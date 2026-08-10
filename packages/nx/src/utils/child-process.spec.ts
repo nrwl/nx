@@ -5,6 +5,7 @@ jest.mock('fs', () => ({
 jest.mock('child_process', () => ({
   ...jest.requireActual('child_process'),
   spawnSync: jest.fn(),
+  execSync: jest.fn(),
 }));
 jest.mock('../native', () => ({ ChildProcess: class {} }));
 jest.mock('./package-manager', () => ({
@@ -16,12 +17,20 @@ jest.mock('./workspace-root', () => ({
   workspaceRootInner: jest.fn(() => '/root'),
 }));
 
-import { spawnSync } from 'child_process';
+import { execSync, spawnSync } from 'child_process';
 import { existsSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { getNxBin, getRunNxBaseCommand, runNxArgvSync } from './child-process';
-import type { PackageManagerCommands } from './package-manager';
+import {
+  getNxBin,
+  getRunNxBaseCommand,
+  readInstalledNxBin,
+  runNxArgvSync,
+} from './child-process';
+import {
+  getPackageManagerCommand,
+  type PackageManagerCommands,
+} from './package-manager';
 
 const realFs = jest.requireActual('fs') as typeof import('fs');
 
@@ -151,8 +160,10 @@ describe('getNxBin', () => {
 
   it('returns null when the workspace has no root package.json', () => {
     // A `.nx/installation` workspace: the `./nx` wrapper has to run so it can
-    // re-sync the installation, so nothing may be spawned directly.
+    // re-sync the installation, so nothing may be spawned directly, not even
+    // the hoisted nx the ascent would otherwise hand back.
     const root = join(fixture, 'ws');
+    writeNxInstall(fixture);
     writeNxInstall(join(root, '.nx', 'installation'));
 
     expect(getNxBin(root)).toBeNull();
@@ -177,6 +188,27 @@ describe('getNxBin', () => {
     expect(getNxBin(root)).toBe(
       join(root, 'node_modules', 'nx', 'dist', 'bin', 'nx.js')
     );
+  });
+
+  describe('readInstalledNxBin', () => {
+    it('takes the entry point the nx installed in that directory names', () => {
+      const root = workspace('ws');
+      const nxBin = writeNxInstall(root);
+
+      expect(readInstalledNxBin(root)).toBe(nxBin);
+    });
+
+    it('returns null rather than reaching for an ancestor nx', () => {
+      // The caller installed nx itself, so an ancestor's is one nobody asked
+      // for. `nx migrate` reads its temp installation through here, and that
+      // temp dir sits directly under the shared system temp directory.
+      writeNxInstall(fixture);
+      const root = join(fixture, 'installation');
+      realFs.mkdirSync(root, { recursive: true });
+
+      expect(readInstalledNxBin(root)).toBeNull();
+      expect(readInstalledNxBin(fixture)).not.toBeNull();
+    });
   });
 });
 
@@ -224,5 +256,27 @@ describe('runNxArgvSync', () => {
     expect(() =>
       runNxArgvSync(['_migrate'], { nxBin: '/tmp/nx/bin/nx.js' })
     ).toThrow('ENOENT');
+  });
+
+  it('hands quoted arguments to the package manager when no nx can be resolved', () => {
+    const execSyncMock = execSync as jest.Mock;
+    execSyncMock.mockReset();
+    // A root package.json with no readable nx beside it: the shape of the
+    // workspaces `getNxBin` declines, so the shell fallback runs.
+    (existsSync as jest.Mock).mockReturnValue(true);
+    (getPackageManagerCommand as jest.Mock).mockReturnValue({ exec: 'npx' });
+    const originalPlatform = process.platform;
+    Object.defineProperty(process, 'platform', { value: 'linux' });
+
+    try {
+      runNxArgvSync(['_migrate', '--commit-prefix=chore(repo): x']);
+    } finally {
+      Object.defineProperty(process, 'platform', { value: originalPlatform });
+    }
+
+    expect(spawnSyncMock).not.toHaveBeenCalled();
+    expect(execSyncMock.mock.calls[0][0]).toBe(
+      `npx nx _migrate '--commit-prefix=chore(repo): x'`
+    );
   });
 });

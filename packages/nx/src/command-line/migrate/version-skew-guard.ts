@@ -14,8 +14,8 @@ import { normalizeVersion } from './version-utils';
 // plan phase instead.
 export const NEW_MIGRATE_FLAGS_FLOOR = '23.2.0';
 
-// yargs accepts both spellings and the raw argv is forwarded verbatim across
-// both migrate hops, so detection must catch each one.
+// yargs accepts both spellings and the raw argv is forwarded across both
+// migrate hops, so detection must catch each one.
 export const NEW_MIGRATE_FLAGS = ['--run-migration', '--runMigration'] as const;
 
 /**
@@ -154,10 +154,9 @@ export async function resolveNewMigrateFlagsRunTarget(options: {
  * because the invoking nx's version is not forwarded across hop A; the
  * refusal names the workspace update that resolves it.
  *
- * `readLocalNxVersion` returns undefined when no readable nx install exists
- * at or above the workspace root; that case does not block. The hand-off
- * spawns the `nx migrate` wrapper, and without an nx installation to
- * delegate to it exits visibly rather than running anything.
+ * `readLocalNxVersion` returning undefined does not block: the hand-off then
+ * resolves nx as it always does, which may fail visibly or land on another nx
+ * the package manager locates.
  */
 export function assertWorkspaceNxSupportsNewMigrateFlags(options: {
   argv: string[];

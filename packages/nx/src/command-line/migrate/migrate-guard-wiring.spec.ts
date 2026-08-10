@@ -19,8 +19,8 @@ jest.mock('../../utils/provenance', () => ({
     mockEnsurePackageHasProvenance(...args),
 }));
 
-// Both spawn helpers are mocked: the hand-off calls runNxArgvSync, and leaving
-// runNxSync live would let its fallback path spawn a real nx.
+// Both spawn helpers are mocked: the hand-off calls runNxArgvSync, and
+// connect-to-nx-cloud, which migrate.ts imports, calls runNxSync.
 const mockRunNxSync = jest.fn();
 const mockRunNxArgvSync = jest.fn();
 jest.mock('../../utils/child-process', () => ({
@@ -236,8 +236,6 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
     restoreEnv('NODE_PATH', originalNodePath);
   });
 
-  // Stands in for the install nxCliPath() performs, so the hand-off reads a
-  // manifest this test controls.
   function stubTempCliInstall(bin?: unknown): string {
     const tmpDir = realpathSync(
       mkdtempSync(join(tmpdir(), 'guard-wiring-temp-cli-'))
@@ -313,7 +311,6 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
   });
 
   it('spawns the entry point the temp installation declares, not a fixed layout', async () => {
-    // nx has published its entry point at dist/bin/nx.js since 23.0.0.
     const tmpDir = stubTempCliInstall({ nx: './dist/bin/nx.js' });
 
     try {
@@ -328,7 +325,6 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
       expect(mockRunNxArgvSync.mock.calls[0][1]).toMatchObject({
         nxBin: join(tmpDir, 'node_modules', 'nx', 'dist', 'bin', 'nx.js'),
       });
-      // the argv never reaches a shell
       expect(
         mockExecSync.mock.calls.filter(([cmd]: [string]) =>
           cmd.includes('_migrate')
@@ -341,6 +337,9 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
 
   it('falls back to the temp installation shim when its manifest names no nx bin', async () => {
     const tmpDir = stubTempCliInstall();
+    process.argv = [...process.argv, '--commit-prefix=chore(repo): '];
+    const originalPlatform = process.platform;
+    Object.defineProperty(process, 'platform', { value: 'linux' });
 
     try {
       const exitCode = await runMigration();
@@ -350,6 +349,41 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
       expect(mockExecSync).toHaveBeenCalledWith(
         `${join(
           tmpDir,
+          'node_modules',
+          '.bin',
+          'nx'
+        )} _migrate --run-migration=@nx/js:gen '--commit-prefix=chore(repo): '`,
+        expect.objectContaining({ windowsHide: true })
+      );
+    } finally {
+      Object.defineProperty(process, 'platform', { value: originalPlatform });
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  it('does not hand off to an nx installed above the temp directory', async () => {
+    // The temp installation declares nx itself, so a hoisted nx above it is
+    // one nobody asked for, and the system temp directory is shared.
+    const tmpDir = realpathSync(
+      mkdtempSync(join(tmpdir(), 'guard-wiring-temp-cli-'))
+    );
+    const installDir = join(tmpDir, 'install');
+    mkdirSync(join(tmpDir, 'node_modules', 'nx'), { recursive: true });
+    writeFileSync(
+      join(tmpDir, 'node_modules', 'nx', 'package.json'),
+      JSON.stringify({ name: 'nx', bin: { nx: './dist/bin/nx.js' } })
+    );
+    mkdirSync(installDir, { recursive: true });
+    mockTmpDirSync.mockReturnValue({ name: installDir });
+
+    try {
+      const exitCode = await runMigration();
+
+      expect(exitCode).toBe(0);
+      expect(mockRunNxArgvSync).not.toHaveBeenCalled();
+      expect(mockExecSync).toHaveBeenCalledWith(
+        `${join(
+          installDir,
           'node_modules',
           '.bin',
           'nx'

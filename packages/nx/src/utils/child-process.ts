@@ -43,13 +43,13 @@ export function getRunNxBaseCommand(
 }
 
 /**
- * Locate the nx entry point the workspace at `root` would run, so a caller can
- * spawn it directly instead of going through a shell.
+ * Locate an nx entry point to spawn for the workspace at `root`, so a caller
+ * can run it directly instead of going through a shell. `findInstalledNxBin`
+ * decides which one.
  *
- * Returns null whenever that answer is not certain, leaving the caller to fall
- * back to `getRunNxBaseCommand` and let the package manager locate nx. Null is
- * therefore always safe: it costs the argument fidelity a direct spawn buys,
- * never the ability to run.
+ * Null means nothing may be spawned directly, leaving the caller to fall back
+ * to `getRunNxBaseCommand`. Null is therefore always safe: it costs the
+ * argument fidelity a direct spawn buys, never the ability to run.
  */
 export function getNxBin(root: string = workspaceRoot): string | null {
   // A workspace with no root package.json runs nx through the `./nx` wrapper,
@@ -63,10 +63,36 @@ export function getNxBin(root: string = workspaceRoot): string | null {
   return findInstalledNxBin(root);
 }
 
-// Mirrors a package manager's own bin lookup: ascend to the nearest installed
-// nx (npx and bun ascend always, pnpm and yarn inside an outer workspace) and
-// take the entry point its `bin` field names, which is the file the manager
-// links into `node_modules/.bin`.
+/**
+ * The entry point the nx installed directly under `dir` names, with no ascent
+ * to `dir`'s ancestors. For an installation that declares nx itself, such as
+ * the temp CLI `nx migrate` builds, an ancestor's nx is never the right answer.
+ */
+export function readInstalledNxBin(dir: string): string | null {
+  const packageDir = join(dir, 'node_modules', 'nx');
+  const manifest = join(packageDir, 'package.json');
+  if (!existsSync(manifest)) {
+    return null;
+  }
+
+  let bin: string | Record<string, string> | undefined;
+  try {
+    ({ bin } = readJsonFile<{ bin?: string | Record<string, string> }>(
+      manifest
+    ));
+  } catch {
+    return null;
+  }
+  // npm accepts both the single-entry shorthand and the map form.
+  const entry = typeof bin === 'string' ? bin : bin?.nx;
+  return typeof entry === 'string' ? join(packageDir, entry) : null;
+}
+
+// Ascend to the nearest installed nx and take the entry point its `bin` field
+// names, which is the file a package manager links into `node_modules/.bin`.
+// Deliberately npx-shaped: npx and bun ascend unconditionally while pnpm and
+// yarn stop at an outer workspace, so this can name an nx those two would
+// decline to run.
 //
 // Deliberately not a resolver. Resolvers answer from NODE_PATH once their
 // explicit paths miss, and `nxCliPath` (command-line/migrate/migrate.ts) points
@@ -77,20 +103,10 @@ export function getNxBin(root: string = workspaceRoot): string | null {
 // without end.
 function findInstalledNxBin(root: string): string | null {
   for (let dir = root; ; dir = dirname(dir)) {
-    const packageDir = join(dir, 'node_modules', 'nx');
-    const manifest = join(packageDir, 'package.json');
-    if (existsSync(manifest)) {
-      let bin: string | Record<string, string> | undefined;
-      try {
-        ({ bin } = readJsonFile<{ bin?: string | Record<string, string> }>(
-          manifest
-        ));
-      } catch {
-        return null;
-      }
-      // npm accepts both the single-entry shorthand and the map form.
-      const entry = typeof bin === 'string' ? bin : bin?.nx;
-      return typeof entry === 'string' ? join(packageDir, entry) : null;
+    // The nearest install wins, so an unusable manifest there ends the search
+    // rather than deferring to an ancestor.
+    if (existsSync(join(dir, 'node_modules', 'nx', 'package.json'))) {
+      return readInstalledNxBin(dir);
     }
     if (dir === dirname(dir)) {
       return null;
@@ -104,8 +120,9 @@ function findInstalledNxBin(root: string): string | null {
  * When `getNxBin` names an entry point, the child is spawned directly with no
  * shell in between, so every argument reaches the child exactly as provided:
  * shell metacharacters (`(`, `%`, `^`, spaces, quotes) are data, not syntax.
- * Otherwise falls back to the package-manager + shell path with each argument
- * quoted.
+ * Otherwise falls back to the package-manager + shell path, where every
+ * argument goes through `quoteShellArg` and the Windows limits it documents
+ * apply.
  */
 export function runNxArgvSync(
   argv: string[],

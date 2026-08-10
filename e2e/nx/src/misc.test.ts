@@ -1007,8 +1007,6 @@ describe('migrate', () => {
       }
     );
 
-    // the prefix contains spaces and parens, which the re-spawn must pass
-    // through as a single argument on every platform
     runCLI(
       `migrate --run-migrations=migrations.json --create-commits --commit-prefix="chore(core): AUTOMATED - "`,
       {
