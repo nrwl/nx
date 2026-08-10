@@ -3,13 +3,12 @@ import { BlogPostDataEntry } from '@nx/nx-dev-data-access-documents/node-only';
 import Image from 'next/image';
 import { BlogAuthors } from './authors';
 import { ChevronLeftIcon, ListBulletIcon } from '@heroicons/react/24/outline';
-import { renderMarkdown } from '@nx/nx-dev-ui-markdoc';
+import { renderMarkdown, Metrics } from '@nx/nx-dev-ui-markdoc';
 import { EpisodePlayer } from './episode-player';
 import { YouTube } from '@nx/nx-dev-ui-common';
 import { FeaturedBlogs } from './featured-blogs';
 import { MoreBlogs } from './more-blogs';
 import { ALL_TOPICS, type Topic } from './topics';
-import { Metrics } from '@nx/nx-dev-ui-markdoc';
 
 export interface BlogDetailsProps {
   post: BlogPostDataEntry;
