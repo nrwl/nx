@@ -1019,33 +1019,62 @@ export async function inferOncePerOptionSet<T>(
 
   // Keep only config files owned by an inferred project root (i.e. files that
   // actually contribute a project). Include-coverage is decided against these.
-  // Both sets scale with project count — materialize the roots once, not per
-  // matched file.
-  const roots = [...inferredRoots];
+  // Ownership is an O(path depth) ancestor walk against the root Set, not an
+  // O(roots) scan per file — both sets scale with project count.
   const matchedConfigFiles = [...rawMatchedFiles].filter((file) =>
-    roots.some((root) => isFileUnderRoot(file, root))
+    isFileOwnedByAnyRoot(file, inferredRoots)
   );
 
   return { inferredTargetsByOptionSet, matchedConfigFiles };
 }
 
-/** Whether `file` (workspace-relative) belongs to project root `root`. */
-function isFileUnderRoot(file: string, root: string): boolean {
-  if (root === '.') {
-    // The root project owns workspace-root-level files (no path separator).
-    return !file.includes('/');
+/**
+ * Whether `file` (workspace-relative) is owned by any root in `roots`. Walks the
+ * file's ancestor directories and checks Set membership — O(path depth), not
+ * O(roots). Equivalent to `roots.some((root) => isFileUnderRoot(file, root))`:
+ * the root project (`.`) owns workspace-root-level files (no path separator),
+ * and a nested root owns the file when it is (or is an ancestor directory of)
+ * the file.
+ */
+function isFileOwnedByAnyRoot(file: string, roots: Set<string>): boolean {
+  if (roots.has(file)) {
+    return true;
   }
-  return file === root || file.startsWith(`${root}/`);
-}
-
-/** Whether `file` belongs to any of `roots`. */
-function isFileUnderAnyRoot(file: string, roots: Set<string>): boolean {
-  for (const root of roots) {
-    if (isFileUnderRoot(file, root)) {
+  const firstSlash = file.indexOf('/');
+  if (firstSlash === -1) {
+    // A workspace-root-level file is owned only by the root project.
+    return roots.has('.');
+  }
+  let dir = file;
+  let slash = dir.lastIndexOf('/');
+  while (slash !== -1) {
+    dir = dir.slice(0, slash);
+    if (roots.has(dir)) {
       return true;
     }
+    slash = dir.lastIndexOf('/');
   }
   return false;
+}
+
+/**
+ * The set of project roots a generated `include` list scopes to, or `undefined`
+ * if any entry is not one of the two shapes this generator emits: `*` (the root
+ * project) or a `<root>` followed by a globstar segment (a nested root). A
+ * user-authored include or any `exclude` falls back to the glob engine.
+ */
+function generatedIncludeRoots(include: string[]): Set<string> | undefined {
+  const roots = new Set<string>();
+  for (const glob of include) {
+    if (glob === '*') {
+      roots.add('.');
+    } else if (glob.endsWith('/**/*') && glob.length > '/**/*'.length) {
+      roots.add(glob.slice(0, -'/**/*'.length));
+    } else {
+      return undefined;
+    }
+  }
+  return roots;
 }
 
 /**
@@ -1059,6 +1088,12 @@ function isFileUnderAnyRoot(file: string, roots: Set<string>): boolean {
  * kept for their sake is now deleted, letting future config files in such
  * locations infer eagerly. The Phase 4 verification pass guards the current
  * behavioral outcome either way.
+ *
+ * Every glob this generator emits scopes to a single root (`*` for the root
+ * project, a nested-root globstar for the rest), so coverage reduces to root
+ * ownership with no glob engine — an O(files * path depth) walk instead of
+ * running minimatch (whose `#matchGlobstar`/`slashSplit` dominate at scale) per
+ * (file, glob). Only user-authored includes or any `exclude` fall through.
  */
 function includeCoversAllConfigFiles(
   include: string[] | undefined,
@@ -1068,9 +1103,16 @@ function includeCoversAllConfigFiles(
   if (!include || include.length === 0) {
     return true;
   }
-  // The bare `minimatch()` helper recompiles its pattern on every call, and
-  // both the include list and the config-file list scale with project count —
-  // compile each glob exactly once.
+  if (!exclude || exclude.length === 0) {
+    const includeRoots = generatedIncludeRoots(include);
+    if (includeRoots) {
+      return configFiles.every((file) =>
+        isFileOwnedByAnyRoot(file, includeRoots)
+      );
+    }
+  }
+  // Fallback for user-authored includes / any exclude: compile each glob once
+  // (the bare `minimatch()` helper recompiles its pattern on every call).
   const includeMatchers = include.map(
     (glob) => new Minimatch(glob, { dot: true })
   );
@@ -1253,7 +1295,7 @@ async function verifyAndFallback<T>(
     // that sits outside this target's migrated roots (errors on migrated roots
     // are handled by the per-project divergence oracle below).
     const erroredOutsideMigratedRoots = erroredConfigFiles.some(
-      (file) => !isFileUnderAnyRoot(file, migratedRoots)
+      (file) => !isFileOwnedByAnyRoot(file, migratedRoots)
     );
     if (reachesNonMigratedRoot || erroredOutsideMigratedRoots) {
       revertedTargets.add(targetName);
