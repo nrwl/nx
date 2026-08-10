@@ -29,6 +29,20 @@ jest.mock('../../utils/child-process', () => ({
   runNxArgvSync: (...args: unknown[]) => mockRunNxArgvSync(...args),
 }));
 
+// The temp-CLI hand-off installs nx for real; stubbing the dir it installs
+// into and the commands it runs lets a test shape that installation.
+const mockTmpDirSync = jest.fn();
+jest.mock('tmp', () => ({
+  ...jest.requireActual('tmp'),
+  dirSync: (...args: unknown[]) => mockTmpDirSync(...args),
+}));
+
+const mockExecSync = jest.fn();
+jest.mock('child_process', () => ({
+  ...jest.requireActual('child_process'),
+  execSync: (...args: unknown[]) => mockExecSync(...args),
+}));
+
 const mockRunInstall = jest.fn();
 jest.mock('./execute-migration', () => ({
   ...jest.requireActual('./execute-migration'),
@@ -194,12 +208,16 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
   const originalUseLocal = process.env.NX_USE_LOCAL;
   const originalMigrateUseLocal = process.env.NX_MIGRATE_USE_LOCAL;
   const originalCliVersion = process.env.NX_MIGRATE_CLI_VERSION;
+  // nxCliPath() appends the temp installation to NODE_PATH.
+  const originalNodePath = process.env.NODE_PATH;
 
   beforeEach(() => {
     mockResolveRunTarget.mockReset().mockResolvedValue('temp-cli');
     mockEnsurePackageHasProvenance.mockReset();
     mockResolvePackageVersion.mockReset().mockResolvedValue('23.2.0');
     mockRunNxArgvSync.mockReset();
+    mockExecSync.mockReset();
+    mockTmpDirSync.mockReset();
     jest.spyOn(output, 'log').mockImplementation(() => {});
     jest.spyOn(output, 'warn').mockImplementation(() => {});
     jest.spyOn(output, 'error').mockImplementation(() => {});
@@ -215,7 +233,23 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
     restoreEnv('NX_USE_LOCAL', originalUseLocal);
     restoreEnv('NX_MIGRATE_USE_LOCAL', originalMigrateUseLocal);
     restoreEnv('NX_MIGRATE_CLI_VERSION', originalCliVersion);
+    restoreEnv('NODE_PATH', originalNodePath);
   });
+
+  // Stands in for the install nxCliPath() performs, so the hand-off reads a
+  // manifest this test controls.
+  function stubTempCliInstall(bin?: unknown): string {
+    const tmpDir = realpathSync(
+      mkdtempSync(join(tmpdir(), 'guard-wiring-temp-cli-'))
+    );
+    mkdirSync(join(tmpDir, 'node_modules', 'nx'), { recursive: true });
+    writeFileSync(
+      join(tmpDir, 'node_modules', 'nx', 'package.json'),
+      JSON.stringify({ name: 'nx', version: '23.2.0', ...(bin ? { bin } : {}) })
+    );
+    mockTmpDirSync.mockReturnValue({ name: tmpDir });
+    return tmpDir;
+  }
 
   it('runs the router with the raw argv before installing the temp CLI', async () => {
     // The first step of the temp-CLI install (nxCliPath), so rejecting it
@@ -276,5 +310,54 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
     expect(exitCode).toBe(1);
     expect(mockEnsurePackageHasProvenance).not.toHaveBeenCalled();
     expect(mockRunNxArgvSync).not.toHaveBeenCalled();
+  });
+
+  it('spawns the entry point the temp installation declares, not a fixed layout', async () => {
+    // nx has published its entry point at dist/bin/nx.js since 23.0.0.
+    const tmpDir = stubTempCliInstall({ nx: './dist/bin/nx.js' });
+
+    try {
+      const exitCode = await runMigration();
+
+      expect(exitCode).toBe(0);
+      expect(mockRunNxArgvSync).toHaveBeenCalledTimes(1);
+      expect(mockRunNxArgvSync.mock.calls[0][0]).toEqual([
+        '_migrate',
+        '--run-migration=@nx/js:gen',
+      ]);
+      expect(mockRunNxArgvSync.mock.calls[0][1]).toMatchObject({
+        nxBin: join(tmpDir, 'node_modules', 'nx', 'dist', 'bin', 'nx.js'),
+      });
+      // the argv never reaches a shell
+      expect(
+        mockExecSync.mock.calls.filter(([cmd]: [string]) =>
+          cmd.includes('_migrate')
+        )
+      ).toEqual([]);
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  it('falls back to the temp installation shim when its manifest names no nx bin', async () => {
+    const tmpDir = stubTempCliInstall();
+
+    try {
+      const exitCode = await runMigration();
+
+      expect(exitCode).toBe(0);
+      expect(mockRunNxArgvSync).not.toHaveBeenCalled();
+      expect(mockExecSync).toHaveBeenCalledWith(
+        `${join(
+          tmpDir,
+          'node_modules',
+          '.bin',
+          'nx'
+        )} _migrate --run-migration=@nx/js:gen`,
+        expect.objectContaining({ windowsHide: true })
+      );
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
   });
 });

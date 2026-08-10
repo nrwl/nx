@@ -83,7 +83,7 @@ import {
   getInstalledVersion,
 } from '../../utils/installed-nx-version';
 import { readNxJson } from '../../config/configuration';
-import { runNxArgvSync } from '../../utils/child-process';
+import { getNxBin, runNxArgvSync } from '../../utils/child-process';
 import { daemonClient } from '../../daemon/client/client';
 import { isNxCloudUsed, isNxCloudDisabled } from '../../utils/nx-cloud-utils';
 import { formatFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
@@ -3753,11 +3753,12 @@ export async function runMigration() {
       // Intentionally not the workspace's nx: `p` is an nx CLI freshly
       // installed into a temp dir by nxCliPath() (latest, or
       // NX_MIGRATE_CLI_VERSION), so migrations run with an up-to-date migrate
-      // implementation. `p` is that install's bin shim; spawn its JS entry
-      // directly so the forwarded argv is not re-parsed by a shell.
-      const tempNxEntry = join(dirname(dirname(p)), 'nx', 'bin', 'nx.js');
+      // implementation. `p` is <tmpDir>/node_modules/.bin/nx, a shell shim;
+      // spawning the entry point that install's own manifest names instead
+      // keeps the forwarded argv out of a shell.
+      const tempNxEntry = getNxBin(dirname(dirname(dirname(p))));
       return runOrReturnExitCode(() =>
-        existsSync(tempNxEntry)
+        tempNxEntry
           ? runNxArgvSync(['_migrate', ...forwardedArgv], {
               stdio: ['inherit', 'inherit', 'inherit'],
               nxBin: tempNxEntry,
