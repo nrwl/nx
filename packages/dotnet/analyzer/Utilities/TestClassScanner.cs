@@ -179,36 +179,52 @@ public static class TestClassScanner
             source.Contains("DoNotParallelize", StringComparison.Ordinal) &&
             DeclaresAssemblyDoNotParallelize(source, options));
 
+        var assemblyDiscoverInternals = materialized.Any(source =>
+            source.Contains("DiscoverInternals", StringComparison.Ordinal) &&
+            DeclaresAssemblyDiscoverInternals(source, options));
+
         var units = new ConcurrentBag<TestUnit>();
         var skippedNested = 0;
         var skippedGeneric = 0;
+        var skippedUnrunnable = 0;
 
         Parallel.ForEach(materialized, source =>
         {
             var exclusions = new Exclusions();
-            foreach (var unit in ScanSource(source, splitBy, assemblyDoNotParallelize, exclusions, options))
+            foreach (var unit in ScanSource(
+                source, splitBy, assemblyDoNotParallelize, assemblyDiscoverInternals, exclusions, options))
             {
                 units.Add(unit);
             }
 
             Interlocked.Add(ref skippedNested, exclusions.Nested);
             Interlocked.Add(ref skippedGeneric, exclusions.Generic);
+            Interlocked.Add(ref skippedUnrunnable, exclusions.Unrunnable);
         });
+
+        // Deduplicating by Id is what collapses `partial` classes declared
+        // across several files into a single class unit, while still letting
+        // their methods surface as distinct method units.
+        //
+        // Ordering must be deterministic: target names derive from these, and
+        // an unstable order would change the project graph hash on every run.
+        var merged = units
+            .GroupBy(unit => unit.Id, StringComparer.Ordinal)
+            .Select(group => group.Aggregate(MergeDuplicates))
+            .OrderBy(unit => unit.Id, StringComparer.Ordinal)
+            .ToList();
+
+        // A class unit with no runnable signal on any of its partial halves is
+        // dropped only here, after merging — one half might declare the test
+        // method or base list that justifies the other.
+        skippedUnrunnable += merged.Count(unit => !unit.HasRunnableMembers);
 
         return new TestDiscoveryResult
         {
-            // Deduplicating by Id is what collapses `partial` classes declared
-            // across several files into a single class unit, while still letting
-            // their methods surface as distinct method units.
-            //
-            // Ordering must be deterministic: target names derive from these, and
-            // an unstable order would change the project graph hash on every run.
-            Units = [.. units
-                .GroupBy(unit => unit.Id, StringComparer.Ordinal)
-                .Select(group => group.Aggregate(MergeDuplicates))
-                .OrderBy(unit => unit.Id, StringComparer.Ordinal)],
+            Units = [.. merged.Where(unit => unit.HasRunnableMembers)],
             SkippedNested = skippedNested,
-            SkippedGeneric = skippedGeneric
+            SkippedGeneric = skippedGeneric,
+            SkippedUnrunnable = skippedUnrunnable
         };
     }
 
@@ -217,17 +233,20 @@ public static class TestClassScanner
     {
         public int Nested;
         public int Generic;
+        public int Unrunnable;
     }
 
     /// <summary>
     /// Two declarations of the same unit (partial class halves) may disagree
     /// about their attributes; take the union so a <c>[DoNotParallelize]</c> on
-    /// either half is honored.
+    /// either half is honored, and so a class unit is kept if either half shows
+    /// a sign of having something runnable.
     /// </summary>
     private static TestUnit MergeDuplicates(TestUnit left, TestUnit right) => left with
     {
         DoNotParallelize = left.DoNotParallelize || right.DoNotParallelize,
-        HasDataRows = left.HasDataRows || right.HasDataRows
+        HasDataRows = left.HasDataRows || right.HasDataRows,
+        HasRunnableMembers = left.HasRunnableMembers || right.HasRunnableMembers
     };
 
     private static bool DeclaresAssemblyDoNotParallelize(string source, CSharpParseOptions options) =>
@@ -237,10 +256,18 @@ public static class TestClassScanner
             .Where(list => list.Target?.Identifier.ValueText == "assembly")
             .Any(list => HasAttribute(list, "DoNotParallelize"));
 
+    private static bool DeclaresAssemblyDiscoverInternals(string source, CSharpParseOptions options) =>
+        CSharpSyntaxTree.ParseText(source, options)
+            .GetCompilationUnitRoot()
+            .AttributeLists
+            .Where(list => list.Target?.Identifier.ValueText == "assembly")
+            .Any(list => HasAttribute(list, "DiscoverInternals"));
+
     private static IEnumerable<TestUnit> ScanSource(
         string source,
         SplitBy splitBy,
         bool assemblyDoNotParallelize,
+        bool assemblyDiscoverInternals,
         Exclusions exclusions,
         CSharpParseOptions options)
     {
@@ -248,7 +275,7 @@ public static class TestClassScanner
 
         foreach (var declaration in root.DescendantNodes().OfType<ClassDeclarationSyntax>())
         {
-            if (!IsAtomizableTestClass(declaration, exclusions))
+            if (!IsAtomizableTestClass(declaration, assemblyDiscoverInternals, exclusions))
             {
                 continue;
             }
@@ -265,7 +292,16 @@ public static class TestClassScanner
                 {
                     Namespace = ns,
                     ClassName = className,
-                    DoNotParallelize = classDoNotParallelize
+                    DoNotParallelize = classDoNotParallelize,
+                    // A local test method is direct evidence; a base list is the
+                    // only signal available for tests inherited from a shared
+                    // base, which this syntax-only pass cannot see into.
+                    // ScanSources drops the unit only if no partial half shows
+                    // either.
+                    HasRunnableMembers =
+                        declaration.Members.OfType<MethodDeclarationSyntax>()
+                            .Any(method => HasAttribute(method.AttributeLists, "TestMethod", "DataTestMethod")) ||
+                        declaration.BaseList is not null
                 };
                 continue;
             }
@@ -286,6 +322,14 @@ public static class TestClassScanner
                     continue;
                 }
 
+                // MSTest never runs an ignored method; a target for it would
+                // only fail on --minimum-expected-tests.
+                if (HasAttribute(method.AttributeLists, "Ignore"))
+                {
+                    exclusions.Unrunnable++;
+                    continue;
+                }
+
                 yield return new TestUnit
                 {
                     Namespace = ns,
@@ -294,6 +338,8 @@ public static class TestClassScanner
                     DoNotParallelize =
                         classDoNotParallelize || HasAttribute(method.AttributeLists, "DoNotParallelize"),
                     HasDataRows = HasAttribute(method.AttributeLists, "DataRow", "DynamicData")
+                    // HasRunnableMembers defaults to true: reaching this point
+                    // already required a qualifying [TestMethod]/[DataTestMethod].
                 };
             }
         }
@@ -301,6 +347,7 @@ public static class TestClassScanner
 
     private static bool IsAtomizableTestClass(
         ClassDeclarationSyntax declaration,
+        bool assemblyDiscoverInternals,
         Exclusions exclusions)
     {
         // Checked first so the exclusion tallies below only count declarations
@@ -334,6 +381,23 @@ public static class TestClassScanner
             return false;
         }
 
+        // MSTest never runs an ignored class's tests; a target for it would
+        // only fail on --minimum-expected-tests. Applies to both split modes —
+        // an ignored class has nothing runnable regardless of how it splits.
+        if (HasAttribute(declaration.AttributeLists, "Ignore"))
+        {
+            exclusions.Unrunnable++;
+            return false;
+        }
+
+        // MSTest does not discover a non-public class's tests unless the
+        // assembly opts in.
+        if (!declaration.Modifiers.Any(SyntaxKind.PublicKeyword) && !assemblyDiscoverInternals)
+        {
+            exclusions.Unrunnable++;
+            return false;
+        }
+
         return true;
     }
 
@@ -341,11 +405,18 @@ public static class TestClassScanner
     /// Builds the dotted namespace for a declaration, joining nested namespace
     /// blocks outermost-first. Handles both block and file-scoped forms.
     /// </summary>
+    /// <remarks>
+    /// Built from identifier tokens rather than <c>NameSyntax.ToString()</c>,
+    /// which would include any trivia — whitespace, line breaks, comments —
+    /// sitting between the dotted segments of an unusually formatted namespace.
+    /// </remarks>
     private static string GetNamespace(SyntaxNode node) =>
         string.Join('.', node.Ancestors()
             .OfType<BaseNamespaceDeclarationSyntax>()
-            .Select(ns => ns.Name.ToString())
-            .Reverse());
+            .Reverse()
+            .SelectMany(ns => ns.Name.DescendantTokens())
+            .Where(token => token.IsKind(SyntaxKind.IdentifierToken))
+            .Select(token => token.ValueText));
 
     private static bool HasAttribute(SyntaxList<AttributeListSyntax> lists, params string[] names) =>
         lists.Any(list => HasAttribute(list, names));
