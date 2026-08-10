@@ -1,6 +1,12 @@
 ---
 name: review-pr
-description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated sandbox container — gVisor on Linux, the Docker VM on macOS — never into the host working tree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the tracking ticket — a GitHub issue or a Linear NXC- ticket, fetched up front — and executes its repro inside the sandbox), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), the security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), and the docs-reviewer agent (checks whether the change leaves prose docs stale or missing, and checks changed docs pages against astro-docs/STYLE_GUIDE.md, the CLAUDE.md docs instructions, and the structural hazards around them: missing redirects, sidebar-coupled routes, parse-breaking Markdoc), then — only when a finding turns on why the author did something, and only once the review is finished — verifies that finding against the PR's Polygraph session (read-only, never resumed; it can downgrade a finding or raise a question but never add one, and its internal content never reaches the public draft), surfaces critical and important findings (plus strengths, a terse suggestions list, and explicit maintainer-call decisions), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through `docker exec` — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
+description: >-
+  Deep code review of a single open PR in nrwl/nx. Checks the PR out only inside an isolated
+  sandbox container, then runs four fixed reviewers: implementation (correctness, errors, types,
+  performance), verification (tests, ticket grounding, comments, and docs), approach, and security.
+  A reproduce-verifier executes a runnable repro only when verification identifies one. The skill
+  saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md and never posts it. Claude
+  reads/executes PR code only through `docker exec`; credentials never enter the sandbox.
 allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(uname *), Bash(docker run *), Bash(docker exec *), Bash(docker rm *), Bash(docker ps *), Bash(docker inspect *), Bash(docker info *), Bash(docker images *), Bash(docker build *), Bash(bash tools/review-sandbox/*), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), mcp__plugin_linear_linear__get_issue, mcp__plugin_linear_linear__list_comments, Read, Grep, Glob, Skill, Agent
 argument-hint: '<PR_NUMBER> [--verify-repros]'
 ---
@@ -154,26 +160,34 @@ docker run -d --name "$CONTAINER" $RUNTIME_FLAG \
   --memory 6g --cpus 4 --pids-limit 2048 \
   "$SANDBOX_IMAGE" sleep infinity
 
-# Shallow-fetch this PR's head into /work/nx AND the base ref into /work/base.
-# Both checkouts are created here, up front, so every downstream agent can rely
-# on them existing (the analyzers read base state from /work/base).
+# Keep repository administration in a bare repo, then create HEAD and base as
+# peer worktrees. Neither shared worktree is the privileged "main checkout",
+# so agents can create isolated worktrees without moving either reference tree.
 docker exec "$CONTAINER" bash -lc '
   export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"
   set -e
-  mkdir -p /work/nx && cd /work/nx
-  git init -q && git remote add origin https://github.com/nrwl/nx
-  git fetch -q --depth 1 origin pull/<NUMBER>/head
-  git checkout -q FETCH_HEAD
-  git fetch -q --depth 1 origin <BASE_REF_NAME>
-  git worktree add --detach /work/base "origin/<BASE_REF_NAME>"
-  git rev-parse HEAD          # HEAD_SHA
+  git init -q --bare /work/repo.git
+  git -C /work/repo.git remote add origin https://github.com/nrwl/nx
+  git -C /work/repo.git fetch -q --depth 1 origin \
+    "+pull/<NUMBER>/head:refs/review/head" \
+    "+refs/heads/<BASE_REF_NAME>:refs/review/base"
+  git -C /work/repo.git worktree add -q --detach /work/nx refs/review/head
+  git -C /work/repo.git worktree add -q --detach /work/base refs/review/base
+  mkdir -p /work/mutations
+  git -C /work/nx rev-parse HEAD          # HEAD_SHA
 '
 
-# Install the workspace ONCE, here, before any agent is dispatched. Agents run test
-# suites, mutate sources to prove a test can fail, and execute the repo's own eslint
-# and tsc — all of which need node_modules. Installing on demand instead means several
-# agents racing `pnpm install` in the same directory, which can corrupt node_modules,
-# and gives them whatever versions they happen to pick rather than the repo's pinned ones.
+# Copy in a small trusted helper before dispatch. It accepts only a fixed review
+# ref and path-safe owner name, then ALWAYS prepares the worktree before returning.
+# Keeping this in scripts/ avoids repeating implementation details in agent prompts.
+docker exec -i "$CONTAINER" bash -lc \
+  'cat >/usr/local/bin/nx-review-create-worktree && chmod 0755 /usr/local/bin/nx-review-create-worktree' \
+  < "$(git rev-parse --show-toplevel)/.claude/skills/review-pr/scripts/nx-review-create-worktree"
+
+# Prepare BOTH shared reference worktrees before dispatch. This gives every agent a
+# ready HEAD and base without racing installs. `--frozen-lockfile` is deliberate: a
+# fallback install could rewrite the lockfile in a reference worktree. A failure is a
+# review signal and means agents must stay read-only in that tree.
 # The image bakes the mise toolchain but no node_modules, so nothing is installed until this runs.
 # cwd must sit under a mise.toml or the shims report "No version is set for shim: npm".
 # No `mise trust` needed: the image sets MISE_YES=1, which auto-trusts the PR's mise.toml on first
@@ -183,37 +197,42 @@ docker exec "$CONTAINER" bash -lc '
 # reason that has nothing to do with the PR.
 docker exec "$CONTAINER" bash -lc '
   export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"
-  cd /work/nx
-  mise install >/dev/null 2>&1                    # installs any tool version the PR bumped
-  if   pnpm install --frozen-lockfile >/tmp/install.log 2>&1; then
-    echo "workspace install OK"
-  elif pnpm install >>/tmp/install.log 2>&1; then
-    echo "workspace install OK — but only WITHOUT --frozen-lockfile: the lockfile is out of sync with package.json (a review signal; note it)"
-  else
-    # Print the cause. A bare "FAILED" sends you diagnosing the PR when the fault is usually the
-    # environment, and the log is inside a container that Step 9 destroys.
-    echo "workspace install FAILED — agents cannot run tests or the repo eslint"
-    tail -20 /tmp/install.log
-  fi
+  prepare_worktree() {
+    dir="$1"
+    label="$2"
+    log="/tmp/install-$label.log"
+    cd "$dir"
+    if mise install >"$log" 2>&1 && pnpm install --frozen-lockfile >>"$log" 2>&1; then
+      echo "$label worktree install OK"
+    else
+      echo "$label worktree install FAILED — keep it read-only; do not run tests or repo tooling there"
+      tail -20 "$log"
+      return 1
+    fi
+  }
+
+  head_install=OK
+  base_install=OK
+  prepare_worktree /work/nx head || head_install=FAILED
+  prepare_worktree /work/base base || base_install=FAILED
+  echo "HEAD_INSTALL=$head_install BASE_INSTALL=$base_install"
 '
 ```
 
-This is the slowest step in the skill, but the image ships a warm pnpm store, so it mostly links rather than downloads. It buys correctness as much as speed: one deterministic install instead of N racing ones, at the versions the repo pins. Skip it only for a diff with nothing runnable (docs-only), and say so in the charter so agents don't discover it one failed command at a time.
+This is the slowest step in the skill, but the image ships a warm pnpm store, so both installs mostly link rather than download. It buys correctness as much as speed: deterministic, prepared comparison trees at the versions each ref pins. Do not skip either setup, even for docs-only changes: every worktree created by this skill must run `mise install` and `pnpm install --frozen-lockfile`.
 
 If it is unexpectedly slow, the image predates the warm store — rebuild it via `setup-review-sandbox`.
 
-`/work/base` is deliberately left uninstalled. Only the reproduce-verifier executes base-side, and pnpm's content-addressable store makes that second install cheap when it does.
-
-Use `origin/<BASE_REF_NAME>` here, **not** `FETCH_HEAD`. `FETCH_HEAD` is a per-worktree pseudoref written into the main worktree's git dir, so it is invisible from a linked worktree — any later command that re-points `/work/base` via `FETCH_HEAD` fails, and git compounds it by reinterpreting the unresolvable token as a pathspec (`--detach does not take a path argument`), which points nowhere near the real cause. Remote-tracking refs live in the common git dir and resolve from every worktree.
+The stable `refs/review/head` and `refs/review/base` refs live in `/work/repo.git`, the common git dir. Use them when creating disposable worktrees; never use `FETCH_HEAD`, whose value is fetch-local and easy to overwrite.
 
 Notes:
 
 - **No `-v` host mounts** — the checkout must live only in the container. All caps dropped, no privilege escalation, resources bounded.
 - **Efficiency:** the gh-only close-without-merge signals (Step 4.5, signals 1–4 and 6–8) need no container. For a **first** review, you may run those cheap signals first and only start the container if no strong close signal fired — a superseded/unnecessary PR then costs no sandbox. For a **re-review**, Step 4's incremental diff needs the container, so start it before Step 4. Either way, once created it must be torn down in Step 9.
 - The image carries the repo toolchain (node/java/dotnet/rust/bun via mise) baked from `mise.toml`, and `mise` auto-installs the PR's _pinned_ toolchain on first exec, so in-container execution (repro, builds) works without host help. It bakes **no** `node_modules` — that is what the install step above is for.
-- `tsc` and `eslint` come from the workspace install, so agents get the versions the repo pins rather than an arbitrary latest. Report the install's outcome in the charter (Step 5).
-- **Run every in-container command with cwd inside `/work/nx`.** mise resolves tool versions by walking up from cwd, so a command run from `/tmp` (or any path outside a `mise.toml` tree) fails with `No version is set for shim: npm` even though `node` happens to resolve — a confusing error with nothing to do with the PR.
-- The `--depth 1` PR-head fetch gives the full working tree at HEAD — enough for reading every changed and surrounding file. This step also adds the base ref as a second worktree at `/work/base` in the same container, before any agent is dispatched — one container per PR holds everything. The agents never create, move, or re-point either checkout; they only read them (only the reproduce-verifier also runs things).
+- `tsc` and `eslint` come from the worktree installs, so agents get the versions each ref pins rather than an arbitrary latest. Report both install outcomes in the charter (Step 5).
+- **Run every in-container command with cwd inside the worktree it targets.** mise resolves tool versions by walking up from cwd, so a command run from `/tmp` (or any path outside a `mise.toml` tree) fails with `No version is set for shim: npm` even though `node` happens to resolve — a confusing error with nothing to do with the PR.
+- The `--depth 1` fetch gives full working trees at HEAD and base — enough for reading every changed and surrounding file. `/work/nx` and `/work/base` are shared reference worktrees. Never edit tracked files, apply patches, switch refs, reset, or stash in them.
 - **Read base state from `/work/base`, not from a host clone.** It is fetched fresh from the remote on every run, so it is always the PR's actual base. A maintainer's local clone can be weeks stale, which would silently answer "was this behavior already there?" against the wrong tree — the question calibration 7 exists to settle.
 
 ### The sandbox reading protocol (used by every agent below)
@@ -233,6 +252,22 @@ To **run** anything against the checkout (installs/builds/tests/repro), go throu
 docker exec "$CONTAINER" bash -lc 'export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"; cd /work/nx && <CMD>'
 ```
 
+Treat `/work/nx` and `/work/base` as shared references. If an agent must edit tracked files, apply a
+patch, or run a command known to rewrite sources, it must first create its own uniquely named
+detached worktree from the appropriate review ref, then prepare that worktree before touching it:
+
+```bash
+docker exec "$CONTAINER" nx-review-create-worktree <AGENT> head
+```
+
+The helper creates `/work/mutations/<AGENT>` and runs `mise install` followed by
+`pnpm install --frozen-lockfile` before it succeeds. Pass `base` instead of `head` only when the
+experiment must mutate the baseline. One agent owns one path; never share or reuse another agent's
+mutation worktree. Do not mutate the references when a disposable worktree cannot be prepared—report
+that the dynamic check was unavailable instead. Build output and ignored caches from ordinary
+non-rewriting commands are allowed in the reference worktrees; the prohibition is against changes
+to tracked source or refs.
+
 The **diff** — the primary review surface — is fetched host-side (it's public PR info) and written to a host file the agents can `Read` directly:
 
 ```bash
@@ -251,7 +286,7 @@ Write-then-verify-then-move, rather than redirecting straight onto the final pat
 
 If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, this is a **re-review** triggered by new commits. Build context for the toolkit so it can be conversational instead of starting fresh.
 
-(If the existing draft's `verdict` is `failed` **and its `## Review draft` body is empty or has no findings**, the prior attempt produced nothing usable — skip this step and review fresh. Do NOT discard it merely because the token says `failed`: since Step 7 now sets `failed` when any single agent fails its EVIDENCE check, a `failed` draft routinely still contains eight agents' worth of real findings, and throwing that away loses the reconciliation this step exists for. The file's history is preserved by Step 8 either way.)
+(If the existing draft's `verdict` is `failed` **and its `## Review draft` body is empty or has no findings**, the prior attempt produced nothing usable — skip this step and review fresh. Do NOT discard it merely because the token says `failed`: since Step 7 now sets `failed` when any single agent fails its EVIDENCE check, a `failed` draft can still contain other reviewers' real findings, and throwing those away loses the reconciliation this step exists for. The file's history is preserved by Step 8 either way.)
 
 1. Read the existing triage file **in full** — the whole `## Review draft` plus every entry under `## Prior reviews`. This is for **you**, the orchestrator: Step 5b reconciliation is explicitly yours to do ("don't dispatch another agent — you already have all the context"), so you need the complete history to sort findings into Addressed / Still concerning / New. Extract:
    - The frontmatter `head_sha` (call it `$PRIOR_SHA`) and `verdict`.
@@ -279,7 +314,7 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
    **Distill; do not paste.** Every byte here is read by every agent you dispatch, so its cost is multiplied by the whole fleet — on a PR with several prior attempts, pasting full bodies makes the carry-forward the single largest fixed charge in the run, larger for most agents than the diff they are meant to review. Worse, it is mostly inert: the bulk of a prior draft is that round's Reproduction / Approach / Performance / Security prose, which describes work already done and re-verified from scratch this round by the agents that own those dimensions. What an agent genuinely needs from history is short: what is still open, what was already fixed, and which trade-offs are settled so it does not re-litigate them.
 
-   Write this shape instead, and keep the whole file **under ~150 lines**:
+   Write this shape instead, and keep the whole file **under ~80 lines**:
 
    ```markdown
    # Re-review context
@@ -324,16 +359,11 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
    ```
 
    Rules for the distillation:
-   - **Re-check the open items yourself, once, before you write this file.** Reading the three or
-     four places a prior round flagged is one or two commands for you; left to the agents it is the
-     same reads repeated by everyone whose dimension touches them, and they all reach your answer.
-     This is the same economy as Step 4.7, applied to the carry-forward. If an item turns out to be
-     fixed, move it to "Already fixed" and say what closed it.
-   - **The budget never evicts an open finding.** The ~150-line target governs _prose_, not the Open-items list. If open items alone exceed the budget, keep them all and cut elsewhere — dropping an unresolved finding silently converts it into a "new" finding next round, or into no finding at all, which is the one failure this file exists to prevent.
-   - **Compress by dropping sections, not by summarizing findings.** Prior Reproduction / Approach / Performance / Security narrative goes entirely; a finding's own wording is preserved. Never paraphrase a finding into something vaguer than the author wrote — the point of quoting is that the next agent can check the same claim.
-   - **Do not carry a prior verdict's reasoning as an instruction.** Say what was found, not what to conclude. An agent told "attempt 5 concluded this is sound" will confirm it; an agent told "attempt 5 found X at file:line" will check X.
-   - **Keep the questions neutral.** Asking "does the new suite actually exercise the rejection branches, and can it fail?" is fair; asking "confirm the new suite is good" is not.
-   - The full history is not lost — it stays in `$TRIAGE_DIR/<NUMBER>.md` (Step 8 keeps it uncapped) and in your own context from step 1. Only the agents' copy is trimmed.
+   - Re-check open items once; move fixed ones to **Already fixed**.
+   - Never omit an unresolved finding; trim narrative first.
+   - Preserve each finding's wording, location, and ask; omit old reproduction/approach/performance/security prose.
+   - Carry facts, not a prior verdict's reasoning; keep focus questions neutral.
+   - Full history remains in `$TRIAGE_DIR/<NUMBER>.md`; only this agent-facing digest is trimmed.
 
 ## Step 4.5: Close-without-merge check
 
@@ -462,7 +492,7 @@ If all signals are cheap-negative, skip emitting the section entirely (no noise 
 
 ### Early exit on a strong close signal
 
-If **superseded (strong)** or **unnecessary (strong)** fired, skip Steps 5 through 5b entirely (toolkit, alternative-approach, performance-analyzer, security-analyzer, docs-reviewer, reproduce-verifier, reconciliation). The verdict precedence in Step 7 already decides the outcome, so agent findings can't change it — and nobody acts on code feedback for a PR that won't merge. Set `$REVIEW_BODY` to just the `### Close-without-merge check` section and continue with Steps 6-10 as normal.
+If **superseded (strong)** or **unnecessary (strong)** fired, skip Steps 5 through 5b entirely (the four reviewers, reproduce-verifier, and reconciliation). The verdict precedence in Step 7 already decides the outcome, so agent findings can't change it. Set `$REVIEW_BODY` to just the close check and continue with Steps 6-10.
 
 ## Step 4.7: Measure shared load-bearing claims ONCE, before dispatching
 
@@ -518,18 +548,23 @@ once, deliberately, before the first `Agent` call.
 
 ### How to do it
 
-1. **Snapshot first.** Copy the tree inside the container (`cp -a /work/nx/packages /snap/packages`)
-   and measure against the snapshot. Agents run concurrently and some mutate `/work/nx` (the test
-   analyzer mutates source deliberately to prove tests can fail); measuring the live checkout makes
-   your result a race.
-2. **Use the workspace install** from Step 3 — `cd /work/nx` first so mise resolves the toolchain.
+1. **Keep the reference worktrees immutable.** Read from `/work/nx` and `/work/base` directly. If
+   the measurement needs to create a harness, edit tracked files, or run source-rewriting tooling,
+   run `docker exec "$CONTAINER" nx-review-create-worktree orchestrator-head head`; the helper
+   creates and prepares `/work/mutations/orchestrator-head`. Use a separately prepared
+   `orchestrator-base base` worktree if the baseline measurement also writes. Never copy or patch
+   files into the shared reference worktrees.
+2. **Use the prepared worktree's install** — `cd` into that worktree first so mise resolves the
+   correct toolchain.
 3. **Prefer the method that reproduces the real build.** For "is this import lazy?", transpile the
    entry module with `tsc --module commonjs` and walk `require()` calls at **column 0** of the emit
    (indented ⇒ inside a function ⇒ lazy). Only TypeScript's own emit applies its real elision rules,
    so a hand-written import parser over-approximates and a grep is simply wrong.
 4. **Measure the comparison points too** — the base (`/work/base`) and, on a re-review, the prior
-   SHA (`git worktree add --detach /work/prior <PRIOR_SHA>`). A number without its baseline cannot
-   answer "is this net-new?", which is calibration 7's question.
+   SHA. If prior needs its own worktree, fetch it into `/work/repo.git`, add a uniquely named
+   `refs/review/prior`, then run `nx-review-create-worktree orchestrator-prior prior`; the helper
+   runs both required setup commands before returning. A number without its baseline cannot answer
+   "is this net-new?", which is calibration 7's question.
 5. **Measure the corollaries each dimension will ask for, not just the headline conclusion.** This is
    what decides whether the step actually suppresses duplication. An agent whose own question sits
    one hop from your conclusion will rebuild the whole harness to answer that hop, and the
@@ -558,12 +593,14 @@ once, deliberately, before the first `Agent` call.
    reproduce-verifier each solved module resolution, each wrote the transpile boilerplate, and
    several each hit the same `cd`-outside-the-mise-tree failure first.
 
-   So: when your measurement needed a harness, save it in the container at a stable path
-   (`/work/nx/<something>-probe.js` — under `/work/nx`, or `require()` cannot resolve workspace
-   modules), make its inputs a parameter rather than a hard-coded list, and give the charter the
-   literal command that runs it.
+   So: when your measurement needed a harness, save it in the prepared orchestrator mutation
+   worktree at a stable path (`/work/mutations/orchestrator-head/<something>-probe.js` — under the
+   worktree, or `require()` cannot resolve workspace modules), make its inputs a parameter rather
+   than a hard-coded list, and give the charter the literal command that runs it. Agents may run
+   that shared rig read-only; if they need to edit it, they copy it into their own prepared mutation
+   worktree first.
 
-   **Reuse the plumbing, never the cases.** The adversarial value of nine agents lives entirely in
+   **Reuse the plumbing, never the cases.** The adversarial value of independent agents lives in
    which inputs each one thinks to try; it lives not at all in who wrote the `ts.transpileModule`
    call. Hand over the loader and the runner; let every agent bring its own matrix. Word the charter
    entry that way explicitly — "here is a rig that executes the shipped code, bring your own inputs"
@@ -584,8 +621,7 @@ Add an `## Established measurements` section (see the Step 5 template). Frame ev
 
 That phrasing is load-bearing. "Here is the answer" makes agents incurious; "here is my
 measurement, break it if you can" keeps the adversarial value at a fraction of the cost. The
-independence that matters — `alternative-approach`, `security-analyzer` and `performance-analyzer`
-arriving uninformed about the _author's reasoning_ — is untouched, because a mechanical measurement
+independence that matters — `alternative-approach` arriving uninformed about the _author's reasoning_ — is untouched, because a mechanical measurement
 is not a rationale. Keep giving them the measurement; keep withholding the Polygraph session until
 Step 5c.
 
@@ -595,11 +631,11 @@ the obvious place for this change to break — the shape a reader would reach fo
 tested it and that it held. Otherwise every agent that has the same good instinct spends the same
 tool calls confirming your silence. Observed working: a charter that recorded "the guard-shape
 difference produces no divergence, including the case that difference would most plausibly expose"
-drew zero re-tests from nine agents, while the one measurement left out of the charter was re-derived
+drew zero re-tests from every agent, while the one measurement left out of the charter was re-derived
 by three.
 
-**Never put a conclusion here that you did not personally run.** This section is trusted by nine
-agents at once, so an error in it is nine wrong reviews rather than one.
+**Never put a conclusion here that you did not personally run.** Every reviewer trusts this section,
+so one error fans out across the whole review.
 
 ## Step 5: Run the review toolkit
 
@@ -610,7 +646,7 @@ First, write a review charter at `/tmp/pr-<NUMBER>.review-charter.md` (host-side
 
 ## Where the code is (READ THIS FIRST)
 
-The PR is checked out at `/work/nx` **inside a sandbox container named `nx-review-pr-<NUMBER>`** (base ref at `/work/base`),
+The PR HEAD and base are peer worktrees at `/work/nx` and `/work/base` **inside a sandbox container named `nx-review-pr-<NUMBER>`**,
 NOT on the host filesystem. Your native Read/Grep/Glob tools will NOT find the PR source. Reach it
 only with `docker exec` against that container:
 
@@ -625,21 +661,35 @@ only with `docker exec` against that container:
   the reproduction) MUST go through
   `docker exec nx-review-pr-<NUMBER> bash -lc 'export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"; cd /work/nx && <cmd>'`.
   Running it bare on the host is a protocol violation.
+- `/work/nx` and `/work/base` are shared reference worktrees. Never edit tracked files, apply a
+  patch, switch refs, reset, or stash in either one. If a check must mutate source—or invokes tooling
+  known to rewrite it—create your assigned `MUTATION_WORKTREE` first:
+
+      docker exec nx-review-pr-<NUMBER> nx-review-create-worktree <AGENT> head
+
+  The helper creates `/work/mutations/<AGENT>` from HEAD and runs `mise install` plus
+  `pnpm install --frozen-lockfile` before returning. Pass `base` only for a baseline mutation. Never
+  create a worktree by hand or borrow another agent's. If setup fails, leave the references untouched
+  and report the dynamic check as unavailable.
 
 ## Toolchain (already installed — do not install your own)
 
-The workspace is installed at `/work/nx`, so `tsc`, `eslint`, `jest` and the repo's own scripts are
-available at the versions the repo pins. Do not install your own copies — you would get different
-versions and could corrupt `node_modules` for the agents running alongside you.
+Both `/work/nx` and `/work/base` are installed, so `tsc`, `eslint`, `jest` and the repo's own scripts
+are available at the versions each ref pins. Do not install your own copies in these shared trees —
+you would get different versions and could corrupt `node_modules` for the agents running alongside
+you. A newly created mutation worktree is the exception: always run its own `mise install` and
+`pnpm install --frozen-lockfile` before using it.
 
-**Always `cd /work/nx` first.** mise resolves tool versions by walking up from cwd, so a command run
-from elsewhere fails with `No version is set for shim: npm` even though `node` resolves:
+**Always `cd` into the target worktree first.** mise resolves tool versions by walking up from cwd,
+so a command run from elsewhere fails with `No version is set for shim: npm` even though `node`
+resolves:
 
     docker exec nx-review-pr-<NUMBER> bash -lc 'cd /work/nx && pnpm --version'
 
-<IF the Step 3 install did not report OK, REPLACE the first paragraph with what actually happened —
-"the workspace install failed, so you cannot run tests or eslint; restrict yourself to reading" —
-rather than leaving agents to discover it one failed command at a time.>
+<IF either Step 3 install did not report OK, REPLACE the first paragraph with the per-worktree
+outcome — for example, "the HEAD install failed, so do not run tests or eslint against HEAD;
+restrict that tree to reading" — rather than leaving agents to discover it one failed command at a
+time.>
 
 ## The problem being solved
 
@@ -657,22 +707,15 @@ Facts about the code **around** the diff, gathered once so you do not each spend
 tool calls rediscovering them. This is context, not conclusions: it says what the code is, never
 whether the change is good. Verify anything you intend to lean on; correct it if it is wrong.
 
-<Fill in from reads you are doing anyway before dispatch. Keep it to ~30 lines. Include:
+<Fill in from reads you are doing anyway before dispatch. Keep it to ~15 lines. Include:
 
 - **The changed symbols** — one line each: what it does, exported or module-private.
 - **Who calls them** — the call sites, with paths, from one `grep` over `/work/nx/packages`. Note any
   reached through a dynamic `require`/`import`, across a package boundary, or from a test-only path.
-- **Base behavior** — what the same code did at `/work/base`, in a sentence per changed function.
-  Where a changed export's **type** moved, give the before and after explicitly, including a type that
-  was previously _inferred_ rather than written down. That fact decides whether the change is a
-  narrowing or a break, so several dimensions need it — type design, code quality, and whoever asks
-  why a now-redundant guard could be deleted — and each will otherwise reconstruct the old inference
-  by hand from deleted source. Observed re-derived three times on one PR.
+- **Base behavior** — what the same code did at `/work/base`, including before/after types for changed exports.
 - **Where it sits in the flow** — the entry point that reaches this code, and what gates it.
 
-Leave OUT the PR body's rationale, the author's stated motivation, and any prior review's
-conclusions. Those bias the dimensions that are supposed to arrive uninformed; call sites and base
-behavior do not.>
+Leave out PR rationale and prior conclusions; call sites and base behavior are sufficient.>
 
 ## Established measurements
 
@@ -702,11 +745,11 @@ the path, the literal command that runs it, and what it does.
 State plainly that the inputs are the agent's to choose — the rig exists so nobody rewrites the
 plumbing, NOT so everyone reuses one case list. Example wording:
 
-    /work/nx/<name>-probe.js executes the SHIPPED implementation (it transpiles the real source;
+    /work/mutations/orchestrator-head/<name>-probe.js executes the SHIPPED implementation (it transpiles the real source;
     it is not a reimplementation). Run it with:
-        docker exec nx-review-pr-<NUMBER> bash -lc 'export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"; cd /work/nx && node <name>-probe.js'
-    Add your own cases to the matrix at the top. Bring inputs your dimension cares about — the
-    case list already there is mine, not a boundary on yours.
+        docker exec nx-review-pr-<NUMBER> bash -lc 'export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"; cd /work/mutations/orchestrator-head && node <name>-probe.js <inputs>'
+    Supply inputs your dimension cares about without editing this shared rig. If an edit is
+    unavoidable, copy it to your own prepared mutation worktree first.
 
 Also list any expensive setup that is reusable rather than re-creatable: a base-side dependency you
 installed, an extracted tarball, a `/snap` snapshot.>
@@ -723,6 +766,9 @@ installed, an extracted tarball, a `/snap` snapshot.>
   when the block was actually run. Test the _exact shipped bytes_: a clean-room reimplementation
   can pass while the shipped snippet is broken (e.g. a `case` arm that `echo`s FAILED but does not
   `exit` still falls through to the next command).
+- **Isolate source mutation.** If any methodology step needs to edit a tracked file, apply a patch,
+  mutate a test to prove it can fail, or run source-rewriting tooling, create and prepare your
+  assigned `MUTATION_WORKTREE` first. Never perform that experiment in `/work/nx` or `/work/base`.
 - **Trace the whole source→sink path, then sweep same-class siblings.** When an untrusted value
   reaches a dangerous sink, do NOT stop at the sink. Walk every hop the value takes — _including
   how it is assigned or read into a variable_ (a bare `VAR=<untrusted>` is itself a sink; see the
@@ -816,9 +862,7 @@ which; agents that are handed both without a hierarchy read both in full.
 Then dispatch each agent with this prompt shape:
 
 `<SUBAGENT_TYPE>` is the **exact** identifier from the dispatch list below — most carry the
-`pr-review-toolkit:` prefix, but `comment-analyzer` is project-local and takes no prefix; prefixing it
-silently resolves to the stock plugin agent, which enforces different comment criteria. `<AGENT>` stays
-the bare name everywhere else, because it is what the evidence file paths are keyed on.
+All four combined reviewers are project-local agent names; `<AGENT>` stays the bare name everywhere because it is what the evidence file paths are keyed on.
 
 ```
 Agent(
@@ -833,7 +877,8 @@ find yourself with an empty file list, you have the wrong scope — re-read the 
 
 - REVIEW TARGET: <EVIDENCE_FILE>  (host file — read it with `Read`; this is what you review)
 - CHANGED FILES: /tmp/pr-<NUMBER>.files  (host file — one path per line; `Read` it)
-- CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this sandbox container; base ref at /work/base)
+- CONTAINER: nx-review-pr-<NUMBER>  (HEAD and base are peer worktrees at /work/nx and /work/base inside this sandbox container)
+- MUTATION_WORKTREE: /work/mutations/<AGENT>  (create only if needed; the charter gives the required setup command)
 - BASE_REF: <BASE_REF_NAME>
 <ONLY IF <EVIDENCE_FILE> is the incremental diff, ADD:>
 - FULL DIFF (reference only): /tmp/pr-<NUMBER>.diff — the whole PR against its base. Consult it to
@@ -860,89 +905,20 @@ as a statement that anything absent from it is fine.
 )
 ```
 
-Dispatch these in parallel:
+Dispatch these fixed lanes with the generic prompt above:
 
-- `pr-review-toolkit:code-reviewer` — general quality and guideline compliance
-- `pr-review-toolkit:silent-failure-hunter` — error handling and swallowed failures
-- `pr-review-toolkit:pr-test-analyzer` — test coverage of the change
-- `comment-analyzer` — comment accuracy (project-local, not the `pr-review-toolkit` one: it enforces this repo's comment criteria and emits the `TIERS` line)
-- `pr-review-toolkit:type-design-analyzer` — only when the diff adds or changes types
+- `implementation-reviewer` — correctness, errors/fallbacks, type/API contracts, and performance
+- `verification-reviewer` — tests, ticket grounding, comments, and docs
 
-`code-simplifier` is deliberately omitted — its output is nice-to-have polish by definition, all of which the trim below would discard.
+`alternative-approach` and `security-reviewer` run every review in Steps 5a and 5a.2. `code-simplifier` is deliberately omitted: its output is polish that cannot justify a review round-trip.
 
-### Scoping which agents spawn
+### Fixed review lanes
 
-Two different levers, with deliberately different bars. The bar is set by **what backstops a wrong
-call**, so do not mix them up.
-
-#### 1. Content-based — structural non-applicability (any review, including the first)
-
-Skip an agent when the diff gives its dimension **nothing to act on**. The list above already does
-this for `type-design-analyzer` ("only when the diff adds or changes types"); the same reasoning
-generalizes, but only where the predicate is **mechanically decidable from the changed-file list and
-the diff text**, with no judgment about likelihood:
-
-| skip                                                                                     | when — and only when                                                                                                        |
-| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `type-design-analyzer`                                                                   | the diff declares or changes no type, interface, or signature                                                               |
-| `security-analyzer`, `performance-analyzer`, `silent-failure-hunter`, `pr-test-analyzer` | the diff changes **no executable code at all** — every path is docs, prose, or comments (`astro-docs/**`, `*.md`, `*.mdoc`) |
-
-`code-reviewer`, `comment-analyzer`, `alternative-approach`, `reproduce-verifier` and `docs-reviewer`
-always run: every diff has quality, prose, an approach, claims to check against code — and either
-changes docs pages (compliance) or may change behavior the docs describe in prose (coverage, Step 5a.4).
-
-**A dimension being unlikely to fire is not non-applicability.** "This diff probably has no security
-issue" is exactly the judgment that loses a finding, and you cannot tell from outside which of the two
-you just made. The test: could you defend the skip to someone who later found a bug there? "The diff
-contains no code" survives that; "I read it and it looked fine" does not — that is a review, and if
-you are doing the review yourself you may as well dispatch the agent that does it properly. Two
-specific traps: a lockfile-only diff is **not** a docs diff (supply chain is `security-analyzer`'s
-core beat), and a generated-file diff still ships executable code.
-
-Structural skips get recorded in `## Failures` exactly like the judgment skips below — see the
-recording rule there. Every agent that did not run is named in the draft, whichever lever skipped it.
-
-#### 2. Delta-based — judgment scoping (re-reviews only)
-
-On a **first** review, stop at the structural rules above — nothing backstops a wrong call, so
-judgment about what the diff "probably" affects has no place.
-
-On a **re-review**, the unchanged code was already reviewed by the full set at a prior attempt, and
-re-running everything against a small delta buys mostly restatement. Scope the set to the dimensions
-the delta actually puts at stake. A round whose delta is one reworded comment does not need the
-security, performance and test dimensions re-run against code none of them touched.
-
-**Scope by dimension at stake, never by which files changed.** This distinction is the whole safety
-margin, because new code routinely changes what _unchanged_ code means. Add a cancellation path and
-the pre-existing `catch` blocks it now reaches can become wrong without appearing in the diff at all.
-A file-based rule drops `silent-failure-hunter` there and loses the finding; a dimension-based rule
-keeps it, because the delta's subject is cancellation and error handling is plainly at stake.
-
-Ask of each agent: _could the delta change what this dimension would conclude?_ Keep it if yes or if
-unsure. Concretely, a delta that adds no new sink and no new untrusted input rarely moves
-`security-analyzer`; one that adds no work on a hot path and no new allocation in a loop rarely moves
-`performance-analyzer`. A delta that changes a signature always moves `type-design-analyzer`.
-
-Three constraints:
-
-- **Never scope out a dimension the delta's own subject matter names.** Cancellation ⇒ error
-  handling. A changed comment ⇒ comment accuracy. A new parameter ⇒ type design.
-- **Record every skip and its reason in `## Failures`**, in the same breath as the scope decision, so
-  the draft never reads as though the full fleet cleared it when only part of it ran. A skipped agent is
-  not-applicable, exactly like `type-design-analyzer` on a typeless diff — not a failure, and it does
-  **not** force `verdict: failed` (Step 7). That token is reserved for an agent that was dispatched
-  and could not prove it read anything.
-- **When in doubt, dispatch.** The asymmetry is stark: an unnecessary agent costs tokens, a wrongly
-  skipped one costs a finding nobody knows is missing.
-
-**Do not extend this to PR-level properties.** Importance, size, author and risk tier are never
-grounds to drop a dimension; a PR does not earn its coverage by looking important. The two bases
-above are the only sanctioned ones — structural non-applicability, and a re-review whose unchanged
-code already carries recorded coverage from a prior attempt.
+Every lane runs on every first review and re-review. A lane with no relevant surface returns a short `*_SOUND` result naming what it checked; it does not need a routing or discovery pass. This preserves coverage while eliminating duplicate reads inside the old specialist fleet.
 
 ### Verify each agent actually reviewed something
 
-A silent "looks good" from an agent that read nothing is the one outcome this pipeline must never produce: it turns a missing review into an apparent endorsement. **Every agent you actually dispatched** — the toolkit agents here **and** the ones in Steps 5a–5a.5 — must prove it opened the artifact. Scoping (above) decides _which_ agents run; it never lowers the bar for one that did. An agent skipped by a scope decision is recorded as not-applicable in `## Failures`; an agent that ran and cannot prove it read anything is a failure.
+A silent "looks good" from a reviewer that read nothing is the one outcome this pipeline must never produce. Every dispatched reviewer must prove it opened the artifact; one that cannot is a failure.
 
 **Demand a line number, not just a line.** A filename is not evidence: the changed-file list is a host file every agent is told to `Read`, so an agent that opened nothing else can still cite one. Neither is a `diff --git` header (reconstructible from that list) nor — on a re-review — a bare code line (the prior-review context file quotes applied fixes, so the _content_ of a `+` line is in the agent's sanctioned reading set even when its container reads fail). The one thing an agent cannot produce without opening `<EVIDENCE_FILE>` is the **line number** of a `+`/`-` content line: line numbers appear in no prompt and in no prose. Require both:
 
@@ -1003,7 +979,7 @@ Verify exactly as above (same single-`verdict` block). Add the far-half check as
 
 If the second attempt also fails, record that agent as **failed** in the draft and in `## Failures` (Step 8).
 
-**A failed agent is not a pass and not a silence — it changes the verdict.** See Step 7: any agent recorded failed forces `verdict: failed`, which is also what lets Step 2's dedup permit a re-review at the same commit. An agent that was **never dispatched** — `type-design-analyzer` on a diff that adds no types, or anything skipped by a scope decision under "Scoping which agents spawn" — is _not_ a failed agent. Note it as not-applicable, with the reason, and move on.
+**A failed agent is not a pass and not a silence — it changes the verdict.** See Step 7: any dispatched reviewer that cannot prove it read the target is failed.
 
 Aggregate the surviving agents' output into Critical / Important / Strengths yourself. That aggregate is `$RAW_REVIEW_BODY`.
 
@@ -1018,9 +994,9 @@ Aggregate the surviving agents' output into Critical / Important / Strengths you
 - **Never re-tier an agent's finding downward on your own judgment.** The only sanctioned downgrade is a named calibration from the list below; when you apply one, say which calibration and why in the draft. "It feels minor", "that's just style", "the fix is one character" are not calibrations. An agent that filed something as a finding did so against a rule it was required to name. You are re-checking it against the calibrations, not re-scoring it by taste, and you are not the tier the agent's contract already assigned.
 - **Severity comes from the rule violated, not the size of the fix.** A one-character punctuation change that breaks a committed `STYLE_GUIDE.md` rule vale has no rule for is Important. A three-paragraph rewrite that violates nothing is a Suggestion. Judging by surface form is the specific way this step goes wrong: docs, comment, and naming findings all have tiny diffs, so they read as polish and get swept into a tier that cannot move the verdict.
 - **The 5-bullet cap binds the Suggestions tier only.** It is never a reason to move anything out of Critical or Important, and it never licenses a silent merge or drop. If you cut to the cap, name in one line what you cut and why. A reader must never mistake a trimmed list for a complete one.
-- **Reconcile per agent before you write the draft.** For each agent that ran, count what it filed at each tier and compare with what your draft carries. Any tier whose count dropped gets a one-line reason in `## Failures`, naming the calibration that licensed it. This is bookkeeping, not judgment, and it is the only thing that catches a compression you did not notice making. `docs-reviewer` and `comment-analyzer` hand you this for free: each emits a `TIERS: findings=<n> suggestions=<n>` line as the fourth line of its report, and `findings=<n>` is the number of that agent's items that must appear in your Critical/Important sections. Grep them, compare them, and treat a shortfall you cannot justify as a bug in your trim rather than a judgement you are entitled to.
+- **Reconcile per reviewer before writing the draft.** Preserve every Critical/Important finding, or record the named calibration that downgraded it in `## Failures`.
 
-Observed: a `docs-reviewer` report filing two findings and four suggestions reached a draft as one finding and one merged bullet. The semicolon violation was demoted because punctuation reads as taste, then the cap silently absorbed two more. Nothing in the run flagged it; the maintainer did.
+Keep findings distinct from Suggestions: a committed-rule violation is not polish merely because the diff is small.
 
 ### Maintainer calls
 
@@ -1030,7 +1006,7 @@ The review body must include a `### Maintainer calls` section whenever the revie
 
 Review changed docs for _editorial direction_, not just factual accuracy: does the page recommend a practice the team shouldn't encourage (e.g. sharing a daemon across containers — a remote-code-execution vector), does it frame an escape hatch as a primary use case, does a new env var/flag doc link back to the concept page that explains its risks? A doc that accurately describes a bad recommendation is a finding, not a strength. Rate genuinely harmful guidance Important; wording/positioning asks go under Suggestions.
 
-This direction check is yours, here at trim time — including rating genuinely harmful guidance, which the `docs-reviewer` agent deliberately does not judge. Docs coverage of the change, compliance with the committed docs rules (`astro-docs/STYLE_GUIDE.md`, the CLAUDE.md docs instructions), and the structural checks (redirects, sidebar coupling, Markdoc validity) belong to that agent — Step 5a.4 dispatched it. Don't re-derive its checks; do re-check its surviving findings against the calibrations below like everyone else's.
+This direction check is yours at trim time. Documentation coverage, committed docs rules, and structural checks belong to `verification-reviewer`; do not re-derive its checks.
 
 **This latitude is additive only.** It lets you _add_ a direction finding the agent's contract told it not to judge. It does not let you demote what that agent filed. Its `DOCS_CONCERN` and `DOCS_UPDATE_NEEDED` verdicts are defined as Important-level in its own contract, and every finding under them arrives with a committed rule quoted — so moving one to Suggestions overrides a rule citation with a preference. The docs tier is where this is most tempting, because a style-guide violation and a taste-level wording ask look identical in the diff and differ only in whether a committed rule names them.
 
@@ -1038,20 +1014,18 @@ This direction check is yours, here at trim time — including rating genuinely 
 
 These standing maintainer calibrations encode this repo's review culture. The charter (Step 5) hands them to the agents up front; re-check the surviving findings against them here — anything that slipped through gets downgraded now. A finding matching one of these is at most a compact one-line advisory note in the draft and **never drives the verdict**:
 
-1. **Test-coverage gaps are advisory.** Untested branches or missing edge-case fixtures never push needs-changes on their own; only code defects, silently-wrong behavior, and inaccurate comments/docs block a PR. Exception: false coverage — a test that asserts the wrong behavior or cannot fail — is a correctness defect, keep it.
-2. **No test demands for deprecation warnings, legacy branches, or telemetry wiring.** Untested deprecation warnings, un-mirrored legacy branches, never-throw wrapper contracts, and event-emission wiring at call sites are non-findings. Unit-testable logic inside such modules (e.g. PII redaction, classification helpers) is still fair game.
-3. **Silent migrations are fine.** Missing `logger.warn`/`logger.info` in migration files (`packages/*/src/migrations/**`) is not a concern — migration-time silence is by design. Silent _correctness_ failures still count.
-4. **Migrations never remove dependencies.** Don't flag a migration for leaving a now-redundant dep in the user's package.json; the user may import it directly. Removal is a judgment call that stays with the user.
-5. **Migration metadata is inside the trust boundary.** `nx migrate` already runs migrations as arbitrary code, so `migrations.json` content flowing into prompts, paths, or logs is not a prompt-injection or path-traversal finding. Only flag sanitization when input crosses a _new_ trust boundary (HTTP endpoints, runtime user input).
-6. **Intentionally-kept temp dirs.** The `nx migrate` install dir and `nx release` scratch dirs are deliberately left on disk as a post-mortem debugging aid. Not a leak; don't ask for cleanup.
-7. **Pre-existing behavior isn't Important.** Before rating a finding Important, verify it's net-new in the diff: does unchanged sibling code follow the same pattern? Did the behavior exist before the PR (check the base, look for tests pinning it)? If either is yes, it's advisory at most.
-8. **Deliberate, tested, documented design decisions aren't blockers.** A behavior change pinned by new tests and documented in JSDoc or the PR body is intentional — the right ask is a callout in the PR description, not a change request.
-9. **Don't demand defensive guards.** The repo prefers fixing an invariant at its source with one descriptive error at the true failure point over scattered guards, warnings, and version checks. Absence of extra defensive coding is not a finding.
-10. **Comment-volume asks are advisory; comment-accuracy findings are not.** The repo's comment criteria (`.claude/agents/comment-analyzer.md`, summarized for authors in `CLAUDE.md` § "Code Comments") default to no comment and cap a warranted one at ~3 lines, so "add a docstring", "document this parameter", "explain the rationale here", and "expand this comment" are Suggestions at most — never Important, never a verdict driver. The project-local `comment-analyzer` already enforces this, so the residual source is another agent (usually `code-reviewer`) reaching for documentation asks outside its beat. Still fully in scope, and still blocking: a comment that contradicts the code it describes, a stale reference the diff left behind, and the repo's load-bearing markers — a `@deprecated` missing its replacement or removal version, or version-gated work written without the `TODO(vNN)` form the major-release deprecation sweep greps for.
+1. **Coverage gaps are advisory.** Missing branches/fixtures never block alone; false coverage (wrong assertion or a test that cannot fail) is a defect.
+2. Do not demand tests for deprecation warnings, legacy paths, telemetry wiring, or never-throw wrappers; testable logic inside them remains in scope.
+3. Migration silence and retained dependencies are intentional. Flag only silent correctness failures; users may still import a dependency.
+4. `migrations.json` is already inside the migration trust boundary. Flag it only when data crosses a new boundary (for example HTTP or runtime input).
+5. `nx migrate` and `nx release` temp directories are intentional post-mortem artifacts, not leaks.
+6. An Important finding must be net-new versus base/sibling behavior. Deliberate behavior backed by tests and documentation is a callout, not a blocker.
+7. Do not demand scattered defensive guards when the invariant can be fixed at its source.
+8. Comment-volume asks are Suggestions. Inaccurate/stale comments and required `@deprecated` / `TODO(vNN)` markers remain blocking.
 
 ## Step 5a: Run the alternative-approach agent
 
-In parallel with Step 5, dispatch the `alternative-approach` agent — the toolkit answers "is this code correct?", this agent answers "is this the right solution at all?":
+Dispatch the `alternative-approach` agent in parallel with Step 5. It asks whether the solution is right, not only correct:
 
 ```
 Agent(
@@ -1062,17 +1036,16 @@ Evaluate whether PR <NUMBER> in nrwl/nx takes the right approach to the problem 
 
 Inputs:
 - PR_NUMBER: <NUMBER>
-- CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this sandbox container; base ref at /work/base)
+- CONTAINER: nx-review-pr-<NUMBER>  (HEAD and base are peer worktrees at /work/nx and /work/base inside this sandbox container)
 - REVIEW TARGET: <EVIDENCE_FILE>  (host file — read it with Read; this is what you review)
 - FULL DIFF (reference only, and only when REVIEW TARGET is the incremental diff): /tmp/pr-<NUMBER>.diff
 - CHARTER: /tmp/pr-<NUMBER>.review-charter.md  (host file — sandbox protocol, pre-installed analysis toolchain, established measurements, severity policy, calibrations)
 - BASE_REF: <BASE_REF_NAME>  (checked out at /work/base in the same container — read base state there)
 
-Read /tmp/pr-<NUMBER>.review-charter.md (a host file) first — it carries the mandatory sandbox reading protocol. The PR source is NOT on the host; reach it only via `docker exec nx-review-pr-<NUMBER> cat/grep/find/sed /work/nx/…`.
+Read the CHARTER first. It defines the sandbox-only reference-worktree protocol and the required proof-of-work block; apply both to findings and endorsements. This agent is read-only and does not need a mutation worktree.
 
-You are READ-ONLY. Use only `cat`/`grep`/`find`/`sed`/`git show` inside the container. Never run installs, builds, tests, or the reproduction — not in the container, and not on the host. Only the reproduce-verifier executes anything.
-
-REQUIRED — open your report with the three proof-of-work lines exactly as the charter's "Proof of work" section specifies, with <EVIDENCE_FILE> as the file the line number refers to. This applies to an endorsement verdict exactly as to a finding: a `*_SOUND` report that does not verify is recorded as failed, not folded into Strengths.
+<ONLY IF Step 4 set $HAS_PRIOR_CONTEXT=true, ADD:>
+Also read `/tmp/pr-<NUMBER>.review-context.md`. It records the caller's one-time check of open and fixed items. Carry those statuses forward; revisit an item only when your own evidence contradicts it.
 
 Follow your standard workflow and return the structured report.
 """
@@ -1085,124 +1058,49 @@ Capture the output as `$APPROACH_REPORT` and fold it into the review body as `##
 - `BETTER_ALTERNATIVE_EXISTS` — counts as an important finding, with the sketch as the ask.
 - `APPROACH_SOUND` — fold the endorsement into **Strengths** as a one-liner; no finding.
 
-## Step 5a.2: Run the performance-analyzer agent
+## Step 5a.2: Integrated lenses
 
-In parallel with Step 5, dispatch the `performance-analyzer` agent — it answers "does this change waste CPU or memory, and does it execute quickly at workspace scale?":
+Performance is reported by `implementation-reviewer`. Security has its own independent review lane below.
+
+## Step 5a.3: Run the security-reviewer agent
+
+Dispatch `security-reviewer` in parallel with Step 5:
 
 ```
 Agent(
-  subagent_type="performance-analyzer",
-  description="Analyze PR <NUMBER> runtime performance",
+  subagent_type="security-reviewer",
+  description="Review PR <NUMBER> security boundaries",
   prompt="""
-Analyze the runtime performance of PR <NUMBER> in nrwl/nx: CPU/memory footprint and execution speed.
+Review PR <NUMBER> in nrwl/nx for untrusted-input paths, command execution, filesystem/archive traversal, network requests, credentials, and unsafe generated configuration.
 
 Inputs:
 - PR_NUMBER: <NUMBER>
-- CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this sandbox container; base ref at /work/base)
+- CONTAINER: nx-review-pr-<NUMBER>  (HEAD and base are peer worktrees at /work/nx and /work/base inside this sandbox container)
+- MUTATION_WORKTREE: /work/mutations/security-reviewer  (create only if needed; the charter gives the required setup command)
 - REVIEW TARGET: <EVIDENCE_FILE>  (host file — read it with Read; this is what you review)
 - FULL DIFF (reference only, and only when REVIEW TARGET is the incremental diff): /tmp/pr-<NUMBER>.diff
 - CHARTER: /tmp/pr-<NUMBER>.review-charter.md  (host file — sandbox protocol, pre-installed analysis toolchain, established measurements, severity policy, calibrations)
 - BASE_REF: <BASE_REF_NAME>  (checked out at /work/base in the same container — read base state there)
 
-Read /tmp/pr-<NUMBER>.review-charter.md (a host file) first — it carries the mandatory sandbox reading protocol. The PR source is NOT on the host; reach it only via `docker exec nx-review-pr-<NUMBER> cat/grep/find/sed /work/nx/…`.
+Read the CHARTER first. It defines the sandbox-only reference-worktree protocol and required proof-of-work block.
 
-You are READ-ONLY. Use only `cat`/`grep`/`find`/`sed`/`git show` inside the container. Never run installs, builds, tests, or the reproduction — not in the container, and not on the host. Only the reproduce-verifier executes anything.
-
-REQUIRED — open your report with the three proof-of-work lines exactly as the charter's "Proof of work" section specifies, with <EVIDENCE_FILE> as the file the line number refers to. This applies to an endorsement verdict exactly as to a finding: a `*_SOUND` report that does not verify is recorded as failed, not folded into Strengths.
+<ONLY IF Step 4 set $HAS_PRIOR_CONTEXT=true, ADD:>
+Also read `/tmp/pr-<NUMBER>.review-context.md`. It records the caller's one-time check of open and fixed items. Carry those statuses forward; revisit an item only when your own evidence contradicts it.
 
 Follow your standard workflow and return the structured report.
 """
 )
 ```
 
-Capture the output as `$PERF_REPORT` and fold it into the review body as `### Performance analysis`, directly below `### Approach analysis`. Verdict influence (Step 7):
+Capture the output as `$SECURITY_REPORT` and fold it into the review body as `### Security review`. Verdict influence (Step 7):
 
-- `PERFORMANCE_REGRESSION` — counts as a critical finding (slower commands for real workspaces, or unbounded memory growth).
-- `PERFORMANCE_CONCERN` — counts as an important finding, with the cheaper shape as the ask.
-- `PERFORMANCE_SOUND` — fold the endorsement into **Strengths** as a one-liner; no finding.
-
-## Step 5a.3: Run the security-analyzer agent
-
-In parallel with Step 5, dispatch the `security-analyzer` agent — it answers "can untrusted data reach a dangerous sink through this change?" (command injection, zip-slip/path traversal, prototype pollution, SSRF, credential leakage):
-
-```
-Agent(
-  subagent_type="security-analyzer",
-  description="Analyze PR <NUMBER> for security vulnerabilities",
-  prompt="""
-Analyze PR <NUMBER> in nrwl/nx for injection-class vulnerabilities and data exposure.
-
-Inputs:
-- PR_NUMBER: <NUMBER>
-- CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this sandbox container; base ref at /work/base)
-- REVIEW TARGET: <EVIDENCE_FILE>  (host file — read it with Read; this is what you review)
-- FULL DIFF (reference only, and only when REVIEW TARGET is the incremental diff): /tmp/pr-<NUMBER>.diff
-- CHARTER: /tmp/pr-<NUMBER>.review-charter.md  (host file — sandbox protocol, pre-installed analysis toolchain, established measurements, severity policy, calibrations)
-- BASE_REF: <BASE_REF_NAME>  (checked out at /work/base in the same container — read base state there)
-
-Read /tmp/pr-<NUMBER>.review-charter.md (a host file) first — it carries the mandatory sandbox reading protocol. The PR source is NOT on the host; reach it only via `docker exec nx-review-pr-<NUMBER> cat/grep/find/sed /work/nx/…`.
-
-You are READ-ONLY. Use only `cat`/`grep`/`find`/`sed`/`git show` inside the container. Never run installs, builds, tests, or the reproduction — not in the container, and not on the host. Only the reproduce-verifier executes anything.
-
-REQUIRED — open your report with the three proof-of-work lines exactly as the charter's "Proof of work" section specifies, with <EVIDENCE_FILE> as the file the line number refers to. This applies to an endorsement verdict exactly as to a finding: a `*_SOUND` report that does not verify is recorded as failed, not folded into Strengths.
-
-Follow your standard workflow and return the structured report.
-"""
-)
-```
-
-Capture the output as `$SECURITY_REPORT` and fold it into the review body as `### Security analysis`, directly below `### Performance analysis`. Verdict influence (Step 7):
-
-- `SECURITY_VULNERABILITY` — counts as a critical finding (complete untrusted-source-to-sink chain in a default setup).
-- `SECURITY_CONCERN` — counts as an important finding, with the traced chain as the evidence.
+- `SECURITY_VULNERABILITY` — counts as a critical finding.
+- `SECURITY_CONCERN` — counts as an important finding.
 - `SECURITY_SOUND` — fold the endorsement into **Strengths** as a one-liner; no finding.
-
-## Step 5a.4: Run the docs-reviewer agent
-
-In parallel with Step 5, dispatch the `docs-reviewer` agent — it answers two questions: "does this change need docs updates it doesn't have?" (every diff — a code change that alters user-facing behavior can leave prose pages stale without touching a docs file) and, when the diff touches docs content, "do the changed docs comply with the rules this repo committed to?" (`astro-docs/STYLE_GUIDE.md`, the docs instructions in `CLAUDE.md`) plus the structural hazards around them (missing redirects for moved/renamed/deleted pages, sidebar-label-coupled routes, Markdoc that breaks parsing):
-
-```
-Agent(
-  subagent_type="docs-reviewer",
-  description="Review PR <NUMBER> docs coverage and compliance",
-  prompt="""
-Review PR <NUMBER> in nrwl/nx for docs coverage (does the change leave prose docs stale or missing?) and, where the diff changes docs content, for compliance with the repo's committed docs rules and structural integrity.
-
-Inputs:
-- PR_NUMBER: <NUMBER>
-- CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this sandbox container; base ref at /work/base)
-- REVIEW TARGET: <EVIDENCE_FILE>  (host file — read it with Read; this is what you review)
-- FULL DIFF (reference only, and only when REVIEW TARGET is the incremental diff): /tmp/pr-<NUMBER>.diff
-- CHARTER: /tmp/pr-<NUMBER>.review-charter.md  (host file — sandbox protocol, pre-installed analysis toolchain, established measurements, severity policy, calibrations)
-- BASE_REF: <BASE_REF_NAME>  (checked out at /work/base in the same container — read base state there)
-
-Read /tmp/pr-<NUMBER>.review-charter.md (a host file) first — it carries the mandatory sandbox reading protocol. The PR source is NOT on the host; reach it only via `docker exec nx-review-pr-<NUMBER> cat/grep/find/sed /work/nx/…`. Read the rules you enforce from the checkout itself (/work/nx/astro-docs/STYLE_GUIDE.md and the docs sections of /work/nx/CLAUDE.md), never from memory.
-
-You are READ-ONLY. Use only `cat`/`grep`/`find`/`sed`/`git show` inside the container. Never run installs, builds, tests, Vale, or the reproduction — not in the container, and not on the host. Only the reproduce-verifier executes anything.
-
-REQUIRED — open your report with the three proof-of-work lines exactly as the charter's "Proof of work" section specifies, with <EVIDENCE_FILE> as the file the line number refers to. This applies to an endorsement verdict exactly as to a finding: a `*_SOUND` report that does not verify is recorded as failed, not folded into Strengths.
-
-ALSO REQUIRED — emit the `TIERS: findings=<n> suggestions=<n>` line your own contract specifies, as a fourth plain-text line immediately after those three. Emit it on every report including `DOCS_SOUND` (`findings=0`). This is docs-specific and additional to the universal three-line block, not a replacement for it.
-
-Follow your standard workflow and return the structured report.
-"""
-)
-```
-
-Capture the output as `$DOCS_REPORT` and fold it into the review body as `### Docs review`, directly below `### Security analysis` (or below `### Performance analysis` when security was skipped). Verdict influence (Step 7):
-
-- `DOCS_BROKEN` — counts as a critical finding (reader-facing breakage: missing redirect, orphaned page, parse-breaking Markdoc).
-- `DOCS_CONCERN` — counts as an important finding, with the committed rule quoted as the evidence.
-- `DOCS_UPDATE_NEEDED` — counts as an important finding, with the named stale/missing page(s) as the ask.
-- `DOCS_SOUND` — fold the endorsement into **Strengths** as a one-liner; no finding.
-
-Harmful-guidance calls are deliberately NOT the agent's: editorial direction stays with you at trim time ("Docs direction" above), rated Important there.
-
-The agent's Suggestions tier (voice/positioning polish) merges into the draft's `### Suggestions` section under the same 5-bullet cap as everything else — it never influences the verdict.
 
 ## Step 5a.5: Run the reproduce-verifier agent
 
-In parallel with Step 5, dispatch the `reproduce-verifier` agent to ground the review in the reported bug.
+Dispatch `reproduce-verifier` only when `verification-reviewer` returns `REPRO_CANDIDATE`. It executes the candidate repro; static ticket grounding already belongs to verification.
 
 The verifier runs in the **same** container as the review — one sandbox per PR holds everything. Both checkouts it needs already exist from Step 3: HEAD at `/work/nx` and the base ref at `/work/base`. The verifier works against `/work/base` for its baseline and never rewrites `/work/nx`, so the read-only review agents keep reading HEAD undisturbed.
 
@@ -1378,7 +1276,7 @@ Most `nrwl/nx` work is driven from a Polygraph session whose description is the 
 
 ### Why after, never before
 
-The `alternative-approach`, `security-analyzer` and `performance-analyzer` agents are valuable precisely because they arrive uninformed. An agent that reads "we considered that alternative and rejected it because X" stops independently designing X; one that reads "we staged this cross-uid and it holds" is markedly less likely to go stage it. Their independence is the product, and it is unrecoverable once spent — so the record stays sealed until there is nothing left for it to bias.
+The `alternative-approach` reviewer is valuable precisely because it arrives uninformed. Reading the author's rationale first would bias its independent design critique, so the record stays sealed until there is nothing left for it to bias.
 
 It is the exam-marking order: sit the paper, then open the answer key. Opening it first tells you nothing about what the candidate knew.
 
@@ -1438,7 +1336,7 @@ The adjusted text becomes the final `$REVIEW_BODY`.
 
 Check in this order (first match wins):
 
-- **Any agent recorded as failed** in Step 5 / 5a / 5a.2 / 5a.3 / 5a.4 / 5a.5 (EVIDENCE line unverifiable after a retry, or the agent errored out) → `verdict: failed`. This outranks everything below deliberately: a review missing one or more dimensions is not a clean review, and a `failed` verdict is the only value Step 2's dedup will let you re-review at the same commit. Name the failed agents in `## Failures`. Do **not** reason "the other agents found nothing, so it's fine" — the whole point is that you cannot know what the missing agent would have found. An agent deliberately **not dispatched** under "Scoping which agents spawn" does not trigger this — that is a recorded scope decision, not a dimension that silently went missing.
+- **Any reviewer recorded as failed** (EVIDENCE line unverifiable after a retry, or the reviewer errored) → `verdict: failed`. This outranks everything below: a review missing a standing dimension is not clean. Name failed reviewers in `## Failures`.
 - Close-without-merge check emitted "Likely superseded" with strong evidence (see Step 4.5) → `verdict: superseded`
 - Close-without-merge check emitted "Likely unnecessary" with strong evidence (see Step 4.5) → `verdict: unnecessary`
 - Has any **Still concerning** or **New concerns** items rated critical → `verdict: needs-changes`

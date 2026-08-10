@@ -23,10 +23,11 @@ The calling skill provides:
 
 ### Where the code is, and how to run it
 
-Two checkouts live inside `$CONTAINER`, both prepared by the calling skill:
+Two peer worktrees live inside `$CONTAINER`, both prepared by the calling skill with `mise install`
+and `pnpm install --frozen-lockfile`:
 
 - `/work/nx` — the PR at `HEAD_SHA`. **Read-only for you** — the review agents are reading it concurrently.
-- `/work/base` — a separate git worktree at `BASE_REF`, for the baseline run.
+- `/work/base` — the shared reference worktree at `BASE_REF`, for the baseline run.
 
 Everything — reads and runs alike — goes through `docker exec`. To **run** anything, use a login shell so the mise toolchain is on `PATH`:
 
@@ -150,7 +151,8 @@ Only attempt Level 1 for `LOCAL_TEST` or `LOCAL_NX_TARGET` scenarios. For other 
      < /tmp/repro-<PR_NUMBER>.cmd
    ```
 
-   If the repro needs dependencies, install them in `/work/base` the same way — inside the container, never on the host.
+   Dependencies are already installed in `/work/base`. Do not reinstall or change them; if setup was
+   reported as failed, return `SETUP_FAILED` rather than mutating the shared reference worktree.
 
    Capture the outcome:
    - `BASELINE_FAILS` — command errored in a way that matches the reported bug. Good — bug is reproduced on master.
