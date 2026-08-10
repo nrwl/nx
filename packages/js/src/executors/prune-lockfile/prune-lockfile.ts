@@ -13,7 +13,6 @@ import {
   dropEmptyPeerDependencySections,
   generatePrunedDeployOutput,
   getCatalogManager,
-  getLockFileName,
   getWorkspacePackagesFromGraph,
   interpolate,
   movePeerDependencyToDependencies,
@@ -34,31 +33,19 @@ export default async function pruneLockfileExecutor(
   mergeAllowScripts(packageJson);
   const packageManager = detectPackageManager(workspaceRoot);
 
-  if (packageManager === 'bun') {
-    logger.warn(
-      'Bun lockfile generation is not supported. Only package.json will be generated. Run "bun install" in the output directory if needed.'
-    );
-    writeFileSync(
-      join(outputDirectory, 'package.json'),
-      JSON.stringify(packageJson, null, 2)
-    );
-  } else {
-    const { project } = parseTargetString(schema.buildTarget, context);
-    const projectRoot = context.projectGraph.nodes[project].data.root;
-    generatePrunedDeployOutput(packageJson, context.projectGraph, projectRoot, {
-      outputDirectory,
-      packageManager,
-      workspaceRoot,
-    });
-    rewriteWorkspaceModuleSpecifiers(packageJson, context.projectGraph);
-    writeFileSync(
-      join(outputDirectory, 'package.json'),
-      JSON.stringify(packageJson, null, 2)
-    );
-    logger.log(
-      `Lockfile pruned: ${join(outputDirectory, getLockFileName(packageManager))}`
-    );
-  }
+  const { project } = parseTargetString(schema.buildTarget, context);
+  const projectRoot = context.projectGraph.nodes[project].data.root;
+  generatePrunedDeployOutput(packageJson, context.projectGraph, projectRoot, {
+    outputDirectory,
+    packageManager,
+    workspaceRoot,
+  });
+  rewriteWorkspaceModuleSpecifiers(packageJson, context.projectGraph);
+  writeFileSync(
+    join(outputDirectory, 'package.json'),
+    JSON.stringify(packageJson, null, 2)
+  );
+  logger.log(`Pruned deploy output written to ${outputDirectory}`);
 
   return {
     success: true,

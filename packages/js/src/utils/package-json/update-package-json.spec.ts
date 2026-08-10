@@ -792,7 +792,7 @@ describe('updatePackageJson', () => {
     );
   });
 
-  it('generates no deploy output for bun, which has no lockfile generation', () => {
+  it('leaves the bun decision to the deploy output', () => {
     mockGeneratePrunedDeployOutput.mockClear();
     // Reset so a pnpm-lock.yaml written by another test does not skew detection.
     vol.reset();
@@ -811,7 +811,12 @@ describe('updatePackageJson', () => {
     };
     updatePackageJson(options, context, undefined, [], fileMap);
 
-    expect(mockGeneratePrunedDeployOutput).not.toHaveBeenCalled();
+    expect(mockGeneratePrunedDeployOutput).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({ packageManager: 'bun' })
+    );
   });
 
   it('writes the manifest with the relocations the deploy output applied on pnpm', () => {

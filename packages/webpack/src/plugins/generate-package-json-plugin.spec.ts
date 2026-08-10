@@ -38,15 +38,13 @@ describe('GeneratePackageJsonPlugin', () => {
     (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
   });
 
-  function runPlugin(): { emitAsset: jest.Mock; warn: jest.Mock } {
+  function runPlugin(): { emitAsset: jest.Mock } {
     const emitAsset = jest.fn();
-    const warn = jest.fn();
     const compilation = {
       hooks: {
         processAssets: { tap: (_opts: unknown, fn: () => void) => fn() },
       },
       emitAsset,
-      getLogger: () => ({ warn }),
     };
     const compiler = {
       webpack: { Compilation: { PROCESS_ASSETS_STAGE_ADDITIONAL: 100 } },
@@ -65,7 +63,7 @@ describe('GeneratePackageJsonPlugin', () => {
       targetName: 'build',
       projectGraph,
     }).apply(compiler as any);
-    return { emitAsset, warn };
+    return { emitAsset };
   }
 
   it('generates the pruned deploy output into the compilation assets', () => {
@@ -100,14 +98,16 @@ describe('GeneratePackageJsonPlugin', () => {
     ).toBeLessThan(emitAsset.mock.invocationCallOrder[packageJsonEmitIndex]);
   });
 
-  it('generates no deploy output for bun, which has no lockfile generation', () => {
+  it('leaves the bun decision to the deploy output', () => {
     (detectPackageManager as jest.Mock).mockReturnValue('bun');
 
-    const { emitAsset, warn } = runPlugin();
+    const { emitAsset } = runPlugin();
 
-    expect(generatePrunedDeployOutput).not.toHaveBeenCalled();
-    expect(warn).toHaveBeenCalledWith(
-      'Bun lockfile generation is not supported. Only package.json will be generated.'
+    expect(generatePrunedDeployOutput).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({ packageManager: 'bun' })
     );
     expect(emitAsset.mock.calls.map(([name]) => name)).toEqual([
       'package.json',

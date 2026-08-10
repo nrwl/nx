@@ -96,22 +96,16 @@ export default async function buildExecutor(
 
   const packageManager = detectPackageManager(context.root);
   if (options.generateLockfile) {
-    if (packageManager === 'bun') {
-      logger.warn(
-        'Bun lockfile generation is not supported. The generated package.json will not include a lockfile. Run "bun install" in the output directory after deployment if needed.'
-      );
-    } else {
-      generatePrunedDeployOutput(
-        builtPackageJson,
-        context.projectGraph,
-        projectRoot,
-        {
-          outputDirectory: options.outputPath,
-          packageManager,
-          workspaceRoot: context.root,
-        }
-      );
-    }
+    generatePrunedDeployOutput(
+      builtPackageJson,
+      context.projectGraph,
+      projectRoot,
+      {
+        outputDirectory: options.outputPath,
+        packageManager,
+        workspaceRoot: context.root,
+      }
+    );
   }
   writeJsonFile(`${options.outputPath}/package.json`, builtPackageJson);
 

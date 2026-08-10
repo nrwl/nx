@@ -91,22 +91,11 @@ export default async function buildExecutor(
   }
 
   if (options.generateLockfile) {
-    if (packageManager === 'bun') {
-      logger.warn(
-        'Bun lockfile generation is not supported. The generated package.json will not include a lockfile. Run "bun install" in the output directory after deployment if needed.'
-      );
-    } else {
-      generatePrunedDeployOutput(
-        packageJson,
-        context.projectGraph,
-        projectRoot,
-        {
-          outputDirectory: options.outputPath,
-          packageManager,
-          workspaceRoot: context.root,
-        }
-      );
-    }
+    generatePrunedDeployOutput(packageJson, context.projectGraph, projectRoot, {
+      outputDirectory: options.outputPath,
+      packageManager,
+      workspaceRoot: context.root,
+    });
   }
   if (options.generatePackageJson) {
     writeJsonFile(`${options.outputPath}/package.json`, packageJson);

@@ -115,22 +115,16 @@ export function updatePackageJson(
 
   const packageManager = detectPackageManager(context.root);
   if (options.generateLockfile) {
-    if (packageManager === 'bun') {
-      logger.warn(
-        `Bun lockfile generation is unsupported. Remove "generateLockfile" option or set it to false.`
-      );
-    } else {
-      generatePrunedDeployOutput(
-        packageJson,
-        context.projectGraph,
-        options.projectRoot,
-        {
-          outputDirectory: options.outputPath,
-          packageManager,
-          workspaceRoot: context.root,
-        }
-      );
-    }
+    generatePrunedDeployOutput(
+      packageJson,
+      context.projectGraph,
+      options.projectRoot,
+      {
+        outputDirectory: options.outputPath,
+        packageManager,
+        workspaceRoot: context.root,
+      }
+    );
   }
 
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
