@@ -73,7 +73,15 @@ type MigrationDefinition<T> = {
 interface InferenceOptionSet<T> {
   /** Stable id used to keep inference results isolated by option set. */
   id: number;
-  /** Raw mapper output — plugin defaults are never applied to inference sets. */
+  /**
+   * The object handed to the plugin's `createNodes` — the raw
+   * `targetPluginOptionMapper` output. The engine never merges its own
+   * `defaultPluginOptions` into it (that is why `derivePluginFilledDefaults`
+   * skips keys already in the defaults). NOTE: the plugin itself may mutate this
+   * object in place during Phase 1 (e.g. `options.devTargetName ??= 'dev'`);
+   * `derivePluginFilledDefaults` relies on exactly that mutation, so after
+   * Phase 1 this can carry the plugin's own fills too.
+   */
   options: Partial<T>;
   targetNames: Set<string>;
 }
@@ -86,23 +94,17 @@ interface ExecutorScope<T> {
 }
 
 /**
- * The result of Phase 0 (Collect). Built once per plugin from a single pass over
- * `forEachExecutorOptions`, replacing the per-executor scope derivation the
- * migrator used to do internally.
+ * The result of Phase 0 (Collect). Built by folding `forEachExecutorOptions`
+ * over every migration/executor into one scope object, replacing the
+ * per-executor scope derivation the migrator used to do internally.
  */
 export interface MigrationScope<T> {
-  /** target name -> set of projects to migrate that target */
-  targetsToMigrate: Map<string, Set<string>>;
   /** project -> resolved plugin registration options (defaults + mappers) */
   pluginOptionsByProject: Map<string, T>;
-  /** distinct inference option sets (deduped raw `targetPluginOptionMapper` output) */
-  distinctOptionSets: Partial<T>[];
   /** distinct inference option sets paired with the target names they infer */
   optionSetGroups: InferenceOptionSet<T>[];
   /** per (migration, executor) slice used to drive residual computation */
   executorScopes: ExecutorScope<T>[];
-  /** projects excluded by a skipProjectFilter */
-  skipped: Set<string>;
 }
 
 function stableStringify(value: unknown): string {
@@ -139,10 +141,8 @@ export function collectMigrationScope<T>(
   logger?: typeof devkitLogger
 ): MigrationScope<T> {
   const log = logger ?? devkitLogger;
-  const targetsToMigrate = new Map<string, Set<string>>();
   const pluginOptionsByProject = new Map<string, T>();
   const executorScopes: ExecutorScope<T>[] = [];
-  const skipped = new Set<string>();
   const optionSetGroupsByKey = new Map<string, InferenceOptionSet<T>>();
 
   for (const migration of migrations) {
@@ -183,7 +183,6 @@ export function collectMigrationScope<T>(
           );
           if (skipProjectReason) {
             skippedForExecutor.add(projectName);
-            skipped.add(projectName);
             const errorMsg = `The "${projectName}" project cannot be migrated. ${skipProjectReason}`;
             if (specificProjectToMigrate) {
               throw new Error(errorMsg);
@@ -217,14 +216,6 @@ export function collectMigrationScope<T>(
       }
 
       for (const [targetName, projs] of targetAndProjects) {
-        if (!targetsToMigrate.has(targetName)) {
-          targetsToMigrate.set(targetName, new Set());
-        }
-        const globalSet = targetsToMigrate.get(targetName);
-        for (const project of projs) {
-          globalSet.add(project);
-        }
-
         const inferenceOptions = migration.targetPluginOptionMapper(targetName);
         const key = stableStringify(inferenceOptions);
         if (!optionSetGroupsByKey.has(key)) {
@@ -238,12 +229,14 @@ export function collectMigrationScope<T>(
         optionSetGroup.targetNames.add(targetName);
         inferenceOptionSetIdsByTarget.set(targetName, optionSetGroup.id);
 
-        // Invert to per-project registration options, mirroring the previous
-        // `migrateProjects` inversion loop (target-grouped insertion order).
+        // Invert to per-project registration options, reusing the single mapper
+        // call above (target-grouped insertion order). One call keeps the
+        // option-set id and the registration options consistent even if a
+        // mapper were impure.
         for (const project of projs) {
           pluginOptionsByProject.set(project, {
             ...(pluginOptionsByProject.get(project) ?? ({} as T)),
-            ...migration.targetPluginOptionMapper(targetName),
+            ...inferenceOptions,
           } as T);
         }
       }
@@ -265,15 +258,10 @@ export function collectMigrationScope<T>(
     });
   }
 
-  const optionSetGroups = [...optionSetGroupsByKey.values()];
-
   return {
-    targetsToMigrate,
     pluginOptionsByProject,
-    distinctOptionSets: optionSetGroups.map((group) => group.options),
-    optionSetGroups,
+    optionSetGroups: [...optionSetGroupsByKey.values()],
     executorScopes,
-    skipped,
   };
 }
 
@@ -313,13 +301,20 @@ function getFullInferredTarget(
   projectRoot: string,
   targetName: string
 ): TargetConfiguration {
-  const inferredTarget = inferredTargetsByOptionSet
-    .get(optionSetId)
-    ?.get(projectRoot)
-    ?.get(targetName);
-  if (!inferredTarget) {
+  const inferredByRoot = inferredTargetsByOptionSet.get(optionSetId);
+  const inferredTargetsByName = inferredByRoot?.get(projectRoot);
+  if (!inferredTargetsByName) {
     throw new Error(
       `The nx plugin did not find a project inside ${projectRoot}. File an issue at https://github.com/nrwl/nx with information about your project structure.`
+    );
+  }
+  const inferredTarget = inferredTargetsByName.get(targetName);
+  if (!inferredTarget) {
+    // The plugin found the project but did not infer a "${targetName}" target
+    // for it under this option set — the migration and inference disagree on
+    // the target name.
+    throw new Error(
+      `The nx plugin found a project inside ${projectRoot} but did not infer a "${targetName}" target for it. File an issue at https://github.com/nrwl/nx with information about your project structure.`
     );
   }
   return inferredTarget;
@@ -947,9 +942,10 @@ export async function migrateProjectExecutorsToPluginV1<T>(
  * inference per distinct plugin-option set (usually one) instead of once per
  * target and once per project. Builds `inferredTargetsByOptionSet` (option set
  * id -> project root -> target name -> FULL inferred target; residual
- * computation strips `command` / `options.cwd` at the point of use) that every
- * later phase reads from, plus the matched config files owned by an inferred
- * project root (used for analytic include coverage).
+ * computation strips `command` / `options.cwd` at the point of use), which
+ * Phase 2 (`computeResidualByProject`) reads to compute residuals and
+ * `baselineFinal`; plus the matched config files owned by an inferred project
+ * root, which Phase 3's registration step reads for analytic include coverage.
  */
 export async function inferOncePerOptionSet<T>(
   tree: Tree,

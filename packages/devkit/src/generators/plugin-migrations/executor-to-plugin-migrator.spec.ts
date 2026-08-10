@@ -212,16 +212,11 @@ describe('collectMigrationScope (Phase 0)', () => {
       undefined
     );
 
-    // targetsToMigrate: target -> set of projects
-    expect([...scope.targetsToMigrate.keys()].sort()).toEqual([
-      'check',
-      'test',
-    ]);
-    expect([...scope.targetsToMigrate.get('test')].sort()).toEqual([
-      'app1',
-      'app2',
-    ]);
-    expect([...scope.targetsToMigrate.get('check')]).toEqual(['app3']);
+    // per-executor slice: target -> set of projects
+    const targetAndProjects = scope.executorScopes[0].targetAndProjects;
+    expect([...targetAndProjects.keys()].sort()).toEqual(['check', 'test']);
+    expect([...targetAndProjects.get('test')].sort()).toEqual(['app1', 'app2']);
+    expect([...targetAndProjects.get('check')]).toEqual(['app3']);
 
     // pluginOptionsByProject: defaults merged with per-target mapper output
     expect(scope.pluginOptionsByProject.get('app1')).toEqual({
@@ -239,9 +234,12 @@ describe('collectMigrationScope (Phase 0)', () => {
 
     // distinct inference option sets (mapper output, no defaults): one per
     // distinct target-name mapping
-    expect(scope.distinctOptionSets).toHaveLength(2);
-    expect(scope.distinctOptionSets).toContainEqual({ targetName: 'test' });
-    expect(scope.distinctOptionSets).toContainEqual({ targetName: 'check' });
+    const distinctOptionSets = scope.optionSetGroups.map(
+      (group) => group.options
+    );
+    expect(distinctOptionSets).toHaveLength(2);
+    expect(distinctOptionSets).toContainEqual({ targetName: 'test' });
+    expect(distinctOptionSets).toContainEqual({ targetName: 'check' });
   });
 
   it('collapses distinct option sets to one when every project shares a target name', () => {
@@ -271,13 +269,11 @@ describe('collectMigrationScope (Phase 0)', () => {
       undefined
     );
 
-    expect(scope.distinctOptionSets).toHaveLength(1);
-    expect(scope.distinctOptionSets[0]).toEqual({ targetName: 'build' });
-    expect([...scope.targetsToMigrate.get('build')].sort()).toEqual([
-      'app1',
-      'app2',
-      'app3',
-    ]);
+    expect(scope.optionSetGroups).toHaveLength(1);
+    expect(scope.optionSetGroups[0].options).toEqual({ targetName: 'build' });
+    expect(
+      [...scope.executorScopes[0].targetAndProjects.get('build')].sort()
+    ).toEqual(['app1', 'app2', 'app3']);
   });
 
   it('throws (not warns) when a specific project cannot be migrated', () => {
