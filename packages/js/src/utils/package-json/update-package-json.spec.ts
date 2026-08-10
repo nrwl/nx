@@ -13,10 +13,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '@nx/devkit';
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
-import {
-  createPrunedLockfile,
-  writePrunedPnpmInstallSettings,
-} from '@nx/devkit/internal';
+import { generatePrunedDeployOutput } from '@nx/devkit/internal';
 
 jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
@@ -24,19 +21,13 @@ jest.mock('nx/src/utils/workspace-root', () => ({
 
 jest.mock('nx/src/plugins/js/lock-file/lock-file', () => ({
   ...jest.requireActual('nx/src/plugins/js/lock-file/lock-file'),
-  createPrunedLockfile: jest.fn((packageJson) => {
+  generatePrunedDeployOutput: jest.fn((packageJson) => {
     // mimic the real contract: a successful prune strips the manifest's baked
     // pnpm config, and the caller writes the manifest afterwards
     jest
       .requireActual('nx/src/plugins/js/lock-file/pruned-output')
       .stripPrunedLockfilePnpmConfig(packageJson);
-    return { lockFileContent: 'lock-file-content', pruned: true };
   }),
-}));
-
-jest.mock('nx/src/plugins/js/lock-file/pruned-output', () => ({
-  ...jest.requireActual('nx/src/plugins/js/lock-file/pruned-output'),
-  writePrunedPnpmInstallSettings: jest.fn(),
 }));
 
 describe('getUpdatedPackageJsonContent', () => {
@@ -764,13 +755,13 @@ describe('updatePackageJson', () => {
     expect(distPackageJson.pnpm).toBeUndefined();
   });
 
-  const mockWritePrunedPnpmInstallSettings =
-    writePrunedPnpmInstallSettings as jest.MockedFunction<
-      typeof writePrunedPnpmInstallSettings
+  const mockGeneratePrunedDeployOutput =
+    generatePrunedDeployOutput as jest.MockedFunction<
+      typeof generatePrunedDeployOutput
     >;
 
-  it('carries pnpm install settings beside the generated lockfile on pnpm', () => {
-    mockWritePrunedPnpmInstallSettings.mockClear();
+  it('generates the deploy output beside the manifest on pnpm', () => {
+    mockGeneratePrunedDeployOutput.mockClear();
     // Reset so a lockfile written by another test does not skew detection.
     vol.reset();
     const fsJson = {
@@ -789,25 +780,25 @@ describe('updatePackageJson', () => {
     };
     updatePackageJson(options, context, undefined, [], fileMap);
 
-    // pnpm 11 reads build-script approvals only from pnpm-workspace.yaml, so the
-    // executor must re-emit them into the output dir (context.root is the source).
-    // The generated lockfile content is passed through so allowBuilds is scoped
-    // without re-reading it from disk.
-    expect(mockWritePrunedPnpmInstallSettings).toHaveBeenCalledWith(
-      'dist/libs/lib1',
-      '/root',
-      'lock-file-content',
-      { includeLocalPathArtifacts: true }
+    expect(mockGeneratePrunedDeployOutput).toHaveBeenCalledWith(
+      expect.objectContaining({ name: '@org/lib1' }),
+      context.projectGraph,
+      'libs/lib1',
+      {
+        outputDirectory: 'dist/libs/lib1',
+        packageManager: 'pnpm',
+        workspaceRoot: '/root',
+      }
     );
   });
 
-  it('does not carry pnpm install settings for a non-pnpm package manager', () => {
-    mockWritePrunedPnpmInstallSettings.mockClear();
+  it('generates no deploy output for bun, which has no lockfile generation', () => {
+    mockGeneratePrunedDeployOutput.mockClear();
     // Reset so a pnpm-lock.yaml written by another test does not skew detection.
     vol.reset();
     const fsJson = {
       'package.json': JSON.stringify(rootPackageJson, null, 2),
-      'package-lock.json': JSON.stringify({ lockfileVersion: 3 }),
+      'bun.lockb': '',
       'libs/lib1/package.json': JSON.stringify(originalPackageJson, null, 2),
     };
     vol.fromJSON(fsJson, '/root');
@@ -820,15 +811,11 @@ describe('updatePackageJson', () => {
     };
     updatePackageJson(options, context, undefined, [], fileMap);
 
-    expect(mockWritePrunedPnpmInstallSettings).not.toHaveBeenCalled();
+    expect(mockGeneratePrunedDeployOutput).not.toHaveBeenCalled();
   });
 
-  const mockCreatePrunedLockfile = createPrunedLockfile as jest.MockedFunction<
-    typeof createPrunedLockfile
-  >;
-
-  it('writes the manifest with the relocations createPrunedLockfile applied on pnpm', () => {
-    mockCreatePrunedLockfile.mockClear();
+  it('writes the manifest with the relocations the deploy output applied on pnpm', () => {
+    mockGeneratePrunedDeployOutput.mockClear();
     vol.reset();
     const fsJson = {
       'package.json': JSON.stringify(rootPackageJson, null, 2),
@@ -846,11 +833,10 @@ describe('updatePackageJson', () => {
       ),
     };
     vol.fromJSON(fsJson, '/root');
-    // createPrunedLockfile relocates local-path specifiers in the manifest; the
+    // The deploy output relocates local-path specifiers in the manifest; the
     // manifest must be written after that mutation lands.
-    mockCreatePrunedLockfile.mockImplementationOnce((manifest) => {
+    mockGeneratePrunedDeployOutput.mockImplementationOnce((manifest) => {
       manifest.dependencies.vendored = 'link:local_path_modules/vendor/thing';
-      return { lockFileContent: 'lock-file-content', pruned: true };
     });
     const options: UpdatePackageJsonOption = {
       outputPath: 'dist/libs/lib1',
@@ -860,51 +846,11 @@ describe('updatePackageJson', () => {
     };
     updatePackageJson(options, context, undefined, [], fileMap);
 
-    expect(mockCreatePrunedLockfile).toHaveBeenCalledWith(
-      expect.objectContaining({ name: '@org/lib1' }),
-      context.projectGraph,
-      'libs/lib1',
-      '/root',
-      'pnpm'
-    );
     const distPackageJson = JSON.parse(
       vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
     );
     expect(distPackageJson.dependencies.vendored).toBe(
       'link:local_path_modules/vendor/thing'
-    );
-  });
-
-  it('ships the root-lockfile fallback without its local-path artifacts', () => {
-    mockWritePrunedPnpmInstallSettings.mockClear();
-    mockCreatePrunedLockfile.mockClear();
-    vol.reset();
-    const fsJson = {
-      'package.json': JSON.stringify(rootPackageJson, null, 2),
-      'pnpm-lock.yaml': `lockfileVersion: '9.0'\n`,
-      'libs/lib1/package.json': JSON.stringify(originalPackageJson, null, 2),
-    };
-    vol.fromJSON(fsJson, '/root');
-    mockCreatePrunedLockfile.mockReturnValueOnce({
-      lockFileContent: 'root-lock-content',
-      pruned: false,
-    });
-    const options: UpdatePackageJsonOption = {
-      outputPath: 'dist/libs/lib1',
-      projectRoot: 'libs/lib1',
-      main: 'libs/lib1/main.ts',
-      updateBuildableProjectDepsInPackageJson: true,
-      generateLockfile: true,
-    };
-    updatePackageJson(options, context, undefined, [], fileMap);
-
-    // The fallback root lockfile references the whole workspace's sources, so
-    // its local-path trees must not ship into the output.
-    expect(mockWritePrunedPnpmInstallSettings).toHaveBeenCalledWith(
-      'dist/libs/lib1',
-      '/root',
-      'root-lock-content',
-      { includeLocalPathArtifacts: false }
     );
   });
 });

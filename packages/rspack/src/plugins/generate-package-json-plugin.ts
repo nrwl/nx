@@ -7,10 +7,8 @@ import {
 import {
   HelperDependency,
   createPackageJson,
-  createPrunedLockfile,
-  emitPrunedPnpmInstallAssets,
+  generatePrunedDeployOutput,
   getHelperDependenciesFromProjectGraph,
-  getLockFileName,
   readTsConfig,
 } from '@nx/js';
 import type { Compiler, RspackPluginInstance } from '@rspack/core';
@@ -79,30 +77,20 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
                 'Bun lockfile generation is not supported. Only package.json will be generated.'
               );
           } else {
-            const { lockFileContent, pruned } = createPrunedLockfile(
+            generatePrunedDeployOutput(
               packageJson,
               this.projectGraph,
               this.projectGraph.nodes[this.context.projectName].data.root,
-              this.context.root,
-              packageManager
-            );
-            compilation.emitAsset(
-              getLockFileName(packageManager),
-              new sources.RawSource(lockFileContent)
-            );
-            if (packageManager === 'pnpm') {
-              emitPrunedPnpmInstallAssets(
-                this.context.root,
-                lockFileContent,
-                packageJson,
-                (assetPath, content) =>
+              {
+                emit: (assetPath, content) =>
                   compilation.emitAsset(
                     assetPath,
                     new sources.RawSource(content)
                   ),
-                { includeLocalPathArtifacts: pruned }
-              );
-            }
+                packageManager,
+                workspaceRoot: this.context.root,
+              }
+            );
           }
 
           compilation.emitAsset(

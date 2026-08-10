@@ -1,13 +1,8 @@
 import type { ExecutorContext } from '@nx/devkit';
 import { detectPackageManager, readJsonFile, writeJsonFile } from '@nx/devkit';
-import {
-  createPackageJson,
-  createPrunedLockfile,
-  getLockFileName,
-  writePrunedPnpmInstallSettings,
-} from '@nx/js';
+import { createPackageJson, generatePrunedDeployOutput } from '@nx/js';
 import { fork } from 'child_process';
-import { existsSync, writeFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 
 import buildExecutor from './build.impl';
 import type { NextBuildBuilderOptions } from '../../utils/types';
@@ -41,7 +36,6 @@ jest.mock('node:fs', () => ({
   ...jest.requireActual('node:fs'),
   cpSync: jest.fn(),
   existsSync: jest.fn(() => false),
-  writeFileSync: jest.fn(),
 }));
 
 jest.mock('node:fs/promises', () => ({
@@ -59,9 +53,7 @@ jest.mock('@nx/devkit', () => ({
 jest.mock('@nx/js', () => ({
   ...jest.requireActual('@nx/js'),
   createPackageJson: jest.fn(),
-  createPrunedLockfile: jest.fn(),
-  getLockFileName: jest.fn(() => 'pnpm-lock.yaml'),
-  writePrunedPnpmInstallSettings: jest.fn(),
+  generatePrunedDeployOutput: jest.fn(),
 }));
 
 // The build's child process is forked; exit fires async so the executor's
@@ -114,89 +106,48 @@ describe('next build executor lockfile wiring', () => {
     jest.clearAllMocks();
     manifest = { name: 'my-app', version: '1.0.0' };
     (createPackageJson as jest.Mock).mockReturnValue(manifest);
-    (createPrunedLockfile as jest.Mock).mockReturnValue({
-      lockFileContent: 'pruned-lock',
-      pruned: true,
-    });
-    (getLockFileName as jest.Mock).mockReturnValue('pnpm-lock.yaml');
     (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
     (existsSync as jest.Mock).mockReturnValue(false);
     (readJsonFile as jest.Mock).mockReturnValue({});
     (fork as jest.Mock).mockImplementation(() => createFakeChildProcess());
   });
 
-  it('creates the pruned pnpm lockfile before the manifest is written', async () => {
+  it('generates the pruned deploy output before the manifest is written', async () => {
     const result = await buildExecutor(options, context);
 
     expect(result).toEqual({ success: true });
-    expect(createPrunedLockfile).toHaveBeenCalledWith(
+    expect(generatePrunedDeployOutput).toHaveBeenCalledWith(
       manifest,
       context.projectGraph,
       'apps/my-app',
-      '/root',
-      'pnpm'
+      {
+        outputDirectory: 'apps/my-app',
+        packageManager: 'pnpm',
+        workspaceRoot: '/root',
+      }
     );
-    // createPrunedLockfile relocates the manifest's local-path specifiers, so
-    // the manifest must be written after it.
+    // The deploy output rewrites the manifest's local-path specifiers, so the
+    // manifest must be written after it.
     expect(
-      (createPrunedLockfile as jest.Mock).mock.invocationCallOrder[0]
+      (generatePrunedDeployOutput as jest.Mock).mock.invocationCallOrder[0]
     ).toBeLessThan((writeJsonFile as jest.Mock).mock.invocationCallOrder[0]);
-    expect(writeFileSync).toHaveBeenCalledWith(
-      'apps/my-app/pnpm-lock.yaml',
-      'pruned-lock',
-      { encoding: 'utf-8' }
-    );
-    expect(writePrunedPnpmInstallSettings).toHaveBeenCalledWith(
-      'apps/my-app',
-      '/root',
-      'pruned-lock',
-      { includeLocalPathArtifacts: true }
-    );
   });
 
-  it('ships the root-lockfile fallback without its local-path artifacts', async () => {
-    (createPrunedLockfile as jest.Mock).mockReturnValue({
-      lockFileContent: 'root-lock',
-      pruned: false,
-    });
+  it('generates no deploy output for bun, which has no lockfile generation', async () => {
+    (detectPackageManager as jest.Mock).mockReturnValue('bun');
 
     await buildExecutor(options, context);
 
-    expect(writeFileSync).toHaveBeenCalledWith(
-      'apps/my-app/pnpm-lock.yaml',
-      'root-lock',
-      { encoding: 'utf-8' }
-    );
-    expect(writePrunedPnpmInstallSettings).toHaveBeenCalledWith(
-      'apps/my-app',
-      '/root',
-      'root-lock',
-      { includeLocalPathArtifacts: false }
+    expect(generatePrunedDeployOutput).not.toHaveBeenCalled();
+    expect(writeJsonFile).toHaveBeenCalledWith(
+      'apps/my-app/package.json',
+      manifest
     );
   });
 
-  it('writes no pnpm install settings for a non-pnpm package manager', async () => {
-    (detectPackageManager as jest.Mock).mockReturnValue('npm');
-    (getLockFileName as jest.Mock).mockReturnValue('package-lock.json');
-    (createPrunedLockfile as jest.Mock).mockReturnValue({
-      lockFileContent: 'npm-lock',
-      pruned: true,
-    });
+  it('generates no deploy output when generateLockfile is off', async () => {
+    await buildExecutor({ ...options, generateLockfile: false }, context);
 
-    await buildExecutor(options, context);
-
-    expect(createPrunedLockfile).toHaveBeenCalledWith(
-      manifest,
-      context.projectGraph,
-      'apps/my-app',
-      '/root',
-      'npm'
-    );
-    expect(writeFileSync).toHaveBeenCalledWith(
-      'apps/my-app/package-lock.json',
-      'npm-lock',
-      { encoding: 'utf-8' }
-    );
-    expect(writePrunedPnpmInstallSettings).not.toHaveBeenCalled();
+    expect(generatePrunedDeployOutput).not.toHaveBeenCalled();
   });
 });

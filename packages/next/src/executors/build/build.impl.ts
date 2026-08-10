@@ -6,14 +6,9 @@ import {
   workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
-import {
-  createPackageJson,
-  createPrunedLockfile,
-  getLockFileName,
-  writePrunedPnpmInstallSettings,
-} from '@nx/js';
+import { createPackageJson, generatePrunedDeployOutput } from '@nx/js';
 import { join, resolve as pathResolve } from 'path';
-import { cpSync, existsSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import { gte } from 'semver';
 
@@ -100,41 +95,25 @@ export default async function buildExecutor(
   updatePackageJson(builtPackageJson, context);
 
   const packageManager = detectPackageManager(context.root);
-  let prunedLockfile: ReturnType<typeof createPrunedLockfile> | undefined;
-  if (options.generateLockfile && packageManager !== 'bun') {
-    prunedLockfile = createPrunedLockfile(
-      builtPackageJson,
-      context.projectGraph,
-      projectRoot,
-      context.root,
-      packageManager
-    );
-  }
-  writeJsonFile(`${options.outputPath}/package.json`, builtPackageJson);
-
   if (options.generateLockfile) {
     if (packageManager === 'bun') {
       logger.warn(
         'Bun lockfile generation is not supported. The generated package.json will not include a lockfile. Run "bun install" in the output directory after deployment if needed.'
       );
     } else {
-      writeFileSync(
-        `${options.outputPath}/${getLockFileName(packageManager)}`,
-        prunedLockfile.lockFileContent,
+      generatePrunedDeployOutput(
+        builtPackageJson,
+        context.projectGraph,
+        projectRoot,
         {
-          encoding: 'utf-8',
+          outputDirectory: options.outputPath,
+          packageManager,
+          workspaceRoot: context.root,
         }
       );
-      if (packageManager === 'pnpm') {
-        writePrunedPnpmInstallSettings(
-          options.outputPath,
-          context.root,
-          prunedLockfile.lockFileContent,
-          { includeLocalPathArtifacts: prunedLockfile.pruned }
-        );
-      }
     }
   }
+  writeJsonFile(`${options.outputPath}/package.json`, builtPackageJson);
 
   // If output path is different from source path, then copy over the config and public files.
   // This is the default behavior when running `nx build <app>`.

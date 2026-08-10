@@ -5,8 +5,20 @@ jest.mock('@nx/devkit', () => ({
   detectPackageManager: jest.fn(),
 }));
 
+// Pruning reads the lockfile of the workspace nx itself runs in, which is not
+// the temp fixture below; stub the pruning step so the fixture's own lockfile
+// content drives the artifacts.
+jest.mock('nx/src/plugins/js/lock-file/project-graph-pruning', () => ({
+  ...jest.requireActual('nx/src/plugins/js/lock-file/project-graph-pruning'),
+  pruneProjectGraph: jest.fn((graph) => graph),
+}));
+jest.mock('nx/src/plugins/js/lock-file/pnpm-parser', () => ({
+  ...jest.requireActual('nx/src/plugins/js/lock-file/pnpm-parser'),
+  stringifyPnpmLockfile: jest.fn(),
+}));
+
 import { detectPackageManager } from '@nx/devkit';
-import { writePrunedPnpmInstallSettings } from '@nx/devkit/internal';
+import { generatePrunedDeployOutput } from '@nx/devkit/internal';
 import {
   mkdirSync,
   mkdtempSync,
@@ -64,10 +76,9 @@ describe('getPruneTargets', () => {
 
   // The prune-lockfile executor ships non-workspace local-path deps (a file:
   // tarball/directory or a link: target) into the output under
-  // local_path_modules/ via writePrunedPnpmInstallSettings. Those destinations
-  // must be covered by a declared prune-lockfile output, or a cache replay on a
-  // fresh machine restores only the declared files and the pruned deploy loses
-  // the vendored dependency.
+  // local_path_modules/. Those destinations must be covered by a declared
+  // prune-lockfile output, or a cache replay on a fresh machine restores only
+  // the declared files and the pruned deploy loses the vendored dependency.
   it('declares outputs covering the local-path artifacts the prune-lockfile executor writes', () => {
     (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
 
@@ -76,6 +87,10 @@ describe('getPruneTargets', () => {
       const outputPath = 'dist/my-app';
       const outputDir = join(workspaceRoot, outputPath);
       mkdirSync(outputDir, { recursive: true });
+      writeFileSync(
+        join(workspaceRoot, 'package.json'),
+        JSON.stringify({ name: 'root', packageManager: 'pnpm@11.2.2' })
+      );
 
       // A vendored file: directory dependency outside the pnpm workspace glob.
       // Its source lives at its original workspace path; the pruned lockfile
@@ -89,19 +104,27 @@ describe('getPruneTargets', () => {
         join(workspaceRoot, 'vendor/dir/index.js'),
         'module.exports = {};'
       );
-      const prunedLockfile = [
-        "lockfileVersion: '9.0'",
-        '',
-        'packages:',
-        '',
-        '  dir-dep@file:local_path_modules/vendor/dir:',
-        '    resolution: {directory: local_path_modules/vendor/dir, type: directory}',
-        '',
-      ].join('\n');
+      const { stringifyPnpmLockfile } = jest.requireMock(
+        'nx/src/plugins/js/lock-file/pnpm-parser'
+      );
+      stringifyPnpmLockfile.mockReturnValue(
+        [
+          "lockfileVersion: '9.0'",
+          '',
+          'packages:',
+          '',
+          '  dir-dep@file:local_path_modules/vendor/dir:',
+          '    resolution: {directory: local_path_modules/vendor/dir, type: directory}',
+          '',
+        ].join('\n')
+      );
 
-      writePrunedPnpmInstallSettings(outputDir, workspaceRoot, prunedLockfile, {
-        includeLocalPathArtifacts: true,
-      });
+      generatePrunedDeployOutput(
+        { name: 'my-app', version: '1.0.0' },
+        { nodes: {}, dependencies: {}, externalNodes: {} },
+        'apps/my-app',
+        { outputDirectory: outputDir, packageManager: 'pnpm', workspaceRoot }
+      );
 
       const declaredOutputs = getPruneTargets('build', outputPath)[
         'prune-lockfile'
@@ -122,6 +145,11 @@ describe('getPruneTargets', () => {
       };
       collect(outputDir);
 
+      // The vendored tree is what the declared outputs have to cover, so the
+      // check is only meaningful once it has actually shipped.
+      expect(writtenFiles).toContain(
+        `${outputPath}/local_path_modules/vendor/dir/index.js`
+      );
       const uncovered = writtenFiles.filter(
         (file) => !coveredByDeclaredOutput(file, declaredOutputs)
       );

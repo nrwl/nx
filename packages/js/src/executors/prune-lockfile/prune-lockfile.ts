@@ -10,8 +10,8 @@ import {
 import { existsSync, lstatSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import {
-  createPrunedLockfile,
   dropEmptyPeerDependencySections,
+  generatePrunedDeployOutput,
   getCatalogManager,
   getLockFileName,
   getWorkspacePackagesFromGraph,
@@ -19,7 +19,6 @@ import {
   movePeerDependencyToDependencies,
   type PackageJson,
   type PackageJsonDependencySection,
-  writePrunedPnpmInstallSettings,
 } from '@nx/devkit/internal';
 import { type PruneLockfileOptions } from './schema';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
@@ -46,32 +45,19 @@ export default async function pruneLockfileExecutor(
   } else {
     const { project } = parseTargetString(schema.buildTarget, context);
     const projectRoot = context.projectGraph.nodes[project].data.root;
-    const { lockFileContent, pruned } = createPrunedLockfile(
-      packageJson,
-      context.projectGraph,
-      projectRoot,
-      workspaceRoot,
-      packageManager
-    );
-    rewriteWorkspaceModuleSpecifiers(packageJson, context.projectGraph);
-    const lockfileOutputPath = join(
+    generatePrunedDeployOutput(packageJson, context.projectGraph, projectRoot, {
       outputDirectory,
-      getLockFileName(packageManager)
-    );
-    writeFileSync(lockfileOutputPath, lockFileContent);
+      packageManager,
+      workspaceRoot,
+    });
+    rewriteWorkspaceModuleSpecifiers(packageJson, context.projectGraph);
     writeFileSync(
       join(outputDirectory, 'package.json'),
       JSON.stringify(packageJson, null, 2)
     );
-    if (packageManager === 'pnpm') {
-      writePrunedPnpmInstallSettings(
-        outputDirectory,
-        workspaceRoot,
-        lockFileContent,
-        { includeLocalPathArtifacts: pruned }
-      );
-    }
-    logger.log(`Lockfile pruned: ${lockfileOutputPath}`);
+    logger.log(
+      `Lockfile pruned: ${join(outputDirectory, getLockFileName(packageManager))}`
+    );
   }
 
   return {

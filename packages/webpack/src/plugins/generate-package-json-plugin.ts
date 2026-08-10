@@ -2,10 +2,8 @@ import * as fs from 'fs';
 import type { Compiler, WebpackPluginInstance } from 'webpack';
 import {
   createPackageJson,
-  createPrunedLockfile,
-  emitPrunedPnpmInstallAssets,
+  generatePrunedDeployOutput,
   getHelperDependenciesFromProjectGraph,
-  getLockFileName,
   HelperDependency,
   readTsConfig,
 } from '@nx/js';
@@ -105,31 +103,21 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
                 'Bun lockfile generation is not supported. Only package.json will be generated.'
               );
           } else {
-            const { lockFileContent, pruned } = createPrunedLockfile(
+            generatePrunedDeployOutput(
               packageJson,
               this.options.projectGraph,
               this.options.projectGraph.nodes[this.options.projectName].data
                 .root,
-              this.options.root,
-              packageManager
-            );
-            compilation.emitAsset(
-              getLockFileName(packageManager),
-              new sources.RawSource(lockFileContent)
-            );
-            if (packageManager === 'pnpm') {
-              emitPrunedPnpmInstallAssets(
-                this.options.root,
-                lockFileContent,
-                packageJson,
-                (assetPath, content) =>
+              {
+                emit: (assetPath, content) =>
                   compilation.emitAsset(
                     assetPath,
                     new sources.RawSource(content)
                   ),
-                { includeLocalPathArtifacts: pruned }
-              );
-            }
+                packageManager,
+                workspaceRoot: this.options.root,
+              }
+            );
           }
 
           compilation.emitAsset(

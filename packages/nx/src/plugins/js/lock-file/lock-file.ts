@@ -4,8 +4,15 @@
  */
 
 import { execSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { dirname, join } from 'node:path';
 import { gte } from 'semver';
 import {
   ProjectGraph,
@@ -21,6 +28,8 @@ import { output } from '../../../utils/output';
 import { PackageJson } from '../../../utils/package-json';
 import {
   dropInheritedPnpmPatchedDependencies,
+  getPrunedPnpmInstallArtifacts,
+  type PrunedDeployArtifact,
   rewritePrunedLocalPathSpecifiers,
   stripPrunedLockfilePnpmConfig,
   validatePrunedLocalPathClosure,
@@ -307,8 +316,8 @@ export function getLockFilePath(packageManager: PackageManager): string {
  *
  * The lockfile alone does not make a complete pnpm output. A workspace
  * declaring build-script approvals, patches or vendored local paths also needs
- * the artifacts `createPrunedLockfile` and the emitters carry, and this warns
- * when that is the case.
+ * the artifacts `generatePrunedDeployOutput` ships, and this warns when that is
+ * the case.
  *
  * On a pruning error the root lockfile is returned as a fail-open fallback,
  * with the manifest left as authored.
@@ -420,18 +429,14 @@ function buildLockFile(
  * pruning error: the fallback's importer describes the whole workspace, so the
  * manifest mutations are rolled back (the root lockfile matches the manifest as
  * authored: original local-path specifiers, the rest of the pnpm config kept),
- * the closure validation is skipped, and the caller must not ship local-path
- * artifacts for it. Pass `pruned` as `includeLocalPathArtifacts` to
- * `emitPrunedPnpmInstallAssets`/`writePrunedPnpmInstallSettings`, which carry
- * the remaining install-time pieces (the pnpm 11 settings-only
- * pnpm-workspace.yaml, the patch files, the local-path artifacts, and the
- * pnpm <=10 package.json declarations).
+ * the closure validation is skipped, and the remaining install-time pieces must
+ * not ship local-path artifacts for it (see `getPrunedPnpmInstallArtifacts`).
  *
  * Mutates `packageJson` (the pnpm-only specifier relocation and the config
  * strip), so write or emit the manifest after calling this. Not for bun, which
  * has no lockfile generation.
  */
-export function createPrunedLockfile(
+function createPrunedLockfile(
   packageJson: PackageJson,
   graph: ProjectGraph,
   projectRoot: string,
@@ -493,6 +498,96 @@ export function createPrunedLockfile(
   }
   dropInheritedPnpmPatchedDependencies(packageJson);
   return { lockFileContent, pruned };
+}
+
+type PrunedDeploySink =
+  | { outputDirectory: string; emit?: never }
+  | {
+      emit: (path: string, content: string | Buffer) => void;
+      outputDirectory?: never;
+    };
+
+/**
+ * Generates the standalone deploy output a generate-package-json flow ships
+ * alongside its manifest: the pruned lockfile and, for pnpm, the install-time
+ * artifacts that lockfile needs (the settings-only pnpm-workspace.yaml, the
+ * `pnpm patch` files, and the vendored non-workspace local-path dependencies).
+ * `options` carries either an `outputDirectory` to write into or an `emit` sink
+ * for a bundler's asset pipeline, never both.
+ *
+ * Mutates `packageJson` into the form the output must ship (the relocated
+ * local-path specifiers, the pnpm config strip, the pnpm <=10 build settings),
+ * so write or emit the manifest after this returns.
+ *
+ * Not for bun, which has no lockfile generation.
+ */
+export function generatePrunedDeployOutput(
+  packageJson: PackageJson,
+  graph: ProjectGraph,
+  projectRoot: string,
+  options: PrunedDeploySink & {
+    packageManager: Exclude<PackageManager, 'bun'>;
+    workspaceRoot?: string;
+  }
+): void {
+  const workspaceRootPath = options.workspaceRoot ?? workspaceRoot;
+  const { packageManager } = options;
+  const { lockFileContent, pruned } = createPrunedLockfile(
+    packageJson,
+    graph,
+    projectRoot,
+    workspaceRootPath,
+    packageManager
+  );
+  const artifacts: PrunedDeployArtifact[] = [
+    { path: getLockFileName(packageManager), content: lockFileContent },
+  ];
+  let obsolete: string[] = [];
+  if (packageManager === 'pnpm') {
+    const pnpmArtifacts = getPrunedPnpmInstallArtifacts(
+      workspaceRootPath,
+      lockFileContent,
+      packageJson,
+      { includeLocalPathArtifacts: pruned }
+    );
+    artifacts.push(...pnpmArtifacts.artifacts);
+    obsolete = pnpmArtifacts.obsolete;
+  }
+
+  if ('outputDirectory' in options) {
+    const { outputDirectory } = options;
+    // Directory trees flow through here one file at a time, so dedupe the
+    // recursive mkdir per destination directory.
+    const createdDirs = new Set<string>();
+    for (const artifact of artifacts) {
+      const destination = join(outputDirectory, artifact.path);
+      const destinationDir = dirname(destination);
+      if (!createdDirs.has(destinationDir)) {
+        mkdirSync(destinationDir, { recursive: true });
+        createdDirs.add(destinationDir);
+      }
+      if ('sourcePath' in artifact) {
+        copyFileSync(artifact.sourcePath, destination);
+      } else {
+        writeFileSync(destination, artifact.content);
+      }
+    }
+    for (const path of obsolete) {
+      const destination = join(outputDirectory, path);
+      if (existsSync(destination)) {
+        rmSync(destination);
+      }
+    }
+  } else {
+    for (const artifact of artifacts) {
+      options.emit(
+        artifact.path,
+        'sourcePath' in artifact
+          ? readFileSync(artifact.sourcePath)
+          : artifact.content
+      );
+    }
+  }
 }
 
 // generate body lines for error message

@@ -20,11 +20,9 @@ import schema from './schema.json';
 import {
   copyAssets,
   createPackageJson,
-  createPrunedLockfile,
-  getLockFileName,
-  writePrunedPnpmInstallSettings,
+  generatePrunedDeployOutput,
 } from '@nx/js';
-import { existsSync, writeFileSync } from 'fs';
+import { existsSync } from 'fs';
 import { relative, resolve } from 'path';
 import {
   createBuildableTsConfig,
@@ -171,42 +169,26 @@ export async function* viteBuildExecutor(
       builtPackageJson.type ??= 'module';
 
       const packageManager = detectPackageManager(context.root);
-      let prunedLockfile: ReturnType<typeof createPrunedLockfile> | undefined;
-      if (packageManager !== 'bun') {
-        prunedLockfile = createPrunedLockfile(
+      if (packageManager === 'bun') {
+        logger.warn(
+          'Bun lockfile generation is not supported. The generated package.json will not include a lockfile. Run "bun install" in the output directory after deployment if needed.'
+        );
+      } else {
+        generatePrunedDeployOutput(
           builtPackageJson,
           context.projectGraph,
           projectRoot,
-          context.root,
-          packageManager
+          {
+            outputDirectory: outDirRelativeToWorkspaceRoot,
+            packageManager,
+            workspaceRoot: context.root,
+          }
         );
       }
       writeJsonFile(
         `${outDirRelativeToWorkspaceRoot}/package.json`,
         builtPackageJson
       );
-
-      if (packageManager === 'bun') {
-        logger.warn(
-          'Bun lockfile generation is not supported. The generated package.json will not include a lockfile. Run "bun install" in the output directory after deployment if needed.'
-        );
-      } else {
-        writeFileSync(
-          `${outDirRelativeToWorkspaceRoot}/${getLockFileName(packageManager)}`,
-          prunedLockfile.lockFileContent,
-          {
-            encoding: 'utf-8',
-          }
-        );
-        if (packageManager === 'pnpm') {
-          writePrunedPnpmInstallSettings(
-            outDirRelativeToWorkspaceRoot,
-            context.root,
-            prunedLockfile.lockFileContent,
-            { includeLocalPathArtifacts: prunedLockfile.pruned }
-          );
-        }
-      }
     }
     // For buildable libs, copy package.json if it exists.
     else if (

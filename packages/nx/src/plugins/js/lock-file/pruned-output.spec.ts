@@ -17,7 +17,7 @@ import * as pacakgeManager from '../../../utils/package-manager';
 import {
   containLocalPath,
   containShippedLocalFilePaths,
-  emitPrunedPnpmInstallAssets,
+  getPrunedPnpmInstallArtifacts,
   getPrunedPnpmInstallSettingsYaml,
   getPrunedPnpmLocalPathArtifacts,
   getPrunedPnpmPackageJsonBuildSettings,
@@ -28,8 +28,14 @@ import {
   uncontainLocalPath,
   validatePrunedLocalPathClosure,
   warnIncompletePrunedPnpmOutput,
-  writePrunedPnpmInstallSettings,
 } from './pruned-output';
+
+// The install artifacts are produced once and shipped by whichever sink the
+// caller gave `generatePrunedDeployOutput`, so these assert on what it returns.
+const settingsYamlOf = (
+  artifacts: Array<{ path: string; content?: string | Buffer }>
+) => artifacts.find((artifact) => artifact.path === 'pnpm-workspace.yaml');
+const manifest = (): PackageJson => ({ name: 'app', version: '0.0.1' });
 
 describe('normalizePrunedPatchPath', () => {
   it.each([
@@ -190,8 +196,8 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     expect(getPrunedPnpmInstallSettingsYaml(tempDir)).toBeNull();
   });
 
-  it('detects the pnpm version once per workspace root across writes', () => {
-    // The bundler plugins emit once per compilation, and resolving the version
+  it('detects the pnpm version once per workspace root across runs', () => {
+    // The bundler plugins ship once per compilation, and resolving the version
     // re-reads the root manifest and can shell out to `pnpm --version`.
     const workspaceRoot = mkdtempSync(join(tmpdir(), 'nx-pruned-pnpm-memo-'));
     try {
@@ -199,14 +205,12 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
         join(workspaceRoot, 'pnpm-workspace.yaml'),
         'allowBuilds:\n  esbuild: true\n'
       );
-      const outputDir = join(workspaceRoot, 'dist');
-      mkdirSync(outputDir);
       const readVersion = jest
         .spyOn(pacakgeManager, 'getPackageManagerVersion')
         .mockReturnValue('11.2.2');
 
-      writePrunedPnpmInstallSettings(outputDir, workspaceRoot);
-      writePrunedPnpmInstallSettings(outputDir, workspaceRoot);
+      getPrunedPnpmInstallArtifacts(workspaceRoot, undefined, manifest());
+      getPrunedPnpmInstallArtifacts(workspaceRoot, undefined, manifest());
 
       expect(readVersion).toHaveBeenCalledTimes(1);
     } finally {
@@ -224,8 +228,6 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
         join(workspaceRoot, 'pnpm-workspace.yaml'),
         'allowBuilds:\n  esbuild: true\n'
       );
-      const outputDir = join(workspaceRoot, 'dist');
-      mkdirSync(outputDir);
       jest
         .spyOn(pacakgeManager, 'getPackageManagerVersion')
         .mockImplementationOnce(() => {
@@ -233,11 +235,19 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
         })
         .mockReturnValue('11.2.2');
 
-      writePrunedPnpmInstallSettings(outputDir, workspaceRoot);
-      expect(existsSync(join(outputDir, 'pnpm-workspace.yaml'))).toBe(false);
+      const first = getPrunedPnpmInstallArtifacts(
+        workspaceRoot,
+        undefined,
+        manifest()
+      );
+      expect(settingsYamlOf(first.artifacts)).toBeUndefined();
 
-      writePrunedPnpmInstallSettings(outputDir, workspaceRoot);
-      expect(existsSync(join(outputDir, 'pnpm-workspace.yaml'))).toBe(true);
+      const second = getPrunedPnpmInstallArtifacts(
+        workspaceRoot,
+        undefined,
+        manifest()
+      );
+      expect(settingsYamlOf(second.artifacts)).toBeDefined();
     } finally {
       rmSync(workspaceRoot, { recursive: true, force: true });
     }
@@ -252,35 +262,37 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
         join(workspaceRoot, 'pnpm-workspace.yaml'),
         'allowBuilds:\n  esbuild: true\n'
       );
-      const outputDir = join(workspaceRoot, 'dist');
-      mkdirSync(outputDir);
       mockPnpmVersion('10.5.0');
 
-      writePrunedPnpmInstallSettings(outputDir, workspaceRoot);
+      const { artifacts } = getPrunedPnpmInstallArtifacts(
+        workspaceRoot,
+        undefined,
+        manifest()
+      );
 
-      expect(existsSync(join(outputDir, 'pnpm-workspace.yaml'))).toBe(false);
+      expect(settingsYamlOf(artifacts)).toBeUndefined();
     } finally {
       rmSync(workspaceRoot, { recursive: true, force: true });
     }
   });
 
-  it('writes the settings file on pnpm 11', () => {
+  it('ships the settings file on pnpm 11', () => {
     const workspaceRoot = mkdtempSync(join(tmpdir(), 'nx-pruned-pnpm-11-'));
     try {
       writeFileSync(
         join(workspaceRoot, 'pnpm-workspace.yaml'),
         'allowBuilds:\n  esbuild: true\n'
       );
-      const outputDir = join(workspaceRoot, 'dist');
-      mkdirSync(outputDir);
-      const outputFile = join(outputDir, 'pnpm-workspace.yaml');
       mockPnpmVersion('11.2.2');
 
-      writePrunedPnpmInstallSettings(outputDir, workspaceRoot);
+      const { artifacts } = getPrunedPnpmInstallArtifacts(
+        workspaceRoot,
+        undefined,
+        manifest()
+      );
 
-      expect(existsSync(outputFile)).toBe(true);
       const { load } = require('@zkochan/js-yaml');
-      expect(load(readFileSync(outputFile, 'utf-8'))).toEqual({
+      expect(load(settingsYamlOf(artifacts).content)).toEqual({
         packages: [],
         allowBuilds: { esbuild: true },
       });
@@ -461,73 +473,41 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     ).toBeNull();
   });
 
-  it('scopes allowBuilds using the pruned lockfile written to the output dir', () => {
+  it('scopes allowBuilds to the packages the pruned lockfile keeps', () => {
     mockPnpmVersion('11.2.2');
     writeRootWorkspaceYaml(
       'allowBuilds:\n  esbuild: true\n  some-absent-native-dep: true\n'
     );
-    const outputDir = join(tempDir, 'dist');
-    mkdirSync(outputDir);
-    writeFileSync(
-      join(outputDir, 'pnpm-lock.yaml'),
-      prunedLockfileWith('esbuild@0.21.5')
+
+    const { artifacts } = getPrunedPnpmInstallArtifacts(
+      tempDir,
+      prunedLockfileWith('esbuild@0.21.5'),
+      manifest()
     );
 
-    writePrunedPnpmInstallSettings(outputDir, tempDir);
-
     const { load } = require('@zkochan/js-yaml');
-    expect(
-      load(readFileSync(join(outputDir, 'pnpm-workspace.yaml'), 'utf-8'))
-    ).toEqual({ packages: [], allowBuilds: { esbuild: true } });
+    expect(load(settingsYamlOf(artifacts).content)).toEqual({
+      packages: [],
+      allowBuilds: { esbuild: true },
+    });
   });
 
-  it('removes a stale settings file when the pruned output no longer has settings', () => {
+  it('reports the settings file as obsolete when the output no longer has settings', () => {
     mockPnpmVersion('11.2.2');
-    // Root once approved a build script, so a prior deploy wrote settings out.
+    // Root once approved a build script, so a prior deploy shipped settings out.
+    // A cache replay restores only the files the newer entry holds, so that
+    // file lingers unless the sink is told to drop it.
     writeRootWorkspaceYaml('allowBuilds:\n  some-absent-native-dep: true\n');
-    const outputDir = join(tempDir, 'dist');
-    mkdirSync(outputDir);
-    const outputFile = join(outputDir, 'pnpm-workspace.yaml');
-    // Leftover from that earlier deploy (a cache replay restores only the files
-    // the newer entry holds, so an emptied settings set leaves this behind).
-    writeFileSync(outputFile, 'allowBuilds:\n  some-absent-native-dep: true\n');
 
     // The current pruned lockfile approves nothing, so there are no settings.
-    writePrunedPnpmInstallSettings(
-      outputDir,
+    const { artifacts, obsolete } = getPrunedPnpmInstallArtifacts(
       tempDir,
-      prunedLockfileWith('lodash@4.17.21')
+      prunedLockfileWith('lodash@4.17.21'),
+      manifest()
     );
 
-    expect(existsSync(outputFile)).toBe(false);
-  });
-
-  it('prefers passed lockfile content over re-reading it from disk', () => {
-    mockPnpmVersion('11.2.2');
-    writeRootWorkspaceYaml(
-      ['allowBuilds:', '  esbuild: true', "  '@parcel/watcher': true", ''].join(
-        '\n'
-      )
-    );
-    const outputDir = join(tempDir, 'dist');
-    mkdirSync(outputDir);
-    // A stale on-disk lockfile the caller's in-memory content supersedes.
-    writeFileSync(
-      join(outputDir, 'pnpm-lock.yaml'),
-      prunedLockfileWith('esbuild@0.21.5')
-    );
-
-    writePrunedPnpmInstallSettings(
-      outputDir,
-      tempDir,
-      prunedLockfileWith('@parcel/watcher@2.4.1')
-    );
-
-    const { load } = require('@zkochan/js-yaml');
-    // Scoped to the passed content (@parcel/watcher), not the on-disk esbuild.
-    expect(
-      load(readFileSync(join(outputDir, 'pnpm-workspace.yaml'), 'utf-8'))
-    ).toEqual({ packages: [], allowBuilds: { '@parcel/watcher': true } });
+    expect(settingsYamlOf(artifacts)).toBeUndefined();
+    expect(obsolete).toEqual(['pnpm-workspace.yaml']);
   });
 
   // A pruned lockfile carrying a patchedDependencies section (values are the
@@ -917,116 +897,28 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     expect(packageJsonPatchedDependencies).toBeNull();
   });
 
-  it('copies patch files and declares them in package.json on pnpm 10', () => {
-    mockPnpmVersion('10.13.1');
-    writeFileSync(
-      join(tempDir, 'package.json'),
-      JSON.stringify({
-        pnpm: {
-          patchedDependencies: {
-            'is-number@7.0.0': 'patches/is-number@7.0.0.patch',
-          },
-        },
-      })
-    );
-    writeRootPatch('patches/is-number@7.0.0.patch', 'PATCH BODY\n');
-    const outputDir = join(tempDir, 'dist');
-    mkdirSync(outputDir);
-    writeFileSync(
-      join(outputDir, 'package.json'),
-      JSON.stringify({ name: 'app', version: '0.0.1' })
-    );
-
-    writePrunedPnpmInstallSettings(
-      outputDir,
-      tempDir,
-      prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number@7.0.0'])
-    );
-
-    // pnpm 10 reads no pnpm-workspace.yaml
-    expect(existsSync(join(outputDir, 'pnpm-workspace.yaml'))).toBe(false);
-    // the patch file is copied preserving its relative path
-    expect(
-      readFileSync(
-        join(outputDir, 'patches/patches/is-number@7.0.0.patch'),
-        'utf-8'
-      )
-    ).toBe('PATCH BODY\n');
-    // and the declaration lands in the emitted package.json
-    const manifest = JSON.parse(
-      readFileSync(join(outputDir, 'package.json'), 'utf-8')
-    );
-    expect(manifest.pnpm.patchedDependencies).toEqual({
-      'is-number@7.0.0': 'patches/patches/is-number@7.0.0.patch',
-    });
-  });
-
   it('carries patches in the yaml and leaves package.json untouched on pnpm 11', () => {
     mockPnpmVersion('11.2.2');
     writeRootWorkspaceYaml(
       'patchedDependencies:\n  is-number@7.0.0: patches/is-number@7.0.0.patch\n'
     );
-    writeRootPatch('patches/is-number@7.0.0.patch');
-    const outputDir = join(tempDir, 'dist');
-    mkdirSync(outputDir);
-    writeFileSync(
-      join(outputDir, 'package.json'),
-      JSON.stringify({ name: 'app', version: '0.0.1' })
-    );
-
-    writePrunedPnpmInstallSettings(
-      outputDir,
-      tempDir,
-      prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number@7.0.0'])
-    );
-
-    const { load } = require('@zkochan/js-yaml');
-    expect(
-      load(readFileSync(join(outputDir, 'pnpm-workspace.yaml'), 'utf-8'))
-    ).toEqual({
-      packages: [],
-      patchedDependencies: {
-        'is-number@7.0.0': 'patches/patches/is-number@7.0.0.patch',
-      },
-    });
-    expect(
-      existsSync(join(outputDir, 'patches/patches/is-number@7.0.0.patch'))
-    ).toBe(true);
-    // pnpm 11 ignores the package.json pnpm field, so it stays as emitted
-    const manifest = JSON.parse(
-      readFileSync(join(outputDir, 'package.json'), 'utf-8')
-    );
-    expect(manifest.pnpm).toBeUndefined();
-  });
-
-  // emitPrunedPnpmInstallAssets is the sink-based sibling the bundler plugins
-  // (webpack, rspack) use: it emits the same artifacts writePrunedPnpmInstallSettings
-  // writes, but through a caller callback and mutating the in-memory manifest.
-  it('emits the pnpm-workspace.yaml and patch files and leaves package.json untouched on pnpm 11', () => {
-    mockPnpmVersion('11.2.2');
-    writeRootWorkspaceYaml(
-      'patchedDependencies:\n  is-number@7.0.0: patches/is-number@7.0.0.patch\n'
-    );
     writeRootPatch('patches/is-number@7.0.0.patch', 'THE PATCH\n');
-    const packageJson: PackageJson = { name: 'app', version: '0.0.1' };
-    const emitted: Array<{ path: string; content: string | Buffer }> = [];
+    const packageJson = manifest();
 
-    emitPrunedPnpmInstallAssets(
+    const { artifacts } = getPrunedPnpmInstallArtifacts(
       tempDir,
       prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number@7.0.0']),
-      packageJson,
-      (path, content) => emitted.push({ path, content })
+      packageJson
     );
 
     const { load } = require('@zkochan/js-yaml');
-    const yamlAsset = emitted.find((a) => a.path === 'pnpm-workspace.yaml');
-    expect(load(yamlAsset.content)).toEqual({
+    expect(load(settingsYamlOf(artifacts).content)).toEqual({
       packages: [],
       patchedDependencies: {
         'is-number@7.0.0': 'patches/patches/is-number@7.0.0.patch',
       },
     });
-    expect(emitted).toContainEqual({
+    expect(artifacts).toContainEqual({
       path: 'patches/patches/is-number@7.0.0.patch',
       content: 'THE PATCH\n',
     });
@@ -1034,8 +926,8 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     expect(packageJson.pnpm).toBeUndefined();
   });
 
-  it('emits each artifact exactly once', () => {
-    // The sink appends, so a double emit would ship a duplicate asset rather
+  it('returns each artifact exactly once', () => {
+    // A bundler sink appends, so a duplicate would ship a duplicate asset rather
     // than overwrite one, and the bundlers reject a duplicate emit outright.
     // Both producers are given a genuine duplicate to collapse: two patch keys
     // sharing one patch file, and one vendored directory reached as a `file:`
@@ -1052,9 +944,8 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     writeRootPatch('patches/is-number.patch', 'THE PATCH\n');
     mkdirSync(join(tempDir, 'vendor/lib'), { recursive: true });
     writeFileSync(join(tempDir, 'vendor/lib/index.js'), 'REAL');
-    const emit = jest.fn();
 
-    emitPrunedPnpmInstallAssets(
+    const { artifacts } = getPrunedPnpmInstallArtifacts(
       tempDir,
       [
         "lockfileVersion: '9.0'",
@@ -1081,12 +972,11 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
         '  is-number@7.0.1: hash-is-number-1',
         '',
       ].join('\n'),
-      { name: 'app', version: '0.0.1' },
-      emit,
+      manifest(),
       { includeLocalPathArtifacts: true }
     );
 
-    const paths = emit.mock.calls.map(([path]) => path);
+    const paths = artifacts.map(({ path }) => path);
     expect(paths).toEqual([...new Set(paths)]);
     expect(paths).toEqual(
       expect.arrayContaining([
@@ -1097,7 +987,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     );
   });
 
-  it('ships the patch file and folds patchedDependencies into the in-memory manifest on pnpm 10', () => {
+  it('ships the patch file and folds patchedDependencies into the manifest on pnpm 10', () => {
     mockPnpmVersion('10.13.1');
     writeFileSync(
       join(tempDir, 'package.json'),
@@ -1112,21 +1002,18 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     writeRootPatch('patches/is-number@7.0.0.patch', 'THE PATCH\n');
     // an existing pnpm field must survive the fold, not be replaced
     const packageJson: PackageJson = {
-      name: 'app',
-      version: '0.0.1',
+      ...manifest(),
       pnpm: { onlyBuiltDependencies: ['esbuild'] },
     };
-    const emitted: Array<{ path: string; content: string | Buffer }> = [];
 
-    emitPrunedPnpmInstallAssets(
+    const { artifacts } = getPrunedPnpmInstallArtifacts(
       tempDir,
       prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number@7.0.0']),
-      packageJson,
-      (path, content) => emitted.push({ path, content })
+      packageJson
     );
 
-    // pnpm <=10 has no pnpm-workspace.yaml; only the patch file is emitted
-    expect(emitted).toEqual([
+    // pnpm <=10 has no pnpm-workspace.yaml; only the patch file ships
+    expect(artifacts).toEqual([
       { path: 'patches/patches/is-number@7.0.0.patch', content: 'THE PATCH\n' },
     ]);
     expect(packageJson.pnpm).toEqual({
@@ -1137,19 +1024,17 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     });
   });
 
-  it('emits nothing and leaves package.json untouched when there are no pnpm install settings', () => {
+  it('ships nothing and leaves package.json untouched when there are no pnpm install settings', () => {
     mockPnpmVersion('11.2.2');
-    const packageJson: PackageJson = { name: 'app', version: '0.0.1' };
-    const emitted: Array<{ path: string; content: string | Buffer }> = [];
+    const packageJson = manifest();
 
-    emitPrunedPnpmInstallAssets(
+    const { artifacts } = getPrunedPnpmInstallArtifacts(
       tempDir,
       prunedLockfileWith('is-number@7.0.0'),
-      packageJson,
-      (path, content) => emitted.push({ path, content })
+      packageJson
     );
 
-    expect(emitted).toEqual([]);
+    expect(artifacts).toEqual([]);
     expect(packageJson.pnpm).toBeUndefined();
   });
 
@@ -1279,7 +1164,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     ]);
   });
 
-  it('resolves the pnpm version once per write even when shipping patches', () => {
+  it('resolves the pnpm version once per run even when shipping patches', () => {
     const versionSpy = jest
       .spyOn(pacakgeManager, 'getPackageManagerVersion')
       .mockReturnValue('11.2.2');
@@ -1287,13 +1172,11 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
       'patchedDependencies:\n  is-number@7.0.0: patches/is-number.patch\n'
     );
     writeRootPatch('patches/is-number.patch');
-    const outputDir = join(tempDir, 'dist');
-    mkdirSync(outputDir);
 
-    writePrunedPnpmInstallSettings(
-      outputDir,
+    getPrunedPnpmInstallArtifacts(
       tempDir,
-      prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number@7.0.0'])
+      prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number@7.0.0']),
+      manifest()
     );
 
     // The pnpm major is resolved once at the entry point and threaded into both
@@ -1525,80 +1408,63 @@ describe('getPrunedPnpmPackageJsonBuildSettings', () => {
     expect(getPrunedPnpmPackageJsonBuildSettings(tempDir)).toBeNull();
   });
 
-  it('folds build approvals into the emitted package.json on pnpm 10', () => {
+  it('folds build approvals into the shipped package.json on pnpm 10', () => {
     mockPnpmVersion('10.13.1');
     writeRootWorkspaceYaml('onlyBuiltDependencies:\n  - esbuild\n');
-    const outputDir = join(tempDir, 'dist');
-    mkdirSync(outputDir);
-    writeFileSync(
-      join(outputDir, 'package.json'),
-      JSON.stringify({ name: 'app', dependencies: { esbuild: '0.21.5' } })
-    );
+    const packageJson: PackageJson = {
+      ...manifest(),
+      dependencies: { esbuild: '0.21.5' },
+    };
 
-    writePrunedPnpmInstallSettings(
-      outputDir,
+    const { artifacts } = getPrunedPnpmInstallArtifacts(
       tempDir,
-      prunedLockfileWith('esbuild@0.21.5')
+      prunedLockfileWith('esbuild@0.21.5'),
+      packageJson
     );
 
-    const pkg = JSON.parse(
-      readFileSync(join(outputDir, 'package.json'), 'utf-8')
-    );
-    expect(pkg.pnpm).toEqual({ onlyBuiltDependencies: ['esbuild'] });
-    // pnpm <=10 reads these from package.json, so no workspace file is written.
-    expect(existsSync(join(outputDir, 'pnpm-workspace.yaml'))).toBe(false);
+    expect(packageJson.pnpm).toEqual({ onlyBuiltDependencies: ['esbuild'] });
+    // pnpm <=10 reads these from package.json, so no workspace file ships.
+    expect(settingsYamlOf(artifacts)).toBeUndefined();
   });
 
-  it('keeps build approvals out of the emitted package.json on pnpm 11', () => {
+  it('keeps build approvals out of the shipped package.json on pnpm 11', () => {
     mockPnpmVersion('11.2.2');
     writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');
-    const outputDir = join(tempDir, 'dist');
-    mkdirSync(outputDir);
-    writeFileSync(
-      join(outputDir, 'package.json'),
-      JSON.stringify({ name: 'app', dependencies: { esbuild: '0.21.5' } })
-    );
+    const packageJson: PackageJson = {
+      ...manifest(),
+      dependencies: { esbuild: '0.21.5' },
+    };
 
-    writePrunedPnpmInstallSettings(
-      outputDir,
+    const { artifacts } = getPrunedPnpmInstallArtifacts(
       tempDir,
-      prunedLockfileWith('esbuild@0.21.5')
+      prunedLockfileWith('esbuild@0.21.5'),
+      packageJson
     );
 
-    const pkg = JSON.parse(
-      readFileSync(join(outputDir, 'package.json'), 'utf-8')
-    );
-    expect(pkg.pnpm).toBeUndefined();
+    expect(packageJson.pnpm).toBeUndefined();
     const { load } = require('@zkochan/js-yaml');
-    expect(
-      load(readFileSync(join(outputDir, 'pnpm-workspace.yaml'), 'utf-8'))
-    ).toEqual({ packages: [], allowBuilds: { esbuild: true } });
+    expect(load(settingsYamlOf(artifacts).content)).toEqual({
+      packages: [],
+      allowBuilds: { esbuild: true },
+    });
   });
 
   it('unions a project-level approval with the carried one', () => {
     mockPnpmVersion('10.13.1');
     writeRootWorkspaceYaml('onlyBuiltDependencies:\n  - esbuild\n');
-    const outputDir = join(tempDir, 'dist');
-    mkdirSync(outputDir);
-    writeFileSync(
-      join(outputDir, 'package.json'),
-      JSON.stringify({
-        name: 'app',
-        pnpm: { onlyBuiltDependencies: ['app-native'] },
-        dependencies: { esbuild: '0.21.5', 'app-native': '1.0.0' },
-      })
-    );
+    const packageJson: PackageJson = {
+      ...manifest(),
+      pnpm: { onlyBuiltDependencies: ['app-native'] },
+      dependencies: { esbuild: '0.21.5', 'app-native': '1.0.0' },
+    };
 
-    writePrunedPnpmInstallSettings(
-      outputDir,
+    getPrunedPnpmInstallArtifacts(
       tempDir,
-      prunedLockfileWith('esbuild@0.21.5', 'app-native@1.0.0')
+      prunedLockfileWith('esbuild@0.21.5', 'app-native@1.0.0'),
+      packageJson
     );
 
-    const pkg = JSON.parse(
-      readFileSync(join(outputDir, 'package.json'), 'utf-8')
-    );
-    expect(new Set(pkg.pnpm.onlyBuiltDependencies)).toEqual(
+    expect(new Set(packageJson.pnpm.onlyBuiltDependencies)).toEqual(
       new Set(['app-native', 'esbuild'])
     );
   });
@@ -2987,7 +2853,7 @@ describe('warnIncompletePrunedPnpmOutput', () => {
       expect.objectContaining({
         bodyLines: [
           expect.stringContaining('build-script approvals'),
-          expect.stringContaining('createPrunedLockfile'),
+          expect.stringContaining('generatePrunedDeployOutput'),
         ],
       })
     );
