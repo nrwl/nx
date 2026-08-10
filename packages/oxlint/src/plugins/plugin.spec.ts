@@ -63,7 +63,7 @@ describe('@nx/oxlint plugin', () => {
     const results = await invokeCreateNodesOnMatchingFiles(context);
 
     expect(results.projects['libs/a'].targets.lint).toMatchObject({
-      command: 'oxlint .',
+      command: 'oxlint --no-error-on-unmatched-pattern .',
       options: { cwd: 'libs/a' },
       cache: true,
     });
@@ -93,6 +93,21 @@ describe('@nx/oxlint plugin', () => {
 
     const results = await invokeCreateNodesOnMatchingFiles(context);
 
+    expect(results.projects['libs/docs']).toBeUndefined();
+  });
+
+  it('should not create a target for a config-owning project with no lintable files', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'libs/docs/project.json': `{"name":"docs"}`,
+      'libs/docs/.oxlintrc.json': `{"rules":{}}`,
+      'libs/docs/README.md': `# docs`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+
+    // Owning a config is not enough: `oxlint` exits 1 with "No files found to
+    // lint" in a directory it has nothing to read.
     expect(results.projects['libs/docs']).toBeUndefined();
   });
 
@@ -188,7 +203,7 @@ describe('@nx/oxlint plugin', () => {
     const results = await invokeCreateNodesOnMatchingFiles(context);
 
     expect(results.projects['.'].targets.lint).toMatchObject({
-      command: 'oxlint ./src',
+      command: 'oxlint --no-error-on-unmatched-pattern ./src',
     });
   });
 

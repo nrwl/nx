@@ -23,8 +23,15 @@ import {
   walkTsconfigExtendsChain,
   type RawTsconfigJsonCache,
 } from '@nx/js/internal';
+import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { relative as nativeRelative, sep as nativeSep } from 'node:path';
+import { createRequire } from 'node:module';
+import {
+  dirname as nativeDirname,
+  join as nativeJoin,
+  relative as nativeRelative,
+  sep as nativeSep,
+} from 'node:path';
 import { basename, dirname, join, normalize, sep } from 'node:path/posix';
 import { OXLINT_CONFIG_FILENAMES } from '../utils/config-file.js';
 
@@ -87,11 +94,11 @@ const internalCreateNodes = async (
         return cached;
       }
 
-      // Owning a config implies wanting linting; otherwise require something
-      // lintable, so docs-only projects get no target. The right-hand side globs
-      // the whole workspace, so it stays behind the `||` and the cache check.
+      // Require something lintable, so docs-only projects get no target even
+      // when they own a config — a target there fails with "No files found to
+      // lint". This spans the whole workspace, so it stays behind the cache
+      // check and is memoized across configs.
       const shouldInferTarget =
-        (configDir === projectRoot && projectRoot !== '.') ||
         ((await getLintableFilesPerProjectRoot()).get(projectRoot) ?? 0) > 0;
 
       if (!shouldInferTarget) {
@@ -464,9 +471,69 @@ function collectTsconfigChainsByProjectRoot(
   return result;
 }
 
+const localRequire = createRequire(import.meta.url);
+
+/**
+ * Asks Oxlint itself which files it would lint. A glob cannot answer this:
+ * Oxlint honours `ignorePatterns`, `.eslintignore` and `.gitignore`, including
+ * from nested project configs, so a project whose files are all ignored is
+ * empty to Oxlint but not to a glob.
+ *
+ * Returns null when Oxlint cannot answer — it is not installed, or one
+ * malformed config anywhere aborts the whole run. Callers fall back to globbing
+ * rather than failing graph construction over another project's broken config.
+ */
+function enumerateLintableFilesWithOxlint(
+  workspaceRoot: string
+): string[] | null {
+  let bin: string;
+  try {
+    bin = nativeJoin(
+      nativeDirname(
+        localRequire.resolve('oxlint/package.json', { paths: [workspaceRoot] })
+      ),
+      'bin',
+      'oxlint'
+    );
+  } catch {
+    return null;
+  }
+  if (!existsSync(bin)) {
+    return null;
+  }
+
+  try {
+    // Spawned through `process.execPath` rather than the `.bin` shim so this
+    // does not depend on a shell or on PATH.
+    // `--ignore-pattern` rather than trusting the workspace's `.gitignore`:
+    // `globWithWorkspaceContext` always skips `node_modules`, and a workspace
+    // that does not gitignore it would otherwise enumerate every dependency.
+    const stdout = execFileSync(
+      process.execPath,
+      [bin, '--debug=files', '--ignore-pattern', '**/node_modules/**', '.'],
+      {
+        cwd: workspaceRoot,
+        encoding: 'utf-8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+        maxBuffer: 64 * 1024 * 1024,
+        // Graph construction must not hang on a wedged subprocess; a timeout
+        // throws, which is the same fall-back-to-globbing path as any other
+        // failure here.
+        timeout: 30_000,
+      }
+    );
+    return stdout
+      .split('\n')
+      .filter(Boolean)
+      .map((file) => file.split(nativeSep).join(sep));
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Counts rather than collects: the only caller asks whether a project has any
- * lintable file, and the glob spans the whole workspace.
+ * lintable file, and the enumeration spans the whole workspace.
  */
 async function collectLintableFilesByProjectRoot(
   projectRoots: string[],
@@ -474,9 +541,11 @@ async function collectLintableFilesByProjectRoot(
 ): Promise<Map<string, number>> {
   const lintableFilesPerProjectRoot = new Map<string, number>();
 
-  const lintableFiles = await globWithWorkspaceContext(context.workspaceRoot, [
-    LINTABLE_FILES_GLOB,
-  ]);
+  const lintableFiles =
+    enumerateLintableFilesWithOxlint(context.workspaceRoot) ??
+    (await globWithWorkspaceContext(context.workspaceRoot, [
+      LINTABLE_FILES_GLOB,
+    ]));
 
   for (const projectRoot of projectRoots) {
     lintableFilesPerProjectRoot.set(projectRoot, 0);
@@ -561,7 +630,11 @@ function getProjectUsingOxlintConfig(
     isRootProject && standaloneSrcPath ? `./${standaloneSrcPath}` : '.';
 
   const targetConfig: TargetConfiguration = {
-    command: `oxlint ${lintPath}`,
+    // `--no-error-on-unmatched-pattern` keeps the task green when nothing is
+    // left to lint. Inference already skips empty projects, but the fallback
+    // enumeration cannot see ignore rules, and files can be deleted after the
+    // graph is built.
+    command: `oxlint --no-error-on-unmatched-pattern ${lintPath}`,
     options: { cwd: projectRoot },
     cache: true,
     inputs: [
