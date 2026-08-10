@@ -42,19 +42,25 @@ export function isAlreadyQuoted(str: string): boolean {
 
 /**
  * Quote a string so it survives being interpolated into a shell command line
- * as a single argument. Strings without shell metacharacters pass through
- * unquoted.
+ * as a single argument.
  *
- * On POSIX shells quoting preserves the content exactly: the argument is
- * wrapped in single quotes (which suppress all interpolation), escaping
- * embedded single quotes. On Windows it is wrapped in double quotes following
- * the MSVCRT argv parsing rules (backslashes are only special when they precede
- * a double quote), which also stops cmd.exe from reading a `^` as its escape
- * character. `%` is the one character left uncovered, since cmd.exe expands
- * %VAR% inside double quotes too.
+ * On Windows the safety boundary is one unbroken double-quoted run: it keeps
+ * `^`, `&`, `|`, `<` and `>` literal through cmd.exe's parse and a `.cmd`
+ * shim's re-parse of `%*`, but not `%`, which cmd.exe expands inside double
+ * quotes too.
+ *
+ * @throws on Windows when the argument contains a double quote, which ends that
+ * run, since cmd.exe recognizes no backslash escape. Carrying one means
+ * caret-escaping every metacharacter instead, doubled for a `.cmd` shim, which
+ * this path does not implement.
  */
 export function quoteShellArg(arg: string): string {
   const isWindows = process.platform === 'win32';
+  if (isWindows && arg.includes('"')) {
+    throw new Error(
+      `Cannot safely pass ${arg} to cmd.exe as a single argument: a double quote inside it would end the quoting and leave the rest of the argument to be read as commands. Remove the double quote and run the command again.`
+    );
+  }
   if (arg === '') {
     // an unquoted empty string would vanish when joined into a command line
     return isWindows ? '""' : "''";
@@ -65,6 +71,8 @@ export function quoteShellArg(arg: string): string {
     return arg;
   }
   return isWindows
-    ? `"${arg.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\+)$/, '$1$1')}"`
+    ? // MSVCRT reads the backslashes that precede the closing quote as escapes,
+      // so they have to be doubled to survive as themselves.
+      `"${arg.replace(/(\\+)$/, '$1$1')}"`
     : `'${arg.replace(/'/g, `'\\''`)}'`;
 }

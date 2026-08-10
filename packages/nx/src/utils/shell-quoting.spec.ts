@@ -91,13 +91,21 @@ describe('quoteShellArg', () => {
         '--commit-prefix=chore(repo): [nx migration] ',
         `"--commit-prefix=chore(repo): [nx migration] "`,
       ],
-      ['embedded double quote', 'say "hi"', `"say \\"hi\\""`],
-      ['backslashes before a double quote', 'a\\"b', `"a\\\\\\"b"`],
       ['trailing backslash', 'C:\\dir\\', `"C:\\dir\\\\"`],
       ['caret, which cmd.exe would otherwise eat', 'a^b', `"a^b"`],
       ['empty string', '', `""`],
     ])('quotes %s: %j', (_, value, expected) => {
       expect(quoteShellArg(value)).toBe(expected);
+    });
+
+    it.each([
+      ['a double quote', 'say "hi"'],
+      ['backslashes before a double quote', 'a\\"b'],
+      ['a double quote ahead of a command separator', 'x"&whoami&"y'],
+    ])('refuses %s: %j', (_, value) => {
+      expect(() => quoteShellArg(value)).toThrow(
+        'would end the quoting and leave the rest of the argument to be read as commands'
+      );
     });
 
     it('leaves a percent sign unquoted, since quoting cannot stop %VAR%', () => {
