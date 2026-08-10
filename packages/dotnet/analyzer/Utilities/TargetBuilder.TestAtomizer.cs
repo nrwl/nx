@@ -61,6 +61,16 @@ public static partial class TargetBuilder
 
         foreach (var unit in units)
         {
+            // Discovery should already guarantee this, but Id becomes a target
+            // name, a filter and a results-directory path.
+            if (!IsDottedIdentifierSequence(unit.Id))
+            {
+                Console.Error.WriteLine(
+                    $"@nx/dotnet: skipping '{unit.Id}' while splitting '{projectName}'. Its name is not " +
+                    "a plain dotted identifier sequence, so it is not safe to use as a target name.");
+                continue;
+            }
+
             var targetName = $"{ciTargetName}--{unit.Id}";
             var nxOutputPath = $"{nxBaseDirectory}/{unit.Id}";
             var cwdRelativePath = $"{cwdRelativeBase}/{unit.Id}";
@@ -175,6 +185,18 @@ public static partial class TargetBuilder
             $"({testWord} the split does not cover). " +
             $"They still run as part of the '{testTargetName}' target.");
     }
+
+    /// <summary>
+    /// Whether <paramref name="id"/> is a dot-separated sequence of ordinary
+    /// identifiers, with nothing else mixed in.
+    /// </summary>
+    private static bool IsDottedIdentifierSequence(string id) =>
+        id.Length > 0 && id.Split('.').All(IsIdentifier);
+
+    private static bool IsIdentifier(string segment) =>
+        segment.Length > 0 &&
+        (char.IsLetter(segment[0]) || segment[0] == '_') &&
+        segment.Skip(1).All(c => char.IsLetterOrDigit(c) || c == '_');
 
     /// <summary>
     /// Builds the argument list for a single split test task.
