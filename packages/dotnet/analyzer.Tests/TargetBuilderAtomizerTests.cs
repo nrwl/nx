@@ -101,13 +101,11 @@ public class TargetBuilderAtomizerTests
     }
 
     [Fact]
-    public void WithNoDiscoveredUnits_ReportsNoExclusionsEvenWhenSomeWereSkipped()
+    public void WithNoDiscoveredUnits_StillReportsWhySkippedClassesWereLeftOut()
     {
-        // Regression test. ReportExclusions used to run before the check for
-        // whether anything actually split, so a project with only nested or
-        // generic classes (no splittable units at all) could still print
-        // "split 'X' into 0 test targets, leaving out N..." — describing a
-        // split that never happened. Nothing should print when nothing splits.
+        // A project whose only test classes were all nested or generic gets
+        // nothing from opting in, and that is exactly the case worth
+        // explaining rather than leaving silent.
         var originalError = Console.Error;
         var writer = new StringWriter();
         Console.SetError(writer);
@@ -137,7 +135,48 @@ public class TargetBuilderAtomizerTests
             Console.SetError(originalError);
         }
 
-        Assert.Equal("", writer.ToString());
+        Assert.Contains("could not split any tests", writer.ToString());
+        Assert.Contains("2 nested", writer.ToString());
+    }
+
+    [Fact]
+    public void WithOnlyInheritedTests_ReportsWhyMethodModeSplitNothing()
+    {
+        // A class can pass discovery (a real, atomizable [TestClass]) yet
+        // produce zero units in method mode because every test it runs is
+        // inherited from a base class — SkippedNested and SkippedGeneric both
+        // stay 0, so without this category there is nothing to report at all.
+        var originalError = Console.Error;
+        var writer = new StringWriter();
+        Console.SetError(writer);
+        try
+        {
+            TargetBuilder.BuildTargets(
+                projectName: "IntegrationTests",
+                fileName: "IntegrationTests.csproj",
+                isTest: true,
+                isExe: true,
+                packageRefs: [],
+                properties: new Dictionary<string, string>(),
+                projectDirectory: ProjectDirectory,
+                workspaceRoot: WorkspaceRoot,
+                options: Options(splitBy: SplitBy.Method),
+                nxJson: null,
+                directoryBuildInputs: [],
+                supportsSplitting: true,
+                discoverTestUnits: _ => new TestDiscoveryResult
+                {
+                    Units = [],
+                    SkippedNoOwnMethod = 1
+                });
+        }
+        finally
+        {
+            Console.SetError(originalError);
+        }
+
+        Assert.Contains("could not split any tests", writer.ToString());
+        Assert.Contains("1 with no test method of their own", writer.ToString());
     }
 
     [Fact]

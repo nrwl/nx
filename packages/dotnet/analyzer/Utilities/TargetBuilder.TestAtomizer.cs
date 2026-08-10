@@ -27,6 +27,10 @@ public static partial class TargetBuilder
         var ciTargetName = options.TestCiTargetName!;
         var units = discovery.Units;
 
+        // Before the early return below: a project whose classes were all
+        // excluded splits nothing and still needs the explanation.
+        ReportExclusions(discovery, projectName, options.TestTargetName);
+
         // A no-op parent with no dependencies would pass while running nothing.
         if (units.Count == 0)
         {
@@ -46,12 +50,14 @@ public static partial class TargetBuilder
 
         var (nxBaseDirectory, cwdRelativeBase) = resultsBase.Value;
 
-        ReportExclusions(discovery, projectName, options.TestTargetName);
-
         var technologies = ProjectUtilities.GetTechnologies(fileName);
         var groupName = options.TestCiGroupName ?? $"{ciTargetName.ToUpperInvariant()} (CI)";
         var dependsOn = new List<object>();
         var groupMembers = new List<string>();
+
+        // Merged into the caller's `targets` only once the parent is built, so
+        // throwing partway through cannot leave leaves without a parent.
+        var atomizedTargets = new Dictionary<string, Target>();
 
         foreach (var unit in units)
         {
@@ -59,7 +65,7 @@ public static partial class TargetBuilder
             var nxOutputPath = $"{nxBaseDirectory}/{unit.Id}";
             var cwdRelativePath = $"{cwdRelativeBase}/{unit.Id}";
 
-            targets[targetName] = baseTestTarget with
+            atomizedTargets[targetName] = baseTestTarget with
             {
                 Options = new TargetOptions
                 {
@@ -84,7 +90,7 @@ public static partial class TargetBuilder
             groupMembers.Add(targetName);
         }
 
-        targets[ciTargetName] = new Target
+        atomizedTargets[ciTargetName] = new Target
         {
             Executor = "nx:noop",
             Cache = baseTestTarget.Cache,
@@ -103,6 +109,11 @@ public static partial class TargetBuilder
 
         groupMembers.Insert(0, ciTargetName);
 
+        foreach (var (name, target) in atomizedTargets)
+        {
+            targets[name] = target;
+        }
+
         return new Dictionary<string, List<string>> { [groupName] = groupMembers };
     }
 
@@ -112,7 +123,8 @@ public static partial class TargetBuilder
     /// </summary>
     /// <remarks>
     /// Excluded tests still run under the ordinary test target, so nothing
-    /// fails; the split run just stops covering them.
+    /// fails; the split run just stops covering them. Fires even when nothing
+    /// split, which is the case most worth explaining.
     /// </remarks>
     private static void ReportExclusions(
         TestDiscoveryResult discovery,
@@ -136,20 +148,31 @@ public static partial class TargetBuilder
             reasons.Add($"{discovery.SkippedUnrunnable} ignored, non-public, or without a test method");
         }
 
+        if (discovery.SkippedNoOwnMethod > 0)
+        {
+            reasons.Add($"{discovery.SkippedNoOwnMethod} with no test method of their own " +
+                "(inherited tests are not split individually)");
+        }
+
         if (reasons.Count == 0)
         {
             return;
         }
 
-        var total = discovery.SkippedNested + discovery.SkippedGeneric + discovery.SkippedUnrunnable;
+        var total = discovery.SkippedNested + discovery.SkippedGeneric +
+            discovery.SkippedUnrunnable + discovery.SkippedNoOwnMethod;
         var reasonsText = reasons.Count == 1
             ? reasons[0]
             : string.Join(", ", reasons.Take(reasons.Count - 1)) + " and " + reasons[^1];
+        var testWord = total == 1 ? "test" : "tests";
+
+        var summary = discovery.Units.Count > 0
+            ? $"split '{projectName}' into {discovery.Units.Count} test targets"
+            : $"could not split any tests for '{projectName}'";
 
         Console.Error.WriteLine(
-            $"@nx/dotnet: split '{projectName}' into {discovery.Units.Count} test targets, " +
-            $"leaving out {reasonsText} " +
-            $"({(total == 1 ? "test" : "tests")} the split does not cover). " +
+            $"@nx/dotnet: {summary}, leaving out {reasonsText} " +
+            $"({testWord} the split does not cover). " +
             $"They still run as part of the '{testTargetName}' target.");
     }
 
