@@ -2489,6 +2489,9 @@ importers:
       enquirer:
         specifier: 'catalog:'
         version: 2.3.6
+      memfs:
+        specifier: ^3.0.1
+        version: 3.6.0
       minimatch:
         specifier: ^10.2.5
         version: 10.2.5
