@@ -29,6 +29,16 @@ public sealed record TestDiscoveryResult
     public int SkippedUnrunnable { get; init; }
 
     /// <summary>
+    /// Method mode only: test classes with no <c>[TestMethod]</c>/
+    /// <c>[DataTestMethod]</c> declared directly on them. Commonly a subclass
+    /// whose tests all live on a base class — class mode can still atomize it
+    /// via the base list, but method mode has no way to attribute inherited
+    /// methods to the subclass that runs them, so it produces nothing for the
+    /// class at all.
+    /// </summary>
+    public int SkippedNoOwnMethod { get; init; }
+
+    /// <summary>
     /// Workspace-relative paths of scanned sources that lie outside the project
     /// directory — linked files, shared sources, anything a
     /// <c>&lt;Compile Include="../..." /&gt;</c> pulls in.
