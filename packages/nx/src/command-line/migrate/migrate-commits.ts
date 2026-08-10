@@ -3,6 +3,7 @@ import { readNxJson } from '../../config/configuration';
 import { getBaseRef } from '../../utils/command-line-utils';
 import {
   getGitCurrentBranch,
+  getGitRemoteNames,
   hasUncommittedChanges,
   tryCommitChanges,
 } from '../../utils/git-utils';
@@ -226,6 +227,25 @@ export function resolveCreateCommits(args: {
   };
 }
 
+// The branch to hold `getBaseRef`'s value against. It may name a remote-tracking
+// ref whose local counterpart drops the remote (the CI-workflow generator writes
+// `origin/<branch>`), yet a local branch can be named `up/feature` while `up` is
+// a remote, so an exact match wins before any stripping and the longest matching
+// remote wins after. `origin` counts even undeclared: the generator assumes it.
+function defaultBranchToCompare(
+  baseRef: string,
+  currentBranch: string | null,
+  root: string
+): string {
+  if (currentBranch === baseRef) {
+    return baseRef;
+  }
+  const remote = [...getGitRemoteNames(root), 'origin']
+    .filter((name) => baseRef.startsWith(`${name}/`))
+    .sort((a, b) => b.length - a.length)[0];
+  return remote ? baseRef.slice(remote.length + 1) : baseRef;
+}
+
 /**
  * Asks before a run starts committing on the workspace's default branch, and
  * reports the decision when the answer is no. Returns whether to proceed.
@@ -242,9 +262,11 @@ export async function confirmMigrationCommitsOnDefaultBranch(
   const currentBranch = getGitCurrentBranch(root);
   const proceed = await confirmCommitsOnDefaultBranch({
     currentBranch,
-    // `getBaseRef` may carry an `origin/` prefix (set by the CI-workflow
-    // generator); compare against the local branch name.
-    defaultBranch: getBaseRef(readNxJson(root)).replace(/^origin\//, ''),
+    defaultBranch: defaultBranchToCompare(
+      getBaseRef(readNxJson(root)),
+      currentBranch,
+      root
+    ),
   });
   if (!proceed) {
     output.log({

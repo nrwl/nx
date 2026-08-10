@@ -83,11 +83,13 @@ jest.mock('../agentic/handoff', () => {
 const mockIsGitRepository = jest.fn();
 const mockGetGitCurrentBranch = jest.fn();
 const mockGetLatestCommitSha = jest.fn();
+const mockGetGitRemoteNames = jest.fn(() => [] as string[]);
 jest.mock('../../../utils/git-utils', () => ({
   ...jest.requireActual('../../../utils/git-utils'),
   isGitRepository: (...args: unknown[]) => mockIsGitRepository(...args),
   getGitCurrentBranch: (...args: unknown[]) => mockGetGitCurrentBranch(...args),
   getLatestCommitSha: (...args: unknown[]) => mockGetLatestCommitSha(...args),
+  getGitRemoteNames: (...args: unknown[]) => mockGetGitRemoteNames(),
 }));
 
 // Only the recorded (--run-id) path reads the agent environment directly; the

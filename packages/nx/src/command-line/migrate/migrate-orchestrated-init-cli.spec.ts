@@ -28,10 +28,12 @@ jest.mock('./safe-prompt', () => ({
 
 const mockIsGitRepository = jest.fn();
 const mockGetGitCurrentBranch = jest.fn();
+const mockGetGitRemoteNames = jest.fn(() => [] as string[]);
 jest.mock('../../utils/git-utils', () => ({
   ...jest.requireActual('../../utils/git-utils'),
   isGitRepository: (...args: unknown[]) => mockIsGitRepository(...args),
   getGitCurrentBranch: (...args: unknown[]) => mockGetGitCurrentBranch(...args),
+  getGitRemoteNames: (...args: unknown[]) => mockGetGitRemoteNames(),
 }));
 
 jest.mock('../../config/configuration', () => ({

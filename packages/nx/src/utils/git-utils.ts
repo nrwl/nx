@@ -455,6 +455,24 @@ export function getGitCurrentBranch(directory?: string): string | null {
   }
 }
 
+// Names of the remotes configured in the repository, empty when there are
+// none or the probe itself failed.
+export function getGitRemoteNames(directory?: string): string[] {
+  try {
+    return execSync('git remote', {
+      encoding: 'utf8',
+      cwd: directory,
+      stdio: ['ignore', 'pipe', 'ignore'],
+      windowsHide: true,
+    })
+      .split('\n')
+      .map((name) => name.trim())
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
 export type WorkingTreeStatus = 'dirty' | 'clean' | 'unknown';
 
 // Tri-state working-tree probe: 'unknown' means the probe itself failed (git
