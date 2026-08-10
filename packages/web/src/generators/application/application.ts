@@ -612,7 +612,9 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     const jestTask = await configurationGenerator(host, {
       project: options.projectName,
       skipSerializers: true,
-      setupFile: 'web-components',
+      // No setup file: the `web-components` one only ever held the
+      // `document-register-element` polyfill, which is long gone.
+      setupFile: 'none',
       compiler: options.compiler,
       skipFormat: true,
       addPlugin: options.addPlugin,

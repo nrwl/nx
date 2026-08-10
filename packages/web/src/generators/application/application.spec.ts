@@ -587,7 +587,6 @@ describe('app', () => {
         "module.exports = {
           displayName: 'my-app',
           preset: '../jest.preset.js',
-          setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
           transform: {
             '^.+\\\\.[tj]s$': 'babel-jest',
           },
@@ -613,7 +612,6 @@ describe('app', () => {
         "module.exports = {
           displayName: 'my-app',
           preset: '../jest.preset.js',
-          setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
           transform: {
             '^.+\\\\.[tj]s$': '@swc/jest',
           },
