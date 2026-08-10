@@ -1307,22 +1307,9 @@ async function determineReactOptions(
 
   if (preset === Preset.ReactStandalone || preset === Preset.ReactMonorepo) {
     bundler = useReactRouter ? 'vite' : await determineReactBundler(parsedArgs);
-    unitTestRunner = await determineUnitTestRunner(parsedArgs, {
-      preferVitest: bundler === 'vite',
-    });
-    e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   } else if (preset === Preset.NextJs || preset === Preset.NextJsStandalone) {
     nextAppDir = await determineNextAppDir(parsedArgs);
     nextSrcDir = await determineNextSrcDir(parsedArgs);
-    unitTestRunner = await determineUnitTestRunner(parsedArgs, {
-      exclude: 'vitest',
-    });
-    e2eTestRunner = await determineE2eTestRunner(parsedArgs);
-  } else if (preset === Preset.ReactNative || preset === Preset.Expo) {
-    unitTestRunner = await determineUnitTestRunner(parsedArgs, {
-      exclude: 'vitest',
-    });
-    e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   }
 
   if (parsedArgs.style) {
@@ -1377,6 +1364,22 @@ async function determineReactOptions(
   // Asked outside the gate: the linter is independent of package-manager
   // workspaces, and `--no-workspaces` used to force ESLint without asking.
   linter = await determineLinterOptions(parsedArgs);
+  if (preset === Preset.ReactStandalone || preset === Preset.ReactMonorepo) {
+    unitTestRunner = await determineUnitTestRunner(parsedArgs, {
+      preferVitest: bundler === 'vite',
+    });
+    e2eTestRunner = await determineE2eTestRunner(parsedArgs);
+  } else if (
+    preset === Preset.NextJs ||
+    preset === Preset.NextJsStandalone ||
+    preset === Preset.ReactNative ||
+    preset === Preset.Expo
+  ) {
+    unitTestRunner = await determineUnitTestRunner(parsedArgs, {
+      exclude: 'vitest',
+    });
+    e2eTestRunner = await determineE2eTestRunner(parsedArgs);
+  }
   if (workspaces) {
     formatter = await determineFormatterOptions(parsedArgs, {
       preferPrettier: true,
@@ -1449,11 +1452,6 @@ async function determineVueOptions(
     }
   }
 
-  unitTestRunner = await determineUnitTestRunner(parsedArgs, {
-    exclude: 'jest',
-  });
-  e2eTestRunner = await determineE2eTestRunner(parsedArgs);
-
   if (parsedArgs.style) {
     style = parsedArgs.style;
   } else {
@@ -1490,6 +1488,10 @@ async function determineVueOptions(
   // Asked outside the gate: the linter is independent of package-manager
   // workspaces, and `--no-workspaces` used to force ESLint without asking.
   linter = await determineLinterOptions(parsedArgs);
+  unitTestRunner = await determineUnitTestRunner(parsedArgs, {
+    exclude: 'jest',
+  });
+  e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   if (workspaces) {
     formatter = await determineFormatterOptions(parsedArgs, {
       preferPrettier: true,
@@ -1649,6 +1651,8 @@ async function determineAngularOptions(
     ssr = reply.ssr === 'Yes';
   }
 
+  const linter = await determineLinterOptions(parsedArgs);
+
   if (parsedArgs.unitTestRunner) {
     unitTestRunner = parsedArgs.unitTestRunner as AngularUnitTestRunner;
   } else if (!parsedArgs.workspaces) {
@@ -1694,7 +1698,6 @@ async function determineAngularOptions(
   }
 
   e2eTestRunner = await determineE2eTestRunner(parsedArgs);
-  const linter = await determineLinterOptions(parsedArgs);
 
   return {
     preset,
@@ -1782,13 +1785,12 @@ async function determineNodeOptions(
     docker = reply.docker === 'Yes';
   }
 
-  unitTestRunner = await determineUnitTestRunner(parsedArgs, {
-    exclude: 'vitest',
-  });
-
   // Asked outside the gate: the linter is independent of package-manager
   // workspaces, and `--no-workspaces` used to force ESLint without asking.
   linter = await determineLinterOptions(parsedArgs);
+  unitTestRunner = await determineUnitTestRunner(parsedArgs, {
+    exclude: 'vitest',
+  });
   if (workspaces) {
     formatter = await determineFormatterOptions(parsedArgs, {
       preferPrettier: true,
