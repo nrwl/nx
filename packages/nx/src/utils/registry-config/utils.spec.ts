@@ -1,4 +1,5 @@
 import {
+  bridgePnpmEnvVars,
   expandEnvVars,
   expandNpmEnvVars,
   expandPnpmEnvVars,
@@ -99,10 +100,42 @@ describe('expandPnpmEnvVars', () => {
     expect(expandPnpmEnvVars('pre-${MISSING}-post', {})).toBe('pre--post');
   });
 
-  it('leaves an escaped \\${VAR} unexpanded', () => {
+  it('consumes the escape on \\${VAR} and keeps the reference literal', () => {
+    // pnpm's own replaceWith returns orig.slice((escape.length + 1) / 2), so the
+    // key it looks a setting up under carries no backslash.
     expect(expandPnpmEnvVars('\\${TOKEN}', { TOKEN: 'secret' })).toBe(
+      '${TOKEN}'
+    );
+    expect(expandPnpmEnvVars('\\\\\\${TOKEN}', { TOKEN: 'secret' })).toBe(
       '\\${TOKEN}'
     );
+  });
+});
+
+describe('bridgePnpmEnvVars', () => {
+  it('escapes what a reference resolved to, so npm reproduces it', () => {
+    expect(
+      bridgePnpmEnvVars('${TOKEN}', { TOKEN: 'ab${INNER}cd', INNER: 'leaked' })
+    ).toBe('ab\\${INNER}cd');
+  });
+
+  it("leaves an escaped reference for npm's own pass to consume", () => {
+    expect(bridgePnpmEnvVars('\\${TOKEN}', { TOKEN: 'secret' })).toBe(
+      '\\${TOKEN}'
+    );
+  });
+
+  it('hands npm the text its expansion turns back into what pnpm resolved', () => {
+    const env = { A: 'a-value', B: 'b${A}b', C: '' };
+    const atoms = ['', 'p', '${A}', '${B}', '${C}', '${MISSING}', '\\${A}'];
+    for (const left of atoms) {
+      for (const right of atoms) {
+        const input = `${left}${right}`;
+        expect(expandNpmEnvVars(bridgePnpmEnvVars(input, env), env)).toBe(
+          expandPnpmEnvVars(input, env)
+        );
+      }
+    }
   });
 });
 

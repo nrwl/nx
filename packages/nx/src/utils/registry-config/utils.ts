@@ -306,18 +306,30 @@ export function ancestorDirectories(root: string): string[] {
 
 const ENV_EXPR = /(?<!\\)(\\*)\$\{([^${}]+)\}/g;
 
+interface ReplaceEnvExprOptions {
+  /**
+   * Leave a match an odd run of backslashes escaped whole, instead of dropping
+   * half the run the way every one of these readers does. For a value bound for
+   * the spawned npm: npm applies the same escape rule to what it receives, so
+   * consuming the escape here would let it expand the reference after all.
+   */
+  keepEscaped?: boolean;
+  /** Applied to what a reference resolved to, for the same reason. */
+  substituted?: (value: string) => string;
+}
+
 function replaceEnvExpr(
   value: string,
-  resolve: (name: string) => string | undefined
+  resolve: (name: string) => string | undefined,
+  { keepEscaped = false, substituted }: ReplaceEnvExprOptions = {}
 ): string {
   return value.replace(ENV_EXPR, (orig: string, esc: string, name: string) => {
-    // An odd run of backslashes escapes the reference. Leave the whole match
-    // verbatim: npm applies the same escape rule to the env values we hand it,
-    // so consuming them here would expand the reference twice.
     if (esc.length % 2) {
-      return orig;
+      return keepEscaped ? orig : orig.slice((esc.length + 1) / 2);
     }
-    return esc.slice(esc.length / 2) + (resolve(name) ?? `$\{${name}}`);
+    const expanded =
+      esc.slice(esc.length / 2) + (resolve(name) ?? `$\{${name}}`);
+    return substituted ? substituted(expanded) : expanded;
   });
 }
 
@@ -366,13 +378,14 @@ export function escapeNpmEnvExpr(value: string): string {
 
 /**
  * Expands `${VAR}` references from the environment the way npm/bun ini readers
- * do. Unknown variables are left verbatim.
+ * do. Unknown variables are left verbatim. The result is bridged, so an escaped
+ * reference keeps its escape for the spawned npm to consume.
  */
 export function expandEnvVars(
   value: string,
   env: NodeJS.ProcessEnv = process.env
 ): string {
-  return replaceEnvExpr(value, (name) => env[name]);
+  return replaceEnvExpr(value, (name) => env[name], { keepEscaped: true });
 }
 
 const YARN_ENV_EXPR = /(\\*)\$\{([^}]+)\}/g;
@@ -432,6 +445,11 @@ function resolvePnpmEnvValue(
  * put a literal `${VAR}` on the wire as if it were a credential. Below 11 the
  * reader throws instead and the whole file goes with it (readPnpmNpmrcMap), so
  * on that line nothing reaching this carries an unresolvable reference.
+ *
+ * This is what pnpm itself ends up with, escapes consumed. Use it for a key,
+ * which nothing expands a second time, and for a value compared against pnpm's
+ * own resolution; a value handed to the spawned npm goes through
+ * bridgePnpmEnvVars instead.
  */
 export function expandPnpmEnvVars(
   value: string,
@@ -440,20 +458,45 @@ export function expandPnpmEnvVars(
   return replaceEnvExpr(value, (name) => resolvePnpmEnvValue(name, env) ?? '');
 }
 
+/**
+ * The same expansion in the form to hand the spawned npm: what a reference
+ * resolved to is escaped, so npm reproduces it instead of expanding a `${VAR}`
+ * the variable's own value carries, which pnpm would have sent literally. An
+ * escaped reference keeps its escape rather than consuming it, because npm's own
+ * pass consumes the same one and lands on what pnpm resolved.
+ */
+export function bridgePnpmEnvVars(
+  value: string,
+  env: NodeJS.ProcessEnv = process.env
+): string {
+  return replaceEnvExpr(value, (name) => resolvePnpmEnvValue(name, env) ?? '', {
+    keepEscaped: true,
+    substituted: escapeNpmEnvExpr,
+  });
+}
+
+/** The `${VAR}` references in `value` that pnpm's throwing reader dies on. */
+export function unresolvedPnpmEnvVars(
+  value: string,
+  env: NodeJS.ProcessEnv = process.env
+): string[] {
+  const unresolved: string[] = [];
+  replaceEnvExpr(value, (name) => {
+    const resolved = resolvePnpmEnvValue(name, env);
+    if (resolved === undefined) {
+      unresolved.push(`$\{${name}}`);
+    }
+    return resolved ?? '';
+  });
+  return unresolved;
+}
+
 /** Whether every `${VAR}` in `value` is one pnpm's throwing reader gets past. */
 export function pnpmEnvVarsResolve(
   value: string,
   env: NodeJS.ProcessEnv = process.env
 ): boolean {
-  let resolves = true;
-  replaceEnvExpr(value, (name) => {
-    const resolved = resolvePnpmEnvValue(name, env);
-    if (resolved === undefined) {
-      resolves = false;
-    }
-    return resolved ?? '';
-  });
-  return resolves;
+  return unresolvedPnpmEnvVars(value, env).length === 0;
 }
 
 export function readEnvVar(
@@ -518,7 +561,7 @@ export function hasCredentialFor(
   );
 }
 
-let warnedNativeCredential = false;
+const warnedNativeCredentials = new Set<string>();
 
 /**
  * npm reads the user's own .npmrc chain and the overlay cannot switch that off,
@@ -538,8 +581,11 @@ export function warnNativeCredential(
   remediation: string,
   npmVisible: (key: string) => string | undefined
 ): void {
+  // Per registry: one migrate resolves several packages, and a scoped one can
+  // send npm to a registry no earlier package reached.
+  const warned = `${packageManager}\0${dart}`;
   if (
-    warnedNativeCredential ||
+    warnedNativeCredentials.has(warned) ||
     env['npm_config_registry'] === undefined ||
     // A credential the overlay carries is the package manager's own and
     // outranks the file, so npm sending it reproduces rather than diverges.
@@ -548,7 +594,7 @@ export function warnNativeCredential(
   ) {
     return;
   }
-  warnedNativeCredential = true;
+  warnedNativeCredentials.add(warned);
   logger.warn(
     `npm will send the credential your .npmrc holds for ${dart} when fetching packages. ${packageManager} would not send it for this request. ${remediation}`
   );

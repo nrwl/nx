@@ -16,6 +16,7 @@ import { fileExists } from '../fileutils';
 import { logger } from '../logger';
 import {
   ancestorDirectories,
+  bridgePnpmEnvVars,
   escapeNpmEnvExpr,
   expandNpmEnvVars,
   expandPnpmEnvVars,
@@ -33,6 +34,7 @@ import {
   setRegistry,
   setScopedRegistry,
   setStrictSsl,
+  unresolvedPnpmEnvVars,
   warnNativeCredential,
   type IgnoresNpmConfigEnv,
   type NpmConfigEnv,
@@ -82,6 +84,60 @@ const PNPM_RESCOPABLE_KEYS = [
   'cert',
   'key',
 ] as const;
+
+/**
+ * pnpm's normalize-registry-url as it reads from 11.15.1: a trailing slash on
+ * whatever the URL parser makes of the value. Before that it appended one only
+ * to a URL with no path at all, which nerfDart already resolves the same way, so
+ * only this form needs reproducing.
+ */
+function normalizePnpmRegistry(registry: string): string {
+  let normalized = registry;
+  try {
+    normalized = new URL(registry).toString();
+  } catch {
+    // Left as written, the way pnpm leaves it; nerfDart rejects it next.
+  }
+  return normalized.endsWith('/') ? normalized : `${normalized}/`;
+}
+
+/**
+ * The nerf dart pnpm keys a registry's own settings on. Normalizing first moves
+ * it a path segment deeper than npm's plain dart: `https://h/api/npm` keys on
+ * `//h/api/npm/`, not on its parent `//h/api/`, so an unscoped credential pinned
+ * there no longer reaches a sibling path. 10.x still bundles the older
+ * normalizer through 10.34.5, where the plain dart is what pnpm computes.
+ */
+function pnpmNerfDart(registry: string, pnpmVersion: string): string | null {
+  return nerfDart(
+    gte(pnpmVersion, '11.15.1') ? normalizePnpmRegistry(registry) : registry
+  );
+}
+
+/**
+ * pnpm's workspaceIsTrustedAuthFile: the workspace .npmrc doubling as the file
+ * pnpm authenticates from. It then expands the references it withholds from a
+ * project-controlled file. pnpm reads the coincident path at both tiers and
+ * merges them, which the workspace copy wins outright, so it is read once here.
+ */
+function isTrustedWorkspaceNpmrc(
+  workspaceDir: string,
+  userConfigPath: string
+): boolean {
+  return resolve(workspaceDir, '.npmrc') === userConfigPath;
+}
+
+/**
+ * Where npm and pnpm both begin a lookup for `registry`, and what
+ * registryKeysFor climbs from. Both append the trailing slash a registry path is
+ * missing before darting (npm darts the request URI; pnpm does it in
+ * getAuthHeaderByURI and pickSettingByUrl), so the walk starts at the request's
+ * own directory and still reaches a setting pinned to `//h/api/npm/` for a
+ * request to `https://h/api/npm`, which the plain dart begins above.
+ */
+function requestNerfDart(registry: string): string | null {
+  return nerfDart(registry.endsWith('/') ? registry : `${registry}/`);
+}
 
 interface PnpmWorkspaceSettings {
   // pnpm type-checks neither of these, and reacts to a wrong shape rather than
@@ -141,15 +197,20 @@ export function getPnpmSpawnRegistryEnv(
     // Both .npmrc files pnpm reads here, project first, which is the order both
     // the bridge and the bypass list resolve them in.
     const npmrcPaths = pnpmNpmrcPaths(root, workspaceFile);
+    // On this version line pnpm's user config is npm's own (no auth.ini, no
+    // npmrcAuthFile), always a file npm reads for itself, so it is a tier the
+    // derived settings resolve across rather than one to bridge.
+    const userConfigPath = getNpmUserConfigPath(root);
     const npmrcProxies = bridgeWorkspaceNpmrc(
       env,
       npmrcPaths,
+      userConfigPath,
       scope,
       pnpmVersion
     );
-    // auth.ini is an 11.x file, so these are the only layers whose bypass list
-    // can need re-spelling here.
-    bridgeNoProxy(env, npmrcPaths, pnpmVersion);
+    // auth.ini is an 11.x file, so the .npmrc chain is the whole of what can
+    // need its bypass list re-spelled here.
+    bridgeNoProxy(env, [...npmrcPaths, userConfigPath], pnpmVersion);
     // Applied last: pnpm assigns the yaml over the whole npmrc-derived config,
     // so what it declares outranks everything the files above contributed.
     applyYamlNetworkSettings(env, settings);
@@ -160,13 +221,11 @@ export function getPnpmSpawnRegistryEnv(
       scope,
       managerIgnoresEnv
     );
-    // On this version line pnpm's user config is npm's own (no auth.ini, no
-    // npmrcAuthFile), always a file npm reads for itself.
     reportCredentialDivergences(
       env,
       root,
       scope,
-      getNpmUserConfigPath(root),
+      userConfigPath,
       npmrcPaths.map((path) => ({ path, filtered: false })),
       pnpmVersion,
       managerIgnoresEnv
@@ -215,6 +274,7 @@ export function getPnpmSpawnRegistryEnv(
   }
 
   const authIniPath = getAuthIniPath();
+  const userConfigPath = getPnpmUserConfigPath(pnpmVersion, root);
   applyUrlScopedEnvConfig(env, pnpmVersion);
   applyJsonAuthCredentials(env, scope, jsonAuth);
   // From 11 pnpm reads one project .npmrc, and it is the one beside the
@@ -228,6 +288,7 @@ export function getPnpmSpawnRegistryEnv(
     workspaceDir,
     scope,
     authIniPath,
+    userConfigPath,
     pnpmVersion,
     managerIgnoresEnv
   );
@@ -235,9 +296,12 @@ export function getPnpmSpawnRegistryEnv(
     env,
     root,
     scope,
-    getPnpmUserConfigPath(pnpmVersion, root),
+    userConfigPath,
     [
-      { path: join(workspaceDir, '.npmrc'), filtered: true },
+      {
+        path: join(workspaceDir, '.npmrc'),
+        filtered: !isTrustedWorkspaceNpmrc(workspaceDir, userConfigPath),
+      },
       { path: authIniPath, filtered: false },
     ],
     pnpmVersion,
@@ -261,6 +325,7 @@ export function getPnpmSpawnRegistryEnv(
     globalSettings,
     workspaceDir,
     authIniPath,
+    userConfigPath,
     pnpmVersion
   );
   if (noProxy) {
@@ -305,7 +370,9 @@ function applyUrlScopedEnvConfig(env: NpmConfigEnv, pnpmVersion: string): void {
     if (!match || match[1].endsWith(':tokenHelper')) {
       continue;
     }
-    env[`npm_config_${match[1]}`] = value;
+    // pnpm takes the value as written, so escape what npm's env tier would
+    // otherwise expand out of a credential that carries a `${VAR}` of its own.
+    env[`npm_config_${match[1]}`] = escapeNpmEnvExpr(value);
   }
 }
 
@@ -343,11 +410,11 @@ function readJsonAuthTier(pnpmVersion: string): JsonAuthTier | null {
         'The pnpm_config__auth environment variable is not valid JSON.'
       );
     }
-    envTier = parsePnpmJsonAuth(parsed, 'pnpm_config__auth');
+    envTier = parsePnpmJsonAuth(parsed, 'pnpm_config__auth', pnpmVersion);
   }
   const yamlAuth = readPnpmGlobalConfigYaml()?.['_auth'];
   const yamlTier =
-    yamlAuth != null ? parsePnpmJsonAuth(yamlAuth, '_auth') : null;
+    yamlAuth != null ? parsePnpmJsonAuth(yamlAuth, '_auth', pnpmVersion) : null;
   if (!envTier && !yamlTier) {
     return null;
   }
@@ -372,7 +439,11 @@ function readJsonAuthTier(pnpmVersion: string): JsonAuthTier | null {
  * name and entry position rather than the entry itself, since a malformed
  * URL key can embed credentials.
  */
-function parsePnpmJsonAuth(parsed: unknown, source: string): JsonAuthTier {
+function parsePnpmJsonAuth(
+  parsed: unknown,
+  source: string,
+  pnpmVersion: string
+): JsonAuthTier {
   if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new Error(
       `The pnpm ${source} setting must be a JSON object of registry URLs.`
@@ -399,9 +470,7 @@ function parsePnpmJsonAuth(parsed: unknown, source: string): JsonAuthTier {
     ) {
       throw invalidJsonAuthEntry(source, entryNumber);
     }
-    // pnpm nerf-darts the href as-is: a path without a trailing slash scopes
-    // to its parent directory, and normalize-registry-url never alters an href.
-    const dart = nerfDart(url.href);
+    const dart = pnpmNerfDart(url.href, pnpmVersion);
     if (!dart) {
       throw invalidJsonAuthEntry(source, entryNumber);
     }
@@ -471,7 +540,12 @@ function applyJsonAuthCredentials(
   for (const wanted of scope ? ['@', scope] : ['@']) {
     for (const entry of jsonAuth.auth) {
       if (entry.scope === wanted) {
-        env[`npm_config_${entry.dart}:_authToken`] = entry.token;
+        // The token sits in a nested object, which pnpm's yaml replacer passes
+        // through untouched, so it is escaped rather than expanded here: npm
+        // would otherwise resolve a `${VAR}` pnpm sends as written.
+        env[`npm_config_${entry.dart}:_authToken`] = escapeNpmEnvExpr(
+          entry.token
+        );
       }
     }
   }
@@ -552,6 +626,7 @@ function resolveNoProxy(
   globalSettings: PnpmWorkspaceSettings,
   npmrcDir: string,
   authIniPath: string,
+  userConfigPath: string,
   pnpmVersion: string
 ): string | undefined {
   const envNoProxy = readPnpmEnvVar('no_proxy', pnpmVersion);
@@ -563,7 +638,7 @@ function resolveNoProxy(
     return yamlNoProxy;
   }
   const fromFiles = fileNoProxy(
-    [join(npmrcDir, '.npmrc'), authIniPath],
+    [join(npmrcDir, '.npmrc'), authIniPath, userConfigPath],
     pnpmVersion
   );
   if (fromFiles) {
@@ -676,11 +751,13 @@ function readPnpmWorkspaceSettings(
 
 /**
  * The scalar settings pnpm withholds from an untrusted file rather than
- * expanding a `${VAR}` into them, its REQUEST_DESTINATION_SCALAR_KEYS.
+ * expanding a `${VAR}` into them, its REQUEST_DESTINATION_SCALAR_KEYS. It
+ * covered the destination alone until 11.11.0 added the proxies that carry a
+ * request there.
  */
-const PNPM_REQUEST_DESTINATION_SCALARS = new Set([
-  'pnprServer',
-  'registry',
+const PNPM_REQUEST_DESTINATION_SCALARS = new Set(['pnprServer', 'registry']);
+const PNPM_REQUEST_DESTINATION_SCALARS_11_11 = new Set([
+  ...PNPM_REQUEST_DESTINATION_SCALARS,
   'httpProxy',
   'httpsProxy',
   'noProxy',
@@ -714,29 +791,45 @@ function resolveYamlEnv(
   pnpmVersion: string,
   trusted: boolean
 ): Record<string, unknown> {
-  const expand = (value: string): string => {
-    if (!pnpmEnvVarsResolve(value)) {
+  const assertResolves = (value: string): void => {
+    const unresolved = unresolvedPnpmEnvVars(value);
+    if (unresolved.length > 0) {
       // pnpm aborts the command here, so there is no resolution left to
-      // reproduce. Propagating to the caller's fall-open warns instead.
+      // reproduce. Propagating to the caller's fall-open warns instead. Only the
+      // references are named: the rest of the value can be a credential.
       throw new Error(
-        `The pnpm configuration file at ${path} references an environment variable that is not set: ${value}`
+        `The pnpm configuration file at ${path} references an environment variable that is not set: ${unresolved.join(
+          ', '
+        )}`
       );
     }
+  };
+  /** For a key, which is read rather than handed to npm. */
+  const expandKey = (value: string): string => {
+    assertResolves(value);
     return expandPnpmEnvVars(value);
   };
+  /** For a value, which the spawned npm expands again. */
+  const expandValue = (value: string): string => {
+    assertResolves(value);
+    return bridgePnpmEnvVars(value);
+  };
   const expands = gte(pnpmVersion, '10.7.0');
-  const resolveScalar = expands ? expand : escapeNpmEnvExpr;
+  const resolveScalar = expands ? expandValue : escapeNpmEnvExpr;
   const resolveRegistry = gte(pnpmVersion, '11.1.0')
     ? resolveScalar
     : escapeNpmEnvExpr;
   const drops = !trusted && gte(pnpmVersion, '11.5.3');
+  const droppedScalars = gte(pnpmVersion, '11.11.0')
+    ? PNPM_REQUEST_DESTINATION_SCALARS_11_11
+    : PNPM_REQUEST_DESTINATION_SCALARS;
   const resolved: Record<string, unknown> = {};
   for (const [rawKey, value] of Object.entries(doc)) {
-    const key = expands ? expand(rawKey) : rawKey;
+    const key = expands ? expandKey(rawKey) : rawKey;
     if (typeof value === 'string') {
       if (
         drops &&
-        PNPM_REQUEST_DESTINATION_SCALARS.has(key) &&
+        droppedScalars.has(key) &&
         PNPM_ENV_PLACEHOLDER.test(value)
       ) {
         continue;
@@ -975,14 +1068,10 @@ function readPnpmNpmrcMap(
   return npmrcEntriesToMap(entries);
 }
 
-// pnpm's AUTH_VALUE_KEYS. BARE_AUTH_KEYS is the subset this file re-keys onto a
-// nerf dart; the three extras are only ever read as part of the test below.
-const PNPM_AUTH_VALUE_KEYS = [
-  ...BARE_AUTH_KEYS,
-  'tokenHelper',
-  'cert',
-  'key',
-] as const;
+// pnpm's AUTH_VALUE_KEYS, which holds the same seven settings as its
+// UNSCOPED_RESCOPABLE_KEYS. Aliased rather than spelled out again so the two
+// cannot drift apart here while pnpm keeps them equal.
+const PNPM_AUTH_VALUE_KEYS = PNPM_RESCOPABLE_KEYS;
 // pnpm's hasEnvPlaceholder, which unlike its expander honors no escape.
 const PNPM_ENV_PLACEHOLDER = /\$\{[^}]+\}/;
 
@@ -1072,8 +1161,19 @@ function readPnpmNpmrcEntries(
   // parseField decides a Boolean-typed setting from the literal value, before it
   // expands any `${VAR}`, so strict-ssl has to be read pre-expansion.
   const rawStrictSsl = map.get('strict-ssl');
+  // What pnpm itself resolves this file's own registry to. The escaped form
+  // below is text for npm to expand, not a URL: `\` is a path separator to the
+  // URL parser, so darting it would key the credential a segment off.
+  const fileRegistry = expandPnpmEnvVars(map.get('registry') ?? '');
   for (const [key, value] of map) {
-    map.set(key, expandPnpmEnvVars(value));
+    // cafile is joined onto a directory before it is handed over, and on Windows
+    // the backslashes an escape adds are separators that path normalization
+    // collapses, leaving npm to consume one of them as the escape. It is escaped
+    // once resolved instead.
+    map.set(
+      key,
+      key === 'cafile' ? expandPnpmEnvVars(value) : bridgePnpmEnvVars(value)
+    );
   }
   // pnpm's getDefaultCreds applies a bare global _authToken/_auth/username/
   // _password (no nerf-dart prefix); npm honors auth only in the nerf-darted
@@ -1086,7 +1186,7 @@ function readPnpmNpmrcEntries(
   // workspace-local .npmrc or pnpm-workspace.yaml aim a user-level credential at
   // a host of its choosing (CVE-2026-50017), so the pin is applied there too
   // rather than reproducing the hole.
-  const dart = nerfDart(map.get('registry') || DEFAULT_REGISTRY);
+  const dart = pnpmNerfDart(fileRegistry || DEFAULT_REGISTRY, pnpmVersion);
   const rescoped: string[] = [];
   for (const bareKey of PNPM_RESCOPABLE_KEYS) {
     const value = map.get(bareKey);
@@ -1149,6 +1249,12 @@ function expandPnpmNpmrcKeys(raw: Map<string, string>): Map<string, string> {
  * rather than below it. The ambient npm_config_* both readers honor on this line
  * outranks either file, so a setting declared there is left alone as well.
  *
+ * Nothing is bridged out of `userConfigPath`, which npm reads for itself, but
+ * the proxies pnpm derives from one another are resolved across it: a tier
+ * missing from the lookup makes an `https-proxy` it declares read as
+ * undeclared, and the caller then derives one from a legacy `proxy` a file
+ * above it set.
+ *
  * A bare credential is deliberately not bridged. pnpm has no per-file rescoping
  * here and pins one to nerfDart(allSettings.registry), the registry the npmrc
  * chain resolves rather than the one the pnpm-workspace.yaml sends the fetch to,
@@ -1157,27 +1263,24 @@ function expandPnpmNpmrcKeys(raw: Map<string, string>): Map<string, string> {
 function bridgeWorkspaceNpmrc(
   env: NpmConfigEnv,
   npmrcPaths: string[],
+  userConfigPath: string,
   scope: string | null,
   pnpmVersion: string
 ): ProxyDeclarations {
   const [projectPath, workspacePath] = npmrcPaths;
   // pnpm's view of the shadowing tier: a file its reader discarded shadows
   // nothing, even though npm goes on reading that same file for itself.
-  const projectRaw = readPnpmNpmrcMap(projectPath, pnpmVersion);
-  const projectNpmrc = projectRaw ? expandPnpmNpmrcKeys(projectRaw) : null;
-  const workspaceRaw = workspacePath
-    ? readPnpmNpmrcMap(workspacePath, pnpmVersion)
-    : null;
-  const workspaceNpmrc = workspaceRaw
-    ? expandPnpmNpmrcKeys(workspaceRaw)
-    : null;
+  const tiers = [...npmrcPaths, userConfigPath].map((path) => {
+    const raw = readPnpmNpmrcMap(path, pnpmVersion);
+    return raw && expandPnpmNpmrcKeys(raw);
+  });
+  const projectNpmrc = tiers[0];
+  const workspaceNpmrc = workspacePath ? tiers[1] : null;
   /** What pnpm resolves from these files and the env tier over them. */
   const resolved = (key: string): string | undefined =>
-    expandPnpmEnvVars(
+    bridgePnpmEnvVars(
       readNpmConfigEnv(process.env, key) ??
-        (projectNpmrc?.has(key)
-          ? projectNpmrc.get(key)
-          : workspaceNpmrc?.get(key)) ??
+        tiers.find((tier) => tier?.has(key))?.get(key) ??
         ''
     ) || undefined;
   const proxies: ProxyDeclarations = {
@@ -1198,7 +1301,7 @@ function bridgeWorkspaceNpmrc(
   // for an empty registry, and npm skips an empty env value outright. Deriving
   // from one is what does damage (an empty cafile resolves to its own directory).
   const bridged = (key: string): string | undefined =>
-    expandPnpmEnvVars(declared(key) ?? '') || undefined;
+    bridgePnpmEnvVars(declared(key) ?? '') || undefined;
 
   // A registry the yaml already forced in outranks these files in pnpm, so it
   // keeps winning here.
@@ -1233,7 +1336,10 @@ function bridgeWorkspaceNpmrc(
     }
   }
 
-  const cafile = bridged('cafile');
+  // Resolved before the npm-facing escape: on Windows the backslashes it adds
+  // are separators, which normalization collapses and npm then reads one of them
+  // as the escape.
+  const cafile = expandPnpmEnvVars(declared('cafile') ?? '') || undefined;
   if (cafile) {
     // pnpm's only reader on this line is loadCAFile, a bare readFileSync on the
     // raw value, so a relative one resolves against the cwd the command runs in,
@@ -1241,7 +1347,7 @@ function bridgeWorkspaceNpmrc(
     // ignores a cafile it cannot open, so getting the base wrong drops the trust
     // anchor with no diagnostic at all. (11.2.0 moved that base to the directory
     // of the declaring file.)
-    setCafile(env, resolve(dirname(projectPath), cafile));
+    setCafile(env, escapeNpmEnvExpr(resolve(dirname(projectPath), cafile)));
   }
   // Flat keys on this line: pnpm pins neither trust anchors nor client TLS
   // material to a registry before 11, and npm reads all three the same way.
@@ -1274,6 +1380,7 @@ function bridgeNpmrcSources(
   workspaceDir: string,
   scope: string | null,
   authIniPath: string,
+  userConfigPath: string,
   pnpmVersion: string,
   managerIgnoresEnv: IgnoresNpmConfigEnv
 ): ProxyDeclarations {
@@ -1289,13 +1396,20 @@ function bridgeNpmrcSources(
       ? projectRaw
       : readNpmrcOrWarn(join(workspaceDir, '.npmrc'));
   const authIniRaw = readNpmrcOrWarn(authIniPath);
-  // Highest pnpm precedence first.
+  const trustedWorkspace = isTrustedWorkspaceNpmrc(
+    workspaceDir,
+    userConfigPath
+  );
+  // The same file at the workspace tier already, where pnpm trusts and reads it.
+  const userRaw = trustedWorkspace ? null : readNpmrcOrWarn(userConfigPath);
+  // Highest pnpm precedence first, matching the order it assigns them in
+  // (workspace .npmrc over auth.ini over the file it authenticates from).
   const sources: PnpmNpmrcSource[] = [];
   if (workspaceRaw) {
     sources.push({
       dir: workspaceDir,
       npmNative: workspaceDir === root,
-      ...readPnpmNpmrcEntries(workspaceRaw, pnpmVersion, true),
+      ...readPnpmNpmrcEntries(workspaceRaw, pnpmVersion, !trustedWorkspace),
     });
   }
   if (authIniRaw) {
@@ -1303,6 +1417,17 @@ function bridgeNpmrcSources(
       dir: dirname(authIniPath),
       npmNative: false,
       ...readPnpmNpmrcEntries(authIniRaw, pnpmVersion, false),
+    });
+  }
+  if (userRaw) {
+    sources.push({
+      dir: dirname(userConfigPath),
+      // pnpm authenticates from the file `npmrcAuthFile`/`userconfig` selects.
+      // npm opens that same file only where its own `userconfig` lands on it;
+      // anywhere else it is a source npm never reads, so its entries need
+      // bridging like auth.ini's.
+      npmNative: userConfigPath === getNpmUserConfigPath(root),
+      ...readPnpmNpmrcEntries(userRaw, pnpmVersion, false),
     });
   }
   if (sources.length === 0) {
@@ -1396,24 +1521,21 @@ function bridgeNpmrcSources(
     }
   }
 
-  const contacted = contactedRegistry(
-    env,
-    projectNpmrc,
-    scope,
-    managerIgnoresEnv
+  const requestDart = requestNerfDart(
+    contactedRegistry(env, projectNpmrc, scope, managerIgnoresEnv)
   );
-  const contactedDart = nerfDart(contacted);
+  const requestKeys = requestDart ? registryKeysFor(requestDart) : [];
   // A withheld credential is invisible in npm's own error, so name it, unless
   // npm already finds one for that registry among the sources visible here. A
   // user-level ~/.npmrc is not one, so the message states only what was
   // withheld rather than predicting how the request will fail.
   if (
     bareKeys.size > 0 &&
-    contactedDart &&
-    !credentialDarts.has(contactedDart) &&
-    !hasCredentials(env, projectNpmrc, contactedDart, managerIgnoresEnv)
+    requestDart &&
+    !requestKeys.some((key) => credentialDarts.has(key)) &&
+    !hasCredentials(env, projectNpmrc, requestDart, managerIgnoresEnv)
   ) {
-    warnUnscopedCredential(contactedDart, [...bareKeys]);
+    warnUnscopedCredential(requestDart, [...bareKeys]);
   }
 
   // Flat TLS/proxy keys are part of pnpm's auth-config inheritance set
@@ -1429,7 +1551,7 @@ function bridgeNpmrcSources(
     // expands a leading `~`. npm ignores a cafile it cannot open, so getting the
     // base wrong drops the trust anchor with no diagnostic at all.
     const base = gte(pnpmVersion, '11.2.0') ? cafileSource.dir : root;
-    setCafile(env, resolve(base, cafile));
+    setCafile(env, escapeNpmEnvExpr(resolve(base, cafile)));
   }
   // npm reads inline `ca` PEM only as a flat (global) key, and pnpm does not
   // source-scope trust anchors, so it needs no pin check.
@@ -1446,35 +1568,38 @@ function bridgeNpmrcSources(
   // Every tier is read here, the URL-scoped env one above the files and the
   // project file among them: npm's own registry-scoped TLS keys take paths
   // (certfile/keyfile), so inline PEM cannot reach it in scoped form from any of
-  // them, npm-native file included.
-  for (const key of ['cert', 'key'] as const) {
-    if (!contactedDart) {
-      continue;
-    }
-    const dartKey = `${contactedDart}:${key}`;
-    const value =
-      env[`npm_config_${dartKey}`] ||
-      // The same ambient tier the dart loop honors: from 11.6.0 pnpm reads a
-      // URL-scoped npm_config_ entry the spawn would otherwise pass straight
-      // through in a form npm makes no use of.
-      (managerIgnoresEnv(dartKey)
-        ? undefined
-        : readNpmConfigEnv(process.env, dartKey)) ||
-      declaringSource(dartKey)?.map.get(dartKey);
-    if (value) {
-      env[`npm_config_${key}`] = value;
-    } else if (
-      projectRaw &&
-      // Read as npm resolves it: it expands a `${VAR}` in the key before it
-      // looks the setting up, so a placeholder-spelled one still reaches it.
-      readExpandedKey(projectRaw, key, expandNpmEnvVars) !== undefined
-    ) {
-      // npm reads this one out of its own project config and presents it to
-      // every host it contacts, where pnpm pinned it to a registry this fetch
-      // never reaches. The `null` literal is what cancels a file value at npm's
-      // env tier; an empty one leaves the file's in place (measured on npm 9,
-      // 10 and 11).
-      env[`npm_config_${key}`] = 'null';
+  // them, npm-native file included. Which tier declares it settles the value
+  // first and the nearest dart declaring one then wins, the order pnpm resolves
+  // them in (pickSettingByUrl walks a map every tier has already merged into).
+  const pinnedTls = (dartKey: string): string | undefined =>
+    env[`npm_config_${dartKey}`] ||
+    // The same ambient tier the dart loop honors: from 11.6.0 pnpm reads a
+    // URL-scoped npm_config_ entry the spawn would otherwise pass straight
+    // through in a form npm makes no use of.
+    (managerIgnoresEnv(dartKey)
+      ? undefined
+      : readNpmConfigEnv(process.env, dartKey)) ||
+    declaringSource(dartKey)?.map.get(dartKey);
+  if (requestDart) {
+    for (const key of ['cert', 'key'] as const) {
+      const value = requestKeys
+        .map((regKey) => pinnedTls(`${regKey}:${key}`))
+        .find(Boolean);
+      if (value) {
+        env[`npm_config_${key}`] = value;
+      } else if (
+        projectRaw &&
+        // Read as npm resolves it: it expands a `${VAR}` in the key before it
+        // looks the setting up, so a placeholder-spelled one still reaches it.
+        readExpandedKey(projectRaw, key, expandNpmEnvVars) !== undefined
+      ) {
+        // npm reads this one out of its own project config and presents it to
+        // every host it contacts, where pnpm pinned it to a registry this fetch
+        // never reaches. The `null` literal is what cancels a file value at npm's
+        // env tier; an empty one leaves the file's in place (measured on npm 9,
+        // 10 and 11).
+        env[`npm_config_${key}`] = 'null';
+      }
     }
   }
   const strictSslSource = bridging('strict-ssl');
@@ -1528,7 +1653,7 @@ function fileNoProxy(
     const value = npmrc.get('no-proxy');
     // npm ignores `no-proxy` in the file it does read, so the value never goes
     // through npm's own expansion under that key; expand it with pnpm's grammar.
-    return value ? expandPnpmEnvVars(value) : undefined;
+    return value ? bridgePnpmEnvVars(value) : undefined;
   }
   return undefined;
 }
@@ -1575,11 +1700,10 @@ function applyResolvedProxies(
     resolveProxies(
       tiers,
       contactedRegistry(env, projectNpmrc, scope, managerIgnoresEnv),
-      (key) =>
-        (managerIgnoresEnv(key)
-          ? undefined
-          : readNpmConfigEnv(process.env, key)) ??
-        readExpandedKey(projectNpmrc, key, expandNpmEnvVars)
+      // The user config counts as what npm sees: a proxy it holds there is one
+      // npm resolves for itself, and overwriting it with a value derived from
+      // another key would put the overlay above a file npm was already reading.
+      npmVisibleReader(env, root, projectNpmrc, managerIgnoresEnv)
     )
   );
 }
@@ -1740,7 +1864,7 @@ function reportCredentialDivergences(
   managerIgnoresEnv: IgnoresNpmConfigEnv
 ): void {
   const projectNpmrc = readNpmrcOrWarn(join(root, '.npmrc')) ?? new Map();
-  const contactedDart = nerfDart(
+  const requestDart = requestNerfDart(
     contactedRegistry(env, projectNpmrc, scope, managerIgnoresEnv)
   );
   const npmVisible = npmVisibleReader(
@@ -1749,7 +1873,7 @@ function reportCredentialDivergences(
     projectNpmrc,
     managerIgnoresEnv
   );
-  if (contactedDart) {
+  if (requestDart) {
     // pnpm goes without one where it resolved the registry but not a credential
     // for it: a file it discards whole over an unresolvable reference, an entry
     // it withholds from 11.5.3, or the .npmrc beside an outer workspace file
@@ -1762,52 +1886,55 @@ function reportCredentialDivergences(
     );
     warnNativeCredential(
       env,
-      contactedDart,
+      requestDart,
       'pnpm',
       'Declare it where pnpm reads it too if it should authenticate there, or remove it from .npmrc if npm should not.',
       (key) => (pnpmSends(key) ? undefined : npmVisible(key))
     );
   }
   const userConfig = readPnpmNpmrcMap(userConfigPath, pnpmVersion);
-  if (!userConfig) {
+  if (!userConfig || !requestDart) {
     return;
   }
   // Where pnpm pins a `tokenHelper` written without a registry prefix.
-  const pinnedDart = gte(pnpmVersion, '11.0.0')
-    ? // 11 rescopes it per file, onto the registry that same file declares
-      // (rescopeUnscopedCreds), expanding `${VAR}` before reading it off.
-      nerfDart(
-        expandPnpmEnvVars(userConfig.get('registry') ?? '') || DEFAULT_REGISTRY
+  const pinnedDart = gte(pnpmVersion, '11.4.0')
+    ? // From 11.4.0 it rescopes per file, onto the registry that same file
+      // declares (rescopeUnscopedCreds), expanding `${VAR}` before reading it
+      // off.
+      pnpmNerfDart(
+        expandPnpmEnvVars(userConfig.get('registry') ?? '') || DEFAULT_REGISTRY,
+        pnpmVersion
       )
-    : // 10.x pins it onto the registry that wins overall instead
-      // (getAuthHeadersFromConfig keys it on allSettings.registry). The default
-      // registry, never a scoped one: pnpm keys the helper on
-      // `registry` alone, so a scoped package goes elsewhere without it.
+    : // 10.x and 11.0-11.3 pin it onto the registry that wins overall instead
+      // (getAuthHeadersFromCreds keys the unscoped credential on the resolved
+      // `registry`). The default registry, never a scoped one: pnpm keys the
+      // helper on `registry` alone, so a scoped package goes elsewhere without
+      // it.
       nerfDart(
         npmResolved(env, projectNpmrc, 'registry', managerIgnoresEnv) ||
           DEFAULT_REGISTRY
       );
-  if (
-    !contactedDart ||
-    !declaresTokenHelper(userConfig, contactedDart, pinnedDart)
-  ) {
+  const requestKeys = registryKeysFor(requestDart);
+  if (!declaresTokenHelper(userConfig, requestKeys, pinnedDart)) {
     return;
   }
   // A plain credential npm holds beside the helper is one npm still sends, so
   // there is nothing to report about the helper it never runs.
-  if (!hasCredentialFor(contactedDart, npmVisible)) {
-    warnTokenHelper(contactedDart);
+  if (!hasCredentialFor(requestDart, npmVisible)) {
+    warnTokenHelper(requestDart);
   }
 }
 
 /**
- * Whether the credential pnpm presents at `dart` comes from a token helper. A
- * helper outranks every other credential for that registry, whichever layer
- * those came from (credsToHeader), so finding one settles what pnpm sends.
+ * Whether the credential pnpm presents for a request comes from a token helper.
+ * A helper outranks every other credential for that registry, whichever layer it
+ * came from (credsToHeader), so finding one settles what pnpm sends.
+ * `requestKeys` is the dart chain pnpm walks, so an unscoped helper counts when
+ * the dart it was pinned to is one of them.
  */
 function declaresTokenHelper(
   userConfig: Map<string, string>,
-  dart: string,
+  requestKeys: string[],
   pinnedDart: string | null
 ): boolean {
   // pnpm expands `${VAR}` in this file's values as well as its keys, and a value
@@ -1816,9 +1943,10 @@ function declaresTokenHelper(
     expandPnpmEnvVars(
       readExpandedKey(userConfig, key, expandPnpmEnvVars) ?? ''
     );
-  return (
-    registryKeysFor(dart).some((key) => declared(`${key}:tokenHelper`)) ||
-    (pinnedDart === dart && !!declared('tokenHelper'))
+  return requestKeys.some(
+    (key) =>
+      !!declared(`${key}:tokenHelper`) ||
+      (key === pinnedDart && !!declared('tokenHelper'))
   );
 }
 

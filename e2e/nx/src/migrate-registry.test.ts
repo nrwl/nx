@@ -5,6 +5,7 @@ import {
   e2eCwd,
   fileExists,
   getPublishedVersion,
+  getSelectedPackageManager,
   newProject,
   readFile,
   runCLI,
@@ -95,8 +96,8 @@ function expectRegistryTakenFromPackageManagerConfig(
 }
 
 // npm has no tier for a package-manager-only config file, so pinning the closed
-// port in the file npm does read leaves that file as the only place a working
-// registry can come from.
+// port in .npmrc leaves the package manager's own file as the only place a
+// working registry can come from.
 function pinNpmrcToUnreachableRegistry(): void {
   updateFile('.npmrc', (content) =>
     [
@@ -171,7 +172,12 @@ function createYarnBerryProject(): void {
   }
 }
 
-describe('migrate registry configuration', () => {
+// Each describe installs and pins the package manager it exercises, so the
+// matrix leg's own choice changes nothing about what runs. Pinning the suite to
+// the one leg every OS has keeps it from repeating identical work per manager.
+const suite = getSelectedPackageManager() === 'npm' ? describe : describe.skip;
+
+suite('migrate registry configuration', () => {
   let previousPackageManager: string;
 
   beforeAll(() => {

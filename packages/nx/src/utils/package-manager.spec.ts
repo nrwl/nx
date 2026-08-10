@@ -34,6 +34,7 @@ import {
   getPackageManagerCommand,
   getPackageManagerVersion,
   getPackageWorkspaces,
+  getWorkspaceRegistryUrlForDisplay,
   isWorkspacesEnabled,
   modifyPnpmWorkspaceYamlToFitNewDirectory,
   modifyYarnRcToFitNewDirectory,
@@ -762,6 +763,100 @@ describe('package-manager', () => {
           'yarn@3.2.3+sha224.953c8233f7a92884eee2de69a1b92d1f2ec1655e66d08071ba9a02fa'
         )
       ).toEqual('3.2.3');
+    });
+  });
+
+  describe('getWorkspaceRegistryUrlForDisplay', () => {
+    let execSyncMock: jest.SpyInstance;
+
+    /** Answers `npm config get <key>` from `answers`, `undefined` for the rest. */
+    function stubNpmConfig(answers: Record<string, string>): void {
+      execSyncMock.mockImplementation((command: string) => {
+        const key = command.replace('npm config get ', '');
+        return command.startsWith('npm config get ')
+          ? `${answers[key] ?? 'undefined'}\n`
+          : '10.0.0\n';
+      });
+    }
+    /** Only the registry lookups; the version probe shells out here as well. */
+    const configCalls = (): string[] =>
+      execSyncMock.mock.calls
+        .map(([command]) => command as string)
+        .filter((command) => command.startsWith('npm config get '));
+
+    beforeEach(() => {
+      clearPackageManagerVersionCache();
+      jest.spyOn(configModule, 'readNxJson').mockReturnValue({});
+      (existsSync as jest.Mock).mockReturnValue(false);
+      (statSync as jest.Mock).mockImplementation(() => {
+        throw new Error('ENOENT: no such file or directory');
+      });
+      jest.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({});
+      execSyncMock = jest.spyOn(childProcess, 'execSync');
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+      jest.clearAllMocks();
+    });
+
+    it('masks the userinfo the answer carries', () => {
+      // It goes into an error message, and a registry declared in a package
+      // manager's own config can hold the credential inline.
+      stubNpmConfig({ registry: 'https://ci-token@registry.corp.example/' });
+
+      expect(getWorkspaceRegistryUrlForDisplay('nx')).toBe(
+        'https://***@registry.corp.example/'
+      );
+    });
+
+    it('asks npm under the overlay the fetch runs with', () => {
+      jest.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({
+        npm_config_registry: 'https://from-overlay.example.com/',
+      });
+      stubNpmConfig({ registry: 'https://from-overlay.example.com/' });
+
+      expect(getWorkspaceRegistryUrlForDisplay('nx')).toBe(
+        'https://from-overlay.example.com/'
+      );
+      const [, options] = execSyncMock.mock.calls.find(([command]) =>
+        (command as string).startsWith('npm config get ')
+      );
+      expect((options as any).env.npm_config_registry).toBe(
+        'https://from-overlay.example.com/'
+      );
+      // A devEngines pin with onFail: error aborts the lookup without this.
+      expect((options as any).env.npm_config_force).toBe('true');
+    });
+
+    it('asks for the scope first, then the default it falls back to', () => {
+      stubNpmConfig({ registry: 'https://default.example.com/' });
+
+      expect(getWorkspaceRegistryUrlForDisplay('@nx/js')).toBe(
+        'https://default.example.com/'
+      );
+      expect(configCalls()).toEqual([
+        'npm config get @nx:registry',
+        'npm config get registry',
+      ]);
+    });
+
+    it('stops at the scoped registry when npm resolves one', () => {
+      stubNpmConfig({
+        '@nx:registry': 'https://scoped.example.com/',
+        registry: 'https://default.example.com/',
+      });
+
+      expect(getWorkspaceRegistryUrlForDisplay('@nx/js')).toBe(
+        'https://scoped.example.com/'
+      );
+      expect(configCalls()).toEqual(['npm config get @nx:registry']);
+    });
+
+    it('resolves nothing when npm declares no registry at all', () => {
+      stubNpmConfig({});
+
+      expect(getWorkspaceRegistryUrlForDisplay('nx')).toBeNull();
     });
   });
 

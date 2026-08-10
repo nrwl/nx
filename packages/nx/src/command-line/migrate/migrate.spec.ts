@@ -4686,6 +4686,7 @@ module.exports = {
         'a host the npm registry is a prefix of',
         'registry.npmjs.org.corp.example',
       ],
+      ['a host the loopback address is a prefix of', '127.0.0.1.corp.example'],
     ])(
       'falls back to install for a migration-less packument from %s',
       async (_label, host) => {

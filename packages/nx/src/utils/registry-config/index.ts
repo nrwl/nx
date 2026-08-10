@@ -15,7 +15,11 @@ import {
 import type { PackageManager } from '../package-manager';
 
 export type { NpmConfigEnv } from './utils';
-export { mergeNpmConfigEnv, ignoresNpmConfigEnv } from './utils';
+export {
+  getPackageScope,
+  mergeNpmConfigEnv,
+  ignoresNpmConfigEnv,
+} from './utils';
 
 /**
  * Computes the npm_config_* environment entries a spawned `npm view`/`npm pack`

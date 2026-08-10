@@ -499,6 +499,20 @@ describe('getPnpmSpawnRegistryEnv', () => {
       );
     });
 
+    it("resolves the proxy pair across npm's user config before deriving one", () => {
+      // pnpm's config on this line is npm-conf shaped, so the user .npmrc is one
+      // of its tiers. An https-proxy there is what a legacy `proxy` above it
+      // leaves undeclared, and deriving without it would overwrite npm's own.
+      writeUserConfig('https-proxy=http://user-proxy.example.com:8080');
+      writeFileSync(
+        join(root, '.npmrc'),
+        'proxy=http://project-proxy.example.com:8080'
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '10.16.0')).toEqual({
+        npm_config_proxy: 'http://user-proxy.example.com:8080',
+      });
+    });
+
     it('pins an unscoped helper to the registry that wins overall', () => {
       // getAuthHeadersFromConfig keys it on allSettings.registry, so the yaml
       // default carries it even though the user config names no registry. 11
@@ -1553,6 +1567,83 @@ describe('getPnpmSpawnRegistryEnv', () => {
       }
     });
 
+    it('escapes what a reference expanded to, so npm does not expand it again', () => {
+      // pnpm substitutes once and sends the result; npm runs its own pass over
+      // every value it receives, which would resolve a `${VAR}` the variable's
+      // own value carries.
+      process.env.NX_TEST_TOKEN = 'ab${NX_TEST_HOST}cd';
+      process.env.NX_TEST_HOST = 'leaked';
+      writeAuthIni(
+        [
+          'registry=https://reg-a.example.com/',
+          '//reg-a.example.com/:_authToken=${NX_TEST_TOKEN}',
+        ].join('\n')
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        'npm_config_//reg-a.example.com/:_authToken': 'ab\\${NX_TEST_HOST}cd',
+      });
+    });
+
+    it('darts a bare credential onto the registry pnpm resolved, not its escaped form', () => {
+      // The bridged registry is text for npm to expand, where `\` is a path
+      // separator to the URL parser: darting that instead keys the credential a
+      // segment off and npm sends the request unauthenticated.
+      process.env.NX_TEST_HOST = 'https://reg-a.example.com/${LITERAL}/';
+      writeAuthIni(
+        ['registry=${NX_TEST_HOST}', '_authToken=ini-token'].join('\n')
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/\\${LITERAL}/',
+        'npm_config_//reg-a.example.com/$%7BLITERAL%7D/:_authToken':
+          'ini-token',
+      });
+    });
+
+    it('keys a credential the way pnpm reads an escaped reference in the key', () => {
+      // pnpm consumes the escape on both halves, so its dart and its registry
+      // agree. npm expands the value but not the key, so a key left escaped
+      // matches no registry and the request goes out unauthenticated.
+      writeAuthIni(
+        [
+          'registry=https://reg-a.example.com/\\${LITERAL}/',
+          '//reg-a.example.com/\\${LITERAL}/:_authToken=ini-token',
+        ].join('\n')
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/\\${LITERAL}/',
+        'npm_config_//reg-a.example.com/${LITERAL}/:_authToken': 'ini-token',
+      });
+    });
+
+    it('escapes a cafile path, so npm opens the file pnpm resolved', () => {
+      // Only the escaping is observable here. That it happens after the path is
+      // resolved matters on Windows alone, where the backslashes it adds are
+      // separators that normalization would collapse.
+      process.env.NX_TEST_TOKEN = 'certs/${LITERAL}/ca.pem';
+      writeAuthIni('cafile=${NX_TEST_TOKEN}');
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_cafile: join(
+          configHome,
+          'pnpm',
+          'certs/\\${LITERAL}/ca.pem'
+        ),
+      });
+    });
+
+    it('escapes a JSON auth token, which pnpm never expands at all', () => {
+      process.env.NX_TEST_HOST = 'leaked';
+      process.env.pnpm_config__auth = JSON.stringify({
+        'https://reg-a.example.com/': {
+          '@': { authToken: 'ab${NX_TEST_HOST}cd' },
+        },
+      });
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        'npm_config_//reg-a.example.com/:_authToken': 'ab\\${NX_TEST_HOST}cd',
+      });
+    });
+
     it('bridges flat ca/cert/key from auth.ini (npm has no inline scoped form)', () => {
       writeAuthIni(
         [
@@ -2169,6 +2260,188 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
     });
 
+    describe('a registry whose path carries no trailing slash', () => {
+      // pnpm's normalize-registry-url appends one from 11.15.1, which moves the
+      // dart it pins a file's own credentials to a path segment deeper.
+      it('pins an unscoped credential to the full path from 11.15.1', () => {
+        writeAuthIni(
+          [
+            'registry=https://reg-a.example.com/api/npm/npm-virtual',
+            '_authToken=ini-token',
+          ].join('\n')
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.15.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/api/npm/npm-virtual',
+          'npm_config_//reg-a.example.com/api/npm/:_authToken': 'ini-token',
+        });
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.15.1')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/api/npm/npm-virtual',
+          'npm_config_//reg-a.example.com/api/npm/npm-virtual/:_authToken':
+            'ini-token',
+        });
+      });
+
+      it('pins a JSON auth entry the same way', () => {
+        process.env.pnpm_config__auth = JSON.stringify({
+          'https://reg-a.example.com/api/npm/npm-virtual': {
+            '@': { authToken: 'json-token' },
+          },
+        });
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.15.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/api/npm/npm-virtual',
+          'npm_config_//reg-a.example.com/api/npm/:_authToken': 'json-token',
+        });
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.15.1')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/api/npm/npm-virtual',
+          'npm_config_//reg-a.example.com/api/npm/npm-virtual/:_authToken':
+            'json-token',
+        });
+      });
+
+      it('finds client TLS material pinned below the plain dart', () => {
+        // Both readers append the slash before darting, so the walk starts at the
+        // request's own directory rather than at its parent.
+        writeYaml(
+          'registries:\n  default: https://reg-a.example.com/api/npm/npm-virtual\n'
+        );
+        writeAuthIni(
+          [
+            '//reg-a.example.com/api/npm/npm-virtual/:cert=-----BEGIN CERT-----',
+            '//reg-a.example.com/api/npm/npm-virtual/:key=-----BEGIN KEY-----',
+          ].join('\n')
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/api/npm/npm-virtual',
+          npm_config_cert: '-----BEGIN CERT-----',
+          npm_config_key: '-----BEGIN KEY-----',
+        });
+      });
+
+      it('reports a credential npm holds there that pnpm would not send', () => {
+        const { logger } = require('../logger');
+        (logger.warn as jest.Mock).mockClear();
+        // 11.5.3 withholds an entry whose value holds a reference; npm expands
+        // the same line and authenticates with it.
+        process.env.NX_TEST_TOKEN = 'project-token';
+        writeYaml(
+          'registries:\n  default: https://reg-a.example.com/api/npm/npm-virtual\n'
+        );
+        writeFileSync(
+          join(root, '.npmrc'),
+          '//reg-a.example.com/api/npm/npm-virtual/:_authToken=${NX_TEST_TOKEN}\n'
+        );
+        jest.isolateModules(() => {
+          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+          fresh('is-even', root, '11.5.3');
+        });
+        expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
+          '//reg-a.example.com/api/npm/npm-virtual/'
+        );
+      });
+
+      it('reports a token helper pinned there', () => {
+        const { logger } = require('../logger');
+        (logger.warn as jest.Mock).mockClear();
+        writeYaml(
+          'registries:\n  default: https://reg-a.example.com/api/npm/npm-virtual\n'
+        );
+        writeUserConfig(
+          '//reg-a.example.com/api/npm/npm-virtual/:tokenHelper=/usr/local/bin/get-token'
+        );
+        jest.isolateModules(() => {
+          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+          fresh('is-even', root, '11.5.0');
+        });
+        expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
+          'runs a token helper'
+        );
+      });
+    });
+
+    describe('the file pnpm authenticates from', () => {
+      it('bridges a pnpm-only user config npm never opens', () => {
+        writePnpmOnlyUserConfig(
+          [
+            'registry=https://reg-a.example.com/',
+            '//reg-a.example.com/:_authToken=user-token',
+            'https-proxy=http://proxy.example.com:8080',
+          ].join('\n')
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+          'npm_config_//reg-a.example.com/:_authToken': 'user-token',
+          npm_config_proxy: 'http://proxy.example.com:8080',
+          npm_config_https_proxy: 'http://proxy.example.com:8080',
+        });
+      });
+
+      it("leaves the same settings to npm when it is npm's own user config", () => {
+        writeUserConfig(
+          [
+            'registry=https://reg-a.example.com/',
+            '//reg-a.example.com/:_authToken=user-token',
+            'https-proxy=http://proxy.example.com:8080',
+          ].join('\n')
+        );
+        // Only the http proxy goes in: npm reads the file for the rest, but it
+        // has no `proxy` of its own to fall back from `https-proxy` to, which
+        // pnpm resolves for itself.
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_proxy: 'http://proxy.example.com:8080',
+        });
+      });
+
+      it('resolves the proxy pair across it before deriving one from another', () => {
+        // pnpm resolves all three settings everywhere first, so an https-proxy
+        // here is what a legacy `proxy` above it leaves undeclared. Skipping the
+        // file would derive an https-proxy from that `proxy` and overwrite npm's.
+        writeUserConfig('https-proxy=http://user-proxy.example.com:8080');
+        writeFileSync(
+          join(root, '.npmrc'),
+          'proxy=http://project-proxy.example.com:8080'
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_proxy: 'http://user-proxy.example.com:8080',
+        });
+      });
+
+      it('trusts the workspace .npmrc when it is that file, above auth.ini', () => {
+        // pnpm's workspaceIsTrustedAuthFile: it expands the references it would
+        // withhold from a project-controlled file, and the workspace copy of the
+        // coincident path outranks auth.ini rather than sitting under it.
+        process.env.NX_TEST_HOST = 'workspace.example.com';
+        writeFileSync(
+          join(root, '.npmrc'),
+          [
+            'registry=https://${NX_TEST_HOST}/',
+            '//workspace.example.com/:_authToken=workspace-token',
+          ].join('\n')
+        );
+        process.env.PNPM_CONFIG_NPMRC_AUTH_FILE = join(root, '.npmrc');
+        writeAuthIni('registry=https://auth-ini.example.com/');
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.15.1')).toEqual({});
+      });
+
+      it('ranks it under auth.ini and the workspace .npmrc', () => {
+        writePnpmOnlyUserConfig(
+          [
+            'registry=https://reg-user.example.com/',
+            '//reg-a.example.com/:_authToken=user-token',
+          ].join('\n')
+        );
+        writeAuthIni(
+          [
+            'registry=https://reg-ini.example.com/',
+            '//reg-a.example.com/:_authToken=ini-token',
+          ].join('\n')
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_registry: 'https://reg-ini.example.com/',
+          'npm_config_//reg-a.example.com/:_authToken': 'ini-token',
+        });
+      });
+    });
+
     describe('reporting a credential pnpm would not send', () => {
       function warnFor(version: string, pkg = 'is-even'): jest.Mock {
         const { logger } = require('../logger');
@@ -2331,6 +2604,23 @@ describe('getPnpmSpawnRegistryEnv', () => {
         expect(warnFor()).not.toHaveBeenCalled();
       });
 
+      it('keeps the overall-registry pin until rescoping arrives in 11.4.0', () => {
+        const { logger } = require('../logger');
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        writeUserConfig('tokenHelper=/usr/local/bin/get-token');
+        for (const [version, warned] of [
+          ['11.3.0', true],
+          ['11.4.0', false],
+        ] as const) {
+          (logger.warn as jest.Mock).mockClear();
+          jest.isolateModules(() => {
+            const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+            fresh('is-even', root, version);
+          });
+          expect((logger.warn as jest.Mock).mock.calls.length > 0).toBe(warned);
+        }
+      });
+
       it('stays quiet about a helper for a registry npm will not contact', () => {
         writeYaml('registries:\n  default: https://reg-a.example.com/\n');
         writeUserConfig(
@@ -2359,12 +2649,22 @@ describe('getPnpmSpawnRegistryEnv', () => {
       it('reports the helper when that same file is one only pnpm reads', () => {
         writeYaml('registries:\n  default: https://reg-a.example.com/\n');
         writePnpmOnlyUserConfig(
+          '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token'
+        );
+        expect(warnFor().mock.calls[0][0]).toContain('//reg-a.example.com/');
+      });
+
+      it('stays quiet about a helper whose file also carries a plain credential npm can be handed', () => {
+        // A file only pnpm reads is bridged, so the plain credential beside the
+        // helper reaches npm the same way one in npm's own user config does.
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        writePnpmOnlyUserConfig(
           [
             '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token',
             '//reg-a.example.com/:_authToken=user-token',
           ].join('\n')
         );
-        expect(warnFor().mock.calls[0][0]).toContain('//reg-a.example.com/');
+        expect(warnFor()).not.toHaveBeenCalled();
       });
 
       it('follows npmrcAuthFile from the global config.yaml', () => {
@@ -2743,7 +3043,31 @@ describe('getPnpmSpawnRegistryEnv', () => {
           npm_config_proxy: 'http://reg-env.example.com:8080',
           npm_config_https_proxy: 'http://reg-env.example.com:8080',
         });
-        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.3')).toEqual({});
+        // The proxies were not part of the withheld set yet, so only the
+        // registry goes.
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.3')).toEqual({
+          npm_config_proxy: 'http://reg-env.example.com:8080',
+          npm_config_https_proxy: 'http://reg-env.example.com:8080',
+        });
+      });
+
+      it('withholds a proxy holding one from 11.11.0', () => {
+        process.env.NX_TEST_HOST = 'reg-env.example.com';
+        writeYaml(
+          [
+            'registries:',
+            '  default: https://reg-a.example.com/',
+            'httpsProxy: http://${NX_TEST_HOST}:8080',
+          ].join('\n')
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+          npm_config_proxy: 'http://reg-env.example.com:8080',
+          npm_config_https_proxy: 'http://reg-env.example.com:8080',
+        });
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.11.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+        });
       });
 
       it('keeps expanding a setting that names no request destination', () => {

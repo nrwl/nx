@@ -692,6 +692,63 @@ export async function resolvePackageVersionUsingInstallation(
   }
 }
 
+/**
+ * The registry the fetch for `pkg` went to, with its userinfo masked because a
+ * registry URL can carry a bare token. npm is asked under the overlay
+ * `packageRegistryView` runs with, so a registry the package manager keeps
+ * outside the .npmrc chain and a scope npm resolves for itself both land on the
+ * value that fetch used. Null where npm declares no registry; throws where it
+ * cannot be run.
+ */
+export function getWorkspaceRegistryUrlForDisplay(pkg: string): string | null {
+  const {
+    getNpmSpawnRegistryEnv,
+    getPackageScope,
+    ignoresNpmConfigEnv,
+    mergeNpmConfigEnv,
+  } = require('./registry-config') as typeof import('./registry-config');
+  const workspacePm = detectPackageManager();
+  const configRoot = getPackageManagerConfigRoot();
+  const workspacePmVersion = getPackageManagerVersionSafe(
+    workspacePm,
+    configRoot
+  );
+  const env = mergeNpmConfigEnv(
+    process.env,
+    {
+      ...getNpmSpawnRegistryEnv(
+        pkg,
+        configRoot,
+        workspacePm,
+        workspacePmVersion
+      ),
+      // Same downgrade packageRegistryView needs: a `devEngines.packageManager`
+      // pin with `onFail: error` aborts even this read-only lookup otherwise.
+      npm_config_force: 'true',
+    },
+    ignoresNpmConfigEnv(workspacePm, workspacePmVersion)
+  );
+  const scope = getPackageScope(pkg);
+  // npm's own pickRegistry order: the scope decides where it can, the default
+  // answers the rest. It prints `undefined` for a setting nothing declares.
+  for (const key of scope ? [`${scope}:registry`, 'registry'] : ['registry']) {
+    const value = execSync(`npm config get ${key}`, {
+      cwd: configRoot,
+      timeout: 5000,
+      windowsHide: true,
+      encoding: 'utf-8',
+      // The downgraded pin warns on stderr, which is noise on a path that only
+      // decorates an error message.
+      stdio: ['ignore', 'pipe', 'ignore'],
+      env,
+    }).trim();
+    if (value && value !== 'undefined' && value !== 'null') {
+      return redactUrlCredentials(value);
+    }
+  }
+  return null;
+}
+
 export async function packageRegistryView(
   pkg: string,
   version: string,
