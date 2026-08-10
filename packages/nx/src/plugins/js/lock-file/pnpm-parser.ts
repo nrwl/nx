@@ -1243,13 +1243,11 @@ function mapRootSnapshot(
             graph.externalNodes[`npm:${packageName}`].data.version === version
               ? graph.externalNodes[`npm:${packageName}`]
               : findNodeMatchingVersion(graph, packageName, version));
-          // A file:/link: local-path dependency records its path relative to the
-          // declaring package here but relative to the workspace root in the
-          // lockfile, so match it to its external node by name instead of by
-          // the (mismatched) path (findLocalPathNode throws when two
-          // local-path packages share a name).
+          // A file:/link: local-path dependency records a path where a version
+          // would go, so the lookups above never match it; findLocalPathNode
+          // matches it on that path instead.
           if (!node && isLocalPathSpecifier(version)) {
-            node = findLocalPathNode(graph, packageName);
+            node = findLocalPathNode(graph, packageName, version);
           }
           // peer dependencies are mapped to dependencies
           const section =
@@ -1270,11 +1268,19 @@ function mapRootSnapshot(
           }
           snapshot.specifiers[packageName] = version;
           snapshot[section] = snapshot[section] || {};
+          // pnpm keys a package by its real name, so an aliased dependency's ref
+          // carries the full key rather than the bare version the name-sharing
+          // case uses. A local-path alias reaches here (an `npm:` one is matched
+          // as an alias and already keeps its key), and dropping the name would
+          // leave the ref pointing at no entry in the packages section.
+          const aliased =
+            lockfileVersion >= 9 && node.data.packageName !== packageName;
           snapshot[section][packageName] = findOriginalKeys(
             packages,
             packageIndex,
             node,
-            lockfileVersion
+            lockfileVersion,
+            { returnFullKey: aliased }
           )[0][0];
         }
       });

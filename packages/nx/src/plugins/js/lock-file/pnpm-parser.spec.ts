@@ -4729,6 +4729,175 @@ snapshots:
         getPrunedPnpmLocalPathArtifacts('/root', result).map((a) => a.path)
       ).toContain('local_path_modules/libs/linked/package.json');
     });
+
+    it('relocates an aliased file: ref together with the key it points at', () => {
+      // pnpm records an aliased local-path dependency as `<real name>@file:<path>`,
+      // both as the package key and as the ref pointing at it. Relocating only
+      // the key leaves the ref pointing at nothing, which pnpm rejects with
+      // ERR_PNPM_LOCKFILE_MISSING_DEPENDENCY.
+      vol.fromJSON(
+        {
+          'node_modules/.modules.yaml': `hoistedDependencies: {}`,
+          'libs/vendor/package.json': '{"name":"vendor-dir","version":"1.0.0"}',
+          'libs/vendor2/package.json':
+            '{"name":"vendor2-real-name","version":"1.0.0"}',
+        },
+        '/root'
+      );
+
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      vendor-dir:
+        specifier: file:libs/vendor
+        version: file:libs/vendor
+
+packages:
+
+  vendor-dir@file:libs/vendor:
+    resolution: {directory: libs/vendor, type: directory}
+
+  vendor2-real-name@file:libs/vendor2:
+    resolution: {directory: libs/vendor2, type: directory}
+
+snapshots:
+
+  vendor-dir@file:libs/vendor:
+    dependencies:
+      aliased-vendor: vendor2-real-name@file:libs/vendor2
+
+  vendor2-real-name@file:libs/vendor2: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { 'vendor-dir': 'file:local_path_modules/libs/vendor' },
+      };
+
+      const graph = makeGraph([], {}, {
+        'npm:vendor-dir': {
+          type: 'npm',
+          name: 'npm:vendor-dir',
+          data: { version: 'file:libs/vendor', packageName: 'vendor-dir' },
+        },
+        'npm:vendor2-real-name': {
+          type: 'npm',
+          name: 'npm:vendor2-real-name',
+          data: {
+            version: 'file:libs/vendor2',
+            packageName: 'vendor2-real-name',
+          },
+        },
+      } as any);
+      graph.dependencies['npm:vendor-dir'] = [
+        {
+          source: 'npm:vendor-dir',
+          target: 'npm:vendor2-real-name',
+          type: 'static',
+        },
+      ];
+
+      const prunedGraph = pruneProjectGraph(
+        graph,
+        packageJson,
+        '/root',
+        'pnpm'
+      );
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/root'
+      );
+
+      expect(result).toContain(
+        'aliased-vendor: vendor2-real-name@file:local_path_modules/libs/vendor2'
+      );
+      expect(result).toContain(
+        'vendor2-real-name@file:local_path_modules/libs/vendor2:'
+      );
+      expect(result).not.toContain('file:libs/vendor2');
+    });
+
+    it('prunes an aliased local-path dependency the lock file keys by its real name', () => {
+      // The manifest names the dependency by its alias while the lock file keys
+      // it by the target's real package name, so nothing matches it by name.
+      // Pruning used to throw "not found in the root lock file" and fall back to
+      // the unpruned root lockfile.
+      vol.fromJSON(
+        {
+          'node_modules/.modules.yaml': `hoistedDependencies: {}`,
+          'libs/vendor/package.json':
+            '{"name":"vendor-real-name","version":"1.0.0"}',
+        },
+        '/root'
+      );
+
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      aliased-vendor:
+        specifier: file:libs/vendor
+        version: vendor-real-name@file:libs/vendor
+
+packages:
+
+  vendor-real-name@file:libs/vendor:
+    resolution: {directory: libs/vendor, type: directory}
+
+snapshots:
+
+  vendor-real-name@file:libs/vendor: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: {
+          'aliased-vendor': 'file:local_path_modules/libs/vendor',
+        },
+      };
+
+      const graph = makeGraph([], {}, {
+        'npm:vendor-real-name': {
+          type: 'npm',
+          name: 'npm:vendor-real-name',
+          data: {
+            version: 'file:libs/vendor',
+            packageName: 'vendor-real-name',
+          },
+        },
+      } as any);
+
+      const prunedGraph = pruneProjectGraph(
+        graph,
+        packageJson,
+        '/root',
+        'pnpm'
+      );
+      expect(prunedGraph.externalNodes['npm:vendor-real-name']).toBeDefined();
+
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/root'
+      );
+
+      // The importer ref keeps the real package name, which is what the packages
+      // section is keyed by; a bare version would point at no entry.
+      expect(result).toMatch(
+        /aliased-vendor:\s+specifier: file:local_path_modules\/libs\/vendor\s+version: vendor-real-name@file:local_path_modules\/libs\/vendor/
+      );
+      expect(result).toContain(
+        'vendor-real-name@file:local_path_modules/libs/vendor:'
+      );
+    });
   });
 
   describe('missing .modules.yaml', () => {
