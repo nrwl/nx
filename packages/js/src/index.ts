@@ -26,8 +26,6 @@ export { type LinterType } from './utils/linter';
 export {
   createLockFile,
   createPackageJson,
-  createPrunedLockfile,
-  emitPrunedPnpmInstallAssets,
+  generatePrunedDeployOutput,
   getLockFileName,
-  writePrunedPnpmInstallSettings,
 } from '@nx/devkit/internal';

@@ -1,21 +1,13 @@
 import {
-  copyFileSync,
   existsSync,
-  mkdirSync,
   readdirSync,
   readFileSync,
   realpathSync,
-  rmSync,
   statSync,
-  writeFileSync,
 } from 'fs';
-import { dirname, isAbsolute, join, posix, relative, resolve, sep } from 'path';
+import { isAbsolute, join, posix, relative, resolve, sep } from 'path';
 import { getCatalogManager } from '../../../utils/catalog';
-import {
-  readJsonFile,
-  readYamlFile,
-  writeJsonFile,
-} from '../../../utils/fileutils';
+import { readJsonFile, readYamlFile } from '../../../utils/fileutils';
 import { logger } from '../../../utils/logger';
 import { output } from '../../../utils/output';
 import type { Lockfile } from '@pnpm/lockfile-types';
@@ -1592,8 +1584,9 @@ export function relocatePrunedLocalPathSpec(
 }
 
 /**
- * Warns when a pruned pnpm lockfile needs install-time artifacts that only the
- * emitters ship, naming the ones this workspace actually needs. For callers of
+ * Warns when a pruned pnpm lockfile needs install-time artifacts that only
+ * `generatePrunedDeployOutput` ships, naming the ones this workspace actually
+ * needs. For callers of
  * the bare `createLockFile`, which hands back a lockfile and nothing else: the
  * pieces below live outside it, so an output assembled from the lockfile and
  * the manifest alone installs without the workspace's build-script approvals,
@@ -1639,7 +1632,7 @@ export function warnIncompletePrunedPnpmOutput(
       `A standalone install of the output will be missing ${missing.join(
         ', and '
       )}.`,
-      'Use createPrunedLockfile together with emitPrunedPnpmInstallAssets or writePrunedPnpmInstallSettings to ship them.',
+      'Use generatePrunedDeployOutput to ship them.',
     ],
   });
 }
@@ -1786,30 +1779,41 @@ export function rewritePrunedLocalPathSpecifiers(
   dropEmptyPeerDependencySections(packageJson);
 }
 
+export type PrunedDeployArtifact =
+  | { path: string; content: string | Buffer; sourcePath?: never }
+  | { path: string; sourcePath: string; content?: never };
+
 /**
- * Emits the pnpm install-time artifacts a standalone pruned output needs through
- * a caller-provided `emit` sink: the pnpm 11 settings-only pnpm-workspace.yaml
- * (see `getPrunedPnpmInstallSettingsYaml`), the `pnpm patch` files, and the
+ * The pnpm install-time artifacts a standalone pruned output needs, as data for
+ * a caller to write or emit: the pnpm 11 settings-only pnpm-workspace.yaml (see
+ * `getPrunedPnpmInstallSettingsYaml`), the `pnpm patch` files, and the
  * non-workspace local-path dependencies (`file:` tarballs/dirs and `link:`
- * targets, see `getPrunedPnpmLocalPathArtifacts`), plus, for pnpm <=10, the
- * build-script approvals and `patchedDependencies` declaration folded into
- * `packageJson` in place (see `getPrunedPnpmPackageJsonBuildSettings`).
- * The bundler plugins (webpack, rspack) hold the manifest in memory and emit it
- * as a compilation asset after this returns, so the pnpm <=10 additions are
- * mutated onto `packageJson` rather than written; the file-writing executors use
- * `writePrunedPnpmInstallSettings` instead.
+ * targets, see `getPrunedPnpmLocalPathArtifacts`). The last are carried as a
+ * source path rather than content so a directory sink can copy them straight
+ * across. Everything is resolved before returning, so a colliding patch path
+ * aborts before the caller ships anything.
+ *
+ * `obsolete` names output-relative paths a prior deploy may hold that this one
+ * must not: a cache replay restores only the files the newer entry holds, so
+ * once the settings empty out a lingering pnpm-workspace.yaml would have pnpm 11
+ * read its patchedDependencies as a lockfile mismatch.
+ *
+ * The pnpm <=10 build-script approvals and `patchedDependencies` declaration are
+ * folded onto `packageJson` in place (see
+ * `getPrunedPnpmPackageJsonBuildSettings`), so write or emit the manifest after
+ * this returns.
+ *
  * Pass `includeLocalPathArtifacts: false` when the lockfile is the root-lockfile
  * fallback, which `createPrunedLockfile` reports as `pruned: false`: its importer
  * references the whole workspace, so shipping its local-path trees would copy
  * unrelated sources into the output.
  */
-export function emitPrunedPnpmInstallAssets(
+export function getPrunedPnpmInstallArtifacts(
   workspaceRootPath: string,
   prunedLockfileContent: string,
   packageJson: PackageJson,
-  emit: (assetPath: string, content: string | Buffer) => void,
   options?: { includeLocalPathArtifacts?: boolean }
-): void {
+): { artifacts: PrunedDeployArtifact[]; obsolete: string[] } {
   const config: PrunedPnpmConfig = {
     pnpmMajor: getPnpmMajorOrWarn(workspaceRootPath),
     patchedDependencies: getPrunedPatchedDependencies(
@@ -1817,8 +1821,6 @@ export function emitPrunedPnpmInstallAssets(
       prunedLockfileContent
     ),
   };
-  // Resolve the patch files first so a colliding patch path aborts before any
-  // asset is emitted.
   const { patchFiles, packageJsonPatchedDependencies } =
     getPrunedPnpmPatchArtifacts(
       workspaceRootPath,
@@ -1830,19 +1832,21 @@ export function emitPrunedPnpmInstallAssets(
     prunedLockfileContent,
     config
   );
+  const artifacts: PrunedDeployArtifact[] = [];
+  const obsolete: string[] = [];
   if (yaml !== null) {
-    emit('pnpm-workspace.yaml', yaml);
+    artifacts.push({ path: 'pnpm-workspace.yaml', content: yaml });
+  } else {
+    obsolete.push('pnpm-workspace.yaml');
   }
-  for (const { path, content } of patchFiles) {
-    emit(path, content);
-  }
+  artifacts.push(...patchFiles);
   if (options?.includeLocalPathArtifacts !== false) {
-    for (const { path, sourcePath } of getPrunedPnpmLocalPathArtifacts(
-      workspaceRootPath,
-      prunedLockfileContent
-    )) {
-      emit(path, readFileSync(sourcePath));
-    }
+    artifacts.push(
+      ...getPrunedPnpmLocalPathArtifacts(
+        workspaceRootPath,
+        prunedLockfileContent
+      )
+    );
   }
   const buildSettings = getPrunedPnpmPackageJsonBuildSettings(
     workspaceRootPath,
@@ -1854,107 +1858,5 @@ export function emitPrunedPnpmInstallAssets(
     buildSettings,
     packageJsonPatchedDependencies
   );
-}
-
-/**
- * Writes the pnpm install-time artifacts a standalone pruned output needs into
- * `outputDirectory`: the pnpm 11 settings-only pnpm-workspace.yaml (see
- * `getPrunedPnpmInstallSettingsYaml`), the `pnpm patch` files, and the
- * non-workspace local-path dependencies (`file:` tarballs/dirs and `link:`
- * targets), plus the pnpm <=10 build-script approvals and
- * `patchedDependencies` declaration in the emitted package.json. Does nothing for
- * whatever the workspace does not use, and removes a stale pnpm-workspace.yaml a
- * prior deploy left when the output no longer has settings. `allowBuilds` and the
- * patch scope come from `lockfileContent` when the caller already has it in hand,
- * otherwise from the pruned lockfile it just wrote to `outputDirectory`.
- * Pass `includeLocalPathArtifacts: false` when the lockfile is the root-lockfile
- * fallback, which `createPrunedLockfile` reports as `pruned: false`: its importer
- * references the whole workspace, so shipping its local-path trees would copy
- * unrelated sources into the output.
- */
-export function writePrunedPnpmInstallSettings(
-  outputDirectory: string,
-  workspaceRootPath: string = workspaceRoot,
-  lockfileContent?: string,
-  options?: { includeLocalPathArtifacts?: boolean }
-): void {
-  const prunedLockfileContent =
-    lockfileContent ?? readPrunedLockfile(outputDirectory);
-  const config: PrunedPnpmConfig = {
-    pnpmMajor: getPnpmMajorOrWarn(workspaceRootPath),
-    patchedDependencies: getPrunedPatchedDependencies(
-      workspaceRootPath,
-      prunedLockfileContent
-    ),
-  };
-  // Resolve the patch files first so a colliding patch path aborts before any
-  // file is written.
-  const { patchFiles, packageJsonPatchedDependencies } =
-    getPrunedPnpmPatchArtifacts(
-      workspaceRootPath,
-      prunedLockfileContent,
-      config
-    );
-  const yaml = getPrunedPnpmInstallSettingsYaml(
-    workspaceRootPath,
-    prunedLockfileContent,
-    config
-  );
-  const settingsPath = join(outputDirectory, 'pnpm-workspace.yaml');
-  if (yaml !== null) {
-    writeFileSync(settingsPath, yaml);
-  } else if (existsSync(settingsPath)) {
-    // A cache replay restores only the files the newer entry holds, so once the
-    // settings empty out a prior deploy's pnpm-workspace.yaml would linger and
-    // pnpm 11 would read its patchedDependencies as a lockfile mismatch. Drop it.
-    rmSync(settingsPath);
-  }
-  // Directory trees flow through here one file at a time, so dedupe the
-  // recursive mkdir per destination directory.
-  const createdDirs = new Set<string>();
-  const ensureDir = (dir: string): void => {
-    if (!createdDirs.has(dir)) {
-      mkdirSync(dir, { recursive: true });
-      createdDirs.add(dir);
-    }
-  };
-  for (const { path, content } of patchFiles) {
-    const destination = join(outputDirectory, path);
-    ensureDir(dirname(destination));
-    writeFileSync(destination, content);
-  }
-  if (options?.includeLocalPathArtifacts !== false) {
-    for (const { path, sourcePath } of getPrunedPnpmLocalPathArtifacts(
-      workspaceRootPath,
-      prunedLockfileContent
-    )) {
-      const destination = join(outputDirectory, path);
-      ensureDir(dirname(destination));
-      copyFileSync(sourcePath, destination);
-    }
-  }
-  const buildSettings = getPrunedPnpmPackageJsonBuildSettings(
-    workspaceRootPath,
-    prunedLockfileContent,
-    config
-  );
-  if (buildSettings || packageJsonPatchedDependencies) {
-    const packageJsonPath = join(outputDirectory, 'package.json');
-    if (existsSync(packageJsonPath)) {
-      const packageJson: PackageJson = readJsonFile(packageJsonPath);
-      applyPrunedPnpmPackageJsonSettings(
-        packageJson,
-        buildSettings,
-        packageJsonPatchedDependencies
-      );
-      writeJsonFile(packageJsonPath, packageJson);
-    }
-  }
-}
-
-function readPrunedLockfile(outputDirectory: string): string | undefined {
-  const lockfilePath = join(outputDirectory, 'pnpm-lock.yaml');
-  return existsSync(lockfilePath)
-    ? readFileSync(lockfilePath, 'utf-8')
-    : undefined;
+  return { artifacts, obsolete };
 }

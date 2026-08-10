@@ -1,9 +1,9 @@
 import { type ExecutorContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-import { existsSync, readFileSync } from 'fs';
+import { readFileSync } from 'fs';
 import { join } from 'path';
 import {
-  createPrunedLockfile,
+  generatePrunedDeployOutput,
   getCatalogManager,
   getWorkspacePackagesFromGraph,
   type PackageJson,
@@ -28,16 +28,16 @@ jest.mock('@nx/devkit/internal', () => ({
   getCatalogManager: jest.fn(),
 }));
 
+// The real entry point reads the workspace's own root lockfile, which no temp
+// fixture provides; stub it with the contract the executor depends on.
 jest.mock('nx/src/plugins/js/lock-file/lock-file', () => ({
   ...jest.requireActual('nx/src/plugins/js/lock-file/lock-file'),
-  getLockFileName: jest.fn(() => 'package-lock.json'),
-  createPrunedLockfile: jest.fn((packageJson) => {
-    // mimic the real contract: a successful prune strips the manifest's baked
-    // pnpm config, and the executor writes the manifest afterwards
+  generatePrunedDeployOutput: jest.fn((packageJson) => {
+    // a successful prune strips the manifest's baked pnpm config, and the
+    // executor writes the manifest afterwards
     jest
       .requireActual('nx/src/plugins/js/lock-file/pruned-output')
       .stripPrunedLockfilePnpmConfig(packageJson);
-    return { lockFileContent: '{}', pruned: true };
   }),
 }));
 jest.mock('nx/src/plugins/js/utils/get-workspace-packages-from-graph', () => ({
@@ -100,6 +100,26 @@ describe('pruneLockfileExecutor - allowScripts', () => {
       readFileSync(join(tempFs.tempDir, 'dist', 'app', 'package.json'), 'utf-8')
     );
   }
+
+  it('generates the deploy output before writing the manifest', async () => {
+    setupWorkspace(
+      { name: 'root', version: '0.0.0' },
+      { name: 'app', version: '0.0.1' }
+    );
+
+    await runExecutor();
+
+    expect(generatePrunedDeployOutput).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'app' }),
+      expect.objectContaining({ nodes: expect.any(Object) }),
+      PROJECT_ROOT,
+      {
+        outputDirectory: join(tempFs.tempDir, 'dist/app'),
+        packageManager: 'npm',
+        workspaceRoot: tempFs.tempDir,
+      }
+    );
+  });
 
   it('copies the root allowScripts verbatim regardless of key shape', async () => {
     setupWorkspace(
@@ -477,7 +497,7 @@ describe('pruneLockfileExecutor - workspace module dependencies', () => {
     const generated: PackageJson = JSON.parse(
       readFileSync(join(tempFs.tempDir, 'dist', 'app', 'package.json'), 'utf-8')
     );
-    // createPrunedLockfile strips the baked resolution-time config from the
+    // The deploy output strips the baked resolution-time config from the
     // manifest; the executor must write the manifest after that, or pnpm
     // aborts with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
     expect(generated.pnpm).toBeUndefined();
@@ -611,261 +631,5 @@ describe('resolveCatalogReferences', () => {
     expect(result.devDependencies).toBeUndefined();
     expect(result.peerDependencies).toBeUndefined();
     expect(result.optionalDependencies).toBeUndefined();
-  });
-});
-
-// The pnpm 11 gate has no e2e coverage: generated e2e workspaces run corepack's
-// default pnpm (~9.x), so the `pnpmMajor === 11` branch never fires there. These
-// unit tests are the only guard on the emitted settings-only pnpm-workspace.yaml.
-describe('pruneLockfileExecutor - pnpm 11 install settings', () => {
-  const mockGetWorkspacePackages =
-    getWorkspacePackagesFromGraph as jest.MockedFunction<
-      typeof getWorkspacePackagesFromGraph
-    >;
-  let tempFs: TempFs;
-
-  beforeEach(() => {
-    tempFs = new TempFs('prune-lockfile');
-    mockWorkspaceRoot = tempFs.tempDir;
-    mockGetWorkspacePackages.mockReturnValue(new Map());
-  });
-
-  afterEach(() => {
-    tempFs.cleanup();
-    jest.clearAllMocks();
-  });
-
-  // A pnpm-lock.yaml plus a pnpm packageManager field makes the executor detect
-  // pnpm and pins the major getPackageManagerVersion reports, so the settings
-  // gate is exercised deterministically without a real pnpm on PATH.
-  function setupPnpmWorkspace(pnpmVersion: string, workspaceYaml?: string) {
-    const files: Record<string, string> = {
-      'package.json': JSON.stringify({
-        name: 'root',
-        version: '0.0.0',
-        packageManager: `pnpm@${pnpmVersion}`,
-      }),
-      'pnpm-lock.yaml': `lockfileVersion: '9.0'\n`,
-      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
-        name: 'app',
-        version: '0.0.1',
-      }),
-    };
-    if (workspaceYaml !== undefined) {
-      files['pnpm-workspace.yaml'] = workspaceYaml;
-    }
-    tempFs.createFilesSync(files);
-    tempFs.createDirSync('dist/app');
-  }
-
-  async function runExecutor() {
-    return pruneLockfileExecutor(
-      {
-        buildTarget: 'app:build',
-        outputPath: join(tempFs.tempDir, 'dist/app'),
-      },
-      {
-        root: tempFs.tempDir,
-        cwd: tempFs.tempDir,
-        isVerbose: false,
-        projectGraph: {
-          nodes: {
-            app: { name: 'app', type: 'app', data: { root: PROJECT_ROOT } },
-          },
-          dependencies: {},
-          externalNodes: {},
-        },
-      } as unknown as ExecutorContext
-    );
-  }
-
-  const outputWorkspaceYaml = () =>
-    join(tempFs.tempDir, 'dist', 'app', 'pnpm-workspace.yaml');
-
-  it('re-emits allowBuilds and supportedArchitectures on pnpm 11', async () => {
-    setupPnpmWorkspace(
-      '11.2.2',
-      [
-        'packages:',
-        "  - 'packages/*'",
-        'overrides:',
-        '  lodash: 4.17.21',
-        'allowBuilds:',
-        '  esbuild: true',
-        'supportedArchitectures:',
-        '  os:',
-        '    - linux',
-        '  cpu:',
-        '    - x64',
-        '',
-      ].join('\n')
-    );
-    // allowBuilds is scoped to packages the pruned lockfile installs, so the
-    // approved package must appear in it for the approval to carry through.
-    (createPrunedLockfile as jest.Mock).mockReturnValueOnce({
-      lockFileContent: [
-        "lockfileVersion: '9.0'",
-        'packages:',
-        '  esbuild@0.21.5:',
-        '    resolution: {integrity: sha512-abc}',
-        '',
-      ].join('\n'),
-      pruned: true,
-    });
-
-    await runExecutor();
-
-    expect(existsSync(outputWorkspaceYaml())).toBe(true);
-    const content = readFileSync(outputWorkspaceYaml(), 'utf-8');
-    // build-script approvals and supported architectures are carried...
-    expect(content).toContain('allowBuilds:');
-    expect(content).toContain('esbuild: true');
-    expect(content).toContain('supportedArchitectures:');
-    expect(content).toContain('linux');
-    // ...resolution-time config is not, and the root packages glob is replaced
-    // by an empty list (required by pnpm 9, inert on 10 and 11).
-    expect(content).toContain('packages: []');
-    expect(content).not.toContain('packages/*');
-    expect(content).not.toContain('overrides:');
-  });
-
-  it('does not emit a pnpm-workspace.yaml on pnpm 10', async () => {
-    setupPnpmWorkspace('10.18.0', 'allowBuilds:\n  esbuild: true\n');
-
-    await runExecutor();
-
-    expect(existsSync(outputWorkspaceYaml())).toBe(false);
-  });
-
-  it('does not emit a pnpm-workspace.yaml when the workspace declares no install-time settings', async () => {
-    setupPnpmWorkspace('11.2.2', 'overrides:\n  lodash: 4.17.21\n');
-
-    await runExecutor();
-
-    expect(existsSync(outputWorkspaceYaml())).toBe(false);
-  });
-});
-
-describe('pruneLockfileExecutor - link: targets and the root lockfile fallback', () => {
-  const mockGetWorkspacePackages =
-    getWorkspacePackagesFromGraph as jest.MockedFunction<
-      typeof getWorkspacePackagesFromGraph
-    >;
-  let tempFs: TempFs;
-
-  beforeEach(() => {
-    tempFs = new TempFs('prune-lockfile');
-    mockWorkspaceRoot = tempFs.tempDir;
-    mockGetWorkspacePackages.mockReturnValue(new Map());
-  });
-
-  afterEach(() => {
-    tempFs.cleanup();
-    jest.clearAllMocks();
-  });
-
-  function setupPnpmWorkspace(linkedManifest: PackageJson) {
-    tempFs.createFilesSync({
-      'package.json': JSON.stringify({
-        name: 'root',
-        version: '0.0.0',
-        packageManager: 'pnpm@11.2.2',
-      }),
-      'pnpm-lock.yaml': `lockfileVersion: '9.0'\n`,
-      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
-        name: 'app',
-        version: '0.0.1',
-        // Project-relative; the executor rewrites it to
-        // link:local_path_modules/vendor/linked.
-        dependencies: { 'linked-lib': 'link:../../vendor/linked' },
-      }),
-      'vendor/linked/package.json': JSON.stringify(linkedManifest),
-      'vendor/linked/index.js': 'module.exports = {};',
-    });
-    tempFs.createDirSync('dist/app');
-  }
-
-  async function runExecutor() {
-    return pruneLockfileExecutor(
-      {
-        buildTarget: 'app:build',
-        outputPath: join(tempFs.tempDir, 'dist/app'),
-      },
-      {
-        root: tempFs.tempDir,
-        cwd: tempFs.tempDir,
-        isVerbose: false,
-        projectGraph: {
-          nodes: {
-            app: { name: 'app', type: 'app', data: { root: PROJECT_ROOT } },
-          },
-          dependencies: {},
-          externalNodes: {},
-        },
-      } as unknown as ExecutorContext
-    );
-  }
-
-  const lockfileLinkingVendor = [
-    "lockfileVersion: '9.0'",
-    '',
-    'importers:',
-    '',
-    '  .:',
-    '    dependencies:',
-    '      linked-lib:',
-    '        specifier: link:local_path_modules/vendor/linked',
-    '        version: link:local_path_modules/vendor/linked',
-    '',
-  ].join('\n');
-
-  it('ships the link: target tree of an actually pruned lockfile', async () => {
-    setupPnpmWorkspace({ name: 'linked-lib', version: '1.0.0' });
-    (createPrunedLockfile as jest.Mock).mockReturnValueOnce({
-      lockFileContent: lockfileLinkingVendor,
-      pruned: true,
-    });
-
-    await runExecutor();
-
-    expect(
-      existsSync(
-        join(
-          tempFs.tempDir,
-          'dist/app/local_path_modules/vendor/linked/index.js'
-        )
-      )
-    ).toBe(true);
-  });
-
-  it('skips local-path shipping on the root lockfile fallback', async () => {
-    // The fallback content describes the whole workspace, not the pruned app:
-    // shipping its link: targets would copy unrelated source trees into the
-    // output.
-    setupPnpmWorkspace({
-      name: 'linked-lib',
-      version: '1.0.0',
-      dependencies: { 'missing-dep': '^1.0.0' },
-    });
-    (createPrunedLockfile as jest.Mock).mockReturnValueOnce({
-      lockFileContent: lockfileLinkingVendor,
-      pruned: false,
-    });
-
-    await expect(runExecutor()).resolves.toEqual({ success: true });
-
-    // The fallback lockfile is still written...
-    expect(
-      readFileSync(join(tempFs.tempDir, 'dist/app/package-lock.json'), 'utf-8')
-    ).toBe(lockfileLinkingVendor);
-    // ...but its link: target tree is not shipped.
-    expect(
-      existsSync(
-        join(
-          tempFs.tempDir,
-          'dist/app/local_path_modules/vendor/linked/index.js'
-        )
-      )
-    ).toBe(false);
   });
 });

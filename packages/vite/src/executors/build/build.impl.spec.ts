@@ -1,7 +1,6 @@
 import type { ExecutorContext } from '@nx/devkit';
 import { detectPackageManager, writeJsonFile } from '@nx/devkit';
-import { createPrunedLockfile, writePrunedPnpmInstallSettings } from '@nx/js';
-import { writeFileSync } from 'fs';
+import { generatePrunedDeployOutput } from '@nx/js';
 import { viteBuildExecutor } from './build.impl';
 import { ViteBuildExecutorOptions } from './schema';
 
@@ -35,12 +34,7 @@ jest.mock('@nx/js', () => ({
   ...jest.requireActual('@nx/js'),
   copyAssets: jest.fn(),
   createPackageJson: jest.fn(() => manifest),
-  createPrunedLockfile: jest.fn(() => ({
-    lockFileContent: 'pruned-lock',
-    pruned: true,
-  })),
-  getLockFileName: jest.fn(() => 'pnpm-lock.yaml'),
-  writePrunedPnpmInstallSettings: jest.fn(),
+  generatePrunedDeployOutput: jest.fn(),
 }));
 
 jest.mock('@nx/devkit', () => ({
@@ -51,7 +45,6 @@ jest.mock('@nx/devkit', () => ({
 
 jest.mock('fs', () => ({
   ...jest.requireActual('fs'),
-  writeFileSync: jest.fn(),
   existsSync: jest.fn(() => false),
 }));
 
@@ -93,10 +86,6 @@ describe('viteBuildExecutor - lockfile generation wiring', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     manifest = { name: 'my-app', version: '1.0.0' };
-    (createPrunedLockfile as jest.Mock).mockReturnValue({
-      lockFileContent: 'pruned-lock',
-      pruned: true,
-    });
   });
 
   async function runExecutor() {
@@ -105,69 +94,34 @@ describe('viteBuildExecutor - lockfile generation wiring', () => {
     }
   }
 
-  it('creates the pruned pnpm lockfile before the manifest is written', async () => {
+  it('generates the pruned deploy output before the manifest is written', async () => {
     (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
 
     await runExecutor();
 
-    expect(createPrunedLockfile).toHaveBeenCalledWith(
+    expect(generatePrunedDeployOutput).toHaveBeenCalledWith(
       manifest,
       context.projectGraph,
       'apps/my-app',
-      '/root',
-      'pnpm'
+      {
+        outputDirectory: expect.stringContaining('dist/apps/my-app'),
+        packageManager: 'pnpm',
+        workspaceRoot: '/root',
+      }
     );
-    // createPrunedLockfile relocates the manifest's local-path specifiers, so
-    // the manifest must be written after it.
+    // The deploy output rewrites the manifest's local-path specifiers, so the
+    // manifest must be written after it.
     expect(
-      (createPrunedLockfile as jest.Mock).mock.invocationCallOrder[0]
+      (generatePrunedDeployOutput as jest.Mock).mock.invocationCallOrder[0]
     ).toBeLessThan((writeJsonFile as jest.Mock).mock.invocationCallOrder[0]);
-    expect(writeFileSync).toHaveBeenCalledWith(
-      expect.stringContaining('pnpm-lock.yaml'),
-      'pruned-lock',
-      { encoding: 'utf-8' }
-    );
-    expect(writePrunedPnpmInstallSettings).toHaveBeenCalledWith(
-      expect.any(String),
-      '/root',
-      'pruned-lock',
-      { includeLocalPathArtifacts: true }
-    );
   });
 
-  it('ships the root-lockfile fallback without its local-path artifacts', async () => {
-    (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
-    (createPrunedLockfile as jest.Mock).mockReturnValue({
-      lockFileContent: 'root-lock',
-      pruned: false,
-    });
+  it('generates no deploy output for bun, which has no lockfile generation', async () => {
+    (detectPackageManager as jest.Mock).mockReturnValue('bun');
 
     await runExecutor();
 
-    expect(writePrunedPnpmInstallSettings).toHaveBeenCalledWith(
-      expect.any(String),
-      '/root',
-      'root-lock',
-      { includeLocalPathArtifacts: false }
-    );
-  });
-
-  it('writes no pnpm install settings for npm', async () => {
-    (detectPackageManager as jest.Mock).mockReturnValue('npm');
-    (createPrunedLockfile as jest.Mock).mockReturnValue({
-      lockFileContent: 'npm-lock',
-      pruned: true,
-    });
-
-    await runExecutor();
-
-    expect(createPrunedLockfile).toHaveBeenCalledWith(
-      manifest,
-      context.projectGraph,
-      'apps/my-app',
-      '/root',
-      'npm'
-    );
-    expect(writePrunedPnpmInstallSettings).not.toHaveBeenCalled();
+    expect(generatePrunedDeployOutput).not.toHaveBeenCalled();
+    expect(writeJsonFile).toHaveBeenCalled();
   });
 });

@@ -1,9 +1,10 @@
 import type { ProjectGraph } from '../../../config/project-graph';
 import type { PackageJson } from '../../../utils/package-json';
-import { createLockFile, createPrunedLockfile } from './lock-file';
+import { createLockFile, generatePrunedDeployOutput } from './lock-file';
 import { stringifyNpmLockfile } from './npm-parser';
 import { stringifyPnpmLockfile } from './pnpm-parser';
 import {
+  getPrunedPnpmInstallArtifacts,
   rewritePrunedLocalPathSpecifiers,
   validatePrunedLocalPathClosure,
   warnIncompletePrunedPnpmOutput,
@@ -27,6 +28,10 @@ jest.mock('./project-graph-pruning', () => ({
 }));
 jest.mock('./pruned-output', () => ({
   ...jest.requireActual('./pruned-output'),
+  getPrunedPnpmInstallArtifacts: jest.fn(() => ({
+    artifacts: [],
+    obsolete: [],
+  })),
   rewritePrunedLocalPathSpecifiers: jest.fn(),
   validatePrunedLocalPathClosure: jest.fn(),
   warnIncompletePrunedPnpmOutput: jest.fn(),
@@ -129,7 +134,7 @@ describe('createLockFile', () => {
   });
 });
 
-describe('createPrunedLockfile', () => {
+describe('generatePrunedDeployOutput', () => {
   let packageJson: PackageJson;
   const graph: ProjectGraph = {
     nodes: {},
@@ -137,8 +142,13 @@ describe('createPrunedLockfile', () => {
     externalNodes: {},
   };
 
+  let emitted: Array<{ path: string; content: string | Buffer }>;
+  const emit = (path: string, content: string | Buffer) =>
+    emitted.push({ path, content });
+
   beforeEach(() => {
     packageJson = { name: 'app', version: '1.0.0' };
+    emitted = [];
   });
 
   afterEach(() => {
@@ -146,13 +156,11 @@ describe('createPrunedLockfile', () => {
   });
 
   it('relocates local-path specifiers, prunes, and validates the closure for pnpm', () => {
-    const result = createPrunedLockfile(
-      packageJson,
-      graph,
-      'apps/app',
-      '/root',
-      'pnpm'
-    );
+    generatePrunedDeployOutput(packageJson, graph, 'apps/app', {
+      emit,
+      packageManager: 'pnpm',
+      workspaceRoot: '/root',
+    });
 
     expect(rewritePrunedLocalPathSpecifiers).toHaveBeenCalledWith(
       packageJson,
@@ -173,10 +181,16 @@ describe('createPrunedLockfile', () => {
       '/root',
       'PRUNED_LOCKFILE'
     );
-    expect(result).toEqual({
-      lockFileContent: 'PRUNED_LOCKFILE',
-      pruned: true,
+    expect(emitted).toContainEqual({
+      path: 'pnpm-lock.yaml',
+      content: 'PRUNED_LOCKFILE',
     });
+    expect(getPrunedPnpmInstallArtifacts).toHaveBeenCalledWith(
+      '/root',
+      'PRUNED_LOCKFILE',
+      packageJson,
+      { includeLocalPathArtifacts: true }
+    );
   });
 
   it('strips the baked pnpm config from the manifest after a successful prune', () => {
@@ -188,15 +202,12 @@ describe('createPrunedLockfile', () => {
       onlyBuiltDependencies: ['sharp'],
     };
 
-    const { pruned } = createPrunedLockfile(
-      packageJson,
-      graph,
-      'apps/app',
-      '/root',
-      'pnpm'
-    );
+    generatePrunedDeployOutput(packageJson, graph, 'apps/app', {
+      emit,
+      packageManager: 'pnpm',
+      workspaceRoot: '/root',
+    });
 
-    expect(pruned).toBe(true);
     // overrides, ignoredOptionalDependencies, and packageExtensions are baked
     // into the pruned lockfile, and the patch declaration comes from the
     // install-settings sinks; build-script approvals are not, so they stay.
@@ -212,15 +223,12 @@ describe('createPrunedLockfile', () => {
       throw new Error('pruning failed');
     });
 
-    const { pruned } = createPrunedLockfile(
-      packageJson,
-      graph,
-      'apps/app',
-      '/root',
-      'pnpm'
-    );
+    generatePrunedDeployOutput(packageJson, graph, 'apps/app', {
+      emit,
+      packageManager: 'pnpm',
+      workspaceRoot: '/root',
+    });
 
-    expect(pruned).toBe(false);
     // The root lockfile still declares the resolution-time config, but the
     // patch paths are the workspace's and no patch file ships unless the sinks
     // scope one out of that lockfile.
@@ -232,46 +240,54 @@ describe('createPrunedLockfile', () => {
       patchedDependencies: { 'foo@1.0.0': 'patches/foo.patch' },
     };
 
-    createPrunedLockfile(packageJson, graph, 'apps/app', '/root', 'pnpm');
+    generatePrunedDeployOutput(packageJson, graph, 'apps/app', {
+      emit,
+      packageManager: 'pnpm',
+      workspaceRoot: '/root',
+    });
 
     expect(packageJson.pnpm).toBeUndefined();
   });
 
   it('skips the pnpm-only steps for npm', () => {
-    const result = createPrunedLockfile(
-      packageJson,
-      graph,
-      'apps/app',
-      '/root',
-      'npm'
-    );
+    generatePrunedDeployOutput(packageJson, graph, 'apps/app', {
+      emit,
+      packageManager: 'npm',
+      workspaceRoot: '/root',
+    });
 
     expect(rewritePrunedLocalPathSpecifiers).not.toHaveBeenCalled();
     expect(validatePrunedLocalPathClosure).not.toHaveBeenCalled();
-    expect(result).toEqual({
-      lockFileContent: 'PRUNED_NPM_LOCKFILE',
-      pruned: true,
-    });
+    expect(getPrunedPnpmInstallArtifacts).not.toHaveBeenCalled();
+    expect(emitted).toEqual([
+      { path: 'package-lock.json', content: 'PRUNED_NPM_LOCKFILE' },
+    ]);
   });
 
-  it('returns the root lockfile unvalidated when pruning falls back', () => {
+  it('ships the root lockfile without its local-path artifacts when pruning falls back', () => {
     (stringifyPnpmLockfile as jest.Mock).mockImplementationOnce(() => {
       throw new Error('pruning failed');
     });
 
-    const result = createPrunedLockfile(
-      packageJson,
-      graph,
-      'apps/app',
-      '/root',
-      'pnpm'
-    );
+    generatePrunedDeployOutput(packageJson, graph, 'apps/app', {
+      emit,
+      packageManager: 'pnpm',
+      workspaceRoot: '/root',
+    });
 
     expect(validatePrunedLocalPathClosure).not.toHaveBeenCalled();
-    expect(result).toEqual({
-      lockFileContent: 'ROOT_LOCKFILE',
-      pruned: false,
+    expect(emitted).toContainEqual({
+      path: 'pnpm-lock.yaml',
+      content: 'ROOT_LOCKFILE',
     });
+    // The fallback importer describes the whole workspace, so its local-path
+    // trees must not ship into the output.
+    expect(getPrunedPnpmInstallArtifacts).toHaveBeenCalledWith(
+      '/root',
+      'ROOT_LOCKFILE',
+      packageJson,
+      { includeLocalPathArtifacts: false }
+    );
   });
 
   it('rolls back the manifest mutations when pruning falls back', () => {
@@ -287,7 +303,11 @@ describe('createPrunedLockfile', () => {
       throw new Error('pruning failed');
     });
 
-    createPrunedLockfile(packageJson, graph, 'apps/app', '/root', 'pnpm');
+    generatePrunedDeployOutput(packageJson, graph, 'apps/app', {
+      emit,
+      packageManager: 'pnpm',
+      workspaceRoot: '/root',
+    });
 
     // The root lockfile matches the manifest as authored: the local-path
     // specifier must not point at unshipped local_path_modules/, and the pnpm
@@ -311,7 +331,11 @@ describe('createPrunedLockfile', () => {
       throw new Error('npm pruning failed');
     });
 
-    createPrunedLockfile(packageJson, graph, 'apps/app', '/root', 'npm');
+    generatePrunedDeployOutput(packageJson, graph, 'apps/app', {
+      emit,
+      packageManager: 'npm',
+      workspaceRoot: '/root',
+    });
 
     const { output } = require('../../../utils/output');
     const [{ bodyLines }] = (output.warn as jest.Mock).mock.calls[0];

@@ -1,11 +1,9 @@
 import {
   createPackageJson,
-  createPrunedLockfile,
   fileExists,
-  getLockFileName,
+  generatePrunedDeployOutput,
   type PackageJson,
   readFileMapCache,
-  writePrunedPnpmInstallSettings,
 } from '@nx/devkit/internal';
 
 import {
@@ -23,7 +21,7 @@ import {
   writeJsonFile,
 } from '@nx/devkit';
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
-import { existsSync, writeFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { basename, dirname, join, parse, relative } from 'path';
 
 import { getRelativeDirectoryToProjectRoot } from '../get-main-file-dir';
@@ -113,47 +111,29 @@ export function updatePackageJson(
     options.format = ['cjs'];
   }
 
-  // update package specific settings
   packageJson = getUpdatedPackageJsonContent(packageJson, options);
 
   const packageManager = detectPackageManager(context.root);
-  let prunedLockfile: ReturnType<typeof createPrunedLockfile> | undefined;
-  if (options.generateLockfile && packageManager !== 'bun') {
-    prunedLockfile = createPrunedLockfile(
-      packageJson,
-      context.projectGraph,
-      options.projectRoot,
-      context.root,
-      packageManager
-    );
-  }
-
-  // save files
-  writeJsonFile(`${options.outputPath}/package.json`, packageJson);
-
   if (options.generateLockfile) {
     if (packageManager === 'bun') {
       logger.warn(
         `Bun lockfile generation is unsupported. Remove "generateLockfile" option or set it to false.`
       );
     } else {
-      writeFileSync(
-        `${options.outputPath}/${getLockFileName(packageManager)}`,
-        prunedLockfile.lockFileContent,
+      generatePrunedDeployOutput(
+        packageJson,
+        context.projectGraph,
+        options.projectRoot,
         {
-          encoding: 'utf-8',
+          outputDirectory: options.outputPath,
+          packageManager,
+          workspaceRoot: context.root,
         }
       );
-      if (packageManager === 'pnpm') {
-        writePrunedPnpmInstallSettings(
-          options.outputPath,
-          context.root,
-          prunedLockfile.lockFileContent,
-          { includeLocalPathArtifacts: prunedLockfile.pruned }
-        );
-      }
     }
   }
+
+  writeJsonFile(`${options.outputPath}/package.json`, packageJson);
 }
 
 function isNpmNode(

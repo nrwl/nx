@@ -5,14 +5,9 @@ import {
   writeJsonFile,
   type ExecutorContext,
 } from '@nx/devkit';
-import {
-  createPackageJson,
-  createPrunedLockfile,
-  getLockFileName,
-  writePrunedPnpmInstallSettings,
-} from '@nx/js';
+import { createPackageJson, generatePrunedDeployOutput } from '@nx/js';
 import { fork } from 'child_process';
-import { copySync, mkdir, statSync, writeFileSync } from 'fs-extra';
+import { copySync, mkdir, statSync } from 'fs-extra';
 import { join } from 'path';
 import { type RemixBuildSchema } from './schema';
 import { warnRemixBuildExecutorDeprecation } from '../../utils/deprecation';
@@ -95,42 +90,26 @@ export default async function buildExecutor(
     packageJson = readJsonFile(join(projectRoot, 'package.json'));
   }
 
-  let prunedLockfile: ReturnType<typeof createPrunedLockfile> | undefined;
-  if (options.generateLockfile && packageManager !== 'bun') {
-    prunedLockfile = createPrunedLockfile(
-      packageJson,
-      context.projectGraph,
-      projectRoot,
-      context.root,
-      packageManager
-    );
-  }
-  if (options.generatePackageJson) {
-    writeJsonFile(`${options.outputPath}/package.json`, packageJson);
-  }
-
   if (options.generateLockfile) {
     if (packageManager === 'bun') {
       logger.warn(
         'Bun lockfile generation is not supported. The generated package.json will not include a lockfile. Run "bun install" in the output directory after deployment if needed.'
       );
     } else {
-      writeFileSync(
-        `${options.outputPath}/${getLockFileName(packageManager)}`,
-        prunedLockfile.lockFileContent,
+      generatePrunedDeployOutput(
+        packageJson,
+        context.projectGraph,
+        projectRoot,
         {
-          encoding: 'utf-8',
+          outputDirectory: options.outputPath,
+          packageManager,
+          workspaceRoot: context.root,
         }
       );
-      if (packageManager === 'pnpm') {
-        writePrunedPnpmInstallSettings(
-          options.outputPath,
-          context.root,
-          prunedLockfile.lockFileContent,
-          { includeLocalPathArtifacts: prunedLockfile.pruned }
-        );
-      }
     }
+  }
+  if (options.generatePackageJson) {
+    writeJsonFile(`${options.outputPath}/package.json`, packageJson);
   }
 
   // If output path is different from source path, then copy over the config and public files.
