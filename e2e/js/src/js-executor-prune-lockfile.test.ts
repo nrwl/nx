@@ -309,13 +309,9 @@ describe('js:prune-lockfile executor', () => {
     });
   });
 
-  // Root pnpm `overrides` is config pnpm 11 reads only from pnpm-workspace.yaml
-  // and records in the lockfile. The standalone pruned dist ships no
-  // pnpm-workspace.yaml at all, so the pruned lockfile must drop `overrides` or
-  // `pnpm install --frozen-lockfile` aborts with
-  // ERR_PNPM_LOCKFILE_CONFIG_MISMATCH. Proves the config strip (#36055) and the
-  // file: workspace-module deps (#36066) compose: deps still install, config is
-  // gone.
+  // `overrides` is resolution-time config already baked into the lockfile's
+  // snapshots. A frozen install of the dist aborts with
+  // ERR_PNPM_LOCKFILE_CONFIG_MISMATCH unless the prune drops it.
   describe('package manager pnpm (standalone pruned dist with root overrides)', () => {
     let scope: string;
 
@@ -387,7 +383,9 @@ describe('js:prune-lockfile executor', () => {
       runCLI(`copy-workspace-modules ${nodeapp}`);
 
       checkFilesExist(`${nodeapp}/dist/pnpm-lock.yaml`);
-      // Workspace modules install as file: directory deps, no workspace file.
+      // The dist ships a pnpm-workspace.yaml only for install settings the
+      // prune carries (build approvals, patches, architectures); this workspace
+      // has none.
       checkFilesDoNotExist(`${nodeapp}/dist/pnpm-workspace.yaml`);
       // The strip dropped the unsatisfiable config from the pruned lockfile.
       expect(readFile(`${nodeapp}/dist/pnpm-lock.yaml`)).not.toContain(

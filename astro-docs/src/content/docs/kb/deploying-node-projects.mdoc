@@ -49,6 +49,9 @@ apps/my-app/dist/
 ├── main.js                          # Compiled application
 ├── package.json                     # Pruned production dependencies
 ├── package-lock.json                # Pruned lockfile (or yarn.lock / pnpm-lock.yaml)
+├── pnpm-workspace.yaml              # pnpm 11+, when install settings survive the prune
+├── patches/                         # pnpm only, if the workspace uses `pnpm patch`
+├── local_path_modules/              # pnpm only, non-workspace file:/link: dependencies
 └── workspace_modules/               # Only present if you have workspace deps
     └── @my-org/
         └── my-lib/
@@ -143,10 +146,9 @@ Add the following targets to your project's `package.json` or `project.json`:
 {% /tabs %}
 
 Replace `package-lock.json` in the `outputs` array with `yarn.lock` or `pnpm-lock.yaml` to match your package manager.
-On pnpm 11 and above, the executor also emits a settings-only `pnpm-workspace.yaml` carrying build-script approvals (`allowBuilds`), `supportedArchitectures`, and any `patchedDependencies`.
-If the workspace uses `pnpm patch`, the executor also copies the referenced `.patch` files into the output under `patches/`, keeping each file's original subpath.
-On pnpm 10 and below, it declares `patchedDependencies` in the emitted `package.json` instead.
-Non-workspace local-path dependencies (`file:` tarballs or directories and `link:` targets) ship under `local_path_modules/`.
+The emitted `pnpm-workspace.yaml` carries build-script approvals (`allowBuilds`), `supportedArchitectures`, and any `patchedDependencies`.
+On pnpm 10 and below there is no such file, and the emitted `package.json` declares `patchedDependencies` instead.
+Copied `.patch` files keep their original subpath under `patches/`.
 Add `{workspaceRoot}/apps/my-app/dist/pnpm-workspace.yaml`, `{workspaceRoot}/apps/my-app/dist/patches`, and `{workspaceRoot}/apps/my-app/dist/local_path_modules` to the `outputs` so a cached run restores them instead of dropping those approvals, patches, or vendored dependencies.
 
 {% aside type="caution" title="Installing the output with --ignore-workspace" %}

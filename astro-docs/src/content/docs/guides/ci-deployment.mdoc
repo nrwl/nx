@@ -73,7 +73,7 @@ module.exports = {
 
 ## Programmatic usage
 
-If you are using a custom setup that does not support the creation of a `package.json` or a lock file, you can still use Nx to generate them via The `createPackageJson` and `createLockFile` functions which are exported from `@nx/js`:
+If you are using a custom setup that does not support the creation of a `package.json` or a lock file, you can still use Nx to generate them via the `createPackageJson` and `generatePrunedDeployOutput` functions which are exported from `@nx/js`:
 
 {% tabs %}
 
@@ -89,12 +89,7 @@ const {
   detectPackageManager,
   writeJsonFile,
 } = require('@nx/devkit');
-const {
-  createLockFile,
-  createPackageJson,
-  getLockFileName,
-} = require('@nx/js');
-const { writeFileSync } = require('fs');
+const { createPackageJson, generatePrunedDeployOutput } = require('@nx/js');
 
 async function main() {
   const outputDir = 'dist'; // You can replace this with the output directory you want to use
@@ -108,23 +103,18 @@ async function main() {
   const projectName = process.env.NX_TASK_TARGET_PROJECT;
   const packageJson = createPackageJson(projectName, projectGraph, {
     isProduction: true, // Used to strip any non-prod dependencies
-    root: projectGraph.nodes[projectName].data.root,
   });
 
-  // For pnpm this also reconciles "packageJson" with the pruned lockfile, so
-  // write the manifest after it rather than before.
-  const lockFile = createLockFile(
+  // Writes the pruned lock file and, for pnpm, the install-time artifacts it
+  // needs. Mutates "packageJson", so write the manifest after it.
+  generatePrunedDeployOutput(
     packageJson,
     projectGraph,
-    detectPackageManager()
+    projectGraph.nodes[projectName].data.root,
+    { outputDirectory: outputDir, packageManager: pm }
   );
 
-  const lockFileName = getLockFileName(pm);
-
   writeJsonFile(`${outputDir}/package.json`, packageJson);
-  writeFileSync(`${outputDir}/${lockFileName}`, lockFile, {
-    encoding: 'utf8',
-  });
 
   //... Any additional steps you want to run
 }
@@ -155,8 +145,7 @@ You can replace _npm_ with _yarn_, _pnpm_, or _bun_ if you are using those packa
 ```typescript
 // Custom executor
 import { Schema } from './schema';
-import { createPackageJson, createLockFile, getLockFileName } from '@nx/js';
-import { writeFileSync } from 'fs';
+import { createPackageJson, generatePrunedDeployOutput } from '@nx/js';
 import {
   detectPackageManager,
   ExecutorContext,
@@ -181,18 +170,20 @@ export default async function buildExecutor(
 
   // do any additional manipulations to "package.json" here
 
-  // For pnpm this also reconciles "packageJson" with the pruned lockfile, so
-  // write the manifest after it rather than before.
-  const lockFile = createLockFile(
+  // Writes the pruned lock file and, for pnpm, the install-time artifacts it
+  // needs. Mutates "packageJson", so write the manifest after it.
+  generatePrunedDeployOutput(
     packageJson,
     context.projectGraph,
-    packageManager
+    context.projectGraph.nodes[context.projectName].data.root,
+    {
+      outputDirectory: options.outputPath,
+      packageManager,
+      workspaceRoot: context.root,
+    }
   );
-  const lockFileName = getLockFileName(packageManager);
+
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
-  writeFileSync(`${options.outputPath}/${lockFileName}`, lockFile, {
-    encoding: 'utf-8',
-  });
 
   // any subsequent executor code
 }
@@ -200,6 +191,12 @@ export default async function buildExecutor(
 
 {% /tabitem %}
 {% /tabs %}
+
+`generatePrunedDeployOutput` supports npm, yarn, and pnpm.
+Bun has no lock file generation, so the function warns and the output keeps only the `package.json`.
+
+`generatePrunedDeployOutput` doesn't rewrite `workspace:` dependencies or copy workspace libraries into the output.
+Use the `@nx/js:prune-lockfile` and `@nx/js:copy-workspace-modules` executors for that.
 
 {% aside type="note" %}
 **What about Vite?**
