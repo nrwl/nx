@@ -1237,7 +1237,9 @@ async function determineNoneOptions(
         ? await determineLinterOptions(parsedArgs)
         : undefined;
 
-    return { preset, js, appName, linter };
+    // Omitted rather than set to `undefined`: the caller `Object.assign`s this
+    // over `argv`, so an explicit key would clobber a user's `--linter`.
+    return { preset, js, appName, ...(linter ? { linter } : {}) };
   }
 }
 
