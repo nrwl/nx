@@ -38,7 +38,11 @@ depends on all of them:
 nx show project IntegrationTests
 ```
 
-Run `nx test-ci IntegrationTests` and Nx expands it into the individual tasks.
+Run one on its own to see it work:
+
+```shell
+nx run IntegrationTests:"test-ci--Acme.Integration.CheckoutTests"
+```
 
 ## Requirements
 
@@ -63,11 +67,7 @@ Running the whole group needs [Nx Cloud](/docs/getting-started/intro). Nx refuse
 it: on one machine you pay process startup for every task without gaining agents to spread them
 over. Use the `test` target for a full local run.
 
-Individual tasks have no such restriction, so you can always run one on its own while working on it:
-
-```shell
-nx run my-project:"test-ci--Acme.Integration.CheckoutTests"
-```
+Individual tasks have no such restriction — run one on its own anytime, the way you did above.
 
 ## Choose class or method
 
@@ -100,11 +100,15 @@ form to filter on. Generic test methods are excluded for the same reason under `
 Those tests still run as part of the ordinary `test` target, and the plugin reports how many it left
 out while building the project graph, so the gap is visible up front.
 
-An abstract test class isn't split either, but that costs you nothing — the concrete classes that
-derive from it are what carry tests, and each of those gets its own task.
+An abstract test class isn't split either, but that costs you nothing under `ciSplitBy: class` — the
+concrete classes that derive from it are what carry tests, and each of those gets its own task
+regardless of where the tests it runs are declared.
 
-Tests declared on a base class and inherited by a subclass that carries no `[TestClass]` of its own
-are also missed. If you rely on that pattern, keep the project on its `test` target.
+Under `ciSplitBy: method`, inherited tests are missed. Method mode only looks at what a class
+declares directly, so a `[TestClass]` subclass with no test method of its own produces no task at
+all, even though its inherited tests still run under `test`. That gap is reported the same way the
+ones above are. Switch to `ciSplitBy: class` (or stay on `test`) for a project that leans on
+inheritance heavily.
 
 ## Parallelism
 
