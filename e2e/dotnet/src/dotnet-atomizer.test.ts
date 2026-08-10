@@ -216,38 +216,6 @@ public class SearchTests
         )
       ).toBe(false);
     });
-
-    it('should fail loudly when a filter selects nothing', () => {
-      // --minimum-expected-tests 1 is what turns a discovery gap into a failure
-      // rather than a vacuous pass. A test class with no test methods is
-      // discovered and given a target, but its filter selects nothing.
-      //
-      // Its own class rather than emptying an existing one, so the target list
-      // the later tests depend on is not disturbed.
-      updateFile(
-        `${projectRoot}/EmptyTests.cs`,
-        `using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace Acme.Integration;
-
-[TestClass]
-public class EmptyTests
-{
-}
-`
-      );
-
-      const output = runCLI(
-        `run ${project}:"test-ci--Acme.Integration.EmptyTests"`,
-        { silenceError: true }
-      );
-
-      expect(output).toContain('Total: 0');
-      expect(output).not.toContain('Successfully ran target');
-
-      // Removed so it does not fail the parent target below.
-      removeFile(`${projectRoot}/EmptyTests.cs`);
-    });
   });
 
   describe('Nx Cloud requirement', () => {

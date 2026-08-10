@@ -131,16 +131,25 @@ public static partial class TargetBuilder
             reasons.Add($"{discovery.SkippedGeneric} generic");
         }
 
+        if (discovery.SkippedUnrunnable > 0)
+        {
+            reasons.Add($"{discovery.SkippedUnrunnable} ignored, non-public, or without a test method");
+        }
+
         if (reasons.Count == 0)
         {
             return;
         }
 
+        var total = discovery.SkippedNested + discovery.SkippedGeneric + discovery.SkippedUnrunnable;
+        var reasonsText = reasons.Count == 1
+            ? reasons[0]
+            : string.Join(", ", reasons.Take(reasons.Count - 1)) + " and " + reasons[^1];
+
         Console.Error.WriteLine(
             $"@nx/dotnet: split '{projectName}' into {discovery.Units.Count} test targets, " +
-            $"leaving out {string.Join(" and ", reasons)} " +
-            $"({(discovery.SkippedNested + discovery.SkippedGeneric == 1 ? "test" : "tests")} " +
-            $"that cannot be selected individually by the test platform). " +
+            $"leaving out {reasonsText} " +
+            $"({(total == 1 ? "test" : "tests")} the split does not cover). " +
             $"They still run as part of the '{testTargetName}' target.");
     }
 
