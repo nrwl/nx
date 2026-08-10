@@ -7,6 +7,8 @@ import {
   hashWithWorkspaceContext,
   workspaceDataDirectory,
   hashObject,
+  hashFile,
+  hashArray,
   PluginCache,
 } from '@nx/devkit/internal';
 
@@ -155,13 +157,24 @@ async function computeSourceHash(
     return null;
   }
 
-  return await hashWithWorkspaceContext(workspaceRoot, [
-    ...result.atomizedRoots.map((root) => rootGlob(root, '**/*.cs')),
-    // Discovery reads MSBuild's Compile items, which can point outside the
-    // project. A linked test file would otherwise change the discovered units
-    // without changing this hash.
-    ...(result.atomizedExternalSources ?? []),
-  ]);
+  const rootsHash = await hashWithWorkspaceContext(
+    workspaceRoot,
+    result.atomizedRoots.map((root) => rootGlob(root, '**/*.cs'))
+  );
+
+  // Discovery reads MSBuild's Compile items, which can point outside the
+  // project. A linked test file would otherwise change the discovered units
+  // without changing this hash. Hashed by exact path rather than folded into
+  // the glob group above: these are literal paths, not patterns, and one
+  // containing a glob metacharacter (*, !, {, ...) would silently change
+  // which files the group matches.
+  const externalHashes = (result.atomizedExternalSources ?? []).map(
+    (relativePath) => hashFile(join(workspaceRoot, relativePath)) ?? ''
+  );
+
+  return externalHashes.length === 0
+    ? rootsHash
+    : hashArray([rootsHash, ...externalHashes]);
 }
 
 /**
