@@ -19,9 +19,8 @@ export async function normalizeLinterOption(
     return detected;
   }
 
-  // Nothing to follow, so this is a real choice. `none` leads because a
-  // workspace with no linter has opted out, and a skipped prompt resolves to
-  // the first choice rather than to `initial`.
+  // Nothing to follow, so this is a real choice. `{ linter: 'none' }` is the
+  // non-interactive answer; `none` leads so the interactive default matches it.
   return await promptWhenInteractive<{
     linter: LinterType;
   }>(

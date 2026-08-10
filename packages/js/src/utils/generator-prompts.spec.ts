@@ -80,8 +80,8 @@ describe('normalizeLinterOption', () => {
     expect(prompt).toHaveBeenCalledTimes(1);
   });
 
-  // `none` must lead: a skipped prompt resolves to the first choice and ignores
-  // `initial`, so the ordering is what decides the non-interactive answer.
+  // `{ linter: 'none' }` is the non-interactive answer; `none` leads so the
+  // interactive default matches it.
   it('should offer none first and default to it when the prompt cannot run', async () => {
     await normalizeLinterOption(tree, undefined);
 
