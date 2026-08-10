@@ -22,7 +22,7 @@ import {
   getEslintConfigNextDependenciesVersionsToInstall,
   isNext16,
 } from '../../../utils/version-utils';
-import { addLintingToProject } from '@nx/js';
+import { addLintingToProject } from '@nx/js/internal';
 
 export async function addLinting(
   host: Tree,

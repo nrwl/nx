@@ -16,7 +16,7 @@ import {
   updateOverrideInLintConfig,
   useFlatConfig,
 } from '@nx/eslint/internal';
-import { addLintingToProject } from '@nx/js';
+import { addLintingToProject } from '@nx/js/internal';
 
 interface NormalizedSchema {
   linter?: LinterType;

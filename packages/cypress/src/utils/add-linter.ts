@@ -22,7 +22,8 @@ import {
   useFlatConfig,
 } from '@nx/eslint/internal';
 import { versions } from './versions';
-import { addLintingToProject, type LinterType } from '@nx/js';
+import { type LinterType } from '@nx/js';
+import { addLintingToProject } from '@nx/js/internal';
 
 export interface CyLinterOptions {
   project: string;

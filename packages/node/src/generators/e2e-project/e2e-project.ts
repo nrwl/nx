@@ -20,7 +20,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { lintProjectGenerator } from '@nx/eslint';
-import { addLintingToProject } from '@nx/js';
+import { addLintingToProject } from '@nx/js/internal';
 import { normalizeLinterOption } from '@nx/js/internal';
 import {
   javaScriptOverride,

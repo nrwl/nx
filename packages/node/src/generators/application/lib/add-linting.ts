@@ -1,6 +1,6 @@
 import { GeneratorCallback, joinPathFragments, Tree } from '@nx/devkit';
 import { isTypedLintingEnabled } from '@nx/eslint/internal';
-import { addLintingToProject } from '@nx/js';
+import { addLintingToProject } from '@nx/js/internal';
 import { NormalizedSchema } from './normalized-schema';
 
 export async function addLintingToApplication(

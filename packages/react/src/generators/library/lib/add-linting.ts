@@ -5,7 +5,7 @@ import {
   Tree,
   joinPathFragments,
 } from '@nx/devkit';
-import { addLintingToProject } from '@nx/js';
+import { addLintingToProject } from '@nx/js/internal';
 
 import { NormalizedSchema } from '../schema';
 import { extraEslintDependencies } from '../../../utils/lint';

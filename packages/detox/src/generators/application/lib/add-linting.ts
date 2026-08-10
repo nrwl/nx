@@ -15,7 +15,7 @@ import {
   isTypedLintingEnabled,
   useFlatConfig,
 } from '@nx/eslint/internal';
-import { addLintingToProject } from '@nx/js';
+import { addLintingToProject } from '@nx/js/internal';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];

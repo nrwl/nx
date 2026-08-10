@@ -20,7 +20,7 @@ import {
   useFlatConfig,
 } from '@nx/eslint/internal';
 import { eslintPluginPlaywrightVersion } from './versions';
-import { addLintingToProject } from '@nx/js';
+import { addLintingToProject } from '@nx/js/internal';
 
 export interface PlaywrightLinterOptions {
   project: string;

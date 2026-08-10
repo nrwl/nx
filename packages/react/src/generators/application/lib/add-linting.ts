@@ -14,7 +14,7 @@ import {
 } from '@nx/eslint/internal';
 import { addDependenciesToPackageJson, runTasksInSerial } from '@nx/devkit';
 import { addSwcDependencies, detectLinters } from '@nx/js/internal';
-import { addLintingToProject } from '@nx/js';
+import { addLintingToProject } from '@nx/js/internal';
 import { extraEslintDependencies } from '../../../utils/lint';
 import { NormalizedSchema } from '../schema';
 import { nxVersion } from '../../../utils/versions';

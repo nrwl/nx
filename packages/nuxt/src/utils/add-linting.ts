@@ -22,7 +22,7 @@ import {
   nuxtEslintConfigVersion,
   nuxtEslintConfigLegacyVersion,
 } from './versions';
-import { addLintingToProject } from '@nx/js';
+import { addLintingToProject } from '@nx/js/internal';
 
 export async function addLinting(
   host: Tree,
