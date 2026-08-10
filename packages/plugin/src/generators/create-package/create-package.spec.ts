@@ -143,4 +143,35 @@ describe('NxPlugin Create Package Generator', () => {
       })
     );
   });
+
+  it('should budget the e2e test for a cold package manager cache', async () => {
+    await pluginGenerator(tree, {
+      name: 'with-e2e',
+      directory: 'packages/with-e2e',
+      compiler: 'tsc',
+      skipTsConfig: false,
+      skipFormat: false,
+      skipLintChecks: false,
+      linter: 'eslint',
+      unitTestRunner: 'jest',
+      e2eTestRunner: 'jest',
+    });
+
+    await createPackageGenerator(
+      tree,
+      getSchema({ project: 'with-e2e', e2eProject: 'with-e2e-e2e' })
+    );
+
+    // The test shells out synchronously, which jest cannot interrupt but vitest
+    // fails after the fact, so an under-budgeted test is an intermittent
+    // failure rather than a consistent one.
+    const spec = tree.read(
+      'packages/with-e2e-e2e/src/create-a-workspace.spec.ts',
+      'utf-8'
+    );
+    const budget = /\}, (\d[\d_]*)\);/.exec(spec);
+
+    expect(budget).not.toBeNull();
+    expect(Number(budget[1].replace(/_/g, ''))).toBeGreaterThanOrEqual(120_000);
+  });
 });
