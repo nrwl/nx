@@ -187,6 +187,7 @@ public static class TestClassScanner
         var skippedNested = 0;
         var skippedGeneric = 0;
         var skippedUnrunnable = 0;
+        var skippedNoOwnMethod = 0;
 
         Parallel.ForEach(materialized, source =>
         {
@@ -200,6 +201,7 @@ public static class TestClassScanner
             Interlocked.Add(ref skippedNested, exclusions.Nested);
             Interlocked.Add(ref skippedGeneric, exclusions.Generic);
             Interlocked.Add(ref skippedUnrunnable, exclusions.Unrunnable);
+            Interlocked.Add(ref skippedNoOwnMethod, exclusions.NoOwnMethod);
         });
 
         // Deduplicating by Id is what collapses `partial` classes declared
@@ -224,7 +226,8 @@ public static class TestClassScanner
             Units = [.. merged.Where(unit => unit.HasRunnableMembers)],
             SkippedNested = skippedNested,
             SkippedGeneric = skippedGeneric,
-            SkippedUnrunnable = skippedUnrunnable
+            SkippedUnrunnable = skippedUnrunnable,
+            SkippedNoOwnMethod = skippedNoOwnMethod
         };
     }
 
@@ -234,6 +237,13 @@ public static class TestClassScanner
         public int Nested;
         public int Generic;
         public int Unrunnable;
+
+        /// <summary>
+        /// Method mode only. Tallied per file, so a partial class with no local
+        /// test method on either half counts twice — a known imprecision in an
+        /// informational count, not in what gets split.
+        /// </summary>
+        public int NoOwnMethod;
     }
 
     /// <summary>
@@ -306,6 +316,8 @@ public static class TestClassScanner
                 continue;
             }
 
+            var hasOwnTestMethod = false;
+
             foreach (var method in declaration.Members.OfType<MethodDeclarationSyntax>())
             {
                 // Generic test methods would need their type arguments encoded
@@ -315,6 +327,12 @@ public static class TestClassScanner
                 {
                     continue;
                 }
+
+                // Counted whether or not this specific method goes on to be
+                // excluded below — a class with an excluded method still
+                // declared one of its own, which is a different situation from
+                // declaring none at all.
+                hasOwnTestMethod = true;
 
                 if (method.TypeParameterList is not null)
                 {
@@ -341,6 +359,11 @@ public static class TestClassScanner
                     // HasRunnableMembers defaults to true: reaching this point
                     // already required a qualifying [TestMethod]/[DataTestMethod].
                 };
+            }
+
+            if (!hasOwnTestMethod)
+            {
+                exclusions.NoOwnMethod++;
             }
         }
     }

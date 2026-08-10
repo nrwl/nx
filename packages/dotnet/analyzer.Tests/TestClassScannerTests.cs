@@ -405,6 +405,36 @@ public class TestClassScannerTests
             "namespace Acme; [TestClass] public abstract class BaseTests { [TestMethod] public void A() { } }"));
     }
 
+    [Fact]
+    public void MethodMode_SubclassWithOnlyInheritedTests_IsCountedNotSilentlyDropped()
+    {
+        // The base's tests are invisible to a syntax-only scan of the
+        // subclass's own declaration, so method mode has nothing to yield for
+        // it — unlike class mode, where the base list is enough to keep the
+        // whole class as one unit. Neither SkippedNested nor SkippedGeneric
+        // moves; without this category the gap would be silent.
+        var result = Discover(SplitBy.Method,
+            "namespace Acme; [TestClass] public abstract class BaseTests { [TestMethod] public void A() { } }",
+            "namespace Acme; [TestClass] public class LoginTests : BaseTests { }");
+
+        Assert.Empty(result.Units);
+        Assert.Equal(1, result.SkippedNoOwnMethod);
+        Assert.Equal(0, result.SkippedNested);
+        Assert.Equal(0, result.SkippedGeneric);
+    }
+
+    [Fact]
+    public void MethodMode_SubclassWithItsOwnMethodIsNotCounted()
+    {
+        var result = Discover(SplitBy.Method,
+            "namespace Acme; [TestClass] public abstract class BaseTests { [TestMethod] public void A() { } }",
+            "namespace Acme; [TestClass] public class LoginTests : BaseTests " +
+            "{ [TestMethod] public void B() { } }");
+
+        Assert.Equal(["Acme.LoginTests.B"], result.Units.Select(u => u.Id));
+        Assert.Equal(0, result.SkippedNoOwnMethod);
+    }
+
     // --- DoNotParallelize ---------------------------------------------------
 
     [Fact]
