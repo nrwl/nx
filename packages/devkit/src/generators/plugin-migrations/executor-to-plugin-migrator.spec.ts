@@ -1,6 +1,11 @@
+import { dirname } from 'node:path/posix';
 import type { TargetDefaults } from 'nx/src/devkit-exports';
 import { readNxJson, readJson, updateNxJson } from 'nx/src/devkit-exports';
-import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
+import {
+  AggregateCreateNodesError,
+  mergeTargetConfigurations,
+} from 'nx/src/devkit-internals';
+import type { CreateNodes } from 'nx/src/devkit-exports';
 import {
   collectMigrationScope,
   computeResidualByProject,
@@ -16,6 +21,7 @@ import {
   setupFixture,
   teardownFixture,
   SYNTHETIC_CONFIG_FILE,
+  SYNTHETIC_CONFIG_GLOB,
   SYNTHETIC_EXECUTOR,
   SYNTHETIC_PLUGIN_PATH,
   type FixtureContext,
@@ -1209,6 +1215,96 @@ describe('Phase 3 — strict-common hoist', () => {
     // the revert is surfaced once
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0][0]).toContain('build');
+  });
+
+  it('M: reverts the hoist when a non-migrated root errors during verification (fail-closed)', async () => {
+    // Same shape as L, but the plugin ERRORS on app3 during verification, so
+    // app3 is absent from the (partial) verification result. `reachesNonMigrated
+    // Root` cannot see it — the guard must fail closed on the errored config
+    // file, which sits outside the migrated roots.
+    ctx = setupFixture('hoist-errored-root');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    // app3: inferred-only for `build`, migrated for nothing
+    addExecutorProject(ctx, {
+      name: 'app3',
+      root: 'app3',
+      targetName: 'unrelated',
+      executor: '@other/tool:noop',
+    });
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [SYNTHETIC_PLUGIN_PATH];
+    updateNxJson(ctx.tree, nxJson);
+
+    // Infers app3 cleanly in Phase 1 (invocation 1) but throws an
+    // AggregateCreateNodesError for app3's config on every later pass.
+    let invocation = 0;
+    const createNodes: CreateNodes<SyntheticPluginOptions> = [
+      SYNTHETIC_CONFIG_GLOB,
+      (configFiles, options) => {
+        invocation++;
+        const targetName = options?.targetName ?? 'build';
+        const results: Array<readonly [string, any]> = [];
+        const errors: Array<[string, Error]> = [];
+        for (const file of configFiles) {
+          const dir = dirname(file);
+          const root = dir === '' || dir === '.' ? '.' : dir;
+          if (root === 'app3' && invocation >= 2) {
+            errors.push([file, new Error(`broken config in ${file}`)]);
+            continue;
+          }
+          results.push([
+            file,
+            {
+              projects: {
+                [root]: {
+                  targets: {
+                    [targetName]: defaultInferredTarget(root, targetName),
+                  },
+                },
+              },
+            },
+          ]);
+        }
+        if (errors.length > 0) {
+          throw new AggregateCreateNodesError(errors, results as any);
+        }
+        return results;
+      },
+    ];
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      SYNTHETIC_PLUGIN_PATH,
+      createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    // The errored app3 config sits outside the migrated roots, so the hoist is
+    // reverted rather than leaking `mode` onto the inferred-only app3 once its
+    // config is fixed.
+    expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({ cache: true });
+    for (const name of ['app1', 'app2']) {
+      expect(readJson(ctx.tree, `${name}/project.json`).targets.build).toEqual({
+        options: { mode: 'production' },
+      });
+    }
+    // the incomplete verification is surfaced, not silent
+    expect(warn).toHaveBeenCalled();
+    expect(
+      warn.mock.calls.some((call) => String(call[0]).includes('build'))
+    ).toBe(true);
   });
 });
 

@@ -22,6 +22,9 @@ import {
 import {
   LoadedNxPlugin,
   ProjectConfigurationsError,
+  isAggregateCreateNodesError,
+  isProjectsWithNoNameError,
+  isMultipleProjectsWithSameNameError,
   mergeTargetConfigurations,
   retrieveProjectConfigurations,
   globalSpinner,
@@ -1039,6 +1042,16 @@ function isFileUnderRoot(file: string, root: string): boolean {
   return file === root || file.startsWith(`${root}/`);
 }
 
+/** Whether `file` belongs to any of `roots`. */
+function isFileUnderAnyRoot(file: string, roots: Set<string>): boolean {
+  for (const root of roots) {
+    if (isFileUnderRoot(file, root)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /**
  * Whether a registration's `include` globs already cover every config file the
  * plugin globs that is owned by an inferred project root (so the registration
@@ -1087,7 +1100,16 @@ async function runVerificationPass<T>(
   pluginPath: string,
   createNodes: CreateNodes<T> | undefined,
   createNodesV2: CreateNodes<T> | undefined
-): Promise<{ result: ConfigurationResult | undefined; errors: string[] }> {
+): Promise<{
+  result: ConfigurationResult | undefined;
+  errors: string[];
+  /**
+   * Config files the plugin threw an `AggregateCreateNodesError` for during
+   * verification. These are the roots the pass could NOT inspect; the guard
+   * fails closed against any that sit outside the migrated set.
+   */
+  erroredConfigFiles: string[];
+}> {
   const nxJson = readNxJson(tree);
   const registrations = (nxJson.plugins ?? []).filter(
     (plugin): plugin is string | ExpandedPluginConfiguration =>
@@ -1095,7 +1117,7 @@ async function runVerificationPass<T>(
       (typeof plugin !== 'string' && plugin.plugin === pluginPath)
   );
   if (registrations.length === 0) {
-    return { result: undefined, errors: [] };
+    return { result: undefined, errors: [], erroredConfigFiles: [] };
   }
 
   global.NX_GRAPH_CREATION = true;
@@ -1114,14 +1136,39 @@ async function runVerificationPass<T>(
         nxJson
       ),
       errors: [],
+      erroredConfigFiles: [],
     };
   } catch (e) {
     if (e instanceof ProjectConfigurationsError) {
       // Verify against the partial result, but keep the causes — they are the
-      // only diagnostic for why affected projects fall back.
+      // only diagnostic for why affected projects fall back or a hoist reverts.
+      const messages: string[] = [];
+      const erroredConfigFiles = new Set<string>();
+      for (const error of e.errors) {
+        // `ProjectsWithNoNameError` / `MultipleProjectsWithSameNameError` are
+        // artifacts of running with no `project.json` (default) layer — nothing
+        // supplies project names — not signs that inference broke. Dropping them
+        // makes a non-empty `errors` mean exactly "a config file failed to
+        // parse/infer", and stops them naming unrelated projects in the warning.
+        if (
+          isProjectsWithNoNameError(error) ||
+          isMultipleProjectsWithSameNameError(error)
+        ) {
+          continue;
+        }
+        messages.push(error.message ?? String(error));
+        if (isAggregateCreateNodesError(error)) {
+          for (const [file] of error.errors) {
+            if (file) {
+              erroredConfigFiles.add(file);
+            }
+          }
+        }
+      }
       return {
         result: e.partialProjectConfigurationsResult,
-        errors: e.errors.map((error) => error.message ?? String(error)),
+        errors: messages,
+        erroredConfigFiles: [...erroredConfigFiles],
       };
     }
     throw e;
@@ -1167,8 +1214,11 @@ async function verifyAndFallback<T>(
     return;
   }
 
-  const { result: verifyResult, errors: verificationErrors } =
-    await runVerificationPass(tree, pluginPath, createNodes, createNodesV2);
+  const {
+    result: verifyResult,
+    errors: verificationErrors,
+    erroredConfigFiles,
+  } = await runVerificationPass(tree, pluginPath, createNodes, createNodesV2);
   if (!verifyResult) {
     return;
   }
@@ -1200,7 +1250,16 @@ async function verifyAndFallback<T>(
         projectConfig.targets?.[targetName] !== undefined &&
         !migratedRoots.has(root)
     );
-    if (reachesNonMigratedRoot) {
+    // Fail closed on inference errors. `reachesNonMigratedRoot` is keyed on the
+    // partial result, so an errored root never appears there — yet it may be an
+    // inferred-only root that would inherit the plugin-scoped default once its
+    // config is fixed. Revert whenever the pass could not inspect a config file
+    // that sits outside this target's migrated roots (errors on migrated roots
+    // are handled by the per-project divergence oracle below).
+    const erroredOutsideMigratedRoots = erroredConfigFiles.some(
+      (file) => !isFileUnderAnyRoot(file, migratedRoots)
+    );
+    if (reachesNonMigratedRoot || erroredOutsideMigratedRoots) {
       revertedTargets.add(targetName);
     }
   }
@@ -1229,6 +1288,14 @@ async function verifyAndFallback<T>(
         );
       }
     }
+    // A revert can be triggered by an inference error the pass could not
+    // inspect; surface those errors so the incomplete verification is not silent.
+    const causes =
+      verificationErrors.length > 0
+        ? ` The verification pass reported errors: ${verificationErrors.join(
+            '; '
+          )}`
+        : '';
     (logger ?? devkitLogger).warn(
       `convert-to-inferred kept per-project configuration for target(s) ${[
         ...revertedTargets,
@@ -1236,7 +1303,7 @@ async function verifyAndFallback<T>(
         .sort()
         .join(
           ', '
-        )} instead of centralizing it: other projects inferred by this plugin would have inherited the centralized configuration. The migrated projects keep the same output as before centralization.`
+        )} instead of centralizing it: other projects inferred by this plugin would have inherited the centralized configuration (or the verification pass could not confirm they would not). The migrated projects keep the same output as before centralization.${causes}`
     );
   }
 
@@ -1302,6 +1369,23 @@ async function verifyAndFallback<T>(
       `convert-to-inferred restored the pre-centralization migration output for ${fallbacks.length} target(s) that could not be verified as equivalent after migration: ${fallbacks.join(
         ', '
       )}. Centralized nx.json defaults are shadowed where their keys overlap, but the live inferred configuration may differ from the pre-migration behavior — review these targets manually.${causes}`
+    );
+  }
+
+  // An error-degraded verification with no revert and no fallback must not be
+  // silent — the migrated targets verified clean, but a broken config file left
+  // the pass unable to see the whole workspace. (`verificationErrors` here has
+  // already had the no-project-name noise filtered out, so it means inference
+  // genuinely broke.)
+  if (
+    verificationErrors.length > 0 &&
+    revertedTargets.size === 0 &&
+    fallbacks.length === 0
+  ) {
+    (logger ?? devkitLogger).warn(
+      `convert-to-inferred could not fully verify the migration: the verification inference pass reported errors: ${verificationErrors.join(
+        '; '
+      )}. The migrated targets matched their pre-migration output, but review any workspace configuration the errors reference.`
     );
   }
 }
