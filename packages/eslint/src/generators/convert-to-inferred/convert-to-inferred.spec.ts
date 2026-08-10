@@ -997,15 +997,13 @@ describe('Eslint - Convert Executors To Plugin', () => {
       for (const name of ['app1', 'app2']) {
         const projectTarget =
           readProjectConfiguration(tree, name).targets?.lint ?? {};
-        // not duplicated in the per-project file
+        // centralized once, not duplicated in the per-project file. That the
+        // hoisted plugin-scoped default actually RESOLVES onto the inferred
+        // target (through Nx's real targetDefaults pipeline, including the
+        // resolveSourcePlugin gate) is verified in the engine spec's
+        // "through the REAL Nx resolution pipeline" tests; a JS-spread merge
+        // here could not observe that gate.
         expect(projectTarget.options?.['cache-location']).toBeUndefined();
-        // but the effective (merged) config still carries it (project.json
-        // deviations win over targetDefaults)
-        const effectiveOptions = {
-          ...(hoisted?.options ?? {}),
-          ...(projectTarget.options ?? {}),
-        };
-        expect(effectiveOptions['cache-location']).toBe('cache-dir');
       }
     });
 
@@ -1041,17 +1039,12 @@ describe('Eslint - Convert Executors To Plugin', () => {
       expect(hoisted?.configurations?.ci).toEqual({
         quiet: true,
       });
+      // centralized once, not duplicated per project (effective resolution is
+      // covered by the engine spec's real-pipeline tests).
       for (const name of ['app1', 'app2']) {
         const projectTarget =
           readProjectConfiguration(tree, name).targets?.lint ?? {};
         expect(projectTarget.configurations?.ci).toBeUndefined();
-        const effectiveCiConfiguration = {
-          ...(hoisted?.configurations?.ci ?? {}),
-          ...(projectTarget.configurations?.ci ?? {}),
-        };
-        expect(effectiveCiConfiguration).toEqual({
-          quiet: true,
-        });
       }
     });
 

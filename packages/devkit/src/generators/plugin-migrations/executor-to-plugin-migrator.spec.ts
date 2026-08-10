@@ -18,6 +18,7 @@ import {
   addExecutorProject,
   createSyntheticPlugin,
   defaultInferredTarget,
+  resolveThroughRealPipeline,
   setupFixture,
   teardownFixture,
   SYNTHETIC_CONFIG_FILE,
@@ -630,6 +631,18 @@ describe('Phase 3 — strict-common hoist', () => {
       const pj = readJson(ctx.tree, `${name}/project.json`);
       expect(pj.targets.build).toBeUndefined();
     }
+
+    // Through the REAL Nx resolution pipeline the plugin-scoped default DOES
+    // apply (no command/executor in the residual), so every project resolves
+    // the centralized `mode` — the hoist is genuinely equivalent.
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+    for (const name of ['app1', 'app2', 'app3']) {
+      expect(resolved[name].build.options?.mode).toBe('production');
+    }
   });
 
   it('B: executor-keyed targetDefault is de-duped into targetDefaults[target]', async () => {
@@ -758,6 +771,19 @@ describe('Phase 3 — strict-common hoist', () => {
         command: `nx run ${name}:build`,
         options: { shared: 'value' },
       });
+    }
+
+    // Assert through the REAL Nx resolution pipeline (inferred + targetDefaults
+    // + project.json, with resolveSourcePlugin's filter.plugin gate): the shared
+    // option survives. Had it been hoisted to a filter:{plugin} default, this
+    // would resolve to `undefined` because the residual carries `command`.
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+    for (const name of ['app1', 'app2']) {
+      expect(resolved[name].build.options?.shared).toBe('value');
     }
   });
 

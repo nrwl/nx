@@ -1113,17 +1113,13 @@ describe('Jest - Convert Executors To Plugin', () => {
         (entry) => entry?.filter?.plugin === '@nx/jest/plugin'
       );
       expect(hoisted?.options?.coverage).toBe(true);
+      // centralized once, not duplicated per project. Effective resolution
+      // through Nx's real targetDefaults pipeline is verified in the engine
+      // spec's "through the REAL Nx resolution pipeline" tests.
       for (const name of ['app1', 'app2']) {
         const projectTarget =
           readProjectConfiguration(tree, name).targets?.test ?? {};
-        // not duplicated per project
         expect(projectTarget.options?.coverage).toBeUndefined();
-        // but the effective (merged) config still carries it
-        const effectiveOptions = {
-          ...(hoisted?.options ?? {}),
-          ...(projectTarget.options ?? {}),
-        };
-        expect(effectiveOptions.coverage).toBe(true);
       }
     });
 

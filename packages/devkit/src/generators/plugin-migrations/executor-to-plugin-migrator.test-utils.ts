@@ -1,9 +1,16 @@
 import { dirname } from 'node:path/posix';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { createTreeWithEmptyWorkspace } from 'nx/src/generators/testing-utils/create-tree-with-empty-workspace';
-import { addProjectConfiguration } from 'nx/src/devkit-exports';
+import { addProjectConfiguration, readNxJson } from 'nx/src/devkit-exports';
+import {
+  LoadedNxPlugin,
+  retrieveProjectConfigurations,
+} from 'nx/src/devkit-internals';
+import { ProjectJsonProjectsPlugin } from 'nx/src/plugins/project-json/build-nodes/project-json';
+import { setupWorkspaceContext } from 'nx/src/utils/workspace-context';
 import type { Tree } from 'nx/src/generators/tree';
 import type { ProjectGraph } from 'nx/src/config/project-graph';
+import type { ExpandedPluginConfiguration } from 'nx/src/config/nx-json';
 import type {
   ProjectConfiguration,
   TargetConfiguration,
@@ -154,6 +161,84 @@ export function setupFixture(
 
 export function teardownFixture(fs: TempFs): void {
   fs.cleanup();
+}
+
+/**
+ * Flush the in-memory Tree's writes/deletes to the backing TempFs disk. The
+ * migration mutates only the Tree; a post-migration resolution reads config
+ * files (and `project.json`) from disk, so it needs the migrated state on disk.
+ */
+export function flushTreeToDisk(ctx: FixtureContext): void {
+  for (const change of ctx.tree.listChanges()) {
+    if (change.type === 'DELETE') {
+      try {
+        ctx.fs.removeFileSync(change.path);
+      } catch {
+        // already gone
+      }
+    } else {
+      ctx.fs.createFileSync(change.path, change.content?.toString() ?? '');
+    }
+  }
+}
+
+/**
+ * Resolve the migrated workspace through the REAL Nx pipeline: the migrated
+ * plugin's registrations as specified plugins + the actual `project.json`
+ * default plugin, so `targetDefaults` synthesis (including
+ * `resolveSourcePlugin`'s `filter.plugin` gate) runs exactly as it does at
+ * runtime. Returns project root -> resolved (effective) target map.
+ *
+ * Unlike the engine's own verification pass (which deliberately omits the
+ * `project.json` layer), this DOES include it — so it can observe cases the
+ * verification pass structurally cannot, such as a `filter: { plugin }` default
+ * being dropped because the project.json residual carries `command`/`executor`.
+ */
+export async function resolveThroughRealPipeline(
+  ctx: FixtureContext,
+  pluginPath: string,
+  createNodes: CreateNodes<SyntheticPluginOptions>
+): Promise<Record<string, Record<string, TargetConfiguration>>> {
+  flushTreeToDisk(ctx);
+  // Re-scan the workspace so the native file context picks up project.json (and
+  // any other) files flushed after the migration's first inference pass.
+  setupWorkspaceContext(ctx.tree.root);
+  const nxJson = readNxJson(ctx.tree);
+  const registrations = (nxJson.plugins ?? []).filter(
+    (plugin): plugin is string | ExpandedPluginConfiguration =>
+      plugin === pluginPath ||
+      (typeof plugin !== 'string' && plugin.plugin === pluginPath)
+  );
+
+  (global as any).NX_GRAPH_CREATION = true;
+  try {
+    const specifiedPlugins = registrations.map(
+      (registration) =>
+        new LoadedNxPlugin({ createNodes, name: pluginPath }, registration)
+    );
+    const projectJsonPlugin = new LoadedNxPlugin(
+      ProjectJsonProjectsPlugin,
+      'nx/core/project-json'
+    );
+    const result = await retrieveProjectConfigurations(
+      {
+        specifiedPlugins,
+        defaultPlugins: [projectJsonPlugin],
+      },
+      ctx.tree.root,
+      nxJson
+    );
+    const targetsByRoot: Record<
+      string,
+      Record<string, TargetConfiguration>
+    > = {};
+    for (const [root, projectConfig] of Object.entries(result.projects ?? {})) {
+      targetsByRoot[root] = projectConfig.targets ?? {};
+    }
+    return targetsByRoot;
+  } finally {
+    (global as any).NX_GRAPH_CREATION = false;
+  }
 }
 
 export interface AddProjectOptions {

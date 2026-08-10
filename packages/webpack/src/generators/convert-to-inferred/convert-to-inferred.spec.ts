@@ -859,14 +859,13 @@ describe('convert-to-inferred', () => {
       development: {},
       production: {},
     });
+    // centralized once, not duplicated per project. Effective resolution
+    // through Nx's real targetDefaults pipeline is verified in the engine spec's
+    // "through the REAL Nx resolution pipeline" tests.
     for (const name of ['app1', 'app2']) {
       const projectTarget =
         readProjectConfiguration(tree, name).targets?.build ?? {};
-      // not duplicated per project
       expect(projectTarget.defaultConfiguration).toBeUndefined();
-      // effective (merged) config still resolves it
-      const effective = { ...hoisted, ...projectTarget };
-      expect(effective.defaultConfiguration).toBe('production');
     }
   });
 
