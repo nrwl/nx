@@ -100,6 +100,22 @@ The reverse is just as common in AI drafts: a short claim followed by a longer s
 
 **The test:** If two adjacent sentences share a subject and the second adds no new fact, merge them.
 
+### Cut signpost openers
+
+A short sentence that announces what a paragraph is about, before the paragraph says it, is a
+label rather than a claim. This one survives the drama-beat test, because the sentences after it
+do add facts, so sweep for it separately.
+
+- Don't: "CI is the other gap. Turborepo scales past one machine through manual binning, while Nx Agents distributes at the task level."
+- Do: "Turborepo scales past one machine through manual binning, while Nx Agents distributes at the task level."
+
+Naming a count is the same move ("Two smaller differences.", "Three things to know."). Either
+fold the label into the sentence that follows or delete it. A real list gets bullets and an
+introductory line instead.
+
+**The test:** Delete the first sentence of each paragraph. If the paragraph still says everything
+it said before, leave it deleted.
+
 ### Cut significance clauses
 
 Naming a property and then explaining why the reader should care about it is a generated shape.
@@ -181,7 +197,7 @@ Run passes in this order. Structural first, vocabulary last.
 
 1. Canonical-home audit: where does each substantive point live?
 2. Repetition count: grep your two or three core findings. If a finding appears more than twice in prose, the third is probably redundant.
-3. Drama-beat sweep, both orders. Also grep for `?` and for significance clauses ("which is what makes", "and that's why").
+3. Drama-beat sweep, both orders. Read the first sentence of each paragraph on its own and cut the ones that only label it. Also grep for `?` and for significance clauses ("which is what makes", "and that's why").
 4. Closer pass.
 5. Claim audit: for each absolute and each counterfactual, check what evidence in the doc supports that strength. Weaken or cite. Check invented numbers the same way.
 6. End-to-end consistency read.
