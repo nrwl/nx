@@ -202,6 +202,40 @@ public class TargetBuilderAtomizerTests
         Assert.False(Build(isTest: false).DerivedFromSources);
     }
 
+    [Fact]
+    public void UnitWithAnIdThatIsNotADottedIdentifierSequence_IsSkipped()
+    {
+        // Id feeds a target name, a filter, and a results-directory path, so
+        // an unexpected shape must be refused rather than trusted. The rest
+        // of the units still get their targets.
+        var originalError = Console.Error;
+        var writer = new StringWriter();
+        Console.SetError(writer);
+        BuildTargetsResult result;
+        try
+        {
+            result = Build(units:
+            [
+                new() { Namespace = "Acme", ClassName = "Weird Name" },
+                new() { Namespace = "Acme", ClassName = "Fine" }
+            ]);
+        }
+        finally
+        {
+            Console.SetError(originalError);
+        }
+
+        Assert.False(result.Targets.ContainsKey("test-ci--Acme.Weird Name"));
+        Assert.True(result.Targets.ContainsKey("test-ci--Acme.Fine"));
+        Assert.Contains("not a plain dotted identifier sequence", writer.ToString());
+
+        var dependencies = (result.Targets["test-ci"].DependsOn ?? [])
+            .OfType<TargetDependency>()
+            .ToList();
+        Assert.Single(dependencies);
+        Assert.Equal("test-ci--Acme.Fine", dependencies[0].Target);
+    }
+
     // --- Shape of the emitted targets --------------------------------------
 
     [Fact]
