@@ -161,7 +161,6 @@ describe('executor-to-plugin-migrator benchmark (synthetic ~600 projects)', () =
     // 2x. A ratio bound pins the de-bloat claim the PR body makes; a plain
     // `<=` would pass even if nothing were centralized.
     const compressionRatio = preBytes / postBytes;
-    // eslint-disable-next-line no-console
     console.log(
       `[bench] config bytes: ${preBytes} -> ${postBytes} (${compressionRatio.toFixed(
         2

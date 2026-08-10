@@ -6,7 +6,12 @@ import {
   LoadedNxPlugin,
   retrieveProjectConfigurations,
 } from 'nx/src/devkit-internals';
+// Test-only imports (this file is excluded from the published lib build); the
+// real project.json plugin + workspace-context reset are needed to resolve the
+// migrated workspace through the same pipeline Nx uses at runtime.
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { ProjectJsonProjectsPlugin } from 'nx/src/plugins/project-json/build-nodes/project-json';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { setupWorkspaceContext } from 'nx/src/utils/workspace-context';
 import type { Tree } from 'nx/src/generators/tree';
 import type { ProjectGraph } from 'nx/src/config/project-graph';
