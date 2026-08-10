@@ -168,6 +168,7 @@ catalogs:
 allowBuilds:
   '@nestjs/core': true
   '@parcel/watcher': false
+  '@scarf/scarf': false
   '@swc/core': false
   '@tailwindcss/oxide': false
   core-js: false

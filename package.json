@@ -236,7 +236,7 @@
     "jsonc-eslint-parser": "^3.1.0",
     "jsonc-parser": "catalog:",
     "kill-port": "^1.6.1",
-    "less": "4.5.1",
+    "less": "4.8.1",
     "less-loader": "catalog:css",
     "license-webpack-plugin": "^4.0.2",
     "lines-and-columns": "2.0.3",
