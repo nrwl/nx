@@ -326,7 +326,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   createApplicationFiles(host, options);
 
   let enableTypedLinting = false;
-  if (options.linter !== 'eslint' && options.linter !== 'none') {
+  if (options.linter !== 'eslint') {
     tasks.push(
       await addLintingToProject(host, {
         linter: options.linter,
