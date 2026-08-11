@@ -272,7 +272,7 @@ describe('NxPlugin e2e-project Generator', () => {
     );
 
     expect(tree.read('my-plugin-e2e/src/my-plugin.spec.ts', 'utf-8')).toContain(
-      '  }, 120_000);'
+      '  }, 300_000);'
     );
   });
 

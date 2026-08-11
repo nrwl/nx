@@ -5,20 +5,20 @@ import { mkdirSync, rmSync } from 'fs';
 describe('<%= pluginName %>', () => {
   let projectDirectory: string;
 
+  // This hook shells out synchronously twice, so its budget has to cover both
+  // installs on a cold package manager cache. Otherwise work that succeeded
+  // still fails on return.
   beforeAll(() => {
     projectDirectory = createTestProject();
 
     // The plugin has been built and published to a local registry in the globalSetup
     // Install the plugin built with the latest source code into the test repo
-    execSync(
-      `<%= packageManagerCommands.addDev %> <%= pluginPackageName %>@e2e`,
-      {
-        cwd: projectDirectory,
-        stdio: 'inherit',
-        env: process.env,
-      }
-    );
-  }, 120_000);
+    execSync(`<%= packageManagerCommands.addDev %> <%= pluginPackageName %>@e2e`, {
+      cwd: projectDirectory,
+      stdio: 'inherit',
+      env: process.env,
+    });
+  }, 300_000);
 
   afterAll(() => {
     if (projectDirectory) {
@@ -29,6 +29,7 @@ describe('<%= pluginName %>', () => {
       });
     }
   });
+
 
   it('should be installed', () => {
     // npm ls will fail if the package is not installed properly
