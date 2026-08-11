@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 import { existsSync, mkdirSync, rmSync } from 'fs';
-import { join } from 'path';
+import { dirname, join } from 'path';
 import { writeJsonFile } from '../../../utils/fileutils';
 import {
   getLatestCommitSha,
@@ -1134,6 +1134,10 @@ function emitAwaitPrompt(
   const migrationId = step.migrationId;
   const { package: pkg, name } = splitMigrationId(migrationId);
   const filePath = handoffPath(dir, { package: pkg, name });
+  // The package id becomes real path segments, so handing over the path
+  // without its directory is what would force the agent to `mkdir -p`. Same
+  // reason the classic runner pre-creates it in run-step.ts.
+  mkdirSync(dirname(filePath), { recursive: true });
   const lines = [
     `Migration ${migrationId} is a prompt-based migration awaiting your outcome.`,
     `Apply the prompt (see the worker's earlier <nx_migrate_prompt> block), then write the handoff file and run the "then" command.`,

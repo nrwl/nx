@@ -180,8 +180,8 @@ export function runDir(root: string, runId: string): string {
 /**
  * The one subtree of a run directory the driving agent writes: its handoff
  * files. Everything else under the run directory is state Nx owns and reads
- * back, so keeping the two apart is what lets an agent's write grant name
- * this path instead of the whole run.
+ * back, so nothing Nx writes belongs in here and no agent write belongs
+ * outside it.
  */
 export function runHandoffsDir(runDirPath: string): string {
   return join(runDirPath, RUN_HANDOFFS_DIR_NAME);
@@ -529,9 +529,9 @@ export function findActiveRun(root: string): {
  */
 export function createRun(root: string, state: MigrateRunState): void {
   const dir = runDir(root, state.runId);
-  // The handoffs subtree is created up front so the agent only ever writes a
-  // file into it, never the directory itself: a write grant narrowed to the
-  // subtree cannot be assumed to cover creating it.
+  // Created up front, and each step's package directory at dispense, so the
+  // agent never has to `mkdir -p`: that costs a workspace-permission prompt in
+  // agents like Claude Code, on every step.
   mkdirSync(runHandoffsDir(dir), { recursive: true });
   writeRunState(dir, state);
   pruneCompletedRuns(root, state.runId);

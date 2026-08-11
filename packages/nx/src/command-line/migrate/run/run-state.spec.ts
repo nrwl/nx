@@ -497,14 +497,14 @@ describe('run-state', () => {
 
   describe('handoffs subtree', () => {
     it('sits under the run directory rather than beside the state Nx owns', () => {
-      // Pinned literally: the agent's write grant is expressed against this
-      // path, and the rest of the run directory must stay outside it.
+      // Pinned literally: package names make up the rest of a handoff path, so
+      // without this segment they would occupy the run directory's top level.
       expect(runHandoffsDir(runDir(root, 'run-1'))).toBe(
         join(migrateRunsDir(root), 'run-1', 'handoffs')
       );
     });
 
-    it('is created with the run so the agent only ever writes a file into it', () => {
+    it('has its root created with the run, ahead of any per-step directory', () => {
       createRun(root, buildState({ runId: 'run-1', status: 'active' }));
 
       expect(existsSync(runHandoffsDir(runDir(root, 'run-1')))).toBe(true);

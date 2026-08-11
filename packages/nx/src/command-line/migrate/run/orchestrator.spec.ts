@@ -1196,6 +1196,21 @@ describe('orchestrator', () => {
       );
     });
 
+    it('creates the handed-over handoff directory so the agent only writes a file', async () => {
+      // The package id becomes real path segments, so the run-creation mkdir
+      // of `handoffs/` alone leaves the agent a path whose parent is missing.
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
+        plan: [promptMig('@nx/js', 'p')],
+      });
+      const packageDir = dirname(handoffPathIn(dir, '@nx/js', 'p'));
+      expect(existsSync(packageDir)).toBe(false);
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(existsSync(packageDir)).toBe(true);
+    });
+
     it.each([
       ['failed', { status: 'failed', summary: 'boom' }],
       ['skipped', { status: 'success', summary: 'n/a', outcome: 'skipped' }],
