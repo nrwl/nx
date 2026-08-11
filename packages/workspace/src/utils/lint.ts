@@ -7,5 +7,6 @@ export const enum Linter {
 }
 
 // Standalone copy of the canonical `LinterType` in `@nx/js`: `@nx/workspace`
-// does not depend on `@nx/js`. Keep the two in sync; nothing checks it.
+// does not depend on `@nx/js`. `@nx/js`'s `linter.ts` asserts the two are
+// identical, so drift here fails that package's build rather than this one's.
 export type LinterType = 'eslint' | 'oxlint' | 'none';

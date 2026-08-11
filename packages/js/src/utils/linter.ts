@@ -3,6 +3,7 @@ import {
   readNxJson,
   type Tree,
 } from '@nx/devkit';
+import type { LinterType as WorkspaceLinterType } from '@nx/workspace';
 
 /**
  * The linters Nx generators can set up for a project.
@@ -10,9 +11,25 @@ import {
  * Canonical home. `@nx/eslint` re-exports this for back-compat. Two standalone
  * copies exist because neither package can depend on `@nx/js`: `@nx/workspace`
  * (which `@nx/js` itself depends on) and `LINTERS` in `create-nx-workspace`.
- * Nothing enforces that the three agree.
+ * The assertion below pins the first; `create-nx-workspace` has no edge to
+ * assert across, so that one is still kept in sync by hand.
  */
 export type LinterType = 'eslint' | 'oxlint' | 'none';
+
+/**
+ * Fails the build if the `@nx/workspace` copy drifts from this one in either
+ * direction. Type-only, so nothing is emitted. It lives here rather than in a
+ * spec because `tsconfig.lib.json` is what CI compiles; spec files are excluded
+ * from it, and Jest strips types without reading them.
+ */
+type AssertTrue<T extends true> = T;
+type _LinterTypeCopiesMatch = AssertTrue<
+  [WorkspaceLinterType] extends [LinterType]
+    ? [LinterType] extends [WorkspaceLinterType]
+      ? true
+      : false
+    : false
+>;
 
 function hasPlugin(tree: Tree, plugin: string): boolean {
   const nxJson = readNxJson(tree);
