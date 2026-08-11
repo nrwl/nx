@@ -11,6 +11,15 @@ import {
 // migrated workspace through the same pipeline Nx uses at runtime.
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { ProjectJsonProjectsPlugin } from 'nx/src/plugins/project-json/build-nodes/project-json';
+// The package.json default plugin: it emits an `nx:run-script` target per
+// package.json script, so loading it lets the pipeline observe cases where the
+// DEFAULT layer (not project.json) authors a target's identity.
+import {
+  // eslint-disable-next-line @typescript-eslint/no-restricted-imports
+  createNodes as packageJsonCreateNodes,
+  // eslint-disable-next-line @typescript-eslint/no-restricted-imports
+  name as packageJsonPluginName,
+} from 'nx/src/plugins/package-json';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { setupWorkspaceContext } from 'nx/src/utils/workspace-context';
 import type { Tree } from 'nx/src/generators/tree';
@@ -197,7 +206,10 @@ export function flushTreeToDisk(ctx: FixtureContext): void {
  * Unlike the engine's own verification pass (which deliberately omits the
  * `project.json` layer), this DOES include it — so it can observe cases the
  * verification pass structurally cannot, such as a `filter: { plugin }` default
- * being dropped because the project.json residual carries `command`/`executor`.
+ * being dropped because a target carries `command`/`executor` in a default
+ * layer. Both real default plugins run: `nx/core/project-json` AND
+ * `nx/core/package-json` (the latter authors a target's identity when a
+ * package.json script or `nx.targets` entry names it).
  */
 export async function resolveThroughRealPipeline(
   ctx: FixtureContext,
@@ -225,10 +237,14 @@ export async function resolveThroughRealPipeline(
       ProjectJsonProjectsPlugin,
       'nx/core/project-json'
     );
+    const packageJsonPlugin = new LoadedNxPlugin(
+      { createNodes: packageJsonCreateNodes, name: packageJsonPluginName },
+      packageJsonPluginName
+    );
     const result = await retrieveProjectConfigurations(
       {
         specifiedPlugins,
-        defaultPlugins: [projectJsonPlugin],
+        defaultPlugins: [projectJsonPlugin, packageJsonPlugin],
       },
       ctx.tree.root,
       nxJson

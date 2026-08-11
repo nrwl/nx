@@ -787,6 +787,62 @@ describe('Phase 3 — strict-common hoist', () => {
     }
   });
 
+  it('does not centralize a target a package.json script names in the default layer', async () => {
+    // The residual here carries NEITHER `executor` nor `command`, so the
+    // residual-only identity check is satisfied. But a `package.json` script
+    // byte-equal to the migrated target name makes the package-json DEFAULT
+    // plugin emit an `nx:run-script` target for it, giving the target an
+    // identity in the default layer. Nx's `resolveSourcePlugin` then refuses to
+    // apply a `filter: { plugin }` default to it, so a hoist would be silently
+    // dropped. The engine must consult the default layer, not just the residual.
+    ctx = setupFixture('hoist-identity-package-json-script');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+      // a package.json next to project.json whose `build` script the
+      // package-json plugin turns into an `nx:run-script` target
+      ctx.tree.write(
+        `${name}/package.json`,
+        JSON.stringify({ name, scripts: { build: 'tsc -b' } })
+      );
+    }
+    const plugin = createSyntheticPlugin();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations()
+    );
+
+    // the shared `mode` must NOT be hoisted — a plugin-scoped default would be
+    // dropped by Nx because the package.json script authors the target identity.
+    expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({ cache: true });
+    for (const name of ['app1', 'app2']) {
+      const pj = readJson(ctx.tree, `${name}/project.json`);
+      expect(pj.targets.build).toEqual({ options: { mode: 'production' } });
+    }
+
+    // Assert through the REAL Nx resolution pipeline with BOTH default plugins
+    // loaded (project.json AND package-json). Had `mode` been hoisted to a
+    // filter:{plugin} default, it would resolve to `undefined` because the
+    // default-layer `nx:run-script` target carries identity.
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+    for (const name of ['app1', 'app2']) {
+      expect(resolved[name].build.options?.mode).toBe('production');
+    }
+  });
+
   it('D: preserves pre-existing target-name default keys the hoist does not touch', async () => {
     ctx = setupFixture('hoist-preserve-existing');
     for (const name of ['app1', 'app2']) {

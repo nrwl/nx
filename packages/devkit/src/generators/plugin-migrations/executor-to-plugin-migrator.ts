@@ -691,6 +691,61 @@ function removeHoistedTargetDefault(
 }
 
 /**
+ * Whether a project's `package.json` authors an identity for `targetName` in the
+ * DEFAULT plugin layer. The package-json plugin turns every included script into
+ * an `nx:run-script` target and honors `nx.targets`; either way the target gains
+ * an `executor`/`command` in a default layer, which makes Nx's
+ * `resolveSourcePlugin` refuse a `filter: { plugin }` targetDefault for it.
+ * Detecting this lets the hoist keep the full residual per project instead of
+ * silently dropping the centralized keys.
+ *
+ * Read through the Tree (the migration's in-memory view), since the migration
+ * may have written the package.json this run.
+ */
+function packageJsonAuthorsTargetIdentity(
+  tree: Tree,
+  root: string | undefined,
+  targetName: string
+): boolean {
+  if (!root) {
+    return false;
+  }
+  const packageJsonPath = join(root, 'package.json');
+  if (!tree.exists(packageJsonPath)) {
+    return false;
+  }
+  let packageJson: {
+    scripts?: Record<string, unknown>;
+    nx?: {
+      includedScripts?: string[];
+      targets?: Record<string, { executor?: unknown; command?: unknown }>;
+    };
+  };
+  try {
+    packageJson = JSON.parse(tree.read(packageJsonPath, 'utf-8'));
+  } catch {
+    // An unparseable package.json infers no target from the package-json
+    // plugin either, so it authors no identity here.
+    return false;
+  }
+  const scripts = packageJson?.scripts ?? {};
+  // `readTargetsFromPackageJson` turns each *included* script into an
+  // `nx:run-script` target (identity). `nx.includedScripts`, when present,
+  // restricts which scripts become targets.
+  const includedScripts =
+    packageJson?.nx?.includedScripts ?? Object.keys(scripts);
+  if (includedScripts.includes(targetName)) {
+    return true;
+  }
+  // An `nx.targets` entry authors identity only when it says how to run.
+  const nxTarget = packageJson?.nx?.targets?.[targetName];
+  return (
+    nxTarget != null &&
+    (nxTarget.executor !== undefined || nxTarget.command !== undefined)
+  );
+}
+
+/**
  * Phase 3 (centralized variant) — hoist the strict-common residual per target
  * into `nx.json` `targetDefaults[targetName]` as a plugin-scoped array entry,
  * remove the dead executor-keyed entries, and write only per-project
@@ -707,14 +762,18 @@ function hoistCommonAndWrite<T>(
   residualByProject: ResidualByProject,
   pluginPath: string
 ): Map<string, TargetDefaultArrayEntry> {
-  // Group residuals by target name across all migrated projects.
+  // Group residuals by target name across all migrated projects, tracking which
+  // projects contribute each target so we can inspect their default-layer config.
   const residualsByTarget = new Map<string, TargetConfiguration[]>();
-  for (const targetMap of residualByProject.values()) {
+  const projectsByTarget = new Map<string, string[]>();
+  for (const [projectName, targetMap] of residualByProject) {
     for (const [targetName, entry] of targetMap) {
       if (!residualsByTarget.has(targetName)) {
         residualsByTarget.set(targetName, []);
+        projectsByTarget.set(targetName, []);
       }
       residualsByTarget.get(targetName).push(entry.residual);
+      projectsByTarget.get(targetName).push(projectName);
     }
   }
 
@@ -734,11 +793,30 @@ function hoistCommonAndWrite<T>(
       (residual) =>
         residual.executor !== undefined || residual.command !== undefined
     );
+    // A residual isn't the only place a target's identity can be authored — a
+    // DEFAULT plugin can author it too. The package-json plugin emits an
+    // `nx:run-script` target for every package.json script (and honors
+    // `nx.targets`), so a script/target byte-equal to the migrated target name
+    // gives it an identity in the default layer even when the project.json
+    // residual carries neither `executor` nor `command`. `resolveSourcePlugin`
+    // refuses a `filter: { plugin }` default in that case too, so treat it like
+    // a residual-carried identity and keep the full residual per project.
+    const authorsIdentityInDefaultLayer = (
+      projectsByTarget.get(targetName) ?? []
+    ).some((projectName) =>
+      packageJsonAuthorsTargetIdentity(
+        tree,
+        projectConfigsByName.get(projectName)?.root,
+        targetName
+      )
+    );
     // Centralization only pays off when at least two projects share the same
     // target; a single migrated project keeps its full residual in
     // project.json.
     const common =
-      residuals.length >= 2 && !carriesIdentity
+      residuals.length >= 2 &&
+      !carriesIdentity &&
+      !authorsIdentityInDefaultLayer
         ? computeStrictCommon(residuals)
         : {};
     commonByTarget.set(targetName, common);
@@ -1222,11 +1300,14 @@ async function runVerificationPass<T>(
  * effective config for a target is approximated by `merge(project.json
  * deviation, verified inferred+targetDefaults)`. It must deep-equal
  * `baselineFinal` (the previous engine's migrated effective config, from Phase
- * 2). CAVEAT: this pass runs with no `project.json` (default) layer, so it
- * cannot observe cases where the deviation's own presence changes whether a
- * `targetDefaults` entry applies at all — e.g. a `filter: { plugin }` entry is
- * rejected by `resolveSourcePlugin` once the residual carries `executor` /
- * `command`. Those targets are kept per-project at the hoist site (they never
+ * 2). CAVEAT: this pass runs with no DEFAULT layer (neither `project.json` nor
+ * `package.json`), so it cannot observe cases where a default layer authors a
+ * target's identity and thereby changes whether a `targetDefaults` entry applies
+ * at all — e.g. a `filter: { plugin }` entry is rejected by
+ * `resolveSourcePlugin` once the target carries `executor` / `command` in a
+ * default layer. That identity can come from the project.json residual itself OR
+ * from the package-json plugin (a script or `nx.targets` entry byte-equal to the
+ * target name). Those targets are kept per-project at the hoist site (they never
  * reach a plugin-scoped entry), not caught here. Any project that fails —
  * or that the intended target no longer infers for at all — is restored to the
  * exact pre-centralization migration output (a full residual; an empty
