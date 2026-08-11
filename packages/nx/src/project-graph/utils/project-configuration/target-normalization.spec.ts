@@ -1,4 +1,5 @@
 import { TempFs } from '../../../internal-testing-utils/temp-fs';
+import * as executorUtils from '../../../command-line/run/executor-utils';
 import type { NxJsonConfiguration } from '../../../config/nx-json';
 import type { TargetConfiguration } from '../../../config/workspace-json-project-json';
 import { output } from '../../../utils/output';
@@ -272,9 +273,59 @@ describe('target-name cache fallback', () => {
     expect(target.cache).toBeUndefined();
   });
 
+  it('should apply to a target that explicitly opts out of continuity', () => {
+    // The schema is stubbed continuous so the opt-out is the only thing that
+    // can decide this: `normalizeTarget` skips the lookup when `continuous` is
+    // present on the target at all. Without the stub the executor simply fails
+    // to resolve here, and the test would pass without exercising the opt-out.
+    const getExecutorInformation = jest
+      .spyOn(executorUtils, 'getExecutorInformation')
+      .mockReturnValue({ schema: { continuous: true } } as any);
+
+    const target = normalize(
+      { executor: '@nx/js:verdaccio', continuous: false },
+      {
+        'local-registry': { cache: true },
+        '@nx/js:verdaccio': { inputs: ['default'] },
+      },
+      'local-registry'
+    );
+
+    expect(target.continuous).toBe(false);
+    expect(target.cache).toBe(true);
+
+    getExecutorInformation.mockRestore();
+  });
+
+  it('should not apply when the executor schema makes the target continuous', () => {
+    // The paired case: no explicit opt-out, so the schema decides and the
+    // target is continuous. Caching it would be invalid.
+    const getExecutorInformation = jest
+      .spyOn(executorUtils, 'getExecutorInformation')
+      .mockReturnValue({ schema: { continuous: true } } as any);
+
+    const target = normalize(
+      { executor: '@nx/js:verdaccio' },
+      {
+        'local-registry': { cache: true },
+        '@nx/js:verdaccio': { inputs: ['default'] },
+      },
+      'local-registry'
+    );
+
+    expect(target.continuous).toBe(true);
+    expect(target.cache).toBeUndefined();
+
+    getExecutorInformation.mockRestore();
+  });
+
   it('should not apply when no executor key shadowed the target name key', () => {
     // The name key's entry declares a foreign executor, so it was dropped as
-    // incompatible rather than shadowed. Nothing to restore, nothing to warn.
+    // incompatible rather than shadowed. Pre-23 this target WAS cacheable —
+    // that derivation matched on target name alone and never read the entry's
+    // `executor` — so this is a deliberate narrowing, not parity. Restoring it
+    // would set `cache` with no key to name in the warning and no migration
+    // able to retire it.
     const target = normalize(
       { executor: '@nx/angular:webpack-browser' },
       { build: { cache: true, executor: '@nx/js:tsc' } }

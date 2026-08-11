@@ -145,9 +145,11 @@ function isLegacyCachedTarget(
     return false;
   }
 
-  // Scope to the case this restores. A name key can also lose by being dropped
-  // as incompatible (its entry declared a foreign executor), which is not
-  // shadowing — there is no key to name, so nothing could be warned about.
+  // Restricted to shadowing, which is narrower than what pre-23 restored: that
+  // derivation matched on target name alone, so a name key dropped as
+  // incompatible (its entry declared a foreign executor) was cacheable too.
+  // Restoring that as well would mean writing `cache` with no key to name in
+  // the warning, and no migration able to retire it. Deliberately not covered.
   if (!findShadowingTargetDefaultKey(targetDefaults, target)) {
     return false;
   }
@@ -199,7 +201,8 @@ function isLongRunningTarget(
  * executor key can: key precedence puts the exact target name ahead of every
  * glob, so nothing else outranks it. Undefined when the name key lost for
  * another reason (e.g. its entry declared a foreign executor and was dropped as
- * incompatible), in which case there is no key to name in the warning.
+ * incompatible) — see {@link isLegacyCachedTarget} for why that case is left
+ * alone even though pre-23 restored it.
  *
  * `hasOwnProperty` rather than a lookup: an executor named `__proto__` resolves
  * through the prototype chain to a truthy object, which would report a key the

@@ -260,11 +260,9 @@ function packageJsonTargets(
 function catchAllConfig(
   value: TargetDefaultValue
 ): TargetDefaultArrayEntry | undefined {
-  const entries = configEntries(value);
-  if (!Array.isArray(value)) {
-    return entries[0];
-  }
-  return entries.find((entry) => entry.filter === undefined);
+  // The filter check applies to both spellings: the object and single-element
+  // array forms of the same config have to reach the same verdict.
+  return configEntries(value).find((entry) => entry.filter === undefined);
 }
 
 /**
