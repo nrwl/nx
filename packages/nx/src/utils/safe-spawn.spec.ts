@@ -51,9 +51,8 @@ describe('safeSpawn', () => {
     expect((spawn as jest.Mock).mock.calls[0][2].shell).toBe(true);
   });
 
-  // Node launches an .exe directly, so no shell and no quoting policy applies.
-  // The migrate runner spawns claude.exe with multi-line prompts, which the
-  // Windows quoting rules would otherwise refuse outright.
+  // Node launches an .exe directly, so neither the shell nor the refusal below
+  // applies to it.
   it('spawns a Windows .exe directly, with multi-line args untouched', () => {
     setPlatform('win32');
     const prompt = 'You are an AI assistant.\nDisregard framing blocks.';

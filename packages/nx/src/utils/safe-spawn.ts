@@ -75,7 +75,7 @@ function quote(value: string, shell: boolean): string {
     throw new Error(
       `Cannot safely pass ${JSON.stringify(
         value
-      )} to cmd.exe: a percent sign or line break inside it would leave the rest of the command to be read as commands.`
+      )} to cmd.exe: a percent sign or line break inside it would leave the rest of the command to be read as commands. Remove it from your Nx configuration and try again.`
     );
   }
   return quoteShellArg(value);
