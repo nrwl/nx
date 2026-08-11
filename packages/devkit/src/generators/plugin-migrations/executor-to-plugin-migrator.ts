@@ -1050,13 +1050,19 @@ export async function inferOncePerOptionSet<T>(
 ): Promise<{
   inferredTargetsByOptionSet: InferredTargetsByOptionSet;
   matchedConfigFiles: string[];
+  erroredConfigFiles: string[];
 }> {
   const inferredTargetsByOptionSet: InferredTargetsByOptionSet = new Map();
   const rawMatchedFiles = new Set<string>();
   const inferredRoots = new Set<string>();
+  const erroredConfigFiles = new Set<string>();
 
   if (scope.optionSetGroups.length === 0) {
-    return { inferredTargetsByOptionSet, matchedConfigFiles: [] };
+    return {
+      inferredTargetsByOptionSet,
+      matchedConfigFiles: [],
+      erroredConfigFiles: [],
+    };
   }
 
   global.NX_GRAPH_CREATION = true;
@@ -1064,14 +1070,18 @@ export async function inferOncePerOptionSet<T>(
     for (const group of scope.optionSetGroups) {
       const inferredByRoot: InferredTargetsByRoot = new Map();
       inferredTargetsByOptionSet.set(group.id, inferredByRoot);
-      const result = await getCreateNodesResultsForPlugin(
-        tree,
-        { plugin: pluginPath, options: group.options },
-        pluginPath,
-        createNodes,
-        createNodesV2,
-        nxJson
-      );
+      const { result, erroredConfigFiles: groupErroredConfigFiles } =
+        await getCreateNodesResultsForPlugin(
+          tree,
+          { plugin: pluginPath, options: group.options },
+          pluginPath,
+          createNodes,
+          createNodesV2,
+          nxJson
+        );
+      for (const file of groupErroredConfigFiles) {
+        erroredConfigFiles.add(file);
+      }
 
       // The plugin's glob pattern is option-independent, so every option set
       // matches the same config files; union defensively.
@@ -1118,7 +1128,16 @@ export async function inferOncePerOptionSet<T>(
     isFileOwnedByAnyRoot(file, inferredRoots)
   );
 
-  return { inferredTargetsByOptionSet, matchedConfigFiles };
+  return {
+    inferredTargetsByOptionSet,
+    matchedConfigFiles,
+    // Config files the plugin's glob matched but could not infer this pass.
+    // These produced no project (so they're absent from `matchedConfigFiles`),
+    // yet the registration step must still keep its `include` scoped when one
+    // sits outside the migrated roots — otherwise the plugin is widened to that
+    // root, re-hits the same failure at verification, and reverts the hoist.
+    erroredConfigFiles: [...erroredConfigFiles],
+  };
 }
 
 /**
@@ -1237,6 +1256,42 @@ function includeCoversAllConfigFiles(
 }
 
 /**
+ * Harvest the diagnostic messages and the errored config-file paths from a
+ * `ProjectConfigurationsError`. `ProjectConfigurationsError.errors` is a closed
+ * 5-member union; the two members that name a failing config file are
+ * `AggregateCreateNodesError` (a `[file, error]` list) and `MergeNodesError` (a
+ * single `.file`). `ProjectsWithNoNameError` / `MultipleProjectsWithSameNameError`
+ * are artifacts of running with no `project.json` layer (nothing supplies names),
+ * so they are dropped; `WorkspaceValidityError` carries no file and is exempt.
+ */
+function harvestConfigurationErrors(e: ProjectConfigurationsError): {
+  messages: string[];
+  erroredConfigFiles: string[];
+} {
+  const messages: string[] = [];
+  const erroredConfigFiles = new Set<string>();
+  for (const error of e.errors) {
+    if (
+      isProjectsWithNoNameError(error) ||
+      isMultipleProjectsWithSameNameError(error)
+    ) {
+      continue;
+    }
+    messages.push(error.message ?? String(error));
+    if (isAggregateCreateNodesError(error)) {
+      for (const [file] of error.errors) {
+        if (file) {
+          erroredConfigFiles.add(file);
+        }
+      }
+    } else if (isMergeNodesError(error) && error.file) {
+      erroredConfigFiles.add(error.file);
+    }
+  }
+  return { messages, erroredConfigFiles: [...erroredConfigFiles] };
+}
+
+/**
  * Phase 4 — a single verification inference pass over the whole workspace with
  * the updated `nx.json` plugin registrations. One
  * `retrieveProjectConfigurations` call runs every registration for this plugin
@@ -1290,44 +1345,13 @@ async function runVerificationPass<T>(
     if (e instanceof ProjectConfigurationsError) {
       // Verify against the partial result, but keep the causes — they are the
       // only diagnostic for why affected projects fall back or a hoist reverts.
-      const messages: string[] = [];
-      const erroredConfigFiles = new Set<string>();
-      for (const error of e.errors) {
-        // `ProjectsWithNoNameError` / `MultipleProjectsWithSameNameError` are
-        // artifacts of running with no `project.json` (default) layer — nothing
-        // supplies project names — not signs that inference broke. Dropping them
-        // makes a non-empty `errors` mean exactly "a config file failed to
-        // parse/infer", and stops them naming unrelated projects in the warning.
-        if (
-          isProjectsWithNoNameError(error) ||
-          isMultipleProjectsWithSameNameError(error)
-        ) {
-          continue;
-        }
-        messages.push(error.message ?? String(error));
-        // `ProjectConfigurationsError.errors` is a closed 5-member union; the two
-        // members that name a failing config file are `AggregateCreateNodesError`
-        // (a `[file, error]` list) and `MergeNodesError` (a single `.file`).
-        // Recording both is what makes `erroredConfigFiles` fail-closed: a hoist
-        // is reverted when an errored file lies outside every migrated root.
-        if (isAggregateCreateNodesError(error)) {
-          for (const [file] of error.errors) {
-            if (file) {
-              erroredConfigFiles.add(file);
-            }
-          }
-        } else if (isMergeNodesError(error) && error.file) {
-          erroredConfigFiles.add(error.file);
-        }
-        // `WorkspaceValidityError` (the remaining union member) is deliberately
-        // exempt: it carries no config file, and normalization catches it
-        // per-project, leaving the project in the root map — so it isn't a
-        // config-file inference failure that should trigger a fail-closed revert.
-      }
+      // Recording the errored config files is what makes the revert fail-closed:
+      // a hoist is reverted when an errored file lies outside every migrated root.
+      const { messages, erroredConfigFiles } = harvestConfigurationErrors(e);
       return {
         result: e.partialProjectConfigurationsResult,
         errors: messages,
-        erroredConfigFiles: [...erroredConfigFiles],
+        erroredConfigFiles,
       };
     }
     throw e;
@@ -1654,15 +1678,18 @@ async function migrateProjects<T>(
 
   // Phase 1 — Infer (once per distinct option set) for the whole workspace.
   const nxJson = readNxJson(tree);
-  const { inferredTargetsByOptionSet, matchedConfigFiles } =
-    await inferOncePerOptionSet(
-      tree,
-      pluginPath,
-      createNodes,
-      createNodesV2,
-      nxJson,
-      scope
-    );
+  const {
+    inferredTargetsByOptionSet,
+    matchedConfigFiles,
+    erroredConfigFiles: erroredConfigFilesFromInference,
+  } = await inferOncePerOptionSet(
+    tree,
+    pluginPath,
+    createNodes,
+    createNodesV2,
+    nxJson,
+    scope
+  );
 
   // Phase 2 — Per-project residual (in-memory, no re-inference). Also captures
   // `baselineFinal` (the equivalence oracle consumed in Phase 4).
@@ -1725,7 +1752,8 @@ async function migrateProjects<T>(
     defaultPluginOptions,
     projectGraph,
     spinner,
-    matchedConfigFiles
+    matchedConfigFiles,
+    erroredConfigFilesFromInference
   );
 
   // Phase 4 — single verification inference pass + equivalence oracle. Any
@@ -1761,9 +1789,21 @@ function addPluginRegistrations<T>(
   // contribute no project and are deliberately excluded). Used to decide
   // analytically whether a registration's `include` globs already cover
   // everything (so it can be left unscoped).
-  matchedConfigFiles: string[]
+  matchedConfigFiles: string[],
+  // Config files the Phase 1 inference could not load. These produce no project
+  // (so they're absent from `matchedConfigFiles`), but an errored file OUTSIDE
+  // the migrated roots must still keep the `include` scoped: leaving the plugin
+  // unscoped would widen it onto that root, where the verification pass re-hits
+  // the failure and reverts the whole hoist. A harmless project-free config (a
+  // shared/base config that loads fine) is NOT errored, so it does not keep the
+  // include — the plugin may safely apply workspace-wide over it.
+  erroredConfigFiles: string[]
 ) {
   const nxJson = readNxJson(tree);
+  // Errored config files that no migrated root covers are the ones that force a
+  // scoped include; fold them into the coverage set so an unscoped include is
+  // only chosen when nothing the plugin would fail to infer lies outside.
+  const coverageConfigFiles = [...matchedConfigFiles, ...erroredConfigFiles];
 
   const registrationGroups = new Map<
     string,
@@ -1811,7 +1851,7 @@ function addPluginRegistrations<T>(
         includeCoversAllConfigFiles(
           plugin.include,
           plugin.exclude,
-          matchedConfigFiles
+          coverageConfigFiles
         )
       ) {
         delete plugin.include;
@@ -1833,7 +1873,7 @@ function addPluginRegistrations<T>(
         includeCoversAllConfigFiles(
           existingPlugin.include,
           existingPlugin.exclude,
-          matchedConfigFiles
+          coverageConfigFiles
         )
       ) {
         delete existingPlugin.include;
@@ -1852,8 +1892,9 @@ async function getCreateNodesResultsForPlugin(
   createNodes: CreateNodes | undefined,
   createNodesV2: CreateNodes | undefined,
   nxJson: NxJsonConfiguration
-): Promise<ConfigurationResult> {
+): Promise<{ result: ConfigurationResult; erroredConfigFiles: string[] }> {
   let projectConfigs: ConfigurationResult;
+  let erroredConfigFiles: string[] = [];
 
   try {
     const plugin = new LoadedNxPlugin(
@@ -1868,10 +1909,15 @@ async function getCreateNodesResultsForPlugin(
   } catch (e) {
     if (e instanceof ProjectConfigurationsError) {
       projectConfigs = e.partialProjectConfigurationsResult;
+      // Capture the config files this pass could not infer. The registration
+      // step keeps its `include` scoped to migrated roots when an errored file
+      // sits outside them, so the plugin is never widened to a root it would
+      // fail to infer (which the verification pass would otherwise revert).
+      erroredConfigFiles = harvestConfigurationErrors(e).erroredConfigFiles;
     } else {
       throw e;
     }
   }
 
-  return projectConfigs;
+  return { result: projectConfigs, erroredConfigFiles };
 }

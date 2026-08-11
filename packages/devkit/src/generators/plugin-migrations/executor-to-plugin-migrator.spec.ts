@@ -1600,6 +1600,119 @@ describe('Phase 3 — strict-common hoist', () => {
     // the incomplete verification is surfaced, not silent
     expect(warn).toHaveBeenCalled();
   });
+
+  it('keeps the include scoped when an errored config sits outside migrated roots (hoist survives)', async () => {
+    // clickup-frontend shape: an executor-keyed default + N migrated `lint`
+    // projects, plus one config that fails to load (tools/eslint-rules) sitting
+    // outside every migrated root. Folding the errored file into the include-
+    // coverage set keeps the registration scoped to the migrated roots, so the
+    // verification pass never infers (and re-errors on) that root — the hoist
+    // survives instead of denormalizing into every project.
+    ctx = setupFixture('errored-root-include-scope');
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.targetDefaults ??= {};
+    (nxJson.targetDefaults as any)[SYNTHETIC_EXECUTOR] = {
+      inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
+      cache: true,
+      dependsOn: [
+        { target: 'build-svg-sprite', projects: ['core-components'] },
+      ],
+    };
+    updateNxJson(ctx.tree, nxJson);
+    for (let i = 0; i < 5; i++) {
+      addExecutorProject(ctx, {
+        name: `app${i}`,
+        root: `apps/app${i}`,
+        targetName: 'lint',
+        executor: SYNTHETIC_EXECUTOR,
+        target: { outputs: ['{options.outputFile}'] } as any,
+      });
+    }
+    // a config OUTSIDE every migrated root that fails to load on every pass
+    ctx.fs.createFileSync(`tools/eslint-rules/${SYNTHETIC_CONFIG_FILE}`, '{}');
+
+    const createNodes: CreateNodes<SyntheticPluginOptions> = [
+      SYNTHETIC_CONFIG_GLOB,
+      (configFiles, options) => {
+        const targetName = options?.targetName ?? 'build';
+        const results: Array<readonly [string, any]> = [];
+        const errors: Array<[string, Error]> = [];
+        for (const file of configFiles) {
+          const dir = dirname(file);
+          const root = dir === '' || dir === '.' ? '.' : dir;
+          if (root === 'tools/eslint-rules') {
+            errors.push([
+              file,
+              new Error('This method cannot be used with flat config.'),
+            ]);
+            continue;
+          }
+          results.push([
+            file,
+            {
+              projects: {
+                [root]: {
+                  targets: {
+                    [targetName]: defaultInferredTarget(root, targetName),
+                  },
+                },
+              },
+            },
+          ]);
+        }
+        if (errors.length > 0) {
+          throw new AggregateCreateNodesError(errors, results as any);
+        }
+        return results;
+      },
+    ];
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      SYNTHETIC_PLUGIN_PATH,
+      createNodes,
+      { targetName: 'lint' },
+      [
+        {
+          executors: [SYNTHETIC_EXECUTOR],
+          targetPluginOptionMapper: () => ({ targetName: 'lint' }),
+          postTargetTransformer: (t: any) => {
+            if (t.options) {
+              delete t.options.config;
+              if (Object.keys(t.options).length === 0) delete t.options;
+            }
+            return t;
+          },
+        },
+      ]
+    );
+
+    // the hoist SURVIVES — centralization happened despite the errored root
+    expect(readNxJson(ctx.tree).targetDefaults.lint).toContainEqual(
+      expect.objectContaining({ filter: { plugin: SYNTHETIC_PLUGIN_PATH } })
+    );
+    // no project denormalized
+    for (let i = 0; i < 5; i++) {
+      expect(
+        readJson(ctx.tree, `apps/app${i}/project.json`).targets?.lint
+      ).toBeUndefined();
+    }
+    // the registration is SCOPED (not widened workspace-wide): the include is
+    // present, covers the migrated roots, and excludes the errored root — so the
+    // plugin never infers tools/eslint-rules.
+    const registration = readNxJson(ctx.tree).plugins?.find(
+      (p): p is ExpandedPluginConfiguration =>
+        typeof p !== 'string' && p.plugin === SYNTHETIC_PLUGIN_PATH
+    );
+    expect(registration?.include).toBeDefined();
+    expect(registration.include).toEqual(
+      expect.arrayContaining(['apps/app0/**/*'])
+    );
+    expect(
+      registration.include.some((g) => g.startsWith('tools/eslint-rules'))
+    ).toBe(false);
+  });
 });
 
 describe('Phase 4 — verify + equivalence oracle + fallback', () => {
