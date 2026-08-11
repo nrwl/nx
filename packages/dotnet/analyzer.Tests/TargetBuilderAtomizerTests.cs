@@ -511,6 +511,45 @@ public class TargetBuilderAtomizerTests
     }
 
     [Fact]
+    public void ResultsDirectoryAtTheProjectRootStillSplits()
+    {
+        // TestResultsDirectory can resolve to the project directory itself, and
+        // ResolvePath emits a bare "{projectRoot}" for it. That is a supported
+        // layout, not a directory outside the workspace.
+        var properties = new Dictionary<string, string>
+        {
+            ["TestResultsDirectory"] = ProjectDirectory
+        };
+
+        var result = Build(properties: properties);
+        var leaf = result.Targets["test-ci--Acme.Integration.LoginTests"];
+        var args = Args(leaf);
+        var index = Array.IndexOf(args, "--results-directory");
+
+        Assert.Equal(["{projectRoot}/Acme.Integration.LoginTests"], leaf.Outputs);
+        Assert.Equal("\"./Acme.Integration.LoginTests\"", args[index + 1]);
+    }
+
+    [Fact]
+    public void ResultsDirectoryAtTheWorkspaceRootStillSplits()
+    {
+        // The same bare-token case one level up: a workspace-anchored results
+        // directory has to climb out of the project to reach it.
+        var properties = new Dictionary<string, string>
+        {
+            ["TestResultsDirectory"] = WorkspaceRoot
+        };
+
+        var result = Build(properties: properties);
+        var leaf = result.Targets["test-ci--Acme.Integration.LoginTests"];
+        var args = Args(leaf);
+        var index = Array.IndexOf(args, "--results-directory");
+
+        Assert.Equal(["{workspaceRoot}/Acme.Integration.LoginTests"], leaf.Outputs);
+        Assert.Equal("\"../../Acme.Integration.LoginTests\"", args[index + 1]);
+    }
+
+    [Fact]
     public void ResultsDirectoryOutsideTheWorkspace_ReportsWhyNothingSplit()
     {
         // Matches the two sibling gates (unsupported platform, no parser
