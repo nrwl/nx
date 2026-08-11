@@ -39,7 +39,7 @@ Pass `--linter` to choose for a single project.
 - `oxlint.config.ts`
 - `oxlint.config.mts`
 
-A project gets a task when it owns an Oxlint config, or when it contains files Oxlint can lint. The workspace root also needs a `package.json` and a `src` or `lib` directory, so a standalone workspace that keeps its sources elsewhere gets no root task. Documentation-only and non-JavaScript projects do not get a target inferred unless they opt in with a config of their own.
+A project gets a task when it contains files Oxlint can lint. The workspace root also needs a `package.json` and a `src` or `lib` directory, so a standalone workspace that keeps its sources elsewhere gets no root task. Documentation-only and non-JavaScript projects get no target, and giving one a config of its own does not change that: Oxlint reports `No files found to lint` where it has nothing to read.
 
 View the inferred task with:
 
