@@ -5,7 +5,7 @@ import {
   realpathSync,
   statSync,
 } from 'fs';
-import { isAbsolute, join, posix, relative, resolve, sep } from 'path';
+import { isAbsolute, join, posix, relative, sep } from 'path';
 import { getCatalogManager } from '../../../utils/catalog';
 import { readJsonFile, readYamlFile } from '../../../utils/fileutils';
 import { logger } from '../../../utils/logger';
@@ -105,8 +105,8 @@ export function dropInheritedPnpmPatchedDependencies(
 
 /**
  * pnpm config resolved once per prune and threaded into the settings-yaml and
- * patch-artifact builders, so neither re-detects the pnpm version nor re-reads
- * the root config and lockfile.
+ * patch-artifact builders, so neither repeats the pnpm version probe or the
+ * patched-dependency resolution.
  */
 type PrunedPnpmConfig = {
   pnpmMajor: number | null;
@@ -728,10 +728,10 @@ export function getPrunedPnpmPatchArtifacts(
     return { patchFiles: [], packageJsonPatchedDependencies: null };
   }
   const patchFiles: Array<{ path: string; content: string }> = [];
-  // normalizePrunedPatchPath can map two different sources to one shipped path
-  // (it drops `.`/`..` and a leading `patches/`), which would ship a single file
-  // for both entries and apply the wrong patch. Detect the clash and fail loudly
-  // rather than silently corrupt the output.
+  // normalizePrunedPatchPath collapses the path, so two distinct sources can
+  // normalize to one shipped path, which would ship a single file for both
+  // entries and apply the wrong patch. Detect the clash and fail loudly rather
+  // than silently corrupt the output.
   const shippedFrom = new Map<string, string>();
   for (const patchPath of new Set(Object.values(patchedDependencies))) {
     // The config/lockfile side normalizes an absolute patch path under patches/,
