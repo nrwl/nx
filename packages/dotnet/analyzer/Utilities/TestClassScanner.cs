@@ -320,9 +320,6 @@ public static class TestClassScanner
 
             foreach (var method in declaration.Members.OfType<MethodDeclarationSyntax>())
             {
-                // Generic test methods would need their type arguments encoded
-                // (and commas %2C-escaped) in the FullyQualifiedName filter.
-                // Excluded rather than guessed at.
                 if (!HasAttribute(method.AttributeLists, "TestMethod", "DataTestMethod"))
                 {
                     continue;
@@ -334,6 +331,9 @@ public static class TestClassScanner
                 // declaring none at all.
                 hasOwnTestMethod = true;
 
+                // Generic test methods would need their type arguments encoded
+                // (and commas %2C-escaped) in the FullyQualifiedName filter.
+                // Excluded rather than guessed at.
                 if (method.TypeParameterList is not null)
                 {
                     exclusions.Generic++;
