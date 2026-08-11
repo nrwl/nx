@@ -87,13 +87,39 @@ function serveAsync(
       }
     );
 
+    let settled = false;
+    const settleResolve = (cp: ChildProcess) => {
+      if (settled) return;
+      settled = true;
+      resolve(cp);
+    };
+    const settleReject = (err: unknown) => {
+      if (settled) return;
+      settled = true;
+      reject(err);
+    };
+
+    // Expo builds the web bundle on first request, so a consumer that only
+    // requests the page once this executor reports ready (e.g. @nx/cypress
+    // waiting on the dev server target) would deadlock against a bundle log
+    // line that can never arrive. Accepting connections is the real signal.
+    void (async () => {
+      while (!settled) {
+        if ((await isPackagerRunning(options.port)) === 'running') {
+          settleResolve(childProcess);
+          return;
+        }
+        await new Promise((r) => setTimeout(r, 500));
+      }
+    })();
+
     childProcess.stdout.on('data', (data) => {
       process.stdout.write(data);
       if (
         data.toString().includes('Bundling complete') ||
         data.toString().includes('Bundled')
       ) {
-        resolve(childProcess);
+        settleResolve(childProcess);
       }
     });
     childProcess.stderr.on('data', (data) => {
@@ -101,14 +127,14 @@ function serveAsync(
     });
 
     childProcess.on('error', (err) => {
-      reject(err);
+      settleReject(err);
     });
     childProcess.on('exit', (code, signal) => {
       if (code === null) code = signalToCode(signal);
       if (code === 0) {
-        resolve(childProcess);
+        settleResolve(childProcess);
       } else {
-        reject(code);
+        settleReject(code);
       }
     });
   });
