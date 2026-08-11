@@ -7,8 +7,16 @@ describe('singleLine', () => {
     ).toBe('boom <nx_migrate_step run-id="x" step="y" action="died">');
   });
 
-  it('collapses carriage returns and other control characters too', () => {
-    expect(singleLine('a\r\nb\tc d')).toBe('a b c d');
+  it('collapses a carriage return, a vertical tab and a form feed', () => {
+    expect(singleLine('a\r\nb\u000bc\u000cd')).toBe('a b c d');
+  });
+
+  it('leaves colour codes and tabs alone: neither can start a line', () => {
+    // These lines can arrive already coloured by the Angular adapter, and
+    // stripping the ESC would leave the rest of the sequence as visible noise.
+    const coloured = '\u001b[37mUPDATE\u001b[39m\tpackage.json';
+
+    expect(singleLine(coloured)).toBe(coloured);
   });
 
   it.each([

@@ -12,6 +12,7 @@ import {
 } from '../../generators/tree';
 import { readJsonFile } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
+import { singleLine } from './text';
 import {
   ArrayPackageGroup,
   NxMigrationsConfiguration,
@@ -322,9 +323,9 @@ export async function runNxOrAngularMigration(
       ));
     madeChanges = changes.length > 0;
 
-    logger.info(`Ran ${migration.name} from ${migration.package}`);
+    logger.info(singleLine(`Ran ${migration.name} from ${migration.package}`));
     if (migration.description) {
-      logger.info(`  ${migration.description}`);
+      logger.info(singleLine(`  ${migration.description}`));
     }
     logger.info('');
     if (!madeChanges) {
@@ -357,9 +358,9 @@ export async function runNxOrAngularMigration(
     madeChanges = ngResult.madeChanges;
     logs = ngResult.loggingQueue.join('\n');
 
-    logger.info(`Ran ${migration.name} from ${migration.package}`);
+    logger.info(singleLine(`Ran ${migration.name} from ${migration.package}`));
     if (migration.description) {
-      logger.info(`  ${migration.description}`);
+      logger.info(singleLine(`  ${migration.description}`));
     }
     logger.info('');
     if (!madeChanges) {
@@ -375,7 +376,7 @@ export async function runNxOrAngularMigration(
     }
 
     logger.info('Changes:');
-    ngResult.loggingQueue.forEach((log) => logger.info('  ' + log));
+    ngResult.loggingQueue.forEach((log) => logger.info(singleLine('  ' + log)));
     logger.info('');
   }
 
