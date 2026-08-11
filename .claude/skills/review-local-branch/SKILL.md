@@ -23,7 +23,9 @@ The sibling of `review-pr`, for work that has not become a PR yet. Same agents, 
 - `sandbox start --local` registers your checkout with **no isolation**. `sandbox doctor` will say so.
 - What it still buys is **uniformity**: the agents speak only the CLI, so the same definitions work in both skills with no transport branch and no fallback path to fall down.
 - What it also buys is a **guardrail on your branch**. A local sandbox is `exec=screened`: commands that obviously write — `git checkout`, `rm`, `pnpm install`, `>` redirects — are rejected, so a review cannot mutate the thing it was asked to review. It is a guardrail, not a security boundary.
-- `sandbox worktree` is **refused** in local mode. There is nowhere safe for a mutation experiment to go when the reference checkout is the branch you are mid-edit on. Agents that need one will report the dynamic check as unavailable; that is correct, not a failure.
+- `sandbox worktree` still works. It cuts a peer worktree **outside the repo**, under `~/.nx-sandboxes/worktrees/<id>-<agent>`, so an agent proving a test can fail never touches your files or your branch — the only thing it writes into your repo is the `.git/worktrees` registration, which `sandbox stop` removes.
+- That worktree carries your **uncommitted work**, not just the last commit. `git worktree add … HEAD` would check out the committed state, which is not what is under review here; the CLI applies `git diff HEAD` on top so the tree matches the diff the agents were given. Untracked files stay out, exactly as they do from the diff.
+- It is installed on creation, which on this repo is minutes rather than seconds. That cost is why agents are told to reach for one only when static reading genuinely cannot settle the question — not as a matter of course.
 
 If you want an agent to run the repo's own build or test commands, start with `--allow-exec` and say so in the charter. No screen can contain those anyway — `node -e` is arbitrary code by construction.
 
@@ -94,8 +96,9 @@ Same shape as `review-pr` Step 5, minus everything the agents already carry. Wri
 
 This is the maintainer's own checkout, already installed. Do not install anything.
 
-`sandbox worktree` is refused here — the reference checkout is the branch under review. If a check
-needs to mutate source, report it as unavailable rather than working around it.
+If a check must mutate source, run `sandbox worktree <SANDBOX> <your-agent-name> head`. It cuts a
+peer worktree outside the repo that already carries the uncommitted work under review, so you may
+mutate it freely. Never edit the checkout itself — it is the maintainer's live branch.
 
 ## What is under review
 

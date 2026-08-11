@@ -46,7 +46,7 @@ The checkout is shared — other agents are reading it while you work. Never edi
 .claude/tools/sandbox worktree <SANDBOX> security-reviewer head
 ```
 
-It returns a new sandbox id, already installed, that you may mutate freely. If it is refused, mutation has nowhere safe to go: report the dynamic check as unavailable rather than working around it.
+It returns a new sandbox id, already installed, that you may mutate freely. A refusal means your id may not execute (you were handed a read-only view, or the sandbox has no usable isolation). Report the dynamic check as unavailable rather than working around it.
 
 **Execute changed shell; do not just read it.** If the diff adds or modifies an executable block with control flow — a gate, a loop, a verification snippet — extract that block's _literal bytes_ (`sandbox read <SANDBOX> <path> --range a,b`, NOT from the diff and NOT a paraphrase) and run it against an adversarial matrix: honest inputs, forgery/negative inputs, and injection payloads. Report the observed outputs. A clean-room reimplementation can pass while the shipped snippet is broken — for example a `case` arm that `echo`s FAILED but does not `exit` still falls through to the next command.
 

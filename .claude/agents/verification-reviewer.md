@@ -53,7 +53,7 @@ The checkout is shared — other agents are reading it while you work. Never edi
 .claude/tools/sandbox worktree <SANDBOX> verification-reviewer head
 ```
 
-It returns a new sandbox id, already installed, that you may mutate freely. Pass `base` instead of `head` for a baseline mutation. If it is refused, mutation has nowhere safe to go: fall back to static mapping and say the test-effectiveness check was unavailable.
+It returns a new sandbox id, already installed, that you may mutate freely. Pass `base` instead of `head` for a baseline mutation. A refusal means your id may not execute (you were handed a read-only view, or the sandbox has no usable isolation). Fall back to static mapping and say the test-effectiveness check was unavailable.
 
 ## Required output preamble
 

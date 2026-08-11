@@ -763,10 +763,12 @@ function cmdInstall(argv) {
 
 /**
  * Provision a private, installed worktree an agent may mutate — the reference
- * checkouts are read concurrently, so proving a test can fail belongs elsewhere.
+ * checkout is read concurrently, so proving a test can fail belongs elsewhere.
  *
- * Local mode refuses: there the reference checkout is the user's own working
- * tree, and a review must not be able to reach for it.
+ * Local mode lands it OUTSIDE the repo, under the CLI's own state dir. A peer
+ * worktree never touches the user's files or branch; the only thing it writes
+ * into their repo is the registration under `.git/worktrees`, which `stop`
+ * removes.
  */
 function cmdWorktree(argv) {
   const [id, owner, side = 'head'] = argv;
@@ -776,28 +778,45 @@ function cmdWorktree(argv) {
   if (side !== 'head' && side !== 'base') die("side must be 'head' or 'base'");
   const sb = getSandbox(id);
 
-  if (sb.mode === 'local') {
+  // A read-only view must not be able to mint a tree that executes.
+  if (sb.exec === 'none') {
     die(
-      `worktree refused for ${id}: this sandbox is the user's own checkout.\n` +
-        `Mutation experiments have nowhere safe to go here — review statically\n` +
-        `and say in your report that the dynamic check was unavailable.`
+      `worktree refused for ${id}: this id may not execute` +
+        (sb.viewOf ? `, being a read-only view of ${sb.viewOf}.` : '.')
     );
   }
-  if (side === 'base' && !sb.base)
-    die(`sandbox ${id} has no base worktree (start it with --base <ref>)`);
-
-  const dir = `/work/mutations/${owner}`;
-  const from = side === 'base' ? sb.baseRef : 'HEAD';
-  const r = execIn(
-    sb,
-    `set -e\n` +
-      `mkdir -p /work/mutations\n` +
-      `test -d ${dir} || git -C ${sb.root} worktree add -q --detach ${dir} ${shq(from)}`,
-    { dir: sb.root }
-  );
-  if (r.status !== 0) die(`worktree creation failed:\n${r.stderr || r.stdout}`);
+  if (side === 'base' && !sb.baseRef)
+    die(`sandbox ${id} has no base ref (start it with --base <ref>)`);
 
   const mutId = newId();
+  const from = side === 'base' ? sb.baseRef : 'HEAD';
+  const dir =
+    sb.mode === 'local'
+      ? path.join(STATE_DIR, 'worktrees', `${mutId.slice(3)}-${owner}`)
+      : `/work/mutations/${owner}`;
+
+  let script =
+    `set -e\n` +
+    `mkdir -p ${shq(path.posix.dirname(dir))}\n` +
+    `git -C ${shq(sb.root)} worktree add -q --detach ${shq(dir)} ${shq(from)}`;
+
+  // `worktree add HEAD` checks out the last COMMIT, but a local review's scope is
+  // merge-base..working-tree — staged and unstaged work included. Without this the
+  // agent would mutate code that is not the code under review and prove nothing
+  // about it. Untracked files stay out, matching what the diff itself covers.
+  if (sb.mode === 'local' && side === 'head') {
+    script +=
+      `\nif ! git -C ${shq(sb.root)} diff --quiet HEAD; then\n` +
+      `  git -C ${shq(sb.root)} diff HEAD | git -C ${shq(dir)} apply --index\n` +
+      `fi`;
+  }
+
+  const r =
+    sb.mode === 'local'
+      ? run('bash', ['-lc', script])
+      : execIn(sb, `mkdir -p /work/mutations\n${script}`, { dir: sb.root });
+  if (r.status !== 0) die(`worktree creation failed:\n${r.stderr || r.stdout}`);
+
   const state = readState();
   state.sandboxes[mutId] = {
     ...sb,
@@ -805,10 +824,12 @@ function cmdWorktree(argv) {
     derivedFrom: sb.viewOf || id,
     root: dir,
     base: null,
-    // Mutation is the point, so no screen — but the tier still cannot exceed the
-    // container's own, which is what keeps a no-isolation backend from gaining
-    // execution through this door.
-    exec: minTier('full', sb.exec),
+    baseRef: sb.baseRef,
+    // Mutation is the point of this tree, so it is not screened. It is a
+    // throwaway peer, not the checkout anyone else is reading.
+    exec: 'full',
+    // What `stop` needs to unregister it from the repo it was cut from.
+    worktreeOf: sb.root,
     createdAt: nowIso(),
   };
   writeState(state);
@@ -820,6 +841,19 @@ function cmdWorktree(argv) {
         ? `The tree exists but has no node_modules: report the dynamic check as unavailable.\n`
         : '')
   );
+}
+
+/**
+ * Unregister a host-side mutation worktree. Deleting the directory alone would
+ * leave the entry under the user's `.git/worktrees`, so their next `git worktree
+ * list` shows a tree this tool created and never cleaned up.
+ */
+function removeHostWorktree(sb) {
+  if (!sb.worktreeOf || sb.mode !== 'local') return;
+  run('git', ['-C', sb.worktreeOf, 'worktree', 'remove', '--force', sb.root], {
+    stdio: 'ignore',
+  });
+  run('git', ['-C', sb.worktreeOf, 'worktree', 'prune'], { stdio: 'ignore' });
 }
 
 function cmdStop(argv) {
@@ -834,6 +868,7 @@ function cmdStop(argv) {
   if (sb.mode === 'container' && !derived) {
     run(sb.backend, ['rm', '-f', sb.container], { stdio: 'ignore' });
   }
+  removeHostWorktree(sb);
   delete state.sandboxes[id];
   // A view or mutation outliving the checkout it points at would hand out a
   // dangling id.
@@ -841,6 +876,7 @@ function cmdStop(argv) {
   if (!derived) {
     for (const [vid, v] of Object.entries(state.sandboxes)) {
       if (v.viewOf === id || v.derivedFrom === id) {
+        removeHostWorktree(v);
         delete state.sandboxes[vid];
         dropped++;
       }
@@ -873,6 +909,16 @@ function cmdPrune() {
   const state = readState();
   let dropped = 0;
   for (const [id, sb] of Object.entries(state.sandboxes)) {
+    // A host worktree whose directory is already gone still holds a registration
+    // in the user's repo, so unregister before dropping the row either way.
+    if (sb.worktreeOf && sb.mode === 'local') {
+      if (!fs.existsSync(sb.root)) {
+        removeHostWorktree(sb);
+        delete state.sandboxes[id];
+        dropped++;
+      }
+      continue;
+    }
     if (sb.mode !== 'container') continue;
     const alive =
       run(sb.backend, ['inspect', sb.container], { stdio: 'ignore' }).status ===
@@ -1051,7 +1097,8 @@ const USAGE = `sandbox — uniform access to a checkout, isolated or local
   exec   <id> [--base] -- <cmd...>             --base runs base-side (installs it on first use)
   install <id> [--base]                        idempotent; head is the caller's to do up front
   view   <id> [--exec screened|none]           second id onto the same checkout, narrowed
-  worktree <id> <owner> [head|base]            private installed tree an agent may mutate
+  worktree <id> <owner> [head|base]            private installed tree an agent may mutate;
+                                               local mode cuts it under ~/.nx-sandboxes/worktrees
   stop   <id> | list | prune | doctor [--image <img>]
 
 exec tiers: none < screened < full. 'screened' rejects commands that obviously
