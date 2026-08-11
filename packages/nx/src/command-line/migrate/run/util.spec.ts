@@ -15,7 +15,7 @@ jest.mock('../../../utils/package-manager', () => ({
     mockGetPackageManagerCommand(...args),
 }));
 
-import { mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import {
@@ -98,7 +98,10 @@ describe('installDepsChangedSinceDispense', () => {
   let dir: string;
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'nx-migrate-run-util-'));
+    // The run directory is named after the run id, which readRunState
+    // enforces, so the fixture cannot live directly in the temp root.
+    dir = join(mkdtempSync(join(tmpdir(), 'nx-migrate-run-util-')), 'run-1');
+    mkdirSync(dir, { recursive: true });
     mockReadPackageJsonDeps.mockReset();
     mockRunInstall.mockReset().mockResolvedValue(undefined);
     mockLogSkippedInstall.mockReset();
@@ -235,7 +238,10 @@ describe('recordInstallLanded', () => {
   let dir: string;
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'nx-migrate-run-util-'));
+    // The run directory is named after the run id, which readRunState
+    // enforces, so the fixture cannot live directly in the temp root.
+    dir = join(mkdtempSync(join(tmpdir(), 'nx-migrate-run-util-')), 'run-1');
+    mkdirSync(dir, { recursive: true });
     mockReadPackageJsonDeps.mockReset();
   });
 

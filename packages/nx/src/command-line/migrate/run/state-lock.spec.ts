@@ -1,5 +1,6 @@
 import {
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
@@ -45,7 +46,10 @@ describe('state-lock', () => {
   let dir: string;
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'nx-migrate-lock-'));
+    // The run directory is named after the run id, which readRunState
+    // enforces, so the fixture cannot live directly in the temp root.
+    dir = join(mkdtempSync(join(tmpdir(), 'nx-migrate-lock-')), 'run-1');
+    mkdirSync(dir, { recursive: true });
   });
 
   afterEach(() => {

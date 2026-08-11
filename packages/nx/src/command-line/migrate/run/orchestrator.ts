@@ -306,8 +306,13 @@ function findActiveRunForPlan(
   const { active, uninterpretable } = findActiveRun(root);
   if (uninterpretable.length > 0) {
     const noun = uninterpretable.length === 1 ? 'directory' : 'directories';
+    // A directory name is whatever is on disk and a reason quotes what it
+    // found, so neither can be trusted to stay on the line it is put on.
     const details = uninterpretable.map(
-      (u) => `${MIGRATE_RUNS_RELATIVE_DIR}/${u.dirName}: ${u.reason}`
+      (u) =>
+        `${MIGRATE_RUNS_RELATIVE_DIR}/${singleLine(u.dirName)}: ${singleLine(
+          u.reason
+        )}`
     );
     if (!active) {
       throw new Error(

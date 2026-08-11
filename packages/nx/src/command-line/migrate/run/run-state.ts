@@ -8,7 +8,7 @@ import {
   type Dirent,
 } from 'fs';
 import { randomBytes } from 'crypto';
-import { join } from 'path';
+import { basename, join } from 'path';
 import { writeJsonFile } from '../../../utils/fileutils';
 import { nxVersion } from '../../../utils/versions';
 import { MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
@@ -399,6 +399,20 @@ export function readRunState(runDirPath: string): MigrateRunState {
     throw corruptRunStateError(
       filePath,
       'is missing required fields or has fields of an unexpected type.'
+    );
+  }
+  // The directory name is the run id every caller reached this state through,
+  // so a run.json naming a different one is not this run: the commands built
+  // from the persisted copy would send the agent somewhere else.
+  if (parsed.runId !== basename(runDirPath)) {
+    // JSON-quoted rather than interpolated bare: the rejected value is the
+    // untrusted one, and this reason is rendered into the stdout the agent
+    // scans for blocks.
+    throw corruptRunStateError(
+      filePath,
+      `declares run id ${JSON.stringify(
+        parsed.runId
+      )} but sits in a directory named ${JSON.stringify(basename(runDirPath))}.`
     );
   }
   return parsed as unknown as MigrateRunState;
