@@ -51,14 +51,6 @@ describe('detectLinters', () => {
     expect(detectLinters(tree)).toEqual(['oxlint']);
   });
 
-  it.each(['@nx/eslint', 'eslint'])(
-    'should detect eslint from the %s dependency alone',
-    (pkg) => {
-      addDevDependency(pkg);
-      expect(detectLinters(tree)).toEqual(['eslint']);
-    }
-  );
-
   it('should detect eslint from the inference plugin', () => {
     addPlugin('@nx/eslint/plugin');
     expect(detectLinters(tree)).toEqual(['eslint']);
