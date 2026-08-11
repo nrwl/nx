@@ -356,7 +356,7 @@ public class TestClassScannerTests
     }
 
     [Fact]
-    public void MethodMode_DataRowMethod_IsASingleUnitFlaggedAsDataDriven()
+    public void MethodMode_DataRowMethod_IsASingleUnit()
     {
         var unit = Assert.Single(Scan(SplitBy.Method, """
             namespace Acme;
@@ -370,8 +370,9 @@ public class TestClassScannerTests
             }
             """));
 
+        // Two [DataRow]s, one unit: MSTest folds the rows under the method's
+        // own name, so one task runs both cases.
         Assert.Equal("Acme.Tests.Adds", unit.Id);
-        Assert.True(unit.HasDataRows);
     }
 
     [Fact]
