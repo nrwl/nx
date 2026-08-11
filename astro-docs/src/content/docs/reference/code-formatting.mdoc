@@ -11,7 +11,8 @@ Nx formats code when you run `nx format:write` or `nx format:check` and at the e
 All of them use the same formatter, which Nx detects from your workspace.
 
 Two formatters are supported: [oxfmt](https://oxc.rs) and [Prettier](https://prettier.io).
-New workspaces default to oxfmt.
+New workspaces default to Prettier.
+oxfmt is offered as experimental while it is pre-1.0.
 
 ## How Nx picks a formatter
 
@@ -33,7 +34,7 @@ The oxfmt config files Nx looks for:
 
 ### When both are configured
 
-oxfmt wins.
+oxfmt wins, and Nx warns once so the switch is not silent.
 Adding an `.oxfmtrc.json` to a workspace that already has a `.prettierrc` switches the whole
 workspace over, including generator formatting.
 To go back, delete the oxfmt config.
@@ -54,6 +55,10 @@ npm add -D oxfmt
 These match an Nx-generated `.prettierrc`.
 If you wrote your own, match what it set instead.
 oxfmt defaults to double quotes and a width of 100.
+
+oxfmt also sorts `package.json` keys, which Prettier does not.
+Expect every manifest in the workspace to be reordered on the first run.
+Set `"sortPackageJson": false` in `.oxfmtrc.json` to keep your current order.
 
 Then delete `.prettierrc` and run `nx format:write --all` to reformat everything in one commit.
 
@@ -80,8 +85,8 @@ Set `indent_style` alongside it.
 
 Set [`NX_SKIP_FORMAT=true`](/docs/reference/environment-variables) to stop generators and migrations
 from formatting.
-TypeScript path sorting is separate and stays off by default; turn it on with
-`NX_FORMAT_SORT_TSCONFIG_PATHS=true`, or per call with `formatFiles`'
+TypeScript path sorting is separate and stays off by default.
+Turn it on with `NX_FORMAT_SORT_TSCONFIG_PATHS=true`, or per call with `formatFiles`'
 `sortRootTsconfigPaths` option.
 
 ```shell
@@ -93,7 +98,7 @@ NX_SKIP_FORMAT=true nx g @nx/react:app my-app
 `create-nx-workspace` asks which formatter you want when you pick a stack (React, Vue, Angular, or
 Node) or the default TypeScript monorepo, and the workspace uses package manager workspaces, which
 is the default.
-Every other path defaults to oxfmt without asking, including `--no-workspaces` and the `apps`,
+Every other path uses Prettier without asking, including `--no-workspaces` and the `apps`,
 `npm`, and `ts-standalone` presets.
 Pass `--formatter` on any path to choose explicitly:
 
