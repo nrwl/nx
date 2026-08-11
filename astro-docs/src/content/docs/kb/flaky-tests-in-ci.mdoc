@@ -30,7 +30,22 @@ makes failing CI easier to ignore.
 Re-run the failed test or test task by itself. A narrow retry gives you a cleaner result and keeps
 the rest of the pipeline moving.
 
-## Prove test flakiness with Nx Cloud
+## Check the common causes
+
+Most flakes match one of these patterns:
+
+| Pattern               | Typical signal                                             | Usual fix                                                                    |
+| --------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Shared state          | The test passes alone but fails after another test.        | Reset data, files, mocks, and process state for each test.                   |
+| Fixed ports or names  | Parallel tasks collide or one task cannot start a service. | Allocate isolated ports, directories, and test data.                         |
+| Timing assumptions    | The failure follows a slow machine or delayed response.    | Wait for a defined event or state, not an arbitrary delay.                   |
+| Test-order dependence | A different order changes the result.                      | Make each test create and clean up its own prerequisites.                    |
+| External services     | Network, API, or third-party failures appear in the logs.  | Stub the dependency where practical, or isolate and monitor the integration. |
+
+Manual investigation limits wasted work, but teams also need reliable evidence across CI runs. Nx
+and Nx Cloud provide that evidence and automate narrow retries.
+
+## Detect and retry flaky tasks with Nx Cloud
 
 Nx runs a test command as a task. A task can run one test file, a group of files, or an entire
 test suite. Nx creates a hash from that task's inputs each time it runs.
@@ -59,9 +74,9 @@ execution environments before you change the test.
 
 ## Fix the flaky task
 
-Work through the failed task in this order:
+Use the attempt details from Nx Cloud and work through the failed task in this order:
 
-1. Re-run the failed task or test file by itself.
+1. Re-run the failed test or test task by itself.
 2. Compare the failed attempt with the successful attempt.
 3. Check the logs, machine image, environment values, network calls, and test order.
 4. Fix the cause that differs between attempts.
@@ -70,20 +85,10 @@ Work through the failed task in this order:
 Record an owner and review date for each quarantine. A quarantine protects the pipeline, but it
 also reduces test coverage.
 
-Most flakes match one of these patterns:
+## Make e2e retries smaller with Nx
 
-| Pattern               | Typical signal                                             | Usual fix                                                                    |
-| --------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Shared state          | The test passes alone but fails after another test.        | Reset data, files, mocks, and process state for each test.                   |
-| Fixed ports or names  | Parallel tasks collide or one task cannot start a service. | Allocate isolated ports, directories, and test data.                         |
-| Timing assumptions    | The failure follows a slow machine or delayed response.    | Wait for a defined event or state, not an arbitrary delay.                   |
-| Test-order dependence | A different order changes the result.                      | Make each test create and clean up its own prerequisites.                    |
-| External services     | Network, API, or third-party failures appear in the logs.  | Stub the dependency where practical, or isolate and monitor the integration. |
-
-## Make e2e retries smaller
-
-A failed spec should not re-run a 40-minute e2e suite. Split a large suite into independently
-runnable file-level tasks. Then CI can retry the failed spec and leave successful specs alone.
+A failed spec should not re-run a 40-minute e2e suite. Nx can split a large suite into independently
+runnable file-level tasks. Then Nx Cloud can retry the failed spec and leave successful specs alone.
 
 [Automated task splitting](/docs/features/ci-features/split-e2e-tasks) creates one task per test
 file for supported Nx plugins. Fix hidden shared state before you distribute a suite across workers
