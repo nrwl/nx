@@ -23,6 +23,7 @@ import {
   LoadedNxPlugin,
   ProjectConfigurationsError,
   isAggregateCreateNodesError,
+  isMergeNodesError,
   isProjectsWithNoNameError,
   isMultipleProjectsWithSameNameError,
   mergeTargetConfigurations,
@@ -1273,13 +1274,24 @@ async function runVerificationPass<T>(
           continue;
         }
         messages.push(error.message ?? String(error));
+        // `ProjectConfigurationsError.errors` is a closed 5-member union; the two
+        // members that name a failing config file are `AggregateCreateNodesError`
+        // (a `[file, error]` list) and `MergeNodesError` (a single `.file`).
+        // Recording both is what makes `erroredConfigFiles` fail-closed: a hoist
+        // is reverted when an errored file lies outside every migrated root.
         if (isAggregateCreateNodesError(error)) {
           for (const [file] of error.errors) {
             if (file) {
               erroredConfigFiles.add(file);
             }
           }
+        } else if (isMergeNodesError(error) && error.file) {
+          erroredConfigFiles.add(error.file);
         }
+        // `WorkspaceValidityError` (the remaining union member) is deliberately
+        // exempt: it carries no config file, and normalization catches it
+        // per-project, leaving the project in the root map — so it isn't a
+        // config-file inference failure that should trigger a fail-closed revert.
       }
       return {
         result: e.partialProjectConfigurationsResult,
