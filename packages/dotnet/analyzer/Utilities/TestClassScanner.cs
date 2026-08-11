@@ -255,7 +255,6 @@ public static class TestClassScanner
     private static TestUnit MergeDuplicates(TestUnit left, TestUnit right) => left with
     {
         DoNotParallelize = left.DoNotParallelize || right.DoNotParallelize,
-        HasDataRows = left.HasDataRows || right.HasDataRows,
         HasRunnableMembers = left.HasRunnableMembers || right.HasRunnableMembers
     };
 
@@ -354,8 +353,7 @@ public static class TestClassScanner
                     ClassName = className,
                     MethodName = method.Identifier.ValueText,
                     DoNotParallelize =
-                        classDoNotParallelize || HasAttribute(method.AttributeLists, "DoNotParallelize"),
-                    HasDataRows = HasAttribute(method.AttributeLists, "DataRow", "DynamicData")
+                        classDoNotParallelize || HasAttribute(method.AttributeLists, "DoNotParallelize")
                     // HasRunnableMembers defaults to true: reaching this point
                     // already required a qualifying [TestMethod]/[DataTestMethod].
                 };
