@@ -1421,6 +1421,81 @@ describe('Phase 3 — strict-common hoist', () => {
       warn.mock.calls.some((call) => String(call[0]).includes('build'))
     ).toBe(true);
   });
+
+  it('M2: reverts the hoist when a non-migrated root fails during MERGE (fail-closed on MergeNodesError)', async () => {
+    // Sibling of M, but app3 fails during the MERGE step, not createNodes: a
+    // target carrying both `command` and `executor` throws inside
+    // `resolveCommandSyntacticSugar` while Nx merges the inferred nodes, so Nx
+    // wraps it as a `MergeNodesError` (which carries `.file`), NOT an
+    // `AggregateCreateNodesError`. Phase 1's helper swallows the
+    // `ProjectConfigurationsError` and proceeds on partial results, so this
+    // reaches the verification pass. The errored file must still fail closed.
+    ctx = setupFixture('hoist-merge-errored-root');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    // app3: inferred-only for `build`, migrated for nothing
+    addExecutorProject(ctx, {
+      name: 'app3',
+      root: 'app3',
+      targetName: 'unrelated',
+      executor: '@other/tool:noop',
+    });
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [SYNTHETIC_PLUGIN_PATH];
+    updateNxJson(ctx.tree, nxJson);
+
+    let invocation = 0;
+    const createNodes: CreateNodes<SyntheticPluginOptions> = [
+      SYNTHETIC_CONFIG_GLOB,
+      (configFiles, options) => {
+        invocation++;
+        const targetName = options?.targetName ?? 'build';
+        return configFiles.map((file) => {
+          const dir = dirname(file);
+          const root = dir === '' || dir === '.' ? '.' : dir;
+          // app3 emits an invalid target on the verification pass: `command` and
+          // `executor` together throw during merge -> MergeNodesError.
+          const target =
+            root === 'app3' && invocation >= 2
+              ? { command: 'echo', executor: 'nx:run-commands' }
+              : defaultInferredTarget(root, targetName);
+          return [
+            file,
+            { projects: { [root]: { targets: { [targetName]: target } } } },
+          ] as const;
+        });
+      },
+    ];
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      SYNTHETIC_PLUGIN_PATH,
+      createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    // The merge failure sits on app3's config, outside the migrated roots, so the
+    // hoist is reverted rather than leaking `mode` onto the inferred-only app3.
+    expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({ cache: true });
+    for (const name of ['app1', 'app2']) {
+      expect(readJson(ctx.tree, `${name}/project.json`).targets.build).toEqual({
+        options: { mode: 'production' },
+      });
+    }
+    // the incomplete verification is surfaced, not silent
+    expect(warn).toHaveBeenCalled();
+  });
 });
 
 describe('Phase 4 — verify + equivalence oracle + fallback', () => {
