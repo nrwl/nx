@@ -358,11 +358,19 @@ function announceResume(runId: string, state: MigrateRunState): void {
   const applied = state.steps.filter((s) => s.status === 'succeeded').length;
   const skipped = state.steps.filter((s) => s.status === 'skipped').length;
   const remaining = state.steps.length - applied - skipped;
+  // A subset of `remaining`, called out separately: a run is resumed most often
+  // because one of these is waiting on a decision, and the count alone would
+  // read as work that has not been reached yet.
+  const stalled = state.steps.filter(
+    (s) => s.status === 'failed' || s.status === 'died'
+  ).length;
   output.log({
     title: `nx migrate: resuming run ${runId}`,
     bodyLines: [
       `  started: ${state.createdAt}`,
-      `  progress: ${applied} applied, ${skipped} skipped, ${remaining} remaining`,
+      `  progress: ${applied} applied, ${skipped} skipped, ${remaining} remaining${
+        stalled > 0 ? ` (${stalled} awaiting a decision)` : ''
+      }`,
     ],
   });
 }

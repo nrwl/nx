@@ -616,36 +616,24 @@ describe('orchestrator', () => {
       expect(readRunState(dir).steps[0].status).toBe('succeeded');
     });
 
-    describe('on Windows', () => {
-      const originalPlatform = process.platform;
-
-      afterEach(() => {
-        Object.defineProperty(process, 'platform', {
-          value: originalPlatform,
-        });
+    it('dispenses commands carrying no shell-dialect syntax', async () => {
+      await runOrchestratorInit({
+        root,
+        migrationsJson: { migrations: [genMig('@nx/js', 'a')] },
+        createCommits: false,
+        commitPrefix: 'chore: [nx migration] ',
+        skipInstall: false,
+        installedNxVersion: '23.0.0',
       });
 
-      it('dispenses commands a cmd.exe or PowerShell shell can run verbatim', async () => {
-        Object.defineProperty(process, 'platform', { value: 'win32' });
-
-        await runOrchestratorInit({
-          root,
-          migrationsJson: { migrations: [genMig('@nx/js', 'a')] },
-          createCommits: false,
-          commitPrefix: 'chore: [nx migration] ',
-          skipInstall: false,
-          installedNxVersion: '23.0.0',
-        });
-
-        const { runId } = findActiveRun(root).active;
-        const block = lastBlock();
-        // Nothing ahead of the package manager's exec prefix: an env-var
-        // assignment there is POSIX-only syntax neither Windows shell parses.
-        expect(block.payload.command).toBe(
-          `npx nx migrate --run-migration=@nx/js:a --run-id=${runId}`
-        );
-        expect(block.payload.then).toBe(`npx nx migrate --run-id=${runId}`);
-      });
+      const { runId } = findActiveRun(root).active;
+      const block = lastBlock();
+      // Nothing ahead of the package manager's exec prefix: an env-var
+      // assignment there is POSIX-only syntax neither Windows shell parses.
+      expect(block.payload.command).toBe(
+        `npx nx migrate --run-migration=@nx/js:a --run-id=${runId}`
+      );
+      expect(block.payload.then).toBe(`npx nx migrate --run-id=${runId}`);
     });
 
     it('refuses a migration id that is not shell-safe, naming it', async () => {
@@ -708,7 +696,8 @@ describe('orchestrator', () => {
         ],
       };
       // Only succeeded and skipped are done; a died step still has work left
-      // and counts as remaining, same as a pending one.
+      // and counts as remaining, same as a pending one, but it is the one
+      // waiting on the user so it is named as well as counted.
       setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:a', 'succeeded'),
@@ -734,9 +723,31 @@ describe('orchestrator', () => {
         title: 'nx migrate: resuming run run-1',
         bodyLines: [
           '  started: 2026-01-01T00:00:00.000Z',
-          '  progress: 2 applied, 1 skipped, 2 remaining',
+          '  progress: 2 applied, 1 skipped, 2 remaining (1 awaiting a decision)',
         ],
       });
+    });
+
+    it('leaves the decision count off when nothing is stalled', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        planHash: computePlanHash(migrationsJson),
+        plan: migrationsJson.migrations,
+      });
+
+      await runOrchestratorInit({
+        root,
+        migrationsJson,
+        createCommits: false,
+        commitPrefix: 'chore: [nx migration] ',
+        skipInstall: false,
+        installedNxVersion: '23.0.0',
+      });
+
+      expect(logged[0].bodyLines[1]).toBe(
+        '  progress: 0 applied, 0 skipped, 1 remaining'
+      );
     });
 
     it('says nothing about resuming when the init started the run', async () => {
@@ -1846,7 +1857,7 @@ describe('orchestrator', () => {
       expect(block.payload.instructions).toContain('landed-sha');
     });
 
-    it('offers only adopt when a commit landed that the dying worker never recorded', async () => {
+    it('withholds retry-clean when a commit landed that the dying worker never recorded', async () => {
       // The worker commits before it appends the ledger entry, so a death
       // between the two leaves no entry to spot while HEAD sits past the ref a
       // clean retry would reset to.

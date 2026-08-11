@@ -1270,6 +1270,10 @@ describe('runSingleMigrationWorker', () => {
 
     it('leaves the dependency baseline alone when the run skips installs, so the change stays pending', async () => {
       mockIsInsideAgent.mockReturnValue(true);
+      // The skip is what this case turns on: without it the installer reports
+      // neither skipped nor installed and the assertion holds for the wrong
+      // reason, the same one as the preceding case.
+      mockSkippedInstall = true;
       mockStringifiedDeps.mockReturnValue('{"deps":1}');
       const baseline = depsHash(root);
       const dir = setupRun('run-1', {
@@ -1290,6 +1294,7 @@ describe('runSingleMigrationWorker', () => {
       });
 
       expect(readRunState(dir).steps[0].depsHashAtDispense).toBe(baseline);
+      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root);
     });
 
     it('skips the generator half on a hybrid retry once its generator already completed', async () => {
