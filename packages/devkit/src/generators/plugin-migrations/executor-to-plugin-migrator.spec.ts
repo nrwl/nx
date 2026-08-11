@@ -880,6 +880,110 @@ describe('Phase 3 — strict-common hoist', () => {
     }
   });
 
+  it('partitions per-project: hoists for eligible projects, excludes authored-identity ones', async () => {
+    // Mixed workspace: two clean projects (eligible) share `mode: production`,
+    // one project has a package.json `build` script (default-layer identity), and
+    // one carries a per-project `command` in its residual. The two excluded
+    // projects must NOT block centralization for the clean pair, and the hoisted
+    // default must NOT resolve for the excluded projects.
+    ctx = setupFixture('per-project-partition');
+    for (const name of ['clean1', 'clean2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: {
+          options: { config: SYNTHETIC_CONFIG_FILE, mode: 'production' },
+          cache: true,
+          outputs: ['{projectRoot}/dist'],
+        },
+      });
+    }
+    // excluded via a package.json script; its residual has NO `mode`
+    addExecutorProject(ctx, {
+      name: 'scripted',
+      root: 'scripted',
+      targetName: 'build',
+      target: {
+        options: { config: SYNTHETIC_CONFIG_FILE },
+        cache: true,
+        outputs: ['{projectRoot}/dist'],
+      },
+    });
+    ctx.tree.write(
+      'scripted/package.json',
+      JSON.stringify({ name: 'scripted', scripts: { build: 'tsc -b' } })
+    );
+    // excluded via a per-project command; its residual has NO `mode`
+    addExecutorProject(ctx, {
+      name: 'commanded',
+      root: 'commanded',
+      targetName: 'build',
+      target: {
+        options: { config: SYNTHETIC_CONFIG_FILE },
+        cache: true,
+        outputs: ['{projectRoot}/dist'],
+      },
+    });
+    const plugin = createSyntheticPlugin();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      [
+        {
+          executors: [SYNTHETIC_EXECUTOR],
+          targetPluginOptionMapper: () => ({ targetName: 'build' }),
+          postTargetTransformer: (target: any, _tree, { projectName }) => {
+            if (target.options) {
+              delete target.options.config;
+              if (Object.keys(target.options).length === 0)
+                delete target.options;
+            }
+            if (projectName === 'commanded') {
+              target.command = `nx run ${projectName}:build`;
+            }
+            return target;
+          },
+        },
+      ]
+    );
+
+    // the eligible pair centralizes `mode`
+    expect(readNxJson(ctx.tree).targetDefaults.build).toContainEqual({
+      filter: { plugin: SYNTHETIC_PLUGIN_PATH },
+      options: { mode: 'production' },
+    });
+    // clean projects keep no residual
+    for (const name of ['clean1', 'clean2']) {
+      expect(
+        readJson(ctx.tree, `${name}/project.json`).targets.build
+      ).toBeUndefined();
+    }
+    // the commanded project keeps its full residual (never reduced)
+    expect(readJson(ctx.tree, 'commanded/project.json').targets.build).toEqual({
+      command: 'nx run commanded:build',
+    });
+
+    // Both directions through REAL resolution (project.json AND package-json):
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+    // eligible: the filter default applies -> centralized `mode` resolves
+    expect(resolved['clean1'].build.options?.mode).toBe('production');
+    expect(resolved['clean2'].build.options?.mode).toBe('production');
+    // excluded: the filter default is REFUSED -> the centralized `mode` must NOT
+    // leak in (their residuals carry no `mode`). If either picks it up, the
+    // partition is unsound.
+    expect(resolved['scripted'].build.options?.mode).toBeUndefined();
+    expect(resolved['commanded'].build.options?.mode).toBeUndefined();
+  });
+
   it('D: preserves pre-existing target-name default keys the hoist does not touch', async () => {
     ctx = setupFixture('hoist-preserve-existing');
     for (const name of ['app1', 'app2']) {

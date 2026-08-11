@@ -779,46 +779,52 @@ function hoistCommonAndWrite<T>(
   }
 
   const commonByTarget = new Map<string, TargetConfiguration>();
+  // Projects whose target identity is authored in a DEFAULT layer, per target.
+  // Nx's `resolveSourcePlugin` refuses a `filter: { plugin }` default for such a
+  // target (see nx/.../project-configuration/target-defaults.ts), so those
+  // projects can't inherit the hoisted keys and must carry the full config
+  // themselves. The partition is PER-PROJECT: one project with authored identity
+  // no longer blocks centralization for its siblings.
+  const excludedProjectsByTarget = new Map<string, Set<string>>();
   // Deterministic target-name order for stable nx.json output.
   for (const targetName of [...residualsByTarget.keys()].sort()) {
     const residuals = residualsByTarget.get(targetName);
-    // A residual that carries `executor`/`command` gives the project's target
-    // an identity in the default (project.json) layer, so Nx's
-    // `resolveSourcePlugin` refuses to apply a `filter: { plugin }` default to
-    // it (see nx/.../project-configuration/target-defaults.ts). Centralizing
-    // such a target would silently drop the hoisted keys — the verification
-    // pass can't see it either, because that pass has no project.json layer —
-    // so keep the full residual per project instead. (@nx/detox is the one
-    // first-party generator that stamps a per-project `command`.)
-    const carriesIdentity = residuals.some(
-      (residual) =>
-        residual.executor !== undefined || residual.command !== undefined
-    );
-    // A residual isn't the only place a target's identity can be authored — a
-    // DEFAULT plugin can author it too. The package-json plugin emits an
-    // `nx:run-script` target for every package.json script (and honors
-    // `nx.targets`), so a script/target byte-equal to the migrated target name
-    // gives it an identity in the default layer even when the project.json
-    // residual carries neither `executor` nor `command`. `resolveSourcePlugin`
-    // refuses a `filter: { plugin }` default in that case too, so treat it like
-    // a residual-carried identity and keep the full residual per project.
-    const authorsIdentityInDefaultLayer = (
-      projectsByTarget.get(targetName) ?? []
-    ).some((projectName) =>
-      packageJsonAuthorsTargetIdentity(
-        tree,
-        projectConfigsByName.get(projectName)?.root,
-        targetName
-      )
-    );
-    // Centralization only pays off when at least two projects share the same
-    // target; a single migrated project keeps its full residual in
-    // project.json.
+    const projects = projectsByTarget.get(targetName) ?? [];
+    // Partition the target's projects. A target's identity is authored in a
+    // default layer when either:
+    //   - the project.json residual carries `executor`/`command` (e.g. @nx/detox
+    //     stamps a per-project `command`), or
+    //   - the package-json plugin authors it: a package.json script byte-equal
+    //     to the target name becomes an `nx:run-script` target (and `nx.targets`
+    //     is honored).
+    // Such projects are EXCLUDED from the hoist (they keep the full residual);
+    // the rest are hoist-eligible.
+    const excludedProjects = new Set<string>();
+    const eligibleResiduals: TargetConfiguration[] = [];
+    for (let i = 0; i < projects.length; i++) {
+      const projectName = projects[i];
+      const residual = residuals[i];
+      const identityAuthored =
+        residual.executor !== undefined ||
+        residual.command !== undefined ||
+        packageJsonAuthorsTargetIdentity(
+          tree,
+          projectConfigsByName.get(projectName)?.root,
+          targetName
+        );
+      if (identityAuthored) {
+        excludedProjects.add(projectName);
+      } else {
+        eligibleResiduals.push(residual);
+      }
+    }
+    excludedProjectsByTarget.set(targetName, excludedProjects);
+    // Centralization only pays off when at least two ELIGIBLE projects share the
+    // target; the common is computed over eligible residuals only, so an excluded
+    // project's config never leaks into the shared default.
     const common =
-      residuals.length >= 2 &&
-      !carriesIdentity &&
-      !authorsIdentityInDefaultLayer
-        ? computeStrictCommon(residuals)
+      eligibleResiduals.length >= 2
+        ? computeStrictCommon(eligibleResiduals)
         : {};
     commonByTarget.set(targetName, common);
   }
@@ -828,17 +834,25 @@ function hoistCommonAndWrite<T>(
   for (const executorScope of scope.executorScopes) {
     for (const [targetName, projectNames] of executorScope.targetAndProjects) {
       const common = commonByTarget.get(targetName) ?? {};
+      const excludedProjects =
+        excludedProjectsByTarget.get(targetName) ?? new Set<string>();
       for (const projectName of projectNames) {
         const entry = residualByProject.get(projectName)?.get(targetName);
         if (!entry) {
           continue;
         }
+        // Excluded projects keep the FULL residual — the plugin-scoped default
+        // won't resolve for them, so nothing may be subtracted. Eligible projects
+        // drop the hoisted common and keep only their deviation.
+        const toWrite = excludedProjects.has(projectName)
+          ? structuredClone(entry.residual)
+          : subtractCommon(entry.residual, common);
         writeResidualTarget(
           tree,
           projectConfigsByName,
           projectName,
           targetName,
-          subtractCommon(entry.residual, common)
+          toWrite
         );
       }
     }
