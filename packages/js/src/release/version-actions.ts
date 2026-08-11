@@ -13,7 +13,7 @@ import { join } from 'node:path';
 import { applyEdits, FormattingOptions, modify } from 'jsonc-parser';
 import { validRange } from 'semver';
 import { VersionActions } from 'nx/release';
-import type { ResolveCurrentVersionForDependency } from 'nx/release';
+import type { ResolveVersionForDependency } from 'nx/release';
 import type {
   AfterAllProjectsVersioned,
   NxReleaseVersionConfiguration,
@@ -225,11 +225,11 @@ export default class JsVersionActions extends VersionActions {
     tree: Tree,
     projectGraph: ProjectGraph,
     dependenciesToUpdate: Record<string, string>,
-    resolveCurrentVersionForDependency?: ResolveCurrentVersionForDependency
+    resolveVersionForDependency?: ResolveVersionForDependency
   ): Promise<string[]> {
     if (
       Object.keys(dependenciesToUpdate).length === 0 &&
-      !resolveCurrentVersionForDependency
+      !resolveVersionForDependency
     ) {
       return [];
     }
@@ -254,12 +254,12 @@ export default class JsVersionActions extends VersionActions {
     const resolveVersion = (projectName: string): Promise<string> => {
       let resolution = resolvedVersions.get(projectName);
       if (!resolution) {
-        if (!resolveCurrentVersionForDependency) {
+        if (!resolveVersionForDependency) {
           throw new Error(
-            `No current version resolver was provided for dependency project "${projectName}".`
+            `No version resolver was provided for dependency project "${projectName}".`
           );
         }
-        resolution = resolveCurrentVersionForDependency(projectName);
+        resolution = resolveVersionForDependency(projectName);
         resolvedVersions.set(projectName, resolution);
       }
       return resolution;
@@ -323,6 +323,10 @@ export default class JsVersionActions extends VersionActions {
                 continue;
               }
 
+              if (this.isLocalDependencyProtocol(currentVersion)) {
+                version = this.applyVersionPrefix(currentVersion, version);
+              }
+
               if (
                 preserveMatchingDependencyRanges.includes(depType) &&
                 !this.isLocalDependencyProtocol(currentVersion)
@@ -340,7 +344,7 @@ export default class JsVersionActions extends VersionActions {
                 }
               }
             } else if (
-              resolveCurrentVersionForDependency &&
+              resolveVersionForDependency &&
               !manifestToUpdate.preserveLocalDependencyProtocols &&
               this.isLocalDependencyProtocol(currentVersion)
             ) {

@@ -69,6 +69,12 @@ export class ReleaseGroupProcessor {
   private processedGroups: Set<string> = new Set();
 
   /**
+   * Tracks release groups that have completed all version decisions. A group
+   * can reach this state before its dependency manifests are updated.
+   */
+  private groupsWithFinalizedVersionDecisions: Set<string> = new Set();
+
+  /**
    * Keeps track of which projects have already had their versions bumped.
    * This is used to avoid redundant version bumping and to determine which
    * projects need their dependencies updated.
@@ -344,6 +350,7 @@ export class ReleaseGroupProcessor {
     releaseGroup: ReleaseGroupWithName
   ): Promise<boolean> {
     if (releaseGroup.projects.length === 0) {
+      this.groupsWithFinalizedVersionDecisions.add(releaseGroup.name);
       return false;
     }
 
@@ -438,6 +445,7 @@ export class ReleaseGroupProcessor {
         }
       }
 
+      this.groupsWithFinalizedVersionDecisions.add(releaseGroup.name);
       return bumpedByDependency;
     }
 
@@ -488,6 +496,8 @@ export class ReleaseGroupProcessor {
         dependentProjects: this.getOriginalDependentProjects(project),
       });
     }
+
+    this.groupsWithFinalizedVersionDecisions.add(releaseGroup.name);
 
     // Then, update dependencies for all projects in the fixed group, also in topological order
     if (bumped) {
@@ -561,6 +571,8 @@ export class ReleaseGroupProcessor {
         }
       }
     }
+
+    this.groupsWithFinalizedVersionDecisions.add(releaseGroup.name);
 
     // Third pass: Update dependencies also in topological order
     for (const project of sortedProjects) {
@@ -810,16 +822,55 @@ export class ReleaseGroupProcessor {
       this.projectGraph,
       dependenciesToUpdate,
       (dependencyProjectName) =>
-        this.releaseGraph.resolveCurrentVersionForDependency(
-          this.tree,
-          this.projectGraph,
-          dependencyProjectName,
-          this.options.preid ?? ''
-        )
+        this.resolveVersionForDependency(dependencyProjectName)
     );
     for (const logMessage of logMessages) {
       projectLogger.buffer(logMessage);
     }
+  }
+
+  /**
+   * Resolve a dependency version when the project graph did not supply it in
+   * `dependenciesToUpdate`.
+   *
+   * @internal
+   */
+  async resolveVersionForDependency(
+    dependencyProjectName: string
+  ): Promise<string> {
+    const versionData = this.versionData.get(dependencyProjectName);
+    if (versionData?.newVersion) {
+      return versionData.newVersion;
+    }
+
+    if (!this.releaseGraph.allProjectsToProcess.has(dependencyProjectName)) {
+      return this.releaseGraph.resolveCurrentVersionForDependency(
+        this.tree,
+        this.projectGraph,
+        dependencyProjectName,
+        this.options.preid
+      );
+    }
+
+    const releaseGroupName = this.getReleaseGroupNameForProject(
+      dependencyProjectName
+    );
+    if (
+      !releaseGroupName ||
+      !this.groupsWithFinalizedVersionDecisions.has(releaseGroupName)
+    ) {
+      throw new Error(
+        `Cannot resolve a concrete version for dependency project "${dependencyProjectName}" because its release group has not finalized its version decisions. Ensure the dependency is represented in the project graph so Nx Release can process it before it updates the dependent manifest.`
+      );
+    }
+
+    if (versionData?.currentVersion) {
+      return versionData.currentVersion;
+    }
+
+    throw new Error(
+      `Cannot resolve a concrete version for dependency project "${dependencyProjectName}" because its finalized release data has no current or new version.`
+    );
   }
 
   private async bumpVersionForProject(

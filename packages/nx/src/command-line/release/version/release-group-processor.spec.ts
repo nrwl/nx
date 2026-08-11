@@ -1694,6 +1694,104 @@ describe('ReleaseGroupProcessor', () => {
     });
   });
 
+  describe('resolveVersionForDependency', () => {
+    const graphDefinition = `
+      groupA ({ "projectsRelationship": "independent" }):
+        - projectA@1.0.0 [js]
+      groupB ({ "projectsRelationship": "independent" }):
+        - projectB@2.5.0 [js]
+    `;
+
+    it('returns the new version for a project that was bumped', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          graphDefinition,
+          {},
+          mockResolveCurrentVersion
+        );
+      const processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters,
+        { userGivenSpecifier: 'minor' }
+      );
+
+      await processor.processGroups();
+
+      await expect(
+        processor.resolveVersionForDependency('projectB')
+      ).resolves.toBe('2.6.0');
+    });
+
+    it('resolves the current version for a project outside the release set', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          graphDefinition,
+          {},
+          mockResolveCurrentVersion,
+          { projects: ['projectA'] }
+        );
+      const processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters,
+        { userGivenSpecifier: 'minor' }
+      );
+
+      await expect(
+        processor.resolveVersionForDependency('projectB')
+      ).resolves.toBe('2.5.0');
+    });
+
+    it('returns the current version after a project is finalized without a bump', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          graphDefinition,
+          { version: { conventionalCommits: true } },
+          mockResolveCurrentVersion
+        );
+      const processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+      mockDeriveSpecifierFromConventionalCommits.mockResolvedValue('none');
+
+      await processor.processGroups();
+
+      await expect(
+        processor.resolveVersionForDependency('projectB')
+      ).resolves.toBe('2.5.0');
+    });
+
+    it('does not use a stale version before the release group is finalized', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          graphDefinition,
+          {},
+          mockResolveCurrentVersion
+        );
+      const processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters,
+        { userGivenSpecifier: 'minor' }
+      );
+
+      await expect(
+        processor.resolveVersionForDependency('projectB')
+      ).rejects.toThrow('has not finalized its version decisions');
+    });
+  });
+
   describe('non-semver versioning', () => {
     it('should handle non-semver versioning for a simple fixed release group with no dependencies', async () => {
       const { nxReleaseConfig, projectGraph, filters } =

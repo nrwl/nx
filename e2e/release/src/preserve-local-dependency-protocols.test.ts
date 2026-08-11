@@ -172,8 +172,12 @@ describe('nx release preserve local dependency protocols', () => {
     `);
   });
 
-  it('should resolve an excluded dependency from its git tag', async () => {
-    const { workspacePath, pkg1, pkg2 } = await initializeProject('pnpm');
+  it('should replace the workspace protocol with the current version when the dependency is excluded from the release', async () => {
+    const {
+      workspacePath,
+      pkg1: releasedProject,
+      pkg2: excludedDependency,
+    } = await initializeProject('pnpm');
 
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
       nxJson.release = {
@@ -187,21 +191,24 @@ describe('nx release preserve local dependency protocols', () => {
       return nxJson;
     });
 
-    await runCommandAsync(`git tag ${pkg1}@1.0.0`);
-    await runCommandAsync(`git tag ${pkg2}@4.2.0`);
+    await runCommandAsync(`git tag ${releasedProject}@1.0.0`);
+    await runCommandAsync(`git tag ${excludedDependency}@4.2.0`);
 
+    // Release only the dependent project. Its dependency remains outside the release set.
     const output = runCLI(
-      `release version minor --projects ${pkg1} --dry-run --verbose`,
+      `release version minor --projects ${releasedProject} --dry-run --verbose`,
       { cwd: workspacePath }
     );
 
-    expect(output).toContain(`-     "@proj/${pkg2}": "workspace:*"`);
-    expect(output).toContain(`+     "@proj/${pkg2}": "4.2.0"`);
     expect(output).toContain(
-      `${pkg2} 🏷️  Resolved the current version as 4.2.0`
+      `-     "@proj/${excludedDependency}": "workspace:*"`
     );
-    expect(output).not.toContain(`${pkg2} ❓ Applied`);
-    expect(output).not.toContain(`${pkg2} ✍️  New version`);
+    expect(output).toContain(`+     "@proj/${excludedDependency}": "4.2.0"`);
+    expect(output).toContain(
+      `${excludedDependency} 🏷️  Resolved the current version as 4.2.0`
+    );
+    expect(output).not.toContain(`${excludedDependency} ❓ Applied`);
+    expect(output).not.toContain(`${excludedDependency} ✍️  New version`);
   });
 
   it('should preserve local dependency protocols when version.preserveLocalDependencyProtocols is not set to false', async () => {

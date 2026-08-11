@@ -25,16 +25,18 @@ import { BUMP_TYPE_REASON_TEXT } from './release-group-processor';
 export type SemverBumpType = ReleaseType | 'none';
 
 /**
- * Lazily resolves the concrete current version of a dependency project that
- * is not already represented in `dependenciesToUpdate`.
+ * Lazily resolves the concrete version of a dependency project that is not
+ * already represented in `dependenciesToUpdate`.
  *
  * Ecosystem-specific VersionActions implementations can use this when their
  * manifest syntax requires a local dependency reference to be replaced even
- * though that dependency is not itself being versioned.
+ * though the project graph did not identify the dependency relationship. The
+ * resolved value can be the dependency's new version when it is part of the
+ * release, or its current version when it is not being versioned.
  *
  * @public
  */
-export type ResolveCurrentVersionForDependency = (
+export type ResolveVersionForDependency = (
   dependencyProjectName: string
 ) => Promise<string>;
 
@@ -482,7 +484,7 @@ It is also possible that the project is being processed because of a dependency 
    * with new dependency versions, but for application deployments it might involve
    * updating something else instead, it depends on the type of application.
    *
-   * `resolveCurrentVersionForDependency` is intentionally lazy: implementations
+   * `resolveVersionForDependency` is intentionally lazy: implementations
    * decide which manifest values require a concrete version, while release core
    * remains unaware of ecosystem-specific dependency protocols.
    *
@@ -493,7 +495,7 @@ It is also possible that the project is being processed because of a dependency 
     tree: Tree,
     projectGraph: ProjectGraph,
     dependenciesToUpdate: Record<string, string>,
-    resolveCurrentVersionForDependency?: ResolveCurrentVersionForDependency
+    resolveVersionForDependency?: ResolveVersionForDependency
   ): Promise<string[]>;
 }
 
@@ -555,7 +557,7 @@ export class NOOP_VERSION_ACTIONS extends VersionActions {
     tree: Tree,
     projectGraph: ProjectGraph,
     dependenciesToUpdate: Record<string, string>,
-    resolveCurrentVersionForDependency?: ResolveCurrentVersionForDependency
+    resolveVersionForDependency?: ResolveVersionForDependency
   ): Promise<string[]> {
     return Promise.resolve([]);
   }

@@ -197,6 +197,34 @@ describe('JsVersionActions', () => {
     expect(tree.read('packages/my-lib/package.json', 'utf-8')).toBe(manifest);
   });
 
+  it('applies workspace ranges to dependency versions supplied by release core', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    writeJson(tree, 'packages/my-lib/package.json', {
+      dependencies: { dependency: 'workspace:^' },
+      peerDependencies: { 'other-dependency': 'workspace:~' },
+      optionalDependencies: { dependency: 'workspace:*' },
+    });
+    const versionActions = await createVersionActions(tree);
+    const resolveVersion = jest.fn();
+
+    await versionActions.updateProjectDependencies(
+      tree,
+      createProjectGraph(),
+      {
+        dependency: '2.5.0',
+        'other-dependency': '3.0.0',
+      },
+      resolveVersion
+    );
+
+    expect(readJson(tree, 'packages/my-lib/package.json')).toEqual({
+      dependencies: { dependency: '^2.5.0' },
+      peerDependencies: { 'other-dependency': '~3.0.0' },
+      optionalDependencies: { dependency: '2.5.0' },
+    });
+    expect(resolveVersion).not.toHaveBeenCalled();
+  });
+
   describe('local dependencies outside the release set', () => {
     it('handles protocol preservation independently for each manifest', async () => {
       const tree = createTreeWithEmptyWorkspace();
