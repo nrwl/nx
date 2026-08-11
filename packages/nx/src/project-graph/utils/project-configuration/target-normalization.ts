@@ -201,12 +201,18 @@ function isLongRunningTarget(
  * glob, so nothing else outranks it. Undefined when the name key lost for
  * another reason (e.g. its entry declared a foreign executor and was dropped as
  * incompatible), in which case there is no key to name in the warning.
+ *
+ * `hasOwnProperty` rather than a lookup: an executor named `__proto__` resolves
+ * through the prototype chain to a truthy object, which would report a key the
+ * user never wrote.
  */
 function findShadowingTargetDefaultKey(
   targetDefaults: TargetDefaults | undefined,
   target: TargetConfiguration
 ): string | undefined {
-  return target.executor && targetDefaults?.[target.executor]
+  return target.executor &&
+    targetDefaults &&
+    Object.prototype.hasOwnProperty.call(targetDefaults, target.executor)
     ? target.executor
     : undefined;
 }

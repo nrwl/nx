@@ -352,4 +352,50 @@ describe('target-name cache fallback', () => {
 
     expect(target.cache).toBeUndefined();
   });
+
+  it('should not treat an inherited key as a shadowing executor key', () => {
+    // `targetDefaults["__proto__"]` resolves through the prototype chain to a
+    // truthy object, so an unguarded lookup reports a shadowing key that the
+    // user never wrote — restoring cache and naming it in the warning.
+    const target = normalize(
+      { executor: '__proto__' },
+      { build: { cache: true } }
+    );
+
+    expect(target.cache).toBeUndefined();
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('should not restore cache when the target-name key declares none', () => {
+    // The most common nx.json shape there is: a name key carrying only
+    // dependsOn/inputs alongside an executor key. Nothing opted in, so nothing
+    // is restored.
+    const target = normalize(
+      { executor: '@nx/angular:webpack-browser' },
+      {
+        build: { dependsOn: ['^build'] },
+        '@nx/angular:webpack-browser': { inputs: ['production'] },
+      }
+    );
+
+    expect(target.cache).toBeUndefined();
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('should stop at a filtered entry rather than read past it to a later one', () => {
+    // Reading past the filter would find the unfiltered `cache: true` and
+    // restore caching for a project the filter may never have covered.
+    const target = normalize(
+      { executor: '@nx/angular:webpack-browser' },
+      {
+        build: [
+          { filter: { projects: ['legacy-app'] }, cache: false },
+          { cache: true },
+        ],
+        '@nx/angular:webpack-browser': { inputs: ['production'] },
+      }
+    );
+
+    expect(target.cache).toBeUndefined();
+  });
 });
