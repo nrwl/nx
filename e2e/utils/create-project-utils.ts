@@ -265,8 +265,9 @@ export function runCreateWorkspace(
     nextAppDir,
     nextSrcDir,
     linter = 'eslint',
-    // Matches `create-nx-workspace`'s own default, so the e2e suites exercise
-    // what users actually get. Suites that need prettier pass it explicitly.
+    // Deliberately NOT `create-nx-workspace`'s default, which is prettier while
+    // oxfmt is pre-1.0: this exercises the oxfmt path across every suite rather
+    // than only the dedicated one. Suites that need prettier pass it explicitly.
     formatter = 'oxfmt',
     unitTestRunner,
     e2eTestRunner,
