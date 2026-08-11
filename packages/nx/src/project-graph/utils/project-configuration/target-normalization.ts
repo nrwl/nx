@@ -118,6 +118,9 @@ export function normalizeTarget(
   return target;
 }
 
+// TODO(v24): remove the legacy target-name cache fallback and its warning.
+// Removal needs a second mechanism for plugin-inferred targets, which the
+// accompanying migration cannot reach.
 /**
  * Whether `target` is cacheable only by way of the legacy name-based fallback:
  * the exact target-name key of `targetDefaults` declares `cache: true`, but an

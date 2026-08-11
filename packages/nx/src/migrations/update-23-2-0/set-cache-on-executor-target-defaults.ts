@@ -22,6 +22,9 @@ import {
 import type { PackageJson } from '../../utils/package-json';
 import { joinPathFragments } from '../../utils/path';
 
+// TODO(v24): remove this migration alongside the runtime fallback it exists to
+// retire (`isLegacyCachedTarget` in `target-normalization.ts`), along with its
+// registration in `packages/nx/migrations.json`.
 /**
  * Target defaults resolve to a single key rather than merging, so an executor
  * key hides the target name key entirely. Before Nx 23 a hidden `cache: true`
@@ -275,7 +278,8 @@ function catchAllConfig(
  * whereas this one decides a permanent edit to `nx.json`. An executor that is
  * unresolvable while the migration runs and resolvable afterwards therefore
  * keeps its stamped `cache` while the runtime starts marking its targets
- * continuous.
+ * continuous — which `normalizeTargets` rejects with a `WorkspaceValidityError`,
+ * failing graph construction until `nx.json` is edited by hand.
  */
 function executorDeclaresContinuous(
   executor: string,
