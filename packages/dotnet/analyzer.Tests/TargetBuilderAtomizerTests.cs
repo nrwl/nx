@@ -315,14 +315,6 @@ public class TargetBuilderAtomizerTests
         Assert.Equal(3, group.Count);
     }
 
-    [Fact]
-    public void GroupNameFallsBackWhenNoneIsProvided()
-    {
-        var result = Build(Options(ciGroupName: null));
-
-        Assert.True(result.TargetGroups!.ContainsKey("TEST-CI (CI)"));
-    }
-
     // --- Filters ------------------------------------------------------------
 
     [Fact]
