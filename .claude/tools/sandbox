@@ -702,9 +702,8 @@ function ownerRow(state, sb) {
 }
 
 /**
- * Install a worktree's dependencies, once. The install marks live on the owning
- * row, so a screened view triggering a base install still records it where the
- * next caller looks — otherwise each view would reinstall into the same tree.
+ * Install a worktree's dependencies, once. Marks live on the owning row, so a
+ * view triggering an install records it where the next caller looks.
  */
 function ensureInstalled(sb, dir, label) {
   const state = readState();
@@ -712,10 +711,9 @@ function ensureInstalled(sb, dir, label) {
   owner.installed = owner.installed || {};
   if (owner.installed[label]) return owner.installed[label];
 
-  // --frozen-lockfile first: a fallback install rewrites the lockfile, which in a
-  // reference worktree silently changes what every other agent is reading. The
-  // fallback still runs, because a lockfile out of sync with package.json is a
-  // review signal worth reporting rather than a reason to abort.
+  // --frozen-lockfile first: a fallback install rewrites the lockfile, silently
+  // changing what every other agent is reading. It still runs, because a lockfile
+  // out of sync with package.json is a review signal rather than a reason to abort.
   const r = execIn(
     sb,
     `mise install >/dev/null 2>&1\n` +
@@ -764,15 +762,11 @@ function cmdInstall(argv) {
 }
 
 /**
- * Provision a private worktree an agent may mutate.
+ * Provision a private, installed worktree an agent may mutate — the reference
+ * checkouts are read concurrently, so proving a test can fail belongs elsewhere.
  *
- * The reference checkouts are shared: several agents read them concurrently, so
- * proving a test can fail by editing source has to happen somewhere else. This
- * hands out that somewhere, already installed.
- *
- * Local mode refuses. There, the "reference checkout" is the user's own working
- * tree — the branch they are mid-edit on — and `git worktree add` against it
- * writes to their `.git`. A review must not be able to reach for that.
+ * Local mode refuses: there the reference checkout is the user's own working
+ * tree, and a review must not be able to reach for it.
  */
 function cmdWorktree(argv) {
   const [id, owner, side = 'head'] = argv;
