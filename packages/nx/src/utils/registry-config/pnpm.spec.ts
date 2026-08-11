@@ -319,6 +319,52 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
     });
 
+    describe('env references in a yaml settings file', () => {
+      it('withholds a proxy holding one from 10.34.5, a release behind the registry', () => {
+        process.env.NX_TEST_HOST = 'proxy-env.example.com';
+        writeYaml('httpsProxy: http://${NX_TEST_HOST}:8080\n');
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '10.34.4')).toEqual({
+          npm_config_proxy: 'http://proxy-env.example.com:8080',
+          npm_config_https_proxy: 'http://proxy-env.example.com:8080',
+        });
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '10.34.5')).toEqual({});
+      });
+
+      it('keeps a registries entry holding one, which 10.x has no branch for', () => {
+        // The withholding reached the scalars alone on this line: the map is a
+        // nested value pnpm 10 copies through whole, placeholder and all.
+        process.env.NX_TEST_HOST = 'reg-env.example.com';
+        writeYaml(
+          [
+            'registries:',
+            '  default: https://${NX_TEST_HOST}/',
+            'registry: https://${NX_TEST_HOST}/',
+          ].join('\n')
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '10.34.5')).toEqual({
+          npm_config_registry: 'https://\\${NX_TEST_HOST}/',
+        });
+      });
+
+      it('withholds one it cannot resolve rather than aborting, from 10.34.2', () => {
+        // The registry is where the backport starts, so the settings beside it
+        // survive from there instead of going down with the whole file.
+        writeYaml(
+          [
+            'registry: https://${NX_TEST_UNSET_VAR}/',
+            'httpsProxy: http://proxy.example.com:8080',
+          ].join('\n')
+        );
+        expect(() =>
+          getPnpmSpawnRegistryEnv('is-even', root, '10.34.1')
+        ).toThrow(/references an environment variable that is not set/);
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '10.34.2')).toEqual({
+          npm_config_proxy: 'http://proxy.example.com:8080',
+          npm_config_https_proxy: 'http://proxy.example.com:8080',
+        });
+      });
+    });
+
     it('bridges a workspace .npmrc no-proxy on 10.x too, which npm reads from no file', () => {
       writeFileSync(
         join(root, '.npmrc'),

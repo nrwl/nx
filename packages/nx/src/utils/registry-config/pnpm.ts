@@ -738,21 +738,50 @@ function readPnpmWorkspaceSettings(
   );
 }
 
-/**
- * The scalar settings pnpm withholds from an untrusted file rather than
- * expanding a `${VAR}` into them, its REQUEST_DESTINATION_SCALAR_KEYS. It
- * covered the destination alone until 11.11.0 added the proxies that carry a
- * request there.
- */
-const PNPM_REQUEST_DESTINATION_SCALARS = new Set(['pnprServer', 'registry']);
-const PNPM_REQUEST_DESTINATION_SCALARS_11_11 = new Set([
-  ...PNPM_REQUEST_DESTINATION_SCALARS,
+const PNPM_REQUEST_PROXY_SCALARS = [
   'httpProxy',
   'httpsProxy',
   'noProxy',
   'proxy',
   'noproxy',
+] as const;
+const PNPM_REQUEST_DESTINATION_SCALARS = new Set(['pnprServer', 'registry']);
+const PNPM_REQUEST_DESTINATION_SCALARS_11_11 = new Set([
+  ...PNPM_REQUEST_DESTINATION_SCALARS,
+  ...PNPM_REQUEST_PROXY_SCALARS,
 ]);
+const PNPM_REQUEST_DESTINATION_SCALARS_10 = new Set(['registry']);
+const PNPM_REQUEST_DESTINATION_SCALARS_10_34_5 = new Set([
+  ...PNPM_REQUEST_DESTINATION_SCALARS_10,
+  ...PNPM_REQUEST_PROXY_SCALARS,
+]);
+
+/**
+ * The scalar settings pnpm withholds from a file rather than expanding a
+ * `${VAR}` into them, its REQUEST_DESTINATION_SCALAR_KEYS, null on a line that
+ * withholds nothing. It covered the destination alone until 11.11.0 added the
+ * proxies that carry a request there, and it was backported onto the 10 line,
+ * where it never names the pnpr server and picked the proxies up in 10.34.5.
+ *
+ * Each line is decided before the next is consulted: a 10.x version must not
+ * reach the 11 gates, which a plain `gte` ladder would let it do.
+ */
+function requestDestinationScalars(pnpmVersion: string): Set<string> | null {
+  if (lt(pnpmVersion, '11.0.0')) {
+    if (lt(pnpmVersion, '10.34.2')) {
+      return null;
+    }
+    return lt(pnpmVersion, '10.34.5')
+      ? PNPM_REQUEST_DESTINATION_SCALARS_10
+      : PNPM_REQUEST_DESTINATION_SCALARS_10_34_5;
+  }
+  if (lt(pnpmVersion, '11.5.3')) {
+    return null;
+  }
+  return lt(pnpmVersion, '11.11.0')
+    ? PNPM_REQUEST_DESTINATION_SCALARS
+    : PNPM_REQUEST_DESTINATION_SCALARS_11_11;
+}
 
 /**
  * A yaml settings file as pnpm's replaceEnvInSettings leaves it. Which
@@ -763,9 +792,12 @@ const PNPM_REQUEST_DESTINATION_SCALARS_11_11 = new Set([
  *   the command. 10.6.0 has no replacer at all and takes the file verbatim.
  * - Top-level string values, on the same line, and likewise fatal.
  * - `registries` and `namedRegistries` values, from 11.1.0.
- * - From 11.5.3 a value naming a request destination is dropped instead, when
- *   the file is one a project controls. The global config.yaml is trusted and
- *   keeps expanding.
+ * - A scalar naming a request destination is dropped instead of expanded, from
+ *   10.34.2 on the 10 line and 11.5.3 on the 11 one
+ *   (requestDestinationScalars). A `registries` entry holding one is dropped
+ *   too, but from 11.5.3 alone: 10.x has no branch for that key and passes the
+ *   map through whole. Both apply to a file a project controls; the global
+ *   config.yaml is trusted and keeps expanding, and only 11 reads it anyway.
  *
  * A nested object elsewhere is passed through untouched on every line, so a
  * placeholder there is neither expanded nor fatal.
@@ -808,25 +840,21 @@ function resolveYamlEnv(
   const resolveRegistry = gte(pnpmVersion, '11.1.0')
     ? resolveScalar
     : escapeNpmEnvExpr;
-  const drops = !trusted && gte(pnpmVersion, '11.5.3');
-  const droppedScalars = gte(pnpmVersion, '11.11.0')
-    ? PNPM_REQUEST_DESTINATION_SCALARS_11_11
-    : PNPM_REQUEST_DESTINATION_SCALARS;
+  const droppedScalars = trusted
+    ? null
+    : requestDestinationScalars(pnpmVersion);
+  const dropsRegistries = !trusted && gte(pnpmVersion, '11.5.3');
   const resolved: Record<string, unknown> = {};
   for (const [rawKey, value] of Object.entries(doc)) {
     const key = expands ? expandKey(rawKey) : rawKey;
     if (typeof value === 'string') {
-      if (
-        drops &&
-        droppedScalars.has(key) &&
-        PNPM_ENV_PLACEHOLDER.test(value)
-      ) {
+      if (droppedScalars?.has(key) && PNPM_ENV_PLACEHOLDER.test(value)) {
         continue;
       }
       resolved[key] = resolveScalar(value);
     } else if (key === 'registries' || key === 'namedRegistries') {
       resolved[key] = mapYamlStrings(value, (entry) =>
-        drops && PNPM_ENV_PLACEHOLDER.test(entry)
+        dropsRegistries && PNPM_ENV_PLACEHOLDER.test(entry)
           ? undefined
           : resolveRegistry(entry)
       );
