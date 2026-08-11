@@ -5,6 +5,7 @@ import {
   getNamedInputs,
   getGraphTimeDotEnvForTask,
   getEnvPathsForTask,
+  hashDaemonClientEnv,
   hashFile,
   hashObject,
   workspaceDataDirectory,
@@ -109,6 +110,10 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
     const normalizedOptions = normalizeOptions(options);
+    // A config can read process.env, which no file hash covers (and which the
+    // daemon swaps per client). Key the cache on the daemon-allowed env set so
+    // an ambient change re-evaluates instead of serving stale targets.
+    const ambientEnvHash = hashDaemonClientEnv();
     // The workspace-root dotenv candidates are the same for every config, so
     // hash each file at most once per pass rather than once per config.
     const dotEnvFileHashes = new Map<string, string | null>();
@@ -121,7 +126,7 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
 
       const projectHashes = await calculateHashesForCreateNodes(
         entries.map((e) => e.projectRoot),
-        { ...normalizedOptions, CI: process.env.CI },
+        { ...normalizedOptions, ambientEnvHash },
         context,
         entries.map((e) => [lockFileName, ...e.externalTsconfigInputs])
       );
@@ -160,7 +165,18 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
       }
       return results;
     } finally {
-      pluginCache.writeToDisk();
+      // The daemon can apply another client's env mid-pass (worker message
+      // dispatch is unserialized), so entries built after the change would be
+      // keyed under the stale pass-start digest. Drop the write; the next
+      // pass recomputes under a coherent key.
+      if (hashDaemonClientEnv() === ambientEnvHash) {
+        pluginCache.writeToDisk();
+      } else if (process.env.NX_VERBOSE_LOGGING === 'true') {
+        emitPluginWorkerLog(
+          'log',
+          '@nx/playwright: the ambient environment changed while inferring targets; skipping the disk cache write for this pass.'
+        );
+      }
     }
   },
 ];

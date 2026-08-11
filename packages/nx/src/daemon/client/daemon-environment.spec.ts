@@ -1,4 +1,8 @@
-import { applyDaemonEnvFromClient, getDaemonEnv } from './daemon-environment';
+import {
+  applyDaemonEnvFromClient,
+  getDaemonEnv,
+  hashDaemonClientEnv,
+} from './daemon-environment';
 
 describe('daemon environment', () => {
   const originalEnv = process.env;
@@ -27,6 +31,55 @@ describe('daemon environment', () => {
       const changed = applyDaemonEnvFromClient({});
       expect(process.env.NX_LOAD_DOT_ENV_FILES).toBeUndefined();
       expect(changed).toContain('NX_LOAD_DOT_ENV_FILES');
+    });
+  });
+
+  describe('hashDaemonClientEnv', () => {
+    it('changes when an allowed env var changes value, appears, or disappears', () => {
+      delete process.env.SOME_TOOL_HOME;
+      const without = hashDaemonClientEnv();
+      process.env.SOME_TOOL_HOME = '/usr/lib/tool';
+      const withVar = hashDaemonClientEnv();
+      expect(withVar).not.toEqual(without);
+      process.env.SOME_TOOL_HOME = '/opt/tool';
+      expect(hashDaemonClientEnv()).not.toEqual(withVar);
+      delete process.env.SOME_TOOL_HOME;
+      expect(hashDaemonClientEnv()).toEqual(without);
+    });
+
+    it('is stable when an excluded env var changes', () => {
+      delete process.env.NX_TUI;
+      delete process.env.ITERM_SESSION_ID;
+      const base = hashDaemonClientEnv();
+      process.env.NX_TUI = 'true';
+      process.env.ITERM_SESSION_ID = 'w0t1p0:12345';
+      expect(hashDaemonClientEnv()).toEqual(base);
+    });
+
+    it('changes when a prefix-exclusion override changes', () => {
+      delete process.env.NX_CLOUD_ACCESS_TOKEN;
+      const base = hashDaemonClientEnv();
+      process.env.NX_CLOUD_ACCESS_TOKEN = 'token';
+      expect(hashDaemonClientEnv()).not.toEqual(base);
+    });
+
+    // The daemon pins the required settings into its own and every plugin
+    // worker's env while daemonless plugin workers typically lack them;
+    // skipping them keeps the digest identical across modes.
+    it('is stable when a required daemon setting changes', () => {
+      delete process.env.NX_PROJECT_GLOB_CACHE;
+      const base = hashDaemonClientEnv();
+      process.env.NX_PROJECT_GLOB_CACHE = 'false';
+      expect(hashDaemonClientEnv()).toEqual(base);
+    });
+
+    // Pins that the overridable settings need no dedicated skip like the
+    // required ones above: they are already in the exclusion set.
+    it('is stable when an overridable daemon setting changes', () => {
+      delete process.env.NX_VERBOSE_LOGGING;
+      const base = hashDaemonClientEnv();
+      process.env.NX_VERBOSE_LOGGING = 'true';
+      expect(hashDaemonClientEnv()).toEqual(base);
     });
   });
 });

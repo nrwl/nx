@@ -18,6 +18,7 @@ export {
   // importing nx/src/utils/catalog directly. See packages/devkit/CLAUDE.md.
   getCatalogManager,
   getGraphTimeDotEnvForTask,
+  hashDaemonClientEnv,
 } from 'nx/src/devkit-internals';
 
 // Generators

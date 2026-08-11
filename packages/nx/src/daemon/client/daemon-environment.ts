@@ -1,3 +1,5 @@
+import { hashObject } from '../../hasher/file-hasher';
+
 const DAEMON_ENV_REQUIRED_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
   NX_CACHE_PROJECTS_CONFIG: 'false',
@@ -144,6 +146,26 @@ function isExcludedEnvVar(key: string): boolean {
     DAEMON_ENV_VARS_EXCLUSIONS.has(key) ||
     DAEMON_ENV_PREFIX_EXCLUSIONS.some((prefix) => key.startsWith(prefix))
   );
+}
+
+/**
+ * Digest of the client-controlled portion of the daemon env: the vars
+ * `getDaemonEnv` would send, minus the required settings the daemon pins
+ * itself. Skipping those yields the same digest whether the process is a
+ * daemon plugin worker (which has them set) or a daemonless one (which
+ * typically does not).
+ */
+export function hashDaemonClientEnv(): string {
+  const env: Record<string, string> = {};
+  for (const key in process.env) {
+    if (
+      !isExcludedEnvVar(key) &&
+      !Object.hasOwn(DAEMON_ENV_REQUIRED_SETTINGS, key)
+    ) {
+      env[key] = process.env[key];
+    }
+  }
+  return hashObject(env);
 }
 
 export function getDaemonEnv() {

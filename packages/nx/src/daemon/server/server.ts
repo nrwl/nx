@@ -13,8 +13,6 @@ import '../../utils/perf-logging';
 import { nxVersion } from '../../utils/versions';
 import { setupWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { readNxJson } from '../../config/nx-json';
-import { getPlugins } from '../../project-graph/plugins/get-plugins';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
 import { isNxVersionMismatch } from '../is-nx-version-mismatch';
 import { getInstalledNxVersion } from '../../utils/installed-nx-version';
@@ -25,7 +23,6 @@ import {
   isHandleResetConfigureAiAgentsStatusMessage,
   RESET_CONFIGURE_AI_AGENTS_STATUS,
 } from '../message-types/configure-ai-agents';
-import { applyDaemonEnvFromClient } from '../client/daemon-environment';
 import {
   assertNotForeignWorkspaceMessage,
   isDaemonMessage,
@@ -110,6 +107,7 @@ import {
 import { handleContextFileData } from './handle-context-file-data';
 import { handleFlushSyncGeneratorChangesToDisk } from './handle-flush-sync-generator-changes-to-disk';
 import { handleForceShutdown } from './handle-force-shutdown';
+import { handleClientEnv } from './handle-client-env';
 import { handleGetFilesInDirectory } from './handle-get-files-in-directory';
 import { handleGetRegisteredSyncGenerators } from './handle-get-registered-sync-generators';
 import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-changes';
@@ -275,16 +273,7 @@ async function handleMessage(socket: Socket, data: string) {
   }
 
   if (isDaemonMessage(payload) && payload.env) {
-    const changedEnvKeys = applyDaemonEnvFromClient(payload.env);
-    if (changedEnvKeys.length > 0) {
-      serverLogger.log(
-        `Graph recompute necessary due to env variable refresh. Changed keys: ${changedEnvKeys.join(
-          ', '
-        )}`
-      );
-      forwardEnvToPluginWorkers(payload.env);
-      invalidateGraphCache();
-    }
+    await handleClientEnv(payload.env);
   }
 
   if (payload.type === 'PING') {
@@ -843,22 +832,6 @@ export async function startServer(): Promise<Server> {
     }
   });
 }
-function forwardEnvToPluginWorkers(env: Record<string, string>) {
-  getPlugins(readNxJson(workspaceRoot))
-    .then((plugins) => {
-      for (const plugin of plugins) {
-        plugin.setWorkerEnv?.(env)?.catch((e) => {
-          serverLogger.log(
-            `Failed to forward env to plugin worker "${plugin.name}": ${e.message}`
-          );
-        });
-      }
-    })
-    .catch(() => {
-      // Plugins may not be loaded yet — env will be picked up on next load
-    });
-}
-
 function serializeUnserializedResult(
   response: boolean | object,
   mode: 'json' | 'v8'

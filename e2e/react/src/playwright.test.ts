@@ -56,6 +56,41 @@ describe('React Playwright e2e tests', () => {
     }
   });
 
+  it('re-resolves the readiness gate when the ambient env changes between runs', () => {
+    const e2eProject = `${appName}-e2e`;
+    const configPath = `${e2eProject}/playwright.config.mts`;
+
+    let originalConfig = '';
+    updateFile(configPath, (content) => {
+      originalConfig = content;
+      return content.replace(/url: 'http:\/\/[^']*'/, 'url: baseURL');
+    });
+
+    try {
+      const showGateUrl = (env: Record<string, string>) => {
+        const project = JSON.parse(
+          runCLI(`show project ${e2eProject} --json`, { env })
+        );
+        const gateTarget = Object.keys(project.targets).find((t) =>
+          t.endsWith('--wait-for-webserver')
+        );
+        expect(gateTarget).toBeDefined();
+        return project.targets[gateTarget].options.servers[0].url;
+      };
+
+      // Sequential daemon clients with different ambient env: the second run
+      // must not be served the first run's cached gate.
+      expect(showGateUrl({ BASE_URL: 'http://localhost:4301' })).toBe(
+        'http://localhost:4301'
+      );
+      expect(showGateUrl({ BASE_URL: 'http://localhost:4302' })).toBe(
+        'http://localhost:4302'
+      );
+    } finally {
+      updateFile(configPath, originalConfig);
+    }
+  });
+
   it('should execute e2e tests using playwright', async () => {
     if (await runE2ETests()) {
       const result = runCLI(`e2e ${appName}-e2e --verbose`);
