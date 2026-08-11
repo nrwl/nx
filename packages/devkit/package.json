@@ -64,7 +64,6 @@
     "semver": "catalog:",
     "yargs-parser": "catalog:",
     "minimatch": "catalog:",
-    "memfs": "^3.0.1",
     "enquirer": "catalog:"
   },
   "devDependencies": {
