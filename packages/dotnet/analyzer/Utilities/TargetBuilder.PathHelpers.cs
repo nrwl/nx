@@ -333,16 +333,14 @@ public static partial class TargetBuilder
 
         // The common case: results live under the project, so the argument is
         // just the tail of the same path.
-        const string projectRootToken = "{projectRoot}/";
-        if (baseDirectory.StartsWith(projectRootToken, StringComparison.Ordinal))
+        if (TryStripRootToken(baseDirectory, "{projectRoot}", out var underProject))
         {
-            return (baseDirectory, baseDirectory[projectRootToken.Length..]);
+            return (baseDirectory, AsCwdRelative(underProject));
         }
 
         // Otherwise the directory is workspace-anchored; walk back up to the
         // workspace root from the project directory to reach it.
-        const string workspaceRootToken = "{workspaceRoot}/";
-        if (baseDirectory.StartsWith(workspaceRootToken, StringComparison.Ordinal))
+        if (TryStripRootToken(baseDirectory, "{workspaceRoot}", out var underWorkspace))
         {
             var projectRelativeToWorkspace = Path
                 .GetRelativePath(workspaceRoot, projectDirectory)
@@ -351,9 +349,49 @@ public static partial class TargetBuilder
                 ? string.Empty
                 : string.Concat(Enumerable.Repeat("../", projectRelativeToWorkspace.Split('/').Length));
 
-            return (baseDirectory, $"{upToWorkspaceRoot}{baseDirectory[workspaceRootToken.Length..]}");
+            return (baseDirectory, AsCwdRelative($"{upToWorkspaceRoot}{underWorkspace}"));
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Strips a leading <c>{projectRoot}</c>/<c>{workspaceRoot}</c> token,
+    /// matching the bare token as well as one followed by a path segment.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="ResolvePath"/> emits the bare form when the results directory
+    /// resolves to the project or workspace root itself.
+    /// </remarks>
+    private static bool TryStripRootToken(string path, string token, out string remainder)
+    {
+        if (string.Equals(path, token, StringComparison.Ordinal))
+        {
+            remainder = string.Empty;
+            return true;
+        }
+
+        if (path.StartsWith($"{token}/", StringComparison.Ordinal))
+        {
+            remainder = path[(token.Length + 1)..];
+            return true;
+        }
+
+        remainder = string.Empty;
+        return false;
+    }
+
+    /// <summary>
+    /// Normalizes a path the task's <c>--results-directory</c> is resolved
+    /// against, so that callers can append <c>/{unit id}</c> to it.
+    /// </summary>
+    /// <remarks>
+    /// An empty string would make that append absolute, and a trailing slash
+    /// would double it.
+    /// </remarks>
+    private static string AsCwdRelative(string path)
+    {
+        var trimmed = path.TrimEnd('/');
+        return trimmed.Length == 0 ? "." : trimmed;
     }
 }
