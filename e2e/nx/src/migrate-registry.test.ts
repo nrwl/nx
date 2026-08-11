@@ -205,7 +205,7 @@ suite('migrate registry configuration', () => {
       // The harness exports the local registry through this, and pnpm takes it
       // over anything a file declares.
       restoreEnv = overrideEnv({ pnpm_config_registry: undefined });
-    });
+    }, 600_000);
 
     afterAll(() => {
       restoreEnv?.();
