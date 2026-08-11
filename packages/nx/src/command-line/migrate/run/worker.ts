@@ -85,6 +85,7 @@ import {
   nowIso,
   pmExecPrefix,
   recordInstallLanded,
+  singleLine,
   summarizeError,
   warnCommitFailed,
 } from './util';
@@ -983,7 +984,7 @@ function printNextSteps(
   if (nextSteps.length === 0) return;
   output.log({
     title: `Next steps for ${migration.package}: ${migration.name}`,
-    bodyLines: nextSteps.map((line) => `- ${line}`),
+    bodyLines: nextSteps.map((line) => `- ${singleLine(line)}`),
   });
 }
 

@@ -67,6 +67,7 @@ import {
   nowIso,
   pmExecPrefix,
   pmInstallCommand,
+  singleLine,
   summarizeError,
   warnCommitFailed,
 } from './util';
@@ -930,7 +931,9 @@ function emitNextStep(root: string, runId: string, step: MigrateStep): void {
 
 function emitRetryFailed(root: string, runId: string, step: MigrateStep): void {
   const migrationId = step.migrationId;
-  const summary = step.outcome?.summary;
+  const summary = step.outcome?.summary
+    ? singleLine(step.outcome.summary)
+    : undefined;
   emit(runId, step, 'retry-failed', {
     then: reconcileCommand(root, runId, 'retry'),
     instructions: [
@@ -1008,13 +1011,15 @@ function cleanRetryUnavailableReason(
   const endangered = endangeredLandedEntry(root, state, step);
   if (endangered) {
     return endangered.sha
-      ? `this migration's changes already landed in commit ${endangered.sha}, which a reset would discard.`
+      ? `this migration's changes already landed in commit ${singleLine(
+          endangered.sha
+        )}, which a reset would discard.`
       : `this migration's changes already landed in a commit, which a reset would discard.`;
   }
   if (step.gitRefBefore && head !== step.gitRefBefore) {
-    return `HEAD is at ${
-      head ?? '(unreadable)'
-    } rather than the ${step.gitRefBefore} this migration started from, so a reset would discard what was committed in between.`;
+    return `HEAD is at ${head ?? '(unreadable)'} rather than the ${singleLine(
+      step.gitRefBefore
+    )} this migration started from, so a reset would discard what was committed in between.`;
   }
   return `resetting the tree could discard uncommitted work that no restore point accounts for.`;
 }
@@ -1026,7 +1031,7 @@ function emitDied(
   step: MigrateStep
 ): void {
   const migrationId = step.migrationId;
-  const ref = step.gitRefBefore;
+  const ref = step.gitRefBefore ? singleLine(step.gitRefBefore) : undefined;
   const head = getLatestCommitSha(root);
   const tree = dirtyTreeSummary(root);
   const cleanRetry = canOfferCleanRetry(root, state, step, head);
