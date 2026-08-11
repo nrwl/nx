@@ -32,6 +32,9 @@ import {
 import { getNxInstallationPath } from './installation-directory';
 import { logger } from './logger';
 import { PackageJson, readModulePackageJson } from './package-json';
+// Type-only so it stays erased: a value import would defeat the deferred
+// require in createRegistrySpawnContext.
+import type { NpmConfigEnv } from './registry-config';
 import { workspaceRoot } from './workspace-root';
 
 const execAsync = promisify(exec);
@@ -693,14 +696,18 @@ export async function resolvePackageVersionUsingInstallation(
 }
 
 /**
- * The registry the fetch for `pkg` went to, with its userinfo masked because a
- * registry URL can carry a bare token. npm is asked under the overlay
- * `packageRegistryView` runs with, so a registry the package manager keeps
- * outside the .npmrc chain and a scope npm resolves for itself both land on the
- * value that fetch used. Null where npm declares no registry; throws where it
- * cannot be run.
+ * What every registry-bound npm spawn resolves the same way: where npm runs,
+ * and an environment reproducing the workspace package manager's own registry,
+ * auth and TLS resolution for `pkg`. `buildEnv` adds the caller's own entries.
  */
-export function getWorkspaceRegistryUrlForDisplay(pkg: string): string | null {
+function createRegistrySpawnContext(pkg: string): {
+  workspacePm: PackageManager;
+  configRoot: string;
+  scope: string | null;
+  buildEnv: (extra: NpmConfigEnv) => NodeJS.ProcessEnv;
+} {
+  // Deferred so the registry resolvers load only for the commands that spawn
+  // npm, not with every package-manager.ts import.
   const {
     getNpmSpawnRegistryEnv,
     getPackageScope,
@@ -713,22 +720,42 @@ export function getWorkspaceRegistryUrlForDisplay(pkg: string): string | null {
     workspacePm,
     configRoot
   );
-  const env = mergeNpmConfigEnv(
-    process.env,
-    {
-      ...getNpmSpawnRegistryEnv(
-        pkg,
-        configRoot,
-        workspacePm,
-        workspacePmVersion
+  return {
+    workspacePm,
+    configRoot,
+    scope: getPackageScope(pkg),
+    buildEnv: (extra) =>
+      mergeNpmConfigEnv(
+        process.env,
+        {
+          ...getNpmSpawnRegistryEnv(
+            pkg,
+            configRoot,
+            workspacePm,
+            workspacePmVersion
+          ),
+          ...extra,
+        },
+        ignoresNpmConfigEnv(workspacePm, workspacePmVersion)
       ),
-      // Same downgrade packageRegistryView needs: a `devEngines.packageManager`
-      // pin with `onFail: error` aborts even this read-only lookup otherwise.
-      npm_config_force: 'true',
-    },
-    ignoresNpmConfigEnv(workspacePm, workspacePmVersion)
-  );
-  const scope = getPackageScope(pkg);
+  };
+}
+
+/**
+ * The registry the fetch for `pkg` went to, with its userinfo masked because a
+ * registry URL can carry a bare token. npm is asked under the overlay
+ * `packageRegistryView` runs with, so a registry the package manager keeps
+ * outside the .npmrc chain and a scope npm resolves for itself both land on the
+ * value that fetch used. Null where npm declares no registry; throws where it
+ * cannot be run.
+ */
+export function getWorkspaceRegistryUrlForDisplay(pkg: string): string | null {
+  const { configRoot, scope, buildEnv } = createRegistrySpawnContext(pkg);
+  const env = buildEnv({
+    // Same downgrade packageRegistryView needs: a `devEngines.packageManager`
+    // pin with `onFail: error` aborts even this read-only lookup otherwise.
+    npm_config_force: 'true',
+  });
   // npm's own pickRegistry order: the scope decides where it can, the default
   // answers the rest. It prints `undefined` for a setting nothing declares.
   for (const key of scope ? [`${scope}:registry`, 'registry'] : ['registry']) {
@@ -758,7 +785,7 @@ export async function packageRegistryView(
   // collapses to the single highest match (breaks per-version field queries).
   options?: { forceNpm?: boolean }
 ): Promise<string> {
-  const workspacePm = detectPackageManager();
+  const { workspacePm, configRoot, buildEnv } = createRegistrySpawnContext(pkg);
   let pm = workspacePm;
   if (options?.forceNpm || pm === 'yarn' || pm === 'bun') {
     /**
@@ -774,18 +801,8 @@ export async function packageRegistryView(
     pm = 'npm';
   }
 
-  // Deferred so the registry resolvers load only for the commands that spawn a
-  // view/pack, not with every package-manager.ts import.
-  const { getNpmSpawnRegistryEnv, ignoresNpmConfigEnv, mergeNpmConfigEnv } =
-    require('./registry-config') as typeof import('./registry-config');
-
   // An empty version means we want the full packument; omit the trailing `@`.
   const spec = version ? `${pkg}@${version}` : pkg;
-  const configRoot = getPackageManagerConfigRoot();
-  const workspacePmVersion = getPackageManagerVersionSafe(
-    workspacePm,
-    configRoot
-  );
   // npm_config_force downgrades npm's `devEngines.packageManager` enforcement,
   // which otherwise aborts even a read-only `view` when the pin sets
   // `onFail: error`. Only set for npm so a `pnpm view` is untouched.
@@ -796,19 +813,7 @@ export async function packageRegistryView(
       {
         windowsHide: true,
         cwd: configRoot,
-        env: mergeNpmConfigEnv(
-          process.env,
-          {
-            ...getNpmSpawnRegistryEnv(
-              pkg,
-              configRoot,
-              workspacePm,
-              workspacePmVersion
-            ),
-            ...(pm === 'npm' ? { npm_config_force: 'true' } : {}),
-          },
-          ignoresNpmConfigEnv(workspacePm, workspacePmVersion)
-        ),
+        env: buildEnv(pm === 'npm' ? { npm_config_force: 'true' } : {}),
       }
     );
     return stdout.toString().trim();
@@ -841,14 +846,7 @@ export async function packageRegistryPack(
 ): Promise<{ tarballPath: string }> {
   const pm = 'npm';
 
-  const { getNpmSpawnRegistryEnv, ignoresNpmConfigEnv, mergeNpmConfigEnv } =
-    require('./registry-config') as typeof import('./registry-config');
-  const workspacePm = detectPackageManager();
-  const configRoot = getPackageManagerConfigRoot();
-  const workspacePmVersion = getPackageManagerVersionSafe(
-    workspacePm,
-    configRoot
-  );
+  const { configRoot, buildEnv } = createRegistrySpawnContext(pkg);
   // Run from the config root, not the temp dir, so npm reads the workspace
   // .npmrc natively; --pack-destination still writes the tarball to the temp
   // dir. npm prints the tarball basename to stdout.
@@ -859,24 +857,14 @@ export async function packageRegistryPack(
       {
         cwd: configRoot,
         windowsHide: true,
-        env: mergeNpmConfigEnv(
-          process.env,
-          {
-            ...getNpmSpawnRegistryEnv(
-              pkg,
-              configRoot,
-              workspacePm,
-              workspacePmVersion
-            ),
-            // downgrade npm's devEngines.packageManager enforcement (onFail:
-            // error) to a warning so pack still runs in a non-npm workspace
-            npm_config_force: 'true',
-            ...(options?.bypassMinReleaseAge
-              ? { npm_config_min_release_age: '0' }
-              : {}),
-          },
-          ignoresNpmConfigEnv(workspacePm, workspacePmVersion)
-        ),
+        env: buildEnv({
+          // downgrade npm's devEngines.packageManager enforcement (onFail:
+          // error) to a warning so pack still runs in a non-npm workspace
+          npm_config_force: 'true',
+          ...(options?.bypassMinReleaseAge
+            ? { npm_config_min_release_age: '0' }
+            : {}),
+        }),
       }
     );
     const tarballPath = stdout.trim();

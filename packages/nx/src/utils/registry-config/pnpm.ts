@@ -1242,6 +1242,38 @@ function expandPnpmNpmrcKeys(raw: Map<string, string>): Map<string, string> {
 }
 
 /**
+ * A registry the yaml or the environment already forced in outranks these files
+ * in pnpm, so it keeps winning here.
+ */
+function applyPnpmFileRegistry(
+  env: NpmConfigEnv,
+  scope: string | null,
+  bridged: (key: string) => string | undefined
+): void {
+  const registry = bridged('registry');
+  if (!env['npm_config_registry'] && registry) {
+    setRegistry(env, registry);
+  }
+  const scopedRegistry = scope ? bridged(`${scope}:registry`) : undefined;
+  if (scope && !env[`npm_config_${scope}:registry`] && scopedRegistry) {
+    setScopedRegistry(env, scope, scopedRegistry);
+  }
+}
+
+/**
+ * `raw` is the value as written, before any `${VAR}` expansion: strict-ssl is
+ * typed Boolean-only, so parseField turns just 'true'/'false' (plus '' -> true
+ * and the null/undefined literals) into non-strings and leaves everything else
+ * a truthy string. '0', 'no' and 'off' all keep TLS verification on in pnpm;
+ * only an explicit 'false' turns it off.
+ */
+function applyPnpmStrictSsl(env: NpmConfigEnv, raw: string | undefined): void {
+  if (raw !== undefined) {
+    setStrictSsl(env, raw !== 'false');
+  }
+}
+
+/**
  * The workspace .npmrc pnpm below 11 layers under the project one. npm has no
  * tier for it at all, so a setting the project file leaves undeclared has to
  * reach npm through the environment; one the project file declares npm resolves
@@ -1303,16 +1335,7 @@ function bridgeWorkspaceNpmrc(
   const bridged = (key: string): string | undefined =>
     bridgePnpmEnvVars(declared(key) ?? '') || undefined;
 
-  // A registry the yaml already forced in outranks these files in pnpm, so it
-  // keeps winning here.
-  const registry = bridged('registry');
-  if (!env['npm_config_registry'] && registry) {
-    setRegistry(env, registry);
-  }
-  const scopedRegistry = scope ? bridged(`${scope}:registry`) : undefined;
-  if (scope && !env[`npm_config_${scope}:registry`] && scopedRegistry) {
-    setScopedRegistry(env, scope, scopedRegistry);
-  }
+  applyPnpmFileRegistry(env, scope, bridged);
   // Every dart is copied, not just the contacted registry's: npm resolves auth
   // per fetched URI and sends only the matching key, so a tarball served from a
   // second authenticated host keeps working. Filtering here would strip it.
@@ -1357,14 +1380,7 @@ function bridgeWorkspaceNpmrc(
       env[`npm_config_${key}`] = value;
     }
   }
-  const rawStrictSsl = declared('strict-ssl');
-  if (rawStrictSsl !== undefined) {
-    // strict-ssl is typed Boolean-only, so parseField turns just 'true'/'false'
-    // (plus '' -> true and the null/undefined literals) into non-strings and
-    // leaves everything else a truthy string: '0', 'no' and 'off' all keep TLS
-    // verification on in pnpm. Only an explicit 'false' turns it off.
-    setStrictSsl(env, rawStrictSsl !== 'false');
-  }
+  applyPnpmStrictSsl(env, declared('strict-ssl'));
   setProxies(env, {
     // The spelling npm reads natively, which it can still only read from its own
     // project config. pnpm prefers `no-proxy` across every layer over `noproxy`
@@ -1455,16 +1471,7 @@ function bridgeNpmrcSources(
   const bridgedValue = (key: string): string | undefined =>
     bridging(key)?.map.get(key) || undefined;
 
-  // A registry already injected from the yaml or env outranks these files in
-  // pnpm, so it keeps winning here.
-  const registry = bridgedValue('registry');
-  if (!env['npm_config_registry'] && registry) {
-    setRegistry(env, registry);
-  }
-  const scopedRegistry = scope ? bridgedValue(`${scope}:registry`) : undefined;
-  if (scope && !env[`npm_config_${scope}:registry`] && scopedRegistry) {
-    setScopedRegistry(env, scope, scopedRegistry);
-  }
+  applyPnpmFileRegistry(env, scope, bridgedValue);
   // Every dart is copied, not just the contacted registry's: npm resolves auth
   // per fetched URI and sends only the matching key, so a tarball served from a
   // second authenticated host keeps working. Filtering here would strip it.
@@ -1602,14 +1609,7 @@ function bridgeNpmrcSources(
       }
     }
   }
-  const strictSslSource = bridging('strict-ssl');
-  if (strictSslSource) {
-    // strict-ssl is typed Boolean-only, so parseField turns just 'true'/'false'
-    // (plus '' -> true and the null/undefined literals) into non-strings and
-    // leaves everything else a truthy string: '0', 'no' and 'off' all keep TLS
-    // verification on in pnpm. Only an explicit 'false' turns it off.
-    setStrictSsl(env, strictSslSource.rawStrictSsl === 'false' ? false : true);
-  }
+  applyPnpmStrictSsl(env, bridging('strict-ssl')?.rawStrictSsl);
   return {
     proxy: declaredValue('proxy'),
     httpProxy: declaredValue('http-proxy'),

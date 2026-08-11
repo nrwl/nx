@@ -1978,8 +1978,8 @@ async function getPackageMigrationsConfigFromRegistry(
     const registry = new URL('dist' in json ? json.dist.tarball : json.tarball)
       .hostname;
 
-    // Registries other than npmjs and the local registry may not support full metadata via npm view
-    // so throw error so that fetcher falls back to getting config via install.
+    // Other registries may not support full metadata via npm view; throw to
+    // trigger the install fallback.
     if (
       !FULL_METADATA_REGISTRIES.includes(registry) &&
       !FULL_METADATA_REGISTRY_MARKERS.some((v) => registry.includes(v))
