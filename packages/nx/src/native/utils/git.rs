@@ -104,30 +104,37 @@ fn resolve_git_dir(git_root: &Path) -> Option<PathBuf> {
 /// inside a linked worktree lands on `<main>/.git/worktrees/<name>`, whose
 /// `commondir` points back at the main `.git`.
 ///
-/// Only a linked worktree's metadata directory carries `commondir`. Anywhere
-/// else (the main repository's own `.git`, a submodule's `.git/modules/<..>`)
-/// its absence is git's way of saying this *is* the common directory, which
-/// is what the fallback returns. Call this only for a git dir already known
-/// to belong to a worktree ([`is_linked_worktree_root`]), or that fallback
-/// answers a different question than the caller asked.
-pub fn common_git_dir(git_dir: &Path) -> PathBuf {
-    read_path_file(&git_dir.join("commondir"), git_dir).unwrap_or_else(|| git_dir.to_path_buf())
+/// `None` means `git_dir` carries no `commondir`. For the main repository's
+/// own `.git` or a submodule's `.git/modules/<..>` that is git's way of
+/// saying this *is* the common directory; for a worktree it means git has
+/// not finished registering it yet. Only the caller can tell those apart, so
+/// neither is answered here.
+pub fn common_git_dir(git_dir: &Path) -> Option<PathBuf> {
+    read_path_file(&git_dir.join("commondir"), git_dir)
 }
 
 /// Whether `path` is the root of a git linked worktree.
 ///
 /// A worktree and a submodule both replace `.git` with a gitfile, so the
-/// gitfile alone can't separate them - what does is that git writes
-/// `commondir` into a worktree's metadata directory and never into a
-/// submodule's. The path a gitfile points *at* is not a reliable
-/// discriminator: a submodule at `packages/worktrees/foo` is registered under
-/// `.git/modules/packages/worktrees/foo`, whose parent segment is
-/// `worktrees` too.
+/// gitfile alone can't separate them - what does is the `gitdir` file git
+/// writes into a worktree's metadata directory, pointing back at the
+/// checkout. A submodule's `.git/modules/<..>` holds no such file; it records
+/// its checkout in `config` as `core.worktree`. The path a gitfile points
+/// *at* is not a reliable discriminator either: a submodule at
+/// `packages/worktrees/foo` is registered under
+/// `.git/modules/packages/worktrees/foo`, whose parent segment is `worktrees`
+/// too.
+///
+/// `commondir` would separate the two just as well, but it cannot be used
+/// here: `git worktree add` writes it *after* the checkout's gitfile, and the
+/// watcher asks this question the moment that gitfile appears. `gitdir` is
+/// written before it, so a worktree is recognized from the first event it
+/// produces rather than a few microseconds later.
 ///
 /// A dangling worktree - one whose main clone has been moved or deleted,
 /// which the absolute path in the gitfile does nothing to survive - answers
 /// `false`, because the metadata directory it names isn't there to hold a
-/// `commondir`.
+/// `gitdir`.
 ///
 /// Costs one read plus one stat, so it suits deciding about a single
 /// directory (a watch event) rather than scanning a whole workspace; use
@@ -138,7 +145,7 @@ pub fn is_linked_worktree_root<P: AsRef<Path>>(path: P) -> bool {
         return false;
     };
 
-    git_dir.join("commondir").is_file()
+    git_dir.join("gitdir").is_file()
 }
 
 /// Roots of git's linked worktrees (`git worktree add`) that live inside
@@ -163,7 +170,11 @@ pub fn nested_linked_worktrees<P: AsRef<Path>>(workspace_root: P) -> Vec<PathBuf
         return Vec::new();
     };
 
-    let Ok(entries) = common_git_dir(&git_dir).join("worktrees").read_dir() else {
+    // No `commondir` means `git_dir` is already the common directory - the
+    // ordinary case of running from the main repository rather than a
+    // worktree of it.
+    let common_dir = common_git_dir(&git_dir).unwrap_or(git_dir);
+    let Ok(entries) = common_dir.join("worktrees").read_dir() else {
         return Vec::new();
     };
 
@@ -207,12 +218,25 @@ pub fn nested_linked_worktrees<P: AsRef<Path>>(workspace_root: P) -> Vec<PathBuf
 #[cfg(test)]
 pub(crate) mod test_support {
     use std::fs::{create_dir_all, write};
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
 
     /// Registers `worktree_root` as a linked worktree of `repo`, byte-for-byte
     /// the way `git worktree add` does: an absolute path in each of the two
     /// gitfiles, and a relative `commondir` pointing back at the main `.git`.
     pub fn register_worktree(repo: &Path, name: &str, worktree_root: &Path) {
+        let metadata_dir = register_worktree_mid_write(repo, name, worktree_root);
+        // `commondir` is how a worktree finds the repository it belongs to.
+        write(metadata_dir.join("commondir"), "../..\n").unwrap();
+    }
+
+    /// The state `git worktree add` leaves behind between writing the
+    /// checkout's gitfile and writing `commondir`, returning the metadata
+    /// directory. The watcher sees a worktree in exactly this state: it acts
+    /// on the gitfile's creation event, and git writes `commondir` after it.
+    ///
+    /// Ordering verified against git 2.44 by mtime - `gitdir`, then the
+    /// checkout's `.git`, then `commondir`.
+    pub fn register_worktree_mid_write(repo: &Path, name: &str, worktree_root: &Path) -> PathBuf {
         let metadata_dir = repo.join(".git").join("worktrees").join(name);
         create_dir_all(&metadata_dir).unwrap();
         create_dir_all(worktree_root).unwrap();
@@ -226,9 +250,7 @@ pub(crate) mod test_support {
             format!("gitdir: {}\n", metadata_dir.display()),
         )
         .unwrap();
-        // `commondir` is how a worktree finds the repository it belongs to,
-        // and the marker that separates it from a submodule.
-        write(metadata_dir.join("commondir"), "../..\n").unwrap();
+        metadata_dir
     }
 
     /// Registers `submodule_path` (relative to `repo`) as a submodule, the way
@@ -255,8 +277,26 @@ mod test {
 
     use assert_fs::TempDir;
 
-    use super::test_support::{register_submodule, register_worktree};
+    use super::test_support::{register_submodule, register_worktree, register_worktree_mid_write};
     use super::*;
+
+    #[test]
+    fn a_worktree_is_a_worktree_before_git_writes_commondir() {
+        // Regression: the discriminator used to be `commondir`, which
+        // `git worktree add` writes *after* the checkout's gitfile. The
+        // watcher acts on that gitfile's creation event, so it asked while
+        // `commondir` was still missing and let the whole new checkout
+        // through - the exact workflow the prune exists for. Timing decided
+        // it, so CI failed on Linux (fast inotify) and passed on macOS.
+        let temp = TempDir::new().unwrap();
+        create_dir_all(temp.path().join(".git")).unwrap();
+
+        let worktree = temp.path().join("wt");
+        let metadata_dir = register_worktree_mid_write(temp.path(), "wt", &worktree);
+        assert!(!metadata_dir.join("commondir").exists());
+
+        assert!(is_linked_worktree_root(&worktree));
+    }
 
     #[test]
     fn identifies_linked_worktree_roots() {

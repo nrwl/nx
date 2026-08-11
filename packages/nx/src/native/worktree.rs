@@ -31,9 +31,13 @@ fn resolve_main_worktree_root(workspace_root: &str) -> Option<String> {
     }
 
     // The gitfile points at `<main>/.git/worktrees/<name>`, whose `commondir`
-    // points back at `<main>/.git`.
+    // points back at `<main>/.git`. Without it there is no answer to give:
+    // treating `<main>/.git/worktrees/<name>` as the common dir would name
+    // `<main>/.git/worktrees` as the repo root and site the cache and the
+    // workspace-data database under it - a path git reads as a worktree
+    // registration and `git worktree prune`, and so `git gc`, deletes.
     let git_dir = read_gitfile(&root.join(".git"), root)?;
-    let common_dir = common_git_dir(&git_dir);
+    let common_dir = common_git_dir(&git_dir)?;
 
     // Resolve symlinks and ".." segments so the path is clean and
     // comparable across worktrees (e.g., in reset's equality check).
@@ -53,7 +57,9 @@ mod test {
     use assert_fs::TempDir;
 
     use crate::native::utils::command::create_command;
-    use crate::native::utils::git::test_support::{register_submodule, register_worktree};
+    use crate::native::utils::git::test_support::{
+        register_submodule, register_worktree, register_worktree_mid_write,
+    };
 
     use super::*;
 
@@ -161,6 +167,22 @@ mod test {
         register_worktree(&repo, "wt", &worktree);
 
         remove_dir_all(repo.join(".git")).unwrap();
+
+        assert_eq!(resolve_main_worktree_root(worktree.to_str().unwrap()), None);
+    }
+
+    #[test]
+    fn a_half_registered_worktree_has_no_main_root() {
+        // `is_linked_worktree_root` answers yes from `gitdir` alone, so this
+        // is reachable in the window before `git worktree add` writes
+        // `commondir`. Guessing the root from the metadata directory would
+        // name `<main>/.git/worktrees` and put the cache where `git gc`
+        // deletes it, so the answer has to be "don't know" instead.
+        let temp = TempDir::new().unwrap();
+        let repo = temp.path().join("repo");
+        create_dir_all(repo.join(".git")).unwrap();
+        let worktree = repo.join("wt");
+        register_worktree_mid_write(&repo, "wt", &worktree);
 
         assert_eq!(resolve_main_worktree_root(worktree.to_str().unwrap()), None);
     }
