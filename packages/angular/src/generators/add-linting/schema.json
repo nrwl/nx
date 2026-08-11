@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/schema",
   "$id": "NxAngularAddLintingGenerator",
   "title": "Add linting to an Angular project.",
-  "description": "Adds linting configuration to an Angular project.",
+  "description": "Adds linting configuration to an Angular project, using the linter the workspace already uses. Adds nothing when the workspace has no linter and none is selected.",
   "cli": "nx",
   "type": "object",
   "examples": [
