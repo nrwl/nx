@@ -1136,19 +1136,36 @@ function isFileOwnedByAnyRoot(file: string, roots: Set<string>): boolean {
   return false;
 }
 
+// Minimatch metacharacters plus extglob prefix operators (`!+@()`). A path
+// segment containing any of these has glob semantics and cannot be reduced to a
+// literal project root.
+const GLOB_METACHARACTERS = /[*?[\]{}!+@()]/;
+
 /**
  * The set of project roots a generated `include` list scopes to, or `undefined`
  * if any entry is not one of the two shapes this generator emits: `*` (the root
- * project) or a `<root>` followed by a globstar segment (a nested root). A
- * user-authored include or any `exclude` falls back to the glob engine.
+ * project) or a literal root followed by a trailing globstar segment (a nested
+ * root). A user-authored include or any `exclude` falls back to the glob engine.
+ *
+ * The globstar branch only qualifies when the root prefix is a LITERAL path.
+ * A prefix carrying glob metacharacters (a wildcard, brace, or extglob segment
+ * before the trailing globstar) is not a shape this generator emits and can't be
+ * reduced to root ownership by string equality, so it falls back to the glob
+ * engine.
  */
-function generatedIncludeRoots(include: string[]): Set<string> | undefined {
+export function generatedIncludeRoots(
+  include: string[]
+): Set<string> | undefined {
   const roots = new Set<string>();
   for (const glob of include) {
     if (glob === '*') {
       roots.add('.');
     } else if (glob.endsWith('/**/*') && glob.length > '/**/*'.length) {
-      roots.add(glob.slice(0, -'/**/*'.length));
+      const root = glob.slice(0, -'/**/*'.length);
+      if (GLOB_METACHARACTERS.test(root)) {
+        return undefined;
+      }
+      roots.add(root);
     } else {
       return undefined;
     }

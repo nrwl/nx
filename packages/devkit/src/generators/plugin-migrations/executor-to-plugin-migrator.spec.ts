@@ -10,6 +10,7 @@ import {
   collectMigrationScope,
   computeResidualByProject,
   computeStrictCommon,
+  generatedIncludeRoots,
   inferOncePerOptionSet,
   migrateProjectExecutorsToPlugin,
   readTargetDefaultsForExecutor,
@@ -582,6 +583,42 @@ describe('computeStrictCommon', () => {
       { cache: true },
     ]);
     expect(common).toEqual({ cache: true });
+  });
+});
+
+describe('generatedIncludeRoots', () => {
+  it('maps the two generated shapes to literal roots', () => {
+    expect(generatedIncludeRoots(['*'])).toEqual(new Set(['.']));
+    expect(generatedIncludeRoots(['apps/demo/**/*'])).toEqual(
+      new Set(['apps/demo'])
+    );
+    expect(generatedIncludeRoots(['*', 'apps/demo/**/*'])).toEqual(
+      new Set(['.', 'apps/demo'])
+    );
+  });
+
+  it('falls back (undefined) when a globstar prefix carries glob metacharacters', () => {
+    // These end in `/**/*` but the prefix is not a literal root, so they cannot
+    // be reduced to root ownership by string equality — the glob engine must
+    // handle them. Previously they were wrongly treated as literal roots.
+    for (const include of [
+      'apps/*/**/*',
+      'apps/{a,b}/**/*',
+      'apps/(a|b)/**/*',
+      'apps/@(a|b)/**/*',
+      'apps/!(x)/**/*',
+      'apps/[ab]/**/*',
+      'apps/?/**/*',
+      '*/**/*',
+    ]) {
+      expect(generatedIncludeRoots([include])).toBeUndefined();
+    }
+  });
+
+  it('falls back (undefined) for any non-generated shape', () => {
+    expect(generatedIncludeRoots(['apps/demo'])).toBeUndefined();
+    expect(generatedIncludeRoots(['apps/**'])).toBeUndefined();
+    expect(generatedIncludeRoots(['**/*'])).toBeUndefined();
   });
 });
 
