@@ -209,12 +209,12 @@ function readMigrationsSource(
   if (runId) {
     const dir = runDir(root, runId);
     // A missing run.json would surface a raw ENOENT from readRunState's
-    // readFileSync; report it the way the orchestrator does instead.
+    // readFileSync; report it the way the orchestrator does instead, down to
+    // carrying no remediation: starting a run is a separate, gated entry point,
+    // and `--run-migrations` would run the whole plan in process instead.
     if (!hasRunState(dir)) {
       throw new Error(
-        `No migrate run '${runId}' was found under ${MIGRATE_RUNS_RELATIVE_DIR}. Start one with \`${pmExecPrefix(
-          root
-        )} nx migrate --run-migrations\` before recording into it.`
+        `No migrate run '${runId}' was found under ${MIGRATE_RUNS_RELATIVE_DIR}.`
       );
     }
     // Version refusal (NewerRunStateFormatError) propagates.
