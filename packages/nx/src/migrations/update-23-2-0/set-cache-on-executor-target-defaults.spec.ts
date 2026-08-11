@@ -303,14 +303,13 @@ describe('set-cache-on-executor-target-defaults migration', () => {
     });
   });
 
-  it('should still enable cache when the sibling package.json targets also opt in', async () => {
+  it('should enable cache on a key reached only through a sibling package.json', async () => {
+    // The project.json contributes no targets, so the key is reachable only if
+    // the sibling package.json is read — without it nothing is collected and
+    // nothing is stamped.
     setup(
-      {
-        build: { cache: true },
-        package: { cache: true },
-        '@nx/js:tsc': { inputs: ['default'] },
-      },
-      { build: { executor: '@nx/js:tsc' } }
+      { package: { cache: true }, '@nx/js:tsc': { inputs: ['default'] } },
+      {}
     );
     tree.write(
       'apps/app/package.json',
@@ -326,6 +325,67 @@ describe('set-cache-on-executor-target-defaults migration', () => {
       inputs: ['default'],
       cache: true,
     });
+  });
+
+  it('should not crash when a project package.json is the literal null', async () => {
+    setup(
+      { build: { cache: true }, '@nx/js:tsc': { inputs: ['default'] } },
+      { build: { executor: '@nx/js:tsc' } }
+    );
+    tree.write('apps/app/package.json', 'null');
+
+    await expect(migration(tree)).resolves.not.toThrow();
+
+    expect(readNxJson(tree).targetDefaults['@nx/js:tsc']).toEqual({
+      inputs: ['default'],
+      cache: true,
+    });
+  });
+
+  it('should not crash when a package.json target entry is null', async () => {
+    setup(
+      { build: { cache: true }, '@nx/js:tsc': { inputs: ['default'] } },
+      { build: { executor: '@nx/js:tsc' } }
+    );
+    tree.write(
+      'apps/app/package.json',
+      JSON.stringify({ name: 'app', nx: { targets: { api: null } } })
+    );
+
+    await expect(migration(tree)).resolves.not.toThrow();
+
+    expect(readNxJson(tree).targetDefaults['@nx/js:tsc']).toEqual({
+      inputs: ['default'],
+      cache: true,
+    });
+  });
+
+  it('should not crash when nx.targets is not an object', async () => {
+    setup(
+      { build: { cache: true }, '@nx/js:tsc': { inputs: ['default'] } },
+      { build: { executor: '@nx/js:tsc' } }
+    );
+    tree.write(
+      'apps/app/package.json',
+      JSON.stringify({ name: 'app', nx: { targets: [1, 2] } })
+    );
+
+    await expect(migration(tree)).resolves.not.toThrow();
+  });
+
+  it('should not write through the prototype chain for a __proto__ executor', async () => {
+    // `"executor": "__proto__"` resolves through the prototype chain on a plain
+    // lookup, so an unguarded `targetDefaults[executor]` collects the target and
+    // the stamp lands on Object.prototype for the rest of the nx migrate run.
+    setup(
+      { build: { cache: true }, '@nx/js:tsc': { inputs: ['default'] } },
+      { build: { executor: '__proto__' } }
+    );
+
+    await migration(tree);
+
+    expect(({} as any).cache).toBeUndefined();
+    expect(Object.keys({} as any)).toEqual([]);
   });
 
   it('should never enable cache on the nx:run-script key', async () => {
@@ -387,6 +447,70 @@ describe('set-cache-on-executor-target-defaults migration', () => {
     getExecutorInformation.mockRestore();
   });
 
+  it('should enable cache on a key whose executor schema resolves as not continuous', async () => {
+    // The paired test above stubs a continuous schema; without this one the
+    // resolved-and-not-continuous return is never observed, because every other
+    // fixture reaches its verdict through the catch.
+    const getExecutorInformation = jest
+      .spyOn(executorUtils, 'getExecutorInformation')
+      .mockReturnValue({ schema: { continuous: false } } as any);
+
+    setup(
+      { build: { cache: true }, '@nx/js:tsc': { inputs: ['default'] } },
+      { build: { executor: '@nx/js:tsc' } }
+    );
+
+    await migration(tree);
+
+    expect(getExecutorInformation).toHaveBeenCalled();
+    expect(readNxJson(tree).targetDefaults['@nx/js:tsc']).toEqual({
+      inputs: ['default'],
+      cache: true,
+    });
+
+    getExecutorInformation.mockRestore();
+  });
+
+  it.each(['serve', 'dev', 'start', 'build-watch', 'test:watch'])(
+    'should not enable cache for %s, which the pre-23 guard excluded by name',
+    async (targetName) => {
+      setup(
+        {
+          [targetName]: { cache: true },
+          '@nx/js:tsc': { inputs: ['default'] },
+        },
+        { [targetName]: { executor: '@nx/js:tsc' } }
+      );
+
+      await migration(tree);
+
+      expect(readNxJson(tree).targetDefaults['@nx/js:tsc']).toEqual({
+        inputs: ['default'],
+      });
+    }
+  );
+
+  it('should stop at a filtered entry rather than read past it to a later one', async () => {
+    // Reading past the filter would find the unfiltered `cache: true` and stamp
+    // the key, widening to every project the executor key covers.
+    setup(
+      {
+        build: [
+          { filter: { projects: ['legacy-app'] }, cache: false },
+          { cache: true },
+        ],
+        '@nx/js:tsc': { inputs: ['default'] },
+      },
+      { build: { executor: '@nx/js:tsc' } }
+    );
+
+    await migration(tree);
+
+    expect(readNxJson(tree).targetDefaults['@nx/js:tsc']).toEqual({
+      inputs: ['default'],
+    });
+  });
+
   it('should not enable cache on a key shared with a target that does not want it', async () => {
     setup(
       {
@@ -405,6 +529,26 @@ describe('set-cache-on-executor-target-defaults migration', () => {
 
     expect(readNxJson(tree).targetDefaults['@nx/js:tsc']).toEqual({
       inputs: ['production'],
+    });
+  });
+
+  it('should still enable cache on a key that declares continuous false', async () => {
+    // Only `continuous: true` makes the key unsafe; declaring it false says the
+    // targets through it are not continuous, which is the case being stamped.
+    setup(
+      {
+        build: { cache: true },
+        '@nx/js:tsc': { inputs: ['default'], continuous: false },
+      },
+      { build: { executor: '@nx/js:tsc' } }
+    );
+
+    await migration(tree);
+
+    expect(readNxJson(tree).targetDefaults['@nx/js:tsc']).toEqual({
+      inputs: ['default'],
+      continuous: false,
+      cache: true,
     });
   });
 

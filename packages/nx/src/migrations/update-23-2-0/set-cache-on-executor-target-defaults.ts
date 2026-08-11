@@ -52,7 +52,13 @@ export default async function update(tree: Tree) {
     Array<[string, TargetConfiguration]>
   >();
   const collect = (targetName: string, target: TargetConfiguration) => {
-    if (!target.executor || !targetDefaults[target.executor]) {
+    // `hasOwnProperty` rather than a lookup: an executor named `__proto__` or
+    // `constructor` resolves through the prototype chain to a truthy object, so
+    // a plain lookup would collect the target and stamp `Object.prototype`.
+    if (
+      !target?.executor ||
+      !Object.prototype.hasOwnProperty.call(targetDefaults, target.executor)
+    ) {
       return;
     }
     const targets = targetsByExecutorKey.get(target.executor) ?? [];
@@ -138,9 +144,8 @@ function canEnableCache(
 
   // Continuity declared by the executor's schema is resolved at graph
   // construction for every target through this key, so one lookup covers them
-  // all. An executor that can't be resolved here can't be resolved there
-  // either, so the runtime won't mark those targets continuous and no
-  // conflicting `nx.json` can result.
+  // all. For what an executor that cannot be resolved here costs, see
+  // {@link executorDeclaresContinuous}.
   if (executorDeclaresContinuous(key, workspaceRoot, projectsMap)) {
     return false;
   }
@@ -225,7 +230,14 @@ function packageJsonTargets(
   if (!tree.exists(packageJsonPath)) {
     return {};
   }
-  return readJson<PackageJson>(tree, packageJsonPath).nx?.targets ?? {};
+  // A parse failure is left to throw: `readJson` names the offending file,
+  // which is the one thing a user can act on. Shapes that parse but aren't the
+  // one this reads contribute no targets rather than crashing the run.
+  const targets = readJson<PackageJson>(tree, packageJsonPath)?.nx?.targets;
+  if (!targets || typeof targets !== 'object' || Array.isArray(targets)) {
+    return {};
+  }
+  return targets;
 }
 
 /**
