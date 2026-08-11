@@ -202,7 +202,7 @@ function PluginCard({ plugin }: { plugin: Plugin }) {
       <div className="flex h-full flex-col">
         <div className="mb-3 flex items-center gap-3">
           <GitHubIcon className="h-6 w-6 flex-shrink-0 text-gray-600 dark:text-slate-400" />
-          <h3 className="text-base font-medium leading-tight text-gray-900 dark:text-slate-100">
+          <h3 className="text-base leading-tight font-medium text-gray-900 dark:text-slate-100">
             {plugin.name}
           </h3>
         </div>
@@ -228,15 +228,15 @@ function PluginCard({ plugin }: { plugin: Plugin }) {
           </div>
           <div className="my-1 ml-1 flex flex-1 justify-end text-nowrap">
             {plugin.pluginType === 'official' ? (
-              <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20 dark:bg-green-500/10 dark:text-green-400 dark:ring-green-500/20">
+              <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-green-600/20 ring-inset dark:bg-green-500/10 dark:text-green-400 dark:ring-green-500/20">
                 Nx Open Source
               </span>
             ) : plugin.nxVersion ? (
-              <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-500/20">
+              <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700 ring-1 ring-amber-600/20 ring-inset dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-500/20">
                 Nx {plugin.nxVersion}
               </span>
             ) : (
-              <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20 dark:bg-blue-500/10 dark:text-blue-400 dark:ring-blue-500/20">
+              <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-600/20 ring-inset dark:bg-blue-500/10 dark:text-blue-400 dark:ring-blue-500/20">
                 Community
               </span>
             )}
@@ -404,7 +404,7 @@ export function PluginDirectory({
           <input
             id="plugin-search"
             name="search"
-            className="block w-full rounded-md border border-slate-300 bg-white py-1.5 pl-8 pr-3 text-sm placeholder-slate-500 transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:placeholder-slate-400 dark:focus:border-blue-400 dark:focus:ring-blue-400"
+            className="block w-full rounded-md border border-slate-300 bg-white py-1.5 pr-3 pl-8 text-sm placeholder-slate-500 transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:placeholder-slate-400 dark:focus:border-blue-400 dark:focus:ring-blue-400"
             placeholder="Search..."
             value={modifiers.term}
             onChange={(event) =>

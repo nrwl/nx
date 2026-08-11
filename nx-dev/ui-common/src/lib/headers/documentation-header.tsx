@@ -45,7 +45,7 @@ function Menu({ tabs }: { tabs: any[] }): ReactElement {
               tab.current
                 ? 'border-blue-500 text-blue-600 dark:border-blue-500 dark:text-blue-500'
                 : 'border-transparent hover:text-zinc-900 dark:hover:text-blue-400',
-              'whitespace-nowrap border-b-2 py-2 text-sm font-medium'
+              'border-b-2 py-2 text-sm font-medium whitespace-nowrap'
             )}
             aria-current={tab.current ? 'page' : undefined}
             prefetch={false}
@@ -224,7 +224,7 @@ export function DocumentationHeader({
         <div className="flex w-full items-center lg:hidden">
           <button
             type="button"
-            className="flex px-4 py-4 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+            className="flex px-4 py-4 focus:ring-2 focus:ring-indigo-500 focus:outline-none focus:ring-inset"
             onClick={() => toggleNav(!isNavOpen)}
           >
             <span className="sr-only">Open sidebar</span>
@@ -265,7 +265,7 @@ export function DocumentationHeader({
               )
             }
           >
-            <span className="text-xl font-bold uppercase tracking-wide">
+            <span className="text-xl font-bold tracking-wide uppercase">
               Docs
             </span>
           </Link>
@@ -282,7 +282,7 @@ export function DocumentationHeader({
             <Link
               href="/blog"
               title="Blog"
-              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
+              className="hidden px-3 py-2 leading-tight font-medium hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
             >
               Blog
@@ -294,7 +294,7 @@ export function DocumentationHeader({
                   <PopoverButton
                     className={cx(
                       open ? 'text-blue-500 dark:text-blue-500' : '',
-                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-zinc-200'
+                      'group inline-flex items-center px-3 py-2 leading-tight font-medium outline-0 dark:text-zinc-200'
                     )}
                   >
                     <span className="transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-blue-500">
@@ -331,7 +331,7 @@ export function DocumentationHeader({
             <Link
               href="/ai"
               title="AI"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
+              className="hidden gap-2 px-3 py-2 leading-tight font-medium hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
             >
               AI
@@ -339,7 +339,7 @@ export function DocumentationHeader({
             <Link
               href="/nx-cloud"
               title="Nx Cloud"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
+              className="hidden gap-2 px-3 py-2 leading-tight font-medium hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
             >
               Nx Cloud
@@ -348,7 +348,7 @@ export function DocumentationHeader({
             <Link
               href="/enterprise"
               title="Enterprise"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
+              className="hidden gap-2 px-3 py-2 leading-tight font-medium hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
             >
               Enterprise

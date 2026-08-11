@@ -53,7 +53,7 @@ export function LessonsList({
                 <span className="inline-block min-w-[2rem] flex-shrink-0 text-sm font-medium text-zinc-400 dark:text-zinc-600">
                   {(index + 1).toString().padStart(1, '0')}
                 </span>
-                <span className="text-[15px] font-medium leading-normal">
+                <span className="text-[15px] leading-normal font-medium">
                   {courseLesson.title}
                 </span>
               </Link>

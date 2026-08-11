@@ -16,7 +16,7 @@ export function Testimonials(): JSX.Element {
           , Nx will keep your CI fast and your workspace maintainable.
         </SectionHeading>
       </header>
-      <div className="md:px-62 mx-auto grid max-w-7xl grid-cols-1 items-stretch gap-8 px-4 py-12 md:grid-cols-3 lg:px-8 lg:py-16">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 items-stretch gap-8 px-4 py-12 md:grid-cols-3 md:px-62 lg:px-8 lg:py-16">
         <div className="rounded-xl bg-zinc-50 p-10 dark:bg-zinc-800/60">
           <ChatBubbleLeftEllipsisIcon className="h-8 w-8 text-blue-500 dark:text-blue-500" />
           <p className="mt-4">
