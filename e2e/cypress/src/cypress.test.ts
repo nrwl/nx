@@ -196,8 +196,7 @@ export default defineConfig({
     TEN_MINS_MS
   );
 
-  // TODO(leosvelperez): Re-enable once https://github.com/cypress-io/cypress/issues/34461 is fixed
-  xit(
+  it(
     `should allow CT and e2e in same project for an angular project`,
     async () => {
       let appName = uniq(`angular-cy-app`);
