@@ -680,6 +680,45 @@ describe('set-cache-on-executor-target-defaults migration', () => {
     expect(tree.read('nx.json').toString()).toEqual(afterFirstRun);
   });
 
+  // The array form is the only shape that can actually drift: a bug that
+  // appends a catch-all instead of amending one grows the key on every run.
+  // The object-shaped case above writes to a fixed slot, so it converges even
+  // when the guards are broken and cannot see that class of bug.
+  it('should change nothing on a second run for an array-shaped default', async () => {
+    setup(
+      {
+        build: { cache: true },
+        '@nx/js:tsc': [
+          { filter: { projects: ['other'] }, inputs: ['x'] },
+          { inputs: ['default'] },
+        ],
+      },
+      { build: { executor: '@nx/js:tsc' } }
+    );
+
+    await migration(tree);
+    const afterFirstRun = tree.read('nx.json').toString();
+    await migration(tree);
+
+    expect(tree.read('nx.json').toString()).toEqual(afterFirstRun);
+  });
+
+  it('should keep declining an all-filtered key on a second run', async () => {
+    setup(
+      {
+        build: { cache: true },
+        '@nx/js:tsc': [{ filter: { projects: ['other'] }, inputs: ['x'] }],
+      },
+      { build: { executor: '@nx/js:tsc' } }
+    );
+
+    const before = tree.read('nx.json').toString();
+    await migration(tree);
+    await migration(tree);
+
+    expect(tree.read('nx.json').toString()).toEqual(before);
+  });
+
   it('should update every shadowed executor key in one pass', async () => {
     setup(
       {
