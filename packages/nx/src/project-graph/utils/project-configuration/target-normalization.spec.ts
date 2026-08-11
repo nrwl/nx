@@ -294,9 +294,13 @@ describe('target-name cache fallback', () => {
     );
 
     expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0][0].bodyLines.join('\n')).toContain(
+    const bodyLines = warn.mock.calls[0][0].bodyLines.join('\n');
+    expect(bodyLines).toContain(
       '"@nx/angular:webpack-browser" does not set "cache", so it was read from "build"'
     );
+    // The deadline is load-bearing: the TODO(v24) markers on both halves assume
+    // it, so the user-facing text has to name the same release.
+    expect(bodyLines).toContain('will be removed in Nx 24');
   });
 
   it('should group the warning across projects and targets', () => {

@@ -12,6 +12,7 @@ import {
   parseExecutor,
 } from '../../../command-line/run/executor-utils';
 import { readJsonFile } from '../../../utils/fileutils';
+import { isLongRunningTargetName } from '../../../utils/long-running-target';
 import { output } from '../../../utils/output';
 import { toProjectName } from '../../../config/to-project-name';
 import {
@@ -190,14 +191,7 @@ function isLongRunningTarget(
   targetName: string,
   target: TargetConfiguration
 ): boolean {
-  return (
-    !!target.continuous ||
-    targetName.endsWith(':watch') ||
-    targetName.endsWith('-watch') ||
-    targetName === 'serve' ||
-    targetName === 'dev' ||
-    targetName === 'start'
-  );
+  return !!target.continuous || isLongRunningTargetName(targetName);
 }
 
 /**
@@ -247,7 +241,7 @@ function warnAboutLegacyCachedTargets(
     '',
     'An executor key applies to every target that resolves through it, so exclude any continuous target before setting "cache" on one — a target that is both cacheable and continuous is rejected.',
     'Target defaults resolve to a single key rather than merging, so an executor key hides the target name key entirely.',
-    'Set "cache" on the executor key to keep these targets cacheable — reading it from the target name key is deprecated and will be removed.'
+    'Set "cache" on the executor key to keep these targets cacheable — reading it from the target name key is deprecated and will be removed in Nx 24.'
   );
 
   output.warn({
