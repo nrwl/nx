@@ -904,7 +904,7 @@ function toRelativeWithin(
 function findOxfmtConfigInBatch(
   files: { path: string; content: string }[]
 ): { name: string; content: string } | undefined {
-  for (const name of oxfmtConfigFiles.filter(isJsonOxfmtConfig)) {
+  for (const name of oxfmtConfigFiles) {
     const match = files.find((file) => file.path === name);
     if (match) {
       return { name, content: match.content };
