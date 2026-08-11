@@ -30,12 +30,6 @@ public sealed record TestUnit
     public bool DoNotParallelize { get; init; }
 
     /// <summary>
-    /// Whether the method is data-driven (<c>[DataRow]</c>/<c>[DynamicData]</c>),
-    /// meaning it expands into several test cases at run time.
-    /// </summary>
-    public bool HasDataRows { get; init; }
-
-    /// <summary>
     /// Whether this unit has anything that could actually run.
     /// </summary>
     /// <remarks>
