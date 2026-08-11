@@ -63,7 +63,7 @@ describe('@nx/oxlint plugin', () => {
     const results = await invokeCreateNodesOnMatchingFiles(context);
 
     expect(results.projects['libs/a'].targets.lint).toMatchObject({
-      command: 'oxlint --no-error-on-unmatched-pattern .',
+      command: 'oxlint .',
       options: { cwd: 'libs/a' },
       cache: true,
     });
@@ -203,7 +203,7 @@ describe('@nx/oxlint plugin', () => {
     const results = await invokeCreateNodesOnMatchingFiles(context);
 
     expect(results.projects['.'].targets.lint).toMatchObject({
-      command: 'oxlint --no-error-on-unmatched-pattern ./src',
+      command: 'oxlint ./src',
     });
   });
 

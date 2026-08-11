@@ -631,11 +631,7 @@ function getProjectUsingOxlintConfig(
     isRootProject && standaloneSrcPath ? `./${standaloneSrcPath}` : '.';
 
   const targetConfig: TargetConfiguration = {
-    // `--no-error-on-unmatched-pattern` keeps the task green when nothing is
-    // left to lint. Inference already skips empty projects, but the fallback
-    // enumeration cannot see ignore rules, and files can be deleted after the
-    // graph is built.
-    command: `oxlint --no-error-on-unmatched-pattern ${lintPath}`,
+    command: `oxlint ${lintPath}`,
     options: { cwd: projectRoot },
     cache: true,
     inputs: [
