@@ -17,7 +17,7 @@ import {
  *   1. whole-workspace inference passes stay single-digit (O(distinct option
  *      sets) + 1 verify), NOT O(projects) — the previous engine ran
  *      ~(targets + 2*projects) passes, i.e. thousands here.
- *   2. total emitted config (nx.json + every project.json) does not grow —
+ *   2. total emitted config (nx.json + every project.json) shrinks materially:
  *      shared config is centralized once instead of duplicated per project.
  */
 
@@ -113,7 +113,7 @@ describe('executor-to-plugin-migrator benchmark (synthetic ~600 projects)', () =
     }
   });
 
-  it('runs single-digit inference passes and does not grow emitted config', async () => {
+  it('runs single-digit inference passes and materially shrinks emitted config', async () => {
     ctx = setupFixture('bench');
     const lintPlugin = createSyntheticPlugin(undefined, LINT_PLUGIN_PATH);
     const testPlugin = createSyntheticPlugin(undefined, TEST_PLUGIN_PATH);
@@ -161,11 +161,6 @@ describe('executor-to-plugin-migrator benchmark (synthetic ~600 projects)', () =
     // 2x. A ratio bound pins the de-bloat claim the PR body makes; a plain
     // `<=` would pass even if nothing were centralized.
     const compressionRatio = preBytes / postBytes;
-    console.log(
-      `[bench] config bytes: ${preBytes} -> ${postBytes} (${compressionRatio.toFixed(
-        2
-      )}x smaller)`
-    );
     expect(compressionRatio).toBeGreaterThan(2);
 
     // Shared config is centralized as a plugin-scoped entry; only the
