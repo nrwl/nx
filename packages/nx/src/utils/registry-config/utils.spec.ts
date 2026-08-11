@@ -10,6 +10,11 @@ import {
   pnpmEnvVarsResolve,
   readEnvVar,
   readNpmConfigEnv,
+  requestNerfDart,
+  setAuthIdent,
+  setAuthToken,
+  setClientCertificate,
+  type NpmConfigEnv,
 } from './utils';
 
 describe('getPackageScope', () => {
@@ -33,6 +38,70 @@ describe('nerfDart', () => {
     ['not a url', null],
   ])('%s -> %s', (url, dart) => {
     expect(nerfDart(url)).toEqual(dart);
+  });
+});
+
+describe('requestNerfDart', () => {
+  it.each([
+    ['https://registry.npmjs.org/', '//registry.npmjs.org/'],
+    // The registry's own directory, where the plain dart lands on its parent.
+    ['https://r.example.com/npm/repoA', '//r.example.com/npm/repoA/'],
+    ['https://r.example.com/npm/repoA/', '//r.example.com/npm/repoA/'],
+    // The slash joins the query, so npm's walk never reaches the deeper dart.
+    ['https://r.example.com/npm/repoA?t=1', '//r.example.com/npm/'],
+    ['not a url', null],
+  ])('%s -> %s', (url, dart) => {
+    expect(requestNerfDart(url)).toEqual(dart);
+  });
+});
+
+describe('setAuthToken', () => {
+  it('keys the token on the registry rather than on its parent directory', () => {
+    const env: NpmConfigEnv = {};
+    setAuthToken(env, 'https://r.example.com/npm/repoA', 'token-a');
+
+    expect(env).toEqual({
+      'npm_config_//r.example.com/npm/repoA/:_authToken': 'token-a',
+    });
+  });
+
+  it('keeps two registries under one directory on separate keys', () => {
+    const env: NpmConfigEnv = {};
+    setAuthToken(env, 'https://r.example.com/npm/repoA', 'token-a');
+    setAuthToken(env, 'https://r.example.com/npm/repoB', 'token-b');
+
+    expect(env).toEqual({
+      'npm_config_//r.example.com/npm/repoA/:_authToken': 'token-a',
+      'npm_config_//r.example.com/npm/repoB/:_authToken': 'token-b',
+    });
+  });
+});
+
+describe('setAuthIdent', () => {
+  it('keys the ident on the registry rather than on its parent directory', () => {
+    const env: NpmConfigEnv = {};
+    setAuthIdent(env, 'https://r.example.com/npm/repoA', 'aWRlbnQ=');
+
+    expect(env).toEqual({
+      'npm_config_//r.example.com/npm/repoA/:_auth': 'aWRlbnQ=',
+    });
+  });
+});
+
+describe('setClientCertificate', () => {
+  it('keys both halves on the registry rather than on its parent directory', () => {
+    const env: NpmConfigEnv = {};
+    setClientCertificate(
+      env,
+      'https://r.example.com/npm/repoA',
+      '/certs/c.pem',
+      '/certs/k.pem'
+    );
+
+    expect(env).toEqual({
+      'npm_config_//r.example.com/npm/repoA/:certfile': '/certs/c.pem',
+      'npm_config_//r.example.com/npm/repoA/:keyfile': '/certs/k.pem',
+    });
   });
 });
 

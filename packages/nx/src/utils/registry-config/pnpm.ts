@@ -29,6 +29,7 @@ import {
   readExpandedKey,
   readNpmConfigEnv,
   registryKeysFor,
+  requestNerfDart,
   setCafile,
   setProxies,
   setRegistry,
@@ -125,18 +126,6 @@ function isTrustedWorkspaceNpmrc(
   userConfigPath: string
 ): boolean {
   return resolve(workspaceDir, '.npmrc') === userConfigPath;
-}
-
-/**
- * Where npm and pnpm both begin a lookup for `registry`, and what
- * registryKeysFor climbs from. Both append the trailing slash a registry path is
- * missing before darting (npm darts the request URI; pnpm does it in
- * getAuthHeaderByURI and pickSettingByUrl), so the walk starts at the request's
- * own directory and still reaches a setting pinned to `//h/api/npm/` for a
- * request to `https://h/api/npm`, which the plain dart begins above.
- */
-function requestNerfDart(registry: string): string | null {
-  return nerfDart(registry.endsWith('/') ? registry : `${registry}/`);
 }
 
 interface PnpmWorkspaceSettings {

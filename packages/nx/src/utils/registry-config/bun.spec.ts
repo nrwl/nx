@@ -388,6 +388,47 @@ describe('getBunSpawnRegistryEnv', () => {
     });
   });
 
+  it('keeps sibling registries under one directory on separate auth keys', () => {
+    // Both dart onto `//reg-a.example.com/npm/` without the trailing slash the
+    // path is missing, so the scoped token would land on the default's key and
+    // reach a repository the workspace never pointed at.
+    writeBunfig(
+      [
+        '[install]',
+        'registry = { url = "https://reg-a.example.com/npm/repoA", token = "default-token" }',
+        '[install.scopes]',
+        '"@acme" = { url = "https://reg-a.example.com/npm/repoB", token = "acme-token" }',
+      ].join('\n')
+    );
+    expect(getBunSpawnRegistryEnv('@acme/pkg', root, '1.3.14')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/npm/repoA',
+      'npm_config_@acme:registry': 'https://reg-a.example.com/npm/repoB',
+      'npm_config_//reg-a.example.com/npm/repoA/:_authToken': 'default-token',
+      'npm_config_//reg-a.example.com/npm/repoB/:_authToken': 'acme-token',
+    });
+  });
+
+  it('keeps sibling user/password credentials on separate keys too', () => {
+    writeBunfig(
+      [
+        '[install]',
+        'registry = { url = "https://reg-a.example.com/npm/repoA", username = "alice", password = "s3cret" }',
+        '[install.scopes]',
+        '"@acme" = { url = "https://reg-a.example.com/npm/repoB", username = "bob", password = "hunter2" }',
+      ].join('\n')
+    );
+    expect(getBunSpawnRegistryEnv('@acme/pkg', root, '1.3.14')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/npm/repoA',
+      'npm_config_@acme:registry': 'https://reg-a.example.com/npm/repoB',
+      'npm_config_//reg-a.example.com/npm/repoA/:username': 'alice',
+      'npm_config_//reg-a.example.com/npm/repoA/:_password':
+        Buffer.from('s3cret').toString('base64'),
+      'npm_config_//reg-a.example.com/npm/repoB/:username': 'bob',
+      'npm_config_//reg-a.example.com/npm/repoB/:_password':
+        Buffer.from('hunter2').toString('base64'),
+    });
+  });
+
   it('darts a credentials-only bunfig scope onto an .npmrc-derived default registry', () => {
     // Measured on bun 1.3.13 against a logging registry: the scoped request
     // went to the .npmrc default carrying the bunfig scope token.

@@ -41,6 +41,22 @@ export function nerfDart(registryUrl: string): string | null {
 }
 
 /**
+ * Where npm and pnpm both begin a lookup for `registry`, and what
+ * registryKeysFor climbs from. Both append the trailing slash a registry path is
+ * missing before darting (npm darts the request URI; pnpm does it in
+ * getAuthHeaderByURI and pickSettingByUrl), so the walk starts at the request's
+ * own directory and still reaches a setting pinned to `//h/api/npm/` for a
+ * request to `https://h/api/npm`, which the plain dart begins above.
+ *
+ * A registry URL carrying a query or a fragment lands back on the plain dart:
+ * npm builds its request URI by concatenation, so the package name joins the
+ * query rather than the path, and its walk never reaches the deeper directory.
+ */
+export function requestNerfDart(registry: string): string | null {
+  return nerfDart(registry.endsWith('/') ? registry : `${registry}/`);
+}
+
+/**
  * The setting name npm resolves an environment key to, null for a key npm does
  * not read.
  * See https://github.com/npm/cli/blob/bb056c85059cfb39514614e31abba09f20ac1612/workspaces/config/lib/index.js#L345-L356
@@ -221,12 +237,18 @@ export function setScopedRegistry(
   env[`npm_config_${scope}:registry`] = url;
 }
 
+/**
+ * Keyed on the registry's own directory rather than the parent a path missing
+ * its trailing slash darts to, so two registries under one parent keep separate
+ * keys instead of handing each other's credential out. The same holds for the
+ * two sinks below.
+ */
 export function setAuthToken(
   env: NpmConfigEnv,
   registryUrl: string,
   token: string
 ): void {
-  const dart = nerfDart(registryUrl);
+  const dart = requestNerfDart(registryUrl);
   if (dart) {
     env[`npm_config_${dart}:_authToken`] = token;
   }
@@ -238,7 +260,7 @@ export function setAuthIdent(
   registryUrl: string,
   base64Ident: string
 ): void {
-  const dart = nerfDart(registryUrl);
+  const dart = requestNerfDart(registryUrl);
   if (dart) {
     env[`npm_config_${dart}:_auth`] = base64Ident;
   }
@@ -255,7 +277,7 @@ export function setClientCertificate(
   certfile: string,
   keyfile: string
 ): void {
-  const dart = nerfDart(registryUrl);
+  const dart = requestNerfDart(registryUrl);
   if (dart) {
     env[`npm_config_${dart}:certfile`] = certfile;
     env[`npm_config_${dart}:keyfile`] = keyfile;

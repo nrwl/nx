@@ -701,6 +701,33 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     });
   });
 
+  it('re-keys onto the registry while still reading always-auth from the directory above it', () => {
+    // The flag is declared where yarn and npm both look it up, and the
+    // credential is written where it cannot reach a sibling repository.
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/npm/repoA',
+      '_authToken=ancestor-token',
+      '//reg-d.example.com/npm/:always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/npm/repoA',
+      'npm_config_//reg-d.example.com/npm/repoA/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it('keeps a native token darted on the registry over a yarn-only bare one', () => {
+    files[`${ROOT}/.npmrc`] =
+      '//reg-d.example.com/npm/repoA/:_authToken=project-token';
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/npm/repoA',
+      '_authToken=ancestor-token',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/npm/repoA',
+    });
+  });
+
   it('prefers a yarn-only nerf-darted token over a bare one for the same registry', () => {
     // yarn's getRegistryOrGlobalOption takes the registry-scoped key first.
     files['/repo/.npmrc'] = [

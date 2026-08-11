@@ -240,6 +240,20 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     });
   });
 
+  it('darts that token onto a registry path rather than the directory above it', () => {
+    projectRc(
+      [
+        'npmRegistryServer: https://reg-a.example.com/npm/repoA',
+        'npmAlwaysAuth: true',
+        'npmAuthToken: secret-token',
+      ].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/npm/repoA',
+      'npm_config_//reg-a.example.com/npm/repoA/:_authToken': 'secret-token',
+    });
+  });
+
   it('does not authenticate an unscoped fetch without npmAlwaysAuth (berry CONFIGURATION default)', () => {
     projectRc(
       [

@@ -8,7 +8,7 @@ import { readNpmrcMap } from '../package-manager-config/npmrc';
 import {
   expandEnvVars,
   getPackageScope,
-  nerfDart,
+  requestNerfDart,
   setAuthToken,
   setCafile,
   setRegistry,
@@ -236,7 +236,7 @@ function applyBunAuth(env: NpmConfigEnv, value: BunRegistryValue): void {
   if (value.token) {
     setAuthToken(env, value.url, value.token);
   } else if (value.username && value.password) {
-    const dart = nerfDart(value.url);
+    const dart = requestNerfDart(value.url);
     if (dart) {
       env[`npm_config_${dart}:username`] = value.username;
       // npm expects _password base64-encoded.

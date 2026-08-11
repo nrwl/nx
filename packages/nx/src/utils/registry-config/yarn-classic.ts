@@ -11,6 +11,7 @@ import {
   nerfDart,
   readEnvVar,
   readNpmConfigEnv,
+  requestNerfDart,
   setCafile,
   setProxies,
   setRegistry,
@@ -167,6 +168,10 @@ function resolveAuth(
   // included) before any overlay matters, so only the yarn-only ancestor files
   // consume it. The _auth/_password base64 carries over as-is.
   const dart = nerfDart(authRegistry);
+  // The credential is written on the registry's own directory so it cannot reach
+  // a sibling path, while the reads above stay on the plain dart yarn and npm
+  // both look a declared key up under.
+  const requestDart = requestNerfDart(authRegistry);
   // always-auth is read for the registry yarn is about to query, not for the
   // dart the credential came from.
   const authenticates = scope !== null || alwaysAuthFor(dart, npmrcChain);
@@ -195,18 +200,22 @@ function resolveAuth(
       if (!winner.npmNative) {
         env[`npm_config_${key}`] = winner.value;
       }
-    } else if (dart) {
+    } else if (requestDart) {
       bareBridges.push({ key, value: winner.value });
     }
   }
   for (const { key, value } of bareBridges) {
     // yarn takes a registry-scoped key over the bare global one, and npm reads a
     // native one itself, so the bare value must not be bridged over a darted key
-    // from any tier.
-    if (firstString(npmrcChain, `${dart}:${key}`)) {
+    // from any tier. Both darts are checked because either spelling declares one
+    // npm resolves for this registry.
+    if (
+      firstString(npmrcChain, `${dart}:${key}`) ||
+      firstString(npmrcChain, `${requestDart}:${key}`)
+    ) {
       continue;
     }
-    env[`npm_config_${dart}:${key}`] = value;
+    env[`npm_config_${requestDart}:${key}`] = value;
   }
 }
 
