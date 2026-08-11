@@ -783,7 +783,7 @@ describe('detox application generator', () => {
   it('should enable the jest oxlint plugin for the e2e project', async () => {
     writeJson(tree, 'package.json', {
       name: '@proj/source',
-      devDependencies: { oxlint: '^1.43.0' },
+      devDependencies: { oxlint: '^1.70.0' },
     });
     writeJson(tree, 'nx.json', { plugins: ['@nx/oxlint'] });
     addProjectConfiguration(tree, 'my-app', { root: 'my-app' });

@@ -100,7 +100,7 @@ describe('addLinting generator', () => {
   it('should set up oxlint when the workspace already uses it', async () => {
     jest.spyOn(linter, 'lintProjectGenerator').mockClear();
     updateJson(tree, 'package.json', (json) => {
-      json.devDependencies = { ...json.devDependencies, oxlint: '^1.43.0' };
+      json.devDependencies = { ...json.devDependencies, oxlint: '^1.70.0' };
       return json;
     });
 

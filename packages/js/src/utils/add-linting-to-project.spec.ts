@@ -100,7 +100,7 @@ describe('addLintingToProject', () => {
   // linter must not silently get ESLint in a workspace that uses Oxlint.
   it('falls back to oxlint when the workspace already uses it', async () => {
     updateJson(tree, 'package.json', (json) => {
-      json.devDependencies = { ...json.devDependencies, oxlint: '^1.43.0' };
+      json.devDependencies = { ...json.devDependencies, oxlint: '^1.70.0' };
       return json;
     });
 

@@ -643,7 +643,7 @@ describe('app', () => {
         updateJson(appTree, 'package.json', (json) => {
           json.devDependencies = {
             ...json.devDependencies,
-            oxlint: '^1.43.0',
+            oxlint: '^1.70.0',
           };
           return json;
         });
