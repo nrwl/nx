@@ -1639,6 +1639,71 @@ describe('Migration', () => {
         expect(mockPrompt).toHaveBeenCalledTimes(1);
       });
 
+      it('should keep the last metadata when a package is staged twice at the same version, gated or not', async () => {
+        const installedVersions = {
+          mypackage: '1.0.0',
+          gate: '2.0.0',
+          child: '1.0.0',
+        };
+        const createMigrator = (gated: boolean) =>
+          new Migrator({
+            packageJson: createPackageJson({
+              dependencies: installedVersions,
+            }),
+            getInstalledPackageVersion: (p) => installedVersions[p] ?? null,
+            fetch: (p): Promise<ResolvedMigrationConfiguration> => {
+              if (p === 'mypackage') {
+                return Promise.resolve({
+                  version: '2.0.0',
+                  packageJsonUpdates: {
+                    first: {
+                      version: '2.0.0',
+                      // Already satisfied: the gate only selects the code path,
+                      // it never holds the group.
+                      ...(gated ? { requires: { gate: '^2.0.0' } } : {}),
+                      packages: {
+                        child: {
+                          version: '2.0.0',
+                          addToPackageJson: 'dependencies',
+                        },
+                      },
+                    },
+                    second: {
+                      version: '2.0.0',
+                      ...(gated ? { requires: { gate: '^2.0.0' } } : {}),
+                      packages: {
+                        child: {
+                          version: '2.0.0',
+                          addToPackageJson: 'devDependencies',
+                          ignoreMigrations: true,
+                        },
+                      },
+                    },
+                  },
+                });
+              }
+
+              return Promise.resolve({ version: '2.0.0' });
+            },
+            from: {},
+            to: {},
+          });
+
+        const gated = await createMigrator(true).migrate('mypackage', '2.0.0');
+        const ungated = await createMigrator(false).migrate(
+          'mypackage',
+          '2.0.0'
+        );
+
+        const expected = {
+          version: '2.0.0',
+          addToPackageJson: 'devDependencies',
+          ignoreMigrations: true,
+        };
+        expect(gated.packageUpdates.child).toEqual(expected);
+        expect(ungated.packageUpdates.child).toEqual(expected);
+      });
+
       it('should prompt when requirements are met', async () => {
         mockPrompt.mockReturnValue(Promise.resolve('Yes'));
         const promptMessage =
