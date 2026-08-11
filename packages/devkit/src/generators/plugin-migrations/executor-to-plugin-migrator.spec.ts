@@ -984,6 +984,57 @@ describe('Phase 3 — strict-common hoist', () => {
     expect(resolved['commanded'].build.options?.mode).toBeUndefined();
   });
 
+  it('warns (not silently) when projects are kept per-project due to authored identity', async () => {
+    // A per-project exclusion is otherwise silent. The migration must surface it,
+    // so a partial/total non-centralization is never mistaken for "centralization
+    // did not apply" — the failure mode that hid the customer's denormalization.
+    ctx = setupFixture('exclusion-warning');
+    for (const name of ['clean1', 'clean2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    addExecutorProject(ctx, {
+      name: 'scripted',
+      root: 'scripted',
+      targetName: 'build',
+      target: uniformExecutorTarget(),
+    });
+    ctx.tree.write(
+      'scripted/package.json',
+      JSON.stringify({ name: 'scripted', scripts: { build: 'tsc -b' } })
+    );
+    const plugin = createSyntheticPlugin();
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    // the eligible pair still centralizes
+    expect(readNxJson(ctx.tree).targetDefaults.build).toContainEqual({
+      filter: { plugin: SYNTHETIC_PLUGIN_PATH },
+      options: { mode: 'production' },
+    });
+    // ...and the exclusion is announced, naming the count and the target
+    expect(warn).toHaveBeenCalled();
+    const message = warn.mock.calls.map((c) => String(c[0])).join('\n');
+    expect(message).toContain(
+      'kept per-project configuration for 1 project(s)'
+    );
+    expect(message).toContain('build');
+  });
+
   it('D: preserves pre-existing target-name default keys the hoist does not touch', async () => {
     ctx = setupFixture('hoist-preserve-existing');
     for (const name of ['app1', 'app2']) {

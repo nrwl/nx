@@ -761,7 +761,8 @@ function hoistCommonAndWrite<T>(
   projectConfigsByName: Map<string, ProjectConfiguration>,
   scope: MigrationScope<T>,
   residualByProject: ResidualByProject,
-  pluginPath: string
+  pluginPath: string,
+  logger?: typeof devkitLogger
 ): Map<string, TargetDefaultArrayEntry> {
   // Group residuals by target name across all migrated projects, tracking which
   // projects contribute each target so we can inspect their default-layer config.
@@ -891,6 +892,27 @@ function hoistCommonAndWrite<T>(
   }
 
   updateNxJson(tree, nxJson);
+
+  // A per-project exclusion is otherwise silent (unlike a Phase 4 revert, which
+  // warns): the excluded projects simply keep their full residual and nothing is
+  // centralized for them. Surface it so a partial or total non-centralization is
+  // never indistinguishable from "centralization did not apply".
+  const excludedTargets = [...excludedProjectsByTarget.entries()].filter(
+    ([, projects]) => projects.size > 0
+  );
+  if (excludedTargets.length > 0) {
+    const totalExcluded = new Set(
+      excludedTargets.flatMap(([, projects]) => [...projects])
+    ).size;
+    const targetNames = excludedTargets
+      .map(([targetName]) => targetName)
+      .sort()
+      .join(', ');
+    (logger ?? devkitLogger).warn(
+      `convert-to-inferred kept per-project configuration for ${totalExcluded} project(s) on target(s) ${targetNames} instead of centralizing it: their target identity is authored outside the plugin (a project.json executor/command, or a package.json script/nx.targets entry), so a plugin-scoped default would not resolve for them. Those projects keep the same output as before; review them if you expected shared configuration.`
+    );
+  }
+
   return hoistedByTarget;
 }
 
@@ -1722,7 +1744,8 @@ async function migrateProjects<T>(
       projectConfigsByName,
       scope,
       residualByProject,
-      pluginPath
+      pluginPath,
+      logger
     );
   }
 
