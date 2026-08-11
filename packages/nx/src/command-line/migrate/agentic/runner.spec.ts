@@ -166,6 +166,7 @@ describe('runAgentic', () => {
       systemContext: 'sys',
       userPrompt: 'user',
       workspaceRoot,
+      runDirName: '23.0.0',
     } as const;
   }
 

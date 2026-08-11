@@ -34,7 +34,6 @@ import {
   hasRunState,
   readRunState,
   runDir,
-  runHandoffsDir,
   CURRENT_RUN_STATE_FORMAT_VERSION,
   SHELL_SAFE_VALUE,
   type MigrateCommitLedgerEntry,
@@ -1424,7 +1423,7 @@ function handoffPath(
   dir: string,
   migration: { package: string; name: string }
 ): string {
-  return stepHandoffPath(runHandoffsDir(dir), migration);
+  return stepHandoffPath(dir, migration);
 }
 
 function removeHandoff(dir: string, migrationId: string): void {

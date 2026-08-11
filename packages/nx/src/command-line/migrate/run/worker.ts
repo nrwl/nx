@@ -89,7 +89,7 @@ import { emitPromptBlock, logToAgent, warnToAgent } from './agent-output';
 // Runs exactly one migration, either standalone or recorded into an existing
 // orchestrated run via `--run-id`. Standalone runs keep no durable run state,
 // though an enabled agentic flow still writes per-run scratch under
-// `.nx/migrate-runs/<version>/` and creates commits by default.
+// `.nx/migrate-runs/<version>/handoffs/` and creates commits by default.
 
 export interface RunSingleMigrationWorkerInput {
   root: string;

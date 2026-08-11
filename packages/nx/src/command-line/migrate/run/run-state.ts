@@ -12,7 +12,7 @@ import { basename, join } from 'path';
 import { writeJsonFile } from '../../../utils/fileutils';
 import { GIT_SHA } from '../../../utils/git-utils';
 import { nxVersion } from '../../../utils/versions';
-import { MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
+import { HANDOFFS_DIR_NAME, MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
 import { RUN_ID_SAFE } from './run-id';
 import { singleLine } from '../text';
 
@@ -48,10 +48,6 @@ const PLAN_SNAPSHOT_NAME = /^plan-\d+\.json$/;
  * of the agent without passing the block-safe writer.
  */
 const STEP_ID = /^step-\d+$/;
-// Package names make up the rest of a handoff path, so without this segment
-// they would occupy the run directory's top level, leaving Nx no name it
-// could add there safely.
-const RUN_HANDOFFS_DIR_NAME = 'handoffs';
 // Keeps `.nx/migrate-runs` from growing unbounded across many `nx migrate`
 // invocations over the life of a workspace.
 const MAX_RETAINED_COMPLETED_RUNS = 5;
@@ -194,14 +190,9 @@ export function runDir(root: string, runId: string): string {
   return join(migrateRunsDir(root), runId);
 }
 
-/**
- * The one subtree of a run directory the driving agent writes: its handoff
- * files. Everything else under the run directory is state Nx owns and reads
- * back, so nothing Nx writes belongs in here and no agent write belongs
- * outside it.
- */
+/** See `HANDOFFS_DIR_NAME` for why the subtree exists. */
 export function runHandoffsDir(runDirPath: string): string {
-  return join(runDirPath, RUN_HANDOFFS_DIR_NAME);
+  return join(runDirPath, HANDOFFS_DIR_NAME);
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

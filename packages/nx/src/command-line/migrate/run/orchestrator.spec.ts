@@ -226,7 +226,7 @@ describe('orchestrator', () => {
   }
 
   function handoffPathIn(dir: string, pkg: string, name: string): string {
-    return stepHandoffPath(runHandoffsDir(dir), { package: pkg, name });
+    return stepHandoffPath(dir, { package: pkg, name });
   }
 
   function writeHandoff(
