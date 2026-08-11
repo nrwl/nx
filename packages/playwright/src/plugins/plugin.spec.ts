@@ -1526,6 +1526,150 @@ describe('@nx/playwright/plugin', () => {
     }
   });
 
+  it('rebuilds cached targets when an allowed ambient env var changes', async () => {
+    const originalToolHome = process.env.TOOL_HOME;
+    const originalWorkspaceRoot = workspaceRoot;
+    delete process.env.TOOL_HOME;
+    setWorkspaceRoot(tempFs.tempDir);
+    process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+    // The cache hit/miss is not observable through the returned targets (the
+    // in-process config load is pinned to its first evaluation), so observe it
+    // through the test-file listing, which only a cache miss reaches.
+    const listTestFiles = jest.spyOn(
+      devkitInternal,
+      'getFilesInDirectoryUsingContext'
+    );
+
+    try {
+      await tempFs.createFiles({
+        'apps/e2e/project.json': '{}',
+        'apps/e2e/playwright.config.js': 'module.exports = {}',
+      });
+
+      const run = () =>
+        createNodesFunction(
+          ['apps/e2e/playwright.config.js'],
+          { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+          context
+        );
+
+      await run();
+      const rebuildsAfterFirst = listTestFiles.mock.calls.length;
+
+      // A rerun with nothing changed stays cached.
+      await run();
+      expect(listTestFiles.mock.calls.length).toBe(rebuildsAfterFirst);
+
+      process.env.TOOL_HOME = '/usr/lib/tool';
+      await run();
+      expect(listTestFiles.mock.calls.length).toBeGreaterThan(
+        rebuildsAfterFirst
+      );
+    } finally {
+      listTestFiles.mockRestore();
+      setWorkspaceRoot(originalWorkspaceRoot);
+      process.env.NX_CACHE_PROJECT_GRAPH = 'false';
+      if (originalToolHome === undefined) {
+        delete process.env.TOOL_HOME;
+      } else {
+        process.env.TOOL_HOME = originalToolHome;
+      }
+    }
+  });
+
+  it('keeps cached targets when an excluded ambient env var changes', async () => {
+    const originalItermProfile = process.env.ITERM_PROFILE;
+    const originalWorkspaceRoot = workspaceRoot;
+    delete process.env.ITERM_PROFILE;
+    setWorkspaceRoot(tempFs.tempDir);
+    process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+    const listTestFiles = jest.spyOn(
+      devkitInternal,
+      'getFilesInDirectoryUsingContext'
+    );
+
+    try {
+      await tempFs.createFiles({
+        'apps/e2e/project.json': '{}',
+        'apps/e2e/playwright.config.js': 'module.exports = {}',
+      });
+
+      const run = () =>
+        createNodesFunction(
+          ['apps/e2e/playwright.config.js'],
+          { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+          context
+        );
+
+      await run();
+      const rebuildsAfterFirst = listTestFiles.mock.calls.length;
+
+      process.env.ITERM_PROFILE = 'Default';
+      await run();
+      expect(listTestFiles.mock.calls.length).toBe(rebuildsAfterFirst);
+    } finally {
+      listTestFiles.mockRestore();
+      setWorkspaceRoot(originalWorkspaceRoot);
+      process.env.NX_CACHE_PROJECT_GRAPH = 'false';
+      if (originalItermProfile === undefined) {
+        delete process.env.ITERM_PROFILE;
+      } else {
+        process.env.ITERM_PROFILE = originalItermProfile;
+      }
+    }
+  });
+
+  it('does not persist a pass whose ambient env changed mid-pass', async () => {
+    const originalBootFlag = process.env.BOOT_FLAG;
+    const originalWorkspaceRoot = workspaceRoot;
+    delete process.env.BOOT_FLAG;
+    setWorkspaceRoot(tempFs.tempDir);
+    process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+    const listTestFiles = jest.spyOn(
+      devkitInternal,
+      'getFilesInDirectoryUsingContext'
+    );
+
+    try {
+      // The config mutates an allowed env var when evaluated, so the pass's
+      // entries are keyed under a digest that no longer matches the env they
+      // were built in. The pass must not persist them: a later pass under the
+      // original env would otherwise hit an entry built under the mutated one.
+      await tempFs.createFiles({
+        'apps/e2e/project.json': '{}',
+        'apps/e2e/playwright.config.js': `process.env.BOOT_FLAG = 'set';
+module.exports = {};`,
+      });
+
+      const run = () =>
+        createNodesFunction(
+          ['apps/e2e/playwright.config.js'],
+          { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+          context
+        );
+
+      await run();
+      const rebuildsAfterFirst = listTestFiles.mock.calls.length;
+
+      // Back on the pass-start env: the same cache key, so only the skipped
+      // persist can force this re-evaluation.
+      delete process.env.BOOT_FLAG;
+      await run();
+      expect(listTestFiles.mock.calls.length).toBeGreaterThan(
+        rebuildsAfterFirst
+      );
+    } finally {
+      listTestFiles.mockRestore();
+      setWorkspaceRoot(originalWorkspaceRoot);
+      process.env.NX_CACHE_PROJECT_GRAPH = 'false';
+      if (originalBootFlag === undefined) {
+        delete process.env.BOOT_FLAG;
+      } else {
+        process.env.BOOT_FLAG = originalBootFlag;
+      }
+    }
+  });
+
   it('shares one config re-evaluation when both chains load the same dotenv inputs', async () => {
     const originalBaseUrl = process.env.BASE_URL;
     const originalWorkspaceRoot = workspaceRoot;

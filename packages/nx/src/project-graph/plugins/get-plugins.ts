@@ -202,6 +202,28 @@ export async function getOnlyDefaultPlugins(root = workspaceRoot) {
   return result;
 }
 
+/**
+ * The plugins from an in-flight load (whose workers may already be forked) or
+ * the last committed one, without triggering a load. Undefined when neither
+ * exists or plugins were cleaned up. After a plugins-config change the
+ * committed set can be the previous, already-disposed one until the new load
+ * commits, so callers must tolerate a disposed worker.
+ */
+export function getPluginsIfLoadedOrLoading():
+  | Promise<LoadedNxPlugin[]>
+  | undefined {
+  const separated = pendingSeparatedPlugins
+    ? pendingSeparatedPlugins.promise
+    : cachedSeparatedPlugins;
+  if (!separated) {
+    return undefined;
+  }
+  return Promise.resolve(separated).then(
+    ({ specifiedPlugins, defaultPlugins }) =>
+      specifiedPlugins.concat(defaultPlugins)
+  );
+}
+
 export function cleanupPlugins() {
   cleanupSpecifiedPlugins?.();
   cleanupDefaultPlugins?.();

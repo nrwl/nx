@@ -424,6 +424,17 @@ export function invalidateGraphCache() {
   cachedSerializedProjectGraphPromise = null;
 }
 
+/**
+ * Marks any in-flight recomputation stale so it chains to a successor instead
+ * of committing. Pair with invalidateGraphCache when a graph input outside the
+ * file watcher's view (e.g. the daemon env) changes: clearing the cached
+ * promise alone leaves an in-flight compute passing its chainToLatest checks
+ * and serving a graph built under the old input to whoever already awaits it.
+ */
+export function markInFlightRecomputationsStale() {
+  ++recomputationGeneration;
+}
+
 // isKnownWorkspaceFile's membership set, derived lazily from the map object it
 // was built from; every commit assigns a fresh `fileMapWithFiles`, so an
 // identity change is what invalidates it.

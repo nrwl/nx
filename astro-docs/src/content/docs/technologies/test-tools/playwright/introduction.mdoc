@@ -119,11 +119,10 @@ Nx caches the result and rebuilds it when an env file the Playwright task would 
 `.env` or `.env.e2e`, changes.
 An env file listed in `.nxignore` is an exception: Nx does not see it change, so the cached
 result stays stale.
-Apart from `CI`, which Nx folds into the cache key, a variable set only in the shell is not part
-of that cache.
-Changing it does not refresh an already-cached address, and shells holding different values
-share whichever address was cached last.
-Set such a variable in an env file instead.
+A variable set only in the shell is part of that cache too, so changing it re-infers the address.
+The exception is variables Nx filters out of the project graph environment, such as terminal
+session details or CI platform internals.
+Changing one of those does not re-infer the address.
 Running `nx reset` also discards the cached address.
 Files the config imports from outside its project, such as a shared helper in `tools/`, are not
 part of the cache either.
