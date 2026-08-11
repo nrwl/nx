@@ -13,6 +13,7 @@ import {
 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { VitestExecutorOptions } from '../executors/test/schema';
+import type { VitestPluginOptions } from '../plugins/plugin';
 import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
 import { warnVitestExecutorGenerating } from './deprecation';
 import { nxVersion } from './versions';
@@ -41,19 +42,30 @@ export function addOrChangeTestTarget(
   hasPlugin: boolean
 ) {
   const nxJson = readNxJson(tree);
+  const target = options.testTarget ?? 'test';
 
-  hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/vitest'
-      : p.plugin === '@nx/vitest' || hasPlugin
-  );
+  // The plugin only infers the target names it is registered for, so a request
+  // for any other name still needs an explicit target.
+  hasPlugin ||=
+    nxJson.plugins?.some((p) => {
+      if (typeof p === 'string') {
+        return p === '@nx/vitest' && target === 'test';
+      }
+      if (p.plugin !== '@nx/vitest') {
+        return false;
+      }
+      const pluginOptions = p.options as VitestPluginOptions;
+      return (
+        (pluginOptions?.testTargetName ?? 'test') === target ||
+        pluginOptions?.ciTargetName === target
+      );
+    }) ?? false;
 
   if (hasPlugin) {
     return;
   }
 
   const project = readProjectConfiguration(tree, options.project);
-  const target = options.testTarget ?? 'test';
 
   const reportsDirectory = joinPathFragments(
     'coverage',
@@ -177,7 +189,7 @@ export function createOrEditViteConfig(
 
   if (!onlyVitest && options.includeLib) {
     plugins.push(
-      `dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json')${
+      `dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json')${
         !isTsSolutionSetup ? ', pathsToAliases: false' : ''
       } })`
     );
@@ -284,7 +296,7 @@ ${
 ${imports.join(';\n')}${imports.length ? ';' : ''}
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   ${printOptions(
     cacheDir,
     plugins.length ? `  plugins: [${plugins.join(', ')}],` : '',
@@ -298,7 +310,7 @@ import { defineConfig } from 'vite';
 ${imports.join(';\n')}${imports.length ? ';' : ''}
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   ${printOptions(
     cacheDir,
     devServerOption,

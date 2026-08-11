@@ -4,6 +4,7 @@ import type { PluginConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
 import { serialize } from '../../../daemon/socket-utils';
 import { MESSAGE_END_SEQ } from '../../../utils/consume-messages-from-socket';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import type {
   CreateDependenciesContext,
@@ -155,11 +156,25 @@ type PluginMessageDefs = DefineMessages<{
 // EXPORTED TYPES (derived from PluginMessageDefs)
 // =============================================================================
 
+/**
+ * The sender's workspace root. Only the *worker* asserts on it, for host→worker
+ * messages; results and notifications carry the field but the host does not
+ * check it. The daemon channel is checked in the same one direction — the
+ * server validates inbound client messages and the client does not validate
+ * responses — so the two are alike rather than one being weaker.
+ * Optional and stamped centrally in `sendMessageOverSocket`, so the many
+ * message constructors need not set it; undefined is treated as not foreign,
+ * which is why this detects a shared socket directory rather than an attacker.
+ */
+export type WorkspaceStampedMessage = { workspaceRoot?: string };
+
 /** Union of all plugin worker message types */
-export type PluginWorkerMessage = AllMessages<PluginMessageDefs>;
+export type PluginWorkerMessage = AllMessages<PluginMessageDefs> &
+  WorkspaceStampedMessage;
 
 /** Union of all plugin worker result types */
-export type PluginWorkerResult = AllResults<PluginMessageDefs>;
+export type PluginWorkerResult = AllResults<PluginMessageDefs> &
+  WorkspaceStampedMessage;
 
 /** Result type for the load message */
 export type PluginWorkerLoadResult = ResultOf<PluginMessageDefs, 'load'>;
@@ -181,7 +196,7 @@ export type PluginWorkerEmitLogNotification = {
   type: 'emitLog';
   level: 'log' | 'warn' | 'error';
   message: string;
-};
+} & WorkspaceStampedMessage;
 
 export type PluginWorkerNotification = PluginWorkerEmitLogNotification;
 
@@ -294,6 +309,8 @@ export function sendMessageOverSocket(
   socket: Socket,
   message: PluginWorkerMessage | PluginWorkerResult | PluginWorkerNotification
 ): void {
+  // Stamped here rather than in each constructor, mirroring the daemon.
+  message.workspaceRoot = workspaceRoot;
   socket.write(serialize(message));
   socket.write(MESSAGE_END_SEQ);
 }

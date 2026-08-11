@@ -29,7 +29,7 @@ describe('Storybook Configuration', () => {
 
       // ASSERT
       expect(
-        tree.read(`libs/storybook-test/vite.config.ts`, 'utf-8')
+        tree.read(`libs/storybook-test/vite.config.mts`, 'utf-8')
       ).toMatchSnapshot();
       expect(
         tree.read(`libs/storybook-test/.storybook/main.ts`, 'utf-8')

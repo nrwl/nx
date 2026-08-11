@@ -32,21 +32,27 @@ defined in either file when a plugin can infer them.
 
 ## How plugins reduce configuration
 
-A plugin reads existing tool configuration and adds the Nx metadata required to run and cache tasks.
-For example, `@nx/vite/plugin` reads `vite.config.ts`, infers the `vite build` command, and derives the
-build output path from the Vite configuration.
+1. Abstracting away common tooling configuration settings so that if your project is using the tool in the most common way, you won't need to worry about configuration at all. The default settings for any Nx plugin are intended to work without modification for most projects in the community.
+2. Allowing you to [provide `targetDefaults`](/docs/kb/reduce-repetitive-configuration) so that the most common settings for projects in your repo can all be defined in one place. Then, only projects that are exceptions need to overwrite those settings. With the judicious application of this method, larger repositories can actually have less lines of configuration after adding Nx than before.
 
 Use `targetDefaults` in `nx.json` for settings shared by matching targets.
 Project-level configuration should contain only exceptions or tasks that no plugin can infer.
 
-```jsonc title="nx.json"
-{
-  "targetDefaults": {
-    "build": {
-      "dependsOn": ["^build"],
-    },
-  },
-}
+If you need to track down the value of a specific configuration property (say `runInBand` for `jest` on the `/apps/my-app` project) you need to look in the following locations. The configuration settings are merged with priority being given to the file higher up in the list.
+
+1. In `/apps/my-app/project.json`, the `options` listed under the `test` target.
+2. In `/nx.json`, the `targetDefaults` entries matching the `test` target.
+3. One of the `test` target options references `/apps/my-app/jest.config.ts`
+4. Which extends `/jest.config.ts`
+
+```text
+repo/
+├── apps/
+│   └── my-app/
+│       ├── jest.config.ts
+│       └── project.json
+├── jest.config.ts
+└── nx.json
 ```
 
 ```jsonc title="packages/myapp/package.json"
