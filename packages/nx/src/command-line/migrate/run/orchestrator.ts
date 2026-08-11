@@ -9,7 +9,6 @@ import {
   isAncestorCommit,
   type PathCommitExposure,
 } from '../../../utils/git-utils';
-import { output } from '../../../utils/output';
 import { nxVersion } from '../../../utils/versions';
 import {
   stepHandoffPath,
@@ -58,7 +57,6 @@ import {
   type StepAction,
   type StepEvent,
 } from './state-machine';
-import { escapeXmlAttr } from '../agentic/print-dropped-agent-context';
 import type { PlannedMigration } from '../migration-shape';
 import {
   depsHash,
@@ -70,7 +68,13 @@ import {
   summarizeError,
   warnCommitFailed,
 } from './util';
-import { singleLine } from './text';
+import { singleLine } from '../text';
+import {
+  emitStepBlock,
+  logToAgent,
+  safeLines,
+  warnToAgent,
+} from './agent-output';
 
 // The dark migrate orchestrator: drives a durable run one dispense at a time.
 // An outer AI agent runs each dispensed command and re-invokes `nx migrate
@@ -308,6 +312,8 @@ function findActiveRunForPlan(
     const noun = uninterpretable.length === 1 ? 'directory' : 'directories';
     // A directory name is whatever is on disk and a reason quotes what it
     // found, so neither can be trusted to stay on the line it is put on.
+    // Sanitized here rather than left to the gateway: these same lines are
+    // joined into the throw below, which leaves through handleErrors.
     const details = uninterpretable.map(
       (u) =>
         `${MIGRATE_RUNS_RELATIVE_DIR}/${singleLine(u.dirName)}: ${singleLine(
@@ -323,7 +329,7 @@ function findActiveRunForPlan(
         ].join('\n')
       );
     }
-    output.warn({
+    warnToAgent({
       title: `Ignoring ${uninterpretable.length} migrate run ${noun} that could not be read.`,
       bodyLines: details,
     });
@@ -369,7 +375,7 @@ function announceResume(runId: string, state: MigrateRunState): void {
   const stalled = state.steps.filter(
     (s) => s.status === 'failed' || s.status === 'died'
   ).length;
-  output.log({
+  logToAgent({
     title: `nx migrate: resuming run ${runId}`,
     bodyLines: [
       `  started: ${state.createdAt}`,
@@ -657,7 +663,7 @@ async function foldLedgerEntry(
     );
   } catch (e) {
     installFailed = true;
-    output.warn({
+    warnToAgent({
       title: `The dependencies changed by ${step.migrationId} could not be installed (${summarizeError(
         e
       )}).`,
@@ -938,23 +944,23 @@ function emitNextStep(root: string, runId: string, step: MigrateStep): void {
   emit(runId, step, 'next-step', {
     command: workerCommand(root, migrationId, runId),
     then: reconcileCommand(root, runId),
-    instructions: `Apply migration ${migrationId} by running the command below, then run the "then" command to record the outcome and get the next step.`,
+    instructionLines: [
+      `Apply migration ${migrationId} by running the command below, then run the "then" command to record the outcome and get the next step.`,
+    ],
   });
 }
 
 function emitRetryFailed(root: string, runId: string, step: MigrateStep): void {
   const migrationId = step.migrationId;
-  const summary = step.outcome?.summary
-    ? singleLine(step.outcome.summary)
-    : undefined;
+  const summary = step.outcome?.summary;
   emit(runId, step, 'retry-failed', {
     then: reconcileCommand(root, runId, 'retry'),
-    instructions: [
+    instructionLines: [
       `Migration ${migrationId} failed${summary ? `: ${summary}` : ''}.`,
       `Decide how to proceed and re-run reconcile with one of:`,
       `  retry: ${reconcileCommand(root, runId, 'retry')}`,
       `  skip:  ${reconcileCommand(root, runId, 'skip')}`,
-    ].join('\n'),
+    ],
   });
 }
 
@@ -1024,15 +1030,13 @@ function cleanRetryUnavailableReason(
   const endangered = endangeredLandedEntry(root, state, step);
   if (endangered) {
     return endangered.sha
-      ? `this migration's changes already landed in commit ${singleLine(
-          endangered.sha
-        )}, which a reset would discard.`
+      ? `this migration's changes already landed in commit ${endangered.sha}, which a reset would discard.`
       : `this migration's changes already landed in a commit, which a reset would discard.`;
   }
   if (step.gitRefBefore && head !== step.gitRefBefore) {
-    return `HEAD is at ${head ?? '(unreadable)'} rather than the ${singleLine(
+    return `HEAD is at ${head ?? '(unreadable)'} rather than the ${
       step.gitRefBefore
-    )} this migration started from, so a reset would discard what was committed in between.`;
+    } this migration started from, so a reset would discard what was committed in between.`;
   }
   return `resetting the tree could discard uncommitted work that no restore point accounts for.`;
 }
@@ -1044,7 +1048,7 @@ function emitDied(
   step: MigrateStep
 ): void {
   const migrationId = step.migrationId;
-  const ref = step.gitRefBefore ? singleLine(step.gitRefBefore) : undefined;
+  const ref = step.gitRefBefore;
   const head = getLatestCommitSha(root);
   const tree = dirtyTreeSummary(root);
   const cleanRetry = canOfferCleanRetry(root, state, step, head);
@@ -1111,7 +1115,7 @@ function emitDied(
       : 'adopt';
   emit(runId, step, 'died', {
     then: reconcileCommand(root, runId, preselected),
-    instructions: lines.join('\n'),
+    instructionLines: lines,
   });
 }
 
@@ -1134,7 +1138,7 @@ function emitStillRunning(
   }
   emit(runId, step, 'still-running', {
     then: reconcileCommand(root, runId),
-    instructions: lines.join('\n'),
+    instructionLines: lines,
   });
 }
 
@@ -1166,7 +1170,7 @@ function emitAwaitPrompt(
   }
   emit(runId, step, 'await-prompt', {
     then: reconcileCommand(root, runId),
-    instructions: lines.join('\n'),
+    instructionLines: lines,
   });
 }
 
@@ -1214,16 +1218,14 @@ function describeRejectedHandoff(handoffPath: string): string[] {
 // exit would tell the driving agent that reconcile itself crashed, and it
 // would stop reading for the correction it is being handed.
 function emitError(root: string, runId: string, reason: string): void {
-  output.warn({
+  warnToAgent({
     title: 'The requested --step-action could not be applied.',
     bodyLines: [reason],
   });
-  writeBlock(
-    runId,
-    '-',
-    'error',
-    jsonPayload({ then: reconcileCommand(root, runId), instructions: reason })
-  );
+  emitStepBlock(runId, '-', 'error', {
+    then: reconcileCommand(root, runId),
+    instructions: reason,
+  });
   reportMigrateOrchestratorDispense({ action: 'error', attempt: 0 });
 }
 
@@ -1275,7 +1277,7 @@ function completeRun(
   const debtLine =
     'Some migration changes could not be committed and may remain in the working tree; review and commit them manually.';
   if (commitDebt) {
-    output.warn({ title: debtLine });
+    warnToAgent({ title: debtLine });
   }
   const uninstalled = current.steps.filter((s) => s.installFailed);
   const installLine =
@@ -1287,20 +1289,19 @@ function completeRun(
         )}\` before using the workspace.`
       : null;
   if (installLine) {
-    output.warn({ title: installLine });
+    warnToAgent({ title: installLine });
   }
-  const instructions = [
+  const instructionLines = [
     `Migrate run ${runId} is complete.`,
     `  applied: ${completed}`,
     `  skipped: ${skipped}`,
     ...(commitDebt ? [debtLine] : []),
     ...(installLine ? [installLine] : []),
-  ].join('\n');
-  output.log({
-    title: 'nx migrate: complete',
-    bodyLines: instructions.split('\n'),
+  ];
+  logToAgent({ title: 'nx migrate: complete', bodyLines: instructionLines });
+  emitStepBlock(runId, '-', 'complete', {
+    instructions: instructionLines.join('\n'),
   });
-  writeBlock(runId, '-', 'complete', jsonPayload({ instructions }));
 }
 
 // --- output -----------------------------------------------------------------
@@ -1308,7 +1309,11 @@ function completeRun(
 interface DispensePayload {
   command?: string;
   then?: string;
-  instructions?: string;
+  // Unjoined on purpose: joining and splitting back would turn a break inside
+  // a value into its own line before anything could tell it from an authored
+  // one. Joined only when the payload is serialized,
+  // so the block's `instructions` string stays what it has always been.
+  instructionLines?: string[];
 }
 
 function emit(
@@ -1317,35 +1322,16 @@ function emit(
   action: string,
   payload: DispensePayload
 ): void {
-  output.log({
-    title: `nx migrate: ${action}`,
-    bodyLines: payload.instructions ? payload.instructions.split('\n') : [],
+  const { instructionLines, ...rest } = payload;
+  // One sanitized array feeds both, so the block payload says exactly what the
+  // human echo said.
+  const lines = instructionLines ? safeLines(instructionLines) : undefined;
+  logToAgent({ title: `nx migrate: ${action}`, bodyLines: lines });
+  emitStepBlock(runId, step.id, action, {
+    ...rest,
+    ...(lines ? { instructions: lines.join('\n') } : {}),
   });
-  writeBlock(runId, step.id, action, jsonPayload(payload));
   reportMigrateOrchestratorDispense({ action, attempt: step.attempt });
-}
-
-// Mirrors print-dropped-agent-context.ts: a raw `<` in a payload value could
-// forge the closing tag, so escape it to the JSON unicode escape (leaving valid
-// JSON) and frame the block with a bare newline pair.
-function jsonPayload(payload: object): string {
-  return JSON.stringify(payload, null, 2).replace(/</g, '\\u003c');
-}
-
-function writeBlock(
-  runId: string,
-  stepId: string,
-  action: string,
-  json: string
-): void {
-  const block = [
-    `<nx_migrate_step run-id="${escapeXmlAttr(runId)}" step="${escapeXmlAttr(
-      stepId
-    )}" action="${escapeXmlAttr(action)}">`,
-    json,
-    `</nx_migrate_step>`,
-  ].join('\n');
-  process.stdout.write(`\n${block}\n\n`);
 }
 
 // Raw argv is forwarded verbatim across the wrapper hops, so every flag is a

@@ -44,16 +44,18 @@ function buildState(overrides: Partial<MigrateRunState> = {}): MigrateRunState {
 
 describe('state-lock', () => {
   let dir: string;
+  let tempRoot: string;
 
   beforeEach(() => {
     // The run directory is named after the run id, which readRunState
     // enforces, so the fixture cannot live directly in the temp root.
-    dir = join(mkdtempSync(join(tmpdir(), 'nx-migrate-lock-')), 'run-1');
+    tempRoot = mkdtempSync(join(tmpdir(), 'nx-migrate-lock-'));
+    dir = join(tempRoot, 'run-1');
     mkdirSync(dir, { recursive: true });
   });
 
   afterEach(() => {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(tempRoot, { recursive: true, force: true });
   });
 
   // flock is per open file description, so a probe from a second fd conflicts

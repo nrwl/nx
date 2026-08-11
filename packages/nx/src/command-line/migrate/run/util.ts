@@ -1,7 +1,6 @@
 // Internal to run/: deliberately not re-exported from ./index.
 
 import { createHash } from 'crypto';
-import { output } from '../../../utils/output';
 import {
   detectPackageManager,
   getPackageManagerCommand,
@@ -13,6 +12,7 @@ import {
 } from '../execute-migration';
 import type { MigrateStep } from './run-state';
 import { updateRunState } from './state-lock';
+import { warnToAgent } from './agent-output';
 
 export function nowIso(): string {
   return new Date().toISOString();
@@ -141,7 +141,7 @@ export function summarizeError(e: unknown): string {
 // (the pre-commit dependency install), which nothing else has logged.
 export function warnCommitFailed(name: string, cause?: unknown): void {
   const causeText = cause === undefined ? '' : ` (${summarizeError(cause)})`;
-  output.warn({
+  warnToAgent({
     title: `The commit for ${name} could not be created${causeText}; its changes remain in the working tree for a later commit to absorb.`,
   });
 }

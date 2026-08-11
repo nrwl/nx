@@ -4,14 +4,9 @@ import type { FileChange } from '../../../generators/tree';
 import { getLatestCommitSha, isGitRepository } from '../../../utils/git-utils';
 import { readJsonFile } from '../../../utils/fileutils';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
-import { logger } from '../../../utils/logger';
-import { output } from '../../../utils/output';
 import { readModulePackageJson } from '../../../utils/package-json';
 import { isInsideAgent } from '../agentic/inception';
-import {
-  escapeXmlAttr,
-  printDroppedAgentContextForOuterAgent,
-} from '../agentic/print-dropped-agent-context';
+import { printDroppedAgentContextForOuterAgent } from '../agentic/print-dropped-agent-context';
 import type {
   AgenticRunContext,
   AgenticStepResult,
@@ -88,7 +83,8 @@ import {
   summarizeError,
   warnCommitFailed,
 } from './util';
-import { singleLine } from './text';
+import { singleLine } from '../text';
+import { emitPromptBlock, logToAgent, warnToAgent } from './agent-output';
 
 // Runs exactly one migration, either standalone or recorded into an existing
 // orchestrated run via `--run-id`. Standalone runs keep no durable run state,
@@ -173,7 +169,7 @@ export async function runSingleMigrationWorker(
     throw new Error(resolved.error);
   }
   if (resolved.warning) {
-    output.warn({ title: resolved.warning });
+    warnToAgent({ title: resolved.warning });
   }
   const createCommits = resolved.effective;
 
@@ -314,7 +310,7 @@ async function runStandalone(
     active = findActiveRun(root).active;
   } catch (e) {
     if (!(e instanceof NewerRunStateFormatError)) {
-      output.warn({
+      warnToAgent({
         title: `Could not check for an active migrate run: ${
           e instanceof Error ? e.message : e
         }`,
@@ -323,7 +319,7 @@ async function runStandalone(
     active = null;
   }
   if (active) {
-    output.warn({
+    warnToAgent({
       title: `This migration won't be recorded into the active migrate run '${active.runId}'.`,
       bodyLines: [
         `Pass --run-id=${active.runId} to record it into that run instead.`,
@@ -982,7 +978,7 @@ function printNextSteps(
   nextSteps: string[]
 ): void {
   if (nextSteps.length === 0) return;
-  output.log({
+  logToAgent({
     title: `Next steps for ${migration.package}: ${migration.name}`,
     bodyLines: nextSteps.map((line) => `- ${singleLine(line)}`),
   });
@@ -1029,18 +1025,10 @@ function emitPromptForOuterAgent(
         : {}),
     };
   }
-  // A raw `<` in a migration-authored string could forge the closing tag; the
-  // JSON unicode escape removes every one and keeps the payload valid JSON.
-  const json = JSON.stringify(payload, null, 2).replace(/</g, '\\u003c');
-  const block = [
-    `The following prompt-based migration was not applied automatically. Apply it to this workspace, then continue.`,
-    ``,
-    `<nx_migrate_prompt migration="${escapeXmlAttr(migrationId)}">`,
-    json,
-    `</nx_migrate_prompt>`,
-  ].join('\n');
-  // Bare newline pair frames the block so adjacent stdout doesn't run into it.
-  process.stdout.write(`\n${block}\n\n`);
+  logToAgent({
+    title: `The following prompt-based migration was not applied automatically. Apply it to this workspace, then continue.`,
+  });
+  emitPromptBlock(migrationId, payload);
 }
 
 function printPromptForUser(
@@ -1080,7 +1068,7 @@ function printPromptForUser(
       'Review the instructions above and apply them manually.'
     );
   }
-  output.log({
+  logToAgent({
     title: `Prompt-based migration ${migration.package}: ${migration.name} must be applied manually`,
     bodyLines,
   });
@@ -1107,9 +1095,9 @@ function resolveDocumentationPath(
     // An unreadable collection is reported through the warning below.
   }
   if (!documentationPath) {
-    logger.warn(
-      `Could not resolve the "documentation" file "${migration.documentation}" declared for migration "${migration.package}: ${migration.name}". It will be skipped.`
-    );
+    warnToAgent({
+      title: `Could not resolve the "documentation" file "${migration.documentation}" declared for migration "${migration.package}: ${migration.name}". It will be skipped.`,
+    });
   }
   return documentationPath;
 }

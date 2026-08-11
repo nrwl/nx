@@ -13,7 +13,7 @@ import { writeJsonFile } from '../../../utils/fileutils';
 import { nxVersion } from '../../../utils/versions';
 import { MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
 import { RUN_ID_SAFE } from './run-id';
-import { singleLine } from './text';
+import { singleLine } from '../text';
 
 export const CURRENT_RUN_STATE_FORMAT_VERSION = 1;
 

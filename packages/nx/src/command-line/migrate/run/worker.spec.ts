@@ -929,7 +929,7 @@ describe('runSingleMigrationWorker', () => {
         './docs/p.md'
       );
       expect(stdout).toContain('"documentationPath": "docs/p.md"');
-      expect(logger.warn).not.toHaveBeenCalled();
+      expect(output.warn).not.toHaveBeenCalled();
     });
 
     it('warns and still surfaces the prompt when the documentation cannot be resolved', async () => {
@@ -945,8 +945,14 @@ describe('runSingleMigrationWorker', () => {
         standaloneInput({ runMigration: '@nx/js:p' })
       );
 
-      expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Could not resolve the "documentation" file')
+      // Routed through the run/ output gateway, which is what sanitizes the
+      // migration-authored path this message interpolates.
+      expect(output.warn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining(
+            'Could not resolve the "documentation" file'
+          ),
+        })
       );
       expect(stdout).toContain('<nx_migrate_prompt migration="@nx/js:p">');
       expect(stdout).not.toContain('documentationPath');

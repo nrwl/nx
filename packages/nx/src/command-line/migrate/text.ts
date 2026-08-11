@@ -1,8 +1,6 @@
-// Internal to run/: deliberately not re-exported from ./index.
-//
-// Dependency-free on purpose. Every module that renders agent-facing text
-// needs this, run-state.ts included, and that one cannot reach util.ts without
-// a cycle through state-lock.ts.
+// Dependency-free on purpose. Every module that renders text an AI agent will
+// read needs this, run/run-state.ts included, and that one cannot reach
+// run/util.ts without a cycle through run/state-lock.ts.
 
 /**
  * Collapses every character a reader could take for a line break, so a value

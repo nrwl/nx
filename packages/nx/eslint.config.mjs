@@ -133,11 +133,41 @@ export default [
               message:
                 "Importing migrate.ts from migrate/run closes an import cycle: migrate.ts already imports run's barrel. Import the shared helper modules under migrate/ directly instead.",
             },
+            {
+              group: [
+                '**/utils/output',
+                '**/utils/output.js',
+                '**/utils/logger',
+                '**/utils/logger.js',
+              ],
+              message:
+                'Write agent-facing output through run/agent-output, which collapses line breaks in untrusted values. This stdout also carries the <nx_migrate_*> blocks the driving agent parses, so a value that keeps its own break can forge one.',
+            },
           ],
         },
       ],
+      // Same boundary as the import restriction above: console writes the two
+      // streams the agent reads, with nothing in between.
+      'no-console': 'error',
+      'no-restricted-syntax': [
+        'error',
+        {
+          // Both spellings: `process.stdout.write(...)` and a `stdout` (or
+          // `stderr`) pulled off `process`/`node:process` and written to.
+          selector:
+            "MemberExpression[object.object.name='process'][object.property.name=/^(stdout|stderr)$/][property.name='write'], MemberExpression[object.name=/^(stdout|stderr)$/][property.name='write']",
+          message:
+            'Emit blocks through run/agent-output rather than writing to a stream directly, so framing and escaping stay in one place.',
+        },
+        {
+          selector:
+            'ImportDeclaration[source.value=/^(node:)?process$/] ImportSpecifier[imported.name=/^(stdout|stderr)$/]',
+          message:
+            'Importing a stream here is the same bypass as writing to process.stdout: go through run/agent-output.',
+        },
+      ],
     },
-    ignores: ['**/*.spec.ts'],
+    ignores: ['**/*.spec.ts', '**/run/agent-output.ts'],
   },
   {
     files: ['./package.json', './executors.json', './migrations.json'],

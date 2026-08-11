@@ -95,11 +95,13 @@ describe('depsHash', () => {
 
 describe('installDepsChangedSinceDispense', () => {
   let dir: string;
+  let tempRoot: string;
 
   beforeEach(() => {
     // The run directory is named after the run id, which readRunState
     // enforces, so the fixture cannot live directly in the temp root.
-    dir = join(mkdtempSync(join(tmpdir(), 'nx-migrate-run-util-')), 'run-1');
+    tempRoot = mkdtempSync(join(tmpdir(), 'nx-migrate-run-util-'));
+    dir = join(tempRoot, 'run-1');
     mkdirSync(dir, { recursive: true });
     mockReadPackageJsonDeps.mockReset();
     mockRunInstall.mockReset().mockResolvedValue(undefined);
@@ -107,7 +109,7 @@ describe('installDepsChangedSinceDispense', () => {
   });
 
   afterEach(() => {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(tempRoot, { recursive: true, force: true });
   });
 
   function seed(step: Partial<MigrateStep>): MigrateStep {
@@ -235,17 +237,19 @@ describe('installDepsChangedSinceDispense', () => {
 
 describe('recordInstallLanded', () => {
   let dir: string;
+  let tempRoot: string;
 
   beforeEach(() => {
     // The run directory is named after the run id, which readRunState
     // enforces, so the fixture cannot live directly in the temp root.
-    dir = join(mkdtempSync(join(tmpdir(), 'nx-migrate-run-util-')), 'run-1');
+    tempRoot = mkdtempSync(join(tmpdir(), 'nx-migrate-run-util-'));
+    dir = join(tempRoot, 'run-1');
     mkdirSync(dir, { recursive: true });
     mockReadPackageJsonDeps.mockReset();
   });
 
   afterEach(() => {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(tempRoot, { recursive: true, force: true });
   });
 
   it('leaves the baseline alone when the probe fails', () => {
