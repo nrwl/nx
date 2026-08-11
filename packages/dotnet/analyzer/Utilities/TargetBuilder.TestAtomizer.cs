@@ -51,7 +51,7 @@ public static partial class TargetBuilder
         var (nxBaseDirectory, cwdRelativeBase) = resultsBase.Value;
 
         var technologies = ProjectUtilities.GetTechnologies(fileName);
-        var groupName = options.TestCiGroupName ?? $"{ciTargetName.ToUpperInvariant()} (CI)";
+        var groupName = options.TestCiGroupName!;
         var dependsOn = new List<object>();
         var groupMembers = new List<string>();
 
