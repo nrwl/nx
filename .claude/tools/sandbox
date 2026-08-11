@@ -616,9 +616,11 @@ function cmdExec(argv) {
   if (sb.exec === 'none') {
     die(
       `exec refused for ${id}: ${
-        sb.mode === 'local'
-          ? 'this local sandbox was created without exec.'
-          : 'no usable isolation runtime.'
+        sb.viewOf
+          ? `this is a read-only view of ${sb.viewOf}.`
+          : sb.mode === 'local'
+            ? 'this local sandbox was created without exec.'
+            : 'no usable isolation runtime.'
       }`
     );
   }
@@ -641,6 +643,10 @@ function cmdExec(argv) {
   if (opts.base && !sb.base) {
     die(`sandbox ${id} has no base worktree (start it with --base <ref>)`);
   }
+  // Base-side reads go through `read --ref base`, so reaching for `exec --base`
+  // means running something — install first. Most reviews never come here, which
+  // is why the base install is not paid for up front.
+  if (opts.base) ensureInstalled(sb, sb.base, 'base');
   const r = execIn(sb, script, {
     stdio: 'inherit',
     dir: opts.base ? sb.base : sb.root,
@@ -688,30 +694,167 @@ function cmdView(argv) {
   );
 }
 
+// ---------------------------------------------------------------- install
+
+/** The row that owns container-wide facts. Views and mutations borrow it. */
+function ownerRow(state, sb) {
+  return state.sandboxes[sb.viewOf || sb.derivedFrom || sb.id] || sb;
+}
+
+/**
+ * Install a worktree's dependencies, once. The install marks live on the owning
+ * row, so a screened view triggering a base install still records it where the
+ * next caller looks — otherwise each view would reinstall into the same tree.
+ */
+function ensureInstalled(sb, dir, label) {
+  const state = readState();
+  const owner = ownerRow(state, sb);
+  owner.installed = owner.installed || {};
+  if (owner.installed[label]) return owner.installed[label];
+
+  // --frozen-lockfile first: a fallback install rewrites the lockfile, which in a
+  // reference worktree silently changes what every other agent is reading. The
+  // fallback still runs, because a lockfile out of sync with package.json is a
+  // review signal worth reporting rather than a reason to abort.
+  const r = execIn(
+    sb,
+    `mise install >/dev/null 2>&1\n` +
+      `if   pnpm install --frozen-lockfile >/tmp/install-${label}.log 2>&1; then echo OK\n` +
+      `elif pnpm install                  >>/tmp/install-${label}.log 2>&1; then echo OK_UNPINNED\n` +
+      `else echo FAILED; tail -20 /tmp/install-${label}.log\n` +
+      `fi`,
+    { dir }
+  );
+  const out = (r.stdout || '').toString().trim();
+  const result = out.startsWith('OK_UNPINNED')
+    ? 'OK_UNPINNED'
+    : out.startsWith('OK')
+      ? 'OK'
+      : 'FAILED';
+  // A failure is recorded too. Retrying it per agent turns one environment fault
+  // into N slow identical faults, and the review still needs to say it happened.
+  owner.installed[label] = result;
+  writeState(state);
+  if (result === 'FAILED') process.stderr.write(out + '\n');
+  return result;
+}
+
+function cmdInstall(argv) {
+  const id = argv[0];
+  if (!id) die('usage: sandbox install <id> [--base]');
+  const sb = getSandbox(id);
+  const opts = parseFlags(argv.slice(1), { base: 'boolean' });
+  if (opts.base && !sb.base)
+    die(`sandbox ${id} has no base worktree (start it with --base <ref>)`);
+  const result = ensureInstalled(
+    sb,
+    opts.base ? sb.base : sb.root,
+    opts.base ? 'base' : 'head'
+  );
+  process.stdout.write(
+    {
+      OK: 'install OK\n',
+      OK_UNPINNED:
+        'install OK — but only WITHOUT --frozen-lockfile: the lockfile is out of sync with package.json (a review signal; note it)\n',
+      FAILED:
+        'install FAILED — this tree cannot run tests or the repo eslint\n',
+    }[result]
+  );
+  if (result === 'FAILED') process.exit(1);
+}
+
+/**
+ * Provision a private worktree an agent may mutate.
+ *
+ * The reference checkouts are shared: several agents read them concurrently, so
+ * proving a test can fail by editing source has to happen somewhere else. This
+ * hands out that somewhere, already installed.
+ *
+ * Local mode refuses. There, the "reference checkout" is the user's own working
+ * tree — the branch they are mid-edit on — and `git worktree add` against it
+ * writes to their `.git`. A review must not be able to reach for that.
+ */
+function cmdWorktree(argv) {
+  const [id, owner, side = 'head'] = argv;
+  if (!id || !owner) die('usage: sandbox worktree <id> <owner> [head|base]');
+  if (!/^[A-Za-z0-9._-]+$/.test(owner))
+    die(`owner '${owner}' must be a path-safe name`);
+  if (side !== 'head' && side !== 'base') die("side must be 'head' or 'base'");
+  const sb = getSandbox(id);
+
+  if (sb.mode === 'local') {
+    die(
+      `worktree refused for ${id}: this sandbox is the user's own checkout.\n` +
+        `Mutation experiments have nowhere safe to go here — review statically\n` +
+        `and say in your report that the dynamic check was unavailable.`
+    );
+  }
+  if (side === 'base' && !sb.base)
+    die(`sandbox ${id} has no base worktree (start it with --base <ref>)`);
+
+  const dir = `/work/mutations/${owner}`;
+  const from = side === 'base' ? sb.baseRef : 'HEAD';
+  const r = execIn(
+    sb,
+    `set -e\n` +
+      `mkdir -p /work/mutations\n` +
+      `test -d ${dir} || git -C ${sb.root} worktree add -q --detach ${dir} ${shq(from)}`,
+    { dir: sb.root }
+  );
+  if (r.status !== 0) die(`worktree creation failed:\n${r.stderr || r.stdout}`);
+
+  const mutId = newId();
+  const state = readState();
+  state.sandboxes[mutId] = {
+    ...sb,
+    id: mutId,
+    derivedFrom: sb.viewOf || id,
+    root: dir,
+    base: null,
+    // Mutation is the point, so no screen — but the tier still cannot exceed the
+    // container's own, which is what keeps a no-isolation backend from gaining
+    // execution through this door.
+    exec: minTier('full', sb.exec),
+    createdAt: nowIso(),
+  };
+  writeState(state);
+
+  const install = ensureInstalled(state.sandboxes[mutId], dir, `mut-${owner}`);
+  process.stdout.write(
+    `${mutId}\n\nmutation worktree of ${id} (${side}) · exec=${state.sandboxes[mutId].exec} · install ${install}\n` +
+      (install === 'FAILED'
+        ? `The tree exists but has no node_modules: report the dynamic check as unavailable.\n`
+        : '')
+  );
+}
+
 function cmdStop(argv) {
   const id = argv[0];
   if (!id) die('usage: sandbox stop <id>');
   const state = readState();
   const sb = state.sandboxes[id];
   if (!sb) die(`unknown sandbox '${id}'`);
-  // Stopping a view drops the row only — the container belongs to its parent.
-  if (sb.mode === 'container' && !sb.viewOf) {
+  // Stopping a view or mutation drops the row only — the container belongs to
+  // the checkout they were derived from.
+  const derived = sb.viewOf || sb.derivedFrom;
+  if (sb.mode === 'container' && !derived) {
     run(sb.backend, ['rm', '-f', sb.container], { stdio: 'ignore' });
   }
   delete state.sandboxes[id];
-  // A view outliving the checkout it points at would hand out a dangling id.
-  let views = 0;
-  if (!sb.viewOf) {
+  // A view or mutation outliving the checkout it points at would hand out a
+  // dangling id.
+  let dropped = 0;
+  if (!derived) {
     for (const [vid, v] of Object.entries(state.sandboxes)) {
-      if (v.viewOf === id) {
+      if (v.viewOf === id || v.derivedFrom === id) {
         delete state.sandboxes[vid];
-        views++;
+        dropped++;
       }
     }
   }
   writeState(state);
   process.stdout.write(
-    `stopped ${id}${views ? ` (and ${views} view${views === 1 ? '' : 's'})` : ''}\n`
+    `stopped ${id}${dropped ? ` (and ${dropped} derived id${dropped === 1 ? '' : 's'})` : ''}\n`
   );
 }
 
@@ -725,6 +868,7 @@ function cmdList() {
       `${id}  ${s.mode.padEnd(9)} ${String(s.isolation).padEnd(6)} ` +
         `exec=${String(s.exec).padEnd(8)} ` +
         `${s.viewOf ? `view-of=${s.viewOf} ` : ''}` +
+        `${s.derivedFrom ? `mutation-of=${s.derivedFrom} ` : ''}` +
         `${s.mode === 'local' ? s.root : s.container}  ${s.createdAt}\n`
     );
   }
@@ -910,8 +1054,10 @@ const USAGE = `sandbox — uniform access to a checkout, isolated or local
   read   <id> <path> [--range a,b] [--ref <sha>] [-n]
   grep   <id> <pattern> [subdir]
   find   <id> <glob> [subdir]
-  exec   <id> [--base] -- <cmd...>             --base runs base-side
+  exec   <id> [--base] -- <cmd...>             --base runs base-side (installs it on first use)
+  install <id> [--base]                        idempotent; head is the caller's to do up front
   view   <id> [--exec screened|none]           second id onto the same checkout, narrowed
+  worktree <id> <owner> [head|base]            private installed tree an agent may mutate
   stop   <id> | list | prune | doctor [--image <img>]
 
 exec tiers: none < screened < full. 'screened' rejects commands that obviously
@@ -926,7 +1072,9 @@ const verbs = {
   grep: cmdGrep,
   find: cmdFind,
   exec: cmdExec,
+  install: cmdInstall,
   view: cmdView,
+  worktree: cmdWorktree,
   stop: cmdStop,
   list: cmdList,
   prune: cmdPrune,
