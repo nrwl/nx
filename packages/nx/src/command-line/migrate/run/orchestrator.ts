@@ -37,6 +37,7 @@ import {
   runDir,
   runHandoffsDir,
   CURRENT_RUN_STATE_FORMAT_VERSION,
+  SHELL_SAFE_VALUE,
   type MigrateCommitLedgerEntry,
   type MigrateRunState,
   type MigrateStep,
@@ -81,11 +82,6 @@ const HANG_THRESHOLD_MS = 15 * 60 * 1000;
 
 // Steps in these statuses are done; every other status needs a dispense.
 const TERMINAL_STATUSES = new Set<MigrateStepStatus>(['succeeded', 'skipped']);
-
-// Dispensed commands are executed verbatim by the outer agent's shell, so
-// hostile ids are refused up front rather than quoted per-platform (POSIX
-// quoting is no defense in cmd.exe).
-const SHELL_SAFE_VALUE = /^[A-Za-z0-9@/:._-]+$/;
 
 export interface RunOrchestratorInitInput {
   root: string;

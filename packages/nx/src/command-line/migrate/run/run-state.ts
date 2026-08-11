@@ -17,6 +17,20 @@ import { RUN_ID_SAFE } from './run-id';
 export const CURRENT_RUN_STATE_FORMAT_VERSION = 1;
 
 export const RUN_STATE_FILE_NAME = 'run.json';
+/**
+ * The charset a migration id must stay inside to be interpolated into a
+ * dispensed command. The outer agent executes those verbatim, so hostile ids
+ * are refused rather than quoted per-platform (POSIX quoting is no defense in
+ * cmd.exe). Enforced twice: on the incoming plan at init, so a bad id never
+ * starts a run, and here on read, so a run whose persisted ids were tampered
+ * with fails closed as corrupt instead of being dispensed.
+ */
+export const SHELL_SAFE_VALUE = /^[A-Za-z0-9@/:._-]+$/;
+// `new Date().toISOString()`, the only shape Nx writes. Retention and active-run
+// selection compare these lexicographically, and the value is rendered into the
+// stdout the agent scans for blocks, so neither a different notation nor an
+// embedded newline can be tolerated.
+const ISO_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 // Package names make up the rest of a handoff path, so without this segment
 // they would occupy the run directory's top level, leaving Nx no name it
 // could add there safely.
@@ -253,6 +267,7 @@ function isStepShape(value: unknown): boolean {
     typeof value.id === 'string' &&
     typeof value.roundIndex === 'number' &&
     typeof value.migrationId === 'string' &&
+    SHELL_SAFE_VALUE.test(value.migrationId) &&
     isOneOf(MIGRATE_STEP_STATUSES, value.status) &&
     typeof value.attempt === 'number' &&
     typeof value.dispenseCount === 'number' &&
@@ -302,6 +317,7 @@ function hasValidRunStateShape(parsed: Record<string, unknown>): boolean {
     REQUIRED_STRING_FIELDS.every(
       (field) => typeof parsed[field] === 'string'
     ) &&
+    ISO_TIMESTAMP.test(parsed.createdAt as string) &&
     typeof parsed.formatVersion === 'number' &&
     typeof parsed.createCommits === 'boolean' &&
     isOneOf(MIGRATE_RUN_STATUSES, parsed.status) &&

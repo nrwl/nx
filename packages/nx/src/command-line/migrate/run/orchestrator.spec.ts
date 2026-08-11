@@ -758,8 +758,10 @@ describe('orchestrator', () => {
       const migrationsJson = {
         migrations: [genMig('@nx/js', "evil'; rm -rf ~")],
       };
+      // The active run carries a safe id because no init could have created it
+      // otherwise; the unsafe one arrives with this invocation's plan.
       setupRun('run-1', {
-        steps: [migStep('step-1', "@nx/js:evil'; rm -rf ~", 'pending')],
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
         planHash: computePlanHash(migrationsJson),
         plan: migrationsJson.migrations,
       });
