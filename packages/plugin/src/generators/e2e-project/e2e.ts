@@ -29,8 +29,8 @@ import {
   findJestConfig,
 } from '@nx/jest';
 import { getRelativePathToRootTsConfig, setupVerdaccio } from '@nx/js';
-import { addLintingToProject } from '@nx/js/internal';
 import {
+  addLintingToProject,
   addLocalRegistryScripts,
   normalizeLinterOption,
   addProjectToTsSolutionWorkspace,

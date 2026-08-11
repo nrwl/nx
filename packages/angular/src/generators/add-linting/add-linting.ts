@@ -6,8 +6,7 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import { addLintingToProject } from '@nx/js/internal';
-import { normalizeLinterOption } from '@nx/js/internal';
+import { addLintingToProject, normalizeLinterOption } from '@nx/js/internal';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import {
   javaScriptOverride,

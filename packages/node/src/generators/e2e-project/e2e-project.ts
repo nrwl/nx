@@ -20,8 +20,13 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { lintProjectGenerator } from '@nx/eslint';
-import { addLintingToProject } from '@nx/js/internal';
-import { normalizeLinterOption } from '@nx/js/internal';
+import {
+  addLintingToProject,
+  normalizeLinterOption,
+  addProjectToTsSolutionWorkspace,
+  isUsingTsSolutionSetup,
+  addSwcTestConfig,
+} from '@nx/js/internal';
 import {
   javaScriptOverride,
   typeScriptOverride,
@@ -36,11 +41,6 @@ import {
   findRootJestPreset,
   getInstalledJestMajorVersion,
 } from '@nx/jest/internal';
-import {
-  addProjectToTsSolutionWorkspace,
-  isUsingTsSolutionSetup,
-  addSwcTestConfig,
-} from '@nx/js/internal';
 import { relative } from 'node:path/posix';
 
 export async function e2eProjectGenerator(host: Tree, options: Schema) {

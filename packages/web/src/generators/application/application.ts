@@ -31,8 +31,8 @@ import {
   getRelativePathToRootTsConfig,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
-import { addLintingToProject } from '@nx/js/internal';
 import {
+  addLintingToProject,
   swcCoreVersion,
   getNpmScope,
   addProjectToTsSolutionWorkspace,

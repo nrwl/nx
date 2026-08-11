@@ -19,7 +19,13 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator, extractTsConfigBase } from '@nx/js';
-import { addLintingToProject } from '@nx/js/internal';
+import {
+  addLintingToProject,
+  addProjectToTsSolutionWorkspace,
+  shouldConfigureTsSolutionSetup,
+  updateTsconfigFiles,
+  sortPackageJsonFields,
+} from '@nx/js/internal';
 import { updateJestTestMatch } from '../../utils/testing-config-utils';
 import {
   isbotVersion,
@@ -42,12 +48,6 @@ import {
   updateUnitTestConfig,
 } from './lib';
 import { NxRemixGeneratorSchema } from './schema';
-import {
-  addProjectToTsSolutionWorkspace,
-  shouldConfigureTsSolutionSetup,
-  updateTsconfigFiles,
-  sortPackageJsonFields,
-} from '@nx/js/internal';
 export function remixApplicationGenerator(
   tree: Tree,
   options: NxRemixGeneratorSchema
