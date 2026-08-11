@@ -1520,20 +1520,33 @@ async function verifyAndFallback<T>(
     );
   }
 
-  // An error-degraded verification with no revert and no fallback must not be
-  // silent — the migrated targets verified clean, but a broken config file left
-  // the pass unable to see the whole workspace. (`verificationErrors` here has
-  // already had the no-project-name noise filtered out, so it means inference
-  // genuinely broke.)
+  // Whenever the verification pass reported errors they must appear in at least
+  // one warning. The revert warning always carries them; the fallback warning
+  // carries them only for a target missing from the verification result (a
+  // divergence fallback has a verified config, so attaching unrelated errors to
+  // it would misattribute the cause). Fire this standalone warning whenever the
+  // errors were surfaced by neither — i.e. nothing reverted AND no fallback
+  // carried them (no fallback at all, or only divergence fallbacks). Otherwise a
+  // broken config file leaves the pass unable to see the whole workspace with no
+  // trace. (`verificationErrors` here has already had the no-project-name noise
+  // filtered out, so it means inference genuinely broke.)
+  const errorsSurfacedByFallbackWarning =
+    fallbacks.length > 0 && anyMissingFromVerification;
   if (
     verificationErrors.length > 0 &&
     revertedTargets.size === 0 &&
-    fallbacks.length === 0
+    !errorsSurfacedByFallbackWarning
   ) {
+    // Only claim the migrated targets matched when nothing fell back; a
+    // divergence fallback means at least one did not.
+    const outcome =
+      fallbacks.length === 0
+        ? ' The migrated targets matched their pre-migration output, but review any workspace configuration the errors reference.'
+        : ' Review any workspace configuration the errors reference.';
     (logger ?? devkitLogger).warn(
       `convert-to-inferred could not fully verify the migration: the verification inference pass reported errors: ${verificationErrors.join(
         '; '
-      )}. The migrated targets matched their pre-migration output, but review any workspace configuration the errors reference.`
+      )}.${outcome}`
     );
   }
 }

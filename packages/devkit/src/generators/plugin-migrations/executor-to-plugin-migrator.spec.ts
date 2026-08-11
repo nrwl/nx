@@ -1592,6 +1592,103 @@ describe('Phase 4 — verify + equivalence oracle + fallback', () => {
     expect(warn.mock.calls[0][0]).toContain('verification pass reported');
   });
 
+  it('surfaces verification errors when only a divergence fallback (no revert) occurs', async () => {
+    // The gap: verification errors exist, NO target reverts (the errored config
+    // is owned by a migrated root), and the sole fallback is a DIVERGENCE
+    // fallback (a verified-but-non-equivalent target). `anyMissingFromVerification`
+    // stays false, so the fallback warning intentionally omits the causes — and
+    // without a revert the standalone must still surface them, or the errors
+    // vanish.
+    ctx = setupFixture('divergence-plus-in-root-error');
+    for (const name of ['app1', 'app2', 'app3']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    // A non-migrated config file NESTED under migrated root app1. It contributes
+    // nothing in Phase 1 and ERRORS only on the verification pass: the error is
+    // owned by app1 (so no revert), and app1/nested is not a migrated project
+    // (so it never sets anyMissingFromVerification).
+    ctx.fs.createFileSync('app1/nested/build.config.json', '{}');
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [SYNTHETIC_PLUGIN_PATH];
+    updateNxJson(ctx.tree, nxJson);
+
+    let invocation = 0;
+    const createNodes: CreateNodes<SyntheticPluginOptions> = [
+      SYNTHETIC_CONFIG_GLOB,
+      (configFiles, options) => {
+        invocation++;
+        const targetName = options?.targetName ?? 'build';
+        const results: Array<readonly [string, any]> = [];
+        const errors: Array<[string, Error]> = [];
+        for (const file of configFiles) {
+          const dir = dirname(file);
+          const root = dir === '' || dir === '.' ? '.' : dir;
+          if (root === 'app1/nested') {
+            if (invocation >= 2) {
+              errors.push([file, new Error(`broken nested config in ${file}`)]);
+            }
+            continue;
+          }
+          const target = defaultInferredTarget(root, targetName);
+          // app3 infers a DIVERGENT target on the verification pass.
+          if (root === 'app3' && invocation >= 2) {
+            target.outputs = ['{projectRoot}/divergent'];
+          }
+          results.push([
+            file,
+            { projects: { [root]: { targets: { [targetName]: target } } } },
+          ]);
+        }
+        if (errors.length > 0) {
+          throw new AggregateCreateNodesError(errors, results as any);
+        }
+        return results;
+      },
+    ];
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      SYNTHETIC_PLUGIN_PATH,
+      createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    // No revert: the shared plugin-scoped default survives for app1/app2.
+    expect(readNxJson(ctx.tree).targetDefaults.build).toStrictEqual([
+      { cache: true },
+      {
+        filter: { plugin: SYNTHETIC_PLUGIN_PATH },
+        options: { mode: 'production' },
+      },
+    ]);
+    expect(
+      readJson(ctx.tree, 'app1/project.json').targets.build
+    ).toBeUndefined();
+    expect(
+      readJson(ctx.tree, 'app2/project.json').targets.build
+    ).toBeUndefined();
+    // app3 fell back (divergence).
+    expect(readJson(ctx.tree, 'app3/project.json').targets.build).toEqual({
+      options: { mode: 'production' },
+    });
+
+    // The verification errors must be surfaced — the divergence-only fallback
+    // warning deliberately omits them, so a standalone warning must carry them.
+    const allWarnings = warn.mock.calls.map((c) => String(c[0])).join('\n');
+    expect(allWarnings).toContain('could not fully verify');
+    expect(allWarnings).toContain('reported errors');
+  });
+
   it('scopes the plugin include to the migrated subset (root project -> "*")', async () => {
     ctx = setupFixture('partial-include');
     // app1 (root) + app2 migrate; app3 is inferrable (has a config file) but
