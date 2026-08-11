@@ -8,11 +8,11 @@ topics:
   - 'Continuous integration'
 ---
 
-A test fails on CI. You run it again, and it passes. The pull request is green, but nobody knows
-what changed.
+Most developers have seen this CI problem: a test fails, then passes after a rerun. The team still
+does not know what changed.
 
-That is a flaky test. Treat the passing retry as evidence to investigate, not proof that the
-failure did not matter.
+That is a flaky test. The pull request is green again, but the failure still matters. Treat the
+passing retry as evidence to investigate, not proof that the problem disappeared.
 
 ## A passing retry does not clear a failure
 
@@ -43,7 +43,7 @@ Most flakes match one of these patterns:
 | External services     | Network, API, or third-party failures appear in the logs.  | Stub the dependency where practical, or isolate and monitor the integration. |
 
 Manual investigation limits wasted work, but teams also need reliable evidence across CI runs. Nx
-and Nx Cloud provide that evidence and automate narrow retries.
+provides that evidence and automates narrow retries.
 
 ## Detect and retry flaky tasks with Nx Cloud
 
