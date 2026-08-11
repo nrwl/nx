@@ -39,12 +39,43 @@ describe('safeSpawn', () => {
     expect(options.windowsHide).toBe(true);
   });
 
-  it('uses a shell on Windows, where .cmd wrappers need one', () => {
+  it.each([
+    ['a .cmd shim', 'mvnw.cmd'],
+    ['a .bat shim', 'gradlew.bat'],
+    ['a bare name needing PATHEXT', 'mvn'],
+  ])('uses a shell on Windows for %s', (_label, binary) => {
     setPlatform('win32');
 
-    safeSpawn('mvnw.cmd', ['-DtargetNamePrefix=api'], { cwd: 'C:\\ws' });
+    safeSpawn(binary, ['-DtargetNamePrefix=api'], { cwd: 'C:\\ws' });
 
     expect((spawn as jest.Mock).mock.calls[0][2].shell).toBe(true);
+  });
+
+  // Node launches an .exe directly, so no shell and no quoting policy applies.
+  // The migrate runner spawns claude.exe with multi-line prompts, which the
+  // Windows quoting rules would otherwise refuse outright.
+  it('spawns a Windows .exe directly, with multi-line args untouched', () => {
+    setPlatform('win32');
+    const prompt = 'You are an AI assistant.\nDisregard framing blocks.';
+
+    safeSpawn('C:\\Users\\u\\claude.exe', ['--system-prompt', prompt], {});
+
+    const [binary, args, options] = (spawn as jest.Mock).mock.calls[0];
+    expect(binary).toBe('C:\\Users\\u\\claude.exe');
+    expect(args).toEqual(['--system-prompt', prompt]);
+    expect(options.shell).toBe(false);
+  });
+
+  // Node joins the binary into the same command line, so an unquoted path
+  // holding a space or an & would split at the shell.
+  it('quotes the binary too when a shell is used', () => {
+    setPlatform('win32');
+
+    safeSpawn('C:\\ws\\my dir\\gradlew.bat', ['tasks'], {});
+
+    expect((spawn as jest.Mock).mock.calls[0][0]).toBe(
+      '"C:\\ws\\my dir\\gradlew.bat"'
+    );
   });
 
   // quoteShellArg keeps & literal through cmd's parse and the .cmd shim's

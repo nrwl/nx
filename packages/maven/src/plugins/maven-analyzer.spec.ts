@@ -9,8 +9,8 @@ import {
 } from '@nx/devkit/internal';
 
 jest.mock('fs');
-// Mock the wrapper, not child_process: cross-spawn sits in between and decides
-// its Windows behavior at module load, which a test cannot influence.
+// Mock the wrapper, not child_process: safeSpawn decides platform behavior at
+// call time, and a child_process assertion would only hold off Windows.
 jest.mock('@nx/devkit/internal', () => ({
   ...jest.requireActual('@nx/devkit/internal'),
   safeSpawn: jest.fn(),

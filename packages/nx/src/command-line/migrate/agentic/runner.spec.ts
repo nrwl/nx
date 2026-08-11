@@ -12,9 +12,9 @@ jest.mock('child_process', () => ({
 jest.mock('enquirer', () => ({
   prompt: jest.fn(),
 }));
-// Assert at the wrapper, not child_process: cross-spawn sits in between and
-// fixes its Windows behavior at module load, so a child_process assertion
-// would only hold on POSIX.
+// Assert at the wrapper, not child_process: safeSpawn decides platform
+// behavior at call time, so a child_process assertion would only hold off
+// Windows.
 jest.mock('../../../utils/safe-spawn', () => ({
   safeSpawn: jest.fn(),
 }));
@@ -728,8 +728,8 @@ describe('runAgentic', () => {
         handoffFilePath,
       });
 
-      // cross-spawn owns launching the .cmd; we only verify runAgentic goes
-      // through the no-shell wrapper rather than adding a shell of its own.
+      // safeSpawn owns how a .cmd is launched; here we only verify runAgentic
+      // routes through it rather than spawning one itself.
       const [binary, , options] = mockSpawn.mock.calls[0];
       expect(binary).toBe('C:\\Users\\u\\AppData\\Roaming\\npm\\claude.cmd');
       expect(options.shell).toBeUndefined();

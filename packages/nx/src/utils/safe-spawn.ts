@@ -5,30 +5,45 @@ import {
   spawn,
   SpawnOptions,
 } from 'child_process';
+import { extname } from 'path';
 import { quoteShellArg } from './shell-quoting';
 
-// Node cannot launch a Windows `.cmd`/`.bat` shim without a shell, and both the
-// maven and gradle wrappers are one. The shell stays there and each argument is
-// quoted; everywhere else no shell runs, so the argv array is passed as-is.
+// Node cannot launch a Windows `.cmd`/`.bat` shim without a shell, and a bare
+// name like `mvn` needs one to be resolved through PATHEXT. Everything else —
+// including a `.exe` — spawns directly, so the shell and the quoting below
+// reach only the invocations that cannot do without them.
 //
 // Deliberately a function: a module-level const is fixed at import time, which
-// makes the Windows branch untestable — the trap cross-spawn's `isWin` sets.
-const needsShell = () => process.platform === 'win32';
+// would make the Windows branch untestable.
+function needsShell(binary: string): boolean {
+  if (process.platform !== 'win32') {
+    return false;
+  }
+  const ext = extname(binary).toLowerCase();
+  return ext === '' || ext === '.cmd' || ext === '.bat';
+}
+
+// `quoteShellArg` deliberately lets these through — see its spec. That is fine
+// for argv a user typed, but cmd.exe expands `%VAR%` and a line break ends the
+// command line whatever the quoting, so neither can be made safe here.
+const UNQUOTABLE_ON_WINDOWS = /[%\r\n]/;
 
 /**
- * Spawn a process with arguments that carry workspace configuration.
+ * Spawn a process without letting its arguments become shell syntax.
  *
- * @throws on Windows if an argument cannot be safely quoted for cmd.exe.
+ * @throws on Windows if the binary or an argument cannot be safely quoted for
+ * cmd.exe.
  */
 export function safeSpawn(
   binary: string,
   args: readonly string[],
   options: Omit<SpawnOptions, 'shell'> = {}
 ): ChildProcess {
-  return spawn(binary, quoteForPlatform(args), {
+  const shell = needsShell(binary);
+  return spawn(quote(binary, shell), quoteAll(args, shell), {
     ...options,
     windowsHide: true,
-    shell: needsShell(),
+    shell,
   });
 }
 
@@ -40,34 +55,32 @@ export function safeExecFileSync(
   args: readonly string[],
   options: Omit<ExecFileSyncOptions, 'encoding' | 'shell'> = {}
 ): string {
-  return execFileSync(binary, quoteForPlatform(args), {
+  const shell = needsShell(binary);
+  return execFileSync(quote(binary, shell), quoteAll(args, shell), {
     stdio: 'pipe',
     ...options,
     windowsHide: true,
-    shell: needsShell(),
+    shell,
     encoding: 'utf-8',
   });
 }
 
-// `quoteShellArg` deliberately lets these through — see its spec. That is fine
-// for argv the user typed, but these arguments come from nx.json in a cloned
-// repository, where cmd.exe expanding `%VAR%` or a line break ending the
-// command is worth refusing outright. Neither is meaningful in a Maven property
-// or a Gradle `-P` value.
-const UNQUOTABLE_ON_WINDOWS = /[%\r\n]/;
-
-function quoteForPlatform(args: readonly string[]): string[] {
-  if (!needsShell()) {
-    return [...args];
+// The binary needs the same treatment as the arguments: Node joins it into the
+// same command line, so a path holding a space or an `&` would split there.
+function quote(value: string, shell: boolean): string {
+  if (!shell) {
+    return value;
   }
-  return args.map((arg) => {
-    if (UNQUOTABLE_ON_WINDOWS.test(arg)) {
-      throw new Error(
-        `Cannot safely pass ${JSON.stringify(
-          arg
-        )} to cmd.exe: a percent sign or line break inside it would leave the rest of the argument to be read as commands. Remove it from your Nx configuration and try again.`
-      );
-    }
-    return quoteShellArg(arg);
-  });
+  if (UNQUOTABLE_ON_WINDOWS.test(value)) {
+    throw new Error(
+      `Cannot safely pass ${JSON.stringify(
+        value
+      )} to cmd.exe: a percent sign or line break inside it would leave the rest of the command to be read as commands.`
+    );
+  }
+  return quoteShellArg(value);
+}
+
+function quoteAll(args: readonly string[], shell: boolean): string[] {
+  return shell ? args.map((arg) => quote(arg, shell)) : [...args];
 }
