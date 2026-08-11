@@ -132,6 +132,31 @@ The `^production` input includes the `production` inputs of project dependencies
 Project-level configuration can extend or replace these values when one project needs different
 hashing behavior.
 
+```json title="packages/some-project/project.json"
+{
+  "name": "some-project",
+  "targets": {
+    "build": {
+      "inputs": ["...", "!{projectRoot}/**/*.md"],
+      ...
+    },
+    "test": {
+      "inputs": [...]
+    }
+    ...
+  }
+}
+```
+
+Inputs may include the following:
+
+- Source files that affect the task.
+- Environment variables that affect the task.
+- Runtime inputs that affect the task.
+- Command-line arguments passed to the task.
+
+Learn more about fine tuning caching in the [Fine-tuning Caching with Inputs page](/docs/kb/configure-inputs).
+
 ## Command-line arguments
 
 Arguments passed to a task affect its hash because they can change the result.

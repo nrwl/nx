@@ -9,7 +9,7 @@ filter: 'type:References'
 
 A project's configuration is constructed by Nx from three sources:
 
-1. [Tasks inferred by Nx plugins](/docs/concepts/inferred-tasks) from tooling configuration
+1. [Tasks inferred by Nx plugins](/docs/concepts/mental-model#inferred-tasks) from tooling configuration
 2. [Workspace `targetDefaults`](/docs/reference/nx-json#target-defaults) defined in the `nx.json` file
 3. Individual project level configuration files (`package.json` and `project.json`)
 
@@ -599,7 +599,7 @@ In the same way that `dependsOn` tells Nx to run another task before running thi
 
 ### Executor/command options
 
-To define what a task does, you must configure which command or executor will run when the task is executed. In the case of [inferred tasks](/docs/concepts/inferred-tasks) you can provide project-specific overrides. As an example, if your repo has projects with a `build` inferred target running the `vite build` command, you can provide some extra options as follows:
+To define what a task does, you must configure which command or executor will run when the task is executed. In the case of [inferred tasks](/docs/concepts/mental-model#inferred-tasks) you can provide project-specific overrides. As an example, if your repo has projects with a `build` inferred target running the `vite build` command, you can provide some extra options as follows:
 
 ```json
 {

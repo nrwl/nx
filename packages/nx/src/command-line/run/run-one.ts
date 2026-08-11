@@ -100,6 +100,7 @@ export async function runOne(
       extraTargetDependencies,
       extraOptions
     );
+    await output.drain();
     process.exit(status);
   }
 }

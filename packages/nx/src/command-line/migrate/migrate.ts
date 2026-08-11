@@ -33,6 +33,7 @@ import {
 } from '../../utils/fileutils';
 import { extractFileFromTarball } from '../../utils/tar';
 import { writeFormattedJsonFile } from '../../utils/write-formatted-json-file';
+import { quoteShellArg } from '../../utils/shell-quoting';
 import { logger } from '../../utils/logger';
 import {
   getGitCurrentBranch,
@@ -82,7 +83,7 @@ import {
   getInstalledVersion,
 } from '../../utils/installed-nx-version';
 import { readNxJson } from '../../config/configuration';
-import { runNxSync } from '../../utils/child-process';
+import { readInstalledNxBin, runNxArgvSync } from '../../utils/child-process';
 import { daemonClient } from '../../daemon/client/client';
 import { isNxCloudUsed, isNxCloudDisabled } from '../../utils/nx-cloud-utils';
 import { formatFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
@@ -3055,14 +3056,11 @@ export async function executeMigrations(
   };
 }
 
-// Forwards this invocation's raw argv to the workspace-local nx, used from
-// each run path's temp-installation check (`!__dirname.startsWith(workspaceRoot)`)
-// right after its gated `runInstall` pre-install. `runNxSync` resolves nx
-// through the workspace's package manager at spawn time, so the child runs
-// the bytes that pre-install put in place.
+// nx is located at spawn time, after the gated pre-install, so the child runs
+// the bytes that install put in place.
 function handOffToLocalNx(args: string[]): number | undefined {
   const exitCode = runOrReturnExitCode(() =>
-    runNxSync(`migrate ${args.join(' ')}`, {
+    runNxArgvSync(['migrate', ...args], {
       stdio: ['inherit', 'inherit', 'inherit'],
       env: {
         ...process.env,
@@ -3449,10 +3447,14 @@ function stringifyCaught(e: unknown): string {
 // A resolver-based lookup (including `resolvePackageJsonWithoutCachePollution`,
 // which does defeat Node's package self-reference) is the wrong tool here:
 // resolvers fall back to NODE_PATH after the explicit paths, and NODE_PATH
-// names the temp installation when this runs there, while the hand-off spawn
-// locates nx through the package manager's bin lookup, which ignores
-// NODE_PATH. The PnP branch below stays bespoke either way: a resolver cannot
-// see into the zip cache without the PnP runtime.
+// names the temp installation when this runs there. The scan below reads its
+// candidate directories itself, so neither NODE_PATH nor self-reference can
+// reach it; `getNxBin` (utils/child-process.ts), which locates the nx the
+// hand-off spawns, avoids resolvers for the same reason, over a narrower set
+// of directories: it skips `.nx/installation`, declines a root without a
+// package.json, and stops at the nearest install rather than reading past an
+// unusable one. The PnP branch below stays bespoke either way: a resolver
+// cannot see into the zip cache without the PnP runtime.
 export function readLocalNxVersion(root: string): string | undefined {
   // A PnP manifest is consulted only when yarn drives the hand-off:
   // `getRunNxBaseCommand` builds the hand-off command through this same
@@ -3585,12 +3587,13 @@ export function readLocalNxVersion(root: string): string | undefined {
 // The workspace's own install locations first (.nx/installation, root), then
 // ancestor directories: package-manager executable lookup ascends (npx and
 // bun always, pnpm and yarn inside an outer workspace) and hoisted layouts
-// install nx above the workspace root. An unrelated ancestor install the
-// hand-off's spawn would not run can be read here; the guards then judge that
-// version rather than failing open. A hand-off issued anyway may not fail
-// visibly: yarn reports "command not found", but pnpm exec falls back to an
-// nx on PATH, so the version read here is the readable answer, not
-// necessarily the executed one.
+// install nx above the workspace root. `getNxBin` ascends too, so an ancestor
+// read here is usually the one the hand-off spawns. They diverge for a
+// `.nx/installation` workspace, which `getNxBin` declines, and where the only
+// nx found sits past the package manager's own lookup boundary and the spawn
+// has fallen back to that manager: yarn then reports "command not found"
+// while pnpm exec lands on an nx on PATH. The version read here is therefore
+// the readable answer, not necessarily the executed one.
 function scanNodeModulesForNxVersion(root: string): string | undefined {
   const searchPaths = [...getNxRequirePaths(root)];
   for (let dir = dirname(root); ; dir = dirname(dir)) {
@@ -3698,11 +3701,13 @@ export async function runMigration() {
     // that parsed the flags, so it needs no capability check. Two lookups
     // can still diverge from the running install, both properties of the
     // spawn machinery rather than of this fallback: a `.nx/installation`
-    // beside a root package.json, and a spawn that misses the workspace
-    // install and falls back to an nx on PATH (pnpm exec).
+    // beside a root package.json, and, once the spawn falls back to the
+    // package manager, a lookup that misses the workspace install and lands
+    // on an nx on PATH (pnpm exec).
+    const forwardedArgv = process.argv.slice(3);
     const runLocalMigrate = () =>
       runOrReturnExitCode(() =>
-        runNxSync(`_migrate ${process.argv.slice(3).join(' ')}`, {
+        runNxArgvSync(['_migrate', ...forwardedArgv], {
           stdio: ['inherit', 'inherit', 'inherit'],
         })
       );
@@ -3746,15 +3751,30 @@ export async function runMigration() {
       ) {
         delete process.env.npm_config_registry;
       }
-      // Intentionally not runNxSync: `p` is an nx CLI freshly installed into a
-      // temp dir by nxCliPath() (latest, or NX_MIGRATE_CLI_VERSION), so
-      // migrations run with an up-to-date migrate implementation instead of
-      // the workspace's current nx.
+      // Intentionally not the workspace's nx: `p` is an nx CLI freshly
+      // installed into a temp dir by nxCliPath() (latest, or
+      // NX_MIGRATE_CLI_VERSION), so migrations run with an up-to-date migrate
+      // implementation. `p` is <tmpDir>/node_modules/.bin/nx, a shell shim;
+      // spawning the entry point that install's own manifest names instead
+      // keeps the forwarded argv out of a shell. That install declares nx
+      // itself, so it is read without ascending: an nx above the temp dir is
+      // one nothing asked for, and the shim below is the answer instead.
+      const tempNxEntry = readInstalledNxBin(dirname(dirname(dirname(p))));
       return runOrReturnExitCode(() =>
-        execSync(`${p} _migrate ${process.argv.slice(3).join(' ')}`, {
-          stdio: ['inherit', 'inherit', 'inherit'],
-          windowsHide: true,
-        })
+        tempNxEntry
+          ? runNxArgvSync(['_migrate', ...forwardedArgv], {
+              stdio: ['inherit', 'inherit', 'inherit'],
+              nxBin: tempNxEntry,
+            })
+          : execSync(
+              `${quoteShellArg(p)} _migrate ${forwardedArgv
+                .map(quoteShellArg)
+                .join(' ')}`,
+              {
+                stdio: ['inherit', 'inherit', 'inherit'],
+                windowsHide: true,
+              }
+            )
       );
     }
 

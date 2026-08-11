@@ -89,7 +89,7 @@ Turborepo caches by default, but without input scoping a change to any file, tes
 
 Nx configures the inputs and outputs for you. Turborepo has you declare them, and repeat them on every cacheable task. The [Caching](#caching) section shows how that compounds across a workspace.
 
-For a full walkthrough, see [Adding Nx to your Existing Project](/docs/guides/adopting-nx/adding-to-existing-project). If you're coming from Turborepo, see [Migrating from Turborepo to Nx](/docs/guides/adopting-nx/from-turborepo).
+For a full walkthrough, see [Adding Nx to your Existing Project](/docs/guides/adopting-nx/adding-to-existing-project). If you're coming from Turborepo, see [Migrating from Turborepo to Nx](/docs/kb/from-turborepo).
 
 ## Running tasks
 
@@ -260,7 +260,7 @@ Both tools offer code generation, but the depth differs significantly.
 
 Turborepo provides `turbo gen`, built on [Plop.js](https://plopjs.com/). It scaffolds files from templates and supports custom action functions for programmatic steps. What it doesn't have is AST-level code modification, awareness of the project graph, or a migration and codemod system.
 
-Nx generators are built on top of [Nx Devkit](/docs/kb/intro), a full programmatic API for workspace manipulation. Generators can read and modify the project graph, perform AST-level TypeScript transforms, and compose with other generators. You can create [local workspace generators](/docs/features/generate-code#creating-custom-generators) that encode your team's specific patterns.
+Nx generators are built on top of [Nx Devkit](/docs/reference/devkit), a full programmatic API for workspace manipulation. Generators can read and modify the project graph, perform AST-level TypeScript transforms, and compose with other generators. You can create [local workspace generators](/docs/features/generate-code#creating-custom-generators) that encode your team's specific patterns.
 
 The real value isn't raw scaffolding, AI can do that too. It's deterministic, convention-aware generation. **AI agents can invoke your generators to produce code matching your patterns from the start.** This is faster and more token-efficient than generating everything from scratch.
 
@@ -456,6 +456,6 @@ Nx adopts incrementally on your existing scripts, so a Turborepo workspace can m
 ## Resources
 
 {% cards cols=2 %}
-{% card title="Migrate from Turborepo to Nx" description="Step-by-step migration with config and command mapping" url="/docs/guides/adopting-nx/from-turborepo" /%}
+{% card title="Migrate from Turborepo to Nx" description="Step-by-step migration with config and command mapping" url="/docs/kb/from-turborepo" /%}
 {% card title="Add Nx to an existing project" description="Adopt Nx incrementally without rewriting tool configuration" url="/docs/guides/adopting-nx/adding-to-existing-project" /%}
 {% /cards %}
