@@ -643,10 +643,16 @@ function cmdExec(argv) {
   if (opts.base && !sb.base) {
     die(`sandbox ${id} has no base worktree (start it with --base <ref>)`);
   }
-  // Base-side reads go through `read --ref base`, so reaching for `exec --base`
-  // means running something — install first. Most reviews never come here, which
-  // is why the base install is not paid for up front.
-  if (opts.base) ensureInstalled(sb, sb.base, 'base');
+  // Install the side being run, once, whichever side it is. Reads go through
+  // `read`/`grep`, so reaching for `exec` means running something. The asymmetric
+  // version of this — base self-healing while head silently ran without
+  // node_modules — turned a forgotten setup call into "command not found" from
+  // an agent, which reads as the change being broken.
+  ensureInstalled(
+    sb,
+    opts.base ? sb.base : sb.root,
+    opts.base ? 'base' : 'head'
+  );
   const r = execIn(sb, script, {
     stdio: 'inherit',
     dir: opts.base ? sb.base : sb.root,

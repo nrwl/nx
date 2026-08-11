@@ -160,13 +160,12 @@ SANDBOX=$(.claude/tools/sandbox start \
 
 .claude/tools/sandbox exec "$SANDBOX" -- git rev-parse HEAD    # HEAD_SHA
 
-# Install HEAD once, here, before any agent is dispatched. Agents run test suites,
-# execute the repo's own eslint and tsc, and mutate sources to prove a test can
-# fail — all of which need node_modules. Installing on demand instead means several
-# agents racing `pnpm install` in the same directory, which can corrupt it.
-# The base side is NOT installed here: `read --ref base` answers the usual base
-# question without running anything, and the first `exec --base` installs it if a
-# review actually needs to run something there.
+# Install HEAD once, here, before any agent is dispatched. `exec` would install it
+# on first use anyway, so this is not what makes it correct — it is what stops
+# several agents from racing the same install, which can corrupt node_modules.
+# The base side is deliberately NOT installed here: `read --ref base` answers the
+# usual base question without running anything, and most reviews never run
+# base-side at all. The first `exec --base` pays for it if one does.
 .claude/tools/sandbox install "$SANDBOX"
 ```
 
