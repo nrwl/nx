@@ -316,13 +316,10 @@ public static class Analyzer
             // Test paths
             "TestResultsDirectory",
 
-            // Microsoft.Testing.Platform. Splitting a test target relies on the
-            // platform's filtering options, so these gate whether a project can
-            // be atomized at all. MSTest.Sdk is not detectable as an SDK
-            // attribute, but it sets EnableMSTestRunner, so it is covered here.
+            // Microsoft.Testing.Platform. Both are required before a project's
+            // tests can be split; SupportsTestSplitting explains why.
             "EnableMSTestRunner",
-            "TestingPlatformDotnetTestSupport",
-            "UseMicrosoftTestingPlatformRunner"
+            "TestingPlatformDotnetTestSupport"
         };
 
         foreach (var prop in propertiesToCollect)
