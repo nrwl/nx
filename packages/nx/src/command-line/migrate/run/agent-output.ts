@@ -6,6 +6,19 @@
 // eslint override for run/ bans `utils/output` and `process.stdout.write`
 // elsewhere in this directory, which is what keeps that a property of the
 // module rather than of whoever writes the next interpolation.
+//
+// Two things this does not cover, both of which have already produced bugs:
+// a thrown error leaves through handleErrors, which splits the message on line
+// terminators and prints the pieces itself, and a value read back from run.json
+// can reach a command the agent runs rather than a line it reads. So a run.json
+// field with a fixed format (an id, a timestamp, a sha, a snapshot file name)
+// is validated in run-state.ts and fails the whole read when it does not match;
+// only free text relies on this module.
+//
+// What is deliberately not attempted: nx `require`s and runs migration code in
+// process, so a migration that ships code can do anything a forged block could,
+// and no amount of sanitizing here changes that. The goal is that data cannot
+// corrupt the framing, not that migrations are contained.
 
 import { output } from '../../../utils/output';
 import { escapeXmlAttr } from '../agentic/print-dropped-agent-context';

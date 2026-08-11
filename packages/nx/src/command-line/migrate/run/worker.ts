@@ -221,6 +221,8 @@ function readMigrationsSource(
         `The migrate run '${runId}' has no recorded plan, so there is no migration to run.`
       );
     }
+    // Safe to join and to name in the error below only because the read
+    // refuses any planSnapshot that is not a bare `plan-<round>.json`.
     const planPath = join(dir, round.planSnapshot);
     if (!existsSync(planPath)) {
       throw new Error(

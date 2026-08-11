@@ -10,6 +10,7 @@ import {
 import { randomBytes } from 'crypto';
 import { basename, join } from 'path';
 import { writeJsonFile } from '../../../utils/fileutils';
+import { GIT_SHA } from '../../../utils/git-utils';
 import { nxVersion } from '../../../utils/versions';
 import { MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
 import { RUN_ID_SAFE } from './run-id';
@@ -32,6 +33,21 @@ export const SHELL_SAFE_VALUE = /^[A-Za-z0-9@/:._-]+$/;
 // stdout the agent scans for blocks, so neither a different notation nor an
 // embedded newline can be tolerated.
 const ISO_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+/**
+ * A round's snapshot is a file Nx writes next to `run.json`, so the recorded
+ * name is a bare `plan-<round>.json`. Pinning the whole name is what keeps a
+ * tampered value from resolving outside the run directory when the worker
+ * joins it, and from reaching stdout with a line break in it when the worker
+ * reports the snapshot missing.
+ */
+const PLAN_SNAPSHOT_NAME = /^plan-\d+\.json$/;
+/**
+ * Nx numbers its steps off the plan, so a recorded id is a bare `step-<n>`.
+ * The state machine names the id back in the reason it rejects an illegal
+ * transition with, and the worker throws that reason, which puts it in front
+ * of the agent without passing the block-safe writer.
+ */
+const STEP_ID = /^step-\d+$/;
 // Package names make up the rest of a handoff path, so without this segment
 // they would occupy the run directory's top level, leaving Nx no name it
 // could add there safely.
@@ -226,6 +242,14 @@ function isOptionalBoolean(value: unknown): boolean {
   return value === undefined || typeof value === 'boolean';
 }
 
+// A recorded `git rev-parse` output. `RegExp.test` stringifies its argument,
+// so a numeric 1234 would pass the hex test without the type check.
+function isOptionalSha(value: unknown): boolean {
+  return (
+    value === undefined || (typeof value === 'string' && GIT_SHA.test(value))
+  );
+}
+
 function isOptionalStringArray(value: unknown): boolean {
   return (
     value === undefined ||
@@ -238,7 +262,8 @@ function isRoundShape(value: unknown): boolean {
     isPlainObject(value) &&
     typeof value.index === 'number' &&
     typeof value.planHash === 'string' &&
-    typeof value.planSnapshot === 'string'
+    typeof value.planSnapshot === 'string' &&
+    PLAN_SNAPSHOT_NAME.test(value.planSnapshot)
   );
 }
 
@@ -247,7 +272,7 @@ function isStepOutcomeShape(value: unknown): boolean {
     value === undefined ||
     (isPlainObject(value) &&
       isOptionalStringArray(value.fileChanges) &&
-      isOptionalString(value.gitRefAfter) &&
+      isOptionalSha(value.gitRefAfter) &&
       isOptionalStringArray(value.nextSteps) &&
       isOptionalString(value.summary))
   );
@@ -266,6 +291,7 @@ function isStepShape(value: unknown): boolean {
   return (
     isPlainObject(value) &&
     typeof value.id === 'string' &&
+    STEP_ID.test(value.id) &&
     typeof value.roundIndex === 'number' &&
     typeof value.migrationId === 'string' &&
     SHELL_SAFE_VALUE.test(value.migrationId) &&
@@ -275,7 +301,7 @@ function isStepShape(value: unknown): boolean {
     isOptionalNumber(value.pid) &&
     isOptionalString(value.startedAt) &&
     isOptionalString(value.finishedAt) &&
-    isOptionalString(value.gitRefBefore) &&
+    isOptionalSha(value.gitRefBefore) &&
     isOptionalBoolean(value.treeCleanAtDispense) &&
     isOptionalString(value.depsHashAtDispense) &&
     isStepOutcomeShape(value.outcome) &&
@@ -294,8 +320,8 @@ function isCommitLedgerEntryShape(value: unknown): boolean {
     isPlainObject(value) &&
     isOneOf(MIGRATE_COMMIT_KINDS, value.kind) &&
     Array.isArray(value.stepIds) &&
-    value.stepIds.every((id) => typeof id === 'string') &&
-    isOptionalString(value.sha)
+    value.stepIds.every((id) => typeof id === 'string' && STEP_ID.test(id)) &&
+    isOptionalSha(value.sha)
   );
 }
 
@@ -385,9 +411,12 @@ export function readRunState(runDirPath: string): MigrateRunState {
     typeof parsed.formatVersion === 'number' &&
     parsed.formatVersion > CURRENT_RUN_STATE_FORMAT_VERSION
   ) {
+    // This refusal runs before the shape check, so `nxVersion` has not been
+    // validated yet and the error carrying it leaves through handleErrors,
+    // which prints the message's own lines rather than the block-safe writer.
     const createdBy =
       typeof parsed.nxVersion === 'string'
-        ? `Nx ${parsed.nxVersion}`
+        ? `Nx ${singleLine(parsed.nxVersion)}`
         : 'a newer version of Nx';
     throw new NewerRunStateFormatError(
       `This migrate run was created with ${createdBy} (run state format v${parsed.formatVersion}), which is newer than the Nx version currently running, ${nxVersion} (run state format v${CURRENT_RUN_STATE_FORMAT_VERSION}). Re-run your migrate command with ${createdBy} or later to resume this run.`

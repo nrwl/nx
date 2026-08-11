@@ -711,6 +711,13 @@ export function getLatestCommitSha(directory?: string): string | null {
 }
 
 /**
+ * The shape of a recorded `git rev-parse` output: 40 hex chars, or 64 in a
+ * sha256 repository. Anything a caller persists and later interpolates into a
+ * command line has to be checked against this first.
+ */
+export const GIT_SHA = /^[0-9a-f]{4,64}$/i;
+
+/**
  * Whether `ancestor` is reachable from `descendant`, i.e. resetting to
  * `descendant` keeps `ancestor` in history. Returns false when the answer
  * cannot be established (invalid input, not a repository, unknown commits),
@@ -721,11 +728,7 @@ export function isAncestorCommit(
   descendant: string,
   directory?: string
 ): boolean {
-  // Both values are recorded `git rev-parse` outputs (40 hex chars, or 64 in
-  // a sha256 repository); anything else must not reach the interpolated
-  // command line.
-  const sha = /^[0-9a-f]{4,64}$/i;
-  if (!sha.test(ancestor) || !sha.test(descendant)) {
+  if (!GIT_SHA.test(ancestor) || !GIT_SHA.test(descendant)) {
     return false;
   }
   try {

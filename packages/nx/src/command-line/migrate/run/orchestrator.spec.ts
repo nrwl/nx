@@ -272,7 +272,7 @@ describe('orchestrator', () => {
 
   describe('init', () => {
     it('builds the step list, snapshot and planHash, then dispenses the first migration', async () => {
-      mockGetLatestCommitSha.mockReturnValue('head-sha');
+      mockGetLatestCommitSha.mockReturnValue('dead0001');
       const migrationsJson = {
         migrations: [
           genMig('@nx/js', 'a', '1.0.0'),
@@ -300,7 +300,7 @@ describe('orchestrator', () => {
       ]);
       // The first migration is dispensed with its pre-migration ref.
       expect(state.steps[0].status).toBe('dispensed');
-      expect(state.steps[0].gitRefBefore).toBe('head-sha');
+      expect(state.steps[0].gitRefBefore).toBe('dead0001');
       expect(state.steps[1].status).toBe('pending');
 
       expect(state.rounds[0].planSnapshot).toBe('plan-0.json');
@@ -344,7 +344,7 @@ describe('orchestrator', () => {
         .mockReturnValue('clean');
       mockGetLatestCommitSha
         .mockReturnValueOnce('before-sha') // before checkpoint
-        .mockReturnValue('checkpoint-sha'); // after checkpoint and dispense ref
+        .mockReturnValue('face0006'); // after checkpoint and dispense ref
 
       await runOrchestratorInit({
         root,
@@ -362,7 +362,7 @@ describe('orchestrator', () => {
       const { state } = findActiveRun(root).active;
       expect(state.commits).toContainEqual({
         kind: 'checkpoint',
-        sha: 'checkpoint-sha',
+        sha: 'face0006',
         stepIds: [],
       });
     });
@@ -379,7 +379,7 @@ describe('orchestrator', () => {
         .mockReturnValue('clean');
       mockGetLatestCommitSha
         .mockReturnValueOnce('before-sha')
-        .mockReturnValue('checkpoint-sha');
+        .mockReturnValue('face0006');
 
       await runOrchestratorInit({
         root,
@@ -394,7 +394,7 @@ describe('orchestrator', () => {
     });
 
     it('records no checkpoint entry and skips the commit on a clean tree', async () => {
-      mockGetLatestCommitSha.mockReturnValue('same-sha');
+      mockGetLatestCommitSha.mockReturnValue('dead0003');
 
       await runOrchestratorInit({
         root,
@@ -415,7 +415,7 @@ describe('orchestrator', () => {
       // commitCheckpointBeforeMigrations swallows commit failures with a
       // warning; a still-dirty tree afterwards is the only evidence.
       mockGetWorkingTreeStatus.mockReturnValue('dirty');
-      mockGetLatestCommitSha.mockReturnValue('same-sha');
+      mockGetLatestCommitSha.mockReturnValue('dead0003');
 
       await runOrchestratorInit({
         root,
@@ -550,7 +550,7 @@ describe('orchestrator', () => {
           ...readRunState(dir),
           steps: [
             migStep('step-1', '@nx/js:a', 'dispensed', {
-              gitRefBefore: 'their-sha',
+              gitRefBefore: 'beef0002',
             }),
           ],
         });
@@ -571,7 +571,7 @@ describe('orchestrator', () => {
       expect(block.step).toBe('step-1');
       // The concurrent dispense's ref survives; this init did not re-dispense.
       const step = readRunState(dir).steps[0];
-      expect(step.gitRefBefore).toBe('their-sha');
+      expect(step.gitRefBefore).toBe('beef0002');
       expect(step.dispenseCount).toBe(1);
     });
 
@@ -661,7 +661,7 @@ describe('orchestrator', () => {
         .mockReturnValue('clean');
       mockGetLatestCommitSha
         .mockReturnValueOnce('before-sha')
-        .mockReturnValue('checkpoint-sha');
+        .mockReturnValue('face0006');
       const initInput = {
         root,
         migrationsJson,
@@ -916,7 +916,7 @@ describe('orchestrator', () => {
         .mockReturnValue('clean');
       mockGetLatestCommitSha
         .mockReturnValueOnce('before-sha')
-        .mockReturnValue('checkpoint-sha');
+        .mockReturnValue('face0006');
       const dir = setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:a', 'pending')],
         createCommits: true,
@@ -1311,7 +1311,7 @@ describe('orchestrator', () => {
     it('installs on the way into the commit when the prompt changed dependencies', async () => {
       mockCommit.mockImplementation(async (...args: unknown[]) => {
         await (args[4] as () => Promise<void>)();
-        return { status: 'committed', sha: 'sha-1' };
+        return { status: 'committed', sha: 'face0001' };
       });
       const dir = await parkedPromptStep({ createCommits: true });
       mockStringifiedDeps.mockReturnValue('{"deps":2}');
@@ -1321,7 +1321,7 @@ describe('orchestrator', () => {
 
       expect(mockRunInstall).toHaveBeenCalledTimes(1);
       expect(readRunState(dir).commits).toEqual([
-        { kind: 'landed', sha: 'sha-1', stepIds: ['step-1'] },
+        { kind: 'landed', sha: 'face0001', stepIds: ['step-1'] },
       ]);
     });
 
@@ -1374,7 +1374,7 @@ describe('orchestrator', () => {
       mockRunInstall.mockRejectedValue(new Error('registry unreachable'));
       mockCommit.mockImplementation(async (...args: unknown[]) => {
         await (args[4] as () => Promise<void>)();
-        return { status: 'committed', sha: 'sha-1' };
+        return { status: 'committed', sha: 'face0001' };
       });
       const dir = await parkedPromptStep({ createCommits: true });
       mockStringifiedDeps.mockReturnValue('{"deps":2}');
@@ -1458,13 +1458,13 @@ describe('orchestrator', () => {
       jest.spyOn(process, 'kill').mockImplementation(() => {
         throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
       });
-      mockGetLatestCommitSha.mockReturnValue('ref-before');
+      mockGetLatestCommitSha.mockReturnValue('beef0001');
       const dir = setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:gen', 'running', {
             pid: 999999,
             startedAt: '2026-01-01T00:00:00.000Z',
-            gitRefBefore: 'ref-before',
+            gitRefBefore: 'beef0001',
             treeCleanAtDispense: true,
           }),
         ],
@@ -1477,7 +1477,7 @@ describe('orchestrator', () => {
       expect(readRunState(dir).steps[0].status).toBe('died');
       const block = lastBlock();
       expect(block.action).toBe('died');
-      expect(block.payload.instructions).toContain('ref-before');
+      expect(block.payload.instructions).toContain('beef0001');
       expect(block.payload.instructions).toContain('working tree');
       expect(block.payload.instructions).toContain('retry-clean');
       expect(block.payload.then).toContain('--step-action=retry-clean');
@@ -1520,7 +1520,7 @@ describe('orchestrator', () => {
           migStep('step-1', '@nx/js:gen', 'running', {
             pid: 999999,
             startedAt: '2026-01-01T00:00:00.000Z',
-            gitRefBefore: 'ref-before',
+            gitRefBefore: 'beef0001',
             ...(treeCleanAtDispense === undefined
               ? {}
               : { treeCleanAtDispense }),
@@ -1552,7 +1552,7 @@ describe('orchestrator', () => {
           migStep('step-1', '@nx/js:gen', 'running', {
             pid: 999999,
             startedAt: '2026-01-01T00:00:00.000Z',
-            gitRefBefore: 'ref-before',
+            gitRefBefore: 'beef0001',
             treeCleanAtDispense: true,
             generatorCompleted: true,
           }),
@@ -1575,13 +1575,13 @@ describe('orchestrator', () => {
       jest.spyOn(process, 'kill').mockImplementation(() => {
         throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
       });
-      mockGetLatestCommitSha.mockReturnValue('ref-before');
+      mockGetLatestCommitSha.mockReturnValue('beef0001');
       setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:gen', 'running', {
             pid: 999999,
             startedAt: '2026-01-01T00:00:00.000Z',
-            gitRefBefore: 'ref-before',
+            gitRefBefore: 'beef0001',
             treeCleanAtDispense: true,
           }),
         ],
@@ -1607,7 +1607,7 @@ describe('orchestrator', () => {
           migStep('step-1', '@nx/js:gen', 'running', {
             pid: 999999,
             startedAt: '2026-01-01T00:00:00.000Z',
-            gitRefBefore: 'ref-before',
+            gitRefBefore: 'beef0001',
           }),
         ],
         createCommits: false,
@@ -1622,11 +1622,11 @@ describe('orchestrator', () => {
     });
 
     it('rejects a hand-crafted retry-clean for a step dispensed against a dirty tree', async () => {
-      mockGetLatestCommitSha.mockReturnValue('ref-before');
+      mockGetLatestCommitSha.mockReturnValue('beef0001');
       const dir = setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:gen', 'died', {
-            gitRefBefore: 'ref-before',
+            gitRefBefore: 'beef0001',
             treeCleanAtDispense: false,
           }),
         ],
@@ -1650,7 +1650,7 @@ describe('orchestrator', () => {
     });
 
     it('records the tree state at dispense so a later death can trust it', async () => {
-      mockGetLatestCommitSha.mockReturnValue('head-now');
+      mockGetLatestCommitSha.mockReturnValue('dead0002');
       mockGetWorkingTreeStatus.mockReturnValue('dirty');
       const dir = setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:gen', 'pending')],
@@ -1662,7 +1662,7 @@ describe('orchestrator', () => {
 
       const step = readRunState(dir).steps[0];
       expect(step.status).toBe('dispensed');
-      expect(step.gitRefBefore).toBe('head-now');
+      expect(step.gitRefBefore).toBe('dead0002');
       expect(step.treeCleanAtDispense).toBe(false);
     });
 
@@ -1675,7 +1675,7 @@ describe('orchestrator', () => {
           migStep('step-1', '@nx/js:gen', 'running', {
             pid: 999999,
             startedAt: '2026-01-01T00:00:00.000Z',
-            gitRefBefore: 'ref-before',
+            gitRefBefore: 'beef0001',
           }),
         ],
         createCommits: false,
@@ -1703,7 +1703,7 @@ describe('orchestrator', () => {
           migStep('step-1', '@nx/js:gen', 'running', {
             pid: 999999,
             startedAt: '2026-01-01T00:00:00.000Z',
-            gitRefBefore: 'ref-before',
+            gitRefBefore: 'beef0001',
           }),
         ],
         createCommits: false,
@@ -1728,7 +1728,7 @@ describe('orchestrator', () => {
           migStep('step-2', '@nx/js:gen', 'running', {
             pid: 999999,
             startedAt: '2026-01-01T00:00:00.000Z',
-            gitRefBefore: 'ref-before',
+            gitRefBefore: 'beef0001',
           }),
         ],
         createCommits: true,
@@ -1753,7 +1753,7 @@ describe('orchestrator', () => {
           migStep('step-1', '@nx/js:gen', 'running', {
             pid: 999999,
             startedAt: '2026-01-01T00:00:00.000Z',
-            gitRefBefore: 'ref-before',
+            gitRefBefore: 'beef0001',
           }),
         ],
         createCommits: true,
@@ -1793,18 +1793,18 @@ describe('orchestrator', () => {
     });
 
     it('offers only adopt when the died step is already covered by a landed ledger entry, naming the commit', async () => {
-      mockGetLatestCommitSha.mockReturnValue('ref-before');
+      mockGetLatestCommitSha.mockReturnValue('beef0001');
       const dir = setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:gen', 'died', {
-            gitRefBefore: 'ref-before',
+            gitRefBefore: 'beef0001',
           }),
         ],
         createCommits: true,
         commits: [
           {
             kind: 'landed',
-            sha: 'landed-sha',
+            sha: 'face0003',
             stepIds: ['step-1'],
           },
         ],
@@ -1819,24 +1819,24 @@ describe('orchestrator', () => {
       expect(block.payload.instructions).toContain(
         'A clean retry is unavailable'
       );
-      expect(block.payload.instructions).toContain('landed-sha');
+      expect(block.payload.instructions).toContain('face0003');
       expect(block.payload.instructions).not.toContain('retry-clean');
       expect(block.payload.then).toContain('--step-action=adopt');
     });
 
     it('rejects retry-clean when the died step is already covered by a landed ledger entry, leaving state untouched', async () => {
-      mockGetLatestCommitSha.mockReturnValue('ref-before');
+      mockGetLatestCommitSha.mockReturnValue('beef0001');
       const dir = setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:gen', 'died', {
-            gitRefBefore: 'ref-before',
+            gitRefBefore: 'beef0001',
           }),
         ],
         createCommits: true,
         commits: [
           {
             kind: 'landed',
-            sha: 'landed-sha',
+            sha: 'face0003',
             stepIds: ['step-1'],
           },
         ],
@@ -1854,18 +1854,18 @@ describe('orchestrator', () => {
       const block = lastBlock();
       expect(block.action).toBe('error');
       expect(block.payload.instructions).toContain('already landed');
-      expect(block.payload.instructions).toContain('landed-sha');
+      expect(block.payload.instructions).toContain('face0003');
     });
 
     it('withholds retry-clean when a commit landed that the dying worker never recorded', async () => {
       // The worker commits before it appends the ledger entry, so a death
       // between the two leaves no entry to spot while HEAD sits past the ref a
       // clean retry would reset to.
-      mockGetLatestCommitSha.mockReturnValue('unrecorded-sha');
+      mockGetLatestCommitSha.mockReturnValue('face0007');
       setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:gen', 'died', {
-            gitRefBefore: 'ref-before',
+            gitRefBefore: 'beef0001',
             treeCleanAtDispense: true,
             generatorCompleted: true,
           }),
@@ -1881,19 +1881,17 @@ describe('orchestrator', () => {
       expect(block.payload.instructions).toContain(
         'A clean retry is unavailable'
       );
-      expect(block.payload.instructions).toContain(
-        'current HEAD: unrecorded-sha'
-      );
+      expect(block.payload.instructions).toContain('current HEAD: face0007');
       expect(block.payload.instructions).not.toContain('retry-clean');
       expect(block.payload.then).toMatch(/--step-action=retry$/);
     });
 
     it('rejects a hand-crafted retry-clean when a commit landed that the ledger never recorded, leaving state untouched', async () => {
-      mockGetLatestCommitSha.mockReturnValue('unrecorded-sha');
+      mockGetLatestCommitSha.mockReturnValue('face0007');
       const dir = setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:gen', 'died', {
-            gitRefBefore: 'ref-before',
+            gitRefBefore: 'beef0001',
             treeCleanAtDispense: true,
             generatorCompleted: true,
           }),
@@ -1912,22 +1910,22 @@ describe('orchestrator', () => {
       expect(readFileSync(join(dir, 'run.json'), 'utf-8')).toBe(before);
       const block = lastBlock();
       expect(block.action).toBe('error');
-      expect(block.payload.instructions).toContain('unrecorded-sha');
-      expect(block.payload.instructions).toContain('ref-before');
+      expect(block.payload.instructions).toContain('face0007');
+      expect(block.payload.instructions).toContain('beef0001');
     });
 
     it('accepts adopt when the died step is already covered by a landed ledger entry, leaving the ledger unchanged', async () => {
       const dir = setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:gen', 'died', {
-            gitRefBefore: 'ref-before',
+            gitRefBefore: 'beef0001',
           }),
         ],
         createCommits: true,
         commits: [
           {
             kind: 'landed',
-            sha: 'landed-sha',
+            sha: 'face0003',
             stepIds: ['step-1'],
           },
         ],
@@ -1945,7 +1943,7 @@ describe('orchestrator', () => {
       expect(state.commits).toEqual([
         {
           kind: 'landed',
-          sha: 'landed-sha',
+          sha: 'face0003',
           stepIds: ['step-1'],
         },
       ]);
@@ -1955,11 +1953,11 @@ describe('orchestrator', () => {
       // A retried step re-captures gitRefBefore after the earlier attempt's
       // commit landed, so resetting to it keeps that commit in history.
       mockIsAncestorCommit.mockReturnValue(true);
-      mockGetLatestCommitSha.mockReturnValue('ref-before');
+      mockGetLatestCommitSha.mockReturnValue('beef0001');
       setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:gen', 'died', {
-            gitRefBefore: 'ref-before',
+            gitRefBefore: 'beef0001',
             treeCleanAtDispense: true,
           }),
         ],
@@ -1967,7 +1965,7 @@ describe('orchestrator', () => {
         commits: [
           {
             kind: 'landed',
-            sha: 'landed-sha',
+            sha: 'face0003',
             stepIds: ['step-1'],
           },
         ],
@@ -1981,8 +1979,8 @@ describe('orchestrator', () => {
       expect(block.payload.instructions).toContain('retry-clean:');
       expect(block.payload.then).toContain('--step-action=retry-clean');
       expect(mockIsAncestorCommit).toHaveBeenCalledWith(
-        'landed-sha',
-        'ref-before',
+        'face0003',
+        'beef0001',
         root
       );
     });
@@ -2015,7 +2013,7 @@ describe('orchestrator', () => {
           migStep('step-1', '@nx/js:gen', 'running', {
             pid: 999999,
             startedAt: '2026-01-01T00:00:00.000Z',
-            gitRefBefore: 'ref-before',
+            gitRefBefore: 'beef0001',
           }),
         ],
         createCommits: true,
@@ -2136,7 +2134,7 @@ describe('orchestrator', () => {
 
     it('adopts a died step and commits its working tree at reconcile', async () => {
       jest.spyOn(process, 'kill').mockReturnValue(true as never);
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'adopt-sha' });
+      mockCommit.mockResolvedValue({ status: 'committed', sha: 'face0004' });
       const dir = setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:gen', 'died')],
         createCommits: true,
@@ -2153,7 +2151,7 @@ describe('orchestrator', () => {
       expect(state.steps[0].status).toBe('succeeded');
       expect(state.commits).toContainEqual({
         kind: 'landed',
-        sha: 'adopt-sha',
+        sha: 'face0004',
         stepIds: ['step-1'],
       });
     });
@@ -2163,7 +2161,7 @@ describe('orchestrator', () => {
       mockRunInstall.mockRejectedValue(new Error('registry unreachable'));
       mockCommit.mockImplementation(async (...args: unknown[]) => {
         await (args[4] as () => Promise<void>)();
-        return { status: 'committed', sha: 'adopt-sha' };
+        return { status: 'committed', sha: 'face0004' };
       });
       const dir = setupRun('run-1', {
         steps: [
@@ -2299,7 +2297,7 @@ describe('orchestrator', () => {
 
   describe('reconcile: commit folding', () => {
     it('commits a folded prompt step, absorbing prior uncovered failed step ids', async () => {
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'newsha' });
+      mockCommit.mockResolvedValue({ status: 'committed', sha: 'face0005' });
       const dir = setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:prior', 'skipped'),
@@ -2319,7 +2317,7 @@ describe('orchestrator', () => {
       ]);
       expect(readRunState(dir).commits).toContainEqual({
         kind: 'landed',
-        sha: 'newsha',
+        sha: 'face0005',
         stepIds: ['step-2', 'step-1'],
       });
     });
@@ -2404,7 +2402,7 @@ describe('orchestrator', () => {
 
   describe('reconcile: resume idempotency', () => {
     it('does not double-transition or double-commit on a second identical reconcile', async () => {
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'sha-1' });
+      mockCommit.mockResolvedValue({ status: 'committed', sha: 'face0001' });
       const dir = setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
         createCommits: true,
@@ -2430,7 +2428,7 @@ describe('orchestrator', () => {
 
     it('refolds after a crash between the git commit and the state write without a duplicate commit', async () => {
       mockCommit
-        .mockResolvedValueOnce({ status: 'committed', sha: 'sha-1' })
+        .mockResolvedValueOnce({ status: 'committed', sha: 'face0001' })
         .mockResolvedValue({ status: 'no-changes' });
       const dir = setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],

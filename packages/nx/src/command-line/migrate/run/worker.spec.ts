@@ -593,7 +593,7 @@ describe('runSingleMigrationWorker', () => {
         logs: '',
         madeChanges: true,
       });
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc' });
+      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc0' });
 
       await runSingleMigrationWorker(
         standaloneInput({ runMigration: '@nx/js:gen', createCommits: false })
@@ -608,7 +608,7 @@ describe('runSingleMigrationWorker', () => {
 
     it('checkpoints pre-existing working-tree state before the migration when commits are enabled', async () => {
       writeMigrations([genMig('@nx/js', 'gen')]);
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc' });
+      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc0' });
 
       await runSingleMigrationWorker(
         standaloneInput({ runMigration: '@nx/js:gen', createCommits: true })
@@ -1023,7 +1023,7 @@ describe('runSingleMigrationWorker', () => {
         logs: '',
         madeChanges: true,
       });
-      mockGetLatestCommitSha.mockReturnValue('sha-after');
+      mockGetLatestCommitSha.mockReturnValue('face0002');
       const dir = setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
         migrations: [genMig('@nx/js', 'gen')],
@@ -1037,7 +1037,7 @@ describe('runSingleMigrationWorker', () => {
       expect(state.steps[0].startedAt).toBeDefined();
       expect(state.steps[0].outcome).toMatchObject({
         fileChanges: ['a.ts'],
-        gitRefAfter: 'sha-after',
+        gitRefAfter: 'face0002',
         nextSteps: ['follow up'],
       });
     });
@@ -1100,7 +1100,7 @@ describe('runSingleMigrationWorker', () => {
     });
 
     it('finishes a retried generator step with the commit alone, covering the earlier debt', async () => {
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'sha-1' });
+      mockCommit.mockResolvedValue({ status: 'committed', sha: 'face0001' });
       const dir = setupRun('run-1', {
         steps: [
           {
@@ -1120,7 +1120,7 @@ describe('runSingleMigrationWorker', () => {
       expect(state.steps[0].status).toBe('succeeded');
       expect(state.commits[1]).toEqual({
         kind: 'landed',
-        sha: 'sha-1',
+        sha: 'face0001',
         stepIds: ['step-1'],
       });
     });
@@ -1133,7 +1133,7 @@ describe('runSingleMigrationWorker', () => {
       mockStringifiedDeps.mockReturnValue('{"deps":2}');
       mockCommit.mockImplementation(async (...args: unknown[]) => {
         await (args[4] as () => Promise<void>)();
-        return { status: 'committed', sha: 'sha-1' };
+        return { status: 'committed', sha: 'face0001' };
       });
       setupRun('run-1', {
         steps: [
@@ -1169,7 +1169,7 @@ describe('runSingleMigrationWorker', () => {
       mockStringifiedDeps.mockReturnValue('{"deps":2}');
       mockCommit.mockImplementation(async (...args: unknown[]) => {
         await (args[4] as () => Promise<void>)();
-        return { status: 'committed', sha: 'sha-1' };
+        return { status: 'committed', sha: 'face0001' };
       });
       setupRun('run-1', {
         steps: [
@@ -1444,7 +1444,7 @@ describe('runSingleMigrationWorker', () => {
         logs: '',
         madeChanges: true,
       });
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'newsha' });
+      mockCommit.mockResolvedValue({ status: 'committed', sha: 'face0005' });
       const dir = setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:prior', 'failed'),
@@ -1464,7 +1464,7 @@ describe('runSingleMigrationWorker', () => {
       const state = readRunState(dir);
       expect(state.commits).toContainEqual({
         kind: 'landed',
-        sha: 'newsha',
+        sha: 'face0005',
         stepIds: ['step-2', 'step-1'],
       });
     });
@@ -1506,8 +1506,8 @@ describe('runSingleMigrationWorker', () => {
       });
       const dir = setupRun('run-1', {
         steps: [
-          migStep('step-old', '@nx/js:gen', 'failed', 0),
-          migStep('step-new', '@nx/js:gen', 'dispensed', 1),
+          migStep('step-1', '@nx/js:gen', 'failed', 0),
+          migStep('step-2', '@nx/js:gen', 'dispensed', 1),
         ],
         rounds: [
           { index: 0, migrations: [genMig('@nx/js', 'gen')] },
@@ -1519,11 +1519,11 @@ describe('runSingleMigrationWorker', () => {
       await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
 
       const state = readRunState(dir);
-      expect(state.steps.find((s) => s.id === 'step-new').status).toBe(
+      expect(state.steps.find((s) => s.id === 'step-2').status).toBe(
         'succeeded'
       );
-      expect(state.steps.find((s) => s.id === 'step-old')).toEqual(
-        before.steps.find((s) => s.id === 'step-old')
+      expect(state.steps.find((s) => s.id === 'step-1')).toEqual(
+        before.steps.find((s) => s.id === 'step-1')
       );
     });
 
@@ -1630,7 +1630,7 @@ describe('runSingleMigrationWorker', () => {
 
     it('enables commits by default: checkpoints, runs the prompt step, then commits', async () => {
       writeMigrations([promptMig('@nx/js', 'p')]);
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc' });
+      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc0' });
 
       await runSingleMigrationWorker(
         standaloneInput({ runMigration: '@nx/js:p' })
@@ -1687,7 +1687,7 @@ describe('runSingleMigrationWorker', () => {
 
     it('warns when the agentic prompt step ran with the install skipped', async () => {
       writeMigrations([promptMig('@nx/js', 'p')]);
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc' });
+      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc0' });
       mockSkippedInstall = true;
 
       await runSingleMigrationWorker(
@@ -1751,7 +1751,7 @@ describe('runSingleMigrationWorker', () => {
         logs: 'gen logs',
         madeChanges: true,
       });
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc' });
+      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc0' });
 
       await runSingleMigrationWorker(
         standaloneInput({ runMigration: '@nx/js:gen' })
@@ -1784,7 +1784,7 @@ describe('runSingleMigrationWorker', () => {
         logs: '',
         madeChanges: true,
       });
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc' });
+      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc0' });
       mockSkippedInstall = true;
 
       await runSingleMigrationWorker(
@@ -1829,7 +1829,7 @@ describe('runSingleMigrationWorker', () => {
         logs: '',
         madeChanges: true,
       });
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc' });
+      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc0' });
 
       await runSingleMigrationWorker(
         standaloneInput({ runMigration: '@nx/js:gen', validate: false })
@@ -1863,7 +1863,7 @@ describe('runSingleMigrationWorker', () => {
         logs: 'generator ran',
         madeChanges: true,
       });
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc' });
+      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc0' });
 
       await runSingleMigrationWorker(
         standaloneInput({ runMigration: '@nx/js:h' })
@@ -1921,7 +1921,7 @@ describe('runSingleMigrationWorker', () => {
         logs: '',
         madeChanges: true,
       });
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc' });
+      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc0' });
       mockSkippedInstall = true;
 
       await runSingleMigrationWorker(
@@ -1954,7 +1954,7 @@ describe('runSingleMigrationWorker', () => {
       mockResolveAgentic.mockResolvedValue(ENABLED_AGENTIC);
       writeMigrations([hybridMig('@nx/js', 'h')]);
       waives();
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc' });
+      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc0' });
 
       await runSingleMigrationWorker(
         standaloneInput({ runMigration: '@nx/js:h' })
@@ -2001,7 +2001,7 @@ describe('runSingleMigrationWorker', () => {
       mockResolveAgentic.mockResolvedValue(ENABLED_AGENTIC);
       writeMigrations([genMig('@nx/js', 'gen')]);
       waives();
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc' });
+      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc0' });
 
       await runSingleMigrationWorker(
         standaloneInput({ runMigration: '@nx/js:gen' })
@@ -2055,7 +2055,7 @@ describe('runSingleMigrationWorker', () => {
       mockResolveAgentic.mockResolvedValue(ENABLED_AGENTIC);
       writeMigrations([hybridMig('@nx/js', 'h')]);
       waives({ agentContext: ['hint'] });
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc' });
+      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc0' });
       const verboseSpy = jest
         .spyOn(logger, 'verbose')
         .mockImplementation(() => undefined);
