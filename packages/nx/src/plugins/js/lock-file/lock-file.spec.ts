@@ -28,10 +28,7 @@ jest.mock('./project-graph-pruning', () => ({
 }));
 jest.mock('./pruned-output', () => ({
   ...jest.requireActual('./pruned-output'),
-  getPrunedPnpmInstallArtifacts: jest.fn(() => ({
-    artifacts: [],
-    obsolete: [],
-  })),
+  getPrunedPnpmInstallArtifacts: jest.fn(() => []),
   rewritePrunedLocalPathSpecifiers: jest.fn(),
   validatePrunedLocalPathClosure: jest.fn(),
   warnIncompletePrunedPnpmOutput: jest.fn(),

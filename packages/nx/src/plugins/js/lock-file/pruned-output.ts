@@ -7,7 +7,11 @@ import {
 } from 'fs';
 import { isAbsolute, join, posix, relative, sep } from 'path';
 import { getCatalogManager } from '../../../utils/catalog';
-import { readJsonFile, readYamlFile } from '../../../utils/fileutils';
+import {
+  fileExists,
+  readJsonFile,
+  readYamlFile,
+} from '../../../utils/fileutils';
 import { logger } from '../../../utils/logger';
 import { output } from '../../../utils/output';
 import type { Lockfile } from '@pnpm/lockfile-types';
@@ -114,8 +118,17 @@ type PrunedPnpmConfig = {
 };
 
 /**
- * Builds the settings-only pnpm-workspace.yaml a standalone pruned output needs
- * on pnpm 11 and above, or null when there is nothing to carry.
+ * Builds the settings-only pnpm-workspace.yaml a standalone pruned output ships.
+ *
+ * Emitted for every pnpm output, including the ones with no settings to carry.
+ * A conditional artifact cannot be retracted once shipped: a cache replay
+ * restores only the files the replayed entry holds, and a bundler that leaves
+ * its output directory uncleaned overwrites nothing, so an earlier build's copy
+ * would survive and pnpm would read its `patchedDependencies` as a lockfile
+ * mismatch. Shipping it unconditionally makes every build overwrite the last.
+ * A `packages: []`-only file is inert: verified installable with identical
+ * module resolution on pnpm 9, 10 and 11, and on pnpm 10 it leaves the
+ * package.json build approvals in force.
  *
  * pnpm 11 was the first major to read these settings only from
  * pnpm-workspace.yaml, never the package.json `pnpm` field, and the rest of the
@@ -133,8 +146,9 @@ type PrunedPnpmConfig = {
  * emitted package.json instead, so a pnpm 11+ deploy of that output would not
  * pick them up.
  *
- * pnpm 10 and below read the same settings from the emitted package.json, so
- * this returns null there, and when the workspace declares none. Resolution-time
+ * pnpm 10 and below read the same settings from the emitted package.json, so the
+ * file carries only `packages: []` there, as it does when the workspace declares
+ * no settings at all. Resolution-time
  * config stays out: it is already baked into the pruned lockfile (see
  * `stripPrunedLockfilePnpmConfig`). `patchedDependencies` are carried too, scoped
  * to the patches the pruned lockfile keeps (see `getPrunedPnpmPatchArtifacts`).
@@ -153,15 +167,13 @@ export function getPrunedPnpmInstallSettingsYaml(
   workspaceRootPath: string = workspaceRoot,
   prunedLockfileContent?: string,
   precomputed?: PrunedPnpmConfig
-): string | null {
-  const settings = getPrunedPnpmWorkspaceSettings(
-    workspaceRootPath,
-    prunedLockfileContent,
-    precomputed
-  );
-  if (settings === null) {
-    return null;
-  }
+): string {
+  const settings =
+    getPrunedPnpmWorkspaceSettings(
+      workspaceRootPath,
+      prunedLockfileContent,
+      precomputed
+    ) ?? {};
   const { dump } = require('@zkochan/js-yaml');
   // pnpm 9 rejects a pnpm-workspace.yaml without a `packages` field; an empty
   // list is accepted by pnpm 9-11 without pulling any importer into the install.
@@ -748,7 +760,10 @@ export function getPrunedPnpmPatchArtifacts(
       );
     }
     shippedFrom.set(destination, source);
-    if (existsSync(source)) {
+    // A file check rather than a mere existence one: a path whose segments all
+    // normalize away (``, `.`, `..`) resolves to a directory, which would fail
+    // the read below with a raw EISDIR instead of taking the warn path.
+    if (fileExists(source)) {
       // Ship the patch under the `patches/<subpath>` path the pruned output
       // declares, reading it from wherever the workspace kept it.
       patchFiles.push({
@@ -756,7 +771,7 @@ export function getPrunedPnpmPatchArtifacts(
         content: readFileSync(source, 'utf-8'),
       });
     } else {
-      // The root config declares this patch but the file is missing (already a
+      // The root config declares this patch but no file is there (already a
       // broken workspace, the root install would fail too). Warn rather than
       // drop the declaration: the pruned lockfile still lists the patch, so
       // dropping only the config would trade this for a lockfile config mismatch.
@@ -931,7 +946,10 @@ function containFileToken(
     return token;
   }
   const pathStart = index + marker.length;
-  const path = token.slice(pathStart);
+  // Normalize separators first, matching the artifact shipping side
+  // (getPrunedPnpmLocalPathArtifacts), so a backslash-authored token contains to
+  // the same posix path the artifacts ship to.
+  const path = normalizePath(token.slice(pathStart));
   const contained = containVendoredFilePath(path, synthesized);
   return contained === path
     ? token
@@ -1567,7 +1585,14 @@ export function relocatePrunedLocalPathSpec(
     /\/+$/,
     ''
   );
-  if (wsRelativeTarget.split('/').includes('..')) {
+  // A `..` segment escapes the workspace, and so does an absolute result: the
+  // absolute-spec check above cannot see an absolute `sourceDir`, which join()
+  // carries through and containment would turn into
+  // `local_path_modules//abs/...`, a path the output never ships.
+  if (
+    isAbsolute(wsRelativeTarget) ||
+    wsRelativeTarget.split('/').includes('..')
+  ) {
     return { spec, reason: 'outside-workspace' };
   }
   if (wsRelativeTarget === '' || wsRelativeTarget === '.') {
@@ -1785,18 +1810,13 @@ export type PrunedDeployArtifact =
 
 /**
  * The pnpm install-time artifacts a standalone pruned output needs, as data for
- * a caller to write or emit: the pnpm 11 settings-only pnpm-workspace.yaml (see
+ * a caller to write or emit: the settings-only pnpm-workspace.yaml (see
  * `getPrunedPnpmInstallSettingsYaml`), the `pnpm patch` files, and the
  * non-workspace local-path dependencies (`file:` tarballs/dirs and `link:`
  * targets, see `getPrunedPnpmLocalPathArtifacts`). The last are carried as a
  * source path rather than content so a directory sink can copy them straight
  * across. Everything is resolved before returning, so a colliding patch path
  * aborts before the caller ships anything.
- *
- * `obsolete` names output-relative paths a prior deploy may hold that this one
- * must not: a cache replay restores only the files the newer entry holds, so
- * once the settings empty out a lingering pnpm-workspace.yaml would have pnpm 11
- * read its patchedDependencies as a lockfile mismatch.
  *
  * The pnpm <=10 build-script approvals and `patchedDependencies` declaration are
  * folded onto `packageJson` in place (see
@@ -1813,7 +1833,7 @@ export function getPrunedPnpmInstallArtifacts(
   prunedLockfileContent: string,
   packageJson: PackageJson,
   options?: { includeLocalPathArtifacts?: boolean }
-): { artifacts: PrunedDeployArtifact[]; obsolete: string[] } {
+): PrunedDeployArtifact[] {
   const config: PrunedPnpmConfig = {
     pnpmMajor: getPnpmMajorOrWarn(workspaceRootPath),
     patchedDependencies: getPrunedPatchedDependencies(
@@ -1832,13 +1852,9 @@ export function getPrunedPnpmInstallArtifacts(
     prunedLockfileContent,
     config
   );
-  const artifacts: PrunedDeployArtifact[] = [];
-  const obsolete: string[] = [];
-  if (yaml !== null) {
-    artifacts.push({ path: 'pnpm-workspace.yaml', content: yaml });
-  } else {
-    obsolete.push('pnpm-workspace.yaml');
-  }
+  const artifacts: PrunedDeployArtifact[] = [
+    { path: 'pnpm-workspace.yaml', content: yaml },
+  ];
   artifacts.push(...patchFiles);
   if (options?.includeLocalPathArtifacts !== false) {
     artifacts.push(
@@ -1858,5 +1874,5 @@ export function getPrunedPnpmInstallArtifacts(
     buildSettings,
     packageJsonPatchedDependencies
   );
-  return { artifacts, obsolete };
+  return artifacts;
 }

@@ -47,11 +47,11 @@
       "factory": "./dist/src/migrations/update-23-1-0/set-tsconfig-root-dir-for-ts6",
       "documentation": "./dist/src/migrations/update-23-1-0/set-tsconfig-root-dir-for-ts6.md"
     },
-    "update-23-2-0-add-pnpm-prune-lockfile-outputs": {
+    "update-23-2-0-add-pnpm-prune-lockfile-cache-config": {
       "version": "23.2.0-beta.5",
-      "description": "Add the pnpm-workspace.yaml, patches, and local_path_modules paths to the outputs of @nx/js:prune-lockfile targets in pnpm workspaces, so a cache replay restores the pnpm install settings, patch files, and vendored local-path dependencies the executor now emits alongside the pruned lockfile.",
-      "implementation": "./dist/src/migrations/update-23-2-0/add-pnpm-prune-lockfile-outputs",
-      "documentation": "./dist/src/migrations/update-23-2-0/add-pnpm-prune-lockfile-outputs.md"
+      "description": "Add the pnpm-workspace.yaml, patches, and local_path_modules paths to the outputs of @nx/js:prune-lockfile targets in pnpm workspaces, and the workspace root pnpm-workspace.yaml and package.json to their inputs, so a cache replay restores the pnpm install settings, patch files, and vendored local-path dependencies the executor now emits, and a change to the root pnpm install settings does not replay a stale one.",
+      "implementation": "./dist/src/migrations/update-23-2-0/add-pnpm-prune-lockfile-cache-config",
+      "documentation": "./dist/src/migrations/update-23-2-0/add-pnpm-prune-lockfile-cache-config.md"
     }
   },
   "packageJsonUpdates": {

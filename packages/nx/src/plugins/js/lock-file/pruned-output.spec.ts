@@ -34,6 +34,9 @@ import {
 const settingsYamlOf = (
   artifacts: Array<{ path: string; content?: string | Buffer }>
 ) => artifacts.find((artifact) => artifact.path === 'pnpm-workspace.yaml');
+const settingsOf = (
+  artifacts: Array<{ path: string; content?: string | Buffer }>
+) => require('@zkochan/js-yaml').load(settingsYamlOf(artifacts).content);
 const manifest = (): PackageJson => ({ name: 'app', version: '0.0.1' });
 
 describe('normalizePrunedPatchPath', () => {
@@ -98,6 +101,13 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     writeFileSync(join(tempDir, 'pnpm-workspace.yaml'), content);
   }
 
+  // The file ships on every pnpm output, so "carries nothing" is a
+  // `packages: []`-only document rather than an absent file.
+  function expectNoSettings(yaml: string) {
+    const { load } = require('@zkochan/js-yaml');
+    expect(load(yaml)).toEqual({ packages: [] });
+  }
+
   it('carries allowBuilds and supportedArchitectures on pnpm 11', () => {
     mockPnpmVersion('11.2.2');
     writeRootWorkspaceYaml(
@@ -115,7 +125,6 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
 
     const yaml = getPrunedPnpmInstallSettingsYaml(tempDir);
 
-    expect(yaml).not.toBeNull();
     const { load } = require('@zkochan/js-yaml');
     expect(load(yaml)).toEqual({
       packages: [],
@@ -129,11 +138,11 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     expect(yaml).not.toContain('packages/*');
   });
 
-  it('returns null on pnpm 10 (those settings are read from package.json)', () => {
+  it('carries no settings on pnpm 10 (those are read from package.json)', () => {
     mockPnpmVersion('10.5.0');
     writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');
 
-    expect(getPrunedPnpmInstallSettingsYaml(tempDir)).toBeNull();
+    expectNoSettings(getPrunedPnpmInstallSettingsYaml(tempDir));
   });
 
   it('carries settings on pnpm 12 and above (same behavior as pnpm 11)', () => {
@@ -142,7 +151,6 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
 
     const yaml = getPrunedPnpmInstallSettingsYaml(tempDir);
 
-    expect(yaml).not.toBeNull();
     const { load } = require('@zkochan/js-yaml');
     expect(load(yaml)).toEqual({
       packages: [],
@@ -150,20 +158,20 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     });
   });
 
-  it('returns null when the workspace has no root pnpm-workspace.yaml', () => {
+  it('carries no settings when the workspace has no root pnpm-workspace.yaml', () => {
     mockPnpmVersion('11.2.2');
 
-    expect(getPrunedPnpmInstallSettingsYaml(tempDir)).toBeNull();
+    expectNoSettings(getPrunedPnpmInstallSettingsYaml(tempDir));
   });
 
-  it('returns null when pnpm 11 declares no install-time settings', () => {
+  it('carries no settings when pnpm 11 declares no install-time settings', () => {
     mockPnpmVersion('11.2.2');
     writeRootWorkspaceYaml('packages:\n  - packages/*\n');
 
-    expect(getPrunedPnpmInstallSettingsYaml(tempDir)).toBeNull();
+    expectNoSettings(getPrunedPnpmInstallSettingsYaml(tempDir));
   });
 
-  it('fails open (null) when the pnpm version cannot be determined', () => {
+  it('fails open (no settings) when the pnpm version cannot be determined', () => {
     jest
       .spyOn(pacakgeManager, 'getPackageManagerVersion')
       .mockImplementation(() => {
@@ -171,28 +179,28 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
       });
     writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');
 
-    expect(getPrunedPnpmInstallSettingsYaml(tempDir)).toBeNull();
+    expectNoSettings(getPrunedPnpmInstallSettingsYaml(tempDir));
   });
 
-  it('fails open (null) when the root pnpm-workspace.yaml is malformed', () => {
+  it('fails open (no settings) when the root pnpm-workspace.yaml is malformed', () => {
     mockPnpmVersion('11.2.2');
     writeRootWorkspaceYaml('allowBuilds: { esbuild: true');
 
-    expect(getPrunedPnpmInstallSettingsYaml(tempDir)).toBeNull();
+    expectNoSettings(getPrunedPnpmInstallSettingsYaml(tempDir));
   });
 
-  it('returns null when the root pnpm-workspace.yaml is empty', () => {
+  it('carries no settings when the root pnpm-workspace.yaml is empty', () => {
     mockPnpmVersion('11.2.2');
     writeRootWorkspaceYaml('');
 
-    expect(getPrunedPnpmInstallSettingsYaml(tempDir)).toBeNull();
+    expectNoSettings(getPrunedPnpmInstallSettingsYaml(tempDir));
   });
 
-  it('returns null when the root pnpm-workspace.yaml has only comments', () => {
+  it('carries no settings when the root pnpm-workspace.yaml has only comments', () => {
     mockPnpmVersion('11.2.2');
     writeRootWorkspaceYaml('# no install-time settings here\n');
 
-    expect(getPrunedPnpmInstallSettingsYaml(tempDir)).toBeNull();
+    expectNoSettings(getPrunedPnpmInstallSettingsYaml(tempDir));
   });
 
   it('detects the pnpm version once per workspace root across runs', () => {
@@ -239,20 +247,23 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
         undefined,
         manifest()
       );
-      expect(settingsYamlOf(first.artifacts)).toBeUndefined();
+      expect(settingsOf(first)).toEqual({ packages: [] });
 
       const second = getPrunedPnpmInstallArtifacts(
         workspaceRoot,
         undefined,
         manifest()
       );
-      expect(settingsYamlOf(second.artifacts)).toBeDefined();
+      expect(settingsOf(second)).toEqual({
+        packages: [],
+        allowBuilds: { esbuild: true },
+      });
     } finally {
       rmSync(workspaceRoot, { recursive: true, force: true });
     }
   });
 
-  it('skips the settings file on pnpm 10', () => {
+  it('ships a settings-less file on pnpm 10', () => {
     // A separate workspace root per pnpm major: the detected version is
     // memoized per root, as it is for the duration of a real process.
     const workspaceRoot = mkdtempSync(join(tmpdir(), 'nx-pruned-pnpm-10-'));
@@ -263,13 +274,13 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
       );
       mockPnpmVersion('10.5.0');
 
-      const { artifacts } = getPrunedPnpmInstallArtifacts(
+      const artifacts = getPrunedPnpmInstallArtifacts(
         workspaceRoot,
         undefined,
         manifest()
       );
 
-      expect(settingsYamlOf(artifacts)).toBeUndefined();
+      expect(settingsOf(artifacts)).toEqual({ packages: [] });
     } finally {
       rmSync(workspaceRoot, { recursive: true, force: true });
     }
@@ -284,7 +295,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
       );
       mockPnpmVersion('11.2.2');
 
-      const { artifacts } = getPrunedPnpmInstallArtifacts(
+      const artifacts = getPrunedPnpmInstallArtifacts(
         workspaceRoot,
         undefined,
         manifest()
@@ -362,12 +373,12 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     mockPnpmVersion('11.2.2');
     writeRootWorkspaceYaml('allowBuilds:\n  some-absent-native-dep: true\n');
 
-    expect(
+    expectNoSettings(
       getPrunedPnpmInstallSettingsYaml(
         tempDir,
         prunedLockfileWith('lodash@4.17.21')
       )
-    ).toBeNull();
+    );
   });
 
   // Valid YAML that is not a lockfile document. Each case needs its own content,
@@ -464,12 +475,12 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
 
     // null means the probe already failed (and warned); re-probing here could
     // disagree with the decisions the other builders derived from that null.
-    expect(
+    expectNoSettings(
       getPrunedPnpmInstallSettingsYaml(tempDir, undefined, {
         pnpmMajor: null,
         patchedDependencies: {},
       })
-    ).toBeNull();
+    );
   });
 
   it('scopes allowBuilds to the packages the pruned lockfile keeps', () => {
@@ -478,7 +489,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
       'allowBuilds:\n  esbuild: true\n  some-absent-native-dep: true\n'
     );
 
-    const { artifacts } = getPrunedPnpmInstallArtifacts(
+    const artifacts = getPrunedPnpmInstallArtifacts(
       tempDir,
       prunedLockfileWith('esbuild@0.21.5'),
       manifest()
@@ -491,22 +502,23 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     });
   });
 
-  it('reports the settings file as obsolete when the output no longer has settings', () => {
+  it('still ships the settings file when the output has no settings to carry', () => {
     mockPnpmVersion('11.2.2');
     // Root once approved a build script, so a prior deploy shipped settings out.
-    // A cache replay restores only the files the newer entry holds, so that
-    // file lingers unless the sink is told to drop it.
+    // Skipping the file now would leave that deploy's copy in place, since a
+    // cache replay restores only the files the replayed entry holds and the
+    // emit sink can only add assets.
     writeRootWorkspaceYaml('allowBuilds:\n  some-absent-native-dep: true\n');
 
     // The current pruned lockfile approves nothing, so there are no settings.
-    const { artifacts, obsolete } = getPrunedPnpmInstallArtifacts(
+    const artifacts = getPrunedPnpmInstallArtifacts(
       tempDir,
       prunedLockfileWith('lodash@4.17.21'),
       manifest()
     );
 
-    expect(settingsYamlOf(artifacts)).toBeUndefined();
-    expect(obsolete).toEqual(['pnpm-workspace.yaml']);
+    const { load } = require('@zkochan/js-yaml');
+    expect(load(settingsYamlOf(artifacts).content)).toEqual({ packages: [] });
   });
 
   // A pruned lockfile carrying a patchedDependencies section (values are the
@@ -880,6 +892,32 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     warn.mockRestore();
   });
 
+  // Every segment filters away, so the shipped path collapses to the bare
+  // `patches/` directory and the source resolves to a directory too. Reading it
+  // would throw a raw EISDIR instead of taking the missing-file warn path.
+  // An empty path never reaches here (getPrunedPatchedDependencies drops it).
+  it.each(['.', '..'])(
+    'warns instead of throwing on a patch path of %p',
+    (patchPath) => {
+      mockPnpmVersion('11.2.2');
+      const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+      writeRootWorkspaceYaml(
+        `patchedDependencies:\n  is-number@7.0.0: '${patchPath}'\n`
+      );
+
+      const { patchFiles } = getPrunedPnpmPatchArtifacts(
+        tempDir,
+        prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number@7.0.0'])
+      );
+
+      expect(patchFiles).toEqual([]);
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('was not found')
+      );
+      warn.mockRestore();
+    }
+  );
+
   it('returns no patch artifacts when the pruned lockfile has no patches', () => {
     mockPnpmVersion('11.2.2');
     writeRootWorkspaceYaml(
@@ -904,7 +942,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     writeRootPatch('patches/is-number@7.0.0.patch', 'THE PATCH\n');
     const packageJson = manifest();
 
-    const { artifacts } = getPrunedPnpmInstallArtifacts(
+    const artifacts = getPrunedPnpmInstallArtifacts(
       tempDir,
       prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number@7.0.0']),
       packageJson
@@ -944,7 +982,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     mkdirSync(join(tempDir, 'vendor/lib'), { recursive: true });
     writeFileSync(join(tempDir, 'vendor/lib/index.js'), 'REAL');
 
-    const { artifacts } = getPrunedPnpmInstallArtifacts(
+    const artifacts = getPrunedPnpmInstallArtifacts(
       tempDir,
       [
         "lockfileVersion: '9.0'",
@@ -1005,14 +1043,16 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
       pnpm: { onlyBuiltDependencies: ['esbuild'] },
     };
 
-    const { artifacts } = getPrunedPnpmInstallArtifacts(
+    const artifacts = getPrunedPnpmInstallArtifacts(
       tempDir,
       prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number@7.0.0']),
       packageJson
     );
 
-    // pnpm <=10 has no pnpm-workspace.yaml; only the patch file ships
+    // pnpm <=10 keeps the settings in package.json, so the workspace file
+    // ships carrying nothing but the empty packages list.
     expect(artifacts).toEqual([
+      { path: 'pnpm-workspace.yaml', content: 'packages: []\n' },
       { path: 'patches/patches/is-number@7.0.0.patch', content: 'THE PATCH\n' },
     ]);
     expect(packageJson.pnpm).toEqual({
@@ -1023,17 +1063,19 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     });
   });
 
-  it('ships nothing and leaves package.json untouched when there are no pnpm install settings', () => {
+  it('ships only the settings-less workspace file and leaves package.json untouched when there are no pnpm install settings', () => {
     mockPnpmVersion('11.2.2');
     const packageJson = manifest();
 
-    const { artifacts } = getPrunedPnpmInstallArtifacts(
+    const artifacts = getPrunedPnpmInstallArtifacts(
       tempDir,
       prunedLockfileWith('is-number@7.0.0'),
       packageJson
     );
 
-    expect(artifacts).toEqual([]);
+    expect(artifacts).toEqual([
+      { path: 'pnpm-workspace.yaml', content: 'packages: []\n' },
+    ]);
     expect(packageJson.pnpm).toBeUndefined();
   });
 
@@ -1415,15 +1457,16 @@ describe('getPrunedPnpmPackageJsonBuildSettings', () => {
       dependencies: { esbuild: '0.21.5' },
     };
 
-    const { artifacts } = getPrunedPnpmInstallArtifacts(
+    const artifacts = getPrunedPnpmInstallArtifacts(
       tempDir,
       prunedLockfileWith('esbuild@0.21.5'),
       packageJson
     );
 
     expect(packageJson.pnpm).toEqual({ onlyBuiltDependencies: ['esbuild'] });
-    // pnpm <=10 reads these from package.json, so no workspace file ships.
-    expect(settingsYamlOf(artifacts)).toBeUndefined();
+    // pnpm <=10 reads these from package.json, so the workspace file that
+    // ships carries none of them.
+    expect(settingsOf(artifacts)).toEqual({ packages: [] });
   });
 
   it('keeps build approvals out of the shipped package.json on pnpm 11', () => {
@@ -1434,7 +1477,7 @@ describe('getPrunedPnpmPackageJsonBuildSettings', () => {
       dependencies: { esbuild: '0.21.5' },
     };
 
-    const { artifacts } = getPrunedPnpmInstallArtifacts(
+    const artifacts = getPrunedPnpmInstallArtifacts(
       tempDir,
       prunedLockfileWith('esbuild@0.21.5'),
       packageJson
@@ -2177,6 +2220,29 @@ describe('containShippedLocalFilePaths', () => {
         .resolution.directory
     ).toBe('local_path_modules/vendor/a');
   });
+
+  // The key and the tarball ref go through the same token containment as the
+  // directory resolution above, so they must normalize the same way or the
+  // shipped file sits at a path the lockfile never names.
+  it('normalizes backslash separators in a file: token before containing', () => {
+    const lockfile = {
+      packages: {
+        'a@file:vendor\\a.tgz': {
+          resolution: { tarball: 'file:vendor\\a.tgz' },
+        },
+      },
+    };
+
+    containShippedLocalFilePaths(lockfile);
+
+    expect(Object.keys(lockfile.packages)).toEqual([
+      'a@file:local_path_modules/vendor/a.tgz',
+    ]);
+    expect(
+      (lockfile.packages as any)['a@file:local_path_modules/vendor/a.tgz']
+        .resolution.tarball
+    ).toBe('file:local_path_modules/vendor/a.tgz');
+  });
 });
 
 describe('containLocalPath', () => {
@@ -2232,6 +2298,18 @@ describe('relocatePrunedLocalPathSpec', () => {
     expect(
       relocatePrunedLocalPathSpec('file:../../vendor/lib/', 'apps/app', '')
     ).toEqual({ spec: 'file:local_path_modules/vendor/lib' });
+  });
+
+  // The absolute-spec guard only sees the spec, so an absolute sourceDir joins
+  // straight through and would contain to `local_path_modules//abs/...`.
+  it.each([
+    ['file:./sub', '/abs/apps/app'],
+    ['file:../vendor/lib', '/abs/apps/app'],
+  ])('reports %s from an absolute source dir as unshippable', (spec, from) => {
+    expect(relocatePrunedLocalPathSpec(spec, from, '')).toEqual({
+      spec,
+      reason: 'outside-workspace',
+    });
   });
 });
 

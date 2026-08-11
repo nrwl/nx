@@ -146,26 +146,38 @@ export function getPruneTargets(
     `{workspaceRoot}/${joinPathFragments(outputPath, 'package.json')}`,
     `{workspaceRoot}/${joinPathFragments(outputPath, lockFileName)}`,
   ];
+  let pruneLockfileInputs: string[] | undefined;
   if (packageManager === 'pnpm') {
-    // On pnpm 11+ the prune-lockfile executor also emits a settings-only
+    // Beside the pruned lockfile the executor emits a settings-only
     // pnpm-workspace.yaml, a `pnpm patch` workspace emits the referenced `.patch`
     // files under `patches/`, and any non-workspace local-path deps (`file:`
     // tarballs/dirs, `link:` targets) ship under `local_path_modules/`; declare
     // all three so a cache replay restores them and native build-script
     // approvals, patches, or vendored dependencies are not silently dropped.
-    // Declared for any pnpm since the generator can't know the pnpm major or
-    // whether the workspace uses such settings; Nx tolerates absent outputs.
+    // The last two are declared for any pnpm since the generator can't know
+    // whether the workspace uses them; Nx tolerates absent outputs.
     pruneLockfileOutputs.push(
       `{workspaceRoot}/${joinPathFragments(outputPath, 'pnpm-workspace.yaml')}`,
       `{workspaceRoot}/${joinPathFragments(outputPath, 'patches')}`,
       `{workspaceRoot}/${joinPathFragments(outputPath, 'local_path_modules')}`
     );
+    // The build approvals and `supportedArchitectures` those artifacts carry are
+    // recorded nowhere in the lockfile, so without the root files in the hash a
+    // revoked approval replays the previous artifact. `default` and `^default`
+    // keep what an undeclared `inputs` would have hashed.
+    pruneLockfileInputs = [
+      'default',
+      '^default',
+      `{workspaceRoot}/pnpm-workspace.yaml`,
+      `{workspaceRoot}/package.json`,
+    ];
   }
   return {
     'prune-lockfile': {
       dependsOn: ['build'],
       cache: true,
       executor: '@nx/js:prune-lockfile',
+      ...(pruneLockfileInputs ? { inputs: pruneLockfileInputs } : {}),
       outputs: pruneLockfileOutputs,
       options: {
         buildTarget,

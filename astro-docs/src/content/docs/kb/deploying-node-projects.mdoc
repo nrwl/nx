@@ -49,7 +49,7 @@ apps/my-app/dist/
 ├── main.js                          # Compiled application
 ├── package.json                     # Pruned production dependencies
 ├── package-lock.json                # Pruned lockfile (or yarn.lock / pnpm-lock.yaml)
-├── pnpm-workspace.yaml              # pnpm 11+, when install settings survive the prune
+├── pnpm-workspace.yaml              # pnpm only, carries the install settings
 ├── patches/                         # pnpm only, if the workspace uses `pnpm patch`
 ├── local_path_modules/              # pnpm only, non-workspace file:/link: dependencies
 └── workspace_modules/               # Only present if you have workspace deps
@@ -147,9 +147,12 @@ Add the following targets to your project's `package.json` or `project.json`:
 
 Replace `package-lock.json` in the `outputs` array with `yarn.lock` or `pnpm-lock.yaml` to match your package manager.
 The emitted `pnpm-workspace.yaml` carries build-script approvals (`allowBuilds`), `supportedArchitectures`, and any `patchedDependencies`.
-On pnpm 10 and below there is no such file, and the emitted `package.json` declares `patchedDependencies` instead.
+On pnpm 10 and below it carries none of them, because the emitted `package.json` declares them instead, but the file still ships so that every run overwrites the last one.
 Copied `.patch` files keep their original subpath under `patches/`.
 Add `{workspaceRoot}/apps/my-app/dist/pnpm-workspace.yaml`, `{workspaceRoot}/apps/my-app/dist/patches`, and `{workspaceRoot}/apps/my-app/dist/local_path_modules` to the `outputs` so a cached run restores them instead of dropping those approvals, patches, or vendored dependencies.
+Add `{workspaceRoot}/pnpm-workspace.yaml` and `{workspaceRoot}/package.json` to the `inputs` as well.
+The build approvals and `supportedArchitectures` live only in those two files, and nothing records them in the lockfile.
+Without them in the `inputs`, revoking an approval leaves the task hash unchanged and a cached run ships an output that still grants it.
 
 {% aside type="caution" title="Installing the output with --ignore-workspace" %}
 `pnpm install --ignore-workspace` skips a `pnpm-workspace.yaml` sitting beside the output, so the settings in it never apply.
@@ -161,8 +164,7 @@ ERR_PNPM_LOCKFILE_CONFIG_MISMATCH  Cannot proceed with the frozen installation. 
 
 Install that output without the flag.
 The emitted file declares an empty `packages` list, which already stops pnpm from treating a parent directory as a workspace.
-The executor emits no `pnpm-workspace.yaml` at all on pnpm 10 and below, or when the workspace has no approvals, architectures, or patches to carry.
-There is nothing for the flag to skip in that case, so keep it if the output is installed inside another pnpm workspace.
+A workspace with no approvals, architectures, or patches to carry gets a file holding only that empty list, so the flag has nothing to skip there.
 {% /aside %}
 
 Then run:
