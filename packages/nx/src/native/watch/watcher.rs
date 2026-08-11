@@ -252,6 +252,23 @@ impl WatchPipeline {
             .collect()
     }
 
+    /// Roots of the linked worktrees nested in the workspace, absolute.
+    ///
+    /// Read from git's registry rather than accumulated from the event
+    /// stream. `track_new_worktrees` only learns of a worktree from its
+    /// `.git` gitfile's creation event, and on Linux and Windows that event
+    /// is never generated: the checkout is created and its gitfile written
+    /// before the directory has a watch, so there is nothing to notice. The
+    /// registry is state, so it cannot be missed the same way.
+    #[cfg(not(target_os = "macos"))]
+    fn resolve_worktrees(&self) -> Vec<PathBuf> {
+        let origin = Path::new(self.origin_path.trim_end_matches(MAIN_SEPARATOR));
+        nested_linked_worktrees(origin)
+            .into_iter()
+            .map(|relative| origin.join(relative))
+            .collect()
+    }
+
     /// Synchronously register watches for new directories, walk them to
     /// backfill files written before the watch was active, and recurse
     /// into any nested subdirectories. Returns Err on `MaxFilesWatch`.
@@ -264,6 +281,21 @@ impl WatchPipeline {
 
         debug!(?dirs, "registering watches for new directories");
         register_watches(&mut self.watcher, dirs)?;
+
+        // `nx_walker_sync` keeps the worktrees themselves out of the walk
+        // below; telling the filterer about them is the other half. A watch
+        // registered before the checkout existed still delivers events from
+        // inside it, and the gitfile `track_new_worktrees` relies on is
+        // written before any watch on that directory exists, so its creation
+        // event is never generated here. Git's registry is state rather than
+        // a notification, so it cannot be missed the same way.
+        for root in self.resolve_worktrees() {
+            debug!(
+                ?root,
+                "linked worktree found while backfilling - blocking it"
+            );
+            self.filterer.track_worktree(&root);
+        }
 
         let mut nested_dirs: HashSet<PathBuf> = HashSet::new();
         let mut backfilled_paths: Vec<PathBuf> = Vec::new();
@@ -1022,6 +1054,46 @@ mod tests {
         assert!(
             leaked.is_empty(),
             "expected no events inside a worktree created after boot; got {leaked:?}"
+        );
+    }
+
+    #[test]
+    fn a_populated_worktree_created_after_boot_is_not_backfilled() {
+        // The checkout is populated immediately after its gitfile, the way
+        // `git worktree add` does it, rather than after a settle. That lands
+        // the files before any watch on the worktree exists, so they arrive
+        // through the backfill walk instead of the event stream - which
+        // prunes only the hardcoded ignores and would otherwise report every
+        // file in the checkout as created, and take an inotify descriptor for
+        // every directory in it.
+        let dir = tempdir().expect("tempdir");
+        let root = dir.path().canonicalize().expect("canonicalize");
+        fs::create_dir_all(root.join(".git")).expect("mkdir .git");
+
+        let (_watcher, captured) = start_watcher(&root);
+
+        let worktree = root.join(".claude/worktrees/wt");
+        register_worktree(&root, "wt", &worktree);
+        fs::create_dir_all(worktree.join("packages/app/src")).expect("mkdir checkout");
+        for file in ["package.json", "packages/app/src/main.ts"] {
+            fs::write(worktree.join(file), "x").expect("populate checkout");
+        }
+        // Un-ignored write proves the watcher is alive.
+        fs::write(root.join("alive.txt"), "z").expect("alive write");
+
+        let events = collect(&captured);
+        assert!(
+            events.iter().any(|e| e.path == "alive.txt"),
+            "expected an event for alive.txt; got {events:?}"
+        );
+
+        let leaked: Vec<_> = events
+            .iter()
+            .filter(|e| e.path.contains("worktrees/wt/"))
+            .collect();
+        assert!(
+            leaked.is_empty(),
+            "expected no events from a worktree populated after boot; got {leaked:?}"
         );
     }
 

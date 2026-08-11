@@ -44,12 +44,36 @@ where
 
     let ignore_glob_set = build_glob_set(&base_ignores).expect("Should be valid globs");
 
+    // Same prune as `create_walker`, for the same reason: a linked worktree is
+    // a full second checkout, and walking it multiplies the file set for no
+    // gain. It matters more here than it looks. The daemon expands a
+    // directory-creation event by walking the new directory
+    // (`transform_event_to_watch_events`) and backfills a newly watched
+    // directory the same way, so without this a `git worktree add` inside the
+    // workspace reports every file of the new checkout as created.
+    let walk_root = base_dir.clone();
+    let worktrees: HashSet<PathBuf> = nested_linked_worktrees(&base_dir).into_iter().collect();
+
     // Use WalkDir instead of ignore::WalkBuilder because it's faster
     WalkDir::new(&base_dir)
         .into_iter()
         .filter_entry(move |entry| {
             let path = entry.path().to_string_lossy();
-            !ignore_glob_set.is_match(path.as_ref())
+            if ignore_glob_set.is_match(path.as_ref()) {
+                return false;
+            }
+
+            if worktrees.is_empty() {
+                return true;
+            }
+
+            // `filter_entry` prunes the entry's whole subtree, so matching the
+            // worktree root is enough to keep the checkout out.
+            entry
+                .path()
+                .strip_prefix(&walk_root)
+                .map(|relative| !worktrees.contains(relative))
+                .unwrap_or(true)
         })
         .filter_map(move |entry| {
             entry.ok().and_then(|e| {
@@ -357,6 +381,23 @@ mod test {
             files,
             vec!["libs/sub/lib.ts".to_string(), "test.txt".to_string()]
         );
+    }
+
+    #[test]
+    fn nx_walker_sync_skips_linked_worktrees() {
+        // The daemon expands a directory-creation event, and backfills a newly
+        // watched directory, by walking it with `nx_walker_sync`. Both run over
+        // whatever `git worktree add` just wrote, so a walk that descends into
+        // a checkout reports every file in it as created.
+        let temp_dir = setup_worktree_fs();
+
+        let mut files = nx_walker_sync(temp_dir.path(), None)
+            .map(|p| p.to_string_lossy().replace('\\', "/"))
+            .filter(|p| p.ends_with(".ts"))
+            .collect::<Vec<_>>();
+        files.sort();
+
+        assert_eq!(files, vec!["libs/sub/lib.ts".to_string()]);
     }
 
     #[test]
