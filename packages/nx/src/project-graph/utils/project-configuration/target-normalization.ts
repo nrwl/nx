@@ -168,6 +168,8 @@ function declaresCacheTrue(value: TargetDefaultValue | undefined): boolean {
   const entries = Array.isArray(value) ? value : [value];
   let declared: boolean | undefined;
   for (const entry of entries) {
+    // `nx.json` is hand-edited; a null or scalar entry would throw here.
+    if (!entry || typeof entry !== 'object') continue;
     if (entry.cache === undefined) continue;
     if (entry.filter) return false;
     declared = entry.cache;

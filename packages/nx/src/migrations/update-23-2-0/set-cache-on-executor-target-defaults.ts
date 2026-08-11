@@ -205,8 +205,17 @@ function declaresAnyContinuous(value: TargetDefaultValue | undefined): boolean {
   return configEntries(value).some((entry) => entry.continuous === true);
 }
 
+/**
+ * The config blocks of a `targetDefaults` value. Entries that are not config
+ * objects are dropped rather than inspected: `nx.json` is hand-edited, and a
+ * `null` or scalar entry would otherwise throw while reading `.cache` off it.
+ */
 function configEntries(value: TargetDefaultValue): TargetDefaultArrayEntry[] {
-  return Array.isArray(value) ? value : [value];
+  const entries = Array.isArray(value) ? value : [value];
+  return entries.filter(
+    (entry): entry is TargetDefaultArrayEntry =>
+      !!entry && typeof entry === 'object'
+  );
 }
 
 /**
@@ -242,16 +251,17 @@ function packageJsonTargets(
 
 /**
  * The unfiltered config block of a `targetDefaults` value, or undefined when the
- * array form carries only filtered entries. Never creates one — see
- * {@link canEnableCache}.
+ * array form carries only filtered entries and when the value is not a config
+ * object at all. Never creates one — see {@link canEnableCache}.
  */
 function catchAllConfig(
   value: TargetDefaultValue
 ): TargetDefaultArrayEntry | undefined {
+  const entries = configEntries(value);
   if (!Array.isArray(value)) {
-    return value;
+    return entries[0];
   }
-  return value.find((entry) => entry.filter === undefined);
+  return entries.find((entry) => entry.filter === undefined);
 }
 
 /**

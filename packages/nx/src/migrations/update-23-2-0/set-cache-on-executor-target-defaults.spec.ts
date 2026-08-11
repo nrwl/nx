@@ -373,6 +373,54 @@ describe('set-cache-on-executor-target-defaults migration', () => {
     await expect(migration(tree)).resolves.not.toThrow();
   });
 
+  it.each([
+    ['a string', JSON.parse('"whatever"')],
+    ['a number', JSON.parse('5')],
+  ])(
+    'should leave an executor default that is %s untouched',
+    async (_label, value) => {
+      setup({ build: { cache: true }, '@nx/js:tsc': value } as any, {
+        build: { executor: '@nx/js:tsc' },
+      });
+
+      await expect(migration(tree)).resolves.not.toThrow();
+
+      expect(readNxJson(tree).targetDefaults['@nx/js:tsc']).toEqual(value);
+    }
+  );
+
+  it('should skip a null array entry and stamp the real one', async () => {
+    setup(
+      JSON.parse(
+        '{"build":{"cache":true},"@nx/js:tsc":[null,{"inputs":["default"]}]}'
+      ),
+      { build: { executor: '@nx/js:tsc' } }
+    );
+
+    await expect(migration(tree)).resolves.not.toThrow();
+
+    expect(readNxJson(tree).targetDefaults['@nx/js:tsc']).toEqual([
+      null,
+      { inputs: ['default'], cache: true },
+    ]);
+  });
+
+  it('should not crash when the target-name default has a null array entry', async () => {
+    setup(
+      JSON.parse(
+        '{"build":[null,{"cache":true}],"@nx/js:tsc":{"inputs":["default"]}}'
+      ),
+      { build: { executor: '@nx/js:tsc' } }
+    );
+
+    await expect(migration(tree)).resolves.not.toThrow();
+
+    expect(readNxJson(tree).targetDefaults['@nx/js:tsc']).toEqual({
+      inputs: ['default'],
+      cache: true,
+    });
+  });
+
   it('should not write through the prototype chain for a __proto__ executor', async () => {
     // `"executor": "__proto__"` resolves through the prototype chain on a plain
     // lookup, so an unguarded `targetDefaults[executor]` collects the target and

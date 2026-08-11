@@ -353,6 +353,21 @@ describe('target-name cache fallback', () => {
     expect(target.cache).toBeUndefined();
   });
 
+  it.each([
+    ['an array entry that is null', JSON.parse('[null,{"cache":true}]')],
+    ['a string', JSON.parse('"nonsense"')],
+    ['a number', JSON.parse('7')],
+  ])('should not throw when the target-name default is %s', (_label, build) => {
+    // nx.json is hand-edited, and this runs inside graph construction — a
+    // throw here fails every nx command, not just the fallback.
+    expect(() =>
+      normalize({ executor: '@nx/js:tsc' }, {
+        build,
+        '@nx/js:tsc': { inputs: ['default'] },
+      } as any)
+    ).not.toThrow();
+  });
+
   it('should not treat an inherited key as a shadowing executor key', () => {
     // `targetDefaults["__proto__"]` resolves through the prototype chain to a
     // truthy object, so an unguarded lookup reports a shadowing key that the
