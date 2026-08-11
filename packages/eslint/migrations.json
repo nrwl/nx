@@ -34,6 +34,16 @@
       "version": "23.1.0-beta.5",
       "description": "Migrate the removed @typescript-eslint/ban-types rule to its v8 successors (no-empty-object-type, no-unsafe-function-type, no-wrapper-object-types), whose options do not map 1:1 - so it is driven by an AI prompt rather than a deterministic codemod.",
       "prompt": "./dist/src/migrations/update-23-1-0/migrate-ban-types-rule.md"
+    },
+    "update-23-2-0-migrate-to-eslint-v10": {
+      "version": "23.2.0-beta.5",
+      "requires": {
+        "eslint": ">=10.0.0"
+      },
+      "description": "Prepare the workspace for ESLint v10: convert eslintrc configs to flat config, since v10 removed the eslintrc format, and replace the ESLint plugins that have no v10 release.",
+      "implementation": "./dist/src/migrations/update-23-2-0/migrate-to-eslint-v10",
+      "prompt": "./dist/src/migrations/update-23-2-0/finish-eslint-v10-migration.md",
+      "documentation": "./dist/src/migrations/update-23-2-0/migrate-to-eslint-v10.md"
     }
   },
   "packageJsonUpdates": {
@@ -262,6 +272,55 @@
         },
         "@typescript-eslint/utils": {
           "version": "^8.58.0"
+        },
+        "@typescript-eslint/rule-tester": {
+          "version": "^8.58.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/scope-manager": {
+          "version": "^8.58.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/typescript-estree": {
+          "version": "^8.58.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.2.0": {
+      "version": "23.2.0-beta.5",
+      "requires": {
+        "eslint": ">=9.0.0 <10.0.0"
+      },
+      "incompatibleWith": {
+        "angular-eslint": "<21.3.0",
+        "@angular-eslint/eslint-plugin": "<21.3.0",
+        "eslint-config-next": "<16.0.0"
+      },
+      "packages": {
+        "eslint": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "typescript-eslint": {
+          "version": "^8.58.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "^8.58.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/parser": {
+          "version": "^8.58.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/utils": {
+          "version": "^8.58.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/type-utils": {
+          "version": "^8.58.0",
+          "alwaysAddToPackageJson": false
         },
         "@typescript-eslint/rule-tester": {
           "version": "^8.58.0",

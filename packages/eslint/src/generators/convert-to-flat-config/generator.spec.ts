@@ -16,7 +16,7 @@ import {
 import { convertToFlatConfigGenerator } from './generator';
 import { ConvertToFlatConfigGeneratorSchema } from './schema';
 import { lintProjectGenerator } from '../lint-project/lint-project';
-import { eslintrcVersion, eslintVersion } from '../../utils/versions';
+import { eslintrcVersion } from '../../utils/versions';
 import { dump } from '@zkochan/js-yaml';
 
 function getLintInputs(nxJson: NxJsonConfiguration): string[] {
@@ -1561,7 +1561,7 @@ describe('convert-to-flat-config generator', () => {
       expect(devDependencies['typescript-eslint']).toBe('^8.20.0');
       // Newly required flat-config packages are still added.
       expect(devDependencies['@eslint/eslintrc']).toBe(eslintrcVersion);
-      expect(devDependencies['@eslint/js']).toBe(eslintVersion);
+      expect(devDependencies['@eslint/js']).toBe('^9.8.0');
     });
 
     it('should overwrite existing ESLint pins by default', async () => {
@@ -1583,7 +1583,7 @@ describe('convert-to-flat-config generator', () => {
       await convertToFlatConfigGenerator(tree, options);
 
       const { devDependencies } = readJson(tree, 'package.json');
-      expect(devDependencies.eslint).toBe(eslintVersion);
+      expect(devDependencies.eslint).toBe('^9.8.0');
     });
   });
 
@@ -1613,7 +1613,7 @@ describe('convert-to-flat-config generator', () => {
     };
 
     it.each(['.eslintrc.js', '.eslintrc.cjs'])(
-      'should warn and skip a project whose eslint config is %s',
+      'should convert a project whose %s is built from literals',
       async (jsConfig) => {
         await lintProjectGenerator(tree, {
           skipFormat: false,
@@ -1622,9 +1622,43 @@ describe('convert-to-flat-config generator', () => {
           setParserOptionsProject: false,
           eslintConfigFormat: 'cjs',
         });
-        // Swap the project's JSON config for a JS one the converter cannot read.
+        // Swap the project's JSON config for a statically readable JS one.
         tree.delete('libs/test-lib/.eslintrc.json');
-        tree.write(`libs/test-lib/${jsConfig}`, 'module.exports = {};');
+        tree.write(
+          `libs/test-lib/${jsConfig}`,
+          `module.exports = { rules: { 'no-console': 'error' } };`
+        );
+
+        const warnSpy = jest.spyOn(logger, 'warn');
+        await convertToFlatConfigGenerator(tree, options);
+
+        expect(warnSpy).not.toHaveBeenCalledWith(
+          expect.stringContaining('Skipping "test-lib"')
+        );
+        expect(tree.exists(`libs/test-lib/${jsConfig}`)).toBeFalsy();
+        expect(tree.read('libs/test-lib/eslint.config.cjs', 'utf-8')).toContain(
+          `'no-console': 'error'`
+        );
+        warnSpy.mockRestore();
+      }
+    );
+
+    it.each(['.eslintrc.js', '.eslintrc.cjs'])(
+      'should warn and skip a project whose %s cannot be read statically',
+      async (jsConfig) => {
+        await lintProjectGenerator(tree, {
+          skipFormat: false,
+          linter: 'eslint',
+          project: 'test-lib',
+          setParserOptionsProject: false,
+          eslintConfigFormat: 'cjs',
+        });
+        // Swap the project's JSON config for a JS one that computes its values.
+        tree.delete('libs/test-lib/.eslintrc.json');
+        tree.write(
+          `libs/test-lib/${jsConfig}`,
+          `module.exports = { rules: require('./rules') };`
+        );
 
         const warnSpy = jest.spyOn(logger, 'warn');
         await convertToFlatConfigGenerator(tree, options);
@@ -1638,6 +1672,32 @@ describe('convert-to-flat-config generator', () => {
         warnSpy.mockRestore();
       }
     );
+
+    it('should convert a root JavaScript-based config built from literals', async () => {
+      tree.write(
+        '.eslintrc.js',
+        `module.exports = { root: true, rules: { 'no-console': 'error' } };`
+      );
+
+      await convertToFlatConfigGenerator(tree, options);
+
+      expect(tree.exists('.eslintrc.js')).toBeFalsy();
+      expect(tree.read('eslint.config.cjs', 'utf-8')).toContain(
+        `'no-console': 'error'`
+      );
+    });
+
+    it('should throw with the reason when the root JavaScript-based config cannot be read statically', async () => {
+      tree.write(
+        '.eslintrc.js',
+        `module.exports = { rules: require('./rules') };`
+      );
+
+      await expect(convertToFlatConfigGenerator(tree, options)).rejects.toThrow(
+        `Cannot convert ".eslintrc.js" automatically because "rules" is not a literal value (require('./rules')).`
+      );
+      expect(tree.exists('.eslintrc.js')).toBeTruthy();
+    });
 
     it('should silently skip a project already on a JavaScript flat config', async () => {
       await lintProjectGenerator(tree, {
@@ -1658,6 +1718,43 @@ describe('convert-to-flat-config generator', () => {
         expect.stringContaining('Skipping "test-lib"')
       );
       warnSpy.mockRestore();
+    });
+
+    it('should report an eslintrc that parses to nothing instead of skipping it silently', async () => {
+      await lintProjectGenerator(tree, {
+        skipFormat: false,
+        linter: 'eslint',
+        project: 'test-lib',
+        setParserOptionsProject: false,
+        eslintConfigFormat: 'cjs',
+      });
+      tree.delete('libs/test-lib/.eslintrc.json');
+      // A comment-only YAML document loads to null, so there is no config to read.
+      tree.write('libs/test-lib/.eslintrc.yaml', '# nothing here\n');
+      tree.write('libs/test-lib/.eslintignore', 'dist\n');
+
+      const warnSpy = jest.spyOn(logger, 'warn');
+      await convertToFlatConfigGenerator(tree, options);
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Skipping "libs/test-lib/.eslintrc.yaml": it does not hold an ESLint configuration'
+        )
+      );
+      expect(tree.exists('libs/test-lib/.eslintrc.yaml')).toBe(true);
+      // The eslintrc is still there, and it is the only thing that reads the
+      // ignore file, so the ignore file has to stay with it.
+      expect(tree.exists('libs/test-lib/.eslintignore')).toBe(true);
+      warnSpy.mockRestore();
+    });
+
+    it('should refuse to convert when the root eslintrc parses to nothing', async () => {
+      tree.delete('.eslintrc.json');
+      tree.write('.eslintrc.yaml', '# nothing here\n');
+
+      await expect(convertToFlatConfigGenerator(tree, options)).rejects.toThrow(
+        'Cannot convert ".eslintrc.yaml": it does not hold an ESLint configuration'
+      );
     });
   });
 });

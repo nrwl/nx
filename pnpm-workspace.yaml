@@ -114,8 +114,8 @@ catalogs:
     '@angular-eslint/eslint-plugin': '^22.1.0'
     '@angular-eslint/eslint-plugin-template': '^22.1.0'
     '@angular-eslint/template-parser': '^22.1.0'
-    '@typescript-eslint/type-utils': '^8.0.0'
-    '@typescript-eslint/utils': '^8.0.0'
+    '@typescript-eslint/type-utils': '^8.58.0'
+    '@typescript-eslint/utils': '^8.58.0'
     angular-eslint: '^22.1.0'
     eslint-config-prettier: '^10.0.0'
   jest:
