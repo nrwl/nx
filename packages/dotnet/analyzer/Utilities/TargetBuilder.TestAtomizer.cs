@@ -107,7 +107,6 @@ public static partial class TargetBuilder
             Inputs = baseTestTarget.Inputs,
             Outputs = baseTestTarget.Outputs,
             DependsOn = [.. dependsOn],
-            // Otherwise Nx could schedule the parent alongside its own tasks.
             Parallelism = units.All(unit => unit.DoNotParallelize) ? false : null,
             Metadata = new TargetMetadata
             {
