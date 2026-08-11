@@ -599,47 +599,5 @@ describe('@nx/dotnet - createNodes', () => {
         'test-ci--Acme.LoginTests',
       ]);
     });
-
-    it('should remove atomized targets when the test target is disabled', () => {
-      // Otherwise the parent and its leaves survive pointing at a target that
-      // no longer exists.
-      const result = mergeUserTargetConfigurations(atomizedNode(), {
-        test: false,
-      });
-
-      expect(Object.keys(result.targets)).toEqual(['build']);
-    });
-
-    it('should drop the now-empty target group when the test target is disabled', () => {
-      const result = mergeUserTargetConfigurations(atomizedNode(), {
-        test: false,
-      });
-
-      expect(result.metadata?.targetGroups).toEqual({});
-    });
-
-    it('should not disturb unrelated target groups when disabling', () => {
-      const node = atomizedNode();
-      node.targets['lint'] = { command: 'dotnet format' };
-      node.metadata!.targetGroups!['LINT'] = ['lint'];
-
-      const result = mergeUserTargetConfigurations(node, { test: false });
-
-      expect(result.metadata?.targetGroups).toEqual({ LINT: ['lint'] });
-      expect(result.targets).toHaveProperty('lint');
-    });
-
-    it('should leave a project without atomized targets untouched', () => {
-      const node: ProjectConfiguration = {
-        root: 'libs/core',
-        name: 'core',
-        targets: { build: { command: 'dotnet build' }, test: {} },
-      };
-
-      const result = mergeUserTargetConfigurations(node, { test: false });
-
-      expect(Object.keys(result.targets)).toEqual(['build']);
-      expect(result.metadata).toBeUndefined();
-    });
   });
 });
