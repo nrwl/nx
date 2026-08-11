@@ -104,11 +104,13 @@ An abstract test class isn't split either, but that costs you nothing under `ciS
 concrete classes that derive from it are what carry tests, and each of those gets its own task
 regardless of where the tests it runs are declared.
 
-Under `ciSplitBy: method`, inherited tests are missed. Method mode only looks at what a class
-declares directly, so a `[TestClass]` subclass with no test method of its own produces no task at
-all, even though its inherited tests still run under `test`. That gap is reported the same way the
-ones above are. Switch to `ciSplitBy: class` (or stay on `test`) for a project that leans on
-inheritance heavily.
+Method mode splits only the `[TestMethod]`s a class declares directly, so tests a subclass inherits
+from a base get no task of their own, whether or not that subclass declares any itself. They still
+run under `test`, just not in the split run.
+
+A subclass declaring no test method of its own is counted and explained, but one that declares some
+and inherits the rest loses the inherited ones silently. Use `ciSplitBy: class` if your suite leans
+on inheritance. Class mode keeps the subclass as one task, wherever its tests are declared.
 
 ## Parallelism
 
