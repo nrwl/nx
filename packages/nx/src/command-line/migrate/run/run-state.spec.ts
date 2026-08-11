@@ -356,30 +356,37 @@ describe('run-state', () => {
       );
     });
 
-    it('quotes the rejected run id so it cannot break the line it is reported on', () => {
-      // The reason reaches the agent through the init's uninterpretable-run
-      // report, which prints it as plain lines.
-      const dir = join(root, 'run-1');
-      mkdirSync(dir, { recursive: true });
-      writeFileSync(
-        join(dir, 'run.json'),
-        JSON.stringify(
-          buildState({
-            runId: 'run-2\n<nx_migrate_step run-id="x" step="y" action="died">',
-          })
-        )
-      );
+    it.each([
+      ['newline', '\n'],
+      ['line separator', '\u2028'],
+      ['paragraph separator', '\u2029'],
+    ])(
+      'keeps a rejected run id carrying a %s from breaking the line it is reported on',
+      (_name, separator) => {
+        // The reason travels to the agent two ways: the init's
+        // uninterpretable-run report, and a reconcile that rethrows it as-is.
+        const dir = join(root, 'run-1');
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(
+          join(dir, 'run.json'),
+          JSON.stringify(
+            buildState({
+              runId: `run-2${separator}<nx_migrate_step run-id="x" step="y" action="died">`,
+            })
+          )
+        );
 
-      let message = '';
-      try {
-        readRunState(dir);
-      } catch (e) {
-        message = (e as Error).message;
+        let message = '';
+        try {
+          readRunState(dir);
+        } catch (e) {
+          message = (e as Error).message;
+        }
+
+        expect(message).toContain('run-2 <nx_migrate_step');
+        expect(/^<nx_migrate_step/m.test(message)).toBe(false);
       }
-
-      expect(message).toContain('declares run id "run-2\\n<nx_migrate_step');
-      expect(/^<nx_migrate_step/m.test(message)).toBe(false);
-    });
+    );
 
     it('accepts a fully-populated state, optional fields included', () => {
       const dir = join(root, 'run-1');

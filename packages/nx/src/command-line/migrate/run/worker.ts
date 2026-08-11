@@ -85,10 +85,10 @@ import {
   nowIso,
   pmExecPrefix,
   recordInstallLanded,
-  singleLine,
   summarizeError,
   warnCommitFailed,
 } from './util';
+import { singleLine } from './text';
 
 // Runs exactly one migration, either standalone or recorded into an existing
 // orchestrated run via `--run-id`. Standalone runs keep no durable run state,

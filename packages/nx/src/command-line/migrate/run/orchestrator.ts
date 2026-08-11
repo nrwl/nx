@@ -67,10 +67,10 @@ import {
   nowIso,
   pmExecPrefix,
   pmInstallCommand,
-  singleLine,
   summarizeError,
   warnCommitFailed,
 } from './util';
+import { singleLine } from './text';
 
 // The dark migrate orchestrator: drives a durable run one dispense at a time.
 // An outer AI agent runs each dispensed command and re-invokes `nx migrate

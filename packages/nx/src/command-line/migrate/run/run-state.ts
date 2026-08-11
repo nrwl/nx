@@ -13,6 +13,7 @@ import { writeJsonFile } from '../../../utils/fileutils';
 import { nxVersion } from '../../../utils/versions';
 import { MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
 import { RUN_ID_SAFE } from './run-id';
+import { singleLine } from './text';
 
 export const CURRENT_RUN_STATE_FORMAT_VERSION = 1;
 
@@ -405,14 +406,17 @@ export function readRunState(runDirPath: string): MigrateRunState {
   // so a run.json naming a different one is not this run: the commands built
   // from the persisted copy would send the agent somewhere else.
   if (parsed.runId !== basename(runDirPath)) {
-    // JSON-quoted rather than interpolated bare: the rejected value is the
-    // untrusted one, and this reason is rendered into the stdout the agent
-    // scans for blocks.
+    // Collapsed, then quoted: the rejected value is the untrusted one and this
+    // reason reaches the stdout the agent scans for blocks. Quoting alone
+    // would not do it, since JSON.stringify leaves the Unicode line separators
+    // literal.
     throw corruptRunStateError(
       filePath,
       `declares run id ${JSON.stringify(
-        parsed.runId
-      )} but sits in a directory named ${JSON.stringify(basename(runDirPath))}.`
+        singleLine(parsed.runId as string)
+      )} but sits in a directory named ${JSON.stringify(
+        singleLine(basename(runDirPath))
+      )}.`
     );
   }
   return parsed as unknown as MigrateRunState;
