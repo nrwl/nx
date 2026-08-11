@@ -1,7 +1,12 @@
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from '../../generators/tree';
 import { TempFs } from '../../internal-testing-utils/temp-fs';
-import { detectFormatter, detectFormatterInTree } from './index';
+import {
+  detectFormatter,
+  detectFormatterInTree,
+  resetFormatterWarningsForTesting,
+} from './index';
+import { logger } from '../logger';
 
 describe('detectFormatterInTree', () => {
   let tree: Tree;
@@ -168,5 +173,39 @@ describe('detectFormatter', () => {
     );
 
     expect(detectFormatter(fs.tempDir)).toBeNull();
+  });
+});
+
+describe('the both-configured warning', () => {
+  let warn: jest.SpyInstance;
+
+  beforeEach(() => {
+    // The warn-once flag is module state; without this the second case here
+    // passes for the wrong reason (already warned) rather than on its own merits.
+    resetFormatterWarningsForTesting();
+    warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => warn.mockRestore());
+
+  it('should warn once, not per call, when both are configured', () => {
+    const tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
+    tree.write('.oxfmtrc.json', '{}');
+    tree.write('.prettierrc', '{}');
+
+    expect(detectFormatterInTree(tree)).toBe('oxfmt');
+    expect(detectFormatterInTree(tree)).toBe('oxfmt');
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain('formatting with oxfmt');
+  });
+
+  it('should stay silent when only one is configured', () => {
+    const tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
+    tree.write('.oxfmtrc.json', '{}');
+
+    expect(detectFormatterInTree(tree)).toBe('oxfmt');
+
+    expect(warn).not.toHaveBeenCalled();
   });
 });

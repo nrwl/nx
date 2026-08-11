@@ -5,6 +5,7 @@ import { readJson } from '../../generators/utils/json';
 import { readJsonFile } from '../fileutils';
 import { isUsingOxfmt, isUsingOxfmtInTree } from './oxfmt';
 import { isUsingPrettier, isUsingPrettierInTree } from './prettier';
+import { logger } from '../logger';
 
 /**
  * A formatter Nx can actually dispatch to. "No formatter configured" is the
@@ -33,8 +34,33 @@ import { isUsingPrettier, isUsingPrettierInTree } from './prettier';
  */
 export type FormatterType = 'prettier' | 'oxfmt';
 
+// Both configured is a real workspace state, not an error: oxfmt wins so that
+// adding an oxfmt config to a prettier repo is honoured as the newer, more
+// specific intent. It is worth saying out loud once, because the two disagree
+// on quoting, width and `sortPackageJson`, and every generator formats through
+// this. Once per process - detection runs on all 200+ `formatFiles` call sites.
+let warnedBothConfigured = false;
+
+function warnBothConfigured(): void {
+  warnedBothConfigured = true;
+  logger.warn(
+    'Both an oxfmt and a prettier config were found. Nx is formatting with ' +
+      'oxfmt. Remove one config, or pass --formatter, to choose explicitly.'
+  );
+}
+
+/** Test-only: the warn-once flag is module state and would leak between cases. */
+export function resetFormatterWarningsForTesting(): void {
+  warnedBothConfigured = false;
+}
+
 export function detectFormatter(root: string): FormatterType | null {
   if (isUsingOxfmt(root)) {
+    // Guarded by the flag first so the extra prettier lookup happens at most
+    // once per process rather than on every generator.
+    if (!warnedBothConfigured && isUsingPrettier(root)) {
+      warnBothConfigured();
+    }
     return 'oxfmt';
   }
   if (isUsingPrettier(root)) {
@@ -59,6 +85,9 @@ export function detectFormatter(root: string): FormatterType | null {
 
 export function detectFormatterInTree(tree: Tree): FormatterType | null {
   if (isUsingOxfmtInTree(tree)) {
+    if (!warnedBothConfigured && isUsingPrettierInTree(tree)) {
+      warnBothConfigured();
+    }
     return 'oxfmt';
   }
   if (isUsingPrettierInTree(tree)) {
