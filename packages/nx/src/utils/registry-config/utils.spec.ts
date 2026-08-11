@@ -194,9 +194,32 @@ describe('bridgePnpmEnvVars', () => {
     );
   });
 
+  it('keeps the next reference escaped when a resolved value ends in a backslash', () => {
+    // The value's trailing backslash and the reference's escape run land side by
+    // side; npm reads the merged run, whose parity has to stay odd.
+    expect(bridgePnpmEnvVars('${DIR}\\${TOKEN}', { DIR: 'C:\\' })).toBe(
+      'C:\\\\\\${TOKEN}'
+    );
+    expect(
+      expandNpmEnvVars('C:\\\\\\${TOKEN}', { DIR: 'C:\\', TOKEN: 'secret' })
+    ).toBe('C:\\${TOKEN}');
+  });
+
   it('hands npm the text its expansion turns back into what pnpm resolved', () => {
-    const env = { A: 'a-value', B: 'b${A}b', C: '' };
-    const atoms = ['', 'p', '${A}', '${B}', '${C}', '${MISSING}', '\\${A}'];
+    const env = { A: 'a-value', B: 'b${A}b', C: '', D: 'd\\', E: 'e\\\\' };
+    const atoms = [
+      '',
+      'p',
+      '${A}',
+      '${B}',
+      '${C}',
+      '${D}',
+      '${E}',
+      '${MISSING}',
+      '\\${A}',
+      '\\\\${A}',
+      '\\\\\\${A}',
+    ];
     for (const left of atoms) {
       for (const right of atoms) {
         const input = `${left}${right}`;

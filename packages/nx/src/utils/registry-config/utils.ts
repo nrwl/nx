@@ -336,22 +336,18 @@ interface ReplaceEnvExprOptions {
    * consuming the escape here would let it expand the reference after all.
    */
   keepEscaped?: boolean;
-  /** Applied to what a reference resolved to, for the same reason. */
-  substituted?: (value: string) => string;
 }
 
 function replaceEnvExpr(
   value: string,
   resolve: (name: string) => string | undefined,
-  { keepEscaped = false, substituted }: ReplaceEnvExprOptions = {}
+  { keepEscaped = false }: ReplaceEnvExprOptions = {}
 ): string {
   return value.replace(ENV_EXPR, (orig: string, esc: string, name: string) => {
     if (esc.length % 2) {
       return keepEscaped ? orig : orig.slice((esc.length + 1) / 2);
     }
-    const expanded =
-      esc.slice(esc.length / 2) + (resolve(name) ?? `$\{${name}}`);
-    return substituted ? substituted(expanded) : expanded;
+    return esc.slice(esc.length / 2) + (resolve(name) ?? `$\{${name}}`);
   });
 }
 
@@ -481,20 +477,21 @@ export function expandPnpmEnvVars(
 }
 
 /**
- * The same expansion in the form to hand the spawned npm: what a reference
- * resolved to is escaped, so npm reproduces it instead of expanding a `${VAR}`
- * the variable's own value carries, which pnpm would have sent literally. An
- * escaped reference keeps its escape rather than consuming it, because npm's own
- * pass consumes the same one and lands on what pnpm resolved.
+ * The same expansion in the form to hand the spawned npm: every `${VAR}` left in
+ * what pnpm resolved is escaped, so npm reproduces it instead of expanding a
+ * reference pnpm would have sent literally, whether that reference is one pnpm
+ * kept escaped or one a variable's own value carries.
+ *
+ * The escaping runs over pnpm's whole result rather than per reference, because
+ * a resolved value ending in a backslash joins the escape run of the reference
+ * behind it. Escaping each piece on its own leaves npm reading the merged run,
+ * whose parity says expand where pnpm's said keep.
  */
 export function bridgePnpmEnvVars(
   value: string,
   env: NodeJS.ProcessEnv = process.env
 ): string {
-  return replaceEnvExpr(value, (name) => resolvePnpmEnvValue(name, env) ?? '', {
-    keepEscaped: true,
-    substituted: escapeNpmEnvExpr,
-  });
+  return escapeNpmEnvExpr(expandPnpmEnvVars(value, env));
 }
 
 /** The `${VAR}` references in `value` that pnpm's throwing reader dies on. */
