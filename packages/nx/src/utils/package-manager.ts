@@ -1,4 +1,10 @@
-import { exec, execFile, execSync } from 'child_process';
+import {
+  exec,
+  execFile,
+  execFileSync,
+  execSync,
+  type ExecSyncOptionsWithStringEncoding,
+} from 'child_process';
 import {
   copyFileSync,
   existsSync,
@@ -60,6 +66,18 @@ function execPackageManagerAsync(
     return execAsync([pm, ...args.map((arg) => `"${arg}"`)].join(' '), options);
   }
   return execFileAsync(pm, args, options);
+}
+
+/** Same split, and the same quote-free precondition, for a blocking caller. */
+function execPackageManagerSync(
+  pm: string,
+  args: string[],
+  options: ExecSyncOptionsWithStringEncoding
+): string {
+  if (process.platform === 'win32') {
+    return execSync([pm, ...args.map((arg) => `"${arg}"`)].join(' '), options);
+  }
+  return execFileSync(pm, args, options);
 }
 
 export type PackageManager = 'yarn' | 'pnpm' | 'npm' | 'bun';
@@ -759,7 +777,7 @@ export function getWorkspaceRegistryUrlForDisplay(pkg: string): string | null {
   // npm's own pickRegistry order: the scope decides where it can, the default
   // answers the rest. It prints `undefined` for a setting nothing declares.
   for (const key of scope ? [`${scope}:registry`, 'registry'] : ['registry']) {
-    const value = execSync(`npm config get ${key}`, {
+    const value = execPackageManagerSync('npm', ['config', 'get', key], {
       cwd: configRoot,
       timeout: 5000,
       windowsHide: true,

@@ -767,22 +767,19 @@ describe('package-manager', () => {
   });
 
   describe('getWorkspaceRegistryUrlForDisplay', () => {
-    let execSyncMock: jest.SpyInstance;
+    let execFileSyncMock: jest.SpyInstance;
+    let platform: PropertyDescriptor;
 
     /** Answers `npm config get <key>` from `answers`, `undefined` for the rest. */
     function stubNpmConfig(answers: Record<string, string>): void {
-      execSyncMock.mockImplementation((command: string) => {
-        const key = command.replace('npm config get ', '');
-        return command.startsWith('npm config get ')
-          ? `${answers[key] ?? 'undefined'}\n`
-          : '10.0.0\n';
-      });
+      execFileSyncMock.mockImplementation(
+        (_file: string, args: string[]) =>
+          `${answers[args[2]] ?? 'undefined'}\n`
+      );
     }
-    /** Only the registry lookups; the version probe shells out here as well. */
-    const configCalls = (): string[] =>
-      execSyncMock.mock.calls
-        .map(([command]) => command as string)
-        .filter((command) => command.startsWith('npm config get '));
+    /** The keys the lookup asked npm for, in order. */
+    const configKeys = (): string[] =>
+      execFileSyncMock.mock.calls.map(([, args]) => (args as string[])[2]);
 
     beforeEach(() => {
       clearPackageManagerVersionCache();
@@ -792,10 +789,16 @@ describe('package-manager', () => {
         throw new Error('ENOENT: no such file or directory');
       });
       jest.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({});
-      execSyncMock = jest.spyOn(childProcess, 'execSync');
+      // The version probe shells out on its own; only the lookup under test is
+      // argv-based, and only off Windows, so the platform is pinned either way.
+      jest.spyOn(childProcess, 'execSync').mockReturnValue('10.0.0\n' as any);
+      execFileSyncMock = jest.spyOn(childProcess, 'execFileSync');
+      platform = Object.getOwnPropertyDescriptor(process, 'platform');
+      Object.defineProperty(process, 'platform', { value: 'linux' });
     });
 
     afterEach(() => {
+      Object.defineProperty(process, 'platform', platform);
       jest.restoreAllMocks();
       jest.clearAllMocks();
     });
@@ -819,9 +822,7 @@ describe('package-manager', () => {
       expect(getWorkspaceRegistryUrlForDisplay('nx')).toBe(
         'https://from-overlay.example.com/'
       );
-      const [, options] = execSyncMock.mock.calls.find(([command]) =>
-        (command as string).startsWith('npm config get ')
-      );
+      const [, , options] = execFileSyncMock.mock.calls[0];
       expect((options as any).env.npm_config_registry).toBe(
         'https://from-overlay.example.com/'
       );
@@ -835,10 +836,7 @@ describe('package-manager', () => {
       expect(getWorkspaceRegistryUrlForDisplay('@nx/js')).toBe(
         'https://default.example.com/'
       );
-      expect(configCalls()).toEqual([
-        'npm config get @nx:registry',
-        'npm config get registry',
-      ]);
+      expect(configKeys()).toEqual(['@nx:registry', 'registry']);
     });
 
     it('stops at the scoped registry when npm resolves one', () => {
@@ -850,13 +848,35 @@ describe('package-manager', () => {
       expect(getWorkspaceRegistryUrlForDisplay('@nx/js')).toBe(
         'https://scoped.example.com/'
       );
-      expect(configCalls()).toEqual(['npm config get @nx:registry']);
+      expect(configKeys()).toEqual(['@nx:registry']);
     });
 
     it('resolves nothing when npm declares no registry at all', () => {
       stubNpmConfig({});
 
       expect(getWorkspaceRegistryUrlForDisplay('nx')).toBeNull();
+    });
+
+    it('quotes the key into the command Windows needs a shell for', () => {
+      Object.defineProperty(process, 'platform', { value: 'win32' });
+      const execSyncMock = jest
+        .spyOn(childProcess, 'execSync')
+        .mockImplementation((command: string) =>
+          command.startsWith('npm "config"')
+            ? ('https://from-shell.example.com/\n' as any)
+            : ('10.0.0\n' as any)
+        );
+
+      expect(getWorkspaceRegistryUrlForDisplay('@nx/js')).toBe(
+        'https://from-shell.example.com/'
+      );
+      expect(execFileSyncMock).not.toHaveBeenCalled();
+      // The version probe shells out first, so the lookup is not call zero.
+      expect(
+        execSyncMock.mock.calls
+          .map(([command]) => command as string)
+          .filter((command) => command.startsWith('npm "config"'))
+      ).toEqual(['npm "config" "get" "@nx:registry"']);
     });
   });
 
