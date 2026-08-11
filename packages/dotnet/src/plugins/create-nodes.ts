@@ -152,50 +152,6 @@ const dotnetProjectGlob =
   '**/{*.{csproj,fsproj,vbproj},Directory.Build.{props,targets,rsp},Directory.Solution.{props,targets},Directory.Packages.props}';
 
 /**
- * Removes an atomized target group whose non-split target is being disabled.
- *
- * Without this, disabling `test` would leave its `test-ci` parent and every
- * `test-ci--*` leaf behind, all pointing at a target that no longer exists.
- * The group is located by its `nonAtomizedTarget` back-reference rather than by
- * name, since the disabling option carries no `ciTargetName` to look up.
- */
-function removeAtomizedTargetsFor(
-  targets: Record<string, TargetConfiguration>,
-  metadata: ProjectConfiguration['metadata'],
-  nonAtomizedTargetName: string
-): ProjectConfiguration['metadata'] {
-  const parentName = Object.keys(targets).find(
-    (name) =>
-      targets[name].metadata?.nonAtomizedTarget === nonAtomizedTargetName
-  );
-
-  if (!parentName) {
-    return metadata;
-  }
-
-  for (const name of Object.keys(targets)) {
-    if (name === parentName || name.startsWith(`${parentName}--`)) {
-      delete targets[name];
-    }
-  }
-
-  if (!metadata?.targetGroups) {
-    return metadata;
-  }
-
-  const targetGroups = Object.fromEntries(
-    Object.entries(metadata.targetGroups)
-      .map(
-        ([group, names]) =>
-          [group, names.filter((name) => name in targets)] as const
-      )
-      .filter(([, names]) => names.length > 0)
-  );
-
-  return { ...metadata, targetGroups };
-}
-
-/**
  * Merge user-specified target configurations with the generated targets from the analyzer
  */
 export function mergeUserTargetConfigurations(
@@ -221,16 +177,10 @@ export function mergeUserTargetConfigurations(
   ];
 
   const mergedTargets = { ...node.targets };
-  let mergedMetadata = node.metadata;
 
   for (const { targetOption, defaultTargetName } of targetMappings) {
     // Disabled target from user configuration
     if (targetOption === false) {
-      mergedMetadata = removeAtomizedTargetsFor(
-        mergedTargets,
-        mergedMetadata,
-        defaultTargetName
-      );
       delete mergedTargets[defaultTargetName];
       continue;
     }
@@ -281,7 +231,7 @@ export function mergeUserTargetConfigurations(
   return {
     ...node,
     targets: mergedTargets,
-    ...(mergedMetadata ? { metadata: mergedMetadata } : {}),
+    ...(node.metadata ? { metadata: node.metadata } : {}),
   };
 }
 
