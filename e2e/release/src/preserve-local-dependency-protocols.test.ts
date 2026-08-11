@@ -172,6 +172,38 @@ describe('nx release preserve local dependency protocols', () => {
     `);
   });
 
+  it('should resolve an excluded dependency from its git tag', async () => {
+    const { workspacePath, pkg1, pkg2 } = await initializeProject('pnpm');
+
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release = {
+        projectsRelationship: 'independent',
+        version: {
+          currentVersionResolver: 'git-tag',
+          preserveLocalDependencyProtocols: false,
+          adjustSemverBumpsForZeroMajorVersion: false,
+        },
+      };
+      return nxJson;
+    });
+
+    await runCommandAsync(`git tag ${pkg1}@1.0.0`);
+    await runCommandAsync(`git tag ${pkg2}@4.2.0`);
+
+    const output = runCLI(
+      `release version minor --projects ${pkg1} --dry-run --verbose`,
+      { cwd: workspacePath }
+    );
+
+    expect(output).toContain(`-     "@proj/${pkg2}": "workspace:*"`);
+    expect(output).toContain(`+     "@proj/${pkg2}": "4.2.0"`);
+    expect(output).toContain(
+      `${pkg2} 🏷️  Resolved the current version as 4.2.0`
+    );
+    expect(output).not.toContain(`${pkg2} ❓ Applied`);
+    expect(output).not.toContain(`${pkg2} ✍️  New version`);
+  });
+
   it('should preserve local dependency protocols when version.preserveLocalDependencyProtocols is not set to false', async () => {
     // The package manager currently does not matter for the versioning behavior, it's imperatively controlled by the user
     const { workspacePath } = await initializeProject('pnpm');

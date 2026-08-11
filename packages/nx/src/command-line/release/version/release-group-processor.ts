@@ -808,7 +808,14 @@ export class ReleaseGroupProcessor {
     const logMessages = await versionActions.updateProjectDependencies(
       this.tree,
       this.projectGraph,
-      dependenciesToUpdate
+      dependenciesToUpdate,
+      (dependencyProjectName) =>
+        this.releaseGraph.resolveCurrentVersionForDependency(
+          this.tree,
+          this.projectGraph,
+          dependencyProjectName,
+          this.options.preid ?? ''
+        )
     );
     for (const logMessage of logMessages) {
       projectLogger.buffer(logMessage);

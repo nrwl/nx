@@ -24,6 +24,20 @@ import { BUMP_TYPE_REASON_TEXT } from './release-group-processor';
 
 export type SemverBumpType = ReleaseType | 'none';
 
+/**
+ * Lazily resolves the concrete current version of a dependency project that
+ * is not already represented in `dependenciesToUpdate`.
+ *
+ * Ecosystem-specific VersionActions implementations can use this when their
+ * manifest syntax requires a local dependency reference to be replaced even
+ * though that dependency is not itself being versioned.
+ *
+ * @public
+ */
+export type ResolveCurrentVersionForDependency = (
+  dependencyProjectName: string
+) => Promise<string>;
+
 function resolveVersionActionsPath(
   path: string,
   projectGraphNode: ProjectGraphProjectNode
@@ -468,13 +482,18 @@ It is also possible that the project is being processed because of a dependency 
    * with new dependency versions, but for application deployments it might involve
    * updating something else instead, it depends on the type of application.
    *
+   * `resolveCurrentVersionForDependency` is intentionally lazy: implementations
+   * decide which manifest values require a concrete version, while release core
+   * remains unaware of ecosystem-specific dependency protocols.
+   *
    * It should return an array of log messages that will be displayed unmodified to the user
    * after the dependencies have been updated.
    */
   abstract updateProjectDependencies(
     tree: Tree,
     projectGraph: ProjectGraph,
-    dependenciesToUpdate: Record<string, string>
+    dependenciesToUpdate: Record<string, string>,
+    resolveCurrentVersionForDependency?: ResolveCurrentVersionForDependency
   ): Promise<string[]>;
 }
 
@@ -535,7 +554,8 @@ export class NOOP_VERSION_ACTIONS extends VersionActions {
   updateProjectDependencies(
     tree: Tree,
     projectGraph: ProjectGraph,
-    dependenciesToUpdate: Record<string, string>
+    dependenciesToUpdate: Record<string, string>,
+    resolveCurrentVersionForDependency?: ResolveCurrentVersionForDependency
   ): Promise<string[]> {
     return Promise.resolve([]);
   }
