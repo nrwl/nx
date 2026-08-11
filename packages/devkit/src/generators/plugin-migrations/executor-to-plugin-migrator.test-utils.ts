@@ -14,10 +14,9 @@ import { ProjectJsonProjectsPlugin } from 'nx/src/plugins/project-json/build-nod
 // The package.json default plugin: it emits an `nx:run-script` target per
 // package.json script, so loading it lets the pipeline observe cases where the
 // DEFAULT layer (not project.json) authors a target's identity.
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import {
-  // eslint-disable-next-line @typescript-eslint/no-restricted-imports
   createNodes as packageJsonCreateNodes,
-  // eslint-disable-next-line @typescript-eslint/no-restricted-imports
   name as packageJsonPluginName,
 } from 'nx/src/plugins/package-json';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
