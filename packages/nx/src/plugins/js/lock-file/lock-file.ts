@@ -9,7 +9,6 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
-  rmSync,
   writeFileSync,
 } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -346,16 +345,25 @@ export function createLockFile(
  * that step themselves. `options.onPruneFallback` fires just before the
  * root-lockfile fallback is returned, so a caller can skip work that only makes
  * sense for an actually pruned lockfile (e.g. link-closure validation and
- * local-path artifact shipping).
+ * local-path artifact shipping). Every root-relative read resolves from
+ * `options.workspaceRootPath`, so a caller passing one cannot end up with the
+ * lockfile read from one root and the catalogs resolved from another.
  */
 function buildLockFile(
   packageJson: PackageJson,
   graph: ProjectGraph,
   packageManager: PackageManager = detectPackageManager(workspaceRoot),
-  options?: { onPruneFallback?: (error: Error) => void }
+  options?: {
+    onPruneFallback?: (error: Error) => void;
+    workspaceRootPath?: string;
+  }
 ): string {
+  const workspaceRootPath = options?.workspaceRootPath ?? workspaceRoot;
   const normalizedPackageJson = normalizePackageJson(packageJson);
-  const content = readFileSync(getLockFilePath(packageManager), 'utf8');
+  const content = readFileSync(
+    join(workspaceRootPath, getLockFileName(packageManager)),
+    'utf8'
+  );
 
   try {
     if (packageManager === 'bun') {
@@ -368,7 +376,7 @@ function buildLockFile(
     const prunedGraph = pruneProjectGraph(
       graph,
       packageJson,
-      workspaceRoot,
+      workspaceRootPath,
       packageManager
     );
     if (packageManager === 'yarn') {
@@ -379,7 +387,7 @@ function buildLockFile(
         prunedGraph,
         content,
         normalizedPackageJson,
-        workspaceRoot
+        workspaceRootPath
       );
     }
     if (packageManager === 'npm') {
@@ -457,6 +465,7 @@ function createPrunedLockfile(
     onPruneFallback: (error) => {
       pruneError = error;
     },
+    workspaceRootPath,
   });
   const pruned = pruneError === undefined;
   if (pruned) {
@@ -552,16 +561,15 @@ export function generatePrunedDeployOutput(
   const artifacts: PrunedDeployArtifact[] = [
     { path: getLockFileName(packageManager), content: lockFileContent },
   ];
-  let obsolete: string[] = [];
   if (packageManager === 'pnpm') {
-    const pnpmArtifacts = getPrunedPnpmInstallArtifacts(
-      workspaceRootPath,
-      lockFileContent,
-      packageJson,
-      { includeLocalPathArtifacts: pruned }
+    artifacts.push(
+      ...getPrunedPnpmInstallArtifacts(
+        workspaceRootPath,
+        lockFileContent,
+        packageJson,
+        { includeLocalPathArtifacts: pruned }
+      )
     );
-    artifacts.push(...pnpmArtifacts.artifacts);
-    obsolete = pnpmArtifacts.obsolete;
   }
 
   if ('outputDirectory' in options) {
@@ -580,12 +588,6 @@ export function generatePrunedDeployOutput(
         copyFileSync(artifact.sourcePath, destination);
       } else {
         writeFileSync(destination, artifact.content);
-      }
-    }
-    for (const path of obsolete) {
-      const destination = join(outputDirectory, path);
-      if (existsSync(destination)) {
-        rmSync(destination);
       }
     }
   } else {

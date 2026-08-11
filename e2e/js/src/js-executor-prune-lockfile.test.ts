@@ -103,6 +103,7 @@ function installPrunedDist(
         expect(resolved.startsWith(realInstallDir + sep)).toBe(true);
       }
     }
+    afterInstall?.(installDir);
   } finally {
     rmSync(installDir, { recursive: true, force: true });
   }

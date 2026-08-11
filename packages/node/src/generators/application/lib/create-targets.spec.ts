@@ -5,22 +5,8 @@ jest.mock('@nx/devkit', () => ({
   detectPackageManager: jest.fn(),
 }));
 
-// Pruning reads the lockfile of the workspace nx itself runs in, which is not
-// the temp fixture below; stub that read and the pruning step so the fixture's
-// own lockfile content drives the artifacts. Only that one path is stubbed,
-// since the fixture's own reads are what the assertions observe.
-// Not a jest.fn: `resetAllMocks` below would strip the passthrough and every
-// read would return undefined.
-jest.mock('node:fs', () => {
-  const actual = jest.requireActual('node:fs');
-  return {
-    ...actual,
-    readFileSync: (path, ...args) =>
-      path === mockRootLockfile
-        ? 'ROOT_LOCKFILE'
-        : actual.readFileSync(path, ...args),
-  };
-});
+// Stub the pruning step so the fixture's own lockfile content drives the
+// artifacts; the fixture root carries the lockfile the read resolves to.
 jest.mock('nx/src/plugins/js/lock-file/project-graph-pruning', () => ({
   ...jest.requireActual('nx/src/plugins/js/lock-file/project-graph-pruning'),
   pruneProjectGraph: jest.fn((graph) => graph),
@@ -30,10 +16,7 @@ jest.mock('nx/src/plugins/js/lock-file/pnpm-parser', () => ({
   stringifyPnpmLockfile: jest.fn(),
 }));
 
-import {
-  detectPackageManager,
-  workspaceRoot as nxWorkspaceRoot,
-} from '@nx/devkit';
+import { detectPackageManager } from '@nx/devkit';
 import { generatePrunedDeployOutput } from '@nx/devkit/internal';
 import {
   mkdirSync,
@@ -45,8 +28,6 @@ import {
 } from 'fs';
 import { tmpdir } from 'os';
 import { join, relative, sep } from 'path';
-
-const mockRootLockfile = join(nxWorkspaceRoot, 'pnpm-lock.yaml');
 
 // True when `writtenFile` (workspace-root-relative, forward-slashed) sits at or
 // under one of the `{workspaceRoot}/...` output globs the prune targets declare.
@@ -81,6 +62,22 @@ describe('getPruneTargets', () => {
     ]);
   });
 
+  it('hashes the root pnpm install settings on pnpm', () => {
+    // allowBuilds and supportedArchitectures come from these two files and are
+    // recorded nowhere in the lockfile, so without them in the hash a revoked
+    // approval replays the previous artifact.
+    (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+
+    const targets = getPruneTargets('build', 'dist/my-app');
+
+    expect(targets['prune-lockfile'].inputs).toEqual([
+      'default',
+      '^default',
+      '{workspaceRoot}/pnpm-workspace.yaml',
+      '{workspaceRoot}/package.json',
+    ]);
+  });
+
   it('declares only package.json and the lockfile on npm', () => {
     (detectPackageManager as jest.Mock).mockReturnValue('npm');
 
@@ -90,6 +87,8 @@ describe('getPruneTargets', () => {
       '{workspaceRoot}/dist/my-app/package.json',
       '{workspaceRoot}/dist/my-app/package-lock.json',
     ]);
+    // npm reads none of those settings, so the target keeps nx's default hash.
+    expect(targets['prune-lockfile'].inputs).toBeUndefined();
   });
 
   // The prune-lockfile executor ships non-workspace local-path deps (a file:
@@ -108,6 +107,12 @@ describe('getPruneTargets', () => {
       writeFileSync(
         join(workspaceRoot, 'package.json'),
         JSON.stringify({ name: 'root', packageManager: 'pnpm@11.2.2' })
+      );
+      // The marker proves the prune read this fixture's lockfile rather than
+      // the one belonging to the checkout the test runs in.
+      writeFileSync(
+        join(workspaceRoot, 'pnpm-lock.yaml'),
+        'FIXTURE_ROOT_LOCKFILE'
       );
 
       // A vendored file: directory dependency outside the pnpm workspace glob.
@@ -143,6 +148,11 @@ describe('getPruneTargets', () => {
         'apps/my-app',
         { outputDirectory: outputDir, packageManager: 'pnpm', workspaceRoot }
       );
+
+      const [, prunedFrom, , resolvedFrom] =
+        stringifyPnpmLockfile.mock.calls[0];
+      expect(prunedFrom).toBe('FIXTURE_ROOT_LOCKFILE');
+      expect(resolvedFrom).toBe(workspaceRoot);
 
       const declaredOutputs = getPruneTargets('build', outputPath)[
         'prune-lockfile'

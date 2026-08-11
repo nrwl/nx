@@ -10,27 +10,11 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import type { ProjectGraph } from '../../../config/project-graph';
 import { output } from '../../../utils/output';
-import { workspaceRoot } from '../../../utils/workspace-root';
 import type { PackageJson } from '../../../utils/package-json';
 import { generatePrunedDeployOutput } from './lock-file';
+import { stringifyPnpmLockfile } from './pnpm-parser';
 import { getPrunedPnpmInstallArtifacts } from './pruned-output';
 
-// The root lockfile path is a module-level constant off nx's own workspace
-// root, so the `workspaceRoot` option below cannot redirect this read. Every
-// other read is the fixture's own, which the assertions depend on.
-const mockRootLockfile = join(workspaceRoot, 'pnpm-lock.yaml');
-// Not a jest.fn: a mock reset would strip the passthrough and every read would
-// return undefined.
-jest.mock('node:fs', () => {
-  const actual = jest.requireActual('node:fs');
-  return {
-    ...actual,
-    readFileSync: (path, ...args) =>
-      path === mockRootLockfile
-        ? 'ROOT_LOCKFILE'
-        : actual.readFileSync(path, ...args),
-  };
-});
 jest.mock('./pnpm-parser', () => ({
   ...jest.requireActual('./pnpm-parser'),
   stringifyPnpmLockfile: jest.fn(() => 'PRUNED_LOCKFILE'),
@@ -48,6 +32,8 @@ jest.mock('./pruned-output', () => ({
 
 // The two sinks are the reason this entry point exists: the file-writing
 // executors and the bundler asset pipelines must ship the same output.
+const FIXTURE_ROOT_LOCKFILE = 'FIXTURE_ROOT_LOCKFILE';
+
 describe('generatePrunedDeployOutput sinks', () => {
   const graph: ProjectGraph = {
     nodes: {},
@@ -59,20 +45,21 @@ describe('generatePrunedDeployOutput sinks', () => {
 
   beforeEach(() => {
     tempDir = mkdtempSync(join(tmpdir(), 'nx-pruned-deploy-'));
+    // The entry point resolves the root lockfile from its `workspaceRoot`
+    // option, so the fixture root needs one. The marker is what proves the read
+    // came from here rather than from this checkout's own lockfile.
+    writeFileSync(join(tempDir, 'pnpm-lock.yaml'), FIXTURE_ROOT_LOCKFILE);
     vendoredFile = join(tempDir, 'vendor/lib/index.js');
     mkdirSync(join(tempDir, 'vendor/lib'), { recursive: true });
     writeFileSync(vendoredFile, 'VENDORED\n');
-    (getPrunedPnpmInstallArtifacts as jest.Mock).mockReturnValue({
-      artifacts: [
-        { path: 'pnpm-workspace.yaml', content: 'packages: []\n' },
-        { path: 'patches/patches/is-number.patch', content: 'THE PATCH\n' },
-        {
-          path: 'local_path_modules/vendor/lib/index.js',
-          sourcePath: vendoredFile,
-        },
-      ],
-      obsolete: [],
-    });
+    (getPrunedPnpmInstallArtifacts as jest.Mock).mockReturnValue([
+      { path: 'pnpm-workspace.yaml', content: 'packages: []\n' },
+      { path: 'patches/patches/is-number.patch', content: 'THE PATCH\n' },
+      {
+        path: 'local_path_modules/vendor/lib/index.js',
+        sourcePath: vendoredFile,
+      },
+    ]);
   });
 
   afterEach(() => {
@@ -103,6 +90,17 @@ describe('generatePrunedDeployOutput sinks', () => {
     );
     return emitted;
   }
+
+  it('prunes the root lockfile of the workspace root it was given', () => {
+    run(join(tempDir, 'dist'));
+
+    expect(stringifyPnpmLockfile).toHaveBeenCalledWith(
+      expect.anything(),
+      FIXTURE_ROOT_LOCKFILE,
+      expect.anything(),
+      tempDir
+    );
+  });
 
   it('writes the same output the emit sink ships', () => {
     const outputDirectory = join(tempDir, 'dist');
@@ -140,28 +138,19 @@ describe('generatePrunedDeployOutput sinks', () => {
     ).toBe(true);
   });
 
-  it('removes an obsolete artifact a prior deploy left in the output', () => {
+  // The emit sink can only add assets, and a cache replay restores only the
+  // files the replayed entry holds, so neither sink can retract a file a prior
+  // deploy shipped. Both must overwrite it instead.
+  it('overwrites a settings file a prior deploy left in the output', () => {
     const outputDirectory = join(tempDir, 'dist');
     mkdirSync(outputDirectory);
     const stale = join(outputDirectory, 'pnpm-workspace.yaml');
     writeFileSync(stale, 'allowBuilds:\n  esbuild: true\n');
-    (getPrunedPnpmInstallArtifacts as jest.Mock).mockReturnValue({
-      artifacts: [],
-      obsolete: ['pnpm-workspace.yaml'],
-    });
 
     run(outputDirectory);
 
-    expect(existsSync(stale)).toBe(false);
-  });
-
-  it('ships no obsolete path through the emit sink, which only adds assets', () => {
-    (getPrunedPnpmInstallArtifacts as jest.Mock).mockReturnValue({
-      artifacts: [],
-      obsolete: ['pnpm-workspace.yaml'],
-    });
-
-    expect([...emit().keys()]).toEqual(['pnpm-lock.yaml']);
+    expect(readFileSync(stale, 'utf-8')).toBe('packages: []\n');
+    expect(emit().get('pnpm-workspace.yaml')).toBe('packages: []\n');
   });
 
   it('ships nothing for bun and leaves the manifest as authored', () => {
