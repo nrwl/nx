@@ -1154,13 +1154,17 @@ async function determineFormatterOptions(args: {
   if (args.formatter) return args.formatter;
   return selectPrompt<Formatter>({
     message: `Which code formatter would you like to use?`,
+    // A skipped prompt resolves to the first choice, so the order here is what
+    // makes prettier the non-interactive default while oxfmt is pre-1.0.
+    // Reorder the choices to change it.
     choices: [
-      { value: 'oxfmt', label: 'oxfmt             [ https://oxc.rs  ]' },
       { value: 'prettier', label: 'prettier          [ https://prettier.io  ]' },
+      {
+        value: 'oxfmt',
+        label: 'oxfmt (experimental) [ https://oxc.rs  ]',
+      },
       { value: 'none', label: 'none' },
     ],
-    // A skipped prompt takes the first choice, so the order here is what picks
-    // the non-interactive default.
     skip: !args.interactive || isCI(),
   });
 }
@@ -1201,7 +1205,7 @@ async function determineNoneOptions(
     }
 
     if (preset === Preset.TS) {
-      return { preset, formatter: parsedArgs.formatter ?? 'oxfmt' };
+      return { preset, formatter: parsedArgs.formatter ?? 'prettier' };
     }
 
     if (parsedArgs.js !== undefined) {
@@ -1365,7 +1369,7 @@ async function determineReactOptions(
   if (workspaces) {
     formatter = await determineFormatterOptions(parsedArgs);
   } else {
-    formatter = parsedArgs.formatter ?? 'oxfmt';
+    formatter = parsedArgs.formatter ?? 'prettier';
   }
 
   return {
@@ -1467,7 +1471,7 @@ async function determineVueOptions(
   if (workspaces) {
     formatter = await determineFormatterOptions(parsedArgs);
   } else {
-    formatter = parsedArgs.formatter ?? 'oxfmt';
+    formatter = parsedArgs.formatter ?? 'prettier';
   }
 
   return {
@@ -1649,7 +1653,7 @@ async function determineAngularOptions(
   if (workspaces) {
     formatter = await determineFormatterOptions(parsedArgs);
   } else {
-    formatter = parsedArgs.formatter ?? 'oxfmt';
+    formatter = parsedArgs.formatter ?? 'prettier';
   }
 
   return {
@@ -1741,7 +1745,7 @@ async function determineNodeOptions(
   if (workspaces) {
     formatter = await determineFormatterOptions(parsedArgs);
   } else {
-    formatter = parsedArgs.formatter ?? 'oxfmt';
+    formatter = parsedArgs.formatter ?? 'prettier';
   }
 
   return {

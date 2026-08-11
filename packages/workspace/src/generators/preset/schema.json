@@ -107,7 +107,7 @@
       "description": "The tool to use for code formatting.",
       "type": "string",
       "enum": ["none", "prettier", "oxfmt"],
-      "default": "oxfmt"
+      "default": "none"
     },
     "workspaces": {
       "description": "Whether to use package manager workspaces.",
