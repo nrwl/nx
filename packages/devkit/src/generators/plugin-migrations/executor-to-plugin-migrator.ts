@@ -1073,6 +1073,7 @@ export async function inferOncePerOptionSet<T>(
   inferredTargetsByOptionSet: InferredTargetsByOptionSet;
   matchedConfigFiles: string[];
   erroredConfigFiles: string[];
+  rawMatchedConfigFiles: string[];
 }> {
   const inferredTargetsByOptionSet: InferredTargetsByOptionSet = new Map();
   const rawMatchedFiles = new Set<string>();
@@ -1082,6 +1083,7 @@ export async function inferOncePerOptionSet<T>(
   if (scope.optionSetGroups.length === 0) {
     return {
       inferredTargetsByOptionSet,
+      rawMatchedConfigFiles: [],
       matchedConfigFiles: [],
       erroredConfigFiles: [],
     };
@@ -1152,6 +1154,12 @@ export async function inferOncePerOptionSet<T>(
 
   return {
     inferredTargetsByOptionSet,
+    // Every config file the plugin's glob matched, independent of whether this
+    // pass inferred a project from it. The registration step needs the full set
+    // to decide include coverage against non-migrated PROJECT roots: a project
+    // the plugin infers only on a later pass (e.g. cache/error asymmetry) is
+    // absent from `matchedConfigFiles` but its config is still globbed here.
+    rawMatchedConfigFiles: [...rawMatchedFiles],
     matchedConfigFiles,
     // Config files the plugin's glob matched but could not infer this pass.
     // These produced no project (so they're absent from `matchedConfigFiles`),
@@ -1704,6 +1712,7 @@ async function migrateProjects<T>(
     inferredTargetsByOptionSet,
     matchedConfigFiles,
     erroredConfigFiles: erroredConfigFilesFromInference,
+    rawMatchedConfigFiles,
   } = await inferOncePerOptionSet(
     tree,
     pluginPath,
@@ -1776,7 +1785,8 @@ async function migrateProjects<T>(
     projectGraph,
     spinner,
     matchedConfigFiles,
-    erroredConfigFilesFromInference
+    erroredConfigFilesFromInference,
+    rawMatchedConfigFiles
   );
 
   // Phase 4 — single verification inference pass + equivalence oracle. Any
@@ -1820,13 +1830,50 @@ function addPluginRegistrations<T>(
   // the failure and reverts the whole hoist. A harmless project-free config (a
   // shared/base config that loads fine) is NOT errored, so it does not keep the
   // include — the plugin may safely apply workspace-wide over it.
-  erroredConfigFiles: string[]
+  erroredConfigFiles: string[],
+  // The FULL set of config files the plugin's glob matched, regardless of what
+  // this migration's inference pass produced a project from. Used to detect
+  // config files owned by NON-MIGRATED projects that the plugin would infer once
+  // the registration is workspace-wide — see below.
+  rawMatchedConfigFiles: string[]
 ) {
   const nxJson = readNxJson(tree);
-  // Errored config files that no migrated root covers are the ones that force a
-  // scoped include; fold them into the coverage set so an unscoped include is
-  // only chosen when nothing the plugin would fail to infer lies outside.
-  const coverageConfigFiles = [...matchedConfigFiles, ...erroredConfigFiles];
+
+  // Config files owned by a NON-MIGRATED project keep the `include` scoped.
+  // `matchedConfigFiles` only lists roots THIS pass inferred; a non-migrated
+  // project the plugin infers only later (cache/error asymmetry) is absent from
+  // it, so an unscoped registration would let the verification pass infer that
+  // root and `reachesNonMigratedRoot` would revert the whole hoist. Judging
+  // coverage against project-graph membership — not this pass's inference —
+  // closes that hole. (A config owned by NO project, e.g. a shared/base config,
+  // is not counted, so it does not force a scoped include.)
+  const migratedRoots = new Set<string>();
+  for (const project of projects.keys()) {
+    const root = projectGraph.nodes[project]?.data?.root;
+    if (root) {
+      migratedRoots.add(root);
+    }
+  }
+  const nonMigratedProjectRoots = new Set<string>();
+  for (const node of Object.values(projectGraph.nodes)) {
+    const root = node?.data?.root;
+    if (root && !migratedRoots.has(root)) {
+      nonMigratedProjectRoots.add(root);
+    }
+  }
+  const nonMigratedProjectConfigFiles = rawMatchedConfigFiles.filter((file) =>
+    isFileOwnedByAnyRoot(file, nonMigratedProjectRoots)
+  );
+
+  // Fold errored files (broken configs the plugin would fail to infer) and
+  // non-migrated project configs (roots the plugin would infer workspace-wide)
+  // into the coverage set: an unscoped `include` is chosen only when neither lies
+  // outside the migrated roots.
+  const coverageConfigFiles = [
+    ...matchedConfigFiles,
+    ...erroredConfigFiles,
+    ...nonMigratedProjectConfigFiles,
+  ];
 
   const registrationGroups = new Map<
     string,

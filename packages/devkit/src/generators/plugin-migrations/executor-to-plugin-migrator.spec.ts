@@ -1764,6 +1764,120 @@ describe('Phase 3 — strict-common hoist', () => {
       registration.include.some((g) => g.startsWith('tools/eslint-rules'))
     ).toBe(false);
   });
+
+  it('keeps the include scoped for NON-MIGRATED projects the plugin infers only at verification', async () => {
+    // clickup-frontend shape: the root project + several tools/* projects are in
+    // the graph but not migrated, and the plugin infers `lint` for them only on
+    // the verification pass (a cache/error asymmetry). They are absent from this
+    // pass's `matchedConfigFiles`, so the include was dropped, the plugin widened
+    // workspace-wide, and `reachesNonMigratedRoot` reverted the whole target.
+    // Judging include coverage against project-graph membership keeps the include
+    // scoped, so those roots are never inferred and the hoist survives.
+    ctx = setupFixture('non-migrated-inferred-at-verify');
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.targetDefaults ??= {};
+    (nxJson.targetDefaults as any)[SYNTHETIC_EXECUTOR] = {
+      inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
+      cache: true,
+      dependsOn: [
+        { target: 'build-svg-sprite', projects: ['core-components'] },
+      ],
+    };
+    updateNxJson(ctx.tree, nxJson);
+    for (let i = 0; i < 5; i++) {
+      addExecutorProject(ctx, {
+        name: `app${i}`,
+        root: `apps/app${i}`,
+        targetName: 'lint',
+        executor: SYNTHETIC_EXECUTOR,
+        target: { outputs: ['{options.outputFile}'] } as any,
+      });
+    }
+    // non-migrated PROJECTS (graph nodes) with config files + a different executor
+    const nonMigrated = ['.', 'tools/tool1', 'tools/tool2'];
+    nonMigrated.forEach((root, i) => {
+      addExecutorProject(ctx, {
+        name: root === '.' ? 'root-proj' : `tool${i}`,
+        root,
+        targetName: 'other',
+        executor: '@other/tool:noop',
+      });
+    });
+
+    let invocation = 0;
+    const createNodes: CreateNodes<SyntheticPluginOptions> = [
+      SYNTHETIC_CONFIG_GLOB,
+      (configFiles, options) => {
+        invocation++;
+        const targetName = options?.targetName ?? 'build';
+        const results: Array<readonly [string, any]> = [];
+        for (const file of configFiles) {
+          const dir = dirname(file);
+          const root = dir === '' || dir === '.' ? '.' : dir;
+          // non-migrated roots infer only on the verification pass
+          if (nonMigrated.includes(root) && invocation < 2) continue;
+          results.push([
+            file,
+            {
+              projects: {
+                [root]: {
+                  targets: {
+                    [targetName]: defaultInferredTarget(root, targetName),
+                  },
+                },
+              },
+            },
+          ]);
+        }
+        return results;
+      },
+    ];
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      SYNTHETIC_PLUGIN_PATH,
+      createNodes,
+      { targetName: 'lint' },
+      [
+        {
+          executors: [SYNTHETIC_EXECUTOR],
+          targetPluginOptionMapper: () => ({ targetName: 'lint' }),
+          postTargetTransformer: (t: any) => {
+            if (t.options) {
+              delete t.options.config;
+              if (Object.keys(t.options).length === 0) delete t.options;
+            }
+            return t;
+          },
+        },
+      ]
+    );
+
+    // the hoist SURVIVES — centralization happened
+    expect(readNxJson(ctx.tree).targetDefaults.lint).toContainEqual(
+      expect.objectContaining({ filter: { plugin: SYNTHETIC_PLUGIN_PATH } })
+    );
+    for (let i = 0; i < 5; i++) {
+      expect(
+        readJson(ctx.tree, `apps/app${i}/project.json`).targets?.lint
+      ).toBeUndefined();
+    }
+    // the registration stays scoped to migrated roots (not widened workspace-wide)
+    const registration = readNxJson(ctx.tree).plugins?.find(
+      (p): p is ExpandedPluginConfiguration =>
+        typeof p !== 'string' && p.plugin === SYNTHETIC_PLUGIN_PATH
+    );
+    expect(registration?.include).toBeDefined();
+    expect(registration.include).toEqual(
+      expect.arrayContaining(['apps/app0/**/*'])
+    );
+    // never scoped to the non-migrated roots
+    expect(registration.include).not.toContain('*');
+    expect(registration.include.some((g) => g.startsWith('tools/'))).toBe(
+      false
+    );
+  });
 });
 
 describe('Phase 4 — verify + equivalence oracle + fallback', () => {
