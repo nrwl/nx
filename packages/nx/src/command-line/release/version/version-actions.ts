@@ -28,11 +28,11 @@ export type SemverBumpType = ReleaseType | 'none';
  * Lazily resolves the concrete version of a dependency project that is not
  * already represented in `dependenciesToUpdate`.
  *
- * Ecosystem-specific VersionActions implementations can use this when their
- * manifest syntax requires a local dependency reference to be replaced even
- * though the project graph did not identify the dependency relationship. The
- * resolved value can be the dependency's new version when it is part of the
- * release, or its current version when it is not being versioned.
+ * Ecosystem-specific VersionActions implementations can use this when a
+ * manifest reference requires a concrete version but `dependenciesToUpdate`
+ * does not contain one. The resolved value can be the dependency's new version
+ * when it is part of the release, or its current version when it is not being
+ * versioned.
  *
  * @public
  */

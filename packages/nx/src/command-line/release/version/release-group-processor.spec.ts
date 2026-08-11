@@ -1792,6 +1792,62 @@ describe('ReleaseGroupProcessor', () => {
     });
   });
 
+  it('defers dist manifest dependency updates until fixed group versions are finalized', async () => {
+    const { nxReleaseConfig, projectGraph, filters } =
+      await createNxReleaseConfigAndPopulateWorkspace(
+        tree,
+        `
+          dependencyGroup ({ "projectsRelationship": "independent" }):
+            - dependency@1.0.0 [js]
+          fixedGroup ({ "projectsRelationship": "fixed" }):
+            - projectA@1.0.0 [js]
+              -> depends on dependency
+            - projectB@1.0.0 [js]
+            - projectC@1.0.0 [js]
+              -> depends on projectA
+              -> depends on projectB
+              -> release config overrides { "version": { "manifestRootsToUpdate": ["dist/projectC"], "preserveLocalDependencyProtocols": false } }
+        `,
+        {
+          version: {
+            conventionalCommits: true,
+          },
+        },
+        mockResolveCurrentVersion
+      );
+
+    updateJson(tree, 'projectC/package.json', (json) => {
+      delete json.dependencies.projectB;
+      return json;
+    });
+    updateJson(tree, 'dist/projectC/package.json', (json) => {
+      json.dependencies.projectB = 'workspace:*';
+      return json;
+    });
+
+    const processor = await createTestReleaseGroupProcessor(
+      tree,
+      projectGraph,
+      nxReleaseConfig,
+      filters
+    );
+    mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+      (_, __, ___, ____, { name: projectName }) =>
+        projectName === 'dependency' ? 'minor' : 'none'
+    );
+
+    await processor.processGroups();
+
+    expect(readJson(tree, 'dist/projectC/package.json')).toEqual({
+      name: 'projectC',
+      version: '1.0.1',
+      dependencies: {
+        projectA: '1.0.1',
+        projectB: '1.0.1',
+      },
+    });
+  });
+
   describe('non-semver versioning', () => {
     it('should handle non-semver versioning for a simple fixed release group with no dependencies', async () => {
       const { nxReleaseConfig, projectGraph, filters } =
