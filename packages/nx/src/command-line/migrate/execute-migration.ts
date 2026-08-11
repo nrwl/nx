@@ -1,6 +1,6 @@
 import * as pc from 'picocolors';
 import { spawn } from 'child_process';
-import { dirname, join } from 'path';
+import { dirname, join, relative } from 'path';
 import { lt } from 'semver';
 import { handleImport } from '../../utils/handle-import';
 import { MigrationsJson } from '../../config/misc-interfaces';
@@ -26,6 +26,7 @@ import {
 import { output } from '../../utils/output';
 import { existsSync } from 'fs';
 import { getNxRequirePaths } from '../../utils/installation-directory';
+import { needsShellQuoting } from '../../utils/shell-quoting';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
@@ -78,7 +79,8 @@ export function readPackageMigrationConfig(
 
 export function runInstall(
   nxWorkspaceRoot?: string,
-  phase: MigrationInstallPhase = 'pre-migration'
+  phase: MigrationInstallPhase = 'pre-migration',
+  rerunCommand?: string
 ): Promise<void> {
   const cwd = nxWorkspaceRoot ?? process.cwd();
   const packageManager = detectPackageManager(cwd);
@@ -124,7 +126,7 @@ export function runInstall(
           // (CLI migrate, `nx repair`, single-migration runner, etc.) surfaces
           // it consistently. Top-level callers catch `NpmPeerDepsInstallError`
           // and return a non-zero exit code without re-logging.
-          logNpmPeerDepsError(phase);
+          logNpmPeerDepsError(phase, rerunCommand);
           reject(new NpmPeerDepsInstallError());
           return;
         }
@@ -163,7 +165,24 @@ export function isNpmPeerDepsError(stderr: string): boolean {
   );
 }
 
-export function logNpmPeerDepsError(phase: MigrationInstallPhase): void {
+// The single-migration rerun command lands in copyable guidance (see
+// `logNpmPeerDepsError` below), so quote ids a shell would split or expand.
+// Single quotes stay literal in POSIX shells and PowerShell alike; double
+// quotes would leave $-expansion active in both. The embedded-quote escape is
+// the POSIX '\'' sequence, the one character PowerShell disagrees on (it wants
+// ''). cmd.exe is knowingly not covered: it does not group on single quotes,
+// and no quoting suppresses its %VAR% expansion.
+export function formatSingleMigrationRerunCommand(migrationId: string): string {
+  const id = needsShellQuoting(migrationId)
+    ? `'${migrationId.replace(/'/g, String.raw`'\''`)}'`
+    : migrationId;
+  return `nx migrate --run-migration=${id}`;
+}
+
+export function logNpmPeerDepsError(
+  phase: MigrationInstallPhase,
+  rerunCommand = 'nx migrate --run-migrations'
+): void {
   const peerDepsResolutionSteps = [
     'Recommended approaches (in order of preference):',
     '',
@@ -177,7 +196,7 @@ export function logNpmPeerDepsError(phase: MigrationInstallPhase): void {
   ];
   const manualInstallHint = [
     'If you installed the dependencies manually, pass "--skip-install" to avoid re-installing them:',
-    '   nx migrate --run-migrations --skip-install',
+    `   ${rerunCommand} --skip-install`,
   ];
 
   if (phase === 'pre-migration') {
@@ -187,8 +206,8 @@ export function logNpmPeerDepsError(phase: MigrationInstallPhase): void {
       bodyLines: [
         ...peerDepsResolutionSteps,
         '',
-        'Once the conflicts are resolved, re-run the migrations:',
-        '   nx migrate --run-migrations',
+        'Once the conflicts are resolved, re-run the migration command:',
+        `   ${rerunCommand}`,
         '',
         ...manualInstallHint,
       ],
@@ -201,13 +220,22 @@ export function logNpmPeerDepsError(phase: MigrationInstallPhase): void {
         ...peerDepsResolutionSteps,
         '',
         'Once the conflicts are resolved, run "npm install" to install the updated dependencies.',
-        'If the migration was interrupted before completing, re-run the remaining migrations:',
-        '   nx migrate --run-migrations',
+        'If the migration run was interrupted before completing, re-run it:',
+        `   ${rerunCommand}`,
         '',
         ...manualInstallHint,
       ],
     });
   }
+}
+
+export function logSkippedPostMigrationInstall(root: string): void {
+  const packageManager = detectPackageManager(root);
+  const installCommand = getPackageManagerCommand(packageManager, root).install;
+  output.warn({
+    title: 'Migrations updated your dependencies, but the install was skipped',
+    bodyLines: [`Run "${installCommand}" to install the updated dependencies.`],
+  });
 }
 
 export class ChangedDepInstaller {
@@ -216,7 +244,8 @@ export class ChangedDepInstaller {
 
   constructor(
     private readonly root: string,
-    private readonly shouldSkipInstall = false
+    private readonly shouldSkipInstall = false,
+    private readonly rerunCommand?: string
   ) {
     this.initialDeps = getStringifiedPackageJsonDeps(root);
   }
@@ -231,7 +260,7 @@ export class ChangedDepInstaller {
       if (this.shouldSkipInstall) {
         this._skippedInstall = true;
       } else {
-        await runInstall(this.root, 'post-migration');
+        await runInstall(this.root, 'post-migration', this.rerunCommand);
       }
     }
     this.initialDeps = currentDeps;
@@ -248,11 +277,12 @@ export async function runNxOrAngularMigration(
   },
   isVerbose: boolean,
   captureGeneratorOutput = false,
-  resolvedCollection?: { collection: MigrationsJson; collectionPath: string }
+  resolvedCollection?: ResolvedMigrationCollection
 ): Promise<{
   changes: FileChange[];
   nextSteps: string[];
   agentContext: string[];
+  skipAgentic: boolean;
   logs: string;
   madeChanges: boolean;
 }> {
@@ -261,6 +291,8 @@ export async function runNxOrAngularMigration(
   let changes: FileChange[] = [];
   let nextSteps: string[] = [];
   let agentContext: string[] = [];
+  // Angular schematics have no return channel, so they can never waive it.
+  let skipAgentic = false;
   let logs = '';
   // Angular's `ngResult.changes` is synthesized from the schematic's
   // DryRunEvent stream so Nx and Angular paths can share commit/validation
@@ -268,14 +300,15 @@ export async function runNxOrAngularMigration(
   let madeChanges = false;
   logger.info(pc.dim('→ Running generator…'));
   if (!isAngularMigration(collection, migration.name)) {
-    ({ nextSteps, changes, agentContext, logs } = await runNxMigration(
-      root,
-      collectionPath,
-      collection,
-      migration.name,
-      migration.version,
-      captureGeneratorOutput
-    ));
+    ({ nextSteps, changes, agentContext, skipAgentic, logs } =
+      await runNxMigration(
+        root,
+        collectionPath,
+        collection,
+        migration.name,
+        migration.version,
+        captureGeneratorOutput
+      ));
     madeChanges = changes.length > 0;
 
     logger.info(`Ran ${migration.name} from ${migration.package}`);
@@ -285,7 +318,14 @@ export async function runNxOrAngularMigration(
     logger.info('');
     if (!madeChanges) {
       logger.info(`No changes were made\n`);
-      return { changes, nextSteps, agentContext, logs, madeChanges };
+      return {
+        changes,
+        nextSteps,
+        agentContext,
+        skipAgentic,
+        logs,
+        madeChanges,
+      };
     }
 
     logger.info('Changes:');
@@ -313,7 +353,14 @@ export async function runNxOrAngularMigration(
     logger.info('');
     if (!madeChanges) {
       logger.info(`No changes were made\n`);
-      return { changes, nextSteps, agentContext, logs, madeChanges };
+      return {
+        changes,
+        nextSteps,
+        agentContext,
+        skipAgentic,
+        logs,
+        madeChanges,
+      };
     }
 
     logger.info('Changes:');
@@ -321,7 +368,7 @@ export async function runNxOrAngularMigration(
     logger.info('');
   }
 
-  return { changes, nextSteps, agentContext, logs, madeChanges };
+  return { changes, nextSteps, agentContext, skipAgentic, logs, madeChanges };
 }
 
 export function getStringifiedPackageJsonDeps(root: string): string {
@@ -367,29 +414,36 @@ export async function runNxMigration(
   } else {
     result = await fn(host, {});
   }
-  const { nextSteps, agentContext } = parseMigrationReturn(result);
+  const { nextSteps, agentContext, skipAgentic } = parseMigrationReturn(result);
   host.lock();
   const changes = host.listChanges();
   flushChanges(root, changes);
-  return { changes, nextSteps, agentContext, logs };
+  return { changes, nextSteps, agentContext, skipAgentic, logs };
 }
 
 export function parseMigrationReturn(value: unknown): {
   nextSteps: string[];
   agentContext: string[];
+  skipAgentic: boolean;
 } {
   if (Array.isArray(value)) {
-    return { nextSteps: filterStrings(value), agentContext: [] };
+    return {
+      nextSteps: filterStrings(value),
+      agentContext: [],
+      skipAgentic: false,
+    };
   }
   if (value && typeof value === 'object') {
     const obj = value as Record<string, unknown>;
     return {
       nextSteps: filterStrings(obj.nextSteps),
       agentContext: filterStrings(obj.agentContext),
+      // Strict, so a truthy non-boolean can't opt a migration out of its AI step.
+      skipAgentic: obj.skipAgentic === true,
     };
   }
   // Catches `void`, mistakenly-returned generator callbacks, malformed values.
-  return { nextSteps: [], agentContext: [] };
+  return { nextSteps: [], agentContext: [], skipAgentic: false };
 }
 
 // Bucket-level tolerance: a single non-string entry shouldn't discard the
@@ -401,7 +455,15 @@ export function filterStrings(value: unknown): string[] {
   return value.filter((v): v is string => typeof v === 'string');
 }
 
-export function readMigrationCollection(packageName: string, root: string) {
+export interface ResolvedMigrationCollection {
+  collection: MigrationsJson;
+  collectionPath: string;
+}
+
+export function readMigrationCollection(
+  packageName: string,
+  root: string
+): ResolvedMigrationCollection {
   const collectionPath = readPackageMigrationConfig(
     packageName,
     root
@@ -412,6 +474,25 @@ export function readMigrationCollection(packageName: string, root: string) {
     collection,
     collectionPath,
   };
+}
+
+// Workspace-relative because the agent runs with cwd at the workspace root;
+// absolute only for layouts that resolve outside it (hoisted/symlinked).
+export function resolveDocumentationFileToWorkspacePath(
+  root: string,
+  migrationsDir: string,
+  documentation: string
+): string | undefined {
+  let documentationFile: string;
+  try {
+    documentationFile = require.resolve(documentation, {
+      paths: [migrationsDir],
+    });
+  } catch {
+    return undefined;
+  }
+  const relativePath = relative(root, documentationFile);
+  return relativePath.startsWith('..') ? documentationFile : relativePath;
 }
 
 export function getImplementationPath(

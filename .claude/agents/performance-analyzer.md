@@ -1,7 +1,7 @@
 ---
 name: performance-analyzer
 description: Use this agent during PR review to analyze the runtime performance of a PR's changes along two axes - (1) resource footprint (unnecessary CPU or memory usage) and (2) execution efficiency (does the code run quickly, avoid redundant work, and scale with workspace size). It reports a finding only when the cost is real on a hot path or scales with input size; micro-costs in cold paths are endorsed as sound so the reviewer knows performance was checked. Read-only on the sandbox checkout.
-model: inherit
+model: opus
 tools: Read, Grep, Glob, Bash
 ---
 

@@ -93,7 +93,7 @@ describe('env vars', () => {
 });`
       );
 
-      if (runE2ETests('cypress')) {
+      if (await runE2ETests('cypress')) {
         // contains the correct output and works
         const run1 = runCLI(
           `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
@@ -185,7 +185,7 @@ export default defineConfig({
         `generate @nx/cypress:configuration --project=${appName} --devServerTarget=${appName}:dev --baseUrl=http://localhost:3000 --no-interactive`
       );
 
-      if (runE2ETests('cypress')) {
+      if (await runE2ETests('cypress')) {
         expect(runCLI(`run ${appName}:component-test`)).toContain(
           'All specs passed!'
         );
@@ -196,7 +196,8 @@ export default defineConfig({
     TEN_MINS_MS
   );
 
-  it(
+  // TODO(leosvelperez): Re-enable once https://github.com/cypress-io/cypress/issues/34461 is fixed
+  xit(
     `should allow CT and e2e in same project for an angular project`,
     async () => {
       let appName = uniq(`angular-cy-app`);
@@ -214,7 +215,7 @@ export default defineConfig({
         `generate @nx/cypress:e2e --project=${appName} --baseUrl=http://localhost:4200 --no-interactive`
       );
 
-      if (runE2ETests('cypress')) {
+      if (await runE2ETests('cypress')) {
         expect(runCLI(`run ${appName}:component-test`)).toContain(
           'All specs passed!'
         );

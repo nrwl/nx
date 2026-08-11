@@ -1,4 +1,8 @@
-import { getRelativeCwd, logShowProjectCommand } from '@nx/devkit/internal';
+import {
+  getRelativeCwd,
+  logShowProjectCommand,
+  type PackageJson,
+} from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   formatFiles,
@@ -23,7 +27,6 @@ import {
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/internal';
-import type { PackageJson } from 'nx/src/utils/package-json';
 import { relative } from 'path';
 import { addLinting } from '../../utils/add-linting';
 import { extractTsConfigBase } from '../../utils/create-ts-config';

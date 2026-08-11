@@ -1,7 +1,7 @@
 ---
 name: setup-review-sandbox
 description: One-time setup of the sandbox prerequisites used by the reproduce-issue skill and the reproduce-verifier agent — Docker, the isolation runtime (gVisor on Linux / Colima on macOS), healthy container networking, and the nx-review-sandbox toolchain image (built from the repo's mise.toml). Idempotent; re-run any time to verify or repair. Use when the user says "set up the review sandbox", "install the sandbox prereqs", "build the sandbox image", or a reproduce-issue preflight reports something MISSING.
-allowed-tools: Read, Grep, Glob, Bash(uname *), Bash(docker info *), Bash(docker run *), Bash(docker build *), Bash(docker image inspect *), Bash(docker images *), Bash(command -v *), Bash(lsmod *)
+allowed-tools: Read, Grep, Glob, Bash(uname *), Bash(docker info *), Bash(docker run *), Bash(docker build *), Bash(docker image inspect *), Bash(docker images *), Bash(command -v *), Bash(lsmod *), Bash(bash tools/review-sandbox/*)
 ---
 
 # Set up the review sandbox (one-time)
@@ -67,18 +67,17 @@ If `modprobe` errors with a BTF / version mismatch (`failed to validate module [
 
 Needed only to **build an unreleased PR's nx** in the sandbox (reproduce-verifier Level 2). Reproducing against a published nx version does NOT need it.
 
-```bash
-docker image inspect nx-review-sandbox:latest >/dev/null 2>&1 && echo "image OK" || echo "image MISSING"
-```
-
-If MISSING (or stale — check the `created` date against the Dockerfile), build it. The Dockerfile only needs `mise.toml`, so build from a **minimal context** — do NOT pass `.` (the repo root), which would ship the whole monorepo (node_modules / .git / dist — many GB) to the daemon:
+Build it — unconditionally, without first checking whether it exists:
 
 ```bash
-mkdir -p tmp/review-sandbox-ctx && cp mise.toml tmp/review-sandbox-ctx/
-docker build -t nx-review-sandbox:latest -f tools/review-sandbox/Dockerfile tmp/review-sandbox-ctx
+bash tools/review-sandbox/build-image.sh
 ```
 
-This installs the repo's exact toolchain — node/java/dotnet/maven/rust/bun via mise — and takes a while + several GB. Requires steps 1 + 3 to pass first (build needs working networking). If disk is tight, `/sandbox-prune` first.
+**Don't gate this on an existence check.** An image built from any older revision passes one identically, so a missing capability stays invisible until a review is mysteriously slow — which is exactly how an image predating the pnpm-store warming went unnoticed for two weeks, costing ~25 minutes of package downloads on every review in between. Docker's layer cache already answers the question properly: ~0.6 s when nothing changed, a real rebuild when something did. `review-pr` calls the same script in its own pre-flight for that reason, so the image is kept current by every review rather than by remembering to re-run this skill.
+
+The script builds from a **minimal context** — five entries, ~2 MB, almost all of it the lockfile — and never `.` (the repo root), which would ship the whole monorepo (node_modules / .git / dist — many GB) to the daemon. All five entries are load-bearing; the Dockerfile explains what each omission breaks.
+
+This installs the repo's exact toolchain — node/java/dotnet/maven/rust/bun via mise — and warms the pnpm store so reviews link packages instead of downloading them. Takes a while and several GB (the warm store is ~2.6 GB of that). Requires steps 1 + 3 to pass first (build needs working networking). If disk is tight, `/sandbox-prune` first.
 
 ## 5. Verify (smoke test)
 

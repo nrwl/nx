@@ -20,22 +20,22 @@ describe('NextJs Component Testing', () => {
   afterAll(() => cleanupProject());
 
   // TODO(nicholas): this is erroring out due to useState error when serving the app in CI. It passes for me locally.
-  xit('should test a NextJs app', () => {
+  xit('should test a NextJs app', async () => {
     const appName = uniq('next-app');
     createAppWithCt(appName);
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       expect(runCLI(`component-test ${appName}`)).toContain(
         'All specs passed!'
       );
     }
   });
 
-  it('should test a NextJs app using babel compiler', () => {
+  it('should test a NextJs app using babel compiler', async () => {
     const appName = uniq('next-app');
     createAppWithCt(appName);
     //  add bable compiler to app
     addBabelSupport(`apps/${appName}`);
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       expect(runCLI(`component-test ${appName}`)).toContain(
         'All specs passed!'
       );
@@ -47,7 +47,7 @@ describe('NextJs Component Testing', () => {
     createLibWithCt(libName, false);
     //  add bable compiler to lib
     addBabelSupport(`libs/${libName}`);
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       expect(runCLI(`component-test ${libName}`)).toContain(
         'All specs passed!'
       );
@@ -57,7 +57,7 @@ describe('NextJs Component Testing', () => {
   it('should test a NextJs lib', async () => {
     const libName = uniq('next-lib');
     createLibWithCt(libName, false);
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       expect(runCLI(`component-test ${libName}`)).toContain(
         'All specs passed!'
       );
@@ -67,7 +67,7 @@ describe('NextJs Component Testing', () => {
   it('should test a NextJs buildable lib', async () => {
     const buildableLibName = uniq('next-buildable-lib');
     createLibWithCt(buildableLibName, true);
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       expect(runCLI(`component-test ${buildableLibName}`)).toContain(
         'All specs passed!'
       );
@@ -77,7 +77,7 @@ describe('NextJs Component Testing', () => {
   it('should test a NextJs server component that uses router', async () => {
     const lib = uniq('next-lib');
     createLibWithCtCypress(lib);
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       expect(runCLI(`component-test ${lib}`)).toContain('All specs passed!');
     }
   }, 600_000);

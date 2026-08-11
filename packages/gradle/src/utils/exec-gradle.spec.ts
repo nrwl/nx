@@ -1,9 +1,9 @@
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import {
   findGradlewFile,
   getCustomGradleExecutableDirectoryFromPlugin,
 } from './exec-gradle';
 import { NxJsonConfiguration } from '@nx/devkit';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 
 describe('exec gradle', () => {
   describe('findGradlewFile', () => {

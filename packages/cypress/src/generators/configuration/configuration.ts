@@ -1,4 +1,8 @@
-import { resolveImportPath, promptWhenInteractive } from '@nx/devkit/internal';
+import {
+  resolveImportPath,
+  promptWhenInteractive,
+  PackageJson,
+} from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -32,7 +36,6 @@ import {
   getTsConfigModuleResolution,
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
-import { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { addLinterToCyProject } from '../../utils/add-linter';
 import { assertSupportedCypressVersion } from '../../utils/assert-supported-cypress-version';

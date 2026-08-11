@@ -7,7 +7,7 @@ import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import { readJsonFile, writeJsonFile } from '../../utils/fileutils';
 import { getPackageNameFromImportPath } from '../../utils/get-package-name-from-import-path';
 import { output } from '../../utils/output';
-import { PackageJson } from '../../utils/package-json';
+import { installPackageToTmp, PackageJson } from '../../utils/package-json';
 import { getPackageManagerCommand } from '../../utils/package-manager';
 import { nxVersion } from '../../utils/versions';
 import { globWithWorkspaceContextSync } from '../../utils/workspace-context';
@@ -33,7 +33,6 @@ import {
   updateGitIgnore,
 } from './implementation/utils';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
-import { installPackageToTmp } from '../../devkit-internals';
 import { handleImport } from '../../utils/handle-import';
 import { isAiAgent } from '../../native';
 import { Agent } from '../../ai/utils';

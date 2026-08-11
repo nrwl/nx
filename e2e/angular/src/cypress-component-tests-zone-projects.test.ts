@@ -5,7 +5,8 @@ import {
   CypressComponentTestsSetup,
 } from './cypress-component-tests-setup';
 
-describe('Angular Cypress Component Tests - Zone.js projects', () => {
+// TODO(leosvelperez): Re-enable once https://github.com/cypress-io/cypress/issues/34461 is fixed
+xdescribe('Angular Cypress Component Tests - Zone.js projects', () => {
   let setup: CypressComponentTestsSetup;
 
   beforeAll(async () => {
@@ -14,26 +15,26 @@ describe('Angular Cypress Component Tests - Zone.js projects', () => {
 
   afterAll(() => cleanupCypressComponentTests());
 
-  it('should successfully run for an app', () => {
+  it('should successfully run for an app', async () => {
     const { appName } = setup;
 
     runCLI(
       `generate @nx/angular:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
     );
-    if (runE2ETests('cypress')) {
+    if (await runE2ETests('cypress')) {
       expect(runCLI(`component-test ${appName}`)).toContain(
         'All specs passed!'
       );
     }
   }, 300_000);
 
-  it('should successfully run for a lib', () => {
+  it('should successfully run for a lib', async () => {
     const { usedInAppLibName } = setup;
 
     runCLI(
       `generate @nx/angular:cypress-component-configuration --project=${usedInAppLibName} --generate-tests --no-interactive`
     );
-    if (runE2ETests('cypress')) {
+    if (await runE2ETests('cypress')) {
       expect(runCLI(`component-test ${usedInAppLibName}`)).toContain(
         'All specs passed!'
       );

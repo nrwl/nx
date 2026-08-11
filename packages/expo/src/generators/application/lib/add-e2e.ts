@@ -1,6 +1,7 @@
 import {
   getE2EWebServerInfo,
   readTargetDefaultsForTarget,
+  type PackageJson,
 } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
@@ -12,7 +13,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { isTypedLintingEnabled } from '@nx/eslint/internal';
-import type { PackageJson } from 'nx/src/utils/package-json';
 import { hasExpoPlugin } from '../../../utils/has-expo-plugin';
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from './normalize-options';

@@ -152,7 +152,9 @@ The `@nx/vitest` plugin creates a target for any project that has a Vitest or Vi
 - `vite.config.cjs` (with `test` configuration)
 - `vite.config.cts` (with `test` configuration)
 
-To view inferred tasks, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-app`.
+The configuration directory must also contain a `package.json` or `project.json`. A root Vitest workspace configuration that only orchestrates child projects is not registered as its own project.
+
+To view inferred tasks, open the [project details view](/docs/concepts/mental-model#inferred-tasks) in Nx Console or run `nx show project my-app`.
 
 ### Plugin options
 
@@ -177,8 +179,8 @@ Configure the plugin in `nx.json`:
 
 | Option              | Type               | Default                     | Description                                                                                                                                                                                               |
 | ------------------- | ------------------ | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `testTargetName`    | string             | `test`                      | Name of the inferred local target.                                                                                                                                                                        |
-| `ciTargetName`      | string             | none                        | Creates a CI-only target used for atomized runs.                                                                                                                                                          |
+| `testTargetName`    | string             | `test`                      | Name of the test task.                                                                                                                                                                                    |
+| `ciTargetName`      | string             | none                        | Creates a CI-only task used for atomized runs.                                                                                                                                                            |
 | `ciGroupName`       | string             | derived from `ciTargetName` | Display name for the atomized CI group.                                                                                                                                                                   |
 | `testMode`          | `watch` or `run`   | `watch`                     | Determines whether Nx runs `vitest` (watch) or `vitest run` (single run).                                                                                                                                 |
 | `discoverTestFiles` | `glob` or `vitest` | `glob`                      | How atomized test files are discovered. `glob` mirrors Vitest's resolution without booting Vitest per project, which is faster during graph creation. Set to `vitest` to always enumerate through Vitest. |
@@ -188,6 +190,12 @@ When `discoverTestFiles` is `glob`, configs that a glob cannot reproduce faithfu
 The `glob` path reads the Nx workspace file index, so it never enumerates specs ignored by `.gitignore` or `.nxignore`, even ones Vitest itself would run. Set `discoverTestFiles` to `vitest` if you need those specs atomized.
 
 There is no single "disable" flag for inference. Use `include` and `exclude` to scope which projects each plugin instance applies to.
+
+The test task is cached, with outputs based on your Vitest coverage configuration.
+Custom reporter output files are not inferred.
+Set `ciTargetName` to enable the [Atomizer](/docs/features/ci-features/split-e2e-tasks).
+
+A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter for these tasks must use the exact identifier `@nx/vitest`.
 
 ### Configure unit and e2e separately
 

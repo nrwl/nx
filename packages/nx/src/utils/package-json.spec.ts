@@ -125,13 +125,15 @@ describe('installPackageToTmp', () => {
       .spyOn(childProcess, 'execSync')
       .mockReturnValue('' as any);
 
-    // npm: peers are omitted via `--omit=peer`
+    // npm: `--legacy-peer-deps`, not `--omit=peer`. npm marks a package as a peer
+    // if anything in the tree peer-depends on it, so `--omit=peer` also prunes
+    // packages that are real dependencies of the installed package.
     installPackageToTmp('@nx/cypress', '1.0.0', 'npm');
     expect(execSyncSpy.mock.calls[0][0]).toBe(
-      'npm install -D @nx/cypress@1.0.0 --omit=peer --ignore-scripts'
+      'npm install -D @nx/cypress@1.0.0 --legacy-peer-deps --ignore-scripts'
     );
 
-    // bun: also accepts `--omit=peer`
+    // bun: `--omit=peer` is safe here, bun does not over-prune the way npm does
     execSyncSpy.mockClear();
     jest.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
       addDev: 'bun add -D',
@@ -654,14 +656,6 @@ const dependencies = [
   ...Object.keys(rootPackageJson.devDependencies),
 ];
 
-const exclusions = new Set([
-  // @types/js-yaml doesn't define a main field, but does define exports.
-  // exports doesn't contain 'package.json', and main is an empty line.
-  // This means the function fails.
-  '@types/js-yaml',
-  '@webcontainer/api',
-]);
-
 // Skip packages this monorepo publishes — pnpm symlinks them into
 // `node_modules/<name>` from `packages/<name>`, so resolving them counts as
 // a cross-project read in CI's sandbox even though it would be a normal
@@ -671,11 +665,12 @@ const isPublishedHere = (name: string) =>
   name === 'nx' || name.startsWith('@nx/') || name.startsWith('create-nx-');
 
 describe('readModulePackageJson', () => {
-  it.each(
-    dependencies.filter((x) => !exclusions.has(x) && !isPublishedHere(x))
-  )(`should be able to find %s`, (s) => {
-    expect(() => readModulePackageJson(s)).not.toThrow();
-  });
+  it.each(dependencies.filter((x) => !isPublishedHere(x)))(
+    `should be able to find %s`,
+    (s) => {
+      expect(() => readModulePackageJson(s)).not.toThrow();
+    }
+  );
 });
 
 describe('getDependencyVersionFromPackageJson', () => {

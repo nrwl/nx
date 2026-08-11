@@ -191,7 +191,7 @@ describe('@nx/expo', () => {
   });
 
   it('should run e2e for cypress', async () => {
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const results = runCLI(`e2e ${appName}-e2e`);
       expect(results).toContain('Successfully ran target e2e');
 

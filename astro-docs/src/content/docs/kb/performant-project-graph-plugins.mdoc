@@ -8,7 +8,7 @@ topics:
 
 Your plugin's `createNodes` function runs every time Nx computes the project graph, which happens before _any_ task is restored from cache. If it does expensive work for every matching file, that cost is paid on every command (`nx build`, `nx graph`, even editor integrations), and it is paid by every developer and every CI machine. A plugin that recomputes everything from scratch is a common cause of slow graph creation, and the cost is magnified on Windows, where filesystem and process-spawn operations are significantly more expensive than on Linux or macOS.
 
-The patterns below are the ones the first-party Nx plugins use to keep graph creation fast. They assume you're already familiar with the [project graph plugin API](/docs/kb/project-graph-plugins) and have written a basic [tooling plugin](/docs/kb/tooling-plugin).
+The patterns below are the ones the first-party Nx plugins use to keep graph creation fast. They assume you've already [created a plugin](/docs/kb/add-language-support) with a working `createNodes` function.
 
 {% aside type="note" title="Internal helpers" %}
 Some helpers shown below (`PluginCache`, `calculateHashesForCreateNodes`) are exported from `@nx/devkit/internal`, and `workspaceDataDirectory` comes from `nx/src/utils/cache-directory`. These are lower-stability surfaces than the main `@nx/devkit` entry point, so they can change between major versions. They are the same helpers first-party plugins rely on, but if you need to support a wide range of Nx versions you can implement the equivalent behavior yourself (a content hash plus a JSON file on disk).
@@ -44,10 +44,6 @@ export const createNodes: CreateNodes<MyPluginOptions> = [
   },
 ];
 ```
-
-{% aside type="note" title="Export name by Nx version" %}
-Use `createNodes` for Nx 22 and later, where it carries this batched signature. For Nx 21 and earlier, the equivalent export is named `createNodesV2`. To support both, export `createNodes` and add `export const createNodesV2 = createNodes`. See the [CreateNodes API Compatibility](/docs/kb/createnodes-compatibility) guide.
-{% /aside %}
 
 ## Cache results to disk
 
@@ -194,7 +190,7 @@ If you can only decide whether a file is relevant after looking at its siblings 
 
 Nx hashes the graph node your plugin produces to decide whether cached task results can be reused. If your function returns different output across runs or machines, because of array ordering, absolute paths, or environment values, Nx computes a different hash and treats unchanged code as a cache miss, defeating both your plugin cache and task caching downstream.
 
-Sort arrays (`targets`, `inputs`, `outputs`, `dependsOn`) explicitly before returning, and avoid leaking `process.env` values, absolute paths, timestamps, or random IDs into target configuration. Prefer workspace-relative tokens like `{workspaceRoot}` and `{projectRoot}`. See [Inferred Tasks](/docs/concepts/inferred-tasks) for the full set of determinism rules.
+Sort arrays (`targets`, `inputs`, `outputs`, `dependsOn`) explicitly before returning, and avoid leaking `process.env` values, absolute paths, timestamps, or random IDs into target configuration. Prefer workspace-relative tokens like `{workspaceRoot}` and `{projectRoot}`.
 
 ## Avoid per-file process spawning and heavy top-level imports
 
@@ -225,8 +221,6 @@ If a user reports slow graph creation, ask them for this output along with `nx r
 
 ## Related documentation
 
-- [Extending the Project Graph](/docs/kb/project-graph-plugins) - The full project graph plugin API
-- [Integrate a New Tool with a Tooling Plugin](/docs/kb/tooling-plugin) - End-to-end tutorial for building a plugin
-- [CreateNodes API Compatibility](/docs/kb/createnodes-compatibility) - Supporting multiple Nx versions
-- [Inferred Tasks](/docs/concepts/inferred-tasks) - How Nx builds the graph from plugins
-- [CreateNodesV2 API Reference](/docs/reference/devkit/CreateNodesV2) - Detailed API documentation
+- [Add Language Support to Nx](/docs/kb/add-language-support) - End-to-end walkthrough for building a plugin
+- [CreateNodes API Compatibility](/docs/kb/createnodes-compatibility) - Supporting Nx versions before 22
+- [Inferred Tasks](/docs/concepts/mental-model#inferred-tasks) - How Nx builds the graph from plugins

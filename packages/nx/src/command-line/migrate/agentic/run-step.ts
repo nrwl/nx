@@ -40,6 +40,17 @@ export interface AgenticStepResult {
   ambiguous: boolean;
 }
 
+/**
+ * `runStep` travels in the context rather than being imported by its call
+ * sites, so this module loads only where the context is built, behind an
+ * agentic-enabled gate.
+ */
+export interface AgenticRunContext {
+  agentic: EnabledResolvedAgentic;
+  runDir: string;
+  runStep: typeof runAgenticPromptStep;
+}
+
 export interface RunAgenticPromptStepInput {
   root: string;
   migration: {

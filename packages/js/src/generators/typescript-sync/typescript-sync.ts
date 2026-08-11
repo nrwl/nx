@@ -12,12 +12,9 @@ import {
 import ignore from 'ignore';
 import { applyEdits, modify } from 'jsonc-parser';
 import { dirname, normalize, relative } from 'node:path/posix';
-import {
-  SyncError,
-  type SyncGeneratorResult,
-} from 'nx/src/utils/sync-generators';
 import * as ts from 'typescript';
 import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
+import { SyncError, type SyncGeneratorResult } from '@nx/devkit/internal';
 
 interface Tsconfig {
   references?: Array<{ path: string }>;

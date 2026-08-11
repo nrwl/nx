@@ -894,7 +894,11 @@ export function ensurePackage<T extends any = any>(
   }
 
   try {
-    return require(pkg);
+    // The workspace comes first so its installed version wins; `__dirname`
+    // keeps the old behaviour as a fallback. A bare `require` would only
+    // resolve from wherever `@nx/devkit` sits, which in a monorepo can be a
+    // different copy of the package than the workspace depends on.
+    return require(require.resolve(pkg, { paths: [workspaceRoot, __dirname] }));
   } catch (e) {
     if (e.code === 'ERR_REQUIRE_ESM') {
       // The package is installed, but is an ESM package.

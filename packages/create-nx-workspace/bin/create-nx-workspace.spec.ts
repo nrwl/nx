@@ -1,9 +1,11 @@
 import {
+  applyEmptyPresetAlias,
   validateWorkspaceName,
   resolveSpecialFolderName,
   determineFolder,
 } from './create-nx-workspace';
 import { CnwError } from '../src/utils/error-utils';
+import { Preset } from '../src/utils/preset/preset';
 import {
   mkdtempSync,
   mkdirSync,
@@ -323,5 +325,29 @@ describe('determineFolder - explicit "." confirmation', () => {
     expect(enquirer.prompt).toHaveBeenCalledTimes(2);
 
     rmSync(tmpDir, { recursive: true });
+  });
+});
+
+describe('applyEmptyPresetAlias', () => {
+  it('maps --preset empty to the ts preset', () => {
+    const argv = { preset: 'empty' as const };
+    applyEmptyPresetAlias(argv);
+    expect(argv.preset).toBe('ts');
+  });
+
+  it('wins over --template so appending --preset=empty escapes the template download', () => {
+    const argv = { preset: 'empty' as const, template: 'nrwl/react-template' };
+    applyEmptyPresetAlias(argv);
+    expect(argv).toEqual({ preset: 'ts' });
+  });
+
+  it('leaves other presets and templates untouched', () => {
+    const preset = { preset: Preset.ReactMonorepo };
+    applyEmptyPresetAlias(preset);
+    expect(preset).toEqual({ preset: 'react-monorepo' });
+
+    const template = { template: 'empty' };
+    applyEmptyPresetAlias(template);
+    expect(template).toEqual({ template: 'empty' });
   });
 });

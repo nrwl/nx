@@ -445,6 +445,27 @@ export async function createProjectGraphAndSourceMapsAsync(
         return buildProjectGraphAndSourceMapsWithoutDaemon();
       }
 
+      if (e.daemonPermissionError) {
+        // Deliberately not disabled: unlike the inotify limit above, a socket
+        // owned by someone else stops being there when it is removed or the
+        // machine reboots, and disabling until `nx reset` would outlive the
+        // cause and hide the fix from anyone who followed the advice.
+        // The first line carries the errno, and it is the one token that tells
+        // the two causes apart: EACCES is a socket owned by someone else (delete
+        // it), EPERM is a sandbox refusing the connect syscall (allow unix
+        // sockets under the Nx socket root). The message hedges between exactly
+        // those two because it cannot tell them apart, and this branch does not
+        // call writeDaemonLogs, so dropping the line loses the errno for good.
+        const [summary, ...details] = e.message.split('\n');
+        output.note({
+          title: `${summary} Continuing without the daemon.`,
+          // The blank line after the summary separates paragraphs when the
+          // message is printed as one blob; as bodyLines it is a leading gap.
+          bodyLines: details[0] === '' ? details.slice(1) : details,
+        });
+        return buildProjectGraphAndSourceMapsWithoutDaemon();
+      }
+
       if (e.internalDaemonError) {
         const errorLogFile = writeDaemonLogs(e.message);
         output.warn({
