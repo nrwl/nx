@@ -177,7 +177,7 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
       expect(mockRunInstall).not.toHaveBeenCalled();
       // The run's own worker still installs what the migration changed; only
       // the wrapper's blanket pre-install is skipped.
-      expect(mockRunNxSync).toHaveBeenCalledTimes(1);
+      expect(mockRunNxArgvSync).toHaveBeenCalledTimes(1);
     });
 
     it('reads the local nx version from the workspace root, not the invocation directory', async () => {
@@ -230,9 +230,9 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
       expect(mockAssertWorkspaceNx).toHaveBeenCalledWith(
         expect.objectContaining({ argv })
       );
-      expect(mockRunNxSync).toHaveBeenCalledTimes(1);
+      expect(mockRunNxArgvSync).toHaveBeenCalledTimes(1);
       expect(mockAssertWorkspaceNx.mock.invocationCallOrder[0]).toBeLessThan(
-        mockRunNxSync.mock.invocationCallOrder[0]
+        mockRunNxArgvSync.mock.invocationCallOrder[0]
       );
     });
 
@@ -246,7 +246,7 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
       ]);
 
       expect(exitCode).toBe(1);
-      expect(mockRunNxSync).not.toHaveBeenCalled();
+      expect(mockRunNxArgvSync).not.toHaveBeenCalled();
     });
   });
 });
@@ -343,8 +343,11 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
     expect(exitCode).toBe(0);
     expect(mockResolveRunTarget).not.toHaveBeenCalled();
     expect(mockEnsurePackageHasProvenance).not.toHaveBeenCalled();
-    expect(mockRunNxSync).toHaveBeenCalledTimes(1);
-    expect(mockRunNxSync.mock.calls[0][0]).toBe('_migrate --run-id=run-1');
+    expect(mockRunNxArgvSync).toHaveBeenCalledTimes(1);
+    expect(mockRunNxArgvSync.mock.calls[0][0]).toEqual([
+      '_migrate',
+      '--run-id=run-1',
+    ]);
   });
 
   it('runs the local nx instead of installing the temp CLI when routed to local-nx', async () => {
