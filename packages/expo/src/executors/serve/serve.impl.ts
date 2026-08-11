@@ -99,10 +99,9 @@ function serveAsync(
       reject(err);
     };
 
-    // Expo builds the web bundle on first request, so a consumer that only
-    // requests the page once this executor reports ready (e.g. @nx/cypress
-    // waiting on the dev server target) would deadlock against a bundle log
-    // line that can never arrive. Accepting connections is the real signal.
+    // Expo bundles on first request, so waiting on a bundle log line deadlocks
+    // against a consumer that only requests once we report ready (@nx/cypress).
+    // /status answers packager-status:running once Metro's bundler is ready.
     void (async () => {
       while (!settled) {
         if ((await isPackagerRunning(options.port)) === 'running') {
