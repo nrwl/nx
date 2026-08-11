@@ -55,9 +55,10 @@ public class PluginOptions
     /// The name of the target group the split targets are collapsed into.
     /// </summary>
     /// <remarks>
-    /// Derived on the TypeScript side from the shared Nx helper, so that the
-    /// naming convention has a single implementation across plugins rather than
-    /// being reimplemented here.
+    /// Always sent alongside <see cref="TestCiTargetName"/>, derived on the
+    /// TypeScript side from the shared Nx helper so the naming convention has
+    /// one implementation across plugins. There is deliberately no default
+    /// here, which would be a second one.
     /// </remarks>
     public string? TestCiGroupName { get; set; }
 
