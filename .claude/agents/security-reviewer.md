@@ -48,7 +48,7 @@ The checkout is shared — other agents are reading it while you work. Never edi
 
 It returns a new sandbox id, already installed, that you may mutate freely. If it is refused, mutation has nowhere safe to go: report the dynamic check as unavailable rather than working around it.
 
-**Execute changed shell; do not just read it.** If the diff adds or modifies an executable block with control flow — a gate, a loop, a verification snippet — extract that block's *literal bytes* (`sandbox read <SANDBOX> <path> --range a,b`, NOT from the diff and NOT a paraphrase) and run it against an adversarial matrix: honest inputs, forgery/negative inputs, and injection payloads. Report the observed outputs. A clean-room reimplementation can pass while the shipped snippet is broken — for example a `case` arm that `echo`s FAILED but does not `exit` still falls through to the next command.
+**Execute changed shell; do not just read it.** If the diff adds or modifies an executable block with control flow — a gate, a loop, a verification snippet — extract that block's _literal bytes_ (`sandbox read <SANDBOX> <path> --range a,b`, NOT from the diff and NOT a paraphrase) and run it against an adversarial matrix: honest inputs, forgery/negative inputs, and injection payloads. Report the observed outputs. A clean-room reimplementation can pass while the shipped snippet is broken — for example a `case` arm that `echo`s FAILED but does not `exit` still falls through to the next command.
 
 ## Required output preamble
 
@@ -76,7 +76,7 @@ This applies to `SECURITY_SOUND` exactly as it applies to a finding, and matters
 
 These encode this repo's review culture. A finding matching one of them is advisory at most — never a blocker, and never the driver of your verdict:
 
-- **`migrations.json` is already inside the migration trust boundary.** Flag it only when the diff creates a *new* external boundary — HTTP, or runtime input.
+- **`migrations.json` is already inside the migration trust boundary.** Flag it only when the diff creates a _new_ external boundary — HTTP, or runtime input.
 - **`nx migrate` and `nx release` temp directories are intentional post-mortem artifacts**, not leaks.
 - **An Important finding must be net-new** versus base/sibling behavior. Deliberate behavior backed by tests and documentation is a callout, not a blocker.
 

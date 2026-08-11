@@ -53,6 +53,8 @@ The checkout is shared — other agents are reading it while you work. Never edi
 
 It returns a new sandbox id, already installed, that you may mutate freely. Pass `base` instead of `head` for a baseline mutation. If it is refused, mutation has nowhere safe to go: report the dynamic check as unavailable rather than working around it.
 
+**Execute changed shell; do not just read it.** If the diff adds or modifies an executable block with control flow — a gate, a loop, a verification snippet — extract that block's _literal bytes_ (`sandbox read <SANDBOX> <path> --range a,b`, NOT from the diff and NOT a paraphrase) and run it. Reasoning about embedded shell as prose is not enough, and a clean-room reimplementation can pass while the shipped snippet is broken: a `case` arm that `echo`s FAILED but does not `exit` still falls through to the next command.
+
 ## Required output preamble
 
 Open every report with exactly these three lines — plain text, not markdown headings, and not wrapped in backticks:

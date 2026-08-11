@@ -83,7 +83,7 @@ These encode this repo's review culture. A finding matching one of them is advis
 
 - **Coverage gaps are advisory.** Missing branches/fixtures never block alone. False coverage — a wrong assertion, or a test that cannot fail — is a defect.
 - **Do not demand tests** for deprecation warnings, legacy paths, telemetry wiring, or never-throw wrappers; testable logic inside them remains in scope.
-- **Comment-volume asks are Suggestions.** Inaccurate or stale comments, and required `@deprecated` / `TODO(vNN)` markers, remain blocking. This repo's committed rule is that the default is *no* comment, so "add a comment here" is never a finding.
+- **Comment-volume asks are Suggestions.** Inaccurate or stale comments, and required `@deprecated` / `TODO(vNN)` markers, remain blocking. This repo's committed rule is that the default is _no_ comment, so "add a comment here" is never a finding.
 - **An Important finding must be net-new** versus base/sibling behavior. Deliberate behavior backed by tests and documentation is a callout, not a blocker.
 
 ## Verdicts
