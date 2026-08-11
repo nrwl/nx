@@ -1,4 +1,9 @@
-import { confirmThirdPartyPreset, determineTemplate } from './prompts';
+import {
+  confirmThirdPartyPreset,
+  determineLinterOptions,
+  determineTemplate,
+} from './prompts';
+import enquirer from 'enquirer';
 
 jest.mock('../utils/ci/is-ci', () => ({
   isCI: jest.fn(() => false),
@@ -126,5 +131,47 @@ describe('confirmThirdPartyPreset', () => {
       confirmThirdPartyPreset('@my-org/nx-plugin', true, false)
     ).resolves.toBe(true);
     expect(enquirer.prompt).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('determineLinterOptions', () => {
+  beforeEach(() => {
+    (enquirer.prompt as jest.Mock).mockReset();
+  });
+
+  it('should return the given linter without prompting', async () => {
+    const result = await determineLinterOptions({
+      linter: 'oxlint',
+      interactive: true,
+    });
+
+    expect(result).toBe('oxlint');
+    expect(enquirer.prompt).not.toHaveBeenCalled();
+  });
+
+  it('should let the prompt skip itself when not interactive', async () => {
+    (enquirer.prompt as jest.Mock).mockResolvedValue({ linter: 'eslint' });
+
+    await determineLinterOptions({ interactive: false });
+
+    // A skipped enquirer prompt resolves to the FIRST choice and ignores
+    // `initial`, so the ordering is what decides the non-interactive default.
+    // Asserting the returned value would only re-read the mock.
+    const [[[question]]] = (enquirer.prompt as jest.Mock).mock.calls;
+    expect(question.skip).toBe(true);
+    expect(question.choices[0]).toEqual(
+      expect.objectContaining({ name: 'eslint' })
+    );
+  });
+
+  it('should prompt when interactive', async () => {
+    (enquirer.prompt as jest.Mock).mockResolvedValue({ linter: 'oxlint' });
+
+    const result = await determineLinterOptions({ interactive: true });
+
+    expect(result).toBe('oxlint');
+    expect(enquirer.prompt).toHaveBeenCalledWith([
+      expect.objectContaining({ name: 'linter', skip: false }),
+    ]);
   });
 });

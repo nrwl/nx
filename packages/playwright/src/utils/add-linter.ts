@@ -6,7 +6,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
+import { LinterType } from '@nx/js';
 import {
   javaScriptOverride,
   addExtendsToLintConfig,
@@ -20,10 +20,11 @@ import {
   useFlatConfig,
 } from '@nx/eslint/internal';
 import { eslintPluginPlaywrightVersion } from './versions';
+import { addLintingToProject } from '@nx/js/internal';
 
 export interface PlaywrightLinterOptions {
   project: string;
-  linter: Linter | LinterType;
+  linter: LinterType;
   enableTypedLinting?: boolean;
   /**
    * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
@@ -52,12 +53,14 @@ export async function addLinterToPlaywrightProject(
 
   const eslintFile = findEslintFile(tree, projectConfig.root);
   const enableTypedLinting = isTypedLintingEnabled(options);
-  if (!eslintFile) {
+
+  // An existing ESLint config means the project is already registered, so skip
+  // straight to the Playwright-specific shaping below.
+  if (options.linter !== 'eslint' || !eslintFile) {
     tasks.push(
-      await lintProjectGenerator(tree, {
+      await addLintingToProject(tree, {
         project: options.project,
         linter: options.linter,
-        skipFormat: true,
         tsConfigPaths: [joinPathFragments(projectConfig.root, 'tsconfig.json')],
         enableTypedLinting,
         skipPackageJson: options.skipPackageJson,
@@ -67,7 +70,9 @@ export async function addLinterToPlaywrightProject(
     );
   }
 
-  if (!options.linter || options.linter !== 'eslint') {
+  // Everything below configures ESLint — predefined configs, `extends`, ignore
+  // entries — which have no equivalent in other linters.
+  if (options.linter !== 'eslint') {
     return runTasksInSerial(...tasks);
   }
 

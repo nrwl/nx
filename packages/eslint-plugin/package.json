@@ -32,6 +32,9 @@
       "nx": [
         "dist/nx.d.ts"
       ],
+      "internal": [
+        "dist/internal.d.ts"
+      ],
       "react": [
         "dist/react.d.ts"
       ],
@@ -67,6 +70,11 @@
       "@nx/nx-source": "./nx.ts",
       "types": "./dist/nx.d.ts",
       "default": "./dist/nx.js"
+    },
+    "./internal": {
+      "@nx/nx-source": "./internal.ts",
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
     },
     "./react": {
       "@nx/nx-source": "./react.ts",

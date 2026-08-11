@@ -1,4 +1,4 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 import type { SupportedStyles } from '@nx/react';
 
 export interface Schema {
@@ -11,7 +11,7 @@ export interface Schema {
   routing?: boolean;
   appProject?: string;
   unitTestRunner: 'jest' | 'vitest' | 'none';
-  linter: Linter | LinterType;
+  linter?: LinterType;
   component?: boolean;
   publishable?: boolean;
   /** @deprecated Use bundler instead. */

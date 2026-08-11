@@ -6,9 +6,12 @@
 
 export {
   determineDefaultBase,
+  determineLinterOptions,
   determineNxCloud,
   determinePackageManager,
+  LINTERS,
 } from './src/internal-utils/prompts';
+export type { Linter } from './src/internal-utils/prompts';
 export {
   withAllPrompts,
   withGitOptions,

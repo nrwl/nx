@@ -57,6 +57,7 @@ describe('application generator', () => {
     });
     updateNxJson(tree, nxJson);
     await applicationGenerator(tree, {
+      linter: 'eslint',
       ...options,
       unitTestRunner: 'vitest',
       e2eTestRunner: 'playwright',
@@ -78,6 +79,7 @@ describe('application generator', () => {
 
     updateNxJson(tree, nxJson);
     await applicationGenerator(tree, {
+      linter: 'eslint',
       ...options,
       bundler: 'rsbuild',
       unitTestRunner: 'vitest',
@@ -147,6 +149,7 @@ describe('application generator', () => {
     });
     updateNxJson(tree, nxJson);
     await applicationGenerator(tree, {
+      linter: 'eslint',
       ...options,
       addPlugin: true,
       unitTestRunner: 'vitest',
