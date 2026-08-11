@@ -17,7 +17,6 @@ import {
   readNxMigrateConfig,
   readTargetsFromPackageJson,
 } from './package-json';
-import * as catalog from './catalog';
 import * as pacakgeManager from './package-manager';
 import { getPackageManagerCommand } from './package-manager';
 import { workspaceRoot } from './workspace-root';

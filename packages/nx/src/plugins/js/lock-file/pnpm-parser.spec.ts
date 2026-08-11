@@ -1423,8 +1423,8 @@ describe('pnpm LockFile utility', () => {
 
   describe('workspace-only lockfile (no packages block)', () => {
     // pnpm omits the `packages:` block entirely when a project depends only on
-    // other workspace packages. Stringify must still write the workspace
-    // importer blocks instead of throwing on the missing block.
+    // other workspace packages. Stringify must still emit the workspace module
+    // as a `file:` package instead of throwing on the missing block.
     const lockFile = `lockfileVersion: '9.0'
 
 settings:
@@ -1442,7 +1442,7 @@ importers:
   packages/b: {}
 `;
 
-    it('should stringify without throwing and write the workspace importer', () => {
+    it('should stringify without throwing and write the workspace module as a file: package', () => {
       const graph: ProjectGraph = {
         nodes: {
           b: {

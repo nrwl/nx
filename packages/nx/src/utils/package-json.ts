@@ -1,18 +1,7 @@
 import { exec, execSync } from 'child_process';
 import { promisify } from 'util';
-import {
-  copyFileSync,
-  existsSync,
-  lstatSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from 'fs';
-import { dirname, isAbsolute, join, relative, resolve } from 'path';
-import { normalizePath } from './path';
+import { existsSync, writeFileSync } from 'fs';
+import { dirname, join, resolve } from 'path';
 
 const execAsync = promisify(exec);
 import { dirSync } from 'tmp';
@@ -27,8 +16,7 @@ import { readJson } from '../generators/utils/json';
 import { readTargetDefaultsForTarget } from '../project-graph/utils/project-configuration-utils';
 import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration/target-merging';
 import { getCatalogManager } from './catalog';
-import { readJsonFile, readYamlFile, writeJsonFile } from './fileutils';
-import { logger } from './logger';
+import { readJsonFile } from './fileutils';
 import { hasNxJsPlugin } from './has-nx-js-plugin';
 import { getNxRequirePaths } from './installation-directory';
 import {
