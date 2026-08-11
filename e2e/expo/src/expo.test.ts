@@ -17,12 +17,16 @@ import {
   reservePort,
 } from '@nx/e2e-utils';
 import { join } from 'path';
+import { setupExpoEnv } from './setup';
 
 describe('@nx/expo', () => {
   let appName: string;
   let libName: string;
+  let restoreExpoEnv: () => void;
 
   beforeAll(() => {
+    restoreExpoEnv = setupExpoEnv();
+
     newProject({
       packages: [
         '@nx/cypress',
@@ -45,7 +49,10 @@ describe('@nx/expo', () => {
     );
   });
 
-  afterAll(() => cleanupProject());
+  afterAll(() => {
+    restoreExpoEnv();
+    cleanupProject();
+  });
 
   it('nx.json should contain plugin configuration', () => {
     const nxJson = readJson('nx.json');
