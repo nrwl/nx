@@ -40,6 +40,7 @@ patchedDependencies:
   '@astrojs/starlight': 'patches/@astrojs__starlight.patch'
 catalog:
   '@babel/core': '^7.29.6'
+  '@clack/prompts': '^1.7.0'
   '@heroicons/react': '^2.1.4'
   '@module-federation/enhanced': '^2.3.3'
   '@playwright/test': '^1.36.0'

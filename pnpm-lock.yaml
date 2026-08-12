@@ -123,6 +123,9 @@ catalogs:
     '@babel/core':
       specifier: ^7.29.6
       version: 7.29.7
+    '@clack/prompts':
+      specifier: ^1.7.0
+      version: 1.7.0
     '@heroicons/react':
       specifier: ^2.1.4
       version: 2.2.0
@@ -2358,6 +2361,9 @@ importers:
 
   packages/create-nx-workspace:
     dependencies:
+      '@clack/prompts':
+        specifier: 'catalog:'
+        version: 1.7.0
       axios:
         specifier: 1.18.1
         version: 1.18.1

@@ -361,16 +361,18 @@ describe('determinePresetOptions', () => {
     interactive: false,
     workspaces: true,
     name: 'myorg',
+    // A value the linter resolution cannot produce on its own, so these tests
+    // pin the threading through each stack rather than the resolved default.
+    linter: 'oxlint',
   } as any;
 
   beforeEach(() => {
     // Recorded calls persist across tests otherwise, so any assertion on which
     // questions were asked would see every earlier test's prompts too.
     (enquirer.prompt as jest.Mock).mockClear();
-    // A sentinel the prompt could not produce by accident, so what these tests
-    // pin is the threading through each stack rather than the prompt's own
-    // default.
-    (enquirer.prompt as jest.Mock).mockResolvedValue({ linter: 'oxlint' });
+    // Other questions in these flows read fields off the reply; an object
+    // keeps them defined without standing in for the linter.
+    (enquirer.prompt as jest.Mock).mockResolvedValue({});
   });
 
   // Every stack must come back with the resolved linter. Once the schemas
