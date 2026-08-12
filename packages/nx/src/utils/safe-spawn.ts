@@ -23,10 +23,12 @@ function needsShell(binary: string): boolean {
   return ext === '' || ext === '.cmd' || ext === '.bat';
 }
 
-// `quoteShellArg` deliberately lets these through — see its spec. That is fine
-// for argv a user typed, but cmd.exe expands `%VAR%` and a line break ends the
-// command line whatever the quoting, so neither can be made safe here.
-const UNQUOTABLE_ON_WINDOWS = /[%\r\n]/;
+// A line break ends the command line whatever the quoting, so no value can
+// carry one. `%` is refused for arguments only: `quoteShellArg` leaves it
+// unquoted by design and cmd.exe expands it, which is meaningless in a
+// `-Dkey=value` pair but ordinary in a directory name.
+const LINE_BREAK = /[\r\n]/;
+const UNQUOTABLE_ARG_ON_WINDOWS = /[%\r\n]/;
 
 /**
  * Spawn a process without letting its arguments become shell syntax.
@@ -40,7 +42,7 @@ export function safeSpawn(
   options: Omit<SpawnOptions, 'shell'> = {}
 ): ChildProcess {
   const shell = needsShell(binary);
-  return spawn(quote(binary, shell), quoteAll(args, shell), {
+  return spawn(quoteBinary(binary, shell), quoteArgs(args, shell), {
     ...options,
     windowsHide: true,
     shell,
@@ -56,7 +58,7 @@ export function safeExecFileSync(
   options: Omit<ExecFileSyncOptions, 'encoding' | 'shell'> = {}
 ): string {
   const shell = needsShell(binary);
-  return execFileSync(quote(binary, shell), quoteAll(args, shell), {
+  return execFileSync(quoteBinary(binary, shell), quoteArgs(args, shell), {
     stdio: 'pipe',
     ...options,
     windowsHide: true,
@@ -65,22 +67,35 @@ export function safeExecFileSync(
   });
 }
 
-// The binary needs the same treatment as the arguments: Node joins it into the
-// same command line, so a path holding a space or an `&` would split there.
-function quote(value: string, shell: boolean): string {
+// The binary needs quoting too: Node joins it into the same command line, so a
+// path holding a space or an `&` would split there. It is a filesystem path
+// rather than configuration, so only a line break is refused.
+function quoteBinary(binary: string, shell: boolean): string {
   if (!shell) {
-    return value;
+    return binary;
   }
-  if (UNQUOTABLE_ON_WINDOWS.test(value)) {
+  if (LINE_BREAK.test(binary)) {
     throw new Error(
-      `Cannot safely pass ${JSON.stringify(
-        value
-      )} to cmd.exe: a percent sign or line break inside it would leave the rest of the command to be read as commands. Remove it from your Nx configuration and try again.`
+      `Cannot run ${JSON.stringify(
+        binary
+      )}: a line break in the path would end the command line before cmd.exe reached the rest of it.`
     );
   }
-  return quoteShellArg(value);
+  return quoteShellArg(binary);
 }
 
-function quoteAll(args: readonly string[], shell: boolean): string[] {
-  return shell ? args.map((arg) => quote(arg, shell)) : [...args];
+function quoteArgs(args: readonly string[], shell: boolean): string[] {
+  if (!shell) {
+    return [...args];
+  }
+  return args.map((arg) => {
+    if (UNQUOTABLE_ARG_ON_WINDOWS.test(arg)) {
+      throw new Error(
+        `Cannot safely pass ${JSON.stringify(
+          arg
+        )} to cmd.exe: a percent sign or line break inside it would leave the rest of the command line to be read as commands. Remove it from your Nx configuration and try again.`
+      );
+    }
+    return quoteShellArg(arg);
+  });
 }

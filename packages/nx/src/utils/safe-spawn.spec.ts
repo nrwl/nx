@@ -65,6 +65,27 @@ describe('safeSpawn', () => {
     expect(options.shell).toBe(false);
   });
 
+  // A percent sign is legal in a Windows directory name, and the binary is a
+  // filesystem path rather than configuration — quoted, not refused.
+  it('allows a percent sign in the binary path on Windows', () => {
+    setPlatform('win32');
+
+    safeSpawn('C:\\ws\\100% done\\gradlew.bat', ['tasks'], {});
+
+    expect((spawn as jest.Mock).mock.calls[0][0]).toBe(
+      '"C:\\ws\\100% done\\gradlew.bat"'
+    );
+  });
+
+  it('refuses a line break in the binary path on Windows', () => {
+    setPlatform('win32');
+
+    expect(() => safeSpawn('C:\\ws\\a\nb\\gradlew.bat', ['tasks'], {})).toThrow(
+      'a line break in the path'
+    );
+    expect(spawn).not.toHaveBeenCalled();
+  });
+
   // Node joins the binary into the same command line, so an unquoted path
   // holding a space or an & would split at the shell.
   it('quotes the binary too when a shell is used', () => {
