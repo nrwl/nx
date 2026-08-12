@@ -5,7 +5,7 @@ import {
   spawn,
   SpawnOptions,
 } from 'child_process';
-import { extname } from 'path';
+import { win32 } from 'path';
 import { quoteShellArg } from './shell-quoting';
 
 // Node cannot launch a Windows `.cmd`/`.bat` shim without a shell, and a bare
@@ -19,7 +19,10 @@ function needsShell(binary: string): boolean {
   if (process.platform !== 'win32') {
     return false;
   }
-  const ext = extname(binary).toLowerCase();
+  // win32.extname, not the platform default: this branch only runs on Windows,
+  // where `path` is win32 anyway, and pinning it lets a test model the real
+  // parse rather than posix's (which reads `C:\ws\my.app\gradlew` as `.app\gradlew`).
+  const ext = win32.extname(binary).toLowerCase();
   return ext === '' || ext === '.cmd' || ext === '.bat';
 }
 

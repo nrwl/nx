@@ -65,6 +65,16 @@ describe('safeSpawn', () => {
     expect(options.shell).toBe(false);
   });
 
+  // A dot in a parent directory is not an extension. posix's extname reads
+  // this as `.app\\gradlew` and would skip the shell; win32 reads `gradlew`.
+  it('treats a dotted parent directory as extension-less', () => {
+    setPlatform('win32');
+
+    safeSpawn('C:\\ws\\my.app\\gradlew', ['tasks'], {});
+
+    expect((spawn as jest.Mock).mock.calls[0][2].shell).toBe(true);
+  });
+
   // A percent sign is legal in a Windows directory name, and the binary is a
   // filesystem path rather than configuration — quoted, not refused.
   it('allows a percent sign in the binary path on Windows', () => {
