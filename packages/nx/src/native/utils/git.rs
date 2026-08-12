@@ -125,11 +125,12 @@ pub fn common_git_dir(git_dir: &Path) -> Option<PathBuf> {
 /// `.git/modules/packages/worktrees/foo`, whose parent segment is `worktrees`
 /// too.
 ///
-/// `commondir` would separate the two just as well, but it cannot be used
-/// here: `git worktree add` writes it *after* the checkout's gitfile, and the
-/// watcher asks this question the moment that gitfile appears. `gitdir` is
-/// written before it, so a worktree is recognized from the first event it
-/// produces rather than a few microseconds later.
+/// `commondir` separates the two just as well. `gitdir` is preferred only
+/// because `git worktree add` writes it first, so this answers `true` for
+/// every state a half-registered worktree passes through rather than all but
+/// the first ~66us of it. No caller is known to observe that window - the
+/// watcher reaches here from an event already queued and dequeued - so treat
+/// this as ordering hygiene, not a fix for a race anyone has measured.
 ///
 /// A dangling worktree - one whose main clone has been moved or deleted,
 /// which the absolute path in the gitfile does nothing to survive - answers

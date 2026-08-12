@@ -239,12 +239,14 @@ where
 
     // Linked worktrees are full checkouts of the workspace nested inside it.
     // Walking one multiplies the file set for no gain. This applies whatever
-    // `use_ignores` says: the daemon's output watcher walks the workspace
-    // root with `use_ignores: false` (`watchOutputFiles` in
-    // daemon/server/watcher.ts) and takes a non-recursive inotify descriptor
-    // per directory the walk yields, where exhausting the limit is fatal.
-    // Resolution costs a handful of syscalls and nothing per entry when the
-    // repository has no worktrees.
+    // `use_ignores` says, because that flag does not mean "not the workspace":
+    // the daemon's output watcher (`watchOutputFiles` in
+    // daemon/server/watcher.ts) walks the workspace root with it false, and
+    // takes a non-recursive inotify descriptor per directory the walk yields,
+    // where exhausting the limit is fatal. Cache output expansion
+    // (`expand_outputs`) passes it false too and walks task outputs, which
+    // hold no worktree - it pays the resolution for nothing, which is a
+    // handful of syscalls per walk and nothing per entry.
     let worktrees: HashSet<PathBuf> = nested_linked_worktrees(&directory).into_iter().collect();
 
     if use_ignores {
