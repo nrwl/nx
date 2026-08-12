@@ -148,6 +148,18 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "23.2.0-cypress-15.20.1": {
+      "version": "23.2.0-beta.6",
+      "requires": {
+        "cypress": ">=15.0.0 <15.20.1"
+      },
+      "packages": {
+        "cypress": {
+          "version": "^15.20.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
