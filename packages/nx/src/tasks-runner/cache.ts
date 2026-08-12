@@ -117,10 +117,16 @@ export class DbCache {
     if (this.remoteCache) {
       // didn't find it locally but we have a remote cache
       // attempt remote cache
-      const res = await this.remoteCache.retrieve(
-        task.hash,
-        this.cache.cacheDirectory
-      );
+      let res: NativeCacheResult | null;
+      try {
+        res = await this.remoteCache.retrieve(
+          task.hash,
+          this.cache.cacheDirectory
+        );
+      } catch (e) {
+        handleRemoteCacheError(e, 'read from', task);
+        return null;
+      }
 
       if (res) {
         this.applyRemoteCacheResults(task.hash, res, task.outputs);
@@ -177,10 +183,16 @@ export class DbCache {
     if (remoteMisses.length > 0) {
       await Promise.all(
         remoteMisses.map(async (task) => {
-          const res = await this.remoteCache.retrieve(
-            task.hash,
-            this.cache.cacheDirectory
-          );
+          let res: NativeCacheResult | null;
+          try {
+            res = await this.remoteCache.retrieve(
+              task.hash,
+              this.cache.cacheDirectory
+            );
+          } catch (e) {
+            handleRemoteCacheError(e, 'read from', task);
+            return;
+          }
           if (res) {
             this.applyRemoteCacheResults(task.hash, res, task.outputs);
             results.set(task.hash, {
@@ -214,26 +226,34 @@ export class DbCache {
     outputs: string[],
     code: number
   ) {
-    return tryAndRetry(async () => {
-      const expandedOutputs = this.cache.put(
-        task.hash,
-        terminalOutput,
-        outputs,
-        code
-      );
+    const expandedOutputs = await tryAndRetry(async () =>
+      this.cache.put(task.hash, terminalOutput, outputs, code)
+    );
 
-      // Notify TaskIOService of actual output files
-      getTaskIOService().notifyTaskOutputs(task.id, expandedOutputs);
+    // Notify TaskIOService of actual output files
+    getTaskIOService().notifyTaskOutputs(task.id, expandedOutputs);
 
-      if (this.remoteCache) {
-        await this.remoteCache.store(
+    if (!this.remoteCache) {
+      return;
+    }
+
+    // The upload gets its own retry loop, separate from the local write above,
+    // so a failing cache server no longer re-runs the local write six times.
+    // The catch sits outside tryAndRetry rather than inside it, so transient
+    // failures are still retried and only the final rejection degrades to a
+    // skipped upload.
+    try {
+      await tryAndRetry(async () =>
+        this.remoteCache.store(
           task.hash,
           this.cache.cacheDirectory,
           terminalOutput,
           code
-        );
-      }
-    });
+        )
+      );
+    } catch (e) {
+      handleRemoteCacheError(e, 'write to', task);
+    }
   }
 
   copyFilesFromCache(_: string, cachedResult: CachedResult, outputs: string[]) {
@@ -443,7 +463,12 @@ export class Cache {
     } else if (this.options.remoteCache && !this.options.skipRemoteCache) {
       // didn't find it locally but we have a remote cache
       // attempt remote cache
-      await this.options.remoteCache.retrieve(task.hash, this.cachePath);
+      try {
+        await this.options.remoteCache.retrieve(task.hash, this.cachePath);
+      } catch (e) {
+        handleRemoteCacheError(e, 'read from', task);
+        return null;
+      }
       // try again from local cache
       const res2 = await this.getFromLocalDir(task);
       return res2 ? { ...res2, remote: true } : null;
@@ -472,7 +497,7 @@ export class Cache {
     outputs: string[],
     code: number
   ) {
-    return tryAndRetry(async () => {
+    await tryAndRetry(async () => {
       /**
        * This is the directory with the cached artifacts
        */
@@ -509,15 +534,26 @@ export class Cache {
       await writeFile(join(td, 'source'), await getCurrentMachineId());
       await writeFile(tdCommit, 'true');
 
-      if (this.options.remoteCache && !this.options.skipRemoteCache) {
-        await this.options.remoteCache.store(task.hash, this.cachePath);
-      }
-
       if (terminalOutput) {
         const outputPath = this.temporaryOutputPath(task);
         await writeFile(outputPath, terminalOutput);
       }
     });
+
+    if (!this.options.remoteCache || this.options.skipRemoteCache) {
+      return;
+    }
+
+    // Kept out of the tryAndRetry above so a failing cache server no longer
+    // re-copies every output into the local cache on each attempt, and so the
+    // catch can degrade the final rejection to a skipped upload.
+    try {
+      await tryAndRetry(async () =>
+        this.options.remoteCache.store(task.hash, this.cachePath)
+      );
+    } catch (e) {
+      handleRemoteCacheError(e, 'write to', task);
+    }
   }
 
   async copyFilesFromCache(
@@ -663,6 +699,51 @@ export class Cache {
     mkdirSync(path, { recursive: true });
     return path;
   }
+}
+
+/**
+ * Whether a remote cache failure should stop the run rather than degrade to a
+ * cache miss.
+ *
+ * The classification is made in Rust, in
+ * `packages/nx/src/native/cache/errors.rs`. It crosses the napi boundary on
+ * `error.code` because napi's `Status` is a closed enum with no room for a
+ * custom code, so `InvalidArg` is what marks a failure as fatal: bad
+ * credentials, a misconfigured endpoint, an artifact that tried to write
+ * outside the cache directory, or a local disk failure.
+ *
+ * Anything else — including errors from a third-party remote cache
+ * implementation, which carry no napi code — is treated as recoverable. Losing
+ * the cache costs time, never correctness, because the task is simply rebuilt.
+ */
+function isFatalRemoteCacheError(e: unknown): boolean {
+  return (e as { code?: string } | null)?.code === 'InvalidArg';
+}
+
+/**
+ * Degrade a remote cache failure to a miss, or rethrow it if it is fatal.
+ *
+ * Warns per failure rather than once per run: when only some tasks lose the
+ * cache, which ones they were is the useful part.
+ */
+function handleRemoteCacheError(
+  e: unknown,
+  operation: 'read from' | 'write to',
+  task: Task
+): void {
+  if (isFatalRemoteCacheError(e)) {
+    throw e;
+  }
+  output.warn({
+    title: `Failed to ${operation} the remote cache for ${task.id}`,
+    bodyLines: [
+      e instanceof Error ? e.message : String(e),
+      '',
+      operation === 'read from'
+        ? 'The task will be run locally instead.'
+        : 'The task is cached locally, but other machines will not get a cache hit for it.',
+    ],
+  });
 }
 
 function tryAndRetry<T>(fn: () => Promise<T>): Promise<T> {
