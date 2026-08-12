@@ -342,9 +342,11 @@ class Converter {
         );
       }
 
-      // Hidden from human readers on nx.dev; keep it that way here.
+      // nx.dev hides this from readers and keeps it for the machine-readable
+      // copy. This article IS the machine-readable copy, and the blocks carry
+      // the safety steps a suggested answer most needs to repeat.
       case 'llm_only':
-        return '';
+        return this.renderChildren(node);
 
       // No static equivalent - point at the page that can render them.
       case 'graph':
