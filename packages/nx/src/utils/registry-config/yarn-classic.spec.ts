@@ -35,6 +35,8 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     'YARN_ALWAYS_AUTH',
     'npm_config_//localhost:4873/:always-auth',
     'yarn_//localhost:4873/:always-auth',
+    'npm_config_//localhost:4873/npm/:always-auth',
+    'npm_config_//localhost:4873/npm/RepoA/:always-auth',
     'npm_config_//reg-d.example.com/:always-auth',
     'yarn_cafile',
     'YARN_CAFILE',
@@ -560,6 +562,33 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     });
   });
 
+  it('resolves an always-auth env var declared on a rung above the registry', () => {
+    // The env merges into the same flat map every attempt reads, so a rung the
+    // suffix rewrite reaches answers from there too.
+    files['/repo/.npmrc'] = [
+      'registry=http://localhost:4873/npm/registry/',
+      '//localhost:4873/npm/:_authToken=parent-token',
+    ].join('\n');
+    process.env['npm_config_//localhost:4873/npm/:always-auth'] = 'true';
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'http://localhost:4873/npm/registry/',
+      'npm_config_//localhost:4873/npm/registry/:_authToken': 'parent-token',
+    });
+  });
+
+  it('ignores a registry-scoped always-auth env var carrying an uppercase path', () => {
+    // mergeEnv lowercases the whole variable name while every read keeps its
+    // case, so yarn never matches this one.
+    files['/repo/.npmrc'] = [
+      'registry=http://localhost:4873/npm/RepoA',
+      '//localhost:4873/npm/RepoA/:_authToken=ancestor-token',
+    ].join('\n');
+    process.env['npm_config_//localhost:4873/npm/RepoA/:always-auth'] = 'true';
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'http://localhost:4873/npm/RepoA',
+    });
+  });
+
   it('ignores a registry-scoped always-auth env var for a dotted host', () => {
     // objectPath nests this key under `//reg-d`, so yarn's flat read never sees
     // it.
@@ -631,6 +660,293 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     });
   });
 
+  it('sends the registry credential, not the host one, to a host declaring its own', () => {
+    // yarn picks a credential per registry rather than per URL: a key on another
+    // host only decides that a tarball served from there is authenticated at
+    // all, and what it then sends is still the registry's.
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '//reg-d.example.com/:_authToken=ancestor-token',
+      '//cdn.example.com/:_authToken=cdn-token',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
+      'npm_config_//cdn.example.com/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it('cancels a host credential npm ranks above the form yarn picked', () => {
+    // npm reads _authToken before _auth, so the host's own bearer token would
+    // answer the tarball in place of the registry's basic one.
+    files[`${ROOT}/.npmrc`] = '//cdn.example.com/:_authToken=cdn-token';
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '_auth=ZmFrZS1iYXNlNjQ=',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_auth': 'ZmFrZS1iYXNlNjQ=',
+      'npm_config_//cdn.example.com/:_auth': 'ZmFrZS1iYXNlNjQ=',
+      'npm_config_//cdn.example.com/:_authToken': 'null',
+    });
+  });
+
+  it('opens a host up on a _password key carrying a suffix', () => {
+    // yarn's gate tests the length only for _authToken, so a key that splits
+    // into three still opens the host through the _password arm.
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '//reg-d.example.com/:_authToken=ancestor-token',
+      '//cdn.example.com/:_password:extra=gate',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
+      'npm_config_//cdn.example.com/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it('overrides a credential darted below the host yarn opened up', () => {
+    // npm settles on the deepest dart covering the tarball URL, so the one
+    // under the gate answers unless the winner is written there too.
+    files[`${ROOT}/.npmrc`] =
+      '//cdn.example.com/pkg/:_auth=bmF0aXZlLWRlc2NlbmRhbnQ=';
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '_authToken=ancestor-token',
+      '//cdn.example.com/:_password=gate',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
+      'npm_config_//cdn.example.com/:_authToken': 'ancestor-token',
+      'npm_config_//cdn.example.com/pkg/:_authToken': 'ancestor-token',
+    });
+  });
+
+  itPosix('cancels a native credential a yarn-only file declares first', () => {
+    // Under root the /usr/local/share home outranks the real one, so the key
+    // yarn resolves is not the one npm reads. The cancellation follows npm's
+    // own tiers.
+    (process.getuid as jest.Mock).mockReturnValue(0);
+    files['/usr/local/share/.npmrc'] =
+      '//cdn.example.com/:_authToken=shadow-token';
+    files[`${HOME}/.npmrc`] = '//cdn.example.com/:_authToken=native-token';
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '_auth=ZmFrZS1iYXNlNjQ=',
+      '//cdn.example.com/:_password=gate',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_auth': 'ZmFrZS1iYXNlNjQ=',
+      'npm_config_//cdn.example.com/:_auth': 'ZmFrZS1iYXNlNjQ=',
+      'npm_config_//cdn.example.com/:_authToken': 'null',
+    });
+  });
+
+  it('keeps a host the gate only reads as a text prefix out of it', () => {
+    // The gate carries no trailing slash, so comparing the two darts as plain
+    // text would run cdn.example.com into cdn.example.com.evil and hand that
+    // origin the registry's credential.
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '_authToken=ancestor-token',
+      '//cdn.example.com:_password=Z2F0ZQ==',
+      '//cdn.example.com.evil/pkg/:_auth=ZXZpbA==',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
+      'npm_config_//cdn.example.com/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it('lands an upper-case gate host on the dart npm resolves', () => {
+    // yarn parses the key before matching, so this gate opens the host; npm
+    // keys its own lookup off a parsed URL, so only the lower-cased dart answers.
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '_authToken=ancestor-token',
+      '//CDN.example.com/:_password=Z2F0ZQ==',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
+      'npm_config_//cdn.example.com/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it('reaches a sibling path the gate covers once its trailing slash is dropped', () => {
+    // yarn normalizes both sides before the prefix test, which drops that
+    // slash, so a gate on /npm/ authenticates /npmish too.
+    files[`${ROOT}/.npmrc`] = '//cdn.example.com/npmish/:_auth=bmF0aXZl';
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '_authToken=ancestor-token',
+      '//cdn.example.com/npm/:_password=Z2F0ZQ==',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
+      'npm_config_//cdn.example.com/npm/:_authToken': 'ancestor-token',
+      'npm_config_//cdn.example.com/npmish/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it('answers for both host spellings when the gate carries a www prefix', () => {
+    // yarn folds the `www.` away before matching, so the gate covers the bare
+    // host too, and npm keys its lookup off whichever one the fetch uses.
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '_authToken=ancestor-token',
+      '//www.cdn.example.com/:_password=Z2F0ZQ==',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
+      'npm_config_//www.cdn.example.com/:_authToken': 'ancestor-token',
+      'npm_config_//cdn.example.com/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it('answers for both path spellings when the gate carries duplicate slashes', () => {
+    // yarn collapses them before matching, so this gate covers /pkg; npm walks
+    // the tarball URL's own spelling, so the folded dart goes in alongside the
+    // raw one.
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '_authToken=ancestor-token',
+      '//cdn.example.com//pkg/:_password=Z2F0ZQ==',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
+      'npm_config_//cdn.example.com//pkg/:_authToken': 'ancestor-token',
+      'npm_config_//cdn.example.com/pkg/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it('answers for the decoded path spelling when the gate carries an escape', () => {
+    // yarn percent-decodes before matching, so this gate covers /pkg too.
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '_authToken=ancestor-token',
+      '//cdn.example.com/%70kg/:_password=Z2F0ZQ==',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
+      'npm_config_//cdn.example.com/%70kg/:_authToken': 'ancestor-token',
+      'npm_config_//cdn.example.com/pkg/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it('opens the path in front of a gate fragment', () => {
+    // An unescaped `#` is an ini comment on both sides, so the fragment only
+    // ever arrives escaped. yarn strips it before matching, so the gate covers
+    // /pkg.
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '_authToken=ancestor-token',
+      '//cdn.example.com/pkg\\#frag:_password=Z2F0ZQ==',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
+      'npm_config_//cdn.example.com/pkg:_authToken': 'ancestor-token',
+    });
+  });
+
+  it('opens the whole host on a fragment sitting right behind it', () => {
+    // The raw authority text runs into the fragment, which is not the parser
+    // rewriting the host.
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '_authToken=ancestor-token',
+      '//cdn.example.com\\#frag:_password=Z2F0ZQ==',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
+      'npm_config_//cdn.example.com/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it('drops a gate whose path escape yarn cannot decode', () => {
+    // decodeURI throws where yarn's own normalize call would have thrown, so
+    // npm matching the raw spelling would authenticate where yarn errors out.
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '_authToken=ancestor-token',
+      '//cdn.example.com/%zz/:_password=Z2F0ZQ==',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it('does not let a gate carrying a query open the path beneath it', () => {
+    // yarn keeps the query in the path it matches on, so this gate covers no
+    // plain tarball URL; reading it as a bare /pkg would hand the credential to
+    // one.
+    files[`${ROOT}/.npmrc`] = '//cdn.example.com/pkg/:certfile=/certs/c.pem';
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '_authToken=ancestor-token',
+      '//cdn.example.com/pkg?x:_password=Z2F0ZQ==',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it('does not let a shorthand IPv4 gate open the address it expands to', () => {
+    // yarn compares 127.1 as written, so it opens nothing on 127.0.0.1;
+    // expanding it here would hand that address the credential.
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '_authToken=ancestor-token',
+      '//127.1/:_password=Z2F0ZQ==',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it('leaves a ported host out, since yarn reads its port where the key name goes', () => {
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '//reg-d.example.com/:_authToken=ancestor-token',
+      '//cdn.example.com:8443/:_authToken=cdn-token',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
+    });
+  });
+
   it('expands ${VAR} in a yarn-only ancestor .npmrc auth token before bridging', () => {
     // yarn classic env-replaces .npmrc values, so the bridged token carries the
     // secret yarn resolved.
@@ -647,7 +963,9 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     }
   });
 
-  it('bridges yarn-only nerf-darted _auth, username, and _password for a scoped fetch', () => {
+  it('bridges the yarn-only nerf-darted _auth alone when a username pair sits beside it', () => {
+    // getAuthByRegistry returns on the first form that resolves, so the pair
+    // beside the basic token is never read.
     files['/repo/.npmrc'] = [
       '@sc:registry=https://reg-d.example.com/',
       '//reg-d.example.com/:_auth=ZmFrZS1iYXNlNjQ=',
@@ -657,24 +975,73 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     expect(getYarnClassicSpawnRegistryEnv('@sc/pkg', ROOT)).toEqual({
       'npm_config_@sc:registry': 'https://reg-d.example.com/',
       'npm_config_//reg-d.example.com/:_auth': 'ZmFrZS1iYXNlNjQ=',
-      'npm_config_//reg-d.example.com/:username': 'alice',
-      'npm_config_//reg-d.example.com/:_password': 'ZmFrZS1wYXNz',
     });
   });
 
-  it('re-keys yarn-only bare _auth, username, and _password onto the default registry dart when always-auth is set', () => {
+  it('re-keys a yarn-only bare _auth onto the default registry dart when always-auth is set', () => {
     // With no registry configured the spawned npm queries its own default, so
     // the creds dart onto npmjs rather than yarn's default.
+    files['/repo/.npmrc'] = ['_auth=ZmFrZS1iYXNlNjQ=', 'always-auth=true'].join(
+      '\n'
+    );
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      'npm_config_//registry.npmjs.org/:_auth': 'ZmFrZS1iYXNlNjQ=',
+    });
+  });
+
+  it('re-keys a yarn-only username pair onto the registry dart', () => {
     files['/repo/.npmrc'] = [
-      '_auth=ZmFrZS1iYXNlNjQ=',
+      'registry=https://reg-d.example.com/',
       'username=alice',
       '_password=ZmFrZS1wYXNz',
       'always-auth=true',
     ].join('\n');
     expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
-      'npm_config_//registry.npmjs.org/:_auth': 'ZmFrZS1iYXNlNjQ=',
-      'npm_config_//registry.npmjs.org/:username': 'alice',
-      'npm_config_//registry.npmjs.org/:_password': 'ZmFrZS1wYXNz',
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:username': 'alice',
+      'npm_config_//reg-d.example.com/:_password': 'ZmFrZS1wYXNz',
+    });
+  });
+
+  it('co-locates a username pair yarn resolved from two different rungs', () => {
+    // getAuthByRegistry runs a ladder per key, so the halves can land on
+    // different rungs; npm only reads a pair sharing one key.
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/npm/registry',
+      '//reg-d.example.com/npm/registry/:username=alice',
+      '_password=ZmFrZS1wYXNz',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/npm/registry',
+      'npm_config_//reg-d.example.com/npm/registry/:username': 'alice',
+      'npm_config_//reg-d.example.com/npm/registry/:_password': 'ZmFrZS1wYXNz',
+    });
+  });
+
+  it('sends no credential for a username yarn has no password to pair with', () => {
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      'username=alice',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+    });
+  });
+
+  it('takes the bare _authToken over an _auth darted on the registry itself', () => {
+    // The whole ladder runs for _authToken before _auth is tried at all, so the
+    // bare key outranks the registry-scoped one.
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '//reg-d.example.com/:_auth=ZmFrZS1iYXNlNjQ=',
+      '_authToken=ancestor-token',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
     });
   });
 
@@ -701,9 +1068,9 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     });
   });
 
-  it('re-keys onto the registry while still reading always-auth from the directory above it', () => {
-    // The flag is declared where yarn and npm both look it up, and the
-    // credential is written where it cannot reach a sibling repository.
+  it('ignores an always-auth declared on the directory above the registry', () => {
+    // yarn tries the registry as a key prefix and never climbs a path the way
+    // npm does, so a flag one directory up leaves the fetch anonymous.
     files['/repo/.npmrc'] = [
       'registry=https://reg-d.example.com/npm/repoA',
       '_authToken=ancestor-token',
@@ -711,7 +1078,152 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     ].join('\n');
     expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
       npm_config_registry: 'https://reg-d.example.com/npm/repoA',
-      'npm_config_//reg-d.example.com/npm/repoA/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it('reads always-auth and a credential off the registry URL with its protocol', () => {
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/npm/repoA',
+      'https://reg-d.example.com/npm/repoA/:always-auth=true',
+      'https://reg-d.example.com/npm/repoA/:_authToken=url-token',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/npm/repoA',
+      'npm_config_//reg-d.example.com/npm/repoA/:_authToken': 'url-token',
+    });
+  });
+
+  it('lowercases the host of a URL-spelled credential onto the dart npm resolves', () => {
+    // npm builds its lookup key through new URL, so only the normalized host
+    // answers the request.
+    files['/repo/.npmrc'] = [
+      'registry=https://REG-D.example.com/npm/repoA',
+      'https://REG-D.example.com/npm/repoA/:always-auth=true',
+      'https://REG-D.example.com/npm/repoA/:_authToken=url-token',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://REG-D.example.com/npm/repoA',
+      'npm_config_//reg-d.example.com/npm/repoA/:_authToken': 'url-token',
+    });
+  });
+
+  it('ignores a URL-spelled key missing the trailing slash yarn adds', () => {
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/npm/repoA',
+      'https://reg-d.example.com/npm/repoA:always-auth=true',
+      'https://reg-d.example.com/npm/repoA:_authToken=url-token',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/npm/repoA',
+    });
+  });
+
+  it('ignores a URL-spelled credential naming another registry', () => {
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/npm/repoA',
+      'https://reg-b.example.com/npm/repoA/:_authToken=other-token',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/npm/repoA',
+    });
+  });
+
+  it('reads the directory above a registry path ending in `registry`', () => {
+    // The third attempt drops that segment. The registry carries its trailing
+    // slash so its own dart is //.../npm/registry/, which the flag and the
+    // token are deliberately not declared on.
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/npm/registry/',
+      '//reg-d.example.com/npm/:always-auth=true',
+      '//reg-d.example.com/npm/:_authToken=parent-token',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/npm/registry/',
+      'npm_config_//reg-d.example.com/npm/registry/:_authToken': 'parent-token',
+      // The declaring dart is also a host yarn authenticates, and npm cannot
+      // read it out of this file for itself.
+      'npm_config_//reg-d.example.com/npm/:_authToken': 'parent-token',
+    });
+  });
+
+  it('drops the `registry` suffix without a segment boundary, as yarn does', () => {
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/npm/myregistry/',
+      '//reg-d.example.com/npm/my/:always-auth=true',
+      '//reg-d.example.com/npm/my/:_authToken=stripped-token',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/npm/myregistry/',
+      'npm_config_//reg-d.example.com/npm/myregistry/:_authToken':
+        'stripped-token',
+      'npm_config_//reg-d.example.com/npm/my/:_authToken': 'stripped-token',
+    });
+  });
+
+  it('sends nothing for a credential darted above a registry yarn cannot climb to', () => {
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/npm/repoA',
+      '//reg-d.example.com/npm/:_authToken=parent-token',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/npm/repoA',
+    });
+  });
+
+  it('takes the credential darted on the registry itself', () => {
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/npm/repoA',
+      '//reg-d.example.com/npm/repoA/:_authToken=exact-token',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/npm/repoA',
+      'npm_config_//reg-d.example.com/npm/repoA/:_authToken': 'exact-token',
+    });
+  });
+
+  it('takes the bare credential over one darted above the registry', () => {
+    // npm would walk up to the parent dart on its own, so the bare value has to
+    // be written below it for the fetch to carry what yarn picked.
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/npm/repoA',
+      '_authToken=bare-token',
+      '//reg-d.example.com/npm/:_authToken=parent-token',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/npm/repoA',
+      'npm_config_//reg-d.example.com/npm/repoA/:_authToken': 'bare-token',
+      // The parent dart authenticates a fetch served from it, and with the
+      // credential yarn picked rather than the one declared there.
+      'npm_config_//reg-d.example.com/npm/:_authToken': 'bare-token',
+    });
+  });
+
+  it('ignores a slashless dart npm would walk to but yarn never spells', () => {
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/npm/repoA',
+      '//reg-d.example.com/npm/repoA:_authToken=slashless-token',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/npm/repoA',
+    });
+  });
+
+  it('falls through a falsy always-auth on the registry to a truthy global one', () => {
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '//reg-d.example.com/:always-auth=false',
+      '_authToken=ancestor-token',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
     });
   });
 
