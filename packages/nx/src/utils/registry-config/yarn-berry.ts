@@ -11,8 +11,8 @@ import {
   escapeNpmEnvExpr,
   expandNpmEnvVars,
   getPackageScope,
-  nerfDart,
   readExpandedKey,
+  requestNerfDart,
   setAuthIdent,
   setAuthToken,
   setCafile,
@@ -245,9 +245,13 @@ export function getYarnBerrySpawnRegistryEnv(
     }
   }
 
+  applyTls(env, rcFiles, effectiveRegistry, yarnVersion);
   // Unlike yarn classic there is no gate to consult here. Everything berry
-  // would send is already in the overlay, which the warning checks against.
-  const dart = nerfDart(effectiveRegistry);
+  // would send is already in the overlay, which the warning checks against, so
+  // it runs once the last of it (the client certificate) is in. The dart is the
+  // one npm resolves for a request to this registry, since the overlay writes
+  // there and the check climbs from it.
+  const dart = requestNerfDart(effectiveRegistry);
   if (dart) {
     warnNativeCredential(
       env,
@@ -258,7 +262,6 @@ export function getYarnBerrySpawnRegistryEnv(
     );
   }
 
-  applyTls(env, rcFiles, effectiveRegistry, yarnVersion);
   // Berry's expander consumes the backslash that escapes a reference, so what
   // it resolves can hold a `${VAR}` npm would go on to resolve for itself,
   // sending a credential berry keeps literal. Escaping every value it produced

@@ -1292,6 +1292,36 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
       expect(warnFor(['is-even'])).toEqual([]);
     });
 
+    it('stays quiet on a registry path npm darts below the directory it sits in', () => {
+      // The overlay writes berry's token on the registry's own directory, which
+      // is where npm starts its lookup, so the check has to start there too.
+      projectRc(
+        [
+          'npmRegistryServer: https://reg-a.example.com/npm/repoA',
+          'npmAuthToken: berry-token',
+          'npmAlwaysAuth: true',
+        ].join('\n') + '\n'
+      );
+      files[`${ROOT}/.npmrc`] =
+        '//reg-a.example.com/npm/:_authToken=native-token\n';
+      expect(warnFor(['is-even'])).toEqual([]);
+    });
+
+    it('stays quiet when berry authenticates with a client certificate', () => {
+      // npm reads the certificate pair before it walks up to the token, so the
+      // .npmrc credential never reaches the wire.
+      projectRc(
+        [
+          'npmRegistryServer: https://reg-a.example.com/npm/repoA',
+          'httpsCertFilePath: ./certs/client.crt',
+          'httpsKeyFilePath: ./certs/client.key',
+        ].join('\n') + '\n'
+      );
+      files[`${ROOT}/.npmrc`] =
+        '//reg-a.example.com/npm/:_authToken=native-token\n';
+      expect(warnFor(['is-even'])).toEqual([]);
+    });
+
     it('counts a native credential whose key holds an env reference', () => {
       // npm expands ${VAR} in an .npmrc key, so this token authenticates reg-a.
       process.env.NX_TEST_HOST = 'reg-a.example.com';
