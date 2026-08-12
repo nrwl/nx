@@ -10,6 +10,7 @@ import {
   isTsEsmSyntaxError,
   NODENEXT_ESM_RESOLVER_SOURCE,
   nodeNextEsmResolveHook,
+  resolveTsNodeEsmCompilerOptions,
 } from './register';
 
 // Avoid a real swc registration side effect when exercising getTranspiler.
@@ -471,5 +472,129 @@ describe('NodeNext ESM resolve hook (nodeNextEsmResolveHook, sync)', () => {
         makeNextResolve([])
       )
     ).toThrow(expect.objectContaining({ code: 'ERR_MODULE_NOT_FOUND' }));
+  });
+});
+
+describe('resolveTsNodeEsmCompilerOptions', () => {
+  it('defaults to nodenext when no value is inherited', () => {
+    expect(JSON.parse(resolveTsNodeEsmCompilerOptions(undefined))).toEqual({
+      moduleResolution: 'nodenext',
+      module: 'nodenext',
+    });
+  });
+
+  it('forces nodenext while preserving other inherited options', () => {
+    const raw = JSON.stringify({
+      moduleResolution: 'node10',
+      module: 'commonjs',
+      customConditions: null,
+      paths: { '@lib': ['libs/lib'] },
+    });
+    expect(JSON.parse(resolveTsNodeEsmCompilerOptions(raw))).toEqual({
+      moduleResolution: 'nodenext',
+      module: 'nodenext',
+      customConditions: null,
+      paths: { '@lib': ['libs/lib'] },
+    });
+  });
+
+  it.each(['{oops', 'null', '7', 'true', '"hello"', '["commonjs"]'])(
+    'passes %s through unchanged for ts-node to handle',
+    (raw) => {
+      expect(resolveTsNodeEsmCompilerOptions(raw)).toBe(raw);
+    }
+  );
+});
+
+describe('forceRegisterEsmLoader', () => {
+  const originalEnv = { ...process.env };
+  let registerSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    registerSpy = jest
+      .spyOn(require('node:module'), 'register')
+      .mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    registerSpy.mockRestore();
+    process.env = { ...originalEnv };
+  });
+
+  function loadForceRegisterEsmLoader(): () => void {
+    let fn: () => void;
+    jest.isolateModules(() => {
+      fn = require('./register').forceRegisterEsmLoader;
+    });
+    return fn;
+  }
+
+  function registeredSetterOptions(): unknown {
+    expect(String(registerSpy.mock.calls[0][0])).toMatch(
+      /^data:text\/javascript,/
+    );
+    const source = decodeURIComponent(
+      String(registerSpy.mock.calls[0][0]).replace('data:text/javascript,', '')
+    );
+    const rhs = source.match(
+      /^process\.env\.TS_NODE_COMPILER_OPTIONS = (.*);$/
+    )[1];
+    return JSON.parse(JSON.parse(rhs));
+  }
+
+  it('registers a compiler-options setter module before the ts-node/esm loader', () => {
+    delete process.env.TS_NODE_COMPILER_OPTIONS;
+
+    loadForceRegisterEsmLoader()();
+
+    expect(registerSpy).toHaveBeenCalledTimes(2);
+    expect(String(registerSpy.mock.calls[1][0])).toMatch(/ts-node\/esm\.mjs$/);
+    expect(registeredSetterOptions()).toEqual({
+      moduleResolution: 'nodenext',
+      module: 'nodenext',
+    });
+  });
+
+  it('forces nodenext module and resolution over an inherited value', () => {
+    process.env.TS_NODE_COMPILER_OPTIONS = JSON.stringify({
+      moduleResolution: 'node10',
+      module: 'commonjs',
+      customConditions: null,
+    });
+
+    loadForceRegisterEsmLoader()();
+
+    expect(registeredSetterOptions()).toEqual({
+      moduleResolution: 'nodenext',
+      module: 'nodenext',
+      customConditions: null,
+    });
+    // Child processes must keep seeing the inherited value.
+    expect(process.env.TS_NODE_COMPILER_OPTIONS).toBe(
+      JSON.stringify({
+        moduleResolution: 'node10',
+        module: 'commonjs',
+        customConditions: null,
+      })
+    );
+  });
+
+  it('passes a malformed inherited value through for ts-node to reject', () => {
+    process.env.TS_NODE_COMPILER_OPTIONS = '{oops';
+
+    loadForceRegisterEsmLoader()();
+
+    const source = decodeURIComponent(
+      String(registerSpy.mock.calls[0][0]).replace('data:text/javascript,', '')
+    );
+    expect(source).toBe('process.env.TS_NODE_COMPILER_OPTIONS = "{oops";');
+  });
+
+  it('does not write a default value into the process env', () => {
+    delete process.env.TS_NODE_COMPILER_OPTIONS;
+
+    loadForceRegisterEsmLoader()();
+
+    expect(process.env.TS_NODE_COMPILER_OPTIONS).toBeUndefined();
   });
 });
