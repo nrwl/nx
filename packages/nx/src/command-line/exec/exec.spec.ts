@@ -34,6 +34,7 @@ import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 import { ProjectGraph } from '../../config/project-graph';
+import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
 import { readJsonFile } from '../../utils/fileutils';
@@ -44,6 +45,10 @@ import {
 } from '../../utils/package-manager';
 import { nxExecCommand } from './exec';
 
+// A package script that calls `nx exec` runs with the project directory as its
+// cwd, so the re-invocation nx builds has to name the workspace root itself
+// rather than inherit that cwd — both for the package manager it picks and for
+// the directory it spawns in.
 describe('nx exec', () => {
   const projectGraph: ProjectGraph = {
     nodes: {
@@ -59,20 +64,20 @@ describe('nx exec', () => {
     dependencies: {},
   };
 
-  let originalArgv: string[];
-  let originalLifecycleEvent: string | undefined;
-  let originalTargetProject: string | undefined;
+  // `npm_lifecycle_event` is the package script nx was invoked from, and an
+  // unset NX_TASK_TARGET_PROJECT is what tells nx it is not already running
+  // inside a task, so it re-invokes itself for that script's project.
+  const packageScriptEnv = {
+    npm_lifecycle_event: 'hello',
+    NX_TASK_TARGET_PROJECT: undefined,
+  };
+
+  const originalArgv = process.argv;
 
   beforeEach(() => {
     jest.clearAllMocks();
 
-    originalArgv = process.argv;
-    originalLifecycleEvent = process.env.npm_lifecycle_event;
-    originalTargetProject = process.env.NX_TASK_TARGET_PROJECT;
-
     process.argv = ['node', 'nx', 'exec', '--', 'echo', 'hi'];
-    process.env.npm_lifecycle_event = 'hello';
-    delete process.env.NX_TASK_TARGET_PROJECT;
 
     (createProjectGraphAsync as jest.Mock).mockResolvedValue(projectGraph);
     (splitArgsIntoNxArgsAndOverrides as jest.Mock).mockReturnValue({
@@ -92,27 +97,17 @@ describe('nx exec', () => {
 
   afterEach(() => {
     process.argv = originalArgv;
-    if (originalLifecycleEvent === undefined) {
-      delete process.env.npm_lifecycle_event;
-    } else {
-      process.env.npm_lifecycle_event = originalLifecycleEvent;
-    }
-    if (originalTargetProject === undefined) {
-      delete process.env.NX_TASK_TARGET_PROJECT;
-    } else {
-      process.env.NX_TASK_TARGET_PROJECT = originalTargetProject;
-    }
   });
 
   it('should detect the package manager from the workspace root', async () => {
-    await nxExecCommand({});
+    await withEnvironmentVariables(packageScriptEnv, () => nxExecCommand({}));
 
     expect(detectPackageManager).toHaveBeenCalledWith('/root');
     expect(getPackageManagerCommand).toHaveBeenCalledWith('yarn');
   });
 
   it('should run the nx target from the workspace root', async () => {
-    await nxExecCommand({});
+    await withEnvironmentVariables(packageScriptEnv, () => nxExecCommand({}));
 
     expect(execSync).toHaveBeenCalledWith(
       expect.stringContaining('yarn nx run child:'),
