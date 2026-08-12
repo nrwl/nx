@@ -16,8 +16,8 @@ on:
         description: 'Delete Pylon articles whose source page no longer exists'
         type: boolean
         default: false
-  # Changes to the tooling or to the articles it converts are exercised on the
-  # PR itself, always as a dry run so a review never writes to Pylon.
+  # Changes to the tooling or to the articles it converts are converted on the
+  # PR itself. Only the preview job runs there; nothing reaches Pylon.
   pull_request:
     paths:
       - 'astro-docs/scripts/pylon/**'
@@ -55,9 +55,12 @@ jobs:
         run: pnpm exec tsx scripts/pylon/render-preview.ts
 
   sync:
-    # Fork PRs get no secrets, so the sync would only fail on a missing token.
-    if: ${{ github.repository_owner == 'nrwl' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    # Never on a pull request. The token can delete every article, so it lives
+    # in an environment restricted to master and is unreachable from a branch.
+    # Pull requests get the preview job, which needs no credentials.
+    if: ${{ github.repository_owner == 'nrwl' && github.event_name != 'pull_request' }}
     needs: preview
+    environment: pylon
     permissions:
       contents: read # to fetch code (actions/checkout)
     runs-on: ubuntu-latest
@@ -80,19 +83,14 @@ jobs:
         working-directory: astro-docs
         env:
           PYLON_API_TOKEN: ${{ secrets.PYLON_API_TOKEN }}
-          DRY_RUN: ${{ github.event_name == 'pull_request' || inputs.dry-run }}
+          DRY_RUN: ${{ inputs.dry-run }}
           PRUNE: ${{ inputs.prune }}
         run: |
-          # A PR has nothing to authenticate with until the secret exists, and
-          # conversion is already covered by the preview job. A scheduled or
-          # manual run without a token is a real failure.
+          # This job only runs where the environment grants the secret, so a
+          # missing token means the environment is misconfigured. Failing here
+          # keeps that from turning the nightly into a silent no-op.
           if [ -z "$PYLON_API_TOKEN" ]; then
-            if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
-              echo "No PYLON_API_TOKEN available, skipping the live dry run." \
-                | tee -a "$GITHUB_STEP_SUMMARY"
-              exit 0
-            fi
-            echo "PYLON_API_TOKEN is required for scheduled and manual runs" >&2
+            echo "PYLON_API_TOKEN is not available from the pylon environment" >&2
             exit 1
           fi
 
