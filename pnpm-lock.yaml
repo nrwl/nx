@@ -3719,8 +3719,8 @@ importers:
         specifier: ^4.26.0
         version: 4.28.0
       css-loader:
-        specifier: ^6.4.0
-        version: 6.11.0(@rspack/core@1.6.8(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3))
+        specifier: ^7.1.4
+        version: 7.1.4(@rspack/core@1.6.8(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3))
       enquirer:
         specifier: 'catalog:'
         version: 2.3.6
@@ -4031,8 +4031,8 @@ importers:
         specifier: ^14.0.0
         version: 14.0.0(webpack@5.105.2)
       css-loader:
-        specifier: ^6.4.0
-        version: 6.11.0(@rspack/core@1.6.8(@swc/helpers@0.5.23))(webpack@5.105.2)
+        specifier: ^7.1.4
+        version: 7.1.4(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(webpack@5.105.2)
       css-minimizer-webpack-plugin:
         specifier: ^8.0.0
         version: 8.0.0(esbuild@0.25.0)(lightningcss@1.32.0)(webpack@5.105.2)
@@ -4044,7 +4044,7 @@ importers:
         version: 4.8.1
       less-loader:
         specifier: catalog:css
-        version: 12.3.1(@rspack/core@1.6.8(@swc/helpers@0.5.23))(less@4.8.1)(webpack@5.105.2)
+        version: 12.3.1(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(less@4.8.1)(webpack@5.105.2)
       license-webpack-plugin:
         specifier: ^4.0.2
         version: 4.0.2(webpack@5.105.2)
@@ -4068,7 +4068,7 @@ importers:
         version: 14.1.0(postcss@8.5.15)
       postcss-loader:
         specifier: catalog:css
-        version: 8.2.1(@rspack/core@1.6.8(@swc/helpers@0.5.23))(postcss@8.5.15)(typescript@6.0.3)(webpack@5.105.2)
+        version: 8.2.1(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(postcss@8.5.15)(typescript@6.0.3)(webpack@5.105.2)
       rxjs:
         specifier: 'catalog:'
         version: 7.8.2
@@ -4080,7 +4080,7 @@ importers:
         version: 1.97.2
       sass-loader:
         specifier: catalog:css
-        version: 16.0.7(@rspack/core@1.6.8(@swc/helpers@0.5.23))(sass-embedded@1.97.2)(sass@1.97.3)(webpack@5.105.2)
+        version: 16.0.7(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(sass-embedded@1.97.2)(sass@1.97.3)(webpack@5.105.2)
       source-map-loader:
         specifier: ^5.0.0
         version: 5.0.0(webpack@5.105.2)
@@ -43169,34 +43169,6 @@ snapshots:
     dependencies:
       postcss: 8.5.25
 
-  css-loader@6.11.0(@rspack/core@1.6.8(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3)):
-    dependencies:
-      icss-utils: 5.1.0(postcss@8.5.15)
-      postcss: 8.5.15
-      postcss-modules-extract-imports: 3.1.0(postcss@8.5.15)
-      postcss-modules-local-by-default: 4.2.0(postcss@8.5.15)
-      postcss-modules-scope: 3.2.1(postcss@8.5.15)
-      postcss-modules-values: 4.0.0(postcss@8.5.15)
-      postcss-value-parser: 4.2.0
-      semver: 7.8.4
-    optionalDependencies:
-      '@rspack/core': 1.6.8(@swc/helpers@0.5.23)
-      webpack: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3)
-
-  css-loader@6.11.0(@rspack/core@1.6.8(@swc/helpers@0.5.23))(webpack@5.105.2):
-    dependencies:
-      icss-utils: 5.1.0(postcss@8.5.15)
-      postcss: 8.5.15
-      postcss-modules-extract-imports: 3.1.0(postcss@8.5.15)
-      postcss-modules-local-by-default: 4.2.0(postcss@8.5.15)
-      postcss-modules-scope: 3.2.1(postcss@8.5.15)
-      postcss-modules-values: 4.0.0(postcss@8.5.15)
-      postcss-value-parser: 4.2.0
-      semver: 7.8.4
-    optionalDependencies:
-      '@rspack/core': 1.6.8(@swc/helpers@0.5.23)
-      webpack: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@5.1.4)
-
   css-loader@6.11.0(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))(webpack@5.105.2):
     dependencies:
       icss-utils: 5.1.0(postcss@8.5.15)
@@ -43225,6 +43197,20 @@ snapshots:
       '@rspack/core': 1.6.8(@swc/helpers@0.5.23)
       webpack: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.1)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3(webpack-bundle-analyzer@4.10.2)(webpack-dev-server@5.2.4)(webpack@5.105.2))
 
+  css-loader@7.1.4(@rspack/core@1.6.8(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3)):
+    dependencies:
+      icss-utils: 5.1.0(postcss@8.5.25)
+      postcss: 8.5.25
+      postcss-modules-extract-imports: 3.1.0(postcss@8.5.25)
+      postcss-modules-local-by-default: 4.2.0(postcss@8.5.25)
+      postcss-modules-scope: 3.2.1(postcss@8.5.25)
+      postcss-modules-values: 4.0.0(postcss@8.5.25)
+      postcss-value-parser: 4.2.0
+      semver: 7.8.5
+    optionalDependencies:
+      '@rspack/core': 1.6.8(@swc/helpers@0.5.23)
+      webpack: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3)
+
   css-loader@7.1.4(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))(webpack@5.109.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3)):
     dependencies:
       icss-utils: 5.1.0(postcss@8.5.25)
@@ -43252,6 +43238,20 @@ snapshots:
     optionalDependencies:
       '@rspack/core': 2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18)
       webpack: 5.109.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.1)(lightningcss@1.32.0)(postcss@8.5.19)(webpack-cli@7.0.3)
+
+  css-loader@7.1.4(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(webpack@5.105.2):
+    dependencies:
+      icss-utils: 5.1.0(postcss@8.5.25)
+      postcss: 8.5.25
+      postcss-modules-extract-imports: 3.1.0(postcss@8.5.25)
+      postcss-modules-local-by-default: 4.2.0(postcss@8.5.25)
+      postcss-modules-scope: 3.2.1(postcss@8.5.25)
+      postcss-modules-values: 4.0.0(postcss@8.5.25)
+      postcss-value-parser: 4.2.0
+      semver: 7.8.5
+    optionalDependencies:
+      '@rspack/core': 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
+      webpack: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@5.1.4)
 
   css-loader@7.1.4(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(webpack@5.109.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.1)(lightningcss@1.32.0)(postcss@8.5.19)(webpack-cli@7.0.3)):
     dependencies:
@@ -48121,19 +48121,19 @@ snapshots:
       '@rspack/core': 1.6.8(@swc/helpers@0.5.23)
       webpack: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.1)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3(webpack-bundle-analyzer@4.10.2)(webpack-dev-server@5.2.4)(webpack@5.105.2))
 
-  less-loader@12.3.1(@rspack/core@1.6.8(@swc/helpers@0.5.23))(less@4.8.1)(webpack@5.105.2):
-    dependencies:
-      less: 4.8.1
-    optionalDependencies:
-      '@rspack/core': 1.6.8(@swc/helpers@0.5.23)
-      webpack: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@5.1.4)
-
   less-loader@12.3.1(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))(less@4.8.1)(webpack@5.105.2):
     dependencies:
       less: 4.8.1
     optionalDependencies:
       '@rspack/core': 2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18)
       webpack: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3)
+
+  less-loader@12.3.1(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(less@4.8.1)(webpack@5.105.2):
+    dependencies:
+      less: 4.8.1
+    optionalDependencies:
+      '@rspack/core': 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
+      webpack: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@5.1.4)
 
   less-loader@12.3.2(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))(less@4.8.1)(webpack@5.105.2):
     dependencies:
@@ -52443,18 +52443,6 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  postcss-loader@8.2.1(@rspack/core@1.6.8(@swc/helpers@0.5.23))(postcss@8.5.15)(typescript@6.0.3)(webpack@5.105.2):
-    dependencies:
-      cosmiconfig: 9.0.0(typescript@6.0.3)
-      jiti: 2.6.1
-      postcss: 8.5.15
-      semver: 7.8.4
-    optionalDependencies:
-      '@rspack/core': 1.6.8(@swc/helpers@0.5.23)
-      webpack: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@5.1.4)
-    transitivePeerDependencies:
-      - typescript
-
   postcss-loader@8.2.1(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))(postcss@8.5.19)(typescript@6.0.3)(webpack@5.109.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.1)(lightningcss@1.32.0)(postcss@8.5.19)(webpack-cli@7.0.3)):
     dependencies:
       cosmiconfig: 9.0.0(typescript@6.0.3)
@@ -52476,6 +52464,18 @@ snapshots:
     optionalDependencies:
       '@rspack/core': 2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18)
       webpack: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3)
+    transitivePeerDependencies:
+      - typescript
+
+  postcss-loader@8.2.1(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(postcss@8.5.15)(typescript@6.0.3)(webpack@5.105.2):
+    dependencies:
+      cosmiconfig: 9.0.0(typescript@6.0.3)
+      jiti: 2.6.1
+      postcss: 8.5.15
+      semver: 7.8.4
+    optionalDependencies:
+      '@rspack/core': 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
+      webpack: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@5.1.4)
     transitivePeerDependencies:
       - typescript
 
@@ -54178,15 +54178,6 @@ snapshots:
       sass-embedded: 1.97.2
       webpack: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.1)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3(webpack-bundle-analyzer@4.10.2)(webpack-dev-server@5.2.4)(webpack@5.105.2))
 
-  sass-loader@16.0.7(@rspack/core@1.6.8(@swc/helpers@0.5.23))(sass-embedded@1.97.2)(sass@1.97.3)(webpack@5.105.2):
-    dependencies:
-      neo-async: 2.6.2
-    optionalDependencies:
-      '@rspack/core': 1.6.8(@swc/helpers@0.5.23)
-      sass: 1.97.3
-      sass-embedded: 1.97.2
-      webpack: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@5.1.4)
-
   sass-loader@16.0.7(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))(sass-embedded@1.97.2)(sass@1.101.0)(webpack@5.105.2):
     dependencies:
       neo-async: 2.6.2
@@ -54204,6 +54195,15 @@ snapshots:
       sass: 1.97.3
       sass-embedded: 1.97.2
       webpack: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3)
+
+  sass-loader@16.0.7(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(sass-embedded@1.97.2)(sass@1.97.3)(webpack@5.105.2):
+    dependencies:
+      neo-async: 2.6.2
+    optionalDependencies:
+      '@rspack/core': 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
+      sass: 1.97.3
+      sass-embedded: 1.97.2
+      webpack: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@5.1.4)
 
   sass-loader@17.0.0(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))(sass-embedded@1.97.2)(sass@1.101.0)(webpack@5.109.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.1)(lightningcss@1.32.0)(postcss@8.5.19)(webpack-cli@7.0.3)):
     optionalDependencies:
