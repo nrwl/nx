@@ -320,6 +320,8 @@ export function getLockFilePath(packageManager: PackageManager): string {
  *
  * On a pruning error the root lockfile is returned as a fail-open fallback,
  * with the manifest left as authored.
+ *
+ * @deprecated Use `generatePrunedDeployOutput` instead. This will be removed in Nx 25.
  */
 export function createLockFile(
   packageJson: PackageJson,
