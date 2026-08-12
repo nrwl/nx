@@ -22,7 +22,10 @@ import {
 import { readJsonFile } from '../../utils/fileutils';
 import { output } from '../../utils/output';
 import { PackageJson } from '../../utils/package-json';
-import { getPackageManagerCommand } from '../../utils/package-manager';
+import {
+  detectPackageManager,
+  getPackageManagerCommand,
+} from '../../utils/package-manager';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { joinPathFragments } from '../../utils/path';
 import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
@@ -124,14 +127,14 @@ function runTargetOnProject(
   const extraArgs =
     providedArgs.length === argv.length ? [] : argv.slice(providedArgs.length);
 
-  const pm = getPackageManagerCommand();
+  const pm = getPackageManagerCommand(detectPackageManager(workspaceRoot));
   // `targetName` might be an npm script with `:` like: `start:dev`, `start:debug`.
   const command = `${
     pm.exec
   } nx run ${projectName}:\\\"${targetName}\\\" ${extraArgs.join(' ')}`;
   execSync(command, {
     stdio: 'inherit',
-
+    cwd: workspaceRoot,
     windowsHide: true,
   });
 }
