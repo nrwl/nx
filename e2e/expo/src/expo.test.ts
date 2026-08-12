@@ -1,4 +1,5 @@
 import { ChildProcess } from 'child_process';
+import { renameSync } from 'fs';
 import {
   runCLI,
   cleanupProject,
@@ -13,7 +14,10 @@ import {
   runE2ETests,
   killPorts,
   createFile,
+  exists,
   removeFile,
+  runCommand,
+  tmpProjPath,
   reservePort,
 } from '@nx/e2e-utils';
 import { join } from 'path';
@@ -147,6 +151,124 @@ describe('@nx/expo', () => {
     // port and process cleanup
     if (process && process.pid) {
       await killProcessAndPorts(process.pid, port);
+    }
+  });
+
+  it('should derive metro projectRoot and node_modules from the app being bundled', () => {
+    createFile(
+      'check-metro.js',
+      `const { realpathSync } = require('fs');
+const { join, resolve } = require('path');
+const config = require(join(process.cwd(), process.argv[2], 'metro.config.js'));
+console.log(
+  'METRO_CHECK ' +
+    JSON.stringify({
+      projectRoot: config.projectRoot,
+      nodeModulesPaths: config.resolver.nodeModulesPaths,
+      processExpoMetro: require.resolve('@expo/metro/metro-config'),
+      appRoot: realpathSync(resolve(process.argv[2])),
+      workspaceRoot: realpathSync(resolve('.')),
+      workspaceNodeModules: realpathSync(resolve('node_modules')),
+    })
+);
+`
+    );
+    const readMergedConfig = () => {
+      const output = runCommand(`node check-metro.js ${appName}`, {
+        failOnError: true,
+      });
+      return JSON.parse(output.match(/METRO_CHECK (.*)/)[1]);
+    };
+    const hadAppNodeModules = exists(
+      tmpProjPath(join(appName, 'node_modules'))
+    );
+
+    try {
+      // SDK 55+ app keeps its own projectRoot
+      let config = readMergedConfig();
+      expect(config.projectRoot).toBe(config.appRoot);
+      expect(config.nodeModulesPaths).toContain(config.workspaceNodeModules);
+
+      // an app pinning its own expo copy stays anchored at the app
+      createFile(
+        `${appName}/node_modules/expo/package.json`,
+        JSON.stringify({ name: 'expo', version: '54.0.0' })
+      );
+      // shim the subpath metro.config.js requires so the pinned copy still
+      // loads the real implementation
+      createFile(
+        `${appName}/node_modules/expo/metro-config.js`,
+        `module.exports = require(require('path').join(__dirname, '..', '..', '..', 'node_modules', 'expo', 'metro-config'));`
+      );
+      config = readMergedConfig();
+      expect(config.projectRoot).toBe(config.appRoot);
+      expect(config.nodeModulesPaths[0]).toBe(
+        join(config.appRoot, 'node_modules')
+      );
+
+      // an SDK 54 app relying on hoisted Expo uses the workspace root even
+      // when a sibling app keeps @expo/metro process-resolvable
+      removeFile(join(appName, 'node_modules', 'expo'));
+      const hoistedExpoPackage = readJson('node_modules/expo/package.json');
+      try {
+        updateFile(
+          'node_modules/expo/package.json',
+          JSON.stringify({ ...hoistedExpoPackage, version: '54.0.0' })
+        );
+        config = readMergedConfig();
+        expect(config.processExpoMetro).toBeDefined();
+        expect(config.projectRoot).toBe(config.workspaceRoot);
+      } finally {
+        updateFile(
+          'node_modules/expo/package.json',
+          JSON.stringify(hoistedExpoPackage)
+        );
+      }
+
+      // no hoisted expo at all: the app-local copy is the only one, so the
+      // app keeps its projectRoot. The workspace expo is hidden while probing,
+      // so call withNxMetro directly - the app's metro.config.js cannot load
+      // without the hoisted @expo/metro-config resolving expo.
+      createFile(
+        `${appName}/node_modules/expo/package.json`,
+        JSON.stringify({ name: 'expo', version: '54.0.0' })
+      );
+      createFile(
+        'check-metro-direct.js',
+        `const { realpathSync } = require('fs');
+const { resolve } = require('path');
+const { withNxMetro } = require('@nx/expo');
+const appRoot = realpathSync(resolve(process.argv[2]));
+const config = withNxMetro({
+  projectRoot: appRoot,
+  resolver: {},
+  transformer: { babelTransformerPath: 'babel-transformer' },
+});
+console.log(
+  'METRO_CHECK ' + JSON.stringify({ projectRoot: config.projectRoot, appRoot })
+);
+`
+      );
+      const wsExpo = tmpProjPath(join('node_modules', 'expo'));
+      const wsExpoHidden = tmpProjPath(join('node_modules', '.expo-hidden'));
+      renameSync(wsExpo, wsExpoHidden);
+      try {
+        const output = runCommand(`node check-metro-direct.js ${appName}`, {
+          failOnError: true,
+        });
+        config = JSON.parse(output.match(/METRO_CHECK (.*)/)[1]);
+        expect(config.projectRoot).toBe(config.appRoot);
+      } finally {
+        renameSync(wsExpoHidden, wsExpo);
+        removeFile('check-metro-direct.js');
+      }
+    } finally {
+      // remove only what this test created
+      removeFile(join(appName, 'node_modules', 'expo'));
+      if (!hadAppNodeModules) {
+        removeFile(join(appName, 'node_modules'));
+      }
+      removeFile('check-metro.js');
     }
   });
 
