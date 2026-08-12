@@ -94,6 +94,8 @@ With `false`, Nx skips that task and Playwright starts its own server inside eac
 If that `webServer` also sets a `port` number, Nx infers an extra task, named
 `<targetName>--wait-for-webserver` (`e2e--wait-for-webserver` by default), that waits for the
 server to be ready.
+The atomized CI tasks share that task, unless they resolve a different address, in which case
+they get their own `<ciTargetName>--wait-for-webserver` task.
 It infers the same task from a `url` when the `webServer` leaves `port` unset, which is when
 Playwright checks the URL rather than the port.
 Playwright then finds the server already running and reuses it.
@@ -117,16 +119,17 @@ dependency is inferred from can itself read that env.
 The readiness address comes from evaluating the Playwright config while Nx computes the project graph.
 Nx caches the result and rebuilds it when an env file the Playwright task would load, such as
 `.env` or `.env.e2e`, changes.
-An env file listed in `.nxignore` is an exception: Nx does not see it change, so the cached
+An env file listed in `.nxignore` is an exception: Nx doesn't see it change, so the cached
 result stays stale.
 A variable set only in the shell is part of that cache too, so changing it re-infers the address.
 The exception is variables Nx filters out of the project graph environment, such as terminal
 session details or CI platform internals.
-Changing one of those does not re-infer the address.
+Changing one of those doesn't re-infer the address.
+`CI` itself isn't filtered: changing it re-infers the address.
 Running `nx reset` also discards the cached address.
 Files the config imports from outside its project, such as a shared helper in `tools/`, are not
 part of the cache either.
-Editing one does not refresh an already-cached address.
+Editing one doesn't refresh an already-cached address.
 Run `nx reset` to re-infer it.
 A task dependency cannot carry a target configuration, so the address is always inferred without
 one and a configuration-scoped env file such as `.env.e2e.production` never affects it.
