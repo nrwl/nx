@@ -92,7 +92,7 @@ You can implement your server in any programming language or framework, as long 
         "parameters": [
           {
             "in": "header",
-            "description": "The file size in bytes",
+            "description": "The file size in bytes. Servers must compare the number of body bytes actually received against this value and reject the upload if fewer arrive. See 'Handling incomplete uploads'.",
             "required": true,
             "schema": {
               "type": "number"
@@ -181,12 +181,33 @@ You can implement your server in any programming language or framework, as long 
 }
 ```
 
+### Handling incomplete uploads
+
+A `PUT` can stop early — the client times out, CI cancels the job, or the network drops mid-body. Your server must never leave a hash readable in that case. A later `GET` that returns a truncated tarball is worse than a cache miss: Nx cannot recompute the entry, because `409 Conflict` means subsequent uploads of that same hash will not replace it.
+
+**Validate `Content-Length` before you commit.** The header is required, and Nx always sends the full artifact size. Compare it against the bytes you actually received and reject the upload if they differ. Return the entry only once the complete body has arrived.
+
+Whether this is a risk for you depends on how your handler consumes the body:
+
+- **If you buffer the whole body before your handler runs**, you are largely safe by default. Frameworks that bind the request to a byte array or equivalent — `express.raw()`, Spring's `@RequestBody byte[]`, Starlette's `await request.body()`, `Bytes` extractors in axum and actix-web, Rack — raise a request-aborted error on truncation and never invoke your handler. Nothing gets persisted.
+- **If you stream the body to storage**, you must check the error from the copy. `io.Copy(dst, r.Body)` in Go, `Request.Body` in ASP.NET Core, `request.stream()` in Starlette, and `req.pipe(...)` in Node all write bytes incrementally as they arrive. The truncation surfaces as a returned error or exception rather than a failure to start, so ignoring it leaves a partial artifact already on disk.
+
+Two ordering details matter more than the language you chose:
+
+- **Write the artifact durably before you publish the entry.** Stream to a temporary path and rename into place only after the body is complete and its length checked, or use an object store whose single-request `PUT` is atomic. Reserving the hash first and filling it in afterwards is the pattern that produces an entry with no artifacts.
+- **For filesystem-backed servers, the artifact path is the index.** There is no separate database row to guard, so creating the final file and writing into it incrementally is itself the bug.
+
+If you sit behind a reverse proxy, check its buffering. nginx's `proxy_request_buffering` is `on` by default, which buffers the full body and shields your upstream entirely; large-upload setups often turn it off, which removes that protection.
+
 ### Usage notes
 
 To use your custom caching server, set the `NX_SELF_HOSTED_REMOTE_CACHE_SERVER` environment variable. The following environment variables also affect behavior:
 
 - `NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN`: The authentication token to access the cache server.
 - `NODE_TLS_REJECT_UNAUTHORIZED`: Set to `0` to disable TLS certificate validation.
+- `NX_SELF_HOSTED_REMOTE_CACHE_NO_TIMEOUTS`: Set to any value to wait indefinitely for the cache server instead of timing out. Only useful if legitimate transfers exceed the built-in budgets; a server that accepts a connection and never replies will then hang the run rather than falling back to a local rebuild.
+
+Nx applies a 10 second connect timeout, a 30 second timeout on downloads, and a 10 minute timeout on uploads. A cache request that fails or times out is not fatal: Nx warns, rebuilds the task locally, and the run continues. The exceptions are a rejected token, a misconfigured endpoint, and an artifact that tries to write outside the cache directory — those stop the run.
 
 ### Migrating from custom tasks runners
 
