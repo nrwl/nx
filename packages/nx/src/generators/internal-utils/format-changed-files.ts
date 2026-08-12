@@ -48,15 +48,12 @@ export async function formatChangedFiles(
       )
   );
 
-  // Detect from the tree, not the disk: the tree is the source of truth and
-  // may hold a formatter config the generator just created but hasn't flushed.
-  // Probing disk config here would also read the real workspace config in
-  // tests, which is why callers previously needed fs mocks.
+  // Detect from the tree, not disk: the tree is the source of truth and may
+  // hold a config the generator just created but hasn't flushed. Probing disk
+  // would also read the real workspace config in tests.
   //
-  // No `seedConfig` is threaded through `formatDetectedFiles`, which devkit's
-  // `formatFiles` does pass. It no longer has to be: `formatFilesWithOxfmt`
-  // falls back to a JSON config carried in the batch itself, so a generator on
-  // this path that writes one is formatted with it rather than bare defaults.
+  // No `seedConfig` is threaded through, unlike devkit's `formatFiles`:
+  // `formatFilesWithOxfmt` falls back to a JSON config carried in the batch.
   const formatterType = detectFormatterInTree(tree);
   if (!formatterType) {
     return;

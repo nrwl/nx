@@ -10,9 +10,9 @@ import { readModulePackageJson } from '../package-json';
 import { FORMATTER_MAX_BUFFER } from './shared';
 
 /**
- * Config filenames prettier discovers. Exported because generator setup has to
- * agree with detection on this list - a workspace whose config format is
- * missing from one side gets a second, redundant config written next to it.
+ * Config filenames prettier discovers. Exported because generator setup must
+ * agree with detection - a format missing from one side gets a second,
+ * redundant config written next to it.
  * https://prettier.io/docs/configuration
  */
 export const prettierConfigFiles = [
@@ -90,11 +90,9 @@ export async function filterToPrettierSupportedFiles(
       .flatMap((language) => language.extensions)
       .filter((extension) => !!extension)
   );
-  // Prettier matches some files by *name* rather than extension - `.swcrc`,
-  // `.babelrc`, `Jakefile` and ~30 others. Most report an empty `extname` and
-  // were dropped; a few (`package.json`, `composer.json`) happened to survive on
-  // their extension. Prettier publishes the list next to the extensions, so read
-  // it rather than hardcoding.
+  // Prettier matches ~30 files by *name* rather than extension (`.swcrc`,
+  // `Jakefile`). It publishes that list next to the extensions, so read it
+  // rather than hardcoding.
   const supportedFilenames = new Set(
     supportInfo.languages.flatMap((language) => language.filenames ?? [])
   );
@@ -147,12 +145,10 @@ export function checkWithPrettier(patterns: string[]): Promise<string[]> {
       { encoding: 'utf-8', windowsHide: true, maxBuffer: FORMATTER_MAX_BUFFER },
       (error, stdout) => {
         if (error) {
-          // Same shape as the oxfmt sibling: a failure that never produced an
-          // exit code - could not spawn, killed, stdout over maxBuffer -
-          // reports a string `code` or none. Prettier's own "files differ"
-          // signal is a numeric exit code, so those never reach here, and
-          // treating them as a file list would pass `format:check` on a
-          // formatter that never ran.
+          // As the oxfmt sibling: a spawn failure, kill or maxBuffer overrun reports a
+          // string `code` or none. Prettier signals "files differ" numerically, so
+          // treating these as a file list would pass `format:check` on a formatter
+          // that never ran.
           if (typeof error['code'] !== 'number') {
             reject(
               new Error(
@@ -163,12 +159,10 @@ export function checkWithPrettier(patterns: string[]): Promise<string[]> {
             );
             return;
           }
-          // Only `Mismatch` means "files differ", the same rule
-          // `checkWithOxfmt` applies. `Failure` still prints the files
-          // prettier got through first - measured: one differing file plus one
-          // unparseable file exits 2 with the differing file on stdout - so
-          // reading stdout as the file list reports the diff and swallows the
-          // syntax error.
+          // Only `Mismatch` means "files differ", as in `checkWithOxfmt`. `Failure`
+          // still prints the files prettier got through - measured, one differing plus
+          // one unparseable exits 2 with the differing file on stdout - so reading
+          // stdout there would swallow the syntax error.
           if (
             error['code'] !== PrettierExitCode.Mismatch ||
             stdout.length === 0
@@ -229,25 +223,21 @@ function shouldUseListDifferent(): boolean {
 }
 
 /**
- * Quote a pattern for the shell-based exec calls used by prettier. oxfmt is
- * invoked via execFile and must receive raw paths instead.
+ * Quote a pattern for prettier's shell-based exec calls; oxfmt uses execFile
+ * and takes raw paths.
  *
- * Exported so `nx format` can size its chunks against the quoted length. The
- * patterns are chunked before they get here, and quoting afterwards grows each
- * one, which would otherwise eat into the headroom `chunkify` leaves.
+ * Exported so `nx format` can size its chunks against the quoted length -
+ * patterns are chunked before they get here, and quoting grows each one.
  */
 export function quoteForShell(pattern: string): string {
-  // These patterns are interpolated into a command string, so every character
-  // the shell treats specially *inside double quotes* has to be escaped, not
-  // just `$`: a backtick is command substitution, a `"` closes the quoting, and
-  // a backslash escapes whatever follows it. The shell consumes one level, so
-  // `\$` reaches prettier as a literal `$`. One pass over the original string
-  // rather than a replace per character: `String.replace` never re-scans what it
-  // inserted, so an escape cannot itself be escaped.
+  // Interpolated into a command string, so every character special *inside
+  // double quotes* needs escaping, not just `$`: a backtick substitutes, `"`
+  // closes the quoting, `\` escapes what follows. One pass over the original,
+  // since `String.replace` never re-scans what it inserted.
   //
-  // Windows is left alone: cmd.exe treats none of `$`, backtick or backslash as
-  // special, escaping them would make prettier look for a file with the
-  // backslash in its name, and `"` cannot occur in a Windows path at all.
+  // Windows is left alone: cmd.exe treats none of these as special, escaping
+  // would make prettier look for a backslash in the name, and `"` cannot occur
+  // in a Windows path.
   const escaped =
     process.platform !== 'win32'
       ? pattern.replace(/([\\"`$])/g, '\\$1')

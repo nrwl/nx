@@ -5,11 +5,11 @@ import {
 } from '@nx/devkit/internal';
 
 /**
- * `@nx/js` has no `nx` peer of its own - it inherits `@nx/devkit`'s, which spans
- * a major either side - so an older nx can legally be installed alongside it.
- * The formatter helpers do not exist there, and a missing CommonJS named export
- * arrives as `undefined` rather than as a load error, so the first use would
- * otherwise be a bare `undefined.every` naming neither the package nor the cause.
+ * `@nx/js` inherits `@nx/devkit`'s `nx` peer, which spans a major either
+ * side, so an older nx without these helpers can legally be installed. A
+ * missing CommonJS named export arrives as `undefined`, so the first use
+ * would otherwise be a bare `undefined.every` naming neither package nor
+ * cause.
  */
 export function assertNxSupportsFormatters(): void {
   if (detectFormatterInTree && oxfmtConfigFiles && prettierConfigFiles) {

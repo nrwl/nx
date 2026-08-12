@@ -36,10 +36,9 @@ import { output } from '../../utils/output';
 import { workspaceRoot } from '../../utils/workspace-root';
 
 /**
- * A table rather than a `switch`, because this lookup lives inside a `try` whose
- * `catch` reports "configured but not installed" - a `never` arm would throw
- * into that catch and be misreported. A missing member is a compile error here
- * instead.
+ * A table, not a `switch`: this lookup sits inside a `try` whose `catch`
+ * reports "configured but not installed", and a `never` arm would throw into
+ * that catch and be misreported. A missing member is a compile error here.
  */
 const resolveFormatterBin = {
   oxfmt: getOxfmtBinPath,
@@ -60,11 +59,10 @@ export async function format(
     return;
   }
 
-  // Detection only looks at configuration, so a workspace can be configured for
-  // a formatter that is not installed - a fresh clone, an `--omit=dev` CI job,
-  // a pruned node_modules. Resolving the binary now turns what would otherwise
-  // surface as a raw MODULE_NOT_FOUND (or, on the prettier path, an unrelated
-  // TypeScript-stripping error) into something actionable.
+  // Detection reads configuration only, so a workspace can be configured for a
+  // formatter that is not installed - a fresh clone, `--omit=dev` CI, a pruned
+  // node_modules. Resolving now turns a raw MODULE_NOT_FOUND into something
+  // actionable.
   try {
     resolveFormatterBin[formatterType]();
   } catch {

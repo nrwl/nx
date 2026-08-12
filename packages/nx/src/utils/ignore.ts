@@ -224,31 +224,27 @@ export function createPrettierIgnoreChecker(tree: Tree): TreeIgnoreChecker {
 }
 
 /**
- * What oxfmt ignores: the same two files prettier reads, but resolved from each
- * file's own directory upwards rather than the workspace root - measured
- * against the oxfmt 0.60.0 CLI, which differs from prettier on exactly that
- * axis. Still one matcher per file rather than merged, as prettier does.
+ * What oxfmt ignores: prettier's two files, but resolved from each file's own
+ * directory upwards rather than the workspace root - measured against the
+ * oxfmt 0.60.0 CLI, which differs from prettier on exactly that axis. Still
+ * one matcher per file rather than merged.
  *
- * `ignorePatterns` from an oxfmt config is not an ignore file and is not read
- * here; `formatFilesWithOxfmt` applies it rooted at that config's directory.
- *
- * Reads from the tree rather than disk, as above.
+ * A config's `ignorePatterns` is not an ignore file and is not read here;
+ * `formatFilesWithOxfmt` applies it rooted at that config's directory.
  */
 export function createOxfmtIgnoreChecker(tree: Tree): TreeIgnoreChecker {
   return createTreeIgnoreChecker(tree, OXFMT_IGNORE_OPTIONS);
 }
 
 /**
- * Exported, unlike git's and prettier's, because oxfmt is the one tool with two
- * consumers: this tree-backed checker and the disk-backed resolver in
- * `formatters/oxfmt.ts`. They must agree, and a shared value is the only thing
- * that makes them, so do not restate these three anywhere.
+ * Exported, unlike git's and prettier's, because oxfmt has two consumers:
+ * this tree-backed checker and the disk-backed resolver in
+ * `formatters/oxfmt.ts`. A shared value is the only thing that keeps them
+ * agreeing, so do not restate these three anywhere.
  *
- * `satisfies` rather than an annotation so the values stay literal - an
+ * `satisfies` rather than an annotation keeps the values literal - an
  * annotation widens `cascade` and `merge` to `boolean` (measured in the
- * declaration emit). Privacy is not what it buys: an unexported type is emitted
- * inline beside the constant either way. What keeps a caller from assembling
- * its own set is that `createTreeIgnoreChecker` is not exported.
+ * declaration emit).
  */
 export const OXFMT_IGNORE_OPTIONS = {
   filenames: ['.gitignore', '.prettierignore'],

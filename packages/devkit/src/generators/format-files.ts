@@ -28,20 +28,16 @@ async function importPrettier(): Promise<typeof Prettier | null> {
 }
 
 /**
- * Formats the created or updated files using the configured formatter, skipping
- * `node_modules`, `.git`, the nx and yarn caches, and anything the workspace's
- * `.gitignore` or `.prettierignore` covers. Which of those ignore files apply
- * follows the formatter: prettier reads the workspace root only, oxfmt cascades.
+ * Formats the created or updated files with the configured formatter,
+ * skipping `node_modules`, `.git`, the nx and yarn caches, and whatever the
+ * workspace's ignore files cover. Which ignore files apply follows the
+ * formatter: prettier reads the workspace root only, oxfmt cascades.
  * @param tree - the file system tree
  * @param options - options for the formatFiles function
  *
  * @remarks
- * Set the environment variable `NX_SKIP_FORMAT` to `true` to skip
- * formatting. This is useful for repositories that format with a tool Nx does
- * not drive (Biome, dprint) or that have custom formatting requirements.
- *
- * Note: `NX_SKIP_FORMAT` skips formatting only - it does not skip TSConfig
- * path sorting, which is controlled by the `sortRootTsconfigPaths` option or
+ * `NX_SKIP_FORMAT=true` skips formatting - but not TSConfig path sorting,
+ * which is controlled by `sortRootTsconfigPaths` or
  * `NX_FORMAT_SORT_TSCONFIG_PATHS`.
  */
 export async function formatFiles(
@@ -80,16 +76,12 @@ export async function formatFiles(
   if (!formatterType) return;
 
   // Each formatter gets the ignore rules its own CLI applies, so a generator
-  // does not rewrite a file that formatter would skip. prettier reads the root
-  // ignore files only; oxfmt cascades. Both measured against the real CLIs.
-  // `.nxignore` is the exception in both directions: `format.ts` filters the
-  // command's own file list through it, and neither checker reads it.
+  // does not rewrite a file that formatter would skip. Both measured against
+  // the real CLIs. `.nxignore` is the exception in both directions: `format.ts`
+  // filters its own list through it, and neither checker reads it.
   //
-  // `getFileInfo` in the prettier branch below looks like it filters ignored
-  // files but only covers its own built-in `node_modules` skip: with no
-  // `ignorePath` it never reads the workspace's ignore files, so `ignored` is
-  // false for everything else (measured).
-  //
+  // `getFileInfo` below looks like it filters ignored files but with no
+  // `ignorePath` it only covers its built-in `node_modules` skip (measured).
   // The optional call is the older-nx path - see `NOTHING_IGNORED`.
   const changedFiles = (
     createChecker: ((tree: Tree) => TreeIgnoreChecker) | undefined
