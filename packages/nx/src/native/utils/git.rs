@@ -1,5 +1,8 @@
+use dashmap::DashMap;
 use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
+use std::time::SystemTime;
 
 /// Prefix of a "gitfile" - the plain file git writes in place of a `.git`
 /// directory for linked worktrees and submodules.
@@ -164,25 +167,75 @@ pub fn is_linked_worktree_root<P: AsRef<Path>>(path: P) -> bool {
 pub fn nested_linked_worktrees<P: AsRef<Path>>(workspace_root: P) -> Vec<PathBuf> {
     let workspace_root = workspace_root.as_ref();
 
-    let Some(git_dir) = find_git_root(workspace_root)
-        .as_deref()
-        .and_then(resolve_git_dir)
-    else {
-        return Vec::new();
-    };
-
-    // No `commondir` means `git_dir` is already the common directory - the
-    // ordinary case of running from the main repository rather than a
-    // worktree of it.
-    let common_dir = common_git_dir(&git_dir).unwrap_or(git_dir);
-    let Ok(entries) = common_dir.join("worktrees").read_dir() else {
-        return Vec::new();
-    };
+    // Revalidating costs one `stat` of the registry git already tracks. Every
+    // other step - the walk up to the git root, the `commondir` read, the
+    // `read_dir` - is skipped, which is the whole point: those are what made
+    // this measurable on walks that can never contain a worktree.
+    if let Some(cached) = NESTED_WORKTREES.get(workspace_root) {
+        if modified_at(&cached.registry) == cached.signature {
+            return cached.roots.clone();
+        }
+    }
 
     // `gitdir` files hold canonical paths, while the walk root may reach the
     // same directory through a symlink or a relative path - canonicalize both
     // sides so the prefix comparison lines up.
     let canonical_root = canonicalize_or_own(workspace_root);
+    // Where a `read_dir` would look, and the path whose mtime decides whether
+    // a cached answer is still good. Absent when the root is in no repository
+    // at all, in which case `.git` appearing is the thing to watch for.
+    let registry = registry_dir(workspace_root).unwrap_or_else(|| canonical_root.join(".git"));
+    let signature = modified_at(&registry);
+
+    let roots = read_nested_linked_worktrees(&registry, &canonical_root);
+    NESTED_WORKTREES.insert(
+        workspace_root.to_path_buf(),
+        CachedWorktrees {
+            registry,
+            signature,
+            roots: roots.clone(),
+        },
+    );
+    roots
+}
+
+/// `<git-dir>/worktrees` for `workspace_root`, wherever git keeps it.
+fn registry_dir(workspace_root: &Path) -> Option<PathBuf> {
+    let git_dir = find_git_root(workspace_root)
+        .as_deref()
+        .and_then(resolve_git_dir)?;
+    // No `commondir` means `git_dir` is already the common directory - the
+    // ordinary case of running from the main repository rather than a
+    // worktree of it.
+    let common_dir = common_git_dir(&git_dir).unwrap_or(git_dir);
+    Some(common_dir.join("worktrees"))
+}
+
+fn modified_at(path: &Path) -> Option<SystemTime> {
+    std::fs::metadata(path).ok()?.modified().ok()
+}
+
+struct CachedWorktrees {
+    registry: PathBuf,
+    signature: Option<SystemTime>,
+    roots: Vec<PathBuf>,
+}
+
+/// Answers for one workspace root, revalidated on every call.
+///
+/// Resolving from scratch is a walk up to the git root, a `commondir` read
+/// and a `read_dir` - measured at ~7us, and paid on every walk including the
+/// task-output walks in `expand_outputs`, which can never contain a worktree.
+/// Git touches `<git-dir>/worktrees` whenever one is added or removed, so one
+/// `stat` of that directory stands in for all of it. A worktree created while
+/// the daemon is running is still picked up on the next walk, which is the
+/// property resolving per walk was for.
+static NESTED_WORKTREES: LazyLock<DashMap<PathBuf, CachedWorktrees>> = LazyLock::new(DashMap::new);
+
+fn read_nested_linked_worktrees(registry: &Path, canonical_root: &Path) -> Vec<PathBuf> {
+    let Ok(entries) = registry.read_dir() else {
+        return Vec::new();
+    };
 
     entries
         .filter_map(|entry| {
@@ -348,6 +401,43 @@ mod test {
         remove_dir_all(repo.join(".git")).unwrap();
 
         assert!(!is_linked_worktree_root(&worktree));
+    }
+
+    #[test]
+    fn sees_a_worktree_created_after_an_earlier_answer_was_cached() {
+        // The per-walk resolution existed so a worktree added while the daemon
+        // runs is picked up on the next graph construction. The cache keeps
+        // that by revalidating against the registry's mtime.
+        let temp = TempDir::new().unwrap();
+        create_dir_all(temp.path().join(".git")).unwrap();
+
+        assert!(nested_linked_worktrees(temp.path()).is_empty());
+
+        register_worktree(temp.path(), "wt", &temp.path().join("nested/wt"));
+
+        assert_eq!(
+            nested_linked_worktrees(temp.path()),
+            vec![PathBuf::from("nested/wt")]
+        );
+    }
+
+    #[test]
+    fn sees_a_second_worktree_added_after_the_first() {
+        let temp = TempDir::new().unwrap();
+        create_dir_all(temp.path().join(".git")).unwrap();
+        register_worktree(temp.path(), "one", &temp.path().join("wt1"));
+
+        assert_eq!(nested_linked_worktrees(temp.path()).len(), 1);
+
+        register_worktree(temp.path(), "two", &temp.path().join("wt2"));
+
+        let mut found = nested_linked_worktrees(temp.path());
+        found.sort();
+        assert_eq!(
+            found,
+            vec![PathBuf::from("wt1"), PathBuf::from("wt2")],
+            "a worktree added after a cached answer must still be seen"
+        );
     }
 
     #[test]
