@@ -98,7 +98,7 @@ describe('GeneratePackageJsonPlugin', () => {
     ).toBeLessThan(emitAsset.mock.invocationCallOrder[packageJsonEmitIndex]);
   });
 
-  it('leaves the bun decision to the deploy output', () => {
+  it('passes a detected bun through for the deploy output to decide', () => {
     (detectPackageManager as jest.Mock).mockReturnValue('bun');
 
     const { emitAsset } = runPlugin();

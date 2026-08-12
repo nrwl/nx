@@ -462,7 +462,7 @@ describe('pruneLockfileExecutor - workspace module dependencies', () => {
     expect(generated.peerDependenciesMeta).toBeUndefined();
   });
 
-  it('strips the pruned manifest pnpm config so a standalone install matches the lockfile', async () => {
+  it('writes the manifest after the deploy output rewrites it', async () => {
     tempFs.createFilesSync({
       'package.json': JSON.stringify({ name: 'root', version: '0.0.0' }),
       'package-lock.json': JSON.stringify({ name: 'root', lockfileVersion: 3 }),
