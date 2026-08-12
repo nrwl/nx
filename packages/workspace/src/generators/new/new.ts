@@ -101,8 +101,8 @@ export async function newGenerator(tree: Tree, opts: Schema) {
     // The npm preset normally skips the preset generator entirely, which is why
     // `--formatter` used to be dropped for it. Run it when there is a formatter
     // to set up. `schema.json` defaults to `none`, so this fork is taken only
-    // when a formatter was actually asked for - which create-nx-workspace
-    // always does.
+    // when a formatter was actually asked for, which on this preset means an
+    // explicit `--formatter`.
     const npmPresetNeedsFormatter =
       options.preset === Preset.NPM &&
       !!options.formatter &&

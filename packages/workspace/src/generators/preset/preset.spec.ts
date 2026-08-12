@@ -12,8 +12,9 @@ describe('preset', () => {
   beforeEach(() => {
     envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
     delete process.env.ESLINT_USE_FLAT_CONFIG;
-    // No formatter, and the tests below pass none, so the snapshots record raw
-    // generator output - double quotes, no comma spacing, `server:{`. That is
+    // The tree carries no formatter config, so detection resolves to none and
+    // the snapshots record raw generator output - double quotes, no comma
+    // spacing, `server:{`. That is
     // valid code that simply has not been formatted; do not "tidy" it, or the
     // snapshots stop matching what a caller who asked for no formatter gets.
     tree = createTreeWithEmptyWorkspace({

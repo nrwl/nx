@@ -180,8 +180,8 @@ describe('the both-configured warning', () => {
   let warn: jest.SpyInstance;
 
   beforeEach(() => {
-    // The warn-once flag is module state; without this the second case here
-    // passes for the wrong reason (already warned) rather than on its own merits.
+    // The warn-once flag is module state; without this reset every case after
+    // the first passes for the wrong reason (already warned).
     resetFormatterWarningsForTesting();
     warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
   });

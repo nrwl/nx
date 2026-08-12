@@ -99,8 +99,8 @@ describe('js init generator', () => {
   });
 
   describe('default formatter', () => {
-    // The default resolves three ways and each arm is user-visible, so none of
-    // them may rely on a caller passing `formatter` explicitly.
+    // The default resolves two ways - detection, then nothing - and both are
+    // user-visible, so neither may rely on a caller passing `formatter`.
 
     it('should install nothing when the workspace has no formatter configured', async () => {
       await init(tree, {});
@@ -122,15 +122,6 @@ describe('js init generator', () => {
       expect(packageJson.devDependencies['oxfmt']).toBeUndefined();
       // A stray .oxfmtrc.json here would win detection over the .prettierrc
       // and silently switch the workspace's formatter.
-      expect(tree.exists('.oxfmtrc.json')).toBe(false);
-    });
-
-    it('should default to no formatter under the TS solution setup', async () => {
-      await init(tree, { addTsPlugin: true });
-
-      const packageJson = readJson(tree, 'package.json');
-      expect(packageJson.devDependencies['oxfmt']).toBeUndefined();
-      expect(packageJson.devDependencies['prettier']).toBeUndefined();
       expect(tree.exists('.oxfmtrc.json')).toBe(false);
     });
   });
