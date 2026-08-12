@@ -149,10 +149,42 @@ Replace `package-lock.json` in the `outputs` array with `yarn.lock` or `pnpm-loc
 The emitted `pnpm-workspace.yaml` carries build-script approvals (`allowBuilds`), `supportedArchitectures`, and any `patchedDependencies`.
 On pnpm 10 and below it carries none of them, because the emitted `package.json` declares them instead, but the file still ships so that every run overwrites the last one.
 Copied `.patch` files keep their original subpath under `patches/`.
-Add `{workspaceRoot}/apps/my-app/dist/pnpm-workspace.yaml`, `{workspaceRoot}/apps/my-app/dist/patches`, and `{workspaceRoot}/apps/my-app/dist/local_path_modules` to the `outputs` so a cached run restores them instead of dropping those approvals, patches, or vendored dependencies.
-Add `{workspaceRoot}/pnpm-workspace.yaml` and `{workspaceRoot}/package.json` to the `inputs` as well.
-The build approvals and `supportedArchitectures` live only in those two files, and nothing records them in the lockfile.
-Without them in the `inputs`, revoking an approval leaves the task hash unchanged and a cached run ships an output that still grants it.
+Resolution-time config such as `pnpm.overrides` is dropped from the emitted manifest, because the pruned lockfile already bakes it into its resolutions.
+A re-resolve inside the deploy directory, such as an install without the lockfile or adding a dependency there, loses those pins.
+
+For pnpm, the complete `prune-lockfile` target declares the extra artifacts in `outputs` so a cached run restores them, and the workspace root settings files in `inputs` so revoking a build-script approval does not replay a cached output that still grants it.
+The approvals and `supportedArchitectures` live only in those two files, and nothing records them in the lockfile.
+The `runtime` input hashes the pnpm major, which decides whether the settings land in the emitted `pnpm-workspace.yaml` or the emitted `package.json` when the root manifest has no `packageManager` field:
+
+```json
+// apps/my-app/project.json
+{
+  "prune-lockfile": {
+    "dependsOn": ["build"],
+    "cache": true,
+    "executor": "@nx/js:prune-lockfile",
+    "inputs": [
+      "default",
+      "^default",
+      "{workspaceRoot}/pnpm-workspace.yaml",
+      "{workspaceRoot}/package.json",
+      {
+        "runtime": "node -e \"try{console.log('pnpm major '+require('child_process').execSync('pnpm --version',{stdio:['ignore','pipe','ignore']}).toString().trim().split('.')[0])}catch{console.log('pnpm major unavailable')}\""
+      }
+    ],
+    "outputs": [
+      "{workspaceRoot}/apps/my-app/dist/package.json",
+      "{workspaceRoot}/apps/my-app/dist/pnpm-lock.yaml",
+      "{workspaceRoot}/apps/my-app/dist/pnpm-workspace.yaml",
+      "{workspaceRoot}/apps/my-app/dist/patches",
+      "{workspaceRoot}/apps/my-app/dist/local_path_modules"
+    ],
+    "options": {
+      "buildTarget": "build"
+    }
+  }
+}
+```
 
 {% aside type="caution" title="Installing the output with --ignore-workspace" %}
 `pnpm install --ignore-workspace` skips a `pnpm-workspace.yaml` sitting beside the output, so the settings in it never apply.
