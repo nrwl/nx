@@ -71,10 +71,6 @@ const learnGroups: SidebarItems = [
             label: 'Reducing boilerplate',
             link: 'getting-started/tutorials/reducing-configuration-boilerplate',
           },
-          {
-            label: 'Gradle monorepo',
-            link: 'getting-started/tutorials/gradle-tutorial',
-          },
         ],
       },
     ],
@@ -94,12 +90,7 @@ const learnGroups: SidebarItems = [
         label: 'Types of configuration',
         link: 'concepts/types-of-configuration',
       },
-      {
-        label: 'Executors and configurations',
-        link: 'concepts/executors-and-configurations',
-      },
       { label: 'Nx plugins', link: 'concepts/nx-plugins' },
-      { label: 'Inferred tasks', link: 'concepts/inferred-tasks' },
       {
         label: 'Building blocks of fast CI',
         link: 'concepts/ci-concepts/building-blocks-fast-ci',
@@ -108,7 +99,6 @@ const learnGroups: SidebarItems = [
         label: 'Parallelization and distribution',
         link: 'concepts/ci-concepts/parallelization-distribution',
       },
-      { label: 'Nx Daemon', link: 'concepts/nx-daemon' },
     ],
   },
   {
@@ -121,6 +111,10 @@ const learnGroups: SidebarItems = [
         link: 'features/cache-task-results',
       },
       { label: 'Enhance your coding agent', link: 'features/enhance-ai' },
+      {
+        label: 'Multi-language support',
+        link: 'features/multi-language-support',
+      },
       {
         label: 'Code organization',
         collapsed: true,
@@ -317,10 +311,6 @@ const learnGroups: SidebarItems = [
             label: 'Preserving Git histories',
             link: 'guides/adopting-nx/preserving-git-histories',
           },
-          {
-            label: 'Migrating from Turborepo',
-            link: 'guides/adopting-nx/from-turborepo',
-          },
         ],
       },
       {
@@ -456,6 +446,7 @@ const technologiesGroups: SidebarItems = [
             link: 'technologies/module-federation/introduction',
           },
           { label: 'ESLint', link: 'technologies/eslint/introduction' },
+          { label: 'Oxlint', link: 'technologies/oxlint/introduction' },
         ],
       },
       {
@@ -578,6 +569,7 @@ const referenceGroups: SidebarItems = [
         link: 'reference/environment-variables',
       },
       { label: 'nxignore', link: 'reference/nxignore' },
+      { label: 'Nx Daemon', link: 'reference/nx-daemon' },
       { label: 'Glossary', link: 'reference/glossary' },
       { label: 'Releases', link: 'reference/releases' },
       { label: 'Nx MCP', link: 'reference/nx-mcp' },
@@ -668,6 +660,11 @@ const referenceGroups: SidebarItems = [
           ...getTechnologyAPIItems('eslint', undefined, 'ESLint'),
           ...getTechnologyAPIItems('eslint-plugin', 'eslint', 'ESLint Plugin'),
         ],
+      },
+      {
+        label: 'Oxlint',
+        collapsed: true,
+        items: [...getTechnologyAPIItems('oxlint', undefined, 'Oxlint')],
       },
       {
         label: 'Webpack',

@@ -8,10 +8,10 @@ import {
 import { createLockFile, createPackageJson, getLockFileName } from '@nx/js';
 import { fork } from 'child_process';
 import { copySync, mkdir, statSync, writeFileSync } from 'fs-extra';
-import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { type RemixBuildSchema } from './schema';
 import { warnRemixBuildExecutorDeprecation } from '../../utils/deprecation';
+import { type PackageJson } from '@nx/devkit/internal';
 
 function buildRemixBuildArgs(options: RemixBuildSchema) {
   const args = ['build'];

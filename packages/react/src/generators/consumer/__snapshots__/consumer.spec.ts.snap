@@ -726,7 +726,7 @@ export function lazyProvider<Props = unknown>(
   "include": ["src"]
 }
 ",
-  "apps/my-consumer/vite.config.ts": "import { defineConfig } from 'vite';
+  "apps/my-consumer/vite.config.mts": "import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { federation } from '@module-federation/vite';
 

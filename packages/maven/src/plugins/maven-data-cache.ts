@@ -1,6 +1,6 @@
 import { join } from 'path';
-import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
 import { MavenAnalysisData } from './types';
+import { PluginCache } from '@nx/devkit/internal';
 
 /**
  * Read the Maven targets cache from disk

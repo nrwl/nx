@@ -5,13 +5,13 @@ import {
   toJS,
   Tree,
 } from '@nx/devkit';
-import {
-  createNxCloudOnboardingURLForWelcomeApp,
-  getNxCloudAppOnBoardingUrl,
-} from 'nx/src/nx-cloud/utilities/onboarding';
 import { join } from 'path';
 import { NormalizedSchema } from './normalize-options';
 import { getInstalledExpoMajor } from '../../../utils/version-utils';
+import {
+  createNxCloudOnboardingURLForWelcomeApp,
+  getNxCloudAppOnBoardingUrl,
+} from '@nx/devkit/internal';
 
 export async function createApplicationFiles(
   host: Tree,

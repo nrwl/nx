@@ -1,4 +1,4 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 import type { SupportedStyles } from '../../../typings/style';
 
 export interface Schema {
@@ -9,7 +9,7 @@ export interface Schema {
   e2eTestRunner: 'cypress' | 'playwright' | 'none';
   globalCss?: boolean;
   js?: boolean;
-  linter: Linter | LinterType;
+  linter?: LinterType;
   name?: string;
   remotes?: string[];
   enableTypedLinting?: boolean;
@@ -33,6 +33,8 @@ export interface Schema {
 }
 
 export interface NormalizedSchema extends Schema {
+  // `normalizeOptions` always resolves this, so it is no longer optional.
+  linter: LinterType;
   appProjectRoot: string;
   e2eProjectName: string;
   projectName: string;

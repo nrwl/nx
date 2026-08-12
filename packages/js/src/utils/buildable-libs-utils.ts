@@ -9,20 +9,20 @@ import {
   parseTargetString,
   readJsonFile,
   writeJsonFile,
+  output,
 } from '@nx/devkit';
 import { unlinkSync } from 'fs';
-import { isNpmProject } from 'nx/src/project-graph/operators';
-import { fileExists } from 'nx/src/utils/fileutils';
-import { output } from 'nx/src/utils/output';
 import { dirname, isAbsolute, join, relative, extname, resolve } from 'path';
 import type * as ts from 'typescript';
 import { readTsConfigPaths, resolvePathsBaseUrl } from './typescript/ts-config';
 import { stripGlobToBaseDir } from './strip-glob-to-base-dir';
 import { randomUUID } from 'crypto';
 import {
+  isNpmProject,
+  fileExists,
   isProjectGraphExternalNode,
   isProjectGraphProjectNode,
-} from 'nx/src/config/project-graph';
+} from '@nx/devkit/internal';
 
 function isBuildable(target: string, node: ProjectGraphProjectNode): boolean {
   return (

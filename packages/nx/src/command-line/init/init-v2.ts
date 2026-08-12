@@ -7,7 +7,7 @@ import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import { readJsonFile, writeJsonFile } from '../../utils/fileutils';
 import { getPackageNameFromImportPath } from '../../utils/get-package-name-from-import-path';
 import { output } from '../../utils/output';
-import { PackageJson } from '../../utils/package-json';
+import { installPackageToTmp, PackageJson } from '../../utils/package-json';
 import { getPackageManagerCommand } from '../../utils/package-manager';
 import { nxVersion } from '../../utils/versions';
 import { globWithWorkspaceContextSync } from '../../utils/workspace-context';
@@ -33,7 +33,6 @@ import {
   updateGitIgnore,
 } from './implementation/utils';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
-import { installPackageToTmp } from '../../devkit-internals';
 import { handleImport } from '../../utils/handle-import';
 import { isAiAgent } from '../../native';
 import { Agent } from '../../ai/utils';
@@ -519,6 +518,7 @@ async function runInit(
 export function getPluginReason(plugin: string): string {
   const reasonMap: Record<string, string> = {
     '@nx/eslint': 'eslint detected in dependencies',
+    '@nx/oxlint': 'oxlint detected in dependencies',
     '@nx/storybook': 'storybook detected in dependencies',
     '@nx/vite': 'vite detected in dependencies',
     '@nx/vitest': 'vitest detected in dependencies',
@@ -570,6 +570,7 @@ function parsePluginsFlag(
 const npmPackageToPluginMap: Record<string, `@nx/${string}`> = {
   // Generic JS tools
   eslint: '@nx/eslint',
+  oxlint: '@nx/oxlint',
   storybook: '@nx/storybook',
   // Bundlers
   vite: '@nx/vite',

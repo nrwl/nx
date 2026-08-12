@@ -83,7 +83,7 @@ If your repository uses package manager workspaces, Nx uses those settings to fi
 
 ### Tasks inferred from your tooling configuration
 
-Nx [plugins](/docs/concepts/nx-plugins) for tools like TypeScript, Vite, Playwright, and Jest [infer task configuration](/docs/concepts/inferred-tasks) from your existing tooling config files, keeping those files as the single source of truth. Because a config file like `vite.config.ts` exists, Nx knows the project can run a `build` task with Vite, and it reads the config to set the correct [cache](/docs/features/cache-task-results) outputs. The TypeScript-specific inference is covered in [how the TypeScript plugin infers tasks](#how-the-typescript-plugin-infers-tasks).
+Nx [plugins](/docs/concepts/nx-plugins) for tools like TypeScript, Vite, Playwright, and Jest [infer task configuration](/docs/concepts/mental-model#inferred-tasks) from your existing tooling config files, keeping those files as the single source of truth. Because a config file like `vite.config.ts` exists, Nx knows the project can run a `build` task with Vite, and it reads the config to set the correct [cache](/docs/features/cache-task-results) outputs. The TypeScript-specific inference is covered in [how the TypeScript plugin infers tasks](#how-the-typescript-plugin-infers-tasks).
 
 ### TypeScript project references kept in sync
 

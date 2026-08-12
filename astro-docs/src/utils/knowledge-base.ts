@@ -146,10 +146,20 @@ export function getKnowledgeBaseArticles(
       topics: doc.data.topics ?? [],
       featured: doc.data.featured ?? false,
       // Falls back to the starlight date when the file has no history of its
-      // own (shallow clone, or a page that isn't committed yet).
-      lastModified: lastModified.get(filePath) ?? getNewestCommitDate(filePath),
+      // own, such as in a shallow clone.
+      lastModified: lastModified.get(filePath) ?? getLastModifiedDate(filePath),
     };
   });
+}
+
+// Starlight throws rather than returning a date when a file has no commits at
+// all, which is any page that isn't committed yet.
+function getLastModifiedDate(filePath: string): Date {
+  try {
+    return getNewestCommitDate(filePath);
+  } catch {
+    return new Date();
+  }
 }
 
 export function getTopicId(label: string): string {

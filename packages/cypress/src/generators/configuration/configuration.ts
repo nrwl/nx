@@ -1,4 +1,8 @@
-import { resolveImportPath, promptWhenInteractive } from '@nx/devkit/internal';
+import {
+  resolveImportPath,
+  promptWhenInteractive,
+  PackageJson,
+} from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -20,8 +24,8 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { Linter, LinterType } from '@nx/eslint';
 import {
+  LinterType,
   getRelativePathToRootTsConfig,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
@@ -32,7 +36,6 @@ import {
   getTsConfigModuleResolution,
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
-import { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { addLinterToCyProject } from '../../utils/add-linter';
 import { assertSupportedCypressVersion } from '../../utils/assert-supported-cypress-version';
@@ -60,7 +63,7 @@ export interface CypressE2EConfigSchema {
   skipPackageJson?: boolean;
   bundler?: 'webpack' | 'vite' | 'none';
   devServerTarget?: string;
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   port?: number | 'cypress-auto';
   jsx?: boolean;
   rootProject?: boolean;

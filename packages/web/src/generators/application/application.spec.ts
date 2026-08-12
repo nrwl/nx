@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import {
@@ -11,11 +11,11 @@ import {
 } from '@nx/devkit';
 import { getProjects, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import * as devkitExports from 'nx/src/devkit-exports';
+import * as devkitExports from '@nx/devkit';
 
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
-import { PackageManagerCommands } from 'nx/src/utils/package-manager';
+import { PackageManagerCommands } from '@nx/devkit/internal';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nx/cypress/internal', () => ({
@@ -77,6 +77,7 @@ describe('app', () => {
 
     it('should generate files', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'my-app',
         addPlugin: true,
       });
@@ -317,6 +318,7 @@ describe('app', () => {
         expect(lookupFn(config)).toEqual(expectedValue);
       };
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'my-dir/my-app',
         addPlugin: true,
       });
@@ -425,6 +427,7 @@ describe('app', () => {
   it('should setup eslint (eslintrc)', async () => {
     process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await applicationGenerator(tree, {
+      linter: 'eslint',
       directory: 'my-app',
       addPlugin: true,
     });
@@ -584,7 +587,6 @@ describe('app', () => {
         "module.exports = {
           displayName: 'my-app',
           preset: '../jest.preset.js',
-          setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
           transform: {
             '^.+\\\\.[tj]s$': 'babel-jest',
           },
@@ -610,7 +612,6 @@ describe('app', () => {
         "module.exports = {
           displayName: 'my-app',
           preset: '../jest.preset.js',
-          setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
           transform: {
             '^.+\\\\.[tj]s$': '@swc/jest',
           },
@@ -969,6 +970,7 @@ describe('app', () => {
 
     it('should generate project.json if useProjectJson is true', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'apps/myapp',
         addPlugin: true,
         useProjectJson: true,

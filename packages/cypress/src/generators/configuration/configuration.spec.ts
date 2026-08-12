@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   addProjectConfiguration,
@@ -324,6 +324,7 @@ describe('Cypress e2e configuration', () => {
     addProject(tree, { name: 'my-lib', type: 'libs' });
 
     await cypressE2EConfigurationGenerator(tree, {
+      linter: 'eslint',
       project: 'my-lib',
       directory: 'cypress',
       baseUrl: 'http://localhost:4200',
@@ -345,6 +346,7 @@ describe('Cypress e2e configuration', () => {
     addProject(tree, { name: 'my-lib', type: 'libs' });
 
     await cypressE2EConfigurationGenerator(tree, {
+      linter: 'eslint',
       project: 'my-lib',
       directory: 'cypress',
       baseUrl: 'http://localhost:4200',
@@ -399,6 +401,7 @@ describe('Cypress e2e configuration', () => {
     );
 
     await cypressE2EConfigurationGenerator(tree, {
+      linter: 'eslint',
       project: 'my-lib',
       directory: 'cypress',
       baseUrl: 'http://localhost:4200',
