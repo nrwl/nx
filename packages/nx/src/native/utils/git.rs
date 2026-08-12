@@ -171,10 +171,10 @@ pub fn nested_linked_worktrees<P: AsRef<Path>>(workspace_root: P) -> Vec<PathBuf
     // other step - the walk up to the git root, the `commondir` read, the
     // `read_dir` - is skipped, which is the whole point: those are what made
     // this measurable on walks that can never contain a worktree.
-    if let Some(cached) = NESTED_WORKTREES.get(workspace_root) {
-        if modified_at(&cached.registry) == cached.signature {
-            return cached.roots.clone();
-        }
+    if let Some(cached) = NESTED_WORKTREES.get(workspace_root)
+        && modified_at(&cached.registry) == cached.signature
+    {
+        return cached.roots.clone();
     }
 
     // `gitdir` files hold canonical paths, while the walk root may reach the
@@ -232,6 +232,17 @@ struct CachedWorktrees {
 /// property resolving per walk was for.
 static NESTED_WORKTREES: LazyLock<DashMap<PathBuf, CachedWorktrees>> = LazyLock::new(DashMap::new);
 
+/// Whether the checkout's `gitfile` names `metadata_dir` as its git directory,
+/// which only the matching half of the same worktree does.
+fn points_back_at(gitfile: &Path, metadata_dir: &Path) -> bool {
+    let Some(parent) = gitfile.parent() else {
+        return false;
+    };
+
+    read_gitfile(gitfile, parent)
+        .is_some_and(|named| canonicalize_or_own(&named) == canonicalize_or_own(metadata_dir))
+}
+
 fn read_nested_linked_worktrees(registry: &Path, canonical_root: &Path) -> Vec<PathBuf> {
     let Ok(entries) = registry.read_dir() else {
         return Vec::new();
@@ -243,17 +254,21 @@ fn read_nested_linked_worktrees(registry: &Path, canonical_root: &Path) -> Vec<P
             // Points at the worktree's own `.git` gitfile, so its parent is
             // the worktree root.
             let gitfile = read_path_file(&metadata_dir.join("gitdir"), &metadata_dir)?;
-            // A registration outlives a worktree deleted by hand, so only
-            // prune while the gitfile is actually there. Otherwise an
-            // ordinary directory later created at the same path - before
-            // anyone ran `git worktree prune` - would vanish from the graph.
-            if !gitfile.is_file() {
+            // A registration outlives a worktree deleted by hand -
+            // `gc.worktreePruneExpire` defaults to three months - so whatever
+            // holds the path now has to earn being pruned. Only the two halves
+            // of one worktree name each other, so requiring the gitfile to
+            // point back here is what earns it. A submodule added at the path
+            // since is the case this catches: its `.git` is a file too, so it
+            // satisfies any check that only asks whether something is there,
+            // but it names `<git-dir>/modules/<..>` and stays in the graph.
+            if !points_back_at(&gitfile, &metadata_dir) {
                 return None;
             }
 
             let worktree_root = canonicalize_or_own(gitfile.parent()?);
 
-            let relative = worktree_root.strip_prefix(&canonical_root).ok()?;
+            let relative = worktree_root.strip_prefix(canonical_root).ok()?;
             // An empty path means the workspace root *is* the worktree -
             // running Nx from inside one is ordinary. The watcher joins these
             // onto its origin and blocks every path under them, so an empty
@@ -438,6 +453,58 @@ mod test {
             vec![PathBuf::from("wt1"), PathBuf::from("wt2")],
             "a worktree added after a cached answer must still be seen"
         );
+    }
+
+    #[test]
+    fn keeps_a_submodule_that_reoccupied_a_stale_worktree_path() {
+        // The registration outlives the worktree by up to three months of
+        // `gc.worktreePruneExpire`. A submodule added at the path in the
+        // meantime has a `.git` file of its own, so a liveness check that only
+        // asks whether the gitfile exists prunes it and its sources leave the
+        // graph - which is exactly what this module promises never to do.
+        let temp = TempDir::new().unwrap();
+        create_dir_all(temp.path().join(".git")).unwrap();
+
+        register_worktree(temp.path(), "gone", &temp.path().join("libs/sub"));
+        remove_dir_all(temp.path().join("libs/sub")).unwrap();
+
+        register_submodule(temp.path(), "libs/sub");
+        write(temp.path().join("libs/sub/lib.ts"), "x").unwrap();
+
+        assert!(
+            nested_linked_worktrees(temp.path()).is_empty(),
+            "a submodule at a stale worktree path must stay in the graph"
+        );
+        assert!(!is_linked_worktree_root(temp.path().join("libs/sub")));
+    }
+
+    #[test]
+    fn keeps_a_worktree_whose_registration_names_a_different_checkout() {
+        // Two halves that do not name each other are not one worktree. Git
+        // does not write this, but a hand-edited or half-copied `.git` reaches
+        // the same state, and pruning on it drops real sources.
+        let temp = TempDir::new().unwrap();
+        create_dir_all(temp.path().join(".git")).unwrap();
+        register_worktree(temp.path(), "wt", &temp.path().join("real"));
+
+        // Point the registration at a checkout that belongs to another one.
+        let other = temp.path().join("other");
+        create_dir_all(&other).unwrap();
+        write(
+            other.join(".git"),
+            format!(
+                "gitdir: {}\n",
+                temp.path().join(".git/worktrees/elsewhere").display()
+            ),
+        )
+        .unwrap();
+        write(
+            temp.path().join(".git/worktrees/wt/gitdir"),
+            format!("{}\n", other.join(".git").display()),
+        )
+        .unwrap();
+
+        assert!(nested_linked_worktrees(temp.path()).is_empty());
     }
 
     #[test]
