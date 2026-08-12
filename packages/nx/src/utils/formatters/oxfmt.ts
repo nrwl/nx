@@ -820,10 +820,10 @@ function toRelativeWithin(
 }
 
 /**
- * The batch's own oxfmt config, if it carries one this path can read.
+ * The batch's own oxfmt config, by discovery order.
  *
- * JSON only: `.ts`/`.mts` need a loader and a real file on disk, and
- * returning one would look applied and then be dropped further in.
+ * Any discovered name is returned; only the JSON form is honoured, and
+ * `resolveOxfmtConfigInDir` is what gates that.
  */
 function findOxfmtConfigInBatch(
   files: { path: string; content: string }[]

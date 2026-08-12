@@ -104,7 +104,7 @@ type AngularUnitTestRunner =
 // be imported here.
 type Formatter = 'oxfmt' | 'prettier' | 'none';
 
-// Order is the prompt order; oxfmt is the default. `satisfies` stops a typo
+// Order here is incidental; the prompt's own choice order sets the default. `satisfies` stops a typo
 // getting in, and the coverage assertion below stops a member being dropped -
 // on its own the array would happily be a subset, and the prompt would then
 // reject a value the generator schemas still accept.
@@ -1228,9 +1228,18 @@ async function determineNoneOptions(
         ? await determineLinterOptions(parsedArgs)
         : undefined;
 
-    // Omitted rather than set to `undefined`: the caller `Object.assign`s this
-    // over `argv`, so an explicit key would clobber a user's `--linter`.
-    return { preset, js, appName, ...(linter ? { linter } : {}) };
+    // `linter` is omitted rather than set to `undefined`: the caller
+    // `Object.assign`s this over `argv`, so an explicit key would clobber a
+    // user's `--linter`. `formatter` is always a value, so it is safe to set -
+    // and it must be, or `@nx/workspace:new`'s `"default": "none"` applies and
+    // these presets get no formatter at all.
+    return {
+      preset,
+      js,
+      appName,
+      formatter: parsedArgs.formatter ?? 'prettier',
+      ...(linter ? { linter } : {}),
+    };
   }
 }
 

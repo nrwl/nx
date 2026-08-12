@@ -3,7 +3,7 @@
 // binary sidesteps that and still exercises real formatting.
 //
 // Caveat: this hands options to the CLI, which honours the config-file-only
-// keys (`overrides`, `ignorePatterns`) that production's `format()` rejects -
+// keys (`overrides`, `ignorePatterns`) that production's `format()` drops -
 // so the mock is more capable than the API it stands in for.
 const { execFileSync } = require('child_process');
 const { mkdtempSync, rmSync, writeFileSync } = require('fs');

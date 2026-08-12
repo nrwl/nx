@@ -104,7 +104,7 @@ function formatDetectedFiles(
     case 'oxfmt':
       return runOxfmtBatch(files, root, options);
     default: {
-      // One of the guarded sites `FormatterType` inventories. Without this arm
+      // Without this arm
       // an unhandled formatter returns undefined into callers that iterate it.
       const unhandled: never = formatterType;
       throw new Error(`Unhandled formatter: ${unhandled}`);

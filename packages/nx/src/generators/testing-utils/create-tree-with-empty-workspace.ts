@@ -12,7 +12,7 @@ type TestFormatter = FormatterType | 'none';
 /**
  * Keyed by `FormatterType` so adding a formatter fails to compile here until
  * this helper can seed it, rather than silently producing a workspace with no
- * config. One of the sites `FormatterType` inventories.
+ * config.
  */
 const formatterConfigFiles = {
   prettier: '.prettierrc',
@@ -22,8 +22,8 @@ const formatterConfigFiles = {
 /**
  * Creates a host for testing.
  *
- * Defaults to oxfmt, matching what `create-nx-workspace` gives a new
- * workspace, so generator tests assert what users actually get. oxfmt formats
+ * Defaults to oxfmt deliberately, so generator tests exercise the oxfmt path
+ * rather than the create-nx-workspace default. oxfmt formats
  * JS, TS, JSON, YAML and Markdown - nothing filters by extension on the way in
  * - so any spec asserting on generated file *content* is affected. Pass `none`
  * to assert exactly what the generator wrote, or `prettier` only for a test

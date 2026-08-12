@@ -10,8 +10,9 @@ import { logger } from '../logger';
 /**
  * Adding a member here does NOT reliably break compilation: the repo builds
  * with `strict: false`, so a `switch` that omits one is not an error. The
- * `never` assertions and type-keyed tables that do catch it live outside
- * `packages/nx` in part, and those only fail once `packages/nx` is rebuilt.
+ * `never` assertions and type-keyed tables that do catch it fail immediately
+ * inside `packages/nx`, but the ones in devkit and `@nx/js` read the type from
+ * its emitted declarations, so those only fail once it has been rebuilt.
  */
 export type FormatterType = 'prettier' | 'oxfmt';
 
@@ -33,7 +34,7 @@ export function resetFormatterWarningsForTesting(): void {
 
 export function detectFormatter(root: string): FormatterType | null {
   if (isUsingOxfmt(root)) {
-    // Flag first: the extra prettier lookup then costs once, not per generator.
+    // Flag first, so the lookup stops repeating once we have warned.
     if (!warnedBothConfigured && isUsingPrettier(root)) {
       warnBothConfigured();
     }

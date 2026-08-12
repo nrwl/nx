@@ -96,8 +96,7 @@ export async function formatFiles(
 
   // One switch rather than a checker ternary plus a dispatch `if`: those defaulted
   // differently, so a third formatter would have been filtered with prettier's
-  // rules and then not formatted at all. One of the guarded sites
-  // `FormatterType` inventories.
+  // rules and then not formatted at all.
   switch (formatterType) {
     case 'prettier':
       await formatWithPrettier(tree, changedFiles(createPrettierIgnoreChecker));

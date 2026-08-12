@@ -100,6 +100,8 @@ Node) or the default TypeScript monorepo, and the workspace uses package manager
 is the default.
 Every other path uses Prettier without asking, including `--no-workspaces` and the `apps`,
 `npm`, and `ts-standalone` presets.
+Running `@nx/workspace:new` directly, rather than through `create-nx-workspace`, sets up no
+formatter unless you pass `--formatter`.
 Pass `--formatter` on any path to choose explicitly:
 
 ```shell
