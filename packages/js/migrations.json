@@ -48,10 +48,16 @@
       "documentation": "./dist/src/migrations/update-23-1-0/set-tsconfig-root-dir-for-ts6.md"
     },
     "update-23-2-0-add-pnpm-prune-lockfile-cache-config": {
-      "version": "23.2.0-beta.7",
+      "version": "23.2.0-beta.8",
       "description": "Add the pnpm-workspace.yaml, patches, and local_path_modules paths to the outputs of @nx/js:prune-lockfile targets in pnpm workspaces, and the workspace root pnpm-workspace.yaml and package.json to their inputs, so a cache replay restores the pnpm install settings, patch files, and vendored local-path dependencies the executor now emits, and a change to the root pnpm install settings does not replay a stale one.",
       "implementation": "./dist/src/migrations/update-23-2-0/add-pnpm-prune-lockfile-cache-config",
       "documentation": "./dist/src/migrations/update-23-2-0/add-pnpm-prune-lockfile-cache-config.md"
+    },
+    "update-23-2-0-add-pnpm-deploy-output-cache-inputs": {
+      "version": "23.2.0-beta.8",
+      "description": "Add the workspace root pnpm-workspace.yaml, the pnpm settings fields of the root package.json, and a pnpm-major runtime probe to the inputs of build targets that emit the pruned pnpm deploy output (webpack, rspack, vite, esbuild with generatePackageJson; next, remix, tsc, swc with generateLockfile), so revoking a build-script approval, changing another pnpm install setting, or crossing the pnpm 10/11 boundary does not replay a cached output that still carries the old one.",
+      "implementation": "./dist/src/migrations/update-23-2-0/add-pnpm-deploy-output-cache-inputs",
+      "documentation": "./dist/src/migrations/update-23-2-0/add-pnpm-deploy-output-cache-inputs.md"
     }
   },
   "packageJsonUpdates": {

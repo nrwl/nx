@@ -16,6 +16,7 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
+  PackageManager,
   ProjectConfiguration,
   TargetConfiguration,
   workspaceRoot,
@@ -23,6 +24,7 @@ import {
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
 import {
   isUsingTsSolutionSetup,
+  PNPM_INSTALL_SETTINGS_INPUTS,
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
   addBuildAndWatchDepsTargets,
 } from '@nx/js/internal';
@@ -89,6 +91,7 @@ export const createNodes: CreateNodes<WebpackPluginOptions> = [
               ctx,
               targetsCache,
               isTsSolutionSetup,
+              packageManager,
               pmc,
               projectHashes[idx]
             ),
@@ -124,6 +127,7 @@ async function createNodesInternal(
   context: CreateNodesContext,
   targetsCache: PluginCache<WebpackTargets>,
   isTsSolutionSetup: boolean,
+  packageManager: PackageManager,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   hash: string
 ): Promise<CreateNodesResult> {
@@ -138,6 +142,7 @@ async function createNodesInternal(
         options,
         context,
         isTsSolutionSetup,
+        packageManager,
         pmc
       )
     );
@@ -162,6 +167,7 @@ async function createWebpackTargets(
   options: Required<WebpackPluginOptions>,
   context: CreateNodesContext,
   isTsSolutionSetup: boolean,
+  packageManager: PackageManager,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<WebpackTargets> {
   const namedInputs = getNamedInputs(projectRoot, context);
@@ -188,24 +194,19 @@ async function createWebpackTargets(
     options: { cwd: projectRoot, env: { NODE_ENV: 'production' } },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
-    inputs:
-      'production' in namedInputs
-        ? [
-            'production',
-            '^production',
-            {
-              externalDependencies: ['webpack-cli'],
-            },
-            TS_SOLUTION_SETUP_TSCONFIG_INPUT,
-          ]
-        : [
-            'default',
-            '^default',
-            {
-              externalDependencies: ['webpack-cli'],
-            },
-            TS_SOLUTION_SETUP_TSCONFIG_INPUT,
-          ],
+    inputs: [
+      ...('production' in namedInputs
+        ? ['production', '^production']
+        : ['default', '^default']),
+      {
+        externalDependencies: ['webpack-cli'],
+      },
+      TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+      // The build can emit a pruned pnpm deploy output (NxAppWebpackPlugin
+      // with generatePackageJson), whose install settings come from these
+      // otherwise-unhashed root sources.
+      ...(packageManager === 'pnpm' ? PNPM_INSTALL_SETTINGS_INPUTS : []),
+    ],
     outputs,
     metadata: {
       technologies: ['webpack'],

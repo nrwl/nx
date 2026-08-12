@@ -164,7 +164,9 @@ export function getPruneTargets(
     // The build approvals and `supportedArchitectures` those artifacts carry are
     // recorded nowhere in the lockfile, so without the root files in the hash a
     // revoked approval replays the previous artifact. `default` and `^default`
-    // keep what an undeclared `inputs` would have hashed.
+    // keep what an undeclared `inputs` would have hashed. Deliberately coarser
+    // than the settings-narrowed json input the bundler build targets use:
+    // over-invalidating this small, rarely-run task costs nothing.
     pruneLockfileInputs = [
       'default',
       '^default',

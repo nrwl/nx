@@ -1,5 +1,8 @@
 import { type CreateNodesContext } from '@nx/devkit';
-import { isUsingTsSolutionSetup } from '@nx/js/internal';
+import {
+  isUsingTsSolutionSetup,
+  PNPM_INSTALL_SETTINGS_INPUTS,
+} from '@nx/js/internal';
 import { createNodes } from './plugin';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 
@@ -152,5 +155,20 @@ describe('@nx/rspack', () => {
         ],
       ]
     `);
+  });
+
+  it('adds the pnpm install settings inputs in a pnpm workspace', async () => {
+    tempFs.removeFileSync('package-lock.json');
+    tempFs.createFileSync('pnpm-lock.yaml', 'lockfileVersion: 9.0');
+
+    const nodes = await createNodesFunction(
+      ['my-app/rspack.config.ts'],
+      {},
+      context
+    );
+
+    expect(nodes[0][1].projects['my-app'].targets.build.inputs).toEqual(
+      expect.arrayContaining(PNPM_INSTALL_SETTINGS_INPUTS)
+    );
   });
 });
