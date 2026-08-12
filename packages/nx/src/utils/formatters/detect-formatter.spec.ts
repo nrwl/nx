@@ -188,6 +188,23 @@ describe('the both-configured warning', () => {
 
   afterEach(() => warn.mockRestore());
 
+  it('should warn on the disk path too, not only the tree path', () => {
+    // `nx format` and `nx init` go through `detectFormatter`, so the tree-side
+    // case above does not cover the warning a CLI user actually sees.
+    const fs = new TempFs('detect-formatter-warn');
+    try {
+      fs.createFileSync('.oxfmtrc.json', '{}');
+      fs.createFileSync('.prettierrc', '{}');
+
+      expect(detectFormatter(fs.tempDir)).toBe('oxfmt');
+
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0][0]).toContain('formatting with oxfmt');
+    } finally {
+      fs.cleanup();
+    }
+  });
+
   it('should warn once, not per call, when both are configured', () => {
     const tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
     tree.write('.oxfmtrc.json', '{}');
