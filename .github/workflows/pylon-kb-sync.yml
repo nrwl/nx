@@ -80,7 +80,6 @@ jobs:
         working-directory: astro-docs
         env:
           PYLON_API_TOKEN: ${{ secrets.PYLON_API_TOKEN }}
-          PYLON_AUTHOR_USER_ID: ${{ vars.PYLON_AUTHOR_USER_ID }}
           DRY_RUN: ${{ github.event_name == 'pull_request' || inputs.dry-run }}
           PRUNE: ${{ inputs.prune }}
         run: |
