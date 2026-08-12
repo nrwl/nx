@@ -538,6 +538,7 @@ function escapeText(value: string): string {
     .replaceAll('>', '&gt;');
 }
 
-function escapeAttribute(value: string): string {
+/** Exported so asset URLs substituted later escape exactly like the rest. */
+export function escapeAttribute(value: string): string {
   return escapeText(value).replaceAll('"', '&quot;');
 }

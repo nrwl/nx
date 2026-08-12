@@ -21,6 +21,7 @@ import { fileURLToPath } from 'node:url';
 import {
   ASSET_PLACEHOLDER_PREFIX,
   convertArticle,
+  escapeAttribute,
   type AssetRef,
 } from './markdoc-to-html.ts';
 import { PylonClient, type PylonArticle } from './pylon-client.ts';
@@ -189,9 +190,11 @@ async function resolveAssets(
       uploaded.set(asset.key, url);
       uploads++;
     }
-    html = html.replaceAll(
-      `${ASSET_PLACEHOLDER_PREFIX}${asset.key}`,
-      url.replaceAll('&', '&amp;')
+    // A replacer function, because a string replacement would treat $&, $`,
+    // $' and $$ in the URL as substitution directives. Escaped the same way
+    // the converter escapes every other attribute.
+    html = html.replaceAll(`${ASSET_PLACEHOLDER_PREFIX}${asset.key}`, () =>
+      escapeAttribute(url)
     );
   }
 
