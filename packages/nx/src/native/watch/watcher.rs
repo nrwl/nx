@@ -212,10 +212,34 @@ impl WatchPipeline {
     /// worktree and the daemon, and `new_directories_from_event` below - which
     /// covers the Linux/Windows per-directory registration - is not compiled
     /// there.
+    ///
+    /// Two filters run before [`is_linked_worktree_root`], and both exist to
+    /// keep this from feeding itself. It runs ahead of the filterer - it has
+    /// to, or the gitfile would be discarded as a `.git` path before it was
+    /// read - so nothing else stops a `.git` event here, and answering one by
+    /// opening a `.git` publishes another. That is a closed loop: the
+    /// workspace's own `.git` produced ~2M events per run, starving every real
+    /// change behind them.
+    ///
+    /// Only a *file* can be a gitfile, and the event already carries the stat
+    /// (`fs::metadata` publishes nothing, unlike a read), so the main
+    /// repository's `.git` directory is skipped without touching the disk.
+    /// Only a *create* can be the moment a worktree appears, which keeps the
+    /// modify and access events on a worktree's own gitfile - the same loop,
+    /// one directory over - from reopening it.
     fn track_new_worktrees(&mut self, event: &RawWatchEvent) {
+        use crate::native::watch::types::meta_is_dir;
+        use notify::EventKind;
+
+        if !matches!(event.kind(), EventKind::Create(_)) {
+            return;
+        }
+
         let new_worktrees: Vec<PathBuf> = event
             .paths()
-            .filter(|(path, _)| path.file_name().is_some_and(|name| name == ".git"))
+            .filter(|(path, metadata)| {
+                !meta_is_dir(metadata) && path.file_name().is_some_and(|name| name == ".git")
+            })
             .filter_map(|(path, _)| path.parent())
             .filter(|root| is_linked_worktree_root(root))
             .map(Path::to_path_buf)
