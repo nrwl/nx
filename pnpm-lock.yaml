@@ -145,8 +145,8 @@ catalogs:
       specifier: ^4.1.0
       version: 4.1.2
     enquirer:
-      specifier: ~2.3.6
-      version: 2.3.6
+      specifier: ^2.4.1
+      version: 2.4.1
     gpt3-tokenizer:
       specifier: ^1.1.5
       version: 1.1.5
@@ -421,7 +421,7 @@ importers:
         version: 3.36.1
       enquirer:
         specifier: 'catalog:'
-        version: 2.3.6
+        version: 2.4.1
       form-data:
         specifier: ^4.0.6
         version: 4.0.6
@@ -2153,7 +2153,7 @@ importers:
         version: 8.59.0(eslint@9.39.4(jiti@2.7.0))(typescript@6.0.3)
       enquirer:
         specifier: 'catalog:'
-        version: 2.3.6
+        version: 2.4.1
       jsonc-parser:
         specifier: 'catalog:'
         version: 3.3.1
@@ -2342,7 +2342,7 @@ importers:
         version: link:../create-nx-workspace
       enquirer:
         specifier: 'catalog:'
-        version: 2.3.6
+        version: 2.4.1
       picocolors:
         specifier: 'catalog:'
         version: 1.1.1
@@ -2363,7 +2363,7 @@ importers:
         version: 4.1.2
       enquirer:
         specifier: 'catalog:'
-        version: 2.3.6
+        version: 2.4.1
       flat:
         specifier: ^5.0.2
         version: 5.0.2
@@ -2458,7 +2458,7 @@ importers:
         version: 5.0.1
       enquirer:
         specifier: 'catalog:'
-        version: 2.3.6
+        version: 2.4.1
       minimatch:
         specifier: ^10.2.5
         version: 10.2.5
@@ -2486,7 +2486,7 @@ importers:
         version: link:../devkit
       enquirer:
         specifier: 'catalog:'
-        version: 2.3.6
+        version: 2.4.1
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
@@ -3221,7 +3221,7 @@ importers:
         version: 5.0.1
       enquirer:
         specifier: 'catalog:'
-        version: 2.3.6
+        version: 2.4.1
       figures:
         specifier: 3.2.0
         version: 3.2.0
@@ -3723,7 +3723,7 @@ importers:
         version: 6.11.0(@rspack/core@1.6.8(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3))
       enquirer:
         specifier: 'catalog:'
-        version: 2.3.6
+        version: 2.4.1
       express:
         specifier: ^4.21.2
         version: 4.21.2
@@ -3845,7 +3845,7 @@ importers:
         version: 8.18.0
       enquirer:
         specifier: 'catalog:'
-        version: 2.3.6
+        version: 2.4.1
       picomatch:
         specifier: 'catalog:'
         version: 4.0.4
@@ -4132,7 +4132,7 @@ importers:
         version: 4.1.2
       enquirer:
         specifier: 'catalog:'
-        version: 2.3.6
+        version: 2.4.1
       picomatch:
         specifier: 'catalog:'
         version: 4.0.4
