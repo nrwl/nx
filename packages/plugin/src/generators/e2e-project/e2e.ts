@@ -22,7 +22,7 @@ import {
   type GeneratorCallback,
   type ProjectConfiguration,
 } from '@nx/devkit';
-import { LinterType, lintProjectGenerator } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 import {
   addPropertyToJestConfig,
   configurationGenerator,
@@ -30,6 +30,7 @@ import {
 } from '@nx/jest';
 import { getRelativePathToRootTsConfig, setupVerdaccio } from '@nx/js';
 import {
+  addLintingToProject,
   addLocalRegistryScripts,
   normalizeLinterOption,
   addProjectToTsSolutionWorkspace,
@@ -322,17 +323,16 @@ export { default as teardown } from './stop-local-registry';
   if (project.targets.e2e) {
     const e2eTarget = project.targets.e2e;
 
+    // The suites share a single tmp/test-project directory, so they have to run
+    // one at a time. Vitest 4 removed `poolOptions`, and nested options do not
+    // survive the executor's argv round-trip anyway, so use the scalar options.
     project.targets.e2e = {
       ...e2eTarget,
       dependsOn: [`^build`],
       options: {
         ...e2eTarget.options,
-        pool: 'forks',
-        poolOptions: {
-          forks: {
-            singleFork: true,
-          },
-        },
+        maxWorkers: 1,
+        isolate: false,
       },
     };
 
@@ -346,19 +346,16 @@ async function addLintingToApplication(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
-  const lintTask = await lintProjectGenerator(tree, {
+  return addLintingToProject(tree, {
     linter: options.linter,
     project: options.projectName,
     tsConfigPaths: [
       joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
     ],
     unitTestRunner: options.testRunner ?? 'jest',
-    skipFormat: true,
     enableTypedLinting: false,
     addPlugin: options.addPlugin,
   });
-
-  return lintTask;
 }
 
 function updatePluginPackageJson(tree: Tree, options: NormalizedSchema) {

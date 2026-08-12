@@ -20,7 +20,7 @@ export {
   serializeTarget,
 } from './src/utils/cli-config-utils';
 
-export { Linter } from './src/utils/lint';
+export { Linter, type LinterType } from './src/utils/lint';
 
 export { moveGenerator } from './src/generators/move/move';
 export { removeGenerator } from './src/generators/remove/remove';

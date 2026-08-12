@@ -518,6 +518,7 @@ async function runInit(
 export function getPluginReason(plugin: string): string {
   const reasonMap: Record<string, string> = {
     '@nx/eslint': 'eslint detected in dependencies',
+    '@nx/oxlint': 'oxlint detected in dependencies',
     '@nx/storybook': 'storybook detected in dependencies',
     '@nx/vite': 'vite detected in dependencies',
     '@nx/vitest': 'vitest detected in dependencies',
@@ -569,6 +570,7 @@ function parsePluginsFlag(
 const npmPackageToPluginMap: Record<string, `@nx/${string}`> = {
   // Generic JS tools
   eslint: '@nx/eslint',
+  oxlint: '@nx/oxlint',
   storybook: '@nx/storybook',
   // Bundlers
   vite: '@nx/vite',

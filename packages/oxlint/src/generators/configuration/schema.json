@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxOxlintConfiguration",
+  "title": "Configure Oxlint for a project",
+  "description": "Register `@nx/oxlint` and enable this project\u2019s Oxlint plugins.",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project.",
+      "$default": {
+        "$source": "projectName"
+      },
+      "x-prompt": "Which project should use Oxlint?"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting files.",
+      "default": false
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "description": "Do not add dependencies to `package.json`.",
+      "default": false
+    },
+    "keepExistingVersions": {
+      "type": "boolean",
+      "description": "Keep existing dependency versions when possible.",
+      "default": false
+    },
+    "plugins": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Oxlint plugins to enable for this project, such as `react` or `jsx-a11y`.",
+      "default": []
+    }
+  },
+  "required": ["project"],
+  "additionalProperties": false
+}

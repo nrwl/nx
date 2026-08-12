@@ -29,9 +29,9 @@
       "x-priority": "important"
     },
     "linter": {
-      "description": "The tool to use for running lint checks.",
+      "description": "The tool to use for running lint checks. Defaults to the linter the workspace already uses.",
       "type": "string",
-      "enum": ["none", "eslint"],
+      "enum": ["none", "eslint", "oxlint"],
       "x-priority": "important"
     },
     "unitTestRunner": {

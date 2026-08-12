@@ -438,6 +438,37 @@ describe('is terminal run', () => {
     expect(isTerminalRun()).toBe(true);
   });
 
+  it('is a terminal run when the command is started from the node module oxlint', () => {
+    // `@nx/oxlint`'s boundaries bridge. Without this the graph memo never takes
+    // and every linted file re-reads the whole project graph.
+    mockProcessArgv([
+      '/Users/user/.nvm/versions/node/v22.12.0/bin/node',
+      '/Users/user/my-repo/node_modules/oxlint/bin/oxlint',
+      '.',
+    ]);
+    expect(isTerminalRun()).toBe(true);
+  });
+
+  it('is not a terminal run when oxlint is serving as a language server', () => {
+    // `oxlint --lsp` is the same entry point as the CLI, so it can only be told
+    // apart by the flag — and it is the long-lived editor process this guard is
+    // meant to keep on a fresh graph.
+    mockProcessArgv([
+      '/Users/user/.nvm/versions/node/v22.12.0/bin/node',
+      '/Users/user/my-repo/node_modules/oxlint/bin/oxlint',
+      '--lsp',
+    ]);
+    expect(isTerminalRun()).toBe(false);
+  });
+
+  it('is not a terminal run under the standalone oxc language server', () => {
+    mockProcessArgv([
+      '/Users/user/.nvm/versions/node/v22.12.0/bin/node',
+      '/Users/user/my-repo/node_modules/.bin/oxc_language_server',
+    ]);
+    expect(isTerminalRun()).toBe(false);
+  });
+
   it('is not a terminal run when the is started from the IDE', () => {
     // Visual Studio Code mac
     mockProcessArgv([
