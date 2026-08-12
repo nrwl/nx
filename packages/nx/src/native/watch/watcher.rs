@@ -321,12 +321,38 @@ impl WatchPipeline {
             self.filterer.track_worktree(&root);
         }
 
+        // A worktree still being created is invisible to both of the above:
+        // `git worktree add` registers it and writes the checkout's gitfile
+        // only after making the directory, so a walk that started in between
+        // finds nothing and hands the checkout back. Asking each directory
+        // directly, at the moment its watch would be registered, is the last
+        // point where the answer is current - and by then git has written the
+        // gitfile, because it does that before populating the tree.
+        let mut late_worktrees: Vec<PathBuf> = Vec::new();
+
         let mut nested_dirs: HashSet<PathBuf> = HashSet::new();
         let mut backfilled_paths: Vec<PathBuf> = Vec::new();
         for dir in dirs {
             for rel_path in nx_walker_sync(dir, None) {
                 let full_path = dir.join(&rel_path);
+                // `nx_walker_sync` yields parents before their children, so a
+                // root recorded here always precedes what it should exclude.
+                if late_worktrees
+                    .iter()
+                    .any(|worktree| full_path.starts_with(worktree))
+                {
+                    continue;
+                }
                 if full_path.is_dir() {
+                    if is_linked_worktree_root(&full_path) {
+                        debug!(
+                            ?full_path,
+                            "worktree finished appearing mid-walk - blocking it"
+                        );
+                        self.filterer.track_worktree(&full_path);
+                        late_worktrees.push(full_path);
+                        continue;
+                    }
                     nested_dirs.insert(full_path);
                 } else if full_path.is_file() {
                     let path = full_path
@@ -1119,6 +1145,84 @@ mod tests {
             leaked.is_empty(),
             "expected no events from a worktree populated after boot; got {leaked:?}"
         );
+    }
+
+    #[test]
+    fn a_real_git_worktree_added_after_boot_is_blocked() {
+        // Every other worktree test builds the layout by hand, which writes
+        // the gitfile before the watcher can react. Real `git worktree add`
+        // makes the directory first and registers it a moment later, so the
+        // walk that registers a watch can land in between and hand the
+        // checkout back. Only driving git reproduces that ordering.
+        //
+        // The window is small: without the fix this caught the leak once in
+        // ten runs, with it ten out of ten. A pass is weak evidence on its
+        // own - it is the cheapest honest coverage of real git, not a proof.
+        let Some(git) = git_or_skip() else { return };
+
+        let dir = tempdir().expect("tempdir");
+        let root = dir.path().canonicalize().expect("canonicalize");
+        let run = |args: &[&str]| {
+            let out = std::process::Command::new(&git)
+                .args(args)
+                .current_dir(&root)
+                .output()
+                .expect("run git");
+            assert!(
+                out.status.success(),
+                "git {args:?}: {}",
+                String::from_utf8_lossy(&out.stderr)
+            );
+        };
+        run(&["init", "-q", "."]);
+        run(&["config", "user.email", "test@example.com"]);
+        run(&["config", "user.name", "test"]);
+        fs::write(root.join("tracked.txt"), "x").expect("seed");
+        run(&["add", "-A"]);
+        run(&["commit", "-qm", "init"]);
+
+        let (_watcher, captured) = start_watcher(&root);
+
+        run(&[
+            "worktree",
+            "add",
+            "-q",
+            ".claude/worktrees/wt",
+            "-b",
+            "wt-branch",
+        ]);
+        std::thread::sleep(Duration::from_millis(400));
+        fs::write(root.join(".claude/worktrees/wt/app.ts"), "y").expect("worktree write");
+        // Un-ignored write proves the watcher is alive.
+        fs::write(root.join("alive.txt"), "z").expect("alive write");
+
+        let events = collect(&captured);
+        assert!(
+            events.iter().any(|e| e.path == "alive.txt"),
+            "expected an event for alive.txt; got {events:?}"
+        );
+
+        let leaked: Vec<_> = events
+            .iter()
+            .filter(|e| e.path.contains("worktrees/wt/"))
+            .collect();
+        assert!(
+            leaked.is_empty(),
+            "expected no events from a real git worktree; got {leaked:?}"
+        );
+    }
+
+    /// `git` is present on every CI image this suite runs on, but a contributor
+    /// without it should see the rest of the suite rather than a failure.
+    fn git_or_skip() -> Option<String> {
+        let git = std::env::var("GIT_EXECUTABLE").unwrap_or_else(|_| "git".to_string());
+        match std::process::Command::new(&git).arg("--version").output() {
+            Ok(out) if out.status.success() => Some(git),
+            _ => {
+                eprintln!("skipping: no usable `git` on PATH");
+                None
+            }
+        }
     }
 
     #[test]
