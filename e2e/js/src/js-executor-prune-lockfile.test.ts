@@ -403,6 +403,81 @@ describe('js:prune-lockfile executor', () => {
     });
   });
 
+  // The webpack build ships the same deploy output through its asset pipeline
+  // (an emit sink) instead of the prune-lockfile executor's file writes, so the
+  // wiring is entirely different code. Regression for #36055: a root override
+  // baked into the pruned lockfile made a standalone install fail with
+  // ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
+  describe('package manager pnpm (webpack emit sink)', () => {
+    beforeAll(() => {
+      newProject({
+        packages: ['@nx/node', '@nx/js', '@nx/eslint', '@nx/jest'],
+        preset: 'ts',
+        packageManager: 'pnpm',
+      });
+    });
+    afterAll(() => {
+      cleanupProject();
+    });
+
+    it('should produce an installable dist from a generatePackageJson webpack build', () => {
+      const nodeapp = uniq('nodeapp');
+
+      runCLI(
+        `generate @nx/node:app ${nodeapp} --bundler=webpack --linter=eslint --unitTestRunner=jest`
+      );
+
+      // The app pulls an npm dep so the dist must install it; the root override
+      // targets that same dep so it lands in the workspace lockfile's config.
+      // Write the override to both pnpm-workspace.yaml (read by pnpm >=10) and
+      // package.json pnpm.overrides (read by pnpm <10, the corepack default in
+      // CI temp dirs) so it lands whichever pnpm resolves the install.
+      updateFile(
+        'pnpm-workspace.yaml',
+        (content) => `${content}\noverrides:\n  lodash: 4.17.21\n`
+      );
+      updateJson('package.json', (json) => {
+        json.pnpm = {
+          ...json.pnpm,
+          overrides: { ...json.pnpm?.overrides, lodash: '4.17.21' },
+        };
+        return json;
+      });
+      updateJson(`${nodeapp}/package.json`, (json) => {
+        json.dependencies = { ...json.dependencies, lodash: '^4.17.21' };
+        json.nx.targets.build = {
+          ...json.nx.targets.build,
+          options: {
+            ...json.nx.targets.build?.options,
+            generatePackageJson: true,
+          },
+        };
+        return json;
+      });
+      runCommand(`pnpm install`);
+
+      // Precondition: the override is recorded in the workspace lockfile, so the
+      // assertions below exercise the strip rather than passing as a no-op.
+      expect(readFile('pnpm-lock.yaml')).toContain('overrides:');
+
+      runCLI(`build ${nodeapp}`);
+
+      checkFilesExist(
+        `${nodeapp}/dist/package.json`,
+        `${nodeapp}/dist/pnpm-lock.yaml`,
+        `${nodeapp}/dist/pnpm-workspace.yaml`
+      );
+      // The strip dropped the unsatisfiable config from the emitted lockfile.
+      expect(readFile(`${nodeapp}/dist/pnpm-lock.yaml`)).not.toContain(
+        'overrides:'
+      );
+
+      installPrunedDist('pnpm', tmpProjPath(`${nodeapp}/dist`), [
+        { chain: [], deps: ['lodash'] },
+      ]);
+    });
+  });
+
   // app -> lib-a (dependency) -> lib-b (lib-a's optionalDependency) -> lodash.
   // optionalDependencies install in production, so the pruned pnpm lockfile must
   // emit lib-b as a file: directory package and copy-workspace-modules must copy

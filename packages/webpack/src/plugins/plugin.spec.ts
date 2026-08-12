@@ -13,6 +13,7 @@ jest.mock('@nx/js/internal', () => ({
 }));
 
 import { CreateNodesContext } from '@nx/devkit';
+import { PNPM_INSTALL_SETTINGS_INPUTS } from '@nx/js/internal';
 import { createNodesV2 } from './plugin';
 import { join } from 'path';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
@@ -219,6 +220,31 @@ describe('@nx/webpack/plugin', () => {
         ],
       ]
     `);
+  });
+
+  it('adds the pnpm install settings inputs in a pnpm workspace', async () => {
+    tempFs.removeFileSync('package-lock.json');
+    tempFs.createFileSync('pnpm-lock.yaml', 'lockfileVersion: 9.0');
+    mockWebpackConfig({
+      output: {
+        path: 'dist/foo',
+      },
+    });
+
+    const nodes = await createNodesFunction(
+      ['my-app/webpack.config.js'],
+      {
+        buildTargetName: 'build',
+        serveTargetName: 'serve',
+        previewTargetName: 'preview',
+        serveStaticTargetName: 'serve-static',
+      },
+      context
+    );
+
+    expect(nodes[0][1].projects['my-app'].targets.build.inputs).toEqual(
+      expect.arrayContaining(PNPM_INSTALL_SETTINGS_INPUTS)
+    );
   });
 
   function mockWebpackConfig(config: any) {

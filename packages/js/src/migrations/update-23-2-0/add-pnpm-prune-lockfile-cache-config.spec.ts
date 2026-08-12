@@ -683,6 +683,46 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     ]);
   });
 
+  it('adds the root sources to the matching defaults entry, not a later filtered one', async () => {
+    const nxJson = readNxJson(tree);
+    nxJson.targetDefaults = {
+      '@nx/js:prune-lockfile': [
+        {
+          filter: { projects: ['app1'] },
+          inputs: ['matching-input'],
+        },
+        {
+          filter: { projects: ['app2'] },
+          inputs: ['nonmatching-input'],
+        },
+      ],
+    };
+    updateNxJson(tree, nxJson);
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      targets: {
+        'prune-lockfile': {
+          executor: '@nx/js:prune-lockfile',
+          outputs: ['{workspaceRoot}/dist/apps/app1/pnpm-lock.yaml'],
+        },
+      },
+    });
+
+    await update(tree);
+
+    const entries = readNxJson(tree).targetDefaults[
+      '@nx/js:prune-lockfile'
+    ] as any[];
+    // The app2-filtered entry supplies some other target's array; appending
+    // there would leave app1 hashing only `matching-input` at runtime.
+    expect(entries[0].inputs).toEqual([
+      'matching-input',
+      '{workspaceRoot}/pnpm-workspace.yaml',
+      '{workspaceRoot}/package.json',
+    ]);
+    expect(entries[1].inputs).toEqual(['nonmatching-input']);
+  });
+
   it('adds the root sources to the target when it owns inputs and the defaults own outputs', async () => {
     const nxJson = readNxJson(tree);
     nxJson.targetDefaults = {

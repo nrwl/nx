@@ -11,6 +11,7 @@ import {
   createNodesFromFiles,
   CreateNodes,
   detectPackageManager,
+  PackageManager,
   ProjectConfiguration,
   readJsonFile,
   workspaceRoot,
@@ -20,6 +21,7 @@ import {
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
 import {
   isUsingTsSolutionSetup,
+  PNPM_INSTALL_SETTINGS_INPUTS,
   addBuildAndWatchDepsTargets,
 } from '@nx/js/internal';
 import { existsSync, readdirSync } from 'fs';
@@ -65,6 +67,7 @@ export const createNodes: CreateNodes<RspackPluginOptions> = [
             context,
             targetsCache,
             isTsSolutionSetup,
+            packageManager,
             pmc,
             lockFileName
           ),
@@ -89,6 +92,7 @@ async function createNodesInternal(
   context: CreateNodesContext,
   targetsCache: PluginCache<RspackTargets>,
   isTsSolutionSetup: boolean,
+  packageManager: PackageManager,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   lockFileName: string
 ) {
@@ -133,6 +137,7 @@ async function createNodesInternal(
         normalizedOptions,
         context,
         isTsSolutionSetup,
+        packageManager,
         pmc
       )
     );
@@ -157,6 +162,7 @@ async function createRspackTargets(
   options: RspackPluginOptions,
   context: CreateNodesContext,
   isTsSolutionSetup: boolean,
+  packageManager: PackageManager,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<RspackTargets> {
   const namedInputs = getNamedInputs(projectRoot, context);
@@ -198,22 +204,18 @@ async function createRspackTargets(
     },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
-    inputs:
-      'production' in namedInputs
-        ? [
-            'production',
-            '^production',
-            {
-              externalDependencies: ['@rspack/cli'],
-            },
-          ]
-        : [
-            'default',
-            '^default',
-            {
-              externalDependencies: ['@rspack/cli'],
-            },
-          ],
+    inputs: [
+      ...('production' in namedInputs
+        ? ['production', '^production']
+        : ['default', '^default']),
+      {
+        externalDependencies: ['@rspack/cli'],
+      },
+      // The build can emit a pruned pnpm deploy output (NxAppRspackPlugin
+      // with generatePackageJson), whose install settings come from these
+      // otherwise-unhashed root sources.
+      ...(packageManager === 'pnpm' ? PNPM_INSTALL_SETTINGS_INPUTS : []),
+    ],
     outputs,
   };
 

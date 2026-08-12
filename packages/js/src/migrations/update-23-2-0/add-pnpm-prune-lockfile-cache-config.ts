@@ -15,6 +15,16 @@ import {
   mergeTargetConfigurations,
   readTargetDefaultsForTarget,
 } from '@nx/devkit/internal';
+import {
+  DEFAULT_INPUTS,
+  compatibleDefaultsEntries,
+  lastMatchingInputsSupplier,
+  namedFilesets,
+  resolveDefaultsExecutor,
+  selectDefaultsKey,
+  type KeyedTargetRef,
+  type MatchedTargetRef,
+} from '../../utils/target-defaults-matching';
 
 const PRUNE_LOCKFILE_EXECUTOR = '@nx/js:prune-lockfile';
 const PNPM_LOCKFILE = 'pnpm-lock.yaml';
@@ -32,36 +42,11 @@ const PNPM_ROOT_SETTINGS_SOURCES = [
   '{workspaceRoot}/pnpm-workspace.yaml',
   '{workspaceRoot}/package.json',
 ];
-// what nx hashes for a target that declares no `inputs`
-const DEFAULT_INPUTS = ['default', '^default'];
-
-/** Everything the runtime's `targetDefaults` matcher needs to resolve a target. */
-interface DefaultsMatchContext {
-  targetName: string;
-  projectName: string;
-  projectNode: ProjectGraphProjectNode;
-  // the executor as the runtime matcher sees it: the target's own, undefined
-  // when a matching default supplies it (defaults are read pre-merge)
-  matcherExecutor: string | undefined;
-}
-
-interface PruneTargetRef extends DefaultsMatchContext {
-  target: TargetConfiguration;
-}
-
-/**
- * A prune target with the `targetDefaults` key the runtime would resolve for
- * it, carried together so the two cannot fall out of step.
- */
-interface KeyedPruneTargetRef {
-  ref: PruneTargetRef;
-  selectedKey: string | null;
-}
 
 export default async function update(tree: Tree) {
   const nxJson = readNxJson(tree);
   const targetDefaults = nxJson?.targetDefaults;
-  const pruneTargets: PruneTargetRef[] = [];
+  const pruneTargets: MatchedTargetRef[] = [];
   const projects = new Map<string, ProjectConfiguration>();
   const changedProjects = new Set<string>();
   for (const [projectName, project] of getProjects(tree)) {
@@ -83,7 +68,8 @@ export default async function update(tree: Tree) {
               targetName,
               projectName,
               projectNode,
-              targetDefaults
+              targetDefaults,
+              PRUNE_LOCKFILE_EXECUTOR
             ));
       if (executor !== PRUNE_LOCKFILE_EXECUTOR) {
         continue;
@@ -105,9 +91,11 @@ export default async function update(tree: Tree) {
   // runtime applies only the first key that resolves for a target (executor,
   // exact name, then longest glob), so anchor each prune target to its
   // selected key
-  const keyedPruneTargets = pruneTargets.map<KeyedPruneTargetRef>((ref) => ({
+  const keyedPruneTargets = pruneTargets.map<KeyedTargetRef>((ref) => ({
     ref,
-    selectedKey: targetDefaults ? selectDefaultsKey(ref, targetDefaults) : null,
+    selectedKey: targetDefaults
+      ? selectDefaultsKey(ref, targetDefaults, PRUNE_LOCKFILE_EXECUTOR)
+      : null,
   }));
   if (targetDefaults) {
     for (const [key, value] of Object.entries(targetDefaults)) {
@@ -155,10 +143,8 @@ export default async function update(tree: Tree) {
       continue;
     }
     // Otherwise they belong to the entry supplying the array the target
-    // inherits, which is the last one declaring `inputs`.
-    const supplier = [...entries]
-      .reverse()
-      .find((entry) => entry.inputs !== undefined);
+    // inherits, which is the last matching one declaring `inputs`.
+    const supplier = lastMatchingInputsSupplier(ref, selectedKey, entries);
     if (supplier) {
       defaultsChanged =
         addRootSettingsInputs(supplier, alreadyHashed) || defaultsChanged;
@@ -195,35 +181,6 @@ export default async function update(tree: Tree) {
   }
 
   await formatFiles(tree);
-}
-
-/**
- * The `targetDefaults` entries under the selected key that survive nx's own
- * per-entry compatibility guard. Graph construction selects the key, then drops
- * each entry whose identity is incompatible with the target's *original* one and
- * keeps the compatible siblings (`createTargetDefaultsResults` in nx's
- * target-defaults). Reading the key unfiltered instead would let a
- * foreign-executor entry contribute outputs the target never gets.
- */
-function compatibleDefaultsEntries(
-  ref: PruneTargetRef,
-  selectedKey: string | null,
-  targetDefaults: TargetDefaults | undefined
-): TargetDefaultArrayEntry[] {
-  if (!targetDefaults || selectedKey === null) {
-    return [];
-  }
-  const value = targetDefaults[selectedKey];
-  return (Array.isArray(value) ? value : [value]).filter((entry) =>
-    // `isCompatibleTarget` against the target's own executor. Falsy rather than
-    // nullish, matching `resolveCommandSyntacticSugar` and `isCompatibleTarget`,
-    // which read an empty string as no identity at all; an executor-less target
-    // has no identity to clash with, so every entry survives, as it does there.
-    !ref.matcherExecutor
-      ? true
-      : !entry.command &&
-        (!entry.executor || entry.executor === ref.matcherExecutor)
-  );
 }
 
 function declaresPnpmLockfile(
@@ -263,105 +220,6 @@ function addRootSettingsInputs(
   return true;
 }
 
-/** The plain filesets an inputs array names, for a containment check. */
-function namedFilesets(
-  inputs: TargetConfiguration['inputs']
-): ReadonlySet<string> {
-  return new Set(
-    (inputs ?? []).filter((input): input is string => typeof input === 'string')
-  );
-}
-
-/**
- * The executor an executor-less target ends up with after its selected
- * defaults key applies. Each matching entry's identity is resolved like the
- * runtime does at merge time: a `command` payload means nx:run-commands, and
- * a later entry's identity replaces an earlier, incompatible one (the reader's
- * merged view keeps the first executor instead, so it cannot be used here).
- */
-function resolveDefaultsExecutor(
-  targetName: string,
-  projectName: string,
-  projectNode: ProjectGraphProjectNode,
-  targetDefaults: TargetDefaults | undefined
-): string | undefined {
-  if (!targetDefaults) {
-    return undefined;
-  }
-  const ref: DefaultsMatchContext = {
-    targetName,
-    projectName,
-    projectNode,
-    matcherExecutor: undefined,
-  };
-  const key = selectDefaultsKey(ref, targetDefaults);
-  if (key === null) {
-    return undefined;
-  }
-  // like the runtime merge, a later matching entry's identity (a `command`
-  // payload means nx:run-commands) replaces an earlier, incompatible one
-  const value = targetDefaults[key];
-  let executor: string | undefined;
-  for (const entry of Array.isArray(value) ? value : [value]) {
-    if (
-      readTargetDefaultsForTarget(targetName, { [key]: [entry] }, undefined, {
-        projectName,
-        projectNode,
-      }) === null
-    ) {
-      continue;
-    }
-    const identity = entry.command ? 'nx:run-commands' : entry.executor;
-    if (identity) {
-      executor = identity;
-    }
-  }
-  return executor;
-}
-
-/**
- * The `targetDefaults` key nx's runtime would select for this target: keys
- * are tried as the executor key, the exact-name key, then glob keys longest
- * first, and the first whose entries produce a match wins; the rest are
- * shadowed. Resolution per key goes through nx's own reader. Non-matching
- * keys never resolve, so sorting all remaining keys by length stands in for
- * the runtime's glob-only ordering.
- */
-function selectDefaultsKey(
-  ref: DefaultsMatchContext,
-  targetDefaults: TargetDefaults
-): string | null {
-  const resolves = (key: string) =>
-    readTargetDefaultsForTarget(
-      ref.targetName,
-      { [key]: targetDefaults[key] },
-      ref.matcherExecutor,
-      { projectName: ref.projectName, projectNode: ref.projectNode }
-    ) !== null;
-  if (
-    targetDefaults[PRUNE_LOCKFILE_EXECUTOR] &&
-    resolves(PRUNE_LOCKFILE_EXECUTOR)
-  ) {
-    return PRUNE_LOCKFILE_EXECUTOR;
-  }
-  if (
-    targetDefaults[ref.targetName] &&
-    ref.targetName !== PRUNE_LOCKFILE_EXECUTOR &&
-    resolves(ref.targetName)
-  ) {
-    return ref.targetName;
-  }
-  const globCandidates = Object.keys(targetDefaults)
-    .filter((key) => key !== PRUNE_LOCKFILE_EXECUTOR && key !== ref.targetName)
-    .sort((a, b) => b.length - a.length);
-  for (const key of globCandidates) {
-    if (resolves(key)) {
-      return key;
-    }
-  }
-  return null;
-}
-
 /**
  * Whether a `targetDefaults` entry applies to `@nx/js:prune-lockfile` targets,
  * mirroring nx's runtime matching: the entry's `filter` and merge-time
@@ -377,7 +235,7 @@ function selectDefaultsKey(
 function appliesToPruneLockfileTargets(
   key: string,
   config: TargetDefaultArrayEntry,
-  pruneTargets: KeyedPruneTargetRef[]
+  pruneTargets: KeyedTargetRef[]
 ): boolean {
   const filter = config.filter;
   if (filter?.executor && filter.executor !== PRUNE_LOCKFILE_EXECUTOR) {
