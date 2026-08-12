@@ -91,7 +91,7 @@ describe('safeSpawn', () => {
     setPlatform('win32');
 
     expect(() => safeSpawn('C:\\ws\\a\nb\\gradlew.bat', ['tasks'], {})).toThrow(
-      'a line break in the path'
+      'a line break inside it'
     );
     expect(spawn).not.toHaveBeenCalled();
   });
@@ -120,17 +120,24 @@ describe('safeSpawn', () => {
     ]);
   });
 
-  // quoteShellArg lets `%` and line breaks through by design, which is fine for
-  // argv the user typed; these come from nx.json in a cloned repo.
-  it.each([
-    ['a percent sign', '-DtargetNamePrefix=%PATH%'],
-    ['a line break', '-DtargetNamePrefix=a\nwhoami'],
-  ])('refuses %s on Windows', (_label, arg) => {
+  // cmd expands a %VAR%, but the result stays inside the quoted run, so it can
+  // only produce a wrong value — and a repo cannot supply the variable.
+  it('quotes a percent sign in an argument rather than refusing it', () => {
     setPlatform('win32');
 
-    expect(() => safeSpawn('mvnw.cmd', [arg], {})).toThrow(
-      'Cannot safely pass'
-    );
+    safeSpawn('mvnw.cmd', ['-DworkspaceRoot=C:\\ws\\100% done'], {});
+
+    expect((spawn as jest.Mock).mock.calls[0][1]).toEqual([
+      '"-DworkspaceRoot=C:\\ws\\100% done"',
+    ]);
+  });
+
+  it('refuses a line break in an argument on Windows', () => {
+    setPlatform('win32');
+
+    expect(() =>
+      safeSpawn('mvnw.cmd', ['-DtargetNamePrefix=a\nwhoami'], {})
+    ).toThrow('a line break inside it');
     expect(spawn).not.toHaveBeenCalled();
   });
 

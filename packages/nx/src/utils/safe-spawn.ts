@@ -26,12 +26,13 @@ function needsShell(binary: string): boolean {
   return ext === '' || ext === '.cmd' || ext === '.bat';
 }
 
-// A line break ends the command line whatever the quoting, so no value can
-// carry one. `%` is refused for arguments only: `quoteShellArg` leaves it
-// unquoted by design and cmd.exe expands it, which is meaningless in a
-// `-Dkey=value` pair but ordinary in a directory name.
+// A line break ends the command line whatever the quoting, so nothing can carry
+// one. `%` is not refused: cmd.exe expands it, but the result stays inside the
+// quoted run, so it can only produce a wrong value rather than a new command —
+// and a repo cannot supply the variable, because `loadRootEnvFiles` runs from
+// `createOrchestrator`, which takes the finished project graph as an argument.
+// Refusing it instead made a workspace under a `%` path unusable on Windows.
 const LINE_BREAK = /[\r\n]/;
-const UNQUOTABLE_ARG_ON_WINDOWS = /[%\r\n]/;
 
 /**
  * Spawn a process without letting its arguments become shell syntax.
@@ -77,28 +78,23 @@ function quoteBinary(binary: string, shell: boolean): string {
   if (!shell) {
     return binary;
   }
-  if (LINE_BREAK.test(binary)) {
+  return quoteForCmd(binary, `the path ${JSON.stringify(binary)}`);
+}
+
+function quoteForCmd(value: string, described: string): string {
+  if (LINE_BREAK.test(value)) {
     throw new Error(
-      `Cannot run ${JSON.stringify(
-        binary
-      )}: a line break in the path would end the command line before cmd.exe reached the rest of it.`
+      `Cannot pass ${described} to cmd.exe: a line break inside it would end the command line before cmd.exe reached the rest of it.`
     );
   }
-  return quoteShellArg(binary);
+  return quoteShellArg(value);
 }
 
 function quoteArgs(args: readonly string[], shell: boolean): string[] {
   if (!shell) {
     return [...args];
   }
-  return args.map((arg) => {
-    if (UNQUOTABLE_ARG_ON_WINDOWS.test(arg)) {
-      throw new Error(
-        `Cannot safely pass ${JSON.stringify(
-          arg
-        )} to cmd.exe: a percent sign or line break inside it would leave the rest of the command line to be read as commands. Remove it from your Nx configuration and try again.`
-      );
-    }
-    return quoteShellArg(arg);
-  });
+  return args.map((arg) =>
+    quoteForCmd(arg, `the argument ${JSON.stringify(arg)}`)
+  );
 }
