@@ -145,16 +145,33 @@ Add the following targets to your project's `package.json` or `project.json`:
 
 {% /tabs %}
 
-Replace `package-lock.json` in the `outputs` array with `yarn.lock` or `pnpm-lock.yaml` to match your package manager.
-The emitted `pnpm-workspace.yaml` carries build-script approvals (`allowBuilds`), `supportedArchitectures`, and any `patchedDependencies`.
-On pnpm 10 and below it carries none of them, because the emitted `package.json` declares them instead, but the file still ships so that every run overwrites the last one.
-Copied `.patch` files keep their original subpath under `patches/`.
-Resolution-time config such as `pnpm.overrides` is dropped from the emitted manifest, because the pruned lockfile already bakes it into its resolutions.
-A re-resolve inside the deploy directory, such as an install without the lockfile or adding a dependency there, loses those pins.
+Replace `package-lock.json` in the `outputs` array with `yarn.lock` or `pnpm-lock.yaml` to match
+your package manager.
 
-For pnpm, the complete `prune-lockfile` target declares the extra artifacts in `outputs` so a cached run restores them, and the workspace root settings files in `inputs` so revoking a build-script approval does not replay a cached output that still grants it.
-The approvals and `supportedArchitectures` live only in those two files, and nothing records them in the lockfile.
-The `runtime` input hashes the pnpm major, which decides whether the settings land in the emitted `pnpm-workspace.yaml` or the emitted `package.json` when the root manifest has no `packageManager` field:
+{% aside type="note" title="Available since Nx 23.2" %}
+Nx 23.2 and later emit `pnpm-workspace.yaml` and, when needed, `patches/` and `local_path_modules/`.
+On older versions, `prune-lockfile` emits only the pruned `package.json` and the pruned lockfile, so
+the pnpm-specific guidance below does not apply.
+{% /aside %}
+
+The emitted `pnpm-workspace.yaml` carries build-script approvals (`allowBuilds`),
+`supportedArchitectures`, and any `patchedDependencies`.
+On pnpm 10 and below it carries none of them, because the emitted `package.json` declares them
+instead, but the file still ships so that every run overwrites the last one.
+Copied `.patch` files keep their original subpath under `patches/`.
+Resolution-time config such as `pnpm.overrides` is dropped from the emitted manifest, because the
+pruned lockfile already bakes it into its resolutions.
+A re-resolve inside the deploy directory, such as an install without the lockfile or adding a
+dependency there, loses those pins.
+
+For pnpm, the complete `prune-lockfile` target declares the extra artifacts in `outputs` so a cached
+run restores them, and the workspace root settings files in `inputs` so revoking a build-script
+approval does not replay a cached output that still grants it.
+The approvals and `supportedArchitectures` live only in those two files, and nothing records them in
+the lockfile.
+The `runtime` input hashes the pnpm major, which decides whether the settings land in the emitted
+`pnpm-workspace.yaml` or the emitted `package.json` when the root manifest has no `packageManager`
+field:
 
 ```json
 // apps/my-app/project.json
@@ -187,16 +204,21 @@ The `runtime` input hashes the pnpm major, which decides whether the settings la
 ```
 
 {% aside type="caution" title="Installing the output with --ignore-workspace" %}
-`pnpm install --ignore-workspace` skips a `pnpm-workspace.yaml` sitting beside the output, so the settings in it never apply.
-On pnpm 11 and above, a workspace using `pnpm patch` therefore gets an output that installs cleanly without the flag and fails with it, because the lockfile declares patches the install no longer sees:
+`pnpm install --ignore-workspace` skips a `pnpm-workspace.yaml` sitting beside the output, so the
+settings in it never apply.
+On pnpm 11 and above, a workspace using `pnpm patch` therefore gets an output that installs cleanly
+without the flag and fails with it, because the lockfile declares patches the install no longer
+sees:
 
 ```text
 ERR_PNPM_LOCKFILE_CONFIG_MISMATCH  Cannot proceed with the frozen installation. The current "patchedDependencies" configuration doesn't match the value found in the lockfile
 ```
 
 Install that output without the flag.
-The emitted file declares an empty `packages` list, which already stops pnpm from treating a parent directory as a workspace.
-A workspace with no approvals, architectures, or patches to carry gets a file holding only that empty list, so the flag has nothing to skip there.
+The emitted file declares an empty `packages` list, which already stops pnpm from treating a parent
+directory as a workspace.
+A workspace with no approvals, architectures, or patches to carry gets a file holding only that
+empty list, so the flag has nothing to skip there.
 {% /aside %}
 
 Then run:
