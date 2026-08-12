@@ -161,6 +161,7 @@ export {
   createProjectGraphAndSourceMapsAsync,
   createProjectRootMappings,
   createRunManyDynamicOutputRenderer,
+  createTargetDefaultsResults,
   createTaskId,
   daemonClient,
   deduceDefaultBase,

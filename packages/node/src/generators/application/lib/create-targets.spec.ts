@@ -1,4 +1,5 @@
 import { getPruneTargets } from './create-targets';
+import { PNPM_MAJOR_RUNTIME_INPUT } from '@nx/js/internal';
 
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual('@nx/devkit'),
@@ -75,6 +76,7 @@ describe('getPruneTargets', () => {
       '^default',
       '{workspaceRoot}/pnpm-workspace.yaml',
       '{workspaceRoot}/package.json',
+      PNPM_MAJOR_RUNTIME_INPUT,
     ]);
   });
 
