@@ -3,7 +3,11 @@ import { HttpsProxyAgent } from 'https-proxy-agent';
 import * as http from 'node:http';
 import * as https from 'node:https';
 import { connect } from 'node:net';
-import { resolveProxyForUrl, type ProxyResolution } from './proxy';
+import {
+  resolveProxyForUrl,
+  withoutCredentials,
+  type ProxyResolution,
+} from './proxy';
 import type { Schema } from './schema';
 
 const DEFAULT_TIMEOUT = 60_000;
@@ -78,7 +82,7 @@ function findServerProblem(server: Server): string | undefined {
     try {
       url = new URL(server.url);
     } catch {
-      return `received an invalid "url": ${server.url}.`;
+      return `received an invalid "url": ${withoutCredentials(server.url)}.`;
     }
     // Only the address the wait starts from is checked here. A redirect can
     // cross to a protocol with its own proxy variable, which the probe reports
@@ -104,7 +108,8 @@ function isValidPort(port: number): boolean {
 }
 
 async function waitForServer(server: Server, timeout: number): Promise<void> {
-  const label = server.url ?? `port ${server.port}`;
+  const label =
+    server.url != null ? redactedHref(server.url) : `port ${server.port}`;
   const deadline = Date.now() + timeout;
   const schedule = [...RETRY_SCHEDULE];
   let lastObserved: string | undefined;
@@ -204,9 +209,9 @@ async function probeUrl(
   }
   return (
     response.failure ??
-    `${response.href} responded with status ${response.status}${viaProxy(
-      response.via
-    )}`
+    `${redactedHref(response.href)} responded with status ${
+      response.status
+    }${viaProxy(response.via)}`
   );
 }
 
@@ -214,6 +219,18 @@ async function probeUrl(
 // request words cannot drift apart.
 function viaProxy(via: string | undefined): string {
   return via ? ` via the proxy at ${via}` : '';
+}
+
+// Probe failures reach the task log, so a URL's credentials come off before it
+// enters one. Callers only pass URLs that already round-tripped through `URL`.
+function redactedHref(href: string): string {
+  const url = new URL(href);
+  if (!url.username && !url.password) {
+    return href;
+  }
+  url.username = '***';
+  url.password = '';
+  return url.href;
 }
 
 interface UrlResponse {
@@ -237,7 +254,7 @@ function requestStatus(
   // between hops or inside the last one.
   const redirectFailure =
     redirects > 0
-      ? `${url.href} redirected ${redirects} times without resolving`
+      ? `${redactedHref(url.href)} redirected ${redirects} times without resolving`
       : undefined;
   const remaining = deadline - Date.now();
   if (remaining <= 0) {
@@ -255,12 +272,13 @@ function requestStatus(
     return Promise.resolve({
       href: url.href,
       status: 0,
-      failure: `${url.href} ${unusableProxyProblem(resolution)}`,
+      failure: `${redactedHref(url.href)} ${unusableProxyProblem(resolution)}`,
     });
   }
 
   const via = resolution.kind === 'proxy' ? resolution.proxy.host : undefined;
-  const describe = (detail: string) => `${url.href} ${detail}${viaProxy(via)}`;
+  const describe = (detail: string) =>
+    `${redactedHref(url.href)} ${detail}${viaProxy(via)}`;
 
   return new Promise((resolve) => {
     const requestOptions: https.RequestOptions = {
@@ -330,11 +348,11 @@ function requestStatus(
             href: url.href,
             status: 0,
             // Node's header parser passes tab and the C1 controls through, and
-            // the value reaches a terminal from here.
+            // the value reaches a terminal from here. Unparseable for URL, so
+            // credentials come off with the string-based treatment.
             failure: describe(
-              `redirected to an invalid location "${location.replace(
-                /[\x00-\x1f\x7f-\x9f]/g,
-                ''
+              `redirected to an invalid location "${withoutCredentials(
+                location.replace(/[\x00-\x1f\x7f-\x9f]/g, '')
               )}"`
             ),
           });
@@ -352,7 +370,9 @@ function requestStatus(
             href: url.href,
             status: 0,
             failure: describe(
-              `redirected to "${redirectUrl.href}", which is not an http or https url`
+              `redirected to "${redactedHref(
+                redirectUrl.href
+              )}", which is not an http or https url`
             ),
           });
           return;

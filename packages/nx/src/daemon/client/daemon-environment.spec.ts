@@ -1,5 +1,6 @@
 import {
   applyDaemonEnvFromClient,
+  getDaemonClientEnvGeneration,
   getDaemonEnv,
   hashDaemonClientEnv,
 } from './daemon-environment';
@@ -31,6 +32,19 @@ describe('daemon environment', () => {
       const changed = applyDaemonEnvFromClient({});
       expect(process.env.NX_LOAD_DOT_ENV_FILES).toBeUndefined();
       expect(changed).toContain('NX_LOAD_DOT_ENV_FILES');
+    });
+  });
+
+  describe('getDaemonClientEnvGeneration', () => {
+    it('moves only when an apply changes the env', () => {
+      const base = getDaemonClientEnvGeneration();
+      const withProbe = { ...process.env, GEN_PROBE: 'a' };
+      applyDaemonEnvFromClient(withProbe);
+      expect(getDaemonClientEnvGeneration()).toBe(base + 1);
+      // The same env again changes nothing, so the count must hold: a pass
+      // spanning only no-op applies must still be allowed to persist.
+      applyDaemonEnvFromClient(withProbe);
+      expect(getDaemonClientEnvGeneration()).toBe(base + 1);
     });
   });
 

@@ -1326,6 +1326,64 @@ describe('@nx/playwright/plugin', () => {
     }
   });
 
+  it('serializes the atomized tasks when only the CI chain adds an uncovered server', async () => {
+    const originalCiExtra = process.env.CI_EXTRA;
+    const originalWorkspaceRoot = workspaceRoot;
+    delete process.env.CI_EXTRA;
+    setWorkspaceRoot(tempFs.tempDir);
+    installFreshConfigEval();
+
+    try {
+      await mockPlaywrightConfig(
+        tempFs,
+        `module.exports = {
+  testDir: 'tests',
+  webServer: [
+    {
+      command: 'npx nx run app1:serve',
+      url: 'http://localhost:4200',
+      reuseExistingServer: true,
+    },
+    ...(process.env.CI_EXTRA
+      ? [{ command: 'node worker.js', reuseExistingServer: true }]
+      : []),
+  ],
+};`
+      );
+      // Both chains resolve the same inferred server and address, so they
+      // share the gate; only the CI chain sees the extra uncovered server.
+      await tempFs.createFiles({
+        'tests/run-me.spec.ts': '',
+        '.env.e2e-ci': 'CI_EXTRA=1\n',
+      });
+
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        context
+      );
+      const { targets } = results[0][1].projects['.'];
+
+      expect(targets['e2e--wait-for-webserver']).toBeDefined();
+      expect(targets['e2e-ci--wait-for-webserver']).toBeUndefined();
+      expect(targets['e2e'].parallelism).toBeUndefined();
+      // The uncovered worker server races parallel atomized runs, so they
+      // must serialize even though the gate is shared.
+      expect(targets['e2e-ci--tests/run-me.spec.ts'].parallelism).toBe(false);
+      expect(targets['e2e-ci--tests/run-me.spec.ts'].dependsOn).toContainEqual({
+        target: 'e2e--wait-for-webserver',
+      });
+    } finally {
+      _setChildEval(null);
+      setWorkspaceRoot(originalWorkspaceRoot);
+      if (originalCiExtra === undefined) {
+        delete process.env.CI_EXTRA;
+      } else {
+        process.env.CI_EXTRA = originalCiExtra;
+      }
+    }
+  });
+
   it('clears the inherited parallelism when only the CI chain resolves serve tasks', async () => {
     const originalServeCommand = process.env.SERVE_COMMAND;
     const originalWorkspaceRoot = workspaceRoot;
@@ -1667,6 +1725,56 @@ module.exports = {};`,
       } else {
         process.env.BOOT_FLAG = originalBootFlag;
       }
+    }
+  });
+
+  it('does not persist a pass during which the daemon swapped the env away and back', async () => {
+    const originalWorkspaceRoot = workspaceRoot;
+    setWorkspaceRoot(tempFs.tempDir);
+    process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+    const listTestFiles = jest.spyOn(
+      devkitInternal,
+      'getFilesInDirectoryUsingContext'
+    );
+    // Another client's env landing on the worker mid-pass and being restored
+    // before the pass ends reproduces the pass-start digest, so only the
+    // application count can reveal that entries were built under the interim
+    // env. Simulated through the count alone: it moves between the pass-start
+    // read and the write-guard read.
+    const envGeneration = jest.spyOn(
+      devkitInternal,
+      'getDaemonClientEnvGeneration'
+    );
+    envGeneration.mockReturnValueOnce(0);
+    envGeneration.mockReturnValue(1);
+
+    try {
+      await tempFs.createFiles({
+        'apps/e2e/project.json': '{}',
+        'apps/e2e/playwright.config.js': 'module.exports = {}',
+      });
+
+      const run = () =>
+        createNodesFunction(
+          ['apps/e2e/playwright.config.js'],
+          { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+          context
+        );
+
+      await run();
+      const rebuildsAfterFirst = listTestFiles.mock.calls.length;
+
+      // The env (and so the cache key) matches the first pass, so only the
+      // skipped persist can force this re-evaluation.
+      await run();
+      expect(listTestFiles.mock.calls.length).toBeGreaterThan(
+        rebuildsAfterFirst
+      );
+    } finally {
+      listTestFiles.mockRestore();
+      envGeneration.mockRestore();
+      setWorkspaceRoot(originalWorkspaceRoot);
+      process.env.NX_CACHE_PROJECT_GRAPH = 'false';
     }
   });
 
@@ -2263,6 +2371,38 @@ module.exports = {};`,
       expect(warn).toHaveBeenCalledWith(
         'warn',
         expect.stringContaining('npx nx run app1:serve --port=4200')
+      );
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('warns for a versioned nx invocation that cannot be inferred', async () => {
+    const warn = jest
+      .spyOn(devkitInternal, 'emitPluginWorkerLog')
+      .mockImplementation(() => {});
+    try {
+      await mockPlaywrightConfig(tempFs, {
+        testDir: 'tests',
+        webServer: {
+          // `nx@latest` is still an Nx invocation, so its skip warrants the
+          // same warning as a bare `nx` one.
+          command: 'npx nx@latest run app1:serve --port=4200',
+          port: 4200,
+          reuseExistingServer: true,
+        },
+      });
+      await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+      await createNodesFunction(
+        ['playwright.config.js'],
+        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        context
+      );
+
+      expect(warn).toHaveBeenCalledWith(
+        'warn',
+        expect.stringContaining('npx nx@latest run app1:serve --port=4200')
       );
     } finally {
       warn.mockRestore();

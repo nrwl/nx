@@ -3,6 +3,7 @@ import {
   emitPluginWorkerLog,
   loadConfigFile,
   getNamedInputs,
+  getDaemonClientEnvGeneration,
   getGraphTimeDotEnvForTask,
   getEnvPathsForTask,
   hashDaemonClientEnv,
@@ -114,6 +115,7 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
     // daemon swaps per client). Key the cache on the daemon-allowed env set so
     // an ambient change re-evaluates instead of serving stale targets.
     const ambientEnvHash = hashDaemonClientEnv();
+    const ambientEnvGeneration = getDaemonClientEnvGeneration();
     // The workspace-root dotenv candidates are the same for every config, so
     // hash each file at most once per pass rather than once per config.
     const dotEnvFileHashes = new Map<string, string | null>();
@@ -166,16 +168,16 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
       return results;
     } finally {
       // The daemon can apply another client's env mid-pass (worker message
-      // dispatch is unserialized), so entries built after the change would be
-      // keyed under the stale pass-start digest. Drop the write; the next
-      // pass recomputes under a coherent key.
-      if (hashDaemonClientEnv() === ambientEnvHash) {
+      // dispatch is unserialized) and a config can mutate the env while
+      // evaluating; entries built after either change are keyed under the
+      // stale pass-start digest, so drop the write and let the next pass
+      // rebuild under a coherent key. The generation catches an env that
+      // changed and changed back mid-pass, which the digest misses.
+      if (
+        getDaemonClientEnvGeneration() === ambientEnvGeneration &&
+        hashDaemonClientEnv() === ambientEnvHash
+      ) {
         pluginCache.writeToDisk();
-      } else if (process.env.NX_VERBOSE_LOGGING === 'true') {
-        emitPluginWorkerLog(
-          'log',
-          '@nx/playwright: the ambient environment changed while inferring targets; skipping the disk cache write for this pass.'
-        );
       }
     }
   },
@@ -419,12 +421,10 @@ async function buildPlaywrightTargets(
       ),
     };
 
-    // The atomized tasks inherit the e2e chain's dependsOn and parallelism.
-    // When the CI chain resolves differently it has its own gate (or none), so
-    // re-derive both from it.
-    if (!chainsShareGate) {
-      applyChainDependsOn(ciBaseTargetConfig, ciChain, ciReadyTargetName);
-    }
+    // Unconditionally: the chains can differ in ways the shared-gate check
+    // deliberately ignores (an extra uncovered server flips parallelism), and
+    // re-deriving is a no-op when they match.
+    applyChainDependsOn(ciBaseTargetConfig, ciChain, ciReadyTargetName);
 
     const groupName = 'E2E (CI)';
     metadata = { targetGroups: { [groupName]: [] } };
@@ -834,7 +834,10 @@ async function resolveChainWebserver(
 // Two chains share a gate only when both the readiness servers and the serve
 // command tasks (which become the gate's and the tasks' dependsOn) match.
 function sameChain(a: ChainWebserver, b: ChainWebserver): boolean {
-  return JSON.stringify(a) === JSON.stringify(b);
+  return (
+    JSON.stringify(a.commandTasks) === JSON.stringify(b.commandTasks) &&
+    JSON.stringify(a.readinessServers) === JSON.stringify(b.readinessServers)
+  );
 }
 
 function buildWaitForWebserverTarget(
@@ -907,7 +910,7 @@ function getWebserverCommandTasks(
       uncoveredServers++;
       // A command that never invokes nx (`npm run start`, `vite`) was never
       // meant to map to a task, so its skip warrants no warning.
-      if (/(^|\s)nx\s/.test(server.command)) {
+      if (/(^|\s)nx(@\S+)?\s/.test(server.command)) {
         const warnedKey = `${configFilePath}|${server.command}`;
         if (!warnedUnparseableCommands.has(warnedKey)) {
           warnedUnparseableCommands.add(warnedKey);

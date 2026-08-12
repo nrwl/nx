@@ -130,7 +130,7 @@ function readEnv(name: string): { variable: string; value: string } {
 
 // A rejected value is echoed back so it can be recognized in the environment,
 // and it reaches the task log, so the credentials come off first.
-function withoutCredentials(value: string): string {
+export function withoutCredentials(value: string): string {
   const at = value.lastIndexOf('@');
   return at === -1 ? value : `***@${value.slice(at + 1)}`;
 }

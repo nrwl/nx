@@ -3,6 +3,12 @@ import { join } from 'node:path';
 
 import { TempFs } from '../../internal-testing-utils/temp-fs';
 
+// Loading the module under test pulls in the daemon server (via ./watcher),
+// which registers a process-global PerformanceObserver. That observer outlives
+// each test's isolated module registry, so a measure emitted by the last real
+// compute would dispatch after teardown and its lazy requires would throw.
+jest.mock('../../utils/perf-logging', () => ({}));
+
 describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () => {
   let fs: TempFs;
 
@@ -278,6 +284,81 @@ describe('isKnownWorkspaceFile', () => {
       scheduleProjectGraphRecomputation(['libs/foo/src/other.ts'], [], []);
       await getCachedSerializedProjectGraphPromise();
       expect(isKnownWorkspaceFile('libs/foo/src/other.ts')).toBe(true);
+    });
+  });
+});
+
+describe('invalidateGraphCache', () => {
+  let fs: TempFs;
+
+  beforeEach(() => {
+    fs = new TempFs('pgir-invalidate');
+  });
+
+  afterEach(() => {
+    fs.cleanup();
+  });
+
+  // The generation bump is what chains an in-flight compute to a successor:
+  // clearing the cached promise alone lets the compute pass its chainToLatest
+  // checks and hand its result — built under the pre-invalidation input — to
+  // whoever already awaits it, with no successor ever started.
+  it('chains an in-flight compute to a successor instead of serving its result', async () => {
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({}),
+      'package.json': JSON.stringify({ name: 'root' }),
+    });
+
+    await jest.isolateModulesAsync(async () => {
+      // The plugin-loader mocks jest.doMock installs in the tests above are
+      // registry-wide and outlive their isolated module graphs.
+      jest.dontMock('../../project-graph/plugins/get-plugins');
+      const { setWorkspaceRoot } = require('../../utils/workspace-root');
+      setWorkspaceRoot(fs.tempDir);
+
+      // Park the first compute inside its config retrieval, after it claimed
+      // its generation — the window an env-carrying client message can land
+      // in. The mock controls timing, not logic; the real retrieval runs.
+      let releaseFirstRetrieve: () => void;
+      const firstRetrieveGate = new Promise<void>((resolve) => {
+        releaseFirstRetrieve = resolve;
+      });
+      let retrieveCallCount = 0;
+      jest.doMock('../../project-graph/utils/retrieve-workspace-files', () => {
+        const actual = jest.requireActual(
+          '../../project-graph/utils/retrieve-workspace-files'
+        );
+        return {
+          ...actual,
+          retrieveProjectConfigurations: async (...args: unknown[]) => {
+            retrieveCallCount++;
+            if (retrieveCallCount === 1) {
+              await firstRetrieveGate;
+            }
+            return actual.retrieveProjectConfigurations(...args);
+          },
+        };
+      });
+
+      const {
+        getCachedSerializedProjectGraphPromise,
+        invalidateGraphCache,
+      } = require('./project-graph-incremental-recomputation');
+
+      const first = getCachedSerializedProjectGraphPromise();
+      while (retrieveCallCount === 0) {
+        await new Promise((r) => setImmediate(r));
+      }
+
+      invalidateGraphCache();
+      releaseFirstRetrieve!();
+
+      const result = await first;
+      expect(result.error).toBeNull();
+      expect(result.projectGraph).toBeDefined();
+      // The successor's retrieval, proving the parked compute discarded its
+      // own result and chained instead of committing.
+      expect(retrieveCallCount).toBeGreaterThanOrEqual(2);
     });
   });
 });

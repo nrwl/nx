@@ -257,6 +257,26 @@ describe('waitForWebserverExecutor', () => {
     expect(message).not.toContain('\u009b');
   });
 
+  it('redacts credentials from an unparseable redirect location', async () => {
+    const server = createHttpServer((_req, res) => {
+      res.statusCode = 302;
+      res.setHeader('location', 'http://user:secret@[]');
+      res.end();
+    });
+    await listen(server, 0);
+    const { port } = server.address() as AddressInfo;
+
+    const result = await waitForWebserverExecutor(
+      { servers: [{ url: `http://127.0.0.1:${port}` }], timeout: 300 },
+      context
+    );
+
+    expect(result).toEqual({ success: false });
+    const [message] = errorSpy.mock.calls[0];
+    expect(message).toContain('redirected to an invalid location "***@[]"');
+    expect(message).not.toContain('secret');
+  });
+
   it('does not treat a redirect to a non-http(s) location as ready', async () => {
     const server = createHttpServer((_req, res) => {
       res.statusCode = 302;
@@ -462,6 +482,30 @@ describe('waitForWebserverExecutor', () => {
 
     expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('responded with status 503')
+    );
+  });
+
+  it('redacts url credentials from the failure it reports', async () => {
+    const server = createHttpServer((_req, res) => {
+      res.statusCode = 503;
+      res.end();
+    });
+    await listen(server, 0);
+    const { port } = server.address() as AddressInfo;
+
+    await waitForWebserverExecutor(
+      {
+        servers: [{ url: `http://user:secret@127.0.0.1:${port}` }],
+        timeout: 1000,
+      },
+      context
+    );
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining(`http://***@127.0.0.1:${port}`)
+    );
+    expect(errorSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining('secret')
     );
   });
 

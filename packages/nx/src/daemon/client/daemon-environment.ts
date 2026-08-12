@@ -178,6 +178,17 @@ export function getDaemonEnv() {
   return Object.assign(env, DAEMON_ENV_REQUIRED_SETTINGS);
 }
 
+let clientEnvGeneration = 0;
+
+/**
+ * Count of client env applications this process has absorbed. Digest equality
+ * alone cannot guard a cache write: an env that changed and changed back
+ * mid-pass yields the pass-start digest again, while the count still moves.
+ */
+export function getDaemonClientEnvGeneration(): number {
+  return clientEnvGeneration;
+}
+
 /**
  * Without the deletion step, a var set by one client (e.g.
  * `NX_PREFER_NODE_STRIP_TYPES=true` or `JAVA_TOOL_OPTIONS=...` for a single
@@ -204,6 +215,9 @@ export function applyDaemonEnvFromClient(newEnv: NodeJS.ProcessEnv): string[] {
       delete process.env[key];
       changedKeys.push(key);
     }
+  }
+  if (changedKeys.length > 0) {
+    clientEnvGeneration++;
   }
   return changedKeys;
 }

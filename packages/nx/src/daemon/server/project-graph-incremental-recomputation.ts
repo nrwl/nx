@@ -415,29 +415,26 @@ async function processCollectedUpdatedAndDeletedFiles(
   }
 }
 
+/**
+ * Discards the cached graph when a graph input outside the file watcher's view
+ * (e.g. the daemon env) changes. Clearing the cached promise makes the next
+ * request trigger a fresh computation; the generation bump marks any in-flight
+ * compute stale so it chains to that successor instead of committing, because
+ * a compute passing its chainToLatest checks would serve a graph built under
+ * the old input to whoever already awaits it.
+ */
 export function invalidateGraphCache() {
-  // Clear the cached promise so the next request triggers a fresh computation.
   // We intentionally do NOT call getCachedSerializedProjectGraphPromise() here
   // because assigning its return Promise to the module-level variable causes a
   // deadlock: the async function resumes, sees the variable is non-null (pointing
   // at its own Promise), takes the "reuse" branch, and awaits itself forever.
   cachedSerializedProjectGraphPromise = null;
-}
-
-/**
- * Marks any in-flight recomputation stale so it chains to a successor instead
- * of committing. Pair with invalidateGraphCache when a graph input outside the
- * file watcher's view (e.g. the daemon env) changes: clearing the cached
- * promise alone leaves an in-flight compute passing its chainToLatest checks
- * and serving a graph built under the old input to whoever already awaits it.
- */
-export function markInFlightRecomputationsStale() {
   ++recomputationGeneration;
 }
 
 // isKnownWorkspaceFile's membership set, derived lazily from the map object it
-// was built from; every commit assigns a fresh `fileMapWithFiles`, so an
-// identity change is what invalidates it.
+// was built from; every `fileMapWithFiles` write clears it, so a replaced map
+// generation is not retained through the memo.
 let knownWorkspaceFiles: Set<string> | undefined;
 let knownWorkspaceFilesSource: typeof fileMapWithFiles;
 
@@ -548,6 +545,8 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     // chainToLatest above without touching `fileMapWithFiles`, so they
     // can't clobber a newer compute's write.
     fileMapWithFiles = fileMapUpdate.fileMap;
+    knownWorkspaceFiles = undefined;
+    knownWorkspaceFilesSource = undefined;
     storedWorkspaceConfigHash = fileMapUpdate.configHash;
     if (fileMapUpdate.knownExternalNodes) {
       knownExternalNodes = fileMapUpdate.knownExternalNodes;
@@ -719,6 +718,8 @@ async function createAndSerializeProjectGraph({
 async function resetInternalState() {
   cachedSerializedProjectGraphPromise = undefined;
   fileMapWithFiles = undefined;
+  knownWorkspaceFiles = undefined;
+  knownWorkspaceFilesSource = undefined;
   currentProjectFileMapCache = undefined;
   currentProjectGraph = undefined;
   currentSourceMaps = undefined;
