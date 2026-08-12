@@ -657,6 +657,12 @@ only with `docker exec` against that container:
   - `docker exec nx-review-pr-<NUMBER> grep -rn "<pattern>" /work/nx/<subdir>`
   - `docker exec nx-review-pr-<NUMBER> find /work/nx -name '<glob>'`
   - `docker exec nx-review-pr-<NUMBER> sed -n '<a>,<b>p' /work/nx/<path>`
+- To compare base against HEAD, use git — both paths are worktrees of one repo, so `refs/review/base`
+  resolves from either. Never compare them with a recursive filesystem `diff`: both trees are fully
+  installed, so `diff -r` walks two complete `node_modules` trees for minutes, and piping through
+  `grep -v node_modules` does not help because the walk is the cost.
+  - `docker exec nx-review-pr-<NUMBER> git -C /work/nx diff --name-only refs/review/base..HEAD`
+  - `docker exec nx-review-pr-<NUMBER> git -C /work/nx diff refs/review/base..HEAD -- <path>`
 - NEVER run PR code on the host. Any command that executes the checkout (install, build, nx, tests,
   the reproduction) MUST go through
   `docker exec nx-review-pr-<NUMBER> bash -lc 'export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"; cd /work/nx && <cmd>'`.
