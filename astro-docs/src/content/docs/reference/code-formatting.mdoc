@@ -95,13 +95,11 @@ NX_SKIP_FORMAT=true nx g @nx/react:app my-app
 
 ## Choose a formatter at workspace creation
 
-`create-nx-workspace` asks which formatter you want when you pick a stack (React, Vue, Angular, or
-Node) or the default TypeScript monorepo, and the workspace uses package manager workspaces, which
-is the default.
-A stack preset or the TypeScript monorepo, run with `--no-workspaces`, uses Prettier without
-asking, and `ts-standalone` asks which formatter you want.
-The `apps` and `npm` presets set up no formatter unless you pass `--formatter`, and neither does
-`@nx/workspace:new` run directly.
+`create-nx-workspace` asks which formatter you want on every preset that sets one up: a stack
+(React, Vue, Angular, or Node), the TypeScript monorepo, and `ts-standalone`.
+Whether the workspace uses package manager workspaces makes no difference.
+The `apps` and `npm` presets generate no project, so they set up no formatter unless you pass
+`--formatter`, and neither does `@nx/workspace:new` run directly.
 Pass `--formatter` on any path to choose explicitly:
 
 ```shell
