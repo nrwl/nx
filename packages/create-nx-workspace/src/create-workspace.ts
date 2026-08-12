@@ -250,9 +250,8 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     await setupCI(directory, ciProvider, packageManager);
   }
 
-  // Format once now that dependencies are on disk: the passes inside
-  // `@nx/workspace:new` run before the install, when no formatter resolves yet.
-  // Non-fatal - the workspace is usable unformatted.
+  // Only now are dependencies on disk: the passes inside `@nx/workspace:new`
+  // run before the install, when no formatter resolves yet.
   if (skipFormatRequested) {
     process.env.NX_SKIP_FORMAT = 'true';
   } else {
@@ -263,9 +262,8 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       // changed files against.
       await execAndWait(`${pmc.exec} nx format --all`, directory);
     } catch (e) {
-      // `execAndWait` points at a log file only when the command produced no
-      // output at all - in which case that file holds just "\n" and is deleted
-      // below. Say what happened instead.
+      // `execAndWait` names a log file only when there was no output at all,
+      // and that file is deleted below - so report the exit code instead.
       const reason =
         e?.logFile && e?.message?.includes(e.logFile)
           ? `The command failed with exit code ${

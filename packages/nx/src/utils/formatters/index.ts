@@ -8,37 +8,14 @@ import { isUsingPrettier, isUsingPrettierInTree } from './prettier';
 import { logger } from '../logger';
 
 /**
- * A formatter Nx can actually dispatch to. "No formatter configured" is the
- * absence of one, so detection returns `FormatterType | null` rather than
- * folding null into this union - dispatch sites then handle only formatters
- * they can actually run, and the caller has to deal with "none" once, up front.
- *
- * The repo builds with `strict: false`, so a `switch` that merely omits a
- * member is not an error by itself. Adding a member here is therefore made to
- * fail compilation at all seven sites that can be made to: `check()` and
- * `write()` in `command-line/format/format.ts`, `formatDetectedFiles` in
- * `generators/internal-utils/format-changed-files.ts` and devkit's
- * `formatFiles` each carry a `never` assertion in their `default` arm, and
- * `format.ts`'s binary-resolution table, `createTreeWithEmptyWorkspace`'s
- * config-file table and `@nx/js`'s `formatterSetups` are keyed by this type.
- * The two outside `packages/nx` - devkit's `formatFiles` and `@nx/js`'s
- * `formatterSetups` - read the type from nx's *emitted* declarations, so they
- * only fail once `packages/nx` has been rebuilt.
- *
- * What still needs visiting by hand: the `formatterType === 'prettier'`
- * ternary and `if` in `format.ts`, and `nx init`'s formatter pass - all
- * `if`/`else` shapes with no exhaustiveness to assert.
- * Also unguarded: `@nx/js:init` installs a formatter by its member name here,
- * so a formatter whose npm package differs from its name needs that call site
- * changed too.
+ * Adding a member here does NOT reliably break compilation: the repo builds
+ * with `strict: false`, so a `switch` that omits one is not an error. The
+ * `never` assertions and type-keyed tables that do catch it live outside
+ * `packages/nx` in part, and those only fail once `packages/nx` is rebuilt.
  */
 export type FormatterType = 'prettier' | 'oxfmt';
 
-// Both configured is a real workspace state, not an error: oxfmt wins so that
-// adding an oxfmt config to a prettier repo is honoured as the newer, more
-// specific intent. It is worth saying out loud once, because the two disagree
-// on quoting, width and `sortPackageJson`, and every generator formats through
-// this. Once per process - detection runs on all 200+ `formatFiles` call sites.
+// Once per process: detection runs on every one of 200+ `formatFiles` call sites.
 let warnedBothConfigured = false;
 
 function warnBothConfigured(): void {
@@ -56,8 +33,7 @@ export function resetFormatterWarningsForTesting(): void {
 
 export function detectFormatter(root: string): FormatterType | null {
   if (isUsingOxfmt(root)) {
-    // Guarded by the flag first so the extra prettier lookup happens at most
-    // once per process rather than on every generator.
+    // Flag first: the extra prettier lookup then costs once, not per generator.
     if (!warnedBothConfigured && isUsingPrettier(root)) {
       warnBothConfigured();
     }

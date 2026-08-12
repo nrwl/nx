@@ -13,14 +13,10 @@ type FormatterSetup = {
 };
 
 /**
- * Keyed by nx's own `FormatterType` and deliberately not `Partial`, so adding a
- * formatter there fails to compile here until it is set up. This is one of the
- * guarded sites listed on `FormatterType` itself, and one of the two outside
- * `packages/nx` - both read the type from nx's emitted declarations, so they
- * fail only once `packages/nx` has been rebuilt.
- *
- * The guard has to be structural: the repo builds with `strict: false`, so an
- * untyped lookup would silently yield `any` rather than flag a missing member.
+ * Not `Partial`, so a new `FormatterType` member fails to compile here until it
+ * is set up - but only after `packages/nx` is rebuilt, since the type comes
+ * from its emitted declarations. The guard must stay structural: under
+ * `strict: false` an untyped lookup yields `any` instead of an error.
  *
  * The key doubles as the npm package name; callers install by it.
  */

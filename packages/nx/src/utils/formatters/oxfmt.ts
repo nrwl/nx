@@ -182,18 +182,13 @@ export function checkWithOxfmt(patterns: string[]): Promise<string[]> {
 let cachedOxfmtModule: Promise<{ format: OxfmtFormat }> | undefined;
 
 /**
- * Loads oxfmt's programmatic API, which ships only as ESM.
+ * `require` first: Node resolves ESM-only through it (20.19+/22.12+), and the
+ * bare specifier is what lets jest swap in a CommonJS mock. The fallback reaches
+ * `import()` via `new Function` so TypeScript cannot downlevel it to `require`.
  *
- * `require` is tried first: Node resolves an ESM-only package through `require`
- * on its own (20.19+/22.12+), and going through the bare package name is what
- * lets jest intercept it with a CommonJS mock. Older runtimes throw there, so
- * the fallback imports the entry point directly - `import()` is reached through
- * `new Function` so TypeScript cannot downlevel it back to a `require`.
- *
- * The two paths resolve differently and deliberately so: the bare `require`
- * resolves from nx's own directory chain, while the fallback (like
- * `getOxfmtBinPath`) resolves from the workspace's install, because nx does not
- * depend on oxfmt itself.
+ * The two resolve from different places on purpose - `require` from nx's own
+ * chain, the fallback from the workspace's install, since nx does not depend
+ * on oxfmt.
  */
 function loadOxfmtModule(): Promise<{ format: OxfmtFormat }> {
   if (!cachedOxfmtModule) {
@@ -231,28 +226,17 @@ function isJsonOxfmtConfig(name: string): boolean {
 }
 
 /**
- * `register` is required lazily so that reading a JSON config does not pull in
- * the TypeScript transpiler machinery.
+ * `register` is required lazily so a JSON config does not pull in the
+ * transpiler. `loadTsFile` bubbles the ESM-redispatch codes for a caller like
+ * this one to dispatch to `import()`.
  *
- * `loadTsFile` deliberately does not handle the ESM-redispatch codes - its own
- * JSDoc says they "bubble unchanged … so async-aware callers can dispatch to
- * `import()`". This is that caller, and a config using top-level await cannot be
- * `require`d on any runtime.
+ * The retry is deliberately not gated on those codes: the same config surfaces
+ * as `ERR_REQUIRE_ASYNC_MODULE` or as `exports is not defined` depending on
+ * whether swc/ts-node registered, and both mean "this is ESM, import it".
+ * Only `import()` ever evaluates the config, so its error is thrown with the
+ * `require` one as its cause rather than either being chosen.
  *
- * The retry is not gated on those codes. Depending on whether swc/ts-node ends
- * up registered, the same config can surface as `ERR_REQUIRE_ASYNC_MODULE` or
- * as a transpile artifact like `exports is not defined` - both mean "this is
- * ESM, import it".
- *
- * Neither error is discardable when the retry also fails. The `require` attempt
- * may have failed before the module body was evaluated (the redispatch codes) or
- * during transpilation, and only `import()` ever actually evaluated the config -
- * so the `import()` error is thrown with the `require` one attached as its cause
- * rather than either being chosen over the other.
- *
- * No unit test pins this: for a `.ts` config both paths surface the same
- * transpile error, and the case where they differ (`.mts` with top-level await)
- * is unreachable from jest. `create-nx-workspace-formatter.test.ts` covers it.
+ * Covered by `create-nx-workspace-formatter.test.ts`; unreachable from jest.
  */
 async function loadTsOxfmtConfig(configPath: string): Promise<unknown> {
   try {
@@ -708,30 +692,16 @@ function overrideOptionsForFile(
 }
 
 /**
- * oxfmt's programmatic API takes options directly rather than discovering a
- * config file, so the workspace's config is read here. A config the generator
- * just created lives only in the tree, so it is passed in as `seedConfig` and
- * takes precedence over whatever is on disk. Nx only ever generates the JSON
- * form, so a seed is parsed rather than executed; a seed in any other form
- * falls through to the config on disk rather than formatting with oxfmt's bare
- * defaults.
+ * Reimplements oxfmt's own config resolution because `format()` discovers
+ * nothing. Tracked at https://github.com/oxc-project/oxc/issues/19922.
  *
- * A config that has to be executed to be understood is loaded the same way Nx
- * loads any other config file, through the workspace's TypeScript transpiler.
- * There is no JavaScript branch: oxfmt does not discover `oxfmt.config.js`.
+ * The nearest config at or above the file's directory wins and *replaces* the
+ * one above rather than merging - measured against oxfmt 0.60.0, so merging
+ * here would format differently from `nx format:write`.
  *
- * Nested configs are discovered the way the CLI does: the nearest config at or
- * above the file's own directory wins, and it *replaces* the one above rather
- * than merging with it. Measured against oxfmt 0.60.0 - a nested config setting
- * only `printWidth` leaves `singleQuote` at oxfmt's default, not at the root
- * config's value - so merging would format differently from `nx format:write`.
- *
- * All of this exists because oxfmt's npm package ships the formatter without a
- * resolver: `format()` takes options and discovers nothing, so config lookup,
- * `.editorconfig` and ignore handling are reimplemented here. Prettier's path
- * needs none of it because `prettier.resolveConfig` does the same job per file.
- * Tracked upstream at https://github.com/oxc-project/oxc/issues/19922 - if that
- * lands, most of this collapses into one call.
+ * `seedConfig` is a root config that exists only in the tree, so it outranks
+ * disk. Only the JSON form is parsed; any other form falls through to disk.
+ * There is no JavaScript branch - oxfmt does not discover `oxfmt.config.js`.
  */
 async function resolveOxfmtConfigInDir(
   dir: string,
@@ -914,19 +884,12 @@ function findOxfmtConfigInBatch(
 }
 
 /**
- * Formats a batch of in-memory files through oxfmt's programmatic API.
+ * Nothing is written to disk: staging files inside the workspace would race the
+ * daemon's watcher and the project graph mid-generator.
  *
- * The files exist only in a virtual tree, and formatting them must not touch
- * the workspace: staging copies of project files (project.json, package.json)
- * inside a workspace races the daemon's file watcher and the project graph
- * while a generator is running. oxfmt's `format` takes the content directly and
- * only reads the file name to pick a parser, so nothing is written to disk.
- *
- * Returns the formatted content keyed by the path the caller passed in. A file
- * is absent from the map when oxfmt has no parser for it, when an ignore file
- * covers it, or when it is already formatted - callers leave those untouched.
- * A file oxfmt cannot parse fails only itself: the rest of the batch is still
- * applied, and every failure is reported through `errors`, one entry per file.
+ * A path is absent from the result when oxfmt has no parser for it, an ignore
+ * file covers it, or it is already formatted. One unparseable file fails only
+ * itself; the rest of the batch still applies.
  */
 export async function formatFilesWithOxfmt(
   files: { path: string; content: string }[],

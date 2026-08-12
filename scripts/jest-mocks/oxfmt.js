@@ -1,17 +1,10 @@
-// CJS wrapper for oxfmt to avoid ESM issues in Jest - oxfmt is ESM-only.
+// CJS wrapper: oxfmt is ESM-only, and jest's per-file VM context rejects the
+// second load with "Provided module is not an instance of Module". Running the
+// binary sidesteps that and still exercises real formatting.
 //
-// Jest keeps a VM context per test file while Node keeps one module registry
-// per process, so the second test file to load oxfmt is handed the first one's
-// module and rejects it with "Provided module is not an instance of Module".
-// Running the binary sidesteps that: it is the same formatter, so the tests
-// still exercise real formatting rather than a stub.
-//
-// It is not, however, the same *entry point*. Production calls oxfmt's
-// programmatic `format()`, which accepts only `FormatConfig`; this wrapper
-// hands the options to the CLI, which also understands the config-file-only
-// keys (`overrides`, `ignorePatterns`). Anything that relies on that
-// difference has to be covered outside this suite - the mock is more capable
-// than the API it stands in for.
+// Caveat: this hands options to the CLI, which honours the config-file-only
+// keys (`overrides`, `ignorePatterns`) that production's `format()` rejects -
+// so the mock is more capable than the API it stands in for.
 const { execFileSync } = require('child_process');
 const { mkdtempSync, rmSync, writeFileSync } = require('fs');
 const { tmpdir } = require('os');
