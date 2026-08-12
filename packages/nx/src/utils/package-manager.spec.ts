@@ -862,7 +862,7 @@ describe('package-manager', () => {
       const execSyncMock = jest
         .spyOn(childProcess, 'execSync')
         .mockImplementation((command: string) =>
-          command.startsWith('npm "config"')
+          command.startsWith('npm config')
             ? ('https://from-shell.example.com/\n' as any)
             : ('10.0.0\n' as any)
         );
@@ -875,8 +875,8 @@ describe('package-manager', () => {
       expect(
         execSyncMock.mock.calls
           .map(([command]) => command as string)
-          .filter((command) => command.startsWith('npm "config"'))
-      ).toEqual(['npm "config" "get" "@nx:registry"']);
+          .filter((command) => command.startsWith('npm config'))
+      ).toEqual(['npm config get @nx:registry']);
     });
   });
 
@@ -1089,7 +1089,7 @@ describe('package-manager', () => {
 
       expect(execMock).not.toHaveBeenCalled();
       const [cmd] = shellMock.mock.calls[0];
-      expect(cmd).toBe('npm "view" "nx@>=0.0.0" "--json"');
+      expect(cmd).toBe('npm view "nx@>=0.0.0" --json');
     });
 
     it('should run from the workspace root and apply the registry overlay to the spawn env', async () => {

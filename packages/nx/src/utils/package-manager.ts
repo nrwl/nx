@@ -41,6 +41,7 @@ import { PackageJson, readModulePackageJson } from './package-json';
 // Type-only so it stays erased: a value import would defeat the deferred
 // require in createRegistrySpawnContext.
 import type { NpmConfigEnv } from './registry-config';
+import { quoteShellArg } from './shell-quoting';
 import { workspaceRoot } from './workspace-root';
 
 const execAsync = promisify(exec);
@@ -54,8 +55,8 @@ const execFileAsync = promisify(execFile);
  * `exec`, with every argument quoted, because Node refuses to execFile the
  * package manager's `.cmd` shim without a shell.
  *
- * That quoting is the whole defence on Windows, so `args` must stay free of
- * embedded double quotes: callers pass package names, versions and fixed flags.
+ * That quoting is the whole defence on Windows, so it goes through
+ * quoteShellArg, which throws on the one argument it cannot make safe.
  */
 function execPackageManagerAsync(
   pm: string,
@@ -63,19 +64,19 @@ function execPackageManagerAsync(
   options: { cwd: string; windowsHide: boolean; env: NodeJS.ProcessEnv }
 ): Promise<{ stdout: string; stderr: string }> {
   if (process.platform === 'win32') {
-    return execAsync([pm, ...args.map((arg) => `"${arg}"`)].join(' '), options);
+    return execAsync([pm, ...args].map(quoteShellArg).join(' '), options);
   }
   return execFileAsync(pm, args, options);
 }
 
-/** Same split, and the same quote-free precondition, for a blocking caller. */
+/** Same split, and the same quoting, for a blocking caller. */
 function execPackageManagerSync(
   pm: string,
   args: string[],
   options: ExecSyncOptionsWithStringEncoding
 ): string {
   if (process.platform === 'win32') {
-    return execSync([pm, ...args.map((arg) => `"${arg}"`)].join(' '), options);
+    return execSync([pm, ...args].map(quoteShellArg).join(' '), options);
   }
   return execFileSync(pm, args, options);
 }
