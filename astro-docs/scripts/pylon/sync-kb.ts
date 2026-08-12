@@ -204,13 +204,26 @@ async function main(): Promise<void> {
   const token = process.env.PYLON_API_TOKEN;
   if (!token) throw new Error('PYLON_API_TOKEN is not set');
 
+  const sources = readSourceArticles(options);
+
+  // Conversion happens before anything is written, so --strict can reject a
+  // degraded article rather than publish it and report the damage afterwards.
+  const warnings = sources.flatMap((source) =>
+    source.warnings.map((warning) => `${source.slug}: ${warning}`)
+  );
+  if (options.strict && warnings.length) {
+    throw new Error(
+      `${warnings.length} conversion warning(s), nothing written:\n  ` +
+        warnings.join('\n  ')
+    );
+  }
+
   const client = new PylonClient({ token, knowledgeBaseId: KNOWLEDGE_BASE_ID });
   // The API requires an author on create. The token belongs to an Nx service
   // identity rather than a person, and Pylon does not render the author on the
   // published article, so there is nothing to attribute elsewhere.
   const authorUserId = await client.getAuthenticatedUserId();
 
-  const sources = readSourceArticles(options);
   const allRemote = await client.listArticles();
   const remote = allRemote.filter(
     (article) => article.collection_id === COLLECTION_ID
@@ -228,14 +241,9 @@ async function main(): Promise<void> {
   const created: string[] = [];
   const updated: string[] = [];
   const skipped: string[] = [];
-  const warnings: string[] = [];
   let uploads = 0;
 
   for (const source of sources) {
-    for (const warning of source.warnings) {
-      warnings.push(`${source.slug}: ${warning}`);
-    }
-
     const resolved = await resolveAssets(source, uploaded, client, options);
     uploads += resolved.uploads;
 
@@ -327,10 +335,6 @@ async function main(): Promise<void> {
   }
   if (warnings.length) {
     console.log(`\nwarnings (${warnings.length}):\n  ${warnings.join('\n  ')}`);
-  }
-
-  if (options.strict && warnings.length) {
-    throw new Error(`${warnings.length} warning(s) with --strict`);
   }
 }
 

@@ -4,6 +4,7 @@
  *
  * Usage:
  *   tsx scripts/pylon/render-preview.ts                 # census + warnings
+ *   tsx scripts/pylon/render-preview.ts --strict        # fail on any warning
  *   tsx scripts/pylon/render-preview.ts <slug>          # print one article
  *   tsx scripts/pylon/render-preview.ts <slug> --out=f  # write it to a file
  */
@@ -84,4 +85,13 @@ if (only) {
       ? `\nwarnings (${allWarnings.length}):\n  ${allWarnings.join('\n  ')}`
       : '\nno warnings'
   );
+
+  // An unsupported tag or a missing image degrades the synced article, so CI
+  // should reject it here rather than let the nightly publish it.
+  if (args.includes('--strict') && allWarnings.length) {
+    console.error(
+      `\n${allWarnings.length} conversion warning(s) with --strict`
+    );
+    process.exit(1);
+  }
 }

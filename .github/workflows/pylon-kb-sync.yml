@@ -52,7 +52,7 @@ jobs:
 
       - name: Convert every article
         working-directory: astro-docs
-        run: pnpm exec tsx scripts/pylon/render-preview.ts
+        run: pnpm exec tsx scripts/pylon/render-preview.ts --strict
 
   sync:
     # Never on a pull request. The token can delete every article, so it lives
@@ -104,14 +104,16 @@ jobs:
 
   report:
     if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name == 'schedule' }}
-    needs: sync
+    # Both jobs, because a failing preview leaves sync skipped rather than
+    # failed, and a skipped result would notify nobody.
+    needs: [preview, sync]
     runs-on: ubuntu-latest
     name: Report status
     steps:
       - name: Send notification
         uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
         with:
-          status: ${{ needs.sync.result }}
+          status: ${{ (contains(needs.*.result, 'failure') || contains(needs.*.result, 'skipped') || contains(needs.*.result, 'cancelled')) && 'failure' || 'success' }}
           message_format: '{emoji} Pylon KB sync has {status_message}'
           notification_title: '{workflow}'
           footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
