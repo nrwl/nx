@@ -7,16 +7,33 @@ use std::{
 
 use super::{
     cache::CachedResult,
-    errors::{HttpRemoteCacheErrors, convert_response_to_error, report_request_error},
+    errors::{HttpRemoteCacheErrors, convert_request_error, convert_response_to_error},
 };
 use flate2::Compression;
 use reqwest::{Client, ClientBuilder, StatusCode, header};
+use std::time::Duration;
 use tar::{Archive, Builder};
 use tracing::trace;
 
+/// How long to wait for the TCP connect and TLS handshake.
+const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
+
+/// Budget for a download. `read_timeout` resets on every successful read once a
+/// response body is streaming, so this bounds idle time rather than total size.
+const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(30);
+
+/// Budget for an upload. Deliberately generous: until response headers arrive,
+/// `read_timeout` has nothing to reset against, so for a PUT it behaves as a
+/// deadline covering "send the whole body and hear back". Sizing it for the
+/// largest realistic artifact is what keeps a slow-but-healthy upload alive.
+const UPLOAD_TIMEOUT: Duration = Duration::from_secs(600);
+
 #[napi]
 pub struct HttpRemoteCache {
-    client: Client,
+    /// Separate clients because `read_timeout` is only configurable per-client,
+    /// and uploads need a far larger budget than downloads.
+    download_client: Client,
+    upload_client: Client,
     url: String,
 }
 
@@ -39,27 +56,45 @@ impl HttpRemoteCache {
             header::HeaderValue::from_static("application/octet-stream"),
         );
 
-        // Keep the system resolver here. Enabling reqwest's `hickory-dns`
-        // feature for the telemetry client flips the default for every client
-        // in the crate, and this URL is user-supplied: it may resolve through
-        // NSS rather than plain DNS (mDNS, LDAP, split-horizon corporate
-        // setups) which hickory does not consult. Only the telemetry endpoint
-        // is a fixed public hostname where that trade is safe.
-        let mut client_builder = ClientBuilder::new()
-            .no_hickory_dns()
-            .default_headers(headers);
+        // Opt-out for servers whose legitimate transfers outrun our budgets.
+        // Without timeouts a server that accepts a connection and never replies
+        // parks the request forever, which stalls the whole run after every
+        // task has already finished.
+        let timeouts_disabled = env::var("NX_SELF_HOSTED_REMOTE_CACHE_NO_TIMEOUTS").is_ok();
 
-        let env_accept_unauthorized = env::var("NODE_TLS_REJECT_UNAUTHORIZED");
-        if let Ok(env_accept_unauthorized) = env_accept_unauthorized {
-            if env_accept_unauthorized == "0" {
-                client_builder = client_builder.danger_accept_invalid_certs(true);
+        let build_client = |read_timeout: Duration| {
+            // Keep the system resolver here. Enabling reqwest's `hickory-dns`
+            // feature for the telemetry client flips the default for every
+            // client in the crate, and this URL is user-supplied: it may
+            // resolve through NSS rather than plain DNS (mDNS, LDAP,
+            // split-horizon corporate setups) which hickory does not consult.
+            // Only the telemetry endpoint is a fixed public hostname where
+            // that trade is safe.
+            let mut client_builder = ClientBuilder::new()
+                .no_hickory_dns()
+                .default_headers(headers.clone());
+
+            if !timeouts_disabled {
+                client_builder = client_builder
+                    .connect_timeout(CONNECT_TIMEOUT)
+                    .read_timeout(read_timeout);
             }
-        }
+
+            let env_accept_unauthorized = env::var("NODE_TLS_REJECT_UNAUTHORIZED");
+            if let Ok(env_accept_unauthorized) = env_accept_unauthorized {
+                if env_accept_unauthorized == "0" {
+                    client_builder = client_builder.danger_accept_invalid_certs(true);
+                }
+            }
+
+            client_builder
+                .build()
+                .expect("Failed to create HTTP client")
+        };
 
         HttpRemoteCache {
-            client: client_builder
-                .build()
-                .expect("Failed to create HTTP client"),
+            download_client: build_client(DOWNLOAD_TIMEOUT),
+            upload_client: build_client(UPLOAD_TIMEOUT),
             url: env::var("NX_SELF_HOSTED_REMOTE_CACHE_SERVER")
                 .expect("NX_REMOTE_CACHE_URL must be set"),
         }
@@ -76,28 +111,30 @@ impl HttpRemoteCache {
 
         let url: String = format!("{}/v1/cache/{}", self.url, hash);
         let response = self
-            .client
+            .download_client
             .get(&url)
             .header("Accept", "application/octet-stream")
             .send()
             .await;
-        if let Ok(resp) = response {
-            trace!("HTTP response status: {}", resp.status());
-            let status = resp.status();
+        match response {
+            Ok(resp) => {
+                trace!("HTTP response status: {}", resp.status());
+                let status = resp.status();
 
-            match status {
-                StatusCode::OK => {
-                    Ok(Some(
-                        // response is an application/octet-stream containing a tarball
-                        // we need to extract the tarball and return the path to the extracted files
-                        Self::download_and_extract_from_result(resp, cache_directory, hash).await?,
-                    ))
+                match status {
+                    StatusCode::OK => {
+                        Ok(Some(
+                            // response is an application/octet-stream containing a tarball
+                            // we need to extract the tarball and return the path to the extracted files
+                            Self::download_and_extract_from_result(resp, cache_directory, hash)
+                                .await?,
+                        ))
+                    }
+                    StatusCode::NOT_FOUND => Ok(None),
+                    _ => Err(convert_response_to_error(resp).await.into()),
                 }
-                StatusCode::NOT_FOUND => Ok(None),
-                _ => Err(convert_response_to_error(resp).await.into()),
             }
-        } else {
-            Err(HttpRemoteCacheErrors::RequestError(response.unwrap_err().to_string()).into())
+            Err(e) => Err(convert_request_error(&e, false).into()),
         }
     }
 
@@ -164,16 +201,12 @@ impl HttpRemoteCache {
 
         let url: String = format!("{}/v1/cache/{}", self.url, hash);
         let response = self
-            .client
+            .upload_client
             .put(&url)
             .body(buffer) // Convert the bytes to a Vec<u8> for the request body
             .send()
             .await
-            .map_err(|e| {
-                napi::Error::from(HttpRemoteCacheErrors::RequestError(report_request_error(
-                    &e,
-                )))
-            })?;
+            .map_err(|e| napi::Error::from(convert_request_error(&e, true)))?;
 
         match response.status() {
             StatusCode::OK => Ok(true),
@@ -190,11 +223,12 @@ impl HttpRemoteCache {
         response: reqwest::Response,
         cache_directory: String,
         hash: String,
-    ) -> anyhow::Result<CachedResult> {
-        let content = response
-            .bytes()
-            .await
-            .map_err(|e| anyhow::anyhow!("Failed to read remote cache response body: {}", e))?;
+    ) -> Result<CachedResult, HttpRemoteCacheErrors> {
+        let content = response.bytes().await.map_err(|e| {
+            // The response body stopped mid-stream. Attributable to the server,
+            // and safe to rebuild from, so it reads as damage rather than malice.
+            convert_request_error(&e, false)
+        })?;
         trace!("Downloaded {} bytes from remote cache", content.len());
         Self::extract_tarball(content.as_ref(), &cache_directory, &hash)
     }
@@ -203,16 +237,26 @@ impl HttpRemoteCache {
     ///
     /// Uses `tar`'s `unpack_in` so a malicious cache server can't escape
     /// `output_dir` via `..`, absolute paths, or symlinks.
+    ///
+    /// Failures are split by what they imply about the server. An archive we
+    /// cannot parse is `CorruptArtifact` — most often a partial upload the
+    /// server committed anyway — and the caller may fall back to rebuilding.
+    /// An archive that tries to write outside `output_dir` is `UnsafeArtifact`
+    /// and always stops the run, because a cache server behaving that way is
+    /// not something to silently work around.
     fn extract_tarball(
         content: &[u8],
         cache_directory: &str,
         hash: &str,
-    ) -> anyhow::Result<CachedResult> {
+    ) -> Result<CachedResult, HttpRemoteCacheErrors> {
         let tar = flate2::read::GzDecoder::new(content);
         let mut archive = Archive::new(tar);
-        let entries = archive
-            .entries() // Get the entries in the archive
-            .map_err(|_| anyhow::anyhow!("Failed to read entries from tarball"))?;
+        let entries = archive.entries().map_err(|e| {
+            HttpRemoteCacheErrors::CorruptArtifact(format!(
+                "failed to read entries from tarball: {}",
+                e
+            ))
+        })?;
 
         let mut code: Option<i16> = None;
         let mut terminal_output: Option<String> = None;
@@ -220,33 +264,66 @@ impl HttpRemoteCache {
 
         let output_dir = Path::new(cache_directory).join(hash);
         // `unpack_in` canonicalizes `output_dir`, so it must exist beforehand.
-        fs::create_dir_all(&output_dir)?;
+        fs::create_dir_all(&output_dir).map_err(|e| {
+            HttpRemoteCacheErrors::LocalCacheError(format!(
+                "failed to create {}: {}",
+                output_dir.display(),
+                e
+            ))
+        })?;
 
         // Extract the archive to the specified cache directory
         for entry in entries {
-            let mut entry =
-                entry.map_err(|_| anyhow::anyhow!("Failed to read entry from tarball"))?;
+            let mut entry = entry.map_err(|e| {
+                HttpRemoteCacheErrors::CorruptArtifact(format!(
+                    "failed to read entry from tarball: {}",
+                    e
+                ))
+            })?;
 
             let entry_path = entry
                 .path()
-                .map_err(|e| anyhow::anyhow!("Invalid entry path in cache artifact: {}", e))?
+                .map_err(|e| {
+                    HttpRemoteCacheErrors::CorruptArtifact(format!(
+                        "invalid entry path in cache artifact: {}",
+                        e
+                    ))
+                })?
                 .to_string_lossy()
                 .into_owned();
 
             if entry_path == "code" {
-                let code_file_bytes = entry.bytes().collect::<Result<Vec<u8>, _>>()?;
+                let code_file_bytes =
+                    entry.bytes().collect::<Result<Vec<u8>, _>>().map_err(|e| {
+                        HttpRemoteCacheErrors::CorruptArtifact(format!(
+                            "failed to read exit code from cache artifact: {}",
+                            e
+                        ))
+                    })?;
                 // The exit code is stored as a 4-byte big-endian integer (see `store`).
-                let code_bytes: [u8; 4] = code_file_bytes
-                    .as_slice()
-                    .try_into()
-                    .map_err(|_| anyhow::anyhow!("Invalid exit code in cache artifact"))?;
+                let code_bytes: [u8; 4] = code_file_bytes.as_slice().try_into().map_err(|_| {
+                    HttpRemoteCacheErrors::CorruptArtifact(
+                        "invalid exit code in cache artifact".to_string(),
+                    )
+                })?;
                 code = Some(u32::from_be_bytes(code_bytes) as i16);
                 trace!("Retrieved exit code from cache: {}", code.unwrap());
             } else if entry_path == "terminalOutput" {
-                let terminal_output_bytes = entry.bytes().collect::<Result<Vec<u8>, _>>()?;
+                let terminal_output_bytes =
+                    entry.bytes().collect::<Result<Vec<u8>, _>>().map_err(|e| {
+                        HttpRemoteCacheErrors::CorruptArtifact(format!(
+                            "failed to read terminal output from cache artifact: {}",
+                            e
+                        ))
+                    })?;
                 let terminal_output_size = terminal_output_bytes.len();
 
-                terminal_output = Some(String::from_utf8(terminal_output_bytes)?);
+                terminal_output = Some(String::from_utf8(terminal_output_bytes).map_err(|e| {
+                    HttpRemoteCacheErrors::CorruptArtifact(format!(
+                        "terminal output in cache artifact is not valid UTF-8: {}",
+                        e
+                    ))
+                })?);
                 size += terminal_output_size as i64;
 
                 trace!(
@@ -262,14 +339,17 @@ impl HttpRemoteCache {
                 let is_file = entry.header().entry_type().is_file();
                 let entry_size = entry.size();
                 // Reject entries `unpack_in` skips (`..`) or refuses (symlink escape).
-                let unpacked = entry
-                    .unpack_in(&output_dir)
-                    .map_err(|e| anyhow::anyhow!("Failed to unpack entry: {}", e))?;
+                let unpacked = entry.unpack_in(&output_dir).map_err(|e| {
+                    HttpRemoteCacheErrors::UnsafeArtifact(format!(
+                        "failed to unpack entry {}: {}",
+                        entry_path, e
+                    ))
+                })?;
                 if !unpacked {
-                    return Err(anyhow::anyhow!(
-                        "Refusing to extract cache entry with unsafe path: {}",
+                    return Err(HttpRemoteCacheErrors::UnsafeArtifact(format!(
+                        "refusing to extract cache entry with unsafe path: {}",
                         entry_path
-                    ));
+                    )));
                 }
                 if is_file {
                     size += entry_size as i64;
@@ -279,7 +359,11 @@ impl HttpRemoteCache {
 
         trace!("Extracted tarball to {}", output_dir.display());
 
-        let code = code.ok_or_else(|| anyhow::anyhow!("Exit code not found in cache artifact"))?;
+        let code = code.ok_or_else(|| {
+            HttpRemoteCacheErrors::CorruptArtifact(
+                "exit code not found in cache artifact".to_string(),
+            )
+        })?;
         Ok(CachedResult {
             terminal_output,
             code,
@@ -349,7 +433,11 @@ mod test {
 
         let result = HttpRemoteCache::extract_tarball(&tar, cache_dir.to_str().unwrap(), "123");
 
-        assert!(result.is_err(), "a `..` entry must be rejected");
+        assert!(
+            matches!(result, Err(HttpRemoteCacheErrors::UnsafeArtifact(_))),
+            "a `..` entry must be rejected as unsafe, not treated as damage: {:?}",
+            result.err()
+        );
         assert!(
             !temp.join("escape.txt").exists(),
             "extraction must not write outside the cache directory"
@@ -408,8 +496,9 @@ mod test {
         let result = HttpRemoteCache::extract_tarball(&tar, cache_dir.to_str().unwrap(), "123");
 
         assert!(
-            result.is_err(),
-            "writing through a symlink must be rejected"
+            matches!(result, Err(HttpRemoteCacheErrors::UnsafeArtifact(_))),
+            "writing through a symlink must be rejected as unsafe: {:?}",
+            result.err()
         );
         assert!(
             !outside.join("pwned.txt").exists(),
@@ -464,8 +553,9 @@ mod test {
         let result = HttpRemoteCache::extract_tarball(&tar, cache_dir.to_str().unwrap(), "123");
 
         assert!(
-            result.is_err(),
-            "a hardlink escaping the cache dir must be rejected"
+            matches!(result, Err(HttpRemoteCacheErrors::UnsafeArtifact(_))),
+            "a hardlink escaping the cache dir must be rejected as unsafe: {:?}",
+            result.err()
         );
     }
 
@@ -478,8 +568,9 @@ mod test {
         let result = HttpRemoteCache::extract_tarball(&tar, cache_dir.to_str().unwrap(), "123");
 
         assert!(
-            result.is_err(),
-            "a short code entry must be rejected, not panic"
+            matches!(result, Err(HttpRemoteCacheErrors::CorruptArtifact(_))),
+            "a short code entry is damage, so the run can still fall back: {:?}",
+            result.err()
         );
     }
 
@@ -492,8 +583,71 @@ mod test {
         let result = HttpRemoteCache::extract_tarball(&tar, cache_dir.to_str().unwrap(), "123");
 
         assert!(
-            result.is_err(),
-            "a missing code entry must be rejected, not panic"
+            matches!(result, Err(HttpRemoteCacheErrors::CorruptArtifact(_))),
+            "a missing code entry is damage, so the run can still fall back: {:?}",
+            result.err()
+        );
+    }
+
+    /// The fatal/recoverable split is what `cache.ts` keys off, so assert it
+    /// directly rather than only through the extraction tests above.
+    #[test]
+    fn damage_is_recoverable_and_malice_is_fatal() {
+        let recoverable = [
+            HttpRemoteCacheErrors::RequestError("reset".into()),
+            HttpRemoteCacheErrors::DownloadTimeout("stalled".into()),
+            HttpRemoteCacheErrors::UploadTimeout("stalled".into()),
+            HttpRemoteCacheErrors::CorruptArtifact("truncated".into()),
+        ];
+        for err in recoverable {
+            assert!(
+                !err.is_fatal(),
+                "{} should degrade to a cache miss",
+                err.as_ref()
+            );
+        }
+
+        let fatal = [
+            HttpRemoteCacheErrors::Unauthorized("bad token".into()),
+            HttpRemoteCacheErrors::Misconfigured("wrong endpoint".into()),
+            HttpRemoteCacheErrors::UnsafeArtifact("../escape".into()),
+            HttpRemoteCacheErrors::LocalCacheError("disk full".into()),
+        ];
+        for err in fatal {
+            assert!(err.is_fatal(), "{} should stop the run", err.as_ref());
+        }
+    }
+
+    /// A stalled server is the failure mode behind #36640: it accepts the
+    /// connection and then goes silent. Without a read timeout this blocks
+    /// forever; with one it must come back as a recoverable timeout.
+    #[tokio::test]
+    async fn retrieve_times_out_against_a_stalled_server() {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let addr = listener.local_addr().unwrap();
+        // Accept and hold the connection open without ever writing a response.
+        std::thread::spawn(move || {
+            let held: Vec<_> = listener.incoming().filter_map(Result::ok).take(1).collect();
+            std::thread::sleep(Duration::from_secs(30));
+            drop(held);
+        });
+
+        let client = ClientBuilder::new()
+            .connect_timeout(CONNECT_TIMEOUT)
+            .read_timeout(Duration::from_millis(250))
+            .build()
+            .unwrap();
+
+        let err = client
+            .get(format!("http://{}/v1/cache/abc", addr))
+            .send()
+            .await
+            .expect_err("a silent server must not block indefinitely");
+
+        assert!(err.is_timeout(), "expected a timeout, got {:?}", err);
+        assert!(
+            !convert_request_error(&err, false).is_fatal(),
+            "a stalled cache server should degrade to a miss, not fail the run"
         );
     }
 
