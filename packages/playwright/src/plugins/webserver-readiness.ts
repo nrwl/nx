@@ -113,9 +113,14 @@ function isWorkerMessage(
   if (typeof message !== 'object' || message === null) {
     return false;
   }
-  const candidate = message as { type?: unknown; webServers?: unknown };
+  const candidate = message as {
+    type?: unknown;
+    error?: unknown;
+    webServers?: unknown;
+  };
   return (
-    candidate.type === 'webserver-config-error' ||
+    (candidate.type === 'webserver-config-error' &&
+      typeof candidate.error === 'string') ||
     (candidate.type === 'webserver-config-result' &&
       Array.isArray(candidate.webServers))
   );

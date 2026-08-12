@@ -1,11 +1,8 @@
 import { getPluginsIfLoadedOrLoading } from '../../project-graph/plugins/get-plugins';
 import { applyDaemonEnvFromClient } from '../client/daemon-environment';
 import { serverLogger } from '../logger';
-import { handleClientEnv } from './handle-client-env';
-import {
-  invalidateGraphCache,
-  markInFlightRecomputationsStale,
-} from './project-graph-incremental-recomputation';
+import { handleClientEnv, _setEnvForwardTimeoutMs } from './handle-client-env';
+import { invalidateGraphCache } from './project-graph-incremental-recomputation';
 
 jest.mock('../client/daemon-environment', () => ({
   applyDaemonEnvFromClient: jest.fn(),
@@ -15,7 +12,6 @@ jest.mock('../../project-graph/plugins/get-plugins', () => ({
 }));
 jest.mock('./project-graph-incremental-recomputation', () => ({
   invalidateGraphCache: jest.fn(),
-  markInFlightRecomputationsStale: jest.fn(),
 }));
 jest.mock('../logger', () => ({
   serverLogger: { log: jest.fn() },
@@ -23,6 +19,7 @@ jest.mock('../logger', () => ({
 
 describe('handleClientEnv', () => {
   const env = { FOO: 'bar' };
+  const flushMicrotasks = () => new Promise(setImmediate);
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -38,7 +35,6 @@ describe('handleClientEnv', () => {
     expect(applyDaemonEnvFromClient).toHaveBeenCalledWith(env);
     expect(getPluginsIfLoadedOrLoading).not.toHaveBeenCalled();
     expect(invalidateGraphCache).not.toHaveBeenCalled();
-    expect(markInFlightRecomputationsStale).not.toHaveBeenCalled();
   });
 
   it('awaits worker forwarding before discarding the cached graph', async () => {
@@ -53,15 +49,65 @@ describe('handleClientEnv', () => {
     );
 
     const done = handleClientEnv(env);
-    await Promise.resolve();
+    await flushMicrotasks();
     expect(setWorkerEnv).toHaveBeenCalledWith(env);
     expect(invalidateGraphCache).not.toHaveBeenCalled();
-    expect(markInFlightRecomputationsStale).not.toHaveBeenCalled();
 
     resolveForward();
     await done;
     expect(invalidateGraphCache).toHaveBeenCalled();
-    expect(markInFlightRecomputationsStale).toHaveBeenCalled();
+  });
+
+  it('holds a no-change client until the in-flight apply completes', async () => {
+    let resolveForward: () => void = () => {};
+    const setWorkerEnv = jest.fn().mockReturnValue(
+      new Promise<void>((resolve) => {
+        resolveForward = resolve;
+      })
+    );
+    (getPluginsIfLoadedOrLoading as jest.Mock).mockReturnValue(
+      Promise.resolve([{ name: 'a', setWorkerEnv }])
+    );
+
+    const first = handleClientEnv(env);
+    // The second client carries the same env the first already wrote to
+    // process.env, so its own apply reports no changed keys.
+    (applyDaemonEnvFromClient as jest.Mock).mockReturnValue([]);
+    let secondSettled = false;
+    const second = handleClientEnv(env).then(() => {
+      secondSettled = true;
+    });
+
+    await flushMicrotasks();
+    expect(secondSettled).toBe(false);
+    expect(invalidateGraphCache).not.toHaveBeenCalled();
+
+    resolveForward();
+    await first;
+    await second;
+    expect(secondSettled).toBe(true);
+    expect(invalidateGraphCache).toHaveBeenCalled();
+  });
+
+  it('proceeds after the forward timeout when a worker never acknowledges', async () => {
+    _setEnvForwardTimeoutMs(50);
+    try {
+      const setWorkerEnv = jest.fn().mockReturnValue(new Promise(() => {}));
+      (getPluginsIfLoadedOrLoading as jest.Mock).mockReturnValue(
+        Promise.resolve([{ name: 'wedged', setWorkerEnv }])
+      );
+
+      await handleClientEnv(env);
+
+      expect(invalidateGraphCache).toHaveBeenCalled();
+      expect(serverLogger.log).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Timed out forwarding the new env to plugin workers'
+        )
+      );
+    } finally {
+      _setEnvForwardTimeoutMs(10_000);
+    }
   });
 
   it('settles when a worker fails to receive the env', async () => {
@@ -83,14 +129,12 @@ describe('handleClientEnv', () => {
       )
     );
     expect(invalidateGraphCache).toHaveBeenCalled();
-    expect(markInFlightRecomputationsStale).toHaveBeenCalled();
   });
 
   it('discards the cached graph even when no plugins are loaded', async () => {
     await handleClientEnv(env);
 
     expect(invalidateGraphCache).toHaveBeenCalled();
-    expect(markInFlightRecomputationsStale).toHaveBeenCalled();
   });
 
   it('settles when an in-flight plugin load fails', async () => {
@@ -100,7 +144,6 @@ describe('handleClientEnv', () => {
 
     await expect(handleClientEnv(env)).resolves.toBeUndefined();
     expect(invalidateGraphCache).toHaveBeenCalled();
-    expect(markInFlightRecomputationsStale).toHaveBeenCalled();
   });
 
   it('skips plugins without a worker to forward to', async () => {

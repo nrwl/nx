@@ -271,6 +271,17 @@ export function getDaemonEnv() {
   return Object.assign(env, DAEMON_ENV_REQUIRED_SETTINGS);
 }
 
+let clientEnvGeneration = 0;
+
+/**
+ * Count of client env applications this process has absorbed. Digest equality
+ * alone cannot guard a cache write: an env that changed and changed back
+ * mid-pass yields the pass-start digest again, while the count still moves.
+ */
+export function getDaemonClientEnvGeneration(): number {
+  return clientEnvGeneration;
+}
+
 /**
  * Env for spawning the daemon process. On top of the reflected env, it must
  * keep excluded vars the daemon needs to start correctly:
@@ -321,6 +332,9 @@ export function applyDaemonEnvFromClient(newEnv: NodeJS.ProcessEnv): string[] {
       delete process.env[key];
       changedKeys.push(key);
     }
+  }
+  if (changedKeys.length > 0) {
+    clientEnvGeneration++;
   }
   return changedKeys;
 }

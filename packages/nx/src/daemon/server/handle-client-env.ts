@@ -2,10 +2,19 @@ import { getPluginsIfLoadedOrLoading } from '../../project-graph/plugins/get-plu
 import type { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
 import { applyDaemonEnvFromClient } from '../client/daemon-environment';
 import { serverLogger } from '../logger';
-import {
-  invalidateGraphCache,
-  markInFlightRecomputationsStale,
-} from './project-graph-incremental-recomputation';
+import { invalidateGraphCache } from './project-graph-incremental-recomputation';
+
+// Bounds the wait for worker acknowledgements so a wedged worker cannot hold
+// every env-carrying client message for the 10-minute plugin-hook timeout. A
+// healthy worker applies the env synchronously and acks in milliseconds.
+let envForwardTimeoutMs = 10_000;
+
+// Test seam: the production timeout would stall the suite.
+export function _setEnvForwardTimeoutMs(ms: number): void {
+  envForwardTimeoutMs = ms;
+}
+
+let inFlightApply: Promise<void> | undefined;
 
 /**
  * Applies an env-carrying client message to the daemon. Must be awaited
@@ -16,6 +25,13 @@ import {
 export async function handleClientEnv(
   env: Record<string, string>
 ): Promise<void> {
+  // A client whose env matches one an in-flight apply already wrote to
+  // process.env sees zero changed keys, yet the graph cache is only discarded
+  // once that apply's forwarding completes. Wait for it so such a client
+  // cannot be served the graph computed under the previous env.
+  while (inFlightApply) {
+    await inFlightApply;
+  }
   const changedEnvKeys = applyDaemonEnvFromClient(env);
   if (changedEnvKeys.length === 0) {
     return;
@@ -25,12 +41,23 @@ export async function handleClientEnv(
       ', '
     )}`
   );
+  const apply = applyEnvChange(env);
+  inFlightApply = apply;
+  try {
+    await apply;
+  } finally {
+    if (inFlightApply === apply) {
+      inFlightApply = undefined;
+    }
+  }
+}
+
+async function applyEnvChange(env: Record<string, string>): Promise<void> {
   await forwardEnvToPluginWorkers(env);
-  // Both discards are needed: clearing the cache makes the next request
-  // recompute under the new env, and the generation bump chains any in-flight
-  // compute (started under the old env) to that successor.
+  // Discarding the cached graph makes the next request recompute under the
+  // new env, and chains any in-flight compute (started under the old env) to
+  // that successor.
   invalidateGraphCache();
-  markInFlightRecomputationsStale();
 }
 
 // Covers committed workers and an in-flight load, whose workers forked under
@@ -38,8 +65,28 @@ export async function handleClientEnv(
 // load started after this needs no forwarding: its workers fork with the
 // daemon's already-updated process.env. Each forward settles rather than
 // rejects so one dead worker (or a failed load) cannot fail every env-carrying
-// client message.
+// client message. Timing out is safe: each worker socket delivers the already
+// sent env update before any later graph message, and the plugin cache write
+// guard drops a pass the update lands in the middle of.
 async function forwardEnvToPluginWorkers(
+  env: Record<string, string>
+): Promise<void> {
+  let timer: NodeJS.Timeout;
+  const timedOut = await Promise.race([
+    forwardEnvToPluginWorkersUnbounded(env).then(() => false),
+    new Promise<true>((resolve) => {
+      timer = setTimeout(() => resolve(true), envForwardTimeoutMs);
+      timer.unref();
+    }),
+  ]).finally(() => clearTimeout(timer));
+  if (timedOut) {
+    serverLogger.log(
+      `Timed out forwarding the new env to plugin workers after ${envForwardTimeoutMs}ms; continuing without their acknowledgement.`
+    );
+  }
+}
+
+async function forwardEnvToPluginWorkersUnbounded(
   env: Record<string, string>
 ): Promise<void> {
   const pluginsPromise = getPluginsIfLoadedOrLoading();
