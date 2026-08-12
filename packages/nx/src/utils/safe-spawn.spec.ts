@@ -120,15 +120,27 @@ describe('safeSpawn', () => {
     ]);
   });
 
-  // cmd expands a %VAR%, but the result stays inside the quoted run, so it can
-  // only produce a wrong value — and a repo cannot supply the variable.
-  it('quotes a percent sign in an argument rather than refusing it', () => {
+  // A workspace path is quoted for its space, and must not be refused for its
+  // percent sign — an earlier revision refused it and broke `%` workspaces.
+  it('quotes a workspace path containing a percent sign rather than refusing it', () => {
     setPlatform('win32');
 
     safeSpawn('mvnw.cmd', ['-DworkspaceRoot=C:\\ws\\100% done'], {});
 
     expect((spawn as jest.Mock).mock.calls[0][1]).toEqual([
       '"-DworkspaceRoot=C:\\ws\\100% done"',
+    ]);
+  });
+
+  // Pins the known gap rather than implying it is closed: `%` alone does not
+  // trigger quoting, so cmd.exe sees the expansion. See safe-spawn.ts.
+  it('leaves an argument whose only special character is % unquoted', () => {
+    setPlatform('win32');
+
+    safeSpawn('mvnw.cmd', ['-DtargetNamePrefix=%FOO%'], {});
+
+    expect((spawn as jest.Mock).mock.calls[0][1]).toEqual([
+      '-DtargetNamePrefix=%FOO%',
     ]);
   });
 

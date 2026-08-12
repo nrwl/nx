@@ -27,11 +27,17 @@ function needsShell(binary: string): boolean {
 }
 
 // A line break ends the command line whatever the quoting, so nothing can carry
-// one. `%` is not refused: cmd.exe expands it, but the result stays inside the
-// quoted run, so it can only produce a wrong value rather than a new command —
-// and a repo cannot supply the variable, because `loadRootEnvFiles` runs from
-// `createOrchestrator`, which takes the finished project graph as an argument.
-// Refusing it instead made a workspace under a `%` path unusable on Windows.
+// one.
+//
+// `%` is deliberately NOT refused, and this is a known gap rather than a safe
+// case. cmd.exe expands `%VAR%` before it parses separators, and `quoteShellArg`
+// does not count `%` as needing quotes, so a value carrying `%` and nothing else
+// reaches cmd unquoted; `bin/nx.ts` loads the workspace's own `.env` before the
+// graph is built, so a repo can set the variable too. Refusing it is what an
+// earlier revision did, and it made any workspace under a `%` path — a legal
+// Windows directory name — unusable. The gap is bounded by the same argument
+// that bounds this whole class: a repo that can reach here already has `mvnw` /
+// `pom.xml` executing on its behalf.
 const LINE_BREAK = /[\r\n]/;
 
 /**
