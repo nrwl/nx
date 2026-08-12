@@ -24,6 +24,10 @@ import type { JsonInput } from '@nx/devkit/internal';
  * dependencies change. Covering them needs content hashing at the graph level
  * (the pnpm parser's directory/link external nodes hash only name and path).
  */
+export const PNPM_MAJOR_RUNTIME_INPUT: { runtime: string } = {
+  runtime: `node -e "try{console.log('pnpm major '+require('child_process').execSync('pnpm --version',{stdio:['ignore','pipe','ignore']}).toString().trim().split('.')[0])}catch{console.log('pnpm major unavailable')}"`,
+};
+
 export const PNPM_INSTALL_SETTINGS_INPUTS: (
   | string
   | JsonInput
@@ -41,7 +45,5 @@ export const PNPM_INSTALL_SETTINGS_INPUTS: (
       'pnpm.patchedDependencies',
     ],
   },
-  {
-    runtime: `node -e "try{console.log('pnpm major '+require('child_process').execSync('pnpm --version',{stdio:['ignore','pipe','ignore']}).toString().trim().split('.')[0])}catch{console.log('pnpm major unavailable')}"`,
-  },
+  PNPM_MAJOR_RUNTIME_INPUT,
 ];

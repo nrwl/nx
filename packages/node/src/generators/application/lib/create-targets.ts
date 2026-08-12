@@ -5,7 +5,10 @@ import {
   TargetConfiguration,
   detectPackageManager,
 } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/internal';
+import {
+  getProjectSourceRoot,
+  PNPM_MAJOR_RUNTIME_INPUT,
+} from '@nx/js/internal';
 import { NormalizedSchema } from './normalized-schema';
 import { getLockFileName } from '@nx/js';
 
@@ -146,7 +149,7 @@ export function getPruneTargets(
     `{workspaceRoot}/${joinPathFragments(outputPath, 'package.json')}`,
     `{workspaceRoot}/${joinPathFragments(outputPath, lockFileName)}`,
   ];
-  let pruneLockfileInputs: string[] | undefined;
+  let pruneLockfileInputs: TargetConfiguration['inputs'] | undefined;
   if (packageManager === 'pnpm') {
     // Beside the pruned lockfile the executor emits a settings-only
     // pnpm-workspace.yaml, a `pnpm patch` workspace emits the referenced `.patch`
@@ -163,15 +166,18 @@ export function getPruneTargets(
     );
     // The build approvals and `supportedArchitectures` those artifacts carry are
     // recorded nowhere in the lockfile, so without the root files in the hash a
-    // revoked approval replays the previous artifact. `default` and `^default`
-    // keep what an undeclared `inputs` would have hashed. Deliberately coarser
-    // than the settings-narrowed json input the bundler build targets use:
-    // over-invalidating this small, rarely-run task costs nothing.
+    // revoked approval replays the previous artifact, and the ambient pnpm
+    // major (probed at hash time) decides which emitted file carries them.
+    // `default` and `^default` keep what an undeclared `inputs` would have
+    // hashed. Deliberately coarser than the settings-narrowed json input the
+    // bundler build targets use: over-invalidating this small, rarely-run task
+    // costs nothing.
     pruneLockfileInputs = [
       'default',
       '^default',
       `{workspaceRoot}/pnpm-workspace.yaml`,
       `{workspaceRoot}/package.json`,
+      PNPM_MAJOR_RUNTIME_INPUT,
     ];
   }
   return {

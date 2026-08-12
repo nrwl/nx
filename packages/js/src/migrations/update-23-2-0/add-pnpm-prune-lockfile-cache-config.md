@@ -8,7 +8,7 @@ Those artifacts are built from pnpm settings the workspace root declares. The bu
 
 The three artifact paths are appended to whichever `outputs` array declares the `pnpm-lock.yaml` entry, reusing that entry's own path prefix. That covers a target's own `outputs` and the `targetDefaults` entries applying to prune-lockfile targets: entries keyed by the executor, declaring or filtering on it, and entries under a target-name or glob key that resolves to one of them. Configurations without `outputs`, configurations whose lockfile entry is not pnpm's, and paths already present are left untouched.
 
-The two root sources go somewhere else, because a target's own `inputs` array replaces the defaults' rather than merging with it. Each target is classified by its merged `outputs`, so inheriting or spreading the lockfile entry still counts, and the sources are added once: to the target's own `inputs` when it declares them, and otherwise to the `targetDefaults` entry supplying the array it inherits. A target inheriting nothing gets nx's own default spelled out first, so nothing that was hashed stops being hashed. A source the target already hashes is left alone. A workspace with no prune-lockfile target at all, configuring them purely through `targetDefaults`, has the sources added to the entry that declares the lockfile output instead, minus any that another entry under the same key already names.
+The two root sources, plus a `runtime` input probing the pnpm major (which decides whether the settings land in the emitted `pnpm-workspace.yaml` or the emitted `package.json` when the root manifest has no `packageManager` field), go somewhere else, because a target's own `inputs` array replaces the defaults' rather than merging with it. Each target is classified by its merged `outputs`, so inheriting or spreading the lockfile entry still counts, and the sources are added once: to the target's own `inputs` when it declares them, and otherwise to the `targetDefaults` entry supplying the array it inherits. A target inheriting nothing gets nx's own default spelled out first, so nothing that was hashed stops being hashed. A source the target already hashes is left alone. A workspace with no prune-lockfile target at all, configuring them purely through `targetDefaults`, has the sources added to every compatible entry under the key that declares its own `inputs` (each can be the array a future target inherits, and a sibling's array covers nothing); when no filter-less entry declares any, the spelled-out default is prepended as a new entry, under a name or glob key pinned to the executor so same-name targets of other executors do not inherit it. The fallback is only authored where it cannot change which key a target resolves: under the executor key when a compatible filter-less entry already exists, and under a name or glob key when a compatible filter-less entry already pins the executor. Any other key gets no fallback, whether its compatible entries are all filtered or its filter-less entries do not pin the executor, because a new entry would make that key win selection for targets that previously resolved their defaults elsewhere.
 
 The migration only ever appends to an array that already exists or writes that spelled-out default; it never authors a `"..."` of its own. Whether a spread finds anything to expand against depends on the identity resets in nx's own document-order merge, and one that finds nothing would leave the target hashing only the two root files.
 
@@ -41,7 +41,10 @@ The migration only ever appends to an array that already exists or writes that s
         "default",
         "^default",
         "{workspaceRoot}/pnpm-workspace.yaml",
-        "{workspaceRoot}/package.json"
+        "{workspaceRoot}/package.json",
+        {
+          "runtime": "node -e \"try{console.log('pnpm major '+require('child_process').execSync('pnpm --version',{stdio:['ignore','pipe','ignore']}).toString().trim().split('.')[0])}catch{console.log('pnpm major unavailable')}\""
+        }
       ],
       "outputs": [
         "{workspaceRoot}/dist/apps/app1/package.json",
