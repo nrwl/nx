@@ -18,10 +18,14 @@ on:
         default: false
   # Changes to the tooling or to the articles it converts are converted on the
   # PR itself. Only the preview job runs there; nothing reaches Pylon.
+  # Assets are included because a removed or renamed image is a conversion
+  # warning, and the article that references it lives elsewhere in the tree.
   pull_request:
     paths:
       - 'astro-docs/scripts/pylon/**'
       - 'astro-docs/src/content/docs/kb/**'
+      - 'astro-docs/src/assets/**'
+      - 'astro-docs/public/img/**'
       - '.github/workflows/pylon-kb-sync.yml'
 
 permissions: {}
@@ -50,9 +54,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Strict on a pull request so a bad tag fails review. Not on a schedule,
+      # where sync depends on this job and one bad article would otherwise
+      # block the other 183 from updating.
       - name: Convert every article
         working-directory: astro-docs
-        run: pnpm exec tsx scripts/pylon/render-preview.ts --strict
+        run: |
+          pnpm exec tsx scripts/pylon/render-preview.ts \
+            ${{ github.event_name == 'pull_request' && '--strict' || '' }}
 
   sync:
     # Never on a pull request. The token can delete every article, so it lives
