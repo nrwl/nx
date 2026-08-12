@@ -445,15 +445,16 @@ describe('js:prune-lockfile executor', () => {
       });
       updateJson(`${nodeapp}/package.json`, (json) => {
         json.dependencies = { ...json.dependencies, lodash: '^4.17.21' };
-        json.nx.targets.build = {
-          ...json.nx.targets.build,
-          options: {
-            ...json.nx.targets.build?.options,
-            generatePackageJson: true,
-          },
-        };
         return json;
       });
+      // The build target is inferred by @nx/webpack/plugin, so the option must
+      // be enabled in the config NxAppWebpackPlugin reads, not on the target.
+      updateFile(`${nodeapp}/webpack.config.js`, (content) =>
+        content.replace(
+          'generatePackageJson: false',
+          'generatePackageJson: true'
+        )
+      );
       runCommand(`pnpm install`);
 
       // Precondition: the override is recorded in the workspace lockfile, so the
