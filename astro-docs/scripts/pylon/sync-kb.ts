@@ -202,8 +202,10 @@ async function main(): Promise<void> {
   if (!token) throw new Error('PYLON_API_TOKEN is not set');
 
   const client = new PylonClient({ token, knowledgeBaseId: KNOWLEDGE_BASE_ID });
+  // Falsy rather than nullish: an unset Actions variable arrives as an empty
+  // string, which would otherwise be sent as the author of every new article.
   const authorUserId =
-    process.env.PYLON_AUTHOR_USER_ID ?? (await client.getAuthenticatedUserId());
+    process.env.PYLON_AUTHOR_USER_ID || (await client.getAuthenticatedUserId());
 
   const sources = readSourceArticles(options);
   const allRemote = await client.listArticles();
