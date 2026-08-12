@@ -146,7 +146,10 @@ function collectUploadedAssets(articles: PylonArticle[]): Map<string, string> {
   for (const article of articles) {
     for (const [, url, key] of bodyOf(article).matchAll(imgPattern)) {
       if (!url.startsWith(ASSET_PLACEHOLDER_PREFIX)) {
-        uploaded.set(decodeAttribute(key), url);
+        // Both are attribute values. Signed CDN URLs carry `&` between query
+        // parameters, so recovering one without decoding would re-escape it on
+        // every run and the article would never compare equal.
+        uploaded.set(decodeAttribute(key), decodeAttribute(url));
       }
     }
   }
