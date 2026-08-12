@@ -257,9 +257,6 @@ describe('formatFiles', () => {
     });
 
     it('should use a config the generator just created rather than the defaults', async () => {
-      // The config exists only in the tree, so oxfmt cannot discover it on
-      // disk - it has to be handed over, or the files a generator ships come
-      // out formatted differently from the config it ships with them.
       // `useTabs` rather than `singleQuote: false`, which is oxfmt's default
       // and so cannot tell "config applied" apart from "config ignored".
       tree.write('.oxfmtrc.json', JSON.stringify({ useTabs: true }));

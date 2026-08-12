@@ -10,6 +10,7 @@ import {
   createIgnoreChainResolver,
   isIgnoredByChain,
   OXFMT_IGNORE_OPTIONS,
+  posixDirname,
   type ScopedIgnoreMatcher,
 } from '../ignore';
 import { parseJson } from '../json';
@@ -795,12 +796,6 @@ function* ancestorsWithin(
     }
     current = parent;
   }
-}
-
-/** `path.dirname` for the workspace-relative POSIX paths the chain is keyed by. */
-function posixDirname(relativePath: string): string {
-  const separator = relativePath.lastIndexOf('/');
-  return separator === -1 ? '' : relativePath.slice(0, separator);
 }
 
 /**
