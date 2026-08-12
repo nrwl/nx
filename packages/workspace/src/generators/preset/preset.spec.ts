@@ -12,7 +12,10 @@ describe('preset', () => {
   beforeEach(() => {
     envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
     delete process.env.ESLINT_USE_FLAT_CONFIG;
-    // No formatter: the preset is what should be setting one up.
+    // No formatter, and the tests below pass none, so the snapshots record raw
+    // generator output - double quotes, no comma spacing, `server:{`. That is
+    // valid code that simply has not been formatted; do not "tidy" it, or the
+    // snapshots stop matching what a caller who asked for no formatter gets.
     tree = createTreeWithEmptyWorkspace({
       layout: 'apps-libs',
       formatter: 'none',
@@ -176,8 +179,8 @@ describe('preset', () => {
             main: './src/main.tsx',
             index: './src/index.html',
             baseHref: '/',
-            assets: ['./src/favicon.ico', './src/assets'],
-            styles: ['./src/styles.css'],
+            assets: ["./src/favicon.ico","./src/assets"],
+            styles: ["./src/styles.css"],
             outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
             optimization: process.env['NODE_ENV'] === 'production',
           }),
@@ -212,11 +215,11 @@ describe('preset', () => {
       export default defineConfig(() => ({
         root: import.meta.dirname,
         cacheDir: '../../node_modules/.vite/apps/vue-preset-monorepo',
-        server: {
+        server:{
           port: 4200,
           host: 'localhost',
         },
-        preview: {
+        preview:{
           port: 4300,
           host: 'localhost',
         },
@@ -243,7 +246,7 @@ describe('preset', () => {
           coverage: {
             reportsDirectory: '../../coverage/apps/vue-preset-monorepo',
             provider: 'v8' as const,
-          },
+          }
         },
       }));
       "
@@ -332,8 +335,8 @@ describe('preset', () => {
             main: './src/main.tsx',
             index: './src/index.html',
             baseHref: '/',
-            assets: ['./src/favicon.ico', './src/assets'],
-            styles: ['./src/styles.css'],
+            assets: ["./src/favicon.ico","./src/assets"],
+            styles: ["./src/styles.css"],
             outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
             optimization: process.env['NODE_ENV'] === 'production',
           }),
@@ -368,11 +371,11 @@ describe('preset', () => {
       export default defineConfig(() => ({
         root: import.meta.dirname,
         cacheDir: './node_modules/.vite/react-standalone-preset-vite',
-        server: {
+        server:{
           port: 4200,
           host: 'localhost',
         },
-        preview: {
+        preview:{
           port: 4300,
           host: 'localhost',
         },
@@ -399,7 +402,7 @@ describe('preset', () => {
           coverage: {
             reportsDirectory: './coverage/react-standalone-preset-vite',
             provider: 'v8' as const,
-          },
+          }
         },
       }));
       "
@@ -425,11 +428,11 @@ describe('preset', () => {
       export default defineConfig(() => ({
         root: import.meta.dirname,
         cacheDir: './node_modules/.vite/vue-standalone-preset',
-        server: {
+        server:{
           port: 4200,
           host: 'localhost',
         },
-        preview: {
+        preview:{
           port: 4300,
           host: 'localhost',
         },
@@ -456,7 +459,7 @@ describe('preset', () => {
           coverage: {
             reportsDirectory: './coverage/vue-standalone-preset',
             provider: 'v8' as const,
-          },
+          }
         },
       }));
       "

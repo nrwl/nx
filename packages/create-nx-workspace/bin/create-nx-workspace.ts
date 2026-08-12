@@ -25,8 +25,11 @@ import {
   determineNxCloud,
   determineNxCloudV2,
   determinePackageManager,
+  determineFormatterOptions,
   determineTemplate,
+  FORMATTERS,
   LINTERS,
+  type Formatter,
   type Linter,
 } from '../src/internal-utils/prompts';
 import {
@@ -98,25 +101,6 @@ type AngularUnitTestRunner =
   | 'jest'
   | 'vitest-angular'
   | 'vitest-analog';
-
-// Kept in sync with the formatter enum in the generator schemas by hand - this
-// package deliberately has no `nx` dependency, so nx's `FormatterType` cannot
-// be imported here.
-type Formatter = 'oxfmt' | 'prettier' | 'none';
-
-// Order here is incidental; the prompt's own choice order sets the default. `satisfies` stops a typo
-// getting in, and the coverage assertion below stops a member being dropped -
-// on its own the array would happily be a subset, and the prompt would then
-// reject a value the generator schemas still accept.
-const FORMATTERS = [
-  'oxfmt',
-  'prettier',
-  'none',
-] as const satisfies readonly Formatter[];
-
-type MissingFormatter = Exclude<Formatter, (typeof FORMATTERS)[number]>;
-const _formattersAreExhaustive: MissingFormatter extends never ? true : never =
-  true;
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset?: Preset;
@@ -1147,28 +1131,6 @@ async function determineWebOptions(
   return { linter: await determineLinterOptions(parsedArgs) };
 }
 
-async function determineFormatterOptions(args: {
-  formatter?: Formatter;
-  interactive?: boolean;
-}) {
-  if (args.formatter) return args.formatter;
-  return selectPrompt<Formatter>({
-    message: `Which code formatter would you like to use?`,
-    // A skipped prompt resolves to the first choice, so the order here is what
-    // makes prettier the non-interactive default while oxfmt is pre-1.0.
-    // Reorder the choices to change it.
-    choices: [
-      { value: 'prettier', label: 'prettier          [ https://prettier.io  ]' },
-      {
-        value: 'oxfmt',
-        label: 'oxfmt (experimental) [ https://oxc.rs  ]',
-      },
-      { value: 'none', label: 'none' },
-    ],
-    skip: !args.interactive || isCI(),
-  });
-}
-
 async function determineNoneOptions(
   parsedArgs: yargs.Arguments<NoneArguments>
 ): Promise<Partial<NoneArguments>> {
@@ -1228,16 +1190,17 @@ async function determineNoneOptions(
         ? await determineLinterOptions(parsedArgs)
         : undefined;
 
-    // `linter` is omitted rather than set to `undefined`: the caller
-    // `Object.assign`s this over `argv`, so an explicit key would clobber a
-    // user's `--linter`. `formatter` is always a value, so it is safe to set -
-    // and it must be, or `@nx/workspace:new`'s `"default": "none"` applies and
-    // these presets get no formatter at all.
+    // Both keys are omitted rather than set to `undefined`: the caller
+    // `Object.assign`s this over `argv`, so an explicit key would clobber the
+    // user's own flag. Forwarding `--formatter` only when it was given is what
+    // keeps a plain `--preset=npm` identical to before - with nothing set,
+    // `@nx/workspace:new`'s `"default": "none"` applies and no formatter is
+    // installed, which is these presets' long-standing behaviour.
     return {
       preset,
       js,
       appName,
-      formatter: parsedArgs.formatter ?? 'prettier',
+      ...(parsedArgs.formatter ? { formatter: parsedArgs.formatter } : {}),
       ...(linter ? { linter } : {}),
     };
   }

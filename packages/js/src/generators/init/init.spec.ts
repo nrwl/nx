@@ -102,13 +102,14 @@ describe('js init generator', () => {
     // The default resolves three ways and each arm is user-visible, so none of
     // them may rely on a caller passing `formatter` explicitly.
 
-    it('should default to oxfmt when the workspace has no formatter configured', async () => {
+    it('should install nothing when the workspace has no formatter configured', async () => {
       await init(tree, {});
 
       const packageJson = readJson(tree, 'package.json');
-      expect(packageJson.devDependencies['oxfmt']).toBeDefined();
-      expect(packageJson.devDependencies['prettier']).toBeUndefined();
-      expect(tree.exists('.oxfmtrc.json')).toBe(true);
+      expect(packageJson.devDependencies?.['oxfmt']).toBeUndefined();
+      expect(packageJson.devDependencies?.['prettier']).toBeUndefined();
+      expect(tree.exists('.oxfmtrc.json')).toBe(false);
+      expect(tree.exists('.prettierrc')).toBe(false);
     });
 
     it('should keep prettier when the workspace already uses it', async () => {

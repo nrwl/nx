@@ -19,10 +19,7 @@ import { getFormatterSetup } from '../../utils/formatter-setup';
 import { assertNxSupportsFormatters } from '../../utils/nx-formatter-internals';
 import { getTsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 import { getRootTsConfigFileName } from '../../utils/typescript/ts-config';
-import {
-  getCustomConditionName,
-  isUsingTsSolutionSetup,
-} from '../../utils/typescript/ts-solution-setup';
+import { getCustomConditionName } from '../../utils/typescript/ts-solution-setup';
 import {
   nxVersion,
   swcHelpersVersion,
@@ -37,13 +34,11 @@ export async function initGenerator(
 ): Promise<GeneratorCallback> {
   schema.addTsPlugin ??= false;
   assertNxSupportsFormatters();
-  const isUsingNewTsSetup = schema.addTsPlugin || isUsingTsSolutionSetup(tree);
   // Defer to `detectFormatterInTree` rather than re-deriving: it encodes the
   // oxfmt-over-prettier precedence, which a prettier-first check gets backwards
-  // for a workspace configured with both. Programmatic callers only -
-  // `schema.json` defaults to "none", which the runner applies before this.
-  schema.formatter ??=
-    detectFormatterInTree(tree) ?? (isUsingNewTsSetup ? 'none' : 'oxfmt');
+  // for a workspace configured with both. Falling back to "none" rather than a
+  // formatter keeps this from installing one the caller never asked for.
+  schema.formatter ??= detectFormatterInTree(tree) ?? 'none';
 
   return initGeneratorInternal(tree, {
     addTsConfigBase: true,

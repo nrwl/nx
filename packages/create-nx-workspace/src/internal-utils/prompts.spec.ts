@@ -1,5 +1,6 @@
 import {
   confirmThirdPartyPreset,
+  determineFormatterOptions,
   determineLinterOptions,
   determineNxCloudV2,
   determineTemplate,
@@ -243,5 +244,55 @@ describe('determineNxCloudV2', () => {
     const { validate } = (clack.autocomplete as jest.Mock).mock.calls[0][0];
     expect(validate(undefined)).toEqual(expect.any(String));
     expect(validate('skip')).toBeUndefined();
+  });
+});
+
+describe('determineFormatterOptions', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('should return the formatter when one was passed', async () => {
+    const result = await determineFormatterOptions({
+      formatter: 'oxfmt',
+      interactive: true,
+    });
+
+    expect(result).toBe('oxfmt');
+    expect(enquirer.prompt).not.toHaveBeenCalled();
+  });
+
+  it('should let the prompt skip itself when not interactive', async () => {
+    (enquirer.prompt as jest.Mock).mockResolvedValue({ formatter: 'prettier' });
+
+    await determineFormatterOptions({ interactive: false });
+
+    // A skipped enquirer prompt resolves to the FIRST choice and ignores
+    // `initial`, so the ordering is what decides the non-interactive default.
+    // Asserting the returned value would only re-read the mock.
+    const [[[question]]] = (enquirer.prompt as jest.Mock).mock.calls;
+    expect(question.skip).toBe(true);
+    expect(question.choices[0]).toEqual(
+      expect.objectContaining({ name: 'prettier' })
+    );
+  });
+
+  it('should label oxfmt experimental while it is pre-1.0', async () => {
+    (enquirer.prompt as jest.Mock).mockResolvedValue({ formatter: 'prettier' });
+
+    await determineFormatterOptions({ interactive: true });
+
+    const [[[question]]] = (enquirer.prompt as jest.Mock).mock.calls;
+    const oxfmt = question.choices.find((c) => c.name === 'oxfmt');
+    expect(oxfmt.message).toContain('experimental');
+  });
+
+  it('should prompt when interactive', async () => {
+    (enquirer.prompt as jest.Mock).mockResolvedValue({ formatter: 'oxfmt' });
+
+    const result = await determineFormatterOptions({ interactive: true });
+
+    expect(result).toBe('oxfmt');
+    expect(enquirer.prompt).toHaveBeenCalledWith([
+      expect.objectContaining({ name: 'formatter', skip: false }),
+    ]);
   });
 });

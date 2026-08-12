@@ -322,3 +322,58 @@ export async function determineLinterOptions(args: {
     initial: 'eslint',
   });
 }
+
+// Kept in sync with the formatter enum in the generator schemas by hand - this
+// package deliberately has no `nx` dependency, so nx's `FormatterType` cannot
+// be imported here.
+export type Formatter = 'oxfmt' | 'prettier' | 'none';
+
+// Order here is incidental; the prompt's own choice order sets the default. `satisfies` stops a typo
+// getting in, and the coverage assertion below stops a member being dropped -
+// on its own the array would happily be a subset, and the prompt would then
+// reject a value the generator schemas still accept.
+export const FORMATTERS = [
+  'oxfmt',
+  'prettier',
+  'none',
+] as const satisfies readonly Formatter[];
+
+type MissingFormatter = Exclude<Formatter, (typeof FORMATTERS)[number]>;
+const _formattersAreExhaustive: MissingFormatter extends never ? true : never =
+  true;
+
+export async function determineFormatterOptions(args: {
+  formatter?: Formatter;
+  interactive?: boolean;
+}) {
+  if (args.formatter) return args.formatter;
+  const reply = await enquirer.prompt<{
+    formatter: Formatter;
+  }>([
+    {
+      name: 'formatter',
+      message: `Which code formatter would you like to use?`,
+      type: 'autocomplete',
+      // A skipped prompt resolves to the first choice and ignores `initial`, so
+      // the order here is what makes prettier the non-interactive default while
+      // oxfmt is pre-1.0. Reorder the choices to change it.
+      choices: [
+        {
+          name: 'prettier',
+          message: 'prettier          [ https://prettier.io  ]',
+        },
+        {
+          name: 'oxfmt',
+          message: 'oxfmt (experimental) [ https://oxc.rs  ]',
+        },
+        {
+          name: 'none',
+          message: 'none',
+        },
+      ],
+      initial: 0,
+      skip: !args.interactive || isCI(),
+    },
+  ]);
+  return reply.formatter;
+}
