@@ -490,7 +490,7 @@ function createPrunedLockfile(
     const bodyLines = [`The lockfile pruning failed: ${pruneError?.message}`];
     if (packageManager === 'pnpm') {
       bodyLines.push(
-        'The emitted package.json keeps its pnpm config, its vendored local-path specifiers point at their original workspace locations, and no local-path artifacts are shipped for it.'
+        'The emitted package.json keeps its resolution-time pnpm config (`overrides`, `packageExtensions`), its vendored local-path specifiers point at their original workspace locations, and no local-path artifacts are shipped for it.'
       );
     }
     bodyLines.push(
@@ -572,7 +572,9 @@ export function generatePrunedDeployOutput(
     );
   }
 
-  if ('outputDirectory' in options) {
+  // Discriminate on the value, not key presence: options built by spread can
+  // carry an explicitly-present `outputDirectory: undefined` beside `emit`.
+  if (options.outputDirectory !== undefined) {
     const { outputDirectory } = options;
     // Directory trees flow through here one file at a time, so dedupe the
     // recursive mkdir per destination directory.

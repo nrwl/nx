@@ -118,50 +118,28 @@ type PrunedPnpmConfig = {
 };
 
 /**
- * Builds the settings-only pnpm-workspace.yaml a standalone pruned output ships.
+ * Builds the settings-only pnpm-workspace.yaml every standalone pruned output
+ * ships. Unconditional because a conditional artifact cannot be retracted: a
+ * cache replay restores only the files the replayed entry holds and a bundler
+ * overwrites rather than cleans its output directory, so an earlier build's
+ * copy would survive and its stale settings would apply. A `packages: []`-only
+ * file is inert, verified installable with identical module resolution on
+ * pnpm 9, 10 and 11.
  *
- * Emitted for every pnpm output, including the ones with no settings to carry.
- * A conditional artifact cannot be retracted once shipped: a cache replay
- * restores only the files the replayed entry holds, and a bundler that leaves
- * its output directory uncleaned overwrites nothing, so an earlier build's copy
- * would survive and pnpm would read its `patchedDependencies` as a lockfile
- * mismatch. Shipping it unconditionally makes every build overwrite the last.
- * A `packages: []`-only file is inert: verified installable with identical
- * module resolution on pnpm 9, 10 and 11, and on pnpm 10 it leaves the
- * package.json build approvals in force.
+ * pnpm 11+ reads build approvals (`allowBuilds`), `supportedArchitectures` and
+ * `patchedDependencies` only from pnpm-workspace.yaml, so those are carried
+ * from the workspace root; pass `prunedLockfileContent` to scope the approvals
+ * to the packages the pruned lockfile keeps (an approval for an absent package
+ * is inert either way, this only keeps the emitted file accurate). On
+ * pnpm <=10, which reads them from the emitted package.json instead (see
+ * `getPrunedPnpmPackageJsonBuildSettings`), or when the workspace declares
+ * none, the file holds only `packages: []`. Resolution-time config stays out:
+ * the pruned lockfile bakes it in (`stripPrunedLockfilePnpmConfig`).
  *
- * pnpm 11 was the first major to read these settings only from
- * pnpm-workspace.yaml, never the package.json `pnpm` field, and the rest of the
- * pruned output ships no workspace file. So on pnpm 11+ the build-script
- * approvals (`allowBuilds`) and `supportedArchitectures` the workspace declares
- * would be dropped, and native production deps would never run their build
- * scripts. Carry those from the workspace root, plus an empty `packages` list:
- * pnpm 9 rejects a pnpm-workspace.yaml without a `packages` field ("packages
- * field missing or empty"), and `packages: []` is accepted by pnpm 9, 10 and 11
- * alike without pulling any importer into the install, so the emitted file
- * installs on any of those majors.
- *
- * The major comes from the build machine's pnpm, which is all that is knowable
- * at build time: an output built on pnpm <=10 declares the settings in its
- * emitted package.json instead, so a pnpm 11+ deploy of that output would not
- * pick them up.
- *
- * pnpm 10 and below read the same settings from the emitted package.json, so the
- * file carries only `packages: []` there, as it does when the workspace declares
- * no settings at all. Resolution-time
- * config stays out: it is already baked into the pruned lockfile (see
- * `stripPrunedLockfilePnpmConfig`). `patchedDependencies` are carried too, scoped
- * to the patches the pruned lockfile keeps (see `getPrunedPnpmPatchArtifacts`).
- *
- * Returns the YAML string so both the file-writing prune paths and the webpack
- * asset pipeline (which emits assets rather than writing to disk) can carry it.
- *
- * Pass `prunedLockfileContent` to narrow `allowBuilds` to the packages the pruned
- * output actually installs; entries for packages the prune dropped are left out.
- * Omit it to carry the root allowlist verbatim (pnpm ignores approvals for absent
- * packages either way, so this only keeps the emitted file accurate).
- * `precomputed` lets a caller pass the pnpm major and pruned patchedDependencies
- * it already resolved instead of recomputing them here.
+ * The major is the build machine's pnpm, which is all that is knowable at
+ * build time: an output built on pnpm <=10 but deployed on pnpm 11+ will not
+ * pick its approvals up. `precomputed` lets a caller pass the pnpm major and
+ * pruned patchedDependencies it already resolved instead of recomputing them.
  */
 export function getPrunedPnpmInstallSettingsYaml(
   workspaceRootPath: string = workspaceRoot,
@@ -454,24 +432,19 @@ function getPrunedPatchedDependencies(
 }
 
 /**
- * The path a `.patch` file takes inside the pruned output. Patches must ship
- * under the output's declared `patches/` directory: a source path outside it (a
- * custom directory, or a parent-relative `../` path) would fall outside the
- * prune target's cached `patches` output and be dropped on a cache replay, and a
- * `..` asset name is not one a bundler can emit. The whole source sub-structure
- * is kept under `patches/`, including a source `patches/` segment, so two
- * patches that share a file name in different directories keep separate
- * destinations. The path is collapsed first, the way pnpm collapses it before
+ * The path a `.patch` file takes inside the pruned output, always under the
+ * output's declared `patches/` directory: a source path outside it would fall
+ * outside the prune target's cached `patches` output and be dropped on a cache
+ * replay, and a `..` asset name is not one a bundler can emit. The source
+ * sub-structure is kept so same-named patches in different directories stay
+ * distinct. The path is collapsed first, the way pnpm collapses it before
  * recording it in the lockfile (`./x` and `a/../x` are both stored as `x`), so
- * the declared path this reads and the recorded path the lockfile side reads
- * produce the same destination. Any `..` left after collapsing escapes the
- * workspace and is dropped so the result cannot resolve outside `patches/`,
- * which is the one way two sources can still meet on one destination:
- * `getPrunedPnpmPatchArtifacts` rejects that pair rather than shipping one file
- * for both.
- * `filterPatchedDependenciesToPrunedPackages` in the pnpm lock-file parser calls
- * this same helper for the lockfile's object-form path (pnpm 9-10), which pnpm
- * --frozen-lockfile cross-checks against this config path, so the two agree.
+ * the config path read here and the lockfile path read by
+ * `filterPatchedDependenciesToPrunedPackages` (which calls this same helper)
+ * produce the same destination. A `..` left after collapsing escapes the
+ * workspace and is dropped, the one way two sources can still meet on one
+ * destination; `getPrunedPnpmPatchArtifacts` rejects that pair rather than
+ * shipping one file for both.
  */
 export function normalizePrunedPatchPath(patchPath: string): string {
   const segments = posix
@@ -604,24 +577,17 @@ type PrunedPnpmPackageJsonBuildSettings = Pick<
 >;
 
 /**
- * The pnpm build-script approvals a standalone pruned output must declare in its
- * emitted package.json so native production deps still run their build scripts on
- * pnpm <=10, or null when there is nothing to carry.
- *
- * pnpm <=10 reads `onlyBuiltDependencies`/`neverBuiltDependencies` (and
- * `supportedArchitectures`) from the package.json `pnpm` field; pnpm 11 removed
- * those keys and reads `allowBuilds` only from pnpm-workspace.yaml (carried there
- * by `getPrunedPnpmInstallSettingsYaml`), so this returns null on pnpm 11+. The
- * root may declare the approvals in pnpm-workspace.yaml (pnpm 10) or the
- * package.json `pnpm` field (pnpm 9), and pnpm 10.26+ uses the `allowBuilds` map,
- * so read both root sources and fold a root `allowBuilds` map into the
- * on/never-built lists pnpm <=10 understands. Approvals are scoped to the
- * packages the pruned lockfile keeps; one for a dropped package is inert. When
- * the lockfile's names cannot be extracted (a pre-v9 lockfile, unparseable
- * content), they are carried verbatim instead of scoped to nothing.
- *
- * Counterpart to the pnpm 11 `getPrunedPnpmInstallSettingsYaml`; keep the two in
- * sync when pnpm changes where build approvals are read from.
+ * The pnpm build-script approvals a standalone pruned output declares in its
+ * emitted package.json so native production deps still run their build scripts
+ * on pnpm <=10; null on pnpm 11+, which reads approvals only from
+ * pnpm-workspace.yaml (`getPrunedPnpmInstallSettingsYaml` carries them there;
+ * keep the two in sync when pnpm moves the read again). Both root sources
+ * (pnpm-workspace.yaml wins over the package.json `pnpm` field) are read, and
+ * a pnpm 10.26+ `allowBuilds` map is folded into the on/never-built lists
+ * pnpm <=10 understands. Approvals are scoped to the packages the pruned
+ * lockfile keeps (one for a dropped package is inert); when the lockfile's
+ * names cannot be extracted (a pre-v9 lockfile, unparseable content) they are
+ * carried verbatim instead of scoped to nothing.
  */
 export function getPrunedPnpmPackageJsonBuildSettings(
   workspaceRootPath: string = workspaceRoot,
@@ -1210,25 +1176,19 @@ function collectPrunedLinkTargetDirs(
 
 /**
  * The non-workspace local-path packages a standalone pruned output must ship so
- * `pnpm install` can resolve them, each as `{ path, sourcePath }` (path relative
- * to the output root, sourcePath the absolute file to ship there). The pruned
- * lockfile records each such path relocated under `LOCAL_PATH_MODULES_DIR` (see
- * containLocalPath), so `path` ships there while `sourcePath` reads from the
- * original workspace location (uncontainLocalPath). Three shapes are shipped:
- * - a `file:` tarball (`resolution.tarball`) -> the `.tgz` file.
- * - a `file:` directory (`resolution.directory`) not under `workspace_modules/`
- *   -> the directory tree (copied workspace modules carry a `workspace_modules/`
- *   directory resolution and are shipped by copy-workspace-modules, so they are
- *   skipped here).
- * - a `link:` target (a root importer `link:` version, or a package `link:`
- *   snapshot ref) -> the target directory tree.
+ * `pnpm install` can resolve them. The pruned lockfile records each path
+ * relocated under `LOCAL_PATH_MODULES_DIR` (see containLocalPath), so `path`
+ * ships there while `sourcePath` reads from the original workspace location.
+ * Three shapes ship: a `file:` tarball (the `.tgz`), a `file:` directory not
+ * under `workspace_modules/` (copied workspace modules ship via
+ * copy-workspace-modules and are skipped here), and a `link:` target directory
+ * (a root importer `link:` version, or a package `link:` snapshot ref).
  * `node_modules` is filtered from every directory copy; a symlink inside a
- * shipped tree is skipped with a warning, while a symlinked root ships when it
- * resolves under the workspace root; entries are deduped by destination. A source
- * that resolves outside the workspace root, or is missing on disk, is skipped
- * with a warning (it is not reproducibly deployable). Returns source paths rather than
- * bytes so the file-writing prune paths can copy without buffering whole trees;
- * the bundler asset pipelines read the bytes as they emit.
+ * shipped tree is skipped with a warning while a symlinked root ships when it
+ * resolves under the workspace root; entries are deduped by destination; a
+ * source missing on disk or resolving outside the workspace root is skipped
+ * with a warning (not reproducibly deployable). Source paths rather than bytes
+ * so the file-writing prune paths can copy without buffering whole trees.
  */
 export function getPrunedPnpmLocalPathArtifacts(
   workspaceRootPath: string = workspaceRoot,
@@ -1400,28 +1360,23 @@ function prunedLockfileReferencesLocalPaths(
 
 /**
  * Fails the pruned build when a shipped local-path target has a required
- * dependency that will not be resolvable in the standalone deploy. Two shapes
- * are validated:
- * - a `link:` target: a symlink, not a packed package, so pnpm never installs
- *   the linked target's own dependency closure.
- * - a `file:` directory package whose lockfile entry carries no dependency
- *   edges (a peer backfilled by the pnpm lock-file parser when
- *   `autoInstallPeers` is off; pnpm never resolved its closure at source).
- * In both cases the target itself installs, `pnpm install --frozen-lockfile`
- * exits 0, and the target resolves its `require`s only from the deploy-root
- * node_modules, i.e. the app's direct dependencies.
- * A required dep of the target that is not a direct (or optional) dependency of
- * the final app manifest would fail at runtime with MODULE_NOT_FOUND, so this
+ * dependency that will not be resolvable in the standalone deploy: a `link:`
+ * target (a symlink, not a packed package, so pnpm never installs its
+ * dependency closure) or a `file:` directory package whose lockfile entry
+ * carries no dependency edges (a peer backfilled when `autoInstallPeers` is
+ * off). Both install, `pnpm install --frozen-lockfile` exits 0, and the target
+ * resolves its `require`s only from the deploy-root node_modules, so a
+ * required dep missing there fails at runtime with MODULE_NOT_FOUND; this
  * throws at build time with the remedy.
  *
- * Only a required dep absent from the app's installed direct deps fails. A peer
- * or optional dep of the target, or a required dep present only in the app's
- * devDependencies (a `--prod` install may omit it), warns instead; these are not
- * provably broken. The app's own peerDependencies count as installed: the pruned
- * lockfile's root importer folds them into `dependencies` (mirroring pnpm's
- * autoInstallPeers), so the deploy install provides them. A backfilled `file:`
- * tarball peer's manifest is inside the archive and is not read, so its closure
- * is not validated. pnpm-only; call sites gate on the package manager.
+ * Only a required dep absent from the app's installed direct deps fails. A
+ * peer or optional dep of the target, or a required dep present only in the
+ * app's devDependencies (a `--prod` install may omit it), warns instead; these
+ * are not provably broken. The app's own peerDependencies count as installed:
+ * the pruned root importer folds them into `dependencies` (mirroring pnpm's
+ * autoInstallPeers). A backfilled `file:` tarball peer's manifest is inside
+ * the archive and is not read, so its closure is not validated. pnpm-only;
+ * call sites gate on the package manager.
  */
 export function validatePrunedLocalPathClosure(
   packageJson: PackageJson,
@@ -1731,22 +1686,20 @@ export function dropEmptyPeerDependencySections(
 /**
  * Rewrites a standalone pruned manifest's non-workspace local-path specifiers
  * (`file:` tarball/dir, `link:` dir) to their shipped location under
- * `LOCAL_PATH_MODULES_DIR`, so a non-frozen `pnpm install` of the deploy output
- * resolves them: pnpm re-resolves a manifest specifier relative to the
- * referencing package, and the deploy root is the workspace root, so the shipped
- * source (see `getPrunedPnpmLocalPathArtifacts`) sits at that relocated path.
- * Mutates `packageJson` in place. pnpm-only; call sites gate on the package
- * manager (the rewrite must not touch npm/yarn/bun manifests).
+ * `LOCAL_PATH_MODULES_DIR`, so a non-frozen `pnpm install` of the deploy
+ * output resolves them from where the shipped source sits (see
+ * `getPrunedPnpmLocalPathArtifacts`). Mutates `packageJson` in place.
+ * pnpm-only; call sites gate on the package manager.
  *
  * Per specifier, in order: resolve a `catalog:` reference first (the bundler's
  * `createPackageJson` does not), skip a workspace package (copied to
- * `workspace_modules/`), then relocate a non-workspace local path from
- * `projectRoot`-relative to its shipped location. A `file:`/`link:` peer
- * dependency is moved into `dependencies` with its `peerDependenciesMeta` entry
- * dropped even when the target cannot ship (pnpm rejects a `file:`/`link:` spec
- * under peerDependencies outright, so leaving it would fail the whole install),
- * mirroring the workspace-module handling. An unshippable target otherwise keeps
- * its specifier, with a warning (see `getPrunedPnpmLocalPathArtifacts`).
+ * `workspace_modules/`), then relocate from `projectRoot`-relative to the
+ * shipped location. A `file:`/`link:` peer dependency is moved into
+ * `dependencies` with its `peerDependenciesMeta` entry dropped even when the
+ * target cannot ship (pnpm rejects such a spec under peerDependencies
+ * outright, so leaving it would fail the whole install), mirroring the
+ * workspace-module handling. An unshippable target otherwise keeps its
+ * specifier, with a warning.
  */
 export function rewritePrunedLocalPathSpecifiers(
   packageJson: PackageJson,
@@ -1809,24 +1762,20 @@ export type PrunedDeployArtifact =
   | { path: string; sourcePath: string; content?: never };
 
 /**
- * The pnpm install-time artifacts a standalone pruned output needs, as data for
- * a caller to write or emit: the settings-only pnpm-workspace.yaml (see
- * `getPrunedPnpmInstallSettingsYaml`), the `pnpm patch` files, and the
- * non-workspace local-path dependencies (`file:` tarballs/dirs and `link:`
- * targets, see `getPrunedPnpmLocalPathArtifacts`). The last are carried as a
- * source path rather than content so a directory sink can copy them straight
- * across. Everything is resolved before returning, so a colliding patch path
- * aborts before the caller ships anything.
+ * The pnpm install-time artifacts a standalone pruned output needs, as data
+ * for a caller to write or emit: the settings-only pnpm-workspace.yaml, the
+ * `pnpm patch` files, and the non-workspace local-path dependencies (carried
+ * as a source path rather than content so a directory sink can copy them
+ * straight across). Everything is resolved before returning, so a colliding
+ * patch path aborts before the caller ships anything. The pnpm <=10
+ * build-script approvals and `patchedDependencies` declaration are folded onto
+ * `packageJson` in place (see `getPrunedPnpmPackageJsonBuildSettings`), so
+ * write or emit the manifest after this returns.
  *
- * The pnpm <=10 build-script approvals and `patchedDependencies` declaration are
- * folded onto `packageJson` in place (see
- * `getPrunedPnpmPackageJsonBuildSettings`), so write or emit the manifest after
- * this returns.
- *
- * Pass `includeLocalPathArtifacts: false` when the lockfile is the root-lockfile
- * fallback, which `createPrunedLockfile` reports as `pruned: false`: its importer
- * references the whole workspace, so shipping its local-path trees would copy
- * unrelated sources into the output.
+ * Pass `includeLocalPathArtifacts: false` for the root-lockfile fallback
+ * (`pruned: false` from `createPrunedLockfile`): its importer references the
+ * whole workspace, so shipping its local-path trees would copy unrelated
+ * sources into the output.
  */
 export function getPrunedPnpmInstallArtifacts(
   workspaceRootPath: string,

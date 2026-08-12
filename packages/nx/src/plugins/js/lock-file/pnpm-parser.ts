@@ -788,6 +788,8 @@ export function stringifyPnpmLockfile(
   // relocated at its synthesis site, which is why it is added afterwards: a
   // second pass over an already-relocated path cannot tell it apart from a
   // workspace path that genuinely starts with the shipped directory's name.
+  // TODO(v24): throw on this collision like the colliding-patches case; today
+  // the copied workspace module silently supersedes the file: dependency.
   warnOnWorkspaceModulePathCollision(snapshots, synthesizedModulePaths);
   containShippedLocalFilePaths(output, synthesizedModulePaths);
 

@@ -1,5 +1,4 @@
 import {
-  checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
   newProject,
@@ -384,10 +383,12 @@ describe('js:prune-lockfile executor', () => {
       runCLI(`copy-workspace-modules ${nodeapp}`);
 
       checkFilesExist(`${nodeapp}/dist/pnpm-lock.yaml`);
-      // The dist ships a pnpm-workspace.yaml only for install settings the
-      // prune carries (build approvals, patches, architectures); this workspace
-      // has none.
-      checkFilesDoNotExist(`${nodeapp}/dist/pnpm-workspace.yaml`);
+      // The dist always ships a pnpm-workspace.yaml so a cache replay or an
+      // uncleaned output directory never leaves a stale copy in place; with no
+      // install settings to carry it holds only an empty `packages` list.
+      expect(readFile(`${nodeapp}/dist/pnpm-workspace.yaml`)).toEqual(
+        'packages: []\n'
+      );
       // The strip dropped the unsatisfiable config from the pruned lockfile.
       expect(readFile(`${nodeapp}/dist/pnpm-lock.yaml`)).not.toContain(
         'overrides:'
