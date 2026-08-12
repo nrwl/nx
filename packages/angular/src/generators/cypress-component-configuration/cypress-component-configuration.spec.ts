@@ -33,8 +33,8 @@ jest.mock('nx/src/project-graph/project-graph', () => ({
   readCachedProjectGraph: jest.fn().mockImplementation(() => projectGraph),
 }));
 
-// Cypress can't run component tests on Angular 22.1+ until Cypress 16, so tests
-// pinning an older Cypress version have to pin Angular below 22.1 as well.
+// Cypress below 15.20.1 can't run component tests on Angular 22.1+, so tests
+// exercising older Cypress behavior pin Angular below 22.1.
 // See: https://github.com/cypress-io/cypress/issues/34461
 function useAngularSupportedByCypress(tree: Tree) {
   updateJson(tree, 'package.json', (json) => {
@@ -67,13 +67,6 @@ describe('Cypress Component Testing Configuration', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     tree.write('.gitignore', '');
     mockedInstalledCypressVersion.mockReturnValue(10);
-    // Cypress can't run component tests on Angular 22.1+ until Cypress 16.
-    // See: https://github.com/cypress-io/cypress/issues/34461
-    updateJson(tree, 'package.json', (json) => {
-      json.dependencies = { ...json.dependencies, cypress: '^16.0.0' };
-      return json;
-    });
-
     projectGraph = {
       dependencies: {},
       nodes: {},
@@ -449,6 +442,7 @@ describe('Cypress Component Testing Configuration', () => {
       return json;
     });
     await generateTestLibrary(tree, {
+      linter: 'eslint',
       directory: 'my-lib',
       skipFormat: true,
     });
@@ -944,6 +938,7 @@ describe('Cypress Component Testing Configuration', () => {
       return json;
     });
     await generateTestApplication(tree, {
+      linter: 'eslint',
       directory: 'zoneless-app',
       bundler: 'webpack',
       skipFormat: true,
@@ -1011,6 +1006,7 @@ describe('Cypress Component Testing Configuration', () => {
       return json;
     });
     await generateTestLibrary(tree, {
+      linter: 'eslint',
       directory: 'zoneless-lib',
       skipFormat: true,
     });
@@ -1144,7 +1140,7 @@ describe('Cypress Component Testing Configuration', () => {
     // this cypress version also fails the zoneless check, which the angular
     // version check must take precedence over
     updateJson(tree, 'package.json', (json) => {
-      json.dependencies = { ...json.dependencies, cypress: '15.7.0' };
+      json.dependencies = { ...json.dependencies, cypress: '15.20.0' };
       return json;
     });
     await generateTestApplication(tree, {
@@ -1171,9 +1167,7 @@ describe('Cypress Component Testing Configuration', () => {
         generateTests: false,
         skipFormat: true,
       })
-    ).rejects.toThrow(
-      /Cypress Component Testing doesn't support Angular 22\.1 and higher/
-    );
+    ).rejects.toThrow(/requires Cypress 15\.20\.1 or higher/);
   });
 });
 

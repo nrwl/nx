@@ -65,7 +65,8 @@ const matrixData: MatrixData = {
     { name: 'e2e-react', codeowners: 'S04TNCNJG5N' },
     { name: 'e2e-rollup', codeowners: 'S04SJ6PL98X' },
     { name: 'e2e-storybook', codeowners: 'S04SVQ8H0G5' },
-    { name: 'e2e-nuxt', codeowners: 'S04SJ6PL98X' }
+    { name: 'e2e-nuxt', codeowners: 'S04SJ6PL98X' },
+    { name: 'e2e-oxlint', codeowners: 'S04SYJGKSCT' }
   ],
   // Non-core plugins only run on the lowest LTS. Plugin-level changes are
   // less Node-version-sensitive than core, so single-version coverage is enough.

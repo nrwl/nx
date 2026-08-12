@@ -22,6 +22,9 @@ describe('Remix E2E Tests', () => {
           '@nx/eslint',
         ],
         packageManager: 'npm',
+        // Remix rejects TypeScript 6, so keep this workspace on the 5.x line
+        // that @nx/remix pins (packages/remix/src/utils/versions.ts).
+        typescriptVersion: '~5.9.2',
       });
     });
 

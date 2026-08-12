@@ -1,4 +1,4 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 
 export interface CreatePackageSchema {
   name: string;
@@ -9,7 +9,7 @@ export interface CreatePackageSchema {
   skipFormat?: boolean;
   tags?: string;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   compiler?: 'swc' | 'tsc';
 
   // options to create e2e project, passed to e2e project generator
