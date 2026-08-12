@@ -65,9 +65,13 @@ jobs:
 
   sync:
     # Never on a pull request. The token can delete every article, so it lives
-    # in an environment restricted to master and is unreachable from a branch.
-    # Pull requests get the preview job, which needs no credentials.
-    if: ${{ github.repository_owner == 'nrwl' && github.event_name != 'pull_request' }}
+    # in an environment and pull requests get the preview job instead, which
+    # needs no credentials.
+    #
+    # Pinned to master as well: the environment admits any protected branch,
+    # which includes every release branch, and a dispatch from one of those
+    # would publish that branch's docs over the live knowledge base.
+    if: ${{ github.repository_owner == 'nrwl' && github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
     needs: preview
     environment: pylon
     permissions:
