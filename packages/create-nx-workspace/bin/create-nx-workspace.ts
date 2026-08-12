@@ -1,5 +1,5 @@
-import enquirer from 'enquirer';
 import yargs from 'yargs';
+import enquirer from 'enquirer';
 import chalk from 'chalk';
 
 import {
@@ -53,6 +53,11 @@ import {
 import { existsSync } from 'fs';
 import { basename, dirname, isAbsolute, join, resolve } from 'path';
 import { isCI } from '../src/utils/ci/is-ci';
+import {
+  askChoice,
+  askText,
+  askYesNo,
+} from '../src/internal-utils/prompt-helpers';
 import { isGhCliAvailable } from '../src/utils/git/git';
 import {
   isAiAgent,
@@ -970,31 +975,20 @@ export async function determineFolder(
 }
 
 async function promptCreateInCurrentDir(dirName: string): Promise<boolean> {
-  const { useCurrentDir } = await enquirer.prompt<{
-    useCurrentDir: 'Yes' | 'No';
-  }>([
-    {
-      name: 'useCurrentDir',
-      message: `Create workspace in the current directory (${dirName})? Existing files may be overwritten.`,
-      type: 'autocomplete',
-      choices: [{ name: 'Yes' }, { name: 'No' }],
-      initial: 0,
-    },
-  ]);
-  return useCurrentDir === 'Yes';
+  return askYesNo({
+    message: `Create workspace in the current directory (${dirName})? Existing files may be overwritten.`,
+  });
 }
 
 async function promptForFolder(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<string> {
-  const reply = await enquirer.prompt<{ folderName: string }>([
-    {
-      name: 'folderName',
+  const reply = {
+    folderName: await askText({
       message: `Where would you like to create your workspace?`,
-      initial: 'org',
-      type: 'input',
+      initialValue: 'org',
       skip: !parsedArgs.interactive || isCI(),
-      validate: (value: string): string | true => {
+      validate: (value: string): string | undefined => {
         if (!value) {
           return 'Folder name cannot be empty';
         }
@@ -1004,10 +998,10 @@ async function promptForFolder(
         if (existsSync(value)) {
           return `The directory '${value}' already exists`;
         }
-        return true;
+        return undefined;
       },
-    },
-  ]);
+    }),
+  };
 
   // Fallback invariants in case validate is bypassed (e.g., in CI or non-interactive mode)
   invariant(
@@ -1145,24 +1139,15 @@ async function determineFormatterOptions(
   opts?: { preferPrettier?: boolean }
 ) {
   if (args.formatter) return args.formatter;
-  const reply = await enquirer.prompt<{ prettier: 'Yes' | 'No' }>([
-    {
-      name: 'prettier',
-      message: `Would you like to use Prettier for code formatting?`,
-      type: 'autocomplete',
-      choices: [
-        {
-          name: 'Yes',
-        },
-        {
-          name: 'No',
-        },
-      ],
-      initial: opts?.preferPrettier ? 0 : 1,
-      skip: !args.interactive || isCI(),
-    },
-  ]);
-  return reply.prettier === 'Yes' ? 'prettier' : 'none';
+  // A skipped run answers yes regardless of `preferPrettier`, which only moves
+  // the highlighted option when the prompt is shown.
+  const usePrettier = await askYesNo({
+    message: `Would you like to use Prettier for code formatting?`,
+    initial: opts?.preferPrettier ?? false,
+    skip: !args.interactive || isCI(),
+    skippedValue: true,
+  });
+  return usePrettier ? 'prettier' : 'none';
 }
 
 async function determineNoneOptions(
@@ -1209,24 +1194,11 @@ async function determineNoneOptions(
     } else if (preset === Preset.TsStandalone) {
       // Only standalone TS preset generates a default package, so we need to provide --js and --appName options.
       appName = parsedArgs.name;
-      const reply = await enquirer.prompt<{ ts: 'Yes' | 'No' }>([
-        {
-          name: 'ts',
-          message: `Would you like to use TypeScript with this project?`,
-          type: 'autocomplete',
-          choices: [
-            {
-              name: 'Yes',
-            },
-            {
-              name: 'No',
-            },
-          ],
-          initial: 0,
-          skip: !parsedArgs.interactive || isCI(),
-        },
-      ]);
-      js = reply.ts === 'No';
+      js = !(await askYesNo({
+        message: `Would you like to use TypeScript with this project?`,
+        skip: !parsedArgs.interactive || isCI(),
+        skippedValue: true,
+      }));
     }
 
     // `ts-standalone` is the only preset on this stack that generates a
@@ -1634,20 +1606,20 @@ async function determineAngularOptions(
   if (parsedArgs.ssr !== undefined) {
     ssr = parsedArgs.ssr;
   } else {
-    const reply = await enquirer.prompt<{ ssr: 'Yes' | 'No' }>([
-      {
-        name: 'ssr',
+    const reply = {
+      ssr: (await askYesNo({
         message: `Do you want to enable Server-Side Rendering (SSR)${
           bundler !== 'rspack'
             ? ' and Static Site Generation (SSG/Prerendering)?'
             : '?'
         }`,
-        type: 'autocomplete',
-        choices: [{ name: 'Yes' }, { name: 'No' }],
-        initial: 1,
+        initial: false,
         skip: !parsedArgs.interactive || isCI(),
-      },
-    ]);
+        skippedValue: true,
+      }))
+        ? ('Yes' as const)
+        : ('No' as const),
+    };
     ssr = reply.ssr === 'Yes';
   }
 

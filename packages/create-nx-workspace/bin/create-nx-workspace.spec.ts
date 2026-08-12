@@ -6,6 +6,7 @@ import {
   determinePresetOptions,
 } from './create-nx-workspace';
 import enquirer from 'enquirer';
+import * as clack from '@clack/prompts';
 import { CnwError } from '../src/utils/error-utils';
 import { Preset } from '../src/utils/preset/preset';
 import {
@@ -21,6 +22,13 @@ import { tmpdir } from 'os';
 jest.mock('enquirer', () => ({
   __esModule: true,
   default: { prompt: jest.fn() },
+}));
+
+jest.mock('@clack/prompts', () => ({
+  __esModule: true,
+  autocomplete: jest.fn(),
+  text: jest.fn(),
+  isCancel: jest.fn(() => false),
 }));
 
 jest.mock('../src/utils/ci/is-ci', () => ({
@@ -275,6 +283,8 @@ describe('determineFolder - explicit "." confirmation', () => {
   beforeEach(() => {
     originalCwd = process.cwd();
     (enquirer.prompt as jest.Mock).mockReset();
+    (clack.autocomplete as jest.Mock).mockReset();
+    (clack.text as jest.Mock).mockReset();
     (isCI as jest.Mock).mockReset().mockReturnValue(false);
   });
 
@@ -294,9 +304,7 @@ describe('determineFolder - explicit "." confirmation', () => {
   it('scaffolds in place when the user confirms', async () => {
     const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
     process.chdir(tmpDir);
-    (enquirer.prompt as jest.Mock).mockResolvedValueOnce({
-      useCurrentDir: 'Yes',
-    });
+    (clack.autocomplete as jest.Mock).mockResolvedValueOnce('Yes');
 
     const parsedArgs = dotArgs();
     const result = await determineFolder(parsedArgs);
@@ -304,7 +312,7 @@ describe('determineFolder - explicit "." confirmation', () => {
     expect(result).toBe(basename(tmpDir));
     expect(parsedArgs.workingDir).toBe(dirname(tmpDir));
     expect(parsedArgs.useCurrentDir).toBe(true);
-    expect(enquirer.prompt).toHaveBeenCalledTimes(1);
+    expect(clack.autocomplete).toHaveBeenCalledTimes(1);
 
     rmSync(tmpDir, { recursive: true });
   });
@@ -312,9 +320,8 @@ describe('determineFolder - explicit "." confirmation', () => {
   it('falls back to a named subfolder when the user declines', async () => {
     const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
     process.chdir(tmpDir);
-    (enquirer.prompt as jest.Mock)
-      .mockResolvedValueOnce({ useCurrentDir: 'No' })
-      .mockResolvedValueOnce({ folderName: 'myorg' });
+    (clack.autocomplete as jest.Mock).mockResolvedValueOnce('No');
+    (clack.text as jest.Mock).mockResolvedValueOnce('myorg');
 
     const parsedArgs = dotArgs();
     const result = await determineFolder(parsedArgs);
@@ -324,7 +331,8 @@ describe('determineFolder - explicit "." confirmation', () => {
     // so the subfolder lands under the cwd.
     expect(parsedArgs.useCurrentDir).toBeFalsy();
     expect(parsedArgs.workingDir).toBeUndefined();
-    expect(enquirer.prompt).toHaveBeenCalledTimes(2);
+    expect(clack.autocomplete).toHaveBeenCalledTimes(1);
+    expect(clack.text).toHaveBeenCalledTimes(1);
 
     rmSync(tmpDir, { recursive: true });
   });
