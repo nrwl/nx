@@ -84,6 +84,19 @@ jobs:
           DRY_RUN: ${{ github.event_name == 'pull_request' || inputs.dry-run }}
           PRUNE: ${{ inputs.prune }}
         run: |
+          # A PR has nothing to authenticate with until the secret exists, and
+          # conversion is already covered by the preview job. A scheduled or
+          # manual run without a token is a real failure.
+          if [ -z "$PYLON_API_TOKEN" ]; then
+            if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+              echo "No PYLON_API_TOKEN available, skipping the live dry run." \
+                | tee -a "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            echo "PYLON_API_TOKEN is required for scheduled and manual runs" >&2
+            exit 1
+          fi
+
           # Both variables arrive as the literal strings "true"/"false"/"", so
           # they have to be compared rather than tested for emptiness.
           args=""
