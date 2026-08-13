@@ -742,6 +742,20 @@ function packageJsonAuthorsTargetIdentity(
   if (includedScripts.includes(targetName)) {
     return true;
   }
+  // The `nx.targets` check below reads PRE-migration state. In a package-based
+  // workspace the target being migrated lives in `nx.targets` itself (that is
+  // where its executor is authored), so reading it here would flag every project
+  // as authoring its own identity, exclude them all, and centralize nothing.
+  // A package-based project's residual is written back to `nx.targets` WITHOUT an
+  // executor/command, so post-migration it authors no identity and the hoisted
+  // `filter:{plugin}` default resolves fine. Gate on the same `project.json`
+  // signal `updateProjectConfiguration` uses to decide where config lives: only
+  // trust an `nx.targets` identity when the project keeps its config in
+  // `project.json` (there a package.json `nx.targets` entry is genuinely separate
+  // from the migrated target).
+  if (!tree.exists(join(root, 'project.json'))) {
+    return false;
+  }
   // An `nx.targets` entry authors identity only when it says how to run.
   const nxTarget = packageJson?.nx?.targets?.[targetName];
   return (

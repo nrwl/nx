@@ -973,6 +973,115 @@ describe('Phase 3 — strict-common hoist', () => {
     });
   });
 
+  it('does not centralize a target a package.json nx.targets entry authors (project.json present)', async () => {
+    // A package.json `nx.targets` entry that says how to run (here a `command`)
+    // makes the package-json DEFAULT plugin author the target's identity, so a
+    // `filter:{plugin}` default would be refused. With a project.json present the
+    // nx.targets entry is genuinely separate from the migrated target, so the
+    // project must be excluded and keep its full residual. Covers the
+    // `nx.targets` arm of the identity gate (the script arm is covered above).
+    ctx = setupFixture('hoist-identity-nx-targets');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+      ctx.tree.write(
+        `${name}/package.json`,
+        JSON.stringify({
+          name,
+          nx: { targets: { build: { command: 'tsc -b' } } },
+        })
+      );
+    }
+    const plugin = createSyntheticPlugin();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations()
+    );
+
+    // NOT hoisted — the nx.targets identity refuses a plugin-scoped default
+    expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({ cache: true });
+    for (const name of ['app1', 'app2']) {
+      expect(readJson(ctx.tree, `${name}/project.json`).targets.build).toEqual({
+        options: { mode: 'production' },
+      });
+    }
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+    for (const name of ['app1', 'app2']) {
+      expect(resolved[name].build.options?.mode).toBe('production');
+    }
+  });
+
+  it('centralizes in a package-based workspace (no project.json) instead of excluding every project', async () => {
+    // Package-based projects author their target in package.json `nx.targets`,
+    // which is exactly where the migrated executor lives PRE-migration. Reading
+    // it as an authored identity would exclude every project and centralize
+    // nothing. The residual is written back to `nx.targets` WITHOUT an executor,
+    // so post-migration it authors no identity and the hoist resolves.
+    ctx = setupFixture('package-based-centralize');
+    // shared `mode` is common (hoisted); each project keeps a distinct `variant`
+    const variants: Record<string, string> = { pkg1: 'a', pkg2: 'b' };
+    for (const name of ['pkg1', 'pkg2']) {
+      const root = `libs/${name}`;
+      const target = {
+        executor: SYNTHETIC_EXECUTOR,
+        options: {
+          config: SYNTHETIC_CONFIG_FILE,
+          mode: 'production',
+          variant: variants[name],
+        },
+        cache: true,
+        outputs: ['{projectRoot}/dist'],
+      };
+      ctx.tree.write(
+        `${root}/package.json`,
+        JSON.stringify({ name, nx: { targets: { build: target } } })
+      );
+      ctx.projectGraph.nodes[name] = {
+        name,
+        type: 'lib',
+        data: { root, targets: { build: target } } as any,
+      };
+      ctx.fs.createFileSync(`${root}/${SYNTHETIC_CONFIG_FILE}`, '{}');
+    }
+    const plugin = createSyntheticPlugin();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations()
+    );
+
+    // the shared `mode` IS hoisted — a package-based workspace no longer blocks it
+    expect(readNxJson(ctx.tree).targetDefaults.build).toContainEqual({
+      filter: { plugin: SYNTHETIC_PLUGIN_PATH },
+      options: { mode: 'production' },
+    });
+    // each project's nx.targets kept only its deviation: no executor (so the
+    // package-json plugin authors no identity and the hoisted default resolves),
+    // and no `mode` (it was centralized).
+    for (const name of ['pkg1', 'pkg2']) {
+      const build = readJson(ctx.tree, `libs/${name}/package.json`).nx.targets
+        .build;
+      expect(build).toEqual({ options: { variant: variants[name] } });
+    }
+  });
+
   it('partitions per-project: hoists for eligible projects, excludes authored-identity ones', async () => {
     // Mixed workspace: two clean projects (eligible) share `mode: production`,
     // one project has a package.json `build` script (default-layer identity), and
