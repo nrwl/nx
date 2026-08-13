@@ -2,6 +2,7 @@
 module.exports = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   globals: {},
+  setupFiles: ['<rootDir>/jest-setup-nx-workspace-data-dir.js'],
   displayName: 'cli',
   preset: '../../jest.preset.js',
   modulePathIgnorePatterns: ['<rootDir>/dist/'],

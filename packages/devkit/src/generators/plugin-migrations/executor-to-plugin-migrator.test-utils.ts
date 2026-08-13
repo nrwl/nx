@@ -1,5 +1,4 @@
-import { dirname, join } from 'node:path/posix';
-import { readFileSync } from 'node:fs';
+import { dirname } from 'node:path/posix';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { createTreeWithEmptyWorkspace } from 'nx/src/generators/testing-utils/create-tree-with-empty-workspace';
 import { addProjectConfiguration, readNxJson } from 'nx/src/devkit-exports';
@@ -12,6 +11,14 @@ import {
 // migrated workspace through the same pipeline Nx uses at runtime.
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { ProjectJsonProjectsPlugin } from 'nx/src/plugins/project-json/build-nodes/project-json';
+// The package.json default plugin: it emits an `nx:run-script` target per
+// package.json script, so loading it lets the pipeline observe cases where the
+// DEFAULT layer (not project.json) authors a target's identity.
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+import {
+  createNodes as packageJsonCreateNodes,
+  name as packageJsonPluginName,
+} from 'nx/src/plugins/package-json';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { setupWorkspaceContext } from 'nx/src/utils/workspace-context';
 import type { Tree } from 'nx/src/generators/tree';
@@ -189,61 +196,6 @@ export function flushTreeToDisk(ctx: FixtureContext): void {
 }
 
 /**
- * A minimal stand-in for the real `nx/core/package-json` default plugin. It
- * emits an `nx:run-script` target per included package.json script (and honors
- * `nx.targets`) — the only behavior the equivalence oracle needs: authoring a
- * target's identity in a DEFAULT layer, which makes `resolveSourcePlugin` refuse
- * a `filter: { plugin }` targetDefault for that target.
- *
- * We deliberately do NOT import `nx/src/plugins/package-json`: its `createNodes`
- * calls `readPackageJsonConfigurationCache()`/`getPackageManagerCommand()`, which
- * read the module-level `workspaceDataDirectory` and `workspaceRoot` (the REAL
- * repo, fixed at import time) — `.nx/workspace-data/*.hash`, `lerna.json`,
- * `nx.json` — files outside the TempFs sandbox and outside `devkit:test`'s
- * declared task inputs, tripping Nx Cloud's task-isolation sandbox on CI. This
- * stand-in reads only `context.workspaceRoot` (the TempFs root).
- */
-const PACKAGE_JSON_IDENTITY_PLUGIN_NAME = 'nx/core/package-json';
-const packageJsonIdentityCreateNodes: CreateNodes = [
-  '**/package.json',
-  (configFiles, _options, context) => {
-    return configFiles.map((file) => {
-      let packageJson: {
-        scripts?: Record<string, unknown>;
-        nx?: {
-          includedScripts?: string[];
-          targets?: Record<string, TargetConfiguration>;
-        };
-      };
-      try {
-        packageJson = JSON.parse(
-          readFileSync(join(context.workspaceRoot, file), 'utf-8')
-        );
-      } catch {
-        return [file, {}] as const;
-      }
-      const scripts = packageJson?.scripts ?? {};
-      const includedScripts =
-        packageJson?.nx?.includedScripts ?? Object.keys(scripts);
-      const targets: Record<string, TargetConfiguration> = {};
-      for (const script of includedScripts) {
-        targets[script] = { executor: 'nx:run-script', options: { script } };
-      }
-      for (const [name, target] of Object.entries(
-        packageJson?.nx?.targets ?? {}
-      )) {
-        targets[name] = target;
-      }
-      const dir = dirname(file);
-      const root = dir === '' || dir === '.' ? '.' : dir;
-      return Object.keys(targets).length === 0
-        ? ([file, {}] as const)
-        : ([file, { projects: { [root]: { targets } } }] as const);
-    });
-  },
-];
-
-/**
  * Resolve the migrated workspace through the REAL Nx pipeline: the migrated
  * plugin's registrations as specified plugins + the actual `project.json`
  * default plugin, so `targetDefaults` synthesis (including
@@ -285,11 +237,8 @@ export async function resolveThroughRealPipeline(
       'nx/core/project-json'
     );
     const packageJsonPlugin = new LoadedNxPlugin(
-      {
-        createNodes: packageJsonIdentityCreateNodes,
-        name: PACKAGE_JSON_IDENTITY_PLUGIN_NAME,
-      },
-      PACKAGE_JSON_IDENTITY_PLUGIN_NAME
+      { createNodes: packageJsonCreateNodes, name: packageJsonPluginName },
+      packageJsonPluginName
     );
     const result = await retrieveProjectConfigurations(
       {
