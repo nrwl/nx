@@ -363,8 +363,7 @@ export function findTransitiveExternalDependencies(
 export function hasBannedDependencies(
   externalDependencies: ProjectGraphDependency[],
   graph: ProjectGraph,
-  depConstraint: DepConstraint,
-  imp: string
+  depConstraint: DepConstraint
 ):
   | Array<[ProjectGraphExternalNode, ProjectGraphProjectNode, DepConstraint]>
   | undefined {
@@ -373,7 +372,7 @@ export function hasBannedDependencies(
       isConstraintBanningProject(
         graph.externalNodes[dependency.target],
         depConstraint,
-        imp
+        graph.externalNodes[dependency.target].data.packageName
       )
     )
     .map((dep) => [

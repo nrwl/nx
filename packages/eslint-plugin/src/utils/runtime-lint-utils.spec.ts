@@ -312,15 +312,10 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
 
   it("should return empty array if any dependents don't have banned import", () => {
     expect(
-      hasBannedDependencies(
-        externalDependencies.slice(1),
-        graph,
-        {
-          sourceTag: 'a',
-          bannedExternalImports: ['angular'],
-        },
-        'react-native'
-      )
+      hasBannedDependencies(externalDependencies.slice(1), graph, {
+        sourceTag: 'a',
+        bannedExternalImports: ['angular'],
+      })
     ).toStrictEqual([]);
   });
 
@@ -331,12 +326,7 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
     };
 
     expect(
-      hasBannedDependencies(
-        externalDependencies.slice(1),
-        graph,
-        constraint,
-        'react-native'
-      )
+      hasBannedDependencies(externalDependencies.slice(1), graph, constraint)
     ).toStrictEqual([[bannedTarget, d, constraint]]);
   });
 
@@ -347,12 +337,7 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
     };
 
     expect(
-      hasBannedDependencies(
-        externalDependencies.slice(1),
-        graph,
-        constraint,
-        'react'
-      )
+      hasBannedDependencies(externalDependencies.slice(1), graph, constraint)
     ).toStrictEqual([
       [nonBannedTarget, target, constraint],
       [nonBannedTarget, c, constraint],
@@ -366,20 +351,12 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
     };
 
     expect(
-      hasBannedDependencies(
-        externalDependencies.slice(1),
-        graph,
-        constraint,
-        'react-native'
-      ).length
+      hasBannedDependencies(externalDependencies.slice(1), graph, constraint)
+        .length
     ).toBe(0);
     expect(
-      hasBannedDependencies(
-        externalDependencies.slice(1),
-        graph,
-        constraint,
-        'react'
-      ).length
+      hasBannedDependencies(externalDependencies.slice(1), graph, constraint)
+        .length
     ).toBe(0);
   });
 });

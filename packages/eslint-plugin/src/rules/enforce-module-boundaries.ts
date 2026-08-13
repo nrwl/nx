@@ -760,8 +760,7 @@ export default ESLintUtils.RuleCreator(
             const matches = hasBannedDependencies(
               transitiveExternalDeps,
               projectGraph,
-              constraint,
-              imp
+              constraint
             );
             if (matches.length > 0) {
               matches.forEach(([target, violatingSource, constraint]) => {
