@@ -1354,9 +1354,11 @@ async function runVerificationPass<T>(
   result: ConfigurationResult | undefined;
   errors: string[];
   /**
-   * Config files the plugin threw an `AggregateCreateNodesError` for during
-   * verification. These are the roots the pass could NOT inspect; the guard
-   * fails closed against any that sit outside the migrated set.
+   * Config files the plugin failed on during verification, harvested by
+   * `harvestConfigurationErrors`: both `AggregateCreateNodesError` entries (a
+   * `[file, error]` list) and a `MergeNodesError`'s `file`. These are the roots
+   * the pass could NOT inspect; the guard fails closed against any that sit
+   * outside the migrated set.
    */
   erroredConfigFiles: string[];
 }> {
