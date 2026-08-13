@@ -880,6 +880,99 @@ describe('Phase 3 — strict-common hoist', () => {
     }
   });
 
+  it('excludes projects whose package.json is jsonc (comment / trailing comma), keeping their config', async () => {
+    // `JSON.parse` throws on `//` comments and trailing commas, but Nx reads
+    // package.json with a jsonc-tolerant parser — so the real package-json plugin
+    // turns the `build` script into an `nx:run-script` target and authors the
+    // identity. If the gate used `JSON.parse` it would throw, treat the project
+    // as eligible, hoist, and Nx would silently drop the centralized config.
+    ctx = setupFixture('jsonc-package-json');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    // app1: a `//` comment. app2: a trailing comma.
+    ctx.tree.write(
+      'app1/package.json',
+      '{\n  // build script for app1\n  "name": "app1",\n  "scripts": { "build": "tsc -b" }\n}'
+    );
+    ctx.tree.write(
+      'app2/package.json',
+      '{\n  "name": "app2",\n  "scripts": { "build": "tsc -b" },\n}'
+    );
+    const plugin = createSyntheticPlugin();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations()
+    );
+
+    // both excluded -> not hoisted; each keeps its full residual
+    expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({ cache: true });
+    for (const name of ['app1', 'app2']) {
+      expect(readJson(ctx.tree, `${name}/project.json`).targets.build).toEqual({
+        options: { mode: 'production' },
+      });
+    }
+    // through REAL resolution each project resolves its own config (default refused)
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+    for (const name of ['app1', 'app2']) {
+      expect(resolved[name].build.options?.mode).toBe('production');
+    }
+  });
+
+  it('fails closed: a genuinely unparseable package.json excludes the project', async () => {
+    ctx = setupFixture('unparseable-package-json');
+    for (const name of ['clean1', 'clean2', 'broken']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    // `broken`'s package.json is not parseable even by the jsonc parser; the gate
+    // must fail closed (treat identity as authored) rather than hoist on a guess.
+    ctx.tree.write('broken/package.json', '{ this is not valid json at all');
+    const plugin = createSyntheticPlugin();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations()
+    );
+
+    // the clean pair centralizes; the broken project is kept per-project
+    expect(readNxJson(ctx.tree).targetDefaults.build).toContainEqual({
+      filter: { plugin: SYNTHETIC_PLUGIN_PATH },
+      options: { mode: 'production' },
+    });
+    expect(
+      readJson(ctx.tree, 'clean1/project.json').targets.build
+    ).toBeUndefined();
+    expect(
+      readJson(ctx.tree, 'clean2/project.json').targets.build
+    ).toBeUndefined();
+    expect(readJson(ctx.tree, 'broken/project.json').targets.build).toEqual({
+      options: { mode: 'production' },
+    });
+  });
+
   it('partitions per-project: hoists for eligible projects, excludes authored-identity ones', async () => {
     // Mixed workspace: two clean projects (eligible) share `mode: production`,
     // one project has a package.json `build` script (default-layer identity), and

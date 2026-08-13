@@ -6,6 +6,7 @@ import type {
   ProjectConfiguration,
 } from 'nx/src/config/workspace-json-project-json';
 import {
+  readJson,
   readNxJson,
   readProjectConfiguration,
   getProjects,
@@ -723,11 +724,13 @@ function packageJsonAuthorsTargetIdentity(
     };
   };
   try {
-    packageJson = JSON.parse(tree.read(packageJsonPath, 'utf-8'));
+    packageJson = readJson(tree, packageJsonPath);
   } catch {
-    // An unparseable package.json infers no target from the package-json
-    // plugin either, so it authors no identity here.
-    return false;
+    // Nx reads this file with the same jsonc-tolerant parser (`//` comments,
+    // trailing commas), so a failure here means inference cannot be trusted for
+    // it either. Fail closed: treat the identity as authored rather than hoist
+    // on a guess.
+    return true;
   }
   const scripts = packageJson?.scripts ?? {};
   // `readTargetsFromPackageJson` turns each *included* script into an
