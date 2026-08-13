@@ -721,6 +721,7 @@ export async function resolvePackageVersionUsingInstallation(
  */
 function createRegistrySpawnContext(pkg: string): {
   workspacePm: PackageManager;
+  workspacePmVersion: string | null;
   configRoot: string;
   scope: string | null;
   buildEnv: (extra: NpmConfigEnv) => NodeJS.ProcessEnv;
@@ -741,6 +742,7 @@ function createRegistrySpawnContext(pkg: string): {
   );
   return {
     workspacePm,
+    workspacePmVersion,
     configRoot,
     scope: getPackageScope(pkg),
     buildEnv: (extra) =>
@@ -804,7 +806,8 @@ export async function packageRegistryView(
   // collapses to the single highest match (breaks per-version field queries).
   options?: { forceNpm?: boolean }
 ): Promise<string> {
-  const { workspacePm, configRoot, buildEnv } = createRegistrySpawnContext(pkg);
+  const { workspacePm, workspacePmVersion, configRoot, buildEnv } =
+    createRegistrySpawnContext(pkg);
   let pm = workspacePm;
   if (options?.forceNpm || pm === 'yarn' || pm === 'bun') {
     /**
@@ -822,6 +825,11 @@ export async function packageRegistryView(
 
   // An empty version means we want the full packument; omit the trailing `@`.
   const spec = version ? `${pkg}@${version}` : pkg;
+  // pnpm 11 reimplemented `view` natively, resolving registry and credentials
+  // (tokenHelper included) itself, so it runs on the untouched environment;
+  // pnpm 10 passed `view` through to the npm CLI, which needs the overlay.
+  const nativePnpmView =
+    pm === 'pnpm' && (parse(workspacePmVersion)?.major ?? 0) >= 11;
   // npm_config_force downgrades npm's `devEngines.packageManager` enforcement,
   // which otherwise aborts even a read-only `view` when the pin sets
   // `onFail: error`. Only set for npm so a `pnpm view` is untouched.
@@ -832,7 +840,9 @@ export async function packageRegistryView(
       {
         windowsHide: true,
         cwd: configRoot,
-        env: buildEnv(pm === 'npm' ? { npm_config_force: 'true' } : {}),
+        env: nativePnpmView
+          ? process.env
+          : buildEnv(pm === 'npm' ? { npm_config_force: 'true' } : {}),
       }
     );
     return stdout.toString().trim();

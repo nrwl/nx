@@ -1029,6 +1029,65 @@ describe('package-manager', () => {
       expect(options.env?.npm_config_force).toBeUndefined();
     });
 
+    it('runs a pnpm >= 11 view on the ambient environment without building the overlay', async () => {
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'pnpm' } });
+      (existsSync as jest.Mock).mockReturnValue(false);
+      jest.spyOn(childProcess, 'execSync').mockReturnValue('11.2.0' as any);
+      const overlaySpy = jest
+        .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
+        .mockReturnValue({});
+
+      await packageRegistryView('nx', 'latest', ['--json']);
+
+      const [file, , options] = execMock.mock.calls[0];
+      expect(file).toBe('pnpm');
+      expect(options.env).toBe(process.env);
+      // Skipping the overlay keeps the resolver's npm-bridging warnings
+      // (tokenHelper) away from a fetch pnpm authenticates itself.
+      expect(overlaySpy).not.toHaveBeenCalled();
+    });
+
+    it('keeps the overlay for a pnpm 10 view, which delegates to the npm CLI', async () => {
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'pnpm' } });
+      (existsSync as jest.Mock).mockReturnValue(false);
+      jest.spyOn(childProcess, 'execSync').mockReturnValue('10.13.1' as any);
+      jest.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({
+        npm_config_registry: 'https://sentinel.example.com/',
+      });
+
+      await packageRegistryView('nx', 'latest', ['--json']);
+
+      const [file, , options] = execMock.mock.calls[0];
+      expect(file).toBe('pnpm');
+      expect(options.env.npm_config_registry).toBe(
+        'https://sentinel.example.com/'
+      );
+    });
+
+    it('keeps the overlay when a pnpm >= 11 view is forced through npm', async () => {
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'pnpm' } });
+      (existsSync as jest.Mock).mockReturnValue(false);
+      jest.spyOn(childProcess, 'execSync').mockReturnValue('11.2.0' as any);
+      jest.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({
+        npm_config_registry: 'https://sentinel.example.com/',
+      });
+
+      await packageRegistryView('nx', 'latest', ['--json'], { forceNpm: true });
+
+      const [file, , options] = execMock.mock.calls[0];
+      expect(file).toBe('npm');
+      expect(options.env.npm_config_registry).toBe(
+        'https://sentinel.example.com/'
+      );
+      expect(options.env.npm_config_force).toBe('true');
+    });
+
     it('should query the bare package name when no version is given', async () => {
       // The full packument is fetched with an empty version, so the spec stays
       // the bare name rather than carrying a trailing `@`.
@@ -1179,7 +1238,7 @@ describe('package-manager', () => {
       );
     });
 
-    it('should drop an ambient credential the workspace pnpm 11.0-11.5 ignores', async () => {
+    it('should drop an ambient credential the workspace pnpm 11.0-11.5 ignores from an npm-forced view', async () => {
       // The overlay does not carry the setting, so only mergeNpmConfigEnv's third
       // argument (ignoresNpmConfigEnv) drops it here.
       jest
@@ -1193,7 +1252,9 @@ describe('package-manager', () => {
       process.env[key] = 'ambient-token';
 
       try {
-        await packageRegistryView('nx', 'latest', ['--json']);
+        await packageRegistryView('nx', 'latest', ['--json'], {
+          forceNpm: true,
+        });
       } finally {
         if (saved === undefined) {
           delete process.env[key];
@@ -1206,7 +1267,7 @@ describe('package-manager', () => {
       expect(options.env[key]).toBeUndefined();
     });
 
-    it('should keep an ambient URL-scoped credential pnpm reads from 11.6.0 on', async () => {
+    it('should keep an ambient URL-scoped credential pnpm reads from 11.6.0 on in an npm-forced view', async () => {
       jest
         .spyOn(configModule, 'readNxJson')
         .mockReturnValue({ cli: { packageManager: 'pnpm' } });
@@ -1218,7 +1279,9 @@ describe('package-manager', () => {
       process.env[key] = 'ambient-token';
 
       try {
-        await packageRegistryView('nx', 'latest', ['--json']);
+        await packageRegistryView('nx', 'latest', ['--json'], {
+          forceNpm: true,
+        });
       } finally {
         if (saved === undefined) {
           delete process.env[key];
