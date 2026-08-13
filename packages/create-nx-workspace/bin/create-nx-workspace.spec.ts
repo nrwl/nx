@@ -369,6 +369,17 @@ describe('determinePresetOptions', () => {
     // Recorded calls persist across tests otherwise, so any assertion on which
     // questions were asked would see every earlier test's prompts too.
     (clack.autocomplete as jest.Mock).mockClear();
+    // A sentinel the prompt could not produce by accident: both lists put the
+    // stable choice first, so answering with the experimental one pins the
+    // threading through each stack rather than the prompt's own default.
+    (clack.autocomplete as jest.Mock).mockImplementation(
+      async ({ options }: { options: { value: string }[] }) => {
+        const values = options.map((o) => o.value);
+        if (values.includes('oxfmt')) return 'oxfmt';
+        if (values.includes('oxlint')) return 'oxlint';
+        return values[0];
+      }
+    );
   });
 
   // Every stack must come back with the resolved linter. Once the schemas
@@ -377,6 +388,7 @@ describe('determinePresetOptions', () => {
   // Each stack needs enough non-interactive args to reach its return statement.
   const perStack: Record<string, Record<string, unknown>> = {
     none: { preset: Preset.TsStandalone },
+    web: { preset: Preset.WebComponents },
     react: {
       preset: Preset.ReactMonorepo,
       appName: 'app',
@@ -432,6 +444,37 @@ describe('determinePresetOptions', () => {
       } as any);
 
       expect(result.linter).toBe('oxlint');
+    }
+  );
+
+  it.each(Object.keys(perStack))(
+    'should thread the resolved formatter through the %s stack',
+    async (stack) => {
+      const result = await determinePresetOptions({
+        ...base,
+        stack,
+        ...perStack[stack],
+      } as any);
+
+      expect(result.formatter).toBe('oxfmt');
+    }
+  );
+
+  // `--no-workspaces` is the case the formatter used to answer for the user:
+  // it took a hardcoded `prettier` while the linter was already asked. Pinning
+  // both here is what stops that gate coming back.
+  it.each(Object.keys(perStack))(
+    'should thread linter and formatter through the %s stack without workspaces',
+    async (stack) => {
+      const result = await determinePresetOptions({
+        ...base,
+        workspaces: false,
+        stack,
+        ...perStack[stack],
+      } as any);
+
+      expect(result.linter).toBe('oxlint');
+      expect(result.formatter).toBe('oxfmt');
     }
   );
 
