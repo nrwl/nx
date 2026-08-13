@@ -1,7 +1,11 @@
 import { existsSync } from 'fs';
 import { basename } from 'path';
 
-import { prompt } from 'enquirer';
+import {
+  askChoice,
+  askMultiselect,
+  askYesNo,
+} from '../../utils/prompt-helpers';
 import { prerelease } from 'semver';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import { readJsonFile, writeJsonFile } from '../../utils/fileutils';
@@ -225,21 +229,18 @@ async function runInit(
     !aiMode &&
     process.stdin.isTTY
   ) {
-    const setupMode = await prompt<{ setupMode: string }>([
-      {
-        type: 'select',
-        name: 'setupMode',
-        message: 'How would you like to set up Nx in this directory?',
-        choices: [
-          {
-            name: '.nx installation (recommended for non-JavaScript projects)',
-          },
-          {
-            name: 'package.json installation (recommended for JavaScript/TypeScript projects)',
-          },
-        ],
-      },
-    ]).then((r) => r.setupMode);
+    const setupMode = await askChoice({
+      message: 'How would you like to set up Nx in this directory?',
+      choices: [
+        {
+          value: '.nx installation (recommended for non-JavaScript projects)',
+        },
+        {
+          value:
+            'package.json installation (recommended for JavaScript/TypeScript projects)',
+        },
+      ],
+    });
 
     if (setupMode.startsWith('package.json')) {
       // Create a minimal package.json so the JS/TS workflow takes over
@@ -264,14 +265,10 @@ async function runInit(
   // AI mode defaults to minimum setup, humans can choose
   let guided = !aiMode; // Default to minimum (false) for AI, guided (true) for humans
   if (options.interactive && !(_isTurborepo || _isNonJs)) {
-    const setupType = await prompt<{ setupPreference: string }>([
-      {
-        type: 'select',
-        name: 'setupPreference',
-        message: 'Would you like a minimum or guided setup?',
-        choices: [{ name: 'Minimum' }, { name: 'Guided' }],
-      },
-    ]).then((r) => r.setupPreference);
+    const setupType = await askChoice({
+      message: 'Would you like a minimum or guided setup?',
+      choices: [{ value: 'Minimum' }, { value: 'Guided' }],
+    });
     guided = setupType === 'Guided';
   }
 
@@ -730,18 +727,10 @@ export async function detectPlugins(
     ],
   });
 
-  const pluginsToInstall = await prompt<{ plugins: string[] }>([
-    {
-      name: 'plugins',
-      type: 'multiselect',
-      message: `Which plugins would you like to add? Press <Space> to select and <Enter> to submit.`,
-      choices: plugins.map((p) => ({ name: p, value: p })),
-      /**
-       * limit is missing from the interface but it limits the amount of options shown
-       */
-      limit: process.stdout.rows - 4, // 4 leaves room for the header above, the prompt and some whitespace
-    } as any,
-  ]).then((r) => r.plugins);
+  const pluginsToInstall = await askMultiselect({
+    message: `Which plugins would you like to add? Press <Space> to select and <Enter> to submit.`,
+    choices: plugins.map((p) => ({ value: p })),
+  });
 
   if (pluginsToInstall?.length === 0)
     return {
@@ -751,22 +740,9 @@ export async function detectPlugins(
 
   const updatePackageScripts =
     existsSync('package.json') &&
-    (await prompt<{ updatePackageScripts: string }>([
-      {
-        name: 'updatePackageScripts',
-        type: 'autocomplete',
-        message: `Do you want to start using Nx in your package.json scripts?`,
-        choices: [
-          {
-            name: 'Yes',
-          },
-          {
-            name: 'No',
-          },
-        ],
-        initial: 0,
-      },
-    ]).then((r) => r.updatePackageScripts === 'Yes'));
+    (await askYesNo({
+      message: `Do you want to start using Nx in your package.json scripts?`,
+    }));
 
   return { plugins: pluginsToInstall, updatePackageScripts };
 }

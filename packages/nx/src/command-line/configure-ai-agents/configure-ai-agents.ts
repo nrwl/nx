@@ -1,4 +1,4 @@
-import { prompt } from 'enquirer';
+import { askMultiselect } from '../../utils/prompt-helpers';
 import { existsSync, readFileSync } from 'node:fs';
 import { relative } from 'node:path';
 import * as pc from 'picocolors';
@@ -213,7 +213,7 @@ export async function configureAiAgentsHandlerImpl(
           ...partiallyConfiguredAgents,
           ...outOfDateAgents,
           ...nonConfiguredAgents,
-        ].map((a) => getAgentChoiceForPrompt(a).message),
+        ].map((a) => getAgentChoiceForPrompt(a).label),
       });
       process.exit(1);
     }
@@ -312,29 +312,25 @@ export async function configureAiAgentsHandlerImpl(
 
   // Interactive mode (or non-interactive with explicit --agents)
   const allAgentChoices: AgentPromptChoice[] = [];
-  const preselectedIndices: number[] = [];
-  let currentIndex = 0;
+  const preselectedAgents: Agent[] = [];
 
   // Partially configured agents first (highest priority)
   partiallyConfiguredAgents.forEach((a) => {
     allAgentChoices.push(getAgentChoiceForPrompt(a));
-    preselectedIndices.push(currentIndex);
-    currentIndex++;
+    preselectedAgents.push(a.name);
   });
 
   // Outdated agents second
   for (const a of fullyConfiguredAgents) {
     if (a.outdated) {
       allAgentChoices.push(getAgentChoiceForPrompt(a));
-      preselectedIndices.push(currentIndex);
-      currentIndex++;
+      preselectedAgents.push(a.name);
     }
   }
 
   // Non-configured agents last
   nonConfiguredAgents.forEach((a) => {
     allAgentChoices.push(getAgentChoiceForPrompt(a));
-    currentIndex++;
   });
 
   if (allAgentChoices.length === 0) {
@@ -350,29 +346,20 @@ export async function configureAiAgentsHandlerImpl(
   let selectedAgents: Agent[];
   if (options.interactive !== false) {
     try {
-      selectedAgents = (
-        await prompt<{ agents: Agent[] }>({
-          type: 'multiselect',
-          name: 'agents',
-          message:
-            'Which AI agents would you like to configure? (space to select, enter to confirm)',
-          choices: allAgentChoices,
-          initial: preselectedIndices,
-          required: true,
-          footer: function () {
-            const focused = this.focused as AgentPromptChoice;
-            return pc.dim(
-              `  ${getAgentFooterDescription(focused.agentConfiguration)}`
-            );
-          },
-        } as any)
-      ).agents;
+      selectedAgents = await askMultiselect<Agent>({
+        message:
+          'Which AI agents would you like to configure? (space to select, enter to confirm)',
+        choices: allAgentChoices,
+        initialValues: preselectedAgents,
+        required: true,
+        onCancel: () => process.exit(1),
+      });
     } catch {
       process.exit(1);
     }
   } else {
     // non-interactive with explicit --agents: configure all requested
-    selectedAgents = allAgentChoices.map((a) => a.name);
+    selectedAgents = allAgentChoices.map((a) => a.value);
   }
 
   if (selectedAgents?.length === 0) {
@@ -420,8 +407,9 @@ export async function configureAiAgentsHandlerImpl(
 }
 
 type AgentPromptChoice = {
-  name: Agent;
-  message: string;
+  value: Agent;
+  label: string;
+  hint: string;
   agentConfiguration: AgentConfiguration;
 };
 
@@ -495,10 +483,11 @@ function getAgentChoiceForPrompt(agent: AgentConfiguration): AgentPromptChoice {
   const needsUpdate = partiallyConfigured || agent.outdated;
 
   return {
-    name: agent.name,
-    message: needsUpdate
+    value: agent.name,
+    label: needsUpdate
       ? `${agent.displayName} (update available)`
       : agent.displayName,
+    hint: getAgentFooterDescription(agent),
     agentConfiguration: agent,
   };
 }
