@@ -113,9 +113,9 @@ export class TaskOrchestrator {
         getInvocationAncestorPids()
       )
     : null;
-  // Tracks tasks registered by THIS process so that recursive code paths
-  // (e.g. applyFromCacheOrRunBatch looping on incomplete batches) don't
-  // re-register and trip the DB uniqueness constraint.
+  // Tasks this process has already registered. Recursive code paths (e.g.
+  // applyFromCacheOrRunBatch looping on incomplete batches) re-enter the
+  // detector for the same task; skipping them saves a DB round trip.
   private registeredInvocations = new Set<string>();
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
@@ -1575,48 +1575,58 @@ export class TaskOrchestrator {
     // duplicate of it.
     this.runningTasksService?.addRunningTask(task.id);
 
-    const taskSpecificEnv = await this.processedTasks.get(task.id);
-    await this.preRunSteps([task], { groupId });
+    let childProcess: RunningTask;
+    try {
+      const taskSpecificEnv = await this.processedTasks.get(task.id);
+      await this.preRunSteps([task], { groupId });
 
-    const pipeOutput = await this.pipeOutputCapture(task);
-    // obtain metadata
-    const temporaryOutputPath = this.cache.temporaryOutputPath(task);
-    const streamOutput = isStaticOutputStyle(this.outputStyle)
-      ? false
-      : shouldStreamOutput(task, this.initiatingProject);
+      const pipeOutput = await this.pipeOutputCapture(task);
+      // obtain metadata
+      const temporaryOutputPath = this.cache.temporaryOutputPath(task);
+      const streamOutput = isStaticOutputStyle(this.outputStyle)
+        ? false
+        : shouldStreamOutput(task, this.initiatingProject);
 
-    let env = pipeOutput
-      ? getEnvVariablesForTask(
-          task,
-          taskSpecificEnv,
-          getForceColorForChild(),
-          this.options.skipNxCache,
-          this.options.captureStderr,
-          null,
-          null
-        )
-      : getEnvVariablesForTask(
-          task,
-          taskSpecificEnv,
-          undefined,
-          this.options.skipNxCache,
-          this.options.captureStderr,
-          temporaryOutputPath,
-          streamOutput
-        );
-    this.detectTaskInvocationLoop(task);
-    const childProcess = await this.runTask(
-      task,
-      streamOutput,
-      env,
-      temporaryOutputPath,
-      pipeOutput
-    );
-    this.runningContinuousTasks.set(task.id, {
-      runningTask: childProcess,
-      groupId,
-      ownsRunningTasksService: true,
-    });
+      let env = pipeOutput
+        ? getEnvVariablesForTask(
+            task,
+            taskSpecificEnv,
+            getForceColorForChild(),
+            this.options.skipNxCache,
+            this.options.captureStderr,
+            null,
+            null
+          )
+        : getEnvVariablesForTask(
+            task,
+            taskSpecificEnv,
+            undefined,
+            this.options.skipNxCache,
+            this.options.captureStderr,
+            temporaryOutputPath,
+            streamOutput
+          );
+      this.detectTaskInvocationLoop(task);
+      childProcess = await this.runTask(
+        task,
+        streamOutput,
+        env,
+        temporaryOutputPath,
+        pipeOutput
+      );
+      this.runningContinuousTasks.set(task.id, {
+        runningTask: childProcess,
+        groupId,
+        ownsRunningTasksService: true,
+      });
+    } catch (e) {
+      // Nothing owns the claim until runningContinuousTasks holds it — the
+      // release paths (completeContinuousTask, the signal handler) both iterate
+      // that map. Drop it here or siblings wait on a task no one is running.
+      this.runningTasksService?.removeRunningTask(task.id);
+      throw e;
+    }
+
     this.continuousTaskExitHandled.set(
       task.id,
       new Promise<void>((resolve) => {
