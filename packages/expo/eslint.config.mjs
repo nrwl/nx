@@ -41,6 +41,10 @@ export default [
             '@expo/cli',
             'eas-cli',
             'util',
+            // resolved dynamically (per-app) in plugins/with-nx-metro.ts and
+            // plugins/metro-resolver.ts
+            'metro-config',
+            'metro-resolver',
           ],
         },
       ],
