@@ -7,7 +7,7 @@ import { tmpdir } from 'tmp';
 import { prompt } from 'enquirer';
 import { output } from '../../utils/output';
 const createSpinner = require('ora');
-import { detectPlugins } from '../init/init-v2';
+import { detectPlugins, getPluginReason } from '../init/init-v2';
 import { readNxJson } from '../../config/nx-json';
 import { readJsonFile } from '../../utils/fileutils';
 import { PackageJson } from '../../utils/package-json';
@@ -46,7 +46,6 @@ import {
   determineImportErrorCode,
   type ImportWarning,
 } from './utils/ai-output';
-import { getPluginReason } from '../init/init-v2';
 
 const importRemoteName = '__tmp_nx_import__';
 

@@ -1,8 +1,7 @@
 import { basename, join, parse } from 'path';
-import { writeJsonFile } from '@nx/devkit';
+import { writeJsonFile, stripIndents, workspaceRoot } from '@nx/devkit';
 import { writeFileSync } from 'fs';
 import { PackageJson } from '@nx/devkit/internal';
-import { stripIndents, workspaceRoot } from '@nx/devkit';
 
 export function updatePackageJson(
   options: {

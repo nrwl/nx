@@ -11,6 +11,7 @@ import {
 import {
   connectToNxCloud,
   createNxCloudOnboardingURL,
+  setupAiAgentsGenerator,
 } from '@nx/devkit/internal';
 import { join } from 'path';
 import { gte } from 'semver';
@@ -18,7 +19,6 @@ import { deduceDefaultBase } from '../../utilities/default-base';
 import { nxVersion } from '../../utils/versions';
 import { Preset } from '../utils/presets';
 import type { NormalizedSchema } from './new';
-import { setupAiAgentsGenerator } from '@nx/devkit/internal';
 
 type PresetInfo = {
   generateAppCmd?: string;

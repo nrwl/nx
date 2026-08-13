@@ -7,16 +7,17 @@ import {
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
-import { getCatalogManager } from '@nx/devkit/internal';
-import { existsSync, lstatSync, writeFileSync } from 'fs';
-import { dirname, join } from 'path';
-import { interpolate } from '@nx/devkit/internal';
 import {
+  getCatalogManager,
+  interpolate,
   type PackageJson,
   type PackageJsonDependencySection,
+  getLockFileName,
+  createLockFile,
+  getWorkspacePackagesFromGraph,
 } from '@nx/devkit/internal';
-import { getLockFileName, createLockFile } from '@nx/devkit/internal';
-import { getWorkspacePackagesFromGraph } from '@nx/devkit/internal';
+import { existsSync, lstatSync, writeFileSync } from 'fs';
+import { dirname, join } from 'path';
 import { type PruneLockfileOptions } from './schema';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
 

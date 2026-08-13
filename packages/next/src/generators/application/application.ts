@@ -12,8 +12,8 @@ import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
   testingLibraryDomVersion,
   testingLibraryReactVersion,
+  getReactDependenciesVersionsToInstall,
 } from '@nx/react/internal';
-import { getReactDependenciesVersionsToInstall } from '@nx/react/internal';
 
 import { normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';

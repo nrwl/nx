@@ -7,8 +7,10 @@ import * as parser from '@typescript-eslint/parser';
 import { TSESLint } from '@typescript-eslint/utils';
 import { vol } from 'memfs';
 import { join } from 'node:path';
-import { FileDataDependency } from '@nx/devkit/internal';
-import { createProjectRootMappings } from '@nx/devkit/internal';
+import {
+  FileDataDependency,
+  createProjectRootMappings,
+} from '@nx/devkit/internal';
 import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from '../../src/rules/enforce-module-boundaries';

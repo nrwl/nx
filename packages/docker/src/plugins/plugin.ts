@@ -3,6 +3,8 @@ import {
   getNamedInputs,
   PluginCache,
   hashObject,
+  workspaceDataDirectory,
+  getLatestCommitSha,
 } from '@nx/devkit/internal';
 import {
   type CreateNodes,
@@ -15,10 +17,6 @@ import {
 } from '@nx/devkit';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
-import {
-  workspaceDataDirectory,
-  getLatestCommitSha,
-} from '@nx/devkit/internal';
 import { interpolateObject } from '../utils/interpolate-pattern';
 
 export interface DockerTargetOptions {

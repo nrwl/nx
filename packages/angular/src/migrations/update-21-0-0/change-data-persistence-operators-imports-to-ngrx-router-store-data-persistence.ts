@@ -6,8 +6,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
-import { fileDataDepTarget } from '@nx/devkit/internal';
-import { readFileMapCache } from '@nx/devkit/internal';
+import { fileDataDepTarget, readFileMapCache } from '@nx/devkit/internal';
 import type { ImportDeclaration, ImportSpecifier, Node } from 'typescript';
 import { versions } from '../../generators/utils/version-utils';
 import { FileChangeRecorder } from '../../utils/file-change-recorder';

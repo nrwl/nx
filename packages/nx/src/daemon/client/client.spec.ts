@@ -6,8 +6,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { dirname } from 'node:path';
+import { join, dirname } from 'node:path';
 
 // Redirect the daemon log and its directory so both states — present and
 // missing — are reachable, and so startInBackground creates nothing in the

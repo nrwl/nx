@@ -1,6 +1,7 @@
 import {
   logShowProjectCommand,
   promptWhenInteractive,
+  upsertTargetDefault,
 } from '@nx/devkit/internal';
 import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import {
@@ -15,7 +16,6 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
-import { upsertTargetDefault } from '@nx/devkit/internal';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
   addProjectToTsSolutionWorkspace,

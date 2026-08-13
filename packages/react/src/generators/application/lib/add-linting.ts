@@ -4,6 +4,8 @@ import {
   joinPathFragments,
   ensurePackage,
   readJson,
+  addDependenciesToPackageJson,
+  runTasksInSerial,
 } from '@nx/devkit';
 import { lintProjectGenerator } from '@nx/eslint';
 import {
@@ -14,7 +16,6 @@ import {
   isTypedLintingEnabled,
   useFlatConfig,
 } from '@nx/eslint/internal';
-import { addDependenciesToPackageJson, runTasksInSerial } from '@nx/devkit';
 import { addSwcDependencies } from '@nx/js/internal';
 import { extraEslintDependencies } from '../../../utils/lint';
 import { NormalizedSchema } from '../schema';

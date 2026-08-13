@@ -1,4 +1,11 @@
-import { getNamedInputs } from '@nx/devkit/internal';
+import {
+  getNamedInputs,
+  hashFile,
+  hashObject,
+  getLockFileName,
+  workspaceDataDirectory,
+  getNxRequirePaths,
+} from '@nx/devkit/internal';
 import {
   createNodesFromFiles,
   detectPackageManager,
@@ -13,6 +20,7 @@ import {
   type NxJsonConfiguration,
   type ProjectConfiguration,
   type TargetConfiguration,
+  hashArray,
 } from '@nx/devkit';
 import {
   existsSync,
@@ -30,12 +38,7 @@ import {
   relative,
   resolve,
 } from 'node:path';
-import { hashArray } from '@nx/devkit';
-import { hashFile, hashObject } from '@nx/devkit/internal';
 import picomatch = require('picomatch');
-import { getLockFileName } from '@nx/devkit/internal';
-import { workspaceDataDirectory } from '@nx/devkit/internal';
-import { getNxRequirePaths } from '@nx/devkit/internal';
 import type { Extension, ParsedCommandLine, System } from 'typescript';
 import {
   addBuildAndWatchDepsTargets,

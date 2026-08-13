@@ -1,5 +1,10 @@
-import { createLockFile, getLockFileName } from '@nx/devkit/internal';
-import { createPackageJson } from '@nx/devkit/internal';
+import {
+  createLockFile,
+  getLockFileName,
+  createPackageJson,
+  fileExists,
+  readFileMapCache,
+} from '@nx/devkit/internal';
 
 import {
   detectPackageManager,
@@ -18,9 +23,7 @@ import {
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
 import { existsSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, parse, relative } from 'path';
-import { fileExists } from '@nx/devkit/internal';
 import type { PackageJson } from '@nx/devkit/internal';
-import { readFileMapCache } from '@nx/devkit/internal';
 
 import { getRelativeDirectoryToProjectRoot } from '../get-main-file-dir';
 import { stripGlobToBaseDir } from '../strip-glob-to-base-dir';

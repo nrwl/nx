@@ -181,6 +181,9 @@ export const baseConfig = [
       ],
       '@nx/workspace-valid-command-object': 'error',
       '@nx/workspace-require-windows-hide': 'error',
+      // allowSeparateTypeImports keeps `import type` declarations distinct from
+      // value ones; collapsing that split would churn ~226 files.
+      'no-duplicate-imports': ['error', { allowSeparateTypeImports: true }],
     },
   },
   {

@@ -1,9 +1,8 @@
 import { type ExecutorContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-import { getCatalogManager } from '@nx/devkit/internal';
+import { getCatalogManager, type PackageJson } from '@nx/devkit/internal';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { type PackageJson } from '@nx/devkit/internal';
 import pruneLockfileExecutor, {
   resolveCatalogReferences,
 } from './prune-lockfile';
