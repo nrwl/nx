@@ -3,8 +3,15 @@ import '../../internal-testing-utils/mock-fs';
 import { join } from 'node:path';
 import { vol } from 'memfs';
 import { createNodeFromPackageJson, createNodes } from './create-nodes';
+import { hashObject } from '../../hasher/file-hasher';
 import { workspaceDataDirectory } from '../../utils/cache-directory';
 import { PluginCache } from '../../utils/plugin-cache-utils';
+import { nxVersion } from '../../utils/versions';
+
+// plain require: the module replaces module.exports, so an `import * as`
+// namespace would be a copy and spying on it would not affect the object
+// create-nodes calls through
+const packageJsonPluginModule = require('../../../plugins/package-json');
 
 const packageJsonCachePath = join(workspaceDataDirectory, 'package-json.hash');
 
@@ -1045,5 +1052,258 @@ describe('nx package.json workspaces plugin', () => {
         ],
       ]
     `);
+  });
+
+  describe('workspace package dependency descriptors', () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    const getProject = (
+      results: Awaited<ReturnType<(typeof createNodes)[1]>>,
+      file: string
+    ) => {
+      const entry = results.find(([f]) => f === file);
+      return Object.values(entry[1].projects)[0];
+    };
+
+    it('should collect dependencies resolving to workspace packages, including aliases', async () => {
+      vol.fromJSON(
+        {
+          'package.json': JSON.stringify({
+            name: 'root',
+            workspaces: ['packages/*'],
+          }),
+          'packages/app/package.json': JSON.stringify({
+            name: 'app',
+            version: '1.0.0',
+            dependencies: {
+              'lib-a': '^1.0.0',
+              'alias-b': 'workspace:lib-b@*',
+              'alias-c': 'npm:@scope/lib-c@^2.0.0',
+              'external-pkg': '^5.0.0',
+              'mismatched-alias': 'npm:lib-b@^9.0.0',
+            },
+            devDependencies: {
+              'lib-b': 'workspace:*',
+            },
+          }),
+          'packages/lib-a/package.json': JSON.stringify({
+            name: 'lib-a',
+            version: '1.2.3',
+          }),
+          'packages/lib-b/package.json': JSON.stringify({
+            name: 'lib-b',
+            version: '2.0.0',
+          }),
+          'packages/lib-c/package.json': JSON.stringify({
+            name: '@scope/lib-c',
+            version: '2.5.0',
+          }),
+        },
+        '/root'
+      );
+
+      const results = await createNodes[1](
+        [
+          'packages/app/package.json',
+          'packages/lib-a/package.json',
+          'packages/lib-b/package.json',
+          'packages/lib-c/package.json',
+        ],
+        undefined,
+        context
+      );
+
+      const app = getProject(results, 'packages/app/package.json');
+      expect(app.metadata.js.packageDependencies).toEqual({
+        dependencies: {
+          'lib-a': {
+            rawSpecifier: '^1.0.0',
+            requestedPackageName: 'lib-a',
+          },
+          'alias-b': {
+            rawSpecifier: 'workspace:lib-b@*',
+            requestedPackageName: 'lib-b',
+          },
+          'alias-c': {
+            rawSpecifier: 'npm:@scope/lib-c@^2.0.0',
+            requestedPackageName: '@scope/lib-c',
+          },
+        },
+        devDependencies: {
+          'lib-b': {
+            rawSpecifier: 'workspace:*',
+            requestedPackageName: 'lib-b',
+          },
+        },
+      });
+
+      // packages without workspace-target dependencies must not carry the field
+      const libA = getProject(results, 'packages/lib-a/package.json');
+      expect(libA.metadata.js.packageDependencies).toBeUndefined();
+    });
+
+    it('should recompute descriptors on cache hits and never store them in the cache', async () => {
+      const appJson = {
+        name: 'app',
+        version: '1.0.0',
+        dependencies: {
+          'alias-b': 'workspace:lib-b@*',
+        },
+      };
+      const files = {
+        'package.json': JSON.stringify({
+          name: 'root',
+          workspaces: ['packages/*'],
+        }),
+        'packages/app/package.json': JSON.stringify(appJson),
+        'packages/lib-b/package.json': JSON.stringify({
+          name: 'lib-b',
+          version: '2.0.0',
+        }),
+      };
+      vol.fromJSON(files, '/root');
+
+      // seed the cache instance the plugin will use with the app project, as
+      // persisted by a previous run: keyed on the manifest's own content, no
+      // descriptors, no targets (which a rebuild would compute)
+      const hash = hashObject({
+        ...appJson,
+        root: 'packages/app',
+        isInPackageManagerWorkspaces: true,
+        nxVersion,
+      });
+      const cache = new PluginCache(packageJsonCachePath, {});
+      cache.set(hash, {
+        root: 'packages/app',
+        name: 'app',
+        metadata: {
+          description: undefined,
+          targetGroups: {},
+          js: {
+            packageName: 'app',
+            packageVersion: '1.0.0',
+            packageExports: undefined,
+            packageMain: undefined,
+            isInPackageManagerWorkspaces: true,
+          },
+        },
+      });
+      jest
+        .spyOn(packageJsonPluginModule, 'readPackageJsonConfigurationCache')
+        .mockReturnValue(cache);
+
+      const configFiles = [
+        'packages/app/package.json',
+        'packages/lib-b/package.json',
+      ];
+      const firstRun = await createNodes[1](configFiles, undefined, context);
+      const firstApp = getProject(firstRun, 'packages/app/package.json');
+      // proves the cache hit was taken: a rebuild would have computed targets
+      expect(firstApp.targets).toBeUndefined();
+      expect(firstApp.metadata.js.packageDependencies).toEqual({
+        dependencies: {
+          'alias-b': {
+            rawSpecifier: 'workspace:lib-b@*',
+            requestedPackageName: 'lib-b',
+          },
+        },
+      });
+      // the entry in the cache the plugin actually used must stay clean:
+      // descriptors are attached to a clone, never baked into the cached entry
+      expect(
+        (cache.get(hash) as any).metadata.js.packageDependencies
+      ).toBeUndefined();
+
+      // The app project is served from the cache keyed on its own unchanged
+      // content. Renaming the target package must still drop the stale
+      // relationship on the next run.
+      vol.fromJSON(
+        {
+          ...files,
+          'packages/lib-b/package.json': JSON.stringify({
+            name: 'lib-b-renamed',
+            version: '2.0.0',
+          }),
+        },
+        '/root'
+      );
+
+      const secondRun = await createNodes[1](configFiles, undefined, context);
+      const secondApp = getProject(secondRun, 'packages/app/package.json');
+      expect(secondApp.targets).toBeUndefined();
+      expect(secondApp.metadata.js.packageDependencies).toBeUndefined();
+    });
+
+    it('should attach descriptors to projects served from the per-file cache', async () => {
+      const appJson = {
+        name: 'app',
+        version: '1.0.0',
+        dependencies: {
+          'alias-b': 'workspace:lib-b@*',
+        },
+      };
+      vol.fromJSON(
+        {
+          'package.json': JSON.stringify({
+            name: 'root',
+            workspaces: ['packages/*'],
+          }),
+          'packages/app/package.json': JSON.stringify(appJson),
+          'packages/lib-b/package.json': JSON.stringify({
+            name: 'lib-b',
+            version: '2.0.0',
+          }),
+        },
+        '/root'
+      );
+
+      // seed the on-disk cache with the app project, as persisted by a
+      // previous run: keyed on the manifest's own content, no descriptors
+      const hash = hashObject({
+        ...appJson,
+        root: 'packages/app',
+        isInPackageManagerWorkspaces: true,
+        nxVersion,
+      });
+      const cachedProject = {
+        root: 'packages/app',
+        name: 'app',
+        metadata: {
+          description: undefined,
+          targetGroups: {},
+          js: {
+            packageName: 'app',
+            packageVersion: '1.0.0',
+            packageExports: undefined,
+            packageMain: undefined,
+            isInPackageManagerWorkspaces: true,
+          },
+        },
+      };
+      const seededCache = new PluginCache(packageJsonCachePath);
+      seededCache.set(hash, cachedProject);
+      seededCache.writeToDisk();
+
+      const results = await createNodes[1](
+        ['packages/app/package.json', 'packages/lib-b/package.json'],
+        undefined,
+        context
+      );
+
+      const app = getProject(results, 'packages/app/package.json');
+      // proves the cache hit was taken: the seeded object's identity fields
+      // survive (a rebuild would have computed targets, which we omitted)
+      expect(app.targets).toBeUndefined();
+      expect(app.metadata.js.packageDependencies).toEqual({
+        dependencies: {
+          'alias-b': {
+            rawSpecifier: 'workspace:lib-b@*',
+            requestedPackageName: 'lib-b',
+          },
+        },
+      });
+    });
   });
 });

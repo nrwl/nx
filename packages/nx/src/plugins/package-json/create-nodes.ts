@@ -23,6 +23,7 @@ import {
 import { joinPathFragments } from '../../utils/path';
 import { nxVersion } from '../../utils/versions';
 import { createNodesFromFiles, CreateNodes } from '../../project-graph/plugins';
+import { getWorkspacePackageDependencies } from '../js/utils/dependency-specifiers';
 import { basename } from 'path';
 import { hashObject } from '../../hasher/file-hasher';
 import {
@@ -66,6 +67,15 @@ export const createNodes: CreateNodes = [
       context.workspaceRoot
     );
 
+    const { packageJsonContents, getWorkspacePackageVersion } =
+      preloadWorkspacePackages(
+        packageJsons,
+        (packageJsonPath) =>
+          isInPackageJsonWorkspaces(packageJsonPath) ||
+          isNextToProjectJson(packageJsonPath),
+        readJson
+      );
+
     return createNodesFromFiles(
       (packageJsonPath, options, context) => {
         const isInPackageManagerWorkspaces =
@@ -78,12 +88,18 @@ export const createNodes: CreateNodes = [
           return null;
         }
 
-        return createNodeFromPackageJson(
-          packageJsonPath,
-          context.workspaceRoot,
-          cache,
-          isInPackageManagerWorkspaces,
-          packageManagerCommand
+        const json = packageJsonContents.get(packageJsonPath);
+        return attachPackageDependencies(
+          createNodeFromPackageJson(
+            packageJsonPath,
+            context.workspaceRoot,
+            cache,
+            isInPackageManagerWorkspaces,
+            packageManagerCommand,
+            json
+          ),
+          json,
+          getWorkspacePackageVersion
         );
       },
       packageJsons,
@@ -92,6 +108,81 @@ export const createNodes: CreateNodes = [
     );
   },
 ];
+
+/**
+ * Reads each eligible manifest once, for reuse in node creation and to build
+ * the workspace package-name map that dependency descriptors resolve against.
+ * Malformed manifests are skipped so they get per-file error attribution when
+ * the caller processes them.
+ */
+export function preloadWorkspacePackages(
+  packageJsonPaths: string[],
+  isEligible: (packageJsonPath: string) => boolean,
+  readJson: (packageJsonPath: string) => PackageJson
+): {
+  packageJsonContents: Map<string, PackageJson>;
+  getWorkspacePackageVersion: (
+    packageName: string
+  ) => string | null | undefined;
+} {
+  const packageJsonContents = new Map<string, PackageJson>();
+  const workspacePackageVersions = new Map<string, string | null>();
+  for (const packageJsonPath of packageJsonPaths) {
+    if (!isEligible(packageJsonPath)) {
+      continue;
+    }
+    try {
+      const json: PackageJson = readJson(packageJsonPath);
+      packageJsonContents.set(packageJsonPath, json);
+      if (json.name) {
+        workspacePackageVersions.set(json.name, json.version ?? null);
+      }
+    } catch {}
+  }
+  return {
+    packageJsonContents,
+    getWorkspacePackageVersion: (packageName) =>
+      workspacePackageVersions.get(packageName),
+  };
+}
+
+/**
+ * Attaches the manifest's workspace dependency descriptors to the project.
+ * The descriptors depend on the other manifests in the workspace, so they are
+ * recomputed on every run and attached to a clone, outside the per-file cache
+ * entry, which is keyed only on this manifest's own content.
+ */
+export function attachPackageDependencies(
+  result: ReturnType<typeof createNodeFromPackageJson>,
+  json: PackageJson | undefined,
+  getWorkspacePackageVersion: (packageName: string) => string | null | undefined
+): ReturnType<typeof createNodeFromPackageJson> {
+  if (!json) {
+    return result;
+  }
+  const packageDependencies = getWorkspacePackageDependencies(
+    json,
+    getWorkspacePackageVersion
+  );
+  if (!packageDependencies) {
+    return result;
+  }
+  const [root, project] = Object.entries(result.projects)[0];
+  if (!project.metadata?.js) {
+    return result;
+  }
+  return {
+    projects: {
+      [root]: {
+        ...project,
+        metadata: {
+          ...project.metadata,
+          js: { ...project.metadata.js, packageDependencies },
+        },
+      },
+    },
+  };
+}
 
 function splitConfigFiles(configFiles: readonly string[]): {
   packageJsons: string[];
@@ -184,9 +275,11 @@ export function createNodeFromPackageJson(
   workspaceRoot: string,
   cache: PackageJsonConfigurationCache,
   isInPackageManagerWorkspaces: boolean,
-  packageManagerCommand: PackageManagerCommands
+  packageManagerCommand: PackageManagerCommands,
+  preloadedPackageJson?: PackageJson
 ) {
-  const json: PackageJson = readJsonFile(join(workspaceRoot, pkgJsonPath));
+  const json: PackageJson =
+    preloadedPackageJson ?? readJsonFile(join(workspaceRoot, pkgJsonPath));
 
   const projectRoot = dirname(pkgJsonPath);
 
