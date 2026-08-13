@@ -187,7 +187,8 @@ describe('applyAgenticHandoffGitignoreFallback', () => {
     );
     expect(mockTry).toHaveBeenCalledWith(
       `${COMMIT_PREFIX}add .nx/migrate-runs to .gitignore`,
-      workspace
+      workspace,
+      ['.nx/migrate-runs']
     );
     const messages = mockInfo.mock.calls.map((c) => stripAnsi(c[0]));
     expect(messages).toEqual([

@@ -10,7 +10,13 @@ import {
 import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
 import type { ResolvedAgentic } from './agentic/types';
+import { MIGRATE_RUNS_RELATIVE_DIR } from './agentic/types';
 import { migratePrompt } from './safe-prompt';
+
+// `git add -A` captures an orchestrated run's scratch state whenever the
+// ignore rule that normally hides it goes missing mid-run (a checkout, a
+// .gitignore edit, or the migration's own changes).
+const MIGRATE_COMMIT_EXCLUDES = [MIGRATE_RUNS_RELATIVE_DIR];
 
 /**
  * Discriminated result for `commitMigrationIfRequested`. Distinguishes the
@@ -62,7 +68,7 @@ export async function commitMigrationIfRequested(
     pendingMigrations
   );
   try {
-    const sha = tryCommitChanges(commitMessage, root);
+    const sha = tryCommitChanges(commitMessage, root, MIGRATE_COMMIT_EXCLUDES);
     if (sha) return { status: 'committed', sha };
     // null = commit landed but `git rev-parse HEAD` failed (see
     // `tryCommitChanges`). Degraded-but-correct — log yellow, not red.
@@ -126,7 +132,8 @@ export function commitCheckpointBeforeMigrations(
   try {
     const sha = tryCommitChanges(
       `${commitPrefix}checkpoint before running migrations`,
-      root
+      root,
+      MIGRATE_COMMIT_EXCLUDES
     );
     if (sha) {
       logger.info(pc.dim(`- Checkpoint commit created: ${sha}`));

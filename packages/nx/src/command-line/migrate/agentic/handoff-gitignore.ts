@@ -111,7 +111,8 @@ export async function applyAgenticHandoffGitignoreFallback({
   try {
     const sha = tryCommitChanges(
       `${commitPrefix}add ${MIGRATE_RUNS_RELATIVE_DIR} to .gitignore`,
-      root
+      root,
+      [MIGRATE_RUNS_RELATIVE_DIR]
     );
     if (sha) {
       logger.info(pc.dim(`  Commit: ${sha}`));

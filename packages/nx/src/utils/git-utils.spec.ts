@@ -479,6 +479,40 @@ describe('git utils tests', () => {
       jest.resetAllMocks();
     });
 
+    it('stages the whole tree and resets nothing when no exclusions are given', () => {
+      (execSync as jest.Mock).mockReturnValue('');
+
+      tryCommitChanges('msg', '/workspace');
+
+      expect(execSync).toHaveBeenCalledWith(
+        'git add -A',
+        expect.objectContaining({ cwd: '/workspace' })
+      );
+      const commands = (execSync as jest.Mock).mock.calls.map((c) => c[0]);
+      expect(commands.some((c) => c.startsWith('git reset'))).toBe(false);
+    });
+
+    it('unstages excluded paths between the add and the commit', () => {
+      // An add-time exclusion pathspec cannot do this: `git add` exits 1 when
+      // a pathspec names an ignored directory, and it cannot unstage entries
+      // that were staged before this call.
+      (execSync as jest.Mock).mockReturnValue('');
+
+      tryCommitChanges('msg', '/workspace', ['.nx/migrate-runs']);
+
+      const commands = (execSync as jest.Mock).mock.calls.map((c) => c[0]);
+      expect(commands).toEqual([
+        'git add -A',
+        'git reset -q -- ".nx/migrate-runs"',
+        'git commit --no-verify -F -',
+        'git rev-parse HEAD',
+      ]);
+      expect(execSync).toHaveBeenCalledWith(
+        'git reset -q -- ".nx/migrate-runs"',
+        expect.objectContaining({ cwd: '/workspace' })
+      );
+    });
+
     it('preserves the original git error as `cause` so callers can inspect signal/status/code', () => {
       // Without `{ cause: err }` on the rethrow, callers lose .status /
       // .signal from the original ChildProcessError — only the formatted

@@ -661,10 +661,16 @@ export function commitChanges(
  * Returns `null` (rather than throwing) when the commit itself succeeded
  * but `git rev-parse HEAD` failed transiently — by contract the diff is
  * no longer in the working tree, so callers must NOT report it as such.
+ *
+ * `excludePaths` are `directory`-relative paths the commit must not capture,
+ * whatever the ignore rules say. Their working-tree files are left intact;
+ * only their index entries are put back to HEAD's state. Paths come from
+ * callers' own constants, never from user input.
  */
 export function tryCommitChanges(
   commitMessage: string,
-  directory: string
+  directory: string,
+  excludePaths: string[] = []
 ): string | null {
   try {
     execSync('git add -A', {
@@ -673,6 +679,20 @@ export function tryCommitChanges(
       cwd: directory,
       windowsHide: true,
     });
+    // Exclusion happens as an unstage rather than an add-time pathspec:
+    // `git add` refuses a pathspec naming an ignored directory (exit 1) even
+    // as an exclusion, and an add-time pathspec cannot cover entries that
+    // were already staged before this call. The reset is relative to cwd, so
+    // a workspace nested inside a larger repo excludes its own path; a path
+    // with no index entry is a quiet no-op, unborn HEAD included.
+    for (const excludePath of excludePaths) {
+      execSync(`git reset -q -- "${excludePath}"`, {
+        encoding: 'utf8',
+        stdio: 'pipe',
+        cwd: directory,
+        windowsHide: true,
+      });
+    }
     execSync('git commit --no-verify -F -', {
       encoding: 'utf8',
       stdio: 'pipe',

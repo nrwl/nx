@@ -134,7 +134,11 @@ describe('commitMigrationIfRequested', () => {
       installDeps
     );
     expect(result).toEqual({ status: 'committed', sha: 'abc123' });
-    expect(mockTry).toHaveBeenCalledWith(`${PREFIX}m1`, ROOT);
+    // The scratch exclusion rides on every migration commit so `git add -A`
+    // cannot capture run state even when its ignore rule went missing mid-run.
+    expect(mockTry).toHaveBeenCalledWith(`${PREFIX}m1`, ROOT, [
+      '.nx/migrate-runs',
+    ]);
   });
 
   it('annotates the commit body with the package: name of prior migrations whose commits failed', async () => {
@@ -199,7 +203,9 @@ describe('commitMigrationIfRequested', () => {
       installDeps,
       []
     );
-    expect(mockTry).toHaveBeenCalledWith(`${PREFIX}m1`, ROOT);
+    expect(mockTry).toHaveBeenCalledWith(`${PREFIX}m1`, ROOT, [
+      '.nx/migrate-runs',
+    ]);
   });
 
   it('returns failed with the real git stderr from tryCommitChanges; message tells the user a future commit will absorb the diff', async () => {
@@ -267,7 +273,8 @@ describe('commitCheckpointBeforeMigrations', () => {
     commitCheckpointBeforeMigrations(ROOT, PREFIX);
     expect(mockTry).toHaveBeenCalledWith(
       `${PREFIX}checkpoint before running migrations`,
-      ROOT
+      ROOT,
+      ['.nx/migrate-runs']
     );
     expect(stripAnsi(mockInfo.mock.calls[0][0])).toMatchInlineSnapshot(
       `"- Checkpoint commit created: chk456"`
