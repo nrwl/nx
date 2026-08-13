@@ -63,19 +63,13 @@ import {
   daemonClient,
   daemonPermissionException,
   daemonProcessException,
+  DaemonStatus,
 } from './client';
 import { VersionMismatchError } from './daemon-socket-messenger';
 
 declare global {
   // eslint-disable-next-line no-var
   var NX_PLUGIN_WORKER: boolean | undefined;
-}
-
-// Mirrors the private enum in client.ts for test assertions.
-const enum DaemonStatus {
-  CONNECTING = 0,
-  DISCONNECTED = 1,
-  CONNECTED = 2,
 }
 
 type TestClient = {
@@ -104,7 +98,11 @@ function asTest(client: DaemonClient): TestClient {
   return client as unknown as TestClient;
 }
 
-type FakeSocket = EventEmitter & { unref: Mock; write: Mock };
+type FakeSocket = EventEmitter & {
+  unref: Mock;
+  write: Mock;
+  destroy: Mock;
+};
 
 // Lets `setUpConnection` run for real, so the close handler under test is the
 // one production installs. Only the members that handler's path touches exist.
@@ -444,7 +442,7 @@ describe('startInBackground', () => {
         // By hand, not via reset(): reset() would clear any instance-held
         // refusal, which is exactly the regression this checks for.
         (readDaemonProcessJsonCache as Mock).mockReturnValue(undefined);
-        (daemonClient as any)._daemonStatus = 1; // DISCONNECTED
+        (daemonClient as any)._daemonStatus = DaemonStatus.DISCONNECTED;
         const error = await (daemonClient as any)
           .startDaemonIfNecessary()
           .catch((e: any) => e);
@@ -487,12 +485,10 @@ describe('DaemonClient state machine', () => {
     daemon = new DaemonClient();
     client = asTest(daemon);
     // Never actually register with metrics during tests.
-    vi
-      .spyOn(
-        client as unknown as { registerDaemonProcessWithMetricsService: any },
-        'registerDaemonProcessWithMetricsService'
-      )
-      .mockResolvedValue(undefined);
+    vi.spyOn(
+      client as unknown as { registerDaemonProcessWithMetricsService: any },
+      'registerDaemonProcessWithMetricsService'
+    ).mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -547,12 +543,12 @@ describe('DaemonClient state machine', () => {
     // throw there must not send an already-CONNECTED client back to
     // DISCONNECTED.
     it('keeps an established connection when the metrics lookup throws', async () => {
-      jest.spyOn(client, 'probeServer').mockResolvedValue({ available: false });
-      jest.spyOn(client, 'startInBackground').mockResolvedValue(undefined);
-      jest.spyOn(client, 'setUpConnection').mockImplementation(() => {
+      vi.spyOn(client, 'probeServer').mockResolvedValue({ available: false });
+      vi.spyOn(client, 'startInBackground').mockResolvedValue(undefined);
+      vi.spyOn(client, 'setUpConnection').mockImplementation(() => {
         /* no-op */
       });
-      (getDaemonProcessIdSync as jest.Mock).mockImplementationOnce(() => {
+      (getDaemonProcessIdSync as Mock).mockImplementationOnce(() => {
         throw new Error('no process json');
       });
 
@@ -653,10 +649,10 @@ describe('DaemonClient state machine', () => {
 
   describe('handleConnectionError() when the reconnect never succeeds', () => {
     it('surfaces the original error to the in-flight message and to concurrent callers', async () => {
-      jest
-        .spyOn(client, 'waitForServerToBeAvailable')
-        .mockResolvedValue({ available: false });
-      const currentReject = jest.fn();
+      vi.spyOn(client, 'waitForServerToBeAvailable').mockResolvedValue({
+        available: false,
+      });
+      const currentReject = vi.fn();
       client.currentReject = currentReject;
       const error = new Error('daemon gone');
 
@@ -675,9 +671,9 @@ describe('DaemonClient state machine', () => {
 
   describe('handleConnectionError() with a version mismatch on reconnect', () => {
     it('surfaces the error to concurrent callers awaiting _waitForDaemonReady', async () => {
-      vi
-        .spyOn(client, 'waitForServerToBeAvailable')
-        .mockRejectedValue(new VersionMismatchError());
+      vi.spyOn(client, 'waitForServerToBeAvailable').mockRejectedValue(
+        new VersionMismatchError()
+      );
       const currentReject = vi.fn();
       client.currentReject = currentReject;
 
