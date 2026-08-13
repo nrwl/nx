@@ -1224,6 +1224,9 @@ function isFileOwnedByAnyRoot(file: string, roots: Set<string>): boolean {
 // Minimatch metacharacters plus extglob prefix operators (`!+@()`). A path
 // segment containing any of these has glob semantics and cannot be reduced to a
 // literal project root.
+// Not reused from `isGlobPattern` (nx/src/utils/globs.ts): its `GLOB_CHARACTERS`
+// set omits `?`, `!`, `+`, and `@`, so it would treat an extglob/negation as a
+// literal root and wrongly widen the include.
 const GLOB_METACHARACTERS = /[*?[\]{}!+@()]/;
 
 /**
