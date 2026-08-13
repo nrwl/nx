@@ -7,7 +7,7 @@ export interface Schema {
   skipTsConfig?: boolean;
   skipFormat?: boolean;
   tags?: string;
-  unitTestRunner?: 'jest' | 'none';
+  unitTestRunner?: 'jest' | 'vitest' | 'none';
   linter?: LinterType;
   buildable?: boolean;
   publishable?: boolean;

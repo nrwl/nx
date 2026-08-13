@@ -189,6 +189,7 @@ export async function libraryGeneratorInternal(
       testEnvironment: options.testEnvironment,
       runtimeTsconfigFileName: 'tsconfig.lib.json',
       compiler: options.compiler === 'swc' ? 'swc' : 'babel',
+      passWithNoTests: options.passWithNoTests,
       addPlugin: options.addPlugin,
     });
     tasks.push(vitestTask);

@@ -2,14 +2,13 @@
 // is not a dependency here, so importing it would resolve to a published
 // tarball rather than workspace source.
 import type { LinterType } from '@nx/js';
-import type { UnitTestRunner } from '../../utils/test-runners';
 
 export interface Schema {
   directory: string;
   name?: string;
   skipFormat: boolean;
   skipPackageJson: boolean;
-  unitTestRunner: UnitTestRunner;
+  unitTestRunner: 'jest' | 'vitest' | 'none';
   tags?: string;
   linter?: LinterType;
   frontendProject?: string;

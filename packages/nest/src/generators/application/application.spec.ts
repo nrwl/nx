@@ -163,6 +163,24 @@ describe('application generator', () => {
     ).toBeTruthy();
   });
 
+  it('should generate spec files and a vitest config when unitTestRunner is vitest', async () => {
+    await applicationGenerator(tree, {
+      directory: appDirectory,
+      unitTestRunner: 'vitest',
+      e2eTestRunner: 'none',
+      addPlugin: true,
+    });
+
+    expect(tree.exists(`${appDirectory}/vitest.config.mts`)).toBeTruthy();
+    expect(tree.exists(`${appDirectory}/jest.config.cts`)).toBeFalsy();
+    expect(
+      tree.exists(`${appDirectory}/src/app/app.controller.spec.ts`)
+    ).toBeTruthy();
+    expect(
+      tree.exists(`${appDirectory}/src/app/app.service.spec.ts`)
+    ).toBeTruthy();
+  });
+
   it('should configure tsconfig correctly', async () => {
     // pin TS<6 to exercise the 'node10' branch deterministically
     updateJson(tree, 'package.json', (json) => {
