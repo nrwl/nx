@@ -736,9 +736,13 @@ function packageJsonAuthorsTargetIdentity(
   const scripts = packageJson?.scripts ?? {};
   // `readTargetsFromPackageJson` turns each *included* script into an
   // `nx:run-script` target (identity). `nx.includedScripts`, when present,
-  // restricts which scripts become targets.
-  const includedScripts =
-    packageJson?.nx?.includedScripts ?? Object.keys(scripts);
+  // restricts which scripts become targets. Normalize a malformed (non-array)
+  // value to the default (all scripts) instead of letting `.includes` throw an
+  // uncaught TypeError mid-generator.
+  const nxIncludedScripts = packageJson?.nx?.includedScripts;
+  const includedScripts = Array.isArray(nxIncludedScripts)
+    ? nxIncludedScripts
+    : Object.keys(scripts);
   if (includedScripts.includes(targetName)) {
     return true;
   }

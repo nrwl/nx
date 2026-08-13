@@ -1082,6 +1082,41 @@ describe('Phase 3 — strict-common hoist', () => {
     }
   });
 
+  it('does not throw when nx.includedScripts is malformed (non-array)', async () => {
+    // A non-array `nx.includedScripts` must not crash the generator with an
+    // uncaught TypeError; it is normalized to the default (all scripts).
+    ctx = setupFixture('malformed-included-scripts');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+      ctx.tree.write(
+        `${name}/package.json`,
+        JSON.stringify({ name, nx: { includedScripts: {} } })
+      );
+    }
+    const plugin = createSyntheticPlugin();
+
+    // must not throw (the pre-fix `.includes` on a non-array did)
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations()
+    );
+
+    // centralization proceeds normally
+    expect(readNxJson(ctx.tree).targetDefaults.build).toContainEqual({
+      filter: { plugin: SYNTHETIC_PLUGIN_PATH },
+      options: { mode: 'production' },
+    });
+  });
+
   it('partitions per-project: hoists for eligible projects, excludes authored-identity ones', async () => {
     // Mixed workspace: two clean projects (eligible) share `mode: production`,
     // one project has a package.json `build` script (default-layer identity), and
