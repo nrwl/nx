@@ -1,4 +1,4 @@
-import { minimatch, Minimatch } from 'minimatch';
+import { minimatch } from 'minimatch';
 import { deepStrictEqual } from 'node:assert';
 import { join } from 'node:path/posix';
 import type {
@@ -23,6 +23,7 @@ import {
 import {
   LoadedNxPlugin,
   ProjectConfigurationsError,
+  findMatchingConfigFiles,
   isAggregateCreateNodesError,
   isMergeNodesError,
   isProjectsWithNoNameError,
@@ -1273,18 +1274,17 @@ function includeCoversAllConfigFiles(
       );
     }
   }
-  // Fallback for user-authored includes / any exclude: compile each glob once
-  // (the bare `minimatch()` helper recompiles its pattern on every call).
-  const includeMatchers = include.map(
-    (glob) => new Minimatch(glob, { dot: true })
-  );
-  const excludeMatchers = (exclude ?? []).map(
-    (glob) => new Minimatch(glob, { dot: true })
-  );
-  return configFiles.every(
-    (file) =>
-      includeMatchers.some((matcher) => matcher.match(file)) &&
-      !excludeMatchers.some((matcher) => matcher.match(file))
+  // Fallback for user-authored includes / any exclude: defer to the SAME matcher
+  // Nx uses to bind config files to a registration. A hand-rolled
+  // `include.some() && !exclude.some()` cannot express an ordered-override
+  // negation like `["packages/**/*", "!packages/legacy/**/*"]`: `.some()` reports
+  // every file "covered" and deletes the include, which widens the registration
+  // so the fenced-off configs get inferred (and executed). `findMatchingConfigFiles`
+  // applies include/exclude with Nx's exact ordered semantics, so coverage holds
+  // only when every config file survives the same filter Nx would run.
+  return (
+    findMatchingConfigFiles(configFiles, include, exclude ?? []).length ===
+    configFiles.length
   );
 }
 

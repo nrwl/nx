@@ -1971,6 +1971,150 @@ describe('Phase 3 — strict-common hoist', () => {
       false
     );
   });
+
+  it('preserves a negated user include when the fenced-off config loads fine (fallback coverage)', async () => {
+    // A user-authored registration fences a subtree off with a negated include:
+    //   include: ['packages/**/*', '!packages/legacy/**/*']
+    // The `!` glob defeats the generated-root fast path, so coverage falls to the
+    // matcher fallback. A hand-rolled `include.some() && !exclude.some()` reports
+    // the fenced-off `packages/legacy` config "covered" (OR semantics ignore the
+    // negation), deletes the include, and widens the registration onto the very
+    // subtree the user excluded. `findMatchingConfigFiles` applies Nx's ordered
+    // override, so the include (and the fence) survives.
+    ctx = setupFixture('negated-include-loads-fine');
+    const seed = readNxJson(ctx.tree);
+    seed.plugins ??= [];
+    seed.plugins.push({
+      plugin: SYNTHETIC_PLUGIN_PATH,
+      options: { targetName: 'lint' } as any,
+      include: ['packages/**/*', '!packages/legacy/**/*'],
+    });
+    updateNxJson(ctx.tree, seed);
+
+    for (let i = 0; i < 2; i++) {
+      addExecutorProject(ctx, {
+        name: `app${i}`,
+        root: `packages/app${i}`,
+        targetName: 'lint',
+        executor: SYNTHETIC_EXECUTOR,
+      });
+    }
+    // packages/legacy is a NON-MIGRATED project whose config loads fine, so its
+    // config file lands in the coverage set via project-graph membership.
+    addExecutorProject(ctx, {
+      name: 'legacy',
+      root: 'packages/legacy',
+      targetName: 'other',
+      executor: '@other/tool:noop',
+    });
+
+    const plugin = createSyntheticPlugin();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      SYNTHETIC_PLUGIN_PATH,
+      plugin.createNodes,
+      { targetName: 'lint' },
+      [
+        {
+          executors: [SYNTHETIC_EXECUTOR],
+          targetPluginOptionMapper: () => ({ targetName: 'lint' }),
+          postTargetTransformer: (t: any) => t,
+        },
+      ]
+    );
+
+    const registration = readNxJson(ctx.tree).plugins?.find(
+      (p): p is ExpandedPluginConfiguration =>
+        typeof p !== 'string' && p.plugin === SYNTHETIC_PLUGIN_PATH
+    );
+    // the include is NOT deleted; the negated fence survives
+    expect(registration?.include).toBeDefined();
+    expect(registration.include).toContain('!packages/legacy/**/*');
+  });
+
+  it('preserves a negated user include when the fenced-off config errors (fallback coverage)', async () => {
+    // Same fence, but `packages/legacy` fails to load. It lands in the coverage
+    // set via `erroredConfigFiles`. The OR-semantics fallback would still report
+    // it "covered", delete the include, widen the registration, and let the
+    // verification pass re-hit (and re-throw on) the fenced-off config.
+    ctx = setupFixture('negated-include-errors');
+    const seed = readNxJson(ctx.tree);
+    seed.plugins ??= [];
+    seed.plugins.push({
+      plugin: SYNTHETIC_PLUGIN_PATH,
+      options: { targetName: 'lint' } as any,
+      include: ['packages/**/*', '!packages/legacy/**/*'],
+    });
+    updateNxJson(ctx.tree, seed);
+
+    for (let i = 0; i < 2; i++) {
+      addExecutorProject(ctx, {
+        name: `app${i}`,
+        root: `packages/app${i}`,
+        targetName: 'lint',
+        executor: SYNTHETIC_EXECUTOR,
+      });
+    }
+    // a config under the fenced-off subtree that fails to load on every pass
+    ctx.fs.createFileSync(`packages/legacy/${SYNTHETIC_CONFIG_FILE}`, '{}');
+
+    const createNodes: CreateNodes<SyntheticPluginOptions> = [
+      SYNTHETIC_CONFIG_GLOB,
+      (configFiles, options) => {
+        const targetName = options?.targetName ?? 'build';
+        const results: Array<readonly [string, any]> = [];
+        const errors: Array<[string, Error]> = [];
+        for (const file of configFiles) {
+          const dir = dirname(file);
+          const root = dir === '' || dir === '.' ? '.' : dir;
+          if (root === 'packages/legacy') {
+            errors.push([file, new Error('cannot load legacy config')]);
+            continue;
+          }
+          results.push([
+            file,
+            {
+              projects: {
+                [root]: {
+                  targets: {
+                    [targetName]: defaultInferredTarget(root, targetName),
+                  },
+                },
+              },
+            },
+          ]);
+        }
+        if (errors.length > 0) {
+          throw new AggregateCreateNodesError(errors, results as any);
+        }
+        return results;
+      },
+    ];
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      SYNTHETIC_PLUGIN_PATH,
+      createNodes,
+      { targetName: 'lint' },
+      [
+        {
+          executors: [SYNTHETIC_EXECUTOR],
+          targetPluginOptionMapper: () => ({ targetName: 'lint' }),
+          postTargetTransformer: (t: any) => t,
+        },
+      ]
+    );
+
+    const registration = readNxJson(ctx.tree).plugins?.find(
+      (p): p is ExpandedPluginConfiguration =>
+        typeof p !== 'string' && p.plugin === SYNTHETIC_PLUGIN_PATH
+    );
+    expect(registration?.include).toBeDefined();
+    expect(registration.include).toContain('!packages/legacy/**/*');
+  });
 });
 
 describe('Phase 4 — verify + equivalence oracle + fallback', () => {
