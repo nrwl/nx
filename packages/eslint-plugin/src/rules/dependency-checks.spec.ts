@@ -3787,6 +3787,287 @@ describe('Dependency checks (eslint)', () => {
       );
     });
   });
+
+  describe('workspace package aliases', () => {
+    const aliasGraphNodes = (packageDependencies: any) => ({
+      liba: {
+        name: 'liba',
+        type: 'lib' as const,
+        data: {
+          root: 'libs/liba',
+          metadata: {
+            js: {
+              packageName: '@mycompany/liba',
+              packageDependencies,
+            },
+          },
+          targets: { build: {} },
+        },
+      },
+      libb: {
+        name: 'libb',
+        type: 'lib' as const,
+        data: {
+          root: 'libs/libb',
+          metadata: {
+            js: {
+              packageName: '@mycompany/libb',
+              packageVersion: '0.0.1',
+              isInPackageManagerWorkspaces: true,
+            },
+          },
+          targets: { build: {} },
+        },
+      },
+    });
+
+    const aliasFileSys = (packageJson: unknown) => ({
+      './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+      './libs/liba/src/index.ts': '',
+      './libs/libb/package.json': JSON.stringify(
+        { name: '@mycompany/libb', version: '0.0.1' },
+        null,
+        2
+      ),
+      './package.json': JSON.stringify(rootPackageJson, null, 2),
+    });
+
+    it('should not report an aliased workspace dependency as missing or obsolete', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        dependencies: {
+          'any-alias': 'workspace:@mycompany/libb@*',
+        },
+      };
+      vol.fromJSON(aliasFileSys(packageJson), '/root');
+
+      const failures = runRule(
+        {},
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: aliasGraphNodes({
+            dependencies: {
+              'any-alias': {
+                rawSpecifier: 'workspace:@mycompany/libb@*',
+                requestedPackageName: '@mycompany/libb',
+              },
+            },
+          }),
+          externalNodes,
+          dependencies: {
+            liba: [{ source: 'liba', target: 'libb', type: 'static' }],
+          },
+        },
+        {
+          liba: [createFile(`libs/liba/src/main.ts`, ['libb'])],
+          libb: [createFile(`libs/libb/src/index.ts`)],
+        }
+      );
+
+      expect(failures).toEqual([]);
+    });
+
+    it('should not report a satisfying npm alias of a workspace dependency', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        dependencies: {
+          'any-alias': 'npm:@mycompany/libb@^0.0.1',
+        },
+      };
+      vol.fromJSON(aliasFileSys(packageJson), '/root');
+
+      const failures = runRule(
+        {},
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: aliasGraphNodes({
+            dependencies: {
+              'any-alias': {
+                rawSpecifier: 'npm:@mycompany/libb@^0.0.1',
+                requestedPackageName: '@mycompany/libb',
+              },
+            },
+          }),
+          externalNodes,
+          dependencies: {
+            liba: [{ source: 'liba', target: 'libb', type: 'static' }],
+          },
+        },
+        {
+          liba: [createFile(`libs/liba/src/main.ts`, ['libb'])],
+          libb: [createFile(`libs/libb/src/index.ts`)],
+        }
+      );
+
+      expect(failures).toEqual([]);
+    });
+
+    it('should resolve a key reused across collections to the production entry', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        dependencies: {
+          'any-alias': 'workspace:@mycompany/libb@*',
+        },
+        devDependencies: {
+          'any-alias': 'workspace:@mycompany/other@*',
+        },
+      };
+      vol.fromJSON(aliasFileSys(packageJson), '/root');
+
+      const nodes = {
+        ...aliasGraphNodes({
+          dependencies: {
+            'any-alias': {
+              rawSpecifier: 'workspace:@mycompany/libb@*',
+              requestedPackageName: '@mycompany/libb',
+            },
+          },
+          devDependencies: {
+            'any-alias': {
+              rawSpecifier: 'workspace:@mycompany/other@*',
+              requestedPackageName: '@mycompany/other',
+            },
+          },
+        }),
+        other: {
+          name: 'other',
+          type: 'lib' as const,
+          data: {
+            root: 'libs/other',
+            metadata: {
+              js: {
+                packageName: '@mycompany/other',
+                packageVersion: '1.0.0',
+                isInPackageManagerWorkspaces: true,
+              },
+            },
+            targets: { build: {} },
+          },
+        },
+      };
+
+      const failures = runRule(
+        {},
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes,
+          externalNodes,
+          dependencies: {
+            liba: [{ source: 'liba', target: 'libb', type: 'static' }],
+          },
+        },
+        {
+          liba: [createFile(`libs/liba/src/main.ts`, ['libb'])],
+          libb: [createFile(`libs/libb/src/index.ts`)],
+        }
+      );
+
+      expect(failures).toEqual([]);
+    });
+
+    it('should not fix an npm alias mismatch to a nested workspace specifier', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        dependencies: {
+          'any-alias': 'npm:@mycompany/libb@^9.0.0',
+        },
+      };
+      const fileSys = {
+        ...aliasFileSys(packageJson),
+        './package.json': JSON.stringify(
+          {
+            ...rootPackageJson,
+            dependencies: {
+              ...rootPackageJson.dependencies,
+              '@mycompany/libb': 'workspace:*',
+            },
+          },
+          null,
+          2
+        ),
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        {},
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: aliasGraphNodes({
+            dependencies: {
+              'any-alias': {
+                rawSpecifier: 'npm:@mycompany/libb@^9.0.0',
+                requestedPackageName: '@mycompany/libb',
+              },
+            },
+          }),
+          externalNodes,
+          dependencies: {
+            liba: [{ source: 'liba', target: 'libb', type: 'static' }],
+          },
+        },
+        {
+          liba: [createFile(`libs/liba/src/main.ts`, ['libb'])],
+          libb: [createFile(`libs/libb/src/index.ts`)],
+        }
+      );
+
+      expect(failures.length).toEqual(1);
+      const content = JSON.stringify(packageJson, null, 2);
+      const result =
+        content.slice(0, failures[0].fix.range[0]) +
+        failures[0].fix.text +
+        content.slice(failures[0].fix.range[1]);
+      // the root tracks the target as workspace:*, which is not a valid
+      // inner range for an npm alias; the built version is used instead
+      expect(result).toContain('"any-alias": "npm:@mycompany/libb@0.0.1"');
+    });
+
+    it('should still report an aliased entry whose target is not depended on', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        dependencies: {
+          external1: '^16.0.0',
+          'any-alias': 'workspace:@mycompany/libb@*',
+        },
+      };
+      vol.fromJSON(aliasFileSys(packageJson), '/root');
+
+      // no graph edge and no code dependency on libb: the alias entry is
+      // genuinely obsolete
+      const failures = runRule(
+        {},
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: aliasGraphNodes({
+            dependencies: {
+              'any-alias': {
+                rawSpecifier: 'workspace:@mycompany/libb@*',
+                requestedPackageName: '@mycompany/libb',
+              },
+            },
+          }),
+          externalNodes,
+          dependencies: {
+            liba: [{ source: 'liba', target: 'npm:external1', type: 'static' }],
+          },
+        },
+        {
+          liba: [createFile(`libs/liba/src/main.ts`, ['npm:external1'])],
+          libb: [createFile(`libs/libb/src/index.ts`)],
+        }
+      );
+
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toContain(
+        'The "any-alias" package is not used'
+      );
+    });
+  });
 });
 
 function createFile(f: string, deps?: FileDataDependency[]): FileData {
