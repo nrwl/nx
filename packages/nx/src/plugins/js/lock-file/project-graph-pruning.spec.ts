@@ -602,6 +602,60 @@ describe('project-graph-pruning', () => {
       expect(prunedGraph.nodes['workspace-lib']).toBeDefined();
     });
 
+    it('should keep a workspace alias entry and traverse the requested target', () => {
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: {
+          'any-alias': 'workspace:workspace-lib@*',
+        },
+      };
+
+      const prunedGraph = pruneProjectGraph(graph, prunedPackageJson);
+
+      expect(prunedGraph.nodes['workspace-lib']).toBeDefined();
+      // the alias target's own dependencies are traversed
+      expect(prunedGraph.externalNodes?.['npm:lodash']).toBeDefined();
+    });
+
+    it('should not let an external node named like the alias key shadow the workspace target', () => {
+      graph.externalNodes['npm:any-alias'] = {
+        type: 'npm',
+        name: 'npm:any-alias',
+        data: {
+          packageName: 'any-alias',
+          version: '9.9.9',
+        },
+      };
+      graph.dependencies['npm:any-alias'] = [];
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: {
+          'any-alias': 'workspace:workspace-lib@*',
+        },
+      };
+
+      const prunedGraph = pruneProjectGraph(graph, prunedPackageJson);
+
+      expect(prunedGraph.externalNodes?.['npm:any-alias']).toBeUndefined();
+      expect(prunedGraph.externalNodes?.['npm:lodash']).toBeDefined();
+    });
+
+    it('should fail when a workspace entry does not match any workspace package', () => {
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: {
+          'any-alias': 'workspace:ghost@*',
+        },
+      };
+
+      expect(() => pruneProjectGraph(graph, prunedPackageJson)).toThrow(
+        '"any-alias": "workspace:ghost@*" does not match any workspace package'
+      );
+    });
+
     it('should handle devDependencies', () => {
       const prunedPackageJson: PackageJson = {
         name: 'test',

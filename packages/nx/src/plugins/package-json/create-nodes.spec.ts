@@ -1054,6 +1054,263 @@ describe('nx package.json workspaces plugin', () => {
     `);
   });
 
+  describe('workspace alias validation', () => {
+    it('should aggregate per-file errors for invalid workspace aliases and keep valid results', async () => {
+      vol.fromJSON(
+        {
+          'package.json': JSON.stringify({
+            name: 'root',
+            workspaces: ['packages/*'],
+          }),
+          'packages/app/package.json': JSON.stringify({
+            name: 'app',
+            version: '1.0.0',
+            dependencies: { 'alias-name': 'workspace:@acme/ghost@*' },
+          }),
+          'packages/lib-b/package.json': JSON.stringify({
+            name: 'lib-b',
+            version: '2.0.0',
+          }),
+        },
+        '/root'
+      );
+
+      let error: any;
+      try {
+        await createNodes[1](
+          ['packages/app/package.json', 'packages/lib-b/package.json'],
+          undefined,
+          context
+        );
+      } catch (e) {
+        error = e;
+      }
+
+      expect(error.name).toEqual('AggregateCreateNodesError');
+      expect(error.errors).toHaveLength(1);
+      const [file, innerError] = error.errors[0];
+      expect(file).toEqual('packages/app/package.json');
+      expect(innerError.message).toContain(
+        'Invalid workspace dependency alias "alias-name": "workspace:@acme/ghost@*".'
+      );
+      // valid files keep their results
+      expect(
+        error.partialResults.some(([f]) => f === 'packages/lib-b/package.json')
+      ).toBe(true);
+    });
+
+    it('should validate the root manifest even when it is not an Nx project', async () => {
+      vol.fromJSON(
+        {
+          'package.json': JSON.stringify({
+            name: 'root',
+            workspaces: ['packages/*'],
+            dependencies: { 'alias-name': 'workspace:ghost@*' },
+          }),
+          'packages/lib-b/package.json': JSON.stringify({
+            name: 'lib-b',
+            version: '2.0.0',
+          }),
+        },
+        '/root'
+      );
+
+      await expect(
+        createNodes[1](
+          ['package.json', 'packages/lib-b/package.json'],
+          undefined,
+          context
+        )
+      ).rejects.toMatchObject({
+        name: 'AggregateCreateNodesError',
+        errors: [
+          [
+            'package.json',
+            expect.objectContaining({
+              message: expect.stringContaining(
+                'Invalid workspace dependency alias'
+              ),
+            }),
+          ],
+        ],
+      });
+    });
+
+    it('should not let a same-named package outside the package-manager workspaces satisfy an alias', async () => {
+      vol.fromJSON(
+        {
+          'package.json': JSON.stringify({
+            name: 'root',
+            workspaces: ['packages/*'],
+          }),
+          'packages/app/package.json': JSON.stringify({
+            name: 'app',
+            version: '1.0.0',
+            dependencies: { 'alias-name': 'workspace:fixture-lib@*' },
+          }),
+          'e2e/fixture/project.json': JSON.stringify({ name: 'fixture-lib' }),
+          'e2e/fixture/package.json': JSON.stringify({
+            name: 'fixture-lib',
+            version: '1.0.0',
+          }),
+        },
+        '/root'
+      );
+
+      await expect(
+        createNodes[1](
+          [
+            'packages/app/package.json',
+            'e2e/fixture/project.json',
+            'e2e/fixture/package.json',
+          ],
+          undefined,
+          context
+        )
+      ).rejects.toMatchObject({ name: 'AggregateCreateNodesError' });
+    });
+
+    it('should not validate manifests outside the package-manager workspaces', async () => {
+      vol.fromJSON(
+        {
+          'package.json': JSON.stringify({
+            name: 'root',
+            workspaces: ['packages/*'],
+          }),
+          'e2e/fixture/project.json': JSON.stringify({ name: 'fixture-lib' }),
+          'e2e/fixture/package.json': JSON.stringify({
+            name: 'fixture-lib',
+            version: '1.0.0',
+            dependencies: { 'alias-name': 'workspace:ghost@*' },
+          }),
+        },
+        '/root'
+      );
+
+      const results = await createNodes[1](
+        ['e2e/fixture/project.json', 'e2e/fixture/package.json'],
+        undefined,
+        context
+      );
+      expect(results.some(([f]) => f === 'e2e/fixture/package.json')).toBe(
+        true
+      );
+    });
+
+    it('should not report a missing target when a workspace manifest fails to parse', async () => {
+      vol.fromJSON(
+        {
+          'package.json': JSON.stringify({
+            name: 'root',
+            workspaces: ['packages/*'],
+          }),
+          'packages/app/package.json': JSON.stringify({
+            name: 'app',
+            version: '1.0.0',
+            dependencies: { 'alias-name': 'workspace:lib-b@*' },
+          }),
+          // the alias target's manifest is malformed, so target membership
+          // cannot be determined
+          'packages/lib-b/package.json': '{ invalid json',
+        },
+        '/root'
+      );
+
+      let error: any;
+      try {
+        await createNodes[1](
+          ['packages/app/package.json', 'packages/lib-b/package.json'],
+          undefined,
+          context
+        );
+      } catch (e) {
+        error = e;
+      }
+
+      // only the parse error surfaces; no missing-target report against app
+      expect(error.name).toEqual('AggregateCreateNodesError');
+      expect(error.errors).toHaveLength(1);
+      expect(error.errors[0][0]).toEqual('packages/lib-b/package.json');
+      expect(error.errors[0][1].message).not.toContain(
+        'Invalid workspace dependency alias'
+      );
+    });
+
+    it('should attribute a malformed root manifest to its file and keep valid results', async () => {
+      vol.fromJSON(
+        {
+          'package.json': '{ invalid json',
+          'packages/lib-b/package.json': JSON.stringify({
+            name: 'lib-b',
+            version: '2.0.0',
+          }),
+          'packages/lib-b/project.json': JSON.stringify({ name: 'lib-b' }),
+        },
+        '/root'
+      );
+
+      let error: any;
+      try {
+        await createNodes[1](
+          [
+            'package.json',
+            'packages/lib-b/package.json',
+            'packages/lib-b/project.json',
+          ],
+          undefined,
+          context
+        );
+      } catch (e) {
+        error = e;
+      }
+
+      expect(error.name).toEqual('AggregateCreateNodesError');
+      expect(error.errors).toHaveLength(1);
+      expect(error.errors[0][0]).toEqual('package.json');
+      expect(
+        error.partialResults.some(([f]) => f === 'packages/lib-b/package.json')
+      ).toBe(true);
+    });
+
+    it('should accept aliases naming any workspace package, including the root package', async () => {
+      vol.fromJSON(
+        {
+          'package.json': JSON.stringify({
+            name: 'root',
+            version: '1.0.0',
+            workspaces: ['packages/*'],
+          }),
+          'packages/app/package.json': JSON.stringify({
+            name: 'app',
+            version: '1.0.0',
+            dependencies: {
+              'alias-root': 'workspace:root@*',
+              'alias-b': 'workspace:lib-b@^2.0.0',
+            },
+          }),
+          'packages/lib-b/package.json': JSON.stringify({
+            name: 'lib-b',
+            version: '2.0.0',
+          }),
+        },
+        '/root'
+      );
+
+      const results = await createNodes[1](
+        [
+          'package.json',
+          'packages/app/package.json',
+          'packages/lib-b/package.json',
+        ],
+        undefined,
+        context
+      );
+      expect(results.some(([f]) => f === 'packages/app/package.json')).toBe(
+        true
+      );
+    });
+  });
+
   describe('workspace package dependency descriptors', () => {
     afterEach(() => {
       jest.restoreAllMocks();
@@ -1145,11 +1402,14 @@ describe('nx package.json workspaces plugin', () => {
     });
 
     it('should recompute descriptors on cache hits and never store them in the cache', async () => {
+      // plain and npm-alias entries degrade quietly when the target package
+      // changes (a workspace: alias would instead raise a validation error)
       const appJson = {
         name: 'app',
         version: '1.0.0',
         dependencies: {
-          'alias-b': 'workspace:lib-b@*',
+          'lib-b': '^2.0.0',
+          'alias-b': 'npm:lib-b@^2.0.0',
         },
       };
       const files = {
@@ -1204,8 +1464,12 @@ describe('nx package.json workspaces plugin', () => {
       expect(firstApp.targets).toBeUndefined();
       expect(firstApp.metadata.js.packageDependencies).toEqual({
         dependencies: {
+          'lib-b': {
+            rawSpecifier: '^2.0.0',
+            requestedPackageName: 'lib-b',
+          },
           'alias-b': {
-            rawSpecifier: 'workspace:lib-b@*',
+            rawSpecifier: 'npm:lib-b@^2.0.0',
             requestedPackageName: 'lib-b',
           },
         },

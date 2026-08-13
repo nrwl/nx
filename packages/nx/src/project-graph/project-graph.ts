@@ -200,9 +200,11 @@ export function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
     if (e instanceof ProjectGraphError) {
       let title = e.message;
 
+      // matches the handleErrors rendering: the nested messages carry the
+      // actionable diagnostics, so they show without --verbose
       const bodyLines = isVerbose
         ? [e.stack]
-        : ['Pass --verbose to see the stacktraces.'];
+        : e.getErrors().map((error) => error.message);
 
       output.error({
         title,

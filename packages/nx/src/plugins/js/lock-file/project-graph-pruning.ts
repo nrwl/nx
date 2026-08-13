@@ -9,6 +9,7 @@ import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builde
 import { getCatalogManager } from '../../../utils/catalog';
 import { PackageJson } from '../../../utils/package-json';
 import { workspaceRoot } from '../../../utils/workspace-root';
+import { parseDependencySpecifier } from '../utils/dependency-specifiers';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 
 /**
@@ -87,6 +88,21 @@ function normalizeDependencies(
         }
       }
 
+      // workspace-protocol entries never resolve from the lock file; they
+      // stay as-is when the requested package (the aliased target for
+      // workspace:<name>@<range> entries, the key otherwise) is a workspace
+      // package
+      const parsed = parseDependencySpecifier(resolvedVersionRange);
+      if (parsed.protocol === 'workspace') {
+        if (workspacePackages.has(parsed.requestedPackageName ?? packageName)) {
+          combinedDependencies[packageName] = resolvedVersionRange;
+          return;
+        }
+        throw new Error(
+          `Pruned lock file creation failed. "${packageName}": "${resolvedVersionRange}" does not match any workspace package.`
+        );
+      }
+
       if (graph.externalNodes[`npm:${packageName}@${resolvedVersionRange}`]) {
         combinedDependencies[packageName] = resolvedVersionRange;
         return;
@@ -154,6 +170,21 @@ export function addNodesAndDependencies(
   builder: ProjectGraphBuilder
 ) {
   Object.entries(packageJsonDeps).forEach(([name, version]) => {
+    // workspace-protocol entries always link a workspace package (the
+    // requested target for workspace:<name>@<range> aliases, the key
+    // otherwise); dispatch them before the external lookups so a same-named
+    // external node cannot shadow the local target
+    const parsed = parseDependencySpecifier(version);
+    if (parsed.protocol === 'workspace') {
+      const workspaceNode = workspacePackages.get(
+        parsed.requestedPackageName ?? name
+      );
+      if (workspaceNode) {
+        traverseWorkspaceNode(graph, builder, workspaceNode);
+      }
+      return;
+    }
+
     const node =
       graph.externalNodes[`npm:${name}@${version}`] ||
       graph.externalNodes[`npm:${name}`];
