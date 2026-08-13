@@ -46,12 +46,14 @@ function createFakeInstallDir(): string {
   return dir;
 }
 
-describe('performShutdown', () => {
+describe('shutdown-utils', () => {
   let handleServerProcessTermination: typeof import('./shutdown-utils').handleServerProcessTermination;
+  let respondWithErrorAndExit: typeof import('./shutdown-utils').respondWithErrorAndExit;
   let exitSpy: jest.SpyInstance;
   let tempDir: string;
 
   const server = { close: (cb: () => void) => cb() } as any;
+  const socket = { write: (_: string, cb: () => void) => cb() } as any;
 
   beforeEach(() => {
     // Both shutdown-utils and latest-nx keep module-level state (the in-flight
@@ -71,11 +73,16 @@ describe('performShutdown', () => {
       },
     });
 
-    ({ handleServerProcessTermination } = require('./shutdown-utils'));
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    ({
+      handleServerProcessTermination,
+      respondWithErrorAndExit,
+    } = require('./shutdown-utils'));
   });
 
   afterEach(async () => {
     exitSpy?.mockRestore();
+    jest.restoreAllMocks();
     await rm(tempDir, { recursive: true, force: true });
   });
 
@@ -131,5 +138,35 @@ describe('performShutdown', () => {
 
     expect(existedAtFirstExit()).toBe(false);
     expect(exitSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('removes the latest Nx temp install before exiting on a failed request', async () => {
+    await primeLatestNxInstall();
+    const existedAtFirstExit = spyOnExit();
+
+    // This path exits without going through `performShutdown`, so it owns the
+    // removal itself.
+    await respondWithErrorAndExit(socket, 'a description', new Error('boom'));
+
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    expect(existedAtFirstExit()).toBe(false);
+  });
+
+  it('keeps the latest Nx temp install on a project graph error, which does not exit', async () => {
+    await primeLatestNxInstall();
+    const existedAtFirstExit = spyOnExit();
+
+    const {
+      DaemonProjectGraphError,
+    } = require('../../project-graph/error-types');
+    await respondWithErrorAndExit(
+      socket,
+      'a description',
+      new DaemonProjectGraphError([new Error('boom')], {} as any, {})
+    );
+
+    expect(exitSpy).not.toHaveBeenCalled();
+    expect(existedAtFirstExit()).toBeUndefined();
+    expect(existsSync(tempDir)).toBe(true);
   });
 });
