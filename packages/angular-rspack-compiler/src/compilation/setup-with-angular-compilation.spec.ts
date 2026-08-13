@@ -373,10 +373,12 @@ describe('setupCompilationWithAngularCompilation', () => {
     expect(compilerOptions.tsBuildInfoFile).toBeUndefined();
   });
 
-  // The flag must mirror the emit's own gate (isolated modules and no
-  // sourcemaps emit raw Angular-transformed TypeScript); tsconfig semantics
-  // like decorators or class fields are the swc rule's concern and must not
-  // flip the classification of what the compilation emitted.
+  // The flag must mirror the emit's own gate: `@angular/build` 22.1 reports
+  // it as `_useTypeScriptTranspilation`, which wins over every other option;
+  // older versions emit raw Angular-transformed TypeScript for isolated
+  // modules without sourcemaps. tsconfig semantics like decorators or class
+  // fields are the swc rule's concern and must not flip the classification of
+  // what the compilation emitted.
   const fastPathOptions = {
     isolatedModules: true,
     experimentalDecorators: true,
@@ -388,6 +390,20 @@ describe('setupCompilationWithAngularCompilation', () => {
     [{ isolatedModules: false }, true],
     [{ ...fastPathOptions, sourceMap: true }, true],
     [{ ...fastPathOptions, inlineSourceMap: true }, true],
+    // Reported by @angular/build 22.1+: the sourcemap options no longer
+    // switch the emit, so the raw-TS emit must not be classified as
+    // transpiled JavaScript.
+    [{ ...fastPathOptions, _useTypeScriptTranspilation: false }, false],
+    [
+      {
+        ...fastPathOptions,
+        inlineSourceMap: true,
+        _useTypeScriptTranspilation: false,
+      },
+      false,
+    ],
+    [{ ...fastPathOptions, _useTypeScriptTranspilation: true }, true],
+    [{ isolatedModules: false, _useTypeScriptTranspilation: false }, false],
     [{ ...fastPathOptions, experimentalDecorators: false }, false],
     [{ ...fastPathOptions, emitDecoratorMetadata: true }, false],
     [{ ...fastPathOptions, useDefineForClassFields: false }, false],
