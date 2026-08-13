@@ -56,7 +56,7 @@ import { connect } from 'net';
 
 import { waitForSocketConnection } from '../../utils/wait-for-socket-connection';
 import { clientLogger } from '../logger';
-import { readDaemonProcessJsonCache } from '../cache';
+import { getDaemonProcessIdSync, readDaemonProcessJsonCache } from '../cache';
 import { DAEMON_OUTPUT_LOG_FILE as logFile } from '../tmp-dir';
 import {
   DaemonClient,
@@ -541,6 +541,25 @@ describe('DaemonClient state machine', () => {
       expect(client._daemonStatus).toBe(DaemonStatus.CONNECTED);
       expect(probeServer).toHaveBeenCalledTimes(2);
       expect(startInBackground).toHaveBeenCalledTimes(2);
+    });
+
+    // Metrics registration happens after the connection is established, so a
+    // throw there must not send an already-CONNECTED client back to
+    // DISCONNECTED.
+    it('keeps an established connection when the metrics lookup throws', async () => {
+      jest.spyOn(client, 'probeServer').mockResolvedValue({ available: false });
+      jest.spyOn(client, 'startInBackground').mockResolvedValue(undefined);
+      jest.spyOn(client, 'setUpConnection').mockImplementation(() => {
+        /* no-op */
+      });
+      (getDaemonProcessIdSync as jest.Mock).mockImplementationOnce(() => {
+        throw new Error('no process json');
+      });
+
+      await expect(client.startDaemonIfNecessary()).rejects.toThrow(
+        'no process json'
+      );
+      expect(client._daemonStatus).toBe(DaemonStatus.CONNECTED);
     });
   });
 
