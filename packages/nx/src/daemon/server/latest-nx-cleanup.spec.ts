@@ -126,11 +126,21 @@ describe('cleanupLatestNx', () => {
 
     await getLatestNxTmpPath();
 
+    // Race a real timer so a broken timeout fails as an assertion rather than
+    // hanging until jest's, which would skip the `useRealTimers` below.
+    const realSetTimeout = setTimeout;
     jest.useFakeTimers();
     try {
       const pending = cleanupLatestNx();
       jest.advanceTimersByTime(10_000);
-      await expect(pending).resolves.toBeUndefined();
+      await expect(
+        Promise.race([
+          pending.then(() => 'gave up'),
+          new Promise((res) =>
+            realSetTimeout(() => res('still hanging'), 1_000).unref()
+          ),
+        ])
+      ).resolves.toBe('gave up');
     } finally {
       jest.useRealTimers();
     }
