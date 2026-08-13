@@ -4,6 +4,7 @@ import {
   getSelectedPackageManager,
   killProcessAndPorts,
   newProject,
+  readFile,
   readJson,
   reservePort,
   runCLI,
@@ -14,7 +15,7 @@ import {
   updateJson,
 } from '@nx/e2e-utils';
 import { ChildProcess } from 'child_process';
-import { names } from '@nx/devkit';
+import { joinPathFragments, names } from '@nx/devkit';
 
 const myApp = uniq('my-app');
 const myVueApp = uniq('my-vue-app');
@@ -532,12 +533,23 @@ export default defineConfig({
       expect(parent.executor).toEqual('nx:noop');
       expect(parent.metadata.nonAtomizedTarget).toEqual('test');
 
+      const reportsDirectory = readFile(`${reactVitest}/vite.config.mts`).match(
+        /reportsDirectory: '([^']+)'/
+      )[1];
+      // The generated reportsDirectory ends with the project root, so the
+      // plugin appends each spec path without a project-root prefix.
+      expect(reportsDirectory).toEqual(`../../coverage/${globDetails.root}`);
       const globAtomized = collectAtomized(globDetails);
       expect(globAtomized.length).toBeGreaterThan(0);
       for (const { target, command } of globAtomized) {
         const relativePath = target.slice('test-ci--'.length);
         expect(relativePath).toMatch(/\.spec\.tsx?$/);
-        expect(command).toEqual(`vitest run ${relativePath}`);
+        expect(command).toEqual(
+          `vitest run ${relativePath} --coverage.reportsDirectory="${joinPathFragments(
+            reportsDirectory,
+            relativePath
+          )}"`
+        );
       }
 
       // force the vitest runtime to enumerate the specs; atomization must match
