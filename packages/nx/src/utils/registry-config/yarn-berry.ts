@@ -217,6 +217,10 @@ export function getYarnBerrySpawnRegistryEnv(
     authIdent = registryEntry?.npmAuthIdent;
     alwaysAuth = isBerryTrueBoolean(registryEntry?.npmAlwaysAuth);
   } else {
+    // berry's getAuthConfiguration ends on the merged configuration with no
+    // source-tier tracking, so a global npmAuthToken/npmAuthIdent (any file
+    // tier, the home rc included, or env) authenticates whichever registry the
+    // other tiers selected. Reproduced deliberately for parity.
     authToken =
       process.env['YARN_NPM_AUTH_TOKEN'] ??
       firstDefinedIn(rcFiles, (c) => c.npmAuthToken);
