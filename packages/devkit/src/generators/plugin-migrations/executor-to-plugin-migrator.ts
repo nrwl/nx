@@ -927,7 +927,7 @@ function hoistCommonAndWrite<T>(
       .sort()
       .join(', ');
     (logger ?? devkitLogger).warn(
-      `convert-to-inferred kept per-project configuration for ${totalExcluded} project(s) on target(s) ${targetNames} instead of centralizing it: their target identity is authored outside the plugin (a project.json executor/command, or a package.json script/nx.targets entry), so a plugin-scoped default would not resolve for them. Those projects keep the same output as before; review them if you expected shared configuration.`
+      `convert-to-inferred kept per-project configuration for ${totalExcluded} project(s) on target(s) ${targetNames} instead of centralizing it: their target identity is authored outside the plugin (a project.json executor/command, or a package.json script/nx.targets entry), so a plugin-scoped default would not resolve for them. Those projects keep the same output as before the migration; review them if you expected shared configuration.`
     );
   }
 
