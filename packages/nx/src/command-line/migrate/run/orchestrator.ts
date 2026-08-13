@@ -515,9 +515,23 @@ export async function runOrchestratorReconcile(
     // An adopted death commits its working tree; that git side effect runs
     // before the lock, then the transition and its ledger entry land in one
     // fresh-state write so a crash can't leave the step succeeded unrecorded.
+    // Without commits the adopted tree is still this migration's result, and
+    // it can carry package.json edits the dead worker never installed; the
+    // install has to run here or the next dispense captures the modified
+    // dependencies as its own baseline and nothing is left to detect them.
     const { entry, installFailed }: StepSideEffects =
-      stepAction === 'adopt' && state.createCommits
-        ? await commitForStep(root, dir, state, target)
+      stepAction === 'adopt'
+        ? state.createCommits
+          ? await commitForStep(root, dir, state, target)
+          : {
+              entry: null,
+              installFailed: await installFailedForStep(
+                root,
+                dir,
+                state,
+                target
+              ),
+            }
         : { entry: null, installFailed: false };
     // A rearm starts a fresh attempt; drop the stale handoff before the rearm
     // is persisted so a crash in between can't refold the old outcome into the
@@ -649,9 +663,27 @@ async function foldLedgerEntry(
   if (promptOutcome.status === 'completed' && state.createCommits) {
     return commitForStep(root, dir, state, step);
   }
-  // A failure is recorded rather than thrown: reconcile still owes the agent a
-  // dispense, and a warning alone dies with this process.
-  let installFailed = false;
+  const installFailed = await installFailedForStep(root, dir, state, step);
+  const entry =
+    promptOutcome.status !== 'completed' &&
+    state.createCommits &&
+    getWorkingTreeStatus(root) !== 'clean'
+      ? { kind: 'failed' as const, stepIds: [step.id] }
+      : null;
+  return { entry, installFailed };
+}
+
+// Installs the dependency changes a step's tree may carry when no commit path
+// will do it (the fold of a prompt outcome that lands no commit, or a
+// non-commit adopt), returning whether the install failed. A failure is
+// recorded rather than thrown: reconcile still owes the agent a dispense, and
+// a warning alone dies with this process.
+async function installFailedForStep(
+  root: string,
+  dir: string,
+  state: MigrateRunState,
+  step: MigrateStep
+): Promise<boolean> {
   try {
     await installDepsChangedSinceDispense(
       root,
@@ -660,22 +692,16 @@ async function foldLedgerEntry(
       state.skipInstall === true,
       reconcileCommand(root, state.runId)
     );
+    return false;
   } catch (e) {
-    installFailed = true;
     warnToAgent({
       title: `The dependencies changed by ${step.migrationId} could not be installed (${summarizeError(
         e
       )}).`,
       bodyLines: [`Run \`${pmInstallCommand(root)}\` before continuing.`],
     });
+    return true;
   }
-  const entry =
-    promptOutcome.status !== 'completed' &&
-    state.createCommits &&
-    getWorkingTreeStatus(root) !== 'clean'
-      ? { kind: 'failed' as const, stepIds: [step.id] }
-      : null;
-  return { entry, installFailed };
 }
 
 // A failed handoff fails the prompt; a success handoff completes it, unless it

@@ -2324,6 +2324,62 @@ describe('orchestrator', () => {
       expect(state.steps[0].installFailed).toBe(true);
     });
 
+    it('installs the adopted dependency changes when the run does not create commits', async () => {
+      jest.spyOn(process, 'kill').mockReturnValue(true as never);
+      const dir = setupRun('run-1', {
+        steps: [
+          // The dead worker edited package.json before dying, so the deps no
+          // longer match the baseline the dispense recorded. Without the
+          // install here, the next dispense would capture the modified state
+          // as its own baseline and nothing would be left to detect it.
+          migStep('step-1', '@nx/js:gen', 'died', {
+            depsHashAtDispense: 'baseline-from-an-earlier-dispense',
+          }),
+        ],
+        createCommits: false,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'adopt',
+      });
+
+      expect(readRunState(dir).steps[0].status).toBe('succeeded');
+      expect(mockRunInstall).toHaveBeenCalledTimes(1);
+      expect(mockRunInstall).toHaveBeenCalledWith(
+        root,
+        'post-migration',
+        expect.stringContaining('--run-id=run-1')
+      );
+      expect(mockCommit).not.toHaveBeenCalled();
+    });
+
+    it('records the install failure when adopting without commits and the install fails', async () => {
+      jest.spyOn(process, 'kill').mockReturnValue(true as never);
+      mockRunInstall.mockRejectedValue(new Error('registry unreachable'));
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'died', {
+            depsHashAtDispense: 'baseline-from-an-earlier-dispense',
+          }),
+        ],
+        createCommits: false,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'adopt',
+      });
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      expect(state.steps[0].installFailed).toBe(true);
+    });
+
     it('does not refold a stale handoff after a retry re-arms the step', async () => {
       const dir = setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:p', 'failed')],
