@@ -36,7 +36,7 @@ export default [
     ignores: ['./src/migrations/**'],
   },
   {
-    files: ['./plugins/with-nx.ts'],
+    files: ['./plugins/with-nx.ts', './src/utils/compose-plugins.ts'],
     rules: {
       '@typescript-eslint/no-restricted-imports': [
         'error',
