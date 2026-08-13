@@ -16,6 +16,14 @@ jest.mock('./agentic/inception', () => ({
   isInsideAgent: () => mockIsInsideAgent(),
 }));
 
+// The classic loop's entry marker, used to prove the dispatch fell through to
+// it rather than merely skipping the orchestrator.
+const mockReportRunStart = jest.fn();
+jest.mock('./migrate-analytics', () => ({
+  ...jest.requireActual('./migrate-analytics'),
+  reportMigrateRunStart: (...args: unknown[]) => mockReportRunStart(...args),
+}));
+
 // The confirmation itself stays real so the branch resolution behind it is
 // exercised; only the terminal prompt is stubbed.
 const mockCanPrompt = jest.fn();
@@ -94,6 +102,7 @@ describe('migrate() orchestrated init dispatch', () => {
     );
     process.env.NX_MIGRATE_ORCHESTRATOR = 'true';
     mockRunOrchestratorInit.mockReset().mockResolvedValue(undefined);
+    mockReportRunStart.mockReset();
     mockIsInsideAgent.mockReset().mockReturnValue(true);
     mockCanPrompt.mockReset().mockReturnValue(true);
     mockMigratePrompt.mockReset().mockResolvedValue({ proceed: true });
@@ -169,6 +178,33 @@ describe('migrate() orchestrated init dispatch', () => {
 
     expect(mockMigratePrompt).not.toHaveBeenCalled();
     expect(mockRunOrchestratorInit).toHaveBeenCalledTimes(1);
+  });
+
+  it.each<[string, () => void]>([
+    [
+      'the gate env var is not set',
+      () => {
+        delete process.env.NX_MIGRATE_ORCHESTRATOR;
+      },
+    ],
+    [
+      'no agent is driving the process',
+      () => {
+        mockIsInsideAgent.mockReturnValue(false);
+      },
+    ],
+  ])('dispatches to the classic loop when %s', async (_label, arrange) => {
+    arrange();
+
+    // The classic loop runs real migration execution, which fails on this
+    // fixture; only the dispatch itself is under test.
+    await migrate(root, runMigrationsArgs({ agentic: false }), [
+      '--run-migrations',
+      '--agentic=false',
+    ]).catch(() => {});
+
+    expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+    expect(mockReportRunStart).toHaveBeenCalledTimes(1);
   });
 
   it.each<[string, boolean, string[]]>([
