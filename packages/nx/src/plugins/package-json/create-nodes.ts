@@ -24,6 +24,7 @@ import { joinPathFragments } from '../../utils/path';
 import { nxVersion } from '../../utils/versions';
 import { createNodesFromFiles, CreateNodes } from '../../project-graph/plugins';
 import { getWorkspacePackageDependencies } from '../js/utils/dependency-specifiers';
+import { findInvalidWorkspaceAliases } from './validate-workspace-aliases';
 import { basename } from 'path';
 import { hashObject } from '../../hasher/file-hasher';
 import {
@@ -67,17 +68,65 @@ export const createNodes: CreateNodes = [
       context.workspaceRoot
     );
 
+    // The root manifest participates in the package manager's install even
+    // when it is not an Nx project, so alias validation checks it too.
+    const isWorkspaceManifest = (packageJsonPath: string) =>
+      packageJsonPath === 'package.json' ||
+      isInPackageJsonWorkspaces(packageJsonPath);
+
     const { packageJsonContents, getWorkspacePackageVersion } =
       preloadWorkspacePackages(
         packageJsons,
         (packageJsonPath) =>
-          isInPackageJsonWorkspaces(packageJsonPath) ||
+          isWorkspaceManifest(packageJsonPath) ||
           isNextToProjectJson(packageJsonPath),
         readJson
       );
 
+    // Skip batch alias validation after any workspace manifest parse
+    // failure; incomplete names could cause false missing-target errors.
+    const workspacePackageNames = new Set<string>();
+    let workspacePackageNamesComplete = true;
+    for (const packageJsonPath of packageJsons) {
+      if (!isWorkspaceManifest(packageJsonPath)) {
+        continue;
+      }
+      const json = packageJsonContents.get(packageJsonPath);
+      if (!json) {
+        workspacePackageNamesComplete = false;
+      } else if (json.name) {
+        workspacePackageNames.add(json.name);
+      }
+    }
+
     return createNodesFromFiles(
       (packageJsonPath, options, context) => {
+        const json = packageJsonContents.get(packageJsonPath);
+
+        // Re-read failed workspace manifests here so createNodesFromFiles
+        // attributes parse errors to their files; a failed root manifest
+        // would otherwise be swallowed by the workspaces-pattern fallback and
+        // skipped as a non-project.
+        if (!json && isWorkspaceManifest(packageJsonPath)) {
+          readJson(packageJsonPath);
+        }
+
+        // Validated before the non-project skip below so a root manifest
+        // without an "nx" property is still checked.
+        if (
+          json &&
+          workspacePackageNamesComplete &&
+          isWorkspaceManifest(packageJsonPath)
+        ) {
+          const aliasIssues = findInvalidWorkspaceAliases(
+            json,
+            workspacePackageNames
+          );
+          if (aliasIssues.length > 0) {
+            throw new Error(aliasIssues.join('\n\n'));
+          }
+        }
+
         const isInPackageManagerWorkspaces =
           isInPackageJsonWorkspaces(packageJsonPath);
         if (
@@ -88,7 +137,6 @@ export const createNodes: CreateNodes = [
           return null;
         }
 
-        const json = packageJsonContents.get(packageJsonPath);
         return attachPackageDependencies(
           createNodeFromPackageJson(
             packageJsonPath,
