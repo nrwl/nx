@@ -702,8 +702,8 @@ function removeHoistedTargetDefault(
  * Detecting this lets the hoist keep the full residual per project instead of
  * silently dropping the centralized keys.
  *
- * Read through the Tree (the migration's in-memory view), since the migration
- * may have written the package.json this run.
+ * Read through the Tree so this sees the same in-memory package.json the rest of
+ * the generator reads and writes, rather than a possibly-stale copy on disk.
  */
 function packageJsonAuthorsTargetIdentity(
   tree: Tree,
