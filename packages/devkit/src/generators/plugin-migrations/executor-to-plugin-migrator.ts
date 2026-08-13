@@ -28,6 +28,7 @@ import {
   isMergeNodesError,
   isProjectsWithNoNameError,
   isMultipleProjectsWithSameNameError,
+  isWorkspaceValidityError,
   mergeTargetConfigurations,
   retrieveProjectConfigurations,
   globalSpinner,
@@ -1338,8 +1339,18 @@ function harvestConfigurationErrors(e: ProjectConfigurationsError): {
           erroredConfigFiles.add(file);
         }
       }
-    } else if (isMergeNodesError(error) && error.file) {
-      erroredConfigFiles.add(error.file);
+    } else if (isMergeNodesError(error)) {
+      if (error.file) {
+        erroredConfigFiles.add(error.file);
+      }
+    } else if (isWorkspaceValidityError(error)) {
+      // Carries no config file; its message (pushed above) is enough.
+    } else {
+      // Exhaustiveness guard: `ProjectConfigurationsError.errors` is a closed
+      // union. If a sixth member is added, this assignment stops compiling until
+      // it is handled here.
+      const _exhaustive: never = error;
+      void _exhaustive;
     }
   }
   return { messages, erroredConfigFiles: [...erroredConfigFiles] };
