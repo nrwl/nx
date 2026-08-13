@@ -655,7 +655,7 @@ console.log('Build complete');
     beforeAll(async () => {
       cachePort = await reservePort();
       // A second port we deliberately don't bind, used by the
-      // "should error if server is not running" test.
+      // "should warn, not fail, if server is not running" test.
       unboundPort = await reservePort();
       cacheServer = fork(join(__dirname, '__fixtures__', 'remote-cache.js'), {
         stdio: 'inherit',
@@ -732,7 +732,7 @@ console.log('Build complete');
       );
     });
 
-    it('should error if server is not running', async () => {
+    it('should warn, not fail, if server is not running', async () => {
       const projectName = uniq('myapp');
       const outputFilePath = `dist/${projectName}/output.txt`;
       updateFile(
@@ -756,7 +756,15 @@ console.log('Build complete');
         silenceError: true,
       });
 
-      expect(output).toContain(`http://localhost:${unboundPort}`);
+      // An unreachable cache server is no longer fatal: handleRemoteCacheError() in
+      // packages/nx/src/tasks-runner/cache.ts warns and lets the task run locally, so
+      // the build still succeeds. Only the errors isFatalRemoteCacheError() recognises
+      // (bad token, and the like) still stop the run.
+      expect(output).toContain('Failed to write to the remote cache');
+      expect(output).toContain(
+        'The task is cached locally, but other machines will not get a cache hit for it.'
+      );
+      expect(output).toContain('Successfully ran target build');
     });
   });
 
