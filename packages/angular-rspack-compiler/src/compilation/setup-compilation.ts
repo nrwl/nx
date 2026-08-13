@@ -153,6 +153,16 @@ export async function setupCompilation(
   ) {
     compilerOptions.customConditions = options.customConditions;
   }
+  // Requests TypeScript's emit over the raw Angular-transformed TypeScript
+  // one. Only TypeScript's carries a sourcemap for every file: the raw emit
+  // passes through files the Angular transforms left untouched, leaving them
+  // nothing to map back to. `@angular/build` 22.1 reads this option instead of
+  // deriving the emit from the sourcemap options, so setting it keeps every
+  // supported version on the same emit.
+  compilerOptions['_useTypeScriptTranspilation'] =
+    !compilerOptions.isolatedModules ||
+    !!compilerOptions.sourceMap ||
+    !!compilerOptions.inlineSourceMap;
 
   const searchDirectories = await generateSearchDirectories([options.root]);
   const postcssConfiguration =

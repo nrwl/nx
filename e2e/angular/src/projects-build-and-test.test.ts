@@ -135,15 +135,18 @@ describe('Angular Projects - Build and Test', () => {
     runCLI(`build ${app} --skip-nx-cache`, {
       env: { NGRS_CONFIG: 'development' },
     });
-    const bundleMap = JSON.parse(
-      readFile(`dist/my-dir/${app}/browser/main.js.map`)
-    );
-    const tsSources = bundleMap.sources
-      .map((source: string, index: number) => ({
-        source,
-        content: bundleMap.sourcesContent?.[index],
-      }))
-      .filter(({ source }) => source.endsWith('.ts'));
+    const readTsSources = () => {
+      const bundleMap = JSON.parse(
+        readFile(`dist/my-dir/${app}/browser/main.js.map`)
+      );
+      return bundleMap.sources
+        .map((source: string, index: number) => ({
+          source,
+          content: bundleMap.sourcesContent?.[index],
+        }))
+        .filter(({ source }) => source.endsWith('.ts'));
+    };
+    const tsSources = readTsSources();
     expect(tsSources.length).toBeGreaterThan(0);
     // The original TypeScript contains the `@Component` decorator, while the
     // intermediate Ivy JS has it compiled away into `ɵcmp`.
@@ -152,6 +155,28 @@ describe('Angular Projects - Build and Test', () => {
     );
     expect(componentSource).toBeDefined();
     expect(componentSource.content).not.toContain('ɵcmp');
+
+    // Optimized builds run the emit through the JavaScript transformer, which
+    // rewrites sourcemaps. Every source it emits must still resolve back to
+    // its TypeScript, including the files the Angular transforms left
+    // untouched (routes, application config) and therefore emitted without a
+    // sourcemap of their own.
+    updateFile(`my-dir/${app}/rspack.config.ts`, (content) =>
+      content.replace('"optimization": false,', '"optimization": true,')
+    );
+    expect(readFile(`my-dir/${app}/rspack.config.ts`)).toContain(
+      '"optimization": true,'
+    );
+    runCLI(`build ${app} --skip-nx-cache`, {
+      env: { NGRS_CONFIG: 'development' },
+    });
+    const optimizedTsSources = readTsSources();
+    expect(optimizedTsSources.length).toBeGreaterThan(0);
+    expect(
+      optimizedTsSources
+        .filter(({ content }) => !content)
+        .map(({ source }) => source)
+    ).toEqual([]);
 
     if (await runE2ETests()) {
       expect(() => runCLI(`e2e ${app}-e2e`)).not.toThrow();
