@@ -3,6 +3,8 @@ import {
   type GeneratorCallback,
   joinPathFragments,
   ensurePackage,
+  addDependenciesToPackageJson,
+  runTasksInSerial,
 } from '@nx/devkit';
 import {
   addExtendsToLintConfig,
@@ -12,7 +14,6 @@ import {
   isTypedLintingEnabled,
   useFlatConfig,
 } from '@nx/eslint/internal';
-import { addDependenciesToPackageJson, runTasksInSerial } from '@nx/devkit';
 import {
   addSwcDependencies,
   detectLinters,

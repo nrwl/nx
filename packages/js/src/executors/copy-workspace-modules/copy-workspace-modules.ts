@@ -6,7 +6,10 @@ import {
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
-import { interpolate } from '@nx/devkit/internal';
+import {
+  interpolate,
+  getWorkspacePackagesFromGraph,
+} from '@nx/devkit/internal';
 import { type CopyWorkspaceModulesOptions } from './schema';
 import {
   cpSync,
@@ -17,7 +20,6 @@ import {
 } from 'node:fs';
 import { dirname, join, relative, sep } from 'path';
 import { lstatSync } from 'fs';
-import { getWorkspacePackagesFromGraph } from '@nx/devkit/internal';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
 
 export default async function copyWorkspaceModules(

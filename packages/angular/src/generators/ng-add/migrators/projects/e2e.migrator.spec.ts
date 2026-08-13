@@ -16,8 +16,10 @@ jest.mock('fs', () => {
 });
 
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
-import { formatFiles, ProjectConfiguration, Tree } from '@nx/devkit';
 import {
+  formatFiles,
+  ProjectConfiguration,
+  Tree,
   joinPathFragments,
   readJson,
   readProjectConfiguration,
