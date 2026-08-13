@@ -194,6 +194,8 @@ export class DaemonClient {
   private _waitForDaemonReady: Promise<void> | null = null;
   private _daemonReady: () => void | null = null;
   private _daemonReadyFailed: (err: Error) => void | null = null;
+  // Terminal once set — see `handleConnectionError`.
+  private _pluginWorkerConnectionLost: Error | null = null;
 
   // Shared file watcher connection state
   private fileWatcherMessenger: DaemonSocketMessenger | undefined;
@@ -296,6 +298,7 @@ export class DaemonClient {
     this.projectGraphListenerMessenger = undefined;
 
     this._daemonStatus = DaemonStatus.DISCONNECTED;
+    this._pluginWorkerConnectionLost = null;
     this._waitForDaemonReady = this.createReadyPromise();
   }
 
@@ -1070,6 +1073,9 @@ export class DaemonClient {
   }
 
   private async startDaemonIfNecessary() {
+    if (this._pluginWorkerConnectionLost) {
+      throw this._pluginWorkerConnectionLost;
+    }
     if (this._daemonStatus == DaemonStatus.CONNECTED) {
       return;
     }
@@ -1188,17 +1194,17 @@ export class DaemonClient {
   private async handleConnectionError(error: Error) {
     clientLogger.log(`[Reconnect] Connection error detected: ${error.message}`);
 
-    // Plugin workers can't survive the daemon going away: their view of
-    // the workspace is tied to the dead daemon (graph state, cached
-    // context, plugin module state). Reconnecting to a new daemon —
-    // potentially a different version — can't produce a correct result,
-    // and `startInBackground` would throw anyway. Fail every queued and
-    // future message with a clear error so callers see a fast failure
-    // instead of hanging on a reconnect path that can't succeed.
+    // A plugin worker cannot bring a daemon back — `startInBackground` throws
+    // in one — and it is usually hosted by the daemon that just died, so the
+    // 60s reconnect poll almost always ends in the same failure. Make the loss
+    // terminal instead: the in-flight message and every later one fail fast
+    // with a clear error. The cost is that a CLI-hosted worker no longer
+    // survives a daemon restart, and that command fails.
     if (global.NX_PLUGIN_WORKER) {
       const pluginWorkerError = daemonProcessException(
         `Plugin worker lost its daemon connection and cannot reconnect: ${error.message}`
       );
+      this._pluginWorkerConnectionLost = pluginWorkerError;
       if (this.currentReject) {
         this.currentReject(pluginWorkerError);
       }

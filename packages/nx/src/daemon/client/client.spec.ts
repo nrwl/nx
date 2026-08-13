@@ -1,4 +1,4 @@
-import type { Mock } from 'vitest';
+import type { Mock, MockInstance } from 'vitest';
 import {
   chmodSync,
   mkdirSync,
@@ -38,11 +38,21 @@ vi.mock('../logger', () => ({
   clientLogger: { log: vi.fn() },
 }));
 
+// Real by default — the probe tests below need a genuine connect errno — and
+// replaced with a fake socket only where the close handler is under test.
+vi.mock('net', async () => {
+  const actual = await vi.importActual<typeof import('net')>('net');
+  return { ...actual, connect: vi.fn(actual.connect) };
+});
+
 vi.mock('../cache', async () => ({
   ...(await vi.importActual('../cache')),
   readDaemonProcessJsonCache: vi.fn(),
   getDaemonProcessIdSync: vi.fn(() => undefined),
 }));
+
+import { EventEmitter } from 'node:events';
+import { connect } from 'net';
 
 import { waitForSocketConnection } from '../../utils/wait-for-socket-connection';
 import { clientLogger } from '../logger';
@@ -72,6 +82,7 @@ type TestClient = {
   _daemonStatus: DaemonStatus;
   _waitForDaemonReady: Promise<void> | null;
   _daemonReady: (() => void) | null;
+  _pluginWorkerConnectionLost: Error | null;
   currentMessage: unknown;
   currentResolve: ((v: unknown) => void) | null;
   currentReject: ((e: unknown) => void) | null;
@@ -92,6 +103,20 @@ type TestClient = {
 function asTest(client: DaemonClient): TestClient {
   return client as unknown as TestClient;
 }
+
+type FakeSocket = EventEmitter & { unref: Mock; write: Mock };
+
+// Lets `setUpConnection` run for real, so the close handler under test is the
+// one production installs. Only the members that handler's path touches exist.
+function createFakeSocket(): FakeSocket {
+  return Object.assign(new EventEmitter(), {
+    unref: vi.fn(),
+    write: vi.fn(),
+    destroy: vi.fn(),
+  });
+}
+
+const tick = () => new Promise((resolve) => setImmediate(resolve));
 
 // Both suites share the mocked log path, so the directory is torn down once at
 // the end rather than by whichever suite finishes first.
@@ -455,12 +480,14 @@ describe('startInBackground', () => {
 });
 
 describe('DaemonClient state machine', () => {
+  let daemon: DaemonClient;
   let client: TestClient;
 
   beforeEach(() => {
-    client = asTest(new DaemonClient());
+    daemon = new DaemonClient();
+    client = asTest(daemon);
     // Never actually register with metrics during tests.
-    jest
+    vi
       .spyOn(
         client as unknown as { registerDaemonProcessWithMetricsService: any },
         'registerDaemonProcessWithMetricsService'
@@ -470,14 +497,14 @@ describe('DaemonClient state machine', () => {
 
   afterEach(() => {
     delete global.NX_PLUGIN_WORKER;
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('startDaemonIfNecessary()', () => {
     it('does not wedge concurrent callers when the initial connect throws', async () => {
       const err = new Error('spawn failed');
-      jest.spyOn(client, 'probeServer').mockResolvedValue({ available: false });
-      jest.spyOn(client, 'startInBackground').mockRejectedValue(err);
+      vi.spyOn(client, 'probeServer').mockResolvedValue({ available: false });
+      vi.spyOn(client, 'startInBackground').mockRejectedValue(err);
 
       // Kick off caller A synchronously; it flips status DISCONNECTED -> CONNECTING.
       const first = client.startDaemonIfNecessary();
@@ -494,14 +521,14 @@ describe('DaemonClient state machine', () => {
 
     it('lets a future caller retry after a failed connect attempt', async () => {
       const err = new Error('spawn failed');
-      const probeServer = jest
+      const probeServer = vi
         .spyOn(client, 'probeServer')
         .mockResolvedValue({ available: false });
-      const startInBackground = jest
+      const startInBackground = vi
         .spyOn(client, 'startInBackground')
         .mockRejectedValueOnce(err)
         .mockResolvedValueOnce(1234);
-      jest.spyOn(client, 'setUpConnection').mockImplementation(() => {
+      vi.spyOn(client, 'setUpConnection').mockImplementation(() => {
         /* no-op */
       });
 
@@ -517,46 +544,100 @@ describe('DaemonClient state machine', () => {
     });
   });
 
-  describe('handleConnectionError() inside a plugin worker', () => {
-    beforeEach(() => {
+  // Production reaches handleConnectionError only through the close handler
+  // `setUpConnection` installs, by which point the connect has already set
+  // CONNECTED and resolved the ready promise. So the whole sequence is driven
+  // here — connect, send, lose the socket — rather than calling the handler on
+  // a fresh client, which starts from a state production never reaches.
+  describe('a plugin worker losing its daemon connection', () => {
+    let socket: FakeSocket;
+    let probeServer: MockInstance;
+    let startInBackground: MockInstance;
+    let waitForServerToBeAvailable: MockInstance;
+
+    beforeEach(async () => {
       global.NX_PLUGIN_WORKER = true;
-    });
-
-    it('does not attempt reconnection', async () => {
-      const waitSpy = jest
-        .spyOn(client, 'waitForServerToBeAvailable')
+      socket = createFakeSocket();
+      (connect as Mock).mockReturnValue(socket);
+      (readDaemonProcessJsonCache as Mock).mockReturnValue({
+        socketPath: '/tmp/nx-spec-plugin-worker/d.sock',
+      });
+      probeServer = vi
+        .spyOn(client, 'probeServer')
         .mockResolvedValue({ available: true });
-      const currentReject = jest.fn();
-      client.currentReject = currentReject;
+      // Left calling through: the real ones are what a reconnect attempt would
+      // hit, and neither may be reached again after the connection is lost.
+      startInBackground = vi.spyOn(client, 'startInBackground');
+      waitForServerToBeAvailable = vi.spyOn(
+        client,
+        'waitForServerToBeAvailable'
+      );
 
-      await client.handleConnectionError(new Error('daemon gone'));
-
-      expect(waitSpy).not.toHaveBeenCalled();
-      expect(currentReject).toHaveBeenCalledTimes(1);
-      const rejectedError = currentReject.mock.calls[0][0] as Error;
-      expect(rejectedError.message).toMatch(/plugin worker/i);
+      await client.startDaemonIfNecessary();
+      expect(client._daemonStatus).toBe(DaemonStatus.CONNECTED);
     });
 
-    it('unblocks concurrent callers parked on _waitForDaemonReady', async () => {
-      // Capture the ready promise that was created in reset().
-      const pendingReady = client._waitForDaemonReady!;
-      client.currentReject = jest.fn();
+    afterEach(async () => {
+      const actual = await vi.importActual<typeof import('net')>('net');
+      (connect as Mock).mockImplementation(actual.connect);
+    });
 
-      await client.handleConnectionError(new Error('daemon gone'));
+    it('fails the in-flight message rather than polling for a replacement daemon', async () => {
+      const inFlight = daemon.requestShutdown();
+      // Let the queue put the message on the socket, so the close below lands
+      // on a client with work in flight.
+      await tick();
 
-      // The promise concurrent callers were awaiting must not be left
-      // hanging — it must surface the plugin-worker error.
-      await expect(pendingReady).rejects.toThrow(/plugin worker/i);
+      socket.emit('close');
+
+      await expect(inFlight).rejects.toThrow(
+        /Plugin worker lost its daemon connection/
+      );
+      expect(waitForServerToBeAvailable).not.toHaveBeenCalled();
+    });
+
+    it('fails later messages with the plugin-worker error even though a daemon is reachable', async () => {
+      const inFlight = daemon.requestShutdown();
+      await tick();
+      socket.emit('close');
+      await expect(inFlight).rejects.toThrow(/Plugin worker/);
+      probeServer.mockClear();
+
+      // The gate every queued and future message awaits before it reaches the
+      // socket. Without the guard the reachable daemon is connected to and the
+      // worker carries on against a daemon it never asked for.
+      await expect(client.startDaemonIfNecessary()).rejects.toThrow(
+        /Plugin worker lost its daemon connection/
+      );
+      expect(probeServer).not.toHaveBeenCalled();
       expect(client._daemonStatus).toBe(DaemonStatus.DISCONNECTED);
+    });
+
+    it('fails later messages with the plugin-worker error, not the startInBackground guard, when no daemon is reachable', async () => {
+      const inFlight = daemon.requestShutdown();
+      await tick();
+      socket.emit('close');
+      await expect(inFlight).rejects.toThrow(/Plugin worker/);
+      probeServer.mockResolvedValue({ available: false });
+
+      const error = await daemon.requestShutdown().catch((e) => e);
+
+      expect(error.message).toContain(
+        'Plugin worker lost its daemon connection'
+      );
+      // What the message got before: startInBackground's guard text, which
+      // tells the user to report a bug they did not hit.
+      expect(error.message).not.toContain('Please report this issue');
+      expect(startInBackground).not.toHaveBeenCalled();
     });
   });
 
   describe('handleConnectionError() with a version mismatch on reconnect', () => {
     it('surfaces the error to concurrent callers awaiting _waitForDaemonReady', async () => {
-      jest
+      vi
         .spyOn(client, 'waitForServerToBeAvailable')
         .mockRejectedValue(new VersionMismatchError());
-      const currentReject = jest.fn();
+      const currentReject = vi.fn();
       client.currentReject = currentReject;
 
       // Drive handleConnectionError; it will create a new _waitForDaemonReady
