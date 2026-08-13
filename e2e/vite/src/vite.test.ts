@@ -533,12 +533,13 @@ export default defineConfig({
       expect(parent.executor).toEqual('nx:noop');
       expect(parent.metadata.nonAtomizedTarget).toEqual('test');
 
+      // The AST edit path used for webpack-bundled apps quotes the key.
       const reportsDirectory = readFile(`${reactVitest}/vite.config.mts`).match(
-        /reportsDirectory: '([^']+)'/
+        /'?reportsDirectory'?: '([^']+)'/
       )[1];
       // The generated reportsDirectory ends with the project root, so the
       // plugin appends each spec path without a project-root prefix.
-      expect(reportsDirectory).toEqual(`../../coverage/${globDetails.root}`);
+      expect(reportsDirectory).toEqual(`../coverage/${globDetails.root}`);
       const globAtomized = collectAtomized(globDetails);
       expect(globAtomized.length).toBeGreaterThan(0);
       for (const { target, command } of globAtomized) {
