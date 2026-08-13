@@ -63,19 +63,13 @@ import {
   daemonClient,
   daemonPermissionException,
   daemonProcessException,
+  DaemonStatus,
 } from './client';
 import { VersionMismatchError } from './daemon-socket-messenger';
 
 declare global {
   // eslint-disable-next-line no-var
   var NX_PLUGIN_WORKER: boolean | undefined;
-}
-
-// Mirrors the private enum in client.ts for test assertions.
-const enum DaemonStatus {
-  CONNECTING = 0,
-  DISCONNECTED = 1,
-  CONNECTED = 2,
 }
 
 type TestClient = {
@@ -104,7 +98,11 @@ function asTest(client: DaemonClient): TestClient {
   return client as unknown as TestClient;
 }
 
-type FakeSocket = EventEmitter & { unref: jest.Mock; write: jest.Mock };
+type FakeSocket = EventEmitter & {
+  unref: jest.Mock;
+  write: jest.Mock;
+  destroy: jest.Mock;
+};
 
 // Lets `setUpConnection` run for real, so the close handler under test is the
 // one production installs. Only the members that handler's path touches exist.
@@ -444,7 +442,7 @@ describe('startInBackground', () => {
         // By hand, not via reset(): reset() would clear any instance-held
         // refusal, which is exactly the regression this checks for.
         (readDaemonProcessJsonCache as jest.Mock).mockReturnValue(undefined);
-        (daemonClient as any)._daemonStatus = 1; // DISCONNECTED
+        (daemonClient as any)._daemonStatus = DaemonStatus.DISCONNECTED;
         const error = await (daemonClient as any)
           .startDaemonIfNecessary()
           .catch((e: any) => e);
