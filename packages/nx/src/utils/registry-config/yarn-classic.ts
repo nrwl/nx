@@ -35,8 +35,13 @@ import {
  * YARN_REGISTRY env > .npmrc registry (the npm-config chain is exhausted first)
  * > .yarnrc registry > https://registry.yarnpkg.com.
  *
- * Scoped: @scope:registry in npm config (env/.npmrc) > @scope:registry in
- * .yarnrc > the unscoped chain.
+ * Scoped: @scope:registry in npm_config_ env > yarn_ env (both merged into the
+ * npm registry's config above its files, any casing, a non-leading `_` read as
+ * `-`; a dotted key never resolves from env because mergeEnv nests it) >
+ * .npmrc > .yarnrc > the unscoped chain. An empty env value masks the file
+ * chain of its tier. npm still reads a spelling yarn ignored or masked (a
+ * dotted env key, or the .npmrc entry behind an empty env value npm skips), so
+ * the overlay then pins yarn's effective registry on the scope.
  *
  * Option keys (cafile, strict-ssl, proxy) resolve the other way around, and off
  * the env first: `yarn_<key>` > .yarnrc > `npm_config_<key>` > .npmrc > yarn's
@@ -515,9 +520,41 @@ function resolveRegistry(
     yarnrcChain,
     cliYarnrcChain
   );
+  if (scope) {
+    pinScopedRegistry(
+      env,
+      npmrcChain,
+      scope,
+      scopedRegistry ?? unscopedRegistry
+    );
+  }
   // yarn's default is npmjs' CNAME and npm stays on registry.npmjs.org, so the
   // dart lands where npm queries.
   return scopedRegistry ?? unscopedRegistry ?? 'https://registry.npmjs.org/';
+}
+
+// npm reads scoped spellings yarn cannot: a dotted env key mergeEnv nests out
+// of yarn's flat lookups, and the .npmrc entry behind an empty env value, which
+// masks the file for yarn while npm skips the empty. Wherever the resolution
+// above left the scoped key unclaimed and npm's own read (env, else its native
+// .npmrc chain) lands elsewhere, yarn's effective registry is written over it.
+function pinScopedRegistry(
+  env: NpmConfigEnv,
+  npmrcChain: RcFile[],
+  scope: string,
+  effectiveRegistry: string | undefined
+): void {
+  const scopedKey = `${scope}:registry`;
+  if (env[`npm_config_${scopedKey}`] !== undefined) {
+    return;
+  }
+  const npmReads =
+    readNpmConfigEnv(process.env, scopedKey) ??
+    npmNativeValue(npmrcChain, scopedKey);
+  const effective = effectiveRegistry ?? 'https://registry.npmjs.org/';
+  if (npmReads !== undefined && npmReads !== effective) {
+    setScopedRegistry(env, scope, effective);
+  }
 }
 
 function resolveUnscopedRegistry(
@@ -567,6 +604,35 @@ function resolveUnscopedRegistry(
   return undefined;
 }
 
+// The value yarn's mergeEnv resolves for `key` under `prefix`: the whole env
+// key is lowercased, the prefix stripped, `__` becomes `.` and a non-leading
+// `_` becomes `-`, later entries overwriting earlier ones, an empty value
+// included. mergeEnv writes through objectPath.set, which nests a dotted key
+// while yarn's lookups stay flat, so a dotted key resolves from no spelling.
+function readYarnMergedEnv(prefix: string, key: string): string | undefined {
+  if (key.includes('.')) {
+    return undefined;
+  }
+  let value: string | undefined;
+  for (const [envKey, candidate] of Object.entries(process.env)) {
+    if (candidate === undefined) {
+      continue;
+    }
+    const lowerKey = envKey.toLowerCase();
+    if (!lowerKey.startsWith(prefix)) {
+      continue;
+    }
+    const normalized = lowerKey
+      .slice(prefix.length)
+      .replace(/__/g, '.')
+      .replace(/([^_])_/g, '$1-');
+    if (normalized === key) {
+      value = candidate;
+    }
+  }
+  return value;
+}
+
 // Returns the scoped registry yarn resolves even when npm reads it natively, so
 // auth can dart onto it.
 function resolveScopedRegistry(
@@ -576,22 +642,46 @@ function resolveScopedRegistry(
   scope: string
 ): string | undefined {
   const scopedKey = `${scope}:registry`;
-  // npm config (env + .npmrc) wins over .yarnrc for scoped keys.
-  const envRegistry = process.env[`npm_config_${scopedKey}`];
-  if (envRegistry !== undefined) {
-    return envRegistry;
-  }
-  const npmScoped = firstString(npmrcChain, scopedKey);
-  if (npmScoped) {
-    if (!npmScoped.npmNative) {
-      setScopedRegistry(env, scope, npmScoped.value);
+  // yarn merges yarn_ env into the npm registry config at init and npm_config_
+  // env over it, with the .npmrc chain under both; the yarn registry tier then
+  // holds yarn_ env over the .yarnrc chain. An empty env value still occupies
+  // its key, so it masks the file chain of its tier and falls through as unset.
+  const npmConfigEnvRegistry = readYarnMergedEnv('npm_config_', scopedKey);
+  const yarnEnvRegistry = readYarnMergedEnv('yarn_', scopedKey);
+  const npmTierEnvRegistry = npmConfigEnvRegistry ?? yarnEnvRegistry;
+  if (npmTierEnvRegistry) {
+    if (npmConfigEnvRegistry) {
+      // npm reads its own env tier natively unless its key rewrite resolves
+      // the spelling to another setting, which is when the bridge takes over.
+      if (readNpmConfigEnv(process.env, scopedKey) !== npmConfigEnvRegistry) {
+        setScopedRegistry(env, scope, npmConfigEnvRegistry);
+      }
+    } else {
+      setScopedRegistry(env, scope, npmTierEnvRegistry);
     }
-    return npmScoped.value;
+    return npmTierEnvRegistry;
   }
-  const yarnScoped = firstString(yarnrcChain, scopedKey);
-  if (yarnScoped) {
-    setScopedRegistry(env, scope, yarnScoped.value);
-    return yarnScoped.value;
+  if (npmTierEnvRegistry === undefined) {
+    const npmScoped = firstString(npmrcChain, scopedKey);
+    if (npmScoped) {
+      if (!npmScoped.npmNative) {
+        setScopedRegistry(env, scope, npmScoped.value);
+      }
+      return npmScoped.value;
+    }
+  }
+  // The yarn registry tier: an npm-tier empty still reaches it, and a truthy
+  // yarn_ value only gets here masked behind an empty npm_config_ spelling.
+  if (yarnEnvRegistry) {
+    setScopedRegistry(env, scope, yarnEnvRegistry);
+    return yarnEnvRegistry;
+  }
+  if (yarnEnvRegistry === undefined) {
+    const yarnScoped = firstString(yarnrcChain, scopedKey);
+    if (yarnScoped) {
+      setScopedRegistry(env, scope, yarnScoped.value);
+      return yarnScoped.value;
+    }
   }
   return undefined;
 }

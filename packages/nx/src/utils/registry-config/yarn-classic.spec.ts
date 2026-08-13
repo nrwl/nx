@@ -29,6 +29,12 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     'YARN_REGISTRY',
     'yarn_registry',
     'npm_config_@types:registry',
+    'NPM_CONFIG_@TYPES:REGISTRY',
+    'YARN_@TYPES:REGISTRY',
+    'NPM_CONFIG_@SC:REGISTRY',
+    'YARN_@SC:REGISTRY',
+    'npm_config_@foo__bar:Registry',
+    'npm_config_@foo.bar:registry',
     'npm_config_always_auth',
     'NPM_CONFIG_ALWAYS_AUTH',
     'yarn_always_auth',
@@ -390,6 +396,89 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     files['/repo/.npmrc'] = '@types:registry=https://reg-g.example.com/';
     expect(getYarnClassicSpawnRegistryEnv('@types/node', ROOT)).toEqual({
       'npm_config_@types:registry': 'https://reg-g.example.com/',
+    });
+  });
+
+  it('lets an uppercase NPM_CONFIG_ scoped env var beat both rc chains (native)', () => {
+    // yarn's mergeEnv lowercases the whole env key, so any casing counts. npm
+    // reads its own env tier the same way, so the registry needs no bridge,
+    // but the auth dart must follow the env-selected registry.
+    process.env['NPM_CONFIG_@TYPES:REGISTRY'] = 'https://reg-env.example.com/';
+    files[`${ROOT}/.npmrc`] = '@types:registry=https://reg-f.example.com/';
+    files[`${ROOT}/.yarnrc`] =
+      '"@types:registry" "https://reg-e.example.com/"\n';
+    files['/repo/.npmrc'] = '_authToken=ancestor-token';
+    expect(getYarnClassicSpawnRegistryEnv('@types/node', ROOT)).toEqual({
+      'npm_config_//reg-env.example.com/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it('bridges a yarn_ scoped env var over the .npmrc chain', () => {
+    // yarn merges yarn_ env into the npm registry config at init, above the
+    // .npmrc files; npm never reads yarn_ keys, so the registry is bridged.
+    process.env['YARN_@TYPES:REGISTRY'] = 'https://reg-yarn-env.example.com/';
+    files[`${ROOT}/.npmrc`] = '@types:registry=https://reg-f.example.com/';
+    expect(getYarnClassicSpawnRegistryEnv('@types/node', ROOT)).toEqual({
+      'npm_config_@types:registry': 'https://reg-yarn-env.example.com/',
+    });
+  });
+
+  it('lets a npm_config_ scoped env var beat a yarn_ scoped env var', () => {
+    process.env['NPM_CONFIG_@SC:REGISTRY'] = 'https://reg-env.example.com/';
+    process.env['YARN_@SC:REGISTRY'] = 'https://reg-yarn-env.example.com/';
+    files['/repo/.npmrc'] = '_authToken=ancestor-token';
+    expect(getYarnClassicSpawnRegistryEnv('@sc/pkg', ROOT)).toEqual({
+      'npm_config_//reg-env.example.com/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it("ignores a dunder env spelling of a dotted scope key (nested out of yarn's flat lookups)", () => {
+    // mergeEnv turns `__` into `.` and stores through objectPath.set, which
+    // nests the dotted key while yarn's lookups stay flat, so the env entry
+    // never resolves and the .yarnrc value wins.
+    process.env['npm_config_@foo__bar:Registry'] =
+      'https://reg-env.example.com/';
+    files[`${ROOT}/.yarnrc`] =
+      '"@foo.bar:registry" "https://reg-e.example.com/"\n';
+    expect(getYarnClassicSpawnRegistryEnv('@foo.bar/pkg', ROOT)).toEqual({
+      'npm_config_@foo.bar:registry': 'https://reg-e.example.com/',
+    });
+  });
+
+  it('lets a later empty spelling mask the .npmrc chain (yarn keeps the empty overwrite)', () => {
+    // mergeEnv writes every spelling in env order, so a later empty one
+    // overwrites the value; the key still occupies the npm tier, masking the
+    // .npmrc chain and falling through to the .yarnrc chain as unset.
+    process.env['npm_config_@types:registry'] = 'https://reg-env.example.com/';
+    process.env['NPM_CONFIG_@TYPES:REGISTRY'] = '';
+    files[`${ROOT}/.npmrc`] = '@types:registry=https://reg-f.example.com/';
+    files[`${ROOT}/.yarnrc`] =
+      '"@types:registry" "https://reg-e.example.com/"\n';
+    expect(getYarnClassicSpawnRegistryEnv('@types/node', ROOT)).toEqual({
+      'npm_config_@types:registry': 'https://reg-e.example.com/',
+    });
+  });
+
+  it('pins the unscoped registry over a dotted scoped env key only npm reads', () => {
+    // yarn never resolves the dotted spelling (mergeEnv nests it) and falls to
+    // the unscoped chain, but the spawned npm would read the ambient env key,
+    // so the overlay claims the scope with yarn's answer.
+    process.env['npm_config_@foo.bar:registry'] =
+      'https://reg-env.example.com/';
+    files[`${ROOT}/.npmrc`] = 'registry=https://reg-b.example.com/';
+    expect(getYarnClassicSpawnRegistryEnv('@foo.bar/pkg', ROOT)).toEqual({
+      'npm_config_@foo.bar:registry': 'https://reg-b.example.com/',
+    });
+  });
+
+  it('pins the registry over an .npmrc scoped entry masked by an empty env value', () => {
+    // The empty env value masks the .npmrc chain for yarn, which falls through
+    // to the unscoped default, while npm skips the empty and would read the
+    // .npmrc entry natively; the overlay claims the scope with yarn's answer.
+    process.env['npm_config_@types:registry'] = '';
+    files[`${ROOT}/.npmrc`] = '@types:registry=https://reg-f.example.com/';
+    expect(getYarnClassicSpawnRegistryEnv('@types/node', ROOT)).toEqual({
+      'npm_config_@types:registry': 'https://registry.npmjs.org/',
     });
   });
 
