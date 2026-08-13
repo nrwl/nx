@@ -1209,8 +1209,8 @@ export class DaemonClient {
       this._waitForDaemonReady = this.createReadyPromise();
       this._daemonStatus = DaemonStatus.CONNECTING;
 
+      let daemonPid: number | null = null;
       try {
-        let daemonPid: number | null = null;
         let probe: { available: boolean; refusal?: ConnectRefusal };
         try {
           probe = await this.probeServer();
@@ -1229,10 +1229,6 @@ export class DaemonClient {
         this.setUpConnection();
         this._daemonStatus = DaemonStatus.CONNECTED;
         this._daemonReady();
-
-        daemonPid ??= getDaemonProcessIdSync();
-        // Fire-and-forget - don't block daemon connection by waiting for metrics registration
-        this.registerDaemonProcessWithMetricsService(daemonPid);
       } catch (err) {
         // Reset to DISCONNECTED and reject the ready promise so every
         // concurrent caller parked on the CONNECTING branch gets the
@@ -1240,6 +1236,12 @@ export class DaemonClient {
         this.failDaemonReady(err);
         throw err;
       }
+
+      // Outside the try: the connection is established by now, and a throw
+      // from here must not undo it.
+      daemonPid ??= getDaemonProcessIdSync();
+      // Fire-and-forget - don't block daemon connection by waiting for metrics registration
+      this.registerDaemonProcessWithMetricsService(daemonPid);
     } else if (this._daemonStatus == DaemonStatus.CONNECTING) {
       await this._waitForDaemonReady;
       const daemonPid = getDaemonProcessIdSync();
