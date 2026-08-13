@@ -7,7 +7,7 @@
 // elsewhere in this directory, which is what keeps that a property of the
 // module rather than of whoever writes the next interpolation.
 //
-// Two things this does not cover, both of which have already produced bugs:
+// Two things this does not cover:
 // a thrown error leaves through handleErrors, which splits the message on line
 // terminators and prints the pieces itself, and a value read back from run.json
 // can reach a command the agent runs rather than a line it reads. So a run.json
@@ -26,9 +26,9 @@ import { singleLine } from '../text';
 
 /**
  * Lines are kept unjoined all the way here on purpose. Joining them and
- * splitting them back, as the dispense path used to, turns an injected break
- * into its own entry before this module sees it, indistinguishable from a line
- * the caller meant to write, and nothing downstream can undo that.
+ * splitting them back turns an injected break into its own entry before this
+ * module sees it, indistinguishable from a line the caller meant to write, and
+ * nothing downstream can undo that.
  */
 export interface AgentMessage {
   title: string;
