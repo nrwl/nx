@@ -60,6 +60,36 @@ describe('cleanupLatestNx', () => {
     expect(cleanup).toHaveBeenCalledTimes(1);
   });
 
+  it('makes a concurrent caller wait for the in-flight removal', async () => {
+    let removed = false;
+    stubInstall(async () => {
+      await new Promise((res) => setTimeout(res, 10));
+      removed = true;
+    });
+
+    await getLatestNxTmpPath();
+
+    // `respondWithErrorAndExit` calls `process.exit` the moment its own cleanup
+    // resolves, so a second caller resolving early kills the first one's `rm`.
+    const first = cleanupLatestNx();
+    await cleanupLatestNx();
+
+    expect(removed).toBe(true);
+    await first;
+  });
+
+  it('removes a re-installed copy that was pulled after an earlier cleanup', async () => {
+    const cleanup = jest.fn().mockResolvedValue(undefined);
+    stubInstall(cleanup);
+
+    await getLatestNxTmpPath();
+    await cleanupLatestNx();
+    await getLatestNxTmpPath();
+    await cleanupLatestNx();
+
+    expect(cleanup).toHaveBeenCalledTimes(2);
+  });
+
   it('swallows a failing cleanup so shutdown can still proceed', async () => {
     stubInstall(async () => {
       throw new Error('EBUSY');
