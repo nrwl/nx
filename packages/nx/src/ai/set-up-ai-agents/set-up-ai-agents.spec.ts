@@ -8,6 +8,7 @@ import { getAgentRulesWrapped } from '../constants';
 import * as installedNxVersionUtils from '../../utils/installed-nx-version';
 import * as cloneModule from '../clone-ai-config-repo';
 import * as fs from 'fs';
+import * as native from '../../native';
 
 jest.mock('fs', () => {
   const actual = jest.requireActual('fs');
@@ -68,6 +69,7 @@ describe('setup-ai-agents generator', () => {
     expect(tree.exists('custom-dir/CLAUDE.md')).toBe(true);
     expect(tree.exists('custom-dir/AGENTS.md')).toBe(true);
     expect(tree.exists('custom-dir/.claude/settings.json')).toBe(true);
+    expect(tree.exists('custom-dir/.claude/settings.local.json')).toBe(true);
     expect(tree.exists('custom-dir/.gemini/settings.json')).toBe(true);
   });
 
@@ -354,6 +356,7 @@ describe('setup-ai-agents generator', () => {
 
         expect(tree.exists('CLAUDE.md')).toBe(false);
         expect(tree.exists('.claude/settings.json')).toBe(false);
+        expect(tree.exists('.claude/settings.local.json')).toBe(false);
       });
 
       it('should create .claude/settings.json with plugin configuration when file does not exist', async () => {
@@ -404,6 +407,56 @@ describe('setup-ai-agents generator', () => {
         expect(config.enabledPlugins['nx@nx-claude-plugins']).toBe(true);
       });
 
+      it('should keep sandbox settings local and allow access to shared worktree data', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+        const getMainWorktreeRootSpy = jest
+          .spyOn(native, 'getMainWorktreeRoot')
+          .mockReturnValue('/path/to/main-worktree');
+
+        tree.write(
+          '.claude/settings.local.json',
+          JSON.stringify({
+            sandbox: {
+              filesystem: {
+                allowRead: ['/existing/read'],
+                allowWrite: ['/existing/write'],
+              },
+            },
+          })
+        );
+
+        try {
+          await setupAiAgentsGenerator(tree, options);
+        } finally {
+          getMainWorktreeRootSpy.mockRestore();
+        }
+
+        const sharedConfig = readJson(tree, '.claude/settings.json');
+        const localConfig = readJson(tree, '.claude/settings.local.json');
+
+        expect(sharedConfig.sandbox).toBeUndefined();
+        expect(localConfig.sandbox.filesystem.allowRead).toEqual([
+          '/existing/read',
+          '/tmp/.nx',
+          '~/.nx',
+          '/path/to/main-worktree/.nx',
+        ]);
+        expect(localConfig.sandbox.filesystem.allowWrite).toEqual([
+          '/existing/write',
+          '/tmp/.nx',
+          '~/.nx',
+          '/path/to/main-worktree/.nx',
+        ]);
+        expect(localConfig.sandbox.network.allowUnixSockets).toEqual([
+          '/tmp/.nx',
+          '~/.nx',
+        ]);
+        expect(localConfig.sandbox.network.allowAllUnixSockets).toBe(true);
+      });
+
       it('should allow analytics requests through the sandbox network filter', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
@@ -413,7 +466,7 @@ describe('setup-ai-agents generator', () => {
         await setupAiAgentsGenerator(tree, options);
 
         const config = JSON.parse(
-          tree.read('.claude/settings.json')?.toString() ?? '{}'
+          tree.read('.claude/settings.local.json')?.toString() ?? '{}'
         );
         expect(config.sandbox.network.allowedDomains).toEqual([
           'www.google-analytics.com',
@@ -427,7 +480,7 @@ describe('setup-ai-agents generator', () => {
         };
 
         tree.write(
-          '.claude/settings.json',
+          '.claude/settings.local.json',
           JSON.stringify({
             sandbox: {
               autoAllowBashIfSandboxed: true,
@@ -441,7 +494,7 @@ describe('setup-ai-agents generator', () => {
         await setupAiAgentsGenerator(tree, options);
 
         const config = JSON.parse(
-          tree.read('.claude/settings.json')?.toString() ?? '{}'
+          tree.read('.claude/settings.local.json')?.toString() ?? '{}'
         );
         expect(config.sandbox.autoAllowBashIfSandboxed).toBe(true);
         expect(config.sandbox.network.allowedDomains).toEqual([
@@ -459,7 +512,7 @@ describe('setup-ai-agents generator', () => {
         await setupAiAgentsGenerator(tree, options);
 
         const config = JSON.parse(
-          tree.read('.claude/settings.json')?.toString() ?? '{}'
+          tree.read('.claude/settings.local.json')?.toString() ?? '{}'
         );
         // Both roots the socket chain may use. Allowing only /tmp/.nx leaves
         // every user on a machine where a peer created it first uncovered,
@@ -494,7 +547,7 @@ describe('setup-ai-agents generator', () => {
         await setupAiAgentsGenerator(tree, options);
 
         const config = JSON.parse(
-          tree.read('.claude/settings.json')?.toString() ?? '{}'
+          tree.read('.claude/settings.local.json')?.toString() ?? '{}'
         );
         expect(config.sandbox.network.allowAllUnixSockets).toBe(true);
       });
@@ -506,7 +559,7 @@ describe('setup-ai-agents generator', () => {
         };
 
         tree.write(
-          '.claude/settings.json',
+          '.claude/settings.local.json',
           JSON.stringify({
             sandbox: {
               filesystem: {
@@ -522,7 +575,7 @@ describe('setup-ai-agents generator', () => {
         await setupAiAgentsGenerator(tree, options);
 
         const config = JSON.parse(
-          tree.read('.claude/settings.json')?.toString() ?? '{}'
+          tree.read('.claude/settings.local.json')?.toString() ?? '{}'
         );
         // The pre-existing entries survive in place, ours is not duplicated,
         // and the root that was missing is appended rather than replacing them.
@@ -856,6 +909,7 @@ describe('setup-ai-agents generator', () => {
 
         expect(tree.exists('CLAUDE.md')).toBe(true);
         expect(tree.exists('.claude/settings.json')).toBe(true);
+        expect(tree.exists('.claude/settings.local.json')).toBe(true);
         expect(tree.exists('.gemini/settings.json')).toBe(true);
         expect(tree.exists('AGENTS.md')).toBe(true);
         // .mcp.json should NOT be created - Claude uses plugin, Gemini uses .gemini/settings.json
