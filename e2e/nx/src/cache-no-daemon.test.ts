@@ -754,6 +754,7 @@ console.log('Build complete');
           NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN: 'test-token',
         },
         silenceError: true,
+        redirectStderr: true,
       });
 
       // An unreachable cache server is no longer fatal: handleRemoteCacheError() in
