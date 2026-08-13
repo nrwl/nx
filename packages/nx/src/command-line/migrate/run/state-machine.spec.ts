@@ -329,6 +329,8 @@ describe('applyStepEvent', () => {
       ALL_ACTIONS.map((action) => {
         let expected: MigrateStepStatus | null = null;
         if (status === 'failed' && action === 'retry') expected = 'pending';
+        else if (status === 'failed' && action === 'retry-clean')
+          expected = 'pending';
         else if (status === 'failed' && action === 'skip') expected = 'skipped';
         else if (status === 'died' && action === 'retry-clean')
           expected = 'pending';
@@ -364,6 +366,7 @@ describe('applyStepEvent', () => {
 
     it.each([
       { status: 'failed' as const, action: 'retry' as const },
+      { status: 'failed' as const, action: 'retry-clean' as const },
       { status: 'died' as const, action: 'retry-clean' as const },
     ])(
       '$action drops the previous attempt fields so a later success cannot carry them',
@@ -444,46 +447,52 @@ describe('applyStepEvent', () => {
       }
     });
 
-    it('retry-clean keeps generatorCompleted when a landed commit of this step carries the generator changes', () => {
-      const state = {
-        ...stateWithStep({ status: 'died', generatorCompleted: true }),
-        commits: [
-          { kind: 'landed', sha: 'abc', stepIds: ['step-1'] },
-        ] as MigrateCommitLedgerEntry[],
-      };
+    it.each(['failed', 'died'] as const)(
+      'retry-clean from %s keeps generatorCompleted when a landed commit of this step carries the generator changes',
+      (status) => {
+        const state = {
+          ...stateWithStep({ status, generatorCompleted: true }),
+          commits: [
+            { kind: 'landed', sha: 'abc', stepIds: ['step-1'] },
+          ] as MigrateCommitLedgerEntry[],
+        };
 
-      const result = applyStepEvent(state, {
-        type: 'stepAction',
-        stepId: 'step-1',
-        action: 'retry-clean',
-      });
+        const result = applyStepEvent(state, {
+          type: 'stepAction',
+          stepId: 'step-1',
+          action: 'retry-clean',
+        });
 
-      expect(result.kind).toBe('ok');
-      if (result.kind === 'ok') {
-        expect(result.state.steps[0].generatorCompleted).toBe(true);
+        expect(result.kind).toBe('ok');
+        if (result.kind === 'ok') {
+          expect(result.state.steps[0].generatorCompleted).toBe(true);
+        }
       }
-    });
+    );
 
-    it('retry-clean drops generatorCompleted when no commit of this step landed: the reset discards the generator changes', () => {
-      // Commits off, or the generator's commit failed. The reset target
-      // predates the generator, so keeping the marker would skip it and record
-      // a success for a migration whose changes are gone.
-      const state = stateWithStep({
-        status: 'died',
-        generatorCompleted: true,
-      });
+    it.each(['failed', 'died'] as const)(
+      'retry-clean from %s drops generatorCompleted when no commit of this step landed: the reset discards the generator changes',
+      (status) => {
+        // Commits off, or the generator's commit failed. The reset target
+        // predates the generator, so keeping the marker would skip it and
+        // record a success for a migration whose changes are gone.
+        const state = stateWithStep({
+          status,
+          generatorCompleted: true,
+        });
 
-      const result = applyStepEvent(state, {
-        type: 'stepAction',
-        stepId: 'step-1',
-        action: 'retry-clean',
-      });
+        const result = applyStepEvent(state, {
+          type: 'stepAction',
+          stepId: 'step-1',
+          action: 'retry-clean',
+        });
 
-      expect(result.kind).toBe('ok');
-      if (result.kind === 'ok') {
-        expect(result.state.steps[0].generatorCompleted).toBeUndefined();
+        expect(result.kind).toBe('ok');
+        if (result.kind === 'ok') {
+          expect(result.state.steps[0].generatorCompleted).toBeUndefined();
+        }
       }
-    });
+    );
 
     it('retry-clean drops generatorCompleted when the only landed commit covers a different step', () => {
       const state = {

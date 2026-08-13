@@ -739,22 +739,21 @@ function applyReconcileStepAction(
     };
   }
   const step = candidates[0];
-  // A retry-clean the death dispense would not have offered must be refused
-  // here too, or a hand-crafted reconcile could reset a tree with no restore
-  // point and destroy prior steps' work.
+  // A retry-clean the dispense would not have offered must be refused here
+  // too, or a hand-crafted reconcile could reset a tree with no restore point
+  // and destroy prior steps' work.
   if (action === 'retry-clean') {
     const head = getLatestCommitSha(root);
+    const fallback =
+      step.status === 'died'
+        ? `Use 'adopt' instead.`
+        : `Use 'retry' or 'skip' instead.`;
     if (!canOfferCleanRetry(root, state, step, head)) {
       return {
         kind: 'error',
         reason: `Cannot apply action 'retry-clean' to step '${
           step.id
-        }': ${cleanRetryUnavailableReason(
-          root,
-          state,
-          step,
-          head
-        )} Use 'adopt' instead.`,
+        }': ${cleanRetryUnavailableReason(root, state, step, head)} ${fallback}`,
       };
     }
   }
@@ -861,7 +860,7 @@ function advanceAndDispense(
       emitNextStep(root, runId, step);
       break;
     case 'failed':
-      emitRetryFailed(root, runId, step);
+      emitRetryFailed(root, runId, state, step);
       break;
     case 'died':
       emitDied(root, runId, state, step);
@@ -949,21 +948,53 @@ function emitNextStep(root: string, runId: string, step: MigrateStep): void {
   });
 }
 
-function emitRetryFailed(root: string, runId: string, step: MigrateStep): void {
+function emitRetryFailed(
+  root: string,
+  runId: string,
+  state: MigrateRunState,
+  step: MigrateStep
+): void {
   const migrationId = step.migrationId;
   const summary = step.outcome?.summary;
+  const head = getLatestCommitSha(root);
+  const tree = dirtyTreeSummary(root);
+  const cleanRetry = canOfferCleanRetry(root, state, step, head);
+  const lines = [
+    `Migration ${migrationId} failed${summary ? `: ${summary}` : ''}.`,
+    `  started from: ${step.gitRefBefore ?? '(unknown)'}`,
+    `  current HEAD: ${head ?? '(unknown)'}`,
+    `  working tree: ${tree === null ? '(unknown)' : tree ? `\n${tree}` : '(clean)'}`,
+    ``,
+    `Decide how to proceed and re-run reconcile with one of:`,
+    `  retry: re-run over the current tree: ${reconcileCommand(root, runId, 'retry')}`,
+  ];
+  if (cleanRetry) {
+    lines.push(
+      `  retry-clean: restore the tree to ${
+        step.gitRefBefore ?? 'the pre-migration ref'
+      } first (e.g. \`git reset --hard ${step.gitRefBefore ?? '<ref>'}\` then \`git clean -fd -e ${MIGRATE_RUNS_RELATIVE_DIR}\`, keeping the run state out of the clean), then retry from that clean state by running: ${reconcileCommand(
+        root,
+        runId,
+        'retry-clean'
+      )}`
+    );
+  }
+  lines.push(`  skip:  ${reconcileCommand(root, runId, 'skip')}`);
+  // A failure recorded before the generator marker can still have written to
+  // the tree (a direct fs or exec side effect, or a crash mid-flush), so where
+  // a restore point exists the reset-backed retry is the preselected one; a
+  // marker means only the install and commit are left, and plain retry is
+  // safe. With neither, plain retry stays: no restore point exists to reset
+  // to, and the evidence lines above let the agent judge the tree first.
+  const preselected: StepAction =
+    step.generatorCompleted !== true && cleanRetry ? 'retry-clean' : 'retry';
   emit(runId, step, 'retry-failed', {
-    then: reconcileCommand(root, runId, 'retry'),
-    instructionLines: [
-      `Migration ${migrationId} failed${summary ? `: ${summary}` : ''}.`,
-      `Decide how to proceed and re-run reconcile with one of:`,
-      `  retry: ${reconcileCommand(root, runId, 'retry')}`,
-      `  skip:  ${reconcileCommand(root, runId, 'skip')}`,
-    ],
+    then: reconcileCommand(root, runId, preselected),
+    instructionLines: lines,
   });
 }
 
-// A clean retry resets the tree to the dead step's captured pre-migration ref.
+// A clean retry resets the tree to the step's captured pre-migration ref.
 // That is only safe when every prior diff is already committed: without
 // per-migration commits the ref is the run's starting commit (the reset would
 // wipe all prior steps' uncommitted work); a failed init checkpoint or a
@@ -1018,8 +1049,8 @@ function endangeredLandedEntry(
   return endangered;
 }
 
-// Explains why retry-clean is withheld for a died step; feeds both the death
-// dispense and a rejected --step-action=retry-clean.
+// Explains why retry-clean is withheld for a failed or died step; feeds the
+// death dispense and a rejected --step-action=retry-clean.
 function cleanRetryUnavailableReason(
   root: string,
   state: MigrateRunState,

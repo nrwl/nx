@@ -168,6 +168,11 @@ function applyStepAction(
       case 'retry':
         // Nothing resets the tree, so the generator's changes are still in it.
         return commit(state, index, rearm(step, true));
+      case 'retry-clean':
+        // A failed generator can have written before throwing (a direct fs or
+        // exec side effect, or a crash mid-flush), so a reset-backed retry is
+        // offered under the same guard as for a death.
+        return commit(state, index, cleanRearm(state, step));
       case 'skip':
         return commit(state, index, { ...step, status: 'skipped' });
     }
@@ -187,15 +192,7 @@ function applyStepAction(
           reason: `Cannot apply action 'retry' to step '${step.id}': the worker died before recording that its generator ran, so keeping the current tree could apply the migration twice. Use 'retry-clean' or 'adopt' instead.`,
         };
       case 'retry-clean':
-        // The reset target predates the generator unless a commit of this
-        // step's own already carries it, so the marker only survives when
-        // such a commit exists; otherwise the reset discards the generator's
-        // changes and the retry has to run it again.
-        return commit(
-          state,
-          index,
-          rearm(step, coveringLandedEntries(state, step.id).length > 0)
-        );
+        return commit(state, index, cleanRearm(state, step));
       case 'adopt':
         return commit(state, index, {
           ...step,
@@ -208,6 +205,14 @@ function applyStepAction(
     kind: 'error',
     reason: `Cannot apply action '${action}' to step '${step.id}' in status '${step.status}'.`,
   };
+}
+
+// Re-arms for a retry that resets the tree first. The reset target predates
+// the generator unless a commit of this step's own already carries it, so the
+// marker only survives when such a commit exists; otherwise the reset discards
+// the generator's changes and the retry has to run it again.
+function cleanRearm(state: MigrateRunState, step: MigrateStep): MigrateStep {
+  return rearm(step, coveringLandedEntries(state, step.id).length > 0);
 }
 
 // An adopted death records how far the worker got, since 'succeeded' alone
