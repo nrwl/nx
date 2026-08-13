@@ -1,5 +1,5 @@
 import * as pc from 'picocolors';
-import { prompt } from 'enquirer';
+import { askChoice, askText } from '../../utils/prompt-helpers';
 import { relative } from 'path';
 
 import { readNxJson } from '../../config/configuration';
@@ -148,47 +148,38 @@ async function promptForCollection(
   } else if (interactive && choices.length > 1) {
     const noneOfTheAbove = `\nNone of the above`;
     choices.push(noneOfTheAbove);
-    let { generator, customCollection } = await prompt<{
-      generator: string;
-      customCollection?: string;
-    }>([
-      {
-        name: 'generator',
-        message: `Which generator would you like to use?`,
-        type: 'autocomplete',
-        // enquirer's typings are incorrect here... It supports (string | Choice)[], but is typed as (string[] | Choice[])
-        choices: choices as string[],
+    const generator = await askChoice({
+      message: `Which generator would you like to use?`,
+      // Local-plugin entries carry a separate display label; the rest are
+      // plain collection names.
+      choices: choices.map((c) =>
+        typeof c === 'string'
+          ? { value: c }
+          : { value: c.value, label: c.message }
+      ),
+    });
+
+    if (generator !== noneOfTheAbove) {
+      return generator;
+    }
+
+    const customCollection = await askText({
+      message: `Which collection would you like to use?`,
+      validate: (value) => {
+        try {
+          getGeneratorInformation(
+            value,
+            generatorName,
+            workspaceRoot,
+            projectsConfiguration.projects
+          );
+          return undefined;
+        } catch {
+          return `Could not find ${value}:${generatorName}`;
+        }
       },
-      {
-        name: 'customCollection',
-        type: 'input',
-        message: `Which collection would you like to use?`,
-        skip: function () {
-          // Skip this question if the user did not answer None of the above
-          return this.state.answers.generator !== noneOfTheAbove;
-        },
-        validate: function (value) {
-          if (this.skipped) {
-            return true;
-          }
-          try {
-            getGeneratorInformation(
-              value,
-              generatorName,
-              workspaceRoot,
-              projectsConfiguration.projects
-            );
-            return true;
-          } catch {
-            logger.error(`\nCould not find ${value}:${generatorName}`);
-            return false;
-          }
-        },
-      },
-    ]);
-    return customCollection
-      ? `${customCollection}:${generatorName}`
-      : generator;
+    });
+    return `${customCollection}:${generatorName}`;
   } else if (deprecatedChoices.size > 0) {
     throw new Error(
       [
