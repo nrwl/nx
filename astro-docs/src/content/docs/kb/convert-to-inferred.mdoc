@@ -134,16 +134,8 @@ Read the recipe on [passing args to commands](/docs/kb/pass-args-to-commands) fo
 ### When inference does not produce the expected target
 
 The migration reads each executor target, then asks the plugin to infer the equivalent task from the tool's configuration files.
-If the plugin finds your project but doesn't infer a target with the name the migration expects, the migration stops with an error like the following.
-
-```text
-The nx plugin found a project inside apps/demo but did not infer a "build" target for it.
-```
-
-The plugin and the migration disagree on the target name, which shouldn't happen during a normal migration.
-Confirm the tool's configuration file uses the standard naming convention, then run the generator again.
-If the error persists, [open an issue](https://github.com/nrwl/nx/issues) with details about your project structure.
-The [troubleshooting guide](/docs/kb/troubleshoot-convert-to-inferred) covers the related error, `The nx plugin did not find a project inside ...`.
+If the plugin finds your project but does not infer a task with the name the migration expects, the migration stops with an error like `The nx plugin found a project inside <root> but did not infer a "<target>" target for it`.
+The [troubleshooting guide](/docs/kb/troubleshoot-convert-to-inferred) explains this error and the related `The nx plugin did not find a project inside ...` error, along with how to resolve each.
 
 ### Configuration file changes
 
