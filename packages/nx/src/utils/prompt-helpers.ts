@@ -15,11 +15,12 @@ export interface Choice<T extends string> {
 
 /**
  * Ctrl+C yields a sentinel rather than throwing. `onCancel` decides what that
- * means for the caller; the default aborts with the POSIX interrupt status.
+ * means for the caller - either a fallback answer or an abort. The default
+ * aborts with the POSIX interrupt status.
  */
-export type OnCancel = () => never;
+export type OnCancel<T> = () => T;
 
-const defaultOnCancel: OnCancel = () => {
+const defaultOnCancel = (): never => {
   process.exit(130);
 };
 
@@ -30,7 +31,7 @@ export async function askChoice<T extends string>(options: {
   /** Answer without prompting; defaults to the first choice. */
   skip?: boolean;
   skippedValue?: T;
-  onCancel?: OnCancel;
+  onCancel?: OnCancel<T>;
 }): Promise<T> {
   if (options.skip) {
     return options.skippedValue ?? options.choices[0].value;
@@ -48,7 +49,7 @@ export async function askChoice<T extends string>(options: {
     initialValue: options.initial ?? options.choices[0].value,
   });
   if (isCancel(answer)) {
-    (options.onCancel ?? defaultOnCancel)();
+    return (options.onCancel ?? defaultOnCancel)();
   }
   return answer as T;
 }
@@ -58,7 +59,7 @@ export async function askYesNo(options: {
   initial?: boolean;
   skip?: boolean;
   skippedValue?: boolean;
-  onCancel?: OnCancel;
+  onCancel?: OnCancel<boolean>;
 }): Promise<boolean> {
   const answer = await askChoice<'Yes' | 'No'>({
     message: options.message,
@@ -71,7 +72,9 @@ export async function askYesNo(options: {
         : options.skippedValue
           ? 'Yes'
           : 'No',
-    onCancel: options.onCancel,
+    onCancel: options.onCancel
+      ? () => (options.onCancel!() ? 'Yes' : 'No')
+      : undefined,
   });
   return answer === 'Yes';
 }
@@ -84,7 +87,7 @@ export async function askText(options: {
   validate?: (value: string) => string | undefined;
   skip?: boolean;
   skippedValue?: string;
-  onCancel?: OnCancel;
+  onCancel?: OnCancel<string>;
 }): Promise<string> {
   if (options.skip) {
     return options.skippedValue ?? options.initialValue ?? '';
@@ -97,7 +100,7 @@ export async function askText(options: {
     validate: options.validate,
   });
   if (isCancel(answer)) {
-    (options.onCancel ?? defaultOnCancel)();
+    return (options.onCancel ?? defaultOnCancel)();
   }
   return answer as string;
 }
@@ -107,7 +110,7 @@ export async function askMultiselect<T extends string>(options: {
   choices: Choice<T>[];
   required?: boolean;
   initialValues?: T[];
-  onCancel?: OnCancel;
+  onCancel?: OnCancel<T[]>;
 }): Promise<T[]> {
   const { multiselect, isCancel } = await prompts();
   const answer = await multiselect<T>({
@@ -121,7 +124,7 @@ export async function askMultiselect<T extends string>(options: {
     initialValues: options.initialValues,
   });
   if (isCancel(answer)) {
-    (options.onCancel ?? defaultOnCancel)();
+    return (options.onCancel ?? defaultOnCancel)();
   }
   return answer as T[];
 }
