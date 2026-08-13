@@ -88,16 +88,18 @@ describe('parseFiles', () => {
   (process.platform === 'win32' ? it.skip : it)(
     'reports paths containing characters that git escapes even when quotepath is off',
     () => {
+      runGit(['config', 'core.quotepath', 'false'], repository);
+
       write('apps/cart/src/app/a"b/test.tsx', 'initial');
-      write('apps/cart/src/app/trailing /test.tsx', 'initial');
+      write('apps/cart/src/app/trailing/endspace ', 'initial');
       commitAll('initial commit');
 
       write('apps/cart/src/app/a"b/test.tsx', 'changed');
-      write('apps/cart/src/app/trailing /test.tsx', 'changed');
+      write('apps/cart/src/app/trailing/endspace ', 'changed');
 
       expect(parseFiles({ uncommitted: true }).files.sort()).toEqual([
         'apps/cart/src/app/a"b/test.tsx',
-        'apps/cart/src/app/trailing /test.tsx',
+        'apps/cart/src/app/trailing/endspace ',
       ]);
     }
   );
