@@ -1,0 +1,127 @@
+/**
+ * `@clack/prompts` is ESM-only. A static import would compile to `require()`
+ * under CommonJS emit and throw ERR_REQUIRE_ESM; `module: nodenext` preserves
+ * this dynamic form.
+ */
+async function prompts() {
+  return await import('@clack/prompts');
+}
+
+export interface Choice<T extends string> {
+  value: T;
+  label?: string;
+  hint?: string;
+}
+
+/**
+ * Ctrl+C yields a sentinel rather than throwing. `onCancel` decides what that
+ * means for the caller; the default aborts with the POSIX interrupt status.
+ */
+export type OnCancel = () => never;
+
+const defaultOnCancel: OnCancel = () => {
+  process.exit(130);
+};
+
+export async function askChoice<T extends string>(options: {
+  message: string;
+  choices: Choice<T>[];
+  initial?: T;
+  /** Answer without prompting; defaults to the first choice. */
+  skip?: boolean;
+  skippedValue?: T;
+  onCancel?: OnCancel;
+}): Promise<T> {
+  if (options.skip) {
+    return options.skippedValue ?? options.choices[0].value;
+  }
+  const { autocomplete, isCancel } = await prompts();
+  const answer = await autocomplete<T>({
+    message: options.message,
+    // `Option<Value>` is conditional on `Value extends Primitive`, which
+    // TypeScript cannot resolve while `T` is still generic.
+    options: options.choices.map((c) => ({
+      value: c.value,
+      label: c.label ?? c.value,
+      ...(c.hint ? { hint: c.hint } : {}),
+    })) as Parameters<typeof autocomplete<T>>[0]['options'],
+    initialValue: options.initial ?? options.choices[0].value,
+  });
+  if (isCancel(answer)) {
+    (options.onCancel ?? defaultOnCancel)();
+  }
+  return answer as T;
+}
+
+export async function askYesNo(options: {
+  message: string;
+  initial?: boolean;
+  skip?: boolean;
+  skippedValue?: boolean;
+  onCancel?: OnCancel;
+}): Promise<boolean> {
+  const answer = await askChoice<'Yes' | 'No'>({
+    message: options.message,
+    choices: [{ value: 'Yes' }, { value: 'No' }],
+    initial: options.initial === false ? 'No' : 'Yes',
+    skip: options.skip,
+    skippedValue:
+      options.skippedValue === undefined
+        ? undefined
+        : options.skippedValue
+          ? 'Yes'
+          : 'No',
+    onCancel: options.onCancel,
+  });
+  return answer === 'Yes';
+}
+
+export async function askText(options: {
+  message: string;
+  initialValue?: string;
+  placeholder?: string;
+  /** Runs synchronously; clack does not await validators. */
+  validate?: (value: string) => string | undefined;
+  skip?: boolean;
+  skippedValue?: string;
+  onCancel?: OnCancel;
+}): Promise<string> {
+  if (options.skip) {
+    return options.skippedValue ?? options.initialValue ?? '';
+  }
+  const { text, isCancel } = await prompts();
+  const answer = await text({
+    message: options.message,
+    initialValue: options.initialValue,
+    placeholder: options.placeholder,
+    validate: options.validate,
+  });
+  if (isCancel(answer)) {
+    (options.onCancel ?? defaultOnCancel)();
+  }
+  return answer as string;
+}
+
+export async function askMultiselect<T extends string>(options: {
+  message: string;
+  choices: Choice<T>[];
+  required?: boolean;
+  initialValues?: T[];
+  onCancel?: OnCancel;
+}): Promise<T[]> {
+  const { multiselect, isCancel } = await prompts();
+  const answer = await multiselect<T>({
+    message: options.message,
+    options: options.choices.map((c) => ({
+      value: c.value,
+      label: c.label ?? c.value,
+      ...(c.hint ? { hint: c.hint } : {}),
+    })) as Parameters<typeof multiselect<T>>[0]['options'],
+    required: options.required ?? false,
+    initialValues: options.initialValues,
+  });
+  if (isCancel(answer)) {
+    (options.onCancel ?? defaultOnCancel)();
+  }
+  return answer as T[];
+}

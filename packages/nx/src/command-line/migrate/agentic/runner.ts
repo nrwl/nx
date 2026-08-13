@@ -2,7 +2,7 @@ import { ChildProcess, execSync, spawn, SpawnOptions } from 'child_process';
 import { extname } from 'path';
 import { output } from '../../../utils/output';
 import { reportMigratePrompt } from '../migrate-analytics';
-import { migratePrompt } from '../safe-prompt';
+import { migrateChoice } from '../safe-prompt';
 import {
   HandoffReadFailureReason,
   readHandoffWithReason,
@@ -463,24 +463,21 @@ async function promptAmbiguous(cause: AmbiguousCause): Promise<HandoffOutcome> {
       bodyLines: causeLines,
     });
   }
-  // `migratePrompt` injects `options.cancel` so Ctrl+C and Esc exit cleanly
-  // via `process.exit(130)` before enquirer's broken cancel cleanup runs.
-  // Any other rejection we treat as abort.
+  // Cancelling exits 130 from inside the prompt; any other rejection is an
+  // abort.
   try {
-    const response = await migratePrompt<{ choice: 'abort' | 'continue' }>({
-      name: 'choice',
-      type: 'select',
+    const choice = await migrateChoice<'abort' | 'continue'>({
       message: 'How should nx migrate proceed?',
       choices: [
-        { name: 'abort', message: 'Treat as failed — abort the run' },
+        { value: 'abort', label: 'Treat as failed — abort the run' },
         {
-          name: 'continue',
-          message: 'Treat as completed — mark done and continue',
+          value: 'continue',
+          label: 'Treat as completed — mark done and continue',
         },
       ],
     });
-    reportMigratePrompt('ambiguous_agent_outcome', response.choice);
-    return response.choice === 'continue'
+    reportMigratePrompt('ambiguous_agent_outcome', choice);
+    return choice === 'continue'
       ? { kind: 'ambiguous-continue' }
       : { kind: 'ambiguous-abort' };
   } catch {

@@ -9,19 +9,20 @@ jest.mock('child_process', () => ({
   // `promisify(exec)` in transitive imports needs a function to wrap.
   exec: jest.fn(),
 }));
-jest.mock('enquirer', () => ({
-  prompt: jest.fn(),
+jest.mock('@clack/prompts', () => ({
+  autocomplete: jest.fn(),
+  isCancel: () => false,
 }));
 
 import { execSync, spawn } from 'child_process';
-import { prompt } from 'enquirer';
+import { autocomplete } from '@clack/prompts';
 import { output } from '../../../utils/output';
 import { adaptSpawnForWindowsShim, runAgentic } from './runner';
 import { AgentDefinition, DetectedInstalledAgent } from './types';
 
 const mockSpawn = spawn as unknown as jest.Mock;
 const mockExecSync = execSync as unknown as jest.Mock;
-const mockPrompt = prompt as unknown as jest.Mock;
+const mockPrompt = autocomplete as unknown as jest.Mock;
 
 function makeDetected(): DetectedInstalledAgent {
   return {
@@ -278,7 +279,7 @@ describe('runAgentic', () => {
         setImmediate(() => child.emit('exit', 0));
         return child;
       });
-      mockPrompt.mockResolvedValue({ choice });
+      mockPrompt.mockResolvedValue(choice);
 
       const outcome = await runAgentic({
         detected: makeDetected(),
@@ -313,7 +314,7 @@ describe('runAgentic', () => {
     ],
   ])('treats %s as exit-with-no-handoff', async (_label, setup) => {
     setup();
-    mockPrompt.mockResolvedValue({ choice: 'abort' });
+    mockPrompt.mockResolvedValue('abort');
 
     const outcome = await runAgentic({
       detected: makeDetected(),
@@ -356,7 +357,7 @@ describe('runAgentic', () => {
       });
       return child;
     });
-    mockPrompt.mockResolvedValue({ choice: 'continue' });
+    mockPrompt.mockResolvedValue('continue');
 
     const outcome = await runAgentic({
       detected: makeDetected(),
@@ -559,7 +560,7 @@ describe('runAgentic', () => {
     mockSpawn.mockImplementation(() => {
       throw new Error('ENOENT: no such file or directory');
     });
-    mockPrompt.mockResolvedValue({ choice: 'abort' });
+    mockPrompt.mockResolvedValue('abort');
 
     await runAgentic({
       detected: makeDetected(),
@@ -584,7 +585,7 @@ describe('runAgentic', () => {
       setImmediate(() => child.emit('exit', 1, null));
       return child;
     });
-    mockPrompt.mockResolvedValue({ choice: 'abort' });
+    mockPrompt.mockResolvedValue('abort');
 
     await runAgentic({
       detected: makeDetected(),
@@ -608,7 +609,7 @@ describe('runAgentic', () => {
       setImmediate(() => child.emit('exit', 0, null));
       return child;
     });
-    mockPrompt.mockResolvedValue({ choice: 'abort' });
+    mockPrompt.mockResolvedValue('abort');
 
     await runAgentic({
       detected: makeDetected(),
@@ -695,7 +696,7 @@ describe('runAgentic', () => {
       });
       return child;
     });
-    mockPrompt.mockResolvedValue({ choice: 'abort' });
+    mockPrompt.mockResolvedValue('abort');
 
     await runAgentic({
       detected: makeDetected(),

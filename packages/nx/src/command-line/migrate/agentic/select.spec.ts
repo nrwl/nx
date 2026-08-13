@@ -1,8 +1,9 @@
 jest.mock('../../../native', () => ({
   isAiAgent: jest.fn(() => false),
 }));
-jest.mock('enquirer', () => ({
-  prompt: jest.fn(),
+jest.mock('@clack/prompts', () => ({
+  autocomplete: jest.fn(),
+  isCancel: () => false,
 }));
 jest.mock('./detect-installed', () => ({
   detectInstalledAgents: jest.fn(),
@@ -16,7 +17,7 @@ jest.mock('../../../utils/output', () => ({
 }));
 
 import { isAiAgent } from '../../../native';
-import { prompt } from 'enquirer';
+import { autocomplete } from '@clack/prompts';
 import { output } from '../../../utils/output';
 import { parseJson } from '../../../utils/json';
 import { TempFs } from '../../../internal-testing-utils/temp-fs';
@@ -25,7 +26,7 @@ import { resolveAgentic } from './select';
 import { DetectedInstalledAgent } from './types';
 
 const mockIsAiAgent = isAiAgent as unknown as jest.Mock;
-const mockPrompt = prompt as unknown as jest.Mock;
+const mockPrompt = autocomplete as unknown as jest.Mock;
 const mockDetect = detectInstalledAgents as unknown as jest.Mock;
 const mockOutputLog = output.log as unknown as jest.Mock;
 const mockOutputError = output.error as unknown as jest.Mock;
@@ -148,7 +149,7 @@ describe('resolveAgentic', () => {
 
   it('fires the up-front prompt when --agentic is undefined and prompt migrations are queued', async () => {
     mockDetect.mockResolvedValue([detected('claude-code')]);
-    mockPrompt.mockResolvedValueOnce({ choice: 'no-once' });
+    mockPrompt.mockResolvedValueOnce('no-once');
     const result = await resolveAgentic({
       agentic: undefined,
       migrations: [{ prompt: 'x.md' }],
@@ -169,7 +170,7 @@ describe('resolveAgentic', () => {
 
   it('enables the agentic flow when the up-front prompt is accepted', async () => {
     tempFs.createFileSync('nx.json', '{}\n');
-    mockPrompt.mockResolvedValueOnce({ choice: 'yes-once' });
+    mockPrompt.mockResolvedValueOnce('yes-once');
     mockDetect.mockResolvedValue([detected('claude-code')]);
     const result = await resolveAgentic({
       agentic: undefined,
@@ -185,50 +186,48 @@ describe('resolveAgentic', () => {
 
   it('renders the up-front prompt as a select with 4 folded choices when one agent is installed', async () => {
     mockDetect.mockResolvedValue([detected('claude-code')]);
-    mockPrompt.mockResolvedValueOnce({ choice: 'no-once' });
+    mockPrompt.mockResolvedValueOnce('no-once');
     await resolveAgentic({
       agentic: undefined,
       migrations: [{ prompt: 'a.md' }, { prompt: 'b.md' }, {}],
     });
     const call = mockPrompt.mock.calls[0][0];
-    expect(call.type).toBe('select');
     expect(call.message).toBe('Enable the agentic flow?');
-    expect(call.choices.map((c: any) => c.name)).toEqual([
+    expect(call.options.map((c: any) => c.value)).toEqual([
       'yes-once',
       'yes-flex',
       'no-once',
       'no-never',
     ]);
-    expect(call.choices[0].description).toBe(
+    expect(call.options[0].hint).toBe(
       'Apply 2 prompt migrations and validate generator output with an AI agent'
     );
   });
 
-  it("surfaces only the focused choice's description via the footer", async () => {
+  it("carries each choice's description as its own hint", async () => {
     mockDetect.mockResolvedValue([detected('claude-code')]);
-    mockPrompt.mockResolvedValueOnce({ choice: 'no-once' });
+    mockPrompt.mockResolvedValueOnce('no-once');
     await resolveAgentic({
       agentic: undefined,
       migrations: [{ prompt: 'a.md' }],
     });
     const call = mockPrompt.mock.calls[0][0];
-    const footer = call.footer as (this: { focused: unknown }) => string;
-    const skipChoice = call.choices.find((c: any) => c.name === 'no-once');
-    expect(footer.call({ focused: skipChoice })).toContain(
+    const skipChoice = call.options.find((c: any) => c.value === 'no-once');
+    expect(skipChoice.hint).toContain(
       'Skip prompts and run generators without AI validation'
     );
-    expect(footer.call({ focused: { description: undefined } })).toBe('');
+    expect(call.options.every((c: any) => !!c.hint)).toBe(true);
   });
 
   it('adds the "pin the agent" choice when multiple agents are installed', async () => {
     mockDetect.mockResolvedValue([detected('claude-code'), detected('codex')]);
-    mockPrompt.mockResolvedValueOnce({ choice: 'no-once' });
+    mockPrompt.mockResolvedValueOnce('no-once');
     await resolveAgentic({
       agentic: undefined,
       migrations: [{ prompt: 'a.md' }],
     });
     const call = mockPrompt.mock.calls[0][0];
-    expect(call.choices.map((c: any) => c.name)).toEqual([
+    expect(call.options.map((c: any) => c.value)).toEqual([
       'yes-once',
       'yes-flex',
       'yes-pin',
@@ -239,13 +238,13 @@ describe('resolveAgentic', () => {
 
   it('singularizes the apply hint when only one prompt migration is queued', async () => {
     mockDetect.mockResolvedValue([detected('claude-code')]);
-    mockPrompt.mockResolvedValueOnce({ choice: 'no-once' });
+    mockPrompt.mockResolvedValueOnce('no-once');
     await resolveAgentic({
       agentic: undefined,
       migrations: [{ prompt: 'only.md' }],
     });
     const call = mockPrompt.mock.calls[0][0];
-    expect(call.choices[0].description).toBe(
+    expect(call.options[0].hint).toBe(
       'Apply 1 prompt migration and validate generator output with an AI agent'
     );
   });
@@ -254,7 +253,7 @@ describe('resolveAgentic', () => {
     it('does not persist for "Yes, just this time" or "No, just this time"', async () => {
       tempFs.createFileSync('nx.json', '{}\n');
       mockDetect.mockResolvedValue([detected('claude-code')]);
-      mockPrompt.mockResolvedValueOnce({ choice: 'no-once' });
+      mockPrompt.mockResolvedValueOnce('no-once');
       const result = await resolveAgentic({
         agentic: undefined,
         migrations: [{ prompt: 'x.md' }],
@@ -266,7 +265,7 @@ describe('resolveAgentic', () => {
     it('persists `false` for "No, never"', async () => {
       tempFs.createFileSync('nx.json', '{}\n');
       mockDetect.mockResolvedValue([detected('claude-code')]);
-      mockPrompt.mockResolvedValueOnce({ choice: 'no-never' });
+      mockPrompt.mockResolvedValueOnce('no-never');
       const result = await resolveAgentic({
         agentic: undefined,
         migrations: [{ prompt: 'x.md' }],
@@ -280,7 +279,7 @@ describe('resolveAgentic', () => {
     it('persists `true` for "Yes, always" (flexible agent)', async () => {
       tempFs.createFileSync('nx.json', '{}\n');
       mockDetect.mockResolvedValue([detected('claude-code')]);
-      mockPrompt.mockResolvedValueOnce({ choice: 'yes-flex' });
+      mockPrompt.mockResolvedValueOnce('yes-flex');
       const result = await resolveAgentic({
         agentic: undefined,
         migrations: [{ prompt: 'x.md' }],
@@ -302,8 +301,8 @@ describe('resolveAgentic', () => {
       ]);
       // First prompt: the folded enable choice. Second: the agent picker.
       mockPrompt
-        .mockResolvedValueOnce({ choice: 'yes-pin' })
-        .mockResolvedValueOnce({ id: 'codex' });
+        .mockResolvedValueOnce('yes-pin')
+        .mockResolvedValueOnce('codex');
       const result = await resolveAgentic({
         agentic: undefined,
         migrations: [{ prompt: 'x.md' }],
@@ -329,7 +328,7 @@ describe('resolveAgentic', () => {
         ].join('\n')
       );
       mockDetect.mockResolvedValue([detected('claude-code')]);
-      mockPrompt.mockResolvedValueOnce({ choice: 'yes-flex' });
+      mockPrompt.mockResolvedValueOnce('yes-flex');
       await resolveAgentic({
         agentic: undefined,
         migrations: [{ prompt: 'x.md' }],
@@ -345,7 +344,7 @@ describe('resolveAgentic', () => {
       // A directory at the nx.json path makes the read/write throw.
       tempFs.createDirSync('nx.json');
       mockDetect.mockResolvedValue([detected('claude-code')]);
-      mockPrompt.mockResolvedValueOnce({ choice: 'yes-flex' });
+      mockPrompt.mockResolvedValueOnce('yes-flex');
       const result = await resolveAgentic({
         agentic: undefined,
         migrations: [{ prompt: 'x.md' }],
@@ -365,7 +364,7 @@ describe('resolveAgentic', () => {
     it('warns when there is no nx.json to save to', async () => {
       // TempFs starts empty, so the workspace root has no nx.json.
       mockDetect.mockResolvedValue([detected('claude-code')]);
-      mockPrompt.mockResolvedValueOnce({ choice: 'yes-flex' });
+      mockPrompt.mockResolvedValueOnce('yes-flex');
       const result = await resolveAgentic({
         agentic: undefined,
         migrations: [{ prompt: 'x.md' }],
@@ -409,7 +408,7 @@ describe('resolveAgentic', () => {
 
   it('fires the picker when multiple agents are detected', async () => {
     mockDetect.mockResolvedValue([detected('claude-code'), detected('codex')]);
-    mockPrompt.mockResolvedValueOnce({ id: 'codex' });
+    mockPrompt.mockResolvedValueOnce('codex');
     const result = await resolveAgentic({
       agentic: true,
       migrations: [{ prompt: 'x.md' }],
@@ -439,7 +438,7 @@ describe('resolveAgentic', () => {
 
   it('warns and falls back to the picker when --agentic=<id> is set but that agent is not installed (others present)', async () => {
     mockDetect.mockResolvedValue([detected('claude-code'), detected('codex')]);
-    mockPrompt.mockResolvedValueOnce({ id: 'codex' });
+    mockPrompt.mockResolvedValueOnce('codex');
     const result = await resolveAgentic({
       agentic: 'opencode',
       migrations: [{ prompt: 'x.md' }],

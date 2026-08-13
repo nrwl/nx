@@ -3189,6 +3189,9 @@ importers:
 
   packages/nx:
     dependencies:
+      '@clack/prompts':
+        specifier: 'catalog:'
+        version: 1.7.0
       '@jest/diff-sequences':
         specifier: 30.0.1
         version: 30.0.1
