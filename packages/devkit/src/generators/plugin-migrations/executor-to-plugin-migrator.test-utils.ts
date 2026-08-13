@@ -163,6 +163,8 @@ export function setupFixture(
     JSON.stringify({ name: 'workspace', version: '0.0.1' })
   );
 
+  writeExecutorResolutionSkeleton(fs);
+
   const projectGraph: ProjectGraph = {
     nodes: {},
     dependencies: {},
@@ -170,6 +172,58 @@ export function setupFixture(
   };
 
   return { tree, fs, projectGraph };
+}
+
+/**
+ * Target normalization resolves each target's executor to read `schema.continuous`
+ * (`normalizeTarget` -> `getExecutorInformation`). The migration triggers this for
+ * `nx:run-commands` (the synthetic plugin's inferred command targets) and the
+ * real-pipeline oracle triggers it for `nx:run-script` (a package.json script the
+ * package-json plugin turns into a target).
+ *
+ * Inside this monorepo the bare package name `nx` has no `node_modules` entry, so
+ * resolution walks to `packages/nx` SOURCE. Those reads (`executors.json` +
+ * `schema.json`) sit outside `devkit:test`'s declared inputs and the Nx Cloud
+ * task-isolation sandbox flags them. `resolveSchema` also prefers the source tree
+ * when the executor's directory is not under `node_modules`.
+ *
+ * Drop a minimal `node_modules/nx` skeleton in the temp workspace so resolution
+ * stays entirely under the temp dir: for `nx/*` the jest resolver defers to the
+ * default resolver, which honors the require paths and resolves `<root>/node_modules`
+ * first, and a `node_modules` directory makes `resolveSchema` skip the source-tree
+ * lookup. `getExecutorInformation` reads only `package.json`, `executors.json`, and
+ * `schema.json`; the implementation factory is lazy and never invoked here, so no
+ * implementation files are needed. Nothing depends on the resolved schema (the
+ * result feeds only `schema.continuous`), so a minimal schema is enough.
+ *
+ * `@nx/js:release-publish` (the implicit `nx-release-publish` target the package-json
+ * plugin adds) cannot be redirected this way: the jest resolver hard-maps scoped
+ * `@nx/*` names to `packages/*` source and ignores the require paths. The spec mocks
+ * `hasNxJsPlugin` to `false` so that target is never added (the temp workspace has no
+ * real `@nx/js`), which is why only the `nx` skeleton is needed here.
+ */
+function writeExecutorResolutionSkeleton(fs: TempFs): void {
+  const minimalSchema = JSON.stringify({ version: 2, properties: {} });
+  const pkgDir = 'node_modules/nx';
+  const executorNames = ['run-commands', 'run-script', 'noop'];
+  fs.createFileSync(
+    `${pkgDir}/package.json`,
+    JSON.stringify({
+      name: 'nx',
+      version: '0.0.0',
+      executors: './executors.json',
+    })
+  );
+  const executors: Record<string, { implementation: string; schema: string }> =
+    {};
+  for (const name of executorNames) {
+    executors[name] = {
+      implementation: `./${name}`,
+      schema: `./${name}.schema.json`,
+    };
+    fs.createFileSync(`${pkgDir}/${name}.schema.json`, minimalSchema);
+  }
+  fs.createFileSync(`${pkgDir}/executors.json`, JSON.stringify({ executors }));
 }
 
 export function teardownFixture(fs: TempFs): void {

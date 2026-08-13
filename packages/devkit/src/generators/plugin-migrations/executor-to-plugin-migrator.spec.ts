@@ -31,6 +31,19 @@ import {
 } from './executor-to-plugin-migrator.test-utils';
 import type { ExpandedPluginConfiguration } from 'nx/src/devkit-exports';
 
+// The temp workspaces these specs build have no real `@nx/js`, so the implicit
+// `nx-release-publish` target (`@nx/js:release-publish`) the package-json plugin
+// adds to non-private projects does not apply. But inside this monorepo `@nx/js`
+// still resolves to `packages/js` SOURCE through the jest resolver, so left alone
+// `hasNxJsPlugin` returns true, the target gets added, and target normalization
+// reads `packages/js`'s executors.json + schema.json (plus a package.json resolver
+// probe) -- all outside `devkit:test`'s declared inputs, which the Nx Cloud
+// task-isolation sandbox flags. `has-nx-js-plugin` lives in its own module so
+// tests can mock it; returning false keeps resolution honest to the temp workspace.
+jest.mock('nx/src/utils/has-nx-js-plugin', () => ({
+  hasNxJsPlugin: () => false,
+}));
+
 function uniformExecutorTarget() {
   return {
     options: { config: SYNTHETIC_CONFIG_FILE, mode: 'production' },
