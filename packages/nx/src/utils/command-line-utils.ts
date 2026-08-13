@@ -333,7 +333,8 @@ function runGit(args: string[]): Buffer {
 }
 
 /**
- * Parses NUL-terminated paths, so callers must pass `-z`. Without it git
+ * Parses NUL-terminated paths, so callers must pass `-z`, and must pass it
+ * before the pathspec — git fatals on a `-z` that follows one. Without `-z` git
  * escapes paths that contain non-ASCII or quoting characters, and honours
  * `core.quotepath`, which is on by default.
  */
