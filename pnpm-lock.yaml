@@ -2370,9 +2370,6 @@ importers:
       chalk:
         specifier: 'catalog:'
         version: 4.1.2
-      enquirer:
-        specifier: 'catalog:'
-        version: 2.3.6
       flat:
         specifier: ^5.0.2
         version: 5.0.2

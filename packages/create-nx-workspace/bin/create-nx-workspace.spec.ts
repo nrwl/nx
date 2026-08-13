@@ -5,7 +5,6 @@ import {
   determineFolder,
   determinePresetOptions,
 } from './create-nx-workspace';
-import enquirer from 'enquirer';
 import * as clack from '@clack/prompts';
 import { CnwError } from '../src/utils/error-utils';
 import { Preset } from '../src/utils/preset/preset';
@@ -18,11 +17,6 @@ import {
 } from 'fs';
 import { join, basename, dirname } from 'path';
 import { tmpdir } from 'os';
-
-jest.mock('enquirer', () => ({
-  __esModule: true,
-  default: { prompt: jest.fn() },
-}));
 
 jest.mock('@clack/prompts', () => ({
   __esModule: true,
@@ -76,7 +70,6 @@ describe('determineFolder', () => {
 
   beforeEach(() => {
     originalCwd = process.cwd();
-    (require('enquirer').default.prompt as jest.Mock).mockReset();
   });
 
   afterEach(() => {
@@ -276,13 +269,11 @@ describe('resolveSpecialFolderName', () => {
 });
 
 describe('determineFolder - explicit "." confirmation', () => {
-  const enquirer = require('enquirer').default;
   const { isCI } = require('../src/utils/ci/is-ci');
   let originalCwd: string;
 
   beforeEach(() => {
     originalCwd = process.cwd();
-    (enquirer.prompt as jest.Mock).mockReset();
     (clack.autocomplete as jest.Mock).mockReset();
     (clack.text as jest.Mock).mockReset();
     (isCI as jest.Mock).mockReset().mockReturnValue(false);
@@ -377,10 +368,7 @@ describe('determinePresetOptions', () => {
   beforeEach(() => {
     // Recorded calls persist across tests otherwise, so any assertion on which
     // questions were asked would see every earlier test's prompts too.
-    (enquirer.prompt as jest.Mock).mockClear();
-    // Other questions in these flows read fields off the reply; an object
-    // keeps them defined without standing in for the linter.
-    (enquirer.prompt as jest.Mock).mockResolvedValue({});
+    (clack.autocomplete as jest.Mock).mockClear();
   });
 
   // Every stack must come back with the resolved linter. Once the schemas
@@ -480,8 +468,10 @@ describe('determinePresetOptions', () => {
       } as any);
 
       expect(result.linter).toBeUndefined();
-      const linterQuestions = (enquirer.prompt as jest.Mock).mock.calls.filter(
-        ([[question]]) => question.name === 'linter'
+      const linterQuestions = (
+        clack.autocomplete as jest.Mock
+      ).mock.calls.filter(([question]) =>
+        String(question?.message ?? '').includes('linter')
       );
       expect(linterQuestions).toHaveLength(0);
     }
