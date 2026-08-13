@@ -1,4 +1,4 @@
-import { exec, execSync } from 'node:child_process';
+import { execFile, execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { basename, extname, join, resolve, dirname } from 'node:path';
 import { major } from 'semver';
@@ -112,21 +112,20 @@ export function writeWithPrettier(
   if (patterns.length === 0) {
     // Prettier with no file arguments reads stdin, and `stdio: [0, 1, 2]` hands
     // it nx's own - from a terminal it blocks forever with nothing on screen. At
-    // EOF it exits 0 under `--list-different` and 2 (which `execSync` throws on)
+    // EOF it exits 0 under `--list-different` and 2 (which `execFileSync` throws on)
     // without it, so which failure you get depends on `shouldUseListDifferent`.
     return;
   }
   const prettierPath = getPrettierPath();
-  const listDifferentArg = shouldUseListDifferent() ? '--list-different ' : '';
+  const listDifferentArg = shouldUseListDifferent() ? ['--list-different'] : [];
 
   // No `--parser json` special case for `.swcrc`: prettier's own language table
   // maps it to the json parser, so it formats correctly on its own (measured).
   // Splitting the batch also meant one of the two spawns could receive zero
   // files, which is the error above.
-  execSync(
-    `node ${quoteForShell(prettierPath)} --write ${listDifferentArg}-- ${patterns
-      .map(quoteForShell)
-      .join(' ')}`,
+  execFileSync(
+    process.execPath,
+    [prettierPath, '--write', ...listDifferentArg, '--', ...patterns],
     {
       cwd,
       stdio: [0, 1, 2],
@@ -138,10 +137,9 @@ export function writeWithPrettier(
 export function checkWithPrettier(patterns: string[]): Promise<string[]> {
   const prettierPath = getPrettierPath();
   return new Promise((resolve, reject) => {
-    exec(
-      `node ${quoteForShell(prettierPath)} --list-different -- ${patterns
-        .map(quoteForShell)
-        .join(' ')}`,
+    execFile(
+      process.execPath,
+      [prettierPath, '--list-different', '--', ...patterns],
       { encoding: 'utf-8', windowsHide: true, maxBuffer: FORMATTER_MAX_BUFFER },
       (error, stdout) => {
         if (error) {
@@ -220,23 +218,4 @@ function shouldUseListDifferent(): boolean {
   }
 
   return useListDifferent;
-}
-
-/**
- * Quote a pattern for prettier's shell-based exec calls; oxfmt uses execFile
- * and takes raw paths.
- *
- * Exported so `nx format` can size its chunks against the quoted length -
- * patterns are chunked before they get here, and quoting grows each one.
- */
-export function quoteForShell(pattern: string): string {
-  // Interpolated into a command string, so every character special *inside
-  // double quotes* needs escaping, not just `$`: a backtick substitutes, `"`
-  // closes the quoting, `\` escapes what follows. One pass over the original,
-  // since `String.replace` never re-scans what it inserted.
-  const escaped =
-    process.platform !== 'win32'
-      ? pattern.replace(/([\\"`$])/g, '\\$1')
-      : pattern;
-  return `"${escaped}"`;
 }
