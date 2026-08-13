@@ -283,13 +283,14 @@ function getUncommittedFiles(): string[] {
     '--name-only',
     '--no-renames',
     '--relative',
+    '-z',
     'HEAD',
     '.',
   ]);
 }
 
 function getUntrackedFiles(): string[] {
-  return parseGitOutput(['ls-files', '--others', '--exclude-standard']);
+  return parseGitOutput(['ls-files', '--others', '--exclude-standard', '-z']);
 }
 
 function getMergeBase(base: string, head: string = 'HEAD') {
@@ -316,6 +317,7 @@ function getFilesUsingBaseAndHead(base: string, head: string): string[] {
     '--name-only',
     '--no-renames',
     '--relative',
+    '-z',
     base,
     head,
   ]);
@@ -330,11 +332,15 @@ function runGit(args: string[]): Buffer {
   });
 }
 
+/**
+ * Parses NUL-terminated paths, so callers must pass `-z`. Without it git
+ * escapes paths that contain non-ASCII or quoting characters, and honours
+ * `core.quotepath`, which is on by default.
+ */
 function parseGitOutput(args: string[]): string[] {
   return runGit(args)
     .toString('utf-8')
-    .split('\n')
-    .map((a) => a.trim())
+    .split('\0')
     .filter((a) => a.length > 0);
 }
 
