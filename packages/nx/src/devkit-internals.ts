@@ -87,6 +87,8 @@ export {
   registerTsProject,
   loadTsFile,
   forceRegisterEsmLoader,
+  isRequireInEsmScopeError,
+  isTsEsmNamedExportLinkageError,
   requireWithTsconfigFallback,
 } from './plugins/js/utils/register';
 export { interpolate } from './tasks-runner/utils';

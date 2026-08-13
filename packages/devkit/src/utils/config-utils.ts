@@ -1,8 +1,11 @@
 import { existsSync, readdirSync } from 'fs';
 import { pathToFileURL } from 'node:url';
+import { types } from 'node:util';
 import { workspaceRoot } from 'nx/src/devkit-exports';
 import {
   forceRegisterEsmLoader,
+  isRequireInEsmScopeError,
+  isTsEsmNamedExportLinkageError,
   loadTsFile,
   registerTsProject,
 } from 'nx/src/devkit-internals';
@@ -60,15 +63,30 @@ async function loadTypeScriptModule(
     }
   }
 
+  // require.cache busting cannot invalidate a module the ESM registry
+  // holds; reloads of known-ESM paths need a cache-busted import().
+  const modulePath = resolveModulePath(path);
+  if (esmRegistryPaths.has(modulePath)) {
+    return await loadTsFileViaImport(path, tsConfigPath);
+  }
+
+  // A CJS-shaped .ts stays in require.cache and may have changed on disk
+  // since; clear it so the reload re-reads the file.
+  clearConfigFromRequireCache(modulePath);
+
   // Both .ts and .mts go through loadTsFile first. Node 22.12+ supports
   // require() of synchronous ESM by default, and loadTsFile's lazy fallback
   // covers swc/ts-node + tsconfig-paths registration when needed (swc-node
   // hooks .cts/.mts/.ts via Module._extensions). Async-only ESM modules
   // (top-level await) throw ERR_REQUIRE_ASYNC_MODULE and fall through to
-  // dynamic import(). ERR_REQUIRE_ESM is the legacy code for the same case
-  // - kept for older Node lines.
+  // dynamic import(). ERR_REQUIRE_ESM is the legacy code for the same case,
+  // kept for older Node lines.
   try {
-    return loadTsFile(path, tsConfigPath);
+    const result = loadTsFile(path, tsConfigPath);
+    if (types.isModuleNamespaceObject(result)) {
+      esmRegistryPaths.add(modulePath);
+    }
+    return result;
   } catch (e: any) {
     if (
       e?.code !== 'ERR_REQUIRE_ESM' &&
@@ -76,41 +94,215 @@ async function loadTypeScriptModule(
     ) {
       throw e;
     }
+    return await loadTsFileViaImport(path, tsConfigPath);
+  }
+}
 
-    // The module must be loaded via dynamic import(). Register
-    // tsconfig-paths first so workspace alias imports resolve, then try a
-    // native dynamic import. Node 22.18+ LTS strips TS types on the ESM
-    // path natively, so pure-ESM TLA configs load without any swc/ts-node
-    // ESM loader. Only escalate to forceRegisterEsmLoader (which throws
-    // when neither @swc-node/register nor ts-node is installed) if the
-    // native attempt hits unsupported TS syntax.
+// Resolved paths of configs that require() loaded as synchronous ESM;
+// reloads of these route through loadTsFileViaImport. On globalThis so the
+// state survives clearRequireCache evicting this module itself (a
+// workspace-linked devkit resolves outside node_modules).
+const esmRegistryPaths: Set<string> = ((globalThis as any)[
+  Symbol.for('@nx/devkit:esmRegistryPaths')
+] ??= new Set());
+
+// Error codes from the load machinery (resolution, type stripping) that
+// warrant registering swc/ts-node + tsconfig-paths and importing again.
+// Unlisted errors propagate unchanged so a failing config is not
+// re-evaluated. A not-found error can also come from the config's own
+// dynamic import()/require() of a missing module, in which case the retry
+// re-runs its top-level side effects; accepted so that static alias and
+// extensionless imports (which fail at link time, before any user code
+// runs) stay recoverable.
+const ESM_LOAD_FALLBACK_ERROR_CODES = new Set([
+  'ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX',
+  'ERR_MODULE_NOT_FOUND',
+  'MODULE_NOT_FOUND',
+  'ERR_UNKNOWN_FILE_EXTENSION',
+]);
+
+// Code-less errors that loadTsFile recovers on first load via the swc/
+// ts-node fallback: a CJS-only global (__dirname, __filename, require) or a
+// type-only named import evaluated on the native ESM path. Reloads must
+// recover them too or an edit that introduces one turns into a hard graph
+// failure. Prefer the host nx's classifiers so the gate matches what its
+// loadTsFile recovers; nx versions that support the error classes without
+// re-exporting the classifiers fall back to local replicas of them.
+export function isTranspilerRecoverableError(
+  err: unknown,
+  path: string
+): boolean {
+  return (
+    (typeof isRequireInEsmScopeError === 'function'
+      ? isRequireInEsmScopeError(err, path)
+      : isRequireInEsmScopeErrorReplica(err, path)) ||
+    (typeof isTsEsmNamedExportLinkageError === 'function'
+      ? isTsEsmNamedExportLinkageError(err, path)
+      : isTsEsmNamedExportLinkageErrorReplica(err, path))
+  );
+}
+
+function isRequireInEsmScopeErrorReplica(
+  err: unknown,
+  filePath: string
+): boolean {
+  if (!(err instanceof ReferenceError)) {
+    return false;
+  }
+  if (!(filePath.endsWith('.ts') || filePath.endsWith('.mts'))) {
+    return false;
+  }
+  return /(require|__dirname|__filename) is not defined/.test(err.message);
+}
+
+function isTsEsmNamedExportLinkageErrorReplica(
+  err: unknown,
+  filePath: string
+): boolean {
+  if (!(err instanceof SyntaxError)) {
+    return false;
+  }
+  return (
+    (filePath.endsWith('.ts') || filePath.endsWith('.mts')) &&
+    err.message.includes('does not provide an export named')
+  );
+}
+
+// Invalidates a config module and its local CommonJS dependency subtree,
+// leaving unrelated cached modules untouched (a broad clear re-evaluates
+// them and breaks singleton identity). Walks each module's recorded
+// children AND the cache-current instance for the same id, since another
+// config may retain an older instance of a shared dependency. Detaches the
+// root from its requiring parent so repeated reloads don't accumulate
+// Module objects in the parent's children array.
+export function clearConfigFromRequireCache(
+  rootId: string,
+  cache: NodeJS.Dict<NodeModule> = require.cache
+): void {
+  const root = cache[rootId];
+  if (!root) {
+    return;
+  }
+
+  const visited = new Set<NodeModule>();
+  const idsToDelete = new Set<string>();
+  const queue: NodeModule[] = [root];
+  while (queue.length) {
+    const mod = queue.pop();
+    if (!mod || visited.has(mod)) {
+      continue;
+    }
+    visited.add(mod);
+    if (packageInstallationDirectories.some((dir) => mod.id.includes(dir))) {
+      continue;
+    }
+    idsToDelete.add(mod.id);
+    const current = cache[mod.id];
+    if (current && current !== mod) {
+      queue.push(current);
+    }
+    for (const child of mod.children) {
+      queue.push(child);
+    }
+  }
+
+  for (const id of idsToDelete) {
+    delete cache[id];
+  }
+
+  if (root.parent) {
+    root.parent.children = root.parent.children.filter(
+      (child) => child.id !== rootId
+    );
+  }
+}
+
+// Canonical key for require.cache checks and esmRegistryPaths: a symlinked
+// config's caller path differs from require's resolved filename.
+function resolveModulePath(path: string): string {
+  try {
+    return require.resolve(path);
+  } catch {
+    return path;
+  }
+}
+
+async function loadTsFileViaImport(
+  path: string,
+  tsConfigPath: string
+): Promise<any> {
+  // Clear any prior require.cache entry so an ESM-to-CJS rewrite (or a
+  // loader-classified CJS load) re-evaluates instead of serving the cached
+  // copy.
+  clearConfigFromRequireCache(resolveModulePath(path));
+
+  // Try a bare native import first: Node 22.18+ strips TS types on the ESM
+  // path natively, and registerTsProject must NOT run up front. A
+  // registered swc/ts-node ESM loader intercepts every subsequent import
+  // in the process (it cannot be unregistered) and may classify a .ts
+  // config as CommonJS, defeating loadESM's cache-busting query on
+  // reloads. Register only when the native attempt fails.
+  try {
+    return unwrapCjsInterop(path, await loadESM(path));
+  } catch (esmErr: any) {
+    if (
+      !ESM_LOAD_FALLBACK_ERROR_CODES.has(esmErr?.code) &&
+      !isTranspilerRecoverableError(esmErr, path)
+    ) {
+      throw esmErr;
+    }
     const cleanup = registerTsProject(tsConfigPath);
     try {
-      return await loadESM(path);
-    } catch (esmErr: any) {
+      return unwrapCjsInterop(path, await loadESM(path));
+    } catch (retryErr: any) {
+      if (isTranspilerRecoverableError(retryErr, path)) {
+        // A registered swc ESM loader compiles the retry to CJS, but
+        // ts-node/esm keeps the file ESM, so CJS globals stay undefined on
+        // the import path. Route through the CJS transpiler hook
+        // registerTsProject installed; it reads fresh from disk. A
+        // namespace result means no hook intercepted and require() hit the
+        // stale ESM registry, so surface the error instead.
+        const required = require(path);
+        if (!types.isModuleNamespaceObject(required)) {
+          return required;
+        }
+        throw retryErr;
+      }
       if (
-        esmErr?.code !== 'ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX' ||
+        retryErr?.code !== 'ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX' ||
         typeof forceRegisterEsmLoader !== 'function'
       ) {
-        throw esmErr;
+        throw retryErr;
       }
-      // Module.register is global and one-shot per process. After this
-      // runs, every subsequent ESM import in the process is routed
-      // through the registered loader, forfeiting Node's native TS
-      // stripping for the dynamic-import path. If neither swc-node nor
-      // ts-node is installed, forceRegisterEsmLoader throws - surface the
-      // original ESM error in that case so the user sees the real
-      // problem, not a misleading "loader missing" message.
+      // Loader registration cannot be undone. Preserve the import error
+      // if registration itself fails.
       try {
         forceRegisterEsmLoader();
       } catch {
-        throw esmErr;
+        throw retryErr;
       }
-      return await loadESM(path);
+      return unwrapCjsInterop(path, await loadESM(path));
     } finally {
       cleanup();
     }
   }
+}
+
+// Some loaders emit CJS for a dynamic import, wrapping module.exports in
+// namespace.default (with or without an __esModule marker). Unwrap only when
+// require.cache proves the load went through the CJS pipeline; genuine ESM
+// never populates require.cache, so its exports are preserved. The entry
+// existence check keeps a default-less ESM namespace from matching on
+// undefined === undefined.
+export function unwrapCjsInterop(
+  path: string,
+  module: unknown,
+  cache: NodeJS.Dict<NodeModule> = require.cache
+): unknown {
+  const entry = cache[resolveModulePath(path)];
+  const cjsExports = (module as { default?: unknown } | null | undefined)
+    ?.default;
+  return entry && entry.exports === cjsExports ? cjsExports : module;
 }
 
 function getTypeScriptConfigPath(
@@ -206,7 +398,17 @@ async function loadCommonJS(path: string): Promise<any> {
   return require(path);
 }
 
+// Global monotonic counter (not Date.now()) so two reloads never share a
+// cache-busting URL, across same-millisecond loads, module reloads, and
+// devkit copies.
+const esmLoadState: { count: number } = ((globalThis as any)[
+  Symbol.for('@nx/devkit:esmLoadState')
+] ??= { count: 0 });
+
 async function loadESM(path: string): Promise<any> {
-  const pathAsFileUrl = pathToFileURL(path).pathname;
-  return await dynamicImport(`${pathAsFileUrl}?t=${Date.now()}`);
+  // Keep the full file URL (.pathname would drop a UNC authority); the
+  // unique query gives each reload a fresh ESM registry key.
+  const fileUrl = pathToFileURL(path);
+  fileUrl.searchParams.set('t', (esmLoadState.count++).toString());
+  return await dynamicImport(fileUrl.href);
 }
