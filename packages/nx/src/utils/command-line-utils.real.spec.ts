@@ -14,8 +14,21 @@ jest.mock('./workspace-root', () => ({
 
 import { parseFiles } from './command-line-utils';
 
+let emptyGitConfig: string;
+
 function runGit(args: string[], cwd: string) {
-  execFileSync('git', args, { cwd, stdio: 'ignore', windowsHide: true });
+  execFileSync('git', args, {
+    cwd,
+    stdio: 'ignore',
+    windowsHide: true,
+    // Point git at an empty config so the developer's `core.hooksPath` and
+    // `commit.gpgsign` cannot break the commits below.
+    env: {
+      ...process.env,
+      GIT_CONFIG_GLOBAL: emptyGitConfig,
+      GIT_CONFIG_SYSTEM: emptyGitConfig,
+    },
+  });
 }
 
 describe('parseFiles', () => {
@@ -35,13 +48,15 @@ describe('parseFiles', () => {
 
   beforeEach(() => {
     tempDirectory = mkdtempSync(join(tmpdir(), 'nx-parse-files-'));
+    emptyGitConfig = join(tempDirectory, 'gitconfig');
+    writeFileSync(emptyGitConfig, '');
     repository = join(tempDirectory, 'repo');
     mkdirSync(repository);
     runGit(['init'], repository);
     runGit(['config', 'user.email', 'test@example.com'], repository);
     runGit(['config', 'user.name', 'Test User'], repository);
     // Git quotes non-ASCII paths when this is on, which is the default. Set it
-    // explicitly so the test does not depend on the developer's global config.
+    // explicitly so the condition each test runs under is stated.
     runGit(['config', 'core.quotepath', 'true'], repository);
     mockWorkspaceRoot = repository;
   });
