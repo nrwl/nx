@@ -23,7 +23,10 @@ import {
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
 import { existsSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, parse, relative } from 'path';
-import type { PackageJson } from '@nx/devkit/internal';
+import type {
+  PackageJson,
+  ProjectPackageDependencies,
+} from '@nx/devkit/internal';
 
 import { getRelativeDirectoryToProjectRoot } from '../get-main-file-dir';
 import { stripGlobToBaseDir } from '../strip-glob-to-base-dir';
@@ -192,11 +195,21 @@ function addMissingDependencies(
         return;
       }
 
-      if (
-        !packageJson.dependencies?.[packageName] &&
-        !packageJson.devDependencies?.[packageName] &&
-        !packageJson.peerDependencies?.[packageName]
-      ) {
+      // The source manifest may reference the package under aliased keys.
+      // Emit each referencing key, expressing aliases in the
+      // registry-installable npm: form so the alias identity survives in the
+      // output manifest.
+      const manifestKeys = getManifestKeysForPackage(
+        projectGraph.nodes[projectName]?.data.metadata?.js?.packageDependencies,
+        packageName
+      );
+      const missingKeys = manifestKeys.filter(
+        (key) =>
+          !packageJson.dependencies?.[key] &&
+          !packageJson.devDependencies?.[key] &&
+          !packageJson.peerDependencies?.[key]
+      );
+      if (missingKeys.length > 0) {
         const outputs = getOutputsForTargetAndConfiguration(
           {
             project: projectName,
@@ -217,11 +230,40 @@ function addMissingDependencies(
           const version = readJsonFile(depPackageJsonPath).version;
 
           packageJson[propType] ??= {};
-          packageJson[propType][packageName] = version;
+          for (const key of missingKeys) {
+            packageJson[propType][key] =
+              key === packageName ? version : `npm:${packageName}@${version}`;
+          }
         }
       }
     }
   });
+}
+
+/**
+ * Returns the manifest dependency keys under which the source project
+ * references the given workspace package: the canonical name for plain
+ * entries and the alias keys for aliased entries. Falls back to the
+ * canonical name when no descriptors are available.
+ */
+function getManifestKeysForPackage(
+  packageDependencies: ProjectPackageDependencies | undefined,
+  packageName: string
+): string[] {
+  const keys = new Set<string>();
+  if (packageDependencies) {
+    for (const collection of Object.values(packageDependencies)) {
+      for (const [key, entry] of Object.entries(collection)) {
+        if (entry.requestedPackageName === packageName) {
+          keys.add(key);
+        }
+      }
+    }
+  }
+  if (keys.size === 0) {
+    keys.add(packageName);
+  }
+  return [...keys];
 }
 
 interface Exports {

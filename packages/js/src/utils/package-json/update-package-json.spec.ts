@@ -664,4 +664,101 @@ describe('updatePackageJson', () => {
       }
     `);
   });
+
+  describe('workspace dependencies', () => {
+    const lib3Node = {
+      type: 'lib' as const,
+      name: 'lib3',
+      data: {
+        root: 'libs/lib3',
+        targets: {
+          build: {
+            outputs: ['{workspaceRoot}/dist/libs/lib3'],
+          },
+        },
+      },
+    };
+
+    const createContext = (
+      packageDependencies?: Record<string, any>
+    ): ExecutorContext => {
+      const graph: ProjectGraph = {
+        ...projectGraph,
+        nodes: {
+          ...projectGraph.nodes,
+          '@org/lib1': {
+            ...projectGraph.nodes['@org/lib1'],
+            data: {
+              ...projectGraph.nodes['@org/lib1'].data,
+              metadata: {
+                js: {
+                  packageName: '@org/lib1',
+                  packageDependencies,
+                },
+              },
+            },
+          },
+          lib3: lib3Node,
+        },
+      };
+      return { ...context, projectGraph: graph };
+    };
+
+    const runUpdate = (testContext: ExecutorContext) => {
+      vol.fromJSON(
+        {
+          'package.json': JSON.stringify(rootPackageJson, null, 2),
+          'libs/lib1/package.json': JSON.stringify(
+            { name: '@org/lib1', version: '0.0.3' },
+            null,
+            2
+          ),
+          'dist/libs/lib3/package.json': JSON.stringify(
+            { name: 'lib3-package', version: '1.2.3' },
+            null,
+            2
+          ),
+        },
+        '/root'
+      );
+      const options: UpdatePackageJsonOption = {
+        outputPath: 'dist/libs/lib1',
+        projectRoot: 'libs/lib1',
+        main: 'libs/lib1/main.ts',
+        updateBuildableProjectDepsInPackageJson: true,
+      };
+      const dependencies: DependentBuildableProjectNode[] = [
+        { name: 'lib3-package', outputs: [], node: lib3Node },
+      ];
+      updatePackageJson(options, testContext, undefined, dependencies, {});
+      return JSON.parse(
+        vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
+      );
+    };
+
+    it('should add a plain workspace dependency under its package name', () => {
+      const distPackageJson = runUpdate(createContext(undefined));
+
+      expect(distPackageJson.dependencies).toEqual({
+        'lib3-package': '1.2.3',
+      });
+    });
+
+    it('should add an aliased workspace dependency under its alias key as an npm alias', () => {
+      const distPackageJson = runUpdate(
+        createContext({
+          dependencies: {
+            'any-alias': {
+              rawSpecifier: 'workspace:lib3-package@*',
+              requestedPackageName: 'lib3-package',
+            },
+          },
+        })
+      );
+
+      expect(distPackageJson.dependencies).toEqual({
+        'any-alias': 'npm:lib3-package@1.2.3',
+      });
+    });
+  });
 });
