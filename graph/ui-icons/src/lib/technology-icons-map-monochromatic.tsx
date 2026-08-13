@@ -26,6 +26,7 @@ import { StorybookIcon } from './technologies/storybook';
 import { TanStackStartIcon } from './technologies/tanstack-start';
 import { TypeScriptIcon } from './technologies/typescript';
 import { ViteIcon } from './technologies/vite';
+import { VitePlusIcon } from './technologies/viteplus';
 import { VitestIcon } from './technologies/vitest';
 import { VueIcon } from './technologies/vue';
 import { WebpackIcon } from './technologies/webpack';
@@ -73,6 +74,8 @@ export const MonochromaticTechnologyIconsMap: Record<
   'tanstack-start': { icon: TanStackStartIcon },
   typescript: { icon: TypeScriptIcon },
   vite: { icon: ViteIcon },
+  viteplus: { icon: VitePlusIcon },
+  'vite-plus': { icon: VitePlusIcon },
   vitest: { icon: VitestIcon },
   VB: { icon: VisualBasicIcon },
   vue: { icon: VueIcon },

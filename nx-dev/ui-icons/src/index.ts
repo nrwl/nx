@@ -161,6 +161,7 @@ export * from './lib/technologies/storybook';
 export * from './lib/technologies/tanstack-start';
 export * from './lib/technologies/typescript';
 export * from './lib/technologies/vite';
+export * from './lib/technologies/viteplus';
 export * from './lib/technologies/vitest';
 export * from './lib/technologies/vue';
 export * from './lib/technologies/webpack';
