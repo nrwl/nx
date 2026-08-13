@@ -1,4 +1,4 @@
-import { exec, execSync } from 'node:child_process';
+import { execFile, execFileSync } from 'node:child_process';
 import * as path from 'node:path';
 import { major } from 'semver';
 import * as yargs from 'yargs';
@@ -49,17 +49,7 @@ export async function format(
     { printWarnings: false },
     readNxJson()
   );
-  const patterns = (
-    await getPatterns(prettier, { ...args, ...nxArgs } as any)
-  ).map((p) => {
-    // On non-Windows, escape $ to prevent shell variable interpolation
-    // (the shell consumes one \, so \\$ becomes \$ which the shell treats as literal $)
-    // On Windows (cmd.exe), $ is not a special character, so escaping it would
-    // cause prettier to look for a file with a literal \$ in the name
-    // prettier-ignore
-    const escaped = process.platform !== 'win32' ? p.replace(/\$/g, '\\\$') : p;
-    return `"${escaped}"`;
-  });
+  const patterns = await getPatterns(prettier, { ...args, ...nxArgs } as any);
 
   // Chunkify the patterns array to prevent crashing the windows terminal
   const chunkList: string[][] = chunkify(patterns);
@@ -170,7 +160,7 @@ function addRootConfigFiles(chunkList: string[][], nxArgs: NxArgs): void {
   }
   const chunk = [];
   const addToChunkIfNeeded = (file: string) => {
-    if (chunkList.every((c) => !c.includes(`"${file}"`))) {
+    if (chunkList.every((c) => !c.includes(file))) {
       chunk.push(file);
     }
   };
@@ -204,13 +194,12 @@ function write(prettier: typeof import('prettier'), patterns: string[]) {
     );
     const prettierPath = getPrettierPath();
     const listDifferentArg = shouldUseListDifferent(prettier.version)
-      ? '--list-different '
-      : '';
+      ? ['--list-different']
+      : [];
 
-    execSync(
-      `node "${prettierPath}" --write ${listDifferentArg}${regularPatterns.join(
-        ' '
-      )}`,
+    execFileSync(
+      process.execPath,
+      [prettierPath, '--write', ...listDifferentArg, ...regularPatterns],
       {
         stdio: [0, 1, 2],
         windowsHide: true,
@@ -218,10 +207,16 @@ function write(prettier: typeof import('prettier'), patterns: string[]) {
     );
 
     if (swcrcPatterns.length > 0) {
-      execSync(
-        `node "${prettierPath}" --write ${listDifferentArg}${swcrcPatterns.join(
-          ' '
-        )} --parser json`,
+      execFileSync(
+        process.execPath,
+        [
+          prettierPath,
+          '--write',
+          ...listDifferentArg,
+          ...swcrcPatterns,
+          '--parser',
+          'json',
+        ],
         {
           stdio: [0, 1, 2],
           windowsHide: true,
@@ -239,8 +234,9 @@ async function check(patterns: string[]): Promise<string[]> {
   const prettierPath = getPrettierPath();
 
   return new Promise((resolve, reject) => {
-    exec(
-      `node "${prettierPath}" --list-different ${patterns.join(' ')}`,
+    execFile(
+      process.execPath,
+      [prettierPath, '--list-different', ...patterns],
       { encoding: 'utf-8', windowsHide: true },
       (error, stdout) => {
         if (error) {
