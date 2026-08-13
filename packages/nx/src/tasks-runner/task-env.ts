@@ -173,6 +173,15 @@ function getNxEnvVariablesForForkedProcess(
     FORCE_COLOR: forceColor,
     NX_WORKSPACE_ROOT: workspaceRoot,
     NX_SKIP_NX_CACHE: skipNxCache ? 'true' : undefined,
+    // tracks the root PID for child nx tasks, used to verify nx is infinitely recursing through the same tasks
+    NX_INVOCATION_ROOT_PID:
+      process.env.NX_INVOCATION_ROOT_PID ?? String(process.pid),
+    // pids of the forked process's ancestor nx processes, outermost first.
+    // Only an ancestor re-invoking a task is a loop — sibling nx processes
+    // running the same task are legitimate.
+    NX_INVOCATION_ANCESTOR_PIDS: appendAncestorPid(
+      process.env.NX_INVOCATION_ANCESTOR_PIDS
+    ),
   };
 
   if (outputPath) {
@@ -235,15 +244,6 @@ function getNxEnvVariablesForTask(
     ...env,
     // Ensure the TUI does not get spawned within the TUI if ever tasks invoke Nx again
     NX_TUI: 'false',
-    // tracks the root PID for child nx tasks, used to verify nx is infinitely recursing through the same tasks
-    NX_INVOCATION_ROOT_PID:
-      process.env.NX_INVOCATION_ROOT_PID ?? String(process.pid),
-    // pids of this task's ancestor nx processes, outermost first. Only an
-    // ancestor re-invoking a task is a loop — sibling nx processes running the
-    // same task are legitimate.
-    NX_INVOCATION_ANCESTOR_PIDS: appendAncestorPid(
-      process.env.NX_INVOCATION_ANCESTOR_PIDS
-    ),
   };
 }
 
