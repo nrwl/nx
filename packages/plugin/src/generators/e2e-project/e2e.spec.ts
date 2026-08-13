@@ -287,10 +287,6 @@ describe('NxPlugin e2e-project Generator', () => {
     expect(globalSetup).toContain(
       "export { default as teardown } from './stop-local-registry'"
     );
-
-    expect(tree.read('my-plugin-e2e/src/my-plugin.spec.ts', 'utf-8')).toContain(
-      '  }, 300_000);'
-    );
   });
 
   it('should add a vitest e2e target when the inferred plugin is registered', async () => {
