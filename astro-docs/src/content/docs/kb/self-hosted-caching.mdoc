@@ -207,7 +207,9 @@ To use your custom caching server, set the `NX_SELF_HOSTED_REMOTE_CACHE_SERVER` 
 - `NODE_TLS_REJECT_UNAUTHORIZED`: Set to `0` to disable TLS certificate validation.
 - `NX_SELF_HOSTED_REMOTE_CACHE_NO_TIMEOUTS`: Set to any value to wait indefinitely for the cache server instead of timing out. Only useful if legitimate transfers exceed the built-in budgets; a server that accepts a connection and never replies will then hang the run rather than falling back to a local rebuild.
 
-Nx applies a 10 second connect timeout, a 30 second timeout on downloads, and a 10 minute timeout on uploads. A cache request that fails or times out is not fatal: Nx warns, rebuilds the task locally, and the run continues. The exceptions are a rejected token, a misconfigured endpoint, and an artifact that tries to write outside the cache directory — those stop the run.
+Nx applies a 10 second connect timeout, a 120 second download timeout, and a 10 minute upload timeout. The download timeout bounds how long Nx waits for the server's next chunk of the response, and it resets each time a chunk arrives, so it detects a stalled server rather than capping artifact size. A large artifact that downloads steadily never trips it. Before the first byte there is nothing to reset, so the same budget doubles as a deadline on how long your server can take to start responding; set `NX_SELF_HOSTED_REMOTE_CACHE_NO_TIMEOUTS` if yours builds or fetches artifacts on demand and needs longer.
+
+A cache request that fails or times out is not fatal: Nx warns, rebuilds the task locally, and the run continues. The exceptions are a rejected token, a misconfigured endpoint, and an artifact that tries to write outside the cache directory — those stop the run.
 
 ### Migrating from custom tasks runners
 
