@@ -632,6 +632,28 @@ describe('DaemonClient state machine', () => {
     });
   });
 
+  describe('handleConnectionError() when the reconnect never succeeds', () => {
+    it('surfaces the original error to the in-flight message and to concurrent callers', async () => {
+      jest
+        .spyOn(client, 'waitForServerToBeAvailable')
+        .mockResolvedValue({ available: false });
+      const currentReject = jest.fn();
+      client.currentReject = currentReject;
+      const error = new Error('daemon gone');
+
+      const settle = client.handleConnectionError(error);
+      // handleConnectionError installs its own ready promise before its first
+      // await; that is the one concurrent callers park on.
+      const newReady = client._waitForDaemonReady!;
+
+      await settle;
+
+      await expect(newReady).rejects.toBe(error);
+      expect(currentReject).toHaveBeenCalledWith(error);
+      expect(client._daemonStatus).toBe(DaemonStatus.DISCONNECTED);
+    });
+  });
+
   describe('handleConnectionError() with a version mismatch on reconnect', () => {
     it('surfaces the error to concurrent callers awaiting _waitForDaemonReady', async () => {
       vi

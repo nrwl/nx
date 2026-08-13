@@ -1218,25 +1218,14 @@ export class DaemonClient {
     // Set status to CONNECTING so new requests will wait for reconnection
     this._daemonStatus = DaemonStatus.CONNECTING;
 
-    let serverAvailable: boolean;
     try {
-      ({ available: serverAvailable } = await this.waitForServerToBeAvailable({
+      const { available } = await this.waitForServerToBeAvailable({
         ignoreVersionMismatch: false,
-      }));
-    } catch (err) {
-      if (err instanceof VersionMismatchError) {
-        // New daemon has different version - reject with error so caller can handle
-        if (this.currentReject) {
-          this.currentReject(err);
-        }
-        this.failDaemonReady(err);
-        return;
+      });
+      if (!available) {
+        // Out of reconnect attempts, so the error that started this stands.
+        throw error;
       }
-      this.failDaemonReady(err);
-      throw err;
-    }
-
-    if (serverAvailable) {
       clientLogger.log(
         `[Reconnect] Reconnection successful, re-establishing connection`
       );
@@ -1253,12 +1242,18 @@ export class DaemonClient {
         const rej = this.currentReject;
         this.sendMessageToDaemon(msg).then(res, rej);
       }
-    } else {
-      // Failed to reconnect after all attempts, reject the pending request
-      if (this.currentReject) {
-        this.currentReject(error);
+    } catch (err) {
+      this.failDaemonReady(err);
+      // A new daemon on a different version and an exhausted reconnect are
+      // both answers for the in-flight caller; anything else is unexpected
+      // and propagates.
+      if (err instanceof VersionMismatchError || err === error) {
+        if (this.currentReject) {
+          this.currentReject(err);
+        }
+        return;
       }
-      this.failDaemonReady(error);
+      throw err;
     }
   }
 
