@@ -1,4 +1,5 @@
-import { type NxJsonConfiguration, readNxJson } from '../config/nx-json';
+import { readNxJson } from '../config/nx-json';
+import { isAnalyticsEnabled } from '../utils/analytics-enabled';
 import { workspaceRoot } from '../utils/workspace-root';
 import { nxVersion } from '../utils/versions';
 import { IS_WASM } from '../native';
@@ -275,10 +276,6 @@ function getPackageManagerInfo() {
     name: pm,
     version: getPackageManagerVersion(pm),
   };
-}
-
-function isAnalyticsEnabled(nxJson: NxJsonConfiguration | null): boolean {
-  return nxJson?.analytics === true;
 }
 
 // Mix workspace id in: shared Docker images (Gitpod, Cypress, etc.) bake
