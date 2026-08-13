@@ -214,6 +214,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       // otherwise fail `nx test` on a freshly generated app.
       passWithNoTests: true,
       addPlugin: options.addPlugin,
+      skipPackageJson: options.skipPackageJson,
       skipFormat: true,
     });
     tasks.push(vitestTask);

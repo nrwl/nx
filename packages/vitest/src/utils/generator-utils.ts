@@ -390,6 +390,7 @@ function handleViteConfigFileExists(
     globals: true,
     environment: options.testEnvironment ?? 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    ...(options.passWithNoTests ? { passWithNoTests: true } : {}),
     reporters: ['default'],
     coverage: {
       reportsDirectory: reportsDirectory,
