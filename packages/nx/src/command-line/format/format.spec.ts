@@ -16,7 +16,6 @@ vi.mock('../../utils/formatters/prettier', () => ({
   writeWithPrettier: vi.fn(),
   checkWithPrettier: vi.fn().mockResolvedValue([]),
   filterToPrettierSupportedFiles: vi.fn(async (files: string[]) => files),
-  quoteForShell: vi.fn((pattern: string) => pattern),
 }));
 vi.mock('../../config/configuration', () => ({ readNxJson: () => ({}) }));
 vi.mock('../../utils/command-line-utils', () => ({

@@ -27,7 +27,6 @@ import {
   checkWithPrettier,
   filterToPrettierSupportedFiles,
   getPrettierPath,
-  quoteForShell,
   writeWithPrettier,
 } from '../../utils/formatters/prettier';
 import { getIgnoreObject } from '../../utils/ignore';
@@ -82,24 +81,13 @@ export async function format(
     readNxJson()
   );
 
-  // Patterns are kept raw here. Prettier is invoked through a shell so it
-  // quotes them at the call site; oxfmt is invoked with execFile and needs
-  // the unquoted paths.
   const patterns = await getPatterns(formatterType, {
     ...args,
     ...nxArgs,
   } as any);
 
   // Chunkify the patterns array to prevent crashing the windows terminal.
-  // The prettier path quotes each pattern on its way to the shell, so size the
-  // chunks against that; oxfmt goes through execFile and gets them raw.
-  const chunkList: string[][] = chunkify(
-    patterns,
-    undefined,
-    formatterType === 'prettier'
-      ? (pattern) => quoteForShell(pattern).length
-      : undefined
-  );
+  const chunkList: string[][] = chunkify(patterns);
 
   switch (command) {
     case 'write':
