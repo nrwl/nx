@@ -9,8 +9,13 @@ import { serverLogger } from '../logger';
 
 // Module-level state - persists across invocations within daemon lifecycle
 let latestNxTmpPath: string | null = null;
-let cleanupFn: (() => void) | null = null;
+let cleanupFn: (() => Promise<void>) | null = null;
 let installPromise: Promise<string> | null = null;
+
+// Removing the install is ~10^4 unlinks, so it is not instant. Bound it anyway:
+// shutdown waits on this, and a wedged filesystem must not leave the daemon
+// undead.
+const CLEANUP_TIMEOUT_MS = 10_000;
 
 /**
  * Returns the path to a temp directory containing `nx@latest`.
@@ -55,15 +60,55 @@ export async function getLatestNxTmpPath(): Promise<string> {
 
 /**
  * Clean up the latest Nx installation on daemon shutdown.
+ *
+ * Callers must await this. The daemon calls `process.exit` once shutdown
+ * finishes, and `process.exit` discards pending work rather than draining it,
+ * so an unawaited removal here leaks the whole ~60MB install every time.
  */
-export function cleanupLatestNx(): void {
-  if (cleanupFn) {
-    serverLogger.log(
-      '[LATEST-NX]: Cleaning up latest Nx installation from',
-      latestNxTmpPath
-    );
-    cleanupFn();
-  }
+export async function cleanupLatestNx(): Promise<void> {
+  const cleanup = cleanupFn;
+  const tmpPath = latestNxTmpPath;
+  // Drop the references first so nothing can hand out a directory that is in
+  // the middle of being deleted.
   latestNxTmpPath = null;
   cleanupFn = null;
+
+  if (!cleanup) {
+    return;
+  }
+
+  serverLogger.log(
+    '[LATEST-NX]: Cleaning up latest Nx installation from',
+    tmpPath
+  );
+
+  try {
+    await withTimeout(cleanup(), CLEANUP_TIMEOUT_MS);
+    serverLogger.log('[LATEST-NX]: Cleaned up latest Nx installation');
+  } catch (e) {
+    // Report the failure rather than exiting on a log line that claims a
+    // cleanup which did not happen.
+    serverLogger.log(
+      '[LATEST-NX]: Failed to clean up latest Nx installation from',
+      tmpPath,
+      e.message
+    );
+  }
+}
+
+async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  let timer: NodeJS.Timeout;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`Timed out after ${ms}ms`)),
+          ms
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
 }

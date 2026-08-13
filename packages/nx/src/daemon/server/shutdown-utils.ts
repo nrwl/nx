@@ -110,7 +110,23 @@ export async function handleServerProcessTerminationWithRestart({
   await performShutdown(server, reason, sockets);
 }
 
-async function performShutdown(
+let shutdownPromise: Promise<void> | null = null;
+
+function performShutdown(
+  server: Server,
+  reason: string,
+  sockets: Iterable<Socket>
+): Promise<void> {
+  // Shutdown gets triggered more than once in practice: `nx daemon --stop`
+  // raises SIGTERM and also trips the "no longer the current daemon" check in
+  // server.ts, which runs every 20ms. Without this guard the second call walks
+  // an already-torn-down server straight to the `process.exit` in
+  // `runShutdown`, killing the first call while it is still awaiting cleanup.
+  shutdownPromise ??= runShutdown(server, reason, sockets);
+  return shutdownPromise;
+}
+
+async function runShutdown(
   server: Server,
   reason: string,
   sockets: Iterable<Socket>
@@ -143,8 +159,9 @@ async function performShutdown(
     deleteDaemonJsonProcessCache();
     cleanupPlugins();
 
-    // Clean up shared latest Nx installation
-    cleanupLatestNx();
+    // Clean up shared latest Nx installation. This must be awaited: the
+    // `process.exit` below drops pending work instead of draining it.
+    await cleanupLatestNx();
 
     // Flush analytics before exiting
     flushAnalytics();
@@ -220,6 +237,9 @@ export async function respondWithErrorAndExit(
 
   // Project Graph errors are okay. Restarting the daemon won't help with this.
   if (!(error instanceof DaemonProjectGraphError)) {
+    // This exit skips `performShutdown`, so the temp install has to be removed
+    // here or it is leaked.
+    await cleanupLatestNx();
     process.exit(1);
   }
 }
