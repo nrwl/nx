@@ -460,7 +460,7 @@ function preparePackageInstallation(
 ) {
   const { dir: tempDir, cleanup } = createTempNpmDirectory?.() ?? {
     dir: dirSync().name,
-    cleanup: () => {},
+    cleanup: async () => {},
   };
 
   console.log(`Fetching ${pkg}...`);
@@ -546,7 +546,7 @@ export async function installPackageToTmpAsync(
   packageManager: PackageManager
 ): Promise<{
   tempDir: string;
-  cleanup: () => void;
+  cleanup: () => Promise<void>;
 }> {
   const { tempDir, cleanup, preInstallCommand, installCommand, execOptions } =
     preparePackageInstallation(pkg, requiredVersion, packageManager);
