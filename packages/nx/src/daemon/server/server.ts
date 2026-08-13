@@ -665,7 +665,7 @@ const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
     // recomputation that reads the new content; invalidating for it here too
     // would discard that recomputation at commit and force a second one. The
     // committed file map approximates what the watcher tracks: a file it does
-    // not know is either ignored (never reaches the watcher, so it needs the
+    // not know is either gitignored (never reaches the watcher, so it needs the
     // invalidation) or created since the last recompute (the watcher handles
     // it; the extra invalidation is fail-safe). Its own try/catch so a fault
     // here cannot trip the
