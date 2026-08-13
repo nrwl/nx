@@ -2,6 +2,7 @@ import type { PlaywrightTestConfig } from '@playwright/test';
 import { fork } from 'node:child_process';
 import { cpus } from 'node:os';
 import { join } from 'node:path';
+import { resolveProxyForUrl } from '../executors/wait-for-webserver/proxy';
 
 /**
  * The serializable subset of a Playwright `webServer` entry that the readiness
@@ -17,6 +18,9 @@ export interface ResolvedWebServer {
   // `wait.stdout`/`wait.stderr` presence projected to a boolean: the RegExp
   // values do not survive the JSON IPC channel.
   waitsForOutput?: boolean;
+  // Non-empty `env` presence. Only Playwright can launch such a command with
+  // its environment, so the values themselves are not needed.
+  hasEnv?: boolean;
 }
 
 export function normalizeWebServers(
@@ -35,7 +39,69 @@ export function normalizeWebServers(
     timeout: server.timeout,
     waitsForOutput:
       server.wait?.stdout || server.wait?.stderr ? true : undefined,
+    hasEnv: server.env && Object.keys(server.env).length > 0 ? true : undefined,
   }));
+}
+
+// The TLS material Node reads when a probe verifies an https certificate.
+const TLS_PROBE_VARS = ['NODE_EXTRA_CA_CERTS', 'NODE_TLS_REJECT_UNAUTHORIZED'];
+
+/**
+ * The env var names whose task-env values would make the readiness gate probe
+ * `servers` differently than the consuming task's own Playwright probe. The
+ * gate runs as its own target, so it loads its own dotenv files, not the
+ * consumer's: a task-scoped proxy exclusion or CA bundle never reaches it, and
+ * a gate probing through the wrong route can fail where Playwright would pass.
+ * A non-empty result means the gate cannot reproduce the task's probe and must
+ * not be inferred.
+ *
+ * Proxy env is compared as the effective routing decision per url (an
+ * `https_proxy` that differs cannot change how an http url is probed); TLS env
+ * only for a verifying https probe (`ignoreHTTPSErrors` turns verification off
+ * on both sides). Like the executor's own up-front validation, only the
+ * address the wait starts from is considered, not addresses a redirect could
+ * reach.
+ */
+export function getProbeEnvDivergence(
+  servers: Array<{ url?: string; ignoreHTTPSErrors?: boolean }>,
+  taskEnv: NodeJS.ProcessEnv,
+  ambientEnv: NodeJS.ProcessEnv = process.env
+): string[] {
+  const diverging = new Set<string>();
+  for (const server of servers) {
+    // A port is probed with a raw TCP connect; no env is involved.
+    if (!server.url) {
+      continue;
+    }
+    let url: URL;
+    try {
+      url = new URL(server.url);
+    } catch {
+      // The executor rejects a malformed url up front; env plays no part.
+      continue;
+    }
+    const protocol = url.protocol.split(':')[0];
+    if (
+      JSON.stringify(resolveProxyForUrl(url, taskEnv)) !==
+      JSON.stringify(resolveProxyForUrl(url, ambientEnv))
+    ) {
+      for (const name of [`${protocol}_proxy`, 'all_proxy', 'no_proxy']) {
+        for (const variable of [name.toLowerCase(), name.toUpperCase()]) {
+          if (taskEnv[variable] !== ambientEnv[variable]) {
+            diverging.add(variable);
+          }
+        }
+      }
+    }
+    if (url.protocol === 'https:' && !server.ignoreHTTPSErrors) {
+      for (const variable of TLS_PROBE_VARS) {
+        if (taskEnv[variable] !== ambientEnv[variable]) {
+          diverging.add(variable);
+        }
+      }
+    }
+  }
+  return [...diverging].sort();
 }
 
 /**

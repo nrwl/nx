@@ -20,7 +20,10 @@ export type ProxyResolution =
   | { kind: 'proxy'; proxy: URL }
   | { kind: 'unusable'; variable: string; value: string; reason: string };
 
-export function resolveProxyForUrl(url: URL): ProxyResolution {
+export function resolveProxyForUrl(
+  url: URL,
+  env: NodeJS.ProcessEnv = process.env
+): ProxyResolution {
   const protocol = url.protocol.split(':')[0];
   // Matched on the host with any port stripped, which keeps the brackets on an
   // IPv6 literal.
@@ -30,13 +33,13 @@ export function resolveProxyForUrl(url: URL): ProxyResolution {
   }
 
   const port = parseInt(url.port) || DEFAULT_PORTS[protocol] || 0;
-  if (!shouldProxy(hostname, port)) {
+  if (!shouldProxy(hostname, port, env)) {
     return { kind: 'direct' };
   }
 
-  let source = readEnv(`${protocol}_proxy`);
+  let source = readEnv(`${protocol}_proxy`, env);
   if (!source.value) {
-    source = readEnv('all_proxy');
+    source = readEnv('all_proxy', env);
   }
   if (!source.value) {
     return { kind: 'direct' };
@@ -86,8 +89,12 @@ export function resolveProxyForUrl(url: URL): ProxyResolution {
 // `no_proxy` governs where traffic may go. Sending the target URL to an
 // excluded proxy would disclose it even when the direct probe is the one that
 // succeeds.
-function shouldProxy(hostname: string, port: number): boolean {
-  const noProxy = readEnv('no_proxy').value.toLowerCase();
+function shouldProxy(
+  hostname: string,
+  port: number,
+  env: NodeJS.ProcessEnv
+): boolean {
+  const noProxy = readEnv('no_proxy', env).value.toLowerCase();
   if (!noProxy) {
     return true;
   }
@@ -119,13 +126,16 @@ function shouldProxy(hostname: string, port: number): boolean {
 // config sets while loading (through `dotenv`, say) reaches Playwright's probe
 // and not this one. The name that was read is reported alongside the value so a
 // bad one can be found among the eight this looks at.
-function readEnv(name: string): { variable: string; value: string } {
+function readEnv(
+  name: string,
+  env: NodeJS.ProcessEnv
+): { variable: string; value: string } {
   const lower = name.toLowerCase();
-  if (process.env[lower]) {
-    return { variable: lower, value: process.env[lower] };
+  if (env[lower]) {
+    return { variable: lower, value: env[lower] };
   }
   const upper = name.toUpperCase();
-  return { variable: upper, value: process.env[upper] || '' };
+  return { variable: upper, value: env[upper] || '' };
 }
 
 // A rejected value is echoed back so it can be recognized in the environment,

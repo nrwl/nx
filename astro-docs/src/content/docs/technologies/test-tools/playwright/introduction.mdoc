@@ -106,6 +106,14 @@ Nx doesn't infer the task dependency or the wait task for a `webServer` that set
 or `wait.stderr`.
 Playwright treats matching output from the server process it starts as the readiness signal and
 can capture values from it into the environment, so Nx leaves starting that server to Playwright.
+The same applies to a `webServer` that sets `env`: only Playwright passes that environment to
+the command it starts, so a task-started server would run without it.
+Nx also skips the wait task, keeping the task dependency, when an env file the Playwright task
+loads changes how the server would be probed: through the proxy variables (`HTTP_PROXY`,
+`HTTPS_PROXY`, `ALL_PROXY`, `NO_PROXY`) for a `url`, or `NODE_EXTRA_CA_CERTS` and
+`NODE_TLS_REJECT_UNAUTHORIZED` for an `https` one.
+The wait task runs with its own environment rather than the Playwright task's, so it can't
+reproduce that probe and the tests fall back to Playwright's own `reuseExistingServer` probe.
 
 The `webServerTimeout` option sets how long, in milliseconds, that task waits before failing.
 It defaults to each web server's configured `timeout`, or 60000 when neither is set.
@@ -135,6 +143,9 @@ A task dependency cannot carry a target configuration, so the address is always 
 one and a configuration-scoped env file such as `.env.e2e.production` never affects it.
 Nx re-evaluates the config under the task's env only when the graph-time evaluation found a
 `webServer`, so a `webServer` that only exists under the task's env is not detected.
+That re-evaluation runs the config in a child process started under the task's env, so an env
+file that sets Node startup options such as `NODE_OPTIONS` has them applied while Nx computes
+the project graph, not only when the task runs.
 If that re-evaluation fails or times out, Nx logs a warning, infers the task dependencies from
 the graph-time evaluation, and skips the wait task.
 The failed result is not cached, so the next project graph computation retries the evaluation.
