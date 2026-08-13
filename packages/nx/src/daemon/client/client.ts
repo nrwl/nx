@@ -160,7 +160,7 @@ export type ChangedFile = {
   type: 'create' | 'update' | 'delete';
 };
 
-enum DaemonStatus {
+export enum DaemonStatus {
   CONNECTING,
   DISCONNECTED,
   CONNECTED,
@@ -228,8 +228,8 @@ export class DaemonClient {
   private _enabled: boolean | undefined;
   private _daemonStatus: DaemonStatus = DaemonStatus.DISCONNECTED;
   private _waitForDaemonReady: Promise<void> | null = null;
-  private _daemonReady: () => void | null = null;
-  private _daemonReadyFailed: (err: Error) => void | null = null;
+  private _daemonReady: (() => void) | null = null;
+  private _daemonReadyFailed: ((err: Error) => void) | null = null;
   // Terminal once set — see `handleConnectionError`.
   private _pluginWorkerConnectionLost: Error | null = null;
 
