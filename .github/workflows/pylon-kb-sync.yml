@@ -16,23 +16,15 @@ on:
         description: 'Delete Pylon articles whose source page no longer exists'
         type: boolean
         default: false
-  # Changes to the tooling or to the articles it converts are converted on the
-  # PR itself. Only the preview job runs there; nothing reaches Pylon.
-  # Assets are included because a removed or renamed image is a conversion
-  # warning, and the article that references it lives elsewhere in the tree.
-  pull_request:
-    paths:
-      - 'astro-docs/scripts/pylon/**'
-      - 'astro-docs/src/content/docs/kb/**'
-      - 'astro-docs/src/assets/**'
-      - 'astro-docs/public/img/**'
-      - '.github/workflows/pylon-kb-sync.yml'
 
 permissions: {}
 
+# Deliberately not run on pull requests. A docs change should not be gated on
+# the knowledge base mirror; if a conversion regresses, the nightly reports it
+# and gets fixed then. `render-preview.ts --strict` covers it locally.
 jobs:
-  # Conversion is worth checking on every PR, including forks, and needs no
-  # credentials to do it.
+  # Separates a conversion failure from an API failure, so a broken nightly
+  # says which half went wrong without reading the log.
   preview:
     if: ${{ github.repository_owner == 'nrwl' }}
     permissions:
@@ -54,24 +46,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Strict on a pull request so a bad tag fails review. Not on a schedule,
-      # where sync depends on this job and one bad article would otherwise
-      # block the other 183 from updating.
+      # Not --strict: sync depends on this job, and one article with an
+      # unsupported tag should not stop the other 183 from updating. Warnings
+      # are reported by the sync step instead.
       - name: Convert every article
         working-directory: astro-docs
-        run: |
-          pnpm exec tsx scripts/pylon/render-preview.ts \
-            ${{ github.event_name == 'pull_request' && '--strict' || '' }}
+        run: pnpm exec tsx scripts/pylon/render-preview.ts
 
   sync:
-    # Never on a pull request. The token can delete every article, so it lives
-    # in an environment and pull requests get the preview job instead, which
-    # needs no credentials.
-    #
-    # Pinned to master as well: the environment admits any protected branch,
-    # which includes every release branch, and a dispatch from one of those
-    # would publish that branch's docs over the live knowledge base.
-    if: ${{ github.repository_owner == 'nrwl' && github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
+    # Pinned to master: the token lives in an environment that admits any
+    # protected branch, which includes every release branch, and a dispatch
+    # from one of those would publish that branch's docs over the live
+    # knowledge base.
+    if: ${{ github.repository_owner == 'nrwl' && github.ref == 'refs/heads/master' }}
     needs: preview
     environment: pylon
     permissions:
