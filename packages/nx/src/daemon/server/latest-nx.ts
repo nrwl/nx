@@ -11,6 +11,7 @@ import { serverLogger } from '../logger';
 let latestNxTmpPath: string | null = null;
 let cleanupFn: (() => Promise<void>) | null = null;
 let installPromise: Promise<string> | null = null;
+let cleanupPromise: Promise<void> | null = null;
 
 // Removing the install is ~10^4 unlinks, so it is not instant. Bound it anyway:
 // shutdown waits on this, and a wedged filesystem must not leave the daemon
@@ -46,6 +47,9 @@ export async function getLatestNxTmpPath(): Promise<string> {
       );
       latestNxTmpPath = result.tempDir;
       cleanupFn = result.cleanup;
+      // A fresh install needs its own removal, so it must not resolve against
+      // the previous one's memo.
+      cleanupPromise = null;
       serverLogger.log(
         '[LATEST-NX]: Successfully pulled latest Nx to',
         latestNxTmpPath
@@ -65,7 +69,15 @@ export async function getLatestNxTmpPath(): Promise<string> {
  * finishes, and `process.exit` discards pending work rather than draining it,
  * so an unawaited removal here leaks the whole ~60MB install every time.
  */
-export async function cleanupLatestNx(): Promise<void> {
+export function cleanupLatestNx(): Promise<void> {
+  // Concurrent callers must await the same removal. `respondWithErrorAndExit`
+  // exits as soon as its own call resolves, so a second caller that resolved
+  // early would kill the first caller's in-flight `rm`.
+  cleanupPromise ??= runCleanup();
+  return cleanupPromise;
+}
+
+async function runCleanup(): Promise<void> {
   const cleanup = cleanupFn;
   const tmpPath = latestNxTmpPath;
   // Drop the references first so nothing can hand out a directory that is in
@@ -97,6 +109,10 @@ export async function cleanupLatestNx(): Promise<void> {
 }
 
 async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  // When the timeout wins the race nothing else is left awaiting `promise`, so
+  // a late rejection would surface as an unhandledRejection.
+  promise.catch(() => {});
+
   let timer: NodeJS.Timeout;
   try {
     return await Promise.race([
