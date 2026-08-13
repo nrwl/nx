@@ -2,6 +2,13 @@ name: Pylon KB Sync
 
 # Mirrors astro-docs/src/content/docs/kb into the Pylon knowledge base so the
 # support widget can suggest these articles as answers. nx.dev stays canonical.
+#
+# Deliberately not run on pull requests: a docs change should not be gated on
+# the knowledge base mirror. A conversion regression surfaces here and gets
+# fixed then. To check a change before it lands, run this locally:
+#
+#   nx run astro-docs:pylon-preview -- --strict     # convert, no API token
+#   nx run astro-docs:pylon-sync -- --dry-run       # diff against live Pylon
 
 on:
   schedule:
@@ -19,47 +26,13 @@ on:
 
 permissions: {}
 
-# Deliberately not run on pull requests. A docs change should not be gated on
-# the knowledge base mirror; if a conversion regresses, the nightly reports it
-# and gets fixed then. `render-preview.ts --strict` covers it locally.
 jobs:
-  # Separates a conversion failure from an API failure, so a broken nightly
-  # says which half went wrong without reading the log.
-  preview:
-    if: ${{ github.repository_owner == 'nrwl' }}
-    permissions:
-      contents: read # to fetch code (actions/checkout)
-    runs-on: ubuntu-latest
-    name: Render articles
-    steps:
-      - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-
-      - name: Setup dev tools with mise
-        uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
-
-      - name: Enable corepack and install pnpm
-        run: |
-          corepack enable
-          corepack prepare --activate
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      # Not --strict: sync depends on this job, and one article with an
-      # unsupported tag should not stop the other 183 from updating. Warnings
-      # are reported by the sync step instead.
-      - name: Convert every article
-        working-directory: astro-docs
-        run: pnpm exec tsx scripts/pylon/render-preview.ts
-
   sync:
     # Pinned to master: the token lives in an environment that admits any
     # protected branch, which includes every release branch, and a dispatch
     # from one of those would publish that branch's docs over the live
     # knowledge base.
     if: ${{ github.repository_owner == 'nrwl' && github.ref == 'refs/heads/master' }}
-    needs: preview
     environment: pylon
     permissions:
       contents: read # to fetch code (actions/checkout)
@@ -103,17 +76,17 @@ jobs:
           pnpm exec tsx scripts/pylon/sync-kb.ts $args
 
   report:
+    # Cancelled and skipped count as failure too, so a nightly that never
+    # reached the sync step cannot pass silently.
     if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name == 'schedule' }}
-    # Both jobs, because a failing preview leaves sync skipped rather than
-    # failed, and a skipped result would notify nobody.
-    needs: [preview, sync]
+    needs: sync
     runs-on: ubuntu-latest
     name: Report status
     steps:
       - name: Send notification
         uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
         with:
-          status: ${{ (contains(needs.*.result, 'failure') || contains(needs.*.result, 'skipped') || contains(needs.*.result, 'cancelled')) && 'failure' || 'success' }}
+          status: ${{ needs.sync.result == 'success' && 'success' || 'failure' }}
           message_format: '{emoji} Pylon KB sync has {status_message}'
           notification_title: '{workflow}'
           footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
