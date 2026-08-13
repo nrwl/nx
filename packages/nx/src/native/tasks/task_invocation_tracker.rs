@@ -69,12 +69,21 @@ impl TaskInvocationTracker {
         pid: u32,
         task_id: String,
     ) -> anyhow::Result<Option<Vec<InvocationRecord>>> {
-        if self.invoked_by_ancestor(&task_id)? {
-            debug!(
-                "Loop detected: task {} is already running in an ancestor of pid {}",
-                &task_id, pid
-            );
-            return Ok(Some(self.ancestor_invocation_chain()?));
+        if !self.ancestor_pids.is_empty() {
+            // One read: the chain is rendered from the same snapshot the loop
+            // check ran against, so an ancestor unregistering in between
+            // cannot leave the reported chain empty.
+            let records = self.invocations_for_root()?;
+            if records
+                .iter()
+                .any(|record| record.task_id == task_id && self.ancestor_pids.contains(&record.pid))
+            {
+                debug!(
+                    "Loop detected: task {} is already running in an ancestor of pid {}",
+                    &task_id, pid
+                );
+                return Ok(Some(self.ancestor_invocation_chain(&records)));
+            }
         }
 
         // A sibling may already hold this task id, so re-registering is not an
@@ -119,31 +128,20 @@ impl TaskInvocationTracker {
         Ok(())
     }
 
-    fn invoked_by_ancestor(&self, task_id: &str) -> anyhow::Result<bool> {
-        if self.ancestor_pids.is_empty() {
-            return Ok(false);
-        }
-        Ok(self
-            .invocations_for_root()?
-            .iter()
-            .any(|record| record.task_id == task_id && self.ancestor_pids.contains(&record.pid)))
-    }
-
     /// Every task invoked along this process's ancestry path, outermost
     /// ancestor first. Ordering comes from the ancestry itself rather than
     /// from `created_at`, whose one-second granularity cannot order rows
     /// written within the same second.
-    fn ancestor_invocation_chain(&self) -> anyhow::Result<Vec<InvocationRecord>> {
-        let records = self.invocations_for_root()?;
+    fn ancestor_invocation_chain(&self, records: &[InvocationRecord]) -> Vec<InvocationRecord> {
         let mut chain = Vec::new();
         for ancestor_pid in &self.ancestor_pids {
-            for record in &records {
+            for record in records {
                 if record.pid == *ancestor_pid {
                     chain.push(record.clone());
                 }
             }
         }
-        Ok(chain)
+        chain
     }
 
     fn invocations_for_root(&self) -> anyhow::Result<Vec<InvocationRecord>> {
@@ -248,6 +246,34 @@ mod tests {
             rendered,
             vec!["app-e2e:e2e-ci--a.cy.ts", "app-e2e:serve-static"]
         );
+    }
+
+    #[test]
+    fn chain_order_follows_ancestry_not_created_at() {
+        let db = in_memory_db();
+        let root = tracker(&db, vec![]);
+        let middle = tracker(&db, vec![ROOT_PID]);
+        let leaf = tracker(&db, vec![ROOT_PID, 200]);
+
+        root.register_task(ROOT_PID, "root:task".into()).unwrap();
+        middle.register_task(200, "mid:task".into()).unwrap();
+        // Make the root's row the newest, so created_at ordering would invert
+        // the chain.
+        db.lock()
+            .unwrap()
+            .execute(
+                "UPDATE task_invocations SET created_at = datetime('now', '+1 hour') WHERE pid = ?1",
+                params![ROOT_PID],
+            )
+            .unwrap();
+
+        let chain = leaf
+            .register_task(300, "mid:task".into())
+            .unwrap()
+            .expect("re-invoking an ancestor's task is a loop");
+
+        let rendered: Vec<&str> = chain.iter().map(|r| r.task_id.as_str()).collect();
+        assert_eq!(rendered, vec!["root:task", "mid:task"]);
     }
 
     #[test]
