@@ -18,9 +18,11 @@ use tracing::trace;
 /// How long to wait for the TCP connect and TLS handshake.
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 
-/// Budget for a download. `read_timeout` resets on every successful read once a
-/// response body is streaming, so this bounds idle time rather than total size.
-const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(30);
+/// Budget for a download, and not a total deadline. `read_timeout` runs flat
+/// until response headers arrive, then resets on every body frame, so a large
+/// artifact is bounded by its slowest gap rather than by its size. Sized for the
+/// flat half: a server that buffers the whole artifact before writing a byte.
+const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(120);
 
 /// Budget for an upload. Deliberately generous: until response headers arrive,
 /// `read_timeout` has nothing to reset against, so for a PUT it behaves as a
