@@ -2,6 +2,7 @@ import {
   checkFilesExist,
   cleanupProject,
   newProject,
+  packageInstall,
   readJson,
   removeFile,
   runCLI,
@@ -328,6 +329,185 @@ export default config;
         removeFile(`${lib}/jest.config.mts`);
 
         expect(result).toContain('Registering ESM TypeScript loader');
+      },
+      TEN_MINS_MS
+    );
+  });
+
+  describe('config reload with a warm daemon and plugin isolation disabled', () => {
+    // With NX_ISOLATE_PLUGINS=false the plugin lives in the daemon process
+    // across graph recomputations. Restart the daemon so it runs with
+    // isolation disabled, and again afterwards for later tests.
+    const env = { NX_ISOLATE_PLUGINS: 'false' };
+
+    beforeAll(() => runCLI('reset', { env }));
+    afterAll(() => runCLI('reset'));
+
+    function setupPlaywrightApp(): string {
+      const app = uniq('app');
+      runCLI(
+        `generate @nx/web:app ${app} --unitTestRunner=none --bundler=vite --e2eTestRunner=none --style=css --no-interactive`,
+        { env }
+      );
+      runCLI(
+        `generate @nx/playwright:configuration --project ${app} --webServerCommand="echo test" --webServerAddress="http://localhost:4200"`,
+        { env }
+      );
+      // Replace the generated .mts config with a .ts one so each test
+      // controls the module shape.
+      removeFile(`${app}/playwright.config.mts`);
+      return app;
+    }
+
+    function showOutputs(app: string): string[] {
+      const project = JSON.parse(runCLI(`show project ${app} --json`, { env }));
+      return project.targets.e2e.outputs;
+    }
+
+    it(
+      'should serve fresh inferred targets after editing an ESM-shaped TS config',
+      () => {
+        // require() can load an ESM-shaped .ts as sync ESM, placing its
+        // live copy in the ESM module registry where require.cache
+        // busting can't reach it.
+        const app = setupPlaywrightApp();
+        updateFile(
+          `${app}/playwright.config.ts`,
+          `export default { outputDir: './out-aaa' };\n`
+        );
+        expect(showOutputs(app)).toContain('{projectRoot}/out-aaa');
+
+        updateFile(
+          `${app}/playwright.config.ts`,
+          `export default { outputDir: './out-bbb' };\n`
+        );
+        expect(showOutputs(app)).toContain('{projectRoot}/out-bbb');
+
+        // Also cover an ESM-to-CJS rewrite.
+        updateFile(
+          `${app}/playwright.config.ts`,
+          `module.exports = { outputDir: './out-ccc' };\n`
+        );
+        expect(showOutputs(app)).toContain('{projectRoot}/out-ccc');
+      },
+      TEN_MINS_MS
+    );
+
+    it(
+      'should serve fresh inferred targets after editing a CJS-shaped TS config',
+      () => {
+        // Must be CJS from the very first load: a path once seen as ESM
+        // reloads through dynamic import, not require.cache.
+        const app = setupPlaywrightApp();
+        updateFile(
+          `${app}/playwright.config.ts`,
+          `module.exports = { outputDir: './out-aaa' };\n`
+        );
+        expect(showOutputs(app)).toContain('{projectRoot}/out-aaa');
+
+        updateFile(
+          `${app}/playwright.config.ts`,
+          `module.exports = { outputDir: './out-bbb' };\n`
+        );
+        expect(showOutputs(app)).toContain('{projectRoot}/out-bbb');
+      },
+      TEN_MINS_MS
+    );
+
+    it(
+      'should serve fresh inferred targets after editing a local dependency of a TS config',
+      () => {
+        // Editing the helper changes the project-root hash, so createNodes
+        // re-runs; the reload must re-evaluate the config's local
+        // dependency subtree, not just the config itself.
+        const app = setupPlaywrightApp();
+        updateFile(
+          `${app}/pw-helper.js`,
+          `module.exports = { outputDir: './out-aaa' };\n`
+        );
+        updateFile(
+          `${app}/playwright.config.ts`,
+          `module.exports = require('./pw-helper.js');\n`
+        );
+        expect(showOutputs(app)).toContain('{projectRoot}/out-aaa');
+
+        updateFile(
+          `${app}/pw-helper.js`,
+          `module.exports = { outputDir: './out-bbb' };\n`
+        );
+        expect(showOutputs(app)).toContain('{projectRoot}/out-bbb');
+      },
+      TEN_MINS_MS
+    );
+
+    it(
+      'should keep inferred targets well-formed after a config attempts to prime the global ESM loader',
+      () => {
+        // TLA + enum attempts a process-wide ESM loader registration. Run
+        // after the fresh-path tests: successful registration lasts for
+        // the daemon's lifetime.
+        const primer = setupPlaywrightApp();
+        updateFile(
+          `${primer}/playwright.config.ts`,
+          `enum Mode { A = 'a' }
+const dir: string = await Promise.resolve('./out-primer');
+export default { outputDir: dir, mode: Mode.A };
+`
+        );
+        runCLI(`show project ${primer} --json`, { env, silenceError: true });
+        // Restore a valid config right away so later graph builds work
+        // without an ESM loader installed.
+        updateFile(
+          `${primer}/playwright.config.ts`,
+          `module.exports = { outputDir: './out-primer' };\n`
+        );
+
+        const app = setupPlaywrightApp();
+        updateFile(
+          `${app}/playwright.config.ts`,
+          `export default { outputDir: './out-aaa' };\n`
+        );
+        expect(showOutputs(app)).toContain('{projectRoot}/out-aaa');
+
+        updateFile(
+          `${app}/playwright.config.ts`,
+          `export default { outputDir: './out-bbb' };\n`
+        );
+        // Fresh or stale is accepted (reload freshness after a successful
+        // registration is Node-version dependent), but only the two values
+        // this test wrote; a corrupted shape would instead fall back to
+        // playwright's default test-results output dir.
+        const outEntry = showOutputs(app).find((o) => o.includes('/out-'));
+        expect(['{projectRoot}/out-aaa', '{projectRoot}/out-bbb']).toContain(
+          outEntry
+        );
+      },
+      TEN_MINS_MS
+    );
+
+    it(
+      'should recover a reload that edits an ESM-shaped config to use a CJS global',
+      () => {
+        // A path once loaded as ESM reloads through dynamic import(), where
+        // __dirname is undefined. The reload must recover through the same
+        // swc/ts-node fallback loadTsFile applies on first load instead of
+        // failing the project graph. ts-node backs that fallback here;
+        // without a transpiler the config cannot load on first load either.
+        // Runs after the primer test because the fallback also registers
+        // the process-wide ESM loader.
+        packageInstall('ts-node', undefined, '10.9.2');
+        const app = setupPlaywrightApp();
+        updateFile(
+          `${app}/playwright.config.ts`,
+          `export default { outputDir: './out-aaa' };\n`
+        );
+        expect(showOutputs(app)).toContain('{projectRoot}/out-aaa');
+
+        updateFile(
+          `${app}/playwright.config.ts`,
+          `const dir: string = __dirname;\nexport default { outputDir: './out-bbb' };\n`
+        );
+        expect(showOutputs(app)).toContain('{projectRoot}/out-bbb');
       },
       TEN_MINS_MS
     );
