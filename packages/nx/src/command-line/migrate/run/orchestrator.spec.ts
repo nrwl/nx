@@ -1649,6 +1649,93 @@ describe('orchestrator', () => {
       );
     });
 
+    it('applies retry-clean once the tree is verifiably clean, re-arming and re-dispensing the step', async () => {
+      mockGetLatestCommitSha.mockReturnValue('beef0001');
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'died', {
+            gitRefBefore: 'beef0001',
+            treeCleanAtDispense: true,
+            generatorCompleted: true,
+          }),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry-clean',
+      });
+
+      const step = readRunState(dir).steps[0];
+      expect(step.attempt).toBe(2);
+      expect(step.status).toBe('dispensed');
+      // No commit of this step landed, so the reset discarded the generator's
+      // changes and the retry has to run it again.
+      expect(step.generatorCompleted).toBeUndefined();
+      expect(lastBlock().action).toBe('next-step');
+    });
+
+    it('rejects retry-clean when the tree still holds changes: the instructed reset never happened', async () => {
+      mockGetLatestCommitSha.mockReturnValue('beef0001');
+      // A killed pre-marker worker leaves the tree dirty and HEAD still at
+      // gitRefBefore, so every dispense-time predicate passes; only the tree
+      // itself can say the caller skipped the reset.
+      mockGetWorkingTreeStatus.mockReturnValue('dirty');
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'died', {
+            gitRefBefore: 'beef0001',
+            treeCleanAtDispense: true,
+          }),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+      const before = readFileSync(join(dir, 'run.json'), 'utf-8');
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry-clean',
+      });
+
+      expect(readFileSync(join(dir, 'run.json'), 'utf-8')).toBe(before);
+      const block = lastBlock();
+      expect(block.action).toBe('error');
+      expect(block.payload.instructions).toContain('not verifiably clean');
+      expect(block.payload.instructions).toContain('git reset --hard beef0001');
+    });
+
+    it('rejects retry-clean when the tree state cannot be verified, never treating unknown as clean', async () => {
+      mockGetLatestCommitSha.mockReturnValue('beef0001');
+      mockGetWorkingTreeStatus.mockReturnValue('unknown');
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'died', {
+            gitRefBefore: 'beef0001',
+            treeCleanAtDispense: true,
+          }),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+      const before = readFileSync(join(dir, 'run.json'), 'utf-8');
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry-clean',
+      });
+
+      expect(readFileSync(join(dir, 'run.json'), 'utf-8')).toBe(before);
+      const block = lastBlock();
+      expect(block.action).toBe('error');
+      expect(block.payload.instructions).toContain('not verifiably clean');
+    });
+
     it('records the tree state at dispense so a later death can trust it', async () => {
       mockGetLatestCommitSha.mockReturnValue('dead0002');
       mockGetWorkingTreeStatus.mockReturnValue('dirty');

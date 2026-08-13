@@ -756,6 +756,17 @@ function applyReconcileStepAction(
         }': ${cleanRetryUnavailableReason(root, state, step, head)} ${fallback}`,
       };
     }
+    // The reset itself is delegated to the caller, and every check above
+    // passes identically whether or not it ran, so only the tree can say
+    // whether the reset actually happened. Anything but a verified-clean tree
+    // is refused: accepting would drop the generator marker and rerun the
+    // generator over the previous attempt's output.
+    if (getWorkingTreeStatus(root) !== 'clean') {
+      return {
+        kind: 'error',
+        reason: `Cannot apply action 'retry-clean' to step '${step.id}': the working tree is not verifiably clean, so the reset this action requires has not happened. Run \`git reset --hard ${step.gitRefBefore}\` then \`git clean -fd -e ${MIGRATE_RUNS_RELATIVE_DIR}\` first, then re-run it. ${fallback}`,
+      };
+    }
   }
   const applied = applyStepEvent(state, {
     type: 'stepAction',
