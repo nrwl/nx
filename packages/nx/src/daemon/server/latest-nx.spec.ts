@@ -1,3 +1,5 @@
+import { dirSync } from 'tmp';
+
 jest.mock('../logger', () => ({
   serverLogger: { log: jest.fn() },
 }));
@@ -88,6 +90,25 @@ describe('cleanupLatestNx', () => {
     await cleanupLatestNx();
 
     expect(cleanup).toHaveBeenCalledTimes(2);
+  });
+
+  it('reports an installation that is still on disk after a cleanup that resolved', async () => {
+    const tempDir = dirSync().name;
+    installPackageToTmpAsync.mockResolvedValue({
+      tempDir,
+      // `createTempNpmDirectory` swallows its own `rm` errors, so this is what a
+      // failed removal looks like to the caller.
+      cleanup: async () => {},
+    });
+
+    await getLatestNxTmpPath();
+    await cleanupLatestNx();
+
+    const { serverLogger } = require('../logger');
+    expect(serverLogger.log).toHaveBeenCalledWith(
+      expect.stringContaining('could not be removed'),
+      tempDir
+    );
   });
 
   it('swallows a failing cleanup so shutdown can still proceed', async () => {

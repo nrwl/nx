@@ -2,6 +2,7 @@
 // eagerly pulls in the task-execution subsystem and instantiates a daemon
 // client, all of which would stay resident for the daemon server's lifetime.
 import { installPackageToTmpAsync } from '../../utils/package-json';
+import { existsSync } from 'node:fs';
 import { detectPackageManager } from '../../utils/package-manager';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -96,7 +97,15 @@ async function runCleanup(): Promise<void> {
 
   try {
     await withTimeout(cleanup(), CLEANUP_TIMEOUT_MS);
-    serverLogger.log('[LATEST-NX]: Cleaned up latest Nx installation');
+    // The cleanup swallows its own `rm` errors, so resolving is not proof the
+    // directory is gone. On Windows it will not be: the temp install's loaded
+    // `.node` binding is mapped into this process and cannot be unlinked.
+    serverLogger.log(
+      existsSync(tmpPath)
+        ? '[LATEST-NX]: Latest Nx installation could not be removed, still at'
+        : '[LATEST-NX]: Cleaned up latest Nx installation from',
+      tmpPath
+    );
   } catch (e) {
     // Report the failure rather than exiting on a log line that claims a
     // cleanup which did not happen.
