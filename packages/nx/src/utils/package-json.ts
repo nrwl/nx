@@ -595,7 +595,7 @@ export async function installPackageToTmpAsync(
   options: { env?: () => NodeJS.ProcessEnv } = {}
 ): Promise<{
   tempDir: string;
-  cleanup: () => void;
+  cleanup: () => Promise<void>;
 }> {
   const {
     tempDir,
