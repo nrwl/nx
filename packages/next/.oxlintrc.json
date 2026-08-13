@@ -96,7 +96,7 @@
       }
     },
     {
-      "files": ["plugins/with-nx.ts"],
+      "files": ["plugins/with-nx.ts", "src/utils/compose-plugins.ts"],
       "rules": {
         "no-restricted-imports": [
           "error",
