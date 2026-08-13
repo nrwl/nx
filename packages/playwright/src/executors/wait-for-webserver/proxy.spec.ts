@@ -38,6 +38,28 @@ describe('resolveProxyForUrl', () => {
     });
   });
 
+  it('resolves from an explicit env instead of process.env when one is passed', () => {
+    process.env.HTTP_PROXY = 'http://ambient.example:8080';
+
+    expect(
+      resolveProxyForUrl(new URL('http://localhost:4200'), {
+        HTTP_PROXY: 'http://task.example:8080',
+      })
+    ).toEqual({
+      kind: 'proxy',
+      proxy: new URL('http://task.example:8080'),
+    });
+    expect(
+      resolveProxyForUrl(new URL('http://localhost:4200'), {
+        HTTP_PROXY: 'http://task.example:8080',
+        NO_PROXY: 'localhost',
+      })
+    ).toEqual({ kind: 'direct' });
+    expect(resolveProxyForUrl(new URL('http://localhost:4200'), {})).toEqual({
+      kind: 'direct',
+    });
+  });
+
   it.each(['http_proxy', 'HTTP_PROXY'])(
     'uses the proxy from %s for an http url',
     (name) => {

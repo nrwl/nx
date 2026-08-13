@@ -1326,6 +1326,253 @@ describe('@nx/playwright/plugin', () => {
     }
   });
 
+  it('skips the gate but keeps the dependency when a task env file changes how the server would be probed', async () => {
+    const savedEnv = saveEnv([
+      'HTTP_PROXY',
+      'http_proxy',
+      'NO_PROXY',
+      'no_proxy',
+    ]);
+    const originalWorkspaceRoot = workspaceRoot;
+    // The gate task runs under its own dotenv, so a task-scoped proxy
+    // exclusion never reaches it: probing through the ambient proxy could time
+    // out where Playwright's own probe (under the task env) goes direct.
+    process.env.HTTP_PROXY = 'http://proxy.example:8080';
+    setWorkspaceRoot(tempFs.tempDir);
+    installFreshConfigEval();
+    const warn = jest
+      .spyOn(devkitInternal, 'emitPluginWorkerLog')
+      .mockImplementation(() => {});
+
+    try {
+      await mockPlaywrightConfig(
+        tempFs,
+        `module.exports = {
+  testDir: 'tests',
+  webServer: [
+    { command: 'npx nx run app1:serve', port: 4200, reuseExistingServer: true },
+    { command: 'npx nx run api1:serve', url: 'http://localhost:4300', reuseExistingServer: true },
+  ],
+};`
+      );
+      await tempFs.createFiles({
+        'tests/run-me.spec.ts': '',
+        '.env.e2e': 'NO_PROXY=localhost\n',
+      });
+
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        {
+          targetName: 'e2e',
+          ciTargetName: 'e2e-ci',
+        },
+        context
+      );
+      const { targets } = results[0][1].projects['.'];
+
+      // The whole chain's gate is skipped, the port-only server included: the
+      // gate is a single task and a partial wait would claim readiness it
+      // never checked.
+      expect(targets['e2e--wait-for-webserver']).toBeUndefined();
+      expect(targets['e2e-ci--wait-for-webserver']).toBeUndefined();
+      expect(targets['e2e'].dependsOn).toContainEqual({
+        projects: ['app1', 'api1'],
+        target: 'serve',
+      });
+      expect(targets['e2e'].parallelism).toBeUndefined();
+      // The warning names the diverging variables, never their values.
+      expect(warn).toHaveBeenCalledWith(
+        'warn',
+        expect.stringContaining('NO_PROXY')
+      );
+      expect(warn).not.toHaveBeenCalledWith(
+        'warn',
+        expect.stringContaining('localhost')
+      );
+    } finally {
+      warn.mockRestore();
+      _setChildEval(null);
+      setWorkspaceRoot(originalWorkspaceRoot);
+      restoreEnv(savedEnv);
+    }
+  });
+
+  it('keeps the gate of a chain whose task env does not change the probe', async () => {
+    const savedEnv = saveEnv([
+      'HTTP_PROXY',
+      'http_proxy',
+      'NO_PROXY',
+      'no_proxy',
+    ]);
+    const originalWorkspaceRoot = workspaceRoot;
+    process.env.HTTP_PROXY = 'http://proxy.example:8080';
+    setWorkspaceRoot(tempFs.tempDir);
+    installFreshConfigEval();
+    const warn = jest
+      .spyOn(devkitInternal, 'emitPluginWorkerLog')
+      .mockImplementation(() => {});
+
+    try {
+      await mockPlaywrightConfig(
+        tempFs,
+        `module.exports = {
+  testDir: 'tests',
+  webServer: {
+    command: 'npx nx run app1:serve',
+    url: 'http://localhost:4200',
+    reuseExistingServer: true,
+  },
+};`
+      );
+      // Only the atomized chain loads the exclusion, so only its gate is
+      // skipped; the e2e chain keeps its own.
+      await tempFs.createFiles({
+        'tests/run-me.spec.ts': '',
+        '.env.e2e-ci': 'NO_PROXY=localhost\n',
+      });
+
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        {
+          targetName: 'e2e',
+          ciTargetName: 'e2e-ci',
+        },
+        context
+      );
+      const { targets } = results[0][1].projects['.'];
+
+      expect(targets['e2e--wait-for-webserver'].options.servers).toEqual([
+        { url: 'http://localhost:4200' },
+      ]);
+      expect(targets['e2e'].dependsOn).toContainEqual({
+        target: 'e2e--wait-for-webserver',
+      });
+      expect(targets['e2e-ci--wait-for-webserver']).toBeUndefined();
+      expect(targets['e2e-ci--tests/run-me.spec.ts'].dependsOn).toContainEqual({
+        projects: ['app1'],
+        target: 'serve',
+      });
+      expect(
+        targets['e2e-ci--tests/run-me.spec.ts'].dependsOn
+      ).not.toContainEqual(
+        expect.objectContaining({ target: expect.stringContaining('wait-for') })
+      );
+      expect(warn).toHaveBeenCalledWith(
+        'warn',
+        expect.stringContaining('e2e-ci')
+      );
+    } finally {
+      warn.mockRestore();
+      _setChildEval(null);
+      setWorkspaceRoot(originalWorkspaceRoot);
+      restoreEnv(savedEnv);
+    }
+  });
+
+  it('keeps a port-only gate under a task env that only changes url probing', async () => {
+    const savedEnv = saveEnv([
+      'HTTP_PROXY',
+      'http_proxy',
+      'NO_PROXY',
+      'no_proxy',
+    ]);
+    const originalWorkspaceRoot = workspaceRoot;
+    process.env.HTTP_PROXY = 'http://proxy.example:8080';
+    setWorkspaceRoot(tempFs.tempDir);
+    installFreshConfigEval();
+
+    try {
+      await mockPlaywrightConfig(
+        tempFs,
+        `module.exports = {
+  testDir: 'tests',
+  webServer: {
+    command: 'npx nx run app1:serve',
+    port: 4200,
+    reuseExistingServer: true,
+  },
+};`
+      );
+      // A port is probed with a raw TCP connect, which no proxy or TLS env
+      // affects.
+      await tempFs.createFiles({
+        'tests/run-me.spec.ts': '',
+        '.env.e2e': 'NO_PROXY=localhost\n',
+      });
+
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        {
+          targetName: 'e2e',
+          ciTargetName: 'e2e-ci',
+        },
+        context
+      );
+      const { targets } = results[0][1].projects['.'];
+
+      expect(targets['e2e--wait-for-webserver'].options.servers).toEqual([
+        { port: 4200 },
+      ]);
+    } finally {
+      _setChildEval(null);
+      setWorkspaceRoot(originalWorkspaceRoot);
+      restoreEnv(savedEnv);
+    }
+  });
+
+  it('skips the gate when a task env file changes the TLS material of a verifying https probe', async () => {
+    const savedEnv = saveEnv(['NODE_EXTRA_CA_CERTS']);
+    const originalWorkspaceRoot = workspaceRoot;
+    setWorkspaceRoot(tempFs.tempDir);
+    installFreshConfigEval();
+    const warn = jest
+      .spyOn(devkitInternal, 'emitPluginWorkerLog')
+      .mockImplementation(() => {});
+
+    try {
+      await mockPlaywrightConfig(
+        tempFs,
+        `module.exports = {
+  testDir: 'tests',
+  webServer: {
+    command: 'npx nx run app1:serve',
+    url: 'https://localhost:4200',
+    reuseExistingServer: true,
+  },
+};`
+      );
+      await tempFs.createFiles({
+        'tests/run-me.spec.ts': '',
+        '.env.e2e': 'NODE_EXTRA_CA_CERTS=./certs/ca.pem\n',
+      });
+
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        {
+          targetName: 'e2e',
+          ciTargetName: 'e2e-ci',
+        },
+        context
+      );
+      const { targets } = results[0][1].projects['.'];
+
+      expect(targets['e2e--wait-for-webserver']).toBeUndefined();
+      expect(targets['e2e'].dependsOn).toContainEqual({
+        projects: ['app1'],
+        target: 'serve',
+      });
+      expect(warn).toHaveBeenCalledWith(
+        'warn',
+        expect.stringContaining('NODE_EXTRA_CA_CERTS')
+      );
+    } finally {
+      warn.mockRestore();
+      _setChildEval(null);
+      setWorkspaceRoot(originalWorkspaceRoot);
+      restoreEnv(savedEnv);
+    }
+  });
+
   it('serializes the atomized tasks when only the CI chain adds an uncovered server', async () => {
     const originalCiExtra = process.env.CI_EXTRA;
     const originalWorkspaceRoot = workspaceRoot;
@@ -2538,6 +2785,86 @@ module.exports = {};`,
     expect(targets['e2e'].parallelism).toBe(false);
   });
 
+  it('should not gate or depend on a webServer that sets env, leaving its launch to Playwright', async () => {
+    // Only Playwright passes `webServer.env` to the command it starts. A
+    // task-started server would run without it, listening at a different
+    // address (a PORT) or silently reused missing the env the tests rely on.
+    await mockPlaywrightConfig(tempFs, {
+      testDir: 'tests',
+      webServer: [
+        {
+          command: 'npx nx run app1:serve',
+          port: 4200,
+          reuseExistingServer: true,
+        },
+        {
+          command: 'npx nx run api1:serve',
+          url: 'http://localhost:4300',
+          reuseExistingServer: true,
+          env: { PORT: '4300' },
+        },
+      ],
+    });
+    await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      {
+        targetName: 'e2e',
+        ciTargetName: 'e2e-ci',
+      },
+      context
+    );
+    const { targets } = results[0][1].projects['.'];
+
+    expect(targets['e2e--wait-for-webserver'].options.servers).toEqual([
+      { port: 4200 },
+    ]);
+    expect(targets['e2e'].dependsOn).toContainEqual({
+      projects: ['app1'],
+      target: 'serve',
+    });
+    expect(targets['e2e'].dependsOn).not.toContainEqual(
+      expect.objectContaining({ projects: expect.arrayContaining(['api1']) })
+    );
+    // Playwright starts the env-carrying server itself, so nothing in the
+    // graph covers it; serialize so parallel atomized runs cannot race it.
+    expect(targets['e2e'].parallelism).toBe(false);
+    expect(targets['e2e-ci'].parallelism).toBe(false);
+  });
+
+  it('should still gate a webServer whose env is empty', async () => {
+    await mockPlaywrightConfig(tempFs, {
+      testDir: 'tests',
+      webServer: {
+        command: 'npx nx run app1:serve',
+        port: 4200,
+        reuseExistingServer: true,
+        env: {},
+      },
+    });
+    await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      {
+        targetName: 'e2e',
+        ciTargetName: 'e2e-ci',
+      },
+      context
+    );
+    const { targets } = results[0][1].projects['.'];
+
+    expect(targets['e2e--wait-for-webserver'].options.servers).toEqual([
+      { port: 4200 },
+    ]);
+    expect(targets['e2e'].dependsOn).toContainEqual({
+      projects: ['app1'],
+      target: 'serve',
+    });
+    expect(targets['e2e'].parallelism).toBeUndefined();
+  });
+
   it('should not set parallelism to false and should infer dependsOn using the tasks run in the different webServer.command that have reuseExistingServer set to true', async () => {
     await mockPlaywrightConfig(tempFs, {
       testDir: 'tests',
@@ -2959,4 +3286,25 @@ async function mockPlaywrightConfig(
       ? config
       : `module.exports = ${JSON.stringify(config)}`
   );
+}
+
+// Clears the named variables so a developer's ambient proxy or TLS env cannot
+// leak into the probe-divergence assertions.
+function saveEnv(names: string[]): Record<string, string | undefined> {
+  const saved: Record<string, string | undefined> = {};
+  for (const name of names) {
+    saved[name] = process.env[name];
+    delete process.env[name];
+  }
+  return saved;
+}
+
+function restoreEnv(saved: Record<string, string | undefined>): void {
+  for (const [name, value] of Object.entries(saved)) {
+    if (value === undefined) {
+      delete process.env[name];
+    } else {
+      process.env[name] = value;
+    }
+  }
 }

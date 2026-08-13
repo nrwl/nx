@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import {
   _setChildEval,
   _setWorkerScriptPath,
+  getProbeEnvDivergence,
   normalizeWebServers,
   resolveWebServersUnderEnv,
   taskEnvDivergesFromAmbient,
@@ -33,7 +34,7 @@ describe('normalizeWebServers', () => {
     expect(normalizeWebServers([server])).toEqual([server]);
   });
 
-  it('projects `wait` to a boolean and drops run-only fields like cwd and env', () => {
+  it('projects `wait` and `env` to booleans and drops run-only fields like cwd', () => {
     expect(
       normalizeWebServers({
         command: 'nx serve app',
@@ -49,6 +50,7 @@ describe('normalizeWebServers', () => {
         url: 'http://localhost:4300',
         reuseExistingServer: true,
         waitsForOutput: true,
+        hasEnv: true,
       },
     ]);
   });
@@ -59,6 +61,126 @@ describe('normalizeWebServers', () => {
     expect(normalized({ stdout: /ready/ })).toBe(true);
     expect(normalized({ stderr: /ready/ })).toBe(true);
     expect(normalized({})).toBeUndefined();
+  });
+
+  it('sets hasEnv only for a non-empty env', () => {
+    const normalized = (server: object) =>
+      normalizeWebServers({ command: 'x', ...server })[0].hasEnv;
+    expect(normalized({ env: { PORT: '4300' } })).toBe(true);
+    expect(normalized({ env: {} })).toBeUndefined();
+    expect(normalized({})).toBeUndefined();
+  });
+});
+
+describe('getProbeEnvDivergence', () => {
+  const httpUrl = { url: 'http://localhost:4200' };
+  const httpsUrl = { url: 'https://localhost:4200' };
+
+  it('reports nothing for port-only servers', () => {
+    expect(
+      getProbeEnvDivergence(
+        [{}],
+        { HTTP_PROXY: 'http://proxy.example:8080' },
+        {}
+      )
+    ).toEqual([]);
+  });
+
+  it('names a no_proxy exclusion that reroutes the probe', () => {
+    const ambient = { HTTP_PROXY: 'http://proxy.example:8080' };
+    expect(
+      getProbeEnvDivergence(
+        [httpUrl],
+        { ...ambient, NO_PROXY: 'localhost' },
+        ambient
+      )
+    ).toEqual(['NO_PROXY']);
+  });
+
+  it('reports nothing when no_proxy differs but no proxy is configured', () => {
+    // The routing decision is direct on both sides; the raw difference cannot
+    // change how the server is probed.
+    expect(
+      getProbeEnvDivergence([httpUrl], { NO_PROXY: 'localhost' }, {})
+    ).toEqual([]);
+  });
+
+  it('names a proxy the task env adds', () => {
+    expect(
+      getProbeEnvDivergence(
+        [httpUrl],
+        { http_proxy: 'http://proxy.example:8080' },
+        {}
+      )
+    ).toEqual(['http_proxy']);
+  });
+
+  it('names the all_proxy fallback when it drives the decision', () => {
+    expect(
+      getProbeEnvDivergence(
+        [httpUrl],
+        { ALL_PROXY: 'http://proxy.example:8080' },
+        {}
+      )
+    ).toEqual(['ALL_PROXY']);
+  });
+
+  it('ignores a proxy variable for a protocol the url does not use', () => {
+    expect(
+      getProbeEnvDivergence(
+        [httpUrl],
+        { HTTPS_PROXY: 'http://proxy.example:8080' },
+        {}
+      )
+    ).toEqual([]);
+  });
+
+  it('names TLS material for a verifying https probe only', () => {
+    const taskEnv = { NODE_EXTRA_CA_CERTS: '/certs/ca.pem' };
+    expect(getProbeEnvDivergence([httpsUrl], taskEnv, {})).toEqual([
+      'NODE_EXTRA_CA_CERTS',
+    ]);
+    expect(getProbeEnvDivergence([httpUrl], taskEnv, {})).toEqual([]);
+    expect(
+      getProbeEnvDivergence(
+        [{ ...httpsUrl, ignoreHTTPSErrors: true }],
+        taskEnv,
+        {}
+      )
+    ).toEqual([]);
+  });
+
+  it('names NODE_TLS_REJECT_UNAUTHORIZED for an https probe', () => {
+    expect(
+      getProbeEnvDivergence(
+        [httpsUrl],
+        { NODE_TLS_REJECT_UNAUTHORIZED: '0' },
+        {}
+      )
+    ).toEqual(['NODE_TLS_REJECT_UNAUTHORIZED']);
+  });
+
+  it('ignores a malformed url', () => {
+    expect(
+      getProbeEnvDivergence(
+        [{ url: 'not a url' }],
+        { HTTP_PROXY: 'http://proxy.example:8080' },
+        {}
+      )
+    ).toEqual([]);
+  });
+
+  it('accumulates sorted names across servers', () => {
+    expect(
+      getProbeEnvDivergence(
+        [httpUrl, httpsUrl],
+        {
+          http_proxy: 'http://proxy.example:8080',
+          NODE_EXTRA_CA_CERTS: '/certs/ca.pem',
+        },
+        {}
+      )
+    ).toEqual(['NODE_EXTRA_CA_CERTS', 'http_proxy']);
   });
 });
 

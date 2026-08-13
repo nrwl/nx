@@ -36,6 +36,7 @@ import { dirname, join, parse, relative, resolve, sep } from 'node:path';
 import type { Schema as WaitForWebserverSchema } from '../executors/wait-for-webserver/schema';
 import { getReporterOutputs, type ReporterOutput } from '../utils/reporters';
 import {
+  getProbeEnvDivergence,
   normalizeWebServers,
   resolveWebServersUnderEnv,
   taskEnvDivergesFromAmbient,
@@ -273,20 +274,14 @@ async function buildPlaywrightTargets(
   const reporterOutputs = getReporterOutputs(playwrightConfig);
   const ambientWebServers = normalizeWebServers(playwrightConfig.webServer);
 
-  // When an inferred web server exposes a port/url, add a task that waits for
-  // it to be ready. Playwright's `reuseExistingServer` probe
-  // otherwise races the server boot, misses, and spawns its own nested server
-  // command whose I/O then leaks into the task. Both the `e2e` task and the
-  // atomized CI tasks depend on it.
+  // The readiness gate: Playwright's `reuseExistingServer` probe otherwise
+  // races the server boot, misses, and spawns its own nested server command
+  // whose I/O then leaks into the task.
   //
-  // The command and address can be read from process.env, but createNodes
-  // evaluates the config without the e2e task's dotenv loaded. Resolve each
-  // consumer chain's servers under that chain's task env so the dependencies
-  // and the gate match what the task will actually run and probe.
-  // `e2e` and the atomized `e2e-ci` tasks can load
-  // different dotenv, so a distinct resolved address gets its own gate. When
-  // both chains load the same dotenv inputs they resolve to the same servers,
-  // so a single resolution is shared; distinct inputs resolve concurrently.
+  // The command and address can read process.env, and createNodes runs without
+  // the task's dotenv loaded, so each consumer chain's servers resolve under
+  // that chain's task env. Chains loading the same dotenv inputs share one
+  // resolution; distinct inputs resolve concurrently and can gate separately.
   const chainsShareDotEnv =
     JSON.stringify(chainDotEnvPairs.target) ===
     JSON.stringify(chainDotEnvPairs.ciTarget);
@@ -819,12 +814,26 @@ async function resolveChainWebserver(
     webServers,
     configFilePath
   );
-  const readinessServers =
-    inferReadiness && !taskEnvEvalFailed
-      ? (commandTasks
-          .map(toReadinessServer)
-          .filter(Boolean) as WebserverReadinessServer[])
-      : [];
+  let readinessServers: WebserverReadinessServer[] = [];
+  if (inferReadiness && !taskEnvEvalFailed) {
+    readinessServers = commandTasks
+      .map(toReadinessServer)
+      .filter(Boolean) as WebserverReadinessServer[];
+    // The gate runs as its own target under its own dotenv, so a task-scoped
+    // change to the probe transport (a proxy exclusion, a CA bundle) never
+    // reaches it and the gate could fail where Playwright's own probe passes.
+    // The dependencies stay; readiness falls back to Playwright's probe.
+    const divergingProbeVars = getProbeEnvDivergence(readinessServers, taskEnv);
+    if (divergingProbeVars.length > 0) {
+      readinessServers = [];
+      emitPluginWorkerLog(
+        'warn',
+        `@nx/playwright: the ${target} task env changes how its web server would be probed (${divergingProbeVars.join(
+          ', '
+        )}), which the readiness task cannot reproduce. No web server readiness task is inferred for ${target}.`
+      );
+    }
+  }
   return {
     chain: { commandTasks, readinessServers, uncoveredServers },
     taskEnvEvalFailed,
@@ -893,6 +902,14 @@ function getWebserverCommandTasks(
     // reused without them, or raced by a duplicate launch while it boots, so
     // such a server gets no inferred dependency and no gate.
     if (server.waitsForOutput) {
+      uncoveredServers++;
+      continue;
+    }
+    // A `webServer.env` only reaches the process Playwright starts itself. A
+    // task-started server would run without it, listening at a different
+    // address or silently reused missing the env the tests rely on, so only
+    // Playwright can launch such a server: no inferred dependency and no gate.
+    if (server.hasEnv) {
       uncoveredServers++;
       continue;
     }

@@ -733,6 +733,30 @@ describe('waitForWebserverExecutor', () => {
       expect(forwarded).toEqual([`${originUrl}/`]);
     });
 
+    it('opts the plain-http proxy dial into family autoselection', async () => {
+      // Playwright's Happy Eyeballs agent dials the proxy on this route, so
+      // an IPv4-only proxy named `localhost` stays reachable; assert the
+      // request options like the direct-probe test, which is deterministic on
+      // every platform.
+      const { originUrl, proxyUrl } = await startSplitRoutes();
+      process.env.HTTP_PROXY = proxyUrl;
+      const requestSpy = http.request as jest.Mock;
+      requestSpy.mockClear();
+
+      const result = await waitForWebserverExecutor(
+        { servers: [{ url: originUrl }], timeout: 2000 },
+        context
+      );
+
+      expect(result).toEqual({ success: true });
+      expect(requestSpy).toHaveBeenCalled();
+      for (const call of requestSpy.mock.calls) {
+        expect(call[1]).toEqual(
+          expect.objectContaining({ autoSelectFamily: true })
+        );
+      }
+    });
+
     it('goes direct when no_proxy covers the host', async () => {
       const { forwarded, originUrl, proxyUrl } = await startSplitRoutes();
       process.env.HTTP_PROXY = proxyUrl;
