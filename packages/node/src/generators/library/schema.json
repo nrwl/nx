@@ -90,12 +90,6 @@
       "type": "string",
       "description": "Sets the `rootDir` for TypeScript compilation. When not defined, it uses the project's root property, or `srcRootForCompilationRoot` if it is defined."
     },
-    "testEnvironment": {
-      "type": "string",
-      "enum": ["jsdom", "node"],
-      "description": "The test environment for the unit test runner. For node libraries this should stay as node unless doing DOM testing.",
-      "default": "jsdom"
-    },
     "babelJest": {
       "type": "boolean",
       "description": "Use `babel` instead of `ts-jest`.",

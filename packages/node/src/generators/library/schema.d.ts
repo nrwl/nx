@@ -12,7 +12,6 @@ export interface Schema {
   buildable?: boolean;
   publishable?: boolean;
   importPath?: string;
-  testEnvironment?: 'jsdom' | 'node';
   rootDir?: string;
   babelJest?: boolean;
   js?: boolean;
