@@ -81,7 +81,7 @@ The `@nx/storybook/plugin` is configured in the `plugins` array in `nx.json`.
 | --------------------------- | ------------------ | --------------------------------------------------- |
 | `buildStorybookTargetName`  | `build-storybook`  | Builds and caches the static Storybook output.      |
 | `serveStorybookTargetName`  | `storybook`        | Runs the Storybook development server continuously. |
-| `testStorybookTargetName`   | `test-storybook`   | Runs `test-storybook` when the project supports it. |
+| `testStorybookTargetName`   | `test-storybook`   | Runs the stories as tests when a runner is set up.  |
 | `staticStorybookTargetName` | `static-storybook` | Serves the built Storybook output continuously.     |
 | `buildDepsTargetName`       | `build-deps`       | Builds project dependencies.                        |
 | `watchDepsTargetName`       | `watch-deps`       | Watches project dependencies.                       |
@@ -179,7 +179,7 @@ nx build-storybook project-name
 
 ### Testing Storybook
 
-With the Storybook server running, you can test Storybook (run all the interaction tests) using this command:
+Run all the interaction tests in your stories using this command:
 
 ```shell
 nx run project-name:test-storybook
@@ -190,6 +190,11 @@ or
 ```shell
 nx test-storybook project-name
 ```
+
+On the test runner path, this target runs `@storybook/test-runner` against a Storybook that's already serving.
+Start `nx storybook project-name` first, or point the runner at a published URL.
+Projects that register the Vitest addon run their stories through Vitest instead, with no serving Storybook.
+For the Vitest addon setup, see [Setting up Storybook interaction tests](/docs/kb/storybook-interaction-tests).
 
 ### Anatomy of the Storybook setup
 
@@ -221,7 +226,7 @@ import type { StorybookConfig } from '@storybook/react-vite';
 
 const config: StorybookConfig = {
   ...
-  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions', ...],
+  addons: ['some-storybook-addon', ...],
   ...
 };
 

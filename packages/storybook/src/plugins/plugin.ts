@@ -25,6 +25,7 @@ import { getLockFileName } from '@nx/js';
 import type { StorybookConfig } from 'storybook/internal/types';
 import { query } from '@phenomnomnominal/tsquery';
 import { addBuildAndWatchDepsTargets } from '@nx/js/internal';
+import { findStorybookAndBuildTargetsAndCompiler } from '../utils/utilities';
 
 export interface StorybookPluginOptions {
   buildStorybookTargetName?: string;
@@ -45,6 +46,24 @@ export const createDependencies: CreateDependencies = () => {
 };
 
 const storybookConfigGlob = '**/.storybook/main.{js,ts,mjs,mts,cjs,cts}';
+
+// Vite-builder frameworks we infer the addon target for. The addon itself only
+// checks that the resolved builder is Vite, so this list is conservative rather
+// than exhaustive. `@storybook/sveltekit` uses the Vite builder despite the name.
+const VITE_BUILDER_FRAMEWORKS = new Set([
+  '@storybook/angular-vite',
+  '@storybook/react-vite',
+  '@storybook/react-native-web-vite',
+  '@storybook/tanstack-react',
+  '@storybook/vue-vite',
+  '@storybook/vue3-vite',
+  '@storybook/svelte-vite',
+  '@storybook/sveltekit',
+  '@storybook/web-components-vite',
+  '@storybook/html-vite',
+  '@storybook/preact-vite',
+  '@storybook/nextjs-vite',
+]);
 
 export const createNodes: CreateNodes<StorybookPluginOptions> = [
   storybookConfigGlob,
@@ -135,7 +154,10 @@ async function createNodesInternal(
   projectRoot: string,
   hash: string
 ) {
-  const projectName = buildProjectName(projectRoot, context.workspaceRoot);
+  const { projectName, angularBuildTarget } = getProjectMetadata(
+    projectRoot,
+    context.workspaceRoot
+  );
 
   if (!targetsCache.has(hash)) {
     targetsCache.set(
@@ -146,6 +168,7 @@ async function createNodesInternal(
         options,
         context,
         projectName,
+        angularBuildTarget,
         pmc
       )
     );
@@ -169,6 +192,7 @@ async function buildStorybookTargets(
   options: StorybookPluginOptions,
   context: CreateNodesContext,
   projectName: string,
+  angularBuildTarget: string | undefined,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const buildOutputs = getOutputs();
@@ -177,9 +201,12 @@ async function buildStorybookTargets(
 
   // First attempt to do a very fast lookup for the framework
   // If that fails, the framework might be inherited, so do a very heavyweight lookup
-  const storybookFramework =
+  // The slow path returns whatever the config holds, which for the common
+  // `getAbsolutePath('@storybook/react-vite')` shape is a resolved path.
+  const storybookFramework = normalizePackageName(
     (await getStorybookFramework(configFilePath, context)) ||
-    (await getStorybookFullyResolvedFramework(configFilePath, context));
+      (await getStorybookFullyResolvedFramework(configFilePath, context))
+  );
 
   const frameworkIsAngular = storybookFramework === '@storybook/angular';
 
@@ -191,23 +218,50 @@ async function buildStorybookTargets(
 
   const targets: Record<string, TargetConfiguration> = {};
 
+  // Resolution alone is not enough: the addon lives in the root package.json, so
+  // it resolves for every project. Registration in this project's own config is
+  // what makes it ours. Resolve first - it is a stat walk, while reading the
+  // registration executes the user's config.
+  const usesVitestAddon =
+    VITE_BUILDER_FRAMEWORKS.has(storybookFramework) &&
+    isInstalled(
+      '@storybook/addon-vitest',
+      context.workspaceRoot,
+      projectRoot
+    ) &&
+    (await registersVitestAddon(configFilePath, context));
+  const hasTestRunner = isInstalled(
+    '@storybook/test-runner',
+    context.workspaceRoot,
+    projectRoot
+  );
+
+  // Falls back to the storybook build target, whose name is configurable, so
+  // resolve it from the options rather than assuming the default.
+  const browserTarget = `${projectName}:${
+    angularBuildTarget ?? options.buildStorybookTargetName
+  }`;
+
   targets[options.buildStorybookTargetName] = buildTarget(
     namedInputs,
     buildOutputs,
     projectRoot,
     frameworkIsAngular,
-    projectName,
-    configFilePath
+    browserTarget,
+    configFilePath,
+    hasTestRunner
   );
 
   targets[options.serveStorybookTargetName] = serveTarget(
     projectRoot,
     frameworkIsAngular,
-    projectName,
+    browserTarget,
     configFilePath
   );
 
-  if (isStorybookTestRunnerInstalled()) {
+  if (usesVitestAddon) {
+    targets[options.testStorybookTargetName] = vitestTestTarget(projectRoot);
+  } else if (hasTestRunner) {
     targets[options.testStorybookTargetName] = testTarget(projectRoot);
   }
 
@@ -234,8 +288,9 @@ function buildTarget(
   outputs: string[],
   projectRoot: string,
   frameworkIsAngular: boolean,
-  projectName: string,
-  configFilePath: string
+  browserTarget: string,
+  configFilePath: string,
+  hasTestRunner: boolean
 ) {
   let targetConfig: TargetConfiguration;
 
@@ -244,7 +299,7 @@ function buildTarget(
       executor: '@storybook/angular:build-storybook',
       options: {
         configDir: `${dirname(configFilePath)}`,
-        browserTarget: `${projectName}:build-storybook`,
+        browserTarget,
         compodoc: false,
         outputDir: joinPathFragments(projectRoot, 'storybook-static'),
       },
@@ -258,9 +313,7 @@ function buildTarget(
           externalDependencies: [
             'storybook',
             '@storybook/angular',
-            isStorybookTestRunnerInstalled()
-              ? '@storybook/test-runner'
-              : undefined,
+            hasTestRunner ? '@storybook/test-runner' : undefined,
           ].filter(Boolean),
         },
       ],
@@ -278,9 +331,7 @@ function buildTarget(
         {
           externalDependencies: [
             'storybook',
-            isStorybookTestRunnerInstalled()
-              ? '@storybook/test-runner'
-              : undefined,
+            hasTestRunner ? '@storybook/test-runner' : undefined,
           ].filter(Boolean),
         },
       ],
@@ -293,7 +344,7 @@ function buildTarget(
 function serveTarget(
   projectRoot: string,
   frameworkIsAngular: boolean,
-  projectName: string,
+  browserTarget: string,
   configFilePath: string
 ) {
   if (frameworkIsAngular) {
@@ -302,8 +353,11 @@ function serveTarget(
       executor: '@storybook/angular:start-storybook',
       options: {
         configDir: `${dirname(configFilePath)}`,
-        browserTarget: `${projectName}:build-storybook`,
+        browserTarget,
         compodoc: false,
+        // The builder defaults to 9009, but test-storybook looks for 6006. Match
+        // the port the non-Angular `storybook dev` target serves on.
+        port: 6006,
       },
     };
   } else {
@@ -322,6 +376,26 @@ function testTarget(projectRoot: string) {
     inputs: [
       {
         externalDependencies: ['storybook', '@storybook/test-runner'],
+      },
+    ],
+  };
+
+  return targetConfig;
+}
+
+function vitestTestTarget(projectRoot: string) {
+  const targetConfig: TargetConfiguration = {
+    // `--passWithNoTests` so the target is green before any stories exist. It does
+    // not mask a missing `storybook` project: that is a startup error either way.
+    command: `vitest run --project=storybook --passWithNoTests`,
+    options: { cwd: projectRoot },
+    inputs: [
+      {
+        externalDependencies: [
+          'storybook',
+          '@storybook/addon-vitest',
+          'vitest',
+        ],
       },
     ],
   };
@@ -366,11 +440,13 @@ async function getStorybookFramework(
     'StringLiteral'
   )?.[0];
 
-  if (storybookConfigImportPackage?.getText() === `'@storybook/core-common'`) {
+  const frameworkPackage = stringLiteralValue(storybookConfigImportPackage);
+
+  if (frameworkPackage === '@storybook/core-common') {
     return parseFrameworkName(mainTsJs);
   }
 
-  return storybookConfigImportPackage?.getText();
+  return frameworkPackage;
 }
 
 function parseFrameworkName(mainTsJs: string) {
@@ -397,10 +473,17 @@ function parseFrameworkName(mainTsJs: string) {
       frameworkPropertyAssignment,
       'StringLiteral'
     )?.[0];
-    return storybookConfigImportPackage?.getText();
+    return stringLiteralValue(storybookConfigImportPackage);
   }
 
-  return query(namePropertyAssignment, `StringLiteral`)?.[0]?.getText();
+  return stringLiteralValue(
+    query(namePropertyAssignment, `StringLiteral`)?.[0]
+  );
+}
+
+function stringLiteralValue(node: { getText(): string } | undefined) {
+  const value = node?.getText();
+  return value?.slice(1, -1);
 }
 
 async function getStorybookFullyResolvedFramework(
@@ -479,28 +562,102 @@ function normalizeOptions(
   };
 }
 
-function buildProjectName(
+function getProjectMetadata(
   projectRoot: string,
   workspaceRoot: string
-): string | undefined {
+): { projectName: string | undefined; angularBuildTarget: string | undefined } {
   const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
   const projectJsonPath = join(workspaceRoot, projectRoot, 'project.json');
-  let name: string;
+  let projectJsonName: string;
+  let projectJsonTargets: Record<string, TargetConfiguration> = {};
+  let packageJsonName: string;
+  let packageJsonTargets: Record<string, TargetConfiguration> = {};
   if (existsSync(projectJsonPath)) {
     const projectJson = parseJson(readFileSync(projectJsonPath, 'utf-8'));
-    name = projectJson.name;
-  } else if (existsSync(packageJsonPath)) {
-    const packageJson = parseJson(readFileSync(packageJsonPath, 'utf-8'));
-    name = packageJson.name;
+    projectJsonName = projectJson.name;
+    projectJsonTargets = projectJson.targets ?? {};
   }
-  return name;
+  if (existsSync(packageJsonPath)) {
+    const packageJson = parseJson(readFileSync(packageJsonPath, 'utf-8'));
+    packageJsonName = packageJson.name;
+    packageJsonTargets = packageJson.nx?.targets ?? {};
+  }
+
+  // Mirror how Nx itself names a project: project.json, then package.json, then
+  // the directory. Both files can carry targets, and project.json wins.
+  const targets = { ...packageJsonTargets, ...projectJsonTargets };
+
+  return {
+    projectName:
+      projectJsonName ?? packageJsonName ?? nameFromRoot(projectRoot),
+    angularBuildTarget:
+      findStorybookAndBuildTargetsAndCompiler(targets).ngBuildTarget,
+  };
 }
 
-function isStorybookTestRunnerInstalled(): boolean {
+// Same derivation as Nx's `toProjectName`. The workspace root has no directory
+// segment to name it after, so leave it undefined and let the caller complain.
+function nameFromRoot(projectRoot: string): string | undefined {
+  const segment = projectRoot.split(/[\/\\]/g).pop();
+  return !segment || segment === '.' ? undefined : segment.toLowerCase();
+}
+
+async function registersVitestAddon(
+  configFilePath: string,
+  context: CreateNodesContext
+): Promise<boolean> {
   try {
-    require.resolve('@storybook/test-runner');
+    const { addons } = await loadConfigFile<StorybookConfig>(
+      join(context.workspaceRoot, configFilePath)
+    );
+    return addons?.some(isVitestAddon) ?? false;
+  } catch {
+    return false;
+  }
+}
+
+function isVitestAddon(addon: unknown): boolean {
+  const addonName =
+    typeof addon === 'string'
+      ? addon
+      : typeof addon === 'object' && addon !== null && 'name' in addon
+        ? addon.name
+        : undefined;
+
+  return (
+    typeof addonName === 'string' &&
+    normalizePackageName(addonName) === '@storybook/addon-vitest'
+  );
+}
+
+// Addons and frameworks are both written either as a bare specifier or as a
+// resolved path, so compare on the trailing scope/name either way.
+function normalizePackageName(packageName: string): string;
+function normalizePackageName(
+  packageName: string | undefined
+): string | undefined;
+function normalizePackageName(packageName: string | undefined) {
+  return packageName
+    ?.replace(/\\/g, '/')
+    .split('/')
+    .filter(Boolean)
+    .slice(-2)
+    .join('/');
+}
+
+// Resolved from the project first so a runner declared in the project's own
+// package.json counts, not just one hoisted to the workspace root.
+function isInstalled(
+  packageName: string,
+  workspaceRoot: string,
+  projectRoot: string
+): boolean {
+  try {
+    require.resolve(packageName, {
+      paths: [join(workspaceRoot, projectRoot), workspaceRoot],
+    });
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
