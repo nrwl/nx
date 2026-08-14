@@ -123,7 +123,7 @@ If your workspace leans on publishing workflows or unusual install hooks, test t
 
 No. Bun workspaces make installs fast and link local packages, but they don't cache task results or detect which projects a commit affects, so CI reruns every task on every push no matter how fast the install was.
 
-When that becomes the bottleneck, add Nx on top without changing how Bun works:
+Add Nx on top to get cached results and affected runs, whatever the size of the workspace. It doesn't change how Bun works:
 
 ```shell
 npx nx@latest init

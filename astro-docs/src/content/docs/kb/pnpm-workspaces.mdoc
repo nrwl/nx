@@ -109,7 +109,7 @@ Upgrading React across the whole repository is now a one-line change, and versio
 
 No. pnpm workspaces handle installing and linking packages, and that's where they stop. There's no task graph and no caching, and git-based `--filter` compares changed files rather than task inputs, so CI still reruns tasks a change couldn't have affected.
 
-When task time becomes the bottleneck, add Nx on top without changing how pnpm works:
+Add Nx on top when you want any of those, no matter how many packages you have. Cached task results, task ordering across packages, and running only what a change affects, without changing how pnpm works:
 
 ```shell
 npx nx@latest init

@@ -8,19 +8,16 @@ filter: 'type:Features'
 
 {% youtube src="https://youtu.be/aEdfYiA5U34" title="Run tasks with Nx" /%}
 
-In a monorepo setup, you don't just run tasks for a single project; you might have hundreds to manage. To help with this, Nx provides a powerful task runner that allows you to:
+Whether you have one project or hundreds, the Nx task runner lets you:
 
-- easily **run multiple targets** for multiple projects **in parallel**
+- **run multiple targets** for multiple projects **in parallel**
 - define **task pipelines** to run tasks in the correct order
 - only run tasks for **projects affected by a given change**
 - **speed up task execution** with [caching](/docs/features/cache-task-results)
 
 ## Define tasks
 
-Nx tasks can be created from existing `package.json` scripts, [inferred from tooling configuration files](/docs/concepts/mental-model#inferred-tasks), or defined in a `project.json` file. Nx combines these three sources to determine the tasks for a particular project.
-
-{% tabs syncKey="project-config-file" %}
-{% tabitem label="package.json" %}
+The `package.json` scripts you already have are a complete set of tasks. Nx reads them as-is, so a project with a `build` and a `test` script gets a `build` and a `test` target with no further configuration:
 
 ```json
 // libs/mylib/package.json
@@ -33,7 +30,9 @@ Nx tasks can be created from existing `package.json` scripts, [inferred from too
 }
 ```
 
-{% /tabitem %}
+Two optional sources add to that set. A `project.json` file defines targets for projects that have no scripts, and [Nx plugins](/docs/concepts/nx-plugins) infer targets from tooling config files so you maintain fewer scripts. Nx combines all three sources when it determines a project's tasks.
+
+{% tabs %}
 {% tabitem label="project.json" %}
 
 ```json
@@ -55,9 +54,9 @@ Nx tasks can be created from existing `package.json` scripts, [inferred from too
 ```
 
 {% /tabitem %}
-{% tabitem label="Inferred by Nx Plugins" %}
+{% tabitem label="Inferred by Nx plugins" %}
 
-[Nx plugins](/docs/concepts/nx-plugins) can detect your tooling configuration files (e.g. `vite.config.ts` or `.eslintrc.json`) and automatically configure runnable tasks including [Nx cache](/docs/features/cache-task-results). For example, the `@nx/jest` plugin will automatically create a `test` task for a project that uses Jest. The names can be configured in the `nx.json` file:
+A plugin detects your tooling configuration files (for example `vite.config.ts` or `.eslintrc.json`) and configures runnable, cacheable tasks from them. The `@nx/jest` plugin creates a `test` task for a project that uses Jest. Target names are configured in `nx.json`:
 
 ```json
 // nx.json
