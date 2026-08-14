@@ -156,6 +156,140 @@ details in a browser window.
 nx show project my-workspace --web
 ```
 
+{% project_details title="Project Details View" %}
+
+```json
+{
+  "project": {
+    "name": "my-workspace",
+    "data": {
+      "root": ".",
+      "targets": {
+        "eslint:lint": {
+          "cache": true,
+          "options": {
+            "cwd": ".",
+            "command": "eslint ./src"
+          },
+          "inputs": [
+            "default",
+            "{workspaceRoot}/.eslintrc",
+            "{workspaceRoot}/tools/eslint-rules/**/*",
+            {
+              "externalDependencies": ["eslint"]
+            }
+          ],
+          "executor": "nx:run-commands",
+          "configurations": {},
+          "metadata": {
+            "technologies": ["eslint"]
+          }
+        },
+        "next:build": {
+          "options": {
+            "cwd": ".",
+            "command": "next build"
+          },
+          "dependsOn": ["^build"],
+          "cache": true,
+          "inputs": [
+            "default",
+            "^default",
+            {
+              "externalDependencies": ["next"]
+            }
+          ],
+          "outputs": ["{projectRoot}/.next", "{projectRoot}/.next/!(cache)"],
+          "executor": "nx:run-commands",
+          "configurations": {},
+          "metadata": {
+            "technologies": ["next"]
+          }
+        },
+        "dev": {
+          "options": {
+            "cwd": ".",
+            "command": "next dev",
+            "continuous": true
+          },
+          "executor": "nx:run-commands",
+          "configurations": {},
+          "metadata": {
+            "technologies": ["next"]
+          }
+        },
+        "start": {
+          "options": {
+            "cwd": ".",
+            "command": "next start",
+            "continuous": true
+          },
+          "dependsOn": ["build"],
+          "executor": "nx:run-commands",
+          "configurations": {},
+          "metadata": {
+            "technologies": ["next"]
+          }
+        }
+      },
+      "sourceRoot": ".",
+      "name": "my-workspace",
+      "projectType": "library",
+      "implicitDependencies": [],
+      "tags": []
+    }
+  },
+  "sourceMap": {
+    "root": ["package.json", "nx/core/package-json-workspaces"],
+    "targets": ["package.json", "nx/core/package-json-workspaces"],
+    "targets.eslint:lint": [".eslintrc.json", "@nx/eslint/plugin"],
+    "targets.eslint:lint.command": [".eslintrc.json", "@nx/eslint/plugin"],
+    "targets.eslint:lint.cache": [".eslintrc.json", "@nx/eslint/plugin"],
+    "targets.eslint:lint.options": [".eslintrc.json", "@nx/eslint/plugin"],
+    "targets.eslint:lint.inputs": [".eslintrc.json", "@nx/eslint/plugin"],
+    "targets.eslint:lint.options.cwd": [".eslintrc.json", "@nx/eslint/plugin"],
+    "targets.next:build": ["next.config.js", "@nx/next/plugin"],
+    "targets.next:build.command": ["next.config.js", "@nx/next/plugin"],
+    "targets.next:build.options": ["next.config.js", "@nx/next/plugin"],
+    "targets.next:build.dependsOn": ["next.config.js", "@nx/next/plugin"],
+    "targets.next:build.cache": ["next.config.js", "@nx/next/plugin"],
+    "targets.next:build.inputs": ["next.config.js", "@nx/next/plugin"],
+    "targets.next:build.outputs": ["next.config.js", "@nx/next/plugin"],
+    "targets.next:build.options.cwd": ["next.config.js", "@nx/next/plugin"],
+    "targets.dev": ["next.config.js", "@nx/next/plugin"],
+    "targets.dev.command": ["next.config.js", "@nx/next/plugin"],
+    "targets.dev.options": ["next.config.js", "@nx/next/plugin"],
+    "targets.dev.options.cwd": ["next.config.js", "@nx/next/plugin"],
+    "targets.start": ["next.config.js", "@nx/next/plugin"],
+    "targets.start.command": ["next.config.js", "@nx/next/plugin"],
+    "targets.start.options": ["next.config.js", "@nx/next/plugin"],
+    "targets.start.dependsOn": ["next.config.js", "@nx/next/plugin"],
+    "targets.start.options.cwd": ["next.config.js", "@nx/next/plugin"],
+    "sourceRoot": ["package.json", "nx/core/package-json-workspaces"],
+    "name": ["package.json", "nx/core/package-json-workspaces"],
+    "projectType": ["package.json", "nx/core/package-json-workspaces"],
+    "targets.nx-release-publish": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.nx-release-publish.dependsOn": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.nx-release-publish.executor": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.nx-release-publish.options": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ]
+  }
+}
+```
+
+{% /project_details %}
+
 The project detail view lists all available tasks, the configuration values for those tasks and where those
 configuration values are being set.
 
