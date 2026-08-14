@@ -1,6 +1,8 @@
 package dev.nx.gradle
 
 import com.google.gson.Gson
+import dev.nx.gradle.utils.CapturedTaskDependencies
+import dev.nx.gradle.utils.DependsOnIndex
 import dev.nx.gradle.utils.NxTracing
 import dev.nx.gradle.utils.createNodeForProject
 import java.io.File
@@ -37,6 +39,10 @@ abstract class NxProjectReportTask @Inject constructor(private val projectLayout
   @get:Internal // Prevent Gradle from caching this reference
   abstract val projectRef: Property<Project>
 
+  // Task dependencies resolved during the configuration phase; resolving them from here would
+  // deadlock the execution worker. See CapturedTaskDependencies.
+  @get:Internal internal var dependsOnIndex: DependsOnIndex = emptyMap()
+
   init {
     atomized.convention(true)
     targetNamePrefix.convention("")
@@ -58,12 +64,14 @@ abstract class NxProjectReportTask @Inject constructor(private val projectLayout
 
         val project = projectRef.get()
         val report =
-            createNodeForProject(
-                project,
-                targetNameOverrides.get(),
-                workspaceRoot.get(),
-                atomized.get(),
-                targetNamePrefix.get())
+            CapturedTaskDependencies.withIndex(dependsOnIndex) {
+              createNodeForProject(
+                  project,
+                  targetNameOverrides.get(),
+                  workspaceRoot.get(),
+                  atomized.get(),
+                  targetNamePrefix.get())
+            }
         val reportJson = gson.toJson(report)
 
         if (outputFile.exists() && outputFile.readText() == reportJson) {
