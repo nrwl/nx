@@ -1,11 +1,10 @@
 import { join } from 'path';
 import { existsSync } from 'fs';
-import { spawn } from 'child_process';
 import { logger, readJsonFile } from '@nx/devkit';
 import { MavenAnalysisData, MavenPluginOptions } from './types';
 import { detectMavenExecutable } from '../utils/detect-maven-executable';
 import treeKill from 'tree-kill';
-import { isCI, workspaceDataDirectory } from '@nx/devkit/internal';
+import { isCI, safeSpawn, workspaceDataDirectory } from '@nx/devkit/internal';
 
 const DEFAULT_ANALYSIS_TIMEOUT_SECONDS = isCI() ? 600 : 120;
 
@@ -101,10 +100,8 @@ export async function runMavenAnalysis(
   logger.verbose(`[Maven Analyzer] Spawning Maven process...`);
   try {
     await new Promise<void>((resolve, reject) => {
-      const child = spawn(mavenExecutable, mavenArgs, {
+      const child = safeSpawn(mavenExecutable, mavenArgs, {
         cwd: workspaceRoot,
-        windowsHide: true,
-        shell: true,
         stdio: 'pipe', // Always use pipe so we can control output
       });
 

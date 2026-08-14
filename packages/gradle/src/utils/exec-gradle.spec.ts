@@ -145,3 +145,71 @@ describe('exec gradle', () => {
     });
   });
 });
+
+describe('execGradleAsync', () => {
+  afterEach(() => {
+    jest.resetModules();
+    jest.restoreAllMocks();
+  });
+
+  function loadWithMockedSpawn() {
+    let captured: any;
+    jest.doMock('@nx/devkit/internal', () => ({
+      ...jest.requireActual('@nx/devkit/internal'),
+      safeSpawn: jest.fn((binary, args, options) => {
+        captured = { binary, args, options };
+        const EventEmitter = require('events');
+        const cp: any = new EventEmitter();
+        cp.stdout = new EventEmitter();
+        cp.stderr = new EventEmitter();
+        setImmediate(() => cp.emit('exit', 0, null));
+        return cp;
+      }),
+    }));
+    const { execGradleAsync } = require('./exec-gradle');
+    return { execGradleAsync, getCaptured: () => captured };
+  }
+
+  // NXC-4659: gradle plugin options are interpolated into `-Pkey=value`, so a
+  // shell here would make nx.json command-injectable.
+  it('should pass args literally without a shell', async () => {
+    const { execGradleAsync, getCaptured } = loadWithMockedSpawn();
+    const malicious = '-PtargetNamePrefix=x; touch /tmp/pwned';
+
+    await execGradleAsync('/ws/gradlew', ['nxProjectGraph', malicious]);
+
+    const captured = getCaptured();
+    expect(captured.options.shell).toBeUndefined();
+    expect(captured.args).toEqual(['nxProjectGraph', malicious]);
+  });
+
+  // Without a shell the child is gradlew itself, so spawn can fail outright and
+  // Node emits `error` instead of `exit`.
+  it('should reject when the spawn itself fails', async () => {
+    let captured: any;
+    jest.doMock('@nx/devkit/internal', () => ({
+      ...jest.requireActual('@nx/devkit/internal'),
+      safeSpawn: jest.fn(() => {
+        const EventEmitter = require('events');
+        const cp: any = new EventEmitter();
+        cp.stdout = new EventEmitter();
+        cp.stderr = new EventEmitter();
+        setImmediate(() => cp.emit('error', new Error('spawn EACCES')));
+        return cp;
+      }),
+    }));
+    const { execGradleAsync } = require('./exec-gradle');
+
+    await expect(
+      execGradleAsync('/ws/gradlew', ['nxProjectGraph'])
+    ).rejects.toThrow('spawn EACCES');
+  });
+
+  it('should drop empty args the shell used to swallow', async () => {
+    const { execGradleAsync, getCaptured } = loadWithMockedSpawn();
+
+    await execGradleAsync('/ws/gradlew', ['nxProjectGraph', '']);
+
+    expect(getCaptured().args).toEqual(['nxProjectGraph']);
+  });
+});
