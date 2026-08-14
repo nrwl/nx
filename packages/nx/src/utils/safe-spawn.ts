@@ -8,10 +8,13 @@ import {
 import { win32 } from 'path';
 import { quoteShellArg } from './shell-quoting';
 
-// Node cannot launch a Windows `.cmd`/`.bat` shim without a shell, and a bare
-// name like `mvn` needs one to be resolved through PATHEXT. Everything else —
-// including a `.exe` — spawns directly, so the shell and the quoting below
-// reach only the invocations that cannot do without them.
+// Node refuses to launch a Windows `.cmd`/`.bat` shim without a shell
+// (CVE-2024-27980). A bare name takes the shell for the same reason, one step
+// removed: libuv walks PATH and PATHEXT itself, so no shell is needed to *find*
+// the binary — but the walk may land on a `.cmd`/`.bat`, and this cannot know
+// which in advance, so it is deliberately conservative. Everything else,
+// including a `.exe`, spawns directly, so the shell and the quoting below reach
+// only the invocations that cannot do without them.
 //
 // Deliberately a function: a module-level const is fixed at import time, which
 // would make the Windows branch untestable.
@@ -30,21 +33,35 @@ function needsShell(binary: string): boolean {
 // one.
 //
 // `%` is deliberately NOT refused, and this is a known gap rather than a safe
-// case. cmd.exe expands `%VAR%` before it parses separators, and `quoteShellArg`
-// does not count `%` as needing quotes, so a value carrying `%` and nothing else
-// reaches cmd unquoted; `bin/nx.ts` loads the workspace's own `.env` before the
-// graph is built, so a repo can set the variable too. Refusing it is what an
-// earlier revision did, and it made any workspace under a `%` path — a legal
-// Windows directory name — unusable. The gap is bounded by the same argument
-// that bounds this whole class: a repo that can reach here already has `mvnw` /
-// `pom.xml` executing on its behalf.
+// case. cmd.exe expands `%VAR%` whether or not the value is quoted — see
+// `quoteShellArg`'s own docstring in ./shell-quoting, which says so and pins it
+// with a test — so quoting contains nothing here. It applies to the binary path
+// as much as to the arguments, and an expansion yielding a `"` defeats the
+// literal-quote refusal below, because that inspects the pre-expansion bytes.
+// `bin/nx.ts` loads the workspace's own `.env` before the graph is built, so a
+// repo can set the variable too.
+//
+// Refusing `%` is what an earlier revision did, and it made any workspace under
+// a `%` path — a legal Windows directory name — fail graph construction. The gap
+// is bounded by the argument that bounds this whole class: a repo that can reach
+// here already has `mvnw` / `pom.xml` executing on its behalf. Closing it
+// properly is tracked as NXC-4798.
 const LINE_BREAK = /[\r\n]/;
 
 /**
- * Spawn a process without letting its arguments become shell syntax.
+ * Spawn a binary that may be a Windows `.cmd`/`.bat` shim, without letting its
+ * arguments become shell syntax.
  *
- * @throws on Windows if the binary or an argument cannot be safely quoted for
- * cmd.exe.
+ * Off Windows, and for a `.exe`, no shell is involved at all. Where one is —
+ * a shim or a bare name — the binary and every argument are quoted for cmd.exe.
+ *
+ * Not a complete guarantee: cmd.exe expands `%VAR%` in the binary or any
+ * argument whether or not it is quoted, so a caller with untrusted arguments
+ * inherits that gap (NXC-4798). See the note on `LINE_BREAK` above.
+ *
+ * @throws on Windows when the binary or an argument contains a line break, or a
+ * literal `"` (via `quoteShellArg`). Those are the only refusals — the `%`
+ * expansion above is not one of them.
  */
 export function safeSpawn(
   binary: string,
@@ -61,6 +78,9 @@ export function safeSpawn(
 
 /**
  * Synchronous {@link safeSpawn}, returning the child's stdout.
+ *
+ * Carries the same Windows caveats: `%VAR%` is expanded quoted or not
+ * (NXC-4798), and a line break or literal `"` throws.
  */
 export function safeExecFileSync(
   binary: string,
@@ -78,8 +98,7 @@ export function safeExecFileSync(
 }
 
 // The binary needs quoting too: Node joins it into the same command line, so a
-// path holding a space or an `&` would split there. It is a filesystem path
-// rather than configuration, so only a line break is refused.
+// path holding a space or an `&` would split there.
 function quoteBinary(binary: string, shell: boolean): string {
   if (!shell) {
     return binary;
@@ -87,10 +106,10 @@ function quoteBinary(binary: string, shell: boolean): string {
   return quoteForCmd(binary, `the path ${JSON.stringify(binary)}`);
 }
 
-function quoteForCmd(value: string, described: string): string {
+function quoteForCmd(value: string, described: string, remedy = ''): string {
   if (LINE_BREAK.test(value)) {
     throw new Error(
-      `Cannot pass ${described} to cmd.exe: a line break inside it would end the command line before cmd.exe reached the rest of it.`
+      `Cannot pass ${described} to cmd.exe: a line break inside it would end the command line before cmd.exe reached the rest of it.${remedy}`
     );
   }
   return quoteShellArg(value);
@@ -101,6 +120,10 @@ function quoteArgs(args: readonly string[], shell: boolean): string[] {
     return [...args];
   }
   return args.map((arg) =>
-    quoteForCmd(arg, `the argument ${JSON.stringify(arg)}`)
+    quoteForCmd(
+      arg,
+      `the argument ${JSON.stringify(arg)}`,
+      ' Remove it from your Nx configuration and try again.'
+    )
   );
 }

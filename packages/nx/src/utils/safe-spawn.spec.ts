@@ -75,8 +75,9 @@ describe('safeSpawn', () => {
     expect((spawn as jest.Mock).mock.calls[0][2].shell).toBe(true);
   });
 
-  // A percent sign is legal in a Windows directory name, and the binary is a
-  // filesystem path rather than configuration — quoted, not refused.
+  // A percent sign is legal in a Windows directory name; refusing it broke
+  // every workspace under such a path. Quoted, not refused — and, per the note
+  // in safe-spawn.ts, quoting does not stop cmd expanding it.
   it('allows a percent sign in the binary path on Windows', () => {
     setPlatform('win32');
 
