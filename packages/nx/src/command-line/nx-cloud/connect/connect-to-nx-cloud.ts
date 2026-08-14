@@ -1,5 +1,6 @@
 import { join } from 'path';
 import { handleImport } from '../../../utils/handle-import';
+import { askChoice } from '../../../utils/prompt-helpers';
 import { output } from '../../../utils/output';
 import { readNxJson } from '../../../config/configuration';
 import { FsTree, flushChanges } from '../../../generators/tree';
@@ -311,25 +312,18 @@ async function nxCloudPrompt(
 ): Promise<MessageOptionKey> {
   const { message, choices, initial, footer, hint } = messages.getPrompt(key);
 
-  const promptConfig = {
-    name: 'NxCloud',
-    message,
-    type: 'autocomplete',
-    choices,
-    initial,
-  } as any; // meeroslav: types in enquirer are not up to date
-  if (footer) {
-    promptConfig.footer = () =>
-      pc.dim(`${footer} ${nxCloudHyperlink(utmContent)}`);
-  }
-  if (hint) {
-    promptConfig.hint = () => pc.dim(hint);
-  }
+  // No separate footer/hint slot, so both are folded into the message.
+  const suffix = [hint, footer && `${footer} ${nxCloudHyperlink(utmContent)}`]
+    .filter(Boolean)
+    .map((t) => pc.dim(t));
 
-  const enquirer = await handleImport('enquirer');
-  return await enquirer
-    .prompt([promptConfig])
-    .then((a: { NxCloud: MessageOptionKey }) => {
-      return a.NxCloud;
-    });
+  return (await askChoice({
+    message: [message, ...suffix].join('\n'),
+    choices: (choices as any[]).map((c) =>
+      typeof c === 'string'
+        ? { value: c, label: c }
+        : { value: c.name ?? c.value, label: c.message ?? c.name ?? c.value }
+    ),
+    initial: (choices as any[])[initial ?? 0]?.name,
+  })) as MessageOptionKey;
 }
