@@ -58,7 +58,9 @@ function createTestProject() {
   });
 
   execSync(
-    `<%= packageManagerCommands.dlx %> create-nx-workspace@latest ${projectName} --preset apps --nxCloud=skip --no-interactive`,
+    // Pin the package manager: left to detection it can pick a different one
+    // than the commands above install and inspect the plugin with.
+    `<%= packageManagerCommands.dlx %> create-nx-workspace@latest ${projectName} --preset apps --nxCloud=skip --no-interactive --packageManager=<%= packageManager %>`,
     {
       cwd: dirname(projectDirectory),
       stdio: 'inherit',

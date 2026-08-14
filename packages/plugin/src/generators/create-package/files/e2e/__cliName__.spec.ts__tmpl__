@@ -21,8 +21,9 @@ describe('<%= cliName %>', () => {
   it('should be installed', () => {
     projectDirectory = createTestProject();
 
-    // npm ls will fail if the package is not installed properly
-    execSync('<%= packageManagerCommands.list %> <%= pluginPackageName %>', {
+    // npm ls will fail if the package is not installed properly. npm, not the
+    // workspace's package manager: bin/index.ts creates the project with npm.
+    execSync('npm ls <%= pluginPackageName %>', {
       cwd: projectDirectory,
       stdio: 'inherit',
     });

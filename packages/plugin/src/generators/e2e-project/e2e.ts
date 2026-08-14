@@ -7,6 +7,7 @@ import {
   ensurePackage,
   formatFiles,
   generateFiles,
+  detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
   names,
@@ -118,6 +119,7 @@ function addFiles(host: Tree, options: NormalizedSchema) {
     tmpl: '',
     rootTsConfigPath: getRelativePathToRootTsConfig(host, options.projectRoot),
     packageManagerCommands: getPackageManagerCommand(),
+    packageManager: detectPackageManager(host.root),
     pluginPackageName,
     simplePluginName,
   });
