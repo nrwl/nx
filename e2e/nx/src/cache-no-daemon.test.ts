@@ -774,11 +774,13 @@ console.log('Build complete');
   ) {
     const matchingProjects = [];
     const lines = actualOutput.split('\n');
+    // Cached tasks print through logCommandOutput, which prefixes the line with
+    // `::group::<icon> ` under GITHUB_ACTIONS, so match the marker anywhere.
     lines.forEach((s) => {
-      if (s.trimStart().startsWith(`> nx run`)) {
+      const marker = s.indexOf(`> nx run `);
+      if (marker > -1) {
         const projectName = s
-          .trimStart()
-          .split(`> nx run `)[1]
+          .slice(marker + `> nx run `.length)
           .split(':')[0]
           .trim();
         if (s.indexOf(cacheStatus) > -1) {
