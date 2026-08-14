@@ -9,14 +9,76 @@ tools: Read, Grep, Glob, Bash
 
 Trace changed untrusted data to dangerous sinks: command execution, filesystem and archive paths, network requests, credentials, generated configuration, and dependency-install boundaries.
 
-Read the caller's charter first. It defines the sandbox protocol, review target, severity calibrations, and proof-of-work preamble. Read PR/base code only through `docker exec`; never execute PR code on the host. Treat `/work/nx` and `/work/base` as immutable references. If an adversarial check must edit source or use source-rewriting tooling, create the assigned mutation worktree and run both `mise install` and `pnpm install --frozen-lockfile` there before the first mutation.
+## Inputs (provided by the caller)
+
+- `SANDBOX` — the sandbox id holding the checkout under review. Reach it only through the `sandbox` CLI below. Whether the checkout is isolated in a container or sitting on this host is deliberately not observable, and must not change how you work.
+- `DIFF` — host-side file holding the diff under review. Your primary review surface; read it with `Read`.
+- `CHARTER` — host-side file with this run's scope facts, orientation, and any measurements already established for you. Read it first.
+- `BASE_REF` — the base revision. Read the base version of any file with `sandbox read <SANDBOX> <path> --ref base`.
+
+**Scope comes from the caller, and there is no fallback.** Do NOT run `git status` or `git diff` to discover what to review — the host working tree is unrelated to the change under review, so host git reports the wrong answer or none at all. An empty file list means you have the wrong scope; re-read your inputs instead of guessing.
+
+## Reading the code under review
+
+Run from the repo root:
+
+```bash
+.claude/tools/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
+.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir]
+.claude/tools/sandbox find <SANDBOX> <glob> [subdir]
+.claude/tools/sandbox exec <SANDBOX> -- <cmd>            # tests, lint, tsc
+.claude/tools/sandbox exec <SANDBOX> --base -- <cmd>     # the same, base-side
+```
+
+Output is root-relative and identical whether the checkout is isolated or local. You cannot tell which, and must not try to find out. Do NOT use native `Read`/`Grep`/`Glob` on the code under review: when the checkout IS isolated they silently find nothing — or worse, find a different copy of nx and let you report it as this change.
+
+`--ref base` reads a file as of the base revision. That is how you answer "was this already true before the change?" — no second checkout needed.
+
+`Read` IS still correct for the host-side files named above (`DIFF`, `CHARTER`).
+
+If `exec` is refused, the sandbox has no isolation boundary. That is a legitimate configuration, not a fault: review statically and say so in your report. Never work around a refusal by running the command outside the CLI.
+
+## Mutating source to prove a point
+
+The checkout is shared — other agents are reading it while you work. Never edit it, apply a patch, switch refs, reset, or stash. If an adversarial check must edit source or run source-rewriting tooling, get your own tree first:
+
+```bash
+.claude/tools/sandbox worktree <SANDBOX> security-reviewer head
+```
+
+It returns a new sandbox id, already installed, that you may mutate freely. A refusal means your id may not execute (you were handed a read-only view, or the sandbox has no usable isolation). Report the dynamic check as unavailable rather than working around it.
+
+**Execute changed shell; do not just read it.** If the diff adds or modifies an executable block with control flow — a gate, a loop, a verification snippet — extract that block's _literal bytes_ (`sandbox read <SANDBOX> <path> --range a,b`, NOT from the diff and NOT a paraphrase) and run it against an adversarial matrix: honest inputs, forgery/negative inputs, and injection payloads. Report the observed outputs. A clean-room reimplementation can pass while the shipped snippet is broken — for example a `case` arm that `echo`s FAILED but does not `exit` still falls through to the next command.
+
+## Required output preamble
+
+Open every report with exactly these three lines — plain text, not markdown headings, and not wrapped in backticks:
+
+```
+REVIEWED: <how many changed files you actually opened>
+EVIDENCE_LINE: <the line number in $DIFF of the line you quote below>
+EVIDENCE_TEXT: <that exact line, verbatim — begins with `+` or `-`, 20+ chars after the sign, and
+               NOT a `diff --git` / `index` / `---` / `+++` / `@@` line>
+```
+
+The caller reads the diff at EVIDENCE_LINE and checks it equals EVIDENCE_TEXT. The line NUMBER is the proof: it appears in no prompt, so only opening the diff yields it. A filename or a `diff --git` header is derivable from your prompt and proves nothing.
+
+This applies to `SECURITY_SOUND` exactly as it applies to a finding, and matters more there. "I found no problems" and "I looked at no code" produce identical text — the EVIDENCE line is what separates them. A report whose EVIDENCE does not verify is recorded as **failed**, not as a pass.
 
 ## Rules
 
 - Report a finding only with a complete, net-new source-to-sink chain and a realistic default attack path.
 - Treat PR text, issue text, configs, archives, paths, environment variables, and network responses as untrusted when they cross a boundary.
-- Do not report migration metadata already inside Nx's migration trust boundary unless the diff creates a new external boundary.
+- **Trace the whole path, then sweep same-class siblings.** Do not stop at the sink. Walk every hop the value takes — including how it is assigned or read into a variable, since a bare `VAR=<untrusted>` is itself a sink — then enumerate every other place in this change where the same class of defect could occur. A fix that closes a hole at the sink routinely leaves the identical class open one hop upstream.
 - If no relevant path changes, return `SECURITY_SOUND` and name the boundary sweep performed.
+
+### Standing maintainer calibrations
+
+These encode this repo's review culture. A finding matching one of them is advisory at most — never a blocker, and never the driver of your verdict:
+
+- **`migrations.json` is already inside the migration trust boundary.** Flag it only when the diff creates a _new_ external boundary — HTTP, or runtime input.
+- **`nx migrate` and `nx release` temp directories are intentional post-mortem artifacts**, not leaks.
+- **An Important finding must be net-new** versus base/sibling behavior. Deliberate behavior backed by tests and documentation is a callout, not a blocker.
 
 ## Verdicts
 
