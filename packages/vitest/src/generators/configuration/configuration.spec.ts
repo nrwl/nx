@@ -68,6 +68,59 @@ describe('@nx/vitest:configuration', () => {
     `);
   });
 
+  it.each([[undefined], [true]])(
+    'should emit passWithNoTests in the project config only when requested (%s)',
+    async (passWithNoTests) => {
+      setVitestVersion('~4.1.0');
+
+      await configurationGenerator(tree, {
+        project: 'mylib',
+        uiFramework: 'none',
+        coverageProvider: 'v8',
+        passWithNoTests,
+        skipPackageJson: true,
+        addPlugin: false,
+        skipFormat: true,
+      });
+
+      const config = tree.read('libs/mylib/vitest.config.mts', 'utf-8');
+      if (passWithNoTests) {
+        expect(config).toContain('passWithNoTests: true');
+      } else {
+        expect(config).not.toContain('passWithNoTests');
+      }
+    }
+  );
+
+  it('should add passWithNoTests to a pre-existing vite config', async () => {
+    setVitestVersion('~4.1.0');
+    tree.write(
+      'libs/mylib/vite.config.mts',
+      `import { defineConfig } from 'vite';
+
+export default defineConfig({
+  test: {
+    globals: true,
+  },
+});
+`
+    );
+
+    await configurationGenerator(tree, {
+      project: 'mylib',
+      uiFramework: 'none',
+      coverageProvider: 'v8',
+      passWithNoTests: true,
+      skipPackageJson: true,
+      addPlugin: false,
+      skipFormat: true,
+    });
+
+    expect(tree.read('libs/mylib/vite.config.mts', 'utf-8')).toContain(
+      `'passWithNoTests': true`
+    );
+  });
+
   it('should create a root vitest.workspace.mts for vitest 3', async () => {
     setVitestVersion('^3.0.0');
 

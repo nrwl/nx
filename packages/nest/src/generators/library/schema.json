@@ -36,7 +36,7 @@
     "unitTestRunner": {
       "description": "Test runner to use for unit tests.",
       "type": "string",
-      "enum": ["jest", "none"],
+      "enum": ["jest", "vitest", "none"],
       "default": "none",
       "x-prompt": "Which unit test runner would you like to use?",
       "x-priority": "important"
@@ -89,7 +89,7 @@
       "default": false
     },
     "testEnvironment": {
-      "description": "The test environment for jest, for node applications this should stay as node unless doing DOM testing.",
+      "description": "The test environment for the unit test runner. For node applications this should stay as node unless doing DOM testing.",
       "type": "string",
       "enum": ["jsdom", "node"],
       "default": "node"

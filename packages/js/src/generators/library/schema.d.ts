@@ -36,6 +36,8 @@ export interface LibraryGeneratorSchema {
   addPlugin?: boolean;
   useProjectJson?: boolean;
   useTscExecutor?: boolean;
+  /** @internal Only honored by the vitest setup. */
+  passWithNoTests?: boolean;
 }
 
 export interface NormalizedLibraryGeneratorOptions
