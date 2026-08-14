@@ -10,6 +10,7 @@ import { gitDependenciesLockFile } from './__fixtures__/bun/git-dependencies.bun
 import { hoistedAndNestedBunLock } from './__fixtures__/bun/hoisted-and-nested.bun.lock';
 import { largeProjectBunLock } from './__fixtures__/bun/large-project.bun.lock';
 import { nextjsAppBunLock } from './__fixtures__/bun/nextjs-app.bun.lock';
+import { nestedOverridesBunLock } from './__fixtures__/bun/nested-overrides.bun.lock';
 import { peerDependenciesMetaLockFile } from './__fixtures__/bun/peer-dependencies-meta.bun.lock';
 import { scopedPackagesBunLock } from './__fixtures__/bun/scoped-packages.bun.lock';
 import { tarballDependenciesLockFile } from './__fixtures__/bun/tarball-dependencies.bun.lock';
@@ -43,6 +44,7 @@ const PEER_LOCK_FILE_HASH = 'peer-hash';
 const ENHANCED_LOCK_FILE_HASH = 'enhanced-hash';
 const ALIAS_LOCK_FILE_HASH = 'alias-hash';
 const HOISTED_NESTED_LOCK_FILE_HASH = 'hoisted-nested-hash';
+const NESTED_OVERRIDES_LOCK_FILE_HASH = 'nested-overrides-hash';
 
 describe('Bun Parser', () => {
   beforeEach(() => {
@@ -1287,8 +1289,8 @@ describe('Bun Parser', () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
       try {
-        // Versions this parser was written against (0, 1 and 2) parse silently
-        for (const version of ['0', '1', '2']) {
+        // Versions this parser was written against (0 to 3) parse silently
+        for (const version of ['0', '1', '2', '3']) {
           expect(() => {
             getBunTextLockfileNodes(
               lockFileWithVersion(version),
@@ -1300,11 +1302,11 @@ describe('Bun Parser', () => {
 
         // Newer versions are parsed with a warning instead of failing
         expect(() => {
-          getBunTextLockfileNodes(lockFileWithVersion('3'), 'version3-hash');
+          getBunTextLockfileNodes(lockFileWithVersion('4'), 'version4-hash');
         }).not.toThrow();
         expect(warnSpy).toHaveBeenCalledTimes(1);
         expect(warnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('lockfileVersion 3')
+          expect.stringContaining('lockfileVersion 4')
         );
 
         // Negative and non-integer versions are rejected
@@ -1349,6 +1351,44 @@ describe('Bun Parser', () => {
 
       expect(Object.keys(version2Nodes).length).toBeGreaterThan(0);
       expect(version2Nodes).toEqual(version1Nodes);
+    });
+
+    it('should parse lockfileVersion 3 with nested and version-scoped overrides', () => {
+      // Written by Bun with `"overrides": { "no-deps": "1.0.0", "one-dep": { "no-deps": "1.1.0" }, "one-range-dep@1": { "no-deps": "2.0.0" } }`
+      expect(nestedOverridesBunLock).toContain('"lockfileVersion": 3');
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        const result = getBunTextLockfileNodes(
+          nestedOverridesBunLock,
+          NESTED_OVERRIDES_LOCK_FILE_HASH
+        );
+
+        expect(warnSpy).not.toHaveBeenCalled();
+        expect(Object.keys(result).sort()).toMatchInlineSnapshot(`
+          [
+            "npm:no-deps",
+            "npm:no-deps@1.0.0",
+            "npm:no-deps@1.1.0",
+            "npm:no-deps@2.0.0",
+            "npm:one-dep",
+            "npm:one-dep@1.0.0",
+            "npm:one-range-dep",
+            "npm:one-range-dep@1.0.0",
+          ]
+        `);
+
+        // the flat override decides the hoisted version, the nested ones
+        // produce the additional versions
+        expect(result['npm:no-deps'].data.version).toBe('1.0.0');
+        expect(result['npm:no-deps@1.0.0'].data.version).toBe('1.0.0');
+        expect(result['npm:no-deps@1.1.0'].data.version).toBe('1.1.0');
+        expect(result['npm:no-deps@2.0.0'].data.version).toBe('2.0.0');
+        expect(result['npm:one-dep/no-deps']).toBeUndefined();
+        expect(result['npm:one-range-dep/no-deps']).toBeUndefined();
+      } finally {
+        warnSpy.mockRestore();
+      }
     });
 
     it('should handle alias dependencies', () => {
@@ -2234,6 +2274,74 @@ describe('Bun Parser', () => {
           type: 'static',
         },
       ]);
+    });
+
+    it('should handle dependencies from a lockfileVersion 3 lockfile with nested overrides', () => {
+      const externalNodes = getBunTextLockfileNodes(
+        nestedOverridesBunLock,
+        NESTED_OVERRIDES_LOCK_FILE_HASH
+      );
+
+      const ctx: CreateDependenciesContext = {
+        projects: {
+          '': {
+            name: 'nested-overrides-test',
+            root: '',
+          },
+        },
+        externalNodes,
+        fileMap: {
+          projectFileMap: {
+            '': [
+              {
+                file: 'bun.lock',
+                hash: NESTED_OVERRIDES_LOCK_FILE_HASH,
+              },
+            ],
+          },
+          nonProjectFiles: [
+            {
+              file: 'bun.lock',
+              hash: NESTED_OVERRIDES_LOCK_FILE_HASH,
+            },
+          ],
+        },
+        filesToProcess: {
+          nonProjectFiles: [
+            {
+              file: 'bun.lock',
+              hash: NESTED_OVERRIDES_LOCK_FILE_HASH,
+            },
+          ],
+          projectFileMap: {},
+        },
+        nxJsonConfiguration: {},
+        workspaceRoot: '/root',
+      };
+
+      const result = getBunTextLockfileDependencies(
+        nestedOverridesBunLock,
+        NESTED_OVERRIDES_LOCK_FILE_HASH,
+        ctx
+      );
+
+      // Both packages declare "no-deps": "^1.0.0"; the "one-dep/no-deps" and
+      // "one-range-dep/no-deps" entries record what each one was resolved to
+      // by its override, the latter outside of the declared range.
+      expect(result).toMatchInlineSnapshot(`
+        [
+          {
+            "source": "npm:one-dep@1.0.0",
+            "target": "npm:no-deps@1.1.0",
+            "type": "static",
+          },
+          {
+            "source": "npm:one-range-dep@1.0.0",
+            "target": "npm:no-deps@2.0.0",
+            "type": "static",
+          },
+        ]
+      `);
     });
 
     it('should handle dependencies with hoisted and nested packages', () => {

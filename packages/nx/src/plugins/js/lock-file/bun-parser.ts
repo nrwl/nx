@@ -13,10 +13,16 @@ import {
 } from '../../../project-graph/project-graph-builder';
 import { parseJson } from '../../../utils/json';
 
-// Highest bun.lock version this parser has been verified against. Bun bumps
-// the version for changes to its own parse-time validation, so newer versions
-// are parsed on a best-effort basis instead of being rejected outright.
-const MAX_KNOWN_LOCKFILE_VERSION = 2;
+// Highest bun.lock version this parser has been verified against:
+// - 1: workspace packages are no longer listed with their dependencies
+// - 2: identical content, stricter validation in Bun's own reader
+// - 3: values in "overrides" may be objects holding rules scoped to a parent
+//      package (`"parent": { "child": "1.0.0" }`) and keys may carry a version
+//      selector (`"parent@1"`, `"child@<2"`). This parser never reads
+//      "overrides"; the resolved packages are listed in "packages" as before.
+// Newer versions are parsed on a best-effort basis instead of being rejected
+// outright.
+const MAX_KNOWN_LOCKFILE_VERSION = 3;
 
 const DEPENDENCY_TYPES = [
   'dependencies',
@@ -30,8 +36,16 @@ const DEPENDENCY_TYPES = [
  * Based on comprehensive analysis of bun.lock.zig source code
  */
 interface BunLockFile {
-  /** Version of the lockfile format (0, 1 or 2 as of Bun 1.4) */
+  /** Version of the lockfile format (0 to 3 as of Bun 1.4) */
   lockfileVersion: number;
+
+  /**
+   * Version rules from the root package.json "overrides"/"resolutions".
+   * Values are version specs, or (lockfileVersion 3) objects of rules scoped
+   * to the dependencies of the package named by the key. Not used by this
+   * parser: the resolutions they produce are already reflected in `packages`.
+   */
+  overrides?: Record<string, string | Record<string, string>>;
 
   /**
    * Workspaces configuration - maps workspace paths to their dependencies
@@ -997,11 +1011,12 @@ function processPackageForDependencies(
 
     const depDependencies = processDependencyEntries(
       deps,
+      packageKey,
       sourceNodeName,
+      lockFile,
       index,
       ctx,
-      workspacePackages,
-      lockFile.manifests
+      workspacePackages
     );
     dependencies.push(...depDependencies);
   }
@@ -1033,11 +1048,12 @@ function extractPackageDependencies(
 
 function processDependencyEntries(
   deps: Record<string, string>,
+  sourcePackageKey: string,
   sourceNodeName: string,
+  lockFile: BunLockFile,
   index: PackageIndex,
   ctx: CreateDependenciesContext,
-  workspacePackages: Set<string>,
-  manifests?: BunLockFile['manifests']
+  workspacePackages: Set<string>
 ): RawProjectGraphDependency[] {
   const dependencies: RawProjectGraphDependency[] = [];
   const depsEntries = Object.entries(deps);
@@ -1047,11 +1063,12 @@ function processDependencyEntries(
       const dependency = processSingleDependency(
         packageName,
         versionSpec,
+        sourcePackageKey,
         sourceNodeName,
+        lockFile,
         index,
         ctx,
-        workspacePackages,
-        manifests
+        workspacePackages
       );
 
       if (dependency) {
@@ -1068,11 +1085,12 @@ function processDependencyEntries(
 function processSingleDependency(
   packageName: string,
   versionSpec: string,
+  sourcePackageKey: string,
   sourceNodeName: string,
+  lockFile: BunLockFile,
   index: PackageIndex,
   ctx: CreateDependenciesContext,
-  workspacePackages: Set<string>,
-  manifests?: BunLockFile['manifests']
+  workspacePackages: Set<string>
 ): RawProjectGraphDependency | null {
   if (typeof packageName !== 'string' || typeof versionSpec !== 'string') {
     return null;
@@ -1090,8 +1108,19 @@ function processSingleDependency(
   let targetPackageName = packageName;
   let targetVersion = versionSpec;
 
-  const aliasTarget = resolveAliasTarget(versionSpec);
-  if (aliasTarget) {
+  // A "<parent>/<name>" entry records what this parent actually resolved the
+  // dependency to. Overrides scoped to a parent (bun.lock v3) can pick a
+  // version outside the declared range, so it takes precedence over matching
+  // the range against the versions in the lockfile.
+  const nestedVersion = resolveNestedVersion(
+    sourcePackageKey,
+    packageName,
+    lockFile
+  );
+  const aliasTarget = nestedVersion ? null : resolveAliasTarget(versionSpec);
+  if (nestedVersion) {
+    targetVersion = nestedVersion;
+  } else if (aliasTarget) {
     targetPackageName = aliasTarget.packageName;
     targetVersion = aliasTarget.version;
   } else {
@@ -1100,7 +1129,7 @@ function processSingleDependency(
       packageName,
       versionSpec,
       index,
-      manifests
+      lockFile.manifests
     );
 
     if (!resolvedVersion) {
@@ -1132,6 +1161,25 @@ function processSingleDependency(
   } catch (e) {
     return null;
   }
+}
+
+function resolveNestedVersion(
+  sourcePackageKey: string,
+  packageName: string,
+  lockFile: BunLockFile
+): string | null {
+  const nestedEntry = lockFile.packages[`${sourcePackageKey}/${packageName}`];
+  if (!Array.isArray(nestedEntry) || typeof nestedEntry[0] !== 'string') {
+    return null;
+  }
+
+  const { name, version } = getCachedSpecInfo(nestedEntry[0]);
+  // aliases ("alias@npm:real@1.0.0") are resolved to the real package by the caller
+  if (name !== packageName || !version || version.startsWith('npm:')) {
+    return null;
+  }
+
+  return version;
 }
 
 function resolveTargetNodeName(
