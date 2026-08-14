@@ -115,7 +115,7 @@ Hoisting means a workspace can import a dependency it never declared, which brea
 
 No. Yarn workspaces install and link packages, `foreach -t` orders scripts, and `--since` selects workspaces changed since a git ref, but nothing is cached and that change detection compares files, not task inputs, so CI still reruns tasks a change couldn't have affected.
 
-Add Nx on top for caching, task ordering, or affected runs, at any workspace size. Yarn keeps doing what it does:
+Add Nx on top of Yarn for task caching, task pipeline orchestration, and affected runs, at any workspace size:
 
 ```shell
 npx nx@latest init

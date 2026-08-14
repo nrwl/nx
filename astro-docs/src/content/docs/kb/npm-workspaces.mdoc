@@ -88,7 +88,7 @@ Hoisting has a downside: any package can import any hoisted dependency, includin
 
 No. npm workspaces install and link packages, but they don't order tasks by dependency, cache results, or detect which projects a commit affects, so CI reruns every task on every push. Workspaces solve linking, and a build tool solves orchestration.
 
-Add Nx on top for any of those three, at whatever size your workspace is today. It doesn't change how npm works:
+Add Nx on top of npm for task caching, task pipeline orchestration, and affected runs, at any workspace size:
 
 ```shell
 npx nx@latest init
