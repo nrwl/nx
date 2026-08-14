@@ -133,7 +133,10 @@ A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter mus
 nx g @nx/angular:app apps/my-app
 ```
 
-By default, Nx configures ESLint for linting, Jest for unit tests, and Cypress for e2e tests. Read more of the options available for the application generator in the [Angular application generators reference](/docs/technologies/angular/generators#application).
+Nx configures the linter your workspace already uses and Playwright for e2e tests.
+Unit tests use Vitest on Angular 21 and later. Earlier versions use Jest.
+Read more of the options available for the application generator in the
+[Angular application generators reference](/docs/technologies/angular/generators#application).
 
 ```shell
 nx serve my-app
@@ -149,7 +152,10 @@ nx e2e my-app
 nx g @nx/angular:lib libs/my-lib
 ```
 
-By default, Nx configures ESLint for linting, Jest for unit tests. Read more of the options available for the application generator in the [angular library generators reference](/docs/technologies/angular/generators#library).
+Nx configures the linter your workspace already uses.
+Unit tests use Vitest on Angular 21 and later. Earlier versions use Jest.
+Read more of the options available for the library generator in the
+[Angular library generators reference](/docs/technologies/angular/generators#library).
 
 There are also generators for setting up common items inside your projects, such as components and services:
 

@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
@@ -49,6 +49,7 @@ describe('app', () => {
 
         it('should create all new files in the correct location', async () => {
           await applicationGenerator(tree, {
+            linter: 'eslint',
             directory: name,
             unitTestRunner: 'vitest',
             useAppDir: false,
@@ -84,6 +85,7 @@ describe('app', () => {
           tree.write('eslint.config.mjs', 'export default {};');
 
           await applicationGenerator(tree, {
+            linter: 'eslint',
             directory: name,
             unitTestRunner: 'vitest',
             useAppDir: false,
@@ -98,6 +100,7 @@ describe('app', () => {
           tree.write('eslint.config.cjs', 'module.exports = {};');
 
           await applicationGenerator(tree, {
+            linter: 'eslint',
             directory: name,
             unitTestRunner: 'vitest',
             useAppDir: false,
@@ -112,6 +115,7 @@ describe('app', () => {
           tree.write('eslint.config.mjs', 'export default {};');
 
           await applicationGenerator(tree, {
+            linter: 'eslint',
             directory: name,
             unitTestRunner: 'vitest',
             useAppDir: false,
@@ -128,6 +132,7 @@ describe('app', () => {
           tree.write('eslint.config.cjs', 'module.exports = {};');
 
           await applicationGenerator(tree, {
+            linter: 'eslint',
             directory: name,
             unitTestRunner: 'vitest',
             useAppDir: false,
@@ -144,6 +149,7 @@ describe('app', () => {
         it('should configure eslint correctly (eslintrc)', async () => {
           process.env.ESLINT_USE_FLAT_CONFIG = 'false';
           await applicationGenerator(tree, {
+            linter: 'eslint',
             directory: name,
             unitTestRunner: 'vitest',
             useAppDir: false,
@@ -162,7 +168,7 @@ describe('app', () => {
           });
 
           expect(
-            tree.read(`${name}/vitest.config.ts`, 'utf-8')
+            tree.read(`${name}/vitest.config.mts`, 'utf-8')
           ).toMatchSnapshot();
           expect(
             tree.read(`${name}/tsconfig.spec.json`, 'utf-8')
@@ -170,6 +176,20 @@ describe('app', () => {
           expect(tree.read(`${name}/tsconfig.json`, 'utf-8')).toMatchSnapshot();
           const packageJson = readJson(tree, 'package.json');
           expect(packageJson.devDependencies['vitest']).toEqual('~4.1.0');
+        });
+
+        it('should fall back to a .ts vitest config on eslintrc', async () => {
+          tree.write('.eslintrc.json', '{}');
+
+          await applicationGenerator(tree, {
+            directory: name,
+            unitTestRunner: 'vitest',
+            linter: 'eslint',
+            useAppDir: false,
+          });
+
+          expect(tree.exists(`${name}/vitest.config.ts`)).toBe(true);
+          expect(tree.exists(`${name}/vitest.config.mts`)).toBe(false);
         });
 
         it('should configure tsconfig and project.json correctly', async () => {
@@ -185,6 +205,7 @@ describe('app', () => {
 
         it('should add the nuxt and vitest plugins', async () => {
           await applicationGenerator(tree, {
+            linter: 'eslint',
             directory: name,
             unitTestRunner: 'vitest',
             useAppDir: false,
@@ -376,6 +397,7 @@ describe('app', () => {
 
     it('should create all files in correct location with useAppDir', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'my-app',
         unitTestRunner: 'vitest',
         useAppDir: true,

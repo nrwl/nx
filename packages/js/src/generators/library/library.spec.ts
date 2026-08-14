@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   getPackageManagerCommand,
@@ -101,6 +101,10 @@ describe('lib', () => {
       // unitTestRunner property is ignored.
       // It only works with our executors.
       expect(tree.exists('my-lib/src/lib/my-lib.spec.ts')).toBeFalsy();
+
+      // `npm-scripts` forces `linter: 'none'` after `normalizeLinterOption` has
+      // already resolved it — nothing else catches a regression there.
+      expect(tree.exists('my-lib/eslint.config.mjs')).toBeFalsy();
     });
 
     it('should generate an empty ts lib using --config=project', async () => {
@@ -1623,6 +1627,26 @@ describe('lib', () => {
 
         expect(tree.exists('my-lib/.babelrc')).toBeFalsy();
       });
+    });
+  });
+
+  describe('--unit-test-runner vitest', () => {
+    it('should not add dependencies when --skipPackageJson', async () => {
+      const before = readJson(tree, 'package.json');
+
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        unitTestRunner: 'vitest',
+        // `addLint` writes its own dependencies regardless of the flag.
+        linter: 'none',
+        skipPackageJson: true,
+        skipFormat: true,
+      });
+
+      // Guards against the assertion passing because the vitest setup never ran.
+      expect(tree.exists('my-lib/vitest.config.mts')).toBeTruthy();
+      expect(readJson(tree, 'package.json')).toEqual(before);
     });
   });
 

@@ -4,6 +4,7 @@ import {
   promptWhenInteractive,
   addBuildTargetDefaults,
   logShowProjectCommand,
+  type PackageJson,
 } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
@@ -28,9 +29,9 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { CompilerOptions } from 'typescript';
+import { addLintingToProject } from '../../utils/add-linting-to-project';
 import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
 import { normalizeLinterOption } from '../../utils/generator-prompts';
 import { sortPackageJsonFields } from '../../utils/package-json/sort-fields';
@@ -188,6 +189,8 @@ export async function libraryGeneratorInternal(
       testEnvironment: options.testEnvironment,
       runtimeTsconfigFileName: 'tsconfig.lib.json',
       compiler: options.compiler === 'swc' ? 'swc' : 'babel',
+      passWithNoTests: options.passWithNoTests,
+      skipPackageJson: options.skipPackageJson,
       addPlugin: options.addPlugin,
     });
     tasks.push(vitestTask);
@@ -397,6 +400,18 @@ export async function addLint(
   tree: Tree,
   options: AddLintOptions
 ): Promise<GeneratorCallback> {
+  // Everything below reaches into `@nx/eslint`'s config utilities, which have
+  // no equivalent for other linters. Dispatch before touching any of it.
+  if (options.linter !== 'eslint') {
+    return addLintingToProject(tree, {
+      linter: options.linter,
+      project: options.name,
+      addPlugin: options.addPlugin,
+      rootProject: options.rootProject,
+      unitTestRunner: options.unitTestRunner,
+    });
+  }
+
   const { lintProjectGenerator } = ensurePackage('@nx/eslint', nxVersion);
   const {
     addOverrideToLintConfig,
@@ -913,6 +928,10 @@ async function normalizeOptions(
 
   return {
     ...options,
+    // Read from `options`, not a hoisted local: the `npm-scripts` block resets
+    // it to 'none' after `normalizeLinterOption` runs. Naming the key also
+    // satisfies the normalized type, since the spread carries `linter?`.
+    linter: options.linter,
     fileName,
     name: isUsingTsSolutionConfig && !options.name ? importPath : projectName,
     projectNames,

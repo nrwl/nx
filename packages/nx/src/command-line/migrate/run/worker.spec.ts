@@ -1125,4 +1125,144 @@ describe('runSingleMigrationWorker', () => {
       expect(mockLogSkippedInstall).toHaveBeenCalledWith(root);
     });
   });
+
+  describe('skipAgentic', () => {
+    const waives = (extra: Record<string, unknown> = {}) => {
+      mockRunMigration.mockResolvedValue({
+        changes: changeList(),
+        nextSteps: [],
+        agentContext: [],
+        logs: '',
+        madeChanges: true,
+        skipAgentic: true,
+        ...extra,
+      });
+    };
+
+    const logged = () =>
+      (logger.info as jest.Mock).mock.calls
+        .map((args) => String(args[0] ?? ''))
+        .join('\n');
+
+    it('skips the prompt step for a waived hybrid with the agentic flow enabled', async () => {
+      mockResolveAgentic.mockResolvedValue(ENABLED_AGENTIC);
+      writeMigrations([hybridMig('@nx/js', 'h')]);
+      waives();
+      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc' });
+
+      await runSingleMigrationWorker(
+        standaloneInput({ runMigration: '@nx/js:h' })
+      );
+
+      expect(mockRunStep).not.toHaveBeenCalled();
+      expect(logged()).toContain(
+        'Prompt phase skipped. The migration reported nothing left for the AI step to do.'
+      );
+      // The generator half still ran, so its changes are committed.
+      expect(mockCommit).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not tell the user to apply a waived hybrid prompt manually', async () => {
+      writeMigrations([hybridMig('@nx/js', 'h')]);
+      waives();
+
+      await runSingleMigrationWorker(
+        standaloneInput({ runMigration: '@nx/js:h' })
+      );
+
+      expect(output.log).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining('must be applied manually'),
+        })
+      );
+      expect(logged()).toContain('Prompt phase skipped.');
+    });
+
+    it('drops the prompt block and the outer-agent hand-off for a waived hybrid under inside-agent', async () => {
+      mockResolveAgentic.mockResolvedValue({ kind: 'inside-agent' });
+      writeMigrations([hybridMig('@nx/js', 'h')]);
+      waives({ agentContext: ['hint for the outer agent'] });
+
+      await runSingleMigrationWorker(
+        standaloneInput({ runMigration: '@nx/js:h' })
+      );
+
+      expect(stdout).not.toContain('<nx_migrate_prompt');
+      expect(stdout).not.toContain('<agent_context');
+    });
+
+    it('skips the validation step for a waived generator-only migration', async () => {
+      mockResolveAgentic.mockResolvedValue(ENABLED_AGENTIC);
+      writeMigrations([genMig('@nx/js', 'gen')]);
+      waives();
+      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc' });
+
+      await runSingleMigrationWorker(
+        standaloneInput({ runMigration: '@nx/js:gen' })
+      );
+
+      expect(mockRunStep).not.toHaveBeenCalled();
+      expect(logged()).toContain(
+        'Validation skipped. The migration reported its changes need no AI review.'
+      );
+      expect(mockCommit).toHaveBeenCalledTimes(1);
+    });
+
+    // `agenticRun` is built only for `kind: 'enabled'` and the hand-off is
+    // emitted only under `kind: 'inside-agent'`, so a generator-only migration
+    // has no validation step to waive there and keeps its hand-off. A hybrid
+    // owes its prompt in every mode, hence the asymmetry with the test above.
+    it('keeps the outer-agent hand-off for a waived generator-only migration under inside-agent', async () => {
+      mockResolveAgentic.mockResolvedValue({ kind: 'inside-agent' });
+      writeMigrations([genMig('@nx/js', 'gen')]);
+      waives({ agentContext: ['hint for the outer agent'] });
+      const verboseSpy = jest
+        .spyOn(logger, 'verbose')
+        .mockImplementation(() => undefined);
+
+      await runSingleMigrationWorker(
+        standaloneInput({ runMigration: '@nx/js:gen' })
+      );
+
+      expect(stdout).toContain('<agent_context migration="@nx/js:gen">');
+      expect(stdout).toContain('hint for the outer agent');
+      // Nothing was waived, so neither the user-facing line nor the
+      // author-facing note applies.
+      expect(logged()).not.toContain('Validation skipped');
+      expect(verboseSpy).not.toHaveBeenCalled();
+    });
+
+    it('stays silent for a waived generator-only migration that had no changes to validate', async () => {
+      mockResolveAgentic.mockResolvedValue(ENABLED_AGENTIC);
+      writeMigrations([genMig('@nx/js', 'gen')]);
+      waives({ changes: [], madeChanges: false });
+
+      await runSingleMigrationWorker(
+        standaloneInput({ runMigration: '@nx/js:gen' })
+      );
+
+      expect(mockRunStep).not.toHaveBeenCalled();
+      expect(logged()).not.toContain('Validation skipped');
+    });
+
+    it('notes an agentContext dropped by a waiver behind --verbose', async () => {
+      mockResolveAgentic.mockResolvedValue(ENABLED_AGENTIC);
+      writeMigrations([hybridMig('@nx/js', 'h')]);
+      waives({ agentContext: ['hint'] });
+      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc' });
+      const verboseSpy = jest
+        .spyOn(logger, 'verbose')
+        .mockImplementation(() => undefined);
+
+      await runSingleMigrationWorker(
+        standaloneInput({ runMigration: '@nx/js:h' })
+      );
+
+      expect(verboseSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          '@nx/js: h returned skipAgentic: true alongside agentContext, which was dropped.'
+        )
+      );
+    });
+  });
 });

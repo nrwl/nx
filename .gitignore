@@ -103,6 +103,14 @@ node_modules/
 # Editor directories and files
 .idea
 .vscode
+# examples/* are fixture workspaces; they carry the editor config a real
+# workspace would have, so generators that append to it can be exercised.
+# Git will not look inside an ignored directory, so the directory itself has to
+# be un-ignored first; re-ignoring its contents keeps that from tracking
+# everything under it.
+!examples/**/.vscode/
+examples/**/.vscode/*
+!examples/**/.vscode/extensions.json
 *.suo
 *.ntvs*
 *.njsproj
@@ -140,6 +148,7 @@ packages/js/README.md
 packages/jest/README.md
 packages/eslint/README.md
 packages/eslint-plugin/README.md
+packages/oxlint/README.md
 packages/vitest/README.md
 packages/cypress/README.md
 packages/playwright/README.md

@@ -57,7 +57,7 @@ jobs:
 
       - name: Enable corepack and install pnpm
         run: |
-          npm install -g corepack@latest
+          npm install -g corepack@0.35.0 --ignore-scripts
           corepack enable
           corepack prepare --activate
 
@@ -163,7 +163,7 @@ jobs:
 
       - name: Enable corepack and install pnpm
         run: |
-          npm install -g corepack@latest
+          npm install -g corepack@0.35.0 --ignore-scripts
           corepack enable
           corepack prepare --activate
 

@@ -33,6 +33,7 @@ import {
 } from '../../utils/fileutils';
 import { extractFileFromTarball } from '../../utils/tar';
 import { writeFormattedJsonFile } from '../../utils/write-formatted-json-file';
+import { quoteShellArg } from '../../utils/shell-quoting';
 import { logger } from '../../utils/logger';
 import {
   getGitCurrentBranch,
@@ -82,7 +83,7 @@ import {
   getInstalledVersion,
 } from '../../utils/installed-nx-version';
 import { readNxJson } from '../../config/configuration';
-import { runNxSync } from '../../utils/child-process';
+import { readInstalledNxBin, runNxArgvSync } from '../../utils/child-process';
 import { daemonClient } from '../../daemon/client/client';
 import { isNxCloudUsed, isNxCloudDisabled } from '../../utils/nx-cloud-utils';
 import { formatFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
@@ -146,9 +147,11 @@ import {
   buildRetainedAtSuccessBody,
   buildTallyBodyLine,
   countLandedCommits,
+  countWaivedAgenticSteps,
   logAgenticSuccessOutcome,
   logFailureRecap,
   logMigrationBoundary,
+  logWaivedAgenticStep,
   retainedMigrations,
   type CommitState,
   type MigrationOutcome,
@@ -2729,6 +2732,27 @@ export async function executeMigrations(
     return { kind: 'none' };
   }
 
+  // Records what a migration's deterministic phase produced. A migration that
+  // changed nothing must not attempt a commit: the absorbing `git add -A`
+  // would build a commit subject naming this no-op migration even though its
+  // content is entirely prior pending diffs, confusing `git log` / `git blame`
+  // attribution. Pending stays pending and the next change-producing migration
+  // absorbs it.
+  async function commitOrRecordNoChanges(
+    m: PlannedMigration,
+    madeChanges: boolean
+  ): Promise<CommitState> {
+    if (!madeChanges) {
+      migrationsWithNoChanges.push(m);
+      return { kind: 'none' };
+    }
+    const commit = await attemptMigrationCommit(m);
+    if (commit.kind === 'landed' && commit.sha) {
+      logger.info(pc.dim(`Committed as ${commit.sha}`));
+    }
+    return commit;
+  }
+
   const totalMigrations = sortedMigrations.length;
   let migrationIndex = 0;
   for (const m of sortedMigrations) {
@@ -2753,6 +2777,11 @@ export async function executeMigrations(
       );
       let outcome: MigrationOutcomeKind;
       let commit: CommitState = { kind: 'none' };
+      // Set when the migration returned `skipAgentic: true` and something was
+      // actually waived, so the end-of-run recaps can report it. A hybrid's
+      // prompt is owed in every agentic mode, so waiving it always counts; a
+      // generator-only migration only counts when validation would have run.
+      let waivedAgenticStep = false;
       if (isPromptOnlyMigration(m)) {
         if (agenticRun) {
           inAgenticStep = true;
@@ -2781,17 +2810,31 @@ export async function executeMigrations(
           outcome = 'deferred';
         }
       } else if (isHybridMigration(m)) {
-        const { changes, nextSteps, agentContext, logs, madeChanges } =
-          await runNxOrAngularMigration(
-            root,
-            m,
-            isVerbose,
-            /* captureGeneratorOutput: */ !!agenticRun,
-            resolvedCollection
-          );
+        const {
+          changes,
+          nextSteps,
+          agentContext,
+          skipAgentic,
+          logs,
+          madeChanges,
+        } = await runNxOrAngularMigration(
+          root,
+          m,
+          isVerbose,
+          /* captureGeneratorOutput: */ !!agenticRun,
+          resolvedCollection
+        );
         migrationEmittedNextSteps.push(...nextSteps);
 
-        if (agenticRun) {
+        if (skipAgentic) {
+          // The generator reported the prompt half unnecessary, so nothing is
+          // owed: no agent run, and no next-steps entry telling the user to
+          // run the prompt themselves. Runs in all three agentic modes.
+          logWaivedAgenticStep(m, agentContext);
+          waivedAgenticStep = true;
+          commit = await commitOrRecordNoChanges(m, madeChanges);
+          outcome = madeChanges ? 'applied' : 'no-changes';
+        } else if (agenticRun) {
           // Install any deps the deterministic phase added/bumped before the
           // agent runs — the prompt half may depend on them being present in
           // node_modules.
@@ -2837,21 +2880,7 @@ export async function executeMigrations(
             printDroppedAgentContext({ migration: m, agentContext });
           }
           skippedPrompts.push(m);
-          if (!madeChanges) {
-            migrationsWithNoChanges.push(m);
-          }
-          // Only attempt a commit when this migration's deterministic
-          // phase actually produced changes. Otherwise the absorbing
-          // `git add -A` would build a commit subject naming this no-op
-          // migration even though its content is entirely prior pending
-          // diffs — confusing `git log` / `git blame` attribution. Pending
-          // stays pending and the next change-producing migration absorbs.
-          if (madeChanges) {
-            commit = await attemptMigrationCommit(m);
-          }
-          if (commit.kind === 'landed' && commit.sha) {
-            logger.info(pc.dim(`Committed as ${commit.sha}`));
-          }
+          commit = await commitOrRecordNoChanges(m, madeChanges);
           outcome = 'deferred';
         }
       } else {
@@ -2859,16 +2888,26 @@ export async function executeMigrations(
         // changes uncommitted in the working tree for the user to review.
         const validationRun =
           agenticRun && shouldRunValidation ? agenticRun : undefined;
-        const { changes, nextSteps, agentContext, logs, madeChanges } =
-          await runNxOrAngularMigration(
-            root,
-            m,
-            isVerbose,
-            /* captureGeneratorOutput: */ !!validationRun,
-            resolvedCollection
-          );
+        const {
+          changes,
+          nextSteps,
+          agentContext,
+          skipAgentic,
+          logs,
+          madeChanges,
+        } = await runNxOrAngularMigration(
+          root,
+          m,
+          isVerbose,
+          /* captureGeneratorOutput: */ !!validationRun,
+          resolvedCollection
+        );
         migrationEmittedNextSteps.push(...nextSteps);
-        const canRunValidation = !!validationRun && changes.length > 0;
+        // Whether a validation step was on the table at all. `skipAgentic`
+        // waives nothing when it wasn't, so the whole waived path hangs off
+        // this, not just the log line.
+        const validationApplies = !!validationRun && changes.length > 0;
+        const canRunValidation = validationApplies && !skipAgentic;
 
         if (canRunValidation) {
           // Install any deps the deterministic phase added/bumped before the
@@ -2903,21 +2942,16 @@ export async function executeMigrations(
           );
           outcome = 'applied';
         } else {
-          // Inner validation step didn't run. Surface `agentContext` under
-          // `inside-agent` so the outer driving agent can ingest it.
-          if (printDroppedAgentContext && agentContext.length > 0) {
+          if (skipAgentic && validationApplies) {
+            logWaivedAgenticStep(m, agentContext);
+            waivedAgenticStep = true;
+          } else if (printDroppedAgentContext && agentContext.length > 0) {
+            // Inner validation step didn't run. Surface `agentContext` under
+            // `inside-agent` so the outer driving agent can ingest it.
             printDroppedAgentContext({ migration: m, agentContext });
           }
-          if (!madeChanges) {
-            migrationsWithNoChanges.push(m);
-            outcome = 'no-changes';
-          } else {
-            commit = await attemptMigrationCommit(m);
-            if (commit.kind === 'landed' && commit.sha) {
-              logger.info(pc.dim(`Committed as ${commit.sha}`));
-            }
-            outcome = 'applied';
-          }
+          commit = await commitOrRecordNoChanges(m, madeChanges);
+          outcome = madeChanges ? 'applied' : 'no-changes';
         }
       }
       outcomes.push({
@@ -2925,6 +2959,7 @@ export async function executeMigrations(
         status: 'completed',
         kind: outcome,
         commit,
+        waivedAgenticStep,
       });
       logger.info('');
     } catch (e) {
@@ -3010,6 +3045,7 @@ export async function executeMigrations(
     skippedPrompts,
     migrationEmittedNextSteps,
     committedShasCount: countLandedCommits(outcomes),
+    waivedAgenticStepsCount: countWaivedAgenticSteps(outcomes),
     // Migrations whose commits failed and never got absorbed by a later
     // commit. The caller surfaces them so a successful run doesn't claim
     // "up to date" while leaving uncommitted diffs in the working tree.
@@ -3020,14 +3056,11 @@ export async function executeMigrations(
   };
 }
 
-// Forwards this invocation's raw argv to the workspace-local nx, used from
-// each run path's temp-installation check (`!__dirname.startsWith(workspaceRoot)`)
-// right after its gated `runInstall` pre-install. `runNxSync` resolves nx
-// through the workspace's package manager at spawn time, so the child runs
-// the bytes that pre-install put in place.
+// nx is located at spawn time, after the gated pre-install, so the child runs
+// the bytes that install put in place.
 function handOffToLocalNx(args: string[]): number | undefined {
   const exitCode = runOrReturnExitCode(() =>
-    runNxSync(`migrate ${args.join(' ')}`, {
+    runNxArgvSync(['migrate', ...args], {
       stdio: ['inherit', 'inherit', 'inherit'],
       env: {
         ...process.env,
@@ -3177,6 +3210,7 @@ async function runMigrations(
     skippedPrompts,
     migrationEmittedNextSteps,
     committedShasCount,
+    waivedAgenticStepsCount,
     retainedAtSuccess,
   } = await executeMigrations(
     root,
@@ -3201,6 +3235,7 @@ async function runMigrations(
     appliedCount,
     committedShasCount,
     skippedPromptsCount,
+    waivedAgenticStepsCount,
     insideAgent,
   });
   const tallyBody = tallyLine ? [tallyLine] : undefined;
@@ -3412,10 +3447,14 @@ function stringifyCaught(e: unknown): string {
 // A resolver-based lookup (including `resolvePackageJsonWithoutCachePollution`,
 // which does defeat Node's package self-reference) is the wrong tool here:
 // resolvers fall back to NODE_PATH after the explicit paths, and NODE_PATH
-// names the temp installation when this runs there, while the hand-off spawn
-// locates nx through the package manager's bin lookup, which ignores
-// NODE_PATH. The PnP branch below stays bespoke either way: a resolver cannot
-// see into the zip cache without the PnP runtime.
+// names the temp installation when this runs there. The scan below reads its
+// candidate directories itself, so neither NODE_PATH nor self-reference can
+// reach it; `getNxBin` (utils/child-process.ts), which locates the nx the
+// hand-off spawns, avoids resolvers for the same reason, over a narrower set
+// of directories: it skips `.nx/installation`, declines a root without a
+// package.json, and stops at the nearest install rather than reading past an
+// unusable one. The PnP branch below stays bespoke either way: a resolver
+// cannot see into the zip cache without the PnP runtime.
 export function readLocalNxVersion(root: string): string | undefined {
   // A PnP manifest is consulted only when yarn drives the hand-off:
   // `getRunNxBaseCommand` builds the hand-off command through this same
@@ -3548,12 +3587,13 @@ export function readLocalNxVersion(root: string): string | undefined {
 // The workspace's own install locations first (.nx/installation, root), then
 // ancestor directories: package-manager executable lookup ascends (npx and
 // bun always, pnpm and yarn inside an outer workspace) and hoisted layouts
-// install nx above the workspace root. An unrelated ancestor install the
-// hand-off's spawn would not run can be read here; the guards then judge that
-// version rather than failing open. A hand-off issued anyway may not fail
-// visibly: yarn reports "command not found", but pnpm exec falls back to an
-// nx on PATH, so the version read here is the readable answer, not
-// necessarily the executed one.
+// install nx above the workspace root. `getNxBin` ascends too, so an ancestor
+// read here is usually the one the hand-off spawns. They diverge for a
+// `.nx/installation` workspace, which `getNxBin` declines, and where the only
+// nx found sits past the package manager's own lookup boundary and the spawn
+// has fallen back to that manager: yarn then reports "command not found"
+// while pnpm exec lands on an nx on PATH. The version read here is therefore
+// the readable answer, not necessarily the executed one.
 function scanNodeModulesForNxVersion(root: string): string | undefined {
   const searchPaths = [...getNxRequirePaths(root)];
   for (let dir = dirname(root); ; dir = dirname(dir)) {
@@ -3661,11 +3701,13 @@ export async function runMigration() {
     // that parsed the flags, so it needs no capability check. Two lookups
     // can still diverge from the running install, both properties of the
     // spawn machinery rather than of this fallback: a `.nx/installation`
-    // beside a root package.json, and a spawn that misses the workspace
-    // install and falls back to an nx on PATH (pnpm exec).
+    // beside a root package.json, and, once the spawn falls back to the
+    // package manager, a lookup that misses the workspace install and lands
+    // on an nx on PATH (pnpm exec).
+    const forwardedArgv = process.argv.slice(3);
     const runLocalMigrate = () =>
       runOrReturnExitCode(() =>
-        runNxSync(`_migrate ${process.argv.slice(3).join(' ')}`, {
+        runNxArgvSync(['_migrate', ...forwardedArgv], {
           stdio: ['inherit', 'inherit', 'inherit'],
         })
       );
@@ -3709,15 +3751,30 @@ export async function runMigration() {
       ) {
         delete process.env.npm_config_registry;
       }
-      // Intentionally not runNxSync: `p` is an nx CLI freshly installed into a
-      // temp dir by nxCliPath() (latest, or NX_MIGRATE_CLI_VERSION), so
-      // migrations run with an up-to-date migrate implementation instead of
-      // the workspace's current nx.
+      // Intentionally not the workspace's nx: `p` is an nx CLI freshly
+      // installed into a temp dir by nxCliPath() (latest, or
+      // NX_MIGRATE_CLI_VERSION), so migrations run with an up-to-date migrate
+      // implementation. `p` is <tmpDir>/node_modules/.bin/nx, a shell shim;
+      // spawning the entry point that install's own manifest names instead
+      // keeps the forwarded argv out of a shell. That install declares nx
+      // itself, so it is read without ascending: an nx above the temp dir is
+      // one nothing asked for, and the shim below is the answer instead.
+      const tempNxEntry = readInstalledNxBin(dirname(dirname(dirname(p))));
       return runOrReturnExitCode(() =>
-        execSync(`${p} _migrate ${process.argv.slice(3).join(' ')}`, {
-          stdio: ['inherit', 'inherit', 'inherit'],
-          windowsHide: true,
-        })
+        tempNxEntry
+          ? runNxArgvSync(['_migrate', ...forwardedArgv], {
+              stdio: ['inherit', 'inherit', 'inherit'],
+              nxBin: tempNxEntry,
+            })
+          : execSync(
+              `${quoteShellArg(p)} _migrate ${forwardedArgv
+                .map(quoteShellArg)
+                .join(' ')}`,
+              {
+                stdio: ['inherit', 'inherit', 'inherit'],
+                windowsHide: true,
+              }
+            )
       );
     }
 

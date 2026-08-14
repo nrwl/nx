@@ -127,7 +127,7 @@ export default App;
       utils.addInitialRoutes('/app.tsx', source)
     );
 
-    expect(result).toMatch(/role="navigation"/);
+    expect(result).toMatch(/<nav>/);
     expect(result).toMatch(/<Link\s+to="\/page-2"/);
     expect(result).toMatch(/<Route\s+path="\/page-2"/);
   });

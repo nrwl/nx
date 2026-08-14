@@ -203,7 +203,7 @@ export function buildTemplateRequiredResult(
     success: false,
     title: 'Template Selection Required',
     message:
-      'Ask the user which workspace type they want, then run again with --template. If the directory exists, append a number (e.g., my-nx-repo-2).',
+      'Ask the user which workspace type they want, then run again with --template. If the directory exists, append a number (e.g., my-nx-repo-2). If this environment cannot reach github.com, run with --preset=empty instead of --template to create a minimal workspace without downloading a template.',
     suggestedName: name,
     templates: [
       {
@@ -349,9 +349,14 @@ function getErrorHints(errorCode: CnwErrorCode | 'UNKNOWN'): string[] {
       ];
     case 'NETWORK_ERROR':
       return [
-        'Check your internet connection',
-        'Try again in a few moments',
-        'Check if npm/yarn registry is accessible',
+        'Templates download from github.com, which may be blocked or unreachable in this environment',
+        'Check your network and sandbox configuration (allow https://github.com) and try again',
+        'Or re-run with --preset=empty (instead of --template) to create a minimal workspace without downloading a template, then build on top of it',
+      ];
+    case 'TEMPLATE_CLONE_FAILED':
+      return [
+        'Check the template name (e.g. nrwl/empty-template)',
+        'If github.com is restricted in this environment, re-run with --preset=empty',
       ];
     case 'PACKAGE_INSTALL_ERROR':
       return [

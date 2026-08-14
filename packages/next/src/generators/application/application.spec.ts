@@ -364,12 +364,61 @@ describe('app', () => {
   });
 
   describe('--linter', () => {
+    // The ESLint config shaping is guarded per-linter, but the dependency
+    // install below it is a separate block that has to be guarded too.
+    it.each(['none', 'oxlint'] as const)(
+      'should not install ESLint packages for --linter=%s',
+      async (linter) => {
+        const name = uniq();
+
+        await applicationGenerator(tree, {
+          directory: name,
+          style: 'css',
+          linter,
+        });
+
+        const { devDependencies } = readJson(tree, 'package.json');
+        // One assertion per package, not `not.arrayContaining([...])`: that
+        // matcher negates "contains all of", so it passes as soon as any single
+        // one is absent — it would miss two of the three leaking back.
+        for (const pkg of [
+          'eslint-config-next',
+          '@next/eslint-plugin-next',
+          'eslint-plugin-react',
+        ]) {
+          expect(devDependencies ?? {}).not.toHaveProperty(pkg);
+        }
+      }
+    );
+
+    // The Playwright branch forwarded `options.linter` while the Cypress branch
+    // passed a literal `'eslint'`, so a Cypress e2e project ignored the app's
+    // linter entirely.
+    it.each(['cypress', 'playwright'] as const)(
+      'should give the %s e2e project the same linter as the app',
+      async (e2eTestRunner) => {
+        const name = uniq();
+
+        await applicationGenerator(tree, {
+          directory: name,
+          style: 'css',
+          linter: 'oxlint',
+          e2eTestRunner,
+        });
+
+        const { devDependencies } = readJson(tree, 'package.json');
+        expect(devDependencies ?? {}).not.toHaveProperty('@nx/eslint');
+        expect(devDependencies ?? {}).not.toHaveProperty('eslint');
+      }
+    );
+
     describe('default (eslint)', () => {
       it('should add flat config as needed MJS', async () => {
         tree.write('eslint.config.mjs', 'export default {};');
         const name = uniq();
 
         await applicationGenerator(tree, {
+          linter: 'eslint',
           directory: name,
           style: 'css',
         });
@@ -397,6 +446,7 @@ describe('app', () => {
         const name = uniq();
 
         await applicationGenerator(tree, {
+          linter: 'eslint',
           directory: name,
           style: 'css',
         });
@@ -423,6 +473,7 @@ describe('app', () => {
       it('should install eslint-config-next@15 when generating a new Next.js application in an empty Nx workspace', async () => {
         const name = uniq();
         await applicationGenerator(tree, {
+          linter: 'eslint',
           directory: name,
           style: 'css',
         });
@@ -450,6 +501,7 @@ describe('app', () => {
 
         const name = uniq();
         await applicationGenerator(tree, {
+          linter: 'eslint',
           directory: name,
           style: 'css',
         });
@@ -477,6 +529,7 @@ describe('app', () => {
 
         const name = uniq();
         await applicationGenerator(tree, {
+          linter: 'eslint',
           directory: name,
           style: 'css',
         });
@@ -495,6 +548,7 @@ describe('app', () => {
       it('should add .eslintrc.json and dependencies', async () => {
         process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await applicationGenerator(tree, {
+          linter: 'eslint',
           directory: 'myapp',
           style: 'css',
         });
@@ -561,6 +615,7 @@ describe('app', () => {
         const name = uniq();
 
         await applicationGenerator(tree, {
+          linter: 'eslint',
           name,
           directory: '.',
           style: 'css',
@@ -709,6 +764,7 @@ describe('app', () => {
     it('should not ignore "out-tsc" from eslint', async () => {
       process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         style: 'css',
         skipFormat: true,
@@ -722,6 +778,7 @@ describe('app', () => {
       tree.write('eslint.config.mjs', 'export default [];');
 
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         style: 'css',
         skipFormat: true,
@@ -780,6 +837,7 @@ describe('app', () => {
 
     it('should add project references when using TS solution', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         appDir: true,
         unitTestRunner: 'jest',
@@ -972,6 +1030,7 @@ describe('app', () => {
 
     it('should generate project.json if useProjectJson is true', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         appDir: true,
         unitTestRunner: 'jest',
@@ -1018,6 +1077,7 @@ describe('app', () => {
     it('should ignore "out-tsc" from eslint', async () => {
       process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         style: 'css',
         skipFormat: true,
@@ -1031,6 +1091,7 @@ describe('app', () => {
       tree.write('eslint.config.mjs', 'export default [];');
 
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         style: 'css',
         skipFormat: true,

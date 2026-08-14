@@ -45,7 +45,10 @@ import {
   resolveCreateCommits,
   type CommitResult,
 } from '../migrate-commits';
-import { logAgenticSuccessOutcome } from '../migrate-output';
+import {
+  logAgenticSuccessOutcome,
+  logWaivedAgenticStep,
+} from '../migrate-output';
 import {
   isHybridMigration,
   isPromptOnlyMigration,
@@ -299,7 +302,7 @@ async function runStandalone(
   const validationRun =
     agenticRun && opts.shouldRunValidation ? agenticRun : undefined;
   const resolvedCollection = readMigrationCollection(migration.package, root);
-  const { changes, nextSteps, agentContext, logs, madeChanges } =
+  const { changes, nextSteps, agentContext, skipAgentic, logs, madeChanges } =
     await runNxOrAngularMigration(
       root,
       migration,
@@ -308,7 +311,14 @@ async function runStandalone(
       resolvedCollection
     );
 
-  if (isHybridMigration(migration) && agenticRun) {
+  // Whether an AI step was on the table for `skipAgentic` to waive. A hybrid
+  // owes its prompt in every agentic mode; a generator-only migration owes
+  // only the validation pass, and only where one would have run.
+  const validationApplies = !!validationRun && changes.length > 0;
+  const waivedAgenticStep =
+    skipAgentic && (isHybridMigration(migration) || validationApplies);
+
+  if (isHybridMigration(migration) && agenticRun && !skipAgentic) {
     // The prompt half may need the deps the generator half added, so install
     // before the agent runs.
     await installDepsIfChanged();
@@ -346,7 +356,7 @@ async function runStandalone(
     return;
   }
 
-  if (validationRun && changes.length > 0) {
+  if (validationApplies && !skipAgentic) {
     // Commit after validation: a failed validation throws, leaving the changes
     // in the working tree for review.
     await installDepsIfChanged();
@@ -383,7 +393,9 @@ async function runStandalone(
     return;
   }
 
-  if (!isHybridMigration(migration)) {
+  if (waivedAgenticStep) {
+    logWaivedAgenticStep(migration, agentContext);
+  } else if (!isHybridMigration(migration)) {
     forwardDroppedAgentContext(migration, agentContext, agentic.kind);
   }
 
@@ -408,7 +420,9 @@ async function runStandalone(
 
   printNextSteps(migration, nextSteps);
 
-  if (isHybridMigration(migration)) {
+  // A waived prompt is not deferred, so it gets no hand-off to an outer agent
+  // and no "apply this manually" block for the user either.
+  if (isHybridMigration(migration) && !skipAgentic) {
     emitOrPrintPrompt(
       root,
       migration,

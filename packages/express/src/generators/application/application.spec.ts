@@ -40,6 +40,7 @@ describe('app', () => {
 
   it('should generate files', async () => {
     await applicationGenerator(appTree, {
+      linter: 'eslint',
       directory: 'my-node-app',
     } as Schema);
 
@@ -69,9 +70,20 @@ describe('app', () => {
     expect(appTree.exists('my-node-app/eslint.config.mjs')).toBeTruthy();
   });
 
+  it('should set up vitest when asked for it', async () => {
+    await applicationGenerator(appTree, {
+      directory: 'my-node-app',
+      unitTestRunner: 'vitest',
+    } as Schema);
+
+    expect(appTree.exists('my-node-app/vitest.config.mts')).toBeTruthy();
+    expect(appTree.exists('my-node-app/jest.config.cts')).toBeFalsy();
+  });
+
   it('should generate the .eslintrc.json file (eslintrc)', async () => {
     process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await applicationGenerator(appTree, {
+      linter: 'eslint',
       directory: 'my-node-app',
     } as Schema);
 
@@ -195,6 +207,7 @@ describe('app', () => {
 
     it('should add project references when using TS solution', async () => {
       await applicationGenerator(appTree, {
+        linter: 'eslint',
         directory: 'myapp',
         useProjectJson: false,
       } as Schema);
@@ -428,6 +441,7 @@ describe('app', () => {
 
     it('should generate project.json if useProjectJson is true', async () => {
       await applicationGenerator(appTree, {
+        linter: 'eslint',
         directory: 'myapp',
         useProjectJson: true,
         skipFormat: true,

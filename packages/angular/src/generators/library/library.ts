@@ -163,6 +163,7 @@ async function addLinting(
     return;
   }
   await addLintingGenerator(host, {
+    linter: options.linter,
     projectName: options.name,
     projectRoot: options.projectRoot,
     prefix: options.prefix,

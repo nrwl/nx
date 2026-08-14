@@ -34,16 +34,14 @@
       "default": false
     },
     "linter": {
-      "description": "The tool to use for running lint checks.",
+      "description": "The tool to use for running lint checks. Defaults to the linter the workspace already uses.",
       "type": "string",
-      "enum": ["eslint", "none"],
-      "default": "none",
-      "x-prompt": "Which linter would you like to use?",
+      "enum": ["eslint", "oxlint", "none"],
       "x-priority": "important"
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["jest", "none"],
+      "enum": ["jest", "vitest", "none"],
       "description": "Test runner to use for unit tests.",
       "default": "none",
       "x-prompt": "Which unit test runner would you like to use?",
@@ -91,12 +89,6 @@
     "rootDir": {
       "type": "string",
       "description": "Sets the `rootDir` for TypeScript compilation. When not defined, it uses the project's root property, or `srcRootForCompilationRoot` if it is defined."
-    },
-    "testEnvironment": {
-      "type": "string",
-      "enum": ["jsdom", "node"],
-      "description": "The test environment to use if `unitTestRunner` is set to `jest`.",
-      "default": "jsdom"
     },
     "babelJest": {
       "type": "boolean",

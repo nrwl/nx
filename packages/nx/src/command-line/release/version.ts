@@ -265,11 +265,22 @@ export function createAPI(
       throw err;
     }
 
-    /**
-     * Ensure that formatting is applied so that version bump diffs are as minimal as possible
-     * within the context of the user's workspace.
-     */
-    await formatChangedFilesWithPrettierIfAvailable(tree, { silent: true });
+    // A version actions implementation can opt its manifests out of this final
+    // pass when it already preserves their formatting while updating values.
+    const manifestsToExcludeFromFormatting = new Set(
+      Array.from(releaseGraph.projectsToVersionActions.values()).flatMap(
+        (versionActions) =>
+          versionActions.excludeManifestsFromFormatting
+            ? versionActions.manifestsToUpdate.map(
+                ({ manifestPath }) => manifestPath
+              )
+            : []
+      )
+    );
+    await formatChangedFilesWithPrettierIfAvailable(tree, {
+      silent: true,
+      excludePaths: manifestsToExcludeFromFormatting,
+    });
 
     printAndFlushChanges(tree, !!args.dryRun);
 

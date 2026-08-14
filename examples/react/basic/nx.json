@@ -6,7 +6,7 @@
       "default",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/tsconfig.spec.json",
-      "!{projectRoot}/eslint.config.@(js|cjs|mjs|ts|cts|mts)"
+      "!{projectRoot}/.oxlintrc.json"
     ],
     "sharedGlobals": []
   },
@@ -14,7 +14,7 @@
     "@nx/vite/plugin",
     "@nx/vitest",
     "@nx/playwright/plugin",
-    "@nx/eslint/plugin"
+    "@nx/oxlint"
   ],
   "analytics": false,
   "neverConnectToCloud": true

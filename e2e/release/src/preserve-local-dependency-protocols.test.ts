@@ -163,8 +163,6 @@ describe('nx release preserve local dependency protocols', () => {
       -     "@proj/{project-name}": "workspace:*"
       +     "@proj/{project-name}": "0.1.0"
       }
-      }
-      +
       NX   Updating PM lock file
       Would update pnpm-lock.yaml with the following command, but --dry-run was set:
       pnpm install --lockfile-only
@@ -206,8 +204,6 @@ describe('nx release preserve local dependency protocols', () => {
       -   "version": "0.0.0",
       +   "version": "0.1.0",
       "exports": {
-      }
-      +
       NX   Updating PM lock file
       Would update pnpm-lock.yaml with the following command, but --dry-run was set:
       pnpm install --lockfile-only

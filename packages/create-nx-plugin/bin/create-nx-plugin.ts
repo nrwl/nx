@@ -5,6 +5,7 @@ import enquirer = require('enquirer');
 import yargs = require('yargs');
 import {
   determineDefaultBase,
+  determineLinterOptions,
   determineNxCloud,
   determinePackageManager,
   withAllPrompts,
@@ -15,9 +16,14 @@ import {
   output,
   messages,
   recordStat,
+  LINTERS,
 } from 'create-nx-workspace/internal';
 import { createWorkspace, CreateWorkspaceOptions } from 'create-nx-workspace';
-import type { NxCloud, PackageManager } from 'create-nx-workspace/internal';
+import type {
+  Linter,
+  NxCloud,
+  PackageManager,
+} from 'create-nx-workspace/internal';
 import { Arguments } from 'yargs';
 
 export const yargsDecorator = {
@@ -76,6 +82,7 @@ interface CreateNxPluginArguments extends CreateWorkspaceOptions {
   packageManager: PackageManager;
   allPrompts: boolean;
   nxCloud: NxCloud;
+  linter?: Linter;
 }
 
 export const commandsObject: yargs.Argv<CreateNxPluginArguments> = yargs
@@ -99,6 +106,19 @@ export const commandsObject: yargs.Argv<CreateNxPluginArguments> = yargs
           .option('createPackageName', {
             describe: 'Name of the CLI package to create workspace with plugin',
             type: 'string',
+          })
+          // `choices` is load-bearing, not documentation: it rejects a typo at
+          // argv parse. The preset's own enum would catch it too, but only after
+          // the workspace has been created and installed.
+          .option('linter', {
+            describe: pc.dim(`Linter to use`),
+            choices: [...LINTERS],
+            type: 'string',
+          })
+          .option('interactive', {
+            describe: pc.dim(`Enable interactive mode`),
+            type: 'boolean',
+            default: true,
           }),
         withNxCloud,
         withAllPrompts,
@@ -193,6 +213,7 @@ async function normalizeArgsMiddleware(
     const packageManager = await determinePackageManager(argv);
     const defaultBase = await determineDefaultBase(argv);
     const nxCloud = await determineNxCloud(argv);
+    const linter = await determineLinterOptions(argv);
 
     Object.assign(argv, {
       pluginName,
@@ -200,6 +221,7 @@ async function normalizeArgsMiddleware(
       nxCloud,
       packageManager,
       defaultBase,
+      linter,
     } as Partial<CreateNxPluginArguments>);
   } catch (e) {
     console.error(e);

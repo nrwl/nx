@@ -1,164 +1,143 @@
 ---
-title: How Caching Works
-description: Learn how Nx computation hashing enables powerful caching, including what factors determine cache validity and how local and remote caches work together.
+title: How caching works
+description: Learn how Nx caching reuses task results locally and across machines to avoid repeated work.
 sidebar:
   order: 1
 filter: 'type:Concepts'
 ---
 
-Before running any cacheable task, Nx computes its computation hash. As long as the computation hash is the same, the output of
-running the task is the same.
+Before running a cacheable task, Nx calculates a hash from the task's inputs.
+Two runs with the same hash represent the same computation, so Nx can reuse the earlier result.
 
-By default, the computation hash for something like `nx test remixapp` includes:
+A task hash can include:
 
-- All the source files of `remixapp` and its dependencies
-- Relevant global configuration
-- Versions of external dependencies
-- Runtime values provisioned by the user such as the version of Node
-- CLI Command flags
+- Project source files and files from project dependencies.
+- Relevant workspace configuration.
+- Versions of external dependencies.
+- Runtime values, such as the operating system and CPU architecture.
+- Command-line arguments passed to the task.
 
-![computation-hashing](../../../assets/concepts/caching/nx-hashing.svg)
+![Inputs used to calculate a task hash](../../../assets/concepts/caching/nx-hashing.svg)
 
-> This behavior is customizable. For instance, lint checks may only depend on the source code of the project and global
-> configs. Builds can depend on the dts files of the compiled libs instead of their source.
+You can customize these inputs for each target.
+For example, a lint target might depend on source files but not documentation, while a build target
+might depend on generated declaration files from its dependencies.
 
-After Nx computes the hash for a task, it then checks if it ran this exact computation before. First, it checks locally, and then if it is missing, and if a remote cache is configured, it checks remotely. If a matching computation is found, Nx retrieves and replays it. This includes restoring files.
+## Cache lookup and storage
 
-Nx places the right files in the right folders and prints the terminal output. From the user's point of view, the command ran the same, only a lot faster.
+Nx checks the local cache after calculating the hash.
+If it doesn't find a result and remote caching is configured, Nx checks the remote cache.
+On a cache hit, Nx restores the cached output files and prints the stored terminal output.
 
-![cache](../../../assets/concepts/caching/cache.svg)
+![Nx checking local and remote caches](../../../assets/concepts/caching/cache.svg)
 
-If Nx doesn't find a corresponding computation hash, Nx runs the task, and after it completes, it takes the outputs and the terminal logs and stores them locally (and, if configured, remotely as well). All of this happens transparently, so you don't have to worry about it.
+On a cache miss, Nx runs the task and stores its terminal output and configured output files in the
+local cache.
+Nx also stores the result in the remote cache when remote caching is configured and the current
+authentication settings permit writes.
 
-## Optimizations
+Nx processes each node in a task graph independently.
+Some tasks can be cache hits while other tasks run normally.
 
-Nx optimizes the caching experience in several ways. For instance, Nx:
+![A large task graph with cached tasks](../../../assets/concepts/caching/task-graph-big.svg)
 
-- Captures stdout and stderr to make sure the replayed output looks the same, including on Windows.
-- Minimizes the IO by remembering what files are replayed where.
-- Only shows relevant output when processing a large task graph.
-- Provides affordances for troubleshooting cache misses. And many other optimizations.
+## Cache inputs and outputs
 
-As your workspace grows, the task graph looks more like this:
+Each cacheable target has inputs and outputs:
 
-![cache](../../../assets/concepts/caching/task-graph-big.svg)
+- Inputs determine the task hash.
+- Outputs identify files and directories to store and restore.
 
-All of these optimizations are crucial for making Nx usable for any non-trivial workspace. Only the minimum amount of
-work happens. The rest is either left as is or restored from the cache.
+Plugins infer these settings when they understand the underlying tool.
+You can override inferred values globally in `nx.json` or for one project in `package.json` or
+`project.json`.
 
-## Fine-tuning the Nx cache
+For detailed configuration options, see [configure inputs](/docs/kb/configure-inputs) and
+[configure outputs](/docs/kb/configure-outputs).
 
-Each cacheable task defines a set of inputs and outputs. Inputs are factors Nx considers when calculating the computation hash.
-Outputs are files that will be cached and restored when the computation hash matches.
-For more information on how to fine-tune caching, see the [Fine-tuning Caching with Inputs recipe](/docs/kb/configure-inputs).
+## What Nx caches
 
-### Inputs
+Nx caches task results at the process level, regardless of whether the task builds, tests, lints, or
+runs another tool.
+A cache entry contains:
 
-Inputs are factors Nx considers when calculating the computation hash for a task.
+- Terminal output written to standard output and standard error.
+- Files and directories matched by the target's `outputs` configuration.
+- The task hash used to identify the entry.
 
-For more information on the different types of inputs and how to configure inputs for your tasks, read the [Fine-tuning Caching with Inputs recipe](/docs/kb/configure-inputs)
+Nx doesn't store the source files and other inputs inside the cache entry.
+It uses their hashes to calculate the task hash.
 
-## What is cached
+The following project-level configuration overrides the inferred outputs for `build`:
 
-Nx cache works on the process level. Regardless of the tools used to build/test/lint/etc.. your project, the results are cached. This includes:
-
-- **Terminal output:** The terminal output generated when running a task. This includes logs, warnings, and errors.
-- **Task artifacts:** The output files of a task defined in the [`outputs` property of your project configuration](/docs/kb/configure-outputs). For example the build output, test results, or linting reports.
-- **Hash:** The hash of the inputs to the computation. The inputs include the source code, runtime values, and command line arguments. Note that the hash is included in the cache, but the actual inputs are not.
-
-{% tabs %}
-{% tabitem label="package.json" %}
-
-```json title="apps/myapp/package.json"
+```jsonc title="packages/myapp/package.json"
 {
   "name": "myapp",
-  "dependencies": {},
-  "devDependencies": {},
   "nx": {
     "targets": {
       "build": {
-        "outputs": ["{projectRoot}/build", "{projectRoot}/public/build"]
-      }
-    }
-  }
+        "outputs": ["{projectRoot}/dist"],
+      },
+    },
+  },
 }
 ```
 
-{% /tabitem %}
-{% tabitem label="project.json" %}
-
-```json title="apps/myapp/project.json"
-{
-  "name": "myapp",
-  ...
-  "targets": {
-    "build": {
-      ...
-      "outputs": ["dist/dist/myapp"]
-    }
-  }
-}
-```
-
-{% /tabitem %}
-{% /tabs %}
-
-If the `outputs` property for a given target isn't defined in the project's `package.json` file, Nx will look at the global, workspace-wide definition in the `targetDefaults` section of `nx.json`:
+Use `targetDefaults` to apply the same output configuration to matching targets across the
+workspace:
 
 ```jsonc title="nx.json"
 {
-  ...
   "targetDefaults": {
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "outputs": [
-        "{projectRoot}/dist",
-        "{projectRoot}/build",
-        "{projectRoot}/public/build"
-      ]
-    }
-  }
+      "outputs": ["{projectRoot}/dist", "{projectRoot}/build"],
+    },
+  },
 }
 ```
 
-If neither is defined, Nx defaults to caching `dist` and `build` at the root of the repository.
+When `outputs` isn't configured, Nx uses an executor's `outputPath` option as a backward-compatible
+fallback.
+For `build` and `prepare` targets without an `outputPath`, Nx checks common `dist`, `build`, and
+`public` directories.
+For reliable caching, prefer outputs inferred by a plugin or configure `outputs` explicitly.
 
-{% aside type="note" title="Output vs OutputPath" %}
-Several executors have a property in options called `outputPath`. On its own, this property does not influence caching or what is stored at the end of a run. You can reuse that property though by defining your outputs like: `outputs: [{options.outputPath}]`.
+{% aside type="note" title="Output paths and executor options" %}
+An executor's `outputPath` option doesn't automatically become part of `outputs` when `outputs` is
+already configured.
+Reference the option explicitly with `"outputs": ["{options.outputPath}"]` when needed.
 {% /aside %}
 
-## Define cache inputs
+## Configure inputs
 
-By default the cache considers all project files (e.g. `{projectRoot}/**/*`). This behavior can be customized by defining in a much more fine-grained way what files should be included or excluded for each target.
+Nx includes all files under a project root by default.
+Plugins and `namedInputs` often provide more focused input sets.
+You can exclude files that don't affect a target or include environment variables, runtime commands,
+and external dependencies.
 
-{% tabs %}
-{% tabitem label="Globally" %}
-
-```json title="nx.json"
+```jsonc title="nx.json"
 {
   "targetDefaults": {
     "build": {
-      "inputs": ["{projectRoot}/**/*", "!{projectRoot}/**/*.md"]
-      ...
+      "inputs": ["production", "^production"],
     },
     "test": {
-      "inputs": [...]
-    }
-  }
+      "inputs": ["default", "^production"],
+    },
+  },
 }
 ```
 
-{% /tabitem %}
-{% tabitem label="Project Level" %}
+The `^production` input includes the `production` inputs of project dependencies.
+Project-level configuration can extend or replace these values when one project needs different
+hashing behavior.
 
 ```json title="packages/some-project/project.json"
 {
   "name": "some-project",
   "targets": {
     "build": {
-      "inputs": ["!{projectRoot}/**/*.md"],
+      "inputs": ["...", "!{projectRoot}/**/*.md"],
       ...
     },
     "test": {
@@ -169,55 +148,40 @@ By default the cache considers all project files (e.g. `{projectRoot}/**/*`). Th
 }
 ```
 
-{% /tabitem %}
-{% /tabs %}
+Inputs may include the following:
 
-Inputs may include
-
-- source files
-- environment variables
-- runtime inputs
-- command line arguments
+- Source files that affect the task.
+- Environment variables that affect the task.
+- Runtime inputs that affect the task.
+- Command-line arguments passed to the task.
 
 Learn more about fine tuning caching in the [Fine-tuning Caching with Inputs page](/docs/kb/configure-inputs).
 
-## Args hash inputs
+## Command-line arguments
 
-Finally, in addition to Source Code Hash Inputs and Runtime Hash Inputs, Nx needs to consider the arguments: For
-example, `nx build remixapp` and `nx build remixapp -- --flag=true` produce different
-results.
-
-Note, only the flags passed to the npm scripts itself affect results of the computation. For instance, the following
-commands are identical from the caching perspective.
+Arguments passed to a task affect its hash because they can change the result.
+For example, these commands produce different hashes:
 
 ```shell
-npx nx build remixapp
-npx nx run-many -t build -p remixapp
+nx build myapp
+nx build myapp --sourcemap
 ```
 
-In other words, Nx does not cache what the developer types into the terminal.
-
-If you build/test/lint… multiple projects, each individual build has its own hash value and will either be retrieved
-from
-cache or run. This means that from the caching point of view, the following command:
+Different Nx command forms that create the same task with the same task arguments produce the same
+hash.
+These commands are equivalent for caching:
 
 ```shell
-npx nx run-many -t build -p header footer
+nx build myapp
+nx run-many -t build -p myapp
 ```
 
-is identical to the following two commands:
-
-```shell
-npx nx build header
-npx nx build footer
-```
-
-## Next steps
+When you run a target for multiple projects, Nx calculates a separate hash for each task.
+One project can be restored from cache while another project runs.
 
 {% aside type="tip" title="Learn by doing" %}
-Try the [Caching](/docs/getting-started/tutorials/caching) tutorial to apply these concepts in your own workspace.
+Follow the [caching tutorial](/docs/getting-started/tutorials/caching) to inspect cache hits in a
+workspace.
 {% /aside %}
 
-Learn more about how to configure caching, where the cache is stored, how to reset it and more.
-
-- [Cache Task Results](/docs/features/cache-task-results)
+For setup and troubleshooting options, see [cache task results](/docs/features/cache-task-results).
