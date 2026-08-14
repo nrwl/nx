@@ -927,11 +927,12 @@ describe('formatFilesWithOxfmt', () => {
       );
     });
 
-    // The files under test sit a directory below the `.editorconfig` that
-    // should apply, so finding it requires the walk-up. Sizes are deliberately
-    // never 2 - that is oxfmt's default, and an assertion on it would hold just
-    // as well if no `.editorconfig` were found at all.
-    it('lets a nearer .editorconfig win over a farther one', async () => {
+    // Measured against the CLI: it resolves `.editorconfig` from its cwd, so a
+    // file a directory down is never read - unlike `.oxfmtrc.json`, which it
+    // does walk up for. Sizes are deliberately never 2 - that is oxfmt's
+    // default, and an assertion on it would hold just as well if no
+    // `.editorconfig` were found at all.
+    it('ignores a nested .editorconfig, as the CLI does', async () => {
       writeConfig({});
       writeFileIn(
         '.editorconfig',
@@ -953,15 +954,19 @@ describe('formatFilesWithOxfmt', () => {
         workspaceRoot
       );
 
-      expect(formatted.get('apps/foo/src/a.ts')).toContain('\n    if (a) {');
+      // Both take the root file's 8. The nested 4 would win under a per-file
+      // walk, and the next `nx format:write` would undo it.
+      expect(formatted.get('apps/foo/src/a.ts')).toContain(
+        '\n        if (a) {'
+      );
       expect(formatted.get('root.ts')).toContain('\n        if (a) {');
     });
 
-    it('stops the .editorconfig walk at root = true', async () => {
+    it('ignores a nested .editorconfig that declares root = true', async () => {
       writeConfig({});
-      // `max_line_length` is set only above the `root = true`, so it is the
-      // property that reveals whether the walk stopped. Asserting on
-      // indent_size alone would not: the nearer file sets it either way.
+      // `max_line_length` sits only in the root file, so it reveals whether the
+      // nested `root = true` cut the chain short. Asserting on indent_size
+      // alone would not: the nearer file sets it either way.
       writeFileIn(
         '.editorconfig',
         '[*]\nindent_style = space\nindent_size = 8\nmax_line_length = 40\n'
@@ -982,10 +987,10 @@ describe('formatFilesWithOxfmt', () => {
       );
 
       const result = formatted.get('apps/foo/src/a.ts');
-      expect(result).toContain('\n    if (a) {');
-      // Indented it is well past 40 columns, so it stays on one line only if
-      // the root file's max_line_length did not leak past the `root = true`.
-      expect(result).toContain('{ alpha: 1, beta: 2, gamma: 3, delta: 4 }');
+      expect(result).toContain('\n        if (a) {');
+      // Indented it is well past 40 columns, so the root file's max_line_length
+      // splits it. It stayed on one line while the nested file was applied.
+      expect(result).not.toContain('{ alpha: 1, beta: 2, gamma: 3, delta: 4 }');
     });
 
     it('fails only the files under an unreadable nested config', async () => {

@@ -70,13 +70,18 @@ oxfmt reads it too, so deleting it starts formatting files you had excluded.
 `nx format:write` runs the formatter's own CLI.
 Generators format files that exist only in memory, so Nx applies the configuration itself.
 Both resolve from each file's own directory upwards: the nearest oxfmt config, its `overrides` and
-`ignorePatterns`, and every `.gitignore`, `.prettierignore`, and `.editorconfig` along the way.
+`ignorePatterns`, and every `.gitignore` and `.prettierignore` along the way.
 
 A nested oxfmt config replaces the one above it rather than merging with it, so any option it leaves
 out falls back to oxfmt's own default and not to the parent's value.
 
-One case leaves the two disagreeing: an `.editorconfig` that sets `indent_size` without
-`indent_style`.
+`.editorconfig` is the exception.
+oxfmt reads it from the directory it runs in rather than from each file upwards, so only the one at
+the workspace root applies.
+Nx matches that behavior in generators.
+
+A root `.editorconfig` that sets `indent_size` without `indent_style` also leaves the two
+disagreeing.
 Generator formatting applies it and `nx format:write` ignores it, so your generated files fail your
 own `nx format:check`.
 Set `indent_style` alongside it.

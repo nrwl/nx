@@ -352,40 +352,27 @@ function readEditorConfigInDir(
  * the oxfmt CLI follows. Deliberately continues above the workspace root,
  * where a repo nested in a larger checkout keeps shared settings.
  *
- * Cached per directory; returned in application order, so nearer overwrites
- * farther.
+ * Returned in application order, so nearer overwrites farther.
  */
-function createEditorConfigResolver(): (fileDir: string) => EditorConfigFile[] {
-  const cache = new Map<string, EditorConfigFile[]>();
-
-  return (fileDir: string) => {
-    const key = path.resolve(fileDir);
-    let chain = cache.get(key);
-    if (chain) {
-      return chain;
-    }
-
-    const found: EditorConfigFile[] = [];
-    let current = key;
-    while (true) {
-      const parsed = readEditorConfigInDir(current);
-      if (parsed) {
-        found.push({ ...parsed, dir: current });
-        if (parsed.isRoot) {
-          break;
-        }
-      }
-      const parent = path.dirname(current);
-      if (parent === current) {
+function editorConfigChainFor(dir: string): EditorConfigFile[] {
+  const found: EditorConfigFile[] = [];
+  let current = path.resolve(dir);
+  while (true) {
+    const parsed = readEditorConfigInDir(current);
+    if (parsed) {
+      found.push({ ...parsed, dir: current });
+      if (parsed.isRoot) {
         break;
       }
-      current = parent;
     }
+    const parent = path.dirname(current);
+    if (parent === current) {
+      break;
+    }
+    current = parent;
+  }
 
-    chain = found.reverse();
-    cache.set(key, chain);
-    return chain;
-  };
+  return found.reverse();
 }
 
 /**
@@ -875,7 +862,11 @@ export async function formatFilesWithOxfmt(
     OXFMT_IGNORE_OPTIONS.filenames,
     OXFMT_IGNORE_OPTIONS.merge
   );
-  const resolveEditorConfig = createEditorConfigResolver();
+  // Measured against the CLI: it resolves `.editorconfig` from its own cwd -
+  // the workspace root, for `nx format` - and never reads a nested one, unlike
+  // the per-file walk it does for `.oxfmtrc.json`. Honouring a nearer file
+  // here would be undone by the next `nx format:write`.
+  const editorConfigChain = editorConfigChainFor(workspaceRoot);
 
   const errors: string[] = [];
   await Promise.all(
@@ -919,10 +910,7 @@ export async function formatFilesWithOxfmt(
         const result = await format(absolutePath, file.content, {
           // Precedence runs .editorconfig < the config's own options < a
           // matching override, which is the order the CLI resolves them in.
-          ...editorConfigOptionsForFile(
-            resolveEditorConfig(fileDir),
-            absolutePath
-          ),
+          ...editorConfigOptionsForFile(editorConfigChain, absolutePath),
           ...config.options,
           ...overrideOptionsForFile(config.overrides, relativeToConfig),
         });
