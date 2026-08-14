@@ -1278,48 +1278,77 @@ describe('Bun Parser', () => {
     });
 
     it('should validate lockfile version', () => {
-      // Test supported versions (0 and 1)
-      const version0LockFile = `{
-          "lockfileVersion": 0,
+      const lockFileWithVersion = (version: string) => `{
+          "lockfileVersion": ${version},
           "workspaces": { "": {} },
           "packages": {}
         }`;
 
-      const version1LockFile = `{
-          "lockfileVersion": 1,
-          "workspaces": { "": {} },
-          "packages": {}
-        }`;
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
-      expect(() => {
-        getBunTextLockfileNodes(version0LockFile, 'version0-hash');
-      }).not.toThrow();
+      try {
+        // Versions this parser was written against (0, 1 and 2) parse silently
+        for (const version of ['0', '1', '2']) {
+          expect(() => {
+            getBunTextLockfileNodes(
+              lockFileWithVersion(version),
+              `version${version}-hash`
+            );
+          }).not.toThrow();
+        }
+        expect(warnSpy).not.toHaveBeenCalled();
 
-      expect(() => {
-        getBunTextLockfileNodes(version1LockFile, 'version1-hash');
-      }).not.toThrow();
+        // Newer versions are parsed with a warning instead of failing
+        expect(() => {
+          getBunTextLockfileNodes(lockFileWithVersion('3'), 'version3-hash');
+        }).not.toThrow();
+        expect(warnSpy).toHaveBeenCalledTimes(1);
+        expect(warnSpy).toHaveBeenCalledWith(
+          expect.stringContaining('lockfileVersion 3')
+        );
 
-      // Test unsupported version
-      const unsupportedVersionLockFile = `{
-          "lockfileVersion": 2,
-          "workspaces": { "": {} },
-          "packages": {}
-        }`;
+        // Negative and non-integer versions are rejected
+        expect(() => {
+          getBunTextLockfileNodes(lockFileWithVersion('-1'), 'negative-hash');
+        }).toThrow('Unsupported lockfile version -1');
 
-      expect(() => {
-        getBunTextLockfileNodes(unsupportedVersionLockFile, 'unsupported-hash');
-      }).toThrow('Unsupported lockfile version 2');
+        expect(() => {
+          getBunTextLockfileNodes(lockFileWithVersion('1.5'), 'float-hash');
+        }).toThrow('Unsupported lockfile version 1.5');
 
-      // Test invalid version type
-      const invalidVersionLockFile = `{
-          "lockfileVersion": "invalid",
-          "workspaces": { "": {} },
-          "packages": {}
-        }`;
+        // Non-numeric versions are rejected
+        expect(() => {
+          getBunTextLockfileNodes(
+            lockFileWithVersion('"invalid"'),
+            'invalid-hash'
+          );
+        }).toThrow('Lockfile version must be a number');
+      } finally {
+        warnSpy.mockRestore();
+      }
+    });
 
-      expect(() => {
-        getBunTextLockfileNodes(invalidVersionLockFile, 'invalid-hash');
-      }).toThrow('Lockfile version must be a number');
+    it('should parse lockfileVersion 2 identically to lockfileVersion 1', () => {
+      const version1Nodes = getBunTextLockfileNodes(
+        basicDependenciesBunLock,
+        'basic-v1-hash'
+      );
+
+      clearCache();
+
+      const version2LockFile = basicDependenciesBunLock.replace(
+        '"lockfileVersion": 1,',
+        '"lockfileVersion": 2,'
+      );
+      expect(version2LockFile).not.toEqual(basicDependenciesBunLock);
+
+      const version2Nodes = getBunTextLockfileNodes(
+        version2LockFile,
+        'basic-v2-hash'
+      );
+
+      expect(Object.keys(version2Nodes).length).toBeGreaterThan(0);
+      expect(version2Nodes).toEqual(version1Nodes);
     });
 
     it('should handle alias dependencies', () => {

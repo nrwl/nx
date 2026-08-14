@@ -13,6 +13,11 @@ import {
 } from '../../../project-graph/project-graph-builder';
 import { parseJson } from '../../../utils/json';
 
+// Highest bun.lock version this parser has been verified against. Bun bumps
+// the version for changes to its own parse-time validation, so newer versions
+// are parsed on a best-effort basis instead of being rejected outright.
+const MAX_KNOWN_LOCKFILE_VERSION = 2;
+
 const DEPENDENCY_TYPES = [
   'dependencies',
   'devDependencies',
@@ -25,7 +30,7 @@ const DEPENDENCY_TYPES = [
  * Based on comprehensive analysis of bun.lock.zig source code
  */
 interface BunLockFile {
-  /** Version of the lockfile format (currently 0 or 1) */
+  /** Version of the lockfile format (0, 1 or 2 as of Bun 1.4) */
   lockfileVersion: number;
 
   /**
@@ -569,12 +574,18 @@ function parseLockFile(
         );
       }
 
-      const supportedVersions = [0, 1];
-      if (!supportedVersions.includes(result.lockfileVersion)) {
+      if (
+        !Number.isInteger(result.lockfileVersion) ||
+        result.lockfileVersion < 0
+      ) {
         throw new Error(
-          `Unsupported lockfile version ${
-            result.lockfileVersion
-          }. Supported versions: ${supportedVersions.join(', ')}`
+          `Unsupported lockfile version ${result.lockfileVersion}. Lockfile version must be a non-negative integer`
+        );
+      }
+
+      if (result.lockfileVersion > MAX_KNOWN_LOCKFILE_VERSION) {
+        console.warn(
+          `bun.lock has lockfileVersion ${result.lockfileVersion}, which is newer than the version ${MAX_KNOWN_LOCKFILE_VERSION} this version of Nx was tested with. Attempting to parse it anyway.`
         );
       }
     }
