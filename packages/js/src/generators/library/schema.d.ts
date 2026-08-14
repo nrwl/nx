@@ -36,10 +36,7 @@ export interface LibraryGeneratorSchema {
   addPlugin?: boolean;
   useProjectJson?: boolean;
   useTscExecutor?: boolean;
-  /**
-   * Only honored by the vitest setup. For callers that delete the generated
-   * spec file, so a fresh library still has a passing `test` target.
-   */
+  /** @internal Only honored by the vitest setup. */
   passWithNoTests?: boolean;
 }
 

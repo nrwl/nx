@@ -6,6 +6,17 @@ import {
   uniq,
 } from '@nx/e2e-utils';
 
+/**
+ * `Successfully ran target test` is also printed when vitest collects nothing,
+ * so every case that owns a spec asserts the passed-test count too.
+ */
+function expectTestsPassed(output: string, project: string, count: number) {
+  expect(output).toContain(
+    `Successfully ran target test for project ${project}`
+  );
+  expect(output).toMatch(new RegExp(`Tests\\s+${count} passed`));
+}
+
 describe('Node + vitest', () => {
   beforeAll(() =>
     newProject({
@@ -22,11 +33,12 @@ describe('Node + vitest', () => {
       `generate @nx/node:app apps/${app} --framework=fastify --unitTestRunner=vitest --e2eTestRunner=none --linter=eslint --no-interactive`
     );
 
-    checkFilesExist(`apps/${app}/vitest.config.mts`);
-
-    expect(runCLI(`test ${app}`)).toContain(
-      `Successfully ran target test for project ${app}`
+    checkFilesExist(
+      `apps/${app}/vitest.config.mts`,
+      `apps/${app}/src/app/app.spec.ts`
     );
+
+    expectTestsPassed(runCLI(`test ${app}`), app, 1);
   });
 
   // A node app without the fastify template ships no spec file, so the test
@@ -38,9 +50,9 @@ describe('Node + vitest', () => {
       `generate @nx/node:app apps/${app} --framework=express --unitTestRunner=vitest --e2eTestRunner=none --linter=eslint --no-interactive`
     );
 
-    expect(runCLI(`test ${app}`)).toContain(
-      `Successfully ran target test for project ${app}`
-    );
+    const output = runCLI(`test ${app}`);
+    expect(output).toContain(`Successfully ran target test for project ${app}`);
+    expect(output).toContain('No test files found');
   });
 
   it('should test a node lib with vitest', () => {
@@ -50,11 +62,12 @@ describe('Node + vitest', () => {
       `generate @nx/node:lib libs/${lib} --unitTestRunner=vitest --linter=eslint --no-interactive`
     );
 
-    checkFilesExist(`libs/${lib}/vitest.config.mts`);
-
-    expect(runCLI(`test ${lib}`)).toContain(
-      `Successfully ran target test for project ${lib}`
+    checkFilesExist(
+      `libs/${lib}/vitest.config.mts`,
+      `libs/${lib}/src/lib/${lib}.spec.ts`
     );
+
+    expectTestsPassed(runCLI(`test ${lib}`), lib, 1);
   });
 
   it('should test a nest app with vitest', () => {
@@ -66,12 +79,13 @@ describe('Node + vitest', () => {
 
     checkFilesExist(
       `apps/${app}/vitest.config.mts`,
-      `apps/${app}/src/app/app.controller.spec.ts`
+      `apps/${app}/src/app/app.controller.spec.ts`,
+      `apps/${app}/src/app/app.service.spec.ts`
     );
 
-    expect(runCLI(`test ${app}`)).toContain(
-      `Successfully ran target test for project ${app}`
-    );
+    // Nest DI needs `design:paramtypes`, which only lands if the transform
+    // honors `emitDecoratorMetadata` -- esbuild does not.
+    expectTestsPassed(runCLI(`test ${app}`), app, 2);
   });
 
   it('should test a nest lib with vitest', () => {
@@ -86,8 +100,6 @@ describe('Node + vitest', () => {
       `libs/${lib}/src/lib/${lib}.service.spec.ts`
     );
 
-    expect(runCLI(`test ${lib}`)).toContain(
-      `Successfully ran target test for project ${lib}`
-    );
+    expectTestsPassed(runCLI(`test ${lib}`), lib, 1);
   });
 });

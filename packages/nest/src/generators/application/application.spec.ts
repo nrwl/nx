@@ -181,6 +181,67 @@ describe('application generator', () => {
     ).toBeTruthy();
   });
 
+  describe('vitest requires vite 8', () => {
+    const setViteVersion = (version: string) =>
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies = { ...json.devDependencies, vite: version };
+        return json;
+      });
+
+    it.each(['^7.0.0', '7.3.6', '~6.2.0'])(
+      'should throw when vite is %s',
+      async (version) => {
+        setViteVersion(version);
+
+        await expect(
+          applicationGenerator(tree, {
+            directory: appDirectory,
+            unitTestRunner: 'vitest',
+            e2eTestRunner: 'none',
+            addPlugin: true,
+          })
+        ).rejects.toThrow(/requires Vite 8 or later/);
+      }
+    );
+
+    it('should not throw when vite is 8', async () => {
+      setViteVersion('^8.0.0');
+
+      await expect(
+        applicationGenerator(tree, {
+          directory: appDirectory,
+          unitTestRunner: 'vitest',
+          e2eTestRunner: 'none',
+          addPlugin: true,
+        })
+      ).resolves.toBeDefined();
+    });
+
+    it('should not throw when vite is not installed', async () => {
+      await expect(
+        applicationGenerator(tree, {
+          directory: appDirectory,
+          unitTestRunner: 'vitest',
+          e2eTestRunner: 'none',
+          addPlugin: true,
+        })
+      ).resolves.toBeDefined();
+    });
+
+    it('should not throw for jest on an older vite', async () => {
+      setViteVersion('^7.0.0');
+
+      await expect(
+        applicationGenerator(tree, {
+          directory: appDirectory,
+          unitTestRunner: 'jest',
+          e2eTestRunner: 'none',
+          addPlugin: true,
+        })
+      ).resolves.toBeDefined();
+    });
+  });
+
   it('should configure tsconfig correctly', async () => {
     // pin TS<6 to exercise the 'node10' branch deterministically
     updateJson(tree, 'package.json', (json) => {

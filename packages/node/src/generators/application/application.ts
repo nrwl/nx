@@ -202,8 +202,9 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     ensurePackage('@nx/vitest', nxVersion);
     // CommonJS `require` instead of dynamic ESM `import`: `ensurePackage`
     // exposes the temp install via `Module._initPaths`, which ESM ignores.
-    // Untyped because the ambient types resolve to the published @nx/vitest.
-    const { configurationGenerator } = require('@nx/vitest/generators');
+    const {
+      configurationGenerator,
+    }: typeof import('@nx/vitest/generators') = require('@nx/vitest/generators');
     const vitestTask = await configurationGenerator(tree, {
       project: options.name,
       uiFramework: 'none',
