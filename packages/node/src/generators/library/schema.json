@@ -93,7 +93,7 @@
     "testEnvironment": {
       "type": "string",
       "enum": ["jsdom", "node"],
-      "description": "The test environment to use if `unitTestRunner` is set to `jest`.",
+      "description": "The test environment for the unit test runner. For node libraries this should stay as node unless doing DOM testing.",
       "default": "jsdom"
     },
     "babelJest": {
