@@ -92,17 +92,35 @@ jobs:
           ITERATIONS="${{ github.event.inputs.iterations || '20' }}"
           mkdir -p /tmp/hunt-logs
           crashes=0
+          shopt -s nullglob
           for i in $(seq 1 "$ITERATIONS"); do
             echo "::group::shard ${{ matrix.shard }} iteration $i/$ITERATIONS"
+            before=(/tmp/cores/core.*)
             set +e
             pnpm nx run e2e-nx:e2e-local --skip-nx-cache -- --testNamePattern="SIGINT process cleanup" 2>&1 | tee "/tmp/hunt-logs/iter-$i.log"
+            # Must be read immediately after the pipeline; any command in
+            # between (including `set -e`) clobbers PIPESTATUS. `$?` alone
+            # would be tee's status, which is always 0.
+            rc=${PIPESTATUS[0]}
             set -e
-            # Case-SENSITIVE on purpose: -i matches lowercase branch/commit
-            # metadata echoed by Nx Cloud and produces false positives.
-            if grep -aqE 'Exited with code 139|Segmentation fault|SIGSEGV' "/tmp/hunt-logs/iter-$i.log"; then
+            after=(/tmp/cores/core.*)
+            # Detect by physical evidence, never by the signal name appearing
+            # in the log. Nx Cloud echoes the HEAD commit's message into the
+            # output, so grepping for a bare 'SIGSEGV' matches this very
+            # workflow's own commit body and fired on 20/20 iterations in run
+            # 30032115805 while nothing had actually crashed. The two runtime
+            # strings below are emitted by the crash itself, not by metadata.
+            # Plain `if`s, not `[ ... ] && x=1`: the latter yields a non-zero
+            # status when the test is false, which is a `set -e` hazard in a
+            # job we need to run for hours without dying mid-loop.
+            crashed=0
+            if [ "$rc" -eq 139 ]; then crashed=1; fi
+            if [ "${#after[@]}" -gt "${#before[@]}" ]; then crashed=1; fi
+            if grep -aqE 'Exited with code 139|Segmentation fault' "/tmp/hunt-logs/iter-$i.log"; then crashed=1; fi
+            if [ "$crashed" -eq 1 ]; then
               crashes=$((crashes+1))
               cp "/tmp/hunt-logs/iter-$i.log" "/tmp/cores/iter-shard${{ matrix.shard }}-$i.log"
-              echo "!! signal death detected in iteration $i"
+              echo "!! signal death detected in iteration $i (exit=$rc cores ${#before[@]}->${#after[@]})"
             fi
             echo "::endgroup::"
           done
