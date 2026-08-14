@@ -1,10 +1,11 @@
 ---
-title: Adding Nx to NPM/Yarn/PNPM Workspace
-description: Learn how to integrate Nx into an existing NPM, Yarn, or PNPM workspace monorepo to gain task scheduling, caching, and improved CI performance.
+title: Adding Nx to an NPM/Yarn/PNPM Monorepo
+description: Learn how to integrate Nx into an existing NPM, Yarn, or PNPM monorepo to gain task scheduling, caching, and improved CI performance.
 filter: 'type:Guides'
-weight: 2
+topics:
+  - 'Adoption'
 sidebar:
-  label: NPM/Yarn/PNPM workspaces
+  label: NPM/Yarn/PNPM monorepos
 ---
 
 {% aside type="note" title="Migrating from Lerna?" %}
@@ -13,14 +14,14 @@ Modern Lerna already runs its tasks through Nx, so the migration is an increment
 {% /aside %}
 
 Nx has first-class support for [monorepos](/docs/getting-started/tutorials/crafting-your-workspace). Add it to an
-existing NPM, Yarn, or PNPM workspace and you get
+existing NPM, Yarn, or PNPM monorepo and you get
 
 - fast [task scheduling](/docs/features/run-tasks)
 - high-performance task [caching](/docs/features/cache-task-results)
 - affected runs that skip the packages your change doesn't touch
 
-None of this is gated on how many packages you have. The setup installs the `nx` package at the root and adds an
-`nx.json` for configuring caching and task pipelines. Your workspace layout, your package manager, and your
+None of this is gated on how many packages the monorepo has. The setup installs the `nx` package at the root and adds
+an `nx.json` for configuring caching and task pipelines. Your workspace layout, your package manager, and your
 `package.json` scripts stay where they are.
 
 {% course_video src="https://youtu.be/3hW53b1IJ84" courseTitle="From PNPM Workspaces to Distributed CI" courseUrl="https://nx.dev/courses/pnpm-nx-next/lessons-01-nx-init" /%}
@@ -155,140 +156,6 @@ details in a browser window.
 nx show project my-workspace --web
 ```
 
-{% project_details title="Project Details View" %}
-
-```json
-{
-  "project": {
-    "name": "my-workspace",
-    "data": {
-      "root": ".",
-      "targets": {
-        "eslint:lint": {
-          "cache": true,
-          "options": {
-            "cwd": ".",
-            "command": "eslint ./src"
-          },
-          "inputs": [
-            "default",
-            "{workspaceRoot}/.eslintrc",
-            "{workspaceRoot}/tools/eslint-rules/**/*",
-            {
-              "externalDependencies": ["eslint"]
-            }
-          ],
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": ["eslint"]
-          }
-        },
-        "next:build": {
-          "options": {
-            "cwd": ".",
-            "command": "next build"
-          },
-          "dependsOn": ["^build"],
-          "cache": true,
-          "inputs": [
-            "default",
-            "^default",
-            {
-              "externalDependencies": ["next"]
-            }
-          ],
-          "outputs": ["{projectRoot}/.next", "{projectRoot}/.next/!(cache)"],
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": ["next"]
-          }
-        },
-        "dev": {
-          "options": {
-            "cwd": ".",
-            "command": "next dev",
-            "continuous": true
-          },
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": ["next"]
-          }
-        },
-        "start": {
-          "options": {
-            "cwd": ".",
-            "command": "next start",
-            "continuous": true
-          },
-          "dependsOn": ["build"],
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": ["next"]
-          }
-        }
-      },
-      "sourceRoot": ".",
-      "name": "my-workspace",
-      "projectType": "library",
-      "implicitDependencies": [],
-      "tags": []
-    }
-  },
-  "sourceMap": {
-    "root": ["package.json", "nx/core/package-json-workspaces"],
-    "targets": ["package.json", "nx/core/package-json-workspaces"],
-    "targets.eslint:lint": [".eslintrc.json", "@nx/eslint/plugin"],
-    "targets.eslint:lint.command": [".eslintrc.json", "@nx/eslint/plugin"],
-    "targets.eslint:lint.cache": [".eslintrc.json", "@nx/eslint/plugin"],
-    "targets.eslint:lint.options": [".eslintrc.json", "@nx/eslint/plugin"],
-    "targets.eslint:lint.inputs": [".eslintrc.json", "@nx/eslint/plugin"],
-    "targets.eslint:lint.options.cwd": [".eslintrc.json", "@nx/eslint/plugin"],
-    "targets.next:build": ["next.config.js", "@nx/next/plugin"],
-    "targets.next:build.command": ["next.config.js", "@nx/next/plugin"],
-    "targets.next:build.options": ["next.config.js", "@nx/next/plugin"],
-    "targets.next:build.dependsOn": ["next.config.js", "@nx/next/plugin"],
-    "targets.next:build.cache": ["next.config.js", "@nx/next/plugin"],
-    "targets.next:build.inputs": ["next.config.js", "@nx/next/plugin"],
-    "targets.next:build.outputs": ["next.config.js", "@nx/next/plugin"],
-    "targets.next:build.options.cwd": ["next.config.js", "@nx/next/plugin"],
-    "targets.dev": ["next.config.js", "@nx/next/plugin"],
-    "targets.dev.command": ["next.config.js", "@nx/next/plugin"],
-    "targets.dev.options": ["next.config.js", "@nx/next/plugin"],
-    "targets.dev.options.cwd": ["next.config.js", "@nx/next/plugin"],
-    "targets.start": ["next.config.js", "@nx/next/plugin"],
-    "targets.start.command": ["next.config.js", "@nx/next/plugin"],
-    "targets.start.options": ["next.config.js", "@nx/next/plugin"],
-    "targets.start.dependsOn": ["next.config.js", "@nx/next/plugin"],
-    "targets.start.options.cwd": ["next.config.js", "@nx/next/plugin"],
-    "sourceRoot": ["package.json", "nx/core/package-json-workspaces"],
-    "name": ["package.json", "nx/core/package-json-workspaces"],
-    "projectType": ["package.json", "nx/core/package-json-workspaces"],
-    "targets.nx-release-publish": [
-      "package.json",
-      "nx/core/package-json-workspaces"
-    ],
-    "targets.nx-release-publish.dependsOn": [
-      "package.json",
-      "nx/core/package-json-workspaces"
-    ],
-    "targets.nx-release-publish.executor": [
-      "package.json",
-      "nx/core/package-json-workspaces"
-    ],
-    "targets.nx-release-publish.options": [
-      "package.json",
-      "nx/core/package-json-workspaces"
-    ]
-  }
-}
-```
-
-{% /project_details %}
-
 The project detail view lists all available tasks, the configuration values for those tasks and where those
 configuration values are being set.
 
@@ -360,11 +227,11 @@ npx nx@latest connect
 
 A browser window will open to register your repository in your [Nx Cloud](https://cloud.nx.app) account. The link is also printed to the terminal if the windows does not open, or you closed it before finishing the steps. The app will guide you to create a PR to enable Nx Cloud on your repository.
 
-![](../../../../assets/guides/adopting-nx/nx-cloud-github-connect.avif)
+![](../../../assets/guides/adopting-nx/nx-cloud-github-connect.avif)
 
 Once the PR is created, merge it into your main branch.
 
-![](../../../../assets/guides/adopting-nx/github-cloud-pr-merged.avif)
+![](../../../assets/guides/adopting-nx/github-cloud-pr-merged.avif)
 
 And make sure you pull the latest changes locally:
 
@@ -426,11 +293,11 @@ git push origin add-workflow
 
 When you view the PR on GitHub, you will see a comment from Nx Cloud that reports on the status of the CI run.
 
-![Nx Cloud report](../../../../assets/guides/adopting-nx/github-pr-cloud-report.avif)
+![Nx Cloud report](../../../assets/guides/adopting-nx/github-pr-cloud-report.avif)
 
 The `See all runs` link goes to a page with the progress and results of tasks that were run in the CI pipeline.
 
-![Run details](../../../../assets/guides/adopting-nx/nx-cloud-run-details.avif)
+![Run details](../../../assets/guides/adopting-nx/nx-cloud-run-details.avif)
 
 For more information about how Nx can improve your CI pipeline, check out our [detailed tutorial for you CI provider](/docs/kb/setup-ci).
 

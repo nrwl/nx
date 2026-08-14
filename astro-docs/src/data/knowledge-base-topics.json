@@ -25,6 +25,11 @@
     "description": "Install Nx, keep versions aligned, and update workspaces safely."
   },
   {
+    "id": "adoption",
+    "label": "Adoption",
+    "description": "Add Nx to an existing project or monorepo and move code in from other repositories."
+  },
+  {
     "id": "organizational-decisions",
     "label": "Organizational decisions",
     "description": "Choose a monorepo structure, ownership model, and dependency strategy for your organization."

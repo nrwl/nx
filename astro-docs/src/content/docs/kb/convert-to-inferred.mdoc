@@ -80,45 +80,7 @@ Target and configuration names are maintained for each project in their `project
 npx nx show project <project-name>
 ```
 
-For example, if we migrated the `@nx/vite` plugin for a single app (i.e. `nx g @nx/vite:convert-to-inferred --project demo`), then running `nx show project demo` will show a screen similar to the following.
-
-{% project_details title="Test" height="300px" %}
-
-```json
-{
-  "project": {
-    "name": "demo",
-    "data": {
-      "root": " apps/demo",
-      "projectType": "application",
-      "targets": {
-        "serve": {
-          "executor": "nx:run-commands",
-          "options": {
-            "command": "vite dev",
-            "continuous": true
-          }
-        },
-        "build": {
-          "executor": "nx:run-commands",
-          "inputs": ["production", "^production"],
-          "outputs": ["{projectRoot}/dist"],
-          "options": {
-            "command": "vite build"
-          }
-        }
-      }
-    }
-  },
-  "sourceMap": {
-    "targets": ["apps/demo/vite.config.ts", "@nx/vite"],
-    "targets.serve": ["apps/demo/vite.config.ts", "@nx/vite"],
-    "targets.build": ["apps/demo/vite.config.ts", "@nx/vite"]
-  }
-}
-```
-
-{% /project_details %}
+For example, if we migrated the `@nx/vite` plugin for a single app (i.e. `nx g @nx/vite:convert-to-inferred --project demo`), then running `nx show project demo` reports the tasks that plugin inferred.
 
 You'll notice that the `serve` and `build` tasks are running the [Vite CLI](https://vite.dev/guide/cli.html) and there are no references to Nx executors. Since the targets directly invoke the Vite CLI, any options that may be passed to it can be passed via Nx commands. e.g. `nx serve demo --cors --port 8888` enables CORs and uses port `8888` using [Vite CLI options](https://vite.dev/guide/cli.html#options)
 The same CLI setup applies to other plugins as well.
