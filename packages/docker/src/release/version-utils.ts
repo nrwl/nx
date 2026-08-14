@@ -1,7 +1,7 @@
 import { execFileSync } from 'child_process';
 import { writeFileSync, mkdirSync } from 'fs';
 import { dirname, join } from 'path';
-import { prompt } from 'enquirer';
+import { askChoice } from '@nx/devkit/internal';
 import { ProjectGraphProjectNode, workspaceRoot } from '@nx/devkit';
 import { interpolateVersionPattern } from './version-pattern-utils';
 import { type FinalConfigForProject } from '@nx/devkit/internal';
@@ -90,28 +90,16 @@ async function promptForNewVersion(
   versionSchemes: Record<string, string>,
   projectName: string
 ) {
-  const { versionScheme } = await prompt<{ versionScheme: string }>({
-    name: 'versionScheme',
-    type: 'select',
+  // Each scheme's resolved pattern renders as its own hint.
+  return askChoice({
     message: `What type of docker release would you like to make for project "${projectName}"?`,
     choices: Object.keys(versionSchemes).map((vs) => ({
-      name: vs,
-      message: vs,
       value: vs,
-      description: interpolateVersionPattern(versionSchemes[vs], {
+      hint: interpolateVersionPattern(versionSchemes[vs], {
         projectName,
       }),
     })),
-    // Show only the focused scheme's resolved pattern, not every row's at once.
-    footer: function () {
-      const focused = this.focused as { description?: string };
-      return focused?.description
-        ? this.styles.muted(`  ${focused.description}`)
-        : '';
-    },
-  } as any);
-
-  return versionScheme;
+  });
 }
 
 function calculateNewVersion(

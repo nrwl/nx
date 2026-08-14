@@ -18,7 +18,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import type { RspackPluginOptions } from '@nx/rspack/plugin';
-import { prompt } from 'enquirer';
+import { askChoice } from '@nx/devkit/internal';
 import { relative, resolve } from 'path';
 import { join } from 'path/posix';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
@@ -319,14 +319,10 @@ async function getProjectToConvert(tree: Tree) {
       projects.add(project);
     });
   }
-  const { project } = await prompt<{ project: string }>({
-    type: 'select',
-    name: 'project',
+  return askChoice({
     message: 'Which project would you like to convert to rspack?',
-    choices: Array.from(projects),
+    choices: Array.from(projects).map((p) => ({ value: p })),
   });
-
-  return project;
 }
 
 export async function convertToRspack(

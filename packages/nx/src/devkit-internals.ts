@@ -41,6 +41,13 @@ export {
   type TreeIgnoreChecker,
 } from './utils/ignore';
 export { splitTarget } from './utils/split-target';
+export {
+  askChoice,
+  askMultiselect,
+  askText,
+  askYesNo,
+  type Choice as PromptChoice,
+} from './utils/prompt-helpers';
 export { combineOptionsForExecutor } from './utils/params';
 export { sortObjectByKeys } from './utils/object-sort';
 export { stripIndent } from './utils/logger';

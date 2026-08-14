@@ -64,7 +64,7 @@
     "semver": "catalog:",
     "yargs-parser": "catalog:",
     "minimatch": "catalog:",
-    "enquirer": "catalog:"
+    "@clack/prompts": "catalog:"
   },
   "devDependencies": {
     "jest": "catalog:jest",

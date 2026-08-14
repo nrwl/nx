@@ -1,4 +1,4 @@
-import { prompt } from 'enquirer';
+import { promptWhenInteractive } from './prompt';
 import {
   getProjects,
   joinPathFragments,
@@ -143,12 +143,15 @@ export async function ensureRootProjectName(
   projectType: 'application' | 'library'
 ): Promise<void> {
   if (!options.name && options.directory === '.' && getRelativeCwd() === '') {
-    const result = await prompt<{ name: string }>({
-      type: 'input',
-      name: 'name',
-      message: `What do you want to name the ${projectType}?`,
-    });
-    options.name = result.name;
+    const { name } = await promptWhenInteractive<{ name: string }>(
+      {
+        name: 'name',
+        type: 'input',
+        message: `What do you want to name the ${projectType}?`,
+      },
+      { name: undefined }
+    );
+    options.name = name;
   }
 }
 

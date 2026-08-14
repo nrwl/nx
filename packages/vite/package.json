@@ -96,7 +96,6 @@
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@phenomnomnominal/tsquery": "catalog:typescript",
-    "enquirer": "catalog:",
     "@nx/js": "workspace:*",
     "@nx/vitest": "workspace:*",
     "picomatch": "catalog:",

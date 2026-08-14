@@ -49,6 +49,12 @@ export {
 } from './src/generators/project-name-and-root-utils';
 export { promptWhenInteractive } from './src/generators/prompt';
 export {
+  askChoice,
+  askMultiselect,
+  askText,
+  askYesNo,
+} from 'nx/src/devkit-internals';
+export {
   addBuildTargetDefaults,
   addE2eCiTargetDefaults,
   findTargetDefault,
