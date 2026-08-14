@@ -95,7 +95,7 @@
     "react": ">=18.0.0 <20.0.0",
     "react-dom": ">=18.0.0 <20.0.0",
     "@nx/module-federation": "workspace:*",
-    "express": "^4.21.2",
+    "express": ">=4.0.0 <6.0.0",
     "http-proxy-middleware": "catalog:"
   },
   "peerDependenciesMeta": {
