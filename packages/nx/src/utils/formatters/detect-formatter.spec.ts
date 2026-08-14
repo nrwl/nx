@@ -200,6 +200,9 @@ describe('the both-configured warning', () => {
 
       expect(warn).toHaveBeenCalledTimes(1);
       expect(warn.mock.calls[0][0]).toContain('formatting with oxfmt');
+      expect(warn.mock.calls[0][0]).toContain(
+        'https://nx.dev/docs/reference/code-formatting'
+      );
     } finally {
       fs.cleanup();
     }
@@ -215,6 +218,21 @@ describe('the both-configured warning', () => {
 
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0][0]).toContain('formatting with oxfmt');
+  });
+
+  it('should point at an action the user can actually take', () => {
+    // The remediation clause went unasserted and shipped naming a `--formatter`
+    // flag `nx format` has never had. Deleting a config is the only lever.
+    const tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
+    tree.write('.oxfmtrc.json', '{}');
+    tree.write('.prettierrc', '{}');
+
+    detectFormatterInTree(tree);
+
+    const message = warn.mock.calls[0][0];
+    expect(message).toContain('Delete the config you are not using');
+    expect(message).toContain('https://nx.dev/docs/reference/code-formatting');
+    expect(message).not.toContain('--formatter');
   });
 
   it('should stay silent when only one is configured', () => {

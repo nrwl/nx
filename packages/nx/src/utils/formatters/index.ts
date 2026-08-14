@@ -23,7 +23,8 @@ function warnBothConfigured(): void {
   warnedBothConfigured = true;
   logger.warn(
     'Both an oxfmt and a prettier config were found. Nx is formatting with ' +
-      'oxfmt. Remove one config, or pass --formatter, to choose explicitly.'
+      'oxfmt. Delete the config you are not using to make the choice ' +
+      'explicit: https://nx.dev/docs/reference/code-formatting'
   );
 }
 
