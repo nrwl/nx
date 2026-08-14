@@ -57,7 +57,9 @@ export function getPackageManagerCommand(
       return {
         preInstall: `yarn set version ${pmVersion}`,
         install: useBerry
-          ? installCommand
+          ? // Berry turns on immutable installs whenever CI is set, which always
+            // fails here: a brand new workspace has no lockfile to be immutable about.
+            `${installCommand} --no-immutable`
           : `${installCommand} --ignore-scripts`,
         // using npx is necessary to avoid yarn classic manipulating the version detection when using berry
         exec: useBerry ? 'npx' : 'yarn',
