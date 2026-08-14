@@ -13,4 +13,7 @@ export { resolveUserDefinedWebpackConfig } from './src/utils/webpack/resolve-use
 export { suppressWebpackComposeHelperWarnings } from './src/utils/deprecation';
 export { WebpackNxBuildCoordinationPlugin } from './src/plugins/webpack-nx-build-coordination-plugin';
 export type { WebSsrDevServerOptions } from './src/executors/ssr-dev-server/schema';
-export { default as ssrDevServerExecutor } from './src/executors/ssr-dev-server/ssr-dev-server.impl';
+// Named binding, not `export { default as … } from`: that emits a getter whose
+// body calls a helper, which Node's CJS analyzer cannot follow below 24.14, so
+// `@nx/react`'s `await import()` of this entry would get undefined.
+export { ssrDevServerExecutor } from './src/executors/ssr-dev-server/ssr-dev-server.impl';
