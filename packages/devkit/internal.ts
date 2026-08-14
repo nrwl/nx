@@ -2,6 +2,8 @@ export {
   signalToCode,
   createProjectRootMappingsFromProjectConfigurations,
   PluginCache,
+  safeExecFileSync,
+  safeSpawn,
   safeWriteFileCache,
 } from 'nx/src/devkit-internals';
 
