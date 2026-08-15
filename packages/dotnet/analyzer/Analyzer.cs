@@ -148,6 +148,13 @@ public static class Analyzer
                     // Build targets
                     var projectName = ProjectUtilities.GetProjectName(primaryNode.ProjectInstance);
                     var projectDirectory = Path.GetDirectoryName(projectPath)!;
+                    var innerBuilds = nodes
+                        .Where(node => !string.IsNullOrEmpty(
+                            node.ProjectInstance?.GetPropertyValue("TargetFramework")))
+                        .Select(node => node.ProjectInstance!)
+                        .ToList();
+                    var tags = ProjectUtilities.GetCommonNxTags(
+                        innerBuilds.Any() ? innerBuilds : nodes.Select(node => node.ProjectInstance!));
 
                     // The closest Directory.Build.* / Directory.Solution.* ancestors that exist
                     // for this project — declared as inputs on every target that already has an
@@ -176,6 +183,7 @@ public static class Analyzer
                     {
                         Name = projectName,
                         Root = projectRoot,
+                        Tags = tags,
                         Targets = targets,
                         Metadata = new Models.ProjectMetadata
                         {

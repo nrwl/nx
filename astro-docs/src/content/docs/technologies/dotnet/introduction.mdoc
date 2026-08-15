@@ -111,6 +111,24 @@ The plugin analyzes your MSBuild project files to determine:
 - Available build targets (build, test, clean, etc.)
 - Project outputs and configuration
 
+## Define Nx project tags in MSBuild
+
+Use the evaluated `NxTags` property or `NxTag` items to add developer-authored taxonomy to a .NET project. This works with values defined in the project file or imported from `Directory.Build.props`.
+
+```xml
+<PropertyGroup>
+  <NxTags>scope:client;owner:devflow</NxTags>
+</PropertyGroup>
+
+<ItemGroup>
+  <NxTag Include="requires:emulator" />
+</ItemGroup>
+```
+
+The plugin adds a tag only when it applies to every evaluated inner build of a multi-target project. A tag conditioned on one target framework is not promoted to the Nx project. Nx project tags have no configuration-specific scope, so this feature does not model tags conditioned on `Configuration`; it reflects the configuration selected for the project graph.
+
+Use these tags for architecture and policy rules. The plugin does not infer tags from project type, language, target framework, runtime identifier, or build host. Tags emitted by `@nx/dotnet` merge with tags from `project.json` and other create-nodes plugins.
+
 ## View inferred tasks
 
 To view inferred tasks for a project, open the [project details view](/docs/features/explore-graph#explore-projects-in-your-workspace) in Nx Console or run `nx show project my-project` in the command line.
