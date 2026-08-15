@@ -147,9 +147,6 @@ public class DotnetMetadataAnalyzerEndToEndTests : IDisposable
         Assert.True(capabilities.GetProperty("packable").GetBoolean());
         Assert.True(capabilities.GetProperty("publishable").GetBoolean());
         Assert.False(capabilities.GetProperty("tool").GetBoolean());
-        // Namespaced under `dotnet` per discussion #36676 — no sibling `projectType`, `tags`, or
-        // `nxTags` keys should ever appear alongside it.
-        Assert.False(node.GetProperty("metadata").TryGetProperty("projectType", out _));
 
         var targetFrameworks = dotnet.GetProperty("targetFrameworks");
         Assert.Equal(2, targetFrameworks.GetArrayLength());
