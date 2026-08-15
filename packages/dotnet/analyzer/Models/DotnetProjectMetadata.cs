@@ -48,6 +48,13 @@ public record DotnetCapabilities
 /// </summary>
 public record DotnetTargetFrameworkMetadata
 {
+    /// <summary>
+    /// The evaluated NuGet package identity for this target framework: the evaluated
+    /// <c>PackageId</c> property, falling back to <c>AssemblyName</c> when unset (matching the
+    /// NuGet packaging SDK's own default resolution), or <c>null</c> if neither is evaluated.
+    /// </summary>
+    public string? PackageId { get; init; }
+
     /// <summary>The evaluated <c>TargetFramework</c> short name (e.g. "net9.0", "net9.0-ios").</summary>
     public string TargetFramework { get; init; } = string.Empty;
 
@@ -86,9 +93,12 @@ public record DotnetTargetFrameworkMetadata
 public record DotnetProjectMetadata
 {
     /// <summary>
-    /// The project's evaluated NuGet package identity: the evaluated <c>PackageId</c> property,
-    /// falling back to <c>AssemblyName</c> when unset (matching the NuGet packaging SDK's own
-    /// default resolution), or <c>null</c> if neither is evaluated.
+    /// The project's evaluated NuGet package identity, set only when every evaluated target
+    /// framework agrees on it (see <see cref="DotnetTargetFrameworkMetadata.PackageId"/>).
+    /// <c>null</c> when no target framework evaluates one, or when they disagree — e.g. a
+    /// conditional <c>PackageId</c> that varies per <c>TargetFramework</c> — since a single
+    /// project-level value would misrepresent one of the frameworks. Consult each entry in
+    /// <see cref="TargetFrameworks"/> for the per-framework identity in that case.
     /// </summary>
     public string? PackageId { get; init; }
 

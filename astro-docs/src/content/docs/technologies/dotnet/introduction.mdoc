@@ -136,6 +136,7 @@ multi-targeted project — rather than re-parsing the project file's XML.
     },
     "targetFrameworks": [
       {
+        "packageId": "MyCompany.MyLibrary",
         "targetFramework": "net9.0",
         "targetFrameworkIdentifier": ".NETCoreApp",
         "targetFrameworkVersion": "v9.0",
@@ -149,6 +150,7 @@ multi-targeted project — rather than re-parsing the project file's XML.
         }
       },
       {
+        "packageId": "MyCompany.MyLibrary",
         "targetFramework": "net9.0-ios",
         "targetFrameworkIdentifier": ".NETCoreApp",
         "targetFrameworkVersion": "v9.0",
@@ -168,8 +170,12 @@ multi-targeted project — rather than re-parsing the project file's XML.
 }
 ```
 
-- **`packageId`** — the evaluated NuGet package identity (`PackageId`, falling back to
-  `AssemblyName` as MSBuild itself does).
+- **`packageId`** — the project's evaluated NuGet package identity (`PackageId`, falling back to
+  `AssemblyName` as MSBuild itself does), set at the project level only when every evaluated
+  target framework agrees on it. It's omitted when no target framework evaluates one, or when
+  they disagree — e.g. a conditional `PackageId` that varies per `TargetFramework` — since a
+  single project-level value would misrepresent one of the frameworks; check each entry's own
+  `packageId` in `targetFrameworks` in that case.
 - **`capabilities`** — project-level capabilities, aggregated across every target framework:
   - `test` — the project opts in via `IsTestProject` or references `Microsoft.NET.Test.Sdk`/`Microsoft.Testing.*`.
   - `executable` — the evaluated `OutputType` is `Exe`.
@@ -177,9 +183,9 @@ multi-targeted project — rather than re-parsing the project file's XML.
   - `publishable` — the evaluated `IsPublishable` (falls back to `executable` when unset).
   - `tool` — the evaluated `PackAsTool`.
 - **`targetFrameworks`** — one entry per evaluated target framework (in declared `TargetFrameworks`
-  order for multi-targeted projects), each with its own framework/platform identifiers, evaluated
-  `RuntimeIdentifier`/`RuntimeIdentifiers`, and its own (non-aggregated) capabilities — a project
-  can be, for example, a test project on one target framework only.
+  order for multi-targeted projects), each with its own evaluated `packageId`, framework/platform
+  identifiers, evaluated `RuntimeIdentifier`/`RuntimeIdentifiers`, and its own (non-aggregated)
+  capabilities — a project can be, for example, a test project on one target framework only.
 
 These capabilities are informational: the plugin does not use them to infer a project `type`, apply
 tags, or generate additional targets.

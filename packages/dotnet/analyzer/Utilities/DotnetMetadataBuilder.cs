@@ -22,9 +22,9 @@ public static class DotnetMetadataBuilder
 
     /// <summary>
     /// Builds project-level <c>metadata.dotnet</c> from one evaluation per target framework.
-    /// Project-level capabilities are the logical OR of every target framework's capabilities,
-    /// and <see cref="DotnetProjectMetadata.PackageId"/> is resolved from the first evaluation
-    /// that has one (package identity does not normally vary per target framework).
+    /// Project-level capabilities are the logical OR of every target framework's capabilities.
+    /// <see cref="DotnetProjectMetadata.PackageId"/> is only set when every target framework that
+    /// evaluates one agrees on the same value — see <see cref="ResolveProjectPackageId"/>.
     /// </summary>
     public static DotnetProjectMetadata Build(IReadOnlyList<TargetFrameworkEvaluation> evaluations)
     {
@@ -47,12 +47,26 @@ public static class DotnetMetadataBuilder
 
         return new DotnetProjectMetadata
         {
-            PackageId = evaluations
-                .Select(e => ResolvePackageId(e.Properties))
-                .FirstOrDefault(id => id is not null),
+            PackageId = ResolveProjectPackageId(frameworks),
             Capabilities = capabilities,
             TargetFrameworks = frameworks,
         };
+    }
+
+    // A project-level PackageId is only meaningful when it's the same for every target
+    // framework that evaluates one. A conditional `PackageId` that varies per `TargetFramework`
+    // (or, transitively, a per-TFM AssemblyName fallback) means no single value describes the
+    // whole project, so this returns null and callers must look at each entry in
+    // DotnetProjectMetadata.TargetFrameworks instead of silently picking the first one.
+    private static string? ResolveProjectPackageId(IReadOnlyList<DotnetTargetFrameworkMetadata> frameworks)
+    {
+        var distinctIds = frameworks
+            .Select(f => f.PackageId)
+            .Where(id => id is not null)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return distinctIds.Count == 1 ? distinctIds[0] : null;
     }
 
     private static DotnetTargetFrameworkMetadata BuildTargetFrameworkMetadata(TargetFrameworkEvaluation evaluation)
@@ -61,6 +75,7 @@ public static class DotnetMetadataBuilder
 
         return new DotnetTargetFrameworkMetadata
         {
+            PackageId = ResolvePackageId(properties),
             TargetFramework = properties.GetValueOrDefault("TargetFramework", string.Empty),
             TargetFrameworkIdentifier = NullIfEmpty(properties.GetValueOrDefault("TargetFrameworkIdentifier")),
             TargetFrameworkVersion = NullIfEmpty(properties.GetValueOrDefault("TargetFrameworkVersion")),

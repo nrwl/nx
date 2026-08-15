@@ -253,7 +253,10 @@ public class DotnetMetadataBuilderTests
             Evaluation(Properties(("TargetFramework", "net9.0"), ("PackageId", "My.Custom.Package"), ("AssemblyName", "MyLib"))),
         };
 
-        Assert.Equal("My.Custom.Package", DotnetMetadataBuilder.Build(evaluations).PackageId);
+        var metadata = DotnetMetadataBuilder.Build(evaluations);
+
+        Assert.Equal("My.Custom.Package", metadata.PackageId);
+        Assert.Equal("My.Custom.Package", Assert.Single(metadata.TargetFrameworks).PackageId);
     }
 
     [Fact]
@@ -273,6 +276,54 @@ public class DotnetMetadataBuilderTests
         var evaluations = new List<DotnetMetadataBuilder.TargetFrameworkEvaluation>
         {
             Evaluation(Properties(("TargetFramework", "net9.0"))),
+        };
+
+        Assert.Null(DotnetMetadataBuilder.Build(evaluations).PackageId);
+    }
+
+    [Fact]
+    public void Build_MultiTarget_SamePackageIdAcrossFrameworks_IsUsedAtProjectLevel()
+    {
+        var evaluations = new List<DotnetMetadataBuilder.TargetFrameworkEvaluation>
+        {
+            Evaluation(Properties(("TargetFramework", "net9.0"), ("PackageId", "My.Custom.Package"))),
+            Evaluation(Properties(("TargetFramework", "net8.0"), ("PackageId", "My.Custom.Package"))),
+        };
+
+        var metadata = DotnetMetadataBuilder.Build(evaluations);
+
+        Assert.Equal("My.Custom.Package", metadata.PackageId);
+        Assert.All(metadata.TargetFrameworks, f => Assert.Equal("My.Custom.Package", f.PackageId));
+    }
+
+    [Fact]
+    public void Build_MultiTarget_ConditionalPackageIdPerFramework_ProjectLevelIsNullButPerFrameworkIsPreserved()
+    {
+        // A conditional `<PackageId>` that varies by `$(TargetFramework)` — no single value
+        // describes the whole project, so the project-level PackageId must not silently pick
+        // whichever framework evaluated first.
+        var evaluations = new List<DotnetMetadataBuilder.TargetFrameworkEvaluation>
+        {
+            Evaluation(Properties(("TargetFramework", "net9.0"), ("PackageId", "My.Package.Net9"))),
+            Evaluation(Properties(("TargetFramework", "net8.0"), ("PackageId", "My.Package.Net8"))),
+        };
+
+        var metadata = DotnetMetadataBuilder.Build(evaluations);
+
+        Assert.Null(metadata.PackageId);
+        Assert.Equal("My.Package.Net9", metadata.TargetFrameworks.Single(f => f.TargetFramework == "net9.0").PackageId);
+        Assert.Equal("My.Package.Net8", metadata.TargetFrameworks.Single(f => f.TargetFramework == "net8.0").PackageId);
+    }
+
+    [Fact]
+    public void Build_MultiTarget_DivergentAssemblyNameFallback_ProjectLevelIsNull()
+    {
+        // Even without an explicit PackageId, a per-TFM AssemblyName override means the
+        // fallback identity still diverges across frameworks — still ambiguous at project level.
+        var evaluations = new List<DotnetMetadataBuilder.TargetFrameworkEvaluation>
+        {
+            Evaluation(Properties(("TargetFramework", "net9.0"), ("AssemblyName", "MyLib.Net9"))),
+            Evaluation(Properties(("TargetFramework", "net8.0"), ("AssemblyName", "MyLib.Net8"))),
         };
 
         Assert.Null(DotnetMetadataBuilder.Build(evaluations).PackageId);
