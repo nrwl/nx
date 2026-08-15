@@ -53,4 +53,13 @@ public class PluginOptions
     /// Defaults to false, leaving the generated targets unchanged.
     /// </summary>
     public bool FrameworkVariants { get; set; } = false;
+
+    /// <summary>
+    /// When true, multi-targeted executables additionally get per-runtime-identifier
+    /// variants (e.g. "publish-net10.0-ios-ios-arm64"). Separate from
+    /// <see cref="FrameworkVariants"/> so opting into per-framework build variants
+    /// does not, on its own, expand the graph with RID variants. Enabling this
+    /// implies framework variants. Defaults to false.
+    /// </summary>
+    public bool RuntimeVariants { get; set; } = false;
 }

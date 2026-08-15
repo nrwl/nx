@@ -91,10 +91,11 @@ public static partial class TargetBuilder
                 Metadata = VariantMetadata($"Build the {tfm} target framework in Release configuration", technologies, tfm, options.BuildTargetName)
             });
 
-            // Per-RID variants are only generated where this framework's inner build both is an
-            // executable and explicitly declares runtime identifiers. IsExecutable is evaluated
-            // per framework, so a library framework of a mixed project gets no publish/RID variants.
-            if (variant.IsExecutable && variant.RuntimeIdentifiers.Count > 0)
+            // Per-RID variants require the separate runtimeVariants opt-in and are only
+            // generated where this framework's inner build is an executable and has runtime
+            // identifiers. IsExecutable is evaluated per framework, so a library framework of a
+            // mixed project gets no publish/RID variants.
+            if (options.RuntimeVariants && variant.IsExecutable && variant.RuntimeIdentifiers.Count > 0)
             {
                 AddRuntimeVariantTargets(
                     targets, seenNames, tfm, token, variant.Properties, variant.RuntimeIdentifiers,

@@ -36,6 +36,7 @@ export interface DotNetAnalyzerOptions {
   publishTargetName?: string;
   packTargetName?: string;
   frameworkVariants?: boolean;
+  runtimeVariants?: boolean;
 }
 
 interface AnalyzerCache {

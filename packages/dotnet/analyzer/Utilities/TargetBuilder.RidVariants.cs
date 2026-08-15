@@ -137,6 +137,14 @@ public static partial class TargetBuilder
             return false;
         }
 
+        if (!ProjectUtilities.IsPublishDirDerivable(
+                properties.GetValueOrDefault("PublishDir"),
+                properties.GetValueOrDefault("OutputPath")))
+        {
+            reason = "a custom PublishDir was set that doesn't match the default <OutputPath>/publish layout";
+            return false;
+        }
+
         reason = string.Empty;
         return true;
     }

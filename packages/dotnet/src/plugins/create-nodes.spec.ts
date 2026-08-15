@@ -660,6 +660,40 @@ describe('@nx/dotnet - createNodes', () => {
     });
   });
 
+  describe('runtimeVariants option', () => {
+    // Mirrors the analyzerOptions computation in create-nodes.ts.
+    const frameworkEnabled = (o: DotNetPluginOptions) =>
+      ((o.frameworkVariants ?? false) || (o.runtimeVariants ?? false)) &&
+      o.build !== false;
+    const runtimeEnabled = (o: DotNetPluginOptions) =>
+      (o.runtimeVariants ?? false) && o.build !== false;
+
+    it('should default to false', () => {
+      expect(runtimeEnabled({})).toBe(false);
+    });
+
+    it('should imply framework variants when enabled', () => {
+      const options: DotNetPluginOptions = { runtimeVariants: true };
+      expect(runtimeEnabled(options)).toBe(true);
+      expect(frameworkEnabled(options)).toBe(true);
+    });
+
+    it('should not enable runtime variants from frameworkVariants alone', () => {
+      const options: DotNetPluginOptions = { frameworkVariants: true };
+      expect(frameworkEnabled(options)).toBe(true);
+      expect(runtimeEnabled(options)).toBe(false);
+    });
+
+    it('should be disabled when the build target is disabled', () => {
+      const options: DotNetPluginOptions = {
+        runtimeVariants: true,
+        build: false,
+      };
+      expect(runtimeEnabled(options)).toBe(false);
+      expect(frameworkEnabled(options)).toBe(false);
+    });
+  });
+
   describe('framework variant merging', () => {
     const nodeWithVariant = (): ProjectConfiguration => ({
       root: 'apps/my-app',

@@ -222,7 +222,7 @@ public static class Analyzer
         List<ProjectGraphNode> nodes,
         PluginOptions pluginOptions)
     {
-        if (!pluginOptions.FrameworkVariants)
+        if (!pluginOptions.FrameworkVariants && !pluginOptions.RuntimeVariants)
         {
             return null;
         }
@@ -252,35 +252,16 @@ public static class Analyzer
     }
 
     /// <summary>
-    /// Collects the explicitly-declared runtime identifiers for an inner build,
-    /// combining the singular <c>RuntimeIdentifier</c> and the plural
-    /// <c>RuntimeIdentifiers</c>. Returns an empty list when none are declared,
-    /// so RID variants are only generated where the project asks for them.
+    /// Collects the runtime identifiers evaluated for an inner build. The plural
+    /// <c>RuntimeIdentifiers</c> is authoritative when non-empty; otherwise the
+    /// evaluated singular <c>RuntimeIdentifier</c> (which may be an SDK default) is
+    /// used. Returns an empty list when neither is set.
     /// </summary>
     private static List<string> CollectRuntimeIdentifiers(ProjectInstance project)
     {
-        var rids = new List<string>();
-
-        void Add(string? raw)
-        {
-            if (string.IsNullOrWhiteSpace(raw))
-            {
-                return;
-            }
-            foreach (var rid in raw.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            {
-                if (!rids.Contains(rid, StringComparer.Ordinal))
-                {
-                    rids.Add(rid);
-                }
-            }
-        }
-
-        Add(project.GetPropertyValue("RuntimeIdentifier"));
-        Add(project.GetPropertyValue("RuntimeIdentifiers"));
-
-        rids.Sort(StringComparer.Ordinal);
-        return rids;
+        return ProjectUtilities.ResolveRuntimeIdentifiers(
+            project.GetPropertyValue("RuntimeIdentifier"),
+            project.GetPropertyValue("RuntimeIdentifiers"));
     }
 
     private static List<PackageReference> CollectPackageReferences(ProjectInstance project)

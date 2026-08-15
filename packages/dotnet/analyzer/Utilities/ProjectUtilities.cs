@@ -166,6 +166,69 @@ public static class ProjectUtilities
     }
 
     /// <summary>
+    /// Resolves the runtime identifiers for an evaluated inner build. The plural
+    /// <c>RuntimeIdentifiers</c> is authoritative when it declares any value;
+    /// otherwise the evaluated singular <c>RuntimeIdentifier</c> is used (which may
+    /// be an SDK default for platform frameworks). Values are split on ';',
+    /// trimmed, de-duplicated, and sorted for stable output. Returns an empty list
+    /// when neither is set.
+    /// </summary>
+    public static List<string> ResolveRuntimeIdentifiers(string? singular, string? plural)
+    {
+        var rids = new List<string>();
+
+        void Add(string? raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+            {
+                return;
+            }
+            foreach (var rid in raw.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (!rids.Contains(rid, StringComparer.Ordinal))
+                {
+                    rids.Add(rid);
+                }
+            }
+        }
+
+        // Plural wins outright when present: a declared RuntimeIdentifiers list must
+        // not be polluted by an unrelated SDK-implicit singular RuntimeIdentifier.
+        Add(plural);
+        if (rids.Count == 0)
+        {
+            Add(singular);
+        }
+
+        rids.Sort(StringComparer.Ordinal);
+        return rids;
+    }
+
+    /// <summary>
+    /// Whether the publish output directory can be derived as
+    /// <c>&lt;OutputPath&gt;/publish</c>. True when <paramref name="publishDir"/> is
+    /// empty (the SDK default) or normalizes to exactly that; false for a custom or
+    /// fixed publish directory, which the per-RID output derivation can't model and
+    /// might collide across RIDs.
+    /// </summary>
+    public static bool IsPublishDirDerivable(string? publishDir, string? outputPath)
+    {
+        if (string.IsNullOrWhiteSpace(publishDir))
+        {
+            return true;
+        }
+
+        if (string.IsNullOrWhiteSpace(outputPath))
+        {
+            return false;
+        }
+
+        var pub = publishDir.Replace('\\', '/').TrimEnd('/');
+        var expected = outputPath.Replace('\\', '/').TrimEnd('/') + "/publish";
+        return string.Equals(pub, expected, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
     /// Gets the list of technologies for a project based on its file type and characteristics.
     /// </summary>
     public static List<string> GetTechnologies(string projectPath)

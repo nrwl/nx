@@ -38,7 +38,7 @@ public class RuntimeAnalyzerIntegrationTests : IDisposable
         try { Directory.Delete(_workspace, recursive: true); } catch { /* best effort */ }
     }
 
-    private JsonElement RunAnalyzer()
+    private JsonElement RunAnalyzer(string optionsJson)
     {
         var dll = Path.Combine(AppContext.BaseDirectory, "MsbuildAnalyzer.dll");
         Assert.True(File.Exists(dll), $"Analyzer not found at {dll}");
@@ -53,7 +53,7 @@ public class RuntimeAnalyzerIntegrationTests : IDisposable
         };
         psi.ArgumentList.Add(dll);
         psi.ArgumentList.Add(_workspace);
-        psi.ArgumentList.Add("""{"frameworkVariants":true}""");
+        psi.ArgumentList.Add(optionsJson);
 
         using var proc = Process.Start(psi)!;
         proc.StandardInput.WriteLine("App/App.csproj");
@@ -73,9 +73,21 @@ public class RuntimeAnalyzerIntegrationTests : IDisposable
     }
 
     [Fact]
+    public void FrameworkVariantsAlone_EmitsNoRuntimeVariants()
+    {
+        var targets = RunAnalyzer("""{"frameworkVariants":true}""");
+        var names = targets.EnumerateObject().Select(p => p.Name).ToArray();
+
+        // Framework build variants are present, but no RID variants without the
+        // separate runtimeVariants opt-in.
+        Assert.Contains("build-net10.0", names);
+        Assert.DoesNotContain(names, n => n.Contains("win-x64") || n.Contains("linux-x64"));
+    }
+
+    [Fact]
     public void Enabled_RealRidProject_EmitsRuntimeVariantsWithScopedOutputs()
     {
-        var targets = RunAnalyzer();
+        var targets = RunAnalyzer("""{"runtimeVariants":true}""");
 
         var publish = targets.GetProperty("publish-net10.0-win-x64");
 

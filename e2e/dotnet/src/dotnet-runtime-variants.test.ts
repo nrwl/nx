@@ -27,7 +27,7 @@ describe('.NET Plugin - Runtime (RID) Variants', () => {
     updateJson('nx.json', (nxJson) => {
       nxJson.plugins = (nxJson.plugins ?? []).map((p: unknown) =>
         p === '@nx/dotnet'
-          ? { plugin: '@nx/dotnet', options: { frameworkVariants: true } }
+          ? { plugin: '@nx/dotnet', options: { runtimeVariants: true } }
           : p
       );
       return nxJson;
@@ -97,6 +97,13 @@ describe('.NET Plugin - Runtime (RID) Variants', () => {
     const metadata = details.targets['publish-net10.0-win-x64'].metadata;
     expect(metadata.targetFramework).toBe('net10.0');
     expect(metadata.runtimeIdentifier).toBe('win-x64');
+  });
+
+  it('should still generate framework build variants (runtime implies framework)', () => {
+    const details = JSON.parse(runCLI(`show project RidApp --json`));
+
+    expect(details.targets['build-net10.0']).toBeDefined();
+    expect(details.targets['build-net9.0']).toBeDefined();
   });
 
   it('should not generate RID variants when no RIDs are declared', () => {

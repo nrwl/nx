@@ -108,6 +108,17 @@ export interface DotNetPluginOptions {
    * @default false
    */
   frameworkVariants?: boolean;
+  /**
+   * When enabled, multi-targeted executables that have runtime identifiers get
+   * per-RID variants — for example `build-net10.0-ios-ios-arm64-release` and
+   * `publish-net10.0-ios-ios-arm64`. This is a separate opt-in from
+   * {@link frameworkVariants}, so opting into per-framework build variants does
+   * not on its own expand the graph with RID variants. Enabling it implies
+   * `frameworkVariants`.
+   *
+   * @default false
+   */
+  runtimeVariants?: boolean;
 }
 
 // MSBuild auto-imports Directory.Build.props/.targets from each ancestor of a project file,
@@ -255,9 +266,15 @@ export const createNodes: CreateNodes<DotNetPluginOptions> = [
         runTargetName:
           (normalizedOptions.run && normalizedOptions.run.targetName) || 'run',
         // Framework variants derive from the build target, so a disabled build
-        // means no variants to generate.
+        // means no variants to generate. Runtime variants imply framework variants.
         frameworkVariants:
-          (normalizedOptions.frameworkVariants ?? false) &&
+          ((normalizedOptions.frameworkVariants ?? false) ||
+            (normalizedOptions.runtimeVariants ?? false)) &&
+          normalizedOptions.build !== false,
+        // RID variants additionally build/publish, so they're gated on the
+        // separate runtimeVariants opt-in (and a non-disabled build).
+        runtimeVariants:
+          (normalizedOptions.runtimeVariants ?? false) &&
           normalizedOptions.build !== false,
       };
 

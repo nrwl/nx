@@ -47,9 +47,16 @@ public class TargetBuilderRuntimeVariantsTests
         RuntimeIdentifiers = rids.ToList(),
     };
 
-    private static Dictionary<string, Target> BuildTargets(List<FrameworkVariant> variants)
+    private static Dictionary<string, Target> BuildTargets(
+        List<FrameworkVariant> variants,
+        bool runtimeVariants = true,
+        bool frameworkVariants = false)
     {
-        var options = new PluginOptions { FrameworkVariants = true };
+        var options = new PluginOptions
+        {
+            FrameworkVariants = frameworkVariants,
+            RuntimeVariants = runtimeVariants,
+        };
         return TargetBuilder.BuildTargets(
             projectName: "MyProj",
             fileName: "MyProj.csproj",
@@ -83,6 +90,17 @@ public class TargetBuilderRuntimeVariantsTests
     };
 
     // --- Gating -----------------------------------------------------------
+
+    [Fact]
+    public void FrameworkVariantsWithoutRuntimeVariants_EmitsNoRuntimeVariants()
+    {
+        // Opting into per-framework build variants must not, on its own, expand
+        // the graph with RID variants — that needs the separate runtimeVariants flag.
+        var targets = BuildTargets(WinAndIos(), runtimeVariants: false, frameworkVariants: true);
+
+        Assert.Contains("build-net10.0", targets.Keys); // framework variants present
+        Assert.DoesNotContain(targets.Keys, k => k.Contains("win-x64") || k.Contains("ios-arm64"));
+    }
 
     [Fact]
     public void NoRidsDeclared_EmitsNoRuntimeVariants()
@@ -247,6 +265,33 @@ public class TargetBuilderRuntimeVariantsTests
         });
 
         Assert.DoesNotContain(targets.Keys, k => k.Contains("win-x64"));
+    }
+
+    [Fact]
+    public void CustomPublishDir_SkipsRuntimeVariants()
+    {
+        // A custom publish directory that isn't <OutputPath>/publish can't be modeled
+        // per-RID, so the variants are skipped rather than pointed at the wrong folder.
+        var targets = BuildTargets(new List<FrameworkVariant>
+        {
+            Variant("net9.0", new[] { "win-x64" }, extraProps: new[] { ("PublishDir", "dist/custompub") }),
+            Variant("net10.0", new[] { "win-x64" }, extraProps: new[] { ("PublishDir", "dist/custompub") }),
+        });
+
+        Assert.DoesNotContain(targets.Keys, k => k.Contains("win-x64"));
+    }
+
+    [Fact]
+    public void DefaultPublishDir_EmitsRuntimeVariants()
+    {
+        // PublishDir equal to <OutputPath>/publish is the derivable default.
+        var targets = BuildTargets(new List<FrameworkVariant>
+        {
+            Variant("net9.0", new[] { "win-x64" }, extraProps: new[] { ("PublishDir", "bin/Debug/net9.0/publish/") }),
+            Variant("net10.0", new[] { "win-x64" }, extraProps: new[] { ("PublishDir", "bin/Debug/net10.0/publish/") }),
+        });
+
+        Assert.Contains("publish-net10.0-win-x64", targets.Keys);
     }
 
     // --- Metadata & naming -----------------------------------------------
