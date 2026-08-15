@@ -60,7 +60,7 @@ public static partial class TargetBuilder
         if (options.FrameworkVariants && frameworkVariants is { Count: > 1 })
         {
             AddFrameworkVariantTargets(
-                targets, fileName, isTest, isExe, frameworkVariants,
+                targets, fileName, frameworkVariants,
                 projectDirectory, workspaceRoot, options, productionInput, directoryBuildInputs);
         }
 

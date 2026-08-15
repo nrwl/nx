@@ -3,13 +3,21 @@ using MsbuildAnalyzer.Models;
 namespace MsbuildAnalyzer.Utilities;
 
 /// <summary>
-/// Per-target-framework target variants for multi-targeted projects.
+/// Per-target-framework build variants for multi-targeted projects.
 ///
 /// A project that declares <c>&lt;TargetFrameworks&gt;</c> has no single host
 /// that can necessarily run an unqualified <c>dotnet build</c> across every
 /// framework (an iOS + Windows project is the canonical case). These variants
-/// let a workspace invoke, cache, and route one framework in isolation while
-/// the unqualified targets keep building the whole project.
+/// let a workspace build and cache one framework in isolation while the
+/// unqualified targets keep building the whole project.
+///
+/// Each variant is <b>self-contained</b>: it does not depend on the unqualified
+/// build and does not pass <c>--no-dependencies</c>, so MSBuild builds each
+/// referenced project's framework-compatible inner build directly. Depending on
+/// the aggregate <c>^build</c> would rebuild every framework of every dependency
+/// and reintroduce the very host-compatibility problem these variants solve.
+/// The tradeoff is coarser task-level caching of dependencies; <c>^production</c>
+/// remains an input so a dependency source change still invalidates the variant.
 ///
 /// Variant target names avoid the ambiguous <c>project:target:configuration</c>
 /// colon delimiter — the framework is joined to the configured target name with
@@ -21,8 +29,6 @@ public static partial class TargetBuilder
     private static void AddFrameworkVariantTargets(
         Dictionary<string, Target> targets,
         string fileName,
-        bool isTest,
-        bool isExe,
         List<FrameworkVariant> frameworkVariants,
         string projectDirectory,
         string workspaceRoot,
@@ -58,72 +64,32 @@ public static partial class TargetBuilder
                 Options = new TargetOptions
                 {
                     Cwd = "{projectRoot}",
-                    Args = ["--no-restore", "--no-dependencies", "--framework", tfm]
+                    Args = ["--no-restore", "--framework", tfm]
                 },
                 Configurations = FrameworkBuildConfigurations(tfm),
-                DependsOn = [$"^{options.BuildTargetName}"],
                 Cache = true,
                 Inputs = inputs,
                 Outputs = buildOutputs,
-                Metadata = VariantMetadata($"Build the {tfm} target framework", technologies, tfm)
+                Metadata = VariantMetadata($"Build the {tfm} target framework", technologies, tfm, options.BuildTargetName)
             });
 
-            // build-<tfm>-release — the Release build that publish/pack variants depend on,
-            // mirroring the unqualified build:release target (Nx cannot depend on a specific
-            // configuration, so the Release build is its own target).
+            // build-<tfm>-release — a Release build of the framework, mirroring the unqualified
+            // build:release target (Nx cannot depend on a configuration, so Release is its own
+            // target that a Release-only consumer can depend on).
             TryAddVariant(targets, seenNames, buildReleaseName, new Target
             {
                 Command = "dotnet build",
                 Options = new TargetOptions
                 {
                     Cwd = "{projectRoot}",
-                    Args = ["--no-restore", "--no-dependencies", "--framework", tfm, "--configuration", "Release"]
+                    Args = ["--no-restore", "--framework", tfm, "--configuration", "Release"]
                 },
                 Configurations = FrameworkBuildConfigurations(tfm),
-                DependsOn = [$"^{options.BuildTargetName}"],
                 Cache = true,
                 Inputs = inputs,
                 Outputs = releaseOutputs.Length > 0 ? releaseOutputs : buildOutputs,
-                Metadata = VariantMetadata($"Build the {tfm} target framework in Release configuration", technologies, tfm)
+                Metadata = VariantMetadata($"Build the {tfm} target framework in Release configuration", technologies, tfm, options.BuildTargetName)
             });
-
-            if (isTest)
-            {
-                var testName = BuildVariantName(options.TestTargetName, token);
-                TryAddVariant(targets, seenNames, testName, new Target
-                {
-                    Command = "dotnet test",
-                    Options = new TargetOptions
-                    {
-                        Cwd = "{projectRoot}",
-                        Args = ["--no-build", "--no-restore", "--framework", tfm]
-                    },
-                    DependsOn = [buildName],
-                    Cache = true,
-                    Inputs = BuildVariantInputs(productionInput, directoryBuildInputs, firstInput: "default"),
-                    Outputs = GetVariantTestOutputs(variant.Properties, projectDirectory, workspaceRoot),
-                    Metadata = VariantMetadata($"Run .NET tests for the {tfm} target framework", technologies, tfm)
-                });
-            }
-
-            if (isExe)
-            {
-                var publishName = BuildVariantName(options.PublishTargetName, token);
-                TryAddVariant(targets, seenNames, publishName, new Target
-                {
-                    Command = "dotnet publish",
-                    Options = new TargetOptions
-                    {
-                        Cwd = "{projectRoot}",
-                        Args = ["--no-build", "--no-dependencies", "--no-restore", "--framework", tfm, "--configuration", "Release"]
-                    },
-                    DependsOn = [buildReleaseName],
-                    Cache = true,
-                    Inputs = BuildVariantInputs(productionInput, directoryBuildInputs, firstInput: "default"),
-                    Outputs = GetVariantPublishOutputs(variant.Properties, projectDirectory, workspaceRoot),
-                    Metadata = VariantMetadata($"Publish the {tfm} target framework", technologies, tfm)
-                });
-            }
         }
     }
 
@@ -192,35 +158,39 @@ public static partial class TargetBuilder
     {
         ["debug"] = new TargetConfiguration
         {
-            Args = ["--no-restore", "--no-dependencies", "--framework", tfm, "--configuration", "Debug"]
+            Args = ["--no-restore", "--framework", tfm, "--configuration", "Debug"]
         },
         ["release"] = new TargetConfiguration
         {
-            Args = ["--no-restore", "--no-dependencies", "--framework", tfm, "--configuration", "Release"]
+            Args = ["--no-restore", "--framework", tfm, "--configuration", "Release"]
         }
     };
 
-    private static TargetMetadata VariantMetadata(string description, List<string> technologies, string tfm) => new()
+    private static TargetMetadata VariantMetadata(
+        string description,
+        List<string> technologies,
+        string tfm,
+        string frameworkVariantOf) => new()
     {
         Description = description,
         Technologies = technologies,
-        TargetFramework = tfm
+        TargetFramework = tfm,
+        FrameworkVariantOf = frameworkVariantOf
     };
 
     private static object[] BuildVariantInputs(
         string productionInput,
-        List<string> directoryBuildInputs,
-        string? firstInput = null)
+        List<string> directoryBuildInputs)
     {
-        // Mirrors the input shape of the unqualified cacheable targets so a variant
-        // invalidates on the same evaluation-affecting files.
+        // Mirrors the unqualified build's inputs minus dependentTasksOutputFiles: a self-contained
+        // variant has no dependent Nx tasks, but ^production still invalidates it when a
+        // dependency's sources change.
         return
         [
-            firstInput ?? productionInput,
+            productionInput,
             $"^{productionInput}",
             "{workspaceRoot}/.editorconfig",
             new { workingDirectory = "absolute" },
-            new { dependentTasksOutputFiles = "**/*" },
             .. directoryBuildInputs
         ];
     }
@@ -257,42 +227,6 @@ public static partial class TargetBuilder
         }
 
         return DedupeOutputs(outputs);
-    }
-
-    private static string[] GetVariantTestOutputs(
-        Dictionary<string, string> properties,
-        string projectDirectory,
-        string workspaceRoot)
-    {
-        var testResultsDir = properties.TryGetValue("TestResultsDirectory", out var configured) && !string.IsNullOrEmpty(configured)
-            ? ResolvePath(configured, projectDirectory, workspaceRoot)
-            : "{projectRoot}/TestResults";
-
-        return testResultsDir is null ? [] : [testResultsDir];
-    }
-
-    private static string[] GetVariantPublishOutputs(
-        Dictionary<string, string> properties,
-        string projectDirectory,
-        string workspaceRoot)
-    {
-        var outputs = new List<string?>();
-
-        var publishDir = properties.TryGetValue("PublishDir", out var configuredPublish) && !string.IsNullOrEmpty(configuredPublish)
-            ? ResolvePath(configuredPublish, projectDirectory, workspaceRoot)
-            : AppendSegment(ResolvePath(properties.GetValueOrDefault("OutputPath") ?? "", projectDirectory, workspaceRoot), "publish");
-
-        outputs.Add(WithConfiguration(publishDir, "Release"));
-
-        var intermediatePath = ResolvePath(properties.GetValueOrDefault("IntermediateOutputPath") ?? "", projectDirectory, workspaceRoot);
-        outputs.Add(WithConfiguration(intermediatePath, "Release"));
-
-        return DedupeOutputs(outputs);
-    }
-
-    private static string? AppendSegment(string? path, string segment)
-    {
-        return path is null ? null : $"{path.TrimEnd('/')}/{segment}";
     }
 
     private static string[] DedupeOutputs(IEnumerable<string?> outputs)

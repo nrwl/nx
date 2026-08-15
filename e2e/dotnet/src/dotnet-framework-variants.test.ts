@@ -80,13 +80,13 @@ describe('.NET Plugin - Framework Variants', () => {
     }
   });
 
-  it('should generate a publish variant per framework for executables', () => {
+  it('should generate a self-contained build variant (no aggregate build dependency)', () => {
     const details = JSON.parse(runCLI(`show project MultiApp --json`));
 
-    expect(details.targets['publish-net10.0']).toBeDefined();
-    expect(details.targets['publish-net10.0'].dependsOn).toContain(
-      'build-net10.0-release'
-    );
+    const variant = details.targets['build-net10.0'];
+    // Self-contained: no dependsOn on the aggregate build, and no --no-dependencies.
+    expect(variant.dependsOn ?? []).not.toContain('^build');
+    expect(variant.options.args).not.toContain('--no-dependencies');
   });
 
   it('should record the target framework in variant metadata', () => {
@@ -94,6 +94,9 @@ describe('.NET Plugin - Framework Variants', () => {
 
     expect(details.targets['build-net10.0'].metadata.targetFramework).toBe(
       'net10.0'
+    );
+    expect(details.targets['build-net10.0'].metadata.frameworkVariantOf).toBe(
+      'build'
     );
   });
 

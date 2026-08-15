@@ -246,14 +246,16 @@ A project that declares `<TargetFrameworks>` (plural) builds more than one targe
 }
 ```
 
-With the option enabled, a project declaring `<TargetFrameworks>net10.0;net10.0-ios</TargetFrameworks>` gets these additional targets alongside the unqualified ones:
+With the option enabled, a project declaring `<TargetFrameworks>net10.0;net10.0-ios</TargetFrameworks>` gets these additional build targets alongside the unqualified ones:
 
-- `build-net10.0`, `build-net10.0-ios` - build a single framework
-- `build-net10.0-release`, `build-net10.0-ios-release` - the Release build that publish depends on
-- `publish-net10.0-ios` - publish a single framework (executable projects)
-- `test-net10.0-ios` - test a single framework (test projects)
+- `build-net10.0`, `build-net10.0-ios` - build a single framework (Debug by default)
+- `build-net10.0-release`, `build-net10.0-ios-release` - build a single framework in Release
 
 Each variant passes `--framework` to the .NET CLI, scopes its outputs and cache identity to that framework, and records the framework in its target metadata. The framework is joined to the target name with a hyphen (never a colon), so `nx run my-app:build-net10.0-ios` is unambiguous.
+
+Variants are self-contained: they don't depend on the unqualified build and don't pass `--no-dependencies`, so building one framework lets MSBuild build each referenced project's compatible framework directly instead of triggering an all-framework build. The tradeoff is coarser task-level caching of dependencies; `^production` stays an input so a dependency's source change still invalidates the variant.
+
+Any configuration you set on the `build` target is applied to its variants too, and disabling `build` removes them.
 
 This option is off by default and never changes the unqualified targets. Single-targeted projects are unaffected.
 

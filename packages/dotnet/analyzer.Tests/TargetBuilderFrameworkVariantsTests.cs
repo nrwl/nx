@@ -5,7 +5,7 @@ using Xunit;
 namespace MsbuildAnalyzer.Tests;
 
 /// <summary>
-/// Unit tests for the opt-in per-target-framework target variants added for
+/// Unit tests for the opt-in per-target-framework build variants added for
 /// multi-targeted projects (https://github.com/nrwl/nx/discussions/36676).
 ///
 /// These drive the pure target-building logic with property dictionaries that
@@ -109,12 +109,49 @@ public class TargetBuilderFrameworkVariantsTests
     }
 
     [Fact]
+    public void OnlyBuildVariants_AreGenerated()
+    {
+        // Scope is build variants only; test/publish variants are a later design.
+        var targets = BuildTargets(frameworkVariants: true, Variants("net10.0", "net10.0-ios"), isExe: true, isTest: true);
+
+        Assert.DoesNotContain(targets.Keys, k => k.StartsWith("test-net") || k.StartsWith("publish-net"));
+    }
+
+    [Fact]
     public void BuildVariant_PassesFrameworkArgument()
     {
         var targets = BuildTargets(frameworkVariants: true, Variants("net10.0", "net10.0-ios"));
 
         var args = targets["build-net10.0-ios"].Options!.Args!;
-        Assert.Equal(new[] { "--no-restore", "--no-dependencies", "--framework", "net10.0-ios" }, args);
+        Assert.Equal(new[] { "--no-restore", "--framework", "net10.0-ios" }, args);
+    }
+
+    [Fact]
+    public void BuildVariant_IsSelfContained()
+    {
+        // A self-contained variant must not depend on the aggregate build or pass
+        // --no-dependencies, or it would rebuild every framework of every dependency
+        // and reintroduce the host-compatibility problem it exists to solve.
+        var targets = BuildTargets(frameworkVariants: true, Variants("net10.0", "net10.0-ios"));
+
+        var buildVariant = targets["build-net10.0-ios"];
+        Assert.True(buildVariant.DependsOn is null || buildVariant.DependsOn.Length == 0);
+        Assert.DoesNotContain("--no-dependencies", buildVariant.Options!.Args!);
+
+        var releaseVariant = targets["build-net10.0-ios-release"];
+        Assert.True(releaseVariant.DependsOn is null || releaseVariant.DependsOn.Length == 0);
+        Assert.DoesNotContain("--no-dependencies", releaseVariant.Options!.Args!);
+    }
+
+    [Fact]
+    public void BuildVariant_KeepsProductionInputForInvalidation()
+    {
+        var targets = BuildTargets(frameworkVariants: true, Variants("net10.0", "net10.0-ios"));
+
+        // With no nx.json the production input resolves to "default"; the caret form
+        // keeps a self-contained variant invalidating on dependency source changes.
+        var inputs = targets["build-net10.0-ios"].Inputs!;
+        Assert.Contains("^default", inputs.OfType<string>());
     }
 
     [Fact]
@@ -148,33 +185,13 @@ public class TargetBuilderFrameworkVariantsTests
     }
 
     [Fact]
-    public void BuildVariant_RecordsFrameworkMetadata()
+    public void BuildVariant_RecordsFrameworkAndBaseTargetMetadata()
     {
         var targets = BuildTargets(frameworkVariants: true, Variants("net10.0", "net10.0-ios"));
 
-        Assert.Equal("net10.0-ios", targets["build-net10.0-ios"].Metadata!.TargetFramework);
-    }
-
-    [Fact]
-    public void PublishVariant_OnlyForExecutables_DependsOnReleaseBuild()
-    {
-        var exeTargets = BuildTargets(frameworkVariants: true, Variants("net10.0", "net10.0-ios"), isExe: true);
-        Assert.Contains("publish-net10.0-ios", exeTargets.Keys);
-        Assert.Equal(new[] { "build-net10.0-ios-release" }, exeTargets["publish-net10.0-ios"].DependsOn);
-
-        var libTargets = BuildTargets(frameworkVariants: true, Variants("net10.0", "net10.0-ios"));
-        Assert.DoesNotContain("publish-net10.0-ios", libTargets.Keys);
-    }
-
-    [Fact]
-    public void TestVariant_OnlyForTestProjects_DependsOnDebugBuild()
-    {
-        var testTargets = BuildTargets(frameworkVariants: true, Variants("net10.0", "net10.0-ios"), isTest: true);
-        Assert.Contains("test-net10.0-ios", testTargets.Keys);
-        Assert.Equal(new[] { "build-net10.0-ios" }, testTargets["test-net10.0-ios"].DependsOn);
-
-        var nonTestTargets = BuildTargets(frameworkVariants: true, Variants("net10.0", "net10.0-ios"));
-        Assert.DoesNotContain("test-net10.0-ios", nonTestTargets.Keys);
+        var metadata = targets["build-net10.0-ios"].Metadata!;
+        Assert.Equal("net10.0-ios", metadata.TargetFramework);
+        Assert.Equal("build", metadata.FrameworkVariantOf);
     }
 
     // --- Naming safety & collisions --------------------------------------
@@ -182,7 +199,7 @@ public class TargetBuilderFrameworkVariantsTests
     [Fact]
     public void VariantNames_NeverContainColon()
     {
-        var targets = BuildTargets(frameworkVariants: true, Variants("net10.0", "net10.0-ios"), isExe: true);
+        var targets = BuildTargets(frameworkVariants: true, Variants("net10.0", "net10.0-ios"));
 
         foreach (var name in targets.Keys.Where(k => k.Contains("net10.0")))
         {
@@ -199,6 +216,7 @@ public class TargetBuilderFrameworkVariantsTests
         Assert.Contains("compile-net10.0-ios", targets.Keys);
         Assert.Contains("compile-net10.0-ios-release", targets.Keys);
         Assert.DoesNotContain("build-net10.0-ios", targets.Keys);
+        Assert.Equal("compile", targets["compile-net10.0-ios"].Metadata!.FrameworkVariantOf);
     }
 
     [Fact]
