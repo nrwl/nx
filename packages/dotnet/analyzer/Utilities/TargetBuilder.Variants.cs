@@ -90,6 +90,16 @@ public static partial class TargetBuilder
                 Outputs = releaseOutputs.Length > 0 ? releaseOutputs : buildOutputs,
                 Metadata = VariantMetadata($"Build the {tfm} target framework in Release configuration", technologies, tfm, options.BuildTargetName)
             });
+
+            // Per-RID variants are only generated where this framework's inner build both is an
+            // executable and explicitly declares runtime identifiers. IsExecutable is evaluated
+            // per framework, so a library framework of a mixed project gets no publish/RID variants.
+            if (variant.IsExecutable && variant.RuntimeIdentifiers.Count > 0)
+            {
+                AddRuntimeVariantTargets(
+                    targets, seenNames, tfm, token, variant.Properties, variant.RuntimeIdentifiers,
+                    projectDirectory, workspaceRoot, options, productionInput, directoryBuildInputs, technologies);
+            }
         }
     }
 
@@ -178,6 +188,20 @@ public static partial class TargetBuilder
         FrameworkVariantOf = frameworkVariantOf
     };
 
+    private static TargetMetadata VariantMetadata(
+        string description,
+        List<string> technologies,
+        string tfm,
+        string rid,
+        string frameworkVariantOf) => new()
+    {
+        Description = description,
+        Technologies = technologies,
+        TargetFramework = tfm,
+        RuntimeIdentifier = rid,
+        FrameworkVariantOf = frameworkVariantOf
+    };
+
     private static object[] BuildVariantInputs(
         string productionInput,
         List<string> directoryBuildInputs)
@@ -241,6 +265,11 @@ public static partial class TargetBuilder
             }
         }
         return result.ToArray();
+    }
+
+    private static string? AppendSegment(string? path, string segment)
+    {
+        return path is null ? null : $"{path.TrimEnd('/')}/{segment}";
     }
 
     /// <summary>

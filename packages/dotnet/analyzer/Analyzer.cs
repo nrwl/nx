@@ -232,10 +232,16 @@ public static class Analyzer
         var variants = nodes
             .Where(n => n.ProjectInstance is not null &&
                         !string.IsNullOrEmpty(n.ProjectInstance.GetPropertyValue("TargetFramework")))
-            .Select(n => new FrameworkVariant
+            .Select(n =>
             {
-                TargetFramework = n.ProjectInstance!.GetPropertyValue("TargetFramework"),
-                Properties = CollectProperties(n.ProjectInstance!)
+                var props = CollectProperties(n.ProjectInstance!);
+                return new FrameworkVariant
+                {
+                    TargetFramework = n.ProjectInstance!.GetPropertyValue("TargetFramework"),
+                    Properties = props,
+                    IsExecutable = IsExecutableProject(props),
+                    RuntimeIdentifiers = CollectRuntimeIdentifiers(n.ProjectInstance!)
+                };
             })
             .GroupBy(v => v.TargetFramework, StringComparer.Ordinal)
             .Select(g => g.First())
@@ -243,6 +249,38 @@ public static class Analyzer
             .ToList();
 
         return variants.Count > 1 ? variants : null;
+    }
+
+    /// <summary>
+    /// Collects the explicitly-declared runtime identifiers for an inner build,
+    /// combining the singular <c>RuntimeIdentifier</c> and the plural
+    /// <c>RuntimeIdentifiers</c>. Returns an empty list when none are declared,
+    /// so RID variants are only generated where the project asks for them.
+    /// </summary>
+    private static List<string> CollectRuntimeIdentifiers(ProjectInstance project)
+    {
+        var rids = new List<string>();
+
+        void Add(string? raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+            {
+                return;
+            }
+            foreach (var rid in raw.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (!rids.Contains(rid, StringComparer.Ordinal))
+                {
+                    rids.Add(rid);
+                }
+            }
+        }
+
+        Add(project.GetPropertyValue("RuntimeIdentifier"));
+        Add(project.GetPropertyValue("RuntimeIdentifiers"));
+
+        rids.Sort(StringComparer.Ordinal);
+        return rids;
     }
 
     private static List<PackageReference> CollectPackageReferences(ProjectInstance project)
@@ -316,6 +354,12 @@ public static class Analyzer
             "UseArtifactsOutput",
             "ArtifactsPath",
             "ArtifactsPivots",
+
+            // Output-layout switches that determine whether framework/runtime
+            // identifier segments are appended to the output path (RID variants
+            // rely on the standard appended layout).
+            "AppendTargetFrameworkToOutputPath",
+            "AppendRuntimeIdentifierToOutputPath",
 
             // Output paths
             "OutputPath",

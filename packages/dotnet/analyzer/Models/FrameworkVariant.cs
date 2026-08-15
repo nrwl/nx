@@ -21,4 +21,21 @@ public sealed record FrameworkVariant
     /// framework's subdirectory.
     /// </summary>
     public required Dictionary<string, string> Properties { get; init; }
+
+    /// <summary>
+    /// Whether this specific inner build is an executable (its evaluated
+    /// <c>OutputType</c> is Exe/WinExe). Evaluated per framework because
+    /// <c>OutputType</c> can be conditioned on <c>TargetFramework</c>, so one
+    /// framework of a project can be an app while another is a library. Gates
+    /// per-RID publish variants, which only make sense for executables.
+    /// </summary>
+    public bool IsExecutable { get; init; }
+
+    /// <summary>
+    /// The runtime identifiers explicitly declared for this framework (from
+    /// <c>RuntimeIdentifier</c>/<c>RuntimeIdentifiers</c>). Empty when the
+    /// project declares none, so RID-specific variants are only generated
+    /// "where declared".
+    /// </summary>
+    public List<string> RuntimeIdentifiers { get; init; } = new();
 }

@@ -29,4 +29,11 @@ public record TargetMetadata
     /// set on framework-specific target variants.
     /// </summary>
     public string? FrameworkVariantOf { get; init; }
+
+    /// <summary>
+    /// The runtime identifier this target invocation is scoped to
+    /// (e.g. "ios-arm64"). Only set on RID-specific target variants; left null
+    /// (and omitted from JSON) otherwise.
+    /// </summary>
+    public string? RuntimeIdentifier { get; init; }
 }

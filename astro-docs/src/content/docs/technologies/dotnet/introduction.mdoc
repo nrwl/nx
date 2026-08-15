@@ -259,6 +259,26 @@ Any configuration you set on the `build` target is applied to its variants too, 
 
 This option is off by default and never changes the unqualified targets. Single-targeted projects are unaffected.
 
+### Runtime identifier variants
+
+When an executable framework also declares runtime identifiers, the same `frameworkVariants` option additionally generates per-RID variants for each declared RID:
+
+```xml
+<PropertyGroup>
+  <TargetFrameworks>net10.0;net10.0-ios</TargetFrameworks>
+  <RuntimeIdentifiers>ios-arm64</RuntimeIdentifiers>
+</PropertyGroup>
+```
+
+- `build-net10.0-ios-ios-arm64-release` - the RID-specific Release build
+- `publish-net10.0-ios-ios-arm64` - publish for that framework and RID
+
+The RID publish passes both `--framework` and `--runtime`, scopes its outputs to the runtime-specific output folder, and depends on the RID-specific build so a `--no-build` publish finds the correct output. The RID Release build is self-contained on the same terms as the framework build variants.
+
+Whether a framework is an executable is evaluated per framework (via `OutputType`), so in a project whose frameworks mix application and library, only the executable frameworks get RID variants. RID variants are only generated where the project explicitly declares runtime identifiers.
+
+RID variants require the standard appended output layout, where the framework and runtime identifier are output-path segments. To avoid declaring cache outputs the build won't write, they are skipped (with a warning) for projects that use `UseArtifactsOutput`, or that set `AppendTargetFrameworkToOutputPath` or `AppendRuntimeIdentifierToOutputPath` to `false`.
+
 ## Set up CI for your .NET monorepo
 
 In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
