@@ -16,7 +16,7 @@ public record NxProjectGraphNode
     public string Root { get; init; } = string.Empty;
 
     /// <summary>
-    /// The Nx project type when it can be inferred consistently across evaluated configurations.
+    /// The Nx project type when it can be inferred consistently across evaluated target frameworks.
     /// </summary>
     public string? ProjectType { get; init; }
 

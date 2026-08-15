@@ -210,7 +210,8 @@ public static class ProjectUtilities
     }
 
     public static string? InferProjectType(
-        IEnumerable<IReadOnlyDictionary<string, string>> evaluatedProperties)
+        IEnumerable<IReadOnlyDictionary<string, string>> evaluatedProperties,
+        bool isTestProject = false)
     {
         string? inferredType = null;
         var hasConfiguration = false;
@@ -231,6 +232,11 @@ public static class ProjectUtilities
             };
 
             if (currentType is null)
+            {
+                return null;
+            }
+
+            if (isTestProject && currentType == "application")
             {
                 return null;
             }

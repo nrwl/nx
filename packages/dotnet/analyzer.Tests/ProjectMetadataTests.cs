@@ -39,7 +39,7 @@ public class ProjectMetadataTests
     }
 
     [Fact]
-    public void DoesNotTreatCapabilitiesAsProjectTypes()
+    public void KeepsLibraryOutputTestProjectsClassifiedAsLibraries()
     {
         var projectType = ProjectUtilities.InferProjectType(
             new[]
@@ -49,9 +49,22 @@ public class ProjectMetadataTests
                     ("IsTestProject", "true"),
                     ("IsPackable", "true"),
                     ("PackAsTool", "true"))
-            });
+            },
+            isTestProject: true);
 
         Assert.Equal("library", projectType);
+    }
+
+    [Theory]
+    [InlineData("Exe")]
+    [InlineData("WinExe")]
+    public void LeavesExecutableTestProjectsUnclassified(string outputType)
+    {
+        var projectType = ProjectUtilities.InferProjectType(
+            new[] { Properties(("OutputType", outputType)) },
+            isTestProject: true);
+
+        Assert.Null(projectType);
     }
 
     [Fact]

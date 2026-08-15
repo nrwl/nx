@@ -12,6 +12,8 @@ import {
   createSimpleDotNetWorkspace,
   createWebApiWorkspace,
   addProjectReference,
+  createDotNetProject,
+  updateProjectFile,
 } from './utils/create-dotnet-project';
 
 describe('.NET Plugin', () => {
@@ -19,6 +21,13 @@ describe('.NET Plugin', () => {
     newProject({ packages: [] });
     runCLI(`add @nx/dotnet`);
     createSimpleDotNetWorkspace();
+    createDotNetProject({ name: 'Executable.Tests', type: 'xunit' });
+    updateProjectFile('Executable.Tests', (content) =>
+      content.replace(
+        '</PropertyGroup>',
+        '  <OutputType>Exe</OutputType>\n</PropertyGroup>'
+      )
+    );
   });
 
   afterAll(() => cleanupProject());
@@ -33,6 +42,7 @@ describe('.NET Plugin', () => {
       expect(projectsData).toContain('MyApp');
       expect(projectsData).toContain('MyLibrary');
       expect(projectsData).toContain('MyApp.Tests');
+      expect(projectsData).toContain('Executable.Tests');
     });
 
     it('should show project details with .NET targets', () => {
@@ -72,6 +82,14 @@ describe('.NET Plugin', () => {
       expect(details.projectType).toBe('library');
       expect(details.metadata.technologies).toEqual(['dotnet', 'C#']);
       expect(details.targets).toHaveProperty('build');
+      expect(details.targets).toHaveProperty('test');
+    });
+
+    it('should leave executable test projects unclassified', () => {
+      const projectDetails = runCLI(`show project Executable.Tests --json`);
+      const details = JSON.parse(projectDetails);
+
+      expect(details.projectType).toBeUndefined();
       expect(details.targets).toHaveProperty('test');
     });
   });
