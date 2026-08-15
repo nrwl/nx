@@ -229,6 +229,13 @@ public static class Analyzer
                         directoryBuildInputs
                     );
 
+                    // Structured, evaluated .NET metadata (metadata.dotnet): reuses the same
+                    // grouped inner-build nodes above rather than re-evaluating XML, aggregating
+                    // per-target-framework facts/capabilities across every framework the
+                    // project targets (not just the primary node used for target generation).
+                    var frameworkEvaluations = CollectTargetFrameworkEvaluations(nodes, primaryNode);
+                    var dotnetMetadata = DotnetMetadataBuilder.Build(frameworkEvaluations);
+
                     nodesByFile[relativeProjectFile] = new NxProjectGraphNode
                     {
                         Name = projectName,
@@ -236,7 +243,8 @@ public static class Analyzer
                         Targets = targets,
                         Metadata = new Models.ProjectMetadata
                         {
-                            Technologies = ProjectUtilities.GetTechnologies(projectPath)
+                            Technologies = ProjectUtilities.GetTechnologies(projectPath),
+                            Dotnet = dotnetMetadata
                         }
                     };
 
@@ -342,5 +350,52 @@ public static class Analyzer
         }
 
         return properties;
+    }
+
+    /// <summary>
+    /// Collects the evaluated properties/package-references for every MSBuild inner-build node
+    /// of a project (one per target framework), ordered to match the outer build's declared
+    /// <c>TargetFrameworks</c> list so <c>metadata.dotnet.targetFrameworks</c> is deterministic.
+    /// Falls back to just <paramref name="primaryNode"/> for legacy/non-SDK projects that never
+    /// evaluate a <c>TargetFramework</c> property.
+    /// </summary>
+    private static List<DotnetMetadataBuilder.TargetFrameworkEvaluation> CollectTargetFrameworkEvaluations(
+        List<ProjectGraphNode> nodes,
+        ProjectGraphNode primaryNode)
+    {
+        var frameworkNodes = nodes
+            .Where(n => !string.IsNullOrEmpty(n.ProjectInstance?.GetPropertyValue("TargetFramework")))
+            .ToList();
+
+        if (frameworkNodes.Count == 0)
+        {
+            frameworkNodes = new List<ProjectGraphNode> { primaryNode };
+        }
+        else
+        {
+            // TargetFrameworks (plural) is evaluated identically on every node for the project
+            // (it isn't batched per inner build), so the primary node's value reflects the
+            // author-declared order even when primaryNode itself is an inner build.
+            var declaredOrder = primaryNode.ProjectInstance!.GetPropertyValue("TargetFrameworks");
+            if (!string.IsNullOrEmpty(declaredOrder))
+            {
+                var order = declaredOrder
+                    .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Select((tfm, index) => (tfm, index))
+                    .ToDictionary(x => x.tfm, x => x.index, StringComparer.OrdinalIgnoreCase);
+
+                frameworkNodes = frameworkNodes
+                    .OrderBy(n => order.TryGetValue(n.ProjectInstance!.GetPropertyValue("TargetFramework"), out var index)
+                        ? index
+                        : int.MaxValue)
+                    .ToList();
+            }
+        }
+
+        return frameworkNodes
+            .Select(n => new DotnetMetadataBuilder.TargetFrameworkEvaluation(
+                CollectProperties(n.ProjectInstance!),
+                CollectPackageReferences(n.ProjectInstance!)))
+            .ToList();
     }
 }
