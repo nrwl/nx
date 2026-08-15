@@ -157,6 +157,53 @@ export interface ProjectMetadata {
     packageMain?: string;
     isInPackageManagerWorkspaces?: boolean;
   };
+  dotnet?: {
+    packageId?: string;
+    capabilities: DotnetCapabilities;
+    targetFrameworks: DotnetTargetFrameworkMetadata[];
+  };
+}
+
+/**
+ * Capabilities describing what operations a .NET project (or one of its evaluated target
+ * frameworks) supports. These overlap rather than being mutually exclusive: a project can be
+ * both a test project and packable, for example.
+ */
+export interface DotnetCapabilities {
+  /** Opts in via `IsTestProject` or references the test SDK/platform packages. */
+  test: boolean;
+  /** The evaluated `OutputType` is `Exe`. */
+  executable: boolean;
+  /** The evaluated `IsPackable` property allows `dotnet pack` to produce a NuGet package. */
+  packable: boolean;
+  /** The evaluated `IsPublishable` property allows `dotnet publish` to produce output. */
+  publishable: boolean;
+  /** The evaluated `PackAsTool` property packages this project as a .NET tool. */
+  tool: boolean;
+}
+
+/**
+ * Evaluated MSBuild facts for a single target framework of a .NET project (one MSBuild "inner
+ * build"). Multi-targeted projects (`TargetFrameworks`) contribute one entry per framework;
+ * single-targeted projects contribute exactly one.
+ */
+export interface DotnetTargetFrameworkMetadata {
+  /** The evaluated `TargetFramework` short name (e.g. "net9.0", "net9.0-ios"). */
+  targetFramework: string;
+  /** The evaluated `TargetFrameworkIdentifier` (e.g. ".NETCoreApp"). */
+  targetFrameworkIdentifier?: string;
+  /** The evaluated `TargetFrameworkVersion` (e.g. "v9.0"). */
+  targetFrameworkVersion?: string;
+  /** The evaluated `TargetPlatformIdentifier` (e.g. "ios", "android", "windows"), when set. */
+  targetPlatformIdentifier?: string;
+  /** The evaluated `TargetPlatformVersion`, set alongside `targetPlatformIdentifier`. */
+  targetPlatformVersion?: string;
+  /** The evaluated single `RuntimeIdentifier` for this target framework, if set. */
+  runtimeIdentifier?: string;
+  /** The evaluated `RuntimeIdentifiers` list for this target framework (multi-RID publish). */
+  runtimeIdentifiers: string[];
+  /** Capabilities evaluated for this specific target framework. */
+  capabilities: DotnetCapabilities;
 }
 
 export interface TargetMetadata {
