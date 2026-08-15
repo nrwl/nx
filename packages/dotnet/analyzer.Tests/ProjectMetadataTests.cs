@@ -17,6 +17,19 @@ public class ProjectMetadataTests
     }
 
     [Fact]
+    public void InfersApplicationsWhenTargetFrameworkOutputTypesAgree()
+    {
+        var projectType = ProjectUtilities.InferProjectType(
+            new[]
+            {
+                Properties(("OutputType", "Exe")),
+                Properties(("OutputType", "WinExe"))
+            });
+
+        Assert.Equal("application", projectType);
+    }
+
+    [Fact]
     public void InfersLibrariesFromLibraryOutputType()
     {
         var projectType = ProjectUtilities.InferProjectType(
