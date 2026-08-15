@@ -90,6 +90,19 @@ export interface DotNetPluginOptions {
    * Use `targetName` to rename the target, and provide additional options/configurations to merge with the generated target.
    */
   run?: TargetConfigurationWithName | false;
+  /**
+   * When enabled, multi-targeted projects (those declaring `<TargetFrameworks>`)
+   * additionally get per-target-framework target variants alongside the
+   * unqualified targets — for example `build-net10.0-ios`, `build-net10.0-ios-release`,
+   * `test-net10.0-ios`, and `publish-net10.0-ios`. Each variant passes `--framework`
+   * to the .NET CLI and scopes its outputs and cache identity to that framework.
+   *
+   * This is opt-in because it expands the task graph, and it never changes the
+   * unqualified targets. Single-targeted projects are unaffected.
+   *
+   * @default false
+   */
+  frameworkVariants?: boolean;
 }
 
 // MSBuild auto-imports Directory.Build.props/.targets from each ancestor of a project file,
@@ -208,6 +221,7 @@ export const createNodes: CreateNodes<DotNetPluginOptions> = [
           'watch',
         runTargetName:
           (normalizedOptions.run && normalizedOptions.run.targetName) || 'run',
+        frameworkVariants: normalizedOptions.frameworkVariants ?? false,
       };
 
       const result = await analyzeProjects(

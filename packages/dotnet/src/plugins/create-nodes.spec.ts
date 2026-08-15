@@ -614,4 +614,16 @@ describe('@nx/dotnet - createNodes', () => {
       expect(cleanTargetName).toBe('cleanup');
     });
   });
+
+  describe('frameworkVariants option', () => {
+    it('should default to false when not provided', () => {
+      const options: DotNetPluginOptions = {};
+      expect(options.frameworkVariants ?? false).toBe(false);
+    });
+
+    it('should pass through the opt-in value', () => {
+      const options: DotNetPluginOptions = { frameworkVariants: true };
+      expect(options.frameworkVariants ?? false).toBe(true);
+    });
+  });
 });

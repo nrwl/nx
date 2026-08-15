@@ -158,6 +158,11 @@ public static class Analyzer
                         directoryFilesByDir
                     );
 
+                    // For opt-in per-framework variants, collect the evaluated inner builds
+                    // (one MSBuild ProjectGraph node per target framework). Only multi-targeted
+                    // projects (more than one distinct framework) get variants.
+                    var frameworkVariants = CollectFrameworkVariants(nodes, pluginOptions);
+
                     var targets = TargetBuilder.BuildTargets(
                         projectName,
                         Path.GetFileName(projectPath),
@@ -169,7 +174,8 @@ public static class Analyzer
                         workspaceRoot,
                         pluginOptions,
                         nxJson,
-                        directoryBuildInputs
+                        directoryBuildInputs,
+                        frameworkVariants
                     );
 
                     nodesByFile[relativeProjectFile] = new NxProjectGraphNode
@@ -204,6 +210,39 @@ public static class Analyzer
             NodesByFile = nodesByFile,
             ReferencesByRoot = referencesByRoot
         };
+    }
+
+    /// <summary>
+    /// Collects the evaluated inner builds of a multi-targeted project as
+    /// <see cref="FrameworkVariant"/> descriptors. Returns null unless framework
+    /// variants are enabled and the project has more than one distinct target
+    /// framework, so single-targeted projects are never expanded.
+    /// </summary>
+    private static List<FrameworkVariant>? CollectFrameworkVariants(
+        List<ProjectGraphNode> nodes,
+        PluginOptions pluginOptions)
+    {
+        if (!pluginOptions.FrameworkVariants)
+        {
+            return null;
+        }
+
+        // Inner builds are the ProjectGraph nodes that carry an evaluated
+        // TargetFramework; the outer build of a multi-targeted project has none.
+        var variants = nodes
+            .Where(n => n.ProjectInstance is not null &&
+                        !string.IsNullOrEmpty(n.ProjectInstance.GetPropertyValue("TargetFramework")))
+            .Select(n => new FrameworkVariant
+            {
+                TargetFramework = n.ProjectInstance!.GetPropertyValue("TargetFramework"),
+                Properties = CollectProperties(n.ProjectInstance!)
+            })
+            .GroupBy(v => v.TargetFramework, StringComparer.Ordinal)
+            .Select(g => g.First())
+            .OrderBy(v => v.TargetFramework, StringComparer.Ordinal)
+            .ToList();
+
+        return variants.Count > 1 ? variants : null;
     }
 
     private static List<PackageReference> CollectPackageReferences(ProjectInstance project)
