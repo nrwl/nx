@@ -123,6 +123,10 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
         name: 'MultiTargetLib',
         type: 'classlib',
       });
+      createDotNetProject({
+        name: 'AmbiguousMultiTarget',
+        type: 'classlib',
+      });
 
       // Enable multi-targeting
       const csprojPath = tmpProjPath('MultiTargetLib/MultiTargetLib.csproj');
@@ -132,6 +136,25 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
         '<TargetFrameworks>net8.0;net9.0</TargetFrameworks>'
       );
       updateFile('MultiTargetLib/MultiTargetLib.csproj', updatedCsproj);
+
+      const ambiguousCsprojPath = tmpProjPath(
+        'AmbiguousMultiTarget/AmbiguousMultiTarget.csproj'
+      );
+      const ambiguousCsproj = readFile(ambiguousCsprojPath)
+        .replace(
+          /<TargetFramework>.*?<\/TargetFramework>/,
+          '<TargetFrameworks>net8.0;net9.0</TargetFrameworks>'
+        )
+        .replace(
+          '</PropertyGroup>',
+          `  <OutputType Condition="'$(TargetFramework)' == 'net8.0'">Exe</OutputType>
+    <OutputType Condition="'$(TargetFramework)' == 'net9.0'">Library</OutputType>
+  </PropertyGroup>`
+        );
+      updateFile(
+        'AmbiguousMultiTarget/AmbiguousMultiTarget.csproj',
+        ambiguousCsproj
+      );
 
       // Enable artifacts output
       updateFile(
@@ -151,7 +174,15 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
       const details = JSON.parse(projectDetails);
 
       // Should have detected multi-targeting configuration
+      expect(details.projectType).toBe('library');
       expect(details.targets.build).toBeDefined();
+    });
+
+    it('should leave conflicting target framework types unclassified', () => {
+      const projectDetails = runCLI(`show project AmbiguousMultiTarget --json`);
+      const details = JSON.parse(projectDetails);
+
+      expect(details.projectType).toBeUndefined();
     });
 
     it('should build for all target frameworks', () => {

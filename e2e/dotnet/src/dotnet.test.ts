@@ -39,6 +39,8 @@ describe('.NET Plugin', () => {
       const projectDetails = runCLI(`show project MyApp --json`);
       const details = JSON.parse(projectDetails);
 
+      expect(details.projectType).toBe('application');
+      expect(details.metadata.technologies).toEqual(['dotnet', 'C#']);
       expect(details.targets).toHaveProperty('build');
       expect(details.targets).toHaveProperty('clean');
       expect(details.targets).toHaveProperty('restore');
@@ -54,6 +56,8 @@ describe('.NET Plugin', () => {
       const projectDetails = runCLI(`show project MyLibrary --json`);
       const details = JSON.parse(projectDetails);
 
+      expect(details.projectType).toBe('library');
+      expect(details.metadata.technologies).toEqual(['dotnet', 'C#']);
       expect(details.targets).toHaveProperty('build');
       expect(details.targets).toHaveProperty('clean');
       expect(details.targets).toHaveProperty('restore');
@@ -65,6 +69,8 @@ describe('.NET Plugin', () => {
       const projectDetails = runCLI(`show project MyApp.Tests --json`);
       const details = JSON.parse(projectDetails);
 
+      expect(details.projectType).toBe('library');
+      expect(details.metadata.technologies).toEqual(['dotnet', 'C#']);
       expect(details.targets).toHaveProperty('build');
       expect(details.targets).toHaveProperty('test');
     });
@@ -139,6 +145,18 @@ describe('.NET Plugin', () => {
       expect(projectsData).toContain('Core');
       expect(projectsData).toContain('Core.Tests');
       expect(projectsData).toContain('WebApi.Tests');
+    });
+
+    it('should expose web application metadata', () => {
+      const projectDetails = runCLI(`show project WebApi --json`);
+      const details = JSON.parse(projectDetails);
+
+      expect(details.projectType).toBe('application');
+      expect(details.metadata.technologies).toEqual([
+        'dotnet',
+        'C#',
+        'ASP.NET Core',
+      ]);
     });
 
     it('should build projects in dependency order', () => {

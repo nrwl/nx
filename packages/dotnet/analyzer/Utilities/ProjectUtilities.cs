@@ -166,9 +166,18 @@ public static class ProjectUtilities
     }
 
     /// <summary>
-    /// Gets the list of technologies for a project based on its file type and characteristics.
+    /// Gets the list of technologies for a project based on its file type and evaluated properties.
     /// </summary>
     public static List<string> GetTechnologies(string projectPath)
+    {
+        return GetTechnologies(
+            projectPath,
+            Array.Empty<IReadOnlyDictionary<string, string>>());
+    }
+
+    public static List<string> GetTechnologies(
+        string projectPath,
+        IEnumerable<IReadOnlyDictionary<string, string>> evaluatedProperties)
     {
         var techs = new List<string> { "dotnet" };
 
@@ -186,7 +195,62 @@ public static class ProjectUtilities
             techs.Add("VB");
         }
 
+        var properties = evaluatedProperties.ToList();
+        if (properties.Any(p => HasTrueProperty(p, "UsingMicrosoftNETSdkWeb")))
+        {
+            techs.Add("ASP.NET Core");
+        }
+
+        if (properties.Any(p => HasTrueProperty(p, "UseMaui")))
+        {
+            techs.Add(".NET MAUI");
+        }
 
         return techs;
+    }
+
+    public static string? InferProjectType(
+        IEnumerable<IReadOnlyDictionary<string, string>> evaluatedProperties)
+    {
+        string? inferredType = null;
+        var hasConfiguration = false;
+
+        foreach (var properties in evaluatedProperties)
+        {
+            hasConfiguration = true;
+            if (!properties.TryGetValue("OutputType", out var outputType))
+            {
+                return null;
+            }
+
+            var currentType = outputType.ToLowerInvariant() switch
+            {
+                "exe" or "winexe" => "application",
+                "library" => "library",
+                _ => null
+            };
+
+            if (currentType is null)
+            {
+                return null;
+            }
+
+            inferredType ??= currentType;
+            if (inferredType != currentType)
+            {
+                return null;
+            }
+        }
+
+        return hasConfiguration ? inferredType : null;
+    }
+
+    private static bool HasTrueProperty(
+        IReadOnlyDictionary<string, string> properties,
+        string propertyName)
+    {
+        return properties.TryGetValue(propertyName, out var value)
+            && bool.TryParse(value, out var result)
+            && result;
     }
 }

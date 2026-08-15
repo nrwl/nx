@@ -127,6 +127,19 @@ public static class Analyzer
                         throw new InvalidOperationException("ProjectInstance is null.");
                     }
 
+                    var configurationNodes = nodes
+                        .Where(n => !string.IsNullOrEmpty(n.ProjectInstance?.GetPropertyValue("TargetFramework")))
+                        .ToList();
+                    if (configurationNodes.Count == 0)
+                    {
+                        configurationNodes = nodes;
+                    }
+
+                    var evaluatedProperties = configurationNodes
+                        .Where(n => n.ProjectInstance is not null)
+                        .Select(n => CollectProperties(n.ProjectInstance!))
+                        .ToList();
+
                     var projectRoot = ProjectUtilities.GetRelativeProjectRoot(projectPath, workspaceRoot);
                     var relativeProjectFile = ProjectUtilities.GetRelativeProjectFile(projectPath, workspaceRoot);
 
@@ -176,10 +189,11 @@ public static class Analyzer
                     {
                         Name = projectName,
                         Root = projectRoot,
+                        ProjectType = ProjectUtilities.InferProjectType(evaluatedProperties),
                         Targets = targets,
                         Metadata = new Models.ProjectMetadata
                         {
-                            Technologies = ProjectUtilities.GetTechnologies(projectPath)
+                            Technologies = ProjectUtilities.GetTechnologies(projectPath, evaluatedProperties)
                         }
                     };
 
@@ -267,6 +281,8 @@ public static class Analyzer
             "OutputType",
             "AssemblyName",
             "IsTestProject",
+            "UsingMicrosoftNETSdkWeb",
+            "UseMaui",
 
             // Build configuration
             "Configuration",
