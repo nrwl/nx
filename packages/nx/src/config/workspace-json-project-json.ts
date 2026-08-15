@@ -158,6 +158,14 @@ export interface ProjectMetadata {
     isInPackageManagerWorkspaces?: boolean;
   };
   dotnet?: {
+    /**
+     * The project's evaluated NuGet package identity, set only when every evaluated target
+     * framework agrees on it (see `DotnetTargetFrameworkMetadata.packageId`). Undefined when no
+     * target framework evaluates one, or when they disagree — e.g. a conditional `PackageId`
+     * that varies per `TargetFramework` — since a single project-level value would misrepresent
+     * one of the frameworks. Consult each entry in `targetFrameworks` for the per-framework
+     * identity in that case.
+     */
     packageId?: string;
     capabilities: DotnetCapabilities;
     targetFrameworks: DotnetTargetFrameworkMetadata[];
@@ -188,6 +196,12 @@ export interface DotnetCapabilities {
  * single-targeted projects contribute exactly one.
  */
 export interface DotnetTargetFrameworkMetadata {
+  /**
+   * The evaluated NuGet package identity for this target framework: the evaluated `PackageId`
+   * property, falling back to `AssemblyName` when unset (matching the NuGet packaging SDK's own
+   * default resolution), or undefined if neither is evaluated.
+   */
+  packageId?: string;
   /** The evaluated `TargetFramework` short name (e.g. "net9.0", "net9.0-ios"). */
   targetFramework: string;
   /** The evaluated `TargetFrameworkIdentifier` (e.g. ".NETCoreApp"). */
