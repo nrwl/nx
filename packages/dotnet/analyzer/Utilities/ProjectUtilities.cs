@@ -1,4 +1,5 @@
 using Microsoft.Build.Execution;
+using MsbuildAnalyzer.Models;
 
 namespace MsbuildAnalyzer.Utilities;
 
@@ -172,12 +173,14 @@ public static class ProjectUtilities
     {
         return GetTechnologies(
             projectPath,
-            Array.Empty<IReadOnlyDictionary<string, string>>());
+            Array.Empty<IReadOnlyDictionary<string, string>>(),
+            Array.Empty<PackageReference>());
     }
 
     public static List<string> GetTechnologies(
         string projectPath,
-        IEnumerable<IReadOnlyDictionary<string, string>> evaluatedProperties)
+        IEnumerable<IReadOnlyDictionary<string, string>> evaluatedProperties,
+        IEnumerable<PackageReference>? packageReferences = null)
     {
         var techs = new List<string> { "dotnet" };
 
@@ -204,6 +207,35 @@ public static class ProjectUtilities
         if (properties.Any(p => HasTrueProperty(p, "UseMaui")))
         {
             techs.Add(".NET MAUI");
+        }
+
+        var packages = packageReferences ?? Array.Empty<PackageReference>();
+        var isBlazorWebAssembly = properties.Any(
+            p => HasTrueProperty(p, "UsingMicrosoftNETSdkBlazorWebAssembly"));
+        var isBlazorHybrid = properties.Any(p => HasTrueProperty(p, "UseMaui"))
+            && packages.Any(p =>
+                p.Include.Equals(
+                    "Microsoft.AspNetCore.Components.WebView.Maui",
+                    StringComparison.OrdinalIgnoreCase));
+
+        if (isBlazorWebAssembly || isBlazorHybrid)
+        {
+            techs.Add("Blazor");
+        }
+
+        if (isBlazorWebAssembly)
+        {
+            techs.Add("Blazor WebAssembly");
+        }
+
+        if (properties.Any(p => HasTrueProperty(p, "UsingMicrosoftNETSdkWebAssembly")))
+        {
+            techs.Add("WebAssembly");
+        }
+
+        if (isBlazorHybrid)
+        {
+            techs.Add("Blazor Hybrid");
         }
 
         return techs;

@@ -193,7 +193,10 @@ public static class Analyzer
                         Targets = targets,
                         Metadata = new Models.ProjectMetadata
                         {
-                            Technologies = ProjectUtilities.GetTechnologies(projectPath, evaluatedProperties)
+                            Technologies = ProjectUtilities.GetTechnologies(
+                                projectPath,
+                                evaluatedProperties,
+                                packageRefs)
                         }
                     };
 
@@ -282,6 +285,8 @@ public static class Analyzer
             "AssemblyName",
             "IsTestProject",
             "UsingMicrosoftNETSdkWeb",
+            "UsingMicrosoftNETSdkBlazorWebAssembly",
+            "UsingMicrosoftNETSdkWebAssembly",
             "UseMaui",
 
             // Build configuration

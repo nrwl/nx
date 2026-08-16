@@ -1,3 +1,4 @@
+using MsbuildAnalyzer.Models;
 using MsbuildAnalyzer.Utilities;
 using Xunit;
 
@@ -115,6 +116,70 @@ public class ProjectMetadataTests
         Assert.Equal(
             new[] { "dotnet", "C#", "ASP.NET Core", ".NET MAUI" },
             technologies);
+    }
+
+    [Fact]
+    public void AddsWebAssemblyTechnology()
+    {
+        var technologies = ProjectUtilities.GetTechnologies(
+            "apps/MyApp/MyApp.csproj",
+            new[]
+            {
+                Properties(("UsingMicrosoftNETSdkWebAssembly", "true"))
+            });
+
+        Assert.Equal(new[] { "dotnet", "C#", "WebAssembly" }, technologies);
+    }
+
+    [Fact]
+    public void AddsBlazorWebAssemblyTechnologies()
+    {
+        var technologies = ProjectUtilities.GetTechnologies(
+            "apps/MyApp/MyApp.csproj",
+            new[]
+            {
+                Properties(
+                    ("UsingMicrosoftNETSdkBlazorWebAssembly", "true"),
+                    ("UsingMicrosoftNETSdkWebAssembly", "true"))
+            });
+
+        Assert.Equal(
+            new[] { "dotnet", "C#", "Blazor", "Blazor WebAssembly", "WebAssembly" },
+            technologies);
+    }
+
+    [Fact]
+    public void AddsMauiBlazorHybridTechnologies()
+    {
+        var technologies = ProjectUtilities.GetTechnologies(
+            "apps/MyApp/MyApp.csproj",
+            new[] { Properties(("UseMaui", "true")) },
+            new[]
+            {
+                new PackageReference
+                {
+                    Include = "Microsoft.AspNetCore.Components.WebView.Maui"
+                }
+            });
+
+        Assert.Equal(
+            new[] { "dotnet", "C#", ".NET MAUI", "Blazor", "Blazor Hybrid" },
+            technologies);
+    }
+
+    [Fact]
+    public void DoesNotInferBlazorFromRazorSdk()
+    {
+        var technologies = ProjectUtilities.GetTechnologies(
+            "apps/MyApp/MyApp.csproj",
+            new[]
+            {
+                Properties(
+                    ("UsingMicrosoftNETSdkWeb", "true"),
+                    ("UsingMicrosoftNETSdkRazor", "true"))
+            });
+
+        Assert.Equal(new[] { "dotnet", "C#", "ASP.NET Core" }, technologies);
     }
 
     [Fact]

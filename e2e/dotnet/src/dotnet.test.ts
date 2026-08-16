@@ -21,6 +21,7 @@ describe('.NET Plugin', () => {
     newProject({ packages: [] });
     runCLI(`add @nx/dotnet`);
     createSimpleDotNetWorkspace();
+    createDotNetProject({ name: 'BlazorWasm', type: 'blazorwasm' });
     createDotNetProject({ name: 'Executable.Tests', type: 'xunit' });
     updateProjectFile('Executable.Tests', (content) =>
       content.replace(
@@ -42,6 +43,7 @@ describe('.NET Plugin', () => {
       expect(projectsData).toContain('MyApp');
       expect(projectsData).toContain('MyLibrary');
       expect(projectsData).toContain('MyApp.Tests');
+      expect(projectsData).toContain('BlazorWasm');
       expect(projectsData).toContain('Executable.Tests');
     });
 
@@ -91,6 +93,19 @@ describe('.NET Plugin', () => {
 
       expect(details.projectType).toBeUndefined();
       expect(details.targets).toHaveProperty('test');
+    });
+
+    it('should expose Blazor WebAssembly technologies', () => {
+      const projectDetails = runCLI(`show project BlazorWasm --json`);
+      const details = JSON.parse(projectDetails);
+
+      expect(details.metadata.technologies).toEqual([
+        'dotnet',
+        'C#',
+        'Blazor',
+        'Blazor WebAssembly',
+        'WebAssembly',
+      ]);
     });
   });
 
