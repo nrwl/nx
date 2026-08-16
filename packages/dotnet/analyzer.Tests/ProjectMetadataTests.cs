@@ -168,6 +168,26 @@ public class ProjectMetadataTests
     }
 
     [Fact]
+    public void AggregatesDistinctPackageReferencesAcrossTargetFrameworks()
+    {
+        var webViewMaui = new PackageReference
+        {
+            Include = "Microsoft.AspNetCore.Components.WebView.Maui",
+            Version = "9.0.0"
+        };
+
+        var packageReferences = Analyzer.AggregatePackageReferences(
+            new[]
+            {
+                Array.Empty<PackageReference>(),
+                new[] { webViewMaui },
+                new[] { webViewMaui }
+            });
+
+        Assert.Equal(new[] { webViewMaui }, packageReferences);
+    }
+
+    [Fact]
     public void DoesNotInferBlazorFromRazorSdk()
     {
         var technologies = ProjectUtilities.GetTechnologies(

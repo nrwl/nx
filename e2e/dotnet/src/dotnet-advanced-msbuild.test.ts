@@ -167,6 +167,35 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
       );
 
       runCLI('run-many -t restore');
+
+      createDotNetProject({
+        name: 'ConditionalMauiBlazor',
+        type: 'classlib',
+      });
+      const conditionalMauiBlazorPath = tmpProjPath(
+        'ConditionalMauiBlazor/ConditionalMauiBlazor.csproj'
+      );
+      const conditionalMauiBlazor = readFile(conditionalMauiBlazorPath)
+        .replace(
+          /<TargetFramework>.*?<\/TargetFramework>/,
+          '<TargetFrameworks>net8.0;net9.0</TargetFrameworks>'
+        )
+        .replace(
+          '</PropertyGroup>',
+          `  <UseMaui>true</UseMaui>
+  </PropertyGroup>`
+        )
+        .replace(
+          '</Project>',
+          `  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="9.0.0" />
+  </ItemGroup>
+</Project>`
+        );
+      updateFile(
+        'ConditionalMauiBlazor/ConditionalMauiBlazor.csproj',
+        conditionalMauiBlazor
+      );
     });
 
     it('should detect multi-targeting configuration', () => {
@@ -183,6 +212,21 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
       const details = JSON.parse(projectDetails);
 
       expect(details.projectType).toBeUndefined();
+    });
+
+    it('should aggregate technology packages across target frameworks', () => {
+      const projectDetails = runCLI(
+        `show project ConditionalMauiBlazor --json`
+      );
+      const details = JSON.parse(projectDetails);
+
+      expect(details.metadata.technologies).toEqual([
+        'dotnet',
+        'C#',
+        '.NET MAUI',
+        'Blazor',
+        'Blazor Hybrid',
+      ]);
     });
 
     it('should build for all target frameworks', () => {

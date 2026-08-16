@@ -139,6 +139,10 @@ public static class Analyzer
                         .Where(n => n.ProjectInstance is not null)
                         .Select(n => CollectProperties(n.ProjectInstance!))
                         .ToList();
+                    var technologyPackageRefs = AggregatePackageReferences(
+                        targetFrameworkNodes
+                            .Where(n => n.ProjectInstance is not null)
+                            .Select(n => CollectPackageReferences(n.ProjectInstance!)));
 
                     var projectRoot = ProjectUtilities.GetRelativeProjectRoot(projectPath, workspaceRoot);
                     var relativeProjectFile = ProjectUtilities.GetRelativeProjectFile(projectPath, workspaceRoot);
@@ -196,7 +200,7 @@ public static class Analyzer
                             Technologies = ProjectUtilities.GetTechnologies(
                                 projectPath,
                                 evaluatedProperties,
-                                packageRefs)
+                                technologyPackageRefs)
                         }
                     };
 
@@ -237,6 +241,15 @@ public static class Analyzer
         }
 
         return packageRefs;
+    }
+
+    internal static List<PackageReference> AggregatePackageReferences(
+        IEnumerable<IEnumerable<PackageReference>> packageReferencesByTargetFramework)
+    {
+        return packageReferencesByTargetFramework
+            .SelectMany(packageReferences => packageReferences)
+            .Distinct()
+            .ToList();
     }
 
     /// <summary>
