@@ -1023,7 +1023,9 @@ describe('runSingleMigrationWorker', () => {
         logs: '',
         madeChanges: true,
       });
-      mockGetLatestCommitSha.mockReturnValue('face0002');
+      mockGetLatestCommitSha.mockReturnValue(
+        'face0002face0002face0002face0002face0002'
+      );
       const dir = setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
         migrations: [genMig('@nx/js', 'gen')],
@@ -1037,7 +1039,7 @@ describe('runSingleMigrationWorker', () => {
       expect(state.steps[0].startedAt).toBeDefined();
       expect(state.steps[0].outcome).toMatchObject({
         fileChanges: ['a.ts'],
-        gitRefAfter: 'face0002',
+        gitRefAfter: 'face0002face0002face0002face0002face0002',
         nextSteps: ['follow up'],
       });
     });
@@ -1100,7 +1102,10 @@ describe('runSingleMigrationWorker', () => {
     });
 
     it('finishes a retried generator step with the commit alone, covering the earlier debt', async () => {
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'face0001' });
+      mockCommit.mockResolvedValue({
+        status: 'committed',
+        sha: 'face0001face0001face0001face0001face0001',
+      });
       const dir = setupRun('run-1', {
         steps: [
           {
@@ -1120,7 +1125,7 @@ describe('runSingleMigrationWorker', () => {
       expect(state.steps[0].status).toBe('succeeded');
       expect(state.commits[1]).toEqual({
         kind: 'landed',
-        sha: 'face0001',
+        sha: 'face0001face0001face0001face0001face0001',
         stepIds: ['step-1'],
       });
     });
@@ -1133,7 +1138,10 @@ describe('runSingleMigrationWorker', () => {
       mockStringifiedDeps.mockReturnValue('{"deps":2}');
       mockCommit.mockImplementation(async (...args: unknown[]) => {
         await (args[4] as () => Promise<void>)();
-        return { status: 'committed', sha: 'face0001' };
+        return {
+          status: 'committed',
+          sha: 'face0001face0001face0001face0001face0001',
+        };
       });
       setupRun('run-1', {
         steps: [
@@ -1169,7 +1177,10 @@ describe('runSingleMigrationWorker', () => {
       mockStringifiedDeps.mockReturnValue('{"deps":2}');
       mockCommit.mockImplementation(async (...args: unknown[]) => {
         await (args[4] as () => Promise<void>)();
-        return { status: 'committed', sha: 'face0001' };
+        return {
+          status: 'committed',
+          sha: 'face0001face0001face0001face0001face0001',
+        };
       });
       setupRun('run-1', {
         steps: [
@@ -1444,7 +1455,10 @@ describe('runSingleMigrationWorker', () => {
         logs: '',
         madeChanges: true,
       });
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'face0005' });
+      mockCommit.mockResolvedValue({
+        status: 'committed',
+        sha: 'face0005face0005face0005face0005face0005',
+      });
       const dir = setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:prior', 'failed'),
@@ -1464,7 +1478,7 @@ describe('runSingleMigrationWorker', () => {
       const state = readRunState(dir);
       expect(state.commits).toContainEqual({
         kind: 'landed',
-        sha: 'face0005',
+        sha: 'face0005face0005face0005face0005face0005',
         stepIds: ['step-2', 'step-1'],
       });
     });
@@ -1661,14 +1675,17 @@ describe('runSingleMigrationWorker', () => {
 
     it('logs the landed commit sha with the success outcome', async () => {
       writeMigrations([promptMig('@nx/js', 'p')]);
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc123' });
+      mockCommit.mockResolvedValue({
+        status: 'committed',
+        sha: 'abc123ababc123ababc123ababc123ababc123ab',
+      });
 
       await runSingleMigrationWorker(
         standaloneInput({ runMigration: '@nx/js:p' })
       );
 
       expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining('(abc123)')
+        expect.stringContaining('(abc123ababc123ababc123ababc123ababc123ab)')
       );
     });
 

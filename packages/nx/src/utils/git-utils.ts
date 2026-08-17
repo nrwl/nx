@@ -735,7 +735,7 @@ export function getLatestCommitSha(directory?: string): string | null {
  * sha256 repository. Anything a caller persists and later interpolates into a
  * command line has to be checked against this first.
  */
-export const GIT_SHA = /^[0-9a-f]{4,64}$/i;
+export const GIT_SHA = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i;
 
 /**
  * Whether `ancestor` is reachable from `descendant`, i.e. resetting to

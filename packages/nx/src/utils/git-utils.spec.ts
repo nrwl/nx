@@ -548,6 +548,9 @@ describe('git utils tests', () => {
   });
 
   describe('isAncestorCommit', () => {
+    const shaA = 'a'.repeat(40);
+    const shaB = 'b'.repeat(40);
+
     afterEach(() => {
       jest.resetAllMocks();
     });
@@ -555,9 +558,9 @@ describe('git utils tests', () => {
     it('returns true when git confirms the ancestry', () => {
       (execSync as jest.Mock).mockReturnValue('');
 
-      expect(isAncestorCommit('abc123', 'def456', '/repo')).toBe(true);
+      expect(isAncestorCommit(shaA, shaB, '/repo')).toBe(true);
       expect(execSync).toHaveBeenCalledWith(
-        'git merge-base --is-ancestor abc123 def456',
+        `git merge-base --is-ancestor ${shaA} ${shaB}`,
         expect.objectContaining({ cwd: '/repo' })
       );
     });
@@ -574,12 +577,16 @@ describe('git utils tests', () => {
         throw new Error('exit 1');
       });
 
-      expect(isAncestorCommit('abc123', 'def456', '/repo')).toBe(false);
+      expect(isAncestorCommit(shaA, shaB, '/repo')).toBe(false);
     });
 
     it('returns false for a non-sha value without invoking git', () => {
-      expect(isAncestorCommit('$(rm -rf /)', 'def456', '/repo')).toBe(false);
-      expect(isAncestorCommit('abc123', 'HEAD~1', '/repo')).toBe(false);
+      expect(isAncestorCommit('$(rm -rf /)', shaB, '/repo')).toBe(false);
+      expect(isAncestorCommit(shaA, 'HEAD~1', '/repo')).toBe(false);
+      // Abbreviated ids never come from `git rev-parse HEAD`, so a persisted
+      // one is corruption or tampering, not a commit to act on.
+      expect(isAncestorCommit('abc123', shaB, '/repo')).toBe(false);
+      expect(isAncestorCommit(shaA, 'a'.repeat(41), '/repo')).toBe(false);
       expect(execSync).not.toHaveBeenCalled();
     });
   });

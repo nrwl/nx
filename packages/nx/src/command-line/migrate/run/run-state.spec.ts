@@ -516,7 +516,7 @@ describe('run-state', () => {
             pid: 123,
             startedAt: '2026-01-01T00:00:00.000Z',
             finishedAt: '2026-01-01T00:01:00.000Z',
-            gitRefBefore: 'beef0001',
+            gitRefBefore: 'beef0001'.repeat(5),
             treeCleanAtDispense: true,
             depsHashAtDispense: 'deps-hash',
             outcome: { summary: 'done' },
@@ -524,7 +524,9 @@ describe('run-state', () => {
             generatorCompleted: true,
           },
         ],
-        commits: [{ kind: 'landed', sha: 'abc0', stepIds: ['step-1'] }],
+        commits: [
+          { kind: 'landed', sha: 'abc0'.repeat(10), stepIds: ['step-1'] },
+        ],
         checkpointFailed: true,
         skipInstall: true,
       });
