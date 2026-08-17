@@ -46,6 +46,8 @@ changes how the server would be probed.
 The variables that count are the proxy variables (`HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`, and
 `NO_PROXY`) for a `webServer` with a `url`, and `NODE_EXTRA_CA_CERTS` and
 `NODE_TLS_REJECT_UNAUTHORIZED` unless every such `webServer` sets `ignoreHTTPSErrors`.
+That option doesn't cover the certificate of an `https` proxy that `HTTPS_PROXY` or `ALL_PROXY`
+routes through, so the TLS variables count whenever that's the route.
 Both probes follow redirects, so a variable that plays no part at the configured URL, such as
 `HTTPS_PROXY` for an `http` URL, still counts.
 Nx compares the routes those variables produce rather than their raw values.

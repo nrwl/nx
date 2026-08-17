@@ -106,7 +106,8 @@ function proxyRoutes(env: NodeJS.ProcessEnv): {
  * configured url takes: an `https_proxy` for an http url or a `no_proxy` entry
  * for another host can still decide how a redirect target is reached. TLS env
  * is compared unless every url server sets `ignoreHTTPSErrors`, which turns
- * verification off on both sides for every hop.
+ * verification off on both sides for every hop, except that the tunnel to an
+ * https proxy is verified with the process defaults either way.
  */
 export function getProbeEnvDivergence(
   servers: Array<{ url?: string; ignoreHTTPSErrors?: boolean }>,
@@ -141,7 +142,17 @@ export function getProbeEnvDivergence(
       }
     }
   }
-  if (urlServers.some((server) => !server.ignoreHTTPSErrors)) {
+  // `ignoreHTTPSErrors` reaches the target's certificate only. An https target
+  // is tunnelled through an https proxy over a TLS connection the proxy agent
+  // opens with the process defaults, on both sides, so that certificate is
+  // verified regardless.
+  const tunnelsThroughTlsProxy = [taskRoutes.https, ambientRoutes.https].some(
+    (route) => route.startsWith('https:')
+  );
+  if (
+    tunnelsThroughTlsProxy ||
+    urlServers.some((server) => !server.ignoreHTTPSErrors)
+  ) {
     for (const variable of TLS_PROBE_VARS) {
       if (taskEnv[variable] !== ambientEnv[variable]) {
         diverging.add(variable);
