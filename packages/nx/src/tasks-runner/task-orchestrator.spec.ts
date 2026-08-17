@@ -174,6 +174,101 @@ describe('TaskOrchestrator', () => {
     });
   });
 
+  describe('detectTaskInvocationLoop', () => {
+    function createTask(
+      id: string,
+      overrides: Record<string, unknown> = {}
+    ): Task {
+      const [project, target] = id.split(':');
+      return {
+        id,
+        target: { project, target },
+        overrides,
+        outputs: [],
+      } as Task;
+    }
+
+    function createOrchestrator(tracker: any) {
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      orchestrator.taskInvocationTracker = tracker;
+      orchestrator.registeredInvocations = new Set<string>();
+      return orchestrator;
+    }
+
+    // A minimal stand-in for the native TaskInvocationTracker: throws on
+    // registerTask() when the same key is registered twice, mirroring the
+    // DB's unique constraint on (root_pid, task_id).
+    function createFakeTracker() {
+      const registered = new Set<string>();
+      return {
+        registerTask: jest.fn((_pid: number, id: string) => {
+          if (registered.has(id)) throw new Error('duplicate');
+          registered.add(id);
+        }),
+        getInvocationChain: jest.fn(() => []),
+      };
+    }
+
+    let exitSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      exitSpy = jest.spyOn(process, 'exit').mockImplementation((() => {
+        throw new Error('process.exit');
+      }) as never);
+    });
+
+    afterEach(() => {
+      exitSpy.mockRestore();
+    });
+
+    it('does not flag the same target invoked multiple times with different overrides', () => {
+      const tracker = createFakeTracker();
+      const orchestrator = createOrchestrator(tracker);
+
+      orchestrator.detectTaskInvocationLoop(
+        createTask('infra:import-minio:review', { bucket: 'media-files' })
+      );
+      orchestrator.detectTaskInvocationLoop(
+        createTask('infra:import-minio:review', { bucket: 'media' })
+      );
+      orchestrator.detectTaskInvocationLoop(
+        createTask('infra:import-minio:review', { bucket: 'invoices' })
+      );
+
+      expect(exitSpy).not.toHaveBeenCalled();
+    });
+
+    it('still flags a genuine self-invoking loop with identical overrides', () => {
+      const tracker = createFakeTracker();
+      // Two separate orchestrator instances share the fake DB tracker, mirroring
+      // two nested Nx processes registering into the same underlying table.
+      const parent = createOrchestrator(tracker);
+      const child = createOrchestrator(tracker);
+      const task = createTask('infra:import-minio:review', { bucket: 'media' });
+
+      parent.detectTaskInvocationLoop(task);
+
+      expect(() => child.detectTaskInvocationLoop(task)).toThrow(
+        'process.exit'
+      );
+      expect(exitSpy).toHaveBeenCalledWith(1);
+    });
+
+    it('still flags a plain re-invocation with no overrides', () => {
+      const tracker = createFakeTracker();
+      const parent = createOrchestrator(tracker);
+      const child = createOrchestrator(tracker);
+      const task = createTask('infra:wait-for-helm-status-deployed:review');
+
+      parent.detectTaskInvocationLoop(task);
+
+      expect(() => child.detectTaskInvocationLoop(task)).toThrow(
+        'process.exit'
+      );
+      expect(exitSpy).toHaveBeenCalledWith(1);
+    });
+  });
+
   describe('cached failures (NX_CACHE_FAILURES)', () => {
     const originalCacheFailures = process.env.NX_CACHE_FAILURES;
 
