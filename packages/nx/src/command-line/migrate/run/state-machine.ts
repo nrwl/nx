@@ -47,7 +47,10 @@ export type StepEvent =
   // after a failed commit or install does not reapply the generator.
   | { type: 'markGeneratorCompleted'; stepId: string }
   | { type: 'markDied'; stepId: string; attempt: number }
-  | { type: 'stepAction'; stepId: string; action: StepAction };
+  // `attempt` binds the action to the attempt the caller validated (its
+  // acceptance gates run outside the locked state write), so the locked
+  // reapply cannot land the decision on a later attempt of the same step.
+  | { type: 'stepAction'; stepId: string; action: StepAction; attempt: number };
 
 // A string discriminant, not a boolean `ok`: this repo compiles without
 // strictNullChecks, where `if (result.ok)` does not narrow a boolean
@@ -148,6 +151,8 @@ export function applyStepEvent(
       return commit(state, index, { ...step, status: 'died' });
 
     case 'stepAction':
+      if (step.attempt !== event.attempt)
+        return staleAttempt(step, event.type, event.attempt);
       return applyStepAction(state, index, step, event.action);
 
     default: {

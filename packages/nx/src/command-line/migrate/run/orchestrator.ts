@@ -517,8 +517,13 @@ export async function runOrchestratorReconcile(
     }
     const target = result.targetStep;
     // An adopted death commits its working tree; that git side effect runs
-    // before the lock, then the transition and its ledger entry land in one
-    // fresh-state write so a crash can't leave the step succeeded unrecorded.
+    // before the lock (locked sections must stay synchronous), then the
+    // transition and its ledger entry land in one fresh-state write so a
+    // crash can't leave the step succeeded unrecorded. As with a fold, that
+    // window is wide, and a rejected reapply after the commit landed is
+    // equivalent to commitForStep's crash-refold window: the commit stays in
+    // history, the ledger misses it, and the rejection names it below so the
+    // agent re-decides against the moved HEAD.
     // Without commits the adopted tree is still this migration's result, and
     // it can carry package.json edits the dead worker never installed; the
     // install has to run here or the next dispense captures the modified
@@ -547,12 +552,16 @@ export async function runOrchestratorReconcile(
     // Re-validate the transition against the fresh disk state: if a concurrent
     // reconcile already resolved this step, surface the state machine's own
     // rejection through the same emitError path rather than writing over it.
+    // The bound attempt keeps the acceptance checks above honest: they ran
+    // against `state`, and a step that was re-armed and failed again in
+    // between is a different attempt those checks never saw.
     let freshRejection: string | undefined;
     const written = updateRunState(dir, (fresh) => {
       const reapplied = applyStepEvent(fresh, {
         type: 'stepAction',
         stepId: target.id,
         action: stepAction,
+        attempt: target.attempt,
       });
       if (reapplied.kind === 'error') {
         freshRejection = reapplied.reason;
@@ -564,7 +573,13 @@ export async function runOrchestratorReconcile(
       return entry ? appendCommit(next, entry) : next;
     });
     if (freshRejection) {
-      emitError(root, runId, freshRejection);
+      emitError(
+        root,
+        runId,
+        entry?.kind === 'landed' && entry.sha
+          ? `${freshRejection} Note: this action's commit ${entry.sha} had already landed and stays in history; resolve the step against the tree as it stands now.`
+          : freshRejection
+      );
       return;
     }
     state = written;
@@ -826,6 +841,7 @@ function applyReconcileStepAction(
     type: 'stepAction',
     stepId: step.id,
     action,
+    attempt: step.attempt,
   });
   if (applied.kind === 'error') {
     return applied;

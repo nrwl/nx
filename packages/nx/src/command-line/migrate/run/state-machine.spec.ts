@@ -347,6 +347,7 @@ describe('applyStepEvent', () => {
       const result = applyStepEvent(state, {
         type: 'stepAction',
         stepId: 'step-1',
+        attempt: 1,
         action,
       });
 
@@ -362,6 +363,28 @@ describe('applyStepEvent', () => {
           }
         }
       }
+    });
+
+    it('rejects an action bound to an earlier attempt of the same step', () => {
+      // The caller's acceptance gates run outside the locked state write; a
+      // step that was re-armed and failed again in between is a different
+      // attempt those gates never saw.
+      const state = stateWithStep({ status: 'failed', attempt: 2 });
+      const before = snapshot(state);
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 1,
+        action: 'retry',
+      });
+
+      expect(result.kind).toBe('error');
+      if (result.kind === 'error') {
+        expect(result.reason).toContain('attempt 1');
+        expect(result.reason).toContain('attempt 2');
+      }
+      expect(state).toEqual(before);
     });
 
     it.each([
@@ -386,6 +409,7 @@ describe('applyStepEvent', () => {
         const result = applyStepEvent(state, {
           type: 'stepAction',
           stepId: 'step-1',
+          attempt: 1,
           action,
         });
 
@@ -411,6 +435,7 @@ describe('applyStepEvent', () => {
       const result = applyStepEvent(state, {
         type: 'stepAction',
         stepId: 'step-1',
+        attempt: 1,
         action: 'retry',
       });
 
@@ -431,6 +456,7 @@ describe('applyStepEvent', () => {
       const result = applyStepEvent(state, {
         type: 'stepAction',
         stepId: 'step-1',
+        attempt: 1,
         action: 'retry',
       });
 
@@ -460,6 +486,7 @@ describe('applyStepEvent', () => {
         const result = applyStepEvent(state, {
           type: 'stepAction',
           stepId: 'step-1',
+          attempt: 1,
           action: 'retry-clean',
         });
 
@@ -484,6 +511,7 @@ describe('applyStepEvent', () => {
         const result = applyStepEvent(state, {
           type: 'stepAction',
           stepId: 'step-1',
+          attempt: 1,
           action: 'retry-clean',
         });
 
@@ -505,6 +533,7 @@ describe('applyStepEvent', () => {
       const result = applyStepEvent(state, {
         type: 'stepAction',
         stepId: 'step-1',
+        attempt: 1,
         action: 'retry-clean',
       });
 
@@ -524,6 +553,7 @@ describe('applyStepEvent', () => {
       const result = applyStepEvent(state, {
         type: 'stepAction',
         stepId: 'step-1',
+        attempt: 1,
         action: 'retry',
       });
 
@@ -542,6 +572,7 @@ describe('applyStepEvent', () => {
       const result = applyStepEvent(state, {
         type: 'stepAction',
         stepId: 'step-1',
+        attempt: 1,
         action: 'retry',
       });
 
@@ -566,6 +597,7 @@ describe('applyStepEvent', () => {
         const result = applyStepEvent(state, {
           type: 'stepAction',
           stepId: 'step-1',
+          attempt: 1,
           action: 'adopt',
         });
 
@@ -588,6 +620,7 @@ describe('applyStepEvent', () => {
       const result = applyStepEvent(state, {
         type: 'stepAction',
         stepId: 'step-1',
+        attempt: 1,
         action: 'adopt',
       });
 
@@ -637,6 +670,7 @@ describe('applyStepEvent', () => {
       const retried = applyStepEvent(state, {
         type: 'stepAction',
         stepId: 'step-1',
+        attempt: 1,
         action: 'retry',
       });
       expect(retried.kind).toBe('ok');
@@ -674,6 +708,7 @@ describe('applyStepEvent', () => {
       const cleaned = applyStepEvent(state, {
         type: 'stepAction',
         stepId: 'step-1',
+        attempt: 2,
         action: 'retry-clean',
       });
       expect(cleaned.kind).toBe('ok');

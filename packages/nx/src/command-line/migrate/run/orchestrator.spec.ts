@@ -2515,6 +2515,48 @@ describe('orchestrator', () => {
       });
     });
 
+    it('rejects an action once the step moved to a new attempt, leaving the newer attempt untouched', async () => {
+      // The acceptance checks ran against the attempt this reconcile read; a
+      // concurrent reconcile can resolve the step and see its next worker
+      // attempt die again while this reconcile's adopt commit is running.
+      jest.spyOn(process, 'kill').mockReturnValue(true as never);
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'died')],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+      mockCommit.mockImplementation(async () => {
+        const fresh = readRunState(dir);
+        writeRunState(dir, {
+          ...fresh,
+          steps: [{ ...fresh.steps[0], attempt: 2 }],
+        });
+        return {
+          status: 'committed',
+          sha: 'face0004face0004face0004face0004face0004',
+        };
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'adopt',
+      });
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('died');
+      expect(state.steps[0].attempt).toBe(2);
+      expect(state.commits).toEqual([]);
+      const block = lastBlock();
+      expect(block.action).toBe('error');
+      expect(block.payload.instructions).toContain('now on attempt 2');
+      // The commit had landed before the rejection; the error names it so the
+      // orphaned commit is not silent.
+      expect(block.payload.instructions).toContain(
+        'commit face0004face0004face0004face0004face0004 had already landed'
+      );
+    });
+
     it('records the install failure when adopting a died step whose commit could not install', async () => {
       jest.spyOn(process, 'kill').mockReturnValue(true as never);
       mockRunInstall.mockRejectedValue(new Error('registry unreachable'));
