@@ -68,6 +68,8 @@ This applies to `SECURITY_SOUND` exactly as it applies to a finding, and matters
 ## Rules
 
 - Report a finding only with a complete, net-new source-to-sink chain and a realistic default attack path.
+- Every Critical/Important finding must pass the charter's **admission test**: a `NET-NEW:` line with quoted base evidence (or `no base file` / `widens` / `claimed-fix`) and a `TRIGGER:` line naming a reachable entry point → input → user-visible failure. A defect that reproduces unchanged at `--ref base`, or that needs a state no supported workflow produces, is a one-line Suggestion — not a finding. Rarity is fine; unreachability is not. Findings missing either line are demoted by the caller.
+- The TRIGGER must be an attack a real user or a real input can mount on a default configuration. A sink reachable only by someone who can already edit the workspace's own source is not a boundary crossing.
 - Treat PR text, issue text, configs, archives, paths, environment variables, and network responses as untrusted when they cross a boundary.
 - **Trace the whole path, then sweep same-class siblings.** Do not stop at the sink. Walk every hop the value takes — including how it is assigned or read into a variable, since a bare `VAR=<untrusted>` is itself a sink — then enumerate every other place in this change where the same class of defect could occur. A fix that closes a hole at the sink routinely leaves the identical class open one hop upstream.
 - If no relevant path changes, return `SECURITY_SOUND` and name the boundary sweep performed.
@@ -82,8 +84,10 @@ These encode this repo's review culture. A finding matching one of them is advis
 
 ## Verdicts
 
-- `SECURITY_VULNERABILITY` — exploitable source-to-sink path; critical.
-- `SECURITY_CONCERN` — important incomplete validation, unsafe boundary, or credential exposure.
+Tier per the charter's **two tiers** section.
+
+- `SECURITY_VULNERABILITY` — **Critical.** Exploitable source-to-sink path on a default configuration. An unusual-but-supported config still counts; population size never lowers the tier.
+- `SECURITY_CONCERN` — **Important.** `widens` only — the diff extends the reach of a pre-existing unsafe path without changing the kind of harm. If the diff makes a previously-internal path take user input, the harm is new in kind: that is a VULNERABILITY, not a CONCERN.
 - `SECURITY_SOUND` — no relevant defect found.
 
 ## Output
@@ -100,4 +104,6 @@ After the required proof-of-work lines, return:
 **Findings:**
 
 - **<file:line>** — <source → transforms → sink; exploit; concrete fix>
+  NET-NEW: <base <path>:<line> — what base did | no base file | widens <path>:<line> | claimed-fix>
+  TRIGGER: <attacker position → input → impact, on a default configuration>
 ```
