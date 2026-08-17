@@ -438,6 +438,34 @@ export function isGitRepository(directory?: string): boolean {
   }
 }
 
+export type GitRepositoryStatus = 'git' | 'not-git' | 'unknown';
+
+/**
+ * Like `isGitRepository`, but separates "this is not a git repository" from
+ * "the probe itself failed" (git not installed, permissions). Callers gating
+ * destructive or unverifiable behavior on the answer must fail closed on
+ * 'unknown' instead of reading a broken probe as a missing repository.
+ */
+export function getGitRepositoryStatus(
+  directory?: string
+): GitRepositoryStatus {
+  try {
+    execSync('git rev-parse --is-inside-work-tree', {
+      stdio: 'pipe',
+      cwd: directory,
+      windowsHide: true,
+      // Force untranslated messages; the classification matches on the
+      // English "not a git repository".
+      env: { ...process.env, LC_ALL: 'C' },
+    });
+    return 'git';
+  } catch (err) {
+    const stderr =
+      (err as { stderr?: Buffer | string })?.stderr?.toString() ?? '';
+    return /not a git repository/i.test(stderr) ? 'not-git' : 'unknown';
+  }
+}
+
 // Checked-out branch name, or null when there isn't one to act on: a detached
 // HEAD reports the literal "HEAD" (treated as no branch), and any git error
 // (not a repo, no commits yet) also yields null.

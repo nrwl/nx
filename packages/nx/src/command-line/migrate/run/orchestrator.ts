@@ -1,8 +1,9 @@
 import { execSync } from 'child_process';
 import { existsSync, mkdirSync, rmSync } from 'fs';
 import { dirname, join } from 'path';
-import { writeJsonFile } from '../../../utils/fileutils';
+import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
 import {
+  getGitRepositoryStatus,
   getLatestCommitSha,
   getPathCommitExposure,
   getWorkingTreeStatus,
@@ -56,7 +57,10 @@ import {
   type StepAction,
   type StepEvent,
 } from './state-machine';
-import type { PlannedMigration } from '../migration-shape';
+import {
+  isPromptOnlyMigration,
+  type PlannedMigration,
+} from '../migration-shape';
 import {
   depsHash,
   installDepsChangedSinceDispense,
@@ -794,6 +798,30 @@ function applyReconcileStepAction(
       };
     }
   }
+  // A failed generator can have written to the tree before throwing, and a
+  // plain retry reruns it, so a pre-marker retry is accepted only when git
+  // can see nothing of the failed attempt in the tree. The state machine is
+  // pure and cannot read the tree, which is why the gate lives here.
+  if (
+    action === 'retry' &&
+    step.status === 'failed' &&
+    step.generatorCompleted !== true &&
+    stepHasGeneratorHalf(root, state, step)
+  ) {
+    const safety = assessPreMarkerRetry(root, step);
+    if (safety.kind === 'unsafe') {
+      return {
+        kind: 'error',
+        reason: `Cannot apply action 'retry' to step '${step.id}': ${safety.reason} Use 'retry-clean' where offered, or 'skip'.`,
+      };
+    }
+    if (safety.kind === 'warned') {
+      warnToAgent({
+        title: `Retrying ${step.migrationId} without verification`,
+        bodyLines: [safety.warning],
+      });
+    }
+  }
   const applied = applyStepEvent(state, {
     type: 'stepAction',
     stepId: step.id,
@@ -996,6 +1024,14 @@ function emitRetryFailed(
   const head = getLatestCommitSha(root);
   const tree = dirtyTreeSummary(root);
   const cleanRetry = canOfferCleanRetry(root, state, step, head);
+  // A failure recorded before the generator marker can still have written to
+  // the tree (a direct fs or exec side effect, or a crash mid-flush); a
+  // marker means only the install and commit are left, so plain retry is
+  // safe outright. So is retrying a step with no generator half to rerun.
+  const retrySafety: PreMarkerRetrySafety =
+    step.generatorCompleted === true || !stepHasGeneratorHalf(root, state, step)
+      ? { kind: 'safe' }
+      : assessPreMarkerRetry(root, step);
   const lines = [
     `Migration ${migrationId} failed${summary ? `: ${summary}` : ''}.`,
     `  started from: ${step.gitRefBefore ?? '(unknown)'}`,
@@ -1003,7 +1039,7 @@ function emitRetryFailed(
     `  working tree: ${tree === null ? '(unknown)' : tree ? `\n${tree}` : '(clean)'}`,
     ``,
     `Decide how to proceed and re-run reconcile with one of:`,
-    `  retry: re-run over the current tree: ${reconcileCommand(root, runId, 'retry')}`,
+    retryOptionLine(retrySafety, reconcileCommand(root, runId, 'retry')),
   ];
   if (cleanRetry) {
     lines.push(
@@ -1017,18 +1053,37 @@ function emitRetryFailed(
     );
   }
   lines.push(`  skip:  ${reconcileCommand(root, runId, 'skip')}`);
-  // A failure recorded before the generator marker can still have written to
-  // the tree (a direct fs or exec side effect, or a crash mid-flush), so where
-  // a restore point exists the reset-backed retry is the preselected one; a
-  // marker means only the install and commit are left, and plain retry is
-  // safe. With neither, plain retry stays: no restore point exists to reset
-  // to, and the evidence lines above let the agent judge the tree first.
-  const preselected: StepAction =
-    step.generatorCompleted !== true && cleanRetry ? 'retry-clean' : 'retry';
+  // Preselect only a continuation that would be accepted as the tree stands:
+  // plain retry when it is safe outright, else the reset-backed retry when a
+  // restore point exists. With neither there is no `then`: an agent that
+  // follows it blindly must not land on an action whose only justification is
+  // evidence it never read.
+  const preselected: StepAction | null =
+    retrySafety.kind === 'safe' ? 'retry' : cleanRetry ? 'retry-clean' : null;
   emit(runId, step, 'retry-failed', {
-    then: reconcileCommand(root, runId, preselected),
+    ...(preselected === null
+      ? {}
+      : { then: reconcileCommand(root, runId, preselected) }),
     instructionLines: lines,
   });
+}
+
+function retryOptionLine(
+  safety: PreMarkerRetrySafety,
+  command: string
+): string {
+  switch (safety.kind) {
+    case 'safe':
+      return `  retry: re-run over the current tree: ${command}`;
+    case 'warned':
+      return `  retry: re-run over the current tree; without git nothing can verify what the failed attempt left, so inspect the tree first: ${command}`;
+    case 'unsafe':
+      return `  retry: re-run over the current tree; refused until the working tree is clean and HEAD is at the started-from ref: ${command}`;
+    default: {
+      const exhaustive: never = safety;
+      return exhaustive;
+    }
+  }
 }
 
 // A clean retry resets the tree to the step's captured pre-migration ref.
@@ -1106,6 +1161,83 @@ function cleanRetryUnavailableReason(
     } this migration started from, so a reset would discard what was committed in between.`;
   }
   return `resetting the tree could discard uncommitted work that no restore point accounts for.`;
+}
+
+// How a plain retry of a failed step whose generator marker is absent can be
+// handled. 'safe': git sees nothing of the failed attempt (tree verifiably
+// clean, HEAD still at the step's starting ref; a moved HEAD can hold the
+// attempt's partial writes as a commit and leave the tree clean). Writes git
+// cannot see (ignored files, changes outside the repository) are beyond every
+// check here, the same boundary retry-clean's reset has. 'warned': outside a
+// git repository not even that much can be checked, so the retry stays
+// available as an explicit choice behind a warning instead of being refused
+// forever. 'unsafe': refused; a failed repository probe proves nothing and
+// also lands here.
+type PreMarkerRetrySafety =
+  | { kind: 'safe' }
+  | { kind: 'warned'; warning: string }
+  | { kind: 'unsafe'; reason: string };
+
+// Whether the step's planned migration has a generator half to rerun. The
+// pre-marker retry gate only exists for that rerun; a prompt-only step's
+// retry re-prompts the agent over the tree it already knows, which is the
+// designed recovery. Unresolvable (missing or edited snapshot) counts as
+// having one: wrongly gating a prompt step costs friction, wrongly freeing a
+// generator step can apply it twice.
+function stepHasGeneratorHalf(
+  root: string,
+  state: MigrateRunState,
+  step: MigrateStep
+): boolean {
+  const round = state.rounds.find((r) => r.index === step.roundIndex);
+  if (!round) return true;
+  try {
+    const migrations =
+      readJsonFile<{ migrations?: PlannedMigration[] }>(
+        join(runDir(root, state.runId), round.planSnapshot)
+      ).migrations ?? [];
+    const migration = migrations.find(
+      (m) => `${m.package}:${m.name}` === step.migrationId
+    );
+    return migration ? !isPromptOnlyMigration(migration) : true;
+  } catch {
+    return true;
+  }
+}
+
+function assessPreMarkerRetry(
+  root: string,
+  step: MigrateStep
+): PreMarkerRetrySafety {
+  const repo = getGitRepositoryStatus(root);
+  if (repo === 'not-git') {
+    return {
+      kind: 'warned',
+      warning: `The workspace is not a git repository, so nothing can verify whether the failed attempt left partial changes in the tree. The retry reruns the generator over whatever is there; confirm the tree yourself first.`,
+    };
+  }
+  if (repo === 'unknown') {
+    return {
+      kind: 'unsafe',
+      reason: `the git repository state could not be determined, so nothing can verify whether the failed attempt left changes in the tree.`,
+    };
+  }
+  const head = getLatestCommitSha(root);
+  if (!step.gitRefBefore || head !== step.gitRefBefore) {
+    return {
+      kind: 'unsafe',
+      reason: `HEAD is at ${head ?? '(unreadable)'} rather than the ${
+        step.gitRefBefore ?? '(unrecorded)'
+      } this migration started from, so the failed attempt's changes may already be committed and rerunning the generator could apply them twice.`,
+    };
+  }
+  if (getWorkingTreeStatus(root) !== 'clean') {
+    return {
+      kind: 'unsafe',
+      reason: `the working tree is not verifiably clean, and the failed attempt may have written to it before failing; rerunning the generator over those changes could apply them twice.`,
+    };
+  }
+  return { kind: 'safe' };
 }
 
 function emitDied(

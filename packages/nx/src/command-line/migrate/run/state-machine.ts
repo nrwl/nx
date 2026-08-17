@@ -167,6 +167,8 @@ function applyStepAction(
     switch (action) {
       case 'retry':
         // Nothing resets the tree, so the generator's changes are still in it.
+        // A pre-marker retry is additionally gated at the reconcile acceptance
+        // site, which can read the live tree; this pure layer cannot.
         return commit(state, index, rearm(step, true));
       case 'retry-clean':
         // A failed generator can have written before throwing (a direct fs or

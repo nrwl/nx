@@ -1,14 +1,14 @@
-// Real-git coverage for tryCommitChanges' exclusions. Kept apart from
-// git-utils.spec.ts, which mocks child_process: the regressions here are
-// about git's actual behavior (`git add` refuses pathspecs naming ignored
-// directories; a negative pathspec cannot unstage), which command-string
-// assertions cannot see.
+// Real-git coverage for tryCommitChanges' exclusions and the repository
+// status probe. Kept apart from git-utils.spec.ts, which mocks child_process:
+// the regressions here are about git's actual behavior (`git add` refuses
+// pathspecs naming ignored directories; a negative pathspec cannot unstage),
+// which command-string assertions cannot see.
 
 import { execSync } from 'child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { GIT_SHA, tryCommitChanges } from './git-utils';
+import { getGitRepositoryStatus, GIT_SHA, tryCommitChanges } from './git-utils';
 
 const SCRATCH = '.nx/migrate-runs';
 
@@ -107,5 +107,31 @@ describe('tryCommitChanges exclusions (real git)', () => {
 
     expect(sha).toMatch(GIT_SHA);
     expect(committedPaths(root)).toEqual(['workspace/a.txt']);
+  });
+});
+
+describe('getGitRepositoryStatus (real git)', () => {
+  let root: string;
+
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), 'nx-git-status-'));
+  });
+
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it('reports a repository as git', () => {
+    initRepo(root);
+
+    expect(getGitRepositoryStatus(root)).toBe('git');
+  });
+
+  it('distinguishes a missing repository from a failed probe', () => {
+    expect(getGitRepositoryStatus(root)).toBe('not-git');
+    // A probe that cannot run at all proves nothing about the directory.
+    expect(getGitRepositoryStatus(join(root, 'does-not-exist'))).toBe(
+      'unknown'
+    );
   });
 });

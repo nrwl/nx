@@ -27,6 +27,7 @@ jest.mock('../migrate-commits', () => ({
     mockCheckpoint(...args),
 }));
 
+const mockGetGitRepositoryStatus = jest.fn();
 const mockGetLatestCommitSha = jest.fn();
 const mockGetPathCommitExposure = jest.fn();
 const mockGetWorkingTreeStatus = jest.fn();
@@ -34,6 +35,8 @@ const mockIsAncestorCommit = jest.fn();
 const mockTryCommitChanges = jest.fn();
 jest.mock('../../../utils/git-utils', () => ({
   ...jest.requireActual('../../../utils/git-utils'),
+  getGitRepositoryStatus: (...args: unknown[]) =>
+    mockGetGitRepositoryStatus(...args),
   getLatestCommitSha: (...args: unknown[]) => mockGetLatestCommitSha(...args),
   getPathCommitExposure: (...args: unknown[]) =>
     mockGetPathCommitExposure(...args),
@@ -112,6 +115,7 @@ describe('orchestrator', () => {
     mockComplete.mockReset();
     mockCommit.mockReset().mockResolvedValue({ status: 'no-changes' });
     mockCheckpoint.mockReset();
+    mockGetGitRepositoryStatus.mockReset().mockReturnValue('git');
     mockGetLatestCommitSha.mockReset().mockReturnValue(null);
     mockGetPathCommitExposure.mockReset().mockReturnValue('ignored');
     mockGetWorkingTreeStatus.mockReset().mockReturnValue('clean');
@@ -2225,7 +2229,110 @@ describe('orchestrator', () => {
   });
 
   describe('reconcile: step-action', () => {
-    it('re-arms a failed step on retry and dispenses it again', async () => {
+    it('re-arms a failed step on retry when the tree is clean at the started-from ref', async () => {
+      mockGetLatestCommitSha.mockReturnValue(
+        'beef0001beef0001beef0001beef0001beef0001'
+      );
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'failed', {
+            gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+          }),
+        ],
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry',
+      });
+
+      const step = readRunState(dir).steps[0];
+      expect(step.attempt).toBe(2);
+      expect(step.status).toBe('dispensed');
+      expect(lastBlock().action).toBe('next-step');
+    });
+
+    it('rejects a pre-marker retry when the tree is dirty, leaving state untouched', async () => {
+      mockGetLatestCommitSha.mockReturnValue(
+        'beef0001beef0001beef0001beef0001beef0001'
+      );
+      mockGetWorkingTreeStatus.mockReturnValue('dirty');
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'failed', {
+            gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+          }),
+        ],
+        plan: [genMig('@nx/js', 'gen')],
+      });
+      const before = readFileSync(join(dir, 'run.json'), 'utf-8');
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry',
+      });
+
+      expect(readFileSync(join(dir, 'run.json'), 'utf-8')).toBe(before);
+      const block = lastBlock();
+      expect(block.action).toBe('error');
+      expect(block.payload.instructions).toContain('not verifiably clean');
+      expect(block.payload.instructions).toContain("or 'skip'");
+    });
+
+    it('rejects a pre-marker retry when HEAD moved off the started-from ref, even with a clean tree', async () => {
+      // A commit made since the dispense can hold the failed attempt's
+      // partial writes and leave the tree clean, so cleanliness alone proves
+      // nothing.
+      mockGetLatestCommitSha.mockReturnValue(
+        'face0001face0001face0001face0001face0001'
+      );
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'failed', {
+            gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+          }),
+        ],
+        plan: [genMig('@nx/js', 'gen')],
+      });
+      const before = readFileSync(join(dir, 'run.json'), 'utf-8');
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry',
+      });
+
+      expect(readFileSync(join(dir, 'run.json'), 'utf-8')).toBe(before);
+      const block = lastBlock();
+      expect(block.action).toBe('error');
+      expect(block.payload.instructions).toContain('may already be committed');
+    });
+
+    it('rejects a pre-marker retry when the repository state cannot be determined', async () => {
+      mockGetGitRepositoryStatus.mockReturnValue('unknown');
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'failed')],
+        plan: [genMig('@nx/js', 'gen')],
+      });
+      const before = readFileSync(join(dir, 'run.json'), 'utf-8');
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry',
+      });
+
+      expect(readFileSync(join(dir, 'run.json'), 'utf-8')).toBe(before);
+      const block = lastBlock();
+      expect(block.action).toBe('error');
+      expect(block.payload.instructions).toContain('could not be determined');
+    });
+
+    it('accepts a pre-marker retry outside a git repository, warning that nothing was verified', async () => {
+      mockGetGitRepositoryStatus.mockReturnValue('not-git');
       const dir = setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:gen', 'failed')],
         plan: [genMig('@nx/js', 'gen')],
@@ -2240,7 +2347,56 @@ describe('orchestrator', () => {
       const step = readRunState(dir).steps[0];
       expect(step.attempt).toBe(2);
       expect(step.status).toBe('dispensed');
-      expect(lastBlock().action).toBe('next-step');
+      expect(output.warn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining('without verification'),
+        })
+      );
+    });
+
+    it('accepts a retry over a dirty tree once the generator marker is recorded', async () => {
+      // The redispensed worker skips the generator, so the tree it left is
+      // the input the remaining install and commit need.
+      mockGetWorkingTreeStatus.mockReturnValue('dirty');
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'failed', {
+            generatorCompleted: true,
+          }),
+        ],
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry',
+      });
+
+      const step = readRunState(dir).steps[0];
+      expect(step.attempt).toBe(2);
+      expect(step.status).toBe('dispensed');
+      expect(step.generatorCompleted).toBe(true);
+    });
+
+    it('accepts a retry of a failed prompt-only step over a dirty tree', async () => {
+      // There is no generator to rerun: the retry re-prompts the agent over
+      // the tree it already knows, which is the designed recovery.
+      mockGetWorkingTreeStatus.mockReturnValue('dirty');
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:p', 'failed')],
+        plan: [promptMig('@nx/js', 'p')],
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry',
+      });
+
+      const step = readRunState(dir).steps[0];
+      expect(step.attempt).toBe(2);
+      expect(step.status).toBe('dispensed');
     });
 
     it('applies retry-clean to a failed step with a restore point, dropping the generator marker', async () => {
@@ -2505,7 +2661,48 @@ describe('orchestrator', () => {
       expect(block.payload.instructions).toContain('skip:');
       expect(block.payload.instructions).not.toContain('retry-clean');
       expect(block.payload.instructions).not.toContain('defer');
-      expect(block.payload.then).toContain('--step-action=retry');
+      // No started-from ref was recorded, so the pre-marker retry cannot be
+      // proven safe and no automatic continuation is handed out.
+      expect(block.payload.instructions).toContain('refused until');
+      expect(block.payload.then).toBeUndefined();
+    });
+
+    it('preselects plain retry for a pre-marker failure whose tree git sees as untouched', async () => {
+      mockGetLatestCommitSha.mockReturnValue(
+        'beef0001beef0001beef0001beef0001beef0001'
+      );
+      setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'failed', {
+            gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+          }),
+        ],
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
+      expect(block.action).toBe('retry-failed');
+      expect(block.payload.then).toMatch(/--step-action=retry$/);
+    });
+
+    it('omits the automatic continuation outside a git repository, offering retry only behind a warning', async () => {
+      mockGetGitRepositoryStatus.mockReturnValue('not-git');
+      setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'failed')],
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
+      expect(block.action).toBe('retry-failed');
+      expect(block.payload.then).toBeUndefined();
+      expect(block.payload.instructions).toContain(
+        'without git nothing can verify'
+      );
+      expect(block.payload.instructions).toContain('skip:');
     });
 
     it('carries the git evidence so the agent can judge the tree before retrying', async () => {
@@ -2533,12 +2730,13 @@ describe('orchestrator', () => {
       expect(block.payload.instructions).toContain('working tree:');
     });
 
-    it('offers retry-clean and preselects it when a pre-marker failure has a restore point', async () => {
-      // The generator can have written before throwing, so where a reset is
-      // safe the reset-backed retry is the default handed to the agent.
+    it('offers retry-clean and preselects it when a dirtied pre-marker failure has a restore point', async () => {
+      // The generator wrote before throwing, so plain retry is out and the
+      // reset-backed retry is the default handed to the agent.
       mockGetLatestCommitSha.mockReturnValue(
         'beef0001beef0001beef0001beef0001beef0001'
       );
+      mockGetWorkingTreeStatus.mockReturnValue('dirty');
       setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:gen', 'failed', {
