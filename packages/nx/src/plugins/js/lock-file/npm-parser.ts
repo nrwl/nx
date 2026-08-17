@@ -15,7 +15,10 @@ import {
 } from '../../../config/project-graph';
 import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
-import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
+import {
+  getWorkspacePackagesFromGraph,
+  resolveWorkspaceDependencyTarget,
+} from '../utils/get-workspace-packages-from-graph';
 
 /**
  * NPM
@@ -479,12 +482,16 @@ export function stringifyNpmLockfile(
     output.overrides = packageJson.overrides;
   }
   if (lockfileVersion > 1) {
-    const packages = mapV3Snapshots(mappedPackages, packageJson);
-    output.packages = { ...packages, ...workspaceModules };
+    const packages = mapV3Snapshots(
+      mappedPackages,
+      packageJson,
+      workspaceModulesFromGraph
+    );
+    output.packages = { ...packages, ...workspaceModules.v3 };
   }
   if (lockfileVersion < 3) {
     const dependencies = mapV1Snapshots(mappedPackages);
-    output.dependencies = { ...dependencies, ...workspaceModules };
+    output.dependencies = { ...dependencies, ...workspaceModules.v1 };
   }
 
   return JSON.stringify(output, null, 2);
@@ -500,53 +507,153 @@ function mapWorkspaceModules(
   packageJson: NormalizedPackageJson,
   rootLockFile: NpmLockFile,
   workspaceModules: Map<string, ProjectGraphProjectNode>
-) {
-  const output: Record<string, NpmDependencyV3 & NpmDependencyV1> = {};
+): {
+  v3: Record<string, NpmDependencyV3>;
+  v1: Record<string, NpmDependencyV1>;
+} {
+  const v3: Record<string, NpmDependencyV3> = {};
+  // npm v1 dependencies are name-keyed and nested; never use filesystem
+  // paths as keys.
+  const v1: Record<string, NpmDependencyV1> = {};
+  const v1NodesByTarget = new Map<string, NpmDependencyV1>();
   const snapshotsByName = new Map<string, NpmDependencyV3 & NpmDependencyV1>();
-  for (const snapshot of Object.values(
-    rootLockFile.packages || rootLockFile.dependencies || {}
+  // npm v1 aliases are key-indexed, so retain raw-key lookup alongside
+  // canonical-name lookup.
+  const snapshotsByKey = new Map<string, NpmDependencyV3 & NpmDependencyV1>();
+  for (const [key, snapshot] of Object.entries(
+    rootLockFile.packages ?? rootLockFile.dependencies ?? {}
   )) {
-    if (snapshot.name) snapshotsByName.set(snapshot.name, snapshot);
+    // npm v1 identifies snapshots by object key; npm v3 supplies snapshot.name.
+    const name = snapshot.name ?? (rootLockFile.packages ? undefined : key);
+    if (name) snapshotsByName.set(name, snapshot);
+    if (!rootLockFile.packages) snapshotsByKey.set(key, snapshot);
   }
 
   // Walk transitive workspace deps so every workspace package
   // copy-workspace-modules writes to disk has matching lockfile entries.
   // Without this, `npm ci` errors with "Missing: <pkg> from lock file".
-  const queue: string[] = Object.keys(packageJson.dependencies ?? {});
+  // Carry consumer identity so canonical links nest when a root alias already
+  // owns the same path.
+  const queue: Array<
+    [
+      key: string,
+      specifier: string | undefined,
+      consumer: string | null,
+      sourceSnapshot: (NpmDependencyV3 & NpmDependencyV1) | undefined,
+    ]
+  > = Object.entries(packageJson.dependencies ?? {}).map(([key, specifier]) => [
+    key,
+    specifier,
+    null,
+    undefined,
+  ]);
   const visited = new Set<string>();
+  const links = new Map<string, string>();
   while (queue.length > 0) {
-    const pkgName = queue.shift()!;
-    if (visited.has(pkgName) || !workspaceModules.has(pkgName)) continue;
+    const [key, specifier, consumer, sourceSnapshot] = queue.shift()!;
+    const pkgName = resolveWorkspaceDependencyTarget(
+      key,
+      specifier,
+      workspaceModules
+    );
+    if (!pkgName) continue;
+
+    const moduleDir = `workspace_modules/${pkgName}`;
+    const rootLinkPath = `node_modules/${key}`;
+    const nested =
+      consumer !== null &&
+      links.has(rootLinkPath) &&
+      links.get(rootLinkPath) !== moduleDir;
+    const linkPath = nested
+      ? `workspace_modules/${consumer}/node_modules/${key}`
+      : rootLinkPath;
+    if (links.get(linkPath) !== moduleDir) {
+      links.set(linkPath, moduleDir);
+      v3[linkPath] = {
+        version: `file:./${moduleDir}`,
+        resolved: moduleDir,
+        link: true,
+      };
+
+      const v1Node: NpmDependencyV1 = { version: `file:./${moduleDir}` };
+      if (nested) {
+        const parent = v1NodesByTarget.get(consumer);
+        if (parent) {
+          parent.dependencies ??= {};
+          parent.dependencies[key] ??= v1Node;
+        }
+      } else {
+        v1[key] ??= v1Node;
+      }
+      if (!v1NodesByTarget.has(pkgName)) {
+        v1NodesByTarget.set(pkgName, v1Node);
+      }
+    }
+
+    if (visited.has(pkgName)) continue;
     visited.add(pkgName);
 
-    const snapshot = snapshotsByName.get(pkgName);
+    // Fall back to the reference snapshot because npm v1 alias nodes lack a
+    // canonical-name entry.
+    const snapshot =
+      snapshotsByName.get(pkgName) ?? sourceSnapshot ?? snapshotsByKey.get(key);
 
-    output[`node_modules/${pkgName}`] = {
-      version: `file:./workspace_modules/${pkgName}`,
-      resolved: `workspace_modules/${pkgName}`,
-      link: true,
-    };
-    output[`workspace_modules/${pkgName}`] = {
+    v3[moduleDir] = {
       name: pkgName,
       version: `0.0.1`,
-      dependencies: snapshot?.dependencies,
+      dependencies: snapshot?.dependencies as Record<string, string>,
     };
 
     for (const depType of WORKSPACE_DEP_TYPES) {
       const deps = snapshot?.[depType];
       if (!deps) continue;
-      for (const depName of Object.keys(deps)) queue.push(depName);
+      for (const [depName, depSpecifier] of Object.entries(deps)) {
+        const isV1Node = typeof depSpecifier === 'object';
+        queue.push([
+          depName,
+          isV1Node
+            ? (depSpecifier as NpmDependencyV1)?.version
+            : (depSpecifier as string),
+          pkgName,
+          isV1Node
+            ? (depSpecifier as NpmDependencyV3 & NpmDependencyV1)
+            : snapshotsByKey.get(depName),
+        ]);
+      }
+    }
+
+    // npm v1 alias snapshots can omit canonical workspace edges; graph
+    // descriptors restore manifest dependencies.
+    const packageDependencies =
+      workspaceModules.get(pkgName)?.data.metadata?.js?.packageDependencies;
+    if (packageDependencies) {
+      for (const depType of WORKSPACE_DEP_TYPES) {
+        const collection = packageDependencies[depType];
+        if (!collection) continue;
+        for (const [depKey, descriptor] of Object.entries(collection)) {
+          queue.push([
+            depKey,
+            descriptor.rawSpecifier,
+            pkgName,
+            snapshotsByKey.get(depKey),
+          ]);
+        }
+      }
     }
   }
-  return output;
+  return { v3, v1 };
 }
 
 function mapV3Snapshots(
   mappedPackages: MappedPackage[],
-  packageJson: NormalizedPackageJson
+  packageJson: NormalizedPackageJson,
+  workspaceModules: Map<string, ProjectGraphProjectNode>
 ): Record<string, NpmDependencyV3> {
   const output: Record<string, NpmDependencyV3> = {};
-  const mappedPackageJson = mapPackageJsonWithWorkspaceModules(packageJson);
+  const mappedPackageJson = mapPackageJsonWithWorkspaceModules(
+    packageJson,
+    workspaceModules
+  );
   output[''] = mappedPackageJson;
 
   mappedPackages.forEach((p) => {
@@ -557,16 +664,31 @@ function mapV3Snapshots(
 }
 
 function mapPackageJsonWithWorkspaceModules(
-  packageJson: NormalizedPackageJson
+  packageJson: NormalizedPackageJson,
+  workspaceModules: Map<string, ProjectGraphProjectNode>
 ) {
-  for (const [pkgName, pkgVersion] of Object.entries(
-    packageJson.dependencies ?? {}
-  )) {
-    if (pkgVersion.startsWith('workspace:') || pkgVersion.startsWith('file:')) {
-      packageJson.dependencies[pkgName] = `workspace_modules/${pkgName}`;
+  if (!packageJson.dependencies) {
+    return packageJson;
+  }
+  // Copy dependencies: the prune-lockfile executor still needs originals to
+  // rewrite aliases after the lockfile is generated.
+  const dependencies = { ...packageJson.dependencies };
+  for (const [pkgName, pkgVersion] of Object.entries(dependencies)) {
+    const target = resolveWorkspaceDependencyTarget(
+      pkgName,
+      pkgVersion,
+      workspaceModules
+    );
+    if (target !== null && target !== pkgName) {
+      dependencies[pkgName] = `workspace_modules/${target}`;
+    } else if (
+      pkgVersion.startsWith('workspace:') ||
+      pkgVersion.startsWith('file:')
+    ) {
+      dependencies[pkgName] = `workspace_modules/${pkgName}`;
     }
   }
-  return packageJson;
+  return { ...packageJson, dependencies };
 }
 
 function mapV1Snapshots(
