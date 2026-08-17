@@ -2,10 +2,7 @@
 //
 // The single writer for everything an orchestrated run puts on stdout. Human
 // lines and the `<nx_migrate_*>` blocks the driving agent parses share that one
-// stream, so a value carrying its own line break could open a forged block. The
-// eslint override for run/ bans `utils/output` and `process.stdout.write`
-// elsewhere in this directory, which is what keeps that a property of the
-// module rather than of whoever writes the next interpolation.
+// stream, so a value carrying its own line break could open a forged block.
 //
 // Two boundaries: a thrown error leaves through handleErrors, which prints it
 // outside this guarantee; and migration code is not contained at all (nx
