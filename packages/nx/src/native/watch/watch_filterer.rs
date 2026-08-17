@@ -44,6 +44,20 @@ impl WatchFilterer {
         }
     }
 
+    /// Replace the tracked set with git's registry, which is authoritative.
+    /// [`WatchFilterer::track_worktree`] only ever adds, so a removed worktree
+    /// would stay blocked while the walker re-admits its path.
+    ///
+    /// Clearing loses nothing the event stream found: a path is only tracked
+    /// after `is_linked_worktree_root` read a `gitdir` for it, and that is a
+    /// registry entry.
+    pub fn set_worktrees(&mut self, roots: &[PathBuf]) {
+        self.worktrees.clear();
+        for root in roots {
+            self.track_worktree(root);
+        }
+    }
+
     fn filter_path(&self, path: &std::path::Path, is_dir: bool) -> bool {
         let path = dunce::simplified(path);
 
@@ -317,6 +331,26 @@ mod test {
         filterer.track_worktree(&outside);
 
         assert!(filterer.worktrees.is_empty());
+    }
+
+    #[test]
+    fn set_worktrees_stops_blocking_one_that_is_gone() {
+        // `track_worktree` only ever adds. Once a worktree is removed the
+        // walker admits its path again, so the filterer has to let go of it -
+        // otherwise those files sit in the graph with no event able to
+        // invalidate them until the daemon restarts.
+        let temp = TempDir::new().unwrap();
+        let origin = temp_origin(&temp);
+        let gone = origin.join(".claude/worktrees/gone");
+        let live = origin.join(".claude/worktrees/live");
+
+        let mut filterer = filterer(&origin, std::slice::from_ref(&gone));
+        assert!(!filterer.filter_path(&gone.join("app.ts"), false));
+
+        filterer.set_worktrees(std::slice::from_ref(&live));
+
+        assert!(filterer.filter_path(&gone.join("app.ts"), false));
+        assert!(!filterer.filter_path(&live.join("app.ts"), false));
     }
 
     #[test]

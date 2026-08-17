@@ -267,12 +267,6 @@ impl WatchPipeline {
             .paths()
             .filter(|(path, metadata)| meta_is_dir(metadata) && !self.ignore_globs.is_match(path))
             .map(|(path, _)| path.to_path_buf())
-            // Registering a worktree root would take a descriptor per
-            // directory in it and backfill the checkout file by file.
-            // `track_new_worktrees` handles the case where the directory
-            // arrives before its gitfile: everything under it is filtered out
-            // before reaching here, so nothing deeper gets registered.
-            .filter(|path| !is_linked_worktree_root(path))
             .collect()
     }
 
@@ -313,13 +307,9 @@ impl WatchPipeline {
         // written before any watch on that directory exists, so its creation
         // event is never generated here. Git's registry is state rather than
         // a notification, so it cannot be missed the same way.
-        for root in self.resolve_worktrees() {
-            debug!(
-                ?root,
-                "linked worktree found while backfilling - blocking it"
-            );
-            self.filterer.track_worktree(&root);
-        }
+        let worktrees = self.resolve_worktrees();
+        debug!(?worktrees, "blocking the linked worktrees git knows about");
+        self.filterer.set_worktrees(&worktrees);
 
         // A worktree still being created is invisible to both of the above:
         // `git worktree add` registers it and writes the checkout's gitfile
@@ -415,7 +405,20 @@ impl WatchPipeline {
 
         #[cfg(not(target_os = "macos"))]
         {
-            let new_dirs = self.new_directories_from_event(&raw);
+            // Registering a worktree root would take a descriptor per directory
+            // in it and backfill the checkout file by file. Blocking rather
+            // than skipping matters: `track_new_worktrees` needs a gitfile
+            // event, so this is the only place the root's own is recognized.
+            let (worktree_roots, new_dirs): (Vec<PathBuf>, Vec<PathBuf>) = self
+                .new_directories_from_event(&raw)
+                .into_iter()
+                .partition(|path| is_linked_worktree_root(path));
+
+            for root in worktree_roots {
+                debug!(?root, "linked worktree directory appeared - blocking it");
+                self.filterer.track_worktree(&root);
+            }
+
             if !new_dirs.is_empty() {
                 self.register_and_backfill_new_dirs(&new_dirs)
                     // Error message contains "inotify_add_watch" so the
@@ -1162,35 +1165,22 @@ mod tests {
 
         let dir = tempdir().expect("tempdir");
         let root = dir.path().canonicalize().expect("canonicalize");
-        let run = |args: &[&str]| {
-            let out = std::process::Command::new(&git)
-                .args(args)
-                .current_dir(&root)
-                .output()
-                .expect("run git");
-            assert!(
-                out.status.success(),
-                "git {args:?}: {}",
-                String::from_utf8_lossy(&out.stderr)
-            );
-        };
-        run(&["init", "-q", "."]);
-        run(&["config", "user.email", "test@example.com"]);
-        run(&["config", "user.name", "test"]);
-        fs::write(root.join("tracked.txt"), "x").expect("seed");
-        run(&["add", "-A"]);
-        run(&["commit", "-qm", "init"]);
+        seed_repo(&git, &root);
 
         let (_watcher, captured) = start_watcher(&root);
 
-        run(&[
-            "worktree",
-            "add",
-            "-q",
-            ".claude/worktrees/wt",
-            "-b",
-            "wt-branch",
-        ]);
+        run_git(
+            &git,
+            &root,
+            &[
+                "worktree",
+                "add",
+                "-q",
+                ".claude/worktrees/wt",
+                "-b",
+                "wt-branch",
+            ],
+        );
         std::thread::sleep(Duration::from_millis(400));
         fs::write(root.join(".claude/worktrees/wt/app.ts"), "y").expect("worktree write");
         // Un-ignored write proves the watcher is alive.
@@ -1210,6 +1200,82 @@ mod tests {
             leaked.is_empty(),
             "expected no events from a real git worktree; got {leaked:?}"
         );
+    }
+
+    #[test]
+    fn a_worktree_added_under_a_watched_parent_is_blocked() {
+        // Every other worktree test starts with no `.claude/`, so the directory
+        // event is for a parent that did not exist yet. Here the parent is
+        // already watched, which is every worktree after the first. Which guard
+        // catches it depends on whether the ingest loop dequeues the directory
+        // event before git finishes registering, so only the outcome is
+        // asserted - `types.rs` holds the deterministic witness.
+        let Some(git) = git_or_skip() else { return };
+
+        let dir = tempdir().expect("tempdir");
+        let root = dir.path().canonicalize().expect("canonicalize");
+        seed_repo(&git, &root);
+        // Exists, and has a watch, before the worktree appears under it.
+        fs::create_dir_all(root.join(".claude/worktrees")).expect("mkdir parent");
+
+        let (_watcher, captured) = start_watcher(&root);
+
+        run_git(
+            &git,
+            &root,
+            &[
+                "worktree",
+                "add",
+                "-q",
+                ".claude/worktrees/wt",
+                "-b",
+                "wt-branch",
+            ],
+        );
+        std::thread::sleep(Duration::from_millis(400));
+        fs::write(root.join(".claude/worktrees/wt/app.ts"), "y").expect("worktree write");
+        // Un-ignored write proves the watcher is alive.
+        fs::write(root.join("alive.txt"), "z").expect("alive write");
+
+        let events = collect(&captured);
+        assert!(
+            events.iter().any(|e| e.path == "alive.txt"),
+            "expected an event for alive.txt; got {events:?}"
+        );
+
+        let leaked: Vec<_> = events
+            .iter()
+            .filter(|e| e.path.contains("worktrees/wt/"))
+            .collect();
+        assert!(
+            leaked.is_empty(),
+            "expected no events from a worktree added under a watched parent; got {leaked:?}"
+        );
+    }
+
+    fn run_git(git: &str, root: &Path, args: &[&str]) {
+        let out = std::process::Command::new(git)
+            .args(args)
+            .current_dir(root)
+            .output()
+            .expect("run git");
+        assert!(
+            out.status.success(),
+            "git {args:?}: {}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
+
+    /// A repository with one commit, so `git worktree add` has something to
+    /// check out - an empty checkout would leak nothing whether or not the
+    /// prune works.
+    fn seed_repo(git: &str, root: &Path) {
+        run_git(git, root, &["init", "-q", "."]);
+        run_git(git, root, &["config", "user.email", "test@example.com"]);
+        run_git(git, root, &["config", "user.name", "test"]);
+        fs::write(root.join("tracked.txt"), "x").expect("seed");
+        run_git(git, root, &["add", "-A"]);
+        run_git(git, root, &["commit", "-qm", "init"]);
     }
 
     /// `git` is present on every CI image this suite runs on, but a contributor
