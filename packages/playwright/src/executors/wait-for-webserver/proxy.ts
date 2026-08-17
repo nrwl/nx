@@ -36,7 +36,18 @@ export function resolveProxyForUrl(
   if (!shouldProxy(hostname, port, env)) {
     return { kind: 'direct' };
   }
+  return resolveProxyForProtocol(protocol, env);
+}
 
+/**
+ * The proxy `env` configures for `protocol`, before any `no_proxy` exclusion:
+ * `<protocol>_proxy`, falling back to `all_proxy`, normalized as the probe
+ * would use it (a value with no scheme takes the target's protocol).
+ */
+export function resolveProxyForProtocol(
+  protocol: string,
+  env: NodeJS.ProcessEnv = process.env
+): ProxyResolution {
   let source = readEnv(`${protocol}_proxy`, env);
   if (!source.value) {
     source = readEnv('all_proxy', env);
@@ -102,10 +113,7 @@ function shouldProxy(
     return false;
   }
 
-  return noProxy.split(/[,\s]/).every((entry) => {
-    if (!entry) {
-      return true;
-    }
+  return noProxyEntries(env).every((entry) => {
     const withPort = entry.match(/^(.+):(\d+)$/);
     let host = withPort ? withPort[1] : entry;
     const entryPort = withPort ? parseInt(withPort[2]) : 0;
@@ -120,6 +128,18 @@ function shouldProxy(
     }
     return !hostname.endsWith(host);
   });
+}
+
+/**
+ * The `no_proxy` entries `env` configures, lowercased and with the empty
+ * entries a separator run leaves dropped. Each entry excludes hosts on its own,
+ * so their order carries no meaning.
+ */
+export function noProxyEntries(env: NodeJS.ProcessEnv): string[] {
+  return readEnv('no_proxy', env)
+    .value.toLowerCase()
+    .split(/[,\s]/)
+    .filter(Boolean);
 }
 
 // The executor runs in its own process, so a proxy variable the Playwright
