@@ -406,6 +406,8 @@ When defining any options or configurations inside of a target default, you may 
 
 Both keys above match a `build` target that uses `@nx/js:tsc`. However, only the most specific defaults, the executor-keyed defaults, will apply. The name-keyed defaults will not apply so specify the full config on the executor key.
 
+`cache` is the one exception. When an executor key shadows a name key that sets `"cache": true`, Nx reads that value back so the target stays cacheable, and warns that relying on it is deprecated. Nx skips continuous targets and long-running ones such as `serve`, `dev` and `start`, because caching them is invalid. Set `cache` on the executor key instead. An executor key applies to every target that resolves through it, so exclude any continuous target first. Nx rejects a target that is both cacheable and continuous.
+
 {% cardgrid %}
 {% linkcard title="Configure Outputs for Task Caching" description="This recipe walks you through how to set outputs" href="/docs/kb/configure-outputs" /%}
 {% /cardgrid %}
