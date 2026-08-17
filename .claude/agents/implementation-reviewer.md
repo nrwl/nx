@@ -29,8 +29,8 @@ Run from the repo root:
 
 ```bash
 .claude/tools/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
-.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir]
-.claude/tools/sandbox find <SANDBOX> <glob> [subdir]
+.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
+.claude/tools/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
 .claude/tools/sandbox exec <SANDBOX> -- <cmd>            # tests, lint, tsc
 .claude/tools/sandbox exec <SANDBOX> --base -- <cmd>     # the same, base-side
 ```
