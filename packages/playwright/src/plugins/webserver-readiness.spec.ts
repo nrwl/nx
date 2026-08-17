@@ -1,4 +1,10 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { cpus, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -97,11 +103,30 @@ describe('getProbeEnvDivergence', () => {
     ).toEqual(['NO_PROXY']);
   });
 
-  it('reports nothing when no_proxy differs but no proxy is configured', () => {
-    // The routing decision is direct on both sides; the raw difference cannot
-    // change how the server is probed.
+  it('names a no_proxy exclusion for a proxy that only routes another protocol', () => {
+    // A redirect to https would be routed through https_proxy; the exclusion
+    // decides that hop.
+    const ambient = { HTTPS_PROXY: 'http://proxy.example:8080' };
+    expect(
+      getProbeEnvDivergence(
+        [httpUrl],
+        { ...ambient, NO_PROXY: 'localhost' },
+        ambient
+      )
+    ).toEqual(['NO_PROXY']);
+  });
+
+  it('reports nothing when no_proxy differs but neither env configures a proxy', () => {
+    // Every hop is direct on both sides.
     expect(
       getProbeEnvDivergence([httpUrl], { NO_PROXY: 'localhost' }, {})
+    ).toEqual([]);
+    expect(
+      getProbeEnvDivergence(
+        [httpUrl],
+        { NO_PROXY: 'localhost', HTTP_PROXY: '' },
+        {}
+      )
     ).toEqual([]);
   });
 
@@ -115,7 +140,7 @@ describe('getProbeEnvDivergence', () => {
     ).toEqual(['http_proxy']);
   });
 
-  it('names the all_proxy fallback when it drives the decision', () => {
+  it('names the all_proxy fallback', () => {
     expect(
       getProbeEnvDivergence(
         [httpUrl],
@@ -125,22 +150,175 @@ describe('getProbeEnvDivergence', () => {
     ).toEqual(['ALL_PROXY']);
   });
 
-  it('ignores a proxy variable for a protocol the url does not use', () => {
+  it('names a proxy variable for a protocol the configured url does not use', () => {
+    // An http url can redirect to https, where https_proxy decides the route.
     expect(
       getProbeEnvDivergence(
         [httpUrl],
         { HTTPS_PROXY: 'http://proxy.example:8080' },
         {}
       )
+    ).toEqual(['HTTPS_PROXY']);
+  });
+
+  it('reports nothing for a differing case-variant with the same effective value', () => {
+    // The probe reads the lowercase name first, so an uppercase value it never
+    // reads is not a difference.
+    expect(
+      getProbeEnvDivergence(
+        [httpUrl],
+        {
+          http_proxy: 'http://proxy.example:8080',
+          HTTP_PROXY: 'http://other.example:8080',
+        },
+        { http_proxy: 'http://proxy.example:8080' }
+      )
     ).toEqual([]);
   });
 
-  it('names TLS material for a verifying https probe only', () => {
+  it('reports nothing for an empty value against an unset one', () => {
+    // The probe treats an empty value as unset.
+    expect(getProbeEnvDivergence([httpUrl], { HTTP_PROXY: '' }, {})).toEqual(
+      []
+    );
+  });
+
+  it('reports nothing for a proxy that no_proxy=* masks on both sides', () => {
+    // Every hop is direct on both sides, whatever the proxy variables say.
+    expect(
+      getProbeEnvDivergence(
+        [httpUrl],
+        { HTTP_PROXY: 'http://a.example:8080', NO_PROXY: '*' },
+        { HTTP_PROXY: 'http://b.example:8080', NO_PROXY: '*' }
+      )
+    ).toEqual([]);
+    expect(
+      getProbeEnvDivergence(
+        [httpUrl],
+        { HTTP_PROXY: 'http://a.example:8080', NO_PROXY: '*' },
+        {}
+      )
+    ).toEqual([]);
+  });
+
+  it('reports nothing when a * entry among others excludes every host on both sides', () => {
+    expect(
+      getProbeEnvDivergence(
+        [httpUrl],
+        { HTTP_PROXY: 'http://a.example:8080', NO_PROXY: 'localhost,*' },
+        { HTTP_PROXY: 'http://b.example:8080', NO_PROXY: '*,other.example' }
+      )
+    ).toEqual([]);
+  });
+
+  it('names a no_proxy=* that turns a configured proxy off on one side only', () => {
+    const proxy = { HTTP_PROXY: 'http://proxy.example:8080' };
+    expect(
+      getProbeEnvDivergence([httpUrl], { ...proxy, NO_PROXY: '*' }, proxy)
+    ).toEqual(['NO_PROXY']);
+  });
+
+  it('reports nothing for an all_proxy that explicit protocol proxies mask', () => {
+    const explicit = {
+      http_proxy: 'http://proxy.example:8080',
+      https_proxy: 'http://proxy.example:8080',
+    };
+    expect(
+      getProbeEnvDivergence(
+        [httpUrl],
+        { ...explicit, ALL_PROXY: 'http://a.example:8080' },
+        { ...explicit, ALL_PROXY: 'http://b.example:8080' }
+      )
+    ).toEqual([]);
+  });
+
+  it('names an all_proxy that decides the route for the other protocol', () => {
+    const explicit = { http_proxy: 'http://proxy.example:8080' };
+    expect(
+      getProbeEnvDivergence(
+        [httpUrl],
+        { ...explicit, ALL_PROXY: 'http://a.example:8080' },
+        explicit
+      )
+    ).toEqual(['ALL_PROXY']);
+  });
+
+  it('compares no_proxy case-insensitively, as the probe reads it', () => {
+    const proxy = { HTTP_PROXY: 'http://proxy.example:8080' };
+    expect(
+      getProbeEnvDivergence(
+        [httpUrl],
+        { ...proxy, NO_PROXY: 'LOCALHOST' },
+        { ...proxy, NO_PROXY: 'localhost' }
+      )
+    ).toEqual([]);
+  });
+
+  it('reports nothing for proxy values that normalize to the same url', () => {
+    expect(
+      getProbeEnvDivergence(
+        [httpUrl],
+        { HTTP_PROXY: 'proxy.example:8080' },
+        { HTTP_PROXY: 'http://proxy.example:8080/' }
+      )
+    ).toEqual([]);
+  });
+
+  it('names a scheme-less all_proxy that dials https through a different scheme', () => {
+    // Without a scheme the value takes the target protocol, so the https route
+    // becomes an https proxy on one side and an http proxy on the other.
+    expect(
+      getProbeEnvDivergence(
+        [httpUrl],
+        { ALL_PROXY: 'proxy.example:8080' },
+        { ALL_PROXY: 'http://proxy.example:8080' }
+      )
+    ).toEqual(['ALL_PROXY']);
+  });
+
+  it('names a no_proxy suffix entry against an exact-host one', () => {
+    // `*example.com` excludes every host ending in example.com; `example.com`
+    // only that host.
+    const proxy = { HTTP_PROXY: 'http://proxy.example:8080' };
+    expect(
+      getProbeEnvDivergence(
+        [httpUrl],
+        { ...proxy, NO_PROXY: '*example.com' },
+        { ...proxy, NO_PROXY: 'example.com' }
+      )
+    ).toEqual(['NO_PROXY']);
+  });
+
+  it('reports nothing for no_proxy entries that differ only in order, separators, or a *. prefix', () => {
+    const proxy = { HTTP_PROXY: 'http://proxy.example:8080' };
+    expect(
+      getProbeEnvDivergence(
+        [httpUrl],
+        { ...proxy, NO_PROXY: 'localhost,*.example.com' },
+        { ...proxy, NO_PROXY: '.example.com, localhost' }
+      )
+    ).toEqual([]);
+  });
+
+  it('names only the case-variant that carries the differing value', () => {
+    expect(
+      getProbeEnvDivergence(
+        [httpUrl],
+        { http_proxy: 'http://a.example:8080', HTTP_PROXY: 'same' },
+        { http_proxy: 'http://b.example:8080', HTTP_PROXY: 'same' }
+      )
+    ).toEqual(['http_proxy']);
+  });
+
+  it('names TLS material for any url probe unless every url server ignores HTTPS errors', () => {
     const taskEnv = { NODE_EXTRA_CA_CERTS: '/certs/ca.pem' };
     expect(getProbeEnvDivergence([httpsUrl], taskEnv, {})).toEqual([
       'NODE_EXTRA_CA_CERTS',
     ]);
-    expect(getProbeEnvDivergence([httpUrl], taskEnv, {})).toEqual([]);
+    // An http url can redirect to https, where the certificate is verified.
+    expect(getProbeEnvDivergence([httpUrl], taskEnv, {})).toEqual([
+      'NODE_EXTRA_CA_CERTS',
+    ]);
     expect(
       getProbeEnvDivergence(
         [{ ...httpsUrl, ignoreHTTPSErrors: true }],
@@ -148,6 +326,13 @@ describe('getProbeEnvDivergence', () => {
         {}
       )
     ).toEqual([]);
+    expect(
+      getProbeEnvDivergence(
+        [{ ...httpUrl, ignoreHTTPSErrors: true }, httpsUrl],
+        taskEnv,
+        {}
+      )
+    ).toEqual(['NODE_EXTRA_CA_CERTS']);
   });
 
   it('names NODE_TLS_REJECT_UNAUTHORIZED for an https probe', () => {
@@ -321,7 +506,10 @@ describe('forkChildEval (real fork)', () => {
   };
 
   beforeAll(() => {
-    fixtureDir = mkdtempSync(join(tmpdir(), 'pw-webserver-readiness-'));
+    // Resolved so the child's cwd (as getcwd reports it) compares equal.
+    fixtureDir = realpathSync(
+      mkdtempSync(join(tmpdir(), 'pw-webserver-readiness-'))
+    );
   });
   afterAll(() => rmSync(fixtureDir, { recursive: true, force: true }));
   afterEach(() => _setWorkerScriptPath(null));
@@ -334,8 +522,25 @@ describe('forkChildEval (real fork)', () => {
       )
     );
     await expect(
-      resolveWebServersUnderEnv('config.ts', 'root', {})
+      resolveWebServersUnderEnv('config.ts', fixtureDir, {})
     ).resolves.toEqual([{ command: 'x', url: 'http://localhost:4301' }]);
+  });
+
+  it('runs the worker from the project root, not the parent cwd', async () => {
+    // Without plugin isolation the parent is the nx CLI process, whose cwd is
+    // wherever nx was invoked; the inferred task runs from the project root.
+    _setWorkerScriptPath(
+      writeWorker(
+        'cwd.js',
+        `process.send({ type: 'webserver-config-result', webServers: [{ command: process.cwd() }] }, () => process.exit(0));`
+      )
+    );
+    const projectRoot = join(fixtureDir, 'apps', 'e2e');
+    mkdirSync(projectRoot, { recursive: true });
+    expect(projectRoot).not.toBe(process.cwd());
+    await expect(
+      resolveWebServersUnderEnv('apps/e2e/playwright.config.ts', fixtureDir, {})
+    ).resolves.toEqual([{ command: projectRoot }]);
   });
 
   it('ignores messages without the worker tag', async () => {
@@ -351,7 +556,7 @@ process.send({ type: 'webserver-config-result', webServers: [{ command: 'x', url
       )
     );
     await expect(
-      resolveWebServersUnderEnv('config.ts', 'root', {})
+      resolveWebServersUnderEnv('config.ts', fixtureDir, {})
     ).resolves.toEqual([{ command: 'x', url: 'http://localhost:4301' }]);
   });
 
@@ -365,7 +570,7 @@ process.send({ type: 'webserver-config-result', webServers: [{ command: 'x', url
       )
     );
     await expect(
-      resolveWebServersUnderEnv('config.ts', 'root', {})
+      resolveWebServersUnderEnv('config.ts', fixtureDir, {})
     ).rejects.toThrow();
   });
 
@@ -377,7 +582,7 @@ process.send({ type: 'webserver-config-result', webServers: [{ command: 'x', url
       )
     );
     await expect(
-      resolveWebServersUnderEnv('config.ts', 'root', {})
+      resolveWebServersUnderEnv('config.ts', fixtureDir, {})
     ).rejects.toThrow(/exited with code 3[\s\S]*boom-detail/);
   });
 
@@ -389,7 +594,7 @@ process.send({ type: 'webserver-config-result', webServers: [{ command: 'x', url
       _setWorkerScriptPath(
         writeWorker('hang.js', `setInterval(() => {}, 1000);`)
       );
-      const evaluation = resolveWebServersUnderEnv('config.ts', 'root', {});
+      const evaluation = resolveWebServersUnderEnv('config.ts', fixtureDir, {});
       // Attach the rejection expectation before firing the timer so the
       // rejection is never unhandled.
       const assertion = expect(evaluation).rejects.toThrow(

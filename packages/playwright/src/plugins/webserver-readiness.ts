@@ -1,8 +1,11 @@
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { fork } from 'node:child_process';
 import { cpus } from 'node:os';
-import { join } from 'node:path';
-import { resolveProxyForUrl } from '../executors/wait-for-webserver/proxy';
+import { dirname, join } from 'node:path';
+import {
+  noProxyEntries,
+  resolveProxyForProtocol,
+} from '../executors/wait-for-webserver/proxy';
 
 /**
  * The serializable subset of a Playwright `webServer` entry that the readiness
@@ -47,6 +50,49 @@ export function normalizeWebServers(
 const TLS_PROBE_VARS = ['NODE_EXTRA_CA_CERTS', 'NODE_TLS_REJECT_UNAUTHORIZED'];
 
 /**
+ * The routes a probe under `env` can take, read as the executor's proxy
+ * resolution reads them: the proxy for each protocol a redirect can reach
+ * (`<protocol>_proxy`, falling back to `all_proxy`, normalized as it would be
+ * dialled) and the `no_proxy` filter as its set of entries. A `no_proxy` that
+ * excludes every host, or no proxy at all, sends every hop direct, so both
+ * collapse to empty routes and a masked variable never counts as a difference.
+ */
+function proxyRoutes(env: NodeJS.ProcessEnv): {
+  http: string;
+  https: string;
+  no_proxy: string;
+} {
+  const route = (protocol: string) => {
+    const resolution = resolveProxyForProtocol(protocol, env);
+    switch (resolution.kind) {
+      case 'direct':
+        return '';
+      case 'proxy':
+        return resolution.proxy.href;
+      case 'unusable':
+        return `unusable ${resolution.value}`;
+      default: {
+        const unhandled: never = resolution;
+        throw new Error(`Unhandled resolution ${JSON.stringify(unhandled)}`);
+      }
+    }
+  };
+  const http = route('http');
+  const https = route('https');
+  // Entries exclude hosts independently, so a differing order or separator is
+  // not a difference. `*.host` and `.host` are the same suffix match, whereas
+  // `*host` (any suffix) and `host` (exact) are not. A bare `*` excludes every
+  // host.
+  const entries = [
+    ...new Set(noProxyEntries(env).map((entry) => entry.replace(/^\*\./, '.'))),
+  ].sort();
+  if (entries.includes('*') || !(http || https)) {
+    return { http: '', https: '', no_proxy: '' };
+  }
+  return { http, https, no_proxy: entries.join(',') };
+}
+
+/**
  * The env var names whose task-env values would make the readiness gate probe
  * `servers` differently than the consuming task's own Playwright probe. The
  * gate runs as its own target, so it loads its own dotenv files, not the
@@ -55,49 +101,50 @@ const TLS_PROBE_VARS = ['NODE_EXTRA_CA_CERTS', 'NODE_TLS_REJECT_UNAUTHORIZED'];
  * A non-empty result means the gate cannot reproduce the task's probe and must
  * not be inferred.
  *
- * Proxy env is compared as the effective routing decision per url (an
- * `https_proxy` that differs cannot change how an http url is probed); TLS env
- * only for a verifying https probe (`ignoreHTTPSErrors` turns verification off
- * on both sides). Like the executor's own up-front validation, only the
- * address the wait starts from is considered, not addresses a redirect could
- * reach.
+ * Both probes follow redirects, so as soon as one server probes a url the
+ * routes for every protocol and host are compared, not only the route the
+ * configured url takes: an `https_proxy` for an http url or a `no_proxy` entry
+ * for another host can still decide how a redirect target is reached. TLS env
+ * is compared unless every url server sets `ignoreHTTPSErrors`, which turns
+ * verification off on both sides for every hop.
  */
 export function getProbeEnvDivergence(
   servers: Array<{ url?: string; ignoreHTTPSErrors?: boolean }>,
   taskEnv: NodeJS.ProcessEnv,
   ambientEnv: NodeJS.ProcessEnv = process.env
 ): string[] {
+  // A port is probed with a raw TCP connect, and the executor rejects a
+  // malformed url up front; env plays no part in either.
+  const urlServers = servers.filter(
+    (server) => server.url && URL.canParse(server.url)
+  );
+  if (urlServers.length === 0) {
+    return [];
+  }
   const diverging = new Set<string>();
-  for (const server of servers) {
-    // A port is probed with a raw TCP connect; no env is involved.
-    if (!server.url) {
-      continue;
-    }
-    let url: URL;
-    try {
-      url = new URL(server.url);
-    } catch {
-      // The executor rejects a malformed url up front; env plays no part.
-      continue;
-    }
-    const protocol = url.protocol.split(':')[0];
-    if (
-      JSON.stringify(resolveProxyForUrl(url, taskEnv)) !==
-      JSON.stringify(resolveProxyForUrl(url, ambientEnv))
-    ) {
-      for (const name of [`${protocol}_proxy`, 'all_proxy', 'no_proxy']) {
-        for (const variable of [name.toLowerCase(), name.toUpperCase()]) {
-          if (taskEnv[variable] !== ambientEnv[variable]) {
-            diverging.add(variable);
-          }
-        }
+  const taskRoutes = proxyRoutes(taskEnv);
+  const ambientRoutes = proxyRoutes(ambientEnv);
+  // Name the raw variables behind a differing route. A proxy route is decided
+  // by every proxy variable (`no_proxy` can mask them all); the filter only by
+  // `no_proxy`.
+  const routeVars =
+    taskRoutes.http !== ambientRoutes.http ||
+    taskRoutes.https !== ambientRoutes.https
+      ? ['http_proxy', 'https_proxy', 'all_proxy', 'no_proxy']
+      : taskRoutes.no_proxy !== ambientRoutes.no_proxy
+        ? ['no_proxy']
+        : [];
+  for (const name of routeVars) {
+    for (const variable of [name, name.toUpperCase()]) {
+      if (taskEnv[variable] !== ambientEnv[variable]) {
+        diverging.add(variable);
       }
     }
-    if (url.protocol === 'https:' && !server.ignoreHTTPSErrors) {
-      for (const variable of TLS_PROBE_VARS) {
-        if (taskEnv[variable] !== ambientEnv[variable]) {
-          diverging.add(variable);
-        }
+  }
+  if (urlServers.some((server) => !server.ignoreHTTPSErrors)) {
+    for (const variable of TLS_PROBE_VARS) {
+      if (taskEnv[variable] !== ambientEnv[variable]) {
+        diverging.add(variable);
       }
     }
   }
@@ -198,7 +245,12 @@ function forkChildEval(
   env: NodeJS.ProcessEnv
 ): Promise<ResolvedWebServer[]> {
   return new Promise((resolve, reject) => {
+    // Startup env and project-root cwd mirror the inferred task, which runs
+    // `playwright test` from the project root: a NODE_OPTIONS loader runs at
+    // process start and resolves a relative path from there, whichever
+    // directory nx was invoked from.
     const child = fork(workerScriptPath, [configFilePath, workspaceRoot], {
+      cwd: join(workspaceRoot, dirname(configFilePath)),
       env,
       stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
     });
