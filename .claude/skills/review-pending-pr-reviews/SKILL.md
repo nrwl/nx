@@ -67,6 +67,32 @@ Flag before the action prompt:
 entirely when the draft's frontmatter shows a `## Grill` section already — `/review-pr` Step 8.5
 grilled it interactively and re-grilling wastes the maintainer's time. Say so and go to Step 4.
 
+**Brief the maintainer before the first question — it is not optional, and it matters more here than
+in `/review-pr`.** That skill's grill follows a review the maintainer just watched run; this one
+opens on a draft a cron produced days ago, about a PR they have likely never opened. Asking "does
+this hold?" cold makes the question unanswerable, and silence is defined below as _stop_ — so a cold
+grill yields no evaluation at all, on the very drafts this skill calls the real gate.
+
+```text
+PR #<N>: <title> — <author>, <age>, reviewed <date> at <head_sha>
+<one or two sentences: what the PR actually changes, in plain terms>
+
+Draft verdict: <verdict> — <what drives it>
+
+Critical (<n>) — these gate the verdict
+  1. <file:line> — <the claim in one clause>
+
+Important (<n>)
+  2. <file:line> — <the claim in one clause>
+
+Pre-existing (<n>), Suggestions (<n>) — not grilled, listed so you know they exist
+```
+
+One line per finding. The detail arrives with the question that needs it, and every question
+restates its own finding inline — the claim, its `NET-NEW` line, its `TRIGGER` line, and one sentence
+on what specifically is uncertain about it. Never refer to a finding by number alone, and never make
+the maintainer open the draft to answer.
+
 Invoke `/grill-me`, scoped to findings rather than to a plan. It works in **rounds over a frontier** —
 round 1 is every Critical finding, round 2 is Important plus whatever round 1 unblocked, round 3 is
 the consequences. Skip Suggestions; they never move the verdict.

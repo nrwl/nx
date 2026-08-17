@@ -1456,6 +1456,44 @@ as written. A grill that invents the maintainer's answers is worse than no grill
 on fabricated authority and launders agent output into apparent human review. Silence means stop, not
 proceed with the obvious answer.
 
+### Brief the maintainer before the first question
+
+**Print this briefing before invoking `/grill-me`. It is not optional.** The maintainer has not read
+the draft — Step 8 wrote it to disk, and nothing has shown it to them. Asking "does this finding
+hold?" about a defect they have never seen makes the question unanswerable, and the honest response
+to an unanswerable question is silence, which this step treats as _stop_. A grill that opens cold
+therefore does not produce a cautious review; it produces no review at all.
+
+```text
+Reviewed PR #<N>: <title>
+<one or two sentences: what the PR actually changes, in plain terms>
+
+Draft verdict: <verdict> — <what drives it: "1 Critical", "no Critical, 6 Important">
+Full draft: <TRIAGE_DIR>/<N>.md
+
+Critical (<n>) — these gate the verdict
+  1. <file:line> — <the claim in one clause>
+  2. …
+
+Important (<n>)
+  3. <file:line> — <the claim in one clause>
+
+Pre-existing (<n>), Suggestions (<n>) — not grilled, listed so you know they exist
+```
+
+Keep it to one line per finding; the detail arrives with the question that needs it. Some drafts run
+to hundreds of KB, and a briefing that reprints the draft is the same failure as no briefing.
+
+### Each question carries its own evidence
+
+A numbered finding in the briefing is a map, not enough to judge by. So every question restates,
+inline, the finding it is about: **the claim**, its `NET-NEW` line, its `TRIGGER` line, and one
+sentence on _why this one is uncertain_ — the specific thing you could not settle from the sandbox.
+Never make the maintainer open the draft to answer, and never refer to a finding by number alone.
+
+If you cannot say what is uncertain about a finding, you have no question — that finding is settled
+and belongs in neither the grill nor its rounds.
+
 Invoke `/grill-me`, scoped to the findings rather than to a plan. It works the tree in **rounds over
 a frontier** — round 1 is every Critical finding (they gate the verdict and are independent of each
 other), round 2 is Important plus whatever round 1 unblocked, round 3 is the consequences. Each

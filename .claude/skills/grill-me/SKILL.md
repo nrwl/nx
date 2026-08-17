@@ -29,6 +29,8 @@ The session is done when the frontier is empty: every branch visited, nothing le
 
 ## When a caller delegates a set of findings
 
+**Brief the user before the first question.** Unlike a plan they wrote themselves, findings arrive from agents the user has not read — so state, up front, what was reviewed and the one-line inventory of findings by tier. Then have every question restate the finding it is about, inline, rather than referring to it by number. A question about a defect the user has never seen is unanswerable, and rule one below turns an unanswered question into a full stop — so opening cold does not make the grill cautious, it makes it produce nothing.
+
 Review findings are mostly independent of each other, so the tree is shallow and wide rather than deep. Round it anyway — the dependencies are real, they just sit between _tiers_ rather than between individual items:
 
 1. **Round 1 — the blocking findings.** They gate the verdict, and they are independent of one another, so the whole tier is one frontier.
