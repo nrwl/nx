@@ -174,11 +174,19 @@ pub(super) fn transform_event_to_watch_events(
 
     #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
     {
+        use crate::native::utils::git::is_linked_worktree_root;
         use crate::native::walker::nx_walker_sync;
         use ignore::Match;
         use ignore::gitignore::GitignoreBuilder;
 
         if matches!(event_kind, EventKind::Create(CreateKind::Folder)) {
+            // A worktree root reaches the walk below as the walk's own root,
+            // where the prune is deliberately empty - Nx running from inside a
+            // worktree has to see its own files.
+            if is_linked_worktree_root(path_ref) {
+                return Ok(vec![]);
+            }
+
             let mut result = vec![];
 
             let mut gitignore_builder = GitignoreBuilder::new(origin);
@@ -249,4 +257,41 @@ fn relative_to_origin(path: &Path, origin: &str) -> PathBuf {
     path.strip_prefix(origin)
         .map(Path::to_path_buf)
         .unwrap_or_else(|_| path.to_path_buf())
+}
+
+#[cfg(test)]
+#[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
+mod test {
+    use super::*;
+    use crate::native::utils::git::test_support::register_worktree;
+    use std::path::MAIN_SEPARATOR;
+    use tempfile::tempdir;
+
+    #[test]
+    fn a_folder_event_for_a_worktree_root_expands_to_nothing() {
+        // Driving the watcher end to end cannot witness this: `git worktree
+        // add` makes the directory before it registers the worktree, so an
+        // idle ingest loop dequeues the event while the root still looks
+        // ordinary and the registration path handles it. The leak needs the
+        // event to arrive after git finished, which only a busy daemon
+        // produces. Handing the transform that state directly is the same
+        // question without the race.
+        let dir = tempdir().expect("tempdir");
+        let root = dir.path().canonicalize().expect("canonicalize");
+        let worktree = root.join(".claude/worktrees/wt");
+        register_worktree(&root, "wt", &worktree);
+        fs::create_dir_all(worktree.join("packages/app")).expect("mkdir checkout");
+        fs::write(worktree.join("packages/app/main.ts"), "x").expect("populate checkout");
+
+        let origin = format!("{}{}", root.display(), MAIN_SEPARATOR);
+        let event = Event::new(EventKind::Create(CreateKind::Folder)).add_path(worktree.clone());
+        let raw = RawWatchEvent::new(event);
+
+        let events = transform_event_to_watch_events(&raw, &origin).expect("transform");
+
+        assert!(
+            events.is_empty(),
+            "expected a worktree root to expand to nothing; got {events:?}"
+        );
+    }
 }
