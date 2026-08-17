@@ -1,4 +1,8 @@
-import { NxJsonConfiguration } from '../../../config/nx-json';
+import {
+  NxJsonConfiguration,
+  TargetDefaults,
+  TargetDefaultValue,
+} from '../../../config/nx-json';
 import {
   ProjectConfiguration,
   TargetConfiguration,
@@ -8,6 +12,8 @@ import {
   parseExecutor,
 } from '../../../command-line/run/executor-utils';
 import { readJsonFile } from '../../../utils/fileutils';
+import { isLongRunningTargetName } from '../../../utils/long-running-target';
+import { output } from '../../../utils/output';
 import { toProjectName } from '../../../config/to-project-name';
 import {
   isProjectWithExistingNameError,
@@ -113,6 +119,140 @@ export function normalizeTarget(
   return target;
 }
 
+// TODO(v24): remove the legacy target-name cache fallback and its warning.
+// Removal needs a second mechanism for plugin-inferred targets, which the
+// accompanying migration cannot reach.
+/**
+ * Whether `target` is cacheable only by way of the legacy name-based fallback:
+ * the exact target-name key of `targetDefaults` declares `cache: true`, but an
+ * executor key won target-default resolution instead, so the merged target never
+ * received it.
+ *
+ * A `true` result means the user's `cache: true` silently lost, so this doubles
+ * as the condition for warning them that the name key is being shadowed.
+ */
+function isLegacyCachedTarget(
+  targetName: string,
+  targetDefaults: TargetDefaults | undefined,
+  target: TargetConfiguration
+): boolean {
+  // Resolution already decided `cache`, so the name key isn't shadowed.
+  if (target.cache !== undefined) {
+    return false;
+  }
+
+  if (isLongRunningTarget(targetName, target)) {
+    return false;
+  }
+
+  // Restricted to shadowing, which is narrower than what pre-23 restored: that
+  // derivation matched on target name alone, so a name key dropped as
+  // incompatible (its entry declared a foreign executor) was cacheable too.
+  // Restoring that as well would mean writing `cache` with no key to name in
+  // the warning, and no migration able to retire it. Deliberately not covered.
+  if (!findShadowingTargetDefaultKey(targetDefaults, target)) {
+    return false;
+  }
+
+  return declaresCacheTrue(targetDefaults?.[targetName]);
+}
+
+/**
+ * Whether the name key declares `cache: true` on an entry that always applies.
+ *
+ * Filters are deliberately not evaluated. They cannot express a pre-23 config
+ * (the filtered array shape postdates the behavior being restored), and a
+ * filtered entry declaring `cache` may or may not apply to this project — so
+ * rather than guess, a filtered `cache` declares the value unknowable and
+ * nothing is restored. Among unfiltered entries the last wins, matching the
+ * in-key merge order.
+ */
+function declaresCacheTrue(value: TargetDefaultValue | undefined): boolean {
+  if (!value) {
+    return false;
+  }
+  const entries = Array.isArray(value) ? value : [value];
+  let declared: boolean | undefined;
+  for (const entry of entries) {
+    // `nx.json` is hand-edited; a null or scalar entry would throw here.
+    if (!entry || typeof entry !== 'object') continue;
+    if (entry.cache === undefined) continue;
+    if (entry.filter) return false;
+    declared = entry.cache;
+  }
+  return declared === true;
+}
+
+/**
+ * The normalization-time half of the pre-23 `longRunningTask` guard, which kept
+ * `cacheableOperations` from ever making these cacheable. Its remaining clause
+ * — `task.overrides['watch']` — is a runtime invocation override with no target
+ * equivalent, so it has no counterpart here.
+ */
+function isLongRunningTarget(
+  targetName: string,
+  target: TargetConfiguration
+): boolean {
+  return !!target.continuous || isLongRunningTargetName(targetName);
+}
+
+/**
+ * The `targetDefaults` key that beat the target-name key for `target`. Only an
+ * executor key can: key precedence puts the exact target name ahead of every
+ * glob, so nothing else outranks it. Undefined when the name key lost for
+ * another reason (e.g. its entry declared a foreign executor and was dropped as
+ * incompatible) — see {@link isLegacyCachedTarget} for why that case is left
+ * alone even though pre-23 restored it.
+ *
+ * `hasOwnProperty` rather than a lookup: an executor named `__proto__` resolves
+ * through the prototype chain to a truthy object, which would report a key the
+ * user never wrote.
+ */
+function findShadowingTargetDefaultKey(
+  targetDefaults: TargetDefaults | undefined,
+  target: TargetConfiguration
+): string | undefined {
+  return target.executor &&
+    targetDefaults &&
+    Object.prototype.hasOwnProperty.call(targetDefaults, target.executor)
+    ? target.executor
+    : undefined;
+}
+
+/**
+ * Emits a single grouped warning for every (shadowing key, target-name key)
+ * pair that relied on the deprecated fallback. Grouping matters because the
+ * same pair recurs in every affected project — a per-target warning would
+ * print hundreds of identical lines in a large workspace.
+ */
+function warnAboutLegacyCachedTargets(
+  legacyCacheReads: Map<string, Set<string>>
+) {
+  if (legacyCacheReads.size === 0) {
+    return;
+  }
+
+  const bodyLines: string[] = [];
+  for (const [shadowingKey, targetKeys] of legacyCacheReads) {
+    for (const targetKey of targetKeys) {
+      bodyLines.push(
+        `  - "${shadowingKey}" does not set "cache", so it was read from "${targetKey}"`
+      );
+    }
+  }
+  bodyLines.push(
+    '',
+    'An executor key applies to every target that resolves through it, so exclude any continuous target before setting "cache" on one — a target that is both cacheable and continuous is rejected.',
+    'Target defaults resolve to a single key rather than merging, so an executor key hides the target name key entirely.',
+    'Set "cache" on the executor key to keep these targets cacheable — reading it from the target name key is deprecated and will be removed in Nx 24.'
+  );
+
+  output.warn({
+    title: 'Some targets are only cacheable through a deprecated fallback.',
+    bodyLines,
+  });
+}
+
 function normalizeTargets(
   project: ProjectConfiguration,
   sourceMaps: ConfigurationSourceMaps,
@@ -121,7 +261,12 @@ function normalizeTargets(
   /**
    * Project configurations keyed by project name
    */
-  projects: Record<string, ProjectConfiguration>
+  projects: Record<string, ProjectConfiguration>,
+  /**
+   * Shadowing `targetDefaults` key -> target name keys its `cache` was read
+   * from. Accumulated across projects so the deprecation warns once per pair.
+   */
+  legacyCacheReads: Map<string, Set<string>>
 ) {
   const targetErrorMessage: string[] = [];
 
@@ -135,6 +280,20 @@ function normalizeTargets(
     );
 
     const target = project.targets[targetName];
+
+    const targetDefaults = nxJsonConfiguration.targetDefaults;
+    if (isLegacyCachedTarget(targetName, targetDefaults, target)) {
+      target.cache = true;
+
+      // Always defined: `isLegacyCachedTarget` returns false without it.
+      const shadowingKey = findShadowingTargetDefaultKey(
+        targetDefaults,
+        target
+      );
+      const targetKeys = legacyCacheReads.get(shadowingKey) ?? new Set();
+      targetKeys.add(targetName);
+      legacyCacheReads.set(shadowingKey, targetKeys);
+    }
 
     if (
       // If the target has no executor or command, it doesn't do anything
@@ -179,6 +338,7 @@ export function validateAndNormalizeProjectRootMap(
   const conflicts = new Map<string, string[]>();
   const projectRootsWithNoName: string[] = [];
   const validityErrors: WorkspaceValidityError[] = [];
+  const legacyCacheReads = new Map<string, Set<string>>();
 
   for (const root in projectRootMap) {
     const project = projectRootMap[root];
@@ -232,7 +392,8 @@ export function validateAndNormalizeProjectRootMap(
         sourceMaps,
         nxJsonConfiguration,
         workspaceRoot,
-        projects
+        projects,
+        legacyCacheReads
       );
     } catch (e) {
       if (e instanceof WorkspaceValidityError) {
@@ -242,6 +403,8 @@ export function validateAndNormalizeProjectRootMap(
       }
     }
   }
+
+  warnAboutLegacyCachedTargets(legacyCacheReads);
 
   const errors: Error[] = [];
 
