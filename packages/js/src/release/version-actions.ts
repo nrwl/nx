@@ -1,4 +1,8 @@
-import { getCatalogManager } from '@nx/devkit/internal';
+import {
+  getCatalogManager,
+  parseDependencySpecifier,
+} from '@nx/devkit/internal';
+import type { ParsedDependencySpecifier } from '@nx/devkit/internal';
 import {
   detectPackageManager,
   PackageManager,
@@ -167,11 +171,22 @@ export default class JsVersionActions extends VersionActions {
     let currentVersion = null;
     let dependencyCollection = null;
     for (const depType of dependencyTypes) {
-      if (json[depType] && json[depType][dependencyPackageName]) {
-        currentVersion = json[depType][dependencyPackageName];
-        dependencyCollection = depType;
-        break;
+      if (!json[depType]) {
+        continue;
       }
+      const entries = findDependencyEntriesForPackage(
+        json[depType],
+        dependencyPackageName
+      ).filter((entry) => getEntryVersionSpec(entry));
+      if (entries.length === 0) {
+        continue;
+      }
+      // Prefer the entry keyed by the package name itself over aliased entries
+      const entry =
+        entries.find((e) => e.key === dependencyPackageName) ?? entries[0];
+      currentVersion = getEntryVersionSpec(entry);
+      dependencyCollection = depType;
+      break;
     }
 
     // Resolve catalog references if needed
@@ -213,8 +228,7 @@ export default class JsVersionActions extends VersionActions {
     projectGraph: ProjectGraph,
     dependenciesToUpdate: Record<string, string>
   ): Promise<string[]> {
-    let numDependenciesToUpdate = Object.keys(dependenciesToUpdate).length;
-    if (numDependenciesToUpdate === 0) {
+    if (Object.keys(dependenciesToUpdate).length === 0) {
       return [];
     }
 
@@ -248,63 +262,102 @@ export default class JsVersionActions extends VersionActions {
             : this.finalConfigForProject.preserveMatchingDependencyRanges ||
               dependencyTypes;
 
-      for (const depType of dependencyTypes) {
-        if (json[depType]) {
-          for (const [dep, version] of Object.entries(dependenciesToUpdate)) {
-            // Resolve the package name from the project graph metadata, as it may not match the project name
-            const packageName =
-              projectGraph.nodes[dep].data.metadata?.js?.packageName;
-            if (!packageName) {
-              throw new Error(
-                `Unable to determine the package name for project "${dep}" from the project graph metadata, please ensure that the "@nx/js" plugin is installed and the project graph has been built. If the issue persists, please report this issue on https://github.com/nrwl/nx/issues`
-              );
-            }
-            const currentVersion = json[depType][packageName];
-            if (currentVersion) {
-              if (catalogManager?.isCatalogReference(currentVersion)) {
-                // collect the catalog updates so we can update the catalog definitions later
-                const catalogRef =
-                  catalogManager.parseCatalogReference(currentVersion)!;
-                catalogUpdates.push({
-                  packageName,
-                  version,
-                  catalogName: catalogRef.catalogName,
-                });
+      // Per-manifest count so that skips in one manifest (e.g. preserved local
+      // protocols, which are configurable per manifest) do not affect the
+      // user-facing logs of the others
+      let numDependenciesToUpdate = Object.keys(dependenciesToUpdate).length;
 
-                numDependenciesToUpdate--;
-                continue;
-              }
-              // Check if other local dependency protocols should be preserved
-              else if (
-                manifestToUpdate.preserveLocalDependencyProtocols &&
-                this.isLocalDependencyProtocol(currentVersion)
-              ) {
-                // Reduce the count appropriately to avoid confusing user-facing logs
-                numDependenciesToUpdate--;
-                continue;
-              } else if (
-                preserveMatchingDependencyRanges.includes(depType) &&
-                !this.isLocalDependencyProtocol(currentVersion)
-              ) {
-                // If the dependency is specified using a range, do some additional processing to determine whether to update the version
-                if (
-                  isValidRange(currentVersion) &&
-                  !isMatchingDependencyRange(version, currentVersion)
-                ) {
-                  throw new Error(
-                    `"preserveMatchingDependencyRanges" is enabled for "${depType}" and the new version "${version}" is outside the current range for "${packageName}" in manifest "${manifestToUpdate.manifestPath}". Please update the range before releasing.`
-                  );
-                } else if (isValidRange(currentVersion)) {
-                  // it is a range, but it is valid
-                  continue;
-                }
-              }
-              manifestUpdates.push({
-                path: [depType, packageName],
-                value: version,
+      for (const [dep, version] of Object.entries(dependenciesToUpdate)) {
+        const collections = dependencyTypes.filter((depType) => json[depType]);
+        if (collections.length === 0) {
+          continue;
+        }
+        // Resolve the package name from the project graph metadata, as it may not match the project name
+        const packageName =
+          projectGraph.nodes[dep].data.metadata?.js?.packageName;
+        if (!packageName) {
+          throw new Error(
+            `Unable to determine the package name for project "${dep}" from the project graph metadata, please ensure that the "@nx/js" plugin is installed and the project graph has been built. If the issue persists, please report this issue on https://github.com/nrwl/nx/issues`
+          );
+        }
+        let updatedEntries = 0;
+        let skippedEntries = 0;
+        for (const depType of collections) {
+          const entries = findDependencyEntriesForPackage(
+            json[depType],
+            packageName
+          );
+          for (const entry of entries) {
+            const rawSpecifier = entry.rawSpecifier;
+            if (catalogManager?.isCatalogReference(rawSpecifier)) {
+              // collect the catalog updates so we can update the catalog definitions later
+              const catalogRef =
+                catalogManager.parseCatalogReference(rawSpecifier)!;
+              catalogUpdates.push({
+                packageName,
+                version,
+                catalogName: catalogRef.catalogName,
               });
+
+              skippedEntries++;
+              continue;
             }
+            // Check if other local dependency protocols should be preserved
+            if (
+              manifestToUpdate.preserveLocalDependencyProtocols &&
+              this.isLocalDependencyProtocol(rawSpecifier)
+            ) {
+              skippedEntries++;
+              continue;
+            }
+            const isAlias = entry.parsed.requestedPackageName !== null;
+            const versionSpec = getEntryVersionSpec(entry);
+            // Nothing to rewrite for an empty version spec: an aliased entry
+            // without an inner range (e.g. npm:pkg) floats to the latest version
+            if (!versionSpec) {
+              continue;
+            }
+            // With versionPrefix "auto" each declaration keeps its own prefix.
+            // The received version carries the prefix of the one entry that was
+            // read for the dependency, so re-derive it per entry
+            let entryVersion = version;
+            if (this.finalConfigForProject.versionPrefix === 'auto') {
+              const prefix = versionSpec.match(/^([~^=])/)?.[1] ?? '';
+              entryVersion = `${prefix}${version.replace(/^[~^=]/, '')}`;
+            }
+            if (
+              preserveMatchingDependencyRanges.includes(depType) &&
+              !this.isLocalDependencyProtocol(rawSpecifier)
+            ) {
+              // If the dependency is specified using a range, do some additional processing to determine whether to update the version
+              if (
+                isValidRange(versionSpec) &&
+                !isMatchingDependencyRange(entryVersion, versionSpec)
+              ) {
+                throw new Error(
+                  `"preserveMatchingDependencyRanges" is enabled for "${depType}" and the new version "${entryVersion}" is outside the current range for "${packageName}" in manifest "${manifestToUpdate.manifestPath}". Please update the range before releasing.`
+                );
+              } else if (isValidRange(versionSpec)) {
+                // it is a range, but it is valid
+                continue;
+              }
+            }
+            manifestUpdates.push({
+              path: [depType, entry.key],
+              // Only the inner range of an aliased entry is versioned; keep the
+              // requested package name and use the registry-compatible npm
+              // protocol (a workspace alias only gets here when local
+              // protocols are not preserved)
+              value: isAlias
+                ? `npm:${packageName}@${entryVersion}`
+                : entryVersion,
+            });
+            updatedEntries++;
           }
+        }
+        // Reduce the count appropriately to avoid confusing user-facing logs
+        if (updatedEntries === 0 && skippedEntries > 0) {
+          numDependenciesToUpdate--;
         }
       }
 
@@ -315,16 +368,14 @@ export default class JsVersionActions extends VersionActions {
       );
 
       // If we ignored local dependecy protocols, then we could have dynamically ended up with zero here and we should not log anything related to dependencies
-      if (numDependenciesToUpdate === 0) {
-        return [];
+      if (numDependenciesToUpdate > 0) {
+        const depText =
+          numDependenciesToUpdate === 1 ? 'dependency' : 'dependencies';
+
+        logMessages.push(
+          `✍️  Updated ${numDependenciesToUpdate} ${depText} in manifest: ${manifestToUpdate.manifestPath}`
+        );
       }
-
-      const depText =
-        numDependenciesToUpdate === 1 ? 'dependency' : 'dependencies';
-
-      logMessages.push(
-        `✍️  Updated ${numDependenciesToUpdate} ${depText} in manifest: ${manifestToUpdate.manifestPath}`
-      );
     }
 
     // Update catalog definitions in the package manager's catalog file
@@ -460,4 +511,45 @@ export default class JsVersionActions extends VersionActions {
     // }
     return true;
   }
+}
+
+interface ManifestDependencyEntry {
+  key: string;
+  rawSpecifier: string;
+  parsed: ParsedDependencySpecifier;
+}
+
+/**
+ * Finds the entries in a manifest dependency collection that reference the
+ * given package: the entry keyed by the package name, plus any aliased entries
+ * (`"key": "workspace:<name>@<range>"`, `"key": "npm:<name>[@<range>]"`) whose
+ * requested package is the given one. An entry keyed by the package name but
+ * aliasing a different package references that other package, not this one.
+ */
+function findDependencyEntriesForPackage(
+  dependencies: Record<string, unknown>,
+  packageName: string
+): ManifestDependencyEntry[] {
+  const entries: ManifestDependencyEntry[] = [];
+  for (const [key, rawSpecifier] of Object.entries(dependencies)) {
+    if (typeof rawSpecifier !== 'string') {
+      continue;
+    }
+    const parsed = parseDependencySpecifier(rawSpecifier);
+    if ((parsed.requestedPackageName ?? key) === packageName) {
+      entries.push({ key, rawSpecifier, parsed });
+    }
+  }
+  return entries;
+}
+
+/**
+ * The versioned part of a manifest dependency entry: the inner range for
+ * aliased entries (`^1.0.0` in `workspace:pkg@^1.0.0`), the raw specifier
+ * otherwise.
+ */
+function getEntryVersionSpec(entry: ManifestDependencyEntry): string | null {
+  return entry.parsed.requestedPackageName !== null
+    ? entry.parsed.range
+    : entry.rawSpecifier;
 }

@@ -154,6 +154,7 @@ export {
 } from './plugins/js/project-graph/build-dependencies/target-project-locator';
 export { getWorkspacePackagesFromGraph } from './plugins/js/utils/get-workspace-packages-from-graph';
 export { parseDependencySpecifier } from './plugins/js/utils/dependency-specifiers';
+export type { ParsedDependencySpecifier } from './plugins/js/utils/dependency-specifiers';
 export type { ProjectPackageDependencies } from './config/workspace-json-project-json';
 export { registerTsConfigPaths } from './plugins/js/utils/register';
 export { getGlobPatternsFromPackageManagerWorkspaces } from './plugins/package-json';

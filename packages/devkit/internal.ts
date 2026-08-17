@@ -132,6 +132,7 @@ export {
   type PackageJson,
   type PackageJsonDependencySection,
   type PackageManagerCommands,
+  type ParsedDependencySpecifier,
   type ProjectPackageDependencies,
   type ProjectRootMappings,
   RemoteCacheV2,
