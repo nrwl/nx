@@ -164,25 +164,22 @@ export async function initGeneratorInternal(
     : () => {};
   tasks.push(installTask);
 
+  // `installTask` is queued, not run, so the formatter just added to
+  // package.json is not on disk yet; ensurePackage installs it out of band.
+  // Not gated on `skipFormat` - callers that pass it format later in this same
+  // process.
+  const isDryRun =
+    !!process.env.NX_DRY_RUN && process.env.NX_DRY_RUN !== 'false';
+  if (
+    formatterSetup &&
+    !schema.skipPackageJson &&
+    !isDryRun &&
+    process.env.NX_SKIP_FORMAT !== 'true'
+  ) {
+    ensurePackage(schema.formatter, formatterSetup.version);
+  }
+
   if (!schema.skipFormat) {
-    // `installTask` is queued, not run, so the formatter just added to
-    // package.json is not on disk yet; ensurePackage installs it out of band
-    // and puts it on NODE_PATH. Skipped when the caller asked us not to manage
-    // dependencies, when formatting is skipped anyway, or under --dry-run,
-    // where ensurePackage throws on a package that is not yet resolvable.
-    const isDryRun =
-      !!process.env.NX_DRY_RUN && process.env.NX_DRY_RUN !== 'false';
-    if (
-      formatterSetup &&
-      !schema.skipPackageJson &&
-      !isDryRun &&
-      process.env.NX_SKIP_FORMAT !== 'true'
-    ) {
-      // `schema.formatter` is the table key here, so it is also the npm
-      // package name - it got past `getFormatterSetup` to produce
-      // `formatterSetup`.
-      ensurePackage(schema.formatter, formatterSetup.version);
-    }
     await formatFiles(tree);
   }
 

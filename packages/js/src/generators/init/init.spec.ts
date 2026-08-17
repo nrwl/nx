@@ -46,6 +46,12 @@ describe('js init generator', () => {
       }
     );
 
+    it('should ensure the formatter even when the caller formats later', async () => {
+      await init(tree, { formatter: 'prettier', skipFormat: true });
+
+      expect(ensurePackage).toHaveBeenCalledWith('prettier', prettierVersion);
+    });
+
     it('should not install anything when skipPackageJson is set', async () => {
       // That option asks this generator not to manage dependencies, and an
       // out-of-band install is still an install.
