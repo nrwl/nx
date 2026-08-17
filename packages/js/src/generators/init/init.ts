@@ -1,4 +1,4 @@
-import { addPlugin } from '@nx/devkit/internal';
+import { addPlugin, detectFormatterInTree } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -11,7 +11,6 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { detectFormatterInTree } from '@nx/devkit/internal';
 import { join } from 'path';
 import { createNodesV2 } from '../../plugins/typescript/plugin';
 import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
