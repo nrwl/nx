@@ -226,10 +226,14 @@ struct CachedWorktrees {
 /// Resolving from scratch is a walk up to the git root, a `commondir` read
 /// and a `read_dir` - measured at ~7us, and paid on every walk including the
 /// task-output walks in `expand_outputs`, which can never contain a worktree.
-/// Git touches `<git-dir>/worktrees` whenever one is added or removed, so one
-/// `stat` of that directory stands in for all of it. A worktree created while
-/// the daemon is running is still picked up on the next walk, which is the
-/// property resolving per walk was for.
+/// Git touches `<git-dir>/worktrees` whenever it adds or removes a
+/// registration, so one `stat` of that directory stands in for all of it. A
+/// worktree created while the daemon is running is still picked up on the next
+/// walk, which is the property resolving per walk was for.
+///
+/// Deleting a checkout with `rm -rf` rather than `git worktree remove` leaves
+/// the registration and the mtime untouched, so a warm entry keeps pruning a
+/// path a cold resolve rejects, until the next add or remove.
 static NESTED_WORKTREES: LazyLock<DashMap<PathBuf, CachedWorktrees>> = LazyLock::new(DashMap::new);
 
 /// Whether the checkout's `gitfile` names `metadata_dir` as its git directory,
