@@ -598,3 +598,87 @@ describe('forceRegisterEsmLoader', () => {
     expect(process.env.TS_NODE_COMPILER_OPTIONS).toBeUndefined();
   });
 });
+
+// A real `ts-node/esm` registration in a child process. `@swc-node/register`
+// loads the TypeScript source there and is hidden from the ESM loader pick so
+// `ts-node/esm` is the loader under test.
+describe('forceRegisterEsmLoader with ts-node/esm', () => {
+  const {
+    mkdtempSync,
+    realpathSync,
+    rmSync,
+    writeFileSync,
+  } = require('node:fs');
+  const { tmpdir } = require('node:os');
+  const { join } = require('node:path');
+  let dir: string;
+
+  beforeAll(() => {
+    // Real path: the loader reports the resolved url.
+    dir = realpathSync(mkdtempSync(join(tmpdir(), 'nx-ts-node-esm-')));
+    writeFileSync(
+      join(dir, 'config.mts'),
+      'export enum Kind { Esm = 1 }\nexport const url = import.meta.url;\n'
+    );
+    writeFileSync(
+      join(dir, 'entry.cjs'),
+      `
+const Module = require('node:module');
+const resolveFilename = Module._resolveFilename;
+Module._resolveFilename = function (request, ...rest) {
+  if (request === '@swc-node/register/esm') {
+    throw Object.assign(new Error('hidden'), { code: 'MODULE_NOT_FOUND' });
+  }
+  return resolveFilename.call(this, request, ...rest);
+};
+const { forceRegisterEsmLoader } = require(process.argv[2]);
+process.env.TS_NODE_COMPILER_OPTIONS = JSON.stringify({
+  module: 'commonjs',
+  moduleResolution: 'node10',
+});
+forceRegisterEsmLoader();
+// Kept out of the transpiled source: a CommonJS transform would turn it into
+// a require, and the file exists to exercise the ESM loader.
+new Function('s', 'return import(s)')(process.argv[3]).then(
+  (m) => process.send({ ok: true, url: m.url, kind: m.Kind.Esm }),
+  (e) => process.send({ ok: false, message: String(e.diagnosticText ?? e) })
+);
+`
+    );
+  });
+
+  afterAll(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('loads an ESM config despite an inherited CommonJS TS_NODE_COMPILER_OPTIONS', async () => {
+    const { fork } = require('node:child_process');
+    const { pathToFileURL } = require('node:url');
+    const configUrl = pathToFileURL(join(dir, 'config.mts')).href;
+    // The child sets the inherited value itself, after its own CommonJS loader
+    // has started, so that loader's options play no part.
+    const { TS_NODE_COMPILER_OPTIONS, NODE_OPTIONS, ...env } = process.env;
+    const child = fork(
+      join(dir, 'entry.cjs'),
+      [require.resolve('./register'), configUrl],
+      {
+        cwd: process.cwd(),
+        env,
+        execArgv: ['--require', '@swc-node/register'],
+        stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
+      }
+    );
+    let stderr = '';
+    child.stderr.on('data', (chunk) => (stderr += chunk));
+    const result = await new Promise<any>((resolve, reject) => {
+      child.once('message', resolve);
+      child.once('error', reject);
+      child.once('exit', (code) =>
+        reject(new Error(`exited with ${code} before replying:\n${stderr}`))
+      );
+    });
+    child.kill();
+
+    expect(result).toEqual({ ok: true, url: configUrl, kind: 1 });
+  }, 60_000);
+});
