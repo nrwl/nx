@@ -54,12 +54,10 @@ const PNPM_RESOLUTION_CONFIG: readonly {
   { manifest: null, lockfile: 'catalogs' },
 ];
 
-/** The `pnpm.*` manifest keys a pruned output drops. */
 const PNPM_MANIFEST_RESOLUTION_CONFIG_FIELDS = PNPM_RESOLUTION_CONFIG.flatMap(
   (field) => (field.manifest === null ? [] : [field.manifest])
 );
 
-/** The top-level lockfile keys a pruned output drops. */
 export const PNPM_LOCKFILE_RESOLUTION_CONFIG_FIELDS =
   PNPM_RESOLUTION_CONFIG.map((field) => field.lockfile);
 
