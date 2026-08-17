@@ -29,7 +29,10 @@ import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { getCatalogManager } from '../../../utils/catalog';
 import { findNodeMatchingVersion } from './project-graph-pruning';
 import { join, relative, sep } from 'path';
-import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
+import {
+  getWorkspacePackagesFromGraph,
+  resolveWorkspaceDependencyTarget,
+} from '../utils/get-workspace-packages-from-graph';
 import { satisfies, validRange } from 'semver';
 
 const WORKSPACE_DEP_TYPES = [
@@ -625,10 +628,15 @@ export function stringifyPnpmLockfile(
       const deps = importer[depType];
       if (!deps) continue;
       for (const depName of Object.keys(deps)) {
-        if (workspaceModules.has(depName) && !allRequiredImporters[depName]) {
-          allRequiredImporters[depName] =
-            workspaceModules.get(depName)!.data.root;
-          queue.push(depName);
+        const target = resolveWorkspaceDependencyTarget(
+          depName,
+          importer.specifiers?.[depName],
+          workspaceModules
+        );
+        if (target && !allRequiredImporters[target]) {
+          allRequiredImporters[target] =
+            workspaceModules.get(target)!.data.root;
+          queue.push(target);
         }
       }
     }
@@ -646,12 +654,17 @@ export function stringifyPnpmLockfile(
       const deps = importer[depType] as Record<string, string> | undefined;
       if (!deps) continue;
       for (const depName of Object.keys(deps)) {
-        if (!workspaceModules.has(depName)) continue;
+        const target = resolveWorkspaceDependencyTarget(
+          depName,
+          importer.specifiers?.[depName],
+          workspaceModules
+        );
+        if (!target) continue;
         // All workspace modules are siblings under workspace_modules/, so the
-        // relative path between them is relative(packageName, depName).
+        // relative path between them is relative(packageName, target).
         // Specifier must match the file: ref copy-workspace-modules writes
         // to the package's package.json — pnpm errors on a mismatch.
-        const rel = relative(packageName, depName).split(sep).join('/');
+        const rel = relative(packageName, target).split(sep).join('/');
         if (!importer.specifiers) importer.specifiers = {};
         importer.specifiers[depName] = `file:${rel}`;
         deps[depName] = `link:${rel}`;
@@ -887,7 +900,23 @@ function mapRootSnapshot(
           }
         }
 
-        if (workspaceModules.has(packageName)) {
+        const workspaceTarget = resolveWorkspaceDependencyTarget(
+          packageName,
+          version,
+          workspaceModules
+        );
+        if (workspaceTarget !== null && workspaceTarget !== packageName) {
+          // aliased entry: the module dir is the target's, and the target's
+          // graph root is authoritative (root importers may only reference the
+          // target through aliases, so the by-name search below cannot be used)
+          importers[workspaceTarget] =
+            workspaceModules.get(workspaceTarget).data.root;
+          snapshot.specifiers[packageName] =
+            `file:./workspace_modules/${workspaceTarget}`;
+          snapshot.dependencies = snapshot.dependencies || {};
+          snapshot.dependencies[packageName] =
+            `link:./workspace_modules/${workspaceTarget}`;
+        } else if (workspaceTarget !== null) {
           for (const [importerPath, importerSnapshot] of Object.entries(
             rootImporters
           )) {

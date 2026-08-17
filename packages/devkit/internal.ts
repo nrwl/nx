@@ -249,6 +249,7 @@ export {
   removeTasksFromTaskGraph,
   requireWithTsconfigFallback,
   resetWorkspaceContext,
+  resolveWorkspaceDependencyTarget,
   runNxSync,
   safeExecFileSync,
   safeSpawn,

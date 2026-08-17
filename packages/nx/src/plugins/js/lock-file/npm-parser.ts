@@ -15,7 +15,10 @@ import {
 } from '../../../config/project-graph';
 import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
-import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
+import {
+  getWorkspacePackagesFromGraph,
+  resolveWorkspaceDependencyTarget,
+} from '../utils/get-workspace-packages-from-graph';
 
 /**
  * NPM
@@ -479,12 +482,16 @@ export function stringifyNpmLockfile(
     output.overrides = packageJson.overrides;
   }
   if (lockfileVersion > 1) {
-    const packages = mapV3Snapshots(mappedPackages, packageJson);
-    output.packages = { ...packages, ...workspaceModules };
+    const packages = mapV3Snapshots(
+      mappedPackages,
+      packageJson,
+      workspaceModulesFromGraph
+    );
+    output.packages = { ...packages, ...workspaceModules.v3 };
   }
   if (lockfileVersion < 3) {
     const dependencies = mapV1Snapshots(mappedPackages);
-    output.dependencies = { ...dependencies, ...workspaceModules };
+    output.dependencies = { ...dependencies, ...workspaceModules.v1 };
   }
 
   return JSON.stringify(output, null, 2);
@@ -500,53 +507,159 @@ function mapWorkspaceModules(
   packageJson: NormalizedPackageJson,
   rootLockFile: NpmLockFile,
   workspaceModules: Map<string, ProjectGraphProjectNode>
-) {
-  const output: Record<string, NpmDependencyV3 & NpmDependencyV1> = {};
+): {
+  v3: Record<string, NpmDependencyV3>;
+  v1: Record<string, NpmDependencyV1>;
+} {
+  const v3: Record<string, NpmDependencyV3> = {};
+  // the v1-compatible `dependencies` section is keyed by dependency name with
+  // nested consumers inside each node, never by filesystem path
+  const v1: Record<string, NpmDependencyV1> = {};
+  // workspace package name -> the v1 node representing it, for nesting
+  const v1NodesByTarget = new Map<string, NpmDependencyV1>();
   const snapshotsByName = new Map<string, NpmDependencyV3 & NpmDependencyV1>();
-  for (const snapshot of Object.values(
-    rootLockFile.packages || rootLockFile.dependencies || {}
+  // v1 sections key nodes by dependency key, which for aliased entries differs
+  // from the package name; keep a raw-key index as a lookup fallback
+  const snapshotsByKey = new Map<string, NpmDependencyV3 & NpmDependencyV1>();
+  for (const [key, snapshot] of Object.entries(
+    rootLockFile.packages ?? rootLockFile.dependencies ?? {}
   )) {
-    if (snapshot.name) snapshotsByName.set(snapshot.name, snapshot);
+    // v3 workspace snapshots carry a name; v1 sections are keyed by name
+    const name = snapshot.name ?? (rootLockFile.packages ? undefined : key);
+    if (name) snapshotsByName.set(name, snapshot);
+    if (!rootLockFile.packages) snapshotsByKey.set(key, snapshot);
   }
 
   // Walk transitive workspace deps so every workspace package
   // copy-workspace-modules writes to disk has matching lockfile entries.
   // Without this, `npm ci` errors with "Missing: <pkg> from lock file".
-  const queue: string[] = Object.keys(packageJson.dependencies ?? {});
+  // Entries carry the consuming package so a link whose root path is already
+  // bound to another module dir (an alias key colliding with a workspace
+  // package name) nests under the consumer instead of overwriting the root
+  // link.
+  const queue: Array<
+    [
+      key: string,
+      specifier: string | undefined,
+      consumer: string | null,
+      sourceSnapshot: (NpmDependencyV3 & NpmDependencyV1) | undefined,
+    ]
+  > = Object.entries(packageJson.dependencies ?? {}).map(([key, specifier]) => [
+    key,
+    specifier,
+    null,
+    undefined,
+  ]);
   const visited = new Set<string>();
+  // node_modules link path -> linked module dir
+  const links = new Map<string, string>();
   while (queue.length > 0) {
-    const pkgName = queue.shift()!;
-    if (visited.has(pkgName) || !workspaceModules.has(pkgName)) continue;
+    const [key, specifier, consumer, sourceSnapshot] = queue.shift()!;
+    const pkgName = resolveWorkspaceDependencyTarget(
+      key,
+      specifier,
+      workspaceModules
+    );
+    if (!pkgName) continue;
+
+    const moduleDir = `workspace_modules/${pkgName}`;
+    const rootLinkPath = `node_modules/${key}`;
+    const nested =
+      consumer !== null &&
+      links.has(rootLinkPath) &&
+      links.get(rootLinkPath) !== moduleDir;
+    const linkPath = nested
+      ? `workspace_modules/${consumer}/node_modules/${key}`
+      : rootLinkPath;
+    if (links.get(linkPath) !== moduleDir) {
+      links.set(linkPath, moduleDir);
+      v3[linkPath] = {
+        version: `file:./${moduleDir}`,
+        resolved: moduleDir,
+        link: true,
+      };
+
+      const v1Node: NpmDependencyV1 = { version: `file:./${moduleDir}` };
+      if (nested) {
+        const parent = v1NodesByTarget.get(consumer);
+        if (parent) {
+          parent.dependencies ??= {};
+          parent.dependencies[key] ??= v1Node;
+        }
+      } else {
+        v1[key] ??= v1Node;
+      }
+      if (!v1NodesByTarget.has(pkgName)) {
+        v1NodesByTarget.set(pkgName, v1Node);
+      }
+    }
+
+    if (visited.has(pkgName)) continue;
     visited.add(pkgName);
 
-    const snapshot = snapshotsByName.get(pkgName);
+    // an alias-keyed v1 node is invisible to the by-name lookup; fall back to
+    // the snapshot the reference itself points at
+    const snapshot =
+      snapshotsByName.get(pkgName) ?? sourceSnapshot ?? snapshotsByKey.get(key);
 
-    output[`node_modules/${pkgName}`] = {
-      version: `file:./workspace_modules/${pkgName}`,
-      resolved: `workspace_modules/${pkgName}`,
-      link: true,
-    };
-    output[`workspace_modules/${pkgName}`] = {
+    v3[moduleDir] = {
       name: pkgName,
       version: `0.0.1`,
-      dependencies: snapshot?.dependencies,
+      dependencies: snapshot?.dependencies as Record<string, string>,
     };
 
     for (const depType of WORKSPACE_DEP_TYPES) {
       const deps = snapshot?.[depType];
       if (!deps) continue;
-      for (const depName of Object.keys(deps)) queue.push(depName);
+      for (const [depName, depSpecifier] of Object.entries(deps)) {
+        // v1 snapshots hold node objects; the specifier is their version
+        const isV1Node = typeof depSpecifier === 'object';
+        queue.push([
+          depName,
+          isV1Node
+            ? (depSpecifier as NpmDependencyV1)?.version
+            : (depSpecifier as string),
+          pkgName,
+          isV1Node
+            ? (depSpecifier as NpmDependencyV3 & NpmDependencyV1)
+            : snapshotsByKey.get(depName),
+        ]);
+      }
+    }
+
+    // the source lock file may not list the package's workspace references at
+    // all (a v1 lock keyed by an alias hoists nothing under the canonical
+    // name); the manifest-truth descriptors from the graph fill the gap
+    const packageDependencies =
+      workspaceModules.get(pkgName)?.data.metadata?.js?.packageDependencies;
+    if (packageDependencies) {
+      for (const depType of WORKSPACE_DEP_TYPES) {
+        const collection = packageDependencies[depType];
+        if (!collection) continue;
+        for (const [depKey, descriptor] of Object.entries(collection)) {
+          queue.push([
+            depKey,
+            descriptor.rawSpecifier,
+            pkgName,
+            snapshotsByKey.get(depKey),
+          ]);
+        }
+      }
     }
   }
-  return output;
+  return { v3, v1 };
 }
 
 function mapV3Snapshots(
   mappedPackages: MappedPackage[],
-  packageJson: NormalizedPackageJson
+  packageJson: NormalizedPackageJson,
+  workspaceModules: Map<string, ProjectGraphProjectNode>
 ): Record<string, NpmDependencyV3> {
   const output: Record<string, NpmDependencyV3> = {};
-  const mappedPackageJson = mapPackageJsonWithWorkspaceModules(packageJson);
+  const mappedPackageJson = mapPackageJsonWithWorkspaceModules(
+    packageJson,
+    workspaceModules
+  );
   output[''] = mappedPackageJson;
 
   mappedPackages.forEach((p) => {
@@ -557,16 +670,33 @@ function mapV3Snapshots(
 }
 
 function mapPackageJsonWithWorkspaceModules(
-  packageJson: NormalizedPackageJson
+  packageJson: NormalizedPackageJson,
+  workspaceModules: Map<string, ProjectGraphProjectNode>
 ) {
-  for (const [pkgName, pkgVersion] of Object.entries(
-    packageJson.dependencies ?? {}
-  )) {
-    if (pkgVersion.startsWith('workspace:') || pkgVersion.startsWith('file:')) {
-      packageJson.dependencies[pkgName] = `workspace_modules/${pkgName}`;
+  if (!packageJson.dependencies) {
+    return packageJson;
+  }
+  // work on a copy: the manifest object is shared with the caller of
+  // createLockFile, and the prune-lockfile executor still needs the original
+  // specifiers to rewrite aliased entries after generating the lockfile
+  const dependencies = { ...packageJson.dependencies };
+  for (const [pkgName, pkgVersion] of Object.entries(dependencies)) {
+    const target = resolveWorkspaceDependencyTarget(
+      pkgName,
+      pkgVersion,
+      workspaceModules
+    );
+    if (target !== null && target !== pkgName) {
+      // aliased entry: point the alias key at the target's module dir
+      dependencies[pkgName] = `workspace_modules/${target}`;
+    } else if (
+      pkgVersion.startsWith('workspace:') ||
+      pkgVersion.startsWith('file:')
+    ) {
+      dependencies[pkgName] = `workspace_modules/${pkgName}`;
     }
   }
-  return packageJson;
+  return { ...packageJson, dependencies };
 }
 
 function mapV1Snapshots(

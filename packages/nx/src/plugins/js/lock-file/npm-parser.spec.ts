@@ -1513,6 +1513,7 @@ describe('NPM lock file utility', () => {
         projectName: string;
         packageName: string;
         root: string;
+        version?: string;
       }>,
       workspaceDeps: Record<string, string[]>,
       externalNodes: ProjectGraph['externalNodes'],
@@ -1520,13 +1521,23 @@ describe('NPM lock file utility', () => {
     ): ProjectGraph {
       const nodes: ProjectGraph['nodes'] = {};
       const dependencies: ProjectGraph['dependencies'] = {};
-      for (const { projectName, packageName, root } of workspaceProjects) {
+      for (const {
+        projectName,
+        packageName,
+        root,
+        version,
+      } of workspaceProjects) {
         nodes[projectName] = {
           name: projectName,
           type: 'lib',
           data: {
             root,
-            metadata: { js: { packageName } },
+            metadata: {
+              js: {
+                packageName,
+                ...(version ? { packageVersion: version } : {}),
+              },
+            },
           },
         } as any;
         dependencies[projectName] = [
@@ -1698,6 +1709,416 @@ describe('NPM lock file utility', () => {
 
       expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-a');
       expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-b');
+    });
+
+    it('should link a workspace alias entry at the root to the target module', () => {
+      const lockFile = {
+        name: 'test-app',
+        version: '1.0.0',
+        lockfileVersion: 3,
+        packages: {
+          '': {
+            name: 'test-app',
+            version: '1.0.0',
+            dependencies: { 'custom-lib': 'npm:@myorg/lib-a@*' },
+          },
+          'libs/lib-a': {
+            name: '@myorg/lib-a',
+            version: '0.0.1',
+          },
+          'node_modules/custom-lib': {
+            resolved: 'libs/lib-a',
+            link: true,
+          },
+        },
+      };
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { 'custom-lib': 'workspace:@myorg/lib-a@*' },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+        ],
+        {},
+        {}
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = JSON.parse(
+        stringifyNpmLockfile(prunedGraph, JSON.stringify(lockFile), packageJson)
+      );
+
+      // the alias key links to the target's module dir
+      expect(result.packages['node_modules/custom-lib']).toEqual({
+        version: 'file:./workspace_modules/@myorg/lib-a',
+        resolved: 'workspace_modules/@myorg/lib-a',
+        link: true,
+      });
+      expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-a');
+      // the root manifest entry points the alias key at the target's dir
+      expect(result.packages[''].dependencies['custom-lib']).toBe(
+        'workspace_modules/@myorg/lib-a'
+      );
+      // the input manifest is not mutated: the prune-lockfile executor still
+      // needs the original specifier to rewrite the alias after the lockfile
+      // is generated
+      expect(packageJson.dependencies['custom-lib']).toBe(
+        'workspace:@myorg/lib-a@*'
+      );
+    });
+
+    it('should nest a transitive canonical link when a root alias claims its name', () => {
+      // root aliases lib-a to lib-b, while lib-b itself depends on the
+      // canonical lib-a package; node_modules/lib-a belongs to the root alias
+      const lockFile = {
+        name: 'test-app',
+        version: '1.0.0',
+        lockfileVersion: 3,
+        packages: {
+          '': {
+            name: 'test-app',
+            version: '1.0.0',
+            dependencies: { 'lib-a': 'workspace:lib-b@*' },
+          },
+          'libs/lib-a': {
+            name: 'lib-a',
+            version: '0.0.1',
+          },
+          'libs/lib-b': {
+            name: 'lib-b',
+            version: '0.0.1',
+            dependencies: { 'lib-a': 'workspace:*' },
+          },
+          'node_modules/lib-a': {
+            resolved: 'libs/lib-b',
+            link: true,
+          },
+        },
+      };
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { 'lib-a': 'workspace:lib-b@*' },
+      };
+
+      const graph = makeGraph(
+        [
+          { projectName: 'lib-a', packageName: 'lib-a', root: 'libs/lib-a' },
+          { projectName: 'lib-b', packageName: 'lib-b', root: 'libs/lib-b' },
+        ],
+        { 'lib-b': ['lib-a'] },
+        {}
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = JSON.parse(
+        stringifyNpmLockfile(prunedGraph, JSON.stringify(lockFile), packageJson)
+      );
+
+      // the root path stays bound to the alias target
+      expect(result.packages['node_modules/lib-a']).toEqual({
+        version: 'file:./workspace_modules/lib-b',
+        resolved: 'workspace_modules/lib-b',
+        link: true,
+      });
+      // the canonical lib-a link nests under its consumer
+      expect(
+        result.packages['workspace_modules/lib-b/node_modules/lib-a']
+      ).toEqual({
+        version: 'file:./workspace_modules/lib-a',
+        resolved: 'workspace_modules/lib-a',
+        link: true,
+      });
+      expect(result.packages).toHaveProperty('workspace_modules/lib-a');
+      expect(result.packages).toHaveProperty('workspace_modules/lib-b');
+    });
+
+    it('should link an npm alias entry targeting a workspace package at the root', () => {
+      const lockFile = {
+        name: 'test-app',
+        version: '1.0.0',
+        lockfileVersion: 3,
+        packages: {
+          '': {
+            name: 'test-app',
+            version: '1.0.0',
+            dependencies: { 'custom-lib': 'npm:@myorg/lib-a@1.0.0' },
+          },
+          'libs/lib-a': {
+            name: '@myorg/lib-a',
+            version: '1.0.0',
+          },
+          'node_modules/custom-lib': {
+            resolved: 'libs/lib-a',
+            link: true,
+          },
+        },
+      };
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { 'custom-lib': 'npm:@myorg/lib-a@1.0.0' },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+            version: '1.0.0',
+          },
+        ],
+        {},
+        {}
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = JSON.parse(
+        stringifyNpmLockfile(prunedGraph, JSON.stringify(lockFile), packageJson)
+      );
+
+      expect(result.packages['node_modules/custom-lib']).toEqual({
+        version: 'file:./workspace_modules/@myorg/lib-a',
+        resolved: 'workspace_modules/@myorg/lib-a',
+        link: true,
+      });
+      expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-a');
+    });
+
+    it('should include entries for aliased transitive workspace deps', () => {
+      // app -> @myorg/lib-a -> custom-inner (npm alias to @myorg/lib-b)
+      const lockFile = {
+        name: 'test-app',
+        version: '1.0.0',
+        lockfileVersion: 3,
+        packages: {
+          '': {
+            name: 'test-app',
+            version: '1.0.0',
+            dependencies: { '@myorg/lib-a': 'file:libs/lib-a' },
+          },
+          'libs/lib-a': {
+            name: '@myorg/lib-a',
+            version: '0.0.1',
+            dependencies: { 'custom-inner': 'npm:@myorg/lib-b@1.0.0' },
+          },
+          'node_modules/@myorg/lib-a': {
+            resolved: 'libs/lib-a',
+            link: true,
+          },
+          'libs/lib-b': {
+            name: '@myorg/lib-b',
+            version: '1.0.0',
+          },
+          'node_modules/custom-inner': {
+            resolved: 'libs/lib-b',
+            link: true,
+          },
+        },
+      };
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { '@myorg/lib-a': 'file:libs/lib-a' },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+          {
+            projectName: '@myorg/lib-b',
+            packageName: '@myorg/lib-b',
+            root: 'libs/lib-b',
+            version: '1.0.0',
+          },
+        ],
+        { '@myorg/lib-a': ['@myorg/lib-b'] },
+        {}
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = JSON.parse(
+        stringifyNpmLockfile(prunedGraph, JSON.stringify(lockFile), packageJson)
+      );
+
+      expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-a');
+      // the aliased target still gets link and module entries
+      expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-b');
+      expect(result.packages['node_modules/custom-inner']).toEqual({
+        version: 'file:./workspace_modules/@myorg/lib-b',
+        resolved: 'workspace_modules/@myorg/lib-b',
+        link: true,
+      });
+    });
+
+    it('should emit name-keyed v1 dependency nodes for workspace deps and aliases', () => {
+      const lockFile = {
+        name: 'test-app',
+        version: '1.0.0',
+        lockfileVersion: 1,
+        dependencies: {
+          '@myorg/lib-a': {
+            version: 'file:libs/lib-a',
+          },
+        },
+      };
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: {
+          '@myorg/lib-a': 'workspace:*',
+          'custom-lib': 'workspace:@myorg/lib-b@*',
+        },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+          {
+            projectName: '@myorg/lib-b',
+            packageName: '@myorg/lib-b',
+            root: 'libs/lib-b',
+          },
+        ],
+        {},
+        {}
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = JSON.parse(
+        stringifyNpmLockfile(prunedGraph, JSON.stringify(lockFile), packageJson)
+      );
+
+      // v1 lockfiles have no packages section
+      expect(result.packages).toBeUndefined();
+      // name-keyed nodes, no filesystem-path keys
+      expect(result.dependencies['@myorg/lib-a']).toEqual({
+        version: 'file:./workspace_modules/@myorg/lib-a',
+      });
+      expect(result.dependencies['custom-lib']).toEqual({
+        version: 'file:./workspace_modules/@myorg/lib-b',
+      });
+      expect(
+        Object.keys(result.dependencies).filter(
+          (k) => k.includes('node_modules') || k.startsWith('workspace_modules')
+        )
+      ).toEqual([]);
+    });
+
+    it('should nest a colliding canonical dependency inside its consumer for v1 lockfiles', () => {
+      const lockFile = {
+        name: 'test-app',
+        version: '1.0.0',
+        lockfileVersion: 1,
+        dependencies: {
+          'lib-a': {
+            version: 'file:libs/lib-b',
+          },
+          'lib-b': {
+            version: 'file:libs/lib-b',
+            dependencies: {
+              'lib-a': { version: 'file:libs/lib-a' },
+            },
+          },
+        },
+      };
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { 'lib-a': 'workspace:lib-b@*' },
+      };
+
+      const graph = makeGraph(
+        [
+          { projectName: 'lib-a', packageName: 'lib-a', root: 'libs/lib-a' },
+          { projectName: 'lib-b', packageName: 'lib-b', root: 'libs/lib-b' },
+        ],
+        { 'lib-b': ['lib-a'] },
+        {}
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = JSON.parse(
+        stringifyNpmLockfile(prunedGraph, JSON.stringify(lockFile), packageJson)
+      );
+
+      expect(result.dependencies['lib-a']).toEqual({
+        version: 'file:./workspace_modules/lib-b',
+        dependencies: {
+          'lib-a': { version: 'file:./workspace_modules/lib-a' },
+        },
+      });
+    });
+
+    it('should walk transitive deps of a workspace package referenced only through an alias in a v1 lock file', () => {
+      // npm keys the v1 node by the alias, so there is no canonical lib-b
+      // entry to look the snapshot up by name, and nothing nests under it
+      const lockFile = {
+        name: 'test-app',
+        version: '1.0.0',
+        lockfileVersion: 1,
+        dependencies: {
+          custom: { version: 'file:libs/lib-b' },
+        },
+      };
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { custom: 'workspace:lib-b@*' },
+      };
+
+      const graph = makeGraph(
+        [
+          { projectName: 'lib-a', packageName: 'lib-a', root: 'libs/lib-a' },
+          { projectName: 'lib-b', packageName: 'lib-b', root: 'libs/lib-b' },
+        ],
+        { 'lib-b': ['lib-a'] },
+        {}
+      );
+      // manifest-truth descriptors: lib-b's manifest depends on lib-a
+      (graph.nodes['lib-b'].data.metadata.js as any).packageDependencies = {
+        dependencies: {
+          'lib-a': {
+            rawSpecifier: 'workspace:*',
+            requestedPackageName: 'lib-a',
+          },
+        },
+      };
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = JSON.parse(
+        stringifyNpmLockfile(prunedGraph, JSON.stringify(lockFile), packageJson)
+      );
+
+      expect(result.dependencies['custom']).toEqual({
+        version: 'file:./workspace_modules/lib-b',
+      });
+      expect(result.dependencies['lib-a']).toEqual({
+        version: 'file:./workspace_modules/lib-a',
+      });
     });
   });
 });

@@ -484,6 +484,7 @@ describe('project-graph-pruning', () => {
               metadata: {
                 js: {
                   packageName: 'workspace-lib',
+                  packageVersion: '1.0.0',
                 },
               },
             },
@@ -640,6 +641,75 @@ describe('project-graph-pruning', () => {
 
       expect(prunedGraph.externalNodes?.['npm:any-alias']).toBeUndefined();
       expect(prunedGraph.externalNodes?.['npm:lodash']).toBeDefined();
+    });
+
+    it('should keep an npm alias entry targeting a workspace package and traverse the target', () => {
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: {
+          'any-alias': 'npm:workspace-lib@1.0.0',
+        },
+      };
+
+      const prunedGraph = pruneProjectGraph(graph, prunedPackageJson);
+
+      expect(prunedGraph.nodes['workspace-lib']).toBeDefined();
+      // the alias target's own dependencies are traversed
+      expect(prunedGraph.externalNodes?.['npm:lodash']).toBeDefined();
+    });
+
+    it('should keep a range-less npm alias entry targeting a workspace package', () => {
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: {
+          'any-alias': 'npm:workspace-lib',
+        },
+      };
+
+      const prunedGraph = pruneProjectGraph(graph, prunedPackageJson);
+
+      expect(prunedGraph.nodes['workspace-lib']).toBeDefined();
+      expect(prunedGraph.externalNodes?.['npm:lodash']).toBeDefined();
+    });
+
+    it('should not let an external node named like the npm alias key shadow the workspace target', () => {
+      graph.externalNodes['npm:any-alias'] = {
+        type: 'npm',
+        name: 'npm:any-alias',
+        data: {
+          packageName: 'any-alias',
+          version: '9.9.9',
+        },
+      };
+      graph.dependencies['npm:any-alias'] = [];
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: {
+          'any-alias': 'npm:workspace-lib@1.0.0',
+        },
+      };
+
+      const prunedGraph = pruneProjectGraph(graph, prunedPackageJson);
+
+      expect(prunedGraph.externalNodes?.['npm:any-alias']).toBeUndefined();
+      expect(prunedGraph.externalNodes?.['npm:lodash']).toBeDefined();
+    });
+
+    it('should fail when an npm alias range does not match the workspace package version and the alias is not in the lock file', () => {
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: {
+          'any-alias': 'npm:workspace-lib@^9.0.0',
+        },
+      };
+
+      expect(() => pruneProjectGraph(graph, prunedPackageJson)).toThrow(
+        'The following package was not found in the root lock file: any-alias@npm:workspace-lib@^9.0.0'
+      );
     });
 
     it('should fail when a workspace entry does not match any workspace package', () => {
