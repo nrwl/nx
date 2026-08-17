@@ -12,6 +12,14 @@ import org.gradle.api.tasks.testing.Test
  * Get the Nx project name from a Gradle project. This returns the buildTreePath with `:` prefix for
  * subprojects (e.g., `:app`, `:lib:core`), or just the project name for root projects.
  */
+/**
+ * The build file that configures [project]: its own, or the nearest ancestor's when it owns none.
+ * `project(':core') { }` blocks configure a project from an ancestor build file — Kafka configures
+ * ~40 subprojects that way — and such a project is no less real for lacking its own file.
+ */
+fun effectiveBuildFile(project: Project): File? =
+    generateSequence(project) { it.parent }.map { it.buildFile }.firstOrNull { it.exists() }
+
 fun getNxProjectName(project: Project): String =
     if (project.buildTreePath.isEmpty() || project.buildTreePath == ":") project.name
     else project.buildTreePath
@@ -100,11 +108,7 @@ private fun createNodeForProjectImpl(
     externalNodes = emptyMap()
   }
   val buildFileRelativePath =
-      if (project.buildFile.exists()) {
-        project.buildFile.relativeTo(File(workspaceRoot)).invariantSeparatorsPath
-      } else {
-        null
-      }
+      effectiveBuildFile(project)?.relativeTo(File(workspaceRoot))?.invariantSeparatorsPath
   // Dependency paths are collected as absolute paths; relativize so the report
   // stays valid when reused from another machine (e.g. CI cache distribution).
   val portableDependencies =
@@ -362,12 +366,23 @@ fun resolveTargetName(
     depTask: Task,
     targetNameOverrides: Map<String, String>,
     targetNamePrefix: String
+): String = resolveTargetName(depTask.name, targetNameOverrides, targetNamePrefix)
+
+/**
+ * Name-only overload. A dependency declared as a path string (`:a:b:test`) can be turned into a
+ * target without realizing the Task it names — realizing it would force the owning project to be
+ * configured.
+ */
+fun resolveTargetName(
+    depTaskName: String,
+    targetNameOverrides: Map<String, String>,
+    targetNamePrefix: String
 ): String {
   val baseName =
-      if (depTask.name == "test" && targetNameOverrides.containsKey("testTargetName")) {
+      if (depTaskName == "test" && targetNameOverrides.containsKey("testTargetName")) {
         targetNameOverrides["testTargetName"]!!
       } else {
-        depTask.name
+        depTaskName
       }
   return if (targetNamePrefix.isNotEmpty()) "$targetNamePrefix$baseName" else baseName
 }

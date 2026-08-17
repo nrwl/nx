@@ -95,6 +95,43 @@ describe('@nx/gradle/plugin', () => {
             },
           },
         ],
+        [
+          "proj/build.gradle",
+          {
+            "externalNodes": {},
+            "projects": {
+              "proj/application": {
+                "metadata": {
+                  "targetGroups": {
+                    "help": [
+                      "buildEnvironment",
+                    ],
+                  },
+                  "technologies": [
+                    "gradle",
+                  ],
+                },
+                "name": "gradle-tutorial",
+                "root": "proj/application",
+                "targets": {
+                  "buildEnvironment": {
+                    "cache": true,
+                    "command": "./gradlew :buildEnvironment",
+                    "metadata": {
+                      "description": "Displays all buildscript dependencies declared in root project 'gradle-tutorial'.",
+                      "technologies": [
+                        "gradle",
+                      ],
+                    },
+                    "options": {
+                      "cwd": "proj",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        ],
       ]
     `);
   });
