@@ -335,6 +335,49 @@ describe('getProbeEnvDivergence', () => {
     ).toEqual(['NODE_EXTRA_CA_CERTS']);
   });
 
+  it('names TLS material behind an https proxy tunnel even when every server ignores HTTPS errors', () => {
+    const proxy = { HTTPS_PROXY: 'https://proxy.example:8443' };
+    // The tunnel to the proxy is verified with the process defaults, which
+    // `ignoreHTTPSErrors` does not reach.
+    expect(
+      getProbeEnvDivergence(
+        [{ ...httpsUrl, ignoreHTTPSErrors: true }],
+        { ...proxy, NODE_EXTRA_CA_CERTS: '/certs/proxy-ca.pem' },
+        proxy
+      )
+    ).toEqual(['NODE_EXTRA_CA_CERTS']);
+    // An http url can redirect to https and take that tunnel.
+    expect(
+      getProbeEnvDivergence(
+        [{ ...httpUrl, ignoreHTTPSErrors: true }],
+        { ...proxy, NODE_TLS_REJECT_UNAUTHORIZED: '0' },
+        proxy
+      )
+    ).toEqual(['NODE_TLS_REJECT_UNAUTHORIZED']);
+    // An http proxy needs no TLS, and an https proxy on the http route only is
+    // dialled with the request's own `rejectUnauthorized`.
+    expect(
+      getProbeEnvDivergence(
+        [{ ...httpsUrl, ignoreHTTPSErrors: true }],
+        {
+          HTTPS_PROXY: 'http://proxy.example:8080',
+          NODE_EXTRA_CA_CERTS: '/certs/proxy-ca.pem',
+        },
+        { HTTPS_PROXY: 'http://proxy.example:8080' }
+      )
+    ).toEqual([]);
+    expect(
+      getProbeEnvDivergence(
+        [{ ...httpsUrl, ignoreHTTPSErrors: true }],
+        {
+          HTTP_PROXY: 'https://proxy.example:8443',
+          NODE_EXTRA_CA_CERTS: '/certs/proxy-ca.pem',
+        },
+        { HTTP_PROXY: 'https://proxy.example:8443' }
+      )
+    ).toEqual([]);
+  });
+
   it('names NODE_TLS_REJECT_UNAUTHORIZED for an https probe', () => {
     expect(
       getProbeEnvDivergence(
