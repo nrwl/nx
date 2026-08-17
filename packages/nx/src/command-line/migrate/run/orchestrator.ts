@@ -1069,30 +1069,31 @@ function emitRetryFailed(
     );
   }
   lines.push(`  skip:  ${reconcileCommand(root, runId, 'skip')}`);
-  // Preselect only a continuation that would be accepted as the tree stands:
-  // plain retry when it is safe outright, else the reset-backed retry when a
-  // restore point exists. With neither there is no `then`: an agent that
-  // follows it blindly must not land on an action whose only justification is
-  // evidence it never read.
-  const preselected: StepAction | null =
-    retrySafety.kind === 'safe' ? 'retry' : cleanRetry ? 'retry-clean' : null;
+  if (pending) {
+    lines.push(UNVERIFIABLE_WRITES_LINE);
+  }
+  // A step whose generator may still run gets no `then`, whichever retry the
+  // checks above would accept: git can vouch for the tracked tree only, and
+  // an agent that follows `then` blindly must not rerun a generator over
+  // writes nothing here could see. Choosing a retry has to be explicit.
   emit(runId, step, 'retry-failed', {
-    ...(preselected === null
-      ? {}
-      : { then: reconcileCommand(root, runId, preselected) }),
+    ...(pending ? {} : { then: reconcileCommand(root, runId, 'retry') }),
     instructionLines: lines,
   });
 }
 
 // Whether the step's generator half may still have to run: it exists and no
 // attempt has recorded running it. Only then can a retry apply a generator
-// twice, so only then is a retry gated. A step with no
+// twice, so only then is a continuation withheld from `then`. A step with no
 // generator (prompt-only) is retried by re-prompting the agent over the tree
 // it already knows, which is the designed recovery; a step recorded before the
 // kind was persisted counts as having one.
 function generatorPending(step: MigrateStep): boolean {
   return step.generatorCompleted !== true && step.hasGenerator !== false;
 }
+
+// Appended to the failed and died dispenses of a step whose generator may rerun.
+const UNVERIFIABLE_WRITES_LINE = `None of these can be verified against writes git does not see (ignored paths, files outside the repository); if this migration writes there, inspect that state before choosing.`;
 
 function retryOptionLine(
   safety: PreMarkerRetrySafety,
@@ -1302,17 +1303,17 @@ function emitDied(
   );
   lines.push(options.length > 1 ? `Choose exactly one:` : `Resolve it with:`);
   lines.push(...options);
+  if (!resume) {
+    lines.push(UNVERIFIABLE_WRITES_LINE);
+  }
   // `retry` is preselected wherever it is legal: it is the only resolution
   // that neither discards work nor records a result the run never produced.
-  // An agent that follows `then` without reading the options gets the safe
-  // one, which is why offering `retry` in the text alone would not be enough.
-  const preselected: StepAction = resume
-    ? 'retry'
-    : cleanRetry
-      ? 'retry-clean'
-      : 'adopt';
+  // While the generator may still run there is no `then` at all: a reset
+  // cannot be verified against writes git does not see, and adopting records
+  // a result nothing checked, so an agent that follows `then` blindly must
+  // land on neither.
   emit(runId, step, 'died', {
-    then: reconcileCommand(root, runId, preselected),
+    ...(resume ? { then: reconcileCommand(root, runId, 'retry') } : {}),
     instructionLines: lines,
   });
 }

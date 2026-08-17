@@ -102,6 +102,14 @@ function runDispensed(command: string): string {
   return runCLI(dispensedArgs(command), { env: AGENT_ENV });
 }
 
+// The reconcile command a died or failed step's options name. A step whose
+// generator may still run gets no `then`, so the fake agent chooses one.
+function stepActionCommand(runId: string, action: string): string {
+  return `${
+    PM_EXEC_PREFIX[getSelectedPackageManager()]
+  } nx migrate --run-id=${runId} --step-action=${action}`;
+}
+
 function handoffPathFrom(block: DispenseBlock): string {
   const match = block.payload.instructions.match(/^Handoff file: (.+)$/m);
   if (!match) {
@@ -362,12 +370,16 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(diedBlock.payload.instructions).toContain('current HEAD:');
     // The killed worker's half-applied change shows up as dirty-tree evidence.
     expect(diedBlock.payload.instructions).toContain('slow-file');
-    expect(diedBlock.payload.then).toContain('--step-action=retry-clean');
+    // The generator marker was never recorded, so no continuation is handed
+    // out: the agent has to choose between the offered options.
+    const retryClean = stepActionCommand(runId, 'retry-clean');
+    expect(diedBlock.payload.instructions).toContain(retryClean);
+    expect(diedBlock.payload.then).toBeUndefined();
 
     runCommand(`git reset --hard ${gitRefBefore}`, { failOnError: true });
     runCommand('git clean -fd', { failOnError: true });
 
-    const complete = driveToComplete(runDispensed(diedBlock.payload.then));
+    const complete = driveToComplete(runDispensed(retryClean));
     expect(complete.action).toBe('complete');
 
     const state = readRunStateFile(runId);
@@ -384,10 +396,8 @@ describe('migrate orchestrator (dark launch)', () => {
     const { runId, diedBlock } = await killWorkerAndReconcile(runInit());
     expect(diedBlock.action).toBe('died');
 
-    const adoptCommand = diedBlock.payload.then.replace(
-      '--step-action=retry-clean',
-      '--step-action=adopt'
-    );
+    const adoptCommand = stepActionCommand(runId, 'adopt');
+    expect(diedBlock.payload.instructions).toContain(adoptCommand);
     const complete = driveToComplete(runDispensed(adoptCommand));
     expect(complete.action).toBe('complete');
 
