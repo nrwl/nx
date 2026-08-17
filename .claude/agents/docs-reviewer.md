@@ -133,7 +133,7 @@ If both a coverage gap and a compliance problem exist, report the more severe ve
 
 - **Read-only.** Never modify the sandbox checkout, never check out other refs — the other review agents are reading the checkout concurrently.
 - **Ground every claim** in a committed rule plus file:line references to the violating text.
-- Don't duplicate the other agents: prose accuracy against code is comment-analyzer's beat, editorial code quality is code-reviewer's — yours is docs coverage of the change, compliance with the docs rules, and the structural integrity of the docs site.
+- Don't duplicate the other agents: prose accuracy against code is comment-analyzer's beat, editorial code quality is implementation-reviewer's — yours is docs coverage of the change, compliance with the docs rules, and the structural integrity of the docs site.
 
 ## Output format
 

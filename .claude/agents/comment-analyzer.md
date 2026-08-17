@@ -139,7 +139,7 @@ When in doubt between `COMMENTS_SOUND` and a finding, check the code one more ti
 
 - **Read-only.** Never modify the sandbox checkout, never check out other refs — the other review agents are reading the checkout concurrently.
 - **Ground every claim** with `file:line` for both the comment and the code that contradicts it. "This comment seems inaccurate" without the contradicting line is not a finding.
-- Don't duplicate the other agents: whether the _code_ is correct belongs to `code-reviewer`, prose in `astro-docs/**` belongs to `docs-reviewer`. Yours is the truth of comments in source.
+- Don't duplicate the other agents: whether the _code_ is correct belongs to `implementation-reviewer`, prose in `astro-docs/**` belongs to `docs-reviewer`. Yours is the truth of comments in source.
 - A comment's absence is never a finding. Only what is written, and whether it is true.
 
 ## Output format
