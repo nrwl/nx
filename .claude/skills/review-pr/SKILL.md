@@ -770,10 +770,22 @@ Critical/Important finding MUST carry these two lines, immediately under it:
   does not. Name the ticket/PR-body claim.
 
 If the same defect reproduces unchanged at `--ref base`, it is **pre-existing**
-and it is not a finding. At most one Suggestions line prefixed `pre-existing:`.
-The reviewer is deciding whether to merge _this diff_, not whether the file is
-perfect. "The PR touched this function, so its old bugs are in scope" is the
-specific mistake — touching a function does not adopt it.
+and it does not block this PR. The reviewer is deciding whether to merge _this
+diff_, not whether the file is perfect. "The PR touched this function, so its
+old bugs are in scope" is the specific mistake — touching a function does not
+adopt it.
+
+**It is still reported.** Emit it under a `PRE-EXISTING:` line instead of
+dropping it — one per defect, no cap, in the same `file:line — defect` shape
+plus the base evidence that proves it predates the diff:
+
+    PRE-EXISTING: <path>:<line> — <defect>. Present at base <path>:<line>.
+
+The maintainer files follow-up tickets from these, so a bare "this is old" is
+useless: the line must stand on its own once separated from the PR that
+surfaced it. This is the one place a defect you are forbidden to block on still
+reaches the reviewer intact — silently discarding it loses work nobody else is
+positioned to redo.
 
 **TRIGGER** must name a path a supported Nx workflow actually reaches: the
 command or public API entry point, the input/config that gets there, and what
@@ -977,12 +989,16 @@ Aggregate the surviving agents' output into Critical / Important / Strengths you
 
 **Only critical and important findings drive the verdict.** Keep **Critical**, **Important**, and **Strengths** in full. Suggestions are no longer discarded: distill any **Suggestions** / nice-to-have material into a `### Suggestions` section of at most 5 one-line bullets (`file:line — ask`), keeping only concrete, actionable asks (a rename, a restructure, a doc cross-link) and dropping vague polish. This tier NEVER influences the verdict — it exists because the maintainer's own reviews are largely made of it. The trimmed text is what flows into the steps below (reconciliation in Step 5b, formatting in Step 6).
 
+**Pre-existing defects get their own section, and it is uncapped.** Collect every agent's `PRE-EXISTING:` lines into a `### Pre-existing` section, verbatim, deduped by `file:line`. It never influences the verdict, and it does **not** draw from the Suggestions 5-bullet cap — the two are separate budgets. Suggestions is taste (a rename, a doc cross-link); this is real defects that predate the diff and exist to be turned into follow-up tickets. Capping them, or folding them into Suggestions where they compete with polish for slots, is how they get silently dropped — which is the whole failure this section exists to stop. Omit the section only when there are none.
+
+Agents that emit a `TIERS` line carry a `preexisting=<n>` count; reconcile the section against it exactly as you do `findings=<n>`, and record any shortfall in `## Failures`. The count is the only mechanical check that a pre-existing item survived the trim.
+
 "Keep in full" is the load-bearing half of that paragraph, and it is the half this step actually fails. Four rules make it enforceable:
 
-- **Enforce the admission test first.** Before anything else, check every Critical/Important finding for its `NET-NEW` and `TRIGGER` lines. Missing either, or a `NET-NEW` that asserts novelty without quoting base evidence ⇒ demote to Suggestions and record one line in `## Failures` naming the agent and the finding. Do not repair it for them by reading `--ref base` yourself — an agent that filed a finding without checking the base did not establish the defect is the PR's, and confirming it here converts your read into their evidence. The one exception: a `widens` or `claimed-fix` NET-NEW that names the base line but reads thin — verify that one in the sandbox and keep it if it holds. This gate is what stops pre-existing and unreachable findings from reaching the maintainer, and it is the only downgrade you perform without a numbered calibration.
+- **Enforce the admission test first.** Before anything else, check every Critical/Important finding for its `NET-NEW` and `TRIGGER` lines. Missing either, or a `NET-NEW` that asserts novelty without quoting base evidence ⇒ demote and record one line in `## Failures` naming the agent and the finding. **Demote by reason, not to one bucket:** a finding whose `NET-NEW` shows the defect reproduces at base goes to `### Pre-existing` (it is a real defect, just not this PR's — the maintainer still wants it); one whose `TRIGGER` names an unreachable path, or which is missing either line outright, goes to Suggestions. Dropping a demoted-as-pre-existing finding on the floor is the failure mode here, not mis-tiering it. Do not repair it for them by reading `--ref base` yourself — an agent that filed a finding without checking the base did not establish the defect is the PR's, and confirming it here converts your read into their evidence. The one exception: a `widens` or `claimed-fix` NET-NEW that names the base line but reads thin — verify that one in the sandbox and keep it if it holds. This gate is what stops pre-existing and unreachable findings from reaching the maintainer, and it is the only downgrade you perform without a numbered calibration.
 - **Never re-tier an agent's finding downward on your own judgment.** Apart from the admission-test gate above, the only sanctioned downgrade is a named calibration from the list below; when you apply one, say which calibration and why in the draft. "It feels minor", "that's just style", "the fix is one character" are not calibrations. An agent that filed something as a finding did so against a rule it was required to name. You are re-checking it against the calibrations, not re-scoring it by taste, and you are not the tier the agent's contract already assigned.
 - **Severity comes from the rule violated, not the size of the fix.** A one-character punctuation change that breaks a committed `STYLE_GUIDE.md` rule vale has no rule for is Important. A three-paragraph rewrite that violates nothing is a Suggestion. Judging by surface form is the specific way this step goes wrong: docs, comment, and naming findings all have tiny diffs, so they read as polish and get swept into a tier that cannot move the verdict.
-- **The 5-bullet cap binds the Suggestions tier only.** It is never a reason to move anything out of Critical or Important, and it never licenses a silent merge or drop. If you cut to the cap, name in one line what you cut and why. A reader must never mistake a trimmed list for a complete one.
+- **The 5-bullet cap binds the Suggestions tier only.** It is never a reason to move anything out of Critical, Important, or `### Pre-existing`, and it never licenses a silent merge or drop. If you cut to the cap, name in one line what you cut and why. A reader must never mistake a trimmed list for a complete one.
 - **Reconcile per reviewer before writing the draft.** Preserve every Critical/Important finding, or record the named calibration that downgraded it in `## Failures`.
 
 Keep findings distinct from Suggestions: a committed-rule violation is not polish merely because the diff is small.
@@ -1008,7 +1024,7 @@ These standing maintainer calibrations encode this repo's review culture. The ch
 3. Migration silence and retained dependencies are intentional. Flag only silent correctness failures; users may still import a dependency.
 4. `migrations.json` is already inside the migration trust boundary. Flag it only when data crosses a new boundary (for example HTTP or runtime input).
 5. `nx migrate` and `nx release` temp directories are intentional post-mortem artifacts, not leaks.
-6. Critical/Important findings must pass the charter's **admission test** — a NET-NEW line with base evidence and a TRIGGER line naming a reachable path. Pre-existing behavior the diff merely touches, and paths no supported workflow reaches, are Suggestions at most. Deliberate behavior backed by tests and documentation is a callout, not a blocker.
+6. Critical/Important findings must pass the charter's **admission test** — a NET-NEW line with base evidence and a TRIGGER line naming a reachable path. Pre-existing behavior the diff merely touches goes to `### Pre-existing` — reported for follow-up, never blocking. Paths no supported workflow reaches are Suggestions at most. Deliberate behavior backed by tests and documentation is a callout, not a blocker.
 7. Do not demand scattered defensive guards when the invariant can be fixed at its source.
 8. Comment-volume asks are Suggestions. Inaccurate/stale comments and required `@deprecated` / `TODO(vNN)` markers remain blocking.
 9. **Severity ignores population size.** Rarity never demotes a finding; unreachability disqualifies it. Windows-only, large-workspace-only, and rare-flag defects keep their tier — name the condition in TRIGGER. Windows is a supported platform, not an edge case.
@@ -1320,6 +1336,8 @@ The adjusted text becomes the final `$REVIEW_BODY`.
 
 `$REVIEW_BODY` is posted as-is — no header, footer, or tool attribution. It should read like a review a maintainer wrote. The review metadata (commit, date, attempt) lives in the triage file's frontmatter, not in the posted body.
 
+**Section order.** Grounding first, then what blocks, then what doesn't: `### Close-without-merge check`, `### Reproduction verification`, `### Approach analysis`, `### Security review`, `### Critical`, `### Important`, `### Maintainer calls`, `### Questions for the author`, `### Suggestions`, `### Pre-existing`, `### Strengths`. `### Pre-existing` sits below everything actionable on this PR and carries a one-line preamble saying it is follow-up material that does not affect the verdict — otherwise a reader skimming headers counts it against the author.
+
 ## Step 7: Determine verdict
 
 Check in this order (first match wins):
@@ -1333,8 +1351,10 @@ Check in this order (first match wins):
 
 (For first reviews with no prior context, fall back to the Critical/Important categories.)
 
-**Only Critical blocks.** There is deliberately no count threshold: Important and
-Suggestions never drive the verdict at any quantity. The old "3+ items" rule was a proxy
+**Only Critical blocks.** There is deliberately no count threshold: Important,
+Suggestions, and `### Pre-existing` never drive the verdict at any quantity. A long
+`### Pre-existing` list is not evidence against the PR — it is evidence the file was
+already in poor shape, which is the author's problem only if their diff caused it. The old "3+ items" rule was a proxy
 for "lots of noise probably means something is wrong" — it was tuned against an Important
 tier that had no definition, and it let three bounded observations block a PR nobody would
 actually hold. The admission test now does that job at the source. A PR with eight

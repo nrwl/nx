@@ -51,10 +51,12 @@ This applies to an endorsement exactly as it applies to a finding, and matters m
 ### Then one more line, immediately after those three
 
 ```
-TIERS: findings=<n> suggestions=<n>
+TIERS: findings=<n> suggestions=<n> preexisting=<n>
 ```
 
 Always emit it, on every report, including `DOCS_SOUND` (`findings=0`). Plain text, fourth line, no markdown, digits only — the caller greps for it.
+
+`preexisting=<n>` counts your `**Pre-existing:**` lines. These never reach Critical/Important and never affect the verdict, but the caller must carry every one into the draft's `### Pre-existing` section — the maintainer files follow-up tickets from that list, so a dropped line is lost work. It is a separate budget from `suggestions=<n>`: the 5-bullet Suggestions cap does not apply, so never trim a pre-existing item to stay under it.
 
 `<n>` for findings counts the blocks under `**Findings:**`. Every one of them is **Important-level** by definition of your verdict (see the verdict table below), so this number is the caller's contract with you: that many docs items must appear in the posted review's Critical/Important sections, not in its Suggestions list.
 
@@ -106,14 +108,14 @@ So do not pad the count, and do not shrink it. **Never soften a finding into a s
 
 6. **Ground every finding.** Quote the rule (file + section heading) and the violating text (page + line). A finding without a named rule behind it is taste — move it to Suggestions or drop it. For coverage findings the grounding is the pair: the diff line that changes the behavior, and the prose page (path + line) that now describes something else — a coverage claim without a named stale page is speculation, drop it. If the same violation pattern repeats across a page, report it once with a count, not once per instance.
 
-7. **Compare against the base when unsure.** If it is unclear whether a violation is new, read the same page with `--ref base`. Pre-existing prose the PR merely moves is advisory at most — flag it as a note, never as a blocker for this PR.
+7. **Compare against the base when unsure.** If it is unclear whether a violation is new, read the same page with `--ref base`. Pre-existing prose the PR merely moves never blocks this PR — report it under `**Pre-existing:**` so the maintainer can file a follow-up, not under `**Findings:**`.
 
 ## Calibration
 
 - **Page unreachable or broken for readers** (missing redirect for a moved/renamed/deleted page, sidebar-coupled route broken, Markdoc that fails to parse) → report as critical.
 - **Clear violation of a committed rule, new in this diff** (terminology table, unsupportable claim, golden-path breach, IA misplacement, duplicated h1) → report as important, quoting the rule.
 - **Voice, rhythm, and positioning asks** — even ones the guide names — → Suggestions tier, one line each. A maintainer polishes these; they never block.
-- **Pre-existing violations in moved prose** → advisory note, not a finding.
+- **Pre-existing violations in moved prose** → `**Pre-existing:**` line, not a finding.
 - **A named prose page left stale by the code change, or missing docs for surface whose siblings are documented** → report as important, naming the page(s) to update.
 - **Editorial direction is not your beat.** Whether a page recommends a practice the team shouldn't encourage is judged by the caller at trim time — do not rate it here.
 - Do not report what Vale will mechanically fail in CI unless it also changes meaning.
@@ -151,6 +153,10 @@ If both a coverage gap and a compliance problem exist, report the more severe ve
 - **<file:line>** — <the violating or stale text, the rule (STYLE_GUIDE.md / CLAUDE.md section) or the diff line that outdates it, and the concrete fix>
 
 **Structural checks:** <one sentence: redirects, sidebar coupling, links/anchors, Markdoc validity — or "n/a, no docs changed">
+
+**Pre-existing:** <one line per defect that reproduces unchanged at base; "none" if 0>
+
+- **<file:line>** — <defect>. Present at base <path>:<line>.
 
 **Suggestions:** <the same count as TIERS suggestions=, then one line each; "none" if 0>
 ```

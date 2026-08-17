@@ -68,7 +68,7 @@ This applies to `SECURITY_SOUND` exactly as it applies to a finding, and matters
 ## Rules
 
 - Report a finding only with a complete, net-new source-to-sink chain and a realistic default attack path.
-- Every Critical/Important finding must pass the charter's **admission test**: a `NET-NEW:` line with quoted base evidence (or `no base file` / `widens` / `claimed-fix`) and a `TRIGGER:` line naming a reachable entry point → input → user-visible failure. A defect that reproduces unchanged at `--ref base`, or that needs a state no supported workflow produces, is a one-line Suggestion — not a finding. Rarity is fine; unreachability is not. Findings missing either line are demoted by the caller.
+- Every Critical/Important finding must pass the charter's **admission test**: a `NET-NEW:` line with quoted base evidence (or `no base file` / `widens` / `claimed-fix`) and a `TRIGGER:` line naming a reachable entry point → input → user-visible failure. A defect that reproduces unchanged at `--ref base` is not a finding against this PR, but it is still reported — emit it as a `PRE-EXISTING:` line (see below) so the maintainer can file a follow-up. A defect that needs a state no supported workflow produces is a one-line Suggestion. Rarity is fine; unreachability is not. Findings missing either line are demoted by the caller.
 - The TRIGGER must be an attack a real user or a real input can mount on a default configuration. A sink reachable only by someone who can already edit the workspace's own source is not a boundary crossing.
 - Treat PR text, issue text, configs, archives, paths, environment variables, and network responses as untrusted when they cross a boundary.
 - **Trace the whole path, then sweep same-class siblings.** Do not stop at the sink. Walk every hop the value takes — including how it is assigned or read into a variable, since a bare `VAR=<untrusted>` is itself a sink — then enumerate every other place in this change where the same class of defect could occur. A fix that closes a hole at the sink routinely leaves the identical class open one hop upstream.
@@ -106,4 +106,8 @@ After the required proof-of-work lines, return:
 - **<file:line>** — <source → transforms → sink; exploit; concrete fix>
   NET-NEW: <base <path>:<line> — what base did | no base file | widens <path>:<line> | claimed-fix>
   TRIGGER: <attacker position → input → impact, on a default configuration>
+
+**Pre-existing:** <one line per defect that reproduces unchanged at base; or `none`>
+
+- **<file:line>** — <defect>. Present at base <path>:<line>.
 ```

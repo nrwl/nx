@@ -125,6 +125,11 @@ Report **critical** and **important** findings, plus **strengths**. Concrete, ac
 nice-to-haves may go in a terse **Suggestions** list. When you endorse a debatable design decision,
 say so in a **Maintainer calls** line rather than folding it into an endorsement.
 
+A defect that reproduces unchanged at `--ref base` does not block this branch, but report it under
+**Pre-existing** — one line per defect, no cap, naming the base line that proves it predates the
+work. That list is what follow-up tickets get filed from; dropping it loses work nobody else is
+positioned to redo.
+
 Your own definition carries the calibrations that bind your dimension, and the proof-of-work
 contract. Both still apply.
 ```
@@ -207,7 +212,7 @@ verdict: <clean|concerns|failed>
 
 `dirty: true` matters on re-review: unlike a PR head SHA, a dirty tree has no stable identity, so a draft against one can never be deduped. Always re-review a dirty branch rather than reporting `ALREADY_REVIEWED`.
 
-Sections: `## Summary`, `## Critical`, `## Important`, `## Strengths`, `## Suggestions`, `## Maintainer calls`, `## Not reviewed` (untracked files), `## Failures` (agents whose EVIDENCE never verified).
+Sections: `## Summary`, `## Critical`, `## Important`, `## Maintainer calls`, `## Suggestions`, `## Pre-existing` (defects that reproduce at base — follow-up material, never blocking; omit when empty), `## Strengths`, `## Not reviewed` (untracked files), `## Failures` (agents whose EVIDENCE never verified).
 
 ## Step 7: Clean up, then offer the rest
 
