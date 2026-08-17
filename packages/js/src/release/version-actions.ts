@@ -1,4 +1,7 @@
-import { getCatalogManager } from '@nx/devkit/internal';
+import {
+  getCatalogManager,
+  parseDependencySpecifier,
+} from '@nx/devkit/internal';
 import {
   detectPackageManager,
   PackageManager,
@@ -17,6 +20,7 @@ import type { ResolveVersionForDependency } from 'nx/release';
 import type {
   AfterAllProjectsVersioned,
   NxReleaseVersionConfiguration,
+  ParsedDependencySpecifier,
 } from '@nx/devkit/internal';
 import { parseRegistryOptions } from '../utils/npm-config';
 import { updateLockFile } from './utils/update-lock-file';
@@ -179,11 +183,22 @@ export default class JsVersionActions extends VersionActions {
     let dependencyCollection = null;
     if (dependencyPackageName) {
       for (const depType of dependencyTypes) {
-        if (json[depType]?.[dependencyPackageName]) {
-          currentVersion = json[depType][dependencyPackageName];
-          dependencyCollection = depType;
-          break;
+        if (!json[depType]) {
+          continue;
         }
+        const entries = findDependencyEntriesForPackage(
+          json[depType],
+          dependencyPackageName
+        ).filter((entry) => getEntryVersionSpec(entry));
+        if (entries.length === 0) {
+          continue;
+        }
+        // Prefer the entry keyed by the package name itself over aliased entries
+        const entry =
+          entries.find((e) => e.key === dependencyPackageName) ?? entries[0];
+        currentVersion = getEntryVersionSpec(entry);
+        dependencyCollection = depType;
+        break;
       }
     }
 
@@ -268,6 +283,7 @@ export default class JsVersionActions extends VersionActions {
     const manifestUpdates: Array<{
       manifestPath: string;
       updates: Array<{ path: string[]; value: string }>;
+      numDependenciesUpdated: number;
     }> = [];
     const catalogUpdates: Array<{
       packageName: string;
@@ -292,91 +308,147 @@ export default class JsVersionActions extends VersionActions {
             : this.finalConfigForProject.preserveMatchingDependencyRanges ||
               dependencyTypes;
 
-      for (const depType of dependencyTypes) {
-        if (json[depType]) {
-          for (const [dependencyName, currentVersion] of Object.entries<string>(
-            json[depType]
-          )) {
-            const targetProject = localDependencyProjects.get(dependencyName);
-            if (!targetProject) {
+      let numDependenciesUpdated = 0;
+
+      for (const [dep, version] of Object.entries(dependenciesToUpdate)) {
+        const collections = dependencyTypes.filter((depType) => json[depType]);
+        if (collections.length === 0) {
+          continue;
+        }
+        const packageName =
+          projectGraph.nodes[dep].data.metadata?.js?.packageName;
+        let updatedEntries = 0;
+        for (const depType of collections) {
+          const entries = findDependencyEntriesForPackage(
+            json[depType],
+            packageName
+          );
+          for (const entry of entries) {
+            const rawSpecifier = entry.rawSpecifier;
+            if (catalogManager?.isCatalogReference(rawSpecifier)) {
+              // collect the catalog updates so we can update the catalog definitions later
+              const catalogRef =
+                catalogManager.parseCatalogReference(rawSpecifier)!;
+              catalogUpdates.push({
+                packageName,
+                version,
+                catalogName: catalogRef.catalogName,
+              });
               continue;
             }
-
-            let version = dependenciesToUpdate[targetProject.projectName];
-            if (version !== undefined) {
-              if (catalogManager?.isCatalogReference(currentVersion)) {
-                // collect the catalog updates so we can update the catalog definitions later
-                const catalogRef =
-                  catalogManager.parseCatalogReference(currentVersion)!;
-                catalogUpdates.push({
-                  packageName: dependencyName,
-                  version,
-                  catalogName: catalogRef.catalogName,
-                });
-                continue;
-              }
-
-              if (
-                manifestToUpdate.preserveLocalDependencyProtocols &&
-                this.isLocalDependencyProtocol(currentVersion)
-              ) {
-                continue;
-              }
-
-              if (this.isLocalDependencyProtocol(currentVersion)) {
-                version = this.applyVersionPrefix(currentVersion, version);
-              }
-
-              if (
-                preserveMatchingDependencyRanges.includes(depType) &&
-                !this.isLocalDependencyProtocol(currentVersion)
-              ) {
-                // If the dependency is specified using a range, do some additional processing to determine whether to update the version
-                if (
-                  isValidRange(currentVersion) &&
-                  !isMatchingDependencyRange(version, currentVersion)
-                ) {
-                  throw new Error(
-                    `"preserveMatchingDependencyRanges" is enabled for "${depType}" and the new version "${version}" is outside the current range for "${dependencyName}" in manifest "${manifestToUpdate.manifestPath}". Please update the range before releasing.`
-                  );
-                } else if (isValidRange(currentVersion)) {
-                  continue;
-                }
-              }
-            } else if (
-              resolveVersionForDependency &&
-              !manifestToUpdate.preserveLocalDependencyProtocols &&
-              this.isLocalDependencyProtocol(currentVersion)
+            if (
+              manifestToUpdate.preserveLocalDependencyProtocols &&
+              this.isLocalDependencyProtocol(rawSpecifier)
             ) {
-              try {
-                version = await this.resolveLocalDependencySpecifier(
-                  dependencyName,
-                  currentVersion,
-                  targetProject,
-                  resolveVersion
-                );
-              } catch (error) {
-                const message =
-                  error instanceof Error ? error.message : String(error);
+              continue;
+            }
+            const isAlias = entry.parsed.requestedPackageName !== null;
+            const versionSpec = getEntryVersionSpec(entry);
+            // A rangeless alias such as npm:pkg floats to the latest version.
+            if (!versionSpec) {
+              continue;
+            }
+            let entryVersion = version;
+            if (!isAlias && this.isLocalDependencyProtocol(rawSpecifier)) {
+              entryVersion = this.applyVersionPrefix(rawSpecifier, version);
+            } else if (this.finalConfigForProject.versionPrefix === 'auto') {
+              // versionPrefix "auto" preserves each declaration's prefix, not
+              // the prefix chosen while reading the dependency.
+              const prefix = versionSpec.match(/^([~^=])/)?.[1] ?? '';
+              entryVersion = `${prefix}${version.replace(/^[~^=]/, '')}`;
+            }
+            if (
+              preserveMatchingDependencyRanges.includes(depType) &&
+              !this.isLocalDependencyProtocol(rawSpecifier)
+            ) {
+              // If the dependency is specified using a range, do some additional processing to determine whether to update the version
+              if (
+                isValidRange(versionSpec) &&
+                !isMatchingDependencyRange(entryVersion, versionSpec)
+              ) {
                 throw new Error(
-                  `Unable to replace local dependency protocol "${currentVersion}" for "${dependencyName}" in manifest "${manifestToUpdate.manifestPath}". ${message}`
+                  `"preserveMatchingDependencyRanges" is enabled for "${depType}" and the new version "${entryVersion}" is outside the current range for "${packageName}" in manifest "${manifestToUpdate.manifestPath}". Please update the range before releasing.`
                 );
+              } else if (isValidRange(versionSpec)) {
+                continue;
               }
             }
-
-            if (version !== undefined) {
-              updates.push({
-                path: [depType, dependencyName],
-                value: version,
-              });
-            }
+            updates.push({
+              path: [depType, entry.key],
+              // Replace only the alias range. Convert workspace aliases to npm
+              // aliases when local protocols are not preserved.
+              value: isAlias
+                ? `npm:${packageName}@${entryVersion}`
+                : entryVersion,
+            });
+            updatedEntries++;
           }
         }
+        if (updatedEntries > 0) {
+          numDependenciesUpdated++;
+        }
+      }
+
+      if (
+        resolveVersionForDependency &&
+        !manifestToUpdate.preserveLocalDependencyProtocols
+      ) {
+        const resolvedDependencyProjects = new Set<string>();
+        for (const depType of dependencyTypes) {
+          if (!json[depType]) {
+            continue;
+          }
+          for (const [dependencyName, rawSpecifier] of Object.entries(
+            json[depType]
+          )) {
+            if (
+              typeof rawSpecifier !== 'string' ||
+              !this.isLocalDependencyProtocol(rawSpecifier)
+            ) {
+              continue;
+            }
+            const parsed = parseDependencySpecifier(rawSpecifier);
+            const packageName = parsed.requestedPackageName ?? dependencyName;
+            const targetProject = localDependencyProjects.get(packageName);
+            if (
+              !targetProject ||
+              dependenciesToUpdate[targetProject.projectName] !== undefined
+            ) {
+              continue;
+            }
+            const isAlias = parsed.requestedPackageName !== null;
+            let version: string;
+            try {
+              version = await this.resolveLocalDependencySpecifier(
+                dependencyName,
+                // resolveLocalDependencySpecifier expects a
+                // workspace:-prefixed specifier; wrap an alias's inner range
+                // in workspace: before calling it.
+                isAlias ? `workspace:${parsed.range ?? ''}` : rawSpecifier,
+                targetProject,
+                resolveVersion
+              );
+            } catch (error) {
+              const message =
+                error instanceof Error ? error.message : String(error);
+              throw new Error(
+                `Unable to replace local dependency protocol "${rawSpecifier}" for "${dependencyName}" in manifest "${manifestToUpdate.manifestPath}". ${message}`
+              );
+            }
+            updates.push({
+              path: [depType, dependencyName],
+              value: isAlias ? `npm:${packageName}@${version}` : version,
+            });
+            resolvedDependencyProjects.add(targetProject.projectName);
+          }
+        }
+        numDependenciesUpdated += resolvedDependencyProjects.size;
       }
 
       manifestUpdates.push({
         manifestPath: manifestToUpdate.manifestPath,
         updates,
+        numDependenciesUpdated,
       });
     }
 
@@ -389,11 +461,15 @@ export default class JsVersionActions extends VersionActions {
         manifestUpdate.manifestPath,
         manifestUpdate.updates
       );
-      if (manifestUpdate.updates.length > 0) {
+
+      if (manifestUpdate.numDependenciesUpdated > 0) {
         const depText =
-          manifestUpdate.updates.length === 1 ? 'dependency' : 'dependencies';
+          manifestUpdate.numDependenciesUpdated === 1
+            ? 'dependency'
+            : 'dependencies';
+
         logMessages.push(
-          `✍️  Updated ${manifestUpdate.updates.length} ${depText} in manifest: ${manifestUpdate.manifestPath}`
+          `✍️  Updated ${manifestUpdate.numDependenciesUpdated} ${depText} in manifest: ${manifestUpdate.manifestPath}`
         );
       }
     }
@@ -422,10 +498,6 @@ export default class JsVersionActions extends VersionActions {
       return lookup;
     }
 
-    // This lookup requires the dependency key to match the package name.
-    // Package aliases need relationship-specific manifest data that the
-    // project graph does not retain. Support is tracked in
-    // https://github.com/nrwl/nx/issues/36630.
     lookup = new Map<string, LocalDependencyProject>();
     for (const [projectName, node] of Object.entries(projectGraph.nodes)) {
       const packageName = node.data.metadata?.js?.packageName;
@@ -624,4 +696,34 @@ export default class JsVersionActions extends VersionActions {
     // }
     return true;
   }
+}
+
+interface ManifestDependencyEntry {
+  key: string;
+  rawSpecifier: string;
+  parsed: ParsedDependencySpecifier;
+}
+
+/** Finds plain and aliased entries whose resolved package name matches packageName. */
+function findDependencyEntriesForPackage(
+  dependencies: Record<string, unknown>,
+  packageName: string
+): ManifestDependencyEntry[] {
+  const entries: ManifestDependencyEntry[] = [];
+  for (const [key, rawSpecifier] of Object.entries(dependencies)) {
+    if (typeof rawSpecifier !== 'string') {
+      continue;
+    }
+    const parsed = parseDependencySpecifier(rawSpecifier);
+    if ((parsed.requestedPackageName ?? key) === packageName) {
+      entries.push({ key, rawSpecifier, parsed });
+    }
+  }
+  return entries;
+}
+
+function getEntryVersionSpec(entry: ManifestDependencyEntry): string | null {
+  return entry.parsed.requestedPackageName !== null
+    ? entry.parsed.range
+    : entry.rawSpecifier;
 }

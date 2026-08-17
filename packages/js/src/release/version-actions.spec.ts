@@ -462,6 +462,592 @@ describe('JsVersionActions', () => {
       );
     });
   });
+
+  describe('workspace and npm package aliases', () => {
+    it('reads the inner range of a workspace alias entry', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'packages/my-lib/package.json',
+        `{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "my-alias": "workspace:dependency@^1.0.0"
+  }
+}
+`
+      );
+      const versionActions = await createVersionActions(tree);
+
+      const result = await versionActions.readCurrentVersionOfDependency(
+        tree,
+        createProjectGraph(),
+        'dependency'
+      );
+
+      expect(result).toEqual({
+        currentVersion: '^1.0.0',
+        dependencyCollection: 'dependencies',
+      });
+    });
+
+    it('reads the inner range of an npm alias entry', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'packages/my-lib/package.json',
+        `{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "devDependencies": {
+    "my-alias": "npm:dependency@~1.2.0"
+  }
+}
+`
+      );
+      const versionActions = await createVersionActions(tree);
+
+      const result = await versionActions.readCurrentVersionOfDependency(
+        tree,
+        createProjectGraph(),
+        'dependency'
+      );
+
+      expect(result).toEqual({
+        currentVersion: '~1.2.0',
+        dependencyCollection: 'devDependencies',
+      });
+    });
+
+    it('prefers the entry keyed by the package name over aliased entries', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'packages/my-lib/package.json',
+        `{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "my-alias": "npm:dependency@~1.0.0",
+    "dependency": "^1.0.0"
+  }
+}
+`
+      );
+      const versionActions = await createVersionActions(tree);
+
+      const result = await versionActions.readCurrentVersionOfDependency(
+        tree,
+        createProjectGraph(),
+        'dependency'
+      );
+
+      expect(result).toEqual({
+        currentVersion: '^1.0.0',
+        dependencyCollection: 'dependencies',
+      });
+    });
+
+    it('does not read an entry keyed by the package name that aliases another package', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'packages/my-lib/package.json',
+        `{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "dependency": "workspace:other-package@*"
+  },
+  "devDependencies": {
+    "my-alias": "workspace:dependency@^1.0.0"
+  }
+}
+`
+      );
+      const versionActions = await createVersionActions(tree);
+
+      const result = await versionActions.readCurrentVersionOfDependency(
+        tree,
+        createProjectGraph(),
+        'dependency'
+      );
+
+      expect(result).toEqual({
+        currentVersion: '^1.0.0',
+        dependencyCollection: 'devDependencies',
+      });
+    });
+
+    it('does not read an aliased entry without an inner range', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'packages/my-lib/package.json',
+        `{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "my-alias": "npm:dependency"
+  }
+}
+`
+      );
+      const versionActions = await createVersionActions(tree);
+
+      const result = await versionActions.readCurrentVersionOfDependency(
+        tree,
+        createProjectGraph(),
+        'dependency'
+      );
+
+      expect(result).toEqual({
+        currentVersion: null,
+        dependencyCollection: null,
+      });
+    });
+
+    it('rewrites a workspace alias to a registry-compatible npm alias when local protocols are not preserved', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'packages/my-lib/package.json',
+        `{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "my-alias": "workspace:dependency@^1.0.0"
+  }
+}
+`
+      );
+      const versionActions = await createVersionActions(tree);
+
+      await versionActions.updateProjectDependencies(
+        tree,
+        createProjectGraph(),
+        { dependency: '2.0.0' }
+      );
+
+      expect(tree.read('packages/my-lib/package.json', 'utf-8')).toBe(`{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "my-alias": "npm:dependency@^2.0.0"
+  }
+}
+`);
+    });
+
+    it('preserves a workspace alias when local protocols are preserved', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      const manifest = `{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "my-alias": "workspace:dependency@^1.0.0"
+  }
+}
+`;
+      tree.write('packages/my-lib/package.json', manifest);
+      const versionActions = await createVersionActions(tree, {
+        preserveLocalDependencyProtocols: true,
+      });
+
+      await versionActions.updateProjectDependencies(
+        tree,
+        createProjectGraph(),
+        { dependency: '2.0.0' }
+      );
+
+      expect(tree.read('packages/my-lib/package.json', 'utf-8')).toBe(manifest);
+    });
+
+    it('resolves an aliased dependency outside the release set to a registry-compatible npm alias', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'packages/my-lib/package.json',
+        `{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "my-alias": "workspace:dependency@^",
+    "dependency": "workspace:~"
+  }
+}
+`
+      );
+      const versionActions = await createVersionActions(tree);
+      const resolveCurrentVersion = jest.fn().mockResolvedValue('2.5.0');
+
+      const logs = await versionActions.updateProjectDependencies(
+        tree,
+        createProjectGraph(),
+        {},
+        resolveCurrentVersion
+      );
+
+      expect(tree.read('packages/my-lib/package.json', 'utf-8')).toBe(`{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "my-alias": "npm:dependency@^2.5.0",
+    "dependency": "~2.5.0"
+  }
+}
+`);
+      expect(resolveCurrentVersion).toHaveBeenCalledTimes(1);
+      expect(resolveCurrentVersion).toHaveBeenCalledWith('dependency');
+      expect(logs).toEqual([
+        '✍️  Updated 1 dependency in manifest: packages/my-lib/package.json',
+      ]);
+    });
+
+    it('updates the inner range of an npm alias entry', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'packages/my-lib/package.json',
+        `{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "my-alias": "npm:dependency@~1.0.0"
+  }
+}
+`
+      );
+      const versionActions = await createVersionActions(tree);
+
+      await versionActions.updateProjectDependencies(
+        tree,
+        createProjectGraph(),
+        { dependency: '^2.0.0' }
+      );
+
+      expect(tree.read('packages/my-lib/package.json', 'utf-8')).toBe(`{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "my-alias": "npm:dependency@~2.0.0"
+  }
+}
+`);
+    });
+
+    it('updates plain and aliased entries referencing the same package', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'packages/my-lib/package.json',
+        `{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "dependency": "^1.0.0"
+  },
+  "devDependencies": {
+    "my-alias": "npm:dependency@^1.0.0"
+  }
+}
+`
+      );
+      const versionActions = await createVersionActions(tree);
+
+      await versionActions.updateProjectDependencies(
+        tree,
+        createProjectGraph(),
+        { dependency: '^2.0.0' }
+      );
+
+      expect(tree.read('packages/my-lib/package.json', 'utf-8')).toBe(`{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "dependency": "^2.0.0"
+  },
+  "devDependencies": {
+    "my-alias": "npm:dependency@^2.0.0"
+  }
+}
+`);
+    });
+
+    it('does not rewrite an entry keyed by the package name that aliases another package', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      const manifest = `{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "dependency": "workspace:other-package@*"
+  }
+}
+`;
+      tree.write('packages/my-lib/package.json', manifest);
+      const versionActions = await createVersionActions(tree);
+
+      await versionActions.updateProjectDependencies(
+        tree,
+        createProjectGraph(),
+        { dependency: '2.0.0' }
+      );
+
+      expect(tree.read('packages/my-lib/package.json', 'utf-8')).toBe(manifest);
+    });
+
+    it('does not rewrite an aliased entry without an inner range', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'packages/my-lib/package.json',
+        `{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "dependency": "1.0.0",
+    "my-alias": "npm:dependency"
+  }
+}
+`
+      );
+      const versionActions = await createVersionActions(tree);
+
+      await versionActions.updateProjectDependencies(
+        tree,
+        createProjectGraph(),
+        { dependency: '2.0.0' }
+      );
+
+      expect(tree.read('packages/my-lib/package.json', 'utf-8')).toBe(`{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "dependency": "2.0.0",
+    "my-alias": "npm:dependency"
+  }
+}
+`);
+    });
+
+    it('preserves an npm alias whose inner range already contains the new version', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      const manifest = `{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "my-alias": "npm:dependency@^1.0.0"
+  }
+}
+`;
+      tree.write('packages/my-lib/package.json', manifest);
+      const versionActions = await createVersionActions(tree, {
+        preserveMatchingDependencyRanges: true,
+      });
+
+      const logs = await versionActions.updateProjectDependencies(
+        tree,
+        createProjectGraph(),
+        { dependency: '1.1.0' }
+      );
+
+      expect(tree.read('packages/my-lib/package.json', 'utf-8')).toBe(manifest);
+      expect(logs).toEqual([]);
+    });
+
+    it('does not log an update when no entry was written', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      const manifest = `{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "my-alias": "npm:dependency",
+    "unrelated": "^1.0.0"
+  }
+}
+`;
+      tree.write('packages/my-lib/package.json', manifest);
+      const versionActions = await createVersionActions(tree);
+
+      const logs = await versionActions.updateProjectDependencies(
+        tree,
+        createProjectGraph(),
+        { dependency: '2.0.0', 'other-dependency': '3.0.0' }
+      );
+
+      expect(tree.read('packages/my-lib/package.json', 'utf-8')).toBe(manifest);
+      expect(logs).toEqual([]);
+    });
+
+    it('processes later manifests when all entries in an earlier manifest are preserved', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      const sourceManifest = `{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "my-alias": "workspace:dependency@^1.0.0"
+  }
+}
+`;
+      tree.write('packages/my-lib/package.json', sourceManifest);
+      tree.write('dist/my-lib/package.json', sourceManifest);
+      const versionActions = await createVersionActions(tree, {
+        manifestRootsToUpdate: [
+          {
+            path: 'packages/my-lib',
+            preserveLocalDependencyProtocols: true,
+          },
+          {
+            path: 'dist/my-lib',
+            preserveLocalDependencyProtocols: false,
+          },
+        ],
+      });
+
+      const logMessages = await versionActions.updateProjectDependencies(
+        tree,
+        createProjectGraph(),
+        { dependency: '2.0.0' }
+      );
+
+      expect(tree.read('packages/my-lib/package.json', 'utf-8')).toBe(
+        sourceManifest
+      );
+      expect(tree.read('dist/my-lib/package.json', 'utf-8')).toBe(`{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "my-alias": "npm:dependency@^2.0.0"
+  }
+}
+`);
+      expect(logMessages).toEqual([
+        '✍️  Updated 1 dependency in manifest: dist/my-lib/package.json',
+      ]);
+    });
+
+    it('counts a dependency preserved in multiple collections once', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      const manifest = `{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "my-alias": "workspace:dependency@^1.0.0"
+  },
+  "devDependencies": {
+    "other-alias": "workspace:dependency@^1.0.0"
+  }
+}
+`;
+      tree.write('packages/my-lib/package.json', manifest);
+      const versionActions = await createVersionActions(tree, {
+        preserveLocalDependencyProtocols: true,
+      });
+
+      const logMessages = await versionActions.updateProjectDependencies(
+        tree,
+        createProjectGraph(),
+        { dependency: '2.0.0' }
+      );
+
+      expect(tree.read('packages/my-lib/package.json', 'utf-8')).toBe(manifest);
+      expect(logMessages).toEqual([]);
+    });
+
+    it('preserves each aliased entry\'s own prefix with versionPrefix "auto"', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'packages/my-lib/package.json',
+        `{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "caret-alias": "npm:dependency@^1.0.0",
+    "tilde-alias": "npm:dependency@~1.0.0"
+  }
+}
+`
+      );
+      const versionActions = await createVersionActions(tree, {
+        versionPrefix: 'auto',
+      });
+
+      await versionActions.updateProjectDependencies(
+        tree,
+        createProjectGraph(),
+        { dependency: '^2.0.0' }
+      );
+
+      expect(tree.read('packages/my-lib/package.json', 'utf-8')).toBe(`{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "caret-alias": "npm:dependency@^2.0.0",
+    "tilde-alias": "npm:dependency@~2.0.0"
+  }
+}
+`);
+    });
+
+    it('preserves each plain entry\'s own prefix with versionPrefix "auto"', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'packages/my-lib/package.json',
+        `{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "dependency": "^1.0.0"
+  },
+  "devDependencies": {
+    "my-alias": "npm:dependency@~1.0.0"
+  },
+  "peerDependencies": {
+    "dependency": "1.0.0"
+  }
+}
+`
+      );
+      const versionActions = await createVersionActions(tree, {
+        versionPrefix: 'auto',
+      });
+
+      await versionActions.updateProjectDependencies(
+        tree,
+        createProjectGraph(),
+        { dependency: '^2.0.0' }
+      );
+
+      expect(tree.read('packages/my-lib/package.json', 'utf-8')).toBe(`{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "dependency": "^2.0.0"
+  },
+  "devDependencies": {
+    "my-alias": "npm:dependency@~2.0.0"
+  },
+  "peerDependencies": {
+    "dependency": "2.0.0"
+  }
+}
+`);
+    });
+
+    it('rejects a dependency version outside a preserved npm alias inner range', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      const manifest = `{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "my-alias": "npm:dependency@^1.0.0"
+  }
+}
+`;
+      tree.write('packages/my-lib/package.json', manifest);
+      const versionActions = await createVersionActions(tree, {
+        preserveMatchingDependencyRanges: true,
+      });
+
+      await expect(
+        versionActions.updateProjectDependencies(tree, createProjectGraph(), {
+          dependency: '2.0.0',
+        })
+      ).rejects.toThrow('is outside the current range');
+      expect(tree.read('packages/my-lib/package.json', 'utf-8')).toBe(manifest);
+    });
+  });
 });
 
 async function createVersionActions(
