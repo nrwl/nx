@@ -246,6 +246,18 @@ describe('run-state', () => {
         )
       );
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+
+      // The step kind decides whether a pre-marker retry may rerun a
+      // generator; the string 'false' must not read as no generator.
+      writeFileSync(
+        join(dir, 'run.json'),
+        JSON.stringify(
+          buildState({
+            steps: [{ ...validStep, hasGenerator: 'false' }] as never,
+          })
+        )
+      );
+      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
     });
 
     it('refuses a running step without a pid: nothing would ever reclassify it', () => {
@@ -513,6 +525,7 @@ describe('run-state', () => {
             status: 'succeeded',
             attempt: 2,
             dispenseCount: 3,
+            hasGenerator: false,
             pid: 123,
             startedAt: '2026-01-01T00:00:00.000Z',
             finishedAt: '2026-01-01T00:01:00.000Z',

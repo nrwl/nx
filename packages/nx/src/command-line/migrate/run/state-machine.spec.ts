@@ -565,7 +565,7 @@ describe('applyStepEvent', () => {
       }
     });
 
-    it('rejects retry from died when the generator half was never recorded', () => {
+    it('rejects retry from died when the generator half was never recorded, reading an unrecorded step kind as a generator', () => {
       const state = stateWithStep({ status: 'died', pid: 123 });
       const before = snapshot(state);
 
@@ -582,6 +582,69 @@ describe('applyStepEvent', () => {
       });
       expect(state).toEqual(before);
     });
+
+    it('accepts retry from died for a step with no generator half, marker or not', () => {
+      // A prompt-only worker never records the marker; its retry re-prompts
+      // the agent over the tree it already knows.
+      const state = stateWithStep({
+        status: 'died',
+        pid: 123,
+        hasGenerator: false,
+      });
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 1,
+        action: 'retry',
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0].status).toBe('pending');
+        expect(result.state.steps[0].attempt).toBe(2);
+      }
+    });
+
+    it('rejects retry from died for a generator step whose marker is absent', () => {
+      const state = stateWithStep({
+        status: 'died',
+        pid: 123,
+        hasGenerator: true,
+      });
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 1,
+        action: 'retry',
+      });
+
+      expect(result.kind).toBe('error');
+    });
+
+    it.each([
+      ['failed', 'retry'],
+      ['failed', 'retry-clean'],
+      ['died', 'retry-clean'],
+    ] as const)(
+      'keeps the step kind across a rearm (%s + %s)',
+      (status, action) => {
+        const state = stateWithStep({ status, hasGenerator: false });
+
+        const result = applyStepEvent(state, {
+          type: 'stepAction',
+          stepId: 'step-1',
+          attempt: 1,
+          action,
+        });
+
+        expect(result.kind).toBe('ok');
+        if (result.kind === 'ok') {
+          expect(result.state.steps[0].hasGenerator).toBe(false);
+        }
+      }
+    );
 
     it.each([
       [true, 'its generator had run'],

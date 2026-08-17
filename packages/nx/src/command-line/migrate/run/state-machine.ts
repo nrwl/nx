@@ -188,10 +188,11 @@ function applyStepAction(
     switch (action) {
       case 'retry':
         // Same no-reset rearm as from 'failed', and legal only once the
-        // generator half is recorded: that is what leaves the redispensed
-        // worker something to do (a hybrid's prompt, or the install and
-        // commit) other than reapplying the generator over its own changes.
-        if (step.generatorCompleted === true) {
+        // generator half is recorded (or the step never had one): that is
+        // what leaves the redispensed worker something to do (a prompt, or
+        // the install and commit) other than reapplying the generator over
+        // its own changes.
+        if (step.generatorCompleted === true || step.hasGenerator === false) {
           return commit(state, index, rearm(step, true));
         }
         return {
@@ -239,7 +240,8 @@ function adoptedSummary(step: MigrateStep): string {
 // already contains the commit that landed them; re-running the generator there
 // would apply them twice. They do not when the reset discards them, and
 // keeping the marker then would skip the generator and record a success for a
-// migration that never ran. The dependency baseline always survives: it tracks
+// migration that never ran. The step kind is a plan fact, not an attempt's,
+// and always survives. So does the dependency baseline: it tracks
 // the last dependencies that were installed, so dropping it here would leave
 // the retry with nothing to detect the previous attempt's package.json edits.
 function rearm(
@@ -253,6 +255,9 @@ function rearm(
     status: 'pending',
     attempt: step.attempt + 1,
     dispenseCount: step.dispenseCount,
+    ...(step.hasGenerator !== undefined
+      ? { hasGenerator: step.hasGenerator }
+      : {}),
     ...(step.depsHashAtDispense !== undefined
       ? { depsHashAtDispense: step.depsHashAtDispense }
       : {}),

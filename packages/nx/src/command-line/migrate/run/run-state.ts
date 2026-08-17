@@ -99,6 +99,10 @@ export interface MigrateStep {
   status: MigrateStepStatus;
   attempt: number;
   dispenseCount: number;
+  // Whether the planned migration has a generator half. Decides what a
+  // pre-marker retry costs: re-prompting the agent is the designed recovery,
+  // rerunning a generator can apply it twice. Absent is read as having one.
+  hasGenerator?: boolean;
   pid?: number;
   startedAt?: string;
   finishedAt?: string;
@@ -289,6 +293,7 @@ function isStepShape(value: unknown): boolean {
     isOneOf(MIGRATE_STEP_STATUSES, value.status) &&
     typeof value.attempt === 'number' &&
     typeof value.dispenseCount === 'number' &&
+    isOptionalBoolean(value.hasGenerator) &&
     isOptionalNumber(value.pid) &&
     isOptionalString(value.startedAt) &&
     isOptionalString(value.finishedAt) &&

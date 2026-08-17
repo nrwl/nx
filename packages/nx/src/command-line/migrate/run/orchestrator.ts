@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import { existsSync, mkdirSync, rmSync } from 'fs';
 import { dirname, join } from 'path';
-import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
+import { writeJsonFile } from '../../../utils/fileutils';
 import {
   getGitRepositoryStatus,
   getLatestCommitSha,
@@ -596,6 +596,7 @@ function buildSteps(sortedMigrations: PlannedMigration[]): MigrateStep[] {
     status: 'pending',
     attempt: 1,
     dispenseCount: 0,
+    hasGenerator: !isPromptOnlyMigration(m),
   }));
 }
 
@@ -820,8 +821,7 @@ function applyReconcileStepAction(
   if (
     action === 'retry' &&
     step.status === 'failed' &&
-    step.generatorCompleted !== true &&
-    stepHasGeneratorHalf(root, state, step)
+    generatorPending(step)
   ) {
     const safety = assessPreMarkerRetry(root, step);
     if (safety.kind === 'unsafe') {
@@ -1044,10 +1044,10 @@ function emitRetryFailed(
   // the tree (a direct fs or exec side effect, or a crash mid-flush); a
   // marker means only the install and commit are left, so plain retry is
   // safe outright. So is retrying a step with no generator half to rerun.
-  const retrySafety: PreMarkerRetrySafety =
-    step.generatorCompleted === true || !stepHasGeneratorHalf(root, state, step)
-      ? { kind: 'safe' }
-      : assessPreMarkerRetry(root, step);
+  const pending = generatorPending(step);
+  const retrySafety: PreMarkerRetrySafety = pending
+    ? assessPreMarkerRetry(root, step)
+    : { kind: 'safe' };
   const lines = [
     `Migration ${migrationId} failed${summary ? `: ${summary}` : ''}.`,
     `  started from: ${step.gitRefBefore ?? '(unknown)'}`,
@@ -1082,6 +1082,16 @@ function emitRetryFailed(
       : { then: reconcileCommand(root, runId, preselected) }),
     instructionLines: lines,
   });
+}
+
+// Whether the step's generator half may still have to run: it exists and no
+// attempt has recorded running it. Only then can a retry apply a generator
+// twice, so only then is a retry gated. A step with no
+// generator (prompt-only) is retried by re-prompting the agent over the tree
+// it already knows, which is the designed recovery; a step recorded before the
+// kind was persisted counts as having one.
+function generatorPending(step: MigrateStep): boolean {
+  return step.generatorCompleted !== true && step.hasGenerator !== false;
 }
 
 function retryOptionLine(
@@ -1194,33 +1204,6 @@ type PreMarkerRetrySafety =
   | { kind: 'warned'; warning: string }
   | { kind: 'unsafe'; reason: string };
 
-// Whether the step's planned migration has a generator half to rerun. The
-// pre-marker retry gate only exists for that rerun; a prompt-only step's
-// retry re-prompts the agent over the tree it already knows, which is the
-// designed recovery. Unresolvable (missing or edited snapshot) counts as
-// having one: wrongly gating a prompt step costs friction, wrongly freeing a
-// generator step can apply it twice.
-function stepHasGeneratorHalf(
-  root: string,
-  state: MigrateRunState,
-  step: MigrateStep
-): boolean {
-  const round = state.rounds.find((r) => r.index === step.roundIndex);
-  if (!round) return true;
-  try {
-    const migrations =
-      readJsonFile<{ migrations?: PlannedMigration[] }>(
-        join(runDir(root, state.runId), round.planSnapshot)
-      ).migrations ?? [];
-    const migration = migrations.find(
-      (m) => `${m.package}:${m.name}` === step.migrationId
-    );
-    return migration ? !isPromptOnlyMigration(migration) : true;
-  } catch {
-    return true;
-  }
-}
-
 function assessPreMarkerRetry(
   root: string,
   step: MigrateStep
@@ -1267,10 +1250,10 @@ function emitDied(
   const head = getLatestCommitSha(root);
   const tree = dirtyTreeSummary(root);
   const cleanRetry = canOfferCleanRetry(root, state, step, head);
-  // The generator half is recorded, so a retry that keeps the tree as it
-  // stands has the rest of the step left to run: a hybrid's prompt, or the
-  // install and commit its worker never reached.
-  const resume = step.generatorCompleted === true;
+  // The generator half is recorded (or the step never had one), so a retry
+  // that keeps the tree as it stands has the rest of the step left to run: a
+  // prompt, or the install and commit its worker never reached.
+  const resume = !generatorPending(step);
   const lines = [
     `The worker for ${migrationId} died; its process is gone.`,
     `  started from: ${ref ?? '(unknown)'}`,

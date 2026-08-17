@@ -282,7 +282,7 @@ describe('orchestrator', () => {
       const migrationsJson = {
         migrations: [
           genMig('@nx/js', 'a', '1.0.0'),
-          genMig('@nx/js', 'b', '2.0.0'),
+          promptMig('@nx/js', 'b', '2.0.0'),
         ],
       };
 
@@ -304,6 +304,9 @@ describe('orchestrator', () => {
         '@nx/js:a',
         '@nx/js:b',
       ]);
+      // The step kind is recorded from the plan: it decides how a step whose
+      // generator marker is absent may be retried.
+      expect(state.steps.map((s) => s.hasGenerator)).toEqual([true, false]);
       // The first migration is dispensed with its pre-migration ref.
       expect(state.steps[0].status).toBe('dispensed');
       expect(state.steps[0].gitRefBefore).toBe(
@@ -1628,6 +1631,45 @@ describe('orchestrator', () => {
       expect(block.payload.then).toContain('--step-action=retry-clean');
     });
 
+    it('offers and preselects retry for a died prompt-only step with commits off, never adopt alone', async () => {
+      // The worker died between starting and parking the prompt: nothing was
+      // emitted or applied, and there is no generator to rerun. Adopt alone
+      // would record a success the run never produced.
+      jest.spyOn(process, 'kill').mockImplementation(() => {
+        throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
+      });
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:p', 'running', {
+            pid: 999999,
+            startedAt: '2026-01-01T00:00:00.000Z',
+            hasGenerator: false,
+          }),
+        ],
+        createCommits: false,
+        plan: [promptMig('@nx/js', 'p')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
+      expect(block.action).toBe('died');
+      expect(block.payload.instructions).toMatch(/--step-action=retry(?!-)/);
+      expect(block.payload.instructions).not.toContain('retry-clean');
+      expect(block.payload.then).toMatch(/--step-action=retry$/);
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry',
+      });
+
+      const step = readRunState(dir).steps[0];
+      expect(step.attempt).toBe(2);
+      expect(step.status).toBe('dispensed');
+      expect(step.hasGenerator).toBe(false);
+    });
+
     it('names the single remaining option instead of asking the agent to choose', async () => {
       jest.spyOn(process, 'kill').mockImplementation(() => {
         throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
@@ -2384,7 +2426,9 @@ describe('orchestrator', () => {
       // the tree it already knows, which is the designed recovery.
       mockGetWorkingTreeStatus.mockReturnValue('dirty');
       const dir = setupRun('run-1', {
-        steps: [migStep('step-1', '@nx/js:p', 'failed')],
+        steps: [
+          migStep('step-1', '@nx/js:p', 'failed', { hasGenerator: false }),
+        ],
         plan: [promptMig('@nx/js', 'p')],
       });
 
@@ -2648,7 +2692,9 @@ describe('orchestrator', () => {
 
     it('does not refold a stale handoff after a retry re-arms the step', async () => {
       const dir = setupRun('run-1', {
-        steps: [migStep('step-1', '@nx/js:p', 'failed')],
+        steps: [
+          migStep('step-1', '@nx/js:p', 'failed', { hasGenerator: false }),
+        ],
         plan: [promptMig('@nx/js', 'p')],
       });
       // Stale handoff from the failed attempt, still on disk.
