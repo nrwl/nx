@@ -39,6 +39,8 @@ Review findings are mostly independent of each other, so the tree is shallow and
 
 Apply each round's answers before asking the next, rather than collecting everything and acting at the end — the user should be able to stop after any round and keep the value of what is already decided.
 
+**Close by briefing again.** When the frontier is empty, re-render the opening inventory against the post-grill state, showing what moved — dropped, re-tiered, kept — and ask whether it matches what the user decided. Answers are given one round at a time against one item at a time, so nobody tracks the cumulative effect in their head, and the material has been mutating the whole way. This is a confirmation, not another round: do not reopen a settled item or raise something the grill never asked about. If the user's reply opens something genuinely new, that is a new round — grill it properly.
+
 ---
 
 The round/frontier method above is adapted from [mattpocock/skills](https://github.com/mattpocock/skills) (`skills/productivity/grilling`), MIT-licensed, © 2026 Matt Pocock.

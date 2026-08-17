@@ -121,6 +121,29 @@ Apply each round's answers before asking the next — drop, re-tier, or keep —
 `/review-pr` Step 7's rule: **only Critical blocks**, at any quantity. Dropping the last Critical
 moves a PR from `needs-changes` to `lgtm`.
 
+**When the frontier is empty, brief again** — the same inventory the grill opened with, re-rendered
+against the post-grill draft, showing what moved rather than only where it landed:
+
+```text
+Grill complete — PR #<N>
+
+Verdict: <before> → <after>          (or "unchanged: <verdict>")
+
+Dropped (<n>)
+  <file:line> — <claim, one clause> — <the maintainer's reason, in their words>
+Re-tiered (<n>)
+  <file:line> — <claim, one clause> — critical→important: <reason>
+Kept (<n>)
+  <file:line> — <claim, one clause>
+```
+
+The maintainer answered one round at a time, against one finding at a time; nobody holds the
+cumulative effect of six answers in their head. Ask whether it matches what they decided, and fix it
+here if not — this is the last point before Step 4 offers to post it to a public PR.
+
+**This is a confirmation, not another round.** Do not reopen a settled finding or raise a concern the
+grill did not. If the maintainer's reply opens something genuinely new, grill it as a new round.
+
 Record every drop and re-tier under `## Grill` in the draft file, one line each:
 
 ```markdown

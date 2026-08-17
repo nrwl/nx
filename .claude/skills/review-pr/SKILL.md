@@ -1520,6 +1520,40 @@ stop after any round and keep what is already decided. Drop the finding, re-tier
 Then **recompute the verdict** with Step 7's rules — dropping the last Critical moves a PR from `needs-changes` to
 `lgtm`, and that is the whole point of the step.
 
+### Brief again when the frontier is empty
+
+**The grill closes with the same briefing it opened with, re-rendered against the post-grill draft.**
+Symmetry is the point: the opening brief is what the maintainer judged _from_, so the closing brief
+is the only way they can check that what got applied is what they meant. Answers are given one round
+at a time, against one finding at a time — nobody tracks the cumulative effect of six answers in
+their head, and the draft has been silently mutating the whole way.
+
+Show what moved, not just where it landed:
+
+```text
+Grill complete — PR #<N>
+
+Verdict: <before> → <after>          (or "unchanged: <verdict>")
+
+Dropped (<n>)
+  <file:line> — <claim, one clause> — <the maintainer's reason, in their words>
+Re-tiered (<n>)
+  <file:line> — <claim, one clause> — critical→important: <reason>
+Kept (<n>)
+  <file:line> — <claim, one clause>
+
+Draft: <TRIAGE_DIR>/<N>.md
+```
+
+Then ask one closing question: does this match what they decided? A correction here is cheap and
+costs one edit; the same correction after Step 9 costs a whole re-review, because the sandbox that
+could settle it is gone.
+
+**This is a confirmation, not another round.** Do not reopen a settled finding, argue a drop, or
+introduce a concern the grill did not raise — the frontier is empty, and the closing brief has no
+license to refill it. If the maintainer's answer to the closing question opens something genuinely
+new, that is a new round: go back and grill it properly.
+
 Record every drop and re-tier under `## Grill` in the triage file, one line each:
 
 ```markdown
