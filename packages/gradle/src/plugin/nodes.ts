@@ -138,22 +138,45 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
       const results = [];
       const normalizedOptions = normalizeOptions(options);
 
-      const buildFileProjectRoots = allBuildFiles.map((f) => dirname(f));
-      const buildFileHashes = await calculateHashesForCreateNodes(
-        buildFileProjectRoots,
+      // A Gradle project need not own a build file — `project(':core') { }` blocks in an
+      // ancestor configure it instead. Drive off the report's project roots and attribute each
+      // to the nearest ancestor build file, rather than assuming one project per build file.
+      const knownBuildFiles = new Set(allBuildFiles.map((f) => normalizePath(f)));
+      const buildFileFor = (projectRoot: string): string | undefined => {
+        let dir = projectRoot;
+        while (true) {
+          for (const name of ['build.gradle', 'build.gradle.kts']) {
+            const candidate = dir === '.' ? name : `${dir}/${name}`;
+            if (knownBuildFiles.has(candidate)) {
+              return candidate;
+            }
+          }
+          if (dir === '.' || dir === '') {
+            return undefined;
+          }
+          const parent = dirname(dir);
+          dir = parent === dir ? '.' : parent;
+        }
+      };
+
+      // Report keys are workspace-relative project roots with `/` separators.
+      const projectRoots = Object.keys(nodes).map((root) => normalizePath(root));
+      const projectHashes = await calculateHashesForCreateNodes(
+        projectRoots,
         normalizedOptions ?? {},
         context
       );
 
-      for (let i = 0; i < allBuildFiles.length; i++) {
-        const gradleFilePath = allBuildFiles[i];
-        const projectRoot = buildFileProjectRoots[i];
-        const hash = buildFileHashes[i];
+      for (let i = 0; i < projectRoots.length; i++) {
+        const normalizedProjectRoot = projectRoots[i];
+        const gradleFilePath = buildFileFor(normalizedProjectRoot);
+        if (!gradleFilePath) {
+          continue;
+        }
+        const hash = projectHashes[i];
 
-        // Get project from cache or nodes (report keys are workspace-relative
-        // with `/` separators)
         if (!pluginCache.has(hash)) {
-          const nodeProject = nodes[normalizePath(projectRoot)];
+          const nodeProject = nodes[normalizedProjectRoot];
           if (nodeProject) {
             pluginCache.set(hash, nodeProject);
           }
@@ -163,8 +186,6 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
         if (!project) {
           continue;
         }
-
-        const normalizedProjectRoot = normalizePath(projectRoot);
 
         // Result 1: Gradle-detected configuration (without nxConfig)
         const gradleConfig = stripNxConfig(project);

@@ -2,13 +2,14 @@ import {
   CreateDependencies,
   CreateDependenciesContext,
   DependencyType,
+  ImplicitDependency,
   logger,
   normalizePath,
   StaticDependency,
   validateDependency,
   workspaceRoot,
 } from '@nx/devkit';
-import { isAbsolute, join, relative } from 'node:path';
+import { dirname, isAbsolute, join, relative } from 'node:path';
 
 import {
   getCurrentProjectGraphReport,
@@ -42,10 +43,11 @@ export const createDependencies: CreateDependencies<
   dependenciesFromReport.forEach((dependencyFromPlugin: StaticDependency) => {
     try {
       // Report paths are workspace-relative with `/` separators
+      const sourceProject = Object.values(context.projects).find(
+        (project) => dependencyFromPlugin.source === project.root
+      );
       const sourceProjectName =
-        Object.values(context.projects).find(
-          (project) => dependencyFromPlugin.source === project.root
-        )?.name ?? dependencyFromPlugin.source;
+        sourceProject?.name ?? dependencyFromPlugin.source;
       const targetProjectName =
         Object.values(context.projects).find(
           (project) => dependencyFromPlugin.target === project.root
@@ -58,12 +60,23 @@ export const createDependencies: CreateDependencies<
       ) {
         return;
       }
-      const dependency: StaticDependency = {
-        source: sourceProjectName,
-        target: targetProjectName,
-        type: DependencyType.static,
-        sourceFile,
-      };
+      // A project configured from an ancestor build file (`project(':core') { }`) is attributed to
+      // that ancestor, which lives outside the project. Nx only accepts a sourceFile that belongs
+      // to the source project, so such an edge is recorded as implicit rather than dropped.
+      const ownsSourceFile =
+        !!sourceProject && dirname(sourceFile) === sourceProject.root;
+      const dependency: StaticDependency | ImplicitDependency = ownsSourceFile
+        ? {
+            source: sourceProjectName,
+            target: targetProjectName,
+            type: DependencyType.static,
+            sourceFile,
+          }
+        : {
+            source: sourceProjectName,
+            target: targetProjectName,
+            type: DependencyType.implicit,
+          };
       validateDependency(dependency, context);
       dependencies.push(dependency);
     } catch {
