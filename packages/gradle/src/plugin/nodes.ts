@@ -141,7 +141,9 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
       // A Gradle project need not own a build file — `project(':core') { }` blocks in an
       // ancestor configure it instead. Drive off the report's project roots and attribute each
       // to the nearest ancestor build file, rather than assuming one project per build file.
-      const knownBuildFiles = new Set(allBuildFiles.map((f) => normalizePath(f)));
+      const knownBuildFiles = new Set(
+        allBuildFiles.map((f) => normalizePath(f))
+      );
       const buildFileFor = (projectRoot: string): string | undefined => {
         let dir = projectRoot;
         while (true) {
@@ -160,7 +162,9 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
       };
 
       // Report keys are workspace-relative project roots with `/` separators.
-      const projectRoots = Object.keys(nodes).map((root) => normalizePath(root));
+      const projectRoots = Object.keys(nodes).map((root) =>
+        normalizePath(root)
+      );
       const projectHashes = await calculateHashesForCreateNodes(
         projectRoots,
         normalizedOptions ?? {},
