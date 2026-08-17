@@ -91,6 +91,7 @@ Favor correctness over cleverness. Keep coordinator-only responsibilities in the
    - Secrets that must not be forwarded.
    - Set `NX_CLOUD_CONTINUOUS_ASSIGNMENT: true` in the global environment for the main orchestration job unless the existing pipeline has a documented reason not to.
    - Do not recommend `--with-env-vars=auto` unless the workflow already uses it or the user explicitly accepts broad forwarding.
+   - Do not pass system or CI platform identifier environment variables via `--with-env-vars`. In particular, exclude `CI`, `CIRCLECI`, `TRAVIS`, `GITHUB_ACTIONS`, `BITBUCKET_BUILD_NUMBER`, `BUILD_BUILDID`, `AGENT_NAME`, `GITLAB_CI`, and `NX_CLOUD_VERSION`; forwarding these can make an Nx Agent identify itself as the CI coordinator or as the wrong CI platform.
    - Never print full env in agent setup.
 
 6. Map reusable CI steps:
