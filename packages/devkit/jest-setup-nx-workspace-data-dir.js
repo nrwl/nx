@@ -9,10 +9,10 @@
 // so this moves the read (and its write) into a temp dir CI allows.
 const { join } = require('node:path');
 const { tmpdir } = require('node:os');
-const { mkdtempSync } = require('node:fs');
+const { mkdtempSync, rmSync } = require('node:fs');
 
 if (!process.env.NX_WORKSPACE_DATA_DIRECTORY) {
-  process.env.NX_WORKSPACE_DATA_DIRECTORY = mkdtempSync(
-    join(tmpdir(), 'nx-devkit-spec-workspace-data-')
-  );
+  const dir = mkdtempSync(join(tmpdir(), 'nx-devkit-spec-workspace-data-'));
+  process.env.NX_WORKSPACE_DATA_DIRECTORY = dir;
+  process.on('exit', () => rmSync(dir, { recursive: true, force: true }));
 }
