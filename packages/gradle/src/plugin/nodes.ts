@@ -11,6 +11,7 @@ import {
   workspaceRoot,
   ProjectGraphExternalNode,
   normalizePath,
+  logger,
 } from '@nx/devkit';
 import { dirname, isAbsolute, join } from 'node:path';
 
@@ -110,8 +111,7 @@ function extractNxConfigOnly(
 export const createNodes: CreateNodes<GradlePluginOptions> = [
   gradleConfigAndTestGlob,
   async (files, options, context) => {
-    const { buildFiles: buildFilesFromSplitConfigFiles, gradlewFiles } =
-      splitConfigFiles(files);
+    const { gradlewFiles } = splitConfigFiles(files);
     const optionsHash = hashObject(options);
     const cachePath = join(
       workspaceDataDirectory,
@@ -127,44 +127,11 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
       options
     );
     const report = getCurrentProjectGraphReport();
-    const { nodes, externalNodes = {}, buildFiles = [] } = report;
-
-    // Combine buildFilesFromSplitConfigFiles and buildFiles, making each value distinct
-    const allBuildFiles = Array.from(
-      new Set([...buildFilesFromSplitConfigFiles, ...buildFiles])
-    );
+    const { nodes, externalNodes = {}, buildFileByProjectRoot = {} } = report;
 
     try {
       const results = [];
       const normalizedOptions = normalizeOptions(options);
-
-      // A Gradle project need not own a build file — `project(':core') { }` blocks in an
-      // ancestor configure it instead. Drive off the report's project roots and attribute each
-      // to the nearest ancestor build file, rather than assuming one project per build file.
-      // Indexed by directory rather than matched against a fixed set of names: a build file may
-      // be renamed via `rootProject.buildFileName`, and those reach allBuildFiles through the report.
-      const buildFilesByDir = new Map<string, string>();
-      for (const file of allBuildFiles) {
-        const normalized = normalizePath(file);
-        const dir = dirname(normalized);
-        if (!buildFilesByDir.has(dir)) {
-          buildFilesByDir.set(dir, normalized);
-        }
-      }
-      const buildFileFor = (projectRoot: string): string | undefined => {
-        let dir = projectRoot;
-        while (true) {
-          const candidate = buildFilesByDir.get(dir);
-          if (candidate) {
-            return candidate;
-          }
-          if (dir === '.' || dir === '') {
-            return undefined;
-          }
-          const parent = dirname(dir);
-          dir = parent === dir ? '.' : parent;
-        }
-      };
 
       // Report keys are workspace-relative project roots with `/` separators — except for a
       // project outside the workspace (an `includeBuild("../x")`), which the reporter deliberately
@@ -181,8 +148,17 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
 
       for (let i = 0; i < projectRoots.length; i++) {
         const normalizedProjectRoot = projectRoots[i];
-        const gradleFilePath = buildFileFor(normalizedProjectRoot);
+        // A Gradle project need not own a build file — `project(':core') { }` blocks in an
+        // ancestor configure it instead — so the report names which file configures each project
+        // rather than one project being inferred per build file.
+        const gradleFilePath = buildFileByProjectRoot[normalizedProjectRoot];
         if (!gradleFilePath) {
+          // Unreachable once `@nx/gradle:init` has run: it writes a build file next to every
+          // settings.gradle, so every project has one somewhere up its ancestry. Reachable on a
+          // plugin older than the pairing, or when the plugin was applied without the generator.
+          logger.verbose(
+            `[@nx/gradle] no build file reported for "${normalizedProjectRoot}"; skipping it. Upgrade dev.nx.gradle.project-graph if projects are missing.`
+          );
           continue;
         }
         // calculateHashesForCreateNodes hashes the files under the root, not the root itself, so

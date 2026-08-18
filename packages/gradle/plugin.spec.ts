@@ -96,7 +96,7 @@ describe('@nx/gradle/plugin', () => {
           },
         ],
         [
-          "proj/build.gradle",
+          "proj/application/build.gradle",
           {
             "externalNodes": {},
             "projects": {

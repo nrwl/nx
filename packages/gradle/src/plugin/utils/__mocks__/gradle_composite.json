@@ -1,13 +1,17 @@
 {
-  "buildFiles": ["nested/nested/proj/build.gradle"],
+  "buildFiles": [
+    "nested/nested/proj/build.gradle"
+  ],
   "nodes": {
     "nested/nested/proj": {
       "targets": {
         "buildEnvironment": {
           "cache": true,
           "metadata": {
-            "description": "Displays all buildscript dependencies declared in root project \u0027my-composite\u0027.",
-            "technologies": ["gradle"]
+            "description": "Displays all buildscript dependencies declared in root project 'my-composite'.",
+            "technologies": [
+              "gradle"
+            ]
           },
           "command": "./gradlew :buildEnvironment",
           "options": {
@@ -17,9 +21,13 @@
       },
       "metadata": {
         "targetGroups": {
-          "help": ["buildEnvironment"]
+          "help": [
+            "buildEnvironment"
+          ]
         },
-        "technologies": ["gradle"]
+        "technologies": [
+          "gradle"
+        ]
       },
       "name": "my-composite"
     }
@@ -35,5 +43,8 @@
       "target": "projectRoot/my-utils",
       "sourceFile": "projectRoot/build.gradle.kts"
     }
-  ]
+  ],
+  "buildFileByProjectRoot": {
+    "nested/nested/proj": "nested/nested/proj/build.gradle"
+  }
 }

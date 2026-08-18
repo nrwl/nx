@@ -93,6 +93,107 @@ class ProcessTaskUtilsTest {
   }
 
   @Test
+  fun `test a task whose dependency set cannot be fully resolved is not cacheable`() {
+    val project = ProjectBuilder.builder().build()
+    val task = project.tasks.register("packagesOtherProject").get()
+    // A qualified path forces the bypass, and a FileCollection cannot be resolved without
+    // configuring the project that produces it — so the dependency set is knowably short.
+    task.dependsOn(":other:jar")
+    task.dependsOn(project.files("some-input.txt"))
+
+    val result =
+        processTask(
+            task,
+            projectBuildPath = ":project",
+            projectRoot = project.projectDir.path,
+            workspaceRoot = project.rootDir.path,
+            externalNodes = mutableMapOf(),
+            dependencies = mutableSetOf(),
+            targetNameOverrides = emptyMap(),
+            gitIgnoreClassifier = GitIgnoreClassifier(project.rootDir),
+            project = project)
+
+    assertEquals(
+        false, result["cache"], "caching a short dependency set risks a stale hit: $result")
+  }
+
+  @Test
+  fun `test a task with a resolvable dependency set stays cacheable`() {
+    val project = ProjectBuilder.builder().build()
+    val task = project.tasks.register("packagesThisProject").get()
+    // A qualified path alone is fully recovered by resolvePathDeps, so nothing is missing.
+    task.dependsOn(":other:jar")
+
+    val result =
+        processTask(
+            task,
+            projectBuildPath = ":project",
+            projectRoot = project.projectDir.path,
+            workspaceRoot = project.rootDir.path,
+            externalNodes = mutableMapOf(),
+            dependencies = mutableSetOf(),
+            targetNameOverrides = emptyMap(),
+            gitIgnoreClassifier = GitIgnoreClassifier(project.rootDir),
+            project = project)
+
+    assertEquals(true, result["cache"])
+  }
+
+  @Test
+  fun `test a self-referential dependsOn terminates`() {
+    val project = ProjectBuilder.builder().build()
+    val task = project.tasks.register("cyclicDeps").get()
+    // A literal cyclic list cannot reach dependsOn — Gradle stores values in a Set, and hashing a
+    // self-referential list overflows before we ever see it. It is reachable only through a
+    // Callable, whose result we expand ourselves without Gradle ever hashing it.
+    val cyclic = mutableListOf<Any>(":other:jar")
+    cyclic.add(cyclic)
+    task.dependsOn(java.util.concurrent.Callable { cyclic })
+
+    val result =
+        processTask(
+            task,
+            projectBuildPath = ":project",
+            projectRoot = project.projectDir.path,
+            workspaceRoot = project.rootDir.path,
+            externalNodes = mutableMapOf(),
+            dependencies = mutableSetOf(),
+            targetNameOverrides = emptyMap(),
+            gitIgnoreClassifier = GitIgnoreClassifier(project.rootDir),
+            project = project)
+
+    assertNotNull(result["executor"])
+  }
+
+  @Test
+  fun `test a Callable dependsOn is expanded rather than dropped`() {
+    val project = ProjectBuilder.builder().build()
+    java.io.File(project.projectDir, "build.gradle").writeText("")
+    val produced = project.tasks.register("producedByClosure").get()
+    val task = project.tasks.register("consumesClosure").get()
+    // `dependsOn { … }` stores a Callable; Gradle resolves it by calling it.
+    task.dependsOn(java.util.concurrent.Callable { produced })
+    task.dependsOn(":other:jar") // forces the bypass
+
+    val result =
+        processTask(
+            task,
+            projectBuildPath = ":project",
+            projectRoot = project.projectDir.path,
+            workspaceRoot = project.rootDir.path,
+            externalNodes = mutableMapOf(),
+            dependencies = mutableSetOf(),
+            targetNameOverrides = emptyMap(),
+            gitIgnoreClassifier = GitIgnoreClassifier(project.rootDir),
+            project = project)
+
+    val dependsOn = result["dependsOn"]?.toString() ?: ""
+    assertTrue(
+        dependsOn.contains("producedByClosure"),
+        "the closure's task must survive the bypass, got $dependsOn")
+  }
+
+  @Test
   fun `test processTask basic properties`() {
     val project = ProjectBuilder.builder().build()
     val task = project.tasks.register("compileJava").get()

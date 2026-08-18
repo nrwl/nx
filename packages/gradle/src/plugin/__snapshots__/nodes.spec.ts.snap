@@ -40,7 +40,7 @@ exports[`@nx/gradle/plugin/nodes should create nodes based on gradle 1`] = `
     },
   ],
   [
-    "proj/build.gradle",
+    "proj/application/build.gradle",
     {
       "externalNodes": {},
       "projects": {
