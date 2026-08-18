@@ -377,7 +377,7 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(diedBlock.payload.then).toBeUndefined();
 
     runCommand(`git reset --hard ${gitRefBefore}`, { failOnError: true });
-    runCommand('git clean -fd', { failOnError: true });
+    runCommand('git clean -fd -e .nx/migrate-runs', { failOnError: true });
 
     const complete = driveToComplete(runDispensed(retryClean));
     expect(complete.action).toBe('complete');

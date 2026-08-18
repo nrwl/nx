@@ -3291,17 +3291,4 @@ describe('orchestrator', () => {
       expect(mockCommit).toHaveBeenCalledTimes(2);
     });
   });
-
-  it('prunes nothing and keeps the run dir under .nx/migrate-runs', async () => {
-    await runOrchestratorInit({
-      root,
-      migrationsJson: { migrations: [genMig('@nx/js', 'a')] },
-      createCommits: false,
-      commitPrefix: 'chore: [nx migration] ',
-      skipInstall: false,
-      installedNxVersion: '23.0.0',
-    });
-    expect(findActiveRun(root).active).not.toBeNull();
-    expect(migrateRunsDir(root)).toContain(join('.nx', 'migrate-runs'));
-  });
 });

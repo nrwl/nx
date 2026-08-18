@@ -1595,8 +1595,9 @@ function appendCommit(
 }
 
 interface DispenseBaselines {
-  // Undefined when there is no HEAD to capture; every field here replaces what
-  // the step held, so an absent value clears rather than inherits.
+  // Undefined when there is no HEAD to capture. This and treeCleanAtDispense
+  // replace what the step held, so an absent value clears rather than
+  // inherits; depsHashAtDispense is kept once set (see setDispenseBaselines).
   gitRefBefore: string | undefined;
   treeCleanAtDispense: boolean;
   // Null when the probe failed. Recording nothing leaves the step with no

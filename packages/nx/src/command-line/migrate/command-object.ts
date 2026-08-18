@@ -113,14 +113,15 @@ function withMigrationOptions(yargs: Argv) {
       type: 'string',
     })
     .option('runId', {
-      // The orchestrated run to record into, or to reconcile when it comes
-      // without `--run-migration`. Hidden with the orchestrator itself.
+      // Hidden with the orchestrator itself.
+      describe:
+        'The orchestrated migrate run to record a single migration into, or to reconcile when given without --run-migration.',
       type: 'string',
       hidden: true,
     })
     .option('stepAction', {
-      // Decision relay for an orchestrated reconcile (`--run-id` without
-      // `--run-migration`); resolves the single failed or died step.
+      describe:
+        'How an orchestrated reconcile resolves its single failed or died step.',
       choices: STEP_ACTIONS,
       type: 'string',
       hidden: true,
