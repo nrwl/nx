@@ -30,6 +30,12 @@ export interface ProjectGraphReport {
   dependencies: Array<StaticDependency>;
   externalNodes?: Record<string, ProjectGraphExternalNode>;
   buildFiles?: string[];
+  /**
+   * Project root -> the build file that configures it. Each per-project report names one of each,
+   * so the pairing is exact; flattening only `buildFiles` would lose which project it belonged to.
+   * Absent for reports written by a plugin older than 0.1.25.
+   */
+  buildFileByProjectRoot?: Record<string, string>;
 }
 
 export interface ProjectGraphReportCache extends ProjectGraphReport {
@@ -214,6 +220,7 @@ export function processNxProjectGraph(
     externalNodes: {},
   };
   const allBuildFiles = new Set<string>();
+  const buildFileByProjectRoot: Record<string, string> = {};
 
   while (index < projectGraphLines.length) {
     const line = projectGraphLines[index].trim();
@@ -253,6 +260,15 @@ export function processNxProjectGraph(
         projectGraphReportJson.buildFiles.forEach((buildFile) =>
           allBuildFiles.add(buildFile)
         );
+        // One report describes one project, so its single build file is that project's.
+        const [buildFile] = projectGraphReportJson.buildFiles;
+        if (buildFile) {
+          for (const projectRoot of Object.keys(
+            projectGraphReportJson.nodes ?? {}
+          )) {
+            buildFileByProjectRoot[projectRoot] = buildFile;
+          }
+        }
       }
     }
     index++;
@@ -260,6 +276,8 @@ export function processNxProjectGraph(
 
   // Convert Set to array for the final result
   projectGraphReportForAllProjects.buildFiles = Array.from(allBuildFiles);
+  projectGraphReportForAllProjects.buildFileByProjectRoot =
+    buildFileByProjectRoot;
 
   return projectGraphReportForAllProjects;
 }

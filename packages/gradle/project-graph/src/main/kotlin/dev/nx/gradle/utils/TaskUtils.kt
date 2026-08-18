@@ -7,11 +7,14 @@ import dev.nx.gradle.data.ExternalDepData
 import dev.nx.gradle.data.ExternalNode
 import java.io.File
 import java.util.Collections
+import java.util.IdentityHashMap
 import java.util.WeakHashMap
+import java.util.concurrent.Callable
 import kotlin.io.path.Path
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.internal.TaskInternal
 import org.gradle.api.internal.provider.ProviderInternal
@@ -89,18 +92,49 @@ private fun pathStringDeps(task: Task): List<String> {
  */
 private fun flattenDependsOn(values: Iterable<*>): List<Any> {
   val flattened = mutableListOf<Any>()
+  // Gradle's own DefaultTaskDependency.visitDependencies drains an ArrayDeque with no cycle
+  // guard, so a self-referential structure loops forever there. Identity semantics rather than
+  // equals/hashCode: the elements are arbitrary user objects, and two equal-but-distinct
+  // collections are separate work.
+  val seen = Collections.newSetFromMap(IdentityHashMap<Any, Boolean>())
   fun visit(value: Any?) {
     when (value) {
       null -> {}
-      is List<*> -> value.forEach(::visit)
-      is Set<*> -> value.forEach(::visit)
-      is Array<*> -> value.forEach(::visit)
+      is List<*> -> if (seen.add(value)) value.forEach(::visit)
+      is Set<*> -> if (seen.add(value)) value.forEach(::visit)
+      is Array<*> -> if (seen.add(value)) value.forEach(::visit)
+      // `dependsOn { … }` stores a Callable. Gradle resolves it by calling it, and so do we —
+      // the result is classified with the same rules, so no path reaches Gradle's resolver.
+      is Callable<*> ->
+          if (seen.add(value)) {
+            try {
+              visit(value.call())
+            } catch (e: Exception) {
+              flattened.add(value)
+            }
+          }
       else -> flattened.add(value)
     }
   }
   values.forEach(::visit)
   return flattened
 }
+
+/**
+ * Entries the bypass cannot resolve without re-entering project configuration: a [FileCollection]
+ * or a raw [org.gradle.api.tasks.TaskDependency] only yields its tasks by resolving, and for a
+ * configuration-backed collection that configures the producing project. A task carrying one is
+ * reported uncacheable rather than cached against a dependency set we know is short.
+ */
+private fun hasUnresolvableDeps(task: Task): Boolean =
+    try {
+      flattenDependsOn(task.dependsOn).any {
+        it is FileCollection || it is org.gradle.api.tasks.TaskDependency
+      }
+    } catch (e: Exception) {
+      task.logger.info("Cannot inspect dependsOn for ${task.path}: ${e.message}")
+      false
+    }
 
 /**
  * Only *qualified* paths need path-based recovery. A bare name (`classes`) resolves inside the
@@ -210,7 +244,10 @@ private fun processTaskImpl(
   val logger = task.logger
   logger.info("NxProjectReportTask: process $task for $projectRoot")
   val target = mutableMapOf<String, Any?>()
-  target["cache"] = isCacheable(task)
+  // Caching a target whose dependency set we know is incomplete risks a stale hit, which is worse
+  // than not caching it. Only tasks that both bypass and carry unresolvable entries are affected.
+  val dependenciesFullyKnown = !(bypassesTaskDependencies(task) && hasUnresolvableDeps(task))
+  target["cache"] = isCacheable(task) && dependenciesFullyKnown
 
   val continuous = isContinuous(task)
   if (continuous) {
