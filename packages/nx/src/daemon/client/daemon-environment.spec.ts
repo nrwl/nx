@@ -1,5 +1,6 @@
 import {
   applyDaemonEnvFromClient,
+  getAppliedDaemonClientEnv,
   getDaemonClientEnvGeneration,
   getDaemonEnv,
   getDaemonSpawnEnv,
@@ -327,10 +328,12 @@ describe('daemon environment', () => {
       process.env.NX_PROJECT_GLOB_CACHE = 'false';
       process.env.NX_CACHE_PROJECTS_CONFIG = 'false';
 
-      const payload = { ...process.env, FOO: 'bar' };
-      delete payload.NX_PROJECT_GLOB_CACHE;
-      delete payload.NX_CACHE_PROJECTS_CONFIG;
-      const changed = applyDaemonEnvFromClient(payload);
+      // baseline the applied client env so only FOO is reported below
+      const base = { ...process.env };
+      delete base.NX_PROJECT_GLOB_CACHE;
+      delete base.NX_CACHE_PROJECTS_CONFIG;
+      applyDaemonEnvFromClient(base);
+      const changed = applyDaemonEnvFromClient({ ...base, FOO: 'bar' });
 
       expect(changed).toEqual(['FOO']);
       expect(process.env.NX_PROJECT_GLOB_CACHE).toBe('false');
@@ -347,6 +350,8 @@ describe('daemon environment', () => {
     });
 
     it('should apply and delete the Nx Cloud auth tokens like any forwarded var', () => {
+      // baseline the applied client env so only the token is reported below
+      applyDaemonEnvFromClient({ ...process.env });
       const added = applyDaemonEnvFromClient({
         ...process.env,
         NX_CLOUD_ACCESS_TOKEN: 'token',
@@ -391,6 +396,55 @@ describe('daemon environment', () => {
       // spanning only no-op applies must still be allowed to persist.
       applyDaemonEnvFromClient(withProbe);
       expect(getDaemonClientEnvGeneration()).toBe(base + 1);
+    });
+  });
+
+  describe('applyDaemonEnvFromClient', () => {
+    it('reports a client change that process.env already matches', () => {
+      // A config the daemon evaluated wrote the value the next client sends,
+      // so process.env has nothing to move on; the client-owned env did move
+      // and the graph computed under the previous client is stale.
+      const previous = { ...process.env };
+      applyDaemonEnvFromClient(previous);
+      process.env.MASKED_PROBE = 'from-config';
+      const generation = getDaemonClientEnvGeneration();
+
+      const changed = applyDaemonEnvFromClient({
+        ...previous,
+        MASKED_PROBE: 'from-config',
+      });
+
+      expect(changed).toEqual(['MASKED_PROBE']);
+      expect(getDaemonClientEnvGeneration()).toBe(generation + 1);
+    });
+  });
+
+  describe('getAppliedDaemonClientEnv', () => {
+    it('returns a copy of the last applied env, whether or not it changed anything', () => {
+      const applied = { ...process.env, APPLIED_PROBE: 'a' };
+      applyDaemonEnvFromClient(applied);
+      expect(getAppliedDaemonClientEnv().env).toEqual(applied);
+      // A no-op apply is still the last one applied.
+      applyDaemonEnvFromClient(applied);
+      const copy = getAppliedDaemonClientEnv().env;
+      expect(copy).toEqual(applied);
+      // A caller mutating the copy must not touch the stored env, which a
+      // later caller reads to undo what a user config wrote.
+      copy.APPLIED_PROBE = 'mutated';
+      expect(getAppliedDaemonClientEnv().env.APPLIED_PROBE).toBe('a');
+    });
+
+    it('advances the sequence on an apply that changes nothing, unlike the generation', () => {
+      // A config that already wrote the value a client then applies leaves
+      // the generation alone; the sequence is how a caller learns the apply
+      // happened at all.
+      const applied = { ...process.env, APPLIED_PROBE: 'a' };
+      applyDaemonEnvFromClient(applied);
+      const { sequence } = getAppliedDaemonClientEnv();
+      const generation = getDaemonClientEnvGeneration();
+      expect(applyDaemonEnvFromClient(applied)).toEqual([]);
+      expect(getDaemonClientEnvGeneration()).toBe(generation);
+      expect(getAppliedDaemonClientEnv().sequence).toBe(sequence + 1);
     });
   });
 

@@ -8,6 +8,7 @@ describe('webserver-config-worker', () => {
   const originalArgv = process.argv;
   const originalSend = process.send;
   const originalUrl = process.env.NX_PW_WORKER_TEST_URL;
+  const originalNoProxy = process.env.NO_PROXY;
 
   beforeEach(() => {
     dir = mkdtempSync(join(tmpdir(), 'pw-config-worker-'));
@@ -21,6 +22,11 @@ describe('webserver-config-worker', () => {
     } else {
       process.env.NX_PW_WORKER_TEST_URL = originalUrl;
     }
+    if (originalNoProxy === undefined) {
+      delete process.env.NO_PROXY;
+    } else {
+      process.env.NO_PROXY = originalNoProxy;
+    }
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -28,10 +34,12 @@ describe('webserver-config-worker', () => {
     process.argv = ['node', 'worker.js', 'playwright.config.js', dir];
   }
 
-  it('evaluates the config from argv under the spawned env and sends the normalized webServers', async () => {
+  it('evaluates the config from argv under the spawned env and sends the normalized webServers with the probe env the config left', async () => {
+    delete process.env.NO_PROXY;
     writeFileSync(
       join(dir, 'playwright.config.js'),
-      `module.exports = {
+      `process.env.NO_PROXY = 'localhost';
+module.exports = {
   webServer: {
     command: 'npx nx run app1:serve',
     url: process.env.NX_PW_WORKER_TEST_URL || 'http://localhost:4200',
@@ -66,6 +74,7 @@ describe('webserver-config-worker', () => {
             waitsForOutput: true,
           },
         ],
+        probeEnv: expect.objectContaining({ NO_PROXY: 'localhost' }),
       },
     ]);
   });

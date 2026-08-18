@@ -43,11 +43,15 @@ run without it.
 
 Nx also skips the wait task, keeping the dependency, when an env file the Playwright task loads
 changes how the server would be probed.
+The same goes for the Playwright config itself, such as one that calls `dotenv.config()`, since it
+runs before Playwright probes.
 The variables that count are the proxy variables (`HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`, and
 `NO_PROXY`) for a `webServer` with a `url`, and `NODE_EXTRA_CA_CERTS` and
 `NODE_TLS_REJECT_UNAUTHORIZED` unless every such `webServer` sets `ignoreHTTPSErrors`.
 That option doesn't cover the certificate of an `https` proxy that `HTTPS_PROXY` or `ALL_PROXY`
 routes through, so the TLS variables count whenever that's the route.
+Node reads `NODE_EXTRA_CA_CERTS` when the process starts, so only its value in an env file
+counts, not one the config sets.
 Both probes follow redirects, so a variable that plays no part at the configured URL, such as
 `HTTPS_PROXY` for an `http` URL, still counts.
 Nx compares the routes those variables produce rather than their raw values.
@@ -58,8 +62,9 @@ order.
 A scheme-less proxy value takes the protocol it's used for.
 A scheme-less `HTTPS_PROXY` is an `https` proxy and a scheme-less `ALL_PROXY` follows each
 request's protocol, so either counts against the same value written with `http://`.
-The wait task runs with its own environment rather than the Playwright task's, so it can't
-reproduce that probe and the tests fall back to Playwright's own `reuseExistingServer` probe.
+The wait task runs with its own environment (its own env files included) rather than the
+Playwright task's and never loads the config, so it can't reproduce that probe and the tests fall
+back to Playwright's own `reuseExistingServer` probe.
 
 ## Configuring the wait task
 

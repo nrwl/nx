@@ -18,6 +18,8 @@ export {
   // importing nx/src/utils/catalog directly. See packages/devkit/CLAUDE.md.
   getCatalogManager,
   getDaemonClientEnvGeneration,
+  getAppliedDaemonClientEnv,
+  applyDaemonEnvFromClient,
   getGraphTimeDotEnvForTask,
   hashDaemonClientEnv,
 } from 'nx/src/devkit-internals';

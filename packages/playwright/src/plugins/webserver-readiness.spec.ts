@@ -11,9 +11,12 @@ import {
   _setChildEval,
   _setWorkerScriptPath,
   getProbeEnvDivergence,
+  loadConfigWithProbeEnv,
   normalizeWebServers,
+  pickProbeEnv,
   resolveWebServersUnderEnv,
   taskEnvDivergesFromAmbient,
+  type ConfigEvaluation,
 } from './webserver-readiness';
 
 // Mirrors the module's own cap so the concurrency assertions don't depend on
@@ -430,6 +433,8 @@ describe('taskEnvDivergesFromAmbient', () => {
   });
 });
 
+const emptyEvaluation: ConfigEvaluation = { webServers: [], probeEnv: {} };
+
 describe('resolveWebServersUnderEnv concurrency', () => {
   afterEach(() => _setChildEval(null));
 
@@ -446,7 +451,7 @@ describe('resolveWebServersUnderEnv concurrency', () => {
           startOrder.push(configFilePath);
           releasers.push(() => {
             active--;
-            resolve([]);
+            resolve(emptyEvaluation);
           });
         })
     );
@@ -485,7 +490,7 @@ describe('resolveWebServersUnderEnv concurrency', () => {
           peak = Math.max(peak, active);
           releasers.push(() => {
             active--;
-            resolve([]);
+            resolve(emptyEvaluation);
           });
         })
     );
@@ -523,7 +528,7 @@ describe('resolveWebServersUnderEnv concurrency', () => {
     _setChildEval((configFilePath) =>
       configFilePath === 'reject'
         ? Promise.reject(new Error('boom'))
-        : Promise.resolve([])
+        : Promise.resolve(emptyEvaluation)
     );
 
     const results = await Promise.allSettled([
@@ -536,6 +541,141 @@ describe('resolveWebServersUnderEnv concurrency', () => {
     // The final call is queued behind the cap; it only runs if the rejected
     // evaluations release their slots.
     expect(results[MAX_CONCURRENT_EVALS].status).toBe('fulfilled');
+  });
+});
+
+describe('loadConfigWithProbeEnv', () => {
+  let dir: string;
+  let originalProbeEnv: Record<string, string>;
+  // A config that stands in for the daemon delivering a client env while the
+  // load is in flight: it applies one itself, through the same call the
+  // plugin worker makes.
+  const applyClientEnv = `require(${JSON.stringify(
+    require.resolve('@nx/devkit/internal')
+  )}).applyDaemonEnvFromClient`;
+
+  const writeConfig = (name: string, body: string): string => {
+    const path = join(dir, name);
+    writeFileSync(path, body);
+    return path;
+  };
+
+  beforeAll(() => {
+    dir = realpathSync(mkdtempSync(join(tmpdir(), 'pw-load-probe-env-')));
+  });
+  afterAll(() => rmSync(dir, { recursive: true, force: true }));
+  beforeEach(() => {
+    // Start from no probe variables at all: the host (a sandbox, a corporate
+    // shell) may set some, and the assertions below are absolute.
+    originalProbeEnv = pickProbeEnv(process.env);
+    for (const variable of Object.keys(originalProbeEnv)) {
+      delete process.env[variable];
+    }
+  });
+  afterEach(() => {
+    for (const variable of ['NO_PROXY', 'HTTP_PROXY', 'PROXY_HOST']) {
+      delete process.env[variable];
+    }
+    Object.assign(process.env, originalProbeEnv);
+  });
+
+  it('returns the config with the probe env its evaluation wrote, then restores the variables', async () => {
+    const path = writeConfig(
+      'writes.cjs',
+      `process.env.NO_PROXY = 'localhost';
+module.exports = { webServer: { command: 'x' } };`
+    );
+
+    const { config, probeEnv } = await loadConfigWithProbeEnv<{
+      webServer: { command: string };
+    }>(path);
+
+    expect(config.webServer.command).toBe('x');
+    expect(probeEnv).toEqual({ NO_PROXY: 'localhost' });
+    expect(process.env.NO_PROXY).toBeUndefined();
+  });
+
+  it("serializes concurrent loads so one config's writes never reach another's probe env", async () => {
+    // Without the lock the first config's write lands before the second load
+    // snapshots, so the second load reads it as its own and restores to it.
+    const writes = writeConfig(
+      'writes-first.cjs',
+      `process.env.NO_PROXY = 'localhost';
+module.exports = {};`
+    );
+    const reads = writeConfig('reads.cjs', `module.exports = {};`);
+
+    const [writesResult, readsResult] = await Promise.all([
+      loadConfigWithProbeEnv(writes),
+      loadConfigWithProbeEnv(reads),
+    ]);
+
+    expect(writesResult.probeEnv).toEqual({ NO_PROXY: 'localhost' });
+    expect(readsResult.probeEnv).toEqual({});
+    expect(process.env.NO_PROXY).toBeUndefined();
+  });
+
+  it('restores every variable the config wrote, not only the probe ones', async () => {
+    // The task and gate dotenv files expand against process.env, so a helper
+    // variable left behind would resolve a reference in them at graph time
+    // that the task's own process never sees.
+    const path = writeConfig(
+      'writes-helper.cjs',
+      `process.env.PROXY_HOST = 'proxy.example';
+module.exports = {};`
+    );
+
+    await loadConfigWithProbeEnv(path);
+
+    expect(process.env.PROXY_HOST).toBeUndefined();
+  });
+
+  it('re-applies the client env applied mid-load over the pre-load values', async () => {
+    // A restore to the pre-load values alone would revert the client's env;
+    // the config's writes go, but the client's stay.
+    const path = writeConfig(
+      'writes-under-swap.cjs',
+      `${applyClientEnv}({ ...process.env, HTTP_PROXY: 'http://client.example:8080' });
+process.env.NO_PROXY = 'localhost';
+process.env.HTTP_PROXY = 'http://config.example:8080';
+module.exports = {};`
+    );
+
+    const { probeEnv } = await loadConfigWithProbeEnv(path);
+
+    expect(probeEnv).toEqual({
+      NO_PROXY: 'localhost',
+      HTTP_PROXY: 'http://config.example:8080',
+    });
+    expect(process.env.NO_PROXY).toBeUndefined();
+    expect(process.env.HTTP_PROXY).toBe('http://client.example:8080');
+  });
+
+  it('re-applies a mid-load client env whose values the config had already written', async () => {
+    // Such an apply changes nothing at the time, so nothing but the apply
+    // sequence records it; a restore keyed on changed values would then delete
+    // the client's variable along with the config's copy of it.
+    const path = writeConfig(
+      'writes-then-client-matches.cjs',
+      `process.env.NO_PROXY = 'localhost';
+${applyClientEnv}({ ...process.env });
+module.exports = {};`
+    );
+
+    await loadConfigWithProbeEnv(path);
+
+    expect(process.env.NO_PROXY).toBe('localhost');
+  });
+
+  it('restores the variables when the load throws', async () => {
+    const path = writeConfig(
+      'throws.cjs',
+      `process.env.NO_PROXY = 'localhost';
+throw new Error('config boom');`
+    );
+
+    await expect(loadConfigWithProbeEnv(path)).rejects.toThrow('config boom');
+    expect(process.env.NO_PROXY).toBeUndefined();
   });
 });
 
@@ -561,12 +701,15 @@ describe('forkChildEval (real fork)', () => {
     _setWorkerScriptPath(
       writeWorker(
         'ok.js',
-        `process.send({ type: 'webserver-config-result', webServers: [{ command: 'x', url: 'http://localhost:4301' }] }, () => process.exit(0));`
+        `process.send({ type: 'webserver-config-result', webServers: [{ command: 'x', url: 'http://localhost:4301' }], probeEnv: { NO_PROXY: 'localhost' } }, () => process.exit(0));`
       )
     );
     await expect(
       resolveWebServersUnderEnv('config.ts', fixtureDir, {})
-    ).resolves.toEqual([{ command: 'x', url: 'http://localhost:4301' }]);
+    ).resolves.toEqual({
+      webServers: [{ command: 'x', url: 'http://localhost:4301' }],
+      probeEnv: { NO_PROXY: 'localhost' },
+    });
   });
 
   it('runs the worker from the project root, not the parent cwd', async () => {
@@ -575,7 +718,7 @@ describe('forkChildEval (real fork)', () => {
     _setWorkerScriptPath(
       writeWorker(
         'cwd.js',
-        `process.send({ type: 'webserver-config-result', webServers: [{ command: process.cwd() }] }, () => process.exit(0));`
+        `process.send({ type: 'webserver-config-result', webServers: [{ command: process.cwd() }], probeEnv: {} }, () => process.exit(0));`
       )
     );
     const projectRoot = join(fixtureDir, 'apps', 'e2e');
@@ -583,24 +726,32 @@ describe('forkChildEval (real fork)', () => {
     expect(projectRoot).not.toBe(process.cwd());
     await expect(
       resolveWebServersUnderEnv('apps/e2e/playwright.config.ts', fixtureDir, {})
-    ).resolves.toEqual([{ command: projectRoot }]);
+    ).resolves.toEqual({
+      webServers: [{ command: projectRoot }],
+      probeEnv: {},
+    });
   });
 
-  it('ignores messages without the worker tag', async () => {
+  it('ignores messages without the worker tag or the result shape', async () => {
     // The evaluated config runs arbitrary user code that can call process.send
-    // itself. A primitive or an untagged object must neither settle nor crash
-    // the resolution; only the tagged result does.
+    // itself. A primitive, an untagged object or a tagged object missing a
+    // field must neither settle nor crash the resolution; only the full result
+    // does.
     _setWorkerScriptPath(
       writeWorker(
         'chatty.js',
         `process.send('ready');
 process.send({ event: 'progress' });
-process.send({ type: 'webserver-config-result', webServers: [{ command: 'x', url: 'http://localhost:4301' }] }, () => process.exit(0));`
+process.send({ type: 'webserver-config-result', webServers: [] });
+process.send({ type: 'webserver-config-result', webServers: [{ command: 'x', url: 'http://localhost:4301' }], probeEnv: {} }, () => process.exit(0));`
       )
     );
     await expect(
       resolveWebServersUnderEnv('config.ts', fixtureDir, {})
-    ).resolves.toEqual([{ command: 'x', url: 'http://localhost:4301' }]);
+    ).resolves.toEqual({
+      webServers: [{ command: 'x', url: 'http://localhost:4301' }],
+      probeEnv: {},
+    });
   });
 
   it('rejects a tagged error message even when the string is empty', async () => {

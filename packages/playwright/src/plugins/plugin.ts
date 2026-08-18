@@ -1,7 +1,7 @@
 import {
   calculateHashesForCreateNodes,
+  clearRequireCache,
   emitPluginWorkerLog,
-  loadConfigFile,
   getNamedInputs,
   getDaemonClientEnvGeneration,
   getGraphTimeDotEnvForTask,
@@ -37,9 +37,11 @@ import type { Schema as WaitForWebserverSchema } from '../executors/wait-for-web
 import { getReporterOutputs, type ReporterOutput } from '../utils/reporters';
 import {
   getProbeEnvDivergence,
+  loadConfigWithProbeEnv,
   normalizeWebServers,
   resolveWebServersUnderEnv,
   taskEnvDivergesFromAmbient,
+  type ProbeEnv,
   type ResolvedWebServer,
 } from './webserver-readiness';
 
@@ -134,6 +136,19 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
         entries.map((e) => [lockFileName, ...e.externalTsconfigInputs])
       );
 
+      // A TypeScript config is `require`d without clearing the module cache, so
+      // a process that already evaluated it (the daemon, with plugin isolation
+      // off) gets that evaluation back: an edited config would keep its old
+      // targets and the env writes it makes while loading would not run again.
+      // Once per pass, so every config loads fresh.
+      if (
+        entries.some(
+          (e) => require.cache[join(context.workspaceRoot, e.configFile)]
+        )
+      ) {
+        clearRequireCache();
+      }
+
       let results: CreateNodesResultArray = [];
       let nodeErrors: Array<[string | null, Error]> = [];
       try {
@@ -169,9 +184,8 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
       return results;
     } finally {
       // The daemon can apply another client's env mid-pass (worker message
-      // dispatch is unserialized) and a config can mutate the env while
-      // evaluating; entries built after either change are keyed under the
-      // stale pass-start digest, so drop the write and let the next pass
+      // dispatch is unserialized); entries built after that are keyed under
+      // the stale pass-start digest, so drop the write and let the next pass
       // rebuild under a coherent key. The generation catches an env that
       // changed and changed back mid-pass, which the digest misses.
       if (
@@ -256,9 +270,10 @@ async function buildPlaywrightTargets(
   // See: https://github.com/microsoft/playwright/pull/11218/files
   delete (process as any)['__pw_initiator__'];
 
-  const playwrightConfig = await loadConfigFile<PlaywrightTestConfig>(
-    join(context.workspaceRoot, configFilePath)
-  );
+  const { config: playwrightConfig, probeEnv: ambientProbeEnv } =
+    await loadConfigWithProbeEnv<PlaywrightTestConfig>(
+      join(context.workspaceRoot, configFilePath)
+    );
 
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -280,11 +295,18 @@ async function buildPlaywrightTargets(
   //
   // The command and address can read process.env, and createNodes runs without
   // the task's dotenv loaded, so each consumer chain's servers resolve under
-  // that chain's task env. Chains loading the same dotenv inputs share one
-  // resolution; distinct inputs resolve concurrently and can gate separately.
+  // that chain's task env. Chains whose tasks and gates load the same dotenv
+  // inputs share one resolution; distinct inputs resolve concurrently and can
+  // gate separately.
+  const gatesShareDotEnv =
+    JSON.stringify(chainDotEnvPairs.gate) ===
+    JSON.stringify(chainDotEnvPairs.ciGate);
   const chainsShareDotEnv =
+    gatesShareDotEnv &&
     JSON.stringify(chainDotEnvPairs.target) ===
-    JSON.stringify(chainDotEnvPairs.ciTarget);
+      JSON.stringify(chainDotEnvPairs.ciTarget);
+  const e2eGateName = `${options.targetName}--wait-for-webserver`;
+  const ciGateName = `${options.ciTargetName}--wait-for-webserver`;
   let e2eResolved: ResolvedChainWebserver;
   let ciResolved: ResolvedChainWebserver;
   if (!options.ciTargetName || chainsShareDotEnv) {
@@ -293,8 +315,10 @@ async function buildPlaywrightTargets(
       projectRoot,
       context.workspaceRoot,
       ambientWebServers,
+      ambientProbeEnv,
       options.targetName,
       undefined,
+      e2eGateName,
       options.waitForWebServer
     );
     ciResolved = e2eResolved;
@@ -305,8 +329,10 @@ async function buildPlaywrightTargets(
         projectRoot,
         context.workspaceRoot,
         ambientWebServers,
+        ambientProbeEnv,
         options.targetName,
         undefined,
+        e2eGateName,
         options.waitForWebServer
       ),
       resolveChainWebserver(
@@ -314,8 +340,10 @@ async function buildPlaywrightTargets(
         projectRoot,
         context.workspaceRoot,
         ambientWebServers,
+        ambientProbeEnv,
         options.ciTargetName,
         options.targetName,
+        ciGateName,
         options.waitForWebServer
       ),
     ]);
@@ -326,15 +354,15 @@ async function buildPlaywrightTargets(
     e2eResolved.taskEnvEvalFailed || ciResolved.taskEnvEvalFailed;
 
   const e2eReadyTargetName =
-    e2eChain.readinessServers.length > 0
-      ? `${options.targetName}--wait-for-webserver`
-      : undefined;
-  const chainsShareGate = sameChain(e2eChain, ciChain);
+    e2eChain.readinessServers.length > 0 ? e2eGateName : undefined;
+  // A shared gate runs under the e2e gate's dotenv, which the ci chain's probe
+  // env was only compared against when both gates load the same files.
+  const chainsShareGate = gatesShareDotEnv && sameChain(e2eChain, ciChain);
   const ciReadyTargetName =
     ciChain.readinessServers.length > 0
       ? chainsShareGate
         ? e2eReadyTargetName
-        : `${options.ciTargetName}--wait-for-webserver`
+        : ciGateName
       : undefined;
 
   const baseTargetConfig: TargetConfiguration = {
@@ -698,9 +726,13 @@ function addSubfolderToOutput(output: string, subfolder: string): string {
 // identical dotenv inputs share one config resolution.
 type DotEnvPairs = Array<[path: string, hash: string]>;
 
+// The dotenv files each consumer chain's task loads and the ones its readiness
+// gate target loads. The gate's decide the env its probe runs under.
 interface ChainDotEnvPairs {
   target: DotEnvPairs;
   ciTarget: DotEnvPairs;
+  gate: DotEnvPairs;
+  ciGate: DotEnvPairs;
 }
 
 function getChainDotEnvPairs(
@@ -709,23 +741,26 @@ function getChainDotEnvPairs(
   options: NormalizedOptions,
   fileHashes: Map<string, string | null>
 ): ChainDotEnvPairs {
-  const target = getDotEnvPairsForTask(
-    workspaceRoot,
-    projectRoot,
-    options.targetName,
-    undefined,
-    fileHashes
-  );
-  const ciTarget = options.ciTargetName
-    ? getDotEnvPairsForTask(
-        workspaceRoot,
-        projectRoot,
-        options.ciTargetName,
-        options.targetName,
-        fileHashes
-      )
-    : target;
-  return { target, ciTarget };
+  const pairsFor = (target: string, nonAtomizedTarget?: string) =>
+    getDotEnvPairsForTask(
+      workspaceRoot,
+      projectRoot,
+      target,
+      nonAtomizedTarget,
+      fileHashes
+    );
+  const target = pairsFor(options.targetName);
+  const gate = pairsFor(`${options.targetName}--wait-for-webserver`);
+  return {
+    target,
+    ciTarget: options.ciTargetName
+      ? pairsFor(options.ciTargetName, options.targetName)
+      : target,
+    gate,
+    ciGate: options.ciTargetName
+      ? pairsFor(`${options.ciTargetName}--wait-for-webserver`)
+      : gate,
+  };
 }
 
 function getDotEnvPairsForTask(
@@ -775,8 +810,10 @@ async function resolveChainWebserver(
   projectRoot: string,
   workspaceRoot: string,
   ambientWebServers: ResolvedWebServer[],
+  ambientProbeEnv: ProbeEnv,
   target: string,
   nonAtomizedTarget: string | undefined,
+  gateTarget: string,
   inferReadiness: boolean
 ): Promise<ResolvedChainWebserver> {
   if (ambientWebServers.length === 0) {
@@ -786,6 +823,7 @@ async function resolveChainWebserver(
     };
   }
   let webServers = ambientWebServers;
+  let probeEnv = ambientProbeEnv;
   let taskEnvEvalFailed = false;
   const taskEnv = getGraphTimeDotEnvForTask(
     projectRoot,
@@ -795,11 +833,11 @@ async function resolveChainWebserver(
   );
   if (taskEnvDivergesFromAmbient(taskEnv)) {
     try {
-      webServers = await resolveWebServersUnderEnv(
+      ({ webServers, probeEnv } = await resolveWebServersUnderEnv(
         configFilePath,
         workspaceRoot,
         taskEnv
-      );
+      ));
     } catch (e) {
       taskEnvEvalFailed = true;
       const detail = e instanceof Error ? e.message : String(e);
@@ -819,18 +857,25 @@ async function resolveChainWebserver(
     readinessServers = commandTasks
       .map(toReadinessServer)
       .filter(Boolean) as WebserverReadinessServer[];
-    // The gate runs as its own target under its own dotenv, so a task-scoped
-    // change to the probe transport (a proxy exclusion, a CA bundle) never
-    // reaches it and the gate could fail where Playwright's own probe passes.
-    // The dependencies stay; readiness falls back to Playwright's probe.
-    const divergingProbeVars = getProbeEnvDivergence(readinessServers, taskEnv);
+    // The gate runs as its own target under its own dotenv and never loads the
+    // config, so a change to the probe transport (a proxy exclusion, a CA
+    // bundle) the task's dotenv or its config makes never reaches it and the
+    // gate could fail where Playwright's own probe passes. The dependencies
+    // stay; readiness falls back to Playwright's probe. Node reads
+    // NODE_EXTRA_CA_CERTS once at startup, so the value the task starts with
+    // is the one its probe trusts, whatever the config writes.
+    const divergingProbeVars = getProbeEnvDivergence(
+      readinessServers,
+      { ...probeEnv, NODE_EXTRA_CA_CERTS: taskEnv.NODE_EXTRA_CA_CERTS },
+      getGraphTimeDotEnvForTask(projectRoot, gateTarget)
+    );
     if (divergingProbeVars.length > 0) {
       readinessServers = [];
       emitPluginWorkerLog(
         'warn',
-        `@nx/playwright: the ${target} task env changes how its web server would be probed (${divergingProbeVars.join(
+        `@nx/playwright: under the ${target} task, ${divergingProbeVars.join(
           ', '
-        )}), which the readiness task cannot reproduce. No web server readiness task is inferred for ${target}.`
+        )} changes how its web server would be probed, which the readiness task cannot reproduce. No web server readiness task is inferred for ${target}.`
       );
     }
   }

@@ -7,7 +7,11 @@ import { PlaywrightTestConfig } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { _clearWarnedUnparseableCommands, createNodesV2 } from './plugin';
-import { _setChildEval, normalizeWebServers } from './webserver-readiness';
+import {
+  _setChildEval,
+  normalizeWebServers,
+  pickProbeEnv,
+} from './webserver-readiness';
 
 // The plugin writes its disk cache under `workspaceDataDirectory`, which is
 // resolved from the real workspace root at import time. Redirect it into the
@@ -41,7 +45,10 @@ function installFreshConfigEval(
       moduleShim.exports,
       { ...process, env }
     );
-    return normalizeWebServers(moduleShim.exports.webServer);
+    return {
+      webServers: normalizeWebServers(moduleShim.exports.webServer),
+      probeEnv: pickProbeEnv(env),
+    };
   });
 }
 
@@ -1573,6 +1580,234 @@ describe('@nx/playwright/plugin', () => {
     }
   });
 
+  it('skips the gate when the config itself changes how the server would be probed while loading', async () => {
+    const savedEnv = saveEnv([
+      'HTTP_PROXY',
+      'http_proxy',
+      'NO_PROXY',
+      'no_proxy',
+    ]);
+    const originalWorkspaceRoot = workspaceRoot;
+    // No task env file: the write happens while the config loads (as a
+    // `dotenv.config()` call in the config would), so it reaches Playwright's
+    // probe and not the gate, which never loads the config.
+    process.env.HTTP_PROXY = 'http://proxy.example:8080';
+    delete process.env.NO_PROXY;
+    delete process.env.no_proxy;
+    setWorkspaceRoot(tempFs.tempDir);
+    const warn = jest
+      .spyOn(devkitInternal, 'emitPluginWorkerLog')
+      .mockImplementation(() => {});
+
+    try {
+      await mockPlaywrightConfig(
+        tempFs,
+        `process.env.NO_PROXY = 'localhost';
+module.exports = {
+  testDir: 'tests',
+  webServer: {
+    command: 'npx nx run app1:serve',
+    url: 'http://localhost:4200',
+    reuseExistingServer: true,
+  },
+};`
+      );
+      await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        context
+      );
+      const { targets } = results[0][1].projects['.'];
+
+      expect(targets['e2e--wait-for-webserver']).toBeUndefined();
+      expect(targets['e2e-ci--wait-for-webserver']).toBeUndefined();
+      expect(targets['e2e'].dependsOn).toContainEqual({
+        projects: ['app1'],
+        target: 'serve',
+      });
+      expect(warn).toHaveBeenCalledWith(
+        'warn',
+        expect.stringContaining('NO_PROXY')
+      );
+      // The write does not outlive the load.
+      expect(process.env.NO_PROXY).toBeUndefined();
+    } finally {
+      warn.mockRestore();
+      setWorkspaceRoot(originalWorkspaceRoot);
+      restoreEnv(savedEnv);
+    }
+  });
+
+  it('keeps the gate when the config only writes NODE_EXTRA_CA_CERTS, which Node read at startup', async () => {
+    const savedEnv = saveEnv(['NODE_EXTRA_CA_CERTS']);
+    const originalWorkspaceRoot = workspaceRoot;
+    delete process.env.NODE_EXTRA_CA_CERTS;
+    setWorkspaceRoot(tempFs.tempDir);
+
+    try {
+      await mockPlaywrightConfig(
+        tempFs,
+        `process.env.NODE_EXTRA_CA_CERTS = './certs/ca.pem';
+module.exports = {
+  testDir: 'tests',
+  webServer: {
+    command: 'npx nx run app1:serve',
+    url: 'https://localhost:4200',
+    reuseExistingServer: true,
+  },
+};`
+      );
+      await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        context
+      );
+      const { targets } = results[0][1].projects['.'];
+
+      expect(targets['e2e--wait-for-webserver'].options.servers).toEqual([
+        { url: 'https://localhost:4200' },
+      ]);
+      expect(process.env.NODE_EXTRA_CA_CERTS).toBeUndefined();
+    } finally {
+      setWorkspaceRoot(originalWorkspaceRoot);
+      restoreEnv(savedEnv);
+    }
+  });
+
+  it('compares the probe against the env of the gate target, own dotenv included', async () => {
+    const savedEnv = saveEnv([
+      'HTTP_PROXY',
+      'http_proxy',
+      'NO_PROXY',
+      'no_proxy',
+    ]);
+    const originalWorkspaceRoot = workspaceRoot;
+    process.env.HTTP_PROXY = 'http://proxy.example:8080';
+    delete process.env.NO_PROXY;
+    delete process.env.no_proxy;
+    setWorkspaceRoot(tempFs.tempDir);
+    installFreshConfigEval();
+
+    try {
+      await mockPlaywrightConfig(
+        tempFs,
+        `module.exports = {
+  testDir: 'tests',
+  webServer: {
+    command: 'npx nx run app1:serve',
+    url: 'http://localhost:4200',
+    reuseExistingServer: true,
+  },
+};`
+      );
+      // The e2e gate loads the same exclusion its task does, so it probes the
+      // same way; the ci gate loads nothing, so the ci chain's probe diverges
+      // and the two chains cannot share the e2e gate either.
+      await tempFs.createFiles({
+        'tests/run-me.spec.ts': '',
+        '.env.e2e': 'NO_PROXY=localhost\n',
+        '.env.e2e--wait-for-webserver': 'NO_PROXY=localhost\n',
+        '.env.e2e-ci': 'NO_PROXY=localhost\n',
+      });
+
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        context
+      );
+      const { targets } = results[0][1].projects['.'];
+
+      expect(targets['e2e--wait-for-webserver'].options.servers).toEqual([
+        { url: 'http://localhost:4200' },
+      ]);
+      expect(targets['e2e-ci--wait-for-webserver']).toBeUndefined();
+      expect(
+        targets['e2e-ci--tests/run-me.spec.ts'].dependsOn
+      ).not.toContainEqual(
+        expect.objectContaining({ target: expect.stringContaining('wait-for') })
+      );
+    } finally {
+      _setChildEval(null);
+      setWorkspaceRoot(originalWorkspaceRoot);
+      restoreEnv(savedEnv);
+    }
+  });
+
+  it('expands the gate env without the variables the config wrote while loading', async () => {
+    const savedEnv = saveEnv([
+      'HTTP_PROXY',
+      'http_proxy',
+      'NO_PROXY',
+      'no_proxy',
+      'PROXY_HOST',
+    ]);
+    const originalWorkspaceRoot = workspaceRoot;
+    delete process.env.HTTP_PROXY;
+    delete process.env.http_proxy;
+    delete process.env.NO_PROXY;
+    delete process.env.no_proxy;
+    delete process.env.PROXY_HOST;
+    setWorkspaceRoot(tempFs.tempDir);
+    installFreshConfigEval();
+    const warn = jest
+      .spyOn(devkitInternal, 'emitPluginWorkerLog')
+      .mockImplementation(() => {});
+
+    try {
+      // The gate's env file references a variable only the config sets. Left
+      // in process.env after the load, it would expand at graph time to the
+      // task's proxy and the gate would be inferred; the gate's own process
+      // never runs the config, so it expands to nothing there.
+      await mockPlaywrightConfig(
+        tempFs,
+        `process.env.PROXY_HOST = 'http://proxy.example:8080';
+module.exports = {
+  testDir: 'tests',
+  webServer: {
+    command: 'npx nx run app1:serve',
+    url: 'http://localhost:4200',
+    reuseExistingServer: true,
+  },
+};`
+      );
+      await tempFs.createFiles({
+        'tests/run-me.spec.ts': '',
+        '.env.e2e': 'HTTP_PROXY=http://proxy.example:8080\n',
+        '.env.e2e--wait-for-webserver': 'HTTP_PROXY=${PROXY_HOST}\n',
+      });
+
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        context
+      );
+      const { targets } = results[0][1].projects['.'];
+
+      expect(targets['e2e--wait-for-webserver']).toBeUndefined();
+      expect(targets['e2e'].dependsOn).toContainEqual({
+        projects: ['app1'],
+        target: 'serve',
+      });
+      expect(targets['e2e'].dependsOn).not.toContainEqual(
+        expect.objectContaining({ target: expect.stringContaining('wait-for') })
+      );
+      expect(warn).toHaveBeenCalledWith(
+        'warn',
+        expect.stringContaining('HTTP_PROXY')
+      );
+      expect(process.env.PROXY_HOST).toBeUndefined();
+    } finally {
+      warn.mockRestore();
+      _setChildEval(null);
+      setWorkspaceRoot(originalWorkspaceRoot);
+      restoreEnv(savedEnv);
+    }
+  });
+
   it('serializes the atomized tasks when only the CI chain adds an uncovered server', async () => {
     const originalCiExtra = process.env.CI_EXTRA;
     const originalWorkspaceRoot = workspaceRoot;
@@ -1924,7 +2159,7 @@ describe('@nx/playwright/plugin', () => {
     }
   });
 
-  it('does not persist a pass whose ambient env changed mid-pass', async () => {
+  it('persists a pass whose config wrote to the env while loading', async () => {
     const originalBootFlag = process.env.BOOT_FLAG;
     const originalWorkspaceRoot = workspaceRoot;
     delete process.env.BOOT_FLAG;
@@ -1936,10 +2171,9 @@ describe('@nx/playwright/plugin', () => {
     );
 
     try {
-      // The config mutates an allowed env var when evaluated, so the pass's
-      // entries are keyed under a digest that no longer matches the env they
-      // were built in. The pass must not persist them: a later pass under the
-      // original env would otherwise hit an entry built under the mutated one.
+      // The write is undone once the config has loaded, so the pass ends on
+      // the digest it started with and its entries are keyed correctly: the
+      // next pass under the same env is a cache hit.
       await tempFs.createFiles({
         'apps/e2e/project.json': '{}',
         'apps/e2e/playwright.config.js': `process.env.BOOT_FLAG = 'set';
@@ -1954,15 +2188,11 @@ module.exports = {};`,
         );
 
       await run();
+      expect(process.env.BOOT_FLAG).toBeUndefined();
       const rebuildsAfterFirst = listTestFiles.mock.calls.length;
 
-      // Back on the pass-start env: the same cache key, so only the skipped
-      // persist can force this re-evaluation.
-      delete process.env.BOOT_FLAG;
       await run();
-      expect(listTestFiles.mock.calls.length).toBeGreaterThan(
-        rebuildsAfterFirst
-      );
+      expect(listTestFiles.mock.calls.length).toBe(rebuildsAfterFirst);
     } finally {
       listTestFiles.mockRestore();
       setWorkspaceRoot(originalWorkspaceRoot);

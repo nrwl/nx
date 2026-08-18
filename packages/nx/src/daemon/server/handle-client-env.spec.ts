@@ -27,6 +27,31 @@ describe('handleClientEnv', () => {
     (getPluginsIfLoadedOrLoading as jest.Mock).mockReturnValue(undefined);
   });
 
+  it('discards the cached graph for a client change a config write already matches', async () => {
+    // With plugins running in the daemon, a config can write the value the
+    // next client sends before that client's env arrives; process.env then
+    // has nothing to move on, but the graph in flight was computed under the
+    // previous client and must not be served to this one.
+    (applyDaemonEnvFromClient as jest.Mock).mockImplementation(
+      jest.requireActual('../client/daemon-environment')
+        .applyDaemonEnvFromClient
+    );
+    const originalEnv = process.env;
+    process.env = { ...originalEnv };
+    try {
+      const previous = { ...process.env };
+      await handleClientEnv(previous);
+      jest.clearAllMocks();
+      process.env.MASKED_PROBE = 'from-config';
+
+      await handleClientEnv({ ...previous, MASKED_PROBE: 'from-config' });
+
+      expect(invalidateGraphCache).toHaveBeenCalled();
+    } finally {
+      process.env = originalEnv;
+    }
+  });
+
   it('does nothing beyond applying the env when no keys changed', async () => {
     (applyDaemonEnvFromClient as jest.Mock).mockReturnValue([]);
 
