@@ -92,8 +92,18 @@ jobs:
         run:
           pnpm nx report
 
+      - name: Enable core dumps for segfault diagnostics
+        run: |
+          sudo mkdir -p /tmp/cores && sudo chmod 777 /tmp/cores
+          # Runner default pipes cores to apport, which discards them.
+          sudo sysctl -w kernel.core_pattern='/tmp/cores/core.%e.%p'
+
       - name: Run Checks/Lint/Test/Build
         run: |
+          # Intermittent SIGSEGV kills of nx clients happen in this step
+          # (e.g. runs 29067764140, 29103579727); keep cores so the
+          # "Collect segfault cores" step can capture a native backtrace.
+          ulimit -c unlimited
           pids=()
 
           pnpm nx record -- nx format:check &
@@ -115,6 +125,38 @@ jobs:
             wait "$pid"
           done
         timeout-minutes: 100
+      - name: Collect segfault cores
+        if: failure()
+        run: |
+          shopt -s nullglob
+          cores=(/tmp/cores/core.*)
+          if [ ${#cores[@]} -eq 0 ]; then
+            echo 'No core dumps found'
+            exit 0
+          fi
+          command -v gdb >/dev/null || { sudo apt-get update -q && sudo apt-get install -y -q gdb; }
+          kept=0
+          for c in "${cores[@]}"; do
+            echo "===== backtrace for $c ====="
+            gdb -q -batch -ex 'set pagination off' -ex bt -ex 'info threads' \
+              "$(command -v node)" "$c" 2>&1 | head -150 | tee -a /tmp/backtraces.txt
+            if [ "$kept" -lt 3 ]; then
+              gzip -f "$c" && kept=$((kept+1)) || true
+            else
+              rm -f "$c"
+            fi
+          done
+
+      - name: Upload segfault cores
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: segfault-cores-linux
+          path: |
+            /tmp/backtraces.txt
+            /tmp/cores/*.gz
+          if-no-files-found: ignore
+
       - name: Fix CI
         run: pnpm nx fix-ci
         if: failure()
