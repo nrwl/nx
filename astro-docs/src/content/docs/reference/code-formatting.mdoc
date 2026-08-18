@@ -73,11 +73,13 @@ oxfmt reads it too, so deleting it starts formatting files you had excluded.
 
 `nx format:write` runs the formatter's own CLI.
 Generators format files that exist only in memory, so Nx applies the configuration itself.
-Both resolve from each file's own directory upwards: the nearest oxfmt config, its `overrides` and
-`ignorePatterns`, and every `.gitignore` and `.prettierignore` along the way.
+With oxfmt, both resolve from each file's own directory upwards: the nearest oxfmt config, its
+`overrides` and `ignorePatterns`, and every `.gitignore` and `.prettierignore` along the way.
+With Prettier, both read the root ignore files only, so a nested `.prettierignore` has no effect
+either way.
 
 A nested oxfmt config replaces the one above it rather than merging with it, so any option it leaves
-out falls back to oxfmt's own default and not to the parent's value.
+out falls back to the oxfmt default and not to the parent's value.
 
 `.editorconfig` is the exception.
 oxfmt reads it from the directory it runs in rather than from each file upwards, so only the one at
