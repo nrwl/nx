@@ -1,0 +1,15 @@
+{
+  "name": "api-client",
+  "targets": {
+    "build": {
+      "command": "tsc -p libs/api-client/tsconfig.json",
+      "dependsOn": ["Api:codegen"],
+      "inputs": [
+        "{projectRoot}/**/*",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
+      "outputs": ["{projectRoot}/dist"],
+      "cache": true
+    }
+  }
+}

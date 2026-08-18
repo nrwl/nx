@@ -1,0 +1,15 @@
+{
+  "name": "web",
+  "targets": {
+    "build": {
+      "command": "tsc -p apps/web/tsconfig.json",
+      "dependsOn": ["^build"],
+      "inputs": [
+        "{projectRoot}/**/*",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
+      "outputs": ["{projectRoot}/dist"],
+      "cache": true
+    }
+  }
+}
