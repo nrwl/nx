@@ -149,16 +149,36 @@ export function getSkippedNxCloudInfo() {
   return out.getOutput();
 }
 
-export async function openCloudSetupUrl(connectUrl: string): Promise<void> {
+export function openCloudSetupUrl(opts: {
+  connectUrl: string;
+  workspaceDirectory: string;
+}): void {
   if (isCI()) {
     return;
   }
 
   try {
-    const open = require('open');
-    await open(connectUrl);
+    // Open through the workspace's own Nx rather than bundling a second opener
+    // here. Only the preset flow installs this CLI's version — `--template` and
+    // third-party presets install whatever Nx *they* pin, which may predate
+    // `openUrl`, so the optional call no-ops. The banner printed after this
+    // carries the URL either way.
+    //
+    // Load the bindings directly: `nx/src/native` is a loader shim that copies
+    // the multi-MB .node into a cache and loads the copy. The key is derived from
+    // cwd, which here is the parent of the new workspace, so nothing ever reuses
+    // it. Skipping the shim also loses its WASI ExperimentalWarning filter, but
+    // that only surfaces on the wasm fallback, where `openUrl` is a stub anyway.
+    // nx-ignore-next-line
+    const nativePath = require.resolve('nx/src/native/native-bindings.js', {
+      paths: [opts.workspaceDirectory],
+    });
+    const { openUrl } = require(nativePath) as {
+      openUrl?: (url: string) => boolean;
+    };
+    openUrl?.(opts.connectUrl);
   } catch {
-    // Fail gracefully — the URL is already displayed in the terminal banner
+    // Fail gracefully — the banner still carries the URL
   }
 }
 
