@@ -33,7 +33,11 @@ import {
   createNxKeyLicenseeInformation,
   getNxKeyInformation,
 } from '../utils/nx-key';
-import { isLogGroupingEnabled, output } from '../utils/output';
+import {
+  isLogGroupingEnabled,
+  isStaticOutputStyle,
+  output,
+} from '../utils/output';
 import { shouldPrintConfigureAiAgentsDisclaimer } from '../ai/configure-ai-agents-disclaimer';
 import {
   collectEnabledTaskSyncGeneratorsFromTaskGraph,
@@ -76,7 +80,7 @@ import {
   validateNoAtomizedTasks,
 } from './task-graph-utils';
 import { TasksRunner, TaskStatus } from './tasks-runner';
-import { isStaticOutputStyle, shouldStreamOutput } from './utils';
+import { shouldStreamOutput } from './utils';
 import { signalToCode } from '../utils/exit-codes';
 import { handleImport } from '../utils/handle-import';
 import * as pc from 'picocolors';

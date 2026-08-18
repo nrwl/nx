@@ -26,19 +26,7 @@ import { output } from '../../utils/output';
 import { projectHasTarget } from '../../utils/project-graph-utils';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { generateGraph } from '../graph/graph';
-import { type OutputStyle } from '../yargs-utils/shared-options';
 import { PublishOptions } from './command-object';
-
-/**
- * Output styles that print every task's output in full. `nx release publish`
- * upgrades anything else to `static-full`, so its dry-run report is never
- * collapsed away. Typed as `OutputStyle[]` so a typo here is a compile error.
- */
-const FULL_OUTPUT_STYLES: readonly OutputStyle[] = [
-  'stream',
-  'stream-without-prefixes',
-  'static-full',
-];
 import {
   createNxReleaseConfig,
   handleNxReleaseConfigError,
@@ -325,16 +313,13 @@ async function runPublishOnProjects(
     { nxJson },
     {
       targets: [requiredTargetName],
+      // Everything this command reports — the registry, the tag, the
+      // package.json diff, the dry-run summary — is printed from inside the
+      // task, so the failures-only default would swallow all of it (under
+      // --dry-run every task succeeds by definition). An explicit
+      // --output-style still wins, since it comes in through the spread.
+      outputStyle: 'static',
       ...(args as any),
-      // Everything this command reports — the dry-run summary, the package
-      // contents, the registry and tag — is printed from inside the task, so it
-      // must not be collapsed away when the task succeeds. Honor an explicit
-      // full-output style, but upgrade any collapsing one (including `static`,
-      // and the default) to `static-full`. The `satisfies` makes a typo in
-      // these literals a compile error rather than a silent fall-through.
-      outputStyle: FULL_OUTPUT_STYLES.includes(args.outputStyle)
-        ? args.outputStyle
-        : 'static-full',
       // It is possible for workspaces to have circular dependencies between packages and still release them to a registry
       nxIgnoreCycles: true,
     },
