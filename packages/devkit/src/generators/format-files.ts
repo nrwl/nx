@@ -177,7 +177,11 @@ async function formatWithOxfmt(
     const { formatted, errors } = await formatFilesWithOxfmt(
       staged,
       tree.root,
-      getGeneratedOxfmtConfig(oxfmtConfigFiles, files)
+      getGeneratedOxfmtConfig(oxfmtConfigFiles, files),
+      // The tree is the post-flush truth, and the only place it exists: disk
+      // cannot see a config the generator staged, and still sees one it
+      // deleted. Both mislead oxfmt's "two configs in one directory" check.
+      oxfmtConfigFiles?.filter((name) => tree.exists(name))
     );
     for (const [filePath, content] of formatted) {
       tree.write(filePath, content);

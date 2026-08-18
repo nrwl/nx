@@ -657,7 +657,8 @@ function overrideOptionsForFile(
 async function resolveOxfmtConfigInDir(
   dir: string,
   workspaceRoot: string,
-  seedConfig?: { name: string; content: string }
+  seedConfig?: { name: string; content: string },
+  rootConfigNames?: readonly string[]
 ): Promise<ResolvedOxfmtConfig | undefined> {
   const isRoot = path.resolve(dir) === path.resolve(workspaceRoot);
 
@@ -665,10 +666,17 @@ async function resolveOxfmtConfigInDir(
   // refuses to run, so choosing one here would format against a config the next
   // `nx format:write` rejects outright. A seed shares the flushed directory
   // with whatever is on disk, and replaces only the name it matches.
-  const candidates = oxfmtConfigFiles.filter(
-    (name) =>
-      existsSync(path.join(dir, name)) || (isRoot && seedConfig?.name === name)
-  );
+  //
+  // `rootConfigNames` is the root's post-flush state, which disk cannot see: a
+  // staged config is not there yet, and a deleted one still is.
+  const candidates =
+    isRoot && rootConfigNames
+      ? rootConfigNames
+      : oxfmtConfigFiles.filter(
+          (name) =>
+            existsSync(path.join(dir, name)) ||
+            (isRoot && seedConfig?.name === name)
+        );
   if (candidates.length > 1) {
     return {
       error: `Both '${candidates[0]}' and '${candidates[1]}' found in ${
@@ -687,7 +695,10 @@ async function resolveOxfmtConfigInDir(
     }
   }
 
-  for (const name of oxfmtConfigFiles) {
+  // `candidates`, not every supported name: at the root a config the tree
+  // deletes is still on disk, and reading it would format against a file the
+  // flush is about to remove.
+  for (const name of candidates) {
     const configPath = path.join(dir, name);
     if (!existsSync(configPath)) {
       continue;
@@ -734,7 +745,8 @@ type DirectoryConfig = ResolvedOxfmtConfig & {
 
 function createOxfmtConfigResolver(
   workspaceRoot: string,
-  seedConfig?: { name: string; content: string }
+  seedConfig?: { name: string; content: string },
+  rootConfigNames?: readonly string[]
 ): (fileDir: string) => Promise<DirectoryConfig> {
   const cache = new Map<string, Promise<DirectoryConfig>>();
 
@@ -743,7 +755,8 @@ function createOxfmtConfigResolver(
       const config = await resolveOxfmtConfigInDir(
         dir,
         workspaceRoot,
-        seedConfig
+        seedConfig,
+        rootConfigNames
       );
       if (config) {
         return {
@@ -850,7 +863,10 @@ function findOxfmtConfigInBatch(
 export async function formatFilesWithOxfmt(
   files: { path: string; content: string }[],
   workspaceRoot: string,
-  seedConfig?: { name: string; content: string }
+  seedConfig?: { name: string; content: string },
+  // Every supported config name the root holds once the tree is flushed. Only a
+  // Tree-holding caller knows this; without it the root is resolved from disk.
+  rootConfigNames?: readonly string[]
 ): Promise<{ formatted: Map<string, string>; errors?: string[] }> {
   const formatted = new Map<string, string>();
   if (files.length === 0) {
@@ -864,7 +880,8 @@ export async function formatFilesWithOxfmt(
   // that is still pass it; this is the fallback.
   const resolveConfig = createOxfmtConfigResolver(
     workspaceRoot,
-    seedConfig ?? findOxfmtConfigInBatch(files)
+    seedConfig ?? findOxfmtConfigInBatch(files),
+    rootConfigNames
   );
   // All three generator-side values come from one constant so they cannot
   // drift. oxfmt honours `.prettierignore` as well as `.gitignore` (measured

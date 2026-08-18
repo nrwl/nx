@@ -1065,6 +1065,37 @@ describe('formatFilesWithOxfmt', () => {
       expect(formatted.get('a.ts')).toEqual("const x = 'hi';\n");
     });
 
+    it('reports two configs that exist only in the tree', async () => {
+      // Neither is on disk, so only the caller's post-flush view shows the pair
+      // the CLI will refuse to load. One seed alone cannot.
+      const { formatted, errors } = await formatFilesWithOxfmt(
+        [{ path: 'a.ts', content: 'const x =  "hi"' }],
+        workspaceRoot,
+        { name: '.oxfmtrc.json', content: '{ "singleQuote": true }' },
+        ['.oxfmtrc.json', '.oxfmtrc.jsonc']
+      );
+
+      expect(errors?.length).toBe(1);
+      expect(errors[0]).toContain(".oxfmtrc.json' and '.oxfmtrc.jsonc'");
+      expect(formatted.size).toBe(0);
+    });
+
+    it('ignores a config the tree deletes rather than reporting a pair', async () => {
+      // On disk until the flush removes it, so the two never coexist. The
+      // surviving config still has to win over the one on its way out.
+      writeConfig({ singleQuote: false });
+
+      const { formatted, errors } = await formatFilesWithOxfmt(
+        [{ path: 'a.ts', content: 'const x =  "hi"' }],
+        workspaceRoot,
+        { name: '.oxfmtrc.jsonc', content: '{ "singleQuote": true }' },
+        ['.oxfmtrc.jsonc']
+      );
+
+      expect(errors).toBeUndefined();
+      expect(formatted.get('a.ts')).toEqual("const x = 'hi';\n");
+    });
+
     it('fails only the files under an unreadable nested config', async () => {
       writeConfig({ singleQuote: true });
       writeFileIn('apps/foo/.oxfmtrc.json', '{ not json');
