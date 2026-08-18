@@ -75,10 +75,16 @@ export class ReleaseGroupProcessor {
   private groupsWithFinalizedVersionDecisions: Set<string> = new Set();
 
   /**
-   * Tracks projects whose dependency manifests must wait until their release
-   * group has completed all version decisions.
+   * Tracks projects whose dependency manifests must wait until all release
+   * groups have completed their version decisions.
    */
   private projectsWithDeferredDependencyUpdates: Set<string> = new Set();
+
+  /**
+   * Indicates that every release group has completed its version decisions,
+   * so dependency manifests can use final versions safely.
+   */
+  private allVersionDecisionsFinalized = false;
 
   /**
    * Keeps track of which projects have already had their versions bumped.
@@ -202,6 +208,8 @@ export class ReleaseGroupProcessor {
       this.processedGroups.add(nextGroup);
       processOrder.push(nextGroup);
     }
+
+    await this.finalizeAllVersionDecisions(processOrder);
 
     return processOrder;
   }
@@ -334,12 +342,6 @@ export class ReleaseGroupProcessor {
   private async processGroup(releaseGroupName: string): Promise<void> {
     const groupNode = this.releaseGraph.groupGraph.get(releaseGroupName)!;
     await this.bumpVersions(groupNode.group);
-
-    // Flush the project loggers for the group
-    for (const project of groupNode.group.projects) {
-      const projectLogger = this.getProjectLoggerForProject(project);
-      projectLogger.flush();
-    }
   }
 
   private async bumpVersions(
@@ -356,7 +358,7 @@ export class ReleaseGroupProcessor {
     releaseGroup: ReleaseGroupWithName
   ): Promise<boolean> {
     if (releaseGroup.projects.length === 0) {
-      await this.finalizeVersionDecisionsForGroup(releaseGroup);
+      this.finalizeVersionDecisionsForGroup(releaseGroup);
       return false;
     }
 
@@ -451,7 +453,7 @@ export class ReleaseGroupProcessor {
         }
       }
 
-      await this.finalizeVersionDecisionsForGroup(releaseGroup);
+      this.finalizeVersionDecisionsForGroup(releaseGroup);
       return bumpedByDependency;
     }
 
@@ -503,7 +505,7 @@ export class ReleaseGroupProcessor {
       });
     }
 
-    await this.finalizeVersionDecisionsForGroup(releaseGroup);
+    this.finalizeVersionDecisionsForGroup(releaseGroup);
 
     // Then, update dependencies for all projects in the fixed group, also in topological order
     if (bumped) {
@@ -578,7 +580,7 @@ export class ReleaseGroupProcessor {
       }
     }
 
-    await this.finalizeVersionDecisionsForGroup(releaseGroup);
+    this.finalizeVersionDecisionsForGroup(releaseGroup);
 
     // Third pass: Update dependencies also in topological order
     for (const project of sortedProjects) {
@@ -780,11 +782,7 @@ export class ReleaseGroupProcessor {
       );
     }
 
-    const releaseGroupName = this.getReleaseGroupNameForProject(projectName);
-    if (
-      releaseGroupName &&
-      !this.groupsWithFinalizedVersionDecisions.has(releaseGroupName)
-    ) {
+    if (!this.allVersionDecisionsFinalized) {
       this.projectsWithDeferredDependencyUpdates.add(projectName);
       return;
     }
@@ -845,15 +843,54 @@ export class ReleaseGroupProcessor {
     }
   }
 
-  private async finalizeVersionDecisionsForGroup(
+  private finalizeVersionDecisionsForGroup(
     releaseGroup: ReleaseGroupWithName
-  ): Promise<void> {
+  ): void {
     this.groupsWithFinalizedVersionDecisions.add(releaseGroup.name);
+  }
 
-    for (const projectName of releaseGroup.projects) {
-      if (this.projectsWithDeferredDependencyUpdates.has(projectName)) {
-        await this.updateDependenciesForProject(projectName);
+  private async finalizeAllVersionDecisions(
+    processOrder: string[]
+  ): Promise<void> {
+    const unfinalizedReleaseGroups = Array.from(
+      this.releaseGraph.groupGraph.keys()
+    ).filter(
+      (releaseGroupName) =>
+        !this.groupsWithFinalizedVersionDecisions.has(releaseGroupName)
+    );
+    if (unfinalizedReleaseGroups.length > 0) {
+      const releaseGroupNames = unfinalizedReleaseGroups
+        .map((releaseGroupName) => `"${releaseGroupName}"`)
+        .join(', ');
+      throw new Error(
+        `Unable to finalize version decisions for release groups ${releaseGroupNames}. Please report this as a bug on https://github.com/nrwl/nx/issues.`
+      );
+    }
+
+    this.allVersionDecisionsFinalized = true;
+
+    for (const releaseGroupName of processOrder) {
+      const releaseGroup = this.releaseGraph.groupGraph.get(releaseGroupName)!;
+      for (const projectName of releaseGroup.group.projects) {
+        if (this.projectsWithDeferredDependencyUpdates.has(projectName)) {
+          await this.updateDependenciesForProject(projectName);
+        }
       }
+
+      // Keep each group's buffered output together and in processing order.
+      for (const projectName of releaseGroup.group.projects) {
+        this.getProjectLoggerForProject(projectName).flush();
+      }
+    }
+
+    if (this.projectsWithDeferredDependencyUpdates.size > 0) {
+      const deferredProjects = Array.from(
+        this.projectsWithDeferredDependencyUpdates,
+        (projectName) => `"${projectName}"`
+      ).join(', ');
+      throw new Error(
+        `Unable to update dependencies for projects ${deferredProjects} because their release groups were not processed. Please report this as a bug on https://github.com/nrwl/nx/issues.`
+      );
     }
   }
 

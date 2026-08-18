@@ -1792,6 +1792,51 @@ describe('ReleaseGroupProcessor', () => {
     });
   });
 
+  it('defers manifest-only dependency updates until all release groups finalize', async () => {
+    const { nxReleaseConfig, projectGraph, filters } =
+      await createNxReleaseConfigAndPopulateWorkspace(
+        tree,
+        `
+          groupA ({ "projectsRelationship": "independent" }):
+            - projectA@1.0.0 [js]
+              -> release config overrides { "version": { "manifestRootsToUpdate": ["dist/projectA"], "preserveLocalDependencyProtocols": false } }
+          groupB ({ "projectsRelationship": "independent" }):
+            - projectB@2.5.0 [js]
+        `,
+        {},
+        mockResolveCurrentVersion
+      );
+
+    updateJson(tree, 'dist/projectA/package.json', (json) => {
+      json.dependencies = {
+        projectB: 'workspace:*',
+      };
+      return json;
+    });
+
+    const processor = await createTestReleaseGroupProcessor(
+      tree,
+      projectGraph,
+      nxReleaseConfig,
+      filters,
+      { userGivenSpecifier: 'minor' }
+    );
+
+    await expect(processor.processGroups()).resolves.toEqual([
+      'groupA',
+      'groupB',
+    ]);
+
+    expect(projectGraph.dependencies.projectA ?? []).toEqual([]);
+    expect(readJson(tree, 'dist/projectA/package.json')).toEqual({
+      name: 'projectA',
+      version: '1.1.0',
+      dependencies: {
+        projectB: '2.6.0',
+      },
+    });
+  });
+
   it('defers dist manifest dependency updates until fixed group versions are finalized', async () => {
     const { nxReleaseConfig, projectGraph, filters } =
       await createNxReleaseConfigAndPopulateWorkspace(
