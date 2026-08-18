@@ -16,13 +16,13 @@ Build an Nx plugin that adds support for my toolchain to this workspace, followi
    - Which targets to infer, and the command behind each one.
    - How manifests declare dependencies on each other, by package name, by relative path, or both.
    - Roughly how many projects the workspace has.
-   - Whether lower-stability Nx APIs are acceptable in exchange for faster graph computation.
-2. Check for a root `package.json` and create one with `npm init -y` plus a dev dependency on `nx` if it is missing, because the plugin generator needs it.
+   - Which Nx versions the plugin has to support, since the disk caching helpers live in a lower-stability entry point.
+2. Check for a root `package.json`. The plugin is a Node package, so the generator has nothing to write to without one. If it is missing, initialize it with whichever package manager the repository already uses, or with `npm init -y` if there is no JavaScript in the repository at all. Do not run `npm init` against a manifest that already exists, because it rewrites fields such as `type` and `license`. Once the manifest is there, `nx init` installs Nx through the detected package manager, so no separate install step is needed.
 3. Generate the plugin with `npx nx add @nx/plugin` and `npx nx g plugin packages/<plugin-name>`, in a directory the toolchain does not treat as a workspace member.
 4. Export `createNodes` from the plugin entry point: glob the manifest, and for each match return a project with cacheable targets that run the toolchain's own commands. Return `{}` for a manifest that describes an aggregate root rather than a package, and infer only the targets each project can run.
 5. Export `createDependencies`: map dependency declarations in the manifests to workspace projects and emit static dependencies.
 6. Register the plugin in `nx.json`, then verify with `NX_DAEMON=false NX_CACHE_PROJECT_GRAPH=false nx show project <project-name> --json`, `nx graph --file=graph.json`, and one real run of every target you inferred.
-7. Measure graph creation with `NX_PERF_LOGGING=true` and work through the checklist under "Tune graph performance" if my plugin accounts for a meaningful share of the time. Reach for the lower-stability disk caching helpers only if I approved them in step 1.
+7. Once the graph is correct, move on to the second phase and optimize it. Measure with `NX_PERF_LOGGING=true`, then work through the performant project graph plugins guide, including disk caching through `@nx/devkit/internal`. Tell me if the Nx version range from step 1 rules those helpers out.
 
 Page: {pageUrl}
 {% /llm_copy_prompt %}
@@ -60,8 +60,9 @@ npx nx g plugin packages/nx-uv
 {% tabitem label="In a repository without Nx" %}
 
 ```shell
+# Only if there is no root package.json yet.
 npm init -y
-npm install --save-dev nx
+
 npx nx init
 npx nx add @nx/plugin
 npx nx g plugin packages/nx-uv
@@ -77,12 +78,11 @@ npx create-nx-plugin nx-uv
 {% /tabitem %}
 {% /tabs %}
 
-In a repository that holds no JavaScript, `nx init` installs Nx under `.nx` and writes no `package.json`, which
-makes the plugin generator fail with `Cannot find package.json`.
-
-Generate the plugin outside any directory your toolchain treats as a workspace member.
-A uv root that globs `packages/*` for members reports `missing a pyproject.toml` as soon as a TypeScript plugin
-lands in `packages/nx-uv`, so exclude that path from the glob or put the plugin somewhere else.
+{% aside type="note" title="Watch for your toolchain's workspace globs" %}
+Some toolchains claim directories through a member glob, and a TypeScript plugin dropped inside one breaks them.
+A uv root that globs `packages/*` reports `missing a pyproject.toml` once the plugin lands in `packages/nx-uv`.
+Exclude that path from the glob, or generate the plugin where the glob doesn't reach.
+{% /aside %}
 
 The plugin entry point exports the two functions, each tied to the glob and options you'll fill in over the next sections:
 
@@ -366,38 +366,25 @@ it('creates a project for each pyproject.toml', async () => {
 The first-party plugins that spawn an external tool mock that step in unit tests and feed in a recorded report fixture, so the tests stay fast and deterministic.
 Plugins scaffolded with `create-nx-plugin` also include an e2e setup that publishes the plugin to a local registry, installs it into a fresh workspace, and asserts on `nx show project --json` output.
 
-## Tune graph performance
+## Optimize graph creation
 
-`createNodes` runs before every task, including the ones Nx restores from cache.
-Reading one small manifest per project, as the example above does, is fast enough for most workspaces.
-Measure before changing anything:
+A correct plugin is the first half of the job.
+`createNodes` runs before every task, including the ones Nx restores from cache, so whatever it costs is charged
+to every command in the workspace.
+Measure that cost once the graph is right:
 
 ```shell
-# Cold: your plugin recomputes everything.
 NX_PERF_LOGGING=true NX_DAEMON=false NX_CACHE_PROJECT_GRAPH=false npx nx graph --file=graph.json
-
-# Warm: Nx reuses the cached graph.
-NX_PERF_LOGGING=true NX_DAEMON=false npx nx graph --file=graph.json
 ```
 
-Nx prints a timing per step, including `<plugin-name>:createNodes`, `<plugin-name>:createDependencies`, and
-`Load Nx Plugin: <plugin-name>`.
-That last one is the cost of importing your entry point, and it is paid on warm runs too.
-When your plugin accounts for a meaningful share of graph creation, work through this list:
+Nx prints a timing per step, including `<plugin-name>:createNodes` and `Load Nx Plugin: <plugin-name>`.
+Loading the entry point is frequently the larger of the two, and it is paid even when Nx reuses a cached graph.
 
-- Read and parse the manifests concurrently, in the single batch `createNodes` hands you.
-- Parse each manifest once and share the result with `createDependencies`.
-- Sort arrays before returning them, so the same input hashes the same way on every machine.
-- Keep top-level imports light and move heavy dependencies behind `await import(...)` in the path that needs them.
-- Replace any per-file child process with a single invocation for the whole workspace.
-- Cache results to disk once reparsing unchanged manifests dominates the remaining time.
+The patterns that bring those numbers down are caching computed targets to disk, loading manifests in one parallel
+batch, keeping returned output deterministic, and keeping top-level imports light.
+Disk caching uses a handful of helpers from `@nx/devkit/internal`, which nearly every first-party plugin depends
+on.
+They sit at a lower stability tier than the main `@nx/devkit` entry point and can change between versions, and
+some will be promoted to the public API later.
 
-Every API shown above comes from the public `@nx/devkit` entry point, which supports one major version of `nx`
-in either direction.
-Disk caching is the exception.
-First-party plugins use a few lower-stability helpers from `@nx/devkit/internal` for it, and those are subject to
-change between versions.
-Some will be promoted to the public API later.
-Until then you can write the equivalent yourself, which amounts to a content hash plus a JSON file on disk.
-
-For the code behind each of these, see [write a performant project graph plugin](/docs/kb/performant-project-graph-plugins).
+[Write a performant project graph plugin](/docs/kb/performant-project-graph-plugins) has the code for each pattern.
