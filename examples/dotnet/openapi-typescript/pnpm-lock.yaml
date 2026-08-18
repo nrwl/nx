@@ -21,7 +21,7 @@ importers:
         specifier: ~5.9.2
         version: 5.9.3
 
-  apps/web:
+  apps/storefront:
     dependencies:
       '@example/api-client':
         specifier: workspace:*
