@@ -44,10 +44,10 @@ The nx plugin found a project inside apps/demo but did not infer a "build" targe
 
 This is not the same as the missing project error above.
 The plugin found the project, so the configuration file is already named correctly.
-What differs here is the target name: the plugin infers a task under a different name than the executor target the migration is converting.
-One way this happens is when two targets share the same executor options and the plugin infers only one of them.
-For example, a `build` and a `test` target with identical options collapse to a single inference, and the plugin infers `test` but not `build`.
-Migrate that target by hand, or [open an issue](https://github.com/nrwl/nx/issues) with details about your project structure.
+The plugin infers only the tasks the tool's configuration file supports, and this configuration file does not support the task the migration is converting.
+For example, `@nx/vite` infers no `serve` task for a configuration that sets `build.lib`, because there is nothing to serve for a library.
+Check the tool's configuration file for the project and add what the plugin needs to infer that task, or migrate that target by hand.
+If the configuration already supports the task, [open an issue](https://github.com/nrwl/nx/issues) with details about your project structure.
 
 ## Next.js: unable to migrate `outputPath`, `generateLockfile` and `includeDevDependenciesInPackageJson` options
 
