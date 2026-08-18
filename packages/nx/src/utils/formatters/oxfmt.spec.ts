@@ -70,20 +70,22 @@ describe('formatFilesWithOxfmt', () => {
     expect(formatted.get('a.ts')).toEqual("const x = 'hi';\n");
   });
 
-  it('falls through to the config on disk when the generated config is not JSON', async () => {
-    // `singleQuote: true` rather than `false` so the assertion distinguishes
-    // the disk config from oxfmt's defaults - with `false` this test passes
-    // even when the fall-through is removed entirely.
+  it('reports a non-JSON generated config that collides with one on disk', async () => {
+    // This used to fall through to the disk config. Measured against oxfmt
+    // 0.60.0, every pair of discovered names is rejected - `.json`/`.jsonc`,
+    // `.json`/`.config.ts`, `.config.ts`/`.config.mts` - so the flushed
+    // directory is one the CLI refuses to load, whichever one was used here.
     writeConfig({ singleQuote: true });
 
-    const { formatted } = await formatFilesWithOxfmt(
+    const { formatted, errors } = await formatFilesWithOxfmt(
       [{ path: 'a.ts', content: 'const x =  "hi"' }],
       workspaceRoot,
       { name: 'oxfmt.config.ts', content: 'export default {};' }
     );
 
-    // Not the bare oxfmt defaults - the workspace's own config still applies.
-    expect(formatted.get('a.ts')).toEqual("const x = 'hi';\n");
+    expect(errors?.length).toBe(1);
+    expect(errors[0]).toContain(".oxfmtrc.json' and 'oxfmt.config.ts'");
+    expect(formatted.size).toBe(0);
   });
 
   // `oxfmt.config.mts` is discovered too, but jest can serve neither half of the
@@ -1012,6 +1014,55 @@ describe('formatFilesWithOxfmt', () => {
       expect(errors?.length).toBe(2);
       expect(errors[0]).toContain('Could not read .editorconfig');
       expect(formatted.size).toBe(0);
+    });
+
+    // Measured against oxfmt 0.60.0: two config files in one directory make the
+    // CLI exit 1 with "Both '.oxfmtrc.json' and '.oxfmtrc.jsonc' found in <dir>"
+    // and format nothing. Taking the first match would format against a config
+    // the next `nx format:write` refuses to load.
+    it('reports two config files in one directory rather than picking one', async () => {
+      writeConfig({ singleQuote: true });
+      writeFileIn('.oxfmtrc.jsonc', '{ "singleQuote": false }');
+
+      const { formatted, errors } = await formatFilesWithOxfmt(
+        [{ path: 'a.ts', content: 'const x =  "hi"' }],
+        workspaceRoot
+      );
+
+      expect(errors?.length).toBe(1);
+      expect(errors[0]).toContain(".oxfmtrc.json' and '.oxfmtrc.jsonc'");
+      expect(formatted.size).toBe(0);
+    });
+
+    it('reports a staged config that collides with a different one on disk', async () => {
+      // The tree has not flushed yet, so only one of the two is on disk - but
+      // both will be once it does, which is when the CLI runs.
+      writeConfig({ singleQuote: true });
+
+      const { formatted, errors } = await formatFilesWithOxfmt(
+        [{ path: 'a.ts', content: 'const x =  "hi"' }],
+        workspaceRoot,
+        { name: '.oxfmtrc.jsonc', content: '{ "singleQuote": false }' }
+      );
+
+      expect(errors?.length).toBe(1);
+      expect(errors[0]).toContain(".oxfmtrc.json' and '.oxfmtrc.jsonc'");
+      expect(formatted.size).toBe(0);
+    });
+
+    it('still formats when a staged config replaces the one on disk', async () => {
+      // Same name, so the flushed directory holds one file, not two. Guards the
+      // duplicate check against firing on every seeded generator run.
+      writeConfig({ singleQuote: false });
+
+      const { formatted, errors } = await formatFilesWithOxfmt(
+        [{ path: 'a.ts', content: 'const x =  "hi"' }],
+        workspaceRoot,
+        { name: '.oxfmtrc.json', content: '{ "singleQuote": true }' }
+      );
+
+      expect(errors).toBeUndefined();
+      expect(formatted.get('a.ts')).toEqual("const x = 'hi';\n");
     });
 
     it('fails only the files under an unreadable nested config', async () => {

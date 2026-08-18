@@ -659,13 +659,27 @@ async function resolveOxfmtConfigInDir(
   workspaceRoot: string,
   seedConfig?: { name: string; content: string }
 ): Promise<ResolvedOxfmtConfig | undefined> {
+  const isRoot = path.resolve(dir) === path.resolve(workspaceRoot);
+
+  // oxfmt defines no precedence between two config files in one directory and
+  // refuses to run, so choosing one here would format against a config the next
+  // `nx format:write` rejects outright. A seed shares the flushed directory
+  // with whatever is on disk, and replaces only the name it matches.
+  const candidates = oxfmtConfigFiles.filter(
+    (name) =>
+      existsSync(path.join(dir, name)) || (isRoot && seedConfig?.name === name)
+  );
+  if (candidates.length > 1) {
+    return {
+      error: `Both '${candidates[0]}' and '${candidates[1]}' found in ${
+        path.relative(workspaceRoot, dir) || '.'
+      } - oxfmt does not define which one wins.`,
+    };
+  }
+
   // The seed is the root config the generator just created, so it only stands
   // in for a config at the root itself.
-  if (
-    seedConfig &&
-    isJsonOxfmtConfig(seedConfig.name) &&
-    path.resolve(dir) === path.resolve(workspaceRoot)
-  ) {
+  if (seedConfig && isJsonOxfmtConfig(seedConfig.name) && isRoot) {
     try {
       return splitOxfmtConfig(parseJson(seedConfig.content));
     } catch (e) {
