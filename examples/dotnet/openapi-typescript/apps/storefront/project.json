@@ -1,9 +1,9 @@
 {
-  "name": "api-client",
+  "name": "storefront",
   "targets": {
     "build": {
-      "command": "tsc -p libs/api-client/tsconfig.json",
-      "dependsOn": ["Api:codegen"],
+      "command": "tsc -p apps/storefront/tsconfig.json",
+      "dependsOn": ["^build"],
       "inputs": ["{projectRoot}/**/*", { "dependentTasksOutputFiles": "**/*" }],
       "outputs": ["{projectRoot}/dist"],
       "cache": true

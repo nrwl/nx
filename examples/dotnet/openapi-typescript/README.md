@@ -25,7 +25,7 @@ error in TypeScript**, without anyone hand-writing an interface twice.
 ## The pipeline
 
 ```
-Api:restore ─▶ Api:build ─▶ Api:codegen ─▶ api-client:build ─▶ web:build
+Api:restore ─▶ Api:build ─▶ Api:codegen ─▶ api-client:build ─▶ storefront:build
                    │              │
        apps/Api/openapi/    libs/api-client/
             Api.json          src/generated
@@ -39,14 +39,14 @@ Api:restore ─▶ Api:build ─▶ Api:codegen ─▶ api-client:build ─▶ w
    a `typescript-fetch` client into `libs/api-client/src/generated`.
 3. **`api-client:build`** compiles that client, along with the hand-written
    `src/assert-types.ts`. That file is the actual test.
-4. **`web:build`** compiles a small front end that imports the client. This edge
-   is not configured anywhere: `apps/web` depends on `@example/api-client` in
+4. **`storefront:build`** compiles a small front end that imports the client. This edge
+   is not configured anywhere: `apps/storefront` depends on `@example/api-client` in
    its `package.json`, and Nx derives the rest.
 
 ```bash
 # From this directory
 pnpm install      # also builds the linked local packages
-nx build web      # runs the whole chain above
+nx build storefront      # runs the whole chain above
 pnpm validate     # nx run-many -t build
 ```
 
@@ -62,7 +62,7 @@ locally.
 "build": { "outputs": ["...", "{projectRoot}/openapi"] }
 ```
 
-The `"..."` splices in the inferred values. Omit it and the array *replaces*
+The `"..."` splices in the inferred values. Omit it and the array _replaces_
 them, dropping `bin` and `obj` from the cache.
 
 **`codegen` and `api-client:build` hash their inputs with
@@ -80,7 +80,7 @@ task you depend on is what actually tracks the change.
 
 ```bash
 # In apps/Api/Program.cs, change `int TemperatureC` to `string TemperatureC`
-nx build web
+nx build storefront
 ```
 
 `api-client:build` fails before the front end is reached:
@@ -93,7 +93,7 @@ Delete `assert-types.ts` and the same change surfaces one step later, in the
 app's own code, because `formatForecast` calls `toFixed` on the value:
 
 ```
-apps/web/src/main.ts(11,41): error TS2551: Property 'toFixed' does not exist on type 'string'.
+apps/storefront/src/main.ts(11,41): error TS2551: Property 'toFixed' does not exist on type 'string'.
 ```
 
 ## Notes
