@@ -6,7 +6,10 @@ import {
   detectFormatterInTree,
   type FormatterType,
 } from '../../utils/formatters';
-import { formatFilesWithOxfmt } from '../../utils/formatters/oxfmt';
+import {
+  formatFilesWithOxfmt,
+  oxfmtConfigFiles,
+} from '../../utils/formatters/oxfmt';
 import type { Tree } from '../tree';
 import { getNxRequirePaths } from '../../utils/installation-directory';
 import { output } from '../../utils/output';
@@ -63,7 +66,10 @@ export async function formatChangedFiles(
     formatterType,
     Array.from(files),
     tree.root,
-    options
+    options,
+    // The post-flush root, which disk cannot see: a config staged here is not
+    // written yet, and one the tree deletes still is.
+    oxfmtConfigFiles.filter((name) => tree.exists(name))
   );
 
   for (const [path, content] of results) {
@@ -96,13 +102,14 @@ function formatDetectedFiles(
   formatterType: FormatterType,
   files: { path: string; content: string | Buffer }[],
   root: string,
-  options?: { silent?: boolean }
+  options?: { silent?: boolean },
+  rootConfigNames?: readonly string[]
 ): Promise<Map<string, string>> {
   switch (formatterType) {
     case 'prettier':
       return formatFilesWithPrettier(files, root, options);
     case 'oxfmt':
-      return runOxfmtBatch(files, root, options);
+      return runOxfmtBatch(files, root, options, rootConfigNames);
     default: {
       // Without this arm an unhandled formatter returns undefined into
       // callers that iterate it.
@@ -186,7 +193,8 @@ async function formatFilesWithPrettier(
 async function runOxfmtBatch(
   files: { path: string; content: string | Buffer }[],
   root: string,
-  options?: { silent?: boolean }
+  options?: { silent?: boolean },
+  rootConfigNames?: readonly string[]
 ): Promise<Map<string, string>> {
   try {
     // The whole batch goes through one call: oxfmt's ESM API is loaded once and
@@ -197,7 +205,9 @@ async function runOxfmtBatch(
         path: file.path,
         content: file.content.toString('utf-8'),
       })),
-      root
+      root,
+      undefined,
+      rootConfigNames
     );
     if (errors?.length && !options?.silent) {
       output.warn({
