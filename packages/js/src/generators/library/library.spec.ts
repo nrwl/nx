@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   getPackageManagerCommand,
@@ -16,6 +16,7 @@ import type { LibraryGeneratorSchema } from './schema';
 
 describe('lib', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
   const defaultOptions: Partial<LibraryGeneratorSchema> = {
     skipTsConfig: false,
     includeBabelRc: false,
@@ -29,8 +30,18 @@ describe('lib', () => {
   };
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
     tree.write('/.gitignore', '');
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   it.each`
@@ -90,6 +101,10 @@ describe('lib', () => {
       // unitTestRunner property is ignored.
       // It only works with our executors.
       expect(tree.exists('my-lib/src/lib/my-lib.spec.ts')).toBeFalsy();
+
+      // `npm-scripts` forces `linter: 'none'` after `normalizeLinterOption` has
+      // already resolved it — nothing else catches a regression there.
+      expect(tree.exists('my-lib/eslint.config.mjs')).toBeFalsy();
     });
 
     it('should generate an empty ts lib using --config=project', async () => {
@@ -261,7 +276,7 @@ describe('lib', () => {
           tree.exists('my-dir/my-lib/src/lib/my-lib.spec.ts')
         ).toBeTruthy();
         expect(tree.exists('my-dir/my-lib/src/index.ts')).toBeTruthy();
-        expect(tree.exists(`my-dir/my-lib/.eslintrc.json`)).toBeTruthy();
+        expect(tree.exists(`my-dir/my-lib/eslint.config.mjs`)).toBeTruthy();
         expect(tree.exists(`my-dir/my-lib/package.json`)).toBeTruthy();
       });
 
@@ -480,6 +495,7 @@ describe('lib', () => {
     `(
       'should ignore $expectedIgnoredFile when bundler=$bundler',
       async ({ bundler, expectedIgnoredFile }) => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await libraryGenerator(tree, {
           ...defaultOptions,
           directory: 'my-lib',
@@ -508,6 +524,7 @@ describe('lib', () => {
     );
 
     it('should ignore rollup and vitest config files when bundler=rollup and unitTestRunner=vitest', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await libraryGenerator(tree, {
         ...defaultOptions,
         directory: 'my-lib',
@@ -535,6 +552,7 @@ describe('lib', () => {
     });
 
     it('should ignore esbuild and vitest config files when bundler=esbuild and unitTestRunner=vitest', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await libraryGenerator(tree, {
         ...defaultOptions,
         directory: 'my-lib',
@@ -563,6 +581,7 @@ describe('lib', () => {
 
     describe('not nested', () => {
       it('should create a local .eslintrc.json', async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await libraryGenerator(tree, {
           ...defaultOptions,
           directory: 'my-lib',
@@ -625,6 +644,7 @@ describe('lib', () => {
 
     describe('nested', () => {
       it('should create a local .eslintrc.json', async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'my-lib',
@@ -751,6 +771,7 @@ describe('lib', () => {
       });
 
       it('should configure the project for linting js files', async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'my-lib',
@@ -812,6 +833,7 @@ describe('lib', () => {
       });
 
       it('should not ignore "out-tsc" from eslint', async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await libraryGenerator(tree, {
           ...defaultOptions,
           directory: 'my-lib',
@@ -1608,8 +1630,29 @@ describe('lib', () => {
     });
   });
 
+  describe('--unit-test-runner vitest', () => {
+    it('should not add dependencies when --skipPackageJson', async () => {
+      const before = readJson(tree, 'package.json');
+
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        unitTestRunner: 'vitest',
+        // `addLint` writes its own dependencies regardless of the flag.
+        linter: 'none',
+        skipPackageJson: true,
+        skipFormat: true,
+      });
+
+      // Guards against the assertion passing because the vitest setup never ran.
+      expect(tree.exists('my-lib/vitest.config.mts')).toBeTruthy();
+      expect(readJson(tree, 'package.json')).toEqual(before);
+    });
+  });
+
   describe('--bundler=esbuild', () => {
     it('should add build with esbuild', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await libraryGenerator(tree, {
         ...defaultOptions,
         directory: 'my-lib',
@@ -1662,6 +1705,7 @@ describe('lib', () => {
 
   describe('--bundler=rollup', () => {
     it('should add build with rollup', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await libraryGenerator(tree, {
         ...defaultOptions,
         directory: 'my-lib',
@@ -2545,6 +2589,7 @@ describe('lib', () => {
     });
 
     it('should ignore "out-tsc" from eslint', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await libraryGenerator(tree, {
         ...defaultOptions,
         directory: 'my-lib',

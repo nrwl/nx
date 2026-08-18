@@ -2,6 +2,7 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/internal';
+import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import {
   addDependenciesToPackageJson,
   formatFiles,
@@ -91,7 +92,7 @@ export async function remote(tree: Tree, schema: Schema) {
     standalone: options.standalone,
     prefix: options.prefix,
     typescriptConfiguration,
-    setParserOptionsProject: options.setParserOptionsProject,
+    enableTypedLinting: isTypedLintingEnabled(options),
   });
 
   const installTasks = [appInstallTask];

@@ -4,7 +4,7 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
-import { addSwcTestConfig } from '@nx/js/internal';
+import { addSwcTestConfig, getTsConfigModuleResolution } from '@nx/js/internal';
 import { join } from 'path';
 import type { JestPresetExtension } from '../../../utils/config/config-file';
 import { getInstalledJestMajorVersion } from '../../../utils/versions';
@@ -60,6 +60,19 @@ export function createFiles(
     ? `test-output/jest/coverage`
     : `${rootOffset}coverage/${projectRoot}`;
 
+  const usesTsJestModuleSettings =
+    !options.isTsSolutionSetup || transformer === 'ts-jest';
+  const moduleResolution = usesTsJestModuleSettings
+    ? getTsConfigModuleResolution(tree)
+    : undefined;
+  // ts-jest forces `moduleResolution: node10` on the CommonJS path for
+  // TypeScript < 6, and node10 ignores package `exports`. Transpiling per file
+  // keeps exports-only workspace libraries resolvable. See NXC-4591.
+  const isolatedModules =
+    options.isTsSolutionSetup &&
+    transformer === 'ts-jest' &&
+    moduleResolution === 'node10';
+
   generateFiles(tree, join(__dirname, commonFilesFolder), projectConfig.root, {
     tmpl: '',
     ...options,
@@ -78,10 +91,9 @@ export function createFiles(
     outDir: options.isTsSolutionSetup
       ? `./out-tsc/jest`
       : `${rootOffset}dist/out-tsc`,
-    module:
-      !options.isTsSolutionSetup || transformer === 'ts-jest'
-        ? 'commonjs'
-        : undefined,
+    module: usesTsJestModuleSettings ? 'commonjs' : undefined,
+    moduleResolution,
+    isolatedModules,
   });
 
   if (options.setupFile !== 'angular') {

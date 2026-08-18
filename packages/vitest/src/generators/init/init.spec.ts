@@ -215,8 +215,7 @@ describe('@nx/vitest:init', () => {
       });
 
       const nxJson = readNxJson(tree);
-      expect(nxJson.targetDefaults).toContainEqual({
-        executor: '@nx/vitest:test',
+      expect(nxJson.targetDefaults?.['@nx/vitest:test']).toEqual({
         cache: true,
         inputs: ['default', '^production'],
       });

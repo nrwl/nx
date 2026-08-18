@@ -26,10 +26,6 @@ export interface JestProjectSchema {
    * @deprecated Use the `compiler` option instead. It will be removed in Nx v22.
    */
   babelJest?: boolean;
-  /**
-   * @deprecated Use the `setupFile` option instead. It will be removed in Nx v22.
-   */
-  skipSetupFile?: boolean;
   keepExistingVersions?: boolean;
 }
 

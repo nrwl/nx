@@ -17,6 +17,10 @@ interface WriterArc {
   readonly __brand: unique symbol;
 }
 
+interface MasterArc {
+  readonly __brand: unique symbol;
+}
+
 interface HashInstruction {
   readonly __brand: unique symbol;
 }
@@ -28,15 +32,15 @@ export declare class ExternalObject<T> {
   }
 }
 export declare class AppLifeCycle {
-  constructor(tasks: Array<Task>, initiatingTasks: Array<string>, runMode: RunMode, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string, workspaceRoot: string, taskGraph: TaskGraph)
+  constructor(tasks: Array<Task>, initiatingTasks: Array<string>, runMode: RunMode, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string, workspaceRoot: string, taskGraph: TaskGraph, isCloudEnabled?: boolean | undefined | null)
   startCommand(threadCount?: number | undefined | null): void
   scheduleTask(task: Task): void
   startTasks(tasks: Array<Task>, metadata: object): void
   printTaskTerminalOutput(task: Task, status: string, output: string): void
   endTasks(taskResults: Array<TaskResult>, metadata: object): void
-  endCommand(): void
+  endCommand(summary?: PerformanceSummaryPayload | undefined | null): void
   __init(doneCallback: (() => unknown)): void
-  registerRunningTask(taskId: string, parserAndWriter: ExternalObject<[ParserArc, WriterArc]>): void
+  registerRunningTask(taskId: string, ptyHandles: ExternalObject<[ParserArc, WriterArc, MasterArc]>): void
   registerRunningTaskWithEmptyParser(taskId: string): void
   appendTaskOutput(taskId: string, output: string, isPtyOutput: boolean): void
   setTaskStatus(taskId: string, status: TaskStatus): void
@@ -47,10 +51,16 @@ export declare class AppLifeCycle {
   registerRunningBatch(batchId: string, batchInfo: BatchInfo): void
   appendBatchOutput(batchId: string, output: string): void
   setBatchStatus(batchId: string, status: BatchStatus): void
+  /**
+   * Set a clickable Nx Cloud link in the TUI: `label` is the text shown,
+   * `url` is opened when it's clicked. This is a `LifeCycle` method so the Nx
+   * Cloud client can call it via the lifecycle it already receives.
+   */
+  setCloudLink(label: string, url: string): void
 }
 
 export declare class ChildProcess {
-  getParserAndWriter(): ExternalObject<[ParserArc, WriterArc]>
+  getPtyHandles(): ExternalObject<[ParserArc, WriterArc, MasterArc]>
   getPid(): number
   kill(signal?: NodeJS.Signals | number): void
   onExit(callback: (message: string) => void): void
@@ -275,6 +285,15 @@ export interface CachedResult {
   size?: number
 }
 
+/**
+ * Cache hits vs total; present only when there was a cache outcome. A bypassed
+ * cache is signalled separately by `cache_skipped`.
+ */
+export interface CacheStat {
+  hits: number
+  total: number
+}
+
 export declare function canInstallNxConsole(): Promise<boolean>
 
 export declare function canInstallNxConsoleForEditor(editor: SupportedEditor): Promise<boolean>
@@ -311,9 +330,28 @@ export interface EventDimensions {
   packageName: string
   packageVersion: string
   duration: string
+  sampleRate: string
   taskCount: string
   projectCount: string
   cachedTaskCount: string
+  cliSource: string
+  interactive: string
+  excludeAppliedMigrations: string
+  include: string
+  includeSource: string
+  multiMajorChoice: string
+  fetchMethod: string
+  fetchFallbackReason: string
+  createCommits: string
+  agenticOutcome: string
+  agentUsed: string
+  errorName: string
+  errorLocation: string
+  migrationName: string
+  promptChoice: string
+  majorsCrossed: string
+  migrationCount: string
+  appliedCount: string
 }
 
 export declare const enum EventType {
@@ -357,6 +395,13 @@ export declare function findImports(projectFileMap: Record<string, Array<string>
  */
 export declare function flushTelemetry(): void
 
+/**
+ * The single duration formatter — used by the task list, terminal report, and TUI
+ * popup. Exposed to JS as `formatDuration` so all three share one implementation.
+ * 0 (or sub-millisecond) → "<1ms", then "470ms", "13.4s", "1m 30s".
+ */
+export declare function formatDuration(ms: number): string
+
 export declare function getBinaryTarget(): string
 
 export declare function getDefaultMaxCacheSize(cachePath: string): number
@@ -370,6 +415,16 @@ export declare function getEventDimensions(): EventDimensions
  * for a single task.
  */
 export declare function getFilesForOutputsBatch(directory: string, entriesBatch: Array<Array<string>>): Array<Array<string>>
+
+/**
+ * The same list, for JavaScript callers that walk a tree rather than the
+ * filesystem - `visitNotIgnoredFiles` - so both sides apply one baseline
+ * instead of maintaining a second copy that drifts.
+ *
+ * The patterns are gitignore-shaped, so they read the same to the `ignore`
+ * crate here and the `ignore` npm package there.
+ */
+export declare function getHardcodedIgnorePatterns(): Array<string>
 
 /**
  * If `workspace_root` is inside a git worktree, returns the main repo root.
@@ -447,14 +502,14 @@ export interface HashInputs {
  * so the caller can set it as an env var for child processes.
  * Used by CLI and daemon.
  */
-export declare function initializeTelemetry(connection: ExternalObject<NxDbConnection>, workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): string
+export declare function initializeTelemetry(connection: ExternalObject<NxDbConnection>, workspaceId: string, userId: string | undefined | null, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): string
 
 /**
  * Initialize telemetry with a pre-fetched session ID.
  * No DB connection — used by plugin workers that inherit the
  * session ID from their parent process via env var.
  */
-export declare function initializeTelemetryWithSessionId(sessionId: string, workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): void
+export declare function initializeTelemetryWithSessionId(sessionId: string, workspaceId: string, userId: string | undefined | null, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): void
 
 export interface InputsInput {
   input: string
@@ -506,7 +561,34 @@ export declare function killProcessTree(rootPid: number, signal?: string | numbe
  */
 export declare function killProcessTreeGraceful(rootPid: number, signal?: string | number | undefined | null, gracePeriodMs?: number | undefined | null): Promise<void>
 
+/**
+ * A docs link rendered as an OSC 8 hyperlink. Both fields come from TS so the
+ * popup never hardcodes a URL.
+ */
+export interface Link {
+  text: string
+  href: string
+}
+
 export declare function logDebug(message: string): void
+
+/**
+ * Checks which `paths` match the given `globs`, using the same glob engine
+ * as the task hasher (`build_glob_set`). Used to statically match
+ * `dependentTasksOutputFiles` globs against candidate paths.
+ */
+export declare function matchGlobPaths(globs: Array<string>, paths: Array<string>): Array<boolean>
+
+/**
+ * Statically checks which `paths` would be captured by the given output
+ * `entries`, without touching the file system. Mirrors `expand_outputs`
+ * semantics: entries match themselves and anything nested under them (so a
+ * directory entry captures its contents), negated (`!`-prefixed) entries
+ * exclude matches from the whole entry set, and a non-empty list with only
+ * negated entries matches everything not excluded. An empty list matches
+ * nothing.
+ */
+export declare function matchOutputPaths(entries: Array<string>, paths: Array<string>): Array<boolean>
 
 /** Combined metadata for groups and processes */
 export interface Metadata {
@@ -545,6 +627,26 @@ export interface NxWorkspaceFilesExternals {
 }
 
 export declare function parseTaskStatus(stringStatus: string): TaskStatus
+
+/**
+ * Structured run report shown in the exit-countdown popup. The TUI builds the
+ * visual from these numbers rather than receiving a pre-formatted string.
+ */
+export interface PerformanceSummaryPayload {
+  runDurationMs: number
+  criticalPathMs: number
+  criticalPathTaskCount: number
+  recoverableMs: number
+  cache?: CacheStat
+  cacheSkipped: boolean
+  /** Already in display order; a multi-line entry embeds a task list. */
+  recommendations: Array<string>
+  /**
+   * Phrases already in `recommendations` to hyperlink in place (e.g. the
+   * remote-cache CTA); empty when none apply.
+   */
+  links: Array<Link>
+}
 
 /** Process metadata (static, doesn't change during process lifetime) */
 export interface ProcessMetadata {

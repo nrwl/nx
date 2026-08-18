@@ -11,10 +11,21 @@ import { libraryGenerator } from './library';
 
 describe('lib', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
     jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   describe('not nested', () => {
@@ -153,12 +164,23 @@ describe('lib', () => {
 
     it('should generate files', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         directory: 'my-lib',
       });
 
       expect(tree.exists(`my-lib/jest.config.cts`)).toBeTruthy();
       expect(tree.exists(`my-lib/src/index.ts`)).toBeTruthy();
       expect(tree.exists(`my-lib/src/lib/my-lib.spec.ts`)).toBeFalsy();
+      expect(tree.exists(`my-lib/eslint.config.mjs`)).toBeTruthy();
+    });
+
+    it('should generate the .eslintrc.json file (eslintrc)', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+      await libraryGenerator(tree, {
+        linter: 'eslint',
+        directory: 'my-lib',
+      });
+
       expect(readJson(tree, `my-lib/.eslintrc.json`)).toMatchSnapshot();
     });
   });
@@ -180,6 +202,7 @@ describe('lib', () => {
 
     it('should generate files', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         directory: 'my-dir/my-lib',
       });
 
@@ -238,6 +261,48 @@ describe('lib', () => {
       expect(tree.exists(`my-lib/jest.config.cts`)).toBeFalsy();
       expect(tree.exists(`my-lib/lib/my-lib.spec.ts`)).toBeFalsy();
       expect(readJson(tree, `my-lib/tsconfig.json`)).toMatchSnapshot();
+    });
+  });
+
+  describe('--unit-test-runner vitest', () => {
+    it('should generate a vitest configuration', async () => {
+      await libraryGenerator(tree, {
+        directory: 'my-lib',
+        unitTestRunner: 'vitest',
+      });
+
+      expect(tree.exists('my-lib/vitest.config.mts')).toBeTruthy();
+      expect(tree.exists('my-lib/jest.config.cts')).toBeFalsy();
+      expect(
+        readJson(tree, 'my-lib/tsconfig.spec.json').compilerOptions.types
+      ).toContain('vitest/globals');
+    });
+
+    // A library without a controller or service has no spec at all, since
+    // `deleteFiles` drops the one @nx/js:library generates.
+    it('should pass with no tests', async () => {
+      await libraryGenerator(tree, {
+        directory: 'my-lib',
+        unitTestRunner: 'vitest',
+      });
+
+      expect(tree.read('my-lib/vitest.config.mts', 'utf-8')).toContain(
+        'passWithNoTests: true'
+      );
+    });
+
+    it('should generate controller and service specs', async () => {
+      await libraryGenerator(tree, {
+        directory: 'my-lib',
+        unitTestRunner: 'vitest',
+        controller: true,
+        service: true,
+      });
+
+      expect(
+        tree.exists('my-lib/src/lib/my-lib.controller.spec.ts')
+      ).toBeTruthy();
+      expect(tree.exists('my-lib/src/lib/my-lib.service.spec.ts')).toBeTruthy();
     });
   });
 
@@ -361,6 +426,7 @@ describe('lib', () => {
 
     it('should add project references when using TS solution', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         directory: 'mylib',
         unitTestRunner: 'jest',
         useProjectJson: false,
@@ -496,6 +562,7 @@ describe('lib', () => {
 
     it('should create a correct package.json for buildable libraries', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         directory: 'mylib',
         unitTestRunner: 'jest',
         useProjectJson: false,
@@ -605,6 +672,7 @@ describe('lib', () => {
 
     it('should generate project.json if useProjectJson is true', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         directory: 'mylib',
         unitTestRunner: 'jest',
         useProjectJson: true,

@@ -154,7 +154,7 @@ describe('React Rspack Module Federation - TS Solution + PM Workspaces', () => {
     // ========================================
     // Test 11: Run E2E tests (if configured)
     // ========================================
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       updateFile(
         `${shell}-e2e/src/integration/app.spec.ts`,
         stripIndents`

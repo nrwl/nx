@@ -1,4 +1,5 @@
-import { formatFiles, logger, readJson, Tree, updateJson } from '@nx/devkit';
+import { formatFiles, logger, readJson, updateJson } from '@nx/devkit';
+import type { Tree } from '@nx/devkit';
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
 import * as path from 'path';
 

@@ -32,9 +32,23 @@ export async function ensurePackageHasProvenance(
       packageVersion,
       '--json --silent'
     );
-    const npmViewResult = JSON.parse(result);
+    const parsed = JSON.parse(result);
+    // `npm view <pkg>@<spec> --json` returns a bare object on npm <= 11 but an
+    // array on npm 12 and pnpm, even for a single resolved version. A version
+    // range matches several versions and the registry lists all of them
+    // (including deprecated ones the installer skips), so we cannot tell which
+    // one will actually be installed; refuse rather than verify the wrong
+    // artifact.
+    if (Array.isArray(parsed) && parsed.length > 1) {
+      throw new ProvenanceError(
+        packageName,
+        packageVersion,
+        'Provenance can only be verified for a single version, but this version resolved to multiple candidates. Specify an exact version.'
+      );
+    }
+    const npmViewResult = Array.isArray(parsed) ? parsed[0] : parsed;
 
-    const attURL = npmViewResult.dist?.attestations?.url;
+    const attURL = npmViewResult?.dist?.attestations?.url;
 
     if (!attURL)
       throw new ProvenanceError(

@@ -15,8 +15,7 @@ describe('Angular Cypress Component Tests - Buildable Lib', () => {
 
   afterAll(() => cleanupCypressComponentTests());
 
-  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
-  it.skip('should test buildable lib not being used in app', () => {
+  it('should test buildable lib not being used in app', async () => {
     const { appName, buildableLibName } = setup;
 
     expect(() => {
@@ -31,7 +30,7 @@ describe('Angular Cypress Component Tests - Buildable Lib', () => {
     runCLI(
       `generate @nx/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build --no-interactive`
     );
-    if (runE2ETests('cypress')) {
+    if (await runE2ETests('cypress')) {
       expect(runCLI(`component-test ${buildableLibName}`)).toContain(
         'All specs passed!'
       );

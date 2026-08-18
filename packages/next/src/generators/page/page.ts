@@ -12,6 +12,7 @@ import {
 } from '@nx/devkit';
 
 import { addStyleDependencies } from '../../utils/styles';
+import { assertSupportedNextVersion } from '../../utils/assert-supported-next-version';
 import { Schema } from './schema';
 
 /*
@@ -20,6 +21,7 @@ import { Schema } from './schema';
  * it is under `pages` folder.
  */
 export async function pageGenerator(host: Tree, schema: Schema) {
+  assertSupportedNextVersion(host);
   const options = await normalizeOptions(host, schema);
   const componentTask = await reactComponentGenerator(host, {
     ...options,

@@ -404,6 +404,52 @@ describe('setup-ai-agents generator', () => {
         expect(config.enabledPlugins['nx@nx-claude-plugins']).toBe(true);
       });
 
+      it('should allow analytics requests through the sandbox network filter', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.sandbox.network.allowedDomains).toEqual([
+          'www.google-analytics.com',
+        ]);
+      });
+
+      it('should preserve existing sandbox allowed domains and not duplicate the analytics domain', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        tree.write(
+          '.claude/settings.json',
+          JSON.stringify({
+            sandbox: {
+              autoAllowBashIfSandboxed: true,
+              network: {
+                allowedDomains: ['example.com', 'www.google-analytics.com'],
+              },
+            },
+          })
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.sandbox.autoAllowBashIfSandboxed).toBe(true);
+        expect(config.sandbox.network.allowedDomains).toEqual([
+          'example.com',
+          'www.google-analytics.com',
+        ]);
+      });
+
       it('should preserve existing ref in nx-claude-plugins source', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',

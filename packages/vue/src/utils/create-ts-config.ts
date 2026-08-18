@@ -1,6 +1,9 @@
 import { Tree, updateJson, writeJson } from '@nx/devkit';
 import * as shared from '@nx/js';
-import { isUsingTsSolutionSetup } from '@nx/js/internal';
+import {
+  getTsConfigBaseOptions,
+  isUsingTsSolutionSetup,
+} from '@nx/js/internal';
 
 export function createTsConfig(
   host: Tree,
@@ -89,12 +92,11 @@ export function createTsConfigForNonTsSolution(
   const json = {
     compilerOptions: {
       allowJs: true,
-      esModuleInterop: false,
       allowSyntheticDefaultImports: true,
       strict: options.strict,
       jsx: 'preserve',
       jsxImportSource: 'vue',
-      moduleResolution: 'node',
+      moduleResolution: 'bundler',
       resolveJsonModule: true,
     },
     files: [],
@@ -116,7 +118,7 @@ export function createTsConfigForNonTsSolution(
   if (options.rootProject) {
     json.compileOnSave = false;
     json.compilerOptions = {
-      ...shared.tsConfigBaseOptions,
+      ...getTsConfigBaseOptions(host),
       ...json.compilerOptions,
     };
     json.exclude = ['node_modules', 'tmp'];

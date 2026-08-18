@@ -1,6 +1,6 @@
-import { joinPathFragments, Tree } from '@nx/devkit';
-import { upsertTargetDefault } from '@nx/devkit/internal';
 import {
+  joinPathFragments,
+  Tree,
   updateJson,
   generateFiles,
   logger,
@@ -10,15 +10,18 @@ import {
   readNxJson,
   updateNxJson,
 } from '@nx/devkit';
+import { upsertTargetDefault } from '@nx/devkit/internal';
 import { CustomServerSchema } from './schema';
 import { join } from 'path';
 import { configureForSwc } from '../../utils/add-swc-to-custom-server';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
+import { assertSupportedNextVersion } from '../../utils/assert-supported-next-version';
 
 export async function customServerGenerator(
   host: Tree,
   options: CustomServerSchema
 ) {
+  assertSupportedNextVersion(host);
   const project = readProjectConfiguration(host, options.project);
   const swcServerName = '.server.swcrc';
 

@@ -7,6 +7,7 @@ import {
   runTasksInSerial,
   type Tree,
 } from '@nx/devkit';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import { getUiFramework } from '../../utils/framework';
 import { nxVersion, reactViteVersion } from '../../utils/versions';
 import { storiesGenerator } from '../stories/stories';
@@ -26,6 +27,8 @@ export async function storybookConfigurationGeneratorInternal(
   host: Tree,
   schema: StorybookConfigureSchema
 ) {
+  assertSupportedReactVersion(host);
+
   const tasks: GeneratorCallback[] = [];
   const nxJson = readNxJson(host);
   const addPluginDefault =
@@ -43,7 +46,9 @@ export async function storybookConfigurationGeneratorInternal(
       addDependenciesToPackageJson(
         host,
         {},
-        { '@vitejs/plugin-react': reactViteVersion }
+        { '@vitejs/plugin-react': reactViteVersion },
+        undefined,
+        true
       )
     );
   }

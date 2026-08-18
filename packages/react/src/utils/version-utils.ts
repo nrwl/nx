@@ -9,6 +9,7 @@ import {
   reactDomVersion,
   reactIsV18Version,
   reactIsVersion,
+  reactRouterVersion,
   reactV18Version,
   reactVersion,
   typesReactDomV18Version,
@@ -26,6 +27,8 @@ type ReactDependenciesVersions = {
   '@types/react': string;
   '@types/react-dom': string;
   '@types/react-is': string;
+  // react-router: always v7 (SSR and newer workspaces)
+  'react-router': string;
 };
 
 export async function getReactDependenciesVersionsToInstall(
@@ -39,6 +42,8 @@ export async function getReactDependenciesVersionsToInstall(
       '@types/react': typesReactV18Version,
       '@types/react-dom': typesReactDomV18Version,
       '@types/react-is': typesReactIsV18Version,
+      // react-router v7 is the SSR package regardless of React version
+      'react-router': reactRouterVersion,
     };
   } else {
     return {
@@ -48,6 +53,7 @@ export async function getReactDependenciesVersionsToInstall(
       '@types/react': typesReactVersion,
       '@types/react-dom': typesReactDomVersion,
       '@types/react-is': typesReactIsVersion,
+      'react-router': reactRouterVersion,
     };
   }
 }

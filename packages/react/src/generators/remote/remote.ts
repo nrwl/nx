@@ -1,4 +1,6 @@
 import { ensureRootProjectName } from '@nx/devkit/internal';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
+import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import {
   addDependenciesToPackageJson,
   formatFiles,
@@ -22,7 +24,10 @@ import { updateModuleFederationProject } from '../../rules/update-module-federat
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { normalizeRemoteName } from '../../utils/normalize-remote';
 import { maybeJs } from '../../utils/maybe-js';
+import { warnReactRemoteGeneratorDeprecation } from '../../utils/module-federation-deprecation';
 import {
+  expressVersion,
+  httpProxyMiddlewareVersion,
   moduleFederationEnhancedVersion,
   nxVersion,
 } from '../../utils/versions';
@@ -129,6 +134,8 @@ export function addModuleFederationFiles(
 }
 
 export async function remoteGenerator(host: Tree, schema: Schema) {
+  assertSupportedReactVersion(host);
+  warnReactRemoteGeneratorDeprecation();
   const tasks: GeneratorCallback[] = [];
   const name = await normalizeRemoteName(host, schema.name, schema);
   const options: NormalizedSchema<Schema> = {
@@ -247,7 +254,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
       updateProjectConfiguration(host, options.projectName, projectConfig);
     }
   }
-  if (!options.setParserOptionsProject) {
+  if (!isTypedLintingEnabled(options)) {
     host.delete(
       joinPathFragments(options.appProjectRoot, 'tsconfig.lint.json')
     );
@@ -284,7 +291,17 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
       '@module-federation/enhanced': moduleFederationEnhancedVersion,
       '@nx/web': nxVersion,
       '@nx/module-federation': nxVersion,
-    }
+      // The webpack path also generates a `serve-static` target running the
+      // `module-federation-static-server` executor, which proxies via express.
+      ...(options.bundler !== 'rspack'
+        ? {
+            express: expressVersion,
+            'http-proxy-middleware': httpProxyMiddlewareVersion,
+          }
+        : {}),
+    },
+    undefined,
+    true
   );
   tasks.push(installTask);
 

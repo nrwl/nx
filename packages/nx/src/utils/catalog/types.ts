@@ -3,6 +3,11 @@ export interface CatalogReference {
   isDefaultCatalog: boolean;
 }
 
+export interface CatalogReferenceMatch {
+  catalogRef: string;
+  versionSpec: string;
+}
+
 export interface CatalogEntry {
   [packageName: string]: string;
 }

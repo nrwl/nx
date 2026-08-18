@@ -12,9 +12,9 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-import { getRelativeProjectJsonSchemaPath } from 'nx/src/generators/utils/project-configuration';
 import { join } from 'path';
 import { convertToInferred } from './convert-to-inferred';
+import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 
 let fs: TempFs;
 let projectGraph: ProjectGraph;
@@ -382,7 +382,7 @@ describe('Storybook - Convert To Inferred', () => {
             "options": {
               "config-dir": ".storybook",
               "output-dir": "../../dist/storybook/apps/app1",
-              "webpack-stats-json": true,
+              "stats-json": true,
             },
             "outputs": [
               "{projectRoot}/{options.output-dir}",

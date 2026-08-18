@@ -218,14 +218,15 @@ describe('getE2EWebServerInfo', () => {
         previewTargetName: 'vite:preview',
       },
     });
-    nxJson.targetDefaults = [
-      {
-        target: 'vite:serve',
-        options: {
-          port: 4500,
+    nxJson.targetDefaults = {
+      'vite:serve': [
+        {
+          options: {
+            port: 4500,
+          },
         },
-      },
-    ];
+      ],
+    };
     updateNxJson(tree, nxJson);
 
     // ACT

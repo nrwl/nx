@@ -15,7 +15,7 @@ describe('Next Playwright e2e tests', () => {
   beforeAll(async () => {
     projectName = newProject({
       name: uniq('pw-next'),
-      packages: ['@nx/next'],
+      packages: ['@nx/next', '@nx/js', '@nx/playwright'],
     });
     runCLI(
       `generate @nx/next:app ${appName} --e2eTestRunner=playwright --no-interactive`
@@ -24,8 +24,8 @@ describe('Next Playwright e2e tests', () => {
 
   afterAll(() => cleanupProject());
 
-  it('should execute e2e tests using playwright', () => {
-    if (runE2ETests('playwright')) {
+  it('should execute e2e tests using playwright', async () => {
+    if (await runE2ETests('playwright')) {
       const result = runCLI(`e2e ${appName}-e2e --verbose`);
       expect(result).toContain(
         `Successfully ran target e2e for project ${appName}-e2e`
@@ -33,7 +33,7 @@ describe('Next Playwright e2e tests', () => {
     }
   });
 
-  it('should execute e2e tests using playwright with a library used in the app', () => {
+  it('should execute e2e tests using playwright with a library used in the app', async () => {
     runCLI(
       `generate @nx/js:library ${usedInAppLibName} --unitTestRunner=none --importPath=@mylib --no-interactive`
     );
@@ -53,7 +53,7 @@ describe('Next Playwright e2e tests', () => {
       `
     );
 
-    if (runE2ETests('playwright')) {
+    if (await runE2ETests('playwright')) {
       const result = runCLI(`e2e ${appName}-e2e --verbose`);
       expect(result).toContain(
         `Successfully ran target e2e for project ${appName}-e2e`

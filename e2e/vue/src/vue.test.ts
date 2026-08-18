@@ -14,7 +14,13 @@ describe('Vue Plugin', () => {
 
   beforeAll(() => {
     proj = newProject({
-      packages: ['@nx/vue'],
+      packages: [
+        '@nx/vue',
+        '@nx/vite',
+        '@nx/vitest',
+        '@nx/rsbuild',
+        '@nx/playwright',
+      ],
     });
   });
 
@@ -34,7 +40,7 @@ describe('Vue Plugin', () => {
       `Successfully ran target build for project ${app}`
     );
 
-    if (runE2ETests('playwright')) {
+    if (await runE2ETests('playwright')) {
       const availablePort = await reservePort();
 
       updateFile(`${app}-e2e/playwright.config.mts`, (content) => {
@@ -76,7 +82,7 @@ describe('Vue Plugin', () => {
       `Successfully ran target build for project ${app}`
     );
 
-    if (runE2ETests('playwright')) {
+    if (await runE2ETests('playwright')) {
       const availablePort = await reservePort();
 
       updateFile(`${app}-e2e/playwright.config.mts`, (content) => {

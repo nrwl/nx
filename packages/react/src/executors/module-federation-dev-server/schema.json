@@ -3,6 +3,7 @@
   "continuous": true,
   "outputCapture": "direct-nodejs",
   "title": "Module Federation Dev Server",
+  "x-deprecated": "The `@nx/react:module-federation-dev-server` executor is deprecated. Dynamic federation in `@nx/react:consumer` removes the need for host-orchestrated remote serving. Removed in Nx v24.",
   "description": "Serve a web application.",
   "cli": "nx",
   "type": "object",

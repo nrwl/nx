@@ -1,5 +1,5 @@
 import { gt, lt, parse, valid } from 'semver';
-import { resolvePackageVersionUsingRegistry } from '../../utils/package-manager';
+import { resolvePackageVersionRespectingMinReleaseAge } from './resolve-package-version';
 
 export const DIST_TAGS = ['latest', 'next', 'canary'] as const;
 export type DistTag = (typeof DIST_TAGS)[number];
@@ -55,17 +55,7 @@ export async function normalizeVersionWithTagCheck(
   // registry references and resolve them. Throws on registry failure;
   // callers that need to tolerate registry outages must wrap.
   if (version && !parse(version)) {
-    return resolvePackageVersionUsingRegistry(pkg, version);
+    return resolvePackageVersionRespectingMinReleaseAge(pkg, version);
   }
   return normalizeVersion(version);
-}
-
-export function isNxEquivalentTarget(
-  targetPackage: string,
-  targetVersion: string
-): boolean {
-  if (isLegacyEra(targetVersion)) {
-    return targetPackage === '@nrwl/workspace';
-  }
-  return targetPackage === 'nx' || targetPackage === '@nx/workspace';
 }

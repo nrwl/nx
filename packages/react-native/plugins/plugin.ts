@@ -3,14 +3,16 @@ import {
   calculateHashesForCreateNodes,
   loadConfigFile,
   PluginCache,
+  workspaceDataDirectory,
+  hashObject,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
-  CreateNodesContextV2,
+  CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResult,
-  CreateNodesResultV2,
-  CreateNodesV2,
+  CreateNodesResultArray,
+  CreateNodes,
   detectPackageManager,
   joinPathFragments,
   NxJsonConfiguration,
@@ -20,8 +22,6 @@ import {
 import { dirname, join } from 'path';
 import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { hashObject } from 'nx/src/devkit-internals';
 
 export interface ReactNativePluginOptions {
   startTargetName?: string;
@@ -40,7 +40,7 @@ type ReactNativeTargets = Record<
   TargetConfiguration<ReactNativePluginOptions>
 >;
 
-export const createNodes: CreateNodesV2<ReactNativePluginOptions> = [
+export const createNodes: CreateNodes<ReactNativePluginOptions> = [
   '**/app.{json,config.js,config.ts}',
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
@@ -67,7 +67,7 @@ export const createNodes: CreateNodesV2<ReactNativePluginOptions> = [
         entries.map(() => [lockFileName])
       );
 
-      let results: CreateNodesResultV2 = [];
+      let results: CreateNodesResultArray = [];
       let nodeErrors: Array<[string | null, Error]> = [];
       try {
         results = await createNodesFromFiles(
@@ -108,7 +108,7 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFile: string,
   options: ReactNativePluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   targetsCache: PluginCache<ReactNativeTargets>,
   hash: string
 ): Promise<CreateNodesResult> {
@@ -133,7 +133,7 @@ async function createNodesInternal(
 function buildReactNativeTargets(
   projectRoot: string,
   options: ReactNativePluginOptions,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -182,6 +182,7 @@ function buildReactNativeTargets(
     },
     [options.syncDepsTargetName]: {
       executor: '@nx/react-native:sync-deps',
+      continuous: false,
     },
     [options.upgradeTargetName]: {
       command: `react-native upgrade`,
@@ -194,7 +195,7 @@ function buildReactNativeTargets(
 
 function getAppConfig(
   configFilePath: string,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Promise<any> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 
@@ -203,7 +204,7 @@ function getAppConfig(
 
 async function filterReactNativeConfigs(
   configFiles: readonly string[],
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Promise<{
   entries: Array<{ configFile: string; projectRoot: string }>;
   preErrors: Array<[string, Error]>;

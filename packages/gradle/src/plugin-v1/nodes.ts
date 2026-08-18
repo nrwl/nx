@@ -1,22 +1,24 @@
-import { calculateHashesForCreateNodes } from '@nx/devkit/internal';
 import {
-  CreateNodesV2,
-  CreateNodesContextV2,
+  calculateHashesForCreateNodes,
+  workspaceDataDirectory,
+  PluginCache,
+  findProjectForPath,
+  hashObject,
+} from '@nx/devkit/internal';
+import {
+  CreateNodes,
+  CreateNodesContext,
   ProjectConfiguration,
   TargetConfiguration,
   createNodesFromFiles,
 } from '@nx/devkit';
 import { basename, dirname, join } from 'node:path';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
-import { findProjectForPath } from 'nx/src/devkit-internals';
 
 import {
   populateGradleReport,
   getCurrentGradleReport,
   GradleReport,
 } from './utils/get-gradle-report';
-import { hashObject } from 'nx/src/hasher/file-hasher';
 import {
   gradleConfigAndTestGlob,
   gradleConfigGlob,
@@ -60,7 +62,7 @@ type GradleTargets = Record<string, Partial<ProjectConfiguration>>;
  * @deprecated The `@nx/gradle/plugin-v1` entry is deprecated and will be removed in Nx 24.
  * Switch to the default `@nx/gradle` plugin.
  */
-export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
+export const createNodesV2: CreateNodes<GradlePluginOptions> = [
   gradleConfigAndTestGlob,
   async (files, options, context) => {
     const { buildFiles, projectRoots, gradlewFiles, testFiles } =
@@ -118,7 +120,7 @@ export const makeCreateNodesForGradleConfigFile =
   async (
     gradleFilePath,
     options: GradlePluginOptions | undefined,
-    context: CreateNodesContextV2,
+    context: CreateNodesContext,
     idx?: number
   ) => {
     const projectRoot = dirname(gradleFilePath);
@@ -179,7 +181,7 @@ async function createGradleProject(
   gradleReport: GradleReport,
   gradleFilePath: string,
   options: GradlePluginOptions | undefined,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   testFiles = []
 ) {
   try {
@@ -255,7 +257,7 @@ async function createGradleProject(
 async function createGradleTargets(
   tasks: GradleTask[],
   options: GradlePluginOptions | undefined,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   outputDirs: Map<string, string>,
   gradleProject: string,
   gradleBuildFilePath: string,
@@ -331,7 +333,7 @@ async function createGradleTargets(
 }
 
 function createInputsMap(
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Record<string, TargetConfiguration['inputs']> {
   const namedInputs = context.nxJsonConfiguration.namedInputs;
   return {

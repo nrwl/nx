@@ -188,7 +188,7 @@ describe('Angular AST Utils', () => {
     it('should return true for a component when the "standalone" prop is not set', () => {
       const tree = createTreeWithEmptyWorkspace({});
       updateJson(tree, 'package.json', (json) => {
-        json.dependencies['@angular/core'] = '^19.0.0';
+        json.dependencies['@angular/core'] = '^20.0.0';
         return json;
       });
       const componentSourceText = `import { Component } from '@angular/core';
@@ -263,7 +263,7 @@ describe('Angular AST Utils', () => {
     it('should return true for a directive when the "standalone" prop is not set', () => {
       const tree = createTreeWithEmptyWorkspace({});
       updateJson(tree, 'package.json', (json) => {
-        json.dependencies['@angular/core'] = '^19.0.0';
+        json.dependencies['@angular/core'] = '^20.0.0';
         return json;
       });
       const directiveSourceText = `import { Directive } from '@angular/core';
@@ -330,7 +330,7 @@ describe('Angular AST Utils', () => {
     it('should return true for a pipe when the "standalone" prop is not set', () => {
       const tree = createTreeWithEmptyWorkspace({});
       updateJson(tree, 'package.json', (json) => {
-        json.dependencies['@angular/core'] = '^19.0.0';
+        json.dependencies['@angular/core'] = '^20.0.0';
         return json;
       });
       const pipeSourceText = `import { Pipe } from '@angular/core';

@@ -1,7 +1,9 @@
+import { execFileSync, execSync } from 'child_process';
 import { splitArgsIntoNxArgsAndOverrides } from './command-line-utils';
 import { withEnvironmentVariables as withEnvironment } from '../internal-testing-utils/with-environment';
 
 jest.mock('../project-graph/file-utils');
+jest.mock('child_process');
 
 describe('splitArgs', () => {
   const blockedEnvVars = [
@@ -499,6 +501,121 @@ describe('splitArgs', () => {
           )
       );
       expect(nxArgs.parallel).toEqual(3);
+    });
+  });
+
+  describe('resolving the affected base against git', () => {
+    const execFileSyncMock = execFileSync as jest.Mock;
+    const execSyncMock = execSync as jest.Mock;
+
+    function splitAffectedArgs(args: Record<string, any>, nxJson = {}) {
+      return splitArgsIntoNxArgsAndOverrides(
+        { $0: '', __overrides_unparsed__: [], ...args },
+        'affected',
+        { printWarnings: false },
+        nxJson as any
+      );
+    }
+
+    beforeEach(() => {
+      execFileSyncMock.mockReturnValue(Buffer.from('a1b2c3d\n'));
+    });
+
+    afterEach(() => {
+      jest.resetAllMocks();
+    });
+
+    it('should resolve the merge base by passing revisions as arguments rather than through a shell', () => {
+      splitAffectedArgs({ base: 'main', head: 'HEAD' });
+
+      expect(execSyncMock).not.toHaveBeenCalled();
+      expect(execFileSyncMock).toHaveBeenCalledWith(
+        'git',
+        ['merge-base', 'main', 'HEAD'],
+        expect.anything()
+      );
+    });
+
+    it('should treat a shell substitution in --base as an opaque revision instead of executing it', () => {
+      const { nxArgs } = splitAffectedArgs({ base: '$(touch /tmp/nx-pwned)' });
+
+      expect(execSyncMock).not.toHaveBeenCalled();
+      expect(execFileSyncMock).toHaveBeenCalledWith(
+        'git',
+        ['merge-base', '$(touch /tmp/nx-pwned)', 'HEAD'],
+        expect.anything()
+      );
+      expect(nxArgs.base).toEqual('a1b2c3d');
+    });
+
+    it('should treat a shell substitution in nx.json defaultBase as an opaque revision', () => {
+      splitAffectedArgs({}, { defaultBase: '$(touch /tmp/nx-pwned)' });
+
+      expect(execSyncMock).not.toHaveBeenCalled();
+      expect(execFileSyncMock).toHaveBeenCalledWith(
+        'git',
+        ['merge-base', '$(touch /tmp/nx-pwned)', 'HEAD'],
+        expect.anything()
+      );
+    });
+
+    it('should treat a shell substitution in NX_BASE as an opaque revision', () => {
+      withEnvironment({ NX_BASE: '$(touch /tmp/nx-pwned)' }, () =>
+        splitAffectedArgs({})
+      );
+
+      expect(execSyncMock).not.toHaveBeenCalled();
+      expect(execFileSyncMock).toHaveBeenCalledWith(
+        'git',
+        ['merge-base', '$(touch /tmp/nx-pwned)', 'HEAD'],
+        expect.anything()
+      );
+    });
+
+    it('should reject an option-like base before invoking git', () => {
+      expect(() => splitAffectedArgs({ base: '--upload-pack=id' })).toThrow(
+        /Invalid git revision/
+      );
+      expect(execFileSyncMock).not.toHaveBeenCalled();
+    });
+
+    it('should reject an option-like head before invoking git', () => {
+      expect(() =>
+        splitAffectedArgs({ base: 'main', head: '--upload-pack=id' })
+      ).toThrow(/Invalid git revision/);
+      expect(execFileSyncMock).not.toHaveBeenCalled();
+    });
+
+    it('should reject an option-like defaultBase from nx.json before invoking git', () => {
+      expect(() =>
+        splitAffectedArgs({}, { defaultBase: '--upload-pack=id' })
+      ).toThrow(/Invalid git revision/);
+      expect(execFileSyncMock).not.toHaveBeenCalled();
+    });
+
+    it('should fall back to the fork point without a shell when merge-base fails', () => {
+      execFileSyncMock.mockImplementationOnce(() => {
+        throw new Error('no merge base');
+      });
+
+      splitAffectedArgs({ base: 'main' });
+
+      expect(execSyncMock).not.toHaveBeenCalled();
+      expect(execFileSyncMock).toHaveBeenLastCalledWith(
+        'git',
+        ['merge-base', '--fork-point', 'main', 'HEAD'],
+        expect.anything()
+      );
+    });
+
+    it('should fall back to the given base when git cannot resolve it', () => {
+      execFileSyncMock.mockImplementation(() => {
+        throw new Error('unknown revision');
+      });
+
+      const { nxArgs } = splitAffectedArgs({ base: 'some-branch' });
+
+      expect(nxArgs.base).toEqual('some-branch');
     });
   });
 });

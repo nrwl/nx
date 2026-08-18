@@ -1,4 +1,14 @@
 //@ts-check
+<% if (addPlugin) { -%>
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // Next.js options go here
+  // See: https://nextjs.org/docs/app/api-reference/config/next-config-js
+};
+
+module.exports = nextConfig;
+<% } else { -%>
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { composePlugins, withNx } = require('@nx/next');
@@ -8,7 +18,7 @@ const { composePlugins, withNx } = require('@nx/next');
  **/
 const nextConfig = {
   // Use this to set Nx-specific options
-  // See: https://nx.dev/recipes/next/next-config-setup
+  // See: https://nx.dev/docs/technologies/react/next/Guides/next-config-setup
   nx: {},
 };
 
@@ -18,3 +28,4 @@ const plugins = [
 ];
 
 module.exports = composePlugins(...plugins)(nextConfig);
+<% } -%>

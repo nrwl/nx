@@ -1,7 +1,7 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { type Tree, readNxJson, updateNxJson } from 'nx/src/devkit-exports';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { getRspackE2EWebServerInfo } from './e2e-web-server-info-utils';
+import { type Tree, readNxJson, updateNxJson } from '@nx/devkit';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 
 describe('getRspackE2EWebServerInfo', () => {
   let tree: Tree;
@@ -22,18 +22,17 @@ describe('getRspackE2EWebServerInfo', () => {
     jest.resetModules();
   });
 
-  it('should use array-shaped targetDefaults when no plugin is registered and plugins are not being used', async () => {
+  it('should use map-shaped targetDefaults when no plugin is registered and plugins are not being used', async () => {
     // ARRANGE
     const nxJson = readNxJson(tree);
     nxJson.plugins ??= [];
-    nxJson.targetDefaults = [
-      {
-        target: 'serve',
+    nxJson.targetDefaults = {
+      serve: {
         options: {
           port: 4400,
         },
       },
-    ];
+    };
     updateNxJson(tree, nxJson);
 
     // ACT

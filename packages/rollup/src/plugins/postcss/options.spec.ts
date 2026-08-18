@@ -10,7 +10,16 @@ describe('normalizeOptions', () => {
     expect(result.modules).toBe(false);
     expect(result.plugins).toEqual([]);
     expect(result.use).toEqual({});
-    expect(result.extensions).toEqual(['.css', '.sss', '.pcss']);
+    expect(result.extensions).toEqual([
+      '.css',
+      '.sss',
+      '.pcss',
+      '.scss',
+      '.sass',
+      '.less',
+      '.styl',
+      '.stylus',
+    ]);
     expect(result.sourceMap).toBe(false);
   });
 

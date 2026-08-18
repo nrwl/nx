@@ -1,0 +1,231 @@
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
+import { createTree } from '../generators/testing-utils/create-tree';
+import type { Tree } from '../generators/tree';
+import { acknowledgeBuildScripts } from './acknowledge-build-scripts';
+import { getPackageManagerVersion } from './package-manager';
+
+jest.mock('./package-manager', () => ({
+  ...jest.requireActual('./package-manager'),
+  getPackageManagerVersion: jest.fn(),
+}));
+
+describe('acknowledgeBuildScripts', () => {
+  let tree: Tree;
+
+  beforeEach(() => {
+    tree = createTree();
+    tree.write(
+      'package.json',
+      JSON.stringify({ name: 'proj', packageManager: 'pnpm@11.2.2' })
+    );
+  });
+
+  it('should add entries to an existing allowBuilds map', () => {
+    tree.write(
+      'pnpm-workspace.yaml',
+      'autoInstallPeers: true\nallowBuilds:\n  nx: true\n'
+    );
+
+    acknowledgeBuildScripts(tree, 'pnpm', { 'unrs-resolver': false });
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatchInlineSnapshot(`
+      "autoInstallPeers: true
+      allowBuilds:
+        nx: true
+        unrs-resolver: false
+      "
+    `);
+  });
+
+  it('should create the allowBuilds map when missing', () => {
+    tree.write('pnpm-workspace.yaml', 'packages:\n  - "packages/*"\n');
+
+    acknowledgeBuildScripts(tree, 'pnpm', { cypress: true });
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatchInlineSnapshot(`
+      "packages:
+        - "packages/*"
+      allowBuilds:
+        cypress: true
+      "
+    `);
+  });
+
+  it('should preserve comments and never overwrite existing entries', () => {
+    tree.write(
+      'pnpm-workspace.yaml',
+      '# team notes\nallowBuilds:\n  # user explicitly allowed this\n  unrs-resolver: true\n'
+    );
+
+    acknowledgeBuildScripts(tree, 'pnpm', {
+      'unrs-resolver': false,
+      esbuild: false,
+    });
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatchInlineSnapshot(`
+      "# team notes
+      allowBuilds:
+        # user explicitly allowed this
+        unrs-resolver: true
+        esbuild: false
+      "
+    `);
+  });
+
+  it('should preserve comments in a file that has no entries yet', () => {
+    tree.write('pnpm-workspace.yaml', '# team notes\n');
+
+    acknowledgeBuildScripts(tree, 'pnpm', { cypress: true });
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatchInlineSnapshot(`
+      "# team notes
+
+      allowBuilds:
+        cypress: true
+      "
+    `);
+  });
+
+  it('should replace the placeholder stubs pnpm writes during non-strict installs', () => {
+    tree.write(
+      'pnpm-workspace.yaml',
+      'allowBuilds:\n  unrs-resolver: set this to true or false\n  cypress: set this to true or false\n'
+    );
+
+    acknowledgeBuildScripts(tree, 'pnpm', { 'unrs-resolver': false });
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatchInlineSnapshot(`
+      "allowBuilds:
+        unrs-resolver: false
+        cypress: set this to true or false
+      "
+    `);
+  });
+
+  it('should be a no-op for package managers other than pnpm', () => {
+    const original = 'packages:\n  - "packages/*"\n';
+    tree.write('pnpm-workspace.yaml', original);
+
+    acknowledgeBuildScripts(tree, 'npm', { cypress: true });
+    acknowledgeBuildScripts(tree, 'yarn', { cypress: true });
+    acknowledgeBuildScripts(tree, 'bun', { cypress: true });
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toBe(original);
+  });
+
+  it('should create pnpm-workspace.yaml when it does not exist', () => {
+    acknowledgeBuildScripts(tree, 'pnpm', { cypress: true });
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatchInlineSnapshot(`
+      "allowBuilds:
+        cypress: true
+      "
+    `);
+  });
+
+  it('should be a no-op for pnpm < 11', () => {
+    tree.write(
+      'package.json',
+      JSON.stringify({ name: 'proj', packageManager: 'pnpm@10.28.2' })
+    );
+    const original = 'onlyBuiltDependencies:\n  - nx\n';
+    tree.write('pnpm-workspace.yaml', original);
+
+    acknowledgeBuildScripts(tree, 'pnpm', { 'unrs-resolver': false });
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toBe(original);
+  });
+
+  it('should read a package.json that JSON.parse rejects', () => {
+    // Nx reads JSON with a jsonc parser everywhere else, so a trailing comma
+    // must not make this the one place that refuses the workspace.
+    tree.write(
+      'package.json',
+      '{\n  "name": "proj",\n  "packageManager": "pnpm@11.2.2",\n}\n'
+    );
+
+    acknowledgeBuildScripts(tree, 'pnpm', { cypress: true });
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatchInlineSnapshot(`
+      "allowBuilds:
+        cypress: true
+      "
+    `);
+  });
+
+  it('should probe the pnpm version when the packageManager pin is not exact', () => {
+    tree.write(
+      'package.json',
+      JSON.stringify({ name: 'proj', packageManager: 'pnpm@^11.0.0' })
+    );
+    jest.mocked(getPackageManagerVersion).mockReturnValueOnce('11.2.2');
+
+    acknowledgeBuildScripts(tree, 'pnpm', { 'unrs-resolver': false });
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatchInlineSnapshot(`
+      "allowBuilds:
+        unrs-resolver: false
+      "
+    `);
+  });
+
+  it('should be a no-op when the pnpm version cannot be determined', () => {
+    tree.write(
+      'package.json',
+      JSON.stringify({ name: 'proj', packageManager: 'pnpm@latest' })
+    );
+    jest.mocked(getPackageManagerVersion).mockImplementationOnce(() => {
+      throw new Error('Cannot determine the version of pnpm.');
+    });
+
+    acknowledgeBuildScripts(tree, 'pnpm', { 'unrs-resolver': false });
+
+    expect(tree.exists('pnpm-workspace.yaml')).toBe(false);
+  });
+
+  it('should leave a malformed pnpm-workspace.yaml untouched', () => {
+    const original = '- just\n- a\n- list\n';
+    tree.write('pnpm-workspace.yaml', original);
+
+    acknowledgeBuildScripts(tree, 'pnpm', { 'unrs-resolver': false });
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toBe(original);
+  });
+
+  it('should leave a pnpm-workspace.yaml with parse errors untouched', () => {
+    // Map-shaped but syntactically invalid (unclosed quote): the parsed root
+    // is still a YAMLMap, but stringifying a document with errors throws.
+    const original = 'packages:\n  - "apps/*\n';
+    tree.write('pnpm-workspace.yaml', original);
+
+    acknowledgeBuildScripts(tree, 'pnpm', { 'unrs-resolver': false });
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toBe(original);
+  });
+
+  it('should accept a filesystem root instead of a tree', () => {
+    const root = mkdtempSync(join(tmpdir(), 'nx-allow-builds-'));
+    try {
+      writeFileSync(
+        join(root, 'package.json'),
+        JSON.stringify({ name: 'proj', packageManager: 'pnpm@11.2.2' })
+      );
+      writeFileSync(join(root, 'pnpm-workspace.yaml'), 'packages:\n  - "*"\n');
+
+      acknowledgeBuildScripts(root, 'pnpm', { nx: true });
+
+      expect(readFileSync(join(root, 'pnpm-workspace.yaml'), 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "packages:
+          - "*"
+        allowBuilds:
+          nx: true
+        "
+      `);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});

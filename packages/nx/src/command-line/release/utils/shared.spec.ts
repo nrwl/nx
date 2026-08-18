@@ -1331,27 +1331,147 @@ describe('shared', () => {
         createMockCommit(
           'ghi789',
           ['libs/lib-a/src/index.ts'],
-          'feat(graph): ambiguous scope'
+          'feat(graph): ambiguous scope',
+          'graph'
         ),
       ];
 
-      try {
-        await getCommitsRelevantToProjects(
+      await expect(
+        getCommitsRelevantToProjects(
           mockProjectGraph,
           commits,
           ['@foo/graph', '@bar/graph'],
           mockReleaseConfig!,
           mockReleaseGraph
-        );
-      } catch (err: any) {
-        expect(err.message).toContain('Ambiguous scope "graph"');
-      }
+        )
+      ).rejects.toThrow(/Ambiguous scope "graph"/);
+    });
+
+    it('should NOT throw when ambiguous scope only collides with projects outside the active release group', async () => {
+      // The commit's `graph` scope matches @foo/graph + @bar/graph
+      // (both outside the active release group). The active group is
+      // ['lib-a'] and the commit touches libs/lib-a. The cross-group
+      // ambiguity is irrelevant to lib-a's release and should not
+      // block it. See https://github.com/nrwl/nx/issues/35744.
+      const commits: GitCommit[] = [
+        createMockCommit(
+          'cross1',
+          ['libs/lib-a/src/index.ts'],
+          'feat(graph): cross-group ambiguous scope',
+          'graph'
+        ),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['lib-a'],
+        mockReleaseConfig!,
+        mockReleaseGraph
+      );
+
+      // lib-a is included via file-affectedness path, treated as
+      // non-scoped for this group (mirrors the empty-scope behavior).
+      expect(result.size).toBe(1);
+      expect(result.get('lib-a')).toHaveLength(1);
+      expect(result.get('lib-a')?.[0].commit.shortHash).toBe('cross1');
+      expect(result.get('lib-a')?.[0].isProjectScopedCommit).toBe(false);
+    });
+
+    it('should treat partially-ambiguous scope as scoped when filtered to a single in-group match', async () => {
+      // Scope `graph` matches @foo/graph + @bar/graph globally, but
+      // only @foo/graph is in the active release group. The filtered
+      // match set has one element, so no throw, and the commit is
+      // treated as scoped to @foo/graph.
+      const commits: GitCommit[] = [
+        createMockCommit(
+          'partial1',
+          ['foo/graph/src/index.ts'],
+          'feat(graph): partial cross-group match',
+          'graph'
+        ),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['@foo/graph'],
+        mockReleaseConfig!,
+        mockReleaseGraph
+      );
+
+      expect(result.size).toBe(1);
+      expect(result.get('@foo/graph')).toHaveLength(1);
+      expect(result.get('@foo/graph')?.[0].commit.shortHash).toBe('partial1');
+      expect(result.get('@foo/graph')?.[0].isProjectScopedCommit).toBe(true);
+    });
+
+    it('should detect intra-group ambiguity for independent release groups even when a single project is being processed', async () => {
+      // For independent release groups, only the single project being
+      // processed is passed as `projects`, but the full release group is
+      // forwarded as `releaseGroupProjects`. The scope `graph` matches
+      // both @foo/graph and @bar/graph, which both live in the active
+      // release group, so this is a genuine in-group ambiguity and must
+      // still throw. See https://github.com/nrwl/nx/issues/35744.
+      const commits: GitCommit[] = [
+        createMockCommit(
+          'indep1',
+          ['foo/graph/src/index.ts'],
+          'feat(graph): ambiguous within independent group',
+          'graph'
+        ),
+      ];
+
+      await expect(
+        getCommitsRelevantToProjects(
+          mockProjectGraph,
+          commits,
+          // only the single independent project currently being processed
+          ['@foo/graph'],
+          mockReleaseConfig!,
+          mockReleaseGraph,
+          // the full release group (both siblings)
+          ['@foo/graph', '@bar/graph']
+        )
+      ).rejects.toThrow(/Ambiguous scope "graph"/);
+    });
+
+    it('should NOT throw for independent release groups when the ambiguous scope collides only with projects outside the group', async () => {
+      // The independent project @foo/graph is released on its own (its
+      // release group contains only itself). The scope `graph` also
+      // matches @bar/graph, but that project lives in a different release
+      // group, so there is no in-group ambiguity. The commit should be
+      // treated as scoped to @foo/graph.
+      const commits: GitCommit[] = [
+        createMockCommit(
+          'indep2',
+          ['foo/graph/src/index.ts'],
+          'feat(graph): only collides outside the group',
+          'graph'
+        ),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['@foo/graph'],
+        mockReleaseConfig!,
+        mockReleaseGraph,
+        // release group only contains the single independent project
+        ['@foo/graph']
+      );
+
+      expect(result.size).toBe(1);
+      expect(result.get('@foo/graph')).toHaveLength(1);
+      expect(result.get('@foo/graph')?.[0].commit.shortHash).toBe('indep2');
+      expect(result.get('@foo/graph')?.[0].isProjectScopedCommit).toBe(true);
     });
 
     function createMockCommit(
       shortHash: string,
       affectedFiles: string[],
-      message?: string
+      message?: string,
+      scope: string = ''
     ): GitCommit {
       return {
         message: message || `feat: commit ${shortHash}`,
@@ -1360,7 +1480,7 @@ describe('shared', () => {
         author: { name: 'Test Author', email: 'test@example.com' },
         description: `commit ${shortHash}`,
         type: 'feat',
-        scope: '',
+        scope,
         references: [],
         authors: [{ name: 'Test Author', email: 'test@example.com' }],
         isBreaking: false,

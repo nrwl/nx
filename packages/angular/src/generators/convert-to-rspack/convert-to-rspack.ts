@@ -23,7 +23,7 @@ import { relative, resolve } from 'path';
 import { join } from 'path/posix';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { nxVersion } from '../../utils/versions';
-import { getAngularRspackVersion, versions } from '../utils/version-utils';
+import { versions } from '../utils/version-utils';
 import { createConfig } from './lib/create-config';
 import { getCustomWebpackConfig } from './lib/get-custom-webpack-config';
 import { updateTsconfig } from './lib/update-tsconfig';
@@ -715,12 +715,11 @@ export async function convertToRspack(
 
   if (!schema.skipInstall) {
     const { webpackMergeVersion, tsNodeVersion } = versions(tree);
-    const angularRspackVersion = getAngularRspackVersion(tree);
     const installTask = addDependenciesToPackageJson(
       tree,
       {},
       {
-        '@nx/angular-rspack': angularRspackVersion,
+        '@nx/angular-rspack': nxVersion,
         'webpack-merge': webpackMergeVersion,
         'ts-node': tsNodeVersion,
       }

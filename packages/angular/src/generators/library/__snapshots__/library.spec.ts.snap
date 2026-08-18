@@ -137,15 +137,14 @@ describe('MyLib', () => {
 exports[`lib --standalone should generate a library with a standalone component as entry point and set up view encapsulation and change detection 1`] = `"export * from './lib/my-lib/my-lib';"`;
 
 exports[`lib --standalone should generate a library with a standalone component as entry point and set up view encapsulation and change detection 2`] = `
-"import { ChangeDetectionStrategy, Component, ViewEncapsulation } from '@angular/core';
+"import { Component, ViewEncapsulation } from '@angular/core';
 
 @Component({
   selector: 'lib-my-lib',
   imports: [],
   template: \`<p>MyLib works!</p>\`,
   styles: \`\`,
-  encapsulation: ViewEncapsulation.ShadowDom,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  encapsulation: ViewEncapsulation.ShadowDom
 })
 export class MyLib {}
 "

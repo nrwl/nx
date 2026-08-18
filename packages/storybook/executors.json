@@ -1,13 +1,13 @@
 {
   "executors": {
     "storybook": {
-      "implementation": "./src/executors/storybook/storybook.impl",
-      "schema": "./src/executors/storybook/schema.json",
+      "implementation": "./dist/src/executors/storybook/storybook.impl",
+      "schema": "./dist/src/executors/storybook/schema.json",
       "description": "Serve Storybook."
     },
     "build": {
-      "implementation": "./src/executors/build-storybook/build-storybook.impl",
-      "schema": "./src/executors/build-storybook/schema.json",
+      "implementation": "./dist/src/executors/build-storybook/build-storybook.impl",
+      "schema": "./dist/src/executors/build-storybook/schema.json",
       "description": "Build Storybook."
     }
   }

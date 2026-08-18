@@ -25,7 +25,7 @@
     },
     {
       "glob": "**/*",
-      "input": "dist/apps/graph",
+      "input": "graph/client/dist",
       "output": "/src/core/graph",
       "ignore": ["assets/**"],
       "includeIgnoredFiles": true

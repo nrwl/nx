@@ -1,17 +1,39 @@
 import {
   cleanupProject,
+  getPackageManagerCommand,
   newProject,
   readJson,
   runCLI,
+  runCommand,
   uniq,
+  updateJson,
 } from '@nx/e2e-utils';
 
 describe('Remix - TS solution setup', () => {
   beforeEach(() => {
     newProject({
-      packages: ['@nx/remix'],
+      packages: [
+        '@nx/remix',
+        '@nx/vite',
+        '@nx/vitest',
+        '@nx/jest',
+        '@nx/eslint',
+      ],
       preset: 'ts',
     });
+
+    // Remix supports TS < 6 only; the workspace default is now TS 6, so pin
+    // back to a 5.x version to keep the Remix generators usable.
+    updateJson('package.json', (json) => {
+      if (json.devDependencies?.typescript) {
+        json.devDependencies.typescript = '~5.9.2';
+      } else {
+        json.dependencies ??= {};
+        json.dependencies.typescript = '~5.9.2';
+      }
+      return json;
+    });
+    runCommand(getPackageManagerCommand().install);
   });
 
   afterEach(() => {
@@ -119,6 +141,28 @@ describe('Remix - TS solution setup', () => {
       `Successfully ran target test for project @proj/${buildableLibJest}`
     );
   }, 120_000);
+
+  it('should fail when generating an application in a TS6 workspace', async () => {
+    const app = uniq('app');
+
+    // Declare TS6 so the guard rejects without installing.
+    updateJson('package.json', (json) => {
+      if (json.devDependencies?.typescript) {
+        json.devDependencies.typescript = '~6.0.3';
+      } else {
+        json.dependencies ??= {};
+        json.dependencies.typescript = '~6.0.3';
+      }
+      return json;
+    });
+
+    const output = runCLI(
+      `generate @nx/remix:application apps/${app} --unitTestRunner=none --linter=none`,
+      { silenceError: true }
+    );
+    expect(output).toContain('Remix does not support TypeScript 6');
+    // beforeEach recreates the workspace (newProject) and re-pins to ~5.9.2, so no manual restore is needed.
+  }, 30_000);
 
   it('should respect and support generating libraries with a name different than the import path', async () => {
     const lib = uniq('lib');

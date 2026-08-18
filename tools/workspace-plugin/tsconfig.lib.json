@@ -1,13 +1,15 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/workspace-plugin",
+    "outDir": "dist",
     "declaration": true,
     "types": ["node"],
     "composite": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "verbatimModuleSyntax": true,
+    "rootDir": "."
   },
   "include": ["src/**/*.ts", "src/**/*.json"],
   "exclude": [

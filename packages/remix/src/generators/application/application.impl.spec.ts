@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   joinPathFragments,
@@ -9,17 +9,38 @@ import {
   writeJson,
 } from '@nx/devkit';
 
-import * as devkitExports from 'nx/src/devkit-exports';
+import * as devkitExports from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import applicationGenerator from './application.impl';
 import { join } from 'path';
-import { PackageManagerCommands } from 'nx/src/utils/package-manager';
+import { PackageManagerCommands } from '@nx/devkit/internal';
 
 describe('Remix Application', () => {
+  let envBackup: string | undefined;
+
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     jest
       .spyOn(devkitExports, 'getPackageManagerCommand')
       .mockReturnValue({ exec: 'npx' } as PackageManagerCommands);
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+    else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+  });
+
+  it('throws when the workspace declares TypeScript 6', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = { ...json.devDependencies, typescript: '~6.0.3' };
+      return json;
+    });
+
+    await expect(
+      applicationGenerator(tree, { directory: 'test', addPlugin: true })
+    ).rejects.toThrow(/does not support TypeScript 6/);
   });
 
   describe('Standalone Project Repo', () => {
@@ -29,6 +50,7 @@ describe('Remix Application', () => {
 
       // ACT
       await applicationGenerator(tree, {
+        linter: 'eslint',
         name: 'test',
         directory: '.',
         addPlugin: true,
@@ -44,13 +66,15 @@ describe('Remix Application', () => {
         tree.read('tests/routes/_index.spec.tsx', 'utf-8')
       ).toMatchSnapshot();
       expect(tree.read('vite.config.mts', 'utf-8')).toMatchSnapshot();
-      expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
+      expect(tree.exists('eslint.config.mjs')).toBeTruthy();
     });
 
-    it('should ignore vite temp files', async () => {
+    it('should ignore vite temp files (eslintrc)', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
       await applicationGenerator(tree, {
+        linter: 'eslint',
         name: 'test',
         directory: '.',
         addPlugin: true,
@@ -114,6 +138,7 @@ describe('Remix Application', () => {
 
         // ACT
         await applicationGenerator(tree, {
+          linter: 'eslint',
           name: 'test',
           directory: '.',
           unitTestRunner: 'vitest',
@@ -139,6 +164,7 @@ describe('Remix Application', () => {
 
         // ACT
         await applicationGenerator(tree, {
+          linter: 'eslint',
           name: 'test',
           directory: '.',
           unitTestRunner: 'jest',
@@ -166,6 +192,7 @@ describe('Remix Application', () => {
 
         // ACT
         await applicationGenerator(tree, {
+          linter: 'eslint',
           name: 'test',
           directory: '.',
           e2eTestRunner: 'cypress',
@@ -186,6 +213,7 @@ describe('Remix Application', () => {
 
       // ACT
       await applicationGenerator(tree, {
+        linter: 'eslint',
         name: 'test',
         directory: '.',
         e2eTestRunner: 'playwright',
@@ -207,6 +235,7 @@ describe('Remix Application', () => {
 
       // ACT
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'test',
         addPlugin: true,
       });
@@ -221,10 +250,12 @@ describe('Remix Application', () => {
       ).toMatchSnapshot();
     });
 
-    it('should ignore vite temp files', async () => {
+    it('should ignore vite temp files (eslintrc)', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'test',
         addPlugin: true,
         skipFormat: true,
@@ -285,6 +316,7 @@ describe('Remix Application', () => {
 
         // ACT
         await applicationGenerator(tree, {
+          linter: 'eslint',
           name: 'test',
           directory: 'demo',
           addPlugin: true,
@@ -309,6 +341,7 @@ describe('Remix Application', () => {
 
         // ACT
         await applicationGenerator(tree, {
+          linter: 'eslint',
           name: 'test',
           directory: 'apps/demo',
           addPlugin: true,
@@ -334,6 +367,7 @@ describe('Remix Application', () => {
 
         // ACT
         await applicationGenerator(tree, {
+          linter: 'eslint',
           directory: 'test',
           unitTestRunner: 'vitest',
           addPlugin: true,
@@ -358,6 +392,7 @@ describe('Remix Application', () => {
 
         // ACT
         await applicationGenerator(tree, {
+          linter: 'eslint',
           directory: 'test',
           unitTestRunner: 'jest',
           addPlugin: true,
@@ -381,6 +416,7 @@ describe('Remix Application', () => {
 
         // ACT
         await applicationGenerator(tree, {
+          linter: 'eslint',
           directory: 'test',
           e2eTestRunner: 'cypress',
           addPlugin: true,
@@ -400,6 +436,7 @@ describe('Remix Application', () => {
 
         // ACT
         await applicationGenerator(tree, {
+          linter: 'eslint',
           directory: 'test',
           e2eTestRunner: 'playwright',
           addPlugin: true,
@@ -439,6 +476,7 @@ describe('Remix Application', () => {
 
     it('should add project references when using TS solution', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         e2eTestRunner: 'playwright',
         unitTestRunner: 'jest',
@@ -785,6 +823,7 @@ describe('Remix Application', () => {
 
     it('should generate project.json if useProjectJson is true', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         e2eTestRunner: 'playwright',
         addPlugin: true,
@@ -832,5 +871,5 @@ function expectTargetsToBeCorrect(tree: Tree, projectRoot: string) {
     tree,
     joinPathFragments(projectRoot === '.' ? '/' : projectRoot, 'project.json')
   );
-  expect(tree.exists(join(projectRoot, '.eslintrc.json'))).toBeTruthy();
+  expect(tree.exists(join(projectRoot, 'eslint.config.mjs'))).toBeTruthy();
 }

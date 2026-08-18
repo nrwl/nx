@@ -16,10 +16,10 @@ import {
   writeJson,
 } from '@nx/devkit';
 import {
-  normalizeTargetDefaults,
+  findTargetDefault,
   upsertTargetDefault,
+  readModulePackageJson,
 } from '@nx/devkit/internal';
-import { readModulePackageJson } from 'nx/src/devkit-internals';
 import { intersects, satisfies, valid, validRange } from 'semver';
 import { nxVersion, oxcProjectRuntimeVersion } from '../../utils/versions';
 import {
@@ -60,13 +60,7 @@ export async function addVitestAngular(
   updateProjectConfiguration(tree, options.name, project);
 
   const nxJson = readNxJson(tree) ?? {};
-  const existing = normalizeTargetDefaults(nxJson.targetDefaults).find(
-    (entry) =>
-      entry.executor === executor &&
-      entry.target === undefined &&
-      entry.projects === undefined &&
-      entry.plugin === undefined
-  );
+  const existing = findTargetDefault(nxJson.targetDefaults, { executor });
   if (!existing) {
     upsertTargetDefault(tree, nxJson, {
       executor,
@@ -145,7 +139,9 @@ export async function addVitestAnalog(
   }
 
   ensurePackage('@nx/vitest', nxVersion);
-  const { configurationGenerator } = await import('@nx/vitest/generators');
+  const {
+    configurationGenerator,
+  }: typeof import('@nx/vitest/generators') = require('@nx/vitest/generators');
 
   tasks.push(
     await configurationGenerator(tree, {

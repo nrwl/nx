@@ -3,7 +3,7 @@ import { cpSync } from 'fs';
 import { fork } from 'node:child_process';
 import { StaticRemoteConfig } from '../../utils';
 import { workspaceRoot } from '@nx/devkit';
-import { readModulePackageJson } from 'nx/src/devkit-internals';
+import { readModulePackageJson } from '@nx/devkit/internal';
 
 export function startStaticRemotesFileServer(
   staticRemotesConfig: Record<string, StaticRemoteConfig>,
@@ -48,6 +48,9 @@ export function startStaticRemotesFileServer(
       `-p=${staticRemotesPort}`,
       `-a=localhost`,
       `--cors`,
+      // disable http caching so a rebuilt static remote is not served stale
+      // from the browser cache (see #27005, which fixed this for the executor)
+      `-c-1`,
     ],
     {
       stdio: 'pipe',

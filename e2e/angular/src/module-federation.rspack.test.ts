@@ -20,7 +20,9 @@ describe('Angular Module Federation', () => {
   let oldVerboseLoggingValue: string;
 
   beforeAll(() => {
-    proj = newProject({ packages: ['@nx/angular'] });
+    proj = newProject({
+      packages: ['@nx/angular', '@nx/rspack', '@nx/vitest', '@nx/playwright'],
+    });
     oldVerboseLoggingValue = process.env.NX_E2E_VERBOSE_LOGGING;
     process.env.NX_E2E_VERBOSE_LOGGING = 'true';
   });
@@ -213,7 +215,7 @@ describe('Angular Module Federation', () => {
       `
     );
 
-    if (runE2ETests('playwright')) {
+    if (await runE2ETests('playwright')) {
       const e2eProcess = await runCommandUntil(
         `e2e ${hostApp}-e2e`,
         (output) => output.includes('Successfully ran target e2e for project'),

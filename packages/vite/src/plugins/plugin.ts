@@ -2,12 +2,14 @@ import {
   calculateHashesForCreateNodes,
   getNamedInputs,
   PluginCache,
+  hashObject,
+  workspaceDataDirectory,
 } from '@nx/devkit/internal';
 import {
   CreateDependencies,
-  CreateNodesContextV2,
+  CreateNodesContext,
   createNodesFromFiles,
-  CreateNodesV2,
+  CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
@@ -23,8 +25,6 @@ import {
 } from '@nx/js/internal';
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
-import { hashObject } from 'nx/src/hasher/file-hasher';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import picomatch = require('picomatch');
 import type { ResolvedConfig } from 'vite';
@@ -64,7 +64,7 @@ export const createDependencies: CreateDependencies = () => {
 
 const viteConfigGlob = '**/vite.config.{js,ts,mjs,mts,cjs,cts}';
 
-export const createNodes: CreateNodesV2<VitePluginOptions> = [
+export const createNodes: CreateNodes<VitePluginOptions> = [
   viteConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
@@ -188,7 +188,7 @@ async function buildViteTargets(
   tsConfigFiles: string[],
   hasReactRouterConfig: boolean,
   isUsingTsSolutionSetup: boolean,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   tsconfigInputs: string[]
 ): Promise<ViteTargets> {
@@ -288,7 +288,7 @@ async function buildViteTargets(
 
     // Check if the project uses Vue plugin
     const hasVuePlugin = viteBuildConfig.plugins?.some(
-      (p) => p.name === 'vite:vue'
+      (p) => p.name === 'vite:vue' || p.name === 'vite:vue2'
     );
     // Explicit `compiler` option wins over inference so users can override
     // when their setup isn't detected (e.g. custom/non-standard Vue plugin).
@@ -657,7 +657,7 @@ function collectTsconfigInputsByProjectRoot(
 
 function checkIfConfigFileShouldBeProject(
   projectRoot: string,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): boolean {
   // Do not create a project if package.json and project.json isn't there.
   const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));

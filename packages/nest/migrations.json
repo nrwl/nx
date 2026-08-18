@@ -3,13 +3,32 @@
   "packageJsonUpdates": {
     "21.2.0-beta.2": {
       "version": "21.2.0-beta.2",
+      "requires": {
+        "@nestjs/core": ">=10.0.0 <11.0.0"
+      },
       "packages": {
-        "nest": {
+        "@nestjs/common": {
+          "version": "^11.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/core": {
+          "version": "^11.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/platform-express": {
+          "version": "^11.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/testing": {
           "version": "^11.0.0",
           "alwaysAddToPackageJson": false
         },
         "@nestjs/schematics": {
           "version": "^11.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "reflect-metadata": {
+          "version": "^0.2.0",
           "alwaysAddToPackageJson": false
         }
       }

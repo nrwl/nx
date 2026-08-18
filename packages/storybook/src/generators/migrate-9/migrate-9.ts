@@ -1,6 +1,5 @@
-import { formatFiles, readJson, Tree } from '@nx/devkit';
+import { formatFiles, readJson, Tree, output } from '@nx/devkit';
 
-import { output } from 'nx/src/utils/output';
 import { callAutomigrate, callUpgrade } from './calling-storybook-cli';
 import {
   checkStorybookInstalled,
@@ -10,8 +9,11 @@ import {
   onlyShowGuide,
 } from './helper-functions';
 import { Schema } from './schema';
+import { assertSupportedStorybookVersion } from '../../utils/assert-supported-storybook-version';
 
 export async function migrate9Generator(tree: Tree, schema: Schema) {
+  assertSupportedStorybookVersion(tree);
+
   schema.versionTag = schema.versionTag ?? 'latest';
   const packageJson = readJson(tree, 'package.json');
   if (!checkStorybookInstalled(packageJson)) {

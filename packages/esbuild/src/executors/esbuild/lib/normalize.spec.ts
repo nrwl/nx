@@ -50,9 +50,9 @@ describe('normalizeOptions', () => {
     },
   };
 
-  it('should handle single entry point options', () => {
+  it('should handle single entry point options', async () => {
     expect(
-      normalizeOptions(
+      await normalizeOptions(
         {
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
@@ -81,9 +81,9 @@ describe('normalizeOptions', () => {
     });
   });
 
-  it('should handle multiple entry point options', () => {
+  it('should handle multiple entry point options', async () => {
     expect(
-      normalizeOptions(
+      await normalizeOptions(
         {
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
@@ -114,9 +114,9 @@ describe('normalizeOptions', () => {
     });
   });
 
-  it('should support custom output file name', () => {
+  it('should support custom output file name', async () => {
     expect(
-      normalizeOptions(
+      await normalizeOptions(
         {
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
@@ -146,8 +146,8 @@ describe('normalizeOptions', () => {
     });
   });
 
-  it('should validate against multiple entry points + outputFileName', () => {
-    expect(() =>
+  it('should validate against multiple entry points + outputFileName', async () => {
+    await expect(
       normalizeOptions(
         {
           main: 'apps/myapp/src/index.ts',
@@ -161,12 +161,12 @@ describe('normalizeOptions', () => {
         },
         context
       )
-    ).toThrow(/Cannot use/);
+    ).rejects.toThrow(/Cannot use/);
   });
 
-  it('should add package.json to assets array if generatePackageJson is false', () => {
+  it('should add package.json to assets array if generatePackageJson is false', async () => {
     expect(
-      normalizeOptions(
+      await normalizeOptions(
         {
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
@@ -195,7 +195,7 @@ describe('normalizeOptions', () => {
     });
   });
 
-  it("should use the tsconfig declaration option if the declaration option isn't defined", () => {
+  it("should use the tsconfig declaration option if the declaration option isn't defined", async () => {
     (
       readTsConfig as jest.MockedFunction<typeof readTsConfig>
     ).mockImplementationOnce(() => ({
@@ -207,7 +207,7 @@ describe('normalizeOptions', () => {
     }));
 
     expect(
-      normalizeOptions(
+      await normalizeOptions(
         {
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
@@ -220,9 +220,9 @@ describe('normalizeOptions', () => {
     ).toEqual(expect.objectContaining({ declaration: true }));
   });
 
-  it('should override thirdParty if bundle:false', () => {
+  it('should override thirdParty if bundle:false', async () => {
     expect(
-      normalizeOptions(
+      await normalizeOptions(
         {
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
@@ -237,9 +237,9 @@ describe('normalizeOptions', () => {
     ).toEqual(expect.objectContaining({ thirdParty: false }));
   });
 
-  it('should override skipTypeCheck if declaration:true', () => {
+  it('should override skipTypeCheck if declaration:true', async () => {
     expect(
-      normalizeOptions(
+      await normalizeOptions(
         {
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',

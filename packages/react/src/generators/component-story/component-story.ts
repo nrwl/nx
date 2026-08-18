@@ -6,6 +6,7 @@ import {
   normalizePath,
   Tree,
 } from '@nx/devkit';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import { ensureTypescript, getProjectSourceRoot } from '@nx/js/internal';
 import type * as ts from 'typescript';
 import {
@@ -149,6 +150,8 @@ export async function componentStoryGenerator(
   host: Tree,
   schema: CreateComponentStoriesFileSchema
 ) {
+  assertSupportedReactVersion(host);
+
   createComponentStoriesFile(host, {
     ...schema,
     interactionTests: schema.interactionTests ?? true,

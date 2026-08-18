@@ -1,5 +1,8 @@
-import { GeneratorCallback, names, offsetFromRoot, Tree } from '@nx/devkit';
 import {
+  GeneratorCallback,
+  names,
+  offsetFromRoot,
+  Tree,
   addDependenciesToPackageJson,
   generateFiles,
   joinPathFragments,
@@ -108,7 +111,9 @@ export async function setupSsrForRemote(
       express: expressVersion,
       '@types/express': typesExpressVersion,
     },
-    {}
+    {},
+    undefined,
+    true
   );
   tasks.push(installTask);
 

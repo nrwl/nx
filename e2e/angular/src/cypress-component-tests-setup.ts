@@ -23,7 +23,13 @@ export function setupCypressComponentTests(
 ): CypressComponentTestsSetup {
   const projectName = newProject({
     name: uniq('cy-ng'),
-    packages: ['@nx/angular'],
+    packages: [
+      '@nx/angular',
+      '@nx/webpack',
+      '@nx/playwright',
+      '@nx/vitest',
+      '@nx/cypress',
+    ],
   });
 
   const appName = uniq('cy-angular-app');

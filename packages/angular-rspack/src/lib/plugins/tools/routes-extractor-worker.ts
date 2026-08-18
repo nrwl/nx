@@ -35,11 +35,13 @@ const { zonePackage, serverBundlePath, outputPath, indexFile } =
   workerData as RoutesExtractorWorkerData;
 
 async function extract(): Promise<string[]> {
+  // rspack emits a CommonJS server bundle; load with `require` so its named
+  // exports resolve (a nodenext `import()` would leave them undefined).
   const {
     AppServerModule,
     ɵgetRoutesFromAngularRouterConfig: getRoutesFromAngularRouterConfig,
     default: bootstrapAppFn,
-  } = (await import(serverBundlePath)) as ServerBundleExports;
+  } = require(serverBundlePath) as ServerBundleExports;
 
   const browserIndexInputPath = path.join(outputPath, indexFile);
   const document = await fs.promises.readFile(browserIndexInputPath, 'utf8');

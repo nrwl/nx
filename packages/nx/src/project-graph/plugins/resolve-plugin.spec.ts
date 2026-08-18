@@ -31,7 +31,7 @@ jest.mock('../../utils/workspace-root', () => ({
   workspaceRoot: '/workspace',
 }));
 
-// Return minimal tsconfig so readTsConfigPaths doesn't throw when it finds the file.
+// Return a minimal tsconfig for tests that exercise the tsconfig-present path.
 jest.mock('../../utils/fileutils', () => ({
   readJsonFile: jest.fn(() => ({ compilerOptions: { paths: {} } })),
 }));
@@ -44,13 +44,17 @@ jest.mock('../../project-graph/utils/retrieve-workspace-files', () => ({
   retrieveProjectConfigurationsWithoutPluginInference: jest.fn(() =>
     Promise.resolve({})
   ),
+  clearProjectsWithoutPluginInferenceCache: jest.fn(),
 }));
 
 jest.mock('../../project-graph/utils/find-project-for-path', () => ({
   findProjectForPath: jest.fn(() => null),
 }));
 
-import { getPluginPathAndName } from './resolve-plugin';
+import {
+  getPluginPathAndName,
+  resetResolvePluginCache,
+} from './resolve-plugin';
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
 // ---------------------------------------------------------------------------
@@ -101,7 +105,7 @@ function onlyFilesExist(...files: string[]) {
 
 describe('resolveSubpathFromExports (via getPluginPathAndName)', () => {
   beforeEach(() => {
-    // Default: tsconfig exists (so readTsConfigPaths doesn't throw), nothing else.
+    // Default: tsconfig exists (tests exercise the tsconfig-present path), nothing else.
     existsSyncMock.mockImplementation((p: unknown) => {
       const s = String(p);
       return s.endsWith('tsconfig.base.json') || s.endsWith('tsconfig.json');
@@ -187,6 +191,33 @@ describe('resolveSubpathFromExports (via getPluginPathAndName)', () => {
         root
       )
     ).toThrow(/Unable to resolve local plugin/);
+  });
+
+  it('resolves a local plugin when the workspace has no root tsconfig', () => {
+    // Workspaces wired purely through package-manager workspaces +
+    // package.json exports have no tsconfig.base.json/tsconfig.json at the
+    // root. Local plugin lookup must fall through to the package-metadata
+    // matching instead of throwing and failing every local plugin load.
+    resetResolvePluginCache();
+    const distFile = `${projectPath}/dist/plugin/index.js`;
+    // No tsconfig exists anywhere — only the built plugin file.
+    onlyFilesExist(distFile);
+
+    const projects = setupProject(
+      {
+        './plugin': { default: './dist/plugin/index.js' },
+      },
+      ['@scope/my-plugin/plugin']
+    );
+
+    const { pluginPath } = getPluginPathAndName(
+      '@scope/my-plugin/plugin',
+      [`${root}/node_modules`],
+      projects,
+      root
+    );
+
+    expect(pluginPath).toBe(distFile);
   });
 
   it('throws an informative error when the subpath has no exports entry', () => {

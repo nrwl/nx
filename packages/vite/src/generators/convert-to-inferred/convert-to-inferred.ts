@@ -8,6 +8,7 @@ import { createNodesV2, VitePluginOptions } from '../../plugins/plugin';
 import { buildPostTargetTransformer } from './lib/build-post-target-transformer';
 import { servePostTargetTransformer } from './lib/serve-post-target-transformer';
 import { previewPostTargetTransformer } from './lib/preview-post-target-transformer';
+import { assertSupportedViteVersion } from '../../utils/assert-supported-vite-version';
 
 interface Schema {
   project?: string;
@@ -15,6 +16,8 @@ interface Schema {
 }
 
 export async function convertToInferred(tree: Tree, options: Schema) {
+  assertSupportedViteVersion(tree);
+
   const projectGraph = await createProjectGraphAsync();
   const migrationLogs = new AggregatedLog();
 

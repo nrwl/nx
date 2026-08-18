@@ -121,12 +121,12 @@ export function getNestWebpackBuildConfig(
     executor: 'nx:run-commands',
     options: {
       command: 'webpack-cli build',
-      args: ['--node-env=production'],
+      env: { NODE_ENV: 'production' },
       cwd: project.root,
     },
     configurations: {
       development: {
-        args: ['--node-env=development'],
+        env: { NODE_ENV: 'development' },
       },
     },
   };

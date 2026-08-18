@@ -6,11 +6,14 @@ import {
   Tree,
 } from '@nx/devkit';
 import type { ArrayLiteralExpression, Node } from 'typescript';
+import { assertSupportedViteVersion } from '../../utils/assert-supported-vite-version';
 
 export async function setupPathsPlugin(
   tree: Tree,
   schema: { skipFormat?: boolean }
 ) {
+  assertSupportedViteVersion(tree);
+
   const files = await globAsync(tree, [
     '**/vite.config.{js,ts,mjs,mts,cjs,cts}',
   ]);

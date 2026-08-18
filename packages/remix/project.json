@@ -5,9 +5,9 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/remix/README.md"],
-      "command": "node ./scripts/copy-readme.js remix",
-      "inputs": ["copyReadme"]
+      "command": "node ./scripts/copy-readme.js remix packages/remix/readme-template.md packages/remix/README.md",
+      "inputs": ["copyReadme"],
+      "outputs": ["{projectRoot}/README.md"]
     }
   },
   "implicitDependencies": ["cypress", "eslint"],

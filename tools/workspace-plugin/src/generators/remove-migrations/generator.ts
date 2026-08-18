@@ -1,10 +1,10 @@
 import {
   formatFiles,
   readJson,
-  Tree,
   updateJson,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
+import type { Tree } from '@nx/devkit';
 import { basename, dirname, join } from 'path';
 import { major } from 'semver';
 

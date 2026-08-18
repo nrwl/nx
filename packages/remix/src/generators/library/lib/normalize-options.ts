@@ -4,7 +4,7 @@ import {
   ensureRootProjectName,
 } from '@nx/devkit/internal';
 import type { NxRemixGeneratorSchema } from '../schema';
-import { isUsingTsSolutionSetup } from '@nx/js/internal';
+import { normalizeLinterOption, isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export interface RemixLibraryOptions extends NxRemixGeneratorSchema {
   projectName: string;
@@ -33,6 +33,9 @@ export async function normalizeOptions(
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
   return {
     ...options,
+    // Resolved after the spread: the framework's ESLint shaping is guarded on
+    // `=== 'eslint'`, and an unresolved `undefined` would skip all of it.
+    linter: await normalizeLinterOption(tree, options.linter),
     unitTestRunner: options.unitTestRunner ?? 'vitest',
     projectName:
       isUsingTsSolutionConfig && !options.name ? importPath : projectName,

@@ -1,6 +1,5 @@
 import { ModuleFederationPlugin } from '@module-federation/enhanced/rspack';
 import type { Configuration } from '@rspack/core';
-import { DefinePlugin } from '@rspack/core';
 import {
   ModuleFederationConfig,
   normalizeProjectName,
@@ -8,6 +7,7 @@ import {
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
 import { workspaceRoot } from '@nx/devkit';
+import { isServeMode } from '../../utils/is-serve-mode';
 
 const isVarOrWindow = (libType?: string) =>
   libType === 'var' || libType === 'window';
@@ -25,11 +25,13 @@ export async function withModuleFederation(
       return config;
     };
   }
-  const isDevServer = process.env['WEBPACK_SERVE'];
+  const isDevServer = isServeMode();
 
   const { sharedDependencies, sharedLibraries, mappedRemotes } =
     getModuleFederationConfig(options);
   const isGlobal = isVarOrWindow(options.library?.type);
+  const { DefinePlugin } =
+    require('@rspack/core') as typeof import('@rspack/core');
 
   return function makeConfig(
     config: Configuration,
@@ -37,6 +39,8 @@ export async function withModuleFederation(
   ): Configuration {
     config.output.uniqueName = options.name;
     config.output.publicPath = 'auto';
+    // rspack-cli dev mode defaults this on; it breaks module federation.
+    config.lazyCompilation ??= false;
 
     if (isGlobal) {
       config.output.scriptType = 'text/javascript';
@@ -89,7 +93,7 @@ export async function withModuleFederation(
             ? [
                 ...(configOverride?.runtimePlugins ?? []),
                 require.resolve(
-                  '@nx/module-federation/src/utils/plugins/runtime-library-control.plugin.js'
+                  '@nx/module-federation/runtime-library-control-plugin'
                 ),
               ]
             : configOverride?.runtimePlugins,

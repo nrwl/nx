@@ -10,6 +10,7 @@ import type { Tree } from '../../../generators/tree';
 import { filterAffected } from '../../../project-graph/affected/affected-project-graph';
 import { calculateFileChanges } from '../../../project-graph/file-utils';
 import { NxArgs } from '../../../utils/command-line-utils';
+import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import {
   IMPLICIT_DEFAULT_RELEASE_GROUP,
   type NxReleaseConfig,
@@ -134,6 +135,7 @@ export class ReleaseGraph {
     Set<string>
   >();
   private originalFilteredProjects = new Set<string>();
+  private matchedProjectsForFilter = new Set<string>();
 
   /**
    * Store the affected graph per commit per project
@@ -163,6 +165,20 @@ export class ReleaseGraph {
    * @internal - Called by createReleaseGraph(), not meant for external use
    */
   async init(options: CreateReleaseGraphOptions): Promise<void> {
+    if (this.filters.projects?.length) {
+      this.matchedProjectsForFilter = new Set(
+        findMatchingProjects(
+          [...this.filters.projects],
+          options.projectGraph.nodes
+        )
+      );
+      if (this.matchedProjectsForFilter.size === 0) {
+        throw new Error(
+          `Your --projects filter "${this.filters.projects}" did not match any projects in the workspace`
+        );
+      }
+    }
+
     // Step 1: Setup project to release group mapping
     this.setupProjectReleaseGroupMapping();
 
@@ -259,7 +275,7 @@ export class ReleaseGraph {
       for (const project of releaseGroup.projects) {
         if (
           this.filters.projects?.length &&
-          !this.filters.projects.includes(project)
+          !this.matchedProjectsForFilter.has(project)
         ) {
           continue;
         }
@@ -318,7 +334,7 @@ export class ReleaseGraph {
 
         if (filters.groups?.includes(groupName)) {
           projectsToProcess.add(project);
-        } else if (filters.projects?.includes(project)) {
+        } else if (this.matchedProjectsForFilter.has(project)) {
           projectsToProcess.add(project);
         }
 
@@ -1046,7 +1062,16 @@ Valid values are: ${validReleaseVersionPrefixes
     } as NxArgs);
 
     // Use the same affected detection logic as `nx affected`
-    affectedGraph = await filterAffected(projectGraph, touchedFiles);
+    affectedGraph = await filterAffected(
+      projectGraph,
+      touchedFiles,
+      undefined,
+      undefined,
+      // Release evaluates historical commits against the current project
+      // graph. A project configuration which no longer exists must not make
+      // every surviving release project relevant to that commit.
+      false
+    );
     this.affectedGraphPerCommit.set(shortHash, affectedGraph);
 
     return affectedGraph;

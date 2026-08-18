@@ -1,7 +1,7 @@
-import { CreateNodesContextV2, workspaceRoot } from '@nx/devkit';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { createNodesV2, getProjectNameFromPath } from './plugin';
-import * as gitUtils from 'nx/src/utils/git-utils';
+import { CreateNodesContext, workspaceRoot } from '@nx/devkit';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { createNodes, getProjectNameFromPath } from './plugin';
+import { getLatestCommitSha } from '@nx/devkit/internal';
 
 jest.mock('nx/src/utils/cache-directory', () => ({
   ...jest.requireActual('nx/src/utils/cache-directory'),
@@ -22,15 +22,14 @@ expect.addSnapshotSerializer({
 });
 
 describe('@nx/docker', () => {
-  let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContextV2;
+  let createNodesFunction = createNodes[1];
+  let context: CreateNodesContext;
   let tempFs: TempFs;
   let cwd: string;
 
-  const mockGetLatestCommitSha =
-    gitUtils.getLatestCommitSha as jest.MockedFunction<
-      typeof gitUtils.getLatestCommitSha
-    >;
+  const mockGetLatestCommitSha = getLatestCommitSha as jest.MockedFunction<
+    typeof getLatestCommitSha
+  >;
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -147,6 +146,7 @@ describe('@nx/docker', () => {
                     },
                   },
                   nx-release-publish: {
+                    continuous: false,
                     executor: @nx/docker:release-publish,
                   },
                 },
@@ -258,6 +258,7 @@ describe('@nx/docker', () => {
                     },
                   },
                   nx-release-publish: {
+                    continuous: false,
                     executor: @nx/docker:release-publish,
                   },
                 },
@@ -335,6 +336,7 @@ describe('@nx/docker', () => {
                     },
                   },
                   nx-release-publish: {
+                    continuous: false,
                     executor: @nx/docker:release-publish,
                   },
                   run-docker: {
@@ -469,6 +471,7 @@ describe('@nx/docker', () => {
                     },
                   },
                   nx-release-publish: {
+                    continuous: false,
                     executor: @nx/docker:release-publish,
                   },
                 },
@@ -630,6 +633,7 @@ describe('@nx/docker', () => {
                     },
                   },
                   nx-release-publish: {
+                    continuous: false,
                     executor: @nx/docker:release-publish,
                   },
                 },

@@ -49,6 +49,7 @@ import { SharedRunningTask } from './running-tasks/shared-running-task';
 import {
   getEnvVariablesForBatchProcess,
   getEnvVariablesForTask,
+  getForceColorForChild,
   getTaskSpecificEnv,
 } from './task-env';
 import { TaskStatus } from './tasks-runner';
@@ -134,6 +135,13 @@ export class TaskOrchestrator {
 
   private processedTasks = new Map<string, Promise<NodeJS.ProcessEnv>>();
 
+  // Hashes confirmed absent from the cache this run. A confirmed miss can
+  // only become a hit when the task itself runs — and then it leaves the
+  // schedule — so a missed hash never needs re-querying. Without this, a
+  // miss waiting for a worker slot is re-queried (including the remote
+  // retrieval) on every coordinator cycle.
+  private cacheMissedHashes = new Set<string>();
+
   private completedTasks = new Map<string, TaskStatus>();
   private waitingForTasks: Function[] = [];
   private pendingDiscreteWorkers = new Set<Promise<TaskResult | void>>();
@@ -175,7 +183,7 @@ export class TaskOrchestrator {
     private readonly bail: boolean,
     private readonly daemon: DaemonClient,
     private readonly outputStyle: string,
-    private readonly taskGraphForHashing: TaskGraph = taskGraph
+    private readonly fullTaskGraph: TaskGraph = taskGraph
   ) {}
 
   async init() {
@@ -306,7 +314,7 @@ export class TaskOrchestrator {
           await hashTasks(
             this.hasher,
             this.projectGraph,
-            this.taskGraphForHashing,
+            this.fullTaskGraph,
             perTaskEnvs,
             this.taskDetails,
             unhashed
@@ -400,7 +408,7 @@ export class TaskOrchestrator {
       await hashTask(
         this.hasher,
         this.projectGraph,
-        this.taskGraphForHashing,
+        this.fullTaskGraph,
         task,
         taskSpecificEnv,
         this.taskDetails
@@ -477,12 +485,23 @@ export class TaskOrchestrator {
    * inside DbCache.getBatch.
    */
   private async fetchCacheHits(tasks: Task[]): Promise<CacheHit[]> {
-    const batchResults = await this.cache.getBatch(tasks);
+    const tasksToQuery = tasks.filter(
+      (t) => t.hash && !this.cacheMissedHashes.has(t.hash)
+    );
+    if (tasksToQuery.length === 0) return [];
+
+    const batchResults = await this.cache.getBatch(tasksToQuery);
     const cacheHits: CacheHit[] = [];
-    for (const task of tasks) {
+    for (const task of tasksToQuery) {
       const cachedResult = batchResults.get(task.hash);
-      if (cachedResult && cachedResult.code === 0) {
+      // Replay a cached result only under the same condition it was cached
+      // under (shouldCacheTaskResult): successes always, failures only when
+      // NX_CACHE_FAILURES is enabled. Otherwise cached failures would be
+      // written but never read back.
+      if (cachedResult && this.shouldCacheTaskResult(task, cachedResult.code)) {
         cacheHits.push({ task, cachedResult });
+      } else {
+        this.cacheMissedHashes.add(task.hash);
       }
     }
     return cacheHits;
@@ -529,11 +548,19 @@ export class TaskOrchestrator {
     const results: TaskResult[] = [];
     for (const { task, cachedResult } of cacheHits) {
       const shouldCopy = shouldCopyMap.get(task.hash) ?? false;
-      const status: TaskStatus = cachedResult.remote
-        ? 'remote-cache'
-        : shouldCopy
-          ? 'local-cache'
-          : 'local-cache-kept-existing';
+      // A cached failure (only replayed when NX_CACHE_FAILURES is enabled) is
+      // reported as a plain failure so exit codes, run summaries, and the TUI
+      // treat it as a failed run rather than a successful cache hit. Reporting
+      // it as 'failure' also ensures its terminal output is always printed,
+      // which the cache statuses suppress for non-initiating projects.
+      const status: TaskStatus =
+        cachedResult.code !== 0
+          ? 'failure'
+          : cachedResult.remote
+            ? 'remote-cache'
+            : shouldCopy
+              ? 'local-cache'
+              : 'local-cache-kept-existing';
 
       this.options.lifeCycle.printTaskTerminalOutput(
         task,
@@ -562,7 +589,9 @@ export class TaskOrchestrator {
    * The coordinator relies on this running unconditionally (when cache
    * is enabled): tasks dispatched in step 5 via runTaskDirectly skip
    * their own cache lookup on the assumption that this has already
-   * confirmed them as misses. Don't add length-based bails.
+   * confirmed them as misses. Excluding cacheMissedHashes preserves that
+   * invariant — every dispatched hash was queried exactly once — but
+   * don't add other length-based bails.
    */
   private async resolveCachedTasksBulk(): Promise<boolean> {
     const { scheduledTasks } = this.tasksSchedule.getAllScheduledTasks();
@@ -570,7 +599,12 @@ export class TaskOrchestrator {
     const candidates: Task[] = [];
     for (const id of scheduledTasks) {
       const task = this.taskGraph.tasks[id];
-      if (task.hash && !task.continuous && task.cache) {
+      if (
+        task.hash &&
+        !this.cacheMissedHashes.has(task.hash) &&
+        !task.continuous &&
+        task.cache
+      ) {
         candidates.push(task);
       }
     }
@@ -651,7 +685,8 @@ export class TaskOrchestrator {
             cachedTasks.map((task) => this.options.lifeCycle.scheduleTask(task))
           );
           await this.preRunSteps(cachedTasks, { groupId });
-          await this.postRunSteps(cacheResults, doNotSkipCache, { groupId });
+          // Replayed from the cache — don't write the results back.
+          await this.postRunSteps(cacheResults, false, groupId);
         }
 
         for (const task of eligible) {
@@ -677,7 +712,7 @@ export class TaskOrchestrator {
     await hashTasks(
       this.hasher,
       this.projectGraph,
-      this.taskGraphForHashing,
+      this.fullTaskGraph,
       perTaskEnvs,
       this.taskDetails,
       tasks
@@ -744,12 +779,18 @@ export class TaskOrchestrator {
         )
         .map((r) => r.task);
       if (tasksToRehash.length > 0) {
+        // hashTasks skips tasks that already have a hash — clear the
+        // preliminary hashes so these tasks actually get re-hashed
+        for (const task of tasksToRehash) {
+          task.hash = undefined;
+          task.hashDetails = undefined;
+        }
         await this.hashBatchTasks(tasksToRehash);
       }
     }
 
     if (batchResults.length > 0) {
-      await this.postRunSteps(batchResults, doNotSkipCache, { groupId });
+      await this.postRunSteps(batchResults, doNotSkipCache, groupId);
     }
 
     // Update batch status based on all task results
@@ -806,7 +847,7 @@ export class TaskOrchestrator {
         await this.forkedProcessTaskRunner.forkProcessForBatch(
           batch,
           this.projectGraph,
-          this.taskGraph,
+          this.fullTaskGraph,
           env
         );
 
@@ -942,7 +983,8 @@ export class TaskOrchestrator {
     const hitTasks = cacheHits.map((h) => h.task);
     await this.preRunSteps(hitTasks, { groupId });
     const results = await this.finalizeCacheHits(cacheHits);
-    await this.postRunSteps(results, doNotSkipCache, { groupId });
+    // Replayed from the cache — don't write the results back.
+    await this.postRunSteps(results, false, groupId);
     return results;
   }
 
@@ -997,7 +1039,7 @@ export class TaskOrchestrator {
     await this.postRunSteps(
       [{ task, status: 'failure', terminalOutput }],
       doNotSkipCache,
-      { groupId }
+      groupId
     );
   }
 
@@ -1027,9 +1069,7 @@ export class TaskOrchestrator {
       ? getEnvVariablesForTask(
           task,
           taskSpecificEnv,
-          process.env.FORCE_COLOR === undefined
-            ? 'true'
-            : process.env.FORCE_COLOR,
+          getForceColorForChild(),
           this.options.skipNxCache,
           this.options.captureStderr,
           null,
@@ -1078,7 +1118,7 @@ export class TaskOrchestrator {
     };
 
     try {
-      await this.postRunSteps([result], doNotSkipCache, { groupId });
+      await this.postRunSteps([result], doNotSkipCache, groupId);
     } finally {
       this.discreteTaskExitHandled.delete(task.id);
       resolveDiscreteExit!();
@@ -1160,7 +1200,7 @@ export class TaskOrchestrator {
             // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
             this.options.lifeCycle.registerRunningTask(
               task.id,
-              runningTask.getParserAndWriter()
+              runningTask.getPtyHandles()
             );
             runningTask.onOutput((output) => {
               this.options.lifeCycle.appendTaskOutput(task.id, output, true);
@@ -1219,7 +1259,7 @@ export class TaskOrchestrator {
           // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
           this.options.lifeCycle.registerRunningTask(
             task.id,
-            runningTask.getParserAndWriter()
+            runningTask.getPtyHandles()
           );
           runningTask.onOutput((output) => {
             this.options.lifeCycle.appendTaskOutput(task.id, output, true);
@@ -1338,9 +1378,7 @@ export class TaskOrchestrator {
       ? getEnvVariablesForTask(
           task,
           taskSpecificEnv,
-          process.env.FORCE_COLOR === undefined
-            ? 'true'
-            : process.env.FORCE_COLOR,
+          getForceColorForChild(),
           this.options.skipNxCache,
           this.options.captureStderr,
           null,
@@ -1400,8 +1438,8 @@ export class TaskOrchestrator {
       status: TaskStatus;
       terminalOutput?: string;
     }[],
-    doNotSkipCache: boolean,
-    { groupId }: { groupId: number }
+    shouldCache: boolean,
+    groupId: number
   ) {
     const now = Date.now();
     const tasksToRecord: { outputs: string[]; hash: string }[] = [];
@@ -1422,7 +1460,10 @@ export class TaskOrchestrator {
       await this.recordOutputsHashBatch(tasksToRecord);
     }
 
-    if (doNotSkipCache && !this.stopRequested) {
+    // Caller decides whether these results should be written to the cache.
+    // Cache replays pass false so a replayed failure (reported as 'failure' so
+    // it counts as a failed run) isn't re-written to the cache on every replay.
+    if (shouldCache && !this.stopRequested) {
       // cache the results
       performance.mark('cache-results-start');
       await Promise.all(

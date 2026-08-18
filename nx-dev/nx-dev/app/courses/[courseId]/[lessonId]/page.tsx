@@ -4,14 +4,15 @@ import { LessonPlayer } from '@nx/nx-dev-ui-courses';
 import { Metadata } from 'next';
 
 interface LessonPageProps {
-  params: { courseId: string; lessonId: string };
+  params: Promise<{ courseId: string; lessonId: string }>;
 }
 
 export async function generateMetadata({
   params,
 }: LessonPageProps): Promise<Metadata> {
-  const course = await coursesApi.getCourse(params.courseId);
-  const lesson = course.lessons.find((l) => l.id === params.lessonId);
+  const { courseId, lessonId } = await params;
+  const course = await coursesApi.getCourse(courseId);
+  const lesson = course.lessons.find((l) => l.id === lessonId);
 
   if (!lesson) {
     return {
@@ -36,8 +37,9 @@ export async function generateStaticParams() {
 }
 
 export default async function LessonPage({ params }: LessonPageProps) {
-  const course = await coursesApi.getCourse(params.courseId);
-  const lesson = course.lessons.find((l) => l.id === params.lessonId);
+  const { courseId, lessonId } = await params;
+  const course = await coursesApi.getCourse(courseId);
+  const lesson = course.lessons.find((l) => l.id === lessonId);
 
   if (!lesson) {
     return <div>Lesson not found</div>;
