@@ -1,6 +1,10 @@
+import * as figures from 'figures';
 import { EventEmitter } from 'events';
+import { existsSync, readFileSync } from 'fs';
+import { stripVTControlCharacters } from 'util';
 import type { ChildProcess } from 'child_process';
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
+import { output } from '../../utils/output';
 import { BatchProcess } from './batch-process';
 
 function fakeChildProcess() {
@@ -96,9 +100,10 @@ describe('BatchProcess', () => {
       return b;
     });
 
-    const captured = batch.getCapturedOutput();
+    const captured = readFileSync(batch.getCapturedOutputPath(), 'utf-8');
     expect(captured).toContain('build log line');
     expect(captured).toContain('OutOfMemoryError');
+    batch.discardCapturedOutput();
   });
 
   it('does not capture anything when output is not being folded', () => {
@@ -115,16 +120,17 @@ describe('BatchProcess', () => {
       }
     );
 
-    expect(batch.getCapturedOutput()).toEqual('');
+    expect(batch.getCapturedOutputPath()).toBeUndefined();
   });
 
-  it('caps the captured buffer so a long-lived batch cannot grow it without bound', () => {
+  it('captures a batch log far larger than a JS string can hold in one piece', () => {
     const child = fakeChildProcess();
 
     const batch = withEnvironmentVariables(FOLDING_ENV, () => {
       const b = new BatchProcess(child, '@nx/gradle:batch');
       captureForwarded(() => {
-        // 3 MB in, well over the ~1 MB cap; the tail (the fatal) is what matters.
+        // 3 MB in. Nothing is dropped: only a failed batch renders this, and
+        // its whole log is the diagnostic.
         for (let i = 0; i < 3; i++) {
           (child as any).stdout.emit(
             'data',
@@ -136,10 +142,35 @@ describe('BatchProcess', () => {
       return b;
     });
 
-    const captured = batch.getCapturedOutput();
-    expect(captured.length).toBeLessThanOrEqual(1_000_000);
-    // The most recent output — where the fatal lands — is retained.
+    const captured = readFileSync(batch.getCapturedOutputPath(), 'utf-8');
+    expect(captured.length).toEqual(3_000_000 + 'FINAL_FATAL'.length);
+    // Both the head, where a compiler's first errors land, and the tail, where
+    // a runner's fatal lands, survive.
+    expect(captured.startsWith('x')).toBe(true);
     expect(captured).toContain('FINAL_FATAL');
+    batch.discardCapturedOutput();
+  });
+
+  it('holds the captured log on disk rather than in memory', () => {
+    const child = fakeChildProcess();
+
+    const batch = withEnvironmentVariables(FOLDING_ENV, () => {
+      const b = new BatchProcess(child, '@nx/gradle:batch');
+      captureForwarded(() => {
+        (child as any).stdout.emit('data', Buffer.from('build log line\n'));
+      });
+      return b;
+    });
+
+    const path = batch.getCapturedOutputPath();
+    expect(path).toBeDefined();
+    expect(existsSync(path)).toBe(true);
+
+    batch.discardCapturedOutput();
+    // Left behind, a batch log per run would accumulate without bound.
+    expect(existsSync(path)).toBe(false);
+    // Safe to call more than once - the orchestrator cleans up in a finally.
+    expect(() => batch.discardCapturedOutput()).not.toThrow();
   });
 
   it('forwards live when the user explicitly asked to stream, even under grouping', () => {
@@ -193,5 +224,32 @@ describe('BatchProcess', () => {
     });
 
     expect(seen).toEqual(['out chunk']);
+  });
+
+  it('keeps a following collapsed summary on its own line', () => {
+    const child = fakeChildProcess();
+
+    // Batch chunks are forwarded raw, unlike forked-task streaming, which
+    // addPrefixTransformer re-emits a whole line at a time. A chunk that ends
+    // mid-line must not have the next task's ✔ line glued onto it.
+    const result = withEnvironmentVariables(
+      { GITHUB_ACTIONS: undefined, NX_SKIP_LOG_GROUPING: undefined },
+      () => {
+        new BatchProcess(child, '@nx/js:tsc');
+        return captureForwarded(() => {
+          // Establish a known line start; the raw chunk below is what has to
+          // move it, and an earlier test must not decide this one's outcome.
+          output.addNewline();
+          (child as any).stdout.emit('data', Buffer.from('compiling...'));
+          output.logCommandSummary('nx run lib:build', 'local-cache');
+        });
+      }
+    );
+
+    const summary = `${figures.tick}  nx run lib:build`;
+    const stdout = stripVTControlCharacters(result.stdout);
+    const index = stdout.indexOf(summary);
+    expect(index).toBeGreaterThan(-1);
+    expect(stdout[index - 1]).toEqual('\n');
   });
 });

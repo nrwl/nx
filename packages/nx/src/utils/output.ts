@@ -1,4 +1,5 @@
 import * as figures from 'figures';
+import { closeSync, openSync, readSync } from 'fs';
 import { EOL } from 'os';
 import * as pc from 'picocolors';
 import * as readline from 'readline';
@@ -16,6 +17,28 @@ export type CollapsibleTaskStatus = Extract<
 
 const GH_GROUP_PREFIX = '::group::';
 const GH_GROUP_SUFFIX = '::endgroup::';
+
+/**
+ * `static-failures-only` is `static` with successful tasks collapsed to a single
+ * line. They select the same life cycle and differ only in what it prints, so
+ * everywhere the life cycle is chosen, the TUI is ruled out, or output is
+ * routed, the two behave identically.
+ */
+export function isStaticOutputStyle(outputStyle: string | undefined): boolean {
+  return outputStyle === 'static' || outputStyle === 'static-failures-only';
+}
+
+/**
+ * Whether a run prints every task's output in full rather than collapsing the
+ * ones that succeeded. Both static life cycles and the batch renderer have to
+ * agree on this, so they read it from here rather than each deriving it.
+ */
+export function printsFullTaskOutput(args: {
+  verbose?: boolean;
+  outputStyle?: string;
+}): boolean {
+  return !!args.verbose || args.outputStyle === 'static';
+}
 
 /**
  * Whether task output should be wrapped in collapsible log groups. Grouping
@@ -123,21 +146,54 @@ class CLIOutput {
   dim = pc.dim;
 
   /**
-   * Whether stdout is positioned at the start of a line, tracking only writes
-   * made through this class. Task output does not reliably end in a newline, so
-   * writers that must begin on a fresh line ask for one via
-   * {@link ensureLineStart} rather than guessing. Code that writes to
-   * `process.stdout` directly can leave this stale; it is relied on only where
-   * grouping suppresses those direct writes, so the value is authoritative
-   * there.
+   * Whether the terminal is positioned at the start of a line. Task output does
+   * not reliably end in a newline, so writers that must begin on a fresh line
+   * ask for one via {@link ensureLineStart} rather than guessing.
+   *
+   * Every write that can leave the cursor mid-line goes through
+   * {@link writeToStream}: this class's own, and a batch worker's live output
+   * via {@link writeTaskOutputChunk}. Forked task streaming bypasses this class
+   * but cannot invalidate the value, because `addPrefixTransformer` re-emits
+   * that output a whole line at a time and always ends on a line boundary.
    */
   private atLineStart = true;
 
   private writeToStream(str: string, stream: WriteStream = process.stdout) {
-    if (stream === process.stdout && str.length > 0) {
+    // stdout and stderr share one cursor wherever this matters — a CI log, a
+    // terminal — so a write to either moves it.
+    if (
+      (stream === process.stdout || stream === process.stderr) &&
+      str.length > 0
+    ) {
       this.atLineStart = str.endsWith('\n');
     }
     stream.write(str);
+  }
+
+  /**
+   * Forwards a chunk of a task's output live, keeping {@link atLineStart}
+   * accurate. Batch workers write raw chunks that routinely end mid-line, and a
+   * collapsed summary line must not be glued onto one.
+   *
+   * @internal Not part of the output API plugins may rely on.
+   */
+  writeTaskOutputChunk(
+    chunk: string | Buffer,
+    stream: WriteStream = process.stdout
+  ) {
+    if (
+      chunk.length > 0 &&
+      (stream === process.stdout || stream === process.stderr)
+    ) {
+      // A Buffer is written through undecoded so a chunk that splits a
+      // multi-byte character is not mangled; 0x0a only ever encodes a newline
+      // in UTF-8, so its last byte answers the question on its own.
+      this.atLineStart =
+        typeof chunk === 'string'
+          ? chunk.endsWith('\n')
+          : chunk[chunk.length - 1] === 0x0a;
+    }
+    stream.write(chunk);
   }
 
   private ensureLineStart() {
@@ -373,35 +429,81 @@ class CLIOutput {
    */
   logCommandRedirect(message: string, taskStatus: TaskStatus, note: string) {
     this.ensureLineStart();
-    const failed = taskStatus === 'failure' || taskStatus === 'stopped';
-    const icon = failed ? pc.red(figures.cross) : pc.green(figures.tick);
+    // A stopped task did not fail; it never got to finish. The TUI summary
+    // already draws that distinction, so use the same glyph.
+    const icon =
+      taskStatus === 'stopped'
+        ? pc.cyan(figures.squareSmallFilled)
+        : taskStatus === 'failure'
+          ? pc.red(figures.cross)
+          : pc.green(figures.tick);
     const command = this.formatCommand(this.normalizeMessage(message));
     this.writeToStream(`${icon}  ${command}  ${pc.dim(note)}${EOL}`);
   }
 
   /**
-   * Prints a failed batch's combined output as one log group. A batch runner's
+   * Prints a batch's combined output as one log group. A batch runner's
    * diagnostics — a crash, a config-phase error, a runner summary — belong to no
    * single task, so the group is labelled with the batch rather than a task.
+   *
+   * The batch's own output is copied straight from the file it was captured
+   * into, so an arbitrarily long log costs a fixed amount of memory here.
+   * Nothing is withheld: this rendering is chosen either because the whole log
+   * was asked for, or because no task claimed any of it.
    */
-  logBatchFailureGroup(label: string, output: string) {
+  logBatchGroup(
+    label: string,
+    body: { capturedOutputPath?: string; trailer?: string },
+    taskStatus: TaskStatus
+  ) {
     const grouped = isLogGroupingEnabled();
     let header = `${pc.dim('> ')}${pc.bold(label)}`;
     if (grouped) {
-      header = `${GH_GROUP_PREFIX}${this.getStatusIcon('failure')} ${header}`;
+      header = `${GH_GROUP_PREFIX}${this.getStatusIcon(taskStatus)} ${header}`;
     }
 
     this.addNewline();
     this.writeToStream(header);
     this.addNewline();
     this.addNewline();
-    this.writeToStream(output);
+    if (body.capturedOutputPath) {
+      this.copyFileToStream(body.capturedOutputPath);
+    }
+    if (body.trailer) {
+      this.ensureLineStart();
+      this.writeToStream(`${body.trailer}${EOL}`);
+    }
 
     if (grouped) {
       this.ensureLineStart();
       this.writeToStream(`${GH_GROUP_SUFFIX}${EOL}`);
     } else {
       this.ensureLineStart();
+    }
+  }
+
+  /**
+   * Copies a file to stdout a chunk at a time. Reading it into one string would
+   * reintroduce the unbounded growth that writing it to disk avoided, and a
+   * long batch log can exceed the maximum length of a JS string.
+   */
+  private copyFileToStream(path: string) {
+    let fd: number;
+    try {
+      fd = openSync(path, 'r');
+    } catch {
+      // The batch left nothing behind, or it is already cleaned up. The tasks'
+      // own redirect lines still point at this group.
+      return;
+    }
+    try {
+      const buffer = Buffer.allocUnsafe(64 * 1024);
+      let bytesRead: number;
+      while ((bytesRead = readSync(fd, buffer, 0, buffer.length, null)) > 0) {
+        this.writeTaskOutputChunk(buffer.subarray(0, bytesRead));
+      }
+    } finally {
+      closeSync(fd);
     }
   }
 
@@ -420,6 +522,8 @@ class CLIOutput {
         return '✅';
       case 'failure':
         return '❌';
+      case 'stopped':
+        return '⏹️';
       case 'skipped':
       case 'local-cache-kept-existing':
         return '⏩';
