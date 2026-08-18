@@ -1,8 +1,5 @@
 {
-  "buildFiles": [
-    "proj/build.gradle",
-    "proj/application/build.gradle"
-  ],
+  "buildFiles": ["proj/build.gradle", "proj/application/build.gradle"],
   "nodes": {
     "proj": {
       "targets": {
@@ -10,9 +7,7 @@
           "cache": true,
           "metadata": {
             "description": "Displays all buildscript dependencies declared in root project 'gradle-tutorial'.",
-            "technologies": [
-              "gradle"
-            ]
+            "technologies": ["gradle"]
           },
           "command": "./gradlew :buildEnvironment",
           "options": {
@@ -22,13 +17,9 @@
       },
       "metadata": {
         "targetGroups": {
-          "help": [
-            "buildEnvironment"
-          ]
+          "help": ["buildEnvironment"]
         },
-        "technologies": [
-          "gradle"
-        ]
+        "technologies": ["gradle"]
       },
       "name": "gradle-tutorial"
     },
@@ -52,9 +43,7 @@
           ],
           "metadata": {
             "description": "Runs Gradle test proj/application/src/test/java/com/example/multimodule/application/DemoApplicationTest10.java in CI",
-            "technologies": [
-              "gradle"
-            ]
+            "technologies": ["gradle"]
           },
           "command": "./gradlew :application:test --tests DemoApplicationTest10",
           "options": {
@@ -79,9 +68,7 @@
           ],
           "metadata": {
             "description": "Runs Gradle test proj/application/src/test/java/com/example/multimodule/application/DemoApplicationTest7.java in CI",
-            "technologies": [
-              "gradle"
-            ]
+            "technologies": ["gradle"]
           },
           "command": "./gradlew :application:test --tests DemoApplicationTest7",
           "options": {
@@ -106,9 +93,7 @@
           ],
           "metadata": {
             "description": "Runs Gradle test proj/application/src/test/java/com/example/multimodule/application/DemoApplicationTest6.java in CI",
-            "technologies": [
-              "gradle"
-            ]
+            "technologies": ["gradle"]
           },
           "command": "./gradlew :application:test --tests DemoApplicationTest6",
           "options": {
@@ -133,9 +118,7 @@
           ],
           "metadata": {
             "description": "Runs Gradle test proj/application/src/test/java/com/example/multimodule/application/DemoApplicationTest3.java in CI",
-            "technologies": [
-              "gradle"
-            ]
+            "technologies": ["gradle"]
           },
           "command": "./gradlew :application:test --tests DemoApplicationTest3",
           "options": {
@@ -160,9 +143,7 @@
           ],
           "metadata": {
             "description": "Runs Gradle test proj/application/src/test/java/com/example/multimodule/application/DemoApplicationTest2.java in CI",
-            "technologies": [
-              "gradle"
-            ]
+            "technologies": ["gradle"]
           },
           "command": "./gradlew :application:test --tests DemoApplicationTest2",
           "options": {
@@ -187,9 +168,7 @@
           ],
           "metadata": {
             "description": "Runs Gradle test proj/application/src/test/java/com/example/multimodule/application/DemoApplicationTest9.java in CI",
-            "technologies": [
-              "gradle"
-            ]
+            "technologies": ["gradle"]
           },
           "command": "./gradlew :application:test --tests DemoApplicationTest9",
           "options": {
@@ -214,9 +193,7 @@
           ],
           "metadata": {
             "description": "Runs Gradle test proj/application/src/test/java/com/example/multimodule/application/DemoApplicationTest.java in CI",
-            "technologies": [
-              "gradle"
-            ]
+            "technologies": ["gradle"]
           },
           "command": "./gradlew :application:test --tests DemoApplicationTest",
           "options": {
@@ -241,9 +218,7 @@
           ],
           "metadata": {
             "description": "Runs Gradle test proj/application/src/test/java/com/example/multimodule/application/DemoApplicationTest5.java in CI",
-            "technologies": [
-              "gradle"
-            ]
+            "technologies": ["gradle"]
           },
           "command": "./gradlew :application:test --tests DemoApplicationTest5",
           "options": {
@@ -268,9 +243,7 @@
           ],
           "metadata": {
             "description": "Runs Gradle test proj/application/src/test/java/com/example/multimodule/application/DemoApplicationTest4.java in CI",
-            "technologies": [
-              "gradle"
-            ]
+            "technologies": ["gradle"]
           },
           "command": "./gradlew :application:test --tests DemoApplicationTest4",
           "options": {
@@ -295,9 +268,7 @@
           ],
           "metadata": {
             "description": "Runs Gradle test proj/application/src/test/java/com/example/multimodule/application/DemoApplicationTest8.java in CI",
-            "technologies": [
-              "gradle"
-            ]
+            "technologies": ["gradle"]
           },
           "command": "./gradlew :application:test --tests DemoApplicationTest8",
           "options": {
@@ -368,9 +339,7 @@
           ],
           "metadata": {
             "description": "Runs Gradle Tests in CI",
-            "technologies": [
-              "gradle"
-            ]
+            "technologies": ["gradle"]
           },
           "options": {
             "cwd": "proj"
@@ -380,13 +349,9 @@
       },
       "metadata": {
         "targetGroups": {
-          "verification": [
-            "ci"
-          ]
+          "verification": ["ci"]
         },
-        "technologies": [
-          "gradle"
-        ]
+        "technologies": ["gradle"]
       },
       "name": "application"
     }
