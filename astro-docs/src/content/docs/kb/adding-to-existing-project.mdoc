@@ -21,9 +21,10 @@ to benefit, and the setup leaves those scripts as they are.
 }
 ```
 
-Run these through Nx and they pick up [caching](/docs/features/cache-task-results). Change a spec file and the `build`
-task is restored from the cache instead of re-running. Change a couple of markdown files and there's nothing to rebuild,
-test, or lint at all.
+Run these through Nx and they pick up [caching](/docs/features/cache-task-results). Rerun a task without touching
+the project and Nx restores the previous result instead of doing the work again. Out of the box a task depends on every
+file in its project, so narrowing what each task reads with [custom inputs](/docs/kb/configure-inputs) is what lets a
+docs-only edit skip the build.
 
 ## Install Nx
 
@@ -39,7 +40,7 @@ npx nx@latest init
 
 - `nx.json` is created.
 - `nx` is added to your dev dependencies.
-- `.gitignore` picks up the Nx cache directories.
+- An existing `.gitignore` picks up the Nx cache directories. Nx does not create the file if it's missing.
 - `package.json` gets an `"nx": {}` property so Nx knows about the root project.
 
 Your scripts are untouched. `npm run build` still runs `next build`, and you opt tasks into caching yourself by
@@ -64,7 +65,7 @@ output, and writes the matching `targetDefaults` for you:
 }
 ```
 
-Either way, run a task twice and the second run is restored from the cache:
+Once a task is marked cacheable, run it twice and the second run is restored from the cache:
 
 ```shell
 npx nx build
@@ -121,8 +122,9 @@ Plugins are optional. Guided setup detects the tools in your repository and offe
 can add them later instead with [`nx add`](/docs/reference/nx-commands#nx-add). A plugin configures tasks from the tool
 config you already have, so you maintain fewer scripts and stop hand-writing cache inputs and outputs.
 
-When you add a plugin, Nx also asks whether to point your `package.json` scripts at the tasks it created. Answering yes
-rewrites them, which extends caching to everywhere those scripts already run, including CI:
+Adding a plugin can also point your `package.json` scripts at the tasks it created, which extends caching to
+everywhere those scripts already run, including CI. Guided `nx init` asks first. `nx add` does it without asking for a
+core `@nx/*` plugin, so pass `--updatePackageScripts=false` to keep your scripts as they are:
 
 ```diff
 // package.json
@@ -142,8 +144,8 @@ rewrites them, which extends caching to everywhere those scripts already run, in
 
 `@nx/next/plugin` adds a `next:build` target that runs `next build` with caching set up correctly, so `nx next:build`
 and `next build` do the same work. `@nx/eslint/plugin` does the same for `eslint ./src`. The `test` script matched no
-plugin and was left alone. Answer no and your scripts stay as they are, with the plugin tasks still available through
-`nx next:build`.
+plugin and was left alone. Skip the rewrite and your scripts stay as they are, with the plugin tasks still available
+through `nx next:build`.
 
 ### Inferred tasks
 
