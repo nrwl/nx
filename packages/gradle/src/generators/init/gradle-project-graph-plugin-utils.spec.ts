@@ -210,7 +210,9 @@ allprojects {
 
         const content = tree.read('proj/build.gradle', 'utf-8');
         expect(
-          content.match(/apply\s+plugin:\s*['"]dev\.nx\.gradle\.project-graph['"]/g)
+          content.match(
+            /apply\s+plugin:\s*['"]dev\.nx\.gradle\.project-graph['"]/g
+          )
         ).toHaveLength(1);
       });
     });
