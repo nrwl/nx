@@ -274,9 +274,10 @@ export function getDaemonEnv() {
 let clientEnvGeneration = 0;
 
 /**
- * Count of client env applications this process has absorbed. Digest equality
- * alone cannot guard a cache write: an env that changed and changed back
- * mid-pass yields the pass-start digest again, while the count still moves.
+ * Count of client env applications that changed at least one variable. Digest
+ * equality alone cannot guard a cache write: an env that changed and changed
+ * back mid-pass yields the pass-start digest again, while the count still
+ * moves.
  */
 export function getDaemonClientEnvGeneration(): number {
   return clientEnvGeneration;
