@@ -12,7 +12,7 @@ import {
   ProjectGraphExternalNode,
   normalizePath,
 } from '@nx/devkit';
-import { dirname, join } from 'node:path';
+import { dirname, isAbsolute, join } from 'node:path';
 
 import {
   gradleConfigAndTestGlob,
@@ -141,17 +141,22 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
       // A Gradle project need not own a build file — `project(':core') { }` blocks in an
       // ancestor configure it instead. Drive off the report's project roots and attribute each
       // to the nearest ancestor build file, rather than assuming one project per build file.
-      const knownBuildFiles = new Set(
-        allBuildFiles.map((f) => normalizePath(f))
-      );
+      // Indexed by directory rather than matched against a fixed set of names: a build file may
+      // be renamed via `rootProject.buildFileName`, and those reach allBuildFiles through the report.
+      const buildFilesByDir = new Map<string, string>();
+      for (const file of allBuildFiles) {
+        const normalized = normalizePath(file);
+        const dir = dirname(normalized);
+        if (!buildFilesByDir.has(dir)) {
+          buildFilesByDir.set(dir, normalized);
+        }
+      }
       const buildFileFor = (projectRoot: string): string | undefined => {
         let dir = projectRoot;
         while (true) {
-          for (const name of ['build.gradle', 'build.gradle.kts']) {
-            const candidate = dir === '.' ? name : `${dir}/${name}`;
-            if (knownBuildFiles.has(candidate)) {
-              return candidate;
-            }
+          const candidate = buildFilesByDir.get(dir);
+          if (candidate) {
+            return candidate;
           }
           if (dir === '.' || dir === '') {
             return undefined;
@@ -161,10 +166,13 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
         }
       };
 
-      // Report keys are workspace-relative project roots with `/` separators.
-      const projectRoots = Object.keys(nodes).map((root) =>
-        normalizePath(root)
-      );
+      // Report keys are workspace-relative project roots with `/` separators — except for a
+      // project outside the workspace (an `includeBuild("../x")`), which the reporter deliberately
+      // leaves absolute. Such a root cannot become an Nx project, and letting it through would
+      // silently attribute it to the workspace-root build file.
+      const projectRoots = Object.keys(nodes)
+        .map((root) => normalizePath(root))
+        .filter((root) => !isAbsolute(root) && !root.startsWith('../'));
       const projectHashes = await calculateHashesForCreateNodes(
         projectRoots,
         normalizedOptions ?? {},
@@ -177,7 +185,13 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
         if (!gradleFilePath) {
           continue;
         }
-        const hash = projectHashes[i];
+        // calculateHashesForCreateNodes hashes the files under the root, not the root itself, so
+        // two roots that own no files of their own hash identically — which is exactly the shape
+        // this loop introduced. Without the root in the key they share a cache entry.
+        const hash = hashObject({
+          hash: projectHashes[i],
+          normalizedProjectRoot,
+        });
 
         if (!pluginCache.has(hash)) {
           const nodeProject = nodes[normalizedProjectRoot];
