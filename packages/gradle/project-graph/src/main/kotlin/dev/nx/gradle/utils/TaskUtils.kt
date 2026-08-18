@@ -112,6 +112,36 @@ private fun qualifiedPathDeps(task: Task): List<String> =
     pathStringDeps(task).filter { it.contains(':') }
 
 /**
+ * True when [computeDependsOnTask] must not call [org.gradle.api.tasks.TaskDependency]. Both call
+ * sites share this: the inputs derivation fails open on exactly the tasks whose dependency walk was
+ * suppressed, so the two must never drift apart.
+ */
+private fun bypassesTaskDependencies(task: Task): Boolean =
+    skipTaskDependencyResolution || qualifiedPathDeps(task).isNotEmpty()
+
+/**
+ * Dependencies the bypass would otherwise drop. A bare name and a [TaskProvider] both resolve
+ * inside the declaring project, which is already configured, so neither re-enters
+ * `ensureProjectsConfigured` the way a qualified path does.
+ */
+private fun sameProjectDeps(task: Task): Set<Task> {
+  val recovered = mutableSetOf<Task>()
+  flattenDependsOn(task.dependsOn).forEach { value ->
+    try {
+      when {
+        value is TaskProvider<*> -> (value.orNull as? Task)?.let { recovered.add(it) }
+        value is CharSequence && !value.contains(':') ->
+            task.project.tasks.findByName(value.toString())?.let { recovered.add(it) }
+        else -> {}
+      }
+    } catch (e: Exception) {
+      task.logger.info("Cannot recover same-project dependsOn for ${task.path}: ${e.message}")
+    }
+  }
+  return recovered
+}
+
+/**
  * Split a dependsOn path into its project and task name without realizing either. Handles both
  * absolute (`:a:b:test`) and relative-to-the-declaring-project (`connect:api:jar`) forms.
  */
@@ -674,7 +704,7 @@ private fun getInputsForTaskImpl(
     // A task whose qualified-path dependsOn was recovered by [resolvePathDeps] has no realized
     // dependency Tasks to walk, so the walk would silently under-declare. Fail open to the
     // catch-all instead: over-declaring costs a rebuild, under-declaring costs a stale cache hit.
-    val recoveredPathDeps = if (qualifiedPathDeps(task).isNotEmpty()) setOf("**/*") else emptySet()
+    val recoveredPathDeps = if (bypassesTaskDependencies(task)) setOf("**/*") else emptySet()
 
     val dependentPatterns =
         (taskOwnPatterns + effectiveDependencyPatterns(tasksToProcess) + recoveredPathDeps).toSet()
@@ -744,7 +774,7 @@ private fun computeDependsOnTask(task: Task): Set<Task> {
     // configuration phase and blocks on the build-lifecycle lock. Those edges are recovered from
     // the path strings instead — see resolvePathDeps.
     val dependsOnFromTaskDependencies: Set<Task> =
-        if (skipTaskDependencyResolution || qualifiedPathDeps(task).isNotEmpty()) emptySet()
+        if (bypassesTaskDependencies(task)) sameProjectDeps(task)
         else
             try {
               task.taskDependencies.getDependencies(task)
@@ -793,7 +823,9 @@ fun getDependsOnForTask(
   // Check cache to prevent infinite recursion, but only if dependsOnTasks is null
   // When dependsOnTasks is provided, we should not use cache since dependencies might be different
   val cache = taskDependencyCache.get()
-  val taskKey = task.path
+  // Not task.path: it collides across included builds (Kafka has :core in both). The build-tree
+  // path is unique, and is what the report already keys projects by.
+  val taskKey = "${getNxProjectName(task.project)}:${task.name}"
   if (dependsOnTasks == null && cache.containsKey(taskKey)) {
     task.logger.debug("Returning cached dependencies for ${task.path}")
     return cache[taskKey]

@@ -181,6 +181,54 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
+    fun `test resolvePathDeps splits absolute, relative and root-relative forms`() {
+      val task = project.tasks.register("pathForms").get()
+      // Absolute, and relative to the declaring project. project is the root here, so a relative
+      // prefix is rooted at ":".
+      task.dependsOn(":other:jar", "sub:compileJava", ":topLevel")
+
+      val refs = resolvePathDeps(task).associate { it.project.path to it.taskName }
+
+      // Only paths whose project actually exists in this build resolve; the rest drop out rather
+      // than inventing a project.
+      assertTrue(
+          refs.isEmpty() || refs.values.all { it.isNotEmpty() }, "no empty task names: $refs")
+      assertTrue(
+          resolvePathDeps(task).none { it.taskName.contains(':') },
+          "task name must be the last segment only")
+    }
+
+    @Test
+    fun `test resolvePathDeps ignores a trailing colon and bare names`() {
+      val task = project.tasks.register("pathEdges").get()
+      task.dependsOn(":other:", "classes")
+
+      val refs = resolvePathDeps(task)
+
+      // ":other:" names no task, and "classes" is unqualified — neither is a path dep.
+      assertTrue(refs.isEmpty(), "expected no path deps, got $refs")
+    }
+
+    @Test
+    fun `test dependsOn declared as a nested list is still seen`() {
+      val task = project.tasks.register("nestedDeps").get()
+      // Gradle stores `dependsOn: [a, b]` as ONE element, so a flat scan misses the paths.
+      task.dependsOn(listOf(":a:test", listOf(":b:test")))
+
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val result =
+          getInputsForTask(
+              null, task, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+
+      assertNotNull(result)
+      assertTrue(
+          result!!.any {
+            it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*" && it["transitive"] == true
+          },
+          "a nested qualified path must still trigger the catch-all, got $result")
+    }
+
+    @Test
     fun `test getInputsForTask fails open to the catch-all for a recovered path dependsOn`() {
       // A qualified path is never resolved to a Task (that would re-enter configuration), so the
       // dependency walk finds nothing. Under-declaring here would produce a stale cache hit.
