@@ -130,6 +130,19 @@ describe('js init generator', () => {
       // and silently switch the workspace's formatter.
       expect(tree.exists('.oxfmtrc.json')).toBe(false);
     });
+
+    it('should keep oxfmt when the workspace already uses it', async () => {
+      writeJson(tree, '.oxfmtrc.json', { singleQuote: true });
+
+      await init(tree, {});
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['oxfmt']).toBeDefined();
+      // Generating into an oxfmt workspace must not drag prettier back in.
+      expect(packageJson.devDependencies?.['prettier']).toBeUndefined();
+      expect(tree.exists('.prettierrc')).toBe(false);
+      expect(tree.exists('.prettierignore')).toBe(false);
+    });
   });
 
   it('should not overwrite existing .oxfmtrc.json', async () => {
