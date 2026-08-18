@@ -45,17 +45,13 @@ export function detectFormatter(root: string): FormatterType | null {
     return 'prettier';
   }
 
-  // oxfmt runs on defaults with no config file at all, so a declared
-  // dependency is the only signal an unconfigured oxfmt workspace gives.
-  // Prettier deliberately has no equivalent fallback: prettier being merely
-  // present in node_modules must not mean "format with prettier", or
-  // workspaces using biome/dprint get reformatted (#30426).
+  // Neither is configured. Both formatters run on their defaults, so a
+  // dependency declared in the root package.json is the only statement of
+  // intent an unconfigured workspace gives. #30426 ruled out treating prettier
+  // as *resolvable in node_modules*, which a declared dependency is not.
   const packageJsonPath = join(root, 'package.json');
   if (existsSync(packageJsonPath)) {
-    const packageJson = readJsonFile(packageJsonPath);
-    if (hasOxfmtDependency(packageJson)) {
-      return 'oxfmt';
-    }
+    return detectFormatterFromDependencies(readJsonFile(packageJsonPath));
   }
 
   return null;
@@ -72,22 +68,37 @@ export function detectFormatterInTree(tree: Tree): FormatterType | null {
     return 'prettier';
   }
 
-  // See detectFormatter: oxfmt-only fallback, deliberately not prettier.
+  // See detectFormatter: a declared dependency is the fallback for both.
   if (tree.exists('package.json')) {
-    if (hasOxfmtDependency(readJson(tree, 'package.json'))) {
-      return 'oxfmt';
-    }
+    return detectFormatterFromDependencies(readJson(tree, 'package.json'));
   }
 
   return null;
 }
 
-function hasOxfmtDependency(packageJson: {
+type PackageJsonDependencies = {
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
-}): boolean {
+};
+
+/** oxfmt first, matching the precedence the config files already have. */
+function detectFormatterFromDependencies(
+  packageJson: PackageJsonDependencies
+): FormatterType | null {
+  if (hasDependency(packageJson, 'oxfmt')) {
+    return 'oxfmt';
+  }
+  if (hasDependency(packageJson, 'prettier')) {
+    return 'prettier';
+  }
+  return null;
+}
+
+function hasDependency(
+  packageJson: PackageJsonDependencies,
+  name: string
+): boolean {
   return Boolean(
-    packageJson.dependencies?.['oxfmt'] ??
-      packageJson.devDependencies?.['oxfmt']
+    packageJson.dependencies?.[name] ?? packageJson.devDependencies?.[name]
   );
 }

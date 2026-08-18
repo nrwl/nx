@@ -73,15 +73,26 @@ describe('detectFormatterInTree', () => {
     expect(detectFormatterInTree(tree)).toBe('oxfmt');
   });
 
-  it('should NOT treat an installed prettier as intent to use prettier', () => {
-    // Workspaces formatting with biome/dprint routinely have prettier in the
-    // dependency graph. Formatting them with prettier would be wrong (#30426).
+  it('should detect prettier from a dependency when it has no config file', () => {
+    // #30426 ruled out prettier merely being resolvable in node_modules, which
+    // a biome/dprint workspace gets transitively. Declaring it is a choice.
     tree.write(
       'package.json',
       JSON.stringify({ devDependencies: { prettier: '^3.6.2' } })
     );
 
-    expect(detectFormatterInTree(tree)).toBeNull();
+    expect(detectFormatterInTree(tree)).toBe('prettier');
+  });
+
+  it('should prefer a declared oxfmt dependency over a declared prettier one', () => {
+    tree.write(
+      'package.json',
+      JSON.stringify({
+        devDependencies: { oxfmt: '^0.60.0', prettier: '^3.6.2' },
+      })
+    );
+
+    expect(detectFormatterInTree(tree)).toBe('oxfmt');
   });
 
   it('should detect prettier configured through package.json', () => {
@@ -166,13 +177,24 @@ describe('detectFormatter', () => {
     expect(detectFormatter(fs.tempDir)).toBe('prettier');
   });
 
-  it('should NOT treat an installed prettier as intent to use prettier', () => {
+  it('should detect prettier from a dependency when it has no config file', () => {
     fs.createFileSync(
       'package.json',
       JSON.stringify({ devDependencies: { prettier: '^3.6.2' } })
     );
 
-    expect(detectFormatter(fs.tempDir)).toBeNull();
+    expect(detectFormatter(fs.tempDir)).toBe('prettier');
+  });
+
+  it('should prefer a declared oxfmt dependency over a declared prettier one', () => {
+    fs.createFileSync(
+      'package.json',
+      JSON.stringify({
+        devDependencies: { oxfmt: '^0.60.0', prettier: '^3.6.2' },
+      })
+    );
+
+    expect(detectFormatter(fs.tempDir)).toBe('oxfmt');
   });
 });
 

@@ -21,6 +21,10 @@ Detection runs in this order, and the first match wins:
 1. An oxfmt config file exists at the workspace root.
 2. A Prettier config file exists at the workspace root, or `package.json` has a `prettier` key.
 3. `package.json` declares an `oxfmt` dependency.
+4. `package.json` declares a `prettier` dependency.
+
+Steps 3 and 4 read the root `package.json` only.
+A formatter that reaches `node_modules` as a transitive dependency doesn't count.
 
 If nothing matches, `nx format:write` and `nx format:check` warn and exit `0`, and generators skip
 formatting.
