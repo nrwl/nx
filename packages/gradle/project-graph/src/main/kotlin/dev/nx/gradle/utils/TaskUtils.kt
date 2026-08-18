@@ -56,21 +56,21 @@ private val dependentOutputPatternsCache: MutableMap<Task, Set<String>> =
 /**
  * `task.taskDependencies.getDependencies()` resolves dependency *paths* (`:a:b:test`), which sends
  * Gradle back through `ensureProjectsConfigured` — re-entering the configuration phase from a task
- * action. On builds that declare cross-project dependsOn by absolute path (Kafka) that blocks
+ * action. On builds that declare cross-project dependsOn by qualified path (Kafka) that blocks
  * indefinitely on the build-lifecycle state lock. Set to fall back to the raw `dependsOn` property,
  * which is already-resolved Task instances and never triggers configuration.
  */
 private val skipTaskDependencyResolution: Boolean =
     System.getenv("NX_GRADLE_SKIP_TASK_DEPS")?.toBoolean() == true
 
-/** A dependency edge as (owning project, task name) — the Task itself is never realized. */
+/** A dependency edge as (owning project, task name); building one never realizes the Task. */
 internal data class DepRef(val project: Project, val taskName: String)
 
 /**
- * Absolute task paths (`:a:b:test`) declared in a task's raw `dependsOn`. These are the entries
- * that make [org.gradle.api.tasks.TaskDependency.getDependencies] re-enter project configuration,
- * so they are read as plain strings and resolved via [Project.findProject], which returns the
- * already-instantiated project object without configuring it.
+ * Task paths and names declared in a task's raw `dependsOn`, as plain strings. The qualified ones
+ * are what make [org.gradle.api.tasks.TaskDependency.getDependencies] re-enter project
+ * configuration; [qualifiedPathDeps] selects those, and [resolvePathDeps] resolves them via
+ * [Project.findProject], which returns the already-instantiated project without configuring it.
  */
 private fun pathStringDeps(task: Task): List<String> {
   return try {
@@ -734,7 +734,7 @@ private fun computeDependsOnTask(task: Task): Set<Task> {
 
     // Then try to get dependencies from taskDependencies (more comprehensive but riskier with
     // config cache)
-    // Resolving TaskDependency for a task that names dependencies by absolute path re-enters the
+    // Resolving TaskDependency for a task that names dependencies by qualified path re-enters the
     // configuration phase and blocks on the build-lifecycle lock. Those edges are recovered from
     // the path strings instead — see resolvePathDeps.
     val dependsOnFromTaskDependencies: Set<Task> =
