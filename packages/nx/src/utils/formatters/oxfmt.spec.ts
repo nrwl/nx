@@ -993,6 +993,27 @@ describe('formatFilesWithOxfmt', () => {
       expect(result).not.toContain('{ alpha: 1, beta: 2, gamma: 3, delta: 4 }');
     });
 
+    it('reports an unreadable root .editorconfig instead of throwing', async () => {
+      writeConfig({});
+      // A directory reads as EISDIR, standing in for any non-ENOENT failure.
+      mkdirSync(join(workspaceRoot, '.editorconfig'));
+
+      const { formatted, errors } = await formatFilesWithOxfmt(
+        [
+          { path: 'a.ts', content: 'const x =  "hi"' },
+          { path: 'b.ts', content: 'const x =  "hi"' },
+        ],
+        workspaceRoot
+      );
+
+      // The chain is resolved once for the batch, so this failure lands outside
+      // the per-file catch. Every file fails rather than being formatted on bare
+      // defaults, which would produce widths `nx format` does not.
+      expect(errors?.length).toBe(2);
+      expect(errors[0]).toContain('Could not read .editorconfig');
+      expect(formatted.size).toBe(0);
+    });
+
     it('fails only the files under an unreadable nested config', async () => {
       writeConfig({ singleQuote: true });
       writeFileIn('apps/foo/.oxfmtrc.json', '{ not json');

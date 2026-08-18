@@ -862,11 +862,19 @@ export async function formatFilesWithOxfmt(
     OXFMT_IGNORE_OPTIONS.filenames,
     OXFMT_IGNORE_OPTIONS.merge
   );
-  // Measured against the CLI: it resolves `.editorconfig` from its own cwd -
-  // the workspace root, for `nx format` - and never reads a nested one, unlike
-  // the per-file walk it does for `.oxfmtrc.json`. Honouring a nearer file
-  // here would be undone by the next `nx format:write`.
-  const editorConfigChain = editorConfigChainFor(workspaceRoot);
+  // Measured against the CLI: it resolves `.editorconfig` from the directory it
+  // runs in and never reads a nested one, unlike the per-file walk it does for
+  // `.oxfmtrc.json`. Honouring a nearer file here would be undone by the next
+  // `nx format:write`.
+  let editorConfigChain: EditorConfigFile[];
+  try {
+    editorConfigChain = editorConfigChainFor(workspaceRoot);
+  } catch (e) {
+    // Resolved once for the batch, so this sits outside the per-file catch.
+    // Bare defaults would format to widths `nx format` does not, so an
+    // unreadable file fails every file rather than being formatted without it.
+    return { formatted, errors: files.map((f) => `${f.path}: ${e.message}`) };
+  }
 
   const errors: string[] = [];
   await Promise.all(
