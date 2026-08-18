@@ -27,7 +27,12 @@ import {
   EXPECTED_TERMINATION_SIGNALS,
   signalToCode,
 } from '../utils/exit-codes';
-import { output, shouldGroupBatchOutput } from '../utils/output';
+import {
+  isStaticOutputStyle,
+  output,
+  printsFullTaskOutput,
+  shouldGroupBatchOutput,
+} from '../utils/output';
 import { combineOptionsForExecutor, Options } from '../utils/params';
 import { workspaceRoot } from '../utils/workspace-root';
 import {
@@ -62,7 +67,6 @@ import {
   getPrintableCommandArgsForTask,
   getTargetConfigurationForTask,
   removeTasksFromTaskGraph,
-  isStaticOutputStyle,
   shouldStreamOutput,
 } from './utils';
 
@@ -155,7 +159,7 @@ export class TaskOrchestrator {
   private resolveStopPromise: (() => void) | null = null;
   private stopRequested = false;
   /** Disambiguates failed-batch log groups; the same executor can run several. */
-  private batchFailureGroupCount = 0;
+  private batchFoldCount = 0;
 
   private runningContinuousTasks = new Map<
     string,
@@ -925,7 +929,7 @@ export class TaskOrchestrator {
         this.printGroupedBatchOutput(
           batch,
           taskResults,
-          batchProcess.getCapturedOutput()
+          batchProcess.getCapturedOutputPath()
         );
       }
 
@@ -946,23 +950,28 @@ export class TaskOrchestrator {
         };
       });
 
-      // The worker died without reporting results, so no per-task fold ran. Its
-      // only diagnostic went to stdout/stderr, held back under log grouping —
-      // surface it as one fold, keeping the exit-code error too. Outside
-      // grouping it already streamed live.
-      if (!isBatchStopping && shouldGroupBatchOutput()) {
-        const captured = batchProcess?.getCapturedOutput() ?? '';
-        const diagnostic = [captured, e.message]
-          .filter(Boolean)
-          .join('\n')
-          .trim();
-        if (diagnostic) {
-          this.printBatchFailureFold(batch, taskResults, diagnostic);
+      // The worker died without reporting results, so nothing was attributed to
+      // a task and no per-task output ran. Everything it wrote went to
+      // stdout/stderr, held back under log grouping — surface it as one fold.
+      // Outside grouping it already streamed live. This matters just as much
+      // when the batch was stopped: every task is marked stopped whether or not
+      // it finished, so the log is the only record of what got through. Only
+      // the exit-code error is dropped there, since it restates the
+      // cancellation.
+      if (shouldGroupBatchOutput()) {
+        const capturedOutputPath = batchProcess?.getCapturedOutputPath();
+        const trailer = isBatchStopping ? undefined : e.message;
+        if (capturedOutputPath || trailer) {
+          this.printBatchFold(batch, taskResults, {
+            capturedOutputPath,
+            trailer,
+          });
         }
       }
 
       return taskResults;
     } finally {
+      batchProcess?.discardCapturedOutput();
       const runBatchEnd = performance.mark('TaskOrchestrator-run-batch:end');
       performance.measure(
         'TaskOrchestrator-run-batch',
@@ -973,25 +982,25 @@ export class TaskOrchestrator {
   }
 
   /**
-   * Prints a completed batch's output once, under log grouping. A batch that
-   * succeeded is rendered from each task's own terminalOutput as per-task
-   * folds. One that failed is rendered from everything the worker wrote as a
-   * single fold, because batch runners emit diagnostics — a runner summary, a
-   * config-phase error, output no task claimed — that live on stdout/stderr and
-   * in no task's terminalOutput. Live forwarding was suppressed while grouping,
-   * so this is the only copy either way.
+   * Prints a completed batch's output once, under log grouping. Live forwarding
+   * was suppressed while grouping, so this is the only copy — which is why the
+   * requested output style has to reach this path rather than stopping at the
+   * life cycle.
+   *
+   * A full-output run wants everything the batch emitted, including whatever no
+   * task claimed — a runner summary, a config-phase error — so it gets the
+   * worker's whole log as one fold. Otherwise the batch's own attribution is
+   * trusted and each task renders through the life cycle exactly as in a
+   * non-batch run: failures in full, successes collapsed to a line. A batch
+   * that never reported results is handled by the caller instead.
    */
   private printGroupedBatchOutput(
     batch: Batch,
     taskResults: TaskResult[],
-    capturedOutput: string
+    capturedOutputPath: string | undefined
   ) {
-    const failed = taskResults.some(
-      (r) => r.status === 'failure' || r.status === 'stopped'
-    );
-
-    if (failed && capturedOutput.trim()) {
-      this.printBatchFailureFold(batch, taskResults, capturedOutput);
+    if (printsFullTaskOutput(this.options) && capturedOutputPath) {
+      this.printBatchFold(batch, taskResults, { capturedOutputPath });
       return;
     }
 
@@ -1007,19 +1016,24 @@ export class TaskOrchestrator {
   }
 
   /**
-   * Renders a failed batch's whole output as one fold, then a line per task
-   * pointing at it. The fold is labelled with the executor and a run-unique id
-   * (the same executor can run more than one batch), rather than an arbitrary
-   * task. Safe to write to `output` directly: grouping implies GitHub Actions
-   * implies a non-TTY, static lifecycle.
+   * Renders a batch's whole output as one fold, then a line per task pointing
+   * at it. The fold is labelled with the executor and a run-unique id (the same
+   * executor can run more than one batch), rather than an arbitrary task. Safe
+   * to write to `output` directly: grouping implies GitHub Actions implies a
+   * non-TTY, static lifecycle.
    */
-  private printBatchFailureFold(
+  private printBatchFold(
     batch: Batch,
     taskResults: TaskResult[],
-    body: string
+    body: { capturedOutputPath?: string; trailer?: string }
   ) {
-    const label = `${batch.executorName} batch #${++this.batchFailureGroupCount}`;
-    output.logBatchFailureGroup(label, body);
+    const label = `${batch.executorName} batch #${++this.batchFoldCount}`;
+    const worst = taskResults.some((r) => r.status === 'failure')
+      ? 'failure'
+      : taskResults.some((r) => r.status === 'stopped')
+        ? 'stopped'
+        : 'success';
+    output.logBatchGroup(label, body, worst);
     for (const { task, status } of taskResults) {
       if (status !== 'skipped') {
         output.logCommandRedirect(

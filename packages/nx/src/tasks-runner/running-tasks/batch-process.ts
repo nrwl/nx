@@ -1,8 +1,11 @@
 import type { ChildProcess, Serializable } from 'child_process';
+import { closeSync, mkdirSync, openSync, rmSync, writeSync } from 'fs';
+import { join } from 'path';
 import { killProcessTreeGraceful } from '../../native';
 import type { TaskResult } from '../../config/misc-interfaces';
+import { workspaceDataDirectory } from '../../utils/cache-directory';
 import { signalToCode } from '../../utils/exit-codes';
-import { shouldGroupBatchOutput } from '../../utils/output';
+import { output, shouldGroupBatchOutput } from '../../utils/output';
 import {
   BatchMessage,
   BatchMessageType,
@@ -17,15 +20,20 @@ export class BatchProcess {
   > = [];
   private outputCallbacks: Array<(output: string) => void> = [];
   /**
-   * All stdout/stderr held back from the live stream under log grouping. A
-   * successful batch is rendered from its per-task terminalOutput and this is
-   * discarded; a failed one is rendered from this as a single fold, so that a
-   * diagnostic no task claimed — a crash, a config-phase error, a runner's
-   * summary — is not lost. Tail-capped so a long-lived batch (Gradle runs one
-   * for the whole command) cannot grow it without bound.
+   * File holding all stdout/stderr held back from the live stream under log
+   * grouping. A successful batch is rendered from its per-task terminalOutput
+   * and this is discarded; a failed one is rendered from this as a single fold,
+   * so that a diagnostic no task claimed — a crash, a config-phase error, a
+   * runner's summary — is not lost.
+   *
+   * It goes to disk rather than a string because a batch is long-lived (Gradle
+   * runs one for the whole command) and its output has no bound. Accumulating
+   * that in memory grows without limit and eventually exceeds the maximum
+   * length of a JS string.
    */
-  private capturedOutput = '';
-  private static readonly CAPTURED_OUTPUT_CAP = 1_000_000;
+  private capturedOutputPath: string | undefined;
+  private capturedOutputFd: number | undefined;
+  private static capturedOutputCount = 0;
 
   constructor(
     private childProcess: ChildProcess,
@@ -68,21 +76,23 @@ export class BatchProcess {
     // Capture stdout output
     if (this.childProcess.stdout) {
       this.childProcess.stdout.on('data', (chunk) => {
-        const output = chunk.toString();
+        const text = chunk.toString();
 
         // When batch output is being folded, the live copy is suppressed to
         // keep each group contiguous; it is retained (see capturedOutput) so a
         // failed batch can still surface everything. Otherwise, maintain
-        // current terminal output behavior.
+        // current terminal output behavior. These chunks are forwarded raw and
+        // routinely end mid-line, so they go through `output` to keep its line
+        // tracking accurate for whatever prints next.
         if (shouldGroupBatchOutput()) {
-          this.capture(output);
+          this.capture(chunk);
         } else {
-          process.stdout.write(chunk);
+          output.writeTaskOutputChunk(chunk);
         }
 
         // Notify callbacks for TUI
         for (const cb of this.outputCallbacks) {
-          cb(output);
+          cb(text);
         }
       });
     }
@@ -90,18 +100,18 @@ export class BatchProcess {
     // Capture stderr output
     if (this.childProcess.stderr) {
       this.childProcess.stderr.on('data', (chunk) => {
-        const output = chunk.toString();
+        const text = chunk.toString();
 
         if (shouldGroupBatchOutput()) {
-          this.capture(output);
+          this.capture(chunk);
         } else {
           // Maintain current terminal output behavior
-          process.stderr.write(chunk);
+          output.writeTaskOutputChunk(chunk, process.stderr);
         }
 
         // Notify callbacks for TUI
         for (const cb of this.outputCallbacks) {
-          cb(output);
+          cb(text);
         }
       });
     }
@@ -123,22 +133,49 @@ export class BatchProcess {
     this.outputCallbacks.push(cb);
   }
 
-  private capture(output: string) {
-    this.capturedOutput += output;
-    if (this.capturedOutput.length > BatchProcess.CAPTURED_OUTPUT_CAP) {
-      this.capturedOutput = this.capturedOutput.slice(
-        -BatchProcess.CAPTURED_OUTPUT_CAP
-      );
+  private capture(chunk: string | Buffer) {
+    if (this.capturedOutputFd === undefined) {
+      const dir = join(workspaceDataDirectory, 'batch-outputs');
+      mkdirSync(dir, { recursive: true });
+      const name = `${this.executorName.replace(/[^a-zA-Z0-9]+/g, '-')}-${
+        process.pid
+      }-${++BatchProcess.capturedOutputCount}.log`;
+      this.capturedOutputPath = join(dir, name);
+      this.capturedOutputFd = openSync(this.capturedOutputPath, 'w');
     }
+    // Written synchronously so the file is complete the moment the batch ends,
+    // with no flush to sequence against the read that renders the fold.
+    writeSync(
+      this.capturedOutputFd,
+      typeof chunk === 'string' ? Buffer.from(chunk) : chunk
+    );
   }
 
   /**
-   * All stdout/stderr held back from the live stream under log grouping. Empty
-   * unless the batch was being grouped; used to render a failed batch as one
-   * fold so output no task claimed is not lost. Tail-capped.
+   * Path to the file holding everything held back from the live stream under
+   * log grouping, or undefined if nothing was captured. Closed here, so the
+   * caller reads a complete file. Used to render a failed batch as one fold so
+   * output no task claimed is not lost.
    */
-  getCapturedOutput(): string {
-    return this.capturedOutput;
+  getCapturedOutputPath(): string | undefined {
+    this.closeCapturedOutput();
+    return this.capturedOutputPath;
+  }
+
+  /** Releases the capture file. Safe to call more than once. */
+  discardCapturedOutput(): void {
+    this.closeCapturedOutput();
+    if (this.capturedOutputPath) {
+      rmSync(this.capturedOutputPath, { force: true });
+      this.capturedOutputPath = undefined;
+    }
+  }
+
+  private closeCapturedOutput() {
+    if (this.capturedOutputFd !== undefined) {
+      closeSync(this.capturedOutputFd);
+      this.capturedOutputFd = undefined;
+    }
   }
 
   async getResults(): Promise<BatchResults> {
