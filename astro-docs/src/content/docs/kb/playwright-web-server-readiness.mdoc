@@ -105,6 +105,13 @@ Run `nx reset` to re-infer it.
 A task dependency can't carry a target configuration, so the address is always inferred without
 one and a configuration-scoped env file such as `.env.e2e.production` never affects it.
 
+The Playwright task runs from the project root, but Nx doesn't guarantee that the config is
+evaluated from there while computing the project graph.
+An address that depends on the working directory, such as a port read from a file at a relative
+path, can differ between the two, and the wait task then waits for the wrong address.
+Derive such an address from `__dirname` instead, or set the `waitForWebServer` plugin option to
+`false`.
+
 Nx re-evaluates the config under the task's env only when the graph-time evaluation found a
 `webServer`, so a `webServer` that only exists under the task's env is not detected.
 That re-evaluation runs the config in a child process started under the task's env, so an env file
