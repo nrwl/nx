@@ -78,9 +78,21 @@ export const createNodes: CreateNodes = [
                       transitive: true,
                     },
                   ],
-                  // The inner build/e2e write dist inside the example
-                  // (module-federation members write <member>/dist).
-                  outputs: ['{projectRoot}/dist', '{projectRoot}/*/dist'],
+                  // Whatever the inner workspace builds, at whatever depth its
+                  // projects sit. A flat example writes <example>/dist;
+                  // module-federation members write <member>/dist; an example
+                  // with apps/ and libs/ writes two levels down, and a .NET one
+                  // adds MSBuild's bin/obj plus any generated sources. Task
+                  // sandboxing rejects writes this list does not cover, so it
+                  // has to describe the union rather than the common case.
+                  outputs: [
+                    '{projectRoot}/**/dist',
+                    '{projectRoot}/**/bin',
+                    '{projectRoot}/**/obj',
+                    '{projectRoot}/**/openapi',
+                    '{projectRoot}/**/generated',
+                    '{projectRoot}/**/*.tsbuildinfo',
+                  ],
                   cache: true,
                 },
               },
