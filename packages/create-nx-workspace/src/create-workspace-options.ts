@@ -52,11 +52,6 @@ export interface CreateWorkspaceOptions {
     message: string; // Message to use for the initial commit
   };
   cliName?: string; // Name of the CLI, used when displaying outputs. e.g. nx, Nx
-  /**
-   * @description Formatter the preset set up. Absent, or `'none'`, means the
-   * preset set none up and there is nothing for the final format pass to run.
-   */
-  formatter?: string;
   aiAgents?: Agent[]; // List of AI agents to configure
   /**
    * @description Skip cloud connection (deferred - show banner but don't write nxCloudId)

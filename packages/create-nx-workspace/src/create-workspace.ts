@@ -64,7 +64,6 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     useGitHub,
     skipGitHubPush = false,
     verbose = false,
-    formatter,
   } = options;
 
   if (cliName) {
@@ -259,9 +258,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     delete process.env.NX_SKIP_FORMAT;
   }
 
-  // A preset that set no formatter up leaves this unset or `'none'`, and the
-  // pass would end a successful creation on "No formatter configured".
-  if (!skipFormatRequested && formatter && formatter !== 'none') {
+  if (!skipFormatRequested && workspaceHasFormatter(directory)) {
     try {
       const pmc = getPackageManagerCommand(packageManager);
       // `--all` because git is not initialised yet, so there is nothing to diff
@@ -463,5 +460,32 @@ function getWorkspaceGlobsFromPreset(preset: string): string[] {
       return ['apps/*'];
     default:
       return ['packages/*'];
+  }
+}
+
+/**
+ * Asks the workspace rather than the caller. `formatter` is only populated for
+ * the known-preset stacks, so trusting it skips the pass for third-party
+ * presets and templates - which is the only formatting those flows get, since
+ * everything before the install runs under `NX_SKIP_FORMAT`.
+ *
+ * Formats when detection cannot run: an unformatted new workspace fails its own
+ * `nx format:check`, which is worse than a spawn that finds nothing to do.
+ */
+function workspaceHasFormatter(directory: string): boolean {
+  try {
+    // nx-ignore-next-line
+    const { detectFormatter } = require(
+      require.resolve('nx/src/devkit-internals', {
+        paths: [directory],
+        // nx-ignore-next-line
+      })
+      // Typed locally: `detectFormatter` is new in this release, so the
+      // published nx these types resolve against does not export it.
+    ) as { detectFormatter: (root: string) => string | null };
+
+    return detectFormatter(directory) !== null;
+  } catch {
+    return true;
   }
 }
