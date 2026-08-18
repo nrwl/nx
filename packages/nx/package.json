@@ -64,7 +64,7 @@
     "ejs": "5.0.1",
     "enquirer": "catalog:",
     "figures": "3.2.0",
-    "flat": "^5.0.2",
+    "flat": "^6.0.1",
     "ignore": "^7.0.5",
     "@jest/diff-sequences": "30.0.1",
     "jsonc-parser": "catalog:",
