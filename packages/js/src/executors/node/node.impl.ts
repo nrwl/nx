@@ -378,9 +378,15 @@ export async function* nodeExecutor(
       );
       while (true) {
         const event = await output.next();
+
+        if (event.done) {
+          break;
+        }
+
         await addToQueue(null, Promise.resolve(event.value));
         await debouncedProcessQueue.trigger();
-        if (event.done && !options.watch) {
+
+        if (!options.watch) {
           break;
         }
       }
