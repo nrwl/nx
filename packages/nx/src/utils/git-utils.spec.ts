@@ -271,6 +271,28 @@ describe('git utils tests', () => {
 
       expect(getWorkingTreeStatus('/repo')).toBe('unknown');
     });
+
+    it('should probe the whole tree with no pathspec when nothing is excluded', () => {
+      (execSync as jest.Mock).mockReturnValue('');
+
+      getWorkingTreeStatus('/repo');
+
+      expect(execSync).toHaveBeenCalledWith(
+        'git status --porcelain',
+        expect.objectContaining({ cwd: '/repo' })
+      );
+    });
+
+    it('should leave excluded paths out of the probe with exclude-only pathspecs', () => {
+      (execSync as jest.Mock).mockReturnValue('');
+
+      getWorkingTreeStatus('/repo', ['.nx/migrate-runs', 'tmp']);
+
+      expect(execSync).toHaveBeenCalledWith(
+        'git status --porcelain -- ":(exclude).nx/migrate-runs" ":(exclude)tmp"',
+        expect.objectContaining({ cwd: '/repo' })
+      );
+    });
   });
 
   describe('getPathCommitExposure', () => {

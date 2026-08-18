@@ -507,14 +507,26 @@ export type WorkingTreeStatus = 'dirty' | 'clean' | 'unknown';
 // missing, spawn failure, permissions), not that the tree is clean. Callers
 // that gate destructive actions on tree cleanliness must treat 'unknown' as
 // unsafe rather than clean.
-export function getWorkingTreeStatus(directory?: string): WorkingTreeStatus {
+// `excludePaths` are left out of the probe the way `tryCommitChanges` leaves
+// them out of the commit, so a tree dirty only under them reads as clean. An
+// exclude-only pathspec still covers the whole tree, matching `git add -A`.
+export function getWorkingTreeStatus(
+  directory?: string,
+  excludePaths: string[] = []
+): WorkingTreeStatus {
+  const pathspecs = excludePaths
+    .map((excludePath) => ` ":(exclude)${excludePath}"`)
+    .join('');
   try {
-    const out = execSync('git status --porcelain', {
-      encoding: 'utf8',
-      cwd: directory,
-      stdio: ['ignore', 'pipe', 'pipe'],
-      windowsHide: true,
-    });
+    const out = execSync(
+      `git status --porcelain${pathspecs ? ` --${pathspecs}` : ''}`,
+      {
+        encoding: 'utf8',
+        cwd: directory,
+        stdio: ['ignore', 'pipe', 'pipe'],
+        windowsHide: true,
+      }
+    );
     return out.trim() === '' ? 'clean' : 'dirty';
   } catch {
     return 'unknown';
@@ -524,8 +536,11 @@ export function getWorkingTreeStatus(directory?: string): WorkingTreeStatus {
 // Sync companion to `GitRepository.hasUncommittedChanges` for callers that
 // can't drop into the async class. A failed probe reads as false; callers for
 // whom that tolerance is unsafe use `getWorkingTreeStatus` instead.
-export function hasUncommittedChanges(directory?: string): boolean {
-  return getWorkingTreeStatus(directory) === 'dirty';
+export function hasUncommittedChanges(
+  directory?: string,
+  excludePaths: string[] = []
+): boolean {
+  return getWorkingTreeStatus(directory, excludePaths) === 'dirty';
 }
 
 export type PathCommitExposure =

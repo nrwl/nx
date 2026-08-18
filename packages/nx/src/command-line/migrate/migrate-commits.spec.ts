@@ -122,6 +122,19 @@ describe('commitMigrationIfRequested', () => {
     );
   });
 
+  it('probes the tree with the same exclusions the commit applies, so scratch-only dirt reads as no-changes', async () => {
+    mockHas.mockReturnValue(false);
+
+    await commitMigrationIfRequested(
+      ROOT,
+      { name: 'm1' },
+      true,
+      PREFIX,
+      installDeps
+    );
+    expect(mockHas).toHaveBeenCalledWith(ROOT, ['.nx/migrate-runs']);
+  });
+
   it('returns the new sha and uses `<prefix><name>` as the commit subject on success', async () => {
     mockHas.mockReturnValue(true);
     mockTry.mockReturnValue('abc123');
@@ -257,10 +270,11 @@ describe('commitMigrationIfRequested', () => {
 });
 
 describe('commitCheckpointBeforeMigrations', () => {
-  it('does nothing when the working tree is clean', () => {
+  it('does nothing when the working tree is clean outside the excluded scratch dir', () => {
     mockHas.mockReturnValue(false);
 
     commitCheckpointBeforeMigrations(ROOT, PREFIX);
+    expect(mockHas).toHaveBeenCalledWith(ROOT, ['.nx/migrate-runs']);
     expect(mockTry).not.toHaveBeenCalled();
     expect(mockInfo).not.toHaveBeenCalled();
     expect(mockWarn).not.toHaveBeenCalled();

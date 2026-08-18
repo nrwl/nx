@@ -57,9 +57,10 @@ export async function commitMigrationIfRequested(
 ): Promise<CommitResult> {
   if (!shouldCreateCommits) return { status: 'disabled' };
   await installDepsIfChanged();
-  // Generator may have only touched gitignored paths, or the prompt half
-  // made no change — log neutrally instead of as an error.
-  if (!hasUncommittedChanges(root)) {
+  // Generator may have only touched gitignored paths or the excluded scratch
+  // dir, or the prompt half made no change: log neutrally, not as an error.
+  // The probe excludes what the commit excludes, else the commit fails empty.
+  if (!hasUncommittedChanges(root, MIGRATE_COMMIT_EXCLUDES)) {
     logger.info(pc.dim(`- No changes to commit for ${migration.name}.`));
     return { status: 'no-changes' };
   }
@@ -128,7 +129,7 @@ export function commitCheckpointBeforeMigrations(
   root: string,
   commitPrefix: string
 ): void {
-  if (!hasUncommittedChanges(root)) return;
+  if (!hasUncommittedChanges(root, MIGRATE_COMMIT_EXCLUDES)) return;
   try {
     const sha = tryCommitChanges(
       `${commitPrefix}checkpoint before running migrations`,
