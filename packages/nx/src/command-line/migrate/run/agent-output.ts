@@ -64,7 +64,7 @@ function writeBlock(
   json: string
 ): void {
   const attrText = attrs
-    .map(([name, value]) => ` ${name}="${escapeXmlAttr(value)}"`)
+    .map(([name, value]) => ` ${name}="${escapeXmlAttr(singleLine(value))}"`)
     .join('');
   process.stdout.write(`\n<${tag}${attrText}>\n${json}\n</${tag}>\n\n`);
 }

@@ -84,4 +84,10 @@ describe('agent-output', () => {
     expect(parseBlocks()).toHaveLength(1);
     expect(stdout).toContain('run-id="run-1&quot; bogus=&quot;x"');
   });
+
+  it('keeps an attribute value with line terminators on the opening tag line', () => {
+    emitStepBlock('run-1\r\nwith\u2028breaks', 'step-1', 'next-step', {});
+
+    expect(stdout).toContain('<nx_migrate_step run-id="run-1 with breaks"');
+  });
 });
