@@ -315,6 +315,33 @@ describe('lib', () => {
     });
   });
 
+  describe('--unit-test-runner vitest', () => {
+    it('should generate a vitest configuration', async () => {
+      await libraryGenerator(tree, {
+        ...baseLibraryConfig,
+        unitTestRunner: 'vitest',
+      });
+
+      expect(tree.exists('my-lib/vitest.config.mts')).toBeTruthy();
+      expect(tree.exists('my-lib/jest.config.cts')).toBeFalsy();
+      expect(
+        readJson(tree, 'my-lib/tsconfig.spec.json').compilerOptions.types
+      ).toContain('vitest/globals');
+      expect(tree.read('my-lib/vitest.config.mts', 'utf-8')).toContain(
+        `environment: 'node'`
+      );
+    });
+
+    it('should keep the generated spec file', async () => {
+      await libraryGenerator(tree, {
+        ...baseLibraryConfig,
+        unitTestRunner: 'vitest',
+      });
+
+      expect(tree.exists('my-lib/src/lib/my-lib.spec.ts')).toBeTruthy();
+    });
+  });
+
   describe('buildable package', () => {
     it('should have a builder defined', async () => {
       await libraryGenerator(tree, {

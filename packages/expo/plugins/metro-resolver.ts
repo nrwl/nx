@@ -7,30 +7,32 @@ import { dirname, join } from 'path';
 import * as fs from 'fs';
 import { workspaceRoot } from '@nx/devkit';
 
-// Cache for metro-resolver module
-let metroResolver: any = null;
+const metroResolverCache = new Map<string, any>();
 
-/**
- * Lazily require the Metro resolver.
- *
- * Expo SDK 55+ ships Metro through `@expo/metro`, so the resolver must come
- * from the same Metro instance Expo uses. Older SDKs (53/54) use the standalone
- * `metro-resolver` package. We prefer `@expo/metro` and fall back to the
- * standalone package to stay compatible with both.
- */
-function getMetroResolver() {
+// The resolver must come from the same Metro instance Expo uses: `@expo/metro`
+// on SDK 55+, standalone `metro-resolver` on 53/54. Resolve from the app root
+// so each app gets its own SDK's copy.
+function getMetroResolver(appRoot: string | undefined, usesExpoMetro: boolean) {
+  const cacheKey = `${appRoot ?? ''}|${usesExpoMetro}`;
+  let metroResolver = metroResolverCache.get(cacheKey);
   if (!metroResolver) {
-    try {
-      metroResolver = require('@expo/metro/metro-resolver');
-    } catch {
+    const candidates = usesExpoMetro
+      ? ['@expo/metro/metro-resolver', 'metro-resolver']
+      : ['metro-resolver', '@expo/metro/metro-resolver'];
+    for (const candidate of candidates) {
       try {
-        metroResolver = require('metro-resolver');
-      } catch (error) {
-        throw new Error(
-          'Unable to load Metro resolver. Install `@expo/metro` (Expo SDK 55+) or `metro-resolver` (>= 0.82.0).'
+        metroResolver = require(
+          require.resolve(candidate, appRoot ? { paths: [appRoot] } : undefined)
         );
-      }
+        break;
+      } catch {}
     }
+    if (!metroResolver) {
+      throw new Error(
+        'Unable to load Metro resolver. Install `@expo/metro` (Expo SDK 55+) or `metro-resolver` (>= 0.82.0).'
+      );
+    }
+    metroResolverCache.set(cacheKey, metroResolver);
   }
   return metroResolver;
 }
@@ -44,7 +46,11 @@ function getMetroResolver() {
 export function getResolveRequest(
   extensions: string[],
   exportsConditionNames: string[] = [],
-  mainFields: string[] = []
+  mainFields: string[] = [],
+  // which app is being bundled; default keeps the process-wide preference
+  anchor: { appRoot?: string; usesExpoMetro: boolean } = {
+    usesExpoMetro: true,
+  }
 ) {
   return function (
     _context: any,
@@ -63,13 +69,14 @@ export function getResolveRequest(
         platform,
         debug
       ) ??
-      defaultMetroResolver(context, realModuleName, platform, debug) ??
+      defaultMetroResolver(context, realModuleName, platform, debug, anchor) ??
       tsconfigPathsResolver(
         context,
         extensions,
         realModuleName,
         platform,
-        debug
+        debug,
+        anchor
       ) ??
       pnpmResolver(
         extensions,
@@ -118,10 +125,11 @@ function defaultMetroResolver(
   context: any,
   realModuleName: string,
   platform: string | null,
-  debug: boolean
+  debug: boolean,
+  anchor: { appRoot?: string; usesExpoMetro: boolean }
 ) {
   try {
-    const resolver = getMetroResolver();
+    const resolver = getMetroResolver(anchor.appRoot, anchor.usesExpoMetro);
     return resolver.resolve(context, realModuleName, platform);
   } catch {
     if (debug)
@@ -187,7 +195,8 @@ function tsconfigPathsResolver(
   extensions: string[],
   realModuleName: string,
   platform: string | null,
-  debug: boolean
+  debug: boolean,
+  anchor: { appRoot?: string; usesExpoMetro: boolean }
 ) {
   try {
     const tsConfigPathMatcher = getMatcher(debug);
@@ -197,7 +206,7 @@ function tsconfigPathsResolver(
       undefined,
       extensions.map((ext) => `.${ext}`)
     );
-    const resolver = getMetroResolver();
+    const resolver = getMetroResolver(anchor.appRoot, anchor.usesExpoMetro);
     return resolver.resolve(context, match, platform);
   } catch {
     if (debug) {

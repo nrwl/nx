@@ -20,6 +20,7 @@ import {
   type TargetConfiguration,
   type TargetDefaultArrayEntry,
   type Tree,
+  logger as devkitLogger,
 } from 'nx/src/devkit-exports';
 import {
   LoadedNxPlugin,
@@ -42,7 +43,6 @@ import {
   updateTargetDefault,
 } from '../target-defaults-utils';
 import { deleteMatchingProperties } from './plugin-migration-utils';
-import { logger as devkitLogger } from 'nx/src/devkit-exports';
 
 export type InferredTargetConfiguration = TargetConfiguration & {
   name: string;

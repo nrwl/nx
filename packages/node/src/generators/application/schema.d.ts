@@ -5,7 +5,7 @@ export interface Schema {
   name?: string;
   skipFormat?: boolean;
   skipPackageJson?: boolean;
-  unitTestRunner?: 'jest' | 'none';
+  unitTestRunner?: 'jest' | 'vitest' | 'none';
   e2eTestRunner?: 'jest' | 'none';
   linter?: LinterType;
   formatter?: 'none' | 'prettier';

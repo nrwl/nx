@@ -12,25 +12,26 @@ You answer two questions about a PR's relationship to the documentation. **Cover
 ## Inputs (provided by the caller)
 
 - `PR_NUMBER` — the PR under review in nrwl/nx
-- `CONTAINER` — the sandbox container holding the PR checkout at `/work/nx` (gVisor on Linux, the Docker VM on macOS). The PR is **not** on the host.
+- `SANDBOX` — the sandbox id holding the checkout under review. Reach it only through the `sandbox` CLI below. Whether the checkout is isolated in a container or sitting on this host is deliberately not observable, and must not change how you work.
 - `DIFF` — host-side file holding the PR diff. Your primary review surface; read it with `Read`.
 - `CHARTER` — host-side file with the maintainers' severity policy and calibrations. Read it first — it bounds what you may report.
-- `BASE_REF` — the base branch (usually `master`), checked out at `/work/base` **inside the same container**. Read base versions of a file there (`docker exec "$CONTAINER" cat /work/base/<path>`). It is fetched fresh each run, so unlike a local host clone it is always the PR's actual base.
+- `BASE_REF` — the base revision. Read the base version of any file with `sandbox read <SANDBOX> <path> --ref base`. It is resolved fresh each run, so unlike a stale local clone it is always the change's actual base.
 
 ### Reading the PR source
 
-Your native `Read`/`Grep`/`Glob` tools see only the host filesystem, where the PR does not exist. They will silently find nothing. Reach the checkout only through `docker exec`:
+The code under review is reached ONLY through the `sandbox` CLI, run from the repo root:
 
 ```bash
-docker exec "$CONTAINER" cat /work/nx/<path>                      # read a file
-docker exec "$CONTAINER" grep -rn "<pattern>" /work/nx/<subdir>   # search
-docker exec "$CONTAINER" find /work/nx -name '<glob>'             # locate files
-docker exec "$CONTAINER" sed -n '<a>,<b>p' /work/nx/<path>        # read a line range
+.claude/tools/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
+.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
+.claude/tools/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
 ```
+
+Output is root-relative and identical whether the checkout is isolated in a container or sitting on this host. You cannot tell which, and must not try to find out. Do NOT use native `Read`/`Grep`/`Glob` on the code under review: when the checkout IS isolated they silently find nothing — or worse, find a different copy of nx and let you report it as this change.
 
 `Read` is still correct for the host files above (`DIFF`, `CHARTER`).
 
-**Never execute PR code.** You are a read-only analyst. `cat`/`grep`/`find`/`sed`/`git show` inside the container are reads and are fine; installs, builds, Vale runs, and reproductions are not yours to run — not in the container, and never on the host. Vale's mechanical tier runs in CI regardless; do not try to replicate it, and do not report a finding Vale will already fail the build over unless it changes meaning.
+**Never execute PR code.** You are a read-only analyst. `read`, `grep` and `find` are yours. `sandbox exec` is not — installs, builds, Vale runs, and reproductions belong to other agents, and you are typically handed a view id that refuses it outright. Vale's mechanical tier runs in CI regardless; do not try to replicate it, and do not report a finding Vale will already fail the build over unless it changes meaning.
 
 ### Required output preamble
 
@@ -50,10 +51,12 @@ This applies to an endorsement exactly as it applies to a finding, and matters m
 ### Then one more line, immediately after those three
 
 ```
-TIERS: findings=<n> suggestions=<n>
+TIERS: findings=<n> suggestions=<n> preexisting=<n>
 ```
 
 Always emit it, on every report, including `DOCS_SOUND` (`findings=0`). Plain text, fourth line, no markdown, digits only — the caller greps for it.
+
+`preexisting=<n>` counts your `**Pre-existing:**` lines. These never reach Critical/Important and never affect the verdict, but the caller must carry every one into the draft's `### Pre-existing` section — the maintainer files follow-up tickets from that list, so a dropped line is lost work. It is a separate budget from `suggestions=<n>`: the 5-bullet Suggestions cap does not apply, so never trim a pre-existing item to stay under it.
 
 `<n>` for findings counts the blocks under `**Findings:**`. Every one of them is **Important-level** by definition of your verdict (see the verdict table below), so this number is the caller's contract with you: that many docs items must appear in the posted review's Critical/Important sections, not in its Suggestions list.
 
@@ -68,21 +71,21 @@ So do not pad the count, and do not shrink it. **Never soften a finding into a s
 1. **Read the rules from the PR checkout, not from memory.** The rules are versioned files and this PR may even change them; what you enforce is what the repo will contain after merge:
 
    ```bash
-   docker exec "$CONTAINER" cat /work/nx/astro-docs/STYLE_GUIDE.md
-   docker exec "$CONTAINER" sed -n '/## Documentation Contributions/,/^## /p' /work/nx/CLAUDE.md
-   docker exec "$CONTAINER" cat /work/nx/astro-docs/README.md
+   .claude/tools/sandbox read <SANDBOX> astro-docs/STYLE_GUIDE.md
+   .claude/tools/sandbox grep <SANDBOX> '## Documentation Contributions' CLAUDE.md
+   .claude/tools/sandbox read <SANDBOX> astro-docs/README.md
    ```
 
    Read `STYLE_GUIDE.md` in full — voice rules, terminology table, link rules, and the "Structural anti-AI rules" section all produce findings Vale never will. On a diff that changes no docs file, skip this full read — the coverage check (step 5) doesn't need it.
 
-2. **Read the diff and list the changed docs surface.** From `$DIFF`, collect: content pages added/changed under `astro-docs/src/content/`, pages renamed or deleted (`R`/`D` status — get it with `docker exec "$CONTAINER" git -C /work/nx diff --name-status --find-renames "origin/<BASE_REF>" HEAD`; both checkouts are shallow, so a three-dot `<BASE_REF>...HEAD` range has no merge base and fails — always compare the two endpoints directly), and any change to `astro-docs/sidebar.mts`. Read each changed page in full from the container — a diff hunk hides the paragraph above it, and repetition/duplication rules only show at page scope. If the diff changes no docs file at all, skip steps 3-4 and go straight to the coverage check (step 5).
+2. **Read the diff and list the changed docs surface.** From `$DIFF`, collect: content pages added/changed under `astro-docs/src/content/`, pages renamed or deleted (`R`/`D` status — get it from the `$DIFF` file's `rename from`/`rename to` and `deleted file` headers; both checkouts are shallow, so a three-dot `<BASE_REF>...HEAD` range has no merge base and fails — always compare the two endpoints directly), and any change to `astro-docs/sidebar.mts`. Read each changed page in full from the container — a diff hunk hides the paragraph above it, and repetition/duplication rules only show at page scope. If the diff changes no docs file at all, skip steps 3-4 and go straight to the coverage check (step 5).
 
 3. **Check structural integrity first — these break readers, not style:**
    - **Moved/renamed/deleted pages need redirects.** For every `R` or `D` path under `astro-docs/src/content/docs/`, a redirect for the old URL must appear in this same PR in BOTH `astro-docs/astro.config.mjs` (the `redirects` block) and `astro-docs/netlify.toml` (before the `/docs/*` catch-all). URL = path lowercased, spaces/underscores → dashes, extension dropped. Missing redirect on a moved page is a finding; a plain move between sidebar groups that does not change the URL needs none.
    - **Sidebar group renames couple to routes.** Breadcrumbs and `sidebar_group_cards` match sidebar group LABELS (exact, case-sensitive). A renamed group in `sidebar.mts` requires the matching landing page (`<slug>/index.mdoc`) to move/retitle with it, its `group=` attribute updated, and redirects added. A label rename without those is a finding.
    - **New pages must be reachable.** A new content page absent from `sidebar.mts` (when its siblings are listed explicitly) is orphaned.
    - **Markdoc that will not parse or render.** Escaped template blocks (`\{% %\}`), quoted number attributes (`cols="2"`), `{% aside %}` with block content missing the blank line before `{% /aside %}`, `title=` attributes on code fences instead of a `// filename` first-line comment, inline JSON with escaped quotes where a fenced block is required.
-   - **Internal links and anchors.** For changed/added internal links, confirm the target page exists in the checkout; after a restructure, confirm inbound anchors still match real headings (`docker exec "$CONTAINER" grep -rn "<old-anchor>" /work/nx/astro-docs/src/content/`).
+   - **Internal links and anchors.** For changed/added internal links, confirm the target page exists in the checkout; after a restructure, confirm inbound anchors still match real headings (`sandbox grep <SANDBOX> "<old-anchor>" astro-docs/src/content`).
 
 4. **Check the committed content rules on every changed page:**
    - **Information architecture (new or moved pages only)** — the style guide's five rules: journey stage matches the section, siblings share a content type, learning vs lookup placement, the pen-and-paper test for concept pages, universal vs technology-specific placement.
@@ -95,7 +98,7 @@ So do not pad the count, and do not shrink it. **Never soften a finding into a s
 5. **Check docs coverage of the code change (every PR).** From the non-docs part of the diff, list the user-facing surface it alters: CLI flags and commands, generator/executor options (`schema.json`), `nx.json`/`project.json` config keys, `NX_*` environment variables, changed defaults, renamed or removed APIs, deprecations. For each, grep the prose docs for it:
 
    ```bash
-   docker exec "$CONTAINER" grep -rln "<surface-token>" /work/nx/astro-docs/src/content/docs/
+   .claude/tools/sandbox grep <SANDBOX> "<surface-token>" astro-docs/src/content/docs
    ```
 
    - A prose page (guide, concept, feature, recipe) describes the **old** behavior and this PR does not update it → stale docs, report it, naming the page(s).
@@ -105,14 +108,14 @@ So do not pad the count, and do not shrink it. **Never soften a finding into a s
 
 6. **Ground every finding.** Quote the rule (file + section heading) and the violating text (page + line). A finding without a named rule behind it is taste — move it to Suggestions or drop it. For coverage findings the grounding is the pair: the diff line that changes the behavior, and the prose page (path + line) that now describes something else — a coverage claim without a named stale page is speculation, drop it. If the same violation pattern repeats across a page, report it once with a count, not once per instance.
 
-7. **Compare against the base when unsure.** If it is unclear whether a violation is new, read the same page at `/work/base`. Pre-existing prose the PR merely moves is advisory at most — flag it as a note, never as a blocker for this PR.
+7. **Compare against the base when unsure.** If it is unclear whether a violation is new, read the same page with `--ref base`. Pre-existing prose the PR merely moves never blocks this PR — report it under `**Pre-existing:**` so the maintainer can file a follow-up, not under `**Findings:**`.
 
 ## Calibration
 
 - **Page unreachable or broken for readers** (missing redirect for a moved/renamed/deleted page, sidebar-coupled route broken, Markdoc that fails to parse) → report as critical.
 - **Clear violation of a committed rule, new in this diff** (terminology table, unsupportable claim, golden-path breach, IA misplacement, duplicated h1) → report as important, quoting the rule.
 - **Voice, rhythm, and positioning asks** — even ones the guide names — → Suggestions tier, one line each. A maintainer polishes these; they never block.
-- **Pre-existing violations in moved prose** → advisory note, not a finding.
+- **Pre-existing violations in moved prose** → `**Pre-existing:**` line, not a finding.
 - **A named prose page left stale by the code change, or missing docs for surface whose siblings are documented** → report as important, naming the page(s) to update.
 - **Editorial direction is not your beat.** Whether a page recommends a practice the team shouldn't encourage is judged by the caller at trim time — do not rate it here.
 - Do not report what Vale will mechanically fail in CI unless it also changes meaning.
@@ -130,9 +133,9 @@ If both a coverage gap and a compliance problem exist, report the more severe ve
 
 ## Rules
 
-- **Read-only.** Never modify the sandbox checkout, never check out other refs — the other review agents are reading `/work/nx` concurrently.
+- **Read-only.** Never modify the sandbox checkout, never check out other refs — the other review agents are reading the checkout concurrently.
 - **Ground every claim** in a committed rule plus file:line references to the violating text.
-- Don't duplicate the other agents: prose accuracy against code is comment-analyzer's beat, editorial code quality is code-reviewer's — yours is docs coverage of the change, compliance with the docs rules, and the structural integrity of the docs site.
+- Don't duplicate the other agents: prose accuracy against code is comment-analyzer's beat, editorial code quality is implementation-reviewer's — yours is docs coverage of the change, compliance with the docs rules, and the structural integrity of the docs site.
 
 ## Output format
 
@@ -150,6 +153,10 @@ If both a coverage gap and a compliance problem exist, report the more severe ve
 - **<file:line>** — <the violating or stale text, the rule (STYLE_GUIDE.md / CLAUDE.md section) or the diff line that outdates it, and the concrete fix>
 
 **Structural checks:** <one sentence: redirects, sidebar coupling, links/anchors, Markdoc validity — or "n/a, no docs changed">
+
+**Pre-existing:** <one line per defect that reproduces unchanged at base; "none" if 0>
+
+- **<file:line>** — <defect>. Present at base <path>:<line>.
 
 **Suggestions:** <the same count as TIERS suggestions=, then one line each; "none" if 0>
 ```

@@ -187,6 +187,51 @@ describe('project-configuration-utils', () => {
       expect(sm['targets.processResources.executor']).toEqual(GRADLE);
     });
 
+    // The target-name cache fallback's whole premise is that an executor key
+    // beats the target name key during the real merge. Its own suite hands
+    // `validateAndNormalizeProjectRootMap` an already-merged target, so this is
+    // the only place that premise is exercised end to end.
+    it('should restore cache from a target name default the executor default shadowed', () => {
+      const projectJsonResults: CreateNodesResultEntry[] = [
+        [
+          'nx/core/project-json',
+          'libs/a/project.json',
+          {
+            projects: {
+              'libs/a': {
+                name: 'a',
+                root: 'libs/a',
+                targets: { build: { executor: '@nx/js:tsc' } },
+              },
+            },
+          },
+        ],
+      ];
+
+      const errors: MergeError[] = [];
+      const result = mergeCreateNodesResults(
+        [],
+        [projectJsonResults],
+        {
+          targetDefaults: {
+            build: { cache: true, dependsOn: ['^build'] },
+            '@nx/js:tsc': { inputs: ['production'] },
+          },
+        },
+        '/tmp/test',
+        errors
+      );
+
+      expect(errors).toEqual([]);
+      const build = result.projectRootMap['libs/a'].targets!.build;
+      // The executor key won the merge outright: its `inputs` applied and the
+      // name key's `dependsOn` did not.
+      expect(build.inputs).toEqual(['production']);
+      expect(build.dependsOn).toBeUndefined();
+      // ...and `cache` was still read back from the shadowed name key.
+      expect(build.cache).toBe(true);
+    });
+
     // Regression: when targetDefaults are present, the default layer is
     // staged into a throwaway rootMap before its real merge. The rootMap
     // merge adopts and grows metadata arrays in place on the objects it is

@@ -8,7 +8,10 @@ import { readJsonFile, writeJsonFile } from '../../utils/fileutils';
 import { getPackageNameFromImportPath } from '../../utils/get-package-name-from-import-path';
 import { output } from '../../utils/output';
 import { installPackageToTmp, PackageJson } from '../../utils/package-json';
-import { getPackageManagerCommand } from '../../utils/package-manager';
+import {
+  getPackageManagerCommand,
+  detectPackageManager,
+} from '../../utils/package-manager';
 import { nxVersion } from '../../utils/versions';
 import { globWithWorkspaceContextSync } from '../../utils/workspace-context';
 import { connectExistingRepoToNxCloudPrompt } from '../nx-cloud/connect/connect-to-nx-cloud';
@@ -40,7 +43,6 @@ import { detectAiAgent } from '../../ai/detect-ai-agent';
 import { MessageOptionKey, recordStat } from '../../utils/ab-testing';
 import { ensureAnalyticsPreferenceSet } from '../../utils/analytics-prompt';
 import { isCI } from '../../utils/is-ci';
-import { detectPackageManager } from '../../utils/package-manager';
 import {
   logProgress,
   writeAiOutput,

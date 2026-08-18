@@ -7,7 +7,6 @@ import {
 } from './utils';
 import * as nodeOSModule from 'node:os';
 import { ENV_NG_BUILD_MAX_WORKERS } from './constants.ts';
-import * as osModule from 'node:os';
 
 vi.mock('node:os');
 
@@ -97,7 +96,7 @@ describe('maxWorkers', () => {
 });
 
 describe('isUsingWindows', async () => {
-  const platformSpy = vi.spyOn(osModule, 'platform');
+  const platformSpy = vi.spyOn(nodeOSModule, 'platform');
 
   beforeEach(() => {
     platformSpy.mockClear();

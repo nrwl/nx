@@ -70,6 +70,16 @@ describe('app', () => {
     expect(appTree.exists('my-node-app/eslint.config.mjs')).toBeTruthy();
   });
 
+  it('should set up vitest when asked for it', async () => {
+    await applicationGenerator(appTree, {
+      directory: 'my-node-app',
+      unitTestRunner: 'vitest',
+    } as Schema);
+
+    expect(appTree.exists('my-node-app/vitest.config.mts')).toBeTruthy();
+    expect(appTree.exists('my-node-app/jest.config.cts')).toBeFalsy();
+  });
+
   it('should generate the .eslintrc.json file (eslintrc)', async () => {
     process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await applicationGenerator(appTree, {

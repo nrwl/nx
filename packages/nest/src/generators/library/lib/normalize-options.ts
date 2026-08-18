@@ -87,6 +87,9 @@ export function toJsLibraryGeneratorOptions(
     tags: options.tags,
     testEnvironment: options.testEnvironment,
     unitTestRunner: options.unitTestRunner,
+    // `deleteFiles` drops the generated spec, and a library without a
+    // controller or service is left with none at all.
+    passWithNoTests: true,
     enableTypedLinting: isTypedLintingEnabled(options),
     addPlugin: options.addPlugin,
     useProjectJson: options.useProjectJson,

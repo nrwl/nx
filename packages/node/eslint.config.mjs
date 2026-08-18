@@ -36,7 +36,10 @@ export default [
           ignoredDependencies: [
             'nx',
             'typescript',
+            // Installed on demand via `ensurePackage` when the generator is
+            // asked for that bundler / unit test runner.
             '@nx/webpack',
+            '@nx/vitest',
             'express',
             'koa',
             'fastify',
