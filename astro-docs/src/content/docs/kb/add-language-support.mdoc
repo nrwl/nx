@@ -319,8 +319,10 @@ export const createDependencies: CreateDependencies<UvPluginOptions> = (
 };
 ```
 
+{% aside type="note" title="Dependencies declared by path" %}
 Some toolchains point at a sibling directory instead of naming a package, as a Poetry path dependency does.
 Resolve those against the directory of the manifest that declares them, then match the result to a project root.
+{% /aside %}
 
 Manifest files like `pyproject.toml`, `go.mod`, or `Cargo.toml` cover most toolchains, since the dependency information is already written down in one place per project.
 If your language only expresses dependencies through import statements in source code, parse those files instead, and use `context.filesToProcess` to limit the work to files that changed since the last graph computation.
@@ -368,24 +370,22 @@ Plugins scaffolded with `create-nx-plugin` also include an e2e setup that publis
 
 ## Optimize graph creation
 
-A correct plugin is the first half of the job.
-`createNodes` runs before every task, including the ones Nx restores from cache, so whatever it costs is charged
-to every command in the workspace.
-Measure that cost once the graph is right:
+`createNodes` runs before every task, so measure what your plugin costs once the graph is correct:
 
 ```shell
 NX_PERF_LOGGING=true NX_DAEMON=false npx nx show projects
 ```
 
 Nx prints a timing per step, including `<plugin-name>:createNodes` and `Load Nx Plugin: <plugin-name>`.
-Loading the entry point is frequently the larger of the two, and it is paid even when Nx reuses a cached graph.
 Keep the daemon off, or the plugin timings never reach your terminal.
 
-The patterns that bring those numbers down are caching computed targets to disk, loading manifests in one parallel
-batch, keeping returned output deterministic, and keeping top-level imports light.
-Disk caching uses a handful of helpers from `@nx/devkit/internal`, which nearly every first-party plugin depends
-on.
-They sit at a lower stability tier than the main `@nx/devkit` entry point and can change between versions, and
-some will be promoted to the public API later.
+From there, work through the patterns that bring those numbers down:
 
-[Write a performant project graph plugin](/docs/kb/performant-project-graph-plugins) has the code for each pattern.
+- Cache computed targets to disk. This uses a handful of helpers from `@nx/devkit/internal`, which nearly every
+  first-party plugin depends on. They sit at a lower stability tier than `@nx/devkit` and can change between
+  versions, and some will be promoted to the public API later.
+- Load and parse the manifests in one parallel batch.
+- Keep the configuration you return deterministic.
+- Keep top-level imports light.
+
+[Write a performant project graph plugin](/docs/kb/performant-project-graph-plugins) has the code for each.
