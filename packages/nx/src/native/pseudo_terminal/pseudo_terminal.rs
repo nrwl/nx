@@ -326,7 +326,11 @@ impl PseudoTerminal {
                 }
                 if should_control_raw_mode {
                     trace!("Disabling raw mode");
-                    disable_raw_mode().expect("Failed to restore non-raw terminal");
+                    // Must not panic: that would skip the exit notification below,
+                    // leaving every consumer of this task's exit waiting forever.
+                    if let Err(e) = disable_raw_mode() {
+                        trace!("Failed to restore non-raw terminal: {:?}", e);
+                    }
                 }
                 exit_to_process_tx.send(exit.to_string()).ok();
             } else {
