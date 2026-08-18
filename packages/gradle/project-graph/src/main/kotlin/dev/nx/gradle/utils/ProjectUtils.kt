@@ -12,17 +12,17 @@ import org.gradle.api.tasks.testing.Test
  * Get the Nx project name from a Gradle project. This returns the buildTreePath with `:` prefix for
  * subprojects (e.g., `:app`, `:lib:core`), or just the project name for root projects.
  */
-/**
- * The build file that configures [project]: its own, or the nearest ancestor's when it owns none.
- * `project(':core') { }` blocks configure a project from an ancestor build file — Kafka configures
- * ~40 subprojects that way — and such a project is no less real for lacking its own file.
- */
-fun effectiveBuildFile(project: Project): File? =
-    generateSequence(project) { it.parent }.map { it.buildFile }.firstOrNull { it.exists() }
-
 fun getNxProjectName(project: Project): String =
     if (project.buildTreePath.isEmpty() || project.buildTreePath == ":") project.name
     else project.buildTreePath
+
+/**
+ * The build file that configures [project]: its own, or the nearest ancestor's when it owns none.
+ * `project(':core') { }` blocks configure a project from an ancestor build file, and such a project
+ * is no less real for lacking its own file.
+ */
+fun effectiveBuildFile(project: Project): File? =
+    generateSequence(project) { it.parent }.map { it.buildFile }.firstOrNull { it.exists() }
 
 /**
  * Make [path] relative to [workspaceRoot] with `/` separators so reports are machine-portable and

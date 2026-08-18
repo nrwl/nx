@@ -39,7 +39,7 @@ export const createDependencies: CreateDependencies<
   const { dependencies: dependenciesFromReport } =
     getCurrentProjectGraphReport();
 
-  const dependencies: Array<StaticDependency> = [];
+  const dependencies: Array<StaticDependency | ImplicitDependency> = [];
   dependenciesFromReport.forEach((dependencyFromPlugin: StaticDependency) => {
     try {
       // Report paths are workspace-relative with `/` separators
