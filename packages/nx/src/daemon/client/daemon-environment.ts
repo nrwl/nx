@@ -179,15 +179,33 @@ export function getDaemonEnv() {
 }
 
 let clientEnvGeneration = 0;
+let clientEnvApplySequence = 0;
+let appliedClientEnv: NodeJS.ProcessEnv | undefined;
 
 /**
- * Count of client env applications that changed at least one variable. Digest
- * equality alone cannot guard a cache write: an env that changed and changed
- * back mid-pass yields the pass-start digest again, while the count still
- * moves.
+ * Count of client env applications that changed at least one variable, in
+ * `process.env` or against the previously applied client env. Digest equality
+ * alone cannot guard a cache write: an env that changed and changed back
+ * mid-pass yields the pass-start digest again, while the count still moves.
  */
 export function getDaemonClientEnvGeneration(): number {
   return clientEnvGeneration;
+}
+
+/**
+ * A copy of the env the last `applyDaemonEnvFromClient` call applied, with a
+ * sequence that advances on every call, or `undefined` before the first. For a
+ * caller that let code it ran (a user config, say) write over `process.env`
+ * and has to put the client's env back: the generation cannot tell it an apply
+ * happened, since an apply whose values the config had already written changes
+ * nothing.
+ */
+export function getAppliedDaemonClientEnv():
+  | { sequence: number; env: NodeJS.ProcessEnv }
+  | undefined {
+  return appliedClientEnv
+    ? { sequence: clientEnvApplySequence, env: { ...appliedClientEnv } }
+    : undefined;
 }
 
 /**
@@ -196,9 +214,14 @@ export function getDaemonClientEnvGeneration(): number {
  * command) would persist in the daemon and leak into every subsequent
  * client's project-graph computation. Deletion skips excluded vars and
  * required settings, which the daemon owns and clients should not control.
+ *
+ * The returned keys are those `process.env` moved on plus those the client's
+ * env moved on since the last applied one: a value a config wrote mid-load can
+ * already match what the next client sends, and the graph computed under the
+ * previous client is stale all the same.
  */
 export function applyDaemonEnvFromClient(newEnv: NodeJS.ProcessEnv): string[] {
-  const changedKeys: string[] = [];
+  const changedKeys = new Set<string>();
   const allKeys = new Set([
     ...Object.keys(process.env),
     ...Object.keys(newEnv),
@@ -207,18 +230,30 @@ export function applyDaemonEnvFromClient(newEnv: NodeJS.ProcessEnv): string[] {
     if (key in newEnv) {
       if (process.env[key] !== newEnv[key]) {
         process.env[key] = newEnv[key];
-        changedKeys.push(key);
+        changedKeys.add(key);
       }
     } else if (
       !isExcludedEnvVar(key) &&
       !Object.hasOwn(DAEMON_ENV_REQUIRED_SETTINGS, key)
     ) {
       delete process.env[key];
-      changedKeys.push(key);
+      changedKeys.add(key);
     }
   }
-  if (changedKeys.length > 0) {
+  if (appliedClientEnv) {
+    for (const key of new Set([
+      ...Object.keys(appliedClientEnv),
+      ...Object.keys(newEnv),
+    ])) {
+      if (appliedClientEnv[key] !== newEnv[key]) {
+        changedKeys.add(key);
+      }
+    }
+  }
+  if (changedKeys.size > 0) {
     clientEnvGeneration++;
   }
-  return changedKeys;
+  clientEnvApplySequence++;
+  appliedClientEnv = { ...newEnv };
+  return [...changedKeys];
 }

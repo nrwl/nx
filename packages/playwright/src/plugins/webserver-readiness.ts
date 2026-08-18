@@ -1,3 +1,8 @@
+import {
+  applyDaemonEnvFromClient,
+  getAppliedDaemonClientEnv,
+  loadConfigFile,
+} from '@nx/devkit/internal';
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { fork } from 'node:child_process';
 import { cpus } from 'node:os';
@@ -48,6 +53,90 @@ export function normalizeWebServers(
 
 // The TLS material Node reads when a probe verifies an https certificate.
 const TLS_PROBE_VARS = ['NODE_EXTRA_CA_CERTS', 'NODE_TLS_REJECT_UNAUTHORIZED'];
+// Every variable a url probe reads to route and verify a request, in both
+// spellings the proxy resolution accepts.
+const PROBE_ENV_VARS = [
+  ...['http_proxy', 'https_proxy', 'all_proxy', 'no_proxy'].flatMap((name) => [
+    name,
+    name.toUpperCase(),
+  ]),
+  ...TLS_PROBE_VARS,
+];
+
+/** The values of the probe variables set in an env. */
+export type ProbeEnv = Record<string, string>;
+
+export function pickProbeEnv(env: NodeJS.ProcessEnv): ProbeEnv {
+  const picked: ProbeEnv = {};
+  for (const variable of PROBE_ENV_VARS) {
+    if (env[variable] !== undefined) {
+      picked[variable] = env[variable];
+    }
+  }
+  return picked;
+}
+
+/**
+ * The webServer entries a config evaluation resolved and the probe env it left
+ * behind, which is what Playwright's own probe runs under: the config runs
+ * before the probe and can write env (through `dotenv`, say) that the readiness
+ * task, its own target in its own process, never sees.
+ */
+export interface ConfigEvaluation {
+  webServers: ResolvedWebServer[];
+  probeEnv: ProbeEnv;
+}
+
+let inProcessLoad: Promise<void> = Promise.resolve();
+
+/**
+ * Loads a Playwright config in this process and returns it with the probe env
+ * its evaluation left in `process.env`, then puts `process.env` back the way
+ * it was: the task and gate dotenv files expand against it, and a later env
+ * comparison has to see the graph-time env, not whatever the last config
+ * wrote. Loads are serialized because createNodes evaluates configs
+ * concurrently and a concurrent load's writes would be misattributed. A
+ * client env applied mid-load (the daemon forwards it as it arrives) is
+ * re-applied over the restored env; restoring the pre-load values alone would
+ * revert it.
+ */
+export async function loadConfigWithProbeEnv<T extends object>(
+  configPath: string
+): Promise<{ config: T; probeEnv: ProbeEnv }> {
+  const previous = inProcessLoad;
+  let release: () => void;
+  inProcessLoad = new Promise<void>((resolve) => (release = resolve));
+  await previous;
+  try {
+    const applySequence = getAppliedDaemonClientEnv()?.sequence;
+    const before = { ...process.env };
+    try {
+      const config = await loadConfigFile<T>(configPath);
+      return { config, probeEnv: pickProbeEnv(process.env) };
+    } finally {
+      restoreEnv(before);
+      const applied = getAppliedDaemonClientEnv();
+      if (applied && applied.sequence !== applySequence) {
+        applyDaemonEnvFromClient(applied.env);
+      }
+    }
+  } finally {
+    release();
+  }
+}
+
+function restoreEnv(snapshot: NodeJS.ProcessEnv): void {
+  for (const key of Object.keys(process.env)) {
+    if (!(key in snapshot)) {
+      delete process.env[key];
+    }
+  }
+  for (const [key, value] of Object.entries(snapshot)) {
+    if (process.env[key] !== value) {
+      process.env[key] = value;
+    }
+  }
+}
 
 /**
  * The routes a probe under `env` can take, read as the executor's proxy
@@ -93,13 +182,15 @@ function proxyRoutes(env: NodeJS.ProcessEnv): {
 }
 
 /**
- * The env var names whose task-env values would make the readiness gate probe
- * `servers` differently than the consuming task's own Playwright probe. The
- * gate runs as its own target, so it loads its own dotenv files, not the
- * consumer's: a task-scoped proxy exclusion or CA bundle never reaches it, and
- * a gate probing through the wrong route can fail where Playwright would pass.
- * A non-empty result means the gate cannot reproduce the task's probe and must
- * not be inferred.
+ * The env var names whose values would make the readiness gate probe `servers`
+ * differently than the consuming task's own Playwright probe: `taskEnv` is the
+ * env that probe runs under (the task env after its config loaded) and
+ * `gateEnv` the env the gate target runs under. The gate is its own target, so
+ * it loads its own dotenv files, not the consumer's, and it never loads the
+ * config: a task-scoped or config-written proxy exclusion or CA bundle never
+ * reaches it, and a gate probing through the wrong route can fail where
+ * Playwright would pass. A non-empty result means the gate cannot reproduce
+ * the task's probe and must not be inferred.
  *
  * Both probes follow redirects, so as soon as one server probes a url the
  * routes for every protocol and host are compared, not only the route the
@@ -112,7 +203,7 @@ function proxyRoutes(env: NodeJS.ProcessEnv): {
 export function getProbeEnvDivergence(
   servers: Array<{ url?: string; ignoreHTTPSErrors?: boolean }>,
   taskEnv: NodeJS.ProcessEnv,
-  ambientEnv: NodeJS.ProcessEnv = process.env
+  gateEnv: NodeJS.ProcessEnv
 ): string[] {
   // A port is probed with a raw TCP connect, and the executor rejects a
   // malformed url up front; env plays no part in either.
@@ -124,20 +215,19 @@ export function getProbeEnvDivergence(
   }
   const diverging = new Set<string>();
   const taskRoutes = proxyRoutes(taskEnv);
-  const ambientRoutes = proxyRoutes(ambientEnv);
+  const gateRoutes = proxyRoutes(gateEnv);
   // Name the raw variables behind a differing route. A proxy route is decided
   // by every proxy variable (`no_proxy` can mask them all); the filter only by
   // `no_proxy`.
   const routeVars =
-    taskRoutes.http !== ambientRoutes.http ||
-    taskRoutes.https !== ambientRoutes.https
+    taskRoutes.http !== gateRoutes.http || taskRoutes.https !== gateRoutes.https
       ? ['http_proxy', 'https_proxy', 'all_proxy', 'no_proxy']
-      : taskRoutes.no_proxy !== ambientRoutes.no_proxy
+      : taskRoutes.no_proxy !== gateRoutes.no_proxy
         ? ['no_proxy']
         : [];
   for (const name of routeVars) {
     for (const variable of [name, name.toUpperCase()]) {
-      if (taskEnv[variable] !== ambientEnv[variable]) {
+      if (taskEnv[variable] !== gateEnv[variable]) {
         diverging.add(variable);
       }
     }
@@ -146,7 +236,7 @@ export function getProbeEnvDivergence(
   // is tunnelled through an https proxy over a TLS connection the proxy agent
   // opens with the process defaults, on both sides, so that certificate is
   // verified regardless.
-  const tunnelsThroughTlsProxy = [taskRoutes.https, ambientRoutes.https].some(
+  const tunnelsThroughTlsProxy = [taskRoutes.https, gateRoutes.https].some(
     (route) => route.startsWith('https:')
   );
   if (
@@ -154,7 +244,7 @@ export function getProbeEnvDivergence(
     urlServers.some((server) => !server.ignoreHTTPSErrors)
   ) {
     for (const variable of TLS_PROBE_VARS) {
-      if (taskEnv[variable] !== ambientEnv[variable]) {
+      if (taskEnv[variable] !== gateEnv[variable]) {
         diverging.add(variable);
       }
     }
@@ -186,14 +276,14 @@ export function taskEnvDivergesFromAmbient(
  * such a message must not settle the resolution.
  */
 export type WebserverConfigWorkerMessage =
-  | { type: 'webserver-config-result'; webServers: ResolvedWebServer[] }
+  | ({ type: 'webserver-config-result' } & ConfigEvaluation)
   | { type: 'webserver-config-error'; error: string };
 
 type ChildEval = (
   configFilePath: string,
   workspaceRoot: string,
   env: NodeJS.ProcessEnv
-) => Promise<ResolvedWebServer[]>;
+) => Promise<ConfigEvaluation>;
 
 // A forked config evaluation holds a full config module graph in memory, so cap
 // how many run at once.
@@ -215,7 +305,7 @@ export async function resolveWebServersUnderEnv(
   configFilePath: string,
   workspaceRoot: string,
   taskEnv: NodeJS.ProcessEnv
-): Promise<ResolvedWebServer[]> {
+): Promise<ConfigEvaluation> {
   // `while` rather than `if`: a caller arriving between a slot's release and
   // the woken waiter's resume can claim the slot first, so the waiter must
   // re-check before taking it.
@@ -241,12 +331,15 @@ function isWorkerMessage(
     type?: unknown;
     error?: unknown;
     webServers?: unknown;
+    probeEnv?: unknown;
   };
   return (
     (candidate.type === 'webserver-config-error' &&
       typeof candidate.error === 'string') ||
     (candidate.type === 'webserver-config-result' &&
-      Array.isArray(candidate.webServers))
+      Array.isArray(candidate.webServers) &&
+      typeof candidate.probeEnv === 'object' &&
+      candidate.probeEnv !== null)
   );
 }
 
@@ -254,7 +347,7 @@ function forkChildEval(
   configFilePath: string,
   workspaceRoot: string,
   env: NodeJS.ProcessEnv
-): Promise<ResolvedWebServer[]> {
+): Promise<ConfigEvaluation> {
   return new Promise((resolve, reject) => {
     // Startup env and project-root cwd mirror the inferred task, which runs
     // `playwright test` from the project root: a NODE_OPTIONS loader runs at
@@ -313,7 +406,12 @@ function forkChildEval(
           finish(() => reject(new Error(withStderr(message.error))));
           break;
         case 'webserver-config-result':
-          finish(() => resolve(message.webServers));
+          finish(() =>
+            resolve({
+              webServers: message.webServers,
+              probeEnv: message.probeEnv,
+            })
+          );
           break;
         default: {
           // A new message variant has to say how it settles the resolution.

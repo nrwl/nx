@@ -1,5 +1,6 @@
 import {
   applyDaemonEnvFromClient,
+  getAppliedDaemonClientEnv,
   getDaemonClientEnvGeneration,
   getDaemonEnv,
   hashDaemonClientEnv,
@@ -45,6 +46,55 @@ describe('daemon environment', () => {
       // spanning only no-op applies must still be allowed to persist.
       applyDaemonEnvFromClient(withProbe);
       expect(getDaemonClientEnvGeneration()).toBe(base + 1);
+    });
+  });
+
+  describe('applyDaemonEnvFromClient', () => {
+    it('reports a client change that process.env already matches', () => {
+      // A config the daemon evaluated wrote the value the next client sends,
+      // so process.env has nothing to move on; the client-owned env did move
+      // and the graph computed under the previous client is stale.
+      const previous = { ...process.env };
+      applyDaemonEnvFromClient(previous);
+      process.env.MASKED_PROBE = 'from-config';
+      const generation = getDaemonClientEnvGeneration();
+
+      const changed = applyDaemonEnvFromClient({
+        ...previous,
+        MASKED_PROBE: 'from-config',
+      });
+
+      expect(changed).toEqual(['MASKED_PROBE']);
+      expect(getDaemonClientEnvGeneration()).toBe(generation + 1);
+    });
+  });
+
+  describe('getAppliedDaemonClientEnv', () => {
+    it('returns a copy of the last applied env, whether or not it changed anything', () => {
+      const applied = { ...process.env, APPLIED_PROBE: 'a' };
+      applyDaemonEnvFromClient(applied);
+      expect(getAppliedDaemonClientEnv().env).toEqual(applied);
+      // A no-op apply is still the last one applied.
+      applyDaemonEnvFromClient(applied);
+      const copy = getAppliedDaemonClientEnv().env;
+      expect(copy).toEqual(applied);
+      // A caller mutating the copy must not touch the stored env, which a
+      // later caller reads to undo what a user config wrote.
+      copy.APPLIED_PROBE = 'mutated';
+      expect(getAppliedDaemonClientEnv().env.APPLIED_PROBE).toBe('a');
+    });
+
+    it('advances the sequence on an apply that changes nothing, unlike the generation', () => {
+      // A config that already wrote the value a client then applies leaves
+      // the generation alone; the sequence is how a caller learns the apply
+      // happened at all.
+      const applied = { ...process.env, APPLIED_PROBE: 'a' };
+      applyDaemonEnvFromClient(applied);
+      const { sequence } = getAppliedDaemonClientEnv();
+      const generation = getDaemonClientEnvGeneration();
+      expect(applyDaemonEnvFromClient(applied)).toEqual([]);
+      expect(getDaemonClientEnvGeneration()).toBe(generation);
+      expect(getAppliedDaemonClientEnv().sequence).toBe(sequence + 1);
     });
   });
 
