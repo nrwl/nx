@@ -64,6 +64,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     useGitHub,
     skipGitHubPush = false,
     verbose = false,
+    formatter,
   } = options;
 
   if (cliName) {
@@ -256,6 +257,11 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     process.env.NX_SKIP_FORMAT = 'true';
   } else {
     delete process.env.NX_SKIP_FORMAT;
+  }
+
+  // A preset that set no formatter up leaves this unset or `'none'`, and the
+  // pass would end a successful creation on "No formatter configured".
+  if (!skipFormatRequested && formatter && formatter !== 'none') {
     try {
       const pmc = getPackageManagerCommand(packageManager);
       // `--all` because git is not initialised yet, so there is nothing to diff
