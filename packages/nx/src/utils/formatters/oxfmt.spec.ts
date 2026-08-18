@@ -691,8 +691,8 @@ describe('formatFilesWithOxfmt', () => {
         workspaceRoot
       );
 
-      // One per file: the config resolves once for the batch, so the failure
-      // lands outside the per-file catch and no file is formatted on defaults.
+      // One per file: the config resolves once for the batch, but its error is
+      // recorded per file, so no file is formatted on defaults.
       expect(errors?.length).toBe(2);
       expect(errors[0]).toContain('oxfmt.config.ts');
       expect(formatted.size).toBe(0);
@@ -1067,6 +1067,24 @@ describe('formatFilesWithOxfmt', () => {
 
       expect(errors).toBeUndefined();
       expect(formatted.get('a.ts')).toEqual("const x = 'hi';\n");
+    });
+
+    it('ignores a root config the tree deletes when no seed replaces it', async () => {
+      // The one path that reaches the disk-read loop with `rootConfigNames`: a
+      // JSON seed returns before it, so this is what pins the loop to
+      // `candidates` rather than every supported name.
+      writeConfig({ useTabs: true });
+
+      const { formatted, errors } = await formatFilesWithOxfmt(
+        [{ path: 'a.ts', content: 'function f() {\nif (a) {\nb();\n}\n}' }],
+        workspaceRoot,
+        undefined,
+        []
+      );
+
+      expect(errors).toBeUndefined();
+      // Spaces, not a tab: the config on its way out is not read.
+      expect(formatted.get('a.ts')).toContain('\n  if (a) {');
     });
 
     it('reports a staged TypeScript config it cannot read yet', async () => {
