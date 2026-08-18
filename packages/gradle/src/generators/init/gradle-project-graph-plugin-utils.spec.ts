@@ -185,10 +185,34 @@ allprojects {
         expect(content).toMatch(
           /plugins\s*{\s*id\s*['"]dev\.nx\.gradle\.project-graph['"]\s*version\s*['"][^'"]+['"]/
         );
+        // Groovy's named-argument colon is required; `apply plugin "x"` is a syntax error.
         expect(content).toMatch(
-          /allprojects\s*{\s*apply\s*plugin\s*['"]dev\.nx\.gradle\.project-graph['"]/
+          /allprojects\s*{\s*apply\s*plugin:\s*['"]dev\.nx\.gradle\.project-graph['"]/
         );
         expect(content).toContain('repositories {');
+      });
+
+      it('should not re-apply the plugin to an allprojects block that already has it', async () => {
+        await tempFs.createFiles({
+          'proj/settings.gradle': '',
+          'proj/build.gradle': `plugins {
+    id "java"
+}
+
+allprojects {
+    apply plugin: "dev.nx.gradle.project-graph"
+    repositories {
+        mavenCentral()
+    }
+}`,
+        });
+
+        await addNxProjectGraphPlugin(tree);
+
+        const content = tree.read('proj/build.gradle', 'utf-8');
+        expect(
+          content.match(/apply\s+plugin:\s*['"]dev\.nx\.gradle\.project-graph['"]/g)
+        ).toHaveLength(1);
       });
     });
 

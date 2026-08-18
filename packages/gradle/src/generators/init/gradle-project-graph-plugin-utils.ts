@@ -290,7 +290,14 @@ async function addNxProjectGraphPluginToBuildGradle(
             '\\.'
           )}\\)`
         )
-      : new RegExp(`\\s*plugin\\(["']${gradleProjectGraphPluginName}["']\\)`);
+      : // Matches the Kotlin `plugin("x")` and Groovy `plugin: "x"` forms alike, so a second
+        // run of the generator doesn't append a duplicate apply.
+        new RegExp(
+          `\\s*plugin\\s*[:(]\\s*["']${gradleProjectGraphPluginName.replace(
+            /\./g,
+            '\\.'
+          )}["']`
+        );
 
     if (buildGradleContent.includes('allprojects {')) {
       if (!applyPluginPattern.test(buildGradleContent)) {
@@ -298,7 +305,9 @@ async function addNxProjectGraphPluginToBuildGradle(
           ? `plugin(${versionCatalogPluginAccessor})`
           : isKotlinDsl
             ? `plugin("${gradleProjectGraphPluginName}")`
-            : `plugin "${gradleProjectGraphPluginName}"`;
+            : // Groovy needs the named-argument colon: `apply plugin: "x"`. Without it Groovy
+              // reads `plugin` as a property and fails with "Could not get unknown property".
+              `plugin: "${gradleProjectGraphPluginName}"`;
 
         buildGradleContent = buildGradleContent.replace(
           /allprojects\s*\{/,
