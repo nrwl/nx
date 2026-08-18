@@ -1,10 +1,9 @@
 import { execFileSync } from 'child_process';
 import { writeFileSync, mkdirSync } from 'fs';
 import { dirname, join } from 'path';
-import { askChoice } from '@nx/devkit/internal';
 import { ProjectGraphProjectNode, workspaceRoot } from '@nx/devkit';
 import { interpolateVersionPattern } from './version-pattern-utils';
-import { type FinalConfigForProject } from '@nx/devkit/internal';
+import { askChoice, type FinalConfigForProject } from '@nx/devkit/internal';
 
 const DEFAULT_VERSION_SCHEMES = {
   production: '{currentDate|YYMM.DD}.{shortCommitSha}',

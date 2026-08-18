@@ -3,6 +3,7 @@ import {
   GeneratorInformation,
   getGeneratorInformation,
   findInstalledPlugins,
+  askMultiselect,
 } from '@nx/devkit/internal';
 import {
   createProjectGraphAsync,
@@ -14,7 +15,6 @@ import {
   Tree,
   workspaceRoot,
 } from '@nx/devkit';
-import { askMultiselect } from '@nx/devkit/internal';
 
 interface Schema {
   project?: string;

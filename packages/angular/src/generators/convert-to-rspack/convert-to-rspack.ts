@@ -1,4 +1,8 @@
-import { forEachExecutorOptions, getNamedInputs } from '@nx/devkit/internal';
+import {
+  askChoice,
+  forEachExecutorOptions,
+  getNamedInputs,
+} from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   ensurePackage,
@@ -18,7 +22,6 @@ import {
   type Tree,
 } from '@nx/devkit';
 import type { RspackPluginOptions } from '@nx/rspack/plugin';
-import { askChoice } from '@nx/devkit/internal';
 import { relative, resolve } from 'path';
 import { join } from 'path/posix';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
