@@ -666,13 +666,11 @@ const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
     // would discard that recomputation at commit and force a second one. The
     // committed file map approximates what the watcher tracks: a file it does
     // not know is either gitignored (never reaches the workspace watcher, so it
-    // needs the invalidation) or created since the last recompute (the watcher handles
-    // it; the extra invalidation is fail-safe). Its own try/catch so a fault
-    // here cannot trip the
-    // outputs-tracking kill switch below, which belongs to an unrelated
-    // subsystem. It fails safe by invalidating: a stale graph on a dotenv edit
-    // is the bug this prevents, and invalidateGraphCache only clears the
-    // cached promise (idempotent, lazy).
+    // needs the invalidation) or created since the last recompute (the watcher
+    // handles it; the extra invalidation is fail-safe). Its own try/catch so a
+    // fault here cannot trip the outputs-tracking kill switch below, which
+    // belongs to an unrelated subsystem, and it fails safe by invalidating: a
+    // stale graph on a dotenv edit is the bug this prevents.
     try {
       if (
         outputsChangesInvalidatingGraphEnv(
