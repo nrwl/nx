@@ -179,17 +179,9 @@ import {
   runInstall,
   runNxOrAngularMigration,
 } from './execute-migration';
-import {
-  runSingleMigrationWorker,
-  runOrchestratorInit,
-  runOrchestratorReconcile,
-  type StepAction,
-} from './run';
-import { isStepAction, STEP_ACTIONS } from './step-actions';
+import { isStepAction, STEP_ACTIONS, type StepAction } from './step-actions';
 import { sortMigrations } from './sort-migrations';
 import { isInsideAgent } from './agentic/inception';
-import { resolveAgentic, resolveShouldRunValidation } from './agentic/select';
-import { applyAgenticHandoffGitignoreFallback } from './agentic/handoff-gitignore';
 import {
   assertWorkspaceNxSupportsNewMigrateFlags,
   resolveNewMigrateFlagsRunTarget,
@@ -2689,9 +2681,7 @@ export async function executeMigrations(
     hoistHandoffGitignore: agentic?.kind === 'enabled',
   });
 
-  // `run-step` is the part worth deferring: it pulls in the prompt builders,
-  // which nothing but an enabled agentic flow needs. `handoff` is already in
-  // the static graph through `./run`.
+  // Lazy-load the agentic chain so non-agentic runs don't pay its startup cost.
   let agenticRun: AgenticRunContext | undefined;
   if (agentic?.kind === 'enabled' && sortedMigrations.length > 0) {
     const { initRunDir, resolveAgenticRunId } =
@@ -3233,6 +3223,7 @@ async function runMigrations(
       'nx',
       getNxRequirePaths(root)
     );
+    const { runOrchestratorInit } = require('./run') as typeof import('./run');
     return await runOrchestratorInit({
       root,
       migrationsJson,
@@ -3251,6 +3242,8 @@ async function runMigrations(
     migrationCount: migrations.length,
   });
 
+  const { resolveAgentic, resolveShouldRunValidation } =
+    require('./agentic/select') as typeof import('./agentic/select');
   let agentic: ResolvedAgentic;
   try {
     agentic = await resolveAgentic({
@@ -3307,6 +3300,8 @@ async function runMigrations(
   }
 
   if (agentic.kind === 'enabled') {
+    const { applyAgenticHandoffGitignoreFallback } =
+      require('./agentic/handoff-gitignore') as typeof import('./agentic/handoff-gitignore');
     const { packageJson: nxPackageJson } = readModulePackageJson(
       'nx',
       getNxRequirePaths(root)
@@ -3783,6 +3778,8 @@ async function runOrchestratorReconcileFromCli(
     return handOffToLocalNx(args);
   }
 
+  const { runOrchestratorReconcile } =
+    require('./run') as typeof import('./run');
   return runOrchestratorReconcile({
     root,
     runId: opts.runId,
@@ -3833,6 +3830,10 @@ async function runSingleMigrationFromCli(
   // The worker resolves the agentic flow, the effective commit config, and
   // the default-branch confirmation itself; hand it the raw flags. Recorded
   // runs (--run-id) take their commit config from run.json instead.
+  // Lazy-load run/ so plain migrate and repair runs don't pay for the agentic
+  // selection chain its barrel pulls in eagerly.
+  const { runSingleMigrationWorker } =
+    require('./run') as typeof import('./run');
   await runSingleMigrationWorker({
     root,
     runMigration: opts.runMigration,
