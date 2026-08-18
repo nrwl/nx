@@ -52,8 +52,12 @@ Both probes follow redirects, so a variable that plays no part at the configured
 `HTTPS_PROXY` for an `http` URL, still counts.
 Nx compares the routes those variables produce rather than their raw values.
 A variable that another one masks doesn't count, such as `NO_PROXY` when no proxy is configured
-or `ALL_PROXY` next to an explicit `HTTP_PROXY` and `HTTPS_PROXY`, and neither does a proxy value
-written with or without its scheme or a `NO_PROXY` list in a different order.
+or `ALL_PROXY` next to an explicit `HTTP_PROXY` and `HTTPS_PROXY`, and neither does an
+`HTTP_PROXY` written with or without its `http://` scheme or a `NO_PROXY` list in a different
+order.
+A scheme-less proxy value takes the protocol it's used for.
+A scheme-less `HTTPS_PROXY` is an `https` proxy and a scheme-less `ALL_PROXY` follows each
+request's protocol, so either counts against the same value written with `http://`.
 The wait task runs with its own environment rather than the Playwright task's, so it can't
 reproduce that probe and the tests fall back to Playwright's own `reuseExistingServer` probe.
 
@@ -77,6 +81,9 @@ Nx caches the result and rebuilds it when an env file the Playwright task would 
 `.env` or `.env.e2e`, changes.
 An env file listed in `.nxignore` is an exception: Nx doesn't see it change, so the cached result
 stays stale.
+So is a workspace-root env file whose name comes from a target name containing `/`, such as
+`.env.e2e/smoke`, which Nx doesn't watch.
+The same file under a project root is watched.
 
 A variable set only in the shell is part of that cache too, so changing it re-infers the address.
 The exception is variables Nx filters out of the project graph environment, such as terminal
