@@ -564,6 +564,78 @@ describe('getTouchedNpmPackages', () => {
     expect(result).toEqual(['npm:happy-nrwl']);
   });
 
+  it('should mark the child package as affected for nested npm overrides', () => {
+    projectGraph.externalNodes['npm:parent-nrwl'] = {
+      name: 'npm:parent-nrwl',
+      type: 'npm',
+      data: {
+        packageName: 'parent-nrwl',
+        version: '2',
+      },
+    };
+    const basePackageJson = {
+      overrides: {
+        'parent-nrwl@^2.0.0': {
+          'happy-nrwl': '1.0.0',
+        },
+      },
+    };
+    const headPackageJson = {
+      overrides: {
+        'parent-nrwl@^2.0.0': {
+          'happy-nrwl': '2.0.0',
+        },
+      },
+    };
+
+    const result = getTouchedNpmPackages(
+      [
+        {
+          file: 'package.json',
+          getChanges: () => jsonDiff(basePackageJson, headPackageJson),
+        },
+      ],
+      projectsConfigurations,
+      nxJson,
+      headPackageJson,
+      projectGraph
+    );
+
+    expect(result).toEqual(['npm:happy-nrwl']);
+  });
+
+  it('should handle the self key in nested npm overrides', () => {
+    const result = getTouchedNpmPackages(
+      [
+        {
+          file: 'package.json',
+          getChanges: () => [
+            {
+              type: JsonDiffType.Modified,
+              path: ['overrides', 'happy-nrwl@^1.0.0', '.'],
+              value: {
+                lhs: '1.0.0',
+                rhs: '1.1.0',
+              },
+            },
+          ],
+        },
+      ],
+      projectsConfigurations,
+      nxJson,
+      {
+        overrides: {
+          'happy-nrwl@^1.0.0': {
+            '.': '1.1.0',
+          },
+        },
+      },
+      projectGraph
+    );
+
+    expect(result).toEqual(['npm:happy-nrwl']);
+  });
+
   it('should mark all projects as affected when resolutions are changed for unknown packages', () => {
     const result = getTouchedNpmPackages(
       [
