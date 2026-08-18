@@ -374,11 +374,12 @@ to every command in the workspace.
 Measure that cost once the graph is right:
 
 ```shell
-NX_PERF_LOGGING=true NX_DAEMON=false NX_CACHE_PROJECT_GRAPH=false npx nx graph --file=graph.json
+NX_PERF_LOGGING=true NX_DAEMON=false npx nx show projects
 ```
 
 Nx prints a timing per step, including `<plugin-name>:createNodes` and `Load Nx Plugin: <plugin-name>`.
 Loading the entry point is frequently the larger of the two, and it is paid even when Nx reuses a cached graph.
+Keep the daemon off, or the plugin timings never reach your terminal.
 
 The patterns that bring those numbers down are caching computed targets to disk, loading manifests in one parallel
 batch, keeping returned output deterministic, and keeping top-level imports light.
