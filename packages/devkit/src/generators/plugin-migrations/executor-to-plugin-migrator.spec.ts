@@ -1097,6 +1097,147 @@ describe('Phase 3 — strict-common hoist', () => {
     }
   });
 
+  it('removes the whole nx.targets entry of a package-based project when its residual is empty', async () => {
+    // Uniform config: everything hoists and the residual is empty. Removing the
+    // last target through `updateProjectConfiguration` leaves package.json
+    // `nx.targets` untouched (it drops an empty `targets` before spreading), so
+    // the executor would survive, author the identity, and the hoisted default
+    // would silently not resolve.
+    ctx = setupFixture('package-based-empty-residual');
+    ctx.tree.write(
+      'package.json',
+      JSON.stringify({
+        name: 'workspace',
+        version: '0.0.1',
+        workspaces: ['libs/*'],
+      })
+    );
+    for (const name of ['pkg1', 'pkg2']) {
+      const root = `libs/${name}`;
+      const target = {
+        executor: SYNTHETIC_EXECUTOR,
+        options: { config: SYNTHETIC_CONFIG_FILE, mode: 'production' },
+        cache: true,
+        outputs: ['{projectRoot}/dist'],
+      };
+      ctx.tree.write(
+        `${root}/package.json`,
+        JSON.stringify({ name, nx: { targets: { build: target } } })
+      );
+      ctx.projectGraph.nodes[name] = {
+        name,
+        type: 'lib',
+        data: { root, targets: { build: target } } as any,
+      };
+      ctx.fs.createFileSync(`${root}/${SYNTHETIC_CONFIG_FILE}`, '{}');
+    }
+    const plugin = createSyntheticPlugin();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations()
+    );
+
+    expect(readNxJson(ctx.tree).targetDefaults.build).toContainEqual({
+      filter: { plugin: SYNTHETIC_PLUGIN_PATH },
+      options: { mode: 'production' },
+    });
+    for (const name of ['pkg1', 'pkg2']) {
+      expect(
+        readJson(ctx.tree, `libs/${name}/package.json`).nx.targets
+      ).toBeUndefined();
+    }
+    // through REAL resolution the executor is gone and the hoisted default applies
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+    for (const name of ['pkg1', 'pkg2']) {
+      expect(resolved[`libs/${name}`].build.executor).not.toBe(
+        SYNTHETIC_EXECUTOR
+      );
+      expect(resolved[`libs/${name}`].build.options?.mode).toBe('production');
+    }
+  });
+
+  it('restores the full residual of a package-based project when the hoist is reverted after its residual emptied', async () => {
+    // Same uniform package-based shape, but the plugin is pre-registered
+    // workspace-wide and pkg3 is inferred-only, so the verification pass reverts
+    // the hoist and writes each project's full residual a SECOND time, after
+    // the first write emptied (and removed) its `nx.targets`.
+    ctx = setupFixture('package-based-empty-residual-revert');
+    ctx.tree.write(
+      'package.json',
+      JSON.stringify({
+        name: 'workspace',
+        version: '0.0.1',
+        workspaces: ['libs/*'],
+      })
+    );
+    for (const name of ['pkg1', 'pkg2']) {
+      const root = `libs/${name}`;
+      const target = {
+        executor: SYNTHETIC_EXECUTOR,
+        options: { config: SYNTHETIC_CONFIG_FILE, mode: 'production' },
+        cache: true,
+        outputs: ['{projectRoot}/dist'],
+      };
+      ctx.tree.write(
+        `${root}/package.json`,
+        JSON.stringify({ name, nx: { targets: { build: target } } })
+      );
+      ctx.projectGraph.nodes[name] = {
+        name,
+        type: 'lib',
+        data: { root, targets: { build: target } } as any,
+      };
+      ctx.fs.createFileSync(`${root}/${SYNTHETIC_CONFIG_FILE}`, '{}');
+    }
+    // pkg3: inferred-only (config file, no executor target)
+    ctx.tree.write(
+      'libs/pkg3/package.json',
+      JSON.stringify({ name: 'pkg3', nx: {} })
+    );
+    ctx.projectGraph.nodes.pkg3 = {
+      name: 'pkg3',
+      type: 'lib',
+      data: { root: 'libs/pkg3', targets: {} } as any,
+    };
+    ctx.fs.createFileSync(`libs/pkg3/${SYNTHETIC_CONFIG_FILE}`, '{}');
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [SYNTHETIC_PLUGIN_PATH];
+    updateNxJson(ctx.tree, nxJson);
+    const plugin = createSyntheticPlugin();
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({ cache: true });
+    for (const name of ['pkg1', 'pkg2']) {
+      expect(
+        readJson(ctx.tree, `libs/${name}/package.json`).nx.targets.build
+      ).toEqual({ options: { mode: 'production' } });
+    }
+    expect(
+      readJson(ctx.tree, 'libs/pkg3/package.json').nx.targets
+    ).toBeUndefined();
+    expect(warn).toHaveBeenCalledTimes(1);
+  });
+
   it('does not throw when nx.includedScripts is malformed (non-array)', async () => {
     // A non-array `nx.includedScripts` must not crash the generator with an
     // uncaught TypeError; it is normalized to the default (all scripts).

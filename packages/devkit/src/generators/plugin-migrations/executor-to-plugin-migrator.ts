@@ -12,6 +12,7 @@ import {
   getProjects,
   updateNxJson,
   updateProjectConfiguration,
+  writeJson,
   type CreateNodes,
   type ExpandedPluginConfiguration,
   type NxJsonConfiguration,
@@ -477,6 +478,34 @@ function writeResidualTarget(
   }
 
   updateProjectConfiguration(tree, projectName, projectConfig);
+
+  // `updateProjectConfiguration` writes a package-based project (no
+  // project.json) by spreading the config over package.json `nx`, and deletes an
+  // empty `targets` from this very (cached) object before the spread. Two
+  // consequences: the old `nx.targets` entry (executor included) survives in
+  // package.json, and the cache can no longer take a later write (the Phase 4
+  // revert). Delete the entry here and keep the cache writable.
+  if (!projectConfig.targets) {
+    projectConfig.targets = {};
+    deletePackageJsonTarget(tree, projectConfig.root, targetName);
+  }
+}
+
+function deletePackageJsonTarget(
+  tree: Tree,
+  root: string,
+  targetName: string
+): void {
+  const packageJsonPath = join(root, 'package.json');
+  const packageJson = readJson(tree, packageJsonPath);
+  if (!packageJson.nx?.targets?.[targetName]) {
+    return;
+  }
+  delete packageJson.nx.targets[targetName];
+  if (Object.keys(packageJson.nx.targets).length === 0) {
+    delete packageJson.nx.targets;
+  }
+  writeJson(tree, packageJsonPath, packageJson);
 }
 
 function readCachedProjectConfiguration(
@@ -751,13 +780,14 @@ function packageJsonAuthorsTargetIdentity(
   // workspace the target being migrated lives in `nx.targets` itself (that is
   // where its executor is authored), so reading it here would flag every project
   // as authoring its own identity, exclude them all, and centralize nothing.
-  // A package-based project's residual is written back to `nx.targets` WITHOUT an
-  // executor/command, so post-migration it authors no identity and the hoisted
-  // `filter:{plugin}` default resolves fine. Gate on the same `project.json`
-  // signal `updateProjectConfiguration` uses to decide where config lives: only
-  // trust an `nx.targets` identity when the project keeps its config in
-  // `project.json` (there a package.json `nx.targets` entry is genuinely separate
-  // from the migrated target).
+  // A package-based project's residual is written back to `nx.targets` without
+  // the migrated executor (a residual that still carries an executor/command is
+  // excluded by the caller before this gate), so post-migration it authors no
+  // identity and the hoisted `filter:{plugin}` default resolves. Gate on the
+  // same `project.json` signal `updateProjectConfiguration` uses to decide where
+  // config lives: only trust an `nx.targets` identity when the project keeps its
+  // config in `project.json` (there a package.json `nx.targets` entry is
+  // genuinely separate from the migrated target).
   if (!tree.exists(join(root, 'project.json'))) {
     return false;
   }
