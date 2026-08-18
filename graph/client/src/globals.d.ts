@@ -35,6 +35,7 @@ export declare global {
     renderMigrate?: (
       data: any
     ) => Interpreter<MigrateState, any, MigrateEvents>;
+    __NX_GRAPH_TEST__?: import('./app/util/graph-wheel-sensitivity').GraphWheelSensitivityTestApi;
   }
 }
 declare module 'cytoscape' {
