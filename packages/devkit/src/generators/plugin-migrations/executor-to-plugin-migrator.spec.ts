@@ -1,11 +1,14 @@
 import { dirname } from 'node:path/posix';
-import type { TargetDefaults } from 'nx/src/devkit-exports';
+import type {
+  CreateNodes,
+  ExpandedPluginConfiguration,
+  TargetDefaults,
+} from 'nx/src/devkit-exports';
 import { readNxJson, readJson, updateNxJson } from 'nx/src/devkit-exports';
 import {
   AggregateCreateNodesError,
   mergeTargetConfigurations,
 } from 'nx/src/devkit-internals';
-import type { CreateNodes } from 'nx/src/devkit-exports';
 import {
   collectMigrationScope,
   computeResidualByProject,
@@ -29,7 +32,6 @@ import {
   type FixtureContext,
   type SyntheticPluginOptions,
 } from './executor-to-plugin-migrator.test-utils';
-import type { ExpandedPluginConfiguration } from 'nx/src/devkit-exports';
 
 // The temp workspaces these specs build have no real `@nx/js`, so the implicit
 // `nx-release-publish` target (`@nx/js:release-publish`) the package-json plugin
