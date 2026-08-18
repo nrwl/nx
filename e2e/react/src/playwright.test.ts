@@ -1,10 +1,13 @@
 import {
   createFile,
+  fileExists,
+  readFile,
   runCLI,
   runE2ETests,
   cleanupProject,
   newProject,
   removeFile,
+  tmpProjPath,
   uniq,
   updateFile,
 } from '@nx/e2e-utils';
@@ -97,6 +100,55 @@ describe('React Playwright e2e tests', () => {
       expect(result).toContain(
         `Successfully ran target e2e for project ${appName}-e2e`
       );
+    }
+  });
+
+  it('lets Playwright reuse the server the readiness gate waited for instead of starting its own', async () => {
+    if (!(await runE2ETests('playwright'))) {
+      return;
+    }
+    const e2eProject = `${appName}-e2e`;
+    const [, serveTarget] =
+      readFile(`${e2eProject}/playwright.config.mts`).match(
+        new RegExp(`nx run ${appName}:(\\S+)'`)
+      ) ?? [];
+    expect(serveTarget).toBeDefined();
+    // Delay the server so Playwright's own probe surely misses when nothing
+    // waited for the server first; the argument would break command inference
+    // on the webServer command, so it goes on the target instead. A different
+    // command replaces the inferred target rather than merging into it, so
+    // the target is spelled out.
+    const projectConfig = fileExists(tmpProjPath(`${appName}/project.json`))
+      ? `${appName}/project.json`
+      : `${appName}/package.json`;
+    let originalProjectConfig = '';
+    updateFile(projectConfig, (content) => {
+      originalProjectConfig = content;
+      const json = JSON.parse(content);
+      const targets = projectConfig.endsWith('package.json')
+        ? ((json.nx ??= {}).targets ??= {})
+        : (json.targets ??= {});
+      targets[serveTarget] = {
+        command: 'node -e "setTimeout(() => {}, 5000)" && vite',
+        options: { cwd: appName },
+        continuous: true,
+      };
+      return JSON.stringify(json, null, 2);
+    });
+
+    try {
+      // Playwright logs which of the two it did under this debug scope. The
+      // atomized target is refused without Nx Cloud unless told otherwise.
+      for (const target of ['e2e', 'e2e-ci']) {
+        const result = runCLI(`run ${e2eProject}:${target}`, {
+          env: { DEBUG: 'pw:webserver', NX_SKIP_ATOMIZER_VALIDATION: 'true' },
+          redirectStderr: true,
+        });
+        expect(result).toContain('WebServer is already available');
+        expect(result).not.toContain('Starting WebServer process');
+      }
+    } finally {
+      updateFile(projectConfig, originalProjectConfig);
     }
   });
 
