@@ -15,7 +15,6 @@ import { assertSupportedAngularVersion } from '../../utils/assert-supported-angu
 import { allTargetOptions } from '../../utils/targets';
 import { setupSsr } from '../setup-ssr/setup-ssr';
 import { validateProject } from '../utils/validations';
-import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import type { GeneratorOptions } from './schema';
 
 const executorsToConvert = new Set([
@@ -107,11 +106,7 @@ async function convertProjectTargets(
   if (useNxExecutor) {
     newExecutor = '@nx/angular:application';
   } else {
-    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-    newExecutor =
-      angularMajorVersion >= 20
-        ? '@angular/build:application'
-        : '@angular-devkit/build-angular:application';
+    newExecutor = '@angular/build:application';
   }
 
   const buildTarget = project.targets[buildTargetName];

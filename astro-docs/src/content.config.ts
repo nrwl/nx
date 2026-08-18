@@ -21,6 +21,8 @@ const customDocsSchema = z
   .object({
     title: z.string(),
     description: z.string(),
+    featured: z.boolean().optional(),
+    topics: z.array(z.string()).optional(),
   })
   .and(searchSchema);
 
@@ -111,6 +113,7 @@ const banner = defineCollection({
     slug: z.string(),
     title: z.string(),
     description: z.string(),
+    artwork: z.string().optional(),
     primaryCtaUrl: z.string(),
     primaryCtaText: z.string(),
     secondaryCtaUrl: z.string().optional(),

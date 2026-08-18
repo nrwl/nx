@@ -3,7 +3,7 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/internal';
-import type { LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 import {
   normalizeLinterOption,
   normalizeUnitTestRunnerOption,

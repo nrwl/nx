@@ -1,4 +1,4 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 
 export interface Schema {
   appProject: string; // name of the project app to be tested (directory + app name), case insensitive
@@ -6,9 +6,13 @@ export interface Schema {
   appName?: string; // name of app to be tested if different form appProject, case insensitive
   e2eDirectory: string; // the directory where e2e app going to be located
   e2eName?: string; // name of the e2e app
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   js?: boolean;
   skipFormat?: boolean;
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
+   */
   setParserOptionsProject?: boolean;
   framework: 'react-native' | 'expo';
   addPlugin?: boolean;

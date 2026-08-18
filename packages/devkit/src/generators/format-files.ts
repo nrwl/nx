@@ -1,13 +1,31 @@
 import { readJson, Tree, writeJson } from 'nx/src/devkit-exports';
 import {
+  createPrettierIgnoreChecker,
   isUsingPrettierInTree,
   sortObjectByKeys,
 } from 'nx/src/devkit-internals';
 import * as path from 'path';
 import type * as Prettier from 'prettier';
+import { NOTHING_IGNORED } from '../utils/nx-ignore-internals';
+
+// Prettier v3 (ESM) exposes its API as named exports; v2 (CJS) exposes it under
+// `.default` when loaded via `import()`. Return whichever carries the API, or
+// null if prettier isn't installed.
+async function importPrettier(): Promise<typeof Prettier | null> {
+  try {
+    const imported = await import('prettier');
+    return (
+      (imported as any).resolveConfig ? imported : (imported as any).default
+    ) as typeof Prettier;
+  } catch {
+    return null;
+  }
+}
 
 /**
- * Formats all the created or updated files using Prettier
+ * Formats the created or updated files using Prettier, skipping `node_modules`,
+ * `.git`, the nx and yarn caches, and anything the workspace's root
+ * `.gitignore` or `.prettierignore` covers
  * @param tree - the file system tree
  * @param options - options for the formatFiles function
  *
@@ -39,9 +57,9 @@ export async function formatFiles(
     return;
   }
 
-  let prettier: typeof Prettier;
+  let prettier: typeof Prettier | null;
   try {
-    prettier = await import('prettier');
+    prettier = await importPrettier();
     /**
      * Even after we discovered prettier in node_modules, we need to be sure that the user is intentionally using prettier
      * before proceeding to format with it.
@@ -53,8 +71,18 @@ export async function formatFiles(
 
   if (!prettier) return;
 
+  // `getFileInfo` below looks like it filters ignored files but only covers its
+  // own built-in `node_modules` skip: with no `ignorePath` it never reads the
+  // workspace's ignore files, so `ignored` is false for everything else
+  // (measured).
+  //
+  // The optional call is the older-nx path - see `NOTHING_IGNORED`.
+  const { isIgnoredFile } =
+    createPrettierIgnoreChecker?.(tree) ?? NOTHING_IGNORED;
   const files = new Set(
-    tree.listChanges().filter((file) => file.type !== 'DELETE')
+    tree
+      .listChanges()
+      .filter((file) => file.type !== 'DELETE' && !isIgnoredFile(file.path))
   );
 
   const changedPrettierInTree = getChangedPrettierConfigInTree(tree);

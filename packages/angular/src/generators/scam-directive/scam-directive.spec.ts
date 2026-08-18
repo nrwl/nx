@@ -1,7 +1,6 @@
 import {
   addProjectConfiguration,
   readNxJson,
-  updateJson,
   updateNxJson,
   writeJson,
 } from '@nx/devkit';
@@ -379,91 +378,6 @@ describe('SCAM Directive Generator', () => {
       ).rejects.toThrowErrorMatchingInlineSnapshot(
         `"The provided directory resolved relative to the current working directory "libs/proj/src/lib/random/example" does not exist under any project root. Please make sure to navigate to a location or provide a directory that exists under a project root."`
       );
-    });
-  });
-
-  describe('compat', () => {
-    it('should generate the scam directive with the "directive" type for versions lower than v20', async () => {
-      const tree = createTreeWithEmptyWorkspace();
-      updateJson(tree, 'package.json', (json) => {
-        json.dependencies = {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        };
-        return json;
-      });
-      addProjectConfiguration(tree, 'app1', {
-        projectType: 'application',
-        sourceRoot: 'apps/app1/src',
-        root: 'apps/app1',
-      });
-
-      await scamDirectiveGenerator(tree, {
-        name: 'example',
-        path: 'apps/app1/src/app/example',
-        inlineScam: true,
-        skipFormat: true,
-      });
-
-      expect(tree.read('apps/app1/src/app/example.directive.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { Directive, NgModule } from '@angular/core';
-        import { CommonModule } from '@angular/common';
-
-        @Directive({
-          selector: '[example]',
-          standalone: false
-        })
-        export class ExampleDirective {
-          constructor() {}
-        }
-
-        @NgModule({
-          imports: [CommonModule],
-          declarations: [ExampleDirective],
-          exports: [ExampleDirective],
-        })
-        export class ExampleDirectiveModule {}
-        "
-      `);
-    });
-
-    it('should generate the module with the "." type separator for versions lower than v20', async () => {
-      const tree = createTreeWithEmptyWorkspace();
-      updateJson(tree, 'package.json', (json) => {
-        json.dependencies = {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        };
-        return json;
-      });
-      addProjectConfiguration(tree, 'app1', {
-        projectType: 'application',
-        sourceRoot: 'apps/app1/src',
-        root: 'apps/app1',
-      });
-
-      await scamDirectiveGenerator(tree, {
-        name: 'example',
-        path: 'apps/app1/src/app/example',
-        inlineScam: false,
-        skipFormat: true,
-      });
-
-      expect(tree.read('apps/app1/src/app/example.module.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { NgModule } from '@angular/core';
-        import { CommonModule } from '@angular/common';
-        import { ExampleDirective } from './example.directive';
-
-        @NgModule({
-          imports: [CommonModule],
-          declarations: [ExampleDirective],
-          exports: [ExampleDirective],
-        })
-        export class ExampleDirectiveModule {}
-        "
-      `);
     });
   });
 });

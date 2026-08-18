@@ -2,9 +2,9 @@ import { names } from '@nx/devkit';
 import {
   cleanupProject,
   getPackageManagerCommand,
-  getRandomPort,
   getSelectedPackageManager,
   newProject,
+  reservePort,
   runCLI,
   runCommand,
   uniq,
@@ -28,10 +28,10 @@ describe('Node Esbuild Applications', () => {
   });
 
   // TODO: Re-enable this test once https://github.com/pinojs/pino/issues/2253 is resolved
-  it.skip('it should generate an app that cosumes a non-buildable ts library', () => {
+  it.skip('it should generate an app that cosumes a non-buildable ts library', async () => {
     const nodeapp = uniq('nodeapp');
     const lib = uniq('lib');
-    const port = getRandomPort();
+    const port = await reservePort();
     process.env.PORT = `${port}`;
 
     runCLI(

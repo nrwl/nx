@@ -17,6 +17,12 @@
       "enum": ["mjs", "cjs"],
       "default": "mjs",
       "x-priority": "internal"
+    },
+    "keepExistingVersions": {
+      "type": "boolean",
+      "description": "Keep the existing versions of any ESLint-related packages already declared in `package.json` instead of overwriting them. Only newly added packages are installed at the latest supported versions.",
+      "default": false,
+      "x-priority": "internal"
     }
   },
   "additionalProperties": false,

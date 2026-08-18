@@ -68,5 +68,12 @@ ruleTester.run(RULE_NAME, rule, {
              cp.spawn('echo', ['hello'], { stdio: 'inherit' });`,
       errors: [{ messageId: 'missingWindowsHide' }],
     },
+    // Member expression as args (no options) - must still report
+    {
+      code: `import { spawn } from 'child_process';
+             const config = { args: ['hello'] };
+             spawn('echo', config.args);`,
+      errors: [{ messageId: 'missingWindowsHide' }],
+    },
   ],
 });

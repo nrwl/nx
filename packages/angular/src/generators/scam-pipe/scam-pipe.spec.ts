@@ -1,7 +1,6 @@
 import {
   addProjectConfiguration,
   readNxJson,
-  updateJson,
   updateNxJson,
   writeJson,
 } from '@nx/devkit';
@@ -395,93 +394,6 @@ describe('SCAM Pipe Generator', () => {
       ).rejects.toThrowErrorMatchingInlineSnapshot(
         `"The provided directory resolved relative to the current working directory "libs/proj/src/lib/random/example" does not exist under any project root. Please make sure to navigate to a location or provide a directory that exists under a project root."`
       );
-    });
-  });
-
-  describe('compat', () => {
-    it('should generate scam pipe file with the "." type separator for versions lower than v20', async () => {
-      const tree = createTreeWithEmptyWorkspace();
-      updateJson(tree, 'package.json', (json) => {
-        json.dependencies = {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        };
-        return json;
-      });
-      addProjectConfiguration(tree, 'app1', {
-        projectType: 'application',
-        sourceRoot: 'apps/app1/src',
-        root: 'apps/app1',
-      });
-
-      await scamPipeGenerator(tree, {
-        name: 'example',
-        path: 'apps/app1/src/app/example/example',
-        inlineScam: true,
-        skipFormat: true,
-      });
-
-      expect(tree.read('apps/app1/src/app/example/example.pipe.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { Pipe, PipeTransform, NgModule } from '@angular/core';
-        import { CommonModule } from '@angular/common';
-
-        @Pipe({
-          name: 'example',
-          standalone: false
-        })
-        export class ExamplePipe implements PipeTransform {
-          transform(value: unknown, ...args: unknown[]): unknown {
-            return null;
-          }
-        }
-
-        @NgModule({
-          imports: [CommonModule],
-          declarations: [ExamplePipe],
-          exports: [ExamplePipe],
-        })
-        export class ExamplePipeModule {}
-        "
-      `);
-    });
-
-    it('should generate the module file with the "." type separator for versions lower than v20', async () => {
-      const tree = createTreeWithEmptyWorkspace();
-      updateJson(tree, 'package.json', (json) => {
-        json.dependencies = {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        };
-        return json;
-      });
-      addProjectConfiguration(tree, 'app1', {
-        projectType: 'application',
-        sourceRoot: 'apps/app1/src',
-        root: 'apps/app1',
-      });
-
-      await scamPipeGenerator(tree, {
-        name: 'example',
-        path: 'apps/app1/src/app/example/example',
-        inlineScam: false,
-        skipFormat: true,
-      });
-
-      expect(tree.read('apps/app1/src/app/example/example.module.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { NgModule } from '@angular/core';
-        import { CommonModule } from '@angular/common';
-        import { ExamplePipe } from './example.pipe';
-
-        @NgModule({
-          imports: [CommonModule],
-          declarations: [ExamplePipe],
-          exports: [ExamplePipe],
-        })
-        export class ExamplePipeModule {}
-        "
-      `);
     });
   });
 });

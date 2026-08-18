@@ -4,22 +4,19 @@
 // internal consumers and may change without semver protection. Consider it
 // the @nx/js equivalent of `@nx/devkit/internal`.
 
-// Re-exports of nx-source internals (need `no-restricted-imports` overrides).
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+// Re-exports of nx-source internals.
 export {
   forceRegisterEsmLoader,
   loadTsFile,
   registerTsProject,
   registerTsConfigPaths,
   requireWithTsconfigFallback,
-} from 'nx/src/plugins/js/utils/register';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+} from '@nx/devkit/internal';
 export {
   TargetProjectLocator,
   isBuiltinModuleImport,
-} from 'nx/src/plugins/js/project-graph/build-dependencies/target-project-locator';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-export { findProjectsNpmDependencies } from 'nx/src/plugins/js/package-json/create-package-json';
+} from '@nx/devkit/internal';
+export { findProjectsNpmDependencies } from '@nx/devkit/internal';
 
 // Raw tsconfig walkers (the other AST utils ship via the public @nx/js entry)
 export {
@@ -45,10 +42,21 @@ export {
   updateTsconfigFiles,
 } from './src/utils/typescript/ts-solution-setup';
 
-// TypeScript helpers (resolvePathsBaseUrl, extractTsConfigBase,
-// tsConfigBaseOptions, addTsLibDependencies, resolveModuleByImport — all ship
-// via the public @nx/js entry)
+// TypeScript helpers. resolvePathsBaseUrl, extractTsConfigBase,
+// tsConfigBaseOptions, addTsLibDependencies, and resolveModuleByImport ship via
+// the public @nx/js entry. getTsConfigBaseOptions is public too, but is
+// re-exported here so internal consumers can import it from @nx/js/internal.
+export { getTsConfigBaseOptions } from './src/utils/typescript/create-ts-config';
+export {
+  createTreeParseConfigHost,
+  type TreeParseConfigHost,
+} from './src/utils/typescript/ts-config';
 export { ensureTypescript } from './src/utils/typescript/ensure-typescript';
+export {
+  getRangeMinimum,
+  getTsConfigModuleResolution,
+  isTypescriptVersionAtLeast,
+} from './src/utils/is-typescript-version-at-least';
 export { getNeededCompilerOptionOverrides } from './src/utils/typescript/configuration';
 export {
   compileTypeScript,
@@ -95,6 +103,11 @@ export {
   normalizeLinterOption,
   normalizeUnitTestRunnerOption,
 } from './src/utils/generator-prompts';
+export { detectLinters } from './src/utils/linter';
+export {
+  addLintingToProject,
+  type AddLintingToProjectOptions,
+} from './src/utils/add-linting-to-project';
 export { createGlobPatternsForDependencies } from './src/utils/generate-globs';
 export { getImportPath } from './src/utils/get-import-path';
 export { stripGlobToBaseDir } from './src/utils/strip-glob-to-base-dir';

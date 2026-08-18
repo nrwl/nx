@@ -97,6 +97,8 @@ export function updateUnitTestConfig(
       '@testing-library/user-event': testingLibraryUserEventsVersion,
       '@remix-run/node': getRemixVersion(tree),
       '@remix-run/testing': getRemixVersion(tree),
-    }
+    },
+    undefined,
+    true
   );
 }

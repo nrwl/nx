@@ -6,11 +6,11 @@ import {
   output,
   ProjectConfiguration,
 } from '@nx/devkit';
-import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import {
   addReleaseConfigForNonTsSolution,
   addReleaseConfigForTsSolution,
 } from './add-release-config';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 describe('add release config', () => {
   let tree: Tree;

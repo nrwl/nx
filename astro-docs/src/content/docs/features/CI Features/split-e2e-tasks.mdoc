@@ -30,7 +30,7 @@ To use **automated task splitting**, you need to connect your workspace to Nx Cl
 npx nx@latest connect
 ```
 
-See the [connect to Nx Cloud recipe](/docs/guides/nx-cloud/setup-ci) for all the details.
+See the [connect to Nx Cloud recipe](/docs/kb/setup-ci) for all the details.
 
 ### Step 2: add the appropriate plugin
 
@@ -76,7 +76,7 @@ nx add @nx/gradle
 
 This command will register the appropriate plugin in the `plugins` array of `nx.json`.
 
-If you upgraded Nx from an older version, ensure that [inferred tasks](/docs/concepts/inferred-tasks#existing-nx-workspaces) are enabled in `nx.json`:
+If you upgraded Nx from an older version, ensure that [inferred tasks](/docs/kb/convert-to-inferred#enable-inferred-tasks-for-older-workspaces) are enabled in `nx.json`:
 
 ```json
 // nx.json
@@ -448,20 +448,20 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           filter: tree:0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 9
 
       - run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
@@ -470,4 +470,4 @@ jobs:
       - run: pnpm exec nx affected -t lint test build e2e-ci
 ```
 
-Learn more about configuring your [CI provider by following these detailed recipes](/docs/guides/nx-cloud/setup-ci).
+Learn more about configuring your [CI provider by following these detailed recipes](/docs/kb/setup-ci).

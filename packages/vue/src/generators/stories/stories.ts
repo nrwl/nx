@@ -12,6 +12,7 @@ import {
 } from '@nx/devkit';
 import { basename, join } from 'path';
 import { nxVersion } from '../../utils/versions';
+import { assertSupportedVueVersion } from '../../utils/assert-supported-vue-version';
 import { createComponentStories } from './lib/component-story';
 import picomatch = require('picomatch');
 
@@ -77,6 +78,8 @@ export async function storiesGenerator(
   host: Tree,
   schema: StorybookStoriesSchema
 ) {
+  assertSupportedVueVersion(host);
+
   const projects = getProjects(host);
   const projectConfiguration = projects.get(schema.project);
   schema.interactionTests = schema.interactionTests ?? true;

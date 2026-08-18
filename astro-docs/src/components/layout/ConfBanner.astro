@@ -1,0 +1,111 @@
+---
+import { confBanner, isConfBannerActive } from './conf-banner';
+
+const active = isConfBannerActive();
+---
+
+{
+  active && (
+    <a
+      class="conf-banner"
+      href={confBanner.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      id="conf-banner-link"
+    >
+      <span class="conf-banner__text">
+        <span class="conf-banner__brand">
+          AI <span class="conf-banner__heart">&#9829;</span> Monorepos
+        </span>
+        <span class="conf-banner__desc">Free online conference &middot; June 23</span>
+      </span>
+      <span class="conf-banner__cta">
+        Join us!
+        <svg
+          class="conf-banner__arrow"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M5 10a.75.75 0 0 1 .75-.75h6.638L9.96 7.046a.75.75 0 0 1 1.08-1.04l3.75 3.75a.75.75 0 0 1 0 1.04l-3.75 3.75a.75.75 0 1 1-1.08-1.04l2.428-2.206H5.75A.75.75 0 0 1 5 10Z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </span>
+    </a>
+  )
+}
+
+<style>
+  .conf-banner {
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline: 0;
+    z-index: calc(var(--sl-z-index-navbar) + 1);
+    height: var(--conf-banner-h, 2.5rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    padding-inline: 1rem;
+    /* Theme-aware: light strip in light mode, dark strip in dark mode. */
+    background-color: var(--sl-color-bg-nav);
+    color: var(--sl-color-gray-2);
+    font-size: 0.875rem;
+    line-height: 1.2;
+    text-decoration: none;
+    border-bottom: 1px solid var(--sl-color-hairline-shade);
+  }
+
+  .conf-banner__text {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+  }
+
+  .conf-banner__brand {
+    font-weight: 700;
+    color: var(--sl-color-gray-1);
+    white-space: nowrap;
+  }
+
+  .conf-banner__heart {
+    color: #f43f5e;
+  }
+
+  .conf-banner__desc {
+    color: var(--sl-color-gray-3);
+    white-space: nowrap;
+  }
+
+  .conf-banner__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.125rem;
+    font-weight: 600;
+    color: var(--sl-color-text-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    white-space: nowrap;
+    transition: color 0.15s ease;
+  }
+
+  .conf-banner:hover .conf-banner__cta {
+    color: var(--sl-color-accent-high);
+  }
+
+  .conf-banner__arrow {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  /* Tight viewports: drop the descriptor so the bar stays one line at 2.5rem. */
+  @media (max-width: 30rem) {
+    .conf-banner__desc {
+      display: none;
+    }
+  }
+</style>

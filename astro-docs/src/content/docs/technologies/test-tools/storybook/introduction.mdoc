@@ -1,6 +1,6 @@
 ---
-title: Storybook Plugin for Nx
-description: This is an overview page for the Storybook plugin in Nx. It explains what Storybook is and how to set it up in your Nx workspace.
+title: Nx with Storybook
+description: Use Storybook with Nx for caching, affected builds, and faster CI across your monorepo.
 sidebar:
   label: Introduction
 weight: 2
@@ -21,17 +21,12 @@ The `@nx/storybook` plugin supports the following package versions.
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
-<!-- The peerDependencies in @nx/storybook's package.json declares >=7.0.0 so that
-     users who still have Storybook 7 installed get a friendlier error from Nx
-     rather than a cryptic package-manager resolution failure. Storybook 7 is
-     no longer actively supported. -->
-
 ## Setting up Storybook
 
 ### Installation
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/storybook` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/storybook` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/kb/keep-nx-versions-in-sync).
 {% /aside %}
 
 In any Nx workspace, you can install `@nx/storybook` by running the following command:
@@ -53,9 +48,11 @@ The `@nx/storybook` plugin will create a task for any project that has a Storybo
 - `.storybook/main.mjs`
 - `.storybook/main.mts`
 
+The project directory that contains `.storybook` must also contain a `package.json` or `project.json`.
+
 ### View inferred tasks
 
-To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/concepts/mental-model#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
 ### @nx/storybook configuration
 
@@ -71,14 +68,25 @@ The `@nx/storybook/plugin` is configured in the `plugins` array in `nx.json`.
         "buildStorybookTargetName": "build-storybook",
         "serveStorybookTargetName": "storybook",
         "testStorybookTargetName": "test-storybook",
-        "staticStorybookTargetName": "static-storybook"
+        "staticStorybookTargetName": "static-storybook",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
       }
     }
   ]
 }
 ```
 
-The `builtStorybookTargetName`, `serveStorybookTargetName`, `testStorybookTargetName` and `staticStorybookTargetName` options control the names of the inferred Storybook tasks. The default names are `build-storybook`, `storybook`, `test-storybook` and `static-storybook`.
+| Option                      | Default            | Inferred behavior                                   |
+| --------------------------- | ------------------ | --------------------------------------------------- |
+| `buildStorybookTargetName`  | `build-storybook`  | Builds and caches the static Storybook output.      |
+| `serveStorybookTargetName`  | `storybook`        | Runs the Storybook development server continuously. |
+| `testStorybookTargetName`   | `test-storybook`   | Runs `test-storybook` when the project supports it. |
+| `staticStorybookTargetName` | `static-storybook` | Serves the built Storybook output continuously.     |
+| `buildDepsTargetName`       | `build-deps`       | Builds project dependencies.                        |
+| `watchDepsTargetName`       | `watch-deps`       | Watches project dependencies.                       |
+
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/storybook/plugin`.
 
 ## Using Storybook
 
@@ -230,7 +238,7 @@ export default config;
 
 ### Setting up documentation
 
-To set up documentation, you can use [Storybook Autodocs](https://storybook.js.org/docs/react/writing-docs/autodocs). For Angular, [you can use `compodoc`](/docs/technologies/test-tools/storybook/guides/angular-storybook-compodoc) to infer `argTypes`. You can read more about `argTypes` in the [official Storybook `argTypes` documentation](https://storybook.js.org/docs/angular/api/argtypes#automatic-argtype-inference).
+To set up documentation, you can use [Storybook Autodocs](https://storybook.js.org/docs/react/writing-docs/autodocs). For Angular, [you can use `compodoc`](/docs/kb/angular-storybook-compodoc) to infer `argTypes`. You can read more about `argTypes` in the [official Storybook `argTypes` documentation](https://storybook.js.org/docs/angular/api/argtypes#automatic-argtype-inference).
 
 You can read more about how to best set up documentation using Storybook for your project in the [official Storybook documentation](https://storybook.js.org/docs/react/writing-docs/introduction).
 
@@ -238,9 +246,9 @@ You can read more about how to best set up documentation using Storybook for you
 
 You can find dedicated information for React and Angular:
 
-- [Set up Storybook for Angular Projects](/docs/technologies/test-tools/storybook/guides/overview-angular)
-- [Set up Storybook for React Projects](/docs/technologies/test-tools/storybook/guides/overview-react)
-- [Set up Storybook for Vue Projects](/docs/technologies/test-tools/storybook/guides/overview-vue)
+- [Set up Storybook for Angular Projects](/docs/kb/overview-angular)
+- [Set up Storybook for React Projects](/docs/kb/overview-react)
+- [Set up Storybook for Vue Projects](/docs/kb/overview-vue)
 
 You can find all Storybook-related Nx documentation in the [Storybook guides section](/docs/technologies/test-tools/storybook/guides).
 
@@ -250,5 +258,11 @@ For more on using Storybook, see the [official Storybook documentation](https://
 
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 
-- [Upgrading Storybook guide](/docs/technologies/test-tools/storybook/guides/upgrading-storybook)
+- [Upgrading Storybook guide](/docs/kb/upgrading-storybook)
 - [Storybook 10 migration generator](/docs/technologies/test-tools/storybook/generators#migrate-10)
+
+## Set up CI
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

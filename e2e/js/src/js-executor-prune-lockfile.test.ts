@@ -54,7 +54,7 @@ describe('js:prune-lockfile executor', () => {
 
       beforeAll(() => {
         scope = newProject({
-          packages: ['@nx/node', '@nx/js'],
+          packages: ['@nx/node', '@nx/js', '@nx/eslint', '@nx/jest'],
           preset: 'ts',
           packageManager,
         });

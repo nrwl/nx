@@ -4,6 +4,7 @@ import type {
 } from '../../../config/project-graph';
 import type { ProjectConfiguration } from '../../../config/workspace-json-project-json';
 import type { HashInputs } from '../../../native';
+import { _resetContextForTesting } from '../../../hasher/check-task-files';
 
 export let graph: ProjectGraph = {
   nodes: {},
@@ -112,6 +113,9 @@ performance.measure = jest.fn();
 const originalCwd = process.cwd;
 
 export function setupBeforeEach() {
+  // Reset the module-level context cache in check-task-files so each test
+  // loads a fresh project graph and HashPlanInspector instance.
+  _resetContextForTesting();
   jest.spyOn(console, 'log').mockImplementation(() => {});
   jest.spyOn(process, 'exit').mockImplementation((() => {}) as any);
   performance.mark('init-local');

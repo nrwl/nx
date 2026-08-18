@@ -15,7 +15,9 @@ describe('Federate Module', () => {
   let proj: string;
 
   beforeAll(() => {
-    proj = newProject({ packages: ['@nx/react', '@nx/js'] });
+    proj = newProject({
+      packages: ['@nx/react', '@nx/js', '@nx/webpack', '@nx/cypress'],
+    });
   });
 
   afterAll(() => cleanupProject());
@@ -109,10 +111,13 @@ describe('Federate Module', () => {
     expect(buildOutput).toContain('Successfully ran target build');
     expect(remoteOutput).toContain('Successfully ran target build');
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const hostE2eResults = await runCommandUntil(
         `e2e ${host}-e2e --no-watch --verbose`,
-        (output) => output.includes('All specs passed!')
+        (output) => output.includes('All specs passed!'),
+        // a module federation cypress e2e (build host + remotes, serve,
+        // run a browser) cannot finish in runCommandUntil's 30s default
+        { timeout: 120_000 }
       );
       await killProcessAndPorts(
         hostE2eResults.pid,
@@ -211,10 +216,13 @@ describe('Federate Module', () => {
     expect(buildOutput).toContain('Successfully ran target build');
     expect(remoteOutput).toContain('Successfully ran target build');
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const hostE2eResults = await runCommandUntil(
         `e2e ${host}-e2e --no-watch --verbose`,
-        (output) => output.includes('All specs passed!')
+        (output) => output.includes('All specs passed!'),
+        // a module federation cypress e2e (build host + remotes, serve,
+        // run a browser) cannot finish in runCommandUntil's 30s default
+        { timeout: 120_000 }
       );
       await killProcessAndPorts(
         hostE2eResults.pid,

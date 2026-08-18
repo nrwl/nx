@@ -4,29 +4,29 @@
   "extends": ["@nx/workspace"],
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init",
-      "schema": "./src/generators/init/schema.json",
+      "factory": "./dist/src/generators/init/init",
+      "schema": "./dist/src/generators/init/schema.json",
       "description": "Initialize the `@nx/node` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
     },
     "application": {
-      "factory": "./src/generators/application/application#applicationGeneratorInternal",
-      "schema": "./src/generators/application/schema.json",
+      "factory": "./dist/src/generators/application/application#applicationGeneratorInternal",
+      "schema": "./dist/src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
       "description": "Create a node application."
     },
     "library": {
-      "factory": "./src/generators/library/library#libraryGeneratorInternal",
-      "schema": "./src/generators/library/schema.json",
+      "factory": "./dist/src/generators/library/library#libraryGeneratorInternal",
+      "schema": "./dist/src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",
       "description": "Create a node library."
     },
     "setup-docker": {
-      "factory": "./src/generators/setup-docker/setup-docker",
-      "schema": "./src/generators/setup-docker/schema.json",
+      "factory": "./dist/src/generators/setup-docker/setup-docker",
+      "schema": "./dist/src/generators/setup-docker/schema.json",
       "description": "Set up Docker configuration for a project.",
       "hidden": false
     }

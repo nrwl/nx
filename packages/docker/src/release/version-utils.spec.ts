@@ -78,6 +78,49 @@ describe('handleDockerVersion {versionActionsVersion} integration', () => {
     expect(newVersion).toBe('my-app-1.2.3');
   });
 
+  it('skips a project when the selected scheme requires a missing version actions version', async () => {
+    const finalConfigForProject: any = {
+      dockerOptions: {
+        repositoryName: 'repo',
+        registryUrl: undefined,
+        versionSchemes: { prod: '{versionActionsVersion}' },
+      },
+    };
+
+    const result = await handleDockerVersion(
+      process.cwd(),
+      mockProjectNode,
+      finalConfigForProject,
+      'prod'
+    );
+
+    expect(result).toEqual({
+      newVersion: null,
+      logs: [
+        'Skipped my-app, because no new version was resolved for this project.',
+      ],
+    });
+  });
+
+  it('still versions a project when its scheme does not require a version actions version', async () => {
+    const finalConfigForProject: any = {
+      dockerOptions: {
+        repositoryName: 'repo',
+        registryUrl: undefined,
+        versionSchemes: { prod: '{projectName}-latest' },
+      },
+    };
+
+    const { newVersion } = await handleDockerVersion(
+      process.cwd(),
+      mockProjectNode,
+      finalConfigForProject,
+      'prod'
+    );
+
+    expect(newVersion).toBe('my-app-latest');
+  });
+
   it('prompts for version scheme when multiple are available', async () => {
     const finalConfigForProject: any = {
       dockerOptions: {
@@ -113,6 +156,39 @@ describe('handleDockerVersion {versionActionsVersion} integration', () => {
       })
     );
     expect(newVersion).toBe('my-app-0.0.0');
+  });
+
+  it("surfaces only the focused scheme's pattern via the footer", async () => {
+    const finalConfigForProject: any = {
+      dockerOptions: {
+        repositoryName: 'repo',
+        registryUrl: undefined,
+        versionSchemes: {
+          prod: '{projectName}-{versionActionsVersion}',
+          dev: '{projectName}-0.0.0',
+        },
+      },
+    };
+    jest.mocked(prompt).mockResolvedValueOnce({ versionScheme: 'dev' });
+
+    await handleDockerVersion(
+      process.cwd(),
+      mockProjectNode,
+      finalConfigForProject,
+      undefined,
+      undefined,
+      versionActionsVersion
+    );
+
+    const call = jest.mocked(prompt).mock.calls[0][0] as any;
+    const styles = { muted: (s: string) => s };
+    const prodChoice = call.choices.find((c: any) => c.name === 'prod');
+    expect(call.footer.call({ focused: prodChoice, styles })).toContain(
+      prodChoice.description
+    );
+    expect(
+      call.footer.call({ focused: { description: undefined }, styles })
+    ).toBe('');
   });
 
   it('falls back to env NX_DOCKER_IMAGE_REF tag if provided (extracting version)', async () => {

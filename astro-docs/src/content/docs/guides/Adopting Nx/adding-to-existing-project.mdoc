@@ -294,14 +294,14 @@ from the example above to run with Nx would look something like this:
 
 Now if you run `npm run test` or `nx test` twice, the results will be retrieved from the cache. The `inputs` used in
 this example are as cautious as possible, so you can significantly improve the value of the cache
-by [customizing Nx Inputs](/docs/guides/tasks--caching/configure-inputs) for each task.
+by [customizing Nx Inputs](/docs/kb/configure-inputs) for each task.
 
 ## Fast CI ⚡
 
 This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
 - Nx reduces wasted time in CI with the [`affected` command](/docs/features/ci-features/affected).
-- Nx Replay's [remote caching](/docs/features/ci-features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
+- [Remote caching](/docs/features/ci-features/remote-cache) reuses task artifacts across CI runs when the task inputs match.
 - Nx Agents [efficiently distribute tasks across machines](/docs/concepts/ci-concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
 - Nx Atomizer [automatically splits](/docs/features/ci-features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/docs/features/ci-features/flaky-tasks).
 
@@ -357,7 +357,7 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           filter: tree:0
@@ -367,9 +367,9 @@ jobs:
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this
       - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
       - run: npm ci
       - uses: nrwl/nx-set-shas@v5
@@ -395,13 +395,13 @@ The `See all runs` link goes to a page with the progress and results of tasks th
 
 ![Run details](../../../../assets/guides/adopting-nx/nx-cloud-run-details.avif)
 
-For more information about how Nx can improve your CI pipeline, check out our [CI setup guides](/docs/guides/nx-cloud/setup-ci).
+For more information about how Nx can improve your CI pipeline, check out our [CI setup guides](/docs/kb/setup-ci).
 
 ## Learn more
 
 {% cardgrid %}
 
-{% linkcard title="Customizing Inputs and Named Inputs" description="Learn more about how to fine-tune caching with custom inputs" href="/docs/guides/tasks--caching/configure-inputs" /%}
+{% linkcard title="Customizing Inputs and Named Inputs" description="Learn more about how to fine-tune caching with custom inputs" href="/docs/kb/configure-inputs" /%}
 
 {% linkcard title="Cache Task Results" description="Learn more about how caching works" href="/docs/features/cache-task-results" /%}
 

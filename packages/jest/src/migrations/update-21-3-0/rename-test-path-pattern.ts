@@ -1,4 +1,7 @@
-import { forEachExecutorOptions } from '@nx/devkit/internal';
+import {
+  forEachExecutorOptions,
+  updateTargetDefault,
+} from '@nx/devkit/internal';
 import {
   formatFiles,
   readNxJson,
@@ -27,51 +30,21 @@ export default async function (tree: Tree) {
     }
   );
 
-  // update options from nx.json target defaults
+  // update options from nx.json target defaults. Migration order isn't
+  // guaranteed, so a default may already be in the filtered array shape;
+  // `updateTargetDefault` walks both the object and array value forms.
   const nxJson = readNxJson(tree);
-  if (!nxJson.targetDefaults) {
-    return;
-  }
-
-  if (Array.isArray(nxJson.targetDefaults)) {
-    for (const entry of nxJson.targetDefaults) {
-      if (
-        entry.target !== '@nx/jest:jest' &&
-        entry.executor !== '@nx/jest:jest'
-      ) {
-        continue;
+  if (nxJson?.targetDefaults) {
+    updateTargetDefault(nxJson, { executor: '@nx/jest:jest' }, (config) => {
+      if (config.options) {
+        renameTestPathPattern(config.options);
       }
-
-      if (entry.options) {
-        renameTestPathPattern(entry.options);
-      }
-
-      Object.values(entry.configurations ?? {}).forEach((config) => {
-        renameTestPathPattern(config);
+      Object.values(config.configurations ?? {}).forEach((c) => {
+        renameTestPathPattern(c);
       });
-    }
-  } else {
-    for (const [targetOrExecutor, targetConfig] of Object.entries(
-      nxJson.targetDefaults
-    )) {
-      if (
-        targetOrExecutor !== '@nx/jest:jest' &&
-        targetConfig.executor !== '@nx/jest:jest'
-      ) {
-        continue;
-      }
-
-      if (targetConfig.options) {
-        renameTestPathPattern(targetConfig.options);
-      }
-
-      Object.values(targetConfig.configurations ?? {}).forEach((config) => {
-        renameTestPathPattern(config);
-      });
-    }
+    });
+    updateNxJson(tree, nxJson);
   }
-
-  updateNxJson(tree, nxJson);
 
   await formatFiles(tree);
 }

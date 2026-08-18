@@ -15,7 +15,9 @@ import { stripIndents } from 'nx/src/utils/strip-indents';
 describe('React Rspack Module Federation Misc - Convert To Rspack', () => {
   beforeAll(() => {
     process.env.NX_ADD_PLUGINS = 'false';
-    newProject({ packages: ['@nx/react', '@nx/rspack'] });
+    newProject({
+      packages: ['@nx/react', '@nx/rspack', '@nx/webpack', '@nx/playwright'],
+    });
   });
   afterAll(() => {
     cleanupProject();
@@ -59,7 +61,7 @@ describe('React Rspack Module Federation Misc - Convert To Rspack', () => {
       `
     );
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const e2eResultsSwc = await runCommandUntil(
         `e2e ${shell}-e2e`,
         (output) => output.includes('Successfully ran target e2e for project'),

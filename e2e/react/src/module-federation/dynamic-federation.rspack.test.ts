@@ -17,7 +17,7 @@ import { runCLI } from './utils';
 
 describe('Dynamic Module Federation', () => {
   beforeAll(() => {
-    newProject({ packages: ['@nx/react'] });
+    newProject({ packages: ['@nx/react', '@nx/rspack', '@nx/cypress'] });
   });
 
   afterAll(() => cleanupProject());
@@ -93,7 +93,7 @@ describe('Dynamic Module Federation', () => {
     expect(buildOutput).toContain('Successfully ran target build');
     expect(remoteOutput).toContain('Successfully ran target build');
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       // Serve Remote since it is dynamic and won't be started with the host
       const remoteProcess = await runCommandUntil(
         `serve ${remote} --verbose`,

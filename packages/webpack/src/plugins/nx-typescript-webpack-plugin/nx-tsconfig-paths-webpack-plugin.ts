@@ -1,8 +1,8 @@
 import * as path from 'path';
-import {
+import type {
   Compiler,
-  type Configuration,
-  type WebpackOptionsNormalized,
+  Configuration,
+  WebpackOptionsNormalized,
 } from 'webpack';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { workspaceRoot } from '@nx/devkit';

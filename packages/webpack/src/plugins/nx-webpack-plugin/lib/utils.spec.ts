@@ -151,4 +151,42 @@ describe('createAllowlistFromExports', () => {
     } as any);
     expect(result).toEqual(['@test/lib', '@test/lib/valid']);
   });
+
+  it('should handle wildcard exports with fallback array targets', () => {
+    const result = createAllowlistFromExports('@test/lib', {
+      './*': ['./src/*.ts', './src/*/index.ts'],
+    });
+    expect(result).toHaveLength(2);
+    expect(result[0]).toBe('@test/lib');
+    expect(result[1]).toBeInstanceOf(RegExp);
+
+    const regex = result[1] as RegExp;
+    expect(regex.test('@test/lib/utils')).toBe(true);
+    expect(regex.test('@test/lib/filters/all-exceptions.filter')).toBe(true);
+    expect(regex.test('@test/lib')).toBe(false);
+  });
+
+  it('should handle exact subpath exports with fallback array targets', () => {
+    const result = createAllowlistFromExports('@test/lib', {
+      './utils': ['./src/utils.ts', './src/utils/index.ts'],
+    });
+    expect(result).toEqual(['@test/lib', '@test/lib/utils']);
+  });
+
+  it('should handle fallback arrays nested in conditional exports', () => {
+    const result = createAllowlistFromExports('@test/lib', {
+      './utils': {
+        development: ['./src/utils.ts', './src/utils/index.ts'],
+      },
+    });
+    expect(result).toEqual(['@test/lib', '@test/lib/utils']);
+  });
+
+  it('should skip export paths with empty fallback arrays', () => {
+    const result = createAllowlistFromExports('@test/lib', {
+      './utils': [],
+      './valid': './src/valid.ts',
+    });
+    expect(result).toEqual(['@test/lib', '@test/lib/valid']);
+  });
 });

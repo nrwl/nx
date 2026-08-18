@@ -1,6 +1,6 @@
-import { type CreateNodesContextV2 } from '@nx/devkit';
+import { type CreateNodesContext } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 
 // Jest 29 does not support dynamic import() unless --experimental-vm-modules is set.
 // For now, we will mock the loadConfigFile function. We should remove this once we upgrade to Jest 30.
@@ -26,7 +26,7 @@ jest.mock('@nx/js/internal', () => ({
 
 describe('@nx/rollup/plugin', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContextV2;
+  let context: CreateNodesContext;
   let cwd = process.cwd();
   let originalCacheProjectGraph = process.env.NX_CACHE_PROJECT_GRAPH;
 

@@ -84,10 +84,10 @@ Outputs:
   - {workspaceRoot}/dist/apps/<APP>
 Options:
   cwd: "apps/<APP>"
-  args:
-    [
-      "--node-env=production"
-    ]
+  env:
+    {
+      "NODE_ENV": "production"
+    }
 Configurations: production
 
 "

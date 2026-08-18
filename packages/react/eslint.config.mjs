@@ -3,6 +3,7 @@ import * as jsoncEslintParser from 'jsonc-eslint-parser';
 
 export default [
   ...baseConfig,
+  { ignores: ['dist'] },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
@@ -56,6 +57,7 @@ export default [
             'prettier',
             'typescript',
             'react',
+            'react-dom',
             '@nx/cypress',
             '@nx/playwright',
             '@nx/jest',
@@ -66,7 +68,6 @@ export default [
             '@nx/vite',
             '@nx/vitest',
             '@nx/webpack',
-            '@babel/preset-react',
             '@module-federation/node',
             '@phenomnomnominal/tsquery',
             '@pmmmwh/react-refresh-webpack-plugin',

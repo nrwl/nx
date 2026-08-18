@@ -340,6 +340,14 @@ export class DbCache {
         );
         return null;
       }
+      // The cache request runs in Rust (reqwest), which honors
+      // NODE_TLS_REJECT_UNAUTHORIZED but bypasses Node's TLS stack, so Node's own
+      // insecure-TLS warning never fires for it. Re-emit Node's warning here.
+      if (process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0') {
+        process.emitWarning(
+          "Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification."
+        );
+      }
       return new HttpRemoteCache();
     }
     return null;

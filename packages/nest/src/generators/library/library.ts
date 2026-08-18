@@ -9,6 +9,8 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
+import { assertSupportedNestJsVersion } from '../../utils/assert-supported-nestjs-version';
+import { assertVitestSupported } from '../../utils/assert-vitest-supported';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import initGenerator from '../init/init';
 import {
@@ -37,7 +39,13 @@ export async function libraryGeneratorInternal(
   tree: Tree,
   rawOptions: LibraryGeneratorOptions
 ): Promise<GeneratorCallback> {
+  assertSupportedNestJsVersion(tree);
+
   const options = await normalizeOptions(tree, rawOptions);
+
+  if (options.unitTestRunner === 'vitest') {
+    assertVitestSupported(tree);
+  }
 
   const jsLibraryTask = await jsLibraryGenerator(
     tree,

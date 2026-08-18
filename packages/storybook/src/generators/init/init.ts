@@ -13,12 +13,9 @@ import {
 } from '@nx/devkit';
 import { gte } from 'semver';
 import { createNodesV2 } from '../../plugins/plugin';
-import {
-  getInstalledStorybookVersion,
-  getStorybookVersionToInstall,
-  storybookMajorVersion,
-} from '../../utils/utilities';
-import { nxVersion, storybookVersion } from '../../utils/versions';
+import { getStorybookVersionToInstall } from '../../utils/utilities';
+import { nxVersion } from '../../utils/versions';
+import { assertSupportedStorybookVersion } from '../../utils/assert-supported-storybook-version';
 import { Schema } from './schema';
 import { updateGitignore } from './lib/update-gitignore';
 
@@ -39,7 +36,7 @@ function checkDependenciesInstalled(
     {},
     devDependencies,
     undefined,
-    schema.keepExistingVersions
+    schema.keepExistingVersions ?? true
   );
 }
 
@@ -83,6 +80,8 @@ export function initGenerator(tree: Tree, schema: Schema) {
 }
 
 export async function initGeneratorInternal(tree: Tree, schema: Schema) {
+  assertSupportedStorybookVersion(tree);
+
   const nxJson = readNxJson(tree);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&

@@ -1,11 +1,6 @@
 import { interpolateName } from 'loader-utils';
 import * as path from 'path';
-import {
-  sources,
-  EntryPlugin,
-  type Compiler,
-  type Compilation,
-} from '@rspack/core';
+import type { sources, EntryPlugin, Compiler, Compilation } from '@rspack/core';
 
 export interface ScriptsRspackPluginOptions {
   name: string;
@@ -51,9 +46,10 @@ export class ScriptsRspackPlugin {
     compiler: Compiler,
     compilation: Compilation,
     { filename, source }: ScriptOutput,
+    EntryPluginCtor: typeof EntryPlugin,
     cached = false
   ) {
-    new EntryPlugin(compiler.context, this.options.name).apply(compiler);
+    new EntryPluginCtor(compiler.context, this.options.name).apply(compiler);
 
     compilation.assets[filename] = source;
   }
@@ -68,6 +64,9 @@ export class ScriptsRspackPlugin {
       .map((script) => path.resolve(this.options.basePath || '', script));
 
     hook(compiler, (compilation: Compilation, callback) => {
+      const rspackSources = compiler.rspack.sources;
+      const EntryPluginCtor = compiler.rspack.EntryPlugin;
+
       const sourceGetters = scripts.map((fullPath) => {
         return new Promise<sources.Source>((resolve, reject) => {
           compilation.inputFileSystem.readFile(
@@ -88,9 +87,12 @@ export class ScriptsRspackPlugin {
                 if (this.options.basePath) {
                   adjustedPath = path.relative(this.options.basePath, fullPath);
                 }
-                source = new sources.OriginalSource(content, adjustedPath);
+                source = new rspackSources.OriginalSource(
+                  content,
+                  adjustedPath
+                );
               } else {
-                source = new sources.RawSource(content);
+                source = new rspackSources.RawSource(content);
               }
 
               resolve(source);
@@ -101,13 +103,13 @@ export class ScriptsRspackPlugin {
 
       Promise.all(sourceGetters)
         .then((_sources) => {
-          const concatSource = new sources.ConcatSource();
+          const concatSource = new rspackSources.ConcatSource();
           _sources.forEach((source) => {
             concatSource.add(source);
             concatSource.add('\n;');
           });
 
-          const combinedSource = new sources.CachedSource(concatSource);
+          const combinedSource = new rspackSources.CachedSource(concatSource);
           const filename = interpolateName(
             { resourcePath: 'scripts.js' },
             this.options.filename as string,
@@ -115,7 +117,7 @@ export class ScriptsRspackPlugin {
           );
 
           const output = { filename, source: combinedSource };
-          this._insertOutput(compiler, compilation, output);
+          this._insertOutput(compiler, compilation, output, EntryPluginCtor);
           this._cachedOutput = output;
           addDependencies(compilation, scripts);
 

@@ -1,8 +1,8 @@
 {
   "executors": {
     "esbuild": {
-      "implementation": "./src/executors/esbuild/esbuild.impl",
-      "schema": "./src/executors/esbuild/schema.json",
+      "implementation": "./dist/src/executors/esbuild/esbuild.impl",
+      "schema": "./dist/src/executors/esbuild/schema.json",
       "description": "Bundle a package using EsBuild."
     }
   }

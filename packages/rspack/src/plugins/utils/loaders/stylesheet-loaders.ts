@@ -1,7 +1,7 @@
 import * as path from 'path';
 import autoprefixer = require('autoprefixer');
 import postcssImports = require('postcss-import');
-import { CssExtractRspackPlugin } from '@rspack/core';
+import type { CssExtractRspackPlugin } from '@rspack/core';
 
 import { getCSSModuleLocalIdent } from '../get-css-module-local-ident';
 import { getOutputHashFormat } from '../hash-format';
@@ -15,13 +15,14 @@ interface PostcssOptions {
 
 export function getCommonLoadersForCssModules(
   options: any,
-  includePaths: string[]
+  includePaths: string[],
+  cssExtractLoader: string
 ) {
   // load component css as raw strings
   return [
     {
       loader: options.extractCss
-        ? CssExtractRspackPlugin.loader
+        ? cssExtractLoader
         : require.resolve('style-loader'),
     },
     {
@@ -30,6 +31,11 @@ export function getCommonLoadersForCssModules(
         modules: {
           mode: 'local',
           getLocalIdent: getCSSModuleLocalIdent,
+          // css-loader 7 defaults namedExport to true, and to camel-case-only
+          // locals when it is off. Generated components import the default
+          // export and reference class names as authored, so pin both.
+          namedExport: false,
+          exportLocalsConvention: 'asIs',
         },
         importLoaders: 1,
       },
@@ -49,12 +55,13 @@ export function getCommonLoadersForCssModules(
 
 export function getCommonLoadersForGlobalCss(
   options: any,
-  includePaths: string[]
+  includePaths: string[],
+  cssExtractLoader: string
 ) {
   return [
     {
       loader: options.extractCss
-        ? CssExtractRspackPlugin.loader
+        ? cssExtractLoader
         : require.resolve('style-loader'),
     },
     { loader: require.resolve('css-loader'), options: { url: false } },
@@ -72,12 +79,13 @@ export function getCommonLoadersForGlobalCss(
 
 export function getCommonLoadersForGlobalStyle(
   options: any,
-  includePaths: string[]
+  includePaths: string[],
+  cssExtractLoader: string
 ) {
   return [
     {
       loader: options.extractCss
-        ? CssExtractRspackPlugin.loader
+        ? cssExtractLoader
         : require.resolve('style-loader'),
       options: { esModule: true },
     },

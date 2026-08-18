@@ -5,8 +5,8 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/rollup/README.md"],
-      "command": "node ./scripts/copy-readme.js rollup",
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js rollup packages/rollup/readme-template.md packages/rollup/README.md",
       "inputs": ["copyReadme"]
     }
   }

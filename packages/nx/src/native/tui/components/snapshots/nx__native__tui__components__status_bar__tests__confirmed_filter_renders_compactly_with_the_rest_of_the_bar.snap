@@ -1,0 +1,5 @@
+---
+source: packages/nx/src/native/tui/components/status_bar.rs
+expression: terminal.backend()
+---
+" 0/3    /build  4 hidden (/ to edit)                    pin output: 1 or 2  show output: <enter>  filter: /  navigate: ↑ ↓  quit: q  help: ?"

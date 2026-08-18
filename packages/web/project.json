@@ -5,8 +5,8 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/web/README.md"],
-      "command": "node ./scripts/copy-readme.js web",
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js web packages/web/readme-template.md packages/web/README.md",
       "inputs": ["copyReadme"]
     }
   }

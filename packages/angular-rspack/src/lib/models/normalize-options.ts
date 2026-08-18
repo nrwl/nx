@@ -80,9 +80,9 @@ export function validateSsr(ssr: AngularRspackPluginOptions['ssr']) {
       throw new Error(
         'The "ssr" option should have an "entry" property. Please check the documentation.'
       );
-    } else if (ssr.experimentalPlatform === 'neutral') {
+    } else if ((ssr.platform ?? ssr.experimentalPlatform) === 'neutral') {
       console.warn(
-        'The "ssr.experimentalPlatform" option is not currently supported. Node will be used as the platform.'
+        'The "neutral" value for the "ssr.platform" option is not currently supported. Node will be used as the platform.'
       );
     }
 }
@@ -99,7 +99,7 @@ export async function normalizeOptions(
     : typeof ssr === 'object'
       ? {
           entry: ssr.entry,
-          experimentalPlatform: 'node' as const, // @TODO: Add support for neutral platform
+          platform: 'node' as const, // @TODO: Add support for neutral platform
         }
       : ssr;
 

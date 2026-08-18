@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   getProjects,
@@ -17,13 +17,27 @@ const baseLibraryConfig = {
   directory: 'my-lib',
   compiler: 'tsc' as const,
   addPlugin: true,
+  // Stated rather than inferred: these specs assert ESLint output, and
+  // `detectLinters` comes back empty for a workspace with no linter installed.
+  linter: 'eslint' as const,
 };
 
 describe('lib', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   describe('not nested', () => {
@@ -126,42 +140,7 @@ describe('lib', () => {
       expect(tree.exists(`my-lib/jest.config.cts`)).toBeTruthy();
       expect(tree.exists('my-lib/src/index.ts')).toBeTruthy();
 
-      const eslintrc = readJson(tree, 'my-lib/.eslintrc.json');
-      expect(eslintrc).toMatchInlineSnapshot(`
-        {
-          "extends": [
-            "../.eslintrc.json",
-          ],
-          "ignorePatterns": [
-            "!**/*",
-          ],
-          "overrides": [
-            {
-              "files": [
-                "*.ts",
-                "*.tsx",
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": {},
-            },
-            {
-              "files": [
-                "*.ts",
-                "*.tsx",
-              ],
-              "rules": {},
-            },
-            {
-              "files": [
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": {},
-            },
-          ],
-        }
-      `);
+      expect(tree.exists('my-lib/eslint.config.mjs')).toBeTruthy();
     });
   });
 
@@ -198,6 +177,7 @@ describe('lib', () => {
 
     it('should generate files', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         ...baseLibraryConfig,
         directory: 'my-dir/my-lib',
       });
@@ -273,6 +253,7 @@ describe('lib', () => {
 
     it('should generate filenames that do not contain directory with --simpleModuleName', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         ...baseLibraryConfig,
         directory: 'my-dir/my-lib',
         simpleModuleName: true,
@@ -282,7 +263,7 @@ describe('lib', () => {
       expect(tree.exists('my-dir/my-lib/src/lib/my-lib.ts')).toBeTruthy();
       expect(tree.exists('my-dir/my-lib/src/lib/my-lib.spec.ts')).toBeTruthy();
       expect(tree.exists('my-dir/my-lib/src/index.ts')).toBeTruthy();
-      expect(tree.exists(`my-dir/my-lib/.eslintrc.json`)).toBeTruthy();
+      expect(tree.exists(`my-dir/my-lib/eslint.config.mjs`)).toBeTruthy();
     });
   });
 
@@ -331,6 +312,33 @@ describe('lib', () => {
           path: './tsconfig.lib.json',
         },
       ]);
+    });
+  });
+
+  describe('--unit-test-runner vitest', () => {
+    it('should generate a vitest configuration', async () => {
+      await libraryGenerator(tree, {
+        ...baseLibraryConfig,
+        unitTestRunner: 'vitest',
+      });
+
+      expect(tree.exists('my-lib/vitest.config.mts')).toBeTruthy();
+      expect(tree.exists('my-lib/jest.config.cts')).toBeFalsy();
+      expect(
+        readJson(tree, 'my-lib/tsconfig.spec.json').compilerOptions.types
+      ).toContain('vitest/globals');
+      expect(tree.read('my-lib/vitest.config.mts', 'utf-8')).toContain(
+        `environment: 'node'`
+      );
+    });
+
+    it('should keep the generated spec file', async () => {
+      await libraryGenerator(tree, {
+        ...baseLibraryConfig,
+        unitTestRunner: 'vitest',
+      });
+
+      expect(tree.exists('my-lib/src/lib/my-lib.spec.ts')).toBeTruthy();
     });
   });
 
@@ -456,6 +464,16 @@ describe('lib', () => {
       `);
     });
   });
+
+  describe('eslintrc (legacy)', () => {
+    it('should generate .eslintrc.json when ESLINT_USE_FLAT_CONFIG=false', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+      await libraryGenerator(tree, baseLibraryConfig);
+      const eslintrc = readJson(tree, 'my-lib/.eslintrc.json');
+      expect(eslintrc.extends).toEqual(['../.eslintrc.json']);
+    });
+  });
+
   describe('--js flag', () => {
     it('should generate js files instead of ts files', async () => {
       await libraryGenerator(tree, {
@@ -544,6 +562,7 @@ describe('lib', () => {
 
     it('should add project references when using TS solution', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         directory: 'mylib',
         unitTestRunner: 'jest',
         addPlugin: true,
@@ -659,6 +678,7 @@ describe('lib', () => {
 
     it('should create a correct package.json for buildable libraries', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         directory: 'mylib',
         unitTestRunner: 'jest',
         addPlugin: true,
@@ -809,6 +829,7 @@ describe('lib', () => {
 
     it('should generate project.json if useProjectJson is true', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         directory: 'mylib',
         unitTestRunner: 'jest',
         addPlugin: true,

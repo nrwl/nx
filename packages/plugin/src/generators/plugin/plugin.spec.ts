@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   getProjects,
@@ -10,9 +10,9 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { PackageJson } from 'nx/src/utils/package-json';
 import { pluginGenerator } from './plugin';
 import { Schema } from './schema';
+import { PackageJson } from '@nx/devkit/internal';
 
 const getSchema: (overrides?: Partial<Schema>) => Schema = (
   overrides = {}
@@ -340,6 +340,22 @@ describe('NxPlugin Plugin Generator', () => {
       await pluginGenerator(tree, getSchema({ e2eTestRunner: 'none' }));
       const projects = getProjects(tree);
       expect(projects.has('my-plugin-e2e')).toBe(false);
+    });
+
+    it('should generate e2e project with jest', async () => {
+      await pluginGenerator(tree, getSchema({ e2eTestRunner: 'jest' }));
+      const projects = getProjects(tree);
+      expect(projects.has('my-plugin-e2e')).toBe(true);
+      const e2eProject = projects.get('my-plugin-e2e');
+      expect(e2eProject.targets.e2e.executor).toBe('@nx/jest:jest');
+    });
+
+    it('should generate e2e project with vitest', async () => {
+      await pluginGenerator(tree, getSchema({ e2eTestRunner: 'vitest' }));
+      const projects = getProjects(tree);
+      expect(projects.has('my-plugin-e2e')).toBe(true);
+      const e2eProject = projects.get('my-plugin-e2e');
+      expect(e2eProject.targets.e2e.executor).toBe('@nx/vitest:test');
     });
   });
 

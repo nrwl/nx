@@ -10,7 +10,7 @@
       "executor": "nx:noop"
     },
     "publish": {
-      "outputs": ["{projectRoot}/bin/Release/publish"]
+      "outputs": ["{projectRoot}/bin/Release/publish", "{projectRoot}/obj"]
     }
   }
 }

@@ -4,6 +4,7 @@ import {
   addBuildTargetDefaults,
   logShowProjectCommand,
   E2EWebServerDetails,
+  type PackageJson,
 } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
@@ -31,9 +32,11 @@ import {
   initGenerator as jsInitGenerator,
 } from '@nx/js';
 import {
+  addLintingToProject,
   swcCoreVersion,
   getNpmScope,
   addProjectToTsSolutionWorkspace,
+  normalizeLinterOption,
   isUsingTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/internal';
@@ -48,7 +51,6 @@ import { webInitGenerator } from '../init/init';
 import { Schema } from './schema';
 import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
 import staticServeConfiguration from '../static-serve/static-serve-configuration';
-import type { PackageJson } from 'nx/src/utils/package-json';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -323,11 +325,29 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
   createApplicationFiles(host, options);
 
+  let enableTypedLinting = false;
+  if (options.linter !== 'eslint') {
+    tasks.push(
+      await addLintingToProject(host, {
+        linter: options.linter,
+        project: options.projectName,
+        unitTestRunner: options.unitTestRunner,
+        addPlugin: options.addPlugin,
+      })
+    );
+  }
   if (options.linter === 'eslint') {
     const { lintProjectGenerator } = ensurePackage<typeof import('@nx/eslint')>(
       '@nx/eslint',
       nxVersion
     );
+    // CommonJS `require` instead of dynamic ESM `import`: `ensurePackage`
+    // exposes the temp install via `Module._initPaths`, which ESM ignores.
+    const {
+      isTypedLintingEnabled,
+      addIgnoresToLintConfig,
+    }: typeof import('@nx/eslint/internal') = require('@nx/eslint/internal');
+    enableTypedLinting = isTypedLintingEnabled(options);
     const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,
       project: options.projectName,
@@ -336,14 +356,13 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       ],
       unitTestRunner: options.unitTestRunner,
       skipFormat: true,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting,
       addPlugin: options.addPlugin,
     });
     tasks.push(lintTask);
 
     // Add out-tsc ignore pattern when using TS solution setup
     if (options.isUsingTsSolutionConfig) {
-      const { addIgnoresToLintConfig } = await import('@nx/eslint/internal');
       addIgnoresToLintConfig(host, options.appProjectRoot, ['**/out-tsc']);
     }
   }
@@ -390,7 +409,11 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       nxVersion
     );
     ensurePackage('@nx/vitest', nxVersion);
-    const { configurationGenerator } = await import('@nx/vitest/generators');
+    // CommonJS `require` instead of dynamic ESM `import`: `ensurePackage`
+    // exposes the temp install via `Module._initPaths`, which ESM ignores.
+    const {
+      configurationGenerator,
+    }: typeof import('@nx/vitest/generators') = require('@nx/vitest/generators');
     const vitestTask = await configurationGenerator(host, {
       uiFramework: 'none',
       project: options.projectName,
@@ -522,6 +545,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       baseUrl: e2eWebServerInfo.e2eWebServerAddress,
       directory: 'src',
       skipFormat: true,
+      enableTypedLinting,
       webServerCommands: {
         default: e2eWebServerInfo.e2eWebServerCommand,
         production: e2eWebServerInfo.e2eCiWebServerCommand,
@@ -572,7 +596,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       directory: 'src',
       js: false,
       linter: options.linter,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting,
       webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
       webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
       addPlugin: options.addPlugin,
@@ -588,7 +612,9 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     const jestTask = await configurationGenerator(host, {
       project: options.projectName,
       skipSerializers: true,
-      setupFile: 'web-components',
+      // No setup file: the `web-components` one only ever held the
+      // `document-register-element` polyfill, which is long gone.
+      setupFile: 'none',
       compiler: options.compiler,
       skipFormat: true,
       addPlugin: options.addPlugin,
@@ -685,7 +711,7 @@ async function normalizeOptions(
     : [];
 
   options.style = options.style || 'css';
-  options.linter = options.linter || 'eslint';
+  options.linter = await normalizeLinterOption(host, options.linter);
   options.unitTestRunner = options.unitTestRunner || 'jest';
   options.e2eTestRunner = options.e2eTestRunner || 'playwright';
 

@@ -1,10 +1,12 @@
 import {
+  acknowledgeBuildScripts,
   addPlugin as _addPlugin,
   upsertTargetDefault,
 } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
+  detectPackageManager,
   formatFiles,
   GeneratorCallback,
   ProjectGraph,
@@ -50,13 +52,15 @@ function findExistingE2eDefault(
   td: TargetDefaults | undefined
 ): Partial<TargetConfiguration> | undefined {
   if (!td) return undefined;
-  if (Array.isArray(td)) {
-    return td.find(
-      (e) =>
-        e.target === 'e2e' && e.projects === undefined && e.plugin === undefined
-    );
+  const value = td['e2e'];
+  if (value === undefined) return undefined;
+  if (Array.isArray(value)) {
+    const found = value.find((e) => e.filter === undefined);
+    if (!found) return undefined;
+    const { filter: _f, ...rest } = found;
+    return rest;
   }
-  return td['e2e'];
+  return value;
 }
 
 function updateDependencies(tree: Tree, options: Schema) {
@@ -68,6 +72,12 @@ function updateDependencies(tree: Tree, options: Schema) {
   };
   if (!getInstalledCypressVersion(tree)) {
     devDependencies.cypress = cypressVersion;
+    // The user explicitly asked for cypress, and its postinstall downloads
+    // the binary it needs to run at all, so enable it — npm and yarn run it
+    // unconditionally. Transitive deps stay denied.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      cypress: true,
+    });
   }
 
   tasks.push(

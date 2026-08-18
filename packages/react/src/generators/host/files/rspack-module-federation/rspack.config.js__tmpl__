@@ -6,6 +6,8 @@ const { join } = require('path');
 const config = require('./module-federation.config');
 
 module.exports = {
+  // rspack-cli dev mode defaults this on; it breaks module federation.
+  lazyCompilation: false,
   output: {
     path: join(__dirname, '<%= rspackPluginOptions.outputPath %>'),
     publicPath: 'auto'

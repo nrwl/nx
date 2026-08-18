@@ -1,4 +1,5 @@
-import { <% if(changeDetection !== 'Default') { %>ChangeDetectionStrategy, <% }%>Component<% if(!!viewEncapsulation) { %>, ViewEncapsulation<% }%> } from '@angular/core';
+<%_ const changeDetectionDefault = angularMajorVersion >= 22 ? 'OnPush' : 'Default'; _%>
+import { <% if(changeDetection !== changeDetectionDefault) { %>ChangeDetectionStrategy, <% }%>Component<% if(!!viewEncapsulation) { %>, ViewEncapsulation<% }%> } from '@angular/core';
 
 @Component({<% if(!skipSelector) {%>
   selector: '<%= selector %>',<%}%><% if (!standalone) { %>
@@ -12,7 +13,7 @@ import { <% if(changeDetection !== 'Default') { %>ChangeDetectionStrategy, <% }%
     }
   <% } %>`<% } else if (style !== 'none') { %>,
   styleUrl: './<%= fileName %>.<%= style %>'<% } %><% if(!!viewEncapsulation) { %>,
-  encapsulation: ViewEncapsulation.<%= viewEncapsulation %><% } if (changeDetection !== 'Default') { %>,
+  encapsulation: ViewEncapsulation.<%= viewEncapsulation %><% } if (changeDetection !== changeDetectionDefault) { %>,
   changeDetection: ChangeDetectionStrategy.<%= changeDetection %><% } %>
 })
 export <% if (exportDefault) {%>default <%}%>class <%= symbolName %> {}

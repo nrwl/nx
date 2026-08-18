@@ -1,9 +1,5 @@
 import * as fs from 'fs';
-import {
-  type Compiler,
-  sources,
-  type RspackPluginInstance,
-} from '@rspack/core';
+import type { Compiler, RspackPluginInstance } from '@rspack/core';
 import {
   createLockFile,
   createPackageJson,
@@ -50,12 +46,13 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
 
   apply(compiler: Compiler): void {
     compiler.hooks.thisCompilation.tap(pluginName, (compilation) => {
-      compilation.hooks.processAssets.tap(
+      compilation.hooks.processAssets.tapPromise(
         {
           name: pluginName,
           stage: compiler.rspack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
         },
-        () => {
+        async () => {
+          const sources = compiler.rspack.sources;
           const helperDependencies = getHelperDependenciesFromProjectGraph(
             this.options.root,
             this.options.projectName,

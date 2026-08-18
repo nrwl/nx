@@ -12,13 +12,15 @@ import {
   updateTsConfigsToJs,
 } from '@nx/devkit';
 import { configurationGenerator } from '@nx/jest';
-import { initGenerator as jsInitGenerator, tsConfigBaseOptions } from '@nx/js';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
   addProjectToTsSolutionWorkspace,
+  getTsConfigBaseOptions,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
   sortPackageJsonFields,
 } from '@nx/js/internal';
+import { assertSupportedFrameworkVersion } from '../../utils/assert-supported-framework-version';
 import { nxVersion } from '../../utils/versions';
 import { e2eProjectGenerator } from '../e2e-project/e2e-project';
 import { initGenerator } from '../init/init';
@@ -43,7 +45,7 @@ function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
     if (options.rootProject) {
       return {
         compilerOptions: {
-          ...tsConfigBaseOptions,
+          ...getTsConfigBaseOptions(tree),
           ...json.compilerOptions,
           esModuleInterop: true,
         },
@@ -72,6 +74,8 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 }
 
 export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
+  assertSupportedFrameworkVersion(tree, schema.framework);
+
   const tasks: GeneratorCallback[] = [];
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(
@@ -139,9 +143,14 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     });
     tasks.push(webpackInitTask);
     if (!options.skipPackageJson) {
-      const { ensureDependencies } = await import(
-        '@nx/webpack/src/utils/ensure-dependencies'
-      );
+      // Use CommonJS `require` rather than a dynamic ESM `import`:
+      // `ensurePackage` makes the on-demand-installed package available via
+      // `Module._initPaths`, which `require()` honors but ESM resolution does
+      // not. Under nodenext, a dynamic `import()` is preserved as a true ESM
+      // dynamic import, so it can't see the temp install.
+      const {
+        ensureDependencies,
+      }: typeof import('@nx/webpack/internal') = require('@nx/webpack/internal');
       tasks.push(
         ensureDependencies(tree, {
           uiFramework: options.isNest ? 'none' : 'react',
@@ -161,7 +170,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
 
   updateTsConfigOptions(tree, options);
 
-  if (options.linter === 'eslint') {
+  if (options.linter !== 'none') {
     const lintTask = await addLintingToApplication(tree, options);
     tasks.push(lintTask);
   }
@@ -189,6 +198,27 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       },
     };
     updateProjectConfiguration(tree, options.name, projectConfig);
+  } else if (options.unitTestRunner === 'vitest') {
+    ensurePackage('@nx/vitest', nxVersion);
+    // CommonJS `require` instead of dynamic ESM `import`: `ensurePackage`
+    // exposes the temp install via `Module._initPaths`, which ESM ignores.
+    const {
+      configurationGenerator,
+    }: typeof import('@nx/vitest/generators') = require('@nx/vitest/generators');
+    const vitestTask = await configurationGenerator(tree, {
+      project: options.name,
+      uiFramework: 'none',
+      coverageProvider: 'v8',
+      testEnvironment: 'node',
+      runtimeTsconfigFileName: 'tsconfig.app.json',
+      // Only the fastify template ships a spec, so the other frameworks would
+      // otherwise fail `nx test` on a freshly generated app.
+      passWithNoTests: true,
+      addPlugin: options.addPlugin,
+      skipPackageJson: options.skipPackageJson,
+      skipFormat: true,
+    });
+    tasks.push(vitestTask);
   } else {
     // No need for default spec file if unit testing is not setup.
     tree.delete(

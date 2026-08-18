@@ -19,6 +19,7 @@ import { hasPlugin } from '../../utils/has-plugin';
 import { warnWebpackExecutorGenerating } from '../../utils/deprecation';
 import { TS_SOLUTION_SETUP_TSCONFIG_INPUT } from '@nx/js/internal';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
+import { assertSupportedWebpackVersion } from '../../utils/versions';
 
 export function configurationGenerator(
   tree: Tree,
@@ -31,6 +32,8 @@ export async function configurationGeneratorInternal(
   tree: Tree,
   options: ConfigurationGeneratorSchema
 ) {
+  assertSupportedWebpackVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
   const nxJson = readNxJson(tree);
   const addPluginDefault =

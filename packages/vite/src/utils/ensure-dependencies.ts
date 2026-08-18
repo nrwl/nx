@@ -60,5 +60,11 @@ export function ensureDependencies(
     // 'none' requires no declaration dependencies.
   }
 
-  return addDependenciesToPackageJson(host, {}, devDependencies);
+  return addDependenciesToPackageJson(
+    host,
+    {},
+    devDependencies,
+    undefined,
+    true
+  );
 }

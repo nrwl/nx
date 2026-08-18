@@ -1,4 +1,4 @@
-import { gt, lt, minVersion } from 'semver';
+import { gt, lt, minVersion, validRange } from 'semver';
 import type { PackageJsonUpdateForPackage as PackageUpdate } from '../../config/misc-interfaces';
 import type { PackageJson } from '../../utils/package-json';
 import { normalizeVersion } from './version-utils';
@@ -40,7 +40,8 @@ export function filterDowngradedUpdates(
     if (!specifier) {
       continue;
     }
-    const floor = minVersion(specifier);
+    // Skip specifiers that aren't semver ranges (workspace:/npm:/git/file).
+    const floor = validRange(specifier) ? minVersion(specifier) : null;
     if (floor && lt(floor.version, resolvedNorm)) {
       result[name] = update;
     }

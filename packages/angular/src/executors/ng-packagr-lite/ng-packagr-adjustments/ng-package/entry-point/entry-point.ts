@@ -1,11 +1,10 @@
-import type {
-  DestinationFiles,
+import {
   NgEntryPoint as NgEntryPointBase,
+  type DestinationFiles,
 } from 'ng-packagr/src/lib/ng-package/entry-point/entry-point';
 import type { NgPackageConfig } from 'ng-packagr/src/ng-package.schema';
-import { dirname, join, relative } from 'node:path';
-import { getNgPackagrVersionInfo } from '../../../../utilities/ng-packagr/ng-packagr-version';
-import { importNgPackagrPath } from '../../../../utilities/ng-packagr/package-imports';
+import { ensureUnixPath } from 'ng-packagr/src/lib/utils/path';
+import { join, relative } from 'node:path';
 
 export type NgEntryPointType = NgEntryPointBase & {
   primaryDestinationPath?: string;
@@ -17,41 +16,6 @@ export function createNgEntryPoint(
   basePath: string,
   secondaryData?: Record<string, any>
 ): NgEntryPointType {
-  const { major: ngPackagrMajorVersion } = getNgPackagrVersionInfo();
-
-  const { NgEntryPoint: NgEntryPointBase } = importNgPackagrPath<
-    typeof import('ng-packagr/src/lib/ng-package/entry-point/entry-point')
-  >(
-    'ng-packagr/src/lib/ng-package/entry-point/entry-point',
-    ngPackagrMajorVersion
-  );
-
-  if (ngPackagrMajorVersion < 20) {
-    class NgEntryPoint extends NgEntryPointBase {
-      /**
-       * Point the FESM2022 files to the ESM2022 files.
-       */
-      public override get destinationFiles(): DestinationFiles {
-        const result = super.destinationFiles;
-        result.fesm2022 = result.esm2022;
-        result.fesm2022Dir = dirname(result.esm2022);
-
-        return result;
-      }
-    }
-
-    return new NgEntryPoint(
-      packageJson,
-      ngPackageJson,
-      basePath,
-      secondaryData
-    );
-  }
-
-  const { ensureUnixPath } = importNgPackagrPath<
-    typeof import('ng-packagr/src/lib/utils/path')
-  >('ng-packagr/src/lib/utils/path', ngPackagrMajorVersion);
-
   class NgEntryPoint extends NgEntryPointBase {
     constructor(
       public readonly packageJson: Record<string, any>,

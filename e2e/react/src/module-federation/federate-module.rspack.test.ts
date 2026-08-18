@@ -15,7 +15,9 @@ describe('Federate Module', () => {
   let proj: string;
 
   beforeAll(() => {
-    proj = newProject({ packages: ['@nx/react', '@nx/js'] });
+    proj = newProject({
+      packages: ['@nx/react', '@nx/js', '@nx/rspack', '@nx/cypress'],
+    });
   });
 
   afterAll(() => cleanupProject());
@@ -109,7 +111,7 @@ describe('Federate Module', () => {
     expect(buildOutput).toContain('Successfully ran target build');
     expect(remoteOutput).toContain('Successfully ran target build');
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const hostE2eResults = await runCommandUntil(
         `e2e ${host}-e2e --verbose`,
         (output) => output.includes('All specs passed!')
@@ -211,7 +213,7 @@ describe('Federate Module', () => {
     expect(buildOutput).toContain('Successfully ran target build');
     expect(remoteOutput).toContain('Successfully ran target build');
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const hostE2eResults = await runCommandUntil(
         `e2e ${host}-e2e --verbose`,
         (output) => output.includes('All specs passed!')

@@ -9,7 +9,7 @@ import {
   updateFile,
   updateJson,
 } from '@nx/e2e-utils';
-import { rmdirSync } from 'fs';
+import { rmSync } from 'fs';
 import { join } from 'path';
 import {
   createSimpleRepo,
@@ -39,7 +39,7 @@ describe('Nx Import - AI Agent Mode', () => {
     }
 
     try {
-      rmdirSync(tempImportE2ERoot);
+      rmSync(tempImportE2ERoot, { recursive: true, force: true });
     } catch {}
   });
 

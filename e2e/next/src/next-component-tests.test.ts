@@ -13,76 +13,71 @@ describe('NextJs Component Testing', () => {
   beforeAll(() => {
     newProject({
       name: uniq('next-ct'),
-      packages: ['@nx/next'],
+      packages: ['@nx/next', '@nx/cypress'],
     });
   });
 
   afterAll(() => cleanupProject());
 
   // TODO(nicholas): this is erroring out due to useState error when serving the app in CI. It passes for me locally.
-  xit('should test a NextJs app', () => {
+  xit('should test a NextJs app', async () => {
     const appName = uniq('next-app');
     createAppWithCt(appName);
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       expect(runCLI(`component-test ${appName}`)).toContain(
         'All specs passed!'
       );
     }
   });
 
-  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
-  it.skip('should test a NextJs app using babel compiler', () => {
+  it('should test a NextJs app using babel compiler', async () => {
     const appName = uniq('next-app');
     createAppWithCt(appName);
     //  add bable compiler to app
     addBabelSupport(`apps/${appName}`);
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       expect(runCLI(`component-test ${appName}`)).toContain(
         'All specs passed!'
       );
     }
   });
 
-  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
-  it.skip('should test a NextJs lib using babel compiler', async () => {
+  it('should test a NextJs lib using babel compiler', async () => {
     const libName = uniq('next-lib');
     createLibWithCt(libName, false);
     //  add bable compiler to lib
     addBabelSupport(`libs/${libName}`);
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       expect(runCLI(`component-test ${libName}`)).toContain(
         'All specs passed!'
       );
     }
   });
 
-  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
-  it.skip('should test a NextJs lib', async () => {
+  it('should test a NextJs lib', async () => {
     const libName = uniq('next-lib');
     createLibWithCt(libName, false);
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       expect(runCLI(`component-test ${libName}`)).toContain(
         'All specs passed!'
       );
     }
   });
 
-  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
-  it.skip('should test a NextJs buildable lib', async () => {
+  it('should test a NextJs buildable lib', async () => {
     const buildableLibName = uniq('next-buildable-lib');
     createLibWithCt(buildableLibName, true);
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       expect(runCLI(`component-test ${buildableLibName}`)).toContain(
         'All specs passed!'
       );
     }
   });
 
-  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
-  it.skip('should test a NextJs server component that uses router', async () => {
+  it('should test a NextJs server component that uses router', async () => {
     const lib = uniq('next-lib');
     createLibWithCtCypress(lib);
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       expect(runCLI(`component-test ${lib}`)).toContain('All specs passed!');
     }
   }, 600_000);

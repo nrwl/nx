@@ -8,42 +8,42 @@
       "executor": "nx:run-commands",
       "dependsOn": ["build-base"],
       "options": {
-        "command": "node dist/update-repos/src/setup-repos.js"
+        "command": "node tools/update-repos/dist/src/setup-repos.js"
       }
     },
     "update-nx-repo": {
       "executor": "nx:run-commands",
       "dependsOn": ["build-base"],
       "options": {
-        "command": "node dist/update-repos/src/update-repo.js nx"
+        "command": "node tools/update-repos/dist/src/update-repo.js nx"
       }
     },
     "update-ocean-repo": {
       "executor": "nx:run-commands",
       "dependsOn": ["build-base"],
       "options": {
-        "command": "node dist/update-repos/src/update-repo.js ocean"
+        "command": "node tools/update-repos/dist/src/update-repo.js ocean"
       }
     },
     "update-nx-examples-repo": {
       "executor": "nx:run-commands",
       "dependsOn": ["build-base"],
       "options": {
-        "command": "node dist/update-repos/src/update-repo.js nx-examples"
+        "command": "node tools/update-repos/dist/src/update-repo.js nx-examples"
       }
     },
     "update-nx-console-repo": {
       "executor": "nx:run-commands",
       "dependsOn": ["build-base"],
       "options": {
-        "command": "node dist/update-repos/src/update-repo.js nx-console"
+        "command": "node tools/update-repos/dist/src/update-repo.js nx-console"
       }
     },
     "update-nx-labs-repo": {
       "executor": "nx:run-commands",
       "dependsOn": ["build-base"],
       "options": {
-        "command": "node dist/update-repos/src/update-repo.js nx-labs"
+        "command": "node tools/update-repos/dist/src/update-repo.js nx-labs"
       }
     },
     "update-repos": {

@@ -15,7 +15,7 @@ import {
 describe('Build React applications and libraries with Webpack', () => {
   beforeAll(() => {
     newProject({
-      packages: ['@nx/react'],
+      packages: ['@nx/react', '@nx/webpack', '@nx/playwright'],
     });
   });
 
@@ -34,7 +34,7 @@ describe('Build React applications and libraries with Webpack', () => {
     const webpackConfig = readFile(`apps/${appName}/webpack.config.js`);
     expect(webpackConfig).toContain(`port: ${customPort}`);
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const e2eResults = runCLI(`e2e ${appName}-e2e`, {
         verbose: true,
       });

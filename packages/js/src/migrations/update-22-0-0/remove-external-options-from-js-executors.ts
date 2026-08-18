@@ -3,6 +3,8 @@ import {
   formatFiles,
   readNxJson,
   readProjectConfiguration,
+  type TargetConfiguration,
+  type TargetDefaultArrayEntry,
   updateNxJson,
   updateProjectConfiguration,
   type Tree,
@@ -50,7 +52,7 @@ export default async function (tree: Tree) {
     return;
   }
 
-  const cleanEntry = (entry: Record<string, any>) => {
+  const cleanEntry = (entry: TargetConfiguration) => {
     if (entry.options) {
       delete entry.options.external;
       delete entry.options.externalBuildTargets;
@@ -58,62 +60,45 @@ export default async function (tree: Tree) {
         delete entry.options;
       }
     }
-    Object.entries(entry.configurations ?? {}).forEach(([, config]: any) => {
+    Object.values(entry.configurations ?? {}).forEach((config) => {
       delete config.external;
       delete config.externalBuildTargets;
     });
   };
 
-  if (Array.isArray(nxJson.targetDefaults)) {
-    const remaining = [];
-    for (const entry of nxJson.targetDefaults) {
-      const matches =
-        executors.includes(entry.executor) || executors.includes(entry.target);
-      if (!matches) {
-        remaining.push(entry);
-        continue;
+  const targetDefaults = nxJson.targetDefaults;
+  for (const key of Object.keys(targetDefaults)) {
+    const value = targetDefaults[key];
+    const entries: TargetDefaultArrayEntry[] = Array.isArray(value)
+      ? value
+      : [value];
+
+    const usesExecutor = (entry: TargetDefaultArrayEntry) =>
+      executors.includes(key) ||
+      executors.includes(entry.executor) ||
+      executors.includes(entry.filter?.executor);
+
+    const kept = entries.filter((entry) => {
+      if (usesExecutor(entry)) {
+        cleanEntry(entry as TargetConfiguration);
       }
-      cleanEntry(entry as any);
-      const meaningfulKeys = Object.keys(entry).filter(
-        (k) =>
-          k !== 'target' &&
-          k !== 'executor' &&
-          k !== 'projects' &&
-          k !== 'plugin'
-      );
-      if (meaningfulKeys.length === 0) continue;
-      remaining.push(entry);
-    }
-    if (remaining.length === 0) {
-      delete nxJson.targetDefaults;
+      // Drop entries left with nothing but their `filter`/`executor` locator.
+      return Object.keys(entry).some((k) => k !== 'filter' && k !== 'executor');
+    });
+
+    if (kept.length === 0) {
+      delete targetDefaults[key];
+    } else if (kept.length === 1 && kept[0].filter === undefined) {
+      // A lone unfiltered entry is stored as the plain object form (which
+      // omits `filter`).
+      const { filter: _filter, ...config } = kept[0];
+      targetDefaults[key] = config;
     } else {
-      nxJson.targetDefaults = remaining;
+      targetDefaults[key] = kept;
     }
-  } else {
-    for (const [targetOrExecutor, targetConfig] of Object.entries(
-      nxJson.targetDefaults
-    )) {
-      if (
-        !executors.includes(targetOrExecutor) &&
-        !executors.includes(targetConfig.executor)
-      ) {
-        continue;
-      }
-
-      cleanEntry(targetConfig as any);
-
-      if (
-        !Object.keys(targetConfig).length ||
-        (Object.keys(targetConfig).length === 1 &&
-          Object.keys(targetConfig)[0] === 'executor')
-      ) {
-        delete nxJson.targetDefaults[targetOrExecutor];
-      }
-
-      if (!Object.keys(nxJson.targetDefaults).length) {
-        delete nxJson.targetDefaults;
-      }
-    }
+  }
+  if (Object.keys(targetDefaults).length === 0) {
+    delete nxJson.targetDefaults;
   }
 
   updateNxJson(tree, nxJson);

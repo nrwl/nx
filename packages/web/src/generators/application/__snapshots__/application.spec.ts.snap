@@ -239,7 +239,7 @@ export default defineConfig({
 
 exports[`app setup web app with --bundler=vite should setup vite configuration 1`] = `null`;
 
-exports[`app should setup eslint 1`] = `
+exports[`app should setup eslint (eslintrc) 1`] = `
 "{
   "extends": ["../.eslintrc.json"],
   "ignorePatterns": ["!**/*"],

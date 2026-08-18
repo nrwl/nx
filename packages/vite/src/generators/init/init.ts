@@ -14,6 +14,7 @@ import { createNodesV2 } from '../../plugins/plugin';
 import { InitGeneratorSchema } from './schema';
 import { checkDependenciesInstalled, moveToDevDependencies } from './lib/utils';
 import { ignoreViteTempFiles } from '../../utils/ignore-vite-temp-files';
+import { assertSupportedViteVersion } from '../../utils/assert-supported-vite-version';
 
 export function updateNxJsonSettings(tree: Tree) {
   const nxJson = readNxJson(tree);
@@ -40,6 +41,8 @@ export async function initGeneratorInternal(
   tree: Tree,
   schema: InitGeneratorSchema
 ) {
+  assertSupportedViteVersion(tree);
+
   const nxJson = readNxJson(tree);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&
