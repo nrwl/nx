@@ -23,8 +23,8 @@ The code under review is reached ONLY through the `sandbox` CLI, run from the re
 
 ```bash
 .claude/tools/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
-.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir]
-.claude/tools/sandbox find <SANDBOX> <glob> [subdir]
+.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
+.claude/tools/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
 ```
 
 Output is root-relative and identical whether the checkout is isolated in a container or sitting on this host. You cannot tell which, and must not try to find out. Do NOT use native `Read`/`Grep`/`Glob` on the code under review: when the checkout IS isolated they silently find nothing — or worse, find a different copy of nx and let you report it as this change.
@@ -93,7 +93,7 @@ When in doubt whether a source is trusted, trace where it enters the process. "C
 
 4. **Trace every candidate end-to-end — including the assignment.** For each suspect, establish the full chain: origin (which untrusted source) → _how it is read/assigned into a variable_ → transformations (any sanitization on the way?) → sink (what damage). The read/assignment step is not a safe no-op — it is a sink for the shell primitives above — so check it, not just the final use. Read the actual sanitization code — do not assume a function named `sanitize`/`normalize` is sufficient; check it against the attack (e.g. does the path check run after resolving symlinks?). When you confirm one sink, sweep the change for sibling occurrences of the same class before you finish — a fix at one sink often leaves the same class open one hop upstream or in a parallel branch.
 
-5. **Compare against the base when unsure.** Pre-existing vulnerable patterns the PR merely moves or repeats are advisory context, not findings against this PR (note them in one line if serious). New-in-diff is your beat.
+5. **Compare against the base when unsure.** Pre-existing vulnerable patterns the PR merely moves or repeats are not findings against this PR — report each under `**Pre-existing:**` so the maintainer can file a follow-up. New-in-diff is your beat, but a real vulnerability that predates the diff is exactly the kind of thing that must not evaporate because the PR that surfaced it wasn't its cause.
 
 ## Calibration
 
@@ -130,6 +130,10 @@ When in doubt between `SECURITY_SOUND` and `SECURITY_CONCERN`, endorse — unfou
 **Findings:** <for non-SOUND verdicts, one block per finding:>
 
 - **<file:line>** — <sink class; the origin → sink chain hop by hop; the attack scenario; the concrete fix>
+
+**Pre-existing:** <one line per defect that reproduces unchanged at base; "none" if 0>
+
+- **<file:line>** — <defect>. Present at base <path>:<line>.
 
 **Trust-boundary summary:** <one sentence: which untrusted sources this PR newly touches, or "none — all inputs trusted workspace data">
 ```

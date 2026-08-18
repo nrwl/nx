@@ -290,8 +290,8 @@ function cmdStart(argv) {
       `mode=${sb.mode} isolation=${sb.isolation} exec=${sb.exec}\n` +
       `Read source ONLY through this CLI:\n` +
       `  .claude/tools/sandbox read ${id} <path> [--range a,b] [--ref <sha>]\n` +
-      `  .claude/tools/sandbox grep ${id} <pattern> [subdir]\n` +
-      `  .claude/tools/sandbox find ${id} <glob>\n` +
+      `  .claude/tools/sandbox grep ${id} <pattern> [subdir] [--ref <sha>]\n` +
+      `  .claude/tools/sandbox find ${id} <glob> [subdir] [--ref <sha>]\n` +
       (sb.exec !== 'none'
         ? `  .claude/tools/sandbox exec ${id} -- <cmd>` +
           (sb.exec === 'screened' ? '   (obvious writes are rejected)' : '') +
@@ -359,26 +359,78 @@ function relOut(stdout) {
 }
 
 function cmdGrep(argv) {
-  const [id, pattern, subdir] = argv;
-  if (!id || !pattern) die('usage: sandbox grep <id> <pattern> [subdir]');
+  const { positional, opts } = parseArgs(argv, { ref: 'string' });
+  const [id, pattern, subdir] = positional;
+  if (!id || !pattern)
+    die('usage: sandbox grep <id> <pattern> [subdir] [--ref <sha>]');
   const sb = getSandbox(id);
   const where = relInRoot(sb.root, subdir || '.');
-  const r = execRaw(sb, ['grep', '-rn', '--', pattern, where], {
-    cwd: sb.root,
-  });
-  process.stdout.write(relOut(r.stdout));
+
+  const r = opts.ref
+    ? gitRawIn(sb, [
+        'grep',
+        '-n',
+        '-e',
+        pattern,
+        resolveRef(sb, opts.ref),
+        '--',
+        where,
+      ])
+    : execRaw(sb, ['grep', '-rn', '--', pattern, where], { cwd: sb.root });
+
+  // `git grep <ref>` prefixes every hit with `<ref>:`; strip it so a base search
+  // and a working-tree search are indistinguishable in shape.
+  const prefix = opts.ref ? `${resolveRef(sb, opts.ref)}:` : '';
+  const stdout = prefix
+    ? (r.stdout || '')
+        .split('\n')
+        .map((l) => (l.startsWith(prefix) ? l.slice(prefix.length) : l))
+        .join('\n')
+    : r.stdout;
+
+  process.stdout.write(relOut(stdout));
   // grep exits 1 on "no matches", which is not an error for a search verb.
   process.exit(r.status === 0 || r.status === 1 ? 0 : r.status);
 }
 
 function cmdFind(argv) {
-  const [id, glob, subdir] = argv;
-  if (!id || !glob) die('usage: sandbox find <id> <glob> [subdir]');
+  const { positional, opts } = parseArgs(argv, { ref: 'string' });
+  const [id, glob, subdir] = positional;
+  if (!id || !glob)
+    die('usage: sandbox find <id> <glob> [subdir] [--ref <sha>]');
   const sb = getSandbox(id);
   const where = relInRoot(sb.root, subdir || '.');
+
+  if (opts.ref) {
+    // ls-tree lists the ref's tree; match the basename so the glob means what
+    // it means for `find -name`.
+    const r = gitRawIn(sb, [
+      'ls-tree',
+      '-r',
+      '--name-only',
+      resolveRef(sb, opts.ref),
+      '--',
+      where,
+    ]);
+    const re = globToRegExp(glob);
+    const hits = readOut(r)
+      .split('\n')
+      .filter((p) => p && re.test(path.posix.basename(p)));
+    process.stdout.write(hits.length ? hits.join('\n') + '\n' : '');
+    return;
+  }
+
   const r = execRaw(sb, ['find', where, '-name', glob], { cwd: sb.root });
   process.stdout.write(relOut(r.stdout));
   process.exit(r.status || 0);
+}
+
+/** `find -name` glob semantics: `*` and `?` match within a single name component. */
+function globToRegExp(glob) {
+  const body = glob
+    .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+    .replace(/[*?]/g, (c) => (c === '*' ? '.*' : '.'));
+  return new RegExp(`^${body}$`);
 }
 
 // ---------------------------------------------------------------- exec screen
@@ -1079,16 +1131,46 @@ function nowIso() {
   return new Date().toISOString();
 }
 
-function parseFlags(argv, spec) {
-  const out = {};
+/**
+ * Split argv into positionals and flags in one pass. The verbs that take an
+ * optional trailing positional need this: parsing flags separately let
+ * `grep <id> <pat> --ref base` bind `--ref` as the subdir and drop `base`,
+ * so the search silently ran against the working tree instead of the ref.
+ * An unknown flag is fatal for the same reason — a silently ignored `--ref`
+ * returns HEAD content under a base-shaped command.
+ */
+function parseArgs(argv, spec) {
+  const positional = [];
+  const opts = {};
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (!a.startsWith('-')) continue;
+    if (!a.startsWith('-')) {
+      positional.push(a);
+      continue;
+    }
     const key = a.replace(/^--?/, '');
-    if (!(key in spec)) continue;
-    out[key] = spec[key] === 'boolean' ? true : argv[++i];
+    if (!(key in spec)) die(`unknown flag '${a}'`);
+    opts[key] = spec[key] === 'boolean' ? true : argv[++i];
   }
-  return out;
+  return { positional, opts };
+}
+
+function parseFlags(argv, spec) {
+  return parseArgs(argv, spec).opts;
+}
+
+/** `--ref base` is an alias for the base the sandbox was started with. */
+function resolveRef(sb, ref) {
+  const r = ref === 'base' ? sb.baseRef : ref;
+  if (!r) die('this sandbox was not started with a --base ref');
+  return r;
+}
+
+/** Like gitIn, but hands back the raw result so search verbs can tolerate "no matches". */
+function gitRawIn(sb, args) {
+  return sb.mode === 'local'
+    ? run('git', ['-C', sb.root, ...args])
+    : execRaw(sb, ['git', '-C', sb.root, ...args]);
 }
 
 // ---------------------------------------------------------------- main
@@ -1098,8 +1180,8 @@ const USAGE = `sandbox — uniform access to a checkout, isolated or local
   start  --local <path> [--allow-exec]         register a host dir; exec=screened unless --allow-exec
   start  --image <img> [--checkout <url> --ref <r> [--base <r>]]
   read   <id> <path> [--range a,b] [--ref <sha>] [-n]
-  grep   <id> <pattern> [subdir]
-  find   <id> <glob> [subdir]
+  grep   <id> <pattern> [subdir] [--ref <sha>]
+  find   <id> <glob> [subdir] [--ref <sha>]
   exec   <id> [--base] -- <cmd...>             --base runs base-side (installs it on first use)
   install <id> [--base]                        idempotent; head is the caller's to do up front
   view   <id> [--exec screened|none]           second id onto the same checkout, narrowed

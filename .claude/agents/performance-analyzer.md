@@ -23,8 +23,8 @@ The code under review is reached ONLY through the `sandbox` CLI, run from the re
 
 ```bash
 .claude/tools/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
-.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir]
-.claude/tools/sandbox find <SANDBOX> <glob> [subdir]
+.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
+.claude/tools/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
 ```
 
 Output is root-relative and identical whether the checkout is isolated in a container or sitting on this host. You cannot tell which, and must not try to find out. Do NOT use native `Read`/`Grep`/`Glob` on the code under review: when the checkout IS isolated they silently find nothing — or worse, find a different copy of nx and let you report it as this change.
@@ -76,7 +76,7 @@ This applies to an endorsement exactly as it applies to a finding, and matters m
 
 6. **Ground every suspect.** For each candidate finding, confirm the call frequency by reading callers (Grep for the function name; check whether it's invoked per-file, per-project, per-task, or once). Estimate the scale factor in a large workspace (e.g. "runs once per project per hash → 5,000× per command in a big monorepo"). A finding without a call-frequency argument is a hunch — drop it.
 
-7. **Compare against the base when unsure.** If it's unclear whether a cost is new, read the same code at the base revision (`sandbox read <SANDBOX> <path> --ref base`). Pre-existing cost the PR merely relocates is not a finding.
+7. **Compare against the base when unsure.** If it's unclear whether a cost is new, read the same code at the base revision (`sandbox read <SANDBOX> <path> --ref base`). Pre-existing cost the PR merely relocates is not a finding — report it under `**Pre-existing:**` so the maintainer can file a follow-up rather than losing it.
 
 ## Calibration
 
@@ -113,6 +113,10 @@ When in doubt between `PERFORMANCE_SOUND` and `PERFORMANCE_CONCERN`, endorse —
 **Findings:** <for non-SOUND verdicts, one block per finding:>
 
 - **<file:line>** — <the cost, the call-frequency/scale argument, and the concrete cheaper shape>
+
+**Pre-existing:** <one line per defect that reproduces unchanged at base; "none" if 0>
+
+- **<file:line>** — <defect>. Present at base <path>:<line>.
 
 **CPU/memory footprint:** <one sentence: net effect on CPU and memory>
 

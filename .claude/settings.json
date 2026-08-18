@@ -31,6 +31,11 @@
   "env": {
     "BASH_MAX_TIMEOUT_MS": "1800000"
   },
+  "sandbox": {
+    "filesystem": {
+      "allowWrite": ["~/.nx-pr-reviews", "~/.nx-sandboxes"]
+    }
+  },
   "extraKnownMarketplaces": {
     "nx-claude-plugins": {
       "source": {
@@ -41,7 +46,6 @@
     }
   },
   "enabledPlugins": {
-    "nx@nx-claude-plugins": true,
-    "pr-review-toolkit@claude-plugins-official": true
+    "nx@nx-claude-plugins": true
   }
 }
