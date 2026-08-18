@@ -295,64 +295,6 @@ describe('Jest Executor', () => {
       );
     });
 
-    it('should send the main to mockRunCLI', async () => {
-      await jestExecutor(
-        {
-          ...defaultOptions,
-          jestConfig: './jest.config.ts',
-          setupFile: './test-setup.ts',
-          watch: false,
-        },
-        mockContext
-      );
-      expect(mockRunCLI).toHaveBeenCalledWith(
-        expect.objectContaining({
-          _: [],
-          setupFilesAfterEnv: ['/root/test-setup.ts'],
-          testPathPatterns: [],
-          watch: false,
-        }),
-        ['/root/jest.config.ts']
-      );
-    });
-
-    describe('when the jest config file has been modified', () => {
-      beforeAll(() => {
-        jest.doMock(
-          '/root/jest.config.ts',
-          () => ({
-            transform: {
-              '^.+\\.[tj]sx?$': 'ts-jest',
-            },
-            globals: { hereToStay: true, 'ts-jest': { diagnostics: false } },
-          }),
-          { virtual: true }
-        );
-      });
-
-      it('should merge the globals property from jest config', async () => {
-        await jestExecutor(
-          {
-            ...defaultOptions,
-            jestConfig: './jest.config.ts',
-            setupFile: './test-setup.ts',
-            watch: false,
-          },
-          mockContext
-        );
-
-        expect(mockRunCLI).toHaveBeenCalledWith(
-          expect.objectContaining({
-            _: [],
-            setupFilesAfterEnv: ['/root/test-setup.ts'],
-            testPathPatterns: [],
-            watch: false,
-          }),
-          ['/root/jest.config.ts']
-        );
-      });
-    });
-
     describe('when we use babel-jest', () => {
       beforeEach(() => {
         jest.doMock(

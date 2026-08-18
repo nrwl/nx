@@ -1,11 +1,12 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc/nx-dev/util-ai",
+    "outDir": "dist",
     "declaration": true,
     "lib": ["dom", "es2019"],
     "types": ["node"],
-    "composite": true
+    "composite": true,
+    "rootDir": "."
   },
   "include": ["src/**/*.ts"],
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]

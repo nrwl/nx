@@ -1,5 +1,6 @@
 import { NxJsonConfiguration } from '@nx/devkit';
 import {
+  normalizePerformanceReport,
   cleanupProject,
   getPackageManagerCommand,
   newProject,
@@ -17,7 +18,7 @@ import { join } from 'node:path';
 expect.addSnapshotSerializer({
   serialize(str: string) {
     return (
-      str
+      normalizePerformanceReport(str)
         // Remove all output unique to specific projects to ensure deterministic snapshots
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
         .replaceAll(
@@ -162,8 +163,6 @@ describe('nx release preserve local dependency protocols', () => {
       -     "@proj/{project-name}": "workspace:*"
       +     "@proj/{project-name}": "0.1.0"
       }
-      }
-      +
       NX   Updating PM lock file
       Would update pnpm-lock.yaml with the following command, but --dry-run was set:
       pnpm install --lockfile-only
@@ -205,8 +204,6 @@ describe('nx release preserve local dependency protocols', () => {
       -   "version": "0.0.0",
       +   "version": "0.1.0",
       "exports": {
-      }
-      +
       NX   Updating PM lock file
       Would update pnpm-lock.yaml with the following command, but --dry-run was set:
       pnpm install --lockfile-only
@@ -279,6 +276,10 @@ describe('nx release preserve local dependency protocols', () => {
         total files: X
         Published to ${e2eRegistryUrl} with tag "latest"
         NX   Successfully ran target nx-release-publish for 2 projects
+        Run duration: {DURATION}
+        Cache: 0/2 hit (0%)
+        Critical path: {DURATION} (2 tasks)
+        Recoverable time: {DURATION}
       `);
 
       // Ensure that the dependency on pkg2 specified on the registry was replaced with the actual version number during publishing
@@ -350,6 +351,10 @@ describe('nx release preserve local dependency protocols', () => {
         + @proj/{project-name}@0.0.0
         Published to ${e2eRegistryUrl} with tag "latest"
         NX   Successfully ran target nx-release-publish for 2 projects
+        Run duration: {DURATION}
+        Cache: 0/2 hit (0%)
+        Critical path: {DURATION} (2 tasks)
+        Recoverable time: {DURATION}
       `);
 
       // Ensure that the dependency on pkg2 specified on the registry was replaced with the actual version number during publishing

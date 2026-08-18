@@ -1,11 +1,11 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
-import { addDependenciesToPackageJson, joinPathFragments } from '@nx/devkit';
 import {
-  nestJsVersion,
-  reflectMetadataVersion,
-  rxjsVersion,
-  tsLibVersion,
-} from './versions';
+  addDependenciesToPackageJson,
+  detectPackageManager,
+  joinPathFragments,
+} from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
+import { tsLibVersion, versions } from './versions';
 
 export function ensureDependencies(
   tree: Tree,
@@ -15,19 +15,27 @@ export function ensureDependencies(
     ? joinPathFragments(projectRoot, 'package.json')
     : 'package.json';
 
+  const pkgVersions = versions(tree);
+  // @nestjs/core releases up to 11.1.24 had an opencollective funding-message
+  // postinstall (removed in 11.1.25); deny it so locked installs of those
+  // versions don't trip pnpm 11's build gate.
+  acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+    '@nestjs/core': false,
+  });
   return addDependenciesToPackageJson(
     tree,
     {
-      '@nestjs/common': nestJsVersion,
-      '@nestjs/core': nestJsVersion,
-      '@nestjs/platform-express': nestJsVersion,
-      'reflect-metadata': reflectMetadataVersion,
-      rxjs: rxjsVersion,
+      '@nestjs/common': pkgVersions.nestJsVersion,
+      '@nestjs/core': pkgVersions.nestJsVersion,
+      '@nestjs/platform-express': pkgVersions.nestJsVersion,
+      'reflect-metadata': pkgVersions.reflectMetadataVersion,
+      rxjs: pkgVersions.rxjsVersion,
       tslib: tsLibVersion,
     },
     {
-      '@nestjs/testing': nestJsVersion,
+      '@nestjs/testing': pkgVersions.nestJsVersion,
     },
-    packageJsonPath
+    packageJsonPath,
+    true
   );
 }

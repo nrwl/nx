@@ -14,13 +14,13 @@ import {
   edgeRuntimeVmVersion,
   happyDomVersion,
   jsdomVersion,
+  versions,
   vitePluginDtsVersion,
   vitePluginReactSwcVersion,
   vitePluginReactV4Version,
   vitePluginReactVersion,
 } from './versions';
 import { getAnalogMajorVersion } from './analog-version';
-import { getVitestDependenciesVersionsToInstall } from './version-utils';
 
 export type EnsureDependenciesOptions = {
   uiFramework: 'angular' | 'react' | 'vue' | 'none';
@@ -84,8 +84,7 @@ export async function ensureDependencies(
   }
 
   if (useVitestUi) {
-    const { vitestUi } = await getVitestDependenciesVersionsToInstall(tree);
-    devDependencies['@vitest/ui'] = vitestUi;
+    devDependencies['@vitest/ui'] = versions(tree).vitestVersion;
   }
 
   return addDependenciesToPackageJson(

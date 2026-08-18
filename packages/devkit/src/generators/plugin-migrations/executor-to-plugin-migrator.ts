@@ -10,12 +10,13 @@ import {
   readProjectConfiguration,
   updateNxJson,
   updateProjectConfiguration,
-  type CreateNodesV2,
+  type CreateNodes,
   type ExpandedPluginConfiguration,
   type NxJsonConfiguration,
   type ProjectGraph,
   type TargetConfiguration,
   type Tree,
+  logger as devkitLogger,
 } from 'nx/src/devkit-exports';
 import {
   LoadedNxPlugin,
@@ -29,7 +30,6 @@ import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-con
 import { forEachExecutorOptions } from '../executor-options-utils';
 import { findTargetDefault } from '../target-defaults-utils';
 import { deleteMatchingProperties } from './plugin-migration-utils';
-import { logger as devkitLogger } from 'nx/src/devkit-exports';
 
 export type InferredTargetConfiguration = TargetConfiguration & {
   name: string;
@@ -63,8 +63,8 @@ class ExecutorToPluginMigrator<T> {
   #nxJson: NxJsonConfiguration;
   #targetDefaultsForExecutor: Partial<TargetConfiguration>;
   #targetAndProjectsToMigrate: Map<string, Set<string>>;
-  #createNodes?: CreateNodesV2<T>;
-  #createNodesV2?: CreateNodesV2<T>;
+  #createNodes?: CreateNodes<T>;
+  #createNodesV2?: CreateNodes<T>;
   #createNodesResultsForTargets: Map<string, ConfigurationResult>;
   #skippedProjects: Set<string>;
 
@@ -75,8 +75,8 @@ class ExecutorToPluginMigrator<T> {
     pluginPath: string,
     pluginOptionsBuilder: PluginOptionsBuilder<T>,
     postTargetTransformer: PostTargetTransformer,
-    createNodes?: CreateNodesV2<T>,
-    createNodesV2?: CreateNodesV2<T>,
+    createNodes?: CreateNodes<T>,
+    createNodesV2?: CreateNodes<T>,
     specificProjectToMigrate?: string,
     filters?: {
       skipProjectFilter?: SkipProjectFilter;
@@ -374,7 +374,7 @@ export async function migrateProjectExecutorsToPlugin<T>(
   tree: Tree,
   projectGraph: ProjectGraph,
   pluginPath: string,
-  createNodesV2: CreateNodesV2<T>,
+  createNodesV2: CreateNodes<T>,
   defaultPluginOptions: T,
   migrations: Array<{
     executors: string[];
@@ -405,7 +405,7 @@ export async function migrateProjectExecutorsToPluginV1<T>(
   tree: Tree,
   projectGraph: ProjectGraph,
   pluginPath: string,
-  createNodes: CreateNodesV2<T>,
+  createNodes: CreateNodes<T>,
   defaultPluginOptions: T,
   migrations: Array<{
     executors: string[];
@@ -434,8 +434,8 @@ async function migrateProjects<T>(
   tree: Tree,
   projectGraph: ProjectGraph,
   pluginPath: string,
-  createNodes: CreateNodesV2<T>,
-  createNodesV2: CreateNodesV2<T>,
+  createNodes: CreateNodes<T>,
+  createNodesV2: CreateNodes<T>,
   defaultPluginOptions: T,
   migrations: Array<{
     executors: string[];
@@ -515,8 +515,8 @@ async function addPluginRegistrations<T>(
   tree: Tree,
   projects: Map<string, Record<string, string>>,
   pluginPath: string,
-  createNodes: CreateNodesV2 | undefined,
-  createNodesV2: CreateNodesV2 | undefined,
+  createNodes: CreateNodes | undefined,
+  createNodesV2: CreateNodes | undefined,
   defaultPluginOptions: T,
   projectGraph: ProjectGraph,
   spinner: typeof globalSpinner
@@ -630,8 +630,8 @@ async function getCreateNodesResultsForPlugin(
   tree: Tree,
   pluginConfiguration: ExpandedPluginConfiguration,
   pluginPath: string,
-  createNodes: CreateNodesV2 | undefined,
-  createNodesV2: CreateNodesV2 | undefined,
+  createNodes: CreateNodes | undefined,
+  createNodesV2: CreateNodes | undefined,
   nxJson: NxJsonConfiguration
 ): Promise<ConfigurationResult> {
   let projectConfigs: ConfigurationResult;

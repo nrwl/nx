@@ -81,7 +81,7 @@ async function runCnwParser() {
     const { commandsObject } = importFresh(
       join(
         workspaceRoot,
-        'dist/packages/create-nx-workspace/bin/create-nx-workspace.js'
+        'packages/create-nx-workspace/dist/bin/create-nx-workspace.js'
       )
     );
 
@@ -96,7 +96,7 @@ async function runCnwParser() {
     const { Preset } = importFresh(
       join(
         workspaceRoot,
-        'dist/packages/create-nx-workspace/src/utils/preset/preset.js'
+        'packages/create-nx-workspace/dist/src/utils/preset/preset.js'
       )
     );
 

@@ -6,7 +6,7 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import { lintProjectGenerator } from '@nx/eslint';
+import { addLintingToProject, normalizeLinterOption } from '@nx/js/internal';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import {
   javaScriptOverride,
@@ -14,7 +14,9 @@ import {
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   findEslintFile,
+  inspectTypedLinting,
   isEslintConfigSupported,
+  isTypedLintingEnabled,
   replaceOverridesInLintConfig,
   useFlatConfig,
 } from '@nx/eslint/internal';
@@ -27,31 +29,40 @@ export async function addLintingGenerator(
   options: AddLintingGeneratorSchema
 ): Promise<GeneratorCallback> {
   assertSupportedAngularVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
   const rootProject = options.projectRoot === '.' || options.projectRoot === '';
-  const lintTask = await lintProjectGenerator(tree, {
-    linter: 'eslint',
-    project: options.projectName,
-    tsConfigPaths: [
-      joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
-    ],
-    unitTestRunner: options.unitTestRunner,
-    setParserOptionsProject: options.setParserOptionsProject,
-    skipFormat: true,
-    rootProject: rootProject,
-    addPlugin: options.addPlugin ?? false,
-    addExplicitTargets: true,
-    skipPackageJson: options.skipPackageJson,
-  });
-  tasks.push(lintTask);
+  // Resolved once, up front: `undefined !== 'eslint'` is true, so an unresolved
+  // linter would take the early return below and skip the angular-eslint arm.
+  // Callers that already resolved it pass it in, so this only prompts when the
+  // generator is run directly.
+  const linter = await normalizeLinterOption(tree, options.linter);
+  tasks.push(
+    await addLintingToProject(tree, {
+      linter,
+      project: options.projectName,
+      tsConfigPaths: [
+        joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
+      ],
+      unitTestRunner: options.unitTestRunner,
+      enableTypedLinting: isTypedLintingEnabled(options),
+      rootProject: rootProject,
+      addPlugin: options.addPlugin ?? false,
+      addExplicitTargets: true,
+      skipPackageJson: options.skipPackageJson,
+    })
+  );
+
+  // The angular-eslint presets, selector rules and dependency install below have
+  // no equivalent in other linters. Only the formatting tail is shared.
+  if (linter !== 'eslint') {
+    if (!options.skipFormat) {
+      await formatFiles(tree);
+    }
+    return runTasksInSerial(...tasks);
+  }
 
   if (isEslintConfigSupported(tree)) {
-    const eslintFile = findEslintFile(tree, options.projectRoot);
-    // keep parser options if they exist
-    const hasParserOptions = tree
-      .read(joinPathFragments(options.projectRoot, eslintFile), 'utf8')
-      .includes(`${options.projectRoot}/tsconfig.*?.json`);
-
     if (useFlatConfig(tree)) {
       addPredefinedConfigToFlatLintConfig(
         tree,
@@ -91,11 +102,28 @@ export async function addLintingGenerator(
         rules: {},
       });
     } else {
+      // Legacy `.eslintrc` overrides are fully replaced below, which would drop
+      // an existing `parserOptions.project`. Detect it first so we can carry it
+      // over. (Flat configs keep typed linting via `lintProjectGenerator`, so
+      // this is only needed on the legacy stack.)
+      const eslintFile = findEslintFile(tree, options.projectRoot);
+      const eslintFileContent = eslintFile
+        ? tree.read(joinPathFragments(options.projectRoot, eslintFile), 'utf8')
+        : null;
+      const typedLinting = eslintFileContent
+        ? inspectTypedLinting(eslintFileContent)
+        : null;
+      // Only a `project` needs carrying over. A config running the project
+      // service needs no glob and typescript-eslint rejects one next to it.
+      const carryOverProject =
+        !!typedLinting?.project && !typedLinting.projectService;
       replaceOverridesInLintConfig(tree, options.projectRoot, [
         ...(rootProject ? [typeScriptOverride, javaScriptOverride] : []),
         {
           files: ['*.ts'],
-          ...(hasParserOptions
+          // Legacy `.eslintrc` is JSON, which can't express the `__dirname`
+          // that `tsconfigRootDir` needs, so it keeps `parserOptions.project`.
+          ...(carryOverProject
             ? {
                 parserOptions: {
                   project: [`${options.projectRoot}/tsconfig.*?.json`],

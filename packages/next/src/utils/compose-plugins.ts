@@ -4,6 +4,7 @@ import type {
   NextPlugin,
   NextPluginThatReturnsConfigFn,
 } from './config';
+import { warnComposePluginsDeprecation } from './deprecation';
 
 export function composePlugins(
   ...plugins: (NextPlugin | NextPluginThatReturnsConfigFn)[]
@@ -13,6 +14,7 @@ export function composePlugins(
       phase: string,
       context: any
     ): Promise<NextConfig> {
+      warnComposePluginsDeprecation(phase);
       let config = baseConfig;
       for (const plugin of plugins) {
         const fn = await plugin;

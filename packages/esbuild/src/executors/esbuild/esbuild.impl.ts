@@ -51,7 +51,7 @@ export async function* esbuildExecutor(
 ) {
   process.env.NODE_ENV ??= context.configurationName ?? 'production';
 
-  const options = normalizeOptions(_options, context);
+  const options = await normalizeOptions(_options, context);
   if (options.deleteOutputPath)
     rmSync(options.outputPath, { recursive: true, force: true });
 
@@ -254,7 +254,10 @@ function getTypeCheckOptions(
 
   if (watch) {
     typeCheckOptions.incremental = true;
-    typeCheckOptions.cacheDir = cacheDir;
+    // Scope the incremental .tsbuildinfo per project (in its own subdir, not
+    // alongside Nx's cache files) so concurrent serves don't collide on a
+    // single file.
+    typeCheckOptions.cacheDir = join(cacheDir, 'esbuild', projectRoot);
   }
 
   if (options.isTsSolutionSetup && options.skipTypeCheck) {

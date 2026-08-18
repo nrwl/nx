@@ -1,11 +1,12 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/angular-rspack-compiler/spec",
+    "outDir": "out-tsc/spec",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "types": ["vitest/globals", "vitest/importMeta", "node", "vitest"]
+    "types": ["vitest/globals", "vitest/importMeta", "node", "vitest"],
+    "rootDir": "."
   },
   "include": [
     "vite.config.ts",

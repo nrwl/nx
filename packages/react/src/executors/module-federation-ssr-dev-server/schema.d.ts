@@ -1,5 +1,5 @@
-import { WebSsrDevServerOptions } from '@nx/webpack/src/executors/ssr-dev-server/schema';
-import { DevRemoteDefinition } from '@nx/module-federation/src/executors/utils';
+import { WebSsrDevServerOptions } from '@nx/webpack/internal';
+import { DevRemoteDefinition } from '@nx/module-federation/internal';
 
 export type ModuleFederationSsrDevServerOptions = WebSsrDevServerOptions & {
   devRemotes?: (

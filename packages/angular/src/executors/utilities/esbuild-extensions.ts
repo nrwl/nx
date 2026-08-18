@@ -1,4 +1,7 @@
 import type { buildApplication } from '@angular/build';
+import { workspaceRoot } from '@nx/devkit';
+import { existsSync } from 'node:fs';
+import { isAbsolute, join } from 'node:path';
 import { loadModule } from './module-loader';
 
 // This is a workaround to make sure we use the same esbuild version as the
@@ -10,6 +13,18 @@ export type PluginSpec = {
   path: string;
   options: any;
 };
+
+// Nx strips {workspaceRoot}/ and expands {projectRoot} in option paths to a
+// path relative to the workspace root, but require() would resolve that against
+// this file's directory. Anchor it to the workspace root, while leaving bare
+// package specifiers (e.g. an esbuild plugin shipped as a package) untouched.
+function resolveModulePath(path: string): string {
+  if (isAbsolute(path)) {
+    return path;
+  }
+  const candidate = join(workspaceRoot, path);
+  return existsSync(candidate) ? candidate : path;
+}
 
 export async function loadPlugins(
   plugins: string[] | PluginSpec[] | undefined,
@@ -31,7 +46,7 @@ async function loadPlugin(
   const pluginPath =
     typeof pluginSpec === 'string' ? pluginSpec : pluginSpec.path;
 
-  let plugin = await loadModule(pluginPath, tsConfig);
+  let plugin = await loadModule(resolveModulePath(pluginPath), tsConfig);
 
   if (typeof plugin === 'function') {
     plugin =
@@ -49,7 +64,9 @@ export async function loadMiddleware(
     return [];
   }
   return Promise.all(
-    middlewareFns.map((fnPath) => loadModule(fnPath, tsConfig))
+    middlewareFns.map((fnPath) =>
+      loadModule(resolveModulePath(fnPath), tsConfig)
+    )
   );
 }
 
@@ -57,5 +74,5 @@ export async function loadIndexHtmlTransformer(
   indexHtmlTransformerPath: string,
   tsConfig: string
 ): Promise<any> {
-  return loadModule(indexHtmlTransformerPath, tsConfig);
+  return loadModule(resolveModulePath(indexHtmlTransformerPath), tsConfig);
 }

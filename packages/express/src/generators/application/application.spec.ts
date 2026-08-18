@@ -1,3 +1,17 @@
+// Pin the detected package manager so inferred lock-file outputs (e.g.
+// prune-lockfile) and package-manager commands are deterministic regardless of
+// which package manager runs the tests.
+jest.mock('@nx/devkit', () => {
+  const actual = jest.requireActual('@nx/devkit');
+  return {
+    ...actual,
+    detectPackageManager: jest.fn(() => 'npm'),
+    getPackageManagerCommand: jest.fn((pm = 'npm') =>
+      actual.getPackageManagerCommand(pm)
+    ),
+  };
+});
+
 import {
   readJson,
   readProjectConfiguration,
@@ -11,13 +25,22 @@ import { Schema } from './schema';
 
 describe('app', () => {
   let appTree: Tree;
+  let envBackup: string | undefined;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     appTree = createTreeWithEmptyWorkspace();
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+    else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
   });
 
   it('should generate files', async () => {
     await applicationGenerator(appTree, {
+      linter: 'eslint',
       directory: 'my-node-app',
     } as Schema);
 
@@ -43,6 +66,26 @@ describe('app', () => {
         ],
       }
     `);
+
+    expect(appTree.exists('my-node-app/eslint.config.mjs')).toBeTruthy();
+  });
+
+  it('should set up vitest when asked for it', async () => {
+    await applicationGenerator(appTree, {
+      directory: 'my-node-app',
+      unitTestRunner: 'vitest',
+    } as Schema);
+
+    expect(appTree.exists('my-node-app/vitest.config.mts')).toBeTruthy();
+    expect(appTree.exists('my-node-app/jest.config.cts')).toBeFalsy();
+  });
+
+  it('should generate the .eslintrc.json file (eslintrc)', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+    await applicationGenerator(appTree, {
+      linter: 'eslint',
+      directory: 'my-node-app',
+    } as Schema);
 
     const eslintrcJson = readJson(appTree, 'my-node-app/.eslintrc.json');
     expect(eslintrcJson).toMatchInlineSnapshot(`
@@ -164,6 +207,7 @@ describe('app', () => {
 
     it('should add project references when using TS solution', async () => {
       await applicationGenerator(appTree, {
+        linter: 'eslint',
         directory: 'myapp',
         useProjectJson: false,
       } as Schema);
@@ -195,7 +239,7 @@ describe('app', () => {
       expect(readJson(appTree, 'myapp/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {
-            "express": "^4.21.2",
+            "express": "^5.1.0",
           },
           "name": "@proj/myapp",
           "nx": {
@@ -397,6 +441,7 @@ describe('app', () => {
 
     it('should generate project.json if useProjectJson is true', async () => {
       await applicationGenerator(appTree, {
+        linter: 'eslint',
         directory: 'myapp',
         useProjectJson: true,
         skipFormat: true,

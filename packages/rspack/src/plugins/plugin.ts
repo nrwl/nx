@@ -1,13 +1,21 @@
-import { getNamedInputs, PluginCache } from '@nx/devkit/internal';
+import {
+  getNamedInputs,
+  PluginCache,
+  hashFile,
+  hashObject,
+  workspaceDataDirectory,
+} from '@nx/devkit/internal';
 import {
   CreateDependencies,
-  CreateNodesContextV2,
+  CreateNodesContext,
   createNodesFromFiles,
-  CreateNodesV2,
+  CreateNodes,
   detectPackageManager,
   ProjectConfiguration,
   readJsonFile,
   workspaceRoot,
+  hashArray,
+  getPackageManagerCommand,
 } from '@nx/devkit';
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
 import {
@@ -15,9 +23,6 @@ import {
   addBuildAndWatchDepsTargets,
 } from '@nx/js/internal';
 import { existsSync, readdirSync } from 'fs';
-import { hashArray, hashFile, hashObject } from 'nx/src/hasher/file-hasher';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { getPackageManagerCommand } from 'nx/src/utils/package-manager';
 import { dirname, extname, isAbsolute, join, relative, resolve } from 'path';
 import { readRspackOptions } from '../utils/read-rspack-options';
 import { resolveUserDefinedRspackConfig } from '../utils/resolve-user-defined-rspack-config';
@@ -38,7 +43,7 @@ export const createDependencies: CreateDependencies = () => {
 
 const rspackConfigGlob = '**/rspack.config.{js,ts,mjs,mts,cjs,cts}';
 
-export const createNodesV2: CreateNodesV2<RspackPluginOptions> = [
+export const createNodes: CreateNodes<RspackPluginOptions> = [
   rspackConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
@@ -73,10 +78,15 @@ export const createNodesV2: CreateNodesV2<RspackPluginOptions> = [
   },
 ];
 
+/**
+ * @deprecated Use {@link createNodes} instead. This will be removed in Nx 24.
+ */
+export const createNodesV2 = createNodes;
+
 async function createNodesInternal(
   configFilePath: string,
   options: RspackPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   targetsCache: PluginCache<RspackTargets>,
   isTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>,
@@ -145,7 +155,7 @@ async function createRspackTargets(
   configFilePath: string,
   projectRoot: string,
   options: RspackPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   isTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<RspackTargets> {

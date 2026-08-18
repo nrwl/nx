@@ -1,6 +1,6 @@
 import { type ExecutorContext, workspaceRoot } from '@nx/devkit';
 import { type StaticRemotesOptions } from './models';
-import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
+import { fileServerExecutor } from '@nx/web/internal';
 import { join } from 'path';
 import { cpSync } from 'fs';
 import type { StaticRemotesConfig } from '../../utils';

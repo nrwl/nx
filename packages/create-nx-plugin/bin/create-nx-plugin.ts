@@ -1,27 +1,29 @@
 #!/usr/bin/env node
+import { join } from 'path';
 import * as pc from 'picocolors';
 import enquirer = require('enquirer');
 import yargs = require('yargs');
 import {
   determineDefaultBase,
+  determineLinterOptions,
   determineNxCloud,
   determinePackageManager,
-} from 'create-nx-workspace/src/internal-utils/prompts';
-import {
   withAllPrompts,
   withGitOptions,
   withNxCloud,
   withOptions,
   withPackageManager,
-} from 'create-nx-workspace/src/internal-utils/yargs-options';
-import { createWorkspace, CreateWorkspaceOptions } from 'create-nx-workspace';
-import { output } from 'create-nx-workspace/src/utils/output';
-import { NxCloud } from 'create-nx-workspace/src/utils/nx/nx-cloud';
-import type { PackageManager } from 'create-nx-workspace/src/utils/package-manager';
-import {
+  output,
   messages,
   recordStat,
-} from 'create-nx-workspace/src/utils/nx/ab-testing';
+  LINTERS,
+} from 'create-nx-workspace/internal';
+import { createWorkspace, CreateWorkspaceOptions } from 'create-nx-workspace';
+import type {
+  Linter,
+  NxCloud,
+  PackageManager,
+} from 'create-nx-workspace/internal';
 import { Arguments } from 'yargs';
 
 export const yargsDecorator = {
@@ -37,7 +39,7 @@ export const yargsDecorator = {
   'aliases:': `${pc.blue(`aliases`)}:`,
 };
 
-const nxVersion = require('../package.json').version;
+const nxVersion = require(join('create-nx-plugin', 'package.json')).version;
 
 async function determinePluginName(
   parsedArgs: CreateNxPluginArguments
@@ -80,6 +82,7 @@ interface CreateNxPluginArguments extends CreateWorkspaceOptions {
   packageManager: PackageManager;
   allPrompts: boolean;
   nxCloud: NxCloud;
+  linter?: Linter;
 }
 
 export const commandsObject: yargs.Argv<CreateNxPluginArguments> = yargs
@@ -103,6 +106,19 @@ export const commandsObject: yargs.Argv<CreateNxPluginArguments> = yargs
           .option('createPackageName', {
             describe: 'Name of the CLI package to create workspace with plugin',
             type: 'string',
+          })
+          // `choices` is load-bearing, not documentation: it rejects a typo at
+          // argv parse. The preset's own enum would catch it too, but only after
+          // the workspace has been created and installed.
+          .option('linter', {
+            describe: pc.dim(`Linter to use`),
+            choices: [...LINTERS],
+            type: 'string',
+          })
+          .option('interactive', {
+            describe: pc.dim(`Enable interactive mode`),
+            type: 'boolean',
+            default: true,
           }),
         withNxCloud,
         withAllPrompts,
@@ -111,7 +127,7 @@ export const commandsObject: yargs.Argv<CreateNxPluginArguments> = yargs
       ),
     async (argv: yargs.ArgumentsCamelCase<CreateNxPluginArguments>) => {
       await main(argv).catch((error) => {
-        const { version } = require('../package.json');
+        const { version } = require(join('create-nx-plugin', 'package.json'));
         output.error({
           title: `Something went wrong! v${version}`,
         });
@@ -197,6 +213,7 @@ async function normalizeArgsMiddleware(
     const packageManager = await determinePackageManager(argv);
     const defaultBase = await determineDefaultBase(argv);
     const nxCloud = await determineNxCloud(argv);
+    const linter = await determineLinterOptions(argv);
 
     Object.assign(argv, {
       pluginName,
@@ -204,6 +221,7 @@ async function normalizeArgsMiddleware(
       nxCloud,
       packageManager,
       defaultBase,
+      linter,
     } as Partial<CreateNxPluginArguments>);
   } catch (e) {
     console.error(e);

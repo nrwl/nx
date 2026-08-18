@@ -838,4 +838,49 @@ describe('show target info', () => {
     expect(allLogged).not.toContain('(from');
     expect(allLogged).not.toContain('(by');
   });
+
+  it('includes continuous and default-configuration deps in show target', async () => {
+    setGraph(
+      new GraphBuilder()
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app-e2e',
+            name: 'my-app-e2e',
+            targets: {
+              e2e: {
+                executor: 'nx:run-commands',
+                options: { command: 'playwright test' },
+                configurations: { ci: {} },
+                defaultConfiguration: 'ci',
+                dependsOn: [{ projects: ['my-app'], target: 'serve' }],
+              },
+            },
+          },
+          'app'
+        )
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app',
+            name: 'my-app',
+            targets: {
+              serve: {
+                executor: '@nx/web:dev-server',
+                continuous: true,
+                dependsOn: ['build'],
+              },
+              build: { executor: '@nx/web:build' },
+            },
+          },
+          'app'
+        )
+        .build()
+    );
+
+    await showTargetInfoHandler({ target: 'my-app-e2e:e2e', json: true });
+
+    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    expect(parsed.dependsOn).toEqual(['my-app:serve']);
+    expect(parsed.transitiveTasks).toEqual(['my-app:build']);
+    expect(parsed.transitiveTasks).not.toContain('my-app-e2e:e2e:ci');
+  });
 });

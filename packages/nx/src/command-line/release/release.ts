@@ -5,7 +5,10 @@ import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { handleErrors } from '../../utils/handle-errors';
 import { output } from '../../utils/output';
-import { createAPI as createReleaseChangelogAPI } from './changelog';
+import {
+  createAPI as createReleaseChangelogAPI,
+  isChangelogEffectivelyEnabled,
+} from './changelog';
 import { ReleaseOptions, VersionOptions } from './command-object';
 import {
   IMPLICIT_DEFAULT_RELEASE_GROUP,
@@ -140,20 +143,6 @@ export function createAPI(
     // Suppress the filter log for the changelog command as it would have already been printed by the version command
     process.env.NX_RELEASE_INTERNAL_SUPPRESS_FILTER_LOG = 'true';
 
-    const changelogResult = await releaseChangelog({
-      ...args,
-      // Re-use existing release graph
-      releaseGraph,
-      versionData: projectsVersionData,
-      version: workspaceVersion,
-      stageChanges: shouldStage,
-      gitCommit: false,
-      gitTag: false,
-      gitPush: false,
-      createRelease: false,
-      deleteVersionPlans: false,
-    });
-
     await setResolvedVersionPlansOnGroups(
       rawVersionPlans,
       releaseGraph.releaseGroups,
@@ -228,6 +217,34 @@ export function createAPI(
       });
     }
 
+    // Check if any changelog generation is actually enabled before calling releaseChangelog,
+    // to avoid expensive operations (project graph recreation, git log, etc.) when changelogs are disabled
+    const changelogGenerationEnabled =
+      isChangelogEffectivelyEnabled(
+        nxReleaseConfig.changelog.workspaceChangelog
+      ) ||
+      releaseGraph.releaseGroups.some((g) =>
+        isChangelogEffectivelyEnabled(g.changelog)
+      );
+
+    // Run changelog generation before git commit/tag so that changelog files are
+    // included in the same commit as the version bump
+    const changelogResult = changelogGenerationEnabled
+      ? await releaseChangelog({
+          ...args,
+          // Re-use existing release graph
+          releaseGraph,
+          versionData: projectsVersionData,
+          version: workspaceVersion,
+          stageChanges: shouldStage,
+          gitCommit: false,
+          gitTag: false,
+          gitPush: false,
+          createRelease: false,
+          deleteVersionPlans: false,
+        })
+      : undefined;
+
     if (shouldCommit) {
       output.logSingleLine(`Committing changes with git`);
 
@@ -289,92 +306,94 @@ export function createAPI(
       hasPushedChanges = true;
     }
 
-    let latestCommit: string | undefined;
+    if (changelogResult) {
+      let latestCommit: string | undefined;
 
-    if (
-      shouldCreateWorkspaceRemoteRelease &&
-      changelogResult.workspaceChangelog
-    ) {
-      const remoteReleaseClient = await createRemoteReleaseClient(
-        // shouldCreateWorkspaceRemoteRelease() ensures that the createRelease property exists and is not false
-        (nxReleaseConfig.changelog.workspaceChangelog as any)
-          .createRelease as ResolvedCreateRemoteReleaseProvider
-      );
-      if (!hasPushedChanges) {
-        throw new Error(
-          `It is not possible to create a ${remoteReleaseClient.remoteReleaseProviderName} release for the workspace without pushing the changes to the remote, please ensure that you have not disabled git push in your nx release config`
-        );
-      }
-
-      output.logSingleLine(
-        `Creating ${remoteReleaseClient.remoteReleaseProviderName} Release`
-      );
-
-      latestCommit = await getCommitHash('HEAD');
-
-      await remoteReleaseClient.createOrUpdateRelease(
-        changelogResult.workspaceChangelog.releaseVersion,
-        changelogResult.workspaceChangelog.contents,
-        latestCommit,
-        { dryRun: args.dryRun }
-      );
-    }
-
-    for (const releaseGroupName of releaseGraph.sortedReleaseGroups) {
-      const releaseGroup = releaseGraph.releaseGroups.find(
-        (g) => g.name === releaseGroupName
-      );
-      if (!releaseGroup) {
-        continue;
-      }
-      const shouldCreateProjectRemoteReleases = shouldCreateRemoteRelease(
-        releaseGroup.changelog
-      );
       if (
-        shouldCreateProjectRemoteReleases &&
-        changelogResult.projectChangelogs
+        shouldCreateWorkspaceRemoteRelease &&
+        changelogResult.workspaceChangelog
       ) {
         const remoteReleaseClient = await createRemoteReleaseClient(
-          // shouldCreateProjectRemoteReleases() ensures that the createRelease property exists and is not false
-          (releaseGroup.changelog as any)
+          // shouldCreateWorkspaceRemoteRelease() ensures that the createRelease property exists and is not false
+          (nxReleaseConfig.changelog.workspaceChangelog as any)
             .createRelease as ResolvedCreateRemoteReleaseProvider
         );
+        if (!hasPushedChanges) {
+          throw new Error(
+            `It is not possible to create a ${remoteReleaseClient.remoteReleaseProviderName} release for the workspace without pushing the changes to the remote, please ensure that you have not disabled git push in your nx release config`
+          );
+        }
 
-        const projects = args.projects?.length
-          ? // If the user has passed a list of projects, we need to use the filtered list of projects within the release group
-            Array.from(
-              releaseGraph.releaseGroupToFilteredProjects.get(releaseGroup)
-            )
-          : // Otherwise, we use the full list of projects within the release group
-            releaseGroup.projects;
-        const projectNodes = projects.map((name) => projectGraph.nodes[name]);
+        output.logSingleLine(
+          `Creating ${remoteReleaseClient.remoteReleaseProviderName} Release`
+        );
 
-        for (const project of projectNodes) {
-          const changelog = changelogResult.projectChangelogs[project.name];
-          if (!changelog) {
-            continue;
-          }
+        latestCommit = await getCommitHash('HEAD');
 
-          if (!hasPushedChanges) {
-            throw new Error(
-              `It is not possible to create a ${remoteReleaseClient.remoteReleaseProviderName} release for the project without pushing the changes to the remote, please ensure that you have not disabled git push in your nx release config`
+        await remoteReleaseClient.createOrUpdateRelease(
+          changelogResult.workspaceChangelog.releaseVersion,
+          changelogResult.workspaceChangelog.contents,
+          latestCommit,
+          { dryRun: args.dryRun }
+        );
+      }
+
+      for (const releaseGroupName of releaseGraph.sortedReleaseGroups) {
+        const releaseGroup = releaseGraph.releaseGroups.find(
+          (g) => g.name === releaseGroupName
+        );
+        if (!releaseGroup) {
+          continue;
+        }
+        const shouldCreateProjectRemoteReleases = shouldCreateRemoteRelease(
+          releaseGroup.changelog
+        );
+        if (
+          shouldCreateProjectRemoteReleases &&
+          changelogResult.projectChangelogs
+        ) {
+          const remoteReleaseClient = await createRemoteReleaseClient(
+            // shouldCreateProjectRemoteReleases() ensures that the createRelease property exists and is not false
+            (releaseGroup.changelog as any)
+              .createRelease as ResolvedCreateRemoteReleaseProvider
+          );
+
+          const projects = args.projects?.length
+            ? // If the user has passed a list of projects, we need to use the filtered list of projects within the release group
+              Array.from(
+                releaseGraph.releaseGroupToFilteredProjects.get(releaseGroup)
+              )
+            : // Otherwise, we use the full list of projects within the release group
+              releaseGroup.projects;
+          const projectNodes = projects.map((name) => projectGraph.nodes[name]);
+
+          for (const project of projectNodes) {
+            const changelog = changelogResult.projectChangelogs[project.name];
+            if (!changelog) {
+              continue;
+            }
+
+            if (!hasPushedChanges) {
+              throw new Error(
+                `It is not possible to create a ${remoteReleaseClient.remoteReleaseProviderName} release for the project without pushing the changes to the remote, please ensure that you have not disabled git push in your nx release config`
+              );
+            }
+
+            output.logSingleLine(
+              `Creating ${remoteReleaseClient.remoteReleaseProviderName} Release`
+            );
+
+            if (!latestCommit) {
+              latestCommit = await getCommitHash('HEAD');
+            }
+
+            await remoteReleaseClient.createOrUpdateRelease(
+              changelog.releaseVersion,
+              changelog.contents,
+              latestCommit,
+              { dryRun: args.dryRun }
             );
           }
-
-          output.logSingleLine(
-            `Creating ${remoteReleaseClient.remoteReleaseProviderName} Release`
-          );
-
-          if (!latestCommit) {
-            latestCommit = await getCommitHash('HEAD');
-          }
-
-          await remoteReleaseClient.createOrUpdateRelease(
-            changelog.releaseVersion,
-            changelog.contents,
-            latestCommit,
-            { dryRun: args.dryRun }
-          );
         }
       }
     }

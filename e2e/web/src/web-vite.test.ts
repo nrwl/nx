@@ -13,7 +13,19 @@ import {
 } from '@nx/e2e-utils';
 
 describe('Web Components Applications with bundler set as vite', () => {
-  beforeEach(() => newProject({ packages: ['@nx/web', '@nx/react'] }));
+  beforeEach(() =>
+    newProject({
+      packages: [
+        '@nx/web',
+        '@nx/react',
+        '@nx/vite',
+        '@nx/vitest',
+        '@nx/eslint',
+        '@nx/cypress',
+        '@nx/playwright',
+      ],
+    })
+  );
   afterEach(() => cleanupProject());
 
   it('should be able to generate a web app', async () => {
@@ -38,7 +50,7 @@ describe('Web Components Applications with bundler set as vite', () => {
 
     expect(lintE2eResults).toContain('Successfully ran target lint');
 
-    if (isNotWindows() && runE2ETests()) {
+    if (isNotWindows() && (await runE2ETests())) {
       const e2eResults = runCLI(`e2e ${appName}-e2e`);
       expect(e2eResults).toContain('Successfully ran target e2e for project');
       await killPorts();

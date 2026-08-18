@@ -74,13 +74,15 @@ async function render({
   const outputFolderPath = path.join(outputPath, route);
   const outputIndexPath = path.join(outputFolderPath, 'index.html');
 
+  // rspack emits a CommonJS server bundle; load with `require` so its named
+  // exports resolve (a nodenext `import()` would leave them undefined).
   const {
     ɵSERVER_CONTEXT,
     AppServerModule,
     renderModule,
     renderApplication,
     default: bootstrapAppFn,
-  } = (await import(serverBundlePath)) as ServerBundleExports;
+  } = require(serverBundlePath) as ServerBundleExports;
 
   assert(
     ɵSERVER_CONTEXT,

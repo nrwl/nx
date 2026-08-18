@@ -1,6 +1,6 @@
 import { logger } from '@nx/devkit';
-import { daemonClient } from 'nx/src/daemon/client/client';
 import { join } from 'path';
+import { daemonClient } from '@nx/devkit/internal';
 
 export async function watchForSingleFileChanges(
   projectName: string,

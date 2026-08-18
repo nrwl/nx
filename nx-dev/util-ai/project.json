@@ -8,7 +8,7 @@
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/nx-dev/util-ai",
+        "outputPath": "nx-dev/util-ai/dist",
         "main": "nx-dev/util-ai/src/index.ts",
         "tsConfig": "nx-dev/util-ai/tsconfig.lib.json",
         "assets": ["nx-dev/util-ai/*.md"]

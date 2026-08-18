@@ -1,4 +1,6 @@
 import { ensureRootProjectName } from '@nx/devkit/internal';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
+import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import {
   addDependenciesToPackageJson,
   detectPackageManager,
@@ -29,16 +31,21 @@ import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs'
 import { isValidVariable } from '@nx/js';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import {
+  expressVersion,
+  httpProxyMiddlewareVersion,
   moduleFederationEnhancedVersion,
   nxVersion,
 } from '../../utils/versions';
 import { updateModuleFederationTsconfig } from './lib/update-module-federation-tsconfig';
 import { normalizeHostName } from './lib/normalize-host-name';
+import { warnReactHostGeneratorDeprecation } from '../../utils/module-federation-deprecation';
 
 export async function hostGenerator(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  assertSupportedReactVersion(host);
+  warnReactHostGeneratorDeprecation();
   const tasks: GeneratorCallback[] = [];
   const name = await normalizeHostName(host, schema.directory, schema.name);
   const options: NormalizedSchema = {
@@ -162,7 +169,7 @@ export async function hostGenerator(
     updateProjectConfiguration(host, options.projectName, projectConfig);
   }
 
-  if (!options.setParserOptionsProject) {
+  if (!isTypedLintingEnabled(options)) {
     host.delete(
       joinPathFragments(options.appProjectRoot, 'tsconfig.lint.json')
     );
@@ -176,7 +183,17 @@ export async function hostGenerator(
     {
       '@nx/web': nxVersion,
       '@nx/module-federation': nxVersion,
-    }
+      // The webpack path also generates a `serve-static` target running the
+      // `module-federation-static-server` executor, which proxies via express.
+      ...(options.bundler !== 'rspack'
+        ? {
+            express: expressVersion,
+            'http-proxy-middleware': httpProxyMiddlewareVersion,
+          }
+        : {}),
+    },
+    undefined,
+    true
   );
   tasks.push(installTask);
 

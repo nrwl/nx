@@ -9,13 +9,13 @@ describe('update-analog-v3 migration', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  it('should update @analogjs/vitest-angular to ~3.0.0', async () => {
+  it('should leave package.json analog versions to packageJsonUpdates', async () => {
     tree.write(
       'package.json',
       JSON.stringify({
         devDependencies: {
-          '@analogjs/vitest-angular': '~2.1.2',
-          '@analogjs/vite-plugin-angular': '~2.1.2',
+          '@analogjs/vitest-angular': '3.0.0-alpha.20',
+          '@analogjs/vite-plugin-angular': '3.0.0-alpha.20',
         },
       })
     );
@@ -23,9 +23,11 @@ describe('update-analog-v3 migration', () => {
     await updateAnalogV3(tree);
 
     const pkgJson = readJson(tree, 'package.json');
-    expect(pkgJson.devDependencies['@analogjs/vitest-angular']).toBe('~3.0.0');
+    expect(pkgJson.devDependencies['@analogjs/vitest-angular']).toBe(
+      '3.0.0-alpha.20'
+    );
     expect(pkgJson.devDependencies['@analogjs/vite-plugin-angular']).toBe(
-      '~3.0.0'
+      '3.0.0-alpha.20'
     );
   });
 

@@ -1,0 +1,677 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { Code } from '@astrojs/starlight/components';
+import {
+  templates,
+  installCommand,
+  repoUrl,
+  relatedTemplates,
+  type Template,
+} from '../../data/templates';
+
+export function getStaticPaths() {
+  return templates.map((t) => ({
+    params: { slug: t.slug },
+    props: { template: t },
+  }));
+}
+
+const { template } = Astro.props as { template: Template };
+const cmd = installCommand(template);
+const repo = repoUrl(template);
+const related = relatedTemplates(template);
+const accentVars = `--tpl-accent:${template.accent};--tpl-accent-to:${template.accentTo}`;
+---
+
+<StarlightPage
+  frontmatter={{
+    title: `${template.name} template`,
+    description: template.tagline,
+    template: 'splash',
+    tableOfContents: false,
+    pagefind: true,
+  }}
+>
+  <div class="tpl-page">
+    <header class="tpl-detail-header">
+      <div>
+        <p class="tpl-sub">{template.tagline}</p>
+      </div>
+      <div class="tpl-actions">
+        <a class="tpl-btn" href={repo} target="_blank" rel="noreferrer">View on GitHub</a>
+        {template.demoUrl && (
+          <a class="tpl-btn" href={template.demoUrl} target="_blank" rel="noreferrer">View demo</a>
+        )}
+      </div>
+    </header>
+
+    <section class="tpl-getstarted">
+      <Code code={cmd} lang="bash" />
+    </section>
+
+    <div class={template.image ? 'tpl-banner tpl-banner--img' : 'tpl-banner'} style={accentVars}>
+      {template.image ? (
+        <img class="tpl-banner-img" src={template.image} alt={`${template.name} template preview`} />
+      ) : (
+        <span class="tpl-banner-word">{template.glyph}</span>
+      )}
+    </div>
+
+    <div class="tpl-detail-grid">
+      <div class="tpl-main">
+        <p class="tpl-lead">{template.description}</p>
+
+        <h2>Highlights</h2>
+        <div class="tpl-highlights">
+          {template.highlights.map((h) => (
+            <div class="tpl-highlight">
+              <h3>{h.title}</h3>
+              <p>{h.body}</p>
+            </div>
+          ))}
+        </div>
+
+        <h2>Quickstart</h2>
+        <ul class="tpl-steps">
+          {template.gettingStarted.map((step) => (
+            <li>
+              <div class="tpl-step-label">{step.label}:</div>
+              <Code code={step.code} lang="bash" />
+            </li>
+          ))}
+        </ul>
+
+        <h2>What's inside</h2>
+        <ul class="tpl-inside">
+          {template.whatsInside.map((item) => {
+            // Items read "<path> - <description>". Render the leading path as
+            // inline code; leave path-less items (e.g. "No projects - ...") plain.
+            const idx = item.indexOf(' - ');
+            const path = idx > -1 ? item.slice(0, idx) : '';
+            return path.includes('/') ? (
+              <li><code>{path}</code>{item.slice(idx)}</li>
+            ) : (
+              <li>{item}</li>
+            );
+          })}
+        </ul>
+
+        <section class="tpl-cloud">
+          <h2>Speed up CI with Nx Cloud</h2>
+          <p>
+            Connect this monorepo to Nx Cloud to share one remote cache across
+            your team and CI, and distribute tasks across machines as it grows.
+          </p>
+          <ul class="tpl-cloud-feats">
+            <li>Remote caching shared across your team and CI</li>
+            <li>Distributed task execution with Nx Agents</li>
+            <li>Automated e2e test splitting</li>
+            <li>CI that detects failures and proposes fixes</li>
+          </ul>
+          <div class="tpl-actions">
+            <a
+              class="tpl-btn tpl-btn-primary"
+              href="https://cloud.nx.app/setup/connect-workspace/guide?utm_source=nx.dev&utm_medium=templates&utm_campaign=templates_gallery"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Connect to Nx Cloud
+            </a>
+            <a class="tpl-btn" href="https://nx.dev/nx-cloud" target="_blank" rel="noreferrer">
+              Learn more
+            </a>
+          </div>
+        </section>
+
+        {template.learnMore && template.learnMore.length > 0 && (
+          <>
+            <h2>Learn more</h2>
+            <ul class="tpl-inside">
+              {template.learnMore.map((link) => (
+                <li>
+                  <a href={link.href} target="_blank" rel="noreferrer">{link.label}</a>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
+
+      <aside class="tpl-meta">
+        <div class="tpl-meta-section">
+          <h3>GitHub</h3>
+          <a class="tpl-repo-link" href={repo} target="_blank" rel="noreferrer">
+            <code>nrwl/{template.repo}</code>
+          </a>
+        </div>
+        <div class="tpl-meta-section">
+          <h3>Category</h3>
+          <div class="tpl-tags">
+            <span class="tpl-tag">{template.category}</span>
+          </div>
+        </div>
+        <div class="tpl-meta-section">
+          <h3>Use cases</h3>
+          <div class="tpl-tags">
+            {template.useCases.map((u) => (
+              <span class="tpl-tag">{u}</span>
+            ))}
+          </div>
+        </div>
+        <div class="tpl-meta-section">
+          <h3>Stack</h3>
+          <div class="tpl-tags">
+            {template.stack.map((s) => (
+              <span class="tpl-tag">{s}</span>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="tpl-related">
+      <h2>Related templates</h2>
+      <div class="tpl-related-grid">
+        {related.map((t) => (
+          <a
+            class="tpl-card"
+            href={`/docs/templates/${t.slug}`}
+            style={`--tpl-accent:${t.accent};--tpl-accent-to:${t.accentTo}`}
+          >
+            <div class={t.image ? 'tpl-thumb tpl-thumb--img' : 'tpl-thumb'}>
+              {t.image ? (
+                <img class="tpl-thumb-img" src={t.image} alt={`${t.name} template preview`} loading="lazy" />
+              ) : (
+                <span class="tpl-thumb-word">{t.glyph}</span>
+              )}
+            </div>
+            <div class="tpl-card-body">
+              <div class="tpl-card-head">
+                <h3 class="tpl-card-title">{t.name}</h3>
+              </div>
+              <span class="tpl-card-meta">{t.category}</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+  </div>
+</StarlightPage>
+
+<style>
+/* No horizontal padding/max-width: inherit Starlight's content gutter so the
+   gallery left edge lines up exactly with the page title above it. */
+.tpl-page {
+  padding-block: 0 4rem;
+}
+
+/* drop the category on narrow related cards so the title has room to breathe */
+@media (max-width: 40rem) {
+  .tpl-card-meta {
+    display: none;
+  }
+}
+
+/* Framer-style card (related templates): cover artwork on top, then a
+   compact footer with the title and category. */
+.tpl-card {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  padding: 0.55rem;
+  background: var(--sl-color-bg);
+  border: 1px solid var(--sl-color-hairline);
+  border-radius: 0.9rem;
+  transition:
+    border-color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+.tpl-card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(
+    in srgb,
+    var(--tpl-accent, #64748b) 55%,
+    var(--sl-color-hairline)
+  );
+  box-shadow: 0 16px 34px -20px
+    color-mix(in srgb, var(--tpl-accent, #000) 70%, transparent);
+}
+
+/* Cover artwork (real screenshot or gradient) */
+.tpl-thumb {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border-radius: 0.6rem;
+  overflow: hidden;
+  background: linear-gradient(
+    135deg,
+    var(--tpl-accent, #475569),
+    var(--tpl-accent-to, #0f172a)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tpl-thumb::after {
+  /* subtle grid texture on the gradient placeholder */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(
+      color-mix(in srgb, white 8%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, white 8%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse at center, black 35%, transparent 80%);
+}
+.tpl-thumb-word {
+  position: relative;
+  z-index: 1;
+  font-weight: 800;
+  font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+  letter-spacing: -0.02em;
+  color: color-mix(in srgb, white 92%, transparent);
+  text-shadow: 0 1px 18px color-mix(in srgb, black 35%, transparent);
+}
+
+.tpl-card-body {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 0.5rem 0.35rem;
+}
+.tpl-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+.tpl-card-title {
+  font-size: 0.98rem;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tpl-card-meta {
+  margin: 0 0 0 auto;
+  font-size: 0.8rem;
+  color: var(--sl-color-gray-4);
+  white-space: nowrap;
+}
+
+/* Real app screenshot covering the gradient artwork (card thumb + detail banner) */
+.tpl-thumb-img,
+.tpl-banner-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  z-index: 2;
+}
+.tpl-thumb--img,
+.tpl-banner--img {
+  /* image fully covers the gradient, but keep a subtle frame for letterboxed shots */
+  background: var(--sl-color-gray-6);
+}
+
+/* =============================================================== Detail === */
+.tpl-detail-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 1.5rem 1.25rem;
+}
+.tpl-detail-header h1 {
+  font-size: clamp(1.7rem, 3.5vw, 2.4rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.35rem;
+}
+.tpl-detail-header .tpl-sub {
+  color: var(--sl-color-gray-3);
+  font-size: 1.05rem;
+  margin: 0;
+  max-width: 40rem;
+}
+.tpl-actions {
+  margin: 0;
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.tpl-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-md, 0.6rem);
+  text-decoration: none;
+  border: 1px solid var(--sl-color-hairline);
+  color: var(--sl-color-white);
+  background: var(--sl-color-bg);
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    transform 0.1s;
+}
+.tpl-btn:hover {
+  border-color: var(--sl-color-gray-4);
+}
+.tpl-btn:active {
+  transform: translateY(1px);
+}
+.tpl-btn-primary {
+  background: var(--sl-color-text-accent);
+  border-color: var(--sl-color-text-accent);
+  color: var(--sl-color-black, #fff);
+}
+[data-theme='light'] .tpl-btn-primary {
+  color: #fff;
+}
+.tpl-btn-primary:hover {
+  background: var(--sl-color-accent-high);
+  border-color: var(--sl-color-accent-high);
+}
+
+/* Big banner artwork on detail page */
+.tpl-banner {
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-lg, 1rem);
+  background: linear-gradient(
+    135deg,
+    var(--tpl-accent, #475569),
+    var(--tpl-accent-to, #0f172a)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 2rem;
+  border: 1px solid var(--sl-color-hairline);
+}
+.tpl-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(
+      color-mix(in srgb, white 8%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, white 8%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 34px 34px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 78%);
+}
+.tpl-banner-word {
+  position: relative;
+  z-index: 1;
+  font-weight: 800;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  letter-spacing: -0.03em;
+  color: color-mix(in srgb, white 94%, transparent);
+  text-shadow: 0 2px 30px color-mix(in srgb, black 35%, transparent);
+}
+
+/* Create-command block (Expressive Code) sits directly under the title */
+.tpl-getstarted {
+  margin: 0 0 2rem;
+}
+
+/* Lead paragraph (template description) at the top of the main column */
+.tpl-lead {
+  font-size: 1.05rem;
+}
+
+.tpl-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+}
+@media (min-width: 60rem) {
+  .tpl-detail-grid {
+    grid-template-columns: minmax(0, 1fr) 16rem;
+  }
+}
+
+.tpl-main h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 2.25rem 0 1rem;
+}
+.tpl-main h2:first-child {
+  margin-top: 0;
+}
+.tpl-main p {
+  color: var(--sl-color-gray-2);
+  line-height: 1.7;
+}
+
+/* Highlights */
+.tpl-highlights {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: 1fr;
+  align-items: stretch;
+}
+@media (min-width: 32rem) {
+  .tpl-highlights {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.tpl-highlight {
+  /* margin:0 neutralizes Starlight markdown auto-spacing, which otherwise
+     pushes every card after the first down and breaks row alignment */
+  margin: 0;
+  border: 1px solid var(--sl-color-hairline);
+  border-radius: var(--radius-md, 0.6rem);
+  padding: 1rem 1.1rem;
+  background: color-mix(in srgb, var(--sl-color-gray-6) 50%, transparent);
+}
+.tpl-highlight h3 {
+  font-size: 0.98rem;
+  font-weight: 600;
+  margin: 0 0 0.3rem;
+}
+.tpl-highlight p {
+  font-size: 0.88rem;
+  color: var(--sl-color-gray-3);
+  margin: 0;
+  line-height: 1.55;
+}
+
+/* Steps */
+.tpl-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.tpl-step-label {
+  font-size: 0.9rem;
+  color: var(--sl-color-gray-2);
+  margin-bottom: 0.35rem;
+}
+
+.tpl-inside {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.tpl-inside li {
+  position: relative;
+  padding-left: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: var(--sl-color-gray-2);
+  font-size: 0.92rem;
+}
+.tpl-inside li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: var(--tpl-accent, var(--sl-color-text-accent));
+}
+
+/* Nx Cloud callout */
+.tpl-cloud {
+  margin-top: 2.5rem;
+  border-radius: var(--radius-lg, 1rem);
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--sl-color-text-accent) 35%,
+      var(--sl-color-hairline)
+    );
+  background:
+    radial-gradient(
+      120% 140% at 0% 0%,
+      color-mix(in srgb, var(--sl-color-text-accent) 16%, transparent),
+      transparent 60%
+    ),
+    var(--sl-color-bg);
+  padding: 1.75rem;
+}
+.tpl-cloud h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.3rem;
+}
+.tpl-cloud p {
+  margin: 0 0 1rem;
+  color: var(--sl-color-gray-2);
+  max-width: 46rem;
+}
+.tpl-cloud-feats {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.6rem 1.5rem;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 40rem) {
+  .tpl-cloud-feats {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.tpl-cloud-feats li {
+  position: relative;
+  padding-left: 1.5rem;
+  color: var(--sl-color-gray-2);
+  font-size: 0.92rem;
+}
+.tpl-cloud-feats li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.45em;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  background: var(--sl-color-text-accent);
+}
+
+/* Meta sidebar */
+.tpl-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-self: start;
+}
+@media (min-width: 60rem) {
+  .tpl-meta {
+    position: sticky;
+    top: 5rem;
+  }
+}
+.tpl-meta-section h3 {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--sl-color-gray-3);
+  margin: 0 0 0.6rem;
+}
+.tpl-meta-section a {
+  color: var(--sl-color-text-accent);
+  text-decoration: none;
+  font-size: 0.92rem;
+}
+.tpl-meta-section a:hover {
+  text-decoration: underline;
+}
+/* GitHub repo shown as a monospace code line, linking only to the repo */
+.tpl-repo-link {
+  display: inline-block;
+}
+.tpl-repo-link code {
+  font-family: 'Input Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--sl-color-text);
+  background: var(--sl-color-gray-6);
+  border: 1px solid var(--sl-color-hairline);
+  border-radius: var(--radius-sm, 0.4rem);
+  padding: 0.2rem 0.5rem;
+}
+.tpl-repo-link:hover code {
+  border-color: var(--sl-color-text-accent);
+}
+.tpl-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.tpl-tag {
+  font-size: 0.78rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--sl-color-hairline);
+  color: var(--sl-color-gray-2);
+  background: var(--sl-color-gray-6);
+}
+
+/* Related */
+.tpl-related {
+  margin-top: 3.5rem;
+  border-top: 1px solid var(--sl-color-hairline);
+  padding-top: 2rem;
+}
+.tpl-related h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0 0 1.25rem;
+}
+.tpl-related-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1.25rem;
+}
+</style>

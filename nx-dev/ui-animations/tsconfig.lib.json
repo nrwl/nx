@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc/nx-dev/ui-animations",
+    "outDir": "dist",
     "types": [],
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "composite": true,
@@ -9,7 +9,8 @@
     "skipLibCheck": true,
     "strict": false,
     "noImplicitAny": false,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "rootDir": "."
   },
   "files": [
     "../../node_modules/@nx/react/typings/cssmodule.d.ts",

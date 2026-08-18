@@ -1,1 +1,1 @@
-export * from '@nx/webpack/src/executors/webpack/lib/normalize-options';
+export { normalizeOptions, normalizePluginPath } from '@nx/webpack';

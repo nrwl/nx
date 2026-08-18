@@ -1,4 +1,9 @@
-import { getRelativeCwd, logShowProjectCommand } from '@nx/devkit/internal';
+import {
+  getRelativeCwd,
+  logShowProjectCommand,
+  type PackageJson,
+} from '@nx/devkit/internal';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -26,7 +31,6 @@ import {
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/internal';
-import type { PackageJson } from 'nx/src/utils/package-json';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { updateJestConfigContent } from '../../utils/jest-utils';
 import { maybeJs } from '../../utils/maybe-js';
@@ -52,6 +56,8 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 }
 
 export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
+  assertSupportedReactVersion(host);
+
   const tasks: GeneratorCallback[] = [];
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(host, schema.addPlugin);
@@ -203,7 +209,9 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       nxVersion
     );
     ensurePackage('@nx/vitest', nxVersion);
-    const { configurationGenerator } = await import('@nx/vitest/generators');
+    const {
+      configurationGenerator,
+    }: typeof import('@nx/vitest/generators') = require('@nx/vitest/generators');
     const vitestTask = await configurationGenerator(host, {
       uiFramework: 'react',
       project: options.name,

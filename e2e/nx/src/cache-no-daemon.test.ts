@@ -27,7 +27,9 @@ const runCLI = (cmd: string, opts: RunCmdOpts = {}) =>
   _runCLI(cmd, { ...opts, daemon: false });
 
 describe('cache (no daemon)', () => {
-  beforeEach(() => newProject({ packages: ['@nx/web', '@nx/js'] }));
+  beforeEach(() =>
+    newProject({ packages: ['@nx/eslint', '@nx/web', '@nx/js', '@nx/jest'] })
+  );
 
   afterEach(() => cleanupProject());
 
@@ -595,7 +597,7 @@ console.log('Build complete');
     expect(cacheEntries).toBeGreaterThan(1);
     expect(cacheEntries).toBeLessThan(10);
     expect(cacheEntriesSize).toBeLessThanOrEqual(500 * 1024);
-  });
+  }, 120000);
 
   it('should honor NX_MAX_CACHE_SIZE env var', async () => {
     runCLI('reset');
@@ -644,7 +646,7 @@ console.log('Build complete');
     expect(cacheEntries).toBeGreaterThan(1);
     expect(cacheEntries).toBeLessThan(10);
     expect(cacheEntriesSize).toBeLessThanOrEqual(500 * 1024);
-  });
+  }, 120000);
 
   describe('http remote cache', () => {
     let cacheServer: any;

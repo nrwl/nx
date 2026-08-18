@@ -1,5 +1,5 @@
 import { updateJson, type Tree } from '@nx/devkit';
-import { tsConfigBaseOptions } from '@nx/js';
+import { getTsConfigBaseOptions } from '@nx/js/internal';
 
 export { extractTsConfigBase } from '@nx/js';
 
@@ -14,7 +14,7 @@ export function updateProjectRootTsConfig(
       // inline tsconfig.base.json into the project
       json.compileOnSave = false;
       json.compilerOptions = {
-        ...tsConfigBaseOptions,
+        ...getTsConfigBaseOptions(host),
         ...json.compilerOptions,
       };
       json.exclude = ['node_modules', 'tmp'];

@@ -3,7 +3,7 @@ import { dirname, join, posix, relative, resolve } from 'node:path';
 import { toNewFormat } from '../../../../adapter/angular-json';
 import type {
   NxJsonConfiguration,
-  TargetDefaultEntry,
+  TargetDefaults,
 } from '../../../../config/nx-json';
 import type { ProjectConfiguration } from '../../../../config/workspace-json-project-json';
 import {
@@ -102,9 +102,7 @@ function createNxJson(
         : []),
     ].filter(Boolean),
   };
-  const defaults: TargetDefaultEntry[] = Array.isArray(nxJson.targetDefaults)
-    ? [...nxJson.targetDefaults]
-    : [];
+  const defaults: TargetDefaults = { ...(nxJson.targetDefaults ?? {}) };
   if (workspaceTargets.includes('build')) {
     upsertTargetDefaultEntry(defaults, 'build', {
       dependsOn: ['^build'],
@@ -138,7 +136,7 @@ function createNxJson(
       inputs: ['default', '^production'],
     });
   }
-  if (defaults.length > 0) {
+  if (Object.keys(defaults).length > 0) {
     nxJson.targetDefaults = defaults;
   }
   writeJsonFile(join(repoRoot, 'nx.json'), nxJson);

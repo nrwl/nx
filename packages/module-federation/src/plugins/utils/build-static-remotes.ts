@@ -1,10 +1,11 @@
 import { fork } from 'node:child_process';
 import { join } from 'path';
 import { createWriteStream } from 'node:fs';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { workspaceRoot } from '@nx/devkit';
 import { StaticRemoteConfig } from '../../utils';
 import { NxModuleFederationDevServerConfig } from '../models';
+import { childBuildEnv } from '../../utils/is-serve-mode';
+import { workspaceDataDirectory } from '@nx/devkit/internal';
 
 export async function buildStaticRemotes(
   staticRemotesConfig: Record<string, StaticRemoteConfig>,
@@ -35,10 +36,7 @@ export async function buildStaticRemotes(
       {
         cwd: workspaceRoot,
         stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
-        env: {
-          ...process.env,
-          WEBPACK_SERVE: 'false',
-        },
+        env: childBuildEnv(),
       }
     );
     // File to debug build failures e.g. 2024-01-01T00_00_0_0Z-build.log'

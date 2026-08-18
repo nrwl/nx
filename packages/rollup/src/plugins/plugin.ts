@@ -2,17 +2,18 @@ import {
   calculateHashesForCreateNodes,
   getNamedInputs,
   PluginCache,
+  workspaceDataDirectory,
+  hashObject,
 } from '@nx/devkit/internal';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { basename, dirname, join } from 'path';
 import { readdirSync } from 'fs';
 import {
   AggregateCreateNodesError,
   type CreateDependencies,
-  CreateNodesContextV2,
+  CreateNodesContext,
   createNodesFromFiles,
-  CreateNodesResultV2,
-  CreateNodesV2,
+  CreateNodesResultArray,
+  CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
@@ -20,7 +21,6 @@ import {
 } from '@nx/devkit';
 import { getLockFileName } from '@nx/js';
 import { type RollupOptions } from 'rollup';
-import { hashObject } from 'nx/src/hasher/file-hasher';
 import {
   isUsingTsSolutionSetup,
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
@@ -43,7 +43,7 @@ type RollupTargets = Record<string, TargetConfiguration>;
 
 const rollupConfigGlob = '**/rollup.config.{js,cjs,mjs,ts,cts,mts}';
 
-export const createNodes: CreateNodesV2<RollupPluginOptions> = [
+export const createNodes: CreateNodes<RollupPluginOptions> = [
   rollupConfigGlob,
   async (configFilePaths, options, context) => {
     const normalizedOptions = normalizeOptions(options);
@@ -71,7 +71,7 @@ export const createNodes: CreateNodesV2<RollupPluginOptions> = [
         entries.map(() => [lockFileName])
       );
 
-      let results: CreateNodesResultV2 = [];
+      let results: CreateNodesResultArray = [];
       let nodeErrors: Array<[string | null, Error]> = [];
       try {
         results = await createNodesFromFiles(
@@ -114,7 +114,7 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFilePath: string,
   options: Required<RollupPluginOptions>,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   targetsCache: PluginCache<RollupTargets>,
   isTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>,
@@ -150,7 +150,7 @@ async function buildRollupTarget(
   configFilePath: string,
   projectRoot: string,
   options: RollupPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   isTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<Record<string, TargetConfiguration>> {
@@ -281,7 +281,7 @@ interface RollupEntry {
 
 async function filterRollupConfigs(
   configFiles: readonly string[],
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Promise<{
   entries: RollupEntry[];
   preErrors: Array<[string, Error]>;

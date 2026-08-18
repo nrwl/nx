@@ -1,4 +1,6 @@
 import assert from 'node:assert';
+import { isAbsolute } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 let load: (<T>(modulePath: string | URL) => Promise<T>) | undefined;
 
@@ -8,7 +10,27 @@ export function loadEsmModule<T>(modulePath: string | URL): Promise<T> {
     undefined
   >;
 
+  // The dynamic import lives inside `new Function(...)` to stop TypeScript from
+  // downleveling it to require(). A side effect is that bare specifiers are
+  // resolved against the location of the Function rather than this module, so
+  // under Node >= 26's stricter ESM resolver they fail with ERR_MODULE_NOT_FOUND
+  // even for declared dependencies. Resolve bare specifiers here, where this
+  // package's dependencies are reachable, and hand off an absolute file URL.
+  if (typeof modulePath === 'string' && isBareSpecifier(modulePath)) {
+    modulePath = pathToFileURL(require.resolve(modulePath)).href;
+  }
+
   return load(modulePath);
+}
+
+function isBareSpecifier(specifier: string): boolean {
+  return (
+    !specifier.startsWith('.') &&
+    !isAbsolute(specifier) &&
+    !specifier.includes('://') &&
+    !specifier.startsWith('node:') &&
+    !specifier.startsWith('data:')
+  );
 }
 
 export function assertIsError(

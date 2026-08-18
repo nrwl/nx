@@ -151,24 +151,21 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
         ],
         sharedGlobals: [],
       },
-      targetDefaults: [
-        {
-          target: 'build',
+      targetDefaults: {
+        build: {
           dependsOn: ['^build'],
           inputs: ['production', '^production'],
           cache: true,
         },
-        {
-          target: 'test',
+        test: {
           inputs: ['default', '^production', '{workspaceRoot}/karma.conf.js'],
           cache: true,
         },
-        {
-          target: 'e2e',
+        e2e: {
           inputs: ['default', '^production'],
           cache: true,
         },
-      ],
+      },
     });
 
     // check angular.json does not exist

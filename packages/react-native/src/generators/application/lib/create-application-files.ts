@@ -5,7 +5,7 @@ import { NormalizedSchema } from './normalize-options';
 import {
   getNxCloudAppOnBoardingUrl,
   createNxCloudOnboardingURLForWelcomeApp,
-} from 'nx/src/nx-cloud/utilities/onboarding';
+} from '@nx/devkit/internal';
 
 export async function createApplicationFiles(
   host: Tree,

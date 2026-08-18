@@ -44,6 +44,9 @@ describe('native Node.js TypeScript support', () => {
         '@nx/playwright',
         '@nx/cypress',
         '@nx/web',
+        '@nx/vite',
+        '@nx/eslint',
+        '@nx/jest',
       ],
     });
   });

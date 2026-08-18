@@ -1,5 +1,5 @@
 use std::fs::{create_dir_all, read_to_string, write};
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use std::rc::Rc;
 use std::time::Instant;
 use tracing::{debug, trace};
@@ -11,7 +11,7 @@ use rusqlite::{params, types::Value};
 use sysinfo::Disks;
 
 use crate::native::cache::expand_outputs::_expand_outputs;
-use crate::native::cache::file_ops::_copy;
+use crate::native::cache::file_ops::{_copy, copy_outputs_into_workspace};
 use crate::native::db::connection::NxDbConnection;
 use crate::native::utils::Normalize;
 use napi::bindgen_prelude::External;
@@ -243,6 +243,7 @@ impl NxCache {
         trace!("Successfully wrote terminal outputs ({} bytes)", total_size);
 
         // Expand the outputs
+        let outputs = normalize_outputs(&self.workspace_root, outputs)?;
         let expanded_outputs = _expand_outputs(&self.workspace_root, outputs)?;
         trace!("Successfully expanded {} outputs", expanded_outputs.len());
 
@@ -389,41 +390,16 @@ impl NxCache {
     ) -> anyhow::Result<i64> {
         let outputs_path = Path::new(&cached_result.outputs_path);
 
+        let outputs = normalize_outputs(&self.workspace_root, outputs)?;
         let expanded_outputs = _expand_outputs(outputs_path, outputs)?;
 
-        trace!("Removing expanded outputs: {:?}", &expanded_outputs);
-        remove_items(
-            expanded_outputs
-                .iter()
-                .map(|p| self.workspace_root.join(p))
-                .collect::<Vec<_>>()
-                .as_slice(),
-        )?;
-
         trace!(
-            "Copying Files from Cache {:?} -> {:?}",
-            &outputs_path, &self.workspace_root
+            "Restoring {} outputs from cache {:?} -> {:?}",
+            expanded_outputs.len(),
+            &outputs_path,
+            &self.workspace_root
         );
-        let sz = _copy(outputs_path, &self.workspace_root);
-
-        match sz {
-            Err(e) => {
-                let kind = underlying_io_error_kind(&e);
-                match kind {
-                    Some(std::io::ErrorKind::NotFound) => {
-                        trace!("No artifacts to copy: {:?}", e);
-                        Ok(0)
-                    }
-                    _ => {
-                        return Err(anyhow::anyhow!("Error copying files from cache: {:?}", e));
-                    }
-                }
-            }
-            Ok(sz) => {
-                trace!("Copied {} bytes from cache", sz);
-                Ok(sz)
-            }
-        }
+        copy_outputs_into_workspace(&self.workspace_root, outputs_path, &expanded_outputs)
     }
 
     #[napi]
@@ -532,12 +508,109 @@ where
     }
 }
 
-// From: https://docs.rs/anyhow/latest/anyhow/struct.Error.html#example-1
-fn underlying_io_error_kind(error: &anyhow::Error) -> Option<std::io::ErrorKind> {
-    for cause in error.chain() {
-        if let Some(io_error) = cause.downcast_ref::<std::io::Error>() {
-            return Some(io_error.kind());
+/// Normalize declared output paths for cache use: relativize an in-workspace
+/// absolute path to the workspace root. Errors if any path resolves outside the
+/// workspace (absolute elsewhere, or relative climbing out via `..`).
+fn normalize_outputs(workspace_root: &Path, outputs: Vec<String>) -> anyhow::Result<Vec<String>> {
+    outputs
+        .into_iter()
+        .map(|output| {
+            let path = Path::new(&output);
+            let relative = if path.is_absolute() {
+                path.strip_prefix(workspace_root).map_err(|_| {
+                    anyhow::anyhow!("Cache output is outside the workspace: {}", output)
+                })?
+            } else {
+                path
+            };
+            if escapes_workspace(relative) {
+                return Err(anyhow::anyhow!(
+                    "Cache output is outside the workspace: {}",
+                    output
+                ));
+            }
+            Ok(relative.to_normalized_string())
+        })
+        .collect()
+}
+
+/// Whether a relative path climbs above its base via `..`.
+fn escapes_workspace(path: &Path) -> bool {
+    let mut depth: i32 = 0;
+    for component in path.components() {
+        match component {
+            Component::ParentDir => {
+                depth -= 1;
+                if depth < 0 {
+                    return true;
+                }
+            }
+            Component::Normal(_) => depth += 1,
+            Component::CurDir => {}
+            // A relative path shouldn't contain a root/prefix; treat as escaping.
+            Component::RootDir | Component::Prefix(_) => return true,
         }
     }
-    None
+    false
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[cfg(unix)]
+    #[test]
+    fn normalize_outputs_relativizes_in_workspace_absolute_paths() {
+        let ws = Path::new("/ws/root");
+        let out = normalize_outputs(
+            ws,
+            vec!["dist".to_string(), "/ws/root/build/app".to_string()],
+        )
+        .unwrap();
+        assert_eq!(out, vec!["dist".to_string(), "build/app".to_string()]);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn normalize_outputs_errors_on_paths_outside_workspace() {
+        let ws = Path::new("/ws/root");
+        // Absolute path outside the workspace.
+        assert!(normalize_outputs(ws, vec!["/etc/cron.d/evil".to_string()]).is_err());
+        // Relative path climbing out via `..`.
+        assert!(normalize_outputs(ws, vec!["../../escape".to_string()]).is_err());
+        // A valid output alongside an escaping one still errors.
+        assert!(
+            normalize_outputs(ws, vec!["dist".to_string(), "../../escape".to_string()]).is_err()
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn normalize_outputs_relativizes_in_workspace_absolute_paths() {
+        let ws = Path::new(r"C:\ws\root");
+        // A drive-letter absolute path inside the workspace is relativized and
+        // its separators normalized to forward slashes.
+        let out = normalize_outputs(
+            ws,
+            vec!["dist".to_string(), r"C:\ws\root\build\app".to_string()],
+        )
+        .unwrap();
+        assert_eq!(out, vec!["dist".to_string(), "build/app".to_string()]);
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn normalize_outputs_errors_on_paths_outside_workspace() {
+        let ws = Path::new(r"C:\ws\root");
+        // Absolute path on the same drive but outside the workspace.
+        assert!(normalize_outputs(ws, vec![r"C:\Windows\System32".to_string()]).is_err());
+        // Absolute path on a different drive.
+        assert!(normalize_outputs(ws, vec![r"D:\elsewhere".to_string()]).is_err());
+        // Relative path climbing out via `..`.
+        assert!(normalize_outputs(ws, vec![r"..\..\escape".to_string()]).is_err());
+        // A valid output alongside an escaping one still errors.
+        assert!(
+            normalize_outputs(ws, vec!["dist".to_string(), r"..\..\escape".to_string()]).is_err()
+        );
+    }
 }

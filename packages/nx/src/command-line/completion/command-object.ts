@@ -2,7 +2,7 @@ import { prompt } from 'enquirer';
 import { existsSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
-import { CommandModule } from 'yargs';
+import { Argv, CommandModule } from 'yargs';
 import { handleImport } from '../../utils/handle-import';
 
 const SHELL_CHOICES = ['bash', 'zsh', 'fish', 'powershell'] as const;
@@ -18,34 +18,16 @@ export const yargsCompletionCommand: CommandModule<{}, CompletionArgs> = {
   command: 'completion [shell]',
   describe:
     'Install shell completion for bash, zsh, fish, or powershell. Omit the shell to pick interactively.',
-  builder: (yargs) =>
-    yargs
-      .positional('shell', {
-        type: 'string',
-        choices: SHELL_CHOICES,
-        describe: 'Shell to install completion for.',
-      })
-      .option('force', {
-        type: 'boolean',
-        default: false,
-        describe:
-          'Install the completion script even if `nx` is not found on PATH.',
-      })
-      .option('stdout', {
-        type: 'boolean',
-        default: false,
-        describe:
-          'Print the completion script to stdout instead of writing to the shell rc file.',
-      })
-      .example('$0 completion bash', 'Install bash completion to ~/.bashrc')
-      .example(
-        '$0 completion',
-        'Pick shells interactively and install completion for each'
-      )
-      .example(
-        '$0 completion bash --stdout >> ~/.bash_profile',
-        'Print to stdout for a custom rc location'
-      ) as any,
+  builder: (yargs) => {
+    const y = withCompletionOptions(yargs);
+    // Yargs' built-in help is disabled (see nx-commands.ts) and this command
+    // skips initLocal's --help handling, so handle it in the builder like init.
+    if (process.argv.includes('--help') || process.argv.includes('-h')) {
+      y.showHelp();
+      process.exit(0);
+    }
+    return y;
+  },
   handler: async (args) => {
     const scripts = await handleImport('./scripts.js', __dirname);
     const shells = args.shell ? [args.shell] : await pickShellsInteractively();
@@ -68,6 +50,36 @@ export const yargsCompletionCommand: CommandModule<{}, CompletionArgs> = {
     process.exit(0);
   },
 };
+
+function withCompletionOptions(yargs: Argv) {
+  return yargs
+    .positional('shell', {
+      type: 'string',
+      choices: SHELL_CHOICES,
+      describe: 'Shell to install completion for.',
+    })
+    .option('force', {
+      type: 'boolean',
+      default: false,
+      describe:
+        'Install the completion script even if `nx` is not found on PATH.',
+    })
+    .option('stdout', {
+      type: 'boolean',
+      default: false,
+      describe:
+        'Print the completion script to stdout instead of writing to the shell rc file.',
+    })
+    .example('$0 completion bash', 'Install bash completion to ~/.bashrc')
+    .example(
+      '$0 completion',
+      'Pick shells interactively and install completion for each'
+    )
+    .example(
+      '$0 completion bash --stdout >> ~/.bash_profile',
+      'Print to stdout for a custom rc location'
+    ) as any;
+}
 
 async function pickShellsInteractively(): Promise<Shell[]> {
   if (!process.stdin.isTTY || !process.stderr.isTTY) {

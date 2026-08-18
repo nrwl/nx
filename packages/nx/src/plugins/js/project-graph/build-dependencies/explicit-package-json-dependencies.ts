@@ -36,7 +36,9 @@ function isPackageJsonAtProjectRoot(
   if (!fileName.endsWith('package.json')) {
     return false;
   }
-  const filePath = fileName.slice(0, -13);
+  // A root-level package.json has no directory prefix, so its project root is '.';
+  // every other manifest sits at '<root>/package.json'.
+  const filePath = fileName === 'package.json' ? '.' : fileName.slice(0, -13);
   return !!roots[filePath];
 }
 

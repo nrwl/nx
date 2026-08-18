@@ -1,0 +1,14 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/oxlint",
+  "projectType": "library",
+  "implicitDependencies": ["eslint-plugin"],
+  "targets": {
+    "build": {
+      "command": "node ./scripts/copy-readme.js oxlint packages/oxlint/readme-template.md packages/oxlint/README.md",
+      "inputs": ["copyReadme"],
+      "outputs": ["{projectRoot}/README.md"],
+      "dependsOn": ["^build", "build-base"]
+    }
+  }
+}

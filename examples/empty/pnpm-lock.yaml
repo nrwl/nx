@@ -1,0 +1,60 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+overrides:
+  '@nx/devkit': link:../../packages/devkit
+
+importers:
+
+  .:
+    devDependencies:
+      '@nx/angular':
+        specifier: link:../../packages/angular
+        version: link:../../packages/angular
+      '@nx/devkit':
+        specifier: link:../../packages/devkit
+        version: link:../../packages/devkit
+      '@nx/js':
+        specifier: link:../../packages/js
+        version: link:../../packages/js
+      '@nx/oxlint':
+        specifier: link:../../packages/oxlint
+        version: link:../../packages/oxlint
+      '@nx/playwright':
+        specifier: link:../../packages/playwright
+        version: link:../../packages/playwright
+      '@nx/react':
+        specifier: link:../../packages/react
+        version: link:../../packages/react
+      '@nx/vite':
+        specifier: link:../../packages/vite
+        version: link:../../packages/vite
+      '@nx/vitest':
+        specifier: link:../../packages/vitest
+        version: link:../../packages/vitest
+      '@nx/vue':
+        specifier: link:../../packages/vue
+        version: link:../../packages/vue
+      '@nx/web':
+        specifier: link:../../packages/web
+        version: link:../../packages/web
+      nx:
+        specifier: link:../../packages/nx
+        version: link:../../packages/nx
+      typescript:
+        specifier: ~5.9.2
+        version: 5.9.3
+
+packages:
+
+  typescript@5.9.3:
+    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
+snapshots:
+
+  typescript@5.9.3: {}

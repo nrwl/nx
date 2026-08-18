@@ -2,7 +2,7 @@ import {
   addProjectConfiguration,
   readNxJson,
   readProjectConfiguration,
-  type TargetDefaultsRecord,
+  type TargetDefaults,
   type Tree,
   updateNxJson,
 } from '@nx/devkit';
@@ -12,7 +12,7 @@ import prefixReportsDirectoryWithProjectRoot from './prefix-reports-directory-wi
 // This migration ran before targetDefaults supported the array shape, so
 // the test fixtures all use the legacy record shape.
 const td = (n: { targetDefaults?: unknown }) =>
-  n.targetDefaults as TargetDefaultsRecord;
+  n.targetDefaults as TargetDefaults;
 
 describe('prefix-reports-directory-with-project-root', () => {
   let tree: Tree;

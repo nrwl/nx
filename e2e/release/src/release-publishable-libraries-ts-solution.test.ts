@@ -1,4 +1,5 @@
 import {
+  normalizePerformanceReport,
   cleanupProject,
   newProject,
   runCLI,
@@ -12,7 +13,7 @@ import { execSync } from 'node:child_process';
 expect.addSnapshotSerializer({
   serialize(str: string) {
     return (
-      str
+      normalizePerformanceReport(str)
         // Remove all output unique to specific projects to ensure deterministic snapshots
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
         .replaceAll(
@@ -52,7 +53,14 @@ describe('release publishable libraries in workspace with ts solution setup', ()
 
   beforeAll(async () => {
     newProject({
-      packages: ['@nx/js', '@nx/react', '@nx/vue', '@nx/react-native'],
+      packages: [
+        '@nx/js',
+        '@nx/react',
+        '@nx/react-native',
+        '@nx/rollup',
+        '@nx/vite',
+        '@nx/vue',
+      ],
       preset: 'ts',
     });
 
@@ -129,6 +137,10 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       total files: X
       Published to ${e2eRegistryUrl} with tag "latest"
       NX   Successfully ran target nx-release-publish for project @proj/{project-name}
+      Run duration: {DURATION}
+      Cache: 0/1 hit (0%)
+      Critical path: {DURATION} (1 task)
+      Recoverable time: {DURATION}
     `);
   });
 
@@ -168,10 +180,10 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       📦  @proj/{project-name}@0.0.3
       === Tarball Contents ===
       XXB README.md
+      XXX.XXX kb dist/README.md
       XXB dist/index.d.ts
       XXB dist/index.esm.css
       XXB dist/index.esm.js
-      XXX.XXX kb dist/README.md
       XXB dist/src/index.d.ts
       XXB dist/src/index.d.ts.map
       XXB dist/src/lib/{project-name}.d.ts
@@ -188,6 +200,10 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       total files: X
       Published to ${e2eRegistryUrl} with tag "latest"
       NX   Successfully ran target nx-release-publish for project @proj/{project-name}
+      Run duration: {DURATION}
+      Cache: 0/1 hit (0%)
+      Critical path: {DURATION} (1 task)
+      Recoverable time: {DURATION}
     `);
   });
 
@@ -242,6 +258,10 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       total files: X
       Published to ${e2eRegistryUrl} with tag "latest"
       NX   Successfully ran target nx-release-publish for project @proj/{project-name}
+      Run duration: {DURATION}
+      Cache: 0/1 hit (0%)
+      Critical path: {DURATION} (1 task)
+      Recoverable time: {DURATION}
     `);
   });
 
@@ -281,10 +301,10 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       📦  @proj/{project-name}@0.0.6
       === Tarball Contents ===
       XXB README.md
+      XXX.XXX kb dist/README.md
       XXB dist/index.cjs.js
       XXB dist/index.d.ts
       XXB dist/index.esm.js
-      XXX.XXX kb dist/README.md
       XXB dist/src/index.d.ts
       XXB dist/src/index.d.ts.map
       XXB dist/src/lib/{project-name}.d.ts
@@ -301,6 +321,10 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       total files: X
       Published to ${e2eRegistryUrl} with tag "latest"
       NX   Successfully ran target nx-release-publish for project @proj/{project-name}
+      Run duration: {DURATION}
+      Cache: 0/1 hit (0%)
+      Critical path: {DURATION} (1 task)
+      Recoverable time: {DURATION}
     `);
   });
 });

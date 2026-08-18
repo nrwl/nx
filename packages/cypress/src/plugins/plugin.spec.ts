@@ -1,15 +1,15 @@
-import { CreateNodesContextV2 } from '@nx/devkit';
+import { CreateNodesContext } from '@nx/devkit';
 import { defineConfig } from 'cypress';
 
 import { createNodesV2 } from './plugin';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { join } from 'path';
 import { nxE2EPreset } from '../../plugins/cypress-preset';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { resetWorkspaceContext } from '@nx/devkit/internal';
 
 describe('@nx/cypress/plugin', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContextV2;
+  let context: CreateNodesContext;
   let tempFs: TempFs;
   let cwd = process.cwd();
   let originalCacheProjectGraph: string | undefined;

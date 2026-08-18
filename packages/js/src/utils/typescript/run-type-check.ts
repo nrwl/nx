@@ -1,9 +1,9 @@
 import chalk from 'chalk';
 import * as path from 'path';
 import type { BuilderProgram, Diagnostic, Program } from 'typescript';
-import { codeFrameColumns } from 'nx/src/utils/code-frames';
 import { highlight } from '../code-frames/highlight';
 import { readTsConfig } from '../../utils/typescript/ts-config';
+import { codeFrameColumns } from '@nx/devkit/internal';
 
 export interface TypeCheckResult {
   warnings?: string[];
@@ -96,6 +96,10 @@ export async function runTypeCheck(
       options: {
         ...compilerOptions,
         incremental: true,
+        // Set after the spread so it overrides any user-set tsBuildInfoFile.
+        // This is a dedicated type-check program with Nx-injected options that
+        // differ from the real build, so its build info must not share a file
+        // with the build, or it corrupts the build's incremental cache.
         tsBuildInfoFile: path.join(cacheDir, '.tsbuildinfo'),
       },
     });

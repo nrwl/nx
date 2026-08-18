@@ -1,0 +1,65 @@
+---
+title: 'npm Read-Through Cache'
+description: 'Serve repeated npm installs from a cache close to your Nx Agents instead of the public npm registry.'
+keywords:
+  [npm, read-through cache, registry proxy, nx agents, nx cloud, add-on, npmrc]
+sidebar:
+  label: npm read-through cache
+  order: 23
+  badge: new!
+filter: 'type:Features'
+---
+
+The npm read-through cache puts a package registry proxy close to your
+[Nx Agents](/docs/features/ci-features/distribute-task-execution). The first time a package is
+requested, it is fetched from the public npm registry and stored in the cache. Repeated installs of
+the same package are then served from the cache instead of the upstream registry, cutting install
+time and external network usage. Once the cache is warm, packages often install faster than restoring
+them from `node_modules` caching.
+
+It also protects your organization from npm registry outages.
+
+## How to enable it
+
+{% aside type="note" title="Requires a dedicated compute cluster" %}
+The npm read-through cache is an Nx Cloud add-on that runs on a
+[dedicated compute cluster](/docs/features/ci-features/dedicated-compute-cluster). Request the
+cluster, then enable this add-on under [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons).
+{% /aside %}
+
+You can enable npm read-through cache through your organization settings:
+
+1. Open [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons) for your organization.
+2. Under **Dedicated compute cluster** card, find **npm read-through cache** and click **Request add-on** and confirm.
+
+When the add-on is enabled, Nx Cloud runs a caching proxy in your dedicated cluster that sits in
+front of the public npm registry. You point your package manager at the proxy through an `.npmrc`
+file. Installs then flow through the cache.
+
+The cache works with **npm**, **yarn**, and **pnpm**, since they all read the `registry` setting
+from `.npmrc`.
+
+## Scope
+
+- **Public npm packages only.** The cache proxies the public npm registry.
+- **Private and scoped packages that require authentication are not cached.** Keep their existing
+  registry entries in your `.npmrc`. Those requests bypass the cache and go straight to your private
+  registry.
+
+## Configuration
+
+Point your package manager at the cache by setting the registry in an `.npmrc`. Place it in the
+project root (simplest) or in the agent's home directory (`~/.npmrc`):
+
+```ini
+# .npmrc
+registry=http://npm:4873/
+```
+
+The cache is always reachable from within your cluster at the address above.
+
+{% aside type="note" title="If you publish packages" %}
+If your CI publishes npm packages, set a publish registry so `npm publish` targets your real
+registry instead of the cache. Add `publishConfig.registry` to the package's `package.json`, or
+pass `npm publish --registry <url>`.
+{% /aside %}

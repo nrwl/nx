@@ -69,7 +69,7 @@ function getProjectsAffectedByPaths(
       const r = project.data.root;
       const root = r && r.endsWith('/') ? r.substring(0, r.length - 1) : r;
       if (
-        (normalizedPath && root && normalizedPath.startsWith(root)) ||
+        (normalizedPath && root && normalizedPath.startsWith(`${root}/`)) ||
         normalizedPath == root
       ) {
         result.push(project.name);

@@ -4,13 +4,13 @@ import * as jsoncEslintParser from 'jsonc-eslint-parser';
 export default [
   ...baseConfig,
   {
-    files: ['**/*.json'],
+    files: ['./package.json'],
     rules: {
       '@nx/dependency-checks': [
         'error',
         {
           buildTargets: ['build-base'],
-          ignoredDependencies: ['nx'],
+          ignoredDependencies: ['nx', 'typescript'],
         },
       ],
     },

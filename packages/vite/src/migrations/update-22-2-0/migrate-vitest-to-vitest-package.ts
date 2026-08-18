@@ -175,36 +175,25 @@ function migrateTargetDefaults(tree: Tree): void {
 
   let hasChanges = false;
 
-  if (Array.isArray(nxJson.targetDefaults)) {
-    for (const entry of nxJson.targetDefaults) {
-      // Pattern A: an executor entry for @nx/vite:test
-      if (entry.executor === '@nx/vite:test' && entry.target === undefined) {
-        entry.executor = '@nx/vitest:test';
-        hasChanges = true;
-      }
-      // Pattern B: a target entry whose executor field references @nx/vite:test
-      else if (entry.executor === '@nx/vite:test') {
-        entry.executor = '@nx/vitest:test';
-        hasChanges = true;
-      }
+  for (const [targetOrExecutor, targetConfig] of Object.entries(
+    nxJson.targetDefaults
+  )) {
+    if (Array.isArray(targetConfig)) {
+      // This migration predates the filtered array value form; values are plain objects here.
+      continue;
     }
-  } else {
-    for (const [targetOrExecutor, targetConfig] of Object.entries(
-      nxJson.targetDefaults
-    )) {
-      // Pattern A: Executor-keyed (e.g., "@nx/vite:test": { ... })
-      if (targetOrExecutor === '@nx/vite:test') {
-        // Move config to new executor key
-        nxJson.targetDefaults['@nx/vitest:test'] ??= {};
-        Object.assign(nxJson.targetDefaults['@nx/vitest:test'], targetConfig);
-        delete nxJson.targetDefaults['@nx/vite:test'];
-        hasChanges = true;
-      }
-      // Pattern B: Target-name-keyed (e.g., "test": { "executor": "@nx/vite:test", ... })
-      else if (targetConfig.executor === '@nx/vite:test') {
-        targetConfig.executor = '@nx/vitest:test';
-        hasChanges = true;
-      }
+    // Pattern A: Executor-keyed (e.g., "@nx/vite:test": { ... })
+    if (targetOrExecutor === '@nx/vite:test') {
+      // Move config to new executor key
+      nxJson.targetDefaults['@nx/vitest:test'] ??= {};
+      Object.assign(nxJson.targetDefaults['@nx/vitest:test'], targetConfig);
+      delete nxJson.targetDefaults['@nx/vite:test'];
+      hasChanges = true;
+    }
+    // Pattern B: Target-name-keyed (e.g., "test": { "executor": "@nx/vite:test", ... })
+    else if (targetConfig.executor === '@nx/vite:test') {
+      targetConfig.executor = '@nx/vitest:test';
+      hasChanges = true;
     }
   }
 

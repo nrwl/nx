@@ -10,6 +10,8 @@ import {
   updateTsConfig,
 } from './lib';
 import type { ApplicationGeneratorOptions } from './schema';
+import { assertSupportedNestJsVersion } from '../../utils/assert-supported-nestjs-version';
+import { assertVitestSupported } from '../../utils/assert-vitest-supported';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 
 export async function applicationGenerator(
@@ -27,7 +29,13 @@ export async function applicationGeneratorInternal(
   tree: Tree,
   rawOptions: ApplicationGeneratorOptions
 ): Promise<GeneratorCallback> {
+  assertSupportedNestJsVersion(tree);
+
   const options = await normalizeOptions(tree, rawOptions);
+
+  if (options.unitTestRunner === 'vitest') {
+    assertVitestSupported(tree);
+  }
 
   const tasks: GeneratorCallback[] = [];
   const initTask = await initGenerator(tree, {

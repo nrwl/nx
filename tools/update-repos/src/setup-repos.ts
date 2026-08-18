@@ -20,16 +20,8 @@ interface Config {
 
 const SCRIPT_DIR = __dirname;
 const REPOS_DIR = path.join(os.tmpdir(), 'updating-nx', 'repos');
-const CONFIG_FILE = path.join(
-  SCRIPT_DIR,
-  '..',
-  '..',
-  '..',
-  'tools',
-  'update-repos',
-  'config',
-  'repos.json'
-);
+// Compiled to tools/update-repos/dist/src, so the package root is two levels up.
+const CONFIG_FILE = path.join(SCRIPT_DIR, '..', '..', 'config', 'repos.json');
 
 function log(message: string) {
   const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);

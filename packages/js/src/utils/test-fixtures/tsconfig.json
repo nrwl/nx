@@ -1,5 +1,10 @@
 {
   "compilerOptions": {
-    "importHelpers": true
+    "importHelpers": true,
+    "strict": false,
+    "noUncheckedSideEffectImports": false,
+    "types": ["*"],
+    "esModuleInterop": false,
+    "ignoreDeprecations": "6.0"
   }
 }

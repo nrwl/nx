@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
@@ -11,21 +11,32 @@ import {
   readJson,
 } from '@nx/devkit';
 
-import * as devkitExports from 'nx/src/devkit-exports';
+import * as devkitExports from '@nx/devkit';
 
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
-import { PackageManagerCommands } from 'nx/src/utils/package-manager';
+import { PackageManagerCommands } from '@nx/devkit/internal';
 
 describe('application generator', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
   const options: Schema = { directory: 'test' } as Schema;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
     jest
       .spyOn(devkitExports, 'getPackageManagerCommand')
       .mockReturnValue({ exec: 'npx' } as PackageManagerCommands);
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   it('should run successfully', async () => {
@@ -46,14 +57,15 @@ describe('application generator', () => {
     });
     updateNxJson(tree, nxJson);
     await applicationGenerator(tree, {
+      linter: 'eslint',
       ...options,
       unitTestRunner: 'vitest',
       e2eTestRunner: 'playwright',
       addPlugin: true,
     });
-    expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/vite.config.ts', 'utf-8')).toMatchSnapshot();
-    expect(tree.read('test/.eslintrc.json', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('test/eslint.config.mjs', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/src/app/App.spec.ts', 'utf-8')).toMatchSnapshot();
     expect(
       tree.read('test-e2e/playwright.config.mts', 'utf-8')
@@ -67,6 +79,7 @@ describe('application generator', () => {
 
     updateNxJson(tree, nxJson);
     await applicationGenerator(tree, {
+      linter: 'eslint',
       ...options,
       bundler: 'rsbuild',
       unitTestRunner: 'vitest',
@@ -136,14 +149,15 @@ describe('application generator', () => {
     });
     updateNxJson(tree, nxJson);
     await applicationGenerator(tree, {
+      linter: 'eslint',
       ...options,
       addPlugin: true,
       unitTestRunner: 'vitest',
       e2eTestRunner: 'cypress',
     });
-    expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/vite.config.ts', 'utf-8')).toMatchSnapshot();
-    expect(tree.read('test/.eslintrc.json', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('test/eslint.config.mjs', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/src/app/App.spec.ts', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test-e2e/cypress.config.ts', 'utf-8')).toMatchSnapshot();
   });

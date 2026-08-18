@@ -64,6 +64,12 @@ export const getAgentRulesWrapped = (options: AgentRulesWrappedOptions) => {
   return `${nxRulesMarkerCommentStart}\n${nxRulesMarkerCommentDescription}\n\n${agentRulesString}\n\n${nxRulesMarkerCommentEnd}`;
 };
 
+/**
+ * Hostname Nx analytics events are sent to (GA4 Measurement Protocol).
+ * Must stay in sync with GA_ENDPOINT in packages/nx/src/native/telemetry/constants.rs.
+ */
+export const analyticsDomain = 'www.google-analytics.com';
+
 export const nxMcpTomlHeader = `[mcp_servers."nx-mcp"]`;
 
 /**

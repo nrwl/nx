@@ -4,6 +4,7 @@
 // See: https://github.com/alexeyraspopov/picocolors/issues/100
 
 if (process.env.FORCE_COLOR === '0') {
+  process.env.NX_ORIGINAL_FORCE_COLOR = '0';
   process.env.NO_COLOR = '1';
   delete process.env.FORCE_COLOR;
 }
@@ -109,6 +110,16 @@ async function main() {
     (process.argv[2] === 'graph' && !workspace)
   ) {
     process.env.NX_DAEMON = 'false';
+    if (process.argv[2] === '_migrate') {
+      // `_migrate` runs the actual migrate flow (spawned by `nx migrate`,
+      // potentially from a temp install of the latest CLI), so its analytics
+      // events would otherwise be silently dropped. A new-enough outer
+      // process prompts for the preference before spawning (making the
+      // ensure step a no-op here), but when the outer is an older nx with no
+      // analytics prompt, this is the first chance to ask. The session ID is
+      // inherited via NX_ANALYTICS_SESSION_ID.
+      await initAnalytics();
+    }
     (await import('nx/src/command-line/nx-commands')).commandsObject.argv;
   } else {
     // polyfill rxjs observable to avoid issues with multiple version of Observable installed in node_modules
@@ -254,6 +265,7 @@ function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
 function isNxCloudCommand(command: string): boolean {
   const nxCloudCommands = [
     'start-ci-run',
+    'start-nx-agents',
     'start-agent',
     'stop-all-agents',
     'complete-ci-run',
@@ -318,7 +330,7 @@ function warnIfUsingOutdatedGlobalInstall(
       : [];
 
     bodyLines.push(
-      'For more information, see https://nx.dev/more-concepts/global-nx'
+      'For more information, see https://nx.dev/docs/getting-started/installation#global-installation'
     );
     output.warn({
       title: `It's time to update Nx 🎉`,

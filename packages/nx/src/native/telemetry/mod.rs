@@ -82,7 +82,7 @@ pub fn initialize_telemetry(
         Arc<Mutex<NxDbConnection>>,
     >,
     workspace_id: String,
-    user_id: String,
+    user_id: Option<String>,
     nx_version: String,
     package_manager_name: String,
     package_manager_version: Option<String>,
@@ -126,7 +126,7 @@ pub fn initialize_telemetry(
 pub fn initialize_telemetry_with_session_id(
     session_id: String,
     workspace_id: String,
-    user_id: String,
+    user_id: Option<String>,
     nx_version: String,
     package_manager_name: String,
     package_manager_version: Option<String>,
@@ -190,9 +190,28 @@ pub struct EventDimensions {
     pub package_name: String,
     pub package_version: String,
     pub duration: String,
+    pub sample_rate: String,
     pub task_count: String,
     pub project_count: String,
     pub cached_task_count: String,
+    pub cli_source: String,
+    pub interactive: String,
+    pub exclude_applied_migrations: String,
+    pub include: String,
+    pub include_source: String,
+    pub multi_major_choice: String,
+    pub fetch_method: String,
+    pub fetch_fallback_reason: String,
+    pub create_commits: String,
+    pub agentic_outcome: String,
+    pub agent_used: String,
+    pub error_name: String,
+    pub error_location: String,
+    pub migration_name: String,
+    pub prompt_choice: String,
+    pub majors_crossed: String,
+    pub migration_count: String,
+    pub applied_count: String,
 }
 
 /// Returns the canonical event dimension names.
@@ -204,9 +223,28 @@ pub fn get_event_dimensions() -> EventDimensions {
         package_name: event_dimension::PACKAGE_NAME.to_string(),
         package_version: event_dimension::PACKAGE_VERSION.to_string(),
         duration: event_dimension::DURATION.to_string(),
+        sample_rate: event_dimension::SAMPLE_RATE.to_string(),
         task_count: event_dimension::TASK_COUNT.to_string(),
         project_count: event_dimension::PROJECT_COUNT.to_string(),
         cached_task_count: event_dimension::CACHED_TASK_COUNT.to_string(),
+        cli_source: event_dimension::CLI_SOURCE.to_string(),
+        interactive: event_dimension::INTERACTIVE.to_string(),
+        exclude_applied_migrations: event_dimension::EXCLUDE_APPLIED_MIGRATIONS.to_string(),
+        include: event_dimension::INCLUDE.to_string(),
+        include_source: event_dimension::INCLUDE_SOURCE.to_string(),
+        multi_major_choice: event_dimension::MULTI_MAJOR_CHOICE.to_string(),
+        fetch_method: event_dimension::FETCH_METHOD.to_string(),
+        fetch_fallback_reason: event_dimension::FETCH_FALLBACK_REASON.to_string(),
+        create_commits: event_dimension::CREATE_COMMITS.to_string(),
+        agentic_outcome: event_dimension::AGENTIC_OUTCOME.to_string(),
+        agent_used: event_dimension::AGENT_USED.to_string(),
+        error_name: event_dimension::ERROR_NAME.to_string(),
+        error_location: event_dimension::ERROR_LOCATION.to_string(),
+        migration_name: event_dimension::MIGRATION_NAME.to_string(),
+        prompt_choice: event_dimension::PROMPT_CHOICE.to_string(),
+        majors_crossed: event_dimension::MAJORS_CROSSED.to_string(),
+        migration_count: event_dimension::MIGRATION_COUNT.to_string(),
+        applied_count: event_dimension::APPLIED_COUNT.to_string(),
     }
 }
 
@@ -216,6 +254,7 @@ pub fn get_event_dimensions() -> EventDimensions {
 
 /// Track an event from Rust code
 /// This is a fire-and-forget operation - errors are logged but not returned
+/// Main JS thread only — reads env vars, racing env::set_var on other threads.
 pub fn track_rust_event(event_name: impl Into<String>, parameters: HashMap<String, String>) {
     if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
         if let Err(e) = telemetry.track_event_impl(event_name.into(), Some(parameters)) {

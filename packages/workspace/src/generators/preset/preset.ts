@@ -319,6 +319,9 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       directory: '.',
       bundler: 'tsc',
+      // Forwarded so the library generator's own resolution short-circuits;
+      // without it the user is asked which linter to use a second time.
+      linter: options.linter,
       unitTestRunner: 'vitest',
       testEnvironment: 'node',
       js: options.js,
@@ -335,7 +338,6 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.workspaces ? undefined : options.name,
       directory: '.',
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig,
       framework: options.framework,
       docker: options.docker,
       rootProject: true,

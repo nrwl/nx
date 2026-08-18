@@ -22,6 +22,12 @@ describe('EsBuild Plugin - Basic - Non-Bundle', () => {
     );
     updateFile(`libs/${myPkg}/src/lib/${myPkg}.ts`, `console.log('Hello');\n`);
     updateFile(`libs/${myPkg}/src/index.ts`, `import './lib/${myPkg}.cjs';\n`);
+    // TS 6 defaults noUncheckedSideEffectImports=true, so the bare .cjs
+    // side-effect import needs an ambient module to typecheck.
+    updateFile(
+      `libs/${myPkg}/src/cjs-modules.d.ts`,
+      `declare module '*.cjs';\n`
+    );
 
     runCLI(`build ${myPkg} --bundle=false`);
 

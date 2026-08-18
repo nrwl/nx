@@ -4,8 +4,8 @@ import {
   type Tree,
 } from '@nx/devkit';
 import {
+  typescriptESLintVersion as latestTypescriptESLintVersion,
   useFlatConfig,
-  eslint9__typescriptESLintVersion,
 } from '@nx/eslint/internal';
 import { versions } from '../../utils/version-utils';
 import { isBuildableLibraryProject } from './buildable-project';
@@ -29,7 +29,7 @@ export function addAngularEsLintDependencies(
 
   if ('typescriptEslintVersion' in compatVersions) {
     devDependencies['@typescript-eslint/utils'] = usesEslintFlatConfig
-      ? eslint9__typescriptESLintVersion
+      ? latestTypescriptESLintVersion
       : compatVersions.typescriptEslintVersion;
   }
 

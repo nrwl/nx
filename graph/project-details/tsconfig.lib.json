@@ -5,7 +5,8 @@
     "outDir": "dist",
     "types": ["node"],
     "lib": ["ES2022", "DOM"],
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "rootDir": "."
   },
   "exclude": [
     "jest.config.ts",

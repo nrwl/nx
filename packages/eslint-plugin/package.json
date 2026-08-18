@@ -6,7 +6,6 @@
   "files": [
     "dist",
     "!dist/tsconfig.tsbuildinfo",
-    "!dist/spec",
     "migrations.json"
   ],
   "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
@@ -33,6 +32,9 @@
       "nx": [
         "dist/nx.d.ts"
       ],
+      "internal": [
+        "dist/internal.d.ts"
+      ],
       "react": [
         "dist/react.d.ts"
       ],
@@ -48,7 +50,8 @@
   },
   "homepage": "https://nx.dev",
   "nx-migrations": {
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
   },
   "exports": {
     ".": {
@@ -68,6 +71,11 @@
       "types": "./dist/nx.d.ts",
       "default": "./dist/nx.js"
     },
+    "./internal": {
+      "@nx/nx-source": "./internal.ts",
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
+    },
     "./react": {
       "@nx/nx-source": "./react.ts",
       "types": "./dist/react.d.ts",
@@ -80,10 +88,13 @@
     }
   },
   "peerDependencies": {
-    "@typescript-eslint/parser": "^6.13.2 || ^7.0.0 || ^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
     "eslint-config-prettier": "catalog:eslint"
   },
   "peerDependenciesMeta": {
+    "@typescript-eslint/parser": {
+      "optional": true
+    },
     "eslint-config-prettier": {
       "optional": true
     }
@@ -94,10 +105,10 @@
     "@phenomnomnominal/tsquery": "catalog:typescript",
     "@typescript-eslint/type-utils": "catalog:eslint",
     "@typescript-eslint/utils": "catalog:eslint",
-    "chalk": "catalog:",
     "confusing-browser-globals": "^1.0.9",
     "globals": "^17.0.0",
     "jsonc-eslint-parser": "^2.1.0",
+    "picocolors": "catalog:",
     "semver": "catalog:",
     "tslib": "catalog:typescript"
   },

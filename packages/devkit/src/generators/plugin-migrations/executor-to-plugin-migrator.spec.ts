@@ -22,13 +22,12 @@ describe('readTargetDefaultsForExecutor', () => {
     });
   });
 
-  it('reads the unfiltered executor entry from array-shaped targetDefaults', () => {
-    const targetDefaults: TargetDefaults = [
-      {
-        executor: '@nx/example:test',
+  it('reads the unfiltered executor entry from an executor-keyed default', () => {
+    const targetDefaults: TargetDefaults = {
+      '@nx/example:test': {
         inputs: ['default', '^default'],
       },
-    ];
+    };
 
     expect(
       readTargetDefaultsForExecutor('@nx/example:test', targetDefaults)
@@ -37,19 +36,21 @@ describe('readTargetDefaultsForExecutor', () => {
     });
   });
 
-  it('does not broaden to target-scoped or filtered array entries', () => {
-    const targetDefaults: TargetDefaults = [
-      {
-        target: 'build',
-        executor: '@nx/example:build',
-        cache: false,
-      },
-      {
-        executor: '@nx/example:build',
-        projects: ['app'],
-        cache: true,
-      },
-    ];
+  it('does not broaden to target-scoped or filtered entries', () => {
+    const targetDefaults: TargetDefaults = {
+      build: [
+        {
+          filter: { executor: '@nx/example:build' },
+          cache: false,
+        },
+      ],
+      '@nx/example:build': [
+        {
+          filter: { projects: ['app'] },
+          cache: true,
+        },
+      ],
+    };
 
     expect(
       readTargetDefaultsForExecutor('@nx/example:build', targetDefaults)

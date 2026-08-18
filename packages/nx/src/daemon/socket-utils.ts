@@ -1,7 +1,13 @@
 import { unlinkSync } from 'fs';
 import { platform, tmpdir } from 'os';
-import { join, resolve } from 'path';
-import { getDaemonSocketDir, getSocketDir } from './tmp-dir';
+import { dirname, join, resolve } from 'path';
+import {
+  getDaemonSocketDir,
+  getPluginSocketDir,
+  getRefusedConfiguredSocketDir,
+  getSocketDir,
+  getSocketDirFallbackCause,
+} from './tmp-dir';
 import { createSerializableError } from '../utils/serializable-error';
 import { isV8SerializerEnabled } from './is-v8-serializer-enabled';
 import { serialize as v8_serialize } from 'v8';
@@ -31,23 +37,47 @@ export const getForkedProcessOsSocketPath = (id: string) => {
 };
 
 export const getPluginOsSocketPath = (id: string) => {
-  let path = resolve(join(getSocketDir(true), 'plugin' + id + '.sock'));
+  let path = resolve(join(getPluginSocketDir(), getPluginSocketFileName(id)));
 
   assertValidSocketPath(path);
 
   return isWindows ? '\\\\.\\pipe\\nx\\' + path : path;
 };
 
+export function getPluginSocketFileName(id: string): string {
+  return `p${id}.sock`;
+}
+
 function assertValidSocketPath(path: string) {
   if (path.length > 95) {
+    const fallbackCause = getSocketDirFallbackCause();
+    const refusedConfiguredSocketDir = getRefusedConfiguredSocketDir();
     throw new Error(
       [
         'Attempted to open socket that exceeds the maximum socket length.',
+        ...(fallbackCause === undefined
+          ? []
+          : [
+              `Nx fell back to ${dirname(
+                path
+              )} because the default socket directory could not be used.`,
+              'Run the command with --verbose to see why the default directory was rejected.',
+            ]),
         '',
-        `Set NX_SOCKET_DIR to a shorter path (e.g. ${
-          isWindows ? '%TMP%/nx-tmp' : '/tmp/nx-tmp'
-        }) to avoid this issue.`,
-      ].join('\n')
+        ...(refusedConfiguredSocketDir === undefined
+          ? [
+              `Set NX_SOCKET_DIR to a shorter path (e.g. ${
+                isWindows ? '%TMP%/nx-tmp' : '/tmp/nx-tmp'
+              }) to avoid this issue.`,
+            ]
+          : [
+              // Saying "set a shorter path" here would be advice they already
+              // followed: they set one, and it was refused for another reason.
+              `The directory set in NX_SOCKET_DIR (${refusedConfiguredSocketDir}) could not be used — see the warning above — so Nx fell back to a longer path.`,
+              'Point NX_SOCKET_DIR at a short directory your user owns.',
+            ]),
+      ].join('\n'),
+      fallbackCause === undefined ? undefined : { cause: fallbackCause }
     );
   }
 }

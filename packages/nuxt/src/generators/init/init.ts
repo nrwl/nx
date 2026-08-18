@@ -4,8 +4,11 @@ import { addPlugin } from '@nx/devkit/internal';
 import { createNodesV2 } from '../../plugins/plugin';
 import { InitSchema } from './schema';
 import { updateDependencies } from './lib/utils';
+import { assertSupportedNuxtVersion } from '../../utils/assert-supported-nuxt-version';
 
 export async function nuxtInitGenerator(host: Tree, schema: InitSchema) {
+  assertSupportedNuxtVersion(host);
+
   await addPlugin(
     host,
     await createProjectGraphAsync(),

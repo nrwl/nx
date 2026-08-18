@@ -29,7 +29,7 @@ describe('@nx/next (legacy)', () => {
 
   beforeAll(() => {
     proj = newProject({
-      packages: ['@nx/next'],
+      packages: ['@nx/next', '@nx/jest', '@nx/eslint', '@nx/playwright'],
     });
     packageManager = detectPackageManager(tmpProjPath());
     originalEnv = process.env.NODE_ENV;

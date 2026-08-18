@@ -7,7 +7,7 @@ describe('Jest root projects', () => {
   describe('angular', () => {
     beforeAll(() => {
       newProject({
-        packages: ['@nx/angular'],
+        packages: ['@nx/angular', '@nx/jest'],
       });
       runCLI(
         `generate @nx/angular:app --name=${myapp} --directory . --rootProject --no-interactive --unitTestRunner=jest --linter=eslint`
@@ -31,7 +31,7 @@ describe('Jest root projects', () => {
   describe('react', () => {
     beforeAll(() => {
       newProject({
-        packages: ['@nx/react'],
+        packages: ['@nx/react', '@nx/vite', '@nx/jest', '@nx/eslint'],
       });
       runCLI(
         `generate @nx/react:app --name=${myapp} --directory . --rootProject --unitTestRunner=jest --linter=eslint`

@@ -5,8 +5,8 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/vue/README.md"],
-      "command": "node ./scripts/copy-readme.js vue",
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js vue packages/vue/readme-template.md packages/vue/README.md",
       "inputs": ["copyReadme"]
     }
   }

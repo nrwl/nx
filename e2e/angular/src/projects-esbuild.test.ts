@@ -10,8 +10,8 @@ import {
 describe('Angular Projects - Esbuild', () => {
   let setup: ProjectsTestSetup;
 
-  beforeAll(() => {
-    setup = setupProjectsTest();
+  beforeAll(async () => {
+    setup = await setupProjectsTest();
   });
 
   afterEach(() => {
@@ -118,6 +118,41 @@ describe('Angular Projects - Esbuild', () => {
     let indexHtmlContent = readFile(`dist/${esbuildApp}/browser/index.html`);
     expect(indexHtmlContent).toContain(
       `<title>${esbuildApp} (transformed)</title>`
+    );
+  });
+
+  it('should support a TypeScript "index.html" transformer located in a library referenced with {workspaceRoot}', async () => {
+    const { esbuildApp, lib1 } = setup;
+
+    // A .ts transformer is loaded via require(), unlike .mjs which Node
+    // resolves against cwd. Placing it in a library and referencing it with
+    // {workspaceRoot} exercises the workspace-relative path resolution.
+    updateFile(
+      `${lib1}/src/index.transformer.ts`,
+      `const indexHtmlTransformer = (indexContent: string): string => {
+        return indexContent.replace(
+          '<title>${esbuildApp}</title>',
+          '<title>${esbuildApp} (transformed from lib)</title>'
+        );
+      };
+
+      export default indexHtmlTransformer;`
+    );
+
+    updateJson(join(esbuildApp, 'project.json'), (config) => {
+      config.targets.build.executor = '@nx/angular:application';
+      config.targets.build.options = {
+        ...config.targets.build.options,
+        indexHtmlTransformer: `{workspaceRoot}/${lib1}/src/index.transformer.ts`,
+      };
+      return config;
+    });
+
+    runCLI(`build ${esbuildApp}`);
+
+    const indexHtmlContent = readFile(`dist/${esbuildApp}/browser/index.html`);
+    expect(indexHtmlContent).toContain(
+      `<title>${esbuildApp} (transformed from lib)</title>`
     );
   });
 });

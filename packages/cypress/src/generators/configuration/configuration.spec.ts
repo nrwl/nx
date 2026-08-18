@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   addProjectConfiguration,
@@ -67,7 +67,7 @@ describe('Cypress e2e configuration', () => {
         "compilerOptions": {
           "allowJs": true,
           "module": "commonjs",
-          "moduleResolution": "node10",
+          "moduleResolution": "bundler",
           "outDir": "../../dist/out-tsc",
           "sourceMap": false,
           "types": [
@@ -134,7 +134,7 @@ describe('Cypress e2e configuration', () => {
         "compilerOptions": {
           "allowJs": true,
           "module": "commonjs",
-          "moduleResolution": "node10",
+          "moduleResolution": "bundler",
           "outDir": "../../dist/out-tsc",
           "sourceMap": false,
           "types": [
@@ -284,7 +284,7 @@ describe('Cypress e2e configuration', () => {
         "compilerOptions": {
           "allowJs": true,
           "module": "commonjs",
-          "moduleResolution": "node10",
+          "moduleResolution": "bundler",
           "outDir": "../../dist/out-tsc",
           "sourceMap": false,
           "types": [
@@ -318,6 +318,43 @@ describe('Cypress e2e configuration', () => {
       addPlugin: true,
     });
     assertCypressFiles(tree, 'libs/my-lib/src/e2e', 'js');
+  });
+
+  it('should set parserOptions.project on the legacy .eslintrc stack when typed linting is enabled', async () => {
+    addProject(tree, { name: 'my-lib', type: 'libs' });
+
+    await cypressE2EConfigurationGenerator(tree, {
+      linter: 'eslint',
+      project: 'my-lib',
+      directory: 'cypress',
+      baseUrl: 'http://localhost:4200',
+      addPlugin: true,
+      enableTypedLinting: true,
+    });
+
+    const eslintConfig = readJson(tree, 'libs/my-lib/.eslintrc.json');
+    const override = eslintConfig.overrides.find((o) => o.parserOptions);
+    expect(override.parserOptions).toEqual({
+      project: 'libs/my-lib/tsconfig.*?.json',
+    });
+    expect(tree.read('libs/my-lib/.eslintrc.json', 'utf-8')).not.toContain(
+      'projectService'
+    );
+  });
+
+  it('should not set parserOptions on the legacy .eslintrc stack when typed linting is disabled', async () => {
+    addProject(tree, { name: 'my-lib', type: 'libs' });
+
+    await cypressE2EConfigurationGenerator(tree, {
+      linter: 'eslint',
+      project: 'my-lib',
+      directory: 'cypress',
+      baseUrl: 'http://localhost:4200',
+      addPlugin: true,
+    });
+
+    const eslintConfig = readJson(tree, 'libs/my-lib/.eslintrc.json');
+    expect(eslintConfig.overrides.some((o) => o.parserOptions)).toBe(false);
   });
 
   it('should not override eslint settings if preset', async () => {
@@ -364,6 +401,7 @@ describe('Cypress e2e configuration', () => {
     );
 
     await cypressE2EConfigurationGenerator(tree, {
+      linter: 'eslint',
       project: 'my-lib',
       directory: 'cypress',
       baseUrl: 'http://localhost:4200',
@@ -635,6 +673,38 @@ export default defineConfig({
     `);
   });
 
+  it('should use node10 moduleResolution in cypress tsconfig on TypeScript < 6', async () => {
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      devDependencies: { ...json.devDependencies, typescript: '~5.9.2' },
+    }));
+    addProject(tree, { name: 'my-app', type: 'apps' });
+
+    await cypressE2EConfigurationGenerator(tree, {
+      project: 'my-app',
+      addPlugin: true,
+    });
+
+    const tsconfig = readJson(tree, 'apps/my-app/tsconfig.json');
+    expect(tsconfig.compilerOptions.moduleResolution).toEqual('node10');
+  });
+
+  it('should use bundler moduleResolution in cypress tsconfig on TypeScript >= 6', async () => {
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      devDependencies: { ...json.devDependencies, typescript: '~6.0.3' },
+    }));
+    addProject(tree, { name: 'my-app', type: 'apps' });
+
+    await cypressE2EConfigurationGenerator(tree, {
+      project: 'my-app',
+      addPlugin: true,
+    });
+
+    const tsconfig = readJson(tree, 'apps/my-app/tsconfig.json');
+    expect(tsconfig.compilerOptions.moduleResolution).toEqual('bundler');
+  });
+
   describe('TS Solution Setup', () => {
     beforeEach(() => {
       tree.write(
@@ -689,6 +759,27 @@ export default defineConfig({
       `);
     });
 
+    it('should set rootDir to offset from cypress dir to satisfy TS5011 (composite off)', async () => {
+      // TS5011: rootDir is required when composite is not set; rootDir must cover all included files
+      addProject(tree, { name: 'my-lib', type: 'libs' });
+      writeJson(tree, 'libs/my-lib/package.json', { name: '@proj/my-lib' });
+      writeJson(tree, 'libs/my-lib/tsconfig.json', {
+        include: [],
+        files: [],
+        references: [],
+      });
+
+      await cypressE2EConfigurationGenerator(tree, {
+        project: 'my-lib',
+        directory: 'src',
+        addPlugin: true,
+      });
+
+      const tsconfig = readJson(tree, 'libs/my-lib/src/tsconfig.json');
+      // cypress dir is nested under the project root, so rootDir must point up to the project root
+      expect(tsconfig.compilerOptions.rootDir).toEqual('..');
+    });
+
     it('should handle existing tsconfig.json files', async () => {
       addProject(tree, { name: 'my-lib', type: 'libs' });
       writeJson(tree, 'libs/my-lib/package.json', {
@@ -725,6 +816,7 @@ export default defineConfig({
         "{
           "extends": "../../../tsconfig.base.json",
           "compilerOptions": {
+            "rootDir": "..",
             "outDir": "out-tsc/cypress",
             "allowJs": true,
             "types": ["cypress", "node"],

@@ -1,11 +1,18 @@
 {
-  "outDir": "dist/packages/express",
+  "outDir": "packages/express/dist",
   "assets": [
-    { "glob": "**/files/**" },
-    { "glob": "**/files/**/.gitkeep" },
-    { "glob": "@(package|executors|generators|migrations).json" },
-    { "glob": "src/**/schema.json" },
-    { "glob": "src/**/schema.d.ts" },
+    {
+      "glob": "**/files/**"
+    },
+    {
+      "glob": "**/files/**/.gitkeep"
+    },
+    {
+      "glob": "src/**/schema.json"
+    },
+    {
+      "glob": "src/**/schema.d.ts"
+    },
     "LICENSE"
   ]
 }

@@ -3,11 +3,11 @@ import * as memfs from 'memfs';
 import '../../../internal-testing-utils/mock-fs';
 
 import { ProjectJsonProjectsPlugin } from './project-json';
-import { CreateNodesContextV2 } from '../../../project-graph/plugins';
-const { createNodesV2 } = ProjectJsonProjectsPlugin;
+import { CreateNodesContext } from '../../../project-graph/plugins';
+const createNodes = ProjectJsonProjectsPlugin.createNodes!;
 
 describe('nx project.json plugin', () => {
-  let context: CreateNodesContextV2;
+  let context: CreateNodesContext;
   beforeEach(() => {
     context = {
       nxJsonConfiguration: {},
@@ -36,7 +36,7 @@ describe('nx project.json plugin', () => {
     );
 
     expect(
-      await createNodesV2[1](
+      await createNodes[1](
         ['project.json', 'packages/lib-a/project.json'],
         undefined,
         context

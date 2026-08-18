@@ -2,14 +2,16 @@ import * as devkit from '@nx/devkit';
 import {
   formatFiles,
   readJson,
+  readJsonFile,
   type NxJsonConfiguration,
   type Tree,
 } from '@nx/devkit';
 import { createTree } from '@nx/devkit/testing';
 import Ajv from 'ajv';
-import * as nxSchema from 'nx/schemas/nx-schema.json';
 import { Preset } from '../utils/presets';
 import { generateWorkspaceFiles } from './generate-workspace-files';
+
+const nxSchema = readJsonFile(require.resolve('nx/schemas/nx-schema.json'));
 
 jest.mock(
   'nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud',
@@ -385,13 +387,43 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
       workspaceGlobs: ['apps/*', 'packages/*'],
     });
 
-    const packageJson = tree.read('/proj/pnpm-workspace.yaml', 'utf-8');
-    expect(packageJson).toMatchInlineSnapshot(`
+    const pnpmWorkspace = tree.read('/proj/pnpm-workspace.yaml', 'utf-8');
+    expect(pnpmWorkspace).toMatchInlineSnapshot(`
       "packages:
         - "apps/*"
         - "packages/*"
 
       autoInstallPeers: true
+      onlyBuiltDependencies:
+        - nx
+      "
+    `);
+    expect(tree.exists('proj/.npmrc')).toBeFalsy();
+  });
+
+  it('should configure the pnpm settings in pnpm-workspace.yaml with allowBuilds for pnpm 11+', async () => {
+    tree.write('proj/package.json', JSON.stringify({}));
+    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('11.0.0');
+
+    await generateWorkspaceFiles(tree, {
+      name: 'proj',
+      directory: 'proj',
+      preset: Preset.NPM,
+      defaultBase: 'main',
+      packageManager: 'pnpm',
+      isCustomPreset: false,
+      workspaceGlobs: ['apps/*', 'packages/*'],
+    });
+
+    const pnpmWorkspace = tree.read('/proj/pnpm-workspace.yaml', 'utf-8');
+    expect(pnpmWorkspace).toMatchInlineSnapshot(`
+      "packages:
+        - "apps/*"
+        - "packages/*"
+
+      autoInstallPeers: true
+      allowBuilds:
+        nx: true
       "
     `);
     expect(tree.exists('proj/.npmrc')).toBeFalsy();

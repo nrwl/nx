@@ -5,10 +5,7 @@ jest.mock('./deduce-default-base', () => ({
 import { mkdtempSync, rmSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import {
-  NxJsonConfiguration,
-  TargetDefaultEntry,
-} from '../../../config/nx-json';
+import { NxJsonConfiguration, TargetDefaults } from '../../../config/nx-json';
 import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
 import {
   createNxJsonFile,
@@ -26,9 +23,11 @@ describe('utils', () => {
       try {
         writeJsonFile(join(repoRoot, 'nx.json'), {
           $schema: './node_modules/nx/schemas/nx-schema.json',
-          targetDefaults: [
-            { target: 'build', projects: 'tag:web', dependsOn: ['^filtered'] },
-          ],
+          targetDefaults: {
+            build: [
+              { filter: { projects: ['tag:web'] }, dependsOn: ['^filtered'] },
+            ],
+          },
         });
 
         createNxJsonFile(repoRoot, ['build'], ['build'], {});
@@ -36,10 +35,12 @@ describe('utils', () => {
         expect(
           readJsonFile<NxJsonConfiguration>(join(repoRoot, 'nx.json'))
         ).toMatchObject({
-          targetDefaults: [
-            { target: 'build', projects: 'tag:web', dependsOn: ['^filtered'] },
-            { target: 'build', dependsOn: ['^build'], cache: true },
-          ],
+          targetDefaults: {
+            build: [
+              { filter: { projects: ['tag:web'] }, dependsOn: ['^filtered'] },
+              { dependsOn: ['^build'], cache: true },
+            ],
+          },
         });
       } finally {
         rmSync(repoRoot, { recursive: true, force: true });
@@ -51,7 +52,7 @@ describe('utils', () => {
       try {
         writeJsonFile(join(repoRoot, 'nx.json'), {
           $schema: './node_modules/nx/schemas/nx-schema.json',
-          targetDefaults: [{ target: 'build', cache: false }],
+          targetDefaults: { build: { cache: false } },
         });
 
         createNxJsonFile(repoRoot, [], ['build'], {});
@@ -59,7 +60,7 @@ describe('utils', () => {
         expect(
           readJsonFile<NxJsonConfiguration>(join(repoRoot, 'nx.json'))
         ).toMatchObject({
-          targetDefaults: [{ target: 'build', cache: false }],
+          targetDefaults: { build: { cache: false } },
         });
       } finally {
         rmSync(repoRoot, { recursive: true, force: true });
@@ -69,26 +70,32 @@ describe('utils', () => {
 
   describe('upsertTargetDefaultEntry', () => {
     it('merges into an existing unfiltered target entry', () => {
-      const entries: TargetDefaultEntry[] = [{ target: 'build', cache: true }];
+      const targetDefaults: TargetDefaults = { build: { cache: true } };
 
-      upsertTargetDefaultEntry(entries, 'build', { dependsOn: ['^build'] });
+      upsertTargetDefaultEntry(targetDefaults, 'build', {
+        dependsOn: ['^build'],
+      });
 
-      expect(entries).toEqual([
-        { target: 'build', cache: true, dependsOn: ['^build'] },
-      ]);
+      expect(targetDefaults).toEqual({
+        build: { cache: true, dependsOn: ['^build'] },
+      });
     });
 
     it('appends a new unfiltered entry instead of merging into a filtered one', () => {
-      const entries: TargetDefaultEntry[] = [
-        { target: 'build', projects: 'tag:web', cache: true },
-      ];
+      const targetDefaults: TargetDefaults = {
+        build: [{ filter: { projects: ['tag:web'] }, cache: true }],
+      };
 
-      upsertTargetDefaultEntry(entries, 'build', { dependsOn: ['^build'] });
+      upsertTargetDefaultEntry(targetDefaults, 'build', {
+        dependsOn: ['^build'],
+      });
 
-      expect(entries).toEqual([
-        { target: 'build', projects: 'tag:web', cache: true },
-        { target: 'build', dependsOn: ['^build'] },
-      ]);
+      expect(targetDefaults).toEqual({
+        build: [
+          { filter: { projects: ['tag:web'] }, cache: true },
+          { dependsOn: ['^build'] },
+        ],
+      });
     });
   });
 
@@ -142,13 +149,12 @@ describe('utils', () => {
         },
         nx: {
           $schema: './node_modules/nx/schemas/nx-schema.json',
-          targetDefaults: [
-            {
-              target: 'build',
+          targetDefaults: {
+            build: {
               dependsOn: ['^build'],
               cache: true,
             },
-          ],
+          },
         },
       },
       {
@@ -162,13 +168,12 @@ describe('utils', () => {
         },
         nx: {
           $schema: './node_modules/nx/schemas/nx-schema.json',
-          targetDefaults: [
-            {
-              target: 'build',
+          targetDefaults: {
+            build: {
               outputs: ['{projectRoot}/dist/**', '{projectRoot}/.next/**'],
               cache: true,
             },
-          ],
+          },
         },
       },
       {
@@ -182,16 +187,15 @@ describe('utils', () => {
         },
         nx: {
           $schema: './node_modules/nx/schemas/nx-schema.json',
-          targetDefaults: [
-            {
-              target: 'build',
+          targetDefaults: {
+            build: {
               inputs: [
                 '{projectRoot}/src/**/*.tsx',
                 '{projectRoot}/test/**/*.tsx',
               ],
               cache: true,
             },
-          ],
+          },
         },
       },
       {
@@ -208,10 +212,10 @@ describe('utils', () => {
         },
         nx: {
           $schema: './node_modules/nx/schemas/nx-schema.json',
-          targetDefaults: [
-            { target: 'build', cache: true },
-            { target: 'dev', cache: false },
-          ],
+          targetDefaults: {
+            build: { cache: true },
+            dev: { cache: false },
+          },
         },
       },
       {
@@ -239,13 +243,12 @@ describe('utils', () => {
         },
         nx: {
           $schema: './node_modules/nx/schemas/nx-schema.json',
-          targetDefaults: [
-            {
-              target: 'build',
+          targetDefaults: {
+            build: {
               dependsOn: ['^build'],
               cache: true,
             },
-          ],
+          },
         },
       },
       {
@@ -281,22 +284,20 @@ describe('utils', () => {
             default: ['{projectRoot}/**/*', 'sharedGlobals'],
           },
           cacheDirectory: '.nx/cache',
-          targetDefaults: [
-            {
-              target: 'build',
+          targetDefaults: {
+            build: {
               dependsOn: ['^build'],
               outputs: ['{projectRoot}/dist/**'],
               inputs: ['{projectRoot}/src/**/*'],
               cache: true,
             },
-            {
-              target: 'test',
+            test: {
               dependsOn: ['build'],
               outputs: ['{projectRoot}/coverage/**'],
               cache: true,
             },
-            { target: 'dev', cache: false },
-          ],
+            dev: { cache: false },
+          },
         },
       },
       {
@@ -324,9 +325,8 @@ describe('utils', () => {
         },
         nx: {
           $schema: './node_modules/nx/schemas/nx-schema.json',
-          targetDefaults: [
-            {
-              target: 'build',
+          targetDefaults: {
+            build: {
               dependsOn: ['^build'],
               inputs: ['{projectRoot}/**/*', '{projectRoot}/.env*'],
               outputs: [
@@ -335,18 +335,16 @@ describe('utils', () => {
               ],
               cache: true,
             },
-            {
-              target: 'lint',
+            lint: {
               dependsOn: ['^lint'],
               cache: true,
             },
-            {
-              target: 'check-types',
+            'check-types': {
               dependsOn: ['^check-types'],
               cache: true,
             },
-            { target: 'dev', cache: false },
-          ],
+            dev: { cache: false },
+          },
         },
       },
     ])('$description', ({ turbo, nx }) => {

@@ -3,6 +3,7 @@
   "continuous": true,
   "outputCapture": "direct-nodejs",
   "title": "Module Federation SSR Dev Server",
+  "x-deprecated": "The `@nx/rspack:module-federation-ssr-dev-server` executor is deprecated. SSR is not first-classed in the new `@nx/react:consumer`/`@nx/react:provider` generators. Removed in Nx v24.",
   "description": "Serve a SSR Consumer (host) application along with its known Producers (remotes).",
   "cli": "nx",
   "type": "object",

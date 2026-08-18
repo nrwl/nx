@@ -52,7 +52,11 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
         );
 
         if (!optionsArg) {
-          // Check if the last argument could be options passed as a variable
+          // Check if the last argument could be options passed via a non-
+          // literal expression. `Identifier` covers `spawn(..., opts)` and
+          // `SpreadElement` covers `spawn(..., ...rest)`. The rule cannot
+          // statically prove what these resolve to, so it gives up rather
+          // than false-positive on a deliberate caller pattern.
           const lastArg = node.arguments[node.arguments.length - 1];
           const hasVariableOptions =
             lastArg &&
