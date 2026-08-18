@@ -28,6 +28,7 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
   const changes = packageJsonChange.getChanges();
 
   const npmPackages = Object.values(projectGraph.externalNodes);
+  let packagesByName: Map<string, ProjectGraphExternalNode[]> | undefined;
 
   const missingTouchedNpmPackages: string[] = [];
 
@@ -77,27 +78,29 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
         (c.path[0] === 'pnpm' && c.path[1] === 'overrides'))
     ) {
       const packageSelector = getPackageSelector(c);
+      if (!packageSelector) continue;
 
-      if (packageSelector) {
-        const matchingNpmPackages = findPackagesForSelector(
-          packageSelector,
-          npmPackages
-        );
+      packagesByName ??= groupPackagesByName(npmPackages);
+      const matchingNpmPackages = findPackagesForSelector(
+        packageSelector,
+        packagesByName
+      );
 
-        if (matchingNpmPackages.length) {
-          touched.push(...matchingNpmPackages.map((pkg) => pkg.name));
-
-          if (
-            matchingNpmPackages.some((pkg) =>
-              globalPackages.has(pkg.data.packageName)
-            )
-          ) {
-            return Object.keys(projectGraph.nodes);
-          }
-        } else {
-          return Object.keys(projectGraph.nodes);
-        }
+      // An unresolved selector can still target a transitive dependency,
+      // so fall back to marking every project affected.
+      if (!matchingNpmPackages.length) {
+        return Object.keys(projectGraph.nodes);
       }
+
+      if (
+        matchingNpmPackages.some((pkg) =>
+          globalPackages.has(pkg.data.packageName)
+        )
+      ) {
+        return Object.keys(projectGraph.nodes);
+      }
+
+      touched.push(...matchingNpmPackages.map((pkg) => pkg.name));
     } else if (isWholeFileChange(c)) {
       // Whole file was touched, so all npm packages are touched.
       touched = npmPackages.map((pkg) => pkg.name);
@@ -125,16 +128,30 @@ function getPackageSelector(change: JsonChange): string | undefined {
   return selector === '.' ? change.path[selectorIndex - 1] : selector;
 }
 
+function groupPackagesByName(
+  npmPackages: ProjectGraphExternalNode[]
+): Map<string, ProjectGraphExternalNode[]> {
+  const packagesByName = new Map<string, ProjectGraphExternalNode[]>();
+  for (const pkg of npmPackages) {
+    const packageName = pkg.data.packageName;
+    if (!packageName) continue;
+    const packages = packagesByName.get(packageName);
+    if (packages) {
+      packages.push(pkg);
+    } else {
+      packagesByName.set(packageName, [pkg]);
+    }
+  }
+  return packagesByName;
+}
+
 function findPackagesForSelector(
   selector: string,
-  npmPackages: ProjectGraphExternalNode[]
+  packagesByName: Map<string, ProjectGraphExternalNode[]>
 ): ProjectGraphExternalNode[] {
   let match: { packageName: string; end: number } | undefined;
-  const packageNames = new Set(
-    npmPackages.map((pkg) => pkg.data.packageName).filter(Boolean)
-  );
 
-  for (const packageName of packageNames) {
+  for (const packageName of packagesByName.keys()) {
     let index = selector.indexOf(packageName);
     while (index !== -1) {
       const end = index + packageName.length;
@@ -157,9 +174,7 @@ function findPackagesForSelector(
     }
   }
 
-  return match
-    ? npmPackages.filter((pkg) => pkg.data.packageName === match.packageName)
-    : [];
+  return match ? packagesByName.get(match.packageName) : [];
 }
 
 function getGlobalPackages(plugins: NxJsonConfiguration['plugins']) {
