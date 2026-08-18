@@ -2,7 +2,7 @@ use dashmap::DashMap;
 use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
-use std::time::SystemTime;
+use std::time::{Duration, SystemTime};
 
 /// Prefix of a "gitfile" - the plain file git writes in place of a `.git`
 /// directory for linked worktrees and submodules.
@@ -188,15 +188,46 @@ pub fn nested_linked_worktrees<P: AsRef<Path>>(workspace_root: P) -> Vec<PathBuf
     let signature = modified_at(&registry);
 
     let roots = read_nested_linked_worktrees(&registry, &canonical_root);
-    NESTED_WORKTREES.insert(
-        workspace_root.to_path_buf(),
-        CachedWorktrees {
-            registry,
-            signature,
-            roots: roots.clone(),
-        },
-    );
+    if is_settled(signature) {
+        NESTED_WORKTREES.insert(
+            workspace_root.to_path_buf(),
+            CachedWorktrees {
+                registry,
+                signature,
+                roots: roots.clone(),
+            },
+        );
+    } else {
+        NESTED_WORKTREES.remove(workspace_root);
+    }
     roots
+}
+
+/// How long a registry's mtime has to have stood before it can stand in for
+/// the registry's contents.
+///
+/// Wider than the coarsest filesystem timestamp anyone runs this on; the cost
+/// of being wrong the other way is one ~7us resolution.
+const RACY_WINDOW: Duration = Duration::from_secs(2);
+
+/// Whether `mtime` is old enough that a later change is guaranteed to move it.
+///
+/// A change landing in the same filesystem clock tick as the mtime we recorded
+/// writes back the value we already hold, so a later comparison sees no change
+/// and the cache serves an answer that is wrong until the next one. Git has
+/// the same problem with index entries and calls them "racily clean".
+/// Declining to cache inside that window closes it on every filesystem,
+/// without a second signature component to be wrong about.
+fn is_settled(mtime: Option<SystemTime>) -> bool {
+    // No registry to time. Its appearance moves the signature off `None`,
+    // which no granularity can hide.
+    let Some(mtime) = mtime else {
+        return true;
+    };
+
+    SystemTime::now()
+        .duration_since(mtime)
+        .is_ok_and(|age| age > RACY_WINDOW)
 }
 
 /// `<git-dir>/worktrees` for `workspace_root`, wherever git keeps it.
@@ -227,9 +258,11 @@ struct CachedWorktrees {
 /// and a `read_dir` - measured at ~7us, and paid on every walk including the
 /// task-output walks in `expand_outputs`, which can never contain a worktree.
 /// Git touches `<git-dir>/worktrees` whenever it adds or removes a
-/// registration, so one `stat` of that directory stands in for all of it. A
-/// worktree created while the daemon is running is still picked up on the next
-/// walk, which is the property resolving per walk was for.
+/// registration, so one `stat` of that directory stands in for all of it, once
+/// that timestamp has stood still long enough to be trusted - see
+/// [`is_settled`]. A worktree created while the daemon is running is still
+/// picked up on the next walk, which is the property resolving per walk was
+/// for.
 ///
 /// Deleting a checkout with `rm -rf` rather than `git worktree remove` leaves
 /// the registration and the mtime untouched, so a warm entry keeps pruning a
@@ -437,6 +470,26 @@ mod test {
         assert_eq!(
             nested_linked_worktrees(temp.path()),
             vec![PathBuf::from("nested/wt")]
+        );
+    }
+
+    #[test]
+    fn does_not_cache_a_registry_that_was_just_modified() {
+        // The mtime of a registry that changed moments ago cannot yet stand in
+        // for its contents: a second change landing in the same clock tick
+        // writes back the value we would have stored, and the comparison that
+        // is supposed to catch it sees no change. Caching only once the
+        // timestamp has stood still is what closes that window, so the absence
+        // of an entry here is the fix, not an accident of timing.
+        let temp = TempDir::new().unwrap();
+        create_dir_all(temp.path().join(".git")).unwrap();
+        register_worktree(temp.path(), "one", &temp.path().join("wt1"));
+
+        assert_eq!(nested_linked_worktrees(temp.path()).len(), 1);
+
+        assert!(
+            NESTED_WORKTREES.get(temp.path()).is_none(),
+            "a registry modified moments ago must not be cached"
         );
     }
 
