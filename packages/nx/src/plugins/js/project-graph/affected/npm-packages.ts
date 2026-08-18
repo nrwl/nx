@@ -76,28 +76,25 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
         c.path[0] === 'resolutions' ||
         (c.path[0] === 'pnpm' && c.path[1] === 'overrides'))
     ) {
-      // Changes to overrides, resolutions, or pnpm.overrides
-      // Find which package was changed and mark projects that depend on it as affected
-      const packageName = c.path[0] === 'pnpm' ? c.path[2] : c.path[1];
+      const packageSelector = getPackageSelector(c);
 
-      if (packageName) {
-        // Look for the npm package in external nodes
-        let npmPackage: ProjectGraphProjectNode | ProjectGraphExternalNode =
-          npmPackages.find((pkg) => pkg.data.packageName === packageName);
+      if (packageSelector) {
+        const matchingNpmPackages = findPackagesForSelector(
+          packageSelector,
+          npmPackages
+        );
 
-        if (npmPackage) {
-          touched.push(npmPackage.name);
+        if (matchingNpmPackages.length) {
+          touched.push(...matchingNpmPackages.map((pkg) => pkg.name));
 
-          // If it's a global package, all projects are affected
           if (
-            'packageName' in npmPackage.data &&
-            globalPackages.has(npmPackage.data.packageName)
+            matchingNpmPackages.some((pkg) =>
+              globalPackages.has(pkg.data.packageName)
+            )
           ) {
             return Object.keys(projectGraph.nodes);
           }
         } else {
-          // If the package isn't found in external nodes, it might affect all projects
-          // since overrides can affect transitive dependencies
           return Object.keys(projectGraph.nodes);
         }
       }
@@ -115,8 +112,55 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
       )} were not found. Please open an issue in GitHub including the package.json file.`
     );
   }
-  return touched;
+  return [...new Set(touched)];
 };
+
+function getPackageSelector(change: JsonChange): string | undefined {
+  const value =
+    change.type === JsonDiffType.Deleted ? change.value.lhs : change.value.rhs;
+  if (typeof value !== 'string') return;
+
+  const selectorIndex = change.path[0] === 'pnpm' ? 2 : change.path.length - 1;
+  const selector = change.path[selectorIndex];
+  return selector === '.' ? change.path[selectorIndex - 1] : selector;
+}
+
+function findPackagesForSelector(
+  selector: string,
+  npmPackages: ProjectGraphExternalNode[]
+): ProjectGraphExternalNode[] {
+  let match: { packageName: string; end: number } | undefined;
+  const packageNames = new Set(
+    npmPackages.map((pkg) => pkg.data.packageName).filter(Boolean)
+  );
+
+  for (const packageName of packageNames) {
+    let index = selector.indexOf(packageName);
+    while (index !== -1) {
+      const end = index + packageName.length;
+      const validStart =
+        index === 0 ||
+        selector[index - 1] === '>' ||
+        selector[index - 1] === '/';
+      const validEnd = end === selector.length || selector[end] === '@';
+
+      if (
+        validStart &&
+        validEnd &&
+        (!match ||
+          end > match.end ||
+          (end === match.end && packageName.length > match.packageName.length))
+      ) {
+        match = { packageName, end };
+      }
+      index = selector.indexOf(packageName, index + 1);
+    }
+  }
+
+  return match
+    ? npmPackages.filter((pkg) => pkg.data.packageName === match.packageName)
+    : [];
+}
 
 function getGlobalPackages(plugins: NxJsonConfiguration['plugins']) {
   return (plugins ?? [])
