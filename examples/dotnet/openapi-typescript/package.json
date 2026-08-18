@@ -11,7 +11,7 @@
   },
   "devDependencies": {
     "@nx/dotnet": "link:../../../packages/dotnet",
-    "@openapitools/openapi-generator-cli": "2.24.0",
+    "@openapitools/openapi-generator-cli": "2.40.1",
     "nx": "link:../../../packages/nx",
     "typescript": "~5.9.2"
   }
