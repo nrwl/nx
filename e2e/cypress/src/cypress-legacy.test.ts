@@ -11,7 +11,7 @@ const TEN_MINS_MS = 600_000;
 
 describe('Cypress E2E Test runner (legacy)', () => {
   beforeAll(() => {
-    newProject({ packages: ['@nx/angular', '@nx/react'] });
+    newProject({ packages: ['@nx/angular', '@nx/react', '@nx/cypress'] });
   });
 
   afterAll(() => cleanupProject());
@@ -31,7 +31,7 @@ describe('Cypress E2E Test runner (legacy)', () => {
         { env: { NX_ADD_PLUGINS: 'false' } }
       );
 
-      if (runE2ETests('cypress')) {
+      if (await runE2ETests('cypress')) {
         const results = runCLI(
           `run-many --target=e2e --parallel=2 --port=cypress-auto --output-style=stream`
         );
@@ -61,7 +61,7 @@ describe('Cypress E2E Test runner (legacy)', () => {
         env: { NX_ADD_PLUGINS: 'false' },
       });
 
-      if (runE2ETests('cypress')) {
+      if (await runE2ETests('cypress')) {
         expect(runCLI(`run ${appName}:component-test`)).toContain(
           'All specs passed!'
         );

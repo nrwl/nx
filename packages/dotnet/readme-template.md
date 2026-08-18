@@ -9,8 +9,6 @@
 
 <hr>
 
-> Note: The `@nx/dotnet` plugin is currently experimental. Features and APIs may change.
-
 # Nx: Smart Monorepos · Fast Builds
 
 Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.

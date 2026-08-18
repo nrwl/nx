@@ -2,15 +2,16 @@
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
 // nx-ignore-next-line
 import { FileChange } from 'nx/src/devkit-exports';
-// nx-ignore-next-line
-import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
 
 import {
   ArrowPathIcon,
+  CheckCircleIcon,
+  ClockIcon,
   CodeBracketIcon,
   ExclamationCircleIcon,
   ListBulletIcon,
   PlayIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { Pill } from '@nx/graph-internal-ui-project-details';
 import {
@@ -32,6 +33,11 @@ import {
   getMigrationType,
   isMigrationRunning,
 } from '../state/automatic/selectors';
+import {
+  isHybridShape,
+  isPromptOnlyShape,
+  type MigrationsJsonMetadata,
+} from '../migration-shape';
 
 export interface MigrationCardHandle {
   expand: () => void;
@@ -82,6 +88,7 @@ export const MigrationCard = forwardRef<
     onFileClick: (file: Omit<FileChange, 'content'>) => void;
     onViewImplementation: () => void;
     onViewDocumentation: () => void;
+    onViewPrompt: () => void;
     isExpanded?: boolean;
   }
 >(function MigrationCard(
@@ -95,6 +102,7 @@ export const MigrationCard = forwardRef<
     onFileClick,
     onViewImplementation,
     onViewDocumentation,
+    onViewPrompt,
     isExpanded: isExpandedProp,
   },
   ref
@@ -124,6 +132,31 @@ export const MigrationCard = forwardRef<
 
   const nextSteps =
     migrationResult?.type === 'successful' ? migrationResult.nextSteps : [];
+
+  const isPromptOnly = isPromptOnlyShape(migration);
+  const isHybrid = isHybridShape(migration);
+  const isPromptBearing = isPromptOnly || isHybrid;
+  const isSuccessful = migrationResult?.type === 'successful';
+  const acknowledgedPrompt =
+    isSuccessful && !!migrationResult.acknowledgedPrompt;
+  // The generator reported the prompt half unnecessary, so the prompt was
+  // never owed. Completion is still gated on `acknowledgedPrompt`, which the
+  // runtime sets alongside this; the field only supplies the reason.
+  const waivedPrompt = isSuccessful && !!migrationResult.skipAgentic;
+  // For terminal non-success states the Failed/Skipped/Stopped pill in the
+  // card top-right already conveys the outcome — stay out of the way.
+  const showPromptStatusRow =
+    isPromptBearing && (!migrationResult || isSuccessful);
+  // The prompt path stays in the next-steps section for every prompt-bearing
+  // phase that reached it (prompt-only from the start, hybrid once the
+  // generator succeeded); only the copy around it changes.
+  const showPromptNextStep =
+    showPromptStatusRow && (isPromptOnly || isSuccessful) && !!migration.prompt;
+  const promptNextStepState = waivedPrompt
+    ? 'waived'
+    : acknowledgedPrompt
+      ? 'acknowledged'
+      : 'pending';
 
   const isSucceeded = useSelector(
     actor,
@@ -196,14 +229,23 @@ export const MigrationCard = forwardRef<
               )} */}
             </div>
             <span className="mb-2 text-sm">{migration.description}</span>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               {migration.package && (
                 <Pill
                   text={`${migration.package}: ${migration.version}`}
                   color={'grey'}
                 />
               )}
+              {isPromptBearing && <AIBadge />}
             </div>
+            {showPromptStatusRow && (
+              <PromptStatusRow
+                isHybrid={isHybrid}
+                isSuccessful={isSuccessful}
+                acknowledgedPrompt={acknowledgedPrompt}
+                waivedPrompt={waivedPrompt}
+              />
+            )}
           </div>
         </div>
 
@@ -243,7 +285,7 @@ export const MigrationCard = forwardRef<
               <Pill text="Stopped" color="yellow" />
             </div>
           )}
-          {onRunMigration && !isStopped && (
+          {onRunMigration && !isStopped && !isPromptOnly && (
             <span
               className={`rounded-md p-1 text-sm ring-1 transition-colors ring-inset ${
                 isSucceeded
@@ -275,7 +317,7 @@ export const MigrationCard = forwardRef<
           )}
         </div>
       </div>
-      {isSucceeded && nextSteps?.length ? (
+      {(isSucceeded && nextSteps?.length) || showPromptNextStep ? (
         <div className="pt-2">
           <div className="my-2 border-t border-slate-200 dark:border-slate-700/60" />
           <span className="pb-2 text-sm font-bold">
@@ -287,6 +329,13 @@ export const MigrationCard = forwardRef<
                 {convertUrlsToLinks(step)}
               </li>
             ))}
+            {showPromptNextStep && (
+              <PromptNextStep
+                prompt={migration.prompt}
+                state={promptNextStepState}
+                onViewPrompt={onViewPrompt}
+              />
+            )}
           </ul>
           <p></p>
         </div>
@@ -383,3 +432,118 @@ export const MigrationCard = forwardRef<
     </div>
   );
 });
+
+function AIBadge() {
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded bg-sky-300/10 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-sky-300 uppercase ring-1 ring-sky-300/40 ring-inset"
+      aria-label="AI-assisted migration"
+    >
+      <SparklesIcon className="h-3 w-3" />
+      AI
+    </span>
+  );
+}
+
+type PromptNextStepState = 'pending' | 'waived' | 'acknowledged';
+
+function PromptNextStep({
+  prompt,
+  state,
+  onViewPrompt,
+}: {
+  prompt: string;
+  state: PromptNextStepState;
+  onViewPrompt: () => void;
+}) {
+  // The only link to the prompt file on the card, so every state keeps it.
+  const path = (
+    <code
+      className="cursor-pointer text-sky-500 underline-offset-2 hover:underline dark:text-sky-300"
+      onClick={() => onViewPrompt()}
+    >
+      {prompt}
+    </code>
+  );
+
+  switch (state) {
+    case 'pending':
+      return (
+        <li className="text-sm">
+          Run the AI prompt at {path} to complete this migration.
+        </li>
+      );
+    case 'waived':
+      return (
+        <li className="text-sm">
+          The AI prompt at {path} was not needed. The migration reported nothing
+          left for it to do.
+        </li>
+      );
+    case 'acknowledged':
+      return (
+        <li className="text-sm">
+          The AI prompt for this migration is at {path}.
+        </li>
+      );
+    default: {
+      const exhaustive: never = state;
+      return exhaustive;
+    }
+  }
+}
+
+function PromptStatusRow({
+  isHybrid,
+  isSuccessful,
+  acknowledgedPrompt,
+  waivedPrompt,
+}: {
+  isHybrid: boolean;
+  isSuccessful: boolean;
+  acknowledgedPrompt: boolean;
+  waivedPrompt: boolean;
+}) {
+  // Prompt-only is "completed" the moment the metadata records success (the
+  // short-circuit does that); hybrid needs the separate acknowledgment, which
+  // a waived prompt phase also sets.
+  const isCompleted = isSuccessful && (!isHybrid || acknowledgedPrompt);
+  const showGeneratorComplete = isHybrid && isSuccessful && !isCompleted;
+
+  return (
+    <div className="mt-3 flex items-center gap-3 text-xs">
+      {isCompleted ? (
+        <>
+          <span className="inline-flex items-center gap-1 text-green-500">
+            <CheckCircleIcon className="h-3.5 w-3.5" />
+            Completed
+          </span>
+          {waivedPrompt && (
+            <>
+              <span className="text-slate-400/60">·</span>
+              <span className="text-slate-500 dark:text-slate-400">
+                AI step not needed
+              </span>
+            </>
+          )}
+        </>
+      ) : (
+        <>
+          {showGeneratorComplete && (
+            <>
+              <span className="inline-flex items-center gap-1 text-green-500">
+                <CheckCircleIcon className="h-3.5 w-3.5" />
+                Generator complete
+              </span>
+              <span className="text-slate-400/60">·</span>
+            </>
+          )}
+          <span className="inline-flex items-center gap-1 text-sky-300">
+            <ClockIcon className="h-3.5 w-3.5" />
+            AI prompt pending
+          </span>
+        </>
+      )}
+    </div>
+  );
+}

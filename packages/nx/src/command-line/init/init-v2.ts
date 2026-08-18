@@ -7,8 +7,11 @@ import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import { readJsonFile, writeJsonFile } from '../../utils/fileutils';
 import { getPackageNameFromImportPath } from '../../utils/get-package-name-from-import-path';
 import { output } from '../../utils/output';
-import { PackageJson } from '../../utils/package-json';
-import { getPackageManagerCommand } from '../../utils/package-manager';
+import { installPackageToTmp, PackageJson } from '../../utils/package-json';
+import {
+  getPackageManagerCommand,
+  detectPackageManager,
+} from '../../utils/package-manager';
 import { nxVersion } from '../../utils/versions';
 import { globWithWorkspaceContextSync } from '../../utils/workspace-context';
 import { connectExistingRepoToNxCloudPrompt } from '../nx-cloud/connect/connect-to-nx-cloud';
@@ -33,14 +36,13 @@ import {
   updateGitIgnore,
 } from './implementation/utils';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
-import { installPackageToTmp } from '../../devkit-internals';
 import { handleImport } from '../../utils/handle-import';
 import { isAiAgent } from '../../native';
 import { Agent } from '../../ai/utils';
 import { detectAiAgent } from '../../ai/detect-ai-agent';
 import { MessageOptionKey, recordStat } from '../../utils/ab-testing';
+import { ensureAnalyticsPreferenceSet } from '../../utils/analytics-prompt';
 import { isCI } from '../../utils/is-ci';
-import { detectPackageManager } from '../../utils/package-manager';
 import {
   logProgress,
   writeAiOutput,
@@ -75,7 +77,11 @@ export async function initHandler(
   let cleanup: () => void | undefined;
   try {
     await ensurePackageHasProvenance('nx', 'latest');
-    const packageInstallResults = installPackageToTmp('nx', 'latest');
+    const packageInstallResults = installPackageToTmp(
+      'nx',
+      'latest',
+      detectPackageManager(process.cwd())
+    );
     cleanup = packageInstallResults.cleanup;
 
     let modulePath = require.resolve('nx/src/command-line/init/init-v2.js', {
@@ -452,7 +458,7 @@ async function runInit(
     nxCloudChoice = 'skip';
   } else {
     nxCloudChoice = options.interactive
-      ? await connectExistingRepoToNxCloudPrompt()
+      ? await connectExistingRepoToNxCloudPrompt('init', 'setupNxCloud', false)
       : 'skip';
   }
   if (nxCloudChoice === 'yes') {
@@ -461,6 +467,11 @@ async function runInit(
     setNeverConnectToCloud(repoRoot);
   }
 
+  const analyticsPrompt = await ensureAnalyticsPreferenceSet(
+    repoRoot,
+    options.interactive
+  );
+
   await recordStat({
     command: 'init',
     nxVersion: version,
@@ -468,6 +479,7 @@ async function runInit(
     meta: {
       type: 'complete',
       nxCloudArg: nxCloudChoice,
+      analyticsPrompt,
       nodeVersion: process.versions.node,
       os: process.platform,
       packageManager: detectPackageManager(),
@@ -508,6 +520,7 @@ async function runInit(
 export function getPluginReason(plugin: string): string {
   const reasonMap: Record<string, string> = {
     '@nx/eslint': 'eslint detected in dependencies',
+    '@nx/oxlint': 'oxlint detected in dependencies',
     '@nx/storybook': 'storybook detected in dependencies',
     '@nx/vite': 'vite detected in dependencies',
     '@nx/vitest': 'vitest detected in dependencies',
@@ -559,6 +572,7 @@ function parsePluginsFlag(
 const npmPackageToPluginMap: Record<string, `@nx/${string}`> = {
   // Generic JS tools
   eslint: '@nx/eslint',
+  oxlint: '@nx/oxlint',
   storybook: '@nx/storybook',
   // Bundlers
   vite: '@nx/vite',

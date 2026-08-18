@@ -1,0 +1,31 @@
+import { defineConfig } from '@rsbuild/core';
+import { pluginReact } from '@rsbuild/plugin-react';
+import { pluginModuleFederation } from '@module-federation/rsbuild-plugin';
+
+const PORT = <%= port %>;
+const NAME = '<%= federationName %>';
+
+export default defineConfig({
+  server: {
+    port: PORT,
+    // Allow cross-origin fetches from a consumer on a different port.
+    headers: { 'Access-Control-Allow-Origin': '*' },
+  },
+  // assetPrefix:true tells rsbuild to emit chunks with the dev-server URL as
+  // their public path. Without it a consumer on a different port asks its
+  // own origin for the federated chunks and gets the SPA-fallback HTML.
+  dev: { assetPrefix: true },
+  html: { template: './index.html' },
+  source: { entry: { index: './src/index.ts' } },
+  plugins: [
+    pluginReact(),
+    pluginModuleFederation({
+      name: NAME,
+      filename: 'remoteEntry.js',
+      exposes: {
+        './<%= exposeName %>': './src/<%= componentName %>.tsx',
+      },
+      shared: ['react', 'react-dom'],
+    }),
+  ],
+});

@@ -16,7 +16,17 @@ describe('React (TS solution)', () => {
   let workspaceName: string;
 
   beforeAll(() => {
-    workspaceName = newProject({ preset: 'ts', packages: ['@nx/react'] });
+    workspaceName = newProject({
+      preset: 'ts',
+      packages: [
+        '@nx/react',
+        '@nx/webpack',
+        '@nx/rspack',
+        '@nx/vite',
+        '@nx/vitest',
+        '@nx/eslint',
+      ],
+    });
   });
 
   afterAll(() => cleanupProject());

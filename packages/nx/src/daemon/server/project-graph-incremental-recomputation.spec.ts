@@ -153,4 +153,71 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
       expect(pluginsCallCount).toBeGreaterThanOrEqual(2);
     });
   });
+
+  // kickOffRecompute() runs fire-and-forget, so a rejecting prologue used to
+  // crash the daemon with an unhandled rejection. A requester's own try/catch
+  // hides that, so the only observable distinguishing fixed from broken is
+  // whether the orphaned promise rejects unhandled — hence the process listener.
+  it('keeps the daemon alive when a recompute plugin load rejects', async () => {
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({ plugins: ['./tools/plugin-a'] }),
+      'package.json': JSON.stringify({ name: 'root' }),
+    });
+
+    await jest.isolateModulesAsync(async () => {
+      const { setWorkspaceRoot } = require('../../utils/workspace-root');
+      setWorkspaceRoot(fs.tempDir);
+
+      const pluginLoadError = new Error('plugin boom');
+      let pluginsCallCount = 0;
+      jest.doMock('../../project-graph/plugins/get-plugins', () => ({
+        __esModule: true,
+        getPlugins: jest.fn(async () => []),
+        getPluginsSeparated: jest.fn(async () => {
+          pluginsCallCount++;
+          throw pluginLoadError;
+        }),
+      }));
+
+      const {
+        scheduleProjectGraphRecomputation,
+        getCachedSerializedProjectGraphPromise,
+      } = require('./project-graph-incremental-recomputation');
+
+      const unhandled: unknown[] = [];
+      const onUnhandled = (reason: unknown) => unhandled.push(reason);
+      process.on('unhandledRejection', onUnhandled);
+
+      try {
+        // Fire-and-forget kickoff — nobody awaits the stored promise.
+        scheduleProjectGraphRecomputation([], ['__trigger.txt'], []);
+
+        // Let the IIFE reject and give Node room to flag an unhandled rejection.
+        await new Promise((r) => setImmediate(r));
+        await new Promise((r) => setImmediate(r));
+        await new Promise((r) => setImmediate(r));
+
+        // Without the fix this orphaned rejection is unhandled — the crash.
+        expect(
+          unhandled.filter(
+            (r) =>
+              r === pluginLoadError ||
+              (r instanceof Error && r.message.includes('plugin boom'))
+          )
+        ).toEqual([]);
+
+        // A requester gets an errorResult, not a throw.
+        const result = await getCachedSerializedProjectGraphPromise();
+        expect(result.projectGraph).toBeNull();
+        expect(result.error).toBeDefined();
+
+        // Errored result clears the cache, so the next request retries.
+        const callsBeforeRetry = pluginsCallCount;
+        await getCachedSerializedProjectGraphPromise();
+        expect(pluginsCallCount).toBeGreaterThan(callsBeforeRetry);
+      } finally {
+        process.removeListener('unhandledRejection', onUnhandled);
+      }
+    });
+  });
 });

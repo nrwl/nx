@@ -1,6 +1,5 @@
 import { interpolateName } from 'loader-utils';
 import * as path from 'path';
-import { pathToFileURL } from 'url';
 import type { Declaration } from 'postcss';
 import type { LoaderContext } from '@rspack/core';
 
@@ -107,7 +106,12 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
     // Separate URL query/hash from the file path before resolving
     const [, filePath, urlSuffix] = inputUrl.match(/^([^?#]*)(.*)$/)!;
     const resolvedPath = path.resolve(context, filePath.replace(/\\/g, '/'));
-    const { pathname } = pathToFileURL(resolvedPath);
+    // Resolve a relative filesystem path, not a file:// URL pathname: on Windows the
+    // pathname is `/C:/...` (spaces as %20), which the resolver cannot find. Relative
+    // (not absolute) lets `resolve()`'s `./`-prefixed lookup succeed on the first try.
+    const resolveRequest = path
+      .relative(context, resolvedPath)
+      .replace(/\\/g, '/');
     let hash = '';
     let search = '';
     if (urlSuffix) {
@@ -115,7 +119,7 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
     }
     const resolver = (file: string, base: string) =>
       new Promise<boolean | string>((resolve, reject) => {
-        loader.resolve(base, decodeURI(file), (err, result) => {
+        loader.resolve(base, file, (err, result) => {
           if (err) {
             reject(err);
             return;
@@ -123,7 +127,7 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
           resolve(result);
         });
       });
-    const result = await resolve(pathname as string, context, resolver);
+    const result = await resolve(resolveRequest, context, resolver);
     return new Promise<boolean | string>((resolve, reject) => {
       loader.fs.readFile(result as string, (err: Error, content: Buffer) => {
         if (err) {

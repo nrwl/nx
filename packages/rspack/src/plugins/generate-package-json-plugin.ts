@@ -12,11 +12,7 @@ import {
   getLockFileName,
   readTsConfig,
 } from '@nx/js';
-import {
-  type Compiler,
-  type RspackPluginInstance,
-  sources,
-} from '@rspack/core';
+import type { Compiler, RspackPluginInstance } from '@rspack/core';
 
 const pluginName = 'GeneratePackageJsonPlugin';
 
@@ -32,12 +28,13 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
 
   apply(compiler: Compiler): void {
     compiler.hooks.thisCompilation.tap(pluginName, (compilation) => {
-      compilation.hooks.processAssets.tap(
+      compilation.hooks.processAssets.tapPromise(
         {
           name: pluginName,
           stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
         },
-        () => {
+        async () => {
+          const sources = compiler.webpack.sources;
           const helperDependencies = getHelperDependenciesFromProjectGraph(
             this.context.root,
             this.context.projectName,

@@ -14,11 +14,13 @@ import {
   findModuleFromOptions,
   normalizeOptions,
   setGeneratorDefaults,
+  validateOptions,
 } from './lib';
 import type { Schema } from './schema';
 
 export async function componentGenerator(tree: Tree, rawOptions: Schema) {
   assertSupportedAngularVersion(tree);
+  validateOptions(tree, rawOptions);
   const options = await normalizeOptions(tree, rawOptions);
 
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);

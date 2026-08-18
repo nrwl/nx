@@ -1,10 +1,12 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "out-tsc",
+    "rootDir": ".",
     "types": ["jest", "node"],
     "isolatedModules": true
   },
+  "exclude": ["out-tsc"],
   "include": ["**/*.test.ts", "**/*.spec.ts", "**/*.d.ts", "jest.config.ts"],
   "references": [{ "path": "./tsconfig.lint.json" }]
 }

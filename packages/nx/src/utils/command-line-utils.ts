@@ -3,8 +3,9 @@ import type { Arguments } from 'yargs';
 import { TEN_MEGABYTES } from '../project-graph/file-utils';
 import { output } from './output';
 import { NxJsonConfiguration } from '../config/nx-json';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { ProjectGraph } from '../config/project-graph';
+import { assertValidGitRevision } from './git-revision';
 import { workspaceRoot } from './workspace-root';
 import { readParallelFromArgsAndEnv } from '../command-line/yargs-utils/shared-options';
 
@@ -277,31 +278,28 @@ export function parseFiles(options: NxArgs): { files: string[] } {
 }
 
 function getUncommittedFiles(): string[] {
-  return parseGitOutput(`git diff --name-only --no-renames --relative HEAD .`);
+  return parseGitOutput([
+    'diff',
+    '--name-only',
+    '--no-renames',
+    '--relative',
+    'HEAD',
+    '.',
+  ]);
 }
 
 function getUntrackedFiles(): string[] {
-  return parseGitOutput(`git ls-files --others --exclude-standard`);
+  return parseGitOutput(['ls-files', '--others', '--exclude-standard']);
 }
 
 function getMergeBase(base: string, head: string = 'HEAD') {
+  assertValidGitRevision(base);
+  assertValidGitRevision(head);
   try {
-    return execSync(`git merge-base "${base}" "${head}"`, {
-      maxBuffer: TEN_MEGABYTES,
-      cwd: workspaceRoot,
-      stdio: 'pipe',
-      windowsHide: true,
-    })
-      .toString()
-      .trim();
+    return runGit(['merge-base', base, head]).toString().trim();
   } catch {
     try {
-      return execSync(`git merge-base --fork-point "${base}" "${head}"`, {
-        maxBuffer: TEN_MEGABYTES,
-        cwd: workspaceRoot,
-        stdio: 'pipe',
-        windowsHide: true,
-      })
+      return runGit(['merge-base', '--fork-point', base, head])
         .toString()
         .trim();
     } catch {
@@ -311,18 +309,29 @@ function getMergeBase(base: string, head: string = 'HEAD') {
 }
 
 function getFilesUsingBaseAndHead(base: string, head: string): string[] {
-  return parseGitOutput(
-    `git diff --name-only --no-renames --relative "${base}" "${head}"`
-  );
+  assertValidGitRevision(base);
+  assertValidGitRevision(head);
+  return parseGitOutput([
+    'diff',
+    '--name-only',
+    '--no-renames',
+    '--relative',
+    base,
+    head,
+  ]);
 }
 
-function parseGitOutput(command: string): string[] {
-  return execSync(command, {
+function runGit(args: string[]): Buffer {
+  return execFileSync('git', args, {
     maxBuffer: TEN_MEGABYTES,
     cwd: workspaceRoot,
     stdio: 'pipe',
     windowsHide: true,
-  })
+  });
+}
+
+function parseGitOutput(args: string[]): string[] {
+  return runGit(args)
     .toString('utf-8')
     .split('\n')
     .map((a) => a.trim())

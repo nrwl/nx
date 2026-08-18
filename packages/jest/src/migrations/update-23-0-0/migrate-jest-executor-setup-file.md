@@ -1,0 +1,169 @@
+#### Migrate `setupFile` Option to `setupFilesAfterEnv`
+
+Migrates the previously deprecated `setupFile` option of the `@nx/jest:jest` executor. The setup file path is appended to the `setupFilesAfterEnv` array in the project's Jest configuration (using `<rootDir>/...` form), and the deprecated option is removed from `project.json` and `nx.json` target defaults.
+
+If the setup file cannot be migrated automatically (e.g. the Jest configuration cannot be parsed because it exports a factory function or assigns `setupFilesAfterEnv` to a non-array value, it sets `rootDir` to a non-literal value, or the target shares a Jest configuration with another target using a different setup file), the deprecated option is still removed and a warning is logged listing the affected targets so the setup file path can be moved manually.
+
+#### Examples
+
+Push the setup file into the project's Jest configuration and remove the option from `project.json`:
+
+##### Before
+
+```json title="apps/myapp/project.json" {7}
+{
+  "targets": {
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "apps/myapp/jest.config.ts",
+        "setupFile": "apps/myapp/src/test-setup.ts"
+      }
+    }
+  }
+}
+```
+
+```ts title="apps/myapp/jest.config.ts"
+export default {
+  displayName: 'myapp',
+};
+```
+
+##### After
+
+```json title="apps/myapp/project.json"
+{
+  "targets": {
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "apps/myapp/jest.config.ts"
+      }
+    }
+  }
+}
+```
+
+```ts title="apps/myapp/jest.config.ts"
+export default {
+  displayName: 'myapp',
+  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+};
+```
+
+Append to an existing `setupFilesAfterEnv` array:
+
+##### Before
+
+```json title="apps/myapp/project.json" {7}
+{
+  "targets": {
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "apps/myapp/jest.config.ts",
+        "setupFile": "apps/myapp/src/test-setup.ts"
+      }
+    }
+  }
+}
+```
+
+```ts title="apps/myapp/jest.config.ts"
+export default {
+  displayName: 'myapp',
+  setupFilesAfterEnv: ['<rootDir>/src/existing-setup.ts'],
+};
+```
+
+##### After
+
+```json title="apps/myapp/project.json"
+{
+  "targets": {
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "apps/myapp/jest.config.ts"
+      }
+    }
+  }
+}
+```
+
+```ts title="apps/myapp/jest.config.ts"
+export default {
+  displayName: 'myapp',
+  setupFilesAfterEnv: [
+    '<rootDir>/src/existing-setup.ts',
+    '<rootDir>/src/test-setup.ts',
+  ],
+};
+```
+
+Remove the option from a target default using the `@nx/jest:jest` executor:
+
+##### Before
+
+```json title="nx.json" {7}
+{
+  "targetDefaults": {
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "{projectRoot}/jest.config.ts",
+        "setupFile": "{projectRoot}/src/test-setup.ts"
+      }
+    }
+  }
+}
+```
+
+##### After
+
+```json title="nx.json"
+{
+  "targetDefaults": {
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "{projectRoot}/jest.config.ts"
+      }
+    }
+  }
+}
+```
+
+Per-project paths don't make sense as workspace defaults, so the option is removed from `nx.json`. Base targets that inherited it don't lose their setup file: the inherited path is expanded and added to `setupFilesAfterEnv` in each project's Jest config, the same as if the target had declared the option itself. A warning is logged noting the removal from `nx.json`.
+
+Remove the option from a target default entry matching on the `@nx/jest:jest` executor:
+
+##### Before
+
+```json title="nx.json" {6}
+{
+  "targetDefaults": {
+    "@nx/jest:jest": {
+      "options": {
+        "jestConfig": "{projectRoot}/jest.config.ts",
+        "setupFile": "{projectRoot}/src/test-setup.ts"
+      }
+    }
+  }
+}
+```
+
+##### After
+
+```json title="nx.json"
+{
+  "targetDefaults": {
+    "@nx/jest:jest": {
+      "options": {
+        "jestConfig": "{projectRoot}/jest.config.ts"
+      }
+    }
+  }
+}
+```

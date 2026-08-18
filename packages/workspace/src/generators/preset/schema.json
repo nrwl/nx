@@ -15,9 +15,9 @@
       "type": "string"
     },
     "linter": {
-      "description": "The tool to use for running lint checks.",
+      "description": "The tool to use for running lint checks. Defaults to the linter the workspace already uses.",
       "type": "string",
-      "default": "eslint"
+      "enum": ["eslint", "oxlint", "none"]
     },
     "routing": {
       "description": "Add routing to the generated application.",
@@ -53,12 +53,6 @@
       "description": "Use Standalone Components if generating an Angular application.",
       "type": "boolean",
       "default": false
-    },
-    "standaloneConfig": {
-      "description": "Split the project configurations into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-      "type": "boolean",
-      "default": true,
-      "x-deprecated": "Nx only supports standaloneConfig"
     },
     "packageManager": {
       "description": "The package manager used to install dependencies.",

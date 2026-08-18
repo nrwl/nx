@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { CreateNodesContextV2, hashArray } from 'nx/src/devkit-exports';
+import { CreateNodesContext, hashArray } from 'nx/src/devkit-exports';
 
 import {
   hashMultiGlobWithWorkspaceContext,
@@ -15,7 +15,7 @@ import {
 export async function calculateHashForCreateNodes(
   projectRoot: string,
   options: object,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   additionalGlobs: string[] = []
 ): Promise<string> {
   return hashArray([
@@ -30,7 +30,7 @@ export async function calculateHashForCreateNodes(
 export async function calculateHashesForCreateNodes(
   projectRoots: string[],
   options: object,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   additionalGlobs: string[][] = []
 ): Promise<string[]> {
   if (projectRoots.length === 0) {

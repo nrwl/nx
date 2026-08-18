@@ -2,7 +2,7 @@ import { createTreeWithEmptyWorkspace } from 'nx/src/generators/testing-utils/cr
 import type { Tree } from 'nx/src/generators/tree';
 import { readJson, writeJson } from 'nx/src/generators/utils/json';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import { CreateNodesV2 } from 'nx/src/project-graph/plugins';
+import { CreateNodes } from 'nx/src/project-graph/plugins';
 import { ProjectGraph } from 'nx/src/devkit-exports';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 
@@ -10,7 +10,7 @@ import { addPlugin, generateCombinations } from './add-plugin';
 
 describe('addPlugin', () => {
   let tree: Tree;
-  let createNodes: CreateNodesV2<{ targetName: string }>;
+  let createNodes: CreateNodes<{ targetName: string }>;
   let graph: ProjectGraph;
   let fs: TempFs;
 
@@ -121,6 +121,64 @@ describe('addPlugin', () => {
           targetName: 'build2',
         },
       });
+    });
+  });
+
+  it('should add the plugin when inferred projects resolve to conflicting names', async () => {
+    // When a single plugin runs in isolation, the project.json plugin does
+    // not run, so inferred projects might not resolve to their real,
+    // unique names. Any resulting duplicate-name conflict is irrelevant to
+    // determining the plugin options and should not fail the generator.
+    await fs.createFiles({
+      'libs/a/ui/project.json': '{}',
+      'libs/b/ui/project.json': '{}',
+      'libs/a/ui/next.config.js': '',
+      'libs/b/ui/next.config.js': '',
+    });
+    createNodes = [
+      '**/next.config.{ts,js,cjs,mjs}',
+      (_, { targetName }) => [
+        [
+          'libs/a/ui/next.config.js',
+          {
+            projects: {
+              'libs/a/ui': {
+                root: 'libs/a/ui',
+                targets: { [targetName]: { command: 'next build' } },
+              },
+            },
+          },
+        ],
+        [
+          'libs/b/ui/next.config.js',
+          {
+            projects: {
+              'libs/b/ui': {
+                root: 'libs/b/ui',
+                targets: { [targetName]: { command: 'next build' } },
+              },
+            },
+          },
+        ],
+      ],
+    ];
+
+    await addPlugin(
+      tree,
+      graph,
+      '@nx/next/plugin',
+      createNodes,
+      {
+        targetName: ['build'],
+      },
+      false
+    );
+
+    expect(readJson(tree, 'nx.json').plugins).toContainEqual({
+      plugin: '@nx/next/plugin',
+      options: {
+        targetName: 'build',
+      },
     });
   });
 

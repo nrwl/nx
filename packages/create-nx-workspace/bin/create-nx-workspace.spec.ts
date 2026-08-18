@@ -1,12 +1,31 @@
 import {
+  applyEmptyPresetAlias,
   validateWorkspaceName,
   resolveSpecialFolderName,
   determineFolder,
+  determinePresetOptions,
 } from './create-nx-workspace';
+import enquirer from 'enquirer';
 import { CnwError } from '../src/utils/error-utils';
-import { mkdtempSync, mkdirSync, rmSync, realpathSync } from 'fs';
+import { Preset } from '../src/utils/preset/preset';
+import {
+  mkdtempSync,
+  mkdirSync,
+  rmSync,
+  realpathSync,
+  writeFileSync,
+} from 'fs';
 import { join, basename, dirname } from 'path';
 import { tmpdir } from 'os';
+
+jest.mock('enquirer', () => ({
+  __esModule: true,
+  default: { prompt: jest.fn() },
+}));
+
+jest.mock('../src/utils/ci/is-ci', () => ({
+  isCI: jest.fn(() => false),
+}));
 
 describe('validateWorkspaceName', () => {
   it('should allow names starting with a letter', () => {
@@ -49,6 +68,7 @@ describe('determineFolder', () => {
 
   beforeEach(() => {
     originalCwd = process.cwd();
+    (require('enquirer').default.prompt as jest.Mock).mockReset();
   });
 
   afterEach(() => {
@@ -79,6 +99,23 @@ describe('determineFolder', () => {
 
     expect(result).toBe(basename(tmpDir));
     expect(parsedArgs.workingDir).toBe(dirname(tmpDir));
+    expect(parsedArgs.useCurrentDir).toBe(true);
+
+    rmSync(tmpDir, { recursive: true });
+  });
+
+  it('should scaffold "." in place even when the cwd is not empty', async () => {
+    const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
+    writeFileSync(join(tmpDir, 'package.json'), '{}');
+    mkdirSync(join(tmpDir, 'src'));
+    process.chdir(tmpDir);
+
+    const parsedArgs = makeParsedArgs({ positional: '.', interactive: false });
+    const result = await determineFolder(parsedArgs);
+
+    expect(result).toBe(basename(tmpDir));
+    expect(parsedArgs.workingDir).toBe(dirname(tmpDir));
+    expect(parsedArgs.useCurrentDir).toBe(true);
 
     rmSync(tmpDir, { recursive: true });
   });
@@ -92,18 +129,6 @@ describe('determineFolder', () => {
 
     expect(result).toBe(basename(tmpDir));
     expect(parsedArgs.workingDir).toBe(dirname(tmpDir));
-
-    rmSync(tmpDir, { recursive: true });
-  });
-
-  it('should return directory basename for "." in interactive mode', async () => {
-    const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
-    process.chdir(tmpDir);
-
-    const parsedArgs = makeParsedArgs({ positional: '.', interactive: true });
-    const result = await determineFolder(parsedArgs);
-
-    expect(result).toBe(basename(tmpDir));
 
     rmSync(tmpDir, { recursive: true });
   });
@@ -166,35 +191,11 @@ describe('resolveSpecialFolderName', () => {
   });
 
   describe('"." and "./"', () => {
-    it('should throw DIRECTORY_EXISTS when cwd is non-empty', () => {
-      // cwd is the repo root, which is definitely non-empty
-      try {
-        resolveSpecialFolderName('.');
-        fail('Expected CnwError to be thrown');
-      } catch (e) {
-        expect(e).toBeInstanceOf(CnwError);
-        expect((e as CnwError).code).toBe('DIRECTORY_EXISTS');
-        expect((e as CnwError).message).toContain('nx init');
-      }
-    });
-
-    it('should throw DIRECTORY_EXISTS for "./" in non-empty directory', () => {
-      try {
-        resolveSpecialFolderName('./');
-        fail('Expected CnwError to be thrown');
-      } catch (e) {
-        expect(e).toBeInstanceOf(CnwError);
-        expect((e as CnwError).code).toBe('DIRECTORY_EXISTS');
-      }
-    });
-
-    it('should resolve "." to basename and parent workingDir when cwd is empty', () => {
+    it('should resolve "." to basename and parent workingDir', () => {
       const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
       process.chdir(tmpDir);
 
-      const result = resolveSpecialFolderName('.');
-
-      expect(result).toEqual({
+      expect(resolveSpecialFolderName('.')).toEqual({
         name: basename(tmpDir),
         workingDir: dirname(tmpDir),
       });
@@ -202,13 +203,25 @@ describe('resolveSpecialFolderName', () => {
       rmSync(tmpDir, { recursive: true });
     });
 
-    it('should resolve "./" to basename and parent workingDir when cwd is empty', () => {
+    it('should resolve "./" to basename and parent workingDir', () => {
       const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
       process.chdir(tmpDir);
 
-      const result = resolveSpecialFolderName('./');
+      expect(resolveSpecialFolderName('./')).toEqual({
+        name: basename(tmpDir),
+        workingDir: dirname(tmpDir),
+      });
 
-      expect(result).toEqual({
+      rmSync(tmpDir, { recursive: true });
+    });
+
+    it('should resolve "." regardless of the cwd contents', () => {
+      const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
+      writeFileSync(join(tmpDir, 'package.json'), '{}');
+      mkdirSync(join(tmpDir, 'src'));
+      process.chdir(tmpDir);
+
+      expect(resolveSpecialFolderName('.')).toEqual({
         name: basename(tmpDir),
         workingDir: dirname(tmpDir),
       });
@@ -252,4 +265,215 @@ describe('resolveSpecialFolderName', () => {
       rmSync(tmpDir, { recursive: true });
     });
   });
+});
+
+describe('determineFolder - explicit "." confirmation', () => {
+  const enquirer = require('enquirer').default;
+  const { isCI } = require('../src/utils/ci/is-ci');
+  let originalCwd: string;
+
+  beforeEach(() => {
+    originalCwd = process.cwd();
+    (enquirer.prompt as jest.Mock).mockReset();
+    (isCI as jest.Mock).mockReset().mockReturnValue(false);
+  });
+
+  afterEach(() => {
+    process.chdir(originalCwd);
+  });
+
+  function dotArgs() {
+    return {
+      _: ['.'],
+      $0: 'create-nx-workspace',
+      name: '',
+      interactive: true,
+    } as any;
+  }
+
+  it('scaffolds in place when the user confirms', async () => {
+    const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
+    process.chdir(tmpDir);
+    (enquirer.prompt as jest.Mock).mockResolvedValueOnce({
+      useCurrentDir: 'Yes',
+    });
+
+    const parsedArgs = dotArgs();
+    const result = await determineFolder(parsedArgs);
+
+    expect(result).toBe(basename(tmpDir));
+    expect(parsedArgs.workingDir).toBe(dirname(tmpDir));
+    expect(parsedArgs.useCurrentDir).toBe(true);
+    expect(enquirer.prompt).toHaveBeenCalledTimes(1);
+
+    rmSync(tmpDir, { recursive: true });
+  });
+
+  it('falls back to a named subfolder when the user declines', async () => {
+    const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
+    process.chdir(tmpDir);
+    (enquirer.prompt as jest.Mock)
+      .mockResolvedValueOnce({ useCurrentDir: 'No' })
+      .mockResolvedValueOnce({ folderName: 'myorg' });
+
+    const parsedArgs = dotArgs();
+    const result = await determineFolder(parsedArgs);
+
+    expect(result).toBe('myorg');
+    // Declined in-place -> not a current-dir scaffold, and workingDir cleared
+    // so the subfolder lands under the cwd.
+    expect(parsedArgs.useCurrentDir).toBeFalsy();
+    expect(parsedArgs.workingDir).toBeUndefined();
+    expect(enquirer.prompt).toHaveBeenCalledTimes(2);
+
+    rmSync(tmpDir, { recursive: true });
+  });
+});
+
+describe('applyEmptyPresetAlias', () => {
+  it('maps --preset empty to the ts preset', () => {
+    const argv = { preset: 'empty' as const };
+    applyEmptyPresetAlias(argv);
+    expect(argv.preset).toBe('ts');
+  });
+
+  it('wins over --template so appending --preset=empty escapes the template download', () => {
+    const argv = { preset: 'empty' as const, template: 'nrwl/react-template' };
+    applyEmptyPresetAlias(argv);
+    expect(argv).toEqual({ preset: 'ts' });
+  });
+
+  it('leaves other presets and templates untouched', () => {
+    const preset = { preset: Preset.ReactMonorepo };
+    applyEmptyPresetAlias(preset);
+    expect(preset).toEqual({ preset: 'react-monorepo' });
+
+    const template = { template: 'empty' };
+    applyEmptyPresetAlias(template);
+    expect(template).toEqual({ template: 'empty' });
+  });
+});
+
+describe('determinePresetOptions', () => {
+  const base = {
+    _: [],
+    $0: '',
+    interactive: false,
+    workspaces: true,
+    name: 'myorg',
+  } as any;
+
+  beforeEach(() => {
+    // Recorded calls persist across tests otherwise, so any assertion on which
+    // questions were asked would see every earlier test's prompts too.
+    (enquirer.prompt as jest.Mock).mockClear();
+    // A sentinel the prompt could not produce by accident, so what these tests
+    // pin is the threading through each stack rather than the prompt's own
+    // default.
+    (enquirer.prompt as jest.Mock).mockResolvedValue({ linter: 'oxlint' });
+  });
+
+  // Every stack must come back with the resolved linter. Once the schemas
+  // stopped defaulting it, a stack that dropped it produced an unlinted
+  // workspace with no prompt and no error.
+  // Each stack needs enough non-interactive args to reach its return statement.
+  const perStack: Record<string, Record<string, unknown>> = {
+    none: { preset: Preset.TsStandalone },
+    react: {
+      preset: Preset.ReactMonorepo,
+      appName: 'app',
+      framework: 'none',
+      style: 'css',
+      bundler: 'vite',
+      unitTestRunner: 'vitest',
+      e2eTestRunner: 'playwright',
+      useReactRouter: false,
+      workspaceType: 'integrated',
+    },
+    angular: {
+      preset: Preset.AngularMonorepo,
+      appName: 'app',
+      style: 'css',
+      bundler: 'esbuild',
+      unitTestRunner: 'jest',
+      e2eTestRunner: 'playwright',
+      standaloneApi: true,
+      routing: true,
+      ssr: false,
+      prefix: 'app',
+      zoneless: true,
+      workspaceType: 'integrated',
+    },
+    vue: {
+      preset: Preset.VueMonorepo,
+      appName: 'app',
+      framework: 'none',
+      style: 'css',
+      unitTestRunner: 'vitest',
+      e2eTestRunner: 'playwright',
+      workspaceType: 'integrated',
+    },
+    node: {
+      preset: Preset.NodeMonorepo,
+      appName: 'app',
+      framework: 'none',
+      docker: false,
+      unitTestRunner: 'jest',
+      e2eTestRunner: 'jest',
+      workspaceType: 'integrated',
+    },
+  };
+
+  it.each(Object.keys(perStack))(
+    'should thread the resolved linter through the %s stack',
+    async (stack) => {
+      const result = await determinePresetOptions({
+        ...base,
+        stack,
+        ...perStack[stack],
+      } as any);
+
+      expect(result.linter).toBe('oxlint');
+    }
+  );
+
+  it('should keep an explicitly passed linter', async () => {
+    const result = await determinePresetOptions({
+      ...base,
+      stack: 'angular',
+      ...perStack.angular,
+      linter: 'eslint',
+    } as any);
+
+    expect(result.linter).toBe('eslint');
+  });
+
+  it('should resolve a linter for the web stack', async () => {
+    const result = await determinePresetOptions({
+      ...base,
+      stack: 'web',
+      preset: Preset.WebComponents,
+    } as any);
+
+    expect(result.linter).toBe('oxlint');
+  });
+
+  // `apps`, `ts` and `npm` reach no generator that takes a linter, so asking
+  // would put the question to the user and then discard the answer.
+  it.each([Preset.Apps, Preset.NPM, Preset.TS])(
+    'should not ask for a linter when %s cannot use one',
+    async (preset) => {
+      const result = await determinePresetOptions({
+        ...base,
+        stack: 'none',
+        preset,
+      } as any);
+
+      expect(result.linter).toBeUndefined();
+      const linterQuestions = (enquirer.prompt as jest.Mock).mock.calls.filter(
+        ([[question]]) => question.name === 'linter'
+      );
+      expect(linterQuestions).toHaveLength(0);
+    }
+  );
 });

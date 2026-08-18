@@ -3,6 +3,7 @@ import * as jsoncEslintParser from 'jsonc-eslint-parser';
 
 export default [
   ...baseConfig,
+  { ignores: ['dist'] },
   {
     files: ['**/*.ts'],
     rules: {
@@ -32,7 +33,17 @@ export default [
         'error',
         {
           buildTargets: ['build-base'],
-          ignoredDependencies: ['nx', 'typescript', '@nx/webpack'],
+          ignoredDependencies: [
+            'nx',
+            'typescript',
+            // Installed on demand via `ensurePackage` when the generator is
+            // asked for that bundler / unit test runner.
+            '@nx/webpack',
+            '@nx/vitest',
+            'express',
+            'koa',
+            'fastify',
+          ],
         },
       ],
     },

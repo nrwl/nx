@@ -30,6 +30,11 @@ export function updateDependencies(tree: Tree) {
       vite: viteVersion,
       '@nx/vite': nxVersion,
       '@nx/vitest': nxVersion,
-    }
+    },
+    undefined,
+    // Don't overwrite a user's installed versions (e.g. React 19 from @nx/react).
+    // Remix v2's fresh-install defaults are React 18 / Vite 6, but an existing
+    // pin is respected.
+    true
   );
 }

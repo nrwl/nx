@@ -36,19 +36,6 @@ export async function checkGitVersion(): Promise<string | null | undefined> {
   }
 }
 
-/**
- * Synchronously checks if git is available on the system.
- * Returns true if git command can be executed, false otherwise.
- */
-export function isGitAvailable(): boolean {
-  try {
-    execSync('git --version', { stdio: 'ignore', windowsHide: true });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 // 1 second timeout for gh CLI pre-flight checks (version, auth). If gh is
 // wrapped by 1Password, a credential manager, or corporate SSO the call can
 // hang indefinitely. Better to skip the push than freeze the CLI.
@@ -195,10 +182,12 @@ export async function initializeGitRepo(
     () => false
   );
   if (insideRepo) {
-    output.log({
-      title:
-        'Directory is already under version control. Skipping initialization of git.',
-    });
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      output.log({
+        title:
+          'Directory is already under version control. Skipping initialization of git.',
+      });
+    }
     return;
   }
   const defaultBase = options.defaultBase || deduceDefaultBase();

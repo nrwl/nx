@@ -46,9 +46,11 @@ export function loadPnpmHoistedDepsDefinition() {
     const content = readFileSync(fullPath, 'utf-8');
     const { load } = require('@zkochan/js-yaml');
     return load(content)?.hoistedDependencies ?? {};
-  } else {
-    throw new Error(`Could not find ".modules.yaml" at "${fullPath}"`);
   }
+
+  throw new Error(
+    `pnpm lockfile detected, but "${fullPath}" is missing. This usually means that "node_modules" was not installed with pnpm. Run "pnpm install" or use a single package manager for this workspace.`
+  );
 }
 
 /**
@@ -69,6 +71,9 @@ const YAML_DOCUMENT_SEPARATOR = '\n---\n';
 // always read the workspace document.
 // https://github.com/pnpm/pnpm/blob/main/lockfile/fs/src/yamlDocuments.ts
 function extractMainLockfileDocument(content: string): string {
+  // Lockfiles written on Windows may use CRLF line endings, which would never
+  // match the LF-only document markers.
+  content = content.replace(/\r\n/g, '\n');
   if (!content.startsWith(YAML_DOCUMENT_START)) {
     return content;
   }

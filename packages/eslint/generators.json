@@ -30,8 +30,8 @@
       "description": "Convert existing ESLint project(s) using `@nx/eslint:lint` executor to use `@nx/eslint/plugin`."
     },
     "setup-oxlint-bridge": {
-      "factory": "./src/generators/setup-oxlint-bridge/setup-oxlint-bridge",
-      "schema": "./src/generators/setup-oxlint-bridge/schema.json",
+      "factory": "./dist/src/generators/setup-oxlint-bridge/setup-oxlint-bridge",
+      "schema": "./dist/src/generators/setup-oxlint-bridge/schema.json",
       "description": "Install eslint-plugin-oxlint and inject the JITI bridge into ESLint flat config for Oxlint coexistence."
     }
   }

@@ -1,5 +1,5 @@
 {
-  "outDir": "dist/packages/create-nx-workspace",
+  "outDir": "packages/create-nx-workspace/dist",
   "assets": [
     {
       "glob": "**/files/**"

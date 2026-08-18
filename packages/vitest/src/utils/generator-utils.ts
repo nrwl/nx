@@ -13,6 +13,7 @@ import {
 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { VitestExecutorOptions } from '../executors/test/schema';
+import type { VitestPluginOptions } from '../plugins/plugin';
 import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
 import { warnVitestExecutorGenerating } from './deprecation';
 import { nxVersion } from './versions';
@@ -23,7 +24,7 @@ export type TargetFlags = Partial<Record<Target, boolean>>;
 export interface VitestGeneratorSchema {
   project: string;
   uiFramework?: 'angular' | 'react' | 'vue' | 'none';
-  coverageProvider: 'v8' | 'istanbul' | 'custom';
+  coverageProvider: 'v8' | 'istanbul' | 'custom' | 'none';
   inSourceTests?: boolean;
   skipViteConfig?: boolean;
   testTarget?: string;
@@ -41,19 +42,30 @@ export function addOrChangeTestTarget(
   hasPlugin: boolean
 ) {
   const nxJson = readNxJson(tree);
+  const target = options.testTarget ?? 'test';
 
-  hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/vitest'
-      : p.plugin === '@nx/vitest' || hasPlugin
-  );
+  // The plugin only infers the target names it is registered for, so a request
+  // for any other name still needs an explicit target.
+  hasPlugin ||=
+    nxJson.plugins?.some((p) => {
+      if (typeof p === 'string') {
+        return p === '@nx/vitest' && target === 'test';
+      }
+      if (p.plugin !== '@nx/vitest') {
+        return false;
+      }
+      const pluginOptions = p.options as VitestPluginOptions;
+      return (
+        (pluginOptions?.testTargetName ?? 'test') === target ||
+        pluginOptions?.ciTargetName === target
+      );
+    }) ?? false;
 
   if (hasPlugin) {
     return;
   }
 
   const project = readProjectConfiguration(tree, options.project);
-  const target = options.testTarget ?? 'test';
 
   const reportsDirectory = joinPathFragments(
     'coverage',
@@ -88,7 +100,8 @@ export interface ViteConfigFileOptions {
   rolldownOptionsExternal?: string[];
   imports?: string[];
   plugins?: string[];
-  coverageProvider?: 'v8' | 'istanbul' | 'custom';
+  coverageProvider?: 'v8' | 'istanbul' | 'custom' | 'none';
+  passWithNoTests?: boolean;
   setupFile?: string;
   useEsmExtension?: boolean;
   port?: number;
@@ -177,7 +190,7 @@ export function createOrEditViteConfig(
 
   if (!onlyVitest && options.includeLib) {
     plugins.push(
-      `dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json')${
+      `dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json')${
         !isTsSolutionSetup ? ', pathsToAliases: false' : ''
       } })`
     );
@@ -196,13 +209,16 @@ export function createOrEditViteConfig(
     globals: true,
     environment: '${options.testEnvironment ?? 'jsdom'}',
     include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+${options.passWithNoTests ? `    passWithNoTests: true,\n` : ''}\
 ${options.setupFile ? `    setupFiles: ['${options.setupFile}'],\n` : ''}\
 ${
   options.inSourceTests
     ? `    includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],\n`
     : ''
 }\
-    reporters: ['default'],
+    reporters: ['default']${
+      options.coverageProvider !== 'none'
+        ? `,
     coverage: {
       reportsDirectory: '${reportsDirectory}',
       provider: ${
@@ -210,6 +226,8 @@ ${
           ? `'${options.coverageProvider}' as const`
           : `'v8' as const`
       },
+    }`
+        : ''
     }
   },`
     : '';
@@ -280,7 +298,7 @@ ${
 ${imports.join(';\n')}${imports.length ? ';' : ''}
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   ${printOptions(
     cacheDir,
     plugins.length ? `  plugins: [${plugins.join(', ')}],` : '',
@@ -294,7 +312,7 @@ import { defineConfig } from 'vite';
 ${imports.join(';\n')}${imports.length ? ';' : ''}
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   ${printOptions(
     cacheDir,
     devServerOption,
@@ -372,6 +390,7 @@ function handleViteConfigFileExists(
     globals: true,
     environment: options.testEnvironment ?? 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    ...(options.passWithNoTests ? { passWithNoTests: true } : {}),
     reporters: ['default'],
     coverage: {
       reportsDirectory: reportsDirectory,

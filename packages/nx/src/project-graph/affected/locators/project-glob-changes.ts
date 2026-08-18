@@ -9,7 +9,14 @@ import { combineGlobPatterns } from '../../../utils/globs';
 import { getPlugins } from '../../plugins/get-plugins';
 
 export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
-  async (touchedFiles, projectGraphNodes): Promise<string[]> => {
+  async (
+    touchedFiles,
+    projectGraphNodes,
+    _nxJson,
+    _packageJson,
+    _projectGraph,
+    projectDeletionAffectsAllProjects = true
+  ): Promise<string[]> => {
     const globPattern = await (async () => {
       // TODO: We need a quicker way to get patterns that should not
       // require starting up plugin workers
@@ -36,7 +43,10 @@ export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
         // If the file no longer exists on disk, then it was deleted
         if (!existsSync(join(workspaceRoot, touchedFile.file))) {
           // If any project has been deleted, we must assume all projects were affected
-          return Object.keys(projectGraphNodes);
+          if (projectDeletionAffectsAllProjects) {
+            return Object.keys(projectGraphNodes);
+          }
+          continue;
         }
 
         // Modified project config files are under a project's root, and implicitly

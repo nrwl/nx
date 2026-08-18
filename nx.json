@@ -99,36 +99,27 @@
         "tag": false
       },
       "currentVersionResolver": "registry",
-      "preserveLocalDependencyProtocols": false,
+      "preserveLocalDependencyProtocols": true,
       "preserveMatchingDependencyRanges": false,
-      "manifestRootsToUpdate": ["dist/packages/{projectName}"],
+      "manifestRootsToUpdate": ["{projectRoot}"],
       "versionActionsOptions": {
         "skipLockFileUpdate": true
       }
     }
   },
-  "targetDefaults": [
-    {
-      "target": "cleanup-tsconfig",
+  "targetDefaults": {
+    "cleanup-tsconfig": {
       "executor": "nx:run-commands",
       "options": {
         "command": "node ./scripts/cleanup-tsconfig-files.js dist/packages/{projectName}"
       }
     },
-    {
-      "target": "nx-release-publish",
-      "options": {
-        "packageRoot": "dist/packages/{projectName}"
-      }
-    },
-    {
-      "target": "build",
+    "build": {
       "dependsOn": ["^build", "typecheck", "build-base"],
       "inputs": ["production", "^production"],
       "cache": true
     },
-    {
-      "executor": "@nx/esbuild:esbuild",
+    "@nx/esbuild:esbuild": {
       "cache": true,
       "dependsOn": ["^build", "typecheck", "build-base"],
       "inputs": [
@@ -140,97 +131,103 @@
         }
       ]
     },
-    {
-      "target": "build-native",
+    "build-native": {
       "inputs": ["native"],
       "cache": true
     },
-    {
-      "target": "build-base",
+    "build-base": {
       "dependsOn": ["^build-base", "build-native", "copy-assets"],
       "cache": true
     },
-    {
-      "target": "test-native",
+    "test-native": {
       "inputs": ["native", "{projectRoot}/**/*.snap"],
       "executor": "@monodon/rust:test",
       "options": {},
       "cache": true
     },
-    {
-      "target": "test",
-      "dependsOn": ["test-native", "build-native", "^build-native"],
-      "options": {
-        "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"],
-        "env": {
-          "NODE_OPTIONS": "--experimental-vm-modules"
+    "test": [
+      {
+        "dependsOn": ["test-native", "build-native", "^build-native"]
+      },
+      {
+        "filter": {
+          "plugin": "@nx/jest/plugin"
+        },
+        "options": {
+          "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"],
+          "env": {
+            "NODE_OPTIONS": "--experimental-vm-modules"
+          }
+        }
+      },
+      {
+        "filter": {
+          "plugin": "@nx/vitest"
+        },
+        "options": {
+          "args": ["--passWithNoTests"]
         }
       }
-    },
-    {
-      "target": "lint",
+    ],
+    "lint": {
       "dependsOn": ["build-native", "^build-native", "build"],
-      "inputs": ["...", { "dependentTasksOutputFiles": "**/*.{js,json,md}" }],
+      "inputs": [
+        "...",
+        {
+          "dependentTasksOutputFiles": "**/*.{js,json,md}"
+        }
+      ],
       "options": {
         "max-warnings": 5
       }
     },
-    {
-      "target": "e2e",
+    "e2e": {
       "cache": true,
       "inputs": ["e2eInputs", "^production"]
     },
-    {
-      "target": "e2e-local",
+    "e2e-local": {
       "cache": true,
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry-e2e"
       ]
     },
-    {
-      "target": "e2e-ci",
+    "e2e-ci": {
       "inputs": ["e2eInputs", "^production"]
     },
-    {
-      "target": "e2e-macos-local",
+    "e2e-macos-local": {
       "cache": true,
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry-e2e"
       ]
     },
-    {
-      "target": "e2e-macos-ci",
+    "e2e-macos-ci": {
       "inputs": ["e2eInputs", "^production"]
     },
-    {
-      "target": "e2e-ci--**/**",
+    "e2e-ci--**/**": {
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry-e2e"
       ],
       "options": {
         "args": ["--forceExit"]
       }
     },
-    {
-      "target": "e2e-macos-ci--**/*",
+    "e2e-macos-ci--**/*": {
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry-e2e"
       ]
     },
-    {
-      "target": "e2e-base",
+    "e2e-base": {
       "inputs": ["default", "^production"]
     },
-    {
-      "target": "build-storybook",
+    "build-storybook": {
       "inputs": [
         "default",
         "^production",
@@ -240,21 +237,19 @@
       ],
       "cache": true
     },
-    {
-      "target": "build-ng",
+    "build-ng": {
       "cache": true
     },
-    {
-      "target": "sitemap",
+    "sitemap": {
       "cache": true
     },
-    {
-      "target": "copy-docs",
+    "copy-docs": {
       "cache": true
     }
-  ],
+  },
   "plugins": [
     "./tools/workspace-plugin/src/plugins/copy-assets-plugin.ts",
+    "./tools/workspace-plugin/src/plugins/examples-plugin.ts",
     "@monodon/rust",
     {
       "plugin": "@nx/vite/plugin",
@@ -269,12 +264,13 @@
     },
     {
       "plugin": "@nx/js/typescript",
-      "exclude": ["examples/angular-rspack/**/*", "nx-dev/**/*", "e2e/**/*"],
+      "exclude": ["examples/**/*", "nx-dev/**/*", "e2e/**/*"],
       "options": {
         "typecheck": true,
         "build": {
           "targetName": "build-base"
-        }
+        },
+        "compiler": "tsgo"
       }
     },
     {
@@ -282,11 +278,13 @@
       "include": ["e2e/**/*", "nx-dev/ui-fence/**/*"],
       "options": {
         "typecheck": true,
-        "build": false
+        "build": false,
+        "compiler": "tsgo"
       }
     },
     {
       "plugin": "@nx/playwright/plugin",
+      "exclude": ["examples/**"],
       "options": {
         "targetName": "pw-e2e",
         "ciTargetName": "e2e-ci"
@@ -294,7 +292,7 @@
     },
     {
       "plugin": "@nx/eslint/plugin",
-      "exclude": ["packages/**/__fixtures__/**/*"],
+      "exclude": ["packages/**/__fixtures__/**/*", "examples/**/*"],
       "options": {
         "targetName": "lint"
       }
@@ -372,17 +370,6 @@
       }
     },
     {
-      "plugin": "@nx/rspack/plugin",
-      "include": ["examples/angular-rspack/**"],
-      "options": {
-        "buildTargetName": "build",
-        "serveTargetName": "serve",
-        "previewTargetName": "preview",
-        "buildDepsTargetName": "build-deps",
-        "watchDepsTargetName": "watch-deps"
-      }
-    },
-    {
       "plugin": "@nx/vitest",
       "options": {
         "testTargetName": "test"
@@ -393,17 +380,16 @@
       ]
     },
     {
-      "plugin": "@nx/vitest",
+      "plugin": "@nx/oxlint",
       "options": {
-        "testTargetName": "vite:test"
-      },
-      "include": ["astro-docs/**"]
+        "targetName": "oxlint"
+      }
     }
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "bust": 3235,
+  "bust": 3237,
   "defaultBase": "master",
   "sync": {
     "applyChanges": true
@@ -411,7 +397,7 @@
   "conformance": {
     "rules": [
       {
-        "rule": "./dist/workspace-plugin/src/conformance-rules/project-package-json",
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/project-package-json",
         "projects": [
           "!.",
           "!create-nx-*",
@@ -445,7 +431,7 @@
         ]
       },
       {
-        "rule": "./dist/workspace-plugin/src/conformance-rules/migration-groups",
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/migration-groups",
         "options": {
           "versionRange": ">= 19.8",
           "groups": [
@@ -497,19 +483,25 @@
         }
       },
       {
-        "rule": "./dist/workspace-plugin/src/conformance-rules/no-ignored-tracked-files"
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/nx-package-group"
       },
       {
-        "rule": "./dist/workspace-plugin/src/conformance-rules/codeblock-language"
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/migration-markdown-assets"
       },
       {
-        "rule": "./dist/workspace-plugin/src/conformance-rules/relative-image-imports"
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/no-ignored-tracked-files"
       },
       {
-        "rule": "./dist/workspace-plugin/src/conformance-rules/types-versions-exports-sync"
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/codeblock-language"
       },
       {
-        "rule": "./dist/workspace-plugin/src/conformance-rules/env-vars-documented",
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/relative-image-imports"
+      },
+      {
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/types-versions-exports-sync"
+      },
+      {
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/env-vars-documented",
         "options": {
           "ignore": [
             "NX_ANALYTICS_SESSION_ID",
@@ -538,7 +530,8 @@
             "NX_PREFIX_OUTPUT",
             "NX_INFER_ALL_PACKAGE_JSONS",
             "NX_AI_FILES_USE_LOCAL",
-            "NX_WINDOWS_PTY_SUPPORT"
+            "NX_WINDOWS_PTY_SUPPORT",
+            "NX_ORIGINAL_FORCE_COLOR"
           ]
         }
       }

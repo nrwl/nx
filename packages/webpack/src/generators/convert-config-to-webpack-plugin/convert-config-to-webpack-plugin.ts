@@ -13,6 +13,7 @@ import { extractWebpackOptions } from './lib/extract-webpack-options';
 import { normalizePathOptions } from './lib/normalize-path-options';
 import { parse } from 'path';
 import { validateProject } from './lib/validate-project';
+import { assertSupportedWebpackVersion } from '../../utils/versions';
 
 interface Schema {
   project?: string;
@@ -32,6 +33,8 @@ export async function convertConfigToWebpackPluginGenerator(
   tree: Tree,
   options: Schema
 ) {
+  assertSupportedWebpackVersion(tree);
+
   let migrated = 0;
 
   const projects = getProjects(tree);

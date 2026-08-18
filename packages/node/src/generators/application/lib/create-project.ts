@@ -1,4 +1,4 @@
-import { addBuildTargetDefaults } from '@nx/devkit/internal';
+import { addBuildTargetDefaults, type PackageJson } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   joinPathFragments,
@@ -7,7 +7,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { TS_SOLUTION_SETUP_TSCONFIG_INPUT } from '@nx/js/internal';
-import type { PackageJson } from 'nx/src/utils/package-json';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { NormalizedSchema } from './normalized-schema';
 import {
@@ -44,7 +43,7 @@ export function addProject(
       project.targets.build = getWebpackBuildConfig(tree, project, options);
     } else if (options.isNest) {
       // If we are using Nest that has the webpack plugin we need to override the
-      // build target so that node-env can be set to production or development so the serve target can be run in development mode
+      // build target so that NODE_ENV can be set to production or development so the serve target can be run in development mode
       project.targets.build = getNestWebpackBuildConfig(project);
     }
   }
@@ -68,12 +67,7 @@ export function addProject(
       tags: project.tags?.length ? project.tags : undefined,
     };
   } else {
-    addProjectConfiguration(
-      tree,
-      options.name,
-      project,
-      options.standaloneConfig
-    );
+    addProjectConfiguration(tree, options.name, project);
   }
 
   if (!options.useProjectJson || options.isUsingTsSolutionConfig) {

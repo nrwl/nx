@@ -1,16 +1,25 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/gradle",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": "dist",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/gradle/tsconfig.tsbuildinfo"
+    "composite": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
-  "include": ["**/*.ts"],
+  "include": ["*.ts", "src/**/*.ts"],
   "exclude": [
+    "node_modules",
+    "dist",
     "jest.config.ts",
     "**/*.spec.ts",
     "**/*.test.ts",
-    "project-graph/**"
+    "project-graph/**",
+    "eslint.config.mjs"
   ],
   "references": [
     {

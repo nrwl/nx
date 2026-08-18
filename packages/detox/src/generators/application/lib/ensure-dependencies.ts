@@ -19,5 +19,11 @@ export function ensureDependencies(tree: Tree, options: NormalizedSchema) {
     devDependencies['@config-plugins/detox'] = configPluginsDetoxVersion;
   }
 
-  return addDependenciesToPackageJson(tree, {}, devDependencies);
+  return addDependenciesToPackageJson(
+    tree,
+    {},
+    devDependencies,
+    undefined,
+    true
+  );
 }

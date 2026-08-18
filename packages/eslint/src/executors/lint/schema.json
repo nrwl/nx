@@ -29,21 +29,7 @@
       "default": "stylish",
       "anyOf": [
         {
-          "enum": [
-            "stylish",
-            "compact",
-            "codeframe",
-            "unix",
-            "visualstudio",
-            "table",
-            "checkstyle",
-            "html",
-            "jslint-xml",
-            "json",
-            "json-with-metadata",
-            "junit",
-            "tap"
-          ]
+          "enum": ["stylish", "html", "json", "json-with-metadata"]
         },
         {
           "minLength": 1

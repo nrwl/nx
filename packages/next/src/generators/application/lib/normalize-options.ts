@@ -3,9 +3,9 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/internal';
-import { assertValidStyle } from '@nx/react/src/utils/assertion';
+import { assertValidStyle } from '@nx/react';
 import { Schema } from '../schema';
-import { isUsingTsSolutionSetup } from '@nx/js/internal';
+import { normalizeLinterOption, isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export interface NormalizedSchema
   extends Omit<Schema, 'name' | 'useTsSolution'> {
@@ -81,7 +81,7 @@ export async function normalizeOptions(
     e2eProjectRoot,
     e2eTestRunner: options.e2eTestRunner || 'playwright',
     fileName,
-    linter: options.linter || 'eslint',
+    linter: await normalizeLinterOption(host, options.linter),
     outputPath,
     parsedTags,
     projectName: appProjectName,

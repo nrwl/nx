@@ -5,10 +5,14 @@ import {
   TargetConfiguration,
   TargetMetadata,
 } from '../../../config/workspace-json-project-json';
-import { recordSourceMapKeysByIndex } from './source-maps';
+import {
+  recordSourceMapKeysByIndex,
+  recordTargetIdentitySourceMapInfo,
+} from './source-maps';
 
 import type { SourceInformation } from './source-maps';
 import {
+  assertNoIntegerLikeSpreadKey,
   getMergeValueResult,
   INTEGER_LIKE_KEY_PATTERN,
   IntegerLikeSpreadKeyError,
@@ -274,6 +278,14 @@ function mergeConfigurations<T extends Object>(
       // Before '...': base wins for shared names. Keep base's source-map
       // entries when it owns the config.
       if (baseHasConfig) {
+        // Base wins, so the incoming config is dropped without reaching
+        // `mergeConfigurationValue`. Validate its nested spread here so an
+        // integer-like-key ambiguity throws regardless of which side owns
+        // the config name (mirrors the base-independent target-level check).
+        assertNoIntegerLikeSpreadKey(
+          newConfigurations?.[configName],
+          configIdentifier ? `Object at "${configIdentifier}"` : 'Object'
+        );
         mergedConfigurations[configName] = baseConfigurations[configName];
       } else {
         mergedConfigurations[configName] = mergeConfigurationValue(
@@ -369,6 +381,10 @@ function mergeConfigurations<T extends Object>(
  * @param projectConfigSourceMap The source map to be filled with metadata about where each property came from
  * @param sourceInformation The metadata about where the new target was defined
  * @param targetIdentifier The identifier for the target to merge, used for source map
+ * @param deferSpreadsWithoutBase Whether a `'...'` spread with no base value is preserved
+ * for a later merge layer to resolve (default), or expanded against the empty base and
+ * dropped. Pass `false` only for a final merge whose result is consumed directly rather
+ * than merged onto a lower-priority base.
  * @returns A merged target configuration
  */
 export function mergeTargetConfigurations(
@@ -377,7 +393,7 @@ export function mergeTargetConfigurations(
   projectConfigSourceMap?: Record<string, SourceInformation>,
   sourceInformation?: SourceInformation,
   targetIdentifier?: string,
-  deferSpreadsWithoutBase?: boolean
+  deferSpreadsWithoutBase: boolean = true
 ): TargetConfiguration {
   const {
     configurations: defaultConfigurations,
@@ -413,9 +429,12 @@ export function mergeTargetConfigurations(
     : new Set<string>();
 
   // Integer-like keys get hoisted to targetKeys[0], making their position
-  // relative to '...' unrecoverable.
+  // relative to '...' unrecoverable. This is a property of the authored
+  // config, not of the base, so it throws regardless of compatibility —
+  // which also keeps the error identical between the target-defaults staging
+  // merge and the real merge, whose bases differ.
   if (
-    hasSpread &&
+    spreadPosInTarget >= 0 &&
     targetKeys[0] &&
     INTEGER_LIKE_KEY_PATTERN.test(targetKeys[0])
   ) {
@@ -444,6 +463,16 @@ export function mergeTargetConfigurations(
 
     if (hasSpread && keysBeforeSpread.has(key)) {
       // Before '...': base wins; fall through to target only if base lacks it.
+      // When base wins, the incoming `target[key]` is dropped without ever
+      // reaching `getMergeValueResult`, so validate its nested spread here —
+      // the integer-like-key ambiguity is a property of the authored value,
+      // not of which side owns the key, and must throw either way.
+      assertNoIntegerLikeSpreadKey(
+        target[key],
+        projectConfigSourceMap
+          ? `Object at "${targetIdentifier}.${key}"`
+          : 'Object'
+      );
       result[key] =
         key in mergeBase
           ? mergeBase[key]
@@ -527,9 +556,26 @@ export function mergeTargetConfigurations(
     }
   }
 
-  // Update source map once after loop
+  // Update the node key once after the loop. Ownership follows identity: this
+  // merge claims `targets.<name>` only when it changed the target's identity
+  // (a new/different executor or command, or an incompatible replace — whose
+  // key purge above empties the slot anyway). A plugin that only layers fields
+  // onto an existing target leaves the node with its creator; weak
+  // target-defaults stamps are always reclaimable.
   if (projectConfigSourceMap) {
-    projectConfigSourceMap[targetIdentifier] = sourceInformation;
+    const identityChanged =
+      !isCompatible ||
+      (target.executor !== undefined &&
+        target.executor !== baseTarget?.executor) ||
+      (target.command !== undefined &&
+        target.command !== baseTarget?.command) ||
+      suppliesNewOptionsIdentity(baseTarget, target);
+    recordTargetIdentitySourceMapInfo(
+      projectConfigSourceMap,
+      targetIdentifier,
+      sourceInformation,
+      identityChanged
+    );
   }
 
   // merge options if there are any
@@ -618,6 +664,32 @@ export function isCompatibleTarget(
   }
 
   return true;
+}
+
+/**
+ * Run-commands and run-script targets carry their runnable identity in
+ * `options` (see {@link isCompatibleTarget}). A layer that supplies that
+ * identity where the base had none changed what the target runs — the same
+ * identity change as setting an executor on a target that had none.
+ */
+function suppliesNewOptionsIdentity(
+  baseTarget: TargetConfiguration | undefined,
+  target: TargetConfiguration
+): boolean {
+  const executor = target.executor ?? baseTarget?.executor;
+  if (executor === 'nx:run-commands') {
+    const baseCommand =
+      baseTarget?.options?.command ??
+      baseTarget?.options?.commands?.join(' && ');
+    const targetCommand =
+      target.options?.command ?? target.options?.commands?.join(' && ');
+    return !!targetCommand && targetCommand !== baseCommand;
+  }
+  if (executor === 'nx:run-script') {
+    const targetScript = target.options?.script;
+    return !!targetScript && targetScript !== baseTarget?.options?.script;
+  }
+  return false;
 }
 
 export function resolveNxTokensInOptions<T extends Object | Array<unknown>>(

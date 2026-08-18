@@ -1,7 +1,7 @@
 import { performance } from 'perf_hooks';
 
 import { join } from 'path';
-import { customDimensions } from '../analytics';
+import { customDimensions, PERF_SPAN_SAMPLE_RATE } from '../analytics';
 import { readNxJson } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
 import {
@@ -313,6 +313,7 @@ export async function createProjectGraphAndSourceMapsAsync(
             [customDimensions.projectCount]: Object.keys(
               currentProjectGraph.nodes
             ).length,
+            [customDimensions.sampleRate]: PERF_SPAN_SAMPLE_RATE,
           }),
         },
       });
@@ -401,6 +402,7 @@ export async function createProjectGraphAndSourceMapsAsync(
           ...(customDimensions && {
             [customDimensions.projectCount]: Object.keys(res.projectGraph.nodes)
               .length,
+            [customDimensions.sampleRate]: PERF_SPAN_SAMPLE_RATE,
           }),
         },
       });
@@ -424,6 +426,7 @@ export async function createProjectGraphAndSourceMapsAsync(
             [customDimensions.projectCount]: Object.keys(
               projectGraphAndSourceMaps.projectGraph.nodes
             ).length,
+            [customDimensions.sampleRate]: PERF_SPAN_SAMPLE_RATE,
           }),
         },
       });
@@ -439,6 +442,27 @@ export async function createProjectGraphAndSourceMapsAsync(
           ],
         });
         markDaemonAsDisabled(e.message);
+        return buildProjectGraphAndSourceMapsWithoutDaemon();
+      }
+
+      if (e.daemonPermissionError) {
+        // Deliberately not disabled: unlike the inotify limit above, a socket
+        // owned by someone else stops being there when it is removed or the
+        // machine reboots, and disabling until `nx reset` would outlive the
+        // cause and hide the fix from anyone who followed the advice.
+        // The first line carries the errno, and it is the one token that tells
+        // the two causes apart: EACCES is a socket owned by someone else (delete
+        // it), EPERM is a sandbox refusing the connect syscall (allow unix
+        // sockets under the Nx socket root). The message hedges between exactly
+        // those two because it cannot tell them apart, and this branch does not
+        // call writeDaemonLogs, so dropping the line loses the errno for good.
+        const [summary, ...details] = e.message.split('\n');
+        output.note({
+          title: `${summary} Continuing without the daemon.`,
+          // The blank line after the summary separates paragraphs when the
+          // message is printed as one blob; as bodyLines it is a leading gap.
+          bodyLines: details[0] === '' ? details.slice(1) : details,
+        });
         return buildProjectGraphAndSourceMapsWithoutDaemon();
       }
 

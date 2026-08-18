@@ -9,12 +9,10 @@ import {
   logger,
   readProjectsConfigurationFromProjectGraph,
 } from '@nx/devkit';
+import { assertPackageIsInstalled } from '../utilities/builder-package';
 import { type Schema } from './schema';
 import { normalizeOptions, startRemotes } from './lib';
-import { startRemoteIterators } from '@nx/module-federation/src/executors/utils';
-import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
-import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
-import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
+import { waitForPortOpen, fileServerExecutor } from '@nx/web/internal';
 import { executeDevServerBuilder } from '../../builders/dev-server/dev-server.impl';
 import {
   getDynamicMfManifestFile,
@@ -22,6 +20,8 @@ import {
 } from '../../builders/utilities/module-federation';
 import { extname, join } from 'path';
 import { existsSync } from 'fs';
+import { warnAngularMfDevServerExecutorDeprecation } from '../../utils/module-federation-deprecation';
+import { createBuilderContext } from '@nx/devkit/ngcli-adapter';
 
 // This is required to ensure that the webpack version used by the Module Federation is the same as the one used by the builders.
 const Module = require('module');
@@ -47,6 +47,15 @@ export async function* moduleFederationDevServerExecutor(
   schema: Schema,
   context: ExecutorContext
 ) {
+  assertPackageIsInstalled(
+    '@nx/module-federation',
+    '@nx/angular:module-federation-dev-server'
+  );
+  const { startRemoteIterators } = await import(
+    '@nx/module-federation/internal'
+  );
+
+  warnAngularMfDevServerExecutorDeprecation();
   const options = normalizeOptions(schema);
 
   const { projects: workspaceProjects } =

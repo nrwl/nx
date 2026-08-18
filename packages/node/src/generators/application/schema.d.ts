@@ -1,13 +1,13 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 
 export interface Schema {
   directory: string;
   name?: string;
   skipFormat?: boolean;
   skipPackageJson?: boolean;
-  unitTestRunner?: 'jest' | 'none';
+  unitTestRunner?: 'jest' | 'vitest' | 'none';
   e2eTestRunner?: 'jest' | 'none';
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   formatter?: 'none' | 'prettier';
   tags?: string;
   frontendProject?: string;
@@ -15,8 +15,11 @@ export interface Schema {
   /** @deprecated use `swcJest` instead */
   babelJest?: boolean;
   js?: boolean;
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
+   */
   setParserOptionsProject?: boolean;
-  standaloneConfig?: boolean;
   bundler?: 'esbuild' | 'webpack';
   framework?: NodeJsFrameWorks;
   port?: number;
@@ -27,6 +30,7 @@ export interface Schema {
   addPlugin?: boolean;
   useTsSolution?: boolean;
   useProjectJson?: boolean;
+  keepExistingVersions?: boolean;
 }
 
 export type NodeJsFrameWorks = 'express' | 'koa' | 'fastify' | 'nest' | 'none';

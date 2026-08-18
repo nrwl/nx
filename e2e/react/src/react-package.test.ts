@@ -38,7 +38,9 @@ describe('Build React libraries and apps', () => {
     childLib = uniq('childlib');
     childLib2 = uniq('childlib2');
 
-    proj = newProject({ packages: ['@nx/react'] });
+    proj = newProject({
+      packages: ['@nx/react', '@nx/rspack', '@nx/rollup', '@nx/jest'],
+    });
 
     // create dependencies by importing
     const createDep = (parent, children: string[]) => {
@@ -189,6 +191,9 @@ module.exports = withNx(
          */
 
         json.compilerOptions.target = 'es5';
+        // es5 target is a deprecated-as-error option under TS 6; suppression
+        // keeps the user-pinned target compiling so __generator is emitted.
+        json.compilerOptions.ignoreDeprecations = '6.0';
         return JSON.stringify(json, null, 2);
       });
       // What we're testing

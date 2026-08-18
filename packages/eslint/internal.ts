@@ -10,8 +10,11 @@ export {
   addOverrideToLintConfig,
   addPluginsToLintConfig,
   addPredefinedConfigToFlatLintConfig,
+  addTypedLintingToFlatConfig,
   findEslintFile,
+  inspectTypedLinting,
   isEslintConfigSupported,
+  isTypedLintingEnabled,
   lintConfigHasOverride,
   replaceOverridesInLintConfig,
   updateOverrideInLintConfig,
@@ -31,9 +34,8 @@ export { setupRootEsLint } from './src/generators/lint-project/setup-root-eslint
 
 export {
   getInstalledEslintVersion,
-  getTypeScriptEslintVersionToInstall,
-} from './src/utils/version-utils';
-
-export { eslint9__typescriptESLintVersion } from './src/utils/versions';
+  typescriptESLintVersion,
+  versions,
+} from './src/utils/versions';
 
 export type { Schema } from './src/executors/lint/schema';

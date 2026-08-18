@@ -1,4 +1,5 @@
 import { ChildProcess, spawn } from 'child_process';
+import { randomBytes } from 'crypto';
 import { Socket } from 'net';
 import { Readable, Writable } from 'stream';
 import path = require('path');
@@ -11,16 +12,18 @@ import {
   consumeMessagesFromSocket,
   parseMessage,
 } from '../../../utils/consume-messages-from-socket';
+import { getPluginResolveConditionNodeArgs } from '../../../plugins/js/utils/typescript';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { logger } from '../../../utils/logger';
 import { ProgressTopics } from '../../../utils/progress-topics';
 import { waitForSocketConnection } from '../../../utils/wait-for-socket-connection';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import type { RawProjectGraphDependency } from '../../project-graph-builder';
 import { LoadedNxPlugin } from '../loaded-nx-plugin';
 import type {
   CreateDependenciesContext,
   CreateMetadataContext,
-  CreateNodesContextV2,
+  CreateNodesContext,
   CreateNodesResult,
   PostTasksExecutionContext,
   PreTasksExecutionContext,
@@ -74,7 +77,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     filePattern: string,
     fn: (
       matchedFiles: string[],
-      context: CreateNodesContextV2
+      context: CreateNodesContext
     ) => Promise<
       Array<readonly [plugin: string, file: string, result: CreateNodesResult]>
     >,
@@ -527,6 +530,13 @@ export class IsolatedPlugin implements LoadedNxPlugin {
 
 global.nxPluginWorkerCount ??= 0;
 
+export function getPluginWorkerSocketId(): string {
+  const counter = global.nxPluginWorkerCount++;
+  return `${process.pid}-${counter.toString(36)}-${randomBytes(4).toString(
+    'hex'
+  )}`;
+}
+
 async function startPluginWorker(name: string) {
   performance.mark(`start-plugin-worker:${name}`);
 
@@ -552,17 +562,28 @@ async function startPluginWorker(name: string) {
       : {}),
   };
 
-  const ipcPath = getPluginOsSocketPath(
-    [process.pid, global.nxPluginWorkerCount++, performance.now()].join('-')
-  );
+  // Keep the host pid readable for diagnostics, the counter collision-free
+  // within this process, and entropy for a reused pid across process runs. The
+  // suffix is a base36 counter plus four random bytes: eleven characters after
+  // the pid until the counter passes 36, and fixed-length where the
+  // `performance.now()` stamp it replaced varied with process uptime. That
+  // keeps the socket path inside the 95-character budget `assertValidSocketPath`
+  // enforces.
+  const ipcPath = getPluginOsSocketPath(getPluginWorkerSocketId());
 
   const worker = spawn(
     process.execPath,
     [
+      // Spawn the worker with the same resolve conditions Nx uses for plugin
+      // entries so the plugin's transitive workspace imports resolve to source.
+      ...getPluginResolveConditionNodeArgs(),
       ...(isWorkerTypescript ? ['--require', 'ts-node/register'] : []),
       workerPath,
       ipcPath,
       name,
+      // The host's root. The worker validates against this rather than re-resolving,
+      // so the two agree by construction.
+      workspaceRoot,
     ],
     {
       stdio: ['ignore', 'pipe', 'pipe'],

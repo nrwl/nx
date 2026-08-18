@@ -8,7 +8,13 @@ import {
   Tree,
 } from '@nx/devkit';
 import { createNodesV2 } from '../../plugins/plugin';
-import { nxVersion, webpackCliVersion } from '../../utils/versions';
+import {
+  nxVersion,
+  webpackCliVersion,
+  webpackDevServerVersion,
+  webpackVersion,
+  assertSupportedWebpackVersion,
+} from '../../utils/versions';
 import { Schema } from './schema';
 
 export function webpackInitGenerator(tree: Tree, schema: Schema) {
@@ -16,6 +22,8 @@ export function webpackInitGenerator(tree: Tree, schema: Schema) {
 }
 
 export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
+  assertSupportedWebpackVersion(tree);
+
   const nxJson = readNxJson(tree);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&
@@ -74,12 +82,18 @@ export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
 
   let installTask: GeneratorCallback = () => {};
   if (!schema.skipPackageJson) {
+    // webpack and webpack-dev-server are peer dependencies, so ensure they are
+    // installed (both the executor and inferred-plugin paths need them at the
+    // user's runtime).
     const devDependencies = {
       '@nx/webpack': nxVersion,
       '@nx/web': nxVersion,
+      webpack: webpackVersion,
+      'webpack-dev-server': webpackDevServerVersion,
     };
 
     if (schema.addPlugin) {
+      // The inferred plugin runs the `webpack-cli` binary.
       devDependencies['webpack-cli'] = webpackCliVersion;
     }
 
@@ -88,7 +102,7 @@ export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
       {},
       devDependencies,
       undefined,
-      schema.keepExistingVersions
+      schema.keepExistingVersions ?? true
     );
   }
 

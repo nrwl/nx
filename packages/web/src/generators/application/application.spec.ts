@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import {
@@ -8,14 +8,15 @@ import {
   updateJson,
   updateNxJson,
   writeJson,
+  getProjects,
+  readJson,
 } from '@nx/devkit';
-import { getProjects, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import * as devkitExports from 'nx/src/devkit-exports';
+import * as devkitExports from '@nx/devkit';
 
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
-import { PackageManagerCommands } from 'nx/src/utils/package-manager';
+import { PackageManagerCommands } from '@nx/devkit/internal';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nx/cypress/internal', () => ({
@@ -25,16 +26,24 @@ jest.mock('@nx/cypress/internal', () => ({
 
 describe('app', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
   let mockedInstalledCypressVersion: jest.Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     mockedInstalledCypressVersion.mockReturnValue(10);
     jest
       .spyOn(devkitExports, 'getPackageManagerCommand')
       .mockReturnValue({ exec: 'npx' } as PackageManagerCommands);
 
     tree = createTreeWithEmptyWorkspace();
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+    else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
   });
 
   describe('not nested', () => {
@@ -69,6 +78,7 @@ describe('app', () => {
 
     it('should generate files', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'my-app',
         addPlugin: true,
       });
@@ -116,42 +126,7 @@ describe('app', () => {
         }
       `);
 
-      const eslintJson = readJson(tree, '/my-app/.eslintrc.json');
-      expect(eslintJson).toMatchInlineSnapshot(`
-        {
-          "extends": [
-            "../.eslintrc.json",
-          ],
-          "ignorePatterns": [
-            "!**/*",
-          ],
-          "overrides": [
-            {
-              "files": [
-                "*.ts",
-                "*.tsx",
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": {},
-            },
-            {
-              "files": [
-                "*.ts",
-                "*.tsx",
-              ],
-              "rules": {},
-            },
-            {
-              "files": [
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": {},
-            },
-          ],
-        }
-      `);
+      expect(tree.exists('my-app/eslint.config.mjs')).toBeTruthy();
     });
 
     it('should setup playwright e2e project', async () => {
@@ -344,6 +319,7 @@ describe('app', () => {
         expect(lookupFn(config)).toEqual(expectedValue);
       };
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'my-dir/my-app',
         addPlugin: true,
       });
@@ -370,12 +346,8 @@ describe('app', () => {
           lookupFn: (json) => json.compilerOptions.outDir,
           expectedValue: '../../dist/out-tsc',
         },
-        {
-          path: 'my-dir/my-app/.eslintrc.json',
-          lookupFn: (json) => json.extends,
-          expectedValue: ['../../.eslintrc.json'],
-        },
       ].forEach(hasJsonValue);
+      expect(tree.exists('my-dir/my-app/eslint.config.mjs')).toBeTruthy();
     });
 
     it('should extend from root tsconfig.base.json', async () => {
@@ -453,8 +425,10 @@ describe('app', () => {
     expect(tree.read('my-app/webpack.config.js', 'utf-8')).toMatchSnapshot();
   });
 
-  it('should setup eslint', async () => {
+  it('should setup eslint (eslintrc)', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await applicationGenerator(tree, {
+      linter: 'eslint',
       directory: 'my-app',
       addPlugin: true,
     });
@@ -472,8 +446,8 @@ describe('app', () => {
       skipFormat: true,
     });
 
-    const eslintConfig = readJson(tree, 'myapp/.eslintrc.json');
-    expect(eslintConfig.ignorePatterns).not.toContain('**/out-tsc');
+    const eslintConfig = tree.read('myapp/eslint.config.mjs', 'utf-8');
+    expect(eslintConfig).not.toContain('**/out-tsc');
   });
 
   it('should not ignore "out-tsc" from eslint with flat config', async () => {
@@ -614,7 +588,6 @@ describe('app', () => {
         "module.exports = {
           displayName: 'my-app',
           preset: '../jest.preset.js',
-          setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
           transform: {
             '^.+\\\\.[tj]s$': 'babel-jest',
           },
@@ -640,7 +613,6 @@ describe('app', () => {
         "module.exports = {
           displayName: 'my-app',
           preset: '../jest.preset.js',
-          setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
           transform: {
             '^.+\\\\.[tj]s$': '@swc/jest',
           },
@@ -838,6 +810,7 @@ describe('app', () => {
             "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
+              "vite/client",
             ],
           },
           "exclude": [
@@ -998,6 +971,7 @@ describe('app', () => {
 
     it('should generate project.json if useProjectJson is true', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'apps/myapp',
         addPlugin: true,
         useProjectJson: true,
@@ -1050,8 +1024,8 @@ describe('app', () => {
         skipFormat: true,
       });
 
-      const eslintConfig = readJson(tree, 'apps/myapp/.eslintrc.json');
-      expect(eslintConfig.ignorePatterns).toContain('**/out-tsc');
+      const eslintConfig = tree.read('apps/myapp/eslint.config.mjs', 'utf-8');
+      expect(eslintConfig).toContain('**/out-tsc');
     });
 
     it('should ignore "out-tsc" from eslint with flat config', async () => {

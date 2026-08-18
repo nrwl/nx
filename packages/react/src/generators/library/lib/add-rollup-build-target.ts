@@ -1,4 +1,3 @@
-import { Tree } from 'nx/src/generators/tree';
 import {
   addDependenciesToPackageJson,
   ensurePackage,
@@ -10,6 +9,7 @@ import {
   readProjectConfiguration,
   runTasksInSerial,
   updateProjectConfiguration,
+  Tree,
 } from '@nx/devkit';
 
 import { maybeJs } from '../../../utils/maybe-js';
@@ -48,7 +48,9 @@ export async function addRollupBuildTarget(
         {
           '@rollup/plugin-url': rollupPluginUrlVersion,
           '@svgr/rollup': svgrRollupVersion,
-        }
+        },
+        undefined,
+        true
       )
     );
   }

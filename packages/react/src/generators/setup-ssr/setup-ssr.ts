@@ -13,6 +13,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { upsertTargetDefault } from '@nx/devkit/internal';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import type * as ts from 'typescript';
 
 import { ensureTypescript, getProjectSourceRoot } from '@nx/js/internal';
@@ -69,6 +70,8 @@ async function getProjectConfig(tree: Tree, projectName: string) {
 }
 
 export async function setupSsrGenerator(tree: Tree, options: Schema) {
+  assertSupportedReactVersion(tree);
+
   const projectConfig = await getProjectConfig(tree, options.project);
   const projectRoot = projectConfig.root;
   const appImportCandidates: AppComponentInfo[] = [
@@ -270,7 +273,9 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
     {
       '@types/express': typesExpressVersion,
       '@types/cors': typesCorsVersion,
-    }
+    },
+    undefined,
+    true
   );
 
   await formatFiles(tree);

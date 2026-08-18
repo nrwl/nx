@@ -3,6 +3,7 @@
   "continuous": true,
   "outputCapture": "direct-nodejs",
   "title": "Module Federation Static Dev Server",
+  "x-deprecated": "The `@nx/react:module-federation-static-server` executor is deprecated. Use `vite preview` / `rsbuild preview` via `nx:run-commands` instead. Removed in Nx v24.",
   "description": "Serve a Consumer (host) application statically along with its Producers (remotes).",
   "cli": "nx",
   "type": "object",

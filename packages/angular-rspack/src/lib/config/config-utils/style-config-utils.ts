@@ -11,6 +11,7 @@ import { createRequire } from 'node:module';
 import { basename, dirname, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { FileImporter } from 'sass';
+import { isServeMode } from '../../utils/rspack-serve-env';
 import type {
   HashFormat,
   NormalizedAngularRspackPluginOptions,
@@ -33,7 +34,7 @@ export async function getStylesConfig(
   loaderRules: RuleSetRules;
   plugins: Plugins;
 }> {
-  const isDevServer = process.env['WEBPACK_SERVE'];
+  const isDevServer = isServeMode();
   const extraPlugins: Plugins = [];
 
   extraPlugins.push(new AnyComponentStyleBudgetChecker(buildOptions.budgets));
@@ -273,22 +274,18 @@ export async function getStylesConfig(
   return {
     loaderRules: styleLanguages.map(({ extensions, use }) => ({
       test: new RegExp(`\\.(?:${extensions.join('|')})$`, 'i'),
-      rules: [
-        // Setup processing rules for global and component styles
+      oneOf: [
+        // Global styles are only defined global styles
         {
-          oneOf: [
-            // Global styles are only defined global styles
-            {
-              use: globalStyleLoaders,
-              resourceQuery: /\?ngGlobalStyle/,
-            },
-            // Component styles are all styles except defined global styles
-            {
-              use: componentStyleLoaders,
-              resourceQuery: /\?ngResource/,
-            },
-          ],
+          resourceQuery: /\?ngGlobalStyle/,
+          use: [...globalStyleLoaders, ...use],
         },
+        // Component styles are all styles except defined global styles
+        {
+          resourceQuery: /\?ngResource/,
+          use: [...componentStyleLoaders, ...use],
+        },
+        // Fallthrough for anything not query-tagged
         { use },
       ],
     })),

@@ -1,9 +1,6 @@
 import { interpolateName } from 'loader-utils';
 import * as path from 'path';
-import * as webpack from 'webpack';
-
-const Chunk = require('webpack/lib/Chunk');
-const EntryPoint = require('webpack/lib/Entrypoint');
+import type * as Webpack from 'webpack';
 
 export interface ScriptsWebpackPluginOptions {
   name: string;
@@ -15,7 +12,7 @@ export interface ScriptsWebpackPluginOptions {
 
 interface ScriptOutput {
   filename: string;
-  source: webpack.sources.Source;
+  source: Webpack.sources.Source;
 }
 
 function addDependencies(compilation: any, scripts: string[]): void {
@@ -67,6 +64,9 @@ export class ScriptsWebpackPlugin {
     { filename, source }: ScriptOutput,
     cached = false
   ) {
+    const Chunk = require('webpack/lib/Chunk');
+    const EntryPoint = require('webpack/lib/Entrypoint');
+
     const chunk = new Chunk(this.options.name);
     chunk.rendered = !cached;
     chunk.id = this.options.name;
@@ -92,10 +92,12 @@ export class ScriptsWebpackPlugin {
     compilation.assets[filename] = source;
   }
 
-  apply(compiler: webpack.Compiler): void {
+  apply(compiler: Webpack.Compiler): void {
     if (!this.options.scripts || this.options.scripts.length === 0) {
       return;
     }
+
+    const webpack = require('webpack') as typeof import('webpack');
 
     const scripts = this.options.scripts
       .filter((script) => !!script)
@@ -114,7 +116,7 @@ export class ScriptsWebpackPlugin {
       }
 
       const sourceGetters = scripts.map((fullPath) => {
-        return new Promise<webpack.sources.Source>((resolve, reject) => {
+        return new Promise<Webpack.sources.Source>((resolve, reject) => {
           compilation.inputFileSystem.readFile(
             fullPath,
             (err: Error, data: Buffer) => {

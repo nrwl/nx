@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "NxReactProvider",
+  "title": "Create a Module Federation provider",
+  "description": "Scaffold a React Module Federation provider that exposes a federated component. The bundler is selected at generation time; the generated project has no Nx-wrapped bundler config.",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "directory": {
+      "type": "string",
+      "description": "Directory the provider is generated in, e.g. `apps/my-provider`. The project name (also used as the federation `name`, with hyphens converted to underscores) is inferred from the trailing path segment.",
+      "alias": "dir",
+      "$default": { "$source": "argv", "index": 0 },
+      "x-prompt": "Which directory do you want to create the provider in?"
+    },
+    "bundler": {
+      "type": "string",
+      "description": "Bundler used by the provider. The choice is final - the bundler config is too different to switch later.",
+      "enum": ["vite", "rsbuild", "rspack"],
+      "default": "vite",
+      "x-prompt": {
+        "message": "Which bundler should the provider use?",
+        "type": "list",
+        "items": [
+          { "value": "vite", "label": "Vite (default)" },
+          { "value": "rsbuild", "label": "Rsbuild" },
+          { "value": "rspack", "label": "Rspack" }
+        ]
+      }
+    },
+    "port": {
+      "type": "number",
+      "description": "Dev-server port the provider listens on. Defaults to a non-5000 port to avoid the macOS AirTunes collision on Vite."
+    },
+    "exposeName": {
+      "type": "string",
+      "description": "Name under which the federated component is exposed (consumers reference `<name>/<exposeName>`).",
+      "default": "App"
+    },
+    "consumer": {
+      "type": "string",
+      "description": "Name of a consumer project whose `serve` target this provider should depend on. When set, `nx serve <provider>` also spins up the consumer (the 'serve a remote, host comes along' UX from the deprecated host/remote generators). Set automatically when the provider is generated as part of `@nx/react:consumer --providerNames=...`."
+    }
+  },
+  "required": ["directory"]
+}

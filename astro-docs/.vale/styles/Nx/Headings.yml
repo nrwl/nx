@@ -67,6 +67,8 @@ exceptions:
   - Expo
   - React Native
   - Module Federation
+  - TanStack
+  - TanStack Router
   - IntelliJ
   - VS Code
   - VSCode
@@ -74,6 +76,12 @@ exceptions:
   - Turborepo
   - Lerna
   - Bazel
+  - Rush Stack
+  - Rush
+  - Depot
+  - Blacksmith
+  - Buildkite
+  - Develocity
   - JSON
   - YAML
   - TOML
@@ -129,6 +137,14 @@ exceptions:
   - Self-Healing
   - AMD64
   - ARM64
+  - macOS
+  - Windows
+  - Linux
+  - Ubuntu
+  - OS
+  - Homebrew
+  - Chocolatey
+  - apt
   # Filenames and env vars
   - SELF_HEALING.md
   - CLAUDE.md

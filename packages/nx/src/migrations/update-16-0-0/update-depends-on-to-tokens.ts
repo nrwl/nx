@@ -4,8 +4,10 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '../../generators/utils/project-configuration';
+import type { TargetConfiguration } from '../../config/workspace-json-project-json';
 import { Tree } from '../../generators/tree';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { targetDefaultConfigs } from '../utils/target-defaults';
 
 export default async function (tree: Tree) {
   updateDependsOnAndInputsInsideNxJson(tree);
@@ -13,49 +15,13 @@ export default async function (tree: Tree) {
   const projectsConfigurations = getProjects(tree);
   for (const [projectName, projectConfiguration] of projectsConfigurations) {
     let projectChanged = false;
-    for (const [targetName, targetConfiguration] of Object.entries(
+    for (const targetConfiguration of Object.values(
       projectConfiguration.targets ?? {}
     )) {
-      for (const dependency of targetConfiguration.dependsOn ?? []) {
-        if (typeof dependency !== 'string') {
-          if (
-            dependency.projects === 'self' ||
-            dependency.projects === '{self}'
-          ) {
-            delete dependency.projects;
-            projectChanged = true;
-          } else if (
-            dependency.projects === 'dependencies' ||
-            dependency.projects === '{dependencies}'
-          ) {
-            delete dependency.projects;
-            dependency.dependencies = true;
-            projectChanged = true;
-          }
-        }
-      }
-      for (let i = 0; i < (targetConfiguration.inputs?.length ?? 0); i++) {
-        const input = targetConfiguration.inputs[i];
-        if (typeof input !== 'string') {
-          if (
-            'projects' in input &&
-            (input.projects === 'self' || input.projects === '{self}')
-          ) {
-            delete input.projects;
-            projectChanged = true;
-          } else if (
-            'projects' in input &&
-            (input.projects === 'dependencies' ||
-              input.projects === '{dependencies}')
-          ) {
-            delete input.projects;
-            targetConfiguration.inputs[i] = {
-              ...input,
-              dependencies: true,
-            };
-            projectChanged = true;
-          }
-        }
+      // Don't use `||=` — it would short-circuit the rewrite once one target
+      // has already changed, leaving later targets untouched.
+      if (rewriteTokensInBlock(targetConfiguration)) {
+        projectChanged = true;
       }
     }
     if (projectChanged) {
@@ -65,55 +31,67 @@ export default async function (tree: Tree) {
 
   await formatChangedFilesWithPrettierIfAvailable(tree);
 }
+
 function updateDependsOnAndInputsInsideNxJson(tree: Tree) {
   const nxJson = readNxJson(tree);
   let nxJsonChanged = false;
-  for (const [target, defaults] of Object.entries(
-    nxJson?.targetDefaults ?? {}
-  )) {
-    for (const dependency of defaults.dependsOn ?? []) {
-      if (typeof dependency !== 'string') {
-        if (
-          dependency.projects === 'self' ||
-          dependency.projects === '{self}'
-        ) {
-          delete dependency.projects;
-          nxJsonChanged = true;
-        } else if (
-          dependency.projects === 'dependencies' ||
-          dependency.projects === '{dependencies}'
-        ) {
-          delete dependency.projects;
-          dependency.dependencies = true;
-          nxJsonChanged = true;
-        }
-      }
-    }
-    for (let i = 0; i < (defaults.inputs?.length ?? 0); i++) {
-      const input = defaults.inputs[i];
-      if (typeof input !== 'string') {
-        if (
-          'projects' in input &&
-          (input.projects === 'self' || input.projects === '{self}')
-        ) {
-          delete input.projects;
-          nxJsonChanged = true;
-        } else if (
-          'projects' in input &&
-          (input.projects === 'dependencies' ||
-            input.projects === '{dependencies}')
-        ) {
-          delete input.projects;
-          defaults.inputs[i] = {
-            ...input,
-            dependencies: true,
-          };
-          nxJsonChanged = true;
-        }
+  for (const defaults of Object.values(nxJson?.targetDefaults ?? {})) {
+    // `nx repair` can't assume migration order, so a default may already be in
+    // the filtered array shape; rewrite every config block of either form.
+    for (const block of targetDefaultConfigs(defaults)) {
+      // Don't use `||=` — it would short-circuit the rewrite once one block
+      // has already changed, leaving later blocks untouched.
+      if (rewriteTokensInBlock(block)) {
+        nxJsonChanged = true;
       }
     }
   }
   if (nxJsonChanged) {
     updateNxJson(tree, nxJson);
   }
+}
+
+// Rewrite the legacy `projects: 'self' | 'dependencies'` tokens on a single
+// dependsOn/inputs-carrying config block. Returns whether anything changed.
+function rewriteTokensInBlock(block: TargetConfiguration): boolean {
+  let changed = false;
+  for (const dependency of block.dependsOn ?? []) {
+    if (typeof dependency !== 'string') {
+      if (dependency.projects === 'self' || dependency.projects === '{self}') {
+        delete dependency.projects;
+        changed = true;
+      } else if (
+        dependency.projects === 'dependencies' ||
+        dependency.projects === '{dependencies}'
+      ) {
+        delete dependency.projects;
+        dependency.dependencies = true;
+        changed = true;
+      }
+    }
+  }
+  for (let i = 0; i < (block.inputs?.length ?? 0); i++) {
+    const input = block.inputs[i];
+    if (typeof input !== 'string') {
+      if (
+        'projects' in input &&
+        (input.projects === 'self' || input.projects === '{self}')
+      ) {
+        delete input.projects;
+        changed = true;
+      } else if (
+        'projects' in input &&
+        (input.projects === 'dependencies' ||
+          input.projects === '{dependencies}')
+      ) {
+        delete input.projects;
+        block.inputs[i] = {
+          ...input,
+          dependencies: true,
+        };
+        changed = true;
+      }
+    }
+  }
+  return changed;
 }

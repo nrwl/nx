@@ -6,8 +6,8 @@
   "targets": {
     "build": {
       "inputs": ["copyReadme"],
-      "outputs": ["{workspaceRoot}/dist/packages/esbuild/README.md"],
-      "commands": ["node ./scripts/copy-readme.js esbuild"]
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js esbuild packages/esbuild/readme-template.md packages/esbuild/README.md"
     }
   }
 }

@@ -1,5 +1,10 @@
-import { installPackageToTmpAsync } from '../../devkit-internals';
+// Import from the defining module, not the devkit-internals barrel: the barrel
+// eagerly pulls in the task-execution subsystem and instantiates a daemon
+// client, all of which would stay resident for the daemon server's lifetime.
+import { installPackageToTmpAsync } from '../../utils/package-json';
+import { detectPackageManager } from '../../utils/package-manager';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
+import { workspaceRoot } from '../../utils/workspace-root';
 import { serverLogger } from '../logger';
 
 // Module-level state - persists across invocations within daemon lifecycle
@@ -29,7 +34,11 @@ export async function getLatestNxTmpPath(): Promise<string> {
     try {
       serverLogger.log('[LATEST-NX]: Pulling latest Nx...');
       await ensurePackageHasProvenance('nx', 'latest');
-      const result = await installPackageToTmpAsync('nx', 'latest');
+      const result = await installPackageToTmpAsync(
+        'nx',
+        'latest',
+        detectPackageManager(workspaceRoot)
+      );
       latestNxTmpPath = result.tempDir;
       cleanupFn = result.cleanup;
       serverLogger.log(

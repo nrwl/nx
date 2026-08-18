@@ -5,6 +5,7 @@ import {
   readJsonFile,
 } from '@nx/devkit';
 import { execSync } from 'child_process';
+import { statSync } from 'fs';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { join } from 'path';
 import { isLocallyLinkedPackageVersion } from '../../utils/is-locally-linked-package-version';
@@ -26,6 +27,33 @@ function processEnv(color: boolean) {
     env.FORCE_COLOR = `${color}`;
   }
   return env;
+}
+
+function isAlreadyPublishedPublishError(
+  stdoutData?: any,
+  stderr = '',
+  stdout = ''
+): boolean {
+  const error = stdoutData?.error;
+  const errorMessage = [
+    error?.summary,
+    error?.detail,
+    error?.message,
+    error?.body?.error,
+    stderr,
+    stdout,
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  return (
+    error?.code === 'EPUBLISHCONFLICT' ||
+    errorMessage.includes(
+      'You cannot publish over the previously published versions'
+    ) ||
+    (error?.code === 'E409' &&
+      errorMessage.includes('this package is already present'))
+  );
 }
 
 export default async function runExecutor(
@@ -359,6 +387,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
     tag,
     isDryRun,
     isNpmInstalled,
+    packageTxt,
   });
 }
 
@@ -373,6 +402,7 @@ interface RunPublishContext {
   tag: string;
   isDryRun: boolean;
   isNpmInstalled: boolean;
+  packageTxt: string;
 }
 
 function runPublish(ctx: RunPublishContext): { success: boolean } {
@@ -387,6 +417,7 @@ function runPublish(ctx: RunPublishContext): { success: boolean } {
     tag,
     isDryRun,
     isNpmInstalled,
+    packageTxt,
   } = ctx;
   const pmCommand = getPackageManagerCommand(pm);
   const publishCommandSegments = [
@@ -451,6 +482,23 @@ function runPublish(ctx: RunPublishContext): { success: boolean } {
       return {
         success: false,
       };
+    }
+
+    // pnpm 11 dropped the per-file size field from its publish --json output,
+    // so recover the sizes from disk for the tarball contents log.
+    if (Array.isArray(jsonData.files)) {
+      for (const file of jsonData.files as Array<{
+        path?: string;
+        size?: number;
+      }>) {
+        if (typeof file.size !== 'number' && typeof file.path === 'string') {
+          try {
+            file.size = statSync(join(packageRoot, file.path)).size;
+          } catch {
+            // leave the size unknown, logTar omits it
+          }
+        }
+      }
     }
 
     if (isDryRun) {
@@ -518,10 +566,35 @@ function runPublish(ctx: RunPublishContext): { success: boolean } {
       try {
         stdoutData = JSON.parse(err.stdout?.toString() || '{}');
       } catch {
+        const stderr = err.stderr?.toString() || '';
+        const stdout = err.stdout?.toString() || '';
+        if (isAlreadyPublishedPublishError(undefined, stderr, stdout)) {
+          console.warn(
+            `Skipped ${packageTxt}, as v${packageJson.version} has already been published to ${registry} with tag "${tag}"`
+          );
+          return {
+            success: true,
+          };
+        }
         console.error(err.stderr?.toString() || '');
         console.error(err.stdout?.toString() || '');
         return {
           success: false,
+        };
+      }
+
+      if (
+        isAlreadyPublishedPublishError(
+          stdoutData,
+          err.stderr?.toString() || '',
+          err.stdout?.toString() || ''
+        )
+      ) {
+        console.warn(
+          `Skipped ${packageTxt}, as v${packageJson.version} has already been published to ${registry} with tag "${tag}"`
+        );
+        return {
+          success: true,
         };
       }
 

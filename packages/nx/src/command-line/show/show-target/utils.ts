@@ -53,15 +53,20 @@ export async function resolveTarget(
   const { projectName, targetName, configurationName } =
     resolveTargetIdentifier(args, graph, nxJson);
 
+  // `resolveProjectNode` accepts a pattern specifier (`my-*`), so the concrete
+  // name it resolved to is the one everything downstream has to use — it is a
+  // lookup key for the task id, not just a label.
   const node = resolveProjectNode(projectName, graph);
+  const resolvedProjectName = node.name;
+
   if (!node.data.targets?.[targetName]) {
-    reportTargetNotFound(projectName, targetName, node);
+    reportTargetNotFound(resolvedProjectName, targetName, node);
   }
 
   const configuration = configurationName ?? args.configuration;
   if (configuration) {
     validateConfiguration(
-      projectName,
+      resolvedProjectName,
       targetName,
       configuration,
       node.data.targets[targetName]
@@ -71,7 +76,7 @@ export async function resolveTarget(
   return {
     graph,
     nxJson,
-    projectName,
+    projectName: resolvedProjectName,
     targetName,
     configuration,
     node,
@@ -252,4 +257,123 @@ export function printList(header: string, items: unknown[], prefix = '\n') {
   if (items.length === 0) return;
   console.log(`${prefix}${pc().bold(header)}:`);
   for (const item of items) console.log(`  ${item}`);
+}
+
+export function printJson(data: Record<string, unknown>) {
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (Array.isArray(value) && value.length === 0) continue;
+    result[key] = value;
+  }
+  console.log(JSON.stringify(result, null, 2));
+}
+
+/** The paths that live under `dir`. An empty `dir` is the workspace root. */
+export function pathsUnder(dir: string, paths: string[]): string[] {
+  if (dir === '') return [...paths];
+  const prefix = dir.endsWith('/') ? dir : dir + '/';
+  return paths.filter((p) => p.startsWith(prefix));
+}
+
+// ── --check results ──────────────────────────────────────────────────
+
+export interface CheckResult {
+  /** The argument as the user typed it. */
+  value: string;
+  /** Workspace-relative form of `value`. */
+  file: string;
+  matched: boolean;
+  /** Which rule matched, when the caller can name one. */
+  category?: string;
+  /** Matches found underneath `value`, when it is a directory. */
+  contained: string[];
+}
+
+const NOUNS = {
+  input: { preposition: 'for', contained: 'input file' },
+  output: { preposition: 'of', contained: 'output path' },
+} as const;
+
+type CheckNoun = keyof typeof NOUNS;
+
+export function renderCheckResults(
+  results: CheckResult[],
+  project: string,
+  target: string,
+  noun: CheckNoun
+) {
+  if (results.length >= 2) {
+    renderBatchCheckResults(results, project, target, noun);
+    return;
+  }
+  for (const result of results) {
+    renderCheckResult(result, project, target, noun);
+  }
+}
+
+export function setCheckExitCode(results: CheckResult[]) {
+  for (const result of results) {
+    process.exitCode ||= result.matched || result.contained.length ? 0 : 1;
+  }
+}
+
+function renderCheckResult(
+  result: CheckResult,
+  project: string,
+  target: string,
+  noun: CheckNoun
+) {
+  const c = pc();
+  const { preposition, contained } = NOUNS[noun];
+  const label = `${c.cyan(project)}:${c.green(target)}`;
+
+  if (result.matched) {
+    const category = result.category ? ` (${result.category})` : '';
+    console.log(
+      `${c.green('✓')} ${c.bold(result.value)} is an ${noun} ${preposition} ${label}${category}`
+    );
+  } else if (result.contained.length > 0) {
+    console.log(
+      `${c.yellow('~')} ${c.bold(result.file)} is a directory containing ${c.bold(String(result.contained.length))} ${contained}(s) ${preposition} ${label}`
+    );
+    for (const item of [...result.contained].sort()) console.log(`  ${item}`);
+  } else {
+    console.log(
+      `${c.red('✗')} ${c.bold(result.value)} is ${c.red('not')} an ${noun} ${preposition} ${label}`
+    );
+  }
+}
+
+function renderBatchCheckResults(
+  results: CheckResult[],
+  project: string,
+  target: string,
+  noun: CheckNoun
+) {
+  const c = pc();
+  const { preposition, contained } = NOUNS[noun];
+  const label = `${c.cyan(project)}:${c.green(target)}`;
+
+  const matched = results.filter((r) => r.matched);
+  const directories = results.filter((r) => !r.matched && r.contained.length);
+  const unmatched = results.filter((r) => !r.matched && !r.contained.length);
+
+  if (matched.length > 0 || directories.length > 0) {
+    console.log(
+      `\n${c.green('✓')} These arguments were ${noun}s ${preposition} ${label}:`
+    );
+    for (const r of matched) console.log(`  ${r.value}`);
+    for (const r of directories) {
+      console.log(
+        `  ${r.file} (directory containing ${r.contained.length} ${contained}s)`
+      );
+    }
+  }
+
+  if (unmatched.length > 0) {
+    console.log(
+      `\n${c.red('✗')} These arguments were ${c.red('not')} ${noun}s ${preposition} ${label}:`
+    );
+    for (const r of unmatched) console.log(`  ${r.value}`);
+  }
 }

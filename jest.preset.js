@@ -46,5 +46,7 @@ module.exports = {
     '^chalk$': '<rootDir>/../../scripts/jest-mocks/chalk.js',
     '^yargs-parser$': '<rootDir>/../../scripts/jest-mocks/yargs-parser.js',
     '^prettier$': '<rootDir>/../../scripts/jest-mocks/prettier.js',
+    // magic-string@1 is ESM-only and @angular-devkit/schematics@22.1 pulls it in
+    '^magic-string$': '<rootDir>/../../scripts/jest-mocks/magic-string.js',
   },
 };

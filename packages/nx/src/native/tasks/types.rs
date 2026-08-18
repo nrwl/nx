@@ -1,6 +1,9 @@
 use std::fmt::Formatter;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::{collections::HashMap, fmt, ptr};
 
+use dashmap::DashMap;
 use napi::{
     bindgen_prelude::{ToNapiValue, check_status},
     sys,
@@ -137,6 +140,17 @@ pub enum CwdMode {
     Relative,
 }
 
+/// Payload of `HashInstruction::JsonFileSet`. Boxed in the enum: inlined, its
+/// four fields would nearly double the size of every HashInstruction in every
+/// task's plan, whether or not json inputs are used.
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
+pub struct JsonFileSetInput {
+    pub project_name: Option<String>,
+    pub json_path: String,
+    pub fields: Option<Vec<String>>,
+    pub exclude_fields: Option<Vec<String>>,
+}
+
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub enum HashInstruction {
     WorkspaceFileSet(Vec<String>),
@@ -149,12 +163,71 @@ pub enum HashInstruction {
     TaskOutput(String, Vec<String>),
     External(String),
     AllExternalDependencies,
-    JsonFileSet {
-        project_name: Option<String>,
-        json_path: String,
-        fields: Option<Vec<String>>,
-        exclude_fields: Option<Vec<String>>,
-    },
+    JsonFileSet(Box<JsonFileSetInput>),
+}
+
+/// Append-only interner for hash instructions. Plans store `u32` ids into the
+/// pool, so each unique instruction is materialized once per planner instance
+/// instead of once per task that references it.
+#[derive(Default)]
+pub struct InstructionPool {
+    ids: DashMap<HashInstruction, u32>,
+    items: DashMap<u32, HashInstruction>,
+    // Display strings, rendered once per unique instruction at intern time so
+    // hashing can hand out shared keys instead of re-rendering per task.
+    keys: DashMap<u32, Arc<str>>,
+    next_id: AtomicU32,
+}
+
+impl InstructionPool {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Returns the id for the instruction, allocating one on first sight.
+    /// Value-equal instructions always intern to the same id, so sorting a
+    /// plan's ids and deduping is equivalent to value-level dedup.
+    pub fn intern(&self, instruction: HashInstruction) -> u32 {
+        if let Some(id) = self.ids.get(&instruction) {
+            return *id;
+        }
+        match self.ids.entry(instruction) {
+            dashmap::mapref::entry::Entry::Occupied(existing) => *existing.get(),
+            dashmap::mapref::entry::Entry::Vacant(vacant) => {
+                let id = self.next_id.fetch_add(1, Ordering::Relaxed);
+                self.items.insert(id, vacant.key().clone());
+                self.keys.insert(id, Arc::from(vacant.key().to_string()));
+                vacant.insert(id);
+                id
+            }
+        }
+    }
+
+    pub fn get(&self, id: u32) -> dashmap::mapref::one::Ref<'_, u32, HashInstruction> {
+        self.items
+            .get(&id)
+            .expect("instruction ids are only handed out by intern()")
+    }
+
+    /// The instruction's Display string, shared across all tasks that
+    /// reference the instruction.
+    pub fn key(&self, id: u32) -> Arc<str> {
+        self.keys
+            .get(&id)
+            .expect("instruction ids are only handed out by intern()")
+            .clone()
+    }
+
+    pub fn len(&self) -> usize {
+        self.items.len()
+    }
+}
+
+/// Hash plans as pool-interned instruction ids, plus the pool that resolves
+/// them. This is what crosses from the HashPlanner to the TaskHasher.
+pub struct HashPlans {
+    pub pool: Arc<InstructionPool>,
+    pub plans: HashMap<String, Vec<u32>>,
 }
 
 impl ToNapiValue for HashInstruction {
@@ -217,27 +290,50 @@ impl fmt::Display for HashInstruction {
                 HashInstruction::TsConfiguration(project_name) => {
                     format!("{project_name}:TsConfig")
                 }
-                HashInstruction::JsonFileSet {
-                    project_name,
-                    json_path,
-                    fields,
-                    exclude_fields,
-                } => {
-                    let prefix = project_name
+                HashInstruction::JsonFileSet(json) => {
+                    let prefix = json
+                        .project_name
                         .as_deref()
                         .map(|p| format!("{p}:"))
                         .unwrap_or_default();
-                    let fields_str = fields
+                    let fields_str = json
+                        .fields
                         .as_ref()
                         .map(|f| format!("[{}]", f.join(",")))
                         .unwrap_or_default();
-                    let exclude_str = exclude_fields
+                    let exclude_str = json
+                        .exclude_fields
                         .as_ref()
                         .map(|f| format!("![{}]", f.join(",")))
                         .unwrap_or_default();
-                    format!("{prefix}json:{json_path}{fields_str}{exclude_str}")
+                    format!("{prefix}json:{}{fields_str}{exclude_str}", json.json_path)
                 }
             }
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn pool_key_matches_display_and_is_shared() {
+        let pool = InstructionPool::new();
+        let instruction = HashInstruction::ProjectConfiguration("proj".to_string());
+        let id = pool.intern(instruction.clone());
+
+        let key = pool.key(id);
+        assert_eq!(&*key, instruction.to_string());
+        // Every call hands out the same allocation, not a fresh string.
+        assert!(Arc::ptr_eq(&key, &pool.key(id)));
+    }
+
+    #[test]
+    fn hash_instruction_stays_small() {
+        // Plans hold one HashInstruction per (task x transitive-dep input) —
+        // millions on large workspaces — and the enum sizes to its largest
+        // variant. Box large payloads instead of growing this (NXC-4604).
+        assert!(std::mem::size_of::<HashInstruction>() <= 56);
     }
 }

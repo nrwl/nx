@@ -29,6 +29,7 @@
       "<%= layoutTypeSrcPath %>",
       "<%= layoutTypeDistPath %>",
     <% } %>
+    "index.d.ts",
     "next-env.d.ts"
   ],
   "exclude": ["node_modules", "jest.config.ts", "jest.config.cts", "<%= rootPath %>**/*.spec.ts", "<%= rootPath %>**/*.test.ts"]

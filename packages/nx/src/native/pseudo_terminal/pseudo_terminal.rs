@@ -7,7 +7,9 @@ use crossterm::{
 };
 use napi::bindgen_prelude::*;
 use parking_lot::{Mutex, RwLock};
-use portable_pty::{CommandBuilder, NativePtySystem, PtyPair, PtySize, PtySystem};
+use portable_pty::{
+    CommandBuilder, MasterPty, NativePtySystem, PtyPair, PtySize, PtySystem, SlavePty,
+};
 use std::io::stdout;
 use std::{
     collections::HashMap,
@@ -26,7 +28,10 @@ use super::os;
 use crate::native::pseudo_terminal::{child_process::ChildProcess, process_killer::ProcessKiller};
 
 pub struct PseudoTerminal {
-    pub pty_pair: PtyPair,
+    // slave is listed before master so that it is dropped first, matching the
+    // drop order PtyPair documents and relies on.
+    pub slave: Box<dyn SlavePty + Send>,
+    pub master: MasterArc,
     pub stdout_tx: Sender<String>,
     pub stdout_rx: Receiver<String>,
     pub printing_rx: Receiver<()>,
@@ -50,6 +55,26 @@ impl Default for PseudoTerminalOptions {
 
 pub type ParserArc = Arc<RwLock<Parser>>;
 pub type WriterArc = Arc<Mutex<Box<dyn Write + Send>>>;
+/// The control end of the pty. Resizing it issues the TIOCSWINSZ ioctl, which
+/// updates the winsize the kernel reports to the child and raises SIGWINCH so
+/// the child knows to redraw at the new dimensions.
+pub type MasterArc = Arc<Mutex<Box<dyn MasterPty + Send>>>;
+
+/// The handles the TUI needs to display and drive a running pty task: the parser
+/// it renders from, the writer it forwards input to, and the master it resizes.
+pub type PtyHandles = (ParserArc, WriterArc, MasterArc);
+
+/// Resize the pty so the child process is told its window changed.
+pub fn resize_master(master: &MasterArc, rows: u16, cols: u16) {
+    if let Err(e) = master.lock().resize(PtySize {
+        rows,
+        cols,
+        pixel_width: 0,
+        pixel_height: 0,
+    }) {
+        debug!("Failed to resize pty to {}x{}: {}", rows, cols, e);
+    }
+}
 
 impl PseudoTerminal {
     pub fn new(options: PseudoTerminalOptions) -> Result<Self> {
@@ -60,14 +85,14 @@ impl PseudoTerminal {
 
         trace!("Opening Pseudo Terminal");
         let (w, h) = options.size;
-        let pty_pair = pty_system.openpty(PtySize {
+        let PtyPair { slave, master } = pty_system.openpty(PtySize {
             rows: h,
             cols: w,
             pixel_width: 0,
             pixel_height: 0,
         })?;
 
-        let writer = pty_pair.master.take_writer()?;
+        let writer = master.take_writer()?;
         let writer_arc = Arc::new(Mutex::new(writer));
         let writer_clone = writer_arc.clone();
 
@@ -84,7 +109,8 @@ impl PseudoTerminal {
             });
         }
 
-        let mut reader = pty_pair.master.try_clone_reader()?;
+        let mut reader = master.try_clone_reader()?;
+        let master_arc: MasterArc = Arc::new(Mutex::new(master));
         let (stdout_tx, stdout_rx) = unbounded();
         let (printing_tx, printing_rx) = unbounded();
         // Output -> stdout handling
@@ -117,6 +143,10 @@ impl PseudoTerminal {
             // and give rendering predictable windows to read.
             let mut pending_tui_buf: Vec<u8> = Vec::new();
             const BATCH_THRESHOLD: usize = 64 * 1024;
+            // Filters reply-eliciting escape sequences out of the captured
+            // copy only — the live stdout passthrough and the TUI parser get
+            // raw bytes, so a running child still talks to the real terminal.
+            let mut capture_filter = super::strip_queries::QueryFilter::new();
 
             'read_loop: loop {
                 if let Ok(len) = reader.read(&mut buf) {
@@ -127,11 +157,20 @@ impl PseudoTerminal {
                             parser.process(&pending_tui_buf);
                             pending_tui_buf.clear();
                         }
+                        let held = capture_filter.flush();
+                        if !held.is_empty() {
+                            stdout_tx_clone
+                                .send(String::from_utf8_lossy(&held).to_string())
+                                .ok();
+                        }
                         break;
                     }
-                    stdout_tx_clone
-                        .send(String::from_utf8_lossy(&buf[0..len]).to_string())
-                        .ok();
+                    let captured = capture_filter.feed(&buf[0..len]);
+                    if !captured.is_empty() {
+                        stdout_tx_clone
+                            .send(String::from_utf8_lossy(&captured).to_string())
+                            .ok();
+                    }
                     let quiet = quiet_clone.load(Ordering::Relaxed);
                     trace!("Quiet: {}", quiet);
                     debug!("Read {} bytes", len);
@@ -211,7 +250,8 @@ impl PseudoTerminal {
             writer: writer_arc,
             running,
             parser,
-            pty_pair,
+            slave,
+            master: master_arc,
             stdout_rx,
             stdout_tx,
             printing_rx,
@@ -230,8 +270,6 @@ impl PseudoTerminal {
         command_label: Option<String>,
     ) -> napi::Result<ChildProcess> {
         let command_dir = get_directory(command_dir)?;
-
-        let pair = &self.pty_pair;
 
         let quiet = quiet.unwrap_or(false);
 
@@ -268,7 +306,7 @@ impl PseudoTerminal {
         }
 
         trace!("Running {}", command_clone);
-        let mut child = pair.slave.spawn_command(cmd)?;
+        let mut child = self.slave.spawn_command(cmd)?;
         self.running.store(true, Ordering::SeqCst);
 
         let is_tty = tty.unwrap_or_else(|| std::io::stdout().is_tty());
@@ -325,6 +363,7 @@ impl PseudoTerminal {
         Ok(ChildProcess::new(
             self.parser.clone(),
             self.writer.clone(),
+            self.master.clone(),
             pid,
             process_killer,
             self.stdout_rx.clone(),

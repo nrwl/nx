@@ -10,7 +10,8 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "bundler",
-    "module": "esnext"
+    "module": "esnext",
+    "ignoreDeprecations": "6.0"
   },
   "files": [],
   "include": [],

@@ -1,7 +1,7 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { type Tree, readNxJson, updateNxJson } from 'nx/src/devkit-exports';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { getViteE2EWebServerInfo } from './e2e-web-server-info-utils';
+import { type Tree, readNxJson, updateNxJson } from '@nx/devkit';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 
 describe('getViteE2EWebServerInfo', () => {
   let tree: Tree;
@@ -47,18 +47,17 @@ describe('getViteE2EWebServerInfo', () => {
     `);
   });
 
-  it('should use array-shaped serve targetDefaults when no plugin is registered and plugins are not being used', async () => {
+  it('should use map-shaped serve targetDefaults when no plugin is registered and plugins are not being used', async () => {
     // ARRANGE
     const nxJson = readNxJson(tree);
     nxJson.plugins ??= [];
-    nxJson.targetDefaults = [
-      {
-        target: 'serve',
+    nxJson.targetDefaults = {
+      serve: {
         options: {
           port: 4400,
         },
       },
-    ];
+    };
     updateNxJson(tree, nxJson);
 
     // ACT
@@ -107,18 +106,17 @@ describe('getViteE2EWebServerInfo', () => {
     `);
   });
 
-  it('should use array-shaped dev targetDefaults when the plugin is just a string', async () => {
+  it('should use map-shaped dev targetDefaults when the plugin is just a string', async () => {
     // ARRANGE
     const nxJson = readNxJson(tree);
     nxJson.plugins = ['@nx/vite/plugin'];
-    nxJson.targetDefaults = [
-      {
-        target: 'dev',
+    nxJson.targetDefaults = {
+      dev: {
         options: {
           port: 4500,
         },
       },
-    ];
+    };
     updateNxJson(tree, nxJson);
 
     // ACT

@@ -2,38 +2,41 @@ import {
   addDependenciesToPackageJson,
   GeneratorCallback,
   runTasksInSerial,
+  Tree,
+  joinPathFragments,
 } from '@nx/devkit';
-import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
+import { LinterType } from '@nx/js';
 import {
   addExtendsToLintConfig,
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
+  isTypedLintingEnabled,
   lintConfigHasOverride,
   replaceOverridesInLintConfig,
   updateOverrideInLintConfig,
   useFlatConfig,
-  getInstalledEslintVersion,
-  getTypeScriptEslintVersionToInstall,
+  versions,
 } from '@nx/eslint/internal';
 import type { Linter as EsLintLinter } from 'eslint';
-import { Tree } from 'nx/src/generators/tree';
-import { joinPathFragments } from 'nx/src/utils/path';
 import {
-  eslint9__VueEslintConfigTypescriptVersion,
   eslintPluginVueVersion,
   vueEslintConfigPrettierVersion,
   vueEslintConfigTypescriptVersion,
 } from './versions';
-import { lt } from 'semver';
+import { addLintingToProject } from '@nx/js/internal';
 
 export async function addLinting(
   host: Tree,
   options: {
-    linter: Linter | LinterType;
+    linter: LinterType;
     name: string;
     projectRoot: string;
     unitTestRunner?: 'vitest' | 'none';
+    enableTypedLinting?: boolean;
+    /**
+     * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
+     */
     setParserOptionsProject?: boolean;
     skipPackageJson?: boolean;
     rootProject?: boolean;
@@ -42,22 +45,26 @@ export async function addLinting(
   },
   projectType: 'lib' | 'app'
 ) {
-  if (options.linter === 'eslint') {
-    const tasks: GeneratorCallback[] = [];
-    const lintTask = await lintProjectGenerator(host, {
+  const tasks: GeneratorCallback[] = [];
+  tasks.push(
+    await addLintingToProject(host, {
+      oxlintPlugins: ['vue'],
       linter: options.linter,
       project: options.projectName,
       tsConfigPaths: [
         joinPathFragments(options.projectRoot, `tsconfig.${projectType}.json`),
       ],
       unitTestRunner: options.unitTestRunner,
-      skipFormat: true,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting: isTypedLintingEnabled(options),
       rootProject: options.rootProject,
       addPlugin: options.addPlugin,
-    });
-    tasks.push(lintTask);
+      skipPackageJson: options.skipPackageJson,
+    })
+  );
 
+  // Everything below configures ESLint — predefined configs, `extends`, ignore
+  // entries — which have no equivalent in other linters.
+  if (options.linter === 'eslint') {
     if (useFlatConfig(host)) {
     } else {
       const addExtendsTask = addExtendsToLintConfig(
@@ -75,13 +82,9 @@ export async function addLinting(
 
     editEslintConfigFiles(host, options.projectRoot);
 
-    const eslintVersion = getInstalledEslintVersion(host);
     const devDependencies = {
       '@vue/eslint-config-prettier': vueEslintConfigPrettierVersion,
-      '@vue/eslint-config-typescript':
-        eslintVersion && lt(eslintVersion, '9.0.0')
-          ? vueEslintConfigTypescriptVersion
-          : eslint9__VueEslintConfigTypescriptVersion,
+      '@vue/eslint-config-typescript': vueEslintConfigTypescriptVersion,
       'eslint-plugin-vue': eslintPluginVueVersion,
     };
     if (
@@ -89,22 +92,22 @@ export async function addLinting(
       useFlatConfig(host)
     ) {
       devDependencies['@typescript-eslint/parser'] =
-        getTypeScriptEslintVersionToInstall(host);
+        versions(host).typescriptESLintVersion;
     }
 
     if (!options.skipPackageJson) {
       const installTask = addDependenciesToPackageJson(
         host,
         {},
-        devDependencies
+        devDependencies,
+        undefined,
+        true
       );
       tasks.push(installTask);
     }
-
-    return runTasksInSerial(...tasks);
-  } else {
-    return () => {};
   }
+
+  return runTasksInSerial(...tasks);
 }
 
 function editEslintConfigFiles(tree: Tree, projectRoot: string) {

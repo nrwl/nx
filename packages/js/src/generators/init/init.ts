@@ -15,6 +15,7 @@ import { join } from 'path';
 import { createNodesV2 } from '../../plugins/typescript/plugin';
 import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
 import { generatePrettierSetup } from '../../utils/prettier';
+import { getTsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 import { getRootTsConfigFileName } from '../../utils/typescript/ts-config';
 import {
   getCustomConditionName,
@@ -106,6 +107,7 @@ export async function initGeneratorInternal(
     } else {
       generateFiles(tree, join(__dirname, './files/non-ts-solution'), '.', {
         fileName: schema.tsConfigName ?? 'tsconfig.base.json',
+        moduleResolution: getTsConfigBaseOptions(tree).moduleResolution,
       });
     }
   }

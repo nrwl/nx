@@ -5,6 +5,7 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import { ensureTypescript, getProjectSourceRoot } from '@nx/js/internal';
 import { basename, dirname, extname, join, relative } from 'path';
 import {
@@ -21,6 +22,7 @@ export async function componentTestGenerator(
   tree: Tree,
   options: ComponentTestSchema
 ) {
+  assertSupportedReactVersion(tree);
   ensurePackage('@nx/cypress', nxVersion);
   // normalize any windows paths
   options.componentPath = options.componentPath.replace(/\\/g, '/');

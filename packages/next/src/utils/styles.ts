@@ -27,7 +27,9 @@ export function addStyleDependencies(
     ? addDependenciesToPackageJson(
         host,
         extraDependencies.dependencies,
-        extraDependencies.devDependencies
+        extraDependencies.devDependencies,
+        undefined,
+        true
       )
     : () => {};
 }

@@ -3,6 +3,7 @@ import * as jsoncEslintParser from 'jsonc-eslint-parser';
 
 export default [
   ...baseConfig,
+  { ignores: ['dist'] },
   {
     files: ['**/*.ts'],
     rules: {
@@ -38,6 +39,10 @@ export default [
             'eslint',
             'nest',
             '@nestjs/schematics',
+            '@nestjs/core',
+            '@nestjs/common',
+            'reflect-metadata',
+            'rxjs',
           ],
         },
       ],

@@ -9,9 +9,10 @@ import {
   Tree,
 } from '@nx/devkit';
 import { initGenerator } from '@nx/js';
-import { createNodesV2 } from '../../../plugin';
+import { createNodes } from '../../../plugin';
 import {
   lessLoaderVersion,
+  nxVersion,
   reactRefreshVersion,
   sassEmbeddedVersion,
   sassLoaderVersion,
@@ -39,7 +40,7 @@ export async function rspackInitGenerator(
       tree,
       await createProjectGraphAsync(),
       '@nx/rspack/plugin',
-      createNodesV2,
+      createNodes,
       {
         buildTargetName: [
           'build',
@@ -106,10 +107,9 @@ export async function rspackInitGenerator(
       : {}),
   };
 
-  const version = require('../../../package.json').version;
-  if (version !== '0.0.1') {
+  if (nxVersion !== '0.0.1') {
     // Ignored for local dev / e2e tests.
-    devDependencies['@nx/rspack'] = version;
+    devDependencies['@nx/rspack'] = nxVersion;
   }
 
   if (schema.style === 'less') {

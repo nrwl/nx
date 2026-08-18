@@ -22,7 +22,7 @@ import {
 } from '../../utils/generator-utils';
 import rspackInitGenerator from '../init/init';
 import { ConfigurationSchema } from './schema';
-import { getProjectType } from '@nx/js/internal';
+import { getProjectType, getTsConfigBaseOptions } from '@nx/js/internal';
 import { Framework } from '../init/schema';
 import { warnRspackExecutorGenerating } from '../../utils/deprecation';
 import { assertSupportedRspackVersion } from '../../utils/assert-supported-rspack-version';
@@ -37,14 +37,11 @@ function editTsConfig(
   framework: Framework,
   relativePathToRootTsConfig: string
 ) {
-  const shared = require('@nx/js');
-
   if (framework === 'react') {
     const json = {
       compilerOptions: {
         jsx: 'react-jsx',
         allowJs: false,
-        esModuleInterop: false,
         allowSyntheticDefaultImports: true,
         strict: true,
       },
@@ -61,7 +58,7 @@ function editTsConfig(
     if (projectIsRootProjectInStandaloneWorkspace(projectRoot)) {
       json.compileOnSave = false;
       json.compilerOptions = {
-        ...shared.tsConfigBaseOptions,
+        ...getTsConfigBaseOptions(tree),
         ...json.compilerOptions,
       };
       json.exclude = ['node_modules', 'tmp'];

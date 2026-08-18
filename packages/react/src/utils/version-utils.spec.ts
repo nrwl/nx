@@ -10,6 +10,7 @@ import {
   reactDomVersion,
   reactIsV18Version,
   reactIsVersion,
+  reactRouterVersion,
   reactV18Version,
   reactVersion,
   typesReactDomV18Version,
@@ -66,6 +67,7 @@ describe('getReactDependenciesVersionsToInstall', () => {
       '@types/react': typesReactV18Version,
       '@types/react-dom': typesReactDomV18Version,
       '@types/react-is': typesReactIsV18Version,
+      'react-router': reactRouterVersion,
     });
   });
 
@@ -94,6 +96,7 @@ describe('getReactDependenciesVersionsToInstall', () => {
       '@types/react': typesReactVersion,
       '@types/react-dom': typesReactDomVersion,
       '@types/react-is': typesReactIsVersion,
+      'react-router': reactRouterVersion,
     });
   });
 
@@ -114,6 +117,7 @@ describe('getReactDependenciesVersionsToInstall', () => {
       '@types/react': typesReactVersion,
       '@types/react-dom': typesReactDomVersion,
       '@types/react-is': typesReactIsVersion,
+      'react-router': reactRouterVersion,
     });
   });
 });

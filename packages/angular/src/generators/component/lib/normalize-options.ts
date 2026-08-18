@@ -12,9 +12,6 @@ export async function normalizeOptions(
   options: Schema
 ): Promise<NormalizedSchema> {
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-  if (angularMajorVersion < 20) {
-    options.type ??= 'component';
-  }
 
   const {
     artifactName: name,
@@ -53,7 +50,9 @@ export async function normalizeOptions(
     ...options,
     name,
     projectName,
-    changeDetection: options.changeDetection ?? 'Default',
+    changeDetection:
+      options.changeDetection ??
+      (angularMajorVersion >= 22 ? 'OnPush' : 'Default'),
     style: options.style ?? 'css',
     standalone: options.standalone ?? true,
     directory,

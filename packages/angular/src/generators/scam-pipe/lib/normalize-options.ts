@@ -3,15 +3,13 @@ import { joinPathFragments, names } from '@nx/devkit';
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
 import { getModuleTypeSeparator } from '../../utils/artifact-types';
 import { validateClassName } from '../../utils/validations';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema, Schema } from '../schema';
 
 export async function normalizeOptions(
   tree: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-  options.typeSeparator ??= angularMajorVersion < 20 ? '.' : '-';
+  options.typeSeparator ??= '-';
 
   const {
     artifactName: name,

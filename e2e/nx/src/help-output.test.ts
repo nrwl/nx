@@ -4,7 +4,7 @@ import { cleanupProject, newProject, runCLI, uniq } from '@nx/e2e-utils';
 xdescribe('--help output', () => {
   beforeAll(() => {
     newProject({
-      packages: ['@nx/js', '@nx/jest', '@nx/eslint', '@nx/webpack'],
+      packages: ['@nx/js', '@nx/jest', '@nx/eslint', '@nx/web', '@nx/webpack'],
     });
   });
 

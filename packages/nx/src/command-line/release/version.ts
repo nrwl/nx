@@ -11,6 +11,7 @@ import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/inte
 import { FsTree, Tree, flushChanges } from '../../generators/tree';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
+import type { ProjectGraph } from '../../config/project-graph';
 import { handleErrors } from '../../utils/handle-errors';
 import { orange, output } from '../../utils/output';
 import { joinPathFragments } from '../../utils/path';
@@ -19,6 +20,7 @@ import { VersionOptions } from './command-object';
 import {
   createNxReleaseConfig,
   handleNxReleaseConfigError,
+  type NxReleaseConfig,
 } from './config/config';
 import { deepMergeJson } from './config/deep-merge-json';
 import { ReleaseGroupWithName } from './config/filter-release-groups';
@@ -263,11 +265,22 @@ export function createAPI(
       throw err;
     }
 
-    /**
-     * Ensure that formatting is applied so that version bump diffs are as minimal as possible
-     * within the context of the user's workspace.
-     */
-    await formatChangedFilesWithPrettierIfAvailable(tree, { silent: true });
+    // A version actions implementation can opt its manifests out of this final
+    // pass when it already preserves their formatting while updating values.
+    const manifestsToExcludeFromFormatting = new Set(
+      Array.from(releaseGraph.projectsToVersionActions.values()).flatMap(
+        (versionActions) =>
+          versionActions.excludeManifestsFromFormatting
+            ? versionActions.manifestsToUpdate.map(
+                ({ manifestPath }) => manifestPath
+              )
+            : []
+      )
+    );
+    await formatChangedFilesWithPrettierIfAvailable(tree, {
+      silent: true,
+      excludePaths: manifestsToExcludeFromFormatting,
+    });
 
     printAndFlushChanges(tree, !!args.dryRun);
 
@@ -321,22 +334,24 @@ export function createAPI(
       }
     }
 
+    const shouldProcessDockerProjects = hasDockerReleaseConfiguration(
+      nxReleaseConfig,
+      releaseGraph,
+      projectGraph
+    );
     // TODO(colum): Remove when Docker support is no longer experimental
-    if (
-      nxReleaseConfig.docker ||
-      releaseGraph.releaseGroups.some((rg) => rg.docker)
-    ) {
+    if (shouldProcessDockerProjects) {
       output.warn({
         title: 'Warning',
         bodyLines: [
           `Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.`,
         ],
       });
+      await processor.processDockerProjects(
+        args.dockerVersionScheme,
+        args.dockerVersion
+      );
     }
-    await processor.processDockerProjects(
-      args.dockerVersionScheme,
-      args.dockerVersion
-    );
 
     const versionData = processor.getVersionData();
 
@@ -436,6 +451,23 @@ export function createAPI(
       releaseGraph,
     };
   };
+}
+
+export function hasDockerReleaseConfiguration(
+  nxReleaseConfig: NxReleaseConfig,
+  releaseGraph: ReleaseGraph,
+  projectGraph: ProjectGraph
+): boolean {
+  if (nxReleaseConfig.docker) {
+    return true;
+  }
+  if (releaseGraph.releaseGroups.some((rg) => rg.docker)) {
+    return true;
+  }
+  return Array.from(releaseGraph.allProjectsToProcess).some(
+    (projectName) =>
+      projectGraph.nodes[projectName]?.data.release?.docker !== undefined
+  );
 }
 
 function printAndFlushChanges(tree: Tree, isDryRun: boolean) {

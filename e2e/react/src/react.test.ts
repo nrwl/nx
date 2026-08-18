@@ -21,9 +21,19 @@ import { join } from 'path';
 describe('React Applications', () => {
   let proj: string;
   describe('Crystal Supported Tests', () => {
-    beforeAll(() => {
-      proj = newProject({ packages: ['@nx/react'] });
-      ensureCypressInstallation();
+    beforeAll(async () => {
+      proj = newProject({
+        packages: [
+          '@nx/react',
+          '@nx/webpack',
+          '@nx/vite',
+          '@nx/vitest',
+          '@nx/jest',
+          '@nx/cypress',
+          '@nx/eslint',
+        ],
+      });
+      await ensureCypressInstallation();
     });
 
     afterAll(() => cleanupProject());
@@ -54,7 +64,7 @@ describe('React Applications', () => {
 
       checkFilesExist(`dist/apps/${appName}/index.html`);
 
-      if (runE2ETests()) {
+      if (await runE2ETests()) {
         const e2eResults = runCLI(`e2e ${appName}-e2e`);
         expect(e2eResults).toContain('Successfully ran target e2e for project');
         expect(await killPorts()).toBeTruthy();
@@ -266,10 +276,18 @@ describe('React Applications', () => {
 
   // TODO(colum): Revisit when cypress --js works with crystal
   describe('Non-Crystal Tests', () => {
-    beforeAll(() => {
+    beforeAll(async () => {
       process.env.NX_ADD_PLUGINS = 'false';
-      proj = newProject({ packages: ['@nx/react'] });
-      ensureCypressInstallation();
+      proj = newProject({
+        packages: [
+          '@nx/react',
+          '@nx/webpack',
+          '@nx/jest',
+          '@nx/cypress',
+          '@nx/eslint',
+        ],
+      });
+      await ensureCypressInstallation();
     });
 
     afterAll(() => {
@@ -436,7 +454,7 @@ async function testGeneratedApp(
     'Test Suites: 1 passed, 1 total'
   );
 
-  if (opts.checkE2E && runE2ETests()) {
+  if (opts.checkE2E && (await runE2ETests())) {
     const e2eResults = runCLI(`e2e ${appName}-e2e`);
     expect(e2eResults).toContain('Successfully ran target e2e');
     expect(await killPorts()).toBeTruthy();

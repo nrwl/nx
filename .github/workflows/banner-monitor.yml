@@ -75,7 +75,7 @@ jobs:
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
         run: |
-          npm install -g netlify-cli
+          npm install -g netlify-cli@27.0.3 --ignore-scripts
 
           echo "Triggering nx-docs deploy..."
           netlify deploy --trigger --prod -s nx-docs

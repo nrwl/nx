@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -7,9 +7,17 @@ import { Preset } from '../utils/presets';
 
 describe('preset', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+    else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
   });
 
   it(`should create files (preset = angular-monorepo)`, async () => {
@@ -22,7 +30,7 @@ describe('preset', () => {
     });
     expect(tree.children(`apps/${name}`).sort()).toMatchInlineSnapshot(`
       [
-        ".eslintrc.json",
+        "eslint.config.mjs",
         "project.json",
         "public",
         "src",
@@ -202,7 +210,7 @@ describe('preset', () => {
     });
 
     expect(tree.exists(`apps/${name}/src/main.ts`)).toBe(true);
-    expect(tree.exists(`apps/${name}/.eslintrc.json`)).toBe(true);
+    expect(tree.exists(`apps/${name}/eslint.config.mjs`)).toBe(true);
   });
 
   it('should create files (preset = react-native)', async () => {

@@ -849,7 +849,10 @@ describe('mergeProjectConfigurationIntoRootMap', () => {
       assertCorrectKeysInSourceMap(
         sourceMap,
         'libs/lib-a',
-        ['targets.build', 'dummy2'],
+        // Ownership of the target node follows its identity: dummy2 only
+        // layered fields onto the target (no executor/command change), so
+        // the node stays with dummy, which created it.
+        ['targets.build', 'dummy'],
         ['targets.build.executor', 'dummy'],
         ['targets.build.inputs', 'dummy2'],
         ['targets.build.outputs', 'dummy2'],

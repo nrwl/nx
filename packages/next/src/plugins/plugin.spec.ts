@@ -1,4 +1,4 @@
-import { CreateNodesContextV2 } from '@nx/devkit';
+import { CreateNodesContext } from '@nx/devkit';
 import type { NextConfig } from 'next';
 
 import { createNodesV2 } from './plugin';
@@ -6,7 +6,7 @@ import { TempFs } from '@nx/devkit/internal-testing-utils';
 
 describe('@nx/next/plugin', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContextV2;
+  let context: CreateNodesContext;
 
   describe('root projects', () => {
     let tempFs: TempFs;

@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc/nx-dev/ui-markdoc",
+    "outDir": "dist",
     "lib": ["DOM", "ES2022"],
     "composite": true,
     "declaration": true,
@@ -9,7 +9,8 @@
     "skipLibCheck": true,
     "allowJs": true,
     "strict": false,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "rootDir": "."
   },
   "files": [
     "../../node_modules/@nx/react/typings/cssmodule.d.ts",

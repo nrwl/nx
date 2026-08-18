@@ -1,10 +1,10 @@
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import {
   createLockFile,
   getLockFileName,
-} from 'nx/src/plugins/js/lock-file/lock-file';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { createPackageJson } from 'nx/src/plugins/js/package-json/create-package-json';
+  createPackageJson,
+  fileExists,
+  readFileMapCache,
+} from '@nx/devkit/internal';
 
 import {
   detectPackageManager,
@@ -23,9 +23,7 @@ import {
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
 import { existsSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, parse, relative } from 'path';
-import { fileExists } from 'nx/src/utils/fileutils';
-import type { PackageJson } from 'nx/src/utils/package-json';
-import { readFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
+import type { PackageJson } from '@nx/devkit/internal';
 
 import { getRelativeDirectoryToProjectRoot } from '../get-main-file-dir';
 import { stripGlobToBaseDir } from '../strip-glob-to-base-dir';

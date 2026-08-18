@@ -140,6 +140,13 @@ export {
   ensurePlaywrightBrowsersInstallation,
 } from './ensure-browser-installation';
 
+// webpack-dev-server's `port: 'auto'` probes from a fixed base (8080), so
+// concurrent e2e-ci tasks on one agent race to bind it (EADDRINUSE in Cypress
+// CT). Give each jest process its own base so probes start in disjoint ranges.
+process.env.WEBPACK_DEV_SERVER_BASE_PORT ??= String(
+  8080 + (process.pid % 5000) * 10
+);
+
 export function getStrippedEnvironmentVariables() {
   return Object.fromEntries(
     Object.entries(process.env).filter(([key]) => {
@@ -167,6 +174,14 @@ export function getStrippedEnvironmentVariables() {
       // NODE_PATH is inherited from Jest (which runs from the original workspace) and contains
       // pnpm paths that cause require.resolve() to find workspace packages instead of e2e test versions.
       if (key === 'NODE_PATH') {
+        return false;
+      }
+
+      // Remove GITHUB_STEP_SUMMARY so e2e subprocesses don't append to the real CI job
+      // summary. The stripper drops NX_TASK_TARGET_PROJECT, so a child nx looks top-level
+      // and would otherwise write its performance report (once per nx command) into the
+      // runner's summary. GITHUB_ACTIONS is kept so log grouping still gets exercised.
+      if (key === 'GITHUB_STEP_SUMMARY') {
         return false;
       }
 

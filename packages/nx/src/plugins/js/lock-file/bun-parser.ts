@@ -13,6 +13,17 @@ import {
 } from '../../../project-graph/project-graph-builder';
 import { parseJson } from '../../../utils/json';
 
+// Highest bun.lock version this parser has been verified against:
+// - 1: workspace packages are no longer listed with their dependencies
+// - 2: identical content, stricter validation in Bun's own reader
+// - 3: values in "overrides" may be objects holding rules scoped to a parent
+//      package (`"parent": { "child": "1.0.0" }`) and keys may carry a version
+//      selector (`"parent@1"`, `"child@<2"`). This parser never reads
+//      "overrides"; the resolved packages are listed in "packages" as before.
+// Newer versions are parsed on a best-effort basis instead of being rejected
+// outright.
+const MAX_KNOWN_LOCKFILE_VERSION = 3;
+
 const DEPENDENCY_TYPES = [
   'dependencies',
   'devDependencies',
@@ -25,8 +36,16 @@ const DEPENDENCY_TYPES = [
  * Based on comprehensive analysis of bun.lock.zig source code
  */
 interface BunLockFile {
-  /** Version of the lockfile format (currently 0 or 1) */
+  /** Version of the lockfile format (0 to 3 as of Bun 1.4) */
   lockfileVersion: number;
+
+  /**
+   * Version rules from the root package.json "overrides"/"resolutions".
+   * Values are version specs, or (lockfileVersion 3) objects of rules scoped
+   * to the dependencies of the package named by the key. Not used by this
+   * parser: the resolutions they produce are already reflected in `packages`.
+   */
+  overrides?: Record<string, string | Record<string, string>>;
 
   /**
    * Workspaces configuration - maps workspace paths to their dependencies
@@ -155,6 +174,10 @@ const specParseCache = new Map<
   string,
   { name: string; version: string; protocol: string }
 >();
+// Memoizes (packageName, versionSpec) -> resolved version for the current
+// lockfile. The same name/range pairs repeat across many dependency lists, so
+// the semver resolution is done once per distinct pair instead of per edge.
+const resolvedVersionCache = new Map<string, string | null>();
 
 // Structured error types for better error handling
 export class BunLockfileParseError extends Error {
@@ -221,6 +244,7 @@ export function clearCache(): void {
   keyMap.clear();
   packageVersions.clear();
   specParseCache.clear();
+  resolvedVersionCache.clear();
 }
 
 // ===== UTILITY FUNCTIONS =====
@@ -564,12 +588,18 @@ function parseLockFile(
         );
       }
 
-      const supportedVersions = [0, 1];
-      if (!supportedVersions.includes(result.lockfileVersion)) {
+      if (
+        !Number.isInteger(result.lockfileVersion) ||
+        result.lockfileVersion < 0
+      ) {
         throw new Error(
-          `Unsupported lockfile version ${
-            result.lockfileVersion
-          }. Supported versions: ${supportedVersions.join(', ')}`
+          `Unsupported lockfile version ${result.lockfileVersion}. Lockfile version must be a non-negative integer`
+        );
+      }
+
+      if (result.lockfileVersion > MAX_KNOWN_LOCKFILE_VERSION) {
+        console.warn(
+          `bun.lock has lockfileVersion ${result.lockfileVersion}, which is newer than the version ${MAX_KNOWN_LOCKFILE_VERSION} this version of Nx was tested with. Attempting to parse it anyway.`
         );
       }
     }
@@ -981,11 +1011,12 @@ function processPackageForDependencies(
 
     const depDependencies = processDependencyEntries(
       deps,
+      packageKey,
       sourceNodeName,
+      lockFile,
       index,
       ctx,
-      workspacePackages,
-      lockFile.manifests
+      workspacePackages
     );
     dependencies.push(...depDependencies);
   }
@@ -1017,11 +1048,12 @@ function extractPackageDependencies(
 
 function processDependencyEntries(
   deps: Record<string, string>,
+  sourcePackageKey: string,
   sourceNodeName: string,
+  lockFile: BunLockFile,
   index: PackageIndex,
   ctx: CreateDependenciesContext,
-  workspacePackages: Set<string>,
-  manifests?: BunLockFile['manifests']
+  workspacePackages: Set<string>
 ): RawProjectGraphDependency[] {
   const dependencies: RawProjectGraphDependency[] = [];
   const depsEntries = Object.entries(deps);
@@ -1031,11 +1063,12 @@ function processDependencyEntries(
       const dependency = processSingleDependency(
         packageName,
         versionSpec,
+        sourcePackageKey,
         sourceNodeName,
+        lockFile,
         index,
         ctx,
-        workspacePackages,
-        manifests
+        workspacePackages
       );
 
       if (dependency) {
@@ -1052,11 +1085,12 @@ function processDependencyEntries(
 function processSingleDependency(
   packageName: string,
   versionSpec: string,
+  sourcePackageKey: string,
   sourceNodeName: string,
+  lockFile: BunLockFile,
   index: PackageIndex,
   ctx: CreateDependenciesContext,
-  workspacePackages: Set<string>,
-  manifests?: BunLockFile['manifests']
+  workspacePackages: Set<string>
 ): RawProjectGraphDependency | null {
   if (typeof packageName !== 'string' || typeof versionSpec !== 'string') {
     return null;
@@ -1074,8 +1108,19 @@ function processSingleDependency(
   let targetPackageName = packageName;
   let targetVersion = versionSpec;
 
-  const aliasTarget = resolveAliasTarget(versionSpec);
-  if (aliasTarget) {
+  // A "<parent>/<name>" entry records what this parent actually resolved the
+  // dependency to. Overrides scoped to a parent (bun.lock v3) can pick a
+  // version outside the declared range, so it takes precedence over matching
+  // the range against the versions in the lockfile.
+  const nestedVersion = resolveNestedVersion(
+    sourcePackageKey,
+    packageName,
+    lockFile
+  );
+  const aliasTarget = nestedVersion ? null : resolveAliasTarget(versionSpec);
+  if (nestedVersion) {
+    targetVersion = nestedVersion;
+  } else if (aliasTarget) {
     targetPackageName = aliasTarget.packageName;
     targetVersion = aliasTarget.version;
   } else {
@@ -1084,7 +1129,7 @@ function processSingleDependency(
       packageName,
       versionSpec,
       index,
-      manifests
+      lockFile.manifests
     );
 
     if (!resolvedVersion) {
@@ -1116,6 +1161,25 @@ function processSingleDependency(
   } catch (e) {
     return null;
   }
+}
+
+function resolveNestedVersion(
+  sourcePackageKey: string,
+  packageName: string,
+  lockFile: BunLockFile
+): string | null {
+  const nestedEntry = lockFile.packages[`${sourcePackageKey}/${packageName}`];
+  if (!Array.isArray(nestedEntry) || typeof nestedEntry[0] !== 'string') {
+    return null;
+  }
+
+  const { name, version } = getCachedSpecInfo(nestedEntry[0]);
+  // aliases ("alias@npm:real@1.0.0") are resolved to the real package by the caller
+  if (name !== packageName || !version || version.startsWith('npm:')) {
+    return null;
+  }
+
+  return version;
 }
 
 function resolveTargetNodeName(
@@ -1181,48 +1245,44 @@ function createHoistedNodes(
  * O(1) lookup using pre-computed index
  */
 function isNestedPackageKey(packageKey: string, index: PackageIndex): boolean {
-  // If the key doesn't contain '/', it's a direct package entry
-  if (!packageKey.includes('/')) {
+  // If the key doesn't contain '/', it's a direct package entry.
+  // Work off slash indices instead of split('/')+slice+join to avoid an
+  // array allocation per key (this runs for every package entry, twice).
+  const lastSlash = packageKey.lastIndexOf('/');
+  if (lastSlash === -1) {
     return false;
   }
 
-  // Check if this looks like a workspace-specific or nested entry
-  const parts = packageKey.split('/');
+  // prefix = everything before the last '/'
+  const prefix = packageKey.substring(0, lastSlash);
 
-  // For multi-part keys, check if the prefix is a workspace path or package name
-  if (parts.length >= 2) {
-    const prefix = parts.slice(0, -1).join('/');
-
-    // O(1) check against known workspace paths
-    if (index.workspacePaths.has(prefix)) {
-      return true;
-    }
-
-    // O(1) check against workspace package names (scoped packages)
-    if (index.workspaceNames.has(prefix)) {
-      return true;
-    }
-
-    // Check for scoped workspace packages (e.g., "@quz/pkg1/lodash")
-    // The prefix must contain '/' to be a scoped package (e.g., "@scope/pkg")
-    // A prefix like just "@scope" without '/' is not a scoped package
-    if (prefix.startsWith('@') && prefix.includes('/')) {
-      return true;
-    }
-
-    // If the key looks like a simple scoped package (e.g., "@custom/lodash")
-    // where parts.length === 2 and first part starts with '@', it's likely
-    // a scoped package alias, not a nested dependency
-    if (parts.length === 2 && parts[0].startsWith('@')) {
-      return false;
-    }
-
-    // This could be dependency nesting (e.g., "is-even/is-odd")
-    // These should be filtered out as they're not direct packages
+  // O(1) check against known workspace paths
+  if (index.workspacePaths.has(prefix)) {
     return true;
   }
 
-  return false;
+  // O(1) check against workspace package names (scoped packages)
+  if (index.workspaceNames.has(prefix)) {
+    return true;
+  }
+
+  // Check for scoped workspace packages (e.g., "@quz/pkg1/lodash")
+  // The prefix must contain '/' to be a scoped package (e.g., "@scope/pkg")
+  // A prefix like just "@scope" without '/' is not a scoped package
+  if (prefix.startsWith('@') && prefix.includes('/')) {
+    return true;
+  }
+
+  // If the key looks like a simple scoped package (e.g., "@custom/lodash")
+  // with a single '/' where the first segment starts with '@', it's likely
+  // a scoped package alias, not a nested dependency
+  if (packageKey.indexOf('/') === lastSlash && packageKey.startsWith('@')) {
+    return false;
+  }
+
+  // This could be dependency nesting (e.g., "is-even/is-odd")
+  // These should be filtered out as they're not direct packages
+  return true;
 }
 
 /**
@@ -1305,6 +1365,30 @@ function getHoistedVersion(
  * O(1) lookup using pre-computed index instead of O(n) scan through all packages
  */
 function findResolvedVersion(
+  packageName: string,
+  versionSpec: string,
+  index: PackageIndex,
+  manifests?: BunLockFile['manifests']
+): string | null {
+  // Resolution depends only on (packageName, versionSpec) for a given lockfile
+  // (index and manifests are constant per parse), so memoize across edges.
+  const cacheKey = `${packageName}\n${versionSpec}`;
+  const cached = resolvedVersionCache.get(cacheKey);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const resolved = computeResolvedVersion(
+    packageName,
+    versionSpec,
+    index,
+    manifests
+  );
+  resolvedVersionCache.set(cacheKey, resolved);
+  return resolved;
+}
+
+function computeResolvedVersion(
   packageName: string,
   versionSpec: string,
   index: PackageIndex,
@@ -1417,19 +1501,27 @@ function findBestVersionMatch(
     return semverVersions[0].version;
   }
 
-  // Return the highest satisfying version (similar to npm behavior)
-  // Sort versions in descending order and return the first one
-  const sortedVersions = satisfyingVersions.sort((a, b) => {
+  // Return the highest satisfying version (similar to npm behavior).
+  // Single-pass max instead of a full sort: only the top element is used, and
+  // the numeric-collation comparator is expensive, so O(n) comparisons beat
+  // O(n log n). Keeps the first element on ties, matching the previous stable
+  // descending sort followed by [0].
+  let best = satisfyingVersions[0];
+  for (let i = 1; i < satisfyingVersions.length; i++) {
+    const candidate = satisfyingVersions[i];
+    let cmp: number;
     try {
-      return b.version.localeCompare(a.version, undefined, {
+      cmp = candidate.version.localeCompare(best.version, undefined, {
         numeric: true,
         sensitivity: 'base',
       });
     } catch {
-      // Fallback to string comparison
-      return b.version.localeCompare(a.version);
+      cmp = candidate.version.localeCompare(best.version);
     }
-  });
+    if (cmp > 0) {
+      best = candidate;
+    }
+  }
 
-  return sortedVersions[0].version;
+  return best.version;
 }

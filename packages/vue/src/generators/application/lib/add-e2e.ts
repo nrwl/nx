@@ -1,5 +1,6 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
-import { E2EWebServerDetails } from '@nx/devkit/internal';
+import { E2EWebServerDetails, type PackageJson } from '@nx/devkit/internal';
+import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -12,7 +13,6 @@ import { webStaticServeGenerator } from '@nx/web';
 import { nxVersion } from '../../../utils/versions';
 import { hasRsbuildPlugin } from '../../../utils/has-rsbuild-plugin';
 import { NormalizedSchema } from '../schema';
-import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function addE2e(
   tree: Tree,
@@ -44,9 +44,11 @@ export async function addE2e(
     );
   } else if (options.bundler === 'rsbuild') {
     ensurePackage('@nx/rsbuild', nxVersion);
-    const { getRsbuildE2EWebServerInfo } = await import(
-      '@nx/rsbuild/config-utils'
-    );
+    // `require()` honors Module._initPaths (which ensurePackage updates); ESM
+    // dynamic `import()` doesn't, so it can't see the on-demand temp install.
+    const {
+      getRsbuildE2EWebServerInfo,
+    }: typeof import('@nx/rsbuild/config-utils') = require('@nx/rsbuild/config-utils');
     e2eWebServerInfo = await getRsbuildE2EWebServerInfo(
       tree,
       options.projectName,
@@ -111,6 +113,7 @@ export async function addE2e(
         devServerTarget: e2eWebServerInfo.e2eDevServerTarget,
         baseUrl: e2eWebServerInfo.e2eWebServerAddress,
         jsx: true,
+        enableTypedLinting: isTypedLintingEnabled(options),
         webServerCommands: {
           default: e2eWebServerInfo.e2eWebServerCommand,
           production: e2eWebServerInfo.e2eCiWebServerCommand,
@@ -162,7 +165,7 @@ export async function addE2e(
         directory: 'src',
         js: false,
         linter: options.linter,
-        setParserOptionsProject: options.setParserOptionsProject,
+        enableTypedLinting: isTypedLintingEnabled(options),
         webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
         webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
       });

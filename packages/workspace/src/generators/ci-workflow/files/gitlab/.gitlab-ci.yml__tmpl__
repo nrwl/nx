@@ -1,31 +1,33 @@
-image: node:20
+image: node:24
 variables:
   CI: 'true'
+  GIT_DEPTH: 0
 
 # Main job
 <%= workflowName %>:
   interruptible: true
   only:
-    - main
+    - <%= mainBranch %>
     - merge_requests
   script:
     <% if(packageManager == 'pnpm'){ %>
-    - npm install --prefix=$HOME/.local -g pnpm@8
+    - npm install --prefix=$HOME/.local -g pnpm@11
     <% } %>
     <% if(packageManager == 'bun'){ %>
     - npm install --prefix=$HOME/.local -g bun
     <% } %>
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
-    # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+    # Configure Nx Agents and task distribution in .nx/ci-config.yaml
+    # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
     <% if (connectedToCloud) { %># Uncomment this line to enable task distribution<% } else { %># Connect your workspace by running "nx connect" and uncomment this line to enable task distribution<% } %>
-    # - <%= packageManagerPreInstallPrefix %> nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>"
+    # - <%= packageManagerPreInstallPrefix %> nx start-nx-agents
 
     - <%= packageManagerInstall %><% if(hasCypress){ %>
     - <%= packageManagerPrefix %> cypress install<% } %><% if(hasPlaywright){ %>
     - <%= packageManagerPrefix %> playwright install --with-deps<% } %><% if(!useRunMany){ %>
-    - NX_HEAD=$CI_COMMIT_SHA
-    - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}<% } %>
+    - export NX_HEAD=$CI_COMMIT_SHA
+    - export NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)}<% } %>
 
 <% for (const command of commands) { %><% if (command.comments) { %><% for (const comment of command.comments) { %>
     # <%- comment %><% } %><% } %><% if (command.command && !command.alwaysRun) { %>

@@ -43,8 +43,8 @@ export interface VersionDataEntry {
     source: string;
     target: string;
     type: string;
-    dependencyCollection: string;
-    rawVersionSpec: string;
+    dependencyCollection: string | null;
+    rawVersionSpec: string | null;
   }[];
 }
 
@@ -456,10 +456,18 @@ export async function getCommitsRelevantToProjects(
   commits: GitCommit[],
   projects: string[],
   nxReleaseConfig: NxReleaseConfig,
-  releaseGraph: ReleaseGraph
+  releaseGraph: ReleaseGraph,
+  // The full set of projects in the active release group. For release
+  // groups with `projectsRelationship: 'independent'`, `projects` only
+  // contains the single project currently being processed, so the scope
+  // matching/ambiguity check below would not see its sibling projects.
+  // `releaseGroupProjects` lets us match scopes against the whole group
+  // regardless of relationship. Defaults to `projects` for fixed groups.
+  releaseGroupProjects: string[] = projects
 ): // Map of projectName to GitCommit[]
 Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
   const projectSet = new Set(projects);
+  const releaseGroupProjectSet = new Set(releaseGroupProjects);
   const relevantCommits: Map<
     string,
     { commit: GitCommit; isProjectScopedCommit: boolean }[]
@@ -489,22 +497,34 @@ Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
     if (scopePatterns.length > 0) {
       const matches = findMatchingProjects(scopePatterns, projectGraph.nodes);
 
-      // detect ambiguity
+      // Detect ambiguity, but only within the active release group's
+      // projects. A scope that resolves ambiguously against projects
+      // outside the group is irrelevant to this group — fall through
+      // to the file-affectedness path used when a commit has no scope
+      // at all. See https://github.com/nrwl/nx/issues/35744.
       for (const pattern of scopePatterns) {
         const perPatternMatches = findMatchingProjects(
           [pattern],
           projectGraph.nodes
         );
+        const inGroupMatches = perPatternMatches.filter((p) =>
+          releaseGroupProjectSet.has(p)
+        );
 
-        if (perPatternMatches.length > 1) {
+        if (inGroupMatches.length > 1) {
           throw new Error(
             `Ambiguous scope "${pattern}" in commit "${commit.message}". ` +
-              `Matches: ${perPatternMatches.join(', ')}`
+              `Matches: ${inGroupMatches.join(', ')}`
           );
         }
       }
 
-      scopedProjects = new Set(matches);
+      // Restrict the scoped-projects set to projects in the active
+      // release group so cross-group matches don't bleed into the
+      // isProjectScopedCommit determination below.
+      scopedProjects = new Set(
+        matches.filter((p) => releaseGroupProjectSet.has(p))
+      );
     }
 
     for (const projectName of Object.keys(affectedGraph.nodes)) {

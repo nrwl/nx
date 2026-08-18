@@ -29,17 +29,4 @@ export interface Schema extends JsonObject {
   suppressionsLocation?: string;
 }
 
-type Formatter =
-  | 'stylish'
-  | 'compact'
-  | 'codeframe'
-  | 'unix'
-  | 'visualstudio'
-  | 'table'
-  | 'checkstyle'
-  | 'html'
-  | 'jslint-xml'
-  | 'json'
-  | 'json-with-metadata'
-  | 'junit'
-  | 'tap';
+type Formatter = 'stylish' | 'html' | 'json' | 'json-with-metadata';
