@@ -131,9 +131,9 @@ describe('StaticRunManyTerminalOutputLifeCycle', () => {
     );
 
     it.each(COLLAPSED_STATUSES)(
-      'prints the full output for a %s task under --output-style=static-full',
+      'prints the full output for a %s task under --output-style=static',
       (status) => {
-        lifeCycle = createLifeCycle({ outputStyle: 'static-full' });
+        lifeCycle = createLifeCycle({ outputStyle: 'static' });
 
         const result = captureOutput(() =>
           lifeCycle.printTaskTerminalOutput(task, status, 'the task body')
@@ -141,6 +141,25 @@ describe('StaticRunManyTerminalOutputLifeCycle', () => {
 
         expect(result).toContain('> nx run proj:test');
         expect(result).toContain('the task body');
+      }
+    );
+
+    it.each(COLLAPSED_STATUSES)(
+      'collapses a %s task under --output-style=static-failures-only',
+      (status, suffix) => {
+        // The literal the default resolves to. Without this, refactoring
+        // printsFullOutput could invert it with every other test still green.
+        lifeCycle = createLifeCycle({ outputStyle: 'static-failures-only' });
+
+        const result = captureOutput(() =>
+          lifeCycle.printTaskTerminalOutput(task, status, 'the task body')
+        );
+
+        expect(result).not.toContain('the task body');
+        expect(result).toContain(`${figures.tick}  nx run proj:test`);
+        if (suffix) {
+          expect(result).toContain(suffix);
+        }
       }
     );
 

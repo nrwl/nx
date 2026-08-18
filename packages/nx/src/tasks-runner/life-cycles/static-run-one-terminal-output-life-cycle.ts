@@ -1,4 +1,4 @@
-import { output } from '../../utils/output';
+import { output, printsFullTaskOutput } from '../../utils/output';
 import { TaskStatus } from '../tasks-runner';
 import { getPrintableCommandArgsForTask } from '../utils';
 import type { LifeCycle, TaskResult } from '../life-cycle';
@@ -37,7 +37,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
    * the ones that succeeded.
    */
   private get printsFullOutput(): boolean {
-    return this.args.verbose || this.args.outputStyle === 'static-full';
+    return printsFullTaskOutput(this.args);
   }
 
   /**
@@ -45,16 +45,36 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
    * printing something worth reading is not silently swallowed.
    */
   private hiddenOutputHint(): string[] {
-    if (this.printsFullOutput || this.collapsedTasks === 0) {
+    const withheld: string[] = [];
+    if (this.collapsedTasks > 0) {
+      withheld.push(
+        `${this.collapsedTasks} successful ${
+          this.collapsedTasks === 1 ? 'task' : 'tasks'
+        }`
+      );
+    }
+    // A stopped task's partial output is what diagnoses a hang, and it is
+    // dropped by default, so say so even when nothing collapsed.
+    if (this.stoppedTasks.length > 0) {
+      withheld.push(
+        `${this.stoppedTasks.length} stopped ${
+          this.stoppedTasks.length === 1 ? 'task' : 'tasks'
+        }`
+      );
+    }
+    if (this.printsFullOutput || withheld.length === 0) {
       return [];
     }
+    const total = this.collapsedTasks + this.stoppedTasks.length;
     return [
       '',
       `${output.dim(
-        `Output of ${this.collapsedTasks} successful ${
-          this.collapsedTasks === 1 ? 'task was' : 'tasks were'
+        `Output of ${withheld.join(' and ')} ${
+          total === 1 ? 'was' : 'were'
         } not shown. Run with`
-      )} --verbose ${output.dim('to see it.')}`,
+      )} --verbose ${output.dim('or')} --output-style=static ${output.dim(
+        'to see it.'
+      )}`,
     ];
   }
 
@@ -179,7 +199,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
     }
 
     const lines = [output.dim(counts.join(', '))];
-    if (this.args.verbose) {
+    if (this.printsFullOutput) {
       lines.push(
         '',
         ...[...skippedTasks, ...this.stoppedTasks].map(
@@ -222,7 +242,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
        * The task that was actually asked for always shows its full output, even
        * on success — printing nothing for `nx build myapp` would be surprising.
        * A stopped task's partial output is shown under --verbose or
-       * --output-style=static-full (what diagnoses a hang); it is dropped on the
+       * --output-style=static (what diagnoses a hang); it is dropped on the
        * default path below.
        */
       output.logCommandOutput(args.join(' '), status, terminalOutput);

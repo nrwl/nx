@@ -134,9 +134,9 @@ describe('StaticRunOneTerminalOutputLifeCycle', () => {
     );
 
     it.each(COLLAPSED_STATUSES)(
-      'prints the full output of a dependency task on %s under --output-style=static-full',
+      'prints the full output of a dependency task on %s under --output-style=static',
       (status) => {
-        const lifeCycle = createLifeCycle({ outputStyle: 'static-full' });
+        const lifeCycle = createLifeCycle({ outputStyle: 'static' });
 
         const result = captureOutput(() =>
           lifeCycle.printTaskTerminalOutput(dependency, status, 'the lib body')
@@ -144,6 +144,24 @@ describe('StaticRunOneTerminalOutputLifeCycle', () => {
 
         expect(result).toContain('> nx run lib:build');
         expect(result).toContain('the lib body');
+      }
+    );
+
+    it.each(COLLAPSED_STATUSES)(
+      'collapses a dependency task on %s under --output-style=static-failures-only',
+      (status) => {
+        // The literal the default resolves to; pinned so a refactor of
+        // printsFullOutput cannot invert it with every other test still green.
+        const lifeCycle = createLifeCycle({
+          outputStyle: 'static-failures-only',
+        });
+
+        const result = captureOutput(() =>
+          lifeCycle.printTaskTerminalOutput(dependency, status, 'the lib body')
+        );
+
+        expect(result).not.toContain('the lib body');
+        expect(result).toContain('nx run lib:build');
       }
     );
 
