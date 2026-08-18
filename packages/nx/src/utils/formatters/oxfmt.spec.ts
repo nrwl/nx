@@ -675,10 +675,11 @@ describe('formatFilesWithOxfmt', () => {
       expect(formatted.get('a.ts')).toContain('  if (a) {');
     });
 
-    it('ignores a config it cannot read in memory rather than half-applying it', async () => {
+    it('reports a config it cannot read in memory rather than using defaults', async () => {
       // `.ts`/`.mts` configs need a loader and a real file, so the seed path
-      // drops them. Formatting on defaults is the honest outcome; returning
-      // them would look applied and then be discarded further in.
+      // cannot evaluate them. Formatting on defaults instead would emit files
+      // that disagree with the config the workspace is about to have, and fail
+      // the next `nx format:check`.
       const { formatted, errors } = await formatFilesWithOxfmt(
         [
           {
@@ -690,8 +691,11 @@ describe('formatFilesWithOxfmt', () => {
         workspaceRoot
       );
 
-      expect(errors).toBeUndefined();
-      expect(formatted.get('a.ts')).toContain('  if (a) {');
+      // One per file: the config resolves once for the batch, so the failure
+      // lands outside the per-file catch and no file is formatted on defaults.
+      expect(errors?.length).toBe(2);
+      expect(errors[0]).toContain('oxfmt.config.ts');
+      expect(formatted.size).toBe(0);
     });
   });
 
@@ -1063,6 +1067,22 @@ describe('formatFilesWithOxfmt', () => {
 
       expect(errors).toBeUndefined();
       expect(formatted.get('a.ts')).toEqual("const x = 'hi';\n");
+    });
+
+    it('reports a staged TypeScript config it cannot read yet', async () => {
+      // Reading it means importing it, and it is not on disk. Formatting on
+      // oxfmt's defaults instead would emit files the next `nx format:check`
+      // rejects, so the batch has to say so.
+      const { formatted, errors } = await formatFilesWithOxfmt(
+        [{ path: 'a.ts', content: 'const x =  "hi"' }],
+        workspaceRoot,
+        { name: 'oxfmt.config.ts', content: 'export default {};' },
+        ['oxfmt.config.ts']
+      );
+
+      expect(errors?.length).toBe(1);
+      expect(errors[0]).toContain('oxfmt.config.ts');
+      expect(formatted.size).toBe(0);
     });
 
     it('reports two configs that exist only in the tree', async () => {

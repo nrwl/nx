@@ -660,7 +660,8 @@ function overrideOptionsForFile(
  * here would format differently from `nx format:write`.
  *
  * `seedConfig` is a root config that exists only in the tree, so it outranks
- * disk. Only the JSON form is parsed; any other form falls through to disk.
+ * disk. Only the JSON form is parsed; a TypeScript form that is not yet on disk
+ * is reported rather than silently formatted on defaults.
  * There is no JavaScript branch - oxfmt does not discover `oxfmt.config.js`.
  */
 async function resolveOxfmtConfigInDir(
@@ -691,6 +692,21 @@ async function resolveOxfmtConfigInDir(
       error: `Both '${candidates[0]}' and '${candidates[1]}' found in ${
         path.relative(workspaceRoot, dir) || '.'
       } - oxfmt does not define which one wins.`,
+    };
+  }
+
+  // A TypeScript config is evaluated by importing it, which tree content cannot
+  // stand in for - it may import from the workspace. Falling through to disk
+  // would format on oxfmt's defaults and produce files the next
+  // `nx format:check` rejects, so report it instead.
+  if (
+    seedConfig &&
+    isRoot &&
+    !isJsonOxfmtConfig(seedConfig.name) &&
+    !existsSync(path.join(dir, seedConfig.name))
+  ) {
+    return {
+      error: `Cannot read ${seedConfig.name} before it is written to disk. Use a JSON oxfmt config, or format after the generator has finished.`,
     };
   }
 
