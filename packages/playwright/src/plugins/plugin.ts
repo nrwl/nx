@@ -561,10 +561,9 @@ async function buildPlaywrightTargets(
     if (chainRequiresSerialization(ciChain)) {
       targets[options.ciTargetName].parallelism = false;
     }
+    // The gate stays out of the group: a group member runs under the atomized
+    // target's dotenv files, and the gate's env was checked against its own.
     ciTargetGroup.push(options.ciTargetName);
-    if (ciReadyTargetName) {
-      ciTargetGroup.push(ciReadyTargetName);
-    }
 
     // infer the task to merge the reports from the atomized tasks
     const mergeReportsTargetOutputs = new Set<string>();

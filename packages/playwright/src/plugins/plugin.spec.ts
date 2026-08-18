@@ -1,11 +1,20 @@
-import { CreateNodesContext, workspaceRoot } from '@nx/devkit';
-import { setWorkspaceRoot } from '@nx/devkit/internal';
+import {
+  CreateNodesContext,
+  ProjectGraph,
+  Task,
+  workspaceRoot,
+} from '@nx/devkit';
+import { getEnvPathsForTask, setWorkspaceRoot } from '@nx/devkit/internal';
 import * as devkitInternal from '@nx/devkit/internal';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import * as jsUtils from '@nx/js';
 import { PlaywrightTestConfig } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+// The run-time dotenv owner resolution lives in the task runner, which the
+// devkit barrels do not re-export.
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+import { getEnvFilesForTask } from 'nx/src/tasks-runner/task-env';
 import { _clearWarnedUnparseableCommands, createNodesV2 } from './plugin';
 import {
   _setChildEval,
@@ -1033,9 +1042,53 @@ describe('@nx/playwright/plugin', () => {
       { projects: ['app1'], target: 'serve' },
       { target: 'e2e--wait-for-webserver' },
     ]);
-    expect(project.metadata.targetGroups['E2E (CI)']).toContain(
+    expect(project.metadata.targetGroups['E2E (CI)']).not.toContain(
       'e2e--wait-for-webserver'
     );
+  });
+
+  it("runs the wait-for-webserver task under its own env files, not the atomized target group's", async () => {
+    // A task in the CI target group loads the group's `nonAtomizedTarget`
+    // dotenv files at run time; the gate's probe env is checked at graph time
+    // against the files named after the gate, so the two must agree.
+    await mockPlaywrightConfig(tempFs, {
+      testDir: 'tests',
+      webServer: {
+        command: 'npx nx run app1:serve',
+        port: 4200,
+        reuseExistingServer: true,
+      },
+    });
+    await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+      context
+    );
+    const project = results[0][1].projects['.'];
+    const graph: ProjectGraph = {
+      nodes: {
+        proj: { name: 'proj', type: 'app', data: { root: '.', ...project } },
+      },
+      dependencies: {},
+    };
+    const taskFor = (target: string): Task =>
+      ({
+        id: `proj:${target}`,
+        target: { project: 'proj', target },
+        projectRoot: '.',
+        overrides: {},
+        outputs: [],
+        parallelism: true,
+      }) as Task;
+
+    expect(
+      getEnvFilesForTask(taskFor('e2e--wait-for-webserver'), graph)
+    ).toEqual(getEnvPathsForTask('.', 'e2e--wait-for-webserver'));
+    expect(
+      getEnvFilesForTask(taskFor('e2e-ci--tests/run-me.spec.ts'), graph)
+    ).toEqual(getEnvPathsForTask('.', 'e2e-ci', undefined, 'e2e'));
   });
 
   it('does not infer a wait-for-webserver task when waitForWebServer is false', async () => {
