@@ -25,7 +25,7 @@ error in TypeScript**, without anyone hand-writing an interface twice.
 ## The pipeline
 
 ```
-Api:restore ─▶ Api:build ─▶ Api:codegen ─▶ api-client:build ─▶ storefront:build
+Api:restore ─▶ Api:build ─▶ Api:codegen ─▶ api-client:compile ─▶ storefront:compile
                    │              │
        apps/Api/openapi/    libs/api-client/
             Api.json          src/generated
@@ -37,17 +37,17 @@ Api:restore ─▶ Api:build ─▶ Api:codegen ─▶ api-client:build ─▶ s
    writes `apps/Api/openapi/Api.json`. There is no separate extraction step.
 2. **`Api:codegen`** runs `openapi-generator-cli` over that document and writes
    a `typescript-fetch` client into `libs/api-client/src/generated`.
-3. **`api-client:build`** compiles that client, along with the hand-written
+3. **`api-client:compile`** compiles that client, along with the hand-written
    `src/assert-types.ts`. That file is the actual test.
-4. **`storefront:build`** compiles a small front end that imports the client. This edge
+4. **`storefront:compile`** compiles a small front end that imports the client. This edge
    is not configured anywhere: `apps/storefront` depends on `@example/api-client` in
    its `package.json`, and Nx derives the rest.
 
 ```bash
 # From this directory
 pnpm install      # also builds the linked local packages
-nx build storefront      # runs the whole chain above
-pnpm validate     # nx run-many -t build
+nx compile storefront      # runs the whole chain above
+pnpm validate     # nx run-many -t compile
 ```
 
 ## Two declarations worth reading
@@ -65,7 +65,7 @@ locally.
 The `"..."` splices in the inferred values. Omit it and the array _replaces_
 them, dropping `bin` and `obj` from the cache.
 
-**`codegen` and `api-client:build` hash their inputs with
+**`codegen` and `api-client:compile` hash their inputs with
 `dependentTasksOutputFiles`.** The obvious thing to write is a path input
 pointing at the generated document, and it does not work: the document is
 gitignored, Nx builds its file map from what git can see, so the input matches
@@ -80,10 +80,10 @@ task you depend on is what actually tracks the change.
 
 ```bash
 # In apps/Api/Program.cs, change `int TemperatureC` to `string TemperatureC`
-nx build storefront
+nx compile storefront
 ```
 
-`api-client:build` fails before the front end is reached:
+`api-client:compile` fails before the front end is reached:
 
 ```
 libs/api-client/src/assert-types.ts(26,14): error TS2322: Type 'string' is not assignable to type 'number'.
@@ -97,6 +97,13 @@ apps/storefront/src/main.ts(11,41): error TS2551: Property 'toFixed' does not ex
 ```
 
 ## Notes
+
+- The targets inside this example are named `compile`, not `build`. Interior
+  `project.json` files are visible to the repo's root Nx graph, and the root CI
+  sweep runs `build` across affected projects. A `build` here would be picked
+  up at the root, where this workspace's `node_modules` does not exist. Root
+  `nx.json` also excludes `examples/**/*` from `@nx/dotnet` and `@nx/oxlint`
+  for the same reason.
 
 - The example targets `net9.0` to match the SDK pinned in the repo's
   `mise.toml`.

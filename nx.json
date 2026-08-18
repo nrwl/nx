@@ -351,6 +351,7 @@
     },
     {
       "plugin": "@nx/dotnet",
+      "exclude": ["examples/**/*"],
       "options": {
         "build": {
           "targetName": "build:dotnet"
@@ -381,6 +382,7 @@
     },
     {
       "plugin": "@nx/oxlint",
+      "exclude": ["examples/**/*"],
       "options": {
         "targetName": "oxlint"
       }
