@@ -185,7 +185,6 @@ allprojects {
         expect(content).toMatch(
           /plugins\s*{\s*id\s*['"]dev\.nx\.gradle\.project-graph['"]\s*version\s*['"][^'"]+['"]/
         );
-        // Groovy's named-argument colon is required; `apply plugin "x"` is a syntax error.
         expect(content).toMatch(
           /allprojects\s*{\s*apply\s*plugin:\s*['"]dev\.nx\.gradle\.project-graph['"]/
         );
