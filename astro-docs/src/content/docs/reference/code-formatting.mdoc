@@ -82,8 +82,10 @@ A nested oxfmt config replaces the one above it rather than merging with it, so 
 out falls back to the oxfmt default and not to the parent's value.
 
 `.editorconfig` is the exception.
-oxfmt reads it from the directory it runs in rather than from each file upwards, so only the one at
-the workspace root applies.
+oxfmt reads it from the directory it runs in rather than from each file upwards, so a nested
+`.editorconfig` never applies.
+The lookup still walks up from the workspace root until a file sets `root = true`, so a checkout
+containing your workspace can contribute settings.
 Nx matches that behavior in generators.
 
 A root `.editorconfig` that sets `indent_size` without `indent_style` also leaves the two
