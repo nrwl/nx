@@ -181,6 +181,26 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
+    fun `test getInputsForTask fails open to the catch-all for a recovered path dependsOn`() {
+      // A qualified path is never resolved to a Task (that would re-enter configuration), so the
+      // dependency walk finds nothing. Under-declaring here would produce a stale cache hit.
+      val mainTask = project.tasks.register("pathDependentTask").get()
+      mainTask.dependsOn(":some:other:project:jar")
+
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val result =
+          getInputsForTask(
+              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+
+      assertNotNull(result)
+      assertTrue(
+          result!!.any {
+            it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*" && it["transitive"] == true
+          },
+          "a task with a qualified-path dependsOn must over-declare the catch-all, got $result")
+    }
+
+    @Test
     fun `test getInputsForTask consolidates by extension`() {
       val dependentTask = project.tasks.register("dependentTask").get()
 

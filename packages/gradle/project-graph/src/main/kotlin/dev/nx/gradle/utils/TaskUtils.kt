@@ -671,7 +671,13 @@ private fun getInputsForTaskImpl(
             .filterNot { nonInputDependentOutputExtensions.contains(it) }
             .map { "**/*.$it" }
 
-    val dependentPatterns = (taskOwnPatterns + effectiveDependencyPatterns(tasksToProcess)).toSet()
+    // A task whose qualified-path dependsOn was recovered by [resolvePathDeps] has no realized
+    // dependency Tasks to walk, so the walk would silently under-declare. Fail open to the
+    // catch-all instead: over-declaring costs a rebuild, under-declaring costs a stale cache hit.
+    val recoveredPathDeps = if (qualifiedPathDeps(task).isNotEmpty()) setOf("**/*") else emptySet()
+
+    val dependentPatterns =
+        (taskOwnPatterns + effectiveDependencyPatterns(tasksToProcess) + recoveredPathDeps).toSet()
     // The catch-all subsumes every specific glob, so when present emit only it.
     val emittedPatterns = if ("**/*" in dependentPatterns) setOf("**/*") else dependentPatterns
     emittedPatterns.forEach { pattern ->
