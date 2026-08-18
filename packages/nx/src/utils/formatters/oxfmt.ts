@@ -1,4 +1,5 @@
 import ignore = require('ignore');
+import { Minimatch } from 'minimatch';
 import { execFile, execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import * as path from 'node:path';
@@ -388,19 +389,9 @@ function compileEditorConfigGlob(glob: string): (filePath: string) => boolean {
       ? glob
       : `**/${glob}`;
 
-  const matcher = createGlobMatcher(pattern);
+  const matcher = new Minimatch(pattern, { dot: true });
 
   return (filePath) => matcher.match(filePath);
-}
-
-/**
- * Required at call time rather than imported: `devkit-internals` re-exports
- * this module eagerly, so a top-level import would put minimatch in the load
- * graph of every `@nx/devkit` consumer for a path most never take.
- */
-function createGlobMatcher(pattern: string) {
-  const { Minimatch } = require('minimatch') as typeof import('minimatch');
-  return new Minimatch(pattern, { dot: true });
 }
 
 /**
@@ -626,7 +617,7 @@ function compileGlobSet(globs: string[] | undefined): (p: string) => boolean {
     // fast-glob, which also treats leading `!` as inversion. A separator-less
     // `!*.ts` is lifted above, so its `!` stops being leading and neither
     // inverts.
-    return createGlobMatcher(pattern);
+    return new Minimatch(pattern, { dot: true });
   });
   return (filePath) => matchers.some((matcher) => matcher.match(filePath));
 }
