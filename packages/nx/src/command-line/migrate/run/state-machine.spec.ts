@@ -336,6 +336,7 @@ describe('applyStepEvent', () => {
           expected = 'pending';
         else if (status === 'died' && action === 'adopt')
           expected = 'succeeded';
+        else if (status === 'died' && action === 'skip') expected = 'skipped';
         return { status, action, expected };
       })
     );

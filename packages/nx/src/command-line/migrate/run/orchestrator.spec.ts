@@ -64,6 +64,7 @@ import {
   rmSync,
   writeFileSync,
 } from 'fs';
+import { createHash } from 'crypto';
 import { tmpdir } from 'os';
 import { dirname, join } from 'path';
 import { output } from '../../../utils/output';
@@ -1733,7 +1734,7 @@ describe('orchestrator', () => {
       expect(lastBlock().payload.instructions).toContain('twice');
     });
 
-    it('names the single remaining option instead of asking the agent to choose', async () => {
+    it('offers adopt and skip when neither retry is available', async () => {
       jest.spyOn(process, 'kill').mockImplementation(() => {
         throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
       });
@@ -1752,8 +1753,127 @@ describe('orchestrator', () => {
       await runOrchestratorReconcile({ root, runId: 'run-1' });
 
       const block = lastBlock();
-      expect(block.payload.instructions).toContain('Resolve it with');
-      expect(block.payload.instructions).not.toContain('Choose exactly one');
+      expect(block.payload.instructions).toContain('Choose exactly one');
+      expect(block.payload.instructions).not.toContain('  retry:');
+      expect(block.payload.instructions).not.toContain('  retry-clean:');
+      expect(block.payload.instructions).toContain('--step-action=adopt');
+      expect(block.payload.instructions).toContain('--step-action=skip');
+    });
+
+    it('skips a died step and leaves the tree as the worker left it', async () => {
+      const dir = setupRun('run-1', {
+        steps: [
+          // Deps unchanged since the dispense, so nothing is owed an install.
+          migStep('step-1', '@nx/js:gen', 'died', {
+            gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+            depsHashAtDispense: createHash('sha256')
+              .update('{"deps":1}')
+              .digest('hex'),
+          }),
+          migStep('step-2', '@nx/js:next', 'pending'),
+        ],
+        createCommits: false,
+        plan: [genMig('@nx/js', 'gen'), genMig('@nx/js', 'next')],
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'skip',
+      });
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('skipped');
+      expect(mockCommit).not.toHaveBeenCalled();
+      expect(mockRunInstall).not.toHaveBeenCalled();
+      expect(lastBlock().action).toBe('next-step');
+      expect(lastBlock().payload.command).toContain('@nx/js:next');
+    });
+
+    it.each(['died', 'failed'] as const)(
+      'installs the dependency edits a skipped %s step left behind and records debt on a committing run',
+      async (status) => {
+        // The worker edited package.json but never installed (it died, or
+        // threw before its install), so the deps no longer hash to the
+        // dispense baseline. Skipping keeps that tree, and without the install
+        // here the next dispense would capture the modified state as its own
+        // baseline; the dirty tree is debt for a later commit to absorb.
+        mockGetWorkingTreeStatus.mockReturnValue('dirty');
+        const dir = setupRun('run-1', {
+          steps: [
+            migStep('step-1', '@nx/js:gen', status, {
+              depsHashAtDispense: 'baseline-from-an-earlier-dispense',
+            }),
+          ],
+          createCommits: true,
+          plan: [genMig('@nx/js', 'gen')],
+        });
+
+        await runOrchestratorReconcile({
+          root,
+          runId: 'run-1',
+          stepAction: 'skip',
+        });
+
+        const state = readRunState(dir);
+        expect(state.steps[0].status).toBe('skipped');
+        expect(mockRunInstall).toHaveBeenCalledTimes(1);
+        expect(mockRunInstall).toHaveBeenCalledWith(
+          root,
+          'post-migration',
+          expect.stringContaining('--run-id=run-1')
+        );
+        expect(mockCommit).not.toHaveBeenCalled();
+        expect(state.commits).toEqual([
+          { kind: 'failed', stepIds: ['step-1'] },
+        ]);
+      }
+    );
+
+    it('warns instead of installing the edits a skipped step left when the run was started with --skip-install', async () => {
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'died', {
+            depsHashAtDispense: 'baseline-from-an-earlier-dispense',
+          }),
+        ],
+        createCommits: false,
+        skipInstall: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'skip',
+      });
+
+      expect(readRunState(dir).steps[0].status).toBe('skipped');
+      expect(mockRunInstall).not.toHaveBeenCalled();
+      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root);
+    });
+
+    it('records the install failure when a skipped step left dependency edits that could not be installed', async () => {
+      mockRunInstall.mockRejectedValue(new Error('registry unreachable'));
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'died', {
+            depsHashAtDispense: 'baseline-from-an-earlier-dispense',
+          }),
+        ],
+        createCommits: false,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'skip',
+      });
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('skipped');
+      expect(state.steps[0].installFailed).toBe(true);
     });
 
     it('rejects a hand-crafted retry-clean for a step dispensed against a dirty tree', async () => {

@@ -528,6 +528,9 @@ export async function runOrchestratorReconcile(
     // it can carry package.json edits the dead worker never installed; the
     // install has to run here or the next dispense captures the modified
     // dependencies as its own baseline and nothing is left to detect them.
+    // A skip leaves the tree as it stands too, so it owes the same install
+    // and, with commits on, the same debt record as a prompt that did not
+    // complete. Retries owe nothing: the rearmed attempt reconciles itself.
     const { entry, installFailed }: StepSideEffects =
       stepAction === 'adopt'
         ? state.createCommits
@@ -541,7 +544,9 @@ export async function runOrchestratorReconcile(
                 target
               ),
             }
-        : { entry: null, installFailed: false };
+        : stepAction === 'skip'
+          ? await retainedTreeSideEffects(root, dir, state, target)
+          : { entry: null, installFailed: false };
     // A rearm starts a fresh attempt; drop the stale handoff before the rearm
     // is persisted so a crash in between can't refold the old outcome into the
     // new attempt. Losing the handoff without the rearm is safe: the step is
@@ -680,14 +685,31 @@ async function foldLedgerEntry(
   step: MigrateStep,
   promptOutcome: MigrateStepPromptOutcome
 ): Promise<StepSideEffects> {
-  if (promptOutcome.status === 'completed' && state.createCommits) {
-    return commitForStep(root, dir, state, step);
+  if (promptOutcome.status === 'completed') {
+    if (state.createCommits) {
+      return commitForStep(root, dir, state, step);
+    }
+    return {
+      entry: null,
+      installFailed: await installFailedForStep(root, dir, state, step),
+    };
   }
+  return retainedTreeSideEffects(root, dir, state, step);
+}
+
+// Shared by prompts that did not complete and by skipped failed or died steps:
+// the tree is kept as it stands, so the step still owes the install of any
+// dependency edits it left and, with commits on, a debt record when the tree
+// is not verifiably clean (see foldLedgerEntry for why).
+async function retainedTreeSideEffects(
+  root: string,
+  dir: string,
+  state: MigrateRunState,
+  step: MigrateStep
+): Promise<StepSideEffects> {
   const installFailed = await installFailedForStep(root, dir, state, step);
   const entry =
-    promptOutcome.status !== 'completed' &&
-    state.createCommits &&
-    getWorkingTreeStatus(root) !== 'clean'
+    state.createCommits && getWorkingTreeStatus(root) !== 'clean'
       ? { kind: 'failed' as const, stepIds: [step.id] }
       : null;
   return { entry, installFailed };
@@ -792,7 +814,7 @@ function applyReconcileStepAction(
     const head = getLatestCommitSha(root);
     const fallback =
       step.status === 'died'
-        ? `Use 'adopt' instead.`
+        ? `Use 'adopt' or 'skip' instead.`
         : `Use 'retry' or 'skip' instead.`;
     if (!canOfferCleanRetry(root, state, step, head)) {
       return {
@@ -1301,9 +1323,14 @@ function emitDied(
       root,
       runId,
       'adopt'
+    )}`,
+    `  skip: leave the tree as it stands and move on without this migration, then run: ${reconcileCommand(
+      root,
+      runId,
+      'skip'
     )}`
   );
-  lines.push(options.length > 1 ? `Choose exactly one:` : `Resolve it with:`);
+  lines.push(`Choose exactly one:`);
   lines.push(...options);
   if (!resume) {
     lines.push(UNVERIFIABLE_WRITES_LINE);

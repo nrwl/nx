@@ -197,7 +197,7 @@ function applyStepAction(
         }
         return {
           kind: 'error',
-          reason: `Cannot apply action 'retry' to step '${step.id}': the worker died before recording that its generator ran, so keeping the current tree could apply the migration twice. Use 'retry-clean' or 'adopt' instead.`,
+          reason: `Cannot apply action 'retry' to step '${step.id}': the worker died before recording that its generator ran, so keeping the current tree could apply the migration twice. Use 'retry-clean', 'adopt' or 'skip' instead.`,
         };
       case 'retry-clean':
         return commit(state, index, cleanRearm(state, step));
@@ -207,6 +207,9 @@ function applyStepAction(
           status: 'succeeded',
           outcome: { ...step.outcome, summary: adoptedSummary(step) },
         });
+      case 'skip':
+        // Same as skipping a failure: the tree stays as the worker left it.
+        return commit(state, index, { ...step, status: 'skipped' });
     }
   }
   return {
