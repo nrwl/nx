@@ -29,8 +29,8 @@ Run from the repo root:
 
 ```bash
 .claude/tools/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
-.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir]
-.claude/tools/sandbox find <SANDBOX> <glob> [subdir]
+.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
+.claude/tools/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
 .claude/tools/sandbox exec <SANDBOX> -- <cmd>            # tests, lint, tsc
 .claude/tools/sandbox exec <SANDBOX> --base -- <cmd>     # the same, base-side
 ```
@@ -72,7 +72,8 @@ This applies to `IMPLEMENTATION_SOUND` exactly as it applies to a finding, and m
 
 ## Rules
 
-- Report only net-new, concrete defects introduced by the diff. Check `--ref base` or an unchanged sibling when relevant.
+- Report only net-new, concrete defects introduced by the diff. Read the base (`--ref base`) or an unchanged sibling before filing one — the base read is what makes it a finding rather than a note about old code.
+- Every Critical/Important finding must pass the charter's **admission test**: a `NET-NEW:` line with quoted base evidence (or `no base file` / `widens` / `claimed-fix`) and a `TRIGGER:` line naming a reachable entry point → input → user-visible failure. A defect that reproduces unchanged at `--ref base` is not a finding against this PR, but it is still reported — emit it as a `PRE-EXISTING:` line (see below) so the maintainer can file a follow-up. A defect that needs a state no supported workflow produces is a one-line Suggestion. Rarity is fine; unreachability is not. Findings missing either line are demoted by the caller.
 - A finding must identify the changed line, affected behavior, supporting source/base evidence, and a specific fix.
 - Do not split one root cause into separate correctness, error, and type findings. Label the primary lens instead.
 - Run a dynamic check only when it materially changes confidence; keep purely static reviews cheap.
@@ -83,14 +84,16 @@ This applies to `IMPLEMENTATION_SOUND` exactly as it applies to a finding, and m
 These encode this repo's review culture. A finding matching one of them is advisory at most — never a blocker, and never the driver of your verdict:
 
 - **Migration silence and retained dependencies are intentional.** Flag only silent correctness failures; users may still import a dependency.
-- **An Important finding must be net-new** versus base/sibling behavior. Deliberate behavior backed by tests and documentation is a callout, not a blocker.
+- **Critical/Important findings must pass the charter's admission test** — NET-NEW base evidence plus a reachable TRIGGER. Pre-existing behavior the diff merely touches goes under **Pre-existing**; paths no supported workflow reaches are Suggestions. Deliberate behavior backed by tests and documentation is a callout, not a blocker.
 - **Do not demand scattered defensive guards** when the invariant can be fixed at its source.
 - Do not ask for speculative guards, extra logging in migrations, or more comments.
 
 ## Verdicts
 
-- `IMPLEMENTATION_BROKEN` — critical correctness, error-handling, or contract defect.
-- `IMPLEMENTATION_CONCERN` — important defect or compatibility concern.
+Tier per the charter's **two tiers** section — Critical = something the PR produces is wrong now; Important = wrong later, or unguarded.
+
+- `IMPLEMENTATION_BROKEN` — **Critical.** Wrong output, data loss, or a crash on a supported path; a wrong or misleading error message (what a CLI prints is what it produces); an unmigrated breaking change to a public API, schema, or executor option.
+- `IMPLEMENTATION_CONCERN` — **Important.** `widens`, a comment the diff left false, or a measurable non-cliff performance regression. A hang or a scaling cliff is BROKEN, not CONCERN.
 - `IMPLEMENTATION_SOUND` — no relevant defect found.
 
 ## Output
@@ -107,6 +110,12 @@ After the required proof-of-work lines, return:
 **Findings:**
 
 - **<file:line>** — [correctness|error|type/API] <failure mode, evidence, and concrete fix>
+  NET-NEW: <base <path>:<line> — what base did | no base file | widens <path>:<line> | claimed-fix>
+  TRIGGER: <entry point → input → user-visible failure>
+
+**Pre-existing:** <one line per defect that reproduces unchanged at base; or `none`>
+
+- **<file:line>** — <defect>. Present at base <path>:<line>.
 
 **Strengths:** <briefly name sound contracts or error paths>
 ```
