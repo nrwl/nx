@@ -304,8 +304,7 @@ async function addNxProjectGraphPluginToBuildGradle(
           ? `plugin(${versionCatalogPluginAccessor})`
           : isKotlinDsl
             ? `plugin("${gradleProjectGraphPluginName}")`
-            : // Groovy named argument; without the colon `plugin` parses as a property.
-              `plugin: "${gradleProjectGraphPluginName}"`;
+            : `plugin: "${gradleProjectGraphPluginName}"`;
 
         buildGradleContent = buildGradleContent.replace(
           /allprojects\s*\{/,
