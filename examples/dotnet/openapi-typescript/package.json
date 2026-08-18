@@ -3,14 +3,15 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "postinstall": "cd ../../.. && pnpm nx run-many -t build -p nx dotnet --skip-sync",
-    "validate": "nx run-many -t compile"
+    "postinstall": "cd ../../.. && pnpm nx run-many -t build -p nx dotnet js --skip-sync",
+    "validate": "nx run-many -t typecheck"
   },
   "nx": {
     "includedScripts": []
   },
   "devDependencies": {
     "@nx/dotnet": "link:../../../packages/dotnet",
+    "@nx/js": "link:../../../packages/js",
     "@openapitools/openapi-generator-cli": "2.40.1",
     "nx": "link:../../../packages/nx",
     "typescript": "~5.9.2"

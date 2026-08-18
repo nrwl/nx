@@ -1,17 +1,10 @@
 {
   "name": "api-client",
+  "implicitDependencies": ["Api"],
   "targets": {
-    "compile": {
-      "command": "tsc -p libs/api-client/tsconfig.json",
-      "dependsOn": ["Api:codegen"],
-      "inputs": [
-        "{projectRoot}/**/*",
-        {
-          "dependentTasksOutputFiles": "**/*"
-        }
-      ],
-      "outputs": ["{projectRoot}/dist"],
-      "cache": true
+    "typecheck": {
+      "dependsOn": ["...", "Api:codegen"],
+      "inputs": ["...", { "dependentTasksOutputFiles": "**/*" }]
     }
   }
 }

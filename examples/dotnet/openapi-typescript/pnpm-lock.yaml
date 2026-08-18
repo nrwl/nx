@@ -11,6 +11,9 @@ importers:
       '@nx/dotnet':
         specifier: link:../../../packages/dotnet
         version: link:../../../packages/dotnet
+      '@nx/js':
+        specifier: link:../../../packages/js
+        version: link:../../../packages/js
       '@openapitools/openapi-generator-cli':
         specifier: 2.40.1
         version: 2.40.1

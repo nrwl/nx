@@ -1,17 +1,3 @@
 {
-  "name": "storefront",
-  "targets": {
-    "compile": {
-      "command": "tsc -p apps/storefront/tsconfig.json",
-      "dependsOn": ["^compile"],
-      "inputs": [
-        "{projectRoot}/**/*",
-        {
-          "dependentTasksOutputFiles": "**/*"
-        }
-      ],
-      "outputs": ["{projectRoot}/dist"],
-      "cache": true
-    }
-  }
+  "name": "storefront"
 }

@@ -25,7 +25,7 @@ error in TypeScript**, without anyone hand-writing an interface twice.
 ## The pipeline
 
 ```
-Api:restore ─▶ Api:build ─▶ Api:codegen ─▶ api-client:compile ─▶ storefront:compile
+Api:restore ─▶ Api:build ─▶ Api:codegen ─▶ api-client:typecheck ─▶ storefront:typecheck
                    │              │
        apps/Api/openapi/    libs/api-client/
             Api.json          src/generated
@@ -37,17 +37,17 @@ Api:restore ─▶ Api:build ─▶ Api:codegen ─▶ api-client:compile ─▶
    writes `apps/Api/openapi/Api.json`. There is no separate extraction step.
 2. **`Api:codegen`** runs `openapi-generator-cli` over that document and writes
    a `typescript-fetch` client into `libs/api-client/src/generated`.
-3. **`api-client:compile`** compiles that client, along with the hand-written
+3. **`api-client:typecheck`** compiles that client, along with the hand-written
    `src/assert-types.ts`. That file is the actual test.
-4. **`storefront:compile`** compiles a small front end that imports the client. This edge
+4. **`storefront:typecheck`** compiles a small front end that imports the client. This edge
    is not configured anywhere: `apps/storefront` depends on `@example/api-client` in
    its `package.json`, and Nx derives the rest.
 
 ```bash
 # From this directory
 pnpm install      # also builds the linked local packages
-nx compile storefront      # runs the whole chain above
-pnpm validate     # nx run-many -t compile
+nx typecheck storefront      # runs the whole chain above
+pnpm validate     # nx run-many -t typecheck
 ```
 
 ## Two declarations worth reading
@@ -65,7 +65,7 @@ locally.
 The `"..."` splices in the inferred values. Omit it and the array _replaces_
 them, dropping `bin` and `obj` from the cache.
 
-**`codegen` and `api-client:compile` hash their inputs with
+**`codegen` and `api-client:typecheck` hash their inputs with
 `dependentTasksOutputFiles`.** The obvious thing to write is a path input
 pointing at the generated document, and it does not work: the document is
 gitignored, Nx builds its file map from what git can see, so the input matches
@@ -80,10 +80,10 @@ task you depend on is what actually tracks the change.
 
 ```bash
 # In apps/Api/Program.cs, change `int TemperatureC` to `string TemperatureC`
-nx compile storefront
+nx typecheck storefront
 ```
 
-`api-client:compile` fails before the front end is reached:
+`api-client:typecheck` fails before the front end is reached:
 
 ```
 libs/api-client/src/assert-types.ts(26,14): error TS2322: Type 'string' is not assignable to type 'number'.
@@ -98,12 +98,23 @@ apps/storefront/src/main.ts(11,41): error TS2551: Property 'toFixed' does not ex
 
 ## Notes
 
-- The targets inside this example are named `compile`, not `build`. Interior
-  `project.json` files are visible to the repo's root Nx graph, and the root CI
-  sweep runs `build` across affected projects. A `build` here would be picked
-  up at the root, where this workspace's `node_modules` does not exist. Root
-  `nx.json` also excludes `examples/**/*` from `@nx/dotnet` and `@nx/oxlint`
-  for the same reason.
+- The TypeScript targets here are `typecheck`, inferred by `@nx/js/typescript`,
+  not a hand-written `build`. That is both the idiomatic setup and a necessity:
+  interior `project.json` files are visible to the repo's root Nx graph, and the
+  root CI sweep runs `build` across affected projects. A `build` here would be
+  picked up at the root, where this workspace's `node_modules` does not exist.
+  Root `nx.json` also excludes `examples/**/*` from `@nx/dotnet` and
+  `@nx/oxlint` for the same reason.
+- `libs/api-client` declares `implicitDependencies: ["Api"]`. The generated
+  client is gitignored, so there is no import for Nx to read, and without the
+  declaration a change to the C# would leave both TypeScript projects looking
+  unaffected.
+- Its `typecheck` also needs `dependentTasksOutputFiles` on `inputs`, for the
+  same reason `codegen` does. Without it the inferred inputs never see the
+  gitignored client change, and the typecheck passes on a stale cache entry
+  while the generated types underneath it are wrong. This was observed, not
+  theorised: breaking the C# record left the pipeline green until the input was
+  added.
 
 - The example targets `net9.0` to match the SDK pinned in the repo's
   `mise.toml`.

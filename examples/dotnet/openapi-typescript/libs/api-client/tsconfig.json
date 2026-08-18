@@ -1,15 +1,8 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "lib": ["ES2022", "DOM"],
-    "strict": true,
-    "declaration": true,
-    "outDir": "dist",
     "rootDir": "src",
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "outDir": "dist"
   },
   "include": ["src/**/*.ts"]
 }
