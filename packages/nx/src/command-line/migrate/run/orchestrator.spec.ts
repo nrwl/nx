@@ -1207,6 +1207,25 @@ describe('orchestrator', () => {
       expect(existsSync(handoffPath)).toBe(false);
     });
 
+    it("carries the agent's failure summary into the retry-failed dispense", async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
+        plan: [promptMig('@nx/js', 'p')],
+      });
+      writeHandoff(dir, '@nx/js', 'p', {
+        status: 'failed',
+        summary: 'the prompt asked for a file that does not exist',
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
+      expect(block.action).toBe('retry-failed');
+      expect(block.payload.instructions).toContain(
+        'Migration @nx/js:p failed: the prompt asked for a file that does not exist.'
+      );
+    });
+
     it('leaves a step awaiting and dispenses a settle instruction when no handoff exists', async () => {
       const dir = setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],

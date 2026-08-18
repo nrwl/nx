@@ -1036,7 +1036,9 @@ function emitRetryFailed(
   step: MigrateStep
 ): void {
   const migrationId = step.migrationId;
-  const summary = step.outcome?.summary;
+  // A worker failure records its summary on the outcome; a prompt the agent
+  // reported as failed carries the agent's own reason on the prompt outcome.
+  const summary = step.outcome?.summary ?? step.promptOutcome?.summary;
   const head = getLatestCommitSha(root);
   const tree = dirtyTreeSummary(root);
   const cleanRetry = canOfferCleanRetry(root, state, step, head);
