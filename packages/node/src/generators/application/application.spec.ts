@@ -433,6 +433,84 @@ describe('app', () => {
     });
   });
 
+  describe('--unit-test-runner vitest', () => {
+    it('should generate a vitest configuration', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-node-app',
+        unitTestRunner: 'vitest',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+      });
+
+      expect(tree.exists('my-node-app/vitest.config.mts')).toBeTruthy();
+      expect(tree.exists('my-node-app/jest.config.cts')).toBeFalsy();
+      expect(tree.read('my-node-app/vitest.config.mts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { defineConfig } from 'vitest/config';
+        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+        export default defineConfig(() => ({
+          root: import.meta.dirname,
+          cacheDir: '../node_modules/.vite/my-node-app',
+          plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+          test: {
+            name: 'my-node-app',
+            watch: false,
+            globals: true,
+            environment: 'node',
+            include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            passWithNoTests: true,
+            reporters: ['default'],
+            coverage: {
+              reportsDirectory: '../coverage/my-node-app',
+              provider: 'v8' as const,
+            },
+          },
+        }));
+        "
+      `);
+    });
+
+    it('should set up the spec tsconfig for vitest', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-node-app',
+        unitTestRunner: 'vitest',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+      });
+
+      const tsConfig = readJson(tree, 'my-node-app/tsconfig.spec.json');
+      expect(tsConfig.compilerOptions.types).toContain('vitest/globals');
+    });
+
+    it('should keep the generated spec file', async () => {
+      await applicationGenerator(tree, {
+        directory: 'api',
+        framework: 'fastify',
+        unitTestRunner: 'vitest',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+      });
+
+      expect(tree.exists('api/src/app/app.spec.ts')).toBeTruthy();
+    });
+
+    it('should not add dependencies when --skipPackageJson', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-node-app',
+        unitTestRunner: 'vitest',
+        e2eTestRunner: 'none',
+        skipPackageJson: true,
+        addPlugin: true,
+      });
+
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies).not.toHaveProperty('vitest');
+      expect(devDependencies).not.toHaveProperty('@vitest/coverage-v8');
+    });
+  });
+
   describe('--linter', () => {
     // The lint block used to be gated on `=== 'eslint'`, so asking for oxlint
     // skipped it entirely and produced an app with no linter and no error.

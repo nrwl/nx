@@ -9,9 +9,9 @@ import {
   findTailwindConfiguration,
   generateSearchDirectories,
   loadPostcssConfiguration,
+  getSupportedBrowsers,
 } from '@angular/build/private';
 import { transformSupportedBrowsersToTargets } from '../utils/targets-from-browsers';
-import { getSupportedBrowsers } from '@angular/build/private';
 import { createRequire } from 'node:module';
 
 export interface StylesheetTransformResult {

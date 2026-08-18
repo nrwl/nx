@@ -101,6 +101,7 @@ export interface ViteConfigFileOptions {
   imports?: string[];
   plugins?: string[];
   coverageProvider?: 'v8' | 'istanbul' | 'custom' | 'none';
+  passWithNoTests?: boolean;
   setupFile?: string;
   useEsmExtension?: boolean;
   port?: number;
@@ -208,6 +209,7 @@ export function createOrEditViteConfig(
     globals: true,
     environment: '${options.testEnvironment ?? 'jsdom'}',
     include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+${options.passWithNoTests ? `    passWithNoTests: true,\n` : ''}\
 ${options.setupFile ? `    setupFiles: ['${options.setupFile}'],\n` : ''}\
 ${
   options.inSourceTests
@@ -388,6 +390,7 @@ function handleViteConfigFileExists(
     globals: true,
     environment: options.testEnvironment ?? 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    ...(options.passWithNoTests ? { passWithNoTests: true } : {}),
     reporters: ['default'],
     coverage: {
       reportsDirectory: reportsDirectory,

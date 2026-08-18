@@ -212,6 +212,7 @@ getTestBed().initTestEnvironment(
           imports: [`import angular from '@analogjs/vite-plugin-angular'`],
           plugins: ['angular()'],
           setupFile: relativeTestSetupPath,
+          passWithNoTests: schema.passWithNoTests,
           useEsmExtension: true,
         },
         true,
@@ -240,6 +241,7 @@ getTestBed().initTestEnvironment(
             schema.coverageProvider === 'none'
               ? undefined
               : schema.coverageProvider,
+          passWithNoTests: schema.passWithNoTests,
           useEsmExtension: true,
         },
         true,

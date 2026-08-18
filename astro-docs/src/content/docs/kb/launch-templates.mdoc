@@ -188,15 +188,21 @@ launch-templates:
 When defined, specifies an existing step file to be used. **Cannot be used when `script` is also defined**
 
 You can find the [list of Nx Cloud reusable steps here](https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps). If you cannot find a reusable step that suits your needs, [you can create your own custom steps](/docs/kb/custom-steps).
+Besides the GitHub shorthand, `uses` accepts workspace-local `file://` paths and full HTTPS URLs from any host serving the raw YAML, not only GitHub. Both are described in [step reference forms](/docs/kb/custom-steps#step-reference-forms).
 
 ```yaml
 // .nx/workflows/agents.yaml
 launch-templates:
   template-one:
     init-steps:
+      # GitHub shorthand (checkout must stay remote, so no file:// here)
       - uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/checkout/main.yaml'
+      # full URL form of the GitHub shorthand
       - name: 'Install Node Modules'
-        uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-node-modules/main.yaml'
+        uses: 'https://raw.githubusercontent.com/nrwl/nx-cloud-workflows/v6/workflow-steps/install-node-modules/main.yaml'
+      # workspace-local file, resolved from the workspace root
+      - name: 'Custom Step'
+        uses: 'file:///.nx/workflows/custom-step.yaml'
 ```
 
 ### `launch-templates.<template-name>.init-steps[*].script`

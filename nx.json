@@ -378,6 +378,12 @@
         "packages/angular-rspack-compiler/**",
         "packages/angular-rspack/**"
       ]
+    },
+    {
+      "plugin": "@nx/oxlint",
+      "options": {
+        "targetName": "oxlint"
+      }
     }
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",

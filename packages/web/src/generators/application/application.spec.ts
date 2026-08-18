@@ -8,8 +8,9 @@ import {
   updateJson,
   updateNxJson,
   writeJson,
+  getProjects,
+  readJson,
 } from '@nx/devkit';
-import { getProjects, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as devkitExports from '@nx/devkit';
 

@@ -1630,6 +1630,26 @@ describe('lib', () => {
     });
   });
 
+  describe('--unit-test-runner vitest', () => {
+    it('should not add dependencies when --skipPackageJson', async () => {
+      const before = readJson(tree, 'package.json');
+
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        unitTestRunner: 'vitest',
+        // `addLint` writes its own dependencies regardless of the flag.
+        linter: 'none',
+        skipPackageJson: true,
+        skipFormat: true,
+      });
+
+      // Guards against the assertion passing because the vitest setup never ran.
+      expect(tree.exists('my-lib/vitest.config.mts')).toBeTruthy();
+      expect(readJson(tree, 'package.json')).toEqual(before);
+    });
+  });
+
   describe('--bundler=esbuild', () => {
     it('should add build with esbuild', async () => {
       process.env.ESLINT_USE_FLAT_CONFIG = 'false';

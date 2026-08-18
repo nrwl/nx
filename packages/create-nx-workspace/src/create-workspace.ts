@@ -5,7 +5,7 @@ import { createPreset } from './create-preset';
 import { createSandbox } from './create-sandbox';
 import { CreateWorkspaceOptions } from './create-workspace-options';
 import { setupCI } from './utils/ci/setup-ci';
-import { mapErrorToBodyLines } from './utils/error-utils';
+import { mapErrorToBodyLines, CnwError } from './utils/error-utils';
 import {
   GitHubPushError,
   initializeGitRepo,
@@ -36,7 +36,6 @@ import {
 } from './utils/package-manager';
 import { isAiAgent, logProgress } from './utils/ai/ai-output';
 import { confirmThirdPartyPreset } from './internal-utils/prompts';
-import { CnwError } from './utils/error-utils';
 
 // State for SIGINT handler - only set after workspace is fully installed
 let workspaceDirectory: string | undefined;

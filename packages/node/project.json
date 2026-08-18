@@ -23,6 +23,7 @@
             "playwright",
             "webpack",
             "jest",
+            "vitest",
             "eslint",
             "docker"
           ],

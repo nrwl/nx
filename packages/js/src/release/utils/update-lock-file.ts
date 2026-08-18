@@ -6,8 +6,7 @@ import {
   output,
 } from '@nx/devkit';
 import { execSync } from 'child_process';
-import { daemonClient } from '@nx/devkit/internal';
-import { getLockFileName } from '@nx/devkit/internal';
+import { daemonClient, getLockFileName } from '@nx/devkit/internal';
 import { gte } from 'semver';
 
 export async function updateLockFile(

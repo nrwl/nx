@@ -1,9 +1,8 @@
 import { ExecutorContext, logger } from '@nx/devkit';
-import { signalToCode } from '@nx/devkit/internal';
+import { signalToCode, readModulePackageJson } from '@nx/devkit/internal';
 import { ChildProcess, execSync, fork } from 'child_process';
 import detectPort from 'detect-port';
 import { existsSync, rmSync } from 'node:fs';
-import { readModulePackageJson } from '@nx/devkit/internal';
 import { dirname, join, resolve } from 'path';
 
 import { VerdaccioExecutorSchema } from './schema';

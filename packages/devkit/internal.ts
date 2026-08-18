@@ -247,6 +247,8 @@ export {
   requireWithTsconfigFallback,
   resetWorkspaceContext,
   runNxSync,
+  safeExecFileSync,
+  safeSpawn,
   setWorkspaceRoot,
   setupAiAgentsGenerator,
   setupWorkspaceContext,
