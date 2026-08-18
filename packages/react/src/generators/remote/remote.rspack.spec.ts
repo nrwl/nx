@@ -105,6 +105,30 @@ describe('remote generator', () => {
   });
 
   describe('bundler=rspack', () => {
+    it('should give each portless remote a distinct port', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      const base = {
+        e2eTestRunner: 'none',
+        linter: 'none',
+        unitTestRunner: 'none',
+        style: 'css',
+        skipFormat: true,
+        bundler: 'rspack',
+      } as const;
+
+      await remote(tree, { ...base, directory: 'r1', name: 'r1' });
+      await remote(tree, { ...base, directory: 'r2', name: 'r2' });
+
+      // Without a port of its own a remote lands on the executor's 4200 default and
+      // collides with every other remote, and `undefined` reaches the host manifest.
+      const p1 = readProjectConfiguration(tree, 'r1').targets.serve.options
+        .port;
+      const p2 = readProjectConfiguration(tree, 'r2').targets.serve.options
+        .port;
+      expect(p1).toEqual(4200);
+      expect(p2).toEqual(4201);
+    });
+
     it('should set up continuous tasks when host is provided', async () => {
       const tree = createTreeWithEmptyWorkspace();
       await host(tree, {
