@@ -424,8 +424,8 @@ class CLIOutput {
 
   /**
    * A one-line stand-in for a task whose full output is shown elsewhere — used
-   * for the tasks of a failed batch, which are rendered together in the batch's
-   * own log group. `note` points the reader at that group.
+   * for the tasks of a batch rendered as a single log group rather than per
+   * task. `note` points the reader at that group.
    */
   logCommandRedirect(message: string, taskStatus: TaskStatus, note: string) {
     this.ensureLineStart();
@@ -500,7 +500,10 @@ class CLIOutput {
       const buffer = Buffer.allocUnsafe(64 * 1024);
       let bytesRead: number;
       while ((bytesRead = readSync(fd, buffer, 0, buffer.length, null)) > 0) {
-        this.writeTaskOutputChunk(buffer.subarray(0, bytesRead));
+        // Copy before writing. `stream.write` queues a Buffer by reference, and
+        // stdout is a pipe wherever grouping is on, so a backed-up write would
+        // still be holding this memory when the next read overwrites it.
+        this.writeTaskOutputChunk(Buffer.from(buffer.subarray(0, bytesRead)));
       }
     } finally {
       closeSync(fd);

@@ -481,6 +481,39 @@ describe('TaskOrchestrator', () => {
       return path;
     }
 
+    it('copies a fold body larger than one read buffer without corrupting it', () => {
+      const orchestrator = createOrchestrator({ outputStyle: 'static' });
+      const a = makeTask('a:build');
+      // Well past the 64 KB read buffer, and distinguishable per line so a
+      // reordered or duplicated chunk cannot hash the same.
+      const body =
+        Array.from({ length: 40000 }, (_, i) =>
+          `line ${i}`.padEnd(31, '.')
+        ).join('\n') + '\n';
+
+      // A backed-up pipe holds each Buffer it was handed and reads it later.
+      // Concatenating on write would copy, and hide the bug being tested.
+      const original = process.stdout.write;
+      const queued: Buffer[] = [];
+      process.stdout.write = ((chunk: any) => {
+        queued.push(
+          Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk))
+        );
+        return true;
+      }) as any;
+      try {
+        orchestrator.printGroupedBatchOutput(
+          BATCH,
+          [{ task: a, status: 'success', code: 0, terminalOutput: '' }],
+          capturedOutputFile(body)
+        );
+      } finally {
+        process.stdout.write = original;
+      }
+
+      expect(Buffer.concat(queued).toString()).toContain(body);
+    });
+
     it('renders a batch that reported results from each task, never as a batch fold', () => {
       const orchestrator = createOrchestrator();
       const a = makeTask('a:build');

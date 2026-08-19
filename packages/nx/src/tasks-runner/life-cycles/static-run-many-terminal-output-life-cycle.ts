@@ -19,6 +19,8 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
   stoppedTasks = [] as Task[];
   allCompletedTasks = new Map<string, Task>();
   private collapsedTasks = 0;
+  /** Stopped tasks that produced output; a batch-stopped task has none. */
+  private stoppedTasksWithOutput = 0;
 
   constructor(
     private readonly projectNames: string[],
@@ -189,22 +191,22 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
     }
     // A stopped task's partial output is what diagnoses a hang, and it is
     // dropped by default, so say so even when nothing collapsed.
-    if (this.stoppedTasks.length > 0) {
+    if (this.stoppedTasksWithOutput > 0) {
       withheld.push(
-        `${this.stoppedTasks.length} stopped ${
-          this.stoppedTasks.length === 1 ? 'task' : 'tasks'
+        `${this.stoppedTasksWithOutput} stopped ${
+          this.stoppedTasksWithOutput === 1 ? 'task' : 'tasks'
         }`
       );
     }
     if (this.printsFullOutput || withheld.length === 0) {
       return [];
     }
-    const total = this.collapsedTasks + this.stoppedTasks.length;
+    const total = this.collapsedTasks + this.stoppedTasksWithOutput;
     return [
       '',
       `${output.dim(
         `Output of ${withheld.join(' and ')} ${
-          total === 1 ? 'was' : 'were'
+          total === 1 && withheld.length === 1 ? 'was' : 'were'
         } not shown. Run with`
       )} --verbose ${output.dim('or')} --output-style=static ${output.dim(
         'to see it.'
@@ -248,6 +250,11 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
         this.failedTasks.push(t.task);
       } else if (t.status === 'stopped') {
         this.stoppedTasks.push(t.task);
+        // A batch-stopped task is reported with no output at all, so counting
+        // it would have the hint promise something --verbose cannot show.
+        if (t.terminalOutput) {
+          this.stoppedTasksWithOutput++;
+        }
       } else if (t.status === 'local-cache') {
         this.cachedTasks.push(t.task);
       } else if (t.status === 'local-cache-kept-existing') {
