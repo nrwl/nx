@@ -234,10 +234,6 @@ export function quoteForShell(pattern: string): string {
   // double quotes* needs escaping, not just `$`: a backtick substitutes, `"`
   // closes the quoting, `\` escapes what follows. One pass over the original,
   // since `String.replace` never re-scans what it inserted.
-  //
-  // Windows is left alone: cmd.exe treats none of these as special, escaping
-  // would make prettier look for a backslash in the name, and `"` cannot occur
-  // in a Windows path.
   const escaped =
     process.platform !== 'win32'
       ? pattern.replace(/([\\"`$])/g, '\\$1')
