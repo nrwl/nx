@@ -255,6 +255,8 @@ export async function pushToGitHub(
     // First prompt: Ask if they want to push to GitHub
     const { autocomplete, text, isCancel } = await prompts();
     const push = await autocomplete({
+      validate: (value) =>
+        value === undefined ? 'Pick one of the listed options' : undefined,
       message: 'Would you like to push this workspace to GitHub?',
       options: [
         { value: 'Yes', label: 'Yes' },

@@ -64,6 +64,8 @@ async function ask(question: PromptQuestion): Promise<unknown> {
     case 'confirm': {
       const answer = unwrap(
         await autocomplete({
+          validate: (value) =>
+            value === undefined ? 'Pick one of the listed options' : undefined,
           message: question.message,
           options: [{ value: 'Yes' }, { value: 'No' }],
           initialValue: question.initial === false ? 'No' : 'Yes',
@@ -84,6 +86,8 @@ async function ask(question: PromptQuestion): Promise<unknown> {
       const choices = toChoices(question);
       return unwrap(
         await autocomplete({
+          validate: (value) =>
+            value === undefined ? 'Pick one of the listed options' : undefined,
           message: question.message,
           options: choices,
           initialValue:

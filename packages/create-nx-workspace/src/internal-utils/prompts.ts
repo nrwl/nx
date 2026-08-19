@@ -337,6 +337,8 @@ export async function determinePackageManager(
     const { autocomplete, isCancel } = await prompts();
     return assertNotCancelled(
       await autocomplete<PackageManager>({
+        validate: (value) =>
+          value === undefined ? 'Pick one of the listed options' : undefined,
         message: `Which package manager to use`,
         options: [
           { value: 'npm', label: 'NPM' },
@@ -373,6 +375,8 @@ export async function determineLinterOptions(args: {
   const { autocomplete, isCancel } = await prompts();
   return assertNotCancelled(
     await autocomplete<Linter>({
+      validate: (value) =>
+        value === undefined ? 'Pick one of the listed options' : undefined,
       message: `Which linter would you like to use?`,
       // `value` is what's returned; `label` is what the list shows. Oxlint is
       // labelled so it isn't presented as an equal of ESLint while the docs and
