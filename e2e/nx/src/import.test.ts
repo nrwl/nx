@@ -14,7 +14,7 @@ import {
 import { mkdirSync, rmSync } from 'fs';
 import { execSync } from 'node:child_process';
 import { join } from 'path';
-import { createMultiPackageRepo } from './import-utils';
+import { createMultiPackageRepo, createSimpleRepo } from './import-utils';
 
 describe('Nx Import', () => {
   let proj: string;
@@ -129,5 +129,33 @@ describe('Nx Import', () => {
     }
 
     checkFilesExist('packages/a/README.md', 'packages/b/README.md');
+  });
+
+  // The workspaces entry `nx import` adds is written after the merge commit, so
+  // it only reaches the user's history through the amend. Importing OUTSIDE the
+  // fixture's `projects/*` globs is what makes that branch run at all - inside
+  // them `isPkgIncluded` is true and it returns before writing anything.
+  //
+  // `--source .` is required: `--no-interactive` does not suppress that prompt,
+  // which only defaults under `isAiAgent()`.
+  it('should commit the workspaces entry it adds', () => {
+    mkdirSync(tempImportE2ERoot, { recursive: true });
+    const repoPath = createSimpleRepo(tempImportE2ERoot, 'workspaces-src');
+
+    runCLI(
+      `import ${repoPath} imported/pkg --ref main --source . --no-interactive`,
+      { verbose: true }
+    );
+
+    // pnpm keeps its workspaces in pnpm-workspace.yaml; everyone else in
+    // package.json.
+    const workspacesFile =
+      getSelectedPackageManager() === 'pnpm'
+        ? 'pnpm-workspace.yaml'
+        : 'package.json';
+    expect(readFile(workspacesFile)).toContain('imported/pkg');
+
+    // Amended, not left dirty for the user to commit themselves.
+    expect(runCommand('git status --porcelain').trim()).toEqual('');
   });
 });

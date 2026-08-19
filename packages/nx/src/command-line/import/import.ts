@@ -774,9 +774,15 @@ async function handleMissingWorkspacesEntry(
 
     addPackagePathToWorkspaces(pkgPath, pm, workspaces, workspaceRoot);
     // That helper is shared, so it does not record for us - without this the
-    // drain below has nothing to do and the rewritten package.json ships
-    // unformatted.
-    recordInitWrite(join(workspaceRoot, 'package.json'));
+    // drain below has nothing to do and the rewritten file ships unformatted.
+    // It writes pnpm-workspace.yaml for pnpm and package.json for the rest, so
+    // recording package.json unconditionally records a file it never touched.
+    recordInitWrite(
+      join(
+        workspaceRoot,
+        pm === 'pnpm' ? 'pnpm-workspace.yaml' : 'package.json'
+      )
+    );
     await formatInitWrites(workspaceRoot, 'nx import');
     await destinationGitClient.amendCommit();
     output.success({
