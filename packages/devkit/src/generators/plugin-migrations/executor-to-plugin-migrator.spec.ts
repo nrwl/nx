@@ -1419,11 +1419,11 @@ describe('Phase 3 — strict-common hoist', () => {
       filter: { plugin: SYNTHETIC_PLUGIN_PATH },
       options: { mode: 'production' },
     });
-    // ...and the exclusion is announced, naming the count and the target
+    // ...and the exclusion is announced, naming the projects and the target
     expect(warn).toHaveBeenCalled();
     const message = warn.mock.calls.map((c) => String(c[0])).join('\n');
     expect(message).toContain(
-      'kept per-project configuration for 1 project(s)'
+      'kept per-project configuration for 1 project(s) (scripted)'
     );
     expect(message).toContain('build');
   });
@@ -2207,6 +2207,188 @@ describe('Phase 3 — strict-common hoist', () => {
     }
     // the incomplete verification is surfaced, not silent
     expect(warn).toHaveBeenCalled();
+  });
+
+  it('reverts the hoist when a nested non-migrated project errors during verification', async () => {
+    // Same shape as M, but the errored project is NESTED under a migrated
+    // root: `app1/child` is an existing non-migrated project whose config the
+    // plugin globs (the parent include covers it). Ancestor-based ownership
+    // would attribute the error to `app1` and skip the revert, leaking the
+    // centralized default onto the child once its config is fixed — the error
+    // must be attributed to the CLOSEST project root instead.
+    ctx = setupFixture('hoist-errored-nested-child');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    // an existing project nested under migrated app1, migrated for nothing
+    addExecutorProject(ctx, {
+      name: 'child',
+      root: 'app1/child',
+      targetName: 'unrelated',
+      executor: '@other/tool:noop',
+    });
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [SYNTHETIC_PLUGIN_PATH];
+    updateNxJson(ctx.tree, nxJson);
+
+    // Infers the child cleanly in Phase 1 (invocation 1) but throws an
+    // AggregateCreateNodesError for its config on every later pass.
+    let invocation = 0;
+    const createNodes: CreateNodes<SyntheticPluginOptions> = [
+      SYNTHETIC_CONFIG_GLOB,
+      (configFiles, options) => {
+        invocation++;
+        const targetName = options?.targetName ?? 'build';
+        const results: Array<readonly [string, any]> = [];
+        const errors: Array<[string, Error]> = [];
+        for (const file of configFiles) {
+          const dir = dirname(file);
+          const root = dir === '' || dir === '.' ? '.' : dir;
+          if (root === 'app1/child' && invocation >= 2) {
+            errors.push([file, new Error(`broken config in ${file}`)]);
+            continue;
+          }
+          results.push([
+            file,
+            {
+              projects: {
+                [root]: {
+                  targets: {
+                    [targetName]: defaultInferredTarget(root, targetName),
+                  },
+                },
+              },
+            },
+          ]);
+        }
+        if (errors.length > 0) {
+          throw new AggregateCreateNodesError(errors, results as any);
+        }
+        return results;
+      },
+    ];
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      SYNTHETIC_PLUGIN_PATH,
+      createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    // The errored config belongs to the nested child project, not to migrated
+    // app1, so the hoist is reverted rather than leaking `mode` onto the child
+    // once its config is fixed.
+    expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({ cache: true });
+    for (const name of ['app1', 'app2']) {
+      expect(readJson(ctx.tree, `${name}/project.json`).targets.build).toEqual({
+        options: { mode: 'production' },
+      });
+    }
+    expect(
+      readJson(ctx.tree, 'app1/child/project.json').targets.build
+    ).toBeUndefined();
+    // the incomplete verification is surfaced, not silent
+    expect(warn).toHaveBeenCalled();
+    expect(
+      warn.mock.calls.some((call) => String(call[0]).includes('build'))
+    ).toBe(true);
+  });
+
+  it('reverts the hoist when a plugin-discovered nested project errors during verification', async () => {
+    // Sibling of the nested-child test above, but the nested project exists
+    // ONLY through plugin inference: no project.json, no graph node, just a
+    // config file the plugin turns into a project in Phase 1. A graph-only
+    // ownership lookup would attribute its verification error to migrated
+    // `app1` and keep the hoist — the attribution must also see the roots the
+    // plugin itself inferred.
+    ctx = setupFixture('hoist-errored-inferred-nested');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    // config file only — the plugin discovers this project
+    ctx.fs.createFileSync(`app1/child/${SYNTHETIC_CONFIG_FILE}`, '{}');
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [SYNTHETIC_PLUGIN_PATH];
+    updateNxJson(ctx.tree, nxJson);
+
+    // Infers the child cleanly in Phase 1 (invocation 1) but throws an
+    // AggregateCreateNodesError for its config on every later pass.
+    let invocation = 0;
+    const createNodes: CreateNodes<SyntheticPluginOptions> = [
+      SYNTHETIC_CONFIG_GLOB,
+      (configFiles, options) => {
+        invocation++;
+        const targetName = options?.targetName ?? 'build';
+        const results: Array<readonly [string, any]> = [];
+        const errors: Array<[string, Error]> = [];
+        for (const file of configFiles) {
+          const dir = dirname(file);
+          const root = dir === '' || dir === '.' ? '.' : dir;
+          if (root === 'app1/child' && invocation >= 2) {
+            errors.push([file, new Error(`broken config in ${file}`)]);
+            continue;
+          }
+          results.push([
+            file,
+            {
+              projects: {
+                [root]: {
+                  targets: {
+                    [targetName]: defaultInferredTarget(root, targetName),
+                  },
+                },
+              },
+            },
+          ]);
+        }
+        if (errors.length > 0) {
+          throw new AggregateCreateNodesError(errors, results as any);
+        }
+        return results;
+      },
+    ];
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      SYNTHETIC_PLUGIN_PATH,
+      createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    // Phase 1 proved a project lives at app1/child, so its verification error
+    // must fail closed: revert the hoist rather than leaking `mode` onto the
+    // child once its config is fixed.
+    expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({ cache: true });
+    for (const name of ['app1', 'app2']) {
+      expect(readJson(ctx.tree, `${name}/project.json`).targets.build).toEqual({
+        options: { mode: 'production' },
+      });
+    }
+    // the incomplete verification is surfaced, not silent
+    expect(warn).toHaveBeenCalled();
+    expect(
+      warn.mock.calls.some((call) => String(call[0]).includes('build'))
+    ).toBe(true);
   });
 
   it('keeps the include scoped when an errored config sits outside migrated roots (hoist survives)', async () => {

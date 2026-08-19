@@ -31,6 +31,7 @@ import {
   isProjectsWithNoNameError,
   isMultipleProjectsWithSameNameError,
   isWorkspaceValidityError,
+  findProjectForPath,
   mergeTargetConfigurations,
   retrieveProjectConfigurations,
   globalSpinner,
@@ -979,15 +980,19 @@ function hoistCommonAndWrite<T>(
     ([, projects]) => projects.size > 0
   );
   if (excludedTargets.length > 0) {
-    const totalExcluded = new Set(
-      excludedTargets.flatMap(([, projects]) => [...projects])
-    ).size;
+    const excludedProjectNames = [
+      ...new Set(excludedTargets.flatMap(([, projects]) => [...projects])),
+    ].sort();
     const targetNames = excludedTargets
       .map(([targetName]) => targetName)
       .sort()
       .join(', ');
     (logger ?? devkitLogger).warn(
-      `convert-to-inferred kept per-project configuration for ${totalExcluded} project(s) on target(s) ${targetNames} instead of centralizing it: their target identity is authored outside the plugin (a project.json executor/command, or a package.json script/nx.targets entry), so a plugin-scoped default would not resolve for them. Those projects keep the same output as before the migration; review them if you expected shared configuration.`
+      `convert-to-inferred kept per-project configuration for ${
+        excludedProjectNames.length
+      } project(s) (${excludedProjectNames.join(
+        ', '
+      )}) on target(s) ${targetNames} instead of centralizing it: their target identity is authored outside the plugin (a project.json executor/command, or a package.json script/nx.targets entry), so a plugin-scoped default would not resolve for them. Those projects keep the same output as before the migration; review them if you expected shared configuration.`
     );
   }
 
@@ -1153,6 +1158,7 @@ export async function inferOncePerOptionSet<T>(
   erroredConfigFiles: string[];
   rawMatchedConfigFiles: string[];
   inferredExecutors: Set<string>;
+  inferredRoots: Set<string>;
 }> {
   const inferredTargetsByOptionSet: InferredTargetsByOptionSet = new Map();
   const rawMatchedFiles = new Set<string>();
@@ -1167,6 +1173,7 @@ export async function inferOncePerOptionSet<T>(
       matchedConfigFiles: [],
       erroredConfigFiles: [],
       inferredExecutors,
+      inferredRoots,
     };
   }
 
@@ -1257,6 +1264,7 @@ export async function inferOncePerOptionSet<T>(
     // root, re-hits the same failure at verification, and reverts the hoist.
     erroredConfigFiles: [...erroredConfigFiles],
     inferredExecutors,
+    inferredRoots,
   };
 }
 
@@ -1525,6 +1533,7 @@ async function verifyAndFallback<T>(
   residualByProject: ResidualByProject,
   projectConfigsByName: Map<string, ProjectConfiguration>,
   hoistedByTarget: Map<string, TargetDefaultArrayEntry>,
+  inferredRoots: Set<string>,
   singleProjectMode: boolean,
   logger: typeof devkitLogger | undefined
 ): Promise<void> {
@@ -1559,6 +1568,22 @@ async function verifyAndFallback<T>(
     }
   }
 
+  // Attribution map for errored-config ownership: every root the engine knows
+  // owns a project, graph projects plus the roots the plugin itself inferred
+  // in Phase 1 (a project discovered from a config file alone has no graph
+  // node). Keys are normalized for the `findProjectForPath` walk; values are
+  // the raw roots the per-target migrated-root sets hold.
+  const normalizeRoot = (root: string) =>
+    root === '' ? '.' : root.endsWith('/') ? root.slice(0, -1) : root;
+  const ownerRootByPath = new Map<string, string>();
+  for (const node of Object.values(projectGraph.nodes)) {
+    ownerRootByPath.set(normalizeRoot(node.data.root), node.data.root);
+  }
+  for (const root of inferredRoots) {
+    if (!ownerRootByPath.has(normalizeRoot(root))) {
+      ownerRootByPath.set(normalizeRoot(root), root);
+    }
+  }
   const revertedTargets = new Set<string>();
   for (const [targetName] of hoistedByTarget) {
     const migratedRoots =
@@ -1571,14 +1596,17 @@ async function verifyAndFallback<T>(
         !migratedRoots.has(root)
     );
     // Fail closed on inference errors. `reachesNonMigratedRoot` is keyed on the
-    // partial result, so an errored root never appears there — yet it may be an
+    // partial result, so an errored root never appears there, yet it may be an
     // inferred-only root that would inherit the plugin-scoped default once its
-    // config is fixed. Revert whenever the pass could not inspect a config file
-    // that sits outside this target's migrated roots (errors on migrated roots
-    // are handled by the per-project divergence oracle below).
-    const erroredOutsideMigratedRoots = erroredConfigFiles.some(
-      (file) => !isFileOwnedByAnyRoot(file, migratedRoots)
-    );
+    // config is fixed. Attribute each errored file to the CLOSEST known
+    // project root (not any migrated ancestor: a nested non-migrated project
+    // must not be absorbed by the migrated project above it) and revert unless
+    // that root is one of this target's migrated roots (errors on migrated
+    // roots are handled by the per-project divergence oracle below).
+    const erroredOutsideMigratedRoots = erroredConfigFiles.some((file) => {
+      const ownerRoot = findProjectForPath(file, ownerRootByPath);
+      return ownerRoot == null || !migratedRoots.has(ownerRoot);
+    });
     if (reachesNonMigratedRoot || erroredOutsideMigratedRoots) {
       revertedTargets.add(targetName);
     }
@@ -1818,6 +1846,7 @@ async function migrateProjects<T>(
     erroredConfigFiles: erroredConfigFilesFromInference,
     rawMatchedConfigFiles,
     inferredExecutors,
+    inferredRoots,
   } = await inferOncePerOptionSet(
     tree,
     pluginPath,
@@ -1908,6 +1937,7 @@ async function migrateProjects<T>(
     residualByProject,
     projectConfigsByName,
     hoistedByTarget,
+    inferredRoots,
     Boolean(specificProjectToMigrate),
     logger
   );

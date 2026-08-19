@@ -229,6 +229,13 @@ The entry is scoped to the plugin's targets with a `filter`, so it only applies 
 
 Each project's `project.json` then keeps only the options that differ from this shared default.
 Configuration a project overrides in its own `project.json` still wins over the centralized default.
+
+Some projects are excluded from centralization: when a target's identity is authored outside the plugin (a `project.json` `executor` or `command`, or a `package.json` script or `nx.targets` entry), the centralized default does not resolve for that target.
+Those projects keep their full per-project configuration, and the generator prints a warning naming them.
+
+After centralizing, the generator verifies that every migrated target still resolves to the same configuration.
+If the centralized default would also reach a project the generator did not migrate, or the verification cannot confirm the result is equivalent, the generator restores full per-project configuration for the affected targets and prints a warning.
+
 This step is skipped for single-project (`--project`) migrations, since centralizing one project's configuration would leak it onto its siblings.
 
 ## Verify the migration
