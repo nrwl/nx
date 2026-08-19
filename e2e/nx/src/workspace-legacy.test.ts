@@ -30,7 +30,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
     const reactApp = uniq('reactapp');
     const appPort = await reservePort();
     runCLI(
-      `generate @nx/react:app --name=${reactApp} --directory="." --bundler=webpack --unitTestRunner=jest --e2eTestRunner=cypress --devServerPort=${appPort} --no-interactive --linter=eslint`,
+      `generate @nx/react:app --name=${reactApp} --directory="." --bundler=webpack --unitTestRunner=jest --e2eTestRunner=cypress --port=${appPort} --no-interactive --linter=eslint`,
       {
         env: {
           NX_ADD_PLUGINS: 'false',

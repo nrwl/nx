@@ -79,8 +79,8 @@ export async function normalizeOptions<T extends Schema = Schema>(
     unitTestRunner: options.unitTestRunner ?? 'jest',
     e2eTestRunner: options.e2eTestRunner ?? 'playwright',
     inSourceTests: options.minimal || options.inSourceTests,
-    // `port` is canonical. The schema aliases `--devServerPort` for CLI users, but
-    // aliases are only applied at the CLI boundary, so programmatic callers need this.
+    // This generator's CLI option has always been `--port`; `devServerPort` is
+    // programmatic-only back-compat, so there is no schema alias to lean on here.
     port: options.port ?? options.devServerPort,
     minimal: options.minimal ?? false,
     // Programmatic callers such as the host and remote generators leave this

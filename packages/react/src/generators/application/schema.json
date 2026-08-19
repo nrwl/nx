@@ -193,8 +193,7 @@
     },
     "port": {
       "type": "number",
-      "description": "The port to use for the development server. Defaults to 4200.",
-      "aliases": ["devServerPort"]
+      "description": "The port to use for the development server. Defaults to 4200."
     }
   },
   "required": ["directory"],
