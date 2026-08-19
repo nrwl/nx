@@ -172,6 +172,12 @@ describe('js init generator', () => {
     expect(prettierignore).toMatch(/\n\/coverage/);
     expect(prettierignore).toMatch(/\n\/dist/);
     expect(prettierignore).toMatch(/\n\/\.nx\/cache/);
+    // Prettier formats json and yaml, so the package manager rewriting its
+    // lockfile would otherwise fail the workspace's own format:check. Matched
+    // as a set because the name depends on the detected package manager.
+    expect(prettierignore).toMatch(
+      /\n(package-lock\.json|yarn\.lock|pnpm-lock\.yaml|bun\.lockb?)/
+    );
   });
 
   it('should not overwrite existing .prettierrc and .prettierignore files', async () => {

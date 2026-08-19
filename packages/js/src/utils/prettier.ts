@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   readJson,
   stripIndents,
   updateJson,
@@ -7,7 +8,7 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import { prettierConfigFiles } from '@nx/devkit/internal';
+import { getLockFileName, prettierConfigFiles } from '@nx/devkit/internal';
 import type { Options } from 'prettier';
 import { assertNxSupportsFormatters } from './nx-formatter-internals';
 import { prettierVersion } from './versions';
@@ -81,6 +82,7 @@ export function generatePrettierSetup(
         /coverage
         /.nx/cache
         /.nx/workspace-data
+        ${getLockFileName(detectPackageManager(tree.root))}
       `
     );
   }
