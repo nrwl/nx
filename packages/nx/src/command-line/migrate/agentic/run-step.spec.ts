@@ -18,6 +18,7 @@ jest.mock('../../../utils/child-process', () => ({
   getRunNxBaseCommand: jest.fn().mockReturnValue('npx nx'),
 }));
 
+import { dirname, join } from 'path';
 import { runAgentic } from './runner';
 import { getAgentDefinition } from './definitions';
 import { runAgenticPromptStep } from './run-step';
@@ -94,6 +95,40 @@ describe('runAgenticPromptStep', () => {
 
     expect(result).toEqual({ summary: 'applied changes', ambiguous: false });
     expect(installDeps).toHaveBeenCalledTimes(1);
+  });
+
+  // The agent is pre-authorized to write one subtree of the run directory, so
+  // the directory created up front, the path the agent is told to write and
+  // the path the runner watches all have to land inside it. Anything outside
+  // costs the approval prompt the pre-authorization exists to avoid.
+  it('creates, announces and watches one path, inside the handoffs subtree', async () => {
+    configureRun({ kind: 'success', summary: 'applied changes' });
+
+    await runAgenticPromptStep({
+      root: '/ws',
+      migration: makeMigration(),
+      agentic: makeAgentic(),
+      runDir: '/ws/.nx/migrate-runs/20.0.0',
+      installDepsIfChanged: installDeps,
+    });
+
+    const expected = join(
+      '/ws/.nx/migrate-runs/20.0.0',
+      'handoffs',
+      '@nx',
+      'test',
+      'm1.json'
+    );
+    const { mkdirSafely } = jest.requireMock('./handoff') as {
+      mkdirSafely: jest.Mock;
+    };
+    expect(mkdirSafely).toHaveBeenCalledWith(
+      dirname(expected),
+      expect.any(String)
+    );
+    const call = mockRunAgentic.mock.calls[0][0];
+    expect(call.handoffFilePath).toBe(expected);
+    expect(call.invocationContext.systemContext).toContain(expected);
   });
 
   it('returns ambiguous=true with a placeholder summary on ambiguous-continue, and still installs deps', async () => {

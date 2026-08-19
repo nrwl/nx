@@ -43,6 +43,7 @@ import {
   nxVersion,
   tsLibVersion,
   tsNodeVersion,
+  versions,
 } from '../../utils/versions';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import { editRootTsConfig } from './lib/edit-root-tsconfig';
@@ -194,6 +195,10 @@ export async function configurationGeneratorInternal(
     }
   } else {
     devDeps['storybook'] = getStorybookVersionToInstall(tree);
+  }
+
+  if (schema.interactionTests) {
+    devDeps['@storybook/test-runner'] = versions(tree).testRunnerVersion;
   }
 
   if (schema.tsConfiguration) {

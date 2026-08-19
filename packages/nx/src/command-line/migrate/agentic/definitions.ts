@@ -3,6 +3,7 @@ import { join } from 'path';
 import {
   AgentDefinition,
   AgentId,
+  HANDOFFS_DIR_NAME,
   InvocationContext,
   InvocationSpec,
   MIGRATE_RUNS_RELATIVE_DIR,
@@ -18,22 +19,50 @@ function claudeCodeWellKnownPaths(): string[] {
   return [join(homedir(), '.claude', 'local', 'claude')];
 }
 
-// Pre-authorizes the handoff write: Claude Code's default permission mode
-// asks before file writes it has no allow rule for, so without this each step
-// ends with an approval prompt for nx's own handoff scratch. Prefix-less
-// patterns resolve against the session cwd (pinned to the workspace root
-// below); `Edit` covers corrections to an already-written handoff.
-const CLAUDE_CODE_HANDOFF_ALLOWED_TOOLS = `Write(${MIGRATE_RUNS_RELATIVE_DIR}/**),Edit(${MIGRATE_RUNS_RELATIVE_DIR}/**)`;
+/**
+ * The run directory names Nx will interpolate into a permission rule. A rule
+ * is a gitignore pattern, which reads `*?[]\` as syntax, and `--allowedTools`
+ * splits its value on commas and spaces, so a name carrying any of those
+ * would change what the rule authorizes rather than what it names. Run
+ * directory names derive from a migration's own version string, which nothing
+ * upstream constrains to this alphabet. The leading character rejects `.`
+ * and `..`.
+ */
+const RULE_SAFE_RUN_DIR_NAME = /^[A-Za-z0-9][A-Za-z0-9._+-]*$/;
+
+/**
+ * Pre-authorizes the handoff write. Claude Code's default permission mode
+ * asks before a file write it has no allow rule for, so without this every
+ * step ends on an approval prompt for Nx's own handoff scratch.
+ *
+ * The rule reaches one run's handoffs and nothing else. Its own run
+ * directory also holds state Nx wrote and reads back, and the sibling
+ * directories belong to other runs, including an orchestrated run whose
+ * handoffs decide how its steps settle. `Edit` is the only tool name file
+ * rules are matched against, and it covers creating the file as well as
+ * correcting one already written. Prefix-less patterns resolve against the
+ * session cwd, pinned to the workspace root below.
+ *
+ * Returns null for a name it cannot express, which costs the approval prompt
+ * this exists to avoid. That beats widening the rule, and nothing narrower is
+ * available: Claude Code has no escape for a literal path.
+ */
+function claudeCodeHandoffAllowedTools(runDirName: string): string | null {
+  if (!RULE_SAFE_RUN_DIR_NAME.test(runDirName)) {
+    return null;
+  }
+  return `Edit(${MIGRATE_RUNS_RELATIVE_DIR}/${runDirName}/${HANDOFFS_DIR_NAME}/**)`;
+}
 
 function claudeCodeBuildInteractive(ctx: InvocationContext): InvocationSpec {
+  const allowedTools = claudeCodeHandoffAllowedTools(ctx.runDirName);
   return {
     // `--allowedTools` is variadic (space/comma separated): a positional
     // placed right after its value gets swallowed as another rule. The rules
     // must stay in one comma-joined element with a non-variadic flag
     // (`--system-prompt`) between them and the user prompt.
     args: [
-      '--allowedTools',
-      CLAUDE_CODE_HANDOFF_ALLOWED_TOOLS,
+      ...(allowedTools ? ['--allowedTools', allowedTools] : []),
       '--system-prompt',
       ctx.systemContext,
       ctx.userPrompt,
