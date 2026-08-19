@@ -49,6 +49,49 @@ describe('create-nx-workspace --formatter', () => {
     expect(() => runCLI('format:check --all')).not.toThrow();
   });
 
+  it('should set up prettier and use it for format:check, format:write and generators', () => {
+    // Prettier is the shipped default, so this is the path nearly every
+    // workspace runs - and until this test it had no e2e coverage at all,
+    // because the fixtures and the other cases here all pin oxfmt.
+    const wsName = uniq('prettier');
+    runCreateWorkspace(wsName, {
+      preset: 'ts',
+      packageManager,
+      formatter: 'prettier',
+    });
+
+    checkFilesExist('.prettierrc');
+    checkFilesDoNotExist('.oxfmtrc.json');
+    expect(readJson('package.json').devDependencies).toHaveProperty('prettier');
+
+    // A freshly created workspace must already satisfy its own formatter.
+    expect(() => runCLI('format:check')).not.toThrow();
+
+    updateFile('unformatted.ts', `const   x={a:1,   b:'hello'}\n`);
+
+    const checkOutput = runCLI('format:check --all', { silenceError: true });
+    expect(checkOutput).toContain('unformatted.ts');
+
+    runCLI('format:write --all');
+
+    // The generated .prettierrc pins `singleQuote`, so prettier has to apply it
+    // rather than its own default of double quotes.
+    expect(readFile('unformatted.ts')).toContain(
+      `const x = { a: 1, b: 'hello' };`
+    );
+
+    expect(() => runCLI('format:check --all')).not.toThrow();
+
+    // Generators format in memory through prettier's API, not the CLI, so this
+    // is a different code path from everything above. Generated files failing
+    // the workspace's own `format:check` is the failure it guards.
+    runCLI(
+      `generate @nx/js:lib packages/mylib --bundler=none --linter=none --unitTestRunner=none --no-interactive`
+    );
+
+    expect(() => runCLI('format:check --all')).not.toThrow();
+  });
+
   it('should format generated files with an oxfmt.config.mts', () => {
     const wsName = uniq('oxfmtmts');
     runCreateWorkspace(wsName, {
