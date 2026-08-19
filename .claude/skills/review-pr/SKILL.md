@@ -252,7 +252,7 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
    - The `## Review draft` section (the most recent review). This becomes "the prior review."
    - The full `## Prior reviews` section (older reviews, if any). All of them — no cap on history.
 
-   What you pass to the **agents** is a different, much smaller artifact — see step 3. Keep the two straight: full history in your head, distilled carry-forward on disk.
+   What you pass to the **agents** is a different, much smaller artifact — see step 4. Keep the two straight: full history in your head, distilled carry-forward on disk.
 
 2. Compute the incremental diff inside the sandbox, writing it to a host file the agents can `Read`. `$PRIOR_SHA` isn't in the shallow checkout, so fetch it first — and branch on whether that fetch succeeded:
 
@@ -265,11 +265,47 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
    fi
    ```
 
-   A failed fetch means the author force-pushed and orphaned `$PRIOR_SHA`. Treat that as a **fresh review**: set `HAS_PRIOR_CONTEXT=false`, skip the incremental diff, skip step 3 below entirely, and note the force-push in the draft. Do not fall through with an empty incremental diff — an empty diff reads as "nothing changed since the last review" when in fact the entire branch was rewritten.
+   A failed fetch means the author force-pushed and orphaned `$PRIOR_SHA`. Treat that as a **fresh review**: set `HAS_PRIOR_CONTEXT=false`, skip the incremental diff, skip the remaining steps below entirely, and note the force-push in the draft. Do not fall through with an empty incremental diff — an empty diff reads as "nothing changed since the last review" when in fact the entire branch was rewritten. (GitHub keeps force-pushed head SHAs fetchable for a long time, so this branch is rare — the common rebase case lands in step 3.)
 
-   Set `HAS_PRIOR_CONTEXT=true` only on the success path. **Step 5 gates on that variable, never on the context file existing** — file existence is not a safe signal, because a prior review of the same PR leaves one behind and it would silently narrow this run's scope to a stale delta. (Step 3 also clears these paths up front, so the two defenses are independent.)
+   Set `HAS_PRIOR_CONTEXT=true` only on the success path. **Step 5 gates on that variable, never on the context file existing** — file existence is not a safe signal, because a prior review of the same PR leaves one behind and it would silently narrow this run's scope to a stale delta. (Step 3 of the skill also clears these paths up front, so the two defenses are independent.)
 
-3. Write a context file at `/tmp/pr-<NUMBER>.review-context.md` (host-side — the agents `Read` it directly; it is our file, not PR code).
+3. **Rebase guard — do not trust the raw range.** If the author rebased between attempts, `$PRIOR_SHA..HEAD` spans every master commit the rebase pulled in — a raw range orders of magnitude larger than the author's true delta. Filename scoping does not fix it, because master churn _inside_ the PR's own files rides along. Detect it cheaply:
+
+   ```bash
+   RANGE_FILES=$(grep -c '^diff --git ' /tmp/pr-<NUMBER>-incremental.diff)
+   PR_FILES=$(gh pr view <NUMBER> --json changedFiles --jq .changedFiles)
+   ```
+
+   If `RANGE_FILES > 2 * PR_FILES` (or the range touches files absent from `gh pr diff --name-only`), the PR was rebased. Rebuild the incremental surface as a **diff-of-diffs** — the PR's patch at `$PRIOR_SHA` vs its patch at HEAD, each taken against its own merge base, so master churn cancels out:
+
+   ```bash
+   # Merge bases come from the host via gh (credentials never enter the sandbox)
+   OLD_MB=$(gh api "repos/nrwl/nx/compare/<BASE_REF_NAME>...$PRIOR_SHA" --jq .merge_base_commit.sha)
+   NEW_MB=$(gh api "repos/nrwl/nx/compare/<BASE_REF_NAME>...<HEAD_REF_OID>" --jq .merge_base_commit.sha)
+   .claude/tools/sandbox exec "$SANDBOX" -- git fetch -q --depth 1 origin "$OLD_MB" "$NEW_MB"
+   ```
+
+   Then keep only files whose per-file patch actually changed between the two sides. Run the whole loop inside one `sandbox exec … -- bash -s` with the script on stdin; its stdout is the new incremental diff on the host:
+
+   ```bash
+   .claude/tools/sandbox exec "$SANDBOX" -- bash -s <<'EOF' > /tmp/pr-<NUMBER>-incremental.diff
+   norm() { grep -v -e '^index ' -e '^@@'; }   # blob hashes and hunk offsets shift on every rebase
+   for f in $({ git diff --name-only "$OLD_MB" "$PRIOR_SHA"; git diff --name-only "$NEW_MB" HEAD; } | sort -u); do
+     if ! diff -q <(git diff "$OLD_MB" "$PRIOR_SHA" -- "$f" | norm) \
+                  <(git diff "$NEW_MB" HEAD -- "$f" | norm) >/dev/null; then
+       git diff "$NEW_MB" HEAD -- "$f"
+     fi
+   done
+   EOF
+   ```
+
+   (Substitute the two merge-base SHAs into the script literally — sandbox exec re-parses args, and the heredoc is quoted, so `$OLD_MB`/`$NEW_MB` won't expand from the host environment.)
+
+   What the delta contains for a flagged file is the PR's **current** patch for that file — reviewable on its own — not the noisy range hunks. Context-line drift from master churn can still flag a file whose author hunks are identical; acceptable — the agent re-reads one file, not four hundred.
+
+   If the rebuilt delta lands under the 40-line evidence threshold, this was a **rebase-only push**: skip the agent fleet entirely, re-verify the carry-forward yourself at HEAD (a rebase can silently drop a previously landed fix — see the distillation rules), and update the draft noting "rebase-only, no author delta".
+
+4. Write a context file at `/tmp/pr-<NUMBER>.review-context.md` (host-side — the agents `Read` it directly; it is our file, not PR code).
 
    **Distill; do not paste.** Every byte here is read by every agent you dispatch, so its cost is multiplied by the whole fleet — on a PR with several prior attempts, pasting full bodies makes the carry-forward the single largest fixed charge in the run, larger for most agents than the diff they are meant to review. Worse, it is mostly inert: the bulk of a prior draft is that round's Reproduction / Approach / Performance / Security prose, which describes work already done and re-verified from scratch this round by the agents that own those dimensions. What an agent genuinely needs from history is short: what is still open, what was already fixed, and which trade-offs are settled so it does not re-litigate them.
 
@@ -319,6 +355,7 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
    Rules for the distillation:
    - Re-check open items once; move fixed ones to **Already fixed**.
+   - On a rebased re-review (step 3 fired), re-verify **Already fixed** items at HEAD too — a rebase can silently drop a landed fix. A dropped one goes back to Open items.
    - Never omit an unresolved finding; trim narrative first.
    - Preserve each finding's wording, location, and ask; omit old reproduction/approach/performance/security prose.
    - Carry facts, not a prior verdict's reasoning; keep focus questions neutral.
