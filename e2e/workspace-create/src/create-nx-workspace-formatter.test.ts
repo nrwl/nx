@@ -85,17 +85,11 @@ describe('create-nx-workspace --formatter', () => {
     // Generators format in memory through prettier's API, not the CLI, so this
     // is a different code path from everything above. Generated files failing
     // the workspace's own `format:check` is the failure it guards.
-    //
-    // Scoped to the generated project rather than `--all`: the generator's
-    // install rewrites the lockfile in the package manager's own style, and
-    // prettier formats YAML, so `--all` would report that instead. The
-    // generated `.prettierignore` does not exclude lockfiles - true on master
-    // too, so it is not this PR's to fix here.
     runCLI(
       `generate @nx/js:lib packages/mylib --bundler=none --linter=none --unitTestRunner=none --no-interactive`
     );
 
-    expect(() => runCLI('format:check --projects=mylib')).not.toThrow();
+    expect(() => runCLI('format:check --all')).not.toThrow();
   });
 
   it('should format generated files with an oxfmt.config.mts', () => {
