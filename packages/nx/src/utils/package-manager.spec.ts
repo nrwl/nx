@@ -770,20 +770,22 @@ describe('package-manager', () => {
     let execFileSyncMock: jest.SpyInstance;
     let platform: PropertyDescriptor;
 
-    /** Answers `npm config get <key>` from `answers`, `undefined` for the rest. */
-    function stubNpmConfig(answers: Record<string, string>): void {
+    /** Answers `<pm> config get <key>` from `answers`, `undefined` for the rest. */
+    function stubPackageManagerConfig(answers: Record<string, string>): void {
       execFileSyncMock.mockImplementation(
         (_file: string, args: string[]) =>
           `${answers[args[2]] ?? 'undefined'}\n`
       );
     }
-    /** The keys the lookup asked npm for, in order. */
+    /** The keys the lookup asked the package manager for, in order. */
     const configKeys = (): string[] =>
       execFileSyncMock.mock.calls.map(([, args]) => (args as string[])[2]);
 
     beforeEach(() => {
       clearPackageManagerVersionCache();
-      jest.spyOn(configModule, 'readNxJson').mockReturnValue({});
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'npm' } });
       (existsSync as jest.Mock).mockReturnValue(false);
       (statSync as jest.Mock).mockImplementation(() => {
         throw new Error('ENOENT: no such file or directory');
@@ -806,7 +808,9 @@ describe('package-manager', () => {
     it('masks the userinfo the answer carries', () => {
       // It goes into an error message, and a registry declared in a package
       // manager's own config can hold the credential inline.
-      stubNpmConfig({ registry: 'https://ci-token@registry.corp.example/' });
+      stubPackageManagerConfig({
+        registry: 'https://ci-token@registry.corp.example/',
+      });
 
       expect(getWorkspaceRegistryUrlForDisplay('nx')).toBe(
         'https://***@registry.corp.example/'
@@ -817,7 +821,9 @@ describe('package-manager', () => {
       jest.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({
         npm_config_registry: 'https://from-overlay.example.com/',
       });
-      stubNpmConfig({ registry: 'https://from-overlay.example.com/' });
+      stubPackageManagerConfig({
+        registry: 'https://from-overlay.example.com/',
+      });
 
       expect(getWorkspaceRegistryUrlForDisplay('nx')).toBe(
         'https://from-overlay.example.com/'
@@ -831,7 +837,7 @@ describe('package-manager', () => {
     });
 
     it('asks for the scope first, then the default it falls back to', () => {
-      stubNpmConfig({ registry: 'https://default.example.com/' });
+      stubPackageManagerConfig({ registry: 'https://default.example.com/' });
 
       expect(getWorkspaceRegistryUrlForDisplay('@nx/js')).toBe(
         'https://default.example.com/'
@@ -840,7 +846,7 @@ describe('package-manager', () => {
     });
 
     it('stops at the scoped registry when npm resolves one', () => {
-      stubNpmConfig({
+      stubPackageManagerConfig({
         '@nx:registry': 'https://scoped.example.com/',
         registry: 'https://default.example.com/',
       });
@@ -852,9 +858,71 @@ describe('package-manager', () => {
     });
 
     it('resolves nothing when npm declares no registry at all', () => {
-      stubNpmConfig({});
+      stubPackageManagerConfig({});
 
       expect(getWorkspaceRegistryUrlForDisplay('nx')).toBeNull();
+    });
+
+    it('uses the pnpm registry-map default after a scoped miss', () => {
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'pnpm' } });
+      jest.spyOn(childProcess, 'execSync').mockReturnValue('11.2.2\n' as any);
+      stubPackageManagerConfig({
+        'registries.default': 'https://ws.example.com/',
+        registry: 'https://npmrc.example.com/',
+      });
+
+      expect(getWorkspaceRegistryUrlForDisplay('@foo/pkg')).toBe(
+        'https://ws.example.com/'
+      );
+      expect(configKeys()).toEqual(['@foo:registry', 'registries.default']);
+      expect(
+        execFileSyncMock.mock.calls.every(([file]) => file === 'pnpm')
+      ).toBe(true);
+      expect(execFileSyncMock.mock.calls[0][2].env).toBe(process.env);
+      expect(registryConfig.getNpmSpawnRegistryEnv).not.toHaveBeenCalled();
+    });
+
+    it('falls through to the flat registry when native pnpm declares no map default', () => {
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'pnpm' } });
+      jest.spyOn(childProcess, 'execSync').mockReturnValue('11.2.2\n' as any);
+      stubPackageManagerConfig({ registry: 'https://npmrc.example.com/' });
+
+      expect(getWorkspaceRegistryUrlForDisplay('nx')).toBe(
+        'https://npmrc.example.com/'
+      );
+      expect(configKeys()).toEqual(['registries.default', 'registry']);
+    });
+
+    it('reports no registry over a malformed map default the fetch died on', () => {
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'pnpm' } });
+      jest.spyOn(childProcess, 'execSync').mockReturnValue('11.2.2\n' as any);
+      stubPackageManagerConfig({
+        'registries.default': '{\n  "nested": "https://nested.example.com/"\n}',
+        registry: 'https://npmrc.example.com/',
+      });
+
+      expect(getWorkspaceRegistryUrlForDisplay('nx')).toBeNull();
+      expect(configKeys()).toEqual(['registries.default']);
+    });
+
+    it('reports no registry over a non-HTTP(S) map default the fetch died on', () => {
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'pnpm' } });
+      jest.spyOn(childProcess, 'execSync').mockReturnValue('11.2.2\n' as any);
+      stubPackageManagerConfig({
+        'registries.default': 'mailto:registry@example.com/',
+        registry: 'https://npmrc.example.com/',
+      });
+
+      expect(getWorkspaceRegistryUrlForDisplay('nx')).toBeNull();
+      expect(configKeys()).toEqual(['registries.default']);
     });
 
     it('quotes the key into the command Windows needs a shell for', () => {

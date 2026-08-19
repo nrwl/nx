@@ -768,20 +768,25 @@ function createRegistrySpawnContext(pkg: string): {
  * `packageRegistryView` spawns the fetch this describes — same manager, same
  * environment — so a registry the package manager keeps outside the .npmrc
  * chain and a scope resolved for itself both land on the value that fetch used.
- * Null where the manager declares no registry; throws where it cannot be run.
+ * Null where the manager yields no usable registry URL; throws where it cannot be run.
  */
 export function getWorkspaceRegistryUrlForDisplay(pkg: string): string | null {
   const { workspacePm, workspacePmVersion, configRoot, scope, buildEnv } =
     createRegistrySpawnContext(pkg);
-  const { pm, env } = resolveRegistrySpawnTarget(
+  const { pm, env, usesNativePnpm } = resolveRegistrySpawnTarget(
     workspacePm,
     workspacePmVersion,
     buildEnv
   );
-  // Both managers follow npm's pickRegistry order: the scope decides where it
-  // can, the default answers the rest. Either prints `undefined` for a setting
-  // nothing declares.
-  for (const key of scope ? [`${scope}:registry`, 'registry'] : ['registry']) {
+  // Ask for the package scope first. Native pnpm can keep the workspace
+  // `registries.default` separate from the flat `registry`, so it is queried
+  // in between.
+  const keys = scope ? [`${scope}:registry`] : [];
+  if (usesNativePnpm) {
+    keys.push('registries.default');
+  }
+  keys.push('registry');
+  for (const key of keys) {
     const value = execPackageManagerSync(pm, ['config', 'get', key], {
       cwd: configRoot,
       timeout: 5000,
@@ -792,9 +797,20 @@ export function getWorkspaceRegistryUrlForDisplay(pkg: string): string | null {
       stdio: ['ignore', 'pipe', 'ignore'],
       env,
     }).trim();
-    if (value && value !== 'undefined' && value !== 'null') {
-      return redactUrlCredentials(value);
+    if (!value || value === 'undefined' || value === 'null') {
+      continue;
     }
+    // A present but unusable answer (a `registries:` map with a non-string
+    // default serializes as JSON; a non-HTTP(S) scheme) also aborted the fetch
+    // this describes, so a key below it was never contacted either.
+    if (!URL.canParse(value)) {
+      return null;
+    }
+    const protocol = new URL(value).protocol;
+    if (protocol !== 'http:' && protocol !== 'https:') {
+      return null;
+    }
+    return redactUrlCredentials(value);
   }
   return null;
 }
@@ -812,7 +828,7 @@ function resolveRegistrySpawnTarget(
   workspacePmVersion: string | null,
   buildEnv: (extra?: NodeJS.ProcessEnv) => NodeJS.ProcessEnv,
   options?: { forceNpm?: boolean }
-): { pm: PackageManager; env: NodeJS.ProcessEnv } {
+): { pm: PackageManager; env: NodeJS.ProcessEnv; usesNativePnpm: boolean } {
   let pm = workspacePm;
   if (options?.forceNpm || pm === 'yarn' || pm === 'bun') {
     /**
@@ -828,7 +844,7 @@ function resolveRegistrySpawnTarget(
     pm = 'npm';
   }
   if (pm === 'pnpm' && (parse(workspacePmVersion)?.major ?? 0) >= 11) {
-    return { pm, env: process.env };
+    return { pm, env: process.env, usesNativePnpm: true };
   }
   // npm_config_force downgrades npm's `devEngines.packageManager` enforcement,
   // which otherwise aborts even a read-only lookup when the pin sets
@@ -836,6 +852,7 @@ function resolveRegistrySpawnTarget(
   return {
     pm,
     env: buildEnv(pm === 'npm' ? { npm_config_force: 'true' } : {}),
+    usesNativePnpm: false,
   };
 }
 
