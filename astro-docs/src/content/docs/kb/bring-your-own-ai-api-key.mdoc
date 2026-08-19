@@ -1,0 +1,193 @@
+---
+title: Bring your own AI API key
+description: Route Nx Cloud self-healing CI through your own Anthropic, AWS Bedrock, Azure AI Foundry, or Google Vertex AI account.
+filter: 'type:Guides'
+topics:
+  - 'Continuous integration'
+  - 'Nx Cloud'
+---
+
+Bring your own key routes [self-healing CI](/docs/features/ci-features/self-healing-ci) through
+your own provider account, so inference bills to you instead of Nx Cloud.
+
+It is a paid add-on, available on the Enterprise plan and enabled for your organization by Nx.
+Contact your developer productivity engineer to turn it on.
+The **AI provider** row does not appear in your organization settings until it is enabled.
+
+{% aside type="caution" title="Claude models only" %}
+`fix-ci` runs on the Claude Agent SDK through the Anthropic Messages API.
+Gemini, GPT, and Nova do not work, even when your provider serves them.
+{% /aside %}
+
+## Choose a mode
+
+Credentials reach `fix-ci` one of two ways.
+In **stored mode** Nx Cloud holds them for you, and in **CI env mode** they stay in your own CI
+secret store.
+Pick between them at `/orgs/<org-id>/ai-provider`, where they appear as
+**Use your own AI provider** and **Supply your credentials in CI env**.
+
+| Property                   | Stored in Nx Cloud                        | Set in your CI                                             |
+| -------------------------- | ----------------------------------------- | ---------------------------------------------------------- |
+| Credential storage         | Encrypted in Nx Cloud                     | Your CI secret store, Nx stores nothing                    |
+| Configured by              | An organization admin, in the settings UI | Your CI or platform team, on the `fix-ci` step             |
+| Providers                  | Anthropic, AWS Bedrock, Azure AI Foundry  | Anthropic, AWS Bedrock, Azure AI Foundry, Google Vertex AI |
+| IAM and STS authentication | Not supported                             | Supported                                                  |
+
+![The Self-Healing CI AI provider setting, showing the CI env and Nx Cloud provider options](../../../assets/nx-cloud/self-healing-ci-ai-provider-mode.png)
+
+Google Vertex AI and AWS IAM or STS credentials are only available in CI env mode.
+
+## Set the model tiers
+
+Self-healing CI uses three model tiers.
+
+| Tier      | Purpose                                                              | Environment variable               |
+| --------- | -------------------------------------------------------------------- | ---------------------------------- |
+| Primary   | Fix generation. Use Opus, or Sonnet 4.5 and later.                   | `ANTHROPIC_DEFAULT_SONNET_MODEL`   |
+| Fallback  | Used when the primary is overloaded. Must differ from the primary.   | `ANTHROPIC_DEFAULT_FALLBACK_MODEL` |
+| Low-power | Background work such as classification and summaries. Usually Haiku. | `ANTHROPIC_DEFAULT_HAIKU_MODEL`    |
+
+The variable names are slots, not model families.
+The primary tier reads `ANTHROPIC_DEFAULT_SONNET_MODEL` whichever model you put in it, so an Opus
+ID belongs there.
+Self-healing CI does not read `ANTHROPIC_DEFAULT_OPUS_MODEL`.
+
+Each tier takes the model identifier your provider publishes:
+
+- Anthropic: a Claude model name, from the
+  [Claude model list](https://platform.claude.com/docs/en/about-claude/models/overview).
+- AWS Bedrock: a Bedrock model ID, shaped `anthropic.<model>-<date>-v1:0`.
+- Azure AI Foundry: the deployment name you gave the model.
+- Google Vertex AI: a Vertex model ID.
+
+In stored mode you enter these as form fields, and in CI env mode you set the variables.
+
+## Set up stored mode
+
+Select **Use your own AI provider**, then pick your provider and fill in the form.
+You need organization admin access, and a Claude model provisioned in your provider for each tier,
+which is a console step in AWS or Azure.
+Nx sets the runtime environment for every `fix-ci` run, so your CI configuration doesn't change.
+
+To rotate a credential, use **Replace credentials**.
+Clearing the provider deletes the stored secret.
+
+## Set up CI env mode
+
+Set the provider variables wherever `fix-ci` runs.
+Nx stores nothing, and the Claude Agent SDK reads the variables at session start.
+
+`fix-ci` runs in two places, so the variables have to be present in both.
+It runs on your main CI job for failures outside agents, meaning non-distributed commands, and on
+Nx Agents for distributed tasks that fail there.
+On the main job, set the variables the way you manage any other CI secret.
+Nx Agents start clean, so
+[forward the variables to the agents](/docs/kb/launch-template-examples#pass-environment-variables).
+Forwarding covers Anthropic and Foundry outright.
+AWS and Vertex need more care on the agents, covered in their sections below.
+
+## Anthropic
+
+In stored mode, supply an Anthropic API key.
+A gateway or proxy base URL is optional.
+
+In CI env mode, set the following variables.
+
+| Variable                    | Required | Value                                                          |
+| --------------------------- | -------- | -------------------------------------------------------------- |
+| `ANTHROPIC_API_KEY`         | Yes      | Anthropic API key                                              |
+| `ANTHROPIC_BASE_URL`        | No       | Gateway or proxy origin. Omit for `api.anthropic.com`          |
+| `ANTHROPIC_DEFAULT_*_MODEL` | No       | The three tiers. Unset falls back to the default Claude models |
+
+## AWS Bedrock
+
+In stored mode, supply a long-term Bedrock API key as a bearer token, plus the AWS region.
+Short-term keys expire and break self-healing once they do.
+
+In CI env mode, set the following variables.
+
+| Variable                                                          | Required      | Value                                           |
+| ----------------------------------------------------------------- | ------------- | ----------------------------------------------- |
+| `CLAUDE_CODE_USE_BEDROCK`                                         | Yes           | `1`                                             |
+| `AWS_REGION`                                                      | Yes           | Region serving your models, such as `us-west-2` |
+| `AWS_BEARER_TOKEN_BEDROCK`                                        | One auth path | Long-term Bedrock API key as a bearer token     |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | One auth path | IAM or STS credentials                          |
+| `ANTHROPIC_DEFAULT_*_MODEL`                                       | Yes           | Bedrock model IDs                               |
+
+Through CI, `fix-ci` doesn't authenticate with a single key.
+It calls the AWS SDK, which walks the standard AWS credential chain to find whatever credentials
+the runner exposes, whether that's environment variables, a shared credentials file, or an
+attached role.
+`CLAUDE_CODE_USE_BEDROCK` and `AWS_REGION` only say where to go, and supplying the credentials is
+the part you set up.
+
+On your own runners, the AWS SDK can use whatever the machine already carries, such as an attached
+instance or task profile, a `~/.aws` file, or credentials your CI injects through OIDC.
+Often you set only the region and the Bedrock flag, and the existing AWS identity does the rest.
+
+Nx Agents carry none of your AWS identity, so pass the credentials as environment variables.
+A long-term Bedrock API key in `AWS_BEARER_TOKEN_BEDROCK` is the shortest path.
+For IAM or STS, mint short-lived credentials on your main job and forward
+`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, and `AWS_REGION` to the agents.
+
+## Azure AI Foundry
+
+The host is `services.ai.azure.com`, not `openai.azure.com`.
+Model values are deployment names, one per tier.
+
+The endpoint takes a resource name such as `my-resource`, or a bare origin such as
+`https://my-resource.services.ai.azure.com`, with no path.
+Nx and the Claude Agent SDK append `/anthropic/v1/messages` themselves, so a stored `/anthropic`
+doubles and returns a 404.
+The Nx Cloud form rejects a path and previews the resolved URL before you save.
+
+In stored mode, supply a Foundry API key and an endpoint in either of those two forms.
+
+In CI env mode, set the following variables.
+
+| Variable                     | Required         | Value                                                                 |
+| ---------------------------- | ---------------- | --------------------------------------------------------------------- |
+| `CLAUDE_CODE_USE_FOUNDRY`    | Yes              | `1`                                                                   |
+| `ANTHROPIC_FOUNDRY_RESOURCE` | One of these two | Resource name only, such as `my-resource`. The SDK derives the origin |
+| `ANTHROPIC_FOUNDRY_BASE_URL` | One of these two | Bare origin, no path. Use for a custom origin                         |
+| `ANTHROPIC_FOUNDRY_API_KEY`  | Yes              | Foundry API key                                                       |
+| `ANTHROPIC_DEFAULT_*_MODEL`  | Yes              | Foundry deployment names                                              |
+
+## Google Vertex AI
+
+Vertex has no Nx Cloud form, so it runs in CI env mode only.
+
+| Variable                         | Required | Value                                                                                  |
+| -------------------------------- | -------- | -------------------------------------------------------------------------------------- |
+| `CLAUDE_CODE_USE_VERTEX`         | Yes      | `1`                                                                                    |
+| `ANTHROPIC_VERTEX_PROJECT_ID`    | Yes      | Google Cloud project ID                                                                |
+| `CLOUD_ML_REGION`                | Yes      | `global`, a multi-region such as `us` or `eu`, or a region such as `us-east5`          |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Yes      | Path to a service account key file, unless Application Default Credentials are present |
+| `ANTHROPIC_DEFAULT_*_MODEL`      | Yes      | Vertex model IDs                                                                       |
+
+Current models take the bare identifier, such as `claude-sonnet-5`.
+A dated snapshot separates the date with `@`, shaped `claude-<model>@<date>`.
+
+Authentication goes through the Google credential chain, which usually wants a service account key
+file rather than a single value.
+On your own runners, use Application Default Credentials through
+`gcloud auth application-default login`, or point `GOOGLE_APPLICATION_CREDENTIALS` at a key file
+already on the machine.
+
+Forwarding to Nx Agents passes values, not files, so carry the key file as a value and rebuild it
+on the agent:
+
+1. Put the service account JSON into an environment variable.
+   Base64-encode it to avoid newline and quoting problems.
+1. Forward that variable to the agents.
+1. In the init step of your launch template, decode the value back out to a file and point
+   `GOOGLE_APPLICATION_CREDENTIALS` at that path.
+
+For region and model details, see
+[Claude on Google Vertex AI](https://code.claude.com/docs/en/google-vertex-ai).
+
+## Verify the setup
+
+Open a CI pipeline execution and check the self-healing tab for fix suggestions.
+Your `nx fix-ci` step should run without logging errors about a missing or rejected provider.
