@@ -27,11 +27,11 @@ jest.mock('./migrate-analytics', () => ({
 // The confirmation itself stays real so the branch resolution behind it is
 // exercised; only the terminal prompt is stubbed.
 const mockCanPrompt = jest.fn();
-const mockMigratePrompt = jest.fn();
+const mockMigrateConfirm = jest.fn();
 jest.mock('./safe-prompt', () => ({
   ...jest.requireActual('./safe-prompt'),
   canPrompt: (...args: unknown[]) => mockCanPrompt(...args),
-  migratePrompt: (...args: unknown[]) => mockMigratePrompt(...args),
+  migrateConfirm: (...args: unknown[]) => mockMigrateConfirm(...args),
 }));
 
 const mockIsGitRepository = jest.fn();
@@ -105,7 +105,7 @@ describe('migrate() orchestrated init dispatch', () => {
     mockReportRunStart.mockReset();
     mockIsInsideAgent.mockReset().mockReturnValue(true);
     mockCanPrompt.mockReset().mockReturnValue(true);
-    mockMigratePrompt.mockReset().mockResolvedValue({ proceed: true });
+    mockMigrateConfirm.mockReset().mockResolvedValue(true);
     mockIsGitRepository.mockReset().mockReturnValue(true);
     mockGetGitCurrentBranch.mockReset().mockReturnValue('main');
     mockGetBaseRef.mockReset().mockReturnValue('main');
@@ -132,24 +132,22 @@ describe('migrate() orchestrated init dispatch', () => {
   }
 
   it('starts no run when the default-branch commit confirmation is declined', async () => {
-    mockMigratePrompt.mockResolvedValue({ proceed: false });
+    mockMigrateConfirm.mockResolvedValue(false);
 
     await migrate(root, runMigrationsArgs(), ['--run-migrations']);
 
-    expect(mockMigratePrompt).toHaveBeenCalledWith([
+    expect(mockMigrateConfirm).toHaveBeenCalledWith(
       expect.objectContaining({
-        name: 'proceed',
-        type: 'confirm',
         message: expect.stringContaining(`default branch 'main'`),
-      }),
-    ]);
+      })
+    );
     expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
   });
 
   it('starts the run once the confirmation is accepted', async () => {
     await migrate(root, runMigrationsArgs(), ['--run-migrations']);
 
-    expect(mockMigratePrompt).toHaveBeenCalledTimes(1);
+    expect(mockMigrateConfirm).toHaveBeenCalledTimes(1);
     expect(mockRunOrchestratorInit).toHaveBeenCalledTimes(1);
   });
 
@@ -158,7 +156,7 @@ describe('migrate() orchestrated init dispatch', () => {
 
     await migrate(root, runMigrationsArgs(), ['--run-migrations']);
 
-    expect(mockMigratePrompt).toHaveBeenCalledTimes(1);
+    expect(mockMigrateConfirm).toHaveBeenCalledTimes(1);
   });
 
   it('does not confirm when the run will not commit', async () => {
@@ -167,7 +165,7 @@ describe('migrate() orchestrated init dispatch', () => {
       '--no-create-commits',
     ]);
 
-    expect(mockMigratePrompt).not.toHaveBeenCalled();
+    expect(mockMigrateConfirm).not.toHaveBeenCalled();
     expect(mockRunOrchestratorInit).toHaveBeenCalledTimes(1);
   });
 
@@ -176,7 +174,7 @@ describe('migrate() orchestrated init dispatch', () => {
 
     await migrate(root, runMigrationsArgs(), ['--run-migrations']);
 
-    expect(mockMigratePrompt).not.toHaveBeenCalled();
+    expect(mockMigrateConfirm).not.toHaveBeenCalled();
     expect(mockRunOrchestratorInit).toHaveBeenCalledTimes(1);
   });
 

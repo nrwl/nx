@@ -14,7 +14,7 @@ jest.mock('../../config/configuration', () => ({
   readNxJson: jest.fn(),
 }));
 jest.mock('./safe-prompt', () => ({
-  migratePrompt: jest.fn(),
+  migrateConfirm: jest.fn(),
 }));
 
 import { readNxJson } from '../../config/configuration';
@@ -31,7 +31,7 @@ import {
   commitMigrationIfRequested,
   confirmMigrationCommitsOnDefaultBranch,
 } from './migrate-commits';
-import { migratePrompt } from './safe-prompt';
+import { migrateConfirm } from './safe-prompt';
 
 const mockHas = hasUncommittedChanges as jest.Mock;
 const mockTry = tryCommitChanges as jest.Mock;
@@ -41,7 +41,7 @@ const mockLog = output.log as jest.Mock;
 const mockCurrentBranch = getGitCurrentBranch as jest.Mock;
 const mockRemoteNames = getGitRemoteNames as jest.Mock;
 const mockReadNxJson = readNxJson as jest.Mock;
-const mockMigratePrompt = migratePrompt as jest.Mock;
+const mockMigrateConfirm = migrateConfirm as jest.Mock;
 
 const ROOT = '/workspace';
 const PREFIX = 'chore: [nx migration] ';
@@ -62,7 +62,7 @@ beforeEach(() => {
   mockCurrentBranch.mockReset();
   mockRemoteNames.mockReset().mockReturnValue([]);
   mockReadNxJson.mockReset().mockReturnValue({});
-  mockMigratePrompt.mockReset().mockResolvedValue({ proceed: true });
+  mockMigrateConfirm.mockReset().mockResolvedValue(true);
   installDeps.mockReset();
   installDeps.mockResolvedValue(undefined);
 });
@@ -343,7 +343,7 @@ describe('confirmMigrationCommitsOnDefaultBranch', () => {
     await expect(
       confirmMigrationCommitsOnDefaultBranch('/workspace', 'running migrations')
     ).resolves.toBe(true);
-    expect(mockMigratePrompt).toHaveBeenCalledTimes(1);
+    expect(mockMigrateConfirm).toHaveBeenCalledTimes(1);
   });
 
   it('prompts for an origin-qualified default base even when no remote is configured', async () => {
@@ -353,7 +353,7 @@ describe('confirmMigrationCommitsOnDefaultBranch', () => {
     await expect(
       confirmMigrationCommitsOnDefaultBranch('/workspace', 'running migrations')
     ).resolves.toBe(true);
-    expect(mockMigratePrompt).toHaveBeenCalledTimes(1);
+    expect(mockMigrateConfirm).toHaveBeenCalledTimes(1);
   });
 
   it('keeps a slash in a local branch name that no remote claims', async () => {
@@ -364,13 +364,13 @@ describe('confirmMigrationCommitsOnDefaultBranch', () => {
     await expect(
       confirmMigrationCommitsOnDefaultBranch('/workspace', 'running migrations')
     ).resolves.toBe(true);
-    expect(mockMigratePrompt).not.toHaveBeenCalled();
+    expect(mockMigrateConfirm).not.toHaveBeenCalled();
 
     mockCurrentBranch.mockReturnValue('release/main');
     await expect(
       confirmMigrationCommitsOnDefaultBranch('/workspace', 'running migrations')
     ).resolves.toBe(true);
-    expect(mockMigratePrompt).toHaveBeenCalledTimes(1);
+    expect(mockMigrateConfirm).toHaveBeenCalledTimes(1);
   });
 
   it('prompts when a local branch is named after a remote it does not track', async () => {
@@ -383,7 +383,7 @@ describe('confirmMigrationCommitsOnDefaultBranch', () => {
     await expect(
       confirmMigrationCommitsOnDefaultBranch('/workspace', 'running migrations')
     ).resolves.toBe(true);
-    expect(mockMigratePrompt).toHaveBeenCalledTimes(1);
+    expect(mockMigrateConfirm).toHaveBeenCalledTimes(1);
   });
 
   it('strips the longest remote name when one remote name prefixes another', async () => {
@@ -394,14 +394,14 @@ describe('confirmMigrationCommitsOnDefaultBranch', () => {
     await expect(
       confirmMigrationCommitsOnDefaultBranch('/workspace', 'running migrations')
     ).resolves.toBe(true);
-    expect(mockMigratePrompt).toHaveBeenCalledTimes(1);
+    expect(mockMigrateConfirm).toHaveBeenCalledTimes(1);
   });
 
   it('reports the decision when the user declines', async () => {
     mockRemoteNames.mockReturnValue(['upstream']);
     mockReadNxJson.mockReturnValue({ defaultBase: 'upstream/main' });
     mockCurrentBranch.mockReturnValue('main');
-    mockMigratePrompt.mockResolvedValue({ proceed: false });
+    mockMigrateConfirm.mockResolvedValue(false);
 
     await expect(
       confirmMigrationCommitsOnDefaultBranch(
