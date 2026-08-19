@@ -133,3 +133,7 @@ export function recordOutputsHashBatch(
 export function disableOutputsTracking() {
   disabled = true;
 }
+
+export function _enableOutputsTrackingForTesting() {
+  disabled = false;
+}

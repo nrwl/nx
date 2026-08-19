@@ -770,7 +770,16 @@ export async function startServer(): Promise<Server> {
           // this triggers the storage of the lock file hash
           daemonIsOutdated();
 
-          if (!getOutputWatcherInstance()) {
+          if (isWindows) {
+            // ReadDirectoryChangesW requires a HANDLE and completion semaphore
+            // for every non-recursive directory watch. Output tracking is an
+            // optimization, so prefer conservative cache misses on Windows
+            // instead of a second workspace-wide watcher.
+            disableOutputsTracking();
+            serverLogger.watcherLog(
+              'Output tracking disabled on Windows to bound daemon HANDLE usage'
+            );
+          } else if (!getOutputWatcherInstance()) {
             storeOutputWatcherInstance(
               await watchOutputFiles(server, handleOutputsChanges)
             );

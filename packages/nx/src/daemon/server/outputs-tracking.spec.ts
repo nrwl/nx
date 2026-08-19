@@ -1,7 +1,10 @@
 import { EventType } from '../../native';
 import {
+  _enableOutputsTrackingForTesting,
   _outputsHashesMatch,
   _recordOutputsHash,
+  disableOutputsTracking,
+  outputsHashesMatchBatch,
   processFileChangesInOutputs,
 } from './outputs-tracking';
 
@@ -50,5 +53,20 @@ describe('outputs tracking', () => {
       now
     );
     expect(_outputsHashesMatch(['dist/app/app1'], '123')).toBe(true);
+  });
+
+  it('should return conservative misses when output tracking is disabled', () => {
+    _recordOutputsHash(['dist/app/conservative'], 'hash');
+    disableOutputsTracking();
+
+    try {
+      expect(
+        outputsHashesMatchBatch([
+          { outputs: ['dist/app/conservative'], hash: 'hash' },
+        ])
+      ).toEqual([false]);
+    } finally {
+      _enableOutputsTrackingForTesting();
+    }
   });
 });
