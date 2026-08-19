@@ -1,6 +1,7 @@
 import {
   logShowProjectCommand,
-  promptWhenInteractive,
+  askYesNo,
+  whenInteractive,
   upsertTargetDefault,
 } from '@nx/devkit/internal';
 import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
@@ -85,30 +86,12 @@ export async function applicationGeneratorInternal(
   options.useReactRouter =
     options.routing && options.bundler === 'vite'
       ? (options.useReactRouter ??
-        (await promptWhenInteractive<{
-          response: 'Yes' | 'No';
-        }>(
-          {
-            name: 'response',
+        (await whenInteractive(false, () =>
+          askYesNo({
             message:
               'Would you like to use react-router for server-side rendering?',
-            type: 'autocomplete',
-            choices: [
-              {
-                name: 'Yes',
-                message:
-                  'I want to use react-router   [ https://reactrouter.com/start/framework/routing   ]',
-              },
-              {
-                name: 'No',
-                message:
-                  'I do not want to use react-router for server-side rendering',
-              },
-            ],
-            initial: 0,
-          },
-          { response: 'No' }
-        ).then((r) => r.response === 'Yes')))
+          })
+        )))
       : false;
 
   const initTask = await reactInitGenerator(tree, {

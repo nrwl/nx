@@ -47,7 +47,7 @@ export {
   ensureRootProjectName,
   resolveImportPath,
 } from './src/generators/project-name-and-root-utils';
-export { promptWhenInteractive } from './src/generators/prompt';
+export { whenInteractive } from './src/generators/prompt';
 export {
   addBuildTargetDefaults,
   addE2eCiTargetDefaults,

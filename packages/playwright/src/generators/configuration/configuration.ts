@@ -1,7 +1,8 @@
 import {
   findTargetDefault,
   resolveImportPath,
-  promptWhenInteractive,
+  askText,
+  whenInteractive,
   upsertTargetDefault,
   PackageJson,
 } from '@nx/devkit/internal';
@@ -311,28 +312,23 @@ async function normalizeOptions(
 }
 
 async function promptForMissingServeData(projectName: string) {
-  const { command, port } = await promptWhenInteractive<{
-    command: string;
-    port: number;
-  }>(
-    [
-      {
-        type: 'input',
-        name: 'command',
-        message: 'What command should be run to serve the application locally?',
-        initial: `npx nx serve ${projectName}`,
-      },
-      {
-        type: 'numeral',
-        name: 'port',
+  const command = await whenInteractive(`npx nx serve ${projectName}`, () =>
+    askText({
+      message: 'What command should be run to serve the application locally?',
+      initialValue: `npx nx serve ${projectName}`,
+    })
+  );
+  const port = await whenInteractive(3000, async () =>
+    Number(
+      await askText({
         message: 'What port will the application be served on?',
-        initial: 3000,
-      },
-    ],
-    {
-      command: `npx nx serve ${projectName}`,
-      port: 3000,
-    }
+        initialValue: '3000',
+        validate: (value) =>
+          value !== '' && !Number.isNaN(Number(value))
+            ? undefined
+            : 'Please enter a number',
+      })
+    )
   );
 
   return {

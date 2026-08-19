@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import { promptWhenInteractive } from '@nx/devkit/internal';
+import { askChoice, whenInteractive } from '@nx/devkit/internal';
 import { isUsingTsSolutionSetup } from './typescript/ts-solution-setup';
 import { detectLinters, type LinterType } from './linter';
 
@@ -21,18 +21,12 @@ export async function normalizeLinterOption(
 
   // Nothing to follow, so this is a real choice. `{ linter: 'none' }` is the
   // non-interactive answer; `none` leads so the interactive default matches it.
-  return await promptWhenInteractive<{
-    linter: LinterType;
-  }>(
-    {
-      type: 'autocomplete',
-      name: 'linter',
+  return whenInteractive<LinterType>('none', () =>
+    askChoice<LinterType>({
       message: `Which linter would you like to use?`,
-      choices: [{ name: 'none' }, { name: 'eslint' }, { name: 'oxlint' }],
-      initial: 0,
-    },
-    { linter: 'none' }
-  ).then(({ linter }) => linter);
+      choices: [{ value: 'none' }, { value: 'eslint' }, { value: 'oxlint' }],
+    })
+  );
 }
 
 export async function normalizeUnitTestRunnerOption<
@@ -47,21 +41,15 @@ export async function normalizeUnitTestRunnerOption<
   }
 
   const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
-  const choices = isTsSolutionSetup
-    ? [{ name: 'none' }, ...testRunners.map((runner) => ({ name: runner }))]
-    : [...testRunners.map((runner) => ({ name: runner })), { name: 'none' }];
+  const choices = (
+    isTsSolutionSetup ? ['none', ...testRunners] : [...testRunners, 'none']
+  ).map((value) => ({ value: value as T }));
   const defaultValue = (isTsSolutionSetup ? 'none' : testRunners[0]) as T;
 
-  return await promptWhenInteractive<{
-    unitTestRunner: T;
-  }>(
-    {
-      type: 'autocomplete',
-      name: 'unitTestRunner',
+  return whenInteractive<T>(defaultValue, () =>
+    askChoice<T>({
       message: `Which unit test runner would you like to use?`,
       choices,
-      initial: 0,
-    },
-    { unitTestRunner: defaultValue }
-  ).then(({ unitTestRunner }) => unitTestRunner);
+    })
+  );
 }
