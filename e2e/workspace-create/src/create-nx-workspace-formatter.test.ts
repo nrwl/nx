@@ -143,9 +143,9 @@ describe('create-nx-workspace --formatter', () => {
     checkFilesDoNotExist('.oxfmtrc.json', '.prettierrc');
 
     // Workspaces with no formatter must degrade to a warning rather than
-    // exiting non-zero - that failure is what broke `nx release` for
-    // non-prettier repos (#30403). The warning goes to stderr, so read the
-    // combined output rather than runCLI's stdout-only return value.
+    // exiting non-zero - at base `nx format` exited 1 with "Prettier is not
+    // installed." The warning goes to stderr, so read the combined output
+    // rather than runCLI's stdout-only return value.
     const { combinedOutput } = await runCommandAsync('nx format:check --all');
     expect(combinedOutput).toContain('No formatter configured');
 

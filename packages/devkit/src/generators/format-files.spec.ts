@@ -99,8 +99,8 @@ describe('formatFiles', () => {
   });
 
   describe('ignore files', () => {
-    // The tree from `beforeEach` is oxfmt, which is what a new workspace gets;
-    // the one prettier-specific case builds its own.
+    // The tree from `beforeEach` is oxfmt - createTreeWithEmptyWorkspace's test
+    // default, not create-nx-workspace's; the one prettier case builds its own.
     //
     // Only that prettier case needs NODE_OPTIONS=--experimental-vm-modules:
     // prettier is reached through a dynamic import jest refuses without it,
