@@ -88,7 +88,7 @@ interface ParsedBlock {
   runId: string;
   step: string;
   action: string;
-  payload: { command?: string; then?: string; instructions?: string };
+  payload: { command?: string; next?: string; instructions?: string };
 }
 
 describe('orchestrator', () => {
@@ -328,7 +328,7 @@ describe('orchestrator', () => {
       expect(block.payload.command).toBe(
         `npx nx migrate --run-migration=@nx/js:a --run-id=${runId}`
       );
-      expect(block.payload.then).toBe(`npx nx migrate --run-id=${runId}`);
+      expect(block.payload.next).toBe(`npx nx migrate --run-id=${runId}`);
       expect(mockInit).toHaveBeenCalledWith({
         migrationCount: 2,
         createCommits: false,
@@ -651,7 +651,7 @@ describe('orchestrator', () => {
       expect(block.payload.command).toBe(
         `npx nx migrate --run-migration=@nx/js:a --run-id=${runId}`
       );
-      expect(block.payload.then).toBe(`npx nx migrate --run-id=${runId}`);
+      expect(block.payload.next).toBe(`npx nx migrate --run-id=${runId}`);
     });
 
     it('refuses a migration id that is not shell-safe, naming it', async () => {
@@ -1532,7 +1532,7 @@ describe('orchestrator', () => {
       expect(block.payload.instructions).toContain('working tree');
       expect(block.payload.instructions).toContain('retry-clean');
       expect(block.payload.instructions).toContain('--step-action=retry-clean');
-      expect(block.payload.then).toBeUndefined();
+      expect(block.payload.next).toBeUndefined();
     });
 
     it('classifies a dead worker on a later attempt as died', async () => {
@@ -1591,7 +1591,7 @@ describe('orchestrator', () => {
       );
       expect(block.payload.instructions).not.toContain('retry-clean');
       expect(block.payload.instructions).toContain('--step-action=adopt');
-      expect(block.payload.then).toBeUndefined();
+      expect(block.payload.next).toBeUndefined();
     });
 
     it('offers retry first when the dead worker had already recorded its generator half', async () => {
@@ -1620,7 +1620,7 @@ describe('orchestrator', () => {
       expect(block.action).toBe('died');
       expect(block.payload.instructions).toMatch(/--step-action=retry(?!-)/);
       expect(block.payload.instructions).toContain('Choose exactly one');
-      expect(block.payload.then).toMatch(/--step-action=retry$/);
+      expect(block.payload.next).toMatch(/--step-action=retry$/);
     });
 
     it('does not offer retry when the dead worker never recorded its generator half', async () => {
@@ -1651,7 +1651,7 @@ describe('orchestrator', () => {
         /--step-action=retry(?!-)/
       );
       expect(block.payload.instructions).toContain('--step-action=retry-clean');
-      expect(block.payload.then).toBeUndefined();
+      expect(block.payload.next).toBeUndefined();
     });
 
     it('offers and preselects retry for a died prompt-only step with commits off, never adopt alone', async () => {
@@ -1682,7 +1682,7 @@ describe('orchestrator', () => {
       expect(block.payload.instructions).not.toContain(
         'writes git does not see'
       );
-      expect(block.payload.then).toMatch(/--step-action=retry$/);
+      expect(block.payload.next).toMatch(/--step-action=retry$/);
 
       await runOrchestratorReconcile({
         root,
@@ -1720,7 +1720,7 @@ describe('orchestrator', () => {
       expect(block.payload.instructions).toContain(
         'writes git does not see (ignored paths'
       );
-      expect(block.payload.then).toBeUndefined();
+      expect(block.payload.next).toBeUndefined();
 
       // A hand-crafted plain retry is refused too: the marker is absent and
       // the step has a generator to rerun.
@@ -2048,7 +2048,7 @@ describe('orchestrator', () => {
       );
       expect(block.payload.instructions).not.toContain('retry-clean');
       expect(block.payload.instructions).toContain('--step-action=adopt');
-      expect(block.payload.then).toBeUndefined();
+      expect(block.payload.next).toBeUndefined();
     });
 
     it('reports the working tree as (unknown) when the status probe fails, never as clean', async () => {
@@ -2099,7 +2099,7 @@ describe('orchestrator', () => {
       expect(block.action).toBe('died');
       expect(block.payload.instructions).not.toContain('retry-clean');
       expect(block.payload.instructions).toContain('--step-action=adopt');
-      expect(block.payload.then).toBeUndefined();
+      expect(block.payload.next).toBeUndefined();
     });
 
     it('offers only adopt when the init checkpoint failed to land', async () => {
@@ -2125,7 +2125,7 @@ describe('orchestrator', () => {
       expect(block.action).toBe('died');
       expect(block.payload.instructions).not.toContain('retry-clean');
       expect(block.payload.instructions).toContain('--step-action=adopt');
-      expect(block.payload.then).toBeUndefined();
+      expect(block.payload.next).toBeUndefined();
     });
 
     it('offers only adopt when the dead step has no captured pre-migration ref', async () => {
@@ -2149,7 +2149,7 @@ describe('orchestrator', () => {
       expect(block.action).toBe('died');
       expect(block.payload.instructions).not.toContain('retry-clean');
       expect(block.payload.instructions).toContain('--step-action=adopt');
-      expect(block.payload.then).toBeUndefined();
+      expect(block.payload.next).toBeUndefined();
     });
 
     it('offers only adopt when the died step is already covered by a landed ledger entry, naming the commit', async () => {
@@ -2186,7 +2186,7 @@ describe('orchestrator', () => {
       );
       expect(block.payload.instructions).not.toContain('retry-clean');
       expect(block.payload.instructions).toContain('--step-action=adopt');
-      expect(block.payload.then).toBeUndefined();
+      expect(block.payload.next).toBeUndefined();
     });
 
     it('rejects retry-clean when the died step is already covered by a landed ledger entry, leaving state untouched', async () => {
@@ -2256,7 +2256,7 @@ describe('orchestrator', () => {
         'current HEAD: face0007face0007face0007face0007face0007'
       );
       expect(block.payload.instructions).not.toContain('retry-clean');
-      expect(block.payload.then).toMatch(/--step-action=retry$/);
+      expect(block.payload.next).toMatch(/--step-action=retry$/);
     });
 
     it('rejects a hand-crafted retry-clean when a commit landed that the ledger never recorded, leaving state untouched', async () => {
@@ -2359,7 +2359,7 @@ describe('orchestrator', () => {
       expect(block.action).toBe('died');
       expect(block.payload.instructions).toContain('retry-clean:');
       expect(block.payload.instructions).toContain('--step-action=retry-clean');
-      expect(block.payload.then).toBeUndefined();
+      expect(block.payload.next).toBeUndefined();
       expect(mockIsAncestorCommit).toHaveBeenCalledWith(
         'face0003face0003face0003face0003face0003',
         'beef0001beef0001beef0001beef0001beef0001',
@@ -2941,7 +2941,7 @@ describe('orchestrator', () => {
       // No started-from ref was recorded, so the pre-marker retry cannot be
       // proven safe and no automatic continuation is handed out.
       expect(block.payload.instructions).toContain('refused until');
-      expect(block.payload.then).toBeUndefined();
+      expect(block.payload.next).toBeUndefined();
     });
 
     it('withholds the automatic continuation from a pre-marker failure even when git sees the tree as untouched', async () => {
@@ -2969,7 +2969,7 @@ describe('orchestrator', () => {
       expect(block.payload.instructions).toContain(
         'writes git does not see (ignored paths'
       );
-      expect(block.payload.then).toBeUndefined();
+      expect(block.payload.next).toBeUndefined();
     });
 
     it('omits the automatic continuation outside a git repository, offering retry only behind a warning', async () => {
@@ -2983,7 +2983,7 @@ describe('orchestrator', () => {
 
       const block = lastBlock();
       expect(block.action).toBe('retry-failed');
-      expect(block.payload.then).toBeUndefined();
+      expect(block.payload.next).toBeUndefined();
       expect(block.payload.instructions).toContain(
         'without git nothing can verify'
       );
@@ -3017,7 +3017,7 @@ describe('orchestrator', () => {
 
     it('offers retry-clean without preselecting it when a dirtied pre-marker failure has a restore point', async () => {
       // The generator wrote before throwing, so plain retry is out. The
-      // reset-backed retry is offered but not handed out as `then`: the reset
+      // reset-backed retry is offered but not handed out as `next`: the reset
       // cannot be verified against writes git does not see either.
       mockGetLatestCommitSha.mockReturnValue(
         'beef0001beef0001beef0001beef0001beef0001'
@@ -3045,7 +3045,7 @@ describe('orchestrator', () => {
       expect(block.payload.instructions).toContain(
         'writes git does not see (ignored paths'
       );
-      expect(block.payload.then).toBeUndefined();
+      expect(block.payload.next).toBeUndefined();
     });
 
     it('preselects plain retry once the generator half is recorded, still offering retry-clean', async () => {
@@ -3068,7 +3068,7 @@ describe('orchestrator', () => {
 
       const block = lastBlock();
       expect(block.payload.instructions).toContain('retry-clean:');
-      expect(block.payload.then).toMatch(/--step-action=retry$/);
+      expect(block.payload.next).toMatch(/--step-action=retry$/);
     });
 
     it('keeps a migration-authored summary on one line so it cannot open a block', async () => {

@@ -49,7 +49,7 @@ interface DispenseBlock {
   runId: string;
   step: string;
   action: string;
-  payload: { command?: string; then?: string; instructions?: string };
+  payload: { command?: string; next?: string; instructions?: string };
 }
 
 interface RunStateFile {
@@ -103,7 +103,7 @@ function runDispensed(command: string): string {
 }
 
 // The reconcile command a died or failed step's options name. A step whose
-// generator may still run gets no `then`, so the fake agent chooses one.
+// generator may still run gets no `next`, so the fake agent chooses one.
 function stepActionCommand(runId: string, action: string): string {
   return `${
     PM_EXEC_PREFIX[getSelectedPackageManager()]
@@ -149,7 +149,7 @@ function driveToComplete(output: string, maxDispenses = 25): DispenseBlock {
         )}`
       );
     }
-    block = parseLastDispense(runDispensed(block.payload.then));
+    block = parseLastDispense(runDispensed(block.payload.next));
   }
   return block;
 }
@@ -301,7 +301,7 @@ async function killWorkerAndReconcile(initOutput: string): Promise<{
   const state = readRunStateFile(dispense.runId);
   const step = state.steps.find((s) => s.migrationId === `${PKG}:slow-mig`);
 
-  const diedBlock = parseLastDispense(runDispensed(dispense.payload.then));
+  const diedBlock = parseLastDispense(runDispensed(dispense.payload.next));
   return { runId: dispense.runId, diedBlock, gitRefBefore: step.gitRefBefore };
 }
 
@@ -326,7 +326,7 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(firstDispense.payload.command).toBe(
       `${execPrefix} nx migrate --run-migration=${PKG}:gen-mig --run-id=${firstDispense.runId}`
     );
-    expect(firstDispense.payload.then).toBe(
+    expect(firstDispense.payload.next).toBe(
       `${execPrefix} nx migrate --run-id=${firstDispense.runId}`
     );
 
@@ -374,7 +374,7 @@ describe('migrate orchestrator (dark launch)', () => {
     // out: the agent has to choose between the offered options.
     const retryClean = stepActionCommand(runId, 'retry-clean');
     expect(diedBlock.payload.instructions).toContain(retryClean);
-    expect(diedBlock.payload.then).toBeUndefined();
+    expect(diedBlock.payload.next).toBeUndefined();
 
     runCommand(`git reset --hard ${gitRefBefore}`, { failOnError: true });
     runCommand('git clean -fd -e .nx/migrate-runs', { failOnError: true });
@@ -424,7 +424,7 @@ describe('migrate orchestrator (dark launch)', () => {
     const first = parseLastDispense(runInit());
     expect(first.action).toBe('next-step');
     runDispensed(first.payload.command);
-    const second = parseLastDispense(runDispensed(first.payload.then));
+    const second = parseLastDispense(runDispensed(first.payload.next));
     expect(second.action).toBe('next-step');
     expect(second.payload.command).toContain(`--run-migration=${PKG}:gen-two`);
 

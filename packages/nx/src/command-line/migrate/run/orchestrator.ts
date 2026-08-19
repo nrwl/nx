@@ -1044,9 +1044,9 @@ function emitNextStep(root: string, runId: string, step: MigrateStep): void {
   const migrationId = step.migrationId;
   emit(runId, step, 'next-step', {
     command: workerCommand(root, migrationId, runId),
-    then: reconcileCommand(root, runId),
+    next: reconcileCommand(root, runId),
     instructionLines: [
-      `Apply migration ${migrationId} by running the command below, then run the "then" command to record the outcome and get the next step.`,
+      `Apply migration ${migrationId} by running the command below, then run the "next" command to record the outcome and get the next step.`,
     ],
   });
 }
@@ -1096,19 +1096,19 @@ function emitRetryFailed(
   if (pending) {
     lines.push(UNVERIFIABLE_WRITES_LINE);
   }
-  // A step whose generator may still run gets no `then`, whichever retry the
+  // A step whose generator may still run gets no `next`, whichever retry the
   // checks above would accept: git can vouch for the tracked tree only, and
-  // an agent that follows `then` blindly must not rerun a generator over
+  // an agent that follows `next` blindly must not rerun a generator over
   // writes nothing here could see. Choosing a retry has to be explicit.
   emit(runId, step, 'retry-failed', {
-    ...(pending ? {} : { then: reconcileCommand(root, runId, 'retry') }),
+    ...(pending ? {} : { next: reconcileCommand(root, runId, 'retry') }),
     instructionLines: lines,
   });
 }
 
 // Whether the step's generator half may still have to run: it exists and no
 // attempt has recorded running it. Only then can a retry apply a generator
-// twice, so only then is a continuation withheld from `then`. A step with no
+// twice, so only then is a continuation withheld from `next`. A step with no
 // generator (prompt-only) is retried by re-prompting the agent over the tree
 // it already knows, which is the designed recovery; a step recorded before the
 // kind was persisted counts as having one.
@@ -1337,12 +1337,12 @@ function emitDied(
   }
   // `retry` is preselected wherever it is legal: it is the only resolution
   // that neither discards work nor records a result the run never produced.
-  // While the generator may still run there is no `then` at all: a reset
+  // While the generator may still run there is no `next` at all: a reset
   // cannot be verified against writes git does not see, and adopting records
-  // a result nothing checked, so an agent that follows `then` blindly must
+  // a result nothing checked, so an agent that follows `next` blindly must
   // land on neither.
   emit(runId, step, 'died', {
-    ...(resume ? { then: reconcileCommand(root, runId, 'retry') } : {}),
+    ...(resume ? { next: reconcileCommand(root, runId, 'retry') } : {}),
     instructionLines: lines,
   });
 }
@@ -1355,7 +1355,7 @@ function emitStillRunning(
   const migrationId = step.migrationId;
   const ageMs = step.startedAt ? Date.now() - Date.parse(step.startedAt) : 0;
   const lines = [
-    `The worker for ${migrationId} (pid ${step.pid}) is still running. Wait for it to finish, then run the "then" command.`,
+    `The worker for ${migrationId} (pid ${step.pid}) is still running. Wait for it to finish, then run the "next" command.`,
   ];
   if (ageMs >= HANG_THRESHOLD_MS) {
     lines.push(
@@ -1365,7 +1365,7 @@ function emitStillRunning(
     );
   }
   emit(runId, step, 'still-running', {
-    then: reconcileCommand(root, runId),
+    next: reconcileCommand(root, runId),
     instructionLines: lines,
   });
 }
@@ -1385,7 +1385,7 @@ function emitAwaitPrompt(
   mkdirSync(dirname(filePath), { recursive: true });
   const lines = [
     `Migration ${migrationId} is a prompt-based migration awaiting your outcome.`,
-    `Apply the prompt (see the worker's earlier <nx_migrate_prompt> block), then write the handoff file and run the "then" command.`,
+    `Apply the prompt (see the worker's earlier <nx_migrate_prompt> block), then write the handoff file and run the "next" command.`,
     `Handoff file: ${filePath}`,
     `Handoff JSON: { "status": "success" | "failed", "summary": "<what you did>" }. To mark the prompt not applicable, use "status": "success" with "outcome": "skipped".`,
   ];
@@ -1397,7 +1397,7 @@ function emitAwaitPrompt(
     lines.push('', ...rejection);
   }
   emit(runId, step, 'await-prompt', {
-    then: reconcileCommand(root, runId),
+    next: reconcileCommand(root, runId),
     instructionLines: lines,
   });
 }
@@ -1413,7 +1413,7 @@ function describeRejectedHandoff(handoffPath: string): string[] {
     detail?: string;
   };
   if (reason === 'missing') return [];
-  const followUp = 'Rewrite the handoff file, then run the "then" command.';
+  const followUp = 'Rewrite the handoff file, then run the "next" command.';
   switch (reason) {
     case 'read-error':
       return [
@@ -1451,7 +1451,7 @@ function emitError(root: string, runId: string, reason: string): void {
     bodyLines: [reason],
   });
   emitStepBlock(runId, '-', 'error', {
-    then: reconcileCommand(root, runId),
+    next: reconcileCommand(root, runId),
     instructions: reason,
   });
   reportMigrateOrchestratorDispense({ action: 'error', attempt: 0 });
@@ -1536,7 +1536,7 @@ function completeRun(
 
 interface DispensePayload {
   command?: string;
-  then?: string;
+  next?: string;
   // Unjoined on purpose: joining and splitting back would turn a break inside
   // a value into its own line before anything could tell it from an authored
   // one. Joined only when the payload is serialized,
