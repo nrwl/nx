@@ -47,6 +47,11 @@ export async function askChoice<T extends string>(options: {
       ...(c.hint ? { hint: c.hint } : {}),
     })) as Parameters<typeof autocomplete<T>>[0]['options'],
     initialValue: options.initial ?? options.choices[0].value,
+    // A no-match filter leaves clack with an empty selection, and Enter then
+    // submits `undefined` rather than blocking. `isCancel` does not catch
+    // that, so downstream comparisons would silently take a wrong branch.
+    validate: (value) =>
+      value === undefined ? 'Pick one of the listed options' : undefined,
   });
   if (isCancel(answer)) {
     return (options.onCancel ?? defaultOnCancel)();

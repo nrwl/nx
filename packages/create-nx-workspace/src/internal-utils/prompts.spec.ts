@@ -1,6 +1,7 @@
 import {
   confirmThirdPartyPreset,
   determineLinterOptions,
+  determineNxCloudV2,
   determineTemplate,
 } from './prompts';
 import * as clack from '@clack/prompts';
@@ -186,5 +187,61 @@ describe('determineLinterOptions', () => {
         ]),
       })
     );
+  });
+});
+
+describe('determineNxCloudV2', () => {
+  const { isCI } = require('../utils/ci/is-ci');
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (isCI as jest.Mock).mockReturnValue(false);
+  });
+
+  // The message choices are `{ value, name }` with `name` as the display text.
+  // Mapping `name` into clack's `value` made every answer resolve to 'yes',
+  // because the caller compares against 'skip' / 'never'.
+  it('offers the choice keys as values, not their labels', async () => {
+    (clack.autocomplete as jest.Mock).mockResolvedValueOnce('skip');
+
+    await determineNxCloudV2({ _: [], $0: '', interactive: true });
+
+    const { options } = (clack.autocomplete as jest.Mock).mock.calls[0][0];
+    expect(options.map((o: { value: string }) => o.value)).toEqual(
+      expect.arrayContaining(['yes', 'skip', 'never'])
+    );
+    expect(options.every((o: { value: string }) => o.value !== o.label)).toBe(
+      true
+    );
+  });
+
+  // Picks by LABEL and returns whatever value the code actually offered for it,
+  // so the option mapping is exercised rather than mocked past. Returning a
+  // fixed value here is what let the label/value inversion ship.
+  it.each([
+    ['Yes', 'yes'],
+    ['Skip for now', 'skip'],
+    ["No, don't ask again", 'never'],
+  ])('resolves the %s option to %s', async (label, expected) => {
+    (clack.autocomplete as jest.Mock).mockImplementationOnce(
+      async ({ options }: { options: { value: string; label: string }[] }) =>
+        options.find((o) => o.label.includes(label.slice(0, 8)))?.value
+    );
+
+    await expect(
+      determineNxCloudV2({ _: [], $0: '', interactive: true })
+    ).resolves.toBe(expected);
+  });
+
+  // Typing text that matches nothing leaves clack with an empty selection and
+  // Enter submits `undefined`, which isCancel() does not catch.
+  it('blocks a submit that matched no option', async () => {
+    (clack.autocomplete as jest.Mock).mockResolvedValueOnce('yes');
+
+    await determineNxCloudV2({ _: [], $0: '', interactive: true });
+
+    const { validate } = (clack.autocomplete as jest.Mock).mock.calls[0][0];
+    expect(validate(undefined)).toEqual(expect.any(String));
+    expect(validate('skip')).toBeUndefined();
   });
 });

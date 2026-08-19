@@ -319,11 +319,16 @@ async function nxCloudPrompt(
 
   return (await askChoice({
     message: [message, ...suffix].join('\n'),
+    // These choices are `{ value, name }` where `name` is the display text,
+    // the inverse of enquirer's usual `{ name, message }`. Prefer `value` so
+    // the answer is the key the caller compares against, not the label.
     choices: (choices as any[]).map((c) =>
       typeof c === 'string'
         ? { value: c, label: c }
-        : { value: c.name ?? c.value, label: c.message ?? c.name ?? c.value }
+        : { value: c.value ?? c.name, label: c.message ?? c.name ?? c.value }
     ),
-    initial: (choices as any[])[initial ?? 0]?.name,
+    initial:
+      (choices as any[])[initial ?? 0]?.value ??
+      (choices as any[])[initial ?? 0]?.name,
   })) as MessageOptionKey;
 }

@@ -81,6 +81,8 @@ export async function determineIfGitHubWillBeUsed(
     const { autocomplete, isCancel } = await prompts();
     const reply = assertNotCancelled(
       await autocomplete({
+        validate: (value) =>
+          value === undefined ? 'Pick one of the listed options' : undefined,
         message: 'Will you be using GitHub as your git hosting provider?',
         options: [
           { value: 'Yes', label: 'Yes' },
@@ -104,13 +106,20 @@ async function nxCloudPrompt(key: MessageKey): Promise<NxCloud> {
   const suffix = [hint, footer].filter(Boolean).map((t) => chalk.dim(t));
   const answer = assertNotCancelled(
     await autocomplete({
+      validate: (value) =>
+        value === undefined ? 'Pick one of the listed options' : undefined,
       message: [message, ...suffix].join('\n'),
+      // These choices are `{ value, name }` with `name` as the display text —
+      // the inverse of enquirer's usual `{ name, message }`. Take `value` so
+      // the answer is the key the caller compares against, not the label.
       options: (choices as any[]).map((c) =>
         typeof c === 'string'
           ? { value: c, label: c }
-          : { value: c.name ?? c.value, label: c.message ?? c.name ?? c.value }
+          : { value: c.value ?? c.name, label: c.message ?? c.name ?? c.value }
       ),
-      initialValue: (choices as any[])[initial ?? 0]?.name,
+      initialValue:
+        (choices as any[])[initial ?? 0]?.value ??
+        (choices as any[])[initial ?? 0]?.name,
     }),
     isCancel
   ) as NxCloud;
@@ -136,6 +145,8 @@ export async function determineTemplate(
   const { autocomplete, isCancel } = await prompts();
   return assertNotCancelled(
     await autocomplete({
+      validate: (value) =>
+        value === undefined ? 'Pick one of the listed options' : undefined,
       message: 'Which starter do you want to use?',
       options: [
         {
@@ -219,6 +230,8 @@ export async function determineAnalytics(
   const { autocomplete, isCancel } = await prompts();
   const enableAnalytics = assertNotCancelled(
     await autocomplete({
+      validate: (value) =>
+        value === undefined ? 'Pick one of the listed options' : undefined,
       message: 'Help improve Nx by sharing your usage data?',
       options: [
         { value: 'Yes', label: 'Yes' },
@@ -291,6 +304,8 @@ export async function confirmThirdPartyPreset(
   const { autocomplete, isCancel } = await prompts();
   const confirm = assertNotCancelled(
     await autocomplete({
+      validate: (value) =>
+        value === undefined ? 'Pick one of the listed options' : undefined,
       message: `Install third-party preset '${packageName}'?`,
       options: [
         { value: 'No', label: 'No' },
