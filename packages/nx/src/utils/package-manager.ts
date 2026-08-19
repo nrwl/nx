@@ -765,8 +765,8 @@ function createRegistrySpawnContext(pkg: string): {
 /**
  * The registry the fetch for `pkg` went to, with its userinfo masked because a
  * registry URL can carry a bare token. The lookup is spawned the way
- * `packageRegistryView` spawns the fetch this describes — same manager, same
- * environment — so a registry the package manager keeps outside the .npmrc
+ * `packageRegistryView` spawns the fetch this describes (same manager, same
+ * environment), so a registry the package manager keeps outside the .npmrc
  * chain and a scope resolved for itself both land on the value that fetch used.
  * Null where the manager yields no usable registry URL; throws where it cannot be run.
  */

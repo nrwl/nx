@@ -253,7 +253,7 @@ suite('migrate registry configuration', () => {
 
   // migrate re-invokes itself through the workspace package manager, and yarn
   // classic hands that child its whole configuration as npm_config_*, registry
-  // included. So this passes on the code that predates the bridging too, and
+  // included. So this would pass without the bridging too, and
   // what it pins is that the bridge agrees with the value yarn resolves: the
   // overlay is applied last, so a registry it got wrong would override yarn's.
   describe('yarn classic', () => {

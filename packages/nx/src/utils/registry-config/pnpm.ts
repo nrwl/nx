@@ -607,7 +607,8 @@ function resolveProxies(
  * spelling and only falls back to `noproxy`, so the spelling decides before the
  * layer does: a workspace .npmrc `no-proxy` beats a pnpm-workspace.yaml
  * `noproxy`. Within one spelling the env sits above the yaml files, the
- * workspace one above the global one, and those above the npmrc-family files.
+ * workspace one above the global one, and those above the npmrc-family files,
+ * which only the `no-proxy` spelling reaches.
  * See createPackageManagerNetworkConfig in pnpm's config reader.
  */
 function resolveNoProxy(
@@ -1807,9 +1808,10 @@ function hasCredentials(
 const PNPM_HOME_PATH = /^~[/\\]/;
 const NPM_HOME_PATH = process.platform === 'win32' ? /^~[/\\]/ : /^~\//;
 
-/** Both tools normalize a config path this way: `~` for the home directory,
- *  else the cwd the command runs in. That cwd is the config root the spawn
- *  uses, not this process's, which a migrate from a subdirectory differs from. */
+/** Both tools normalize a config path this way: a leading `~/` (or `~\`) for
+ *  the home directory, else the cwd the command runs in. That cwd is the config
+ *  root the spawn uses, not this process's, which a migrate from a subdirectory
+ *  differs from. */
 function resolveConfigPath(
   value: string,
   homePattern: RegExp,

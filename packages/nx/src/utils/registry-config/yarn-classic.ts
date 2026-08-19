@@ -1022,7 +1022,7 @@ function readYarnrcMap(
   // front and no retry behind, which is why only a mapping declares anything.
   if (path.endsWith('.yml')) {
     const map = parseYarnrcAsYaml(path);
-    // yarn keeps `yarn-path` alone from a .yml that names one, dropping the CLI
+    // yarn keeps `yarnPath` alone from a .yml that names one, dropping the CLI
     // args read here.
     // See https://github.com/yarnpkg/yarn/blob/740c38c3a962c30ddb344a919bbfb7065620714b/src/rc.js#L55-L70
     return typeof map.get('yarnPath') === 'string' ? new Map() : map;
