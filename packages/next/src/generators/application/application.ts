@@ -19,6 +19,7 @@ import { normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
 import { addE2e } from './lib/add-e2e';
 import { addJest } from './lib/add-jest';
+import { addVitest } from './lib/add-vitest';
 import { addProject } from './lib/add-project';
 import { createApplicationFiles } from './lib/create-application-files';
 import { setDefaults } from './lib/set-defaults';
@@ -92,6 +93,9 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
   const jestTask = await addJest(host, options);
   tasks.push(jestTask);
+
+  const vitestTask = await addVitest(host, options);
+  tasks.push(vitestTask);
 
   const styledTask = addStyleDependencies(host, {
     style: options.style,

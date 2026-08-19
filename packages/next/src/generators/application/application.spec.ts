@@ -1102,6 +1102,71 @@ describe('app', () => {
     });
   });
 
+  describe('--unit-test-runner vitest', () => {
+    it('should generate a vitest config and no jest config', async () => {
+      const name = 'myapp';
+      await applicationGenerator(tree, {
+        directory: name,
+        style: 'css',
+        unitTestRunner: 'vitest',
+        skipFormat: true,
+      });
+
+      expect(tree.exists(`${name}/jest.config.cts`)).toBeFalsy();
+      expect(tree.exists(`${name}/specs/index.spec.tsx`)).toBeTruthy();
+      expect(tree.read(`${name}/vitest.config.mts`, 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "/// <reference types='vitest' />
+        import { defineConfig } from 'vite';
+        import react from '@vitejs/plugin-react';
+        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+        export default defineConfig(() => ({
+          root: import.meta.dirname,
+          cacheDir: '../node_modules/.vite/myapp',
+          plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+          // Uncomment this if you are using workers.
+          // worker: {
+          //   plugins: () => [ nxViteTsPaths() ],
+          // },
+          test: {
+            name: 'myapp',
+            watch: false,
+            globals: true,
+            environment: 'jsdom',
+            include: ['specs/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            reporters: ['default'],
+            coverage: {
+              reportsDirectory: '../coverage/myapp',
+              provider: 'v8' as const,
+            }
+          },
+        }));
+        "
+      `);
+    });
+
+    it('should add test types to tsconfig.json so specs outside src type-check', async () => {
+      const name = 'myapp';
+      await applicationGenerator(tree, {
+        directory: name,
+        style: 'css',
+        unitTestRunner: 'vitest',
+        skipFormat: true,
+      });
+
+      const tsconfig = readJson(tree, `${name}/tsconfig.json`);
+      expect(tsconfig.compilerOptions.types).toEqual(
+        expect.arrayContaining(['vitest/globals', 'node'])
+      );
+      const tsconfigSpec = readJson(tree, `${name}/tsconfig.spec.json`);
+      expect(tsconfigSpec.compilerOptions.types).toEqual(
+        expect.arrayContaining(['vitest/globals', 'vite/client', 'node'])
+      );
+    });
+  });
+
   describe('--unit-test-runner jest', () => {
     it('should use next/jest.js for Jest configuration', async () => {
       const name = 'myapp';

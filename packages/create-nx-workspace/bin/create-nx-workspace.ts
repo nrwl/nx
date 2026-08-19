@@ -155,7 +155,7 @@ interface NodeArguments extends BaseArguments {
   appName: string;
   framework: 'none' | 'express' | 'fastify' | 'koa' | 'nest';
   docker: boolean;
-  unitTestRunner: 'none' | 'jest';
+  unitTestRunner: 'none' | 'jest' | 'vitest';
 }
 
 interface WebArguments extends BaseArguments {
@@ -1369,12 +1369,10 @@ async function determineReactOptions(
       preferVitest: bundler === 'vite',
     });
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
-  } else if (
-    preset === Preset.NextJs ||
-    preset === Preset.NextJsStandalone ||
-    preset === Preset.ReactNative ||
-    preset === Preset.Expo
-  ) {
+  } else if (preset === Preset.NextJs || preset === Preset.NextJsStandalone) {
+    unitTestRunner = await determineUnitTestRunner(parsedArgs);
+    e2eTestRunner = await determineE2eTestRunner(parsedArgs);
+  } else if (preset === Preset.ReactNative || preset === Preset.Expo) {
     unitTestRunner = await determineUnitTestRunner(parsedArgs, {
       exclude: 'vitest',
     });
@@ -1724,7 +1722,7 @@ async function determineNodeOptions(
   let docker: boolean;
   let linter: undefined | Linter;
   let formatter: undefined | 'none' | 'prettier';
-  let unitTestRunner: undefined | 'none' | 'jest' = undefined;
+  let unitTestRunner: undefined | 'none' | 'jest' | 'vitest' = undefined;
   const workspaces = parsedArgs.workspaces;
 
   if (parsedArgs.preset) {
@@ -1788,9 +1786,7 @@ async function determineNodeOptions(
   // Asked outside the gate: the linter is independent of package-manager
   // workspaces, and `--no-workspaces` used to force ESLint without asking.
   linter = await determineLinterOptions(parsedArgs);
-  unitTestRunner = await determineUnitTestRunner(parsedArgs, {
-    exclude: 'vitest',
-  });
+  unitTestRunner = await determineUnitTestRunner(parsedArgs);
   if (workspaces) {
     formatter = await determineFormatterOptions(parsedArgs, {
       preferPrettier: true,
