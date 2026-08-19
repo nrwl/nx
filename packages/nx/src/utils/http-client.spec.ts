@@ -4,9 +4,19 @@ import { createHttpClient, HttpError, httpRequest } from './http-client';
 
 describe('httpRequest', () => {
   let server: Server;
+  let otherOriginServer: Server;
   let baseUrl: string;
+  let otherOriginUrl: string;
 
   beforeAll(async () => {
+    otherOriginServer = createServer((req, res) => {
+      res.setHeader('content-type', 'application/json');
+      res.end(JSON.stringify({ headers: req.headers }));
+    });
+    await new Promise<void>((resolve) => otherOriginServer.listen(0, resolve));
+    otherOriginUrl = `http://localhost:${
+      (otherOriginServer.address() as AddressInfo).port
+    }`;
     server = createServer((req, res) => {
       let body = '';
       req.on('data', (chunk) => (body += chunk));
@@ -29,10 +39,19 @@ describe('httpRequest', () => {
           res.end(JSON.stringify({ message: 'nope' }));
         } else if (req.url.startsWith('/slow')) {
           setTimeout(() => res.end('{}'), 5_000).unref();
+        } else if (req.url.startsWith('/redirect-no-location')) {
+          res.statusCode = 302;
+          res.end();
+        } else if (req.url.startsWith('/redirect-cross-origin')) {
+          res.statusCode = 302;
+          res.setHeader('location', `${otherOriginUrl}/echo`);
+          res.end();
         } else if (req.url.startsWith('/redirect')) {
           res.statusCode = 302;
           res.setHeader('location', '/echo');
           res.end();
+        } else if (req.url.startsWith('/stall')) {
+          res.write('first chunk then silence');
         } else {
           res.statusCode = 500;
           res.end('unexpected');
@@ -44,7 +63,10 @@ describe('httpRequest', () => {
   });
 
   afterAll(async () => {
+    server.closeAllConnections();
+    otherOriginServer.closeAllConnections();
     await new Promise((resolve) => server.close(resolve));
+    await new Promise((resolve) => otherOriginServer.close(resolve));
   });
 
   it('should send JSON bodies, custom headers and query params', async () => {
@@ -128,6 +150,52 @@ describe('httpRequest', () => {
       expect(error.response.data).toEqual({ message: 'nope' });
       agent.destroy();
     });
+
+    it('should keep credentials on same-origin redirects but strip them cross-origin', async () => {
+      const agent = new Agent();
+      const sameOrigin = await httpRequest(`${baseUrl}/redirect`, {
+        httpAgent: agent,
+        headers: { authorization: 'secret', 'x-safe': 'kept' },
+      });
+      expect(sameOrigin.data.headers['authorization']).toBe('secret');
+
+      const crossOrigin = await httpRequest(
+        `${baseUrl}/redirect-cross-origin`,
+        {
+          httpAgent: agent,
+          headers: { authorization: 'secret', 'x-safe': 'kept' },
+        }
+      );
+      expect(crossOrigin.data.headers['authorization']).toBeUndefined();
+      expect(crossOrigin.data.headers['x-safe']).toBe('kept');
+      agent.destroy();
+    });
+
+    it('should reject a redirect status without a location header', async () => {
+      const agent = new Agent();
+      const error: HttpError = await httpRequest(
+        `${baseUrl}/redirect-no-location`,
+        { httpAgent: agent }
+      ).catch((e) => e);
+      expect(error).toBeInstanceOf(HttpError);
+      expect(error.status).toBe(302);
+      agent.destroy();
+    });
+  });
+
+  it('should abort a stalled stream body after the inactivity timeout', async () => {
+    const response = await httpRequest(`${baseUrl}/stall`, {
+      responseType: 'stream',
+      timeout: 200,
+    });
+
+    await expect(
+      (async () => {
+        for await (const _ of response.data) {
+          // consume until the stall guard destroys the stream
+        }
+      })()
+    ).rejects.toThrow('Response stalled for 200ms');
   });
 
   describe('createHttpClient', () => {

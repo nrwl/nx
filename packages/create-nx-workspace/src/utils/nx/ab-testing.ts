@@ -353,7 +353,7 @@ export async function recordStat(opts: {
       return;
     }
 
-    await fetch(`${getCloudUrl()}/nx-cloud/stats`, {
+    const response = await fetch(`${getCloudUrl()}/nx-cloud/stats`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
@@ -364,6 +364,9 @@ export async function recordStat(opts: {
       }),
       signal: AbortSignal.timeout(400),
     });
+    if (!response.ok) {
+      throw new Error(`Failed to record stat: HTTP ${response.status}`);
+    }
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       console.error(e);

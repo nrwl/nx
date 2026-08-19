@@ -1,6 +1,7 @@
-import { Readable } from 'stream';
+import { PassThrough, Readable } from 'stream';
 import type { Agent as HttpAgent } from 'http';
 import type { Agent as HttpsAgent } from 'https';
+import { logger } from './logger';
 
 export interface HttpRequestConfig {
   method?: string;
@@ -116,6 +117,12 @@ export async function httpRequest<T = any>(
     : null;
 
   if (config.httpAgent || config.httpsAgent) {
+    // The agent owns the connection, so an explicit proxy cannot also apply
+    if (config.proxy) {
+      logger.warn(
+        'Both an http(s) agent and a proxy were configured; the agent is used and the proxy option is ignored.'
+      );
+    }
     return nodeTransportRequest(
       fullUrl,
       config,
@@ -146,20 +153,27 @@ export async function httpRequest<T = any>(
   const responseHeaders = Object.fromEntries(res.headers.entries());
 
   if (config.responseType === 'stream') {
-    // The timeout covers connection + headers only; aborting mid-body would
-    // kill slow downloads.
-    if (timer) clearTimeout(timer);
     if (!res.ok) {
-      throw new HttpError({
-        status: res.status,
-        headers: responseHeaders,
-        data: await parseResponseData(res),
-      });
+      try {
+        throw new HttpError({
+          status: res.status,
+          headers: responseHeaders,
+          data: await parseResponseData(res),
+        });
+      } finally {
+        if (timer) clearTimeout(timer);
+      }
     }
+    // The headers timeout ends here; the body gets a per-chunk inactivity
+    // guard instead, so slow-but-progressing downloads survive
+    if (timer) clearTimeout(timer);
     return {
       status: res.status,
       headers: responseHeaders,
-      data: Readable.fromWeb(res.body as any) as any,
+      data: guardStreamStall(
+        Readable.fromWeb(res.body as any),
+        config.timeout
+      ) as any,
     };
   }
 
@@ -252,7 +266,41 @@ function resolveFetch(config: HttpRequestConfig): {
   return { fetchImpl: fetch };
 }
 
-const MAX_REDIRECTS = 5;
+// Same limit axios (follow-redirects) used
+const MAX_REDIRECTS = 21;
+
+const SENSITIVE_HEADERS = ['authorization', 'cookie', 'proxy-authorization'];
+
+/**
+ * Destroys the stream if no data arrives for `timeout` ms. Resets per chunk,
+ * so slow-but-progressing downloads survive while stalls still abort.
+ */
+function guardStreamStall(source: Readable, timeout?: number): Readable {
+  if (!timeout) return source;
+  const out = new PassThrough();
+  let timer: NodeJS.Timeout;
+  const arm = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const error = new DOMException(
+        `Response stalled for ${timeout}ms`,
+        'TimeoutError'
+      );
+      source.destroy(error as any);
+      out.destroy(error as any);
+    }, timeout);
+  };
+  arm();
+  source.on('data', arm);
+  source.on('end', () => clearTimeout(timer));
+  source.on('close', () => clearTimeout(timer));
+  source.on('error', (e) => {
+    clearTimeout(timer);
+    out.destroy(e);
+  });
+  source.pipe(out);
+  return out;
+}
 
 /**
  * node:http(s) transport for requests carrying axios-style agent options
@@ -284,10 +332,13 @@ function nodeTransportRequest<T>(
         if (
           res.statusCode >= 300 &&
           res.statusCode < 400 &&
-          res.headers.location &&
-          redirectCount < MAX_REDIRECTS
+          res.headers.location
         ) {
           res.resume();
+          if (redirectCount >= MAX_REDIRECTS) {
+            reject(new Error('Maximum number of redirects exceeded'));
+            return;
+          }
           const location = new URL(res.headers.location, fullUrl).href;
           // 301/302/303 demote to GET, matching fetch/follow-redirects
           const nextConfig =
@@ -296,11 +347,21 @@ function nodeTransportRequest<T>(
               : { ...config, method: 'GET' };
           const nextBody =
             res.statusCode === 307 || res.statusCode === 308 ? body : undefined;
+          // Don't leak credentials across origins (matches fetch/axios)
+          let nextHeaders = headers;
+          if (new URL(location).origin !== new URL(fullUrl).origin) {
+            nextHeaders = { ...headers };
+            for (const header of Object.keys(nextHeaders)) {
+              if (SENSITIVE_HEADERS.includes(header.toLowerCase())) {
+                delete nextHeaders[header];
+              }
+            }
+          }
           resolve(
             nodeTransportRequest(
               location,
               nextConfig,
-              headers,
+              nextHeaders,
               nextBody,
               controller,
               timer,
@@ -317,12 +378,16 @@ function nodeTransportRequest<T>(
             : (value ?? '');
         }
 
-        if (config.responseType === 'stream' && res.statusCode < 400) {
+        if (
+          config.responseType === 'stream' &&
+          res.statusCode >= 200 &&
+          res.statusCode < 300
+        ) {
           if (timer) clearTimeout(timer);
           resolve({
             status: res.statusCode,
             headers: responseHeaders,
-            data: res as any,
+            data: guardStreamStall(res, config.timeout) as any,
           });
           return;
         }
@@ -339,7 +404,9 @@ function nodeTransportRequest<T>(
           } catch {
             data = text;
           }
-          if (res.statusCode >= 400) {
+          // 2xx only, like axios's default validateStatus (an unfollowed
+          // 3xx is an error)
+          if (res.statusCode < 200 || res.statusCode >= 300) {
             reject(
               new HttpError({
                 status: res.statusCode,
