@@ -33,8 +33,9 @@ export async function initGenerator(
 ): Promise<GeneratorCallback> {
   schema.addTsPlugin ??= false;
   // Detection is the only thing here that needs the nx-side helpers, so the
-  // assert belongs with it: an explicit formatter must still work on an older
-  // peer-compatible nx, and `'none'` reaches no formatter code at all.
+  // assert belongs with it: `'none'` must still work on an older peer-compatible
+  // nx, and it reaches no formatter code at all. An explicit `'prettier'` or
+  // `'oxfmt'` does not - both setups assert for themselves.
   if (schema.formatter == null) {
     assertNxSupportsFormatters();
     // Defer to `detectFormatterInTree` rather than re-deriving: it encodes the
