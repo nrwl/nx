@@ -34,7 +34,10 @@ function assertNotCancelled<T>(
   value: T | symbol,
   isCancel: (v: unknown) => boolean
 ): T {
-  if (isCancel(value)) {
+  // clack's cancel sentinel is a module-local symbol, so `isCancel` only
+  // recognises a cancel from the same copy of `@clack/core`. A prompt
+  // resolves to its value or that sentinel, so any symbol is a cancel.
+  if (isCancel(value) || typeof value === 'symbol') {
     throw new CnwError('CANCELLED', 'Cancelled.');
   }
   return value as T;

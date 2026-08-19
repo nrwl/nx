@@ -9,6 +9,21 @@ async function prompts() {
   return await import('@clack/prompts');
 }
 
+/**
+ * clack's cancel sentinel is a module-local `Symbol('clack:cancel')`, so
+ * `isCancel` only recognises a cancel from the same copy of `@clack/core`. Two
+ * copies in one process (a version skew between `nx` and a plugin) would make
+ * it silently return false and let the sentinel through as an answer. A prompt
+ * only ever resolves to its value or that sentinel, so treating any symbol as
+ * a cancel survives that.
+ */
+function isCancelled(
+  value: unknown,
+  isCancel: (v: unknown) => boolean
+): boolean {
+  return isCancel(value) || typeof value === 'symbol';
+}
+
 export interface Choice<T extends string> {
   value: T;
   label?: string;
@@ -30,7 +45,7 @@ interface AskOptions<T extends string> {
 
 /** Ctrl+C yields a sentinel rather than throwing, so every prompt checks. */
 function unwrap<T>(value: T | symbol, isCancel: (v: unknown) => boolean): T {
-  if (isCancel(value)) {
+  if (isCancelled(value, isCancel)) {
     throw new CnwError('CANCELLED', 'Cancelled.');
   }
   return value as T;

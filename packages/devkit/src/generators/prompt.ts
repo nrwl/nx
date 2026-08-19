@@ -54,7 +54,10 @@ function toChoices(question: PromptQuestion): PromptChoice[] {
 async function ask(question: PromptQuestion): Promise<unknown> {
   const { autocomplete, multiselect, text, isCancel } = await prompts();
   const unwrap = <T>(value: T | symbol): T => {
-    if (isCancel(value)) {
+    // clack's cancel sentinel is a module-local symbol, so `isCancel` only
+    // recognises a cancel from the same copy of `@clack/core`. A prompt
+    // resolves to its value or that sentinel, so any symbol is a cancel.
+    if (isCancel(value) || typeof value === 'symbol') {
       process.exit(130);
     }
     return value as T;
