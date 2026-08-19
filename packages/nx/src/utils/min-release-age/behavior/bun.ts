@@ -1,7 +1,9 @@
-import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { rcompare, satisfies, valid } from 'semver';
-import { parse as parseToml } from 'smol-toml';
+import {
+  getBunGlobalConfigBase,
+  readBunfigRaw,
+} from '../../package-manager-config/bunfig';
 import { MS_PER_DAY, MS_PER_SECOND } from '../constants';
 import { MinReleaseAgeViolationError } from '../errors';
 import type { RegistryMetadata } from '../packument';
@@ -105,8 +107,7 @@ function readLocalBunInstall(root: string): BunInstallConfig | 'error' {
 }
 
 function readGlobalBunInstall(): BunInstallConfig | 'error' {
-  const xdg = process.env.XDG_CONFIG_HOME;
-  const base = xdg || process.env.HOME;
+  const base = getBunGlobalConfigBase(process.env);
   if (!base) {
     return {};
   }
@@ -114,14 +115,13 @@ function readGlobalBunInstall(): BunInstallConfig | 'error' {
 }
 
 function readBunInstall(path: string): BunInstallConfig | 'error' {
-  if (!existsSync(path)) {
+  const parsed = readBunfigRaw(path);
+  // bun skips a bunfig it cannot read and resolves on, so its settings do not
+  // apply. Only a parse failure kills the install.
+  if (parsed === null || parsed === 'unreadable') {
     return {};
   }
-  let parsed: Record<string, unknown>;
-  try {
-    parsed = parseToml(readFileSync(path, 'utf-8')) as Record<string, unknown>;
-  } catch {
-    // Unparseable bunfig makes bun's install die; treat as a hard error.
+  if (parsed === 'invalid') {
     return 'error';
   }
   const install = parsed.install;

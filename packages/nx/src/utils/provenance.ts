@@ -1,11 +1,9 @@
-import { execSync } from 'child_process';
 import { createRequire } from 'module';
 import { join } from 'path';
 import { promisify } from 'util';
 import { readJsonFile } from './fileutils';
 import {
-  detectPackageManager,
-  getPackageManagerCommand,
+  getWorkspaceRegistryUrlForDisplay,
   packageRegistryView,
 } from './package-manager';
 
@@ -27,11 +25,10 @@ export async function ensurePackageHasProvenance(
   }
 
   try {
-    const result = await packageRegistryView(
-      packageName,
-      packageVersion,
-      '--json --silent'
-    );
+    const result = await packageRegistryView(packageName, packageVersion, [
+      '--json',
+      '--silent',
+    ]);
     const parsed = JSON.parse(result);
     // `npm view <pkg>@<spec> --json` returns a bare object on npm <= 11 but an
     // array on npm 12 and pnpm, even for a single resolved version. A version
@@ -147,25 +144,10 @@ export class ProvenanceError extends Error {
   constructor(packageName: string, packageVersion: string, error?: string) {
     let customRegistry: string | undefined = undefined;
     try {
-      const packageManager = detectPackageManager();
-      const commands = getPackageManagerCommand(packageManager);
-
-      // Try to get registry from current package manager, fall back to npm
-      const registryCommand =
-        commands.getRegistryUrl ?? 'npm config get registry';
-
-      const registry = execSync(registryCommand, {
-        timeout: 5000,
-        windowsHide: true,
-        encoding: 'utf-8',
-      }).trim();
+      const registry = getWorkspaceRegistryUrlForDisplay(packageName);
 
       // Only consider it custom if it's not the default npm registry
-      if (
-        registry &&
-        registry !== 'undefined' &&
-        !registry.includes('registry.npmjs.org')
-      ) {
+      if (registry && !registry.includes('registry.npmjs.org')) {
         customRegistry = registry;
       }
     } catch {
