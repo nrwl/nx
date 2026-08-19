@@ -307,10 +307,41 @@ async function buildVitestTargets(
       // Resolve under `mode: 'test'` to match Vitest, which defaults the Vite
       // mode to 'test'; a config that branches on `command`/`mode` would
       // otherwise enumerate a different spec set here than at test time.
+      // Vite resolves the configured `root` against the invoking cwd before
+      // exposing it, so the resolved value from graph construction differs
+      // from the atom run's. Capture the raw value after all user config
+      // hooks instead, and resolve it below the way the atom run would.
+      let configuredViteRoot: string | undefined;
       const viteServeConfig = await resolveConfig(
         {
           configFile: absoluteConfigFilePath,
           mode: 'test',
+          plugins: [
+            {
+              // Mirrors Vitest's own pre-plugin test.root promotion at the
+              // same phase, so later user config hooks observe and can
+              // override the promoted root exactly as they would at run
+              // time. Vitest's options.root fallback is irrelevant: atom
+              // commands pass no --root.
+              name: 'nx-promote-vitest-root',
+              enforce: 'pre' as const,
+              config(config: { root?: string; test?: { root?: string } }) {
+                if (config.test?.root) {
+                  return { root: config.test.root };
+                }
+              },
+            },
+            {
+              name: 'nx-capture-vitest-root',
+              enforce: 'post' as const,
+              config: {
+                order: 'post' as const,
+                handler(config: { root?: string }) {
+                  configuredViteRoot = config.root;
+                },
+              },
+            },
+          ],
         },
         'serve'
       );
@@ -323,6 +354,40 @@ async function buildVitestTargets(
           useGlobDiscovery ? viteServeConfig : undefined,
           viteServeConfig.test?.dir
         );
+
+      // Each atom writes coverage to its own directory or the reports would
+      // overwrite one another. The nested flag never enables coverage.
+      const coverageReportsDirectory =
+        viteServeConfig.test?.coverage?.reportsDirectory || 'coverage';
+      // Atom directories mirror each spec file's path, so they are disjoint
+      // and attributable by construction. A reports directory outside the
+      // project can be shared by several projects, so it gets a project-root
+      // prefix, except when it already ends with the project root as the
+      // nx-generated `../../coverage/<projectRoot>` configs do.
+      const fullProjectRoot = resolve(context.workspaceRoot, projectRoot);
+      // Vitest resolves a relative reportsDirectory against its resolved
+      // root, not the invoking cwd. The captured root already reflects the
+      // `test.root` promotion mirrored above; map it the way the atom run
+      // would: an omitted root resolves to the atom's cwd, the project
+      // root, a relative one resolves against it, and an absolute one (the
+      // generated configs set `import.meta.dirname`) is used as-is. A root
+      // computed from runtime state such as `process.cwd()` was already
+      // evaluated in this process and cannot be mapped, so it is not
+      // supported.
+      const effectiveVitestRoot = !configuredViteRoot
+        ? fullProjectRoot
+        : isAbsolute(configuredViteRoot)
+          ? configuredViteRoot
+          : resolve(fullProjectRoot, configuredViteRoot);
+      const resolvedReportsDirectory = resolve(
+        effectiveVitestRoot,
+        coverageReportsDirectory
+      );
+      const atomSubfolderPrefix =
+        isPathOutside(relative(fullProjectRoot, resolvedReportsDirectory)) &&
+        !endsWithProjectRoot(resolvedReportsDirectory, projectRoot)
+          ? projectRoot
+          : '';
 
       for (const relativePath of projectRootRelativeTestPaths) {
         if (relativePath.includes('../')) {
@@ -341,14 +406,28 @@ async function buildVitestTargets(
           );
         }
 
+        const outputSubfolder = atomSubfolderPrefix
+          ? joinPathFragments(atomSubfolderPrefix, relativePath)
+          : relativePath;
+        // joinPathFragments strips Windows drive letters, so an absolute
+        // reports directory must be joined with the OS path helper.
+        const atomCoverageDirectory = isAbsolute(coverageReportsDirectory)
+          ? join(coverageReportsDirectory, outputSubfolder)
+          : joinPathFragments(coverageReportsDirectory, outputSubfolder);
         const targetName = `${options.ciTargetName}--${relativePath}`;
         dependsOn.push(targetName);
         targets[targetName] = {
           // It does not make sense to run atomized tests in watch mode as they are intended to be run in CI
-          command: `vitest run ${relativePath}`,
+          command: `vitest run ${relativePath} --coverage.reportsDirectory="${atomCoverageDirectory}"`,
           cache: targets[options.testTargetName].cache,
           inputs: targets[options.testTargetName].inputs,
-          outputs: targets[options.testTargetName].outputs,
+          outputs: [
+            normalizeAtomOutputPath(
+              join(resolvedReportsDirectory, outputSubfolder),
+              fullProjectRoot,
+              context.workspaceRoot
+            ),
+          ],
           options: {
             cwd: projectRoot,
             env: targets[options.testTargetName].options.env,
@@ -485,6 +564,62 @@ function getOutputs(
     testOutputs: [reportsDirectoryPath],
     hasTest: !!test,
   };
+}
+
+/**
+ * Whether a `relative()` result leaves the base directory. A `..` prefix is
+ * only traversal at a segment boundary; a directory named `..coverage` is a
+ * child.
+ */
+function isPathOutside(relativePath: string): boolean {
+  return (
+    relativePath === '..' ||
+    relativePath.startsWith(`..${sep}`) ||
+    isAbsolute(relativePath)
+  );
+}
+
+/**
+ * Maps an atom's absolute coverage directory to an Nx output pattern,
+ * preferring the narrowest anchor. An absolute path outside the workspace
+ * keeps the `{workspaceRoot}`-relative form the non-atomized target uses.
+ */
+function normalizeAtomOutputPath(
+  absoluteOutputPath: string,
+  fullProjectRoot: string,
+  workspaceRoot: string
+): string {
+  const relativeToProject = relative(fullProjectRoot, absoluteOutputPath);
+  if (!isPathOutside(relativeToProject)) {
+    return joinPathFragments('{projectRoot}', relativeToProject);
+  }
+  const relativeToWorkspace = relative(workspaceRoot, absoluteOutputPath);
+  if (!isPathOutside(relativeToWorkspace)) {
+    return joinPathFragments('{workspaceRoot}', relativeToWorkspace);
+  }
+  return `{workspaceRoot}/${relativeToWorkspace}`;
+}
+
+/**
+ * Whether the resolved reports directory's trailing path segments equal the
+ * project root. For the root project there are no segments to compare and a
+ * prefix would add nothing, so it also holds.
+ */
+function endsWithProjectRoot(
+  resolvedPath: string,
+  projectRoot: string
+): boolean {
+  const pathSegments = resolvedPath.split(/[\\/]/).filter(Boolean);
+  const rootSegments = projectRoot
+    .split('/')
+    .filter((segment) => segment && segment !== '.');
+  return (
+    pathSegments.length >= rootSegments.length &&
+    rootSegments.every(
+      (segment, i) =>
+        pathSegments[pathSegments.length - rootSegments.length + i] === segment
+    )
+  );
 }
 
 function normalizeOutputPath(
