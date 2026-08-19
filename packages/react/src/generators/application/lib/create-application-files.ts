@@ -58,9 +58,6 @@ export function getDefaultTemplateVariables(
     hasStyleFile,
     isUsingTsSolutionSetup: isUsingTsSolutionSetup(host),
     port: options.port ?? 4200,
-    // The MF rspack configs render the dev-server port. Same value as `port`, kept
-    // under its own name because the SSR templates' `port` is the app server's.
-    devServerPort: options.port ?? 4200,
   };
 }
 
