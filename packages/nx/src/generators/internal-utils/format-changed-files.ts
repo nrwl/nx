@@ -156,12 +156,14 @@ async function formatFilesWithPrettier(
           filepath: systemPath,
         };
 
+        // No early return when this is null: detection accepts a formatter
+        // declared in the root package.json, so a workspace can select prettier
+        // without configuring it. Skipping here would leave `nx release` and
+        // migrations unformatted while devkit's `formatFiles` - which has never
+        // had this guard - formats the same workspace on prettier's defaults.
         const config = await prettier.resolveConfig(systemPath, {
           editorconfig: true,
         });
-        if (!config) {
-          return;
-        }
         resolvedOptions = {
           ...resolvedOptions,
           ...config,

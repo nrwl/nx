@@ -53,4 +53,36 @@ describe('formatChangedFiles', () => {
 
     expect(write).not.toHaveBeenCalled();
   });
+
+  // Detection accepts a formatter declared in the root package.json, so prettier
+  // can be selected without being configured. devkit's `formatFiles` formats that
+  // workspace on prettier's defaults; this path used to skip it, so `nx release`
+  // and devkit disagreed about the same workspace.
+  it('formats on prettier defaults when prettier is declared but not configured', async () => {
+    const packageJson = JSON.stringify({
+      devDependencies: { prettier: '^3.6.2' },
+    });
+    const write = jest.fn();
+    const tree = {
+      root,
+      exists: (path: string) => path === 'package.json',
+      read: (path: string) =>
+        path === 'package.json' ? Buffer.from(packageJson) : null,
+      listChanges: jest.fn(() => [
+        {
+          path: 'packages/my-lib/package.json',
+          type: 'UPDATE' as const,
+          content: Buffer.from('{"version":"1.1.0"}'),
+        },
+      ]),
+      write,
+    } as unknown as Tree;
+
+    await formatChangedFiles(tree);
+
+    expect(write).toHaveBeenCalledTimes(1);
+    // Prettier's own defaults, with no config anywhere - the same single-line to
+    // multi-line expansion #30403 reported.
+    expect(write.mock.calls[0][1]).toEqual('{\n  "version": "1.1.0"\n}\n');
+  });
 });
