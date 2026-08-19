@@ -13,6 +13,13 @@ export interface Choice<T extends string> {
   hint?: string;
 }
 
+/** A bare string is a choice whose label is its value. */
+export type ChoiceOrValue<T extends string> = T | Choice<T>;
+
+function toChoice<T extends string>(choice: ChoiceOrValue<T>): Choice<T> {
+  return typeof choice === 'string' ? { value: choice } : choice;
+}
+
 /**
  * Ctrl+C yields a sentinel rather than throwing. `onCancel` decides what that
  * means for the caller - either a fallback answer or an abort. The default
@@ -26,7 +33,7 @@ const defaultOnCancel = (): never => {
 
 export async function selectPrompt<T extends string>(options: {
   message: string;
-  choices: Choice<T>[];
+  choices: readonly ChoiceOrValue<T>[];
   initial?: T;
   /** Answer without prompting; defaults to the first choice. */
   skip?: boolean;
@@ -34,19 +41,20 @@ export async function selectPrompt<T extends string>(options: {
   onCancel?: OnCancel<T>;
 }): Promise<T> {
   if (options.skip) {
-    return options.skippedValue ?? options.choices[0].value;
+    return options.skippedValue ?? toChoice(options.choices[0]).value;
   }
+  const choices = options.choices.map(toChoice);
   const { autocomplete, isCancel } = await prompts();
   const answer = await autocomplete<T>({
     message: options.message,
     // `Option<Value>` is conditional on `Value extends Primitive`, which
     // TypeScript cannot resolve while `T` is still generic.
-    options: options.choices.map((c) => ({
+    options: choices.map((c) => ({
       value: c.value,
       label: c.label ?? c.value,
       ...(c.hint ? { hint: c.hint } : {}),
     })) as Parameters<typeof autocomplete<T>>[0]['options'],
-    initialValue: options.initial ?? options.choices[0].value,
+    initialValue: options.initial ?? choices[0].value,
     // A no-match filter leaves clack with an empty selection, and Enter then
     // submits `undefined` rather than blocking. `isCancel` does not catch
     // that, so downstream comparisons would silently take a wrong branch.
@@ -112,21 +120,24 @@ export async function textPrompt(options: {
 
 export async function multiselectPrompt<T extends string>(options: {
   message: string;
-  choices: Choice<T>[];
+  choices: readonly ChoiceOrValue<T>[];
   required?: boolean;
-  initialValues?: T[];
+  initialValues?: readonly T[];
   onCancel?: OnCancel<T[]>;
 }): Promise<T[]> {
+  const choices = options.choices.map(toChoice);
   const { multiselect, isCancel } = await prompts();
   const answer = await multiselect<T>({
     message: options.message,
-    options: options.choices.map((c) => ({
+    options: choices.map((c) => ({
       value: c.value,
       label: c.label ?? c.value,
       ...(c.hint ? { hint: c.hint } : {}),
     })) as Parameters<typeof multiselect<T>>[0]['options'],
     required: options.required ?? false,
-    initialValues: options.initialValues,
+    initialValues: options.initialValues
+      ? [...options.initialValues]
+      : undefined,
   });
   if (isCancel(answer)) {
     return (options.onCancel ?? defaultOnCancel)();

@@ -81,7 +81,7 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
     cacheableOperations = await multiselectPrompt({
       message:
         'Which of the following scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not)',
-      choices: scripts.map((s) => ({ value: s })),
+      choices: scripts,
     });
 
     for (const scriptName of cacheableOperations) {

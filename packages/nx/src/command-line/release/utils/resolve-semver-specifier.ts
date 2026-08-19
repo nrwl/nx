@@ -48,7 +48,7 @@ export async function resolveSemverSpecifierFromPrompt(
   const specifier = await selectPrompt({
     message: selectionMessage,
     choices: [
-      ...RELEASE_TYPES.map((t) => ({ value: t })),
+      ...RELEASE_TYPES,
       { value: 'custom', label: 'Custom exact version' },
     ],
     onCancel: abort,

@@ -15,9 +15,16 @@ export interface Choice<T extends string> {
   hint?: string;
 }
 
+/** A bare string is a choice whose label is its value. */
+export type ChoiceOrValue<T extends string> = T | Choice<T>;
+
+function toChoice<T extends string>(choice: ChoiceOrValue<T>): Choice<T> {
+  return typeof choice === 'string' ? { value: choice } : choice;
+}
+
 interface AskOptions<T extends string> {
   message: string;
-  choices: Choice<T>[];
+  choices: readonly ChoiceOrValue<T>[];
   /**
    * Answer without prompting. The value is the first choice unless
    * `skippedValue` says otherwise.
@@ -40,20 +47,21 @@ export async function selectPrompt<T extends string>(
   options: AskOptions<T>
 ): Promise<T> {
   if (options.skip) {
-    return options.skippedValue ?? options.choices[0].value;
+    return options.skippedValue ?? toChoice(options.choices[0]).value;
   }
+  const choices = options.choices.map(toChoice);
   const { autocomplete, isCancel } = await prompts();
   return unwrap(
     await autocomplete<T>({
       message: options.message,
       // `Option<Value>` is conditional on `Value extends Primitive`, which
       // TypeScript cannot resolve while `T` is still generic.
-      options: options.choices.map((c) => ({
+      options: choices.map((c) => ({
         value: c.value,
         label: c.label ?? c.value,
         hint: c.hint,
       })) as Parameters<typeof autocomplete<T>>[0]['options'],
-      initialValue: options.initial ?? options.choices[0].value,
+      initialValue: options.initial ?? choices[0].value,
       // A no-match filter leaves clack with an empty selection, and Enter then
       // submits `undefined` rather than blocking. `isCancel` does not catch
       // that, so downstream comparisons would silently take a wrong branch.

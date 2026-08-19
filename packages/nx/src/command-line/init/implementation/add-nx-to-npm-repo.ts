@@ -47,7 +47,7 @@ export async function addNxToNpmRepo(options: Options, guided: boolean = true) {
     cacheableOperations = await multiselectPrompt({
       message:
         'Which of the following scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not). You can use spacebar to select one or more scripts.',
-      choices: scripts.map((s) => ({ value: s })),
+      choices: scripts,
     });
 
     for (const scriptName of cacheableOperations) {

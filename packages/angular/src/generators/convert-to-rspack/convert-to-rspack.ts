@@ -324,7 +324,7 @@ async function getProjectToConvert(tree: Tree) {
   }
   return selectPrompt({
     message: 'Which project would you like to convert to rspack?',
-    choices: Array.from(projects).map((p) => ({ value: p })),
+    choices: Array.from(projects),
   });
 }
 

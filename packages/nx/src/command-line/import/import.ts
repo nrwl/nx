@@ -203,7 +203,7 @@ export async function importHandler(options: ImportOptions) {
     const branchChoices = await sourceGitClient.listBranches();
     ref = await selectPrompt({
       message: `Which branch do you want to import?`,
-      choices: branchChoices.map((b) => ({ value: b })),
+      choices: branchChoices,
     });
   }
 

@@ -96,7 +96,7 @@ async function collectCacheableOperations(options: Options): Promise<string[]> {
     cacheableOperations = await multiselectPrompt({
       message:
         'Which of the following targets are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not)',
-      choices: workspaceTargets.map((t) => ({ value: t })),
+      choices: workspaceTargets,
       initialValues: defaultCacheableTargetsInWorkspace,
     });
   } else {

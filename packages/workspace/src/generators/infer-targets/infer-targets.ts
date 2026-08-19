@@ -47,7 +47,7 @@ export async function convertToInferredGenerator(tree: Tree, options: Schema) {
 
     generatorsToRun = await multiselectPrompt({
       message: 'Which inference plugin do you want to use?',
-      choices: allChoices.map((c) => ({ value: c })),
+      choices: allChoices,
       initialValues: allChoices,
       required: true,
     });

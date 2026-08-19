@@ -91,7 +91,7 @@ async function pickShellsInteractively(): Promise<Shell[]> {
   const detected = detectAvailableShells();
   return await multiselectPrompt<Shell>({
     message: 'Install nx completion for which shell(s)?',
-    choices: SHELL_CHOICES.map((name) => ({ value: name })),
+    choices: SHELL_CHOICES,
     // Pre-select shells we can detect on this machine.
     initialValues: SHELL_CHOICES.filter((name) => detected.has(name)),
     onCancel: () => [],

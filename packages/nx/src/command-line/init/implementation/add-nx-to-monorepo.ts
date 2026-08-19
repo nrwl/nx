@@ -46,13 +46,13 @@ export async function addNxToMonorepo(
     targetDefaults = await multiselectPrompt({
       message:
         'Which scripts need to be run in order? (e.g. before building a project, dependent projects must be built)',
-      choices: scripts.map((s) => ({ value: s })),
+      choices: scripts,
     });
 
     cacheableOperations = await multiselectPrompt({
       message:
         'Which scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not)',
-      choices: scripts.map((s) => ({ value: s })),
+      choices: scripts,
     });
 
     for (const scriptName of cacheableOperations) {

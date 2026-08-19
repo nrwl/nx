@@ -729,7 +729,7 @@ export async function detectPlugins(
 
   const pluginsToInstall = await multiselectPrompt({
     message: `Which plugins would you like to add? Press <Space> to select and <Enter> to submit.`,
-    choices: plugins.map((p) => ({ value: p })),
+    choices: plugins,
   });
 
   if (pluginsToInstall?.length === 0)

@@ -311,7 +311,7 @@ async function createVersionPlanFileForBumps(
 async function promptForVersion(message: string): Promise<string> {
   return selectPrompt({
     message,
-    choices: [...RELEASE_TYPES, 'none'].map((v) => ({ value: v })),
+    choices: [...RELEASE_TYPES, 'none'],
     onCancel: () => {
       output.log({
         title: 'Cancelled version plan creation.',
