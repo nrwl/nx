@@ -97,6 +97,7 @@ export interface ViteConfigFileOptions {
   includeVitest?: boolean;
   inSourceTests?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
+  testInclude?: string[];
   rolldownOptionsExternal?: string[];
   imports?: string[];
   plugins?: string[];
@@ -116,6 +117,7 @@ export function createOrEditViteConfig(
     projectAlreadyHasViteTargets?: TargetFlags;
     skipPackageJson?: boolean;
     vitestFileName?: boolean;
+    skipNxPlugins?: boolean;
   } = {}
 ) {
   const { root: projectRoot } = readProjectConfiguration(tree, options.project);
@@ -177,7 +179,7 @@ export function createOrEditViteConfig(
     );
   }
 
-  if (!isTsSolutionSetup) {
+  if (!isTsSolutionSetup && !extraOptions.skipNxPlugins) {
     imports.push(
       `import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'`,
       `import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'`
@@ -202,13 +204,17 @@ export function createOrEditViteConfig(
       ? `./coverage/${options.project}`
       : `${offsetFromRoot(projectRoot)}coverage/${projectRoot}`;
 
+  const testInclude = options.testInclude ?? [
+    '{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+  ];
+
   const testOption = options.includeVitest
     ? `  test: {
     name: '${options.project}',
     watch: false,
     globals: true,
     environment: '${options.testEnvironment ?? 'jsdom'}',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: [${testInclude.map((pattern) => `'${pattern}'`).join(', ')}],
 ${options.passWithNoTests ? `    passWithNoTests: true,\n` : ''}\
 ${options.setupFile ? `    setupFiles: ['${options.setupFile}'],\n` : ''}\
 ${
@@ -389,7 +395,9 @@ function handleViteConfigFileExists(
   const testOptionObject = {
     globals: true,
     environment: options.testEnvironment ?? 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: options.testInclude ?? [
+      'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+    ],
     ...(options.passWithNoTests ? { passWithNoTests: true } : {}),
     reporters: ['default'],
     coverage: {

@@ -104,7 +104,6 @@ export default [
             '@nx/playwright',
             // Installed on demand via `ensurePackage` when the generator is
             // asked for the vitest unit test runner.
-            '@nx/vite',
             '@nx/vitest',
             'typescript',
             'react',

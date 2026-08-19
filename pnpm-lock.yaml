@@ -3082,9 +3082,6 @@ importers:
       '@nx/playwright':
         specifier: workspace:*
         version: link:../playwright
-      '@nx/vite':
-        specifier: workspace:*
-        version: link:../vite
       '@nx/vitest':
         specifier: workspace:*
         version: link:../vitest

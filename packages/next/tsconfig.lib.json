@@ -46,9 +46,6 @@
       "path": "../vitest/tsconfig.lib.json"
     },
     {
-      "path": "../vite/tsconfig.lib.json"
-    },
-    {
       "path": "../playwright/tsconfig.lib.json"
     },
     {

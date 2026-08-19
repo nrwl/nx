@@ -324,7 +324,6 @@ export interface ViteConfigFileOptions {
   includeVitest?: boolean;
   inSourceTests?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
-  testInclude?: string[];
   rolldownOptionsExternal?: string[];
   imports?: string[];
   plugins?: string[];
@@ -425,17 +424,13 @@ export function createOrEditViteConfig(
       ? `./coverage/${options.project}`
       : `${offsetFromRoot(projectRoot)}coverage/${projectRoot}`;
 
-  const testInclude = options.testInclude ?? [
-    '{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
-  ];
-
   const testOption = options.includeVitest
     ? `  test: {
     name: '${options.project}',
     watch: false,
     globals: true,
     environment: '${options.testEnvironment ?? 'jsdom'}',
-    include: [${testInclude.map((pattern) => `'${pattern}'`).join(', ')}],
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
 ${options.setupFile ? `    setupFiles: ['${options.setupFile}'],\n` : ''}\
 ${
   options.inSourceTests
@@ -730,9 +725,7 @@ function handleViteConfigFileExists(
   const testOptionObject = {
     globals: true,
     environment: options.testEnvironment ?? 'jsdom',
-    include: options.testInclude ?? [
-      'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
-    ],
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
     coverage: {
       reportsDirectory: reportsDirectory,

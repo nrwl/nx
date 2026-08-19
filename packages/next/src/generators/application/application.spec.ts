@@ -1114,26 +1114,22 @@ describe('app', () => {
 
       expect(tree.exists(`${name}/jest.config.cts`)).toBeFalsy();
       expect(tree.exists(`${name}/specs/index.spec.tsx`)).toBeTruthy();
-      // The config imports @nx/vite/plugins/*, so the dep must be installed.
+      // The config must not depend on the deprecated @nx/vite helper plugins.
       expect(
         readJson(tree, 'package.json').devDependencies['@nx/vite']
+      ).toBeUndefined();
+      expect(
+        readJson(tree, 'package.json').devDependencies['vitest']
       ).toBeDefined();
       expect(tree.read(`${name}/vitest.config.mts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/// <reference types='vitest' />
-        import { defineConfig } from 'vite';
+        "import { defineConfig } from 'vitest/config';
         import react from '@vitejs/plugin-react';
-        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
         export default defineConfig(() => ({
           root: import.meta.dirname,
           cacheDir: '../node_modules/.vite/myapp',
-          plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-          // Uncomment this if you are using workers.
-          // worker: {
-          //   plugins: () => [ nxViteTsPaths() ],
-          // },
+          plugins: [react()],
           test: {
             name: 'myapp',
             watch: false,

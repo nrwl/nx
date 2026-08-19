@@ -1,14 +1,11 @@
 import {
-  addDependenciesToPackageJson,
   ensurePackage,
   GeneratorCallback,
   joinPathFragments,
   readJson,
-  runTasksInSerial,
   Tree,
   updateJson,
 } from '@nx/devkit';
-import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from './normalize-options';
@@ -21,15 +18,12 @@ export async function addVitest(
     return () => {};
   }
 
-  const { createOrEditViteConfig } = ensurePackage<typeof import('@nx/vite')>(
-    '@nx/vite',
-    nxVersion
-  );
   ensurePackage('@nx/vitest', nxVersion);
   // CommonJS `require` instead of dynamic ESM `import`: `ensurePackage` exposes
   // the temp install via `Module._initPaths`, which ESM ignores.
   const {
     configurationGenerator,
+    createOrEditViteConfig,
   }: typeof import('@nx/vitest/generators') = require('@nx/vitest/generators');
 
   const vitestTask = await configurationGenerator(host, {
@@ -63,8 +57,11 @@ export async function addVitest(
       useEsmExtension: true,
     },
     true,
-    undefined,
-    true
+    {
+      vitestFileName: true,
+      skipPackageJson: options.skipPackageJson,
+      skipNxPlugins: true,
+    }
   );
 
   // The generated specs live in `specs/`, which only tsconfig.json covers, so
@@ -86,21 +83,5 @@ export async function addVitest(
     }
   );
 
-  const tasks = [vitestTask];
-  // The generated config imports `@nx/vite/plugins/*` in non-TS-solution
-  // workspaces, and `skipViteConfig` bypasses the generator that would have
-  // added the dependency.
-  if (!isUsingTsSolutionSetup(host) && !options.skipPackageJson) {
-    tasks.push(
-      addDependenciesToPackageJson(
-        host,
-        {},
-        { '@nx/vite': nxVersion },
-        undefined,
-        true
-      )
-    );
-  }
-
-  return runTasksInSerial(...tasks);
+  return vitestTask;
 }
