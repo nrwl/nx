@@ -1103,6 +1103,30 @@ describe('formatFilesWithOxfmt', () => {
       expect(formatted.size).toBe(0);
     });
 
+    it('reports a staged TypeScript config even when an older copy is on disk', async () => {
+      // The case the previous guard let through: the path exists, so it loaded
+      // the copy being replaced and formatted against the outgoing options.
+      writeFileSync(
+        join(workspaceRoot, 'oxfmt.config.ts'),
+        'export default { useTabs: true };\n',
+        'utf-8'
+      );
+
+      const { formatted, errors } = await formatFilesWithOxfmt(
+        [{ path: 'a.ts', content: 'function f() {\nif (a) {\nb();\n}\n}' }],
+        workspaceRoot,
+        {
+          name: 'oxfmt.config.ts',
+          content: 'export default { useTabs: false };\n',
+        },
+        ['oxfmt.config.ts']
+      );
+
+      expect(errors?.length).toBe(1);
+      expect(errors[0]).toContain('oxfmt.config.ts');
+      expect(formatted.size).toBe(0);
+    });
+
     it('reports two configs that exist only in the tree', async () => {
       // Neither is on disk, so only the caller's post-flush view shows the pair
       // the CLI will refuse to load. One seed alone cannot.
