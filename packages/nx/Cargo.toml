@@ -115,6 +115,11 @@ fs4 = "0.12.0"
 ratatui = { version = "0.30", features = ["unstable-rendered-line-info"] }
 reqwest = { version = "0.12.22", default-features = false, features = [
     "rustls-tls-native-roots",
+    # Pure-Rust DNS resolver. The default resolver calls getaddrinfo() on a
+    # tokio blocking thread; getaddrinfo reads env vars via glibc's lock-free
+    # getenv(), which segfaults when another thread mutates `environ`
+    # (process.env writes from JS). See telemetry/service.rs.
+    "hickory-dns",
 ] }
 rusqlite = { version = "0.32.1", features = ["bundled", "array", "vtab"] }
 notify = "8"
