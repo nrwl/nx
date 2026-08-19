@@ -24,6 +24,13 @@ async function createPreset(tree: Tree, options: Schema) {
     // formatter up and the choice would be dropped. Only the formatter is
     // configured here - `@nx/js:init` would also add TypeScript and a root
     // tsconfig, which both presets deliberately leave out.
+    //
+    // Guarded because `@nx/js` is only in the new workspace's package.json, not
+    // necessarily on disk: `validateOptions` allows `skipInstall` with exactly
+    // these presets, and requiring it there would throw where nothing needs it.
+    if (!options.formatter || options.formatter === 'none') {
+      return;
+    }
     const { setUpFormatter } = require('@nx' + '/js');
     return setUpFormatter(tree, options.formatter);
   } else if (options.preset === Preset.AngularMonorepo) {
