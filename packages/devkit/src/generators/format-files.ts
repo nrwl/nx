@@ -181,7 +181,17 @@ async function formatWithOxfmt(
       // The tree is the post-flush truth, and the only place it exists: disk
       // cannot see a config the generator staged, and still sees one it
       // deleted. Both mislead oxfmt's "two configs in one directory" check.
-      oxfmtConfigFiles?.filter((name) => tree.exists(name))
+      oxfmtConfigFiles?.filter((name) => tree.exists(name)),
+      // Ignore files as they will be after the flush: the batch is selected
+      // against the tree, so re-checking against disk decides a staged
+      // `.gitignore`/`.prettierignore` change twice, two ways.
+      //
+      // Only when the checkers exist. An nx without them is older than this
+      // argument, so it would drop the reader and filter nothing - and there is
+      // no pre-filter to disagree with either.
+      createOxfmtIgnoreChecker
+        ? (relativePath: string) => tree.read(relativePath, 'utf-8')
+        : undefined
     );
     for (const [filePath, content] of formatted) {
       tree.write(filePath, content);

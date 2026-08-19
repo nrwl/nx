@@ -33,6 +33,9 @@ describe('formatChangedFiles', () => {
     const tree = {
       root,
       exists: (path: string) => path === '.oxfmtrc.json',
+      // The ignore chain is read through the tree now; this workspace has no
+      // ignore files, so every lookup misses.
+      read: () => null,
       listChanges: jest.fn(() => [
         {
           path: 'packages/my-lib/package.json',
@@ -52,6 +55,32 @@ describe('formatChangedFiles', () => {
     });
 
     expect(write).not.toHaveBeenCalled();
+  });
+
+  // The batch is selected against the tree, so the backend has to re-check
+  // against the tree too. Reading disk here would still see the rule the
+  // generator just removed, and silently skip a file it was asked to format.
+  it('formats a file whose ignore rule the tree removed', async () => {
+    writeFileSync(join(root, '.gitignore'), 'packages/my-lib/a.ts\n');
+    const write = jest.fn();
+    const tree = {
+      root,
+      exists: (path: string) => path === '.oxfmtrc.json',
+      // The tree's .gitignore no longer carries the rule that disk still has.
+      read: (path: string) => (path === '.gitignore' ? '' : null),
+      listChanges: jest.fn(() => [
+        {
+          path: 'packages/my-lib/a.ts',
+          type: 'UPDATE' as const,
+          content: Buffer.from('const   x  =  1\n'),
+        },
+      ]),
+      write,
+    } as unknown as Tree;
+
+    await formatChangedFiles(tree);
+
+    expect(write).toHaveBeenCalledTimes(1);
   });
 
   // Detection accepts a formatter declared in the root package.json, so prettier

@@ -5,7 +5,6 @@ import { existsSync, readFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { Tree } from '../../generators/tree';
-import { readFileIfExisting } from '../fileutils';
 import {
   createIgnoreChainResolver,
   isIgnoredByChain,
@@ -878,7 +877,11 @@ export async function formatFilesWithOxfmt(
   seedConfig?: { name: string; content: string },
   // Every supported config name the root holds once the tree is flushed. Only a
   // Tree-holding caller knows this; without it the root is resolved from disk.
-  rootConfigNames?: readonly string[]
+  rootConfigNames?: readonly string[],
+  // Reads a workspace-relative file, `null` when it does not exist. A
+  // tree-holding caller passes a tree-backed one so ignore files are read as
+  // they will be after the flush; everyone else gets disk.
+  read?: (relativePath: string) => string | null | undefined
 ): Promise<{ formatted: Map<string, string>; errors?: string[] }> {
   const formatted = new Map<string, string>();
   if (files.length === 0) {
@@ -899,9 +902,14 @@ export async function formatFilesWithOxfmt(
   // drift. oxfmt honours `.prettierignore` as well as `.gitignore` (measured
   // against its CLI), keeping one matcher per file so a `!` in one cannot
   // re-include what the other excluded.
+  // `readFileIfExisting` is not usable here: it returns '' for a missing file,
+  // which an empty ignore file also returns.
   const resolveIgnores = createIgnoreChainResolver(
-    (relativePath) =>
-      readFileIfExisting(path.join(workspaceRoot, relativePath)),
+    read ??
+      ((relativePath) => {
+        const absolute = path.join(workspaceRoot, relativePath);
+        return existsSync(absolute) ? readFileSync(absolute, 'utf-8') : null;
+      }),
     OXFMT_IGNORE_OPTIONS.filenames,
     OXFMT_IGNORE_OPTIONS.merge
   );

@@ -69,7 +69,10 @@ export async function formatChangedFiles(
     options,
     // The post-flush root, which disk cannot see: a config staged here is not
     // written yet, and one the tree deletes still is.
-    oxfmtConfigFiles.filter((name) => tree.exists(name))
+    oxfmtConfigFiles.filter((name) => tree.exists(name)),
+    // Same reason, for the ignore files: the batch is selected against the tree,
+    // so the backend has to re-check against the tree and not against disk.
+    (relativePath) => tree.read(relativePath, 'utf-8')
   );
 
   for (const [path, content] of results) {
@@ -103,13 +106,14 @@ function formatDetectedFiles(
   files: { path: string; content: string | Buffer }[],
   root: string,
   options?: { silent?: boolean },
-  rootConfigNames?: readonly string[]
+  rootConfigNames?: readonly string[],
+  read?: (relativePath: string) => string | null
 ): Promise<Map<string, string>> {
   switch (formatterType) {
     case 'prettier':
       return formatFilesWithPrettier(files, root, options);
     case 'oxfmt':
-      return runOxfmtBatch(files, root, options, rootConfigNames);
+      return runOxfmtBatch(files, root, options, rootConfigNames, read);
     default: {
       // Without this arm an unhandled formatter returns undefined into
       // callers that iterate it.
@@ -196,7 +200,8 @@ async function runOxfmtBatch(
   files: { path: string; content: string | Buffer }[],
   root: string,
   options?: { silent?: boolean },
-  rootConfigNames?: readonly string[]
+  rootConfigNames?: readonly string[],
+  read?: (relativePath: string) => string | null
 ): Promise<Map<string, string>> {
   try {
     // The whole batch goes through one call: oxfmt's ESM API is loaded once and
@@ -209,7 +214,8 @@ async function runOxfmtBatch(
       })),
       root,
       undefined,
-      rootConfigNames
+      rootConfigNames,
+      read
     );
     if (errors?.length && !options?.silent) {
       output.warn({
