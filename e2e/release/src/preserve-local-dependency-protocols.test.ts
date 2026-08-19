@@ -172,7 +172,7 @@ describe('nx release preserve local dependency protocols', () => {
     `);
   });
 
-  it('should replace the workspace protocol with the current version when the dependency is excluded from the release', async () => {
+  it('should replace the workspace protocol with the current version when the dependency group is excluded from the release', async () => {
     const {
       workspacePath,
       pkg1: releasedProject,
@@ -181,7 +181,16 @@ describe('nx release preserve local dependency protocols', () => {
 
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
       nxJson.release = {
-        projectsRelationship: 'independent',
+        groups: {
+          released: {
+            projects: [releasedProject],
+            projectsRelationship: 'independent',
+          },
+          excluded: {
+            projects: [excludedDependency],
+            projectsRelationship: 'independent',
+          },
+        },
         version: {
           currentVersionResolver: 'git-tag',
           preserveLocalDependencyProtocols: false,

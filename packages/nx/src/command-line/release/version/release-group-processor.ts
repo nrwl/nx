@@ -892,6 +892,8 @@ export class ReleaseGroupProcessor {
         `Unable to update dependencies for projects ${deferredProjects} because their release groups were not processed. Please report this as a bug on https://github.com/nrwl/nx/issues.`
       );
     }
+
+    this.flushAllProjectLoggers();
   }
 
   /**
