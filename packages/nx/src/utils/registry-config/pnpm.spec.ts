@@ -1707,6 +1707,15 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
     });
 
+    it('does not bridge an empty ca declaration', () => {
+      // An empty value declares nothing to derive from; an empty npm_config_ca
+      // would only differ from an absent one in the spawned environment.
+      writeAuthIni(['registry=https://reg-a.example.com/', 'ca='].join('\n'));
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+      });
+    });
+
     it('drops auth.ini cert/key when another registry will be contacted', () => {
       // npm_config_cert/key present the client certificate to every host it
       // contacts, and pnpm pins them to the declaring file's registry. The trust

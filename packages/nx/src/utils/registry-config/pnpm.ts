@@ -1579,9 +1579,9 @@ function bridgeNpmrcSources(
   }
   // npm reads inline `ca` PEM only as a flat (global) key, and pnpm does not
   // source-scope trust anchors, so it needs no pin check.
-  const caSource = bridging('ca');
-  if (caSource) {
-    env['npm_config_ca'] = caSource.map.get('ca');
+  const ca = bridgedValue('ca');
+  if (ca) {
+    env['npm_config_ca'] = ca;
   }
   // `cert`/`key` are client TLS material, which pnpm pins to a registry the same
   // way it pins credentials, so by here they are darted. npm has no
