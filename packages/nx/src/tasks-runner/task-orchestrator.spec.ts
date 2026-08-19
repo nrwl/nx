@@ -443,7 +443,6 @@ describe('TaskOrchestrator', () => {
         ...args,
       };
       // Object.create bypasses field initializers.
-      orchestrator.batchFoldCount = 0;
       return orchestrator;
     }
 
@@ -463,7 +462,7 @@ describe('TaskOrchestrator', () => {
     }
 
     const BATCH = {
-      id: 'batch',
+      id: '@nx/js:tsc 1',
       executorName: '@nx/js:tsc',
       taskGraph: {},
     };
@@ -499,7 +498,7 @@ describe('TaskOrchestrator', () => {
       expect(print).toHaveBeenCalledTimes(2);
       expect(print).toHaveBeenCalledWith(a, 'success', 'a body');
       expect(print).toHaveBeenCalledWith(b, 'local-cache', 'b body');
-      expect(out).not.toContain('@nx/js:tsc batch #');
+      expect(out).not.toContain('batch @nx/js:tsc');
     });
 
     it('renders a FAILED batch that reported results per task, not as one fold', () => {
@@ -520,7 +519,7 @@ describe('TaskOrchestrator', () => {
       const print = orchestrator.options.lifeCycle.printTaskTerminalOutput;
       expect(print).toHaveBeenCalledWith(b, 'failure', 'b failed');
       expect(print).toHaveBeenCalledWith(a, 'success', 'a body');
-      expect(out).not.toContain('batch #');
+      expect(out).not.toContain('batch @nx/js:tsc');
     });
 
     it.each([
@@ -544,7 +543,7 @@ describe('TaskOrchestrator', () => {
       // A full-output run wants everything the batch emitted, including the
       // bytes no task attributed to itself.
       expect(out).toContain('runner summary no task claimed');
-      expect(out).toContain('@nx/js:tsc batch #1');
+      expect(out).toContain('batch @nx/js:tsc 1');
       expect(
         orchestrator.options.lifeCycle.printTaskTerminalOutput
       ).not.toHaveBeenCalled();
@@ -566,7 +565,7 @@ describe('TaskOrchestrator', () => {
       );
 
       expect(out).not.toContain('runner summary no task claimed');
-      expect(out).not.toContain('batch #');
+      expect(out).not.toContain('batch @nx/js:tsc');
       expect(
         orchestrator.options.lifeCycle.printTaskTerminalOutput
       ).toHaveBeenCalledWith(a, 'success', 'a body');
@@ -643,7 +642,6 @@ describe('TaskOrchestrator', () => {
         },
       };
       // Object.create bypasses field initializers.
-      orchestrator.batchFoldCount = 0;
       orchestrator.stopRequested = stopRequested;
       orchestrator.projectGraph = {} as ProjectGraph;
       orchestrator.taskGraph = {
@@ -687,7 +685,7 @@ describe('TaskOrchestrator', () => {
     }
 
     const batch = {
-      id: 'batch',
+      id: '@nx/gradle:batch 1',
       executorName: '@nx/gradle:batch',
       taskGraph: { tasks: { 'a:build': {} } },
     };
@@ -702,7 +700,7 @@ describe('TaskOrchestrator', () => {
         orchestrator.runBatch(batch, {}, 0)
       );
 
-      expect(out).toContain('@nx/gradle:batch batch #1');
+      expect(out).toContain('batch @nx/gradle:batch 1');
       expect(out).toContain('FAILURE: Could not resolve all dependencies');
       expect(out).toContain(EXIT_ERROR);
     });
@@ -719,23 +717,27 @@ describe('TaskOrchestrator', () => {
 
       // The partial log is the only thing that shows where an interrupted
       // batch hung, and grouping means nothing streamed live.
-      expect(out).toContain('@nx/gradle:batch batch #1');
+      expect(out).toContain('batch @nx/gradle:batch 1');
       expect(out).toContain('gradle: still resolving dependencies');
       // The exit code just restates the cancellation.
       expect(out).not.toContain(EXIT_ERROR);
     });
 
-    it('gives each crashed batch a distinct id', async () => {
+    it('labels each fold with the batch it came from', async () => {
+      const second = { ...batch, id: '@nx/gradle:batch 2' };
+
       const out = await captureStdout(async () => {
         await createOrchestrator('first crash', false).runBatch(batch, {}, 0);
-        await createOrchestrator('second crash', false).runBatch(batch, {}, 0);
+        await createOrchestrator('second crash', false).runBatch(second, {}, 0);
       });
 
-      // The same executor can crash more than once in a run; the redirect
-      // lines have to point at the right fold.
+      // The same executor can crash more than once in a run, so the label has to
+      // carry the batch's own id rather than a count of folds rendered.
+      expect(out).toContain('batch @nx/gradle:batch 1');
+      expect(out).toContain('batch @nx/gradle:batch 2');
       expect(out).toContain('first crash');
       expect(out).toContain('second crash');
-      expect(out).toContain('@nx/gradle:batch batch #1');
+      expect(out).toContain('(output in "batch @nx/gradle:batch 2" above)');
     });
   });
 });
