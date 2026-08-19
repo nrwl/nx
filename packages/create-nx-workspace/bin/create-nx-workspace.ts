@@ -53,9 +53,9 @@ import { existsSync } from 'fs';
 import { basename, dirname, isAbsolute, join, resolve } from 'path';
 import { isCI } from '../src/utils/ci/is-ci';
 import {
-  askChoice,
-  askText,
-  askYesNo,
+  selectPrompt,
+  textPrompt,
+  confirmationPrompt,
 } from '../src/internal-utils/prompt-helpers';
 import { isGhCliAvailable } from '../src/utils/git/git';
 import {
@@ -976,7 +976,7 @@ export async function determineFolder(
 }
 
 async function promptCreateInCurrentDir(dirName: string): Promise<boolean> {
-  return askYesNo({
+  return confirmationPrompt({
     message: `Create workspace in the current directory (${dirName})? Existing files may be overwritten.`,
   });
 }
@@ -985,7 +985,7 @@ async function promptForFolder(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<string> {
   const reply = {
-    folderName: await askText({
+    folderName: await textPrompt({
       message: `Where would you like to create your workspace?`,
       initialValue: 'org',
       skip: !parsedArgs.interactive || isCI(),
@@ -1062,7 +1062,9 @@ async function determineStack(
     }
   }
 
-  const stack = await askChoice<'none' | 'react' | 'angular' | 'node' | 'vue'>({
+  const stack = await selectPrompt<
+    'none' | 'react' | 'angular' | 'node' | 'vue'
+  >({
     message: `Which stack do you want to use?`,
     choices: [
       { value: `none` },
@@ -1130,7 +1132,7 @@ async function determineFormatterOptions(
   if (args.formatter) return args.formatter;
   // A skipped run answers yes regardless of `preferPrettier`, which only moves
   // the highlighted option when the prompt is shown.
-  const usePrettier = await askYesNo({
+  const usePrettier = await confirmationPrompt({
     message: `Would you like to use Prettier for code formatting?`,
     initial: opts?.preferPrettier ?? false,
     skip: !args.interactive || isCI(),
@@ -1183,7 +1185,7 @@ async function determineNoneOptions(
     } else if (preset === Preset.TsStandalone) {
       // Only standalone TS preset generates a default package, so we need to provide --js and --appName options.
       appName = parsedArgs.name;
-      js = !(await askYesNo({
+      js = !(await confirmationPrompt({
         message: `Would you like to use TypeScript with this project?`,
         skip: !parsedArgs.interactive || isCI(),
         skippedValue: true,
@@ -1282,7 +1284,7 @@ async function determineReactOptions(
     preset === Preset.NextJsStandalone
   ) {
     const reply = {
-      style: await askChoice<string>({
+      style: await selectPrompt<string>({
         message: `Default stylesheet format`,
         choices: [
           { value: 'css', label: 'CSS' },
@@ -1412,7 +1414,7 @@ async function determineVueOptions(
     style = parsedArgs.style;
   } else {
     const reply = {
-      style: await askChoice<string>({
+      style: await selectPrompt<string>({
         message: `Default stylesheet format`,
         choices: [
           { value: 'css', label: 'CSS' },
@@ -1525,7 +1527,7 @@ async function determineAngularOptions(
     bundler = parsedArgs.bundler;
   } else {
     const reply = {
-      bundler: await askChoice<(typeof validAngularBundlers)[number]>({
+      bundler: await selectPrompt<(typeof validAngularBundlers)[number]>({
         message: `Which bundler would you like to use?`,
         choices: [
           { value: 'esbuild', label: 'esbuild [ https://esbuild.github.io/ ]' },
@@ -1543,7 +1545,7 @@ async function determineAngularOptions(
     style = parsedArgs.style;
   } else {
     const reply = {
-      style: await askChoice<string>({
+      style: await selectPrompt<string>({
         message: `Default stylesheet format`,
         choices: [
           { value: 'css', label: 'CSS' },
@@ -1567,7 +1569,7 @@ async function determineAngularOptions(
     ssr = parsedArgs.ssr;
   } else {
     const reply = {
-      ssr: (await askYesNo({
+      ssr: (await confirmationPrompt({
         message: `Do you want to enable Server-Side Rendering (SSR)${
           bundler !== 'rspack'
             ? ' and Static Site Generation (SSG/Prerendering)?'
@@ -1590,7 +1592,7 @@ async function determineAngularOptions(
   } else if (!parsedArgs.workspaces) {
     unitTestRunner = undefined;
   } else {
-    unitTestRunner = (await askChoice<AngularUnitTestRunner>({
+    unitTestRunner = (await selectPrompt<AngularUnitTestRunner>({
       message: 'Which unit test runner would you like to use?',
       skip: !parsedArgs.interactive || isCI(),
       choices: [
@@ -1687,7 +1689,7 @@ async function determineNodeOptions(
     docker = parsedArgs.docker;
   } else {
     const reply = {
-      docker: (await askYesNo({
+      docker: (await confirmationPrompt({
         message:
           'Would you like to generate a Dockerfile? [https://docs.docker.com/]',
         initial: false,
@@ -1729,7 +1731,7 @@ async function determineNodeOptions(
 async function determinePackageBasedOrIntegratedOrStandalone(): Promise<
   'package-based' | 'integrated' | 'standalone'
 > {
-  const workspaceType = await askChoice<
+  const workspaceType = await selectPrompt<
     'standalone' | 'integrated' | 'package-based'
   >({
     message: `Package-based monorepo, integrated monorepo, or standalone project?`,
@@ -1765,7 +1767,7 @@ async function determinePackageBasedOrIntegratedOrStandalone(): Promise<
 async function determineStandaloneOrMonorepo(): Promise<
   'integrated' | 'standalone'
 > {
-  const workspaceType = await askChoice<'standalone' | 'integrated'>({
+  const workspaceType = await selectPrompt<'standalone' | 'integrated'>({
     message: `Integrated monorepo, or standalone project?`,
     choices: [
       {
@@ -1798,7 +1800,7 @@ async function determineAppName(
 ): Promise<string> {
   if (parsedArgs.appName) return parsedArgs.appName;
 
-  const appName = await askText({
+  const appName = await textPrompt({
     message: `Application name`,
     initialValue: parsedArgs.name,
     skip: !parsedArgs.interactive || isCI(),
@@ -1819,7 +1821,7 @@ async function determineReactFramework(
   }
 
   const reply = {
-    framework: await askChoice<'none' | 'next' | 'expo' | 'react-native'>({
+    framework: await selectPrompt<'none' | 'next' | 'expo' | 'react-native'>({
       message: 'What framework would you like to use?',
       choices: [
         {
@@ -1845,7 +1847,7 @@ async function determineReactBundler(
 ): Promise<'webpack' | 'vite' | 'rspack'> {
   if (parsedArgs.bundler) return parsedArgs.bundler;
   const reply = {
-    bundler: await askChoice<'webpack' | 'vite' | 'rspack'>({
+    bundler: await selectPrompt<'webpack' | 'vite' | 'rspack'>({
       message: `Which bundler would you like to use?`,
       choices: [
         { value: 'vite', label: 'Vite    [ https://vite.dev/     ]' },
@@ -1864,7 +1866,7 @@ async function determineNextAppDir(
 ): Promise<boolean> {
   if (parsedArgs.nextAppDir !== undefined) return parsedArgs.nextAppDir;
   const reply = {
-    nextAppDir: (await askYesNo({
+    nextAppDir: (await confirmationPrompt({
       message: 'Would you like to use the App Router (recommended)?',
       skip: !parsedArgs.interactive || isCI(),
       skippedValue: true,
@@ -1880,7 +1882,7 @@ async function determineNextSrcDir(
 ): Promise<boolean> {
   if (parsedArgs.nextSrcDir !== undefined) return parsedArgs.nextSrcDir;
   const reply = {
-    nextSrcDir: (await askYesNo({
+    nextSrcDir: (await confirmationPrompt({
       message: 'Would you like to use the src/ directory?',
       skip: !parsedArgs.interactive || isCI(),
       skippedValue: true,
@@ -1896,7 +1898,7 @@ async function determineVueFramework(
 ): Promise<'none' | 'nuxt'> {
   if (!!parsedArgs.framework) return parsedArgs.framework;
   const reply = {
-    framework: await askChoice<'none' | 'nuxt'>({
+    framework: await selectPrompt<'none' | 'nuxt'>({
       message: 'What framework would you like to use?',
       choices: [
         { value: 'none', label: 'None', hint: '         I only want Vue' },
@@ -1914,20 +1916,20 @@ async function determineNodeFramework(
 ): Promise<'express' | 'fastify' | 'koa' | 'nest' | 'none'> {
   if (!!parsedArgs.framework) return parsedArgs.framework;
   const reply = {
-    framework: await askChoice<'express' | 'fastify' | 'koa' | 'nest' | 'none'>(
-      {
-        message: 'What framework should be used?',
-        choices: [
-          { value: 'none', label: 'None' },
-          { value: 'express', label: 'Express [ https://expressjs.com/ ]' },
-          { value: 'fastify', label: 'Fastify [ https://www.fastify.dev/ ]' },
-          { value: 'koa', label: 'Koa     [ https://koajs.com/      ]' },
-          { value: 'nest', label: 'NestJs  [ https://nestjs.com/     ]' },
-        ],
-        initial: 'none',
-        skip: !parsedArgs.interactive || isCI(),
-      }
-    ),
+    framework: await selectPrompt<
+      'express' | 'fastify' | 'koa' | 'nest' | 'none'
+    >({
+      message: 'What framework should be used?',
+      choices: [
+        { value: 'none', label: 'None' },
+        { value: 'express', label: 'Express [ https://expressjs.com/ ]' },
+        { value: 'fastify', label: 'Fastify [ https://www.fastify.dev/ ]' },
+        { value: 'koa', label: 'Koa     [ https://koajs.com/      ]' },
+        { value: 'nest', label: 'NestJs  [ https://nestjs.com/     ]' },
+      ],
+      initial: 'none',
+      skip: !parsedArgs.interactive || isCI(),
+    }),
   };
   return reply.framework;
 }
@@ -1950,7 +1952,7 @@ async function determineUnitTestRunner<T extends 'none' | 'jest' | 'vitest'>(
   }
 
   const reply = {
-    unitTestRunner: await askChoice<'none' | 'jest' | 'vitest'>({
+    unitTestRunner: await selectPrompt<'none' | 'jest' | 'vitest'>({
       message: 'Which unit test runner would you like to use?',
       choices: [
         { value: 'none', label: 'None' },
@@ -1972,7 +1974,7 @@ async function determineE2eTestRunner(
 ): Promise<'none' | 'cypress' | 'playwright'> {
   if (parsedArgs.e2eTestRunner) return parsedArgs.e2eTestRunner;
   const reply = {
-    e2eTestRunner: await askChoice<'none' | 'cypress' | 'playwright'>({
+    e2eTestRunner: await selectPrompt<'none' | 'cypress' | 'playwright'>({
       message: 'Test runner to use for end to end (E2E) tests',
       choices: [
         {
@@ -1998,7 +2000,7 @@ async function determineReactRouter(
     return false;
   if (parsedArgs.useReactRouter !== undefined) return parsedArgs.useReactRouter;
   const reply = {
-    response: (await askYesNo({
+    response: (await confirmationPrompt({
       message:
         'Would you like to use React Router for server-side rendering [https://reactrouter.com/]?',
       skip: !parsedArgs.interactive || isCI(),

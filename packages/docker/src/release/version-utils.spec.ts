@@ -1,5 +1,5 @@
 import { handleDockerVersion } from './version-utils';
-import { askChoice } from '@nx/devkit/internal';
+import { selectPrompt } from '@nx/devkit/internal';
 
 /** Minimal mock objects to satisfy types without importing full release graph machinery */
 const mockProjectNode: any = { name: 'my-app', data: { root: 'apps/my-app' } };
@@ -7,7 +7,7 @@ const versionActionsVersion = '1.2.3';
 
 jest.mock('@nx/devkit/internal', () => ({
   ...jest.requireActual('@nx/devkit/internal'),
-  askChoice: jest.fn(),
+  selectPrompt: jest.fn(),
 }));
 
 describe('handleDockerVersion {versionActionsVersion} integration', () => {
@@ -135,7 +135,7 @@ describe('handleDockerVersion {versionActionsVersion} integration', () => {
     };
 
     // Mock prompt to return 'dev' scheme
-    jest.mocked(askChoice).mockResolvedValueOnce('dev');
+    jest.mocked(selectPrompt).mockResolvedValueOnce('dev');
 
     const { newVersion } = await handleDockerVersion(
       process.cwd(),
@@ -146,7 +146,7 @@ describe('handleDockerVersion {versionActionsVersion} integration', () => {
       versionActionsVersion
     );
 
-    expect(askChoice).toHaveBeenCalledWith(
+    expect(selectPrompt).toHaveBeenCalledWith(
       expect.objectContaining({
         choices: expect.arrayContaining([
           expect.objectContaining({ value: 'prod' }),
@@ -168,7 +168,7 @@ describe('handleDockerVersion {versionActionsVersion} integration', () => {
         },
       },
     };
-    jest.mocked(askChoice).mockResolvedValueOnce('dev');
+    jest.mocked(selectPrompt).mockResolvedValueOnce('dev');
 
     await handleDockerVersion(
       process.cwd(),
@@ -179,7 +179,7 @@ describe('handleDockerVersion {versionActionsVersion} integration', () => {
       versionActionsVersion
     );
 
-    const call = jest.mocked(askChoice).mock.calls[0][0] as any;
+    const call = jest.mocked(selectPrompt).mock.calls[0][0] as any;
     // The hint interpolates the project name only, matching what the scheme
     // list can resolve before a version is chosen.
     const devChoice = call.choices.find((c: any) => c.value === 'dev');

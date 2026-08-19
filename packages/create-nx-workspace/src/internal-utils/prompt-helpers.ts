@@ -36,7 +36,7 @@ function unwrap<T>(value: T | symbol, isCancel: (v: unknown) => boolean): T {
   return value as T;
 }
 
-export async function askChoice<T extends string>(
+export async function selectPrompt<T extends string>(
   options: AskOptions<T>
 ): Promise<T> {
   if (options.skip) {
@@ -64,14 +64,14 @@ export async function askChoice<T extends string>(
   );
 }
 
-export async function askYesNo(options: {
+export async function confirmationPrompt(options: {
   message: string;
   skip?: boolean;
   /** Answer used when skipped. Defaults to yes, matching a first-choice skip. */
   skippedValue?: boolean;
   initial?: boolean;
 }): Promise<boolean> {
-  const answer = await askChoice<'Yes' | 'No'>({
+  const answer = await selectPrompt<'Yes' | 'No'>({
     message: options.message,
     choices: [{ value: 'Yes' }, { value: 'No' }],
     skip: options.skip,
@@ -86,7 +86,7 @@ export async function askYesNo(options: {
   return answer === 'Yes';
 }
 
-export async function askText(options: {
+export async function textPrompt(options: {
   message: string;
   initialValue?: string;
   /** Runs synchronously; clack does not await validators. */

@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { askChoice } from '../../utils/prompt-helpers';
+import { selectPrompt } from '../../utils/prompt-helpers';
 import { existsSync } from 'fs';
 import { prerelease } from 'semver';
 import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
@@ -62,7 +62,7 @@ export async function initHandler(options: InitArgs) {
     }
   } else {
     const useDotNxFolder =
-      (await askChoice({
+      (await selectPrompt({
         message: 'Where should your workspace be created?',
         choices: [
           { value: 'false', label: 'In a new folder under this directory' },

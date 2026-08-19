@@ -1,6 +1,6 @@
 import {
   logShowProjectCommand,
-  askYesNo,
+  confirmationPrompt,
   whenInteractive,
   upsertTargetDefault,
 } from '@nx/devkit/internal';
@@ -87,7 +87,7 @@ export async function applicationGeneratorInternal(
     options.routing && options.bundler === 'vite'
       ? (options.useReactRouter ??
         (await whenInteractive(false, () =>
-          askYesNo({
+          confirmationPrompt({
             message:
               'Would you like to use react-router for server-side rendering?',
           })

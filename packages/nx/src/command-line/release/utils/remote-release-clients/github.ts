@@ -1,5 +1,5 @@
 import * as pc from 'picocolors';
-import { askChoice } from '../../../../utils/prompt-helpers';
+import { selectPrompt } from '../../../../utils/prompt-helpers';
 import { execFileSync, execSync } from 'node:child_process';
 import { existsSync, promises as fsp } from 'node:fs';
 import { homedir } from 'node:os';
@@ -381,7 +381,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
 
   private async promptForContinueInGitHub(): Promise<boolean> {
     try {
-      const open = await askChoice({
+      const open = await selectPrompt({
         message:
           'Do you want to finish creating the release manually in your browser?',
         choices: [

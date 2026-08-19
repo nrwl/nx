@@ -1,4 +1,4 @@
-import { askMultiselect } from '../../../../utils/prompt-helpers';
+import { multiselectPrompt } from '../../../../utils/prompt-helpers';
 import { join } from 'path';
 import { readJsonFile, writeJsonFile } from '../../../../utils/fileutils';
 import { nxVersion } from '../../../../utils/versions';
@@ -93,7 +93,7 @@ async function collectCacheableOperations(options: Options): Promise<string[]> {
         '🧑‍🔧 Please answer the following questions about the targets found in your angular.json in order to generate task runner configuration',
     });
 
-    cacheableOperations = await askMultiselect({
+    cacheableOperations = await multiselectPrompt({
       message:
         'Which of the following targets are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not)',
       choices: workspaceTargets.map((t) => ({ value: t })),

@@ -1,6 +1,11 @@
 import { logger } from './logger';
 import { handleImport } from './handle-import';
-import { askChoice, askMultiselect, askText, askYesNo } from './prompt-helpers';
+import {
+  selectPrompt,
+  multiselectPrompt,
+  textPrompt,
+  confirmationPrompt,
+} from './prompt-helpers';
 import type { NxJsonConfiguration } from '../config/nx-json';
 import type {
   ProjectsConfigurations,
@@ -1018,12 +1023,12 @@ async function askSchemaQuestion(question: Prompt): Promise<any> {
 
   switch (question.type) {
     case 'confirm':
-      return askYesNo({
+      return confirmationPrompt({
         message: question.message,
         initial: question.initial !== false,
       });
     case 'multiselect':
-      return askMultiselect({
+      return multiselectPrompt({
         message: question.message,
         choices,
         initialValues: Array.isArray(question.initial)
@@ -1031,7 +1036,7 @@ async function askSchemaQuestion(question: Prompt): Promise<any> {
           : undefined,
       });
     case 'autocomplete':
-      return askChoice({
+      return selectPrompt({
         message: question.message,
         choices,
         initial: question.initial,
@@ -1039,7 +1044,7 @@ async function askSchemaQuestion(question: Prompt): Promise<any> {
     case 'numeral': {
       // No numeric prompt; the answer is parsed back so the schema still
       // receives a number.
-      const answer = await askText({
+      const answer = await textPrompt({
         message: question.message,
         initialValue:
           question.initial === undefined ? undefined : String(question.initial),
@@ -1051,7 +1056,7 @@ async function askSchemaQuestion(question: Prompt): Promise<any> {
       return Number(answer);
     }
     default:
-      return askText({
+      return textPrompt({
         message: question.message,
         initialValue:
           typeof question.initial === 'string' ? question.initial : undefined,

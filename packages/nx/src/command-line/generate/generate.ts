@@ -1,5 +1,5 @@
 import * as pc from 'picocolors';
-import { askChoice, askText } from '../../utils/prompt-helpers';
+import { selectPrompt, textPrompt } from '../../utils/prompt-helpers';
 import { relative } from 'path';
 
 import { readNxJson } from '../../config/configuration';
@@ -148,7 +148,7 @@ async function promptForCollection(
   } else if (interactive && choices.length > 1) {
     const noneOfTheAbove = `\nNone of the above`;
     choices.push(noneOfTheAbove);
-    const generator = await askChoice({
+    const generator = await selectPrompt({
       message: `Which generator would you like to use?`,
       // Local-plugin entries carry a separate display label; the rest are
       // plain collection names.
@@ -163,7 +163,7 @@ async function promptForCollection(
       return generator;
     }
 
-    const customCollection = await askText({
+    const customCollection = await textPrompt({
       message: `Which collection would you like to use?`,
       validate: (value) => {
         try {

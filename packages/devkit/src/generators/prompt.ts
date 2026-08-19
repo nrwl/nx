@@ -26,7 +26,7 @@ function isInteractive(): boolean {
  * Ask only when prompting is possible, otherwise take the default.
  *
  * The prompt is a callback so callers reach for whichever typed helper fits
- * (`askChoice`, `askText`, ...) rather than describing a question through one
+ * (`selectPrompt`, `textPrompt`, ...) rather than describing a question through one
  * union type.
  */
 export async function whenInteractive<T>(
@@ -44,7 +44,7 @@ export async function whenInteractive<T>(
  * so it cannot depend on symbols added to a newer `nx`. First-party plugins
  * have no such constraint and should use `@nx/devkit/internal`.
  */
-export async function promptText(options: {
+export async function textPrompt(options: {
   message: string;
   initialValue?: string;
   validate?: (value: string) => string | undefined;

@@ -16,7 +16,7 @@ import {
   messages,
   recordStat,
   LINTERS,
-  askText,
+  textPrompt,
 } from 'create-nx-workspace/internal';
 import { createWorkspace, CreateWorkspaceOptions } from 'create-nx-workspace';
 import type {
@@ -48,7 +48,7 @@ async function determinePluginName(
     return parsedArgs.pluginName;
   }
 
-  return askText({
+  return textPrompt({
     message: `Plugin name                        `,
     validate: (value) =>
       value.length ? undefined : 'Plugin name cannot be empty',
@@ -62,7 +62,7 @@ async function determineCreatePackageName(
     return parsedArgs.createPackageName;
   }
 
-  return askText({
+  return textPrompt({
     message: `Create a package which can be used by npx to create a new workspace (Leave blank to not create this package)`,
   });
 }

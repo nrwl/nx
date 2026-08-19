@@ -1,5 +1,5 @@
 import * as pc from 'picocolors';
-import { askChoice } from '../../../../utils/prompt-helpers';
+import { selectPrompt } from '../../../../utils/prompt-helpers';
 import { execSync } from 'node:child_process';
 import { orange, output } from '../../../../utils/output';
 import type { PostGitTask } from '../../changelog';
@@ -273,7 +273,7 @@ export class GitLabRemoteReleaseClient extends RemoteReleaseClient<GitLabRelease
 
   private async promptForContinueInGitLab(): Promise<boolean> {
     try {
-      const open = await askChoice({
+      const open = await selectPrompt({
         message: 'Do you want to create the release manually in your browser?',
         choices: [
           {

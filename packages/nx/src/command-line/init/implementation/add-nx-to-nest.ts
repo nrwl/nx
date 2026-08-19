@@ -1,4 +1,4 @@
-import { askMultiselect, askText } from '../../../utils/prompt-helpers';
+import { multiselectPrompt, textPrompt } from '../../../utils/prompt-helpers';
 import { unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'path';
 import { InitArgs } from '../init-v1';
@@ -78,14 +78,14 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
       title:
         '🧑‍🔧 Please answer the following questions about the scripts found in your package.json in order to generate task runner configuration',
     });
-    cacheableOperations = await askMultiselect({
+    cacheableOperations = await multiselectPrompt({
       message:
         'Which of the following scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not)',
       choices: scripts.map((s) => ({ value: s })),
     });
 
     for (const scriptName of cacheableOperations) {
-      scriptOutputs[scriptName] = await askText({
+      scriptOutputs[scriptName] = await textPrompt({
         message: `Does the "${scriptName}" script create any outputs? If not, leave blank, otherwise provide a path (e.g. dist, lib, build, coverage)`,
       });
     }

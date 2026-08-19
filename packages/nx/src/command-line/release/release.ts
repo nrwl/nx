@@ -1,4 +1,4 @@
-import { askYesNo } from '../../utils/prompt-helpers';
+import { confirmationPrompt } from '../../utils/prompt-helpers';
 import { rmSync } from 'node:fs';
 import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
@@ -444,7 +444,7 @@ export function createAPI(
 }
 
 async function promptForPublish(): Promise<boolean> {
-  return askYesNo({
+  return confirmationPrompt({
     message: 'Do you want to publish these versions?',
     // Cancelling is a decision not to publish, not a failure.
     onCancel: () => false,

@@ -1,6 +1,10 @@
 import { isCI } from '../../utils/is-ci';
 import { output } from '../../utils/output';
-import { askChoice, Choice, askYesNo } from '../../utils/prompt-helpers';
+import {
+  selectPrompt,
+  Choice,
+  confirmationPrompt,
+} from '../../utils/prompt-helpers';
 
 /**
  * Whether `nx migrate` may show interactive prompts: requires a TTY on stdin,
@@ -28,7 +32,7 @@ export async function migrateConfirm(options: {
   message: string;
   initial?: boolean;
 }): Promise<boolean> {
-  return askYesNo({
+  return confirmationPrompt({
     message: options.message,
     initial: options.initial,
     onCancel: cancelMigrate,
@@ -43,7 +47,7 @@ export async function migrateChoice<T extends string>(options: {
   choices: Choice<T>[];
   initial?: T;
 }): Promise<T> {
-  return askChoice<T>({
+  return selectPrompt<T>({
     message: options.message,
     choices: options.choices,
     initial: options.initial,

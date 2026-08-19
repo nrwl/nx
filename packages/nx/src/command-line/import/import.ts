@@ -4,7 +4,7 @@ import * as pc from 'picocolors';
 import { cloneFromUpstream, GitRepository } from '../../utils/git-utils';
 import { stat, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'tmp';
-import { askChoice, askText } from '../../utils/prompt-helpers';
+import { selectPrompt, textPrompt } from '../../utils/prompt-helpers';
 import { output } from '../../utils/output';
 const createSpinner = require('ora');
 import { detectPlugins, getPluginReason } from '../init/init-v2';
@@ -134,7 +134,7 @@ export async function importHandler(options: ImportOptions) {
   const tempImportDirectory = join(tmpdir, 'nx-import');
 
   if (!sourceRepository) {
-    sourceRepository = await askText({
+    sourceRepository = await textPrompt({
       message:
         'What is the URL of the repository you want to import? (This can be a local git repository or a git remote URL)',
       validate: (value) => (value ? undefined : 'A repository is required'),
@@ -201,7 +201,7 @@ export async function importHandler(options: ImportOptions) {
       );
     }
     const branchChoices = await sourceGitClient.listBranches();
-    ref = await askChoice({
+    ref = await selectPrompt({
       message: `Which branch do you want to import?`,
       choices: branchChoices.map((b) => ({ value: b })),
     });
@@ -212,7 +212,7 @@ export async function importHandler(options: ImportOptions) {
       // Default to importing the entire repository in agent mode
       source = '.';
     } else {
-      source = await askText({
+      source = await textPrompt({
         message: `Which directory do you want to import into this workspace? (leave blank to import the entire repository)`,
       });
     }
@@ -224,7 +224,7 @@ export async function importHandler(options: ImportOptions) {
         'The --destination option is required when running in agent mode.'
       );
     }
-    destination = await askText({
+    destination = await textPrompt({
       message: 'Where in this workspace should the code be imported into?',
       initialValue: source ? source : undefined,
       validate: (value) => (value ? undefined : 'A destination is required'),

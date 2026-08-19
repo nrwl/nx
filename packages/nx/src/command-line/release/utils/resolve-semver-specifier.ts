@@ -1,4 +1,4 @@
-import { askChoice, askText } from '../../../utils/prompt-helpers';
+import { selectPrompt, textPrompt } from '../../../utils/prompt-helpers';
 import { RELEASE_TYPES, valid } from 'semver';
 import { ProjectGraph } from '../../../config/project-graph';
 import { NxReleaseConfig } from '../config/config';
@@ -45,7 +45,7 @@ export async function resolveSemverSpecifierFromPrompt(
   // what the user meant as an abort.
   const abort = (): never => process.exit(1);
 
-  const specifier = await askChoice({
+  const specifier = await selectPrompt({
     message: selectionMessage,
     choices: [
       ...RELEASE_TYPES.map((t) => ({ value: t })),
@@ -58,7 +58,7 @@ export async function resolveSemverSpecifierFromPrompt(
     return specifier as SemverBumpType;
   }
 
-  return askText({
+  return textPrompt({
     message: customVersionMessage,
     validate: (input) =>
       valid(input) ? undefined : 'Please enter a valid semver version',

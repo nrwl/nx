@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import { askChoice, whenInteractive } from '@nx/devkit/internal';
+import { selectPrompt, whenInteractive } from '@nx/devkit/internal';
 import { isUsingTsSolutionSetup } from './typescript/ts-solution-setup';
 import { detectLinters, type LinterType } from './linter';
 
@@ -22,7 +22,7 @@ export async function normalizeLinterOption(
   // Nothing to follow, so this is a real choice. `{ linter: 'none' }` is the
   // non-interactive answer; `none` leads so the interactive default matches it.
   return whenInteractive<LinterType>('none', () =>
-    askChoice<LinterType>({
+    selectPrompt<LinterType>({
       message: `Which linter would you like to use?`,
       choices: [{ value: 'none' }, { value: 'eslint' }, { value: 'oxlint' }],
     })
@@ -47,7 +47,7 @@ export async function normalizeUnitTestRunnerOption<
   const defaultValue = (isTsSolutionSetup ? 'none' : testRunners[0]) as T;
 
   return whenInteractive<T>(defaultValue, () =>
-    askChoice<T>({
+    selectPrompt<T>({
       message: `Which unit test runner would you like to use?`,
       choices,
     })

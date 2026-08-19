@@ -24,7 +24,7 @@ const defaultOnCancel = (): never => {
   process.exit(130);
 };
 
-export async function askChoice<T extends string>(options: {
+export async function selectPrompt<T extends string>(options: {
   message: string;
   choices: Choice<T>[];
   initial?: T;
@@ -59,14 +59,14 @@ export async function askChoice<T extends string>(options: {
   return answer as T;
 }
 
-export async function askYesNo(options: {
+export async function confirmationPrompt(options: {
   message: string;
   initial?: boolean;
   skip?: boolean;
   skippedValue?: boolean;
   onCancel?: OnCancel<boolean>;
 }): Promise<boolean> {
-  const answer = await askChoice<'Yes' | 'No'>({
+  const answer = await selectPrompt<'Yes' | 'No'>({
     message: options.message,
     choices: [{ value: 'Yes' }, { value: 'No' }],
     initial: options.initial === false ? 'No' : 'Yes',
@@ -84,7 +84,7 @@ export async function askYesNo(options: {
   return answer === 'Yes';
 }
 
-export async function askText(options: {
+export async function textPrompt(options: {
   message: string;
   initialValue?: string;
   placeholder?: string;
@@ -110,7 +110,7 @@ export async function askText(options: {
   return answer as string;
 }
 
-export async function askMultiselect<T extends string>(options: {
+export async function multiselectPrompt<T extends string>(options: {
   message: string;
   choices: Choice<T>[];
   required?: boolean;

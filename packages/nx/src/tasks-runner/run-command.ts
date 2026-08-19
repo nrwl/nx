@@ -1,4 +1,4 @@
-import { askChoice } from '../utils/prompt-helpers';
+import { selectPrompt } from '../utils/prompt-helpers';
 import { stripVTControlCharacters } from 'node:util';
 
 import type { Observable } from 'rxjs';
@@ -892,7 +892,7 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
 async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {
   try {
     // No footer slot, so the opt-out note is part of the message.
-    const applyChanges = await askChoice({
+    const applyChanges = await selectPrompt({
       message: `Would you like to sync the identified changes to get your workspace up to date?${pc.dim(
         '\nYou can skip this prompt by setting the `sync.applyChanges` option to `true` in your `nx.json`.\nFor more information, refer to the docs: https://nx.dev/concepts/sync-generators.'
       )}`,
@@ -913,7 +913,7 @@ async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {
 
 async function confirmRunningTasksWithSyncFailures(): Promise<void> {
   try {
-    const runTasks = await askChoice({
+    const runTasks = await selectPrompt({
       message: `Would you like to ignore the sync failures and continue running the tasks?${pc.dim(
         `\nWhen running in CI and there are sync failures, the tasks won't run. Addressing the errors above is highly recommended to prevent failures in CI.`
       )}`,

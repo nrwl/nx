@@ -1,6 +1,6 @@
 import { join } from 'path';
 import { handleImport } from '../../../utils/handle-import';
-import { askChoice } from '../../../utils/prompt-helpers';
+import { selectPrompt } from '../../../utils/prompt-helpers';
 import { output } from '../../../utils/output';
 import { readNxJson } from '../../../config/configuration';
 import { FsTree, flushChanges } from '../../../generators/tree';
@@ -317,7 +317,7 @@ async function nxCloudPrompt(
     .filter(Boolean)
     .map((t) => pc.dim(t));
 
-  return (await askChoice({
+  return (await selectPrompt({
     message: [message, ...suffix].join('\n'),
     // These choices are `{ value, name }` where `name` is the display text,
     // the inverse of enquirer's usual `{ name, message }`. Prefer `value` so

@@ -1,7 +1,7 @@
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
-  askChoice,
+  selectPrompt,
   whenInteractive,
   addBuildTargetDefaults,
   logShowProjectCommand,
@@ -808,7 +808,7 @@ async function normalizeOptions(
     options.unitTestRunner ??= await whenInteractive<
       'none' | 'jest' | 'vitest'
     >('none', () =>
-      askChoice<'none' | 'jest' | 'vitest'>({
+      selectPrompt<'none' | 'jest' | 'vitest'>({
         message: `Which unit test runner would you like to use?`,
         choices: [{ value: 'none' }, { value: 'vitest' }, { value: 'jest' }],
       })
@@ -817,7 +817,7 @@ async function normalizeOptions(
     options.unitTestRunner ??= await whenInteractive<
       'none' | 'jest' | 'vitest' | undefined
     >(undefined, () =>
-      askChoice<'none' | 'jest' | 'vitest'>({
+      selectPrompt<'none' | 'jest' | 'vitest'>({
         message: `Which unit test runner would you like to use?`,
         choices: [{ value: 'jest' }, { value: 'vitest' }, { value: 'none' }],
       })

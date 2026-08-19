@@ -1,4 +1,4 @@
-import { askMultiselect } from '../../utils/prompt-helpers';
+import { multiselectPrompt } from '../../utils/prompt-helpers';
 import { isCI } from '../../utils/is-ci';
 import { Agent, agentDisplayMap, supportedAgents } from '../../ai/utils';
 import { detectAiAgent } from '../../ai/detect-ai-agent';
@@ -24,7 +24,7 @@ export async function determineAiAgents(
 }
 
 async function aiAgentsPrompt(): Promise<Agent[]> {
-  return askMultiselect<Agent>({
+  return multiselectPrompt<Agent>({
     message: 'Which AI agents, if any, would you like to set up?',
     choices: supportedAgents.map((a) => ({
       value: a,

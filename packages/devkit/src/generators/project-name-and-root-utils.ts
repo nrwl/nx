@@ -1,4 +1,4 @@
-import { promptText, whenInteractive } from './prompt';
+import { textPrompt, whenInteractive } from './prompt';
 import {
   getProjects,
   joinPathFragments,
@@ -144,7 +144,7 @@ export async function ensureRootProjectName(
 ): Promise<void> {
   if (!options.name && options.directory === '.' && getRelativeCwd() === '') {
     options.name = await whenInteractive(undefined, () =>
-      promptText({
+      textPrompt({
         message: `What do you want to name the ${projectType}?`,
       })
     );

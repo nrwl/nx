@@ -1,4 +1,4 @@
-import { askMultiselect } from '../../utils/prompt-helpers';
+import { multiselectPrompt } from '../../utils/prompt-helpers';
 import { existsSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
@@ -89,7 +89,7 @@ async function pickShellsInteractively(): Promise<Shell[]> {
     process.exit(1);
   }
   const detected = detectAvailableShells();
-  return await askMultiselect<Shell>({
+  return await multiselectPrompt<Shell>({
     message: 'Install nx completion for which shell(s)?',
     choices: SHELL_CHOICES.map((name) => ({ value: name })),
     // Pre-select shells we can detect on this machine.

@@ -1,5 +1,5 @@
 import * as pc from 'picocolors';
-import { askYesNo } from '../../utils/prompt-helpers';
+import { confirmationPrompt } from '../../utils/prompt-helpers';
 import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { prerelease } from 'semver';
 import { dirSync } from 'tmp';
@@ -1309,7 +1309,7 @@ async function filterProjectCommits({
 }
 
 async function promptForRemoteRelease(): Promise<boolean> {
-  return askYesNo({
+  return confirmationPrompt({
     message: `Do you want to create a ${
       remoteReleaseProviderName ?? 'remote'
     } release anyway?`,

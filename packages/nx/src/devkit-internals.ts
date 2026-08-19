@@ -42,10 +42,10 @@ export {
 } from './utils/ignore';
 export { splitTarget } from './utils/split-target';
 export {
-  askChoice,
-  askMultiselect,
-  askText,
-  askYesNo,
+  selectPrompt,
+  multiselectPrompt,
+  textPrompt,
+  confirmationPrompt,
   type Choice as PromptChoice,
 } from './utils/prompt-helpers';
 export { combineOptionsForExecutor } from './utils/params';

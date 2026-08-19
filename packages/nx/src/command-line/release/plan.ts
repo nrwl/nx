@@ -1,4 +1,4 @@
-import { askChoice, askText } from '../../utils/prompt-helpers';
+import { selectPrompt, textPrompt } from '../../utils/prompt-helpers';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -309,7 +309,7 @@ async function createVersionPlanFileForBumps(
 }
 
 async function promptForVersion(message: string): Promise<string> {
-  return askChoice({
+  return selectPrompt({
     message,
     choices: [...RELEASE_TYPES, 'none'].map((v) => ({ value: v })),
     onCancel: () => {
@@ -331,7 +331,7 @@ async function promptForMessage(versionPlanName: string): Promise<string> {
 
 async function _promptForMessage(versionPlanName: string): Promise<string> {
   try {
-    const reply = await askText({
+    const reply = await textPrompt({
       message:
         'What changelog message would you like associated with this change? (Leave blank to open an external editor for multi-line messages/easier editing)',
     });

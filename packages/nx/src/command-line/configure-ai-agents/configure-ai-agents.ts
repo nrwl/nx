@@ -1,4 +1,4 @@
-import { askMultiselect } from '../../utils/prompt-helpers';
+import { multiselectPrompt } from '../../utils/prompt-helpers';
 import { existsSync, readFileSync } from 'node:fs';
 import { relative } from 'node:path';
 import * as pc from 'picocolors';
@@ -346,7 +346,7 @@ export async function configureAiAgentsHandlerImpl(
   let selectedAgents: Agent[];
   if (options.interactive !== false) {
     try {
-      selectedAgents = await askMultiselect<Agent>({
+      selectedAgents = await multiselectPrompt<Agent>({
         message:
           'Which AI agents would you like to configure? (space to select, enter to confirm)',
         choices: allAgentChoices,

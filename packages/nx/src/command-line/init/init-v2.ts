@@ -2,9 +2,9 @@ import { existsSync } from 'fs';
 import { basename } from 'path';
 
 import {
-  askChoice,
-  askMultiselect,
-  askYesNo,
+  selectPrompt,
+  multiselectPrompt,
+  confirmationPrompt,
 } from '../../utils/prompt-helpers';
 import { prerelease } from 'semver';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
@@ -229,7 +229,7 @@ async function runInit(
     !aiMode &&
     process.stdin.isTTY
   ) {
-    const setupMode = await askChoice({
+    const setupMode = await selectPrompt({
       message: 'How would you like to set up Nx in this directory?',
       choices: [
         {
@@ -265,7 +265,7 @@ async function runInit(
   // AI mode defaults to minimum setup, humans can choose
   let guided = !aiMode; // Default to minimum (false) for AI, guided (true) for humans
   if (options.interactive && !(_isTurborepo || _isNonJs)) {
-    const setupType = await askChoice({
+    const setupType = await selectPrompt({
       message: 'Would you like a minimum or guided setup?',
       choices: [{ value: 'Minimum' }, { value: 'Guided' }],
     });
@@ -727,7 +727,7 @@ export async function detectPlugins(
     ],
   });
 
-  const pluginsToInstall = await askMultiselect({
+  const pluginsToInstall = await multiselectPrompt({
     message: `Which plugins would you like to add? Press <Space> to select and <Enter> to submit.`,
     choices: plugins.map((p) => ({ value: p })),
   });
@@ -740,7 +740,7 @@ export async function detectPlugins(
 
   const updatePackageScripts =
     existsSync('package.json') &&
-    (await askYesNo({
+    (await confirmationPrompt({
       message: `Do you want to start using Nx in your package.json scripts?`,
     }));
 

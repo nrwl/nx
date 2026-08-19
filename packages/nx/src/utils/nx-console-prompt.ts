@@ -1,4 +1,4 @@
-import { askYesNo } from './prompt-helpers';
+import { confirmationPrompt } from './prompt-helpers';
 import { homedir } from 'os';
 import { output } from './output';
 import {
@@ -59,7 +59,7 @@ async function promptForNxConsoleInstallation(): Promise<boolean> {
       ],
     });
 
-    return await askYesNo({
+    return await confirmationPrompt({
       message: 'Install Nx Console? (you can uninstall anytime)',
       onCancel: () => false,
     });

@@ -1,7 +1,7 @@
 import {
   findTargetDefault,
   resolveImportPath,
-  askText,
+  textPrompt,
   whenInteractive,
   upsertTargetDefault,
   PackageJson,
@@ -313,14 +313,14 @@ async function normalizeOptions(
 
 async function promptForMissingServeData(projectName: string) {
   const command = await whenInteractive(`npx nx serve ${projectName}`, () =>
-    askText({
+    textPrompt({
       message: 'What command should be run to serve the application locally?',
       initialValue: `npx nx serve ${projectName}`,
     })
   );
   const port = await whenInteractive(3000, async () =>
     Number(
-      await askText({
+      await textPrompt({
         message: 'What port will the application be served on?',
         initialValue: '3000',
         validate: (value) =>

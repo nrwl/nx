@@ -1,5 +1,5 @@
 import { existsSync } from 'fs';
-import { askYesNo } from './prompt-helpers';
+import { confirmationPrompt } from './prompt-helpers';
 import { join } from 'path';
 import { output } from './output';
 import { isCI } from './is-ci';
@@ -52,7 +52,7 @@ export async function promptForAnalyticsPreference(): Promise<boolean> {
       ],
     });
 
-    return await askYesNo({
+    return await confirmationPrompt({
       message: 'Share usage data with the Nx team?',
       // Cancelling is a decline, not a failure.
       onCancel: () => false,

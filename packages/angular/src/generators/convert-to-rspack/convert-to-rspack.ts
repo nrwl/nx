@@ -1,5 +1,5 @@
 import {
-  askChoice,
+  selectPrompt,
   forEachExecutorOptions,
   getNamedInputs,
 } from '@nx/devkit/internal';
@@ -322,7 +322,7 @@ async function getProjectToConvert(tree: Tree) {
       projects.add(project);
     });
   }
-  return askChoice({
+  return selectPrompt({
     message: 'Which project would you like to convert to rspack?',
     choices: Array.from(projects).map((p) => ({ value: p })),
   });

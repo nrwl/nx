@@ -78,10 +78,10 @@ import {
 } from '../config/schema-utils';
 import { handleImport } from '../utils/handle-import';
 import {
-  askChoice,
-  askMultiselect,
-  askText,
-  askYesNo,
+  selectPrompt,
+  multiselectPrompt,
+  textPrompt,
+  confirmationPrompt,
 } from '../utils/prompt-helpers';
 import { resolveNxTokensInOptions } from '../project-graph/utils/project-configuration/target-merging';
 
@@ -1039,18 +1039,18 @@ function createPromptProvider() {
 
     switch (question.type) {
       case 'confirm':
-        return askYesNo({
+        return confirmationPrompt({
           message: question.message,
           initial: question.initial !== false,
         });
       case 'select':
-        return askChoice({
+        return selectPrompt({
           message: question.message,
           choices,
           initial: question.initial,
         });
       case 'multiselect':
-        return askMultiselect({
+        return multiselectPrompt({
           message: question.message,
           choices,
           initialValues: question.initial,
@@ -1058,7 +1058,7 @@ function createPromptProvider() {
       case 'numeral': {
         // No numeric prompt; the answer is parsed back so callers still get a
         // number rather than the typed string.
-        const answer = await askText({
+        const answer = await textPrompt({
           message: question.message,
           initialValue:
             question.initial === undefined
@@ -1072,7 +1072,7 @@ function createPromptProvider() {
         return Number(answer);
       }
       default:
-        return askText({
+        return textPrompt({
           message: question.message,
           initialValue: question.initial,
           validate,

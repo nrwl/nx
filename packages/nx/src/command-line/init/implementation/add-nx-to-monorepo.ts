@@ -1,4 +1,4 @@
-import { askMultiselect, askText } from '../../../utils/prompt-helpers';
+import { multiselectPrompt, textPrompt } from '../../../utils/prompt-helpers';
 import { readdirSync, readFileSync, statSync } from 'fs';
 import ignore = require('ignore');
 import { join, relative } from 'path';
@@ -43,20 +43,20 @@ export async function addNxToMonorepo(
         '🧑‍🔧 Please answer the following questions about the scripts found in your workspace in order to generate task runner configuration',
     });
 
-    targetDefaults = await askMultiselect({
+    targetDefaults = await multiselectPrompt({
       message:
         'Which scripts need to be run in order? (e.g. before building a project, dependent projects must be built)',
       choices: scripts.map((s) => ({ value: s })),
     });
 
-    cacheableOperations = await askMultiselect({
+    cacheableOperations = await multiselectPrompt({
       message:
         'Which scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not)',
       choices: scripts.map((s) => ({ value: s })),
     });
 
     for (const scriptName of cacheableOperations) {
-      scriptOutputs[scriptName] = await askText({
+      scriptOutputs[scriptName] = await textPrompt({
         message: `Does the "${scriptName}" script create any outputs? If not, leave blank, otherwise provide a path relative to a project root (e.g. dist, lib, build, coverage)`,
       });
     }

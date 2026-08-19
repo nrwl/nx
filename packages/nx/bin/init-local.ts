@@ -4,7 +4,7 @@ import { commandsObject } from '../src/command-line/nx-commands';
 import { WorkspaceTypeAndRoot } from '../src/utils/find-workspace-root';
 import { stripIndents } from '../src/utils/strip-indents';
 import { daemonClient } from '../src/daemon/client/client';
-import { askYesNo } from '../src/utils/prompt-helpers';
+import { confirmationPrompt } from '../src/utils/prompt-helpers';
 import { output } from '../src/utils/output';
 import { flushAnalytics } from '../src/analytics';
 
@@ -147,7 +147,7 @@ async function ensureNxConsoleInstalledViaDaemon(): Promise<void> {
     });
 
     try {
-      const shouldInstallNxConsole = await askYesNo({
+      const shouldInstallNxConsole = await confirmationPrompt({
         message: 'Install Nx Console? (you can uninstall anytime)',
         onCancel: () => false,
       });
