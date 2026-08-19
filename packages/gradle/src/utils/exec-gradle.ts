@@ -7,8 +7,11 @@ import { SpawnOptions } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, join, isAbsolute } from 'node:path';
 import { GradlePluginOptions } from '../plugin/utils/gradle-plugin-options';
-import treeKill from 'tree-kill';
-import { safeSpawn, signalToCode } from '@nx/devkit/internal';
+import {
+  killProcessTreeGraceful,
+  safeSpawn,
+  signalToCode,
+} from '@nx/devkit/internal';
 
 export const fileSeparator = process.platform.startsWith('win')
   ? 'file:///'
@@ -38,7 +41,7 @@ export function execGradleAsync(
   args: ReadonlyArray<string>,
   execOptions: Omit<SpawnOptions, 'shell'> = {}
 ): Promise<Buffer> {
-  // Extract signal so we can handle cancellation with tree-kill
+  // Extract signal so we can handle cancellation with a process-tree kill
   // instead of Node's default which only kills the immediate child.
   const { signal, ...restOptions } = execOptions;
 
@@ -50,16 +53,18 @@ export function execGradleAsync(
       ...restOptions,
     });
 
-    // Use tree-kill on abort to kill the entire process tree
-    // (gradlew spawns java), not just the direct child.
+    let stdout = Buffer.from('');
+
+    // On abort, kill the entire process tree (gradlew spawns java) and settle
+    // immediately — a wedged JVM that outlives the kill signal would otherwise
+    // keep this promise pending and the abort error would never surface.
     const onAbort = () => {
       if (cp.pid) {
-        treeKill(cp.pid);
+        killProcessTreeGraceful(cp.pid).catch(() => {});
       }
+      rej(stdout);
     };
     signal?.addEventListener('abort', onAbort, { once: true });
-
-    let stdout = Buffer.from('');
     cp.stdout?.on('data', (data) => {
       stdout += data;
     });
