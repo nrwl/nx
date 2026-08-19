@@ -1,6 +1,16 @@
 import { names } from '@nx/devkit';
-import { readFile, runCLI, uniq, updateFile, updateJson } from '@nx/e2e-utils';
-import { join } from 'path';
+import {
+  checkFilesDoNotExist,
+  checkFilesExist,
+  readFile,
+  readJson,
+  runCLI,
+  tmpProjPath,
+  uniq,
+  updateFile,
+  updateJson,
+} from '@nx/e2e-utils';
+import { dirname, join, relative } from 'path';
 import {
   setupProjectsTest,
   resetProjectsTest,
@@ -27,12 +37,16 @@ describe('Angular Projects - Buildable Libraries', () => {
     // ARRANGE
     const buildableLib = uniq('buildlib1');
     const buildableChildLib = uniq('buildlib2');
+    const entryPoint = uniq('entrypoint');
 
     runCLI(
       `generate @nx/angular:library ${buildableLib} --buildable=true --no-standalone --no-interactive`
     );
     runCLI(
       `generate @nx/angular:library ${buildableChildLib} --buildable=true --no-standalone --no-interactive`
+    );
+    runCLI(
+      `generate @nx/angular:secondary-entry-point --name=${entryPoint} --library=${buildableLib} --no-interactive`
     );
 
     // update the app module to include a ref to the buildable lib
@@ -162,6 +176,49 @@ describe('Angular Projects - Buildable Libraries', () => {
       `Building entry point '@${proj}/${buildableLib}'`
     );
     expect(libOutput).toContain(`nx run ${app1}:build:development`);
+
+    // the development configuration keeps declarationMap enabled, so the lib
+    // emits declaration maps that must still resolve to its sources
+    const declarationMap = `dist/${buildableLib}/lib/${
+      names(buildableLib).fileName
+    }-module.d.ts.map`;
+    const { sources } = readJson<{ sources: string[] }>(declarationMap);
+    expect(
+      sources.map((source) =>
+        relative(
+          tmpProjPath(),
+          join(tmpProjPath(dirname(declarationMap)), source)
+        )
+      )
+    ).toEqual([
+      join(
+        buildableLib,
+        'src',
+        'lib',
+        `${names(buildableLib).fileName}-module.ts`
+      ),
+    ]);
+
+    const { typings, exports: packageExports } = readJson<{
+      typings: string;
+      exports: Record<string, Record<string, string>>;
+    }>(`dist/${buildableLib}/package.json`);
+
+    // the flat module file is built in memory by ngc and has no source on disk,
+    // so it must not ship a declaration map
+    expect(readFile(`dist/${buildableLib}/${typings}`)).not.toContain(
+      'sourceMappingURL'
+    );
+    checkFilesDoNotExist(`dist/${buildableLib}/${typings}.map`);
+
+    // the package manifest is written while the primary entry point is in
+    // progress, so the secondary entry point is mapped before it is built
+    expect(packageExports[`./${entryPoint}`]).toBeDefined();
+    checkFilesExist(
+      ...Object.values(packageExports).flatMap((conditions) =>
+        Object.values(conditions).map((file) => `dist/${buildableLib}/${file}`)
+      )
+    );
 
     // to proof it has been built from source the "main.js" should actually contain
     // the path to dist
