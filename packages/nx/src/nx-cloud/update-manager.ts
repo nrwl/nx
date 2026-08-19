@@ -9,6 +9,7 @@ import {
   writeFileSync,
 } from 'fs';
 import { createGunzip } from 'zlib';
+import { pipeline } from 'stream';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { createApiHttpClient } from './utilities/nx-cloud-http-client';
@@ -354,6 +355,8 @@ async function downloadAndExtractClientBundle(
       } else if (headers.type === 'file') {
         const outputFilePath = join(bundleExtractLocation, headers.name);
         const writeStream = createWriteStream(outputFilePath);
+        // Surface disk errors through the pipeline instead of crashing
+        writeStream.on('error', (e) => extract.destroy(e));
         stream.pipe(writeStream);
 
         // Continue the tar stream after the write stream closes
@@ -365,17 +368,17 @@ async function downloadAndExtractClientBundle(
       }
     });
 
-    extract.on('error', (e) => {
-      rej(e);
-    });
-
     extract.on('finish', function () {
       removeOldClientBundles(version);
       writeBundleVerificationLock();
       res(bundleExtractLocation);
     });
 
-    resp.data.pipe(createGunzip()).pipe(extract);
+    // pipeline propagates download/gunzip errors that .pipe() would leave
+    // uncaught
+    pipeline(resp.data, createGunzip(), extract, (e) => {
+      if (e) rej(e);
+    });
   });
 }
 

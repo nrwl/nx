@@ -42,6 +42,10 @@ describe('httpRequest', () => {
         } else if (req.url.startsWith('/redirect-no-location')) {
           res.statusCode = 302;
           res.end();
+        } else if (req.url.startsWith('/redirect-bad-location')) {
+          res.statusCode = 302;
+          res.setHeader('location', 'http://[invalid');
+          res.end();
         } else if (req.url.startsWith('/redirect-cross-origin')) {
           res.statusCode = 302;
           res.setHeader('location', `${otherOriginUrl}/echo`);
@@ -171,6 +175,14 @@ describe('httpRequest', () => {
       agent.destroy();
     });
 
+    it('should reject a malformed location header instead of crashing', async () => {
+      const agent = new Agent();
+      await expect(
+        httpRequest(`${baseUrl}/redirect-bad-location`, { httpAgent: agent })
+      ).rejects.toThrow();
+      agent.destroy();
+    });
+
     it('should reject a redirect status without a location header', async () => {
       const agent = new Agent();
       const error: HttpError = await httpRequest(
@@ -218,6 +230,17 @@ describe('httpRequest', () => {
       expect(response.data.headers['x-default']).toBe('a');
       expect(response.data.headers['x-overridden']).toBe('b');
       expect(response.data.body).toEqual({ some: 'data' });
+    });
+
+    it('should merge differently-cased headers as overrides, not duplicates', async () => {
+      const client = createHttpClient({
+        baseURL: baseUrl,
+        headers: { Authorization: 'default' },
+      });
+      const response = await client.get('/echo', {
+        headers: { authorization: 'override' },
+      });
+      expect(response.data.headers['authorization']).toBe('override');
     });
   });
 });

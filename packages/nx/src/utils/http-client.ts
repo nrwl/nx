@@ -66,7 +66,10 @@ export function createHttpClient(defaults: HttpRequestConfig = {}): HttpClient {
   const merge = (config: HttpRequestConfig = {}): HttpRequestConfig => ({
     ...defaults,
     ...config,
-    headers: { ...defaults.headers, ...config.headers },
+    headers: {
+      ...toLowerCaseKeys(defaults.headers),
+      ...toLowerCaseKeys(config.headers),
+    },
   });
   return {
     request: (url, config) => httpRequest(url, merge(config)),
@@ -82,13 +85,13 @@ export async function httpRequest<T = any>(
 ): Promise<HttpResponse<T>> {
   const fullUrl = buildFullUrl(url, config);
 
-  const headers: Record<string, string> = { ...config.headers };
+  // Lowercase keys so differently-cased duplicates override instead of
+  // sending both values
+  const headers: Record<string, string> = toLowerCaseKeys(config.headers);
   let body: string | undefined;
   if (config.data !== undefined) {
     body = JSON.stringify(config.data);
-    if (!Object.keys(headers).some((h) => h.toLowerCase() === 'content-type')) {
-      headers['content-type'] = 'application/json';
-    }
+    headers['content-type'] ??= 'application/json';
   }
 
   const controller = new AbortController();
@@ -116,7 +119,10 @@ export async function httpRequest<T = any>(
       )
     : null;
 
-  if (config.httpAgent || config.httpsAgent) {
+  const agentForUrl = fullUrl.startsWith('https:')
+    ? config.httpsAgent
+    : config.httpAgent;
+  if (agentForUrl) {
     // The agent owns the connection, so an explicit proxy cannot also apply
     if (config.proxy) {
       logger.warn(
@@ -170,10 +176,9 @@ export async function httpRequest<T = any>(
     return {
       status: res.status,
       headers: responseHeaders,
-      data: guardStreamStall(
-        Readable.fromWeb(res.body as any),
-        config.timeout
-      ) as any,
+      data: (res.body
+        ? guardStreamStall(Readable.fromWeb(res.body as any), config.timeout)
+        : Readable.from([])) as any,
     };
   }
 
@@ -201,6 +206,16 @@ async function parseResponseData(res: Response): Promise<any> {
   }
 }
 
+function toLowerCaseKeys(
+  headers?: Record<string, string>
+): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const [key, value] of Object.entries(headers ?? {})) {
+    result[key.toLowerCase()] = value;
+  }
+  return result;
+}
+
 function buildFullUrl(url: string, config: HttpRequestConfig): string {
   let fullUrl = url;
   if (config.baseURL && !/^https?:\/\//i.test(url)) {
@@ -225,6 +240,7 @@ function buildFullUrl(url: string, config: HttpRequestConfig): string {
 }
 
 let envProxyAgent: any;
+const proxyAgents = new Map<string, any>();
 
 function resolveFetch(config: HttpRequestConfig): {
   fetchImpl: typeof fetch;
@@ -233,19 +249,23 @@ function resolveFetch(config: HttpRequestConfig): {
   if (config.proxy) {
     const undici = require('undici');
     const { host, port, protocol, auth } = config.proxy;
-    return {
-      fetchImpl: undici.fetch,
-      dispatcher: new undici.ProxyAgent({
-        uri: `${(protocol ?? 'http').replace(/:$/, '')}://${host}:${port}`,
-        ...(auth
-          ? {
-              token: `Basic ${Buffer.from(
-                `${auth.username}:${auth.password}`
-              ).toString('base64')}`,
-            }
-          : {}),
-      }),
-    };
+    const uri = `${(protocol ?? 'http').replace(/:$/, '')}://${host}:${port}`;
+    const token = auth
+      ? `Basic ${Buffer.from(`${auth.username}:${auth.password}`).toString(
+          'base64'
+        )}`
+      : undefined;
+    // Reuse agents so repeated requests don't accumulate connection pools
+    const key = `${uri}|${token ?? ''}`;
+    let dispatcher = proxyAgents.get(key);
+    if (!dispatcher) {
+      dispatcher = new undici.ProxyAgent({
+        uri,
+        ...(token ? { token } : {}),
+      });
+      proxyAgents.set(key, dispatcher);
+    }
+    return { fetchImpl: undici.fetch, dispatcher };
   }
   // axios semantics: `proxy: false` opts out of env-based proxying
   if (config.proxy === false) {
@@ -336,38 +356,49 @@ function nodeTransportRequest<T>(
         ) {
           res.resume();
           if (redirectCount >= MAX_REDIRECTS) {
+            if (timer) clearTimeout(timer);
             reject(new Error('Maximum number of redirects exceeded'));
             return;
           }
-          const location = new URL(res.headers.location, fullUrl).href;
-          // 301/302/303 demote to GET, matching fetch/follow-redirects
-          const nextConfig =
-            res.statusCode === 307 || res.statusCode === 308
+          try {
+            const location = new URL(res.headers.location, fullUrl).href;
+            const preserveMethod =
+              res.statusCode === 307 || res.statusCode === 308;
+            // 301/302/303 demote to GET, matching fetch/follow-redirects
+            const nextConfig = preserveMethod
               ? config
               : { ...config, method: 'GET' };
-          const nextBody =
-            res.statusCode === 307 || res.statusCode === 308 ? body : undefined;
-          // Don't leak credentials across origins (matches fetch/axios)
-          let nextHeaders = headers;
-          if (new URL(location).origin !== new URL(fullUrl).origin) {
-            nextHeaders = { ...headers };
-            for (const header of Object.keys(nextHeaders)) {
-              if (SENSITIVE_HEADERS.includes(header.toLowerCase())) {
-                delete nextHeaders[header];
+            const nextBody = preserveMethod ? body : undefined;
+            const nextHeaders = { ...headers };
+            if (!preserveMethod) {
+              // The body is dropped, so its headers must not survive
+              delete nextHeaders['content-type'];
+              delete nextHeaders['content-length'];
+            }
+            // Don't leak credentials across origins (matches fetch/axios)
+            if (new URL(location).origin !== new URL(fullUrl).origin) {
+              for (const header of Object.keys(nextHeaders)) {
+                if (SENSITIVE_HEADERS.includes(header.toLowerCase())) {
+                  delete nextHeaders[header];
+                }
               }
             }
+            resolve(
+              nodeTransportRequest(
+                location,
+                nextConfig,
+                nextHeaders,
+                nextBody,
+                controller,
+                timer,
+                redirectCount + 1
+              )
+            );
+          } catch (e) {
+            // e.g. a malformed location header; reject instead of crashing
+            if (timer) clearTimeout(timer);
+            reject(e);
           }
-          resolve(
-            nodeTransportRequest(
-              location,
-              nextConfig,
-              nextHeaders,
-              nextBody,
-              controller,
-              timer,
-              redirectCount + 1
-            )
-          );
           return;
         }
 
@@ -394,7 +425,10 @@ function nodeTransportRequest<T>(
 
         const chunks: Buffer[] = [];
         res.on('data', (chunk: Buffer) => chunks.push(chunk));
-        res.on('error', reject);
+        res.on('error', (e: Error) => {
+          if (timer) clearTimeout(timer);
+          reject(e);
+        });
         res.on('end', () => {
           if (timer) clearTimeout(timer);
           const text = Buffer.concat(chunks).toString('utf-8');
