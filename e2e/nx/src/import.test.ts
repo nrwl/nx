@@ -11,10 +11,10 @@ import {
   updateFile,
   updateJson,
 } from '@nx/e2e-utils';
-import { mkdirSync, rmSync } from 'fs';
+import { mkdirSync, rmSync, writeFileSync } from 'fs';
 import { execSync } from 'node:child_process';
 import { join } from 'path';
-import { createMultiPackageRepo } from './import-utils';
+import { createMultiPackageRepo, createSimpleRepo } from './import-utils';
 
 describe('Nx Import', () => {
   let proj: string;
@@ -129,5 +129,35 @@ describe('Nx Import', () => {
     }
 
     checkFilesExist('packages/a/README.md', 'packages/b/README.md');
+  });
+
+  // `nx import` records the files each step writes and formats that set before
+  // every commit amend, so the formatting lands *inside* the commit. Moving a
+  // `formatInitWrites` call after its amend would still format the files - and
+  // leave the user a dirty tree to commit themselves - which nothing else here
+  // would catch.
+  it('should format imported files inside the commit it makes', () => {
+    mkdirSync(tempImportE2ERoot, { recursive: true });
+    const repoPath = createSimpleRepo(tempImportE2ERoot, 'formatting-src');
+    writeFileSync(
+      join(repoPath, 'index.ts'),
+      `const   greeting={message:"hi"}\nexport default greeting\n`
+    );
+    execSync('git add . && git commit -m "add source"', { cwd: repoPath });
+
+    runCLI(
+      `import ${repoPath} projects/formatting --ref main --no-interactive`,
+      { verbose: true }
+    );
+
+    // Formatted by the destination workspace's formatter, not carried over
+    // verbatim. The fixture workspace is oxfmt, whose generated config pins
+    // single quotes.
+    expect(readFile('projects/formatting/index.ts')).toContain(
+      `{ message: 'hi' }`
+    );
+
+    // And the formatting is in the commit, not sitting in the working tree.
+    expect(runCommand('git status --porcelain').trim()).toEqual('');
   });
 });
