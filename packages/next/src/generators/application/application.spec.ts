@@ -1135,7 +1135,7 @@ describe('app', () => {
             watch: false,
             globals: true,
             environment: 'jsdom',
-            include: ['{src,specs}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            include: ['{src,app,pages,specs}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             reporters: ['default'],
             coverage: {
               reportsDirectory: '../coverage/myapp',

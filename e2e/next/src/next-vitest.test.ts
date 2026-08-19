@@ -41,6 +41,9 @@ describe('Next.js Vitest', () => {
 
     const testResult = await runCLIAsync(`test ${appName}`);
     expect(testResult.combinedOutput).toContain('Successfully ran target test');
+    // Both the generated specs/ test and the colocated src/ one must run.
+    expect(testResult.combinedOutput).toContain('page.spec');
+    expect(testResult.combinedOutput).toContain('index.spec');
   }, 300_000);
 
   it('should test a lib generated with --unitTestRunner=vitest', async () => {

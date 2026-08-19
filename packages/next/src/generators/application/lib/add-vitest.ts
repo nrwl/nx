@@ -47,10 +47,10 @@ export async function addVitest(
       includeLib: false,
       includeVitest: true,
       testEnvironment: 'jsdom',
-      // The generated spec lives in `specs/` (files under `pages/` become
-      // routes), but users may still colocate specs under `src/`.
+      // The generated spec lives in `specs/`; colocated specs may sit under
+      // `src/`, or under root `app/`/`pages/` when `--no-src` is used.
       testInclude: [
-        '{src,specs}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+        '{src,app,pages,specs}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
       ],
       imports: [`import react from '@vitejs/plugin-react'`],
       plugins: ['react()'],
