@@ -1573,6 +1573,170 @@ describe('Phase 3 — strict-common hoist', () => {
     });
   });
 
+  it('keeps the executor-keyed targetDefault when a non-migrated inferred target in the graph uses the executor', async () => {
+    ctx = setupFixture('hoist-executor-alive-graph');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, { name, root: name, targetName: 'build' });
+    }
+    // a target contributed by another, already-registered plugin: present in
+    // the project graph but invisible to getProjects (no project.json)
+    ctx.projectGraph.nodes['lib1'] = {
+      name: 'lib1',
+      type: 'lib',
+      data: {
+        root: 'lib1',
+        targets: { package: { executor: SYNTHETIC_EXECUTOR } },
+      } as any,
+    };
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.targetDefaults ??= {};
+    nxJson.targetDefaults[SYNTHETIC_EXECUTOR] = { dependsOn: ['^build'] };
+    updateNxJson(ctx.tree, nxJson);
+    const plugin = createSyntheticPlugin();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations()
+    );
+
+    // still alive: lib1's inferred `package` target resolves the executor key
+    expect(readNxJson(ctx.tree).targetDefaults[SYNTHETIC_EXECUTOR]).toEqual({
+      dependsOn: ['^build'],
+    });
+  });
+
+  it('keeps the executor-keyed targetDefault when the migrated plugin itself infers a target with the executor', async () => {
+    ctx = setupFixture('hoist-executor-alive-inference');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, { name, root: name, targetName: 'build' });
+    }
+    // an inferred-only root: config file, no explicit project
+    ctx.fs.createFileSync(`tools/${SYNTHETIC_CONFIG_FILE}`, '{}');
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.targetDefaults ??= {};
+    nxJson.targetDefaults[SYNTHETIC_EXECUTOR] = { dependsOn: ['^build'] };
+    updateNxJson(ctx.tree, nxJson);
+    const plugin = createSyntheticPlugin((root, targetName, options, i) =>
+      root === 'tools'
+        ? { executor: SYNTHETIC_EXECUTOR }
+        : defaultInferredTarget(root, targetName)
+    );
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations()
+    );
+
+    // still alive: the plugin's own inference emits the executor for `tools`
+    expect(readNxJson(ctx.tree).targetDefaults[SYNTHETIC_EXECUTOR]).toEqual({
+      dependsOn: ['^build'],
+    });
+  });
+
+  it('keeps the executor-keyed targetDefault when the plugin was already registered before the migration', async () => {
+    ctx = setupFixture('hoist-executor-alive-position');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, { name, root: name, targetName: 'build' });
+    }
+    // a pre-existing registration (its own option set, or another plugin after
+    // it) can win a migrated pair's identity with this executor via later-wins
+    // merging, shadowed in the graph by the explicit target — removal must
+    // fail open
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        options: { targetName: 'build' },
+        include: ['libs/**/*'],
+      },
+    ];
+    nxJson.targetDefaults ??= {};
+    nxJson.targetDefaults[SYNTHETIC_EXECUTOR] = { dependsOn: ['^build'] };
+    updateNxJson(ctx.tree, nxJson);
+    const plugin = createSyntheticPlugin();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations()
+    );
+
+    expect(readNxJson(ctx.tree).targetDefaults[SYNTHETIC_EXECUTOR]).toEqual({
+      dependsOn: ['^build'],
+    });
+  });
+
+  it("keeps the executor-keyed targetDefault when a migrated project's package.json authors the target identity", async () => {
+    ctx = setupFixture('hoist-executor-alive-package-json');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, { name, root: name, targetName: 'build' });
+    }
+    // the package-json DEFAULT plugin re-injects this executor at resolution,
+    // invisible to getProjects because a sibling project.json exists
+    ctx.tree.write(
+      'app1/package.json',
+      JSON.stringify({
+        name: 'app1',
+        nx: { targets: { build: { executor: SYNTHETIC_EXECUTOR } } },
+      })
+    );
+    ctx.tree.write(
+      'package.json',
+      JSON.stringify({
+        name: 'workspace',
+        version: '0.0.1',
+        workspaces: ['app1'],
+      })
+    );
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.targetDefaults ??= {};
+    // equal to the inferred `cache: true`, so residual subtraction drops it and
+    // the entry is the only remaining source once the executor is re-injected
+    nxJson.targetDefaults[SYNTHETIC_EXECUTOR] = { cache: true };
+    updateNxJson(ctx.tree, nxJson);
+    const plugin = createSyntheticPlugin();
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    expect(readNxJson(ctx.tree).targetDefaults[SYNTHETIC_EXECUTOR]).toEqual({
+      cache: true,
+    });
+    // app1 was excluded from hoisting by the identity gate and the exclusion warned
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('kept per-project configuration')
+    );
+    // through the real pipeline, app1 resolves the package-json-authored
+    // executor and still inherits the entry's value
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+    expect(resolved['app1'].build.executor).toBe(SYNTHETIC_EXECUTOR);
+    expect(resolved['app1'].build.cache).toBe(true);
+  });
+
   it('G: array-shaped pre-existing target-name default gains the plugin-scoped entry; existing entries untouched', async () => {
     ctx = setupFixture('hoist-array-existing');
     for (const name of ['app1', 'app2', 'app3']) {

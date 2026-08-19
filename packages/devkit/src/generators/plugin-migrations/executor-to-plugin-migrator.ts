@@ -628,25 +628,6 @@ function subtractCommon(
 }
 
 /**
- * Whether any target still uses the executor (post-migration). The cached
- * project map is mutated in place by every residual write, so it already
- * carries the post-write state — no whole-workspace re-scan needed.
- */
-function isExecutorStillUsed(
-  projectConfigsByName: Map<string, ProjectConfiguration>,
-  executor: string
-): boolean {
-  for (const projectConfig of projectConfigsByName.values()) {
-    for (const target of Object.values(projectConfig.targets ?? {})) {
-      if (target.executor === executor) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-/**
  * Remove the now-dead executor-keyed target default that Phase 2 inlined into
  * every migrated project (mirrors `readTargetDefaultsForExecutor`'s match: the
  * unfiltered entry keyed directly by the executor string).
@@ -815,6 +796,8 @@ function hoistCommonAndWrite<T>(
   scope: MigrationScope<T>,
   residualByProject: ResidualByProject,
   pluginPath: string,
+  projectGraph: ProjectGraph,
+  inferredExecutors: Set<string>,
   logger?: typeof devkitLogger
 ): Map<string, TargetDefaultArrayEntry> {
   // Group residuals by target name across all migrated projects, tracking which
@@ -840,6 +823,10 @@ function hoistCommonAndWrite<T>(
   // themselves. The partition is PER-PROJECT: one project with authored identity
   // no longer blocks centralization for its siblings.
   const excludedProjectsByTarget = new Map<string, Set<string>>();
+  // package.json can reintroduce a migrated executor at resolution after the
+  // explicit target is rewritten, invisible to the liveness scan below (the
+  // package config is ignored when a sibling project.json exists).
+  let packageJsonAuthoredIdentity = false;
   // Deterministic target-name order for stable nx.json output.
   for (const targetName of [...residualsByTarget.keys()].sort()) {
     const residuals = residualsByTarget.get(targetName);
@@ -858,14 +845,18 @@ function hoistCommonAndWrite<T>(
     for (let i = 0; i < projects.length; i++) {
       const projectName = projects[i];
       const residual = residuals[i];
+      const packageJsonAuthored = packageJsonAuthorsTargetIdentity(
+        tree,
+        projectConfigsByName.get(projectName)?.root,
+        targetName
+      );
+      if (packageJsonAuthored) {
+        packageJsonAuthoredIdentity = true;
+      }
       const identityAuthored =
         residual.executor !== undefined ||
         residual.command !== undefined ||
-        packageJsonAuthorsTargetIdentity(
-          tree,
-          projectConfigsByName.get(projectName)?.root,
-          targetName
-        );
+        packageJsonAuthored;
       if (identityAuthored) {
         excludedProjects.add(projectName);
       } else {
@@ -928,12 +919,46 @@ function hoistCommonAndWrite<T>(
     );
   }
 
-  const migratedExecutors = new Set(
-    scope.executorScopes.map((executorScope) => executorScope.executor)
+  // A pre-existing registration of this plugin (or a plugin after it) can win
+  // a migrated pair's identity after the explicit target is rewritten, and a
+  // package-authored identity resurfaces the same way. A registration this
+  // migration ADDS is appended last and wins identity itself, so only fresh
+  // registrations remove dead executor entries; otherwise fail open.
+  const pluginPreRegistered = (nxJson.plugins ?? []).some(
+    (plugin) =>
+      (typeof plugin === 'string' ? plugin : plugin.plugin) === pluginPath
   );
-  for (const executor of migratedExecutors) {
-    if (!isExecutorStillUsed(projectConfigsByName, executor)) {
-      removeDeadExecutorTargetDefault(nxJson, executor);
+
+  if (!pluginPreRegistered && !packageJsonAuthoredIdentity) {
+    // An executor-keyed targetDefault applies to any RESOLVED target carrying
+    // the executor, so liveness needs every source of one: post-write explicit
+    // targets, graph targets of untouched pairs (migrated pairs still show the
+    // pre-write executor), and everything this plugin's own inference emits.
+    const liveExecutors = new Set(inferredExecutors);
+    for (const projectConfig of projectConfigsByName.values()) {
+      for (const target of Object.values(projectConfig.targets ?? {})) {
+        if (target.executor) {
+          liveExecutors.add(target.executor);
+        }
+      }
+    }
+    for (const [projectName, node] of Object.entries(projectGraph.nodes)) {
+      for (const [targetName, target] of Object.entries(
+        node.data.targets ?? {}
+      )) {
+        if (
+          target.executor &&
+          !residualByProject.get(projectName)?.has(targetName)
+        ) {
+          liveExecutors.add(target.executor);
+        }
+      }
+    }
+
+    for (const executorScope of scope.executorScopes) {
+      if (!liveExecutors.has(executorScope.executor)) {
+        removeDeadExecutorTargetDefault(nxJson, executorScope.executor);
+      }
     }
   }
 
@@ -1127,11 +1152,13 @@ export async function inferOncePerOptionSet<T>(
   matchedConfigFiles: string[];
   erroredConfigFiles: string[];
   rawMatchedConfigFiles: string[];
+  inferredExecutors: Set<string>;
 }> {
   const inferredTargetsByOptionSet: InferredTargetsByOptionSet = new Map();
   const rawMatchedFiles = new Set<string>();
   const inferredRoots = new Set<string>();
   const erroredConfigFiles = new Set<string>();
+  const inferredExecutors = new Set<string>();
 
   if (scope.optionSetGroups.length === 0) {
     return {
@@ -1139,6 +1166,7 @@ export async function inferOncePerOptionSet<T>(
       rawMatchedConfigFiles: [],
       matchedConfigFiles: [],
       erroredConfigFiles: [],
+      inferredExecutors,
     };
   }
 
@@ -1175,6 +1203,14 @@ export async function inferOncePerOptionSet<T>(
         // why include-necessity must be judged against inferred roots, not the
         // raw glob (which also matches package.json/project.json/etc.).
         inferredRoots.add(root);
+
+        // Executor-keyed targetDefaults can apply to ANY inferred target name,
+        // so the Phase 3 dead-entry removal must see every emitted executor.
+        for (const target of Object.values(projectConfig.targets ?? {})) {
+          if (target.executor) {
+            inferredExecutors.add(target.executor);
+          }
+        }
 
         for (const targetName of group.targetNames) {
           const inferredTarget = projectConfig.targets?.[targetName];
@@ -1220,6 +1256,7 @@ export async function inferOncePerOptionSet<T>(
     // sits outside the migrated roots — otherwise the plugin is widened to that
     // root, re-hits the same failure at verification, and reverts the hoist.
     erroredConfigFiles: [...erroredConfigFiles],
+    inferredExecutors,
   };
 }
 
@@ -1780,6 +1817,7 @@ async function migrateProjects<T>(
     matchedConfigFiles,
     erroredConfigFiles: erroredConfigFilesFromInference,
     rawMatchedConfigFiles,
+    inferredExecutors,
   } = await inferOncePerOptionSet(
     tree,
     pluginPath,
@@ -1821,6 +1859,8 @@ async function migrateProjects<T>(
       scope,
       residualByProject,
       pluginPath,
+      projectGraph,
+      inferredExecutors,
       logger
     );
   }
