@@ -269,6 +269,45 @@ describe('applyNxJsonMigrateDefaults', () => {
     });
   });
 
+  describe('orchestrator reconcile phase (bare --run-id)', () => {
+    const base = { runId: 'run-1' };
+
+    it('fills nothing: the run owns its commit config, and the rest is generate-only', () => {
+      const config: NxMigrateConfiguration = {
+        createCommits: true,
+        commitPrefix: 'chore: migrate ',
+        agentic: 'claude-code',
+        validate: false,
+        include: 'required',
+        multiMajorMode: 'gradual',
+      };
+      const result = applyNxJsonMigrateDefaults(base, config, noEnv);
+      // The reconcile passes no commit config to the orchestrator: it reads
+      // both from run.json, recorded when the run was created.
+      expect(result.createCommits).toBeUndefined();
+      expect(result.commitPrefix).toBeUndefined();
+      expect(result.agentic).toBeUndefined();
+      expect(result.validate).toBeUndefined();
+      expect(result.include).toBeUndefined();
+      expect(result.includeFromConfig).toBeUndefined();
+      expect(result.multiMajorMode).toBeUndefined();
+    });
+
+    it('fills nothing for a recorded worker either (--run-migration with --run-id)', () => {
+      const config: NxMigrateConfiguration = {
+        createCommits: true,
+        commitPrefix: 'chore: migrate ',
+      };
+      const result = applyNxJsonMigrateDefaults(
+        { runMigration: '@nx/js:gen', runId: 'run-1' },
+        config,
+        noEnv
+      );
+      expect(result.createCommits).toBeUndefined();
+      expect(result.commitPrefix).toBeUndefined();
+    });
+  });
+
   describe('generate-migrations phase', () => {
     const base = { packageAndVersion: 'nx@latest' };
 

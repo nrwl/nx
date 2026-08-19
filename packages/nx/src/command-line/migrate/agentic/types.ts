@@ -2,14 +2,24 @@ import type { AgentId } from './cli-args';
 export type { AgentId };
 
 /**
- * Workspace-relative directory holding all migrate-run scratch (handoff
- * files). Shared by the run-dir layout in `handoff.ts` and the agent
- * permission rules in `definitions.ts` so the pre-authorized write scope
+ * Workspace-relative directory holding all migrate-run scratch: a run
+ * directory per run id. Shared by the run-dir layout in `handoff.ts` and the
+ * agent permission rules in `definitions.ts` so the pre-authorized write scope
  * can't drift from the actual layout. It lives here so `definitions.ts`,
  * loaded whenever the agentic flow is resolved, doesn't pull in the handoff
  * runtime for the path alone.
  */
 export const MIGRATE_RUNS_RELATIVE_DIR = '.nx/migrate-runs';
+
+/**
+ * The one subtree of a run directory an agent writes: its handoff files.
+ * Everything beside it is state Nx owns and reads back, the orchestrator's
+ * run state and plan snapshots included, so the pre-authorized write scope
+ * stops at this segment. Package names make up the rest of a handoff path,
+ * so without it they would occupy the run directory's top level and leave Nx
+ * no name it could add there safely.
+ */
+export const HANDOFFS_DIR_NAME = 'handoffs';
 
 /**
  * Composite identity of the v23 migration that adds `.nx/migrate-runs` to
@@ -56,6 +66,13 @@ export interface InvocationContext {
   systemContext: string;
   userPrompt: string;
   workspaceRoot: string;
+  /**
+   * Name of the run directory under `MIGRATE_RUNS_RELATIVE_DIR` holding this
+   * invocation's handoff. A workspace can carry several run directories at
+   * once, so a definition that pre-authorizes the handoff write narrows it to
+   * this one: the others belong to runs this invocation is not executing.
+   */
+  runDirName: string;
 }
 
 /**
