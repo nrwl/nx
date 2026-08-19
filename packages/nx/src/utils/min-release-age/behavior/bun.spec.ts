@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { MinReleaseAgeViolationError } from '../errors';
@@ -592,6 +592,15 @@ describe('bun min-release-age behavior', () => {
       writeProjectBunfig('[install\nminimumReleaseAge = =\n');
       const result = await readBunPolicy(root, '1.3.0');
       expect(result.outcome).toBe('ambiguous');
+    });
+
+    it('unreadable bunfig -> inactive (bun skips it and resolves on)', async () => {
+      delete process.env.XDG_CONFIG_HOME;
+      process.env.HOME = userHome;
+      mkdirSync(join(root, 'bunfig.toml'));
+      await expect(readBunPolicy(root, '1.3.0')).resolves.toEqual({
+        outcome: 'inactive',
+      });
     });
   });
 });

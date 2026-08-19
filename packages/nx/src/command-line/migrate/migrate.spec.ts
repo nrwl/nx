@@ -3670,6 +3670,119 @@ describe('Migration', () => {
     });
   });
 
+  describe('fetching migrations config from the registry', () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it.each([
+      ['the npm registry', 'registry.npmjs.org'],
+      // npmjs' CNAME, so it serves the same metadata.
+      ['the yarn registry', 'registry.yarnpkg.com'],
+      ['a local registry', 'localhost'],
+      // The loopback literals a local registry is just as often reached by,
+      // neither of which contains "localhost".
+      ['a local registry on IPv4 loopback', '127.0.0.1'],
+      ['a local registry on IPv6 loopback', '[::1]'],
+      ['an Artifactory host', 'myco.artifactory.example.com'],
+    ])(
+      'reads a migration-less packument straight from %s',
+      async (_label, host) => {
+        jest
+          .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
+          .mockResolvedValue('2.0.1');
+        jest.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
+          JSON.stringify({
+            dist: {
+              tarball: `https://${host}/mypackage/-/mypackage-2.0.1.tgz`,
+            },
+          })
+        );
+        const fetch = createFetcher({} as any);
+        await expect(fetch('mypackage', 'latest')).resolves.toMatchObject({
+          version: '2.0.1',
+        });
+        expect(fetch.stats).toMatchObject({
+          registryCount: 1,
+          installCount: 0,
+        });
+      }
+    );
+
+    it('skips the tarball-host check when the package declares migration config', async () => {
+      // The tarball host is off the allowlist on purpose, so only the declared
+      // nx-migrations can skip the check.
+      jest
+        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
+        .mockResolvedValue('2.0.1');
+      jest.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
+        JSON.stringify({
+          'nx-migrations': { packageGroup: ['mypackage-plugin'] },
+          dist: {
+            tarball:
+              'https://registry.corp.example.com/mypackage/-/mypackage-2.0.1.tgz',
+          },
+        })
+      );
+      const fetch = createFetcher({} as any);
+      await expect(fetch('mypackage', 'latest')).resolves.toMatchObject({
+        version: '2.0.1',
+      });
+      expect(fetch.stats).toMatchObject({
+        registryCount: 1,
+        installCount: 0,
+      });
+    });
+
+    it.each([
+      ['an unsupported registry', 'registry.corp.example.com'],
+      // Look-alikes of the exact-matched hosts: a substring test would take these
+      // for the official registries and skip the install fallback.
+      [
+        'a host the yarn registry is a prefix of',
+        'registry.yarnpkg.com.corp.example',
+      ],
+      [
+        'a host the yarn registry is a suffix of',
+        'mirror-registry.yarnpkg.com',
+      ],
+      [
+        'a host the npm registry is a prefix of',
+        'registry.npmjs.org.corp.example',
+      ],
+      ['a host the loopback address is a prefix of', '127.0.0.1.corp.example'],
+    ])(
+      'falls back to install for a migration-less packument from %s',
+      async (_label, host) => {
+        jest
+          .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
+          .mockResolvedValue('2.0.1');
+        jest.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
+          JSON.stringify({
+            dist: {
+              tarball: `https://${host}/mypackage/-/mypackage-2.0.1.tgz`,
+            },
+          })
+        );
+        jest.spyOn(packageMgrUtils, 'createTempNpmDirectory').mockReturnValue({
+          dir: join(tmpdir(), 'nx-migrate-spec-does-not-exist'),
+          cleanup: async () => {},
+        });
+        const fetch = createFetcher({ add: 'npm-add' } as any);
+        // The install fails in this harness; the assertion is that the fetcher routed
+        // to install after the registry refusal, retrying the original spec rather
+        // than the resolved version.
+        await expect(fetch('mypackage', 'latest')).rejects.toThrow(
+          'Failed to fetch migrations for mypackage@latest'
+        );
+        expect(fetch.stats).toMatchObject({
+          installCount: 1,
+          fallbackReason: 'unsupported-registry',
+        });
+      }
+    );
+  });
+
   describe('multi-major migration prompt', () => {
     let originalCi: string | undefined;
     const originalTtyDescriptor = Object.getOwnPropertyDescriptor(
