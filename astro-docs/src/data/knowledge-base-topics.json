@@ -45,6 +45,11 @@
     "description": "Configure CI pipelines, task distribution, caching, and failure handling."
   },
   {
+    "id": "nx-cloud",
+    "label": "Nx Cloud",
+    "description": "Configure Nx Cloud features, access, and integrations."
+  },
+  {
     "id": "tasks-caching",
     "label": "Tasks & caching",
     "description": "Configure task inputs, outputs, dependencies, and caching."

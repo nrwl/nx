@@ -1,0 +1,106 @@
+---
+title: Use the Docker layer cache with Nx Agents
+description: Configure Docker Buildx to reuse image layers across Nx Agent runs.
+filter: 'type:Guides'
+topics:
+  - 'Continuous integration'
+  - 'Nx Cloud'
+---
+
+The Docker layer cache stores BuildKit cache layers in a registry near your Nx Agents.
+A later build can pull unchanged layers from this registry instead of building them again.
+
+{% aside type="note" title="Requires a dedicated compute cluster" %}
+Docker layer caching is an Nx Cloud add-on for a
+[dedicated compute cluster](/docs/features/ci-features/dedicated-compute-cluster).
+Request the cluster, then request this add-on under
+[**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons).
+{% /aside %}
+
+The layer cache is separate from the registry that stores your final images.
+Read and write cache layers through `NX_DOCKER_CACHE_REGISTRY`, then push final images to your
+company registry.
+
+## Set up the Docker builder
+
+Layer caching uses the registry backend from Docker BuildKit.
+Add the Buildx setup step before your build tasks in the
+[Nx Agents launch template](/docs/kb/launch-templates):
+
+```yaml
+# .nx/workflows/agents.yaml
+launch-templates:
+  linux-medium:
+    init-steps:
+      - name: Set up Docker Buildx
+        uses: 'nrwl/nx-cloud-workflows/main/workflow-steps/setup-docker-buildx/main.yaml'
+```
+
+This reusable step installs and configures Buildx as the default builder.
+If you use a different setup, [install Docker Buildx](https://github.com/docker/buildx#linux-packages)
+on each agent and configure a builder before the build starts.
+
+## Add the cache flags
+
+Use `--cache-to` to export new layers and `--cache-from` to import existing layers:
+
+```shell
+docker build \
+  --push \
+  --tag <company-registry>/<image-name>:<image-tag> \
+  --cache-to type=registry,ref=${NX_DOCKER_CACHE_REGISTRY}/<image-name>:main,mode=max \
+  --cache-from type=registry,ref=${NX_DOCKER_CACHE_REGISTRY}/<image-name>:main \
+  --file <path-to-dockerfile> \
+  .
+```
+
+The command uses these values:
+
+- `NX_DOCKER_CACHE_REGISTRY` contains the in-cluster registry address from Nx Cloud.
+- `<image-name>` identifies the cache for one image, such as `backend` or `api`.
+- `mode=max` exports intermediate layers as well as the final layers.
+- `--push` sends the final image to `<company-registry>`, not to the cache registry.
+
+Use a different cache image name for each Docker image that your workspace builds.
+Your agent must authenticate with the company registry before it uses `--push`.
+
+{% aside type="caution" title="Use main for persistent cache layers" %}
+Nx Cloud keeps layers under the `main` tag.
+It periodically removes layers under other tags.
+Use `main` for the long-lived cache that every branch can read.
+{% /aside %}
+
+## Add a branch cache
+
+A branch can read its own recent layers first and use `main` as a fallback:
+
+```shell
+docker build \
+  --push \
+  --tag <company-registry>/<image-name>:<image-tag> \
+  --cache-from type=registry,ref=${NX_DOCKER_CACHE_REGISTRY}/<image-name>:<branch-tag> \
+  --cache-from type=registry,ref=${NX_DOCKER_CACHE_REGISTRY}/<image-name>:main \
+  --cache-to type=registry,ref=${NX_DOCKER_CACHE_REGISTRY}/<image-name>:<branch-tag>,mode=max \
+  .
+```
+
+Replace `<branch-tag>` with a valid Docker tag derived from the branch name.
+Use `main` as the branch tag on the main branch so its layers remain available.
+Nx Cloud can remove other branch tags periodically.
+
+## Test without publishing
+
+Omit `--push` while you test the build configuration.
+Docker still builds the image and reads or writes the layer cache, but it does not push the final
+image to your company registry.
+
+## Verify cache use
+
+Run the same build after the first build warms the cache.
+The BuildKit output shows `[CACHED]` for reused layers.
+The performance gain depends on the changed Dockerfile steps and the transfer speed between the
+agent and registry.
+Cache import and export still require network and disk input/output.
+
+For more cache options, see the
+[Docker registry cache documentation](https://docs.docker.com/build/cache/backends/registry).
