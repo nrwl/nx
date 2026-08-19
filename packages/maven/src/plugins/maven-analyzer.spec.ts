@@ -3,6 +3,7 @@ import { existsSync } from 'fs';
 import { readJsonFile } from '@nx/devkit';
 import { EventEmitter } from 'events';
 import {
+  killProcessTreeGraceful,
   safeExecFileSync,
   safeSpawn,
   workspaceDataDirectory,
@@ -15,6 +16,7 @@ jest.mock('@nx/devkit/internal', () => ({
   ...jest.requireActual('@nx/devkit/internal'),
   safeSpawn: jest.fn(),
   safeExecFileSync: jest.fn(),
+  killProcessTreeGraceful: jest.fn().mockResolvedValue(undefined),
 }));
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual('@nx/devkit'),
@@ -228,6 +230,26 @@ describe('Maven Analyzer', () => {
       await expect(promise).rejects.toThrow(
         'Maven analysis failed with code 1'
       );
+    });
+
+    // A process that never exits must still settle the promise, or the
+    // timeout error is never reported.
+    it('should report the timeout even if the process never exits', async () => {
+      const mockChild = new EventEmitter() as any;
+      mockChild.stdout = new EventEmitter();
+      mockChild.stderr = new EventEmitter();
+      mockChild.pid = 1234;
+      (safeSpawn as jest.Mock).mockReturnValue(mockChild);
+
+      process.env.NX_MAVEN_ANALYSIS_TIMEOUT = '0.001';
+      try {
+        await expect(runMavenAnalysis(workspaceRoot, {})).rejects.toThrow(
+          'Maven analysis timed out'
+        );
+        expect(killProcessTreeGraceful).toHaveBeenCalledWith(1234);
+      } finally {
+        delete process.env.NX_MAVEN_ANALYSIS_TIMEOUT;
+      }
     });
 
     it('should handle spawn error', async () => {
