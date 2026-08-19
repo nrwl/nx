@@ -3,6 +3,7 @@ import { isCI } from './is-ci';
 import { getPackageManagerCommand } from './package-manager';
 import { getCloudUrl } from '../nx-cloud/utilities/get-cloud-options';
 import { terminalLink } from './terminal-link';
+import { httpRequest } from './http-client';
 import * as pc from 'picocolors';
 
 export const NX_CLOUD_URL = 'https://nx.dev/nx-cloud';
@@ -141,20 +142,18 @@ export async function recordStat(opts: {
     if (!shouldRecordStats()) {
       return;
     }
-    const axios = require('axios');
-    await (axios['default'] ?? axios)
-      .create({
-        baseURL: getCloudUrl(),
-        timeout: 400,
-      })
-      .post('/nx-cloud/stats', {
+    await httpRequest(`${getCloudUrl()}/nx-cloud/stats`, {
+      method: 'POST',
+      timeout: 400,
+      data: {
         command: opts.command,
         isCI: isCI(),
         useCloud: opts.useCloud,
         meta: opts.meta
           ? JSON.stringify({ ...opts.meta, nxVersion: opts.nxVersion })
           : opts.nxVersion,
-      });
+      },
+    });
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       console.error(e);

@@ -17,8 +17,7 @@ import {
   RemoteRepoData,
 } from './remote-release-client';
 
-// Use default import with esModuleInterop
-import axios from 'axios';
+import { httpRequest } from '../../../../utils/http-client';
 
 export interface GithubRepoData extends RemoteRepoData {}
 
@@ -184,12 +183,9 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
               break;
             }
           }
-          const { data } = await axios
-            .get<
-              any,
-              { data?: UnghUserLookupResponse }
-            >(`https://ungh.cc/users/find/${email}`)
-            .catch(() => ({ data: { user: null } }));
+          const { data } = await httpRequest<UnghUserLookupResponse>(
+            `https://ungh.cc/users/find/${email}`
+          ).catch(() => ({ data: { user: null } }));
           if (data?.user?.username) {
             meta.username = data.user.username;
             break;
