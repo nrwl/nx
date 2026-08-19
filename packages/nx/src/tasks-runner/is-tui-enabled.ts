@@ -51,7 +51,7 @@ export function shouldUseTui(
 
   if (
     isStaticOutputStyle(nxArgs.outputStyle) ||
-    ['stream', 'stream-without-prefixes', 'dynamic-legacy'].includes(
+    ['summary', 'stream', 'stream-without-prefixes', 'dynamic-legacy'].includes(
       nxArgs.outputStyle
     )
   ) {
