@@ -1114,6 +1114,10 @@ describe('app', () => {
 
       expect(tree.exists(`${name}/jest.config.cts`)).toBeFalsy();
       expect(tree.exists(`${name}/specs/index.spec.tsx`)).toBeTruthy();
+      // The config imports @nx/vite/plugins/*, so the dep must be installed.
+      expect(
+        readJson(tree, 'package.json').devDependencies['@nx/vite']
+      ).toBeDefined();
       expect(tree.read(`${name}/vitest.config.mts`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "/// <reference types='vitest' />
@@ -1135,7 +1139,7 @@ describe('app', () => {
             watch: false,
             globals: true,
             environment: 'jsdom',
-            include: ['specs/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            include: ['{src,specs}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             reporters: ['default'],
             coverage: {
               reportsDirectory: '../coverage/myapp',

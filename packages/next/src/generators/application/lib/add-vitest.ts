@@ -1,11 +1,14 @@
 import {
+  addDependenciesToPackageJson,
   ensurePackage,
   GeneratorCallback,
   joinPathFragments,
   readJson,
+  runTasksInSerial,
   Tree,
   updateJson,
 } from '@nx/devkit';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from './normalize-options';
@@ -50,8 +53,11 @@ export async function addVitest(
       includeLib: false,
       includeVitest: true,
       testEnvironment: 'jsdom',
-      // Specs live outside `src` because anything under `pages/` becomes a route.
-      testInclude: ['specs/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+      // The generated spec lives in `specs/` (files under `pages/` become
+      // routes), but users may still colocate specs under `src/`.
+      testInclude: [
+        '{src,specs}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+      ],
       imports: [`import react from '@vitejs/plugin-react'`],
       plugins: ['react()'],
       useEsmExtension: true,
@@ -80,5 +86,21 @@ export async function addVitest(
     }
   );
 
-  return vitestTask;
+  const tasks = [vitestTask];
+  // The generated config imports `@nx/vite/plugins/*` in non-TS-solution
+  // workspaces, and `skipViteConfig` bypasses the generator that would have
+  // added the dependency.
+  if (!isUsingTsSolutionSetup(host) && !options.skipPackageJson) {
+    tasks.push(
+      addDependenciesToPackageJson(
+        host,
+        {},
+        { '@nx/vite': nxVersion },
+        undefined,
+        true
+      )
+    );
+  }
+
+  return runTasksInSerial(...tasks);
 }
