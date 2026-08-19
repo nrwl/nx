@@ -158,9 +158,6 @@ export class TaskOrchestrator {
   private bailed = false;
   private resolveStopPromise: (() => void) | null = null;
   private stopRequested = false;
-  /** Disambiguates failed-batch log groups; the same executor can run several. */
-  private batchFoldCount = 0;
-
   private runningContinuousTasks = new Map<
     string,
     {
@@ -1027,7 +1024,10 @@ export class TaskOrchestrator {
     taskResults: TaskResult[],
     body: { capturedOutputPath?: string; trailer?: string }
   ) {
-    const label = `${batch.executorName} batch #${++this.batchFoldCount}`;
+    // batch.id is already `<executor> <n>`, numbered per executor when the batch
+    // was scheduled. Deriving a second number here would drift from it, since
+    // only batches that render a fold would be counted.
+    const label = `batch ${batch.id}`;
     const worst = taskResults.some((r) => r.status === 'failure')
       ? 'failure'
       : taskResults.some((r) => r.status === 'stopped')
