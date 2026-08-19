@@ -7,18 +7,6 @@ async function prompts() {
   return await import('@clack/prompts');
 }
 
-/**
- * clack's cancel sentinel is a module-local `Symbol('clack:cancel')`, so
- * `isCancel` only recognises a cancel from the same copy of `@clack/core`. Two
- * copies in one process (a version skew between `nx` and a plugin) would make
- * it silently return false and let the sentinel through as an answer. A prompt
- * only ever resolves to its value or that sentinel, so treating any symbol as
- * a cancel survives that.
- */
-function cancelled(value: unknown, isCancel: (v: unknown) => boolean): boolean {
-  return isCancel(value) || typeof value === 'symbol';
-}
-
 export interface Choice<T extends string> {
   value: T;
   label?: string;
@@ -65,7 +53,7 @@ export async function askChoice<T extends string>(options: {
     validate: (value) =>
       value === undefined ? 'Pick one of the listed options' : undefined,
   });
-  if (cancelled(answer, isCancel)) {
+  if (isCancel(answer)) {
     return (options.onCancel ?? defaultOnCancel)();
   }
   return answer as T;
@@ -116,7 +104,7 @@ export async function askText(options: {
     placeholder: options.placeholder,
     validate: options.validate,
   });
-  if (cancelled(answer, isCancel)) {
+  if (isCancel(answer)) {
     return (options.onCancel ?? defaultOnCancel)();
   }
   return answer as string;
@@ -140,7 +128,7 @@ export async function askMultiselect<T extends string>(options: {
     required: options.required ?? false,
     initialValues: options.initialValues,
   });
-  if (cancelled(answer, isCancel)) {
+  if (isCancel(answer)) {
     return (options.onCancel ?? defaultOnCancel)();
   }
   return answer as T[];

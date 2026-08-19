@@ -265,7 +265,7 @@ export async function pushToGitHub(
       initialValue: 'Yes',
     });
 
-    if (isCancel(push) || typeof push === 'symbol' || push !== 'Yes') {
+    if (isCancel(push) || push !== 'Yes') {
       return VcsPushStatus.OptedOutOfPushingToVcs;
     }
 
@@ -295,7 +295,7 @@ export async function pushToGitHub(
       },
     });
 
-    if (isCancel(repoName) || typeof repoName === 'symbol') {
+    if (isCancel(repoName)) {
       return VcsPushStatus.OptedOutOfPushingToVcs;
     }
 

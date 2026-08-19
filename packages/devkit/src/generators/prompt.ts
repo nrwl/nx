@@ -51,10 +51,7 @@ export async function promptText(options: {
 }): Promise<string> {
   const { text, isCancel } = await prompts();
   const answer = await text(options);
-  // clack's cancel sentinel is a module-local symbol, so `isCancel` only
-  // recognises a cancel from the same copy of `@clack/core`. A prompt resolves
-  // to its value or that sentinel, so any symbol is a cancel.
-  if (isCancel(answer) || typeof answer === 'symbol') {
+  if (isCancel(answer)) {
     process.exit(130);
   }
   return answer as string;
