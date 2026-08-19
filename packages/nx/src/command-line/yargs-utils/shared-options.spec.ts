@@ -224,6 +224,50 @@ describe('shared-options', () => {
         }
       ));
 
+    it('should default to summary when driven by an AI agent', async () => {
+      const { isAiAgent } = require('../../native');
+      (isAiAgent as jest.Mock).mockReturnValue(true);
+      try {
+        await withEnvironmentVariables(
+          { NX_TUI: false, CI: 'false', NX_TUI_SKIP_CAPABILITY_CHECK: 'true' },
+          async () => {
+            const command = withOutputStyleOption(argv);
+            const result = await command.parseAsync([]);
+            expect(result.outputStyle).toEqual('summary');
+          }
+        );
+      } finally {
+        (isAiAgent as jest.Mock).mockReturnValue(false);
+      }
+    });
+
+    it('should let an explicit style beat the AI agent default', async () => {
+      const { isAiAgent } = require('../../native');
+      (isAiAgent as jest.Mock).mockReturnValue(true);
+      try {
+        await withEnvironmentVariables(
+          { NX_TUI: false, CI: 'false', NX_TUI_SKIP_CAPABILITY_CHECK: 'true' },
+          async () => {
+            const command = withOutputStyleOption(argv);
+            const result = await command.parseAsync(['--output-style=static']);
+            expect(result.outputStyle).toEqual('static');
+          }
+        );
+      } finally {
+        (isAiAgent as jest.Mock).mockReturnValue(false);
+      }
+    });
+
+    it('should not default to summary when not an AI agent', async () =>
+      withEnvironmentVariables(
+        { NX_TUI: false, CI: 'false', NX_TUI_SKIP_CAPABILITY_CHECK: 'true' },
+        async () => {
+          const command = withOutputStyleOption(argv);
+          const result = await command.parseAsync([]);
+          expect(result.outputStyle).not.toEqual('summary');
+        }
+      ));
+
     it('should use NX_DEFAULT_OUTPUT_STYLE if not set', async () =>
       withEnvironmentVariables(
         {
