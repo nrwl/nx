@@ -272,14 +272,20 @@ async function handleMessage(socket: Socket, data: string) {
   }
 
   if (isDaemonMessage(payload) && payload.env) {
-    const changedEnvKeys = applyDaemonEnvFromClient(payload.env);
-    if (changedEnvKeys.length > 0) {
+    const { runtimeChangedKeys, graphChangedKeys } =
+      applyDaemonEnvFromClient(payload.env);
+
+    // Workers need the latest runtime wrappers even when graph identity is stable.
+    if (runtimeChangedKeys.length > 0) {
+      forwardEnvToPluginWorkers(payload.env);
+    }
+
+    if (graphChangedKeys.length > 0) {
       serverLogger.log(
-        `Graph recompute necessary due to env variable refresh. Changed keys: ${changedEnvKeys.join(
+        `Graph recompute necessary due to env variable refresh. Changed keys: ${graphChangedKeys.join(
           ', '
         )}`
       );
-      forwardEnvToPluginWorkers(payload.env);
       invalidateGraphCache();
     }
   }

@@ -1,3 +1,7 @@
+import { delimiter } from 'node:path';
+
+const BERRY_BIN_FOLDER_GRAPH_IDENTITY = '<YARN_BERRY_BIN_FOLDER>';
+
 const DAEMON_ENV_REQUIRED_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
   NX_CACHE_PROJECTS_CONFIG: 'false',
@@ -162,8 +166,72 @@ export function getDaemonEnv() {
  * client's project-graph computation. Deletion skips excluded vars and
  * required settings, which the daemon owns and clients should not control.
  */
-export function applyDaemonEnvFromClient(newEnv: NodeJS.ProcessEnv): string[] {
+export interface DaemonEnvironmentChanges {
+  runtimeChangedKeys: string[];
+  graphChangedKeys: string[];
+}
+
+/**
+ * Yarn creates a fresh BERRY_BIN_FOLDER for every script invocation and
+ * prepends it to PATH. The folder contains runtime command shims, so workers
+ * must receive the latest value, but its random path is not project-graph
+ * identity. Normalize only the graph comparison; never mutate runtime env.
+ */
+export function normalizeDaemonEnvironmentForGraph(
+  env: NodeJS.ProcessEnv,
+  platform: NodeJS.Platform = process.platform,
+): NodeJS.ProcessEnv {
+  const normalized = { ...env };
+  const berryBinFolder = normalized.BERRY_BIN_FOLDER;
+
+  if (!berryBinFolder) {
+    return normalized;
+  }
+
+  const pathKey = Object.keys(normalized).find(
+    (key) => key.toUpperCase() === "PATH",
+  );
+  if (pathKey && normalized[pathKey]) {
+    const pathDelimiter = platform === "win32" ? ";" : ":";
+    const canonicalize = (value: string) => {
+      const withPlatformSeparators =
+        platform === "win32" ? value.replaceAll("/", "\\") : value;
+      return platform === "win32"
+        ? withPlatformSeparators.toLowerCase()
+        : withPlatformSeparators;
+    };
+    const canonicalBerryBinFolder = canonicalize(berryBinFolder);
+    normalized[pathKey] = normalized[pathKey]
+      .split(pathDelimiter)
+      .filter((entry) => canonicalize(entry) !== canonicalBerryBinFolder)
+      .join(pathDelimiter);
+  }
+
+  normalized.BERRY_BIN_FOLDER = BERRY_BIN_FOLDER_GRAPH_IDENTITY;
+  return normalized;
+}
+
+function getChangedKeys(
+  currentEnv: NodeJS.ProcessEnv,
+  newEnv: NodeJS.ProcessEnv,
+): string[] {
   const changedKeys: string[] = [];
+  for (const key of new Set([
+    ...Object.keys(currentEnv),
+    ...Object.keys(newEnv),
+  ])) {
+    if (currentEnv[key] !== newEnv[key]) {
+      changedKeys.push(key);
+    }
+  }
+  return changedKeys;
+}
+
+export function applyDaemonEnvFromClient(
+  newEnv: NodeJS.ProcessEnv,
+): DaemonEnvironmentChanges {
+  const currentGraphEnv = normalizeDaemonEnvironmentForGraph(process.env);
+  const runtimeChangedKeys: string[] = [];
   const allKeys = new Set([
     ...Object.keys(process.env),
     ...Object.keys(newEnv),
@@ -172,15 +240,20 @@ export function applyDaemonEnvFromClient(newEnv: NodeJS.ProcessEnv): string[] {
     if (key in newEnv) {
       if (process.env[key] !== newEnv[key]) {
         process.env[key] = newEnv[key];
-        changedKeys.push(key);
+        runtimeChangedKeys.push(key);
       }
     } else if (
       !isExcludedEnvVar(key) &&
       !Object.hasOwn(DAEMON_ENV_REQUIRED_SETTINGS, key)
     ) {
       delete process.env[key];
-      changedKeys.push(key);
+      runtimeChangedKeys.push(key);
     }
   }
-  return changedKeys;
+
+  const newGraphEnv = normalizeDaemonEnvironmentForGraph(process.env);
+  return {
+    runtimeChangedKeys,
+    graphChangedKeys: getChangedKeys(currentGraphEnv, newGraphEnv),
+  };
 }
