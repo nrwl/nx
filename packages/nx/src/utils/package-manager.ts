@@ -764,23 +764,25 @@ function createRegistrySpawnContext(pkg: string): {
 
 /**
  * The registry the fetch for `pkg` went to, with its userinfo masked because a
- * registry URL can carry a bare token. npm is asked under the overlay
- * `packageRegistryView` runs with, so a registry the package manager keeps
- * outside the .npmrc chain and a scope npm resolves for itself both land on the
- * value that fetch used. Null where npm declares no registry; throws where it
- * cannot be run.
+ * registry URL can carry a bare token. The lookup is spawned the way
+ * `packageRegistryView` spawns the fetch this describes — same manager, same
+ * environment — so a registry the package manager keeps outside the .npmrc
+ * chain and a scope resolved for itself both land on the value that fetch used.
+ * Null where the manager declares no registry; throws where it cannot be run.
  */
 export function getWorkspaceRegistryUrlForDisplay(pkg: string): string | null {
-  const { configRoot, scope, buildEnv } = createRegistrySpawnContext(pkg);
-  const env = buildEnv({
-    // Same downgrade packageRegistryView needs: a `devEngines.packageManager`
-    // pin with `onFail: error` aborts even this read-only lookup otherwise.
-    npm_config_force: 'true',
-  });
-  // npm's own pickRegistry order: the scope decides where it can, the default
-  // answers the rest. It prints `undefined` for a setting nothing declares.
+  const { workspacePm, workspacePmVersion, configRoot, scope, buildEnv } =
+    createRegistrySpawnContext(pkg);
+  const { pm, env } = resolveRegistrySpawnTarget(
+    workspacePm,
+    workspacePmVersion,
+    buildEnv
+  );
+  // Both managers follow npm's pickRegistry order: the scope decides where it
+  // can, the default answers the rest. Either prints `undefined` for a setting
+  // nothing declares.
   for (const key of scope ? [`${scope}:registry`, 'registry'] : ['registry']) {
-    const value = execPackageManagerSync('npm', ['config', 'get', key], {
+    const value = execPackageManagerSync(pm, ['config', 'get', key], {
       cwd: configRoot,
       timeout: 5000,
       windowsHide: true,
@@ -797,17 +799,20 @@ export function getWorkspaceRegistryUrlForDisplay(pkg: string): string | null {
   return null;
 }
 
-export async function packageRegistryView(
-  pkg: string,
-  version: string,
-  args: string[],
-  // `forceNpm` runs the view through npm even in a pnpm workspace: npm projects
-  // a field across every matched version, whereas `pnpm view <pkg>@<range>`
-  // collapses to the single highest match (breaks per-version field queries).
+/**
+ * Which manager answers a registry read for this workspace, and the environment
+ * it reads under. pnpm 11 reimplemented `view` natively, resolving registry and
+ * credentials (tokenHelper included) itself, so it runs on the untouched
+ * environment; pnpm 10 passed `view` through to the npm CLI, which needs the
+ * overlay. Shared so a lookup describing a fetch cannot resolve against a
+ * different environment than the fetch used.
+ */
+function resolveRegistrySpawnTarget(
+  workspacePm: PackageManager,
+  workspacePmVersion: string | null,
+  buildEnv: (extra?: NodeJS.ProcessEnv) => NodeJS.ProcessEnv,
   options?: { forceNpm?: boolean }
-): Promise<string> {
-  const { workspacePm, workspacePmVersion, configRoot, buildEnv } =
-    createRegistrySpawnContext(pkg);
+): { pm: PackageManager; env: NodeJS.ProcessEnv } {
   let pm = workspacePm;
   if (options?.forceNpm || pm === 'yarn' || pm === 'bun') {
     /**
@@ -822,17 +827,38 @@ export async function packageRegistryView(
      */
     pm = 'npm';
   }
+  if (pm === 'pnpm' && (parse(workspacePmVersion)?.major ?? 0) >= 11) {
+    return { pm, env: process.env };
+  }
+  // npm_config_force downgrades npm's `devEngines.packageManager` enforcement,
+  // which otherwise aborts even a read-only lookup when the pin sets
+  // `onFail: error`. Only set for npm so a pnpm spawn is untouched.
+  return {
+    pm,
+    env: buildEnv(pm === 'npm' ? { npm_config_force: 'true' } : {}),
+  };
+}
+
+export async function packageRegistryView(
+  pkg: string,
+  version: string,
+  args: string[],
+  // `forceNpm` runs the view through npm even in a pnpm workspace: npm projects
+  // a field across every matched version, whereas `pnpm view <pkg>@<range>`
+  // collapses to the single highest match (breaks per-version field queries).
+  options?: { forceNpm?: boolean }
+): Promise<string> {
+  const { workspacePm, workspacePmVersion, configRoot, buildEnv } =
+    createRegistrySpawnContext(pkg);
+  const { pm, env } = resolveRegistrySpawnTarget(
+    workspacePm,
+    workspacePmVersion,
+    buildEnv,
+    options
+  );
 
   // An empty version means we want the full packument; omit the trailing `@`.
   const spec = version ? `${pkg}@${version}` : pkg;
-  // pnpm 11 reimplemented `view` natively, resolving registry and credentials
-  // (tokenHelper included) itself, so it runs on the untouched environment;
-  // pnpm 10 passed `view` through to the npm CLI, which needs the overlay.
-  const nativePnpmView =
-    pm === 'pnpm' && (parse(workspacePmVersion)?.major ?? 0) >= 11;
-  // npm_config_force downgrades npm's `devEngines.packageManager` enforcement,
-  // which otherwise aborts even a read-only `view` when the pin sets
-  // `onFail: error`. Only set for npm so a `pnpm view` is untouched.
   try {
     const { stdout } = await execPackageManagerAsync(
       pm,
@@ -840,9 +866,7 @@ export async function packageRegistryView(
       {
         windowsHide: true,
         cwd: configRoot,
-        env: nativePnpmView
-          ? process.env
-          : buildEnv(pm === 'npm' ? { npm_config_force: 'true' } : {}),
+        env,
       }
     );
     return stdout.toString().trim();
