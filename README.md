@@ -31,7 +31,7 @@
 
 </div>
 
-Nx is a monorepo solution for TypeScript and polyglot codebases. Built with Rust for performance, extensible via TypeScript. Caches what didn't change, runs only what's affected, and comes with an integrated CI solution. Start simple, scale as you grow.
+Nx is a fast, extensible build system and developer platform for TypeScript and polyglot monorepos. Its Rust core caches what didn't change and runs only what's affected, while TypeScript plugins make it fit any stack. Pair it with Nx Cloud for CI that scales with your repo. Start simple, grow as you need.
 
 ## Quick Start
 
