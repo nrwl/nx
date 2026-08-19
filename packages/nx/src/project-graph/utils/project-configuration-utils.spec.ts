@@ -1583,6 +1583,251 @@ describe('project-configuration-utils', () => {
       expect(errors).toEqual([]);
     });
 
+    it('should apply targetDefaults options to an inferred target that is not redeclared (#36700)', () => {
+      // Repro for #36700: `@nx/js/typescript` infers a run-commands `build`
+      // target, nothing redeclares it, and the target default names a
+      // different command. The default's `options.command` must reach the
+      // target the same way its `outputs`/`cache`/`inputs` already do —
+      // target defaults layer above the specified plugins.
+      const specifiedResults = [
+        [
+          [
+            '@nx/js/typescript',
+            'packages/a/tsconfig.lib.json',
+            {
+              projects: {
+                'packages/a': {
+                  name: 'a',
+                  root: 'packages/a',
+                  targets: {
+                    // The shape `@nx/js/typescript` emits: the `command`
+                    // shorthand plus a `cwd`, desugared into an
+                    // `nx:run-commands` target during the merge.
+                    build: {
+                      command: 'tsc --build tsconfig.lib.json',
+                      options: { cwd: 'packages/a' },
+                      cache: true,
+                      inputs: ['inferred-input'],
+                      outputs: ['{projectRoot}/dist'],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const errors = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults as any,
+        [],
+        {
+          targetDefaults: {
+            build: {
+              cache: true,
+              inputs: ['production'],
+              outputs: ['{projectRoot}/MARKER-OUTPUT'],
+              options: { command: 'echo FROM-TARGET-DEFAULTS' },
+            },
+          },
+        },
+        '/tmp/test',
+        errors
+      );
+
+      const buildTarget = result.projectRootMap['packages/a'].targets!['build'];
+      expect(buildTarget.options).toEqual({
+        command: 'echo FROM-TARGET-DEFAULTS',
+        // Option keys the default does not name keep the plugin's values.
+        cwd: 'packages/a',
+      });
+      // The fields that were already applied before the regression still are.
+      expect(buildTarget.outputs).toEqual(['{projectRoot}/MARKER-OUTPUT']);
+      expect(buildTarget.inputs).toEqual(['production']);
+      expect(buildTarget.cache).toEqual(true);
+      expect(buildTarget.executor).toEqual('nx:run-commands');
+      expect(errors).toEqual([]);
+    });
+
+    it('should apply a targetDefaults commands array to an inferred target that is not redeclared', () => {
+      // The `options.commands` form carries the same command identity as
+      // `options.command`, so it has to survive synthesis the same way.
+      const specifiedResults = [
+        [
+          [
+            '@nx/js/typescript',
+            'packages/a/tsconfig.lib.json',
+            {
+              projects: {
+                'packages/a': {
+                  name: 'a',
+                  root: 'packages/a',
+                  targets: {
+                    build: {
+                      executor: 'nx:run-commands',
+                      options: { commands: ['tsc --build tsconfig.lib.json'] },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const errors = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults as any,
+        [],
+        {
+          targetDefaults: {
+            build: {
+              options: { commands: ['tsdown', 'tsc --emitDeclarationOnly'] },
+            },
+          },
+        },
+        '/tmp/test',
+        errors
+      );
+
+      const buildTarget = result.projectRootMap['packages/a'].targets!['build'];
+      expect(buildTarget.options).toEqual({
+        commands: ['tsdown', 'tsc --emitDeclarationOnly'],
+      });
+      expect(errors).toEqual([]);
+    });
+
+    it('should let an inferred target keep its command when the targetDefaults entry names no command', () => {
+      // The complement of #36700: a default that only carries ordinary
+      // options must not disturb what the inferred target runs.
+      const specifiedResults = [
+        [
+          [
+            '@nx/js/typescript',
+            'packages/a/tsconfig.lib.json',
+            {
+              projects: {
+                'packages/a': {
+                  name: 'a',
+                  root: 'packages/a',
+                  targets: {
+                    build: {
+                      executor: 'nx:run-commands',
+                      options: {
+                        command: 'tsc --build tsconfig.lib.json',
+                        color: false,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const errors = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults as any,
+        [],
+        {
+          targetDefaults: {
+            build: { cache: true, options: { color: true, parallel: false } },
+          },
+        },
+        '/tmp/test',
+        errors
+      );
+
+      const buildTarget = result.projectRootMap['packages/a'].targets!['build'];
+      expect(buildTarget.options).toEqual({
+        command: 'tsc --build tsconfig.lib.json',
+        color: true,
+        parallel: false,
+      });
+      expect(buildTarget.cache).toEqual(true);
+      expect(errors).toEqual([]);
+    });
+
+    it('should let project.json override a targetDefaults command while its other fields still apply (#36067)', () => {
+      // The #36067 guarantee, with the target default also naming a command:
+      // project.json outranks target defaults, so its command wins, and the
+      // default's `cache`/`outputs` must still ride onto the winning target
+      // rather than being dropped with the replaced inferred one.
+      const specifiedResults = [
+        [
+          [
+            '@nx/js/typescript',
+            'packages/a/tsconfig.lib.json',
+            {
+              projects: {
+                'packages/a': {
+                  name: 'a',
+                  root: 'packages/a',
+                  targets: {
+                    build: {
+                      executor: 'nx:run-commands',
+                      options: { command: 'tsc --build tsconfig.lib.json' },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const defaultResults = [
+        [
+          [
+            'nx/core/project-json',
+            'packages/a/project.json',
+            {
+              projects: {
+                'packages/a': {
+                  name: 'a',
+                  root: 'packages/a',
+                  targets: {
+                    build: {
+                      executor: 'nx:run-commands',
+                      options: { commands: ['tsdown'], cwd: 'packages/a' },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const errors = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults as any,
+        defaultResults as any,
+        {
+          targetDefaults: {
+            build: {
+              cache: true,
+              outputs: ['{projectRoot}/MARKER-OUTPUT'],
+              options: { command: 'echo FROM-TARGET-DEFAULTS' },
+            },
+          },
+        },
+        '/tmp/test',
+        errors
+      );
+
+      const buildTarget = result.projectRootMap['packages/a'].targets!['build'];
+      expect(buildTarget.options).toEqual(
+        expect.objectContaining({ commands: ['tsdown'], cwd: 'packages/a' })
+      );
+      expect(buildTarget.options.command).toBeUndefined();
+      expect(buildTarget.cache).toEqual(true);
+      expect(buildTarget.outputs).toEqual(['{projectRoot}/MARKER-OUTPUT']);
+      expect(errors).toEqual([]);
+    });
+
     it('should merge multiple specified plugins contributing to the same project', () => {
       const specifiedResults = [
         [
