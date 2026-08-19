@@ -1,9 +1,11 @@
-import type { AxiosRequestConfig } from 'axios';
-import axios from 'axios';
 import type { PostGitTask } from '../../changelog';
 import { ResolvedCreateRemoteReleaseProvider } from '../../config/config';
 import type { Reference } from '../git';
 import { handleImport } from '../../../../utils/handle-import';
+import {
+  httpRequest,
+  type HttpRequestConfig,
+} from '../../../../utils/http-client';
 import { printDiff } from '../print-changes';
 import { noDiffInChangelogMessage, type ReleaseVersion } from '../shared';
 import type { GithubRemoteReleaseClient } from './github';
@@ -90,7 +92,7 @@ export abstract class RemoteReleaseClient<
    */
   protected async makeRequest(
     url: string,
-    opts: AxiosRequestConfig = {}
+    opts: HttpRequestConfig = {}
   ): Promise<any> {
     const remoteRepoData = this.getRemoteRepoData<RemoteRepoData>();
     if (!remoteRepoData) {
@@ -98,15 +100,15 @@ export abstract class RemoteReleaseClient<
         `No remote repo data could be resolved for the current workspace`
       );
     }
-    const config: AxiosRequestConfig<any> = {
+    const config: HttpRequestConfig = {
       ...opts,
       baseURL: remoteRepoData.apiBaseUrl,
       headers: {
-        ...(opts.headers as any),
+        ...opts.headers,
         ...this.tokenHeader,
       },
     };
-    return (await axios<any, any>(url, config)).data;
+    return (await httpRequest(url, config)).data;
   }
 
   async createOrUpdateRelease(

@@ -133,7 +133,7 @@ async function getTerminalOutputLifeCycle(
   }
 
   // Kick off in the background so the URL is ready by the exit report. A brief
-  // sync preamble (git remote + axios load) runs here; the network call does not.
+  // sync preamble (git remote lookup) runs here; the network call does not.
   prefetchRemoteCacheOnboardingUrl(nxJson);
 
   if (isTuiEnabled()) {

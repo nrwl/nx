@@ -9,6 +9,7 @@ import { createNxCloudOnboardingURL } from '../../utilities/url-shorten';
 import { getCloudUrl } from '../../utilities/get-cloud-options';
 import { join } from 'path';
 import { getVcsRemoteInfo } from '../../../utils/git-utils';
+import { httpRequest } from '../../../utils/http-client';
 
 function printCloudConnectionDisabledMessage() {
   output.error({
@@ -53,12 +54,15 @@ async function createNxCloudWorkspaceV1(
   nxInitDate: string | null
 ): Promise<{ token: string; url: string }> {
   const apiUrl = getCloudUrl();
-  const response = await require('axios').post(
+  const response = await httpRequest(
     `${apiUrl}/nx-cloud/create-org-and-workspace`,
     {
-      workspaceName,
-      installationSource,
-      nxInitDate,
+      method: 'POST',
+      data: {
+        workspaceName,
+        installationSource,
+        nxInitDate,
+      },
     }
   );
 
@@ -75,12 +79,15 @@ async function createNxCloudWorkspaceV2(
   nxInitDate: string | null
 ): Promise<{ nxCloudId: string; url: string }> {
   const apiUrl = getCloudUrl();
-  const response = await require('axios').post(
+  const response = await httpRequest(
     `${apiUrl}/nx-cloud/v2/create-org-and-workspace`,
     {
-      workspaceName,
-      installationSource,
-      nxInitDate,
+      method: 'POST',
+      data: {
+        workspaceName,
+        installationSource,
+        nxInitDate,
+      },
     }
   );
 

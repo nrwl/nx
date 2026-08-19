@@ -1,4 +1,3 @@
-import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import {
   createWriteStream,
   existsSync,
@@ -12,7 +11,8 @@ import {
 import { createGunzip } from 'zlib';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { createApiAxiosInstance } from './utilities/axios';
+import { createApiHttpClient } from './utilities/nx-cloud-http-client';
+import { HttpClient, HttpError, HttpResponse } from '../utils/http-client';
 import { debugLog } from './debug-logger';
 import type { CloudTaskRunnerOptions } from './nx-cloud-tasks-runner-shell';
 import * as tar from 'tar-stream';
@@ -70,14 +70,17 @@ export async function verifyOrUpdateNxCloudClient(options?: {
     process.env.NX_CLOUD_API || options?.url || 'https://cloud.nx.app';
 
   if (shouldVerifyInstalledRunnerBundle(currentBundle)) {
-    const axios = createApiAxiosInstance(options);
+    const httpClient = createApiHttpClient(options);
 
-    let verifyBundleResponse: AxiosResponse<VerifyClientBundleResponse>;
+    let verifyBundleResponse: HttpResponse<VerifyClientBundleResponse>;
     try {
-      verifyBundleResponse = await verifyCurrentBundle(axios, currentBundle);
+      verifyBundleResponse = await verifyCurrentBundle(
+        httpClient,
+        currentBundle
+      );
     } catch (e: any) {
       // Enterprise image compatibility, to be removed
-      if (e.message === 'Request failed with status code 404' && apiUrl) {
+      if (e instanceof HttpError && e.status === 404 && apiUrl) {
         throw new NxCloudEnterpriseOutdatedError(apiUrl);
       }
 
@@ -128,7 +131,7 @@ export async function verifyOrUpdateNxCloudClient(options?: {
     }
 
     const fullPath = await downloadAndExtractClientBundle(
-      axios,
+      httpClient,
       runnerBundleInstallDirectory,
       version,
       url
@@ -249,10 +252,10 @@ function shouldVerifyInstalledRunnerBundle(
 }
 
 async function verifyCurrentBundle(
-  axios: AxiosInstance,
+  httpClient: HttpClient,
   currentBundle: CloudBundleInstall | null
-): Promise<AxiosResponse<VerifyClientBundleResponse>> {
-  return axios.get('/nx-cloud/client/verify', {
+): Promise<HttpResponse<VerifyClientBundleResponse>> {
+  return httpClient.get('/nx-cloud/client/verify', {
     params: currentBundle
       ? {
           version: currentBundle.version,
@@ -317,16 +320,16 @@ function hashDirectory(dir: string): string {
 }
 
 async function downloadAndExtractClientBundle(
-  axios: AxiosInstance,
+  httpClient: HttpClient,
   runnerBundleInstallDirectory: string,
   version: string,
   url: string
 ): Promise<string> {
-  let resp;
+  let resp: HttpResponse<NodeJS.ReadableStream>;
   try {
-    resp = await axios.get(url, {
+    resp = await httpClient.get(url, {
       responseType: 'stream',
-    } as AxiosRequestConfig);
+    });
   } catch (e: any) {
     console.error('Error while updating Nx Cloud client bundle');
     throw e;

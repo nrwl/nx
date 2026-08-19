@@ -353,18 +353,17 @@ export async function recordStat(opts: {
       return;
     }
 
-    const axios = require('axios');
-    await (axios['default'] ?? axios)
-      .create({
-        baseURL: getCloudUrl(),
-        timeout: 400,
-      })
-      .post('/nx-cloud/stats', {
+    await fetch(`${getCloudUrl()}/nx-cloud/stats`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
         command: opts.command,
         isCI: isCI(),
         useCloud: opts.useCloud,
         meta: JSON.stringify({ nxVersion: opts.nxVersion, ...opts.meta }),
-      });
+      }),
+      signal: AbortSignal.timeout(400),
+    });
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       console.error(e);

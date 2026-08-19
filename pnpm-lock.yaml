@@ -2358,9 +2358,6 @@ importers:
 
   packages/create-nx-workspace:
     dependencies:
-      axios:
-        specifier: 1.18.1
-        version: 1.18.1
       chalk:
         specifier: 'catalog:'
         version: 4.1.2
@@ -3204,9 +3201,6 @@ importers:
       '@zkochan/js-yaml':
         specifier: 'catalog:'
         version: 0.0.7
-      axios:
-        specifier: 1.18.1
-        version: 1.18.1
       cli-cursor:
         specifier: 3.1.0
         version: 3.1.0
@@ -3282,6 +3276,9 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
+      undici:
+        specifier: ^7.29.0
+        version: 7.29.0
       which:
         specifier: 'catalog:'
         version: 3.0.1
@@ -25745,6 +25742,10 @@ packages:
 
   undici@7.24.7:
     resolution: {integrity: sha512-H/nlJ/h0ggGC+uRL3ovD+G0i4bqhvsDOpbDv7At5eFLlj2b41L8QliGbnl2H7SnDiYhENphh1tQFJZf+MyfLsQ==}
+    engines: {node: '>=20.18.1'}
+
+  undici@7.29.0:
+    resolution: {integrity: sha512-IDxfleLmmbSskfWSUATiN1nfn2rDuvnMOqb5CWR92iIfojA0Ud+ulOAAEQ57LPr9rWmsreUyf5lwyao+7GNNVw==}
     engines: {node: '>=20.18.1'}
 
   unenv@2.0.0-rc.24:
@@ -56058,6 +56059,8 @@ snapshots:
   undici@6.21.3: {}
 
   undici@7.24.7: {}
+
+  undici@7.29.0: {}
 
   unenv@2.0.0-rc.24:
     dependencies:

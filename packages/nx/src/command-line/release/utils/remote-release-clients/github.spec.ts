@@ -1,7 +1,7 @@
 import { GithubRemoteReleaseClient } from './github';
 
-jest.mock('axios', () => ({
-  get: jest.fn(),
+jest.mock('../../../../utils/http-client', () => ({
+  httpRequest: jest.fn(),
 }));
 
 jest.mock('node:child_process', () => ({
@@ -10,7 +10,8 @@ jest.mock('node:child_process', () => ({
   execSync: jest.requireActual('node:child_process').execSync,
 }));
 
-const axiosGetMock = jest.requireMock('axios').get as jest.Mock;
+const httpRequestMock = jest.requireMock('../../../../utils/http-client')
+  .httpRequest as jest.Mock;
 const execFileSyncMock = jest.requireMock('node:child_process')
   .execFileSync as jest.Mock;
 
@@ -30,7 +31,7 @@ describe('GithubRemoteReleaseClient', () => {
   });
 
   it('should prefer the username returned by ungh', async () => {
-    axiosGetMock.mockResolvedValue({
+    httpRequestMock.mockResolvedValue({
       data: {
         user: {
           username: 'from-ungh',
@@ -48,7 +49,7 @@ describe('GithubRemoteReleaseClient', () => {
   });
 
   it('should fall back to gh api when ungh does not return a username', async () => {
-    axiosGetMock.mockResolvedValue({
+    httpRequestMock.mockResolvedValue({
       data: {
         user: null,
       },
@@ -86,7 +87,7 @@ describe('GithubRemoteReleaseClient', () => {
   });
 
   it('should fall back to gh api when ungh fails', async () => {
-    axiosGetMock.mockRejectedValue(new Error('ungh unavailable'));
+    httpRequestMock.mockRejectedValue(new Error('ungh unavailable'));
     execFileSyncMock.mockReturnValue(
       JSON.stringify({
         items: [{ login: 'from-gh' }],
@@ -112,7 +113,7 @@ describe('GithubRemoteReleaseClient', () => {
     await client.applyUsernameToAuthors(authors);
 
     expect(authors.get('Test User')?.username).toBeUndefined();
-    expect(axiosGetMock).not.toHaveBeenCalled();
+    expect(httpRequestMock).not.toHaveBeenCalled();
     expect(execFileSyncMock).not.toHaveBeenCalled();
   });
 
@@ -124,14 +125,14 @@ describe('GithubRemoteReleaseClient', () => {
     await client.applyUsernameToAuthors(authors);
 
     expect(authors.get('Test User')?.username).toBeUndefined();
-    expect(axiosGetMock).not.toHaveBeenCalled();
+    expect(httpRequestMock).not.toHaveBeenCalled();
     expect(execFileSyncMock).not.toHaveBeenCalled();
   });
 
   it('should skip a bad email but still resolve a valid one in the same set', async () => {
     // The guard must `continue` past the empty email, not `break` out of the
     // loop, so a valid email later in the set is still looked up.
-    axiosGetMock.mockResolvedValue({
+    httpRequestMock.mockResolvedValue({
       data: {
         user: {
           username: 'from-ungh',
@@ -145,14 +146,14 @@ describe('GithubRemoteReleaseClient', () => {
     await client.applyUsernameToAuthors(authors);
 
     expect(authors.get('Test User')?.username).toBe('from-ungh');
-    expect(axiosGetMock).toHaveBeenCalledTimes(1);
-    expect(axiosGetMock).toHaveBeenCalledWith(
+    expect(httpRequestMock).toHaveBeenCalledTimes(1);
+    expect(httpRequestMock).toHaveBeenCalledWith(
       'https://ungh.cc/users/find/test@example.com'
     );
   });
 
   it('should leave the username unset when both lookups fail', async () => {
-    axiosGetMock.mockRejectedValue(new Error('ungh unavailable'));
+    httpRequestMock.mockRejectedValue(new Error('ungh unavailable'));
     execFileSyncMock.mockImplementation(() => {
       throw new Error('gh unavailable');
     });
