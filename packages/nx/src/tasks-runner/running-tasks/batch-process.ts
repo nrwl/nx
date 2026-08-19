@@ -21,10 +21,12 @@ export class BatchProcess {
   private outputCallbacks: Array<(output: string) => void> = [];
   /**
    * File holding all stdout/stderr held back from the live stream under log
-   * grouping. A successful batch is rendered from its per-task terminalOutput
-   * and this is discarded; a failed one is rendered from this as a single fold,
-   * so that a diagnostic no task claimed — a crash, a config-phase error, a
-   * runner's summary — is not lost.
+   * grouping. It is rendered as a single fold by a full-output run, and by any
+   * batch that crashed or was stopped, so that a diagnostic no task claimed — a
+   * crash, a config-phase error, a runner's summary — is not lost. A batch that
+   * reported results on the default style renders per task and this is
+   * discarded. Crashiness is unknowable while capturing, so it is always
+   * written.
    *
    * It goes to disk rather than a string because a batch is long-lived (Gradle
    * runs one for the whole command) and its output has no bound. Accumulating
@@ -33,6 +35,12 @@ export class BatchProcess {
    */
   private capturedOutputPath: string | undefined;
   private capturedOutputFd: number | undefined;
+  /**
+   * Set once the capture is released. A chunk can still arrive after that —
+   * stdout delivers past the exit event — and reopening then would mint a
+   * second numbered file that nothing ever cleans up.
+   */
+  private capturedOutputDiscarded = false;
   private static capturedOutputCount = 0;
 
   constructor(
@@ -79,8 +87,8 @@ export class BatchProcess {
         const text = chunk.toString();
 
         // When batch output is being folded, the live copy is suppressed to
-        // keep each group contiguous; it is retained (see capturedOutput) so a
-        // failed batch can still surface everything. Otherwise, maintain
+        // keep each group contiguous; it is retained (see capturedOutputPath)
+        // for the renderings that need it. Otherwise, maintain
         // current terminal output behavior. These chunks are forwarded raw and
         // routinely end mid-line, so they go through `output` to keep its line
         // tracking accurate for whatever prints next.
@@ -134,6 +142,11 @@ export class BatchProcess {
   }
 
   private capture(chunk: string | Buffer) {
+    // Only a released capture stops recording; a handed-over one keeps
+    // appending, so trailing output still reaches the fold.
+    if (this.capturedOutputDiscarded) {
+      return;
+    }
     if (this.capturedOutputFd === undefined) {
       const dir = join(workspaceDataDirectory, 'batch-outputs');
       mkdirSync(dir, { recursive: true });
@@ -145,25 +158,31 @@ export class BatchProcess {
     }
     // Written synchronously so the file is complete the moment the batch ends,
     // with no flush to sequence against the read that renders the fold.
-    writeSync(
-      this.capturedOutputFd,
-      typeof chunk === 'string' ? Buffer.from(chunk) : chunk
-    );
+    const bytes = typeof chunk === 'string' ? Buffer.from(chunk) : chunk;
+    let written = 0;
+    while (written < bytes.length) {
+      written += writeSync(this.capturedOutputFd, bytes, written);
+    }
   }
 
   /**
    * Path to the file holding everything held back from the live stream under
-   * log grouping, or undefined if nothing was captured. Closed here, so the
-   * caller reads a complete file. Used to render a failed batch as one fold so
-   * output no task claimed is not lost.
+   * log grouping, or undefined if nothing was captured. Used to render the whole
+   * batch as one fold, so output no task claimed is not lost.
+   *
+   * The file is deliberately left open. A worker's stdout can deliver after its
+   * exit event — which is what `getResults()` settles on — and that trailing
+   * output is exactly the kind this fold exists to carry, so it keeps appending
+   * to the same file rather than being dropped or landing in a second one.
+   * Writes are unbuffered, so a reader always sees a complete prefix.
    */
   getCapturedOutputPath(): string | undefined {
-    this.closeCapturedOutput();
     return this.capturedOutputPath;
   }
 
   /** Releases the capture file. Safe to call more than once. */
   discardCapturedOutput(): void {
+    this.capturedOutputDiscarded = true;
     this.closeCapturedOutput();
     if (this.capturedOutputPath) {
       rmSync(this.capturedOutputPath, { force: true });

@@ -882,9 +882,9 @@ export class TaskOrchestrator {
         // allocate one just to write a cursor-hide escape.
         //
         // When the batch is being folded, printing is deferred to batch end
-        // (printGroupedBatchOutput): a batch that succeeds renders as per-task
-        // folds, one that fails renders as a single fold carrying everything —
-        // including any output no task claimed.
+        // (printGroupedBatchOutput), which renders by output style: a
+        // full-output run gets the worker's whole log as one fold, anything
+        // else renders each task through the life cycle.
         if (status !== 'skipped' && !shouldGroupBatchOutput()) {
           this.options.lifeCycle.printTaskTerminalOutput(
             task,
