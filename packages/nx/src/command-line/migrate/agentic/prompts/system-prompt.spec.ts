@@ -146,18 +146,26 @@ describe('buildSystemPrompt', () => {
   });
 
   describe('formatting the agent’s changes (author mode)', () => {
-    it('directs the agent to format the files it changed before handoff, via nx format:write', () => {
+    it('directs the agent to format only the files it changed, via Prettier rather than nx format:write', () => {
       const prompt = buildSystemPrompt(ctx);
       expect(prompt).toMatch(
-        /format the files you created or modified .* run `nx format:write`/
+        /format the files you created or modified .* run it over exactly those files/
       );
+      // Without --ignore-unknown, a changed path Prettier has no parser for
+      // (.gitignore, .env) fails the whole instructed command.
+      expect(prompt).toContain('--ignore-unknown');
+      // nx format:write cannot be scoped that tightly: it selects the branch
+      // delta by default and always appends the root config files, both of
+      // which the scope rules forbid touching.
+      expect(prompt).toMatch(/Do not use `nx format:write` for this/);
     });
 
-    it('carves nx format:write out of the mutating-nx-command prohibition', () => {
+    it('lists nx format:write among the forbidden mutating nx commands', () => {
       const prompt = buildSystemPrompt(ctx);
       expect(prompt).toMatch(
-        /mutate workspace state .*, except `nx format:write` to format the files you changed/
+        /mutate workspace state \(`nx migrate`, `nx reset`, `nx format:write`/
       );
+      expect(prompt).not.toMatch(/except `nx format:write`/);
     });
 
     it('no longer blanket-forbids reformatting, only reformatting untouched files', () => {
