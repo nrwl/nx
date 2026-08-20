@@ -296,6 +296,23 @@ describe('package-manager', () => {
       expect(getPackageManagerVersion('npm')).toEqual('7.20.3');
     });
 
+    it('should ignore workspace configuration when detecting the pnpm version', () => {
+      jest.spyOn(fs, 'existsSync').mockReturnValue(false);
+      const execSync = jest
+        .spyOn(childProcess, 'execSync')
+        .mockReturnValue('11.2.2');
+
+      expect(getPackageManagerVersion('pnpm', '/workspace')).toEqual('11.2.2');
+      expect(execSync).toHaveBeenCalledWith(
+        'pnpm --ignore-workspace --version',
+        {
+          cwd: '/workspace',
+          encoding: 'utf-8',
+          windowsHide: true,
+        }
+      );
+    });
+
     it('should detect pnpm package manager version from package.json packageManager', () => {
       jest.spyOn(fs, 'existsSync').mockReturnValueOnce(true);
       jest.spyOn(childProcess, 'execSync').mockImplementation(() => {
