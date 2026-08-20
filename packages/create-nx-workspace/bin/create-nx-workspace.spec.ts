@@ -360,9 +360,11 @@ describe('determinePresetOptions', () => {
     interactive: false,
     workspaces: true,
     name: 'myorg',
-    // A value the linter resolution cannot produce on its own, so these tests
-    // pin the threading through each stack rather than the resolved default.
+    // Values neither resolution can produce on its own while `interactive` is
+    // false, so these tests pin the threading through each stack rather than the
+    // resolved default.
     linter: 'oxlint',
+    formatter: 'oxfmt',
   } as any;
 
   beforeEach(() => {

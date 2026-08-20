@@ -248,51 +248,66 @@ describe('determineNxCloudV2', () => {
 });
 
 describe('determineFormatterOptions', () => {
-  beforeEach(() => jest.clearAllMocks());
+  const { isCI } = require('../utils/ci/is-ci');
 
-  it('should return the formatter when one was passed', async () => {
+  beforeEach(() => {
+    (clack.autocomplete as jest.Mock).mockReset();
+    (isCI as jest.Mock).mockReturnValue(false);
+  });
+
+  it('should return the given formatter without prompting', async () => {
     const result = await determineFormatterOptions({
       formatter: 'oxfmt',
       interactive: true,
     });
 
     expect(result).toBe('oxfmt');
-    expect(enquirer.prompt).not.toHaveBeenCalled();
+    expect(clack.autocomplete).not.toHaveBeenCalled();
   });
 
-  it('should let the prompt skip itself when not interactive', async () => {
-    (enquirer.prompt as jest.Mock).mockResolvedValue({ formatter: 'prettier' });
+  it('should default to prettier without prompting when not interactive', async () => {
+    const result = await determineFormatterOptions({ interactive: false });
 
-    await determineFormatterOptions({ interactive: false });
+    expect(result).toBe('prettier');
+    expect(clack.autocomplete).not.toHaveBeenCalled();
+  });
 
-    // A skipped enquirer prompt resolves to the FIRST choice and ignores
-    // `initial`, so the ordering is what decides the non-interactive default.
-    // Asserting the returned value would only re-read the mock.
-    const [[[question]]] = (enquirer.prompt as jest.Mock).mock.calls;
-    expect(question.skip).toBe(true);
-    expect(question.choices[0]).toEqual(
-      expect.objectContaining({ name: 'prettier' })
-    );
+  it('should default to prettier without prompting in CI', async () => {
+    (isCI as jest.Mock).mockReturnValue(true);
+
+    const result = await determineFormatterOptions({ interactive: true });
+
+    expect(result).toBe('prettier');
+    expect(clack.autocomplete).not.toHaveBeenCalled();
   });
 
   it('should label oxfmt experimental while it is pre-1.0', async () => {
-    (enquirer.prompt as jest.Mock).mockResolvedValue({ formatter: 'prettier' });
+    (clack.autocomplete as jest.Mock).mockResolvedValue('prettier');
 
     await determineFormatterOptions({ interactive: true });
 
-    const [[[question]]] = (enquirer.prompt as jest.Mock).mock.calls;
-    const oxfmt = question.choices.find((c) => c.name === 'oxfmt');
-    expect(oxfmt.message).toContain('experimental');
+    const [[question]] = (clack.autocomplete as jest.Mock).mock.calls;
+    const oxfmt = question.options.find(
+      (o: { value: string }) => o.value === 'oxfmt'
+    );
+    expect(oxfmt.label).toContain('experimental');
   });
 
   it('should prompt when interactive', async () => {
-    (enquirer.prompt as jest.Mock).mockResolvedValue({ formatter: 'oxfmt' });
+    (clack.autocomplete as jest.Mock).mockResolvedValue('oxfmt');
 
     const result = await determineFormatterOptions({ interactive: true });
 
     expect(result).toBe('oxfmt');
-    expect(enquirer.prompt).toHaveBeenCalledWith([
-      expect.objectContaining({ name: 'formatter', skip: false }),
-    ]);
+    expect(clack.autocomplete).toHaveBeenCalledWith(
+      expect.objectContaining({
+        initialValue: 'prettier',
+        options: expect.arrayContaining([
+          expect.objectContaining({ value: 'prettier' }),
+          expect.objectContaining({ value: 'oxfmt' }),
+          expect.objectContaining({ value: 'none' }),
+        ]),
+      })
+    );
   });
 });

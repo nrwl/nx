@@ -345,35 +345,23 @@ const _formattersAreExhaustive: MissingFormatter extends never ? true : never =
 export async function determineFormatterOptions(args: {
   formatter?: Formatter;
   interactive?: boolean;
-}) {
+}): Promise<Formatter> {
   if (args.formatter) return args.formatter;
-  const reply = await enquirer.prompt<{
-    formatter: Formatter;
-  }>([
-    {
-      name: 'formatter',
-      message: `Which code formatter would you like to use?`,
-      type: 'autocomplete',
-      // A skipped prompt resolves to the first choice and ignores `initial`, so
-      // the order here is what makes prettier the non-interactive default while
-      // oxfmt is pre-1.0. Reorder the choices to change it.
-      choices: [
-        {
-          name: 'prettier',
-          message: 'prettier          [ https://prettier.io  ]',
-        },
-        {
-          name: 'oxfmt',
-          message: 'oxfmt (experimental) [ https://oxc.rs  ]',
-        },
-        {
-          name: 'none',
-          message: 'none',
-        },
-      ],
-      initial: 0,
-      skip: !args.interactive || isCI(),
-    },
-  ]);
-  return reply.formatter;
+
+  // Prettier is the non-interactive default; changing it means changing this
+  // line, not the option order.
+  if (!args.interactive || isCI()) return 'prettier';
+
+  return selectPrompt<Formatter>({
+    message: `Which code formatter would you like to use?`,
+    // `value` is what's returned; `label` is what the list shows. oxfmt is
+    // labelled so it isn't presented as an equal of Prettier while it is
+    // pre-1.0.
+    choices: [
+      { value: 'prettier', label: 'prettier' },
+      { value: 'oxfmt', label: 'oxfmt (experimental)' },
+      { value: 'none', label: 'none' },
+    ],
+    initial: 'prettier',
+  });
 }
