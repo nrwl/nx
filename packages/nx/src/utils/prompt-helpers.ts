@@ -30,10 +30,6 @@ function toChoice<T extends string>(choice: ChoiceOrValue<T>): Choice<T> {
  */
 export type OnCancel<T> = () => T;
 
-const defaultOnCancel = (): never => {
-  process.exit(130);
-};
-
 export async function selectPrompt<T extends string>(options: {
   message: string;
   choices: readonly ChoiceOrValue<T>[];
@@ -65,7 +61,11 @@ export async function selectPrompt<T extends string>(options: {
       value === undefined ? 'Pick one of the listed options' : undefined,
   });
   if (isCancel(answer)) {
-    return (options.onCancel ?? defaultOnCancel)();
+    if (options.onCancel) {
+      return options.onCancel();
+    }
+    // No handler means the user aborted the command.
+    process.exit(130);
   }
   return answer as T;
 }
@@ -116,7 +116,11 @@ export async function textPrompt(options: {
     validate: options.validate,
   });
   if (isCancel(answer)) {
-    return (options.onCancel ?? defaultOnCancel)();
+    if (options.onCancel) {
+      return options.onCancel();
+    }
+    // No handler means the user aborted the command.
+    process.exit(130);
   }
   return answer as string;
 }
@@ -143,7 +147,11 @@ export async function multiselectPrompt<T extends string>(options: {
       : undefined,
   });
   if (isCancel(answer)) {
-    return (options.onCancel ?? defaultOnCancel)();
+    if (options.onCancel) {
+      return options.onCancel();
+    }
+    // No handler means the user aborted the command.
+    process.exit(130);
   }
   return answer as T[];
 }

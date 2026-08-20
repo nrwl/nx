@@ -27,10 +27,6 @@ export type OnCancel<T> = () => T;
 /** A bare string is a choice whose label is its value. */
 export type ChoiceOrValue<T extends string> = T | Choice<T>;
 
-function cancelled(): never {
-  throw new CnwError('CANCELLED', 'Cancelled.');
-}
-
 function toChoice<T extends string>(choice: ChoiceOrValue<T>): Choice<T> {
   return typeof choice === 'string' ? { value: choice } : choice;
 }
@@ -75,7 +71,10 @@ export async function selectPrompt<T extends string>(
   });
   // Ctrl+C yields a sentinel rather than throwing.
   if (isCancel(answer)) {
-    return options.onCancel ? options.onCancel() : cancelled();
+    if (options.onCancel) {
+      return options.onCancel();
+    }
+    throw new CnwError('CANCELLED', 'Cancelled.');
   }
   return answer as T;
 }
@@ -125,7 +124,10 @@ export async function textPrompt(options: {
     validate: options.validate,
   });
   if (isCancel(answer)) {
-    return options.onCancel ? options.onCancel() : cancelled();
+    if (options.onCancel) {
+      return options.onCancel();
+    }
+    throw new CnwError('CANCELLED', 'Cancelled.');
   }
   return answer as string;
 }

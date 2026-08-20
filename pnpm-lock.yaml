@@ -2453,9 +2453,6 @@ importers:
 
   packages/devkit:
     dependencies:
-      '@clack/prompts':
-        specifier: 'catalog:'
-        version: 1.7.0
       ejs:
         specifier: 5.0.1
         version: 5.0.1

@@ -1,4 +1,5 @@
-import { textPrompt, whenInteractive } from './prompt';
+import { textPrompt } from 'nx/src/devkit-internals';
+import { whenInteractive } from './prompt';
 import {
   getProjects,
   joinPathFragments,
