@@ -137,17 +137,13 @@ import {
 } from './handle-tasks-execution-hooks';
 import { handleUpdateWorkspaceContext } from './handle-update-workspace-context';
 import {
-  disableOutputsTracking,
-  processFileChangesInOutputs,
-} from './outputs-tracking';
+  getOutputsWatcherTerminalError,
+  handleOutputsChanges,
+} from './handle-outputs-changes';
 import {
   scheduleProjectGraphRecomputation,
   registerProjectGraphRecomputationListener,
-  invalidateGraphCache,
-  isKnownWorkspaceFile,
-  currentProjectGraph,
 } from './project-graph-incremental-recomputation';
-import { outputsChangesInvalidatingGraphEnv } from './dotenv-graph-changes';
 import {
   hasRegisteredProjectGraphListenerSockets,
   registeredProjectGraphListenerSockets,
@@ -178,7 +174,6 @@ import {
 } from './watcher';
 
 let workspaceWatcherError: Error | undefined;
-let outputsWatcherError: Error | undefined;
 
 global.NX_DAEMON = true;
 process.env.NX_DAEMON_PROCESS = 'true';
@@ -232,6 +227,14 @@ async function handleMessage(socket: Socket, data: string) {
       socket,
       `File watcher error in the workspace '${workspaceRoot}'.`,
       workspaceWatcherError
+    );
+  }
+  const outputsWatcherTerminalError = getOutputsWatcherTerminalError();
+  if (outputsWatcherTerminalError) {
+    await respondWithErrorAndExit(
+      socket,
+      `File watcher error in the workspace '${workspaceRoot}'.`,
+      outputsWatcherTerminalError
     );
   }
 
@@ -640,66 +643,6 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
     serverLogger.watcherLog(`Unexpected workspace error`, err.message);
     console.error(err);
     workspaceWatcherError = err;
-  }
-};
-
-const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
-  try {
-    if (err || !changeEvents || !changeEvents.length) {
-      let error = typeof err === 'string' ? new Error(err) : err;
-      serverLogger.watcherLog(
-        'Unexpected outputs watcher error',
-        error.message
-      );
-      console.error(error);
-      outputsWatcherError = error;
-      disableOutputsTracking();
-      return;
-    }
-
-    // A dotenv change that a task chain loads must refresh the graph so
-    // createNodes re-resolves config reading process.env. This runs above the
-    // outputsWatcherError guard: the two concerns are independent, and a
-    // disabled outputs tracker must not leave the graph stale on a dotenv edit.
-    // A change to a file the workspace watcher tracks already schedules a
-    // recomputation that reads the new content; invalidating for it here too
-    // would discard that recomputation at commit and force a second one. The
-    // committed file map approximates what the watcher tracks: a file it does
-    // not know is either gitignored (never reaches the workspace watcher, so it
-    // needs the invalidation) or created since the last recompute (the watcher
-    // handles it; the extra invalidation is fail-safe). Its own try/catch so a
-    // fault here cannot trip the outputs-tracking kill switch below, which
-    // belongs to an unrelated subsystem, and it fails safe by invalidating: a
-    // stale graph on a dotenv edit is the bug this prevents.
-    try {
-      if (
-        outputsChangesInvalidatingGraphEnv(
-          changeEvents,
-          currentProjectGraph
-        ).some((path) => !isKnownWorkspaceFile(path))
-      ) {
-        invalidateGraphCache();
-      }
-    } catch (e) {
-      serverLogger.watcherLog(
-        'Failed to evaluate dotenv changes for graph invalidation; invalidating the graph cache to be safe',
-        e instanceof Error ? e.message : String(e)
-      );
-      console.error(e);
-      invalidateGraphCache();
-    }
-
-    if (outputsWatcherError) {
-      return;
-    }
-
-    serverLogger.watcherLog('Processing file changes in outputs');
-    processFileChangesInOutputs(changeEvents);
-  } catch (err) {
-    serverLogger.watcherLog(`Unexpected outputs watcher error`, err.message);
-    console.error(err);
-    outputsWatcherError = err;
-    disableOutputsTracking();
   }
 };
 
