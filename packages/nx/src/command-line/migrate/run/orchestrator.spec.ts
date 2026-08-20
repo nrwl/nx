@@ -187,6 +187,13 @@ describe('orchestrator', () => {
     version,
     prompt: `prompts/${name}.md`,
   });
+  const hybridMig = (pkg: string, name: string, version = '1.0.0') => ({
+    package: pkg,
+    name,
+    version,
+    implementation: `./${name}.js`,
+    prompt: `prompts/${name}.md`,
+  });
 
   const migStep = (
     id: string,
@@ -1935,6 +1942,83 @@ describe('orchestrator', () => {
       }
     );
 
+    it('folds a skipped handoff on a hybrid prompt as completed, landing the commit', async () => {
+      // The generator half's changes are already applied, so a prompt the
+      // agent marks not applicable still completes the migration; folding it
+      // as skipped would report it as not run and strand the changes as debt.
+      mockCommit.mockResolvedValue({
+        status: 'committed',
+        sha: 'face0007face0007face0007face0007face0007',
+      });
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:h', 'awaiting-prompt-outcome'),
+            awaitingKind: 'migration-prompt' as const,
+            generatorCompleted: true,
+            generatorMadeChanges: true,
+          },
+        ],
+        createCommits: true,
+        plan: [hybridMig('@nx/js', 'h')],
+      });
+      writeHandoff(dir, '@nx/js', 'h', {
+        status: 'success',
+        summary: 'prompt not applicable here',
+        outcome: 'skipped',
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      expect(state.steps[0].promptOutcome).toEqual({
+        status: 'completed',
+        summary: 'prompt not applicable here',
+      });
+      expect(state.commits).toEqual([
+        {
+          kind: 'landed',
+          sha: 'face0007face0007face0007face0007face0007',
+          stepIds: ['step-1'],
+        },
+      ]);
+    });
+
+    it('folds a skipped handoff on a no-op hybrid prompt as skipped, without a commit', async () => {
+      // The generator changed nothing, so nothing of the migration is in the
+      // tree; a commit here would `git add -A` unrelated pending diffs under
+      // a migration that changed nothing.
+      mockCommit.mockResolvedValue({
+        status: 'committed',
+        sha: 'face0008face0008face0008face0008face0008',
+      });
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:h', 'awaiting-prompt-outcome'),
+            awaitingKind: 'migration-prompt' as const,
+            generatorCompleted: true,
+            generatorMadeChanges: false,
+          },
+        ],
+        createCommits: true,
+        plan: [hybridMig('@nx/js', 'h')],
+      });
+      writeHandoff(dir, '@nx/js', 'h', {
+        status: 'success',
+        summary: 'n/a',
+        outcome: 'skipped',
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('skipped');
+      expect(mockCommit).not.toHaveBeenCalled();
+      expect(state.commits).toEqual([]);
+    });
+
     it('folds a skipped handoff on a validation pass as completed, landing the commit', async () => {
       // The generator's changes are already applied, so "validation not
       // applicable" must complete the migration; folding it as skipped would
@@ -1989,6 +2073,76 @@ describe('orchestrator', () => {
 
       expect(readRunState(dir).steps[0].status).toBe('failed');
       expect(existsSync(handoffPath)).toBe(false);
+    });
+
+    it('removes the stored agent-work payloads once the outcome folds terminally', async () => {
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome'),
+            attempt: 2,
+          },
+        ],
+        plan: [promptMig('@nx/js', 'p')],
+      });
+      mkdirSync(join(dir, 'agent-work'), { recursive: true });
+      for (const attempt of [1, 2]) {
+        writeFileSync(
+          join(dir, 'agent-work', `step-1-attempt-${attempt}.json`),
+          JSON.stringify({ migrationId: '@nx/js:p', prompt: 'prompts/p.md' })
+        );
+      }
+      writeHandoff(dir, '@nx/js', 'p', { status: 'success', summary: 'done' });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(readRunState(dir).steps[0].status).toBe('succeeded');
+      expect(existsSync(join(dir, 'agent-work', 'step-1-attempt-1.json'))).toBe(
+        false
+      );
+      expect(existsSync(join(dir, 'agent-work', 'step-1-attempt-2.json'))).toBe(
+        false
+      );
+    });
+
+    it('finishes the fold when a stored payload entry cannot be removed', async () => {
+      // The outcome is already recorded by cleanup time; a directory planted
+      // at a payload path must not abort the reconcile that settled the step.
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
+        plan: [promptMig('@nx/js', 'p')],
+      });
+      mkdirSync(join(dir, 'agent-work', 'step-1-attempt-1.json'), {
+        recursive: true,
+      });
+      writeHandoff(dir, '@nx/js', 'p', { status: 'success', summary: 'done' });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(readRunState(dir).steps[0].status).toBe('succeeded');
+      expect(lastBlock().action).toBe('complete');
+    });
+
+    it('keeps the stored agent-work payloads when the outcome folds as failed', async () => {
+      // A retry re-hands the newest surviving copy, so a failed fold must
+      // not throw it away.
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
+        plan: [promptMig('@nx/js', 'p')],
+      });
+      mkdirSync(join(dir, 'agent-work'), { recursive: true });
+      writeFileSync(
+        join(dir, 'agent-work', 'step-1-attempt-1.json'),
+        JSON.stringify({ migrationId: '@nx/js:p', prompt: 'prompts/p.md' })
+      );
+      writeHandoff(dir, '@nx/js', 'p', { status: 'failed', summary: 'boom' });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(readRunState(dir).steps[0].status).toBe('failed');
+      expect(existsSync(join(dir, 'agent-work', 'step-1-attempt-1.json'))).toBe(
+        true
+      );
     });
 
     it("carries the agent's failure summary into the retry-failed dispense", async () => {
@@ -2054,6 +2208,230 @@ describe('orchestrator', () => {
       expect(block.payload.instructions).not.toContain('"outcome": "skipped"');
       expect(block.payload.instructions).toContain(
         handoffPathIn(dir, '@nx/js', 'gen')
+      );
+    });
+
+    it('offers no skipped outcome for a hybrid prompt whose generator changes are applied', async () => {
+      setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:h', 'awaiting-prompt-outcome'),
+            awaitingKind: 'migration-prompt' as const,
+            generatorCompleted: true,
+            generatorMadeChanges: true,
+          },
+        ],
+        plan: [hybridMig('@nx/js', 'h')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
+      expect(block.action).toBe('await-prompt');
+      expect(block.payload.instructions).toContain(
+        'If the prompt does not apply here'
+      );
+      expect(block.payload.instructions).not.toContain('"outcome": "skipped"');
+    });
+
+    it('keeps the skipped outcome for a hybrid prompt whose generator made no changes', async () => {
+      setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:h', 'awaiting-prompt-outcome'),
+            awaitingKind: 'migration-prompt' as const,
+            generatorCompleted: true,
+            generatorMadeChanges: false,
+          },
+        ],
+        plan: [hybridMig('@nx/js', 'h')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(lastBlock().payload.instructions).toContain(
+        'To mark the prompt not applicable'
+      );
+    });
+
+    it('re-emits the stored agent-work payload when re-dispensing an awaiting step', async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
+        plan: [promptMig('@nx/js', 'p')],
+      });
+      mkdirSync(join(dir, 'agent-work'), { recursive: true });
+      writeFileSync(
+        join(dir, 'agent-work', 'step-1-attempt-1.json'),
+        JSON.stringify({ migrationId: '@nx/js:p', prompt: 'prompts/p.md' })
+      );
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(stdout).toContain('<nx_migrate_prompt migration="@nx/js:p">');
+      expect(stdout).toContain('"prompt": "prompts/p.md"');
+      const block = lastBlock();
+      expect(block.action).toBe('await-prompt');
+      expect(block.payload.instructions).toContain(
+        'the <nx_migrate_prompt> block above'
+      );
+    });
+
+    it('synthesizes the prompt payload from the plan when none is stored', async () => {
+      // An awaiting step offers no retry action, so a dispense that only
+      // pointed backward at stdout the session no longer has could stall a
+      // valid run forever (e.g. one parked before payloads were stored).
+      setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
+        plan: [promptMig('@nx/js', 'p')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(stdout).toContain('<nx_migrate_prompt migration="@nx/js:p">');
+      expect(stdout).toContain('"prompt": "prompts/p.md"');
+      expect(lastBlock().payload.instructions).toContain(
+        'the <nx_migrate_prompt> block above'
+      );
+    });
+
+    it('synthesizes the tree-pointing payload for an awaited validation pass when none is stored', async () => {
+      setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:gen', 'awaiting-prompt-outcome'),
+            awaitingKind: 'generator-validation' as const,
+          },
+        ],
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(stdout).toContain('<nx_migrate_prompt migration="@nx/js:gen">');
+      expect(stdout).toContain('"kind": "generator-validation"');
+      expect(lastBlock().payload.instructions).toContain(
+        'the <nx_migrate_prompt> block above'
+      );
+    });
+
+    it('ignores a payload stored by an earlier attempt, synthesizing from the plan instead', async () => {
+      // The re-armed attempt parks with its own payload; the previous
+      // attempt's stored copy says nothing about the work now awaited.
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome'),
+            attempt: 2,
+          },
+        ],
+        plan: [promptMig('@nx/js', 'p')],
+      });
+      mkdirSync(join(dir, 'agent-work'), { recursive: true });
+      writeFileSync(
+        join(dir, 'agent-work', 'step-1-attempt-1.json'),
+        JSON.stringify({ migrationId: '@nx/js:p', prompt: 'prompts/stale.md' })
+      );
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(stdout).not.toContain('prompts/stale.md');
+      expect(stdout).toContain('"prompt": "prompts/p.md"');
+    });
+
+    it.each([
+      ['is not usable JSON', 'not json'],
+      [
+        'names a different migration',
+        JSON.stringify({ migrationId: '@nx/other:x', prompt: 'prompts/x.md' }),
+      ],
+      [
+        'does not match the awaited kind',
+        JSON.stringify({
+          migrationId: '@nx/js:p',
+          kind: 'generator-validation',
+        }),
+      ],
+      [
+        'is missing the prompt path',
+        JSON.stringify({ migrationId: '@nx/js:p' }),
+      ],
+    ] as const)(
+      'rejects a stored payload that %s, synthesizing from the plan instead',
+      async (_case, content) => {
+        // A misplaced or truncated file must not become the authoritative
+        // instruction for the awaited work.
+        const dir = setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
+          plan: [promptMig('@nx/js', 'p')],
+        });
+        mkdirSync(join(dir, 'agent-work'), { recursive: true });
+        writeFileSync(
+          join(dir, 'agent-work', 'step-1-attempt-1.json'),
+          content
+        );
+
+        await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+        expect(stdout).not.toContain('prompts/x.md');
+        expect(stdout).not.toContain('"kind": "generator-validation"');
+        expect(stdout).toContain('"prompt": "prompts/p.md"');
+      }
+    );
+
+    it('rejects a stored payload naming different instructions than the plan, synthesizing instead', async () => {
+      // A same-migration file pointing at another instructions file must not
+      // redirect the agent away from what the durable run records.
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
+        plan: [promptMig('@nx/js', 'p')],
+      });
+      mkdirSync(join(dir, 'agent-work'), { recursive: true });
+      writeFileSync(
+        join(dir, 'agent-work', 'step-1-attempt-1.json'),
+        JSON.stringify({ migrationId: '@nx/js:p', prompt: 'prompts/stale.md' })
+      );
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(stdout).not.toContain('prompts/stale.md');
+      expect(stdout).toContain('"prompt": "prompts/p.md"');
+    });
+
+    it.each([
+      ['an object for migrations', '{"migrations": {}}'],
+      ['a null migration entry', '{"migrations": [null]}'],
+    ] as const)(
+      'still dispenses the awaiting step when the plan snapshot holds %s',
+      async (_case, planContent) => {
+        // A damaged-but-parseable snapshot must degrade to the last-resort
+        // pointer, not abort the reconcile that re-hands the awaited work.
+        const dir = setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
+          plan: [promptMig('@nx/js', 'p')],
+        });
+        writeFileSync(join(dir, 'plan-0.json'), planContent);
+
+        await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+        const block = lastBlock();
+        expect(block.action).toBe('await-prompt');
+        expect(block.payload.instructions).toContain(
+          "the worker's earlier <nx_migrate_prompt> block"
+        );
+      }
+    );
+
+    it("points at the worker's earlier block only when even the plan cannot name the prompt", async () => {
+      setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
+        plan: [],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(stdout).not.toContain('<nx_migrate_prompt');
+      expect(lastBlock().payload.instructions).toContain(
+        "the worker's earlier <nx_migrate_prompt> block"
       );
     });
 
@@ -3474,6 +3852,116 @@ describe('orchestrator', () => {
       expect(step.status).toBe('dispensed');
       expect(step.generatorCompleted).toBeUndefined();
       expect(lastBlock().action).toBe('next-step');
+    });
+
+    it('removes the stored payloads when retry-clean drops the generator marker', async () => {
+      // The reset discards the generator run those payloads describe; the
+      // rerun must not let a later retained retry re-hand stale evidence.
+      mockGetLatestCommitSha.mockReturnValue(
+        'beef0001beef0001beef0001beef0001beef0001'
+      );
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:h', 'failed', {
+            gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+            treeCleanAtDispense: true,
+            generatorCompleted: true,
+          }),
+        ],
+        createCommits: true,
+        plan: [hybridMig('@nx/js', 'h')],
+      });
+      mkdirSync(join(dir, 'agent-work'), { recursive: true });
+      writeFileSync(
+        join(dir, 'agent-work', 'step-1-attempt-1.json'),
+        JSON.stringify({ migrationId: '@nx/js:h', prompt: 'prompts/h.md' })
+      );
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry-clean',
+      });
+
+      const step = readRunState(dir).steps[0];
+      expect(step.attempt).toBe(2);
+      expect(step.generatorCompleted).toBeUndefined();
+      expect(existsSync(join(dir, 'agent-work', 'step-1-attempt-1.json'))).toBe(
+        false
+      );
+    });
+
+    it('keeps the stored payloads when retry-clean retains the generator marker', async () => {
+      // The reset target already carries the commit that landed the
+      // generator's changes, so the stored payload still describes the tree.
+      mockGetLatestCommitSha.mockReturnValue(
+        'beef0001beef0001beef0001beef0001beef0001'
+      );
+      mockIsAncestorCommit.mockReturnValue(true);
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:h', 'failed', {
+            gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+            treeCleanAtDispense: true,
+            generatorCompleted: true,
+          }),
+        ],
+        createCommits: true,
+        commits: [
+          {
+            kind: 'landed',
+            sha: 'face0001face0001face0001face0001face0001',
+            stepIds: ['step-1'],
+          },
+        ],
+        plan: [hybridMig('@nx/js', 'h')],
+      });
+      mkdirSync(join(dir, 'agent-work'), { recursive: true });
+      writeFileSync(
+        join(dir, 'agent-work', 'step-1-attempt-1.json'),
+        JSON.stringify({ migrationId: '@nx/js:h', prompt: 'prompts/h.md' })
+      );
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry-clean',
+      });
+
+      const step = readRunState(dir).steps[0];
+      expect(step.attempt).toBe(2);
+      expect(step.generatorCompleted).toBe(true);
+      expect(existsSync(join(dir, 'agent-work', 'step-1-attempt-1.json'))).toBe(
+        true
+      );
+    });
+
+    it('keeps the stored payloads on a plain retry', async () => {
+      // The lineage is unbroken: the retained retry re-hands the newest copy.
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:h', 'failed', {
+            generatorCompleted: true,
+          }),
+        ],
+        plan: [hybridMig('@nx/js', 'h')],
+      });
+      mkdirSync(join(dir, 'agent-work'), { recursive: true });
+      writeFileSync(
+        join(dir, 'agent-work', 'step-1-attempt-1.json'),
+        JSON.stringify({ migrationId: '@nx/js:h', prompt: 'prompts/h.md' })
+      );
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry',
+      });
+
+      expect(readRunState(dir).steps[0].attempt).toBe(2);
+      expect(existsSync(join(dir, 'agent-work', 'step-1-attempt-1.json'))).toBe(
+        true
+      );
     });
 
     it('rejects retry-clean for a failed step with no restore point, naming the failed-step fallbacks', async () => {

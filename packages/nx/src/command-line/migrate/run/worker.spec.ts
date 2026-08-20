@@ -157,7 +157,14 @@ vi.mock('../../../utils/package-manager', () => ({
   getPackageManagerCommand: () => ({ exec: 'npx', install: 'npm install' }),
 }));
 
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { logger } from '../../../utils/logger';
@@ -1097,6 +1104,382 @@ describe('runSingleMigrationWorker', () => {
       expect(step.status).toBe('awaiting-prompt-outcome');
       expect(step.awaitingKind).toBe('migration-prompt');
       expect(step.generatorCompleted).toBe(true);
+    });
+
+    it('defers the hybrid commit to the fold, parking with the changes uncommitted', async () => {
+      mockRunMigration.mockResolvedValue({
+        changes: changeList(),
+        nextSteps: [],
+        agentContext: [],
+        logs: '',
+        madeChanges: true,
+      });
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:h', 'dispensed')],
+        migrations: [hybridMig('@nx/js', 'h')],
+        createCommits: true,
+      });
+
+      await runSingleMigrationWorker(recordedInput('@nx/js:h', 'run-1'));
+
+      // One commit per migration: the fold commits the generator's and the
+      // prompt's changes together, and a failed prompt leaves both
+      // uncommitted for review, as in the classic loop.
+      expect(mockCommit).not.toHaveBeenCalled();
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('awaiting-prompt-outcome');
+      expect(state.commits).toEqual([]);
+    });
+
+    it.each([
+      ['prompt-only', promptMig('@nx/js', 'm'), '"prompt": "prompts/m.md"'],
+      ['hybrid', hybridMig('@nx/js', 'm'), '"prompt": "prompts/m.md"'],
+      [
+        'validating generator',
+        genMig('@nx/js', 'm'),
+        '"kind": "generator-validation"',
+      ],
+    ] as const)(
+      'stores the parked %s payload for re-emission, keyed by step and attempt',
+      async (_kind, migration, marker) => {
+        mockRunMigration.mockResolvedValue({
+          changes: changeList(),
+          nextSteps: [],
+          agentContext: [],
+          logs: 'gen output',
+          madeChanges: true,
+        });
+        const dir = setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:m', 'dispensed')],
+          migrations: [migration],
+          validate: true,
+        });
+
+        await runSingleMigrationWorker(recordedInput('@nx/js:m', 'run-1'));
+
+        const stored = readFileSync(
+          join(dir, 'agent-work', 'step-1-attempt-1.json'),
+          'utf-8'
+        );
+        expect(stored).toContain('"migrationId": "@nx/js:m"');
+        expect(stored).toContain(marker);
+      }
+    );
+
+    it('stores a retry park payload under its own attempt', async () => {
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:h', 'dispensed'),
+            attempt: 2,
+            generatorCompleted: true,
+          },
+        ],
+        migrations: [hybridMig('@nx/js', 'h')],
+      });
+
+      await runSingleMigrationWorker(recordedInput('@nx/js:h', 'run-1'));
+
+      expect(existsSync(join(dir, 'agent-work', 'step-1-attempt-2.json'))).toBe(
+        true
+      );
+      expect(existsSync(join(dir, 'agent-work', 'step-1-attempt-1.json'))).toBe(
+        false
+      );
+    });
+
+    it('fails the attempt instead of parking when the payload cannot be stored', async () => {
+      // A parked step's durable contract includes the stored copy (the
+      // runbook promises a lost block is re-emitted), so a step must not
+      // park without it.
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:p', 'dispensed')],
+        migrations: [promptMig('@nx/js', 'p')],
+      });
+      // A directory at the payload path makes the store's rename fail.
+      mkdirSync(join(dir, 'agent-work', 'step-1-attempt-1.json'), {
+        recursive: true,
+      });
+
+      await expect(
+        runSingleMigrationWorker(recordedInput('@nx/js:p', 'run-1'))
+      ).rejects.toThrow();
+
+      const step = readRunState(dir).steps[0];
+      expect(step.status).toBe('failed');
+      // The store runs before the emission, so no block was handed out that
+      // the run state does not know how to recover.
+      expect(stdout).not.toContain('<nx_migrate_prompt');
+    });
+
+    it('re-hands the payload stored by the earlier attempt on a hybrid retry', async () => {
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:h', 'dispensed'),
+            attempt: 2,
+            generatorCompleted: true,
+            generatorCompletedAtAttempt: 1,
+          },
+        ],
+        migrations: [hybridMig('@nx/js', 'h')],
+      });
+      mkdirSync(join(dir, 'agent-work'), { recursive: true });
+      writeFileSync(
+        join(dir, 'agent-work', 'step-1-attempt-1.json'),
+        JSON.stringify({
+          migrationId: '@nx/js:h',
+          prompt: 'prompts/h.md',
+          impl: {
+            logs: 'gen output',
+            changes: [{ type: 'UPDATE', path: 'a.ts' }],
+          },
+        })
+      );
+
+      await runSingleMigrationWorker(recordedInput('@nx/js:h', 'run-1'));
+
+      // The captured generator output rides along instead of being dropped.
+      expect(stdout).toContain('"logs": "gen output"');
+      expect(
+        readFileSync(join(dir, 'agent-work', 'step-1-attempt-2.json'), 'utf-8')
+      ).toContain('"logs": "gen output"');
+      expect(readRunState(dir).steps[0].status).toBe('awaiting-prompt-outcome');
+    });
+
+    it('re-hands the payload stored by the earlier attempt on an owed-validation retry', async () => {
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:gen', 'dispensed'),
+            attempt: 2,
+            generatorCompleted: true,
+            generatorCompletedAtAttempt: 1,
+            validationOwed: true,
+          },
+        ],
+        migrations: [genMig('@nx/js', 'gen')],
+        validate: true,
+      });
+      mkdirSync(join(dir, 'agent-work'), { recursive: true });
+      writeFileSync(
+        join(dir, 'agent-work', 'step-1-attempt-1.json'),
+        JSON.stringify({
+          migrationId: '@nx/js:gen',
+          kind: 'generator-validation',
+          impl: {
+            logs: 'gen output',
+            changes: [{ type: 'UPDATE', path: 'a.ts' }],
+          },
+        })
+      );
+
+      await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
+
+      expect(mockRunMigration).not.toHaveBeenCalled();
+      expect(stdout).toContain('"impl"');
+      expect(stdout).toContain('"logs": "gen output"');
+      expect(
+        readFileSync(join(dir, 'agent-work', 'step-1-attempt-2.json'), 'utf-8')
+      ).toContain('"kind": "generator-validation"');
+      expect(output.log).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining('still await validation'),
+        })
+      );
+    });
+
+    it('does not re-hand a payload stored before the lineage boundary', async () => {
+      // Attempt 1's payload predates a reset-backed retry: the marker was
+      // re-recorded on attempt 2, so attempt 1's copy describes a generator
+      // run whose tree was reset away, even when its removal failed.
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:gen', 'dispensed'),
+            attempt: 3,
+            generatorCompleted: true,
+            generatorCompletedAtAttempt: 2,
+            validationOwed: true,
+          },
+        ],
+        migrations: [genMig('@nx/js', 'gen')],
+        validate: true,
+      });
+      mkdirSync(join(dir, 'agent-work'), { recursive: true });
+      writeFileSync(
+        join(dir, 'agent-work', 'step-1-attempt-1.json'),
+        JSON.stringify({
+          migrationId: '@nx/js:gen',
+          kind: 'generator-validation',
+          impl: { logs: 'stale gen output', changes: [] },
+        })
+      );
+
+      await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
+
+      expect(stdout).not.toContain('stale gen output');
+      expect(stdout).toContain('"kind": "generator-validation"');
+      expect(output.log).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining('Inspect them with git'),
+        })
+      );
+    });
+
+    it('re-hands a payload stored on the lineage boundary attempt itself', async () => {
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:gen', 'dispensed'),
+            attempt: 3,
+            generatorCompleted: true,
+            generatorCompletedAtAttempt: 2,
+            validationOwed: true,
+          },
+        ],
+        migrations: [genMig('@nx/js', 'gen')],
+        validate: true,
+      });
+      mkdirSync(join(dir, 'agent-work'), { recursive: true });
+      writeFileSync(
+        join(dir, 'agent-work', 'step-1-attempt-2.json'),
+        JSON.stringify({
+          migrationId: '@nx/js:gen',
+          kind: 'generator-validation',
+          impl: { logs: 'current gen output', changes: [] },
+        })
+      );
+
+      await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
+
+      expect(stdout).toContain('"logs": "current gen output"');
+    });
+
+    it('points the retry at the tree when the stored payload does not match the awaited work', async () => {
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:gen', 'dispensed'),
+            attempt: 2,
+            generatorCompleted: true,
+            generatorCompletedAtAttempt: 1,
+            validationOwed: true,
+          },
+        ],
+        migrations: [genMig('@nx/js', 'gen')],
+        validate: true,
+      });
+      mkdirSync(join(dir, 'agent-work'), { recursive: true });
+      // A prompt payload for another migration must not become this step's
+      // validation instruction.
+      writeFileSync(
+        join(dir, 'agent-work', 'step-1-attempt-1.json'),
+        JSON.stringify({ migrationId: '@nx/other:x', prompt: 'prompts/x.md' })
+      );
+
+      await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
+
+      expect(stdout).toContain('"kind": "generator-validation"');
+      expect(stdout).not.toContain('"impl"');
+      expect(output.log).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining('Inspect them with git'),
+        })
+      );
+    });
+
+    it('re-derives the prompt when the carried payload names different instructions than the plan', async () => {
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:h', 'dispensed'),
+            attempt: 2,
+            generatorCompleted: true,
+            generatorCompletedAtAttempt: 1,
+          },
+        ],
+        migrations: [hybridMig('@nx/js', 'h')],
+      });
+      mkdirSync(join(dir, 'agent-work'), { recursive: true });
+      writeFileSync(
+        join(dir, 'agent-work', 'step-1-attempt-1.json'),
+        JSON.stringify({
+          migrationId: '@nx/js:h',
+          prompt: 'prompts/stale.md',
+          impl: { logs: 'gen output', changes: [] },
+        })
+      );
+
+      await runSingleMigrationWorker(recordedInput('@nx/js:h', 'run-1'));
+
+      expect(stdout).not.toContain('prompts/stale.md');
+      expect(stdout).not.toContain('gen output');
+      expect(stdout).toContain('"prompt": "prompts/h.md"');
+    });
+
+    it('finds the carried payload by enumerating stored files, not by scanning the attempt range', async () => {
+      // The attempt is a persisted number a tampered-but-valid state can
+      // inflate; a range scan would perform that many synchronous reads.
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:gen', 'dispensed'),
+            attempt: 1000000000,
+            generatorCompleted: true,
+            generatorCompletedAtAttempt: 1,
+            validationOwed: true,
+          },
+        ],
+        migrations: [genMig('@nx/js', 'gen')],
+        validate: true,
+      });
+      mkdirSync(join(dir, 'agent-work'), { recursive: true });
+      writeFileSync(
+        join(dir, 'agent-work', 'step-1-attempt-1.json'),
+        JSON.stringify({
+          migrationId: '@nx/js:gen',
+          kind: 'generator-validation',
+          impl: { logs: 'gen output', changes: [] },
+        })
+      );
+
+      await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
+
+      expect(stdout).toContain('"logs": "gen output"');
+    });
+
+    it('does not re-hand a stored payload when the lineage boundary is absent', async () => {
+      // An older nx's rearm drops the boundary field while leaving the
+      // files, so absence cannot prove the copy belongs to the current
+      // lineage; the lookup fails closed and the emission points at the
+      // tree.
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:gen', 'dispensed'),
+            attempt: 2,
+            generatorCompleted: true,
+            validationOwed: true,
+          },
+        ],
+        migrations: [genMig('@nx/js', 'gen')],
+        validate: true,
+      });
+      mkdirSync(join(dir, 'agent-work'), { recursive: true });
+      writeFileSync(
+        join(dir, 'agent-work', 'step-1-attempt-1.json'),
+        JSON.stringify({
+          migrationId: '@nx/js:gen',
+          kind: 'generator-validation',
+          impl: { logs: 'possibly stale gen output', changes: [] },
+        })
+      );
+
+      await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
+
+      expect(stdout).not.toContain('possibly stale gen output');
+      expect(stdout).toContain('"kind": "generator-validation"');
     });
 
     it('marks the generator done before attempting the commit, so a failure there is not lost', async () => {

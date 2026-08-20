@@ -85,6 +85,11 @@ import {
 } from './util';
 import { singleLine } from '../text';
 import { emitPromptBlock, logToAgent, warnToAgent } from './agent-output';
+import {
+  agentWorkPayloadPath,
+  latestStoredAgentWorkPayload,
+  persistAgentWorkPayload,
+} from './agent-work-payload';
 
 // Runs exactly one migration, either standalone or recorded into an existing
 // orchestrated run via `--run-id`. Standalone runs keep no durable run state,
@@ -524,17 +529,14 @@ async function runStandalone(
   // A waived prompt is not deferred, so it gets no hand-off to an outer agent
   // and no "apply this manually" block for the user either.
   if (isHybridMigration(migration) && !skipAgentic) {
-    emitOrPrintPrompt(
-      root,
-      migration,
-      agentic.kind,
-      {
+    emitOrPrintPrompt(root, migration, agentic.kind, {
+      impl: {
         logs,
         changes,
         agentContext,
       },
-      resolvedCollection
-    );
+      resolvedCollection,
+    });
   }
 }
 
@@ -614,9 +616,15 @@ async function runRecorded(
   // or a validation pass over the generator's changes); the step then parks
   // in 'awaiting-prompt-outcome' instead of succeeding.
   let awaitingKind: MigrateStepAwaitingKind | undefined;
+  // Where this attempt's handed-back payload is stored so a later reconcile
+  // can re-emit the block. Derived from the step and attempt, so a re-armed
+  // attempt writes its own file and never inherits a stale one.
+  const payloadPath = agentWorkPayloadPath(dir, step.id, startedStep.attempt);
   try {
     if (isPromptOnlyMigration(migration)) {
-      emitOrPrintPrompt(root, migration, agenticKind);
+      emitOrPrintPrompt(root, migration, agenticKind, {
+        persistPath: payloadPath,
+      });
       awaitingKind = 'migration-prompt';
     } else if (
       generatorAlreadyCompleted &&
@@ -624,7 +632,31 @@ async function runRecorded(
       isHybridMigration(migration)
     ) {
       await reinstallFromBaseline();
-      emitOrPrintPrompt(root, migration, agenticKind);
+      // An earlier attempt's stored payload carries the captured generator
+      // output this retry cannot recompute; re-hand it when it survives.
+      const carried = latestStoredAgentWorkPayload(
+        dir,
+        step.id,
+        startedStep.attempt,
+        startedStep.generatorCompletedAtAttempt,
+        {
+          migrationId,
+          kind: 'migration-prompt',
+          promptPath: migration.prompt,
+        }
+      );
+      if (carried) {
+        reemitCarriedAgentWork(
+          migrationId,
+          'migration-prompt',
+          payloadPath,
+          carried
+        );
+      } else {
+        emitOrPrintPrompt(root, migration, agenticKind, {
+          persistPath: payloadPath,
+        });
+      }
       awaitingKind = 'migration-prompt';
     } else if (
       generatorAlreadyCompleted &&
@@ -634,11 +666,30 @@ async function runRecorded(
       // settled (its install, park, or fold failed), so this attempt still
       // owes it; the persisted flag is the only record, since the decision
       // needed the generator result that is gone with that attempt. The
-      // captured generator output is gone too, so the emission points at the
-      // tree instead, and the commit stays with the fold as on a first
+      // captured generator output survives only in that attempt's stored
+      // payload; when it does, it is re-handed, and otherwise the emission
+      // points at the tree. The commit stays with the fold as on a first
       // attempt. A true waiver never writes the flag.
       await reinstallFromBaseline();
-      emitValidationBlock(root, migration, undefined);
+      const carried = latestStoredAgentWorkPayload(
+        dir,
+        step.id,
+        startedStep.attempt,
+        startedStep.generatorCompletedAtAttempt,
+        { migrationId, kind: 'generator-validation' }
+      );
+      if (carried) {
+        reemitCarriedAgentWork(
+          migrationId,
+          'generator-validation',
+          payloadPath,
+          carried
+        );
+      } else {
+        emitValidationBlock(root, migration, undefined, {
+          persistPath: payloadPath,
+        });
+      }
       awaitingKind = 'generator-validation';
     } else if (generatorAlreadyCompleted) {
       // Reached when the AI step was waived by the earlier attempt, or the
@@ -695,6 +746,7 @@ async function runRecorded(
       const waivedAgenticStep =
         skipAgentic && (isHybridMigration(migration) || validationApplies);
       const validationOwed = validationApplies && !waivedAgenticStep;
+      const promptOwed = isHybridMigration(migration) && !waivedAgenticStep;
 
       // Recorded before the commit is attempted: from here on the changes are
       // in the tree, so a failed install or commit must leave a retry with
@@ -723,11 +775,17 @@ async function runRecorded(
       // Commits follow the run config, not CLI flags, and only when the
       // generator changed something: a no-op step must not create a commit
       // (nor a ledger entry) that absorbs prior pending diffs under its name.
-      // A step handing off a validation pass defers its commit to the fold so
-      // a failed validation leaves the changes uncommitted for review, as in
-      // the classic loop; the install still runs first because the agent may
-      // run tasks that need what the generator added.
-      if (state.createCommits && madeChanges && !validationOwed) {
+      // A step handing work back (a validation pass, or a hybrid's prompt
+      // half) defers its commit to the fold, so the migration lands as one
+      // commit and a failed hand-back leaves the changes uncommitted for
+      // review, as in the classic loop; the install still runs first because
+      // the agent may run tasks that need what the generator added.
+      if (
+        state.createCommits &&
+        madeChanges &&
+        !validationOwed &&
+        !promptOwed
+      ) {
         state = await commitStepChanges(
           dir,
           root,
@@ -753,21 +811,19 @@ async function runRecorded(
           root,
           migration,
           { logs, changes, agentContext },
-          resolvedCollection
+          { resolvedCollection, persistPath: payloadPath }
         );
         awaitingKind = 'generator-validation';
-      } else if (isHybridMigration(migration) && !waivedAgenticStep) {
-        emitOrPrintPrompt(
-          root,
-          migration,
-          agenticKind,
-          {
+      } else if (promptOwed) {
+        emitOrPrintPrompt(root, migration, agenticKind, {
+          impl: {
             logs,
             changes,
             agentContext,
           },
-          resolvedCollection
-        );
+          resolvedCollection,
+          persistPath: payloadPath,
+        });
         awaitingKind = 'migration-prompt';
       } else {
         outcome = buildOutcome(changes, nextSteps, migration.description, root);
@@ -1074,23 +1130,39 @@ function printNextSteps(
   });
 }
 
+interface EmitPromptOptions {
+  impl?: { logs: string; changes: FileChange[]; agentContext: string[] };
+  resolvedCollection?: ResolvedMigrationCollection;
+  // Set by recorded runs: the payload is stored at this path, before the
+  // block is emitted, so a later reconcile can re-emit it for the parked
+  // step. A failed store throws and fails the attempt: the runbook promises
+  // a lost block is re-emitted, so a step must not park without the copy
+  // that keeps the promise.
+  persistPath?: string;
+}
+
 function emitOrPrintPrompt(
   root: string,
   migration: PlannedMigration,
   agenticKind: ResolvedAgentic['kind'],
-  impl?: { logs: string; changes: FileChange[]; agentContext: string[] },
-  resolvedCollection?: ResolvedMigrationCollection
+  opts: EmitPromptOptions = {}
 ): void {
   const migrationId = `${migration.package}:${migration.name}`;
   const promptPath = migration.prompt;
   const documentationPath = resolveDocumentationPath(
     root,
     migration,
-    resolvedCollection
+    opts.resolvedCollection
   );
 
   if (agenticKind === 'inside-agent') {
-    emitPromptForOuterAgent(migrationId, promptPath, documentationPath, impl);
+    emitPromptForOuterAgent(
+      migrationId,
+      promptPath,
+      documentationPath,
+      opts.impl,
+      opts.persistPath
+    );
   } else {
     printPromptForUser(root, migration, promptPath, documentationPath);
   }
@@ -1102,21 +1174,52 @@ function emitPromptForOuterAgent(
   documentationPath: string | undefined,
   impl:
     | { logs: string; changes: FileChange[]; agentContext: string[] }
-    | undefined
+    | undefined,
+  persistPath: string | undefined
 ): void {
   const payload: Record<string, unknown> = { migrationId, prompt: promptPath };
   if (documentationPath) payload.documentationPath = documentationPath;
   if (impl) {
-    payload.impl = {
-      logs: impl.logs,
-      changes: impl.changes.map((c) => ({ type: c.type, path: c.path })),
-      ...(impl.agentContext.length > 0
-        ? { agentContext: impl.agentContext }
-        : {}),
-    };
+    payload.impl = implPayload(impl);
+  }
+  if (persistPath) {
+    persistAgentWorkPayload(persistPath, payload);
   }
   logToAgent({
     title: `The following prompt-based migration was not applied automatically. Apply it to this workspace, then continue.`,
+  });
+  emitPromptBlock(migrationId, payload);
+}
+
+function implPayload(impl: {
+  logs: string;
+  changes: FileChange[];
+  agentContext: string[];
+}): Record<string, unknown> {
+  return {
+    logs: impl.logs,
+    changes: impl.changes.map((c) => ({ type: c.type, path: c.path })),
+    ...(impl.agentContext.length > 0
+      ? { agentContext: impl.agentContext }
+      : {}),
+  };
+}
+
+// Re-hands the work an earlier attempt of the same step stored: the payload
+// is re-persisted under this attempt (the dispense reads only the current
+// attempt's file) and re-emitted as the live block.
+function reemitCarriedAgentWork(
+  migrationId: string,
+  kind: MigrateStepAwaitingKind,
+  payloadPath: string,
+  payload: Record<string, unknown>
+): void {
+  persistAgentWorkPayload(payloadPath, payload);
+  logToAgent({
+    title:
+      kind === 'migration-prompt'
+        ? `The following prompt-based migration was not applied automatically. Apply it to this workspace, then continue.`
+        : `The following migration's generator ran in an earlier attempt and its changes still await validation. Validate them per the runbook's validation scope rules, then continue.`,
   });
   emitPromptBlock(migrationId, payload);
 }
@@ -1175,13 +1278,13 @@ function emitValidationBlock(
   impl:
     | { logs: string; changes: FileChange[]; agentContext: string[] }
     | undefined,
-  resolvedCollection?: ResolvedMigrationCollection
+  opts: Omit<EmitPromptOptions, 'impl'> = {}
 ): void {
   const migrationId = `${migration.package}:${migration.name}`;
   const documentationPath = resolveDocumentationPath(
     root,
     migration,
-    resolvedCollection
+    opts.resolvedCollection
   );
 
   // `kind` is what tells the block apart from an applied-prompt payload,
@@ -1192,13 +1295,10 @@ function emitValidationBlock(
   };
   if (documentationPath) payload.documentationPath = documentationPath;
   if (impl) {
-    payload.impl = {
-      logs: impl.logs,
-      changes: impl.changes.map((c) => ({ type: c.type, path: c.path })),
-      ...(impl.agentContext.length > 0
-        ? { agentContext: impl.agentContext }
-        : {}),
-    };
+    payload.impl = implPayload(impl);
+  }
+  if (opts.persistPath) {
+    persistAgentWorkPayload(opts.persistPath, payload);
   }
   logToAgent({
     title: impl

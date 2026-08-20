@@ -90,6 +90,15 @@ describe('renderRunbook', () => {
     );
   });
 
+  it('tells the agent a lost prompt block is re-emitted by the reconcile dispense', () => {
+    const runbook = renderRunbook(buildContext());
+
+    expect(runbook).toContain(
+      "If a step's `<nx_migrate_prompt>` block is no longer in your context"
+    );
+    expect(runbook).toContain('re-emits it');
+  });
+
   it('gives per-agent subagent guidance including the opencode grant pattern', () => {
     const runbook = renderRunbook(buildContext());
 

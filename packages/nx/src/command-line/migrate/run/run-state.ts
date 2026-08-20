@@ -157,6 +157,15 @@ export interface MigrateStep {
   // agent work (the prompt, or the validation pass) or commits what is
   // already in the tree, instead of reapplying the changes.
   generatorCompleted?: boolean;
+  // The attempt the marker was recorded on: the start of the lineage whose
+  // stored agent-work payloads a retry may re-hand. Payloads from earlier
+  // attempts predate a reset-backed retry, so they describe a generator run
+  // whose tree was discarded, and the lookup never crosses this boundary.
+  // Absent fails the lookup closed (no payload is re-handed): an older nx's
+  // rearm drops the field while leaving the files, so absence cannot prove
+  // the stored copies belong to the current lineage. Discarded with the
+  // marker on a clean retry.
+  generatorCompletedAtAttempt?: number;
   // Set alongside `generatorCompleted` when the generator waived its AI step
   // via `skipAgentic`, so a retry does not re-emit a prompt or validation
   // pass the migration said was unnecessary. Discarded with the marker when a
@@ -405,7 +414,14 @@ function isStepShape(value: unknown): boolean {
     typeof value.migrationId === 'string' &&
     SHELL_SAFE_VALUE.test(value.migrationId) &&
     isOneOf(MIGRATE_STEP_STATUSES, value.status) &&
-    typeof value.attempt === 'number' &&
+    // The attempt derives the stored-payload file name a park writes and
+    // filters the enumerated payloads a retry may re-hand (see
+    // agent-work-payload.ts), so it must be a real counter: a fractional or
+    // non-finite value (valid JSON like 1e400 parses to Infinity) breaks the
+    // name round-trip and the range comparison instead of surfacing the
+    // corrupt-state refusal.
+    Number.isSafeInteger(value.attempt) &&
+    (value.attempt as number) >= 1 &&
     typeof value.dispenseCount === 'number' &&
     isOptionalBoolean(value.hasGenerator) &&
     isOptionalNumber(value.pid) &&
@@ -419,6 +435,13 @@ function isStepShape(value: unknown): boolean {
     (value.awaitingKind === undefined ||
       isOneOf(MIGRATE_STEP_AWAITING_KINDS, value.awaitingKind)) &&
     isOptionalBoolean(value.generatorCompleted) &&
+    // The lower end of that filter: outside the positive integers up to the
+    // step's attempt it could not name an attempt that exists.
+    (value.generatorCompletedAtAttempt === undefined ||
+      (Number.isSafeInteger(value.generatorCompletedAtAttempt) &&
+        (value.generatorCompletedAtAttempt as number) >= 1 &&
+        (value.generatorCompletedAtAttempt as number) <=
+          (value.attempt as number))) &&
     isOptionalBoolean(value.agenticWaived) &&
     isOptionalBoolean(value.validationOwed) &&
     isOptionalBoolean(value.generatorMadeChanges) &&

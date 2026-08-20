@@ -223,6 +223,23 @@ describe('applyStepEvent', () => {
       }
     });
 
+    it('records the attempt the marker was written on as the payload lineage boundary', () => {
+      const state = stateWithStep({ status: 'running', attempt: 3 });
+
+      const result = applyStepEvent(state, {
+        type: 'markGeneratorCompleted',
+        stepId: 'step-1',
+        agenticWaived: false,
+        validationOwed: false,
+        madeChanges: true,
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0].generatorCompletedAtAttempt).toBe(3);
+      }
+    });
+
     it('records an explicit false when the generator made no changes', () => {
       const state = stateWithStep({ status: 'running' });
 
@@ -516,6 +533,7 @@ describe('applyStepEvent', () => {
       const state = stateWithStep({
         status: 'failed',
         generatorCompleted: true,
+        generatorCompletedAtAttempt: 1,
         agenticWaived: true,
         validationOwed: true,
         generatorMadeChanges: false,
@@ -535,6 +553,9 @@ describe('applyStepEvent', () => {
         // Carried as-is, false included: an explicit false is what lets the
         // retry skip the no-op commit.
         expect(result.state.steps[0].generatorMadeChanges).toBe(false);
+        // The lineage boundary describes the marker, not the attempt, so a
+        // retained retry keeps it.
+        expect(result.state.steps[0].generatorCompletedAtAttempt).toBe(1);
       }
     });
 
@@ -542,6 +563,7 @@ describe('applyStepEvent', () => {
       const state = stateWithStep({
         status: 'failed',
         generatorCompleted: true,
+        generatorCompletedAtAttempt: 1,
         agenticWaived: true,
         validationOwed: true,
         generatorMadeChanges: true,
@@ -559,6 +581,9 @@ describe('applyStepEvent', () => {
         // No landed commit carries the changes, so the rerun re-decides all
         // of them along with everything else.
         expect(result.state.steps[0].generatorCompleted).toBeUndefined();
+        expect(
+          result.state.steps[0].generatorCompletedAtAttempt
+        ).toBeUndefined();
         expect(result.state.steps[0].agenticWaived).toBeUndefined();
         expect(result.state.steps[0].validationOwed).toBeUndefined();
         expect(result.state.steps[0].generatorMadeChanges).toBeUndefined();

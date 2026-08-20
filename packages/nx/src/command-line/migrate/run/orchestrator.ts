@@ -14,7 +14,7 @@ import {
   type BigIntStats,
 } from 'fs';
 import { dirname, join } from 'path';
-import { writeJsonFile } from '../../../utils/fileutils';
+import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
 import {
   getGitRepositoryStatus,
   getLatestCommitSha,
@@ -86,12 +86,18 @@ import {
 } from './util';
 import { singleLine } from '../text';
 import {
+  emitPromptBlock,
   emitRunbookBlock,
   emitStepBlock,
   logToAgent,
   safeLines,
   warnToAgent,
 } from './agent-output';
+import {
+  agentWorkPayloadPath,
+  readAgentWorkPayload,
+  removeAgentWorkPayloads,
+} from './agent-work-payload';
 import {
   renderRunbook,
   RUNBOOK_FILE_NAME,
@@ -761,6 +767,23 @@ export async function runOrchestratorReconcile(
     // still failed/died and the agent re-issues the action.
     if (stepAction === 'retry' || stepAction === 'retry-clean') {
       removeHandoff(dir, target.migrationId);
+      // A reset-backed retry that dropped the generator marker reruns the
+      // generator, so payloads stored by earlier attempts describe a run
+      // whose tree was reset away; remove them. Hygiene, not the correctness
+      // boundary: the lineage bound persisted with the next marker
+      // (generatorCompletedAtAttempt) is what keeps a later retry from
+      // re-handing a copy this best-effort removal missed. A plain retry
+      // keeps the files: its lineage is unbroken, and a retained retry
+      // re-hands the newest copy. Removed with the handoff, before the rearm
+      // is persisted: losing them without the rearm only costs a later
+      // emission its stored copy.
+      if (
+        stepAction === 'retry-clean' &&
+        result.state.steps.find((s) => s.id === target.id)
+          .generatorCompleted !== true
+      ) {
+        removeAgentWorkPayloads(dir, target.id, target.attempt);
+      }
     }
     // Re-validate the transition against the fresh disk state: if a concurrent
     // reconcile already resolved this step, surface the state machine's own
@@ -832,14 +855,15 @@ async function foldHandoffs(
     );
     if (!result.ok) continue; // still awaiting; the dispense asks to settle it
     let promptOutcome = handoffToPromptOutcome(result.handoff);
-    // A skipped handoff on a validation pass is not a skipped migration: the
-    // generator's changes are already applied, so the step completes and its
-    // commit lands. Folding it as 'skipped' would report the migration as not
-    // run and strand the changes as commit debt.
-    if (
-      step.awaitingKind === 'generator-validation' &&
-      promptOutcome.status === 'skipped'
-    ) {
+    // A skipped handoff on a step whose generator applied changes (a
+    // validation pass, or a hybrid's prompt half) is not a skipped migration:
+    // those changes are in the tree, so the step completes and its commit
+    // lands. Folding it as 'skipped' would report the migration as not run
+    // and strand the changes as commit debt. A prompt-only step never carries
+    // the marker, and a hybrid whose generator was a no-op left nothing to
+    // land, so both fold as recorded: committing there would `git add -A`
+    // unrelated pending diffs under a migration that changed nothing.
+    if (generatorChangesApplied(step) && promptOutcome.status === 'skipped') {
       promptOutcome = { ...promptOutcome, status: 'completed' };
     }
     // The commit and the install are side effects, so they happen before the
@@ -876,8 +900,15 @@ async function foldHandoffs(
     });
     // Only the handoff this fold consumed is removed. A rejected fold leaves
     // it in place: it belongs to whichever attempt is on disk now, and that
-    // attempt's own reconcile still has to read it.
-    if (folded) removeHandoff(dir, step.migrationId);
+    // attempt's own reconcile still has to read it. The stored agent-work
+    // payloads go with a terminal outcome; a failed fold keeps them, since a
+    // retry re-hands the newest surviving copy.
+    if (folded) {
+      removeHandoff(dir, step.migrationId);
+      if (promptOutcome.status !== 'failed') {
+        removeAgentWorkPayloads(dir, step.id, step.attempt);
+      }
+    }
   }
   return current;
 }
@@ -1190,7 +1221,7 @@ function advanceAndDispense(
       emitStillRunning(root, runId, step);
       break;
     case 'awaiting-prompt-outcome':
-      emitAwaitPrompt(root, dir, runId, step);
+      emitAwaitPrompt(root, dir, runId, state, step);
       break;
     case 'succeeded':
     case 'skipped':
@@ -1332,6 +1363,17 @@ function emitRetryFailed(
 // kind was persisted counts as having one.
 function generatorPending(step: MigrateStep): boolean {
   return step.generatorCompleted !== true && step.hasGenerator !== false;
+}
+
+// Whether the step's generator half ran and left changes in the tree: the
+// marker is recorded and it is not an explicit no-op. Decides how a skipped
+// handoff folds and whether the dispense offers the skipped outcome. Absent
+// generatorMadeChanges (a marker an older nx wrote) counts as applied,
+// keeping that version's fold behavior.
+function generatorChangesApplied(step: MigrateStep): boolean {
+  return (
+    step.generatorCompleted === true && step.generatorMadeChanges !== false
+  );
 }
 
 // Appended to the failed and died dispenses of a step whose generator may rerun.
@@ -1592,6 +1634,7 @@ function emitAwaitPrompt(
   root: string,
   dir: string,
   runId: string,
+  state: MigrateRunState,
   step: MigrateStep
 ): void {
   const migrationId = step.migrationId;
@@ -1602,23 +1645,60 @@ function emitAwaitPrompt(
   // reason the classic runner pre-creates it in run-step.ts.
   mkdirSync(dirname(filePath), { recursive: true });
   const validating = step.awaitingKind === 'generator-validation';
+  // The plan's prompt path is the ground truth for a prompt park: it anchors
+  // the stored-copy check (a same-migration file naming different
+  // instructions is rejected) and is what the fallback below re-hands.
+  const planPrompt = validating
+    ? null
+    : planPromptPath(dir, state, migrationId);
+  // Re-emit the payload the worker stored when it parked the step, so a
+  // session that lost the original block (a compaction, a restart) gets the
+  // work restated instead of a pointer into stdout it no longer has. When no
+  // stored copy is usable (the park predates the stored copy, or the file no
+  // longer matches the awaited work), the payload is synthesized from
+  // durable facts instead: the tree-pointing validation marker, or the
+  // plan's prompt path. An awaiting step offers no retry action, so a
+  // dispense that only pointed backward could stall a valid run forever.
+  // Only a plan that cannot name the prompt leaves the backward pointer, as
+  // the last resort.
+  const payload =
+    readAgentWorkPayload(agentWorkPayloadPath(dir, step.id, step.attempt), {
+      migrationId,
+      kind: validating ? 'generator-validation' : 'migration-prompt',
+      ...(planPrompt === null ? {} : { promptPath: planPrompt }),
+    }) ??
+    (validating
+      ? { migrationId, kind: 'generator-validation' }
+      : planPrompt === null
+        ? null
+        : { migrationId, prompt: planPrompt });
+  if (payload) {
+    emitPromptBlock(migrationId, payload);
+  }
+  const blockRef = payload
+    ? 'the <nx_migrate_prompt> block above'
+    : "the worker's earlier <nx_migrate_prompt> block";
   const lines = validating
     ? [
         `Migration ${migrationId} ran its generator; its changes are awaiting your validation.`,
-        `Validate them (see the worker's earlier <nx_migrate_prompt> block and the runbook's validation scope rules), then write the handoff file and run the "next" command.`,
+        `Validate them (see ${blockRef} and the runbook's validation scope rules), then write the handoff file and run the "next" command.`,
       ]
     : [
         `Migration ${migrationId} is a prompt-based migration awaiting your outcome.`,
-        `Apply the prompt (see the worker's earlier <nx_migrate_prompt> block), then write the handoff file and run the "next" command.`,
+        `Apply the prompt (see ${blockRef}), then write the handoff file and run the "next" command.`,
       ];
   lines.push(
     `Handoff file: ${filePath}`,
-    // No skipped outcome is offered for a validation pass: the generator's
-    // changes are already applied, so "validation not needed" still completes
-    // the migration (and the fold treats a skipped handoff that way).
+    // No skipped outcome is offered once a generator's changes are applied
+    // (a validation pass, or a hybrid's prompt half): "not applicable" still
+    // completes the migration, and the fold treats a skipped handoff that
+    // way. A prompt-only step, or a hybrid whose generator was a no-op, can
+    // still be marked skipped: nothing of the migration is in the tree.
     validating
       ? `Handoff JSON: { "status": "success" | "failed", "summary": "<what you verified>" }. If validation does not apply here, use "status": "success" and say so in the summary.`
-      : `Handoff JSON: { "status": "success" | "failed", "summary": "<what you did>" }. To mark the prompt not applicable, use "status": "success" with "outcome": "skipped".`
+      : generatorChangesApplied(step)
+        ? `Handoff JSON: { "status": "success" | "failed", "summary": "<what you did>" }. If the prompt does not apply here, use "status": "success" and say so in the summary; the migration's generator changes are already applied.`
+        : `Handoff JSON: { "status": "success" | "failed", "summary": "<what you did>" }. To mark the prompt not applicable, use "status": "success" with "outcome": "skipped".`
   );
   // A handoff that exists but can't be read/parsed/validated is a rejection,
   // not a still-awaited outcome. Naming why stops the run from re-emitting the
@@ -1631,6 +1711,38 @@ function emitAwaitPrompt(
     next: reconcileCommand(root, runId),
     instructionLines: lines,
   });
+}
+
+// The prompt path the run's latest plan snapshot records for the migration;
+// null when the snapshot cannot be read, is not the shape nx writes, or does
+// not name one. A damaged-but-parseable snapshot must land on null too: this
+// runs while re-handing an awaiting step's work, and throwing here would
+// keep the run from re-dispensing that work at all. The snapshot name is
+// validated as a bare `plan-<round>.json` at state read, so the join cannot
+// leave the run directory.
+function planPromptPath(
+  dir: string,
+  state: MigrateRunState,
+  migrationId: string
+): string | null {
+  const round = latestRound(state);
+  if (!round) return null;
+  let migrations: unknown;
+  try {
+    migrations = readJsonFile<{ migrations?: unknown }>(
+      join(dir, round.planSnapshot)
+    ).migrations;
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(migrations)) return null;
+  for (const entry of migrations) {
+    if (typeof entry !== 'object' || entry === null) continue;
+    const migration = entry as PlannedMigration;
+    if (`${migration.package}:${migration.name}` !== migrationId) continue;
+    return typeof migration.prompt === 'string' ? migration.prompt : null;
+  }
+  return null;
 }
 
 // Empty unless a handoff file is present but unusable; wording mirrors the

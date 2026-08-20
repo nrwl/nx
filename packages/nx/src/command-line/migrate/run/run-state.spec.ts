@@ -260,6 +260,64 @@ describe('run-state', () => {
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
     });
 
+    it('refuses attempt and lineage-boundary values outside the counters nx writes', () => {
+      // Both derive stored-payload file names and filter the enumerated
+      // payloads a retry may re-hand (see agent-work-payload.ts), so a
+      // fractional or non-finite value (valid JSON like 1e400 parses to
+      // Infinity) breaks the name round-trip and the range comparison, and a
+      // boundary past the step's attempt could not name an attempt that
+      // exists.
+      const dir = join(root, 'run-1');
+      mkdirSync(dir, { recursive: true });
+      const validStep = {
+        id: 'step-1',
+        roundIndex: 0,
+        migrationId: '@nx/js:a',
+        status: 'pending',
+        attempt: 1,
+        dispenseCount: 0,
+      };
+      const withStep = (overrides: Record<string, unknown>) =>
+        JSON.stringify(
+          buildState({ steps: [{ ...validStep, ...overrides }] as never })
+        );
+
+      for (const attempt of [0, 1.5]) {
+        writeFileSync(join(dir, 'run.json'), withStep({ attempt }));
+        expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+      }
+      // JSON.stringify cannot produce a non-finite literal, so rewrite a
+      // placeholder into one the parser accepts.
+      writeFileSync(
+        join(dir, 'run.json'),
+        withStep({ attempt: 99999 }).replace('99999', '1e400')
+      );
+      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+
+      for (const boundary of [0, 1.5, 2]) {
+        writeFileSync(
+          join(dir, 'run.json'),
+          withStep({ generatorCompletedAtAttempt: boundary })
+        );
+        expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+      }
+      writeFileSync(
+        join(dir, 'run.json'),
+        withStep({ generatorCompletedAtAttempt: 99999 }).replace(
+          '99999',
+          '-1e400'
+        )
+      );
+      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+
+      // The in-range shape still reads.
+      writeFileSync(
+        join(dir, 'run.json'),
+        withStep({ attempt: 2, generatorCompletedAtAttempt: 2 })
+      );
+      expect(readRunState(dir).steps[0].generatorCompletedAtAttempt).toBe(2);
+    });
+
     it('refuses a running step without a pid: nothing would ever reclassify it', () => {
       // Death detection skips a running step with no pid and no step action
       // targets one, so it would stall the run for good.
