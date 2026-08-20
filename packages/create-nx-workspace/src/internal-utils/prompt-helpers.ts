@@ -113,3 +113,29 @@ export async function textPrompt(options: {
   }
   return answer as string;
 }
+
+export async function multiselectPrompt<T extends string>(options: {
+  message: string;
+  choices: readonly ChoiceOrValue<T>[];
+  required?: boolean;
+  initialValues?: readonly T[];
+}): Promise<T[]> {
+  const choices = options.choices.map(toChoice);
+  const { multiselect, isCancel } = await prompts();
+  const answer = await multiselect<T>({
+    message: options.message,
+    options: choices.map((c) => ({
+      value: c.value,
+      label: c.label ?? c.value,
+      ...(c.hint ? { hint: c.hint } : {}),
+    })) as Option<T>[],
+    required: options.required ?? false,
+    initialValues: options.initialValues
+      ? [...options.initialValues]
+      : undefined,
+  });
+  if (isCancel(answer)) {
+    throw new CnwError('CANCELLED', 'Cancelled.');
+  }
+  return answer as T[];
+}

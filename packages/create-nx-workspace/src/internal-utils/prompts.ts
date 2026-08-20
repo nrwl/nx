@@ -19,26 +19,12 @@ import {
 import { detectAiAgentName, isAiAgent } from '../utils/ai/ai-output';
 import { CnwError } from '../utils/error-utils';
 import { output } from '../utils/output';
-
-/**
- * `@clack/prompts` is ESM-only. A static import would compile to `require()`
- * under CommonJS emit and throw ERR_REQUIRE_ESM; `module: nodenext` preserves
- * this dynamic form.
- */
-async function prompts() {
-  return await import('@clack/prompts');
-}
-
-/** Ctrl+C returns a sentinel rather than throwing, so every prompt must check. */
-function assertNotCancelled<T>(
-  value: T | symbol,
-  isCancel: (v: unknown) => boolean
-): T {
-  if (isCancel(value)) {
-    throw new CnwError('CANCELLED', 'Cancelled.');
-  }
-  return value as T;
-}
+import {
+  confirmationPrompt,
+  multiselectPrompt,
+  selectPrompt,
+  textPrompt,
+} from './prompt-helpers';
 
 export async function determineNxCloud(
   parsedArgs: yargs.Arguments<{ nxCloud: NxCloud }>
@@ -78,20 +64,9 @@ export async function determineIfGitHubWillBeUsed(
 ): Promise<boolean> {
   if (parsedArgs.nxCloud === 'yes' || parsedArgs.nxCloud === 'circleci') {
     if (parsedArgs?.useGitHub) return true;
-    const { autocomplete, isCancel } = await prompts();
-    const reply = assertNotCancelled(
-      await autocomplete({
-        validate: (value) =>
-          value === undefined ? 'Pick one of the listed options' : undefined,
-        message: 'Will you be using GitHub as your git hosting provider?',
-        options: [
-          { value: 'Yes', label: 'Yes' },
-          { value: 'No', label: 'No' },
-        ],
-      }),
-      isCancel
-    );
-    return reply === 'Yes';
+    return confirmationPrompt({
+      message: 'Will you be using GitHub as your git hosting provider?',
+    });
   }
   return false;
 }
@@ -100,29 +75,23 @@ async function nxCloudPrompt(key: MessageKey): Promise<NxCloud> {
   const { message, choices, initial, fallback, footer, hint } =
     messages.getPrompt(key);
 
-  const { autocomplete, isCancel } = await prompts();
-
   // No separate footer/hint slot, so both are folded into the message.
   const suffix = [hint, footer].filter(Boolean).map((t) => chalk.dim(t));
-  const answer = assertNotCancelled(
-    await autocomplete({
-      validate: (value) =>
-        value === undefined ? 'Pick one of the listed options' : undefined,
-      message: [message, ...suffix].join('\n'),
-      // These choices are `{ value, name }` with `name` as the display text —
-      // the inverse of enquirer's usual `{ name, message }`. Take `value` so
-      // the answer is the key the caller compares against, not the label.
-      options: (choices as any[]).map((c) =>
-        typeof c === 'string'
-          ? { value: c, label: c }
-          : { value: c.value ?? c.name, label: c.message ?? c.name ?? c.value }
-      ),
-      initialValue:
-        (choices as any[])[initial ?? 0]?.value ??
-        (choices as any[])[initial ?? 0]?.name,
-    }),
-    isCancel
-  ) as NxCloud;
+
+  // These choices are `{ value, name }` with `name` as the display text — the
+  // inverse of enquirer's usual `{ name, message }`. Take `value` so the answer
+  // is the key the caller compares against, not the label.
+  const options = (choices as any[]).map((c) =>
+    typeof c === 'string'
+      ? { value: c }
+      : { value: c.value ?? c.name, label: c.message ?? c.name ?? c.value }
+  );
+
+  const answer = (await selectPrompt({
+    message: [message, ...suffix].join('\n'),
+    choices: options,
+    initial: options[initial ?? 0]?.value,
+  })) as NxCloud;
 
   if (fallback && answer === fallback.value) {
     return nxCloudPrompt(fallback.key);
@@ -142,42 +111,34 @@ export async function determineTemplate(
   if (!parsedArgs.interactive || isCI()) return 'nrwl/empty-template';
   // Docs generation needs preset flow to document all presets
   if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') return 'custom';
-  const { autocomplete, isCancel } = await prompts();
-  return assertNotCancelled(
-    await autocomplete({
-      validate: (value) =>
-        value === undefined ? 'Pick one of the listed options' : undefined,
-      message: 'Which starter do you want to use?',
-      options: [
-        {
-          value: 'nrwl/empty-template',
-          label: 'Minimal           (empty monorepo without projects)',
-        },
-        {
-          value: 'nrwl/react-template',
-          label:
-            'React             (fullstack monorepo with React and Express)',
-        },
-        {
-          value: 'nrwl/angular-template',
-          label:
-            'Angular           (fullstack monorepo with Angular and Express)',
-        },
-        {
-          value: 'nrwl/typescript-template',
-          label:
-            'NPM Packages      (monorepo with TypeScript packages ready to publish)',
-        },
-        {
-          value: 'custom',
-          label:
-            'Custom            (advanced setup with additional frameworks)',
-        },
-      ],
-      initialValue: 'nrwl/empty-template',
-    }),
-    isCancel
-  );
+  return selectPrompt({
+    message: 'Which starter do you want to use?',
+    choices: [
+      {
+        value: 'nrwl/empty-template',
+        label: 'Minimal           (empty monorepo without projects)',
+      },
+      {
+        value: 'nrwl/react-template',
+        label: 'React             (fullstack monorepo with React and Express)',
+      },
+      {
+        value: 'nrwl/angular-template',
+        label:
+          'Angular           (fullstack monorepo with Angular and Express)',
+      },
+      {
+        value: 'nrwl/typescript-template',
+        label:
+          'NPM Packages      (monorepo with TypeScript packages ready to publish)',
+      },
+      {
+        value: 'custom',
+        label: 'Custom            (advanced setup with additional frameworks)',
+      },
+    ],
+    initial: 'nrwl/empty-template',
+  });
 }
 
 export async function determineAiAgents(
@@ -201,18 +162,14 @@ export async function determineAiAgents(
 }
 
 async function aiAgentsPrompt(): Promise<Agent[]> {
-  const { multiselect, isCancel } = await prompts();
-  return assertNotCancelled(
-    await multiselect<Agent>({
-      message: 'Which AI agents, if any, would you like to set up?',
-      options: supportedAgents.map((a) => ({
-        value: a,
-        label: agentDisplayMap[a],
-      })),
-      required: false,
-    }),
-    isCancel
-  );
+  return multiselectPrompt<Agent>({
+    message: 'Which AI agents, if any, would you like to set up?',
+    choices: supportedAgents.map((a) => ({
+      value: a,
+      label: agentDisplayMap[a],
+    })),
+    required: false,
+  });
 }
 
 export async function determineAnalytics(
@@ -227,20 +184,14 @@ export async function determineAnalytics(
     return 'unset';
   }
 
-  const { autocomplete, isCancel } = await prompts();
-  const enableAnalytics = assertNotCancelled(
-    await autocomplete({
-      validate: (value) =>
-        value === undefined ? 'Pick one of the listed options' : undefined,
-      message: 'Help improve Nx by sharing your usage data?',
-      options: [
-        { value: 'Yes', label: 'Yes' },
-        { value: 'No', label: 'No' },
-      ],
-      initialValue: 'Yes',
-    }),
-    isCancel
-  );
+  const enableAnalytics = await selectPrompt({
+    message: 'Help improve Nx by sharing your usage data?',
+    choices: [
+      { value: 'Yes', label: 'Yes' },
+      { value: 'No', label: 'No' },
+    ],
+    initial: 'Yes',
+  });
   return enableAnalytics === 'Yes' ? 'yes' : 'no';
 }
 
@@ -250,14 +201,10 @@ export async function determineDefaultBase(
   if (parsedArgs.defaultBase) {
     return parsedArgs.defaultBase;
   } else if (parsedArgs.allPrompts) {
-    const { text, isCancel } = await prompts();
-    const defaultBase = assertNotCancelled(
-      await text({
-        message: `Main branch name`,
-        initialValue: `main`,
-      }),
-      isCancel
-    );
+    const defaultBase = await textPrompt({
+      message: `Main branch name`,
+      initialValue: `main`,
+    });
     if (!defaultBase) {
       throw new CnwError('INVALID_BRANCH_NAME', 'Branch name cannot be empty');
     }
@@ -301,20 +248,14 @@ export async function confirmThirdPartyPreset(
     return true;
   }
 
-  const { autocomplete, isCancel } = await prompts();
-  const confirm = assertNotCancelled(
-    await autocomplete({
-      validate: (value) =>
-        value === undefined ? 'Pick one of the listed options' : undefined,
-      message: `Install third-party preset '${packageName}'?`,
-      options: [
-        { value: 'No', label: 'No' },
-        { value: 'Yes', label: 'Yes' },
-      ],
-      initialValue: 'No',
-    }),
-    isCancel
-  );
+  const confirm = await selectPrompt({
+    message: `Install third-party preset '${packageName}'?`,
+    choices: [
+      { value: 'No', label: 'No' },
+      { value: 'Yes', label: 'Yes' },
+    ],
+    initial: 'No',
+  });
   return confirm === 'Yes';
 }
 
@@ -334,22 +275,16 @@ export async function determinePackageManager(
       ])}`
     );
   } else if (parsedArgs.allPrompts) {
-    const { autocomplete, isCancel } = await prompts();
-    return assertNotCancelled(
-      await autocomplete<PackageManager>({
-        validate: (value) =>
-          value === undefined ? 'Pick one of the listed options' : undefined,
-        message: `Which package manager to use`,
-        options: [
-          { value: 'npm', label: 'NPM' },
-          { value: 'yarn', label: 'Yarn' },
-          { value: 'pnpm', label: 'PNPM' },
-          { value: 'bun', label: 'Bun' },
-        ],
-        initialValue: 'npm',
-      }),
-      isCancel
-    );
+    return selectPrompt<PackageManager>({
+      message: `Which package manager to use`,
+      choices: [
+        { value: 'npm', label: 'NPM' },
+        { value: 'yarn', label: 'Yarn' },
+        { value: 'pnpm', label: 'PNPM' },
+        { value: 'bun', label: 'Bun' },
+      ],
+      initial: 'npm',
+    });
   }
 
   return detectInvokedPackageManager();
@@ -372,22 +307,16 @@ export async function determineLinterOptions(args: {
   // line, not the option order.
   if (!args.interactive || isCI()) return 'eslint';
 
-  const { autocomplete, isCancel } = await prompts();
-  return assertNotCancelled(
-    await autocomplete<Linter>({
-      validate: (value) =>
-        value === undefined ? 'Pick one of the listed options' : undefined,
-      message: `Which linter would you like to use?`,
-      // `value` is what's returned; `label` is what the list shows. Oxlint is
-      // labelled so it isn't presented as an equal of ESLint while the docs and
-      // the package both call it experimental.
-      options: [
-        { value: 'eslint', label: 'eslint' },
-        { value: 'oxlint', label: 'oxlint (experimental)' },
-        { value: 'none', label: 'none' },
-      ],
-      initialValue: 'eslint',
-    }),
-    isCancel
-  );
+  return selectPrompt<Linter>({
+    message: `Which linter would you like to use?`,
+    // `value` is what's returned; `label` is what the list shows. Oxlint is
+    // labelled so it isn't presented as an equal of ESLint while the docs and
+    // the package both call it experimental.
+    choices: [
+      { value: 'eslint', label: 'eslint' },
+      { value: 'oxlint', label: 'oxlint (experimental)' },
+      { value: 'none', label: 'none' },
+    ],
+    initial: 'eslint',
+  });
 }
