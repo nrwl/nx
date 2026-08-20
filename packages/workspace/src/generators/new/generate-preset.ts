@@ -107,6 +107,7 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
           : null,
       opts.nxCloudToken ? `--nxCloudToken=${opts.nxCloudToken}` : null,
       opts.formatter ? `--formatter=${opts.formatter}` : null,
+      opts.skipInstall ? `--skipInstall` : null,
       opts.workspaces !== false ? `--workspaces` : `--no-workspaces`,
       opts.useProjectJson ? `--useProjectJson` : null,
     ].filter((e) => !!e);

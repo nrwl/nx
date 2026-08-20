@@ -7,6 +7,7 @@ export interface Schema {
   style?: string;
   linter?: string;
   formatter?: 'none' | 'prettier' | 'oxfmt';
+  skipInstall?: boolean;
   workspaces?: boolean;
   framework?: string;
   packageManager?: string;

@@ -103,6 +103,11 @@
       "description": "Generate an application that does not use 'zone.js'.",
       "type": "boolean"
     },
+    "skipInstall": {
+      "description": "Skip installing dependencies. Formatter setup needs @nx/js on disk, so it is skipped too.",
+      "type": "boolean",
+      "default": false
+    },
     "formatter": {
       "description": "The tool to use for code formatting.",
       "type": "string",

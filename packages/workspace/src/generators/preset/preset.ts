@@ -1,4 +1,10 @@
-import { installPackagesTask, names, readNxJson, Tree } from '@nx/devkit';
+import {
+  installPackagesTask,
+  logger,
+  names,
+  readNxJson,
+  Tree,
+} from '@nx/devkit';
 import { Schema } from './schema';
 import { Preset } from '../utils/presets';
 import { join } from 'path';
@@ -25,10 +31,18 @@ async function createPreset(tree: Tree, options: Schema) {
     // configured here - `@nx/js:init` would also add TypeScript and a root
     // tsconfig, which both presets deliberately leave out.
     //
-    // Guarded because `@nx/js` is only in the new workspace's package.json, not
-    // necessarily on disk: `validateOptions` allows `skipInstall` with exactly
-    // these presets, and requiring it there would throw where nothing needs it.
+    // `@nx/js` is only in the new workspace's package.json, not necessarily on
+    // disk. `validateOptions` allows `skipInstall` with these presets, so the
+    // require has to be reached only when there is a formatter to set up AND
+    // the install that puts `@nx/js` there actually ran.
     if (!options.formatter || options.formatter === 'none') {
+      return;
+    }
+    if (options.skipInstall) {
+      logger.warn(
+        `Skipped ${options.formatter} setup: it lives in @nx/js, which --skipInstall leaves uninstalled. ` +
+          `Run "nx g @nx/js:init --formatter=${options.formatter}" once dependencies are installed.`
+      );
       return;
     }
     const { setUpFormatter } = require('@nx' + '/js');
