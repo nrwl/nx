@@ -1,0 +1,42 @@
+---
+title: Use Repositories from Multiple GitHub Organizations in Nx Cloud
+description: Choose an access model and connect repositories from multiple GitHub organizations to one Nx Cloud organization
+filter: 'type:Guides'
+topics:
+  - 'Continuous integration'
+---
+
+A GitHub-connected Nx Cloud organization can only connect repositories from the GitHub organization it is connected to. If your repositories span multiple GitHub organizations, choose an Nx Cloud access model based on how you want to manage users.
+
+## Choose an access model
+
+| Access model                                                | Use when                                                                            | Nx Cloud organization and licensing impact                                                                                                      |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| SAML and SCIM                                               | Your identity provider should control access to every workspace centrally.          | Use one organization and one license for all workspaces.                                                                                        |
+| Multiple GitHub-connected organizations                     | Each GitHub organization must remain a separate administration and access boundary. | Create one Nx Cloud organization and license for each GitHub organization. Usage reporting is also split between them.                          |
+| One standard organization with repository-scoped workspaces | Workspace access should mirror each repository's GitHub contributors.               | Use one Nx Cloud organization and license for repositories from any number of GitHub organizations. This is the recommended GitHub-based model. |
+
+## Configure repository-scoped access
+
+1. Create a standard Nx Cloud organization without connecting it to a GitHub organization. Use the manual organization setup flow. The warnings shown during this flow are expected.
+2. Add a workspace for each repository. The add-workspace flow connects the repository to Nx Cloud through the GitHub App.
+3. Grant the Nx Cloud GitHub App access to every repository you add. You can authorize repositories from different GitHub organizations.
+4. In each workspace's access settings, select the repository-scoped access type.
+5. Ask each user to connect their GitHub account to Nx Cloud through OAuth. Nx Cloud uses their GitHub identity to verify that they are a contributor to the connected repository.
+
+Nx Cloud then synchronizes workspace access from the repository's GitHub contributors. Adding or removing access in GitHub updates who can access that workspace without requiring Nx Cloud organization membership.
+
+{% aside type="note" title="Existing GitHub-connected organization" %}
+Changing an existing GitHub-connected organization to a standard organization is not a self-service operation. [Contact Nx Cloud support](/contact) to assess converting it without creating a new organization.
+{% /aside %}
+
+## Understand the access limitations
+
+- Organization administrator access is managed manually in a standard organization.
+- Users with only repository-scoped workspace access do not see the organization in their organization list. They must open the workspace from a direct link, such as a CI Pipeline Execution link in a GitHub pull request comment.
+- Signing in with GitHub is not sufficient by itself. Each user must also connect their GitHub account to Nx Cloud so their GitHub identity can be matched to repository access.
+
+## Related configuration
+
+- Review the [Nx Cloud GitHub App permissions](/docs/kb/github-app-permissions) before granting repository access.
+- To manage access centrally instead of mirroring GitHub repositories, configure [Okta SAML and SCIM](/docs/enterprise/single-tenant/okta-saml) or [Azure SAML](/docs/enterprise/single-tenant/azure-saml).
