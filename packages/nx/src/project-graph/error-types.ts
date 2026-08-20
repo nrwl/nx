@@ -3,6 +3,7 @@ import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { CreateNodesFunction } from './plugins/public-api';
 import { ConfigurationResult } from './utils/project-configuration-utils';
 import type { ConfigurationSourceMaps } from './utils/project-configuration/source-maps';
+import type { WorktreeConflictAdvice } from '../utils/git-worktrees';
 
 export type ProjectGraphErrorTypes =
   | AggregateCreateNodesError
@@ -110,10 +111,10 @@ export class MultipleProjectsWithSameNameError extends Error {
     public conflicts: Map<string, string[]>,
     public projects: Record<string, ProjectConfiguration>,
     /**
-     * Paths to ignore when the duplicates come from git worktrees nested in
-     * the workspace, which is a different fix than renaming them.
+     * Set when some of the duplicates come from git worktrees nested in the
+     * workspace, which is a different fix than renaming them.
      */
-    public worktreeIgnoreTargets?: string[]
+    public worktreeAdvice?: WorktreeConflictAdvice
   ) {
     super(
       [
@@ -122,21 +123,30 @@ export class MultipleProjectsWithSameNameError extends Error {
           [`- ${project}: `, ...roots.map((r) => `  - ${r}`)].join('\n')
         ),
         '',
-        ...(worktreeIgnoreTargets?.length
+        ...(worktreeAdvice?.ignoreTargets.length
           ? [
               'Some of these are inside git worktrees nested in this workspace. A worktree is a full checkout, so every project in it collides with the one it was checked out from.',
               '',
-              `To fix this, add the following to .gitignore:`,
-              ...worktreeIgnoreTargets.map((target) => `  ${target}`),
+              'To fix those, add the following to .gitignore:',
+              ...worktreeAdvice.ignoreTargets.map((target) => `  ${target}`),
+              // Ignoring the worktrees settles only the duplicates they
+              // explain; anything left is an ordinary name collision and still
+              // needs the ordinary answer.
+              ...(worktreeAdvice.explainsAllConflicts
+                ? []
+                : ['', `The rest are not from worktrees. ${RENAME_ADVICE}`]),
             ]
           : [
-              "To fix this, set a unique name for each project in a project.json inside the project's root. If the project does not currently have a project.json, you can create one that contains only a name.",
+              `To fix this, ${RENAME_ADVICE[0].toLowerCase()}${RENAME_ADVICE.slice(1)}`,
             ]),
       ].join('\n')
     );
     this.name = this.constructor.name;
   }
 }
+
+const RENAME_ADVICE =
+  "Set a unique name for each project in a project.json inside the project's root. If the project does not currently have a project.json, you can create one that contains only a name.";
 
 export class ProjectWithExistingNameError extends Error {
   constructor(

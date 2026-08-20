@@ -20,8 +20,9 @@ function readRecordedPath(file: string, base: string): string | null {
 
 /**
  * `<git-dir>/worktrees`, where git registers every linked worktree of the
- * repository `workspaceRoot` belongs to. Null when there is no repository, or
- * when `.git` is a gitfile naming a directory that isn't there.
+ * repository `workspaceRoot` belongs to. Null when there is no `.git`, or when
+ * it is a gitfile that names nothing. The directory it names is not checked -
+ * reading it is what tells us whether anything is registered.
  */
 function worktreeRegistry(workspaceRoot: string): string | null {
   const dotGit = join(workspaceRoot, '.git');
@@ -103,29 +104,81 @@ export function isInside(path: string, root: string): boolean {
   return path === root || path.startsWith(`${root}/`);
 }
 
+/** Advice for duplicate project names that come from nested git worktrees. */
+export interface WorktreeConflictAdvice {
+  /** Paths to add to `.gitignore`. */
+  ignoreTargets: string[];
+  /**
+   * Whether ignoring them settles every duplicate. When false the caller still
+   * owes the reader the ordinary advice for the ones left over.
+   */
+  explainsAllConflicts: boolean;
+}
+
 /**
- * The path to suggest ignoring when duplicate project names come from git
- * worktrees nested in the workspace, or null when they don't.
- *
- * Prefers the directory holding the worktrees - agent tooling keeps them under
- * one (`.claude/worktrees`), and one entry beats one per worktree. Only when
- * that directory holds nothing else, though: ignoring a directory that also
- * holds real projects would drop them from the graph.
+ * What to tell someone whose duplicate project names come from git worktrees
+ * nested in the workspace, or null when none of them do.
  */
-export function worktreeIgnoreTarget(
+export function analyzeWorktreeConflicts(
   workspaceRoot: string,
-  conflictingRoots: string[]
-): string[] | null {
+  conflicts: Map<string, string[]>
+): WorktreeConflictAdvice | null {
   const worktrees = nestedWorktreeRoots(workspaceRoot);
   if (!worktrees.length) {
     return null;
   }
 
-  const offending = worktrees.filter((worktree) =>
-    conflictingRoots.some((root) => isInside(root, worktree))
-  );
+  const offending: string[] = [];
+  let explainsAllConflicts = true;
+
+  for (const roots of conflicts.values()) {
+    const fromWorktrees = worktrees.filter((worktree) =>
+      roots.some((root) => isInside(root, worktree))
+    );
+    // What would still be defined twice once the worktrees are out of the way.
+    const remaining = roots.filter(
+      (root) => !worktrees.some((worktree) => isInside(root, worktree))
+    );
+
+    // Worth naming whenever a worktree is involved, even if ignoring it
+    // doesn't settle the whole conflict.
+    for (const worktree of fromWorktrees) {
+      if (!offending.includes(worktree)) {
+        offending.push(worktree);
+      }
+    }
+
+    if (!fromWorktrees.length || remaining.length > 1) {
+      explainsAllConflicts = false;
+    }
+  }
+
   if (!offending.length) {
     return null;
+  }
+
+  return {
+    ignoreTargets: ignoreTargetsFor(workspaceRoot, offending, worktrees),
+    explainsAllConflicts,
+  };
+}
+
+/**
+ * The worktree roots themselves, or the one directory holding them.
+ *
+ * Collapsing to the directory is only worth anything when it saves lines, and
+ * only safe when it holds nothing else. With a single worktree it saves
+ * nothing and risks everything: a lone worktree in `apps/` would have us name
+ * `apps/`, which holds only that worktree today and is where the reader will
+ * put projects tomorrow.
+ */
+function ignoreTargetsFor(
+  workspaceRoot: string,
+  offending: string[],
+  worktrees: string[]
+): string[] {
+  if (offending.length < 2) {
+    return offending;
   }
 
   const parent = commonParent(offending);

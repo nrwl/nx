@@ -11,6 +11,8 @@ import {
   resolveCommandSyntacticSugar,
 } from './target-merging';
 import { validateProject } from './target-normalization';
+import { analyzeWorktreeConflicts } from '../../../utils/git-worktrees';
+import { workspaceRoot as workspaceRootDefault } from '../../../utils/workspace-root';
 import { ProjectNameInNodePropsManager } from './name-substitution-manager';
 import type { ConfigurationSourceMaps, SourceInformation } from './source-maps';
 import {
@@ -229,7 +231,8 @@ export function mergeProjectConfigurationIntoRootMap(
 }
 
 export function readProjectConfigurationsFromRootMap(
-  projectRootMap: Record<string, ProjectConfiguration>
+  projectRootMap: Record<string, ProjectConfiguration>,
+  workspaceRoot: string = workspaceRootDefault
 ) {
   const projects: Record<string, ProjectConfiguration> = {};
   // If there are projects that have the same name, that is an error.
@@ -263,7 +266,13 @@ export function readProjectConfigurationsFromRootMap(
   }
 
   if (conflicts.size > 0) {
-    throw new MultipleProjectsWithSameNameError(conflicts, projects);
+    // Only on the way to throwing, so a workspace without duplicates never
+    // pays for reading git's worktree registry.
+    throw new MultipleProjectsWithSameNameError(
+      conflicts,
+      projects,
+      analyzeWorktreeConflicts(workspaceRoot, conflicts) ?? undefined
+    );
   }
   if (projectRootsWithNoName.length > 0) {
     throw new ProjectsWithNoNameError(projectRootsWithNoName, projects);

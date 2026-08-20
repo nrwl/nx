@@ -171,9 +171,47 @@ describe('validateAndNormalizeProjectRootMap', () => {
       message = (e as AggregateError).errors[0].message;
     }
 
+    // The bare path also appears in the list of conflicting roots above, so
+    // pin the advice line itself - matching the path alone passes with the
+    // advice deleted entirely.
+    expect(message).toContain(
+      'To fix those, add the following to .gitignore:\n  .claude/worktrees/wt'
+    );
     expect(message).toContain('git worktrees nested in this workspace');
-    expect(message).toContain('.claude/worktrees');
-    expect(message).not.toContain('set a unique name');
+    // Nothing is left over, so the reader is not also told to rename anything.
+    expect(message).not.toContain('Set a unique name');
+  });
+
+  it('should still ask for a rename for the duplicates a worktree does not explain', () => {
+    const metadataDir = join(tempFs.tempDir, '.git', 'worktrees', 'wt');
+    const checkout = join(tempFs.tempDir, '.claude', 'worktrees', 'wt');
+    mkdirSync(metadataDir, { recursive: true });
+    mkdirSync(checkout, { recursive: true });
+    writeFileSync(join(metadataDir, 'gitdir'), `${join(checkout, '.git')}\n`);
+    writeFileSync(join(checkout, '.git'), `gitdir: ${metadataDir}\n`);
+
+    const projectRootMap = {
+      'libs/ui': { name: 'ui', root: 'libs/ui' },
+      '.claude/worktrees/wt/libs/ui': {
+        name: 'ui',
+        root: '.claude/worktrees/wt/libs/ui',
+      },
+      'apps/a': { name: 'dup', root: 'apps/a' },
+      'apps/b': { name: 'dup', root: 'apps/b' },
+    };
+
+    let message = '';
+    try {
+      validateAndNormalizeProjectRootMap(tempFs.tempDir, projectRootMap, {});
+    } catch (e) {
+      message = (e as AggregateError).errors[0].message;
+    }
+
+    // `dup` is an ordinary collision listed alongside the worktree one, and
+    // would otherwise be named and then left with no remedy.
+    expect(message).toContain('git worktrees nested in this workspace');
+    expect(message).toContain('The rest are not from worktrees.');
+    expect(message).toContain('Set a unique name');
   });
 });
 
