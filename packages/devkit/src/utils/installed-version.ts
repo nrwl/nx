@@ -9,7 +9,9 @@ import { getDependencyVersionFromPackageJson } from './package-json';
  * `package.json` — not the workspace's declared range.
  *
  * Use this from executor / runtime contexts where node_modules is present.
- * Generator-time code should use `getDeclaredPackageVersion` instead.
+ * Generator-time code should read from the tree first (the declared range or
+ * `getInstalledPackageVersionFromTree`) and may fall back to this with
+ * `requirePaths` restricted to the workspace root.
  *
  * Pass `requirePaths` to resolve from specific directories only (e.g. the
  * workspace root, excluding the `.nx/installation` fallback); otherwise the
