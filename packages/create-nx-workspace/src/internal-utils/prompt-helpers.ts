@@ -108,7 +108,14 @@ export async function confirmationPrompt(options: {
 export async function textPrompt(options: {
   message: string;
   initialValue?: string;
-  /** Runs synchronously; clack does not await validators. */
+  /**
+   * Runs synchronously; clack does not await validators.
+   *
+   * Always receives a string. clack validates on Enter *before* it coerces an
+   * empty submit to `''`, so it would otherwise hand `undefined` to a prompt
+   * declaring no `initialValue`; the wrapper below normalizes that, matching
+   * what enquirer passed.
+   */
   validate?: (value: string) => string | undefined;
   skip?: boolean;
   skippedValue?: string;
@@ -121,7 +128,9 @@ export async function textPrompt(options: {
   const answer = await text({
     message: options.message,
     initialValue: options.initialValue,
-    validate: options.validate,
+    validate: options.validate
+      ? (value) => options.validate(value ?? '')
+      : undefined,
   });
   if (isCancel(answer)) {
     if (options.onCancel) {
