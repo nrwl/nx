@@ -11,12 +11,21 @@ import { getDependencyVersionFromPackageJson } from './package-json';
  * Use this from executor / runtime contexts where node_modules is present.
  * Generator-time code should use `getDeclaredPackageVersion` instead.
  *
+ * Pass `requirePaths` to resolve from specific directories only (e.g. the
+ * workspace root, excluding the `.nx/installation` fallback); otherwise the
+ * default nx require paths are used.
+ *
  * Returns `null` when the package is not resolvable.
  */
-export function getInstalledPackageVersion(packageName: string): string | null {
+export function getInstalledPackageVersion(
+  packageName: string,
+  requirePaths?: string[]
+): string | null {
   try {
-    const { packageJson } = readModulePackageJson(packageName);
-    return packageJson.version ?? null;
+    const { packageJson } = requirePaths
+      ? readModulePackageJson(packageName, requirePaths)
+      : readModulePackageJson(packageName);
+    return typeof packageJson.version === 'string' ? packageJson.version : null;
   } catch {
     return null;
   }
@@ -45,6 +54,31 @@ export function getDeclaredPackageVersion(
     if (normalized) return normalized;
   }
   return latestKnownVersion ? normalizeSemver(latestKnownVersion) : null;
+}
+
+/**
+ * Reads the installed version of a package from the tree's `node_modules`,
+ * so it reflects in-flight tree changes and stays controllable in tests.
+ * Returns `null` when the package is not present in the tree's
+ * `node_modules`.
+ */
+export function getInstalledPackageVersionFromTree(
+  tree: Tree,
+  packageName: string
+): string | null {
+  try {
+    const pkgJson = tree.read(
+      `node_modules/${packageName}/package.json`,
+      'utf-8'
+    );
+    if (!pkgJson) {
+      return null;
+    }
+    const version = JSON.parse(pkgJson).version;
+    return typeof version === 'string' ? version : null;
+  } catch {
+    return null;
+  }
 }
 
 export const NON_SEMVER_DIST_TAGS = ['latest', 'next'] as const;
