@@ -100,15 +100,16 @@ export function buildGenericValidationUserPrompt(
     );
   }
 
+  const targetDiscovery = `discover each project's targets with \`nx show project <name> --json\`, which includes targets inferred by plugins (reading \`project.json\` / \`package.json\` misses those; fall back to it only if the project graph cannot be built) — do not assume \`typecheck\` / \`test\` / \`lint\` exist. If no typecheck-equivalent exists, \`build\` is an acceptable substitute.`;
   const firstStep = ctx.impl.hasDiffContext
-    ? `1. Inspect this migration's changes. ${renderGitInspectInstruction()} Resolve each affected path to its owning Nx project via \`nx show project <name>\` (or by reading the project's \`project.json\` / \`package.json\`) to discover which targets each project actually defines — do not assume \`typecheck\` / \`test\` / \`lint\` exist. If no typecheck-equivalent exists, \`build\` is an acceptable substitute.`
-    : `1. Resolve each path in <files_changed> to its owning Nx project. Use \`nx show project <name>\` (or read the project's \`project.json\` / \`package.json\`) to discover which targets each project actually defines — do not assume \`typecheck\` / \`test\` / \`lint\` exist. If no typecheck-equivalent exists, \`build\` is an acceptable substitute.`;
+    ? `1. Inspect this migration's changes. ${renderGitInspectInstruction()} Resolve each affected path to its owning Nx project, then ${targetDiscovery}`
+    : `1. Resolve each path in <files_changed> to its owning Nx project, then ${targetDiscovery}`;
 
   lines.push(
     ``,
     `<validation_instructions>`,
     firstStep,
-    `2. Pick the smallest relevant subset of available targets to verify the change. Prefer \`nx affected -t <target>\` (or \`nx run <project>:<target>\` for a single project). When many small projects are affected, you may use \`nx run-many -t <target> -p <project1>,<project2>\` with the project list derived from the changed files. Unscoped \`nx run-many\` (no \`-p\`) is forbidden.`,
+    `2. Pick the smallest relevant subset of available targets to verify the change. Prefer \`nx affected --files=<changed paths> -t <target>\` with the changed file list (bare \`nx affected\` also selects the branch delta and unrelated uncommitted changes), or \`nx run <project>:<target>\` for a single project. When many small projects are affected, you may use \`nx run-many -t <target> -p <project1>,<project2>\` with the project list derived from the changed files. Unscoped \`nx run-many\` (no \`-p\`) is forbidden.`,
     `3. If a verification surfaces an issue the migration should have produced cleanly (e.g. a missing import, a type annotation the generator's template missed), you may apply a minor in-scope fix. The boundary is "what this migration intended to accomplish" — do not refactor, do not modify functionality unrelated to the migration, do not extend the migration's scope, do not touch code the migration was not concerned with. If you are unsure whether a fix is in scope, report it in \`summary\` instead of applying.`,
     `4. Apply every fix you can within scope, then end the step per the handoff contract. If everything is resolved, write your handoff with \`status: "success"\`, summarizing what you verified and any fixes you applied. If unresolved findings remain, report them to the user and ask how to proceed before writing any handoff; on a \`status: "failed"\` handoff, enumerate the findings in \`summary\` so the user can address them — no commit will be created from a failed run, so the generator's changes and your partial fixes will sit uncommitted in the working tree for the user to review.`,
     `</validation_instructions>`,
