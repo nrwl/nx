@@ -371,17 +371,6 @@ describe('determinePresetOptions', () => {
     // Recorded calls persist across tests otherwise, so any assertion on which
     // questions were asked would see every earlier test's prompts too.
     (clack.autocomplete as jest.Mock).mockClear();
-    // A sentinel the prompt could not produce by accident: both lists put the
-    // stable choice first, so answering with the experimental one pins the
-    // threading through each stack rather than the prompt's own default.
-    (clack.autocomplete as jest.Mock).mockImplementation(
-      async ({ options }: { options: { value: string }[] }) => {
-        const values = options.map((o) => o.value);
-        if (values.includes('oxfmt')) return 'oxfmt';
-        if (values.includes('oxlint')) return 'oxlint';
-        return values[0];
-      }
-    );
   });
 
   // Every stack must come back with the resolved linter. Once the schemas

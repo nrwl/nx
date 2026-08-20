@@ -28,8 +28,8 @@ async function createPreset(tree: Tree, options: Schema) {
   if (options.preset === Preset.Apps || options.preset === Preset.NPM) {
     // These presets generate no project, so nothing downstream would set the
     // formatter up and the choice would be dropped. Only the formatter is
-    // configured here - `@nx/js:init` would also add TypeScript and a root
-    // tsconfig, which both presets deliberately leave out.
+    // configured here - `@nx/js:init` would also add TypeScript and register
+    // its plugin, which both presets deliberately leave out.
     //
     // `@nx/js` is only in the new workspace's package.json, not necessarily on
     // disk. `validateOptions` allows `skipInstall` with these presets, so the
@@ -39,9 +39,11 @@ async function createPreset(tree: Tree, options: Schema) {
       return;
     }
     if (options.skipInstall) {
+      // No follow-up command to name: `@nx/js:init` is what sets a formatter
+      // up, and running it here is what the comment above rules out for these
+      // presets.
       logger.warn(
-        `Skipped ${options.formatter} setup: it lives in @nx/js, which --skipInstall leaves uninstalled. ` +
-          `Run "nx g @nx/js:init --formatter=${options.formatter}" once dependencies are installed.`
+        `Skipped ${options.formatter} setup: it lives in @nx/js, which --skipInstall leaves uninstalled.`
       );
       return;
     }

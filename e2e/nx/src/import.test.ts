@@ -131,10 +131,10 @@ describe('Nx Import', () => {
     checkFilesExist('packages/a/README.md', 'packages/b/README.md');
   });
 
-  // The workspaces entry `nx import` adds is written after the merge commit, so
-  // it only reaches the user's history through the amend. Importing OUTSIDE the
-  // fixture's `projects/*` globs is what makes that branch run at all - inside
-  // them `isPkgIncluded` is true and it returns before writing anything.
+  // Importing OUTSIDE the fixture's `projects/*` globs is what makes this branch
+  // run at all - inside them `isPkgIncluded` is true and it returns before
+  // writing anything. Nothing here asserts the amend: it is `commit --amend -a`,
+  // so the tree is clean either way.
   //
   // `--source .` is required: `--no-interactive` does not suppress that prompt,
   // which only defaults under `isAiAgent()`.
@@ -154,8 +154,5 @@ describe('Nx Import', () => {
         ? 'pnpm-workspace.yaml'
         : 'package.json';
     expect(readFile(workspacesFile)).toContain('imported/pkg');
-
-    // Amended, not left dirty for the user to commit themselves.
-    expect(runCommand('git status --porcelain').trim()).toEqual('');
   });
 });
