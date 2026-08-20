@@ -563,5 +563,10 @@
     "name": "@anarchitects/nx-typeorm",
     "description": "Nx plugin for TypeORM integration in Nx backend applications and libraries.",
     "url": "https://github.com/anarchitects/anarchitecture-plugins/tree/main/packages/typeorm"
+  },
+  {
+    "name": "@seriouslag/nx-openapi-ts-plugin",
+    "description": "Nx plugin for @hey-api/openapi-ts — generators and executors for OpenAPI TypeScript client codegen",
+    "url": "https://github.com/seriouslag/openapi-ts-nx-plugin"
   }
 ]
