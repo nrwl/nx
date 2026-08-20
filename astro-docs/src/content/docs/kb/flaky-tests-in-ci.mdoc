@@ -1,6 +1,6 @@
 ---
-title: 'Flaky Tests in CI: Detection and Remediation'
-description: 'Learn how to detect, isolate, and fix flaky tests in CI without rerunning an entire pipeline.'
+title: 'What Is a Flaky Test? Causes, Detection, and Fixes'
+description: 'A flaky test passes and fails on the same code. Learn what causes flaky tests, how to detect them in CI, and how to fix the common patterns.'
 sidebar:
   label: Flaky Tests in CI
 filter: 'type:Guides'
@@ -8,29 +8,15 @@ topics:
   - 'Continuous integration'
 ---
 
-Most developers have seen this CI problem: a test fails, then passes after a rerun, even though the
-code did not change.
+A **flaky test** is a test that passes on one run and fails on another without any change to the
+code under test or to the test itself. Its result is nondeterministic, so the same commit can
+produce a green pipeline and a red one.
 
-That is a flaky test. The pull request is green again, but the failure still matters. Treat the
-passing retry as evidence to investigate, not proof that the problem disappeared.
+Most developers meet one the same way: CI fails, they hit rerun, the build goes green, and the pull
+request merges. The failure still matters. Treat the passing retry as evidence to investigate, not
+as proof that the problem disappeared.
 
-## A passing retry does not clear a failure
-
-A flaky test passes and fails with the same inputs. Its result can change because of shared state,
-timing, test order, a port collision, or an external service.
-
-A failure after a source or configuration change may be a regression instead. Fix a failure that
-reproduces with the changed inputs. Do not retry it until it passes.
-
-## Stop rerunning the whole pipeline
-
-A full-pipeline retry repeats work that already passed. It wastes compute, delays feedback, and
-makes failing CI easier to ignore.
-
-Re-run the failed test or test task by itself. A narrow retry gives you a cleaner result and keeps
-the rest of the pipeline moving.
-
-## Check the common causes
+## What causes flaky tests
 
 Most flakes match one of these patterns:
 
@@ -42,26 +28,63 @@ Most flakes match one of these patterns:
 | Test-order dependence | A different order changes the result.                      | Make each test create and clean up its own prerequisites.                    |
 | External services     | Network, API, or third-party failures appear in the logs.  | Stub the dependency where practical, or isolate and monitor the integration. |
 
-Manual investigation limits wasted work, but teams also need reliable evidence across CI runs. Nx
-provides that evidence and automates narrow retries.
+A failure after a source or configuration change may be a regression instead. Fix a failure that
+reproduces with the changed inputs. Do not retry it until it passes.
 
-## Detect and retry flaky tasks with Nx Cloud
+## How to fix a flaky test
+
+Work through the failed test in this order:
+
+1. Re-run the failed test or test task by itself. A full-pipeline retry repeats work that already passed, wastes compute, and delays the result.
+2. Compare the failed attempt with the successful attempt.
+3. Check the logs, machine image, environment values, network calls, and test order.
+4. Fix the cause that differs between attempts, using the table above to narrow it down.
+5. Quarantine the test only when the team cannot fix it immediately.
+
+Record an owner and review date for each quarantine. A quarantine protects the pipeline, but it
+also reduces test coverage.
+
+## Flaky tests in Playwright, Cypress, Jest, and Vitest
+
+End-to-end tests flake more than unit tests because they carry real browsers, real servers, and
+real network calls. Both major e2e runners can retry a failed test - `retries` in
+`playwright.config.ts`, and `retries` (with separate `runMode` and `openMode` values) in the Cypress
+config. Playwright even labels a fail-then-pass result as flaky in its report.
+
+A framework retry runs on the same machine, so a port conflict or a process leaked by an earlier
+test is still there when the test runs again. The record is also scoped to one run's report, and
+nothing accumulates into a picture of which tests flake the most across your CI.
+
+Nx Cloud retries on a different machine to rule out the environment, and tracks results per task
+across runs. [Automated task splitting](/docs/features/ci-features/split-e2e-tasks) creates one
+task per test file for `@nx/playwright`, `@nx/cypress`, `@nx/jest`, and `@nx/vitest`, so only the
+failed spec file runs again.
+
+## A passing retry does not clear a failure
+
+A rerun that goes green tells you the test is nondeterministic. It does not tell you which of the
+patterns above caused it, and it does not tell you whether the underlying race can also corrupt
+production behavior. Teams need evidence that survives across CI runs rather than one developer's
+recollection that "that one is always flaky".
+
+## Detect flaky tests automatically with Nx Cloud
 
 Nx runs a test command as a task. A task can run one test file, a group of files, or an entire
 test suite. Nx creates a hash from that task's inputs each time it runs.
 
-When one task hash both fails and succeeds, Nx Cloud knows that task is flaky. This is stronger
-evidence than a retry count. A test that fails once after a new commit may be a regression. A task
-that passes and fails with one hash is nondeterministic.
+When one task hash both fails and succeeds, Nx Cloud knows that task is flaky. A task that fails
+once after a new commit has a new hash and may be a regression.
+A task that passes and fails with one hash - even on different machines, days apart - is
+nondeterministic.
 
 When a known flaky task fails, Nx Cloud sends it to a different [Nx Agent](/docs/features/ci-features/distribute-task-execution).
 It makes at most two attempts in total. The retry targets the failed work instead of the complete
 pipeline.
 
-[Enable flaky task detection](/docs/features/ci-features/flaky-tasks) to use this behavior in your
+[Enable flaky test detection](/docs/features/ci-features/flaky-tasks) to use this behavior in your
 CI pipeline.
 
-## Use flaky task analytics to choose what to fix
+## Choose which flaky test to fix first
 
 ![Flaky task analytics in Nx Cloud](../../../assets/features/ci-features/nx-cloud-flaky-tasks-metrics-chart.avif)
 
@@ -70,29 +93,8 @@ tasks by impact, which combines a task's flake rate with how often it runs.
 
 Start with a frequently run task that fails often. It blocks more pull requests and wastes more CI
 time than a task with one isolated failure. Open the task to inspect its attempts, logs, and
-execution environments before you change the test.
-
-## Fix the flaky task
-
-Use the attempt details from Nx Cloud and work through the failed task in this order:
-
-1. Re-run the failed test or test task by itself.
-2. Compare the failed attempt with the successful attempt.
-3. Check the logs, machine image, environment values, network calls, and test order.
-4. Fix the cause that differs between attempts.
-5. Quarantine the test only when the team cannot fix it immediately.
-
-Record an owner and review date for each quarantine. A quarantine protects the pipeline, but it
-also reduces test coverage.
-
-## Make e2e retries smaller with Nx
-
-A failed spec should not re-run a 40-minute e2e suite. Nx can split a large suite into independently
-runnable file-level tasks. Then Nx Cloud can retry the failed spec and leave successful specs alone.
-
-[Automated task splitting](/docs/features/ci-features/split-e2e-tasks) creates one task per test
-file for supported Nx plugins. Fix hidden shared state before you distribute a suite across workers
-or machines.
+execution environments before you change the test. The dashboard is part of [flaky task
+analytics](/docs/features/ci-features/flaky-tasks#flaky-task-analytics) in Nx Cloud.
 
 ## Keep task inputs complete
 
