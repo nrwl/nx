@@ -855,6 +855,25 @@ describe('app', () => {
       });
     });
 
+    it('should emit the @/* alias for --no-src apps', async () => {
+      await applicationGenerator(tree, {
+        linter: 'eslint',
+        directory: 'apps/myapp',
+        unitTestRunner: 'vitest',
+        style: 'css',
+        src: false,
+        useTsSolution: true,
+        skipFormat: true,
+      });
+
+      const vitestConfig = tree.read('apps/myapp/vitest.config.mts', 'utf-8');
+      expect(vitestConfig).toContain(
+        `'@': new URL('.', import.meta.url).pathname,`
+      );
+      const tsconfigSpec = readJson(tree, 'apps/myapp/tsconfig.spec.json');
+      expect(tsconfigSpec.compilerOptions.paths).toEqual({ '@/*': ['./*'] });
+    });
+
     it('should add project references when using TS solution', async () => {
       await applicationGenerator(tree, {
         linter: 'eslint',
