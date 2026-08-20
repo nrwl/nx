@@ -7,7 +7,7 @@ description: >-
   A reproduce-verifier executes a runnable repro only when verification identifies one. The skill
   saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md and never posts it. Claude
   reads/executes PR code only through the sandbox CLI; credentials never enter the sandbox.
-allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(.claude/tools/sandbox *), Bash(bash tools/review-sandbox/*), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), mcp__plugin_linear_linear__get_issue, mcp__plugin_linear_linear__list_comments, Read, Grep, Glob, Skill, Agent
+allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh api repos/nrwl/nx/compare/*), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(.claude/tools/sandbox *), Bash(bash tools/review-sandbox/*), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Bash(awk *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), mcp__plugin_linear_linear__get_issue, mcp__plugin_linear_linear__list_comments, Read, Grep, Glob, Skill, Agent
 argument-hint: '<PR_NUMBER> [--verify-repros]'
 ---
 
@@ -259,7 +259,8 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
    ```bash
    if .claude/tools/sandbox exec "$SANDBOX" -- git fetch -q --depth 1 origin "$PRIOR_SHA"; then
      .claude/tools/sandbox exec "$SANDBOX" -- git diff "$PRIOR_SHA".."<HEAD_REF_OID>" \
-       > /tmp/pr-<NUMBER>-incremental.diff
+       > /tmp/pr-<NUMBER>-incremental.diff \
+       || { echo "FATAL: failed to build incremental diff"; exit 1; }
    else
      echo "PRIOR_SHA <PRIOR_SHA> no longer on the remote — force-pushed; reviewing fresh"
    fi
@@ -269,41 +270,65 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
    Set `HAS_PRIOR_CONTEXT=true` only on the success path. **Step 5 gates on that variable, never on the context file existing** — file existence is not a safe signal, because a prior review of the same PR leaves one behind and it would silently narrow this run's scope to a stale delta. (Step 3 of the skill also clears these paths up front, so the two defenses are independent.)
 
-3. **Rebase guard — do not trust the raw range.** If the author rebased between attempts, `$PRIOR_SHA..HEAD` spans every master commit the rebase pulled in — a raw range orders of magnitude larger than the author's true delta. Filename scoping does not fix it, because master churn _inside_ the PR's own files rides along. Detect it cheaply:
+3. **Base-movement guard: do not trust the raw range after the merge base changes.** Resolve both merge bases on the host because credentials never enter the sandbox:
 
    ```bash
-   RANGE_FILES=$(grep -c '^diff --git ' /tmp/pr-<NUMBER>-incremental.diff)
-   PR_FILES=$(gh pr view <NUMBER> --json changedFiles --jq .changedFiles)
+   OLD_MB=$(gh api "repos/nrwl/nx/compare/<BASE_REF_NAME>...$PRIOR_SHA" \
+     --jq .merge_base_commit.sha) \
+     || { echo "FATAL: failed to resolve prior merge base"; exit 1; }
+   NEW_MB=$(gh api "repos/nrwl/nx/compare/<BASE_REF_NAME>...<HEAD_REF_OID>" \
+     --jq .merge_base_commit.sha) \
+     || { echo "FATAL: failed to resolve current merge base"; exit 1; }
+   test -n "$OLD_MB" && test -n "$NEW_MB" \
+     || { echo "FATAL: empty merge-base SHA"; exit 1; }
+   REPLAY_FALLBACK=false
    ```
 
-   If `RANGE_FILES > 2 * PR_FILES` (or the range touches files absent from `gh pr diff --name-only`), the PR was rebased. Rebuild the incremental surface as a **diff-of-diffs** — the PR's patch at `$PRIOR_SHA` vs its patch at HEAD, each taken against its own merge base, so master churn cancels out:
+   If `OLD_MB == NEW_MB`, the raw `$PRIOR_SHA..HEAD` range contains only the branch endpoint delta. Count its changed paths and keep it as the incremental surface:
 
    ```bash
-   # Merge bases come from the host via gh (credentials never enter the sandbox)
-   OLD_MB=$(gh api "repos/nrwl/nx/compare/<BASE_REF_NAME>...$PRIOR_SHA" --jq .merge_base_commit.sha)
-   NEW_MB=$(gh api "repos/nrwl/nx/compare/<BASE_REF_NAME>...<HEAD_REF_OID>" --jq .merge_base_commit.sha)
-   .claude/tools/sandbox exec "$SANDBOX" -- git fetch -q --depth 1 origin "$OLD_MB" "$NEW_MB"
+   if [ "$OLD_MB" = "$NEW_MB" ]; then
+     PATCH_CHANGES=$(awk '/^diff --git / { count++ } END { print count + 0 }' \
+       /tmp/pr-<NUMBER>-incremental.diff) \
+       || { echo "FATAL: failed to count incremental changes"; exit 1; }
+   else
+     .claude/tools/sandbox exec "$SANDBOX" -- \
+       git fetch -q --depth 1 origin "$OLD_MB" "$NEW_MB" \
+       || { echo "FATAL: failed to fetch merge bases"; exit 1; }
+   fi
    ```
 
-   Then keep only files whose per-file patch actually changed between the two sides. Run the whole loop inside one `sandbox exec … -- bash -s` with the script on stdin; its stdout is the new incremental diff on the host:
+   If the merge bases differ, the raw range includes base-branch commits. Rebuild the incremental surface by replaying the prior PR patch onto the current merge base in a temporary Git index, then compare that expected tree with HEAD. Stream the trusted helper from the host into the sandbox; never execute a helper from the PR-controlled checkout. `${CLAUDE_SKILL_DIR}` is substituted when the skill loads, so the input path does not depend on the current working directory:
 
    ```bash
-   .claude/tools/sandbox exec "$SANDBOX" -- bash -s <<'EOF' > /tmp/pr-<NUMBER>-incremental.diff
-   norm() { grep -v -e '^index ' -e '^@@'; }   # blob hashes and hunk offsets shift on every rebase
-   for f in $({ git diff --name-only "$OLD_MB" "$PRIOR_SHA"; git diff --name-only "$NEW_MB" HEAD; } | sort -u); do
-     if ! diff -q <(git diff "$OLD_MB" "$PRIOR_SHA" -- "$f" | norm) \
-                  <(git diff "$NEW_MB" HEAD -- "$f" | norm) >/dev/null; then
-       git diff "$NEW_MB" HEAD -- "$f"
+   if [ "$OLD_MB" != "$NEW_MB" ]; then
+     if .claude/tools/sandbox exec "$SANDBOX" -- bash -s -- \
+       "$OLD_MB" "$PRIOR_SHA" "$NEW_MB" \
+       < "${CLAUDE_SKILL_DIR}/scripts/replay-prior-patch.sh" \
+       > /tmp/pr-<NUMBER>-incremental.diff
+     then
+       PATCH_CHANGES=$(awk '/^diff --git / { count++ } END { print count + 0 }' \
+         /tmp/pr-<NUMBER>-incremental.diff) \
+         || { echo "FATAL: failed to count replayed changes"; exit 1; }
+       case "$PATCH_CHANGES" in
+         ''|*[!0-9]*) echo "FATAL: invalid replayed-change count"; exit 1 ;;
+       esac
+     else
+       REPLAY_STATUS=$?
+       if [ "$REPLAY_STATUS" -eq 10 ]; then
+         REPLAY_FALLBACK=true
+         echo "Prior patch did not replay cleanly; reviewing the full PR diff"
+       else
+         echo "FATAL: failed to rebuild incremental diff (exit $REPLAY_STATUS)"
+         exit 1
+       fi
      fi
-   done
-   EOF
+   fi
    ```
 
-   (Substitute the two merge-base SHAs into the script literally — sandbox exec re-parses args, and the heredoc is quoted, so `$OLD_MB`/`$NEW_MB` won't expand from the host environment.)
+   The helper exits 10 only when `--3way` cannot replay the prior patch; every other nonzero exit is fatal. The temporary index preserves the prior author patch across non-overlapping base churn, including binary changes, modes, symlinks, unusual pathnames, and file-to-directory transitions. If the replay conflicts, the author may have resolved overlapping base changes manually. In that case, `REPLAY_FALLBACK=true` selects the full PR diff in Step 5 and keeps the prior review context; it never treats an uncomparable patch as an empty delta or assigns a numeric change count. If this block reports `FATAL`, stop the review because its evidence is invalid.
 
-   What the delta contains for a flagged file is the PR's **current** patch for that file — reviewable on its own — not the noisy range hunks. Context-line drift from master churn can still flag a file whose author hunks are identical; acceptable — the agent re-reads one file, not four hundred.
-
-   If the rebuilt delta lands under the 40-line evidence threshold, this was a **rebase-only push**: skip the agent fleet entirely, re-verify the carry-forward yourself at HEAD (a rebase can silently drop a previously landed fix — see the distillation rules), and update the draft noting "rebase-only, no author delta".
+   If `REPLAY_FALLBACK=false` and `PATCH_CHANGES` is zero, this was a **base-movement-only push** or an equivalent tree rewrite. Skip the remaining context-building and agent steps, re-verify the carry-forward yourself at HEAD, update the review body with "no author delta", then continue at Step 8 so history and cleanup still run. Any positive count continues to Step 5 regardless of line count; the existing evidence fallback handles a small but real author delta.
 
 4. Write a context file at `/tmp/pr-<NUMBER>.review-context.md` (host-side — the agents `Read` it directly; it is our file, not PR code).
 
@@ -342,11 +367,12 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
    ## Diff since last review (`$PRIOR_SHA..<HEAD>`)
 
-   See /tmp/pr-<NUMBER>-incremental.diff for the new code added since the prior review.
+   <When `REPLAY_FALLBACK=false`: See /tmp/pr-<NUMBER>-incremental.diff for the author delta since the prior review.>
+   <When `REPLAY_FALLBACK=true`: The prior patch did not replay cleanly on the current base, so this attempt reviews the full PR diff. No narrower author delta is safe.>
 
    ## Review focus
 
-   Focus on the diff since the last review. The open items above are already re-checked — carry
+   Focus on the named review target. The open items above are already re-checked; carry
    their status into your report if your dimension owns one, but do not go and re-derive it. Do not
    re-analyze unchanged code from scratch.
 
@@ -355,7 +381,7 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
    Rules for the distillation:
    - Re-check open items once; move fixed ones to **Already fixed**.
-   - On a rebased re-review (step 3 fired), re-verify **Already fixed** items at HEAD too — a rebase can silently drop a landed fix. A dropped one goes back to Open items.
+   - When `OLD_MB != NEW_MB`, re-verify **Already fixed** items at HEAD too. Base movement can silently drop a landed fix. A dropped one goes back to Open items.
    - Never omit an unresolved finding; trim narrative first.
    - Preserve each finding's wording, location, and ask; omit old reproduction/approach/performance/security prose.
    - Carry facts, not a prior verdict's reasoning; keep focus questions neutral.
@@ -887,7 +913,9 @@ The proof-of-work line number each agent's definition requires is checked agains
 per dispatch as `<EVIDENCE_FILE>`:
 
 - **First review**, or no usable incremental diff → `/tmp/pr-<NUMBER>.diff`.
+- **Re-review** where `REPLAY_FALLBACK=true` -> `/tmp/pr-<NUMBER>.diff`.
 - **Re-review** where Step 4 set `HAS_PRIOR_CONTEXT=true` **and**
+  `REPLAY_FALLBACK=false` **and**
   `wc -l < /tmp/pr-<NUMBER>-incremental.diff` is at least 40 → `/tmp/pr-<NUMBER>-incremental.diff`.
 
 Pointing the proof at the incremental diff on a re-review does two things at once: it proves the
