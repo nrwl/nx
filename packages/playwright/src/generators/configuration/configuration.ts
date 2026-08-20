@@ -312,24 +312,27 @@ async function normalizeOptions(
 }
 
 async function promptForMissingServeData(projectName: string) {
-  const command = isInteractive()
-    ? await textPrompt({
-        message: 'What command should be run to serve the application locally?',
-        initialValue: `npx nx serve ${projectName}`,
-      })
-    : `npx nx serve ${projectName}`;
-  const port = isInteractive()
-    ? Number(
-        await textPrompt({
-          message: 'What port will the application be served on?',
-          initialValue: '3000',
-          validate: (value) =>
-            value !== '' && !Number.isNaN(Number(value))
-              ? undefined
-              : 'Please enter a number',
-        })
-      )
-    : 3000;
+  if (!isInteractive()) {
+    return {
+      webServerCommand: `npx nx serve ${projectName}`,
+      webServerAddress: 'http://localhost:3000',
+    };
+  }
+
+  const command = await textPrompt({
+    message: 'What command should be run to serve the application locally?',
+    initialValue: `npx nx serve ${projectName}`,
+  });
+  const port = Number(
+    await textPrompt({
+      message: 'What port will the application be served on?',
+      initialValue: '3000',
+      validate: (value) =>
+        value !== '' && !Number.isNaN(Number(value))
+          ? undefined
+          : 'Please enter a number',
+    })
+  );
 
   return {
     webServerCommand: command,
