@@ -117,13 +117,6 @@ vi.mock('../../../utils/git-utils', async () => ({
   getGitRemoteNames: (...args: unknown[]) => mockGetGitRemoteNames(),
 }));
 
-// Only the recorded (--run-id) path reads the agent environment directly; the
-// standalone path goes through the mocked resolveAgentic above.
-const mockIsInsideAgent = vi.fn();
-vi.mock('../agentic/inception', () => ({
-  isInsideAgent: () => mockIsInsideAgent(),
-}));
-
 const mockGetBaseRef = vi.fn();
 vi.mock('../../../utils/command-line-utils', async () => ({
   ...(await vi.importActual('../../../utils/command-line-utils')),
@@ -272,7 +265,6 @@ describe('runSingleMigrationWorker', () => {
     mockReportRunError.mockReset();
     mockCanPrompt.mockReset().mockReturnValue(false);
     mockMigrateConfirm.mockReset().mockResolvedValue(true);
-    mockIsInsideAgent.mockReset().mockReturnValue(false);
     mockGetLatestCommitSha.mockReset().mockReturnValue(null);
     mockLogSkippedInstall.mockReset();
     mockChangedDepInstallerCtor.mockReset();
@@ -342,6 +334,7 @@ describe('runSingleMigrationWorker', () => {
       rounds?: { index: number; migrations: PlannedMigration[] }[];
       createCommits?: boolean;
       skipInstall?: boolean;
+      validate?: boolean;
       commits?: MigrateCommitLedgerEntry[];
     }
   ): string {
@@ -364,6 +357,9 @@ describe('runSingleMigrationWorker', () => {
       status: 'active',
       createCommits: opts.createCommits ?? false,
       commitPrefix: 'chore: [nx migration] ',
+      // Off by default so the plain-generator lifecycle tests keep exercising
+      // the no-validation flow; the validation cases opt in explicitly.
+      validate: opts.validate ?? false,
       ...(opts.skipInstall ? { skipInstall: true } : {}),
       rounds: rounds.map((r) => ({
         index: r.index,
@@ -1065,6 +1061,9 @@ describe('runSingleMigrationWorker', () => {
         gitRefAfter: 'face0002face0002face0002face0002face0002',
         nextSteps: ['follow up'],
       });
+      // No agent step can consume the generator output on a run that does not
+      // validate, so it is not captured.
+      expect(mockRunMigration.mock.calls[0][3]).toBe(false);
     });
 
     it('parks a prompt-only migration in awaiting-prompt-outcome', async () => {
@@ -1075,7 +1074,9 @@ describe('runSingleMigrationWorker', () => {
 
       await runSingleMigrationWorker(recordedInput('@nx/js:p', 'run-1'));
 
-      expect(readRunState(dir).steps[0].status).toBe('awaiting-prompt-outcome');
+      const step = readRunState(dir).steps[0];
+      expect(step.status).toBe('awaiting-prompt-outcome');
+      expect(step.awaitingKind).toBe('migration-prompt');
       expect(mockRunMigration).not.toHaveBeenCalled();
     });
 
@@ -1094,6 +1095,7 @@ describe('runSingleMigrationWorker', () => {
       expect(mockRunMigration.mock.calls[0][4]).toBe(DEFAULT_COLLECTION);
       const step = readRunState(dir).steps[0];
       expect(step.status).toBe('awaiting-prompt-outcome');
+      expect(step.awaitingKind).toBe('migration-prompt');
       expect(step.generatorCompleted).toBe(true);
     });
 
@@ -1257,7 +1259,6 @@ describe('runSingleMigrationWorker', () => {
       // The installer already reconciled the generator's package.json edits;
       // leaving the baseline behind would make the next actor read them as an
       // unapplied change and pay a second full install.
-      mockIsInsideAgent.mockReturnValue(true);
       mockInstalled = true;
       mockStringifiedDeps.mockReturnValue('{"deps":1}');
       const baseline = depsHash(root);
@@ -1286,7 +1287,6 @@ describe('runSingleMigrationWorker', () => {
     it('leaves the baseline alone when the dependencies never changed, so no install ran to move it', async () => {
       // `skippedInstall` is only about the skip-install flag; unchanged
       // dependencies leave it false with nothing installed either.
-      mockIsInsideAgent.mockReturnValue(true);
       mockStringifiedDeps.mockReturnValue('{"deps":1}');
       const baseline = depsHash(root);
       const dir = setupRun('run-1', {
@@ -1309,7 +1309,6 @@ describe('runSingleMigrationWorker', () => {
     });
 
     it('leaves the dependency baseline alone when the run skips installs, so the change stays pending', async () => {
-      mockIsInsideAgent.mockReturnValue(true);
       // The skip is what this case turns on: without it the installer reports
       // neither skipped nor installed and the assertion holds for the wrong
       // reason, the same one as the preceding case.
@@ -1338,7 +1337,6 @@ describe('runSingleMigrationWorker', () => {
     });
 
     it('skips the generator half on a hybrid retry once its generator already completed', async () => {
-      mockIsInsideAgent.mockReturnValue(true);
       const dir = setupRun('run-1', {
         steps: [
           {
@@ -1359,6 +1357,328 @@ describe('runSingleMigrationWorker', () => {
       expect(step.status).toBe('awaiting-prompt-outcome');
       expect(step.generatorCompleted).toBe(true);
     });
+
+    it('re-installs from the baseline before re-emitting the prompt on a hybrid retry', async () => {
+      // The prompt half may need the dependencies the earlier attempt's
+      // generator added, and this attempt does not re-run the generator to
+      // install them.
+      mockStringifiedDeps.mockReturnValue('{"deps":1}');
+      const baseline = depsHash(root);
+      mockStringifiedDeps.mockReturnValue('{"deps":2}');
+      setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:h', 'dispensed'),
+            generatorCompleted: true,
+            depsHashAtDispense: baseline,
+          },
+        ],
+        migrations: [hybridMig('@nx/js', 'h')],
+      });
+
+      await runSingleMigrationWorker({
+        ...recordedInput('@nx/js:h', 'run-1'),
+        skipInstall: false,
+      });
+
+      expect(mockRunInstall).toHaveBeenCalledWith(
+        root,
+        'post-migration',
+        expect.stringContaining('--run-id=run-1')
+      );
+      expect(stdout).toContain('<nx_migrate_prompt migration="@nx/js:h">');
+    });
+
+    it('parks a generator migration for validation when the run validates and the generator made changes', async () => {
+      mockRunMigration.mockResolvedValue({
+        changes: changeList(),
+        nextSteps: [],
+        agentContext: ['generator hint'],
+        logs: 'gen output',
+        madeChanges: true,
+      });
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+        validate: true,
+      });
+
+      await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
+
+      // Captured so the validation payload can carry the generator output.
+      expect(mockRunMigration.mock.calls[0][3]).toBe(true);
+      const step = readRunState(dir).steps[0];
+      expect(step.status).toBe('awaiting-prompt-outcome');
+      expect(step.awaitingKind).toBe('generator-validation');
+      expect(step.generatorCompleted).toBe(true);
+      // Persisted with the marker so a retry knows the pass is still owed.
+      expect(step.validationOwed).toBe(true);
+      // The commit stays with the fold: a failed validation must leave the
+      // changes uncommitted for review, as in the classic loop.
+      expect(mockCommit).not.toHaveBeenCalled();
+      expect(readRunState(dir).commits).toEqual([]);
+      expect(stdout).toContain('<nx_migrate_prompt migration="@nx/js:gen">');
+      expect(stdout).toContain('"kind": "generator-validation"');
+      expect(stdout).toContain('"logs": "gen output"');
+      expect(stdout).toContain('"path": "a.ts"');
+      expect(stdout).toContain('"agentContext"');
+    });
+
+    it('succeeds a validating run without a validation pass when the generator made no changes', async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        migrations: [genMig('@nx/js', 'gen')],
+        validate: true,
+      });
+
+      await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
+
+      const step = readRunState(dir).steps[0];
+      expect(step.status).toBe('succeeded');
+      // Recorded as an explicit false so a retry of a death after the marker
+      // neither parks for validation nor commits.
+      expect(step.generatorMadeChanges).toBe(false);
+      expect(stdout).not.toContain('<nx_migrate_prompt');
+    });
+
+    it('waives the validation pass when the generator reports skipAgentic, committing through the plain path', async () => {
+      mockRunMigration.mockResolvedValue({
+        changes: changeList(),
+        nextSteps: [],
+        agentContext: ['dropped hint'],
+        skipAgentic: true,
+        logs: '',
+        madeChanges: true,
+      });
+      mockCommit.mockResolvedValue({
+        status: 'committed',
+        sha: 'face0001face0001face0001face0001face0001',
+      });
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+        validate: true,
+      });
+
+      await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      // Persisted so a retry after a failure does not re-emit waived work.
+      expect(state.steps[0].agenticWaived).toBe(true);
+      expect(state.commits).toEqual([
+        {
+          kind: 'landed',
+          sha: 'face0001face0001face0001face0001face0001',
+          stepIds: ['step-1'],
+        },
+      ]);
+      expect(stdout).not.toContain('<nx_migrate_prompt');
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Validation skipped')
+      );
+    });
+
+    it('waives the prompt half of a hybrid when the generator reports skipAgentic', async () => {
+      mockRunMigration.mockResolvedValue({
+        changes: changeList(),
+        nextSteps: [],
+        agentContext: [],
+        skipAgentic: true,
+        logs: '',
+        madeChanges: true,
+      });
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:h', 'dispensed')],
+        migrations: [hybridMig('@nx/js', 'h')],
+      });
+
+      await runSingleMigrationWorker(recordedInput('@nx/js:h', 'run-1'));
+
+      const step = readRunState(dir).steps[0];
+      expect(step.status).toBe('succeeded');
+      expect(step.agenticWaived).toBe(true);
+      expect(step.outcome).toMatchObject({ fileChanges: ['a.ts'] });
+      expect(stdout).not.toContain('<nx_migrate_prompt');
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Prompt phase skipped')
+      );
+    });
+
+    it.each([
+      ['hybrid', hybridMig('@nx/js', 'm')],
+      ['validating generator', genMig('@nx/js', 'm')],
+    ] as const)(
+      'finishes a retried %s step without re-emitting the agent work its earlier attempt waived',
+      async (_kind, migration) => {
+        mockCommit.mockResolvedValue({
+          status: 'committed',
+          sha: 'face0001face0001face0001face0001face0001',
+        });
+        const dir = setupRun('run-1', {
+          steps: [
+            {
+              ...migStep('step-1', '@nx/js:m', 'dispensed'),
+              generatorCompleted: true,
+              agenticWaived: true,
+            },
+          ],
+          migrations: [migration],
+          createCommits: true,
+          validate: true,
+        });
+
+        await runSingleMigrationWorker(recordedInput('@nx/js:m', 'run-1'));
+
+        expect(mockRunMigration).not.toHaveBeenCalled();
+        expect(stdout).not.toContain('<nx_migrate_prompt');
+        const state = readRunState(dir);
+        expect(state.steps[0].status).toBe('succeeded');
+        expect(state.commits).toEqual([
+          {
+            kind: 'landed',
+            sha: 'face0001face0001face0001face0001face0001',
+            stepIds: ['step-1'],
+          },
+        ]);
+      }
+    );
+
+    it('re-parks a retried generator step for validation instead of finishing it silently', async () => {
+      // The earlier attempt recorded the owed validation with the marker and
+      // its park or fold never settled the step, so this attempt still owes
+      // the pass. The captured generator output is gone with that attempt, so
+      // the emission points at the tree.
+      mockStringifiedDeps.mockReturnValue('{"deps":1}');
+      const baseline = depsHash(root);
+      mockStringifiedDeps.mockReturnValue('{"deps":2}');
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:gen', 'dispensed'),
+            generatorCompleted: true,
+            validationOwed: true,
+            depsHashAtDispense: baseline,
+          },
+        ],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+        validate: true,
+      });
+
+      await runSingleMigrationWorker({
+        ...recordedInput('@nx/js:gen', 'run-1'),
+        skipInstall: false,
+      });
+
+      expect(mockRunMigration).not.toHaveBeenCalled();
+      // Re-installed from the step's baseline before handing the work back.
+      expect(mockRunInstall).toHaveBeenCalledWith(
+        root,
+        'post-migration',
+        expect.stringContaining('--run-id=run-1')
+      );
+      expect(mockCommit).not.toHaveBeenCalled();
+      const step = readRunState(dir).steps[0];
+      expect(step.status).toBe('awaiting-prompt-outcome');
+      expect(step.awaitingKind).toBe('generator-validation');
+      expect(stdout).toContain('"kind": "generator-validation"');
+      expect(stdout).not.toContain('"impl"');
+      expect(output.log).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining('earlier attempt'),
+        })
+      );
+    });
+
+    it('finishes a retried no-change generator without parking for validation or committing', async () => {
+      // The first attempt determined validation did not apply and recorded
+      // that nothing changed; a death between the marker and the success
+      // write must not turn the no-op into agent work, and its retry must
+      // not build a commit whose `git add -A` would absorb unrelated
+      // pending diffs under the no-op's name.
+      mockCommit.mockResolvedValue({
+        status: 'committed',
+        sha: 'face0001face0001face0001face0001face0001',
+      });
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:gen', 'dispensed'),
+            generatorCompleted: true,
+            generatorMadeChanges: false,
+          },
+        ],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+        validate: true,
+      });
+
+      await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
+
+      expect(mockRunMigration).not.toHaveBeenCalled();
+      expect(stdout).not.toContain('<nx_migrate_prompt');
+      expect(mockCommit).not.toHaveBeenCalled();
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      expect(state.commits).toEqual([]);
+    });
+
+    it('defaults to validating when the run state predates the validate field', async () => {
+      mockRunMigration.mockResolvedValue({
+        changes: changeList(),
+        nextSteps: [],
+        agentContext: [],
+        logs: '',
+        madeChanges: true,
+      });
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        migrations: [genMig('@nx/js', 'gen')],
+      });
+      const state = readRunState(dir);
+      delete state.validate;
+      writeRunState(dir, state);
+
+      await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
+
+      const step = readRunState(dir).steps[0];
+      expect(step.status).toBe('awaiting-prompt-outcome');
+      expect(step.awaitingKind).toBe('generator-validation');
+    });
+
+    it.each([
+      ['prompt-only', promptMig('@nx/js', 'm')],
+      ['validating generator', genMig('@nx/js', 'm')],
+    ] as const)(
+      'emits the structured block for a recorded %s step regardless of ambient agent detection',
+      async (_kind, migration) => {
+        // Nothing in this environment marks an agent; the dispensed command
+        // is part of the orchestrated protocol either way, and a parked step
+        // must never be awaiting a payload that was not emitted.
+        mockRunMigration.mockResolvedValue({
+          changes: changeList(),
+          nextSteps: [],
+          agentContext: [],
+          logs: '',
+          madeChanges: true,
+        });
+        const dir = setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:m', 'dispensed')],
+          migrations: [migration],
+          validate: true,
+        });
+
+        await runSingleMigrationWorker(recordedInput('@nx/js:m', 'run-1'));
+
+        expect(readRunState(dir).steps[0].status).toBe(
+          'awaiting-prompt-outcome'
+        );
+        expect(stdout).toContain('<nx_migrate_prompt migration="@nx/js:m">');
+      }
+    );
 
     it('records a failed step carrying the error first line as its outcome summary, then rethrows', async () => {
       mockRunMigration.mockRejectedValue(

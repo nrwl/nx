@@ -1935,6 +1935,48 @@ describe('orchestrator', () => {
       }
     );
 
+    it('folds a skipped handoff on a validation pass as completed, landing the commit', async () => {
+      // The generator's changes are already applied, so "validation not
+      // applicable" must complete the migration; folding it as skipped would
+      // report the migration as not run and strand its changes as debt.
+      mockCommit.mockResolvedValue({
+        status: 'committed',
+        sha: 'face0006face0006face0006face0006face0006',
+      });
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:gen', 'awaiting-prompt-outcome'),
+            awaitingKind: 'generator-validation' as const,
+            generatorCompleted: true,
+          },
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+      writeHandoff(dir, '@nx/js', 'gen', {
+        status: 'success',
+        summary: 'nothing to validate here',
+        outcome: 'skipped',
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      expect(state.steps[0].promptOutcome).toEqual({
+        status: 'completed',
+        summary: 'nothing to validate here',
+      });
+      expect(state.commits).toEqual([
+        {
+          kind: 'landed',
+          sha: 'face0006face0006face0006face0006face0006',
+          stepIds: ['step-1'],
+        },
+      ]);
+    });
+
     it('removes the handoff file once its outcome is folded', async () => {
       const dir = setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
@@ -1981,7 +2023,37 @@ describe('orchestrator', () => {
       expect(block.action).toBe('await-prompt');
       expect(block.payload.instructions).toContain('awaiting your outcome');
       expect(block.payload.instructions).toContain(
+        'To mark the prompt not applicable'
+      );
+      expect(block.payload.instructions).toContain(
         handoffPathIn(dir, '@nx/js', 'p')
+      );
+    });
+
+    it('dispenses validation instructions for a step awaiting a validation pass', async () => {
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:gen', 'awaiting-prompt-outcome'),
+            awaitingKind: 'generator-validation' as const,
+          },
+        ],
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
+      expect(block.action).toBe('await-prompt');
+      expect(block.payload.instructions).toContain('awaiting your validation');
+      // No skipped outcome is offered: a waived validation still completes
+      // the migration.
+      expect(block.payload.instructions).toContain(
+        'If validation does not apply here'
+      );
+      expect(block.payload.instructions).not.toContain('"outcome": "skipped"');
+      expect(block.payload.instructions).toContain(
+        handoffPathIn(dir, '@nx/js', 'gen')
       );
     });
 
