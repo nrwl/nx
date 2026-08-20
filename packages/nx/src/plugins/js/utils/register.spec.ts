@@ -762,4 +762,59 @@ describe('registerSourceGraphResolver', () => {
     cleanup();
     expect(deregister).toHaveBeenCalled();
   });
+
+  it('keeps the collection shape of the conditions it forwards', () => {
+    const nodeModule = require('node:module') as typeof import('node:module');
+    let resolveHook: Function;
+    jest
+      .spyOn(nodeModule, 'registerHooks')
+      .mockImplementation(({ resolve }) => {
+        resolveHook = resolve;
+        return { deregister: jest.fn() };
+      });
+    jest
+      .spyOn(typescriptUtils, 'getRootTsConfigResolveExportsConditions')
+      .mockReturnValue(['source']);
+
+    const cleanup = registerSourceGraphResolver(
+      '/workspace/plugin.cjs',
+      '/workspace',
+      ['@proj/utils']
+    );
+    const forwarded: unknown[] = [];
+    const nextResolve = (
+      _specifier: string,
+      context: { conditions: unknown }
+    ) => {
+      forwarded.push(context.conditions);
+      return { url: 'file:///workspace/packages/utils/src/index.js' };
+    };
+
+    // Node < 22.19 / < 24.5 hands CJS resolve hooks a Set and requires one back.
+    resolveHook(
+      '@proj/utils',
+      {
+        conditions: new Set(['require', 'node']),
+        importAttributes: {},
+        parentURL: 'file:///workspace/plugin.cjs',
+      },
+      nextResolve
+    );
+    resolveHook(
+      '@proj/utils',
+      {
+        conditions: ['import', 'node'],
+        importAttributes: {},
+        parentURL: 'file:///workspace/plugin.cjs',
+      },
+      nextResolve
+    );
+
+    expect(forwarded).toEqual([
+      new Set(['require', 'node', 'source']),
+      ['import', 'node', 'source'],
+    ]);
+
+    cleanup();
+  });
 });
