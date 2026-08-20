@@ -136,6 +136,25 @@ describe('buildGenericValidationUserPrompt', () => {
     });
   });
 
+  it('makes inferred-target discovery authoritative and scopes affected runs to the changed files', () => {
+    for (const hasDiffContext of [true, false]) {
+      const out = buildGenericValidationUserPrompt({
+        ...baseCtx,
+        impl: { ...baseCtx.impl, hasDiffContext },
+      });
+      // project.json / package.json miss plugin-inferred targets, so they must
+      // read as a fallback, never as an equivalent discovery path.
+      expect(out).toContain('`nx show project <name> --json`');
+      expect(out).toContain('targets inferred by plugins');
+      // Bare `nx affected` selects the branch delta plus unrelated uncommitted
+      // changes, not this migration's changes.
+      expect(out).toContain(
+        '`nx affected --files=<changed paths> -t <target>`'
+      );
+      expect(out).not.toContain('`nx affected -t <target>`');
+    }
+  });
+
   it('escapes hostile content in every user-authored interpolation site', () => {
     const out = buildGenericValidationUserPrompt({
       package: '@evil/pkg',

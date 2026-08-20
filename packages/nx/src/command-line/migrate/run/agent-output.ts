@@ -61,12 +61,12 @@ function blockPayload(payload: object): string {
 function writeBlock(
   tag: string,
   attrs: [string, string][],
-  json: string
+  body: string
 ): void {
   const attrText = attrs
     .map(([name, value]) => ` ${name}="${escapeXmlAttr(singleLine(value))}"`)
     .join('');
-  process.stdout.write(`\n<${tag}${attrText}>\n${json}\n</${tag}>\n\n`);
+  process.stdout.write(`\n<${tag}${attrText}>\n${body}\n</${tag}>\n\n`);
 }
 
 export function emitStepBlock(
@@ -92,4 +92,22 @@ export function emitPromptBlock(migrationId: string, payload: object): void {
     [['migration', migrationId]],
     blockPayload(payload)
   );
+}
+
+/**
+ * Emits the runbook as markdown, not JSON: the block carries the runbook
+ * file's bytes so the agent reads exactly what a resume re-emits from disk.
+ * A body line that opens or closes an `<nx_migrate_*>` tag is neutralized
+ * rather than trusted; the renderer never produces one, so only tampered
+ * bytes are altered. "Line start" spans the full terminator set `singleLine`
+ * collapses, not just what `^` under `/m` recognizes: a reader that treats
+ * NEL or a form feed as a break would otherwise see a break this check
+ * did not.
+ */
+export function emitRunbookBlock(runId: string, content: string): void {
+  const neutralized = content.replace(
+    /(^|[\r\n\u000b\u000c\u0085\u2028\u2029])(\s*)<(?=\/?nx_migrate_)/g,
+    '$1$2\\u003c'
+  );
+  writeBlock('nx_migrate_runbook', [['run-id', runId]], neutralized);
 }
