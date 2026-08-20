@@ -47,12 +47,13 @@ export {
   ensureRootProjectName,
   resolveImportPath,
 } from './src/generators/project-name-and-root-utils';
-// Generator-only. These return `fallback` instead of blocking when the
-// terminal cannot prompt; the ungated prompts below always ask.
+// Generator-facing prompts. These return their `fallback` instead of asking
+// when the terminal cannot prompt; `promptAlways` asks unconditionally.
 export {
-  confirmationPromptIfInteractive,
-  selectPromptIfInteractive,
-  textPromptIfInteractive,
+  confirmationPrompt,
+  promptAlways,
+  selectPrompt,
+  textPrompt,
 } from './src/generators/prompt';
 export {
   addBuildTargetDefaults,
@@ -232,10 +233,6 @@ export {
   killProcessTreeGraceful,
   loadTsFile,
   mergeTargetConfigurations,
-  confirmationPrompt,
-  multiselectPrompt,
-  selectPrompt,
-  textPrompt,
   normalizeDependencyConfigDefinition,
   normalizeDependencyConfigProjects,
   normalizeTargetDependencyWithStringProjects,

@@ -1,7 +1,7 @@
 import {
   findTargetDefault,
   resolveImportPath,
-  textPromptIfInteractive,
+  textPrompt,
   upsertTargetDefault,
   PackageJson,
 } from '@nx/devkit/internal';
@@ -311,13 +311,13 @@ async function normalizeOptions(
 }
 
 async function promptForMissingServeData(projectName: string) {
-  const command = await textPromptIfInteractive({
+  const command = await textPrompt({
     message: 'What command should be run to serve the application locally?',
     initialValue: `npx nx serve ${projectName}`,
     fallback: `npx nx serve ${projectName}`,
   });
   const port = Number(
-    await textPromptIfInteractive({
+    await textPrompt({
       message: 'What port will the application be served on?',
       initialValue: '3000',
       validate: (value) =>

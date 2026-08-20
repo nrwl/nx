@@ -3,7 +3,7 @@ import { writeFileSync, mkdirSync } from 'fs';
 import { dirname, join } from 'path';
 import { ProjectGraphProjectNode, workspaceRoot } from '@nx/devkit';
 import { interpolateVersionPattern } from './version-pattern-utils';
-import { selectPrompt, type FinalConfigForProject } from '@nx/devkit/internal';
+import { promptAlways, type FinalConfigForProject } from '@nx/devkit/internal';
 
 const DEFAULT_VERSION_SCHEMES = {
   production: '{currentDate|YYMM.DD}.{shortCommitSha}',
@@ -90,7 +90,7 @@ async function promptForNewVersion(
   projectName: string
 ) {
   // Each scheme's resolved pattern renders as its own hint.
-  return selectPrompt({
+  return promptAlways.select({
     message: `What type of docker release would you like to make for project "${projectName}"?`,
     choices: Object.keys(versionSchemes).map((vs) => ({
       value: vs,

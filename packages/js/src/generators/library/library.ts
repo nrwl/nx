@@ -1,7 +1,7 @@
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
-  selectPromptIfInteractive,
+  selectPrompt,
   addBuildTargetDefaults,
   logShowProjectCommand,
   type PackageJson,
@@ -804,13 +804,13 @@ async function normalizeOptions(
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
 
   if (isUsingTsSolutionConfig) {
-    options.unitTestRunner ??= await selectPromptIfInteractive({
+    options.unitTestRunner ??= await selectPrompt({
       message: `Which unit test runner would you like to use?`,
       choices: [{ value: 'none' }, { value: 'vitest' }, { value: 'jest' }],
       fallback: 'none',
     });
   } else {
-    options.unitTestRunner ??= await selectPromptIfInteractive({
+    options.unitTestRunner ??= await selectPrompt({
       message: `Which unit test runner would you like to use?`,
       choices: [{ value: 'jest' }, { value: 'vitest' }, { value: 'none' }],
       fallback: undefined,

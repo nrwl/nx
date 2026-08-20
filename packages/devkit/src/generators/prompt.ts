@@ -1,6 +1,7 @@
 import {
   confirmationPrompt as promptForConfirmation,
   isCI,
+  multiselectPrompt as promptForMultiselect,
   selectPrompt as promptForSelection,
   textPrompt as promptForText,
 } from 'nx/src/devkit-internals';
@@ -23,7 +24,7 @@ function isInteractive(): boolean {
  */
 type Fallback<F> = { fallback: F };
 
-export async function textPromptIfInteractive<F = never>(
+export async function textPrompt<F = never>(
   options: Parameters<typeof promptForText>[0] & Fallback<F>
 ): Promise<string | F> {
   return isInteractive() ? promptForText(options) : options.fallback;
@@ -31,14 +32,26 @@ export async function textPromptIfInteractive<F = never>(
 
 // Let both parameters infer from the arguments. Naming `T` at a call site
 // pins `F` to `never`, since TypeScript cannot infer a type argument partially.
-export async function selectPromptIfInteractive<T extends string, F = never>(
+export async function selectPrompt<T extends string, F = never>(
   options: Parameters<typeof promptForSelection<T>>[0] & Fallback<F>
 ): Promise<T | F> {
   return isInteractive() ? promptForSelection<T>(options) : options.fallback;
 }
 
-export async function confirmationPromptIfInteractive<F = never>(
+export async function confirmationPrompt<F = never>(
   options: Parameters<typeof promptForConfirmation>[0] & Fallback<F>
 ): Promise<boolean | F> {
   return isInteractive() ? promptForConfirmation(options) : options.fallback;
 }
+
+/**
+ * Prompts that ask unconditionally, for code that runs outside a generator -
+ * `nx release`, standalone CLIs - where NX_INTERACTIVE is never set and the
+ * gated prompts above would return their fallback instead of asking.
+ */
+export const promptAlways = {
+  confirm: promptForConfirmation,
+  multiselect: promptForMultiselect,
+  select: promptForSelection,
+  text: promptForText,
+};

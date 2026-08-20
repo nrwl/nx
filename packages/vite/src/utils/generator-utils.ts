@@ -1,7 +1,4 @@
-import {
-  addBuildTargetDefaults,
-  confirmationPrompt,
-} from '@nx/devkit/internal';
+import { addBuildTargetDefaults, promptAlways } from '@nx/devkit/internal';
 import {
   joinPathFragments,
   logger,
@@ -622,7 +619,7 @@ async function handleUnsupportedUserProvidedTargetsErrors(
      your changes before converting a project to use Vite, and test the converted project thoroughly before deploying it.
     `
   );
-  const shouldConvert = await confirmationPrompt({
+  const shouldConvert = await promptAlways.confirm({
     message: `Should we convert the ${validFoundTargetName} target to use the @nx/vite:${executor} executor?`,
   });
   if (!shouldConvert) {
@@ -653,7 +650,7 @@ export async function handleUnknownConfiguration(projectName: string) {
       `
   );
 
-  const shouldConvert = await confirmationPrompt({
+  const shouldConvert = await promptAlways.confirm({
     message: `Should Nx convert your project to use Vite?`,
   });
   if (!shouldConvert) {

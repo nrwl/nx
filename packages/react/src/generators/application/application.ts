@@ -1,6 +1,6 @@
 import {
   logShowProjectCommand,
-  confirmationPromptIfInteractive,
+  confirmationPrompt,
   upsertTargetDefault,
 } from '@nx/devkit/internal';
 import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
@@ -85,7 +85,7 @@ export async function applicationGeneratorInternal(
   options.useReactRouter =
     options.routing && options.bundler === 'vite'
       ? (options.useReactRouter ??
-        (await confirmationPromptIfInteractive({
+        (await confirmationPrompt({
           message:
             'Would you like to use react-router for server-side rendering?',
           fallback: false,

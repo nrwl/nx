@@ -1,14 +1,14 @@
 import { readNxJson, updateNxJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { selectPromptIfInteractive } from '@nx/devkit/internal';
+import { selectPrompt } from '@nx/devkit/internal';
 import { normalizeLinterOption } from './generator-prompts';
 
 jest.mock('@nx/devkit/internal', () => ({
   ...jest.requireActual('@nx/devkit/internal'),
-  selectPromptIfInteractive: jest.fn(),
+  selectPrompt: jest.fn(),
 }));
 
-const prompt = selectPromptIfInteractive as jest.Mock;
+const prompt = selectPrompt as jest.Mock;
 
 describe('normalizeLinterOption', () => {
   let tree: Tree;
