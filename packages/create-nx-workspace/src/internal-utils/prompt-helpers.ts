@@ -1,3 +1,6 @@
+// Type-only, so it is erased at emit and never becomes a `require` of an
+// ESM-only package. The runtime import stays dynamic below.
+import type { Option } from '@clack/prompts';
 import { CnwError } from '../utils/error-utils';
 
 /**
@@ -51,7 +54,7 @@ export async function selectPrompt<T extends string>(
       value: c.value,
       label: c.label ?? c.value,
       ...(c.hint ? { hint: c.hint } : {}),
-    })) as Parameters<typeof autocomplete<T>>[0]['options'],
+    })) as Option<T>[],
     initialValue: options.initial ?? choices[0].value,
     // A no-match filter leaves clack with an empty selection, and Enter then
     // submits `undefined` rather than blocking. `isCancel` does not catch
