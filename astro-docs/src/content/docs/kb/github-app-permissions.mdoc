@@ -8,6 +8,8 @@ topics:
 
 The Nx Cloud GitHub App requires the following permissions to provide CI/CD integration and setup experiences. Most information is used transiently during operations and not stored in our systems.
 
+If your workspaces use repositories from more than one GitHub organization, see how to [configure a standard Nx Cloud organization with repository-scoped access](/docs/kb/multiple-github-organizations).
+
 {% callout type="note" title="Administration (read & write) permission removed." %}
 The Nx Cloud GitHub App no longer requests the `Administration` (read & write) permission. It was previously required to generate new workspaces from the browser; that feature has since been removed, so we've dropped the permission to reduce the access we request.
 {% /callout %}
