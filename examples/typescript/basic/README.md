@@ -21,11 +21,11 @@ packages/greeter       one small TypeScript library
 pnpm install
 
 # Verify everything is formatted, then typecheck
-pnpm nx format:check
+pnpm nx format:check --all
 pnpm nx run-many -t typecheck
 
 # Format the workspace with oxfmt
-pnpm nx format:write
+pnpm nx format:write --all
 ```
 
 Introduce a formatting mistake (extra spaces, double quotes) in
