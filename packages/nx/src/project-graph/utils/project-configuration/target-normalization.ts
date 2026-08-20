@@ -32,6 +32,7 @@ import {
 import type { ConfigurationSourceMaps } from './source-maps';
 
 import { existsSync } from 'node:fs';
+import { worktreeIgnoreTarget } from '../../../utils/git-worktrees';
 import { join } from 'path';
 
 export function validateProject(
@@ -409,7 +410,19 @@ export function validateAndNormalizeProjectRootMap(
   const errors: Error[] = [];
 
   if (conflicts.size > 0) {
-    errors.push(new MultipleProjectsWithSameNameError(conflicts, projects));
+    // Only on the way to throwing, so a workspace without duplicates never
+    // pays for reading git's worktree registry.
+    const worktreeIgnoreTargets = worktreeIgnoreTarget(
+      workspaceRoot,
+      Array.from(conflicts.values()).flat()
+    );
+    errors.push(
+      new MultipleProjectsWithSameNameError(
+        conflicts,
+        projects,
+        worktreeIgnoreTargets ?? undefined
+      )
+    );
   }
   if (projectRootsWithNoName.length > 0) {
     errors.push(new ProjectsWithNoNameError(projectRootsWithNoName, projects));

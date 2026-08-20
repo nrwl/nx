@@ -1,3 +1,6 @@
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { TempFs } from '../../../internal-testing-utils/temp-fs';
 import * as executorUtils from '../../../command-line/run/executor-utils';
 import type { NxJsonConfiguration } from '../../../config/nx-json';
@@ -141,6 +144,36 @@ describe('validateAndNormalizeProjectRootMap', () => {
     expect(() =>
       validateAndNormalizeProjectRootMap(tempFs.tempDir, projectRootMap, {})
     ).toThrow(AggregateError);
+  });
+
+  it('should point a duplicate coming from a worktree at the directory to ignore', () => {
+    // A worktree is a full checkout, so every project in it duplicates the one
+    // it came from. Renaming is the wrong advice - the copy shouldn't be walked.
+    const metadataDir = join(tempFs.tempDir, '.git', 'worktrees', 'wt');
+    const checkout = join(tempFs.tempDir, '.claude', 'worktrees', 'wt');
+    mkdirSync(metadataDir, { recursive: true });
+    mkdirSync(checkout, { recursive: true });
+    writeFileSync(join(metadataDir, 'gitdir'), `${join(checkout, '.git')}\n`);
+    writeFileSync(join(checkout, '.git'), `gitdir: ${metadataDir}\n`);
+
+    const projectRootMap = {
+      'libs/ui': { name: 'ui', root: 'libs/ui' },
+      '.claude/worktrees/wt/libs/ui': {
+        name: 'ui',
+        root: '.claude/worktrees/wt/libs/ui',
+      },
+    };
+
+    let message = '';
+    try {
+      validateAndNormalizeProjectRootMap(tempFs.tempDir, projectRootMap, {});
+    } catch (e) {
+      message = (e as AggregateError).errors[0].message;
+    }
+
+    expect(message).toContain('git worktrees nested in this workspace');
+    expect(message).toContain('.claude/worktrees');
+    expect(message).not.toContain('set a unique name');
   });
 });
 
