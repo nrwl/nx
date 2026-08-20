@@ -134,6 +134,58 @@ describe('@nx/oxlint plugin', () => {
     );
   });
 
+  // Oxlint layers .eslintignore files from every ancestor of a linted file,
+  // which changes which files are linted.
+  it('should declare ancestor .eslintignore files as inputs', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+    const inputs = results.projects['libs/a'].targets.lint.inputs;
+
+    expect(inputs).toContain('{workspaceRoot}/.eslintignore');
+    expect(inputs).toContain('{workspaceRoot}/libs/.eslintignore');
+    // The project's own directory is covered by `default`.
+    expect(inputs).not.toContain('{workspaceRoot}/libs/a/.eslintignore');
+  });
+
+  it('should declare jsPlugins packages as externalDependencies and local jsPlugins as file inputs', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"jsPlugins":["@nx/oxlint/boundaries-plugin","some-plugin/entry","./tools/local-plugin.js"],"rules":{}}`,
+      'tools/local-plugin.js': `export default { meta: {}, rules: {} };`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+    const inputs = results.projects['libs/a'].targets.lint.inputs;
+
+    // The plugin code produces the lint results, so upgrading it must
+    // invalidate the cache.
+    expect(inputs).toContainEqual({
+      externalDependencies: ['oxlint', '@nx/oxlint', 'some-plugin'],
+    });
+    expect(inputs).toContain('{workspaceRoot}/tools/local-plugin.js');
+  });
+
+  it('should collect jsPlugins declared in an extended config', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"extends":["./configs/base.json"],"rules":{}}`,
+      'configs/base.json': `{"jsPlugins":["@acme/oxlint-plugin"],"rules":{}}`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+
+    expect(results.projects['libs/a'].targets.lint.inputs).toContainEqual({
+      externalDependencies: ['oxlint', '@acme/oxlint-plugin'],
+    });
+  });
+
   // Target `inputs` only. The separate per-project list that feeds the plugin's
   // cache key is computed elsewhere and is not observable here — mutating it
   // leaves this test green.
