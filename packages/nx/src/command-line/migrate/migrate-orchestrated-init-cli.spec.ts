@@ -224,4 +224,21 @@ describe('migrate() orchestrated init dispatch', () => {
       );
     }
   );
+
+  it.each<[string, boolean | undefined, string[]]>([
+    ['forwards --validate=false to the run', false, ['--no-validate']],
+    [
+      'leaves the validation policy unset when the flag is omitted',
+      undefined,
+      [],
+    ],
+  ])('%s', async (_label, validate, extraArgs) => {
+    await migrate(root, runMigrationsArgs({ validate }), [
+      '--run-migrations',
+      ...extraArgs,
+    ]);
+
+    // Raw flag value on purpose: the run records the resolved policy itself.
+    expect(mockRunOrchestratorInit.mock.calls[0][0].validate).toBe(validate);
+  });
 });

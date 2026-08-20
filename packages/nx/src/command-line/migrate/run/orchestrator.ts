@@ -1,5 +1,18 @@
 import { execSync } from 'child_process';
-import { existsSync, mkdirSync, rmSync } from 'fs';
+import { randomBytes } from 'crypto';
+import {
+  closeSync,
+  constants as fsConstants,
+  fstatSync,
+  lstatSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+  type BigIntStats,
+} from 'fs';
 import { dirname, join } from 'path';
 import { writeJsonFile } from '../../../utils/fileutils';
 import {
@@ -73,11 +86,18 @@ import {
 } from './util';
 import { singleLine } from '../text';
 import {
+  emitRunbookBlock,
   emitStepBlock,
   logToAgent,
   safeLines,
   warnToAgent,
 } from './agent-output';
+import {
+  renderRunbook,
+  RUNBOOK_FILE_NAME,
+  type RunbookContext,
+} from './runbook';
+import { detectPackageManager } from '../../../utils/package-manager';
 
 // The dark migrate orchestrator: drives a durable run one dispense at a time.
 // An outer AI agent runs each dispensed command and re-invokes `nx migrate
@@ -102,6 +122,9 @@ export interface RunOrchestratorInitInput {
   skipInstall: boolean;
   // Workspace-local nx version; the v23 cutoff for the .gitignore fallback.
   installedNxVersion: string;
+  // The `--validate` flag as the user passed it (undefined when omitted); the
+  // run records the resolved policy the same way it records skipInstall.
+  validate: boolean | undefined;
 }
 
 export interface RunOrchestratorReconcileInput {
@@ -171,6 +194,7 @@ export async function runOrchestratorInit(
     commitPrefix,
     skipInstall,
     installedNxVersion,
+    validate,
   } = input;
   const planHash = computePlanHash(migrationsJson);
 
@@ -263,6 +287,8 @@ export async function runOrchestratorInit(
     createCommits,
     commitPrefix,
     ...(skipInstall ? { skipInstall: true } : {}),
+    validate: validate !== false,
+    runbookPath: RUNBOOK_FILE_NAME,
     rounds: [
       {
         index: 0,
@@ -290,6 +316,14 @@ export async function runOrchestratorInit(
     // crash in between must not leave an active run without its plan.
     mkdirSync(dir, { recursive: true });
     writeJsonFile(join(dir, PLAN_SNAPSHOT_0), migrationsJson);
+    // The runbook gets the same crash guarantee: a discoverable run always
+    // has the runbook a resume re-emits from disk. 'wx' creates without
+    // following links, so nothing pre-planted at the path can redirect it.
+    writeFileSync(
+      join(dir, RUNBOOK_FILE_NAME),
+      renderRunbook(runbookContext(root, runId, state)),
+      { flag: 'wx' }
+    );
     createRun(root, state);
     return null;
   });
@@ -298,7 +332,7 @@ export async function runOrchestratorInit(
     return;
   }
 
-  finishInit(root, dir, runId, state);
+  finishInit(root, dir, runId, state, 'created');
 }
 
 // Reads the newest active run, refusing one whose plan differs from the
@@ -358,16 +392,23 @@ function resumeRun(root: string, runId: string, state: MigrateRunState): void {
   if (state.createCommits) {
     assertScratchDirSafeForCommits(root, continueRunHint(runId));
   }
+  // Read, repair, or refuse the runbook before the checkpoint retry and the
+  // analytics watermark: an invocation that cannot provide the run's
+  // contract must not first change git history or durable run state.
+  const runbook = ensureRunbook(root, dir, runId, state);
+  if (runbook === null) {
+    return;
+  }
   // A run flagged checkpointFailed gets one more chance to capture the
   // pre-existing tree state before its first migration commit absorbs it.
   const resumed = ensureCheckpoint(root, dir, state);
   announceResume(runId, resumed);
-  finishInit(root, dir, runId, resumed);
+  finishInit(root, dir, runId, resumed, 'resumed', runbook);
 }
 
-// The dispense that follows says nothing about the steps already behind it, so
-// a resumed run is otherwise indistinguishable from a fresh one that happens
-// to start partway down the plan.
+// The initialized response that follows says nothing about the steps already
+// behind it, so a resumed run is otherwise indistinguishable from a fresh one
+// that happens to start partway down the plan.
 function announceResume(runId: string, state: MigrateRunState): void {
   const applied = state.steps.filter((s) => s.status === 'succeeded').length;
   const skipped = state.steps.filter((s) => s.status === 'skipped').length;
@@ -448,12 +489,19 @@ function checkpointEntry(
 }
 
 // Shared tail of a fresh and a resumed init: emit the init analytics once per
-// run (watermark-guarded) and emit the current dispense.
+// run (watermark-guarded), then a runbook-only response. No migration step is
+// dispensed here: the agent reads the runbook first and asks for the run's
+// current step by reconciling, so the contract always lands before the first
+// command does.
 function finishInit(
   root: string,
   dir: string,
   runId: string,
-  state: MigrateRunState
+  state: MigrateRunState,
+  origin: 'created' | 'resumed',
+  // The runbook bytes when the caller already ensured them (the resume path,
+  // which must fail before its git and state side effects).
+  runbook?: string
 ): void {
   let current = state;
   if (!current.analytics.startEmitted) {
@@ -475,7 +523,151 @@ function finishInit(
       });
     }
   }
-  advanceAndDispense(root, dir, runId, current);
+  const content = runbook ?? ensureRunbook(root, dir, runId, current);
+  if (content === null) {
+    return;
+  }
+  emitRunbookBlock(runId, content);
+  const instructionLines = [
+    `Nx ${origin} migrate run ${runId}. No migration step ran in this response.`,
+    `Read the runbook above; it is the contract for driving this run. Then run the "next" command to get the run's current step.`,
+  ];
+  const lines = safeLines(instructionLines);
+  logToAgent({ title: `nx migrate: run ${origin}`, bodyLines: lines });
+  emitStepBlock(runId, '-', 'initialized', {
+    next: reconcileCommand(root, runId),
+    instructions: lines.join('\n'),
+  });
+}
+
+// Ensures the run's runbook is present and readable, returning its bytes. A
+// missing file is re-rendered only by the nx version that created the run:
+// the runbook's content is version-locked, and a different nx re-rendering it
+// would silently hand the agent a contract the run was not created under.
+// Returns null after emitting the exit-0 refusal when neither holds.
+function ensureRunbook(
+  root: string,
+  dir: string,
+  runId: string,
+  state: MigrateRunState
+): string | null {
+  const filePath = join(dir, state.runbookPath ?? RUNBOOK_FILE_NAME);
+  const stat = lstatRunbook(filePath);
+  if (stat?.isFile()) {
+    // The read is the proof the entry is usable: a runbook the agent cannot
+    // read must not pass the guard, so read errors (an unreadable mode, an
+    // I/O failure) propagate before the run advances. The read goes through
+    // a descriptor: O_NOFOLLOW makes a symlink swapped in after the lstat
+    // fail the open (ELOOP) instead of being followed, and O_NONBLOCK stops
+    // a planted FIFO blocking the open (same guard as owned-private-dir.ts).
+    const fd = openSync(
+      filePath,
+      fsConstants.O_RDONLY |
+        (fsConstants.O_NOFOLLOW ?? 0) |
+        (fsConstants.O_NONBLOCK ?? 0)
+    );
+    try {
+      // The descriptor must be the inspected regular file itself. The inode
+      // comparison carries the guarantee where the open flags cannot:
+      // Windows has neither O_NOFOLLOW nor O_NONBLOCK, so a followed
+      // replacement shows up only as a different inode.
+      const fdStat = fstatSync(fd, { bigint: true });
+      if (
+        !fdStat.isFile() ||
+        fdStat.dev !== stat.dev ||
+        fdStat.ino !== stat.ino
+      ) {
+        throw new Error(
+          `${MIGRATE_RUNS_RELATIVE_DIR}/${runId}/${RUNBOOK_FILE_NAME} was replaced while being read; ${continueRunHint(
+            runId
+          )}`
+        );
+      }
+      return readFileSync(fd, 'utf-8');
+    } finally {
+      closeSync(fd);
+    }
+  }
+  if (stat) {
+    // A directory here is a corrupted run dir; erasing its contents as a side
+    // effect of a reconcile is not this code's call to make.
+    if (stat.isDirectory()) {
+      throw new Error(
+        `${MIGRATE_RUNS_RELATIVE_DIR}/${runId}/${RUNBOOK_FILE_NAME} is a directory, not the runbook file nx wrote there. Remove it, then ${continueRunHint(
+          runId
+        )}`
+      );
+    }
+    // Any other non-regular entry (a symlink most likely) would redirect the
+    // re-render write below outside the run directory; unlink it, without
+    // traversal. Removal failures propagate: falling through to the write
+    // would follow a symlink that could not be removed.
+    rmSync(filePath, { force: true });
+  }
+  if (state.nxVersion !== nxVersion) {
+    const reason = [
+      `The runbook for run '${runId}' is missing from ${MIGRATE_RUNS_RELATIVE_DIR}/${runId}, and this nx (${nxVersion}) cannot re-render the one nx ${singleLine(
+        state.nxVersion
+      )} wrote.`,
+      `Restore the file, re-run with the nx version that created the run, or remove ${MIGRATE_RUNS_RELATIVE_DIR}/${runId} to abandon the run (migrations it already applied remain applied).`,
+    ];
+    warnToAgent({ title: reason[0], bodyLines: [reason[1]] });
+    emitStepBlock(runId, '-', 'error', {
+      instructions: reason.join('\n'),
+    });
+    return null;
+  }
+  const content = renderRunbook(runbookContext(root, runId, state));
+  // Published via rename so no reader can ever observe a partial runbook at
+  // the path: partial bytes only exist under the temp name, a crashed repair
+  // leaves the path missing rather than truncated, and rename replaces
+  // whatever sits at the destination (a concurrent repair's identical render,
+  // or a re-planted symlink) without following it. The random suffix matches
+  // writeRunState's temp naming: a pid would collide across PID namespaces
+  // sharing the workspace, and each invocation must only ever touch its own
+  // temp file. 'wx' creates without following links, so anything planted at
+  // the temp name fails the repair instead of redirecting it.
+  const tmpPath = `${filePath}~${randomBytes(4).toString('hex')}`;
+  writeFileSync(tmpPath, content, { flag: 'wx' });
+  renameSync(tmpPath, filePath);
+  updateRunState(dir, (fresh) =>
+    fresh.runbookPath ? null : { ...fresh, runbookPath: RUNBOOK_FILE_NAME }
+  );
+  warnToAgent({
+    title: `The runbook for run '${runId}' was missing; it has been re-rendered.`,
+  });
+  return content;
+}
+
+// lstat that treats only a missing entry as null; other inspection failures
+// (permissions, I/O) propagate rather than masquerading as "missing". Bigint
+// stats so the inode identity compared above cannot lose precision.
+function lstatRunbook(filePath: string): BigIntStats | null {
+  try {
+    return lstatSync(filePath, { bigint: true });
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException)?.code === 'ENOENT') {
+      return null;
+    }
+    throw e;
+  }
+}
+
+function runbookContext(
+  root: string,
+  runId: string,
+  state: MigrateRunState
+): RunbookContext {
+  return {
+    runId,
+    packageManager: detectPackageManager(root),
+    nxInvocation: `${pmExecPrefix(root)} nx`,
+    reconcileCommand: reconcileCommand(root, runId),
+    createCommits: state.createCommits,
+    // The same `!== false` read the flag itself gets, so a run recorded
+    // without the field renders validation on.
+    validate: state.validate !== false,
+  };
 }
 
 export async function runOrchestratorReconcile(
@@ -502,6 +694,22 @@ export async function runOrchestratorReconcile(
   // can itself commit a settled prompt step.
   if (state.createCommits) {
     assertScratchDirSafeForCommits(root, continueRunHint(runId));
+  }
+
+  // The runbook is the run's persisted contract, and reconcile is the command
+  // a compacted or restarted session recovers through; read, repair, or
+  // refuse it here, before any fold or dispense, so the run can never advance
+  // while the contract is unavailable. A completed run owes no recovery, and
+  // neither does an active run whose steps are all terminal: no work can
+  // advance, the only thing left is to persist and emit the self-contained
+  // terminal response, and hiding it behind a missing contract would leave
+  // the run active forever.
+  if (
+    state.status !== 'completed' &&
+    firstActionableStep(state) !== undefined &&
+    ensureRunbook(root, dir, runId, state) === null
+  ) {
+    return;
   }
 
   // (a) fold handoffs into prompt outcomes (committing completed ones).
@@ -1042,7 +1250,7 @@ function dispenseNextStep(
 
 function emitNextStep(root: string, runId: string, step: MigrateStep): void {
   const migrationId = step.migrationId;
-  emit(runId, step, 'next-step', {
+  emit(root, runId, step, 'next-step', {
     command: workerCommand(root, migrationId, runId),
     next: reconcileCommand(root, runId),
     instructionLines: [
@@ -1100,7 +1308,7 @@ function emitRetryFailed(
   // checks above would accept: git can vouch for the tracked tree only, and
   // an agent that follows `next` blindly must not rerun a generator over
   // writes nothing here could see. Choosing a retry has to be explicit.
-  emit(runId, step, 'retry-failed', {
+  emit(root, runId, step, 'retry-failed', {
     ...(pending ? {} : { next: reconcileCommand(root, runId, 'retry') }),
     instructionLines: lines,
   });
@@ -1341,7 +1549,7 @@ function emitDied(
   // cannot be verified against writes git does not see, and adopting records
   // a result nothing checked, so an agent that follows `next` blindly must
   // land on neither.
-  emit(runId, step, 'died', {
+  emit(root, runId, step, 'died', {
     ...(resume ? { next: reconcileCommand(root, runId, 'retry') } : {}),
     instructionLines: lines,
   });
@@ -1364,7 +1572,7 @@ function emitStillRunning(
       )} minutes and may be hung. Verify pid ${step.pid}; either keep waiting, or kill it so the next reconcile can classify it as died.`
     );
   }
-  emit(runId, step, 'still-running', {
+  emit(root, runId, step, 'still-running', {
     next: reconcileCommand(root, runId),
     instructionLines: lines,
   });
@@ -1396,7 +1604,7 @@ function emitAwaitPrompt(
   if (rejection.length > 0) {
     lines.push('', ...rejection);
   }
-  emit(runId, step, 'await-prompt', {
+  emit(root, runId, step, 'await-prompt', {
     next: reconcileCommand(root, runId),
     instructionLines: lines,
   });
@@ -1446,13 +1654,17 @@ function describeRejectedHandoff(handoffPath: string): string[] {
 // exit would tell the driving agent that reconcile itself crashed, and it
 // would stop reading for the correction it is being handed.
 function emitError(root: string, runId: string, reason: string): void {
+  // A rejected action is an active response like any dispense, so it carries
+  // the runbook footer: the master receiving it may have just lost its
+  // context. One sanitized array feeds both outputs, as in emit().
+  const lines = safeLines([reason, ...runbookFooterLines(root, runId)]);
   warnToAgent({
     title: 'The requested --step-action could not be applied.',
-    bodyLines: [reason],
+    bodyLines: lines,
   });
   emitStepBlock(runId, '-', 'error', {
     next: reconcileCommand(root, runId),
-    instructions: reason,
+    instructions: lines.join('\n'),
   });
   reportMigrateOrchestratorDispense({ action: 'error', attempt: 0 });
 }
@@ -1545,21 +1757,47 @@ interface DispensePayload {
 }
 
 function emit(
+  root: string,
   runId: string,
   step: MigrateStep,
   action: string,
   payload: DispensePayload
 ): void {
   const { instructionLines, ...rest } = payload;
+  const withFooter = instructionLines
+    ? [...instructionLines, ...runbookFooterLines(root, runId)]
+    : undefined;
   // One sanitized array feeds both, so the block payload says exactly what the
   // human echo said.
-  const lines = instructionLines ? safeLines(instructionLines) : undefined;
+  const lines = withFooter ? safeLines(withFooter) : undefined;
   logToAgent({ title: `nx migrate: ${action}`, bodyLines: lines });
   emitStepBlock(runId, step.id, action, {
     ...rest,
     ...(lines ? { instructions: lines.join('\n') } : {}),
   });
   reportMigrateOrchestratorDispense({ action, attempt: step.attempt });
+}
+
+// Appended to every step dispense and rejected-action response so a session
+// that lost its context is always one line away from the contract. The
+// complete output and the missing-runbook refusal (which cannot point at a
+// readable file) stand alone. Reconcile ensures the file before dispensing;
+// the lstat gate covers the paths that legitimately skip that recovery (a
+// completed run's rejected action) without ever naming a non-regular entry.
+function runbookFooterLines(root: string, runId: string): string[] {
+  if (
+    lstatRunbook(join(runDir(root, runId), RUNBOOK_FILE_NAME))?.isFile() !==
+    true
+  ) {
+    return [];
+  }
+  return [
+    ``,
+    `Runbook: ${MIGRATE_RUNS_RELATIVE_DIR}/${runId}/${RUNBOOK_FILE_NAME}. After a compaction or restart, re-read it and run \`${reconcileCommand(
+      root,
+      runId
+    )}\`; never infer the run's progress from memory.`,
+  ];
 }
 
 // Raw argv is forwarded verbatim across the wrapper hops, so every flag is a
