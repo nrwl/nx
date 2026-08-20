@@ -11,8 +11,10 @@ import {
   isTsEsmSyntaxError,
   NODENEXT_ESM_RESOLVER_SOURCE,
   nodeNextEsmResolveHook,
+  registerSourceGraphResolver,
   resolveTsNodeEsmCompilerOptions,
 } from './register';
+import * as typescriptUtils from './typescript';
 
 // Avoid a real swc registration side effect when exercising getTranspiler.
 // The source loads this with a bare require (CJS channel), so stub the
@@ -687,4 +689,77 @@ new Function('s', 'return import(s)')(process.argv[3]).then(
 
     expect(result).toEqual({ ok: true, url: configUrl, kind: 1 });
   }, 60_000);
+});
+
+describe('registerSourceGraphResolver', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('limits workspace conditions to imports from a tracked source graph', () => {
+    const nodeModule = require('node:module') as typeof import('node:module');
+    const deregister = vi.fn();
+    let resolveHook: Function;
+    vi.spyOn(nodeModule, 'registerHooks').mockImplementation(({ resolve }) => {
+      resolveHook = resolve;
+      return { deregister };
+    });
+    vi.spyOn(
+      typescriptUtils,
+      'getRootTsConfigResolveExportsConditions'
+    ).mockReturnValue(['source']);
+
+    const cleanup = registerSourceGraphResolver(
+      '/workspace/plugin.ts',
+      '/workspace',
+      ['@proj/utils']
+    );
+    const calls: Array<{ specifier: string; conditions: string[] }> = [];
+    const nextResolve = (
+      specifier: string,
+      context: { conditions: string[] }
+    ) => {
+      calls.push({ specifier, conditions: context.conditions });
+      return {
+        url:
+          specifier === './lazy.js'
+            ? 'file:///workspace/lazy.ts'
+            : 'file:///workspace/packages/utils/src/index.ts',
+      };
+    };
+    const context = (parentURL: string) => ({
+      conditions: ['node'],
+      importAttributes: {},
+      parentURL,
+    });
+
+    resolveHook(
+      '@proj/utils',
+      context('file:///workspace/plugin.ts'),
+      nextResolve
+    );
+    resolveHook(
+      '@proj/utils',
+      context('file:///workspace/built-generator.js'),
+      nextResolve
+    );
+    resolveHook(
+      './lazy.js',
+      context('file:///workspace/plugin.ts'),
+      nextResolve
+    );
+    resolveHook(
+      '@proj/utils',
+      context('file:///workspace/lazy.ts'),
+      nextResolve
+    );
+
+    expect(calls).toEqual([
+      { specifier: '@proj/utils', conditions: ['node', 'source'] },
+      { specifier: '@proj/utils', conditions: ['node'] },
+      { specifier: './lazy.js', conditions: ['node'] },
+      { specifier: '@proj/utils', conditions: ['node', 'source'] },
+    ]);
+
+    cleanup();
+    expect(deregister).toHaveBeenCalled();
+  });
 });

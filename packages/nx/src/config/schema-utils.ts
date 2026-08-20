@@ -3,6 +3,7 @@ import { join, relative } from 'path';
 import { resolve as resolveExports } from 'resolve.exports';
 import {
   loadTsFile,
+  registerSourceGraphResolver,
   requireWithTsconfigFallback,
 } from '../plugins/js/utils/register';
 import { getWorkspacePackagesMetadata } from '../plugins/js/utils/packages';
@@ -71,12 +72,21 @@ export function getImplementationFactory<T>(
   const [implementationModulePath, implementationExportName] =
     implementation.split('#');
   return () => {
-    const modulePath = resolveImplementation(
+    const { path: modulePath, isSource } = resolveImplementationWithMetadata(
       implementationModulePath,
       directory,
       packageName,
       projects
     );
+    if (isSource) {
+      // ponytail: factories have no unload lifecycle; repeated loads refresh
+      // and reuse this bounded per-entry resolver state.
+      registerSourceGraphResolver(
+        modulePath,
+        workspaceRoot,
+        Object.keys(getWorkspacePackagesMetadata(projects).packageToProjectMap)
+      );
+    }
     // Route .ts entrypoints through loadTsFile so the native-strip ->
     // swc/ts-node fallback chain runs. Plain require() bypasses the matcher
     // set and bubbles errors like extensionless `./schema` imports (strict
@@ -103,6 +113,20 @@ export function resolveImplementation(
   packageName: string,
   projects: Record<string, ProjectConfiguration>
 ): string {
+  return resolveImplementationWithMetadata(
+    implementationModulePath,
+    directory,
+    packageName,
+    projects
+  ).path;
+}
+
+function resolveImplementationWithMetadata(
+  implementationModulePath: string,
+  directory: string,
+  packageName: string,
+  projects: Record<string, ProjectConfiguration>
+): { path: string; isSource: boolean } {
   const validImplementations = ['', '.js', '.ts'].map(
     (x) => implementationModulePath + x
   );
@@ -119,7 +143,7 @@ export function resolveImplementation(
         projects
       );
       if (maybeImplementationFromSource) {
-        return maybeImplementationFromSource;
+        return { path: maybeImplementationFromSource, isSource: true };
       }
     }
   }
@@ -127,13 +151,14 @@ export function resolveImplementation(
   for (const maybeImplementation of validImplementations) {
     const maybeImplementationPath = join(directory, maybeImplementation);
     if (existsSync(maybeImplementationPath)) {
-      return maybeImplementationPath;
+      return { path: maybeImplementationPath, isSource: false };
     }
 
     try {
-      return require.resolve(maybeImplementation, {
-        paths: [directory],
-      });
+      return {
+        path: require.resolve(maybeImplementation, { paths: [directory] }),
+        isSource: false,
+      };
     } catch {}
   }
 
