@@ -1188,9 +1188,9 @@ async function determineNoneOptions(
       }));
     }
 
-    // `ts-standalone` is the only preset on this stack that generates source;
-    // `apps`, `ts` and `npm` reach no generator that takes a formatter, and
-    // `@nx/js:library` no longer defaults one for it.
+    // `ts-standalone` is the only preset left to ask here: `ts` returned above
+    // with its own prompt, and `apps` and `npm` generate no project, so nothing
+    // downstream would apply an answer. An explicit `--formatter` still carries.
     const formatter =
       preset === Preset.TsStandalone
         ? await determineFormatterOptions(parsedArgs)
