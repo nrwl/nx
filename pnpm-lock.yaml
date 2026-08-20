@@ -147,9 +147,6 @@ catalogs:
     chalk:
       specifier: ^4.1.0
       version: 4.1.2
-    enquirer:
-      specifier: ~2.3.6
-      version: 2.3.6
     gpt3-tokenizer:
       specifier: ^1.1.5
       version: 1.1.5
@@ -422,9 +419,6 @@ importers:
       core-js:
         specifier: 3.36.1
         version: 3.36.1
-      enquirer:
-        specifier: 'catalog:'
-        version: 2.3.6
       form-data:
         specifier: ^4.0.6
         version: 4.0.6
@@ -564,6 +558,9 @@ importers:
       '@babel/runtime':
         specifier: ^7.22.6
         version: 7.28.3
+      '@clack/prompts':
+        specifier: 'catalog:'
+        version: 1.7.0
       '@eslint/compat':
         specifier: ^2.0.5
         version: 2.0.5(eslint@9.39.4(jiti@2.7.0))
