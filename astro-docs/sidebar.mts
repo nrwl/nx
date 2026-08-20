@@ -365,10 +365,6 @@ const learnGroups: SidebarItems = [
                 label: 'Azure SAML',
                 link: 'enterprise/single-tenant/azure-saml',
               },
-              {
-                label: 'Prometheus metrics',
-                link: 'enterprise/single-tenant/prometheus-metrics',
-              },
             ],
           },
           {

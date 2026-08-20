@@ -1,8 +1,15 @@
 ---
-title: Prometheus Metrics
-description: Scrape workspace-level Prometheus metrics from a single-tenant Nx Cloud instance
+title: Scrape Prometheus metrics from Nx Cloud
+description: Scrape workspace-level Prometheus metrics from a single-tenant Nx Cloud instance with Grafana Alloy or Prometheus, and manage the service account credentials.
 filter: 'type:Guides'
+topics:
+  - 'Nx Cloud'
 ---
+
+{% aside type="caution" title="Nx Enterprise" %}
+Workspace metrics are available for hosted [Nx Cloud single-tenant deployments](/docs/enterprise/single-tenant/overview).
+[Contact the Nx team](https://nx.dev/enterprise) to add them to your deployment.
+{% /aside %}
 
 Single-tenant Nx Cloud instances expose workspace-level metrics in the Prometheus exposition
 format.
