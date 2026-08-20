@@ -831,7 +831,17 @@ async function foldHandoffs(
       handoffPath(dir, splitMigrationId(step.migrationId))
     );
     if (!result.ok) continue; // still awaiting; the dispense asks to settle it
-    const promptOutcome = handoffToPromptOutcome(result.handoff);
+    let promptOutcome = handoffToPromptOutcome(result.handoff);
+    // A skipped handoff on a validation pass is not a skipped migration: the
+    // generator's changes are already applied, so the step completes and its
+    // commit lands. Folding it as 'skipped' would report the migration as not
+    // run and strand the changes as commit debt.
+    if (
+      step.awaitingKind === 'generator-validation' &&
+      promptOutcome.status === 'skipped'
+    ) {
+      promptOutcome = { ...promptOutcome, status: 'completed' };
+    }
     // The commit and the install are side effects, so they happen before the
     // fold, outside the lock; the transition and its ledger entry then land in
     // one fresh-state write. A crash cannot leave the step settled with its
@@ -1591,12 +1601,25 @@ function emitAwaitPrompt(
   // without its directory is what would force the agent to `mkdir -p`. Same
   // reason the classic runner pre-creates it in run-step.ts.
   mkdirSync(dirname(filePath), { recursive: true });
-  const lines = [
-    `Migration ${migrationId} is a prompt-based migration awaiting your outcome.`,
-    `Apply the prompt (see the worker's earlier <nx_migrate_prompt> block), then write the handoff file and run the "next" command.`,
+  const validating = step.awaitingKind === 'generator-validation';
+  const lines = validating
+    ? [
+        `Migration ${migrationId} ran its generator; its changes are awaiting your validation.`,
+        `Validate them (see the worker's earlier <nx_migrate_prompt> block and the runbook's validation scope rules), then write the handoff file and run the "next" command.`,
+      ]
+    : [
+        `Migration ${migrationId} is a prompt-based migration awaiting your outcome.`,
+        `Apply the prompt (see the worker's earlier <nx_migrate_prompt> block), then write the handoff file and run the "next" command.`,
+      ];
+  lines.push(
     `Handoff file: ${filePath}`,
-    `Handoff JSON: { "status": "success" | "failed", "summary": "<what you did>" }. To mark the prompt not applicable, use "status": "success" with "outcome": "skipped".`,
-  ];
+    // No skipped outcome is offered for a validation pass: the generator's
+    // changes are already applied, so "validation not needed" still completes
+    // the migration (and the fold treats a skipped handoff that way).
+    validating
+      ? `Handoff JSON: { "status": "success" | "failed", "summary": "<what you verified>" }. If validation does not apply here, use "status": "success" and say so in the summary.`
+      : `Handoff JSON: { "status": "success" | "failed", "summary": "<what you did>" }. To mark the prompt not applicable, use "status": "success" with "outcome": "skipped".`
+  );
   // A handoff that exists but can't be read/parsed/validated is a rejection,
   // not a still-awaited outcome. Naming why stops the run from re-emitting the
   // same await forever while the agent leaves the bad file in place.

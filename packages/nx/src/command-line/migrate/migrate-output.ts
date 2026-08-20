@@ -55,9 +55,7 @@ export function logAgenticSuccessOutcome(
  * `skipAgentic`, plus a verbose note for any `agentContext` the waiver
  * dropped. A hybrid waives its paired prompt; a generator-only migration
  * waives the validation pass, so callers must reach here only once they know
- * one was on the table. Under `inside-agent` only a hybrid can, so the
- * hand-off dropped alongside is always a prompt's; a waived generator-only
- * migration keeps its own. The note is author-facing, hence `--verbose`.
+ * one was on the table. The note is author-facing, hence `--verbose`.
  */
 export function logWaivedAgenticStep(
   migration: {

@@ -153,9 +153,29 @@ export interface MigrateStep {
   // fields.
   awaitingKind?: MigrateStepAwaitingKind;
   // Set once a step's generator half has run, before the commit is attempted,
-  // so a retry after a failed commit or install re-emits only the prompt (or
-  // commits what is already in the tree) instead of reapplying the changes.
+  // so a retry after a failed commit or install re-emits only the remaining
+  // agent work (the prompt, or the validation pass) or commits what is
+  // already in the tree, instead of reapplying the changes.
   generatorCompleted?: boolean;
+  // Set alongside `generatorCompleted` when the generator waived its AI step
+  // via `skipAgentic`, so a retry does not re-emit a prompt or validation
+  // pass the migration said was unnecessary. Discarded with the marker when a
+  // clean retry reruns the generator, which re-decides the waiver.
+  agenticWaived?: boolean;
+  // Set alongside `generatorCompleted` when the generator's changes owe the
+  // run's validation pass (validation on, changes made, not waived). A retry
+  // cannot recompute this: the decision needs the generator result, which is
+  // gone with the attempt that ran it. Absent means none was owed, including
+  // on states written by an older nx, whose runs never owed one. Discarded
+  // with the marker on a clean retry.
+  validationOwed?: boolean;
+  // Whether the completed generator changed any files, written with the
+  // marker as an explicit boolean: it decides whether a retry owes a commit,
+  // and a no-op step's commit would absorb unrelated pending diffs under its
+  // name. Absent means the marker came from an older nx that did not record
+  // it, and the retry keeps that version's commit behavior. Discarded with
+  // the marker on a clean retry.
+  generatorMadeChanges?: boolean;
   // Set when the run could not install the dependency changes this step left
   // behind, cleared by the next install that lands. The invocation that hit
   // the failure warns and exits, so without this the completion report could
@@ -399,6 +419,9 @@ function isStepShape(value: unknown): boolean {
     (value.awaitingKind === undefined ||
       isOneOf(MIGRATE_STEP_AWAITING_KINDS, value.awaitingKind)) &&
     isOptionalBoolean(value.generatorCompleted) &&
+    isOptionalBoolean(value.agenticWaived) &&
+    isOptionalBoolean(value.validationOwed) &&
+    isOptionalBoolean(value.generatorMadeChanges) &&
     isOptionalBoolean(value.installFailed) &&
     // A cross-field invariant the rest of the loop relies on: a running step
     // without a pid is never reclassified as died and no step action targets

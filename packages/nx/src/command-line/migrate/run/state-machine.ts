@@ -6,6 +6,7 @@ import type {
   MigrateCommitLedgerEntry,
   MigrateRunState,
   MigrateStep,
+  MigrateStepAwaitingKind,
   MigrateStepOutcome,
   MigrateStepPromptOutcome,
 } from './run-state';
@@ -32,6 +33,7 @@ export type StepEvent =
       type: 'awaitPromptOutcome';
       stepId: string;
       finishedAt: string;
+      awaitingKind: MigrateStepAwaitingKind;
     }
   // `foldPromptOutcome` and `markDied` carry the attempt they were observed
   // on. Both are written after an unlocked read, and both source statuses
@@ -45,7 +47,18 @@ export type StepEvent =
     }
   // Emitted between the generator half and the commit attempt, so a retry
   // after a failed commit or install does not reapply the generator.
-  | { type: 'markGeneratorCompleted'; stepId: string }
+  // `agenticWaived` records whether the generator waived its AI step via
+  // `skipAgentic`, `validationOwed` whether its changes owe the run's
+  // validation pass, and `madeChanges` whether it changed any files (which
+  // decides if a retry owes a commit); a retry cannot recompute any of them
+  // without rerunning the generator, so all three persist with the marker.
+  | {
+      type: 'markGeneratorCompleted';
+      stepId: string;
+      agenticWaived: boolean;
+      validationOwed: boolean;
+      madeChanges: boolean;
+    }
   | { type: 'markDied'; stepId: string; attempt: number }
   // `attempt` binds the action to the attempt the caller validated (its
   // acceptance gates run outside the locked state write), so the locked
@@ -125,11 +138,21 @@ export function applyStepEvent(
         ...step,
         status: 'awaiting-prompt-outcome',
         finishedAt: event.finishedAt,
+        awaitingKind: event.awaitingKind,
       });
 
     case 'markGeneratorCompleted':
       if (step.status !== 'running') return illegal(step, event.type);
-      return commit(state, index, { ...step, generatorCompleted: true });
+      return commit(state, index, {
+        ...step,
+        generatorCompleted: true,
+        ...(event.agenticWaived ? { agenticWaived: true } : {}),
+        ...(event.validationOwed ? { validationOwed: true } : {}),
+        // Written as an explicit boolean either way: absent is reserved for
+        // markers an older nx wrote, whose retries keep that version's
+        // commit behavior.
+        generatorMadeChanges: event.madeChanges,
+      });
 
     case 'foldPromptOutcome':
       if (step.status !== 'awaiting-prompt-outcome')
@@ -266,6 +289,20 @@ function rearm(
       : {}),
     ...(keepGeneratorCompleted && step.generatorCompleted
       ? { generatorCompleted: true }
+      : {}),
+    // The waiver and the owed validation are facts about the generator run
+    // whose changes the marker preserves; they travel with the marker and are
+    // re-decided when a clean retry reruns the generator.
+    ...(keepGeneratorCompleted && step.generatorCompleted && step.agenticWaived
+      ? { agenticWaived: true }
+      : {}),
+    ...(keepGeneratorCompleted && step.generatorCompleted && step.validationOwed
+      ? { validationOwed: true }
+      : {}),
+    ...(keepGeneratorCompleted &&
+    step.generatorCompleted &&
+    step.generatorMadeChanges !== undefined
+      ? { generatorMadeChanges: step.generatorMadeChanges }
       : {}),
   };
 }

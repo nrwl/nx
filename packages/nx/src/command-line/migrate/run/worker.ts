@@ -5,7 +5,6 @@ import { getLatestCommitSha, isGitRepository } from '../../../utils/git-utils';
 import { readJsonFile } from '../../../utils/fileutils';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { readModulePackageJson } from '../../../utils/package-json';
-import { isInsideAgent } from '../agentic/inception';
 import { printDroppedAgentContextForOuterAgent } from '../agentic/print-dropped-agent-context';
 import type {
   AgenticRunContext,
@@ -62,6 +61,7 @@ import {
   type MigrateCommitLedgerEntry,
   type MigrateRunState,
   type MigrateStep,
+  type MigrateStepAwaitingKind,
   type MigrateStepOutcome,
 } from './run-state';
 import { RUN_ID_SAFE } from './run-id';
@@ -550,11 +550,12 @@ async function runRecorded(
   let state = readRunState(dir);
 
   // A recorded run never resolves the agentic flow (the outer agent drives
-  // it); prompts are emitted for that agent or printed for a user hand-running
-  // the dispensed command.
-  const agenticKind: ResolvedAgentic['kind'] = isInsideAgent()
-    ? 'inside-agent'
-    : 'disabled';
+  // it), and the dispensed command is part of the orchestrated protocol
+  // whoever re-runs it (the driving agent, a subagent it spawned, or a user's
+  // shell). Agent work is therefore always emitted as a structured block:
+  // gating it on ambient agent detection would park the step awaiting an
+  // outcome whose payload was never emitted.
+  const agenticKind: ResolvedAgentic['kind'] = 'inside-agent';
 
   const migrationId = `${migration.package}:${migration.name}`;
   // The plan was read from the latest round's snapshot, so only that round's
@@ -580,8 +581,9 @@ async function runRecorded(
 
   // A prior attempt's generator half already ran, so this attempt must not
   // reapply it against a tree that already holds its changes: a hybrid
-  // re-emits only its prompt, and a plain generator step has nothing left to
-  // do but the install and commit its previous attempt failed on.
+  // re-emits only its prompt, a validating generator step re-emits only its
+  // validation pass, and one whose AI step was waived (or that has none) has
+  // nothing left but the install and commit its previous attempt failed on.
   // Read from the state the start transition returned: a delayed invocation
   // may have claimed a later attempt whose flag its entry snapshot predates.
   const startedStep = state.steps.find((s) => s.id === step.id);
@@ -590,15 +592,58 @@ async function runRecorded(
   // are re-invoked by the loop and never carry the user's flags; an explicit
   // --skip-install on this invocation still applies on top of it.
   const effectiveSkipInstall = state.skipInstall === true || skipInstall;
+  // The run records the resolved validation policy at init; absent (a state
+  // predating the field) falls back to the same default init applies.
+  const shouldValidate = state.validate !== false;
+  // Re-installs what changed since the step's persisted baseline before its
+  // work is handed back to the agent on a retry: the prompt or validation may
+  // need the dependencies the earlier attempt's generator added.
+  const reinstallFromBaseline = () =>
+    recordingInstallFailure(dir, step.id, () =>
+      installDepsChangedSinceDispense(
+        root,
+        dir,
+        startedStep,
+        effectiveSkipInstall,
+        `${formatSingleMigrationRerunCommand(migrationId)} --run-id=${runId}`
+      )
+    );
 
   let outcome: MigrateStepOutcome | undefined;
+  // Set when this attempt handed work back to the agent (a prompt to apply,
+  // or a validation pass over the generator's changes); the step then parks
+  // in 'awaiting-prompt-outcome' instead of succeeding.
+  let awaitingKind: MigrateStepAwaitingKind | undefined;
   try {
-    if (
-      isPromptOnlyMigration(migration) ||
-      (generatorAlreadyCompleted && isHybridMigration(migration))
-    ) {
+    if (isPromptOnlyMigration(migration)) {
       emitOrPrintPrompt(root, migration, agenticKind);
+      awaitingKind = 'migration-prompt';
+    } else if (
+      generatorAlreadyCompleted &&
+      startedStep.agenticWaived !== true &&
+      isHybridMigration(migration)
+    ) {
+      await reinstallFromBaseline();
+      emitOrPrintPrompt(root, migration, agenticKind);
+      awaitingKind = 'migration-prompt';
+    } else if (
+      generatorAlreadyCompleted &&
+      startedStep.validationOwed === true
+    ) {
+      // The earlier attempt's changes owed a validation pass that never
+      // settled (its install, park, or fold failed), so this attempt still
+      // owes it; the persisted flag is the only record, since the decision
+      // needed the generator result that is gone with that attempt. The
+      // captured generator output is gone too, so the emission points at the
+      // tree instead, and the commit stays with the fold as on a first
+      // attempt. A true waiver never writes the flag.
+      await reinstallFromBaseline();
+      emitValidationBlock(root, migration, undefined);
+      awaitingKind = 'generator-validation';
     } else if (generatorAlreadyCompleted) {
+      // Reached when the AI step was waived by the earlier attempt, or the
+      // step never owed one (no changes, validation off, or an older-nx
+      // state): only the install and commit are left.
       state = await finishCompletedGenerator(
         dir,
         root,
@@ -625,24 +670,48 @@ async function runRecorded(
         migration.package,
         root
       );
-      const { changes, nextSteps, agentContext, logs, madeChanges } =
-        await runNxOrAngularMigration(
-          root,
-          migration,
-          isVerbose,
-          isHybridMigration(migration),
-          resolvedCollection
-        );
+      const {
+        changes,
+        nextSteps,
+        agentContext,
+        skipAgentic,
+        logs,
+        madeChanges,
+      } = await runNxOrAngularMigration(
+        root,
+        migration,
+        isVerbose,
+        // Captured whenever an agent step may consume it: a hybrid's prompt
+        // payload, or the validation pass over the generator's changes.
+        isHybridMigration(migration) || shouldValidate,
+        resolvedCollection
+      );
+
+      // Mirrors the classic loop: a validation pass is on the table only for
+      // a generator-only migration that changed something, and skipAgentic
+      // waives an AI step only when one was owed.
+      const validationApplies =
+        shouldValidate && !isHybridMigration(migration) && changes.length > 0;
+      const waivedAgenticStep =
+        skipAgentic && (isHybridMigration(migration) || validationApplies);
+      const validationOwed = validationApplies && !waivedAgenticStep;
 
       // Recorded before the commit is attempted: from here on the changes are
       // in the tree, so a failed install or commit must leave a retry with
-      // only those left to do rather than running the generator again.
+      // only those left to do rather than running the generator again. The
+      // waiver and the owed validation ride along so that retry re-emits
+      // exactly the agent work this attempt decided was owed.
       state = transition(dir, {
         type: 'markGeneratorCompleted',
         stepId: step.id,
+        agenticWaived: waivedAgenticStep,
+        validationOwed,
+        madeChanges,
       });
 
-      if (!isHybridMigration(migration)) {
+      if (waivedAgenticStep) {
+        logWaivedAgenticStep(migration, agentContext);
+      } else if (!isHybridMigration(migration) && !validationApplies) {
         forwardDroppedAgentContext(migration, agentContext, agenticKind);
       }
 
@@ -650,10 +719,15 @@ async function runRecorded(
         recordingInstallFailure(dir, step.id, () =>
           installer.installDepsIfChanged()
         );
+
       // Commits follow the run config, not CLI flags, and only when the
-      // generator changed something: a no-op step must not create a commit (nor
-      // a ledger entry) that absorbs prior pending diffs under its name.
-      if (state.createCommits && madeChanges) {
+      // generator changed something: a no-op step must not create a commit
+      // (nor a ledger entry) that absorbs prior pending diffs under its name.
+      // A step handing off a validation pass defers its commit to the fold so
+      // a failed validation leaves the changes uncommitted for review, as in
+      // the classic loop; the install still runs first because the agent may
+      // run tasks that need what the generator added.
+      if (state.createCommits && madeChanges && !validationOwed) {
         state = await commitStepChanges(
           dir,
           root,
@@ -674,7 +748,15 @@ async function runRecorded(
 
       printNextSteps(migration, nextSteps);
 
-      if (isHybridMigration(migration)) {
+      if (validationOwed) {
+        emitValidationBlock(
+          root,
+          migration,
+          { logs, changes, agentContext },
+          resolvedCollection
+        );
+        awaitingKind = 'generator-validation';
+      } else if (isHybridMigration(migration) && !waivedAgenticStep) {
         emitOrPrintPrompt(
           root,
           migration,
@@ -686,6 +768,7 @@ async function runRecorded(
           },
           resolvedCollection
         );
+        awaitingKind = 'migration-prompt';
       } else {
         outcome = buildOutcome(changes, nextSteps, migration.description, root);
       }
@@ -702,14 +785,15 @@ async function runRecorded(
     throw e;
   }
 
-  // A prompt half (prompt-only, or the prompt phase of a hybrid) is applied by
-  // a separate actor, so the step parks in awaiting-prompt-outcome and this
+  // Handed-back work (a prompt half, or a validation pass) is applied by a
+  // separate actor, so the step parks in awaiting-prompt-outcome and this
   // process exits successfully.
-  if (isPromptOnlyMigration(migration) || isHybridMigration(migration)) {
+  if (awaitingKind !== undefined) {
     transition(dir, {
       type: 'awaitPromptOutcome',
       stepId: step.id,
       finishedAt: nowIso(),
+      awaitingKind,
     });
     return;
   }
@@ -780,7 +864,11 @@ async function finishCompletedGenerator(
         `${formatSingleMigrationRerunCommand(migrationId)} --run-id=${runId}`
       )
     );
-  if (!state.createCommits) {
+  // Same guard as the first attempt: a no-op step's commit would absorb
+  // unrelated pending diffs under its name. Only an explicit false skips it;
+  // absent means an older nx wrote the marker without recording the answer,
+  // and the commit is kept as that version's retries did.
+  if (!state.createCommits || step.generatorMadeChanges === false) {
     await installDeps();
     return state;
   }
@@ -1074,6 +1162,50 @@ function printPromptForUser(
     title: `Prompt-based migration ${migration.package}: ${migration.name} must be applied manually`,
     bodyLines,
   });
+}
+
+// The validation counterpart of a hybrid's prompt emission: the generator ran
+// without an AI-driven part, and the run's validation pass hands its changes
+// back through a structured block. `impl` is absent on a retry, where the
+// generator ran in an earlier attempt and its captured output is gone; the
+// emission then points at the tree instead.
+function emitValidationBlock(
+  root: string,
+  migration: PlannedMigration,
+  impl:
+    | { logs: string; changes: FileChange[]; agentContext: string[] }
+    | undefined,
+  resolvedCollection?: ResolvedMigrationCollection
+): void {
+  const migrationId = `${migration.package}:${migration.name}`;
+  const documentationPath = resolveDocumentationPath(
+    root,
+    migration,
+    resolvedCollection
+  );
+
+  // `kind` is what tells the block apart from an applied-prompt payload,
+  // which carries `prompt` instead.
+  const payload: Record<string, unknown> = {
+    migrationId,
+    kind: 'generator-validation',
+  };
+  if (documentationPath) payload.documentationPath = documentationPath;
+  if (impl) {
+    payload.impl = {
+      logs: impl.logs,
+      changes: impl.changes.map((c) => ({ type: c.type, path: c.path })),
+      ...(impl.agentContext.length > 0
+        ? { agentContext: impl.agentContext }
+        : {}),
+    };
+  }
+  logToAgent({
+    title: impl
+      ? `The following migration's generator ran without an AI-driven part. Validate its changes per the runbook's validation scope rules, then continue.`
+      : `The following migration's generator ran in an earlier attempt and its changes still await validation. Inspect them with git, validate them per the runbook's validation scope rules, then continue.`,
+  });
+  emitPromptBlock(migrationId, payload);
 }
 
 // Non-fatal: documentation is supplementary, so a failure warns and the
