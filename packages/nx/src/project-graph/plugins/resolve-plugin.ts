@@ -32,6 +32,11 @@ type LocalPluginMatch = {
   resolvedFile?: string;
 };
 
+type LocalPluginResolution = {
+  isSource: boolean;
+  path: string;
+};
+
 const TS_SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.cts', '.mts']);
 
 let projectsWithoutInference: Record<string, ProjectConfiguration>;
@@ -68,13 +73,21 @@ export async function resolveNxPlugin(
     }
   }
 
-  const { pluginPath, name, shouldRegisterTSTranspiler } = getPluginPathAndName(
+  const result = getPluginPathAndName(
     moduleName,
     paths,
     projectsWithoutInference,
     root
   );
-  return { pluginPath, name, shouldRegisterTSTranspiler };
+  const packageToProjectMap = projectsWithoutInference
+    ? getWorkspacePackagesMetadata(projectsWithoutInference).packageToProjectMap
+    : undefined;
+  return {
+    ...result,
+    workspacePackageNames: packageToProjectMap
+      ? Object.keys(packageToProjectMap)
+      : [],
+  };
 }
 
 /**
@@ -136,6 +149,7 @@ export function getPluginPathAndName(
   root: string
 ) {
   let pluginPath: string | undefined;
+  let isSourcePlugin = false;
 
   // Resolve local workspace plugins from source first so the workspace's
   // `customConditions`/`development` exports condition wins over the built
@@ -147,7 +161,13 @@ export function getPluginPathAndName(
     ? resolveLocalNxPlugin(moduleName, projects, root)
     : null;
   if (localPlugin) {
-    pluginPath = tryResolveLocalPluginFromSource(moduleName, localPlugin, root);
+    const resolution = tryResolveLocalPluginFromSource(
+      moduleName,
+      localPlugin,
+      root
+    );
+    pluginPath = resolution?.path;
+    isSourcePlugin = resolution?.isSource ?? false;
     if (!pluginPath && getSubpathOfLocalPackage(moduleName, localPlugin)) {
       throwUnresolvableLocalPluginError(moduleName, localPlugin, root);
     }
@@ -184,7 +204,7 @@ export function getPluginPathAndName(
     existsSync(packageJsonPath) // plugin has a package.json
       ? readJsonFile(packageJsonPath) // read name from package.json
       : { name: moduleName };
-  return { pluginPath, name, shouldRegisterTSTranspiler };
+  return { pluginPath, name, shouldRegisterTSTranspiler, isSourcePlugin };
 }
 
 function getSubpathOfLocalPackage(
@@ -202,9 +222,9 @@ function tryResolveLocalPluginFromSource(
   moduleName: string,
   plugin: LocalPluginMatch,
   root: string
-): string | null {
+): LocalPluginResolution | null {
   if (plugin.resolvedFile) {
-    return plugin.resolvedFile;
+    return { path: plugin.resolvedFile, isSource: true };
   }
 
   const subpath = getSubpathOfLocalPackage(moduleName, plugin);
@@ -218,7 +238,7 @@ function tryResolveLocalPluginFromSource(
   }
 
   const main = readPluginMainFromProjectConfiguration(plugin.projectConfig);
-  return main ? path.join(root, main) : null;
+  return main ? { path: path.join(root, main), isSource: true } : null;
 }
 
 function throwUnresolvableLocalPluginError(
@@ -251,7 +271,7 @@ function resolveSubpathFromExports(
   projectPath: string,
   subpath: string,
   root: string
-): string | null {
+): LocalPluginResolution | null {
   const packageExports = projectConfig.metadata?.js?.packageExports;
   if (!packageExports) {
     return null;
@@ -270,10 +290,20 @@ function resolveSubpathFromExports(
       return null;
     }
 
+    let defaultMatches: string[] | void;
+    try {
+      defaultMatches = resolveExports(pkg, subpath, { conditions: [] });
+    } catch {}
+    const isSource = !defaultMatches || defaultMatches[0] !== matches[0];
+
     for (const match of matches) {
       const candidate = path.join(projectPath, match);
       if (existsSync(candidate)) {
-        return candidate;
+        return {
+          path: candidate,
+          isSource:
+            isSource || TS_SOURCE_EXTENSIONS.has(path.extname(candidate)),
+        };
       }
     }
   } catch (e) {

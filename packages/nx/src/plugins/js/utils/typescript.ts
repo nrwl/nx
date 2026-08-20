@@ -112,14 +112,9 @@ export function getRootTsConfigPath(): string | null {
   return tsConfigFileName ? join(workspaceRoot, tsConfigFileName) : null;
 }
 
-const customConditionsCache = new Map<string, string[]>();
 export function getRootTsConfigCustomConditions(
   root: string = workspaceRoot
 ): string[] {
-  if (customConditionsCache.has(root)) {
-    return customConditionsCache.get(root)!;
-  }
-
   // Resolve via the TypeScript API rather than a raw JSON read so that
   // `customConditions` inherited through `extends` chains are honored —
   // matches what TypeScript itself sees when resolving package exports.
@@ -140,7 +135,6 @@ export function getRootTsConfigCustomConditions(
     break;
   }
 
-  customConditionsCache.set(root, conditions);
   return conditions;
 }
 
@@ -159,7 +153,7 @@ export function getRootTsConfigResolveExportsConditions(
 }
 
 /**
- * Node `--conditions <name>` CLI args for spawning a plugin worker or the daemon
+ * Node `--conditions <name>` CLI args for spawning an isolated plugin worker
  * with the plugin-resolution conditions active at startup. Mirrors the set Nx
  * uses to resolve the plugin entry (`getRootTsConfigResolveExportsConditions`)
  * so the entry and the plugin's transitive workspace imports resolve the same
