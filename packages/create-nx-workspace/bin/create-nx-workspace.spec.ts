@@ -477,3 +477,116 @@ describe('determinePresetOptions', () => {
     }
   );
 });
+
+// The choice list is ordered, not just filtered: the leading entry is both the
+// interactive default and the answer a skipped prompt resolves to. A rewrite
+// that dropped the ordering sent every non-interactive workspace to `none`.
+describe('determineUnitTestRunner', () => {
+  const base = {
+    interactive: false,
+    workspaces: true,
+    name: 'myorg',
+    linter: 'oxlint',
+  } as any;
+
+  const stacks: Record<
+    string,
+    { args: Record<string, unknown>; expected: string; excluded: string }
+  > = {
+    'react (vite)': {
+      args: {
+        stack: 'react',
+        preset: Preset.ReactMonorepo,
+        appName: 'app',
+        framework: 'none',
+        style: 'css',
+        bundler: 'vite',
+        e2eTestRunner: 'playwright',
+        useReactRouter: false,
+        workspaceType: 'integrated',
+      },
+      expected: 'vitest',
+      excluded: '',
+    },
+    'react (webpack)': {
+      args: {
+        stack: 'react',
+        preset: Preset.ReactMonorepo,
+        appName: 'app',
+        framework: 'none',
+        style: 'css',
+        bundler: 'webpack',
+        e2eTestRunner: 'playwright',
+        useReactRouter: false,
+        workspaceType: 'integrated',
+      },
+      expected: 'jest',
+      excluded: '',
+    },
+    vue: {
+      args: {
+        stack: 'vue',
+        preset: Preset.VueMonorepo,
+        appName: 'app',
+        framework: 'none',
+        style: 'css',
+        e2eTestRunner: 'playwright',
+        workspaceType: 'integrated',
+      },
+      expected: 'vitest',
+      excluded: 'jest',
+    },
+    node: {
+      args: {
+        stack: 'node',
+        preset: Preset.NodeMonorepo,
+        appName: 'app',
+        framework: 'none',
+        docker: false,
+        e2eTestRunner: 'jest',
+        workspaceType: 'integrated',
+      },
+      expected: 'jest',
+      excluded: 'vitest',
+    },
+  };
+
+  beforeEach(() => {
+    (clack.autocomplete as jest.Mock).mockClear();
+  });
+
+  it.each(Object.keys(stacks))(
+    'should answer %s with its preferred runner when not interactive',
+    async (stack) => {
+      const { args, expected } = stacks[stack];
+
+      const result = await determinePresetOptions({ ...base, ...args } as any);
+
+      expect(result.unitTestRunner).toBe(expected);
+    }
+  );
+
+  it.each(Object.keys(stacks).filter((s) => stacks[s].excluded))(
+    'should not offer %s an excluded runner',
+    async (stack) => {
+      const { args, excluded } = stacks[stack];
+      (clack.autocomplete as jest.Mock).mockImplementation(
+        async ({ options }) => options[0].value
+      );
+
+      await determinePresetOptions({
+        ...base,
+        ...args,
+        interactive: true,
+      } as any);
+
+      const question = (clack.autocomplete as jest.Mock).mock.calls
+        .map(([q]) => q)
+        .find((q) => String(q?.message ?? '').includes('unit test runner'));
+      expect(question).toBeDefined();
+      expect(
+        question.options.map((o: { value: string }) => o.value)
+      ).not.toContain(excluded);
+    }
+  );
+});

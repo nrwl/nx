@@ -1951,15 +1951,31 @@ async function determineUnitTestRunner<T extends 'none' | 'jest' | 'vitest'>(
     return undefined;
   }
 
+  // `none` sorts last and the preferred runner first, because the leading
+  // choice is both the interactive default and the answer a skipped prompt
+  // resolves to. Callers pass `exclude` to keep a runner they cannot support
+  // off the list entirely.
+  const choices = (
+    [
+      { value: 'none', label: 'None' },
+      { value: 'jest', label: 'Jest   [ https://jestjs.io/ ]' },
+      { value: 'vitest', label: 'Vitest [ https://vitest.dev/ ]' },
+    ] as const
+  )
+    .filter((t) => !options?.exclude || options.exclude !== t.value)
+    .sort((a, b) => {
+      if (a.value === 'none') return 1;
+      if (b.value === 'none') return -1;
+      if (options?.preferVitest && a.value === 'vitest') return -1;
+      if (options?.preferVitest && b.value === 'vitest') return 1;
+      return 0;
+    });
+
   const reply = {
     unitTestRunner: await selectPrompt<'none' | 'jest' | 'vitest'>({
       message: 'Which unit test runner would you like to use?',
-      choices: [
-        { value: 'none', label: 'None' },
-        { value: 'jest', label: 'Jest   [ https://jestjs.io/ ]' },
-        { value: 'vitest', label: 'Vitest [ https://vitest.dev/ ]' },
-      ],
-      initial: 'none',
+      choices: [...choices],
+      initial: choices[0].value,
       skip: !parsedArgs.interactive || isCI(),
     }),
   };
