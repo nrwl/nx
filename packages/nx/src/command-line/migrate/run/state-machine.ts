@@ -146,6 +146,9 @@ export function applyStepEvent(
       return commit(state, index, {
         ...step,
         generatorCompleted: true,
+        // The lineage boundary for stored agent-work payloads: a retry never
+        // re-hands one from an attempt before the marker's own.
+        generatorCompletedAtAttempt: step.attempt,
         ...(event.agenticWaived ? { agenticWaived: true } : {}),
         ...(event.validationOwed ? { validationOwed: true } : {}),
         // Written as an explicit boolean either way: absent is reserved for
@@ -289,6 +292,11 @@ function rearm(
       : {}),
     ...(keepGeneratorCompleted && step.generatorCompleted
       ? { generatorCompleted: true }
+      : {}),
+    ...(keepGeneratorCompleted &&
+    step.generatorCompleted &&
+    step.generatorCompletedAtAttempt !== undefined
+      ? { generatorCompletedAtAttempt: step.generatorCompletedAtAttempt }
       : {}),
     // The waiver and the owed validation are facts about the generator run
     // whose changes the marker preserves; they travel with the marker and are
