@@ -2,9 +2,8 @@
 // second load with "Provided module is not an instance of Module". Running the
 // binary sidesteps that and still exercises real formatting.
 //
-// Caveat: this hands options to the CLI, which honours the config-file-only
-// keys (`overrides`, `ignorePatterns`) that production's `format()` drops -
-// so the mock is more capable than the API it stands in for.
+// The config-file-only keys are stripped below, so the double drops exactly what
+// `format()` drops.
 const { execFileSync } = require('child_process');
 const { mkdtempSync, rmSync, writeFileSync } = require('fs');
 const { tmpdir } = require('os');
@@ -30,7 +29,12 @@ exports.format = async function format(fileName, sourceText, options) {
   const configDir = mkdtempSync(path.join(tmpdir(), 'nx-oxfmt-jest-'));
   try {
     const configPath = path.join(configDir, '.oxfmtrc.json');
-    writeFileSync(configPath, JSON.stringify(options ?? {}), 'utf-8');
+    // `format()` takes `FormatConfig`; a config file takes `Oxfmtrc`, which adds
+    // `overrides` and `ignorePatterns`. Handing those to the CLI would let the
+    // double honour keys the real API ignores, so a test could pass on the CLI
+    // applying an override that production has to apply itself.
+    const { overrides, ignorePatterns, ...formatConfig } = options ?? {};
+    writeFileSync(configPath, JSON.stringify(formatConfig), 'utf-8');
 
     const code = execFileSync(
       'node',
