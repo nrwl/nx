@@ -88,6 +88,10 @@ const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   'POSH_SESSION_ID',
   'MISE_SHELL',
 
+  // Editor preference; graph computation is non-interactive
+  'EDITOR',
+  'VISUAL',
+
   // Output presentation
   'PAGER',
   'FORCE_COLOR',

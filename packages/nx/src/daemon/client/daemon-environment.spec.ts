@@ -154,6 +154,16 @@ describe('daemon environment', () => {
       expect(env.MISE_SHELL).toBeUndefined();
     });
 
+    it('should exclude editor preference vars', () => {
+      process.env.EDITOR = 'vim';
+      process.env.VISUAL = 'code --wait';
+
+      const env = getDaemonEnv();
+
+      expect(env.EDITOR).toBeUndefined();
+      expect(env.VISUAL).toBeUndefined();
+    });
+
     it('should exclude AI agent vars', () => {
       process.env.AI_AGENT = 'claude-code_2-1-228_agent';
       process.env.CODEX_THREAD_ID = 'per-session-id';
