@@ -1,10 +1,14 @@
-import { dirname, isAbsolute, join, resolve, sep } from 'path';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'path';
 import { existsSync, readFileSync } from 'fs';
 import type { TsConfigOptions } from 'ts-node';
 import type { CompilerOptions } from 'typescript';
 import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
 import { workspaceRoot } from '../../../utils/workspace-root';
-import { getRootTsConfigPath, readTsConfigWithoutFiles } from './typescript';
+import {
+  getRootTsConfigPath,
+  getRootTsConfigResolveExportsConditions,
+  readTsConfigWithoutFiles,
+} from './typescript';
 
 const swcNodeInstalled = packageIsInstalled('@swc-node/register');
 const tsNodeInstalled = packageIsInstalled('ts-node/register');
@@ -416,95 +420,133 @@ const isInvokedByTsx: boolean = (() => {
   );
 })();
 
-let resolveConditionsInjected = false;
+type SourceGraph = {
+  conditions: string[];
+  modules: Set<string>;
+  packageNames: Set<string>;
+  root: string;
+};
+
+const sourceGraphs = new Map<string, SourceGraph>();
+let sourceGraphHooks: { deregister(): void } | undefined;
 
 /**
- * Make Node's module resolver honor the given export conditions for the rest of
- * the process, via `module.registerHooks()`. Used when a local plugin is loaded
- * from source in-process (no child process to pass `--conditions` to at spawn):
- * the hook appends the conditions to every resolution so the plugin's transitive
- * workspace imports resolve to source the same way the plugin entry did.
+ * Apply workspace export conditions only to known workspace-package imports
+ * reached from an explicitly source-loaded entry. Relative source imports are
+ * tracked so lazy imports remain in the same graph; third-party modules are not.
  *
- * No-op when:
- *   - `conditions` is empty (nothing to inject);
- *   - every target condition is already active at startup (a spawned plugin
- *     worker or daemon was launched with the full `--conditions` set, so Node's
- *     resolver already honors them and the per-resolve hook would be redundant);
- *   - `module.registerHooks` is unavailable (Node < 22.15 / < 23.5). Those
- *     runtimes keep the `NODE_OPTIONS=--conditions` escape hatch.
- *
- * Idempotent and best-effort.
+ * Requires synchronous module hooks (Node 22.15+ / 23.5+). Older runtimes keep
+ * the isolated-worker behavior and can opt into conditions at process startup.
  */
-export function ensureResolveConditionsInjected(conditions: string[]): void {
-  if (resolveConditionsInjected) return;
-  resolveConditionsInjected = true;
-
-  if (!conditions.length) return;
-
-  // Skip only when Node already honors every target condition (e.g. a worker or
-  // daemon spawned with the full `--conditions` set); a partial overlap still
-  // needs the hook to add the missing ones.
-  const activeConditions = getConditionsActiveAtStartup();
-  if (conditions.every((condition) => activeConditions.has(condition))) return;
-
+export function registerSourceGraphResolver(
+  entryPath: string,
+  root: string,
+  workspacePackageNames: string[]
+): () => void {
   const module = require('node:module') as typeof import('node:module');
-  const registerHooks = (
-    module as typeof module & {
-      registerHooks?: (opts: {
-        resolve?: (
-          specifier: string,
-          context: { conditions?: string[] },
-          nextResolve: (specifier: string, context?: unknown) => unknown
-        ) => unknown;
-      }) => unknown;
-    }
-  ).registerHooks;
-  if (typeof registerHooks !== 'function') return;
+  if (typeof module.registerHooks !== 'function') {
+    return () => {};
+  }
 
+  const { pathToFileURL } = require('node:url') as typeof import('node:url');
+  const entryUrl = normalizeModuleUrl(pathToFileURL(entryPath).href);
+  const graph = sourceGraphs.get(entryUrl);
+  if (graph) {
+    graph.conditions = getRootTsConfigResolveExportsConditions(root);
+    graph.packageNames = new Set(workspacePackageNames);
+    return () => {};
+  }
+
+  sourceGraphs.set(entryUrl, {
+    conditions: getRootTsConfigResolveExportsConditions(root),
+    modules: new Set([entryUrl]),
+    packageNames: new Set(workspacePackageNames),
+    root,
+  });
+
+  sourceGraphHooks ??= module.registerHooks({
+    resolve(specifier, context, nextResolve) {
+      const parentUrl = context.parentURL
+        ? normalizeModuleUrl(context.parentURL)
+        : undefined;
+      // ponytail: linear in loaded source plugins; index by parent URL if this
+      // becomes hot in workspaces with hundreds of in-process plugins.
+      const sourceGraph = parentUrl
+        ? [...sourceGraphs.values()].find((g) => g.modules.has(parentUrl))
+        : undefined;
+      if (!sourceGraph) {
+        return nextResolve(specifier, context);
+      }
+
+      const result = sourceGraph.packageNames.has(
+        getPackageNameFromSpecifier(specifier)
+      )
+        ? nextResolve(specifier, {
+            ...context,
+            conditions: appendConditions(
+              context.conditions,
+              sourceGraph.conditions
+            ),
+          })
+        : nodeNextEsmResolveHook(specifier, context, nextResolve);
+
+      if (isWorkspaceModuleUrl(result.url, sourceGraph.root)) {
+        sourceGraph.modules.add(normalizeModuleUrl(result.url));
+      }
+      return result;
+    },
+  });
+
+  return () => {
+    sourceGraphs.delete(entryUrl);
+    if (sourceGraphs.size === 0) {
+      sourceGraphHooks?.deregister();
+      sourceGraphHooks = undefined;
+    }
+  };
+}
+
+function appendConditions(current: string[], additions: string[]): string[] {
+  const conditions = [...current];
+  for (const condition of additions) {
+    if (!conditions.includes(condition)) {
+      conditions.push(condition);
+    }
+  }
+  return conditions;
+}
+
+function getPackageNameFromSpecifier(specifier: string): string {
+  const segments = specifier.split('/');
+  return specifier.startsWith('@')
+    ? segments.slice(0, 2).join('/')
+    : segments[0];
+}
+
+function normalizeModuleUrl(url: string): string {
   try {
-    registerHooks.call(module, {
-      resolve(specifier, context, nextResolve) {
-        const merged = context.conditions
-          ? [...context.conditions, ...conditions]
-          : conditions;
-        return nextResolve(specifier, { ...context, conditions: merged });
-      },
-    });
+    const normalized = new URL(url);
+    normalized.search = '';
+    normalized.hash = '';
+    return normalized.href;
   } catch {
-    // Best-effort: leave Node's native resolution in place rather than failing.
+    return url;
   }
 }
 
-/**
- * Export conditions this process was started with, parsed from `--conditions`
- * (or its `-C` alias) in `process.execArgv` and `NODE_OPTIONS`. Node's resolver
- * already honors these, so the injected hook only needs to cover target
- * conditions not present here.
- */
-function getConditionsActiveAtStartup(): Set<string> {
-  const active = new Set<string>();
-  const collect = (tokens: string[]) => {
-    for (let i = 0; i < tokens.length; i++) {
-      const token = tokens[i];
-      if (token === '--conditions' || token === '-C') {
-        const value = tokens[i + 1];
-        if (value) {
-          active.add(value);
-          i++;
-        }
-      } else if (token.startsWith('--conditions=')) {
-        active.add(token.slice('--conditions='.length));
-      } else if (token.startsWith('-C=')) {
-        active.add(token.slice('-C='.length));
-      }
-    }
-  };
-
-  collect(process.execArgv ?? []);
-  const nodeOptions = process.env.NODE_OPTIONS;
-  if (nodeOptions) collect(nodeOptions.split(/\s+/).filter(Boolean));
-
-  return active;
+function isWorkspaceModuleUrl(url: string, root: string): boolean {
+  if (!url.startsWith('file:')) {
+    return false;
+  }
+  const { fileURLToPath } = require('node:url') as typeof import('node:url');
+  const relativePath = relative(root, fileURLToPath(url));
+  return (
+    relativePath !== '' &&
+    relativePath !== '..' &&
+    !relativePath.startsWith(`..${sep}`) &&
+    !isAbsolute(relativePath) &&
+    !relativePath.split(sep).includes('node_modules')
+  );
 }
 
 /**
