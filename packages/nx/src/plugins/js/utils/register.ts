@@ -513,7 +513,7 @@ export function registerSourceGraphResolver(
       const parentUrl = context.parentURL
         ? normalizeModuleUrl(context.parentURL)
         : undefined;
-      // ponytail: linear in loaded source plugins; index by parent URL if this
+      // This is linear in loaded source plugins. Index by parent URL if it
       // becomes hot in workspaces with hundreds of in-process plugins.
       const sourceGraph = parentUrl
         ? [...sourceGraphs.values()].find((g) => g.modules.has(parentUrl))
