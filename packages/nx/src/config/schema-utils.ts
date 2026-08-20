@@ -79,8 +79,8 @@ export function getImplementationFactory<T>(
       projects
     );
     if (isSource) {
-      // ponytail: factories have no unload lifecycle; repeated loads refresh
-      // and reuse this bounded per-entry resolver state.
+      // Factories have no unload lifecycle; repeated loads refresh and reuse
+      // this bounded per-entry resolver state.
       registerSourceGraphResolver(
         modulePath,
         workspaceRoot,
