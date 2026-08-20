@@ -5,9 +5,9 @@ import {
   writeJsonFile,
   type ExecutorContext,
 } from '@nx/devkit';
-import { createLockFile, createPackageJson, getLockFileName } from '@nx/js';
+import { createPackageJson, generatePrunedDeployOutput } from '@nx/js';
 import { fork } from 'child_process';
-import { copySync, mkdir, statSync, writeFileSync } from 'fs-extra';
+import { copySync, mkdir, statSync } from 'fs-extra';
 import { join } from 'path';
 import { type RemixBuildSchema } from './schema';
 import { warnRemixBuildExecutorDeprecation } from '../../utils/deprecation';
@@ -68,6 +68,7 @@ export default async function buildExecutor(
   if (!outputIsDirectory) {
     mkdir(options.outputPath);
   }
+  const packageManager = detectPackageManager(context.root);
   let packageJson: PackageJson;
   if (options.generatePackageJson) {
     packageJson = createPackageJson(context.projectName, context.projectGraph, {
@@ -85,32 +86,19 @@ export default async function buildExecutor(
     }
 
     updatePackageJson(packageJson, context);
-    writeJsonFile(`${options.outputPath}/package.json`, packageJson);
   } else {
     packageJson = readJsonFile(join(projectRoot, 'package.json'));
   }
 
   if (options.generateLockfile) {
-    const packageManager = detectPackageManager(context.root);
-
-    if (packageManager === 'bun') {
-      logger.warn(
-        'Bun lockfile generation is not supported. The generated package.json will not include a lockfile. Run "bun install" in the output directory after deployment if needed.'
-      );
-    } else {
-      const lockFile = createLockFile(
-        packageJson,
-        context.projectGraph,
-        packageManager
-      );
-      writeFileSync(
-        `${options.outputPath}/${getLockFileName(packageManager)}`,
-        lockFile,
-        {
-          encoding: 'utf-8',
-        }
-      );
-    }
+    generatePrunedDeployOutput(packageJson, context.projectGraph, projectRoot, {
+      outputDirectory: options.outputPath,
+      packageManager,
+      workspaceRoot: context.root,
+    });
+  }
+  if (options.generatePackageJson) {
+    writeJsonFile(`${options.outputPath}/package.json`, packageJson);
   }
 
   // If output path is different from source path, then copy over the config and public files.

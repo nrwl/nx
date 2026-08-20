@@ -29,7 +29,10 @@ export { mergeTargetConfigurations } from './project-graph/utils/project-configu
 export { readProjectConfigurationsFromRootMap } from './project-graph/utils/project-configuration/project-nodes-manager';
 export { findMatchingConfigFiles } from './project-graph/utils/project-configuration-utils';
 export { findMatchingProjects } from './utils/find-matching-projects';
-export { readTargetDefaultsForTarget } from './project-graph/utils/project-configuration/target-defaults';
+export {
+  createTargetDefaultsResults,
+  readTargetDefaultsForTarget,
+} from './project-graph/utils/project-configuration/target-defaults';
 // Only the tree-bound checkers and their type cross the boundary. The
 // primitives they are built from carry preconditions a caller can violate - a
 // chain must be resolved from the file's own directory, and the array it
@@ -142,6 +145,7 @@ export {
 export { createNxCloudOnboardingURL } from './nx-cloud/utilities/url-shorten';
 export {
   createLockFile,
+  generatePrunedDeployOutput,
   getLockFileName,
 } from './plugins/js/lock-file/lock-file';
 export {
@@ -256,6 +260,12 @@ export type {
   PackageJsonDependencySection,
 } from './utils/package-json';
 export { readNxMigrateConfig } from './utils/package-json';
+export {
+  dropEmptyPeerDependencySections,
+  movePeerDependencyToDependencies,
+  relocatePrunedLocalPathSpec,
+  warnUnshippableLocalPathSpec,
+} from './plugins/js/lock-file/pruned-output';
 export type { PackageManagerCommands } from './utils/package-manager';
 // Sourced from the leaf module rather than ./utils/plugins: the barrel index
 // pulls output.ts and core-plugins.ts into the eager closure for a function that
