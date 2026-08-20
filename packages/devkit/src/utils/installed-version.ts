@@ -1,5 +1,5 @@
 import { readModulePackageJson } from 'nx/src/devkit-internals';
-import type { Tree } from 'nx/src/devkit-exports';
+import { readJson, type Tree } from 'nx/src/devkit-exports';
 import { clean, coerce } from 'semver';
 import { getDependencyVersionFromPackageJson } from './package-json';
 
@@ -69,14 +69,10 @@ export function getInstalledPackageVersionFromTree(
   packageName: string
 ): string | null {
   try {
-    const pkgJson = tree.read(
-      `node_modules/${packageName}/package.json`,
-      'utf-8'
+    const { version } = readJson(
+      tree,
+      `node_modules/${packageName}/package.json`
     );
-    if (!pkgJson) {
-      return null;
-    }
-    const version = JSON.parse(pkgJson).version;
     return typeof version === 'string' ? version : null;
   } catch {
     return null;
