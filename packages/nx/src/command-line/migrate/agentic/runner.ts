@@ -88,10 +88,11 @@ export async function runAgentic(
   }
 
   // Counts SIGINTs while the agent runs. Non-zero after exit means the
-  // user pressed Ctrl+C → skip the ambiguous abort/continue prompt, because
-  // enquirer misbehaves in the TTY state left by a SIGINT-killed child
-  // (ERR_USE_AFTER_CLOSE, setRawMode EIO) and the errors surface from async
-  // chains that `await` cannot catch.
+  // user pressed Ctrl+C → skip the ambiguous abort/continue prompt. Prompting
+  // in the TTY state left by a SIGINT-killed child misbehaved under enquirer
+  // (ERR_USE_AFTER_CLOSE, setRawMode EIO) from async chains `await` could not
+  // catch. Whether @clack/prompts shares that fault is unverified, so the skip
+  // stays; reproducing it needs a real terminal.
   let userInterruptCount = 0;
   const swallowSigint = () => {
     userInterruptCount++;
@@ -449,13 +450,14 @@ function escapeCmdCommand(arg: string): string {
 
 async function promptAmbiguous(cause: AmbiguousCause): Promise<HandoffOutcome> {
   // stderr blank line so the spacer lands in the same stream as output.warn
-  // and the enquirer prompt — buffered stdout could otherwise reorder it
-  // and glue the prompt to the agent's trailing exit message.
+  // and the prompt — buffered stdout could otherwise reorder it and glue the
+  // prompt to the agent's trailing exit message.
   process.stderr.write('\n');
-  // Cause rendered ABOVE the prompt rather than inlined into prompt.message:
-  // enquirer's select redraw uses different math for clear (wrap-aware) vs
-  // restore (raw \n-split count), so a multi-line message can leave orphaned
-  // cells on arrow-key re-renders. Keeping message single-line sidesteps it.
+  // Cause rendered ABOVE the prompt rather than inlined into its message:
+  // enquirer's select redraw used different math for clear (wrap-aware) vs
+  // restore (raw \n-split count), so a multi-line message could leave orphaned
+  // cells on arrow-key re-renders. Kept single-line because that constraint is
+  // unverified under @clack/prompts, not because the cause still applies.
   const causeLines = describeAmbiguousCause(cause);
   if (causeLines.length > 0) {
     output.warn({

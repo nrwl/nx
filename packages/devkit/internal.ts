@@ -110,11 +110,11 @@ export {
   CompositeLifeCycle,
   DeletedFileChange,
   type DependsOnEntryLocation,
+  confirmationPrompt,
   // NOTE: distinct from @nx/devkit's public FileChange (generators/tree.ts),
   // which describes a pending Tree write. This one is a per-file diff
   // ({ file, getChanges }), and the two barrels are routinely imported side by
   // side — an editor auto-import can silently pick the wrong one.
-  confirmationPrompt,
   type FileChange,
   type FileDataDependency,
   type FileMapCache,

@@ -19,8 +19,8 @@ export async function normalizeLinterOption(
     return detected;
   }
 
-  // Nothing to follow, so this is a real choice. `{ linter: 'none' }` is the
-  // non-interactive answer; `none` leads so the interactive default matches it.
+  // Nothing to follow, so this is a real choice. `none` is the non-interactive
+  // answer, and leads the list so the interactive default matches it.
   return isInteractive()
     ? selectPrompt<LinterType>({
         message: `Which linter would you like to use?`,
