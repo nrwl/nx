@@ -90,19 +90,23 @@ export interface ConfigEvaluation {
 let inProcessLoad: Promise<void> = Promise.resolve();
 
 /**
- * Loads a Playwright config in this process and returns it with the probe env
- * its evaluation left in `process.env`, then puts `process.env` back the way
- * it was: the task and gate dotenv files expand against it, and a later env
- * comparison has to see the graph-time env, not whatever the last config
- * wrote. Loads are serialized because createNodes evaluates configs
- * concurrently and a concurrent load's writes would be misattributed. A
- * client env applied mid-load (the daemon forwards it as it arrives) is
+ * Loads a Playwright config in this process, hands it to `consume`, and
+ * returns the consumed value with the probe env the evaluation left in
+ * `process.env`, then puts `process.env` back the way it was: the task and
+ * gate dotenv files expand against it, and a later env comparison has to see
+ * the graph-time env, not whatever the last config wrote. `consume` must be
+ * synchronous and must not let the config object escape: a config can expose
+ * getters that read env it set while loading, so every read has to happen
+ * before the restore. Loads are serialized because createNodes evaluates
+ * configs concurrently and a concurrent load's writes would be misattributed.
+ * A client env applied mid-load (the daemon forwards it as it arrives) is
  * re-applied over the restored env; restoring the pre-load values alone would
  * revert it.
  */
-export async function loadConfigWithProbeEnv<T extends object>(
-  configPath: string
-): Promise<{ config: T; probeEnv: ProbeEnv }> {
+export async function loadConfigWithProbeEnv<T extends object, R>(
+  configPath: string,
+  consume: (config: T) => R
+): Promise<{ consumed: R; probeEnv: ProbeEnv }> {
   const previous = inProcessLoad;
   let release: () => void;
   inProcessLoad = new Promise<void>((resolve) => (release = resolve));
@@ -112,7 +116,7 @@ export async function loadConfigWithProbeEnv<T extends object>(
     const before = { ...process.env };
     try {
       const config = await loadConfigFile<T>(configPath);
-      return { config, probeEnv: pickProbeEnv(process.env) };
+      return { consumed: consume(config), probeEnv: pickProbeEnv(process.env) };
     } finally {
       restoreEnv(before);
       const applied = getAppliedDaemonClientEnv();

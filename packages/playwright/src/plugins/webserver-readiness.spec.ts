@@ -579,20 +579,39 @@ describe('loadConfigWithProbeEnv', () => {
     Object.assign(process.env, originalProbeEnv);
   });
 
-  it('returns the config with the probe env its evaluation wrote, then restores the variables', async () => {
+  it('returns the consumed config with the probe env its evaluation wrote, then restores the variables', async () => {
     const path = writeConfig(
       'writes.cjs',
       `process.env.NO_PROXY = 'localhost';
 module.exports = { webServer: { command: 'x' } };`
     );
 
-    const { config, probeEnv } = await loadConfigWithProbeEnv<{
-      webServer: { command: string };
-    }>(path);
+    const { consumed, probeEnv } = await loadConfigWithProbeEnv(
+      path,
+      (config: { webServer: { command: string } }) => config.webServer.command
+    );
 
-    expect(config.webServer.command).toBe('x');
+    expect(consumed).toBe('x');
     expect(probeEnv).toEqual({ NO_PROXY: 'localhost' });
     expect(process.env.NO_PROXY).toBeUndefined();
+  });
+
+  it('consumes the config before restoring, so a getter reading env the load wrote sees it', async () => {
+    // The consumer's reads are the last moment that env exists: after the
+    // restore a lazy getter would read the pre-load value.
+    const path = writeConfig(
+      'getter.cjs',
+      `process.env.PROXY_HOST = 'proxy.example';
+module.exports = { get command() { return process.env.PROXY_HOST; } };`
+    );
+
+    const { consumed } = await loadConfigWithProbeEnv(
+      path,
+      (config: { command: string }) => config.command
+    );
+
+    expect(consumed).toBe('proxy.example');
+    expect(process.env.PROXY_HOST).toBeUndefined();
   });
 
   it("serializes concurrent loads so one config's writes never reach another's probe env", async () => {
@@ -606,8 +625,8 @@ module.exports = {};`
     const reads = writeConfig('reads.cjs', `module.exports = {};`);
 
     const [writesResult, readsResult] = await Promise.all([
-      loadConfigWithProbeEnv(writes),
-      loadConfigWithProbeEnv(reads),
+      loadConfigWithProbeEnv(writes, () => undefined),
+      loadConfigWithProbeEnv(reads, () => undefined),
     ]);
 
     expect(writesResult.probeEnv).toEqual({ NO_PROXY: 'localhost' });
@@ -625,7 +644,7 @@ module.exports = {};`
 module.exports = {};`
     );
 
-    await loadConfigWithProbeEnv(path);
+    await loadConfigWithProbeEnv(path, () => undefined);
 
     expect(process.env.PROXY_HOST).toBeUndefined();
   });
@@ -641,7 +660,7 @@ process.env.HTTP_PROXY = 'http://config.example:8080';
 module.exports = {};`
     );
 
-    const { probeEnv } = await loadConfigWithProbeEnv(path);
+    const { probeEnv } = await loadConfigWithProbeEnv(path, () => undefined);
 
     expect(probeEnv).toEqual({
       NO_PROXY: 'localhost',
@@ -662,7 +681,7 @@ ${applyClientEnv}({ ...process.env });
 module.exports = {};`
     );
 
-    await loadConfigWithProbeEnv(path);
+    await loadConfigWithProbeEnv(path, () => undefined);
 
     expect(process.env.NO_PROXY).toBe('localhost');
   });
@@ -674,7 +693,9 @@ module.exports = {};`
 throw new Error('config boom');`
     );
 
-    await expect(loadConfigWithProbeEnv(path)).rejects.toThrow('config boom');
+    await expect(loadConfigWithProbeEnv(path, () => undefined)).rejects.toThrow(
+      'config boom'
+    );
     expect(process.env.NO_PROXY).toBeUndefined();
   });
 });

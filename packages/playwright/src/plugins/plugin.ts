@@ -270,10 +270,35 @@ async function buildPlaywrightTargets(
   // See: https://github.com/microsoft/playwright/pull/11218/files
   delete (process as any)['__pw_initiator__'];
 
-  const { config: playwrightConfig, probeEnv: ambientProbeEnv } =
-    await loadConfigWithProbeEnv<PlaywrightTestConfig>(
-      join(context.workspaceRoot, configFilePath)
-    );
+  // The reads happen inside the consume callback, before the load's env
+  // writes are restored: the config object can expose getters that read env
+  // it set while loading, so it must not escape the protected scope.
+  const {
+    consumed: {
+      testOutput,
+      reporterOutputs,
+      ambientWebServers,
+      testDir: configTestDir,
+      testMatch,
+      testIgnore,
+    },
+    probeEnv: ambientProbeEnv,
+  } = await loadConfigWithProbeEnv(
+    join(context.workspaceRoot, configFilePath),
+    (config: PlaywrightTestConfig) => ({
+      testOutput: getTestOutput(config),
+      reporterOutputs: getReporterOutputs(config),
+      ambientWebServers: normalizeWebServers(config.webServer),
+      testDir: config.testDir,
+      // Playwright defaults to the following pattern.
+      testMatch: materializeTestPattern(
+        config.testMatch ?? '**/*.@(spec|test).?(c|m)[jt]s?(x)'
+      ),
+      testIgnore: config.testIgnore
+        ? materializeTestPattern(config.testIgnore)
+        : undefined,
+    })
+  );
 
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -284,10 +309,6 @@ async function buildPlaywrightTargets(
 
   const targets: ProjectConfiguration['targets'] = {};
   let metadata: ProjectConfiguration['metadata'];
-
-  const testOutput = getTestOutput(playwrightConfig);
-  const reporterOutputs = getReporterOutputs(playwrightConfig);
-  const ambientWebServers = normalizeWebServers(playwrightConfig.webServer);
 
   // The readiness gate: Playwright's `reuseExistingServer` probe otherwise
   // races the server boot, misses, and spawns its own nested server command
@@ -453,19 +474,17 @@ async function buildPlaywrightTargets(
     metadata = { targetGroups: { [groupName]: [] } };
     const ciTargetGroup = metadata.targetGroups[groupName];
 
-    const testDir = playwrightConfig.testDir
-      ? joinPathFragments(projectRoot, playwrightConfig.testDir)
+    const testDir = configTestDir
+      ? joinPathFragments(projectRoot, configTestDir)
       : projectRoot;
-
-    // Playwright defaults to the following pattern.
-    playwrightConfig.testMatch ??= '**/*.@(spec|test).?(c|m)[jt]s?(x)';
 
     const dependsOn: TargetDependencyConfig[] = [];
 
     const testFiles = await getAllTestFiles({
       context,
       path: testDir,
-      config: playwrightConfig,
+      testMatch,
+      testIgnore,
     });
 
     for (const testFile of testFiles) {
@@ -485,7 +504,9 @@ async function buildPlaywrightTargets(
                 testFile,
                 testFiles,
                 context,
-                config: playwrightConfig,
+                testDir,
+                testMatch,
+                testIgnore,
               },
               null,
               2
@@ -599,17 +620,30 @@ async function buildPlaywrightTargets(
 async function getAllTestFiles(opts: {
   context: CreateNodesContext;
   path: string;
-  config: PlaywrightTestConfig;
+  testMatch: PlaywrightTestConfig['testMatch'];
+  testIgnore: PlaywrightTestConfig['testIgnore'];
 }) {
   const files = await getFilesInDirectoryUsingContext(
     opts.context.workspaceRoot,
     opts.path
   );
-  const matcher = createMatcher(opts.config.testMatch);
-  const ignoredMatcher = opts.config.testIgnore
-    ? createMatcher(opts.config.testIgnore)
+  const matcher = createMatcher(opts.testMatch);
+  const ignoredMatcher = opts.testIgnore
+    ? createMatcher(opts.testIgnore)
     : () => false;
   return files.filter((file) => matcher(file) && !ignoredMatcher(file));
+}
+
+// Copies a test file pattern off a just-loaded config: an array element or a
+// property can be a getter reading env the load wrote, so every read has to
+// happen before that env is restored, and a cloned RegExp leaves no
+// config-owned object behind.
+function materializeTestPattern(
+  pattern: string | RegExp | Array<string | RegExp>
+): string | RegExp | Array<string | RegExp> {
+  const clone = (p: string | RegExp) =>
+    typeof p === 'string' ? p : new RegExp(p.source, p.flags);
+  return Array.isArray(pattern) ? Array.from(pattern, clone) : clone(pattern);
 }
 
 function createMatcher(pattern: string | RegExp | Array<string | RegExp>) {

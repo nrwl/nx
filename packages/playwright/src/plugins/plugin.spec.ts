@@ -1091,6 +1091,43 @@ describe('@nx/playwright/plugin', () => {
     ).toEqual(getEnvPathsForTask('.', 'e2e-ci', undefined, 'e2e'));
   });
 
+  it('resolves testMatch and testIgnore whose elements read env the config wrote while loading', async () => {
+    // The getters run when the pattern elements are read, not when the config
+    // loads, so they only see the config's env writes if the plugin reads
+    // every pattern element before those writes are restored.
+    await mockPlaywrightConfig(
+      tempFs,
+      `process.env.PW_FROM_CONFIG_MATCH = '**/*.spec.ts';
+process.env.PW_FROM_CONFIG_IGNORE = '**/skip-me.spec.ts';
+const testMatch = [];
+Object.defineProperty(testMatch, '0', {
+  enumerable: true,
+  get: () => process.env.PW_FROM_CONFIG_MATCH,
+});
+const testIgnore = [];
+Object.defineProperty(testIgnore, '0', {
+  enumerable: true,
+  get: () => process.env.PW_FROM_CONFIG_IGNORE,
+});
+module.exports = { testDir: 'tests', testMatch, testIgnore };`
+    );
+    await tempFs.createFiles({
+      'tests/run-me.spec.ts': '',
+      'tests/skip-me.spec.ts': '',
+    });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+      context
+    );
+
+    const targets = results[0][1].projects['.'].targets;
+    expect(targets['e2e-ci--tests/run-me.spec.ts']).toBeDefined();
+    expect(targets['e2e-ci--tests/skip-me.spec.ts']).toBeUndefined();
+    expect(process.env.PW_FROM_CONFIG_MATCH).toBeUndefined();
+  });
+
   it('does not infer a wait-for-webserver task when waitForWebServer is false', async () => {
     await mockPlaywrightConfig(tempFs, {
       testDir: 'tests',
