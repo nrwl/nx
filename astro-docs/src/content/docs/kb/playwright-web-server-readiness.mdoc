@@ -48,6 +48,8 @@ runs before Playwright probes.
 The variables that count are the proxy variables (`HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`, and
 `NO_PROXY`) for a `webServer` with a `url`, and `NODE_EXTRA_CA_CERTS` and
 `NODE_TLS_REJECT_UNAUTHORIZED` unless every such `webServer` sets `ignoreHTTPSErrors`.
+The proxy variables count in either spelling, and the lowercase one (`http_proxy`) wins over the
+uppercase one when both are set.
 That option doesn't cover the certificate of an `https` proxy that `HTTPS_PROXY` or `ALL_PROXY`
 routes through, so the TLS variables count whenever that's the route.
 Node reads `NODE_EXTRA_CA_CERTS` when the process starts, so only its value in an env file
@@ -109,8 +111,9 @@ The Playwright task runs from the project root, but Nx doesn't guarantee that th
 evaluated from there while computing the project graph.
 An address that depends on the working directory, such as a port read from a file at a relative
 path, can differ between the two, and the wait task then waits for the wrong address.
-Derive such an address from `__dirname` instead, or set the `waitForWebServer` plugin option to
-`false`.
+Derive such an address from the config file's own directory instead: `import.meta.dirname` in an
+ESM config, such as the generated `playwright.config.mts`, or `__dirname` in a CommonJS one.
+Alternatively, set the `waitForWebServer` plugin option to `false`.
 
 Nx re-evaluates the config under the task's env only when the graph-time evaluation found a
 `webServer`, so a `webServer` that only exists under the task's env is not detected.
