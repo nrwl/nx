@@ -61,7 +61,22 @@ pub struct TelemetryService {
 
 impl TelemetryService {
     pub fn new(opts: TelemetryOptions) -> Result<Self> {
+        // Resolve DNS in-process rather than through getaddrinfo(). reqwest's
+        // default resolver runs getaddrinfo on a tokio blocking thread, and
+        // getaddrinfo reads env vars (LOCALDOMAIN, RES_OPTIONS, ...) via
+        // glibc's getenv(), which takes no lock. Meanwhile the JS main thread
+        // mutates `environ` through process.env -- plugin preTasksExecution
+        // hooks, the daemon's env sync, CLI arg handling. A reader walking an
+        // environ array that setenv has just reallocated and freed segfaults;
+        // that is the intermittent CI SIGSEGV (exit 139), captured as a core
+        // dump with getenv() as frame #0.
+        //
+        // hickory speaks DNS directly and still honours /etc/hosts
+        // (ResolveHosts::Auto), so blocking this endpoint with a hosts entry
+        // keeps working. Set explicitly rather than leaning on the cargo
+        // feature default, which applies to every reqwest client in the crate.
         let client = ClientBuilder::new()
+            .hickory_dns(true)
             .build()
             .map_err(|e| Error::from_reason(format!("Failed to create HTTP client: {}", e)))?;
 

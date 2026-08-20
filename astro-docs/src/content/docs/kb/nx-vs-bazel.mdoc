@@ -40,7 +40,7 @@ Bazel is strong at hermetic caching, remote execution, and reproducibility, and 
 
 Bazel requires the build to be described up front: a `BUILD` file per package with declared inputs, plus the hermeticity work of breaking undeclared dependencies. Generators like Gazelle and `aspect configure` automate much of it, and AI codemods help more, so a realistic migration runs several weeks, growing when many teams move in parallel. [Airbnb's web migration](https://medium.com/airbnb-engineering/adopting-bazel-for-web-at-scale-a784b2dbe325) shows the shape of the pre-work at a large org: `BUILD` files for roughly a thousand top-level directories, custom generation tooling, and repo-wide dependency-cycle cleanup. There is no supported incremental path: a dependency chain converts fully before caching pays off.
 
-Nx adopts in place. Existing scripts run unchanged, [plugins automatically configure tasks](/docs/concepts/mental-model#inferred-tasks) from the tool configs you already have, and caching starts paying off per task as you opt tasks in. See [adding Nx to an existing project](/docs/guides/adopting-nx/adding-to-existing-project).
+Nx adopts in place. Existing scripts run unchanged, [plugins automatically configure tasks](/docs/concepts/mental-model#inferred-tasks) from the tool configs you already have, and caching starts paying off per task as you opt tasks in. See [adding Nx to an existing project](/docs/kb/adding-to-existing-project).
 
 ## Caching
 
@@ -96,6 +96,6 @@ Unless you are in that extreme-scale, deeply polyglot case, Nx alone covers the 
 ## Resources
 
 {% cards cols=2 %}
-{% card title="Add Nx to an existing project" description="Adopt Nx incrementally without rewriting tool configuration" url="/docs/guides/adopting-nx/adding-to-existing-project" /%}
+{% card title="Add Nx to an existing project" description="Adopt Nx incrementally without rewriting tool configuration" url="/docs/kb/adding-to-existing-project" /%}
 {% card title="Nx plugin registry" description="First-party and community plugins across languages and frameworks" url="/docs/plugin-registry" /%}
 {% /cards %}
