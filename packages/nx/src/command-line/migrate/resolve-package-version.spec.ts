@@ -182,7 +182,7 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
     mockUsingInstall.mockResolvedValue('install-resolved');
     // Mirror the writer's real contract: returns the entries it actually added.
     mockWriteExcludes.mockImplementation((_root, entries) => entries);
-    // The strict prompt gates on stdin (the surface enquirer reads).
+    // pnpm's strict prompt gates on stdin, and nx mirrors that gate.
     originalIsTTY = Object.getOwnPropertyDescriptor(
       process.stdin,
       'isTTY'

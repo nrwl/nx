@@ -572,8 +572,9 @@ describe('runAgentic', () => {
     const lines = ambiguousCauseLines();
     expect(lines.join('\n')).toContain('Could not spawn the agent');
     expect(lines.join('\n')).toContain('ENOENT');
-    // The prompt itself stays single-line — multi-line `message` triggers
-    // enquirer's wrap-asymmetric redraw on narrow terminals.
+    // The prompt stays single-line. Multi-line `message` triggered enquirer's
+    // wrap-asymmetric redraw on narrow terminals; kept because that constraint
+    // is unverified under @clack/prompts, not because the cause still applies.
     expect(mockPrompt.mock.calls[0][0].message).toBe(
       'How should nx migrate proceed?'
     );

@@ -358,9 +358,10 @@ async function resolveFromHandoffOrPrompt(
   };
   if (userInterrupted) {
     // User pressed Ctrl+C. Don't show the abort/continue prompt — they
-    // already told us what they want, and the TTY state after a
-    // SIGINT-killed child trips enquirer's setRawMode-EIO and
-    // ERR_USE_AFTER_CLOSE bugs. The orchestrator's standard failure
+    // already told us what they want. Prompting in the TTY state left by a
+    // SIGINT-killed child also tripped enquirer's setRawMode-EIO and
+    // ERR_USE_AFTER_CLOSE bugs; whether @clack/prompts shares that fault is
+    // unverified, so the skip stays. The orchestrator's standard failure
     // cascade surfaces the abort outcome.
     //
     // Forward the underlying cause as pre-rendered summary lines so the
