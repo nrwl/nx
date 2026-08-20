@@ -146,17 +146,26 @@ async function promptForCollection(
   } else if (!interactive && choices.length > 1) {
     throwInvalidInvocation(Array.from(choicesMap));
   } else if (interactive && choices.length > 1) {
-    const noneOfTheAbove = `\nNone of the above`;
+    const noneOfTheAbove = `None of the above`;
+    // Blank line before the last entry. The newline has to trail the choice
+    // *before* the gap: a leading one would land between the following
+    // choice's radio marker and its text, splitting that row in two.
+    const beforeGap = choices.length - 1;
     choices.push(noneOfTheAbove);
     const generator = await selectPrompt({
       message: `Which generator would you like to use?`,
       // Local-plugin entries carry a separate display label; the rest are
-      // plain collection names.
-      choices: choices.map((c) =>
-        typeof c === 'string'
-          ? { value: c }
-          : { value: c.value, label: c.message }
-      ),
+      // plain collection names. Only the label takes the newline, so the
+      // value still resolves as a collection name.
+      choices: choices.map((c, i) => {
+        const choice =
+          typeof c === 'string'
+            ? { value: c, label: c }
+            : { value: c.value, label: c.message };
+        return i === beforeGap && !choice.label.endsWith('\n')
+          ? { ...choice, label: `${choice.label}\n` }
+          : choice;
+      }),
     });
 
     if (generator !== noneOfTheAbove) {
