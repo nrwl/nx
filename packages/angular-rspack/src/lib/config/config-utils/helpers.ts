@@ -121,6 +121,13 @@ export async function normalizeOptionWithI18n(
       };
 
   const normalizedOptions = await normalizeOptions(_options);
+  if (normalizedOptions.outputMode && i18n.shouldInline) {
+    // The engine manifests would need per-locale entry points, which the
+    // locale inlining pipeline does not produce yet.
+    throw new Error(
+      'Locale inlining ("localize") is not supported when "outputMode" is set. Please build each locale separately.'
+    );
+  }
   return { i18n, i18nHash, normalizedOptions };
 }
 
