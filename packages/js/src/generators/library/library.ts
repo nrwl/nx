@@ -1,6 +1,7 @@
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
+  isInteractive,
   selectPrompt,
   addBuildTargetDefaults,
   logShowProjectCommand,
@@ -804,17 +805,19 @@ async function normalizeOptions(
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
 
   if (isUsingTsSolutionConfig) {
-    options.unitTestRunner ??= await selectPrompt({
-      message: `Which unit test runner would you like to use?`,
-      choices: [{ value: 'none' }, { value: 'vitest' }, { value: 'jest' }],
-      fallback: 'none',
-    });
+    options.unitTestRunner ??= isInteractive()
+      ? await selectPrompt<'none' | 'jest' | 'vitest'>({
+          message: `Which unit test runner would you like to use?`,
+          choices: [{ value: 'none' }, { value: 'vitest' }, { value: 'jest' }],
+        })
+      : 'none';
   } else {
-    options.unitTestRunner ??= await selectPrompt({
-      message: `Which unit test runner would you like to use?`,
-      choices: [{ value: 'jest' }, { value: 'vitest' }, { value: 'none' }],
-      fallback: undefined,
-    });
+    options.unitTestRunner ??= isInteractive()
+      ? await selectPrompt<'none' | 'jest' | 'vitest'>({
+          message: `Which unit test runner would you like to use?`,
+          choices: [{ value: 'jest' }, { value: 'vitest' }, { value: 'none' }],
+        })
+      : undefined;
 
     if (!options.unitTestRunner && options.bundler === 'vite') {
       options.unitTestRunner = 'vitest';

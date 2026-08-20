@@ -1,4 +1,4 @@
-import { promptAlways } from '@nx/devkit/internal';
+import { confirmationPrompt } from '@nx/devkit/internal';
 import {
   joinPathFragments,
   logger,
@@ -641,7 +641,7 @@ async function handleUnsupportedUserProvidedTargetsErrors(
     `
   );
 
-  const shouldConvert = await promptAlways.confirm({
+  const shouldConvert = await confirmationPrompt({
     message: `Should we convert the ${validFoundTargetName} target to use the @nx/rspack:${executor} executor?`,
   });
   if (!shouldConvert) {
@@ -672,7 +672,7 @@ export async function handleUnknownExecutors(projectName: string) {
       `
   );
 
-  const shouldConvert = await promptAlways.confirm({
+  const shouldConvert = await confirmationPrompt({
     message: `Should Nx convert your project to use the @nx/rspack executors?`,
   });
   if (!shouldConvert) {

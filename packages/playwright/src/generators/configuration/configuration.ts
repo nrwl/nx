@@ -1,6 +1,7 @@
 import {
   findTargetDefault,
   resolveImportPath,
+  isInteractive,
   textPrompt,
   upsertTargetDefault,
   PackageJson,
@@ -311,22 +312,24 @@ async function normalizeOptions(
 }
 
 async function promptForMissingServeData(projectName: string) {
-  const command = await textPrompt({
-    message: 'What command should be run to serve the application locally?',
-    initialValue: `npx nx serve ${projectName}`,
-    fallback: `npx nx serve ${projectName}`,
-  });
-  const port = Number(
-    await textPrompt({
-      message: 'What port will the application be served on?',
-      initialValue: '3000',
-      validate: (value) =>
-        value !== '' && !Number.isNaN(Number(value))
-          ? undefined
-          : 'Please enter a number',
-      fallback: '3000',
-    })
-  );
+  const command = isInteractive()
+    ? await textPrompt({
+        message: 'What command should be run to serve the application locally?',
+        initialValue: `npx nx serve ${projectName}`,
+      })
+    : `npx nx serve ${projectName}`;
+  const port = isInteractive()
+    ? Number(
+        await textPrompt({
+          message: 'What port will the application be served on?',
+          initialValue: '3000',
+          validate: (value) =>
+            value !== '' && !Number.isNaN(Number(value))
+              ? undefined
+              : 'Please enter a number',
+        })
+      )
+    : 3000;
 
   return {
     webServerCommand: command,

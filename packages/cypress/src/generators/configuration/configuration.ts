@@ -1,5 +1,6 @@
 import {
   resolveImportPath,
+  isInteractive,
   textPrompt,
   PackageJson,
 } from '@nx/devkit/internal';
@@ -267,23 +268,25 @@ In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:
 }
 
 async function promptForMissingServeData(projectName: string) {
-  const devServerTarget = await textPrompt({
-    message:
-      'What is the name of the target used to serve the application locally?',
-    initialValue: `${projectName}:serve`,
-    fallback: `${projectName}:serve`,
-  });
-  const port = Number(
-    await textPrompt({
-      message: 'What port will the application be served on?',
-      initialValue: '3000',
-      validate: (value) =>
-        value !== '' && !Number.isNaN(Number(value))
-          ? undefined
-          : 'Please enter a number',
-      fallback: '3000',
-    })
-  );
+  const devServerTarget = isInteractive()
+    ? await textPrompt({
+        message:
+          'What is the name of the target used to serve the application locally?',
+        initialValue: `${projectName}:serve`,
+      })
+    : `${projectName}:serve`;
+  const port = isInteractive()
+    ? Number(
+        await textPrompt({
+          message: 'What port will the application be served on?',
+          initialValue: '3000',
+          validate: (value) =>
+            value !== '' && !Number.isNaN(Number(value))
+              ? undefined
+              : 'Please enter a number',
+        })
+      )
+    : 3000;
 
   return {
     devServerTarget,
