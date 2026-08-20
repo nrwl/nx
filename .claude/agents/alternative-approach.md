@@ -23,8 +23,8 @@ The code under review is reached ONLY through the `sandbox` CLI, run from the re
 
 ```bash
 .claude/tools/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
-.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir]
-.claude/tools/sandbox find <SANDBOX> <glob> [subdir]
+.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
+.claude/tools/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
 ```
 
 Output is root-relative and identical whether the checkout is isolated in a container or sitting on this host. You cannot tell which, and must not try to find out. Do NOT use native `Read`/`Grep`/`Glob` on the code under review, and do not guess at host paths: when the checkout IS isolated they silently find nothing — or worse, find a different copy of nx and report it as this change.

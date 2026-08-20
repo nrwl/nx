@@ -120,4 +120,35 @@ describe('ensurePackageHasProvenance', () => {
     );
     expect(global.fetch).not.toHaveBeenCalled();
   });
+
+  it('names the registry the failing fetch went to', async () => {
+    jest
+      .spyOn(packageManager, 'getWorkspaceRegistryUrlForDisplay')
+      .mockReturnValue('https://registry.corp.example/');
+    packageRegistryViewSpy.mockResolvedValue(
+      JSON.stringify(packument('1.0.0', false))
+    );
+
+    await expect(ensurePackageHasProvenance('nx', '1.0.0')).rejects.toThrow(
+      'custom registry configuration (https://registry.corp.example/)'
+    );
+    expect(
+      packageManager.getWorkspaceRegistryUrlForDisplay
+    ).toHaveBeenCalledWith('nx');
+  });
+
+  it('keeps the generic note when the registry cannot be determined', async () => {
+    jest
+      .spyOn(packageManager, 'getWorkspaceRegistryUrlForDisplay')
+      .mockImplementation(() => {
+        throw new Error('npm is not on PATH');
+      });
+    packageRegistryViewSpy.mockResolvedValue(
+      JSON.stringify(packument('1.0.0', false))
+    );
+
+    await expect(ensurePackageHasProvenance('nx', '1.0.0')).rejects.toThrow(
+      'This could indicate a security risk'
+    );
+  });
 });

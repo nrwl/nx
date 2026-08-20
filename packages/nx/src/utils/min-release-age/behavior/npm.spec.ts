@@ -7,11 +7,13 @@ jest.mock('os', () => ({
   ...jest.requireActual('os'),
   homedir: jest.fn(() => '/home/user'),
 }));
-jest.mock('../npmrc', () => ({ readNpmrcEntries: jest.fn(() => null) }));
+jest.mock('../../package-manager-config/npmrc', () => ({
+  readNpmrcEntries: jest.fn(() => null),
+}));
 
 import * as childProcess from 'child_process';
 import { MinReleaseAgeViolationError } from '../errors';
-import { readNpmrcEntries } from '../npmrc';
+import { readNpmrcEntries } from '../../package-manager-config/npmrc';
 import type { RegistryMetadata } from '../packument';
 import type { MinReleaseAgePolicy } from '../policy';
 import { pickNpmVersion, readNpmPolicy } from './npm';
@@ -19,8 +21,9 @@ import { pickNpmVersion, readNpmPolicy } from './npm';
 // The real parser drives the mocked surface map (path -> contents) so
 // detectSurfaces sees genuine parsing; an absent path reads as a missing
 // file (null).
-const { parseNpmrcContent } =
-  jest.requireActual<typeof import('../npmrc')>('../npmrc');
+const { parseNpmrcContent } = jest.requireActual<
+  typeof import('../../package-manager-config/npmrc')
+>('../../package-manager-config/npmrc');
 
 const HOUR = 3_600_000;
 const NOW = Date.parse('2026-06-05T00:00:00.000Z');
@@ -453,6 +456,17 @@ describe('npm min-release-age behavior', () => {
       it('undetectable sources (both rank lowest) -> before wins', async () => {
         mockConfig({ 'min-release-age': 7, before: BEFORE });
         const result = await readNpmPolicy('/root', '11.16.0', {});
+        expect(result.outcome).toBe('active');
+        if (result.outcome === 'active') {
+          expect(result.policy.cutoffMs).toBe(Date.parse(BEFORE));
+        }
+      });
+
+      it('scans an unreadable .npmrc as though it were absent (npm reads it that way)', async () => {
+        readNpmrcEntriesMock.mockReturnValue('unreadable');
+        mockConfig({ 'min-release-age': 7, before: BEFORE });
+        const result = await readNpmPolicy('/root', '11.16.0', {});
+        expect(readNpmrcEntriesMock).toHaveBeenCalled();
         expect(result.outcome).toBe('active');
         if (result.outcome === 'active') {
           expect(result.policy.cutoffMs).toBe(Date.parse(BEFORE));

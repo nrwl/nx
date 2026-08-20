@@ -107,8 +107,7 @@ The [`@nx/react:storybook-configuration` generator](/docs/technologies/react/gen
 // libs/feature/ui/src/lib/my-button/my-button.stories.tsx
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { MyButton } from './my-button';
-import { within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { expect } from 'storybook/test';
 
 const meta = {
   component: MyButton,
@@ -132,14 +131,13 @@ export const Heading = {
     padding: 0,
     disabled: false,
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    expect(canvas.getByText(/MyButton!/gi)).toBeTruthy();
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/MyButton!/gi)).toBeTruthy();
   },
 } satisfies Story;
 ```
 
-Notice the interaction test on the second story, inside the `play` function. This just tests if the default text that appears on generated components exists in the rendered component. You can edit this test to suit your needs. You can read more about interaction tests [here](https://storybook.js.org/docs/react/writing-tests/interaction-testing).
+Notice the interaction test on the second story, inside the `play` function. This just tests if the default text that appears on generated components exists in the rendered component. You can edit this test to suit your needs. You can read more about interaction tests [here](https://storybook.js.org/docs/writing-tests/interaction-testing).
 
 ## More documentation
 

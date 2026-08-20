@@ -301,15 +301,15 @@ const learnGroups: SidebarItems = [
           },
           {
             label: 'Automate importing projects',
-            link: 'guides/adopting-nx/import-project',
+            link: 'kb/import-project',
           },
           {
             label: 'Manual migrations',
-            link: 'guides/adopting-nx/manual',
+            link: 'kb/manual-migration',
           },
           {
             label: 'Preserving Git histories',
-            link: 'guides/adopting-nx/preserving-git-histories',
+            link: 'kb/preserving-git-histories',
           },
         ],
       },

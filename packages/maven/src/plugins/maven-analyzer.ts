@@ -3,8 +3,12 @@ import { existsSync } from 'fs';
 import { logger, readJsonFile } from '@nx/devkit';
 import { MavenAnalysisData, MavenPluginOptions } from './types';
 import { detectMavenExecutable } from '../utils/detect-maven-executable';
-import treeKill from 'tree-kill';
-import { isCI, safeSpawn, workspaceDataDirectory } from '@nx/devkit/internal';
+import {
+  isCI,
+  killProcessTreeGraceful,
+  safeSpawn,
+  workspaceDataDirectory,
+} from '@nx/devkit/internal';
 
 const DEFAULT_ANALYSIS_TIMEOUT_SECONDS = isCI() ? 600 : 120;
 
@@ -105,11 +109,14 @@ export async function runMavenAnalysis(
         stdio: 'pipe', // Always use pipe so we can control output
       });
 
-      // Use tree-kill on abort to kill the entire process tree
+      // On abort, kill the entire process tree and settle immediately — a
+      // wedged process that outlives the kill signal would otherwise keep
+      // this promise pending and the abort error would never surface.
       const onAbort = () => {
         if (child.pid) {
-          treeKill(child.pid);
+          killProcessTreeGraceful(child.pid).catch(() => {});
         }
+        reject(new Error('Maven analysis aborted'));
       };
       signal.addEventListener('abort', onAbort, { once: true });
 
