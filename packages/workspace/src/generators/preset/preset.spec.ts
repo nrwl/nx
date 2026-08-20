@@ -2,8 +2,11 @@ import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { validateOptsAgainstSchema } from 'nx/src/utils/params';
 import { presetGenerator } from './preset';
 import { Preset } from '../utils/presets';
+
+const presetSchema = require('./schema.json');
 
 describe('preset', () => {
   let tree: Tree;
@@ -190,6 +193,18 @@ describe('preset', () => {
     expect(readProjectConfiguration(tree, name)).toBeDefined();
   });
 
+  it(`should pass Angular-specific style options to the application generator`, async () => {
+    const name = `angular-less-preset-monorepo`;
+    await presetGenerator(tree, {
+      name,
+      preset: Preset.AngularMonorepo,
+      style: 'less',
+      linter: 'eslint',
+    });
+
+    expect(tree.exists(`/apps/${name}/src/styles.less`)).toBe(true);
+  });
+
   it(`should create files (preset = next)`, async () => {
     const name = `next-preset`;
     await presetGenerator(tree, {
@@ -199,6 +214,24 @@ describe('preset', () => {
       linter: 'eslint',
     });
     expect(tree.exists(`/apps/${name}/src/app/page.tsx`)).toBe(true);
+  });
+
+  it.each([
+    [Preset.ReactMonorepo, 'none'],
+    [Preset.NextJs, 'none'],
+    [Preset.AngularMonorepo, 'sass'],
+    [Preset.AngularMonorepo, 'less'],
+  ])('should allow %s to validate its %s style option', (preset, style) => {
+    expect(() =>
+      validateOptsAgainstSchema(
+        {
+          name: 'my-app',
+          preset,
+          style,
+        },
+        presetSchema
+      )
+    ).not.toThrow();
   });
 
   it(`should create files (preset = express)`, async () => {

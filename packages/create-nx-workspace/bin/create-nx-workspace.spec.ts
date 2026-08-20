@@ -1,8 +1,10 @@
 import {
+  determineAngularOptions,
   applyEmptyPresetAlias,
   validateWorkspaceName,
   resolveSpecialFolderName,
   determineFolder,
+  determineReactOptions,
   determinePresetOptions,
 } from './create-nx-workspace';
 import enquirer from 'enquirer';
@@ -327,6 +329,71 @@ describe('determineFolder - explicit "." confirmation', () => {
     expect(enquirer.prompt).toHaveBeenCalledTimes(2);
 
     rmSync(tmpDir, { recursive: true });
+  });
+});
+
+describe('stylesheet format prompts', () => {
+  const enquirer = require('enquirer').default;
+
+  beforeEach(() => {
+    (enquirer.prompt as jest.Mock).mockReset().mockResolvedValue({
+      style: 'css',
+    });
+  });
+
+  function getStyleChoices(): string[] {
+    const stylePrompt = (enquirer.prompt as jest.Mock).mock.calls
+      .flatMap(([questions]) => questions)
+      .find((question) => question.name === 'style');
+
+    return stylePrompt.choices.map((choice) => choice.name);
+  }
+
+  it.each([Preset.ReactStandalone, Preset.NextJsStandalone])(
+    'should offer supported stylesheet formats for %s',
+    async (preset) => {
+      await determineReactOptions({
+        _: [],
+        $0: 'create-nx-workspace',
+        name: 'my-app',
+        preset,
+        stack: 'react',
+        workspaceType: 'standalone',
+        appName: 'my-app',
+        interactive: true,
+        bundler: 'vite',
+        nextAppDir: true,
+        nextSrcDir: true,
+        useReactRouter: false,
+        routing: true,
+        unitTestRunner: 'jest',
+        e2eTestRunner: 'playwright',
+      } as any);
+
+      expect(getStyleChoices()).toEqual(['css', 'scss', 'none']);
+    }
+  );
+
+  it('should offer supported stylesheet formats for Angular', async () => {
+    await determineAngularOptions({
+      _: [],
+      $0: 'create-nx-workspace',
+      name: 'my-app',
+      preset: Preset.AngularStandalone,
+      stack: 'angular',
+      workspaceType: 'standalone',
+      appName: 'my-app',
+      interactive: true,
+      bundler: 'esbuild',
+      routing: true,
+      standaloneApi: true,
+      unitTestRunner: 'jest',
+      e2eTestRunner: 'playwright',
+      ssr: false,
+      zoneless: false,
+    } as any);
+
+    expect(getStyleChoices()).toEqual(['css', 'scss', 'sass', 'less']);
   });
 });
 
