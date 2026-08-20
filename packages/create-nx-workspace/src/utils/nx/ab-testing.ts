@@ -244,7 +244,6 @@ interface MessageData {
   initial: number;
   choices: Array<{ value: string; name: string }>;
   footer: string;
-  hint?: string;
   fallback?: { value: string; key: MessageKey };
   completionMessage: CompletionMessageKey;
 }

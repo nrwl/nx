@@ -72,11 +72,11 @@ export async function determineIfGitHubWillBeUsed(
 }
 
 async function nxCloudPrompt(key: MessageKey): Promise<NxCloud> {
-  const { message, choices, initial, fallback, footer, hint } =
+  const { message, choices, initial, fallback, footer } =
     messages.getPrompt(key);
 
-  // No separate footer/hint slot, so both are folded into the message.
-  const suffix = [hint, footer].filter(Boolean).map((t) => chalk.dim(t));
+  // No separate footer slot, so it is folded into the message.
+  const suffix = [footer].filter(Boolean).map((t) => chalk.dim(t));
 
   // These choices are `{ value, name }` with `name` as the display text — the
   // inverse of enquirer's usual `{ name, message }`. Take `value` so the answer
