@@ -27,6 +27,7 @@ describe('daemon environment', () => {
       process.env.__MISE_DIFF = 'per-hook-env-run';
       process.env.FNM_MULTISHELL_PATH = '/tmp/fnm_multishells/1234_5678';
       process.env.POSH_SESSION_ID = 'per-shell-session';
+      process.env.MISE_SHELL = 'zsh';
 
       const env = getDaemonEnv();
 
@@ -40,6 +41,7 @@ describe('daemon environment', () => {
       expect(env.__MISE_DIFF).toBeUndefined();
       expect(env.FNM_MULTISHELL_PATH).toBeUndefined();
       expect(env.POSH_SESSION_ID).toBeUndefined();
+      expect(env.MISE_SHELL).toBeUndefined();
     });
 
     it('should exclude per-directory and per-invocation vars', () => {
@@ -141,7 +143,6 @@ describe('daemon environment', () => {
       process.env.NODE_DISABLE_COLORS = '1';
       process.env.FORCE_HYPERLINK = '1';
       process.env.NX_ORIGINAL_FORCE_COLOR = '0';
-      process.env.MISE_SHELL = 'zsh';
 
       const env = getDaemonEnv();
 
@@ -151,7 +152,6 @@ describe('daemon environment', () => {
       expect(env.NODE_DISABLE_COLORS).toBeUndefined();
       expect(env.FORCE_HYPERLINK).toBeUndefined();
       expect(env.NX_ORIGINAL_FORCE_COLOR).toBeUndefined();
-      expect(env.MISE_SHELL).toBeUndefined();
     });
 
     it('should exclude editor preference vars', () => {
@@ -255,7 +255,7 @@ describe('daemon environment', () => {
     it('should not add ELECTRON_RUN_AS_NODE when the client does not have it', () => {
       delete process.env.ELECTRON_RUN_AS_NODE;
 
-      expect(getDaemonSpawnEnv().ELECTRON_RUN_AS_NODE).toBeUndefined();
+      expect('ELECTRON_RUN_AS_NODE' in getDaemonSpawnEnv()).toBe(false);
     });
 
     it('should keep NX_WORKSPACE_ROOT_PATH so the daemon starts with the pinned workspace root', () => {
@@ -303,6 +303,8 @@ describe('daemon environment', () => {
     it('should converge after one application of a client env payload', () => {
       process.env.ATUIN_SESSION = 'daemon-startup-value';
       process.env.JAVA_HOME = '/opt/java-client';
+      // isolate the payload from the developer's shell
+      delete process.env.JAVA_TOOL_OPTIONS;
       const payload = getDaemonEnv();
       applyDaemonEnvFromClient(payload);
 
