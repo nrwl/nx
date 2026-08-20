@@ -228,10 +228,13 @@ function getOwnerTargetForTask(
     for (const targets of Object.values(project.data.metadata.targetGroups)) {
       if (targets.includes(task.target.target)) {
         for (const target of targets) {
-          if (project.data.targets[target].metadata?.nonAtomizedTarget) {
+          // a target group can name a target the project does not define —
+          // inference plugins build the group and the targets separately, so
+          // the two can disagree. skip the phantom rather than dereferencing it.
+          if (project.data.targets[target]?.metadata?.nonAtomizedTarget) {
             return [
               target,
-              project.data.targets[target].metadata?.nonAtomizedTarget,
+              project.data.targets[target]?.metadata?.nonAtomizedTarget,
             ];
           }
         }
