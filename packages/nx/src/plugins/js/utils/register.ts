@@ -435,8 +435,9 @@ let sourceGraphHooks: { deregister(): void } | undefined;
  * reached from an explicitly source-loaded entry. Relative source imports are
  * tracked so lazy imports remain in the same graph; third-party modules are not.
  *
- * Requires synchronous module hooks (Node 22.15+ / 23.5+). Older runtimes keep
- * the isolated-worker behavior and can opt into conditions at process startup.
+ * Needs `module.registerHooks()` (Node 22.15+ / 23.5+). Node forwards the added
+ * conditions for CJS from there but for ESM only from 22.19 / 24.5; below that
+ * ESM imports keep Node's default conditions. Isolated workers get them at spawn.
  */
 export function registerSourceGraphResolver(
   entryPath: string,
@@ -506,14 +507,20 @@ export function registerSourceGraphResolver(
   };
 }
 
-function appendConditions(current: string[], additions: string[]): string[] {
-  const conditions = [...current];
+// Node < 22.19 / < 24.5 hands CJS hooks a Set and passes the forwarded value
+// straight to resolvers that call `.has()`; newer Node rejects anything but an
+// array. Return the shape we were given (@types/node only knows the array).
+function appendConditions(
+  current: Iterable<string> | undefined,
+  additions: string[]
+): string[] {
+  const merged = new Set(current);
   for (const condition of additions) {
-    if (!conditions.includes(condition)) {
-      conditions.push(condition);
-    }
+    merged.add(condition);
   }
-  return conditions;
+  return (
+    Array.isArray(current) || !current ? [...merged] : merged
+  ) as string[];
 }
 
 function getPackageNameFromSpecifier(specifier: string): string {
