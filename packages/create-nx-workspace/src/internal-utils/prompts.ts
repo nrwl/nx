@@ -75,9 +75,6 @@ async function nxCloudPrompt(key: MessageKey): Promise<NxCloud> {
   const { message, choices, initial, fallback, footer } =
     messages.getPrompt(key);
 
-  // No separate footer slot, so it is folded into the message.
-  const suffix = [footer].filter(Boolean).map((t) => chalk.dim(t));
-
   // These choices are `{ value, name }` with `name` as the display text — the
   // inverse of enquirer's usual `{ name, message }`. Take `value` so the answer
   // is the key the caller compares against, not the label.
@@ -88,7 +85,8 @@ async function nxCloudPrompt(key: MessageKey): Promise<NxCloud> {
   );
 
   const answer = (await selectPrompt({
-    message: [message, ...suffix].join('\n'),
+    // No separate footer slot, so it is folded into the message.
+    message: `${message}\n${chalk.dim(footer)}`,
     choices: options,
     initial: options[initial ?? 0]?.value,
   })) as NxCloud;

@@ -18,8 +18,18 @@ export interface Choice<T extends string> {
   hint?: string;
 }
 
+/**
+ * What a cancel resolves to. Defaults to aborting workspace creation; callers
+ * pass one when cancelling means something the flow can carry on from.
+ */
+export type OnCancel<T> = () => T;
+
 /** A bare string is a choice whose label is its value. */
 export type ChoiceOrValue<T extends string> = T | Choice<T>;
+
+function cancelled(): never {
+  throw new CnwError('CANCELLED', 'Cancelled.');
+}
 
 function toChoice<T extends string>(choice: ChoiceOrValue<T>): Choice<T> {
   return typeof choice === 'string' ? { value: choice } : choice;
@@ -36,6 +46,7 @@ interface SelectPromptOptions<T extends string> {
   skippedValue?: T;
   /** Highlighted when the prompt opens. Has no bearing on `skip`. */
   initial?: T;
+  onCancel?: OnCancel<T>;
 }
 
 export async function selectPrompt<T extends string>(
@@ -64,7 +75,7 @@ export async function selectPrompt<T extends string>(
   });
   // Ctrl+C yields a sentinel rather than throwing.
   if (isCancel(answer)) {
-    throw new CnwError('CANCELLED', 'Cancelled.');
+    return options.onCancel ? options.onCancel() : cancelled();
   }
   return answer as T;
 }
@@ -75,6 +86,7 @@ export async function confirmationPrompt(options: {
   /** Answer used when skipped. Defaults to yes, matching a first-choice skip. */
   skippedValue?: boolean;
   initial?: boolean;
+  onCancel?: OnCancel<boolean>;
 }): Promise<boolean> {
   const answer = await selectPrompt<'Yes' | 'No'>({
     message: options.message,
@@ -87,6 +99,9 @@ export async function confirmationPrompt(options: {
           ? 'Yes'
           : 'No',
     initial: options.initial === false ? 'No' : 'Yes',
+    onCancel: options.onCancel
+      ? () => (options.onCancel!() ? 'Yes' : 'No')
+      : undefined,
   });
   return answer === 'Yes';
 }
@@ -98,6 +113,7 @@ export async function textPrompt(options: {
   validate?: (value: string) => string | undefined;
   skip?: boolean;
   skippedValue?: string;
+  onCancel?: OnCancel<string>;
 }): Promise<string> {
   if (options.skip) {
     return options.skippedValue ?? options.initialValue ?? '';
@@ -109,7 +125,7 @@ export async function textPrompt(options: {
     validate: options.validate,
   });
   if (isCancel(answer)) {
-    throw new CnwError('CANCELLED', 'Cancelled.');
+    return options.onCancel ? options.onCancel() : cancelled();
   }
   return answer as string;
 }

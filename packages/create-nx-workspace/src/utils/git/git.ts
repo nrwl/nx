@@ -2,11 +2,10 @@ import { execSync } from 'child_process';
 import { deduceDefaultBase } from './default-base';
 import { output } from '../output';
 import { execAndWait } from '../child-process-utils';
-
-/** ESM-only; a static import would emit `require()` under CommonJS. */
-async function prompts() {
-  return await import('@clack/prompts');
-}
+import {
+  confirmationPrompt,
+  textPrompt,
+} from '../../internal-utils/prompt-helpers';
 
 export enum VcsPushStatus {
   PushedToVcs = 'PushedToVcs',
@@ -253,19 +252,13 @@ export async function pushToGitHub(
     populateExistingRepos(directory);
 
     // First prompt: Ask if they want to push to GitHub
-    const { autocomplete, text, isCancel } = await prompts();
-    const push = await autocomplete({
-      validate: (value) =>
-        value === undefined ? 'Pick one of the listed options' : undefined,
+    // Cancelling is a decision not to push, not a failure to push.
+    const push = await confirmationPrompt({
       message: 'Would you like to push this workspace to GitHub?',
-      options: [
-        { value: 'Yes', label: 'Yes' },
-        { value: 'No', label: 'No' },
-      ],
-      initialValue: 'Yes',
+      onCancel: () => false,
     });
 
-    if (isCancel(push) || push !== 'Yes') {
+    if (!push) {
       return VcsPushStatus.OptedOutOfPushingToVcs;
     }
 
@@ -281,7 +274,9 @@ export async function pushToGitHub(
     // it has normally settled by now.
     const existingRepos = await existingReposPromise;
 
-    const repoName = await text({
+    // An empty name cannot come from the prompt - `validate` requires a slash -
+    // so it is unambiguous as the cancelled signal.
+    const repoName = await textPrompt({
       message: 'Repository name (format: username/repo-name):',
       initialValue: defaultRepo,
       validate: (value: string): string | undefined => {
@@ -293,9 +288,10 @@ export async function pushToGitHub(
         }
         return undefined;
       },
+      onCancel: () => '',
     });
 
-    if (isCancel(repoName)) {
+    if (!repoName) {
       return VcsPushStatus.OptedOutOfPushingToVcs;
     }
 
