@@ -1807,6 +1807,10 @@ async function determineAppName(
     message: `Application name`,
     initialValue: parsedArgs.name,
     skip: !parsedArgs.interactive || isCI(),
+    // Reject here so clearing the field re-prompts. The invariant below still
+    // guards the skipped path, where no validator runs.
+    validate: (value) =>
+      value.trim() ? undefined : 'Application name cannot be empty',
   });
   invariant(appName, 'INVALID_APP_NAME', 'App name cannot be empty');
   return appName;

@@ -202,6 +202,10 @@ export async function determineDefaultBase(
     const defaultBase = await textPrompt({
       message: `Main branch name`,
       initialValue: `main`,
+      // Reject here so clearing the field re-prompts rather than aborting the
+      // run on the throw below.
+      validate: (value) =>
+        value.trim() ? undefined : 'Branch name cannot be empty',
     });
     if (!defaultBase) {
       throw new CnwError('INVALID_BRANCH_NAME', 'Branch name cannot be empty');
