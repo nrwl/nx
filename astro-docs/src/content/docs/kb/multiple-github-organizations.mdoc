@@ -10,11 +10,13 @@ A GitHub-connected Nx Cloud organization can only connect repositories from the 
 
 ## Choose an access model
 
-| Access model                                                | Use when                                                                            | Nx Cloud organization and licensing impact                                                                                                      |
-| ----------------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| SAML and SCIM                                               | Your identity provider should control access to every workspace centrally.          | Use one organization and one license for all workspaces.                                                                                        |
-| Multiple GitHub-connected organizations                     | Each GitHub organization must remain a separate administration and access boundary. | Create one Nx Cloud organization and license for each GitHub organization. Usage reporting is also split between them.                          |
-| One standard organization with repository-scoped workspaces | Workspace access should mirror each repository's GitHub contributors.               | Use one Nx Cloud organization and license for repositories from any number of GitHub organizations. This is the recommended GitHub-based model. |
+The licensing details below apply only to Nx Cloud Enterprise customers.
+
+| Access model                                                | Use when                                                                            | Organization setup and Enterprise licensing                                                                                                                          |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SAML and SCIM                                               | Your identity provider should control access to every workspace centrally.          | Use one organization for all workspaces. Enterprise customers need one license.                                                                                      |
+| Multiple GitHub-connected organizations                     | Each GitHub organization must remain a separate administration and access boundary. | Create one Nx Cloud organization for each GitHub organization. Enterprise customers need one license per Nx Cloud organization. Usage reporting is also split.       |
+| One standard organization with repository-scoped workspaces | Workspace access should mirror each repository's GitHub contributors.               | Use one Nx Cloud organization for repositories from any number of GitHub organizations. Enterprise customers need one license. This is the recommended GitHub model. |
 
 ## Configure repository-scoped access
 
