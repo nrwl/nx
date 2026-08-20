@@ -1,16 +1,14 @@
 import { readNxJson, updateNxJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { selectPrompt, whenInteractive } from '@nx/devkit/internal';
+import { selectPromptIfInteractive } from '@nx/devkit/internal';
 import { normalizeLinterOption } from './generator-prompts';
 
 jest.mock('@nx/devkit/internal', () => ({
   ...jest.requireActual('@nx/devkit/internal'),
-  whenInteractive: jest.fn(),
-  selectPrompt: jest.fn(),
+  selectPromptIfInteractive: jest.fn(),
 }));
 
-const prompt = whenInteractive as jest.Mock;
-const choicePrompt = selectPrompt as jest.Mock;
+const prompt = selectPromptIfInteractive as jest.Mock;
 
 describe('normalizeLinterOption', () => {
   let tree: Tree;
@@ -84,15 +82,12 @@ describe('normalizeLinterOption', () => {
 
   // `none` is the non-interactive answer, and leads the list so the
   // interactive default matches it.
-  it('should offer none first and default to it when the prompt cannot run', async () => {
+  it('should offer none first and fall back to it when the prompt cannot run', async () => {
     await normalizeLinterOption(tree, undefined);
 
-    const [defaultValue, ask] = prompt.mock.calls[0];
-    expect(defaultValue).toBe('none');
-
-    // The question only exists inside the callback, so run it to see it.
-    choicePrompt.mockResolvedValueOnce('none');
-    await ask();
-    expect(choicePrompt.mock.calls[0][0].choices[0]).toEqual({ value: 'none' });
+    const [options] = prompt.mock.calls[0];
+    expect(options.fallback).toBe('none');
+    // The interactive default is the first choice, so it matches the fallback.
+    expect(options.choices[0]).toEqual({ value: 'none' });
   });
 });

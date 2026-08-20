@@ -47,7 +47,13 @@ export {
   ensureRootProjectName,
   resolveImportPath,
 } from './src/generators/project-name-and-root-utils';
-export { whenInteractive } from './src/generators/prompt';
+// Generator-only. These return `fallback` instead of blocking when the
+// terminal cannot prompt; the ungated prompts below always ask.
+export {
+  confirmationPromptIfInteractive,
+  selectPromptIfInteractive,
+  textPromptIfInteractive,
+} from './src/generators/prompt';
 export {
   addBuildTargetDefaults,
   addE2eCiTargetDefaults,
@@ -108,7 +114,6 @@ export {
   type Change,
   type ChangedFile,
   CompositeLifeCycle,
-  confirmationPrompt,
   DeletedFileChange,
   type DependsOnEntryLocation,
   // NOTE: distinct from @nx/devkit's public FileChange (generators/tree.ts),
@@ -227,7 +232,10 @@ export {
   killProcessTreeGraceful,
   loadTsFile,
   mergeTargetConfigurations,
+  confirmationPrompt,
   multiselectPrompt,
+  selectPrompt,
+  textPrompt,
   normalizeDependencyConfigDefinition,
   normalizeDependencyConfigProjects,
   normalizeTargetDependencyWithStringProjects,
@@ -238,7 +246,6 @@ export {
   readCachedProjectConfiguration,
   readFileIfExisting,
   readFileMapCache,
-  selectPrompt,
   readModulePackageJson,
   readNxJsonFromDisk,
   readNxMigrateConfig,
@@ -256,7 +263,6 @@ export {
   setupAiAgentsGenerator,
   setupWorkspaceContext,
   shouldStreamOutput,
-  textPrompt,
   toNewFormat,
   toOldFormat,
   transformLegacyOutputs,

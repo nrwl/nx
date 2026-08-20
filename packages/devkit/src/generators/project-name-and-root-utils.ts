@@ -1,5 +1,4 @@
-import { textPrompt } from 'nx/src/devkit-internals';
-import { whenInteractive } from './prompt';
+import { textPromptIfInteractive } from './prompt';
 import {
   getProjects,
   joinPathFragments,
@@ -144,11 +143,10 @@ export async function ensureRootProjectName(
   projectType: 'application' | 'library'
 ): Promise<void> {
   if (!options.name && options.directory === '.' && getRelativeCwd() === '') {
-    options.name = await whenInteractive(undefined, () =>
-      textPrompt({
-        message: `What do you want to name the ${projectType}?`,
-      })
-    );
+    options.name = await textPromptIfInteractive({
+      message: `What do you want to name the ${projectType}?`,
+      fallback: undefined,
+    });
   }
 }
 
