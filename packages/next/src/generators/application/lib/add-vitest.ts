@@ -40,6 +40,21 @@ export async function addVitest(
     skipFormat: true,
   });
 
+  // Vitest cannot resolve the `@/*` alias Next resolves itself at build time,
+  // so mirror the app tsconfig `paths` as explicit aliases.
+  const tsConfigJson = readJson(
+    host,
+    joinPathFragments(options.appProjectRoot, 'tsconfig.json')
+  );
+  const resolveAlias: Record<string, string> = {};
+  for (const [key, targets] of Object.entries(
+    (tsConfigJson?.compilerOptions?.paths ?? {}) as Record<string, string[]>
+  )) {
+    if (key.endsWith('/*') && targets[0]?.endsWith('/*')) {
+      resolveAlias[key.slice(0, -2)] = targets[0].slice(0, -2);
+    }
+  }
+
   createOrEditViteConfig(
     host,
     {
@@ -54,6 +69,7 @@ export async function addVitest(
       ],
       imports: [`import react from '@vitejs/plugin-react'`],
       plugins: ['react()'],
+      resolveAlias,
       useEsmExtension: true,
     },
     true,
@@ -82,6 +98,22 @@ export async function addVitest(
       return json;
     }
   );
+  // tsconfig.spec.json extends tsconfig.base.json in TS solution setups, so
+  // specs would not see the app's `@/*` alias without copying it over.
+  if (tsConfigJson?.compilerOptions?.paths) {
+    updateJson(
+      host,
+      joinPathFragments(options.appProjectRoot, 'tsconfig.spec.json'),
+      (json) => {
+        json.compilerOptions ??= {};
+        json.compilerOptions.paths = {
+          ...tsConfigJson.compilerOptions.paths,
+          ...json.compilerOptions.paths,
+        };
+        return json;
+      }
+    );
+  }
 
   return vitestTask;
 }

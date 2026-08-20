@@ -98,6 +98,8 @@ export interface ViteConfigFileOptions {
   inSourceTests?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
   testInclude?: string[];
+  /** Aliases to emit under `resolve.alias`, as alias -> project-relative dir. */
+  resolveAlias?: Record<string, string>;
   rolldownOptionsExternal?: string[];
   imports?: string[];
   plugins?: string[];
@@ -214,7 +216,9 @@ export function createOrEditViteConfig(
     watch: false,
     globals: true,
     environment: '${options.testEnvironment ?? 'jsdom'}',
-    include: [${testInclude.map((pattern) => `'${pattern}'`).join(', ')}],
+    include: [${testInclude
+      .map((pattern) => `'${pattern.replace(/'/g, "\\'")}'`)
+      .join(', ')}],
 ${options.passWithNoTests ? `    passWithNoTests: true,\n` : ''}\
 ${options.setupFile ? `    setupFiles: ['${options.setupFile}'],\n` : ''}\
 ${
@@ -272,6 +276,20 @@ ${
   //   plugins: () => [ nxViteTsPaths() ],
   // },`;
 
+  const aliasEntries = Object.entries(options.resolveAlias ?? {});
+  const resolveOption = aliasEntries.length
+    ? `  resolve: {
+    alias: {
+${aliasEntries
+  .map(
+    ([alias, dir]) =>
+      `      '${alias}': new URL('${dir}', import.meta.url).pathname,`
+  )
+  .join('\n')}
+    },
+  },`
+    : '';
+
   const cacheDir = `cacheDir: '${normalizedJoinPaths(
     offsetFromRoot(projectRoot),
     'node_modules',
@@ -308,6 +326,7 @@ export default defineConfig(() => ({
   ${printOptions(
     cacheDir,
     plugins.length ? `  plugins: [${plugins.join(', ')}],` : '',
+    resolveOption,
     defineOption,
     testOption
   )}
@@ -324,6 +343,7 @@ export default defineConfig(() => ({
     devServerOption,
     previewServerOption,
     `  plugins: [${plugins.join(', ')}],`,
+    resolveOption,
     workerOption,
     buildOption,
     defineOption,

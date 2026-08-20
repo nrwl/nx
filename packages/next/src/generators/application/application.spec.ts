@@ -835,6 +835,26 @@ describe('app', () => {
       });
     });
 
+    it('should emit the @/* alias in the vitest config', async () => {
+      await applicationGenerator(tree, {
+        linter: 'eslint',
+        directory: 'apps/myapp',
+        unitTestRunner: 'vitest',
+        style: 'css',
+        useTsSolution: true,
+        skipFormat: true,
+      });
+
+      const vitestConfig = tree.read('apps/myapp/vitest.config.mts', 'utf-8');
+      expect(vitestConfig).toContain(
+        `'@': new URL('./src', import.meta.url).pathname,`
+      );
+      const tsconfigSpec = readJson(tree, 'apps/myapp/tsconfig.spec.json');
+      expect(tsconfigSpec.compilerOptions.paths).toEqual({
+        '@/*': ['./src/*'],
+      });
+    });
+
     it('should add project references when using TS solution', async () => {
       await applicationGenerator(tree, {
         linter: 'eslint',
@@ -1114,7 +1134,6 @@ describe('app', () => {
 
       expect(tree.exists(`${name}/jest.config.cts`)).toBeFalsy();
       expect(tree.exists(`${name}/specs/index.spec.tsx`)).toBeTruthy();
-      // The config must not depend on the deprecated @nx/vite helper plugins.
       expect(
         readJson(tree, 'package.json').devDependencies['@nx/vite']
       ).toBeUndefined();
