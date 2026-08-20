@@ -51,24 +51,35 @@ vi.mock('../../../utils/git-utils', async () => ({
   tryCommitChanges: (...args: unknown[]) => mockTryCommitChanges(...args),
 }));
 
+const mockDetectPackageManager = vi.fn();
 vi.mock('../../../utils/package-manager', () => ({
-  detectPackageManager: () => 'npm',
+  detectPackageManager: (...args: unknown[]) =>
+    mockDetectPackageManager(...args),
   getPackageManagerCommand: () => ({ exec: 'npx', install: 'npm install' }),
 }));
 
+// Serve fs from a mutable copy: the crash-window tests below spy on the very
+// functions the orchestrator calls, which the frozen builtin namespace forbids.
+vi.mock('fs', async () => ({ ...require('fs') }));
+
+import * as fs from 'fs';
 import {
+  chmodSync,
   existsSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'fs';
 import { createHash } from 'crypto';
 import { tmpdir } from 'os';
 import { dirname, join } from 'path';
 import { output } from '../../../utils/output';
+import { nxVersion } from '../../../utils/versions';
 import { stepHandoffPath } from '../agentic/handoff';
 import { runOrchestratorInit, runOrchestratorReconcile } from './orchestrator';
 import { computePlanHash } from './run-id';
@@ -124,6 +135,7 @@ describe('orchestrator', () => {
     mockStringifiedDeps.mockReset().mockReturnValue('{"deps":1}');
     mockRunInstall.mockReset().mockResolvedValue(undefined);
     mockLogSkippedInstall.mockReset();
+    mockDetectPackageManager.mockReset().mockReturnValue('npm');
   });
 
   afterEach(() => {
@@ -150,6 +162,17 @@ describe('orchestrator', () => {
   function lastBlock(): ParsedBlock {
     const blocks = parseBlocks();
     return blocks[blocks.length - 1];
+  }
+
+  function parseRunbookBlocks(): { runId: string; content: string }[] {
+    const re =
+      /<nx_migrate_runbook run-id="([^"]*)">\n([\s\S]*?)\n<\/nx_migrate_runbook>/g;
+    const blocks: { runId: string; content: string }[] = [];
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(stdout)) !== null) {
+      blocks.push({ runId: m[1], content: m[2] });
+    }
+    return blocks;
   }
 
   const genMig = (pkg: string, name: string, version = '1.0.0') => ({
@@ -193,6 +216,10 @@ describe('orchestrator', () => {
       startEmitted?: boolean;
       completeEmitted?: boolean;
       checkpointFailed?: boolean;
+      nxVersion?: string;
+      // The runbook a real init would have written; false leaves it off disk.
+      runbook?: string | false;
+      validate?: boolean;
     }
   ): string {
     const dir = runDir(root, runId);
@@ -201,15 +228,22 @@ describe('orchestrator', () => {
       join(dir, 'plan-0.json'),
       JSON.stringify({ migrations: opts.plan ?? [] })
     );
+    if (opts.runbook !== false) {
+      writeFileSync(
+        join(dir, 'RUNBOOK.md'),
+        opts.runbook ?? '# stub runbook\n'
+      );
+    }
     const state: MigrateRunState = {
       formatVersion: 1,
       runId,
       createdAt: '2026-01-01T00:00:00.000Z',
-      nxVersion: '1.0.0',
+      nxVersion: opts.nxVersion ?? '1.0.0',
       status: opts.status ?? 'active',
       createCommits: opts.createCommits ?? false,
       commitPrefix: 'chore: [nx migration] ',
       ...(opts.skipInstall ? { skipInstall: true } : {}),
+      ...(opts.validate !== undefined ? { validate: opts.validate } : {}),
       rounds: [
         {
           index: 0,
@@ -275,7 +309,7 @@ describe('orchestrator', () => {
   }
 
   describe('init', () => {
-    it('builds the step list, snapshot and planHash, then dispenses the first migration', async () => {
+    it('builds the step list, snapshot and planHash, then answers with the runbook and no step', async () => {
       mockGetLatestCommitSha.mockReturnValue(
         'dead0001dead0001dead0001dead0001dead0001'
       );
@@ -293,6 +327,7 @@ describe('orchestrator', () => {
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: false,
         installedNxVersion: '23.0.0',
+        validate: undefined,
       });
 
       const { active } = findActiveRun(root);
@@ -307,12 +342,9 @@ describe('orchestrator', () => {
       // The step kind is recorded from the plan: it decides how a step whose
       // generator marker is absent may be retried.
       expect(state.steps.map((s) => s.hasGenerator)).toEqual([true, false]);
-      // The first migration is dispensed with its pre-migration ref.
-      expect(state.steps[0].status).toBe('dispensed');
-      expect(state.steps[0].gitRefBefore).toBe(
-        'dead0001dead0001dead0001dead0001dead0001'
-      );
-      expect(state.steps[1].status).toBe('pending');
+      // No migration is dispensed at init: the agent reads the runbook first
+      // and asks for the first step by reconciling.
+      expect(state.steps.map((s) => s.status)).toEqual(['pending', 'pending']);
 
       expect(state.rounds[0].planSnapshot).toBe('plan-0.json');
       expect(state.rounds[0].planHash).toMatch(/^[0-9a-f]{64}$/);
@@ -322,16 +354,49 @@ describe('orchestrator', () => {
       expect(snapshot.migrations).toHaveLength(2);
 
       const block = lastBlock();
+      expect(block.action).toBe('initialized');
+      expect(block.step).toBe('-');
+      expect(block.payload.command).toBeUndefined();
+      expect(block.payload.next).toBe(`npx nx migrate --run-id=${runId}`);
+      expect(block.payload.instructions).toContain(
+        `Nx created migrate run ${runId}. No migration step ran in this response.`
+      );
+      expect(mockInit).toHaveBeenCalledWith({
+        migrationCount: 2,
+        createCommits: false,
+      });
+    });
+
+    it('dispenses the first migration on the reconcile that follows init', async () => {
+      mockGetLatestCommitSha.mockReturnValue(
+        'dead0001dead0001dead0001dead0001dead0001'
+      );
+      await runOrchestratorInit({
+        root,
+        migrationsJson: { migrations: [genMig('@nx/js', 'a')] },
+        createCommits: false,
+        commitPrefix: 'chore: [nx migration] ',
+        skipInstall: false,
+        installedNxVersion: '23.0.0',
+        validate: undefined,
+      });
+      const { runId } = findActiveRun(root).active;
+      stdout = '';
+
+      await runOrchestratorReconcile({ root, runId });
+
+      const state = findActiveRun(root).active.state;
+      expect(state.steps[0].status).toBe('dispensed');
+      expect(state.steps[0].gitRefBefore).toBe(
+        'dead0001dead0001dead0001dead0001dead0001'
+      );
+      const block = lastBlock();
       expect(block.action).toBe('next-step');
       expect(block.step).toBe('step-1');
       expect(block.payload.command).toBe(
         `npx nx migrate --run-migration=@nx/js:a --run-id=${runId}`
       );
       expect(block.payload.next).toBe(`npx nx migrate --run-id=${runId}`);
-      expect(mockInit).toHaveBeenCalledWith({
-        migrationCount: 2,
-        createCommits: false,
-      });
     });
 
     it('records the run install policy so later invocations can honor --skip-install', async () => {
@@ -344,6 +409,7 @@ describe('orchestrator', () => {
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: true,
         installedNxVersion: '23.0.0',
+        validate: undefined,
       });
 
       expect(findActiveRun(root).active.state.skipInstall).toBe(true);
@@ -364,6 +430,7 @@ describe('orchestrator', () => {
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: false,
         installedNxVersion: '23.0.0',
+        validate: undefined,
       });
 
       expect(mockCheckpoint).toHaveBeenCalledWith(
@@ -399,6 +466,7 @@ describe('orchestrator', () => {
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: false,
         installedNxVersion: '23.0.0',
+        validate: undefined,
       });
 
       expect(runDirsAtCheckpoint).toBe(0);
@@ -416,6 +484,7 @@ describe('orchestrator', () => {
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: false,
         installedNxVersion: '23.0.0',
+        validate: undefined,
       });
 
       expect(mockCheckpoint).not.toHaveBeenCalled();
@@ -439,6 +508,7 @@ describe('orchestrator', () => {
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: false,
         installedNxVersion: '23.0.0',
+        validate: undefined,
       });
 
       expect(mockCheckpoint).toHaveBeenCalledTimes(1);
@@ -461,6 +531,7 @@ describe('orchestrator', () => {
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: false,
         installedNxVersion: '23.0.0',
+        validate: undefined,
       });
 
       const { state } = findActiveRun(root).active;
@@ -486,6 +557,7 @@ describe('orchestrator', () => {
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: false,
         installedNxVersion: '23.0.0',
+        validate: undefined,
       });
 
       expect(readFileSync(join(root, '.gitignore'), 'utf-8')).toContain(
@@ -521,6 +593,7 @@ describe('orchestrator', () => {
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: false,
         installedNxVersion: '23.0.0',
+        validate: undefined,
       });
 
       expect(activeRunDirNames()).toEqual(['competitor-run']);
@@ -544,6 +617,7 @@ describe('orchestrator', () => {
           commitPrefix: 'chore: [nx migration] ',
           skipInstall: false,
           installedNxVersion: '23.0.0',
+          validate: undefined,
         })
       ).rejects.toThrow(/already active with a different plan/);
 
@@ -559,7 +633,7 @@ describe('orchestrator', () => {
       });
       // The dispense's pre-migration ref read is the last git side effect
       // before its state write; a concurrent dispense landing there postdates
-      // this init's read of the step as pending.
+      // this reconcile's read of the step as pending.
       mockGetLatestCommitSha.mockImplementationOnce(() => {
         writeRunState(dir, {
           ...readRunState(dir),
@@ -572,19 +646,12 @@ describe('orchestrator', () => {
         return null;
       });
 
-      await runOrchestratorInit({
-        root,
-        migrationsJson,
-        createCommits: false,
-        commitPrefix: 'chore: [nx migration] ',
-        skipInstall: false,
-        installedNxVersion: '23.0.0',
-      });
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
 
       const block = lastBlock();
       expect(block.action).toBe('next-step');
       expect(block.step).toBe('step-1');
-      // The concurrent dispense's ref survives; this init did not re-dispense.
+      // The concurrent dispense's ref survives; this one did not re-dispense.
       const step = readRunState(dir).steps[0];
       expect(step.gitRefBefore).toBe(
         'beef0002beef0002beef0002beef0002beef0002'
@@ -592,7 +659,7 @@ describe('orchestrator', () => {
       expect(step.dispenseCount).toBe(1);
     });
 
-    it('dispatches against fresh state when a concurrent process advanced the run during the init report', async () => {
+    it('keeps the runbook-only response and the concurrent progress when the run advanced during the init report', async () => {
       const migrationsJson = {
         migrations: [genMig('@nx/js', 'a'), genMig('@nx/js', 'b')],
       };
@@ -606,7 +673,7 @@ describe('orchestrator', () => {
         startEmitted: false,
       });
       // The init-analytics report fires between the watermark claim and the
-      // dispense; a concurrent process advancing the run there makes this
+      // response; a concurrent process advancing the run there makes this
       // init's in-memory snapshot stale.
       mockInit.mockImplementationOnce(() => {
         writeRunState(dir, {
@@ -625,12 +692,15 @@ describe('orchestrator', () => {
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: false,
         installedNxVersion: '23.0.0',
+        validate: undefined,
       });
 
+      // Init dispenses nothing either way; the concurrent progress survives
+      // untouched and the next reconcile picks it up.
       const block = lastBlock();
-      expect(block.action).toBe('next-step');
-      expect(block.step).toBe('step-2');
+      expect(block.action).toBe('initialized');
       expect(readRunState(dir).steps[0].status).toBe('succeeded');
+      expect(readRunState(dir).steps[1].status).toBe('dispensed');
     });
 
     it('dispenses commands carrying no shell-dialect syntax', async () => {
@@ -641,9 +711,12 @@ describe('orchestrator', () => {
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: false,
         installedNxVersion: '23.0.0',
+        validate: undefined,
       });
-
       const { runId } = findActiveRun(root).active;
+
+      await runOrchestratorReconcile({ root, runId });
+
       const block = lastBlock();
       // Nothing ahead of the package manager's exec prefix: an env-var
       // assignment there is POSIX-only syntax neither Windows shell parses.
@@ -664,6 +737,7 @@ describe('orchestrator', () => {
           commitPrefix: 'chore: [nx migration] ',
           skipInstall: false,
           installedNxVersion: '23.0.0',
+          validate: undefined,
         })
       ).rejects.toThrow(
         `The migration id '@nx/js:evil'; rm -rf ~' contains characters that are not shell-safe`
@@ -686,6 +760,7 @@ describe('orchestrator', () => {
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: false,
         installedNxVersion: '23.0.0',
+        validate: undefined,
       };
       await runOrchestratorInit(initInput);
       const { runId } = findActiveRun(root).active;
@@ -699,7 +774,10 @@ describe('orchestrator', () => {
       expect(mockCheckpoint).toHaveBeenCalledTimes(1);
       const block = lastBlock();
       expect(block.runId).toBe(runId);
-      expect(block.action).toBe('next-step');
+      expect(block.action).toBe('initialized');
+      expect(block.payload.instructions).toContain(
+        `Nx resumed migrate run ${runId}.`
+      );
     });
 
     it('announces the run it resumed and how far along it is', async () => {
@@ -734,6 +812,7 @@ describe('orchestrator', () => {
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: false,
         installedNxVersion: '23.0.0',
+        validate: undefined,
       });
 
       expect(logged[0]).toEqual({
@@ -760,6 +839,7 @@ describe('orchestrator', () => {
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: false,
         installedNxVersion: '23.0.0',
+        validate: undefined,
       });
 
       expect(logged[0].bodyLines[1]).toBe(
@@ -775,6 +855,7 @@ describe('orchestrator', () => {
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: false,
         installedNxVersion: '23.0.0',
+        validate: undefined,
       });
 
       expect(logged.map((l) => l.title)).not.toContainEqual(
@@ -802,6 +883,7 @@ describe('orchestrator', () => {
           commitPrefix: 'chore: [nx migration] ',
           skipInstall: false,
           installedNxVersion: '23.0.0',
+          validate: undefined,
         })
       ).rejects.toThrow(
         `The migration id '@nx/js:evil'; rm -rf ~' contains characters that are not shell-safe`
@@ -823,6 +905,7 @@ describe('orchestrator', () => {
           commitPrefix: 'chore: [nx migration] ',
           skipInstall: false,
           installedNxVersion: '23.0.0',
+          validate: undefined,
         })
       ).rejects.toThrow(
         `A migrate run 'run-1' is already active with a different plan`
@@ -837,6 +920,7 @@ describe('orchestrator', () => {
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: false,
         installedNxVersion: '23.0.0',
+        validate: undefined,
       });
       const { runId } = findActiveRun(root).active;
 
@@ -848,6 +932,7 @@ describe('orchestrator', () => {
           commitPrefix: 'chore: [nx migration] ',
           skipInstall: false,
           installedNxVersion: '23.0.0',
+          validate: undefined,
         })
       ).rejects.toThrow(
         `A migrate run '${runId}' is already active with a different plan`
@@ -867,6 +952,7 @@ describe('orchestrator', () => {
           commitPrefix: 'chore: [nx migration] ',
           skipInstall: false,
           installedNxVersion: '23.0.0',
+          validate: undefined,
         })
       ).rejects.toThrow(/could not be determined[\s\S]*corrupt/);
 
@@ -890,6 +976,7 @@ describe('orchestrator', () => {
           commitPrefix: 'chore: [nx migration] ',
           skipInstall: false,
           installedNxVersion: '23.0.0',
+          validate: undefined,
         })
       ).rejects.toThrow(/not a valid run id/);
 
@@ -915,6 +1002,7 @@ describe('orchestrator', () => {
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: false,
         installedNxVersion: '23.0.0',
+        validate: undefined,
       });
 
       expect(output.warn).toHaveBeenCalledWith(
@@ -949,6 +1037,7 @@ describe('orchestrator', () => {
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: false,
         installedNxVersion: '23.0.0',
+        validate: undefined,
       });
 
       expect(mockCheckpoint).toHaveBeenCalledTimes(1);
@@ -978,6 +1067,7 @@ describe('orchestrator', () => {
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: false,
         installedNxVersion: '23.0.0',
+        validate: undefined,
       });
 
       const state = readRunState(dir);
@@ -1004,6 +1094,7 @@ describe('orchestrator', () => {
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: false,
         installedNxVersion: '23.0.0',
+        validate: undefined,
       });
 
       expect(mockCheckpoint).not.toHaveBeenCalled();
@@ -1025,9 +1116,658 @@ describe('orchestrator', () => {
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: false,
         installedNxVersion: '23.0.0',
+        validate: undefined,
       });
 
       expect(mockCheckpoint).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('init: runbook', () => {
+    const initInput = (migrationsJson: { migrations?: unknown[] }) => ({
+      root,
+      migrationsJson,
+      createCommits: false,
+      commitPrefix: 'chore: [nx migration] ',
+      skipInstall: false,
+      installedNxVersion: '23.0.0',
+      validate: undefined as boolean | undefined,
+    });
+
+    it('writes the runbook into the run directory and emits its bytes ahead of the initialized block', async () => {
+      await runOrchestratorInit(
+        initInput({ migrations: [genMig('@nx/js', 'a')] })
+      );
+
+      const { runId, state } = findActiveRun(root).active;
+      expect(state.runbookPath).toBe('RUNBOOK.md');
+      expect(state.validate).toBe(true);
+      const onDisk = readFileSync(
+        join(runDir(root, runId), 'RUNBOOK.md'),
+        'utf-8'
+      );
+      expect(onDisk).toContain(`# Nx migrate run ${runId}`);
+      expect(onDisk).toContain(`npx nx migrate --run-id=${runId}`);
+      expect(onDisk).toContain('a validation pass');
+      const runbooks = parseRunbookBlocks();
+      expect(runbooks).toHaveLength(1);
+      expect(runbooks[0].runId).toBe(runId);
+      expect(runbooks[0].content).toBe(onDisk);
+      // The runbook lands before the initialized step block, so the contract
+      // is read before the first command is.
+      expect(stdout.indexOf('<nx_migrate_runbook')).toBeGreaterThanOrEqual(0);
+      expect(stdout.indexOf('<nx_migrate_runbook')).toBeLessThan(
+        stdout.indexOf('<nx_migrate_step')
+      );
+    });
+
+    it('records --validate=false on the run and renders the runbook without the validation pass', async () => {
+      await runOrchestratorInit({
+        ...initInput({ migrations: [genMig('@nx/js', 'a')] }),
+        validate: false,
+      });
+
+      const { runId, state } = findActiveRun(root).active;
+      expect(state.validate).toBe(false);
+      const onDisk = readFileSync(
+        join(runDir(root, runId), 'RUNBOOK.md'),
+        'utf-8'
+      );
+      expect(onDisk).not.toContain('a validation pass');
+    });
+
+    it('re-emits the stored runbook bytes on resume, even from a different nx version', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        planHash: computePlanHash(migrationsJson),
+        plan: migrationsJson.migrations,
+        nxVersion: '1.0.0',
+        runbook: '# stored contract\ncustom bytes\n',
+      });
+
+      await runOrchestratorInit(initInput(migrationsJson));
+
+      const runbooks = parseRunbookBlocks();
+      expect(runbooks).toHaveLength(1);
+      // The stored bytes verbatim: no re-render from this nx's templates.
+      expect(runbooks[0].content).toBe('# stored contract\ncustom bytes\n');
+      const block = lastBlock();
+      expect(block.action).toBe('initialized');
+      expect(block.payload.instructions).toContain(
+        'Nx resumed migrate run run-1.'
+      );
+    });
+
+    it('re-renders a missing runbook when the same nx version resumes the run', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        planHash: computePlanHash(migrationsJson),
+        plan: migrationsJson.migrations,
+        nxVersion,
+        runbook: false,
+      });
+
+      await runOrchestratorInit(initInput(migrationsJson));
+
+      expect(output.warn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining(
+            'was missing; it has been re-rendered'
+          ),
+        })
+      );
+      const onDisk = readFileSync(join(dir, 'RUNBOOK.md'), 'utf-8');
+      expect(onDisk).toContain('# Nx migrate run run-1');
+      expect(parseRunbookBlocks()[0].content).toBe(onDisk);
+      // The re-render also records the path a pre-runbook state was missing.
+      expect(readRunState(dir).runbookPath).toBe('RUNBOOK.md');
+      expect(lastBlock().action).toBe('initialized');
+    });
+
+    it('refuses with an error block when the runbook is missing and a different nx wrote the run', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        planHash: computePlanHash(migrationsJson),
+        plan: migrationsJson.migrations,
+        nxVersion: '1.0.0',
+        runbook: false,
+      });
+
+      await runOrchestratorInit(initInput(migrationsJson));
+
+      expect(parseRunbookBlocks()).toHaveLength(0);
+      const block = lastBlock();
+      expect(block.action).toBe('error');
+      expect(block.payload.instructions).toContain(
+        'cannot re-render the one nx 1.0.0 wrote'
+      );
+      expect(block.payload.instructions).toContain('abandon the run');
+      // No runbook was invented and no step was dispensed.
+      expect(existsSync(join(dir, 'RUNBOOK.md'))).toBe(false);
+      expect(readRunState(dir).steps[0].status).toBe('pending');
+    });
+
+    it('removes a non-regular entry at the runbook path instead of writing through it', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        planHash: computePlanHash(migrationsJson),
+        plan: migrationsJson.migrations,
+        nxVersion,
+        runbook: false,
+      });
+      const victim = join(root, 'victim.md');
+      writeFileSync(victim, 'untouched');
+      symlinkSync(victim, join(dir, 'RUNBOOK.md'));
+
+      await runOrchestratorInit(initInput(migrationsJson));
+
+      // The re-render landed in a regular file; the link target kept its
+      // bytes.
+      expect(lstatSync(join(dir, 'RUNBOOK.md')).isFile()).toBe(true);
+      expect(readFileSync(victim, 'utf-8')).toBe('untouched');
+      expect(readFileSync(join(dir, 'RUNBOOK.md'), 'utf-8')).toContain(
+        '# Nx migrate run run-1'
+      );
+    });
+
+    // Directory mode bits do not gate deletion on Windows, and root bypasses
+    // them, so the removal-failure setup only means something rootless POSIX.
+    const rootlessPosix =
+      process.platform === 'win32' || process.getuid?.() === 0 ? it.skip : it;
+
+    rootlessPosix(
+      'fails closed when a non-regular runbook entry cannot be removed',
+      async () => {
+        const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+        const dir = setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:a', 'pending')],
+          planHash: computePlanHash(migrationsJson),
+          plan: migrationsJson.migrations,
+          nxVersion,
+          runbook: false,
+        });
+        const victim = join(root, 'victim.md');
+        writeFileSync(victim, 'untouched');
+        symlinkSync(victim, join(dir, 'RUNBOOK.md'));
+        // A run directory the removal cannot write to: the failed rm must
+        // propagate rather than fall through to a write that would follow the
+        // link.
+        chmodSync(dir, 0o555);
+        try {
+          await expect(
+            runOrchestratorInit(initInput(migrationsJson))
+          ).rejects.toThrow();
+          expect(readFileSync(victim, 'utf-8')).toBe('untouched');
+        } finally {
+          chmodSync(dir, 0o755);
+        }
+      }
+    );
+
+    it('refuses a cross-version resume before the checkpoint retry or any state write', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      mockGetWorkingTreeStatus.mockReturnValue('dirty');
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        planHash: computePlanHash(migrationsJson),
+        plan: migrationsJson.migrations,
+        createCommits: true,
+        checkpointFailed: true,
+        startEmitted: false,
+        nxVersion: '1.0.0',
+        runbook: false,
+      });
+      const before = readRunState(dir);
+
+      await runOrchestratorInit({
+        ...initInput(migrationsJson),
+        createCommits: true,
+      });
+
+      // The refusal is side-effect free: no checkpoint commit, no analytics
+      // watermark, no ledger append.
+      expect(lastBlock().action).toBe('error');
+      expect(mockCheckpoint).not.toHaveBeenCalled();
+      expect(mockInit).not.toHaveBeenCalled();
+      expect(readRunState(dir)).toEqual(before);
+    });
+
+    rootlessPosix(
+      'fails a resume on an unreadable runbook before the checkpoint retry or any state write',
+      async () => {
+        const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+        mockGetWorkingTreeStatus.mockReturnValue('dirty');
+        const dir = setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:a', 'pending')],
+          planHash: computePlanHash(migrationsJson),
+          plan: migrationsJson.migrations,
+          createCommits: true,
+          checkpointFailed: true,
+          startEmitted: false,
+        });
+        chmodSync(join(dir, 'RUNBOOK.md'), 0o000);
+        const before = readRunState(dir);
+        try {
+          await expect(
+            runOrchestratorInit({
+              ...initInput(migrationsJson),
+              createCommits: true,
+            })
+          ).rejects.toThrow();
+          expect(mockCheckpoint).not.toHaveBeenCalled();
+          expect(mockInit).not.toHaveBeenCalled();
+          expect(readRunState(dir)).toEqual(before);
+        } finally {
+          chmodSync(join(dir, 'RUNBOOK.md'), 0o644);
+        }
+      }
+    );
+
+    it('refuses a directory at the runbook path instead of erasing its contents', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        planHash: computePlanHash(migrationsJson),
+        plan: migrationsJson.migrations,
+        nxVersion,
+        runbook: false,
+      });
+      mkdirSync(join(dir, 'RUNBOOK.md'));
+      writeFileSync(join(dir, 'RUNBOOK.md', 'keep.txt'), 'kept');
+
+      await expect(
+        runOrchestratorInit(initInput(migrationsJson))
+      ).rejects.toThrow(/RUNBOOK\.md is a directory/);
+
+      expect(readFileSync(join(dir, 'RUNBOOK.md', 'keep.txt'), 'utf-8')).toBe(
+        'kept'
+      );
+    });
+  });
+
+  describe('reconcile: runbook', () => {
+    it('points each step dispense at the runbook', async () => {
+      setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        plan: [genMig('@nx/js', 'a')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(lastBlock().action).toBe('next-step');
+      expect(lastBlock().payload.instructions).toContain(
+        'Runbook: .nx/migrate-runs/run-1/RUNBOOK.md'
+      );
+      expect(lastBlock().payload.instructions).toContain(
+        "never infer the run's progress from memory"
+      );
+    });
+
+    it('repairs a runbook deleted mid-run before dispensing', async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        plan: [genMig('@nx/js', 'a')],
+        nxVersion,
+        runbook: false,
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(output.warn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining(
+            'was missing; it has been re-rendered'
+          ),
+        })
+      );
+      expect(readFileSync(join(dir, 'RUNBOOK.md'), 'utf-8')).toContain(
+        '# Nx migrate run run-1'
+      );
+      expect(lastBlock().action).toBe('next-step');
+      expect(lastBlock().payload.instructions).toContain(
+        'Runbook: .nx/migrate-runs/run-1/RUNBOOK.md'
+      );
+    });
+
+    it('publishes a complete runbook even when a concurrent repair races it', async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        plan: [genMig('@nx/js', 'a')],
+        nxVersion,
+        runbook: false,
+      });
+      // The render's package-manager read sits between the missing probe and
+      // the atomic publish; a concurrent repair landing there is renamed
+      // over, so the path only ever holds a complete contract.
+      mockDetectPackageManager.mockImplementationOnce(() => {
+        writeFileSync(join(dir, 'RUNBOOK.md'), '# concurrent repair\n');
+        return 'npm';
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(readFileSync(join(dir, 'RUNBOOK.md'), 'utf-8')).toContain(
+        '# Nx migrate run run-1'
+      );
+      expect(lastBlock().action).toBe('next-step');
+    });
+
+    it('replaces a symlink planted mid-repair instead of writing through it', async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        plan: [genMig('@nx/js', 'a')],
+        nxVersion,
+        runbook: false,
+      });
+      const victim = join(root, 'victim.md');
+      writeFileSync(victim, 'untouched');
+      mockDetectPackageManager.mockImplementationOnce(() => {
+        symlinkSync(victim, join(dir, 'RUNBOOK.md'));
+        return 'npm';
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      // rename replaces the link itself; the target keeps its bytes.
+      expect(readFileSync(victim, 'utf-8')).toBe('untouched');
+      expect(lstatSync(join(dir, 'RUNBOOK.md')).isFile()).toBe(true);
+      expect(readFileSync(join(dir, 'RUNBOOK.md'), 'utf-8')).toContain(
+        '# Nx migrate run run-1'
+      );
+      expect(lastBlock().action).toBe('next-step');
+    });
+
+    it('leaves nothing at the runbook path when the publish is interrupted after the temp write', async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        plan: [genMig('@nx/js', 'a')],
+        nxVersion,
+        runbook: false,
+      });
+      // Interrupt at the rename itself: the full content is already on disk
+      // under the temp name, which is exactly the crash the atomic publish
+      // must keep away from the real path.
+      const realRename = fs.renameSync.bind(fs);
+      const spy = vi
+        .spyOn(fs, 'renameSync')
+        .mockImplementation((from: unknown, to: unknown) => {
+          if (typeof to === 'string' && to.endsWith('RUNBOOK.md')) {
+            spy.mockRestore();
+            throw new Error('interrupted publish');
+          }
+          return realRename(from, to);
+        });
+
+      await expect(
+        runOrchestratorReconcile({ root, runId: 'run-1' })
+      ).rejects.toThrow('interrupted publish');
+
+      // The written bytes sit only under the temp name; no truncated file a
+      // later invocation could accept as the contract.
+      expect(existsSync(join(dir, 'RUNBOOK.md'))).toBe(false);
+      expect(readdirSync(dir).some((n) => n.startsWith('RUNBOOK.md~'))).toBe(
+        true
+      );
+      stdout = '';
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(readFileSync(join(dir, 'RUNBOOK.md'), 'utf-8')).toContain(
+        '# Nx migrate run run-1'
+      );
+      expect(lastBlock().action).toBe('next-step');
+    });
+
+    it('repairs alongside a stale temp orphan from an earlier interrupted publish', async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        plan: [genMig('@nx/js', 'a')],
+        nxVersion,
+        runbook: false,
+      });
+      // Another invocation's orphan; this repair's random-suffix temp never
+      // touches it.
+      writeFileSync(join(dir, 'RUNBOOK.md~deadbeef'), 'stale');
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(readFileSync(join(dir, 'RUNBOOK.md'), 'utf-8')).toContain(
+        '# Nx migrate run run-1'
+      );
+      expect(readFileSync(join(dir, 'RUNBOOK.md~deadbeef'), 'utf-8')).toBe(
+        'stale'
+      );
+      expect(lastBlock().action).toBe('next-step');
+    });
+
+    // These exercise the POSIX-only rejections (O_NOFOLLOW, mkfifo). Windows
+    // lacks both flags; its guard is the inode-identity check, covered for
+    // every platform by the replaced-by-a-different-file test below.
+    const posixOnly = process.platform === 'win32' ? it.skip : it;
+
+    posixOnly(
+      'rejects a runbook swapped for a symlink between inspection and read',
+      async () => {
+        const dir = setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:a', 'pending')],
+          plan: [genMig('@nx/js', 'a')],
+        });
+        const victim = join(root, 'victim.md');
+        writeFileSync(victim, 'secret-bytes');
+        // Swap the entry the moment the orchestrator has inspected it, before
+        // it opens the path for the read.
+        const realLstat = fs.lstatSync.bind(fs);
+        const spy = vi
+          .spyOn(fs, 'lstatSync')
+          .mockImplementation((p: unknown, o: unknown) => {
+            const stats = realLstat(p, o);
+            if (typeof p === 'string' && p.endsWith('RUNBOOK.md')) {
+              spy.mockRestore();
+              rmSync(p);
+              symlinkSync(victim, p);
+            }
+            return stats;
+          });
+
+        await expect(
+          runOrchestratorReconcile({ root, runId: 'run-1' })
+        ).rejects.toThrow();
+
+        // The link target's bytes never reached the response, and the run
+        // did not advance.
+        expect(stdout).not.toContain('secret-bytes');
+        expect(readRunState(dir).steps[0].status).toBe('pending');
+      }
+    );
+
+    posixOnly(
+      'rejects a runbook swapped for a FIFO instead of blocking on it',
+      async () => {
+        const dir = setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:a', 'pending')],
+          plan: [genMig('@nx/js', 'a')],
+        });
+        const realLstat = fs.lstatSync.bind(fs);
+        const spy = vi
+          .spyOn(fs, 'lstatSync')
+          .mockImplementation((p: unknown, o: unknown) => {
+            const stats = realLstat(p, o);
+            if (typeof p === 'string' && p.endsWith('RUNBOOK.md')) {
+              spy.mockRestore();
+              rmSync(p);
+              require('child_process').execSync(`mkfifo ${JSON.stringify(p)}`);
+            }
+            return stats;
+          });
+
+        // O_NONBLOCK keeps the open from waiting on a FIFO writer; the
+        // descriptor check then rejects the non-regular entry.
+        await expect(
+          runOrchestratorReconcile({ root, runId: 'run-1' })
+        ).rejects.toThrow(/replaced while being read/);
+        expect(readRunState(dir).steps[0].status).toBe('pending');
+      }
+    );
+
+    it('rejects a runbook replaced by a different file between inspection and read', async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        plan: [genMig('@nx/js', 'a')],
+      });
+      const realLstat = fs.lstatSync.bind(fs);
+      const spy = vi
+        .spyOn(fs, 'lstatSync')
+        .mockImplementation((p: unknown, o: unknown) => {
+          const stats = realLstat(p, o);
+          if (typeof p === 'string' && p.endsWith('RUNBOOK.md')) {
+            spy.mockRestore();
+            rmSync(p);
+            writeFileSync(p, '# not the inspected file\n');
+          }
+          return stats;
+        });
+
+      // The inode identity check carries the guarantee even where the open
+      // flags cannot (Windows has no O_NOFOLLOW).
+      await expect(
+        runOrchestratorReconcile({ root, runId: 'run-1' })
+      ).rejects.toThrow(/replaced while being read/);
+      expect(readRunState(dir).steps[0].status).toBe('pending');
+    });
+
+    it('completes an all-terminal active run without requiring the runbook', async () => {
+      // The worker marks the last step succeeded but leaves the run active;
+      // this reconcile only has the terminal response left to emit, so a
+      // missing runbook must not leave the run active forever.
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+        plan: [genMig('@nx/js', 'a')],
+        nxVersion: '1.0.0',
+        runbook: false,
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(parseBlocks().map((b) => b.action)).toEqual(['complete']);
+      expect(readRunState(dir).status).toBe('completed');
+    });
+
+    it('anchors a rejected step action to the runbook', async () => {
+      setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        plan: [genMig('@nx/js', 'a')],
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry',
+      });
+
+      const block = lastBlock();
+      expect(block.action).toBe('error');
+      expect(block.payload.instructions).toContain(
+        'Runbook: .nx/migrate-runs/run-1/RUNBOOK.md'
+      );
+    });
+
+    it('omits the runbook anchor when a completed run has none to name', async () => {
+      setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+        plan: [genMig('@nx/js', 'a')],
+        status: 'completed',
+        completeEmitted: true,
+        nxVersion: '1.0.0',
+        runbook: false,
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry',
+      });
+
+      const block = lastBlock();
+      expect(block.action).toBe('error');
+      expect(block.payload.instructions).not.toContain('Runbook:');
+    });
+
+    // Mode bits do not gate reads this way on Windows, and root bypasses
+    // them, so the unreadable-file setup only means something rootless POSIX.
+    const rootlessPosix =
+      process.platform === 'win32' || process.getuid?.() === 0 ? it.skip : it;
+
+    rootlessPosix(
+      'refuses to dispense when the runbook cannot be read',
+      async () => {
+        const dir = setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:a', 'pending')],
+          plan: [genMig('@nx/js', 'a')],
+        });
+        chmodSync(join(dir, 'RUNBOOK.md'), 0o000);
+        try {
+          await expect(
+            runOrchestratorReconcile({ root, runId: 'run-1' })
+          ).rejects.toThrow();
+          // The run did not advance while its contract was unavailable.
+          expect(readRunState(dir).steps[0].status).toBe('pending');
+          expect(parseBlocks()).toHaveLength(0);
+        } finally {
+          chmodSync(join(dir, 'RUNBOOK.md'), 0o644);
+        }
+      }
+    );
+
+    it('refuses to dispense when the runbook is missing and a different nx wrote the run', async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        plan: [genMig('@nx/js', 'a')],
+        nxVersion: '1.0.0',
+        runbook: false,
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
+      expect(block.action).toBe('error');
+      expect(block.payload.instructions).toContain(
+        'cannot re-render the one nx 1.0.0 wrote'
+      );
+      // Nothing advanced: the run cannot move without its contract.
+      expect(readRunState(dir).steps[0].status).toBe('pending');
+    });
+
+    it('leaves the completion output without the footer', async () => {
+      setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+        plan: [genMig('@nx/js', 'a')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(lastBlock().action).toBe('complete');
+      expect(lastBlock().payload.instructions).not.toContain('Runbook:');
+    });
+
+    it('re-emits completion without requiring the runbook', async () => {
+      // A completed run cannot advance; its terminal response must not hide
+      // behind a missing contract, whichever nx wrote the run.
+      setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+        plan: [genMig('@nx/js', 'a')],
+        status: 'completed',
+        completeEmitted: true,
+        nxVersion: '1.0.0',
+        runbook: false,
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(parseBlocks().map((b) => b.action)).toEqual(['complete']);
     });
   });
 
@@ -1039,6 +1779,7 @@ describe('orchestrator', () => {
       commitPrefix: 'chore: [nx migration] ',
       skipInstall: false,
       installedNxVersion: '23.0.0',
+      validate: undefined,
     });
 
     it('refuses a fresh init when scratch files are tracked, before any git side effect', async () => {
@@ -1104,6 +1845,7 @@ describe('orchestrator', () => {
         // Pre-v23 nx: the inline fallback applies the entry.
         skipInstall: false,
         installedNxVersion: '22.5.0',
+        validate: undefined,
       });
 
       expect(checkpointSawEntry).toBe(true);
