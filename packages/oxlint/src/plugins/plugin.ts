@@ -73,6 +73,7 @@ const internalCreateNodes = async (
   projectRootsByOxlintRoots: Map<string, string[]>,
   getLintableFilesPerProjectRoot: () => Promise<Map<string, number>>,
   configChainsByConfig: Map<string, string[]>,
+  jsPluginDepsByConfig: Map<string, JsPluginDeps>,
   tsconfigChainsByProjectRoot: Map<string, string[]>,
   projectsCache: PluginCache<OxlintProjects>,
   hashByRoot: Map<string, string>,
@@ -113,6 +114,7 @@ const internalCreateNodes = async (
         context,
         pmc,
         configChainsByConfig,
+        jsPluginDepsByConfig,
         tsconfigChainsByProjectRoot.get(projectRoot) ?? [],
         rootConfig
       );
@@ -173,10 +175,8 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
       existsSync(join(context.workspaceRoot, file))
     );
 
-    const configChainsByConfig = collectConfigChains(
-      oxlintConfigFiles,
-      context.workspaceRoot
-    );
+    const { chains: configChainsByConfig, jsPluginDepsByConfig } =
+      collectConfigChains(oxlintConfigFiles, context.workspaceRoot);
     const tsconfigChainsByProjectRoot = collectTsconfigChainsByProjectRoot(
       projectRoots,
       context.workspaceRoot
@@ -199,12 +199,21 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
         });
         // Deduped: every chain ends at the same root config, and each duplicate
         // is another whole-workspace glob for the hasher.
+        const allConfigs = [
+          ...governingConfigs,
+          ...governingConfigs.flatMap(
+            (config) => configChainsByConfig.get(config) ?? []
+          ),
+        ];
         return [
           ...new Set([
-            ...governingConfigs,
-            ...governingConfigs.flatMap(
-              (config) => configChainsByConfig.get(config) ?? []
+            ...allConfigs,
+            ...allConfigs.flatMap(
+              (config) => jsPluginDepsByConfig.get(config)?.files ?? []
             ),
+            // Change which files Oxlint considers lintable, and therefore
+            // whether a target is inferred at all.
+            ...ancestorEslintignorePaths(root),
             lockFilePattern,
             ...(tsconfigChainsByProjectRoot.get(root) ?? []),
           ]),
@@ -225,6 +234,7 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
             projectRootsByOxlintRoots,
             getLintableFilesPerProjectRoot,
             configChainsByConfig,
+            jsPluginDepsByConfig,
             tsconfigChainsByProjectRoot,
             targetsCache,
             hashByRoot,
@@ -319,20 +329,36 @@ function splitConfigFiles(
   };
 }
 
+interface JsPluginDeps {
+  packages: string[];
+  files: string[];
+}
+
 /**
  * Resolves each config's `extends` chain to workspace-relative target inputs.
  * Oxlint resolves entries relative to the referencing config and only tracks the
  * chain for its LSP, so Nx walks it here or caching goes stale. TypeScript
  * configs are not statically readable, so only the file itself is tracked.
+ *
+ * Also collects each config's `jsPlugins`: their code produces lint results, so
+ * package specifiers become externalDependencies and workspace-relative files
+ * become file inputs.
  */
 function collectConfigChains(
   oxlintConfigFiles: string[],
   workspaceRoot: string
-): Map<string, string[]> {
+): {
+  chains: Map<string, string[]>;
+  jsPluginDepsByConfig: Map<string, JsPluginDeps>;
+} {
   const result = new Map<string, string[]>();
+  const jsPluginDepsByConfig = new Map<string, JsPluginDeps>();
   // Shared across configs so the common root config is read once. `null` records
   // a failed read, so a bad file is not retried per referrer.
-  const jsonCache = new Map<string, { extends?: string[] } | null>();
+  const jsonCache = new Map<
+    string,
+    { extends?: string[]; jsPlugins?: string[] } | null
+  >();
   const existsCache = new Map<string, boolean>();
 
   const configExists = (relativeConfigPath: string): boolean => {
@@ -344,14 +370,43 @@ function collectConfigChains(
     return exists;
   };
 
+  const recordJsPluginDeps = (
+    relativeConfigPath: string,
+    jsPlugins: unknown
+  ): void => {
+    if (jsPluginDepsByConfig.has(relativeConfigPath)) {
+      return;
+    }
+    const deps: JsPluginDeps = { packages: [], files: [] };
+    if (Array.isArray(jsPlugins)) {
+      for (const entry of jsPlugins) {
+        if (typeof entry !== 'string' || entry.startsWith('/')) {
+          continue;
+        }
+        if (entry.startsWith('.')) {
+          const resolved = normalize(join(dirname(relativeConfigPath), entry));
+          if (!resolved.startsWith('..')) {
+            deps.files.push(resolved);
+          }
+        } else {
+          const segments = entry.split('/');
+          deps.packages.push(
+            entry.startsWith('@') ? segments.slice(0, 2).join('/') : segments[0]
+          );
+        }
+      }
+    }
+    jsPluginDepsByConfig.set(relativeConfigPath, deps);
+  };
+
   const readConfig = (
     relativeConfigPath: string
-  ): { extends?: string[] } | null => {
+  ): { extends?: string[]; jsPlugins?: string[] } | null => {
     if (jsonCache.has(relativeConfigPath)) {
       return jsonCache.get(relativeConfigPath);
     }
 
-    let json: { extends?: string[] } | null = null;
+    let json: { extends?: string[]; jsPlugins?: string[] } | null = null;
     if (configExists(relativeConfigPath)) {
       try {
         json = readJsonFile(join(workspaceRoot, relativeConfigPath), {
@@ -384,6 +439,7 @@ function collectConfigChains(
       }
 
       const json = readConfig(relativeConfigPath);
+      recordJsPluginDeps(relativeConfigPath, json?.jsPlugins);
 
       if (!Array.isArray(json?.extends)) {
         return;
@@ -410,7 +466,7 @@ function collectConfigChains(
     result.set(configFile, extended);
   }
 
-  return result;
+  return { chains: result, jsPluginDepsByConfig };
 }
 
 /**
@@ -568,6 +624,24 @@ async function collectLintableFilesByProjectRoot(
   return lintableFilesPerProjectRoot;
 }
 
+/**
+ * `.eslintignore` candidates in every ancestor directory of the project root,
+ * workspace root included. The project's own directory is excluded — files
+ * there are covered by the `default` input.
+ */
+function ancestorEslintignorePaths(projectRoot: string): string[] {
+  const result: string[] = [];
+  let dir = projectRoot === '.' ? '.' : dirname(projectRoot);
+  while (true) {
+    result.push(dir === '.' ? '.eslintignore' : `${dir}/.eslintignore`);
+    if (dir === '.') {
+      break;
+    }
+    dir = dirname(dir);
+  }
+  return result;
+}
+
 // Only the keys are read, so the value type is left open for both callers.
 function getRootForDirectory(
   directory: string,
@@ -592,6 +666,7 @@ function getProjectUsingOxlintConfig(
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   configChainsByConfig: Map<string, string[]>,
+  jsPluginDepsByConfig: Map<string, JsPluginDeps>,
   tsconfigChainOutsideProjectRoot: string[],
   rootConfig: string | undefined
 ): CreateNodesResult['projects'][string] | null {
@@ -630,6 +705,18 @@ function getProjectUsingOxlintConfig(
   const lintPath =
     isRootProject && standaloneSrcPath ? `./${standaloneSrcPath}` : '.';
 
+  const jsPluginPackages = new Set<string>();
+  const jsPluginFiles = new Set<string>();
+  for (const config of configInputs) {
+    const deps = jsPluginDepsByConfig.get(config);
+    for (const pkg of deps?.packages ?? []) {
+      jsPluginPackages.add(pkg);
+    }
+    for (const file of deps?.files ?? []) {
+      jsPluginFiles.add(file);
+    }
+  }
+
   const targetConfig: TargetConfiguration = {
     command: `oxlint ${lintPath}`,
     options: { cwd: projectRoot },
@@ -638,10 +725,17 @@ function getProjectUsingOxlintConfig(
       'default',
       '^default',
       ...configInputs.map((config) => `{workspaceRoot}/${config}`),
+      ...[...jsPluginFiles].map((file) => `{workspaceRoot}/${file}`),
+      // Oxlint layers .eslintignore files from every ancestor of a linted
+      // file; the project's own is covered by `default`. Declared even when
+      // absent, like the extends chain.
+      ...ancestorEslintignorePaths(projectRoot).map(
+        (file) => `{workspaceRoot}/${file}`
+      ),
       ...tsconfigChainOutsideProjectRoot.map(
         (file) => `{workspaceRoot}/${file}`
       ),
-      { externalDependencies: ['oxlint'] },
+      { externalDependencies: ['oxlint', ...jsPluginPackages] },
     ],
     metadata: {
       technologies: ['oxlint'],
