@@ -545,10 +545,11 @@ exports.createNodesV2 = [
     );
   });
 
-  it('should resolve a source-loaded local plugin transitive workspace import from source', async () => {
+  it('should scope custom conditions to a source-loaded plugin graph', async () => {
     const plugin = uniq('plugin');
     const lib = uniq('lib');
-    const marker = 'resolved-workspace-dep-from-source';
+    const sourceMarker = 'resolved-workspace-dep-from-source';
+    const builtMarker = 'resolved-workspace-dep-from-dist';
     const pm = getSelectedPackageManager();
 
     runCLI(`generate @nx/plugin:plugin packages/${plugin}`);
@@ -557,9 +558,7 @@ exports.createNodesV2 = [
       readJson('tsconfig.base.json').compilerOptions.customConditions[0];
     expect(sourceCondition).not.toBe('development');
 
-    // A sibling workspace package exposing its TS source via the workspace
-    // custom condition and its built output via `default`. Its `dist` is never
-    // built, so the plugin can only import it if source resolution wins.
+    // A sibling workspace package exposes different source and built markers.
     createFile(
       `packages/${lib}/package.json`,
       JSON.stringify({
@@ -577,7 +576,11 @@ exports.createNodesV2 = [
     );
     createFile(
       `packages/${lib}/src/index.ts`,
-      `export const workspaceDepMarker = '${marker}';\n`
+      `export const workspaceDepMarker = '${sourceMarker}';\n`
+    );
+    createFile(
+      `packages/${lib}/dist/index.js`,
+      `exports.workspaceDepMarker = '${builtMarker}';\n`
     );
 
     // The plugin's registered (source) entry statically imports the sibling
@@ -624,6 +627,7 @@ export const createNodesV2: CreateNodesV2<PluginOptions> = [
       pkg.dependencies ??= {};
       pkg.dependencies[`@${workspaceName}/${lib}`] =
         pm === 'pnpm' ? 'workspace:*' : '*';
+      pkg.generators = './generators.json';
       pkg.exports = {
         ...pkg.exports,
         './deps': {
@@ -634,12 +638,34 @@ export const createNodesV2: CreateNodesV2<PluginOptions> = [
       return pkg;
     });
 
+    createFile(
+      `packages/${plugin}/generators.json`,
+      JSON.stringify({
+        generators: {
+          sync: {
+            factory: './dist/generators/sync.js',
+            schema: './dist/generators/schema.json',
+          },
+        },
+      })
+    );
+    createFile(`packages/${plugin}/dist/generators/schema.json`, '{}');
+    createFile(
+      `packages/${plugin}/dist/generators/sync.js`,
+      `const { workspaceDepMarker } = require('@${workspaceName}/${lib}');
+module.exports = (tree) => tree.write('sync-output.txt', workspaceDepMarker);
+`
+    );
+
     updateJson(`nx.json`, (nxJson) => {
       nxJson.plugins ??= [];
       nxJson.plugins.push({
         plugin: `@${workspaceName}/${plugin}/deps`,
         options: { inferredTags: ['deps-tag'] },
       });
+      nxJson.sync = {
+        globalGenerators: [`@${workspaceName}/${plugin}:sync`],
+      };
       return nxJson;
     });
 
@@ -653,15 +679,17 @@ export const createNodesV2: CreateNodesV2<PluginOptions> = [
     );
     createFile(`packages/${inferredProject}/my-project-file`);
 
-    // The plugin loads from source during graph construction; its import of the
-    // sibling package must resolve to source (dist was never built). If it fell
-    // through to dist, plugin load would fail and the inferred target wouldn't
-    // exist.
+    runCLI('reset');
+    runCLI('sync');
+    expect(readFileSync(join(tmpProjPath(), 'sync-output.txt'), 'utf-8')).toBe(
+      builtMarker
+    );
+
     const configuration = JSON.parse(
       runCLI(`show project ${inferredProject} --json`)
     );
     expect(configuration.tags).toContain('deps-tag');
-    expect(runCLI(`build ${inferredProject}`)).toContain(marker);
+    expect(runCLI(`build ${inferredProject}`)).toContain(sourceMarker);
   }, 120000);
 
   it('should respect and support generating plugins with a name different than the import path', async () => {
