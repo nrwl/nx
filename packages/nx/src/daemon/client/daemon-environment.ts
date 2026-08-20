@@ -38,7 +38,8 @@ const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   'NX_CLI_SET',
   // Set by Nx Console on the extension host; always equals the daemon's own
   // workspace root (foreign-workspace messages are rejected), and the daemon
-  // resolves its root at startup before any client env is applied.
+  // resolves its root at startup before any client env is applied. The spawn
+  // env keeps it so that startup resolution honors the pinned root.
   'NX_WORKSPACE_ROOT_PATH',
 
   // Nx UI/logging vars (don't affect graph structure)
@@ -249,15 +250,24 @@ export function getDaemonEnv() {
 
 /**
  * Env for spawning the daemon process. On top of the reflected env, it must
- * keep ELECTRON_RUN_AS_NODE (matched by the ELECTRON_ prefix exclusion):
- * when the spawning client runs inside an Electron host, process.execPath is
- * the Electron binary and only this var makes it run the daemon's Node entry
- * point.
+ * keep excluded vars the daemon needs to start correctly:
+ * - ELECTRON_RUN_AS_NODE (matched by the ELECTRON_ prefix exclusion): when
+ *   the spawning client runs inside an Electron host, process.execPath is
+ *   the Electron binary and only this var makes it run the daemon's Node
+ *   entry point.
+ * - NX_WORKSPACE_ROOT_PATH: the daemon resolves its workspace root at
+ *   startup by walking up from cwd looking for workspace markers; without
+ *   the pin, a root without markers under an ancestor that has them
+ *   resolves to the ancestor and the daemon publishes its socket under the
+ *   wrong workspace.
  */
 export function getDaemonSpawnEnv() {
   const env = getDaemonEnv();
   if (process.env.ELECTRON_RUN_AS_NODE !== undefined) {
     env.ELECTRON_RUN_AS_NODE = process.env.ELECTRON_RUN_AS_NODE;
+  }
+  if (process.env.NX_WORKSPACE_ROOT_PATH !== undefined) {
+    env.NX_WORKSPACE_ROOT_PATH = process.env.NX_WORKSPACE_ROOT_PATH;
   }
   return env;
 }

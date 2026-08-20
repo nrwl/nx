@@ -257,6 +257,22 @@ describe('daemon environment', () => {
 
       expect(getDaemonSpawnEnv().ELECTRON_RUN_AS_NODE).toBeUndefined();
     });
+
+    it('should keep NX_WORKSPACE_ROOT_PATH so the daemon starts with the pinned workspace root', () => {
+      process.env.NX_WORKSPACE_ROOT_PATH = '/workspace/root';
+
+      const env = getDaemonSpawnEnv();
+
+      expect(env.NX_WORKSPACE_ROOT_PATH).toBe('/workspace/root');
+      // still excluded from the reflected env
+      expect(getDaemonEnv().NX_WORKSPACE_ROOT_PATH).toBeUndefined();
+    });
+
+    it('should not add NX_WORKSPACE_ROOT_PATH when the client does not have it', () => {
+      delete process.env.NX_WORKSPACE_ROOT_PATH;
+
+      expect('NX_WORKSPACE_ROOT_PATH' in getDaemonSpawnEnv()).toBe(false);
+    });
   });
 
   describe('applyDaemonEnvFromClient', () => {
