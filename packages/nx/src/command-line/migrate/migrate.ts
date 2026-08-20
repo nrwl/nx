@@ -3311,6 +3311,7 @@ async function runMigrations(
       // what the user asked for.
       skipInstall: shouldSkipInstall,
       installedNxVersion: orchestratorNxPackageJson.version,
+      validate: opts.validate,
     });
   }
 
