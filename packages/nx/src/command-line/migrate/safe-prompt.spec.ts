@@ -53,19 +53,32 @@ describe('migrate prompts', () => {
     });
   });
 
-  // Cancelling exits the process rather than returning, so `nx migrate` never
+  // Cancelling ends the process rather than returning, so `nx migrate` never
   // proceeds on a half-answered prompt.
   describe('cancellation', () => {
-    it('exits with 130 when the user cancels', async () => {
+    it('ends as an interrupt when the user cancels', async () => {
       mockAutocomplete.mockResolvedValueOnce(Symbol.for('clack:cancel'));
       mockIsCancel.mockReturnValue(true);
+      // All three are stubbed on purpose: a real `kill` would signal this jest
+      // worker, and a real `removeAllListeners` would strip its SIGINT handling.
+      const removeAllListeners = jest
+        .spyOn(process, 'removeAllListeners')
+        .mockReturnValue(process);
+      const kill = jest
+        .spyOn(process, 'kill')
+        .mockImplementation((() => true) as never);
       const exit = jest.spyOn(process, 'exit').mockImplementation((() => {
         throw new Error('exited');
       }) as never);
 
       await expect(migrateConfirm({ message: '?' })).rejects.toThrow('exited');
+      if (process.platform !== 'win32') {
+        expect(kill).toHaveBeenCalledWith(process.pid, 'SIGINT');
+      }
       expect(exit).toHaveBeenCalledWith(130);
 
+      removeAllListeners.mockRestore();
+      kill.mockRestore();
       exit.mockRestore();
     });
   });

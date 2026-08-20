@@ -1,3 +1,4 @@
+import { exitAsInterrupted } from '../../utils/exit-codes';
 import { isCI } from '../../utils/is-ci';
 import { output } from '../../utils/output';
 import {
@@ -22,7 +23,7 @@ export function canPrompt(interactive: boolean | undefined): boolean {
 function cancelMigrate(): never {
   process.stdout.write('\n');
   output.warn({ title: 'nx migrate interrupted by user.' });
-  process.exit(130);
+  exitAsInterrupted();
 }
 
 /**

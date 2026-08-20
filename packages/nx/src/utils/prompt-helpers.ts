@@ -1,6 +1,7 @@
 // Type-only, so it is erased at emit and never becomes a `require` of an
 // ESM-only package. The runtime import stays dynamic below.
 import type { Option } from '@clack/prompts';
+import { exitAsInterrupted } from './exit-codes';
 /**
  * `@clack/prompts` is ESM-only. A static import would compile to `require()`
  * under CommonJS emit and throw ERR_REQUIRE_ESM; `module: nodenext` preserves
@@ -65,7 +66,7 @@ export async function selectPrompt<T extends string>(options: {
       return options.onCancel();
     }
     // No handler means the user aborted the command.
-    process.exit(130);
+    exitAsInterrupted();
   }
   return answer as T;
 }
@@ -129,7 +130,7 @@ export async function textPrompt(options: {
       return options.onCancel();
     }
     // No handler means the user aborted the command.
-    process.exit(130);
+    exitAsInterrupted();
   }
   return answer as string;
 }
@@ -160,7 +161,7 @@ export async function multiselectPrompt<T extends string>(options: {
       return options.onCancel();
     }
     // No handler means the user aborted the command.
-    process.exit(130);
+    exitAsInterrupted();
   }
   return answer as T[];
 }

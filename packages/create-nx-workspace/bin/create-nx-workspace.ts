@@ -49,6 +49,7 @@ import {
   CnwErrorCode,
   mapErrorToBodyLines,
 } from '../src/utils/error-utils';
+import { exitAsInterrupted } from '../src/utils/exit-codes';
 import { existsSync } from 'fs';
 import { basename, dirname, isAbsolute, join, resolve } from 'path';
 import { isCI } from '../src/utils/ci/is-ci';
@@ -422,7 +423,7 @@ process.on('SIGINT', async () => {
     });
   }
 
-  process.exit(130); // Standard exit code for SIGINT
+  exitAsInterrupted();
 });
 
 let rawArgs: Arguments;
@@ -505,6 +506,12 @@ async function handleError(error: unknown): Promise<void> {
       aiAgent: isAiAgent(),
     },
   });
+
+  // Cancelling is not a failure: no "Failed to create workspace" banner, and
+  // the process ends as interrupted rather than with a generic error code.
+  if (error instanceof CnwError && error.code === 'CANCELLED') {
+    exitAsInterrupted();
+  }
 
   // Output error in appropriate format
   if (isAiAgent()) {
@@ -812,10 +819,6 @@ async function normalizeArgsMiddleware(
     } catch (e) {
       if (e instanceof CnwError) {
         throw e;
-      }
-      // Enquirer throws an empty string when user presses Ctrl+C
-      if (e === '') {
-        process.exit(130);
       }
       const message = e instanceof Error ? e.message : String(e);
       throw new CnwError('UNKNOWN', message);
