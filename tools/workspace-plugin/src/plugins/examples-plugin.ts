@@ -72,48 +72,15 @@ export const createNodes: CreateNodes = [
                   inputs: [
                     'default',
                     '^default',
-                    // `default` is {projectRoot}/**/*, and Nx assigns each file
-                    // to the project that owns it. An example whose interior
-                    // directories are themselves projects in THIS graph (a
-                    // nested example with apps/ and libs/) therefore loses its
-                    // own sources from that glob. Address the tree literally so
-                    // the whole example is an input regardless of ownership.
-                    `{workspaceRoot}/${exampleRoot}/**/*`,
                     '{workspaceRoot}/tsconfig.json',
-                    // ...which extends the base, so reading one reads both.
-                    '{workspaceRoot}/tsconfig.base.json',
-                    // MSBuild and Roslyn walk ancestor directories up from the
-                    // project file, so a .NET example reads these from the repo
-                    // root even though nothing under examples/ references them.
-                    // Listed whether or not they exist today; a missing input
-                    // file is a no-op, and adding one later should not quietly
-                    // start tripping task sandboxing.
-                    '{workspaceRoot}/Directory.Build.props',
-                    '{workspaceRoot}/Directory.Build.targets',
-                    '{workspaceRoot}/Directory.Packages.props',
-                    '{workspaceRoot}/NuGet.config',
-                    '{workspaceRoot}/global.json',
-                    '{workspaceRoot}/.editorconfig',
                     {
                       dependentTasksOutputFiles: '**/*',
                       transitive: true,
                     },
                   ],
-                  // Whatever the inner workspace builds, at whatever depth its
-                  // projects sit. A flat example writes <example>/dist;
-                  // module-federation members write <member>/dist; an example
-                  // with apps/ and libs/ writes two levels down, and a .NET one
-                  // adds MSBuild's bin/obj plus any generated sources. Task
-                  // sandboxing rejects writes this list does not cover, so it
-                  // has to describe the union rather than the common case.
-                  outputs: [
-                    '{projectRoot}/**/dist',
-                    '{projectRoot}/**/bin',
-                    '{projectRoot}/**/obj',
-                    '{projectRoot}/**/openapi',
-                    '{projectRoot}/**/generated',
-                    '{projectRoot}/**/*.tsbuildinfo',
-                  ],
+                  // The inner build/e2e write dist inside the example
+                  // (module-federation members write <member>/dist).
+                  outputs: ['{projectRoot}/dist', '{projectRoot}/*/dist'],
                   cache: true,
                 },
               },
