@@ -1,12 +1,13 @@
 import { handleDockerVersion } from './version-utils';
-import { prompt } from 'enquirer';
+import { selectPrompt } from '@nx/devkit/internal';
 
 /** Minimal mock objects to satisfy types without importing full release graph machinery */
 const mockProjectNode: any = { name: 'my-app', data: { root: 'apps/my-app' } };
 const versionActionsVersion = '1.2.3';
 
-jest.mock('enquirer', () => ({
-  prompt: jest.fn(),
+jest.mock('@nx/devkit/internal', () => ({
+  ...jest.requireActual('@nx/devkit/internal'),
+  selectPrompt: jest.fn(),
 }));
 
 describe('handleDockerVersion {versionActionsVersion} integration', () => {
@@ -134,7 +135,7 @@ describe('handleDockerVersion {versionActionsVersion} integration', () => {
     };
 
     // Mock prompt to return 'dev' scheme
-    jest.mocked(prompt).mockResolvedValueOnce({ versionScheme: 'dev' });
+    jest.mocked(selectPrompt).mockResolvedValueOnce('dev');
 
     const { newVersion } = await handleDockerVersion(
       process.cwd(),
@@ -145,20 +146,18 @@ describe('handleDockerVersion {versionActionsVersion} integration', () => {
       versionActionsVersion
     );
 
-    expect(prompt).toHaveBeenCalledWith(
+    expect(selectPrompt).toHaveBeenCalledWith(
       expect.objectContaining({
-        name: 'versionScheme',
-        type: 'select',
         choices: expect.arrayContaining([
-          expect.objectContaining({ name: 'prod' }),
-          expect.objectContaining({ name: 'dev' }),
+          expect.objectContaining({ value: 'prod' }),
+          expect.objectContaining({ value: 'dev' }),
         ]),
       })
     );
     expect(newVersion).toBe('my-app-0.0.0');
   });
 
-  it("surfaces only the focused scheme's pattern via the footer", async () => {
+  it("carries each scheme's resolved pattern as its own hint", async () => {
     const finalConfigForProject: any = {
       dockerOptions: {
         repositoryName: 'repo',
@@ -169,7 +168,7 @@ describe('handleDockerVersion {versionActionsVersion} integration', () => {
         },
       },
     };
-    jest.mocked(prompt).mockResolvedValueOnce({ versionScheme: 'dev' });
+    jest.mocked(selectPrompt).mockResolvedValueOnce('dev');
 
     await handleDockerVersion(
       process.cwd(),
@@ -180,15 +179,12 @@ describe('handleDockerVersion {versionActionsVersion} integration', () => {
       versionActionsVersion
     );
 
-    const call = jest.mocked(prompt).mock.calls[0][0] as any;
-    const styles = { muted: (s: string) => s };
-    const prodChoice = call.choices.find((c: any) => c.name === 'prod');
-    expect(call.footer.call({ focused: prodChoice, styles })).toContain(
-      prodChoice.description
-    );
-    expect(
-      call.footer.call({ focused: { description: undefined }, styles })
-    ).toBe('');
+    const call = jest.mocked(selectPrompt).mock.calls[0][0] as any;
+    // The hint interpolates the project name only, matching what the scheme
+    // list can resolve before a version is chosen.
+    const devChoice = call.choices.find((c: any) => c.value === 'dev');
+    expect(devChoice.hint).toBe('my-app-0.0.0');
+    expect(call.choices.every((c: any) => !!c.hint)).toBe(true);
   });
 
   it('falls back to env NX_DOCKER_IMAGE_REF tag if provided (extracting version)', async () => {

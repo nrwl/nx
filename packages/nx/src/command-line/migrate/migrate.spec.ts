@@ -11,8 +11,10 @@ const mockGetInstalledVersion = mocks.getInstalledVersion;
 const mockGetInstalledPackageGroup = mocks.getInstalledPackageGroup;
 const mockGetInstalledLegacyNrwlWorkspaceVersion =
   mocks.getInstalledLegacyNrwlWorkspaceVersion;
-jest.mock('enquirer', () => ({
-  prompt: (...args: any[]) => mocks.prompt(...args),
+jest.mock('@clack/prompts', () => ({
+  autocomplete: (...args: any[]) => mocks.prompt(...args),
+  text: (...args: any[]) => mocks.prompt(...args),
+  isCancel: () => false,
 }));
 jest.mock('../../utils/installed-nx-version', () => ({
   getInstalledNxVersion: () => mocks.getInstalledNxVersion(),
@@ -936,7 +938,7 @@ describe('Migration', () => {
       });
 
       it('should prompt when --interactive and there is a package updates group with confirmation prompts', async () => {
-        mockPrompt.mockReturnValue(Promise.resolve({ shouldApply: true }));
+        mockPrompt.mockReturnValue(Promise.resolve('Yes'));
         const promptMessage =
           'Do you want to update the packages related to <some fwk name>?';
         const migrator = new Migrator({
@@ -989,14 +991,14 @@ describe('Migration', () => {
           minVersionWithSkippedUpdates: undefined,
         });
         expect(mockPrompt).toHaveBeenCalledWith(
-          expect.arrayContaining([
-            expect.objectContaining({ message: promptMessage }),
-          ])
+          expect.objectContaining({
+            message: expect.stringContaining(promptMessage),
+          })
         );
       });
 
       it('should filter out updates when prompt answer is false', async () => {
-        mockPrompt.mockReturnValue(Promise.resolve({ shouldApply: false }));
+        mockPrompt.mockReturnValue(Promise.resolve('No'));
         const migrator = new Migrator({
           packageJson: createPackageJson({
             dependencies: { child1: '1.0.0', child2: '1.0.0', child3: '1.0.0' },
@@ -1049,7 +1051,7 @@ describe('Migration', () => {
       });
 
       it('should not prompt and get all updates when --interactive=false', async () => {
-        mockPrompt.mockReturnValue(Promise.resolve({ shouldApply: false }));
+        mockPrompt.mockReturnValue(Promise.resolve('No'));
         const migrator = new Migrator({
           packageJson: createPackageJson({
             dependencies: { child1: '1.0.0', child2: '1.0.0', child3: '1.0.0' },
@@ -1153,7 +1155,7 @@ describe('Migration', () => {
       });
 
       it('should drop entries that contain only optional packages without firing their x-prompt', async () => {
-        mockPrompt.mockReturnValue(Promise.resolve({ shouldApply: true }));
+        mockPrompt.mockReturnValue(Promise.resolve('Yes'));
         const migrator = new Migrator({
           packageJson: createPackageJson({
             dependencies: {
@@ -1474,7 +1476,7 @@ describe('Migration', () => {
       });
 
       it('should prompt when requirements are met', async () => {
-        mockPrompt.mockReturnValue(Promise.resolve({ shouldApply: true }));
+        mockPrompt.mockReturnValue(Promise.resolve('Yes'));
         const promptMessage =
           'Do you want to update the packages related to <some fwk name>?';
         const migrator = new Migrator({
@@ -1519,14 +1521,14 @@ describe('Migration', () => {
           minVersionWithSkippedUpdates: undefined,
         });
         expect(mockPrompt).toHaveBeenCalledWith(
-          expect.arrayContaining([
-            expect.objectContaining({ message: promptMessage }),
-          ])
+          expect.objectContaining({
+            message: expect.stringContaining(promptMessage),
+          })
         );
       });
 
       it('should not prompt when requirements are not met', async () => {
-        mockPrompt.mockReturnValue(Promise.resolve({ shouldApply: true }));
+        mockPrompt.mockReturnValue(Promise.resolve('Yes'));
         const promptMessage =
           'Do you want to update the packages related to <some fwk name>?';
         const migrator = new Migrator({
@@ -1739,7 +1741,7 @@ describe('Migration', () => {
     });
 
     it('should not generate migrations for packages which confirmation prompt answer was false', async () => {
-      mockPrompt.mockReturnValue(Promise.resolve({ shouldApply: false }));
+      mockPrompt.mockReturnValue(Promise.resolve('No'));
       const migrator = new Migrator({
         packageJson: createPackageJson({
           dependencies: { child: '1.0.0', child2: '1.0.0' },
@@ -4091,7 +4093,7 @@ module.exports = {
         configurable: true,
       });
       process.env.CI = 'false';
-      mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'required' }));
+      mockPrompt.mockReturnValueOnce(Promise.resolve('required'));
       const result = await resolveInclude(
         undefined,
         supportsOptionalMigrationsContext
@@ -4106,10 +4108,10 @@ module.exports = {
         configurable: true,
       });
       process.env.CI = 'false';
-      mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'all' }));
+      mockPrompt.mockReturnValueOnce(Promise.resolve('all'));
       await resolveInclude(undefined, supportsOptionalMigrationsContext);
-      const choices = mockPrompt.mock.calls[0][0].choices;
-      expect(choices.map((c: { name: string }) => c.name)).toEqual([
+      const choices = mockPrompt.mock.calls[0][0].options;
+      expect(choices.map((c: { value: string }) => c.value)).toEqual([
         'required',
         'optional',
         'all',
@@ -4122,14 +4124,14 @@ module.exports = {
         configurable: true,
       });
       process.env.CI = 'false';
-      mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'all' }));
+      mockPrompt.mockReturnValueOnce(Promise.resolve('all'));
       await resolveInclude(undefined, {
         hasFrom: true,
         hasExcludeAppliedMigrations: false,
         targetSupportsOptionalUpdates: true,
       });
-      const choices = mockPrompt.mock.calls[0][0].choices;
-      expect(choices.map((c: { name: string }) => c.name)).toEqual([
+      const choices = mockPrompt.mock.calls[0][0].options;
+      expect(choices.map((c: { value: string }) => c.value)).toEqual([
         'required',
         'all',
       ]);
@@ -4141,14 +4143,14 @@ module.exports = {
         configurable: true,
       });
       process.env.CI = 'false';
-      mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'all' }));
+      mockPrompt.mockReturnValueOnce(Promise.resolve('all'));
       await resolveInclude(undefined, {
         hasFrom: false,
         hasExcludeAppliedMigrations: true,
         targetSupportsOptionalUpdates: true,
       });
-      const choices = mockPrompt.mock.calls[0][0].choices;
-      expect(choices.map((c: { name: string }) => c.name)).toEqual([
+      const choices = mockPrompt.mock.calls[0][0].options;
+      expect(choices.map((c: { value: string }) => c.value)).toEqual([
         'required',
         'all',
       ]);
@@ -4160,13 +4162,13 @@ module.exports = {
         configurable: true,
       });
       process.env.CI = 'false';
-      mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'all' }));
+      mockPrompt.mockReturnValueOnce(Promise.resolve('all'));
       await resolveInclude(undefined, {
         ...supportsOptionalMigrationsContext,
         interactive: true,
       });
-      const choices = mockPrompt.mock.calls[0][0].choices;
-      expect(choices.map((c: { name: string }) => c.name)).toEqual([
+      const choices = mockPrompt.mock.calls[0][0].options;
+      expect(choices.map((c: { value: string }) => c.value)).toEqual([
         'required',
         'all',
       ]);
@@ -4808,7 +4810,7 @@ module.exports = {
         '21': '21.5.3',
         '22': '22.5.3',
       });
-      mockPrompt.mockResolvedValue({ chosen: '21.5.3' });
+      mockPrompt.mockResolvedValue('21.5.3');
 
       const r = await parseWithIncludes({
         packageAndVersion: 'next',
@@ -4817,13 +4819,11 @@ module.exports = {
 
       expect(mockPrompt).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: 'select',
-          name: 'chosen',
           message: 'How would you like to proceed?',
-          choices: expect.arrayContaining([
-            expect.objectContaining({ name: '21.5.3' }),
-            expect.objectContaining({ name: '22.5.3' }),
-            expect.objectContaining({ name: '23.1.0' }),
+          options: expect.arrayContaining([
+            expect.objectContaining({ value: '21.5.3' }),
+            expect.objectContaining({ value: '22.5.3' }),
+            expect.objectContaining({ value: '23.1.0' }),
           ]),
         })
       );
@@ -4841,7 +4841,7 @@ module.exports = {
         '21': '21.5.3',
         '22': '22.5.3',
       });
-      mockPrompt.mockResolvedValue({ chosen: '22.5.3' });
+      mockPrompt.mockResolvedValue('22.5.3');
 
       await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -4849,8 +4849,8 @@ module.exports = {
       });
 
       const promptArgs = mockPrompt.mock.calls[0][0];
-      const choices = promptArgs.choices as { name: string }[];
-      expect(choices.map((c) => c.name)).toEqual(['22.5.3', '23.1.0']);
+      const choices = promptArgs.options as { value: string }[];
+      expect(choices.map((c) => c.value)).toEqual(['22.5.3', '23.1.0']);
     });
 
     it('should not include the current-major option when installed is on the latest minor of the current major but behind on patch', async () => {
@@ -4861,7 +4861,7 @@ module.exports = {
         '21': '21.5.3',
         '22': '22.5.3',
       });
-      mockPrompt.mockResolvedValue({ chosen: '22.5.3' });
+      mockPrompt.mockResolvedValue('22.5.3');
 
       await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -4869,8 +4869,8 @@ module.exports = {
       });
 
       const promptArgs = mockPrompt.mock.calls[0][0];
-      const choices = promptArgs.choices as { name: string }[];
-      expect(choices.map((c) => c.name)).toEqual(['22.5.3', '23.1.0']);
+      const choices = promptArgs.options as { value: string }[];
+      expect(choices.map((c) => c.value)).toEqual(['22.5.3', '23.1.0']);
     });
 
     it('should omit the current-major (v22) step from the multi-major prompt', async () => {
@@ -4881,7 +4881,7 @@ module.exports = {
         '22': '22.5.3',
         '23': '23.5.3',
       });
-      mockPrompt.mockResolvedValue({ chosen: '23.5.3' });
+      mockPrompt.mockResolvedValue('23.5.3');
 
       await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -4889,9 +4889,9 @@ module.exports = {
       });
 
       const promptArgs = mockPrompt.mock.calls[0][0];
-      const choices = promptArgs.choices as { name: string }[];
+      const choices = promptArgs.options as { value: string }[];
       // The 22.x current-major step is suppressed; only next-major and direct.
-      expect(choices.map((c) => c.name)).toEqual(['23.5.3', '24.1.0']);
+      expect(choices.map((c) => c.value)).toEqual(['23.5.3', '24.1.0']);
     });
 
     it('should keep --include=required valid when multi-major redirects to the next major (v22 install)', async () => {
@@ -4905,7 +4905,7 @@ module.exports = {
         '22': '22.5.3',
         '23': '23.5.3',
       });
-      mockPrompt.mockResolvedValue({ chosen: '23.5.3' });
+      mockPrompt.mockResolvedValue('23.5.3');
 
       const r = await parseWithIncludes({
         packageAndVersion: 'nx@24.0.0',
@@ -4925,7 +4925,7 @@ module.exports = {
         '21': '21.5.3',
         '22': '22.5.3',
       });
-      mockPrompt.mockResolvedValue({ chosen: '21.5.3' });
+      mockPrompt.mockResolvedValue('21.5.3');
       const warnSpy = spyWarn();
 
       const r = await parseWithIncludes({
@@ -5186,7 +5186,7 @@ module.exports = {
           '21': '21.5.3',
           '22': '22.5.3',
         });
-        mockPrompt.mockResolvedValue({ chosen: '21.5.3' });
+        mockPrompt.mockResolvedValue('21.5.3');
 
         const r = await parseWithIncludes({
           packageAndVersion: positional,
@@ -5247,7 +5247,7 @@ module.exports = {
         '21': '21.5.3',
         '22': '22.5.3',
       });
-      mockPrompt.mockResolvedValue({ chosen: '22.5.3' });
+      mockPrompt.mockResolvedValue('22.5.3');
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -5267,7 +5267,7 @@ module.exports = {
         '21': '21.5.3',
         '22': '22.5.3',
       });
-      mockPrompt.mockResolvedValue({ chosen: '23.1.0' });
+      mockPrompt.mockResolvedValue('23.1.0');
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -5353,7 +5353,7 @@ module.exports = {
         '21': '21.5.3',
         '22': '22.5.3',
       });
-      mockPrompt.mockResolvedValue({ chosen: '22.5.3' });
+      mockPrompt.mockResolvedValue('22.5.3');
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -6147,7 +6147,7 @@ module.exports = {
       });
 
       it('proceeds when the user confirms on the default branch', async () => {
-        mockPrompt.mockResolvedValue({ proceed: true });
+        mockPrompt.mockResolvedValue('Yes');
         await expect(
           confirmCommitsOnDefaultBranch({
             currentBranch: 'main',
@@ -6158,7 +6158,7 @@ module.exports = {
       });
 
       it('aborts when the user declines on the default branch', async () => {
-        mockPrompt.mockResolvedValue({ proceed: false });
+        mockPrompt.mockResolvedValue('No');
         await expect(
           confirmCommitsOnDefaultBranch({
             currentBranch: 'main',

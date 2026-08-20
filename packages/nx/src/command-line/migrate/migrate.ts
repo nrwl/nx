@@ -1,6 +1,6 @@
 import * as pc from 'picocolors';
 import { exec, execSync, type StdioOptions } from 'child_process';
-import { canPrompt, migratePrompt } from './safe-prompt';
+import { canPrompt, migrateChoice, migrateConfirm } from './safe-prompt';
 import { dirname, join } from 'path';
 import { createRequire } from 'module';
 import { joinPathFragments } from '../../utils/path';
@@ -916,39 +916,32 @@ export class Migrator {
       return Promise.resolve(false);
     }
 
-    const promptConfig = {
-      name: 'shouldApply',
-      type: 'confirm',
-      message: packageUpdate['x-prompt'],
-      initial: true,
-    };
-
-    if (packageName.startsWith('@nx/')) {
-      // @ts-expect-error -- enquirer types aren't correct, footer does exist
-      promptConfig.footer = () =>
-        pc.dim(
-          `  View migration details at https://nx.dev/nx-api/${packageName.replace(
+    // No footer slot, so the docs link is appended to the message.
+    const detailsLink = packageName.startsWith('@nx/')
+      ? pc.dim(
+          `\n  View migration details at https://nx.dev/nx-api/${packageName.replace(
             '@nx/',
             ''
           )}#${packageUpdateKey.replace(/[-\.]/g, '')}packageupdates`
-        );
-    }
+        )
+      : '';
 
-    return await migratePrompt([promptConfig]).then(
-      ({ shouldApply }: { shouldApply: boolean }) => {
-        this.promptAnswers[promptKey] = shouldApply;
+    return await migrateConfirm({
+      message: `${packageUpdate['x-prompt']}${detailsLink}`,
+      initial: true,
+    }).then((shouldApply: boolean) => {
+      this.promptAnswers[promptKey] = shouldApply;
 
-        if (
-          !shouldApply &&
-          (!this.minVersionWithSkippedUpdates ||
-            lt(packageUpdate.version, this.minVersionWithSkippedUpdates))
-        ) {
-          this.minVersionWithSkippedUpdates = packageUpdate.version;
-        }
-
-        return shouldApply;
+      if (
+        !shouldApply &&
+        (!this.minVersionWithSkippedUpdates ||
+          lt(packageUpdate.version, this.minVersionWithSkippedUpdates))
+      ) {
+        this.minVersionWithSkippedUpdates = packageUpdate.version;
       }
-    );
+
+      return shouldApply;
+    });
   }
 
   private getPackageUpdatePromptKey(
@@ -1067,10 +1060,10 @@ export async function resolveInclude(
     setMigrateIncludeSource('nx-json');
     return configuredInclude;
   }
-  const choices: { name: string; message: string }[] = [
+  const choices: { value: MigrateInclude; label: string }[] = [
     {
-      name: 'required',
-      message:
+      value: 'required',
+      label:
         'Required only (the target package and the packages it ships with)',
     },
   ];
@@ -1082,9 +1075,8 @@ export async function resolveInclude(
     context.interactive !== true
   ) {
     choices.push({
-      name: 'optional',
-      message:
-        'Optional only (the dependency updates those packages recommend)',
+      value: 'optional',
+      label: 'Optional only (the dependency updates those packages recommend)',
     });
   }
   if (!canPrompt(context.interactive)) {
@@ -1092,14 +1084,10 @@ export async function resolveInclude(
     return 'all';
   }
   choices.push({
-    name: 'all',
-    message: 'All (required and optional)',
+    value: 'all',
+    label: 'All (required and optional)',
   });
-  const { include: selected } = await migratePrompt<{
-    include: MigrateInclude;
-  }>({
-    type: 'select',
-    name: 'include',
+  const selected = await migrateChoice<MigrateInclude>({
     message: 'Which packages would you like to migrate?',
     choices,
   });

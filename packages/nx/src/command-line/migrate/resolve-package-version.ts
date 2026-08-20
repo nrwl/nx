@@ -16,7 +16,7 @@ import {
 } from '../../utils/min-release-age/policy';
 import { appendMinimumReleaseAgeExcludes } from '../../utils/min-release-age/pnpm-exclude-writer';
 import { resolveCompliantVersion } from '../../utils/min-release-age/resolve';
-import { migratePrompt } from './safe-prompt';
+import { migrateConfirm } from './safe-prompt';
 
 /**
  * Whether nx migrate should resolve versions via the npm registry (fast) rather
@@ -268,14 +268,10 @@ async function handleViolation(
 
   // pnpm prompts once for the whole run; remember an approval for later picks.
   if (!strictApprovalGranted) {
-    const { approved } = await migratePrompt<{ approved: boolean }>([
-      {
-        name: 'approved',
-        type: 'confirm',
-        initial: false,
-        message: `The following version does not meet the ${policy.sourceDescription} constraint:\n${blockedLine}\nInstall anyway and add it to minimumReleaseAgeExclude in pnpm-workspace.yaml?`,
-      },
-    ]);
+    const approved = await migrateConfirm({
+      initial: false,
+      message: `The following version does not meet the ${policy.sourceDescription} constraint:\n${blockedLine}\nInstall anyway and add it to minimumReleaseAgeExclude in pnpm-workspace.yaml?`,
+    });
 
     if (!approved) {
       // Deny must surface as a violation: migrate.ts only rethrows

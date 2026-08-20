@@ -1,4 +1,5 @@
-import { prompt } from 'enquirer';
+import { textPrompt } from 'nx/src/devkit-internals';
+import { isInteractive } from './prompt';
 import {
   getProjects,
   joinPathFragments,
@@ -143,12 +144,11 @@ export async function ensureRootProjectName(
   projectType: 'application' | 'library'
 ): Promise<void> {
   if (!options.name && options.directory === '.' && getRelativeCwd() === '') {
-    const result = await prompt<{ name: string }>({
-      type: 'input',
-      name: 'name',
-      message: `What do you want to name the ${projectType}?`,
-    });
-    options.name = result.name;
+    options.name = isInteractive()
+      ? await textPrompt({
+          message: `What do you want to name the ${projectType}?`,
+        })
+      : undefined;
   }
 }
 

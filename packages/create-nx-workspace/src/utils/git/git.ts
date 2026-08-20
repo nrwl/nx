@@ -2,7 +2,10 @@ import { execSync } from 'child_process';
 import { deduceDefaultBase } from './default-base';
 import { output } from '../output';
 import { execAndWait } from '../child-process-utils';
-import enquirer from 'enquirer';
+import {
+  confirmationPrompt,
+  textPrompt,
+} from '../../internal-utils/prompt-helpers';
 
 export enum VcsPushStatus {
   PushedToVcs = 'PushedToVcs',
@@ -249,17 +252,13 @@ export async function pushToGitHub(
     populateExistingRepos(directory);
 
     // First prompt: Ask if they want to push to GitHub
-    const { push } = await enquirer.prompt<{ push: 'Yes' | 'No' }>([
-      {
-        name: 'push',
-        message: 'Would you like to push this workspace to GitHub?',
-        type: 'autocomplete',
-        choices: [{ name: 'Yes' }, { name: 'No' }],
-        initial: 0,
-      },
-    ]);
+    // Cancelling is a decision not to push, not a failure to push.
+    const push = await confirmationPrompt({
+      message: 'Would you like to push this workspace to GitHub?',
+      onCancel: () => false,
+    });
 
-    if (push !== 'Yes') {
+    if (!push) {
       return VcsPushStatus.OptedOutOfPushingToVcs;
     }
 
@@ -270,27 +269,31 @@ export async function pushToGitHub(
     )}`;
 
     // Second prompt: Ask where to create the repository with validation
-    const { repoName } = await enquirer.prompt<{ repoName: string }>([
-      {
-        name: 'repoName',
-        message: 'Repository name (format: username/repo-name):',
-        type: 'input',
-        initial: defaultRepo,
-        validate: async (value: string): Promise<any> => {
-          if (!value.includes('/')) {
-            return 'Repository name must be in format: username/repo-name';
-          }
+    // Validation runs synchronously, so the background fetch is resolved here
+    // rather than awaited inside it. It was started before the prompt above, so
+    // it has normally settled by now.
+    const existingRepos = await existingReposPromise;
 
-          // Wait for background fetch to complete before validating
-          const existingRepos = await existingReposPromise;
-          if (existingRepos?.has(value)) {
-            return `Repository '${value}' already exists. Choose a different name or create manually: ${createRepoUrl}`;
-          }
-
-          return true;
-        },
+    // An empty name cannot come from the prompt - `validate` requires a slash -
+    // so it is unambiguous as the cancelled signal.
+    const repoName = await textPrompt({
+      message: 'Repository name (format: username/repo-name):',
+      initialValue: defaultRepo,
+      validate: (value: string): string | undefined => {
+        if (!value.includes('/')) {
+          return 'Repository name must be in format: username/repo-name';
+        }
+        if (existingRepos?.has(value)) {
+          return `Repository '${value}' already exists. Choose a different name or create manually: ${createRepoUrl}`;
+        }
+        return undefined;
       },
-    ]);
+      onCancel: () => '',
+    });
+
+    if (!repoName) {
+      return VcsPushStatus.OptedOutOfPushingToVcs;
+    }
 
     // Create GitHub repository and push using gh CLI.
     // Uses execAndWait (not spawnAndWait) so output is captured rather than

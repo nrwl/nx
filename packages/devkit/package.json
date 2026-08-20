@@ -63,8 +63,7 @@
     "tslib": "catalog:typescript",
     "semver": "catalog:",
     "yargs-parser": "catalog:",
-    "minimatch": "catalog:",
-    "enquirer": "catalog:"
+    "minimatch": "catalog:"
   },
   "devDependencies": {
     "jest": "catalog:jest",

@@ -11,7 +11,6 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import * as enquirer from 'enquirer';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import { angularDevkitVersion, angularVersion } from '../../utils/versions';
@@ -23,7 +22,6 @@ jest.mock('@nx/cypress/internal', () => ({
   ...jest.requireActual('@nx/cypress/internal'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
-jest.mock('enquirer');
 
 describe('app', () => {
   let appTree: Tree;
@@ -36,10 +34,6 @@ describe('app', () => {
     envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
     delete process.env.ESLINT_USE_FLAT_CONFIG;
     mockedInstalledCypressVersion.mockReturnValue(null);
-    // @ts-ignore
-    enquirer.prompt = jest
-      .fn()
-      .mockReturnValue(Promise.resolve({ 'standalone-components': true }));
     appTree = createTreeWithEmptyWorkspace();
   });
 

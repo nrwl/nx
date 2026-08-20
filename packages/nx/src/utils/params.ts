@@ -1,5 +1,11 @@
 import { logger } from './logger';
 import { handleImport } from './handle-import';
+import {
+  selectPrompt,
+  multiselectPrompt,
+  textPrompt,
+  confirmationPrompt,
+} from './prompt-helpers';
 import type { NxJsonConfiguration } from '../config/nx-json';
 import type {
   ProjectsConfigurations,
@@ -853,13 +859,19 @@ function getGeneratorDefaults(
   return defaults;
 }
 
-type Prompt = ConstructorParameters<typeof import('enquirer').Prompt>[0] & {
+type Prompt = {
   name: string;
   type: 'input' | 'autocomplete' | 'multiselect' | 'confirm' | 'numeral';
   message: string;
   initial?: any;
+  /**
+   * Retained because {@link getPromptsForSchema} is exported and asserted on;
+   * the prompt itself scrolls rather than truncating.
+   */
   limit?: number;
   choices?: (string | { name: string; message: string })[];
+  /** Returns `true` when valid, otherwise the message to show. */
+  validate?: (value: any) => boolean | string;
 };
 
 export function getPromptsForSchema(
@@ -975,15 +987,82 @@ async function promptForValues(
   schema: Schema,
   projectsConfigurations: ProjectsConfigurations
 ) {
-  return await (
-    await handleImport('enquirer')
-  )
-    .prompt(getPromptsForSchema(opts, schema, projectsConfigurations))
-    .then((values) => ({ ...opts, ...values }))
-    .catch((e) => {
-      console.error(e);
-      process.exit(1);
-    });
+  try {
+    const values: Options = {};
+    // Asked one at a time; a schema prompt has no cross-question state, so the
+    // order is just the schema's own.
+    for (const question of getPromptsForSchema(
+      opts,
+      schema,
+      projectsConfigurations
+    )) {
+      values[question.name] = await askSchemaQuestion(question);
+    }
+    return { ...opts, ...values };
+  } catch (e) {
+    console.error(e);
+    process.exit(1);
+  }
+}
+
+async function askSchemaQuestion(question: Prompt): Promise<any> {
+  const validate = question.validate
+    ? (value: any) => {
+        const result = question.validate(value);
+        return result === true
+          ? undefined
+          : typeof result === 'string'
+            ? result
+            : 'Invalid value';
+      }
+    : undefined;
+
+  const choices = (question.choices ?? []).map((c) =>
+    typeof c === 'string' ? { value: c } : { value: c.name, label: c.message }
+  );
+
+  switch (question.type) {
+    case 'confirm':
+      return confirmationPrompt({
+        message: question.message,
+        initial: question.initial !== false,
+      });
+    case 'multiselect':
+      return multiselectPrompt({
+        message: question.message,
+        choices,
+        initialValues: Array.isArray(question.initial)
+          ? question.initial
+          : undefined,
+      });
+    case 'autocomplete':
+      return selectPrompt({
+        message: question.message,
+        choices,
+        initial: question.initial,
+      });
+    case 'numeral': {
+      // No numeric prompt; the answer is parsed back so the schema still
+      // receives a number.
+      const answer = await textPrompt({
+        message: question.message,
+        initialValue:
+          question.initial === undefined ? undefined : String(question.initial),
+        validate: (value) =>
+          value !== '' && !Number.isNaN(Number(value))
+            ? validate?.(Number(value))
+            : 'Please enter a number',
+      });
+      return Number(answer);
+    }
+    default:
+      return textPrompt({
+        message: question.message,
+        initialValue:
+          typeof question.initial === 'string' ? question.initial : undefined,
+        validate,
+      });
+  }
 }
 
 function findSchemaForProperty(

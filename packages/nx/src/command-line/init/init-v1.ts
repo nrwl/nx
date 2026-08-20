@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { prompt } from 'enquirer';
+import { selectPrompt } from '../../utils/prompt-helpers';
 import { existsSync } from 'fs';
 import { prerelease } from 'semver';
 import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
@@ -61,23 +61,14 @@ export async function initHandler(options: InitArgs) {
       });
     }
   } else {
-    const useDotNxFolder = await prompt<{ useDotNxFolder: string }>([
-      {
-        name: 'useDotNxFolder',
-        type: 'autocomplete',
+    const useDotNxFolder =
+      (await selectPrompt({
         message: 'Where should your workspace be created?',
         choices: [
-          {
-            name: 'In a new folder under this directory',
-            value: 'false',
-          },
-          {
-            name: 'In this directory',
-            value: 'true',
-          },
+          { value: 'false', label: 'In a new folder under this directory' },
+          { value: 'true', label: 'In this directory' },
         ],
-      },
-    ]).then((r) => r.useDotNxFolder === 'true');
+      })) === 'true';
     if (useDotNxFolder) {
       setupDotNxInstallation(version);
     } else {

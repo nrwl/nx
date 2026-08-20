@@ -1,14 +1,16 @@
 import { readNxJson, updateNxJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { promptWhenInteractive } from '@nx/devkit/internal';
+import { isInteractive, selectPrompt } from '@nx/devkit/internal';
 import { normalizeLinterOption } from './generator-prompts';
 
 jest.mock('@nx/devkit/internal', () => ({
   ...jest.requireActual('@nx/devkit/internal'),
-  promptWhenInteractive: jest.fn(),
+  isInteractive: jest.fn(),
+  selectPrompt: jest.fn(),
 }));
 
-const prompt = promptWhenInteractive as jest.Mock;
+const prompt = selectPrompt as jest.Mock;
+const interactive = isInteractive as jest.Mock;
 
 describe('normalizeLinterOption', () => {
   let tree: Tree;
@@ -16,10 +18,11 @@ describe('normalizeLinterOption', () => {
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
     prompt.mockReset();
+    interactive.mockReset().mockReturnValue(true);
     // A value the workspace could not produce by detection, so a test that
     // passes only because the prompt ran is distinguishable from one that
     // passes because detection answered.
-    prompt.mockResolvedValue({ linter: 'oxlint' });
+    prompt.mockResolvedValue('oxlint');
   });
 
   function addDevDependency(pkg: string) {
@@ -80,13 +83,18 @@ describe('normalizeLinterOption', () => {
     expect(prompt).toHaveBeenCalledTimes(1);
   });
 
-  // `{ linter: 'none' }` is the non-interactive answer; `none` leads so the
+  // `none` is the non-interactive answer, and leads the list so the
   // interactive default matches it.
-  it('should offer none first and default to it when the prompt cannot run', async () => {
+  it('should take none without asking when the prompt cannot run', async () => {
+    interactive.mockReturnValue(false);
+
+    await expect(normalizeLinterOption(tree, undefined)).resolves.toBe('none');
+    expect(prompt).not.toHaveBeenCalled();
+  });
+
+  it('should offer none first so the interactive default matches', async () => {
     await normalizeLinterOption(tree, undefined);
 
-    const [question, defaultValue] = prompt.mock.calls[0];
-    expect(question.choices[0]).toEqual({ name: 'none' });
-    expect(defaultValue).toEqual({ linter: 'none' });
+    expect(prompt.mock.calls[0][0].choices[0]).toEqual({ value: 'none' });
   });
 });

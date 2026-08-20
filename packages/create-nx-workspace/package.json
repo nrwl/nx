@@ -37,9 +37,9 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
+    "@clack/prompts": "catalog:",
     "axios": "1.18.1",
     "chalk": "catalog:",
-    "enquirer": "catalog:",
     "flat": "^5.0.2",
     "open": "^8.4.0",
     "ora": "catalog:",

@@ -112,11 +112,11 @@ jest.mock('../migrate-analytics', () => ({
 }));
 
 const mockCanPrompt = jest.fn();
-const mockMigratePrompt = jest.fn();
+const mockMigrateConfirm = jest.fn();
 jest.mock('../safe-prompt', () => ({
   ...jest.requireActual('../safe-prompt'),
   canPrompt: (...args: unknown[]) => mockCanPrompt(...args),
-  migratePrompt: (...args: unknown[]) => mockMigratePrompt(...args),
+  migrateConfirm: (...args: unknown[]) => mockMigrateConfirm(...args),
 }));
 
 jest.mock('../../../config/configuration', () => ({
@@ -248,7 +248,7 @@ describe('runSingleMigrationWorker', () => {
     mockGetBaseRef.mockReset().mockReturnValue('main');
     mockReportRunError.mockReset();
     mockCanPrompt.mockReset().mockReturnValue(false);
-    mockMigratePrompt.mockReset().mockResolvedValue({ proceed: true });
+    mockMigrateConfirm.mockReset().mockResolvedValue(true);
     mockIsInsideAgent.mockReset().mockReturnValue(false);
     mockGetLatestCommitSha.mockReset().mockReturnValue(null);
     mockLogSkippedInstall.mockReset();
@@ -471,7 +471,7 @@ describe('runSingleMigrationWorker', () => {
       writeMigrations([genMig('@nx/js', 'gen')]);
       mockCanPrompt.mockReturnValue(true);
       mockGetGitCurrentBranch.mockReturnValue('main');
-      mockMigratePrompt.mockResolvedValue({ proceed: false });
+      mockMigrateConfirm.mockResolvedValue(false);
 
       await runSingleMigrationWorker(
         standaloneInput({ runMigration: '@nx/js:gen', createCommits: true })
@@ -489,7 +489,7 @@ describe('runSingleMigrationWorker', () => {
       writeMigrations([genMig('@nx/js', 'gen')]);
       mockCanPrompt.mockReturnValue(true);
       mockGetGitCurrentBranch.mockReturnValue('main');
-      mockMigratePrompt.mockResolvedValue({ proceed: true });
+      mockMigrateConfirm.mockResolvedValue(true);
 
       await runSingleMigrationWorker(
         standaloneInput({ runMigration: '@nx/js:gen', createCommits: true })
@@ -503,13 +503,13 @@ describe('runSingleMigrationWorker', () => {
       mockCanPrompt.mockReturnValue(true);
       mockGetBaseRef.mockReturnValue('origin/main');
       mockGetGitCurrentBranch.mockReturnValue('main');
-      mockMigratePrompt.mockResolvedValue({ proceed: false });
+      mockMigrateConfirm.mockResolvedValue(false);
 
       await runSingleMigrationWorker(
         standaloneInput({ runMigration: '@nx/js:gen', createCommits: true })
       );
 
-      expect(mockMigratePrompt).toHaveBeenCalledTimes(1);
+      expect(mockMigrateConfirm).toHaveBeenCalledTimes(1);
       expect(mockRunMigration).not.toHaveBeenCalled();
     });
 
@@ -522,7 +522,7 @@ describe('runSingleMigrationWorker', () => {
         standaloneInput({ runMigration: '@nx/js:gen', createCommits: true })
       );
 
-      expect(mockMigratePrompt).not.toHaveBeenCalled();
+      expect(mockMigrateConfirm).not.toHaveBeenCalled();
       expect(mockRunMigration).toHaveBeenCalledTimes(1);
     });
 

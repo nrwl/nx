@@ -47,7 +47,7 @@ export {
   ensureRootProjectName,
   resolveImportPath,
 } from './src/generators/project-name-and-root-utils';
-export { promptWhenInteractive } from './src/generators/prompt';
+export { isInteractive } from './src/generators/prompt';
 export {
   addBuildTargetDefaults,
   addE2eCiTargetDefaults,
@@ -110,6 +110,7 @@ export {
   CompositeLifeCycle,
   DeletedFileChange,
   type DependsOnEntryLocation,
+  confirmationPrompt,
   // NOTE: distinct from @nx/devkit's public FileChange (generators/tree.ts),
   // which describes a pending Tree write. This one is a per-file diff
   // ({ file, getChanges }), and the two barrels are routinely imported side by
@@ -226,6 +227,7 @@ export {
   killProcessTreeGraceful,
   loadTsFile,
   mergeTargetConfigurations,
+  multiselectPrompt,
   normalizeDependencyConfigDefinition,
   normalizeDependencyConfigProjects,
   normalizeTargetDependencyWithStringProjects,
@@ -249,6 +251,7 @@ export {
   runNxSync,
   safeExecFileSync,
   safeSpawn,
+  selectPrompt,
   setWorkspaceRoot,
   setupAiAgentsGenerator,
   setupWorkspaceContext,
@@ -256,6 +259,7 @@ export {
   toNewFormat,
   toOldFormat,
   transformLegacyOutputs,
+  textPrompt,
   unparse,
   validateOutputs,
   workspaceDataDirectory,

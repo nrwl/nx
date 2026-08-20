@@ -3,6 +3,7 @@ import {
   GeneratorInformation,
   getGeneratorInformation,
   findInstalledPlugins,
+  multiselectPrompt,
 } from '@nx/devkit/internal';
 import {
   createProjectGraphAsync,
@@ -14,7 +15,6 @@ import {
   Tree,
   workspaceRoot,
 } from '@nx/devkit';
-import { prompt } from 'enquirer';
 
 interface Schema {
   project?: string;
@@ -45,21 +45,12 @@ export async function convertToInferredGenerator(tree: Tree, options: Schema) {
   } else {
     const allChoices = Array.from(generatorCollectionChoices.keys());
 
-    generatorsToRun = (
-      await prompt<{ generatorsToRun: string[] }>({
-        type: 'multiselect',
-        name: 'generatorsToRun',
-        message: 'Which inference plugin do you want to use?',
-        choices: allChoices,
-        initial: allChoices,
-        validate: (result: string[]) => {
-          if (result.length === 0) {
-            return 'Please select at least one plugin.';
-          }
-          return true;
-        },
-      } as any)
-    ).generatorsToRun;
+    generatorsToRun = await multiselectPrompt({
+      message: 'Which inference plugin do you want to use?',
+      choices: allChoices,
+      initialValues: allChoices,
+      required: true,
+    });
   }
 
   if (generatorsToRun.length === 0) {

@@ -1,4 +1,4 @@
-import { prompt } from 'enquirer';
+import { multiselectPrompt } from '../../../../utils/prompt-helpers';
 import { join } from 'path';
 import { readJsonFile, writeJsonFile } from '../../../../utils/fileutils';
 import { nxVersion } from '../../../../utils/versions';
@@ -93,23 +93,12 @@ async function collectCacheableOperations(options: Options): Promise<string[]> {
         '🧑‍🔧 Please answer the following questions about the targets found in your angular.json in order to generate task runner configuration',
     });
 
-    cacheableOperations = (
-      (await prompt([
-        {
-          type: 'multiselect',
-          name: 'cacheableOperations',
-          initial: defaultCacheableTargetsInWorkspace as any,
-          message:
-            'Which of the following targets are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not)',
-          // enquirer mutates the array below, create a new one to avoid it
-          choices: [...workspaceTargets],
-          /**
-           * limit is missing from the interface but it limits the amount of options shown
-           */
-          limit: process.stdout.rows - 4, // 4 leaves room for the header above, the prompt and some whitespace
-        } as any,
-      ])) as any
-    ).cacheableOperations;
+    cacheableOperations = await multiselectPrompt({
+      message:
+        'Which of the following targets are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not)',
+      choices: workspaceTargets,
+      initialValues: defaultCacheableTargetsInWorkspace,
+    });
   } else {
     cacheableOperations =
       options.cacheable ?? defaultCacheableTargetsInWorkspace;

@@ -123,6 +123,9 @@ catalogs:
     '@babel/core':
       specifier: ^7.29.6
       version: 7.29.7
+    '@clack/prompts':
+      specifier: ^1.7.0
+      version: 1.7.0
     '@heroicons/react':
       specifier: ^2.1.4
       version: 2.2.0
@@ -2154,9 +2157,6 @@ importers:
       '@typescript-eslint/type-utils':
         specifier: catalog:eslint
         version: 8.59.0(eslint@9.39.4(jiti@2.7.0))(typescript@6.0.3)
-      enquirer:
-        specifier: 'catalog:'
-        version: 2.3.6
       jsonc-parser:
         specifier: 'catalog:'
         version: 3.3.1
@@ -2343,9 +2343,6 @@ importers:
       create-nx-workspace:
         specifier: workspace:*
         version: link:../create-nx-workspace
-      enquirer:
-        specifier: 'catalog:'
-        version: 2.3.6
       picocolors:
         specifier: 'catalog:'
         version: 1.1.1
@@ -2358,15 +2355,15 @@ importers:
 
   packages/create-nx-workspace:
     dependencies:
+      '@clack/prompts':
+        specifier: 'catalog:'
+        version: 1.7.0
       axios:
         specifier: 1.18.1
         version: 1.18.1
       chalk:
         specifier: 'catalog:'
         version: 4.1.2
-      enquirer:
-        specifier: 'catalog:'
-        version: 2.3.6
       flat:
         specifier: ^5.0.2
         version: 5.0.2
@@ -2459,9 +2456,6 @@ importers:
       ejs:
         specifier: 5.0.1
         version: 5.0.1
-      enquirer:
-        specifier: 'catalog:'
-        version: 2.3.6
       minimatch:
         specifier: ^10.2.5
         version: 10.2.5
@@ -2487,9 +2481,6 @@ importers:
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
-      enquirer:
-        specifier: 'catalog:'
-        version: 2.3.6
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
@@ -3180,6 +3171,9 @@ importers:
 
   packages/nx:
     dependencies:
+      '@clack/prompts':
+        specifier: 'catalog:'
+        version: 1.7.0
       '@jest/diff-sequences':
         specifier: 30.0.1
         version: 30.0.1
@@ -3219,9 +3213,6 @@ importers:
       ejs:
         specifier: 5.0.1
         version: 5.0.1
-      enquirer:
-        specifier: 'catalog:'
-        version: 2.3.6
       figures:
         specifier: 3.2.0
         version: 3.2.0
@@ -3721,9 +3712,6 @@ importers:
       css-loader:
         specifier: ^7.1.4
         version: 7.1.4(@rspack/core@1.6.8(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3))
-      enquirer:
-        specifier: 'catalog:'
-        version: 2.3.6
       express:
         specifier: ^4.21.2
         version: 4.21.2
@@ -3843,9 +3831,6 @@ importers:
       ajv:
         specifier: 'catalog:'
         version: 8.18.0
-      enquirer:
-        specifier: 'catalog:'
-        version: 2.3.6
       picomatch:
         specifier: 'catalog:'
         version: 4.0.4
@@ -4130,9 +4115,6 @@ importers:
       chalk:
         specifier: 'catalog:'
         version: 4.1.2
-      enquirer:
-        specifier: 'catalog:'
-        version: 2.3.6
       picomatch:
         specifier: 'catalog:'
         version: 4.0.4
