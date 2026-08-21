@@ -168,6 +168,38 @@ class ProcessTaskUtilsTest {
   }
 
   @Test
+  fun `test a provider dependsOn resolves through the engine`() {
+    val project = ProjectBuilder.builder().build()
+    java.io.File(project.projectDir, "build.gradle").writeText("")
+    val other = ProjectBuilder.builder().withParent(project).withName("other").build()
+    other.tasks.register("jar")
+    project.tasks.register("producedByProvider")
+    val task = project.tasks.register("consumesProvider").get()
+    // `named().map { }` yields a plain Provider, not a TaskProvider — the shape the old
+    // recovery dropped.
+    task.dependsOn(project.tasks.named("producedByProvider").map { it })
+    task.dependsOn(":other:jar") // forces the bypass
+
+    val result =
+        processTask(
+            task,
+            projectBuildPath = ":project",
+            projectRoot = project.projectDir.path,
+            workspaceRoot = project.rootDir.path,
+            externalNodes = mutableMapOf(),
+            dependencies = mutableSetOf(),
+            targetNameOverrides = emptyMap(),
+            gitIgnoreClassifier = GitIgnoreClassifier(project.rootDir),
+            project = project)
+
+    val dependsOn = result["dependsOn"]?.toString() ?: ""
+    assertTrue(
+        dependsOn.contains("producedByProvider"),
+        "the provider's task must survive the bypass, got $dependsOn")
+    assertTrue(dependsOn.contains("jar"), "the path edge must also survive, got $dependsOn")
+  }
+
+  @Test
   fun `test a Groovy closure dependsOn receives the task and is expanded`() {
     val project = ProjectBuilder.builder().build()
     java.io.File(project.projectDir, "build.gradle").writeText("")
@@ -316,6 +348,60 @@ class ProcessTaskUtilsTest {
 
       // Should contain the non-conflicting input file
       assertTrue(result.any { it == Path("{projectRoot}", "src", "main.kt").toString() })
+    }
+
+    @Test
+    fun `test a resolved path dependsOn feeds precise patterns instead of the catch-all`() {
+      val other = ProjectBuilder.builder().withParent(project).withName("other").build()
+      val jar = other.tasks.register("jar").get()
+      jar.outputs.file(java.io.File(workspaceRoot, "other/build/libs/other.jar"))
+
+      val task = project.tasks.register("consumesResolvedPath").get()
+      task.dependsOn(":other:jar")
+
+      val result =
+          getInputsForTask(
+              null,
+              task,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              GitIgnoreClassifier(java.io.File(workspaceRoot)))
+
+      assertNotNull(result)
+      assertFalse(
+          result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*" },
+          "a fully resolved path must not fail open, got $result")
+      assertTrue(
+          result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar" },
+          "the resolved task's outputs must feed precise patterns, got $result")
+    }
+
+    @Test
+    fun `test a screened FileCollection keeps the catch-all even when paths resolve`() {
+      val other = ProjectBuilder.builder().withParent(project).withName("other").build()
+      other.tasks.register("jar")
+      val builder = project.tasks.register("builderTask").get()
+
+      val task = project.tasks.register("consumesContainer").get()
+      task.dependsOn(":other:jar")
+      // A FileCollection's internals may hold the real resolver, so it is screened, and the
+      // screening must keep the fail-open inputs.
+      task.dependsOn(project.files("some.txt").builtBy(builder))
+
+      val result =
+          getInputsForTask(
+              null,
+              task,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              GitIgnoreClassifier(java.io.File(workspaceRoot)))
+
+      assertNotNull(result)
+      assertTrue(
+          result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*" },
+          "a screened container must keep the catch-all, got $result")
     }
 
     @Test

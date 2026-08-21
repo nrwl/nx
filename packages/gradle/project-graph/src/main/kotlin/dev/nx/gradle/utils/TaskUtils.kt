@@ -21,6 +21,7 @@ import org.gradle.api.internal.TaskInternal
 import org.gradle.api.internal.provider.ProviderInternal
 import org.gradle.api.internal.provider.TransformBackedProvider
 import org.gradle.api.internal.tasks.DefaultTaskDependency
+import org.gradle.api.internal.tasks.TaskResolver
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.AbstractCopyTask
 import org.gradle.api.tasks.TaskProvider
@@ -29,6 +30,7 @@ import org.gradle.api.tasks.bundling.Compression
 import org.gradle.api.tasks.bundling.Tar
 import org.gradle.api.tasks.compile.AbstractCompile
 import org.gradle.api.tasks.testing.Test as GradleTest
+import org.gradle.util.Path as GradlePath
 
 private val kotlinCompileToolClass: Class<*>? by lazy {
   try {
@@ -198,6 +200,91 @@ private fun sameProjectDeps(task: Task): Set<Task> {
     }
   }
   return recovered
+}
+
+/** Realized tasks plus how many dependsOn values nothing could safely resolve. */
+internal data class DependsOnResolution(val tasks: Set<Task>, val unresolved: Int)
+
+private val dependsOnResolutionCache: MutableMap<Task, DependsOnResolution> =
+    Collections.synchronizedMap(WeakHashMap())
+
+/**
+ * The pure lookup behind [safeTaskResolver]: `findProject` returns the already-configured project
+ * and `findByName` never enters `ensureProjectsConfigured`, so this is legal on an execution worker
+ * — the #36668 deadlock lives entirely in the resolver this replaces.
+ */
+private fun lookupTask(owner: Project, p: String): Task? {
+  val sep = p.lastIndexOf(':')
+  return if (sep < 0) {
+    owner.tasks.findByName(p)
+  } else {
+    val taskName = p.substring(sep + 1)
+    if (taskName.isEmpty()) {
+      null
+    } else {
+      val prefix = p.substring(0, sep)
+      val projectPath =
+          when {
+            p.startsWith(":") -> prefix.ifEmpty { ":" }
+            owner.path == ":" -> ":$prefix"
+            else -> "${owner.path}:$prefix"
+          }
+      owner.rootProject.findProject(projectPath)?.tasks?.findByName(taskName)
+    }
+  }
+}
+
+/**
+ * [TaskResolver]'s signature changed across Gradle majors (String in 8, [GradlePath] in 9), and the
+ * JVM dispatches by exact descriptor — so both are implemented: the compile-time API's as the
+ * override, the other as a plain method found by name and descriptor at runtime.
+ */
+private fun safeTaskResolver(owner: Project): TaskResolver =
+    object : TaskResolver {
+      override fun resolveTask(path: String): Task? = lookupTask(owner, path)
+
+      @Suppress("unused") fun resolveTask(path: GradlePath): Task? = lookupTask(owner, path.path)
+    }
+
+/**
+ * Gradle's own resolution engine, made legal inside a task action by two substitutions: strings
+ * route through [safeTaskResolver] instead of the build-scoped resolver, and values whose INTERNALS
+ * may hold the real resolver (a FileCollection's builtBy can carry a path string) are screened out
+ * rather than descended into. Screening is an allowlist so an unforeseen type is counted, never
+ * resolved. Strings are pre-probed so a miss is counted here instead of surfacing as a null inside
+ * the engine.
+ */
+private fun resolveDependsOn(task: Task): DependsOnResolution =
+    dependsOnResolutionCache[task]
+        ?: computeResolveDependsOn(task).also { dependsOnResolutionCache[task] = it }
+
+private fun computeResolveDependsOn(task: Task): DependsOnResolution {
+  val engineValues = mutableListOf<Any>()
+  var unresolved = 0
+  flattenDependsOn(task).forEach { value ->
+    when (value) {
+      is Task -> engineValues.add(value)
+      is CharSequence ->
+          if (lookupTask(task.project, value.toString()) != null) {
+            engineValues.add(value)
+          } else {
+            unresolved++
+          }
+      is Provider<*> -> engineValues.add(value)
+      else -> unresolved++ // FileCollection, TaskDependency, Buildable, anything unknown
+    }
+  }
+  return try {
+    val copy = DefaultTaskDependency(safeTaskResolver(task.project), null)
+    engineValues.forEach { copy.add(it) }
+    DependsOnResolution(copy.getDependencies(task), unresolved)
+  } catch (e: Throwable) {
+    // internal-API drift on a future Gradle, or a value the engine rejects: fall back to the
+    // hand-rolled recovery and treat every string as unresolved so inputs fail open.
+    task.logger.info("Safe dependsOn resolution failed for ${task.path}: ${e.message}")
+    DependsOnResolution(
+        sameProjectDeps(task), unresolved + engineValues.count { it is CharSequence })
+  }
 }
 
 /**
@@ -766,7 +853,11 @@ private fun getInputsForTaskImpl(
     // A task whose qualified-path dependsOn was recovered by [resolvePathDeps] has no realized
     // dependency Tasks to walk, so the walk would silently under-declare. Fail open to the
     // catch-all instead: over-declaring costs a rebuild, under-declaring costs a stale cache hit.
-    val recoveredPathDeps = if (bypassesTaskDependencies(task)) setOf("**/*") else emptySet()
+    // The engine hands back real Tasks, so a fully resolved dependsOn feeds precise patterns;
+    // fail open only for the values screening or resolution actually lost.
+    val recoveredPathDeps =
+        if (bypassesTaskDependencies(task) && resolveDependsOn(task).unresolved > 0) setOf("**/*")
+        else emptySet()
 
     val dependentPatterns =
         (taskOwnPatterns + effectiveDependencyPatterns(tasksToProcess) + recoveredPathDeps).toSet()
@@ -836,7 +927,7 @@ private fun computeDependsOnTask(task: Task): Set<Task> {
     // configuration phase and blocks on the build-lifecycle lock. Those edges are recovered from
     // the path strings instead — see resolvePathDeps.
     val dependsOnFromTaskDependencies: Set<Task> =
-        if (bypassesTaskDependencies(task)) sameProjectDeps(task)
+        if (bypassesTaskDependencies(task)) resolveDependsOn(task).tasks
         else
             try {
               task.taskDependencies.getDependencies(task)
