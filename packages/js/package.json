@@ -53,6 +53,9 @@
       ],
       "src/utils/versions": [
         "dist/src/utils/versions.d.ts"
+      ],
+      "src/utils/typescript/oxc-declaration-emitter": [
+        "dist/src/utils/typescript/oxc-declaration-emitter.d.ts"
       ]
     }
   },
@@ -117,6 +120,11 @@
       "@nx/nx-source": "./src/utils/versions.ts",
       "types": "./dist/src/utils/versions.d.ts",
       "default": "./dist/src/utils/versions.js"
+    },
+    "./src/utils/typescript/oxc-declaration-emitter": {
+      "@nx/nx-source": "./src/utils/typescript/oxc-declaration-emitter.ts",
+      "types": "./dist/src/utils/typescript/oxc-declaration-emitter.d.ts",
+      "default": "./dist/src/utils/typescript/oxc-declaration-emitter.js"
     }
   },
   "dependencies": {
@@ -162,10 +170,14 @@
   },
   "peerDependencies": {
     "@swc/cli": ">=0.6.0 <0.9.0",
+    "oxc-transform": "^0.144.0",
     "verdaccio": "^6.0.5"
   },
   "peerDependenciesMeta": {
     "@swc/cli": {
+      "optional": true
+    },
+    "oxc-transform": {
       "optional": true
     },
     "verdaccio": {

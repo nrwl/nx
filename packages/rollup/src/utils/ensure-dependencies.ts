@@ -5,17 +5,24 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { acknowledgeBuildScripts } from '@nx/devkit/internal';
-import { swcCoreVersion, swcHelpersVersion } from '@nx/js/internal';
+import {
+  oxcTransformVersion,
+  swcCoreVersion,
+  swcHelpersVersion,
+} from '@nx/js/internal';
 import { coreJsVersion, swcLoaderVersion, tsLibVersion } from './versions';
 
 export type EnsureDependenciesOptions = {
   compiler?: 'babel' | 'swc' | 'tsc';
+  useOxcDeclarations?: boolean;
 };
 
 export function ensureDependencies(
   tree: Tree,
   options: EnsureDependenciesOptions
 ): GeneratorCallback {
+  const devDependencies: Record<string, string> = {};
+
   switch (options.compiler) {
     case 'swc':
       // @swc/core's postinstall only installs a wasm fallback for platforms not
@@ -23,35 +30,28 @@ export function ensureDependencies(
       acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
         '@swc/core': false,
       });
-      return addDependenciesToPackageJson(
-        tree,
-        {},
-        {
-          '@swc/helpers': swcHelpersVersion,
-          '@swc/core': swcCoreVersion,
-          'swc-loader': swcLoaderVersion,
-        },
-        undefined,
-        true
-      );
+      devDependencies['@swc/helpers'] = swcHelpersVersion;
+      devDependencies['@swc/core'] = swcCoreVersion;
+      devDependencies['swc-loader'] = swcLoaderVersion;
+      break;
     case 'babel':
-      return addDependenciesToPackageJson(
-        tree,
-        {},
-        {
-          'core-js': coreJsVersion, // needed for preset-env to work
-          tslib: tsLibVersion,
-        },
-        undefined,
-        true
-      );
+      devDependencies['core-js'] = coreJsVersion; // needed for preset-env to work
+      devDependencies['tslib'] = tsLibVersion;
+      break;
     default:
-      return addDependenciesToPackageJson(
-        tree,
-        {},
-        { tslib: tsLibVersion },
-        undefined,
-        true
-      );
+      devDependencies['tslib'] = tsLibVersion;
+      break;
   }
+
+  if (options.useOxcDeclarations) {
+    devDependencies['oxc-transform'] = oxcTransformVersion;
+  }
+
+  return addDependenciesToPackageJson(
+    tree,
+    {},
+    devDependencies,
+    undefined,
+    true
+  );
 }

@@ -62,6 +62,11 @@
       "type": "string",
       "description": "Sets the rootDir for the declaration (*.d.ts) files."
     },
+    "useOxcDeclarations": {
+      "type": "boolean",
+      "description": "Use oxc-transform for generating TypeScript declaration files (.d.ts) instead of the TypeScript compiler. Requires `isolatedDeclarations: true` in the project's tsconfig. Significantly faster than TSC-based emission.",
+      "default": false
+    },
     "watch": {
       "type": "boolean",
       "description": "Enable re-building when files change.",

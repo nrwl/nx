@@ -133,4 +133,5 @@ export {
   swcNodeVersion,
   tsLibVersion,
   typesNodeVersion,
+  oxcTransformVersion,
 } from './src/utils/versions';

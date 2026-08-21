@@ -18,3 +18,5 @@ export const vitePluginReactSwcVersion = '^4.3.0';
 export const vitePluginDtsVersion = '~4.5.0';
 export const ajvVersion = '^8.0.0';
 export const jitiVersion = '2.4.2';
+
+export const rolldownPluginDtsVersion = '^0.22.0';

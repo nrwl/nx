@@ -41,6 +41,9 @@
       ],
       "plugins/rollup-replace-files.plugin": [
         "dist/plugins/rollup-replace-files.plugin.d.ts"
+      ],
+      "plugins/nx-oxc-declarations.plugin": [
+        "dist/plugins/nx-oxc-declarations.plugin.d.ts"
       ]
     }
   },
@@ -78,6 +81,11 @@
       "@nx/nx-source": "./plugins/rollup-replace-files.plugin.ts",
       "types": "./dist/plugins/rollup-replace-files.plugin.d.ts",
       "default": "./dist/plugins/rollup-replace-files.plugin.js"
+    },
+    "./plugins/nx-oxc-declarations.plugin": {
+      "@nx/nx-source": "./plugins/nx-oxc-declarations.plugin.ts",
+      "types": "./dist/plugins/nx-oxc-declarations.plugin.d.ts",
+      "default": "./dist/plugins/nx-oxc-declarations.plugin.js"
     }
   },
   "author": "Victor Savkin",

@@ -6,6 +6,7 @@ import {
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
+import { oxcDeclarations } from './oxc-declarations';
 import { isAbsolute, resolve } from 'path';
 import {
   calculateProjectBuildableDependencies,
@@ -252,27 +253,38 @@ export function withNx(
       }),
       image(),
       json(),
-      (() => {
-        // @rollup/plugin-typescript needs outDir and declarationDir to match Rollup's output directory
-        const { outDir, declarationDir, ...tsCompilerOptions } =
-          compilerOptions;
-        const rollupOutputDir = Array.isArray(finalConfig.output)
-          ? finalConfig.output[0].dir
-          : finalConfig.output.dir;
-        return require('@rollup/plugin-typescript')({
-          tsconfig: tsConfigPath,
-          compilerOptions: {
-            ...tsCompilerOptions,
-            composite: false,
-            outDir: rollupOutputDir,
-            declarationDir: rollupOutputDir,
-            noEmitOnError: !options.skipTypeCheck,
-          },
-        });
-      })(),
-      typeDefinitions({
-        projectRoot,
-      }),
+      // When useOxcDeclarations is enabled with a non-tsc compiler, skip
+      // TypeScript entirely. SWC/Babel handles JS, oxc handles declarations.
+      ...(options.useOxcDeclarations && (useSwc || useBabel)
+        ? []
+        : [
+            (() => {
+              // @rollup/plugin-typescript needs outDir and declarationDir to match Rollup's output directory
+              const { outDir, declarationDir, ...tsCompilerOptions } =
+                compilerOptions;
+              const rollupOutputDir = Array.isArray(finalConfig.output)
+                ? finalConfig.output[0].dir
+                : finalConfig.output.dir;
+              return require('@rollup/plugin-typescript')({
+                tsconfig: tsConfigPath,
+                compilerOptions: {
+                  ...tsCompilerOptions,
+                  composite: false,
+                  outDir: rollupOutputDir,
+                  declarationDir: rollupOutputDir,
+                  noEmitOnError: !options.skipTypeCheck,
+                },
+              });
+            })(),
+          ]),
+      options.useOxcDeclarations
+        ? oxcDeclarations({
+            projectRoot,
+            sourceRoot: join(workspaceRoot, projectSourceRoot),
+          })
+        : typeDefinitions({
+            projectRoot,
+          }),
       postcss({
         inject: true,
         extract: options.extractCss,
