@@ -94,27 +94,27 @@ describe('isNativeStripPreferred', () => {
     setNativeTypescriptSupport('strip');
     delete process.env.NX_PREFER_TS_NODE;
     delete process.env.NX_PREFER_NODE_STRIP_TYPES;
-    expect((await loadIsNativeStripPreferred())).toBe(true);
+    expect(await loadIsNativeStripPreferred()).toBe(true);
   });
 
   it('does not prefer native strip when the runtime lacks support', async () => {
     setNativeTypescriptSupport(false);
     delete process.env.NX_PREFER_TS_NODE;
     delete process.env.NX_PREFER_NODE_STRIP_TYPES;
-    expect((await loadIsNativeStripPreferred())).toBe(false);
+    expect(await loadIsNativeStripPreferred()).toBe(false);
   });
 
   it('does not prefer native strip when NX_PREFER_NODE_STRIP_TYPES is false', async () => {
     setNativeTypescriptSupport('strip');
     process.env.NX_PREFER_NODE_STRIP_TYPES = 'false';
-    expect((await loadIsNativeStripPreferred())).toBe(false);
+    expect(await loadIsNativeStripPreferred()).toBe(false);
   });
 
   it('does not prefer native strip when NX_PREFER_TS_NODE is true', async () => {
     setNativeTypescriptSupport('strip');
     process.env.NX_PREFER_TS_NODE = 'true';
     delete process.env.NX_PREFER_NODE_STRIP_TYPES;
-    expect((await loadIsNativeStripPreferred())).toBe(false);
+    expect(await loadIsNativeStripPreferred()).toBe(false);
   });
 });
 

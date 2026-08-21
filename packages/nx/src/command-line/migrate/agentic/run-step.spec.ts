@@ -178,7 +178,7 @@ describe('runAgenticPromptStep', () => {
   });
 
   it('uses "Validation failed" labeling in generic-validation mode failures', async () => {
-    const { logger } = (await import('../../../utils/logger'));
+    const { logger } = await import('../../../utils/logger');
     configureRun({ kind: 'failed', summary: 'tests failed' });
 
     await expect(
