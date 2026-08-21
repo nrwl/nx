@@ -14,7 +14,7 @@ export function updateModuleFederationE2eProject(
     if (projectConfig.targets.e2e.executor !== '@nx/playwright:playwright') {
       projectConfig.targets.e2e.options = {
         ...projectConfig.targets.e2e.options,
-        baseUrl: `http://localhost:${options.devServerPort}`,
+        baseUrl: `http://localhost:${options.port}`,
       };
       updateProjectConfiguration(host, options.e2eProjectName, projectConfig);
     }

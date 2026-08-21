@@ -16,7 +16,7 @@ export function updateModuleFederationProject(
     js?: boolean;
     projectName: string;
     appProjectRoot: string;
-    devServerPort?: number;
+    port?: number;
     typescriptConfiguration?: boolean;
     dynamic?: boolean;
     bundler?: 'rspack' | 'webpack';
@@ -65,16 +65,17 @@ export function updateModuleFederationProject(
     }
   }
 
+  // MF owns its serve target rather than inheriting one: a plugin-driven workspace
+  // leaves no executor targets behind, but MF still needs a dev server to orchestrate
+  // the remotes, so create it when it isn't there.
+  projectConfig.targets.serve ??= {};
+  projectConfig.targets.serve.options ??= {};
   if (options.bundler !== 'rspack') {
     projectConfig.targets.serve.executor =
       '@nx/react:module-federation-dev-server';
   }
-  projectConfig.targets.serve ??= {};
-  projectConfig.targets.serve.options ??= {};
   projectConfig.targets.serve.options.port =
-    options.bundler === 'rspack' && options.ssr && isHost
-      ? 4000
-      : options.devServerPort;
+    options.bundler === 'rspack' && options.ssr && isHost ? 4000 : options.port;
 
   // `serve-static` for remotes that don't need to be in development mode
   if (options.bundler !== 'rspack') {

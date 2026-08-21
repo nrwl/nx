@@ -132,6 +132,49 @@ describe('react app generator (legacy)', () => {
     `);
   });
 
+  it('should not write a dev-server port that was never requested', async () => {
+    await applicationGenerator(appTree, {
+      ...schema,
+      directory: 'default-app',
+      bundler: 'webpack',
+      skipFormat: true,
+    });
+
+    // @nx/webpack:dev-server already defaults to 4200; restating it here would be noise.
+    expect(
+      readProjectConfiguration(appTree, 'default-app').targets.serve.options
+    ).not.toHaveProperty('port');
+  });
+
+  it('should write an explicitly requested port to the serve target', async () => {
+    await applicationGenerator(appTree, {
+      ...schema,
+      directory: 'pinned-app',
+      bundler: 'webpack',
+      port: 4321,
+      skipFormat: true,
+    });
+
+    expect(
+      readProjectConfiguration(appTree, 'pinned-app').targets.serve.options.port
+    ).toBe(4321);
+  });
+
+  it('should accept the deprecated devServerPort from programmatic callers', async () => {
+    await applicationGenerator(appTree, {
+      ...schema,
+      directory: 'aliased-app',
+      bundler: 'webpack',
+      devServerPort: 4322,
+      skipFormat: true,
+    });
+
+    expect(
+      readProjectConfiguration(appTree, 'aliased-app').targets.serve.options
+        .port
+    ).toBe(4322);
+  });
+
   it('should setup vite', async () => {
     await applicationGenerator(appTree, {
       ...schema,

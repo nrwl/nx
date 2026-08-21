@@ -171,6 +171,7 @@ function createRspackServeTarget(
     defaultConfiguration: 'development',
     options: {
       buildTarget: `${options.projectName}:build`,
+      ...(options.port ? { port: options.port } : {}),
       hmr: true,
     },
     configurations: {
@@ -262,6 +263,9 @@ function createServeTarget(options: NormalizedSchema): TargetConfiguration {
     defaultConfiguration: 'development',
     options: {
       buildTarget: `${options.projectName}:build`,
+      // Only when asked: @nx/webpack:dev-server already defaults to 4200, so writing
+      // it unrequested would just restate the executor's own default.
+      ...(options.port ? { port: options.port } : {}),
       hmr: true,
     },
     configurations: {

@@ -8,7 +8,6 @@ import {
   assertValidStyle,
 } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
-import { findFreePort } from './find-free-port';
 import { normalizeLinterOption, isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export async function normalizeOptions<T extends Schema = Schema>(
@@ -80,7 +79,9 @@ export async function normalizeOptions<T extends Schema = Schema>(
     unitTestRunner: options.unitTestRunner ?? 'jest',
     e2eTestRunner: options.e2eTestRunner ?? 'playwright',
     inSourceTests: options.minimal || options.inSourceTests,
-    devServerPort: options.devServerPort ?? options.port ?? findFreePort(host),
+    // This generator's CLI option has always been `--port`; `devServerPort` is
+    // programmatic-only back-compat, so there is no schema alias to lean on here.
+    port: options.port ?? options.devServerPort,
     minimal: options.minimal ?? false,
     // Programmatic callers such as the host and remote generators leave this
     // unset; the guards downstream read an unresolved `undefined` as "not eslint"
