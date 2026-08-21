@@ -17,9 +17,8 @@ fun getNxProjectName(project: Project): String =
     else project.buildTreePath
 
 /**
- * The build file that configures [project]: its own, or the nearest ancestor's when it owns none.
- * `project(':core') { }` blocks configure a project from an ancestor build file, and such a project
- * is no less real for lacking its own file.
+ * The build file that configures [project]: its own, or the nearest ancestor's — `project(':core')
+ * { }` configures from an ancestor.
  */
 fun effectiveBuildFile(project: Project): File? =
     generateSequence(project) { it.parent }.map { it.buildFile }.firstOrNull { it.exists() }

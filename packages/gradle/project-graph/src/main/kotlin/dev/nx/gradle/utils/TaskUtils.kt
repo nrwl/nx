@@ -43,38 +43,17 @@ private val kotlinCompileToolClass: Class<*>? by lazy {
 private fun isKotlinCompileTask(task: Task): Boolean =
     kotlinCompileToolClass?.isInstance(task) == true
 
-/**
- * A task's dependencies and its declared output shape are fixed for the life of one build
- * invocation, but [effectiveDependencyPatterns] re-walks the same subtrees once per task — on a
- * large multi-project build that walk dominates report time, because resolving a dependency edge
- * can force configuration resolution in another project.
- *
- * Keyed by [Task] identity, not `task.path`: paths collide across included builds (Kafka has both
- * `:core` and `api-checker`'s `:core`). Weak keys so a long-lived daemon doesn't retain build state
- * between invocations; Gradle holds the tasks strongly for the duration of the build anyway.
- */
+/** Weak Task keys, not `task.path`: paths collide across included builds. */
 private val dependsOnTaskCache: MutableMap<Task, Set<Task>> =
     Collections.synchronizedMap(WeakHashMap())
 
 private val dependentOutputPatternsCache: MutableMap<Task, Set<String>> =
     Collections.synchronizedMap(WeakHashMap())
 
-/**
- * `task.taskDependencies.getDependencies()` resolves dependency *paths* (`:a:b:test`), which sends
- * Gradle back through `ensureProjectsConfigured` — re-entering the configuration phase from a task
- * action. On builds that declare cross-project dependsOn by qualified path (Kafka) that blocks
- * indefinitely on the build-lifecycle state lock. Set to fall back to the raw `dependsOn` property,
- * which is already-resolved Task instances and never triggers configuration.
- */
+/** Escape hatch: force every task down the dependsOn-only path, never TaskDependency. */
 private val skipTaskDependencyResolution: Boolean =
     System.getenv("NX_GRADLE_SKIP_TASK_DEPS")?.toBoolean() == true
 
-/**
- * Task paths and names declared in a task's raw `dependsOn`, as plain strings. The qualified ones
- * are what make [org.gradle.api.tasks.TaskDependency.getDependencies] re-enter project
- * configuration; [qualifiedPathDeps] selects those, and [lookupTask] resolves them without ever
- * entering it.
- */
 private fun pathStringDeps(task: Task): List<String> {
   return try {
     val paths = flattenDependsOn(task).filterIsInstance<CharSequence>()
@@ -85,28 +64,19 @@ private fun pathStringDeps(task: Task): List<String> {
   }
 }
 
-/**
- * `dependsOn: [':a:test', ':b:test']` stores the whole list as ONE element of the dependsOn set, so
- * declared paths are invisible to a flat scan. Only List/Set/Array are descended into — a
- * FileCollection is also Iterable, and iterating one would resolve it.
- */
 private val dependsOnExpansionCache: MutableMap<Task, List<Any>> =
     Collections.synchronizedMap(WeakHashMap())
 
-/**
- * Memoized: several call sites per task need this expansion, and it *invokes* user closures, which
- * must not run once per caller.
- */
+/** Memoized: it invokes user closures, which must not run once per caller. */
 private fun flattenDependsOn(task: Task): List<Any> =
     dependsOnExpansionCache[task]
         ?: computeFlattenDependsOn(task).also { dependsOnExpansionCache[task] = it }
 
+// `dependsOn: [a, b]` is ONE element. Descend only List/Set/Array — a FileCollection is Iterable
+// too, and iterating one resolves it.
 private fun computeFlattenDependsOn(task: Task): List<Any> {
   val flattened = mutableListOf<Any>()
-  // Gradle's own DefaultTaskDependency.visitDependencies drains an ArrayDeque with no cycle
-  // guard, so a self-referential structure loops forever there. Identity semantics rather than
-  // equals/hashCode: the elements are arbitrary user objects, and two equal-but-distinct
-  // collections are separate work.
+  // Identity-keyed cycle guard: Gradle's own visitDependencies has none and loops forever.
   val seen = Collections.newSetFromMap(IdentityHashMap<Any, Boolean>())
   fun visit(value: Any?) {
     when (value) {
@@ -114,9 +84,8 @@ private fun computeFlattenDependsOn(task: Task): List<Any> {
       is List<*> -> if (seen.add(value)) value.forEach(::visit)
       is Set<*> -> if (seen.add(value)) value.forEach(::visit)
       is Array<*> -> if (seen.add(value)) value.forEach(::visit)
-      // Must precede the Callable arm: Closure implements GroovyCallable, which extends Callable,
-      // and Gradle passes the task to `dependsOn { … }` — calling it without one throws for any
-      // closure that uses its parameter.
+      // Must precede Callable: Closure extends it, and Gradle passes the task to
+      // `dependsOn { … }` — calling with no argument throws.
       is Closure<*> ->
           if (seen.add(value)) {
             try {
@@ -126,8 +95,6 @@ private fun computeFlattenDependsOn(task: Task): List<Any> {
               flattened.add(value)
             }
           }
-      // `dependsOn(Callable { … })` — Gradle resolves it by calling it, and so do we; the result is
-      // classified with the same rules, so no path reaches Gradle's resolver.
       is Callable<*> ->
           if (seen.add(value)) {
             try {
@@ -144,12 +111,7 @@ private fun computeFlattenDependsOn(task: Task): List<Any> {
   return flattened
 }
 
-/**
- * Entries the bypass cannot resolve without re-entering project configuration: a [FileCollection]
- * or a raw [org.gradle.api.tasks.TaskDependency] only yields its tasks by resolving, and for a
- * configuration-backed collection that configures the producing project. A task carrying one is
- * reported uncacheable rather than cached against a dependency set we know is short.
- */
+/** dependsOn values that yield tasks only by resolving — which would configure the producer. */
 private fun hasUnresolvableDeps(task: Task): Boolean =
     try {
       flattenDependsOn(task).any {
@@ -161,33 +123,26 @@ private fun hasUnresolvableDeps(task: Task): Boolean =
     }
 
 /**
- * Only *qualified* paths need path-based recovery. A bare name (`classes`) resolves inside the
- * declaring project and never reaches the build-scoped resolver, so leaving those to
- * [org.gradle.api.tasks.TaskDependency] keeps full fidelity — notably letting
- * [effectiveDependencyPatterns] see through lifecycle tasks.
+ * Only qualified paths need the bypass: a bare name never triggers a cross-project lookup, so
+ * leaving it to [org.gradle.api.tasks.TaskDependency] keeps lifecycle-task fidelity.
  */
 private fun qualifiedPathDeps(task: Task): List<String> =
     pathStringDeps(task).filter { it.contains(':') }
 
 /**
- * True when [computeDependsOnTask] must not call [org.gradle.api.tasks.TaskDependency]. Both call
- * sites share this: the inputs derivation fails open on exactly the tasks whose dependency walk was
- * suppressed, so the two must never drift apart.
+ * The single gate: a qualified path in [org.gradle.api.tasks.TaskDependency] re-enters
+ * configuration and deadlocks (#36668). The inputs derivation must fail open on exactly the same
+ * tasks, so both sites share this.
  */
 private fun bypassesTaskDependencies(task: Task): Boolean =
     skipTaskDependencyResolution || qualifiedPathDeps(task).isNotEmpty()
 
-/** Realized tasks plus how many dependsOn values nothing could safely resolve. */
 internal data class DependsOnResolution(val tasks: Set<Task>, val unresolved: Int)
 
 private val dependsOnResolutionCache: MutableMap<Task, DependsOnResolution> =
     Collections.synchronizedMap(WeakHashMap())
 
-/**
- * The pure lookup behind [safeTaskResolver]: `findProject` returns the already-configured project
- * and `findByName` never enters `ensureProjectsConfigured`, so this is legal on an execution worker
- * — the #36668 deadlock lives entirely in the resolver this replaces.
- */
+/** Deadlock-free lookup: findProject + findByName never enter `ensureProjectsConfigured`. */
 internal fun lookupTask(owner: Project, p: String): Task? {
   val sep = p.lastIndexOf(':')
   return if (sep < 0) {
@@ -210,9 +165,8 @@ internal fun lookupTask(owner: Project, p: String): Task? {
 }
 
 /**
- * [TaskResolver]'s signature changed across Gradle majors (String in 8, [GradlePath] in 9), and the
- * JVM dispatches by exact descriptor — so both are implemented: the compile-time API's as the
- * override, the other as a plain method found by name and descriptor at runtime.
+ * [TaskResolver.resolveTask] took a String in Gradle 8 and a [GradlePath] in 9; the JVM dispatches
+ * by exact descriptor, so both are implemented.
  */
 private fun safeTaskResolver(owner: Project): TaskResolver =
     object : TaskResolver {
@@ -222,12 +176,8 @@ private fun safeTaskResolver(owner: Project): TaskResolver =
     }
 
 /**
- * Gradle's own resolution engine, made legal inside a task action by two substitutions: strings
- * route through [safeTaskResolver] instead of the build-scoped resolver, and values whose INTERNALS
- * may hold the real resolver (a FileCollection's builtBy can carry a path string) are screened out
- * rather than descended into. Screening is an allowlist so an unforeseen type is counted, never
- * resolved. Strings are pre-probed so a miss is counted here instead of surfacing as a null inside
- * the engine.
+ * Gradle's engine with [safeTaskResolver]. Screening is an allowlist: a value whose internals could
+ * hold the real resolver (a FileCollection's builtBy) is counted, never passed in.
  */
 private fun resolveDependsOn(task: Task): DependsOnResolution =
     dependsOnResolutionCache[task]
@@ -254,8 +204,8 @@ private fun computeResolveDependsOn(task: Task): DependsOnResolution {
     engineValues.forEach { copy.add(it) }
     DependsOnResolution(copy.getDependencies(task), unresolved)
   } catch (e: Throwable) {
-    // internal-API drift on a future Gradle, or a value the engine rejects: fall back to the
-    // hand-rolled recovery and treat every string as unresolved so inputs fail open.
+    // Engine drift or a rejected value: keep the Tasks in hand, count the rest unresolved so
+    // inputs fail open.
     task.logger.info("Safe dependsOn resolution failed for ${task.path}: ${e.message}")
     DependsOnResolution(
         engineValues.filterIsInstance<Task>().toSet(),
@@ -312,8 +262,7 @@ private fun processTaskImpl(
   val logger = task.logger
   logger.info("NxProjectReportTask: process $task for $projectRoot")
   val target = mutableMapOf<String, Any?>()
-  // Caching a target whose dependency set we know is incomplete risks a stale hit, which is worse
-  // than not caching it. Only tasks that both bypass and carry unresolvable entries are affected.
+  // An incomplete dependency set must not be cached: a stale hit is worse than no cache.
   val dependenciesFullyKnown = !(bypassesTaskDependencies(task) && hasUnresolvableDeps(task))
   target["cache"] = isCacheable(task) && dependenciesFullyKnown
 
@@ -806,9 +755,8 @@ private fun getInputsForTaskImpl(
             .filterNot { nonInputDependentOutputExtensions.contains(it) }
             .map { "**/*.$it" }
 
-    // The engine hands back real Tasks, so a fully resolved dependsOn feeds precise patterns.
-    // Fail open only for the values screening or resolution actually lost: over-declaring costs a
-    // rebuild, under-declaring costs a stale cache hit.
+    // Fail open for what screening or resolution lost: over-declaring costs a rebuild,
+    // under-declaring a stale hit.
     val recoveredPathDeps =
         if (bypassesTaskDependencies(task) && resolveDependsOn(task).unresolved > 0) setOf("**/*")
         else emptySet()
@@ -863,9 +811,7 @@ fun getDependsOnTask(task: Task): Set<Task> =
     dependsOnTaskCache[task] ?: computeDependsOnTask(task).also { dependsOnTaskCache[task] = it }
 
 private fun computeDependsOnTask(task: Task): Set<Task> {
-  // Try to safely get dependencies, with fallback for configuration cache issues
   return try {
-    // First try to get dependencies from task.dependsOn property
     val dependsOnFromProperty: Set<Task> =
         try {
           flattenDependsOn(task).filterIsInstance<Task>().toSet()
@@ -875,11 +821,6 @@ private fun computeDependsOnTask(task: Task): Set<Task> {
           emptySet()
         }
 
-    // Then try to get dependencies from taskDependencies (more comprehensive but riskier with
-    // config cache)
-    // Resolving TaskDependency for a task that names dependencies by qualified path re-enters the
-    // configuration phase and blocks on the build-lifecycle lock. Those edges are recovered from
-    // the path strings instead — see resolveDependsOn.
     val dependsOnFromTaskDependencies: Set<Task> =
         if (bypassesTaskDependencies(task)) resolveDependsOn(task).tasks
         else
@@ -930,8 +871,7 @@ fun getDependsOnForTask(
   // Check cache to prevent infinite recursion, but only if dependsOnTasks is null
   // When dependsOnTasks is provided, we should not use cache since dependencies might be different
   val cache = taskDependencyCache.get()
-  // Not task.path: it collides across included builds (Kafka has :core in both). The build-tree
-  // path is unique, and is what the report already keys projects by.
+  // task.path collides across included builds; the build-tree path does not.
   val taskKey = "${getNxProjectName(task.project)}:${task.name}"
   if (dependsOnTasks == null && cache.containsKey(taskKey)) {
     task.logger.debug("Returning cached dependencies for ${task.path}")
@@ -983,8 +923,6 @@ fun getDependsOnForTask(
   if (dependsOnTasks == null) {
     try {
       cache[taskKey] = null
-      // Unconditional: a task may have no realized Task dependencies yet still declare
-      // path-string ones, which mapTasksToObjects recovers.
       val result = mapTasksToObjects(getDependsOnTask(task)).ifEmpty { null }
       cache[taskKey] = result
       return result
