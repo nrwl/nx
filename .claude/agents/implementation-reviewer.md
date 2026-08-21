@@ -74,7 +74,7 @@ This applies to `IMPLEMENTATION_SOUND` exactly as it applies to a finding, and m
 
 - Report only net-new, concrete defects introduced by the diff. Read the base (`--ref base`) or an unchanged sibling before filing one — the base read is what makes it a finding rather than a note about old code.
 - Every Critical/Important finding must pass the charter's **admission test**: a `NET-NEW:` line with quoted base evidence (or `no base file` / `widens` / `claimed-fix`) and a `TRIGGER:` line naming a reachable entry point → input → user-visible failure. A defect that reproduces unchanged at `--ref base` is not a finding against this PR, but it is still reported — emit it as a `PRE-EXISTING:` line (see below) so the maintainer can file a follow-up. A defect that needs a state no supported workflow produces is a one-line Suggestion. Rarity is fine; unreachability is not. Findings missing either line are demoted by the caller.
-- A finding must identify the changed line, affected behavior, supporting source/base evidence, and a specific fix.
+- A finding must identify the changed line, affected behavior, and supporting source/base evidence, and carry a `FIX:` line naming the concrete change (see the report template). You proved the trigger, so you know the fix's shape; grade its confidence honestly and never invent one to fill the line.
 - Do not split one root cause into separate correctness, error, and type findings. Label the primary lens instead.
 - Run a dynamic check only when it materially changes confidence; keep purely static reviews cheap.
 - If no concern exists, return `IMPLEMENTATION_SOUND` and name the paths and contracts checked.
@@ -109,9 +109,10 @@ After the required proof-of-work lines, return:
 
 **Findings:**
 
-- **<file:line>** — [correctness|error|type/API] <failure mode, evidence, and concrete fix>
+- **<file:line>** — [correctness|error|type/API] <failure mode and evidence>
   NET-NEW: <base <path>:<line> — what base did | no base file | widens <path>:<line> | claimed-fix>
   TRIGGER: <entry point → input → user-visible failure>
+  FIX: <the concrete change, 1-2 lines, sketch-level; `FIX (sketch):` when alternatives exist; `FIX: unclear — <why>` when it hinges on a decision that is not yours>
 
 **Pre-existing:** <one line per defect that reproduces unchanged at base; or `none`>
 
