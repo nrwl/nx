@@ -2,10 +2,13 @@ import {
   ensurePackage,
   GeneratorCallback,
   joinPathFragments,
+  offsetFromRoot,
   readJson,
   Tree,
   updateJson,
 } from '@nx/devkit';
+import { getRootTsConfigPathInTree } from '@nx/js';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from './normalize-options';
@@ -40,18 +43,38 @@ export async function addVitest(
     skipFormat: true,
   });
 
-  // Vitest cannot resolve the `@/*` alias Next resolves itself at build time,
-  // so mirror the app tsconfig `paths` as explicit aliases.
+  // Vitest cannot resolve the `@/*` alias (or workspace-root aliases in
+  // non-TS-solution setups) that Next resolves itself at build time, so mirror
+  // the tsconfig `paths` as explicit aliases.
   const tsConfigJson = readJson(
     host,
     joinPathFragments(options.appProjectRoot, 'tsconfig.json')
   );
   const resolveAlias: Record<string, string> = {};
-  for (const [key, targets] of Object.entries(
-    (tsConfigJson?.compilerOptions?.paths ?? {}) as Record<string, string[]>
-  )) {
-    if (key.endsWith('/*') && targets[0]?.endsWith('/*')) {
-      resolveAlias[key.slice(0, -2)] = targets[0].slice(0, -2);
+  const collectAliases = (
+    paths: Record<string, string[]> | undefined,
+    prefix: string
+  ) => {
+    for (const [key, targets] of Object.entries(paths ?? {})) {
+      if (!targets?.[0]) {
+        continue;
+      }
+      if (key.endsWith('/*') && targets[0].endsWith('/*')) {
+        resolveAlias[key.slice(0, -2)] = prefix + targets[0].slice(0, -2);
+      } else if (!key.includes('*')) {
+        resolveAlias[key] = prefix + targets[0];
+      }
+    }
+  };
+  collectAliases(tsConfigJson?.compilerOptions?.paths, '');
+  if (!isUsingTsSolutionSetup(host)) {
+    const rootTsConfigPath = getRootTsConfigPathInTree(host);
+    if (rootTsConfigPath && host.exists(rootTsConfigPath)) {
+      const rootTsConfig = readJson(host, rootTsConfigPath);
+      collectAliases(
+        rootTsConfig?.compilerOptions?.paths,
+        offsetFromRoot(options.appProjectRoot)
+      );
     }
   }
 
@@ -99,21 +122,33 @@ export async function addVitest(
     }
   );
   // tsconfig.spec.json extends tsconfig.base.json in TS solution setups, so
-  // specs would not see the app's `@/*` alias without copying it over.
-  if (tsConfigJson?.compilerOptions?.paths) {
-    updateJson(
-      host,
-      joinPathFragments(options.appProjectRoot, 'tsconfig.spec.json'),
-      (json) => {
+  // specs would not see the app's `@/*` alias without copying it over. Its
+  // include also only covers `src/`, so add the `specs/` layout.
+  updateJson(
+    host,
+    joinPathFragments(options.appProjectRoot, 'tsconfig.spec.json'),
+    (json) => {
+      if (tsConfigJson?.compilerOptions?.paths) {
         json.compilerOptions ??= {};
         json.compilerOptions.paths = {
           ...tsConfigJson.compilerOptions.paths,
           ...json.compilerOptions.paths,
         };
-        return json;
       }
-    );
-  }
+      json.include = [
+        ...(json.include ?? []),
+        'specs/**/*.test.ts',
+        'specs/**/*.spec.ts',
+        'specs/**/*.test.tsx',
+        'specs/**/*.spec.tsx',
+        'specs/**/*.test.js',
+        'specs/**/*.spec.js',
+        'specs/**/*.test.jsx',
+        'specs/**/*.spec.jsx',
+      ];
+      return json;
+    }
+  );
 
   return vitestTask;
 }

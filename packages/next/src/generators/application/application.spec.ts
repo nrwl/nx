@@ -847,7 +847,7 @@ describe('app', () => {
 
       const vitestConfig = tree.read('apps/myapp/vitest.config.mts', 'utf-8');
       expect(vitestConfig).toContain(
-        `'@': new URL('./src', import.meta.url).pathname,`
+        `'@': join(import.meta.dirname, './src'),`
       );
       const tsconfigSpec = readJson(tree, 'apps/myapp/tsconfig.spec.json');
       expect(tsconfigSpec.compilerOptions.paths).toEqual({
@@ -867,9 +867,7 @@ describe('app', () => {
       });
 
       const vitestConfig = tree.read('apps/myapp/vitest.config.mts', 'utf-8');
-      expect(vitestConfig).toContain(
-        `'@': new URL('.', import.meta.url).pathname,`
-      );
+      expect(vitestConfig).toContain(`'@': join(import.meta.dirname, '.'),`);
       const tsconfigSpec = readJson(tree, 'apps/myapp/tsconfig.spec.json');
       expect(tsconfigSpec.compilerOptions.paths).toEqual({ '@/*': ['./*'] });
     });
@@ -1201,6 +1199,34 @@ describe('app', () => {
       const tsconfigSpec = readJson(tree, `${name}/tsconfig.spec.json`);
       expect(tsconfigSpec.compilerOptions.types).toEqual(
         expect.arrayContaining(['vitest/globals', 'vite/client', 'node'])
+      );
+    });
+  });
+
+  describe('--unit-test-runner vitest workspace aliases', () => {
+    it('should mirror root tsconfig paths as aliases in non-ts-solution workspaces', async () => {
+      updateJson(tree, 'tsconfig.base.json', (json) => {
+        json.compilerOptions ??= {};
+        json.compilerOptions.paths = {
+          '@proj/mylib': ['libs/mylib/src/index.ts'],
+          '@proj/other/*': ['libs/other/src/*'],
+        };
+        return json;
+      });
+
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        style: 'css',
+        unitTestRunner: 'vitest',
+        skipFormat: true,
+      });
+
+      const vitestConfig = tree.read('myapp/vitest.config.mts', 'utf-8');
+      expect(vitestConfig).toContain(
+        `'@proj/mylib': join(import.meta.dirname, '../libs/mylib/src/index.ts'),`
+      );
+      expect(vitestConfig).toContain(
+        `'@proj/other': join(import.meta.dirname, '../libs/other/src'),`
       );
     });
   });

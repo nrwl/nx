@@ -28,6 +28,71 @@ describe('createOrEditViteConfig', () => {
   });
 
   describe('vitest config generation', () => {
+    it('should escape special characters in testInclude patterns', () => {
+      createOrEditViteConfig(
+        tree,
+        {
+          project: 'my-app',
+          includeVitest: true,
+          coverageProvider: 'none',
+          testInclude: ["specs/it's.spec.ts", 'src\\new.spec.ts'],
+        },
+        true,
+        { vitestFileName: true, skipPackageJson: true }
+      );
+
+      const config = tree.read('apps/my-app/vitest.config.ts', 'utf-8');
+
+      expect(config).toContain(
+        `include: ['specs/it\\'s.spec.ts', 'src\\\\new.spec.ts'],`
+      );
+    });
+
+    it('should emit resolve.alias entries for resolveAlias', () => {
+      createOrEditViteConfig(
+        tree,
+        {
+          project: 'my-app',
+          includeVitest: true,
+          coverageProvider: 'none',
+          resolveAlias: {
+            '@': './src',
+            '@proj/lib': '../../libs/lib/src/index.ts',
+          },
+        },
+        true,
+        { vitestFileName: true, skipPackageJson: true }
+      );
+
+      const config = tree.read('apps/my-app/vitest.config.ts', 'utf-8');
+
+      expect(config).toContain(`import { join } from 'node:path';`);
+      expect(config).toContain(`'@': join(import.meta.dirname, './src'),`);
+      expect(config).toContain(
+        `'@proj/lib': join(import.meta.dirname, '../../libs/lib/src/index.ts'),`
+      );
+    });
+
+    it('should not add resolve.alias to an existing config', () => {
+      tree.write('apps/my-app/vitest.config.ts', 'export default {};');
+
+      createOrEditViteConfig(
+        tree,
+        {
+          project: 'my-app',
+          includeVitest: true,
+          coverageProvider: 'none',
+          resolveAlias: { '@': './src' },
+        },
+        true,
+        { vitestFileName: true, skipPackageJson: true }
+      );
+
+      const config = tree.read('apps/my-app/vitest.config.ts', 'utf-8');
+
+      expect(config).not.toContain('alias');
+    });
+
     it('should generate vitest config with v8 coverage provider', () => {
       createOrEditViteConfig(
         tree,

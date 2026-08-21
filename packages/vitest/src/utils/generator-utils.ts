@@ -91,6 +91,11 @@ export function addOrChangeTestTarget(
   updateProjectConfiguration(tree, options.project, project);
 }
 
+// Escape a value for emission inside a single-quoted source literal.
+function escapeLiteral(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
 export interface ViteConfigFileOptions {
   project: string;
   includeLib?: boolean;
@@ -98,7 +103,11 @@ export interface ViteConfigFileOptions {
   inSourceTests?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
   testInclude?: string[];
-  /** Aliases to emit under `resolve.alias`, as alias -> project-relative dir. */
+  /**
+   * Aliases to emit under `resolve.alias`, as alias -> project-relative path.
+   * Only applies when a new config file is written; an existing config is left
+   * untouched.
+   */
   resolveAlias?: Record<string, string>;
   rolldownOptionsExternal?: string[];
   imports?: string[];
@@ -217,7 +226,7 @@ export function createOrEditViteConfig(
     globals: true,
     environment: '${options.testEnvironment ?? 'jsdom'}',
     include: [${testInclude
-      .map((pattern) => `'${pattern.replace(/'/g, "\\'")}'`)
+      .map((pattern) => `'${escapeLiteral(pattern)}'`)
       .join(', ')}],
 ${options.passWithNoTests ? `    passWithNoTests: true,\n` : ''}\
 ${options.setupFile ? `    setupFiles: ['${options.setupFile}'],\n` : ''}\
@@ -277,13 +286,16 @@ ${
   // },`;
 
   const aliasEntries = Object.entries(options.resolveAlias ?? {});
+  if (aliasEntries.length) {
+    imports.push(`import { join } from 'node:path'`);
+  }
   const resolveOption = aliasEntries.length
     ? `  resolve: {
     alias: {
 ${aliasEntries
   .map(
-    ([alias, dir]) =>
-      `      '${alias}': new URL('${dir}', import.meta.url).pathname,`
+    ([alias, target]) =>
+      `      '${escapeLiteral(alias)}': join(import.meta.dirname, '${escapeLiteral(target)}'),`
   )
   .join('\n')}
     },
@@ -298,6 +310,11 @@ ${aliasEntries
   )}',`;
 
   if (tree.exists(viteConfigPath)) {
+    if (aliasEntries.length) {
+      logger.warn(
+        `${viteConfigPath} already exists; the requested resolve.alias entries were not added to it.`
+      );
+    }
     handleViteConfigFileExists(
       tree,
       viteConfigPath,
