@@ -39,7 +39,7 @@ public class TargetBuilderDirectoryBuildInputsTests
             workspaceRoot: WorkspaceRoot,
             options: new PluginOptions(),
             nxJson: null,
-            directoryBuildInputs: directoryBuildInputs ?? new List<string>());
+            directoryBuildInputs: directoryBuildInputs ?? new List<string>()).Targets;
 
     private static IEnumerable<string> StringInputs(Target t) =>
         t.Inputs?.OfType<string>() ?? Enumerable.Empty<string>();

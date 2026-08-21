@@ -125,6 +125,15 @@ Each target type can be configured with:
 - Additional target configuration properties (options, configurations, dependsOn, cache, inputs, outputs)
 - Set to `false` to disable a target
 
+The `test` target takes three more options, which split its tests across many tasks so they can be
+cached and distributed independently. See [Split .NET Tests Across Tasks](/docs/kb/split-dotnet-tests).
+
+| Option         | Type                | Default                     | Description                                                                                  |
+| -------------- | ------------------- | --------------------------- | -------------------------------------------------------------------------------------------- |
+| `ciTargetName` | string              | none                        | Name of the CI-only target that runs the tests split across tasks. Unset means no splitting. |
+| `ciGroupName`  | string              | derived from `ciTargetName` | Display name for the group these tasks are collapsed into.                                   |
+| `ciSplitBy`    | `class` or `method` | `class`                     | Whether each task runs one test class or one test method.                                    |
+
 For example:
 
 ```json
