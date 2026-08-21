@@ -342,9 +342,17 @@ async function createPreset(tree: Tree, options: Schema) {
     });
   } else if (options.preset === Preset.TS) {
     const { initGenerator } = require('@nx' + '/js');
+    // `validateOptions` allows `skipInstall` here, and this run must then stay
+    // install-free: `skipPackageJson` gates both `ensurePackage` and the
+    // package.json write that would make `installPackagesTask` install, and
+    // `skipFormat` keeps `formatFiles` from loading the formatter. The
+    // formatter config is still written, so detection restores the dependency
+    // on the next `@nx/js:init`-running generator.
     return initGenerator(tree, {
       formatter: options.formatter,
       addTsPlugin: process.env.NX_ADD_PLUGINS !== 'false' && options.workspaces,
+      skipPackageJson: options.skipInstall,
+      skipFormat: options.skipInstall,
     });
   } else if (options.preset === Preset.TsStandalone) {
     const { libraryGenerator } = require('@nx' + '/js');

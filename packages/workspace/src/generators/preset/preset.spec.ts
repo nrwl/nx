@@ -82,6 +82,50 @@ describe('preset', () => {
       }
     );
 
+    it.each([['prettier'], ['oxfmt']])(
+      'should honour --formatter=%s on the ts preset',
+      async (formatter) => {
+        tree.delete('.prettierrc');
+
+        await presetGenerator(tree, {
+          name: 'ts-preset',
+          preset: Preset.TS,
+          linter: 'eslint',
+          formatter,
+        } as any);
+
+        expect(readJson(tree, 'package.json').devDependencies).toHaveProperty(
+          formatter
+        );
+      }
+    );
+
+    it.each([['prettier'], ['oxfmt']])(
+      'should not touch package.json on the ts preset with --skipInstall and --formatter=%s',
+      async (formatter) => {
+        tree.delete('.prettierrc');
+        // The whole file, not just the formatter entry: any change here makes
+        // `installPackagesTask` run a real install, which is exactly what
+        // `--skipInstall` promises not to do.
+        const packageJsonBefore = tree.read('package.json', 'utf-8');
+
+        await presetGenerator(tree, {
+          name: 'ts-preset',
+          preset: Preset.TS,
+          linter: 'eslint',
+          formatter,
+          skipInstall: true,
+        } as any);
+
+        expect(tree.read('package.json', 'utf-8')).toBe(packageJsonBefore);
+        // The choice is not dropped: the config survives, so formatter
+        // detection re-adds the dependency on the next @nx/js:init run.
+        expect(
+          tree.exists(formatter === 'oxfmt' ? '.oxfmtrc.json' : '.prettierrc')
+        ).toBe(true);
+      }
+    );
+
     it('should configure nothing when the formatter is none', async () => {
       tree.delete('.prettierrc');
 
