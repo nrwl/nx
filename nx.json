@@ -382,7 +382,6 @@
     },
     {
       "plugin": "@nx/oxlint",
-      "exclude": ["examples/**/*"],
       "options": {
         "targetName": "oxlint"
       }
