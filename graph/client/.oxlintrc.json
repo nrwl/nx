@@ -28,7 +28,7 @@
             "message": "Direct imports from native-bindings.js are not allowed. Import from index.js instead."
           },
           {
-            "group": ["rxjs/*"]
+            "group": ["rxjs/**/*"]
           }
         ]
       }

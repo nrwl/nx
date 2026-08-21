@@ -21,6 +21,4 @@ export default [
       'src/content/banner.json',
     ],
   },
-  // Private docs site (not a published plugin): its build-time schema parser
-  // reads nx internal types directly, so it opts out of the devkit boundary.
 ];

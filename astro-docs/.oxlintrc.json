@@ -15,6 +15,9 @@
             "message": "Please default to native fetch instead of 'node-fetch'."
           }
         ],
+        // Private docs site (not a published plugin): its build-time schema
+        // parser reads nx internal types directly, so the nx → @nx/devkit
+        // boundary group from the root config is deliberately omitted here.
         "patterns": [
           {
             "group": ["nx/src/plugins/js*", "nx/src/plugins/js*/**"],
