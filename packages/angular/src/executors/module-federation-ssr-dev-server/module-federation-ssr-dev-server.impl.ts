@@ -51,9 +51,8 @@ export async function* moduleFederationSsrDevServerExecutor(
     '@nx/module-federation',
     '@nx/angular:module-federation-dev-ssr'
   );
-  const { startRemoteIterators } = await import(
-    '@nx/module-federation/internal'
-  );
+  const { startRemoteIterators } =
+    await import('@nx/module-federation/internal');
 
   warnAngularMfDevSsrExecutorDeprecation();
   const options = normalizeOptions(schema);
@@ -62,9 +61,8 @@ export async function* moduleFederationSsrDevServerExecutor(
     '@angular-devkit/build-angular',
     '@nx/angular:module-federation-dev-ssr'
   );
-  const { executeSSRDevServerBuilder } = await import(
-    '@angular-devkit/build-angular'
-  );
+  const { executeSSRDevServerBuilder } =
+    await import('@angular-devkit/build-angular');
 
   const currIter = eachValueFrom(
     executeSSRDevServerBuilder(

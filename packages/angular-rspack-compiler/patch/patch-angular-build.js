@@ -3,9 +3,8 @@ const { gte, coerce } = require('semver');
 const { dirname, join } = require('path');
 
 function main() {
-  const angularBuildPackageJson = require.resolve(
-    '@angular/build/package.json'
-  );
+  const angularBuildPackageJson =
+    require.resolve('@angular/build/package.json');
   const fileContentsJson = JSON.parse(
     readFileSync(angularBuildPackageJson, 'utf8')
   );

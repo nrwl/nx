@@ -29,8 +29,7 @@ import {
 } from './package-manager';
 import { workspaceRoot } from './workspace-root';
 
-export interface NxProjectPackageJsonConfiguration
-  extends Partial<ProjectConfiguration> {
+export interface NxProjectPackageJsonConfiguration extends Partial<ProjectConfiguration> {
   includedScripts?: string[];
 }
 

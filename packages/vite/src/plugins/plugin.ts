@@ -504,10 +504,10 @@ function getOutputs(
 
   const isBuildable = Boolean(
     build?.lib ||
-      viteBuildConfig?.builder?.buildApp ||
-      build?.rollupOptions?.input || // Vite <8
-      build?.rolldownOptions?.input || // Vite >=8
-      existsSync(join(workspaceRoot, projectRoot, 'index.html'))
+    viteBuildConfig?.builder?.buildApp ||
+    build?.rollupOptions?.input || // Vite <8
+    build?.rolldownOptions?.input || // Vite >=8
+    existsSync(join(workspaceRoot, projectRoot, 'index.html'))
   );
 
   const hasServeConfig = Boolean(server?.host || server?.port);
