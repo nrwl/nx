@@ -382,10 +382,9 @@ describe('task graph utils', () => {
       expect(() => {
         assertTaskGraphDoesNotContainInvalidTargets(taskGraph);
       }).toThrowErrorMatchingInlineSnapshot(`
-      [DependingOnNonParallelContinuousTaskError: The following continuous tasks do not support parallelism but are depended on:
-       - b:watch <- a:build
-      Parallelism must be enabled for a continuous task if it is depended on, as the tasks that depend on it will run in parallel with it.]
-    `);
+        [NonParallelTaskDependsOnContinuousTasksError: The following tasks do not support parallelism but depend on continuous tasks:
+         - a:build -> b:watch]
+      `);
     });
 
     it('should throw if a task that is depended on and is continuous has parallelism set to false', () => {
@@ -413,9 +412,9 @@ describe('task graph utils', () => {
       expect(() => {
         assertTaskGraphDoesNotContainInvalidTargets(taskGraph);
       }).toThrowErrorMatchingInlineSnapshot(`
-        "The following continuous tasks do not support parallelism but are depended on:
+        [DependingOnNonParallelContinuousTaskError: The following continuous tasks do not support parallelism but are depended on:
          - b:watch <- a:build
-        Parallelism must be enabled for a continuous task if it is depended on, as the tasks that depend on it will run in parallel with it."
+        Parallelism must be enabled for a continuous task if it is depended on, as the tasks that depend on it will run in parallel with it.]
       `);
     });
   });

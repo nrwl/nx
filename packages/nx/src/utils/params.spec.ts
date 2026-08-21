@@ -886,10 +886,11 @@ describe('params', () => {
           }
         )
       ).toThrowErrorMatchingInlineSnapshot(`
-                    SchemaError {
-                      "message": "Property 'a' does not match the schema. 4 should be less than 3",
-                    }
-                  `);
+        [Error: Options did not match schema: {}.
+        Please fix 1 of the following errors:
+         - Required property 'a' is missing
+         - Required property 'b' is missing]
+      `);
     });
 
     it('should throw if more than one of the oneOf conditions are met', () => {
@@ -923,13 +924,13 @@ describe('params', () => {
           }
         )
       ).toThrowErrorMatchingInlineSnapshot(`
-        "Options did not match schema: {
+        [Error: Options did not match schema: {
           "a": true,
           "b": false
         }.
         Should only match one of 
          - {"required":["a"]}
-         - {"required":["b"]}"
+         - {"required":["b"]}]
       `);
     });
 
@@ -961,9 +962,9 @@ describe('params', () => {
           }
         )
       ).toThrowErrorMatchingInlineSnapshot(`
-        "Options did not match schema. Please fix any of the following errors:
+        [Error: Options did not match schema. Please fix any of the following errors:
          - Required property 'a' is missing
-         - Required property 'b' is missing"
+         - Required property 'b' is missing]
       `);
     });
 
@@ -1110,12 +1111,20 @@ describe('params', () => {
         expect(() =>
           validateOptsAgainstSchema({ a: true }, schema)
         ).toThrowErrorMatchingInlineSnapshot(
-          `"Property 'a' does not match the schema. 'true' should be '3'."`
+          `
+          SchemaError {
+            "message": "Property 'a' does not match the schema. 'true' should be '3'.",
+          }
+        `
         );
         expect(() =>
           validateOptsAgainstSchema({ a: 123 }, schema)
         ).toThrowErrorMatchingInlineSnapshot(
-          `"Property 'a' does not match the schema. '123' should be '3'."`
+          `
+          SchemaError {
+            "message": "Property 'a' does not match the schema. '123' should be '3'.",
+          }
+        `
         );
       });
 
@@ -1137,7 +1146,11 @@ describe('params', () => {
           expect(() =>
             validateOptsAgainstSchema({ a: 123 }, schema)
           ).toThrowErrorMatchingInlineSnapshot(
-            `"Property 'a' does not match the schema. '123' should be a 'string,boolean'."`
+            `
+            SchemaError {
+              "message": "Property 'a' does not match the schema. '123' should be a 'string,boolean'.",
+            }
+          `
           );
         });
       });
@@ -1158,7 +1171,11 @@ describe('params', () => {
           expect(() =>
             validateOptsAgainstSchema({ a: 'xyz' }, schema)
           ).toThrowErrorMatchingInlineSnapshot(
-            `"Property 'a' does not match the schema. 'xyz' should match the pattern '^a'."`
+            `
+            SchemaError {
+              "message": "Property 'a' does not match the schema. 'xyz' should match the pattern '^a'.",
+            }
+          `
           );
         });
 
@@ -1174,7 +1191,11 @@ describe('params', () => {
           expect(() =>
             validateOptsAgainstSchema({ a: 'a' }, schema)
           ).toThrowErrorMatchingInlineSnapshot(
-            `"Property 'a' does not match the schema. 'a' (1 character(s)) should have at least 2 character(s)."`
+            `
+            SchemaError {
+              "message": "Property 'a' does not match the schema. 'a' (1 character(s)) should have at least 2 character(s).",
+            }
+          `
           );
           expect(() =>
             validateOptsAgainstSchema({ a: 'abc' }, schema)
@@ -1195,7 +1216,11 @@ describe('params', () => {
           expect(() =>
             validateOptsAgainstSchema({ a: 'xyz' }, schema)
           ).toThrowErrorMatchingInlineSnapshot(
-            `"Property 'a' does not match the schema. 'xyz' should match the pattern '^a'."`
+            `
+            SchemaError {
+              "message": "Property 'a' does not match the schema. 'xyz' should match the pattern '^a'.",
+            }
+          `
           );
         });
       });
@@ -1301,7 +1326,11 @@ describe('params', () => {
           expect(() =>
             validateOptsAgainstSchema({ a: 5 }, schema)
           ).toThrowErrorMatchingInlineSnapshot(
-            `"Property 'a' does not match the schema. 5 should be a multiple of 3."`
+            `
+            SchemaError {
+              "message": "Property 'a' does not match the schema. 5 should be a multiple of 3.",
+            }
+          `
           );
         });
 
@@ -1317,7 +1346,11 @@ describe('params', () => {
           expect(() =>
             validateOptsAgainstSchema({ a: 2 }, schema)
           ).toThrowErrorMatchingInlineSnapshot(
-            `"Property 'a' does not match the schema. 2 should be at least 3"`
+            `
+            SchemaError {
+              "message": "Property 'a' does not match the schema. 2 should be at least 3",
+            }
+          `
           );
           expect(() =>
             validateOptsAgainstSchema({ a: 3 }, schema)
@@ -1339,12 +1372,20 @@ describe('params', () => {
           expect(() =>
             validateOptsAgainstSchema({ a: 2 }, schema)
           ).toThrowErrorMatchingInlineSnapshot(
-            `"Property 'a' does not match the schema. 2 should be greater than 3"`
+            `
+            SchemaError {
+              "message": "Property 'a' does not match the schema. 2 should be greater than 3",
+            }
+          `
           );
           expect(() =>
             validateOptsAgainstSchema({ a: 3 }, schema)
           ).toThrowErrorMatchingInlineSnapshot(
-            `"Property 'a' does not match the schema. 3 should be greater than 3"`
+            `
+            SchemaError {
+              "message": "Property 'a' does not match the schema. 3 should be greater than 3",
+            }
+          `
           );
           expect(() =>
             validateOptsAgainstSchema({ a: 4 }, schema)
@@ -1369,7 +1410,11 @@ describe('params', () => {
           expect(() =>
             validateOptsAgainstSchema({ a: 4 }, schema)
           ).toThrowErrorMatchingInlineSnapshot(
-            `"Property 'a' does not match the schema. 4 should be at most 3"`
+            `
+            SchemaError {
+              "message": "Property 'a' does not match the schema. 4 should be at most 3",
+            }
+          `
           );
         });
 
@@ -1388,12 +1433,20 @@ describe('params', () => {
           expect(() =>
             validateOptsAgainstSchema({ a: 3 }, schema)
           ).toThrowErrorMatchingInlineSnapshot(
-            `"Property 'a' does not match the schema. 3 should be less than 3"`
+            `
+            SchemaError {
+              "message": "Property 'a' does not match the schema. 3 should be less than 3",
+            }
+          `
           );
           expect(() =>
             validateOptsAgainstSchema({ a: 4 }, schema)
           ).toThrowErrorMatchingInlineSnapshot(
-            `"Property 'a' does not match the schema. 4 should be less than 3"`
+            `
+            SchemaError {
+              "message": "Property 'a' does not match the schema. 4 should be less than 3",
+            }
+          `
           );
         });
       });
