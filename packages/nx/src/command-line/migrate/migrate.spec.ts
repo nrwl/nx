@@ -1466,7 +1466,7 @@ describe('Migration', () => {
       });
 
       it('should re-evaluate held updates after later package groups satisfy their gates', async () => {
-        mockPrompt.mockResolvedValue('Yes');
+        mockPrompt.mockResolvedValue({ shouldApply: true });
         const installedVersions = {
           mypackage: '1.0.0',
           'first-owner': '1.0.0',
