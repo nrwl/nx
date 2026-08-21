@@ -153,9 +153,9 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
         // rather than one project being inferred per build file.
         const gradleFilePath = buildFileByProjectRoot[normalizedProjectRoot];
         if (!gradleFilePath) {
-          // Unreachable once `@nx/gradle:init` has run: it writes a build file next to every
-          // settings.gradle, so every project has one somewhere up its ancestry. Reachable on a
-          // plugin older than the pairing, or when the plugin was applied without the generator.
+          // The report named no build file for this project. Unreachable once `@nx/gradle:init`
+          // has run — it writes one next to every settings.gradle — so this means an ancestor
+          // configures it and the Gradle plugin predates `effectiveBuildFile`.
           logger.verbose(
             `[@nx/gradle] no build file reported for "${normalizedProjectRoot}"; skipping it. Upgrade dev.nx.gradle.project-graph if projects are missing.`
           );

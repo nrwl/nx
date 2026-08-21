@@ -31,9 +31,11 @@ export interface ProjectGraphReport {
   externalNodes?: Record<string, ProjectGraphExternalNode>;
   buildFiles?: string[];
   /**
-   * Project root -> the build file that configures it. Each per-project report names one of each,
-   * so the pairing is exact; flattening only `buildFiles` would lose which project it belonged to.
-   * Absent for reports written by a plugin older than 0.1.25.
+   * Project root -> the build file that configures it. Derived here from each per-project report,
+   * not reported by the Gradle plugin: a report names one project and one build file, and
+   * flattening `buildFiles` alone loses which project it belonged to. A project whose report names
+   * no build file has no entry — that is how an ancestor-configured project goes missing on a
+   * plugin predating `effectiveBuildFile`.
    */
   buildFileByProjectRoot?: Record<string, string>;
 }
