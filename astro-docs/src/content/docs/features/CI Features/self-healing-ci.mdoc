@@ -56,7 +56,7 @@ jobs:
       # Your existing steps which check out the repo, start-ci-run, install
       # dependencies, etc.
       # These are just illustrative examples...
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
       - run: npx nx start-ci-run
       - run: npm ci
@@ -310,6 +310,12 @@ If a fix is 90% correct but needs minor adjustments:
 1. Click "Apply Locally" in the GitHub comment or Nx Cloud UI
 2. Run the provided command in your terminal
 3. Make your adjustments and commit
+
+The provided command takes the form below. The fix identifier is shown in the Nx Cloud UI and in the PR/MR comment. Pass `--no-interactive` to disable prompting.
+
+```shell
+nx apply-locally <fix-identifier>
+```
 
 ![Apply Self-Healing Fixes Locally](../../../../assets/features/self-healing-apply-locally.avif)
 
