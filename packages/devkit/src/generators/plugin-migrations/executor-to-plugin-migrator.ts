@@ -432,7 +432,8 @@ function writeResiduals<T>(
   projectConfigsByName: Map<string, ProjectConfiguration>,
   projectGraph: ProjectGraph,
   scope: MigrationScope<T>,
-  residualByProject: ResidualByProject
+  residualByProject: ResidualByProject,
+  logger?: typeof devkitLogger
 ) {
   for (const executorScope of scope.executorScopes) {
     for (const [targetName, projectNames] of executorScope.targetAndProjects) {
@@ -446,7 +447,8 @@ function writeResiduals<T>(
           projectConfigsByName,
           projectName,
           targetName,
-          structuredClone(entry.residual)
+          structuredClone(entry.residual),
+          logger
         );
       }
     }
@@ -459,7 +461,8 @@ function writeResidualTarget(
   projectConfigsByName: Map<string, ProjectConfiguration>,
   projectName: string,
   targetName: string,
-  residual: TargetConfiguration
+  residual: TargetConfiguration,
+  logger?: typeof devkitLogger
 ) {
   const projectConfig = readCachedProjectConfiguration(
     tree,
@@ -488,7 +491,19 @@ function writeResidualTarget(
   // revert). Delete the entry here and keep the cache writable.
   if (!projectConfig.targets) {
     projectConfig.targets = {};
-    deletePackageJsonTarget(tree, projectConfig.root, targetName);
+    // With the entry gone, an included package.json script with the same name
+    // would author the target in the default plugin layer, replacing the
+    // inferred target with `nx:run-script`. Keep the entry (the pre-migration
+    // executor) in that case so the target's behavior does not change.
+    if (
+      packageJsonAuthorsTargetIdentity(tree, projectConfig.root, targetName)
+    ) {
+      (logger ?? devkitLogger).warn(
+        `convert-to-inferred kept the package.json nx.targets entry for target "${targetName}" in project "${projectName}": an included package.json script with the same name would otherwise replace the inferred target with nx:run-script. The target keeps the same behavior as before the migration; rename or exclude the script, then remove the nx.targets entry to let the inferred target take over.`
+      );
+    } else {
+      deletePackageJsonTarget(tree, projectConfig.root, targetName);
+    }
   }
 }
 
@@ -711,8 +726,9 @@ function removeHoistedTargetDefault(
  * an `nx:run-script` target and honors `nx.targets`; either way the target gains
  * an `executor`/`command` in a default layer, which makes Nx's
  * `resolveSourcePlugin` refuse a `filter: { plugin }` targetDefault for it.
- * Detecting this lets the hoist keep the full residual per project instead of
- * silently dropping the centralized keys.
+ * The hoist uses this to keep the full residual per project instead of silently
+ * dropping the centralized keys; the empty-residual write uses it to keep the
+ * `nx.targets` entry instead of letting a same-name script take the target over.
  *
  * Read through the Tree so this sees the same in-memory package.json the rest of
  * the generator reads and writes, rather than a possibly-stale copy on disk.
@@ -898,7 +914,8 @@ function hoistCommonAndWrite<T>(
           projectConfigsByName,
           projectName,
           targetName,
-          toWrite
+          toWrite,
+          logger
         );
       }
     }
@@ -1632,7 +1649,8 @@ async function verifyAndFallback<T>(
           projectConfigsByName,
           projectName,
           targetName,
-          structuredClone(entry.residual)
+          structuredClone(entry.residual),
+          logger
         );
       }
     }
@@ -1695,7 +1713,8 @@ async function verifyAndFallback<T>(
           projectConfigsByName,
           projectName,
           targetName,
-          structuredClone(entry.residual)
+          structuredClone(entry.residual),
+          logger
         );
         fallbacks.push(`${projectName} > ${targetName}`);
       }
@@ -1879,7 +1898,8 @@ async function migrateProjects<T>(
       projectConfigsByName,
       projectGraph,
       scope,
-      residualByProject
+      residualByProject,
+      logger
     );
   } else {
     hoistedByTarget = hoistCommonAndWrite(

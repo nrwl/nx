@@ -1238,6 +1238,146 @@ describe('Phase 3 — strict-common hoist', () => {
     expect(warn).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps the nx.targets entry of a package-based project with a same-name included script when its residual is empty (--project)', async () => {
+    // Deleting the entry would let the package-json default plugin turn the
+    // `build` script into an `nx:run-script` target that takes the target's
+    // identity over from the inferred target. Keep the entry and warn instead.
+    ctx = setupFixture('package-based-empty-residual-script');
+    ctx.tree.write(
+      'package.json',
+      JSON.stringify({
+        name: 'workspace',
+        version: '0.0.1',
+        workspaces: ['libs/*'],
+      })
+    );
+    const target = {
+      executor: SYNTHETIC_EXECUTOR,
+      options: { config: SYNTHETIC_CONFIG_FILE },
+      cache: true,
+      outputs: ['{projectRoot}/dist'],
+    };
+    ctx.tree.write(
+      'libs/pkg1/package.json',
+      JSON.stringify({
+        name: 'pkg1',
+        scripts: { build: 'echo build' },
+        nx: { targets: { build: target } },
+      })
+    );
+    ctx.projectGraph.nodes.pkg1 = {
+      name: 'pkg1',
+      type: 'lib',
+      data: { root: 'libs/pkg1', targets: { build: target } } as any,
+    };
+    ctx.fs.createFileSync(`libs/pkg1/${SYNTHETIC_CONFIG_FILE}`, '{}');
+    const plugin = createSyntheticPlugin();
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      'pkg1',
+      { warn } as any
+    );
+
+    // the entry survives verbatim, exactly as the previous engine left it
+    expect(
+      readJson(ctx.tree, 'libs/pkg1/package.json').nx.targets.build
+    ).toEqual(target);
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'kept the package.json nx.targets entry for target "build" in project "pkg1"'
+      )
+    );
+    // through REAL resolution (package-json default plugin included) the
+    // pre-migration executor still runs; without the entry the `build` script
+    // would take the identity over with `nx:run-script`
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+    expect(resolved['libs/pkg1'].build.executor).toBe(SYNTHETIC_EXECUTOR);
+  });
+
+  it('keeps the nx.targets entry only for the script-authoring package-based project in a whole-workspace migration', async () => {
+    ctx = setupFixture('package-based-empty-residual-script-ww');
+    ctx.tree.write(
+      'package.json',
+      JSON.stringify({
+        name: 'workspace',
+        version: '0.0.1',
+        workspaces: ['libs/*'],
+      })
+    );
+    const target = {
+      executor: SYNTHETIC_EXECUTOR,
+      options: { config: SYNTHETIC_CONFIG_FILE },
+      cache: true,
+      outputs: ['{projectRoot}/dist'],
+    };
+    // pkg1 also has an included same-name script; pkg2 does not
+    ctx.tree.write(
+      'libs/pkg1/package.json',
+      JSON.stringify({
+        name: 'pkg1',
+        scripts: { build: 'echo build' },
+        nx: { targets: { build: target } },
+      })
+    );
+    ctx.tree.write(
+      'libs/pkg2/package.json',
+      JSON.stringify({ name: 'pkg2', nx: { targets: { build: target } } })
+    );
+    for (const name of ['pkg1', 'pkg2']) {
+      ctx.projectGraph.nodes[name] = {
+        name,
+        type: 'lib',
+        data: { root: `libs/${name}`, targets: { build: target } } as any,
+      };
+      ctx.fs.createFileSync(`libs/${name}/${SYNTHETIC_CONFIG_FILE}`, '{}');
+    }
+    const plugin = createSyntheticPlugin();
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    // pkg1 keeps its entry (script identity), pkg2's is removed as usual
+    expect(
+      readJson(ctx.tree, 'libs/pkg1/package.json').nx.targets.build
+    ).toEqual(target);
+    expect(
+      readJson(ctx.tree, 'libs/pkg2/package.json').nx.targets
+    ).toBeUndefined();
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'kept the package.json nx.targets entry for target "build" in project "pkg1"'
+      )
+    );
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+    expect(resolved['libs/pkg1'].build.executor).toBe(SYNTHETIC_EXECUTOR);
+    expect(resolved['libs/pkg2'].build.executor).not.toBe(SYNTHETIC_EXECUTOR);
+    expect(resolved['libs/pkg2'].build.options?.command).toBe('acme-build');
+  });
+
   it('does not throw when nx.includedScripts is malformed (non-array)', async () => {
     // A non-array `nx.includedScripts` must not crash the generator with an
     // uncaught TypeError; it is normalized to the default (all scripts).
