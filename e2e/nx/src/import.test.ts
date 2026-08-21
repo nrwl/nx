@@ -133,14 +133,22 @@ describe('Nx Import', () => {
 
   // Importing OUTSIDE the fixture's `projects/*` globs is what makes this branch
   // run at all - inside them `isPkgIncluded` is true and it returns before
-  // writing anything. Nothing here asserts the amend: it is `commit --amend -a`,
-  // so the tree is clean either way.
+  // writing anything.
   //
   // `--source .` is required: `--no-interactive` does not suppress that prompt,
   // which only defaults under `isAiAgent()`.
-  it('should commit the workspaces entry it adds', () => {
+  it('should format and commit the workspaces entry it adds', () => {
     mkdirSync(tempImportE2ERoot, { recursive: true });
     const repoPath = createSimpleRepo(tempImportE2ERoot, 'workspaces-src');
+
+    // The entry is written with a 2-space `writeJsonFile`, so an off-default
+    // width is what makes the drain's rewrite observable in the committed
+    // bytes.
+    updateJson('.oxfmtrc.json', (json) => {
+      json.tabWidth = 4;
+      return json;
+    });
+    runCommand(`git add . && git commit -m "seed formatter config"`);
 
     runCLI(
       `import ${repoPath} imported/pkg --ref main --source . --no-interactive`,
@@ -153,6 +161,17 @@ describe('Nx Import', () => {
       getSelectedPackageManager() === 'pnpm'
         ? 'pnpm-workspace.yaml'
         : 'package.json';
-    expect(readFile(workspacesFile)).toContain('imported/pkg');
+    // The working tree holds the entry before either endpoint runs; only the
+    // amend puts it in HEAD.
+    const committed = runCommand(`git show HEAD:${workspacesFile}`);
+    if (getSelectedPackageManager() === 'pnpm') {
+      // oxfmt does not format YAML, so the entry itself is all the pnpm
+      // branch can assert.
+      expect(committed).toContain('imported/pkg');
+    } else {
+      // 8 spaces = the seeded tabWidth at array depth. The raw write indents
+      // by 4, so this fails if the drain is skipped or runs after the amend.
+      expect(committed).toContain('        "imported/pkg"');
+    }
   });
 });
