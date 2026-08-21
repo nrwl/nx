@@ -1,21 +1,21 @@
-jest.mock('./runner', () => ({ runAgentic: jest.fn() }));
-jest.mock('./definitions', () => ({ getAgentDefinition: jest.fn() }));
-jest.mock('./handoff', () => ({
-  ...jest.requireActual('./handoff'),
-  mkdirSafely: jest.fn(),
+vi.mock('./runner', () => ({ runAgentic: vi.fn() }));
+vi.mock('./definitions', () => ({ getAgentDefinition: vi.fn() }));
+vi.mock('./handoff', async () => ({
+  ...(await vi.importActual('./handoff')),
+  mkdirSafely: vi.fn(),
 }));
-jest.mock('../migrate-output', () => ({
-  resetSgrAfterAgent: jest.fn(),
+vi.mock('../migrate-output', () => ({
+  resetSgrAfterAgent: vi.fn(),
 }));
-jest.mock('../../../utils/logger', () => ({
-  logger: { info: jest.fn() },
+vi.mock('../../../utils/logger', () => ({
+  logger: { info: vi.fn() },
 }));
-jest.mock('../../../utils/package-manager', () => ({
-  detectPackageManager: jest.fn().mockReturnValue('npm'),
-  getPackageManagerCommand: jest.fn().mockReturnValue({ exec: 'npx' }),
+vi.mock('../../../utils/package-manager', () => ({
+  detectPackageManager: vi.fn().mockReturnValue('npm'),
+  getPackageManagerCommand: vi.fn().mockReturnValue({ exec: 'npx' }),
 }));
-jest.mock('../../../utils/child-process', () => ({
-  getRunNxBaseCommand: jest.fn().mockReturnValue('npx nx'),
+vi.mock('../../../utils/child-process', () => ({
+  getRunNxBaseCommand: vi.fn().mockReturnValue('npx nx'),
 }));
 
 import { dirname, join } from 'path';
@@ -79,7 +79,7 @@ describe('runAgenticPromptStep', () => {
       mkdirSafely: jest.Mock;
     };
     mkdirSafely.mockClear();
-    installDeps = jest.fn().mockResolvedValue(undefined);
+    installDeps = vi.fn().mockResolvedValue(undefined);
   });
 
   it('returns the agent summary and calls installDeps on success', async () => {

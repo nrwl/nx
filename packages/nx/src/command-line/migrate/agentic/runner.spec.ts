@@ -3,15 +3,15 @@ import { mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
-jest.mock('child_process', () => ({
-  spawn: jest.fn(),
-  execSync: jest.fn(),
+vi.mock('child_process', () => ({
+  spawn: vi.fn(),
+  execSync: vi.fn(),
   // `promisify(exec)` and `promisify(execFile)` in transitive imports need a function to wrap.
-  exec: jest.fn(),
-  execFile: jest.fn(),
+  exec: vi.fn(),
+  execFile: vi.fn(),
 }));
-jest.mock('@clack/prompts', () => ({
-  autocomplete: jest.fn(),
+vi.mock('@clack/prompts', () => ({
+  autocomplete: vi.fn(),
   isCancel: () => false,
 }));
 
@@ -40,7 +40,7 @@ function makeDefinition(): AgentDefinition {
     displayName: 'Claude Code',
     binaryNames: ['claude'],
     wellKnownPaths: () => [],
-    buildInteractive: jest.fn(() => ({
+    buildInteractive: vi.fn(() => ({
       args: ['--system-prompt', 'sys', 'user'],
       cwd: '/workspace',
     })),
@@ -61,7 +61,7 @@ function fakeChild(
   ee.exitCode = null;
   ee.signalCode = null;
   ee.killed = false;
-  ee.kill = jest.fn((signal?: NodeJS.Signals) => {
+  ee.kill = vi.fn((signal?: NodeJS.Signals) => {
     if (ee.killed) return false;
     ee.killed = true;
     if (opts.exitOnKill) {
@@ -95,7 +95,7 @@ describe('runAgentic', () => {
     mockSpawn.mockReset();
     mockExecSync.mockReset();
     mockPrompt.mockReset();
-    warnSpy = jest.spyOn(output, 'warn').mockImplementation(() => {});
+    warnSpy = vi.spyOn(output, 'warn').mockImplementation(() => {});
     sigintCapture = null;
     originalListeners = process.listeners('SIGINT') as NodeJS.SignalsListener[];
   });
@@ -139,7 +139,7 @@ describe('runAgentic', () => {
   } {
     const handlers: NodeJS.SignalsListener[] = [];
     const realOn = process.on.bind(process);
-    const spy = jest
+    const spy = vi
       .spyOn(process, 'on')
       .mockImplementation((event: string | symbol, listener: any) => {
         if (event === 'SIGINT') handlers.push(listener);

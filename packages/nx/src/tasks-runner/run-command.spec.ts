@@ -13,11 +13,11 @@ describe('getRunner', () => {
 
   beforeEach(() => {
     nxJson = {};
-    mockRunner = jest.fn();
+    mockRunner = vi.fn();
   });
 
   it('uses default runner when no tasksRunnerOptions are present', () => {
-    jest.mock(join(__dirname, './default-tasks-runner.ts'), () => mockRunner);
+    vi.mock(join(__dirname, './default-tasks-runner.ts'), () => mockRunner);
 
     const { tasksRunner } = withEnvironmentVariables(
       {
@@ -97,7 +97,7 @@ describe('getRunner', () => {
   });
 
   it('reads options from base properties if no runner options provided', () => {
-    jest.mock(join(__dirname, './default-tasks-runner.ts'), () => mockRunner);
+    vi.mock(join(__dirname, './default-tasks-runner.ts'), () => mockRunner);
 
     const { runnerOptions } = getRunner(
       {},

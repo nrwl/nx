@@ -2,9 +2,9 @@ import { ProjectGraph } from '../config/project-graph';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
 import { splitTarget } from './split-target';
 
-jest.mock('./output', () => ({
+vi.mock('./output', () => ({
   output: {
-    warn: jest.fn(),
+    warn: vi.fn(),
   },
 }));
 
@@ -142,7 +142,7 @@ describe('splitTarget', () => {
 
 describe('ambiguous target resolution', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   // Scenario 1: a:b:c — project "a" has targets "b:c" and "b" (no configs)

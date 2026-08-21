@@ -13,7 +13,7 @@ import {
 } from './register';
 
 // Avoid a real swc registration side effect when exercising getTranspiler.
-jest.mock('@swc-node/register/register', () => ({
+vi.mock('@swc-node/register/register', () => ({
   register: () => () => {},
 }));
 
@@ -114,8 +114,8 @@ describe('getTranspiler', () => {
   // TS6 requires the suppression flag to avoid hard-erroring on deprecated options.
   it('sets ignoreDeprecations to "6.0" on TypeScript >= 6', () => {
     jest.isolateModules(() => {
-      jest.doMock('typescript', () => ({
-        ...jest.requireActual('typescript'),
+      vi.doMock('typescript', async () => ({
+        ...(await vi.importActual('typescript')),
         versionMajorMinor: '6.0',
       }));
       const { getTranspiler: fresh } =
@@ -124,14 +124,14 @@ describe('getTranspiler', () => {
       fresh(opts);
       expect(opts.ignoreDeprecations).toEqual('6.0');
     });
-    jest.unmock('typescript');
+    vi.unmock('typescript');
   });
 
   // TS5 rejects the '6.0' value (TS5103) so the option must stay absent.
   it('leaves ignoreDeprecations unset on TypeScript < 6', () => {
     jest.isolateModules(() => {
-      jest.doMock('typescript', () => ({
-        ...jest.requireActual('typescript'),
+      vi.doMock('typescript', async () => ({
+        ...(await vi.importActual('typescript')),
         versionMajorMinor: '5.9',
       }));
       const { getTranspiler: fresh } =
@@ -140,7 +140,7 @@ describe('getTranspiler', () => {
       fresh(opts);
       expect(opts.ignoreDeprecations).toBeUndefined();
     });
-    jest.unmock('typescript');
+    vi.unmock('typescript');
   });
 });
 

@@ -110,10 +110,10 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
         resolveFirstPlugins = resolve;
       });
       let pluginsCallCount = 0;
-      jest.doMock('../../project-graph/plugins/get-plugins', () => ({
+      vi.doMock('../../project-graph/plugins/get-plugins', () => ({
         __esModule: true,
-        getPlugins: jest.fn(async () => []),
-        getPluginsSeparated: jest.fn(async () => {
+        getPlugins: vi.fn(async () => []),
+        getPluginsSeparated: vi.fn(async () => {
           pluginsCallCount++;
           if (pluginsCallCount === 1) {
             await firstPluginsGate;
@@ -123,7 +123,7 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
       }));
 
       const { serverLogger } = require('../logger');
-      const logSpy = jest.spyOn(serverLogger, 'log');
+      const logSpy = vi.spyOn(serverLogger, 'log');
 
       const {
         scheduleProjectGraphRecomputation,
@@ -170,10 +170,10 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
 
       const pluginLoadError = new Error('plugin boom');
       let pluginsCallCount = 0;
-      jest.doMock('../../project-graph/plugins/get-plugins', () => ({
+      vi.doMock('../../project-graph/plugins/get-plugins', () => ({
         __esModule: true,
-        getPlugins: jest.fn(async () => []),
-        getPluginsSeparated: jest.fn(async () => {
+        getPlugins: vi.fn(async () => []),
+        getPluginsSeparated: vi.fn(async () => {
           pluginsCallCount++;
           throw pluginLoadError;
         }),

@@ -7,8 +7,8 @@ import { isAbsolute } from 'node:path';
 function loadHomeTmpDir(homedir: () => string): string | undefined {
   let value: string | undefined;
   jest.isolateModules(() => {
-    jest.doMock('node:os', () => ({
-      ...jest.requireActual('node:os'),
+    vi.doMock('node:os', async () => ({
+      ...(await vi.importActual('node:os')),
       homedir,
     }));
     value = require('./nx-tmp-dir').NX_HOME_TMP_DIR;
@@ -18,7 +18,7 @@ function loadHomeTmpDir(homedir: () => string): string | undefined {
 
 describe('NX_HOME_TMP_DIR', () => {
   afterEach(() => {
-    jest.dontMock('node:os');
+    vi.doUnmock('node:os');
   });
 
   it('sits beneath the home directory when there is one', () => {

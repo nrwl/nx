@@ -54,7 +54,7 @@ describe('show target info', () => {
         .build()
     );
 
-    process.cwd = jest.fn().mockReturnValue('/workspace/apps/my-app');
+    process.cwd = vi.fn().mockReturnValue('/workspace/apps/my-app');
 
     await showTargetInfoHandler({ target: 'build', json: true });
 
@@ -383,7 +383,7 @@ describe('show target info', () => {
 
   it('should error when target not found and list available targets', async () => {
     const { output } = require('../../../utils/output');
-    jest.spyOn(process, 'exit').mockImplementation((code) => {
+    vi.spyOn(process, 'exit').mockImplementation((code) => {
       throw new Error(`process.exit: ${code}`);
     });
 
@@ -417,7 +417,7 @@ describe('show target info', () => {
 
   it('should error when project not found', async () => {
     const { output } = require('../../../utils/output');
-    jest.spyOn(process, 'exit').mockImplementation((code) => {
+    vi.spyOn(process, 'exit').mockImplementation((code) => {
       throw new Error(`process.exit: ${code}`);
     });
 
@@ -447,7 +447,7 @@ describe('show target info', () => {
 
   it('should error when configuration not found and list available configs', async () => {
     const { output } = require('../../../utils/output');
-    jest.spyOn(process, 'exit').mockImplementation((code) => {
+    vi.spyOn(process, 'exit').mockImplementation((code) => {
       throw new Error(`process.exit: ${code}`);
     });
 
@@ -784,7 +784,7 @@ describe('show target info', () => {
     expect(inputLine).toContain('nx.json');
 
     // Also verify JSON output strips internal fields
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     await showTargetInfoHandler({
       target: 'my-app:build',
       json: true,

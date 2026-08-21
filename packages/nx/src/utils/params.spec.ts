@@ -1763,7 +1763,7 @@ describe('params', () => {
 
   describe('warnDeprecations', () => {
     beforeEach(() => {
-      jest.spyOn(logger, 'warn').mockImplementation(() => {});
+      vi.spyOn(logger, 'warn').mockImplementation(() => {});
     });
 
     it('should not log a warning when an option marked as deprecated is not specified', () => {

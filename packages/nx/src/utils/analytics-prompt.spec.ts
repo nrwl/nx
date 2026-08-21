@@ -1,6 +1,6 @@
-const mockPrompt = jest.fn();
-const mockIsCancel = jest.fn(() => false);
-jest.mock('@clack/prompts', () => ({
+const mockPrompt = vi.fn();
+const mockIsCancel = vi.fn(() => false);
+vi.mock('@clack/prompts', () => ({
   autocomplete: (...args: any[]) => mockPrompt(...args),
   isCancel: (...args: any[]) => mockIsCancel(...args),
 }));
@@ -19,17 +19,17 @@ describe('analytics-prompt', () => {
   let originalStdinIsTTY: boolean | undefined;
   let originalStdoutIsTTY: boolean | undefined;
 
-  let mockIsCI = jest.spyOn(isCi, 'isCI');
-  let mockReadNxJson = jest.spyOn(nxJson, 'readNxJson');
-  let mockReadJsonFile = jest.spyOn(fileUtils, 'readJsonFile');
-  let mockWriteFormattedJsonFile = jest
+  let mockIsCI = vi.spyOn(isCi, 'isCI');
+  let mockReadNxJson = vi.spyOn(nxJson, 'readNxJson');
+  let mockReadJsonFile = vi.spyOn(fileUtils, 'readJsonFile');
+  let mockWriteFormattedJsonFile = vi
     .spyOn(writeFormattedModule, 'writeFormattedJsonFile')
     .mockResolvedValue(undefined);
-  let mockOutputLog = jest.spyOn(outputModule.output, 'log');
-  let mockOutputSuccess = jest.spyOn(outputModule.output, 'success');
+  let mockOutputLog = vi.spyOn(outputModule.output, 'log');
+  let mockOutputSuccess = vi.spyOn(outputModule.output, 'success');
 
   beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
 
     // Prevent output from writing to stdout during tests
     mockOutputLog.mockImplementation(() => {});

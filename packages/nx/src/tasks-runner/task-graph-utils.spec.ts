@@ -231,7 +231,7 @@ describe('task graph utils', () => {
       env = process.env;
       process.env = {};
 
-      mockProcessExit = jest
+      mockProcessExit = vi
         .spyOn(process, 'exit')
         .mockImplementation((code: number) => {
           return undefined as never;

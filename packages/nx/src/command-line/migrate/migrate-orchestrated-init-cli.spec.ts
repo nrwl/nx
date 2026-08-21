@@ -3,71 +3,71 @@
 // decides for itself is decided here. Kept in its own file so the module mocks
 // below don't leak into the other migrate specs.
 
-const mockRunOrchestratorInit = jest.fn();
-jest.mock('./run', () => ({
-  runSingleMigrationWorker: jest.fn(),
+const mockRunOrchestratorInit = vi.fn();
+vi.mock('./run', () => ({
+  runSingleMigrationWorker: vi.fn(),
   runOrchestratorInit: (...args: unknown[]) => mockRunOrchestratorInit(...args),
-  runOrchestratorReconcile: jest.fn(),
+  runOrchestratorReconcile: vi.fn(),
 }));
 
-const mockIsInsideAgent = jest.fn();
-jest.mock('./agentic/inception', () => ({
-  ...jest.requireActual('./agentic/inception'),
+const mockIsInsideAgent = vi.fn();
+vi.mock('./agentic/inception', async () => ({
+  ...(await vi.importActual('./agentic/inception')),
   isInsideAgent: () => mockIsInsideAgent(),
 }));
 
 // The classic loop's entry marker, used to prove the dispatch fell through to
 // it rather than merely skipping the orchestrator.
-const mockReportRunStart = jest.fn();
-jest.mock('./migrate-analytics', () => ({
-  ...jest.requireActual('./migrate-analytics'),
+const mockReportRunStart = vi.fn();
+vi.mock('./migrate-analytics', async () => ({
+  ...(await vi.importActual('./migrate-analytics')),
   reportMigrateRunStart: (...args: unknown[]) => mockReportRunStart(...args),
 }));
 
 // The confirmation itself stays real so the branch resolution behind it is
 // exercised; only the terminal prompt is stubbed.
-const mockCanPrompt = jest.fn();
-const mockMigrateConfirm = jest.fn();
-jest.mock('./safe-prompt', () => ({
-  ...jest.requireActual('./safe-prompt'),
+const mockCanPrompt = vi.fn();
+const mockMigrateConfirm = vi.fn();
+vi.mock('./safe-prompt', async () => ({
+  ...(await vi.importActual('./safe-prompt')),
   canPrompt: (...args: unknown[]) => mockCanPrompt(...args),
   migrateConfirm: (...args: unknown[]) => mockMigrateConfirm(...args),
 }));
 
-const mockIsGitRepository = jest.fn();
-const mockGetGitCurrentBranch = jest.fn();
-const mockGetGitRemoteNames = jest.fn(() => [] as string[]);
-jest.mock('../../utils/git-utils', () => ({
-  ...jest.requireActual('../../utils/git-utils'),
+const mockIsGitRepository = vi.fn();
+const mockGetGitCurrentBranch = vi.fn();
+const mockGetGitRemoteNames = vi.fn(() => [] as string[]);
+vi.mock('../../utils/git-utils', async () => ({
+  ...(await vi.importActual('../../utils/git-utils')),
   isGitRepository: (...args: unknown[]) => mockIsGitRepository(...args),
   getGitCurrentBranch: (...args: unknown[]) => mockGetGitCurrentBranch(...args),
   getGitRemoteNames: (...args: unknown[]) => mockGetGitRemoteNames(),
 }));
 
-jest.mock('../../config/configuration', () => ({
-  ...jest.requireActual('../../config/configuration'),
+vi.mock('../../config/configuration', async () => ({
+  ...(await vi.importActual('../../config/configuration')),
   readNxJson: () => ({}),
 }));
 
-const mockGetBaseRef = jest.fn();
-jest.mock('../../utils/command-line-utils', () => ({
-  ...jest.requireActual('../../utils/command-line-utils'),
+const mockGetBaseRef = vi.fn();
+vi.mock('../../utils/command-line-utils', async () => ({
+  ...(await vi.importActual('../../utils/command-line-utils')),
   getBaseRef: (...args: unknown[]) => mockGetBaseRef(...args),
 }));
 
-jest.mock('../../utils/package-json', () => ({
-  ...jest.requireActual('../../utils/package-json'),
+vi.mock('../../utils/package-json', async () => ({
+  ...(await vi.importActual('../../utils/package-json')),
   readModulePackageJson: () => ({
     packageJson: { name: 'nx', version: '23.0.0' },
     path: '/virtual/nx/package.json',
   }),
 }));
 
-jest.mock('../../daemon/client/client', () => ({
+vi.mock('../../daemon/client/client', () => ({
   daemonClient: {
-    stop: jest.fn().mockResolvedValue(undefined),
+    stop: vi.fn().mockResolvedValue(undefined),
     enabled: () => false,
-    reset: jest.fn(),
+    reset: vi.fn(),
   },
 }));
 
@@ -109,13 +109,13 @@ describe('migrate() orchestrated init dispatch', () => {
     mockIsGitRepository.mockReset().mockReturnValue(true);
     mockGetGitCurrentBranch.mockReset().mockReturnValue('main');
     mockGetBaseRef.mockReset().mockReturnValue('main');
-    jest.spyOn(output, 'log').mockImplementation(() => {});
-    jest.spyOn(output, 'warn').mockImplementation(() => {});
-    jest.spyOn(output, 'error').mockImplementation(() => {});
+    vi.spyOn(output, 'log').mockImplementation(() => {});
+    vi.spyOn(output, 'warn').mockImplementation(() => {});
+    vi.spyOn(output, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     process.chdir(originalCwd);
     rmSync(root, { recursive: true, force: true });
     if (originalGate === undefined) delete process.env.NX_MIGRATE_ORCHESTRATOR;

@@ -26,36 +26,36 @@ import { isSandbox } from '../utils/is-sandbox';
 // messages depend on, and stubbing it is how the Windows rows came to assert an
 // answer the shipped function could not give. Rows that need a specific answer
 // still override it explicitly.
-jest.mock('../utils/owned-private-dir', () => {
-  const actual = jest.requireActual('../utils/owned-private-dir');
+vi.mock('../utils/owned-private-dir', async () => {
+  const actual = await vi.importActual('../utils/owned-private-dir');
   // Only the two guards are stubbed. describeRefusal/remedyFor/
   // DirectoryRefusedError stay real, so the messages these tests assert on are
   // the ones users get rather than ones the mock invented.
   return {
     ...actual,
-    ensureOwnedPrivateDir: jest.fn((d: string) => ({ status: 'ok', path: d })),
-    ensureSafeSharedRoot: jest.fn((d: string) => ({ status: 'ok', path: d })),
-    isPeerWritable: jest.fn(actual.isPeerWritable),
-    getUserSegment: jest.fn(() => '501'),
+    ensureOwnedPrivateDir: vi.fn((d: string) => ({ status: 'ok', path: d })),
+    ensureSafeSharedRoot: vi.fn((d: string) => ({ status: 'ok', path: d })),
+    isPeerWritable: vi.fn(actual.isPeerWritable),
+    getUserSegment: vi.fn(() => '501'),
   };
 });
 
-jest.mock('../utils/is-sandbox', () => ({
-  isSandbox: jest.fn(() => false),
+vi.mock('../utils/is-sandbox', () => ({
+  isSandbox: vi.fn(() => false),
 }));
 
-jest.mock('../utils/logger', () => ({
+vi.mock('../utils/logger', () => ({
   logger: {
-    verbose: jest.fn(),
-    warn: jest.fn(),
+    verbose: vi.fn(),
+    warn: vi.fn(),
   },
 }));
 
-jest.mock('node:fs', () => {
-  const actual = jest.requireActual('node:fs');
+vi.mock('node:fs', async () => {
+  const actual = await vi.importActual('node:fs');
   return {
     ...actual,
-    mkdirSync: jest.fn(),
+    mkdirSync: vi.fn(),
   };
 });
 
@@ -100,8 +100,8 @@ describe('socket directories', () => {
   const setPlatform = (platform: NodeJS.Platform) =>
     Object.defineProperty(process, 'platform', { value: platform });
 
-  afterEach(() => {
-    jest.clearAllMocks();
+  afterEach(async () => {
+    vi.clearAllMocks();
     // clearAllMocks resets calls but keeps implementations, so a test that
     // stages an unusable root would otherwise stage it for every test after it.
     (ensureSafeSharedRoot as jest.Mock).mockImplementation((d: string) =>
@@ -111,7 +111,7 @@ describe('socket directories', () => {
       accept(d)
     );
     (isPeerWritable as jest.Mock).mockImplementation(
-      jest.requireActual('../utils/owned-private-dir').isPeerWritable
+      (await vi.importActual('../utils/owned-private-dir')).isPeerWritable
     );
     (isSandbox as jest.Mock).mockReturnValue(false);
     // The workspace-fallback warning is latched once per process, so without
@@ -276,8 +276,8 @@ describe('socket directories', () => {
     setPlatform('linux');
     (isSandbox as jest.Mock).mockReturnValue(true);
     jest.isolateModules(() => {
-      jest.doMock('node:os', () => ({
-        ...jest.requireActual('node:os'),
+      vi.doMock('node:os', async () => ({
+        ...(await vi.importActual('node:os')),
         // No home directory is one of the reasons the home tier is skipped and
         // this fallback is reached, so the sandbox line has to survive it.
         homedir: () => '',
@@ -302,7 +302,7 @@ describe('socket directories', () => {
         expect.stringContaining('covering only /tmp/.nx does not cover')
       );
     });
-    jest.dontMock('node:os');
+    vi.doUnmock('node:os');
   });
 
   // The whole line, not a substring. Each piece is pinned where it is written
@@ -566,7 +566,7 @@ describe('socket directories', () => {
   // someone else" — wrong in most of the cases it covered.
   it("reports the guard's own reason for a refused NX_SOCKET_DIR", () => {
     setPlatform('linux');
-    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d: string) =>
       d === '/custom/socket/dir'
         ? reject(d, { kind: 'not-a-directory', dir: d })
@@ -596,8 +596,8 @@ describe('socket directories', () => {
   it('skips the home tier when HOME makes it the shared container itself', () => {
     setPlatform('linux');
     jest.isolateModules(() => {
-      jest.doMock('node:os', () => ({
-        ...jest.requireActual('node:os'),
+      vi.doMock('node:os', async () => ({
+        ...(await vi.importActual('node:os')),
         // HOME=/tmp, so ~/.nx IS /tmp/.nx.
         homedir: () => '/tmp',
       }));
@@ -620,7 +620,7 @@ describe('socket directories', () => {
       expect(collidingSocketDir()).toBe(workspaceDir);
       expect(guard).not.toHaveBeenCalledWith(SHARED_TMP_ROOT);
     });
-    jest.dontMock('node:os');
+    vi.doUnmock('node:os');
   });
 
   it('rejects the home roots as a configured socket dir, as it does the shared ones', () => {
@@ -635,8 +635,8 @@ describe('socket directories', () => {
   it('does not call the Windows per-user temp roots shared with other users', () => {
     setPlatform('win32');
     jest.isolateModules(() => {
-      jest.doMock('node:os', () => ({
-        ...jest.requireActual('node:os'),
+      vi.doMock('node:os', async () => ({
+        ...(await vi.importActual('node:os')),
         platform: () => 'win32',
       }));
       const { InvalidSocketDirConfigured: Ctor } = require('./tmp-dir');
@@ -676,7 +676,7 @@ describe('socket directories', () => {
       expect((refusalFor(winOsTmp) as any).reason).toEqual('os-temp-root');
       expect((refusalFor(winNxTmp) as any).reason).toEqual('nx-managed');
     });
-    jest.dontMock('node:os');
+    vi.doUnmock('node:os');
   });
 
   it('keeps the home tier off Windows, where named pipes have nothing to contain', () => {
@@ -767,9 +767,9 @@ describe('socket directories', () => {
   // which makes this the default spelling rather than a contrived one. Past the
   // list, ensureOwnedPrivateDir re-locks the directory to 0700 and
   // removeSocketDir aims a recursive delete at it.
-  it('refuses a symlinked spelling of a root it refuses directly', () => {
+  it('refuses a symlinked spelling of a root it refuses directly', async () => {
     setPlatform('linux');
-    const realFs = jest.requireActual('node:fs');
+    const realFs = await vi.importActual('node:fs');
     const dir = realFs.mkdtempSync(join(systemTmpDir, 'nx-alias-'));
     const link = join(dir, 'alias');
     realFs.symlinkSync(systemTmpDir, link);
@@ -787,9 +787,9 @@ describe('socket directories', () => {
   // only whole existing paths degrades the check to the string match it
   // replaced on exactly a fresh machine. Staged through the home root, since
   // that one can be relocated to a directory this test controls.
-  it('refuses an aliased spelling of a root that does not exist yet', () => {
+  it('refuses an aliased spelling of a root that does not exist yet', async () => {
     setPlatform('linux');
-    const realFs = jest.requireActual('node:fs');
+    const realFs = await vi.importActual('node:fs');
     const home = realFs.mkdtempSync(join(systemTmpDir, 'nx-fresh-home-'));
     const aliasBase = realFs.mkdtempSync(join(systemTmpDir, 'nx-fresh-alias-'));
     const alias = join(aliasBase, 'link');
@@ -797,8 +797,8 @@ describe('socket directories', () => {
 
     try {
       jest.isolateModules(() => {
-        jest.doMock('node:os', () => ({
-          ...jest.requireActual('node:os'),
+        vi.doMock('node:os', async () => ({
+          ...(await vi.importActual('node:os')),
           homedir: () => home,
         }));
         const {
@@ -813,7 +813,7 @@ describe('socket directories', () => {
 
         expect(() => freshSocketDir()).toThrow(Ctor);
       });
-      jest.dontMock('node:os');
+      vi.doUnmock('node:os');
     } finally {
       realFs.rmSync(home, { recursive: true, force: true });
       realFs.rmSync(aliasBase, { recursive: true, force: true });
@@ -958,7 +958,7 @@ describe('socket directories', () => {
     (ensureOwnedPrivateDir as jest.Mock).mockImplementationOnce((d: string) =>
       reject(d)
     );
-    const warn = jest.spyOn(console, 'warn').mockImplementation();
+    const warn = vi.spyOn(console, 'warn').mockImplementation();
     try {
       expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
       expect(getSocketDirFallbackCause()).toBeUndefined();

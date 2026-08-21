@@ -2,8 +2,8 @@ import type { ProjectGraph } from '../../config/project-graph';
 import { DeletedFileChange } from '../file-utils';
 import { filterAffected } from './affected-project-graph';
 
-jest.mock('../plugins/get-plugins', () => ({
-  ...jest.requireActual('../plugins/get-plugins'),
+vi.mock('../plugins/get-plugins', async () => ({
+  ...(await vi.importActual('../plugins/get-plugins')),
   getPlugins: async () => [
     {
       name: 'test',

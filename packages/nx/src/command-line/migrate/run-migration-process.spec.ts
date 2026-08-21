@@ -1,6 +1,6 @@
-const mockRunNxOrAngularMigration = jest.fn();
-const mockInstallDepsIfChanged = jest.fn();
-jest.mock('./migrate', () => ({
+const mockRunNxOrAngularMigration = vi.fn();
+const mockInstallDepsIfChanged = vi.fn();
+vi.mock('./migrate', () => ({
   runNxOrAngularMigration: (...args: unknown[]) =>
     mockRunNxOrAngularMigration(...args),
   ChangedDepInstaller: class {
@@ -8,14 +8,14 @@ jest.mock('./migrate', () => ({
   },
 }));
 
-const mockCommitMigrationIfRequested = jest.fn();
-jest.mock('./migrate-commits', () => ({
+const mockCommitMigrationIfRequested = vi.fn();
+vi.mock('./migrate-commits', () => ({
   commitMigrationIfRequested: (...args: unknown[]) =>
     mockCommitMigrationIfRequested(...args),
 }));
 
-jest.mock('child_process', () => ({
-  ...jest.requireActual('child_process'),
+vi.mock('child_process', async () => ({
+  ...(await vi.importActual('child_process')),
   execSync: () => 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2\n',
 }));
 
@@ -43,13 +43,13 @@ describe('run-migration-process', () => {
       'false',
       'chore: ',
     ];
-    writeSpy = jest
+    writeSpy = vi
       .spyOn(process.stdout, 'write')
       .mockImplementation((chunk: string | Uint8Array) => {
         written.push(String(chunk));
         return true;
       });
-    exitSpy = jest
+    exitSpy = vi
       .spyOn(process, 'exit')
       .mockImplementation((() => undefined) as never);
     mockInstallDepsIfChanged.mockResolvedValue(undefined);
@@ -59,8 +59,8 @@ describe('run-migration-process', () => {
     process.argv = argvBackup;
     writeSpy.mockRestore();
     exitSpy.mockRestore();
-    jest.resetModules();
-    jest.clearAllMocks();
+    vi.resetModules();
+    vi.clearAllMocks();
   });
 
   const runScript = async (): Promise<Record<string, unknown>> => {

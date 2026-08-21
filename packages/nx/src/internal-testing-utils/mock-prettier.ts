@@ -1,10 +1,10 @@
 // Mock prettier to avoid loading the actual module.
 // Prettier v3 uses dynamic imports which fail in Jest's VM environment.
-jest.mock('prettier', () => ({
-  format: jest.fn((code) => code),
-  resolveConfig: jest.fn().mockResolvedValue({}),
-  getFileInfo: jest
+vi.mock('prettier', () => ({
+  format: vi.fn((code) => code),
+  resolveConfig: vi.fn().mockResolvedValue({}),
+  getFileInfo: vi
     .fn()
     .mockResolvedValue({ ignored: false, inferredParser: 'typescript' }),
-  check: jest.fn().mockResolvedValue(true),
+  check: vi.fn().mockResolvedValue(true),
 }));

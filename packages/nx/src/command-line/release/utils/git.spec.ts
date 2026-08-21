@@ -6,8 +6,8 @@ import {
 } from './git';
 import { RepoGitTags } from './repository-git-tags';
 
-jest.mock('./exec-command', () => ({
-  execCommand: jest.fn(() =>
+vi.mock('./exec-command', () => ({
+  execCommand: vi.fn(() =>
     Promise.resolve(`
 x5.0.0
 release/4.😐2.2
@@ -266,7 +266,7 @@ See merge request nx-release-test/nx-release-test!2`,
     const mockResolveTags = mockRepoGitTags.resolveTags.bind(mockRepoGitTags);
 
     afterEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     describe('when releaseTag.strictPreid is false', () => {

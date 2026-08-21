@@ -9,7 +9,7 @@ describe('agent-output', () => {
 
   beforeEach(() => {
     stdout = '';
-    writeSpy = jest
+    writeSpy = vi
       .spyOn(process.stdout, 'write')
       .mockImplementation((chunk: string | Uint8Array) => {
         stdout += chunk.toString();

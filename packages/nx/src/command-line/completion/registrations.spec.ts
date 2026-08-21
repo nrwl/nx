@@ -33,7 +33,7 @@ describe('completion/registrations', () => {
     originalRoot = currentWorkspaceRoot;
     setWorkspaceRoot(workspaceRoot);
 
-    readGraphSpy = jest
+    readGraphSpy = vi
       .spyOn(projectGraphModule, 'readCachedProjectGraph')
       .mockImplementation(() => {
         const path = join(

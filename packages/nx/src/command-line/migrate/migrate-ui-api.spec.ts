@@ -1,5 +1,5 @@
-jest.mock('child_process');
-jest.mock('fs');
+vi.mock('child_process');
+vi.mock('fs');
 import { execFileSync, execSync, spawn } from 'child_process';
 import { EventEmitter } from 'events';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
@@ -27,7 +27,7 @@ describe('migrate-ui-api git invocations', () => {
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   describe('undoMigration', () => {

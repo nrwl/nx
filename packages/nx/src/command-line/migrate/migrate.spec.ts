@@ -1,9 +1,9 @@
 const mocks = {
-  prompt: jest.fn(),
-  getInstalledNxVersion: jest.fn(),
-  getInstalledVersion: jest.fn(),
-  getInstalledPackageGroup: jest.fn(),
-  getInstalledLegacyNrwlWorkspaceVersion: jest.fn(),
+  prompt: vi.fn(),
+  getInstalledNxVersion: vi.fn(),
+  getInstalledVersion: vi.fn(),
+  getInstalledPackageGroup: vi.fn(),
+  getInstalledLegacyNrwlWorkspaceVersion: vi.fn(),
 };
 const mockPrompt = mocks.prompt;
 const mockGetInstalledNxVersion = mocks.getInstalledNxVersion;
@@ -11,12 +11,12 @@ const mockGetInstalledVersion = mocks.getInstalledVersion;
 const mockGetInstalledPackageGroup = mocks.getInstalledPackageGroup;
 const mockGetInstalledLegacyNrwlWorkspaceVersion =
   mocks.getInstalledLegacyNrwlWorkspaceVersion;
-jest.mock('@clack/prompts', () => ({
+vi.mock('@clack/prompts', () => ({
   autocomplete: (...args: any[]) => mocks.prompt(...args),
   text: (...args: any[]) => mocks.prompt(...args),
   isCancel: () => false,
 }));
-jest.mock('../../utils/installed-nx-version', () => ({
+vi.mock('../../utils/installed-nx-version', () => ({
   getInstalledNxVersion: () => mocks.getInstalledNxVersion(),
   getInstalledVersion: (pkg: string) => mocks.getInstalledVersion(pkg),
   getInstalledPackageGroup: (pkg: string) =>
@@ -27,7 +27,7 @@ jest.mock('../../utils/installed-nx-version', () => ({
 // These tests exercise the migrate logic, not the cooldown wrapper: delegate the
 // policy-aware resolver to the legacy registry resolution so the existing
 // `resolvePackageVersionUsingRegistry` spies keep driving the assertions.
-jest.mock('./resolve-package-version', () => ({
+vi.mock('./resolve-package-version', () => ({
   isRegistryResolutionEnabled: () => true,
   resolvePackageVersionRespectingMinReleaseAge: (
     packageName: string,
@@ -935,7 +935,7 @@ describe('Migration', () => {
 
     describe('--interactive', () => {
       beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
       });
 
       it('should prompt when --interactive and there is a package updates group with confirmation prompts', async () => {
@@ -1109,7 +1109,7 @@ describe('Migration', () => {
 
     describe('--include', () => {
       beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
       });
 
       it('should keep required packages and drop optional ones when include is required', async () => {
@@ -1314,7 +1314,7 @@ describe('Migration', () => {
 
     describe('requirements', () => {
       beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
       });
 
       it('should collect updates that meet requirements and leave out those that do not meet them', async () => {
@@ -2616,7 +2616,7 @@ module.exports = {
         // Only an nx.json pin makes this observable: without it, bun's
         // lockfiles outrank yarn.lock in detection and the manifest is
         // skipped anyway.
-        const spy = jest
+        const spy = vi
           .spyOn(configModule, 'readNxJson')
           .mockReturnValue({ cli: { packageManager: 'yarn' } });
         try {
@@ -2713,7 +2713,7 @@ module.exports = {
         JSON.stringify({ name: 'nx', version: '23.4.0' })
       );
       // detectPackageManager reads nx.json, which throws on a malformed file.
-      const spy = jest
+      const spy = vi
         .spyOn(configModule, 'readNxJson')
         .mockImplementation(() => {
           throw new Error('Cannot parse nx.json');
@@ -2852,7 +2852,7 @@ module.exports = {
     });
 
     it('returns undefined rather than an ancestor version when the manifest locator throws a value that cannot be stringified', () => {
-      const verboseSpy = jest.spyOn(logger, 'verbose').mockImplementation();
+      const verboseSpy = vi.spyOn(logger, 'verbose').mockImplementation();
       try {
         const ws = join(root, 'ws');
         mkdirSync(ws, { recursive: true });
@@ -3004,7 +3004,7 @@ module.exports = {
     });
 
     it('logs the location that supplied the version', () => {
-      const verboseSpy = jest.spyOn(logger, 'verbose').mockImplementation();
+      const verboseSpy = vi.spyOn(logger, 'verbose').mockImplementation();
       try {
         mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
         writeFileSync(
@@ -3079,7 +3079,7 @@ module.exports = {
       mockGetInstalledVersion.mockReset();
       mockGetInstalledPackageGroup.mockReset();
       mockGetInstalledLegacyNrwlWorkspaceVersion.mockReset();
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
       Object.defineProperty(process.stdin, 'isTTY', {
         value: originalStdinIsTTY,
         configurable: true,
@@ -3087,9 +3087,10 @@ module.exports = {
     });
 
     it('should work for generating migrations', async () => {
-      jest
-        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
-        .mockResolvedValue('12.3.0');
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockResolvedValue('12.3.0');
       const r = await parseMigrationsOptions({
         packageAndVersion: '8.12.0',
         from: '@myscope/a@12.3,@myscope/b@1.1.1',
@@ -3350,9 +3351,10 @@ module.exports = {
     });
 
     it('should default to nx@latest when no packageAndVersion is provided', async () => {
-      jest
-        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
-        .mockImplementation((pkg, version) => Promise.resolve(version));
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockImplementation((pkg, version) => Promise.resolve(version));
       const r = await parseMigrationsOptions({});
       expect(r).toMatchObject({
         type: 'generateMigrations',
@@ -3393,9 +3395,10 @@ module.exports = {
 
     it('should resolve the latest dist-tag up front for a bare invocation on v22+', async () => {
       mockGetInstalledNxVersion.mockReturnValue('22.0.0');
-      jest
-        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
-        .mockResolvedValue('23.1.0');
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockResolvedValue('23.1.0');
       const r = await parseMigrationsOptions({});
       expect(r).toMatchObject({
         type: 'generateMigrations',
@@ -3537,7 +3540,7 @@ module.exports = {
     });
 
     it('should handle different variations of the target package', async () => {
-      const packageRegistryViewSpy = jest
+      const packageRegistryViewSpy = vi
         .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
         .mockImplementation((pkg, version) => {
           return Promise.resolve(version);
@@ -4037,11 +4040,12 @@ module.exports = {
     });
 
     it('should handle backslashes in package names', async () => {
-      jest
-        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
-        .mockImplementation((pkg, version) => {
-          return Promise.resolve('12.3.0');
-        });
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockImplementation((pkg, version) => {
+        return Promise.resolve('12.3.0');
+      });
       const r = await parseMigrationsOptions({
         packageAndVersion: '@nx\\workspace@8.12.0',
         from: '@myscope\\a@12.3,@myscope\\b@1.1.1',
@@ -4166,7 +4170,7 @@ module.exports = {
         // `nx migrate <pkg>` hard-fail with a `--include` error the user never
         // passed. The overlay must carry it as a default, not a flag, and a
         // target that doesn't support optional updates must fall back to 'all' with a warning.
-        const warnSpy = jest
+        const warnSpy = vi
           .spyOn(require('../../utils/output').output, 'warn')
           .mockImplementation(() => {});
         const result = await parseMigrationsOptions(
@@ -4214,7 +4218,7 @@ module.exports = {
     beforeEach(() => {
       originalCi = process.env.CI;
       originalTty = process.stdin.isTTY;
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     afterEach(() => {
@@ -4759,7 +4763,7 @@ module.exports = {
 
   describe('minimum-release-age violation propagation', () => {
     afterEach(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     function violation() {
@@ -4792,9 +4796,10 @@ module.exports = {
 
     it('the fetcher surfaces a cooldown violation instead of falling back to install', async () => {
       const err = violation();
-      jest
-        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
-        .mockRejectedValue(err);
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockRejectedValue(err);
       const fetch = createFetcher({} as any);
       await expect(fetch('mypackage', 'latest')).rejects.toBe(err);
     });
@@ -4802,10 +4807,11 @@ module.exports = {
     it('the fetcher rejects when an exact requested version comes back as a different version', async () => {
       // A config surface (registry proxy, override, cooldown gate) silently
       // substituting another version must fail the run, not corrupt the plan.
-      jest
-        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
-        .mockResolvedValue('2.0.1');
-      jest.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockResolvedValue('2.0.1');
+      vi.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
         JSON.stringify({
           dist: {
             tarball:
@@ -4820,10 +4826,11 @@ module.exports = {
     });
 
     it('the fetcher passes through tag and range specs that resolve to a different version', async () => {
-      jest
-        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
-        .mockResolvedValue('2.0.1');
-      jest.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockResolvedValue('2.0.1');
+      vi.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
         JSON.stringify({
           dist: {
             tarball:
@@ -4840,7 +4847,7 @@ module.exports = {
 
   describe('fetching migrations config from the registry', () => {
     afterEach(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it.each([
@@ -4856,10 +4863,11 @@ module.exports = {
     ])(
       'reads a migration-less packument straight from %s',
       async (_label, host) => {
-        jest
-          .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
-          .mockResolvedValue('2.0.1');
-        jest.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
+        vi.spyOn(
+          packageMgrUtils,
+          'resolvePackageVersionUsingRegistry'
+        ).mockResolvedValue('2.0.1');
+        vi.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
           JSON.stringify({
             dist: {
               tarball: `https://${host}/mypackage/-/mypackage-2.0.1.tgz`,
@@ -4880,10 +4888,11 @@ module.exports = {
     it('skips the tarball-host check when the package declares migration config', async () => {
       // The tarball host is off the allowlist on purpose, so only the declared
       // nx-migrations can skip the check.
-      jest
-        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
-        .mockResolvedValue('2.0.1');
-      jest.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockResolvedValue('2.0.1');
+      vi.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
         JSON.stringify({
           'nx-migrations': { packageGroup: ['mypackage-plugin'] },
           dist: {
@@ -4922,17 +4931,18 @@ module.exports = {
     ])(
       'falls back to install for a migration-less packument from %s',
       async (_label, host) => {
-        jest
-          .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
-          .mockResolvedValue('2.0.1');
-        jest.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
+        vi.spyOn(
+          packageMgrUtils,
+          'resolvePackageVersionUsingRegistry'
+        ).mockResolvedValue('2.0.1');
+        vi.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
           JSON.stringify({
             dist: {
               tarball: `https://${host}/mypackage/-/mypackage-2.0.1.tgz`,
             },
           })
         );
-        jest.spyOn(packageMgrUtils, 'createTempNpmDirectory').mockReturnValue({
+        vi.spyOn(packageMgrUtils, 'createTempNpmDirectory').mockReturnValue({
           dir: join(tmpdir(), 'nx-migrate-spec-does-not-exist'),
           cleanup: async () => {},
         });
@@ -4997,7 +5007,7 @@ module.exports = {
       } else {
         delete (process.stdin as { isTTY?: boolean }).isTTY;
       }
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     function setTty(value: boolean) {
@@ -5008,20 +5018,21 @@ module.exports = {
     }
 
     function mockRegistry(map: { latest?: string } & Record<string, string>) {
-      jest
-        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
-        .mockImplementation((_pkg, version) => {
-          const v = String(version);
-          if (v in map) return Promise.resolve(map[v]!);
-          const match = v.match(/^\^(\d+)\.0\.0$/);
-          if (match && map[match[1]]) return Promise.resolve(map[match[1]]!);
-          if (match) return Promise.reject(new Error('none'));
-          return Promise.resolve(v);
-        });
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockImplementation((_pkg, version) => {
+        const v = String(version);
+        if (v in map) return Promise.resolve(map[v]!);
+        const match = v.match(/^\^(\d+)\.0\.0$/);
+        if (match && map[match[1]]) return Promise.resolve(map[match[1]]!);
+        if (match) return Promise.reject(new Error('none'));
+        return Promise.resolve(v);
+      });
     }
 
     function spyWarn() {
-      return jest
+      return vi
         .spyOn(require('../../utils/output').output, 'warn')
         .mockImplementation(() => {});
     }
@@ -6348,7 +6359,7 @@ module.exports = {
 
     describe('confirmCommitsOnDefaultBranch', () => {
       beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
       });
 
       it('proceeds without prompting when the branch cannot be resolved', async () => {
@@ -6522,7 +6533,7 @@ module.exports = {
       // realpath so the workspace-relative assertion isn't defeated by the
       // macOS /tmp -> /private/tmp symlink (require.resolve returns realpaths).
       tmpRoot = realpathSync(mkdtempSync(join(tmpdir(), 'nx-migration-docs-')));
-      warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+      warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
     });
 
     afterEach(() => {

@@ -6,17 +6,17 @@ import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { TaskOrchestrator } from './task-orchestrator';
 
-performance.mark = jest.fn((name: string) => ({ name }) as PerformanceMark);
-performance.measure = jest.fn();
+performance.mark = vi.fn((name: string) => ({ name }) as PerformanceMark);
+performance.measure = vi.fn();
 
-jest.mock('./task-env', () => ({
-  ...jest.requireActual('./task-env'),
-  getTaskSpecificEnv: jest.fn(() => process.env),
+vi.mock('./task-env', async () => ({
+  ...(await vi.importActual('./task-env')),
+  getTaskSpecificEnv: vi.fn(() => process.env),
 }));
 
-jest.mock('./utils', () => ({
-  ...jest.requireActual('./utils'),
-  getCustomHasher: jest.fn(() => null),
+vi.mock('./utils', async () => ({
+  ...(await vi.importActual('./utils')),
+  getCustomHasher: vi.fn(() => null),
 }));
 
 describe('TaskOrchestrator', () => {
@@ -66,7 +66,7 @@ describe('TaskOrchestrator', () => {
     function createOrchestrator(taskGraph: TaskGraph) {
       let hasherCallCount = 0;
       const hasher = {
-        hashTasks: jest.fn(async (tasks: Task[]) => {
+        hashTasks: vi.fn(async (tasks: Task[]) => {
           hasherCallCount++;
           return tasks.map((t) => ({
             value: `${t.id}|call-${hasherCallCount}`,
@@ -91,20 +91,20 @@ describe('TaskOrchestrator', () => {
       orchestrator.taskDetails = null;
       orchestrator.taskInvocationTracker = null;
       orchestrator.completedTasks = new Map();
-      orchestrator.options = { lifeCycle: { scheduleTask: jest.fn() } };
+      orchestrator.options = { lifeCycle: { scheduleTask: vi.fn() } };
       orchestrator.forkedProcessTaskRunner = {
-        cleanUpBatchProcesses: jest.fn(),
+        cleanUpBatchProcesses: vi.fn(),
       };
-      orchestrator.applyCachedResults = jest.fn().mockResolvedValue([]);
-      orchestrator.preRunSteps = jest.fn();
+      orchestrator.applyCachedResults = vi.fn().mockResolvedValue([]);
+      orchestrator.preRunSteps = vi.fn();
       const hashesAtCacheTime: Record<string, string> = {};
-      orchestrator.postRunSteps = jest.fn(async (results: any[]) => {
+      orchestrator.postRunSteps = vi.fn(async (results: any[]) => {
         for (const r of results) {
           hashesAtCacheTime[r.task.id] = r.task.hash;
           orchestrator.completedTasks.set(r.task.id, r.status);
         }
       });
-      orchestrator.runBatch = jest.fn(async (batch: any) =>
+      orchestrator.runBatch = vi.fn(async (batch: any) =>
         Object.values(batch.taskGraph.tasks).map((task) => ({
           task,
           status: 'success',
@@ -160,7 +160,7 @@ describe('TaskOrchestrator', () => {
       const { orchestrator, hasher } = createOrchestrator(taskGraph);
       // dep resolves from cache, so its outputs are already settled on disk
       // when the consumer's hash is computed
-      orchestrator.applyCachedResults = jest.fn(async (tasks: Task[]) =>
+      orchestrator.applyCachedResults = vi.fn(async (tasks: Task[]) =>
         tasks
           .filter((t) => t.id === 'dep:build')
           .map((task) => ({ task, status: 'local-cache', code: 0 }))
@@ -206,15 +206,15 @@ describe('TaskOrchestrator', () => {
     function createOrchestrator(batchResults: Map<string, any>) {
       const orchestrator: any = Object.create(TaskOrchestrator.prototype);
       orchestrator.cache = {
-        getBatch: jest.fn(async () => batchResults),
-        copyFilesFromCache: jest.fn(),
+        getBatch: vi.fn(async () => batchResults),
+        copyFilesFromCache: vi.fn(),
       };
       orchestrator.cacheMissedHashes = new Set();
-      orchestrator.shouldCopyOutputsFromCacheBatch = jest.fn(
+      orchestrator.shouldCopyOutputsFromCacheBatch = vi.fn(
         async () => new Map()
       );
       orchestrator.options = {
-        lifeCycle: { printTaskTerminalOutput: jest.fn() },
+        lifeCycle: { printTaskTerminalOutput: vi.fn() },
       };
       return orchestrator;
     }
@@ -300,7 +300,7 @@ describe('TaskOrchestrator', () => {
     function createOrchestrator(batchResults: Map<string, any>) {
       const orchestrator: any = Object.create(TaskOrchestrator.prototype);
       orchestrator.cache = {
-        getBatch: jest.fn(async () => batchResults),
+        getBatch: vi.fn(async () => batchResults),
       };
       orchestrator.cacheMissedHashes = new Set();
       return orchestrator;
@@ -384,7 +384,7 @@ describe('TaskOrchestrator', () => {
       orchestrator.groups = [];
       orchestrator.options = {
         parallel: 3,
-        lifeCycle: { scheduleTask: jest.fn() },
+        lifeCycle: { scheduleTask: vi.fn() },
       };
 
       expect(await orchestrator.resolveCachedTasksBulk()).toBe(false);

@@ -9,14 +9,14 @@ import * as installedNxVersionUtils from '../../utils/installed-nx-version';
 import * as cloneModule from '../clone-ai-config-repo';
 import * as fs from 'fs';
 
-jest.mock('fs', () => {
-  const actual = jest.requireActual('fs');
+vi.mock('fs', async () => {
+  const actual = await vi.importActual('fs');
   return {
     ...actual,
-    existsSync: jest
+    existsSync: vi
       .fn()
       .mockImplementation((...args: any[]) => actual.existsSync(...args)),
-    readFileSync: jest
+    readFileSync: vi
       .fn()
       .mockImplementation((...args: any[]) => actual.readFileSync(...args)),
   };
@@ -39,7 +39,7 @@ describe('setup-ai-agents generator', () => {
 
     // Mock getInstalledNxVersion to return Nx 22+ by default
     // This ensures existing tests pass by defaulting to the new format
-    getInstalledNxVersionSpy = jest
+    getInstalledNxVersionSpy = vi
       .spyOn(installedNxVersionUtils, 'getInstalledNxVersion')
       .mockReturnValue('22.0.0');
   });
@@ -814,7 +814,7 @@ describe('setup-ai-agents generator', () => {
 
       it('should not delete .gemini/skills when .agents/skills does not exist', async () => {
         // Mock getAiConfigRepoPath to fail so .agents/skills is not created
-        const spy = jest
+        const spy = vi
           .spyOn(cloneModule, 'getAiConfigRepoPath')
           .mockImplementation(() => {
             throw new Error('no network');
@@ -1257,12 +1257,12 @@ config_file = ".codex/agents/ci-monitor-subagent.toml"
 `;
 
       beforeEach(() => {
-        getAiConfigRepoPathSpy = jest
+        getAiConfigRepoPathSpy = vi
           .spyOn(cloneModule, 'getAiConfigRepoPath')
           .mockReturnValue('/fake/repo');
 
         const originalExistsSync = fs.existsSync;
-        existsSyncSpy = jest
+        existsSyncSpy = vi
           .spyOn(fs, 'existsSync')
           .mockImplementation((path: any) => {
             if (
@@ -1287,7 +1287,7 @@ config_file = ".codex/agents/ci-monitor-subagent.toml"
           });
 
         const originalReadFileSync = fs.readFileSync;
-        readFileSyncSpy = jest
+        readFileSyncSpy = vi
           .spyOn(fs, 'readFileSync')
           .mockImplementation((path: any, ...args: any[]) => {
             if (
@@ -1508,7 +1508,7 @@ sandbox_mode = "read-only"
         // Mock readFileSync to fail only for package.json so it falls back to default version
         // but allow other file reads (needed for generateFiles)
         const originalReadFileSync = fs.readFileSync;
-        const readFileSyncSpy = jest
+        const readFileSyncSpy = vi
           .spyOn(fs, 'readFileSync')
           .mockImplementation((path: any, ...args: any[]) => {
             if (

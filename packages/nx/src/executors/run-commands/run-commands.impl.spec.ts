@@ -22,7 +22,7 @@ describe('Run Commands', () => {
   const context = {} as any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should handle empty commands array', async () => {
@@ -682,7 +682,7 @@ describe('Run Commands', () => {
 
   describe('--color', () => {
     it('should not set FORCE_COLOR=true', async () => {
-      const spawnSpy = jest.spyOn(require('child_process'), 'spawn');
+      const spawnSpy = vi.spyOn(require('child_process'), 'spawn');
       await runCommands(
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
@@ -716,7 +716,7 @@ describe('Run Commands', () => {
     });
 
     it('should not set FORCE_COLOR=true when --no-color is passed', async () => {
-      const spawnSpy = jest.spyOn(require('child_process'), 'spawn');
+      const spawnSpy = vi.spyOn(require('child_process'), 'spawn');
       await runCommands(
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
@@ -751,7 +751,7 @@ describe('Run Commands', () => {
     });
 
     it('should set FORCE_COLOR=true when running with --color', async () => {
-      const spawnSpy = jest.spyOn(require('child_process'), 'spawn');
+      const spawnSpy = vi.spyOn(require('child_process'), 'spawn');
       await runCommands(
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],

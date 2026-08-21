@@ -1,5 +1,5 @@
-jest.mock('../logger', () => ({
-  logger: { warn: jest.fn(), verbose: jest.fn() },
+vi.mock('../logger', () => ({
+  logger: { warn: vi.fn(), verbose: vi.fn() },
 }));
 
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'fs';

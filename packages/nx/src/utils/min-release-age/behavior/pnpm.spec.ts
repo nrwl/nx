@@ -530,7 +530,7 @@ describe('pnpm min-release-age behavior', () => {
 
   describe('readPnpmPolicy', () => {
     afterEach(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     // readPnpmPolicy reads pnpm's resolved config via `pnpm config list --json`,
@@ -539,14 +539,12 @@ describe('pnpm min-release-age behavior', () => {
     // emits. An exclude array mirrors a yaml surface, a comma-joined string
     // mirrors .npmrc / env. pnpm itself decides which surface won.
     function mockPnpmConfig(config: Record<string, unknown> | 'throw') {
-      jest
-        .spyOn(require('child_process'), 'execSync')
-        .mockImplementation(() => {
-          if (config === 'throw') {
-            throw new Error('pnpm config list failed');
-          }
-          return JSON.stringify(config);
-        });
+      vi.spyOn(require('child_process'), 'execSync').mockImplementation(() => {
+        if (config === 'throw') {
+          throw new Error('pnpm config list failed');
+        }
+        return JSON.stringify(config);
+      });
     }
 
     function pnpmBehavior(behavior: PmMinReleaseAgeBehavior) {
@@ -785,11 +783,11 @@ describe('pnpm min-release-age behavior', () => {
 
   describe('NO_MATURE release-age wording (pnpm v11 formatTimeAgo buckets)', () => {
     beforeEach(() => {
-      jest.spyOn(Date, 'now').mockReturnValue(NOW);
+      vi.spyOn(Date, 'now').mockReturnValue(NOW);
     });
 
     afterEach(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     function detailFor(ageHours: number, windowHours: number): string {
@@ -831,12 +829,12 @@ describe('pnpm min-release-age behavior', () => {
 
   describe('exclude grammar (via readPnpmPolicy.isExcluded)', () => {
     afterEach(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     async function excludeFor(version: string, doc: Record<string, unknown>) {
       // pnpm reports a yaml-set exclude as a JSON array via `config list --json`.
-      jest.spyOn(require('child_process'), 'execSync').mockReturnValue(
+      vi.spyOn(require('child_process'), 'execSync').mockReturnValue(
         JSON.stringify({
           'minimum-release-age': doc.minimumReleaseAge,
           'minimum-release-age-exclude': doc.minimumReleaseAgeExclude,

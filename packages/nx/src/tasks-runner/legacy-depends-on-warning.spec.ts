@@ -1,8 +1,8 @@
-jest.mock('../utils/output', () => ({
-  output: { warn: jest.fn() },
+vi.mock('../utils/output', () => ({
+  output: { warn: vi.fn() },
 }));
-jest.mock('../project-graph/nx-deps-cache', () => ({
-  readSourceMapsCache: jest.fn(),
+vi.mock('../project-graph/nx-deps-cache', () => ({
+  readSourceMapsCache: vi.fn(),
 }));
 
 import {

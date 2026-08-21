@@ -1,7 +1,7 @@
 import { serverLogger } from '../logger';
 
-jest.mock('../../utils/versions', () => ({
-  ...jest.requireActual('../../utils/versions'),
+vi.mock('../../utils/versions', async () => ({
+  ...(await vi.importActual('../../utils/versions')),
   nxVersion: 'NX_VERSION',
 }));
 
@@ -9,14 +9,14 @@ describe('serverLogger', () => {
   let consoleLogSpy: jest.SpyInstance;
 
   beforeEach(() => {
-    jest
-      .spyOn(global.Date, 'now')
-      .mockImplementation(() => new Date('2021-10-11T17:18:45.980Z').valueOf());
-    consoleLogSpy = jest.spyOn(console, 'log');
+    vi.spyOn(global.Date, 'now').mockImplementation(() =>
+      new Date('2021-10-11T17:18:45.980Z').valueOf()
+    );
+    consoleLogSpy = vi.spyOn(console, 'log');
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   describe('log()', () => {

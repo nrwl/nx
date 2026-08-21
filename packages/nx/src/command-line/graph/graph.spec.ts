@@ -5,27 +5,27 @@ import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { allFileData } from '../../utils/all-file-data';
 import { getExpandedTaskInputs, ProjectGraphClientResponse } from './graph';
 
-jest.mock('../../native', () => ({
-  HashPlanner: jest.fn(),
-  transferProjectGraph: jest.fn((g) => g),
+vi.mock('../../native', () => ({
+  HashPlanner: vi.fn(),
+  transferProjectGraph: vi.fn((g) => g),
 }));
-jest.mock('../../native/transform-objects', () => ({
-  transformProjectGraphForRust: jest.fn((g) => g),
+vi.mock('../../native/transform-objects', () => ({
+  transformProjectGraphForRust: vi.fn((g) => g),
 }));
-jest.mock('../../project-graph/project-graph', () => ({
-  createProjectGraphAsync: jest.fn(),
-  createProjectGraphAndSourceMapsAsync: jest.fn(),
-  handleProjectGraphError: jest.fn(),
+vi.mock('../../project-graph/project-graph', () => ({
+  createProjectGraphAsync: vi.fn(),
+  createProjectGraphAndSourceMapsAsync: vi.fn(),
+  handleProjectGraphError: vi.fn(),
 }));
-jest.mock('../../config/configuration', () => ({
-  readNxJson: jest.fn(() => ({})),
-  workspaceLayout: jest.fn(() => ({ appsDir: '', libsDir: '' })),
+vi.mock('../../config/configuration', () => ({
+  readNxJson: vi.fn(() => ({})),
+  workspaceLayout: vi.fn(() => ({ appsDir: '', libsDir: '' })),
 }));
-jest.mock('../../tasks-runner/create-task-graph', () => ({
-  createTaskGraph: jest.fn(),
+vi.mock('../../tasks-runner/create-task-graph', () => ({
+  createTaskGraph: vi.fn(),
 }));
-jest.mock('../../utils/all-file-data', () => ({
-  allFileData: jest.fn(),
+vi.mock('../../utils/all-file-data', () => ({
+  allFileData: vi.fn(),
 }));
 
 const createProjectGraphAsyncMock = createProjectGraphAsync as jest.Mock;
@@ -72,9 +72,9 @@ describe('getExpandedTaskInputs', () => {
   }
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
-    getPlansMock = jest.fn().mockReturnValue({});
+    getPlansMock = vi.fn().mockReturnValue({});
     HashPlannerMock.mockImplementation(() => ({ getPlans: getPlansMock }));
 
     createProjectGraphAsyncMock.mockResolvedValue({

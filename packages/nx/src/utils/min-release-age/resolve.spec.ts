@@ -1,8 +1,8 @@
-jest.mock('./packument', () => ({
-  fetchRegistryMetadata: jest.fn(),
+vi.mock('./packument', () => ({
+  fetchRegistryMetadata: vi.fn(),
 }));
-jest.mock('./pick', () => ({
-  pickMinReleaseAgeCompliantVersion: jest.fn(),
+vi.mock('./pick', () => ({
+  pickMinReleaseAgeCompliantVersion: vi.fn(),
 }));
 
 import { fetchRegistryMetadata } from './packument';
@@ -32,7 +32,7 @@ function pnpmPolicy(): MinReleaseAgePolicy {
 
 describe('resolveCompliantVersion', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockFetchMetadata.mockResolvedValue({
       name: 'pkg-a',
       versions: [],
