@@ -54,6 +54,13 @@ const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   'COMPOSER_NO_INTERACTION',
   'OPENCODE',
   'GEMINI_CLI',
+  'AI_AGENT',
+
+  // Editors / IDEs
+  'NX_CONSOLE',
+
+  // Package managers (process-scoped)
+  'INIT_CWD',
 
   // Shell mechanics
   '_',
@@ -99,6 +106,11 @@ const DAEMON_ENV_PREFIX_EXCLUSIONS = [
   // Package managers (process-scoped)
   'npm_',
   'pnpm_',
+  'PNPM_',
+  'COREPACK_',
+
+  // Toolchain version managers
+  'MISE_',
 
   // Nx Cloud runner/agent vars (per-worker values like NX_CLOUD_WORKER_ID
   // and NX_CLOUD_EXECUTION_ID diverge between distributed-execution workers
@@ -111,6 +123,14 @@ const DAEMON_ENV_PREFIX_EXCLUSIONS = [
   'VSCODE_',
   'JETBRAINS_',
 
+  // AI agent harnesses (the daemon is shared with plain CLI clients)
+  'CLAUDE_',
+  'COPILOT_',
+  'CURSOR_',
+
+  // Git plumbing vars, set by git when Nx runs from a hook
+  'GIT_',
+
   // Terminal emulators
   'ITERM_',
   'KITTY_',
@@ -122,6 +142,15 @@ const DAEMON_ENV_PREFIX_EXCLUSIONS = [
   // Benchmarking / profiling tools
   'HYPERFINE_', // hyperfine sets HYPERFINE_RANDOMIZED_ENVIRONMENT_OFFSET for each iteration
 ];
+
+/**
+ * Vars the daemon still needs — graph construction resolves executables
+ * through them (`bun` for lockfile parsing, `mvn` for Maven inference) — but
+ * whose value must not invalidate the project graph: `nx`, `pnpm nx` and Nx
+ * Console each prepend their own entries, so reflecting the difference would
+ * recompute a graph that cannot come out any different.
+ */
+const DAEMON_ENV_NON_INVALIDATING_VARS = new Set(['PATH', 'NODE_PATH']);
 
 /**
  * Vars that match an excluded prefix but should still reach the daemon. The
@@ -182,5 +211,7 @@ export function applyDaemonEnvFromClient(newEnv: NodeJS.ProcessEnv): string[] {
       changedKeys.push(key);
     }
   }
-  return changedKeys;
+  return changedKeys.filter(
+    (key) => !DAEMON_ENV_NON_INVALIDATING_VARS.has(key)
+  );
 }
