@@ -1,3 +1,5 @@
+vi.mock('child_process');
+
 import { MinReleaseAgeViolationError } from '../errors';
 import type { RegistryMetadata } from '../packument';
 import type { MinReleaseAgePolicy, PmMinReleaseAgeBehavior } from '../policy';
@@ -538,13 +540,15 @@ describe('pnpm min-release-age behavior', () => {
     // keys camelCase, pnpm 10 kebab-case; each test mocks the form its version
     // emits. An exclude array mirrors a yaml surface, a comma-joined string
     // mirrors .npmrc / env. pnpm itself decides which surface won.
-    function mockPnpmConfig(config: Record<string, unknown> | 'throw') {
-      vi.spyOn(require('child_process'), 'execSync').mockImplementation(() => {
-        if (config === 'throw') {
-          throw new Error('pnpm config list failed');
+    async function mockPnpmConfig(config: Record<string, unknown> | 'throw') {
+      vi.mocked((await import('child_process')).execSync).mockImplementation(
+        () => {
+          if (config === 'throw') {
+            throw new Error('pnpm config list failed');
+          }
+          return JSON.stringify(config);
         }
-        return JSON.stringify(config);
-      });
+      );
     }
 
     function pnpmBehavior(behavior: PmMinReleaseAgeBehavior) {
@@ -834,7 +838,7 @@ describe('pnpm min-release-age behavior', () => {
 
     async function excludeFor(version: string, doc: Record<string, unknown>) {
       // pnpm reports a yaml-set exclude as a JSON array via `config list --json`.
-      vi.spyOn(require('child_process'), 'execSync').mockReturnValue(
+      vi.mocked((await import('child_process')).execSync).mockReturnValue(
         JSON.stringify({
           'minimum-release-age': doc.minimumReleaseAge,
           'minimum-release-age-exclude': doc.minimumReleaseAgeExclude,

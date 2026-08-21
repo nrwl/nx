@@ -582,7 +582,7 @@ See merge request nx-release-test/nx-release-test!2`,
     it('should return null if execCommand throws an error', async () => {
       // should return null if execCommand throws an error
       (
-        require('./exec-command').execCommand as jest.Mock
+        (await import('./exec-command')).execCommand as jest.Mock
       ).mockImplementationOnce(() => {
         throw new Error('error');
       });

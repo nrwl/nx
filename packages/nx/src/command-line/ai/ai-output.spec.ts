@@ -1,7 +1,8 @@
 import { writeAiOutput, logProgress, writeErrorLog } from './ai-output';
 
 // Mock isAiAgent
-vi.mock('../../native', () => ({
+vi.mock('../../native', async (importOriginal) => ({
+  ...(await importOriginal<any>()),
   isAiAgent: vi.fn(),
 }));
 

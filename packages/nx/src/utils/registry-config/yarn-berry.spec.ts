@@ -1081,7 +1081,7 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     // enableNetwork: false makes berry exit without contacting the registry
     // (verified on 4.15.0), and npm has no setting that reproduces it.
     const warnOnce = async (rc: string, versions: string[]): string[] => {
-      const { logger } = require('../logger');
+      const { logger } = await import('../logger');
       (logger.warn as jest.Mock).mockClear();
       projectRc(rc);
       vi.resetModules();
@@ -1237,7 +1237,7 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
 
   describe('reporting a credential berry would not send', () => {
     const warnFor = async (packages: string[]): string[] => {
-      const { logger } = require('../logger');
+      const { logger } = await import('../logger');
       (logger.warn as jest.Mock).mockClear();
       vi.resetModules();
       const { getYarnBerrySpawnRegistryEnv: fresh } = await import(

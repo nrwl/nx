@@ -61,13 +61,13 @@ describe('getPluginsSeparated', () => {
   // Resolver for each deferred specified-plugin load, keyed by plugin name.
   let pendingPluginLoads: Map<string, (plugin: unknown) => void>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Fresh module state per test — getPluginsSeparated caches at module
     // level, so a stale cache would mask the behavior under test.
     vi.resetModules();
     pendingPluginLoads = new Map();
 
-    ({ loadNxPlugin } = require('./in-process-loader'));
+    ({ loadNxPlugin } = await import('./in-process-loader'));
     loadNxPlugin.mockImplementation((plugin: unknown) => {
       const name = typeof plugin === 'string' ? plugin : (plugin as any).plugin;
       // Default plugins load from absolute paths — resolve them immediately.
@@ -82,7 +82,7 @@ describe('getPluginsSeparated', () => {
       return [promise, () => {}];
     });
 
-    ({ getPluginsSeparated } = require('./get-plugins'));
+    ({ getPluginsSeparated } = await import('./get-plugins'));
   });
 
   function finishLoading(pluginName: string) {
@@ -131,7 +131,7 @@ describe('getPluginsSeparated', () => {
   });
 
   it('drops the cached local-plugin resolution snapshot when loading the specified plugins', async () => {
-    const { resetResolvePluginCache } = require('./resolve-plugin');
+    const { resetResolvePluginCache } = await import('./resolve-plugin');
     expect(resetResolvePluginCache).not.toHaveBeenCalled();
 
     const load = getPluginsSeparated({ plugins: ['test-a'] });

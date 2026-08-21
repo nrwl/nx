@@ -1,8 +1,8 @@
 import { ProjectGraphBuilder } from '../project-graph-builder';
 import { applyImplicitDependencies } from './implicit-project-dependencies';
 
-vi.mock('fs', () => {
-  const memFs = require('memfs').fs;
+vi.mock('fs', async () => {
+  const memFs = (await import('memfs')).fs;
   return {
     ...memFs,
     existsSync: (p) => (p.endsWith('.node') ? true : memFs.existsSync(p)),

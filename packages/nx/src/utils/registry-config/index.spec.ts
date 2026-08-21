@@ -120,7 +120,7 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
     // resetModules resets the once-flag but shares the logger mock, so clear
     // it first; this branch returns before touching the filesystem, so no file
     // fixtures.
-    const { logger } = require('../logger');
+    const { logger } = await import('../logger');
     (logger.warn as jest.Mock).mockClear();
     vi.resetModules();
     const { getNpmSpawnRegistryEnv: fresh } = await import('./index');
@@ -130,7 +130,7 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
   });
 
   it('warns once (not per package) when the pnpm version is unknown', async () => {
-    const { logger } = require('../logger');
+    const { logger } = await import('../logger');
     (logger.warn as jest.Mock).mockClear();
     vi.resetModules();
     const { getNpmSpawnRegistryEnv: fresh } = await import('./index');
@@ -159,8 +159,8 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
     });
   });
 
-  it('degrades to no bridging when a resolver throws (root is not a string)', () => {
-    const { logger } = require('../logger');
+  it('degrades to no bridging when a resolver throws (root is not a string)', async () => {
+    const { logger } = await import('../logger');
     (logger.verbose as jest.Mock).mockClear();
     expect(
       getNpmSpawnRegistryEnv('is-even', undefined as any, 'pnpm', '11.5.0')
@@ -169,7 +169,7 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
   });
 
   it('warns once (not per package) that a configuration could not be resolved', async () => {
-    const { logger } = require('../logger');
+    const { logger } = await import('../logger');
     (logger.warn as jest.Mock).mockClear();
     files[`${ROOT}/.yarnrc.yml`] =
       'npmRegistryServer: "https://reg-a/\n  x: [\n';
@@ -186,7 +186,7 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
   });
 
   it('degrades to no bridging when the pnpm global config.yaml does not parse (pnpm dies on it)', async () => {
-    const { logger } = require('../logger');
+    const { logger } = await import('../logger');
     (logger.warn as jest.Mock).mockClear();
     process.env.XDG_CONFIG_HOME = '/xdg';
     files['/xdg/pnpm/config.yaml'] = '_auth: [unclosed\n';
@@ -199,8 +199,8 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
     );
   });
 
-  it('degrades to no bridging when a yarn rc file does not parse', () => {
-    const { logger } = require('../logger');
+  it('degrades to no bridging when a yarn rc file does not parse', async () => {
+    const { logger } = await import('../logger');
     (logger.verbose as jest.Mock).mockClear();
     files[`${ROOT}/.yarnrc.yml`] =
       'npmRegistryServer: "https://reg-a.example.com/\n  bad: [unclosed\n';
@@ -214,7 +214,7 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
   });
 
   it('degrades to no bridging when yarn classic hits an unreadable .npmrc (yarn itself dies on it)', async () => {
-    const { logger } = require('../logger');
+    const { logger } = await import('../logger');
     (logger.warn as jest.Mock).mockClear();
     files[`${ROOT}/.npmrc`] = 'registry=https://reg-a.example.com/';
     const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();

@@ -13,9 +13,9 @@ import { join, dirname } from 'node:path';
 // workspace. Unique per run so parallel workers cannot collide.
 vi.mock('../tmp-dir', async () => {
   const actual = await vi.importActual('../tmp-dir');
-  const { join: joinPath } = require('node:path');
-  const { mkdtempSync } = require('node:fs');
-  const { tmpdir: osTmpDir } = require('node:os');
+  const { join: joinPath } = await import('node:path');
+  const { mkdtempSync } = await import('node:fs');
+  const { tmpdir: osTmpDir } = await import('node:os');
   const daemonDir = mkdtempSync(joinPath(osTmpDir(), 'nx-spec-daemon-'));
   return {
     ...actual,

@@ -1,3 +1,7 @@
+// semver's ESM namespace is frozen, so spy at the module-mock level; spy mode
+// keeps the real implementations until a test overrides one.
+vi.mock('semver', { spy: true });
+
 import { RawVersionPlan } from '../config/version-plans';
 import * as execCommandModule from '../utils/exec-command';
 import * as gitUtils from '../utils/git';
@@ -222,7 +226,7 @@ describe('version-plan-filtering', () => {
 
     it('should extract preid from prerelease version', async () => {
       const prereleaseSpyOn = vi
-        .spyOn(require('semver'), 'prerelease')
+        .mocked((await import('semver')).prerelease)
         .mockReturnValue(['beta', 1]);
       mockGetLatestGitTagForPattern.mockResolvedValue({ tag: 'v2.0.0-beta.1' });
       mockGetCommitHash.mockResolvedValue('prerelease-sha');
@@ -256,7 +260,7 @@ describe('version-plan-filtering', () => {
 
     it('should handle version data with project preids', async () => {
       const prereleaseSpyOn = vi
-        .spyOn(require('semver'), 'prerelease')
+        .mocked((await import('semver')).prerelease)
         .mockImplementation((version) =>
           typeof version === 'string' && version.includes('alpha')
             ? ['alpha', 1]

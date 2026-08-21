@@ -17,7 +17,9 @@ describe('getRunner', () => {
   });
 
   it('uses default runner when no tasksRunnerOptions are present', () => {
-    vi.mock(join(__dirname, './default-tasks-runner.ts'), () => mockRunner);
+    // getRunner loads the runner with a bare require, so fetch the expected
+    // instance through the same channel rather than mocking the module.
+    const expected = require('./default-tasks-runner').default;
 
     const { tasksRunner } = withEnvironmentVariables(
       {
@@ -26,7 +28,7 @@ describe('getRunner', () => {
       () => getRunner({}, {})
     );
 
-    expect(tasksRunner).toEqual(mockRunner);
+    expect(tasksRunner).toEqual(expected);
   });
 
   it('uses nx-cloud when no tasksRunnerOptions are present and accessToken is specified', () => {
