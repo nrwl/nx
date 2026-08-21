@@ -1,11 +1,15 @@
 import { serverLogger } from '../logger';
-import { outputsChangesInvalidatingGraphEnv } from './dotenv-graph-changes';
+import {
+  classifyDotEnvChanges,
+  queuePendingDotEnvEvents,
+} from './dotenv-graph-changes';
 import {
   disableOutputsTracking,
   processFileChangesInOutputs,
 } from './outputs-tracking';
 import {
   currentProjectGraph,
+  getRecomputationGeneration,
   invalidateGraphCache,
   isKnownWorkspaceFile,
 } from './project-graph-incremental-recomputation';
@@ -58,21 +62,32 @@ export const handleOutputsChanges: FileWatcherCallback = async (
     // disabled outputs tracker must not leave the graph stale on a dotenv edit.
     // A change to a file the workspace watcher tracks already schedules a
     // recomputation that reads the new content; invalidating for it here too
-    // would discard that recomputation at commit and force a second one. The
-    // committed file map approximates what the watcher tracks: a file it does
-    // not know is either gitignored (never reaches the workspace watcher, so it
-    // needs the invalidation) or created since the last recompute (the watcher
-    // handles it; the extra invalidation is fail-safe). Its own try/catch so a
-    // fault here cannot trip the outputs-tracking kill switch below, which
-    // belongs to an unrelated subsystem, and it fails safe by invalidating: a
-    // stale graph on a dotenv edit is the bug this prevents.
+    // would discard that recomputation at commit and force a second one. It is
+    // queued instead of dropped: the two watchers deliver independently, so a
+    // computation already in flight may have read the file before the edit,
+    // and only the pre-serve replay can prove that. The committed file map
+    // approximates what the watcher tracks: a file it does not know is either
+    // gitignored (never reaches the workspace watcher, so it needs the
+    // invalidation) or created since the last recompute (the watcher handles
+    // it; the extra invalidation is fail-safe). Its own try/catch so a fault
+    // here cannot trip the outputs-tracking kill switch below, which belongs
+    // to an unrelated subsystem, and it fails safe by invalidating: a stale
+    // graph on a dotenv edit is the bug this prevents.
     try {
-      if (
-        outputsChangesInvalidatingGraphEnv(
-          changeEvents,
-          currentProjectGraph
-        ).some((path) => !isKnownWorkspaceFile(path))
-      ) {
+      const { invalidating, unclassified } = classifyDotEnvChanges(
+        changeEvents,
+        currentProjectGraph
+      );
+      const generation = getRecomputationGeneration();
+      queuePendingDotEnvEvents(
+        unclassified.map((event) => event.path),
+        generation
+      );
+      const knownInvalidating = invalidating.filter((path) =>
+        isKnownWorkspaceFile(path)
+      );
+      queuePendingDotEnvEvents(knownInvalidating, generation);
+      if (knownInvalidating.length < invalidating.length) {
         invalidateGraphCache();
       }
     } catch (e) {

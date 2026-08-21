@@ -9,11 +9,16 @@ jest.mock('./outputs-tracking', () => ({
 }));
 jest.mock('./project-graph-incremental-recomputation', () => ({
   currentProjectGraph: undefined,
+  getRecomputationGeneration: jest.fn(() => 7),
   invalidateGraphCache: jest.fn(),
   isKnownWorkspaceFile: jest.fn(() => true),
 }));
 jest.mock('./dotenv-graph-changes', () => ({
-  outputsChangesInvalidatingGraphEnv: jest.fn(() => []),
+  classifyDotEnvChanges: jest.fn(() => ({
+    invalidating: [],
+    unclassified: [],
+  })),
+  queuePendingDotEnvEvents: jest.fn(),
 }));
 
 describe('handleOutputsChanges', () => {
@@ -27,7 +32,10 @@ describe('handleOutputsChanges', () => {
     invalidateGraphCache: jest.Mock;
     isKnownWorkspaceFile: jest.Mock;
   };
-  let dotenvChanges: { outputsChangesInvalidatingGraphEnv: jest.Mock };
+  let dotenvChanges: {
+    classifyDotEnvChanges: jest.Mock;
+    queuePendingDotEnvEvents: jest.Mock;
+  };
   let consoleError: jest.SpyInstance;
 
   const events: WatchEvent[] = [{ path: '.env.e2e', type: EventType.update }];
@@ -79,9 +87,10 @@ describe('handleOutputsChanges', () => {
     expect(getOutputsWatcherTerminalError()).toBeUndefined();
     expect(outputsTracking.disableOutputsTracking).toHaveBeenCalled();
 
-    dotenvChanges.outputsChangesInvalidatingGraphEnv.mockReturnValue([
-      '.env.e2e',
-    ]);
+    dotenvChanges.classifyDotEnvChanges.mockReturnValue({
+      invalidating: ['.env.e2e'],
+      unclassified: [],
+    });
     recomputation.isKnownWorkspaceFile.mockReturnValue(false);
     await handleOutputsChanges(null, events);
 
@@ -90,5 +99,41 @@ describe('handleOutputsChanges', () => {
     expect(outputsTracking.processFileChangesInOutputs).toHaveBeenCalledTimes(
       1
     );
+  });
+
+  it('forwards unclassified dotenv events to the pending queue without invalidating', async () => {
+    const event: WatchEvent = {
+      path: 'apps/e2e/.env.e2e',
+      type: EventType.update,
+    };
+    dotenvChanges.classifyDotEnvChanges.mockReturnValueOnce({
+      invalidating: [],
+      unclassified: [event],
+    });
+    await handleOutputsChanges(null, [event]);
+
+    expect(dotenvChanges.queuePendingDotEnvEvents).toHaveBeenCalledWith(
+      ['apps/e2e/.env.e2e'],
+      7
+    );
+    expect(recomputation.invalidateGraphCache).not.toHaveBeenCalled();
+  });
+
+  it('queues an invalidating edit of a tracked dotenv file instead of invalidating', async () => {
+    // The workspace watcher schedules the recomputation for a tracked file,
+    // but a computation already in flight may have read the file before the
+    // edit; only the queued evidence lets the pre-serve replay prove that.
+    dotenvChanges.classifyDotEnvChanges.mockReturnValueOnce({
+      invalidating: ['libs/foo/.env.e2e'],
+      unclassified: [],
+    });
+    recomputation.isKnownWorkspaceFile.mockReturnValue(true);
+    await handleOutputsChanges(null, events);
+
+    expect(dotenvChanges.queuePendingDotEnvEvents).toHaveBeenCalledWith(
+      ['libs/foo/.env.e2e'],
+      7
+    );
+    expect(recomputation.invalidateGraphCache).not.toHaveBeenCalled();
   });
 });
