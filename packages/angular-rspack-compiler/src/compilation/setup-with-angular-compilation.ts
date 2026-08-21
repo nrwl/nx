@@ -176,16 +176,18 @@ export async function setupCompilationWithAngularCompilation(
   }
 
   // Only the AOT emit branches between TypeScript transpilation and raw
-  // Angular-transformed TypeScript, on this exact expression over the
-  // program's options (JIT always transpiles). The loaders classify the
-  // emitted cache entries with this flag, so it must never diverge from the
-  // emit's gate. The worker-based initialize reports only four options; the
-  // three the gate reads are among them, and any other option would be
-  // undefined here.
+  // Angular-transformed TypeScript (JIT always transpiles). The loaders
+  // classify the emitted cache entries with this flag, so it must never
+  // diverge from the emit's gate. `@angular/build` 22.1 gates on the
+  // `_useTypeScriptTranspilation` option `setupCompilation` sets and reports
+  // it back here; versions that ignore the option derive the fallback
+  // expression themselves at emit time. The worker-based initialize marshals
+  // every option read here; any other option would be undefined.
   const useTypeScriptTranspilation =
-    !initializedCompilerOptions?.isolatedModules ||
-    !!initializedCompilerOptions?.sourceMap ||
-    !!initializedCompilerOptions?.inlineSourceMap;
+    (initializedCompilerOptions?.['_useTypeScriptTranspilation'] as boolean) ??
+    (!initializedCompilerOptions?.isolatedModules ||
+      !!initializedCompilerOptions?.sourceMap ||
+      !!initializedCompilerOptions?.inlineSourceMap);
 
   return {
     angularCompilation,
