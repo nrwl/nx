@@ -516,9 +516,7 @@ describe('TaskOrchestrator', () => {
     });
 
     it('renders a batch that reported results from each task, never as a batch fold', () => {
-      const orchestrator = createOrchestrator({
-        outputStyle: 'static-failures-only',
-      });
+      const orchestrator = createOrchestrator();
       const a = makeTask('a:build');
       const b = makeTask('b:build');
       const taskResults = [
@@ -538,9 +536,7 @@ describe('TaskOrchestrator', () => {
     });
 
     it('renders a FAILED batch that reported results per task, not as one fold', () => {
-      const orchestrator = createOrchestrator({
-        outputStyle: 'static-failures-only',
-      });
+      const orchestrator = createOrchestrator();
       const a = makeTask('a:build');
       const b = makeTask('b:build');
       const taskResults = [
@@ -588,9 +584,7 @@ describe('TaskOrchestrator', () => {
     });
 
     it('does not fold a batch under the failures-only default', () => {
-      const orchestrator = createOrchestrator({
-        outputStyle: 'static-failures-only',
-      });
+      const orchestrator = createOrchestrator();
       const a = makeTask('a:build');
       const taskResults = [
         { task: a, status: 'success', code: 0, terminalOutput: 'a body' },

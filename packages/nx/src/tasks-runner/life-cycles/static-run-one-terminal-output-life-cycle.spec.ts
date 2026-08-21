@@ -65,9 +65,6 @@ describe('StaticRunOneTerminalOutputLifeCycle', () => {
     args: { verbose?: boolean; outputStyle?: string } = {},
     tasks: Task[] = [initiating, dependency]
   ) {
-    // Default to the collapsing style, which is what CI resolves to; merged
-    // rather than defaulted so a test passing `{}` still gets it.
-    args = { outputStyle: 'static-failures-only', ...args };
     return new StaticRunOneTerminalOutputLifeCycle(
       'app',
       tasks.map((t) => t.target.project),

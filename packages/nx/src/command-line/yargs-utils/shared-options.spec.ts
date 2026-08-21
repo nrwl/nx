@@ -209,35 +209,18 @@ describe('shared-options', () => {
         }
       ));
 
-    it('should default to static-failures-only in CI', async () =>
+    it('should leave the style unset when none was given', async () =>
       withEnvironmentVariables(
         { NX_TUI: false, CI: 'true', NX_TUI_SKIP_CAPABILITY_CHECK: 'true' },
         async () => {
+          // The failures-only default is resolved where output is rendered, not
+          // here. outputStyle is also read by the orchestrator to decide whether
+          // a task streams, and naming a static style there stops
+          // shouldStreamOutput from being consulted at all - which silently
+          // stops continuous tasks from streaming.
           const command = withOutputStyleOption(argv);
           const result = await command.parseAsync([]);
-          expect(result.outputStyle).toEqual('static-failures-only');
-        }
-      ));
-
-    it('should not collapse output outside CI', async () =>
-      withEnvironmentVariables(
-        { NX_TUI: false, CI: 'false', NX_TUI_SKIP_CAPABILITY_CHECK: 'true' },
-        async () => {
-          // A non-TTY local run - piping to a file - still gets the static life
-          // cycle, and must still print in full.
-          const command = withOutputStyleOption(argv);
-          const result = await command.parseAsync([]);
-          expect(result.outputStyle).not.toEqual('static-failures-only');
-        }
-      ));
-
-    it('should let an explicit style beat the CI default', async () =>
-      withEnvironmentVariables(
-        { NX_TUI: false, CI: 'true', NX_TUI_SKIP_CAPABILITY_CHECK: 'true' },
-        async () => {
-          const command = withOutputStyleOption(argv);
-          const result = await command.parseAsync(['--output-style=stream']);
-          expect(result.outputStyle).toEqual('stream');
+          expect(result.outputStyle).toBeUndefined();
         }
       ));
 
