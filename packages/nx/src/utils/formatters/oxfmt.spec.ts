@@ -631,6 +631,31 @@ describe('formatFilesWithOxfmt', () => {
       expect(errors).toBeUndefined();
       expect([...formatted.keys()]).toEqual(['kept.ts']);
     });
+
+    it('skips a file inside an ignored directory despite a nested negation', async () => {
+      // Measured against the oxfmt 0.60.0 CLI: a scan skips `dist/keep.ts`
+      // because it never enters `dist/`, so the nested negation is never read.
+      // Without the ancestor walk the negation is the nearest opinion and the
+      // file would be rewritten.
+      writeFileSync(join(workspaceRoot, '.gitignore'), 'dist/\n', 'utf-8');
+      mkdirSync(join(workspaceRoot, 'dist'), { recursive: true });
+      writeFileSync(
+        join(workspaceRoot, 'dist/.gitignore'),
+        '!keep.ts\n',
+        'utf-8'
+      );
+
+      const { formatted, errors } = await formatFilesWithOxfmt(
+        [
+          { path: 'dist/keep.ts', content: 'const x =  1' },
+          { path: 'kept.ts', content: 'const y =  1' },
+        ],
+        workspaceRoot
+      );
+
+      expect(errors).toBeUndefined();
+      expect([...formatted.keys()]).toEqual(['kept.ts']);
+    });
   });
 
   describe('a config carried in the batch', () => {

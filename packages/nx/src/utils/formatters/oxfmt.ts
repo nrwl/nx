@@ -6,11 +6,9 @@ import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { Tree } from '../../generators/tree';
 import {
+  createAncestorAwareIgnoreChecker,
   createIgnoreChainResolver,
-  isIgnoredByChain,
   OXFMT_IGNORE_OPTIONS,
-  posixDirname,
-  type ScopedIgnoreMatcher,
 } from '../ignore';
 import { parseJson } from '../json';
 import { readModulePackageJson } from '../package-json';
@@ -253,12 +251,12 @@ async function loadTsOxfmtConfig(configPath: string): Promise<unknown> {
  * directory, so it is matched separately from the chain.
  */
 function isIgnored(
-  chain: ScopedIgnoreMatcher[],
+  isIgnoredFile: (relativePath: string) => boolean,
   relativePath: string,
   config: DirectoryConfig,
   absoluteFilePath: string
 ): boolean {
-  if (isIgnoredByChain(chain, relativePath)) {
+  if (isIgnoredFile(relativePath)) {
     return true;
   }
 
@@ -898,10 +896,11 @@ export async function formatFilesWithOxfmt(
     seedConfig ?? findOxfmtConfigInBatch(files),
     rootConfigNames
   );
-  // All three generator-side values come from one constant so they cannot
-  // drift. oxfmt honours `.prettierignore` as well as `.gitignore` (measured
-  // against its CLI), keeping one matcher per file so a `!` in one cannot
-  // re-include what the other excluded.
+  // The filenames and the merge rule come from the shared constant so the two
+  // consumers cannot drift; the cascade axis is the ancestor-aware checker
+  // itself, which both go through. oxfmt honours `.prettierignore` as well as
+  // `.gitignore` (measured against its CLI), keeping one matcher per file so a
+  // `!` in one cannot re-include what the other excluded.
   // `readFileIfExisting` is not usable here: it returns '' for a missing file,
   // which an empty ignore file also returns.
   const resolveIgnores = createIgnoreChainResolver(
@@ -913,6 +912,7 @@ export async function formatFilesWithOxfmt(
     OXFMT_IGNORE_OPTIONS.filenames,
     OXFMT_IGNORE_OPTIONS.merge
   );
+  const { isIgnoredFile } = createAncestorAwareIgnoreChecker(resolveIgnores);
   // Measured against the CLI: it resolves `.editorconfig` from the directory it
   // runs in and never reads a nested one, unlike the per-file walk it does for
   // `.oxfmtrc.json`. Honouring a nearer file here would be undone by the next
@@ -950,14 +950,7 @@ export async function formatFilesWithOxfmt(
         const relativePath = toRelativeWithin(workspaceRoot, file.path);
         if (
           relativePath !== undefined &&
-          isIgnored(
-            resolveIgnores(
-              OXFMT_IGNORE_OPTIONS.cascade ? posixDirname(relativePath) : ''
-            ),
-            relativePath,
-            config,
-            absolutePath
-          )
+          isIgnored(isIgnoredFile, relativePath, config, absolutePath)
         ) {
           return;
         }
