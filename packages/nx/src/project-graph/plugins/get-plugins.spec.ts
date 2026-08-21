@@ -68,6 +68,12 @@ describe('getPluginsSeparated', () => {
     pendingPluginLoads = new Map();
 
     ({ loadNxPlugin } = await import('./in-process-loader'));
+    // Unlike jest, resetModules does not re-run vi.mock factories, so the
+    // mock fns persist across tests — clear their recorded calls.
+    loadNxPlugin.mockClear();
+    (
+      (await import('./resolve-plugin')).resetResolvePluginCache as jest.Mock
+    ).mockClear();
     loadNxPlugin.mockImplementation((plugin: unknown) => {
       const name = typeof plugin === 'string' ? plugin : (plugin as any).plugin;
       // Default plugins load from absolute paths — resolve them immediately.

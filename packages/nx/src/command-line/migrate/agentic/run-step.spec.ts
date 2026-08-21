@@ -65,17 +65,17 @@ function configureRun(outcome: HandoffOutcome) {
 describe('runAgenticPromptStep', () => {
   let installDeps: jest.Mock;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     mockRunAgentic.mockReset();
     mockGetDefinition.mockReset();
     // mockClear (not mockReset) — mockReset wipes the factory return
     // values set at jest.mock() time, so detectPackageManager etc. would
     // start returning undefined.
-    const { logger } = jest.requireMock('../../../utils/logger') as {
+    const { logger } = (await import('../../../utils/logger')) as {
       logger: { info: jest.Mock };
     };
     logger.info.mockClear();
-    const { mkdirSafely } = jest.requireMock('./handoff') as {
+    const { mkdirSafely } = (await import('./handoff')) as {
       mkdirSafely: jest.Mock;
     };
     mkdirSafely.mockClear();
@@ -119,7 +119,7 @@ describe('runAgenticPromptStep', () => {
       'test',
       'm1.json'
     );
-    const { mkdirSafely } = jest.requireMock('./handoff') as {
+    const { mkdirSafely } = (await import('./handoff')) as {
       mkdirSafely: jest.Mock;
     };
     expect(mkdirSafely).toHaveBeenCalledWith(
@@ -178,7 +178,7 @@ describe('runAgenticPromptStep', () => {
   });
 
   it('uses "Validation failed" labeling in generic-validation mode failures', async () => {
-    const { logger } = jest.requireMock('../../../utils/logger');
+    const { logger } = (await import('../../../utils/logger'));
     configureRun({ kind: 'failed', summary: 'tests failed' });
 
     await expect(
