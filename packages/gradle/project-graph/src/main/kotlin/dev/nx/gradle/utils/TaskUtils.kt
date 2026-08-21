@@ -5,16 +5,23 @@ import dev.nx.gradle.data.Dependency
 import dev.nx.gradle.data.DependsOnEntry
 import dev.nx.gradle.data.ExternalDepData
 import dev.nx.gradle.data.ExternalNode
+import groovy.lang.Closure
 import java.io.File
+import java.util.Collections
+import java.util.IdentityHashMap
+import java.util.WeakHashMap
+import java.util.concurrent.Callable
 import kotlin.io.path.Path
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.internal.TaskInternal
 import org.gradle.api.internal.provider.ProviderInternal
 import org.gradle.api.internal.provider.TransformBackedProvider
 import org.gradle.api.internal.tasks.DefaultTaskDependency
+import org.gradle.api.internal.tasks.TaskResolver
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.AbstractCopyTask
 import org.gradle.api.tasks.TaskProvider
@@ -23,6 +30,7 @@ import org.gradle.api.tasks.bundling.Compression
 import org.gradle.api.tasks.bundling.Tar
 import org.gradle.api.tasks.compile.AbstractCompile
 import org.gradle.api.tasks.testing.Test as GradleTest
+import org.gradle.util.Path as GradlePath
 
 private val kotlinCompileToolClass: Class<*>? by lazy {
   try {
@@ -34,6 +42,176 @@ private val kotlinCompileToolClass: Class<*>? by lazy {
 
 private fun isKotlinCompileTask(task: Task): Boolean =
     kotlinCompileToolClass?.isInstance(task) == true
+
+/** Weak Task keys, not `task.path`: paths collide across included builds. */
+private val dependsOnTaskCache: MutableMap<Task, Set<Task>> =
+    Collections.synchronizedMap(WeakHashMap())
+
+private val dependentOutputPatternsCache: MutableMap<Task, Set<String>> =
+    Collections.synchronizedMap(WeakHashMap())
+
+/** Escape hatch: force every task down the dependsOn-only path, never TaskDependency. */
+private val skipTaskDependencyResolution: Boolean =
+    System.getenv("NX_GRADLE_SKIP_TASK_DEPS")?.toBoolean() == true
+
+private fun pathStringDeps(task: Task): List<String> {
+  return try {
+    val paths = flattenDependsOn(task).filterIsInstance<CharSequence>()
+    paths.map { it.toString() }.filter { it.isNotEmpty() }
+  } catch (e: Exception) {
+    task.logger.info("Cannot read dependsOn paths for ${task.path}: ${e.message}")
+    emptyList()
+  }
+}
+
+private val dependsOnExpansionCache: MutableMap<Task, List<Any>> =
+    Collections.synchronizedMap(WeakHashMap())
+
+/** Memoized: it invokes user closures, which must not run once per caller. */
+private fun flattenDependsOn(task: Task): List<Any> =
+    dependsOnExpansionCache[task]
+        ?: computeFlattenDependsOn(task).also { dependsOnExpansionCache[task] = it }
+
+// `dependsOn: [a, b]` is ONE element. Descend only List/Set/Array — a FileCollection is Iterable
+// too, and iterating one resolves it.
+private fun computeFlattenDependsOn(task: Task): List<Any> {
+  val flattened = mutableListOf<Any>()
+  // Identity-keyed cycle guard: Gradle's own visitDependencies has none and loops forever.
+  val seen = Collections.newSetFromMap(IdentityHashMap<Any, Boolean>())
+  fun visit(value: Any?) {
+    when (value) {
+      null -> {}
+      is List<*> -> if (seen.add(value)) value.forEach(::visit)
+      is Set<*> -> if (seen.add(value)) value.forEach(::visit)
+      is Array<*> -> if (seen.add(value)) value.forEach(::visit)
+      // Must precede Callable: Closure extends it, and Gradle passes the task to
+      // `dependsOn { … }` — calling with no argument throws.
+      is Closure<*> ->
+          if (seen.add(value)) {
+            try {
+              visit(value.call(task))
+            } catch (e: Exception) {
+              task.logger.info("Cannot expand dependsOn closure for ${task.path}: ${e.message}")
+              flattened.add(value)
+            }
+          }
+      is Callable<*> ->
+          if (seen.add(value)) {
+            try {
+              visit(value.call())
+            } catch (e: Exception) {
+              task.logger.info("Cannot expand dependsOn callable for ${task.path}: ${e.message}")
+              flattened.add(value)
+            }
+          }
+      else -> flattened.add(value)
+    }
+  }
+  task.dependsOn.forEach(::visit)
+  return flattened
+}
+
+/** dependsOn values that yield tasks only by resolving — which would configure the producer. */
+private fun hasUnresolvableDeps(task: Task): Boolean =
+    try {
+      flattenDependsOn(task).any {
+        it is FileCollection || it is org.gradle.api.tasks.TaskDependency
+      }
+    } catch (e: Exception) {
+      task.logger.info("Cannot inspect dependsOn for ${task.path}: ${e.message}")
+      false
+    }
+
+/**
+ * Only qualified paths need the bypass: a bare name never triggers a cross-project lookup, so
+ * leaving it to [org.gradle.api.tasks.TaskDependency] keeps lifecycle-task fidelity.
+ */
+private fun qualifiedPathDeps(task: Task): List<String> =
+    pathStringDeps(task).filter { it.contains(':') }
+
+/**
+ * The single gate: a qualified path in [org.gradle.api.tasks.TaskDependency] re-enters
+ * configuration and deadlocks (#36668). The inputs derivation must fail open on exactly the same
+ * tasks, so both sites share this.
+ */
+private fun bypassesTaskDependencies(task: Task): Boolean =
+    skipTaskDependencyResolution || qualifiedPathDeps(task).isNotEmpty()
+
+internal data class DependsOnResolution(val tasks: Set<Task>, val unresolved: Int)
+
+private val dependsOnResolutionCache: MutableMap<Task, DependsOnResolution> =
+    Collections.synchronizedMap(WeakHashMap())
+
+/** Deadlock-free lookup: findProject + findByName never enter `ensureProjectsConfigured`. */
+internal fun lookupTask(owner: Project, p: String): Task? {
+  val sep = p.lastIndexOf(':')
+  return if (sep < 0) {
+    owner.tasks.findByName(p)
+  } else {
+    val taskName = p.substring(sep + 1)
+    if (taskName.isEmpty()) {
+      null
+    } else {
+      val prefix = p.substring(0, sep)
+      val projectPath =
+          when {
+            p.startsWith(":") -> prefix.ifEmpty { ":" }
+            owner.path == ":" -> ":$prefix"
+            else -> "${owner.path}:$prefix"
+          }
+      owner.rootProject.findProject(projectPath)?.tasks?.findByName(taskName)
+    }
+  }
+}
+
+/**
+ * [TaskResolver.resolveTask] took a String in Gradle 8 and a [GradlePath] in 9; the JVM dispatches
+ * by exact descriptor, so both are implemented.
+ */
+private fun safeTaskResolver(owner: Project): TaskResolver =
+    object : TaskResolver {
+      override fun resolveTask(path: String): Task? = lookupTask(owner, path)
+
+      @Suppress("unused") fun resolveTask(path: GradlePath): Task? = lookupTask(owner, path.path)
+    }
+
+/**
+ * Gradle's engine with [safeTaskResolver]. Screening is an allowlist: a value whose internals could
+ * hold the real resolver (a FileCollection's builtBy) is counted, never passed in.
+ */
+private fun resolveDependsOn(task: Task): DependsOnResolution =
+    dependsOnResolutionCache[task]
+        ?: computeResolveDependsOn(task).also { dependsOnResolutionCache[task] = it }
+
+private fun computeResolveDependsOn(task: Task): DependsOnResolution {
+  val engineValues = mutableListOf<Any>()
+  var unresolved = 0
+  flattenDependsOn(task).forEach { value ->
+    when (value) {
+      is Task -> engineValues.add(value)
+      is CharSequence ->
+          if (lookupTask(task.project, value.toString()) != null) {
+            engineValues.add(value)
+          } else {
+            unresolved++
+          }
+      is Provider<*> -> engineValues.add(value)
+      else -> unresolved++ // FileCollection, TaskDependency, Buildable, anything unknown
+    }
+  }
+  return try {
+    val copy = DefaultTaskDependency(safeTaskResolver(task.project), null)
+    engineValues.forEach { copy.add(it) }
+    DependsOnResolution(copy.getDependencies(task), unresolved)
+  } catch (e: Throwable) {
+    // Engine drift or a rejected value: keep the Tasks in hand, count the rest unresolved so
+    // inputs fail open.
+    task.logger.info("Safe dependsOn resolution failed for ${task.path}: ${e.message}")
+    DependsOnResolution(
+        engineValues.filterIsInstance<Task>().toSet(),
+        unresolved + engineValues.count { it !is Task })
+  }
+}
 
 /**
  * Process a task and convert it into target Going to populate:
@@ -84,7 +262,9 @@ private fun processTaskImpl(
   val logger = task.logger
   logger.info("NxProjectReportTask: process $task for $projectRoot")
   val target = mutableMapOf<String, Any?>()
-  target["cache"] = isCacheable(task)
+  // An incomplete dependency set must not be cached: a stale hit is worse than no cache.
+  val dependenciesFullyKnown = !(bypassesTaskDependencies(task) && hasUnresolvableDeps(task))
+  target["cache"] = isCacheable(task) && dependenciesFullyKnown
 
   val continuous = isContinuous(task)
   if (continuous) {
@@ -202,7 +382,11 @@ private fun dependencyOutputExtensions(task: Task): Set<String> {
  * dependentTasksOutputFiles patterns for one dependency: per-extension globs when nameable,
  * otherwise the wildcard catch-all for a declared directory output (a Copy is the common case).
  */
-private fun dependentOutputPatterns(task: Task): Set<String> {
+private fun dependentOutputPatterns(task: Task): Set<String> =
+    dependentOutputPatternsCache[task]
+        ?: computeDependentOutputPatterns(task).also { dependentOutputPatternsCache[task] = it }
+
+private fun computeDependentOutputPatterns(task: Task): Set<String> {
   val extensions = dependencyOutputExtensions(task)
   return when {
     extensions.isNotEmpty() ->
@@ -571,7 +755,14 @@ private fun getInputsForTaskImpl(
             .filterNot { nonInputDependentOutputExtensions.contains(it) }
             .map { "**/*.$it" }
 
-    val dependentPatterns = (taskOwnPatterns + effectiveDependencyPatterns(tasksToProcess)).toSet()
+    // Fail open for what screening or resolution lost: over-declaring costs a rebuild,
+    // under-declaring a stale hit.
+    val recoveredPathDeps =
+        if (bypassesTaskDependencies(task) && resolveDependsOn(task).unresolved > 0) setOf("**/*")
+        else emptySet()
+
+    val dependentPatterns =
+        (taskOwnPatterns + effectiveDependencyPatterns(tasksToProcess) + recoveredPathDeps).toSet()
     // The catch-all subsumes every specific glob, so when present emit only it.
     val emittedPatterns = if ("**/*" in dependentPatterns) setOf("**/*") else dependentPatterns
     emittedPatterns.forEach { pattern ->
@@ -616,32 +807,33 @@ fun getOutputsForTask(task: Task, projectRoot: String, workspaceRoot: String): L
   }
 }
 
-fun getDependsOnTask(task: Task): Set<Task> {
-  // Try to safely get dependencies, with fallback for configuration cache issues
+fun getDependsOnTask(task: Task): Set<Task> =
+    dependsOnTaskCache[task] ?: computeDependsOnTask(task).also { dependsOnTaskCache[task] = it }
+
+private fun computeDependsOnTask(task: Task): Set<Task> {
   return try {
-    // First try to get dependencies from task.dependsOn property
     val dependsOnFromProperty: Set<Task> =
         try {
-          task.dependsOn.filterIsInstance<Task>().toSet()
+          flattenDependsOn(task).filterIsInstance<Task>().toSet()
         } catch (e: Exception) {
           task.logger.info(
               "Cannot access task.dependsOn for ${task.path}, possibly due to configuration cache: ${e.message}")
           emptySet()
         }
 
-    // Then try to get dependencies from taskDependencies (more comprehensive but riskier with
-    // config cache)
     val dependsOnFromTaskDependencies: Set<Task> =
-        try {
-          task.taskDependencies.getDependencies(task)
-        } catch (e: UnsupportedOperationException) {
-          task.logger.info(
-              "Cannot access taskDependencies for ${task.path} due to configuration cache restrictions")
-          emptySet()
-        } catch (e: Exception) {
-          task.logger.info("Error calling getDependencies for ${task.path}: ${e.message}")
-          emptySet()
-        }
+        if (bypassesTaskDependencies(task)) resolveDependsOn(task).tasks
+        else
+            try {
+              task.taskDependencies.getDependencies(task)
+            } catch (e: UnsupportedOperationException) {
+              task.logger.info(
+                  "Cannot access taskDependencies for ${task.path} due to configuration cache restrictions")
+              emptySet()
+            } catch (e: Exception) {
+              task.logger.info("Error calling getDependencies for ${task.path}: ${e.message}")
+              emptySet()
+            }
 
     val combinedDependsOn = dependsOnFromTaskDependencies.union(dependsOnFromProperty)
 
@@ -679,7 +871,8 @@ fun getDependsOnForTask(
   // Check cache to prevent infinite recursion, but only if dependsOnTasks is null
   // When dependsOnTasks is provided, we should not use cache since dependencies might be different
   val cache = taskDependencyCache.get()
-  val taskKey = task.path
+  // task.path collides across included builds; the build-tree path does not.
+  val taskKey = "${getNxProjectName(task.project)}:${task.name}"
   if (dependsOnTasks == null && cache.containsKey(taskKey)) {
     task.logger.debug("Returning cached dependencies for ${task.path}")
     return cache[taskKey]
@@ -690,21 +883,23 @@ fun getDependsOnForTask(
     val sameProjectDependsOn = mutableListOf<DependsOnEntry>()
     val crossProjectByTarget = mutableMapOf<String, MutableList<String>>()
 
-    tasks.forEach { depTask ->
+    // A project configured from an ancestor build file owns no build file of its own, but is still
+    // a real project — attribute its edges to whichever file configures it.
+    val taskProjectBuildFile = effectiveBuildFile(taskProject)
+
+    tasks.distinct().forEach { depTask ->
       val depProject = depTask.project
 
       if (task.name != "buildDependents" &&
           depProject != taskProject &&
           dependencies != null &&
-          taskProject.buildFile.exists()) {
+          taskProjectBuildFile != null) {
         dependencies.add(
             Dependency(
-                taskProject.projectDir.path,
-                depProject.projectDir.path,
-                taskProject.buildFile.path))
+                taskProject.projectDir.path, depProject.projectDir.path, taskProjectBuildFile.path))
       }
 
-      if (depProject.buildFile.path != null && depProject.buildFile.exists()) {
+      if (effectiveBuildFile(depProject) != null) {
         val targetName = resolveTargetName(depTask, targetNameOverrides, targetNamePrefix)
         if (depProject == taskProject) {
           sameProjectDependsOn.add(DependsOnEntry(target = targetName))
@@ -728,13 +923,7 @@ fun getDependsOnForTask(
   if (dependsOnTasks == null) {
     try {
       cache[taskKey] = null
-      val combinedDependsOn = getDependsOnTask(task)
-      val result =
-          if (combinedDependsOn.isNotEmpty()) {
-            mapTasksToObjects(combinedDependsOn).ifEmpty { null }
-          } else {
-            null
-          }
+      val result = mapTasksToObjects(getDependsOnTask(task)).ifEmpty { null }
       cache[taskKey] = result
       return result
     } catch (e: Exception) {
@@ -749,13 +938,7 @@ fun getDependsOnForTask(
     }
   } else {
     return try {
-      val result =
-          if (dependsOnTasks.isNotEmpty()) {
-            mapTasksToObjects(dependsOnTasks).ifEmpty { null }
-          } else {
-            null
-          }
-      result
+      mapTasksToObjects(dependsOnTasks).ifEmpty { null }
     } catch (e: Exception) {
       task.logger.info("Unexpected error getting dependencies for ${task.path}: ${e.message}")
       task.logger.debug("Stack trace:", e)

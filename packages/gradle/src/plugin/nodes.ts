@@ -11,8 +11,9 @@ import {
   workspaceRoot,
   ProjectGraphExternalNode,
   normalizePath,
+  logger,
 } from '@nx/devkit';
-import { dirname, join } from 'node:path';
+import { dirname, isAbsolute, join } from 'node:path';
 
 import {
   gradleConfigAndTestGlob,
@@ -110,8 +111,7 @@ function extractNxConfigOnly(
 export const createNodes: CreateNodes<GradlePluginOptions> = [
   gradleConfigAndTestGlob,
   async (files, options, context) => {
-    const { buildFiles: buildFilesFromSplitConfigFiles, gradlewFiles } =
-      splitConfigFiles(files);
+    const { gradlewFiles } = splitConfigFiles(files);
     const optionsHash = hashObject(options);
     const cachePath = join(
       workspaceDataDirectory,
@@ -127,33 +127,42 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
       options
     );
     const report = getCurrentProjectGraphReport();
-    const { nodes, externalNodes = {}, buildFiles = [] } = report;
-
-    // Combine buildFilesFromSplitConfigFiles and buildFiles, making each value distinct
-    const allBuildFiles = Array.from(
-      new Set([...buildFilesFromSplitConfigFiles, ...buildFiles])
-    );
+    const { nodes, externalNodes = {}, buildFileByProjectRoot = {} } = report;
 
     try {
       const results = [];
       const normalizedOptions = normalizeOptions(options);
 
-      const buildFileProjectRoots = allBuildFiles.map((f) => dirname(f));
-      const buildFileHashes = await calculateHashesForCreateNodes(
-        buildFileProjectRoots,
+      // Roots outside the workspace stay absolute in the report and cannot become Nx projects.
+      const projectRoots = Object.keys(nodes)
+        .map((root) => normalizePath(root))
+        .filter((root) => !isAbsolute(root) && !root.startsWith('../'));
+      const projectHashes = await calculateHashesForCreateNodes(
+        projectRoots,
         normalizedOptions ?? {},
         context
       );
 
-      for (let i = 0; i < allBuildFiles.length; i++) {
-        const gradleFilePath = allBuildFiles[i];
-        const projectRoot = buildFileProjectRoots[i];
-        const hash = buildFileHashes[i];
+      for (let i = 0; i < projectRoots.length; i++) {
+        const normalizedProjectRoot = projectRoots[i];
+        const gradleFilePath = buildFileByProjectRoot[normalizedProjectRoot];
+        if (!gradleFilePath) {
+          // No build file reported: an ancestor configures it and the plugin predates
+          // effectiveBuildFile.
+          logger.verbose(
+            `[@nx/gradle] no build file reported for "${normalizedProjectRoot}"; skipping it. Upgrade dev.nx.gradle.project-graph if projects are missing.`
+          );
+          continue;
+        }
+        // calculateHashesForCreateNodes hashes files *under* the root, so two file-less roots
+        // hash identically; the root must be in the key.
+        const hash = hashObject({
+          hash: projectHashes[i],
+          normalizedProjectRoot,
+        });
 
-        // Get project from cache or nodes (report keys are workspace-relative
-        // with `/` separators)
         if (!pluginCache.has(hash)) {
-          const nodeProject = nodes[normalizePath(projectRoot)];
+          const nodeProject = nodes[normalizedProjectRoot];
           if (nodeProject) {
             pluginCache.set(hash, nodeProject);
           }
@@ -163,8 +172,6 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
         if (!project) {
           continue;
         }
-
-        const normalizedProjectRoot = normalizePath(projectRoot);
 
         // Result 1: Gradle-detected configuration (without nxConfig)
         const gradleConfig = stripNxConfig(project);

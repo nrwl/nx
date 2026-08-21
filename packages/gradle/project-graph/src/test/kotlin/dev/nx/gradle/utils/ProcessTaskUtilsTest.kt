@@ -3,8 +3,10 @@ package dev.nx.gradle.utils
 import dev.nx.gradle.data.Dependency
 import dev.nx.gradle.data.DependsOnEntry
 import dev.nx.gradle.data.ExternalNode
+import groovy.lang.Closure
 import kotlin.io.path.Path
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -93,6 +95,172 @@ class ProcessTaskUtilsTest {
   }
 
   @Test
+  fun `test a task whose dependency set cannot be fully resolved is not cacheable`() {
+    val project = ProjectBuilder.builder().build()
+    val task = project.tasks.register("packagesOtherProject").get()
+    // Qualified path forces the bypass; the FileCollection is unresolvable — the set is knowably
+    // short.
+    task.dependsOn(":other:jar")
+    task.dependsOn(project.files("some-input.txt"))
+
+    val result =
+        processTask(
+            task,
+            projectBuildPath = ":project",
+            projectRoot = project.projectDir.path,
+            workspaceRoot = project.rootDir.path,
+            externalNodes = mutableMapOf(),
+            dependencies = mutableSetOf(),
+            targetNameOverrides = emptyMap(),
+            gitIgnoreClassifier = GitIgnoreClassifier(project.rootDir),
+            project = project)
+
+    assertEquals(
+        false, result["cache"], "caching a short dependency set risks a stale hit: $result")
+  }
+
+  @Test
+  fun `test a task with a resolvable dependency set stays cacheable`() {
+    val project = ProjectBuilder.builder().build()
+    val task = project.tasks.register("packagesThisProject").get()
+    // No FileCollection/TaskDependency, so nothing is knowably missing.
+    task.dependsOn(":other:jar")
+
+    val result =
+        processTask(
+            task,
+            projectBuildPath = ":project",
+            projectRoot = project.projectDir.path,
+            workspaceRoot = project.rootDir.path,
+            externalNodes = mutableMapOf(),
+            dependencies = mutableSetOf(),
+            targetNameOverrides = emptyMap(),
+            gitIgnoreClassifier = GitIgnoreClassifier(project.rootDir),
+            project = project)
+
+    assertEquals(true, result["cache"])
+  }
+
+  @Test
+  fun `test a self-referential dependsOn terminates`() {
+    val project = ProjectBuilder.builder().build()
+    val task = project.tasks.register("cyclicDeps").get()
+    // Gradle stores dependsOn in a Set, and hashing a self-referential list overflows — a cycle
+    // is reachable only through a Callable.
+    val cyclic = mutableListOf<Any>(":other:jar")
+    cyclic.add(cyclic)
+    task.dependsOn(java.util.concurrent.Callable { cyclic })
+
+    val result =
+        processTask(
+            task,
+            projectBuildPath = ":project",
+            projectRoot = project.projectDir.path,
+            workspaceRoot = project.rootDir.path,
+            externalNodes = mutableMapOf(),
+            dependencies = mutableSetOf(),
+            targetNameOverrides = emptyMap(),
+            gitIgnoreClassifier = GitIgnoreClassifier(project.rootDir),
+            project = project)
+
+    assertNotNull(result["executor"])
+  }
+
+  @Test
+  fun `test a provider dependsOn resolves through the engine`() {
+    val project = ProjectBuilder.builder().build()
+    java.io.File(project.projectDir, "build.gradle").writeText("")
+    val other = ProjectBuilder.builder().withParent(project).withName("other").build()
+    other.tasks.register("jar")
+    project.tasks.register("producedByProvider")
+    val task = project.tasks.register("consumesProvider").get()
+    // `named().map { }` yields a plain Provider, not a TaskProvider.
+    task.dependsOn(project.tasks.named("producedByProvider").map { it })
+    task.dependsOn(":other:jar") // forces the bypass
+
+    val result =
+        processTask(
+            task,
+            projectBuildPath = ":project",
+            projectRoot = project.projectDir.path,
+            workspaceRoot = project.rootDir.path,
+            externalNodes = mutableMapOf(),
+            dependencies = mutableSetOf(),
+            targetNameOverrides = emptyMap(),
+            gitIgnoreClassifier = GitIgnoreClassifier(project.rootDir),
+            project = project)
+
+    val dependsOn = result["dependsOn"]?.toString() ?: ""
+    assertTrue(
+        dependsOn.contains("producedByProvider"),
+        "the provider's task must survive the bypass, got $dependsOn")
+    assertTrue(dependsOn.contains("jar"), "the path edge must also survive, got $dependsOn")
+  }
+
+  @Test
+  fun `test a Groovy closure dependsOn receives the task and is expanded`() {
+    val project = ProjectBuilder.builder().build()
+    java.io.File(project.projectDir, "build.gradle").writeText("")
+    val produced = project.tasks.register("producedByGroovyClosure").get()
+    val task = project.tasks.register("consumesGroovyClosure").get()
+    // Gradle passes the task to `dependsOn { … }`; a Closure is a Callable, so a no-arg call
+    // throws.
+    task.dependsOn(
+        object : Closure<Any?>(this) {
+          fun doCall(owner: Task): Any? {
+            requireNotNull(owner) { "Gradle passes the task to a dependsOn closure" }
+            return produced
+          }
+        })
+    task.dependsOn(":other:jar") // forces the bypass
+
+    val result =
+        processTask(
+            task,
+            projectBuildPath = ":project",
+            projectRoot = project.projectDir.path,
+            workspaceRoot = project.rootDir.path,
+            externalNodes = mutableMapOf(),
+            dependencies = mutableSetOf(),
+            targetNameOverrides = emptyMap(),
+            gitIgnoreClassifier = GitIgnoreClassifier(project.rootDir),
+            project = project)
+
+    val dependsOn = result["dependsOn"]?.toString() ?: ""
+    assertTrue(
+        dependsOn.contains("producedByGroovyClosure"),
+        "the closure's task must survive the bypass, got $dependsOn")
+  }
+
+  @Test
+  fun `test a Callable dependsOn is expanded rather than dropped`() {
+    val project = ProjectBuilder.builder().build()
+    java.io.File(project.projectDir, "build.gradle").writeText("")
+    val produced = project.tasks.register("producedByClosure").get()
+    val task = project.tasks.register("consumesClosure").get()
+    // `dependsOn { … }` stores a Callable; Gradle resolves it by calling it.
+    task.dependsOn(java.util.concurrent.Callable { produced })
+    task.dependsOn(":other:jar") // forces the bypass
+
+    val result =
+        processTask(
+            task,
+            projectBuildPath = ":project",
+            projectRoot = project.projectDir.path,
+            workspaceRoot = project.rootDir.path,
+            externalNodes = mutableMapOf(),
+            dependencies = mutableSetOf(),
+            targetNameOverrides = emptyMap(),
+            gitIgnoreClassifier = GitIgnoreClassifier(project.rootDir),
+            project = project)
+
+    val dependsOn = result["dependsOn"]?.toString() ?: ""
+    assertTrue(
+        dependsOn.contains("producedByClosure"),
+        "the closure's task must survive the bypass, got $dependsOn")
+  }
+
+  @Test
   fun `test processTask basic properties`() {
     val project = ProjectBuilder.builder().build()
     val task = project.tasks.register("compileJava").get()
@@ -178,6 +346,129 @@ class ProcessTaskUtilsTest {
 
       // Should contain the non-conflicting input file
       assertTrue(result.any { it == Path("{projectRoot}", "src", "main.kt").toString() })
+    }
+
+    @Test
+    fun `test a resolved path dependsOn feeds precise patterns instead of the catch-all`() {
+      val other = ProjectBuilder.builder().withParent(project).withName("other").build()
+      val jar = other.tasks.register("jar").get()
+      jar.outputs.file(java.io.File(workspaceRoot, "other/build/libs/other.jar"))
+
+      val task = project.tasks.register("consumesResolvedPath").get()
+      task.dependsOn(":other:jar")
+
+      val result =
+          getInputsForTask(
+              null,
+              task,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              GitIgnoreClassifier(java.io.File(workspaceRoot)))
+
+      assertNotNull(result)
+      assertFalse(
+          result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*" },
+          "a fully resolved path must not fail open, got $result")
+      assertTrue(
+          result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar" },
+          "the resolved task's outputs must feed precise patterns, got $result")
+    }
+
+    @Test
+    fun `test a screened FileCollection keeps the catch-all even when paths resolve`() {
+      val other = ProjectBuilder.builder().withParent(project).withName("other").build()
+      other.tasks.register("jar")
+      val builder = project.tasks.register("builderTask").get()
+
+      val task = project.tasks.register("consumesContainer").get()
+      task.dependsOn(":other:jar")
+      // A FileCollection is screened, so the fail-open inputs must survive.
+      task.dependsOn(project.files("some.txt").builtBy(builder))
+
+      val result =
+          getInputsForTask(
+              null,
+              task,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              GitIgnoreClassifier(java.io.File(workspaceRoot)))
+
+      assertNotNull(result)
+      assertTrue(
+          result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*" },
+          "a screened container must keep the catch-all, got $result")
+    }
+
+    @Test
+    fun `test lookupTask splits absolute, relative and nested forms`() {
+      val other = ProjectBuilder.builder().withParent(project).withName("other").build()
+      val sub = ProjectBuilder.builder().withParent(project).withName("sub").build()
+      val nested = ProjectBuilder.builder().withParent(other).withName("nested").build()
+      other.tasks.register("jar")
+      sub.tasks.register("compileJava")
+      nested.tasks.register("test")
+
+      assertEquals(":other:jar", lookupTask(project, ":other:jar")?.path)
+      assertEquals(":sub:compileJava", lookupTask(project, "sub:compileJava")?.path)
+      assertEquals(":other:nested:test", lookupTask(project, ":other:nested:test")?.path)
+    }
+
+    @Test
+    fun `test lookupTask returns null for a project that does not exist`() {
+      assertNull(
+          lookupTask(project, ":nosuchproject:jar"),
+          "must not invent a project that is not in the build")
+    }
+
+    @Test
+    fun `test lookupTask rejects a trailing colon and resolves bare names in the owner`() {
+      ProjectBuilder.builder().withParent(project).withName("other").build()
+      project.tasks.register("classes")
+
+      // ":other:" names no task; a bare name resolves inside the declaring project.
+      assertNull(lookupTask(project, ":other:"), "a trailing colon names no task")
+      assertEquals(":classes", lookupTask(project, "classes")?.path)
+    }
+
+    @Test
+    fun `test dependsOn declared as a nested list is still seen`() {
+      val task = project.tasks.register("nestedDeps").get()
+      // Gradle stores `dependsOn: [a, b]` as ONE element, so a flat scan misses the paths.
+      task.dependsOn(listOf(":a:test", listOf(":b:test")))
+
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val result =
+          getInputsForTask(
+              null, task, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+
+      assertNotNull(result)
+      assertTrue(
+          result!!.any {
+            it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*" && it["transitive"] == true
+          },
+          "a nested qualified path must still trigger the catch-all, got $result")
+    }
+
+    @Test
+    fun `test getInputsForTask fails open to the catch-all for a recovered path dependsOn`() {
+      // :some:other:project is not in the build, so the path cannot resolve and inputs must fail
+      // open.
+      val mainTask = project.tasks.register("pathDependentTask").get()
+      mainTask.dependsOn(":some:other:project:jar")
+
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val result =
+          getInputsForTask(
+              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+
+      assertNotNull(result)
+      assertTrue(
+          result!!.any {
+            it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*" && it["transitive"] == true
+          },
+          "a task with a qualified-path dependsOn must over-declare the catch-all, got $result")
     }
 
     @Test
