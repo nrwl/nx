@@ -1,12 +1,17 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { logger, parseJson, workspaceRoot, ProjectConfiguration } from '@nx/devkit';
+import {
+  logger,
+  parseJson,
+  workspaceRoot,
+  ProjectConfiguration,
+  hashArray,
+} from '@nx/devkit';
 import {
   hashWithWorkspaceContext,
   workspaceDataDirectory,
   hashObject,
   hashFile,
-  hashArray,
   isCI,
   killChildOnHostExit,
   killProcessTreeGraceful,
