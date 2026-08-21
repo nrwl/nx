@@ -3,8 +3,10 @@ package dev.nx.gradle.utils
 import dev.nx.gradle.data.Dependency
 import dev.nx.gradle.data.DependsOnEntry
 import dev.nx.gradle.data.ExternalNode
+import groovy.lang.Closure
 import kotlin.io.path.Path
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -166,6 +168,41 @@ class ProcessTaskUtilsTest {
   }
 
   @Test
+  fun `test a Groovy closure dependsOn receives the task and is expanded`() {
+    val project = ProjectBuilder.builder().build()
+    java.io.File(project.projectDir, "build.gradle").writeText("")
+    val produced = project.tasks.register("producedByGroovyClosure").get()
+    val task = project.tasks.register("consumesGroovyClosure").get()
+    // Gradle calls `dependsOn { … }` WITH the task. A Closure is a Callable, so calling it with no
+    // argument throws for any closure that uses its parameter, and the edge is lost.
+    task.dependsOn(
+        object : Closure<Any?>(this) {
+          fun doCall(owner: Task): Any? {
+            requireNotNull(owner) { "Gradle passes the task to a dependsOn closure" }
+            return produced
+          }
+        })
+    task.dependsOn(":other:jar") // forces the bypass
+
+    val result =
+        processTask(
+            task,
+            projectBuildPath = ":project",
+            projectRoot = project.projectDir.path,
+            workspaceRoot = project.rootDir.path,
+            externalNodes = mutableMapOf(),
+            dependencies = mutableSetOf(),
+            targetNameOverrides = emptyMap(),
+            gitIgnoreClassifier = GitIgnoreClassifier(project.rootDir),
+            project = project)
+
+    val dependsOn = result["dependsOn"]?.toString() ?: ""
+    assertTrue(
+        dependsOn.contains("producedByGroovyClosure"),
+        "the closure's task must survive the bypass, got $dependsOn")
+  }
+
+  @Test
   fun `test a Callable dependsOn is expanded rather than dropped`() {
     val project = ProjectBuilder.builder().build()
     java.io.File(project.projectDir, "build.gradle").writeText("")
@@ -282,25 +319,38 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
-    fun `test resolvePathDeps splits absolute, relative and root-relative forms`() {
+    fun `test resolvePathDeps splits absolute, relative and nested forms`() {
+      // Real children, so an implementation returning nothing would fail this test.
+      val other = ProjectBuilder.builder().withParent(project).withName("other").build()
+      ProjectBuilder.builder().withParent(project).withName("sub").build()
+      ProjectBuilder.builder().withParent(other).withName("nested").build()
+
       val task = project.tasks.register("pathForms").get()
-      // Absolute, and relative to the declaring project. project is the root here, so a relative
-      // prefix is rooted at ":".
-      task.dependsOn(":other:jar", "sub:compileJava", ":topLevel")
+      // Absolute, relative to the declaring project (root here, so rooted at ":"), and nested.
+      task.dependsOn(":other:jar", "sub:compileJava", ":other:nested:test")
 
       val refs = resolvePathDeps(task).associate { it.project.path to it.taskName }
 
-      // Only paths whose project actually exists in this build resolve; the rest drop out rather
-      // than inventing a project.
-      assertTrue(
-          refs.isEmpty() || refs.values.all { it.isNotEmpty() }, "no empty task names: $refs")
-      assertTrue(
-          resolvePathDeps(task).none { it.taskName.contains(':') },
-          "task name must be the last segment only")
+      assertEquals(
+          mapOf(":other" to "jar", ":sub" to "compileJava", ":other:nested" to "test"), refs)
+    }
+
+    @Test
+    fun `test resolvePathDeps drops a path naming a project that does not exist`() {
+      val task = project.tasks.register("unknownProject").get()
+      task.dependsOn(":nosuchproject:jar")
+
+      assertEquals(
+          emptyList<DepRef>(),
+          resolvePathDeps(task),
+          "must not invent a project that is not in the build")
     }
 
     @Test
     fun `test resolvePathDeps ignores a trailing colon and bare names`() {
+      // A real :other exists, so an empty result is about the trailing colon and the bare name,
+      // not about the project being absent.
+      ProjectBuilder.builder().withParent(project).withName("other").build()
       val task = project.tasks.register("pathEdges").get()
       task.dependsOn(":other:", "classes")
 

@@ -5,6 +5,7 @@ import dev.nx.gradle.data.Dependency
 import dev.nx.gradle.data.DependsOnEntry
 import dev.nx.gradle.data.ExternalDepData
 import dev.nx.gradle.data.ExternalNode
+import groovy.lang.Closure
 import java.io.File
 import java.util.Collections
 import java.util.IdentityHashMap
@@ -77,7 +78,7 @@ internal data class DepRef(val project: Project, val taskName: String)
  */
 private fun pathStringDeps(task: Task): List<String> {
   return try {
-    val paths = flattenDependsOn(task.dependsOn).filterIsInstance<CharSequence>()
+    val paths = flattenDependsOn(task).filterIsInstance<CharSequence>()
     paths.map { it.toString() }.filter { it.isNotEmpty() }
   } catch (e: Exception) {
     task.logger.info("Cannot read dependsOn paths for ${task.path}: ${e.message}")
@@ -90,7 +91,18 @@ private fun pathStringDeps(task: Task): List<String> {
  * declared paths are invisible to a flat scan. Only List/Set/Array are descended into — a
  * FileCollection is also Iterable, and iterating one would resolve it.
  */
-private fun flattenDependsOn(values: Iterable<*>): List<Any> {
+private val dependsOnExpansionCache: MutableMap<Task, List<Any>> =
+    Collections.synchronizedMap(WeakHashMap())
+
+/**
+ * Memoized: several call sites per task need this expansion, and it *invokes* user closures, which
+ * must not run once per caller.
+ */
+private fun flattenDependsOn(task: Task): List<Any> =
+    dependsOnExpansionCache[task]
+        ?: computeFlattenDependsOn(task).also { dependsOnExpansionCache[task] = it }
+
+private fun computeFlattenDependsOn(task: Task): List<Any> {
   val flattened = mutableListOf<Any>()
   // Gradle's own DefaultTaskDependency.visitDependencies drains an ArrayDeque with no cycle
   // guard, so a self-referential structure loops forever there. Identity semantics rather than
@@ -103,20 +115,33 @@ private fun flattenDependsOn(values: Iterable<*>): List<Any> {
       is List<*> -> if (seen.add(value)) value.forEach(::visit)
       is Set<*> -> if (seen.add(value)) value.forEach(::visit)
       is Array<*> -> if (seen.add(value)) value.forEach(::visit)
-      // `dependsOn { … }` stores a Callable. Gradle resolves it by calling it, and so do we —
-      // the result is classified with the same rules, so no path reaches Gradle's resolver.
+      // Must precede the Callable arm: Closure implements GroovyCallable, which extends Callable,
+      // and Gradle passes the task to `dependsOn { … }` — calling it without one throws for any
+      // closure that uses its parameter.
+      is Closure<*> ->
+          if (seen.add(value)) {
+            try {
+              visit(value.call(task))
+            } catch (e: Exception) {
+              task.logger.info("Cannot expand dependsOn closure for ${task.path}: ${e.message}")
+              flattened.add(value)
+            }
+          }
+      // `dependsOn(Callable { … })` — Gradle resolves it by calling it, and so do we; the result is
+      // classified with the same rules, so no path reaches Gradle's resolver.
       is Callable<*> ->
           if (seen.add(value)) {
             try {
               visit(value.call())
             } catch (e: Exception) {
+              task.logger.info("Cannot expand dependsOn callable for ${task.path}: ${e.message}")
               flattened.add(value)
             }
           }
       else -> flattened.add(value)
     }
   }
-  values.forEach(::visit)
+  task.dependsOn.forEach(::visit)
   return flattened
 }
 
@@ -128,7 +153,7 @@ private fun flattenDependsOn(values: Iterable<*>): List<Any> {
  */
 private fun hasUnresolvableDeps(task: Task): Boolean =
     try {
-      flattenDependsOn(task.dependsOn).any {
+      flattenDependsOn(task).any {
         it is FileCollection || it is org.gradle.api.tasks.TaskDependency
       }
     } catch (e: Exception) {
@@ -160,7 +185,7 @@ private fun bypassesTaskDependencies(task: Task): Boolean =
  */
 private fun sameProjectDeps(task: Task): Set<Task> {
   val recovered = mutableSetOf<Task>()
-  flattenDependsOn(task.dependsOn).forEach { value ->
+  flattenDependsOn(task).forEach { value ->
     try {
       when {
         value is TaskProvider<*> -> (value.orNull as? Task)?.let { recovered.add(it) }
@@ -798,7 +823,7 @@ private fun computeDependsOnTask(task: Task): Set<Task> {
     // First try to get dependencies from task.dependsOn property
     val dependsOnFromProperty: Set<Task> =
         try {
-          flattenDependsOn(task.dependsOn).filterIsInstance<Task>().toSet()
+          flattenDependsOn(task).filterIsInstance<Task>().toSet()
         } catch (e: Exception) {
           task.logger.info(
               "Cannot access task.dependsOn for ${task.path}, possibly due to configuration cache: ${e.message}")
