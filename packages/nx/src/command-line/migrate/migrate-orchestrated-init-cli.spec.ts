@@ -4,11 +4,14 @@
 // below don't leak into the other migrate specs.
 
 const mockRunOrchestratorInit = vi.fn();
-vi.mock('./run', () => ({
+// migrate.ts lazy-requires ./run (CJS channel), which vi.mock cannot
+// intercept; replace the module in the require channel instead.
+import { mockCjsModule } from '../../internal-testing-utils/cjs-mock';
+mockCjsModule(import.meta.url, './run', {
   runSingleMigrationWorker: vi.fn(),
   runOrchestratorInit: (...args: unknown[]) => mockRunOrchestratorInit(...args),
   runOrchestratorReconcile: vi.fn(),
-}));
+});
 
 const mockIsInsideAgent = vi.fn();
 vi.mock('./agentic/inception', async () => ({

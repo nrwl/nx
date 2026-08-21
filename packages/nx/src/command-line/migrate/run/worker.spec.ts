@@ -14,7 +14,9 @@ vi.mock('../execute-migration', async () => ({
   formatSingleMigrationRerunCommand: (
     await vi.importActual('../execute-migration')
   ).formatSingleMigrationRerunCommand,
-  ChangedDepInstaller: vi.fn().mockImplementation((...args: unknown[]) => {
+  ChangedDepInstaller: vi.fn().mockImplementation(function (
+    ...args: unknown[]
+  ) {
     mockChangedDepInstallerCtor(...args);
     return {
       installDepsIfChanged: (...called: unknown[]) =>

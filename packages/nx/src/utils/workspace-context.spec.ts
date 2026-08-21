@@ -5,15 +5,18 @@ const mockDaemonMultiGlob = vi.fn();
 const mockEnabled = vi.fn();
 const mockIsOnDaemon = vi.fn();
 
-vi.mock('../native', async (importOriginal) => ({
-  ...(await importOriginal<any>()),
-  WorkspaceContext: vi.fn().mockImplementation(() => ({
+// The source lazy-requires ../native (CJS channel), which vi.mock cannot
+// intercept. Mutate the CJS instance directly; each test file runs in its own
+// forked process, so the mutation cannot leak to other files.
+const cjsNative = require('../native');
+cjsNative.WorkspaceContext = vi.fn().mockImplementation(function () {
+  return {
     glob: mockGlob,
     multiGlob: mockMultiGlob,
     workspaceRoot: '/virtual',
-  })),
-  getMainWorktreeRoot: vi.fn().mockReturnValue('/virtual'),
-}));
+  };
+});
+cjsNative.getMainWorktreeRoot = vi.fn().mockReturnValue('/virtual');
 
 vi.mock('./cache-directory', () => ({
   workspaceDataDirectoryForWorkspace: vi.fn().mockReturnValue('/virtual/.nx'),

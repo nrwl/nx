@@ -1,6 +1,6 @@
 import { AgentDefinition } from './types';
 
-vi.mock('which', () => vi.fn());
+vi.mock('which', () => ({ default: vi.fn() }));
 vi.mock('fs/promises', () => ({
   access: vi.fn(),
   constants: { X_OK: 1 },

@@ -44,12 +44,15 @@ vi.mock('../utils/is-sandbox', () => ({
   isSandbox: vi.fn(() => false),
 }));
 
-vi.mock('../utils/logger', () => ({
-  logger: {
-    verbose: vi.fn(),
-    warn: vi.fn(),
-  },
-}));
+// The source lazy-requires the logger (CJS channel), which vi.mock cannot
+// intercept. Mutate the CJS instance and return it from the factory so both
+// module channels share the same mocked object.
+vi.mock('../utils/logger', () => {
+  const cjs = require('../utils/logger');
+  cjs.logger.verbose = vi.fn();
+  cjs.logger.warn = vi.fn();
+  return cjs;
+});
 
 vi.mock('node:fs', async () => {
   const actual = await vi.importActual('node:fs');

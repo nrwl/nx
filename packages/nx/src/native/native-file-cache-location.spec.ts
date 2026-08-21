@@ -176,14 +176,14 @@ describe('native file cache location', () => {
       vi.doUnmock('../utils/owned-private-dir');
     };
 
-    it('should return a path when every guard passes', () => {
-      withGuards({}, (m) => {
+    it('should return a path when every guard passes', async () => {
+      (await withGuards({}, (m) => {
         expect(m.getNativeFileCacheLocationToDelete()).not.toBeNull();
-      });
+      }));
     });
 
-    it('should refuse when the shared container is not safe', () => {
-      withGuards(
+    it('should refuse when the shared container is not safe', async () => {
+      (await withGuards(
         {
           isSafeSharedRoot: vi.fn((d: string) => ({
             status: 'refused',
@@ -193,7 +193,7 @@ describe('native file cache location', () => {
         (m) => {
           expect(m.getNativeFileCacheLocationToDelete()).toBeNull();
         }
-      );
+      ));
     });
 
     // Argument-aware, one directory at a time: a mock that answers the same way
@@ -202,8 +202,8 @@ describe('native file cache location', () => {
     it.each([
       ['the per-user root', () => dirname(NATIVE_CACHE_ROOT)],
       ['the native cache root', () => NATIVE_CACHE_ROOT],
-    ])('should refuse when %s is not ours', (_label, refused: () => string) => {
-      withGuards(
+    ])('should refuse when %s is not ours', async (_label, refused: () => string) => {
+      (await withGuards(
         {
           isOwnedRealDirectory: vi.fn((d: string) =>
             d === refused() ? null : d
@@ -212,7 +212,7 @@ describe('native file cache location', () => {
         (m) => {
           expect(m.getNativeFileCacheLocationToDelete()).toBeNull();
         }
-      );
+      ));
     });
   });
 

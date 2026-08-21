@@ -5166,7 +5166,7 @@ module.exports = {
         '22': '22.5.3',
       });
       mockPrompt.mockResolvedValue('21.5.3');
-      const warnSpy = spyWarn();
+      const warnSpy = (await spyWarn());
 
       const r = await parseWithIncludes({
         packageAndVersion: 'nx@23.1.0',
@@ -5181,7 +5181,7 @@ module.exports = {
     it('should warn (not prompt) in non-TTY environments', async () => {
       setTty(false);
       mockRegistry({ latest: '23.1.0' });
-      const warnSpy = spyWarn();
+      const warnSpy = (await spyWarn());
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -5196,7 +5196,7 @@ module.exports = {
     it('should warn (not prompt) when --no-interactive is passed in a TTY', async () => {
       setTty(true);
       mockRegistry({ latest: '23.1.0' });
-      const warnSpy = spyWarn();
+      const warnSpy = (await spyWarn());
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -5212,7 +5212,7 @@ module.exports = {
     it('should not prompt or warn when --multi-major-mode=direct is set', async () => {
       setTty(true);
       mockRegistry({ latest: '23.1.0' });
-      const warnSpy = spyWarn();
+      const warnSpy = (await spyWarn());
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -5229,7 +5229,7 @@ module.exports = {
       setTty(true);
       process.env.NX_MULTI_MAJOR_MODE = 'direct';
       mockRegistry({ latest: '23.1.0' });
-      const warnSpy = spyWarn();
+      const warnSpy = (await spyWarn());
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -5248,7 +5248,7 @@ module.exports = {
         '21': '21.5.3',
         '22': '22.5.3',
       });
-      const warnSpy = spyWarn();
+      const warnSpy = (await spyWarn());
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -5269,7 +5269,7 @@ module.exports = {
         '21': '21.5.3',
         '22': '22.5.3',
       });
-      const warnSpy = spyWarn();
+      const warnSpy = (await spyWarn());
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -5288,7 +5288,7 @@ module.exports = {
       // Next-major lookup fails → next-major option dropped. Both unavailable.
       mockGetInstalledNxVersion.mockReturnValue('21.5.3');
       mockRegistry({ latest: '23.1.0', '21': '21.5.3' });
-      const warnSpy = spyWarn();
+      const warnSpy = (await spyWarn());
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -5315,7 +5315,7 @@ module.exports = {
         '21': '21.5.3',
         '22': '22.5.3',
       });
-      const warnSpy = spyWarn();
+      const warnSpy = (await spyWarn());
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -5357,7 +5357,7 @@ module.exports = {
         '23': '23.5.3',
         '24': '24.5.3',
       });
-      const warnSpy = spyWarn();
+      const warnSpy = (await spyWarn());
 
       const r = await parseWithIncludes({
         packageAndVersion: 'nx@23.0.0',
@@ -5373,7 +5373,7 @@ module.exports = {
     it('should not prompt or warn when delta is exactly 1 major', async () => {
       setTty(true);
       mockRegistry({ latest: '22.5.3' });
-      const warnSpy = spyWarn();
+      const warnSpy = (await spyWarn());
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -5389,7 +5389,7 @@ module.exports = {
       setTty(true);
       mockGetInstalledNxVersion.mockReturnValue('13.10.0');
       mockRegistry({ latest: '23.1.0' });
-      const warnSpy = spyWarn();
+      const warnSpy = (await spyWarn());
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -5404,7 +5404,7 @@ module.exports = {
     it('should not prompt or warn for --include=optional', async () => {
       setTty(true);
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
-      const warnSpy = spyWarn();
+      const warnSpy = (await spyWarn());
 
       const r = await parseWithIncludes({ include: 'optional' });
 
@@ -5448,7 +5448,7 @@ module.exports = {
       // unavailable → fall back to warn.
       mockGetInstalledNxVersion.mockReturnValue('21.5.3');
       mockRegistry({ latest: '23.1.0', '21': '21.5.3' });
-      const warnSpy = spyWarn();
+      const warnSpy = (await spyWarn());
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
