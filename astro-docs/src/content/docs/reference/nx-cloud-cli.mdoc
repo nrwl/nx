@@ -1,13 +1,13 @@
 ---
 title: Cloud Commands
-description: Complete reference for all Nx Cloud CLI commands
+description: Reference for the Nx Cloud CLI commands you run directly
 sidebar:
   order: 2
 filter: 'type:References'
 ---
 
 The Nx Cloud command line interface provides various commands to connect and interact with Nx Cloud, manage distributed task execution, and handle authentication.
-Below is a complete reference for all available commands and their options.
+Below is a reference for the commands you run directly and their options.
 
 ## Available commands
 
@@ -25,9 +25,13 @@ npx nx-cloud login [nxCloudUrl]
 
 #### Options
 
-| Option       | Type   | Description                                    | Default                |
-| ------------ | ------ | ---------------------------------------------- | ---------------------- |
-| `nxCloudUrl` | string | The URL of the Nx Cloud instance to connect to | `https://cloud.nx.app` |
+| Option       | Type    | Description                                                        | Default                |
+| ------------ | ------- | ------------------------------------------------------------------ | ---------------------- |
+| `nxCloudUrl` | string  | The URL of the Nx Cloud instance to connect to                     | `https://cloud.nx.app` |
+| `--status`   | boolean | Report the current login status and exit without opening a browser |                        |
+
+With `--status`, the command reports whether a personal access token is set for the resolved Nx Cloud URL.
+When `nx.json` also contains an `nxCloudId`, the token is checked against Nx Cloud, and an expired or revoked token is reported as invalid.
 
 #### Configuration file location
 
@@ -82,21 +86,21 @@ npx nx-cloud configure
 
 #### Options
 
-| Option                  | Type   | Description                            | Default                |
-| ----------------------- | ------ | -------------------------------------- | ---------------------- |
-| `--personalAccessToken` | string | The personal access token to configure |                        |
-| `--nx-cloud-url`        | string | The URL of the Nx Cloud instance       | `https://cloud.nx.app` |
+| Option                    | Type   | Description                            | Default                |
+| ------------------------- | ------ | -------------------------------------- | ---------------------- |
+| `--personal-access-token` | string | The personal access token to configure |                        |
+| `--nx-cloud-url`          | string | The URL of the Nx Cloud instance       | `https://cloud.nx.app` |
 
 #### Examples
 
 ```shell
-npx nx-cloud configure --personalAccessToken=SOME_ACCESS_TOKEN
+npx nx-cloud configure --personal-access-token=SOME_ACCESS_TOKEN
 ```
 
 To configure multiple tokens for different instances of the Nx Cloud app:
 
 ```shell
-npx nx-cloud configure --personalAccessToken=SOME_ACCESS_TOKEN --nx-cloud-url=https://nx-cloud.my-domain.app
+npx nx-cloud configure --personal-access-token=SOME_ACCESS_TOKEN --nx-cloud-url=https://nx-cloud.my-domain.app
 ```
 
 ### `nx-cloud convert-to-nx-cloud-id`
@@ -410,6 +414,8 @@ If you accidentally run this command locally, remove all generated marker files 
 | ------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | `--distribute-on`               | string  | Configure the number of agents, [launch templates](/docs/kb/launch-templates) and [assignment rules](/docs/kb/assignment-rules) for distributed execution              |         |
 | `--assignment-rules`            | string  | Path to the [assignment rules configuration](/docs/kb/assignment-rules#using-assignment-rules-when-you-bring-your-own-compute) for manual distribution.                |         |
+| `--scheduling-constraints`      | string  | Path to a YAML file with same-agent scheduling constraints                                                                                                             |         |
+| `--no-distribution`             | boolean | Disable distribution for this run                                                                                                                                      |         |
 | `--require-explicit-completion` | boolean | Disable automatic completion monitoring and require explicit `nx complete-ci-run`                                                                                      | `false` |
 | `--stop-agents-after`           | string  | Comma-separated list of targets after which agents should terminate                                                                                                    |         |
 | `--stop-agents-on-failure`      | boolean | Terminate all agents when a command fails. This flag does not interrupt the command itself. To cancel the command on failure use [nxBail](/docs/reference/nx-commands) | `true`  |
@@ -420,6 +426,22 @@ If you accidentally run this command locally, remove all generated marker files 
 | `--force`                       | boolean | Bypass CI environment check. Run [`nx-cloud cleanup`](#nx-cloud-cleanup) if accidentally ran locally.                                                                  |         |
 
 #### Detailed option usage
+
+##### `--scheduling-constraints`
+
+Point this at a YAML file describing which tasks have to run on the same agent.
+The file is read from disk before the run group is created, and both its contents and its path are sent to Nx Cloud.
+`start-ci-run` exits with an error when the file cannot be read or is empty.
+
+When `--distribute-on` points at a configuration file that already embeds scheduling constraints, the `--scheduling-constraints` file replaces them.
+The same applies to `--assignment-rules`, and the two flags override their embedded counterparts independently.
+
+##### `--no-distribution`
+
+Turn distribution off for the whole CI pipeline execution.
+This also stops `start-ci-run` from writing the marker file that makes subsequent `nx` commands run as distributed executions, so use it for pipelines that only want Nx Cloud caching and [self-healing CI](/docs/features/ci-features/self-healing-ci).
+
+Pass either `--distribute-on` or `--no-distribution`. With neither, the command warns that the distribution configuration is ambiguous.
 
 ##### `--distribute-on`
 
@@ -623,13 +645,21 @@ npx nx-cloud start-agent
 
 #### Options
 
-| Option      | Type    | Description                          | Default |
-| ----------- | ------- | ------------------------------------ | ------- |
-| `--verbose` | boolean | Enable verbose logging for debugging | `false` |
+| Option      | Type   | Description                                                                   | Default |
+| ----------- | ------ | ----------------------------------------------------------------------------- | ------- |
+| `--targets` | string | Comma-separated target names. The agent only picks up tasks for these targets |         |
+
+Without `--targets`, the agent accepts any task assigned to it.
+Use it to dedicate a pool of agents to a subset of your pipeline, for example `--targets=e2e`.
 
 #### Environment variables
 
-Use the `NX_AGENT_NAME` environment variable to assign a name to the agent for identification in logs and the Nx Cloud UI:
+| Variable                                           | Description                                                                                        |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `NX_AGENT_NAME`                                    | Name the agent for logs and the Nx Cloud UI. Defaults to the CircleCI job name, then a random name |
+| `NX_AGENT_INSTANCE_NAME`                           | Distinguish individual instances that share an agent name                                          |
+| `NX_AGENT_LAUNCH_TEMPLATE`                         | Report the [launch template](/docs/kb/launch-templates) the agent runs, used by assignment rules   |
+| `NX_VERBOSE_LOGGING` or `NX_CLOUD_VERBOSE_LOGGING` | Set either to `true` to turn on verbose logging. `start-agent` has no `--verbose` flag             |
 
 ```shell
 NX_AGENT_NAME=agent-1 npx nx-cloud start-agent
@@ -671,6 +701,178 @@ Remove temporary marker files created by `start-ci-run` if accidentally run loca
 npx nx-cloud cleanup
 ```
 
+### `nx-cloud fix-ci`
+
+Run [self-healing CI](/docs/features/ci-features/self-healing-ci) for the current CI pipeline execution.
+The command asks Nx Cloud which failures need fixing, runs the AI agent against them, and reports the resulting fix back to the pipeline.
+When no failing task qualifies, it prints a note and exits without doing any work.
+
+This command is the same as running `nx fix-ci`. It is not supported on Windows.
+
+**Usage:**
+
+```shell
+npx nx-cloud fix-ci
+```
+
+Configure which tasks are eligible and which fixes apply automatically through `start-ci-run --fix-tasks` and `--auto-apply-fixes`, or through the Nx Cloud UI. See [self-healing CI](/docs/features/ci-features/self-healing-ci) for the full configuration.
+
+### `nx-cloud apply-locally`
+
+Apply a self-healing fix to your working copy instead of merging it from the pull request.
+Copy the fix identifier from the Nx Cloud UI or the pull request comment, then run the command from the root of your workspace.
+
+Nx Cloud downloads the diff, checks out the branch the fix was generated for, and applies it there.
+If that branch is checked out in another worktree, the fix is applied in that worktree. The command refuses to run when you have uncommitted changes, and it stops when your branch has diverged from the commit the fix was based on.
+
+**Usage:**
+
+```shell
+npx nx-cloud apply-locally <fix-identifier>
+```
+
+#### Options
+
+| Option             | Type    | Description                                                          | Default |
+| ------------------ | ------- | -------------------------------------------------------------------- | ------- |
+| `<fix-identifier>` | string  | The fix identifier, in `<id>-<id>` form, for example `abc123-def456` |         |
+| `--no-interactive` | boolean | Skip the prompts and take the default answer for each one            |         |
+
+For the walkthrough with screenshots, see [applying locally for fine-tuning](/docs/features/ci-features/self-healing-ci#applying-locally-for-fine-tuning).
+
+### `nx-cloud conformance`
+
+Run the [conformance](/docs/enterprise/conformance) rules configured for your workspace, including the rules published to your Nx Cloud organization, and run the fix generator for any rule that has one.
+
+Rules configured in Nx Cloud take precedence over the same rule in `nx.json`, and the command warns when it drops a local entry for that reason.
+Requires `@nx/conformance` version 1.3.3 or later in the workspace.
+
+**Usage:**
+
+```shell
+npx nx-cloud conformance
+```
+
+#### Options
+
+| Option          | Type    | Description                                                                        | Default |
+| --------------- | ------- | ---------------------------------------------------------------------------------- | ------- |
+| `--verbose`     | boolean | Print additional details while running                                             | `false` |
+| `--printConfig` | boolean | Print the resolved conformance configuration and exit. `--print-config` also works | `false` |
+
+### `nx-cloud conformance:check`
+
+Same as [`nx-cloud conformance`](#nx-cloud-conformance), except that fix generators do not run and nothing is written to disk.
+Run this one in CI.
+
+**Usage:**
+
+```shell
+npx nx-cloud conformance:check
+```
+
+#### Options
+
+| Option          | Type    | Description                                                                        | Default |
+| --------------- | ------- | ---------------------------------------------------------------------------------- | ------- |
+| `--verbose`     | boolean | Print additional details while running                                             | `false` |
+| `--printConfig` | boolean | Print the resolved conformance configuration and exit. `--print-config` also works | `false` |
+
+### `nx-cloud publish-conformance-rule`
+
+Package one conformance rule directory into an archive and publish it to your Nx Cloud organization, where it becomes available to every connected workspace.
+The directory must contain the rule implementation and a `schema.json`.
+
+Your workspace needs an `nxCloudId` in `nx.json` plus a personal access token. Run `nx-cloud convert-to-nx-cloud-id` if you are still on an access token, then authenticate with `nx login` locally or `nx-cloud configure --personal-access-token=<pat>` in CI.
+
+**Usage:**
+
+```shell
+npx nx-cloud publish-conformance-rule <rule-directory>
+```
+
+#### Options
+
+| Option             | Type    | Description                                                | Default |
+| ------------------ | ------- | ---------------------------------------------------------- | ------- |
+| `<rule-directory>` | string  | Path to the rule directory, relative to the workspace root |         |
+| `--verbose`        | boolean | Print additional details while packaging and uploading     | `false` |
+
+See [publish conformance rules to Nx Cloud](/docs/enterprise/publish-conformance-rules-to-nx-cloud) for the rule layout and the full workflow.
+
+### `nx-cloud publish-conformance-rules`
+
+Publish every rule directory inside a parent directory, one after another.
+Each entry in the parent directory has to be a directory. The command errors and points you at [`publish-conformance-rule`](#nx-cloud-publish-conformance-rule) when it finds a file.
+
+**Usage:**
+
+```shell
+npx nx-cloud publish-conformance-rules <rules-parent-directory>
+```
+
+#### Options
+
+| Option                     | Type    | Description                                                                                  | Default |
+| -------------------------- | ------- | -------------------------------------------------------------------------------------------- | ------- |
+| `<rules-parent-directory>` | string  | Path to the directory holding the rule directories, relative to the workspace root           |         |
+| `--verbose`                | boolean | Print additional details while packaging and uploading, and print the stack trace on failure | `false` |
+
+### `nx-cloud validate`
+
+Check a [launch template](/docs/kb/launch-templates) file against the Nx Cloud schema and report every error it finds.
+The command exits with a non-zero status when the file is invalid, so it works as a CI guard against merging a broken template.
+
+**Usage:**
+
+```shell
+npx nx-cloud validate --workflow-file=<file>
+```
+
+#### Options
+
+| Option            | Type    | Description                                                                                    | Default |
+| ----------------- | ------- | ---------------------------------------------------------------------------------------------- | ------- |
+| `--workflow-file` | string  | Path to the file to validate. Required                                                         |         |
+| `--step-file`     | boolean | Validate a single [custom step](/docs/kb/custom-steps) file instead of a whole launch template | `false` |
+
+#### Examples
+
+```shell
+npx nx-cloud validate --workflow-file=./.nx/workflows/agents.yaml
+npx nx-cloud validate --workflow-file=./.nx/workflows/custom-steps.yaml --step-file
+```
+
+See [validating launch templates](/docs/kb/launch-templates#validating-launch-templates).
+
+#### Subcommands
+
+##### `nx-cloud validate sandbox-violations`
+
+Replay a downloaded [sandbox report](/docs/features/ci-features/sandboxing) against your current `nx.json`.
+For every task in the report, the command prints which unexpected reads and writes your latest input and output declarations now cover, and which ones remain unexplained.
+
+It accepts a single per-task report, an array of reports, or the `index.json` written next to them, in which case every referenced report is loaded.
+Exits `0` when every task is reconciled and `1` when at least one task still has unexpected reads or writes. Requires Nx 22.6.0 or later.
+
+**Usage:**
+
+```shell
+npx nx-cloud validate sandbox-violations <report-path>
+```
+
+| Option          | Type    | Description                                                           | Default |
+| --------------- | ------- | --------------------------------------------------------------------- | ------- |
+| `<report-path>` | string  | Path to a per-task report, an array of reports, or an `index.json`    |         |
+| `--json`        | boolean | Emit a machine-readable summary on stdout instead of the printed view | `false` |
+
+```shell
+npx nx-cloud get sandbox-reports --branch <branch> --since 1d
+npx nx-cloud validate sandbox-violations .nx/workspace-data/sandbox-reports/<branch>/index.json --json
+```
+
+For the fix workflow, see [fix sandbox violations](/docs/kb/fix-sandbox-violations).
+
 ### `nx-cloud get sandbox-reports`
 
 Download sandbox reports for tasks that ran on a branch. Reports capture unexpected file reads and writes detected by the Nx Cloud task sandbox and are written to disk as JSON files for inspection or post-processing.
@@ -683,17 +885,18 @@ npx nx-cloud get sandbox-reports [options]
 
 #### Options
 
-| Option              | Type    | Description                                                                            | Default                                          |
-| ------------------- | ------- | -------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| `--branch`          | string  | Branch to query                                                                        | current git branch                               |
-| `--fallback-branch` | string  | For each task without a report on `--branch`, fall back to this branch's latest report |                                                  |
-| `--since`           | string  | Time window. Units: `h`, `d`, `w`, `y` (e.g. `1h`, `7d`, `4w`, `1y`)                   | `7d`                                             |
-| `--output`, `-o`    | string  | Output directory                                                                       | `./.nx/workspace-data/sandbox-reports/<branch>/` |
-| `--include-clean`   | boolean | Include reports with zero unexpected reads/writes                                      | `false`                                          |
-| `--concurrency`     | number  | Parallel downloads                                                                     | `20`                                             |
-| `--force`           | boolean | Overwrite existing files instead of skipping them                                      | `false`                                          |
-| `--json`            | boolean | Print a machine-readable summary on stdout                                             | `false`                                          |
-| `--help`, `-h`      | boolean | Show command help and exit                                                             |                                                  |
+| Option                  | Type    | Description                                                                                                | Default                                          |
+| ----------------------- | ------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `--branch`              | string  | Branch to query                                                                                            | current git branch                               |
+| `--fallback-branch`     | string  | For each task without a report on `--branch`, fall back to this branch's latest report                     |                                                  |
+| `--since`               | string  | Time window. Units: `h`, `d`, `w`, `y` (e.g. `1h`, `7d`, `4w`, `1y`)                                       | `7d`                                             |
+| `--output`, `-o`        | string  | Output directory                                                                                           | `./.nx/workspace-data/sandbox-reports/<branch>/` |
+| `--include-clean`       | boolean | Include reports with zero unexpected reads/writes                                                          | `false`                                          |
+| `--latest-reports-only` | boolean | Fetch only the latest report per task. Pass `--no-latest-reports-only` to fetch every report in the window | `true`                                           |
+| `--concurrency`         | number  | Parallel downloads                                                                                         | `20`                                             |
+| `--force`               | boolean | Overwrite existing files instead of skipping them                                                          | `false`                                          |
+| `--json`                | boolean | Print a machine-readable summary on stdout                                                                 | `false`                                          |
+| `--help`, `-h`          | boolean | Show command help and exit                                                                                 |                                                  |
 
 #### Examples
 
@@ -708,6 +911,57 @@ Fall back to `main` for any task that has no report on the feature branch:
 ```shell
 npx nx-cloud get sandbox-reports --branch my-feature --fallback-branch main
 ```
+
+### `nx-cloud record`
+
+Run any command, stream its output as usual, and upload that output and its exit code to Nx Cloud.
+The recorded command shows up in the Runs view as a `record-command` target, which puts the output of non-Nx pipeline steps next to your task results.
+
+`nx record` exits with the same code the wrapped command exited with, so it is safe to drop in front of an existing step.
+
+**Usage:**
+
+```shell
+npx nx-cloud record -- <command> [args...]
+```
+
+#### Examples
+
+```shell
+npx nx-cloud record -- echo "hello world"
+npx nx-cloud record -- nx format:check
+```
+
+Everything after `--` belongs to the wrapped command. See [recording non-Nx commands](/docs/guides/nx-cloud/record-commands).
+
+### `nx-cloud decrypt-artifact`
+
+Decrypt an artifact that Nx Cloud stored with your workspace [encryption key](/docs/guides/nx-cloud/encryption).
+Point it at a single encrypted file or at a directory, in which case every file underneath is decrypted into a mirrored output tree.
+
+The key is read from `NX_CLOUD_ENCRYPTION_KEY`. Without that variable, the nearest `nx.json` is searched for `nxCloudEncryptionKey`.
+
+**Usage:**
+
+```shell
+npx nx-cloud decrypt-artifact <path> [--output-path <path>]
+```
+
+#### Options
+
+| Option                | Type   | Description                                                                   | Default   |
+| --------------------- | ------ | ----------------------------------------------------------------------------- | --------- |
+| `<path>`              | string | Path to the encrypted file or directory                                       |           |
+| `--output-path`, `-o` | string | Output directory. A relative path resolves from the current working directory | see below |
+
+For a single file, the output lands in the current directory, named after the input with the `.enc` or `.encrypted` wrapper removed and `-decrypted` appended.
+A `.tar.gz` or `.zip` extension is restored from the decrypted content when the name carries no extension of its own.
+For a directory, the output goes to `<directory-name>-decrypted` in the current directory, and each file inside keeps its own name minus the wrapper extension.
+
+{% aside type="caution" title="Relative paths and pnpm or yarn" %}
+Under `pnpm nx-cloud` and `yarn nx-cloud`, relative paths resolve from the workspace root rather than your current directory.
+Use `npx nx-cloud`, `./node_modules/.bin/nx-cloud`, or an absolute path.
+{% /aside %}
 
 ## Getting help
 
