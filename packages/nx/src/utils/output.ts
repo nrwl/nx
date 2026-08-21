@@ -33,22 +33,18 @@ export function isStaticOutputStyle(outputStyle: string | undefined): boolean {
  * ones that succeeded. Both static life cycles and the batch renderer have to
  * agree on this, so they read it from here rather than each deriving it.
  *
- * Collapsing is the behavior of one style only — the failures-only default. The
- * static life cycles also serve `stream`, `stream-without-prefixes` and (in CI)
- * `dynamic-legacy`, and every one of those is a style someone asked for
- * explicitly, so none of them may quietly withhold output. Listing what
- * collapses rather than what does not is also what keeps a newly added style
- * from silently inheriting it.
+ * Exactly one style collapses. The static life cycles also serve `static`,
+ * `stream`, `stream-without-prefixes` and, in CI, `dynamic-legacy` — every one
+ * of those was asked for explicitly, so none may quietly withhold output. A run
+ * that named no style at all is resolved to a style before it gets here
+ * (`withOutputStyleOption`), rather than being inferred as a default in this
+ * predicate, so a programmatic caller that builds args by hand prints in full.
  */
 export function printsFullTaskOutput(args: {
   verbose?: boolean;
   outputStyle?: string;
 }): boolean {
-  // An absent style resolves to the failures-only life cycle, so it collapses.
-  return (
-    !!args.verbose ||
-    (args.outputStyle ?? 'static-failures-only') !== 'static-failures-only'
-  );
+  return !!args.verbose || args.outputStyle !== 'static-failures-only';
 }
 
 /**

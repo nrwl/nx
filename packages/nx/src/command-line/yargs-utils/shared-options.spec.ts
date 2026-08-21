@@ -209,6 +209,38 @@ describe('shared-options', () => {
         }
       ));
 
+    it('should default to static-failures-only in CI', async () =>
+      withEnvironmentVariables(
+        { NX_TUI: false, CI: 'true', NX_TUI_SKIP_CAPABILITY_CHECK: 'true' },
+        async () => {
+          const command = withOutputStyleOption(argv);
+          const result = await command.parseAsync([]);
+          expect(result.outputStyle).toEqual('static-failures-only');
+        }
+      ));
+
+    it('should not collapse output outside CI', async () =>
+      withEnvironmentVariables(
+        { NX_TUI: false, CI: 'false', NX_TUI_SKIP_CAPABILITY_CHECK: 'true' },
+        async () => {
+          // A non-TTY local run - piping to a file - still gets the static life
+          // cycle, and must still print in full.
+          const command = withOutputStyleOption(argv);
+          const result = await command.parseAsync([]);
+          expect(result.outputStyle).not.toEqual('static-failures-only');
+        }
+      ));
+
+    it('should let an explicit style beat the CI default', async () =>
+      withEnvironmentVariables(
+        { NX_TUI: false, CI: 'true', NX_TUI_SKIP_CAPABILITY_CHECK: 'true' },
+        async () => {
+          const command = withOutputStyleOption(argv);
+          const result = await command.parseAsync(['--output-style=stream']);
+          expect(result.outputStyle).toEqual('stream');
+        }
+      ));
+
     it('should use NX_DEFAULT_OUTPUT_STYLE if not set', async () =>
       withEnvironmentVariables(
         {
