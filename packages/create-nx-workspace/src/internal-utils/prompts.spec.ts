@@ -1,5 +1,6 @@
 import {
   confirmThirdPartyPreset,
+  determineFormatterOptions,
   determineLinterOptions,
   determineNxCloudV2,
   determineTemplate,
@@ -243,5 +244,70 @@ describe('determineNxCloudV2', () => {
     const { validate } = (clack.autocomplete as jest.Mock).mock.calls[0][0];
     expect(validate(undefined)).toEqual(expect.any(String));
     expect(validate('skip')).toBeUndefined();
+  });
+});
+
+describe('determineFormatterOptions', () => {
+  const { isCI } = require('../utils/ci/is-ci');
+
+  beforeEach(() => {
+    (clack.autocomplete as jest.Mock).mockReset();
+    (isCI as jest.Mock).mockReturnValue(false);
+  });
+
+  it('should return the given formatter without prompting', async () => {
+    const result = await determineFormatterOptions({
+      formatter: 'oxfmt',
+      interactive: true,
+    });
+
+    expect(result).toBe('oxfmt');
+    expect(clack.autocomplete).not.toHaveBeenCalled();
+  });
+
+  it('should default to prettier without prompting when not interactive', async () => {
+    const result = await determineFormatterOptions({ interactive: false });
+
+    expect(result).toBe('prettier');
+    expect(clack.autocomplete).not.toHaveBeenCalled();
+  });
+
+  it('should default to prettier without prompting in CI', async () => {
+    (isCI as jest.Mock).mockReturnValue(true);
+
+    const result = await determineFormatterOptions({ interactive: true });
+
+    expect(result).toBe('prettier');
+    expect(clack.autocomplete).not.toHaveBeenCalled();
+  });
+
+  it('should label oxfmt experimental while it is pre-1.0', async () => {
+    (clack.autocomplete as jest.Mock).mockResolvedValue('prettier');
+
+    await determineFormatterOptions({ interactive: true });
+
+    const [[question]] = (clack.autocomplete as jest.Mock).mock.calls;
+    const oxfmt = question.options.find(
+      (o: { value: string }) => o.value === 'oxfmt'
+    );
+    expect(oxfmt.label).toContain('experimental');
+  });
+
+  it('should prompt when interactive', async () => {
+    (clack.autocomplete as jest.Mock).mockResolvedValue('oxfmt');
+
+    const result = await determineFormatterOptions({ interactive: true });
+
+    expect(result).toBe('oxfmt');
+    expect(clack.autocomplete).toHaveBeenCalledWith(
+      expect.objectContaining({
+        initialValue: 'prettier',
+        options: expect.arrayContaining([
+          expect.objectContaining({ value: 'prettier' }),
+          expect.objectContaining({ value: 'oxfmt' }),
+          expect.objectContaining({ value: 'none' }),
+        ]),
+      })
+    );
   });
 });

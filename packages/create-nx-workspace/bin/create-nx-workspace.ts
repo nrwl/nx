@@ -25,8 +25,11 @@ import {
   determineNxCloud,
   determineNxCloudV2,
   determinePackageManager,
+  determineFormatterOptions,
   determineTemplate,
+  FORMATTERS,
   LINTERS,
+  type Formatter,
   type Linter,
 } from '../src/internal-utils/prompts';
 import {
@@ -102,7 +105,7 @@ type AngularUnitTestRunner =
 interface BaseArguments extends CreateWorkspaceOptions {
   preset?: Preset;
   linter?: Linter;
-  formatter?: 'none' | 'prettier';
+  formatter?: Formatter;
   workspaces?: boolean;
   useProjectJson?: boolean;
 }
@@ -257,6 +260,9 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           .option('formatter', {
             describe: chalk.dim`Code formatter to use.`,
             type: 'string',
+            // Fail at the CLI on a typo rather than downstream in schema
+            // validation, where the message is much further from the cause.
+            choices: FORMATTERS,
           })
           // `choices` is load-bearing, not documentation: `determineLinterOptions`
           // returns `--linter` as-is and nothing downstream validates it — the
@@ -1116,32 +1122,17 @@ export async function determinePresetOptions(
 
 /**
  * `web-components` prompts for nothing of its own — `style` and `e2eTestRunner`
- * come from the CLI or fall back downstream — but the preset does generate a
- * lintable app, so it still needs a linter.
+ * come from the CLI or fall back downstream — but the preset does generate an
+ * app that is both linted and formatted, so it needs both answers.
  */
 async function determineWebOptions(
   parsedArgs: yargs.Arguments<WebArguments>
 ): Promise<Partial<WebArguments>> {
-  return { linter: await determineLinterOptions(parsedArgs) };
-}
-
-async function determineFormatterOptions(
-  args: {
-    formatter?: 'none' | 'prettier';
-    interactive?: boolean;
-  },
-  opts?: { preferPrettier?: boolean }
-) {
-  if (args.formatter) return args.formatter;
-  // A skipped run answers yes regardless of `preferPrettier`, which only moves
-  // the highlighted option when the prompt is shown.
-  const usePrettier = await confirmationPrompt({
-    message: `Would you like to use Prettier for code formatting?`,
-    initial: opts?.preferPrettier ?? false,
-    skip: !args.interactive || isCI(),
-    skippedValue: true,
-  });
-  return usePrettier ? 'prettier' : 'none';
+  // Property order is the prompt order here - each `await` runs where it sits.
+  return {
+    formatter: await determineFormatterOptions(parsedArgs),
+    linter: await determineLinterOptions(parsedArgs),
+  };
 }
 
 async function determineNoneOptions(
@@ -1180,7 +1171,9 @@ async function determineNoneOptions(
     }
 
     if (preset === Preset.TS) {
-      return { preset, formatter: 'prettier' };
+      // Asked here too: the workspaces variant above already prompts, and this
+      // preset reaches `@nx/js:init`, which sets the formatter up either way.
+      return { preset, formatter: await determineFormatterOptions(parsedArgs) };
     }
 
     if (parsedArgs.js !== undefined) {
@@ -1195,17 +1188,34 @@ async function determineNoneOptions(
       }));
     }
 
-    // `ts-standalone` is the only preset on this stack that generates a
-    // lintable project; `apps`, `ts` and `npm` reach no generator that takes a
-    // linter, so asking would discard the answer.
+    // `ts-standalone` is the only preset left to ask here: `ts` returned above
+    // with its own prompt, and `apps` and `npm` generate no project, so nothing
+    // downstream would apply an answer. An explicit `--formatter` still carries.
+    const formatter =
+      preset === Preset.TsStandalone
+        ? await determineFormatterOptions(parsedArgs)
+        : parsedArgs.formatter;
+
+    // Same rule for the linter: `ts-standalone` is also the only preset here
+    // that generates a lintable project, so asking would discard the answer.
     const linter =
       preset === Preset.TsStandalone
         ? await determineLinterOptions(parsedArgs)
         : undefined;
 
-    // Omitted rather than set to `undefined`: the caller `Object.assign`s this
-    // over `argv`, so an explicit key would clobber a user's `--linter`.
-    return { preset, js, appName, ...(linter ? { linter } : {}) };
+    // Both keys are omitted rather than set to `undefined`: the caller
+    // `Object.assign`s this over `argv`, so an explicit key would clobber the
+    // user's own flag. Forwarding `--formatter` only when it was given is what
+    // keeps a plain `--preset=npm` identical to before - with nothing set,
+    // `@nx/workspace:new`'s `"default": "none"` applies and no formatter is
+    // installed, which is these presets' long-standing behaviour.
+    return {
+      preset,
+      js,
+      appName,
+      ...(formatter ? { formatter } : {}),
+      ...(linter ? { linter } : {}),
+    };
   }
 }
 
@@ -1223,7 +1233,6 @@ async function determineReactOptions(
   let nextAppDir = false;
   let nextSrcDir = false;
   let linter: undefined | Linter;
-  let formatter: undefined | 'none' | 'prettier';
 
   const workspaces = parsedArgs.workspaces;
 
@@ -1322,8 +1331,10 @@ async function determineReactOptions(
     style = reply.style;
   }
 
-  // Asked outside the gate: the linter is independent of package-manager
-  // workspaces, and `--no-workspaces` used to force ESLint without asking.
+  // Asked outside the gate: neither answer depends on package-manager
+  // workspaces, and `--no-workspaces` used to force prettier and ESLint
+  // without asking.
+  const formatter = await determineFormatterOptions(parsedArgs);
   linter = await determineLinterOptions(parsedArgs);
   if (preset === Preset.ReactStandalone || preset === Preset.ReactMonorepo) {
     unitTestRunner = await determineUnitTestRunner(parsedArgs, {
@@ -1340,13 +1351,6 @@ async function determineReactOptions(
       exclude: 'vitest',
     });
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
-  }
-  if (workspaces) {
-    formatter = await determineFormatterOptions(parsedArgs, {
-      preferPrettier: true,
-    });
-  } else {
-    formatter = 'prettier';
   }
 
   return {
@@ -1375,7 +1379,6 @@ async function determineVueOptions(
   let unitTestRunner: undefined | 'none' | 'vitest' = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
   let linter: undefined | Linter;
-  let formatter: undefined | 'none' | 'prettier';
 
   const workspaces = parsedArgs.workspaces;
 
@@ -1438,20 +1441,15 @@ async function determineVueOptions(
     style = reply.style;
   }
 
-  // Asked outside the gate: the linter is independent of package-manager
-  // workspaces, and `--no-workspaces` used to force ESLint without asking.
+  // Asked outside the gate: neither answer depends on package-manager
+  // workspaces, and `--no-workspaces` used to force prettier and ESLint
+  // without asking.
+  const formatter = await determineFormatterOptions(parsedArgs);
   linter = await determineLinterOptions(parsedArgs);
   unitTestRunner = await determineUnitTestRunner(parsedArgs, {
     exclude: 'jest',
   });
   e2eTestRunner = await determineE2eTestRunner(parsedArgs);
-  if (workspaces) {
-    formatter = await determineFormatterOptions(parsedArgs, {
-      preferPrettier: true,
-    });
-  } else {
-    formatter = 'prettier';
-  }
 
   return {
     preset,
@@ -1480,6 +1478,7 @@ async function determineAngularOptions(
   const routing = parsedArgs.routing;
   const prefix = parsedArgs.prefix;
   const zoneless = parsedArgs.zoneless;
+  const workspaces = parsedArgs.workspaces;
 
   if (prefix) {
     // https://github.com/angular/angular-cli/blob/main/packages/schematics/angular/utility/validation.ts#L11-L14
@@ -1588,6 +1587,7 @@ async function determineAngularOptions(
     ssr = reply.ssr === 'Yes';
   }
 
+  const formatter = await determineFormatterOptions(parsedArgs);
   const linter = await determineLinterOptions(parsedArgs);
 
   if (parsedArgs.unitTestRunner) {
@@ -1640,6 +1640,8 @@ async function determineAngularOptions(
     prefix,
     zoneless,
     linter,
+    formatter,
+    workspaces,
   };
 }
 
@@ -1651,7 +1653,6 @@ async function determineNodeOptions(
   let framework: 'express' | 'fastify' | 'koa' | 'nest' | 'none';
   let docker: boolean;
   let linter: undefined | Linter;
-  let formatter: undefined | 'none' | 'prettier';
   let unitTestRunner: undefined | 'none' | 'jest' = undefined;
   const workspaces = parsedArgs.workspaces;
 
@@ -1705,19 +1706,14 @@ async function determineNodeOptions(
     docker = reply.docker === 'Yes';
   }
 
-  // Asked outside the gate: the linter is independent of package-manager
-  // workspaces, and `--no-workspaces` used to force ESLint without asking.
+  // Asked outside the gate: neither answer depends on package-manager
+  // workspaces, and `--no-workspaces` used to force prettier and ESLint
+  // without asking.
+  const formatter = await determineFormatterOptions(parsedArgs);
   linter = await determineLinterOptions(parsedArgs);
   unitTestRunner = await determineUnitTestRunner(parsedArgs, {
     exclude: 'vitest',
   });
-  if (workspaces) {
-    formatter = await determineFormatterOptions(parsedArgs, {
-      preferPrettier: true,
-    });
-  } else {
-    formatter = 'prettier';
-  }
 
   return {
     preset,

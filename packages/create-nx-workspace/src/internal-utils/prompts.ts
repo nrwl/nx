@@ -322,3 +322,46 @@ export async function determineLinterOptions(args: {
     initial: 'eslint',
   });
 }
+
+// Kept in sync with the formatter enum in the generator schemas by hand - this
+// package deliberately has no `nx` dependency, so nx's `FormatterType` cannot
+// be imported here.
+export type Formatter = 'oxfmt' | 'prettier' | 'none';
+
+// Order here is incidental; the prompt's own choice order sets the default. `satisfies` stops a typo
+// getting in, and the coverage assertion below stops a member being dropped -
+// on its own the array would happily be a subset, and the prompt would then
+// reject a value the generator schemas still accept.
+export const FORMATTERS = [
+  'oxfmt',
+  'prettier',
+  'none',
+] as const satisfies readonly Formatter[];
+
+type MissingFormatter = Exclude<Formatter, (typeof FORMATTERS)[number]>;
+const _formattersAreExhaustive: MissingFormatter extends never ? true : never =
+  true;
+
+export async function determineFormatterOptions(args: {
+  formatter?: Formatter;
+  interactive?: boolean;
+}): Promise<Formatter> {
+  if (args.formatter) return args.formatter;
+
+  // Prettier is the non-interactive default; changing it means changing this
+  // line, not the option order.
+  if (!args.interactive || isCI()) return 'prettier';
+
+  return selectPrompt<Formatter>({
+    message: `Which code formatter would you like to use?`,
+    // `value` is what's returned; `label` is what the list shows. oxfmt is
+    // labelled so it isn't presented as an equal of Prettier while it is
+    // pre-1.0.
+    choices: [
+      { value: 'prettier', label: 'prettier' },
+      { value: 'oxfmt', label: 'oxfmt (experimental)' },
+      { value: 'none', label: 'none' },
+    ],
+    initial: 'prettier',
+  });
+}

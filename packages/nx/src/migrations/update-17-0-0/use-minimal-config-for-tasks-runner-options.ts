@@ -2,7 +2,7 @@ import { updateJson } from '../../generators/utils/json';
 import { Tree } from '../../generators/tree';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { PackageJson } from '../../utils/package-json';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { formatChangedFiles } from '../../generators/internal-utils/format-changed-files';
 import { readNxJson } from '../../generators/utils/nx-json';
 import {
   NxCloudEnterpriseOutdatedError,
@@ -107,7 +107,7 @@ export default async function migrate(tree: Tree) {
     return nxJson;
   });
 
-  await formatChangedFilesWithPrettierIfAvailable(tree);
+  await formatChangedFiles(tree);
 }
 
 async function isNxCloudClientSupported(nxJson: NxJsonConfiguration) {

@@ -22,6 +22,7 @@ import { setupStandaloneWorkspace } from './standalone-workspace';
 import type { AngularJsonConfig, Options } from './types';
 import { connectExistingRepoToNxCloudPrompt } from '../../../nx-cloud/connect/connect-to-nx-cloud';
 import { MessageOptionKey } from '../../../../utils/ab-testing';
+import { formatInitWrites, recordInitWrite } from '../format';
 
 const defaultCacheableOperations: string[] = [
   'build',
@@ -44,6 +45,8 @@ export async function addNxToAngularCliRepo(options: Options) {
   if (legacyMigrationFn) {
     output.log({ title: '💽 Running migration for a legacy Angular version' });
     await legacyMigrationFn();
+    // The exit skips the caller's drain, so format the recorded writes here.
+    await formatInitWrites(repoRoot);
     process.exit(0);
   }
 
@@ -153,6 +156,7 @@ function addPluginDependencies(): void {
   packageJson.devDependencies = sortObjectByKeys(packageJson.devDependencies);
 
   writeJsonFile(packageJsonPath, packageJson);
+  recordInitWrite(packageJsonPath);
 }
 
 async function setupWorkspace(

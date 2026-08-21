@@ -570,6 +570,7 @@ const referenceGroups: SidebarItems = [
       },
       { label: 'nxignore', link: 'reference/nxignore' },
       { label: 'Nx Daemon', link: 'reference/nx-daemon' },
+      { label: 'Code formatting', link: 'reference/code-formatting' },
       { label: 'Glossary', link: 'reference/glossary' },
       { label: 'Releases', link: 'reference/releases' },
       { label: 'Nx MCP', link: 'reference/nx-mcp' },

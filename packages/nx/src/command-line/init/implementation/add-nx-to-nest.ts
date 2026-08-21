@@ -2,6 +2,7 @@ import { multiselectPrompt, textPrompt } from '../../../utils/prompt-helpers';
 import { unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'path';
 import { InitArgs } from '../init-v1';
+import { recordInitWrite } from './format';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import { ProjectConfiguration } from '../../../config/workspace-json-project-json';
 import {
@@ -149,6 +150,7 @@ function addNestPluginToPackageJson(repoRoot: string) {
   json.devDependencies['@nx/nest'] = nxVersion;
   json.devDependencies['@nx/jest'] = nxVersion;
   writeJsonFile(path, json);
+  recordInitWrite(path);
 }
 
 function createProjectJson(
@@ -239,6 +241,7 @@ function createProjectJson(
   }
 
   writeJsonFile(path, json);
+  recordInitWrite(path);
 }
 
 function getJestOptions(
@@ -290,6 +293,7 @@ module.exports = {...nxPreset};
 `,
       'utf8'
     );
+    recordInitWrite(jestPresetPath);
     return true;
   }
 
@@ -324,11 +328,13 @@ function addJestTargets(
     `export default ${JSON.stringify(unitTestOptions, null, 2)}`,
     'utf8'
   );
+  recordInitWrite(unitTestConfigPath);
   writeFileSync(
     e2eTestConfigPath,
     `export default ${JSON.stringify(e2eTestOptions, null, 2)}`,
     'utf8'
   );
+  recordInitWrite(e2eTestConfigPath);
 
   projectJson.targets['test'] = {
     executor: '@nx/jest:jest',
@@ -364,6 +370,7 @@ function addNrwlJsPluginsConfig(repoRoot: string) {
   }
 
   writeJsonFile(path, json);
+  recordInitWrite(path);
 }
 
 function updatePackageJsonScripts(repoRoot: string, isJS: boolean) {
@@ -411,6 +418,7 @@ function updatePackageJsonScripts(repoRoot: string, isJS: boolean) {
   }
 
   writeJsonFile(path, json);
+  recordInitWrite(path);
 }
 
 function updateTsConfig(repoRoot: string, sourceRoot: string) {
@@ -424,6 +432,7 @@ function updateTsConfig(repoRoot: string, sourceRoot: string) {
   json.include.push(`${sourceRoot}/**/*.ts`);
 
   writeJsonFile(path, json);
+  recordInitWrite(path);
 }
 
 function removeFile(repoRoot: string, file: string) {

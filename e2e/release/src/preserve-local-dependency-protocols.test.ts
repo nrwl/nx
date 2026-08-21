@@ -42,7 +42,7 @@ expect.addSnapshotSerializer({
         // We trim each line to reduce the chances of snapshot flakiness
 
         // Slightly different handling needed for bun (length can be 8)
-        .replaceAll(/[a-fA-F0-9]{7,8}/g, '{COMMIT_SHA}')
+        .replaceAll(/\b[a-fA-F0-9]{7,8}\b/g, '{COMMIT_SHA}')
         .replaceAll(/bun publish v\d+\.\d+\.\d+/g, 'bun publish vX.X.X')
         .replaceAll(
           /Integrity:\s*.*/g,

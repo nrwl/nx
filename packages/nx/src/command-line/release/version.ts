@@ -7,7 +7,7 @@ import {
   readNxJson,
 } from '../../config/nx-json';
 import { LARGE_BUFFER } from '../../executors/run-commands/run-commands.impl';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { formatChangedFiles } from '../../generators/internal-utils/format-changed-files';
 import { FsTree, Tree, flushChanges } from '../../generators/tree';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
@@ -277,7 +277,7 @@ export function createAPI(
             : []
       )
     );
-    await formatChangedFilesWithPrettierIfAvailable(tree, {
+    await formatChangedFiles(tree, {
       silent: true,
       excludePaths: manifestsToExcludeFromFormatting,
     });

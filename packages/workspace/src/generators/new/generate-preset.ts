@@ -107,6 +107,7 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
           : null,
       opts.nxCloudToken ? `--nxCloudToken=${opts.nxCloudToken}` : null,
       opts.formatter ? `--formatter=${opts.formatter}` : null,
+      opts.skipInstall ? `--skipInstall` : null,
       opts.workspaces !== false ? `--workspaces` : `--no-workspaces`,
       opts.useProjectJson ? `--useProjectJson` : null,
     ].filter((e) => !!e);
@@ -124,8 +125,9 @@ function getPresetDependencies({
   js,
 }: NormalizedSchema) {
   switch (preset) {
-    // Empty workspaces — no preset generator runs, so `@nx/js:init` never adds
-    // typescript and pinning it here would be net-new.
+    // These generate no project, so `@nx/js:init` never runs to add typescript
+    // and pinning it here would be net-new. The preset generator itself does
+    // run - it sets up the chosen formatter.
     case Preset.Apps:
     case Preset.NPM:
       return { dependencies: {}, dev: { '@nx/js': nxVersion } };

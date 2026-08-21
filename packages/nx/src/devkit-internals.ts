@@ -37,6 +37,7 @@ export { readTargetDefaultsForTarget } from './project-graph/utils/project-confi
 // them.
 export {
   createGitIgnoreChecker,
+  createOxfmtIgnoreChecker,
   createPrettierIgnoreChecker,
   type TreeIgnoreChecker,
 } from './utils/ignore';
@@ -78,7 +79,16 @@ export {
 } from './plugins/js/utils/register';
 export { interpolate } from './tasks-runner/utils';
 export { isCI } from './utils/is-ci';
-export { isUsingPrettierInTree } from './utils/is-using-prettier';
+export {
+  isUsingPrettierInTree,
+  prettierConfigFiles,
+} from './utils/formatters/prettier';
+export { detectFormatter, detectFormatterInTree } from './utils/formatters';
+export type { FormatterType } from './utils/formatters';
+export {
+  formatFilesWithOxfmt,
+  oxfmtConfigFiles,
+} from './utils/formatters/oxfmt';
 export { readYamlFile } from './utils/fileutils';
 export { globalSpinner } from './utils/spinner';
 export { signalToCode } from './utils/exit-codes';
