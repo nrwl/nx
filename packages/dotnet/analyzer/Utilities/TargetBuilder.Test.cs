@@ -35,7 +35,7 @@ public static partial class TargetBuilder
                 Cwd = "{projectRoot}",
                 Args = [.. defaultFlags]
             },
-            DependsOn = [options.BuildTargetName],
+            DependsOn = [new TargetDependency { Target = options.BuildTargetName, Params = "forward" }],
             Cache = true,
             Inputs =
             [

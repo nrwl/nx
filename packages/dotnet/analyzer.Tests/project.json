@@ -1,6 +1,7 @@
 {
   "name": "MsbuildAnalyzer.Tests",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "tags": ["dotnet-analyzer"],
   "targets": {
     "build": {
       "executor": "nx:noop",
