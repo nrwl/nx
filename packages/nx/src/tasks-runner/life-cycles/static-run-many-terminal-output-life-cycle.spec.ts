@@ -274,6 +274,36 @@ describe('StaticRunManyTerminalOutputLifeCycle', () => {
     });
   });
 
+  describe('output written outside CLIOutput', () => {
+    it('keeps a collapsed summary off the end of declared PTY output', () => {
+      const result = captureOutput(() => {
+        output.addNewline();
+        // The native side writes the chunk itself and then declares it, because
+        // CLIOutput never sees a pseudo-terminal's writes.
+        process.stdout.write('[dev] compiling...');
+        output.noteExternalWrite('[dev] compiling...');
+        lifeCycle.printTaskTerminalOutput(task, 'local-cache', 'body');
+      });
+
+      const summary = `${figures.tick}  nx run proj:test`;
+      const index = result.indexOf(summary);
+      expect(index).toBeGreaterThan(-1);
+      expect(result[index - 1]).toEqual('\n');
+    });
+
+    it('does not spend a blank line when that output ended on a line', () => {
+      const result = captureOutput(() => {
+        output.addNewline();
+        process.stdout.write('[dev] ready\n');
+        output.noteExternalWrite('[dev] ready\n');
+        lifeCycle.printTaskTerminalOutput(task, 'local-cache', 'body');
+      });
+
+      // Already at a line start, so ensureLineStart has nothing to do.
+      expect(result).toContain(`[dev] ready\n${figures.tick}`);
+    });
+  });
+
   describe('endCommand', () => {
     it('summarizes tasks that never ran as a count', () => {
       const ran = makeTask('ran');
