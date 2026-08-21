@@ -61,6 +61,7 @@ import { createRunManyDynamicOutputRenderer } from './life-cycles/dynamic-run-ma
 import { createRunOneDynamicOutputRenderer } from './life-cycles/dynamic-run-one-terminal-output-life-cycle';
 import { StaticRunManyTerminalOutputLifeCycle } from './life-cycles/static-run-many-terminal-output-life-cycle';
 import { StaticRunOneTerminalOutputLifeCycle } from './life-cycles/static-run-one-terminal-output-life-cycle';
+import { SummaryTerminalOutputLifeCycle } from './life-cycles/summary-terminal-output-life-cycle';
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
 import { getTasksHistoryLifeCycle } from './life-cycles/task-history-life-cycle';
 import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle';
@@ -368,6 +369,13 @@ async function getTerminalOutputLifeCycle(
       },
       printSummary: () => printSummary(),
       renderIsDone,
+    };
+  }
+
+  if (nxArgs.outputStyle === 'summary') {
+    return {
+      lifeCycle: new SummaryTerminalOutputLifeCycle(tasks),
+      renderIsDone: Promise.resolve(),
     };
   }
 
@@ -1182,6 +1190,7 @@ function shouldUseDynamicLifeCycle(
   if (isCI()) return false;
   if (
     isStaticOutputStyle(outputStyle) ||
+    outputStyle === 'summary' ||
     outputStyle === 'stream' ||
     outputStyle === 'stream-without-prefixes'
   )

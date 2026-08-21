@@ -1,5 +1,5 @@
 import { defaultMaxListeners } from 'events';
-import { writeFileSync } from 'fs';
+import { existsSync, statSync, writeFileSync } from 'fs';
 import { relative } from 'path';
 import { performance } from 'perf_hooks';
 import * as pc from 'picocolors';
@@ -182,6 +182,11 @@ export class TaskOrchestrator {
   private discreteTaskExitHandled = new Map<string, Promise<void>>();
   private continuousTaskExitHandled = new Map<string, Promise<void>>();
   private cleanupPromise: Promise<void> | null = null;
+  // Tasks whose runner already owns the write to
+  // `<cacheDir>/terminalOutputs/<hash>` — forked processes write it as they
+  // exit, and the paths that never spawn one write it inline. The backstop in
+  // postRunSteps consults this so a task's output is written exactly once.
+  private tasksWithPersistedOutput = new Set<string>();
   // endregion internal state
 
   constructor(
@@ -1151,6 +1156,10 @@ export class TaskOrchestrator {
   ): Promise<void> {
     if (this.completedTasks.has(task.id)) return;
     const terminalOutput = e?.message ?? '';
+    // The worker rejected, so whatever the runner was going to leave on disk
+    // either never landed or can't be trusted. Hand the file back to
+    // postRunSteps so the failure itself is what the task's output path holds.
+    this.tasksWithPersistedOutput.delete(task.id);
     this.options.lifeCycle.printTaskTerminalOutput(
       task,
       'failure',
@@ -1332,17 +1341,22 @@ export class TaskOrchestrator {
           }
         }
 
-        if (!streamOutput && !shouldPrefix) {
-          // TODO: shouldn't this be checking if the task is continuous before writing anything to disk or calling printTaskTerminalOutput?
-          runningTask.onExit((code, terminalOutput) => {
+        runningTask.onExit((code, terminalOutput) => {
+          if (!streamOutput && !shouldPrefix) {
             this.options.lifeCycle.printTaskTerminalOutput(
               task,
               code === 0 ? 'success' : 'failure',
               terminalOutput
             );
+          }
+          // A continuous task never reaches postRunSteps, so exiting is its
+          // only chance to leave its output on disk. A discrete one is written
+          // there instead, whatever its output style — writing here too would
+          // just duplicate it.
+          if (task.continuous) {
             writeFileSync(temporaryOutputPath, terminalOutput);
-          });
-        }
+          }
+        });
 
         return runningTask;
       } catch (e) {
@@ -1353,6 +1367,7 @@ export class TaskOrchestrator {
         }
         const terminalOutput = e.stack ?? e.message ?? '';
         writeFileSync(temporaryOutputPath, terminalOutput);
+        this.tasksWithPersistedOutput.add(task.id);
         return new NoopChildProcess({
           code: 1,
           terminalOutput,
@@ -1360,6 +1375,7 @@ export class TaskOrchestrator {
       }
     } else if (targetConfiguration.executor === 'nx:noop') {
       writeFileSync(temporaryOutputPath, '');
+      this.tasksWithPersistedOutput.add(task.id);
       return new NoopChildProcess({
         code: 0,
         terminalOutput: '',
@@ -1373,6 +1389,12 @@ export class TaskOrchestrator {
         temporaryOutputPath,
         streamOutput
       );
+      // Every forked path leaves the file behind whatever the output style:
+      // the pseudo-terminal and prefixed processes write it when they exit,
+      // the direct-output capture has the child write it itself, and the
+      // fork-failure fallback writes the error. Continuous tasks depend on
+      // that — they never reach postRunSteps.
+      this.tasksWithPersistedOutput.add(task.id);
       if (this.tuiEnabled) {
         if (runningTask instanceof PseudoTtyProcess) {
           // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
@@ -1438,9 +1460,14 @@ export class TaskOrchestrator {
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
         console.error(e);
       }
+      const terminalOutput = e.stack ?? e.message ?? '';
+      // No process ever started, so nothing else will write the file. Record
+      // why, so the task's terminal output path resolves to the fork error
+      // rather than to nothing.
+      writeFileSync(temporaryOutputPath, terminalOutput);
       return new NoopChildProcess({
         code: 1,
-        terminalOutput: e.stack ?? e.message ?? '',
+        terminalOutput,
       });
     }
   }
@@ -1530,6 +1557,9 @@ export class TaskOrchestrator {
       new Promise<void>((resolve) => {
         childProcess.onExit(async (code) => {
           await this.handleContinuousTaskExit(code, task, groupId, true);
+          // Registered after the runner's own exit handler, which is what
+          // wrote the file.
+          this.recordContinuousTerminalOutput(task);
           resolve();
         });
       })
@@ -1581,35 +1611,19 @@ export class TaskOrchestrator {
     // Caller decides whether these results should be written to the cache.
     // Cache replays pass false so a replayed failure (reported as 'failure' so
     // it counts as a failed run) isn't re-written to the cache on every replay.
-    if (shouldCache && !this.stopRequested) {
+    const resultsToCache =
+      shouldCache && !this.stopRequested ? this.resultsToCache(results) : [];
+
+    // Resolved before the cache writes so the two never write the same file.
+    this.persistTerminalOutputs(results, resultsToCache);
+
+    if (resultsToCache.length > 0) {
       // cache the results
       performance.mark('cache-results-start');
       await Promise.all(
-        results
-          .filter(
-            ({ status }) =>
-              status !== 'local-cache' &&
-              status !== 'local-cache-kept-existing' &&
-              status !== 'remote-cache' &&
-              status !== 'skipped' &&
-              status !== 'stopped'
-          )
-          .map((result) => ({
-            ...result,
-            code:
-              result.status === 'local-cache' ||
-              result.status === 'local-cache-kept-existing' ||
-              result.status === 'remote-cache' ||
-              result.status === 'success'
-                ? 0
-                : 1,
-            outputs: result.task.outputs,
-          }))
-          .filter(({ task, code }) => this.shouldCacheTaskResult(task, code))
-          .filter(({ terminalOutput, outputs }) => terminalOutput || outputs)
-          .map(async ({ task, code, terminalOutput, outputs }) =>
-            this.cache.put(task, terminalOutput, outputs, code)
-          )
+        resultsToCache.map(async ({ task, code, terminalOutput, outputs }) =>
+          this.cache.put(task, terminalOutput, outputs, code)
+        )
       );
       performance.mark('cache-results-end');
       performance.measure(
@@ -1621,6 +1635,121 @@ export class TaskOrchestrator {
 
     await this.complete(results, groupId);
     await this.scheduleNextTasksAndReleaseThreads();
+  }
+
+  /**
+   * The results `cache.put` will write, in the shape it wants them. Pulled out
+   * of postRunSteps so the terminal-output backstop can be told exactly which
+   * tasks the cache is already writing a file for.
+   */
+  private resultsToCache(
+    results: {
+      task: Task;
+      status: TaskStatus;
+      terminalOutput?: string;
+    }[]
+  ) {
+    return results
+      .filter(
+        ({ status }) =>
+          status !== 'local-cache' &&
+          status !== 'local-cache-kept-existing' &&
+          status !== 'remote-cache' &&
+          status !== 'skipped' &&
+          status !== 'stopped'
+      )
+      .map((result) => ({
+        ...result,
+        code:
+          result.status === 'local-cache' ||
+          result.status === 'local-cache-kept-existing' ||
+          result.status === 'remote-cache' ||
+          result.status === 'success'
+            ? 0
+            : 1,
+        outputs: result.task.outputs,
+      }))
+      .filter(({ task, code }) => this.shouldCacheTaskResult(task, code))
+      .filter(({ terminalOutput, outputs }) => terminalOutput || outputs);
+  }
+
+  /**
+   * Guarantee that every task that actually ran leaves its terminal output at
+   * `<cacheDir>/terminalOutputs/<hash>`, whatever its cache setting, output
+   * style, or batch membership. That path is what the static output styles
+   * point users and agents at, and what Nx Cloud falls back to reading when a
+   * task's in-memory output is undefined, so a task that reaches a terminal
+   * state without a file there is a dangling reference.
+   *
+   * Batch tasks are why this exists. Their output only ever arrives over IPC,
+   * so the sole thing that ever put it on disk was `cache.put` — leaving a
+   * `cache:false` batch task (the shape CI runs under `NX_BATCH_MODE`) with no
+   * file at all.
+   *
+   * Written exactly once per task: tasks whose runner owns the file are
+   * recorded in `tasksWithPersistedOutput`, and tasks `cache.put` is about to
+   * write are skipped here. Cache replays are skipped too — their output was
+   * read from this very file. Skipped tasks never ran, so there is nothing to
+   * write.
+   *
+   * Every file written without a cache entry behind it is then registered with
+   * the cache, because `removeOldCacheRecords` only collects hashes it finds in
+   * the database — an unregistered file would never be cleaned up. That covers
+   * files this method wrote AND ones a runner wrote, which are equally
+   * invisible to the GC.
+   */
+  private persistTerminalOutputs(
+    results: {
+      task: Task;
+      status: TaskStatus;
+      terminalOutput?: string;
+    }[],
+    resultsToCache: { task: Task }[]
+  ) {
+    const writtenByCache = new Set(resultsToCache.map(({ task }) => task.id));
+    const toRecord: { hash: string; size: number }[] = [];
+    for (const { task, status, terminalOutput } of results) {
+      if (
+        terminalOutput === undefined ||
+        // A task that failed before it was hashed has no path to write to.
+        !task.hash ||
+        status === 'skipped' ||
+        status === 'local-cache' ||
+        status === 'local-cache-kept-existing' ||
+        status === 'remote-cache' ||
+        // `cache.put` writes the file and records the hash itself.
+        writtenByCache.has(task.id)
+      ) {
+        continue;
+      }
+      if (!this.tasksWithPersistedOutput.has(task.id)) {
+        this.tasksWithPersistedOutput.add(task.id);
+        writeFileSync(this.cache.temporaryOutputPath(task), terminalOutput);
+      }
+      toRecord.push({
+        hash: task.hash,
+        size: Buffer.byteLength(terminalOutput),
+      });
+    }
+    if (toRecord.length > 0) {
+      this.cache.recordTerminalOutputs(toRecord);
+    }
+  }
+
+  /**
+   * Register a continuous task's terminal output with the cache so the GC can
+   * collect it. Continuous tasks never reach postRunSteps — their file is
+   * written by whichever runner ran them, as the process exits — so this is
+   * the only place their hash gets recorded. Read off disk rather than from a
+   * result, because a continuous task completes without one.
+   */
+  private recordContinuousTerminalOutput(task: Task) {
+    if (!task.hash) return;
+    const path = this.cache.temporaryOutputPath(task);
+    if (!existsSync(path)) return;
+    this.cache.recordTerminalOutputs([
+      { hash: task.hash, size: statSync(path).size },
+    ]);
   }
 
   private async scheduleNextTasksAndReleaseThreads() {
