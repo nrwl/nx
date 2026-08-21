@@ -25,26 +25,10 @@ vi.mock('@clack/prompts', () => ({
   isCancel: () => false,
 }));
 
-vi.mock('./version-actions', () => {
-  // Defer the actual module access to avoid timing issues with ESM
-  let cachedActual: any = null;
-  const getActual = async () => {
-    if (!cachedActual) {
-      cachedActual = await vi.importActual('./version-actions');
-    }
-    return cachedActual;
-  };
-
+vi.mock('./version-actions', async (importOriginal) => {
+  const actual = await importOriginal<any>();
   return {
-    get NOOP_VERSION_ACTIONS() {
-      return getActual().NOOP_VERSION_ACTIONS;
-    },
-    get VersionActions() {
-      return getActual().VersionActions;
-    },
-    get SemverBumpType() {
-      return getActual().SemverBumpType;
-    },
+    ...actual,
     deriveSpecifierFromVersionPlan: (...args: any[]) =>
       mocks.deriveSpecifierFromVersionPlan(...args),
     resolveVersionActionsForProject: (...args: any[]) =>

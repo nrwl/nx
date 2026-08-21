@@ -1,8 +1,9 @@
 import { GithubRemoteReleaseClient } from './github';
 
-vi.mock('axios', () => ({
-  get: vi.fn(),
-}));
+vi.mock('axios', () => {
+  const get = vi.fn();
+  return { get, default: { get } };
+});
 
 vi.mock('node:child_process', async () => ({
   ...(await vi.importActual('node:child_process')),
@@ -10,8 +11,8 @@ vi.mock('node:child_process', async () => ({
   execSync: (await vi.importActual('node:child_process')).execSync,
 }));
 
-const axiosGetMock = jest.requireMock('axios').get as jest.Mock;
-const execFileSyncMock = jest.requireMock('node:child_process')
+const axiosGetMock = (await import('axios')).default.get as jest.Mock;
+const execFileSyncMock = (await import('node:child_process'))
   .execFileSync as jest.Mock;
 
 describe('GithubRemoteReleaseClient', () => {

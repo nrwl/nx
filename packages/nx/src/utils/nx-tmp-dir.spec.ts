@@ -4,15 +4,15 @@ import { isAbsolute } from 'node:path';
  * `NX_HOME_TMP_DIR` is resolved once at module scope, so each case re-imports
  * the module with `node:os` staged rather than mutating anything afterwards.
  */
-async function loadHomeTmpDir(homedir: () => string): string | undefined {
-  let value: string | undefined;
+async function loadHomeTmpDir(
+  homedir: () => string
+): Promise<string | undefined> {
   vi.resetModules();
   vi.doMock('node:os', async () => ({
     ...(await vi.importActual('node:os')),
     homedir,
   }));
-  value = (await import('./nx-tmp-dir')).NX_HOME_TMP_DIR;
-  return value;
+  return (await import('./nx-tmp-dir')).NX_HOME_TMP_DIR;
 }
 
 describe('NX_HOME_TMP_DIR', () => {
@@ -20,8 +20,8 @@ describe('NX_HOME_TMP_DIR', () => {
     vi.doUnmock('node:os');
   });
 
-  it('sits beneath the home directory when there is one', () => {
-    const dir = loadHomeTmpDir(() => '/home/ada');
+  it('sits beneath the home directory when there is one', async () => {
+    const dir = await loadHomeTmpDir(() => '/home/ada');
 
     expect(dir).toEqual('/home/ada/.nx');
     expect(isAbsolute(dir!)).toBe(true);
@@ -36,16 +36,16 @@ describe('NX_HOME_TMP_DIR', () => {
     ['a relative path', () => 'not/absolute'],
   ])(
     'is undefined when the home directory resolves to %s',
-    (_label: string, homedir: () => string) => {
-      expect(loadHomeTmpDir(homedir)).toBeUndefined();
+    async (_label: string, homedir: () => string) => {
+      expect(await loadHomeTmpDir(homedir)).toBeUndefined();
     }
   );
 
-  it('is undefined rather than throwing when there is no home directory', () => {
+  it('is undefined rather than throwing when there is no home directory', async () => {
     // The native binding loader imports this module, so a throw at module scope
     // would take out startup rather than one location.
     expect(
-      loadHomeTmpDir(() => {
+      await loadHomeTmpDir(() => {
         throw Object.assign(new Error('uv_os_homedir'), { code: 'ENOENT' });
       })
     ).toBeUndefined();

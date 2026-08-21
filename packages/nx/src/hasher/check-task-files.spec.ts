@@ -144,13 +144,14 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
     mockInit = vi.fn().mockResolvedValue(undefined);
     mockInspectTaskInputs = vi.fn();
 
-    MockHashPlanInspector.mockImplementation(
-      () =>
-        ({
-          init: mockInit,
-          inspectTaskInputs: mockInspectTaskInputs,
-        }) as unknown as HashPlanInspector
-    );
+    // A plain function so `new HashPlanInspector(...)` works (arrows are not
+    // constructible under vitest's mocks).
+    MockHashPlanInspector.mockImplementation(function () {
+      return {
+        init: mockInit,
+        inspectTaskInputs: mockInspectTaskInputs,
+      } as unknown as HashPlanInspector;
+    } as any);
 
     // Default project graph returned by createProjectGraphAsync.
     mockCreateProjectGraphAsync.mockResolvedValue(buildGraph());

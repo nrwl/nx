@@ -13,9 +13,17 @@ import {
 } from './register';
 
 // Avoid a real swc registration side effect when exercising getTranspiler.
-vi.mock('@swc-node/register/register', () => ({
-  register: () => () => {},
-}));
+// The source loads this with a bare require (CJS channel), so stub the
+// require cache rather than vi.mock.
+import { createRequire, Module } from 'node:module';
+{
+  const req = createRequire(import.meta.url);
+  const modPath = req.resolve('@swc-node/register/register');
+  const stub = new (Module as any)(modPath);
+  stub.exports = { register: () => () => {} };
+  stub.loaded = true;
+  req.cache[modPath] = stub;
+}
 
 describe('getTsNodeCompilerOptions', () => {
   it('should replace enum value with enum key for module', () => {
@@ -81,31 +89,31 @@ describe('isNativeStripPreferred', () => {
     }
   });
 
-  it('prefers native strip when the runtime supports it', () => {
+  it('prefers native strip when the runtime supports it', async () => {
     setNativeTypescriptSupport('strip');
     delete process.env.NX_PREFER_TS_NODE;
     delete process.env.NX_PREFER_NODE_STRIP_TYPES;
-    expect(loadIsNativeStripPreferred()).toBe(true);
+    expect((await loadIsNativeStripPreferred())).toBe(true);
   });
 
-  it('does not prefer native strip when the runtime lacks support', () => {
+  it('does not prefer native strip when the runtime lacks support', async () => {
     setNativeTypescriptSupport(false);
     delete process.env.NX_PREFER_TS_NODE;
     delete process.env.NX_PREFER_NODE_STRIP_TYPES;
-    expect(loadIsNativeStripPreferred()).toBe(false);
+    expect((await loadIsNativeStripPreferred())).toBe(false);
   });
 
-  it('does not prefer native strip when NX_PREFER_NODE_STRIP_TYPES is false', () => {
+  it('does not prefer native strip when NX_PREFER_NODE_STRIP_TYPES is false', async () => {
     setNativeTypescriptSupport('strip');
     process.env.NX_PREFER_NODE_STRIP_TYPES = 'false';
-    expect(loadIsNativeStripPreferred()).toBe(false);
+    expect((await loadIsNativeStripPreferred())).toBe(false);
   });
 
-  it('does not prefer native strip when NX_PREFER_TS_NODE is true', () => {
+  it('does not prefer native strip when NX_PREFER_TS_NODE is true', async () => {
     setNativeTypescriptSupport('strip');
     process.env.NX_PREFER_TS_NODE = 'true';
     delete process.env.NX_PREFER_NODE_STRIP_TYPES;
-    expect(loadIsNativeStripPreferred()).toBe(false);
+    expect((await loadIsNativeStripPreferred())).toBe(false);
   });
 });
 

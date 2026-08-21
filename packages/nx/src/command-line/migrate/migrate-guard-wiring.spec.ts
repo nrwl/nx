@@ -33,10 +33,14 @@ vi.mock('../../utils/child-process', async () => ({
 // The temp-CLI hand-off installs nx for real; stubbing the dir it installs
 // into and the commands it runs lets a test shape that installation.
 const mockTmpDirSync = vi.fn();
-vi.mock('tmp', async () => ({
-  ...(await vi.importActual('tmp')),
+// migrate.ts lazy-requires tmp (CJS channel), which vi.mock cannot intercept;
+// replace the module in the require channel instead.
+import { mockCjsModule } from '../../internal-testing-utils/cjs-mock';
+import * as realTmp from 'tmp';
+mockCjsModule(import.meta.url, 'tmp', {
+  ...realTmp,
   dirSync: (...args: unknown[]) => mockTmpDirSync(...args),
-}));
+});
 
 const mockExecSync = vi.fn();
 vi.mock('child_process', async () => ({

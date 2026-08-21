@@ -98,8 +98,6 @@ describe('getRunner', () => {
   });
 
   it('reads options from base properties if no runner options provided', () => {
-    vi.mock(join(__dirname, './default-tasks-runner.ts'), () => mockRunner);
-
     const { runnerOptions } = getRunner(
       {},
       {

@@ -6,12 +6,15 @@ const mockRunSingleMigrationWorker = vi.fn();
 const mockReportRunError = vi.fn();
 const mockReportGenerateError = vi.fn();
 
-vi.mock('./run', () => ({
+// migrate.ts lazy-requires ./run (CJS channel), which vi.mock cannot
+// intercept; replace the module in the require channel instead.
+import { mockCjsModule } from '../../internal-testing-utils/cjs-mock';
+mockCjsModule(import.meta.url, './run', {
   runSingleMigrationWorker: (...args: unknown[]) =>
     mockRunSingleMigrationWorker(...args),
   runOrchestratorInit: vi.fn(),
   runOrchestratorReconcile: vi.fn(),
-}));
+});
 
 vi.mock('../../daemon/client/client', () => ({
   daemonClient: {

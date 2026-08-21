@@ -101,10 +101,14 @@ vi.mock('../../../tasks-runner/utils', async () => {
 });
 
 vi.mock('../../../hasher/hash-plan-inspector', () => ({
-  HashPlanInspector: vi.fn().mockImplementation(() => ({
-    init: vi.fn().mockResolvedValue(undefined),
-    inspectTaskInputs: vi.fn().mockImplementation(() => mockHashInputs),
-  })),
+  // A plain function so `new HashPlanInspector(...)` works (arrows are not
+  // constructible under vitest's mocks).
+  HashPlanInspector: vi.fn().mockImplementation(function () {
+    return {
+      init: vi.fn().mockResolvedValue(undefined),
+      inspectTaskInputs: vi.fn().mockImplementation(() => mockHashInputs),
+    };
+  }),
 }));
 
 performance.mark = vi.fn();
