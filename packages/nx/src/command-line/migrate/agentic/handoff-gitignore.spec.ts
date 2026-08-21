@@ -24,7 +24,7 @@ const mockInfo = logger.info as jest.Mock;
 const HANDOFF_GITIGNORE_MIGRATION = {
   package: 'nx',
   name: '23-0-0-add-migrate-runs-to-git-ignore',
-  version: '23.0.0-beta.18',
+  version: '23.2.0-beta.10',
 };
 
 const COMMIT_PREFIX = 'chore: [nx migration] ';

@@ -181,7 +181,7 @@
       "implementation": "./dist/src/migrations/update-23-0-0/consolidate-release-tag-config"
     },
     "23-0-0-add-migrate-runs-to-git-ignore": {
-      "version": "23.0.0-beta.18",
+      "version": "23.2.0-beta.10",
       "description": "Adds .nx/migrate-runs to .gitignore",
       "implementation": "./dist/src/migrations/update-23-0-0/add-migrate-runs-to-git-ignore"
     },
