@@ -1,5 +1,4 @@
 import { IS_WASM } from '../../../native';
-import { isSandbox } from '../../../utils/is-sandbox';
 
 export function isIsolationEnabled() {
   // Explicitly enabled, regardless of further conditions
@@ -10,9 +9,7 @@ export function isIsolationEnabled() {
     // Explicitly disabled
     process.env.NX_ISOLATE_PLUGINS === 'false' ||
     // Isolation is disabled on WASM builds currently.
-    IS_WASM ||
-    // Isolation is disabled in sandbox environments (AI agents, etc.)
-    isSandbox()
+    IS_WASM
   ) {
     return false;
   }

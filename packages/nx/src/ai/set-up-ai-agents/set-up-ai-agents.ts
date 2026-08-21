@@ -36,6 +36,7 @@ import {
   opencodeMcpPath,
   rulesRegex,
 } from '../constants';
+import { NX_ALLOWLIST_ROOTS } from '../../utils/nx-tmp-dir';
 import { getAiConfigRepoPath } from '../clone-ai-config-repo';
 import { Agent, supportedAgents } from '../utils';
 import {
@@ -173,19 +174,50 @@ export async function setupAiAgentsGeneratorImpl(
         ...json.enabledPlugins,
         'nx@nx-claude-plugins': true,
       },
-      // Allow Nx analytics requests through Claude Code's sandbox network filter
+      // Allow Nx analytics requests and Nx unix socket usage (daemon, plugin
+      // workers, forked processes) through Claude Code's sandbox. Nx also
+      // copies its native binary into a cache under the same fixed tmp root
+      // before loading it, so the read/write grants cover that too. The root
+      // is a fixed /tmp path on macOS and Linux, so these entries are
+      // machine-independent and safe to commit.
       sandbox: {
         ...json.sandbox,
+        filesystem: {
+          ...json.sandbox?.filesystem,
+          allowRead: appendAllMissing(
+            json.sandbox?.filesystem?.allowRead,
+            NX_ALLOWLIST_ROOTS
+          ),
+          // Covers the whole tmp root, not just the socket dir: the native
+          // binary cache lives under it too, and without the cache a running
+          // daemon keeps an open handle on the binding inside node_modules,
+          // which blocks reinstalling or rebuilding dependencies. What keeps
+          // users apart is not this allowlist but the 0700 per-uid directories
+          // Nx verifies on every use (see ensureOwnedPrivateDir).
+          allowWrite: appendAllMissing(
+            json.sandbox?.filesystem?.allowWrite,
+            NX_ALLOWLIST_ROOTS
+          ),
+        },
         network: {
           ...json.sandbox?.network,
-          allowedDomains: json.sandbox?.network?.allowedDomains?.includes(
+          allowedDomains: appendIfMissing(
+            json.sandbox?.network?.allowedDomains,
             analyticsDomain
-          )
-            ? json.sandbox.network.allowedDomains
-            : [
-                ...(json.sandbox?.network?.allowedDomains ?? []),
-                analyticsDomain,
-              ],
+          ),
+          allowUnixSockets: appendAllMissing(
+            json.sandbox?.network?.allowUnixSockets,
+            NX_ALLOWLIST_ROOTS
+          ),
+          // Nx does not only connect to sockets, it creates them: the daemon,
+          // every plugin worker, and forked task processes each bind their own.
+          // Claude Code's scoped `allowUnixSockets` permits connecting to a
+          // socket that already exists but not creating one, so the scoped
+          // entry above cannot unblock a fresh daemon or a plugin worker on its
+          // own. Both are written: the scoped entry records which path Nx uses
+          // (and is what a future create-capable scoped policy would need),
+          // while this is what actually lets Nx bind today.
+          allowAllUnixSockets: true,
         },
       },
     }));
@@ -421,6 +453,23 @@ export async function setupAiAgentsGeneratorImpl(
       errors,
     };
   };
+}
+
+function appendIfMissing(
+  existing: string[] | undefined,
+  value: string
+): string[] {
+  return existing?.includes(value) ? existing : [...(existing ?? []), value];
+}
+
+function appendAllMissing(
+  existing: string[] | undefined,
+  values: readonly string[]
+): string[] {
+  return values.reduce<string[]>(
+    (acc, value) => appendIfMissing(acc, value),
+    existing ?? []
+  );
 }
 
 function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {

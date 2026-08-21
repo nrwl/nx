@@ -123,6 +123,7 @@ import {
   isDaemonDisabled,
   removeSocketDir,
 } from '../tmp-dir';
+import { sandboxSocketHint } from '../sandbox-socket-hint';
 import {
   DaemonSocketMessenger,
   VersionMismatchError,
@@ -245,7 +246,7 @@ export class DaemonClient {
       // version mismatch => no daemon because the installed nx version differs from the running one
       if (
         isNxVersionMismatch() ||
-        ((isCI() || isDocker() || isSandbox()) && env !== 'true') ||
+        ((isCI() || isDocker()) && env !== 'true') ||
         isDaemonDisabled() ||
         nxJsonIsNotPresent() ||
         (useDaemonProcessOption === undefined && env === 'false') ||
@@ -1115,7 +1116,15 @@ export class DaemonClient {
 
         let error: any;
         if (err.message.startsWith('connect ENOENT')) {
-          error = daemonProcessException('The Daemon Server is not running');
+          error = daemonProcessException(
+            [
+              'The Daemon Server is not running',
+              // A denied bind leaves no socket file behind, so the client sees
+              // a missing socket rather than a refused connection. Outside a
+              // sandbox this is just the ordinary "not started yet" case.
+              ...(isSandbox() ? sandboxSocketHint() : []),
+            ].join('\n')
+          );
         } else if (isPermissionErrno(err as NodeJS.ErrnoException)) {
           // The 0700 dir and 0600 socket mean the OS refuses this rather than the
           // connect silently succeeding.
@@ -1454,7 +1463,13 @@ export class DaemonClient {
         );
       }
       throw daemonProcessException(
-        'Failed to start or connect to the Nx Daemon process.'
+        [
+          'Failed to start or connect to the Nx Daemon process.',
+          // The daemon can fail to start for many reasons; only surface the
+          // sandbox guidance when we know a sandbox is in play, where it is
+          // the most likely cause.
+          ...(isSandbox() ? sandboxSocketHint() : []),
+        ].join('\n')
       );
     }
   }

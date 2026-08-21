@@ -99,6 +99,8 @@ Code inside the sandbox runs as your user, so this grant does let it write that 
 
 Claude Code's `allowUnixSockets` setting currently only allows _connecting_ to sockets, not _creating_ them. A scoped allowlist works when the daemon is already running (started outside the sandbox, for example from your own terminal), but processes inside the sandbox that need to create sockets, such as a fresh daemon, plugin workers, or forked tasks, still require `allowAllUnixSockets: true`.
 
+Running `nx configure-ai-agents` writes all of these to `.claude/settings.json` for you: the scoped socket path, the read/write grants, and `allowAllUnixSockets: true`. Claude Code's sandbox blocks writes to its own settings file, so run it from a regular terminal rather than through the agent.
+
 ## Alternative workarounds
 
 If you prefer not to enable blanket Unix socket access, you can disable the Nx features that require sockets. These workarounds come with tradeoffs:

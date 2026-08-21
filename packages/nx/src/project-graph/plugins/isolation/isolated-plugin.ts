@@ -7,6 +7,7 @@ import path = require('path');
 import type { PluginConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
 import { serverLogger } from '../../../daemon/logger';
+import { sandboxSocketHint } from '../../../daemon/sandbox-socket-hint';
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
 import {
   consumeMessagesFromSocket,
@@ -14,6 +15,7 @@ import {
 } from '../../../utils/consume-messages-from-socket';
 import { getPluginResolveConditionNodeArgs } from '../../../plugins/js/utils/typescript';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
+import { isSandbox } from '../../../utils/is-sandbox';
 import { logger } from '../../../utils/logger';
 import { ProgressTopics } from '../../../utils/progress-topics';
 import { waitForSocketConnection } from '../../../utils/wait-for-socket-connection';
@@ -638,7 +640,12 @@ async function connectToWorker(
   worker.once('exit', (code) => {
     if (!abortController.signal.aborted) {
       earlyExitError = new Error(
-        `Plugin worker for "${name}" exited with code ${code} before the connection was established.`
+        [
+          `Plugin worker for "${name}" exited with code ${code} before the connection was established.`,
+          // The worker's own stderr may be lost with the process; when a
+          // sandbox is in play, name the likely cause and the fix directly.
+          ...(isSandbox() ? sandboxSocketHint() : []),
+        ].join('\n')
       );
       abortController.abort();
     }
