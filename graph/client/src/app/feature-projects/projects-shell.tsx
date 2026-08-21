@@ -303,7 +303,7 @@ function ProjectsShellInner() {
               toolPopoverPanelItemActiveClassName="text-slate-200 bg-sky-500 dark:bg-sky-600"
             />
           </NxGraphToolbarItemGroup>
-          <NxGraphToolbarItemGroup className="pl-2 pr-0">
+          <NxGraphToolbarItemGroup className="pr-0 pl-2">
             <NxGraphResetLayoutTool toolClassName="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-600" />
             <NxGraphResetGraphTool toolClassName="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-600" />
             <NxGraphShareTool
@@ -312,7 +312,7 @@ function ProjectsShellInner() {
               toolPopoverPanelItemClassName="hover:bg-sky-500 dark:hover:bg-sky-600 hover:text-slate-200 dark:text-slate-300"
             />
           </NxGraphToolbarItemGroup>
-          <NxGraphToolbarItemGroup className="pl-2 pr-0">
+          <NxGraphToolbarItemGroup className="pr-0 pl-2">
             <NxGraphProjectModeTool
               toolPopoverButtonClassName="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-600"
               toolPopoverPanelClassName="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 z-50"
@@ -353,8 +353,8 @@ function ProjectsShellInner() {
         {handleEventResult.rendererConfig.platform === 'nx-console' ? (
           <ProjectGraphControlsPanel handleEventResult={handleEventResult} />
         ) : (
-          <div className="absolute bottom-0 left-0 top-4 flex flex-col">
-            <div className="mb-2 ml-4 min-w-96 max-w-96">
+          <div className="absolute top-4 bottom-0 left-0 flex flex-col">
+            <div className="mb-2 ml-4 max-w-96 min-w-96">
               <TabGroup>
                 <TabList className="flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
                   <Tab
