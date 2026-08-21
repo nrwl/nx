@@ -36,6 +36,7 @@ export default [
           ignoredDependencies: [
             'nx',
             'typescript',
+            '@typescript/typescript6',
             // Installed on demand via `ensurePackage` when the generator is
             // asked for that bundler / unit test runner.
             '@nx/webpack',

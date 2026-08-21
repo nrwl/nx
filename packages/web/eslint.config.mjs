@@ -54,6 +54,7 @@ export default [
           ignoredDependencies: [
             'nx',
             'typescript',
+            '@typescript/typescript6',
             'eslint',
             'http-server',
             '@nx/eslint',

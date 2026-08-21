@@ -56,6 +56,7 @@ export default [
             'eslint',
             'prettier',
             'typescript',
+            '@typescript/typescript6',
             'react',
             'react-dom',
             '@nx/cypress',

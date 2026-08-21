@@ -37,6 +37,7 @@ export default [
             'nx',
             '@nx/eslint',
             'typescript',
+            '@typescript/typescript6',
             'eslint',
             'express',
           ],

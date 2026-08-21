@@ -28,6 +28,7 @@ export default [
             // runtime (see src/utils/versions.ts).
             '@nx/playwright',
             'typescript',
+            '@typescript/typescript6',
             '@playwright/test',
             '@nx/webpack',
             '@nx/vite',

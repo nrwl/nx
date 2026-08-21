@@ -35,6 +35,7 @@ export default [
             '@nx/playwright',
             '@nx/detox',
             'typescript',
+            '@typescript/typescript6',
             'eslint',
             'expo',
             'react',

@@ -35,6 +35,7 @@ export default [
           ignoredDependencies: [
             'nx',
             'typescript',
+            '@typescript/typescript6',
             '@nx/cypress',
             '@nx/playwright',
             '@nx/storybook',

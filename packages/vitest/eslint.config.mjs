@@ -34,6 +34,7 @@ export default [
             '@nx/vitest',
             'eslint',
             'typescript',
+            '@typescript/typescript6',
             '@nx/eslint',
             'vite',
           ],

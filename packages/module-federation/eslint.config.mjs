@@ -24,6 +24,7 @@ export default [
             'nx',
             'eslint',
             'typescript',
+            '@typescript/typescript6',
             '@nx/cypress',
             '@nx/playwright',
             '@nx/vite',

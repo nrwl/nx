@@ -36,6 +36,7 @@ export default [
           ignoredDependencies: [
             'nx',
             'typescript',
+            '@typescript/typescript6',
             'eslint',
             'nest',
             '@nestjs/schematics',
