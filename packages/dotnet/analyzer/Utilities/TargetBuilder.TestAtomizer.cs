@@ -27,18 +27,10 @@ public static partial class TargetBuilder
         var ciTargetName = options.TestCiTargetName!;
         var units = discovery.Units;
 
-        // Before the early return below: a project whose classes were all
-        // excluded splits nothing and still needs the explanation.
-        ReportExclusions(discovery, projectName, options.TestTargetName);
-
-        // A no-op parent with no dependencies would pass while running nothing.
-        if (units.Count == 0)
-        {
-            return null;
-        }
-
         // Every unit appends only its id to this base, so whether it can be
         // expressed as an Nx path is a property of the project, not the unit.
+        // Resolved before any exclusion summary: when the directory rules out
+        // splitting, nothing was left out — splitting never started.
         var resultsBase = GetAtomizedTestResultsBase(properties, projectName, projectDirectory, workspaceRoot);
         if (resultsBase is null)
         {
@@ -49,6 +41,26 @@ public static partial class TargetBuilder
         }
 
         var (nxBaseDirectory, cwdRelativeBase) = resultsBase.Value;
+
+        // The base reaches a command string, so a value this builder cannot
+        // express safely is refused rather than escaped.
+        if (!IsPlainResultsDirectory(nxBaseDirectory))
+        {
+            Console.Error.WriteLine(
+                $"@nx/dotnet: cannot split tests for '{projectName}'. Its test results directory " +
+                "is not a plain path, so it is not safe to use in the test command.");
+            return null;
+        }
+
+        // Before the early return below: a project whose classes were all
+        // excluded splits nothing and still needs the explanation.
+        ReportExclusions(discovery, projectName, options.TestTargetName);
+
+        // A no-op parent with no dependencies would pass while running nothing.
+        if (units.Count == 0)
+        {
+            return null;
+        }
 
         var technologies = ProjectUtilities.GetTechnologies(fileName);
         var groupName = options.TestCiGroupName!;
@@ -100,6 +112,13 @@ public static partial class TargetBuilder
             groupMembers.Add(targetName);
         }
 
+        // The loop can reject every unit, which reaches the same state the
+        // early return above exists to prevent.
+        if (dependsOn.Count == 0)
+        {
+            return null;
+        }
+
         atomizedTargets[ciTargetName] = new Target
         {
             Executor = "nx:noop",
@@ -140,49 +159,59 @@ public static partial class TargetBuilder
         string projectName,
         string testTargetName)
     {
-        var reasons = new List<string>();
+        // Split by what happens to the class, not just why it was left out: a
+        // nested or generic class still runs unsplit, an ignored or non-public
+        // one is never run by MSTest at all, so one sentence cannot cover both.
+        var unsplitReasons = new List<string>();
 
         if (discovery.SkippedNested > 0)
         {
-            reasons.Add($"{discovery.SkippedNested} nested");
+            unsplitReasons.Add($"{discovery.SkippedNested} nested");
         }
 
         if (discovery.SkippedGeneric > 0)
         {
-            reasons.Add($"{discovery.SkippedGeneric} generic");
-        }
-
-        if (discovery.SkippedUnrunnable > 0)
-        {
-            reasons.Add($"{discovery.SkippedUnrunnable} ignored, non-public, or without a test method");
+            unsplitReasons.Add($"{discovery.SkippedGeneric} generic");
         }
 
         if (discovery.SkippedNoOwnMethod > 0)
         {
-            reasons.Add($"{discovery.SkippedNoOwnMethod} with no test method of their own " +
-                "(inherited tests are not split individually)");
+            unsplitReasons.Add($"{discovery.SkippedNoOwnMethod} with no test method of their own");
         }
 
-        if (reasons.Count == 0)
+        if (unsplitReasons.Count == 0 && discovery.SkippedUnrunnable == 0)
         {
             return;
         }
-
-        var total = discovery.SkippedNested + discovery.SkippedGeneric +
-            discovery.SkippedUnrunnable + discovery.SkippedNoOwnMethod;
-        var reasonsText = reasons.Count == 1
-            ? reasons[0]
-            : string.Join(", ", reasons.Take(reasons.Count - 1)) + " and " + reasons[^1];
-        var testWord = total == 1 ? "test" : "tests";
 
         var summary = discovery.Units.Count > 0
             ? $"split '{projectName}' into {discovery.Units.Count} test targets"
             : $"could not split any tests for '{projectName}'";
 
-        Console.Error.WriteLine(
-            $"@nx/dotnet: {summary}, leaving out {reasonsText} " +
-            $"({testWord} the split does not cover). " +
-            $"They still run as part of the '{testTargetName}' target.");
+        if (unsplitReasons.Count > 0)
+        {
+            var total = discovery.SkippedNested + discovery.SkippedGeneric + discovery.SkippedNoOwnMethod;
+            var reasonsText = unsplitReasons.Count == 1
+                ? unsplitReasons[0]
+                : string.Join(", ", unsplitReasons.Take(unsplitReasons.Count - 1)) + " and " + unsplitReasons[^1];
+            var testWord = total == 1 ? "test" : "tests";
+
+            Console.Error.WriteLine(
+                $"@nx/dotnet: {summary}, leaving out {reasonsText} " +
+                $"({testWord} the split does not cover). " +
+                $"They still run as part of the '{testTargetName}' target.");
+        }
+
+        if (discovery.SkippedUnrunnable > 0)
+        {
+            var classWord = discovery.SkippedUnrunnable == 1 ? "class" : "classes";
+            var prefix = unsplitReasons.Count > 0 ? "@nx/dotnet: also left out" : $"@nx/dotnet: {summary}, leaving out";
+
+            Console.Error.WriteLine(
+                $"{prefix} {discovery.SkippedUnrunnable} ignored, non-public, or empty test " +
+                $"{classWord}. MSTest would not run {(discovery.SkippedUnrunnable == 1 ? "it" : "them")} " +
+                "under any target.");
+        }
     }
 
     /// <summary>

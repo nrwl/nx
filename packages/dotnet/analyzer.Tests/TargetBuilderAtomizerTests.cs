@@ -180,6 +180,114 @@ public class TargetBuilderAtomizerTests
     }
 
     [Fact]
+    public void UnrunnableClasses_AreNotDescribedAsStillRunningUnderTheTestTarget()
+    {
+        // An ignored, non-public or empty [TestClass] is not run by MSTest at
+        // all, so it must not be folded into the sentence that promises the
+        // unsplit target still covers what was left out.
+        var originalError = Console.Error;
+        var writer = new StringWriter();
+        Console.SetError(writer);
+        try
+        {
+            TargetBuilder.BuildTargets(
+                projectName: "IntegrationTests",
+                fileName: "IntegrationTests.csproj",
+                isTest: true,
+                isExe: true,
+                packageRefs: [],
+                properties: new Dictionary<string, string>(),
+                projectDirectory: ProjectDirectory,
+                workspaceRoot: WorkspaceRoot,
+                options: Options(),
+                nxJson: null,
+                directoryBuildInputs: [],
+                supportsSplitting: true,
+                discoverTestUnits: _ => new TestDiscoveryResult
+                {
+                    Units = TwoClasses,
+                    SkippedUnrunnable = 2
+                });
+        }
+        finally
+        {
+            Console.SetError(originalError);
+        }
+
+        var output = writer.ToString();
+        Assert.Contains("2 ignored, non-public, or empty test classes", output);
+        Assert.Contains("would not run them under any target", output);
+        Assert.DoesNotContain("still run as part of", output);
+    }
+
+    [Fact]
+    public void NoOwnMethod_IsNotExplainedAsInheritance()
+    {
+        // The count covers any class declaring no [TestMethod] in method mode,
+        // including one with no base type at all, so it cannot claim the tests
+        // were inherited.
+        var originalError = Console.Error;
+        var writer = new StringWriter();
+        Console.SetError(writer);
+        try
+        {
+            TargetBuilder.BuildTargets(
+                projectName: "IntegrationTests",
+                fileName: "IntegrationTests.csproj",
+                isTest: true,
+                isExe: true,
+                packageRefs: [],
+                properties: new Dictionary<string, string>(),
+                projectDirectory: ProjectDirectory,
+                workspaceRoot: WorkspaceRoot,
+                options: Options(splitBy: SplitBy.Method),
+                nxJson: null,
+                directoryBuildInputs: [],
+                supportsSplitting: true,
+                discoverTestUnits: _ => new TestDiscoveryResult
+                {
+                    Units = [],
+                    SkippedNoOwnMethod = 1
+                });
+        }
+        finally
+        {
+            Console.SetError(originalError);
+        }
+
+        var output = writer.ToString();
+        Assert.Contains("1 with no test method of their own", output);
+        Assert.DoesNotContain("inherited", output);
+    }
+
+    [Fact]
+    public void WhenEveryUnitIsRejected_NoParentTargetIsEmitted()
+    {
+        // The units.Count == 0 return cannot cover this: discovery found units,
+        // and the id guard emptied them afterwards. A parent with no
+        // dependencies would pass while running nothing.
+        var originalError = Console.Error;
+        var writer = new StringWriter();
+        Console.SetError(writer);
+        BuildTargetsResult result;
+        try
+        {
+            result = Build(units:
+            [
+                new() { Namespace = "Acme", ClassName = "Weird Name" },
+                new() { Namespace = "Acme", ClassName = "Also Weird" }
+            ]);
+        }
+        finally
+        {
+            Console.SetError(originalError);
+        }
+
+        Assert.DoesNotContain(result.Targets.Keys, name => name.StartsWith("test-ci"));
+        Assert.Null(result.TargetGroups);
+    }
+
+    [Fact]
     public void WithNoDiscoveredUnits_StillReportsBeingDerivedFromSources()
     {
         // Regression test. A project that opts in but declares no test classes
@@ -539,6 +647,56 @@ public class TargetBuilderAtomizerTests
 
         Assert.Equal(["{workspaceRoot}/Acme.Integration.LoginTests"], leaf.Outputs);
         Assert.Equal("\"../../Acme.Integration.LoginTests\"", args[index + 1]);
+    }
+
+    [Theory]
+    [InlineData("TestResults/`touch /tmp/pwned`")]
+    [InlineData("TestResults\" ; touch /tmp/pwned ; echo \"")]
+    [InlineData("TestResults/$(id)")]
+    [InlineData("../../../../tmp/escaped")]
+    public void ResultsDirectoryThatIsNotAPlainPath_ReportsWhyNothingSplit(string testResultsDirectory)
+    {
+        // The resolved base is interpolated into --results-directory, which Nx
+        // joins into a command string and runs through a shell, so a value that
+        // is not a plain path is refused the same way an unusable unit id is.
+        // MSBuild does not interpret these, so they reach the analyzer verbatim.
+        var properties = new Dictionary<string, string>
+        {
+            ["TestResultsDirectory"] = testResultsDirectory
+        };
+
+        var originalError = Console.Error;
+        var writer = new StringWriter();
+        Console.SetError(writer);
+        BuildTargetsResult result;
+        try
+        {
+            result = Build(properties: properties);
+        }
+        finally
+        {
+            Console.SetError(originalError);
+        }
+
+        Assert.DoesNotContain(result.Targets.Keys, name => name.StartsWith("test-ci"));
+        Assert.Null(result.TargetGroups);
+        Assert.Contains("cannot split tests", writer.ToString());
+    }
+
+    [Fact]
+    public void ResultsDirectoryWithOrdinaryPunctuationStillSplits()
+    {
+        // The guard is an allow-list, so the ordinary characters a results
+        // directory actually uses have to keep working — including a space,
+        // which is safe because the argument is emitted already quoted.
+        var properties = new Dictionary<string, string>
+        {
+            ["TestResultsDirectory"] = "artifacts/test-results.v2/Integration Tests"
+        };
+
+        var result = Build(properties: properties);
+
+        Assert.Contains(result.Targets.Keys, name => name.StartsWith("test-ci--"));
     }
 
     [Fact]
