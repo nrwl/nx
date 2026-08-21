@@ -202,6 +202,8 @@ export class DaemonClient {
       includeGlobalWorkspaceFiles?: boolean;
       includeDependencies?: boolean;
       allowPartialGraph?: boolean;
+      includeFiles?: string[];
+      excludeFiles?: string[];
     }
   > = new Map();
 
@@ -380,6 +382,8 @@ export class DaemonClient {
       includeGlobalWorkspaceFiles?: boolean;
       includeDependencies?: boolean;
       allowPartialGraph?: boolean;
+      includeFiles?: string[];
+      excludeFiles?: string[];
     },
     callback: (
       error: Error | null | 'reconnecting' | 'reconnected' | 'closed',
@@ -426,6 +430,9 @@ export class DaemonClient {
         (message) => {
           try {
             const parsedMessage = parseMessage<any>(message);
+            if (this.handleFileWatcherSideChannelMessage(parsedMessage)) {
+              return;
+            }
             // Notify all callbacks
             for (const cb of this.fileWatcherCallbacks.values()) {
               cb(null, parsedMessage);
@@ -476,6 +483,39 @@ export class DaemonClient {
         this.fileWatcherMessenger = undefined;
       }
     };
+  }
+
+  /**
+   * Handles the messages that can arrive on a watch socket without being a
+   * file-change notification, and reports whether the message was one of them.
+   *
+   * The watch socket carries three kinds of traffic: the FILE-WATCH-CHANGED
+   * notifications the callbacks exist for, log lines the daemon wants shown in
+   * this terminal (e.g. "your filter dropped every changed file"), and an
+   * error response when registration itself failed. Only the first is a
+   * `data` payload — handing either of the others to the callbacks would have
+   * them read `changedProjects` off the wrong shape.
+   */
+  private handleFileWatcherSideChannelMessage(parsedMessage: any): boolean {
+    if (isEmitLogMessage(parsedMessage)) {
+      console[parsedMessage.level](parsedMessage.message);
+      return true;
+    }
+
+    if (parsedMessage?.error) {
+      const error =
+        parsedMessage.error instanceof Error
+          ? parsedMessage.error
+          : new Error(
+              parsedMessage.error.message ?? String(parsedMessage.error)
+            );
+      for (const cb of this.fileWatcherCallbacks.values()) {
+        cb(error, null);
+      }
+      return true;
+    }
+
+    return false;
   }
 
   private async reconnectFileWatcher() {
@@ -532,6 +572,9 @@ export class DaemonClient {
         (message) => {
           try {
             const parsedMessage = parseMessage<any>(message);
+            if (this.handleFileWatcherSideChannelMessage(parsedMessage)) {
+              return;
+            }
             for (const cb of this.fileWatcherCallbacks.values()) {
               cb(null, parsedMessage);
             }

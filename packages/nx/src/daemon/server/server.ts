@@ -100,7 +100,7 @@ import { registerFileChangeListener } from './file-watching/file-change-events';
 import { routeWorkspaceChanges } from './file-watching/route-workspace-changes';
 import {
   hasRegisteredFileWatcherSockets,
-  registeredFileWatcherSockets,
+  registerFileWatcherSocket,
   removeRegisteredFileWatcherSocket,
 } from './file-watching/file-watcher-sockets';
 import {
@@ -334,7 +334,23 @@ async function handleMessage(socket: Socket, data: string) {
       mode
     );
   } else if (payload.type === 'REGISTER_FILE_WATCHER') {
-    registeredFileWatcherSockets.push({ socket, config: payload.config });
+    // Registration throws on an invalid include/exclude glob. It can't go
+    // through `handleResult` like its siblings because this message is
+    // fire-and-forget: the client treats anything arriving on a watch socket
+    // as a file-change notification, so a success response would be misread.
+    // Only the error path responds — the same thing `handleResult` does on
+    // failure — so a bad pattern surfaces in the terminal of the client that
+    // sent it instead of rejecting unhandled and taking the workspace-wide
+    // daemon down with no explanation.
+    try {
+      registerFileWatcherSocket({ socket, config: payload.config });
+    } catch (error) {
+      await respondWithErrorAndExit(
+        socket,
+        '[REGISTER_FILE_WATCHER]',
+        error instanceof Error ? error : new Error(String(error))
+      );
+    }
   } else if (isRegisterProjectGraphListenerMessage(payload)) {
     registeredProjectGraphListenerSockets.push(socket);
   } else if (isHandleGlobMessage(payload)) {

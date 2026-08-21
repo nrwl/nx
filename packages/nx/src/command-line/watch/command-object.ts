@@ -52,6 +52,18 @@ function withWatchOptions(yargs: Argv) {
         alias: 'g',
         hidden: true,
       })
+      .option('includeFiles', {
+        type: 'array',
+        string: true,
+        description:
+          'Only re-trigger the command for changed files matching one of these globs (space-delimited, anchored at the workspace root — use `**/*.ts`, not `*.ts`).',
+      })
+      .option('excludeFiles', {
+        type: 'array',
+        string: true,
+        description:
+          'Never re-trigger the command for changed files matching one of these globs (space-delimited, anchored at the workspace root). Wins over --includeFiles.',
+      })
       .option('command', { type: 'string', hidden: true })
       .option('verbose', {
         type: 'boolean',
