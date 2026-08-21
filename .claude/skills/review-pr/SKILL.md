@@ -92,7 +92,7 @@ Parse out:
 - `title`, `author.login`, `headRefOid` (the head SHA), `headRefName`, `baseRefName`, `url`
 - `isDraft` — if true, exit early (don't review drafts)
 - **Local dedup:** if `$TRIAGE_DIR/<NUMBER>.md` exists, its frontmatter `head_sha` equals `headRefOid`, its `pipeline_version` equals the current `PIPELINE_VERSION` (see below), and its `verdict` is not `failed`, this PR was already reviewed at this commit — exit with no draft change; log "ALREADY_REVIEWED". A `failed` draft never blocks a retry. To deliberately re-review an unchanged PR, delete the draft file or just say so in the session.
-- **`PIPELINE_VERSION: 8`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
+- **`PIPELINE_VERSION: 9`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
 
 ### Fetch the tracking ticket
 
@@ -748,6 +748,12 @@ installed, an extracted tarball, a `/snap` snapshot.>
 
 ## What to report
 
+You and the author share a goal: get this PR merged without letting bad code
+in. A finding is not a rejection — it is the distance between the PR and merge,
+stated precisely enough that the author can close it. That stance changes
+nothing about rigor (the admission test below still gates every finding); it
+changes what a finding must contain: the defect, the proof, and the way out.
+
 Report **critical** and **important** findings, plus **strengths**. Concrete,
 actionable nice-to-haves (a rename, a restructure, a missing cross-link) may go
 in a terse **Suggestions** list — one line each; vague polish will be discarded.
@@ -816,10 +822,11 @@ not on the bug.
 Two failure modes dominate this pipeline's false positives: defects that were
 already there before the PR, and defects nothing a real user does can reach.
 Both read as legitimate findings, because both describe real code. So every
-Critical/Important finding MUST carry these two lines, immediately under it:
+Critical/Important finding MUST carry these three lines, immediately under it:
 
     NET-NEW: <base evidence — see below>
     TRIGGER: <entry point → input → user-visible failure>
+    FIX: <the concrete change, 1-2 lines — see below>
 
 **NET-NEW** must be one of:
 
@@ -864,9 +871,21 @@ Windows, only in a monorepo above some size, or only with a rarely-used flag
 IS a trigger — name the condition. Cut the ones nothing reaches, not the ones
 few people reach.
 
-Both lines are checked by the caller at trim time. A Critical/Important finding
-that omits either, or whose NET-NEW cites no base evidence, is demoted to
-Suggestions — so a real defect written up without them loses its weight.
+**FIX** names the concrete change: which function, what it should do instead —
+one or two lines, sketch-level, not a patch. You already know the shape from
+proving the TRIGGER; writing it down costs a sentence and turns the finding
+from a verdict into a path to merge. Grade your own confidence: plain `FIX:`
+when you are confident in the shape; `FIX (sketch):` when viable alternatives
+exist or you have not traced every call site — a confidently wrong
+prescription is worse than none. `FIX: unclear — <why>` is legal when the
+right change hinges on a decision only the author or maintainer can make; name
+that decision. Never invent a prescription to fill the line.
+
+NET-NEW and TRIGGER are checked by the caller at trim time. A
+Critical/Important finding that omits either, or whose NET-NEW cites no base
+evidence, is demoted — so a real defect written up without them loses its
+weight. A missing FIX never demotes a finding (the defect is real regardless);
+the caller records the gap in `## Failures` instead.
 When you endorse a debatable design decision (fail-open vs fail-closed,
 normalization, escape hatches, compat trade-offs), say so explicitly in a
 **Maintainer calls** line rather than folding it into an endorsement.
@@ -1060,7 +1079,7 @@ Agents that emit a `TIERS` line carry a `preexisting=<n>` count; reconcile the s
 
 "Keep in full" is the load-bearing half of that paragraph, and it is the half this step actually fails. Four rules make it enforceable:
 
-- **Enforce the admission test first.** Before anything else, check every Critical/Important finding for its `NET-NEW` and `TRIGGER` lines. Missing either, or a `NET-NEW` that asserts novelty without quoting base evidence ⇒ demote and record one line in `## Failures` naming the agent and the finding. **Demote by reason, not to one bucket:** a finding whose `NET-NEW` shows the defect reproduces at base goes to `### Pre-existing` (it is a real defect, just not this PR's — the maintainer still wants it); one whose `TRIGGER` names an unreachable path, or which is missing either line outright, goes to Suggestions. Dropping a demoted-as-pre-existing finding on the floor is the failure mode here, not mis-tiering it. Do not repair it for them by reading `--ref base` yourself — an agent that filed a finding without checking the base did not establish the defect is the PR's, and confirming it here converts your read into their evidence. The one exception: a `widens` or `claimed-fix` NET-NEW that names the base line but reads thin — verify that one in the sandbox and keep it if it holds. This gate is what stops pre-existing and unreachable findings from reaching the maintainer, and it is the only downgrade you perform without a numbered calibration.
+- **Enforce the admission test first.** Before anything else, check every Critical/Important finding for its `NET-NEW` and `TRIGGER` lines. Missing either, or a `NET-NEW` that asserts novelty without quoting base evidence ⇒ demote and record one line in `## Failures` naming the agent and the finding. **Demote by reason, not to one bucket:** a finding whose `NET-NEW` shows the defect reproduces at base goes to `### Pre-existing` (it is a real defect, just not this PR's — the maintainer still wants it); one whose `TRIGGER` names an unreachable path, or which is missing either line outright, goes to Suggestions. Dropping a demoted-as-pre-existing finding on the floor is the failure mode here, not mis-tiering it. Do not repair it for them by reading `--ref base` yourself — an agent that filed a finding without checking the base did not establish the defect is the PR's, and confirming it here converts your read into their evidence. The one exception: a `widens` or `claimed-fix` NET-NEW that names the base line but reads thin — verify that one in the sandbox and keep it if it holds. This gate is what stops pre-existing and unreachable findings from reaching the maintainer, and it is the only downgrade you perform without a numbered calibration. Separately, check every surviving Critical/Important finding for its `FIX:` line. A missing one never demotes — repair is not admission, and a real defect does not lose weight for lacking a prescription — but record it in `## Failures` naming the agent and finding. Do not write a prescription on the agent's behalf: the agent proved the trigger and knows the fix's shape; you would be guessing.
 - **Never re-tier an agent's finding downward on your own judgment.** Apart from the admission-test gate above, the only sanctioned downgrade is a named calibration from the list below; when you apply one, say which calibration and why in the draft. "It feels minor", "that's just style", "the fix is one character" are not calibrations. An agent that filed something as a finding did so against a rule it was required to name. You are re-checking it against the calibrations, not re-scoring it by taste, and you are not the tier the agent's contract already assigned.
 - **Severity comes from the rule violated, not the size of the fix.** A one-character punctuation change that breaks a committed `STYLE_GUIDE.md` rule vale has no rule for is Important. A three-paragraph rewrite that violates nothing is a Suggestion. Judging by surface form is the specific way this step goes wrong: docs, comment, and naming findings all have tiny diffs, so they read as polish and get swept into a tier that cannot move the verdict.
 - **The 5-bullet cap binds the Suggestions tier only.** It is never a reason to move anything out of Critical, Important, or `### Pre-existing`, and it never licenses a silent merge or drop. If you cut to the cap, name in one line what you cut and why. A reader must never mistake a trimmed list for a complete one.
@@ -1400,6 +1419,8 @@ The adjusted text becomes the final `$REVIEW_BODY`.
 ## Step 6: Format for GitHub
 
 `$REVIEW_BODY` is posted as-is — no header, footer, or tool attribution. It should read like a review a maintainer wrote. The review metadata (commit, date, attempt) lives in the triage file's frontmatter, not in the posted body.
+
+**Write to the author as a collaborator, not a gatekeeper.** The shared goal is merging this PR without letting bad code in, and the body should read that way: every Critical/Important finding keeps its `FIX:` line so the author sees the path to merge next to the defect, and the summary frames what stands between the PR and merge rather than delivering a verdict. Rigor is untouched — collaboration is the framing of the findings, never a reason to soften or drop one.
 
 **Section order.** Grounding first, then what blocks, then what doesn't: `### Close-without-merge check`, `### Reproduction verification`, `### Approach analysis`, `### Security review`, `### Critical`, `### Important`, `### Maintainer calls`, `### Questions for the author`, `### Suggestions`, `### Pre-existing`, `### Strengths`. `### Pre-existing` sits below everything actionable on this PR and carries a one-line preamble saying it is follow-up material that does not affect the verdict — otherwise a reader skimming headers counts it against the author.
 
