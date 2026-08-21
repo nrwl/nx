@@ -175,7 +175,7 @@ describe('validateAndNormalizeProjectRootMap', () => {
     // pin the advice line itself - matching the path alone passes with the
     // advice deleted entirely.
     expect(message).toContain(
-      'To fix those, add the following to .gitignore:\n  /.claude/worktrees/wt'
+      'add the following to the .gitignore in the workspace root:\n  /.claude/worktrees/wt'
     );
     expect(message).toContain('git worktrees nested in this workspace');
     // Nothing is left over, so the reader is not also told to rename anything.

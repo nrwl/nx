@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { dirname, join, relative, resolve, sep } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 const GITDIR_PREFIX = 'gitdir:';
 
@@ -121,13 +121,12 @@ export function nestedWorktreeRoots(workspaceRoot: string): string[] {
     }
 
     const root = relative(workspaceRoot, dirname(gitfile));
-    // Outside the workspace, or the workspace itself - neither is a nested
-    // worktree that Nx would walk into.
-    if (
-      !root ||
-      root.startsWith('..') ||
-      resolve(workspaceRoot, root) === resolve(workspaceRoot)
-    ) {
+    // Neither the workspace itself nor anything outside it is a nested
+    // worktree Nx would walk into. Compared by whole segments, because `..` is
+    // a traversal and `..hidden` is an ordinary directory name; and by
+    // absoluteness, because `relative` across Windows drives returns its
+    // second argument, which is outside by definition and carries no `..`.
+    if (!root || isAbsolute(root) || root.split(sep)[0] === '..') {
       continue;
     }
 

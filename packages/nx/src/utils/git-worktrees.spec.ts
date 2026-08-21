@@ -34,6 +34,14 @@ describe('git worktrees', () => {
       ]);
     });
 
+    it('keeps a directory whose name merely begins with dots', () => {
+      // `..hidden` is an ordinary directory inside the workspace. Only a
+      // leading `..` *segment* means the path climbed out of it.
+      registerWorktree('dots', '..hidden/wt');
+
+      expect(nestedWorktreeRoots(workspaceRoot)).toEqual(['..hidden/wt']);
+    });
+
     it('returns nothing when the repo has no worktrees', () => {
       expect(nestedWorktreeRoots(workspaceRoot)).toEqual([]);
     });

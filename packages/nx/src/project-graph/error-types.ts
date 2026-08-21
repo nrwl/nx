@@ -127,7 +127,10 @@ export class MultipleProjectsWithSameNameError extends Error {
           ? [
               'Some of these are inside git worktrees nested in this workspace. A worktree is a full checkout, so every project in it collides with the one it was checked out from.',
               '',
-              'To fix those, add the following to .gitignore:',
+              // Which `.gitignore` matters: a leading slash anchors to the
+              // directory holding the file, and these paths are relative to
+              // the workspace, which is not always the repository root.
+              'To fix those, add the following to the .gitignore in the workspace root:',
               ...worktreeAdvice.ignoreTargets.map((target) => `  ${target}`),
               // Ignoring the worktrees settles only the duplicates they
               // explain; anything left is an ordinary name collision and still
