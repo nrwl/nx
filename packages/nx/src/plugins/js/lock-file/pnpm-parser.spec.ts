@@ -3021,7 +3021,8 @@ snapshots:
 
   describe('workspace-only lockfile', () => {
     // pnpm omits the `packages` block entirely when every dependency resolves
-    // to a `link:`/`workspace:` reference, so there is nothing external to lock.
+    // to a `link:`/`workspace:` reference; out-of-workspace links still mint
+    // external nodes.
     const lockFile = `lockfileVersion: '9.0'
 
 settings:
@@ -3038,8 +3039,8 @@ importers:
 `;
 
     beforeEach(() => {
-      // The parser requires `.modules.yaml` to exist; a workspace with no
-      // external packages hoists nothing.
+      // The parser requires `.modules.yaml` to exist; nothing is hoisted
+      // when the lockfile has no packages block.
       vol.fromJSON(
         { 'node_modules/.modules.yaml': 'hoistedDependencies: {}\n' },
         '/root'
@@ -3049,9 +3050,6 @@ importers:
     it('should produce a node only for the out-of-workspace link', () => {
       const result = getPnpmLockfileNodes(lockFile, '__workspace_only__');
 
-      // `link:../my-plugin` escapes the workspace, so it is an external
-      // dependency even though the lockfile has no packages block; a task
-      // input naming it must resolve to a node instead of failing the hasher.
       expect(result.nodes).toEqual({
         'npm:my-plugin': {
           type: 'npm',
@@ -3083,11 +3081,8 @@ importers:
   });
 
   describe('linked dependencies', () => {
-    // A `link:` outside the workspace has no packages-section entry, so no
-    // node used to exist for it and `externalDependencies: ['<name>']` on any
-    // task failed hashing with "could not be found" (seen with a linked
-    // @nx/oxlint whose config names it via jsPlugins). Links inside the
-    // workspace are workspace projects and must NOT become external nodes.
+    // Out-of-workspace `link:` targets mint external nodes; links inside the
+    // workspace are workspace projects and must not.
     const lockFile = `lockfileVersion: '9.0'
 
 settings:
@@ -3098,9 +3093,15 @@ importers:
 
   .:
     dependencies:
+      abs-out:
+        specifier: link:/elsewhere/abs-plugin
+        version: link:/elsewhere/abs-plugin
       is-even:
         specifier: ^1.0.0
         version: 1.0.0
+      multi-target:
+        specifier: link:../elsewhere/root-target
+        version: link:../elsewhere/root-target
     devDependencies:
       '@scoped/linked-out':
         specifier: link:../../elsewhere/plugin
@@ -3108,17 +3109,22 @@ importers:
       abs-in:
         specifier: link:/root/packages/local
         version: link:/root/packages/local
-      abs-out:
-        specifier: link:/elsewhere/abs-plugin
-        version: link:/elsewhere/abs-plugin
       dot-named:
         specifier: link:..cache/plugin
         version: link:..cache/plugin
       linked-in:
         specifier: link:packages/local
         version: link:packages/local
+    optionalDependencies:
+      opt-linked:
+        specifier: link:../elsewhere/opt-plugin
+        version: link:../elsewhere/opt-plugin
 
-  packages/local: {}
+  packages/local:
+    dependencies:
+      multi-target:
+        specifier: link:../../elsewhere/nested-target
+        version: link:../../elsewhere/nested-target
 
 packages:
 
@@ -3159,6 +3165,23 @@ snapshots:
       expect(nodes['npm:is-even']).toBeDefined();
     });
 
+    it('should mint nodes for outside links in dependencies and optionalDependencies', () => {
+      const { nodes } = getPnpmLockfileNodes(lockFile, '__linked_dep_types__');
+
+      expect(nodes['npm:abs-out']).toBeDefined();
+      expect(nodes['npm:opt-linked'].data.version).toBe(
+        'link:../elsewhere/opt-plugin'
+      );
+    });
+
+    it('should let the root importer win when several importers link the same name', () => {
+      const { nodes } = getPnpmLockfileNodes(lockFile, '__linked_competing__');
+
+      expect(nodes['npm:multi-target'].data.version).toBe(
+        'link:../elsewhere/root-target'
+      );
+    });
+
     it('should resolve absolute link targets against the workspace root', () => {
       const { nodes } = getPnpmLockfileNodes(lockFile, '__linked_abs__');
 
@@ -3177,7 +3200,6 @@ snapshots:
     it('should not treat a dot-prefixed directory name as an escape', () => {
       const { nodes } = getPnpmLockfileNodes(lockFile, '__linked_dotname__');
 
-      // `..cache` is a directory inside the workspace, not a `../` traversal.
       expect(nodes['npm:dot-named']).toBeUndefined();
     });
 
@@ -3193,8 +3215,6 @@ snapshots:
 
       const { nodes } = getPnpmLockfileNodes(withNestedLink, '__linked_dup__');
 
-      // npm:is-even already names the hoisted registry version; the link from
-      // the nested importer must not replace it.
       expect(nodes['npm:is-even'].data.version).toBe('1.0.0');
     });
   });

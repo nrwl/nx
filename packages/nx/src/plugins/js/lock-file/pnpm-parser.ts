@@ -536,10 +536,10 @@ function getNodes(
   // Nx. Links that resolve inside the workspace are workspace projects, not
   // externals, and are skipped.
   //
-  // Importers are visited root-first, then lexicographically, so when several
-  // importers link the same package name to different targets the choice of
-  // the surviving node is deterministic — the bare name is the only name
-  // `externalDependencies` can reference, so only one node is minted per name.
+  // One node per package name, chosen deterministically by visiting importers
+  // root-first, then lexicographically. An `externalDependencies` input names
+  // a package, not a link target, so it could not distinguish two linked
+  // targets anyway.
   const importerPaths = Object.keys(data.importers ?? {}).sort((a, b) =>
     a === '.' ? -1 : b === '.' ? 1 : a.localeCompare(b)
   );
