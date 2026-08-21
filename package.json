@@ -354,7 +354,7 @@
     "react-dom": "catalog:react",
     "react-syntax-highlighter": "^15.5.0",
     "regenerator-runtime": "0.13.7",
-    "sharp": "^0.33.3",
+    "sharp": "^0.35.3",
     "string-width": "^4.2.3",
     "tailwind-merge": "catalog:tailwind",
     "tailwindcss": "4.1.11",
