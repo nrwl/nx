@@ -3,7 +3,14 @@ import type { LinterType } from '../../utils/linter';
 import type { ProjectPackageManagerWorkspaceState } from '../../utils/package-manager-workspaces';
 
 export type Compiler = 'tsc' | 'swc';
-export type Bundler = 'swc' | 'tsc' | 'rollup' | 'vite' | 'esbuild' | 'none';
+export type Bundler =
+  | 'swc'
+  | 'tsc'
+  | 'rollup'
+  | 'vite'
+  | 'esbuild'
+  | 'tsdown'
+  | 'none';
 
 export interface LibraryGeneratorSchema {
   directory: string;

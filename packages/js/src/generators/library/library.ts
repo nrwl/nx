@@ -60,6 +60,7 @@ import {
   esbuildVersion,
   nxVersion,
   swcHelpersVersion,
+  tsdownVersion,
   tsLibVersion,
   typesNodeVersion,
 } from '../../utils/versions';
@@ -288,6 +289,7 @@ async function configureProject(
     options.config !== 'npm-scripts' &&
     (options.bundler === 'swc' ||
       options.bundler === 'esbuild' ||
+      options.bundler === 'tsdown' ||
       ((!options.isUsingTsSolutionConfig || options.useTscExecutor) &&
         options.bundler === 'tsc'))
   ) {
@@ -295,43 +297,58 @@ async function configureProject(
     const executor = getBuildExecutor(options.bundler);
     addBuildTargetDefaults(tree, executor);
 
-    projectConfiguration.targets.build = {
-      executor,
-      outputs: ['{options.outputPath}'],
-      options: {
-        outputPath,
-        main: `${options.projectRoot}/src/index` + (options.js ? '.js' : '.ts'),
-        tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
-      },
-    };
-
-    if (
-      options.bundler === 'swc' &&
-      (options.skipTypeCheck || options.isUsingTsSolutionConfig)
-    ) {
-      projectConfiguration.targets.build.options.skipTypeCheck = true;
-    }
-
-    if (options.isUsingTsSolutionConfig) {
-      if (options.bundler === 'esbuild') {
-        projectConfiguration.targets.build.options.format = ['esm'];
-        projectConfiguration.targets.build.options.declarationRootDir = `${options.projectRoot}/src`;
-      } else if (options.bundler === 'swc') {
-        projectConfiguration.targets.build.options.stripLeadingPaths = true;
-      }
+    if (options.bundler === 'tsdown') {
+      projectConfiguration.targets.build = {
+        executor,
+        outputs: ['{projectRoot}/dist'],
+        options: {
+          entry: [`src/index` + (options.js ? '.js' : '.ts')],
+          outDir: 'dist',
+          format: options.isUsingTsSolutionConfig ? ['esm'] : ['esm', 'cjs'],
+          dts: true,
+          tsconfig: `tsconfig.lib.json`,
+        },
+      };
     } else {
-      projectConfiguration.targets.build.options.assets = [];
+      projectConfiguration.targets.build = {
+        executor,
+        outputs: ['{options.outputPath}'],
+        options: {
+          outputPath,
+          main:
+            `${options.projectRoot}/src/index` + (options.js ? '.js' : '.ts'),
+          tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
+        },
+      };
 
-      if (options.bundler === 'esbuild') {
-        projectConfiguration.targets.build.options.format = ['cjs'];
-        projectConfiguration.targets.build.options.generatePackageJson = true;
+      if (
+        options.bundler === 'swc' &&
+        (options.skipTypeCheck || options.isUsingTsSolutionConfig)
+      ) {
+        projectConfiguration.targets.build.options.skipTypeCheck = true;
       }
 
-      if (!options.minimal) {
-        projectConfiguration.targets.build.options.assets ??= [];
-        projectConfiguration.targets.build.options.assets.push(
-          joinPathFragments(options.projectRoot, '*.md')
-        );
+      if (options.isUsingTsSolutionConfig) {
+        if (options.bundler === 'esbuild') {
+          projectConfiguration.targets.build.options.format = ['esm'];
+          projectConfiguration.targets.build.options.declarationRootDir = `${options.projectRoot}/src`;
+        } else if (options.bundler === 'swc') {
+          projectConfiguration.targets.build.options.stripLeadingPaths = true;
+        }
+      } else {
+        projectConfiguration.targets.build.options.assets = [];
+
+        if (options.bundler === 'esbuild') {
+          projectConfiguration.targets.build.options.format = ['cjs'];
+          projectConfiguration.targets.build.options.generatePackageJson = true;
+        }
+
+        if (!options.minimal) {
+          projectConfiguration.targets.build.options.assets ??= [];
+          projectConfiguration.targets.build.options.assets.push(
+            joinPathFragments(options.projectRoot, '*.md')
+          );
+        }
       }
     }
   }
@@ -500,6 +517,10 @@ export async function addLint(
           );
         } else if (options.bundler === 'esbuild') {
           ignoredFiles.add('{projectRoot}/esbuild.config.{js,ts,mjs,mts}');
+        } else if (options.bundler === 'tsdown') {
+          ignoredFiles.add(
+            '{projectRoot}/tsdown.config.{js,ts,mjs,mts,cjs,cts}'
+          );
         }
         if (options.unitTestRunner === 'vitest') {
           // When bundler is 'vite', vite.config holds both build and test config
@@ -981,6 +1002,12 @@ function addProjectDependencies(
       undefined,
       true
     );
+  } else if (options.bundler === 'tsdown') {
+    return addDependenciesToPackageJson(
+      tree,
+      {},
+      { tsdown: tsdownVersion, '@types/node': typesNodeVersion }
+    );
   } else {
     return addDependenciesToPackageJson(
       tree,
@@ -1004,6 +1031,7 @@ function getBuildExecutor(bundler: Bundler) {
       return `@nx/rollup:rollup`;
     case 'swc':
     case 'tsc':
+    case 'tsdown':
       return `@nx/js:${bundler}`;
     case 'vite':
       return `@nx/vite:build`;
@@ -1136,14 +1164,16 @@ function getCompilerOptions(
 ): Record<keyof CompilerOptions, any> {
   return {
     module: options.isUsingTsSolutionConfig
-      ? options.bundler === 'rollup'
+      ? options.bundler === 'rollup' || options.bundler === 'tsdown'
         ? 'esnext'
         : 'nodenext'
       : 'commonjs',
     ...(options.isUsingTsSolutionConfig
       ? {
           moduleResolution:
-            options.bundler === 'rollup' ? 'bundler' : 'nodenext',
+            options.bundler === 'rollup' || options.bundler === 'tsdown'
+              ? 'bundler'
+              : 'nodenext',
         }
       : {}),
     ...(options.js ? { allowJs: true } : {}),
@@ -1242,6 +1272,12 @@ function determineEntryFields(
           types: './index.d.ts',
         };
       }
+    case 'tsdown':
+      return {
+        type: 'module',
+        main: './dist/index.js',
+        types: './dist/index.d.ts',
+      };
     case 'none': {
       if (options.isUsingTsSolutionConfig) {
         return {
