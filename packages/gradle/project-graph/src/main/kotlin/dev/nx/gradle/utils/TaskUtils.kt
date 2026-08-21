@@ -69,14 +69,11 @@ private val dependentOutputPatternsCache: MutableMap<Task, Set<String>> =
 private val skipTaskDependencyResolution: Boolean =
     System.getenv("NX_GRADLE_SKIP_TASK_DEPS")?.toBoolean() == true
 
-/** A dependency edge as (owning project, task name); building one never realizes the Task. */
-internal data class DepRef(val project: Project, val taskName: String)
-
 /**
  * Task paths and names declared in a task's raw `dependsOn`, as plain strings. The qualified ones
  * are what make [org.gradle.api.tasks.TaskDependency.getDependencies] re-enter project
- * configuration; [qualifiedPathDeps] selects those, and [resolvePathDeps] resolves them via
- * [Project.findProject], which returns the already-instantiated project without configuring it.
+ * configuration; [qualifiedPathDeps] selects those, and [lookupTask] resolves them without ever
+ * entering it.
  */
 private fun pathStringDeps(task: Task): List<String> {
   return try {
@@ -180,28 +177,6 @@ private fun qualifiedPathDeps(task: Task): List<String> =
 private fun bypassesTaskDependencies(task: Task): Boolean =
     skipTaskDependencyResolution || qualifiedPathDeps(task).isNotEmpty()
 
-/**
- * Dependencies the bypass would otherwise drop. A bare name and a [TaskProvider] both resolve
- * inside the declaring project, which is already configured, so neither re-enters
- * `ensureProjectsConfigured` the way a qualified path does.
- */
-private fun sameProjectDeps(task: Task): Set<Task> {
-  val recovered = mutableSetOf<Task>()
-  flattenDependsOn(task).forEach { value ->
-    try {
-      when {
-        value is TaskProvider<*> -> (value.orNull as? Task)?.let { recovered.add(it) }
-        value is CharSequence && !value.contains(':') ->
-            task.project.tasks.findByName(value.toString())?.let { recovered.add(it) }
-        else -> {}
-      }
-    } catch (e: Exception) {
-      task.logger.info("Cannot recover same-project dependsOn for ${task.path}: ${e.message}")
-    }
-  }
-  return recovered
-}
-
 /** Realized tasks plus how many dependsOn values nothing could safely resolve. */
 internal data class DependsOnResolution(val tasks: Set<Task>, val unresolved: Int)
 
@@ -213,7 +188,7 @@ private val dependsOnResolutionCache: MutableMap<Task, DependsOnResolution> =
  * and `findByName` never enters `ensureProjectsConfigured`, so this is legal on an execution worker
  * — the #36668 deadlock lives entirely in the resolver this replaces.
  */
-private fun lookupTask(owner: Project, p: String): Task? {
+internal fun lookupTask(owner: Project, p: String): Task? {
   val sep = p.lastIndexOf(':')
   return if (sep < 0) {
     owner.tasks.findByName(p)
@@ -283,29 +258,10 @@ private fun computeResolveDependsOn(task: Task): DependsOnResolution {
     // hand-rolled recovery and treat every string as unresolved so inputs fail open.
     task.logger.info("Safe dependsOn resolution failed for ${task.path}: ${e.message}")
     DependsOnResolution(
-        sameProjectDeps(task), unresolved + engineValues.count { it is CharSequence })
+        engineValues.filterIsInstance<Task>().toSet(),
+        unresolved + engineValues.count { it !is Task })
   }
 }
-
-/**
- * Split a dependsOn path into its project and task name without realizing either. Handles both
- * absolute (`:a:b:test`) and relative-to-the-declaring-project (`connect:api:jar`) forms.
- */
-internal fun resolvePathDeps(task: Task): List<DepRef> =
-    qualifiedPathDeps(task).mapNotNull { path ->
-      val separator = path.lastIndexOf(':')
-      val taskName = path.substring(separator + 1)
-      if (taskName.isEmpty()) return@mapNotNull null
-      val prefix = path.substring(0, separator)
-      val ownerPath = task.project.path
-      val projectPath =
-          when {
-            path.startsWith(":") -> prefix.ifEmpty { ":" }
-            ownerPath == ":" -> ":$prefix"
-            else -> "$ownerPath:$prefix"
-          }
-      task.project.rootProject.findProject(projectPath)?.let { DepRef(it, taskName) }
-    }
 
 /**
  * Process a task and convert it into target Going to populate:
@@ -850,11 +806,9 @@ private fun getInputsForTaskImpl(
             .filterNot { nonInputDependentOutputExtensions.contains(it) }
             .map { "**/*.$it" }
 
-    // A task whose qualified-path dependsOn was recovered by [resolvePathDeps] has no realized
-    // dependency Tasks to walk, so the walk would silently under-declare. Fail open to the
-    // catch-all instead: over-declaring costs a rebuild, under-declaring costs a stale cache hit.
-    // The engine hands back real Tasks, so a fully resolved dependsOn feeds precise patterns;
-    // fail open only for the values screening or resolution actually lost.
+    // The engine hands back real Tasks, so a fully resolved dependsOn feeds precise patterns.
+    // Fail open only for the values screening or resolution actually lost: over-declaring costs a
+    // rebuild, under-declaring costs a stale cache hit.
     val recoveredPathDeps =
         if (bypassesTaskDependencies(task) && resolveDependsOn(task).unresolved > 0) setOf("**/*")
         else emptySet()
@@ -925,7 +879,7 @@ private fun computeDependsOnTask(task: Task): Set<Task> {
     // config cache)
     // Resolving TaskDependency for a task that names dependencies by qualified path re-enters the
     // configuration phase and blocks on the build-lifecycle lock. Those edges are recovered from
-    // the path strings instead — see resolvePathDeps.
+    // the path strings instead — see resolveDependsOn.
     val dependsOnFromTaskDependencies: Set<Task> =
         if (bypassesTaskDependencies(task)) resolveDependsOn(task).tasks
         else
@@ -989,15 +943,12 @@ fun getDependsOnForTask(
     val sameProjectDependsOn = mutableListOf<DependsOnEntry>()
     val crossProjectByTarget = mutableMapOf<String, MutableList<String>>()
 
-    // Realized Tasks plus edges recovered from path strings, which never carry a Task instance.
-    val depRefs = tasks.map { DepRef(it.project, it.name) } + resolvePathDeps(task).distinct()
-
     // A project configured from an ancestor build file owns no build file of its own, but is still
     // a real project — attribute its edges to whichever file configures it.
     val taskProjectBuildFile = effectiveBuildFile(taskProject)
 
-    depRefs.distinct().forEach { depRef ->
-      val depProject = depRef.project
+    tasks.distinct().forEach { depTask ->
+      val depProject = depTask.project
 
       if (task.name != "buildDependents" &&
           depProject != taskProject &&
@@ -1009,7 +960,7 @@ fun getDependsOnForTask(
       }
 
       if (effectiveBuildFile(depProject) != null) {
-        val targetName = resolveTargetName(depRef.taskName, targetNameOverrides, targetNamePrefix)
+        val targetName = resolveTargetName(depTask, targetNameOverrides, targetNamePrefix)
         if (depProject == taskProject) {
           sameProjectDependsOn.add(DependsOnEntry(target = targetName))
         } else {

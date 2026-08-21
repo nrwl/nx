@@ -366,23 +366,12 @@ fun resolveTargetName(
     depTask: Task,
     targetNameOverrides: Map<String, String>,
     targetNamePrefix: String
-): String = resolveTargetName(depTask.name, targetNameOverrides, targetNamePrefix)
-
-/**
- * Name-only overload. A dependency declared as a path string (`:a:b:test`) can be turned into a
- * target without realizing the Task it names — realizing it would force the owning project to be
- * configured.
- */
-fun resolveTargetName(
-    depTaskName: String,
-    targetNameOverrides: Map<String, String>,
-    targetNamePrefix: String
 ): String {
   val baseName =
-      if (depTaskName == "test" && targetNameOverrides.containsKey("testTargetName")) {
+      if (depTask.name == "test" && targetNameOverrides.containsKey("testTargetName")) {
         targetNameOverrides["testTargetName"]!!
       } else {
-        depTaskName
+        depTask.name
       }
   return if (targetNamePrefix.isNotEmpty()) "$targetNamePrefix$baseName" else baseName
 }

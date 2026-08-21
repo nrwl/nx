@@ -123,7 +123,7 @@ class ProcessTaskUtilsTest {
   fun `test a task with a resolvable dependency set stays cacheable`() {
     val project = ProjectBuilder.builder().build()
     val task = project.tasks.register("packagesThisProject").get()
-    // A qualified path alone is fully recovered by resolvePathDeps, so nothing is missing.
+    // A qualified path alone is fully resolved through the engine, so nothing is missing.
     task.dependsOn(":other:jar")
 
     val result =
@@ -405,45 +405,36 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
-    fun `test resolvePathDeps splits absolute, relative and nested forms`() {
-      // Real children, so an implementation returning nothing would fail this test.
+    fun `test lookupTask splits absolute, relative and nested forms`() {
+      // Real children with real tasks, so a lookup returning nothing fails this test.
       val other = ProjectBuilder.builder().withParent(project).withName("other").build()
-      ProjectBuilder.builder().withParent(project).withName("sub").build()
-      ProjectBuilder.builder().withParent(other).withName("nested").build()
+      val sub = ProjectBuilder.builder().withParent(project).withName("sub").build()
+      val nested = ProjectBuilder.builder().withParent(other).withName("nested").build()
+      other.tasks.register("jar")
+      sub.tasks.register("compileJava")
+      nested.tasks.register("test")
 
-      val task = project.tasks.register("pathForms").get()
       // Absolute, relative to the declaring project (root here, so rooted at ":"), and nested.
-      task.dependsOn(":other:jar", "sub:compileJava", ":other:nested:test")
-
-      val refs = resolvePathDeps(task).associate { it.project.path to it.taskName }
-
-      assertEquals(
-          mapOf(":other" to "jar", ":sub" to "compileJava", ":other:nested" to "test"), refs)
+      assertEquals(":other:jar", lookupTask(project, ":other:jar")?.path)
+      assertEquals(":sub:compileJava", lookupTask(project, "sub:compileJava")?.path)
+      assertEquals(":other:nested:test", lookupTask(project, ":other:nested:test")?.path)
     }
 
     @Test
-    fun `test resolvePathDeps drops a path naming a project that does not exist`() {
-      val task = project.tasks.register("unknownProject").get()
-      task.dependsOn(":nosuchproject:jar")
-
-      assertEquals(
-          emptyList<DepRef>(),
-          resolvePathDeps(task),
+    fun `test lookupTask returns null for a project that does not exist`() {
+      assertNull(
+          lookupTask(project, ":nosuchproject:jar"),
           "must not invent a project that is not in the build")
     }
 
     @Test
-    fun `test resolvePathDeps ignores a trailing colon and bare names`() {
-      // A real :other exists, so an empty result is about the trailing colon and the bare name,
-      // not about the project being absent.
+    fun `test lookupTask rejects a trailing colon and resolves bare names in the owner`() {
       ProjectBuilder.builder().withParent(project).withName("other").build()
-      val task = project.tasks.register("pathEdges").get()
-      task.dependsOn(":other:", "classes")
+      project.tasks.register("classes")
 
-      val refs = resolvePathDeps(task)
-
-      // ":other:" names no task, and "classes" is unqualified — neither is a path dep.
-      assertTrue(refs.isEmpty(), "expected no path deps, got $refs")
+      // ":other:" names no task; a bare name resolves inside the declaring project.
+      assertNull(lookupTask(project, ":other:"), "a trailing colon names no task")
+      assertEquals(":classes", lookupTask(project, "classes")?.path)
     }
 
     @Test
