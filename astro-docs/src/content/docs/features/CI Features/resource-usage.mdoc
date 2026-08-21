@@ -1,6 +1,6 @@
 ---
 title: 'Resource Usage'
-description: 'Upload and view CPU and memory metrics for your CI runs to find bottlenecks, debug out-of-memory errors, and right-size your agents.'
+description: 'Understand how your tasks use CPU and memory during CI runs.'
 keywords:
   [
     resource usage,
@@ -10,7 +10,6 @@ keywords:
     out of memory,
     nx agents,
     nx cloud,
-    add-on,
   ]
 sidebar:
   label: Resource usage
@@ -19,44 +18,64 @@ sidebar:
 filter: 'type:Features'
 ---
 
-The resource usage add-on records CPU and memory metrics while your tasks run and surfaces them in
-Nx Cloud. Use this data to find resource bottlenecks, debug out-of-memory (OOM) errors, and pick the
-right agent size for your workload, all the way down to which task caused a spike.
-
-{% aside type="note" title="Nx Cloud add-on" %}
-Resource usage is a standalone Nx Cloud add-on. Enable it under [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons) for your
-organization.
-{% /aside %}
+Resource usage records CPU and memory metrics while your tasks run and surfaces them in Nx Cloud.
+Use this data to find resource bottlenecks, debug out-of-memory (OOM) errors, and analyze the tasks
+that cause resource spikes.
 
 {% aside type="caution" title="Nx 22.1+ Required" %}
 Resource usage requires Nx 22.1 or later.
 {% /aside %}
 
-## Enabling resource usage
+## Enable resource usage
 
-Enable the add-on under [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons), or from the **Enable resource profiling** prompt on
-the **Analysis** tab of any CI pipeline execution.
+Resource usage is an add-on, enabled by default for new organizations. Once it's on, Nx uploads CPU
+and memory metrics for your CI runs and you view them in Nx Cloud. There's nothing else to set up.
 
-Once the add-on is active, metrics are collected and uploaded automatically, whether you distribute
-your tasks with [Nx Agents](/docs/features/ci-features/distribute-task-execution) or run them on a
-single machine. There's nothing else to configure.
+Data collection for each report costs 10 credits. With Nx Agents, each agent generates its own
+report. For non-distributed runs, every report generated on the same machine counts as a single
+10 credit charge, however many runs happen there. See the
+[credits pricing reference](/docs/reference/nx-cloud/credits-pricing) for details.
+
+Data collection can be turned off at either the organization or the workspace level.
+
+### Organization
+
+Turn the resource usage add-on on or off under **Settings > Add-ons**. Disabling it here stops
+collection for every workspace in the organization.
+
+![The resource usage add-on toggle in organization settings](../../../../assets/guides/nx-cloud/resource-usage-org-add-on.avif)
+
+### Workspace
+
+Once the add-on is on for the organization, go to **Workspace > Settings** and find the
+**Resource usage reports** card. Two switches control collection independently:
+
+- **Distributed runs** - metrics for runs distributed across Nx Agents.
+- **Non distributed runs** - metrics for runs from non-distributed Nx commands.
+
+![The distributed and non distributed run toggles in workspace settings](../../../../assets/guides/nx-cloud/resource-usage-workspace-toggles.avif)
+
+Turning a switch off stops new reports from being generated. Reports collected earlier stay
+viewable as long as the add-on is active for the organization.
+
+Metrics are collected in CI only. Runs on a developer machine don't report resource usage.
 
 {% aside type="note" title="Bringing your own compute" %}
-If you [bring your own compute](/docs/guides/nx-cloud/bring-your-own-compute) and run the agents on
+If you [bring your own compute](/docs/kb/bring-your-own-compute) and run the agents on
 your own CI, add a single CLI step per agent job to upload metrics. See
 [the section below](#resource-metrics-when-you-bring-your-own-compute).
 {% /aside %}
 
-When a CI pipeline execution doesn't yet have the add-on, Nx Cloud shows a preview with sample data
-and a prompt to enable it, including a note on the
-[Self-healing CI](/docs/features/ci-features/self-healing-ci) PR comment when a run hits memory or
-CPU issues.
-
 ## Viewing resource usage
+
+What gets measured depends on how you run. With Nx Agents, Nx records every task an agent executes.
+For a standalone Nx command in CI, it records every task in the run.
 
 ### Runs with Nx Agents
 
-Open any CI pipeline execution and go to the **Analysis** tab.
+Open any CI pipeline execution and go to the **Resource usage** tab.
+
+![The Resource usage tab for a run distributed across Nx Agents](../../../../assets/guides/nx-cloud/resource-usage-agents-view.avif)
 
 #### Agent resource usage summary
 
@@ -98,9 +117,18 @@ The detail view has a few controls for digging in:
 ### Runs without Nx Agents
 
 For a run that isn't distributed on Nx Agents, open the run details and go to the **Resource usage**
-tab.
+view.
 
-![Non distributed run resource usage](../../../../assets/guides/nx-cloud/resource-non-dte-view.avif)
+![Resource usage view for a run that isn't distributed on Nx Agents](../../../../assets/guides/nx-cloud/resource-usage-non-distributed-view.avif)
+
+Three cards across the top give you the machine specs plus average and maximum figures for CPU and
+memory. Memory and CPU charts below them plot utilization over the run's lifetime, broken down by
+process. The two charts share an x-axis, so hovering one shows you the same moment in the other.
+
+The controls match the per-agent detail view described above: switch between **Individual** and
+**Stacked** view modes, toggle reference lines, snap the axis to peak usage, click legend items to
+isolate a process, drag across a chart to zoom into a spike, and download the raw per-process data as
+CSV. **Reset zoom** returns to the full timeline.
 
 ## Common use cases
 
@@ -142,14 +170,14 @@ Here's the GitHub Actions step:
 The `if: always()` condition is important: if an agent is OOM-killed mid-run, the normal step
 sequence stops, but the upload still needs to happen so you can see which task caused the kill.
 
-The [bring your own compute guide](/docs/guides/nx-cloud/bring-your-own-compute) shows the equivalent step for CircleCI,
+The [bring your own compute guide](/docs/kb/bring-your-own-compute) shows the equivalent step for CircleCI,
 Azure Pipelines, Bitbucket Pipelines, GitLab CI, and Jenkins.
 
 ## Configuration
 
-Metric collection is controlled by these environment variables:
+Metrics collection is controlled by these environment variables:
 
-| Variable                              | Description                                                                      |
-| ------------------------------------- | -------------------------------------------------------------------------------- |
-| `NX_CLOUD_DISABLE_METRICS_COLLECTION` | Set to `true` to disable CPU and memory metric collection during task execution. |
-| `NX_CLOUD_METRICS_DIRECTORY`          | Directory where Nx writes resource metrics during task execution.                |
+| Variable                              | Description                                                                                                                                                 |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NX_CLOUD_DISABLE_METRICS_COLLECTION` | Set to the exact string `true` to disable CPU and memory metric collection during task execution. Other values, including `1` and `TRUE`, don't disable it. |
+| `NX_CLOUD_METRICS_DIRECTORY`          | Directory where Nx writes resource metrics during task execution.                                                                                           |

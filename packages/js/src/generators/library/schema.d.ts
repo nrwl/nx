@@ -1,6 +1,5 @@
 import type { ProjectNameAndRootOptions } from '@nx/devkit/internal';
-// nx-ignore-next-line
-const { Linter, LinterType } = require('@nx/eslint'); // use require to import to avoid circular dependency
+import type { LinterType } from '../../utils/linter';
 import type { ProjectPackageManagerWorkspaceState } from '../../utils/package-manager-workspaces';
 
 export type Compiler = 'tsc' | 'swc';
@@ -15,7 +14,7 @@ export interface LibraryGeneratorSchema {
   skipPackageJson?: boolean;
   includeBabelRc?: boolean;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   testEnvironment?: 'jsdom' | 'node';
   importPath?: string;
   js?: boolean;
@@ -23,6 +22,10 @@ export interface LibraryGeneratorSchema {
   strict?: boolean;
   publishable?: boolean;
   buildable?: boolean;
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
+   */
   setParserOptionsProject?: boolean;
   config?: 'workspace' | 'project' | 'npm-scripts';
   compiler?: Compiler;
@@ -33,11 +36,15 @@ export interface LibraryGeneratorSchema {
   addPlugin?: boolean;
   useProjectJson?: boolean;
   useTscExecutor?: boolean;
+  /** @internal Only honored by the vitest setup. */
+  passWithNoTests?: boolean;
 }
 
 export interface NormalizedLibraryGeneratorOptions
   extends LibraryGeneratorSchema {
   name: string;
+  /** `normalizeOptions` always resolves this, so it is no longer optional. */
+  linter: LinterType;
   projectNames: ProjectNameAndRootOptions['names'];
   fileName: string;
   projectRoot: string;

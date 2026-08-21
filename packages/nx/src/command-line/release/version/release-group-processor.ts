@@ -281,8 +281,8 @@ export class ReleaseGroupProcessor {
       finalConfigForProject: FinalConfigForProject,
       dockerVersionScheme?: string,
       dockerVersion?: string,
-      versionActionsVersion?: string
-    ) => Promise<{ newVersion: string; logs: string[] }>;
+      versionActionsVersion?: string | null
+    ) => Promise<{ newVersion: string | null; logs: string[] }>;
     try {
       const dockerVersionUtilsPath = '@nx/docker/release/version-utils';
       const { handleDockerVersion: _handleDockerVersion } = require(

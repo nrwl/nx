@@ -11,7 +11,7 @@ filter: 'type:References'
 [Docker](https://www.docker.com/) packages applications into portable container images. In a Docker monorepo, Nx builds, caches, and publishes those images alongside the rest of your projects.
 
 The Nx Plugin for Docker contains executors and utilities for building and publishing docker images within an Nx workspace.
-Using the `@nx/docker` [Inference Plugin](/docs/concepts/inferred-tasks), Nx will automatically detect `Dockerfile`'s in your workspace and provide a `docker:build` and `docker:run` target for each.
+Using the `@nx/docker` [Inference Plugin](/docs/concepts/mental-model#inferred-tasks), Nx will automatically detect `Dockerfile`'s in your workspace and provide a `docker:build` and `docker:run` target for each.
 It will also provide a `nx-release-publish` target for publishing docker images to a registry.
 
 ## Installation
@@ -34,7 +34,7 @@ The `@nx/docker` plugin will create a task for any project that has a Dockerfile
 
 ### View inferred tasks
 
-To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/concepts/mental-model#inferred-tasks) in Nx Console or run `nx show project my-project` in the command line.
 
 ### @nx/docker configuration
 
@@ -59,7 +59,7 @@ The `buildTarget` and `runTarget` options control the names of the inferred Dock
 
 ### Advanced plugin configuration
 
-The `buildTarget` and `runTarget` options can be configured as objects to provide additional customization beyond just naming the targets. This allows you to pass custom arguments, set environment variables, and use pattern interpolation.
+Configure `buildTarget` and `runTarget` as objects to pass custom arguments, set environment variables, and use pattern interpolation.
 
 ```json
 // nx.json
@@ -99,11 +99,15 @@ The `buildTarget` and `runTarget` options can be configured as objects to provid
 
 When using the object format, the following properties are available:
 
-- **`name`** (string, required): The name of the inferred target
+- **`name`** (string, required): The name of the task
 - **`args`** (string[], optional): Additional arguments to pass to the Docker command. Supports pattern interpolation.
 - **`env`** (object, optional): Environment variables to set when running the Docker command. Values support pattern interpolation.
 - **`envFile`** (string, optional): Path to an environment file to load
 - **`cwd`** (string, optional): Working directory for the command. Supports pattern interpolation.
+- **`configurations`** (object, optional): Named Nx configurations that override `args`, `env`, `envFile`, `cwd`, or `skipDefaultTag`.
+- **`skipDefaultTag`** (boolean, default `false`): Do not add the default Nx `--tag` argument to build commands. Supply a tag in `args`; opting out also disables Nx Release versioning and publishing for that Docker project.
+
+The build task depends on the project's `build` task and dependency builds. The run task depends on the Docker build task. Nx also adds an `nx-release-publish` task for publishing images with [Nx Release](/docs/features/manage-releases).
 
 #### Pattern interpolation
 
@@ -180,6 +184,8 @@ This configuration:
 - Enables Docker BuildKit for improved build performance
 - Injects build arguments and environment variables from the CI/CD pipeline
 
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/docker`.
+
 ## Set up CI
 
 In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
@@ -195,4 +201,4 @@ To build Docker images on Nx Agents, your organization needs the [dedicated comp
 The `@nx/docker` plugin provides a `nx-release-publish` target for publishing docker images to a registry.
 [Nx Release](/docs/features/manage-releases) was also updated to support versioning docker images, generating changelogs, and publishing docker images to a registry through a single command.
 
-You can learn more about how to manage releases for Docker Images in the [Release Docker Images](/docs/guides/nx-release/release-docker-images) guide.
+You can learn more about how to manage releases for Docker Images in the [Release Docker Images](/docs/kb/release-docker-images) guide.

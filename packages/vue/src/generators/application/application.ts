@@ -1,4 +1,4 @@
-import { logShowProjectCommand } from '@nx/devkit/internal';
+import { logShowProjectCommand, type PackageJson } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   formatFiles,
@@ -10,6 +10,7 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
+import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
@@ -28,7 +29,6 @@ import {
   updateTsconfigFiles,
   sortPackageJsonFields,
 } from '@nx/js/internal';
-import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function applicationGenerator(tree: Tree, options: Schema) {
   return applicationGeneratorInternal(tree, {
@@ -131,10 +131,10 @@ export async function applicationGeneratorInternal(
       {
         name: options.projectName,
         projectRoot: options.appProjectRoot,
-        linter: options.linter ?? 'eslint',
+        linter: options.linter,
         unitTestRunner: options.unitTestRunner,
         skipPackageJson: options.skipPackageJson,
-        setParserOptionsProject: options.setParserOptionsProject,
+        enableTypedLinting: isTypedLintingEnabled(options),
         rootProject: options.rootProject,
         addPlugin: options.addPlugin,
         projectName: options.projectName,

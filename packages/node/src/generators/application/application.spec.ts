@@ -180,6 +180,7 @@ describe('app', () => {
 
     it('should generate files', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'my-node-app',
         addPlugin: true,
       });
@@ -376,6 +377,7 @@ describe('app', () => {
         expect(lookupFn(config)).toEqual(expectedValue);
       };
       await applicationGenerator(tree, {
+        linter: 'eslint',
         name: 'my-node-app',
         directory: 'my-dir/my-node-app/',
         addPlugin: true,
@@ -431,6 +433,118 @@ describe('app', () => {
     });
   });
 
+  describe('--unit-test-runner vitest', () => {
+    it('should generate a vitest configuration', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-node-app',
+        unitTestRunner: 'vitest',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+      });
+
+      expect(tree.exists('my-node-app/vitest.config.mts')).toBeTruthy();
+      expect(tree.exists('my-node-app/jest.config.cts')).toBeFalsy();
+      expect(tree.read('my-node-app/vitest.config.mts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { defineConfig } from 'vitest/config';
+        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+        export default defineConfig(() => ({
+          root: import.meta.dirname,
+          cacheDir: '../node_modules/.vite/my-node-app',
+          plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+          test: {
+            name: 'my-node-app',
+            watch: false,
+            globals: true,
+            environment: 'node',
+            include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            passWithNoTests: true,
+            reporters: ['default'],
+            coverage: {
+              reportsDirectory: '../coverage/my-node-app',
+              provider: 'v8' as const,
+            },
+          },
+        }));
+        "
+      `);
+    });
+
+    it('should set up the spec tsconfig for vitest', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-node-app',
+        unitTestRunner: 'vitest',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+      });
+
+      const tsConfig = readJson(tree, 'my-node-app/tsconfig.spec.json');
+      expect(tsConfig.compilerOptions.types).toContain('vitest/globals');
+    });
+
+    it('should keep the generated spec file', async () => {
+      await applicationGenerator(tree, {
+        directory: 'api',
+        framework: 'fastify',
+        unitTestRunner: 'vitest',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+      });
+
+      expect(tree.exists('api/src/app/app.spec.ts')).toBeTruthy();
+    });
+
+    it('should not add dependencies when --skipPackageJson', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-node-app',
+        unitTestRunner: 'vitest',
+        e2eTestRunner: 'none',
+        skipPackageJson: true,
+        addPlugin: true,
+      });
+
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies).not.toHaveProperty('vitest');
+      expect(devDependencies).not.toHaveProperty('@vitest/coverage-v8');
+    });
+  });
+
+  describe('--linter', () => {
+    // The lint block used to be gated on `=== 'eslint'`, so asking for oxlint
+    // skipped it entirely and produced an app with no linter and no error.
+    // `@nx/nest:app` and `@nx/express:app` delegate here, so they broke too.
+    it('should set up oxlint when asked for it', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-node-app',
+        linter: 'oxlint',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+      });
+
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies['oxlint']).toBeDefined();
+      expect(devDependencies['@nx/oxlint']).toBeDefined();
+      expect(tree.exists('.oxlintrc.json')).toBe(true);
+    });
+
+    it('should set up no linter for none', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-node-app',
+        linter: 'none',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+      });
+
+      const { devDependencies = {} } = readJson(tree, 'package.json');
+      expect(devDependencies['oxlint']).toBeUndefined();
+      expect(devDependencies['eslint']).toBeUndefined();
+    });
+  });
+
   describe('--frontendProject', () => {
     it('should configure proxy', async () => {
       await angularApplicationGenerator(tree, {
@@ -479,6 +593,7 @@ describe('app', () => {
     it('should generate .eslintrc.json when ESLINT_USE_FLAT_CONFIG=false', async () => {
       process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'my-node-app',
         addPlugin: true,
       });
@@ -686,6 +801,7 @@ describe('app', () => {
 
     it('should add project references when using TS solution', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         bundler: 'webpack',
         unitTestRunner: 'jest',
@@ -1016,6 +1132,7 @@ describe('app', () => {
 
     it('should generate project.json if useProjectJson is true', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         bundler: 'webpack',
         unitTestRunner: 'jest',

@@ -18,14 +18,18 @@ import {
 } from '@nx/e2e-utils';
 import { ChildProcess } from 'child_process';
 import { join } from 'path';
+import { setupExpoEnv } from './setup';
 
 describe('@nx/expo (legacy)', () => {
   let proj: string;
   let appName = uniq('my-app');
   let libName = uniq('lib');
   let originalEnv: string;
+  let restoreExpoEnv: () => void;
 
   beforeAll(() => {
+    restoreExpoEnv = setupExpoEnv();
+
     proj = newProject({
       packages: [
         '@nx/cypress',
@@ -63,6 +67,7 @@ describe('@nx/expo (legacy)', () => {
   });
   afterAll(() => {
     process.env.NX_ADD_PLUGINS = originalEnv;
+    restoreExpoEnv();
     cleanupProject();
   });
 
@@ -264,7 +269,7 @@ describe('@nx/expo (legacy)', () => {
   });
 
   it('should run e2e for cypress', async () => {
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const results = runCLI(`e2e ${appName}-e2e`);
       expect(results).toContain('Successfully ran target e2e');
 
@@ -278,7 +283,7 @@ describe('@nx/expo (legacy)', () => {
   });
 
   it('should run e2e for cypress with configuration ci', async () => {
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const results = runCLI(`e2e ${appName}-e2e --configuration=ci`);
       expect(results).toContain('Successfully ran target e2e');
 
@@ -300,7 +305,7 @@ describe('@nx/expo (legacy)', () => {
     // Build first to speed up static-serve
     runCLI(`export ${appName2}`);
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const results = runCLI(`e2e ${appName2}-e2e`, { verbose: true });
       expect(results).toContain('Successfully ran target e2e');
 

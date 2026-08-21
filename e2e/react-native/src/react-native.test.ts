@@ -145,7 +145,7 @@ describe('@nx/react-native', () => {
   });
 
   it('should run e2e for cypress', async () => {
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       expect(() => runCLI(`e2e ${appName}-e2e`)).not.toThrow();
 
       expect(() =>
@@ -203,7 +203,7 @@ describe('@nx/react-native', () => {
       `generate @nx/react:application ${appName2} --directory=apps/${appName2} --bundler=vite --e2eTestRunner=playwright --install=false --no-interactive --unitTestRunner=jest --linter=eslint`
     );
     expect(() => runCLI(`build ${appName2}`)).not.toThrow();
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       expect(() => runCLI(`e2e ${appName2}-e2e`)).not.toThrow();
       // port and process cleanup
       try {

@@ -40,11 +40,15 @@ module.exports = {
   testEnvironment: 'node',
   setupFiles: ['../../scripts/unit-test-setup.js'],
   moduleNameMapper: {
+    // @clack/prompts is ESM-only; a real prompt library has no place in unit tests anyway
+    '^@clack/prompts$': '<rootDir>/../../scripts/jest-mocks/clack-prompts.js',
     // Mock ora to avoid ESM issues - ora@9+ is ESM-only and breaks Jest
     '^ora$': '<rootDir>/../../scripts/jest-mocks/ora.js',
     // Handle both `import * as x` and `import x from` styles for CommonJS modules
     '^chalk$': '<rootDir>/../../scripts/jest-mocks/chalk.js',
     '^yargs-parser$': '<rootDir>/../../scripts/jest-mocks/yargs-parser.js',
     '^prettier$': '<rootDir>/../../scripts/jest-mocks/prettier.js',
+    // magic-string@1 is ESM-only and @angular-devkit/schematics@22.1 pulls it in
+    '^magic-string$': '<rootDir>/../../scripts/jest-mocks/magic-string.js',
   },
 };

@@ -9,12 +9,6 @@ filter: 'type:References'
 
 The `nx.json` file configures the Nx CLI and project defaults. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/nx-schema.json) is available on GitHub.
 
-{% aside type="note" title="Nx 22 Changes" %}
-Release tag configuration now uses a nested `releaseTag` object (e.g., `releaseTag.pattern` instead of `releaseTagPattern`). Old properties work until Nx 23.
-
-See [Release Tag](#release-tag) for details.
-{% /aside %}
-
 The following is an expanded example showing all options. Your `nx.json` will likely be much shorter.
 
 ```json
@@ -105,11 +99,11 @@ The following is an expanded example showing all options. Your `nx.json` will li
 
 ## Plugins
 
-Nx plugins improve the experience of using different tools with Nx. One key feature of plugins is that they can [automatically configure the way Nx runs tasks](/docs/concepts/inferred-tasks) for a tool based on that tool's configuration. In order for a plugin to configure tasks for Nx, it needs to be registered in the `plugins` array. If a plugin has no options, it can be listed as a string. Otherwise, it should be listed as an object with a `plugin` property and an `options` property.
+Nx plugins improve the experience of using different tools with Nx. One key feature of plugins is that they can [automatically configure the way Nx runs tasks](/docs/concepts/mental-model#inferred-tasks) for a tool based on that tool's configuration. In order for a plugin to configure tasks for Nx, it needs to be registered in the `plugins` array. If a plugin has no options, it can be listed as a string. Otherwise, it should be listed as an object with a `plugin` property and an `options` property.
 
 Every plugin behaves differently, so consult the plugin's own documentation for information about what it does. You can browse the [plugin registry](/docs/plugin-registry) for available plugins.
 
-To learn about creating your own plugin read about [extending Nx](/docs/extending-nx/intro).
+To learn about creating your own plugin read about [extending Nx](/docs/kb/add-language-support).
 
 ```json
 // nx.json
@@ -125,6 +119,15 @@ To learn about creating your own plugin read about [extending Nx](/docs/extendin
   ]
 }
 ```
+
+### Plugin order
+
+Plugins are processed in the order that they appear in the `plugins` array.
+If multiple plugins create a task with the same name, the plugin listed last wins.
+For example, if a project has both a `vite.config.ts` file and a `webpack.config.js` file, both the `@nx/vite` plugin and the `@nx/webpack` plugin will try to create a `build` task.
+The `build` task that is executed belongs to the plugin listed lower in the `plugins` array.
+When the two targets are compatible (they run the same executor and command), their configuration is merged property by property with the later plugin's values winning.
+When they are incompatible, the later target replaces the earlier one entirely.
 
 ### Scope plugins to specific projects
 
@@ -187,20 +190,48 @@ This will exclude all e2e projects except `toolkit-workspace-e2e`.
 - The last matching pattern determines if a file is included
 - If the first pattern is a negation, all files are matched initially
 
+## Plugins config
+
+`pluginsConfig` holds options for a plugin that apply workspace-wide, rather than to a single registered plugin entry. It is keyed by plugin package name.
+
+```json
+// nx.json
+{
+  "pluginsConfig": {
+    "@nx/js": {
+      "projectsAffectedByDependencyUpdates": "auto"
+    }
+  }
+}
+```
+
+### projectsAffectedByDependencyUpdates
+
+Controls which projects Nx marks as affected when the package manager lock file changes.
+
+| Value      | Description                                                                                                                   |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `"all"`    | **(default)** Every project in the workspace is affected. Safest, and the most CI work.                                       |
+| `"auto"`   | Only projects whose resolved dependencies changed. Nx parses the lock file at both revisions and diffs the resolved packages. |
+| `string[]` | Project names or glob patterns, for example `["app-*", "shared-lib"]`. Only matching projects are affected.                   |
+
+In `"auto"` mode Nx supports `pnpm-lock.yaml`, `pnpm-lock.yml`, `package-lock.json`, `yarn.lock`, `bun.lock`, and `bun.lockb`. Binary Bun lock files are rendered by Bun before diffing, so Bun must be available wherever `nx affected` runs.
+
+For how the affected set is computed, see [run only tasks affected by a PR](/docs/features/ci-features/affected).
+
 ## Task options
 
 The following properties affect the way Nx runs tasks and can be set at the root of `nx.json`.
 
-| Property                | Description                                                                                                                                                                                                                                                                                                                             |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| parallel                | defines the max number of targets run in parallel                                                                                                                                                                                                                                                                                       |
-| captureStderr           | defines whether the cache captures stderr or just stdout                                                                                                                                                                                                                                                                                |
-| skipNxCache             | defines whether the Nx Cache should be skipped (defaults to `false`)                                                                                                                                                                                                                                                                    |
-| cacheDirectory          | defines where the local cache is stored (defaults to `.nx/cache`)                                                                                                                                                                                                                                                                       |
-| encryptionKey           | (when using `"nx-cloud"` only) defines an encryption key to support end-to-end encryption of your cloud cache. You may also provide an environment variable with the key `NX_CLOUD_ENCRYPTION_KEY` that contains an encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable |
-| selectivelyHashTsConfig | only hash the path mapping of the active project in the `tsconfig.base.json` (e.g., adding/removing projects doesn't affect the hash of existing projects) (defaults to `false`)                                                                                                                                                        |
+| Property             | Description                                                                                                                                                                                                                                                                                                                                |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| parallel             | defines the max number of targets run in parallel                                                                                                                                                                                                                                                                                          |
+| cacheDirectory       | defines where the local cache is stored (defaults to `.nx/cache`)                                                                                                                                                                                                                                                                          |
+| nxCloudEncryptionKey | (when connected to Nx Cloud only) defines an encryption key to support end-to-end encryption of your cloud cache. You may also provide an environment variable with the key `NX_CLOUD_ENCRYPTION_KEY` that contains an encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable |
 
 You can configure `parallel` in `nx.json`, but you can also set a `--parallel` flag in the terminal `nx run-many -t test --parallel=5`.
+
+To skip the cache for a single run, pass `--skip-nx-cache` (alias `--disableNxCache`) on the command line. There is no root `nx.json` property for it.
 
 ## Default base
 
@@ -258,7 +289,7 @@ When some targets matching an entry in the map should have different defaults th
 Within a key's array, entries apply in document order. **Later entries override prior entries**. An entry with **no `filter`** is a catch-all baseline that applies to every variant of that target; an entry **with a `filter`** applies only where its `plugin`, `projects`, and `executor` match. Because a later entry overrides an earlier one, a trailing catch-all can reset a value set above it. Target defaults apply after targets have been inferred by plugins but before project configuration in `project.json` or `package.json`.
 
 {% aside type="caution" title="Beware" %}
-When a key's value is a plain object (or an array entry has no `filter`), Nx matches by the key alone. Make sure all defaults make sense to all targets that match the key. Anything set in a target default will also override the configuration of [tasks inferred by plugins](/docs/concepts/inferred-tasks).
+When a key's value is a plain object (or an array entry has no `filter`), Nx matches by the key alone. Make sure all defaults make sense to all targets that match the key. Anything set in a target default will also override the configuration of [tasks inferred by plugins](/docs/concepts/mental-model#inferred-tasks).
 {% /aside %}
 
 Some common scenarios for this follow.
@@ -298,7 +329,7 @@ In this case Nx will use the right `production` input for each project.
 
 {% cardgrid %}
 {% linkcard title="Inputs and Named Inputs Reference" description="Learn about all the possible settings for `inputs` and `namedInputs`" href="/docs/reference/inputs" /%}
-{% linkcard title="Configure Inputs for Task Caching" description="This recipes walks you through a few examples of how to configure `inputs` and `namedInputs`" href="/docs/guides/tasks--caching/configure-inputs" /%}
+{% linkcard title="Configure Inputs for Task Caching" description="This recipes walks you through a few examples of how to configure `inputs` and `namedInputs`" href="/docs/kb/configure-inputs" /%}
 {% /cardgrid %}
 
 ### Task pipelines
@@ -374,8 +405,10 @@ When defining any options or configurations inside of a target default, you may 
 
 Both keys above match a `build` target that uses `@nx/js:tsc`. However, only the most specific defaults, the executor-keyed defaults, will apply. The name-keyed defaults will not apply so specify the full config on the executor key.
 
+`cache` is the one exception. When an executor key shadows a name key that sets `"cache": true`, Nx reads that value back so the target stays cacheable, and warns that relying on it is deprecated. Nx skips continuous targets and long-running ones such as `serve`, `dev` and `start`, because caching them is invalid. Set `cache` on the executor key instead. An executor key applies to every target that resolves through it, so exclude any continuous target first. Nx rejects a target that is both cacheable and continuous.
+
 {% cardgrid %}
-{% linkcard title="Configure Outputs for Task Caching" description="This recipe walks you through how to set outputs" href="/docs/guides/tasks--caching/configure-outputs" /%}
+{% linkcard title="Configure Outputs for Task Caching" description="This recipe walks you through how to set outputs" href="/docs/kb/configure-outputs" /%}
 {% /cardgrid %}
 
 ### Cache
@@ -416,7 +449,7 @@ You can configure options specific to a target's executor. As an example, if you
 }
 ```
 
-You can also provide defaults for [inferred targets](/docs/concepts/inferred-tasks) or targets running a command using the `nx:run-commands` executor. As an example, if your repo has projects where **all the `build` targets** run the same `vite build` command, you can provide some default options as follows:
+You can also provide defaults for [inferred targets](/docs/concepts/mental-model#inferred-tasks) or targets running a command using the `nx:run-commands` executor. As an example, if your repo has projects where **all the `build` targets** run the same `vite build` command, you can provide some default options as follows:
 
 ```json
 // nx.json
@@ -444,7 +477,7 @@ If two plugins expose a target with the same name (e.g. both `@nx/vitest` and `@
         "inputs": ["default", "^production"]
       },
       {
-        "filter": { "plugin": "@nx/jest" },
+        "filter": { "plugin": "@nx/jest/plugin" },
         "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]
       }
     ]
@@ -476,7 +509,7 @@ Or use the `projects` filter — which accepts the same patterns as the `--proje
 If multiple targets with the same name run different commands (or use different executors), do not set options in `targetDefaults`. Different commands would accept different options, and the target defaults will apply to all targets with the same name regardless of the command they run. If you were to provide options in `targetDefaults` for them, the commands that don't expect those options could throw an error.
 {% /aside %}
 
-For more details on how to pass args to the underlying command see the [Pass Args to Commands recipe](/docs/guides/tasks--caching/pass-args-to-commands).
+For more details on how to pass args to the underlying command see the [Pass Args to Commands recipe](/docs/kb/pass-args-to-commands).
 
 ### Task atomizer configuration
 
@@ -501,7 +534,7 @@ Nx uses glob patterns to match against the target name. This means that the `**/
 
 ### Spread token
 
-By default, a target default replaces the corresponding value from a matching [inferred task](/docs/concepts/inferred-tasks) (and from any lower-priority configuration source) rather than merging with it. The spread token (`"..."`) lets a target default contribute to the base value instead of overwriting it.
+By default, a target default replaces the corresponding value from a matching [inferred task](/docs/concepts/mental-model#inferred-tasks) (and from any lower-priority configuration source) rather than merging with it. The spread token (`"..."`) lets a target default contribute to the base value instead of overwriting it.
 
 **In arrays**, `"..."` is substituted with the items from the base array at that position. For example, to add an input to every `build` target while keeping the inputs its plugin already infers:
 
@@ -587,7 +620,7 @@ The legacy flat properties (`releaseTagPattern`, `releaseTagPatternRequireSemver
 | Property                 | Type                | Default                                                           | Description                                                                                                                                                                                                                                                                                           |
 | ------------------------ | ------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **pattern**              | string              | `v{version}` for fixed, `{projectName}@{version}` for independent | The git tag pattern to use. Supports interpolation of `{version}`, `{projectName}`, and `{releaseGroupName}`                                                                                                                                                                                          |
-| **requireSemver**        | boolean             | `false`                                                           | Whether to require that all tags match semantic versioning                                                                                                                                                                                                                                            |
+| **requireSemver**        | boolean             | `true`                                                            | Whether to require that all tags match semantic versioning                                                                                                                                                                                                                                            |
 | **strictPreid**          | boolean             | `true`                                                            | Whether to ensure prerelease IDs are consistent across packages                                                                                                                                                                                                                                       |
 | **preferDockerVersion**  | boolean             | `false`                                                           | Whether to prefer Docker-compatible version format in git tags                                                                                                                                                                                                                                        |
 | **checkAllBranchesWhen** | boolean \| string[] | undefined                                                         | Controls whether to check all branches or only merged branches when resolving current versions from git tags. `true` = always check all branches, `false` = only check the current branch, `string[]` = check all branches when the current branch matches any of the provided names or glob patterns |
@@ -865,7 +898,7 @@ The `docker` property configures Docker image versioning and publishing when usi
 }
 ```
 
-Read more about it in the [Release Docker Images guide](/docs/guides/nx-release/release-docker-images).
+Read more about it in the [Release Docker Images guide](/docs/kb/release-docker-images).
 
 #### Docker plugin options
 
@@ -922,7 +955,7 @@ Example patterns:
 
 #### Group-level Docker configuration
 
-You can configure [Docker release](/docs/guides/nx-release/release-docker-images) settings at the release group level:
+You can configure [Docker release](/docs/kb/release-docker-images) settings at the release group level:
 
 ```jsonc
 // nx.json
@@ -947,7 +980,7 @@ You can configure [Docker release](/docs/guides/nx-release/release-docker-images
 }
 ```
 
-This allows you to have other releases such as [NPM](/docs/guides/nx-release/release-npm-packages) or [Rust crates](/docs/guides/nx-release/publish-rust-crates) in the same workspace.
+This allows you to have other releases such as [NPM](/docs/kb/release-npm-packages) or [Rust crates](/docs/kb/publish-rust-crates) in the same workspace.
 
 ## Sync
 
@@ -1081,7 +1114,7 @@ Regardless of the `maxCacheSize` setting, Nx will remove cache entries that have
 
 ## TUI
 
-The `tui` property in `nx.json` configures the [Terminal UI](/docs/guides/tasks--caching/terminal-ui). It allows you to enable or disable the TUI and configure its behavior.
+The `tui` property in `nx.json` configures the [Terminal UI](/docs/kb/terminal-ui). It allows you to enable or disable the TUI and configure its behavior.
 
 ```json
 // nx.json

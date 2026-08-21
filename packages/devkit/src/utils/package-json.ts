@@ -37,9 +37,10 @@ const NON_SEMVER_TAGS = {
 /**
  * Get the resolved version of a dependency from package.json.
  *
- * Retrieves a package version and automatically resolves PNPM catalog references
- * (e.g., "catalog:default") to their actual version strings. By default, searches
- * `dependencies` first, then falls back to `devDependencies`.
+ * Retrieves a package version and automatically resolves package manager
+ * catalog references (e.g., "catalog:default") to their actual version
+ * strings. By default, searches `dependencies` first, then falls back to
+ * `devDependencies`.
  *
  * **Tree-based usage** (generators and migrations):
  * Use when you have a `Tree` object, which is typical in Nx generators and migrations.
@@ -893,7 +894,11 @@ export function ensurePackage<T extends any = any>(
   }
 
   try {
-    return require(pkg);
+    // The workspace comes first so its installed version wins; `__dirname`
+    // keeps the old behaviour as a fallback. A bare `require` would only
+    // resolve from wherever `@nx/devkit` sits, which in a monorepo can be a
+    // different copy of the package than the workspace depends on.
+    return require(require.resolve(pkg, { paths: [workspaceRoot, __dirname] }));
   } catch (e) {
     if (e.code === 'ERR_REQUIRE_ESM') {
       // The package is installed, but is an ESM package.

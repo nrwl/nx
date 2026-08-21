@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   addDependenciesToPackageJson,
@@ -164,8 +164,8 @@ describe('@nx/vite:configuration', () => {
     });
 
     it('should throw when trying to convert something unknown and user denies conversion', async () => {
-      const { Confirm } = require('enquirer');
-      const confirmSpy = jest.spyOn(Confirm.prototype, 'run');
+      const devkitInternal = require('@nx/devkit/internal');
+      const confirmSpy = jest.spyOn(devkitInternal, 'confirmationPrompt');
       confirmSpy.mockResolvedValue(false);
 
       expect.assertions(2);
@@ -248,8 +248,8 @@ describe('@nx/vite:configuration', () => {
     });
 
     it('should set up non buildable library which already has vite.config.mts correctly', async () => {
-      const { Confirm } = require('enquirer');
-      const confirmSpy = jest.spyOn(Confirm.prototype, 'run');
+      const devkitInternal = require('@nx/devkit/internal');
+      const confirmSpy = jest.spyOn(devkitInternal, 'confirmationPrompt');
       confirmSpy.mockResolvedValue(true);
 
       mockReactLibNonBuildableVitestRunnerGenerator(tree);

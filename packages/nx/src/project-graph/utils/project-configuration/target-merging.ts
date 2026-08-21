@@ -12,6 +12,7 @@ import {
 
 import type { SourceInformation } from './source-maps';
 import {
+  assertNoIntegerLikeSpreadKey,
   getMergeValueResult,
   INTEGER_LIKE_KEY_PATTERN,
   IntegerLikeSpreadKeyError,
@@ -277,6 +278,14 @@ function mergeConfigurations<T extends Object>(
       // Before '...': base wins for shared names. Keep base's source-map
       // entries when it owns the config.
       if (baseHasConfig) {
+        // Base wins, so the incoming config is dropped without reaching
+        // `mergeConfigurationValue`. Validate its nested spread here so an
+        // integer-like-key ambiguity throws regardless of which side owns
+        // the config name (mirrors the base-independent target-level check).
+        assertNoIntegerLikeSpreadKey(
+          newConfigurations?.[configName],
+          configIdentifier ? `Object at "${configIdentifier}"` : 'Object'
+        );
         mergedConfigurations[configName] = baseConfigurations[configName];
       } else {
         mergedConfigurations[configName] = mergeConfigurationValue(
@@ -420,9 +429,12 @@ export function mergeTargetConfigurations(
     : new Set<string>();
 
   // Integer-like keys get hoisted to targetKeys[0], making their position
-  // relative to '...' unrecoverable.
+  // relative to '...' unrecoverable. This is a property of the authored
+  // config, not of the base, so it throws regardless of compatibility —
+  // which also keeps the error identical between the target-defaults staging
+  // merge and the real merge, whose bases differ.
   if (
-    hasSpread &&
+    spreadPosInTarget >= 0 &&
     targetKeys[0] &&
     INTEGER_LIKE_KEY_PATTERN.test(targetKeys[0])
   ) {
@@ -451,6 +463,16 @@ export function mergeTargetConfigurations(
 
     if (hasSpread && keysBeforeSpread.has(key)) {
       // Before '...': base wins; fall through to target only if base lacks it.
+      // When base wins, the incoming `target[key]` is dropped without ever
+      // reaching `getMergeValueResult`, so validate its nested spread here —
+      // the integer-like-key ambiguity is a property of the authored value,
+      // not of which side owns the key, and must throw either way.
+      assertNoIntegerLikeSpreadKey(
+        target[key],
+        projectConfigSourceMap
+          ? `Object at "${targetIdentifier}.${key}"`
+          : 'Object'
+      );
       result[key] =
         key in mergeBase
           ? mergeBase[key]
@@ -534,16 +556,25 @@ export function mergeTargetConfigurations(
     }
   }
 
-  // Update source map once after loop. Real plugins win last, but a target
-  // default — which only stamps fields onto an existing target and never
-  // authors its existence — must not steal the node key from the plugin that
-  // introduced the target. An incompatible replace clears these keys above, so
-  // a replacing real plugin still re-owns the node.
+  // Update the node key once after the loop. Ownership follows identity: this
+  // merge claims `targets.<name>` only when it changed the target's identity
+  // (a new/different executor or command, or an incompatible replace — whose
+  // key purge above empties the slot anyway). A plugin that only layers fields
+  // onto an existing target leaves the node with its creator; weak
+  // target-defaults stamps are always reclaimable.
   if (projectConfigSourceMap) {
+    const identityChanged =
+      !isCompatible ||
+      (target.executor !== undefined &&
+        target.executor !== baseTarget?.executor) ||
+      (target.command !== undefined &&
+        target.command !== baseTarget?.command) ||
+      suppliesNewOptionsIdentity(baseTarget, target);
     recordTargetIdentitySourceMapInfo(
       projectConfigSourceMap,
       targetIdentifier,
-      sourceInformation
+      sourceInformation,
+      identityChanged
     );
   }
 
@@ -633,6 +664,32 @@ export function isCompatibleTarget(
   }
 
   return true;
+}
+
+/**
+ * Run-commands and run-script targets carry their runnable identity in
+ * `options` (see {@link isCompatibleTarget}). A layer that supplies that
+ * identity where the base had none changed what the target runs — the same
+ * identity change as setting an executor on a target that had none.
+ */
+function suppliesNewOptionsIdentity(
+  baseTarget: TargetConfiguration | undefined,
+  target: TargetConfiguration
+): boolean {
+  const executor = target.executor ?? baseTarget?.executor;
+  if (executor === 'nx:run-commands') {
+    const baseCommand =
+      baseTarget?.options?.command ??
+      baseTarget?.options?.commands?.join(' && ');
+    const targetCommand =
+      target.options?.command ?? target.options?.commands?.join(' && ');
+    return !!targetCommand && targetCommand !== baseCommand;
+  }
+  if (executor === 'nx:run-script') {
+    const targetScript = target.options?.script;
+    return !!targetScript && targetScript !== baseTarget?.options?.script;
+  }
+  return false;
 }
 
 export function resolveNxTokensInOptions<T extends Object | Array<unknown>>(

@@ -1,9 +1,11 @@
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
-  promptWhenInteractive,
+  isInteractive,
+  selectPrompt,
   addBuildTargetDefaults,
   logShowProjectCommand,
+  type PackageJson,
 } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
@@ -28,9 +30,9 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { CompilerOptions } from 'typescript';
+import { addLintingToProject } from '../../utils/add-linting-to-project';
 import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
 import { normalizeLinterOption } from '../../utils/generator-prompts';
 import { sortPackageJsonFields } from '../../utils/package-json/sort-fields';
@@ -188,6 +190,8 @@ export async function libraryGeneratorInternal(
       testEnvironment: options.testEnvironment,
       runtimeTsconfigFileName: 'tsconfig.lib.json',
       compiler: options.compiler === 'swc' ? 'swc' : 'babel',
+      passWithNoTests: options.passWithNoTests,
+      skipPackageJson: options.skipPackageJson,
       addPlugin: options.addPlugin,
     });
     tasks.push(vitestTask);
@@ -385,6 +389,7 @@ export type AddLintOptions = Pick<
   | 'projectRoot'
   | 'unitTestRunner'
   | 'js'
+  | 'enableTypedLinting'
   | 'setParserOptionsProject'
   | 'rootProject'
   | 'bundler'
@@ -396,7 +401,28 @@ export async function addLint(
   tree: Tree,
   options: AddLintOptions
 ): Promise<GeneratorCallback> {
+  // Everything below reaches into `@nx/eslint`'s config utilities, which have
+  // no equivalent for other linters. Dispatch before touching any of it.
+  if (options.linter !== 'eslint') {
+    return addLintingToProject(tree, {
+      linter: options.linter,
+      project: options.name,
+      addPlugin: options.addPlugin,
+      rootProject: options.rootProject,
+      unitTestRunner: options.unitTestRunner,
+    });
+  }
+
   const { lintProjectGenerator } = ensurePackage('@nx/eslint', nxVersion);
+  const {
+    addOverrideToLintConfig,
+    lintConfigHasOverride,
+    isEslintConfigSupported,
+    updateOverrideInLintConfig,
+    addIgnoresToLintConfig,
+    isTypedLintingEnabled,
+    // nx-ignore-next-line
+  } = require('@nx/eslint/internal');
   const projectConfiguration = readProjectConfiguration(tree, options.name);
   const task = await lintProjectGenerator(tree, {
     project: options.name,
@@ -406,20 +432,12 @@ export async function addLint(
       joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
     ],
     unitTestRunner: options.unitTestRunner,
-    setParserOptionsProject: options.setParserOptionsProject,
+    enableTypedLinting: isTypedLintingEnabled(options),
     rootProject: options.rootProject,
     addPlugin: options.addPlugin,
     // Since the build target is inferred now, we need to let the generator know to add @nx/dependency-checks regardless.
     addPackageJsonDependencyChecks: options.bundler !== 'none',
   });
-  const {
-    addOverrideToLintConfig,
-    lintConfigHasOverride,
-    isEslintConfigSupported,
-    updateOverrideInLintConfig,
-    addIgnoresToLintConfig,
-    // nx-ignore-next-line
-  } = require('@nx/eslint/internal');
 
   // if config is not supported, we don't need to do anything
   if (!isEslintConfigSupported(tree)) {
@@ -787,31 +805,19 @@ async function normalizeOptions(
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
 
   if (isUsingTsSolutionConfig) {
-    options.unitTestRunner ??= await promptWhenInteractive<{
-      unitTestRunner: 'none' | 'jest' | 'vitest';
-    }>(
-      {
-        type: 'autocomplete',
-        name: 'unitTestRunner',
-        message: `Which unit test runner would you like to use?`,
-        choices: [{ name: 'none' }, { name: 'vitest' }, { name: 'jest' }],
-        initial: 0,
-      },
-      { unitTestRunner: 'none' }
-    ).then(({ unitTestRunner }) => unitTestRunner);
+    options.unitTestRunner ??= isInteractive()
+      ? await selectPrompt<'none' | 'jest' | 'vitest'>({
+          message: `Which unit test runner would you like to use?`,
+          choices: [{ value: 'none' }, { value: 'vitest' }, { value: 'jest' }],
+        })
+      : 'none';
   } else {
-    options.unitTestRunner ??= await promptWhenInteractive<{
-      unitTestRunner: 'none' | 'jest' | 'vitest';
-    }>(
-      {
-        type: 'autocomplete',
-        name: 'unitTestRunner',
-        message: `Which unit test runner would you like to use?`,
-        choices: [{ name: 'jest' }, { name: 'vitest' }, { name: 'none' }],
-        initial: 0,
-      },
-      { unitTestRunner: undefined }
-    ).then(({ unitTestRunner }) => unitTestRunner);
+    options.unitTestRunner ??= isInteractive()
+      ? await selectPrompt<'none' | 'jest' | 'vitest'>({
+          message: `Which unit test runner would you like to use?`,
+          choices: [{ value: 'jest' }, { value: 'vitest' }, { value: 'none' }],
+        })
+      : undefined;
 
     if (!options.unitTestRunner && options.bundler === 'vite') {
       options.unitTestRunner = 'vitest';
@@ -911,6 +917,10 @@ async function normalizeOptions(
 
   return {
     ...options,
+    // Read from `options`, not a hoisted local: the `npm-scripts` block resets
+    // it to 'none' after `normalizeLinterOption` runs. Naming the key also
+    // satisfies the normalized type, since the spread carries `linter?`.
+    linter: options.linter,
     fileName,
     name: isUsingTsSolutionConfig && !options.name ? importPath : projectName,
     projectNames,

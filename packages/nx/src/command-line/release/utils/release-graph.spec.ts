@@ -220,6 +220,138 @@ describe('ReleaseGraph', () => {
   });
 
   describe('filtering - independent release groups with updateDependents', () => {
+    it('should expand project tag patterns before filtering release projects', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - projectA@1.0.0 [js]
+            - projectB@1.0.0 [js]
+            - projectC@1.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+            },
+          },
+          mockResolveCurrentVersion,
+          {
+            projects: ['tag:type:api'],
+          }
+        );
+
+      projectGraph.nodes.projectA.data.tags = ['type:api'];
+      projectGraph.nodes.projectB.data.tags = ['type:api'];
+      projectGraph.nodes.projectC.data.tags = ['type:other'];
+
+      const graph = await createReleaseGraph({
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters,
+        firstRelease: false,
+        preid: undefined,
+        verbose: false,
+      });
+
+      expect(graph.allProjectsToProcess).toEqual(
+        new Set(['projectA', 'projectB'])
+      );
+      expect(
+        graph.releaseGroupToFilteredProjects.get(graph.releaseGroups[0])
+      ).toEqual(new Set(['projectA', 'projectB']));
+      expect(graph.filterLog).toEqual({
+        title: 'Your filter "tag:type:api" matched the following projects:',
+        bodyLines: ['- projectA', '- projectB'],
+      });
+    });
+
+    it('should expand exclusion patterns without mutating the filter', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - projectA@1.0.0 [js]
+            - projectB@1.0.0 [js]
+            - projectC@1.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+            },
+          },
+          mockResolveCurrentVersion,
+          {
+            projects: ['!tag:type:other'],
+          }
+        );
+
+      projectGraph.nodes.projectA.data.tags = ['type:api'];
+      projectGraph.nodes.projectB.data.tags = ['type:api'];
+      projectGraph.nodes.projectC.data.tags = ['type:other'];
+
+      const graph = await createReleaseGraph({
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters,
+        firstRelease: false,
+        preid: undefined,
+        verbose: false,
+      });
+
+      expect(graph.allProjectsToProcess).toEqual(
+        new Set(['projectA', 'projectB'])
+      );
+      expect(
+        graph.releaseGroupToFilteredProjects.get(graph.releaseGroups[0])
+      ).toEqual(new Set(['projectA', 'projectB']));
+      expect(graph.filterLog?.title).toBe(
+        'Your filter "!tag:type:other" matched the following projects:'
+      );
+      expect(filters.projects).toEqual(['!tag:type:other']);
+    });
+
+    it('should provide a friendly error when no projects match', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - projectA@1.0.0 [js]
+            - projectB@1.0.0 [js]
+        `,
+          {
+            version: {
+              conventionalCommits: true,
+            },
+          },
+          mockResolveCurrentVersion,
+          {
+            projects: ['tag:type:apo'],
+          }
+        );
+
+      projectGraph.nodes.projectA.data.tags = ['type:api'];
+      projectGraph.nodes.projectB.data.tags = ['type:api'];
+
+      await expect(
+        createReleaseGraph({
+          tree,
+          projectGraph,
+          nxReleaseConfig,
+          filters,
+          firstRelease: false,
+          preid: undefined,
+          verbose: false,
+        })
+      ).rejects.toThrow(
+        'Your --projects filter "tag:type:apo" did not match any projects in the workspace'
+      );
+    });
+
     describe('scenario: projectA depends on projectB, filter by [projectB]', () => {
       it('should include ONLY projectB when updateDependents=never (projectA should NOT be included)', async () => {
         const { nxReleaseConfig, projectGraph, filters } =

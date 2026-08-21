@@ -53,9 +53,9 @@
       "description": "Application name."
     },
     "linter": {
-      "description": "The tool to use for running lint checks.",
+      "description": "The tool to use for running lint checks. Defaults to the linter the workspace already uses.",
       "type": "string",
-      "default": "eslint"
+      "enum": ["eslint", "oxlint", "none"]
     },
     "packageManager": {
       "description": "The package manager used to install dependencies.",

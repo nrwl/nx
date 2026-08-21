@@ -2,6 +2,8 @@ import {
   getNamedInputs,
   calculateHashesForCreateNodes,
   PluginCache,
+  workspaceDataDirectory,
+  hashObject,
 } from '@nx/devkit/internal';
 import {
   CreateNodesContext,
@@ -15,8 +17,6 @@ import {
 } from '@nx/devkit';
 import { dirname, join } from 'path';
 import { getLockFileName } from '@nx/js';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { hashObject } from 'nx/src/devkit-internals';
 import { addBuildAndWatchDepsTargets } from '@nx/js/internal';
 
 export interface DetoxPluginOptions {

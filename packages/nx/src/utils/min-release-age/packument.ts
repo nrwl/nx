@@ -25,7 +25,7 @@ function toArray<T>(value: T | T[] | undefined): T[] {
 export async function fetchRegistryMetadata(
   pkg: string
 ): Promise<RegistryMetadata> {
-  const raw = await packageRegistryView(pkg, '', '--json');
+  const raw = await packageRegistryView(pkg, '', ['--json']);
   const parsed = JSON.parse(raw) as {
     name?: string;
     versions?: string | string[];

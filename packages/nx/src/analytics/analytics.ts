@@ -1,4 +1,4 @@
-import { readNxJson } from '../config/nx-json';
+import { type NxJsonConfiguration, readNxJson } from '../config/nx-json';
 import { workspaceRoot } from '../utils/workspace-root';
 import { nxVersion } from '../utils/versions';
 import { IS_WASM } from '../native';
@@ -20,7 +20,7 @@ import * as os from 'os';
 import { createHash } from 'crypto';
 import { getCurrentMachineId } from '../utils/machine-id-cache';
 import { isCI } from '../utils/is-ci';
-import { generateWorkspaceId } from '../utils/analytics-prompt';
+import { generateWorkspaceId } from '../utils/workspace-id';
 import { getDbConnection } from '../utils/db-connection';
 
 // Conditionally import telemetry functions only on non-WASM platforms
@@ -71,18 +71,21 @@ export async function startAnalytics() {
   // detection, machine id, telemetry init) may throw past this boundary -
   // on any failure, continue without telemetry.
   try {
-    if (!isAnalyticsEnabled()) {
+    const nxJson = readNxJson(workspaceRoot);
+    if (!isAnalyticsEnabled(nxJson)) {
       return;
     }
 
-    const nxJson = readNxJson(workspaceRoot);
-    const workspaceId = generateWorkspaceId();
+    const workspaceId = generateWorkspaceId(workspaceRoot, nxJson);
     if (!workspaceId) {
       // Not a git repo — no telemetry
       return;
     }
     const isNxCloud = !!(nxJson?.nxCloudId ?? nxJson?.nxCloudAccessToken);
-    const userId = await getTelemetryUserId(workspaceId);
+    // A CI fleet is not a user: shared images bake in /etc/machine-id, so a
+    // uid would collapse whole fleets into one GA "user" (and trip per-user
+    // collection caps). GA falls back to cid = workspace for CI traffic.
+    const userId = isCI() ? undefined : await getTelemetryUserId(workspaceId);
     const packageManagerInfo = getPackageManagerInfo();
 
     const nodeVersion = parse(process.version);
@@ -274,8 +277,7 @@ function getPackageManagerInfo() {
   };
 }
 
-function isAnalyticsEnabled(): boolean {
-  const nxJson = readNxJson(workspaceRoot);
+function isAnalyticsEnabled(nxJson: NxJsonConfiguration | null): boolean {
   return nxJson?.analytics === true;
 }
 

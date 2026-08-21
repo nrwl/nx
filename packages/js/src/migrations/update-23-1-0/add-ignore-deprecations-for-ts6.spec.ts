@@ -1051,5 +1051,67 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
           .ignoreDeprecations
       ).toBe('6.0');
     });
+
+    it('flags a child that inherits a deprecated value through a package-form "extends"', async () => {
+      // A package-provided base (an @tsconfig/* preset) is reached through node
+      // module resolution, which probes for the package with fileExists and
+      // directoryExists; a host answering those from ts.sys reads real disk and
+      // never finds a base that exists only in the tree. The base lives under
+      // node_modules and is not named tsconfig*.json, so it is never collected;
+      // its node10 reaches the child only if the host resolves the package.
+      tree.write(
+        'node_modules/@tsconfig/base/package.json',
+        JSON.stringify({ name: '@tsconfig/base', version: '1.0.0' }, null, 2)
+      );
+      tree.write(
+        'node_modules/@tsconfig/base/base.json',
+        JSON.stringify(
+          { compilerOptions: { moduleResolution: 'node10' } },
+          null,
+          2
+        )
+      );
+      tree.write(
+        'libs/a/tsconfig.app.json',
+        JSON.stringify(
+          { extends: '@tsconfig/base/base.json', compilerOptions: {} },
+          null,
+          2
+        )
+      );
+
+      await update(tree);
+
+      expect(
+        readJson(tree, 'libs/a/tsconfig.app.json').compilerOptions
+          .ignoreDeprecations
+      ).toBe('6.0');
+    });
+
+    it('flags a child that inherits a deprecated value through an extension-less "extends"', async () => {
+      // "./base" (no .json) resolves against process.cwd() when existence comes
+      // from ts.sys, so it works only when the command runs from the workspace
+      // root. The tree host answers existence from the tree, so it resolves
+      // regardless of the working directory.
+      tree.write(
+        'libs/a/base.json',
+        JSON.stringify(
+          { compilerOptions: { moduleResolution: 'node10' } },
+          null,
+          2
+        )
+      );
+      tree.write(
+        'libs/a/tsconfig.app.json',
+        JSON.stringify({ extends: './base', compilerOptions: {} }, null, 2)
+      );
+
+      await update(tree);
+
+      expect(
+        readJson(tree, 'libs/a/tsconfig.app.json').compilerOptions
+          .ignoreDeprecations
+      ).toBe('6.0');
+    });
   });
 });

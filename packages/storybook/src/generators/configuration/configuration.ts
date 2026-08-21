@@ -33,7 +33,6 @@ import {
   projectIsRootProjectInStandaloneWorkspace,
   updateLintConfig,
 } from './lib/util-functions';
-import type { LinterType } from '@nx/eslint';
 import {
   findStorybookAndBuildTargetsAndCompiler,
   getStorybookVersionToInstall,
@@ -44,6 +43,7 @@ import {
   nxVersion,
   tsLibVersion,
   tsNodeVersion,
+  versions,
 } from '../../utils/versions';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import { editRootTsConfig } from './lib/edit-root-tsconfig';
@@ -197,6 +197,10 @@ export async function configurationGeneratorInternal(
     devDeps['storybook'] = getStorybookVersionToInstall(tree);
   }
 
+  if (schema.interactionTests) {
+    devDeps['@storybook/test-runner'] = versions(tree).testRunnerVersion;
+  }
+
   if (schema.tsConfiguration) {
     devDeps['ts-node'] = tsNodeVersion;
   }
@@ -244,7 +248,6 @@ function normalizeSchema(
 
   const defaults = {
     interactionTests: true,
-    linter: 'eslint' as LinterType,
     js: false,
     tsConfiguration: true,
     addPlugin,

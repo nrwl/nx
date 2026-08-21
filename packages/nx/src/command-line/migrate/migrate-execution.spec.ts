@@ -13,6 +13,12 @@ jest.mock('./migrate-commits', () => ({
     mockCommitCheckpointBeforeMigrations(...args),
 }));
 
+const mockRunAgenticPromptStep = jest.fn();
+jest.mock('./agentic/run-step', () => ({
+  runAgenticPromptStep: (...args: unknown[]) =>
+    mockRunAgenticPromptStep(...args),
+}));
+
 const mockNgRunMigration = jest.fn();
 jest.mock('../../adapter/ngcli-adapter', () => ({
   runMigration: (...args: unknown[]) => mockNgRunMigration(...args),
@@ -41,9 +47,13 @@ import {
 import { tmpdir } from 'os';
 import { dirname, join } from 'path';
 import type { MigrationsJson } from '../../config/misc-interfaces';
+import { logger } from '../../utils/logger';
+import { output } from '../../utils/output';
+import type { ResolvedAgentic } from './agentic/types';
 import {
   ChangedDepInstaller,
   executeMigrations,
+  formatSingleMigrationRerunCommand,
   getImplementationPath,
   parseMigrationReturn,
   readMigrationCollection,
@@ -93,51 +103,82 @@ afterEach(() => {
 });
 
 describe('parseMigrationReturn', () => {
-  it.each<[string, unknown, { nextSteps: string[]; agentContext: string[] }]>([
+  it.each<
+    [
+      string,
+      unknown,
+      { nextSteps: string[]; agentContext: string[]; skipAgentic: boolean },
+    ]
+  >([
     [
       'returns an array of strings as nextSteps with an empty agentContext',
       ['a', 'b'],
-      { nextSteps: ['a', 'b'], agentContext: [] },
+      { nextSteps: ['a', 'b'], agentContext: [], skipAgentic: false },
     ],
     [
       'filters non-string entries out of an array return value',
       ['a', 1, null, 'b', undefined, {}],
-      { nextSteps: ['a', 'b'], agentContext: [] },
+      { nextSteps: ['a', 'b'], agentContext: [], skipAgentic: false },
     ],
     [
       'filters non-string entries out of both nextSteps and agentContext',
       { nextSteps: ['x', 2], agentContext: ['y', false] },
-      { nextSteps: ['x'], agentContext: ['y'] },
+      { nextSteps: ['x'], agentContext: ['y'], skipAgentic: false },
     ],
     [
       'returns empty arrays for an object missing both keys',
       {},
-      { nextSteps: [], agentContext: [] },
+      { nextSteps: [], agentContext: [], skipAgentic: false },
     ],
     [
       'returns empty arrays for an object with unrelated keys',
       { foo: 'bar' },
-      { nextSteps: [], agentContext: [] },
+      { nextSteps: [], agentContext: [], skipAgentic: false },
     ],
     [
       'returns empty arrays for undefined',
       undefined,
-      { nextSteps: [], agentContext: [] },
+      { nextSteps: [], agentContext: [], skipAgentic: false },
     ],
     [
       'returns empty arrays for null',
       null,
-      { nextSteps: [], agentContext: [] },
+      { nextSteps: [], agentContext: [], skipAgentic: false },
     ],
     [
       'returns empty arrays for a number',
       42,
-      { nextSteps: [], agentContext: [] },
+      { nextSteps: [], agentContext: [], skipAgentic: false },
     ],
     [
       'returns empty arrays for a function',
       () => {},
-      { nextSteps: [], agentContext: [] },
+      { nextSteps: [], agentContext: [], skipAgentic: false },
+    ],
+    [
+      'reads skipAgentic: true alongside the other buckets',
+      { nextSteps: ['a'], agentContext: ['b'], skipAgentic: true },
+      { nextSteps: ['a'], agentContext: ['b'], skipAgentic: true },
+    ],
+    [
+      'reads skipAgentic: true on its own',
+      { skipAgentic: true },
+      { nextSteps: [], agentContext: [], skipAgentic: true },
+    ],
+    [
+      'reads an explicit skipAgentic: false',
+      { skipAgentic: false },
+      { nextSteps: [], agentContext: [], skipAgentic: false },
+    ],
+    [
+      'does not let a truthy string opt out of the AI step',
+      { skipAgentic: 'yes' },
+      { nextSteps: [], agentContext: [], skipAgentic: false },
+    ],
+    [
+      'does not let a truthy number opt out of the AI step',
+      { skipAgentic: 1 },
+      { nextSteps: [], agentContext: [], skipAgentic: false },
     ],
   ])('%s', (_title, input, expected) => {
     expect(parseMigrationReturn(input)).toEqual(expected);
@@ -307,9 +348,35 @@ describe('runNxOrAngularMigration', () => {
     expect(result.madeChanges).toBe(true);
     expect(result.nextSteps).toEqual(['step one']);
     expect(result.agentContext).toEqual(['ctx one']);
+    expect(result.skipAgentic).toBe(false);
     expect(existsSync(join(tmpRoot, 'generated.txt'))).toBe(true);
     expect(readFileSync(join(tmpRoot, 'generated.txt'), 'utf-8')).toBe('hello');
     expect(mockNgRunMigration).not.toHaveBeenCalled();
+  });
+
+  it('surfaces skipAgentic from the generator return value', async () => {
+    const pkgDir = installMigrationPackage(tmpRoot, 'pkg-waive', {
+      generators: {
+        waive: { version: '1.0.0', implementation: './impl.js' },
+      },
+    });
+    writeImplFile(
+      pkgDir,
+      'impl.js',
+      `module.exports.default = async function (tree) {
+        tree.write('waived.txt', 'x');
+        return { skipAgentic: true };
+      };`
+    );
+
+    const result = await runNxOrAngularMigration(
+      tmpRoot,
+      { package: 'pkg-waive', name: 'waive', version: '1.0.0' },
+      false
+    );
+
+    expect(result.madeChanges).toBe(true);
+    expect(result.skipAgentic).toBe(true);
   });
 
   it('reports no changes for a no-op implementation', async () => {
@@ -419,6 +486,9 @@ describe('runNxOrAngularMigration', () => {
     expect(result.changes).toHaveLength(1);
     expect(result.nextSteps).toEqual([]);
     expect(result.agentContext).toEqual([]);
+    // Angular schematics have no return channel, so they can never waive
+    // their AI step.
+    expect(result.skipAgentic).toBe(false);
   });
 });
 
@@ -496,6 +566,50 @@ describe('ChangedDepInstaller', () => {
     expect(mockSpawn).toHaveBeenCalledTimes(1);
   });
 
+  it('reports installed only once an install actually lands', async () => {
+    // `installed` re-points the recorded run's dependency baseline
+    // (recordInstallLanded), so a value that flips early would let a later
+    // step skip an install that never happened.
+    writePackageJson();
+    const installer = new ChangedDepInstaller(tmpRoot, false);
+    expect(installer.installed).toBe(false);
+    writePackageJson({ dependencies: { foo: '2.0.0' } });
+    const child = new FakeChildProcess();
+    mockSpawn.mockReturnValue(child);
+
+    const promise = installer.installDepsIfChanged();
+    expect(installer.installed).toBe(false);
+    child.emit('close', 0);
+    await promise;
+
+    expect(installer.installed).toBe(true);
+  });
+
+  it('does not report installed when the install fails', async () => {
+    writePackageJson();
+    const installer = new ChangedDepInstaller(tmpRoot, false);
+    writePackageJson({ dependencies: { foo: '2.0.0' } });
+    const child = new FakeChildProcess();
+    mockSpawn.mockReturnValue(child);
+
+    const promise = installer.installDepsIfChanged();
+    child.emit('close', 1);
+
+    await expect(promise).rejects.toThrow();
+    expect(installer.installed).toBe(false);
+  });
+
+  it('does not report installed when the install was skipped', async () => {
+    writePackageJson();
+    const installer = new ChangedDepInstaller(tmpRoot, true);
+    writePackageJson({ dependencies: { foo: '2.0.0' } });
+
+    await installer.installDepsIfChanged();
+
+    expect(installer.skippedInstall).toBe(true);
+    expect(installer.installed).toBe(false);
+  });
+
   it('treats a missing package.json as an empty dependency set, so writing one counts as a change', async () => {
     // tmpRoot has no package.json at construction time.
     const installer = new ChangedDepInstaller(tmpRoot, true);
@@ -545,6 +659,60 @@ describe('ChangedDepInstaller', () => {
 
       await expect(promise).rejects.toThrow(/^Command failed:/);
     });
+
+    it('surfaces the configured rerun command in the peer-deps guidance', async () => {
+      const errorSpy = jest.spyOn(output, 'error').mockImplementation(() => {});
+      try {
+        writePackageJson();
+        const installer = new ChangedDepInstaller(
+          tmpRoot,
+          false,
+          'nx migrate --run-migration=@nx/js:x'
+        );
+        writePackageJson({ dependencies: { foo: '2.0.0' } });
+        const child = new FakeChildProcess(true);
+        mockSpawn.mockReturnValue(child);
+
+        const promise = installer.installDepsIfChanged();
+        child.stderr!.emit('data', Buffer.from('npm ERR! code ERESOLVE'));
+        child.emit('close', 1);
+
+        await expect(promise).rejects.toMatchObject({
+          name: 'NpmPeerDepsInstallError',
+        });
+        expect(errorSpy).toHaveBeenCalledTimes(1);
+        const bodyLines = (
+          errorSpy.mock.calls[0][0] as { bodyLines: string[] }
+        ).bodyLines.join('\n');
+        expect(bodyLines).toContain('   nx migrate --run-migration=@nx/js:x');
+        expect(bodyLines).toContain(
+          '   nx migrate --run-migration=@nx/js:x --skip-install'
+        );
+        expect(bodyLines).not.toContain('nx migrate --run-migrations');
+      } finally {
+        errorSpy.mockRestore();
+      }
+    });
+  });
+});
+
+describe('formatSingleMigrationRerunCommand', () => {
+  it('passes a plain id through unquoted', () => {
+    expect(formatSingleMigrationRerunCommand('@nx/js:my-migration')).toBe(
+      'nx migrate --run-migration=@nx/js:my-migration'
+    );
+  });
+
+  it('single-quotes an id the shell would split or expand, keeping it literal', () => {
+    expect(formatSingleMigrationRerunCommand('@nx/js:rename files')).toBe(
+      "nx migrate --run-migration='@nx/js:rename files'"
+    );
+    expect(formatSingleMigrationRerunCommand('@nx/js:use-$(cmd)')).toBe(
+      "nx migrate --run-migration='@nx/js:use-$(cmd)'"
+    );
+    expect(formatSingleMigrationRerunCommand("@nx/js:it's")).toBe(
+      String.raw`nx migrate --run-migration='@nx/js:it'\''s'`
+    );
   });
 });
 
@@ -685,5 +853,277 @@ describe('executeMigrations', () => {
     );
 
     expect(mockCommitMigrationIfRequested.mock.calls[2][5]).toEqual([]);
+  });
+
+  describe('skipAgentic', () => {
+    let infoSpy: jest.SpyInstance;
+
+    const AGENTIC_ENABLED: ResolvedAgentic = {
+      kind: 'enabled',
+      selectedAgent: {
+        id: 'claude-code',
+        displayName: 'Claude Code',
+        binary: '/usr/local/bin/claude',
+        source: 'path',
+      },
+    };
+
+    // Writes a migration implementation plus its `migrations.json` entry, so
+    // each case can pick its own return value and change footprint.
+    const writeMigration = (
+      name: string,
+      body: string
+    ): { package: string; name: string; version: string } => {
+      const collectionPath = join(pkgDir, 'migrations.json');
+      const collection = JSON.parse(readFileSync(collectionPath, 'utf-8'));
+      collection.generators[name] = {
+        version: '9.0.0',
+        implementation: `./${name}.js`,
+      };
+      writeFileSync(collectionPath, JSON.stringify(collection));
+      writeImplFile(
+        pkgDir,
+        `${name}.js`,
+        `module.exports.default = async function (tree) { ${body} };`
+      );
+      return { package: 'exec-plugin', name, version: '9.0.0' };
+    };
+
+    const hybrid = (name: string, body: string) => ({
+      ...writeMigration(name, body),
+      implementation: `./${name}.js`,
+      prompt: `prompts/${name}.md`,
+    });
+
+    const run = (migrations: Array<Record<string, unknown>>) =>
+      executeMigrations(
+        tmpRoot,
+        migrations as Parameters<typeof executeMigrations>[1],
+        false,
+        /* shouldCreateCommits: */ true,
+        'chore(repo): ',
+        true,
+        AGENTIC_ENABLED,
+        false,
+        /* shouldRunValidation: */ true
+      );
+
+    const logged = () =>
+      infoSpy.mock.calls.map((args) => String(args[0] ?? '')).join('\n');
+
+    beforeEach(() => {
+      infoSpy = jest.spyOn(logger, 'info').mockImplementation(() => undefined);
+      mockCommitMigrationIfRequested.mockResolvedValue({
+        status: 'committed',
+        sha: 'sha',
+      });
+      mockRunAgenticPromptStep.mockResolvedValue({
+        ambiguous: false,
+        summary: 'done',
+      });
+    });
+
+    afterEach(() => {
+      infoSpy.mockRestore();
+    });
+
+    it('runs the prompt step for a hybrid that does not waive it', async () => {
+      const m = hybrid('hybrid-keeps', `tree.write('kept.txt', 'x');`);
+
+      const result = await run([m]);
+
+      expect(mockRunAgenticPromptStep).toHaveBeenCalledTimes(1);
+      expect(result.waivedAgenticStepsCount).toBe(0);
+    });
+
+    it('skips the prompt step, the next-steps entry, and the deferral for a waived hybrid', async () => {
+      const m = hybrid(
+        'hybrid-waives',
+        `tree.write('waived.txt', 'x'); return { skipAgentic: true };`
+      );
+
+      const result = await run([m]);
+
+      expect(mockRunAgenticPromptStep).not.toHaveBeenCalled();
+      expect(result.skippedPrompts).toEqual([]);
+      expect(result.skippedPromptsCount).toBe(0);
+      expect(result.nextSteps).toEqual([]);
+      expect(result.waivedAgenticStepsCount).toBe(1);
+      expect(logged()).toContain(
+        'Prompt phase skipped. The migration reported nothing left for the AI step to do.'
+      );
+    });
+
+    it('waives the prompt step with the agentic flow disabled too', async () => {
+      const m = hybrid(
+        'hybrid-waives-offline',
+        `tree.write('waived.txt', 'x'); return { skipAgentic: true };`
+      );
+
+      const result = await executeMigrations(
+        tmpRoot,
+        [m] as Parameters<typeof executeMigrations>[1],
+        false,
+        true,
+        'chore(repo): ',
+        true,
+        { kind: 'disabled' }
+      );
+
+      expect(result.skippedPrompts).toEqual([]);
+      expect(result.waivedAgenticStepsCount).toBe(1);
+      expect(logged()).toContain(
+        'Prompt phase skipped. The migration reported nothing left for the AI step to do.'
+      );
+    });
+
+    it('does not commit a waived hybrid that made no changes, leaving prior commit debt pending', async () => {
+      mockCommitMigrationIfRequested.mockReset();
+      mockCommitMigrationIfRequested.mockResolvedValue({
+        status: 'failed',
+        reason: 'boom',
+      });
+      const first = migration('mig-a', '1.0.0');
+      const waived = hybrid(
+        'hybrid-noop-waives',
+        `return { skipAgentic: true };`
+      );
+
+      const result = await run([first, waived]);
+
+      // Only `mig-a` attempted a commit: a no-op migration must not absorb
+      // the prior failed commit's diff under its own name.
+      expect(mockCommitMigrationIfRequested).toHaveBeenCalledTimes(1);
+      expect(mockCommitMigrationIfRequested.mock.calls[0][1].name).toBe(
+        'mig-a'
+      );
+      expect(result.migrationsWithNoChanges.map((m) => m.name)).toEqual([
+        'hybrid-noop-waives',
+      ]);
+      expect(result.retainedAtSuccess).toEqual(['exec-plugin: mig-a']);
+      expect(result.waivedAgenticStepsCount).toBe(1);
+    });
+
+    it('skips the validation step for a waived generator-only migration', async () => {
+      const m = writeMigration(
+        'gen-waives',
+        `tree.write('validated.txt', 'x'); return { skipAgentic: true };`
+      );
+
+      const result = await run([m]);
+
+      expect(mockRunAgenticPromptStep).not.toHaveBeenCalled();
+      expect(result.waivedAgenticStepsCount).toBe(1);
+      expect(logged()).toContain(
+        'Validation skipped. The migration reported its changes need no AI review.'
+      );
+    });
+
+    it('stays silent for a waived generator-only migration that had no changes to validate', async () => {
+      const m = writeMigration(
+        'gen-noop-waives',
+        `return { skipAgentic: true };`
+      );
+
+      const result = await run([m]);
+
+      expect(mockRunAgenticPromptStep).not.toHaveBeenCalled();
+      expect(logged()).not.toContain('Validation skipped');
+      // Nothing was going to run, so there is no waived step to report.
+      expect(result.waivedAgenticStepsCount).toBe(0);
+      expect(result.migrationsWithNoChanges.map((m) => m.name)).toEqual([
+        'gen-noop-waives',
+      ]);
+    });
+
+    // `agenticRun` requires `kind: 'enabled'` and the outer-agent hand-off
+    // requires `kind: 'inside-agent'`, so these two pin the asymmetry that
+    // falls out of that: a hybrid's prompt is owed in every mode and waiving
+    // it moots the hand-off, while a generator-only migration has no
+    // validation step to waive under `inside-agent` and keeps the hand-off.
+    const runInsideAgent = (m: Record<string, unknown>) =>
+      executeMigrations(
+        tmpRoot,
+        [m] as Parameters<typeof executeMigrations>[1],
+        false,
+        true,
+        'chore(repo): ',
+        true,
+        { kind: 'inside-agent' },
+        false,
+        /* shouldRunValidation: */ true
+      );
+
+    it('keeps the outer-agent hand-off for a waived generator-only migration under inside-agent', async () => {
+      const m = writeMigration(
+        'gen-waives-inside-agent',
+        `tree.write('validated.txt', 'x'); return { skipAgentic: true, agentContext: ['hint for the outer agent'] };`
+      );
+      const stdoutSpy = jest
+        .spyOn(process.stdout, 'write')
+        .mockImplementation(() => true);
+      const verboseSpy = jest
+        .spyOn(logger, 'verbose')
+        .mockImplementation(() => undefined);
+
+      let written: string;
+      // Read before restoring: `mockRestore` also resets the recorded calls, so
+      // asserting on the spy afterwards would pass no matter what fired.
+      let verboseCalls: number;
+      let result: Awaited<ReturnType<typeof executeMigrations>>;
+      try {
+        result = await runInsideAgent(m);
+        written = stdoutSpy.mock.calls.map((args) => String(args[0])).join('');
+        verboseCalls = verboseSpy.mock.calls.length;
+      } finally {
+        stdoutSpy.mockRestore();
+        verboseSpy.mockRestore();
+      }
+
+      expect(written).toContain(
+        '<agent_context migration="exec-plugin:gen-waives-inside-agent">'
+      );
+      expect(written).toContain('hint for the outer agent');
+      // No validation step exists under `inside-agent`, so nothing was waived
+      // and neither the user-facing line nor the author-facing note applies.
+      expect(result.waivedAgenticStepsCount).toBe(0);
+      expect(logged()).not.toContain('Validation skipped');
+      expect(verboseCalls).toBe(0);
+    });
+
+    it('drops the outer-agent hand-off for a waived hybrid under inside-agent', async () => {
+      const m = hybrid(
+        'hybrid-waives-inside-agent',
+        `tree.write('waived.txt', 'x'); return { skipAgentic: true, agentContext: ['hint for the outer agent'] };`
+      );
+      const stdoutSpy = jest
+        .spyOn(process.stdout, 'write')
+        .mockImplementation(() => true);
+
+      let written: string;
+      let result: Awaited<ReturnType<typeof executeMigrations>>;
+      try {
+        result = await runInsideAgent(m);
+        written = stdoutSpy.mock.calls.map((args) => String(args[0])).join('');
+      } finally {
+        stdoutSpy.mockRestore();
+      }
+
+      expect(written).not.toContain('<agent_context');
+      expect(result.waivedAgenticStepsCount).toBe(1);
+      expect(result.skippedPrompts).toEqual([]);
+    });
+
+    it('runs the validation step for a generator-only migration that does not waive it', async () => {
+      const m = writeMigration(
+        'gen-keeps',
+        `tree.write('validated.txt', 'x');`
+      );
+
+      const result = await run([m]);
+
+      expect(mockRunAgenticPromptStep).toHaveBeenCalledTimes(1);
+      expect(result.waivedAgenticStepsCount).toBe(0);
+    });
   });
 });

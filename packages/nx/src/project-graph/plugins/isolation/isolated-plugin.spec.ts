@@ -1,4 +1,8 @@
-import { IsolatedPlugin, LoadResultPayload } from './isolated-plugin';
+import {
+  getPluginWorkerSocketId,
+  IsolatedPlugin,
+  LoadResultPayload,
+} from './isolated-plugin';
 
 // We need to mock the dependencies before importing the class
 jest.mock('../../../daemon/socket-utils', () => ({
@@ -18,6 +22,42 @@ jest.mock('../resolve-plugin', () => ({
 }));
 
 describe('IsolatedPlugin', () => {
+  describe('plugin worker socket ids', () => {
+    const initialWorkerCount = global.nxPluginWorkerCount;
+
+    beforeEach(() => {
+      global.nxPluginWorkerCount = 0;
+    });
+
+    afterAll(() => {
+      global.nxPluginWorkerCount = initialWorkerCount;
+    });
+
+    it('combines the pid, a monotonic counter, and eight random hex characters', () => {
+      expect(getPluginWorkerSocketId()).toMatch(
+        new RegExp(`^${process.pid}-0-[0-9a-f]{8}$`)
+      );
+      expect(getPluginWorkerSocketId()).toMatch(
+        new RegExp(`^${process.pid}-1-[0-9a-f]{8}$`)
+      );
+    });
+
+    it('draws the tail fresh each time rather than deriving it', () => {
+      // The shape above is satisfied by any constant and by a hash of the
+      // workspace root — which is exactly the determinism this replaced, so
+      // without this the fix can be reverted with the suite green. On Windows
+      // the name is the only barrier there is.
+      const tails = new Set(
+        Array.from({ length: 16 }, () => {
+          const parts = getPluginWorkerSocketId().split('-');
+          return parts[parts.length - 1];
+        })
+      );
+
+      expect(tails.size).toBeGreaterThan(1);
+    });
+  });
+
   // Helper to create a mock load result
   function createLoadResult(
     hooks: Partial<{

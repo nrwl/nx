@@ -19,7 +19,7 @@ title="Applying Module Boundaries"
 
 Nx offers two complementary approaches to enforce module boundaries:
 
-**ESLint Integration** - For JavaScript/TypeScript projects, enforce boundaries on code imports using the `@nx/enforce-module-boundaries` ESLint rule. This checks TypeScript imports and `package.json` dependencies during linting.
+**Lint rule integration** - For JavaScript/TypeScript projects, enforce boundaries on code imports using the `@nx/enforce-module-boundaries` rule. This checks TypeScript imports and `package.json` dependencies during linting. ESLint runs the rule natively, and `@nx/oxlint` bridges it into Oxlint.
 
 **Language-Agnostic Conformance** - For any project type (e.g. Java, Python, PHP, JavaScript, etc.), use the [Conformance plugin's Enforce Project Boundaries rule](/docs/enterprise/conformance). This rule checks dependencies in the Nx graph during `nx conformance:check`. Requires [Nx Enterprise plan](https://nx.dev/enterprise).
 
@@ -98,7 +98,7 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 
 Once you have tagged your projects, configure the dependency constraints based on your chosen approach:
 
-{% tabs syncKey="eslint-config-preference" %}
+{% tabs syncKey="boundary-enforcement" %}
 {% tabitem label="ESLint" %}
 
 For JavaScript/TypeScript projects, configure the `@nx/enforce-module-boundaries` ESLint rule:
@@ -194,7 +194,47 @@ A project tagged with "scope:admin" can only depend on projects
 tagged with "scoped:shared" or "scope:admin".
 ```
 
-Read more about [ESLint rule options](/docs/technologies/eslint/eslint-plugin/guides/enforce-module-boundaries).
+Read more about [ESLint rule options](/docs/kb/enforce-module-boundaries).
+
+{% /tabitem %}
+{% tabitem label="Oxlint" %}
+
+[`@nx/oxlint`](/docs/technologies/oxlint/introduction) exposes the rule to Oxlint as a JavaScript plugin.
+It reads the project graph and takes the options documented for ESLint, so your constraints carry over unchanged.
+
+{% aside type="caution" title="Experimental" %}
+The bridge depends on the Oxlint JavaScript plugin API. Oxlint excludes that API from its semantic versioning policy, so it can change in any release.
+{% /aside %}
+
+Register the bridge and configure the rule in `.oxlintrc.json`:
+
+```json
+{
+  "jsPlugins": ["@nx/oxlint/boundaries-plugin"],
+  "rules": {
+    "@nx/enforce-module-boundaries": [
+      "error",
+      {
+        "allow": [],
+        "depConstraints": [
+          {
+            "sourceTag": "scope:shared",
+            "onlyDependOnLibsWithTags": ["scope:shared"]
+          },
+          {
+            "sourceTag": "scope:admin",
+            "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"]
+          },
+          {
+            "sourceTag": "scope:client",
+            "onlyDependOnLibsWithTags": ["scope:shared", "scope:client"]
+          }
+        ]
+      }
+    ]
+  }
+}
+```
 
 {% /tabitem %}
 {% tabitem label="Conformance" %}

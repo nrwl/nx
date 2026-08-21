@@ -3,24 +3,47 @@
 import TableOfContentsList from './TableOfContentsList.astro';
 import { GitHubStarWidget } from '@nx/nx-dev-ui-common';
 import CopyPageButton from '../CopyPageButton.astro';
+import { getTopicId } from '../../utils/knowledge-base';
 
-const { toc } = Astro.locals.starlightRoute;
+const { toc, id, entry } = Astro.locals.starlightRoute;
 const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
 const rawContent = Astro.locals.rawContent;
+const topics = id.startsWith('kb/') ? (entry.data.topics ?? []) : [];
 ---
 
 {
   toc && (
-    <custom-toc data-min-h={toc.minHeadingLevel} data-max-h={toc.maxHeadingLevel}>
+    <custom-toc
+      data-min-h={toc.minHeadingLevel}
+      data-max-h={toc.maxHeadingLevel}
+    >
       <div class="github-star-widget-container">
         <GitHubStarWidget starsCount={githubStarsCount} client:load />
       </div>
       <nav aria-labelledby="starlight__on-this-page">
-        <h2 id="starlight__on-this-page">{Astro.locals.t('tableOfContents.onThisPage')}</h2>
+        <h2 id="starlight__on-this-page">
+          {Astro.locals.t('tableOfContents.onThisPage')}
+        </h2>
         <div class="toc-container">
           <TableOfContentsList toc={toc.items} />
         </div>
       </nav>
+      {topics.length > 0 && (
+        <section
+          class="kb-article-topics"
+          aria-labelledby="kb-article-topics-heading"
+          data-pagefind-ignore
+        >
+          <h2 id="kb-article-topics-heading">Topics</h2>
+          <ul>
+            {topics.map((topic) => (
+              <li>
+                <a href={`/docs/kb/${getTopicId(topic)}`}>{topic}</a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {rawContent && (
         <div class="copy-page-button-container">
           <CopyPageButton content={rawContent} />
@@ -35,7 +58,9 @@ const rawContent = Astro.locals.rawContent;
   const PAGE_TITLE_ID = 'starlight__overview';
 
   class CustomTOC extends HTMLElement {
-    private _current = this.querySelector<HTMLAnchorElement>('a[aria-current="true"]');
+    private _current = this.querySelector<HTMLAnchorElement>(
+      'a[aria-current="true"]'
+    );
     private minH = parseInt(this.dataset.minH || '2', 10);
     private maxH = parseInt(this.dataset.maxH || '3', 10);
     private tocContainer: HTMLElement | null = null;
@@ -45,7 +70,7 @@ const rawContent = Astro.locals.rawContent;
       if (this._current) this._current.removeAttribute('aria-current');
       link.setAttribute('aria-current', 'true');
       this._current = link;
-      
+
       // Auto-scroll the active item into view within the TOC container
       this.scrollActiveIntoView(link);
     }
@@ -61,32 +86,37 @@ const rawContent = Astro.locals.rawContent;
 
     private scrollActiveIntoView(link: HTMLAnchorElement): void {
       if (!this.tocContainer) return;
-      
+
       // Check if user prefers reduced motion
-      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      
+      const prefersReducedMotion = window.matchMedia(
+        '(prefers-reduced-motion: reduce)'
+      ).matches;
+
       // Get the position of the link relative to the TOC container
       const containerRect = this.tocContainer.getBoundingClientRect();
       const linkRect = link.getBoundingClientRect();
-      
+
       // Calculate if the link is outside the visible area
       const isAboveView = linkRect.top < containerRect.top;
       const isBelowView = linkRect.bottom > containerRect.bottom;
-      
+
       if (isAboveView || isBelowView) {
         // Scroll the link into view with some padding
         const offsetTop = link.offsetTop - this.tocContainer.offsetTop;
-        const scrollPosition = offsetTop - this.tocContainer.clientHeight / 2 + link.clientHeight / 2;
-        
+        const scrollPosition =
+          offsetTop -
+          this.tocContainer.clientHeight / 2 +
+          link.clientHeight / 2;
+
         this.tocContainer.scrollTo({
           top: Math.max(0, scrollPosition),
-          behavior: prefersReducedMotion ? 'auto' : 'smooth'
+          behavior: prefersReducedMotion ? 'auto' : 'smooth',
         });
       }
     }
 
     private init = (): void => {
-      const links = Array.from(this.querySelectorAll('a'))
+      const links = Array.from(this.querySelectorAll('a'));
 
       const getElementHeading = (el: Element): HTMLHeadingElement | null => {
         if (!el) return null;
@@ -109,7 +139,9 @@ const rawContent = Astro.locals.rawContent;
           if (!isIntersecting) continue;
           const heading = getElementHeading(target);
           if (!heading) continue;
-          const link = links.find((link) => link.hash === '#' + encodeURIComponent(heading.id));
+          const link = links.find(
+            (link) => link.hash === '#' + encodeURIComponent(heading.id)
+          );
           if (link) {
             this.current = link;
             break;
@@ -117,12 +149,16 @@ const rawContent = Astro.locals.rawContent;
         }
       };
 
-      const toObserve = document.querySelectorAll('main [id], main [id] ~ *, main .content > *');
+      const toObserve = document.querySelectorAll(
+        'main [id], main [id] ~ *, main .content > *'
+      );
       let observer: IntersectionObserver | undefined;
 
       const observe = () => {
         if (observer) observer.disconnect();
-        observer = new IntersectionObserver(setCurrent, { rootMargin: this.getRootMargin() });
+        observer = new IntersectionObserver(setCurrent, {
+          rootMargin: this.getRootMargin(),
+        });
         toObserve.forEach((h) => observer!.observe(h));
       };
 
@@ -130,21 +166,23 @@ const rawContent = Astro.locals.rawContent;
       let timeout: NodeJS.Timeout;
       // Re-observe on resize to adjust for layout changes
       window.addEventListener('resize', () => {
-        if(observer) {
+        if (observer) {
           observer.disconnect();
           observer = undefined;
         }
         clearTimeout(timeout);
-        timeout = setTimeout(() => this.onIdle(observe), 200)
-
+        timeout = setTimeout(() => this.onIdle(observe), 200);
       });
     };
 
     private getRootMargin(): `-${number}px 0% ${number}px` {
-      const navBarHeight = document.querySelector('header')?.getBoundingClientRect().height || 0;
-      const mobileTocHeight = this.querySelector('summary')?.getBoundingClientRect().height || 0;
+      const navBarHeight =
+        document.querySelector('header')?.getBoundingClientRect().height || 0;
+      const mobileTocHeight =
+        this.querySelector('summary')?.getBoundingClientRect().height || 0;
       // Account for footer by reducing bottom margin
-      const footerHeight = document.querySelector('footer')?.getBoundingClientRect().height || 0;
+      const footerHeight =
+        document.querySelector('footer')?.getBoundingClientRect().height || 0;
       const top = navBarHeight + mobileTocHeight + 32;
       const bottom = top + 53;
       const height = document.documentElement.clientHeight;
@@ -161,11 +199,11 @@ const rawContent = Astro.locals.rawContent;
     custom-toc {
       display: block;
     }
-    
+
     custom-toc nav {
       display: block;
     }
-    
+
     custom-toc h2 {
       color: var(--sl-color-text);
       font-size: var(--sl-text-sm);
@@ -174,7 +212,7 @@ const rawContent = Astro.locals.rawContent;
       margin: 0 0 0.5rem 0;
       padding: 0;
     }
-    
+
     /* GitHub star widget styling */
     .github-star-widget-container {
       margin-bottom: 1rem;
@@ -186,7 +224,40 @@ const rawContent = Astro.locals.rawContent;
       margin-top: 1rem;
       border-top: 1px solid var(--sl-color-hairline);
     }
-    
+
+    .kb-article-topics {
+      margin-top: 1rem;
+    }
+
+    .kb-article-topics ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .kb-article-topics a {
+      display: inline-flex;
+      padding: 0.2rem 0.5rem;
+      border-radius: 999px;
+      background: var(--sl-color-gray-6);
+      color: var(--sl-color-gray-3);
+      font-size: 0.72rem;
+      line-height: 1.4;
+      text-decoration: none;
+    }
+
+    .kb-article-topics a:hover {
+      color: var(--sl-color-white);
+    }
+
+    .kb-article-topics a:focus-visible {
+      outline: 2px solid var(--sl-color-accent-high);
+      outline-offset: 3px;
+    }
+
     /* Container with proper scrolling */
     .toc-container {
       /* Allow ToC to be its natural height - parent sticky container handles viewport constraints */
@@ -194,32 +265,32 @@ const rawContent = Astro.locals.rawContent;
       overflow-y: auto;
       overflow-x: hidden;
     }
-    
+
     /* Only enable smooth scrolling if user doesn't prefer reduced motion */
     @media (prefers-reduced-motion: no-preference) {
       .toc-container {
         scroll-behavior: smooth;
       }
     }
-    
+
     /* Scrollbar styling */
     .toc-container::-webkit-scrollbar {
       width: 4px;
     }
-    
+
     .toc-container::-webkit-scrollbar-track {
       background: transparent;
     }
-    
+
     .toc-container::-webkit-scrollbar-thumb {
       background: var(--sl-color-gray-5);
       border-radius: 2px;
     }
-    
+
     .toc-container:hover::-webkit-scrollbar-thumb {
       background: var(--sl-color-gray-4);
     }
-    
+
     /* Firefox scrollbar */
     .toc-container {
       scrollbar-width: thin;

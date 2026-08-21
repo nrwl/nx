@@ -129,7 +129,7 @@ describe('Independent Deployability', () => {
     expect(buildOutput).toContain('Successfully ran target build');
     expect(remoteOutput).toContain('Successfully ran target build');
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const hostE2eResults = await runCommandUntil(
         `e2e ${host}-e2e --verbose`,
         (output) => output.includes('All specs passed!'),
@@ -267,7 +267,7 @@ describe('Independent Deployability', () => {
       `
     );
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       // test remote e2e
       const remoteE2eResults = await runCommandUntil(
         `e2e ${remote}-e2e --verbose`,
@@ -393,7 +393,7 @@ describe('Independent Deployability', () => {
     expect(buildOutput).toContain('Successfully ran target build');
     expect(remoteOutput).toContain('Successfully ran target build');
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const hostE2eResultsSwc = await runCommandUntil(
         `e2e ${shell}-e2e --verbose`,
         (output) =>

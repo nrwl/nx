@@ -52,7 +52,7 @@ Workspace libraries are projects whose source lives in your workspace and are li
 ```
 
 {% aside type="note" title="Setting up an npm workspace?" %}
-See [Use npm Workspaces with Nx](/docs/guides/tips-n-tricks/npm-workspaces) for configuring the `workspaces` field in `package.json` from scratch.
+See [Use npm Workspaces with Nx](/docs/kb/npm-workspaces) for configuring the `workspaces` field in `package.json` from scratch.
 {% /aside %}
 
 {% /tabitem %}
@@ -69,7 +69,7 @@ See [Use npm Workspaces with Nx](/docs/guides/tips-n-tricks/npm-workspaces) for 
 ```
 
 {% aside type="note" title="Setting up a pnpm workspace?" %}
-See [Use pnpm Workspaces with Nx](/docs/guides/tips-n-tricks/pnpm-workspaces) for configuring `pnpm-workspace.yaml` and the `workspace:` protocol from scratch.
+See [Use pnpm Workspaces with Nx](/docs/kb/pnpm-workspaces) for configuring `pnpm-workspace.yaml` and the `workspace:` protocol from scratch.
 {% /aside %}
 
 {% /tabitem %}
@@ -86,7 +86,7 @@ See [Use pnpm Workspaces with Nx](/docs/guides/tips-n-tricks/pnpm-workspaces) fo
 ```
 
 {% aside type="note" title="Setting up a Yarn workspace?" %}
-See [Use Yarn Workspaces with Nx](/docs/guides/tips-n-tricks/yarn-workspaces) for configuring the `workspaces` field in `package.json` and the `workspace:` protocol from scratch.
+See [Use Yarn Workspaces with Nx](/docs/kb/yarn-workspaces) for configuring the `workspaces` field in `package.json` and the `workspace:` protocol from scratch.
 {% /aside %}
 
 {% /tabitem %}
@@ -103,7 +103,7 @@ See [Use Yarn Workspaces with Nx](/docs/guides/tips-n-tricks/yarn-workspaces) fo
 ```
 
 {% aside type="note" title="Setting up a Bun workspace?" %}
-See [Use Bun Workspaces with Nx](/docs/guides/tips-n-tricks/bun-workspaces) for configuring the `workspaces` field in `package.json` and the `workspace:` protocol from scratch.
+See [Use Bun Workspaces with Nx](/docs/kb/bun-workspaces) for configuring the `workspaces` field in `package.json` and the `workspace:` protocol from scratch.
 {% /aside %}
 
 {% /tabitem %}
@@ -208,14 +208,13 @@ catalog:
 {% /tabitem %}
 {% tabitem label="yarn" %}
 
-Define catalogs in `.yarnrc.yml`:
+Define the default catalog under the `catalog` key in `.yarnrc.yml` (Yarn 4.10+):
 
 ```yaml
 # .yarnrc.yml
-catalogs:
-  default:
-    react: ^19.0.0
-    react-dom: ^19.0.0
+catalog:
+  react: ^19.0.0
+  react-dom: ^19.0.0
 ```
 
 ```jsonc
@@ -236,12 +235,32 @@ npm does not have catalog support. Enforce a single version policy by defining a
 {% /tabitem %}
 {% tabitem label="bun" %}
 
-Bun does not currently support catalogs. Define shared dependency versions in the root `package.json` and reference them using `workspace:*` for internal packages.
+Define the default catalog under the `catalog` field in the root `package.json` (Nx 23.2+):
+
+```jsonc
+// package.json
+{
+  "catalog": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+  },
+}
+```
+
+```jsonc
+// apps/my-app/package.json
+{
+  "dependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:",
+  },
+}
+```
 
 {% /tabitem %}
 {% /tabs %}
 
-For a deeper comparison of dependency strategies, see [Dependency Management Strategies](/docs/concepts/decisions/dependency-management).
+For a deeper comparison of dependency strategies, see [Dependency Management Strategies](/docs/kb/dependency-management).
 
 ## What Nx does (and doesn't do)
 

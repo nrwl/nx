@@ -3,7 +3,7 @@ import { resolve } from 'path';
 
 export default defineConfig({
   cacheDir: '../../node_modules/.vite/angular-rspack/unit',
-  root: __dirname,
+  root: import.meta.dirname,
   resolve: {
     // Use regex aliases so each subpath is intercepted independently. Plain
     // string aliases (e.g., `'@nx/devkit'`) do prefix matching in vite, which

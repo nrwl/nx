@@ -1,10 +1,10 @@
 import type { buildEsbuildBrowser as buildEsbuildBrowserFn } from '@angular-devkit/build-angular/src/builders/browser-esbuild';
 import type { ExecutorContext } from '@nx/devkit';
 import type { DependentBuildableProjectNode } from '@nx/js/internal';
-import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import { loadPlugins } from '../utilities/esbuild-extensions';
 import type { EsBuildSchema } from './schema';
+import { createBuilderContext } from '@nx/devkit/ngcli-adapter';
 
 export default async function* esbuildExecutor(
   options: EsBuildSchema,

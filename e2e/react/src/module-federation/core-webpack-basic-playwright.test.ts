@@ -86,7 +86,7 @@ describe('React Module Federation - Webpack Basic - Playwright', () => {
       `
     );
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       console.log(
         `[core-webpack-basic-playwright] Starting e2e (swc) for ${shell}-e2e`
       );

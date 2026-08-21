@@ -12,13 +12,15 @@ import {
   writeJsonFile,
 } from '@nx/devkit';
 
-import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { gradleConfigAndTestGlob } from '../../utils/split-config-files';
 import { nxVersion } from '../../utils/versions';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getNxProjectGraphLines } from './get-project-graph-lines';
 import { GradlePluginOptions, normalizeOptions } from './gradle-plugin-options';
-import { hashObject } from 'nx/src/devkit-internals';
+import {
+  hashWithWorkspaceContext,
+  workspaceDataDirectory,
+  hashObject,
+} from '@nx/devkit/internal';
 
 // the output json file from the gradle plugin
 export interface ProjectGraphReport {

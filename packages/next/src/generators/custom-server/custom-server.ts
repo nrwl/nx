@@ -1,6 +1,6 @@
-import { joinPathFragments, Tree } from '@nx/devkit';
-import { upsertTargetDefault } from '@nx/devkit/internal';
 import {
+  joinPathFragments,
+  Tree,
   updateJson,
   generateFiles,
   logger,
@@ -10,6 +10,7 @@ import {
   readNxJson,
   updateNxJson,
 } from '@nx/devkit';
+import { upsertTargetDefault } from '@nx/devkit/internal';
 import { CustomServerSchema } from './schema';
 import { join } from 'path';
 import { configureForSwc } from '../../utils/add-swc-to-custom-server';

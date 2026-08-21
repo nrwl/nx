@@ -29,6 +29,7 @@
             "esbuild",
             "gradle",
             "nuxt",
+            "@nx/oxlint",
             "plugin",
             "react-native",
             "remix"
@@ -54,6 +55,7 @@
             "esbuild",
             "gradle",
             "nuxt",
+            "@nx/oxlint",
             "plugin",
             "react-native",
             "remix"
@@ -65,6 +67,7 @@
         "production",
         "^production",
         "{projectRoot}/src/content/banner.json",
+        "{projectRoot}/netlify.toml",
         { "env": "NX_DEV_URL" },
         "{workspaceRoot}/packages/*/package.json",
         "{workspaceRoot}/packages/*/{generators,executors,migrations}.json",

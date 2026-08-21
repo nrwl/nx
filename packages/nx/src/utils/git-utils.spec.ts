@@ -2,7 +2,10 @@ import {
   parseVcsRemoteUrl,
   getVcsRemoteInfo,
   getGitCurrentBranch,
+  getPathCommitExposure,
   getUncommittedChangesSnapshot,
+  getWorkingTreeStatus,
+  isAncestorCommit,
   tryCommitChanges,
 } from './git-utils';
 import { execSync } from 'child_process';
@@ -244,6 +247,141 @@ describe('git utils tests', () => {
     });
   });
 
+  describe('getWorkingTreeStatus', () => {
+    afterEach(() => {
+      jest.resetAllMocks();
+    });
+
+    it('should return dirty when git status reports changes', () => {
+      (execSync as jest.Mock).mockReturnValue(' M file.ts\n');
+
+      expect(getWorkingTreeStatus('/repo')).toBe('dirty');
+    });
+
+    it('should return clean when git status reports nothing', () => {
+      (execSync as jest.Mock).mockReturnValue('\n');
+
+      expect(getWorkingTreeStatus('/repo')).toBe('clean');
+    });
+
+    it('should return unknown, not clean, when the probe throws', () => {
+      (execSync as jest.Mock).mockImplementation(() => {
+        throw new Error('spawn git EAGAIN');
+      });
+
+      expect(getWorkingTreeStatus('/repo')).toBe('unknown');
+    });
+
+    it('should probe the whole tree with no pathspec when nothing is excluded', () => {
+      (execSync as jest.Mock).mockReturnValue('');
+
+      getWorkingTreeStatus('/repo');
+
+      expect(execSync).toHaveBeenCalledWith(
+        'git status --porcelain',
+        expect.objectContaining({ cwd: '/repo' })
+      );
+    });
+
+    it('should leave excluded paths out of the probe with exclude-only pathspecs', () => {
+      (execSync as jest.Mock).mockReturnValue('');
+
+      getWorkingTreeStatus('/repo', ['.nx/migrate-runs', 'tmp']);
+
+      expect(execSync).toHaveBeenCalledWith(
+        'git status --porcelain -- ":(exclude).nx/migrate-runs" ":(exclude)tmp"',
+        expect.objectContaining({ cwd: '/repo' })
+      );
+    });
+  });
+
+  describe('getPathCommitExposure', () => {
+    afterEach(() => {
+      jest.resetAllMocks();
+    });
+
+    function failWithStatus(status: number): Error & { status: number } {
+      return Object.assign(new Error(`exit ${status}`), { status });
+    }
+
+    it('should return tracked when files under the path are in the index, without consulting check-ignore', () => {
+      (execSync as jest.Mock).mockReturnValueOnce(
+        '.nx/migrate-runs/run-1/run.json\n'
+      );
+
+      expect(getPathCommitExposure('.nx/migrate-runs', '/repo')).toBe(
+        'tracked'
+      );
+      expect(execSync).toHaveBeenCalledTimes(1);
+      expect(execSync).toHaveBeenCalledWith(
+        'git ls-files -- .nx/migrate-runs',
+        expect.anything()
+      );
+    });
+
+    it('should return ignored when nothing is tracked and check-ignore matches', () => {
+      (execSync as jest.Mock).mockReturnValueOnce('\n').mockReturnValueOnce('');
+
+      expect(getPathCommitExposure('.nx/migrate-runs', '/repo')).toBe(
+        'ignored'
+      );
+      // The check-ignore query must carry a trailing slash: a directory-only
+      // ignore rule (trailing-slash .gitignore entry) does not match a bare
+      // query when the directory does not exist on disk yet.
+      expect(execSync).toHaveBeenLastCalledWith(
+        'git check-ignore -q -- .nx/migrate-runs/',
+        expect.anything()
+      );
+    });
+
+    it('should not double the trailing slash when the caller already passes one', () => {
+      (execSync as jest.Mock).mockReturnValueOnce('\n').mockReturnValueOnce('');
+
+      expect(getPathCommitExposure('.nx/migrate-runs/', '/repo')).toBe(
+        'ignored'
+      );
+      expect(execSync).toHaveBeenLastCalledWith(
+        'git check-ignore -q -- .nx/migrate-runs/',
+        expect.anything()
+      );
+    });
+
+    it('should return unignored when nothing is tracked and check-ignore reports no coverage', () => {
+      (execSync as jest.Mock)
+        .mockReturnValueOnce('\n')
+        .mockImplementationOnce(() => {
+          throw failWithStatus(1);
+        });
+
+      expect(getPathCommitExposure('.nx/migrate-runs', '/repo')).toBe(
+        'unignored'
+      );
+    });
+
+    it('should return unknown when the ls-files probe fails', () => {
+      (execSync as jest.Mock).mockImplementationOnce(() => {
+        throw new Error('spawn git EAGAIN');
+      });
+
+      expect(getPathCommitExposure('.nx/migrate-runs', '/repo')).toBe(
+        'unknown'
+      );
+      expect(execSync).toHaveBeenCalledTimes(1);
+    });
+
+    it('should return unknown when check-ignore fails for any reason other than "not ignored"', () => {
+      (execSync as jest.Mock)
+        .mockReturnValueOnce('\n')
+        .mockImplementationOnce(() => {
+          throw failWithStatus(128);
+        });
+
+      expect(getPathCommitExposure('.nx/migrate-runs', '/repo')).toBe(
+        'unknown'
+      );
+    });
+  });
+
   describe('getUncommittedChangesSnapshot', () => {
     const mockReadFileSync = fs.readFileSync as jest.Mock;
 
@@ -363,6 +501,40 @@ describe('git utils tests', () => {
       jest.resetAllMocks();
     });
 
+    it('stages the whole tree and resets nothing when no exclusions are given', () => {
+      (execSync as jest.Mock).mockReturnValue('');
+
+      tryCommitChanges('msg', '/workspace');
+
+      expect(execSync).toHaveBeenCalledWith(
+        'git add -A',
+        expect.objectContaining({ cwd: '/workspace' })
+      );
+      const commands = (execSync as jest.Mock).mock.calls.map((c) => c[0]);
+      expect(commands.some((c) => c.startsWith('git reset'))).toBe(false);
+    });
+
+    it('unstages excluded paths between the add and the commit', () => {
+      // An add-time exclusion pathspec cannot do this: `git add` exits 1 when
+      // a pathspec names an ignored directory, and it cannot unstage entries
+      // that were staged before this call.
+      (execSync as jest.Mock).mockReturnValue('');
+
+      tryCommitChanges('msg', '/workspace', ['.nx/migrate-runs']);
+
+      const commands = (execSync as jest.Mock).mock.calls.map((c) => c[0]);
+      expect(commands).toEqual([
+        'git add -A',
+        'git reset -q -- ".nx/migrate-runs"',
+        'git commit --no-verify -F -',
+        'git rev-parse HEAD',
+      ]);
+      expect(execSync).toHaveBeenCalledWith(
+        'git reset -q -- ".nx/migrate-runs"',
+        expect.objectContaining({ cwd: '/workspace' })
+      );
+    });
+
     it('preserves the original git error as `cause` so callers can inspect signal/status/code', () => {
       // Without `{ cause: err }` on the rethrow, callers lose .status /
       // .signal from the original ChildProcessError — only the formatted
@@ -394,6 +566,50 @@ describe('git utils tests', () => {
       expect(wrapper.message).toContain('gpg failed to sign');
       expect(wrapper.cause).toBe(originalErr);
       expect((wrapper.cause as { status?: number })?.status).toBe(128);
+    });
+  });
+
+  describe('isAncestorCommit', () => {
+    const shaA = 'a'.repeat(40);
+    const shaB = 'b'.repeat(40);
+
+    afterEach(() => {
+      jest.resetAllMocks();
+    });
+
+    it('returns true when git confirms the ancestry', () => {
+      (execSync as jest.Mock).mockReturnValue('');
+
+      expect(isAncestorCommit(shaA, shaB, '/repo')).toBe(true);
+      expect(execSync).toHaveBeenCalledWith(
+        `git merge-base --is-ancestor ${shaA} ${shaB}`,
+        expect.objectContaining({ cwd: '/repo' })
+      );
+    });
+
+    it('accepts 64-char object ids from sha256 repositories', () => {
+      (execSync as jest.Mock).mockReturnValue('');
+      const sha256 = 'a'.repeat(64);
+
+      expect(isAncestorCommit(sha256, sha256, '/repo')).toBe(true);
+    });
+
+    it('returns false when git rejects or fails', () => {
+      (execSync as jest.Mock).mockImplementation(() => {
+        throw new Error('exit 1');
+      });
+
+      expect(isAncestorCommit(shaA, shaB, '/repo')).toBe(false);
+    });
+
+    it('returns false for a non-sha value without invoking git', () => {
+      expect(isAncestorCommit('$(rm -rf /)', shaB, '/repo')).toBe(false);
+      expect(isAncestorCommit(shaA, 'HEAD~1', '/repo')).toBe(false);
+      // Abbreviated ids never come from `git rev-parse HEAD`, so a persisted
+      // one is corruption or tampering, not a commit to act on.
+      expect(isAncestorCommit('abc123', shaB, '/repo')).toBe(false);
+      expect(isAncestorCommit(shaA, 'a'.repeat(41), '/repo')).toBe(false);
+      expect(execSync).not.toHaveBeenCalled();
     });
   });
 });

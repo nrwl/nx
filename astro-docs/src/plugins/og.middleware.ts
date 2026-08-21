@@ -27,7 +27,6 @@ export const onRequest = defineRouteMiddleware(async (context) => {
 
   let ogImageUrl: URL;
 
-  // Check if this route has a generated OG image
   if (pages.has(routeId)) {
     const imagePath = `${import.meta.env['BASE_URL']}/og/${routeId}.png`;
     ogImageUrl = new URL(imagePath, import.meta.env['SITE']);
@@ -56,6 +55,13 @@ export const onRequest = defineRouteMiddleware(async (context) => {
     {
       tag: 'meta',
       attrs: { property: 'og:image:height', content: '630' },
+    },
+    {
+      tag: 'meta',
+      attrs: {
+        property: 'og:image:alt',
+        content: title,
+      },
     },
     {
       tag: 'meta',

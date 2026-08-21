@@ -63,6 +63,19 @@ describe('migrate-output', () => {
     kind: 'no-changes',
     commit: { kind: 'none' },
   });
+  // A migration that returned `skipAgentic: true` and waived the AI step it
+  // would otherwise have run. Its deterministic half still applied.
+  const waived = (
+    name: string,
+    sha: string | null = null,
+    pkg: string = PKG
+  ): MigrationOutcome => ({
+    migration: { package: pkg, name },
+    status: 'completed',
+    kind: 'applied',
+    commit: { kind: 'landed', sha },
+    waivedAgenticStep: true,
+  });
   const failedCommit = (
     name: string,
     kind: MigrationOutcomeKind = 'applied',
@@ -105,6 +118,7 @@ describe('migrate-output', () => {
           appliedCount: 0,
           committedShasCount: 0,
           skippedPromptsCount: 0,
+          waivedAgenticStepsCount: 0,
           insideAgent: false,
         })
       ).toBeNull();
@@ -116,6 +130,7 @@ describe('migrate-output', () => {
           appliedCount: 0,
           committedShasCount: 0,
           skippedPromptsCount: 2,
+          waivedAgenticStepsCount: 0,
           insideAgent: false,
         })
       ).toBe('2 prompt migrations skipped.');
@@ -127,6 +142,7 @@ describe('migrate-output', () => {
           appliedCount: 0,
           committedShasCount: 0,
           skippedPromptsCount: 1,
+          waivedAgenticStepsCount: 0,
           insideAgent: false,
         })
       ).toBe('1 prompt migration skipped.');
@@ -138,6 +154,7 @@ describe('migrate-output', () => {
           appliedCount: 0,
           committedShasCount: 0,
           skippedPromptsCount: 2,
+          waivedAgenticStepsCount: 0,
           insideAgent: true,
         })
       ).toBe('2 prompt migrations deferred.');
@@ -149,6 +166,7 @@ describe('migrate-output', () => {
           appliedCount: 3,
           committedShasCount: 0,
           skippedPromptsCount: 0,
+          waivedAgenticStepsCount: 0,
           insideAgent: false,
         })
       ).toBe('3 migrations applied, 0 commits created.');
@@ -160,6 +178,7 @@ describe('migrate-output', () => {
           appliedCount: 2,
           committedShasCount: 2,
           skippedPromptsCount: 1,
+          waivedAgenticStepsCount: 0,
           insideAgent: false,
         })
       ).toBe(
@@ -173,9 +192,36 @@ describe('migrate-output', () => {
           appliedCount: 1,
           committedShasCount: 1,
           skippedPromptsCount: 0,
+          waivedAgenticStepsCount: 0,
           insideAgent: false,
         })
       ).toBe('1 migration applied, 1 commit created.');
+    });
+
+    it('appends the waived-AI-steps segment after the skipped-prompts one', () => {
+      expect(
+        buildTallyBodyLine({
+          appliedCount: 12,
+          committedShasCount: 12,
+          skippedPromptsCount: 3,
+          waivedAgenticStepsCount: 2,
+          insideAgent: false,
+        })
+      ).toBe(
+        '12 migrations applied, 12 commits created, 3 prompt migrations skipped, 2 AI steps not needed.'
+      );
+    });
+
+    it('singularizes the waived-AI-steps segment at count 1', () => {
+      expect(
+        buildTallyBodyLine({
+          appliedCount: 1,
+          committedShasCount: 1,
+          skippedPromptsCount: 0,
+          waivedAgenticStepsCount: 1,
+          insideAgent: false,
+        })
+      ).toBe('1 migration applied, 1 commit created, 1 AI step not needed.');
     });
   });
 
@@ -373,6 +419,26 @@ describe('migrate-output', () => {
 
       expect(linesLogged()).toContain(
         '2 applied (last: b → bbb), 1 deferred. 1 not attempted.'
+      );
+    });
+
+    it('reports waived AI steps that completed before the failure', () => {
+      const outcomes: MigrationOutcome[] = [
+        applied('a', 'aaa'),
+        waived('b', 'bbb'),
+        waived('c', 'ccc'),
+      ];
+
+      logFailureRecap({
+        migrationIndex: 4,
+        totalMigrations: 5,
+        outcomes,
+        migrationEmittedNextSteps: [],
+        insideAgent: false,
+      });
+
+      expect(linesLogged()).toContain(
+        '3 applied (last: c → ccc), 2 AI steps not needed. 1 not attempted.'
       );
     });
 

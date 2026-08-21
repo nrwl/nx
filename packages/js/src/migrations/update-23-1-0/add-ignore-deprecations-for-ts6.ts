@@ -3,6 +3,10 @@ import { basename, dirname } from 'node:path';
 import { applyEdits, getNodeValue, modify, parseTree } from 'jsonc-parser';
 import type * as ts from 'typescript';
 import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
+import {
+  createTreeParseConfigHost,
+  extendsResolutionFailed,
+} from '../../utils/typescript/ts-config';
 
 const FORMATTING_OPTIONS = {
   formattingOptions: { keepLines: true, insertSpaces: true, tabSize: 2 },
@@ -34,8 +38,9 @@ type CompilerOptions = Record<string, unknown>;
  *        the pre-TS6 behavior. It is itself deprecated (removed in TS7), so pass
  *        2 silences it, deferring the interop change to the eventual TS7 work.
  *  - Config-load flag: set `ignoreDeprecations: "6.0"` on every file named
- *    exactly `tsconfig.json`, the name jest/ts-node auto-resolve (walking up
- *    from the file they compile, such as jest.config.ts). ts-node injects a
+ *    exactly `tsconfig.json`, the name ts-node auto-resolves when jest compiles
+ *    a config file like jest.config.ts (walking up from the working directory,
+ *    not the config file's own directory). ts-node injects a
  *    `target: es5` when the config leaves it unset, and es5 is a TS6-deprecated
  *    value (TS5107); the flag (which ts-node passes through) keeps that load
  *    silent. Set unconditionally, since any `tsconfig.json` is a potential
@@ -56,14 +61,11 @@ type CompilerOptions = Record<string, unknown>;
 export default async function (tree: Tree) {
   tsModule ??= ensureTypescript();
   const ts = tsModule;
-  // Tree-backed host so TypeScript resolves `extends` against pass 1's pending
-  // writes; the `readDirectory` no-op skips the source-file scan, since only the
-  // merged compiler options matter here, not the file list.
-  const parseHost: ts.ParseConfigHost = {
-    ...ts.sys,
-    readFile: (filePath) => tree.read(filePath, 'utf-8') ?? undefined,
-    readDirectory: () => [],
-  };
+  // Tree-faithful host so TypeScript resolves `extends` against pass 1's pending
+  // writes and against package-provided bases (a naive `tree.read` host misses
+  // the latter). The host's `readDirectory` no-op skips the source-file scan,
+  // since only the merged compiler options matter here, not the file list.
+  const parseHost = createTreeParseConfigHost(tree);
 
   const tsconfigPaths = await globAsync(tree, ['**/tsconfig*.json']);
 
@@ -226,11 +228,20 @@ function silenceDeprecations(
   // The `extends`-merged main options, normalized by TypeScript. Passing the
   // config object (not the path) keeps TypeScript from re-reading this file; it
   // reads only the ancestors.
-  const mainOptions = ts.parseJsonConfigFileContent(
+  const mainParsed = ts.parseJsonConfigFileContent(
     { extends: own.extends, compilerOptions: mainIsObject ? mainBlock : {} },
     parseHost,
     dirname(tsconfigPath)
-  ).options;
+  );
+  // A base that neither the tree nor `tsc` can read leaves the merged options
+  // incomplete, so a value it deprecates would be missed. The config does not
+  // compile in that state anyway; surface it rather than silently guessing.
+  if (extendsResolutionFailed(mainParsed.errors)) {
+    logger.warn(
+      `Could not resolve the "extends" chain of "${tsconfigPath}"; a TypeScript 6 deprecated option inherited from the unresolved base may have been missed. Make sure the config compiles.`
+    );
+  }
+  const mainOptions = mainParsed.options;
   const mainDeprecated = hasDeprecatedOption(ts, mainOptions);
 
   let contents = original;

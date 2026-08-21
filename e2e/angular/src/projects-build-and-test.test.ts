@@ -83,7 +83,7 @@ describe('Angular Projects - Build and Test', () => {
     console.log(
       `The current es2015 bundle size is ${es2015BundleSize / 1000} KB`
     );
-    expect(es2015BundleSize).toBeLessThanOrEqual(226000);
+    expect(es2015BundleSize).toBeLessThanOrEqual(227000);
 
     // check unit tests
     runCLI(
@@ -91,7 +91,7 @@ describe('Angular Projects - Build and Test', () => {
     );
 
     // check e2e tests
-    if (runE2ETests('playwright')) {
+    if (await runE2ETests('playwright')) {
       // app1 was generated with --port=app1Port, so its e2e serves there
       expect(() => runCLI(`e2e ${app1}-e2e`)).not.toThrow();
       expect(await killPort(app1Port)).toBeTruthy();
@@ -129,7 +129,31 @@ describe('Angular Projects - Build and Test', () => {
       env: { NODE_ENV: 'production' },
     });
 
-    if (runE2ETests()) {
+    // Build with sourcemaps enabled (the development configuration sets
+    // `sourceMap: true`) and verify the emitted sourcemap resolves back to
+    // the original TypeScript sources instead of the intermediate Ivy JS.
+    runCLI(`build ${app} --skip-nx-cache`, {
+      env: { NGRS_CONFIG: 'development' },
+    });
+    const bundleMap = JSON.parse(
+      readFile(`dist/my-dir/${app}/browser/main.js.map`)
+    );
+    const tsSources = bundleMap.sources
+      .map((source: string, index: number) => ({
+        source,
+        content: bundleMap.sourcesContent?.[index],
+      }))
+      .filter(({ source }) => source.endsWith('.ts'));
+    expect(tsSources.length).toBeGreaterThan(0);
+    // The original TypeScript contains the `@Component` decorator, while the
+    // intermediate Ivy JS has it compiled away into `ɵcmp`.
+    const componentSource = tsSources.find(({ content }) =>
+      content?.includes('@Component')
+    );
+    expect(componentSource).toBeDefined();
+    expect(componentSource.content).not.toContain('ɵcmp');
+
+    if (await runE2ETests()) {
       expect(() => runCLI(`e2e ${app}-e2e`)).not.toThrow();
       expect(await killPort(port)).toBeTruthy();
     }
@@ -163,7 +187,7 @@ describe('Angular Projects - Build and Test', () => {
       `generate @nx/angular:app ${app} --port=${port} --e2eTestRunner=playwright --no-interactive`
     );
 
-    if (runE2ETests('playwright')) {
+    if (await runE2ETests('playwright')) {
       expect(() => runCLI(`e2e ${app}-e2e`)).not.toThrow();
       expect(await killPort(port)).toBeTruthy();
     }

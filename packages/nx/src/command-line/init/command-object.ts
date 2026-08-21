@@ -18,8 +18,10 @@ export const yargsInitCommand: CommandModule = {
     return withInitOptions(yargs);
   },
   handler: async (args: any) => {
-    // Node 24 has stricter readline behavior, and enquirer is not checking for closed state
-    // when invoking operations, thus you get an ERR_USE_AFTER_CLOSE error.
+    // Node 24's stricter readline throws ERR_USE_AFTER_CLOSE when a prompt
+    // library operates on a closed interface. Added for enquirer, which nx no
+    // longer uses; verify against Node 24 before removing.
+    // TODO(v24): drop if @clack/prompts proves not to need it.
     process.on('uncaughtException', (error) => {
       if (
         error &&

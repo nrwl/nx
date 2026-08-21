@@ -3017,4 +3017,54 @@ snapshots:
       ).toThrow(/was not installed with pnpm/);
     });
   });
+
+  describe('workspace-only lockfile', () => {
+    // pnpm omits the `packages` block entirely when every dependency resolves
+    // to a `link:`/`workspace:` reference, so there is nothing external to lock.
+    const lockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    devDependencies:
+      my-plugin:
+        specifier: link:../my-plugin
+        version: link:../my-plugin
+`;
+
+    beforeEach(() => {
+      // The parser requires `.modules.yaml` to exist; a workspace with no
+      // external packages hoists nothing.
+      vol.fromJSON(
+        { 'node_modules/.modules.yaml': 'hoistedDependencies: {}\n' },
+        '/root'
+      );
+    });
+
+    it('should produce no external nodes', () => {
+      const result = getPnpmLockfileNodes(lockFile, '__workspace_only__');
+
+      expect(result.nodes).toEqual({});
+    });
+
+    it('should produce no dependencies', () => {
+      const { keyMap } = getPnpmLockfileNodes(lockFile, '__workspace_only__');
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes: {},
+        fileMap: { nonProjectFiles: [], projectFileMap: {} },
+        filesToProcess: { nonProjectFiles: [], projectFileMap: {} },
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+
+      expect(
+        getPnpmLockfileDependencies(lockFile, '__workspace_only__', ctx, keyMap)
+      ).toEqual([]);
+    });
+  });
 });

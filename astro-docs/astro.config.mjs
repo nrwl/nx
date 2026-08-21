@@ -16,6 +16,10 @@ process.env.NX_DEV_URL = resolveNxDevUrl();
 
 const BASE = '/docs';
 
+// Set on non-production builds (versioned snapshots, canary) so the archived
+// pages don't compete with nx.dev in search results.
+const NO_INDEX = process.env.NX_DOCS_NO_INDEX === 'true';
+
 // This is exposed as window.__CONFIG
 const PUBLIC_CONFIG = {
   gtmMeasurementId: 'GTM-KW8423B6',
@@ -42,20 +46,24 @@ export default defineConfig({
   },
   trailingSlash: 'never',
   redirects: {
+    '/concepts/inferred-tasks': '/docs/concepts/mental-model',
+    '/concepts/executors-and-configurations':
+      '/docs/kb/executors-and-configurations',
+    '/concepts/nx-daemon': '/docs/reference/nx-daemon',
     '/guides/tips-n-tricks/define-environment-variables':
       '/docs/reference/environment-variables#loading-environment-variables',
     '/technologies/angular/guides/use-environment-variables-in-angular':
       '/docs/reference/environment-variables#loading-environment-variables',
     '/technologies/react/guides/use-environment-variables-in-react':
       '/docs/reference/environment-variables#loading-environment-variables',
-    '/knowledge-base/installation':
-      '/docs/knowledge-base/installation-and-updates',
+    '/knowledge-base/installation': '/docs/kb/installation-and-updates',
+    '/kb/project-graph-plugins': '/docs/kb/add-language-support',
+    '/kb/intro': '/docs/kb/add-language-support',
+    '/kb/tooling-plugin': '/docs/kb/add-language-support',
     '/guides/nx-cloud/source-control-integration/github':
       '/docs/features/ci-features/github-integration',
-    '/concepts/decisions/overview':
-      '/docs/concepts/decisions/monorepo-vs-polyrepo',
-    '/concepts/decisions/why-monorepos':
-      '/docs/concepts/decisions/what-is-a-monorepo',
+    '/concepts/decisions/overview': '/docs/kb/monorepo-vs-polyrepo',
+    '/concepts/decisions/why-monorepos': '/docs/kb/what-is-a-monorepo',
     '/features/maintain-typescript-monorepos':
       '/docs/technologies/typescript/introduction',
     '/guides/nx-cloud/ci-resource-usage':
@@ -100,6 +108,14 @@ export default defineConfig({
       disable404Route: true,
       lastUpdated: true,
       head: [
+        ...(NO_INDEX
+          ? [
+              {
+                tag: 'meta',
+                attrs: { name: 'robots', content: 'noindex' },
+              },
+            ]
+          : []),
         {
           tag: 'script',
           content: `window.__CONFIG = ${JSON.stringify(PUBLIC_CONFIG)};`,
@@ -123,6 +139,7 @@ export default defineConfig({
         './src/plugins/github-stars.middleware.ts',
         './src/plugins/raw-content.middleware.ts',
         './src/plugins/canonical.middleware.ts',
+        './src/plugins/knowledge-base-layout.middleware.ts',
         './src/plugins/schema.middleware.ts',
       ],
       markdown: {

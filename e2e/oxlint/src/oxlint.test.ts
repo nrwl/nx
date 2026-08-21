@@ -1,0 +1,125 @@
+import {
+  checkFilesExist,
+  cleanupProject,
+  newProject,
+  readJson,
+  runCLI,
+  uniq,
+  updateFile,
+} from '@nx/e2e-utils';
+
+/**
+ * Scope: only what a unit test structurally cannot cover — `nx add` against a
+ * real workspace, and a real Oxlint binary running through Nx's cache. Target
+ * inference itself is covered by `plugin.spec.ts` in `packages/oxlint`.
+ */
+
+/**
+ * Looks the Oxlint target up by the technology it declares, not by name. The
+ * name depends on whether ESLint already owns `lint` in the generated
+ * workspace, and asserting on a guessed name silently tests ESLint instead.
+ */
+function requireOxlintTarget(project: string): string {
+  const { targets } = JSON.parse(runCLI(`show project ${project} --json`));
+  const entry = Object.entries<Record<string, any>>(targets ?? {}).find(
+    ([, target]) => target.metadata?.technologies?.includes('oxlint')
+  );
+  if (!entry) {
+    throw new Error(
+      `No Oxlint target on "${project}". Targets: ${JSON.stringify(
+        targets,
+        null,
+        2
+      )}`
+    );
+  }
+  return entry[0];
+}
+
+/**
+ * Runs the task expecting it to fail, and returns what it printed. `runCLI`
+ * throws on a non-zero exit and carries the output on the error, so this
+ * asserts the failure without `silenceError` hiding it.
+ */
+function runExpectingFailure(command: string): string {
+  try {
+    runCLI(command);
+  } catch (e: any) {
+    return `${e.stdout ?? ''}${e.stderr ?? ''}`;
+  }
+  throw new Error(`Expected "${command}" to fail, but it succeeded.`);
+}
+
+describe('Oxlint', () => {
+  beforeAll(() => {
+    newProject({ packages: ['@nx/oxlint', '@nx/js'] });
+    runCLI('add @nx/oxlint');
+  });
+
+  afterAll(() => cleanupProject());
+
+  it('should register the plugin and write a root config', () => {
+    checkFilesExist('.oxlintrc.json');
+
+    const nxJson = readJson('nx.json');
+    expect(
+      nxJson.plugins.some(
+        (p: string | { plugin: string }) =>
+          (typeof p === 'string' ? p : p.plugin) === '@nx/oxlint'
+      )
+    ).toBe(true);
+  });
+
+  it('should pass, serve a re-run from cache, fail on a violation, then pass once fixed', () => {
+    const lib = uniq('oxlintrules');
+    // Both runners are explicit so this does not depend on what the workspace
+    // defaults to — `--unitTestRunner` would otherwise resolve to jest here and
+    // pull in a package this suite never installs.
+    runCLI(
+      `generate @nx/js:lib packages/${lib} --linter=oxlint --unitTestRunner=none --no-interactive`
+    );
+    // Written before the first run so every step below shares one config, and
+    // the cache hit in step 2 is not just a config change being picked up.
+    updateFile(
+      '.oxlintrc.json',
+      JSON.stringify({ rules: { 'no-debugger': 'error' } })
+    );
+    updateFile(
+      `packages/${lib}/src/index.ts`,
+      `export function clean() {\n  return 1;\n}\n`
+    );
+
+    const targetName = requireOxlintTarget(lib);
+    const command = `run ${lib}:${targetName}`;
+
+    // 1. clean source passes. `runCLI` throws on a non-zero exit, so getting
+    //    this far is itself the check that the task succeeded.
+    expect(runCLI(command)).toContain(`Successfully ran target ${targetName}`);
+
+    // 2. nothing changed, so the second run is replayed from the cache. Nx
+    // reports that per task as `[existing outputs match the cache, left as is]`
+    // even for a target with no declared outputs, which this one is — Oxlint
+    // writes no files, so terminal output is all the cache holds.
+    expect(runCLI(command)).toContain('existing outputs match the cache');
+
+    // 3. a violation fails the task, with Oxlint's own diagnostic rather than a
+    // generic task error. The task must actually exit non-zero: a linter that
+    // reports a violation and still exits 0 would let CI go green on it.
+    updateFile(
+      `packages/${lib}/src/index.ts`,
+      `export function boom() {\n  debugger;\n}\n`
+    );
+    expect(runExpectingFailure(command)).toContain('no-debugger');
+
+    // 4. fixing it passes again. Deliberately not the step-1 content — that
+    // would be a cache hit, which would prove the cache replays a success, not
+    // that Oxlint passes on the fixed source.
+    updateFile(
+      `packages/${lib}/src/index.ts`,
+      `export function fixed() {\n  return 2;\n}\n`
+    );
+    const afterFix = runCLI(command);
+    expect(afterFix).toContain(`Successfully ran target ${targetName}`);
+    expect(afterFix).not.toContain('existing outputs match the cache');
+  });
+});

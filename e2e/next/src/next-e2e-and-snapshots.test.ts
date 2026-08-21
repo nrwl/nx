@@ -36,7 +36,7 @@ describe('Next.js Applications - E2E and Snapshots', () => {
       `generate @nx/next:app ${appName} --no-interactive --style=css --linter=eslint --unitTestRunner=jest`
     );
 
-    if (runE2ETests('playwright')) {
+    if (await runE2ETests('playwright')) {
       const e2eResults = runCLI(`e2e-ci ${appName}-e2e --verbose`, {
         verbose: true,
         env: {

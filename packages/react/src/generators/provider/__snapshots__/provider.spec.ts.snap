@@ -531,7 +531,7 @@ export {};
   "include": ["src"]
 }
 ",
-  "apps/my-provider/vite.config.ts": "import { defineConfig } from 'vite';
+  "apps/my-provider/vite.config.mts": "import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { federation } from '@module-federation/vite';
 

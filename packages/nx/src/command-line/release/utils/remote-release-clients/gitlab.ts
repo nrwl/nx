@@ -1,5 +1,5 @@
 import * as pc from 'picocolors';
-import { prompt } from 'enquirer';
+import { selectPrompt } from '../../../../utils/prompt-helpers';
 import { execSync } from 'node:child_process';
 import { orange, output } from '../../../../utils/output';
 import type { PostGitTask } from '../../changelog';
@@ -251,7 +251,9 @@ export class GitLabRemoteReleaseClient extends RemoteReleaseClient<GitLabRelease
       return;
     }
 
-    const open = require('open');
+    const { default: open } = await (new Function(
+      'return import("open")'
+    )() as Promise<typeof import('open')>);
     await open(result.url)
       .then(() => {
         console.info(
@@ -271,29 +273,19 @@ export class GitLabRemoteReleaseClient extends RemoteReleaseClient<GitLabRelease
 
   private async promptForContinueInGitLab(): Promise<boolean> {
     try {
-      const reply = await prompt<{ open: 'Yes' | 'No' }>([
-        {
-          name: 'open',
-          message:
-            'Do you want to create the release manually in your browser?',
-          type: 'autocomplete',
-          choices: [
-            {
-              name: 'Yes',
-              hint: 'It will open the GitLab release page for you',
-            },
-            {
-              name: 'No',
-            },
-          ],
-          initial: 0,
-        },
-      ]);
-      return reply.open === 'Yes';
+      const open = await selectPrompt({
+        message: 'Do you want to create the release manually in your browser?',
+        choices: [
+          {
+            value: 'Yes',
+            hint: 'It will open the GitLab release page for you',
+          },
+          { value: 'No' },
+        ],
+        onCancel: () => process.exit(1),
+      });
+      return open === 'Yes';
     } catch {
-      // Ensure the cursor is always restored before exiting
-      process.stdout.write('\u001b[?25h');
-      // Handle the case where the user exits the prompt with ctrl+c
       process.exit(1);
     }
   }

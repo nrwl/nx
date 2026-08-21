@@ -14,20 +14,33 @@ export type SourceInformation = [file: string | null, plugin: string];
 export const TARGET_DEFAULTS_PLUGIN_NAME = 'nx/target-defaults';
 
 /**
- * Write the source for a target's "identity" key (the target node itself, or
- * its executor/command). Real plugins win last; a target-defaults stamp only
- * claims the key when no real plugin already recorded it — target defaults
- * never bring a target into existence, they only layer fields onto one.
+ * Write the source for the target node key (`targets.<name>`). Ownership of a
+ * target follows its identity, not the last writer:
+ *
+ *  - An unowned key goes to whoever writes it first (the creator).
+ *  - A target-defaults stamp is weak — it never authors a target's existence,
+ *    so any real plugin reclaims the key from it, and it can never take the
+ *    key from a real plugin.
+ *  - Between real plugins, the key only changes hands when the merge changed
+ *    the target's identity (executor/command) — a plugin that merely layers
+ *    fields (dependsOn, options, …) onto an existing target does not become
+ *    its owner.
  */
 export function recordTargetIdentitySourceMapInfo(
   sourceMap: Record<string, SourceInformation>,
   key: string,
-  sourceInfo: SourceInformation
+  sourceInfo: SourceInformation,
+  identityChanged = false
 ): void {
-  if (
-    sourceInfo[1] !== TARGET_DEFAULTS_PLUGIN_NAME ||
-    sourceMap[key] === undefined
-  ) {
+  const existing = sourceMap[key];
+  if (existing === undefined) {
+    sourceMap[key] = sourceInfo;
+    return;
+  }
+  if (sourceInfo[1] === TARGET_DEFAULTS_PLUGIN_NAME) {
+    return;
+  }
+  if (existing[1] === TARGET_DEFAULTS_PLUGIN_NAME || identityChanged) {
     sourceMap[key] = sourceInfo;
   }
 }

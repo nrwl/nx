@@ -111,7 +111,7 @@ describe('Federate Module', () => {
     expect(buildOutput).toContain('Successfully ran target build');
     expect(remoteOutput).toContain('Successfully ran target build');
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const hostE2eResults = await runCommandUntil(
         `e2e ${host}-e2e --no-watch --verbose`,
         (output) => output.includes('All specs passed!'),
@@ -216,7 +216,7 @@ describe('Federate Module', () => {
     expect(buildOutput).toContain('Successfully ran target build');
     expect(remoteOutput).toContain('Successfully ran target build');
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const hostE2eResults = await runCommandUntil(
         `e2e ${host}-e2e --no-watch --verbose`,
         (output) => output.includes('All specs passed!'),

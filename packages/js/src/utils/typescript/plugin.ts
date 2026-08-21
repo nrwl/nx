@@ -2,9 +2,9 @@ import type {
   ExpandedPluginConfiguration,
   NxJsonConfiguration,
 } from '@nx/devkit';
-import { findMatchingConfigFiles } from 'nx/src/devkit-internals';
 import picomatch = require('picomatch');
 import type { TscPluginOptions } from '../../plugins/typescript/plugin';
+import { findMatchingConfigFiles } from '@nx/devkit/internal';
 
 export function ensureProjectIsIncludedInPluginRegistrations(
   nxJson: NxJsonConfiguration,

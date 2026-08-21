@@ -1,5 +1,9 @@
 import type { Tree } from '../../generators/tree';
-import { formatCatalogError, type CatalogManager } from './manager';
+import {
+  collectCatalogReferencesForPackage,
+  formatCatalogError,
+  type CatalogManager,
+} from './manager';
 import {
   readCatalogDefinitions,
   updateCatalogVersionsInFile,
@@ -8,6 +12,7 @@ import type {
   CatalogDefinitions,
   CatalogEntry,
   CatalogReference,
+  CatalogReferenceMatch,
 } from './types';
 
 const PNPM_WORKSPACE_FILENAME = 'pnpm-workspace.yaml';
@@ -76,6 +81,13 @@ export class PnpmCatalogManager implements CatalogManager {
     }
 
     return catalogToUse?.[packageName] || null;
+  }
+
+  getCatalogReferencesForPackage(
+    treeOrRoot: Tree | string,
+    packageName: string
+  ): CatalogReferenceMatch[] {
+    return collectCatalogReferencesForPackage(this, treeOrRoot, packageName);
   }
 
   validateCatalogReference(

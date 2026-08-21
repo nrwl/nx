@@ -417,6 +417,16 @@ export declare function getEventDimensions(): EventDimensions
 export declare function getFilesForOutputsBatch(directory: string, entriesBatch: Array<Array<string>>): Array<Array<string>>
 
 /**
+ * The same list, for JavaScript callers that walk a tree rather than the
+ * filesystem - `visitNotIgnoredFiles` - so both sides apply one baseline
+ * instead of maintaining a second copy that drifts.
+ *
+ * The patterns are gitignore-shaped, so they read the same to the `ignore`
+ * crate here and the `ignore` npm package there.
+ */
+export declare function getHardcodedIgnorePatterns(): Array<string>
+
+/**
  * If `workspace_root` is inside a git worktree, returns the main repo root.
  * Returns `None` when already in the main repo (or not in a git repo at all).
  */
@@ -492,14 +502,14 @@ export interface HashInputs {
  * so the caller can set it as an env var for child processes.
  * Used by CLI and daemon.
  */
-export declare function initializeTelemetry(connection: ExternalObject<NxDbConnection>, workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): string
+export declare function initializeTelemetry(connection: ExternalObject<NxDbConnection>, workspaceId: string, userId: string | undefined | null, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): string
 
 /**
  * Initialize telemetry with a pre-fetched session ID.
  * No DB connection — used by plugin workers that inherit the
  * session ID from their parent process via env var.
  */
-export declare function initializeTelemetryWithSessionId(sessionId: string, workspaceId: string, userId: string, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): void
+export declare function initializeTelemetryWithSessionId(sessionId: string, workspaceId: string, userId: string | undefined | null, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): void
 
 export interface InputsInput {
   input: string

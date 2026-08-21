@@ -12,7 +12,7 @@ import { dirname, isAbsolute } from 'path';
 import { tmpFolder, tmpProjPath } from './paths';
 import { parseJson } from '@nx/devkit';
 import type { JsonParseOptions } from '@nx/devkit';
-import { directoryExists, fileExists } from 'nx/src/utils/fileutils';
+import { directoryExists, fileExists } from '@nx/devkit/internal';
 
 export { directoryExists, fileExists };
 

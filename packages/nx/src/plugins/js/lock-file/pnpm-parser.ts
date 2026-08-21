@@ -306,7 +306,8 @@ function getNodes(
     hash?: string;
     alias?: boolean;
   }>();
-  for (const [key, snapshot] of Object.entries(data.packages)) {
+  // pnpm omits the packages block for workspace-only lockfiles (no external deps)
+  for (const [key, snapshot] of Object.entries(data.packages ?? {})) {
     let packageNameObj;
     const originalPackageName = extractNameFromKey(key, isV5);
     if (!originalPackageName) {
@@ -539,7 +540,8 @@ function getDependencies(
   ctx: CreateDependenciesContext
 ): RawProjectGraphDependency[] {
   const results: RawProjectGraphDependency[] = [];
-  Object.keys(data.packages).forEach((key) => {
+  // pnpm omits the packages block for workspace-only lockfiles (no external deps)
+  Object.keys(data.packages ?? {}).forEach((key) => {
     const snapshot = data.packages[key];
     const nodes = keyMap.get(key);
     nodes.forEach((node) => {

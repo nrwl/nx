@@ -1,5 +1,4 @@
-import { Tree } from 'nx/src/generators/tree';
-import { readJson } from 'nx/src/generators/utils/json';
+import { Tree, readJson } from '@nx/devkit';
 
 export function getImportPath(tree: Tree, projectDirectory: string): string {
   const npmScope = getNpmScope(tree);

@@ -6,7 +6,7 @@ sidebar:
 filter: 'type:Features'
 ---
 
-{% youtube src="https://youtu.be/o-6jb78uuP0" title="Remote Caching with Nx Replay" /%}
+{% youtube src="https://youtu.be/o-6jb78uuP0" title="Remote caching with Nx Cloud" /%}
 
 Rebuilding and retesting the same code repeatedly is costly. Nx offers a sophisticated and battle-tested computation caching system that ensures **code is never rebuilt twice**. This:
 
@@ -124,11 +124,11 @@ To achieve this, we can add `inputs` and `outputs` definitions globally for all 
 
 Note that you only need to define output locations if they differ from the usual `dist` or `build` directory, which Nx automatically recognizes.
 
-Learn more [about configuring inputs including `namedInputs`](/docs/guides/tasks--caching/configure-inputs).
+Learn more [about configuring inputs including `namedInputs`](/docs/kb/configure-inputs).
 
 ## Configure caching automatically
 
-When using [Nx plugins](/docs/concepts/nx-plugins), many tasks have caching configured automatically, saving you the effort of manual setup. **Nx plugins can [automatically infer tasks](/docs/concepts/inferred-tasks) and configure caching** based on your underlying tooling configuration files.
+When using [Nx plugins](/docs/concepts/nx-plugins), many tasks have caching configured automatically, saving you the effort of manual setup. **Nx plugins can [automatically infer tasks](/docs/concepts/mental-model#inferred-tasks) and configure caching** based on your underlying tooling configuration files.
 
 For example, if you add the `@nx/vite` plugin using the following command...
 
@@ -148,13 +148,13 @@ nx show project <project-name> --web
 
 Alternatively, you can view these directly in your editor by installing [Nx Console](/docs/getting-started/editor-setup).
 
-Learn more details about [Nx plugins](/docs/concepts/nx-plugins) and [inferred tasks](/docs/concepts/inferred-tasks).
+Learn more details about [Nx plugins](/docs/concepts/nx-plugins) and [inferred tasks](/docs/concepts/mental-model#inferred-tasks).
 
 ## Troubleshoot cache settings
 
 Caching is hard. If you run into issues, check out the following resources:
 
-- [Debug cache misses](/docs/troubleshooting/troubleshoot-cache-misses)
-- [Turn off or skip the cache](/docs/guides/tasks--caching/skipping-cache)
-- [Change the cache location](/docs/guides/tasks--caching/change-cache-location)
+- [Debug cache misses](/docs/kb/troubleshoot-cache-misses)
+- [Turn off or skip the cache](/docs/kb/skipping-cache)
+- [Change the cache location](/docs/kb/change-cache-location)
 - [Clear the local or remote cache](/docs/reference/nx-commands#nx-reset)

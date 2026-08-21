@@ -59,6 +59,9 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     // Use environment variable instead of npm config command to avoid polluting other tests
     process.env[`npm_config_//${listenAddress}:${port}/:_authToken`] =
       authToken;
+    // npm has the same policy as pnpm below. It is off by default, so this
+    // only matters where a user-level .npmrc turns it on.
+    process.env.npm_config_min_release_age = '0';
     // pnpm 11 reads pnpm_config_* env vars instead of npm_config_*, and they
     // take precedence over any registry a stray process wrote to ~/.npmrc.
     process.env.pnpm_config_registry = registry;
@@ -99,6 +102,15 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     process.env.YARN_ENABLE_GLOBAL_CACHE = 'false';
 
     process.env.NX_SKIP_PROVENANCE_CHECK = 'true';
+
+    // Installing a workspace unzips the Cypress binary into a cache directory
+    // shared by everything on the machine, so two suites running side by side
+    // can clear that directory out from under each other mid-unzip. Suites that
+    // never run e2e tests do not need the binary at all; the ones that do get it
+    // from `ensureCypressInstallation`, which takes a lock first.
+    if (process.env.NX_E2E_RUN_E2E !== 'true') {
+      process.env.CYPRESS_INSTALL_BINARY = '0';
+    }
 
     global.e2eTeardown = () => {
       // Clean up environment variable instead of npm config command

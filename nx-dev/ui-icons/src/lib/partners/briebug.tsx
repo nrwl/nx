@@ -1,6 +1,4 @@
-import { FC } from 'react';
-
-import { SVGProps } from 'react';
+import { FC, SVGProps } from 'react';
 
 export const BriebugIcon: FC<SVGProps<SVGSVGElement>> = (props) => {
   return (

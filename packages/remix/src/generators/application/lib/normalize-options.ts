@@ -3,7 +3,7 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/internal';
-import { isUsingTsSolutionSetup } from '@nx/js/internal';
+import { isUsingTsSolutionSetup, normalizeLinterOption } from '@nx/js/internal';
 import { type NxRemixGeneratorSchema } from '../schema';
 
 export interface NormalizedSchema extends NxRemixGeneratorSchema {
@@ -48,7 +48,7 @@ export async function normalizeOptions(
 
   return {
     ...options,
-    linter: options.linter ?? 'eslint',
+    linter: await normalizeLinterOption(tree, options.linter),
     projectName: appProjectName,
     projectRoot,
     importPath,

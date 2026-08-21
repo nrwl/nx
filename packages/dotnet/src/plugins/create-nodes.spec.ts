@@ -1,4 +1,5 @@
 import { ProjectConfiguration, TargetConfiguration } from '@nx/devkit';
+import { mergeTargetConfigurations } from '@nx/devkit/internal';
 import {
   DotNetPluginOptions,
   TargetConfigurationWithName,
@@ -19,11 +20,6 @@ function mergeUserTargetConfigurations(
   if (!node.targets || !options) {
     return node;
   }
-
-  // Import mergeTargetConfigurations from nx
-  const {
-    mergeTargetConfigurations,
-  } = require('nx/src/project-graph/utils/project-configuration-utils');
 
   const targetMappings: Array<{
     targetOption: TargetConfigurationWithName | false | undefined;

@@ -73,7 +73,7 @@
 /ci/monorepo-ci-bitbucket-pipelines /docs/guides/nx-cloud/setup-ci 301
 /ci/distributed-builds /docs/concepts/ci-concepts/parallelization-distribution 301
 /ci/setup-incremental-builds-angular /recipes/angular/setup-incremental-builds-angular 301
-/guides/turbo-and-nx /docs/guides/adopting-nx/from-turborepo 301
+/guides/turbo-and-nx /docs/kb/from-turborepo 301
 /guides/why-monorepos /docs/concepts/decisions/what-is-a-monorepo 301
 /guides/adding-assets-react /recipes/react/adding-assets 301
 /guides/environment-variables /docs/reference/environment-variables 301
@@ -247,7 +247,7 @@
 /concepts/more-concepts/nx-and-angular /nx-api/angular/documents/nx-and-angular 301
 /concepts/more-concepts/nx-devkit-angular-devkit /nx-api/angular/documents/nx-devkit-angular-devkit 301
 /concepts/more-concepts/incremental-builds /docs/concepts/buildable-and-publishable-libraries 301
-/concepts/turbo-and-nx /docs/guides/adopting-nx/from-turborepo 301
+/concepts/turbo-and-nx /docs/kb/from-turborepo 301
 
 # --- nested5minuteTutorialUrls ---
 /tutorials/package-based-repo-tutorial /docs/getting-started/tutorials/typescript-packages-tutorial 301
@@ -497,7 +497,7 @@
 /concepts/more-concepts/creating-libraries /docs/concepts/decisions/project-size 301
 /concepts/more-concepts/library-types /docs/concepts/decisions/project-dependency-rules 301
 /concepts/more-concepts/grouping-libraries /docs/concepts/decisions/folder-structure 301
-/concepts/more-concepts/turbo-and-nx /docs/guides/adopting-nx/from-turborepo 301
+/concepts/more-concepts/turbo-and-nx /docs/kb/from-turborepo 301
 /concepts/more-concepts/nx-daemon /docs/concepts/nx-daemon 301
 /concepts/more-concepts/buildable-and-publishable-libraries /docs/concepts/buildable-and-publishable-libraries 301
 
@@ -803,9 +803,6 @@
 # --- gettingStartedRedirects ---
 /getting-started/why-nx /docs/getting-started/intro 301
 
-# --- pricingRedirects ---
-/pricing /nx-cloud#plans 301
-
 # --- ciTutorialRedirects ---
 /ci/intro/tutorials/circle /docs/guides/nx-cloud/setup-ci 301
 /ci/intro/tutorials/github-actions /ci/recipes/set-up/monorepo-ci-github-actions 301
@@ -888,7 +885,7 @@
 /getting-started/tutorials/typescript-packages-tutorial /docs/getting-started/tutorials/typescript-packages-tutorial 301
 /getting-started/tutorials/react-monorepo-tutorial /docs/getting-started/tutorials/react-monorepo-tutorial 301
 /getting-started/tutorials/angular-monorepo-tutorial /docs/getting-started/tutorials/angular-monorepo-tutorial 301
-/getting-started/tutorials/gradle-tutorial /docs/getting-started/tutorials/gradle-tutorial 301
+/getting-started/tutorials/gradle-tutorial /docs/kb/gradle-tutorial 301
 /getting-started/* /docs/getting-started/intro 301
 /ci/getting-started /docs/getting-started/nx-cloud 301
 /ci/getting-started/intro /docs/getting-started/nx-cloud 301

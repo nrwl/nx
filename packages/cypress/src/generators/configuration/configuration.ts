@@ -1,4 +1,9 @@
-import { resolveImportPath, promptWhenInteractive } from '@nx/devkit/internal';
+import {
+  resolveImportPath,
+  isInteractive,
+  textPrompt,
+  PackageJson,
+} from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -20,8 +25,8 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { Linter, LinterType } from '@nx/eslint';
 import {
+  LinterType,
   getRelativePathToRootTsConfig,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
@@ -32,7 +37,6 @@ import {
   getTsConfigModuleResolution,
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
-import { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { addLinterToCyProject } from '../../utils/add-linter';
 import { assertSupportedCypressVersion } from '../../utils/assert-supported-cypress-version';
@@ -52,11 +56,15 @@ export interface CypressE2EConfigSchema {
   directory?: string;
   js?: boolean;
   skipFormat?: boolean;
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
+   */
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
   bundler?: 'webpack' | 'vite' | 'none';
   devServerTarget?: string;
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   port?: number | 'cypress-auto';
   jsx?: boolean;
   rootProject?: boolean;
@@ -260,29 +268,27 @@ In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:
 }
 
 async function promptForMissingServeData(projectName: string) {
-  const { devServerTarget, port } = await promptWhenInteractive<{
-    devServerTarget: string;
-    port: number;
-  }>(
-    [
-      {
-        type: 'input',
-        name: 'devServerTarget',
-        message:
-          'What is the name of the target used to serve the application locally?',
-        initial: `${projectName}:serve`,
-      },
-      {
-        type: 'numeral',
-        name: 'port',
-        message: 'What port will the application be served on?',
-        initial: 3000,
-      },
-    ],
-    {
+  if (!isInteractive()) {
+    return {
       devServerTarget: `${projectName}:serve`,
-      port: 3000,
-    }
+      baseUrl: 'http://localhost:3000',
+    };
+  }
+
+  const devServerTarget = await textPrompt({
+    message:
+      'What is the name of the target used to serve the application locally?',
+    initialValue: `${projectName}:serve`,
+  });
+  const port = Number(
+    await textPrompt({
+      message: 'What port will the application be served on?',
+      initialValue: '3000',
+      validate: (value) =>
+        value !== '' && !Number.isNaN(Number(value))
+          ? undefined
+          : 'Please enter a number',
+    })
   );
 
   return {

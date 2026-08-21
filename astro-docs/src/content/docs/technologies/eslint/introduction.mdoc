@@ -26,7 +26,7 @@ The `@nx/eslint` plugin supports the following package versions.
 ### Installation
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/eslint` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/eslint` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/kb/keep-nx-versions-in-sync).
 {% /aside %}
 
 In any Nx workspace, you can install `@nx/eslint` by running the following command:
@@ -60,7 +60,7 @@ Even if a project has an ESLint configuration file, it will only have an inferre
 
 ### View inferred tasks
 
-To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/concepts/mental-model#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
 ### @nx/eslint configuration
 
@@ -73,14 +73,22 @@ The `@nx/eslint/plugin` is configured in the `plugins` array in `nx.json`.
     {
       "plugin": "@nx/eslint/plugin",
       "options": {
-        "targetName": "lint"
+        "targetName": "lint",
+        "extensions": ["ts", "tsx", "js", "jsx", "html", "vue"]
       }
     }
   ]
 }
 ```
 
-- The `targetName` option controls the name of the inferred ESLint tasks. The default name is `lint`.
+| Option       | Type     | Default                                           | Description                                     |
+| ------------ | -------- | ------------------------------------------------- | ----------------------------------------------- |
+| `targetName` | string   | `lint`                                            | Name of the ESLint task.                        |
+| `extensions` | string[] | `ts, cts, mts, tsx, js, cjs, mjs, jsx, html, vue` | File extensions Nx checks before adding a task. |
+
+The lint task runs ESLint from the project root and is cached, with inputs and outputs based on your ESLint configuration.
+
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/eslint/plugin`.
 
 ## Lint
 

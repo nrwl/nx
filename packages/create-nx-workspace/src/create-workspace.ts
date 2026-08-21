@@ -5,7 +5,7 @@ import { createPreset } from './create-preset';
 import { createSandbox } from './create-sandbox';
 import { CreateWorkspaceOptions } from './create-workspace-options';
 import { setupCI } from './utils/ci/setup-ci';
-import { mapErrorToBodyLines } from './utils/error-utils';
+import { mapErrorToBodyLines, CnwError } from './utils/error-utils';
 import {
   GitHubPushError,
   initializeGitRepo,
@@ -36,7 +36,6 @@ import {
 } from './utils/package-manager';
 import { isAiAgent, logProgress } from './utils/ai/ai-output';
 import { confirmThirdPartyPreset } from './internal-utils/prompts';
-import { CnwError } from './utils/error-utils';
 
 // State for SIGINT handler - only set after workspace is fully installed
 let workspaceDirectory: string | undefined;
@@ -77,7 +76,9 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     // Resolve shorthand template names to full GitHub org/repo format
     options.template = resolveTemplateShorthand(options.template);
 
-    if (!options.template.startsWith('nrwl/'))
+    // Strict slug match - a bare startsWith('nrwl/') check lets path
+    // traversal (`nrwl/../evil`) resolve to another org's repo.
+    if (!/^nrwl\/[\w.-]+$/.test(options.template))
       throw new Error(
         `Invalid template. Only templates from the 'nrwl' GitHub org are supported.`
       );

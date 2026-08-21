@@ -116,7 +116,7 @@ describe('React Module Federation - Webpack Basic - Host Remote Generation', () 
 
       await killProcessAndPorts(serveResult.pid, readPort(shell));
 
-      if (runE2ETests()) {
+      if (await runE2ETests()) {
         const e2eResultsSwc = await runCommandUntil(
           `e2e ${shell}-e2e --no-watch --verbose`,
           (output) => output.includes('All specs passed!')

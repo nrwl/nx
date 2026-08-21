@@ -26,7 +26,7 @@ The `@nx/rollup` plugin supports the following package versions.
 ### Installation
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/rollup` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/rollup` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/kb/keep-nx-versions-in-sync).
 {% /aside %}
 
 In any Nx workspace, you can install `@nx/rollup` by running the following command:
@@ -36,6 +36,47 @@ nx add @nx/rollup
 ```
 
 This will install the correct version of `@nx/rollup`.
+
+## Configure task inference
+
+The `@nx/rollup/plugin` plugin looks for these Rollup configuration files:
+
+- `rollup.config.js`
+- `rollup.config.cjs`
+- `rollup.config.mjs`
+- `rollup.config.ts`
+- `rollup.config.cts`
+- `rollup.config.mts`
+
+A configuration file is associated with a project when its directory also contains a `package.json` or `project.json`. Nx creates a cached build task that runs `rollup -c`, with outputs based on your Rollup configuration, and depends on the same task in dependency projects.
+
+Configure the plugin in `nx.json`:
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/rollup/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
+      }
+    }
+  ]
+}
+```
+
+| Option                | Type   | Default      | Description                                         |
+| --------------------- | ------ | ------------ | --------------------------------------------------- |
+| `buildTargetName`     | string | `build`      | Name of the cached Rollup build task.               |
+| `buildDepsTargetName` | string | `build-deps` | Name of the task that builds project dependencies.  |
+| `watchDepsTargetName` | string | `watch-deps` | Name of the task that watches project dependencies. |
+
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference.
+A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact
+identifier `@nx/rollup/plugin`.
 
 ## Using @nx/rollup
 

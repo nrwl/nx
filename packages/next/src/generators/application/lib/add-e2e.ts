@@ -1,7 +1,9 @@
 import {
   getE2EWebServerInfo,
   readTargetDefaultsForTarget,
+  type PackageJson,
 } from '@nx/devkit/internal';
+import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -12,7 +14,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { webStaticServeGenerator } from '@nx/web';
-import type { PackageJson } from 'nx/src/utils/package-json';
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from './normalize-options';
 
@@ -79,13 +80,13 @@ export async function addE2e(
 
     const e2eTask = await configurationGenerator(host, {
       ...options,
-      linter: 'eslint',
       project: options.e2eProjectName,
       directory: 'src',
       skipFormat: true,
       devServerTarget: e2eWebServerInfo.e2eDevServerTarget,
       baseUrl: e2eWebServerInfo.e2eWebServerAddress,
       jsx: true,
+      enableTypedLinting: isTypedLintingEnabled(options),
       webServerCommands: {
         default: e2eWebServerInfo.e2eWebServerCommand,
       },
@@ -136,7 +137,7 @@ export async function addE2e(
       directory: 'src',
       js: false,
       linter: options.linter,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting: isTypedLintingEnabled(options),
       webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
       webServerCommand: e2eWebServerInfo.e2eWebServerCommand,
       addPlugin: options.addPlugin,

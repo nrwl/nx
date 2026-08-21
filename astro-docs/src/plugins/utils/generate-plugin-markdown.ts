@@ -29,12 +29,8 @@ export function generateMigrationItem(name: string, item: any): string {
     }
   }
 
-  if (config.fullPath) {
-    const maybeExampleMdFile = config.fullPath + '.md';
-    if (existsSync(maybeExampleMdFile)) {
-      const rawContent = readFileSync(maybeExampleMdFile, 'utf-8');
-      markdown += `${rawContent}\n\n`;
-    }
+  if (config.documentationPath && existsSync(config.documentationPath)) {
+    markdown += `${readFileSync(config.documentationPath, 'utf-8')}\n\n`;
   }
 
   return markdown;

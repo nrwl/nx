@@ -188,7 +188,6 @@ export default ESLintUtils.RuleCreator(
     const rootPackageJsonDeps = getAllDependencies(rootPackageJson);
 
     const catalogManager = getCatalogManager(workspaceRoot);
-    const catalogDefs = catalogManager?.getCatalogDefinitions(workspaceRoot);
 
     function catalogEntryMatchesInstalled(
       catalogVersionSpec: string,
@@ -207,33 +206,11 @@ export default ESLintUtils.RuleCreator(
     }
 
     function getCatalogVersionForPackage(packageName: string): string | null {
-      if (!catalogDefs) {
-        return null;
-      }
-
-      const matches: { catalogRef: string; versionSpec: string }[] = [];
-
-      // Check default catalog — `catalog` takes precedence over `catalogs.default`.
-      // Both existing simultaneously is a pnpm error caught by validateCatalogReference.
-      const defaultEntry =
-        catalogDefs.catalog?.[packageName] ??
-        catalogDefs.catalogs?.default?.[packageName];
-      if (defaultEntry) {
-        matches.push({ catalogRef: 'catalog:', versionSpec: defaultEntry });
-      }
-
-      // Check named catalogs (skip "default" — handled above)
-      if (catalogDefs.catalogs) {
-        for (const [name, entries] of Object.entries(catalogDefs.catalogs)) {
-          if (name === 'default' || !entries?.[packageName]) {
-            continue;
-          }
-          matches.push({
-            catalogRef: `catalog:${name}`,
-            versionSpec: entries[packageName],
-          });
-        }
-      }
+      const matches =
+        catalogManager?.getCatalogReferencesForPackage(
+          workspaceRoot,
+          packageName
+        ) ?? [];
 
       if (!matches.length) {
         return null;

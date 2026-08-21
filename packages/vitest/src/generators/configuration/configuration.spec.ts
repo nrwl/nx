@@ -41,7 +41,7 @@ describe('@nx/vitest:configuration', () => {
     });
   }
 
-  it('should inline the projects into a root vitest.config.ts for vitest 4', async () => {
+  it('should inline the projects into a root vitest.config.mts for vitest 4', async () => {
     setVitestVersion('~4.1.0');
 
     await configurationGenerator(tree, {
@@ -54,9 +54,9 @@ describe('@nx/vitest:configuration', () => {
       skipFormat: true,
     });
 
-    expect(tree.exists('vitest.workspace.ts')).toBe(false);
-    expect(tree.exists('vitest.config.ts')).toBe(true);
-    expect(tree.read('vitest.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+    expect(tree.exists('vitest.workspace.mts')).toBe(false);
+    expect(tree.exists('vitest.config.mts')).toBe(true);
+    expect(tree.read('vitest.config.mts', 'utf-8')).toMatchInlineSnapshot(`
       "import { defineConfig } from 'vitest/config';
 
       export default defineConfig({
@@ -68,7 +68,60 @@ describe('@nx/vitest:configuration', () => {
     `);
   });
 
-  it('should create a root vitest.workspace.ts for vitest 3', async () => {
+  it.each([[undefined], [true]])(
+    'should emit passWithNoTests in the project config only when requested (%s)',
+    async (passWithNoTests) => {
+      setVitestVersion('~4.1.0');
+
+      await configurationGenerator(tree, {
+        project: 'mylib',
+        uiFramework: 'none',
+        coverageProvider: 'v8',
+        passWithNoTests,
+        skipPackageJson: true,
+        addPlugin: false,
+        skipFormat: true,
+      });
+
+      const config = tree.read('libs/mylib/vitest.config.mts', 'utf-8');
+      if (passWithNoTests) {
+        expect(config).toContain('passWithNoTests: true');
+      } else {
+        expect(config).not.toContain('passWithNoTests');
+      }
+    }
+  );
+
+  it('should add passWithNoTests to a pre-existing vite config', async () => {
+    setVitestVersion('~4.1.0');
+    tree.write(
+      'libs/mylib/vite.config.mts',
+      `import { defineConfig } from 'vite';
+
+export default defineConfig({
+  test: {
+    globals: true,
+  },
+});
+`
+    );
+
+    await configurationGenerator(tree, {
+      project: 'mylib',
+      uiFramework: 'none',
+      coverageProvider: 'v8',
+      passWithNoTests: true,
+      skipPackageJson: true,
+      addPlugin: false,
+      skipFormat: true,
+    });
+
+    expect(tree.read('libs/mylib/vite.config.mts', 'utf-8')).toContain(
+      `'passWithNoTests': true`
+    );
+  });
+
+  it('should create a root vitest.workspace.mts for vitest 3', async () => {
     setVitestVersion('^3.0.0');
 
     await configurationGenerator(tree, {
@@ -81,8 +134,8 @@ describe('@nx/vitest:configuration', () => {
       skipFormat: true,
     });
 
-    expect(tree.exists('vitest.config.ts')).toBe(false);
-    expect(tree.read('vitest.workspace.ts', 'utf-8')).toMatchInlineSnapshot(
+    expect(tree.exists('vitest.config.mts')).toBe(false);
+    expect(tree.read('vitest.workspace.mts', 'utf-8')).toMatchInlineSnapshot(
       `"export default ['**/vite.config.{mjs,js,ts,mts}', '**/vitest.config.{mjs,js,ts,mts}'];"`
     );
   });
@@ -217,7 +270,7 @@ export default defineConfig({
     // A generated vitest.config.ts would win resolution and shadow the root vite
     // config, dropping its settings (aliases, plugins) from vitest runs. Leave
     // it in place and warn that the project's own config won't apply.
-    expect(tree.exists('vitest.config.ts')).toBe(false);
+    expect(tree.exists('vitest.config.mts')).toBe(false);
     expect(tree.read('vite.config.ts', 'utf-8')).toBe(viteConfig);
     expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('setupFiles'));
 
@@ -248,7 +301,7 @@ export default defineConfig({
     // The vite config already aggregates via test.projects; a generated
     // vitest.config.ts would shadow it, so nothing is written and no vite-config
     // warning is emitted.
-    expect(tree.exists('vitest.config.ts')).toBe(false);
+    expect(tree.exists('vitest.config.mts')).toBe(false);
     expect(tree.read('vite.config.ts', 'utf-8')).toBe(viteConfig);
     expect(warnSpy).not.toHaveBeenCalledWith(
       expect.stringContaining('test.projects')
@@ -280,7 +333,7 @@ export default defineConfig(() => ({ plugins: [] }));
 
     // A function config can't be read statically, so we can't rule out that it
     // aggregates; stay conservative and warn instead of shadowing it.
-    expect(tree.exists('vitest.config.ts')).toBe(false);
+    expect(tree.exists('vitest.config.mts')).toBe(false);
     expect(warnSpy).toHaveBeenCalledWith(
       expect.stringContaining('test.projects')
     );
@@ -302,13 +355,13 @@ export default defineConfig(() => ({ plugins: [] }));
       skipFormat: true,
     });
 
-    expect(tree.exists('vitest.config.ts')).toBe(false);
+    expect(tree.exists('vitest.config.mts')).toBe(false);
     expect(tree.read('vitest.workspace.ts', 'utf-8')).toBe(
       '// existing workspace file'
     );
   });
 
-  it('should default to the root vitest.config.ts shape when the vitest version cannot be detected', async () => {
+  it('should default to the root vitest.config.mts shape when the vitest version cannot be detected', async () => {
     // No vitest in package.json, so the version is undetectable; new installs
     // resolve to vitest 4, so the root config uses the inlined projects shape.
     await configurationGenerator(tree, {
@@ -321,7 +374,7 @@ export default defineConfig(() => ({ plugins: [] }));
       skipFormat: true,
     });
 
-    expect(tree.exists('vitest.workspace.ts')).toBe(false);
-    expect(tree.exists('vitest.config.ts')).toBe(true);
+    expect(tree.exists('vitest.workspace.mts')).toBe(false);
+    expect(tree.exists('vitest.config.mts')).toBe(true);
   });
 });

@@ -40,7 +40,13 @@ exceptions:
   - BitBucket
   - BitBucket Cloud
   - Azure DevOps
+  - Azure AI Foundry
   - Azure
+  - AWS Bedrock
+  - Google Vertex AI
+  - Anthropic
+  - Claude Code
+  - Claude
   - Docker
   - Dockerfile
   - Kubernetes
@@ -76,6 +82,8 @@ exceptions:
   - Turborepo
   - Lerna
   - Bazel
+  - Rush Stack
+  - Rush
   - Depot
   - Blacksmith
   - Buildkite
@@ -135,6 +143,14 @@ exceptions:
   - Self-Healing
   - AMD64
   - ARM64
+  - macOS
+  - Windows
+  - Linux
+  - Ubuntu
+  - OS
+  - Homebrew
+  - Chocolatey
+  - apt
   # Filenames and env vars
   - SELF_HEALING.md
   - CLAUDE.md

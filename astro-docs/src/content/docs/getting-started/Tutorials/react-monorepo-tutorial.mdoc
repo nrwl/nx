@@ -61,7 +61,7 @@ Let's take a look at the structure of our new Nx workspace:
   - package.json
   - tsconfig.base.json
   - tsconfig.json
-  - vitest.config.ts
+  - vitest.config.mts
 
 {%/filetree%}
 
@@ -83,7 +83,7 @@ You can also use `npx nx run shop:serve` as an alternative syntax. The `<project
 
 ### Inferred tasks
 
-By default Nx simply runs your `package.json` scripts. However, you can also adopt [Nx technology plugins](/docs/technologies) that help abstract away some of the lower-level config and have Nx manage that. One such thing is to automatically identify tasks that can be run for your project from [tooling configuration files](/docs/concepts/inferred-tasks) such as `package.json` scripts and `vite.config.ts`.
+By default Nx simply runs your `package.json` scripts. However, you can also adopt [Nx technology plugins](/docs/technologies) that help abstract away some of the lower-level config and have Nx manage that. One such thing is to automatically identify tasks that can be run for your project from [tooling configuration files](/docs/concepts/mental-model#inferred-tasks) such as `package.json` scripts and `vite.config.ts`.
 
 In `nx.json` there's already the `@nx/vite` plugin registered which automatically identifies `build`, `serve`, and other Vite-related tasks.
 
@@ -246,7 +246,7 @@ Running the above commands should lead to the following directory structure:
   - package.json
   - tsconfig.base.json
   - tsconfig.json
-  - vitest.config.ts
+  - vitest.config.mts
 
 {% /filetree %}
 
@@ -481,9 +481,9 @@ Here are some things you can dive into next:
 
 - [Set up CI](/docs/getting-started/setup-ci) with remote caching and self-healing
 - Learn more about the [underlying mental model of Nx](/docs/concepts/mental-model)
-- Learn how to [migrate your existing project to Nx](/docs/guides/adopting-nx/adding-to-existing-project)
-- [Setup Storybook for our shared UI library](/docs/technologies/test-tools/storybook/guides/overview-react)
-- [Learn how to setup Tailwind](/docs/technologies/react/guides/using-tailwind-css-in-react)
+- Learn how to [migrate your existing project to Nx](/docs/kb/adding-to-existing-project)
+- [Setup Storybook for our shared UI library](/docs/kb/overview-react)
+- [Learn how to setup Tailwind](/docs/kb/using-tailwind-css-in-react)
 - Learn about [enforcing boundaries between projects](/docs/features/enforce-module-boundaries)
 
 Also, make sure you

@@ -3,13 +3,12 @@ import { BlogPostDataEntry } from '@nx/nx-dev-data-access-documents/node-only';
 import Image from 'next/image';
 import { BlogAuthors } from './authors';
 import { ChevronLeftIcon, ListBulletIcon } from '@heroicons/react/24/outline';
-import { renderMarkdown } from '@nx/nx-dev-ui-markdoc';
+import { renderMarkdown, Metrics } from '@nx/nx-dev-ui-markdoc';
 import { EpisodePlayer } from './episode-player';
 import { YouTube } from '@nx/nx-dev-ui-common';
 import { FeaturedBlogs } from './featured-blogs';
 import { MoreBlogs } from './more-blogs';
 import { ALL_TOPICS, type Topic } from './topics';
-import { Metrics } from '@nx/nx-dev-ui-markdoc';
 
 export interface BlogDetailsProps {
   post: BlogPostDataEntry;
@@ -63,7 +62,7 @@ export function BlogDetails({ post, allPosts }: BlogDetailsProps) {
         </div>
 
         {/* Title */}
-        <header className="mx-auto mb-16 mt-8 px-4">
+        <header className="mx-auto mt-8 mb-16 px-4">
           <h1 className="text-center text-4xl font-semibold text-zinc-900 dark:text-white">
             {post.title}
           </h1>
@@ -105,7 +104,7 @@ export function BlogDetails({ post, allPosts }: BlogDetailsProps) {
         <div className="relative isolate grid grid-cols-1 gap-8 xl:grid-cols-[200px_minmax(0,1fr)_200px]">
           <div className="hidden min-h-full xl:block">
             {post.metrics && (
-              <div className="sticky top-28 pr-4 pt-8">
+              <div className="sticky top-28 pt-8 pr-4">
                 <Metrics metrics={post.metrics} variant="vertical" />
               </div>
             )}
@@ -137,7 +136,7 @@ export function BlogDetails({ post, allPosts }: BlogDetailsProps) {
 
       {/* Related Posts Section */}
       {post.tags.length > 0 && relatedPosts.length > 0 && (
-        <section className="mt-24 border-b border-t border-zinc-200 bg-zinc-50 py-24 sm:py-32 dark:border-zinc-800 dark:bg-zinc-900">
+        <section className="mt-24 border-t border-b border-zinc-200 bg-zinc-50 py-24 sm:py-32 dark:border-zinc-800 dark:bg-zinc-900">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-none">
               <h2 className="mb-8 flex items-center gap-3 text-2xl font-semibold text-zinc-900 dark:text-white">

@@ -3,7 +3,7 @@ import { cpSync } from 'fs';
 import { fork } from 'node:child_process';
 import { StaticRemoteConfig } from '../../utils';
 import { workspaceRoot } from '@nx/devkit';
-import { readModulePackageJson } from 'nx/src/devkit-internals';
+import { readModulePackageJson } from '@nx/devkit/internal';
 
 export function startStaticRemotesFileServer(
   staticRemotesConfig: Record<string, StaticRemoteConfig>,

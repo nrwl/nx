@@ -1,5 +1,5 @@
 import type { names } from '@nx/devkit';
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 import type { SupportedStyles } from '../../../typings/style';
 
 export interface Schema {
@@ -11,7 +11,7 @@ export interface Schema {
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   inSourceTests?: boolean;
   e2eTestRunner: 'cypress' | 'playwright' | 'none';
-  linter: Linter | LinterType;
+  linter?: LinterType;
   classComponent?: boolean;
   routing?: boolean;
   useReactRouter?: boolean;
@@ -19,6 +19,10 @@ export interface Schema {
   js?: boolean;
   globalCss?: boolean;
   strict?: boolean;
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
+   */
   setParserOptionsProject?: boolean;
   compiler?: 'babel' | 'swc';
   remotes?: string[];
@@ -37,6 +41,8 @@ export interface Schema {
 }
 
 export interface NormalizedSchema<T extends Schema = Schema> extends T {
+  // `normalizeOptions` always resolves this, so it is no longer optional.
+  linter: LinterType;
   projectName: string;
   appProjectRoot: string;
   e2eProjectName: string;

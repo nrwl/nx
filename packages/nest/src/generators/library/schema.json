@@ -28,17 +28,15 @@
       "type": "string"
     },
     "linter": {
-      "description": "The tool to use for running lint checks.",
+      "description": "The tool to use for running lint checks. Defaults to the linter the workspace already uses.",
       "type": "string",
-      "enum": ["eslint", "none"],
-      "default": "none",
-      "x-prompt": "Which linter would you like to use?",
+      "enum": ["eslint", "oxlint", "none"],
       "x-priority": "important"
     },
     "unitTestRunner": {
       "description": "Test runner to use for unit tests.",
       "type": "string",
-      "enum": ["jest", "none"],
+      "enum": ["jest", "vitest", "none"],
       "default": "none",
       "x-prompt": "Which unit test runner would you like to use?",
       "x-priority": "important"
@@ -91,7 +89,7 @@
       "default": false
     },
     "testEnvironment": {
-      "description": "The test environment for jest, for node applications this should stay as node unless doing DOM testing.",
+      "description": "The test environment for the unit test runner. For node applications this should stay as node unless doing DOM testing.",
       "type": "string",
       "enum": ["jsdom", "node"],
       "default": "node"
@@ -118,10 +116,16 @@
       "type": "boolean",
       "default": true
     },
+    "enableTypedLinting": {
+      "type": "boolean",
+      "description": "Whether to enable typed linting. For flat configs, this configures the recommended `parserOptions.projectService` and `tsconfigRootDir`. For legacy `.eslintrc` configs, this configures `parserOptions.project`. We do not enable this by default for lint performance reasons.",
+      "default": false
+    },
     "setParserOptionsProject": {
       "type": "boolean",
-      "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
-      "default": false
+      "description": "Deprecated alias for `enableTypedLinting`.",
+      "default": false,
+      "x-deprecated": "Use `enableTypedLinting` instead. This option will be removed in Nx v24."
     },
     "skipPackageJson": {
       "description": "Do not add dependencies to `package.json`.",

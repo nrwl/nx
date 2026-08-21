@@ -65,7 +65,6 @@
     "css-loader": "^7.1.2",
     "jsonc-parser": "catalog:",
     "less-loader": "catalog:css",
-    "license-webpack-plugin": "^4.0.2",
     "loader-utils": "3.3.1",
     "open": "10.1.0",
     "ora": "catalog:",

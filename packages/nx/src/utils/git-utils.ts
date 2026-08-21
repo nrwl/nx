@@ -6,7 +6,7 @@ import {
 } from 'child_process';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
-import { dirname, join, posix, sep } from 'path';
+import { dirname, join, posix, relative, sep } from 'path';
 import { logger } from './logger';
 
 function execFileAsync(
@@ -60,12 +60,7 @@ export class GitRepository {
   constructor(private directory: string) {}
 
   getGitRootPath(cwd: string) {
-    return execFileSync('git', ['rev-parse', '--show-toplevel'], {
-      cwd,
-      windowsHide: true,
-    })
-      .toString()
-      .trim();
+    return getGitRootPath(cwd);
   }
 
   async hasUncommittedChanges() {
@@ -368,6 +363,68 @@ export function getVcsRemoteInfo(directory?: string): VcsRemoteInfo | null {
   }
 }
 
+export function getGitRootPath(cwd?: string): string {
+  return execFileSync('git', ['rev-parse', '--show-toplevel'], {
+    cwd,
+    windowsHide: true,
+  })
+    .toString()
+    .trim();
+}
+
+/**
+ * Path of `directory` relative to its git root, posix-separated so it is
+ * identical on every OS, and '' when the directory is the git root itself.
+ * Null outside a git repository.
+ */
+export function getGitRootRelativePath(directory: string): string | null {
+  try {
+    return relative(getGitRootPath(directory), directory)
+      .split(sep)
+      .join(posix.sep);
+  } catch {
+    return null;
+  }
+}
+
+/** A shallow clone's truncated history has no stable root commit. */
+export function isShallowRepository(directory?: string): boolean {
+  try {
+    return (
+      execFileSync('git', ['rev-parse', '--is-shallow-repository'], {
+        encoding: 'utf8',
+        stdio: 'pipe',
+        cwd: directory,
+        windowsHide: true,
+      }).trim() === 'true'
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * SHA of the repository's first commit. Merged unrelated histories leave
+ * several root commits — the sorted-first one is picked so every clone
+ * agrees. Null when there are no commits, or outside a git repository.
+ */
+export function getFirstCommitSha(directory?: string): string | null {
+  try {
+    const roots = execFileSync('git', ['rev-list', '--max-parents=0', 'HEAD'], {
+      encoding: 'utf8',
+      stdio: 'pipe',
+      cwd: directory,
+      windowsHide: true,
+    })
+      .trim()
+      .split(/\r?\n/)
+      .filter(Boolean);
+    return roots.sort()[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function isGitRepository(directory?: string): boolean {
   try {
     execSync('git rev-parse --is-inside-work-tree', {
@@ -378,6 +435,34 @@ export function isGitRepository(directory?: string): boolean {
     return true;
   } catch {
     return false;
+  }
+}
+
+export type GitRepositoryStatus = 'git' | 'not-git' | 'unknown';
+
+/**
+ * Like `isGitRepository`, but separates "this is not a git repository" from
+ * "the probe itself failed" (git not installed, permissions). Callers gating
+ * destructive or unverifiable behavior on the answer must fail closed on
+ * 'unknown' instead of reading a broken probe as a missing repository.
+ */
+export function getGitRepositoryStatus(
+  directory?: string
+): GitRepositoryStatus {
+  try {
+    execSync('git rev-parse --is-inside-work-tree', {
+      stdio: 'pipe',
+      cwd: directory,
+      windowsHide: true,
+      // Force untranslated messages; the classification matches on the
+      // English "not a git repository".
+      env: { ...process.env, LC_ALL: 'C' },
+    });
+    return 'git';
+  } catch (err) {
+    const stderr =
+      (err as { stderr?: Buffer | string })?.stderr?.toString() ?? '';
+    return /not a git repository/i.test(stderr) ? 'not-git' : 'unknown';
   }
 }
 
@@ -398,20 +483,113 @@ export function getGitCurrentBranch(directory?: string): string | null {
   }
 }
 
-// Sync companion to `GitRepository.hasUncommittedChanges` for callers that
-// can't drop into the async class (e.g. the migrate orchestrator, which
-// branches on this before spawning subprocesses synchronously).
-export function hasUncommittedChanges(directory?: string): boolean {
+// Names of the remotes configured in the repository, empty when there are
+// none or the probe itself failed.
+export function getGitRemoteNames(directory?: string): string[] {
   try {
-    const out = execSync('git status --porcelain', {
+    return execSync('git remote', {
+      encoding: 'utf8',
+      cwd: directory,
+      stdio: ['ignore', 'pipe', 'ignore'],
+      windowsHide: true,
+    })
+      .split('\n')
+      .map((name) => name.trim())
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+export type WorkingTreeStatus = 'dirty' | 'clean' | 'unknown';
+
+// Tri-state working-tree probe: 'unknown' means the probe itself failed (git
+// missing, spawn failure, permissions), not that the tree is clean. Callers
+// that gate destructive actions on tree cleanliness must treat 'unknown' as
+// unsafe rather than clean.
+// `excludePaths` are left out of the probe the way `tryCommitChanges` leaves
+// them out of the commit, so a tree dirty only under them reads as clean. An
+// exclude-only pathspec still covers the whole tree, matching `git add -A`.
+export function getWorkingTreeStatus(
+  directory?: string,
+  excludePaths: string[] = []
+): WorkingTreeStatus {
+  const pathspecs = excludePaths
+    .map((excludePath) => ` ":(exclude)${excludePath}"`)
+    .join('');
+  try {
+    const out = execSync(
+      `git status --porcelain${pathspecs ? ` --${pathspecs}` : ''}`,
+      {
+        encoding: 'utf8',
+        cwd: directory,
+        stdio: ['ignore', 'pipe', 'pipe'],
+        windowsHide: true,
+      }
+    );
+    return out.trim() === '' ? 'clean' : 'dirty';
+  } catch {
+    return 'unknown';
+  }
+}
+
+// Sync companion to `GitRepository.hasUncommittedChanges` for callers that
+// can't drop into the async class. A failed probe reads as false; callers for
+// whom that tolerance is unsafe use `getWorkingTreeStatus` instead.
+export function hasUncommittedChanges(
+  directory?: string,
+  excludePaths: string[] = []
+): boolean {
+  return getWorkingTreeStatus(directory, excludePaths) === 'dirty';
+}
+
+export type PathCommitExposure =
+  | 'ignored'
+  | 'tracked'
+  | 'unignored'
+  | 'unknown';
+
+// Classifies whether `git add -A` commits made in `directory` can sweep in
+// the directory at `dirPath`. Tracked files stay committable no matter what
+// the ignore rules say (ignore rules never apply to tracked files), so
+// `git ls-files` decides 'tracked' first; `git check-ignore` then splits the
+// untracked remainder into 'ignored' (covered) vs 'unignored' (no
+// coverage). 'unknown' means the probe itself failed (not a git repository,
+// git missing); callers gating destructive behavior on the result must
+// treat it as unsafe.
+export function getPathCommitExposure(
+  dirPath: string,
+  directory?: string
+): PathCommitExposure {
+  try {
+    const tracked = execSync(`git ls-files -- ${dirPath}`, {
       encoding: 'utf8',
       cwd: directory,
       stdio: ['ignore', 'pipe', 'pipe'],
       windowsHide: true,
     });
-    return out.trim() !== '';
+    if (tracked.trim() !== '') {
+      return 'tracked';
+    }
   } catch {
-    return false;
+    return 'unknown';
+  }
+  // Query with a trailing slash so git treats the path as a directory even
+  // when it does not exist on disk yet: a directory-only ignore rule (a
+  // trailing-slash .gitignore entry) does not match a bare query for an
+  // absent path, which would misreport covered workspaces as unignored.
+  const asDir = dirPath.endsWith('/') ? dirPath : `${dirPath}/`;
+  try {
+    execSync(`git check-ignore -q -- ${asDir}`, {
+      cwd: directory,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+    });
+    return 'ignored';
+  } catch (e) {
+    // check-ignore exits 1 for "not ignored"; anything else is a probe
+    // failure.
+    return (e as { status?: number })?.status === 1 ? 'unignored' : 'unknown';
   }
 }
 
@@ -526,10 +704,16 @@ export function commitChanges(
  * Returns `null` (rather than throwing) when the commit itself succeeded
  * but `git rev-parse HEAD` failed transiently — by contract the diff is
  * no longer in the working tree, so callers must NOT report it as such.
+ *
+ * `excludePaths` are `directory`-relative paths the commit must not capture,
+ * whatever the ignore rules say. Their working-tree files are left intact;
+ * only their index entries are put back to HEAD's state. Paths come from
+ * callers' own constants, never from user input.
  */
 export function tryCommitChanges(
   commitMessage: string,
-  directory: string
+  directory: string,
+  excludePaths: string[] = []
 ): string | null {
   try {
     execSync('git add -A', {
@@ -538,6 +722,20 @@ export function tryCommitChanges(
       cwd: directory,
       windowsHide: true,
     });
+    // Exclusion happens as an unstage rather than an add-time pathspec:
+    // `git add` refuses a pathspec naming an ignored directory (exit 1) even
+    // as an exclusion, and an add-time pathspec cannot cover entries that
+    // were already staged before this call. The reset is relative to cwd, so
+    // a workspace nested inside a larger repo excludes its own path; a path
+    // with no index entry is a quiet no-op, unborn HEAD included.
+    for (const excludePath of excludePaths) {
+      execSync(`git reset -q -- "${excludePath}"`, {
+        encoding: 'utf8',
+        stdio: 'pipe',
+        cwd: directory,
+        windowsHide: true,
+      });
+    }
     execSync('git commit --no-verify -F -', {
       encoding: 'utf8',
       stdio: 'pipe',
@@ -572,5 +770,38 @@ export function getLatestCommitSha(directory?: string): string | null {
     }).trim();
   } catch {
     return null;
+  }
+}
+
+/**
+ * The shape of a recorded `git rev-parse` output: 40 hex chars, or 64 in a
+ * sha256 repository. Anything a caller persists and later interpolates into a
+ * command line has to be checked against this first.
+ */
+export const GIT_SHA = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i;
+
+/**
+ * Whether `ancestor` is reachable from `descendant`, i.e. resetting to
+ * `descendant` keeps `ancestor` in history. Returns false when the answer
+ * cannot be established (invalid input, not a repository, unknown commits),
+ * so callers treat an unverifiable commit as not preserved.
+ */
+export function isAncestorCommit(
+  ancestor: string,
+  descendant: string,
+  directory?: string
+): boolean {
+  if (!GIT_SHA.test(ancestor) || !GIT_SHA.test(descendant)) {
+    return false;
+  }
+  try {
+    execSync(`git merge-base --is-ancestor ${ancestor} ${descendant}`, {
+      stdio: 'pipe',
+      windowsHide: true,
+      cwd: directory,
+    });
+    return true;
+  } catch {
+    return false;
   }
 }

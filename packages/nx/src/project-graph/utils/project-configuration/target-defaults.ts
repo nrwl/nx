@@ -20,7 +20,6 @@ import {
 import { isGlobPattern } from '../../../utils/globs';
 import type { CreateNodesResult } from '../../plugins/public-api';
 import {
-  SourceInformation,
   ConfigurationSourceMaps,
   targetSourceMapKey,
   TARGET_DEFAULTS_PLUGIN_NAME,
@@ -54,8 +53,7 @@ export function createTargetDefaultsResults(
   specifiedPluginRootMap: Record<string, ProjectConfiguration>,
   defaultPluginRootMap: Record<string, ProjectConfiguration>,
   nxJsonConfiguration: NxJsonConfiguration,
-  specifiedSourceMaps?: ConfigurationSourceMaps,
-  defaultSourceMaps?: ConfigurationSourceMaps
+  specifiedSourceMaps?: ConfigurationSourceMaps
 ): CreateNodesResultEntry[] {
   const targetDefaultsConfig = nxJsonConfiguration.targetDefaults;
   if (!targetDefaultsConfig) {
@@ -126,8 +124,8 @@ export function createTargetDefaultsResults(
         ? resolveSourcePlugin(
             root,
             targetName,
-            specifiedSourceMaps,
-            defaultSourceMaps
+            defaultTargets[targetName],
+            specifiedSourceMaps
           )
         : undefined;
 
@@ -563,41 +561,38 @@ function normalizeTargetDefaultValue(
 function resolveSourcePlugin(
   root: string,
   targetName: string,
-  specifiedSourceMaps: ConfigurationSourceMaps | undefined,
-  defaultSourceMaps: ConfigurationSourceMaps | undefined
+  defaultTarget: TargetConfiguration | undefined,
+  specifiedSourceMaps: ConfigurationSourceMaps | undefined
 ): string | undefined {
-  // Default-plugin attribution overrides specified-plugin attribution in the
-  // merge, so check it first. The executor/command keys carry the plugin that
-  // *created* the target, which is what `filter.plugin` ("targets originated by
-  // X") means. The top-level `targets.<name>` node key is deliberately NOT used
-  // as a fallback: it tracks the last writer, so a later plugin augmenting the
-  // target would mis-attribute it. The trade-off is that a target with neither
-  // an executor nor a command (a rare, non-runnable shape) resolves to no
-  // source plugin and won't match a `filter.plugin` default — accepted, since
-  // every runnable target carries one of these keys.
-  const executorKey = `${targetSourceMapKey(targetName)}.executor`;
-  const commandKey = `${targetSourceMapKey(targetName)}.command`;
-  const candidates: (string | undefined)[] = [
-    pluginFromSourceMap(defaultSourceMaps, root, executorKey),
-    pluginFromSourceMap(defaultSourceMaps, root, commandKey),
-    pluginFromSourceMap(specifiedSourceMaps, root, executorKey),
-    pluginFromSourceMap(specifiedSourceMaps, root, commandKey),
-  ];
+  // `filter.plugin` ("targets originated by X") can only name a plugin from
+  // nx.json's `plugins` — the specified set. When the default layer authors
+  // the target's identity (its merged config carries an executor or command,
+  // which the merge lets win), the originator is a default plugin and the
+  // target has no matchable source plugin; no source maps are needed to see
+  // that. Otherwise the specified layer's executor/command attribution names
+  // the originator. The top-level `targets.<name>` node key is deliberately
+  // NOT used as a fallback: it tracks ownership, so a later plugin augmenting
+  // the target would mis-attribute it. The trade-off is that a target with
+  // neither an executor nor a command (a rare, non-runnable shape) resolves to
+  // no source plugin and won't match a `filter.plugin` default — accepted,
+  // since every runnable target carries one of these keys.
+  if (
+    defaultTarget &&
+    (defaultTarget.executor !== undefined ||
+      defaultTarget.command !== undefined)
+  ) {
+    return undefined;
+  }
 
-  for (const candidate of candidates) {
-    if (candidate && candidate !== TARGET_DEFAULTS_PLUGIN_NAME)
-      return candidate;
+  const sourceMap = specifiedSourceMaps?.[root];
+  for (const identityKey of ['executor', 'command']) {
+    const plugin =
+      sourceMap?.[`${targetSourceMapKey(targetName)}.${identityKey}`]?.[1];
+    if (plugin && plugin !== TARGET_DEFAULTS_PLUGIN_NAME) {
+      return plugin;
+    }
   }
   return undefined;
-}
-
-function pluginFromSourceMap(
-  maps: ConfigurationSourceMaps | undefined,
-  root: string,
-  key: string
-): string | undefined {
-  const entry = maps?.[root]?.[key] as SourceInformation | undefined;
-  return entry?.[1];
 }
 
 // Builds a name → MatcherProjectNode view for `findMatchingProjects` to

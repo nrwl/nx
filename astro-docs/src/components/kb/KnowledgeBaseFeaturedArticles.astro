@@ -1,0 +1,148 @@
+---
+import type { KnowledgeBaseArticle } from '../../utils/knowledge-base';
+import { getTopicId } from '../../utils/knowledge-base';
+
+interface Props {
+  articles: KnowledgeBaseArticle[];
+}
+
+const { articles } = Astro.props;
+const dateFormatter = new Intl.DateTimeFormat('en-US', {
+  dateStyle: 'medium',
+  timeZone: 'UTC',
+});
+---
+
+<div class="kb-featured-grid" data-pagefind-ignore>
+  {
+    articles.map((article) => (
+      <article class="kb-featured-card">
+        <h3>
+          <a class="kb-featured-card-link" href={article.href}>
+            {article.title}
+          </a>
+        </h3>
+        <p>{article.description}</p>
+        <div class="kb-featured-meta">
+          <time datetime={article.lastModified.toISOString()}>
+            Updated {dateFormatter.format(article.lastModified)}
+          </time>
+          <ul aria-label={`Topics for ${article.title}`}>
+            {article.topics.map((topic) => (
+              <li>
+                <a href={`/docs/kb/${getTopicId(topic)}`}>{topic}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </article>
+    ))
+  }
+</div>
+
+<style>
+  .kb-featured-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+    gap: 1rem;
+  }
+
+  .kb-featured-card {
+    position: relative;
+    display: flex;
+    min-height: 16rem;
+    margin: 0;
+    padding: 1.25rem;
+    flex-direction: column;
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 0.8rem;
+    background: var(--sl-color-bg);
+    transition:
+      border-color 0.18s ease,
+      transform 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+
+  .kb-featured-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--sl-color-gray-4);
+    box-shadow: 0 14px 30px -24px var(--sl-color-black);
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    line-height: 1.35;
+  }
+
+  .kb-featured-card-link {
+    color: var(--sl-color-white);
+    text-decoration: none;
+  }
+
+  .kb-featured-card-link::after {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    border-radius: 0.8rem;
+    content: '';
+  }
+
+  .kb-featured-card-link:focus-visible {
+    outline: none;
+  }
+
+  .kb-featured-card-link:focus-visible::after {
+    outline: 2px solid var(--sl-color-accent-high);
+    outline-offset: 3px;
+  }
+
+  p {
+    margin: 0.7rem 0 1.25rem;
+    color: var(--sl-color-gray-3);
+    font-size: 0.92rem;
+    line-height: 1.55;
+  }
+
+  .kb-featured-meta {
+    display: grid;
+    gap: 0.7rem;
+    margin-top: auto;
+  }
+
+  time {
+    color: var(--sl-color-gray-4);
+    font-size: 0.75rem;
+  }
+
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li a {
+    position: relative;
+    z-index: 2;
+    display: inline-flex;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: var(--sl-color-gray-6);
+    color: var(--sl-color-gray-3);
+    font-size: 0.72rem;
+    line-height: 1.4;
+    text-decoration: none;
+  }
+
+  li a:hover {
+    color: var(--sl-color-white);
+  }
+
+  a:focus-visible {
+    outline: 2px solid var(--sl-color-accent-high);
+    outline-offset: 3px;
+  }
+</style>

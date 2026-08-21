@@ -1,21 +1,31 @@
-import { TS_ALL_EXT_REGEX } from '@nx/angular-rspack-compiler';
-import { type Configuration, ContextReplacementPlugin } from '@rspack/core';
+import type { SwcTranspilationTransform } from '@nx/angular-rspack-compiler';
+import {
+  type Configuration,
+  ContextReplacementPlugin,
+  DefinePlugin,
+} from '@rspack/core';
 import { resolve } from 'path';
 import type {
   I18nOptions,
   NormalizedAngularRspackPluginOptions,
 } from '../../models';
 import { NgRspackPlugin } from '../../plugins/ng-rspack';
+import type { AngularRspackPlugin } from '../../plugins/angular-rspack-plugin';
+import type { SharedLicenseInputs } from '../../plugins/extract-licenses-plugin';
 import { PrerenderPlugin } from '../../plugins/prerender-plugin';
 import { isPackageInstalled } from '../../utils/misc-helpers';
 import { getDevServerConfig } from './dev-server-config-utils';
 import { getOptimization } from './optimization-config';
+import { getSwcTranspilationRules } from './swc-transpilation';
 import { isServeMode } from '../../utils/rspack-serve-env';
 
 export async function getServerConfig(
   normalizedOptions: NormalizedAngularRspackPluginOptions,
   i18n: I18nOptions,
-  defaultConfig: Configuration
+  defaultConfig: Configuration,
+  swcTranspilationTransform: SwcTranspilationTransform,
+  sharedLicenseInputs?: SharedLicenseInputs,
+  sharedAngularPlugin?: AngularRspackPlugin
 ): Promise<Configuration> {
   const isDevServer = isServeMode();
   const { root } = normalizedOptions;
@@ -55,22 +65,7 @@ export async function getServerConfig(
     module: {
       ...defaultConfig.module,
       rules: [
-        {
-          test: TS_ALL_EXT_REGEX,
-          use: [
-            {
-              loader: 'builtin:swc-loader',
-              options: {
-                jsc: {
-                  parser: {
-                    syntax: 'typescript',
-                  },
-                  target: 'es2022',
-                },
-              },
-            },
-          ],
-        },
+        ...getSwcTranspilationRules(swcTranspilationTransform),
         {
           // eslint-disable-next-line @nx/enforce-module-boundaries
           loader: require.resolve(
@@ -91,9 +86,16 @@ export async function getServerConfig(
       ...(defaultConfig.plugins ?? []),
       // Fixes Critical dependency: the request of a dependency is an expression
       new ContextReplacementPlugin(/@?hapi|express[\\/]/),
+      // rspack inlines `import.meta.url` as the source file's URL, breaking
+      // the `isMainModule` listen gate; point it at the emitted bundle.
+      new DefinePlugin({
+        'import.meta.url': "require('node:url').pathToFileURL(__filename).href",
+      }),
       new NgRspackPlugin(normalizedOptions, {
         i18nOptions: i18n,
         platform: 'server',
+        sharedLicenseInputs,
+        sharedAngularPlugin,
       }),
       ...(normalizedOptions.prerender ||
       (normalizedOptions.appShell && !isDevServer)
