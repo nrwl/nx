@@ -26,3 +26,13 @@ task-exclusions:
     exclude-reads:
       - '**/*.stories.{js,jsx,ts,tsx,mdx}'
       - '**/*.{spec,test}.{js,jsx,ts,tsx}'
+
+  # MSBuild scratch. The example's validate-example wrapper shells into a
+  # standalone workspace and runs dotnet build/test there, which fills bin/ and
+  # obj/ next to each .csproj. Nothing downstream consumes them, so they are
+  # excluded rather than declared as outputs of the wrapper.
+  - project: examples-dotnet-basic
+    target: validate-example
+    exclude-writes:
+      - 'examples/dotnet/basic/**/bin/**'
+      - 'examples/dotnet/basic/**/obj/**'
