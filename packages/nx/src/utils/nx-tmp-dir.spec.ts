@@ -4,15 +4,14 @@ import { isAbsolute } from 'node:path';
  * `NX_HOME_TMP_DIR` is resolved once at module scope, so each case re-imports
  * the module with `node:os` staged rather than mutating anything afterwards.
  */
-function loadHomeTmpDir(homedir: () => string): string | undefined {
+async function loadHomeTmpDir(homedir: () => string): string | undefined {
   let value: string | undefined;
-  jest.isolateModules(() => {
-    vi.doMock('node:os', async () => ({
-      ...(await vi.importActual('node:os')),
-      homedir,
-    }));
-    value = require('./nx-tmp-dir').NX_HOME_TMP_DIR;
-  });
+  vi.resetModules();
+  vi.doMock('node:os', async () => ({
+    ...(await vi.importActual('node:os')),
+    homedir,
+  }));
+  value = (await import('./nx-tmp-dir')).NX_HOME_TMP_DIR;
   return value;
 }
 

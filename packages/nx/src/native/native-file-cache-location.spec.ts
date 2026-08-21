@@ -158,22 +158,21 @@ describe('native file cache location', () => {
   // otherwise leaves the suite green. Its constants are module scope, so the
   // guards are mocked and the module re-imported rather than staged on disk.
   describe('getNativeFileCacheLocationToDelete', () => {
-    const withGuards = (
+    const withGuards = async (
       guards: Record<string, unknown>,
       assert: (m: any) => void
     ) => {
-      jest.isolateModules(() => {
-        vi.doMock('../utils/owned-private-dir', async () => ({
-          ...(await vi.importActual('../utils/owned-private-dir')),
-          isSafeSharedRoot: vi.fn(() => ({
-            status: 'ok',
-            path: '/tmp/.nx',
-          })),
-          isOwnedRealDirectory: vi.fn(() => '/tmp/.nx/501'),
-          ...guards,
-        }));
-        assert(require('./native-file-cache-location'));
-      });
+      vi.resetModules();
+      vi.doMock('../utils/owned-private-dir', async () => ({
+        ...(await vi.importActual('../utils/owned-private-dir')),
+        isSafeSharedRoot: vi.fn(() => ({
+          status: 'ok',
+          path: '/tmp/.nx',
+        })),
+        isOwnedRealDirectory: vi.fn(() => '/tmp/.nx/501'),
+        ...guards,
+      }));
+      assert(await import('./native-file-cache-location'));
       vi.doUnmock('../utils/owned-private-dir');
     };
 

@@ -116,28 +116,26 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
     expect(getNpmSpawnRegistryEnv('is-even', ROOT, 'yarn', null)).toEqual({});
   });
 
-  it('warns once (not per package) when the yarn version is unknown', () => {
-    // isolateModules resets the once-flag but shares the logger mock, so clear
+  it('warns once (not per package) when the yarn version is unknown', async () => {
+    // resetModules resets the once-flag but shares the logger mock, so clear
     // it first; this branch returns before touching the filesystem, so no file
     // fixtures.
     const { logger } = require('../logger');
     (logger.warn as jest.Mock).mockClear();
-    jest.isolateModules(() => {
-      const { getNpmSpawnRegistryEnv: fresh } = require('./index');
-      fresh('is-even', ROOT, 'yarn', null);
-      fresh('is-odd', ROOT, 'yarn', null);
-    });
+    vi.resetModules();
+    const { getNpmSpawnRegistryEnv: fresh } = await import('./index');
+    fresh('is-even', ROOT, 'yarn', null);
+    fresh('is-odd', ROOT, 'yarn', null);
     expect(logger.warn).toHaveBeenCalledTimes(1);
   });
 
-  it('warns once (not per package) when the pnpm version is unknown', () => {
+  it('warns once (not per package) when the pnpm version is unknown', async () => {
     const { logger } = require('../logger');
     (logger.warn as jest.Mock).mockClear();
-    jest.isolateModules(() => {
-      const { getNpmSpawnRegistryEnv: fresh } = require('./index');
-      fresh('is-even', ROOT, 'pnpm', null);
-      fresh('is-odd', ROOT, 'pnpm', null);
-    });
+    vi.resetModules();
+    const { getNpmSpawnRegistryEnv: fresh } = await import('./index');
+    fresh('is-even', ROOT, 'pnpm', null);
+    fresh('is-odd', ROOT, 'pnpm', null);
     expect(logger.warn).toHaveBeenCalledTimes(1);
   });
 
@@ -170,16 +168,15 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
     expect(logger.verbose).toHaveBeenCalledTimes(1);
   });
 
-  it('warns once (not per package) that a configuration could not be resolved', () => {
+  it('warns once (not per package) that a configuration could not be resolved', async () => {
     const { logger } = require('../logger');
     (logger.warn as jest.Mock).mockClear();
     files[`${ROOT}/.yarnrc.yml`] =
       'npmRegistryServer: "https://reg-a/\n  x: [\n';
-    jest.isolateModules(() => {
-      const { getNpmSpawnRegistryEnv: fresh } = require('./index');
-      fresh('is-even', ROOT, 'yarn', '4.16.0');
-      fresh('is-odd', ROOT, 'yarn', '4.16.0');
-    });
+    vi.resetModules();
+    const { getNpmSpawnRegistryEnv: fresh } = await import('./index');
+    fresh('is-even', ROOT, 'yarn', '4.16.0');
+    fresh('is-odd', ROOT, 'yarn', '4.16.0');
     // Verbose is off by default, so without this warning the fallback to npm's
     // own resolution is silent.
     expect(logger.warn).toHaveBeenCalledTimes(1);
@@ -188,15 +185,14 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
     );
   });
 
-  it('degrades to no bridging when the pnpm global config.yaml does not parse (pnpm dies on it)', () => {
+  it('degrades to no bridging when the pnpm global config.yaml does not parse (pnpm dies on it)', async () => {
     const { logger } = require('../logger');
     (logger.warn as jest.Mock).mockClear();
     process.env.XDG_CONFIG_HOME = '/xdg';
     files['/xdg/pnpm/config.yaml'] = '_auth: [unclosed\n';
-    jest.isolateModules(() => {
-      const { getNpmSpawnRegistryEnv: fresh } = require('./index');
-      expect(fresh('is-even', ROOT, 'pnpm', '11.10.0')).toEqual({});
-    });
+    vi.resetModules();
+    const { getNpmSpawnRegistryEnv: fresh } = await import('./index');
+    expect(fresh('is-even', ROOT, 'pnpm', '11.10.0')).toEqual({});
     expect(logger.warn).toHaveBeenCalledTimes(1);
     expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
       'Could not resolve the pnpm configuration'
@@ -217,7 +213,7 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
     expect(logger.verbose).toHaveBeenCalledTimes(1);
   });
 
-  it('degrades to no bridging when yarn classic hits an unreadable .npmrc (yarn itself dies on it)', () => {
+  it('degrades to no bridging when yarn classic hits an unreadable .npmrc (yarn itself dies on it)', async () => {
     const { logger } = require('../logger');
     (logger.warn as jest.Mock).mockClear();
     files[`${ROOT}/.npmrc`] = 'registry=https://reg-a.example.com/';
@@ -231,12 +227,11 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
       }
     );
     // yarn itself exits 1 on the unreadable file, so resolving from the rest
-    // would promote a registry it never reaches. isolateModules keeps the
+    // would promote a registry it never reaches. resetModules keeps the
     // warn-once flag fresh.
-    jest.isolateModules(() => {
-      const { getNpmSpawnRegistryEnv: fresh } = require('./index');
-      expect(fresh('is-even', ROOT, 'yarn', '1.22.22')).toEqual({});
-    });
+    vi.resetModules();
+    const { getNpmSpawnRegistryEnv: fresh } = await import('./index');
+    expect(fresh('is-even', ROOT, 'yarn', '1.22.22')).toEqual({});
     expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
       'Could not resolve the yarn configuration'
     );
