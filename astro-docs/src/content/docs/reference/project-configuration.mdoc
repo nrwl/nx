@@ -530,6 +530,22 @@ This also works when defining a relation for the target of the project itself us
 }
 ```
 
+The expanded syntax also accepts an `options` property, which controls whether the options configured on this target are forwarded to the dependency targets. Like `params`, it can be set to `"forward"` or `"ignore"` and defaults to `"ignore"`.
+
+```json
+{
+  "targets": {
+    "build": {
+      "options": { "out": "dist/mylib" },
+      // forward the options of this target to the dependency target
+      "dependsOn": [{ "target": "pre-build", "options": "forward" }]
+    }
+  }
+}
+```
+
+When the target runs with a configuration, the options of that configuration are merged over the target options before they are forwarded. `params` and `options` are set independently of each other, and when both are forwarded, the params passed on the command line take precedence over the forwarded options.
+
 Additionally, when using the expanded object syntax, you can specify individual projects in version 16 or greater.
 
 ```json
