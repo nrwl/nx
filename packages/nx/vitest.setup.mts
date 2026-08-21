@@ -17,7 +17,15 @@ import { createRequire } from 'module';
  * CJS transform gave us for free. Caveat: modules loaded this way are
  * separate instances from vite-imported ones and do not see vi.mock.
  */
-createRequire(import.meta.url)('@swc-node/register');
+{
+  // The register hook installs source-map-support, which overrides
+  // Error.prepareStackTrace globally and mis-maps vite-transformed spec
+  // frames (breaking vitest's error locations AND inline-snapshot updates,
+  // which resolve call sites from stacks). Restore the original handler.
+  const originalPrepareStackTrace = Error.prepareStackTrace;
+  createRequire(import.meta.url)('@swc-node/register');
+  Error.prepareStackTrace = originalPrepareStackTrace;
+}
 
 const realWorkspaceRoot = path.resolve(import.meta.dirname, '..', '..');
 
