@@ -4,12 +4,12 @@ import { checkWithOxfmt } from './oxfmt';
 // matter most are the ones e2e cannot reach: a formatter that was killed, could
 // not be spawned, or overran its stdout buffer. Those report a *string* `code`
 // (or none at all) rather than an exit code, and must never be read as success.
-jest.mock('node:child_process', () => ({
-  ...jest.requireActual('node:child_process'),
-  execFile: jest.fn(),
+vi.mock('node:child_process', async () => ({
+  ...require('node:child_process'),
+  execFile: vi.fn(),
 }));
 
-const { execFile } = require('node:child_process');
+import { execFile } from 'node:child_process';
 
 describe('checkWithOxfmt', () => {
   function respondWith(error: unknown, stdout = '', stderr = '') {

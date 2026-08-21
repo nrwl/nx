@@ -4,44 +4,47 @@ import { format } from './format';
 // whether CI passes - fail-open, configured-but-not-installed, and the
 // write/check dispatch - have no fast test. These mock the seams around it.
 
-jest.mock('../../utils/formatters', () => ({ detectFormatter: jest.fn() }));
-jest.mock('../../utils/formatters/oxfmt', () => ({
-  getOxfmtBinPath: jest.fn(),
-  writeWithOxfmt: jest.fn(),
-  checkWithOxfmt: jest.fn().mockResolvedValue([]),
+vi.mock('../../utils/formatters', () => ({ detectFormatter: vi.fn() }));
+vi.mock('../../utils/formatters/oxfmt', () => ({
+  getOxfmtBinPath: vi.fn(),
+  writeWithOxfmt: vi.fn(),
+  checkWithOxfmt: vi.fn().mockResolvedValue([]),
 }));
-jest.mock('../../utils/formatters/prettier', () => ({
-  getPrettierPath: jest.fn(),
-  writeWithPrettier: jest.fn(),
-  checkWithPrettier: jest.fn().mockResolvedValue([]),
-  filterToPrettierSupportedFiles: jest.fn(async (files: string[]) => files),
-  quoteForShell: jest.fn((pattern: string) => pattern),
+vi.mock('../../utils/formatters/prettier', () => ({
+  getPrettierPath: vi.fn(),
+  writeWithPrettier: vi.fn(),
+  checkWithPrettier: vi.fn().mockResolvedValue([]),
+  filterToPrettierSupportedFiles: vi.fn(async (files: string[]) => files),
+  quoteForShell: vi.fn((pattern: string) => pattern),
 }));
-jest.mock('../../config/configuration', () => ({ readNxJson: () => ({}) }));
-jest.mock('../../utils/command-line-utils', () => ({
-  splitArgsIntoNxArgsAndOverrides: jest.fn(),
-  parseFiles: jest.fn(() => ({ files: [] })),
-  getProjectRoots: jest.fn(() => []),
+vi.mock('../../config/configuration', () => ({ readNxJson: () => ({}) }));
+vi.mock('../../utils/command-line-utils', () => ({
+  splitArgsIntoNxArgsAndOverrides: vi.fn(),
+  parseFiles: vi.fn(() => ({ files: [] })),
+  getProjectRoots: vi.fn(() => []),
 }));
-jest.mock('../../plugins/js/utils/typescript', () => ({
-  getRootTsConfigFileName: jest.fn(() => 'tsconfig.base.json'),
-  getRootTsConfigPath: jest.fn(() => '/ws/tsconfig.base.json'),
+vi.mock('../../plugins/js/utils/typescript', () => ({
+  getRootTsConfigFileName: vi.fn(() => 'tsconfig.base.json'),
+  getRootTsConfigPath: vi.fn(() => '/ws/tsconfig.base.json'),
 }));
-jest.mock('../../utils/ignore', () => ({
+vi.mock('../../utils/ignore', () => ({
   getIgnoreObject: () => ({ filter: (files: string[]) => files }),
 }));
-jest.mock('../../utils/fileutils', () => ({
-  ...jest.requireActual('../../utils/fileutils'),
+vi.mock('../../utils/fileutils', async () => ({
+  ...(await vi.importActual('../../utils/fileutils')),
   fileExists: () => true,
 }));
 
-const { detectFormatter } = require('../../utils/formatters');
-const { getOxfmtBinPath, writeWithOxfmt, checkWithOxfmt } =
-  require('../../utils/formatters/oxfmt') as Record<string, jest.Mock>;
-const { getPrettierPath, writeWithPrettier, checkWithPrettier } =
-  require('../../utils/formatters/prettier') as Record<string, jest.Mock>;
-const { splitArgsIntoNxArgsAndOverrides, parseFiles } =
-  require('../../utils/command-line-utils') as Record<string, jest.Mock>;
+const { detectFormatter } = await import('../../utils/formatters');
+const { getOxfmtBinPath, writeWithOxfmt, checkWithOxfmt } = (await import(
+  '../../utils/formatters/oxfmt'
+)) as Record<string, jest.Mock>;
+const { getPrettierPath, writeWithPrettier, checkWithPrettier } = (await import(
+  '../../utils/formatters/prettier'
+)) as Record<string, jest.Mock>;
+const { splitArgsIntoNxArgsAndOverrides, parseFiles } = (await import(
+  '../../utils/command-line-utils'
+)) as Record<string, jest.Mock>;
 
 describe('nx format', () => {
   let warn: jest.SpyInstance;
@@ -54,7 +57,7 @@ describe('nx format', () => {
     splitArgsIntoNxArgsAndOverrides.mockReturnValue({ nxArgs });
   }
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // `mockReset`, not `clearAllMocks`: the not-installed cases install a
     // throwing implementation, and clearing only wipes the call log.
     [
@@ -71,20 +74,20 @@ describe('nx format', () => {
     getPrettierPath.mockReturnValue('/bin/prettier');
     parseFiles.mockReturnValue({ files: [] });
 
-    const { output } = require('../../utils/output');
-    warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
-    error = jest.spyOn(output, 'error').mockImplementation(() => {});
+    const { output } = await import('../../utils/output');
+    warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
+    error = vi.spyOn(output, 'error').mockImplementation(() => {});
     // Throw rather than return, so the code under test stops where it would.
-    exit = jest.spyOn(process, 'exit').mockImplementation(() => {
+    exit = vi.spyOn(process, 'exit').mockImplementation(() => {
       throw new Exited();
     });
-    jest.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => {});
     checkWithOxfmt.mockResolvedValue([]);
     checkWithPrettier.mockResolvedValue([]);
     withArgs({ all: true });
   });
 
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => vi.restoreAllMocks());
 
   it('warns and does nothing when no formatter is configured', async () => {
     // Fail-open: a Biome/dprint workspace must not be reformatted, and
