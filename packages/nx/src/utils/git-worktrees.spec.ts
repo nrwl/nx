@@ -51,6 +51,57 @@ describe('git worktrees', () => {
     });
   });
 
+  describe('when the workspace sits below the git root', () => {
+    // An Nx workspace nested in a larger repository is ordinary. Its worktrees
+    // are registered against the repository, so looking only at
+    // `<workspace>/.git` finds no registry and the reader gets the base
+    // message with no mention of worktrees.
+    let repoRoot: string;
+    let workspace: string;
+
+    beforeEach(() => {
+      repoRoot = mkdtempSync(join(tmpdir(), 'nx-repo-'));
+      mkdirSync(join(repoRoot, '.git'), { recursive: true });
+      workspace = join(repoRoot, 'tools', 'workspace');
+      mkdirSync(workspace, { recursive: true });
+    });
+
+    function registerAt(name: string, absoluteRoot: string) {
+      const metadataDir = join(repoRoot, '.git', 'worktrees', name);
+      mkdirSync(metadataDir, { recursive: true });
+      mkdirSync(absoluteRoot, { recursive: true });
+      writeFileSync(
+        join(metadataDir, 'gitdir'),
+        `${join(absoluteRoot, '.git')}\n`
+      );
+      writeFileSync(join(absoluteRoot, '.git'), `gitdir: ${metadataDir}\n`);
+    }
+
+    it('finds a worktree nested inside the workspace', () => {
+      registerAt('wt', join(workspace, '.claude', 'worktrees', 'wt'));
+
+      expect(nestedWorktreeRoots(workspace)).toEqual(['.claude/worktrees/wt']);
+    });
+
+    it('drops a worktree that is in the repo but outside the workspace', () => {
+      // The walker never reaches it, so it cannot be causing the duplicate.
+      registerAt('elsewhere', join(repoRoot, 'other', 'wt'));
+
+      expect(nestedWorktreeRoots(workspace)).toEqual([]);
+    });
+
+    it('advises on a duplicate coming from the nested worktree', () => {
+      registerAt('wt', join(workspace, '.claude', 'worktrees', 'wt'));
+
+      expect(
+        analyzeWorktreeConflicts(
+          workspace,
+          new Map([['ui', ['libs/ui', '.claude/worktrees/wt/libs/ui']]])
+        )!.ignoreTargets
+      ).toEqual(['/.claude/worktrees/wt']);
+    });
+  });
+
   describe('when the workspace is itself a linked worktree', () => {
     // Real layout: someone opens an agent worktree and runs Nx there, then
     // tooling makes more worktrees inside it. `.git` is a gitfile, so the

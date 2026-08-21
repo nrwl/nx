@@ -20,7 +20,8 @@ function readRecordedPath(file: string, base: string): string | null {
 
 /**
  * `<git-dir>/worktrees`, where git registers every linked worktree of the
- * repository `workspaceRoot` belongs to. Null when there is no `.git`, or when
+ * repository `workspaceRoot` belongs to - found by walking up, since the
+ * workspace need not be the repository root. Null when there is no `.git`, or when
  * it is a gitfile that names nothing. The registry itself is not checked -
  * reading it is what tells us whether anything is registered.
  */
@@ -32,14 +33,41 @@ function isDirectory(path: string): boolean {
   }
 }
 
+/**
+ * The nearest directory at or above `from` holding a `.git`, or null when
+ * there is no repository above it.
+ *
+ * The workspace root and the repository root are often the same directory, but
+ * a workspace nested in a larger repo is ordinary - and its worktrees are
+ * registered against the repository, not against the workspace.
+ */
+function findGitRoot(from: string): string | null {
+  let current = resolve(from);
+
+  while (!existsSync(join(current, '.git'))) {
+    const parent = dirname(current);
+    if (parent === current) {
+      return null;
+    }
+    current = parent;
+  }
+
+  return current;
+}
+
 function worktreeRegistry(workspaceRoot: string): string | null {
-  const dotGit = join(workspaceRoot, '.git');
+  const gitRoot = findGitRoot(workspaceRoot);
+  if (!gitRoot) {
+    return null;
+  }
+
+  const dotGit = join(gitRoot, '.git');
 
   let gitDir: string | null;
   try {
     gitDir = statSync(dotGit).isDirectory()
       ? dotGit
-      : readRecordedPath(dotGit, workspaceRoot);
+      : readRecordedPath(dotGit, gitRoot);
   } catch {
     return null;
   }
