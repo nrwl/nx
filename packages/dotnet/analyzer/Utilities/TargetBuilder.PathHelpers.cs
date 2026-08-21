@@ -356,6 +356,37 @@ public static partial class TargetBuilder
     }
 
     /// <summary>
+    /// Whether a resolved results directory is a root token followed only by
+    /// ordinary path segments, with no traversal and nothing a shell would
+    /// reinterpret.
+    /// </summary>
+    /// <remarks>
+    /// The value is interpolated into <c>--results-directory</c>, which Nx joins
+    /// into a command string and runs through a shell, so one this builder
+    /// cannot express safely is refused rather than escaped — the same
+    /// fail-closed choice <c>AddAtomizedTestTargets</c> makes for a unit id it
+    /// cannot use.
+    ///
+    /// A space is allowed because the argument is emitted already quoted, so it
+    /// cannot split the value; the rejected characters are the ones a shell
+    /// would still act on inside those quotes.
+    /// </remarks>
+    private static bool IsPlainResultsDirectory(string nxBaseDirectory)
+    {
+        var segments = nxBaseDirectory.Split('/');
+
+        if (segments[0] is not ("{projectRoot}" or "{workspaceRoot}"))
+        {
+            return false;
+        }
+
+        return segments.Skip(1).All(segment =>
+            segment.Length > 0 &&
+            segment != ".." &&
+            segment.All(c => char.IsAsciiLetterOrDigit(c) || c is '.' or '_' or '-' or ' '));
+    }
+
+    /// <summary>
     /// Strips a leading <c>{projectRoot}</c>/<c>{workspaceRoot}</c> token,
     /// matching the bare token as well as one followed by a path segment.
     /// </summary>
