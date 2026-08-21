@@ -155,6 +155,13 @@ export class TaskOrchestrator {
   private groups: boolean[] = [];
   private continuousTasksStarted = 0;
 
+  /**
+   * How many folds each batch id has rendered. A batch that reports a strict
+   * subset of its tasks is re-run under the same id, so one id can produce more
+   * than one fold and the redirect lines have to point at the right one.
+   */
+  private batchFoldRenders = new Map<string, number>();
+
   private bailed = false;
   private resolveStopPromise: (() => void) | null = null;
   private stopRequested = false;
@@ -1026,8 +1033,12 @@ export class TaskOrchestrator {
   ) {
     // batch.id is already `<executor> <n>`, numbered per executor when the batch
     // was scheduled. Deriving a second number here would drift from it, since
-    // only batches that render a fold would be counted.
-    const label = `batch ${batch.id}`;
+    // only batches that render a fold would be counted. The suffix disambiguates
+    // re-runs of the same batch rather than replacing the id, so it cannot.
+    const renders = (this.batchFoldRenders.get(batch.id) ?? 0) + 1;
+    this.batchFoldRenders.set(batch.id, renders);
+    const label =
+      renders === 1 ? `batch ${batch.id}` : `batch ${batch.id}:${renders}`;
     const worst = taskResults.some((r) => r.status === 'failure')
       ? 'failure'
       : taskResults.some((r) => r.status === 'stopped')

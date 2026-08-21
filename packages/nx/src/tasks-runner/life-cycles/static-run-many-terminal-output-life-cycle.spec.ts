@@ -4,6 +4,7 @@ import { Task } from '../../config/task-graph';
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 import type { TaskResult } from '../life-cycle';
 import { TaskStatus } from '../tasks-runner';
+import { output } from '../../utils/output';
 import { StaticRunManyTerminalOutputLifeCycle } from './static-run-many-terminal-output-life-cycle';
 
 function makeTask(project: string, target = 'test'): Task {
@@ -236,6 +237,28 @@ describe('StaticRunManyTerminalOutputLifeCycle', () => {
         expect(result[index - 1]).toEqual('\n');
       }
     );
+
+    it('does not glue a summary onto raw in-process run-commands output', () => {
+      // nx:run-commands is the one executor that runs in the main process, and
+      // its addColorAndPrefix splits on newlines without appending one - so its
+      // streamed chunks routinely end mid-line. Routed through the same entry
+      // point, it keeps the line tracking true.
+      const other = makeTask('other');
+      const result = withEnvironmentVariables(
+        { GITHUB_ACTIONS: undefined, NX_SKIP_LOG_GROUPING: undefined },
+        () =>
+          captureOutput(() => {
+            output.addNewline();
+            output.writeTaskOutputChunk('[serve] compiling...');
+            lifeCycle.printTaskTerminalOutput(other, 'local-cache', 'body');
+          })
+      );
+
+      const summary = `${figures.tick}  nx run other:test`;
+      const index = result.indexOf(summary);
+      expect(index).toBeGreaterThan(-1);
+      expect(result[index - 1]).toEqual('\n');
+    });
 
     it('honors NX_SKIP_LOG_GROUPING', () => {
       const result = withEnvironmentVariables(
