@@ -280,7 +280,7 @@ function createGetOutput(
   // Registered while handling the process's own stdout, so it cannot have
   // closed yet. Awaiting a promise created here -- rather than attaching a
   // listener after the kill -- also covers the process exiting on its own,
-  // where a late `once('close')` would never fire and hang the test.
+  // where a listener added after 'close' already fired would hang the test.
   let exited = false;
   const closed = new Promise<void>((res) =>
     p.on('close', () => {
