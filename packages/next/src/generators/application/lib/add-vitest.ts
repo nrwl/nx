@@ -26,8 +26,10 @@ export async function addVitest(
   // the temp install via `Module._initPaths`, which ESM ignores.
   const {
     configurationGenerator,
-    createOrEditViteConfig,
   }: typeof import('@nx/vitest/generators') = require('@nx/vitest/generators');
+  const {
+    createOrEditViteConfig,
+  }: typeof import('@nx/vitest/internal') = require('@nx/vitest/internal');
 
   const vitestTask = await configurationGenerator(host, {
     project: options.projectName,
