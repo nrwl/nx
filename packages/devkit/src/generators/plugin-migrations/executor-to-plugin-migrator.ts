@@ -797,12 +797,46 @@ function packageJsonAuthorsTargetIdentity(
   );
 }
 
+function isRegistrationOfPlugin(
+  registration: string | ExpandedPluginConfiguration,
+  pluginPath: string
+): boolean {
+  return typeof registration === 'string'
+    ? registration === pluginPath
+    : registration.plugin === pluginPath;
+}
+
+/**
+ * Whether every nx.json `plugins` entry after the migrated plugin's first
+ * registration is also the migrated plugin. Only then is the migrated plugin
+ * guaranteed to merge last for the targets it infers, keeping the
+ * executor/command attribution (and with it `filter: { plugin }`
+ * target-default resolution) with this plugin. No registration at all fails
+ * closed.
+ */
+function pluginRegistrationsFormTail(
+  nxJson: NxJsonConfiguration,
+  pluginPath: string
+): boolean {
+  const plugins = nxJson.plugins ?? [];
+  const isMigratedPlugin = (plugin: string | ExpandedPluginConfiguration) =>
+    isRegistrationOfPlugin(plugin, pluginPath);
+  const firstIndex = plugins.findIndex(isMigratedPlugin);
+  if (firstIndex === -1) {
+    return false;
+  }
+  return plugins.slice(firstIndex + 1).every(isMigratedPlugin);
+}
+
 /**
  * Phase 3 (centralized variant) — hoist the strict-common residual per target
  * into `nx.json` `targetDefaults[targetName]` as a plugin-scoped array entry,
  * remove the dead executor-keyed entries, and write only per-project
  * deviations to project.json. Used for whole-workspace migrations;
- * single-project mode keeps the full residual.
+ * single-project mode keeps the full residual. Hoisting also requires the
+ * plugin's registrations to form the tail of nx.json `plugins` (see
+ * `pluginRegistrationsFormTail`); otherwise every project keeps its full
+ * residual.
  *
  * Returns the appended entry per target so the verification pass can revert a
  * hoist that turns out to reach a target the migration did not migrate.
@@ -815,6 +849,7 @@ function hoistCommonAndWrite<T>(
   pluginPath: string,
   projectGraph: ProjectGraph,
   inferredExecutors: Set<string>,
+  pluginPreRegistered: boolean,
   logger?: typeof devkitLogger
 ): Map<string, TargetDefaultArrayEntry> {
   // Group residuals by target name across all migrated projects, tracking which
@@ -891,6 +926,31 @@ function hoistCommonAndWrite<T>(
     commonByTarget.set(targetName, common);
   }
 
+  // A specified plugin registered AFTER the migrated plugin merges later, so a
+  // same-name target it authors takes the executor/command attribution;
+  // `resolveSourcePlugin` then names that plugin and rejects this plugin's
+  // `filter: { plugin }` default, silently dropping the hoisted keys. The
+  // verification pass loads only the migrated plugin, so it cannot observe
+  // this. Registrations are written before this runs, so the plugins array is
+  // final: hoist only when the migrated plugin's registrations form its tail;
+  // otherwise keep the full residuals (the previous engine's output).
+  if (!pluginRegistrationsFormTail(readNxJson(tree), pluginPath)) {
+    const skippedTargets = [...commonByTarget.entries()]
+      .filter(([, common]) => Object.keys(common).length > 0)
+      .map(([targetName]) => targetName)
+      .sort();
+    if (skippedTargets.length > 0) {
+      for (const targetName of skippedTargets) {
+        commonByTarget.set(targetName, {});
+      }
+      (logger ?? devkitLogger).warn(
+        `convert-to-inferred kept per-project configuration for target(s) ${skippedTargets.join(
+          ', '
+        )} instead of centralizing it: other plugins are registered after this plugin in nx.json, and a plugin registered later can take over a target's identity, which would silently drop the centralized configuration. The migrated projects keep the same output as before the migration.`
+      );
+    }
+  }
+
   // Write per-project deviations first so migrated targets drop their executor
   // before we decide whether an executor-keyed target default is still needed.
   for (const executorScope of scope.executorScopes) {
@@ -942,11 +1002,8 @@ function hoistCommonAndWrite<T>(
   // package-authored identity resurfaces the same way. A registration this
   // migration ADDS is appended last and wins identity itself, so only fresh
   // registrations remove dead executor entries; otherwise fail open.
-  const pluginPreRegistered = (nxJson.plugins ?? []).some(
-    (plugin) =>
-      (typeof plugin === 'string' ? plugin : plugin.plugin) === pluginPath
-  );
-
+  // `pluginPreRegistered` is captured by the caller BEFORE registrations are
+  // written (they now precede this).
   if (!pluginPreRegistered && !packageJsonAuthoredIdentity) {
     // An executor-keyed targetDefault applies to any RESOLVED target carrying
     // the executor, so liveness needs every source of one: post-write explicit
@@ -1886,6 +1943,46 @@ async function migrateProjects<T>(
     projectConfigsByName
   );
 
+  // Some plugins' `createNodes` normalize their options object in place (e.g.
+  // `options.devTargetName ??= 'dev'`). The previous engine inferred once per
+  // project passing the project's registration-options object by reference, so
+  // those objects picked up the plugin's default keys. Phase 1 runs the same
+  // inference on each option-set object, so recover exactly those plugin-filled
+  // default keys (without any extra inference) and merge them back so the
+  // emitted registration options stay identical.
+  const pluginFilledDefaults = derivePluginFilledDefaults(
+    scope.optionSetGroups,
+    defaultPluginOptions
+  );
+  for (const [project, options] of scope.pluginOptionsByProject) {
+    projects.set(project, {
+      ...pluginFilledDefaults,
+      ...options,
+    } as Record<string, string>);
+  }
+
+  // Phase 3 — one-shot plugin registration + analytic include computation.
+  // Runs before the hoist: the hoist is gated on the FINAL position of this
+  // plugin's registrations in the plugins array (a later registration of
+  // another plugin can take a target's identity over), so the array must be in
+  // its final state first. The pre-registration state is captured here for the
+  // hoist's dead-entry removal gate, which needs to know whether this
+  // migration added the registration.
+  const pluginPreRegistered = (readNxJson(tree).plugins ?? []).some((plugin) =>
+    isRegistrationOfPlugin(plugin, pluginPath)
+  );
+  addPluginRegistrations(
+    tree,
+    projects,
+    pluginPath,
+    defaultPluginOptions,
+    projectGraph,
+    spinner,
+    matchedConfigFiles,
+    erroredConfigFilesFromInference,
+    rawMatchedConfigFiles
+  );
+
   // Phase 3 — Derive strict-common + write. Single-project mode never hoists
   // (would leak shared config to sibling projects), so it keeps the full
   // residual in project.json; whole-workspace mode hoists the common config to
@@ -1910,40 +2007,10 @@ async function migrateProjects<T>(
       pluginPath,
       projectGraph,
       inferredExecutors,
+      pluginPreRegistered,
       logger
     );
   }
-
-  // Some plugins' `createNodes` normalize their options object in place (e.g.
-  // `options.devTargetName ??= 'dev'`). The previous engine inferred once per
-  // project passing the project's registration-options object by reference, so
-  // those objects picked up the plugin's default keys. Phase 1 runs the same
-  // inference on each option-set object, so recover exactly those plugin-filled
-  // default keys (without any extra inference) and merge them back so the
-  // emitted registration options stay identical.
-  const pluginFilledDefaults = derivePluginFilledDefaults(
-    scope.optionSetGroups,
-    defaultPluginOptions
-  );
-  for (const [project, options] of scope.pluginOptionsByProject) {
-    projects.set(project, {
-      ...pluginFilledDefaults,
-      ...options,
-    } as Record<string, string>);
-  }
-
-  // Phase 3/4 — one-shot plugin registration + analytic include computation.
-  addPluginRegistrations(
-    tree,
-    projects,
-    pluginPath,
-    defaultPluginOptions,
-    projectGraph,
-    spinner,
-    matchedConfigFiles,
-    erroredConfigFilesFromInference,
-    rawMatchedConfigFiles
-  );
 
   // Phase 4 — single verification inference pass + equivalence oracle. Any
   // project whose centralized config cannot be verified as equivalent falls

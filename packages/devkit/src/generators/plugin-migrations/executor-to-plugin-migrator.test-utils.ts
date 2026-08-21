@@ -263,29 +263,44 @@ export function flushTreeToDisk(ctx: FixtureContext): void {
  * layer. Both real default plugins run: `nx/core/project-json` AND
  * `nx/core/package-json` (the latter authors a target's identity when a
  * package.json script or `nx.targets` entry names it).
+ *
+ * `extraPlugins` maps additional plugin paths to their `createNodes`, letting a
+ * test load OTHER specified plugins registered in nx.json — in registration
+ * order, so plugin-merge ordering (a later plugin taking a target's identity
+ * over) resolves exactly as at runtime.
  */
 export async function resolveThroughRealPipeline(
   ctx: FixtureContext,
   pluginPath: string,
-  createNodes: CreateNodes<SyntheticPluginOptions>
+  createNodes: CreateNodes<SyntheticPluginOptions>,
+  extraPlugins?: Record<string, CreateNodes<SyntheticPluginOptions>>
 ): Promise<Record<string, Record<string, TargetConfiguration>>> {
   flushTreeToDisk(ctx);
   // Re-scan the workspace so the native file context picks up project.json (and
   // any other) files flushed after the migration's first inference pass.
   setupWorkspaceContext(ctx.tree.root);
   const nxJson = readNxJson(ctx.tree);
+  const createNodesByPluginPath: Record<
+    string,
+    CreateNodes<SyntheticPluginOptions>
+  > = { [pluginPath]: createNodes, ...extraPlugins };
+  const registrationPluginPath = (
+    plugin: string | ExpandedPluginConfiguration
+  ) => (typeof plugin === 'string' ? plugin : plugin.plugin);
   const registrations = (nxJson.plugins ?? []).filter(
     (plugin): plugin is string | ExpandedPluginConfiguration =>
-      plugin === pluginPath ||
-      (typeof plugin !== 'string' && plugin.plugin === pluginPath)
+      registrationPluginPath(plugin) in createNodesByPluginPath
   );
 
   (global as any).NX_GRAPH_CREATION = true;
   try {
-    const specifiedPlugins = registrations.map(
-      (registration) =>
-        new LoadedNxPlugin({ createNodes, name: pluginPath }, registration)
-    );
+    const specifiedPlugins = registrations.map((registration) => {
+      const path = registrationPluginPath(registration);
+      return new LoadedNxPlugin(
+        { createNodes: createNodesByPluginPath[path], name: path },
+        registration
+      );
+    });
     const projectJsonPlugin = new LoadedNxPlugin(
       ProjectJsonProjectsPlugin,
       'nx/core/project-json'

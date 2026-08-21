@@ -1378,6 +1378,132 @@ describe('Phase 3 — strict-common hoist', () => {
     expect(resolved['libs/pkg2'].build.options?.command).toBe('acme-build');
   });
 
+  it('does not centralize when another plugin is registered after the reused registration', async () => {
+    // A plugin registered later in nx.json `plugins` merges later; when it
+    // authors the same target, the executor/command attribution moves to it and
+    // `resolveSourcePlugin` rejects the migrated plugin's `filter: { plugin }`
+    // default, silently dropping the hoisted keys. The migration cannot see
+    // that (its verification pass loads only the migrated plugin), so it must
+    // keep the full residuals.
+    const OTHER_PLUGIN_PATH = '@acme/other/plugin';
+    ctx = setupFixture('hoist-blocked-by-later-plugin');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [
+      { plugin: SYNTHETIC_PLUGIN_PATH, options: { targetName: 'build' } },
+      OTHER_PLUGIN_PATH,
+    ];
+    updateNxJson(ctx.tree, nxJson);
+    const plugin = createSyntheticPlugin();
+    const otherPlugin = createSyntheticPlugin(
+      (root) => ({ command: 'other-build', options: { cwd: root } }),
+      OTHER_PLUGIN_PATH
+    );
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    // no hoisted entry; the full residual stays in each project.json
+    expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({ cache: true });
+    for (const name of ['app1', 'app2']) {
+      expect(readJson(ctx.tree, `${name}/project.json`).targets.build).toEqual({
+        options: { mode: 'production' },
+      });
+    }
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'other plugins are registered after this plugin in nx.json'
+      )
+    );
+    // through REAL resolution with BOTH plugins, the later plugin owns the
+    // target's identity, and the residual still preserves the explicit options
+    // (a hoisted default would have been rejected and its keys dropped)
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { [OTHER_PLUGIN_PATH]: otherPlugin.createNodes }
+    );
+    for (const name of ['app1', 'app2']) {
+      expect(resolved[name].build.options?.command).toBe('other-build');
+      expect(resolved[name].build.options?.mode).toBe('production');
+    }
+  });
+
+  it('centralizes when the new registration is appended after every other plugin', async () => {
+    // The migration appends its new registration at the end of `plugins`, so
+    // the migrated plugin merges last, keeps the executor/command attribution
+    // for its targets, and the hoisted `filter: { plugin }` default resolves
+    // even though another plugin authors the same target earlier.
+    const OTHER_PLUGIN_PATH = '@acme/other/plugin';
+    ctx = setupFixture('hoist-appended-after-other-plugin');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [OTHER_PLUGIN_PATH];
+    updateNxJson(ctx.tree, nxJson);
+    const plugin = createSyntheticPlugin();
+    const otherPlugin = createSyntheticPlugin(
+      (root) => ({ command: 'other-build', options: { cwd: root } }),
+      OTHER_PLUGIN_PATH
+    );
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    expect(readNxJson(ctx.tree).targetDefaults.build).toContainEqual({
+      filter: { plugin: SYNTHETIC_PLUGIN_PATH },
+      options: { mode: 'production' },
+    });
+    for (const name of ['app1', 'app2']) {
+      expect(
+        readJson(ctx.tree, `${name}/project.json`).targets.build
+      ).toBeUndefined();
+    }
+    expect(warn).not.toHaveBeenCalled();
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { [OTHER_PLUGIN_PATH]: otherPlugin.createNodes }
+    );
+    for (const name of ['app1', 'app2']) {
+      expect(resolved[name].build.options?.command).toBe('acme-build');
+      expect(resolved[name].build.options?.mode).toBe('production');
+    }
+  });
+
   it('does not throw when nx.includedScripts is malformed (non-array)', async () => {
     // A non-array `nx.includedScripts` must not crash the generator with an
     // uncaught TypeError; it is normalized to the default (all scripts).
