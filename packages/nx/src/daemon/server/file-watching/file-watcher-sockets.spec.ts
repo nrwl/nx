@@ -5,6 +5,7 @@ jest.mock('../project-graph-incremental-recomputation', () => ({
   currentProjectGraph: undefined,
 }));
 
+import { parseMessage } from '../../../utils/consume-messages-from-socket';
 import { handleResult } from '../server';
 import {
   notifyFileWatcherSocketsOfError,
@@ -67,6 +68,22 @@ describe('notifyFileWatcherSocketsOfError', () => {
     expect(JSON.parse(response)).toEqual({
       watcherError: 'inotify_add_watch failed',
     });
+  });
+
+  // The client decides between a change event and a failure by reading
+  // `watcherError` off the parsed message, so the payload has to survive
+  // parseMessage's JSON-vs-v8 detection with that key intact.
+  it('survives the client-side parse the daemon client actually uses', async () => {
+    registerSocket({} as Socket);
+
+    notifyFileWatcherSocketsOfError(new Error('inotify_add_watch failed'));
+    await flushQueue();
+
+    const [, , buildResult] = handleResultMock.mock.calls[0];
+    const { response } = await buildResult();
+
+    const parsed = parseMessage<{ watcherError?: string }>(response);
+    expect(parsed.watcherError).toEqual('inotify_add_watch failed');
   });
 
   it('does nothing when no client is watching', async () => {
