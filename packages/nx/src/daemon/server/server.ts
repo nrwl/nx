@@ -100,6 +100,7 @@ import { registerFileChangeListener } from './file-watching/file-change-events';
 import { routeWorkspaceChanges } from './file-watching/route-workspace-changes';
 import {
   hasRegisteredFileWatcherSockets,
+  notifyFileWatcherSocketsOfError,
   registeredFileWatcherSockets,
   removeRegisteredFileWatcherSocket,
 } from './file-watching/file-watcher-sockets';
@@ -639,6 +640,7 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
       );
       console.error(error);
       workspaceWatcherError = error;
+      notifyFileWatcherSocketsOfError(error);
       return;
     }
 
@@ -648,6 +650,7 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
     serverLogger.watcherLog(`Unexpected workspace error`, err.message);
     console.error(err);
     workspaceWatcherError = err;
+    notifyFileWatcherSocketsOfError(err);
   }
 };
 
