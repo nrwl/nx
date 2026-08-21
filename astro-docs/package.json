@@ -2,6 +2,10 @@
   "name": "astro-docs",
   "version": "0.0.1",
   "private": true,
+  "scripts": {
+    "format": "prettier --write \"**/*.mdoc\"",
+    "format-check": "prettier --check \"**/*.mdoc\""
+  },
   "dependencies": {
     "@astrojs/check": "^0.7.0",
     "@astrojs/markdoc": "^0.15.0",
@@ -24,5 +28,8 @@
     "canvaskit-wasm": "^0.40.0",
     "octokit": "^2.0.14",
     "tailwindcss": "4.1.11"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2"
   }
 }
