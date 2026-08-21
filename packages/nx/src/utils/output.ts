@@ -33,18 +33,24 @@ export function isStaticOutputStyle(outputStyle: string | undefined): boolean {
  * ones that succeeded. Both static life cycles and the batch renderer have to
  * agree on this, so they read it from here rather than each deriving it.
  *
- * Exactly one style collapses. The static life cycles also serve `static`,
- * `stream`, `stream-without-prefixes` and, in CI, `dynamic-legacy` — every one
- * of those was asked for explicitly, so none may quietly withhold output. A run
- * that named no style at all is resolved to a style before it gets here
- * (`withOutputStyleOption`), rather than being inferred as a default in this
- * predicate, so a programmatic caller that builds args by hand prints in full.
+ * Exactly one style collapses, and it is also what a run that named no style
+ * gets. The static life cycles also serve `static`, `stream`,
+ * `stream-without-prefixes` and, in CI, `dynamic-legacy` — every one of those
+ * was asked for explicitly, so none may quietly withhold output.
+ *
+ * Resolving the absent case here rather than assigning `outputStyle` upstream is
+ * deliberate: the value is also read by the orchestrator to decide whether a
+ * task streams, and naming the default there stops `shouldStreamOutput` from
+ * ever being consulted — including for the continuous tasks that must stream.
  */
 export function printsFullTaskOutput(args: {
   verbose?: boolean;
   outputStyle?: string;
 }): boolean {
-  return !!args.verbose || args.outputStyle !== 'static-failures-only';
+  return (
+    !!args.verbose ||
+    (args.outputStyle ?? 'static-failures-only') !== 'static-failures-only'
+  );
 }
 
 /**
