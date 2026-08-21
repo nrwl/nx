@@ -21,10 +21,10 @@ describe('ensurePackageHasProvenance', () => {
 
   beforeEach(() => {
     delete process.env.NX_SKIP_PROVENANCE_CHECK;
-    packageRegistryViewSpy = jest.spyOn(packageManager, 'packageRegistryView');
+    packageRegistryViewSpy = vi.spyOn(packageManager, 'packageRegistryView');
     // fail the fetch so the check stops right after locating the attestation
     // URL; isolates the npm-view parsing from full attestation validation.
-    global.fetch = jest.fn().mockResolvedValue({
+    global.fetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 500,
       statusText: 'Internal Server Error',
@@ -32,7 +32,7 @@ describe('ensurePackageHasProvenance', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     global.fetch = originalFetch;
     if (originalSkip === undefined) {
       delete process.env.NX_SKIP_PROVENANCE_CHECK;
@@ -122,9 +122,10 @@ describe('ensurePackageHasProvenance', () => {
   });
 
   it('names the registry the failing fetch went to', async () => {
-    jest
-      .spyOn(packageManager, 'getWorkspaceRegistryUrlForDisplay')
-      .mockReturnValue('https://registry.corp.example/');
+    vi.spyOn(
+      packageManager,
+      'getWorkspaceRegistryUrlForDisplay'
+    ).mockReturnValue('https://registry.corp.example/');
     packageRegistryViewSpy.mockResolvedValue(
       JSON.stringify(packument('1.0.0', false))
     );
@@ -138,11 +139,12 @@ describe('ensurePackageHasProvenance', () => {
   });
 
   it('keeps the generic note when the registry cannot be determined', async () => {
-    jest
-      .spyOn(packageManager, 'getWorkspaceRegistryUrlForDisplay')
-      .mockImplementation(() => {
-        throw new Error('npm is not on PATH');
-      });
+    vi.spyOn(
+      packageManager,
+      'getWorkspaceRegistryUrlForDisplay'
+    ).mockImplementation(() => {
+      throw new Error('npm is not on PATH');
+    });
     packageRegistryViewSpy.mockResolvedValue(
       JSON.stringify(packument('1.0.0', false))
     );

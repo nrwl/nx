@@ -1,6 +1,6 @@
-jest.mock('@clack/prompts', () => ({
-  autocomplete: jest.fn(),
-  isCancel: jest.fn(() => false),
+vi.mock('@clack/prompts', () => ({
+  autocomplete: vi.fn(),
+  isCancel: vi.fn(() => false),
 }));
 
 import { autocomplete, isCancel } from '@clack/prompts';
@@ -61,13 +61,13 @@ describe('migrate prompts', () => {
       mockIsCancel.mockReturnValue(true);
       // All three are stubbed on purpose: a real `kill` would signal this jest
       // worker, and a real `removeAllListeners` would strip its SIGINT handling.
-      const removeAllListeners = jest
+      const removeAllListeners = vi
         .spyOn(process, 'removeAllListeners')
         .mockReturnValue(process);
-      const kill = jest
+      const kill = vi
         .spyOn(process, 'kill')
         .mockImplementation((() => true) as never);
-      const exit = jest.spyOn(process, 'exit').mockImplementation((() => {
+      const exit = vi.spyOn(process, 'exit').mockImplementation((() => {
         throw new Error('exited');
       }) as never);
 

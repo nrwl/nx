@@ -1,23 +1,23 @@
 // Under jest, os.homedir() ignores a process.env.HOME override and a spyOn does
 // not reach a module's named import; mock both to stay off the real filesystem.
-jest.mock('os', () => ({
-  ...jest.requireActual('os'),
-  homedir: jest.fn(() => '/home/user'),
+vi.mock('os', async () => ({
+  ...(await vi.importActual('os')),
+  homedir: vi.fn(() => '/home/user'),
 }));
-jest.mock('fs', () => ({
-  ...jest.requireActual('fs'),
-  existsSync: jest.fn(),
-  readFileSync: jest.fn(),
-  statSync: jest.fn(),
+vi.mock('fs', async () => ({
+  ...(await vi.importActual('fs')),
+  existsSync: vi.fn(),
+  readFileSync: vi.fn(),
+  statSync: vi.fn(),
 }));
-jest.mock('../logger', () => ({
+vi.mock('../logger', () => ({
   logger: {
-    warn: jest.fn(),
-    error: jest.fn(),
-    info: jest.fn(),
-    log: jest.fn(),
-    debug: jest.fn(),
-    verbose: jest.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    log: vi.fn(),
+    debug: vi.fn(),
+    verbose: vi.fn(),
   },
 }));
 

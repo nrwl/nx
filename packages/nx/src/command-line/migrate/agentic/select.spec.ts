@@ -1,18 +1,18 @@
-jest.mock('../../../native', () => ({
-  isAiAgent: jest.fn(() => false),
+vi.mock('../../../native', () => ({
+  isAiAgent: vi.fn(() => false),
 }));
-jest.mock('@clack/prompts', () => ({
-  autocomplete: jest.fn(),
+vi.mock('@clack/prompts', () => ({
+  autocomplete: vi.fn(),
   isCancel: () => false,
 }));
-jest.mock('./detect-installed', () => ({
-  detectInstalledAgents: jest.fn(),
+vi.mock('./detect-installed', () => ({
+  detectInstalledAgents: vi.fn(),
 }));
-jest.mock('../../../utils/output', () => ({
+vi.mock('../../../utils/output', () => ({
   output: {
-    log: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+    log: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   },
 }));
 

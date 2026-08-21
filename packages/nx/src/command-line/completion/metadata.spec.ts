@@ -59,7 +59,7 @@ describe('completion/metadata', () => {
 
   describe('findFlagCompletion', () => {
     it('returns the registered handler', () => {
-      const handler = jest.fn(() => ['ok']);
+      const handler = vi.fn(() => ['ok']);
       registerCompletion('meta-test-flag', { flags: { focus: handler } });
       const meta = findCompletionMetadata(['meta-test-flag', ''])!.metadata;
 
@@ -77,7 +77,7 @@ describe('completion/metadata', () => {
 
   describe('resolveCompletion', () => {
     it('dispatches a positional `complete` fn with current + args', () => {
-      const complete = jest.fn(() => ['proj-a', 'proj-b']);
+      const complete = vi.fn(() => ['proj-a', 'proj-b']);
       registerCompletion('meta-test-resolve-pos', {
         positionals: [{ complete }],
       });
@@ -110,7 +110,7 @@ describe('completion/metadata', () => {
     });
 
     it('dispatches a flag handler when previousToken is a flag', () => {
-      const handler = jest.fn(() => ['root', 'lib']);
+      const handler = vi.fn(() => ['root', 'lib']);
       registerCompletion('meta-test-resolve-flag', {
         flags: { focus: handler },
       });
@@ -130,8 +130,8 @@ describe('completion/metadata', () => {
     });
 
     it('flag dispatch takes precedence over positionals', () => {
-      const flag = jest.fn(() => ['from-flag']);
-      const positional = jest.fn(() => ['from-positional']);
+      const flag = vi.fn(() => ['from-flag']);
+      const positional = vi.fn(() => ['from-positional']);
       registerCompletion('meta-test-resolve-precedence', {
         positionals: [{ complete: positional }],
         flags: { focus: flag },
@@ -153,7 +153,7 @@ describe('completion/metadata', () => {
       // default (filename completion). Falling through to positional
       // dispatch would offer wrong candidates (e.g. project names for
       // `nx g app --directory <TAB>`).
-      const positional = jest.fn(() => ['x']);
+      const positional = vi.fn(() => ['x']);
       registerCompletion('meta-test-resolve-flag-fallthrough', {
         positionals: [{ complete: positional }],
         flags: {},

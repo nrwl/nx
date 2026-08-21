@@ -12,11 +12,11 @@ describe('createLogger', () => {
 
   beforeEach(() => {
     mockDriver = {
-      warn: jest.fn(),
-      error: jest.fn(),
-      info: jest.fn(),
-      log: jest.fn(),
-      debug: jest.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      info: vi.fn(),
+      log: vi.fn(),
+      debug: vi.fn(),
     };
   });
 

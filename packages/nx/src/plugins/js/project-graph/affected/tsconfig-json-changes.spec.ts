@@ -40,10 +40,8 @@ describe('getTouchedProjectsFromTsConfig', () => {
   ['tsconfig.json', 'tsconfig.base.json'].forEach((tsConfig) => {
     describe(`(${tsConfig})`, () => {
       beforeEach(() => {
-        jest
-          .spyOn(tsUtils, 'getRootTsConfigFileName')
-          .mockReturnValue(tsConfig);
-        jest.clearAllMocks();
+        vi.spyOn(tsUtils, 'getRootTsConfigFileName').mockReturnValue(tsConfig);
+        vi.clearAllMocks();
       });
 
       it(`should not return changes when ${tsConfig} is not touched`, () => {

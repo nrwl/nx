@@ -156,7 +156,7 @@ describe('parseJson', () => {
   });
 
   it('should not call JSON.parse when expectComments is true', () => {
-    jest.spyOn(JSON, 'parse');
+    vi.spyOn(JSON, 'parse');
 
     expect(
       parseJson(

@@ -4,8 +4,8 @@ import { tmpdir } from 'os';
 import { shouldPrintConfigureAiAgentsDisclaimer } from './configure-ai-agents-disclaimer';
 import { agentsMdPath, getAgentRulesWrapped } from './constants';
 
-jest.mock('./detect-ai-agent', () => ({
-  detectAiAgent: jest.fn(() => null),
+vi.mock('./detect-ai-agent', () => ({
+  detectAiAgent: vi.fn(() => null),
 }));
 
 import { detectAiAgent } from './detect-ai-agent';

@@ -13,13 +13,13 @@ describe('handleImport', () => {
     const esmError = new Error('require() of ES Module not supported');
     (esmError as any).code = 'ERR_REQUIRE_ESM';
 
-    const originalRequire = jest.requireActual('./handle-import');
+    const originalRequire = await vi.importActual('./handle-import');
 
-    jest.resetModules();
+    vi.resetModules();
 
     // Mock require to throw ERR_REQUIRE_ESM for a specific module
     const mockModule = { default: 'esm-value', named: 'named-value' };
-    jest.mock(
+    vi.mock(
       'fake-esm-package',
       () => {
         throw esmError;

@@ -1,20 +1,20 @@
-jest.mock('fs', () => ({
-  ...jest.requireActual('fs'),
-  existsSync: jest.fn(),
+vi.mock('fs', async () => ({
+  ...(await vi.importActual('fs')),
+  existsSync: vi.fn(),
 }));
-jest.mock('child_process', () => ({
-  ...jest.requireActual('child_process'),
-  spawnSync: jest.fn(),
-  execSync: jest.fn(),
+vi.mock('child_process', async () => ({
+  ...(await vi.importActual('child_process')),
+  spawnSync: vi.fn(),
+  execSync: vi.fn(),
 }));
-jest.mock('../native', () => ({ ChildProcess: class {} }));
-jest.mock('./package-manager', () => ({
-  detectPackageManager: jest.fn(),
-  getPackageManagerCommand: jest.fn(),
+vi.mock('../native', () => ({ ChildProcess: class {} }));
+vi.mock('./package-manager', () => ({
+  detectPackageManager: vi.fn(),
+  getPackageManagerCommand: vi.fn(),
 }));
-jest.mock('./workspace-root', () => ({
+vi.mock('./workspace-root', () => ({
   workspaceRoot: '/root',
-  workspaceRootInner: jest.fn(() => '/root'),
+  workspaceRootInner: vi.fn(() => '/root'),
 }));
 
 import { execSync, spawnSync } from 'child_process';
@@ -32,7 +32,7 @@ import {
   type PackageManagerCommands,
 } from './package-manager';
 
-const realFs = jest.requireActual('fs') as typeof import('fs');
+const realFs = (await vi.importActual('fs')) as typeof import('fs');
 
 describe('getRunNxBaseCommand', () => {
   const pmc = { exec: 'npx' } as PackageManagerCommands;

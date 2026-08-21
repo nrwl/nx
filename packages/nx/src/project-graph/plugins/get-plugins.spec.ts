@@ -2,23 +2,23 @@ import { createSerializableError } from '../../utils/serializable-error';
 import { reasonToError } from './get-plugins';
 
 // Isolation off so loadingMethod() routes to loadNxPlugin, which we mock.
-jest.mock('./isolation/enabled', () => ({
+vi.mock('./isolation/enabled', () => ({
   isIsolationEnabled: () => false,
 }));
-jest.mock('./isolation', () => ({
-  loadIsolatedNxPlugin: jest.fn(),
+vi.mock('./isolation', () => ({
+  loadIsolatedNxPlugin: vi.fn(),
 }));
-jest.mock('../../adapter/angular-json', () => ({
+vi.mock('../../adapter/angular-json', () => ({
   shouldMergeAngularProjects: () => false,
 }));
-jest.mock('./in-process-loader', () => ({
-  loadNxPlugin: jest.fn(),
+vi.mock('./in-process-loader', () => ({
+  loadNxPlugin: vi.fn(),
 }));
 // Resolution of local plugins relies on a cached workspace snapshot;
 // loadSpecifiedNxPlugins must drop it on every reload. Mocked so the test can
 // assert that wiring without touching the real filesystem-backed resolver.
-jest.mock('./resolve-plugin', () => ({
-  resetResolvePluginCache: jest.fn(),
+vi.mock('./resolve-plugin', () => ({
+  resetResolvePluginCache: vi.fn(),
 }));
 
 describe('reasonToError', () => {
@@ -64,7 +64,7 @@ describe('getPluginsSeparated', () => {
   beforeEach(() => {
     // Fresh module state per test — getPluginsSeparated caches at module
     // level, so a stale cache would mask the behavior under test.
-    jest.resetModules();
+    vi.resetModules();
     pendingPluginLoads = new Map();
 
     ({ loadNxPlugin } = require('./in-process-loader'));

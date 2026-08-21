@@ -1,11 +1,11 @@
-jest.mock('@clack/prompts', () => ({
-  autocomplete: jest.fn(),
+vi.mock('@clack/prompts', () => ({
+  autocomplete: vi.fn(),
   isCancel: () => false,
 }));
 
-jest.mock('../../../utils/ab-testing', () => ({
-  ...jest.requireActual('../../../utils/ab-testing'),
-  recordStat: jest.fn(),
+vi.mock('../../../utils/ab-testing', async () => ({
+  ...(await vi.importActual('../../../utils/ab-testing')),
+  recordStat: vi.fn(),
 }));
 
 import { autocomplete } from '@clack/prompts';

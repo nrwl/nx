@@ -112,7 +112,7 @@ describe('GA4 event name length cap', () => {
 let mockCustomDimensions: unknown;
 let mockReportEvent: jest.Mock;
 
-jest.mock('../../analytics', () => ({
+vi.mock('../../analytics', () => ({
   get customDimensions() {
     return mockCustomDimensions;
   },
@@ -121,7 +121,7 @@ jest.mock('../../analytics', () => ({
 
 describe('migrate-analytics events', () => {
   function load() {
-    jest.resetModules();
+    vi.resetModules();
     return require('./migrate-analytics') as typeof import('./migrate-analytics');
   }
 
@@ -136,7 +136,7 @@ describe('migrate-analytics events', () => {
   }
 
   beforeEach(() => {
-    mockReportEvent = jest.fn();
+    mockReportEvent = vi.fn();
     mockCustomDimensions = new Proxy({}, { get: (_t, key) => key });
   });
 

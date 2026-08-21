@@ -11,8 +11,8 @@ import { join, dirname } from 'node:path';
 // Redirect the daemon log and its directory so both states — present and
 // missing — are reachable, and so startInBackground creates nothing in the
 // workspace. Unique per run so parallel workers cannot collide.
-jest.mock('../tmp-dir', () => {
-  const actual = jest.requireActual('../tmp-dir');
+vi.mock('../tmp-dir', async () => {
+  const actual = await vi.importActual('../tmp-dir');
   const { join: joinPath } = require('node:path');
   const { mkdtempSync } = require('node:fs');
   const { tmpdir: osTmpDir } = require('node:os');
@@ -24,23 +24,23 @@ jest.mock('../tmp-dir', () => {
   };
 });
 
-jest.mock('child_process', () => ({
-  ...jest.requireActual('child_process'),
-  spawn: jest.fn(() => ({ pid: 4242, unref: jest.fn() })),
+vi.mock('child_process', async () => ({
+  ...(await vi.importActual('child_process')),
+  spawn: vi.fn(() => ({ pid: 4242, unref: vi.fn() })),
 }));
 
-jest.mock('../../utils/wait-for-socket-connection', () => ({
-  waitForSocketConnection: jest.fn(),
+vi.mock('../../utils/wait-for-socket-connection', () => ({
+  waitForSocketConnection: vi.fn(),
 }));
 
-jest.mock('../logger', () => ({
-  clientLogger: { log: jest.fn() },
+vi.mock('../logger', () => ({
+  clientLogger: { log: vi.fn() },
 }));
 
-jest.mock('../cache', () => ({
-  ...jest.requireActual('../cache'),
-  readDaemonProcessJsonCache: jest.fn(),
-  getDaemonProcessIdSync: jest.fn(() => undefined),
+vi.mock('../cache', async () => ({
+  ...(await vi.importActual('../cache')),
+  readDaemonProcessJsonCache: vi.fn(),
+  getDaemonProcessIdSync: vi.fn(() => undefined),
 }));
 
 import { waitForSocketConnection } from '../../utils/wait-for-socket-connection';
@@ -184,7 +184,7 @@ describe('startInBackground', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     rmSync(logFile, { force: true });
   });
 

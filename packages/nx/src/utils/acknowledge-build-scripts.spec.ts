@@ -6,9 +6,9 @@ import type { Tree } from '../generators/tree';
 import { acknowledgeBuildScripts } from './acknowledge-build-scripts';
 import { getPackageManagerVersion } from './package-manager';
 
-jest.mock('./package-manager', () => ({
-  ...jest.requireActual('./package-manager'),
-  getPackageManagerVersion: jest.fn(),
+vi.mock('./package-manager', async () => ({
+  ...(await vi.importActual('./package-manager')),
+  getPackageManagerVersion: vi.fn(),
 }));
 
 describe('acknowledgeBuildScripts', () => {
@@ -160,7 +160,7 @@ describe('acknowledgeBuildScripts', () => {
       'package.json',
       JSON.stringify({ name: 'proj', packageManager: 'pnpm@^11.0.0' })
     );
-    jest.mocked(getPackageManagerVersion).mockReturnValueOnce('11.2.2');
+    vi.mocked(getPackageManagerVersion).mockReturnValueOnce('11.2.2');
 
     acknowledgeBuildScripts(tree, 'pnpm', { 'unrs-resolver': false });
 
@@ -176,7 +176,7 @@ describe('acknowledgeBuildScripts', () => {
       'package.json',
       JSON.stringify({ name: 'proj', packageManager: 'pnpm@latest' })
     );
-    jest.mocked(getPackageManagerVersion).mockImplementationOnce(() => {
+    vi.mocked(getPackageManagerVersion).mockImplementationOnce(() => {
       throw new Error('Cannot determine the version of pnpm.');
     });
 

@@ -8,9 +8,9 @@ import type {
 } from '../../project-graph/plugins/public-api';
 
 // Mock the tasks-execution-hooks module
-jest.mock('../../project-graph/plugins/tasks-execution-hooks', () => ({
-  runPreTasksExecution: jest.fn(),
-  runPostTasksExecution: jest.fn(),
+vi.mock('../../project-graph/plugins/tasks-execution-hooks', () => ({
+  runPreTasksExecution: vi.fn(),
+  runPostTasksExecution: vi.fn(),
 }));
 
 import {
@@ -20,7 +20,7 @@ import {
 
 describe('Task Execution Hooks', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('handleRunPreTasksExecution', () => {

@@ -10,7 +10,7 @@ import { ProjectGraph } from '../../../config/project-graph';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 
-jest.mock('fs', () => {
+vi.mock('fs', () => {
   const memFs = require('memfs').fs;
   return {
     ...memFs,
@@ -19,7 +19,7 @@ jest.mock('fs', () => {
 });
 
 const { readFileSync: realReadFileSync } =
-  jest.requireActual<typeof import('fs')>('fs');
+  await vi.importActual<typeof import('fs')>('fs');
 function loadJsonFixture(path: string) {
   return JSON.parse(realReadFileSync(path, 'utf-8'));
 }

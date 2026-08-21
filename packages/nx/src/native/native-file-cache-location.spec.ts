@@ -24,9 +24,9 @@ import { nxVersion } from '../utils/versions';
 // we cannot produce as the owning user: being unable to re-lock a loose dir.
 // The helper tightens through an O_NOFOLLOW descriptor, so fchmodSync rather
 // than chmodSync is the call that has to fail.
-jest.mock('fs', () => {
-  const actual = jest.requireActual('fs');
-  return { ...actual, fchmodSync: jest.fn(actual.fchmodSync) };
+vi.mock('fs', async () => {
+  const actual = await vi.importActual('fs');
+  return { ...actual, fchmodSync: vi.fn(actual.fchmodSync) };
 });
 
 // The ownership/permission hardening has no analogue on Windows, where the OS
@@ -71,7 +71,7 @@ describe('native file cache location', () => {
     });
 
     afterEach(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
       rmSync(base, { recursive: true, force: true });
     });
 
@@ -118,7 +118,7 @@ describe('native file cache location', () => {
       mkdirSync(dir, { mode: 0o700 });
       // We cannot chown without root, so move our own uid instead — the
       // comparison under test is `stats.uid !== process.getuid()`.
-      jest.spyOn(process, 'getuid').mockReturnValue(process.getuid!() + 1);
+      vi.spyOn(process, 'getuid').mockReturnValue(process.getuid!() + 1);
 
       expect(ensureOwnedPrivateDir(dir).status).toBe('refused');
     });
@@ -163,18 +163,18 @@ describe('native file cache location', () => {
       assert: (m: any) => void
     ) => {
       jest.isolateModules(() => {
-        jest.doMock('../utils/owned-private-dir', () => ({
-          ...jest.requireActual('../utils/owned-private-dir'),
-          isSafeSharedRoot: jest.fn(() => ({
+        vi.doMock('../utils/owned-private-dir', async () => ({
+          ...(await vi.importActual('../utils/owned-private-dir')),
+          isSafeSharedRoot: vi.fn(() => ({
             status: 'ok',
             path: '/tmp/.nx',
           })),
-          isOwnedRealDirectory: jest.fn(() => '/tmp/.nx/501'),
+          isOwnedRealDirectory: vi.fn(() => '/tmp/.nx/501'),
           ...guards,
         }));
         assert(require('./native-file-cache-location'));
       });
-      jest.dontMock('../utils/owned-private-dir');
+      vi.doUnmock('../utils/owned-private-dir');
     };
 
     it('should return a path when every guard passes', () => {
@@ -186,7 +186,7 @@ describe('native file cache location', () => {
     it('should refuse when the shared container is not safe', () => {
       withGuards(
         {
-          isSafeSharedRoot: jest.fn((d: string) => ({
+          isSafeSharedRoot: vi.fn((d: string) => ({
             status: 'refused',
             refusal: { kind: 'not-a-directory', dir: d },
           })),
@@ -206,7 +206,7 @@ describe('native file cache location', () => {
     ])('should refuse when %s is not ours', (_label, refused: () => string) => {
       withGuards(
         {
-          isOwnedRealDirectory: jest.fn((d: string) =>
+          isOwnedRealDirectory: vi.fn((d: string) =>
             d === refused() ? null : d
           ),
         },
@@ -241,7 +241,7 @@ describe('native file cache location', () => {
           const target = join(base, 'loose');
           mkdirSync(target, { mode: 0o777 });
           chmodSync(target, 0o777);
-          const getuid = jest
+          const getuid = vi
             .spyOn(process, 'getuid')
             .mockReturnValue(process.getuid!() + 1);
           process.env.NX_NATIVE_FILE_CACHE_DIRECTORY = target;
@@ -302,7 +302,7 @@ describe('native file cache location', () => {
         try {
           const target = join(base, 'foreign');
           mkdirSync(target, { mode: 0o700 });
-          const getuid = jest
+          const getuid = vi
             .spyOn(process, 'getuid')
             .mockReturnValue(process.getuid!() + 1);
           process.env.NX_NATIVE_FILE_CACHE_DIRECTORY = target;

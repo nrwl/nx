@@ -1,24 +1,24 @@
-const mockGlob = jest.fn();
-const mockMultiGlob = jest.fn();
-const mockDaemonGlob = jest.fn();
-const mockDaemonMultiGlob = jest.fn();
-const mockEnabled = jest.fn();
-const mockIsOnDaemon = jest.fn();
+const mockGlob = vi.fn();
+const mockMultiGlob = vi.fn();
+const mockDaemonGlob = vi.fn();
+const mockDaemonMultiGlob = vi.fn();
+const mockEnabled = vi.fn();
+const mockIsOnDaemon = vi.fn();
 
-jest.mock('../native', () => ({
-  WorkspaceContext: jest.fn().mockImplementation(() => ({
+vi.mock('../native', () => ({
+  WorkspaceContext: vi.fn().mockImplementation(() => ({
     glob: mockGlob,
     multiGlob: mockMultiGlob,
     workspaceRoot: '/virtual',
   })),
-  getMainWorktreeRoot: jest.fn().mockReturnValue('/virtual'),
+  getMainWorktreeRoot: vi.fn().mockReturnValue('/virtual'),
 }));
 
-jest.mock('./cache-directory', () => ({
-  workspaceDataDirectoryForWorkspace: jest.fn().mockReturnValue('/virtual/.nx'),
+vi.mock('./cache-directory', () => ({
+  workspaceDataDirectoryForWorkspace: vi.fn().mockReturnValue('/virtual/.nx'),
 }));
 
-jest.mock('../daemon/client/client', () => ({
+vi.mock('../daemon/client/client', () => ({
   daemonClient: {
     enabled: () => mockEnabled(),
     glob: (...args: unknown[]) => mockDaemonGlob(...args),
@@ -26,7 +26,7 @@ jest.mock('../daemon/client/client', () => ({
   },
 }));
 
-jest.mock('../daemon/is-on-daemon', () => ({
+vi.mock('../daemon/is-on-daemon', () => ({
   isOnDaemon: () => mockIsOnDaemon(),
 }));
 
@@ -38,7 +38,7 @@ import {
 
 describe('workspace-context /virtual short-circuit', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     resetWorkspaceContext();
     // Simulate the problematic case: daemon is enabled and we are NOT
     // running on the daemon (i.e. a generator test in a host process).

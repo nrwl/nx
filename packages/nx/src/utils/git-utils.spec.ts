@@ -11,12 +11,12 @@ import {
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 
-jest.mock('child_process');
-jest.mock('fs', () => {
-  const actual: typeof import('fs') = jest.requireActual('fs');
+vi.mock('child_process');
+vi.mock('fs', async () => {
+  const actual: typeof import('fs') = await vi.importActual('fs');
   return {
     ...actual,
-    readFileSync: jest.fn(actual.readFileSync),
+    readFileSync: vi.fn(actual.readFileSync),
   };
 });
 
@@ -159,7 +159,7 @@ describe('git utils tests', () => {
 
   describe('getVcsRemoteInfo', () => {
     afterEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
     });
 
     it('should return VCS info for GitHub remote', () => {
@@ -217,7 +217,7 @@ describe('git utils tests', () => {
 
   describe('getGitCurrentBranch', () => {
     afterEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
     });
 
     it('should return the current branch name', () => {
@@ -249,7 +249,7 @@ describe('git utils tests', () => {
 
   describe('getWorkingTreeStatus', () => {
     afterEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
     });
 
     it('should return dirty when git status reports changes', () => {
@@ -297,7 +297,7 @@ describe('git utils tests', () => {
 
   describe('getPathCommitExposure', () => {
     afterEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
     });
 
     function failWithStatus(status: number): Error & { status: number } {
@@ -386,7 +386,7 @@ describe('git utils tests', () => {
     const mockReadFileSync = fs.readFileSync as jest.Mock;
 
     afterEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
     });
 
     function mockGit(map: {
@@ -498,7 +498,7 @@ describe('git utils tests', () => {
 
   describe('tryCommitChanges', () => {
     afterEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
     });
 
     it('stages the whole tree and resets nothing when no exclusions are given', () => {
@@ -574,7 +574,7 @@ describe('git utils tests', () => {
     const shaB = 'b'.repeat(40);
 
     afterEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
     });
 
     it('returns true when git confirms the ancestry', () => {

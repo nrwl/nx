@@ -1,5 +1,5 @@
 // @ts-ignore
-jest.mock('fs', (): Partial<typeof import('fs')> => {
+vi.mock('fs', (): Partial<typeof import('fs')> => {
   const mockFs = require('memfs').fs;
   return {
     ...mockFs,
@@ -14,7 +14,7 @@ jest.mock('fs', (): Partial<typeof import('fs')> => {
 });
 
 // @ts-ignore
-jest.mock('node:fs', (): Partial<typeof import('fs')> => {
+vi.mock('node:fs', (): Partial<typeof import('fs')> => {
   const mockFs = require('memfs').fs;
   return {
     ...mockFs,

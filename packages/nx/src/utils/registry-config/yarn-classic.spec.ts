@@ -1,16 +1,16 @@
 // os.homedir() ignores a runtime process.env.HOME override under jest, and a
 // spyOn does not reach a module's named import either.
-jest.mock('os', () => ({
-  ...jest.requireActual('os'),
-  homedir: jest.fn(() => '/home/user'),
+vi.mock('os', async () => ({
+  ...(await vi.importActual('os')),
+  homedir: vi.fn(() => '/home/user'),
 }));
-jest.mock('fs', () => ({
-  ...jest.requireActual('fs'),
-  existsSync: jest.fn(),
-  readFileSync: jest.fn(),
+vi.mock('fs', async () => ({
+  ...(await vi.importActual('fs')),
+  existsSync: vi.fn(),
+  readFileSync: vi.fn(),
 }));
-jest.mock('../logger', () => ({
-  logger: { warn: jest.fn(), verbose: jest.fn() },
+vi.mock('../logger', () => ({
+  logger: { warn: vi.fn(), verbose: vi.fn() },
 }));
 
 import * as fs from 'fs';
@@ -88,12 +88,12 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     // Deleting FAKEROOTKEY above puts production on its root home tier whenever
     // the run itself is uid 0 (container CI).
     if (process.platform !== 'win32') {
-      jest.spyOn(process, 'getuid' as any).mockReturnValue(501 as any);
+      vi.spyOn(process, 'getuid' as any).mockReturnValue(501 as any);
     }
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     for (const key of managedEnvKeys) {
       if (savedEnv[key] === undefined) {
         delete process.env[key];

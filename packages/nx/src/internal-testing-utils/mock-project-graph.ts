@@ -1,8 +1,8 @@
 import { jest } from '@jest/globals';
 
-jest.doMock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+vi.doMock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn().mockImplementation(async () => {
     return {
       nodes: {},
       dependencies: {},

@@ -1,33 +1,33 @@
-const mockSpawn = jest.fn();
-jest.mock('child_process', () => ({
-  ...jest.requireActual('child_process'),
+const mockSpawn = vi.fn();
+vi.mock('child_process', async () => ({
+  ...(await vi.importActual('child_process')),
   spawn: (...args: unknown[]) => mockSpawn(...args),
 }));
 
-const mockCommitMigrationIfRequested = jest.fn();
-const mockCommitCheckpointBeforeMigrations = jest.fn();
-jest.mock('./migrate-commits', () => ({
+const mockCommitMigrationIfRequested = vi.fn();
+const mockCommitCheckpointBeforeMigrations = vi.fn();
+vi.mock('./migrate-commits', () => ({
   commitMigrationIfRequested: (...args: unknown[]) =>
     mockCommitMigrationIfRequested(...args),
   commitCheckpointBeforeMigrations: (...args: unknown[]) =>
     mockCommitCheckpointBeforeMigrations(...args),
 }));
 
-const mockRunAgenticPromptStep = jest.fn();
-jest.mock('./agentic/run-step', () => ({
+const mockRunAgenticPromptStep = vi.fn();
+vi.mock('./agentic/run-step', () => ({
   runAgenticPromptStep: (...args: unknown[]) =>
     mockRunAgenticPromptStep(...args),
 }));
 
-const mockNgRunMigration = jest.fn();
-jest.mock('../../adapter/ngcli-adapter', () => ({
+const mockNgRunMigration = vi.fn();
+vi.mock('../../adapter/ngcli-adapter', () => ({
   runMigration: (...args: unknown[]) => mockNgRunMigration(...args),
 }));
-jest.mock('../../adapter/compat', () => ({}));
+vi.mock('../../adapter/compat', () => ({}));
 
-const mockCreateProjectGraphAsync = jest.fn();
-const mockReadProjectsConfigurationFromProjectGraph = jest.fn();
-jest.mock('../../project-graph/project-graph', () => ({
+const mockCreateProjectGraphAsync = vi.fn();
+const mockReadProjectsConfigurationFromProjectGraph = vi.fn();
+vi.mock('../../project-graph/project-graph', () => ({
   createProjectGraphAsync: (...args: unknown[]) =>
     mockCreateProjectGraphAsync(...args),
   readProjectsConfigurationFromProjectGraph: (...args: unknown[]) =>
@@ -99,7 +99,7 @@ class FakeChildProcess extends EventEmitter {
 }
 
 afterEach(() => {
-  jest.resetAllMocks();
+  vi.resetAllMocks();
 });
 
 describe('parseMigrationReturn', () => {
@@ -661,7 +661,7 @@ describe('ChangedDepInstaller', () => {
     });
 
     it('surfaces the configured rerun command in the peer-deps guidance', async () => {
-      const errorSpy = jest.spyOn(output, 'error').mockImplementation(() => {});
+      const errorSpy = vi.spyOn(output, 'error').mockImplementation(() => {});
       try {
         writePackageJson();
         const installer = new ChangedDepInstaller(
@@ -912,7 +912,7 @@ describe('executeMigrations', () => {
       infoSpy.mock.calls.map((args) => String(args[0] ?? '')).join('\n');
 
     beforeEach(() => {
-      infoSpy = jest.spyOn(logger, 'info').mockImplementation(() => undefined);
+      infoSpy = vi.spyOn(logger, 'info').mockImplementation(() => undefined);
       mockCommitMigrationIfRequested.mockResolvedValue({
         status: 'committed',
         sha: 'sha',
@@ -1059,10 +1059,10 @@ describe('executeMigrations', () => {
         'gen-waives-inside-agent',
         `tree.write('validated.txt', 'x'); return { skipAgentic: true, agentContext: ['hint for the outer agent'] };`
       );
-      const stdoutSpy = jest
+      const stdoutSpy = vi
         .spyOn(process.stdout, 'write')
         .mockImplementation(() => true);
-      const verboseSpy = jest
+      const verboseSpy = vi
         .spyOn(logger, 'verbose')
         .mockImplementation(() => undefined);
 
@@ -1096,7 +1096,7 @@ describe('executeMigrations', () => {
         'hybrid-waives-inside-agent',
         `tree.write('waived.txt', 'x'); return { skipAgentic: true, agentContext: ['hint for the outer agent'] };`
       );
-      const stdoutSpy = jest
+      const stdoutSpy = vi
         .spyOn(process.stdout, 'write')
         .mockImplementation(() => true);
 

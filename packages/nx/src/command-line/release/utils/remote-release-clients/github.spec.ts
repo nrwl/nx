@@ -1,13 +1,13 @@
 import { GithubRemoteReleaseClient } from './github';
 
-jest.mock('axios', () => ({
-  get: jest.fn(),
+vi.mock('axios', () => ({
+  get: vi.fn(),
 }));
 
-jest.mock('node:child_process', () => ({
-  ...jest.requireActual('node:child_process'),
-  execFileSync: jest.fn(),
-  execSync: jest.requireActual('node:child_process').execSync,
+vi.mock('node:child_process', async () => ({
+  ...(await vi.importActual('node:child_process')),
+  execFileSync: vi.fn(),
+  execSync: (await vi.importActual('node:child_process')).execSync,
 }));
 
 const axiosGetMock = jest.requireMock('axios').get as jest.Mock;
@@ -26,7 +26,7 @@ describe('GithubRemoteReleaseClient', () => {
   );
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it('should prefer the username returned by ungh', async () => {
