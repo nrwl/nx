@@ -16,6 +16,7 @@ import {
 // The source loads this with a bare require (CJS channel), so stub the
 // require cache rather than vi.mock.
 import { createRequire, Module } from 'node:module';
+import { mockCjsModule } from '../../../internal-testing-utils/cjs-mock';
 {
   const req = createRequire(import.meta.url);
   const modPath = req.resolve('@swc-node/register/register');
@@ -121,10 +122,11 @@ describe('getTranspiler', () => {
   // TS6 requires the suppression flag to avoid hard-erroring on deprecated options.
   it('sets ignoreDeprecations to "6.0" on TypeScript >= 6', async () => {
     vi.resetModules();
-    vi.doMock('typescript', async () => ({
-      ...(await vi.importActual('typescript')),
+    // register.ts lazy-requires typescript (CJS channel); replace it there.
+    mockCjsModule(import.meta.url, 'typescript', {
+      ...require('typescript'),
       versionMajorMinor: '6.0',
-    }));
+    });
     const { getTranspiler: fresh } = (await import(
       './register'
     )) as typeof import('./register');
@@ -137,10 +139,10 @@ describe('getTranspiler', () => {
   // TS5 rejects the '6.0' value (TS5103) so the option must stay absent.
   it('leaves ignoreDeprecations unset on TypeScript < 6', async () => {
     vi.resetModules();
-    vi.doMock('typescript', async () => ({
-      ...(await vi.importActual('typescript')),
+    mockCjsModule(import.meta.url, 'typescript', {
+      ...require('typescript'),
       versionMajorMinor: '5.9',
-    }));
+    });
     const { getTranspiler: fresh } = (await import(
       './register'
     )) as typeof import('./register');

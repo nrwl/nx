@@ -14,12 +14,24 @@ vi.mock('./migrate-commits', () => ({
 }));
 
 const mockRunAgenticPromptStep = vi.fn();
+// executeMigrations lazy-requires ./agentic/run-step (CJS channel).
+mockCjsModule(import.meta.url, './agentic/run-step', {
+  runAgenticPromptStep: (...args: unknown[]) =>
+    mockRunAgenticPromptStep(...args),
+});
 vi.mock('./agentic/run-step', () => ({
   runAgenticPromptStep: (...args: unknown[]) =>
     mockRunAgenticPromptStep(...args),
 }));
 
 const mockNgRunMigration = vi.fn();
+// execute-migration loads the ng compat layer through handleImport (CJS
+// channel), which vi.mock cannot intercept; replace it there instead.
+import { mockCjsModule } from '../../internal-testing-utils/cjs-mock';
+mockCjsModule(import.meta.url, '../../adapter/ngcli-adapter', {
+  runMigration: (...args: unknown[]) => mockNgRunMigration(...args),
+});
+mockCjsModule(import.meta.url, '../../adapter/compat', {});
 vi.mock('../../adapter/ngcli-adapter', () => ({
   runMigration: (...args: unknown[]) => mockNgRunMigration(...args),
 }));

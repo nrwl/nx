@@ -58,11 +58,22 @@ vi.mock('../agentic/select', async () => ({
 }));
 
 const mockRunStep = vi.fn();
+// worker.ts lazy-requires the agentic modules (CJS channel); replace them
+// in the require channel as well as the import graph.
+import { mockCjsModule } from '../../../internal-testing-utils/cjs-mock';
+mockCjsModule(import.meta.url, '../agentic/run-step', {
+  runAgenticPromptStep: (...args: unknown[]) => mockRunStep(...args),
+});
 vi.mock('../agentic/run-step', () => ({
   runAgenticPromptStep: (...args: unknown[]) => mockRunStep(...args),
 }));
 
 const mockGitignoreFallback = vi.fn();
+mockCjsModule(import.meta.url, '../agentic/handoff-gitignore', {
+  ...require('../agentic/handoff-gitignore'),
+  applyAgenticHandoffGitignoreFallback: (...args: unknown[]) =>
+    mockGitignoreFallback(...args),
+});
 vi.mock('../agentic/handoff-gitignore', async () => ({
   ...(await vi.importActual('../agentic/handoff-gitignore')),
   applyAgenticHandoffGitignoreFallback: (...args: unknown[]) =>
@@ -72,6 +83,16 @@ vi.mock('../agentic/handoff-gitignore', async () => ({
 // Passthrough spy: the real initRunDir still runs (the runDir assertions below
 // depend on its output) while the call order stays observable.
 const mockInitRunDir = vi.fn();
+{
+  const realHandoff = require('../agentic/handoff');
+  mockCjsModule(import.meta.url, '../agentic/handoff', {
+    ...realHandoff,
+    initRunDir: (...args: unknown[]) => {
+      mockInitRunDir(...args);
+      return realHandoff.initRunDir(...args);
+    },
+  });
+}
 vi.mock('../agentic/handoff', async () => {
   const actual = await vi.importActual('../agentic/handoff');
   return {
