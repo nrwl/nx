@@ -10,7 +10,9 @@ import {
   isTsEsmSyntaxError,
   NODENEXT_ESM_RESOLVER_SOURCE,
   nodeNextEsmResolveHook,
+  registerSourceGraphResolver,
 } from './register';
+import * as typescriptUtils from './typescript';
 
 // Avoid a real swc registration side effect when exercising getTranspiler.
 jest.mock('@swc-node/register/register', () => ({
@@ -471,5 +473,134 @@ describe('NodeNext ESM resolve hook (nodeNextEsmResolveHook, sync)', () => {
         makeNextResolve([])
       )
     ).toThrow(expect.objectContaining({ code: 'ERR_MODULE_NOT_FOUND' }));
+  });
+});
+
+describe('registerSourceGraphResolver', () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it('limits workspace conditions to imports from a tracked source graph', () => {
+    const nodeModule = require('node:module') as typeof import('node:module');
+    const deregister = jest.fn();
+    let resolveHook: Function;
+    jest
+      .spyOn(nodeModule, 'registerHooks')
+      .mockImplementation(({ resolve }) => {
+        resolveHook = resolve;
+        return { deregister };
+      });
+    jest
+      .spyOn(typescriptUtils, 'getRootTsConfigResolveExportsConditions')
+      .mockReturnValue(['source']);
+
+    const cleanup = registerSourceGraphResolver(
+      '/workspace/plugin.ts',
+      '/workspace',
+      ['@proj/utils']
+    );
+    const calls: Array<{ specifier: string; conditions: string[] }> = [];
+    const nextResolve = (
+      specifier: string,
+      context: { conditions: string[] }
+    ) => {
+      calls.push({ specifier, conditions: context.conditions });
+      return {
+        url:
+          specifier === './lazy.js'
+            ? 'file:///workspace/lazy.ts'
+            : 'file:///workspace/packages/utils/src/index.ts',
+      };
+    };
+    const context = (parentURL: string) => ({
+      conditions: ['node'],
+      importAttributes: {},
+      parentURL,
+    });
+
+    resolveHook(
+      '@proj/utils',
+      context('file:///workspace/plugin.ts'),
+      nextResolve
+    );
+    resolveHook(
+      '@proj/utils',
+      context('file:///workspace/built-generator.js'),
+      nextResolve
+    );
+    resolveHook(
+      './lazy.js',
+      context('file:///workspace/plugin.ts'),
+      nextResolve
+    );
+    resolveHook(
+      '@proj/utils',
+      context('file:///workspace/lazy.ts'),
+      nextResolve
+    );
+
+    expect(calls).toEqual([
+      { specifier: '@proj/utils', conditions: ['node', 'source'] },
+      { specifier: '@proj/utils', conditions: ['node'] },
+      { specifier: './lazy.js', conditions: ['node'] },
+      { specifier: '@proj/utils', conditions: ['node', 'source'] },
+    ]);
+
+    cleanup();
+    expect(deregister).toHaveBeenCalled();
+  });
+
+  it('keeps the collection shape of the conditions it forwards', () => {
+    const nodeModule = require('node:module') as typeof import('node:module');
+    let resolveHook: Function;
+    jest
+      .spyOn(nodeModule, 'registerHooks')
+      .mockImplementation(({ resolve }) => {
+        resolveHook = resolve;
+        return { deregister: jest.fn() };
+      });
+    jest
+      .spyOn(typescriptUtils, 'getRootTsConfigResolveExportsConditions')
+      .mockReturnValue(['source']);
+
+    const cleanup = registerSourceGraphResolver(
+      '/workspace/plugin.cjs',
+      '/workspace',
+      ['@proj/utils']
+    );
+    const forwarded: unknown[] = [];
+    const nextResolve = (
+      _specifier: string,
+      context: { conditions: unknown }
+    ) => {
+      forwarded.push(context.conditions);
+      return { url: 'file:///workspace/packages/utils/src/index.js' };
+    };
+
+    // Node < 22.19 / < 24.5 hands CJS resolve hooks a Set and requires one back.
+    resolveHook(
+      '@proj/utils',
+      {
+        conditions: new Set(['require', 'node']),
+        importAttributes: {},
+        parentURL: 'file:///workspace/plugin.cjs',
+      },
+      nextResolve
+    );
+    resolveHook(
+      '@proj/utils',
+      {
+        conditions: ['import', 'node'],
+        importAttributes: {},
+        parentURL: 'file:///workspace/plugin.cjs',
+      },
+      nextResolve
+    );
+
+    expect(forwarded).toEqual([
+      new Set(['require', 'node', 'source']),
+      ['import', 'node', 'source'],
+    ]);
+
+    cleanup();
   });
 });
