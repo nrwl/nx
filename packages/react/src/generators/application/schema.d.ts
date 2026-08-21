@@ -26,10 +26,7 @@ export interface Schema {
   setParserOptionsProject?: boolean;
   compiler?: 'babel' | 'swc';
   remotes?: string[];
-  /**
-   * @deprecated Use {@link Schema.port} instead. This option will be removed in Nx v24.
-   * Kept so programmatic callers keep working; the CLI aliases it.
-   */
+  /** @deprecated Use {@link Schema.port} instead. This option will be removed in Nx v24. */
   devServerPort?: number;
   skipPackageJson?: boolean;
   rootProject?: boolean;
