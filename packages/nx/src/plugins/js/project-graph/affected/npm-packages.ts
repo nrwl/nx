@@ -83,7 +83,8 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
       packagesByName ??= groupPackagesByName(npmPackages);
       const matchingNpmPackages = findPackagesForSelector(
         packageSelector,
-        packagesByName
+        packagesByName,
+        c.path[0] === 'pnpm'
       );
 
       // An unresolved selector can still target a transitive dependency,
@@ -119,9 +120,12 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
 };
 
 function getPackageSelector(change: JsonChange): string | undefined {
-  const value =
-    change.type === JsonDiffType.Deleted ? change.value.lhs : change.value.rhs;
-  if (typeof value !== 'string') return;
+  if (
+    typeof change.value.lhs !== 'string' &&
+    typeof change.value.rhs !== 'string'
+  ) {
+    return;
+  }
 
   const selectorIndex = change.path[0] === 'pnpm' ? 2 : change.path.length - 1;
   const selector = change.path[selectorIndex];
@@ -147,34 +151,22 @@ function groupPackagesByName(
 
 function findPackagesForSelector(
   selector: string,
-  packagesByName: Map<string, ProjectGraphExternalNode[]>
+  packagesByName: Map<string, ProjectGraphExternalNode[]>,
+  isPnpmOverride: boolean
 ): ProjectGraphExternalNode[] {
-  let match: { packageName: string; end: number } | undefined;
-
-  for (const packageName of packagesByName.keys()) {
-    let index = selector.indexOf(packageName);
-    while (index !== -1) {
-      const end = index + packageName.length;
-      const validStart =
-        index === 0 ||
-        selector[index - 1] === '>' ||
-        selector[index - 1] === '/';
-      const validEnd = end === selector.length || selector[end] === '@';
-
-      if (
-        validStart &&
-        validEnd &&
-        (!match ||
-          end > match.end ||
-          (end === match.end && packageName.length > match.packageName.length))
-      ) {
-        match = { packageName, end };
-      }
-      index = selector.indexOf(packageName, index + 1);
+  if (isPnpmOverride) {
+    // Pnpm does not treat `>` as a parent delimiter when it starts a range.
+    const parentDelimiterIndex = selector.search(/[^ |@]>/);
+    if (parentDelimiterIndex !== -1) {
+      selector = selector.slice(parentDelimiterIndex + 2);
     }
   }
 
-  return match ? packagesByName.get(match.packageName) : [];
+  const packageName = selector.match(
+    /(?:^|\/)(@[^/@>\s]+\/[^/@>\s]+|[^/@>\s]+)(?:@[^/]*)?$/
+  )?.[1];
+
+  return packageName ? (packagesByName.get(packageName) ?? []) : [];
 }
 
 function getGlobalPackages(plugins: NxJsonConfiguration['plugins']) {
