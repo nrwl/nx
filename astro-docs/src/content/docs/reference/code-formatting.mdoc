@@ -82,11 +82,11 @@ A nested oxfmt config replaces the one above it rather than merging with it, so 
 out falls back to the oxfmt default and not to the parent's value.
 
 `.editorconfig` is the exception.
-oxfmt reads it from the directory it runs in rather than from each file upwards, so a nested
-`.editorconfig` never applies.
-The lookup still walks up from the workspace root until a file sets `root = true`, so a checkout
-containing your workspace can contribute settings.
-Nx matches that behavior in generators.
+oxfmt looks it up once from the directory it runs in rather than from each file upwards.
+For `nx format` that directory is the one you run the command from; generators anchor the lookup at
+the workspace root, so a nested `.editorconfig` never affects generated files.
+The lookup walks up until a file sets `root = true`, so a checkout containing your workspace can
+contribute settings.
 
 A root `.editorconfig` that sets `indent_size` without `indent_style` also leaves the two
 disagreeing.
@@ -98,6 +98,8 @@ Set `indent_style` alongside it.
 
 Set [`NX_SKIP_FORMAT=true`](/docs/reference/environment-variables) to stop generators and migrations
 from formatting.
+It also covers the files `nx init` and `nx import` write, and the formatting pass at the end of
+`create-nx-workspace`.
 TypeScript path sorting is separate and stays off by default.
 Turn it on with `NX_FORMAT_SORT_TSCONFIG_PATHS=true`, or per call with `formatFiles`'
 `sortRootTsconfigPaths` option.
