@@ -108,6 +108,15 @@
     }
   },
   "targetDefaults": {
+    "oxlint": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/.eslintignore",
+        {
+          "externalDependencies": ["oxlint", "@nx/oxlint"]
+        }
+      ]
+    },
     "cleanup-tsconfig": {
       "executor": "nx:run-commands",
       "options": {
