@@ -139,9 +139,8 @@ export async function getCommonConfig(
           use: [
             {
               // oxlint-disable-next-line @nx/enforce-module-boundaries
-              loader: require.resolve(
-                '@nx/angular-rspack/loaders/angular-loader'
-              ),
+              loader:
+                require.resolve('@nx/angular-rspack/loaders/angular-loader'),
             },
           ],
         },
@@ -150,9 +149,8 @@ export async function getCommonConfig(
           use: [
             {
               // oxlint-disable-next-line @nx/enforce-module-boundaries
-              loader: require.resolve(
-                '@nx/angular-rspack/loaders/angular-partial-transform-loader'
-              ),
+              loader:
+                require.resolve('@nx/angular-rspack/loaders/angular-partial-transform-loader'),
             },
           ],
         },

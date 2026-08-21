@@ -68,9 +68,8 @@ export async function getServerConfig(
         ...getSwcTranspilationRules(swcTranspilationTransform),
         {
           // oxlint-disable-next-line @nx/enforce-module-boundaries
-          loader: require.resolve(
-            '@nx/angular-rspack/loaders/platform-server-exports-loader'
-          ),
+          loader:
+            require.resolve('@nx/angular-rspack/loaders/platform-server-exports-loader'),
           include: [
             resolve(root, (normalizedOptions.ssr as { entry: string }).entry),
           ],

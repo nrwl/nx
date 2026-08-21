@@ -1772,9 +1772,8 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       const { logger } = await import('../logger');
       (logger.warn as Mock).mockClear();
       vi.resetModules();
-      const { getYarnClassicSpawnRegistryEnv: fresh } = await import(
-        './yarn-classic'
-      );
+      const { getYarnClassicSpawnRegistryEnv: fresh } =
+        await import('./yarn-classic');
       for (const pkg of packages) {
         fresh(pkg, ROOT);
       }

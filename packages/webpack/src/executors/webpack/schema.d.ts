@@ -93,8 +93,7 @@ export interface WebpackExecutorOptions {
   rebaseRootRelative?: boolean;
 }
 
-export interface NormalizedWebpackExecutorOptions
-  extends WebpackExecutorOptions {
+export interface NormalizedWebpackExecutorOptions extends WebpackExecutorOptions {
   outputFileName: string;
   assets: AssetGlobPattern[];
   root: string;

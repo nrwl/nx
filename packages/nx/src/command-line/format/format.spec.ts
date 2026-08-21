@@ -37,15 +37,12 @@ vi.mock('../../utils/fileutils', async () => ({
 }));
 
 const { detectFormatter } = await import('../../utils/formatters');
-const { getOxfmtBinPath, writeWithOxfmt, checkWithOxfmt } = (await import(
-  '../../utils/formatters/oxfmt'
-)) as Record<string, Mock>;
-const { getPrettierPath, writeWithPrettier, checkWithPrettier } = (await import(
-  '../../utils/formatters/prettier'
-)) as Record<string, Mock>;
-const { splitArgsIntoNxArgsAndOverrides, parseFiles } = (await import(
-  '../../utils/command-line-utils'
-)) as Record<string, Mock>;
+const { getOxfmtBinPath, writeWithOxfmt, checkWithOxfmt } =
+  (await import('../../utils/formatters/oxfmt')) as Record<string, Mock>;
+const { getPrettierPath, writeWithPrettier, checkWithPrettier } =
+  (await import('../../utils/formatters/prettier')) as Record<string, Mock>;
+const { splitArgsIntoNxArgsAndOverrides, parseFiles } =
+  (await import('../../utils/command-line-utils')) as Record<string, Mock>;
 
 describe('nx format', () => {
   let warn: MockInstance;
