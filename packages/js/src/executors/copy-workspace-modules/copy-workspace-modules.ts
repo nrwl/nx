@@ -9,6 +9,7 @@ import {
 import {
   interpolate,
   getWorkspacePackagesFromGraph,
+  resolveWorkspaceDependencyTarget,
 } from '@nx/devkit/internal';
 import { type CopyWorkspaceModulesOptions } from './schema';
 import {
@@ -111,11 +112,16 @@ function handleWorkspaceModules(
       for (const [depName, depVersion] of Object.entries(
         copiedPackageJson.dependencies
       )) {
-        if (workspaceModules.has(depName)) {
-          const relativePath = calculateRelativePath(pkgName, depName);
+        const target = resolveWorkspaceDependencyTarget(
+          depName,
+          depVersion,
+          workspaceModules
+        );
+        if (target) {
+          const relativePath = calculateRelativePath(pkgName, target);
           copiedPackageJson.dependencies[depName] = `file:${relativePath}`;
           packageJsonModified = true;
-          processModule(depName);
+          processModule(target);
         }
       }
 
@@ -132,8 +138,17 @@ function handleWorkspaceModules(
   }
 
   // Process all top-level dependencies
-  for (const [pkgName] of Object.entries(packageJson.dependencies)) {
-    processModule(pkgName);
+  for (const [pkgName, pkgVersion] of Object.entries(
+    packageJson.dependencies
+  )) {
+    const target = resolveWorkspaceDependencyTarget(
+      pkgName,
+      pkgVersion,
+      workspaceModules
+    );
+    if (target) {
+      processModule(target);
+    }
   }
 }
 

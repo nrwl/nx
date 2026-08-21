@@ -1,9 +1,11 @@
 import { createNodesFromFiles, NxPlugin } from '../src/project-graph/plugins';
 import { workspaceRoot } from '../src/utils/workspace-root';
 import {
+  attachPackageDependencies,
   buildPackageJsonWorkspacesMatcher,
   buildPackageJsonPatterns,
   createNodeFromPackageJson,
+  preloadWorkspacePackages,
 } from '../src/plugins/package-json';
 import { workspaceDataDirectory } from '../src/utils/cache-directory';
 import { join } from 'path';
@@ -50,15 +52,31 @@ const plugin: NxPlugin = {
         context.workspaceRoot
       );
 
+      // Every matched package.json becomes a project here, so they all
+      // participate in the workspace package-name map.
+      const { packageJsonContents, getWorkspacePackageVersion } =
+        preloadWorkspacePackages(
+          [...configFiles],
+          () => true,
+          (f) => readJsonFile(join(workspaceRoot, f))
+        );
+
       const result = createNodesFromFiles(
-        (packageJsonPath) =>
-          createNodeFromPackageJson(
-            packageJsonPath,
-            workspaceRoot,
-            cache,
-            isInPackageJsonWorkspaces(packageJsonPath),
-            packageManagerCommand
-          ),
+        (packageJsonPath) => {
+          const json = packageJsonContents.get(packageJsonPath);
+          return attachPackageDependencies(
+            createNodeFromPackageJson(
+              packageJsonPath,
+              workspaceRoot,
+              cache,
+              isInPackageJsonWorkspaces(packageJsonPath),
+              packageManagerCommand,
+              json
+            ),
+            json,
+            getWorkspacePackageVersion
+          );
+        },
         configFiles,
         options,
         context

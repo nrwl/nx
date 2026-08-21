@@ -163,6 +163,180 @@ describe('pruneLockfileExecutor - allowScripts', () => {
   });
 });
 
+describe('pruneLockfileExecutor - workspace module manifest rewrite', () => {
+  const mockGetWorkspacePackagesFromGraph =
+    require('nx/src/plugins/js/utils/get-workspace-packages-from-graph')
+      .getWorkspacePackagesFromGraph as jest.Mock;
+
+  let tempFs: TempFs;
+
+  beforeEach(() => {
+    tempFs = new TempFs('prune-lockfile-aliases');
+    mockWorkspaceRoot = tempFs.tempDir;
+    mockGetWorkspacePackagesFromGraph.mockReturnValue(
+      new Map([
+        [
+          '@myorg/lib-a',
+          {
+            name: '@myorg/lib-a',
+            type: 'lib',
+            data: {
+              root: 'libs/lib-a',
+              metadata: {
+                js: { packageName: '@myorg/lib-a', packageVersion: '1.0.0' },
+              },
+            },
+          },
+        ],
+      ])
+    );
+  });
+
+  afterEach(() => {
+    tempFs.cleanup();
+    jest.clearAllMocks();
+    mockGetWorkspacePackagesFromGraph.mockReturnValue(new Map());
+  });
+
+  async function runWithDependencies(dependencies: Record<string, string>) {
+    tempFs.createFilesSync({
+      'package.json': JSON.stringify({ name: 'root', version: '0.0.0' }),
+      'package-lock.json': JSON.stringify({ name: 'root', lockfileVersion: 3 }),
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        dependencies,
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    await pruneLockfileExecutor(
+      {
+        buildTarget: 'app:build',
+        outputPath: join(tempFs.tempDir, 'dist/app'),
+      },
+      {
+        root: tempFs.tempDir,
+        cwd: tempFs.tempDir,
+        isVerbose: false,
+        projectGraph: {
+          nodes: {
+            app: { name: 'app', type: 'app', data: { root: PROJECT_ROOT } },
+            '@myorg/lib-a': {
+              name: '@myorg/lib-a',
+              type: 'lib',
+              data: {
+                root: 'libs/lib-a',
+                metadata: {
+                  js: { packageName: '@myorg/lib-a', packageVersion: '1.0.0' },
+                },
+              },
+            },
+          },
+          dependencies: {},
+          externalNodes: {},
+        },
+      } as unknown as ExecutorContext
+    );
+
+    return JSON.parse(
+      readFileSync(join(tempFs.tempDir, 'dist', 'app', 'package.json'), 'utf-8')
+    ).dependencies;
+  }
+
+  it('rewrites a workspace alias entry to the target module dir under the alias key', async () => {
+    const dependencies = await runWithDependencies({
+      'custom-lib': 'workspace:@myorg/lib-a@*',
+    });
+
+    expect(dependencies).toEqual({
+      'custom-lib': 'file:./workspace_modules/@myorg/lib-a',
+    });
+  });
+
+  it('rewrites an npm alias entry targeting a workspace package to the target module dir', async () => {
+    const dependencies = await runWithDependencies({
+      'custom-lib': 'npm:@myorg/lib-a@1.0.0',
+    });
+
+    expect(dependencies).toEqual({
+      'custom-lib': 'file:./workspace_modules/@myorg/lib-a',
+    });
+  });
+
+  it('rewrites a plain workspace dependency to its own module dir', async () => {
+    const dependencies = await runWithDependencies({
+      '@myorg/lib-a': 'workspace:*',
+    });
+
+    expect(dependencies).toEqual({
+      '@myorg/lib-a': 'file:./workspace_modules/@myorg/lib-a',
+    });
+  });
+
+  it('leaves an npm alias to a registry package untouched', async () => {
+    const dependencies = await runWithDependencies({
+      'custom-lib': 'npm:lodash@^4.17.21',
+    });
+
+    expect(dependencies).toEqual({
+      'custom-lib': 'npm:lodash@^4.17.21',
+    });
+  });
+
+  it('rewrites an alias even after the real npm stringifier processed the manifest', async () => {
+    // regression: the npm stringifier used to rewrite the shared manifest
+    // object in place, leaving the executor unable to recognize the alias
+    const rootLockFile = {
+      name: 'root',
+      version: '0.0.0',
+      lockfileVersion: 3,
+      packages: {
+        '': { name: 'root', version: '0.0.0' },
+        'libs/lib-a': { name: '@myorg/lib-a', version: '1.0.0' },
+        'node_modules/@myorg/lib-a': { resolved: 'libs/lib-a', link: true },
+      },
+    };
+    const { pruneProjectGraph } = jest.requireActual<
+      typeof import('nx/src/plugins/js/lock-file/project-graph-pruning')
+    >('nx/src/plugins/js/lock-file/project-graph-pruning');
+    const { stringifyNpmLockfile } = jest.requireActual<
+      typeof import('nx/src/plugins/js/lock-file/npm-parser')
+    >('nx/src/plugins/js/lock-file/npm-parser');
+    // createLockFile itself reads the root lockfile from disk, so compose its
+    // npm path (prune + stringify) with an inline root lockfile instead
+    (
+      jest.requireMock('nx/src/plugins/js/lock-file/lock-file')
+        .createLockFile as jest.Mock
+    ).mockImplementation((pkgJson, graph) =>
+      stringifyNpmLockfile(
+        pruneProjectGraph(graph, pkgJson),
+        JSON.stringify(rootLockFile),
+        pkgJson
+      )
+    );
+
+    const dependencies = await runWithDependencies({
+      'custom-lib': 'npm:@myorg/lib-a@1.0.0',
+    });
+
+    expect(dependencies).toEqual({
+      'custom-lib': 'file:./workspace_modules/@myorg/lib-a',
+    });
+    const lockfile = JSON.parse(
+      readFileSync(
+        join(tempFs.tempDir, 'dist', 'app', 'package-lock.json'),
+        'utf-8'
+      )
+    );
+    expect(lockfile.packages['node_modules/custom-lib']).toEqual({
+      version: 'file:./workspace_modules/@myorg/lib-a',
+      resolved: 'workspace_modules/@myorg/lib-a',
+      link: true,
+    });
+  });
+});
+
 describe('resolveCatalogReferences', () => {
   const mockGetCatalogManager = getCatalogManager as jest.MockedFunction<
     typeof getCatalogManager

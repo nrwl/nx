@@ -1289,6 +1289,110 @@ describe('TargetProjectLocator', () => {
 
       expect(result).toBeFalsy();
     });
+
+    describe('aliases and version specifiers', () => {
+      const projects: Record<string, ProjectGraphProjectNode> = {
+        pkg1: {
+          name: 'pkg1',
+          type: 'lib' as const,
+          data: {
+            root: 'packages/pkg1',
+            metadata: {
+              js: {
+                packageName: '@org/pkg1',
+                packageVersion: '1.2.3',
+                isInPackageManagerWorkspaces: true,
+              },
+            },
+          },
+        },
+        pkg2: {
+          name: 'pkg2',
+          type: 'lib' as const,
+          data: {
+            root: 'packages/pkg2',
+            metadata: {
+              js: {
+                packageName: '@org/pkg2',
+                packageVersion: '2.0.0',
+                isInPackageManagerWorkspaces: true,
+              },
+            },
+          },
+        },
+        'lib-b': {
+          name: 'lib-b',
+          type: 'lib' as const,
+          data: {
+            root: 'packages/lib-b',
+            metadata: {
+              js: {
+                packageName: 'lib-b',
+                packageVersion: '3.0.0',
+                isInPackageManagerWorkspaces: true,
+              },
+            },
+          },
+        },
+      };
+
+      it.each`
+        dep            | specifier                       | expected
+        ${'@org/pkg1'} | ${'*'}                          | ${'pkg1'}
+        ${'@org/pkg1'} | ${'^1.0.0'}                     | ${'pkg1'}
+        ${'@org/pkg1'} | ${'^9.0.0'}                     | ${null}
+        ${'@org/pkg1'} | ${'workspace:*'}                | ${'pkg1'}
+        ${'@org/pkg1'} | ${'workspace:^9.0.0'}           | ${'pkg1'}
+        ${'alias'}     | ${'workspace:@org/pkg1@*'}      | ${'pkg1'}
+        ${'alias'}     | ${'workspace:@org/pkg1@^9.0.0'} | ${'pkg1'}
+        ${'alias'}     | ${'workspace:lib-b@*'}          | ${'lib-b'}
+        ${'@org/pkg2'} | ${'workspace:@org/pkg1@*'}      | ${'pkg1'}
+        ${'alias'}     | ${'workspace:@org/ghost@*'}     | ${null}
+        ${'alias'}     | ${'npm:@org/pkg1@^1.0.0'}       | ${'pkg1'}
+        ${'alias'}     | ${'npm:@org/pkg1@^9.0.0'}       | ${null}
+        ${'alias'}     | ${'npm:@org/ghost@*'}           | ${null}
+      `(
+        'should resolve dep=$dep specifier=$specifier to $expected',
+        ({ dep, specifier, expected }) => {
+          const targetProjectLocator = new TargetProjectLocator(
+            projects,
+            {},
+            new Map()
+          );
+
+          const result = targetProjectLocator.findDependencyInWorkspaceProjects(
+            'packages/app/package.json',
+            dep,
+            specifier
+          );
+
+          expect(result).toEqual(expected);
+        }
+      );
+
+      it('should resolve a file: dependency by path against the source manifest directory', () => {
+        const targetProjectLocator = new TargetProjectLocator(
+          projects,
+          {},
+          new Map()
+        );
+
+        expect(
+          targetProjectLocator.findDependencyInWorkspaceProjects(
+            'packages/app/package.json',
+            '@org/pkg1',
+            'file:../pkg1'
+          )
+        ).toEqual('pkg1');
+        expect(
+          targetProjectLocator.findDependencyInWorkspaceProjects(
+            'packages/app/package.json',
+            '@org/pkg1',
+            'file:../elsewhere'
+          )
+        ).toBeNull();
+      });
+    });
   });
 
   describe('findImportInWorkspaceProjects', () => {

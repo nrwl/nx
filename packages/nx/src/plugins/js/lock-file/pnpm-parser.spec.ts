@@ -2707,6 +2707,7 @@ snapshots:
         projectName: string;
         packageName: string;
         root: string;
+        version?: string;
       }>,
       workspaceDeps: Record<string, string[]>,
       externalNodes: Record<string, ProjectGraphExternalNode>,
@@ -2714,13 +2715,23 @@ snapshots:
     ): ProjectGraph {
       const nodes: ProjectGraph['nodes'] = {};
       const dependencies: ProjectGraph['dependencies'] = {};
-      for (const { projectName, packageName, root } of workspaceProjects) {
+      for (const {
+        projectName,
+        packageName,
+        root,
+        version,
+      } of workspaceProjects) {
         nodes[projectName] = {
           name: projectName,
           type: 'lib',
           data: {
             root,
-            metadata: { js: { packageName } },
+            metadata: {
+              js: {
+                packageName,
+                ...(version ? { packageVersion: version } : {}),
+              },
+            },
           },
         } as any;
         dependencies[projectName] = [
@@ -2981,6 +2992,240 @@ snapshots: {}`;
       expect(result).toMatch(
         /'@myorg\/shared':\s+specifier: file:\.\.\/shared\s+version: link:\.\.\/shared/
       );
+    });
+
+    it('should map a workspace alias entry at the root to the target workspace module', () => {
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      custom-lib:
+        specifier: workspace:@myorg/lib-a@*
+        version: link:libs/lib-a
+
+  libs/lib-a:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+
+packages:
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+
+snapshots:
+
+  lodash@4.17.21: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { 'custom-lib': 'workspace:@myorg/lib-a@*' },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+        ],
+        {},
+        {
+          'npm:lodash': {
+            type: 'npm',
+            name: 'npm:lodash',
+            data: {
+              version: '4.17.21',
+              packageName: 'lodash',
+              hash: 'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+            },
+          },
+        },
+        {
+          '@myorg/lib-a': ['npm:lodash'],
+        }
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
+
+      // the alias key links to the target's module dir
+      expect(result).toMatch(
+        /custom-lib:\s+specifier: file:\.\/workspace_modules\/@myorg\/lib-a\s+version: link:\.\/workspace_modules\/@myorg\/lib-a/
+      );
+      expect(result).toContain(`workspace_modules/@myorg/lib-a:`);
+      expect(result).toContain(`lodash@4.17.21:`);
+    });
+
+    it('should map an npm alias entry targeting a workspace package at the root', () => {
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      custom-lib:
+        specifier: npm:@myorg/lib-a@1.0.0
+        version: link:libs/lib-a
+
+  libs/lib-a:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+
+packages:
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+
+snapshots:
+
+  lodash@4.17.21: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { 'custom-lib': 'npm:@myorg/lib-a@1.0.0' },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+            version: '1.0.0',
+          },
+        ],
+        {},
+        {
+          'npm:lodash': {
+            type: 'npm',
+            name: 'npm:lodash',
+            data: {
+              version: '4.17.21',
+              packageName: 'lodash',
+              hash: 'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+            },
+          },
+        },
+        {
+          '@myorg/lib-a': ['npm:lodash'],
+        }
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
+
+      expect(result).toMatch(
+        /custom-lib:\s+specifier: file:\.\/workspace_modules\/@myorg\/lib-a\s+version: link:\.\/workspace_modules\/@myorg\/lib-a/
+      );
+      expect(result).toContain(`workspace_modules/@myorg/lib-a:`);
+      expect(result).toContain(`lodash@4.17.21:`);
+    });
+
+    it('should rewrite aliased transitive workspace dependencies in importer blocks', () => {
+      // app -> @myorg/lib-a (workspace:*) -> custom-inner (workspace alias to @myorg/lib-b) -> lodash
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      '@myorg/lib-a':
+        specifier: workspace:*
+        version: link:libs/lib-a
+
+  libs/lib-a:
+    dependencies:
+      custom-inner:
+        specifier: workspace:@myorg/lib-b@*
+        version: link:../lib-b
+
+  libs/lib-b:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+
+packages:
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+
+snapshots:
+
+  lodash@4.17.21: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { '@myorg/lib-a': 'workspace:*' },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+          {
+            projectName: '@myorg/lib-b',
+            packageName: '@myorg/lib-b',
+            root: 'libs/lib-b',
+          },
+        ],
+        {
+          '@myorg/lib-a': ['@myorg/lib-b'],
+        },
+        {
+          'npm:lodash': {
+            type: 'npm',
+            name: 'npm:lodash',
+            data: {
+              version: '4.17.21',
+              packageName: 'lodash',
+              hash: 'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+            },
+          },
+        },
+        {
+          '@myorg/lib-b': ['npm:lodash'],
+        }
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
+
+      // the aliased target still gets its own importer block
+      expect(result).toContain(`workspace_modules/@myorg/lib-b:`);
+      // the alias key inside lib-a's importer is rewritten to the target's dir
+      expect(result).toMatch(
+        /custom-inner:\s+specifier: file:\.\.\/lib-b\s+version: link:\.\.\/lib-b/
+      );
+      expect(result).toContain(`lodash@4.17.21:`);
     });
   });
 

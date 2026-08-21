@@ -1,5 +1,8 @@
 import { NX_VERSION, normalizePath, workspaceRoot } from '@nx/devkit';
-import { getCatalogManager } from '@nx/devkit/internal';
+import {
+  getCatalogManager,
+  parseDependencySpecifier,
+} from '@nx/devkit/internal';
 import { findNpmDependencies } from '@nx/js/internal';
 import { ESLintUtils } from '@typescript-eslint/utils';
 import { AST } from 'jsonc-eslint-parser';
@@ -168,7 +171,68 @@ export default ESLintUtils.RuleCreator(
         runtimeHelpers,
       }
     );
-    const expectedDependencyNames = Object.keys(npmDependencies);
+    let expectedDependencyNames = Object.keys(npmDependencies);
+
+    const packageJson = JSON.parse(context.sourceCode.getText());
+    const projPackageJsonDeps = getProductionDependencies(packageJson);
+
+    // The manifest may reference a workspace package under aliased keys
+    // (workspace:<name>@<range>, npm:<name>@<range>). findNpmDependencies
+    // records those under the target's canonical package name, so expected
+    // names are remapped to the manifest identity: without this, an aliased
+    // entry is reported both missing (canonical name) and obsolete (alias
+    // key).
+    const packageNameByAliasKey = new Map<string, string>();
+    const sourcePackageDependencies =
+      sourceProject.data.metadata?.js?.packageDependencies;
+    if (sourcePackageDependencies) {
+      // a key repeated across collections resolves to the effective
+      // production entry: dependencies win, matching the graph's precedence
+      // when it builds edges from the manifest
+      for (const collection of [
+        'optionalDependencies',
+        'peerDependencies',
+        'devDependencies',
+        'dependencies',
+      ] as const) {
+        for (const [key, entry] of Object.entries(
+          sourcePackageDependencies[collection] ?? {}
+        )) {
+          if (key !== entry.requestedPackageName) {
+            packageNameByAliasKey.set(key, entry.requestedPackageName);
+          }
+        }
+      }
+      const aliasKeysByPackageName = new Map<string, string[]>();
+      for (const [key, packageName] of packageNameByAliasKey) {
+        const keys = aliasKeysByPackageName.get(packageName) ?? [];
+        keys.push(key);
+        aliasKeysByPackageName.set(packageName, keys);
+      }
+      for (const [packageName, aliasKeys] of aliasKeysByPackageName) {
+        if (!(packageName in npmDependencies)) {
+          continue;
+        }
+        const presentAliasKeys = aliasKeys.filter(
+          (key) => projPackageJsonDeps[key]
+        );
+        if (!presentAliasKeys.length) {
+          continue;
+        }
+        expectedDependencyNames.push(...presentAliasKeys);
+        if (!projPackageJsonDeps[packageName]) {
+          expectedDependencyNames = expectedDependencyNames.filter(
+            (d) => d !== packageName
+          );
+        }
+      }
+    }
+
+    // Resolves the installed version for an expected name, whether it is a
+    // canonical package name or an alias key.
+    const getInstalledVersion = (packageName: string): string | undefined =>
+      npmDependencies[packageName] ??
+      npmDependencies[packageNameByAliasKey.get(packageName)];
 
     // Packages eligible for `workspace:*` rewrites under
     // `peerDepsVersionStrategy: 'workspace'`. Must be both a workspace project
@@ -181,9 +245,6 @@ export default ESLintUtils.RuleCreator(
         workspacePackageNames.add(js.packageName);
       }
     }
-
-    const packageJson = JSON.parse(context.sourceCode.getText());
-    const projPackageJsonDeps = getProductionDependencies(packageJson);
 
     const rootPackageJsonDeps = getAllDependencies(rootPackageJson);
 
@@ -394,17 +455,42 @@ export default ESLintUtils.RuleCreator(
         resolvedPackageRange = resolved;
       }
 
+      const installedVersion = getInstalledVersion(packageName);
+      if (installedVersion === undefined) {
+        return;
+      }
+
+      // an npm:<name>@<range> alias is checked against its inner range
+      const parsedRange = parseDependencySpecifier(resolvedPackageRange);
+      const comparableRange =
+        parsedRange.protocol === 'npm'
+          ? (parsedRange.range ?? '*')
+          : resolvedPackageRange;
+
       if (
-        npmDependencies[packageName].startsWith('file:') ||
-        resolvedPackageRange.startsWith('file:') ||
-        npmDependencies[packageName] === '*' ||
-        resolvedPackageRange === '*' ||
+        installedVersion.startsWith('file:') ||
+        comparableRange.startsWith('file:') ||
+        installedVersion === '*' ||
+        comparableRange === '*' ||
         resolvedPackageRange.startsWith('workspace:') ||
-        satisfies(npmDependencies[packageName], resolvedPackageRange, {
+        satisfies(installedVersion, comparableRange, {
           includePrerelease: true,
         })
       ) {
         return;
+      }
+
+      const canonicalPackageName = packageNameByAliasKey.get(packageName);
+      let fixedVersion =
+        rootPackageJsonDeps[canonicalPackageName ?? packageName] ||
+        installedVersion;
+      if (
+        canonicalPackageName &&
+        parseDependencySpecifier(fixedVersion).protocol !== 'plain'
+      ) {
+        // the fix nests the version inside npm:<target>@...; only a plain
+        // registry range is valid there, not e.g. a root workspace:* entry
+        fixedVersion = installedVersion;
       }
 
       context.report({
@@ -412,13 +498,15 @@ export default ESLintUtils.RuleCreator(
         messageId: 'versionMismatch',
         data: {
           packageName: packageName,
-          version: npmDependencies[packageName],
+          version: installedVersion,
         },
         fix: (fixer) =>
           fixer.replaceText(
             node as any,
             `"${packageName}": "${
-              rootPackageJsonDeps[packageName] || npmDependencies[packageName]
+              canonicalPackageName
+                ? `npm:${canonicalPackageName}@${fixedVersion}`
+                : fixedVersion
             }"`
           ),
       });
