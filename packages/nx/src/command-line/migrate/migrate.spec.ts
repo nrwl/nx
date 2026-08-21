@@ -1476,7 +1476,7 @@ describe('Migration', () => {
       });
 
       it('should re-evaluate held updates after later package groups satisfy their gates', async () => {
-        mockPrompt.mockResolvedValue({ shouldApply: true });
+        mockPrompt.mockResolvedValue('Yes');
         const installedVersions = {
           mypackage: '1.0.0',
           'first-owner': '1.0.0',
@@ -1570,7 +1570,7 @@ describe('Migration', () => {
       });
 
       it('should not re-prompt or apply a held update that was declined once its gate was satisfied', async () => {
-        mockPrompt.mockResolvedValue({ shouldApply: false });
+        mockPrompt.mockResolvedValue('No');
         const installedVersions = {
           mypackage: '1.0.0',
           'gated-owner': '1.0.0',
