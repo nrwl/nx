@@ -51,6 +51,73 @@ describe('git worktrees', () => {
     });
   });
 
+  describe('when the workspace is itself a linked worktree', () => {
+    // Real layout: someone opens an agent worktree and runs Nx there, then
+    // tooling makes more worktrees inside it. `.git` is a gitfile, so the
+    // registry is only reachable by following `commondir` back to the main
+    // repository - every worktree of a repo shares one registry.
+    let mainRepo: string;
+    let nestedWorkspace: string;
+
+    beforeEach(() => {
+      mainRepo = mkdtempSync(join(tmpdir(), 'nx-main-'));
+      const mainGitDir = join(mainRepo, '.git');
+      mkdirSync(mainGitDir, { recursive: true });
+
+      // The workspace we run in is a worktree of `mainRepo`.
+      nestedWorkspace = join(mainRepo, 'checkouts', 'workspace');
+      const workspaceMeta = join(mainGitDir, 'worktrees', 'workspace');
+      mkdirSync(workspaceMeta, { recursive: true });
+      mkdirSync(nestedWorkspace, { recursive: true });
+      writeFileSync(
+        join(workspaceMeta, 'gitdir'),
+        `${join(nestedWorkspace, '.git')}\n`
+      );
+      writeFileSync(
+        join(nestedWorkspace, '.git'),
+        `gitdir: ${workspaceMeta}\n`
+      );
+      writeFileSync(join(workspaceMeta, 'commondir'), '../..\n');
+
+      // And an agent worktree nested inside that workspace.
+      const agentMeta = join(mainGitDir, 'worktrees', 'agent');
+      const agentCheckout = join(
+        nestedWorkspace,
+        '.claude',
+        'worktrees',
+        'agent'
+      );
+      mkdirSync(agentMeta, { recursive: true });
+      mkdirSync(agentCheckout, { recursive: true });
+      writeFileSync(
+        join(agentMeta, 'gitdir'),
+        `${join(agentCheckout, '.git')}\n`
+      );
+      writeFileSync(join(agentCheckout, '.git'), `gitdir: ${agentMeta}\n`);
+      writeFileSync(join(agentMeta, 'commondir'), '../..\n');
+    });
+
+    it('follows commondir to find worktrees nested inside it', () => {
+      expect(nestedWorktreeRoots(nestedWorkspace)).toEqual([
+        '.claude/worktrees/agent',
+      ]);
+    });
+
+    it('does not report the workspace itself', () => {
+      // Its own registration resolves to the walk root, which is not nested.
+      expect(nestedWorktreeRoots(nestedWorkspace)).not.toContain('');
+    });
+
+    it('advises on a duplicate coming from the nested worktree', () => {
+      expect(
+        analyzeWorktreeConflicts(
+          nestedWorkspace,
+          new Map([['ui', ['libs/ui', '.claude/worktrees/agent/libs/ui']]])
+        )!.ignoreTargets
+      ).toEqual(['/.claude/worktrees/agent']);
+    });
+  });
+
   describe('analyzeWorktreeConflicts', () => {
     function analyze(conflicts: Record<string, string[]>) {
       return analyzeWorktreeConflicts(
@@ -69,9 +136,18 @@ describe('git worktrees', () => {
           api: ['apps/api', '.claude/worktrees/two/apps/api'],
         })
       ).toEqual({
-        ignoreTargets: ['.claude/worktrees'],
+        ignoreTargets: ['/.claude/worktrees'],
         explainsAllConflicts: true,
       });
+    });
+
+    it('anchors a top-level worktree so it is a location, not a name', () => {
+      // Bare `wt1` in a .gitignore matches any `wt1` at any depth.
+      registerWorktree('one', 'wt1');
+
+      expect(
+        analyze({ ui: ['libs/ui', 'wt1/libs/ui'] })!.ignoreTargets
+      ).toEqual(['/wt1']);
     });
 
     it('names a lone worktree rather than the directory holding it', () => {
@@ -80,7 +156,7 @@ describe('git worktrees', () => {
       registerWorktree('one', 'apps/wt');
 
       expect(analyze({ ui: ['libs/ui', 'apps/wt/libs/ui'] })).toEqual({
-        ignoreTargets: ['apps/wt'],
+        ignoreTargets: ['/apps/wt'],
         explainsAllConflicts: true,
       });
     });
@@ -96,7 +172,7 @@ describe('git worktrees', () => {
           a: ['libs/a', 'trees/one/libs/a'],
           b: ['libs/b', 'trees/two/libs/b'],
         })!.ignoreTargets
-      ).toEqual(['trees/one', 'trees/two']);
+      ).toEqual(['/trees/one', '/trees/two']);
     });
 
     it('names the worktrees themselves when they share no directory', () => {
@@ -109,7 +185,7 @@ describe('git worktrees', () => {
           a: ['libs/a', 'wt1/libs/a'],
           b: ['libs/b', 'nested/wt2/libs/b'],
         })!.ignoreTargets
-      ).toEqual(['wt1', 'nested/wt2']);
+      ).toEqual(['/wt1', '/nested/wt2']);
     });
 
     it('reports that ignoring them leaves duplicates the reader still owns', () => {

@@ -21,9 +21,17 @@ function readRecordedPath(file: string, base: string): string | null {
 /**
  * `<git-dir>/worktrees`, where git registers every linked worktree of the
  * repository `workspaceRoot` belongs to. Null when there is no `.git`, or when
- * it is a gitfile that names nothing. The directory it names is not checked -
+ * it is a gitfile that names nothing. The registry itself is not checked -
  * reading it is what tells us whether anything is registered.
  */
+function isDirectory(path: string): boolean {
+  try {
+    return statSync(path).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
 function worktreeRegistry(workspaceRoot: string): string | null {
   const dotGit = join(workspaceRoot, '.git');
 
@@ -41,9 +49,14 @@ function worktreeRegistry(workspaceRoot: string): string | null {
 
   // Running from inside a linked worktree lands on
   // `<main>/.git/worktrees/<name>`, whose `commondir` names the real git dir.
-  const commonDir =
-    readRecordedPath(join(gitDir, 'commondir'), gitDir) ?? gitDir;
-  return join(commonDir, 'worktrees');
+  // Followed only when it names a directory that is there: `commondir` is a
+  // path out of a file we did not write, and everything downstream reads
+  // whatever it points at.
+  const commonDir = readRecordedPath(join(gitDir, 'commondir'), gitDir);
+  return join(
+    commonDir && isDirectory(commonDir) ? commonDir : gitDir,
+    'worktrees'
+  );
 }
 
 /**
@@ -178,13 +191,26 @@ function ignoreTargetsFor(
   worktrees: string[]
 ): string[] {
   if (offending.length < 2) {
-    return offending;
+    return offending.map(anchored);
   }
 
   const parent = commonParent(offending);
-  return parent && holdsOnlyWorktrees(workspaceRoot, parent, worktrees)
-    ? [parent]
-    : offending;
+  return (
+    parent && holdsOnlyWorktrees(workspaceRoot, parent, worktrees)
+      ? [parent]
+      : offending
+  ).map(anchored);
+}
+
+/**
+ * A gitignore pattern rooted at the workspace rather than matched anywhere.
+ *
+ * Without the leading slash a single-segment path like `wt1` is a name, not a
+ * location - it would ignore every `wt1` at any depth. Applied to all of them
+ * so the emitted line reads the same way wherever it came from.
+ */
+function anchored(root: string): string {
+  return `/${root}`;
 }
 
 /**

@@ -12,7 +12,7 @@ import {
 } from './target-merging';
 import { validateProject } from './target-normalization';
 import { analyzeWorktreeConflicts } from '../../../utils/git-worktrees';
-import { workspaceRoot as workspaceRootDefault } from '../../../utils/workspace-root';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import { ProjectNameInNodePropsManager } from './name-substitution-manager';
 import type { ConfigurationSourceMaps, SourceInformation } from './source-maps';
 import {
@@ -231,8 +231,7 @@ export function mergeProjectConfigurationIntoRootMap(
 }
 
 export function readProjectConfigurationsFromRootMap(
-  projectRootMap: Record<string, ProjectConfiguration>,
-  workspaceRoot: string = workspaceRootDefault
+  projectRootMap: Record<string, ProjectConfiguration>
 ) {
   const projects: Record<string, ProjectConfiguration> = {};
   // If there are projects that have the same name, that is an error.
