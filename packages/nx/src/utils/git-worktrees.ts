@@ -18,13 +18,6 @@ function readRecordedPath(file: string, base: string): string | null {
   return raw ? resolve(base, raw) : null;
 }
 
-/**
- * `<git-dir>/worktrees`, where git registers every linked worktree of the
- * repository `workspaceRoot` belongs to - found by walking up, since the
- * workspace need not be the repository root. Null when there is no `.git`, or when
- * it is a gitfile that names nothing. The registry itself is not checked -
- * reading it is what tells us whether anything is registered.
- */
 function isDirectory(path: string): boolean {
   try {
     return statSync(path).isDirectory();
@@ -55,6 +48,13 @@ function findGitRoot(from: string): string | null {
   return current;
 }
 
+/**
+ * `<git-dir>/worktrees`, where git registers every linked worktree of the
+ * repository `workspaceRoot` belongs to - found by walking up, since the
+ * workspace need not be the repository root. Null when there is no `.git`, or
+ * when it is a gitfile that names nothing. The registry itself is not checked -
+ * reading it is what tells us whether anything is registered.
+ */
 function worktreeRegistry(workspaceRoot: string): string | null {
   const gitRoot = findGitRoot(workspaceRoot);
   if (!gitRoot) {
@@ -77,9 +77,9 @@ function worktreeRegistry(workspaceRoot: string): string | null {
 
   // Running from inside a linked worktree lands on
   // `<main>/.git/worktrees/<name>`, whose `commondir` names the real git dir.
-  // Followed only when it names a directory that is there: `commondir` is a
-  // path out of a file we did not write, and everything downstream reads
-  // whatever it points at.
+  // Ignored unless it names a directory that exists. That is a sanity check
+  // on a path out of a file we did not write, not a bound on where it may
+  // point - it can still name any directory on the machine.
   const commonDir = readRecordedPath(join(gitDir, 'commondir'), gitDir);
   return join(
     commonDir && isDirectory(commonDir) ? commonDir : gitDir,

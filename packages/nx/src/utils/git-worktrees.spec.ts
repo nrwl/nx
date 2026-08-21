@@ -51,6 +51,31 @@ describe('git worktrees', () => {
     });
   });
 
+  it('falls back to the git dir when commondir names something that is not a directory', () => {
+    // Pointing `commondir` at a file has to give a different answer from
+    // following it, or this pins nothing: following a file yields a
+    // `worktrees` path underneath it, which reads as empty either way. So the
+    // registration lives beside `commondir`, where only the fallback finds it.
+    const metadataDir = join(workspaceRoot, '.git', 'worktrees', 'self');
+    const notADirectory = join(workspaceRoot, '.git', 'not-a-dir');
+    mkdirSync(metadataDir, { recursive: true });
+    writeFileSync(notADirectory, 'x\n');
+    writeFileSync(join(metadataDir, 'commondir'), `${notADirectory}\n`);
+
+    // A workspace that is itself a linked worktree, so `commondir` is read.
+    const workspace = mkdtempSync(join(tmpdir(), 'nx-fallback-'));
+    writeFileSync(join(workspace, '.git'), `gitdir: ${metadataDir}\n`);
+
+    const checkout = join(workspace, 'nested', 'wt');
+    const innerMeta = join(metadataDir, 'worktrees', 'inner');
+    mkdirSync(innerMeta, { recursive: true });
+    mkdirSync(checkout, { recursive: true });
+    writeFileSync(join(innerMeta, 'gitdir'), `${join(checkout, '.git')}\n`);
+    writeFileSync(join(checkout, '.git'), `gitdir: ${innerMeta}\n`);
+
+    expect(nestedWorktreeRoots(workspace)).toEqual(['nested/wt']);
+  });
+
   describe('when the workspace sits below the git root', () => {
     // An Nx workspace nested in a larger repository is ordinary. Its worktrees
     // are registered against the repository, so looking only at
