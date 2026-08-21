@@ -91,8 +91,9 @@ With `false`, Nx skips that task and Playwright starts its own server inside eac
 If that `webServer` also sets a `port` or `url`, Nx infers an extra task, named
 `<targetName>--wait-for-webserver` (`e2e--wait-for-webserver` by default), that waits for the
 server to be ready.
-The atomized CI tasks share that task, unless they resolve a different address, in which case
-they get their own `<ciTargetName>--wait-for-webserver` task.
+The atomized CI tasks share that task when it would wait for the same servers, depend on the
+same serve tasks, and load the same env files.
+Otherwise they get their own `<ciTargetName>--wait-for-webserver` task.
 Playwright then finds the server already running and reuses it.
 
 The `webServerTimeout` option sets how long, in milliseconds, that task waits before failing.
