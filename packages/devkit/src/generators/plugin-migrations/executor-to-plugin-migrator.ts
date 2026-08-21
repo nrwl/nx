@@ -90,6 +90,13 @@ interface InferenceOptionSet<T> {
    */
   options: Partial<T>;
   targetNames: Set<string>;
+  /**
+   * Roots of the projects migrated under this option set. Phase 1 retains
+   * cloned inferred targets only for these roots (Phase 2 reads no others), so
+   * retention scales with the migrated projects instead of every inferred root
+   * times every option set.
+   */
+  migratedRoots: Set<string>;
 }
 
 interface ExecutorScope<T> {
@@ -229,6 +236,7 @@ export function collectMigrationScope<T>(
             id: optionSetGroupsByKey.size,
             options: inferenceOptions,
             targetNames: new Set(),
+            migratedRoots: new Set(),
           });
         }
         const optionSetGroup = optionSetGroupsByKey.get(key);
@@ -240,6 +248,9 @@ export function collectMigrationScope<T>(
         // option-set id and the registration options consistent even if a
         // mapper were impure.
         for (const project of projs) {
+          optionSetGroup.migratedRoots.add(
+            projectGraph.nodes[project].data.root
+          );
           pluginOptionsByProject.set(project, {
             ...(pluginOptionsByProject.get(project) ?? ({} as T)),
             ...inferenceOptions,
@@ -1291,6 +1302,14 @@ export async function inferOncePerOptionSet<T>(
           if (target.executor) {
             inferredExecutors.add(target.executor);
           }
+        }
+
+        // Retain clones only for this option set's migrated roots: Phase 2
+        // reads them for migrated (project, target) pairs alone, so keeping
+        // every inferred root would retain up to (option sets x roots) targets
+        // for nothing.
+        if (!group.migratedRoots.has(root)) {
+          continue;
         }
 
         for (const targetName of group.targetNames) {

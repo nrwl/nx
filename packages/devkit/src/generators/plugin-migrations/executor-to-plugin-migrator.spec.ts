@@ -497,6 +497,28 @@ describe('computeResidualByProject (Phase 2)', () => {
     expect(
       residualByProject.get('app2').get('build').baselineFinal.options.command
     ).toBe('acme-build-secondary');
+
+    // retention is scoped to each option set's migrated roots: every pass
+    // infers for every matched root, but only the roots migrated under the
+    // option set are kept
+    const primaryGroup = scope.optionSetGroups.find(
+      (group) => group.options.variant === 'primary'
+    );
+    const secondaryGroup = scope.optionSetGroups.find(
+      (group) => group.options.variant === 'secondary'
+    );
+    expect(
+      inferredTargetsByOptionSet.get(primaryGroup.id).get('app1')
+    ).toBeDefined();
+    expect(
+      inferredTargetsByOptionSet.get(primaryGroup.id).get('app2')
+    ).toBeUndefined();
+    expect(
+      inferredTargetsByOptionSet.get(secondaryGroup.id).get('app2')
+    ).toBeDefined();
+    expect(
+      inferredTargetsByOptionSet.get(secondaryGroup.id).get('app1')
+    ).toBeUndefined();
   });
 
   it('residual equals what a single-project migration writes into project.json', async () => {
