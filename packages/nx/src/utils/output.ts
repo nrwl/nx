@@ -32,12 +32,23 @@ export function isStaticOutputStyle(outputStyle: string | undefined): boolean {
  * Whether a run prints every task's output in full rather than collapsing the
  * ones that succeeded. Both static life cycles and the batch renderer have to
  * agree on this, so they read it from here rather than each deriving it.
+ *
+ * Collapsing is the behavior of one style only — the failures-only default. The
+ * static life cycles also serve `stream`, `stream-without-prefixes` and (in CI)
+ * `dynamic-legacy`, and every one of those is a style someone asked for
+ * explicitly, so none of them may quietly withhold output. Listing what
+ * collapses rather than what does not is also what keeps a newly added style
+ * from silently inheriting it.
  */
 export function printsFullTaskOutput(args: {
   verbose?: boolean;
   outputStyle?: string;
 }): boolean {
-  return !!args.verbose || args.outputStyle === 'static';
+  // An absent style resolves to the failures-only life cycle, so it collapses.
+  return (
+    !!args.verbose ||
+    (args.outputStyle ?? 'static-failures-only') !== 'static-failures-only'
+  );
 }
 
 /**
@@ -150,11 +161,21 @@ class CLIOutput {
    * not reliably end in a newline, so writers that must begin on a fresh line
    * ask for one via {@link ensureLineStart} rather than guessing.
    *
-   * Every write that can leave the cursor mid-line goes through
-   * {@link writeToStream}: this class's own, and a batch worker's live output
-   * via {@link writeTaskOutputChunk}. Forked task streaming bypasses this class
-   * but cannot invalidate the value, because `addPrefixTransformer` re-emits
-   * that output a whole line at a time and always ends on a line boundary.
+   * Holding that true means every writer that can leave the cursor mid-line has
+   * to go through this class. There are three, and only three:
+   *
+   * - This class's own writes, via {@link writeToStream}.
+   * - A batch worker's live output, via {@link writeTaskOutputChunk}.
+   * - `nx:run-commands`, which is the only executor that runs in the main
+   *   process (`task-orchestrator.ts` gates that on the executor name), and
+   *   whose raw writes go through {@link writeTaskOutputChunk} for this reason.
+   *   Its `addColorAndPrefix` splits on newlines without ever appending one, so
+   *   its chunks routinely end mid-line.
+   *
+   * Forked task streaming is the one bypass that is safe, and only because
+   * `addPrefixTransformer` re-emits that output a whole line at a time, always
+   * ending on a line boundary. Anything else writing to stdout during a run
+   * invalidates this and must be routed.
    */
   private atLineStart = true;
 

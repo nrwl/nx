@@ -443,6 +443,7 @@ describe('TaskOrchestrator', () => {
         ...args,
       };
       // Object.create bypasses field initializers.
+      orchestrator.batchFoldRenders = new Map();
       return orchestrator;
     }
 
@@ -675,6 +676,7 @@ describe('TaskOrchestrator', () => {
         },
       };
       // Object.create bypasses field initializers.
+      orchestrator.batchFoldRenders = new Map();
       orchestrator.stopRequested = stopRequested;
       orchestrator.projectGraph = {} as ProjectGraph;
       orchestrator.taskGraph = {
@@ -754,6 +756,22 @@ describe('TaskOrchestrator', () => {
       expect(out).toContain('gradle: still resolving dependencies');
       // The exit code just restates the cancellation.
       expect(out).not.toContain(EXIT_ERROR);
+    });
+
+    it('disambiguates two folds rendered for the same batch id', async () => {
+      // A batch that reports a strict subset of its tasks is re-run under the
+      // same id, so one id can render more than one fold.
+      const orchestrator = createOrchestrator('first pass', false);
+
+      const out = await captureStdout(async () => {
+        await orchestrator.runBatch(batch, {}, 0);
+        await orchestrator.runBatch(batch, {}, 0);
+      });
+
+      expect(out).toContain('batch @nx/gradle:batch 1');
+      expect(out).toContain('batch @nx/gradle:batch 1:2');
+      // Each task's redirect line has to name the fold it belongs to.
+      expect(out).toContain('(output in "batch @nx/gradle:batch 1:2" above)');
     });
 
     it('labels each fold with the batch it came from', async () => {
