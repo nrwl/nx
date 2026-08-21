@@ -42,21 +42,22 @@ const ranFor =
   (lines: string[]): boolean =>
     expected.every((e) => lines.includes(e));
 
-/** One NX_FILE_CHANGES batch carries every file in `expected`. */
-const batchedAll =
-  (expected: string[]) =>
-  (lines: string[]): boolean =>
-    lines.some((line) => expected.every((f) => line.split(' ').includes(f)));
-
-// '' when the watcher emitted nothing, so the assertion diffs readably instead of
-// throwing on undefined.
-function matchingBatch(lines: string[], expected: string[]): string {
-  return (
-    lines.find((line) => expected.every((f) => line.split(' ').includes(f))) ??
-    lines[0] ??
-    ''
-  );
+/** Unique paths across every NX_FILE_CHANGES batch, sorted. */
+function reportedFiles(lines: string[]): string[] {
+  return [
+    ...new Set(lines.flatMap((line) => line.split(' ')).filter(Boolean)),
+  ].sort();
 }
+
+// Across batches, not within one: the writes are 10ms apart and the watcher
+// coalesces on a 100ms idle window, so a loaded machine splits one burst into
+// several batches. Observed on CI as three.
+const receivedAll =
+  (expected: string[]) =>
+  (lines: string[]): boolean => {
+    const received = reportedFiles(lines);
+    return expected.every((e) => received.includes(e));
+  };
 
 // The parsed lines drop every NX-prefixed line, which is where `nx watch`
 // reports errors. Keep the raw stream so afterEach can show it.
@@ -157,10 +158,9 @@ describe('Nx Watch', () => {
       `libs/${proj1}/newfile2.txt`,
       `libs/${proj2}/newfile.txt`,
     ];
-    const lines = await getOutput(batchedAll(expected));
-    let results = matchingBatch(lines, expected).split(' ').sort();
+    const lines = await getOutput(receivedAll(expected));
 
-    expect(results).toEqual(expected);
+    expect(reportedFiles(lines)).toEqual([...expected].sort());
   }, 50000);
 
   it('should watch for global workspace file changes', async () => {
@@ -178,10 +178,9 @@ describe('Nx Watch', () => {
       `libs/${proj2}/newfile.txt`,
       'newfile2.txt',
     ];
-    const lines = await getOutput(batchedAll(expected));
-    let results = matchingBatch(lines, expected).split(' ').sort();
+    const lines = await getOutput(receivedAll(expected));
 
-    expect(results).toEqual(expected);
+    expect(reportedFiles(lines)).toEqual([...expected].sort());
   }, 50000);
 
   it('should watch selected projects only', async () => {
@@ -236,10 +235,11 @@ describe('Nx Watch', () => {
     );
 
     const expected = [`libs/${proj1}/src/newsubdir/newfile.ts`];
-    const lines = await getOutput(batchedAll(expected));
-    let results = matchingBatch(lines, expected).split(' ').sort();
+    const lines = await getOutput(receivedAll(expected));
 
-    expect(results).toContain(`libs/${proj1}/src/newsubdir/newfile.ts`);
+    expect(reportedFiles(lines)).toContain(
+      `libs/${proj1}/src/newsubdir/newfile.ts`
+    );
   }, 50000);
 
   it('should reconnect after daemon restart', async () => {
@@ -304,13 +304,16 @@ function createGetOutput(
       await wait(50);
     }
 
+    // Sampled before the kill below, which would otherwise set `exited` too and
+    // make every timeout look like the process had died on its own.
+    const exitedOnItsOwn = exited;
     if (!exited) {
       await wait(settleMs);
       treeKill(p.pid);
     }
     await closed;
 
-    if (exited && !until(lines())) {
+    if (exitedOnItsOwn && !until(lines())) {
       // `nx watch` exits on a fatal daemon error. Reporting that beats letting
       // the caller assert on an empty array and show `Received: []`.
       throw new Error(
