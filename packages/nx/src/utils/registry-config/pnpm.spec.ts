@@ -2498,7 +2498,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
         );
         process.env.NX_TEST_TOKEN = 'a-token';
         // 11.5.2 expands it, so pnpm sends the same credential npm does.
-        expect((await warnFor('11.5.2'))).not.toHaveBeenCalled();
+        expect(await warnFor('11.5.2')).not.toHaveBeenCalled();
         expect((await warnFor('11.5.3')).mock.calls[0][0]).toMatch(
           /npm will send the credential your .npmrc holds for \/\/reg-a.example.com\/ .*pnpm would not send it/s
         );
@@ -2532,14 +2532,14 @@ describe('getPnpmSpawnRegistryEnv', () => {
           join(root, '.npmrc'),
           '//reg-a.example.com/:_authToken=a-token\n'
         );
-        expect((await warnFor('11.5.3'))).not.toHaveBeenCalled();
-        expect((await warnFor('10.16.0'))).not.toHaveBeenCalled();
+        expect(await warnFor('11.5.3')).not.toHaveBeenCalled();
+        expect(await warnFor('10.16.0')).not.toHaveBeenCalled();
       });
 
       it('stays quiet for an ambient credential the 10.x line reads for itself', async () => {
         writeYaml('registries:\n  default: https://reg-a.example.com/\n');
         process.env['npm_config_//reg-a.example.com/:_authToken'] = 'env-token';
-        expect((await warnFor('10.16.0'))).not.toHaveBeenCalled();
+        expect(await warnFor('10.16.0')).not.toHaveBeenCalled();
       });
 
       it('stays quiet where npm resolved the registry for itself', async () => {
@@ -2549,7 +2549,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
           join(root, '.npmrc'),
           'registry=https://reg-a.example.com/\n//reg-a.example.com/:_authToken=a-token\n'
         );
-        expect((await warnFor('11.5.3'))).not.toHaveBeenCalled();
+        expect(await warnFor('11.5.3')).not.toHaveBeenCalled();
       });
     });
 
@@ -2587,7 +2587,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
         writeUserConfig(
           '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token'
         );
-        const warn = (await warnFor());
+        const warn = await warnFor();
         expect(warn).toHaveBeenCalledTimes(1);
         expect(warn.mock.calls[0][0]).toContain('//reg-a.example.com/');
         expect(warn.mock.calls[0][0]).not.toContain('get-token');
@@ -2615,7 +2615,9 @@ describe('getPnpmSpawnRegistryEnv', () => {
             'tokenHelper=/usr/local/bin/get-token',
           ].join('\n')
         );
-        expect((await warnFor()).mock.calls[0][0]).toContain('//reg-a.example.com/');
+        expect((await warnFor()).mock.calls[0][0]).toContain(
+          '//reg-a.example.com/'
+        );
       });
 
       it('stays quiet when an unscoped helper is pinned elsewhere', async () => {
@@ -2626,7 +2628,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
             'tokenHelper=/usr/local/bin/get-token',
           ].join('\n')
         );
-        expect((await warnFor())).not.toHaveBeenCalled();
+        expect(await warnFor()).not.toHaveBeenCalled();
       });
 
       it('leaves an unscoped helper on npmjs when its file names no registry', async () => {
@@ -2635,7 +2637,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
         // the same line to the registry that wins overall instead.
         writeYaml('registries:\n  default: https://reg-a.example.com/\n');
         writeUserConfig('tokenHelper=/usr/local/bin/get-token');
-        expect((await warnFor())).not.toHaveBeenCalled();
+        expect(await warnFor()).not.toHaveBeenCalled();
       });
 
       it('keeps the overall-registry pin until rescoping arrives in 11.4.0', async () => {
@@ -2659,13 +2661,13 @@ describe('getPnpmSpawnRegistryEnv', () => {
         writeUserConfig(
           '//reg-other.example.com/:tokenHelper=/usr/local/bin/get-token'
         );
-        expect((await warnFor())).not.toHaveBeenCalled();
+        expect(await warnFor()).not.toHaveBeenCalled();
       });
 
       it('stays quiet when a helper reference expands to nothing', async () => {
         writeYaml('registries:\n  default: https://reg-a.example.com/\n');
         writeUserConfig('//reg-a.example.com/:tokenHelper=${PNPM_TEST_HELPER}');
-        expect((await warnFor())).not.toHaveBeenCalled();
+        expect(await warnFor()).not.toHaveBeenCalled();
       });
 
       it('stays quiet when a plain credential sits beside the helper in a file npm reads', async () => {
@@ -2676,7 +2678,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
             '//reg-a.example.com/:_authToken=user-token',
           ].join('\n')
         );
-        expect((await warnFor())).not.toHaveBeenCalled();
+        expect(await warnFor()).not.toHaveBeenCalled();
       });
 
       it('reports the helper when that same file is one only pnpm reads', async () => {
@@ -2684,7 +2686,9 @@ describe('getPnpmSpawnRegistryEnv', () => {
         writePnpmOnlyUserConfig(
           '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token'
         );
-        expect((await warnFor()).mock.calls[0][0]).toContain('//reg-a.example.com/');
+        expect((await warnFor()).mock.calls[0][0]).toContain(
+          '//reg-a.example.com/'
+        );
       });
 
       it('stays quiet about a helper whose file also carries a plain credential npm can be handed', async () => {
@@ -2697,7 +2701,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
             '//reg-a.example.com/:_authToken=user-token',
           ].join('\n')
         );
-        expect((await warnFor())).not.toHaveBeenCalled();
+        expect(await warnFor()).not.toHaveBeenCalled();
       });
 
       it('follows npmrcAuthFile from the global config.yaml', async () => {
@@ -2712,7 +2716,9 @@ describe('getPnpmSpawnRegistryEnv', () => {
           `npmrcAuthFile: ${path}\n`
         );
         writeYaml('registries:\n  default: https://reg-a.example.com/\n');
-        expect((await warnFor()).mock.calls[0][0]).toContain('//reg-a.example.com/');
+        expect((await warnFor()).mock.calls[0][0]).toContain(
+          '//reg-a.example.com/'
+        );
       });
 
       it('stays quiet when the project .npmrc authenticates that registry anyway', async () => {
@@ -2724,7 +2730,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
         writeUserConfig(
           '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token'
         );
-        expect((await warnFor())).not.toHaveBeenCalled();
+        expect(await warnFor()).not.toHaveBeenCalled();
       });
 
       it('stays quiet about a helper in auth.ini, which pnpm refuses to run', async () => {
@@ -2734,7 +2740,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
             '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token',
           ].join('\n')
         );
-        expect((await warnFor())).not.toHaveBeenCalled();
+        expect(await warnFor()).not.toHaveBeenCalled();
       });
 
       it('resolves a relative auth-file path against the config root', async () => {
@@ -2746,7 +2752,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
           '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token'
         );
         process.env.PNPM_CONFIG_NPMRC_AUTH_FILE = 'pnpm-auth.npmrc';
-        const warn = (await warnFor());
+        const warn = await warnFor();
         expect(warn).toHaveBeenCalledTimes(1);
         expect(warn.mock.calls[0][0]).toContain('//reg-a.example.com/');
       });
@@ -2759,7 +2765,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
           '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token'
         );
         process.env['npm_config_//reg-a.example.com/:_authToken'] = 'env-token';
-        const warn = (await warnFor());
+        const warn = await warnFor();
         expect(warn).toHaveBeenCalledTimes(1);
         expect(warn.mock.calls[0][0]).toContain('//reg-a.example.com/');
       });
@@ -2771,7 +2777,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
         writePnpmOnlyUserConfig(
           '//${NX_TEST_HOST}/:tokenHelper=/usr/local/bin/get-token'
         );
-        const warn = (await warnFor());
+        const warn = await warnFor();
         expect(warn).toHaveBeenCalledTimes(1);
         expect(warn.mock.calls[0][0]).toContain('//reg-a.example.com/');
       });
@@ -2787,7 +2793,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
           join(root, '.npmrc'),
           '//${NX_TEST_HOST}/:_authToken=project-token'
         );
-        expect((await warnFor())).not.toHaveBeenCalled();
+        expect(await warnFor()).not.toHaveBeenCalled();
       });
 
       it('lets a later env-keyed registry override an earlier literal one', async () => {
@@ -2803,7 +2809,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
         writePnpmOnlyUserConfig(
           '//reg-b.example.com/:tokenHelper=/usr/local/bin/get-token'
         );
-        const warn = (await warnFor('@nx-test/pkg'));
+        const warn = await warnFor('@nx-test/pkg');
         expect(warn).toHaveBeenCalledTimes(1);
         expect(warn.mock.calls[0][0]).toContain('//reg-b.example.com/');
       });
@@ -2820,7 +2826,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
         writePnpmOnlyUserConfig(
           '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token'
         );
-        const warn = (await warnFor('@nx-test/pkg'));
+        const warn = await warnFor('@nx-test/pkg');
         expect(warn).toHaveBeenCalledTimes(1);
         expect(warn.mock.calls[0][0]).toContain('//reg-a.example.com/');
       });

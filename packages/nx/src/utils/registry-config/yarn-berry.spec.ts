@@ -1095,19 +1095,19 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     };
 
     it('reports a global enableNetwork once', async () => {
-      const messages = (await warnOnce(
+      const messages = await warnOnce(
         [
           'npmRegistryServer: https://reg-a.example.com/',
           'enableNetwork: false',
         ].join('\n'),
         ['4.16.0', '4.16.0']
-      ));
+      );
       expect(messages).toHaveLength(1);
       expect(messages[0]).toContain('reg-a.example.com');
     });
 
     it('reports a per-host enableNetwork for the registry it resolved', async () => {
-      const messages = (await warnOnce(
+      const messages = await warnOnce(
         [
           'npmRegistryServer: https://reg-a.example.com/',
           'networkSettings:',
@@ -1115,13 +1115,13 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
           '    enableNetwork: false',
         ].join('\n'),
         ['4.16.0']
-      ));
+      );
       expect(messages).toHaveLength(1);
       expect(messages[0]).toContain('reg-a.example.com');
     });
 
     it('stays quiet when another host is the one cut off', async () => {
-      const messages = (await warnOnce(
+      const messages = await warnOnce(
         [
           'npmRegistryServer: https://reg-a.example.com/',
           'networkSettings:',
@@ -1129,12 +1129,12 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
           '    enableNetwork: false',
         ].join('\n'),
         ['4.16.0']
-      ));
+      );
       expect(messages).toEqual([]);
     });
 
     it('lets a per-host entry re-enable the network globally turned off', async () => {
-      const messages = (await warnOnce(
+      const messages = await warnOnce(
         [
           'npmRegistryServer: https://reg-a.example.com/',
           'enableNetwork: false',
@@ -1143,16 +1143,16 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
           '    enableNetwork: true',
         ].join('\n'),
         ['4.16.0']
-      ));
+      );
       expect(messages).toEqual([]);
     });
 
     it('reports the env var too', async () => {
       process.env.YARN_ENABLE_NETWORK = 'false';
-      const messages = (await warnOnce(
+      const messages = await warnOnce(
         'npmRegistryServer: https://reg-a.example.com/\n',
         ['4.16.0']
-      ));
+      );
       expect(messages).toHaveLength(1);
     });
   });
@@ -1256,14 +1256,14 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     });
 
     it('warns once when npm authenticates on a registry berry resolved', async () => {
-      const warnings = (await warnFor(['is-even', 'is-odd']));
+      const warnings = await warnFor(['is-even', 'is-odd']);
       expect(warnings).toHaveLength(1);
       expect(warnings[0]).toContain('//reg-a.example.com/');
       expect(warnings[0]).toContain('Remove that credential from .npmrc');
     });
 
     it('warns for a scoped fetch too, since berry still reads no .npmrc', async () => {
-      expect((await warnFor(['@acme/pkg']))).toHaveLength(1);
+      expect(await warnFor(['@acme/pkg'])).toHaveLength(1);
     });
 
     it('stays quiet when berry supplies the credential itself', async () => {
@@ -1276,13 +1276,13 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
           'npmAlwaysAuth: true',
         ].join('\n') + '\n'
       );
-      expect((await warnFor(['is-even']))).toEqual([]);
+      expect(await warnFor(['is-even'])).toEqual([]);
     });
 
     it('stays quiet when the .npmrc holds nothing for that registry', async () => {
       files[`${ROOT}/.npmrc`] =
         '//other.example.com/:_authToken=native-token\n';
-      expect((await warnFor(['is-even']))).toEqual([]);
+      expect(await warnFor(['is-even'])).toEqual([]);
     });
 
     it('does not count an ambient credential the berry spawn strips', async () => {
@@ -1291,7 +1291,7 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
       files[`${ROOT}/.npmrc`] =
         '//other.example.com/:_authToken=native-token\n';
       process.env['npm_config_//reg-a.example.com/:_authToken'] = 'env-token';
-      expect((await warnFor(['is-even']))).toEqual([]);
+      expect(await warnFor(['is-even'])).toEqual([]);
     });
 
     it('stays quiet on a registry path npm darts below the directory it sits in', async () => {
@@ -1306,7 +1306,7 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
       );
       files[`${ROOT}/.npmrc`] =
         '//reg-a.example.com/npm/:_authToken=native-token\n';
-      expect((await warnFor(['is-even']))).toEqual([]);
+      expect(await warnFor(['is-even'])).toEqual([]);
     });
 
     it('stays quiet when berry authenticates with a client certificate', async () => {
@@ -1321,14 +1321,14 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
       );
       files[`${ROOT}/.npmrc`] =
         '//reg-a.example.com/npm/:_authToken=native-token\n';
-      expect((await warnFor(['is-even']))).toEqual([]);
+      expect(await warnFor(['is-even'])).toEqual([]);
     });
 
     it('counts a native credential whose key holds an env reference', async () => {
       // npm expands ${VAR} in an .npmrc key, so this token authenticates reg-a.
       process.env.NX_TEST_HOST = 'reg-a.example.com';
       files[`${ROOT}/.npmrc`] = '//${NX_TEST_HOST}/:_authToken=native-token\n';
-      const warnings = (await warnFor(['is-even']));
+      const warnings = await warnFor(['is-even']);
       expect(warnings).toHaveLength(1);
       expect(warnings[0]).toContain('//reg-a.example.com/');
     });

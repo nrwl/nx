@@ -4,7 +4,9 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { join } from 'path';
 // getRunner loads the runner with a bare require, so compare against the
 // instance from the same channel rather than the vite-imported copy.
-const { nxCloudTasksRunnerShell } = require('../nx-cloud/nx-cloud-tasks-runner-shell');
+const {
+  nxCloudTasksRunnerShell,
+} = require('../nx-cloud/nx-cloud-tasks-runner-shell');
 import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
 
 describe('getRunner', () => {

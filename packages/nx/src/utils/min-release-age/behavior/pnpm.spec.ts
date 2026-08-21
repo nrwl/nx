@@ -542,14 +542,12 @@ describe('pnpm min-release-age behavior', () => {
     // emits. An exclude array mirrors a yaml surface, a comma-joined string
     // mirrors .npmrc / env. pnpm itself decides which surface won.
     async function mockPnpmConfig(config: Record<string, unknown> | 'throw') {
-      vi.mocked(cpExecSync).mockImplementation(
-        () => {
-          if (config === 'throw') {
-            throw new Error('pnpm config list failed');
-          }
-          return JSON.stringify(config);
+      vi.mocked(cpExecSync).mockImplementation(() => {
+        if (config === 'throw') {
+          throw new Error('pnpm config list failed');
         }
-      );
+        return JSON.stringify(config);
+      });
     }
 
     function pnpmBehavior(behavior: PmMinReleaseAgeBehavior) {
@@ -570,19 +568,19 @@ describe('pnpm min-release-age behavior', () => {
     });
 
     it('unable to read pnpm config -> ambiguous (defer to install)', async () => {
-      (await mockPnpmConfig('throw'));
+      await mockPnpmConfig('throw');
       const result = await readPnpmPolicy('/root', '10.16.0');
       expect(result.outcome).toBe('ambiguous');
     });
 
     it('v10 no cooldown configured -> inactive', async () => {
-      (await mockPnpmConfig({}));
+      await mockPnpmConfig({});
       const result = await readPnpmPolicy('/root', '10.16.0');
       expect(result.outcome).toBe('inactive');
     });
 
     it('v10 window -> active strict', async () => {
-      (await mockPnpmConfig({ 'minimum-release-age': 1440 }));
+      await mockPnpmConfig({ 'minimum-release-age': 1440 });
       const result = await readPnpmPolicy('/root', '10.16.0');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
@@ -595,19 +593,19 @@ describe('pnpm min-release-age behavior', () => {
     });
 
     it('zero window -> inactive', async () => {
-      (await mockPnpmConfig({ 'minimum-release-age': 0 }));
+      await mockPnpmConfig({ 'minimum-release-age': 0 });
       const result = await readPnpmPolicy('/root', '10.16.0');
       expect(result.outcome).toBe('inactive');
     });
 
     it('negative window -> inactive', async () => {
-      (await mockPnpmConfig({ 'minimum-release-age': -10 }));
+      await mockPnpmConfig({ 'minimum-release-age': -10 });
       const result = await readPnpmPolicy('/root', '10.16.0');
       expect(result.outcome).toBe('inactive');
     });
 
     it('v11 no explicit window -> active loose default 1440', async () => {
-      (await mockPnpmConfig({}));
+      await mockPnpmConfig({});
       const result = await readPnpmPolicy('/root', '11.0.0');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
@@ -624,7 +622,7 @@ describe('pnpm min-release-age behavior', () => {
     it.each(['11.0.4', '11.1.3', '11.5.2'])(
       'v%s built-in default window stays loose (no strict auto-on)',
       async (version) => {
-        (await mockPnpmConfig({}));
+        await mockPnpmConfig({});
         const result = await readPnpmPolicy('/root', version);
         expect(result.outcome).toBe('active');
         if (result.outcome === 'active') {
@@ -637,7 +635,7 @@ describe('pnpm min-release-age behavior', () => {
     );
 
     it('v11 >=11.0.4 explicit window auto-enables strict', async () => {
-      (await mockPnpmConfig({ minimumReleaseAge: 2880 }));
+      await mockPnpmConfig({ minimumReleaseAge: 2880 });
       const result = await readPnpmPolicy('/root', '11.0.4');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
@@ -648,10 +646,10 @@ describe('pnpm min-release-age behavior', () => {
     });
 
     it('v11 >=11.0.4 explicit strict:false stays loose', async () => {
-      (await mockPnpmConfig({
+      await mockPnpmConfig({
         minimumReleaseAge: 2880,
         minimumReleaseAgeStrict: false,
-      }));
+      });
       const result = await readPnpmPolicy('/root', '11.0.4');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
@@ -660,7 +658,7 @@ describe('pnpm min-release-age behavior', () => {
     });
 
     it('v11.0.0 explicit window does NOT auto-enable strict', async () => {
-      (await mockPnpmConfig({ minimumReleaseAge: 2880 }));
+      await mockPnpmConfig({ minimumReleaseAge: 2880 });
       const result = await readPnpmPolicy('/root', '11.0.0');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
@@ -669,7 +667,7 @@ describe('pnpm min-release-age behavior', () => {
     });
 
     it('v11.1.3+ writesExcludes true', async () => {
-      (await mockPnpmConfig({ minimumReleaseAge: 1440 }));
+      await mockPnpmConfig({ minimumReleaseAge: 1440 });
       const result = await readPnpmPolicy('/root', '11.1.3');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
@@ -678,7 +676,7 @@ describe('pnpm min-release-age behavior', () => {
     });
 
     it('v11.1.2 writesExcludes false', async () => {
-      (await mockPnpmConfig({ minimumReleaseAge: 1440 }));
+      await mockPnpmConfig({ minimumReleaseAge: 1440 });
       const result = await readPnpmPolicy('/root', '11.1.2');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
@@ -688,10 +686,10 @@ describe('pnpm min-release-age behavior', () => {
 
     // pnpm reports the resolved exclude as a JSON array (set in a yaml surface).
     it('honors an exclude array from pnpm config', async () => {
-      (await mockPnpmConfig({
+      await mockPnpmConfig({
         minimumReleaseAge: 1440,
         minimumReleaseAgeExclude: ['pkg-a', 'pkg-b'],
-      }));
+      });
       const result = await readPnpmPolicy('/root', '11.5.2');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
@@ -704,10 +702,10 @@ describe('pnpm min-release-age behavior', () => {
     // pnpm reports the resolved exclude as a comma-joined string (set via
     // .npmrc / env). This is the ocean case: `minimum-release-age-exclude=nx,@nx/*`.
     it('honors a comma-joined exclude string from pnpm config', async () => {
-      (await mockPnpmConfig({
+      await mockPnpmConfig({
         'minimum-release-age': 10080,
         'minimum-release-age-exclude': 'nx,@nx/*',
-      }));
+      });
       const result = await readPnpmPolicy('/root', '10.26.1');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
@@ -720,16 +718,16 @@ describe('pnpm min-release-age behavior', () => {
     // An entry pnpm's version-policy grammar rejects (a range in a version
     // union) is a version-dependent landmine; nx defers rather than crash.
     it('invalid exclude entry -> ambiguous (defer to install)', async () => {
-      (await mockPnpmConfig({
+      await mockPnpmConfig({
         minimumReleaseAge: 1440,
         minimumReleaseAgeExclude: ['pkg-a@^1.0.0'],
-      }));
+      });
       const result = await readPnpmPolicy('/root', '11.5.2');
       expect(result.outcome).toBe('ambiguous');
     });
 
     it('v11 ignoreMissingTime defaults to skip; explicit false errors', async () => {
-      (await mockPnpmConfig({ minimumReleaseAge: 1440 }));
+      await mockPnpmConfig({ minimumReleaseAge: 1440 });
       let result = await readPnpmPolicy('/root', '11.5.2');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
@@ -738,10 +736,10 @@ describe('pnpm min-release-age behavior', () => {
         );
       }
 
-      (await mockPnpmConfig({
+      await mockPnpmConfig({
         minimumReleaseAge: 1440,
         minimumReleaseAgeIgnoreMissingTime: false,
-      }));
+      });
       result = await readPnpmPolicy('/root', '11.5.2');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
@@ -756,7 +754,7 @@ describe('pnpm min-release-age behavior', () => {
     // explicitly-set value on pnpm 11, so the window fell back to the built-in
     // 1440 default (gh-36330).
     it('honors a camelCase window from pnpm 11 (auto-enables strict)', async () => {
-      (await mockPnpmConfig({ minimumReleaseAge: 60 }));
+      await mockPnpmConfig({ minimumReleaseAge: 60 });
       const result = await readPnpmPolicy('/root', '11.13.0');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
@@ -768,12 +766,12 @@ describe('pnpm min-release-age behavior', () => {
     });
 
     it('honors camelCase exclude, strict, and ignoreMissingTime from pnpm 11', async () => {
-      (await mockPnpmConfig({
+      await mockPnpmConfig({
         minimumReleaseAge: 2880,
         minimumReleaseAgeExclude: ['pkg-a'],
         minimumReleaseAgeStrict: false,
         minimumReleaseAgeIgnoreMissingTime: false,
-      }));
+      });
       const result = await readPnpmPolicy('/root', '11.13.0');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {

@@ -1805,7 +1805,7 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     });
 
     it('warns once when npm authenticates on a bridged registry yarn would not', async () => {
-      const warnings = (await warnFor(['is-even', 'is-odd']));
+      const warnings = await warnFor(['is-even', 'is-odd']);
       expect(warnings).toHaveLength(1);
       expect(warnings[0]).toContain('//reg-y.example.com/');
       expect(warnings[0]).toContain('yarn would not send it');
@@ -1817,11 +1817,11 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
 
     it('stays quiet when always-auth makes yarn send the same credential', async () => {
       files[`${ROOT}/.npmrc`] += 'always-auth=true\n';
-      expect((await warnFor(['is-even']))).toEqual([]);
+      expect(await warnFor(['is-even'])).toEqual([]);
     });
 
     it('stays quiet for a scoped fetch, which yarn authenticates', async () => {
-      expect((await warnFor(['@acme/pkg']))).toEqual([]);
+      expect(await warnFor(['@acme/pkg'])).toEqual([]);
     });
 
     it('stays quiet when no registry was bridged', async () => {
@@ -1830,14 +1830,14 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       delete files[`${ROOT}/.yarnrc`];
       files[`${ROOT}/.npmrc`] =
         'registry=https://reg-y.example.com/\n//reg-y.example.com/:_authToken=native-token\n';
-      expect((await warnFor(['is-even']))).toEqual([]);
+      expect(await warnFor(['is-even'])).toEqual([]);
     });
 
     it('stays quiet when the credential sits in a file npm cannot read', async () => {
       files[`${ROOT}/.npmrc`] = '';
       files['/repo/.npmrc'] =
         '//reg-y.example.com/:_authToken=ancestor-token\n';
-      expect((await warnFor(['is-even']))).toEqual([]);
+      expect(await warnFor(['is-even'])).toEqual([]);
     });
 
     it('follows npm up the registry path to a credential darted at the host', async () => {
@@ -1845,7 +1845,7 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
         'registry "https://reg-y.example.com/artifactory/api/npm/repo/"\n';
       files[`${ROOT}/.npmrc`] =
         '//reg-y.example.com/:_authToken=native-token\n';
-      expect((await warnFor(['is-even']))).toHaveLength(1);
+      expect(await warnFor(['is-even'])).toHaveLength(1);
     });
 
     it.each([
@@ -1856,7 +1856,7 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       ],
     ])('recognizes a credential held as %s', async (_form, npmrc) => {
       files[`${ROOT}/.npmrc`] = `${npmrc}\n`;
-      expect((await warnFor(['is-even']))).toHaveLength(1);
+      expect(await warnFor(['is-even'])).toHaveLength(1);
     });
   });
 });

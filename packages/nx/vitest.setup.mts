@@ -42,6 +42,12 @@ const nxSrcPath = (relative: string) => {
 process.env.NX_DAEMON = 'false';
 delete process.env.npm_config_user_agent;
 
+// nx:run-commands injects FORCE_COLOR=true, which would put ANSI codes into
+// snapshotted error output; snapshots are recorded colorless, so pin color
+// detection off regardless of how the suite is invoked.
+delete process.env.FORCE_COLOR;
+process.env.NO_COLOR = '1';
+
 // Guard: nothing in a unit test may write the real repo's nx.json. Surfaces
 // the offending test with a stack instead of silently clobbering the file.
 {
@@ -55,7 +61,10 @@ delete process.env.npm_config_user_agent;
   const guard = (name: 'writeFileSync' | 'writeFile') => {
     const orig: any = cjsFs[name];
     cjsFs[name] = function (target: any, ...rest: any[]) {
-      if (typeof target === 'string' && guardedTargets.has(path.resolve(target))) {
+      if (
+        typeof target === 'string' &&
+        guardedTargets.has(path.resolve(target))
+      ) {
         throw new Error(
           `[vitest-setup] A test attempted to ${name} the real workspace file ${target}`
         );
@@ -140,8 +149,9 @@ vi.doMock(workspaceContextPath, async () => {
       'globWithWorkspaceContextSync',
       () => []
     ),
-    multiGlobWithWorkspaceContext: guarded('multiGlobWithWorkspaceContext', () =>
-      Promise.resolve([])
+    multiGlobWithWorkspaceContext: guarded(
+      'multiGlobWithWorkspaceContext',
+      () => Promise.resolve([])
     ),
     hashWithWorkspaceContext: guarded('hashWithWorkspaceContext', () =>
       Promise.resolve('0')
