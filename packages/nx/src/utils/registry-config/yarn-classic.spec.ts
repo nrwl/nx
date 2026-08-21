@@ -1785,17 +1785,16 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
   describe('reporting a credential yarn would not send', () => {
     // The overlay cannot stop npm reading the same .npmrc, so npm authenticates
     // on a registry yarn resolved but would have queried anonymously.
-    const warnFor = (packages: string[]): string[] => {
+    const warnFor = async (packages: string[]): string[] => {
       const { logger } = require('../logger');
       (logger.warn as jest.Mock).mockClear();
-      jest.isolateModules(() => {
-        const {
-          getYarnClassicSpawnRegistryEnv: fresh,
-        } = require('./yarn-classic');
-        for (const pkg of packages) {
-          fresh(pkg, ROOT);
-        }
-      });
+      vi.resetModules();
+      const { getYarnClassicSpawnRegistryEnv: fresh } = await import(
+        './yarn-classic'
+      );
+      for (const pkg of packages) {
+        fresh(pkg, ROOT);
+      }
       return (logger.warn as jest.Mock).mock.calls.map((call) => call[0]);
     };
 

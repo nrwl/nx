@@ -65,11 +65,10 @@ describe('isNativeStripPreferred', () => {
     });
   }
 
-  function loadIsNativeStripPreferred(): boolean {
+  async function loadIsNativeStripPreferred(): boolean {
     let result: boolean;
-    jest.isolateModules(() => {
-      result = require('./register').isNativeStripPreferred();
-    });
+    vi.resetModules();
+    result = (await import('./register')).isNativeStripPreferred();
     return result;
   }
 
@@ -112,34 +111,34 @@ describe('isNativeStripPreferred', () => {
 
 describe('getTranspiler', () => {
   // TS6 requires the suppression flag to avoid hard-erroring on deprecated options.
-  it('sets ignoreDeprecations to "6.0" on TypeScript >= 6', () => {
-    jest.isolateModules(() => {
-      vi.doMock('typescript', async () => ({
-        ...(await vi.importActual('typescript')),
-        versionMajorMinor: '6.0',
-      }));
-      const { getTranspiler: fresh } =
-        require('./register') as typeof import('./register');
-      const opts: CompilerOptions = {};
-      fresh(opts);
-      expect(opts.ignoreDeprecations).toEqual('6.0');
-    });
+  it('sets ignoreDeprecations to "6.0" on TypeScript >= 6', async () => {
+    vi.resetModules();
+    vi.doMock('typescript', async () => ({
+      ...(await vi.importActual('typescript')),
+      versionMajorMinor: '6.0',
+    }));
+    const { getTranspiler: fresh } = (await import(
+      './register'
+    )) as typeof import('./register');
+    const opts: CompilerOptions = {};
+    fresh(opts);
+    expect(opts.ignoreDeprecations).toEqual('6.0');
     vi.unmock('typescript');
   });
 
   // TS5 rejects the '6.0' value (TS5103) so the option must stay absent.
-  it('leaves ignoreDeprecations unset on TypeScript < 6', () => {
-    jest.isolateModules(() => {
-      vi.doMock('typescript', async () => ({
-        ...(await vi.importActual('typescript')),
-        versionMajorMinor: '5.9',
-      }));
-      const { getTranspiler: fresh } =
-        require('./register') as typeof import('./register');
-      const opts: CompilerOptions = {};
-      fresh(opts);
-      expect(opts.ignoreDeprecations).toBeUndefined();
-    });
+  it('leaves ignoreDeprecations unset on TypeScript < 6', async () => {
+    vi.resetModules();
+    vi.doMock('typescript', async () => ({
+      ...(await vi.importActual('typescript')),
+      versionMajorMinor: '5.9',
+    }));
+    const { getTranspiler: fresh } = (await import(
+      './register'
+    )) as typeof import('./register');
+    const opts: CompilerOptions = {};
+    fresh(opts);
+    expect(opts.ignoreDeprecations).toBeUndefined();
     vi.unmock('typescript');
   });
 });

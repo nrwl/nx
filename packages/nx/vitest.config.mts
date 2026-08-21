@@ -35,6 +35,12 @@ export default defineConfig({
     // Match the jest-resolver.js behavior: prefer local TS source for nx's
     // own exports map.
     conditions: ['@nx/nx-source'],
+    // Deep imports like nx/src/... and nx/bin/... aren't in the exports map;
+    // the jest resolver allowed them, so map them straight to source.
+    alias: [
+      { find: /^nx\/src\/(.*)$/, replacement: `${import.meta.dirname}/src/$1` },
+      { find: /^nx\/bin\/(.*)$/, replacement: `${import.meta.dirname}/bin/$1` },
+    ],
   },
   test: {
     watch: false,

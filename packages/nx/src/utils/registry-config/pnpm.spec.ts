@@ -439,7 +439,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
     });
 
-    it('reports no token helper from a user config pnpm drops that way', () => {
+    it('reports no token helper from a user config pnpm drops that way', async () => {
       // pnpm never gets the helper out of the file, so there is no credential
       // npm is missing.
       const { logger } = require('../logger');
@@ -448,10 +448,9 @@ describe('getPnpmSpawnRegistryEnv', () => {
       writeUserConfig(
         '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token\ncafile=${NX_TEST_HOST}/ca.pem'
       );
-      jest.isolateModules(() => {
-        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-        fresh('is-even', root, '10.16.0');
-      });
+      vi.resetModules();
+      const { getPnpmSpawnRegistryEnv: fresh } = await import('./pnpm');
+      fresh('is-even', root, '10.16.0');
       expect(logger.warn).not.toHaveBeenCalled();
     });
 
@@ -528,7 +527,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
 
     // getAuthHeadersFromConfig reads a tokenHelper from userSettings only. With
     // no auth.ini and no npmrcAuthFile here, that file is npm's own userconfig.
-    it('reports a user-config token helper for the registry the yaml sends npm to', () => {
+    it('reports a user-config token helper for the registry the yaml sends npm to', async () => {
       const { logger } = require('../logger');
       (logger.warn as jest.Mock).mockClear();
       writeYaml('registries:\n  default: https://reg-a.example.com/\n');
@@ -536,10 +535,9 @@ describe('getPnpmSpawnRegistryEnv', () => {
         join(configHome, 'user.npmrc'),
         '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token'
       );
-      jest.isolateModules(() => {
-        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-        fresh('is-even', root, '10.16.0');
-      });
+      vi.resetModules();
+      const { getPnpmSpawnRegistryEnv: fresh } = await import('./pnpm');
+      fresh('is-even', root, '10.16.0');
       expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
         '//reg-a.example.com/'
       );
@@ -559,7 +557,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
     });
 
-    it('pins an unscoped helper to the registry that wins overall', () => {
+    it('pins an unscoped helper to the registry that wins overall', async () => {
       // getAuthHeadersFromConfig keys it on allSettings.registry, so the yaml
       // default carries it even though the user config names no registry. 11
       // pins the same line to the declaring file instead.
@@ -570,16 +568,15 @@ describe('getPnpmSpawnRegistryEnv', () => {
         join(configHome, 'user.npmrc'),
         'tokenHelper=/usr/local/bin/get-token'
       );
-      jest.isolateModules(() => {
-        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-        fresh('is-even', root, '10.16.0');
-      });
+      vi.resetModules();
+      const { getPnpmSpawnRegistryEnv: fresh } = await import('./pnpm');
+      fresh('is-even', root, '10.16.0');
       expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
         '//reg-a.example.com/'
       );
     });
 
-    it('ignores the 11-only auth-file selection when picking that config', () => {
+    it('ignores the 11-only auth-file selection when picking that config', async () => {
       const { logger } = require('../logger');
       (logger.warn as jest.Mock).mockClear();
       const path = join(configHome, 'pnpm-only.npmrc');
@@ -589,14 +586,13 @@ describe('getPnpmSpawnRegistryEnv', () => {
       );
       process.env.PNPM_CONFIG_NPMRC_AUTH_FILE = path;
       writeYaml('registries:\n  default: https://reg-a.example.com/\n');
-      jest.isolateModules(() => {
-        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-        fresh('is-even', root, '10.16.0');
-      });
+      vi.resetModules();
+      const { getPnpmSpawnRegistryEnv: fresh } = await import('./pnpm');
+      fresh('is-even', root, '10.16.0');
       expect(logger.warn).not.toHaveBeenCalled();
     });
 
-    it('counts an ambient credential npm keeps on this line', () => {
+    it('counts an ambient credential npm keeps on this line', async () => {
       // pnpm 10.x reads npm_config_*, so the spawn keeps this token and npm
       // authenticates with it. On 11.0-11.5 it is dropped and the helper is reported.
       const { logger } = require('../logger');
@@ -606,10 +602,9 @@ describe('getPnpmSpawnRegistryEnv', () => {
         '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token'
       );
       process.env['npm_config_//reg-a.example.com/:_authToken'] = 'env-token';
-      jest.isolateModules(() => {
-        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-        fresh('is-even', root, '10.16.0');
-      });
+      vi.resetModules();
+      const { getPnpmSpawnRegistryEnv: fresh } = await import('./pnpm');
+      fresh('is-even', root, '10.16.0');
       expect(logger.warn).not.toHaveBeenCalled();
     });
 
@@ -1338,7 +1333,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
     });
 
-    it('warns once when a bare auth.ini credential cannot reach the contacted registry', () => {
+    it('warns once when a bare auth.ini credential cannot reach the contacted registry', async () => {
       // Nothing in npm's own error ties the missing credential back to auth.ini.
       const { logger } = require('../logger');
       (logger.warn as jest.Mock).mockClear();
@@ -1347,18 +1342,17 @@ describe('getPnpmSpawnRegistryEnv', () => {
         'registry=https://reg-b.example.com/'
       );
       writeAuthIni('_authToken=ini-token');
-      jest.isolateModules(() => {
-        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-        fresh('is-even', root, '11.5.0');
-        fresh('is-odd', root, '11.5.0');
-      });
+      vi.resetModules();
+      const { getPnpmSpawnRegistryEnv: fresh } = await import('./pnpm');
+      fresh('is-even', root, '11.5.0');
+      fresh('is-odd', root, '11.5.0');
       expect(logger.warn).toHaveBeenCalledTimes(1);
       expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
         '//reg-b.example.com/'
       );
     });
 
-    it('names the registry without the credentials embedded in its url', () => {
+    it('names the registry without the credentials embedded in its url', async () => {
       const { logger } = require('../logger');
       (logger.warn as jest.Mock).mockClear();
       writeFileSync(
@@ -1366,16 +1360,15 @@ describe('getPnpmSpawnRegistryEnv', () => {
         'registry=https://alice:s3cr3t@reg-b.example.com/'
       );
       writeAuthIni('_authToken=ini-token');
-      jest.isolateModules(() => {
-        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-        fresh('is-even', root, '11.5.0');
-      });
+      vi.resetModules();
+      const { getPnpmSpawnRegistryEnv: fresh } = await import('./pnpm');
+      fresh('is-even', root, '11.5.0');
       const message = (logger.warn as jest.Mock).mock.calls[0][0];
       expect(message).toContain('//reg-b.example.com/');
       expect(message).not.toContain('s3cr3t');
     });
 
-    it('stays quiet when the workspace .npmrc already authenticates that registry', () => {
+    it('stays quiet when the workspace .npmrc already authenticates that registry', async () => {
       const { logger } = require('../logger');
       (logger.warn as jest.Mock).mockClear();
       writeFileSync(
@@ -1386,14 +1379,13 @@ describe('getPnpmSpawnRegistryEnv', () => {
         ].join('\n')
       );
       writeAuthIni('_authToken=ini-token');
-      jest.isolateModules(() => {
-        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-        fresh('is-even', root, '11.5.0');
-      });
+      vi.resetModules();
+      const { getPnpmSpawnRegistryEnv: fresh } = await import('./pnpm');
+      fresh('is-even', root, '11.5.0');
       expect(logger.warn).not.toHaveBeenCalled();
     });
 
-    it('stays quiet when a parent registry path carries the credential', () => {
+    it('stays quiet when a parent registry path carries the credential', async () => {
       const { logger } = require('../logger');
       (logger.warn as jest.Mock).mockClear();
       writeFileSync(
@@ -1404,14 +1396,13 @@ describe('getPnpmSpawnRegistryEnv', () => {
         ].join('\n')
       );
       writeAuthIni('_authToken=ini-token');
-      jest.isolateModules(() => {
-        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-        fresh('is-even', root, '11.5.0');
-      });
+      vi.resetModules();
+      const { getPnpmSpawnRegistryEnv: fresh } = await import('./pnpm');
+      fresh('is-even', root, '11.5.0');
       expect(logger.warn).not.toHaveBeenCalled();
     });
 
-    it('does not count an ambient credential the spawn strips on 11.0-11.5', () => {
+    it('does not count an ambient credential the spawn strips on 11.0-11.5', async () => {
       // This pnpm line ignores npm_config_* entirely, so the spawn drops this ambient
       // token (mergeNpmConfigEnv) before npm runs. npm then fetches reg-b with no
       // credential, so the auth.ini bare token pinned to npmjs is still missing.
@@ -1423,14 +1414,13 @@ describe('getPnpmSpawnRegistryEnv', () => {
         'registry=https://reg-b.example.com/'
       );
       writeAuthIni('_authToken=ini-token');
-      jest.isolateModules(() => {
-        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-        fresh('is-even', root, '11.5.0');
-      });
+      vi.resetModules();
+      const { getPnpmSpawnRegistryEnv: fresh } = await import('./pnpm');
+      fresh('is-even', root, '11.5.0');
       expect(logger.warn).toHaveBeenCalledTimes(1);
     });
 
-    it('still warns when the credential npm would find is incomplete', () => {
+    it('still warns when the credential npm would find is incomplete', async () => {
       const { logger } = require('../logger');
       (logger.warn as jest.Mock).mockClear();
       writeFileSync(
@@ -1441,14 +1431,13 @@ describe('getPnpmSpawnRegistryEnv', () => {
         ].join('\n')
       );
       writeAuthIni('_authToken=ini-token');
-      jest.isolateModules(() => {
-        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-        fresh('is-even', root, '11.5.0');
-      });
+      vi.resetModules();
+      const { getPnpmSpawnRegistryEnv: fresh } = await import('./pnpm');
+      fresh('is-even', root, '11.5.0');
       expect(logger.warn).toHaveBeenCalledTimes(1);
     });
 
-    it('names the keys that are actually unscoped in the remediation', () => {
+    it('names the keys that are actually unscoped in the remediation', async () => {
       const { logger } = require('../logger');
       (logger.warn as jest.Mock).mockClear();
       writeFileSync(
@@ -1456,17 +1445,16 @@ describe('getPnpmSpawnRegistryEnv', () => {
         'registry=https://reg-b.example.com/'
       );
       writeAuthIni(['username=alice', '_password=cGFzcw=='].join('\n'));
-      jest.isolateModules(() => {
-        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-        fresh('is-even', root, '11.5.0');
-      });
+      vi.resetModules();
+      const { getPnpmSpawnRegistryEnv: fresh } = await import('./pnpm');
+      fresh('is-even', root, '11.5.0');
       const message = (logger.warn as jest.Mock).mock.calls[0][0];
       expect(message).toContain('"//reg-b.example.com/:username=..."');
       expect(message).toContain('"//reg-b.example.com/:_password=..."');
       expect(message).not.toContain('_authToken');
     });
 
-    it('stays quiet when the bare credential expanded to nothing', () => {
+    it('stays quiet when the bare credential expanded to nothing', async () => {
       const { logger } = require('../logger');
       (logger.warn as jest.Mock).mockClear();
       delete process.env.NX_TEST_UNSET_TOKEN;
@@ -1475,14 +1463,13 @@ describe('getPnpmSpawnRegistryEnv', () => {
         'registry=https://reg-b.example.com/'
       );
       writeAuthIni('_authToken=${NX_TEST_UNSET_TOKEN}');
-      jest.isolateModules(() => {
-        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-        fresh('is-even', root, '11.5.0');
-      });
+      vi.resetModules();
+      const { getPnpmSpawnRegistryEnv: fresh } = await import('./pnpm');
+      fresh('is-even', root, '11.5.0');
       expect(logger.warn).not.toHaveBeenCalled();
     });
 
-    it('stays quiet when the bare auth.ini credential reaches its registry', () => {
+    it('stays quiet when the bare auth.ini credential reaches its registry', async () => {
       const { logger } = require('../logger');
       (logger.warn as jest.Mock).mockClear();
       writeAuthIni(
@@ -1490,10 +1477,9 @@ describe('getPnpmSpawnRegistryEnv', () => {
           '\n'
         )
       );
-      jest.isolateModules(() => {
-        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-        fresh('is-even', root, '11.5.0');
-      });
+      vi.resetModules();
+      const { getPnpmSpawnRegistryEnv: fresh } = await import('./pnpm');
+      fresh('is-even', root, '11.5.0');
       expect(logger.warn).not.toHaveBeenCalled();
     });
 
@@ -1914,7 +1900,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
         });
       });
 
-      it('counts an ambient credential the spawn keeps from 11.6.0 on', () => {
+      it('counts an ambient credential the spawn keeps from 11.6.0 on', async () => {
         // The spawn keeps the ambient URL-scoped token (mergeNpmConfigEnv), so npm
         // authenticates with it and there is no withheld credential to warn about.
         const { logger } = require('../logger');
@@ -1925,10 +1911,9 @@ describe('getPnpmSpawnRegistryEnv', () => {
           'registry=https://reg-b.example.com/'
         );
         writeAuthIni('_authToken=ini-token');
-        jest.isolateModules(() => {
-          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-          fresh('is-even', root, '11.6.0');
-        });
+        vi.resetModules();
+        const { getPnpmSpawnRegistryEnv: fresh } = await import('./pnpm');
+        fresh('is-even', root, '11.6.0');
         expect(logger.warn).not.toHaveBeenCalled();
       });
 
@@ -2372,7 +2357,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
         });
       });
 
-      it('reports a credential npm holds there that pnpm would not send', () => {
+      it('reports a credential npm holds there that pnpm would not send', async () => {
         const { logger } = require('../logger');
         (logger.warn as jest.Mock).mockClear();
         // 11.5.3 withholds an entry whose value holds a reference; npm expands
@@ -2385,16 +2370,15 @@ describe('getPnpmSpawnRegistryEnv', () => {
           join(root, '.npmrc'),
           '//reg-a.example.com/api/npm/npm-virtual/:_authToken=${NX_TEST_TOKEN}\n'
         );
-        jest.isolateModules(() => {
-          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-          fresh('is-even', root, '11.5.3');
-        });
+        vi.resetModules();
+        const { getPnpmSpawnRegistryEnv: fresh } = await import('./pnpm');
+        fresh('is-even', root, '11.5.3');
         expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
           '//reg-a.example.com/api/npm/npm-virtual/'
         );
       });
 
-      it('reports a token helper pinned there', () => {
+      it('reports a token helper pinned there', async () => {
         const { logger } = require('../logger');
         (logger.warn as jest.Mock).mockClear();
         writeYaml(
@@ -2403,10 +2387,9 @@ describe('getPnpmSpawnRegistryEnv', () => {
         writeUserConfig(
           '//reg-a.example.com/api/npm/npm-virtual/:tokenHelper=/usr/local/bin/get-token'
         );
-        jest.isolateModules(() => {
-          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-          fresh('is-even', root, '11.5.0');
-        });
+        vi.resetModules();
+        const { getPnpmSpawnRegistryEnv: fresh } = await import('./pnpm');
+        fresh('is-even', root, '11.5.0');
         expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
           'runs a token helper'
         );
@@ -2498,13 +2481,12 @@ describe('getPnpmSpawnRegistryEnv', () => {
     });
 
     describe('reporting a credential pnpm would not send', () => {
-      function warnFor(version: string, pkg = 'is-even'): jest.Mock {
+      async function warnFor(version: string, pkg = 'is-even'): jest.Mock {
         const { logger } = require('../logger');
         (logger.warn as jest.Mock).mockClear();
-        jest.isolateModules(() => {
-          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-          fresh(pkg, root, version);
-        });
+        vi.resetModules();
+        const { getPnpmSpawnRegistryEnv: fresh } = await import('./pnpm');
+        fresh(pkg, root, version);
         return logger.warn as jest.Mock;
       }
 
@@ -2522,7 +2504,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
         );
       });
 
-      it('reports the one in the .npmrc a nested workspace hides from pnpm', () => {
+      it('reports the one in the .npmrc a nested workspace hides from pnpm', async () => {
         // pnpm reads the .npmrc beside the outer workspace file; npm opens the
         // inner one, which carries a credential pnpm never saw.
         const nested = join(root, 'nested');
@@ -2536,10 +2518,9 @@ describe('getPnpmSpawnRegistryEnv', () => {
         );
         const { logger } = require('../logger');
         (logger.warn as jest.Mock).mockClear();
-        jest.isolateModules(() => {
-          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-          fresh('is-even', nested, '11.5.0');
-        });
+        vi.resetModules();
+        const { getPnpmSpawnRegistryEnv: fresh } = await import('./pnpm');
+        fresh('is-even', nested, '11.5.0');
         expect((logger.warn as jest.Mock).mock.calls[0][0]).toMatch(
           /pnpm would not send it/
         );
@@ -2592,13 +2573,12 @@ describe('getPnpmSpawnRegistryEnv', () => {
       // pnpm runs a helper only from its user auth file; the same line in auth.ini or
       // a project .npmrc aborts the command with TOKEN_HELPER_IN_PROJECT_CONFIG
       // (verified on 11.9.0).
-      function warnFor(pkg = 'is-even'): jest.Mock {
+      async function warnFor(pkg = 'is-even'): jest.Mock {
         const { logger } = require('../logger');
         (logger.warn as jest.Mock).mockClear();
-        jest.isolateModules(() => {
-          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-          fresh(pkg, root, '11.5.0');
-        });
+        vi.resetModules();
+        const { getPnpmSpawnRegistryEnv: fresh } = await import('./pnpm');
+        fresh(pkg, root, '11.5.0');
         return logger.warn as jest.Mock;
       }
 
@@ -2613,18 +2593,17 @@ describe('getPnpmSpawnRegistryEnv', () => {
         expect(warn.mock.calls[0][0]).not.toContain('get-token');
       });
 
-      it('warns once across packages', () => {
+      it('warns once across packages', async () => {
         const { logger } = require('../logger');
         (logger.warn as jest.Mock).mockClear();
         writeYaml('registries:\n  default: https://reg-a.example.com/\n');
         writeUserConfig(
           '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token'
         );
-        jest.isolateModules(() => {
-          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-          fresh('is-even', root, '11.5.0');
-          fresh('is-odd', root, '11.5.0');
-        });
+        vi.resetModules();
+        const { getPnpmSpawnRegistryEnv: fresh } = await import('./pnpm');
+        fresh('is-even', root, '11.5.0');
+        fresh('is-odd', root, '11.5.0');
         expect(logger.warn).toHaveBeenCalledTimes(1);
       });
 
@@ -2659,7 +2638,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
         expect(warnFor()).not.toHaveBeenCalled();
       });
 
-      it('keeps the overall-registry pin until rescoping arrives in 11.4.0', () => {
+      it('keeps the overall-registry pin until rescoping arrives in 11.4.0', async () => {
         const { logger } = require('../logger');
         writeYaml('registries:\n  default: https://reg-a.example.com/\n');
         writeUserConfig('tokenHelper=/usr/local/bin/get-token');
@@ -2668,10 +2647,9 @@ describe('getPnpmSpawnRegistryEnv', () => {
           ['11.4.0', false],
         ] as const) {
           (logger.warn as jest.Mock).mockClear();
-          jest.isolateModules(() => {
-            const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-            fresh('is-even', root, version);
-          });
+          vi.resetModules();
+          const { getPnpmSpawnRegistryEnv: fresh } = await import('./pnpm');
+          fresh('is-even', root, version);
           expect((logger.warn as jest.Mock).mock.calls.length > 0).toBe(warned);
         }
       });

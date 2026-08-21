@@ -64,9 +64,8 @@ describe('run-migration-process', () => {
   });
 
   const runScript = async (): Promise<Record<string, unknown>> => {
-    jest.isolateModules(() => {
-      require('./run-migration-process.js');
-    });
+    vi.resetModules();
+    await import('./run-migration-process.js');
     // The script's top-level call is fire-and-forget; let its awaits settle.
     for (let i = 0; i < 5; i++) {
       await new Promise((resolve) => setImmediate(resolve));

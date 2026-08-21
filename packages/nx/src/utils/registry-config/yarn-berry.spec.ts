@@ -1080,16 +1080,17 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
   describe('a host yarn refuses to reach', () => {
     // enableNetwork: false makes berry exit without contacting the registry
     // (verified on 4.15.0), and npm has no setting that reproduces it.
-    const warnOnce = (rc: string, versions: string[]): string[] => {
+    const warnOnce = async (rc: string, versions: string[]): string[] => {
       const { logger } = require('../logger');
       (logger.warn as jest.Mock).mockClear();
       projectRc(rc);
-      jest.isolateModules(() => {
-        const { getYarnBerrySpawnRegistryEnv: fresh } = require('./yarn-berry');
-        for (const version of versions) {
-          fresh('is-even', ROOT, version);
-        }
-      });
+      vi.resetModules();
+      const { getYarnBerrySpawnRegistryEnv: fresh } = await import(
+        './yarn-berry'
+      );
+      for (const version of versions) {
+        fresh('is-even', ROOT, version);
+      }
       return (logger.warn as jest.Mock).mock.calls.map((call) => call[0]);
     };
 
@@ -1235,15 +1236,16 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
   });
 
   describe('reporting a credential berry would not send', () => {
-    const warnFor = (packages: string[]): string[] => {
+    const warnFor = async (packages: string[]): string[] => {
       const { logger } = require('../logger');
       (logger.warn as jest.Mock).mockClear();
-      jest.isolateModules(() => {
-        const { getYarnBerrySpawnRegistryEnv: fresh } = require('./yarn-berry');
-        for (const pkg of packages) {
-          fresh(pkg, ROOT, '4.16.0');
-        }
-      });
+      vi.resetModules();
+      const { getYarnBerrySpawnRegistryEnv: fresh } = await import(
+        './yarn-berry'
+      );
+      for (const pkg of packages) {
+        fresh(pkg, ROOT, '4.16.0');
+      }
       return (logger.warn as jest.Mock).mock.calls.map((call) => call[0]);
     };
 
