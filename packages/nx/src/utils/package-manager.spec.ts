@@ -19,6 +19,25 @@ import {
 } from 'fs';
 import { join } from 'path';
 import * as childProcess from 'child_process';
+import { promisify } from 'util';
+
+// The automocked exec/execFile carry util.promisify.custom as bare vi.fns
+// that resolve undefined; the source captured promisify(exec) at load, so
+// make the customs delegate to the callback mocks instead.
+for (const name of ['exec', 'execFile'] as const) {
+  const fn: any = childProcess[name];
+  const custom = fn?.[promisify.custom];
+  if (custom?.mockImplementation) {
+    custom.mockImplementation(
+      (...args: any[]) =>
+        new Promise((resolve, reject) => {
+          fn(...args, (err: any, val: any) =>
+            err ? reject(err) : resolve(val)
+          );
+        })
+    );
+  }
+}
 import { tmpdir } from 'os';
 import { parse } from 'yaml';
 
@@ -26,6 +45,22 @@ import * as configModule from '../config/configuration';
 import * as projectGraphFileUtils from '../project-graph/file-utils';
 import * as fileUtils from '../utils/fileutils';
 import * as registryConfig from './registry-config';
+import { mockCjsModule } from '../internal-testing-utils/cjs-mock';
+
+// package-manager.ts lazy-requires ./registry-config (CJS channel), which
+// vi.spyOn on the import namespace cannot reach; replace it there with a
+// shared mock that defaults to the real implementation.
+const mockGetNpmSpawnRegistryEnv = vi.fn(
+  require('./registry-config').getNpmSpawnRegistryEnv
+);
+mockCjsModule(import.meta.url, './registry-config', {
+  ...require('./registry-config'),
+  getNpmSpawnRegistryEnv: mockGetNpmSpawnRegistryEnv,
+});
+beforeEach(() => {
+  // mockReset restores the real implementation passed to vi.fn.
+  mockGetNpmSpawnRegistryEnv.mockReset();
+});
 import { workspaceRoot } from './workspace-root';
 import {
   addPackagePathToWorkspaces,
@@ -784,7 +819,7 @@ describe('package-manager', () => {
       (statSync as jest.Mock).mockImplementation(() => {
         throw new Error('ENOENT: no such file or directory');
       });
-      vi.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({});
+      mockGetNpmSpawnRegistryEnv.mockReturnValue({});
       // The version probe shells out on its own; only the lookup under test is
       // argv-based, and only off Windows, so the platform is pinned either way.
       vi.spyOn(childProcess, 'execSync').mockReturnValue('10.0.0\n' as any);
@@ -812,7 +847,7 @@ describe('package-manager', () => {
     });
 
     it('asks npm under the overlay the fetch runs with', () => {
-      vi.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({
+      mockGetNpmSpawnRegistryEnv.mockReturnValue({
         npm_config_registry: 'https://from-overlay.example.com/',
       });
       stubPackageManagerConfig({
@@ -875,7 +910,7 @@ describe('package-manager', () => {
         execFileSyncMock.mock.calls.every(([file]) => file === 'pnpm')
       ).toBe(true);
       expect(execFileSyncMock.mock.calls[0][2].env).toBe(process.env);
-      expect(registryConfig.getNpmSpawnRegistryEnv).not.toHaveBeenCalled();
+      expect(mockGetNpmSpawnRegistryEnv).not.toHaveBeenCalled();
     });
 
     it('falls through to the flat registry when native pnpm declares no map default', () => {
@@ -1097,9 +1132,7 @@ describe('package-manager', () => {
       });
       (existsSync as jest.Mock).mockReturnValue(false);
       vi.spyOn(childProcess, 'execSync').mockReturnValue('11.2.0' as any);
-      const overlaySpy = vi
-        .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
-        .mockReturnValue({});
+      const overlaySpy = mockGetNpmSpawnRegistryEnv.mockReturnValue({});
 
       await packageRegistryView('nx', 'latest', ['--json']);
 
@@ -1117,7 +1150,7 @@ describe('package-manager', () => {
       });
       (existsSync as jest.Mock).mockReturnValue(false);
       vi.spyOn(childProcess, 'execSync').mockReturnValue('10.13.1' as any);
-      vi.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({
+      mockGetNpmSpawnRegistryEnv.mockReturnValue({
         npm_config_registry: 'https://sentinel.example.com/',
       });
 
@@ -1136,7 +1169,7 @@ describe('package-manager', () => {
       });
       (existsSync as jest.Mock).mockReturnValue(false);
       vi.spyOn(childProcess, 'execSync').mockReturnValue('11.2.0' as any);
-      vi.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({
+      mockGetNpmSpawnRegistryEnv.mockReturnValue({
         npm_config_registry: 'https://sentinel.example.com/',
       });
 
@@ -1221,11 +1254,9 @@ describe('package-manager', () => {
       (existsSync as jest.Mock).mockImplementation(
         (p: string) => p === join(workspaceRoot, 'package.json')
       );
-      const overlaySpy = vi
-        .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
-        .mockReturnValue({
-          npm_config_registry: 'https://sentinel.example.com/',
-        });
+      const overlaySpy = mockGetNpmSpawnRegistryEnv.mockReturnValue({
+        npm_config_registry: 'https://sentinel.example.com/',
+      });
 
       await packageRegistryView('nx', 'latest', ['--json']);
 
@@ -1253,9 +1284,7 @@ describe('package-manager', () => {
       const versionSpy = vi
         .spyOn(childProcess, 'execSync')
         .mockReturnValue('1.2.0' as any);
-      const overlaySpy = vi
-        .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
-        .mockReturnValue({});
+      const overlaySpy = mockGetNpmSpawnRegistryEnv.mockReturnValue({});
 
       await packageRegistryView('nx', 'latest', ['--json']);
       // The second call hits the cache, so the changed mock must not reach it.
@@ -1277,7 +1306,7 @@ describe('package-manager', () => {
         cli: { packageManager: 'bun' },
       });
       vi.spyOn(childProcess, 'execSync').mockReturnValue('1.2.0' as any);
-      vi.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({
+      mockGetNpmSpawnRegistryEnv.mockReturnValue({
         npm_config_registry: 'https://sentinel.example.com/',
       });
       const saved = process.env.NPM_CONFIG_REGISTRY;
@@ -1308,7 +1337,7 @@ describe('package-manager', () => {
       });
       (existsSync as jest.Mock).mockReturnValue(false);
       vi.spyOn(childProcess, 'execSync').mockReturnValue('11.5.0' as any);
-      vi.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({});
+      mockGetNpmSpawnRegistryEnv.mockReturnValue({});
       const key = 'npm_config_//reg.example.com/:_authToken';
       const saved = process.env[key];
       process.env[key] = 'ambient-token';
@@ -1335,7 +1364,7 @@ describe('package-manager', () => {
       });
       (existsSync as jest.Mock).mockReturnValue(false);
       vi.spyOn(childProcess, 'execSync').mockReturnValue('11.6.0' as any);
-      vi.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({});
+      mockGetNpmSpawnRegistryEnv.mockReturnValue({});
       const key = 'npm_config_//reg.example.com/:_authToken';
       const saved = process.env[key];
       process.env[key] = 'ambient-token';
@@ -1394,9 +1423,7 @@ describe('package-manager', () => {
       const installationPath = join(workspaceRoot, '.nx', 'installation');
       (existsSync as jest.Mock).mockReturnValue(false);
       (statSync as jest.Mock).mockReturnValue({ isDirectory: () => true });
-      const overlaySpy = vi
-        .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
-        .mockReturnValue({});
+      const overlaySpy = mockGetNpmSpawnRegistryEnv.mockReturnValue({});
 
       await packageRegistryView('nx', 'latest', ['--json']);
 
@@ -1410,7 +1437,7 @@ describe('package-manager', () => {
       (statSync as jest.Mock).mockImplementation(() => {
         throw new Error('ENOENT: no such file or directory');
       });
-      vi.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({});
+      mockGetNpmSpawnRegistryEnv.mockReturnValue({});
 
       await packageRegistryView('nx', 'latest', ['--json']);
 
@@ -1424,7 +1451,7 @@ describe('package-manager', () => {
         (p: string) => p === installationPath
       );
       (statSync as jest.Mock).mockReturnValue({ isDirectory: () => false });
-      vi.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({});
+      mockGetNpmSpawnRegistryEnv.mockReturnValue({});
 
       await packageRegistryView('nx', 'latest', ['--json']);
 
@@ -1498,11 +1525,9 @@ describe('package-manager', () => {
       (existsSync as jest.Mock).mockImplementation(
         (p: string) => p === join(workspaceRoot, 'package.json')
       );
-      const overlaySpy = vi
-        .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
-        .mockReturnValue({
-          npm_config_registry: 'https://sentinel.example.com/',
-        });
+      const overlaySpy = mockGetNpmSpawnRegistryEnv.mockReturnValue({
+        npm_config_registry: 'https://sentinel.example.com/',
+      });
 
       await packageRegistryPack('/tmp/pack', 'nx', '1.0.0');
 
@@ -1534,7 +1559,7 @@ describe('package-manager', () => {
       });
       (existsSync as jest.Mock).mockReturnValue(false);
       vi.spyOn(childProcess, 'execSync').mockReturnValue('11.5.0' as any);
-      vi.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({});
+      mockGetNpmSpawnRegistryEnv.mockReturnValue({});
       const key = 'npm_config_//reg.example.com/:_authToken';
       const saved = process.env[key];
       process.env[key] = 'ambient-token';
@@ -1587,9 +1612,7 @@ describe('package-manager', () => {
       const installationPath = join(workspaceRoot, '.nx', 'installation');
       (existsSync as jest.Mock).mockReturnValue(false);
       (statSync as jest.Mock).mockReturnValue({ isDirectory: () => true });
-      const overlaySpy = vi
-        .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
-        .mockReturnValue({});
+      const overlaySpy = mockGetNpmSpawnRegistryEnv.mockReturnValue({});
 
       await packageRegistryPack('/tmp/pack', 'nx', '1.0.0');
 
@@ -1610,7 +1633,7 @@ describe('package-manager', () => {
         throw new Error('ENOENT: no such file or directory');
       });
       vi.spyOn(childProcess, 'execSync').mockReturnValue('10.0.0' as any);
-      vi.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({});
+      mockGetNpmSpawnRegistryEnv.mockReturnValue({});
     });
 
     afterEach(() => {

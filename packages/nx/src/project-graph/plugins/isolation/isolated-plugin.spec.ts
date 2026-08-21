@@ -96,7 +96,7 @@ describe('IsolatedPlugin', () => {
     plugin.shutdownCount = 0;
 
     // Mock spawnAndConnect
-    const spawnAndConnect = vi.fn().mockImplementation(() => {
+    const spawnAndConnect = vi.fn().mockImplementation(async () => {
       plugin._alive = true;
       plugin.spawnAndConnectCount++;
       return loadResult;
@@ -104,7 +104,7 @@ describe('IsolatedPlugin', () => {
     plugin.spawnAndConnect = spawnAndConnect;
 
     // Mock shutdown
-    const shutdown = vi.fn().mockImplementation(() => {
+    const shutdown = vi.fn().mockImplementation(async () => {
       plugin._alive = false;
       plugin.shutdownCount++;
     });
@@ -278,7 +278,7 @@ describe('IsolatedPlugin', () => {
       );
 
       let callCount = 0;
-      sendRequest.mockImplementation(() => {
+      sendRequest.mockImplementation(async () => {
         callCount++;
         return callCount === 1 ? promiseA : promiseB;
       });

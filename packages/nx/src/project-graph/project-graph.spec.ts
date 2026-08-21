@@ -40,7 +40,7 @@ describe('buildProjectGraphAndSourceMapsWithoutDaemon', () => {
       ],
     } as any;
 
-    vi.spyOn(plugins, 'getPluginsSeparated').mockImplementation(() => ({
+    vi.spyOn(plugins, 'getPluginsSeparated').mockImplementation(async () => ({
       specifiedPlugins: [testPlugin],
       defaultPlugins: [],
     }));
@@ -74,7 +74,7 @@ describe('buildProjectGraphAndSourceMapsWithoutDaemon', () => {
         }),
       ],
     } as any;
-    vi.spyOn(plugins, 'getPluginsSeparated').mockImplementation(() => ({
+    vi.spyOn(plugins, 'getPluginsSeparated').mockImplementation(async () => ({
       specifiedPlugins: [testPlugin],
       defaultPlugins: [],
     }));
@@ -88,12 +88,12 @@ describe('buildProjectGraphAndSourceMapsWithoutDaemon', () => {
       name: 'test-plugin',
       createNodes: [
         '*',
-        vi.fn().mockImplementation(() => {
+        vi.fn().mockImplementation(async () => {
           return [];
         }),
       ],
     } as any;
-    vi.spyOn(plugins, 'getPluginsSeparated').mockImplementation(() => ({
+    vi.spyOn(plugins, 'getPluginsSeparated').mockImplementation(async () => ({
       specifiedPlugins: [testPlugin],
       defaultPlugins: [],
     }));
