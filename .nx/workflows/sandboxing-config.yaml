@@ -26,3 +26,17 @@ task-exclusions:
     exclude-reads:
       - '**/*.stories.{js,jsx,ts,tsx,mdx}'
       - '**/*.{spec,test}.{js,jsx,ts,tsx}'
+
+  # MSBuild scratch. The example's validate-example wrapper shells into a
+  # standalone workspace and runs dotnet build/test there, which fills bin/ and
+  # obj/ next to each .csproj. MSBuild then reads them straight back: the
+  # restore writes obj/project.assets.json for the build to consume, and the
+  # test run loads the assemblies out of bin/. They are this task's own scratch
+  # in both directions, and nothing downstream consumes them, so they are
+  # excluded rather than declared as outputs of the wrapper.
+  - project: examples-dotnet-basic
+    target: validate-example
+    exclude-reads: &dotnet-example-scratch
+      - 'examples/dotnet/basic/**/bin/**'
+      - 'examples/dotnet/basic/**/obj/**'
+    exclude-writes: *dotnet-example-scratch
