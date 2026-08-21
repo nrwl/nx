@@ -28,7 +28,8 @@ import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { getCatalogManager } from '../../../utils/catalog';
 import { findNodeMatchingVersion } from './project-graph-pruning';
-import { join, posix, relative, sep } from 'path';
+import { isAbsolute, join, posix, relative, sep } from 'path';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 import { satisfies, validRange } from 'semver';
 
@@ -226,6 +227,23 @@ function findPatchHash(
     (entry) => entry.versionSpecifier === null
   );
   return nameOnlyMatch?.hash;
+}
+
+// Segment-aware: `..` and `../x` escape, a directory literally named `..cache`
+// does not. Absolute targets are resolved against the workspace root.
+function linkTargetEscapesWorkspace(
+  importerPath: string,
+  depVersion: string
+): boolean {
+  const rawTarget = depVersion.slice('link:'.length);
+  if (posix.isAbsolute(rawTarget) || isAbsolute(rawTarget)) {
+    const rel = relative(workspaceRoot, rawTarget);
+    return rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel);
+  }
+  const combined = posix.normalize(
+    posix.join(importerPath === '.' ? '' : importerPath, rawTarget)
+  );
+  return combined === '..' || combined.startsWith('../');
 }
 
 function getNodes(
@@ -512,11 +530,21 @@ function getNodes(
   // `link:` dependencies pointing outside the workspace never appear in the
   // packages section, so nothing above minted a node for them — and a task
   // input naming one via `externalDependencies` fails hashing with "could not
-  // be found". Mint a node keyed on the link path. Its hash changes only when
-  // the path does, not when the linked content does, which is how linked
-  // dependencies behave everywhere else in Nx. Links that resolve inside the
-  // workspace are workspace projects, not externals, and are skipped.
-  for (const [importerPath, importer] of Object.entries(data.importers ?? {})) {
+  // be found". Mint a node under the bare `npm:<name>`, hashed on the link
+  // path: the hash changes only when the path does, not when the linked
+  // content does, which is how linked dependencies behave everywhere else in
+  // Nx. Links that resolve inside the workspace are workspace projects, not
+  // externals, and are skipped.
+  //
+  // Importers are visited root-first, then lexicographically, so when several
+  // importers link the same package name to different targets the choice of
+  // the surviving node is deterministic — the bare name is the only name
+  // `externalDependencies` can reference, so only one node is minted per name.
+  const importerPaths = Object.keys(data.importers ?? {}).sort((a, b) =>
+    a === '.' ? -1 : b === '.' ? 1 : a.localeCompare(b)
+  );
+  for (const importerPath of importerPaths) {
+    const importer = data.importers[importerPath];
     for (const depType of [
       'dependencies',
       'devDependencies',
@@ -530,18 +558,12 @@ function getNodes(
         if (typeof depVersion !== 'string' || !depVersion.startsWith('link:')) {
           continue;
         }
-        const linkTarget = posix.normalize(
-          posix.join(
-            importerPath === '.' ? '' : importerPath,
-            depVersion.slice('link:'.length)
-          )
-        );
-        if (!linkTarget.startsWith('..')) {
+        if (!linkTargetEscapesWorkspace(importerPath, depVersion)) {
           continue; // inside the workspace -> a workspace project
         }
         const bareName = `npm:${depName}`;
         if (results[bareName]) {
-          continue; // a registry version is hoisted under this name
+          continue; // a hoisted registry version or an earlier link wins
         }
         results[bareName] = {
           type: 'npm',

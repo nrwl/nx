@@ -15,6 +15,7 @@ import {
   RawProjectGraphDependency,
 } from '../../../project-graph/project-graph-builder';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
+import { hashArray } from '../../../hasher/file-hasher';
 
 jest.mock('node:fs', () => {
   const memFs = require('memfs').fs;
@@ -3058,7 +3059,7 @@ importers:
           data: {
             version: 'link:../my-plugin',
             packageName: 'my-plugin',
-            hash: expect.any(String),
+            hash: hashArray(['my-plugin', 'link:../my-plugin']),
           },
         },
       });
@@ -3104,6 +3105,15 @@ importers:
       '@scoped/linked-out':
         specifier: link:../../elsewhere/plugin
         version: link:../../elsewhere/plugin
+      abs-in:
+        specifier: link:/root/packages/local
+        version: link:/root/packages/local
+      abs-out:
+        specifier: link:/elsewhere/abs-plugin
+        version: link:/elsewhere/abs-plugin
+      dot-named:
+        specifier: link:..cache/plugin
+        version: link:..cache/plugin
       linked-in:
         specifier: link:packages/local
         version: link:packages/local
@@ -3136,15 +3146,39 @@ snapshots:
         data: {
           version: 'link:../../elsewhere/plugin',
           packageName: '@scoped/linked-out',
-          hash: expect.any(String),
+          hash: hashArray([
+            '@scoped/linked-out',
+            'link:../../elsewhere/plugin',
+          ]),
         },
       });
       expect(nodes['npm:linked-in']).toBeUndefined();
       expect(Object.keys(nodes).filter((n) => n.includes('linked-in'))).toEqual(
         []
       );
-      // Registry packages are untouched.
       expect(nodes['npm:is-even']).toBeDefined();
+    });
+
+    it('should resolve absolute link targets against the workspace root', () => {
+      const { nodes } = getPnpmLockfileNodes(lockFile, '__linked_abs__');
+
+      expect(nodes['npm:abs-out']).toEqual({
+        type: 'npm',
+        name: 'npm:abs-out',
+        data: {
+          version: 'link:/elsewhere/abs-plugin',
+          packageName: 'abs-out',
+          hash: hashArray(['abs-out', 'link:/elsewhere/abs-plugin']),
+        },
+      });
+      expect(nodes['npm:abs-in']).toBeUndefined();
+    });
+
+    it('should not treat a dot-prefixed directory name as an escape', () => {
+      const { nodes } = getPnpmLockfileNodes(lockFile, '__linked_dotname__');
+
+      // `..cache` is a directory inside the workspace, not a `../` traversal.
+      expect(nodes['npm:dot-named']).toBeUndefined();
     });
 
     it('should not shadow a hoisted registry package with a link from a nested importer', () => {
