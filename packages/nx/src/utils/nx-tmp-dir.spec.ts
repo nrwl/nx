@@ -9,7 +9,7 @@ async function loadHomeTmpDir(
 ): Promise<string | undefined> {
   vi.resetModules();
   vi.doMock('node:os', async () => ({
-    ...(await vi.importActual('node:os')),
+    ...require('node:os'),
     homedir,
   }));
   return (await import('./nx-tmp-dir')).NX_HOME_TMP_DIR;

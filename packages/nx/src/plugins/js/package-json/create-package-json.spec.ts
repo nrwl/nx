@@ -1,5 +1,5 @@
 vi.mock('fs', async () => ({
-  ...(await vi.importActual('fs')),
+  ...require('fs'),
   existsSync: vi.fn(),
 }));
 vi.mock('../../../utils/fileutils');

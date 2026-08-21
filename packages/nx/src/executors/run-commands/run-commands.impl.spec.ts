@@ -686,7 +686,7 @@ describe('Run Commands', () => {
 
   describe('--color', () => {
     it('should not set FORCE_COLOR=true', async () => {
-      const spawnSpy = vi.mocked((await import('child_process')).spawn);
+      const spawnSpy = vi.mocked(require('child_process').spawn);
       await runCommands(
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
@@ -720,7 +720,7 @@ describe('Run Commands', () => {
     });
 
     it('should not set FORCE_COLOR=true when --no-color is passed', async () => {
-      const spawnSpy = vi.mocked((await import('child_process')).spawn);
+      const spawnSpy = vi.mocked(require('child_process').spawn);
       await runCommands(
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
@@ -755,7 +755,7 @@ describe('Run Commands', () => {
     });
 
     it('should set FORCE_COLOR=true when running with --color', async () => {
-      const spawnSpy = vi.mocked((await import('child_process')).spawn);
+      const spawnSpy = vi.mocked(require('child_process').spawn);
       await runCommands(
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],

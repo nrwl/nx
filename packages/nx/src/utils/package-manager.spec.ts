@@ -1,6 +1,6 @@
 vi.mock('fs', async () => {
   return {
-    ...(await vi.importActual('fs')),
+    ...require('fs'),
     existsSync: vi.fn(),
     readFileSync: vi.fn(),
     statSync: vi.fn(),
@@ -70,7 +70,7 @@ describe('package-manager', () => {
 
     it('should detect yarn package manager from yarn.lock', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
-      vi.spyOn(fs, 'existsSync').mockImplementation(async (p) => {
+      vi.spyOn(fs, 'existsSync').mockImplementation((p) => {
         switch (p) {
           case 'yarn.lock':
             return true;
@@ -83,7 +83,7 @@ describe('package-manager', () => {
           case 'bun.lock':
             return false;
           default:
-            return (await vi.importActual('fs')).existsSync(p);
+            return require('fs').existsSync(p);
         }
       });
       const packageManager = detectPackageManager();
@@ -93,7 +93,7 @@ describe('package-manager', () => {
 
     it('should detect pnpm package manager from pnpm-lock.yaml', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
-      vi.spyOn(fs, 'existsSync').mockImplementation(async (p) => {
+      vi.spyOn(fs, 'existsSync').mockImplementation((p) => {
         switch (p) {
           case 'yarn.lock':
             return false;
@@ -106,7 +106,7 @@ describe('package-manager', () => {
           case 'bun.lock':
             return false;
           default:
-            return (await vi.importActual('fs')).existsSync(p);
+            return require('fs').existsSync(p);
         }
       });
       const packageManager = detectPackageManager();
@@ -116,7 +116,7 @@ describe('package-manager', () => {
 
     it('should detect bun package manager from bun.lockb', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
-      vi.spyOn(fs, 'existsSync').mockImplementation(async (p) => {
+      vi.spyOn(fs, 'existsSync').mockImplementation((p) => {
         switch (p) {
           case 'yarn.lock':
             return false;
@@ -129,7 +129,7 @@ describe('package-manager', () => {
           case 'bun.lock':
             return false;
           default:
-            return (await vi.importActual('fs')).existsSync(p);
+            return require('fs').existsSync(p);
         }
       });
       const packageManager = detectPackageManager();
@@ -139,7 +139,7 @@ describe('package-manager', () => {
 
     it('should detect bun package manager from bun.lock', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
-      vi.spyOn(fs, 'existsSync').mockImplementation(async (p) => {
+      vi.spyOn(fs, 'existsSync').mockImplementation((p) => {
         switch (p) {
           case 'yarn.lock':
             return false;
@@ -152,7 +152,7 @@ describe('package-manager', () => {
           case 'bun.lockb':
             return false;
           default:
-            return (await vi.importActual('fs')).existsSync(p);
+            return require('fs').existsSync(p);
         }
       });
       const packageManager = detectPackageManager();
@@ -162,7 +162,7 @@ describe('package-manager', () => {
 
     it('should use npm package manager as default', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
-      vi.spyOn(fs, 'existsSync').mockImplementation(async (p) => {
+      vi.spyOn(fs, 'existsSync').mockImplementation((p) => {
         switch (p) {
           case 'yarn.lock':
             return false;
@@ -175,7 +175,7 @@ describe('package-manager', () => {
           case 'bun.lock':
             return false;
           default:
-            return (await vi.importActual('fs')).existsSync(p);
+            return require('fs').existsSync(p);
         }
       });
       const originalUserAgent = process.env.npm_config_user_agent;
@@ -191,7 +191,7 @@ describe('package-manager', () => {
 
     it('should detect npm package manager from package-lock.json', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
-      vi.spyOn(fs, 'existsSync').mockImplementation(async (p) => {
+      vi.spyOn(fs, 'existsSync').mockImplementation((p) => {
         switch (p) {
           case 'yarn.lock':
             return false;
@@ -204,7 +204,7 @@ describe('package-manager', () => {
           case 'bun.lock':
             return false;
           default:
-            return (await vi.importActual('fs')).existsSync(p);
+            return require('fs').existsSync(p);
         }
       });
       const packageManager = detectPackageManager();
@@ -279,7 +279,7 @@ describe('package-manager', () => {
 
     it('should detect package manager from --version', () => {
       vi.spyOn(fs, 'existsSync').mockReturnValue(false);
-      vi.spyOn(childProcess, 'execSync').mockImplementation(async (p) => {
+      vi.spyOn(childProcess, 'execSync').mockImplementation((p) => {
         switch (p) {
           case 'yarn --version':
             return '1.22.10';
@@ -288,7 +288,7 @@ describe('package-manager', () => {
           case 'npm --version':
             return '7.20.3';
           default:
-            return (await vi.importActual('child_process')).execSync(p);
+            return require('child_process').execSync(p);
         }
       });
       expect(getPackageManagerVersion('yarn')).toEqual('1.22.10');
@@ -538,8 +538,8 @@ describe('package-manager', () => {
           join(tempWorkspace, 'package.json'),
           '{"workspaces": ["packages/*"]}'
         );
-        vi.spyOn(fs, 'readFileSync').mockImplementation(async (...args) =>
-          (await vi.importActual('fs')).readFileSync(...args)
+        vi.spyOn(fs, 'readFileSync').mockImplementation((...args) =>
+          require('fs').readFileSync(...args)
         );
         const workspaces = getPackageWorkspaces(
           packageManager as PackageManager,
@@ -571,8 +571,8 @@ describe('package-manager', () => {
           `packages:\n  - apps/*`
         );
 
-        vi.spyOn(fs, 'readFileSync').mockImplementation(async (...args) =>
-          (await vi.importActual('fs')).readFileSync(...args)
+        vi.spyOn(fs, 'readFileSync').mockImplementation((...args) =>
+          require('fs').readFileSync(...args)
         );
         vi.spyOn(fs, 'existsSync').mockReturnValueOnce(true);
         const workspaces = getPackageWorkspaces('pnpm', tempWorkspace);

@@ -4,7 +4,7 @@ vi.mock('child_process');
 // module scope (as yarn.spec.ts does for os) so the host's real ~/.npmrc cannot
 // leak into the config-surface attribution tests.
 vi.mock('os', async () => ({
-  ...(await vi.importActual('os')),
+  ...require('os'),
   homedir: vi.fn(() => '/home/user'),
 }));
 vi.mock('../../package-manager-config/npmrc', () => ({

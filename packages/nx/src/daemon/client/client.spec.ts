@@ -25,7 +25,7 @@ vi.mock('../tmp-dir', async () => {
 });
 
 vi.mock('child_process', async () => ({
-  ...(await vi.importActual('child_process')),
+  ...require('child_process'),
   spawn: vi.fn(() => ({ pid: 4242, unref: vi.fn() })),
 }));
 
@@ -165,7 +165,7 @@ describe('startInBackground', () => {
 
   const refuse = (code: string) =>
     (waitForSocketConnection as jest.Mock).mockImplementation(
-      async (_socketPath, options) => {
+      (_socketPath, options) => {
         options?.onConnectError?.(
           Object.assign(new Error(`connect ${code} ${refusedSocket}`), {
             code,
@@ -252,7 +252,7 @@ describe('startInBackground', () => {
   it('should not report a refusal belonging to a concurrent poll', async () => {
     const polls: Array<{ options: any; resolve: (v: null) => void }> = [];
     (waitForSocketConnection as jest.Mock).mockImplementation(
-      async (_socketPath, options) =>
+      (_socketPath, options) =>
         new Promise<null>((resolve) => polls.push({ options, resolve }))
     );
 

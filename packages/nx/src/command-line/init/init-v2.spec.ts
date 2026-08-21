@@ -2,7 +2,7 @@ import { detectPlugins } from './init-v2';
 
 // Mock dependencies
 vi.mock('fs', async () => ({
-  ...(await vi.importActual('fs')),
+  ...require('fs'),
   existsSync: vi.fn((path: string) => {
     if (path === 'package.json') return true;
     return false;

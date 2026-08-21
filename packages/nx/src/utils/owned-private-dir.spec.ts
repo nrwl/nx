@@ -512,8 +512,8 @@ describe('ensureOwnedPrivateDir', () => {
         // mode-derived expectation is satisfied there whether or not the
         // verdict runs — and Linux is what CI runs, so the guard on this
         // round's headline fix would not have executed anywhere.
-        (fchmodSync as jest.Mock).mockImplementationOnce(async (fd: number) => {
-          (await vi.importActual('node:fs')).fchmodSync(fd, 0o777);
+        (fchmodSync as jest.Mock).mockImplementationOnce((fd: number) => {
+          require('node:fs').fchmodSync(fd, 0o777);
           throw Object.assign(new Error('denied'), { code: 'EPERM' });
         });
 

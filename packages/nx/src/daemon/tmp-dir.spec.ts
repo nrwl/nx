@@ -280,7 +280,7 @@ describe('socket directories', () => {
     (isSandbox as jest.Mock).mockReturnValue(true);
     vi.resetModules();
     vi.doMock('node:os', async () => ({
-      ...(await vi.importActual('node:os')),
+      ...require('node:os'),
       // No home directory is one of the reasons the home tier is skipped and
       // this fallback is reached, so the sandbox line has to survive it.
       homedir: () => '',
@@ -599,7 +599,7 @@ describe('socket directories', () => {
     setPlatform('linux');
     vi.resetModules();
     vi.doMock('node:os', async () => ({
-      ...(await vi.importActual('node:os')),
+      ...require('node:os'),
       // HOME=/tmp, so ~/.nx IS /tmp/.nx.
       homedir: () => '/tmp',
     }));
@@ -637,7 +637,7 @@ describe('socket directories', () => {
     setPlatform('win32');
     vi.resetModules();
     vi.doMock('node:os', async () => ({
-      ...(await vi.importActual('node:os')),
+      ...require('node:os'),
       platform: () => 'win32',
     }));
     const { InvalidSocketDirConfigured: Ctor } = await import('./tmp-dir');
@@ -798,7 +798,7 @@ describe('socket directories', () => {
     try {
       vi.resetModules();
       vi.doMock('node:os', async () => ({
-        ...(await vi.importActual('node:os')),
+        ...require('node:os'),
         homedir: () => home,
       }));
       const { getSocketDir: freshSocketDir, InvalidSocketDirConfigured: Ctor } =

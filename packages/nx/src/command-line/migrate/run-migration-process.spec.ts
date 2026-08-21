@@ -15,7 +15,7 @@ vi.mock('./migrate-commits', () => ({
 }));
 
 vi.mock('child_process', async () => ({
-  ...(await vi.importActual('child_process')),
+  ...require('child_process'),
   execSync: () => 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2\n',
 }));
 

@@ -90,13 +90,22 @@ export function setMockHasCustomHasher(value: boolean) {
   mockHasCustomHasher = value;
 }
 
+// hasCustomHasher lazy-requires tasks-runner/utils (CJS channel), which
+// vi.mock cannot intercept; replace the module in the require channel too.
+import { mockCjsModule } from '../../../internal-testing-utils/cjs-mock';
+const mockGetExecutorForTask = vi.hoisted(() => vi.fn());
+mockGetExecutorForTask.mockImplementation(() => ({
+  hasherFactory: mockHasCustomHasher ? () => {} : null,
+}));
+mockCjsModule(import.meta.url, '../../../tasks-runner/utils', {
+  ...require('../../../tasks-runner/utils'),
+  getExecutorForTask: mockGetExecutorForTask,
+});
 vi.mock('../../../tasks-runner/utils', async () => {
   const actual = await vi.importActual('../../../tasks-runner/utils');
   return {
     ...actual,
-    getExecutorForTask: vi.fn().mockImplementation(() => ({
-      hasherFactory: mockHasCustomHasher ? () => {} : null,
-    })),
+    getExecutorForTask: mockGetExecutorForTask,
   };
 });
 
