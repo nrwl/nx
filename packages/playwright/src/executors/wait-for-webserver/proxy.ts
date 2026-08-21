@@ -1,8 +1,8 @@
 // Playwright routes its readiness poll through a proxy configured in the
 // environment, so a gate that always connected directly would be answering a
 // different question than the check it exists to satisfy. Selection mirrors the
-// `proxy-from-env` copy Playwright bundles (`getProxyForUrl`) together with its
-// own `normalizeProxyURL`, checked against playwright-core 1.60.0. The
+// `proxy-from-env` copy playwright-core 1.60.0 bundles (`getProxyForUrl`)
+// together with its own `normalizeProxyURL`. The
 // transport is left to `https-proxy-agent`, the agent Playwright itself hands
 // to `https.request` for a proxied https target.
 
