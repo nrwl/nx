@@ -27,7 +27,12 @@ import {
   EXPECTED_TERMINATION_SIGNALS,
   signalToCode,
 } from '../utils/exit-codes';
-import { output } from '../utils/output';
+import {
+  isStaticOutputStyle,
+  output,
+  printsFullTaskOutput,
+  shouldGroupBatchOutput,
+} from '../utils/output';
 import { combineOptionsForExecutor, Options } from '../utils/params';
 import { workspaceRoot } from '../utils/workspace-root';
 import {
@@ -42,6 +47,7 @@ import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { isTuiEnabled } from './is-tui-enabled';
 import { TaskMetadata, TaskResult } from './life-cycle';
 import { PseudoTtyProcess } from './pseudo-terminal';
+import { BatchProcess } from './running-tasks/batch-process';
 import { NoopChildProcess } from './running-tasks/noop-child-process';
 import { getColor, writePrefixedLines } from './running-tasks/output-prefix';
 import { RunningTask } from './running-tasks/running-task';
@@ -149,10 +155,16 @@ export class TaskOrchestrator {
   private groups: boolean[] = [];
   private continuousTasksStarted = 0;
 
+  /**
+   * How many folds each batch id has rendered. A batch that reports a strict
+   * subset of its tasks is re-run under the same id, so one id can produce more
+   * than one fold and the redirect lines have to point at the right one.
+   */
+  private batchFoldRenders = new Map<string, number>();
+
   private bailed = false;
   private resolveStopPromise: (() => void) | null = null;
   private stopRequested = false;
-
   private runningContinuousTasks = new Map<
     string,
     {
@@ -842,14 +854,14 @@ export class TaskOrchestrator {
     groupId: number
   ): Promise<TaskResult[]> {
     const runBatchStart = performance.mark('TaskOrchestrator-run-batch:start');
+    let batchProcess: BatchProcess | undefined;
     try {
-      const batchProcess =
-        await this.forkedProcessTaskRunner.forkProcessForBatch(
-          batch,
-          this.projectGraph,
-          this.fullTaskGraph,
-          env
-        );
+      batchProcess = await this.forkedProcessTaskRunner.forkProcessForBatch(
+        batch,
+        this.projectGraph,
+        this.fullTaskGraph,
+        env
+      );
 
       // Stream output from batch process to the batch
       batchProcess.onOutput((output) => {
@@ -875,7 +887,12 @@ export class TaskOrchestrator {
         // Skipped tasks didn't run, so they have no terminal output and don't
         // need a per-task PTY — calling printTaskTerminalOutput would otherwise
         // allocate one just to write a cursor-hide escape.
-        if (status !== 'skipped') {
+        //
+        // When the batch is being folded, printing is deferred to batch end
+        // (printGroupedBatchOutput), which renders by output style: a
+        // full-output run gets the worker's whole log as one fold, anything
+        // else renders each task through the life cycle.
+        if (status !== 'skipped' && !shouldGroupBatchOutput()) {
           this.options.lifeCycle.printTaskTerminalOutput(
             task,
             status,
@@ -899,7 +916,7 @@ export class TaskOrchestrator {
       const results = await batchProcess.getResults();
       const batchResultEntries = Object.entries(results);
 
-      return batchResultEntries.map(([taskId, result]) => {
+      const taskResults = batchResultEntries.map(([taskId, result]) => {
         const task = this.taskGraph.tasks[taskId];
         task.startTime = result.startTime;
         task.endTime = result.endTime;
@@ -911,10 +928,20 @@ export class TaskOrchestrator {
           terminalOutput: result.terminalOutput,
         };
       });
+
+      if (shouldGroupBatchOutput()) {
+        this.printGroupedBatchOutput(
+          batch,
+          taskResults,
+          batchProcess.getCapturedOutputPath()
+        );
+      }
+
+      return taskResults;
     } catch (e) {
       const isBatchStopping = this.stopRequested;
 
-      return Object.keys(batch.taskGraph.tasks).map((taskId) => {
+      const taskResults = Object.keys(batch.taskGraph.tasks).map((taskId) => {
         const task = this.taskGraph.tasks[taskId];
         if (isBatchStopping) {
           task.endTime = Date.now();
@@ -926,13 +953,106 @@ export class TaskOrchestrator {
           terminalOutput: isBatchStopping ? '' : (e.stack ?? e.message ?? ''),
         };
       });
+
+      // The worker died without reporting results, so nothing was attributed to
+      // a task and no per-task output ran. Everything it wrote went to
+      // stdout/stderr, held back under log grouping — surface it as one fold.
+      // Outside grouping it already streamed live. This matters just as much
+      // when the batch was stopped: every task is marked stopped whether or not
+      // it finished, so the log is the only record of what got through. Only
+      // the exit-code error is dropped there, since it restates the
+      // cancellation.
+      if (shouldGroupBatchOutput()) {
+        const capturedOutputPath = batchProcess?.getCapturedOutputPath();
+        const trailer = isBatchStopping ? undefined : e.message;
+        if (capturedOutputPath || trailer) {
+          this.printBatchFold(batch, taskResults, {
+            capturedOutputPath,
+            trailer,
+          });
+        }
+      }
+
+      return taskResults;
     } finally {
+      batchProcess?.discardCapturedOutput();
       const runBatchEnd = performance.mark('TaskOrchestrator-run-batch:end');
       performance.measure(
         'TaskOrchestrator-run-batch',
         runBatchStart.name,
         runBatchEnd.name
       );
+    }
+  }
+
+  /**
+   * Prints a completed batch's output once, under log grouping. Live forwarding
+   * was suppressed while grouping, so this is the only copy — which is why the
+   * requested output style has to reach this path rather than stopping at the
+   * life cycle.
+   *
+   * A full-output run wants everything the batch emitted, including whatever no
+   * task claimed — a runner summary, a config-phase error — so it gets the
+   * worker's whole log as one fold. Otherwise the batch's own attribution is
+   * trusted and each task renders through the life cycle exactly as in a
+   * non-batch run: failures in full, successes collapsed to a line. A batch
+   * that never reported results is handled by the caller instead.
+   */
+  private printGroupedBatchOutput(
+    batch: Batch,
+    taskResults: TaskResult[],
+    capturedOutputPath: string | undefined
+  ) {
+    if (printsFullTaskOutput(this.options) && capturedOutputPath) {
+      this.printBatchFold(batch, taskResults, { capturedOutputPath });
+      return;
+    }
+
+    for (const { task, status, terminalOutput } of taskResults) {
+      if (status !== 'skipped') {
+        this.options.lifeCycle.printTaskTerminalOutput(
+          task,
+          status,
+          terminalOutput ?? ''
+        );
+      }
+    }
+  }
+
+  /**
+   * Renders a batch's whole output as one fold, then a line per task pointing
+   * at it. The fold is labelled with the executor and a run-unique id (the same
+   * executor can run more than one batch), rather than an arbitrary task. Safe
+   * to write to `output` directly: grouping implies GitHub Actions implies a
+   * non-TTY, static lifecycle.
+   */
+  private printBatchFold(
+    batch: Batch,
+    taskResults: TaskResult[],
+    body: { capturedOutputPath?: string; trailer?: string }
+  ) {
+    // batch.id is already `<executor> <n>`, numbered per executor when the batch
+    // was scheduled. Deriving a second number here would drift from it, since
+    // only batches that render a fold would be counted. The suffix disambiguates
+    // re-runs of the same batch rather than replacing the id, so it cannot.
+    const renders = (this.batchFoldRenders.get(batch.id) ?? 0) + 1;
+    this.batchFoldRenders.set(batch.id, renders);
+    const label =
+      renders === 1 ? `batch ${batch.id}` : `batch ${batch.id}:${renders}`;
+    const worst = taskResults.some((r) => r.status === 'failure')
+      ? 'failure'
+      : taskResults.some((r) => r.status === 'stopped')
+        ? 'stopped'
+        : 'success';
+    output.logBatchGroup(label, body, worst);
+    for (const { task, status } of taskResults) {
+      if (status !== 'skipped') {
+        output.logCommandRedirect(
+          getPrintableCommandArgsForTask(task).join(' '),
+          status,
+          `(output in "${label}" above)`
+        );
+      }
     }
   }
 
@@ -1060,10 +1180,9 @@ export class TaskOrchestrator {
 
     const pipeOutput = await this.pipeOutputCapture(task);
     const temporaryOutputPath = this.cache.temporaryOutputPath(task);
-    const streamOutput =
-      this.outputStyle === 'static'
-        ? false
-        : shouldStreamOutput(task, this.initiatingProject);
+    const streamOutput = isStaticOutputStyle(this.outputStyle)
+      ? false
+      : shouldStreamOutput(task, this.initiatingProject);
 
     const env = pipeOutput
       ? getEnvVariablesForTask(
@@ -1369,10 +1488,9 @@ export class TaskOrchestrator {
     const pipeOutput = await this.pipeOutputCapture(task);
     // obtain metadata
     const temporaryOutputPath = this.cache.temporaryOutputPath(task);
-    const streamOutput =
-      this.outputStyle === 'static'
-        ? false
-        : shouldStreamOutput(task, this.initiatingProject);
+    const streamOutput = isStaticOutputStyle(this.outputStyle)
+      ? false
+      : shouldStreamOutput(task, this.initiatingProject);
 
     let env = pipeOutput
       ? getEnvVariablesForTask(

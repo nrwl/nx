@@ -1,11 +1,83 @@
+import * as figures from 'figures';
+import { closeSync, openSync, readSync } from 'fs';
 import { EOL } from 'os';
 import * as pc from 'picocolors';
 import * as readline from 'readline';
 import { WriteStream } from 'tty';
 import type { TaskStatus } from '../tasks-runner/tasks-runner';
 
+/**
+ * The statuses whose output can be collapsed to a single line: the task did the
+ * work, or the cache stood in for it.
+ */
+export type CollapsibleTaskStatus = Extract<
+  TaskStatus,
+  'success' | 'local-cache' | 'local-cache-kept-existing' | 'remote-cache'
+>;
+
 const GH_GROUP_PREFIX = '::group::';
 const GH_GROUP_SUFFIX = '::endgroup::';
+
+/**
+ * `static-failures-only` is `static` with successful tasks collapsed to a single
+ * line. They select the same life cycle and differ only in what it prints, so
+ * everywhere the life cycle is chosen, the TUI is ruled out, or output is
+ * routed, the two behave identically.
+ */
+export function isStaticOutputStyle(outputStyle: string | undefined): boolean {
+  return outputStyle === 'static' || outputStyle === 'static-failures-only';
+}
+
+/**
+ * Whether a run prints every task's output in full rather than collapsing the
+ * ones that succeeded. Both static life cycles and the batch renderer have to
+ * agree on this, so they read it from here rather than each deriving it.
+ *
+ * Exactly one style collapses, and it is also what a run that named no style
+ * gets. The static life cycles also serve `static`, `stream`,
+ * `stream-without-prefixes` and, in CI, `dynamic-legacy` — every one of those
+ * was asked for explicitly, so none may quietly withhold output.
+ *
+ * Resolving the absent case here rather than assigning `outputStyle` upstream is
+ * deliberate: the value is also read by the orchestrator to decide whether a
+ * task streams, and naming the default there stops `shouldStreamOutput` from
+ * ever being consulted — including for the continuous tasks that must stream.
+ */
+export function printsFullTaskOutput(args: {
+  verbose?: boolean;
+  outputStyle?: string;
+}): boolean {
+  return (
+    !!args.verbose ||
+    (args.outputStyle ?? 'static-failures-only') !== 'static-failures-only'
+  );
+}
+
+/**
+ * Whether task output should be wrapped in collapsible log groups. Grouping
+ * requires each task's output to be written as one contiguous block, which is
+ * why batch mode's implicit streaming backs off when this is on. It does not
+ * govern streaming in general — an explicit `--output-style`, the TUI, and
+ * long running tasks all still stream.
+ */
+export function isLogGroupingEnabled(): boolean {
+  return (
+    process.env.NX_SKIP_LOG_GROUPING !== 'true' && !!process.env.GITHUB_ACTIONS
+  );
+}
+
+/**
+ * Whether a batch task's output should be collapsed into its per-task log group
+ * rather than forwarded live. A batch worker writes its output to stdout/stderr
+ * live and also reports the same text back as each task's terminalOutput, which
+ * the grouped block prints; forwarding the live copy too would duplicate it
+ * outside the group and defeat the fold. This is only worth doing when grouping
+ * is on and the user has not asked to stream — an explicit stream style (which
+ * sets NX_STREAM_OUTPUT) wants the live copy, folds or not.
+ */
+export function shouldGroupBatchOutput(): boolean {
+  return isLogGroupingEnabled() && process.env.NX_STREAM_OUTPUT !== 'true';
+}
 
 export interface CLIErrorMessageConfig {
   title: string;
@@ -86,8 +158,96 @@ class CLIOutput {
   underline = pc.underline;
   dim = pc.dim;
 
+  /**
+   * Whether the terminal is positioned at the start of a line. Task output does
+   * not reliably end in a newline, so writers that must begin on a fresh line
+   * ask for one via {@link ensureLineStart} rather than guessing.
+   *
+   * Holding that true means every writer that can leave the cursor mid-line is
+   * either routed through this class or declared to it:
+   *
+   * - This class's own writes, via {@link writeToStream}.
+   * - A batch worker's live output, via {@link writeTaskOutputChunk}.
+   * - `nx:run-commands`, which is the only executor that runs in the main
+   *   process (`task-orchestrator.ts` gates that on the executor name), and
+   *   whose raw writes go through {@link writeTaskOutputChunk} for this reason.
+   *   Its `addColorAndPrefix` splits on newlines without ever appending one, so
+   *   its chunks routinely end mid-line.
+   * - A pseudo-terminal task, which cannot be routed: the native side writes to
+   *   this process's stdout from Rust, at arbitrary PTY read boundaries. It
+   *   declares itself via {@link noteExternalWrite} instead, which is why that
+   *   exists.
+   *
+   * Forked task streaming is the one bypass that is safe, and only because
+   * `addPrefixTransformer` re-emits that output a whole line at a time, always
+   * ending on a line boundary. Anything else writing to stdout during a run
+   * invalidates this and must be routed or declared.
+   */
+  private atLineStart = true;
+
   private writeToStream(str: string, stream: WriteStream = process.stdout) {
+    // stdout and stderr share one cursor wherever this matters — a CI log, a
+    // terminal — so a write to either moves it.
+    if (
+      (stream === process.stdout || stream === process.stderr) &&
+      str.length > 0
+    ) {
+      this.atLineStart = str.endsWith('\n');
+    }
     stream.write(str);
+  }
+
+  /**
+   * Forwards a chunk of a task's output live, keeping {@link atLineStart}
+   * accurate. Batch workers write raw chunks that routinely end mid-line, and a
+   * collapsed summary line must not be glued onto one.
+   *
+   * @internal Not part of the output API plugins may rely on.
+   */
+  writeTaskOutputChunk(
+    chunk: string | Buffer,
+    stream: WriteStream = process.stdout
+  ) {
+    if (
+      chunk.length > 0 &&
+      (stream === process.stdout || stream === process.stderr)
+    ) {
+      // A Buffer is written through undecoded so a chunk that splits a
+      // multi-byte character is not mangled; 0x0a only ever encodes a newline
+      // in UTF-8, so its last byte answers the question on its own.
+      this.atLineStart =
+        typeof chunk === 'string'
+          ? chunk.endsWith('\n')
+          : chunk[chunk.length - 1] === 0x0a;
+    }
+    stream.write(chunk);
+  }
+
+  /**
+   * Declares output this class could not route — a pseudo-terminal task's, which
+   * the native side writes straight to our stdout — so the next writer needing a
+   * fresh line asks for one instead of trusting a stale position.
+   *
+   * The chunk is inspected rather than assumed mid-line, so output that did end
+   * on a line boundary does not cost a blank line. PTY chunks often end in an
+   * escape sequence after the newline, and that reads as mid-line, which is the
+   * safe direction to be wrong in: a spare newline, never a glued one.
+   */
+  noteExternalWrite(chunk?: string | Buffer): void {
+    if (chunk === undefined || chunk.length === 0) {
+      this.atLineStart = false;
+      return;
+    }
+    this.atLineStart =
+      typeof chunk === 'string'
+        ? chunk.endsWith('\n')
+        : chunk[chunk.length - 1] === 0x0a;
+  }
+
+  private ensureLineStart() {
+    if (!this.atLineStart) {
+      this.addNewline();
+    }
   }
 
   overwriteLine(lineText: string = '') {
@@ -273,10 +433,8 @@ class CLIOutput {
       taskStatus
     );
 
-    if (
-      process.env.NX_SKIP_LOG_GROUPING !== 'true' &&
-      process.env.GITHUB_ACTIONS
-    ) {
+    const grouped = isLogGroupingEnabled();
+    if (grouped) {
       const icon = this.getStatusIcon(taskStatus);
       commandOutputWithStatus = `${GH_GROUP_PREFIX}${icon} ${commandOutputWithStatus}`;
     }
@@ -287,11 +445,116 @@ class CLIOutput {
     this.addNewline();
     this.writeToStream(output);
 
-    if (
-      process.env.NX_SKIP_LOG_GROUPING !== 'true' &&
-      process.env.GITHUB_ACTIONS
-    ) {
-      this.writeToStream(GH_GROUP_SUFFIX);
+    if (grouped) {
+      // GitHub only recognizes ::endgroup:: as a workflow command when it
+      // starts a line, and task output routinely lacks a trailing newline.
+      this.ensureLineStart();
+      this.writeToStream(`${GH_GROUP_SUFFIX}${EOL}`);
+    }
+  }
+
+  /**
+   * A single line standing in for a task's full output, used when the output
+   * itself carries no information worth printing (a success, or a cache hit).
+   * Statuses that carry a diagnosable body are deliberately not accepted here.
+   */
+  logCommandSummary(message: string, taskStatus: CollapsibleTaskStatus) {
+    // The preceding task may have left the cursor mid-line, and this line must
+    // not be glued onto the end of that task's output.
+    this.ensureLineStart();
+    const icon = pc.green(figures.tick);
+    const command = this.addTaskStatus(
+      taskStatus,
+      this.formatCommand(this.normalizeMessage(message))
+    );
+    this.writeToStream(`${icon}  ${command}${EOL}`);
+  }
+
+  /**
+   * A one-line stand-in for a task whose full output is shown elsewhere — used
+   * for the tasks of a batch rendered as a single log group rather than per
+   * task. `note` points the reader at that group.
+   */
+  logCommandRedirect(message: string, taskStatus: TaskStatus, note: string) {
+    this.ensureLineStart();
+    // A stopped task did not fail; it never got to finish. The TUI summary
+    // already draws that distinction, so use the same glyph.
+    const icon =
+      taskStatus === 'stopped'
+        ? pc.cyan(figures.squareSmallFilled)
+        : taskStatus === 'failure'
+          ? pc.red(figures.cross)
+          : pc.green(figures.tick);
+    const command = this.formatCommand(this.normalizeMessage(message));
+    this.writeToStream(`${icon}  ${command}  ${pc.dim(note)}${EOL}`);
+  }
+
+  /**
+   * Prints a batch's combined output as one log group. A batch runner's
+   * diagnostics — a crash, a config-phase error, a runner summary — belong to no
+   * single task, so the group is labelled with the batch rather than a task.
+   *
+   * The batch's own output is copied straight from the file it was captured
+   * into, so an arbitrarily long log costs a fixed amount of memory here.
+   * Nothing is withheld: this rendering is chosen either because the whole log
+   * was asked for, or because no task claimed any of it.
+   */
+  logBatchGroup(
+    label: string,
+    body: { capturedOutputPath?: string; trailer?: string },
+    taskStatus: TaskStatus
+  ) {
+    const grouped = isLogGroupingEnabled();
+    let header = `${pc.dim('> ')}${pc.bold(label)}`;
+    if (grouped) {
+      header = `${GH_GROUP_PREFIX}${this.getStatusIcon(taskStatus)} ${header}`;
+    }
+
+    this.addNewline();
+    this.writeToStream(header);
+    this.addNewline();
+    this.addNewline();
+    if (body.capturedOutputPath) {
+      this.copyFileToStream(body.capturedOutputPath);
+    }
+    if (body.trailer) {
+      this.ensureLineStart();
+      this.writeToStream(`${body.trailer}${EOL}`);
+    }
+
+    if (grouped) {
+      this.ensureLineStart();
+      this.writeToStream(`${GH_GROUP_SUFFIX}${EOL}`);
+    } else {
+      this.ensureLineStart();
+    }
+  }
+
+  /**
+   * Copies a file to stdout a chunk at a time. Reading it into one string would
+   * reintroduce the unbounded growth that writing it to disk avoided, and a
+   * long batch log can exceed the maximum length of a JS string.
+   */
+  private copyFileToStream(path: string) {
+    let fd: number;
+    try {
+      fd = openSync(path, 'r');
+    } catch {
+      // The batch left nothing behind, or it is already cleaned up. The tasks'
+      // own redirect lines still point at this group.
+      return;
+    }
+    try {
+      const buffer = Buffer.allocUnsafe(64 * 1024);
+      let bytesRead: number;
+      while ((bytesRead = readSync(fd, buffer, 0, buffer.length, null)) > 0) {
+        // Copy before writing. `stream.write` queues a Buffer by reference, and
+        // stdout is a pipe wherever grouping is on, so a backed-up write would
+        // still be holding this memory when the next read overwrites it.
+        this.writeTaskOutputChunk(Buffer.from(buffer.subarray(0, bytesRead)));
+      }
+    } finally {
+      closeSync(fd);
     }
   }
 
@@ -310,6 +573,8 @@ class CLIOutput {
         return '✅';
       case 'failure':
         return '❌';
+      case 'stopped':
+        return '⏹️';
       case 'skipped':
       case 'local-cache-kept-existing':
         return '⏩';

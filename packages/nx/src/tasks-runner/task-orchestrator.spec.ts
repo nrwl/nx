@@ -1,3 +1,7 @@
+import { mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
+import { stripVTControlCharacters } from 'util';
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { TaskOrchestrator } from './task-orchestrator';
@@ -388,6 +392,403 @@ describe('TaskOrchestrator', () => {
 
       expect(await orchestrator.resolveCachedTasksBulk()).toBe(false);
       expect(orchestrator.cache.getBatch).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('printGroupedBatchOutput', () => {
+    // Restoring by assignment would set the string "undefined" for anything
+    // that was unset, which is truthy - leaving isLogGroupingEnabled() true for
+    // the rest of the worker. withEnvironmentVariables deletes properly.
+    let restoreEnv: () => void;
+    beforeEach(() => {
+      // Put shouldGroupBatchOutput() into its folding state.
+      const saved = {
+        GITHUB_ACTIONS: process.env.GITHUB_ACTIONS,
+        NX_SKIP_LOG_GROUPING: process.env.NX_SKIP_LOG_GROUPING,
+        NX_STREAM_OUTPUT: process.env.NX_STREAM_OUTPUT,
+      };
+      process.env.GITHUB_ACTIONS = 'true';
+      delete process.env.NX_SKIP_LOG_GROUPING;
+      delete process.env.NX_STREAM_OUTPUT;
+      restoreEnv = () => {
+        for (const [key, value] of Object.entries(saved)) {
+          if (value === undefined) {
+            delete process.env[key];
+          } else {
+            process.env[key] = value;
+          }
+        }
+      };
+    });
+
+    afterEach(() => restoreEnv());
+
+    function makeTask(id: string): Task {
+      const [project, target] = id.split(':');
+      return {
+        id,
+        target: { project, target },
+        overrides: { __overrides_unparsed__: [] },
+        outputs: [],
+        parallelism: true,
+      } as Partial<Task> as Task;
+    }
+
+    function createOrchestrator(
+      args: { verbose?: boolean; outputStyle?: string } = {}
+    ) {
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      orchestrator.options = {
+        lifeCycle: { printTaskTerminalOutput: jest.fn() },
+        ...args,
+      };
+      // Object.create bypasses field initializers.
+      orchestrator.batchFoldRenders = new Map();
+      return orchestrator;
+    }
+
+    function captureStdout(cb: () => void): string {
+      const original = process.stdout.write;
+      let out = '';
+      process.stdout.write = ((chunk: any) => {
+        out += chunk;
+        return true;
+      }) as any;
+      try {
+        cb();
+      } finally {
+        process.stdout.write = original;
+      }
+      return stripVTControlCharacters(out);
+    }
+
+    const BATCH = {
+      id: '@nx/js:tsc 1',
+      executorName: '@nx/js:tsc',
+      taskGraph: {},
+    };
+
+    /** The batch's captured worker log, which only a full-output run renders. */
+    let capturedOutputDir: string;
+    beforeEach(() => {
+      capturedOutputDir = mkdtempSync(join(tmpdir(), 'nx-batch-output-'));
+    });
+    afterEach(() => {
+      rmSync(capturedOutputDir, { recursive: true, force: true });
+    });
+    function capturedOutputFile(contents: string): string {
+      const path = join(capturedOutputDir, `captured-${contents.length}.log`);
+      writeFileSync(path, contents);
+      return path;
+    }
+
+    it('copies a fold body larger than one read buffer without corrupting it', () => {
+      const orchestrator = createOrchestrator({ outputStyle: 'static' });
+      const a = makeTask('a:build');
+      // Well past the 64 KB read buffer, and distinguishable per line so a
+      // reordered or duplicated chunk cannot hash the same.
+      const body =
+        Array.from({ length: 40000 }, (_, i) =>
+          `line ${i}`.padEnd(31, '.')
+        ).join('\n') + '\n';
+
+      // A backed-up pipe holds each Buffer it was handed and reads it later.
+      // Concatenating on write would copy, and hide the bug being tested.
+      const original = process.stdout.write;
+      const queued: Buffer[] = [];
+      process.stdout.write = ((chunk: any) => {
+        queued.push(
+          Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk))
+        );
+        return true;
+      }) as any;
+      try {
+        orchestrator.printGroupedBatchOutput(
+          BATCH,
+          [{ task: a, status: 'success', code: 0, terminalOutput: '' }],
+          capturedOutputFile(body)
+        );
+      } finally {
+        process.stdout.write = original;
+      }
+
+      expect(Buffer.concat(queued).toString()).toContain(body);
+    });
+
+    it('renders a batch that reported results from each task, never as a batch fold', () => {
+      const orchestrator = createOrchestrator();
+      const a = makeTask('a:build');
+      const b = makeTask('b:build');
+      const taskResults = [
+        { task: a, status: 'success', code: 0, terminalOutput: 'a body' },
+        { task: b, status: 'local-cache', code: 0, terminalOutput: 'b body' },
+      ];
+
+      const out = captureStdout(() =>
+        orchestrator.printGroupedBatchOutput(BATCH, taskResults, undefined)
+      );
+
+      const print = orchestrator.options.lifeCycle.printTaskTerminalOutput;
+      expect(print).toHaveBeenCalledTimes(2);
+      expect(print).toHaveBeenCalledWith(a, 'success', 'a body');
+      expect(print).toHaveBeenCalledWith(b, 'local-cache', 'b body');
+      expect(out).not.toContain('batch @nx/js:tsc');
+    });
+
+    it('renders a FAILED batch that reported results per task, not as one fold', () => {
+      const orchestrator = createOrchestrator();
+      const a = makeTask('a:build');
+      const b = makeTask('b:build');
+      const taskResults = [
+        { task: a, status: 'success', code: 0, terminalOutput: 'a body' },
+        { task: b, status: 'failure', code: 1, terminalOutput: 'b failed' },
+      ];
+
+      const out = captureStdout(() =>
+        orchestrator.printGroupedBatchOutput(BATCH, taskResults, undefined)
+      );
+
+      // The failing task owns its output, so dumping the worker's whole log
+      // would only add every successful task's body back to the run.
+      const print = orchestrator.options.lifeCycle.printTaskTerminalOutput;
+      expect(print).toHaveBeenCalledWith(b, 'failure', 'b failed');
+      expect(print).toHaveBeenCalledWith(a, 'success', 'a body');
+      expect(out).not.toContain('batch @nx/js:tsc');
+    });
+
+    it.each([
+      ['--output-style=static', { outputStyle: 'static' }],
+      ['--verbose', { verbose: true }],
+    ])('renders the whole batch log as one fold under %s', (_name, args) => {
+      const orchestrator = createOrchestrator(args);
+      const a = makeTask('a:build');
+      const taskResults = [
+        { task: a, status: 'success', code: 0, terminalOutput: 'a body' },
+      ];
+
+      const out = captureStdout(() =>
+        orchestrator.printGroupedBatchOutput(
+          BATCH,
+          taskResults,
+          capturedOutputFile('runner summary no task claimed')
+        )
+      );
+
+      // A full-output run wants everything the batch emitted, including the
+      // bytes no task attributed to itself.
+      expect(out).toContain('runner summary no task claimed');
+      expect(out).toContain('batch @nx/js:tsc 1');
+      expect(
+        orchestrator.options.lifeCycle.printTaskTerminalOutput
+      ).not.toHaveBeenCalled();
+    });
+
+    it('does not fold a batch under the failures-only default', () => {
+      const orchestrator = createOrchestrator();
+      const a = makeTask('a:build');
+      const taskResults = [
+        { task: a, status: 'success', code: 0, terminalOutput: 'a body' },
+      ];
+
+      const out = captureStdout(() =>
+        orchestrator.printGroupedBatchOutput(
+          BATCH,
+          taskResults,
+          capturedOutputFile('runner summary no task claimed')
+        )
+      );
+
+      expect(out).not.toContain('runner summary no task claimed');
+      expect(out).not.toContain('batch @nx/js:tsc');
+      expect(
+        orchestrator.options.lifeCycle.printTaskTerminalOutput
+      ).toHaveBeenCalledWith(a, 'success', 'a body');
+    });
+
+    it('skips tasks that never dispatched', () => {
+      const orchestrator = createOrchestrator();
+      const a = makeTask('a:build');
+      const taskResults = [
+        { task: a, status: 'skipped', code: 1, terminalOutput: '' },
+      ];
+
+      captureStdout(() =>
+        orchestrator.printGroupedBatchOutput(BATCH, taskResults, undefined)
+      );
+
+      expect(
+        orchestrator.options.lifeCycle.printTaskTerminalOutput
+      ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('runBatch failure folds', () => {
+    // Restoring by assignment would set the string "undefined" for anything
+    // that was unset, which is truthy - leaving isLogGroupingEnabled() true for
+    // the rest of the worker. withEnvironmentVariables deletes properly.
+    let restoreEnv: () => void;
+    beforeEach(() => {
+      // Put shouldGroupBatchOutput() into its folding state.
+      const saved = {
+        GITHUB_ACTIONS: process.env.GITHUB_ACTIONS,
+        NX_SKIP_LOG_GROUPING: process.env.NX_SKIP_LOG_GROUPING,
+        NX_STREAM_OUTPUT: process.env.NX_STREAM_OUTPUT,
+      };
+      process.env.GITHUB_ACTIONS = 'true';
+      delete process.env.NX_SKIP_LOG_GROUPING;
+      delete process.env.NX_STREAM_OUTPUT;
+      restoreEnv = () => {
+        for (const [key, value] of Object.entries(saved)) {
+          if (value === undefined) {
+            delete process.env[key];
+          } else {
+            process.env[key] = value;
+          }
+        }
+      };
+    });
+
+    afterEach(() => restoreEnv());
+
+    const EXIT_ERROR = '"@nx/gradle:batch" exited unexpectedly with code: 137';
+
+    let capturedOutputDir: string;
+    beforeEach(() => {
+      capturedOutputDir = mkdtempSync(join(tmpdir(), 'nx-batch-runbatch-'));
+    });
+    afterEach(() => {
+      rmSync(capturedOutputDir, { recursive: true, force: true });
+    });
+
+    function capturedPath(contents: string): string {
+      const path = join(capturedOutputDir, 'captured.log');
+      writeFileSync(path, contents);
+      return path;
+    }
+
+    function createOrchestrator(captured: string, stopRequested: boolean) {
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      orchestrator.options = {
+        lifeCycle: {
+          printTaskTerminalOutput: jest.fn(),
+          appendTaskOutput: jest.fn(),
+          setTaskStatus: jest.fn(),
+        },
+      };
+      // Object.create bypasses field initializers.
+      orchestrator.batchFoldRenders = new Map();
+      orchestrator.stopRequested = stopRequested;
+      orchestrator.projectGraph = {} as ProjectGraph;
+      orchestrator.taskGraph = {
+        tasks: {
+          'a:build': {
+            id: 'a:build',
+            target: { project: 'a', target: 'build' },
+            overrides: { __overrides_unparsed__: [] },
+            outputs: [],
+            parallelism: true,
+          } as Partial<Task> as Task,
+        },
+      } as Partial<TaskGraph> as TaskGraph;
+      orchestrator.fullTaskGraph = orchestrator.taskGraph;
+      orchestrator.forkedProcessTaskRunner = {
+        forkProcessForBatch: jest.fn().mockResolvedValue({
+          onOutput: jest.fn(),
+          onTaskResults: jest.fn(),
+          getResults: jest.fn().mockRejectedValue(new Error(EXIT_ERROR)),
+          getCapturedOutputPath: () =>
+            captured ? capturedPath(captured) : undefined,
+          discardCapturedOutput: () => {},
+        }),
+      };
+      return orchestrator;
+    }
+
+    async function captureStdout(cb: () => Promise<unknown>): Promise<string> {
+      const original = process.stdout.write;
+      let out = '';
+      process.stdout.write = ((chunk: any) => {
+        out += chunk;
+        return true;
+      }) as any;
+      try {
+        await cb();
+      } finally {
+        process.stdout.write = original;
+      }
+      return stripVTControlCharacters(out);
+    }
+
+    const batch = {
+      id: '@nx/gradle:batch 1',
+      executorName: '@nx/gradle:batch',
+      taskGraph: { tasks: { 'a:build': {} } },
+    };
+
+    it("surfaces a crashed batch's captured log alongside the exit error", async () => {
+      const orchestrator = createOrchestrator(
+        'FAILURE: Could not resolve all dependencies',
+        false
+      );
+
+      const out = await captureStdout(() =>
+        orchestrator.runBatch(batch, {}, 0)
+      );
+
+      expect(out).toContain('batch @nx/gradle:batch 1');
+      expect(out).toContain('FAILURE: Could not resolve all dependencies');
+      expect(out).toContain(EXIT_ERROR);
+    });
+
+    it("surfaces a stopped batch's captured log, without the exit error", async () => {
+      const orchestrator = createOrchestrator(
+        'gradle: still resolving dependencies',
+        true
+      );
+
+      const out = await captureStdout(() =>
+        orchestrator.runBatch(batch, {}, 0)
+      );
+
+      // The partial log is the only thing that shows where an interrupted
+      // batch hung, and grouping means nothing streamed live.
+      expect(out).toContain('batch @nx/gradle:batch 1');
+      expect(out).toContain('gradle: still resolving dependencies');
+      // The exit code just restates the cancellation.
+      expect(out).not.toContain(EXIT_ERROR);
+    });
+
+    it('disambiguates two folds rendered for the same batch id', async () => {
+      // A batch that reports a strict subset of its tasks is re-run under the
+      // same id, so one id can render more than one fold.
+      const orchestrator = createOrchestrator('first pass', false);
+
+      const out = await captureStdout(async () => {
+        await orchestrator.runBatch(batch, {}, 0);
+        await orchestrator.runBatch(batch, {}, 0);
+      });
+
+      expect(out).toContain('batch @nx/gradle:batch 1');
+      expect(out).toContain('batch @nx/gradle:batch 1:2');
+      // Each task's redirect line has to name the fold it belongs to.
+      expect(out).toContain('(output in "batch @nx/gradle:batch 1:2" above)');
+    });
+
+    it('labels each fold with the batch it came from', async () => {
+      const second = { ...batch, id: '@nx/gradle:batch 2' };
+
+      const out = await captureStdout(async () => {
+        await createOrchestrator('first crash', false).runBatch(batch, {}, 0);
+        await createOrchestrator('second crash', false).runBatch(second, {}, 0);
+      });
+
+      // The same executor can crash more than once in a run, so the label has to
+      // carry the batch's own id rather than a count of folds rendered.
+      expect(out).toContain('batch @nx/gradle:batch 1');
+      expect(out).toContain('batch @nx/gradle:batch 2');
+      expect(out).toContain('first crash');
+      expect(out).toContain('second crash');
+      expect(out).toContain('(output in "batch @nx/gradle:batch 2" above)');
     });
   });
 });
