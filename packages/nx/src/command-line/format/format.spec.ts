@@ -88,7 +88,7 @@ describe('nx format', () => {
 
   it('warns and does nothing when no formatter is configured', async () => {
     // Fail-open: a Biome/dprint workspace must not be reformatted, and
-    // `format:check` must not fail CI for it. Fixes #30403.
+    // `format:check` must not fail CI for it.
     detectFormatter.mockReturnValue(null);
 
     await expect(format('write', {} as any)).resolves.toBeUndefined();
