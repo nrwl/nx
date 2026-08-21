@@ -206,11 +206,19 @@ describe('Nx Running Tests', () => {
         expect(stdout).toMatch(/ECHOED positional --a=123 --no-b/);
       }
 
-      expect(
-        runCLI(`echo:fail ${mylib}`, {
-          silenceError: true,
-        })
-      ).toContain(`Cannot find configuration for task ${mylib}:echo:fail`);
+      const echoFailOutput = runCLI(`echo:fail ${mylib}`, {
+        silenceError: true,
+      });
+      // The target does not exist, so run-one reports the available targets
+      // (the only included script) instead of a cryptic task graph error.
+      // "echo:dev" is too far from "echo:fail" to be offered as a "did you
+      // mean", so it can only reach the output via the available-targets list.
+      expect(echoFailOutput).toContain(
+        `Cannot find target "echo:fail" for project "${mylib}"`
+      );
+      expect(echoFailOutput).toContain(`Available targets:`);
+      expect(echoFailOutput).toContain(`- echo:dev`);
+      expect(echoFailOutput).not.toContain(`Did you mean`);
 
       updateJson(`libs/${mylib}/project.json`, (c) => original);
     }, 1000000);
