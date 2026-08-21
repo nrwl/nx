@@ -44,7 +44,7 @@ mockCjsModule(import.meta.url, 'tmp', {
 
 const mockExecSync = vi.fn();
 vi.mock('child_process', async () => ({
-  ...(await vi.importActual('child_process')),
+  ...require('child_process'),
   execSync: (...args: unknown[]) => mockExecSync(...args),
 }));
 

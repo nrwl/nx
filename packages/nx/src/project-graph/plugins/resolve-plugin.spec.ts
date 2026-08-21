@@ -6,7 +6,7 @@
 const existsSyncMock = vi.fn<boolean, [unknown]>(() => false);
 
 vi.mock('node:fs', async () => ({
-  ...(await vi.importActual('node:fs')),
+  ...require('node:fs'),
   existsSync: (...args: unknown[]) => existsSyncMock(...args),
 }));
 

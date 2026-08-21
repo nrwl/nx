@@ -4,7 +4,7 @@ import { join } from 'path';
 import { getPnpmConfigDir, readPnpmYamlConfig } from './pnpm-config';
 
 vi.mock('os', async () => ({
-  ...(await vi.importActual('os')),
+  ...require('os'),
   homedir: vi.fn(),
 }));
 

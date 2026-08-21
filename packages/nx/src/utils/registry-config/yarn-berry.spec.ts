@@ -1,11 +1,11 @@
 // os.homedir() ignores a runtime process.env.HOME override under jest, and a
 // spyOn does not affect a module's named import either.
 vi.mock('os', async () => ({
-  ...(await vi.importActual('os')),
+  ...require('os'),
   homedir: vi.fn(() => '/home/user'),
 }));
 vi.mock('fs', async () => ({
-  ...(await vi.importActual('fs')),
+  ...require('fs'),
   existsSync: vi.fn(),
   readFileSync: vi.fn(),
 }));

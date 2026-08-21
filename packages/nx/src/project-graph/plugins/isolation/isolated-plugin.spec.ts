@@ -96,7 +96,7 @@ describe('IsolatedPlugin', () => {
     plugin.shutdownCount = 0;
 
     // Mock spawnAndConnect
-    const spawnAndConnect = vi.fn().mockImplementation(async () => {
+    const spawnAndConnect = vi.fn().mockImplementation(() => {
       plugin._alive = true;
       plugin.spawnAndConnectCount++;
       return loadResult;
@@ -111,7 +111,7 @@ describe('IsolatedPlugin', () => {
     plugin.shutdown = shutdown;
 
     // Mock sendRequest to return success by default
-    const sendRequest = vi.fn().mockImplementation(async (type: string) => {
+    const sendRequest = vi.fn().mockImplementation((type: string) => {
       switch (type) {
         case 'createNodes':
           return { success: true, result: [] };

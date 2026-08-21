@@ -2756,7 +2756,7 @@ describe('orchestrator', () => {
         createCommits: true,
         plan: [genMig('@nx/js', 'gen')],
       });
-      mockCommit.mockImplementation(async () => {
+      mockCommit.mockImplementation(() => {
         const fresh = readRunState(dir);
         writeRunState(dir, {
           ...fresh,

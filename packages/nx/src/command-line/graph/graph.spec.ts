@@ -76,7 +76,11 @@ describe('getExpandedTaskInputs', () => {
     vi.clearAllMocks();
 
     getPlansMock = vi.fn().mockReturnValue({});
-    HashPlannerMock.mockImplementation(() => ({ getPlans: getPlansMock }));
+    // A plain function so `new HashPlanner(...)` works (arrows are not
+    // constructible under vitest's mocks).
+    HashPlannerMock.mockImplementation(function () {
+      return { getPlans: getPlansMock };
+    });
 
     createProjectGraphAsyncMock.mockResolvedValue({
       nodes: {},

@@ -1,9 +1,9 @@
 vi.mock('fs', async () => ({
-  ...(await vi.importActual('fs')),
+  ...require('fs'),
   existsSync: vi.fn(),
 }));
 vi.mock('child_process', async () => ({
-  ...(await vi.importActual('child_process')),
+  ...require('child_process'),
   spawnSync: vi.fn(),
   execSync: vi.fn(),
 }));
@@ -32,7 +32,7 @@ import {
   type PackageManagerCommands,
 } from './package-manager';
 
-const realFs = (await vi.importActual('fs')) as typeof import('fs');
+const realFs = require('fs') as typeof import('fs');
 
 describe('getRunNxBaseCommand', () => {
   const pmc = { exec: 'npx' } as PackageManagerCommands;

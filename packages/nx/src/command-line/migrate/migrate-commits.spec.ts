@@ -84,7 +84,7 @@ describe('commitMigrationIfRequested', () => {
 
   it('runs installDeps before checking for uncommitted changes', async () => {
     let installFinished = false;
-    installDeps.mockImplementation(async () => {
+    installDeps.mockImplementation(() => {
       installFinished = true;
     });
     mockHas.mockImplementation(() => {

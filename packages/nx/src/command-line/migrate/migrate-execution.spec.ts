@@ -1,6 +1,6 @@
 const mockSpawn = vi.fn();
 vi.mock('child_process', async () => ({
-  ...(await vi.importActual('child_process')),
+  ...require('child_process'),
   spawn: (...args: unknown[]) => mockSpawn(...args),
 }));
 

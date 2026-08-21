@@ -175,7 +175,7 @@ describe('nxCloudPrompt option mapping', () => {
 
   it('returns the selected key unchanged', async () => {
     mockAutocomplete.mockImplementationOnce(
-      async ({ options }: { options: { value: string }[] }) =>
+      ({ options }: { options: { value: string }[] }) =>
         options.find((o) => o.value === 'skip')?.value
     );
 

@@ -2,8 +2,8 @@ vi.mock('child_process');
 // os.homedir() reads the native home and ignores a runtime process.env.HOME
 // override inside jest, so mock it to redirect home to a temp dir per test.
 vi.mock('os', async () => ({
-  ...(await vi.importActual('os')),
-  homedir: vi.fn(async () => (await vi.importActual('os')).homedir()),
+  ...require('os'),
+  homedir: vi.fn(async () => require('os').homedir()),
 }));
 
 import * as childProcess from 'child_process';
