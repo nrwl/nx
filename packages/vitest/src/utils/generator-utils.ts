@@ -93,7 +93,11 @@ export function addOrChangeTestTarget(
 
 // Escape a value for emission inside a single-quoted source literal.
 function escapeLiteral(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r');
 }
 
 export interface ViteConfigFileOptions {
@@ -286,9 +290,6 @@ ${
   // },`;
 
   const aliasEntries = Object.entries(options.resolveAlias ?? {});
-  if (aliasEntries.length) {
-    imports.push(`import { join } from 'node:path'`);
-  }
   const resolveOption = aliasEntries.length
     ? `  resolve: {
     alias: {
@@ -333,7 +334,10 @@ ${aliasEntries
     return;
   }
 
-  // When using vitest.config, use vitest/config import and skip vite-specific options
+  if (aliasEntries.length) {
+    imports.push(`import { join } from 'node:path'`);
+  }
+
   const viteConfigContent = extraOptions.vitestFileName
     ? `import { defineConfig } from 'vitest/config';
 ${imports.join(';\n')}${imports.length ? ';' : ''}

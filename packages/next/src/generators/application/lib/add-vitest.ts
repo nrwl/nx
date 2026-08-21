@@ -71,9 +71,12 @@ export async function addVitest(
     const rootTsConfigPath = getRootTsConfigPathInTree(host);
     if (rootTsConfigPath && host.exists(rootTsConfigPath)) {
       const rootTsConfig = readJson(host, rootTsConfigPath);
+      // Path mappings resolve relative to `baseUrl` when the root tsconfig
+      // sets one.
+      const baseUrl = rootTsConfig?.compilerOptions?.baseUrl ?? '.';
       collectAliases(
         rootTsConfig?.compilerOptions?.paths,
-        offsetFromRoot(options.appProjectRoot)
+        joinPathFragments(offsetFromRoot(options.appProjectRoot), baseUrl) + '/'
       );
     }
   }
@@ -134,6 +137,10 @@ export async function addVitest(
           ...tsConfigJson.compilerOptions.paths,
           ...json.compilerOptions.paths,
         };
+      }
+      if (options.js) {
+        json.compilerOptions ??= {};
+        json.compilerOptions.allowJs = true;
       }
       json.include = [
         ...(json.include ?? []),

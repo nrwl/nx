@@ -48,6 +48,24 @@ describe('createOrEditViteConfig', () => {
       );
     });
 
+    it('should escape line terminators in emitted literals', () => {
+      createOrEditViteConfig(
+        tree,
+        {
+          project: 'my-app',
+          includeVitest: true,
+          coverageProvider: 'none',
+          testInclude: ['specs/a\nb.spec.ts'],
+        },
+        true,
+        { vitestFileName: true, skipPackageJson: true }
+      );
+
+      const config = tree.read('apps/my-app/vitest.config.ts', 'utf-8');
+
+      expect(config).toContain(`include: ['specs/a\\nb.spec.ts'],`);
+    });
+
     it('should emit resolve.alias entries for resolveAlias', () => {
       createOrEditViteConfig(
         tree,
@@ -91,6 +109,7 @@ describe('createOrEditViteConfig', () => {
       const config = tree.read('apps/my-app/vitest.config.ts', 'utf-8');
 
       expect(config).not.toContain('alias');
+      expect(config).not.toContain('node:path');
     });
 
     it('should generate vitest config with v8 coverage provider', () => {

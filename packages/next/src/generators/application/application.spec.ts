@@ -1229,6 +1229,42 @@ describe('app', () => {
         `'@proj/other': join(import.meta.dirname, '../libs/other/src'),`
       );
     });
+
+    it('should resolve root tsconfig paths against its baseUrl', async () => {
+      updateJson(tree, 'tsconfig.base.json', (json) => {
+        json.compilerOptions ??= {};
+        json.compilerOptions.baseUrl = 'src';
+        json.compilerOptions.paths = {
+          'shared/*': ['shared/*'],
+        };
+        return json;
+      });
+
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        style: 'css',
+        unitTestRunner: 'vitest',
+        skipFormat: true,
+      });
+
+      const vitestConfig = tree.read('myapp/vitest.config.mts', 'utf-8');
+      expect(vitestConfig).toContain(
+        `'shared': join(import.meta.dirname, '../src/shared'),`
+      );
+    });
+
+    it('should enable allowJs in tsconfig.spec.json for --js apps', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        style: 'css',
+        unitTestRunner: 'vitest',
+        js: true,
+        skipFormat: true,
+      });
+
+      const tsconfigSpec = readJson(tree, 'myapp/tsconfig.spec.json');
+      expect(tsconfigSpec.compilerOptions.allowJs).toBe(true);
+    });
   });
 
   describe('--unit-test-runner jest', () => {
