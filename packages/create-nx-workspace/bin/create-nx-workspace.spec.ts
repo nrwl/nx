@@ -581,7 +581,7 @@ describe('determineUnitTestRunner', () => {
         workspaceType: 'integrated',
       },
       expected: 'jest',
-      excluded: 'vitest',
+      excluded: '',
     },
   };
 
