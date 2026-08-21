@@ -1,4 +1,5 @@
 import { readNxJson } from '../../config/nx-json';
+import { isCI } from '../../utils/is-ci';
 import { shouldUseTui } from '../../tasks-runner/is-tui-enabled';
 import { NxArgs } from '../../utils/command-line-utils';
 import type { Argv, ParserConfigurationOptions } from 'yargs';
@@ -362,6 +363,19 @@ export function withOutputStyleOption<T>(
           choices.includes(process.env.NX_DEFAULT_OUTPUT_STYLE as OutputStyle)
         ) {
           args.outputStyle = process.env.NX_DEFAULT_OUTPUT_STYLE;
+        }
+      },
+      (args) => {
+        // CI is where a log is read after the fact and only the failures matter.
+        // Deliberately not keyed on the static life cycle's own condition, which
+        // is any non-TTY: piping a local run to a file still prints in full,
+        // exactly as it did before this style existed.
+        if (
+          !args.outputStyle &&
+          isCI() &&
+          choices.includes('static-failures-only')
+        ) {
+          args.outputStyle = 'static-failures-only';
         }
       },
       (args) => {
