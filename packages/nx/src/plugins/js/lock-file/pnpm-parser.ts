@@ -28,7 +28,7 @@ import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { getCatalogManager } from '../../../utils/catalog';
 import { findNodeMatchingVersion } from './project-graph-pruning';
-import { join, relative, sep } from 'path';
+import { join, posix, relative, sep } from 'path';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 import { satisfies, validRange } from 'semver';
 
@@ -508,6 +508,54 @@ function getNodes(
       results[node.name] = node;
     });
   }
+
+  // `link:` dependencies pointing outside the workspace never appear in the
+  // packages section, so nothing above minted a node for them — and a task
+  // input naming one via `externalDependencies` fails hashing with "could not
+  // be found". Mint a node keyed on the link path. Its hash changes only when
+  // the path does, not when the linked content does, which is how linked
+  // dependencies behave everywhere else in Nx. Links that resolve inside the
+  // workspace are workspace projects, not externals, and are skipped.
+  for (const [importerPath, importer] of Object.entries(data.importers ?? {})) {
+    for (const depType of [
+      'dependencies',
+      'devDependencies',
+      'optionalDependencies',
+    ] as const) {
+      const deps = importer[depType] as Record<string, string> | undefined;
+      if (!deps) {
+        continue;
+      }
+      for (const [depName, depVersion] of Object.entries(deps)) {
+        if (typeof depVersion !== 'string' || !depVersion.startsWith('link:')) {
+          continue;
+        }
+        const linkTarget = posix.normalize(
+          posix.join(
+            importerPath === '.' ? '' : importerPath,
+            depVersion.slice('link:'.length)
+          )
+        );
+        if (!linkTarget.startsWith('..')) {
+          continue; // inside the workspace -> a workspace project
+        }
+        const bareName = `npm:${depName}`;
+        if (results[bareName]) {
+          continue; // a registry version is hoisted under this name
+        }
+        results[bareName] = {
+          type: 'npm',
+          name: bareName,
+          data: {
+            version: depVersion,
+            packageName: depName,
+            hash: hashArray([depName, depVersion]),
+          },
+        };
+      }
+    }
+  }
+
   return { nodes: results, keyMap };
 }
 

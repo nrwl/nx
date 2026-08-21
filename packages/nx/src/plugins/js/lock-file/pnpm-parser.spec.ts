@@ -3045,10 +3045,23 @@ importers:
       );
     });
 
-    it('should produce no external nodes', () => {
+    it('should produce a node only for the out-of-workspace link', () => {
       const result = getPnpmLockfileNodes(lockFile, '__workspace_only__');
 
-      expect(result.nodes).toEqual({});
+      // `link:../my-plugin` escapes the workspace, so it is an external
+      // dependency even though the lockfile has no packages block; a task
+      // input naming it must resolve to a node instead of failing the hasher.
+      expect(result.nodes).toEqual({
+        'npm:my-plugin': {
+          type: 'npm',
+          name: 'npm:my-plugin',
+          data: {
+            version: 'link:../my-plugin',
+            packageName: 'my-plugin',
+            hash: expect.any(String),
+          },
+        },
+      });
     });
 
     it('should produce no dependencies', () => {
@@ -3065,6 +3078,90 @@ importers:
       expect(
         getPnpmLockfileDependencies(lockFile, '__workspace_only__', ctx, keyMap)
       ).toEqual([]);
+    });
+  });
+
+  describe('linked dependencies', () => {
+    // A `link:` outside the workspace has no packages-section entry, so no
+    // node used to exist for it and `externalDependencies: ['<name>']` on any
+    // task failed hashing with "could not be found" (seen with a linked
+    // @nx/oxlint whose config names it via jsPlugins). Links inside the
+    // workspace are workspace projects and must NOT become external nodes.
+    const lockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      is-even:
+        specifier: ^1.0.0
+        version: 1.0.0
+    devDependencies:
+      '@scoped/linked-out':
+        specifier: link:../../elsewhere/plugin
+        version: link:../../elsewhere/plugin
+      linked-in:
+        specifier: link:packages/local
+        version: link:packages/local
+
+  packages/local: {}
+
+packages:
+
+  is-even@1.0.0:
+    resolution: {integrity: sha512-LEhnkAdJqic4Dbqn58A0y52IXoHWlsueqQkKfMfdEnIYG8A1sm/GHidKkS6yvXlMoRrkM34csHnXQtOqcb+Jzg==}
+
+snapshots:
+
+  is-even@1.0.0: {}
+`;
+
+    beforeEach(() => {
+      vol.fromJSON(
+        { 'node_modules/.modules.yaml': 'hoistedDependencies: {}\n' },
+        '/root'
+      );
+    });
+
+    it('should create a node for an out-of-workspace link but not an in-workspace one', () => {
+      const { nodes } = getPnpmLockfileNodes(lockFile, '__linked_deps__');
+
+      expect(nodes['npm:@scoped/linked-out']).toEqual({
+        type: 'npm',
+        name: 'npm:@scoped/linked-out',
+        data: {
+          version: 'link:../../elsewhere/plugin',
+          packageName: '@scoped/linked-out',
+          hash: expect.any(String),
+        },
+      });
+      expect(nodes['npm:linked-in']).toBeUndefined();
+      expect(Object.keys(nodes).filter((n) => n.includes('linked-in'))).toEqual(
+        []
+      );
+      // Registry packages are untouched.
+      expect(nodes['npm:is-even']).toBeDefined();
+    });
+
+    it('should not shadow a hoisted registry package with a link from a nested importer', () => {
+      const withNestedLink = lockFile.replace(
+        '  packages/local: {}',
+        `  packages/local:
+    dependencies:
+      is-even:
+        specifier: link:../../../other/is-even
+        version: link:../../../other/is-even`
+      );
+
+      const { nodes } = getPnpmLockfileNodes(withNestedLink, '__linked_dup__');
+
+      // npm:is-even already names the hoisted registry version; the link from
+      // the nested importer must not replace it.
+      expect(nodes['npm:is-even'].data.version).toBe('1.0.0');
     });
   });
 });
