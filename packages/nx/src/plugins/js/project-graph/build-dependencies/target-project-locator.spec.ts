@@ -623,8 +623,10 @@ describe('TargetProjectLocator', () => {
       expect(result).toEqual('child-pm-workspaces');
     });
 
-    it('should convert relative file paths to absolute paths before TypeScript module resolution', () => {
-      const typescriptModule = require('nx/src/plugins/js/utils/typescript');
+    it('should convert relative file paths to absolute paths before TypeScript module resolution', async () => {
+      const typescriptModule = await import(
+        'nx/src/plugins/js/utils/typescript'
+      );
       const resolveModuleByImportSpy = vi
         .spyOn(typescriptModule, 'resolveModuleByImport')
         .mockReturnValue('/root/libs/proj/some-module.ts');
@@ -661,8 +663,10 @@ describe('TargetProjectLocator', () => {
       resolveModuleByImportSpy.mockRestore();
     });
 
-    it('should keep absolute file paths as-is for TypeScript module resolution', () => {
-      const typescriptModule = require('nx/src/plugins/js/utils/typescript');
+    it('should keep absolute file paths as-is for TypeScript module resolution', async () => {
+      const typescriptModule = await import(
+        'nx/src/plugins/js/utils/typescript'
+      );
       const resolveModuleByImportSpy = vi
         .spyOn(typescriptModule, 'resolveModuleByImport')
         .mockReturnValue('/root/libs/proj/some-module.ts');

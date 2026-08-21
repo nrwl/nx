@@ -12,8 +12,8 @@ import {
   warnLegacyDependsOnMagicString,
 } from './legacy-depends-on-warning';
 
-const { output } = require('../utils/output');
-const { readSourceMapsCache } = require('../project-graph/nx-deps-cache');
+const { output } = await import('../utils/output');
+const { readSourceMapsCache } = await import('../project-graph/nx-deps-cache');
 
 const selfEntry = (target: string) => ({ projects: 'self', target }) as const;
 

@@ -30,7 +30,7 @@ vi.mock('./plugin-capabilities', () => ({
     mockGetPluginCapabilities(...args),
 }));
 
-const { output } = require('../output');
+const { output } = await import('../output');
 
 describe('formatPluginCapabilitiesAsJson', () => {
   it('should format a plugin with generators and executors', () => {

@@ -29,14 +29,13 @@ vi.mock('../../utils/installed-nx-version', () => ({
 // `resolvePackageVersionUsingRegistry` spies keep driving the assertions.
 vi.mock('./resolve-package-version', () => ({
   isRegistryResolutionEnabled: () => true,
-  resolvePackageVersionRespectingMinReleaseAge: (
+  resolvePackageVersionRespectingMinReleaseAge: async (
     packageName: string,
     version: string
   ) =>
-    require('../../utils/package-manager').resolvePackageVersionUsingRegistry(
-      packageName,
-      version
-    ),
+    (
+      await import('../../utils/package-manager')
+    ).resolvePackageVersionUsingRegistry(packageName, version),
 }));
 import { resolveCatalogSpecifiers } from '../../utils/catalog';
 import * as configModule from '../../config/configuration';
@@ -4171,7 +4170,7 @@ module.exports = {
         // passed. The overlay must carry it as a default, not a flag, and a
         // target that doesn't support optional updates must fall back to 'all' with a warning.
         const warnSpy = vi
-          .spyOn(require('../../utils/output').output, 'warn')
+          .spyOn((await import('../../utils/output')).output, 'warn')
           .mockImplementation(() => {});
         const result = await parseMigrationsOptions(
           applyNxJsonMigrateDefaults(
@@ -5031,9 +5030,9 @@ module.exports = {
       });
     }
 
-    function spyWarn() {
+    async function spyWarn() {
       return vi
-        .spyOn(require('../../utils/output').output, 'warn')
+        .spyOn((await import('../../utils/output')).output, 'warn')
         .mockImplementation(() => {});
     }
 

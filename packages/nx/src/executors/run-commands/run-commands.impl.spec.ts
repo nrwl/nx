@@ -1,3 +1,7 @@
+// child_process's ESM namespace is frozen; spy mode wraps the real spawn so
+// the --color tests can observe env without changing behavior.
+vi.mock('child_process', { spy: true });
+
 import { readFileSync, writeFileSync } from 'fs';
 import { env } from 'npm-run-path';
 import { relative } from 'path';
@@ -682,7 +686,7 @@ describe('Run Commands', () => {
 
   describe('--color', () => {
     it('should not set FORCE_COLOR=true', async () => {
-      const spawnSpy = vi.spyOn(require('child_process'), 'spawn');
+      const spawnSpy = vi.mocked((await import('child_process')).spawn);
       await runCommands(
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
@@ -716,7 +720,7 @@ describe('Run Commands', () => {
     });
 
     it('should not set FORCE_COLOR=true when --no-color is passed', async () => {
-      const spawnSpy = vi.spyOn(require('child_process'), 'spawn');
+      const spawnSpy = vi.mocked((await import('child_process')).spawn);
       await runCommands(
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
@@ -751,7 +755,7 @@ describe('Run Commands', () => {
     });
 
     it('should set FORCE_COLOR=true when running with --color', async () => {
-      const spawnSpy = vi.spyOn(require('child_process'), 'spawn');
+      const spawnSpy = vi.mocked((await import('child_process')).spawn);
       await runCommands(
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],

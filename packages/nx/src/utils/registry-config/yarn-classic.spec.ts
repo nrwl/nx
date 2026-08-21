@@ -1786,7 +1786,7 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     // The overlay cannot stop npm reading the same .npmrc, so npm authenticates
     // on a registry yarn resolved but would have queried anonymously.
     const warnFor = async (packages: string[]): string[] => {
-      const { logger } = require('../logger');
+      const { logger } = await import('../logger');
       (logger.warn as jest.Mock).mockClear();
       vi.resetModules();
       const { getYarnClassicSpawnRegistryEnv: fresh } = await import(

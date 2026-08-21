@@ -5,7 +5,8 @@ const mockDaemonMultiGlob = vi.fn();
 const mockEnabled = vi.fn();
 const mockIsOnDaemon = vi.fn();
 
-vi.mock('../native', () => ({
+vi.mock('../native', async (importOriginal) => ({
+  ...(await importOriginal<any>()),
   WorkspaceContext: vi.fn().mockImplementation(() => ({
     glob: mockGlob,
     multiGlob: mockMultiGlob,

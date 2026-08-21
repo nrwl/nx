@@ -144,7 +144,7 @@ describe('show project', () => {
   });
 
   it('should show error when cwd is not within a project and no projectName provided', async () => {
-    const { output } = require('../../utils/output');
+    const { output } = await import('../../utils/output');
 
     // Make process.exit throw to stop execution
     vi.spyOn(process, 'exit').mockImplementation((code) => {

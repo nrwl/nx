@@ -1,4 +1,5 @@
-vi.mock('../../../native', () => ({
+vi.mock('../../../native', async (importOriginal) => ({
+  ...(await importOriginal<any>()),
   isAiAgent: vi.fn(() => false),
 }));
 vi.mock('@clack/prompts', () => ({

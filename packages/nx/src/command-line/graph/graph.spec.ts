@@ -5,7 +5,8 @@ import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { allFileData } from '../../utils/all-file-data';
 import { getExpandedTaskInputs, ProjectGraphClientResponse } from './graph';
 
-vi.mock('../../native', () => ({
+vi.mock('../../native', async (importOriginal) => ({
+  ...(await importOriginal<any>()),
   HashPlanner: vi.fn(),
   transferProjectGraph: vi.fn((g) => g),
 }));

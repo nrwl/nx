@@ -382,7 +382,7 @@ describe('show target info', () => {
   });
 
   it('should error when target not found and list available targets', async () => {
-    const { output } = require('../../../utils/output');
+    const { output } = await import('../../../utils/output');
     vi.spyOn(process, 'exit').mockImplementation((code) => {
       throw new Error(`process.exit: ${code}`);
     });
@@ -416,7 +416,7 @@ describe('show target info', () => {
   });
 
   it('should error when project not found', async () => {
-    const { output } = require('../../../utils/output');
+    const { output } = await import('../../../utils/output');
     vi.spyOn(process, 'exit').mockImplementation((code) => {
       throw new Error(`process.exit: ${code}`);
     });
@@ -446,7 +446,7 @@ describe('show target info', () => {
   });
 
   it('should error when configuration not found and list available configs', async () => {
-    const { output } = require('../../../utils/output');
+    const { output } = await import('../../../utils/output');
     vi.spyOn(process, 'exit').mockImplementation((code) => {
       throw new Error(`process.exit: ${code}`);
     });

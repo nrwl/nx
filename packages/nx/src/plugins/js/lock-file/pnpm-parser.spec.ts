@@ -17,8 +17,8 @@ import {
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { hashArray } from '../../../hasher/file-hasher';
 
-vi.mock('node:fs', () => {
-  const memFs = require('memfs').fs;
+vi.mock('node:fs', async () => {
+  const memFs = (await import('memfs')).fs;
   return {
     ...memFs,
     existsSync: (p) => (p.endsWith('.node') ? true : memFs.existsSync(p)),

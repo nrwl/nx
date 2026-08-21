@@ -8,7 +8,7 @@ vi.mock('./output', () => ({
   },
 }));
 
-const { output } = require('./output');
+const { output } = await import('./output');
 
 let projectGraph: ProjectGraph;
 

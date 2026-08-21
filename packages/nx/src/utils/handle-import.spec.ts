@@ -29,7 +29,7 @@ describe('handleImport', () => {
 
     // We can't easily mock dynamic import, so instead test with a real CJS module
     // and verify the error-code branching logic directly
-    const handleImportModule = require('./handle-import');
+    const handleImportModule = await import('./handle-import');
 
     // Verify the function exists and returns from require for CJS
     const result = await handleImportModule.handleImport('path');

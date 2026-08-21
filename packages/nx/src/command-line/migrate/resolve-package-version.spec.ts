@@ -86,10 +86,10 @@ describe('isRegistryResolutionEnabled', () => {
   const originalEnv = { ...process.env };
   let warnSpy: jest.SpyInstance;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     resetResolvePackageVersionState();
     warnSpy = vi
-      .spyOn(require('../../utils/output').output, 'warn')
+      .spyOn((await import('../../utils/output')).output, 'warn')
       .mockImplementation(() => {});
     delete process.env.NX_MIGRATE_USE_REGISTRY_RESOLUTION;
     delete process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH;
@@ -252,7 +252,7 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
 
   it('logs a one-liner (deduped) when the pick differs from the unconstrained version', async () => {
     const log = vi
-      .spyOn(require('../../utils/output').output, 'log')
+      .spyOn((await import('../../utils/output')).output, 'log')
       .mockImplementation(() => {});
     mockReadPolicy.mockResolvedValue(pnpmPolicy());
     mockResolve.mockResolvedValue({ version: '1.1.1', unconstrained: '1.2.0' });
