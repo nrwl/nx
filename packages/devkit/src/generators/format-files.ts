@@ -182,9 +182,10 @@ async function formatWithOxfmt(
       // cannot see a config the generator staged, and still sees one it
       // deleted. Both mislead oxfmt's "two configs in one directory" check.
       oxfmtConfigFiles?.filter((name) => tree.exists(name)),
-      // Ignore files as they will be after the flush: the batch is selected
-      // against the tree, so re-checking against disk decides a staged
-      // `.gitignore`/`.prettierignore` change twice, two ways.
+      // Ignore files and the root `.editorconfig` as they will be after the
+      // flush: the batch is selected against the tree, so re-checking against
+      // disk decides a staged `.gitignore`/`.prettierignore` change twice, two
+      // ways, and misses a staged `.editorconfig` entirely.
       //
       // Only when the checkers exist. An nx without them is older than this
       // argument, so it would drop the reader and filter nothing - and there is

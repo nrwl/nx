@@ -581,6 +581,69 @@ describe('formatFilesWithOxfmt', () => {
       expect(errors).toBeUndefined();
       expect(formatted.size).toBe(0);
     });
+
+    it('reads a staged root .editorconfig through the read callback', async () => {
+      // A generator that creates the .editorconfig stages it in the tree, so
+      // disk holds no copy until the flush.
+      const { formatted } = await formatFilesWithOxfmt(
+        [{ path: 'a.ts', content: 'function f() {\n  const x = 1;\n}\n' }],
+        workspaceRoot,
+        undefined,
+        undefined,
+        (relativePath) =>
+          relativePath === '.editorconfig'
+            ? 'root = true\n\n[*]\nindent_size = 4\n'
+            : null
+      );
+
+      expect(formatted.get('a.ts')).toEqual(
+        'function f() {\n    const x = 1;\n}\n'
+      );
+    });
+
+    it('prefers a staged root .editorconfig over the one on disk', async () => {
+      writeEditorConfig('root = true\n\n[*]\nindent_size = 8\n');
+
+      const { formatted } = await formatFilesWithOxfmt(
+        [{ path: 'a.ts', content: 'function f() {\n  const x = 1;\n}\n' }],
+        workspaceRoot,
+        undefined,
+        undefined,
+        (relativePath) =>
+          relativePath === '.editorconfig'
+            ? 'root = true\n\n[*]\nindent_size = 4\n'
+            : null
+      );
+
+      expect(formatted.get('a.ts')).toEqual(
+        'function f() {\n    const x = 1;\n}\n'
+      );
+    });
+
+    it('does not apply a .editorconfig the read callback reports absent', async () => {
+      // On disk but deleted in the tree: `read` returning null is the
+      // post-flush truth, so the disk copy must not apply.
+      writeEditorConfig('root = true\n\n[*]\nmax_line_length = 40\n');
+
+      const { formatted, errors } = await formatFilesWithOxfmt(
+        [
+          {
+            path: 'a.ts',
+            content:
+              'const someName = { alpha: 1, beta: 2, gamma: 3, delta: 4 };\n',
+          },
+        ],
+        workspaceRoot,
+        undefined,
+        undefined,
+        () => null
+      );
+
+      // Under oxfmt's default width the line stays whole; the disk file's 40
+      // would split it.
+      expect(errors).toBeUndefined();
+      expect(formatted.size).toBe(0);
+    });
   });
 
   describe('ignore files', () => {

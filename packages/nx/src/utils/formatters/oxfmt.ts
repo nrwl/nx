@@ -282,10 +282,6 @@ type EditorConfigFile = {
   isRoot: boolean;
 };
 
-/**
- * Compiles each section's glob once per batch, not per file: the globs are
- * invariant, so this is O(sections) rather than O(files x sections).
- */
 function readEditorConfigInDir(
   dir: string
 ): { sections: EditorConfigSection[]; isRoot: boolean } | undefined {
@@ -302,6 +298,17 @@ function readEditorConfigInDir(
     return undefined;
   }
 
+  return parseEditorConfig(contents);
+}
+
+/**
+ * Compiles each section's glob once per batch, not per file: the globs are
+ * invariant, so this is O(sections) rather than O(files x sections).
+ */
+function parseEditorConfig(contents: string): {
+  sections: EditorConfigSection[];
+  isRoot: boolean;
+} {
   const sections: EditorConfigSection[] = [];
   let current: EditorConfigSection | undefined;
   let isRoot = false;
@@ -349,13 +356,29 @@ function readEditorConfigInDir(
  * the oxfmt CLI follows. Deliberately continues above the workspace root,
  * where a repo nested in a larger checkout keeps shared settings.
  *
+ * `read` takes workspace-relative paths and the walk starts at the workspace
+ * root, so it can only serve the starting directory; every directory above
+ * sits outside the workspace and is read from disk.
+ *
  * Returned in application order, so nearer overwrites farther.
  */
-function editorConfigChainFor(dir: string): EditorConfigFile[] {
+function editorConfigChainFor(
+  dir: string,
+  read?: (relativePath: string) => string | null | undefined
+): EditorConfigFile[] {
   const found: EditorConfigFile[] = [];
-  let current = path.resolve(dir);
+  const start = path.resolve(dir);
+  let current = start;
   while (true) {
-    const parsed = readEditorConfigInDir(current);
+    let parsed:
+      | { sections: EditorConfigSection[]; isRoot: boolean }
+      | undefined;
+    if (read && current === start) {
+      const contents = read('.editorconfig');
+      parsed = contents == null ? undefined : parseEditorConfig(contents);
+    } else {
+      parsed = readEditorConfigInDir(current);
+    }
     if (parsed) {
       found.push({ ...parsed, dir: current });
       if (parsed.isRoot) {
@@ -877,8 +900,9 @@ export async function formatFilesWithOxfmt(
   // Tree-holding caller knows this; without it the root is resolved from disk.
   rootConfigNames?: readonly string[],
   // Reads a workspace-relative file, `null` when it does not exist. A
-  // tree-holding caller passes a tree-backed one so ignore files are read as
-  // they will be after the flush; everyone else gets disk.
+  // tree-holding caller passes a tree-backed one so ignore files and the root
+  // `.editorconfig` are read as they will be after the flush; everyone else
+  // gets disk.
   read?: (relativePath: string) => string | null | undefined
 ): Promise<{ formatted: Map<string, string>; errors?: string[] }> {
   const formatted = new Map<string, string>();
@@ -916,10 +940,11 @@ export async function formatFilesWithOxfmt(
   // Measured against the CLI: it resolves `.editorconfig` from the directory it
   // runs in and never reads a nested one, unlike the per-file walk it does for
   // `.oxfmtrc.json`. Honouring a nearer file here would be undone by the next
-  // `nx format:write`.
+  // `nx format:write`. The root's own file goes through `read`, so one a
+  // generator staged (or deleted) is honoured as it will be after the flush.
   let editorConfigChain: EditorConfigFile[];
   try {
-    editorConfigChain = editorConfigChainFor(workspaceRoot);
+    editorConfigChain = editorConfigChainFor(workspaceRoot, read);
   } catch (e) {
     // Resolved once for the batch, so this sits outside the per-file catch.
     // Bare defaults would format to widths `nx format` does not, so an

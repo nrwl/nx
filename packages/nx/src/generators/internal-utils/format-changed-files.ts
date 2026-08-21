@@ -70,8 +70,9 @@ export async function formatChangedFiles(
     // The post-flush root, which disk cannot see: a config staged here is not
     // written yet, and one the tree deletes still is.
     oxfmtConfigFiles.filter((name) => tree.exists(name)),
-    // Same reason, for the ignore files: the batch is selected against the tree,
-    // so the backend has to re-check against the tree and not against disk.
+    // Same reason, for the ignore files and the root .editorconfig: the batch
+    // is selected against the tree, so the backend has to re-check against the
+    // tree and not against disk.
     (relativePath) => tree.read(relativePath, 'utf-8')
   );
 
