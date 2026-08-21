@@ -1,8 +1,7 @@
 {
   "$schema": "../../node_modules/oxlint/configuration_schema.json",
-  "ignorePatterns": ["dist"],
+  "extends": ["../../.oxlintrc.json"],
   "categories": {
-    "correctness": "error",
     "suspicious": "warn"
   },
   "rules": {
