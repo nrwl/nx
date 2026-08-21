@@ -40,7 +40,13 @@ exceptions:
   - BitBucket
   - BitBucket Cloud
   - Azure DevOps
+  - Azure AI Foundry
   - Azure
+  - AWS Bedrock
+  - Google Vertex AI
+  - Anthropic
+  - Claude Code
+  - Claude
   - Docker
   - Dockerfile
   - Kubernetes

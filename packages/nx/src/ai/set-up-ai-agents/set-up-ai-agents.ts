@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { major } from 'semver';
 import TOML from 'smol-toml';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { formatChangedFiles } from '../../generators/internal-utils/format-changed-files';
 import { Tree } from '../../generators/tree';
 import { generateFiles } from '../../generators/utils/generate-files';
 import { readJson, updateJson, writeJson } from '../../generators/utils/json';
@@ -352,7 +352,7 @@ export async function setupAiAgentsGeneratorImpl(
     '.claude/settings.local.json'
   );
 
-  await formatChangedFilesWithPrettierIfAvailable(tree);
+  await formatChangedFiles(tree);
 
   // we use the check variable to determine if we should actually make changes or just report what would be changed
   return async (check: boolean = false) => {

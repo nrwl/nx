@@ -347,12 +347,28 @@ export class DaemonClient {
     cwd: string,
     collectInputs?: boolean
   ): Promise<Hash[]> {
+    // Task results get written back onto these task objects as the run
+    // progresses — hash/hashDetails/timestamps by hashing and the
+    // orchestrator, terminalOutput by the Nx Cloud life cycle (untyped) —
+    // so a later message would otherwise re-ship every earlier result.
+    const trimmedTasks: Record<string, Task> = {};
+    for (const [id, t] of Object.entries(taskGraph.tasks)) {
+      const {
+        hash,
+        hashDetails,
+        startTime,
+        endTime,
+        terminalOutput,
+        ...strippedTask
+      } = t as Task & { terminalOutput?: string };
+      trimmedTasks[id] = strippedTask as Task;
+    }
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
       runnerOptions,
       perTaskEnvs,
-      tasks,
-      taskGraph,
+      tasks: tasks.map((t) => trimmedTasks[t.id]),
+      taskGraph: { ...taskGraph, tasks: trimmedTasks },
       cwd,
       collectInputs,
     });

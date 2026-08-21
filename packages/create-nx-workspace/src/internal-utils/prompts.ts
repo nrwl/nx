@@ -1,5 +1,4 @@
 import yargs from 'yargs';
-import enquirer from 'enquirer';
 import chalk from 'chalk';
 
 import { MessageKey, messages } from '../utils/nx/ab-testing';
@@ -20,6 +19,12 @@ import {
 import { detectAiAgentName, isAiAgent } from '../utils/ai/ai-output';
 import { CnwError } from '../utils/error-utils';
 import { output } from '../utils/output';
+import {
+  confirmationPrompt,
+  multiselectPrompt,
+  selectPrompt,
+  textPrompt,
+} from './prompt-helpers';
 
 export async function determineNxCloud(
   parsedArgs: yargs.Arguments<{ nxCloud: NxCloud }>
@@ -59,44 +64,37 @@ export async function determineIfGitHubWillBeUsed(
 ): Promise<boolean> {
   if (parsedArgs.nxCloud === 'yes' || parsedArgs.nxCloud === 'circleci') {
     if (parsedArgs?.useGitHub) return true;
-    const reply = await enquirer.prompt<{ github: 'Yes' | 'No' }>([
-      {
-        name: 'github',
-        message: 'Will you be using GitHub as your git hosting provider?',
-        type: 'autocomplete',
-        choices: [{ name: 'Yes' }, { name: 'No' }],
-        initial: 0,
-      },
-    ]);
-    return reply.github === 'Yes';
+    return confirmationPrompt({
+      message: 'Will you be using GitHub as your git hosting provider?',
+    });
   }
   return false;
 }
 
 async function nxCloudPrompt(key: MessageKey): Promise<NxCloud> {
-  const { message, choices, initial, fallback, footer, hint } =
+  const { message, choices, initial, fallback, footer } =
     messages.getPrompt(key);
 
-  const promptConfig = {
-    name: 'NxCloud',
-    message,
-    type: 'autocomplete',
-    choices,
-    initial,
-  } as any; // meeroslav: types in enquirer are not up to date
-  if (footer) {
-    promptConfig.footer = () => chalk.dim(footer);
-  }
-  if (hint) {
-    promptConfig.hint = () => chalk.dim(hint);
-  }
+  // These choices are `{ value, name }` with `name` as the display text — the
+  // inverse of enquirer's usual `{ name, message }`. Take `value` so the answer
+  // is the key the caller compares against, not the label.
+  const options = (choices as any[]).map((c) =>
+    typeof c === 'string'
+      ? { value: c }
+      : { value: c.value ?? c.name, label: c.message ?? c.name ?? c.value }
+  );
 
-  return enquirer.prompt<{ NxCloud: NxCloud }>([promptConfig]).then((a) => {
-    if (fallback && a.NxCloud === fallback.value) {
-      return nxCloudPrompt(fallback.key);
-    }
-    return a.NxCloud;
-  });
+  const answer = (await selectPrompt({
+    // No separate footer slot, so it is folded into the message.
+    message: `${message}\n${chalk.dim(footer)}`,
+    choices: options,
+    initial: options[initial ?? 0]?.value,
+  })) as NxCloud;
+
+  if (fallback && answer === fallback.value) {
+    return nxCloudPrompt(fallback.key);
+  }
+  return answer;
 }
 
 export async function determineTemplate(
@@ -111,42 +109,34 @@ export async function determineTemplate(
   if (!parsedArgs.interactive || isCI()) return 'nrwl/empty-template';
   // Docs generation needs preset flow to document all presets
   if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') return 'custom';
-  const { template } = await enquirer.prompt<{ template: string }>([
-    {
-      name: 'template',
-      message: 'Which starter do you want to use?',
-      type: 'autocomplete',
-      choices: [
-        {
-          name: 'nrwl/empty-template',
-          message: 'Minimal           (empty monorepo without projects)',
-        },
-        {
-          name: 'nrwl/react-template',
-          message:
-            'React             (fullstack monorepo with React and Express)',
-        },
-        {
-          name: 'nrwl/angular-template',
-          message:
-            'Angular           (fullstack monorepo with Angular and Express)',
-        },
-        {
-          name: 'nrwl/typescript-template',
-          message:
-            'NPM Packages      (monorepo with TypeScript packages ready to publish)',
-        },
-        {
-          name: 'custom',
-          message:
-            'Custom            (advanced setup with additional frameworks)',
-        },
-      ],
-      initial: 0,
-    },
-  ]);
-
-  return template;
+  return selectPrompt({
+    message: 'Which starter do you want to use?',
+    choices: [
+      {
+        value: 'nrwl/empty-template',
+        label: 'Minimal           (empty monorepo without projects)',
+      },
+      {
+        value: 'nrwl/react-template',
+        label: 'React             (fullstack monorepo with React and Express)',
+      },
+      {
+        value: 'nrwl/angular-template',
+        label:
+          'Angular           (fullstack monorepo with Angular and Express)',
+      },
+      {
+        value: 'nrwl/typescript-template',
+        label:
+          'NPM Packages      (monorepo with TypeScript packages ready to publish)',
+      },
+      {
+        value: 'custom',
+        label: 'Custom            (advanced setup with additional frameworks)',
+      },
+    ],
+    initial: 'nrwl/empty-template',
+  });
 }
 
 export async function determineAiAgents(
@@ -170,22 +160,14 @@ export async function determineAiAgents(
 }
 
 async function aiAgentsPrompt(): Promise<Agent[]> {
-  const promptConfig: Parameters<typeof enquirer.prompt>[0] & {
-    footer: () => void;
-  } = {
-    name: 'agents',
+  return multiselectPrompt<Agent>({
     message: 'Which AI agents, if any, would you like to set up?',
-    type: 'multiselect',
     choices: supportedAgents.map((a) => ({
-      name: a,
-      message: agentDisplayMap[a],
+      value: a,
+      label: agentDisplayMap[a],
     })),
-    footer: () =>
-      chalk.dim(
-        'Multiple selections possible. <Space> to select. <Enter> to confirm.'
-      ),
-  };
-  return (await enquirer.prompt<{ agents: Agent[] }>([promptConfig])).agents;
+    required: false,
+  });
 }
 
 export async function determineAnalytics(
@@ -200,17 +182,14 @@ export async function determineAnalytics(
     return 'unset';
   }
 
-  const { enableAnalytics } = await enquirer.prompt<{
-    enableAnalytics: 'Yes' | 'No';
-  }>([
-    {
-      name: 'enableAnalytics',
-      message: 'Help improve Nx by sharing your usage data?',
-      type: 'autocomplete',
-      choices: [{ name: 'Yes' }, { name: 'No' }],
-      initial: 0,
-    },
-  ]);
+  const enableAnalytics = await selectPrompt({
+    message: 'Help improve Nx by sharing your usage data?',
+    choices: [
+      { value: 'Yes', label: 'Yes' },
+      { value: 'No', label: 'No' },
+    ],
+    initial: 'Yes',
+  });
   return enableAnalytics === 'Yes' ? 'yes' : 'no';
 }
 
@@ -220,24 +199,18 @@ export async function determineDefaultBase(
   if (parsedArgs.defaultBase) {
     return parsedArgs.defaultBase;
   } else if (parsedArgs.allPrompts) {
-    return enquirer
-      .prompt<{ DefaultBase: string }>([
-        {
-          name: 'DefaultBase',
-          message: `Main branch name`,
-          initial: `main`,
-          type: 'input',
-        },
-      ])
-      .then((a) => {
-        if (!a.DefaultBase) {
-          throw new CnwError(
-            'INVALID_BRANCH_NAME',
-            'Branch name cannot be empty'
-          );
-        }
-        return a.DefaultBase;
-      });
+    const defaultBase = await textPrompt({
+      message: `Main branch name`,
+      initialValue: `main`,
+      // Reject here so clearing the field re-prompts rather than aborting the
+      // run on the throw below.
+      validate: (value) =>
+        value.trim() ? undefined : 'Branch name cannot be empty',
+    });
+    if (!defaultBase) {
+      throw new CnwError('INVALID_BRANCH_NAME', 'Branch name cannot be empty');
+    }
+    return defaultBase;
   }
   return deduceDefaultBase();
 }
@@ -277,15 +250,14 @@ export async function confirmThirdPartyPreset(
     return true;
   }
 
-  const { confirm } = await enquirer.prompt<{ confirm: 'Yes' | 'No' }>([
-    {
-      name: 'confirm',
-      message: `Install third-party preset '${packageName}'?`,
-      type: 'autocomplete',
-      choices: [{ name: 'No' }, { name: 'Yes' }],
-      initial: 0,
-    },
-  ]);
+  const confirm = await selectPrompt({
+    message: `Install third-party preset '${packageName}'?`,
+    choices: [
+      { value: 'No', label: 'No' },
+      { value: 'Yes', label: 'Yes' },
+    ],
+    initial: 'No',
+  });
   return confirm === 'Yes';
 }
 
@@ -305,22 +277,16 @@ export async function determinePackageManager(
       ])}`
     );
   } else if (parsedArgs.allPrompts) {
-    return enquirer
-      .prompt<{ packageManager: PackageManager }>([
-        {
-          name: 'packageManager',
-          message: `Which package manager to use`,
-          initial: 0,
-          type: 'autocomplete',
-          choices: [
-            { name: 'npm', message: 'NPM' },
-            { name: 'yarn', message: 'Yarn' },
-            { name: 'pnpm', message: 'PNPM' },
-            { name: 'bun', message: 'Bun' },
-          ],
-        },
-      ])
-      .then((a) => a.packageManager);
+    return selectPrompt<PackageManager>({
+      message: `Which package manager to use`,
+      choices: [
+        { value: 'npm', label: 'NPM' },
+        { value: 'yarn', label: 'Yarn' },
+        { value: 'pnpm', label: 'PNPM' },
+        { value: 'bun', label: 'Bun' },
+      ],
+      initial: 'npm',
+    });
   }
 
   return detectInvokedPackageManager();
@@ -338,25 +304,64 @@ export async function determineLinterOptions(args: {
   interactive?: boolean;
 }): Promise<Linter> {
   if (args.linter) return args.linter;
-  const reply = await enquirer.prompt<{ linter: Linter }>([
-    {
-      name: 'linter',
-      message: `Which linter would you like to use?`,
-      type: 'autocomplete',
-      // `name` is the value returned; `message` is what the list shows. Oxlint
-      // is labelled so it isn't presented as an equal of ESLint here while the
-      // docs and the package both call it experimental.
-      choices: [
-        { name: 'eslint' },
-        { name: 'oxlint', message: 'oxlint (experimental)' },
-        { name: 'none' },
-      ],
-      // A skipped prompt resolves to the first choice and ignores `initial`, so
-      // the order above is what makes ESLint the non-interactive default while
-      // Oxlint is experimental. Reorder the choices to change it.
-      initial: 0,
-      skip: !args.interactive || isCI(),
-    },
-  ]);
-  return reply.linter;
+
+  // ESLint is the non-interactive default; changing it means changing this
+  // line, not the option order.
+  if (!args.interactive || isCI()) return 'eslint';
+
+  return selectPrompt<Linter>({
+    message: `Which linter would you like to use?`,
+    // `value` is what's returned; `label` is what the list shows. Oxlint is
+    // labelled so it isn't presented as an equal of ESLint while the docs and
+    // the package both call it experimental.
+    choices: [
+      { value: 'eslint', label: 'eslint' },
+      { value: 'oxlint', label: 'oxlint (experimental)' },
+      { value: 'none', label: 'none' },
+    ],
+    initial: 'eslint',
+  });
+}
+
+// Kept in sync with the formatter enum in the generator schemas by hand - this
+// package deliberately has no `nx` dependency, so nx's `FormatterType` cannot
+// be imported here.
+export type Formatter = 'oxfmt' | 'prettier' | 'none';
+
+// Order here is incidental; the prompt's own choice order sets the default. `satisfies` stops a typo
+// getting in, and the coverage assertion below stops a member being dropped -
+// on its own the array would happily be a subset, and the prompt would then
+// reject a value the generator schemas still accept.
+export const FORMATTERS = [
+  'oxfmt',
+  'prettier',
+  'none',
+] as const satisfies readonly Formatter[];
+
+type MissingFormatter = Exclude<Formatter, (typeof FORMATTERS)[number]>;
+const _formattersAreExhaustive: MissingFormatter extends never ? true : never =
+  true;
+
+export async function determineFormatterOptions(args: {
+  formatter?: Formatter;
+  interactive?: boolean;
+}): Promise<Formatter> {
+  if (args.formatter) return args.formatter;
+
+  // Prettier is the non-interactive default; changing it means changing this
+  // line, not the option order.
+  if (!args.interactive || isCI()) return 'prettier';
+
+  return selectPrompt<Formatter>({
+    message: `Which code formatter would you like to use?`,
+    // `value` is what's returned; `label` is what the list shows. oxfmt is
+    // labelled so it isn't presented as an equal of Prettier while it is
+    // pre-1.0.
+    choices: [
+      { value: 'prettier', label: 'prettier' },
+      { value: 'oxfmt', label: 'oxfmt (experimental)' },
+      { value: 'none', label: 'none' },
+    ],
+    initial: 'prettier',
+  });
 }

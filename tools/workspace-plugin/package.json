@@ -6,8 +6,8 @@
   "executors": "./executors.json",
   "dependencies": {
     "@nx/conformance": "5.0.4",
-    "@nx/devkit": "23.2.0-beta.7",
-    "@nx/js": "23.2.0-beta.7",
+    "@nx/devkit": "23.2.0-beta.9",
+    "@nx/js": "23.2.0-beta.9",
     "@xmldom/xmldom": "^0.8.10",
     "semver": "catalog:",
     "shiki": "^4.0.2",

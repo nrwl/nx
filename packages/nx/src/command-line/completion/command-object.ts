@@ -1,4 +1,4 @@
-import { prompt } from 'enquirer';
+import { multiselectPrompt } from '../../utils/prompt-helpers';
 import { existsSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
@@ -89,18 +89,13 @@ async function pickShellsInteractively(): Promise<Shell[]> {
     process.exit(1);
   }
   const detected = detectAvailableShells();
-  const answer = (await prompt({
-    type: 'multiselect',
-    name: 'shells',
+  return await multiselectPrompt<Shell>({
     message: 'Install nx completion for which shell(s)?',
-    choices: SHELL_CHOICES.map((name) => ({
-      name,
-      value: name,
-      // Pre-check shells we can detect on this machine.
-      enabled: detected.has(name),
-    })),
-  })) as { shells?: Shell[] };
-  return answer.shells ?? [];
+    choices: SHELL_CHOICES,
+    // Pre-select shells we can detect on this machine.
+    initialValues: SHELL_CHOICES.filter((name) => detected.has(name)),
+    onCancel: () => [],
+  });
 }
 
 /** Best-effort detect-which-shells-the-user-has. Pre-checks the multiselect.

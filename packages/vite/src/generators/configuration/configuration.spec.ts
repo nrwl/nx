@@ -164,8 +164,8 @@ describe('@nx/vite:configuration', () => {
     });
 
     it('should throw when trying to convert something unknown and user denies conversion', async () => {
-      const { Confirm } = require('enquirer');
-      const confirmSpy = jest.spyOn(Confirm.prototype, 'run');
+      const devkitInternal = require('@nx/devkit/internal');
+      const confirmSpy = jest.spyOn(devkitInternal, 'confirmationPrompt');
       confirmSpy.mockResolvedValue(false);
 
       expect.assertions(2);
@@ -248,8 +248,8 @@ describe('@nx/vite:configuration', () => {
     });
 
     it('should set up non buildable library which already has vite.config.mts correctly', async () => {
-      const { Confirm } = require('enquirer');
-      const confirmSpy = jest.spyOn(Confirm.prototype, 'run');
+      const devkitInternal = require('@nx/devkit/internal');
+      const confirmSpy = jest.spyOn(devkitInternal, 'confirmationPrompt');
       confirmSpy.mockResolvedValue(true);
 
       mockReactLibNonBuildableVitestRunnerGenerator(tree);
@@ -528,10 +528,7 @@ describe('@nx/vite:configuration', () => {
           root: import.meta.dirname,
           cacheDir: '../../node_modules/.vite/packages/my-lib',
           plugins: [
-            dts({
-              entryRoot: 'src',
-              tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json'),
-            }),
+            dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json') }),
           ],
           // Uncomment this if you are using workers.
           // worker: {

@@ -307,14 +307,9 @@ export default defineConfig((_env, argv) => {
             options: {
               jsc: {
                 parser: { syntax: 'typescript', tsx: true },
-                transform: {
-                  react: { runtime: 'automatic', development: isDev },
-                },
+                transform: { react: { runtime: 'automatic', development: isDev } },
               },
-              env: {
-                targets:
-                  'Chrome >= 87, Firefox >= 78, Edge >= 88, Safari >= 14',
-              },
+              env: { targets: 'Chrome >= 87, Firefox >= 78, Edge >= 88, Safari >= 14' },
             },
           },
         },
@@ -324,10 +319,7 @@ export default defineConfig((_env, argv) => {
       // excludeChunks is REQUIRED on a provider: without it the federation
       // remoteEntry chunk gets injected into the standalone HTML and breaks
       // direct serves.
-      new rspack.HtmlRspackPlugin({
-        template: './index.html',
-        excludeChunks: [NAME],
-      }),
+      new rspack.HtmlRspackPlugin({ template: './index.html', excludeChunks: [NAME] }),
       new ModuleFederationPlugin({
         name: NAME,
         filename: 'remoteEntry.js',

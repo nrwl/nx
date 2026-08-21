@@ -1000,11 +1000,7 @@ describe('app', () => {
             port: 4300,
             host: 'localhost',
           },
-          plugins: [
-            !process.env.VITEST && reactRouter(),
-            nxViteTsPaths(),
-            nxCopyAssetsPlugin(['*.md']),
-          ],
+          plugins: [!process.env.VITEST && reactRouter(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
           // Uncomment this if you are using workers.
           // worker: {
           //   plugins: () => [ nxViteTsPaths() ],
@@ -1126,12 +1122,7 @@ describe('app', () => {
             "module": "commonjs",
             "moduleResolution": "bundler",
             "jsx": "react-jsx",
-            "types": [
-              "jest",
-              "node",
-              "@nx/react/typings/cssmodule.d.ts",
-              "@nx/react/typings/image.d.ts"
-            ]
+            "types": ["jest", "node", "@nx/react/typings/cssmodule.d.ts", "@nx/react/typings/image.d.ts"]
           },
           "files": ["src/test-setup.ts"],
           "include": [

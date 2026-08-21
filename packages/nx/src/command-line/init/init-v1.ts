@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { prompt } from 'enquirer';
+import { selectPrompt } from '../../utils/prompt-helpers';
 import { existsSync } from 'fs';
 import { prerelease } from 'semver';
 import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
@@ -13,6 +13,7 @@ import { readJsonFile } from '../../utils/fileutils';
 import { PackageJson } from '../../utils/package-json';
 import { nxVersion } from '../../utils/versions';
 import { isMonorepo, printFinalMessage } from './implementation/utils';
+import { formatInitWrites } from './implementation/format';
 
 export interface InitArgs {
   integrated: boolean;
@@ -33,53 +34,50 @@ export async function initHandler(options: InitArgs) {
   }
   if (options.useDotNxInstallation === true) {
     setupDotNxInstallation(version);
+    await formatInitWrites(process.cwd());
   } else if (existsSync('package.json')) {
     const packageJson: PackageJson = readJsonFile('package.json');
     if (existsSync('angular.json')) {
       await addNxToAngularCliRepo(options);
 
+      await formatInitWrites(process.cwd());
       printFinalMessage({
         learnMoreLink: 'https://nx.dev/recipes/angular/migration/angular',
       });
       return;
     } else if (isNestCLI(packageJson)) {
       await addNxToNest(options, packageJson);
+      await formatInitWrites(process.cwd());
       printFinalMessage({
         learnMoreLink: 'https://nx.dev/recipes/adopting-nx/adding-to-monorepo',
       });
       return;
     } else if (isMonorepo(packageJson)) {
       await addNxToMonorepo({ ...options, legacy: true });
+      await formatInitWrites(process.cwd());
       printFinalMessage({
         learnMoreLink: 'https://nx.dev/recipes/adopting-nx/adding-to-monorepo',
       });
     } else {
       await addNxToNpmRepo({ ...options, legacy: true });
+      await formatInitWrites(process.cwd());
       printFinalMessage({
         learnMoreLink:
           'https://nx.dev/recipes/adopting-nx/adding-to-existing-project',
       });
     }
   } else {
-    const useDotNxFolder = await prompt<{ useDotNxFolder: string }>([
-      {
-        name: 'useDotNxFolder',
-        type: 'autocomplete',
+    const useDotNxFolder =
+      (await selectPrompt({
         message: 'Where should your workspace be created?',
         choices: [
-          {
-            name: 'In a new folder under this directory',
-            value: 'false',
-          },
-          {
-            name: 'In this directory',
-            value: 'true',
-          },
+          { value: 'false', label: 'In a new folder under this directory' },
+          { value: 'true', label: 'In this directory' },
         ],
-      },
-    ]).then((r) => r.useDotNxFolder === 'true');
+      })) === 'true';
     if (useDotNxFolder) {
       setupDotNxInstallation(version);
+      await formatInitWrites(process.cwd());
     } else {
       execSync(`npx --yes create-nx-workspace@${version} ${args}`, {
         stdio: [0, 1, 2],

@@ -205,6 +205,34 @@ describe('execGradleAsync', () => {
     ).rejects.toThrow('spawn EACCES');
   });
 
+  // A wedged JVM can survive the kill signal; the promise must still settle
+  // on abort or the timeout error never surfaces.
+  it('should reject on abort even if the process never exits', async () => {
+    const killProcessTreeGraceful = jest.fn(() => Promise.resolve());
+    jest.doMock('@nx/devkit/internal', () => ({
+      ...jest.requireActual('@nx/devkit/internal'),
+      safeSpawn: jest.fn(() => {
+        const EventEmitter = require('events');
+        const cp: any = new EventEmitter();
+        cp.pid = 123;
+        cp.stdout = new EventEmitter();
+        cp.stderr = new EventEmitter();
+        return cp; // never emits `exit`
+      }),
+      killProcessTreeGraceful,
+    }));
+    const { execGradleAsync } = require('./exec-gradle');
+
+    const controller = new AbortController();
+    const promise = execGradleAsync('/ws/gradlew', ['nxProjectGraph'], {
+      signal: controller.signal,
+    });
+    controller.abort();
+
+    await expect(promise).rejects.toBeDefined();
+    expect(killProcessTreeGraceful).toHaveBeenCalledWith(123);
+  });
+
   it('should drop empty args the shell used to swallow', async () => {
     const { execGradleAsync, getCaptured } = loadWithMockedSpawn();
 

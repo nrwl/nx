@@ -1,7 +1,8 @@
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
-  promptWhenInteractive,
+  isInteractive,
+  selectPrompt,
   addBuildTargetDefaults,
   logShowProjectCommand,
   type PackageJson,
@@ -103,8 +104,6 @@ export async function libraryGeneratorInternal(
       tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
       addTsConfigBase: true,
       addTsPlugin,
-      // In the new setup, Prettier is prompted for and installed during `create-nx-workspace`.
-      formatter: isUsingTsSolutionSetup(tree) ? 'none' : 'prettier',
     })
   );
   const options = await normalizeOptions(tree, schema);
@@ -804,31 +803,19 @@ async function normalizeOptions(
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
 
   if (isUsingTsSolutionConfig) {
-    options.unitTestRunner ??= await promptWhenInteractive<{
-      unitTestRunner: 'none' | 'jest' | 'vitest';
-    }>(
-      {
-        type: 'autocomplete',
-        name: 'unitTestRunner',
-        message: `Which unit test runner would you like to use?`,
-        choices: [{ name: 'none' }, { name: 'vitest' }, { name: 'jest' }],
-        initial: 0,
-      },
-      { unitTestRunner: 'none' }
-    ).then(({ unitTestRunner }) => unitTestRunner);
+    options.unitTestRunner ??= isInteractive()
+      ? await selectPrompt<'none' | 'jest' | 'vitest'>({
+          message: `Which unit test runner would you like to use?`,
+          choices: [{ value: 'none' }, { value: 'vitest' }, { value: 'jest' }],
+        })
+      : 'none';
   } else {
-    options.unitTestRunner ??= await promptWhenInteractive<{
-      unitTestRunner: 'none' | 'jest' | 'vitest';
-    }>(
-      {
-        type: 'autocomplete',
-        name: 'unitTestRunner',
-        message: `Which unit test runner would you like to use?`,
-        choices: [{ name: 'jest' }, { name: 'vitest' }, { name: 'none' }],
-        initial: 0,
-      },
-      { unitTestRunner: undefined }
-    ).then(({ unitTestRunner }) => unitTestRunner);
+    options.unitTestRunner ??= isInteractive()
+      ? await selectPrompt<'none' | 'jest' | 'vitest'>({
+          message: `Which unit test runner would you like to use?`,
+          choices: [{ value: 'jest' }, { value: 'vitest' }, { value: 'none' }],
+        })
+      : undefined;
 
     if (!options.unitTestRunner && options.bundler === 'vite') {
       options.unitTestRunner = 'vitest';

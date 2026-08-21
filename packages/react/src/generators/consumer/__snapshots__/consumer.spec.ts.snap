@@ -137,16 +137,13 @@ class ProviderBoundary extends Component<
       return (
         <div role="alert">
           <p>
-            Provider &quot;{this.props.name}&quot; unavailable:{' '}
-            {this.state.error.message}
+            Provider &quot;{this.props.name}&quot; unavailable: {this.state.error.message}
           </p>
         </div>
       );
     }
     return (
-      <Suspense fallback={<p>Loading {this.props.name}...</p>}>
-        {this.props.children}
-      </Suspense>
+      <Suspense fallback={<p>Loading {this.props.name}...</p>}>{this.props.children}</Suspense>
     );
   }
 }
@@ -205,14 +202,9 @@ const PROVIDERS: Array<{ alias: string; name: string; entry: string }> = [
 // setting \`type: 'module'\` here breaks them with #RUNTIME-002.
 registerRemotes(PROVIDERS.map((remote) => ({ ...remote })));
 
-export function lazyProvider<Props = unknown>(
-  alias: string,
-  exposeName: string,
-) {
+export function lazyProvider<Props = unknown>(alias: string, exposeName: string) {
   return lazy(async () => {
-    const mod = await loadRemote<{ default: ComponentType<Props> }>(
-      \`\${alias}/\${exposeName}\`,
-    );
+    const mod = await loadRemote<{ default: ComponentType<Props> }>(\`\${alias}/\${exposeName}\`);
     return { default: mod!.default };
   });
 }
@@ -368,14 +360,9 @@ export default defineConfig((_env, argv) => {
             options: {
               jsc: {
                 parser: { syntax: 'typescript', tsx: true },
-                transform: {
-                  react: { runtime: 'automatic', development: isDev },
-                },
+                transform: { react: { runtime: 'automatic', development: isDev } },
               },
-              env: {
-                targets:
-                  'Chrome >= 87, Firefox >= 78, Edge >= 88, Safari >= 14',
-              },
+              env: { targets: 'Chrome >= 87, Firefox >= 78, Edge >= 88, Safari >= 14' },
             },
           },
         },
@@ -414,16 +401,13 @@ class ProviderBoundary extends Component<
       return (
         <div role="alert">
           <p>
-            Provider &quot;{this.props.name}&quot; unavailable:{' '}
-            {this.state.error.message}
+            Provider &quot;{this.props.name}&quot; unavailable: {this.state.error.message}
           </p>
         </div>
       );
     }
     return (
-      <Suspense fallback={<p>Loading {this.props.name}...</p>}>
-        {this.props.children}
-      </Suspense>
+      <Suspense fallback={<p>Loading {this.props.name}...</p>}>{this.props.children}</Suspense>
     );
   }
 }
@@ -482,14 +466,9 @@ const PROVIDERS: Array<{ alias: string; name: string; entry: string }> = [
 // setting \`type: 'module'\` here breaks them with #RUNTIME-002.
 registerRemotes(PROVIDERS.map((remote) => ({ ...remote })));
 
-export function lazyProvider<Props = unknown>(
-  alias: string,
-  exposeName: string,
-) {
+export function lazyProvider<Props = unknown>(alias: string, exposeName: string) {
   return lazy(async () => {
-    const mod = await loadRemote<{ default: ComponentType<Props> }>(
-      \`\${alias}/\${exposeName}\`,
-    );
+    const mod = await loadRemote<{ default: ComponentType<Props> }>(\`\${alias}/\${exposeName}\`);
     return { default: mod!.default };
   });
 }
@@ -627,16 +606,13 @@ class ProviderBoundary extends Component<
       return (
         <div role="alert">
           <p>
-            Provider &quot;{this.props.name}&quot; unavailable:{' '}
-            {this.state.error.message}
+            Provider &quot;{this.props.name}&quot; unavailable: {this.state.error.message}
           </p>
         </div>
       );
     }
     return (
-      <Suspense fallback={<p>Loading {this.props.name}...</p>}>
-        {this.props.children}
-      </Suspense>
+      <Suspense fallback={<p>Loading {this.props.name}...</p>}>{this.props.children}</Suspense>
     );
   }
 }
@@ -696,14 +672,9 @@ const PROVIDERS: Array<{ alias: string; name: string; entry: string }> = [
 // \`Cannot use import statement outside a module\` (#RUNTIME-001).
 registerRemotes(PROVIDERS.map((remote) => ({ ...remote, type: 'module' })));
 
-export function lazyProvider<Props = unknown>(
-  alias: string,
-  exposeName: string,
-) {
+export function lazyProvider<Props = unknown>(alias: string, exposeName: string) {
   return lazy(async () => {
-    const mod = await loadRemote<{ default: ComponentType<Props> }>(
-      \`\${alias}/\${exposeName}\`,
-    );
+    const mod = await loadRemote<{ default: ComponentType<Props> }>(\`\${alias}/\${exposeName}\`);
     return { default: mod!.default };
   });
 }

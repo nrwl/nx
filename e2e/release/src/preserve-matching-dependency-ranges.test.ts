@@ -41,7 +41,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
         // We trim each line to reduce the chances of snapshot flakiness
         // Slightly different handling needed for bun (length can be 8)
-        .replaceAll(/[a-fA-F0-9]{7,8}/g, '{COMMIT_SHA}')
+        .replaceAll(/\b[a-fA-F0-9]{7,8}\b/g, '{COMMIT_SHA}')
         .split('\n')
         .map((r) => r.trim())
         .filter(Boolean)
