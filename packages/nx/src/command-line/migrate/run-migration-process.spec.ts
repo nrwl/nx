@@ -1,23 +1,28 @@
 const mockRunNxOrAngularMigration = vi.fn();
 const mockInstallDepsIfChanged = vi.fn();
-vi.mock('./migrate', () => ({
+const mockCommitMigrationIfRequested = vi.fn();
+
+// The script under test is a plain CJS .js file; load it and mock its
+// dependencies entirely in the require channel so the test does not depend
+// on how vite routes requires inside transformed CJS.
+import { mockCjsModule } from '../../internal-testing-utils/cjs-mock';
+mockCjsModule(import.meta.url, './migrate', {
   runNxOrAngularMigration: (...args: unknown[]) =>
     mockRunNxOrAngularMigration(...args),
   ChangedDepInstaller: class {
     installDepsIfChanged = mockInstallDepsIfChanged;
   },
-}));
-
-const mockCommitMigrationIfRequested = vi.fn();
-vi.mock('./migrate-commits', () => ({
+});
+mockCjsModule(import.meta.url, './migrate-commits', {
   commitMigrationIfRequested: (...args: unknown[]) =>
     mockCommitMigrationIfRequested(...args),
-}));
-
-vi.mock('child_process', async () => ({
+});
+mockCjsModule(import.meta.url, 'child_process', {
   ...require('child_process'),
   execSync: () => 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2\n',
-}));
+});
+import { createRequire } from 'node:module';
+const cjsRequire = createRequire(import.meta.url);
 
 // The single-migration child that Nx Console spawns hand-builds its JSON
 // payload, so a unit test on the parent's record writer stays green even when
@@ -64,8 +69,8 @@ describe('run-migration-process', () => {
   });
 
   const runScript = async (): Promise<Record<string, unknown>> => {
-    vi.resetModules();
-    await import('./run-migration-process.js');
+    delete cjsRequire.cache[cjsRequire.resolve('./run-migration-process.js')];
+    cjsRequire('./run-migration-process.js');
     // The script's top-level call is fire-and-forget; let its awaits settle.
     for (let i = 0; i < 5; i++) {
       await new Promise((resolve) => setImmediate(resolve));

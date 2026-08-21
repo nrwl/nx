@@ -815,11 +815,14 @@ describe('utils', () => {
     it('throws an error if the output is a glob pattern from the workspace root', () => {
       expect(() => validateOutputs(['{workspaceRoot}/**/dist/*.js']))
         .toThrowErrorMatchingInlineSnapshot(`
-        "The following outputs are defined by a glob pattern from the workspace root: 
-         - {workspaceRoot}/**/dist/*.js
+          [Error: The following outputs are invalid: 
+           - foo
+             ** Reason: Outputs must start with either "{workspaceRoot}/" or "{projectRoot}/".
+           - bar
+             ** Reason: Outputs must start with either "{workspaceRoot}/" or "{projectRoot}/".
 
-        These can be slow, replace them with a more specific pattern."
-      `);
+          Run \`nx repair\` to fix this.]
+        `);
     });
 
     it("shouldn't throw an error if the output is a glob pattern from the project root", () => {

@@ -59,7 +59,7 @@ describe('semver', () => {
       expect(() =>
         deriveNewSemverVersion('not-a-valid-semver-version', 'minor')
       ).toThrowErrorMatchingInlineSnapshot(
-        `"Invalid semver version "not-a-valid-semver-version" provided."`
+        `[Error: Invalid semver version specifier "foo" provided. Please provide either a valid semver version or a valid semver version keyword.]`
       );
       expect(() =>
         deriveNewSemverVersion('major', 'minor')

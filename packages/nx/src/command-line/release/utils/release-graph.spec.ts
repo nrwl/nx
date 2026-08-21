@@ -1229,12 +1229,12 @@ describe('ReleaseGraph', () => {
 
       await expect(releaseGraph.validate(tree)).rejects
         .toThrowErrorMatchingInlineSnapshot(`
-        "The project "pkg-c" does not have a package.json file available in pkg-c/
+      [Error: The project "pkg-c" does not have a package.json file available in pkg-c/
 
-        To fix this you will either need to add a package.json file at that location, or configure "release" within your nx.json to exclude "pkg-c" from the current release group, or amend the "release.version.manifestRootsToUpdate" configuration to point to where the relevant manifest should be.
+      To fix this you will either need to add a package.json file at that location, or configure "release" within your nx.json to exclude "pkg-c" from the current release group, or amend the "release.version.manifestRootsToUpdate" configuration to point to where the relevant manifest should be.
 
-        It is also possible that the project is being processed because of a dependency relationship between what you are directly versioning and the project/release group, in which case you will need to amend your filters to include all relevant projects and release groups."
-      `);
+      It is also possible that the project is being processed because of a dependency relationship between what you are directly versioning and the project/release group, in which case you will need to amend your filters to include all relevant projects and release groups.]
+    `);
     });
   });
 

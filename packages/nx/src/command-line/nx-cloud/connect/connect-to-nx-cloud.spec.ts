@@ -150,7 +150,9 @@ describe('connect-to-nx-cloud', () => {
 describe('nxCloudPrompt option mapping', () => {
   const mockAutocomplete = autocomplete as unknown as jest.Mock;
 
-  beforeEach(() => mockAutocomplete.mockReset());
+  beforeEach(() => {
+    mockAutocomplete.mockReset();
+  });
 
   // The message choices are `{ value, name }` with `name` as the display text.
   // Mapping `name` into clack's `value` made the prompt answer with the label,

@@ -31,6 +31,11 @@ describe('analytics-prompt', () => {
   beforeEach(() => {
     vi.resetAllMocks();
 
+    // vi.resetAllMocks restores a spy's ORIGINAL implementation (unlike
+    // jest), so the write stub must be re-applied or the real function
+    // writes the repo's actual nx.json.
+    mockWriteFormattedJsonFile.mockResolvedValue(undefined);
+
     // Prevent output from writing to stdout during tests
     mockOutputLog.mockImplementation(() => {});
     mockOutputSuccess.mockImplementation(() => {});

@@ -33,7 +33,11 @@ const gradualArgs = {
 };
 
 describe('multi-major minimum-release-age probe', () => {
-  beforeEach(() => resolveMock.mockReset());
+  beforeEach(() => {
+    // vitest calls a function returned from a hook as cleanup; mockReset()
+    // returns the mock, so never return it.
+    resolveMock.mockReset();
+  });
 
   it('probes each candidate major side-effect-free (applySideEffects: false)', async () => {
     resolveMock.mockImplementation((_pkg: string, range: string) =>

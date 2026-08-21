@@ -107,7 +107,9 @@ describe('bun min-release-age behavior', () => {
     // Pin the clock so the stability walk's search bound is deterministic.
     nowSpy = vi.spyOn(Date, 'now').mockReturnValue(NOW);
   });
-  afterAll(() => nowSpy.mockRestore());
+  afterAll(() => {
+    nowSpy.mockRestore();
+  });
 
   describe('pickBunVersion (24h window)', () => {
     const policy = policyWithWindow(24);

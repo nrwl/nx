@@ -886,11 +886,10 @@ describe('params', () => {
           }
         )
       ).toThrowErrorMatchingInlineSnapshot(`
-        "Options did not match schema: {}.
-        Please fix 1 of the following errors:
-         - Required property 'a' is missing
-         - Required property 'b' is missing"
-      `);
+                    SchemaError {
+                      "message": "Property 'a' does not match the schema. 4 should be less than 3",
+                    }
+                  `);
     });
 
     it('should throw if more than one of the oneOf conditions are met', () => {

@@ -43,7 +43,7 @@ describe('detectInstalledAgents', () => {
   });
 
   it('marks PATH-resolved agents with source "path"', async () => {
-    mockWhich.mockImplementation((name: string) =>
+    mockWhich.mockImplementation(async (name: string) =>
       name === 'claude' ? '/usr/local/bin/claude' : null
     );
     const definitions = [
@@ -64,7 +64,7 @@ describe('detectInstalledAgents', () => {
 
   it('falls back to well-known paths when PATH misses', async () => {
     mockWhich.mockResolvedValue(null);
-    mockAccess.mockImplementation((path: string) => {
+    mockAccess.mockImplementation(async (path: string) => {
       if (path === '/home/me/.claude/local/claude') {
         return;
       }
@@ -91,7 +91,7 @@ describe('detectInstalledAgents', () => {
   });
 
   it('tries multiple binary names per agent and returns the first PATH hit', async () => {
-    mockWhich.mockImplementation((name: string) =>
+    mockWhich.mockImplementation(async (name: string) =>
       name === 'codex.cmd' ? '/usr/local/bin/codex.cmd' : null
     );
     const definitions = [
@@ -108,7 +108,7 @@ describe('detectInstalledAgents', () => {
   });
 
   it('preserves input order and filters out missing agents', async () => {
-    mockWhich.mockImplementation((name: string) =>
+    mockWhich.mockImplementation(async (name: string) =>
       name === 'opencode' ? '/usr/local/bin/opencode' : null
     );
     mockAccess.mockRejectedValue(new Error('not executable'));
