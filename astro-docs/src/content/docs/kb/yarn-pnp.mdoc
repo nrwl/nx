@@ -31,13 +31,13 @@ If the version is in the `1.x.x` range, the workspace will be created with yarn 
  yarn set version stable
 ```
 
-This command will update `.yarnrc.yml` with the path to the local yarn `bin` of the correct version and will set the `packageManager` property in the root `package.json`:
+This command will update `.yarnrc.yml` with the path to the local yarn `bin` of the correct version and will set the `packageManager` property in the root `package.json`. The exact version depends on the current stable release of yarn:
 
 ```jsonc
 // package.json
 {
   // ...
-  "packageManager": "yarn@3.6.1",
+  "packageManager": "yarn@4.x.y",
 }
 ```
 
