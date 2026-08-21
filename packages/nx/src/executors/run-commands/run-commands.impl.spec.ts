@@ -390,7 +390,7 @@ describe('Run Commands', () => {
         }, 150);
       });
 
-      it('should keep waiting when not all strings specified as ready condition were found', (done) => {
+      it('should keep waiting when not all strings specified as ready condition were found', async () => {
         const f = fileSync().name;
         let result: { success: boolean } | null = null;
 
@@ -407,11 +407,9 @@ describe('Run Commands', () => {
           result = res;
         });
 
-        setTimeout(() => {
-          expect(readFile(f)).toEqual('1');
-          expect(result).toBeNull();
-          done();
-        }, 150);
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        expect(readFile(f)).toEqual('1');
+        expect(result).toBeNull();
       });
     });
   });
