@@ -58,6 +58,10 @@ function matchingBatch(lines: string[], expected: string[]): string {
   );
 }
 
+// The parsed lines drop every NX-prefixed line, which is where `nx watch`
+// reports errors. Keep the raw stream so afterEach can show it.
+let lastWatchOutput = '';
+
 let writeSeq = 0;
 function uniqueFileContent() {
   return `content-${Date.now()}-${++writeSeq}`;
@@ -108,6 +112,7 @@ describe('Nx Watch', () => {
     } catch (e) {
       console.log(`[watch-debug] failed to read daemon log: ${e}`);
     }
+    console.log(`[watch-debug] nx watch output: \n${lastWatchOutput}`);
     runCLI('reset', { env: daemonEnv });
   });
 
@@ -267,9 +272,25 @@ type GetOutput = (
 
 // Waits for `until` rather than a fixed window, so a slow-but-correct watcher
 // passes while a silent one still fails.
-function createGetOutput(p: ReturnType<typeof spawn>, readRaw: () => string) {
+function createGetOutput(
+  p: ReturnType<typeof spawn>,
+  readStdout: () => string,
+  readAll: () => string = readStdout
+) {
+  // Registered while handling the process's own stdout, so it cannot have
+  // closed yet. Awaiting a promise created here -- rather than attaching a
+  // listener after the kill -- also covers the process exiting on its own,
+  // where a late `once('close')` would never fire and hang the test.
+  let exited = false;
+  const closed = new Promise<void>((res) =>
+    p.on('close', () => {
+      exited = true;
+      res();
+    })
+  );
+
   const lines = () =>
-    readRaw()
+    readStdout()
       .split('\n')
       .map((line) => line.trim())
       .filter((line) => line.length > 0 && !line.includes('NX'));
@@ -279,12 +300,23 @@ function createGetOutput(p: ReturnType<typeof spawn>, readRaw: () => string) {
     { settleMs = OUTPUT_SETTLE_MS, timeout = OUTPUT_TIMEOUT_MS } = {}
   ) => {
     const deadline = Date.now() + timeout;
-    while (Date.now() < deadline && !until(lines())) {
+    while (Date.now() < deadline && !exited && !until(lines())) {
       await wait(50);
     }
-    await wait(settleMs);
-    treeKill(p.pid);
-    await new Promise<void>((res) => p.on('close', res));
+
+    if (!exited) {
+      await wait(settleMs);
+      treeKill(p.pid);
+    }
+    await closed;
+
+    if (exited && !until(lines())) {
+      // `nx watch` exits on a fatal daemon error. Reporting that beats letting
+      // the caller assert on an empty array and show `Received: []`.
+      throw new Error(
+        `nx watch exited before producing the expected output:\n${readAll()}`
+      );
+    }
     return lines();
   };
 
@@ -316,15 +348,31 @@ async function runWatch(command: string) {
     });
 
     let output = '';
+    let all = '';
+    lastWatchOutput = '';
     let resolved = false;
     p.stdout?.on('data', (data) => {
       output += data;
+      all += data;
+      lastWatchOutput = all;
       const s = data.toString().trim();
       isVerboseE2ERun() && console.log(s);
       if (s.includes('watch process waiting') && !resolved) {
         resolved = true;
-        resolve(createGetOutput(p, () => output));
+        resolve(
+          createGetOutput(
+            p,
+            () => output,
+            () => all
+          )
+        );
       }
+    });
+
+    p.stderr?.on('data', (data) => {
+      all += data;
+      lastWatchOutput = all;
+      isVerboseE2ERun() && console.log('stderr:', data.toString().trim());
     });
   });
 }
@@ -346,19 +394,31 @@ async function runWatchWithReconnect(command: string) {
     });
 
     let output = '';
+    let all = '';
+    lastWatchOutput = '';
     let resolved = false;
     p.stdout?.on('data', (data) => {
       output += data;
+      all += data;
+      lastWatchOutput = all;
       const s = data.toString().trim();
       isVerboseE2ERun() && console.log(s);
       // Resolve once we see the watch is ready, but don't kill the process yet
       if (s.includes('watch process waiting') && !resolved) {
         resolved = true;
-        resolve(createGetOutput(p, () => output));
+        resolve(
+          createGetOutput(
+            p,
+            () => output,
+            () => all
+          )
+        );
       }
     });
 
     p.stderr?.on('data', (data) => {
+      all += data;
+      lastWatchOutput = all;
       const s = data.toString().trim();
       isVerboseE2ERun() && console.log('stderr:', s);
     });
