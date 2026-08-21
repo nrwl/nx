@@ -33,6 +33,12 @@ overrides:
   websocket-driver: '^0.7.5'
   tar: '^7.5.19'
   seroval: '^1.5.6'
+  # astro/ipx/next pull their own sharp; the libvips CVEs (GHSA-f88m-g3jw-g9cj)
+  # are only patched from 0.35.0 on.
+  'sharp@<0.35.0': '^0.35.3'
+  # Only the 0.1.x line is affected by the ReDoS (GHSA-37ch-88jc-xwx2);
+  # express 5 / nestjs pull 8.x and 3.x, which must stay put.
+  'path-to-regexp@<0.1.13': '^0.1.13'
 onlyBuiltDependencies:
   - '@nestjs/core'
   - 'nx'
