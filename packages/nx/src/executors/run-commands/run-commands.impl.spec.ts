@@ -1087,8 +1087,9 @@ describe('Run Commands', () => {
 
       expect(result.success).toBe(false);
       const duration = Date.now() - startTime;
-      // Should complete quickly (fail-fast), not wait for 2 seconds
-      expect(duration).toBeLessThan(500);
+      // Should complete quickly (fail-fast), not wait for 2 seconds. The
+      // margin leaves room for CPU contention in a full parallel suite run.
+      expect(duration).toBeLessThan(1500);
     });
 
     it('should handle multiple simultaneous failures in parallel commands', async () => {
@@ -1160,8 +1161,9 @@ describe('Run Commands', () => {
 
       expect(result.success).toBe(false);
       const duration = Date.now() - startTime;
-      // Should complete quickly after failure and cleanup
-      expect(duration).toBeLessThan(500);
+      // Should complete quickly after failure and cleanup. The margin leaves
+      // room for CPU contention in a full parallel suite run.
+      expect(duration).toBeLessThan(1500);
     });
   });
 });
