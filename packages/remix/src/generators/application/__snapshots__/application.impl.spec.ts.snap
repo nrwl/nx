@@ -425,7 +425,7 @@ test('renders loader data', async () => {
 
   render(<RemixStub />);
 
-  await screen.findByText('Hello there,');
+  expect(await screen.findByText('Hello there,')).toBeTruthy();
 });
 "
 `;
@@ -478,7 +478,7 @@ test('renders loader data', async () => {
 
   render(<RemixStub />);
 
-  await screen.findByText('Hello there,');
+  expect(await screen.findByText('Hello there,')).toBeTruthy();
 });
 "
 `;
@@ -595,7 +595,7 @@ test('renders loader data', async () => {
 
   render(<RemixStub />);
 
-  await screen.findByText('Hello there,');
+  expect(await screen.findByText('Hello there,')).toBeTruthy();
 });
 "
 `;
