@@ -163,8 +163,8 @@ class CLIOutput {
    * not reliably end in a newline, so writers that must begin on a fresh line
    * ask for one via {@link ensureLineStart} rather than guessing.
    *
-   * Holding that true means every writer that can leave the cursor mid-line has
-   * to go through this class. There are three, and only three:
+   * Holding that true means every writer that can leave the cursor mid-line is
+   * either routed through this class or declared to it:
    *
    * - This class's own writes, via {@link writeToStream}.
    * - A batch worker's live output, via {@link writeTaskOutputChunk}.
@@ -173,11 +173,15 @@ class CLIOutput {
    *   whose raw writes go through {@link writeTaskOutputChunk} for this reason.
    *   Its `addColorAndPrefix` splits on newlines without ever appending one, so
    *   its chunks routinely end mid-line.
+   * - A pseudo-terminal task, which cannot be routed: the native side writes to
+   *   this process's stdout from Rust, at arbitrary PTY read boundaries. It
+   *   declares itself via {@link noteExternalWrite} instead, which is why that
+   *   exists.
    *
    * Forked task streaming is the one bypass that is safe, and only because
    * `addPrefixTransformer` re-emits that output a whole line at a time, always
    * ending on a line boundary. Anything else writing to stdout during a run
-   * invalidates this and must be routed.
+   * invalidates this and must be routed or declared.
    */
   private atLineStart = true;
 
@@ -217,6 +221,27 @@ class CLIOutput {
           : chunk[chunk.length - 1] === 0x0a;
     }
     stream.write(chunk);
+  }
+
+  /**
+   * Declares output this class could not route — a pseudo-terminal task's, which
+   * the native side writes straight to our stdout — so the next writer needing a
+   * fresh line asks for one instead of trusting a stale position.
+   *
+   * The chunk is inspected rather than assumed mid-line, so output that did end
+   * on a line boundary does not cost a blank line. PTY chunks often end in an
+   * escape sequence after the newline, and that reads as mid-line, which is the
+   * safe direction to be wrong in: a spare newline, never a glued one.
+   */
+  noteExternalWrite(chunk?: string | Buffer): void {
+    if (chunk === undefined || chunk.length === 0) {
+      this.atLineStart = false;
+      return;
+    }
+    this.atLineStart =
+      typeof chunk === 'string'
+        ? chunk.endsWith('\n')
+        : chunk[chunk.length - 1] === 0x0a;
   }
 
   private ensureLineStart() {
