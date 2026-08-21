@@ -2,13 +2,17 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { logger, workspaceRoot, ProjectConfiguration } from '@nx/devkit';
+import {
+  logger,
+  workspaceRoot,
+  ProjectConfiguration,
+  hashArray,
+} from '@nx/devkit';
 import {
   hashWithWorkspaceContext,
   workspaceDataDirectory,
   hashObject,
   hashFile,
-  hashArray,
   PluginCache,
 } from '@nx/devkit/internal';
 
