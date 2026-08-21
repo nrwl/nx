@@ -133,10 +133,7 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
       const results = [];
       const normalizedOptions = normalizeOptions(options);
 
-      // Report keys are workspace-relative project roots with `/` separators — except for a
-      // project outside the workspace (an `includeBuild("../x")`), which the reporter deliberately
-      // leaves absolute. Such a root cannot become an Nx project, and letting it through would
-      // silently attribute it to the workspace-root build file.
+      // Roots outside the workspace stay absolute in the report and cannot become Nx projects.
       const projectRoots = Object.keys(nodes)
         .map((root) => normalizePath(root))
         .filter((root) => !isAbsolute(root) && !root.startsWith('../'));
@@ -148,22 +145,17 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
 
       for (let i = 0; i < projectRoots.length; i++) {
         const normalizedProjectRoot = projectRoots[i];
-        // A Gradle project need not own a build file — `project(':core') { }` blocks in an
-        // ancestor configure it instead — so the report names which file configures each project
-        // rather than one project being inferred per build file.
         const gradleFilePath = buildFileByProjectRoot[normalizedProjectRoot];
         if (!gradleFilePath) {
-          // The report named no build file for this project. Unreachable once `@nx/gradle:init`
-          // has run — it writes one next to every settings.gradle — so this means an ancestor
-          // configures it and the Gradle plugin predates `effectiveBuildFile`.
+          // No build file reported: an ancestor configures it and the plugin predates
+          // effectiveBuildFile.
           logger.verbose(
             `[@nx/gradle] no build file reported for "${normalizedProjectRoot}"; skipping it. Upgrade dev.nx.gradle.project-graph if projects are missing.`
           );
           continue;
         }
-        // calculateHashesForCreateNodes hashes the files under the root, not the root itself, so
-        // two roots that own no files of their own hash identically — which is exactly the shape
-        // this loop introduced. Without the root in the key they share a cache entry.
+        // calculateHashesForCreateNodes hashes files *under* the root, so two file-less roots
+        // hash identically; the root must be in the key.
         const hash = hashObject({
           hash: projectHashes[i],
           normalizedProjectRoot,

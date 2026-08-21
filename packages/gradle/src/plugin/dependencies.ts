@@ -60,9 +60,8 @@ export const createDependencies: CreateDependencies<
       ) {
         return;
       }
-      // A project configured from an ancestor build file (`project(':core') { }`) is attributed to
-      // that ancestor, which lives outside the project. Nx only accepts a sourceFile that belongs
-      // to the source project, so such an edge is recorded as implicit rather than dropped.
+      // An ancestor-configured project's build file lies outside it, and Nx rejects a foreign
+      // sourceFile — record implicit rather than drop.
       const ownsSourceFile =
         !!sourceProject && dirname(sourceFile) === sourceProject.root;
       const dependency: StaticDependency | ImplicitDependency = ownsSourceFile

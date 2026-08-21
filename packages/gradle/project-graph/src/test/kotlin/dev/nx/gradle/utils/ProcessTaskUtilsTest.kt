@@ -98,8 +98,8 @@ class ProcessTaskUtilsTest {
   fun `test a task whose dependency set cannot be fully resolved is not cacheable`() {
     val project = ProjectBuilder.builder().build()
     val task = project.tasks.register("packagesOtherProject").get()
-    // A qualified path forces the bypass, and a FileCollection cannot be resolved without
-    // configuring the project that produces it — so the dependency set is knowably short.
+    // Qualified path forces the bypass; the FileCollection is unresolvable — the set is knowably
+    // short.
     task.dependsOn(":other:jar")
     task.dependsOn(project.files("some-input.txt"))
 
@@ -123,7 +123,7 @@ class ProcessTaskUtilsTest {
   fun `test a task with a resolvable dependency set stays cacheable`() {
     val project = ProjectBuilder.builder().build()
     val task = project.tasks.register("packagesThisProject").get()
-    // A qualified path alone is fully resolved through the engine, so nothing is missing.
+    // No FileCollection/TaskDependency, so nothing is knowably missing.
     task.dependsOn(":other:jar")
 
     val result =
@@ -145,9 +145,8 @@ class ProcessTaskUtilsTest {
   fun `test a self-referential dependsOn terminates`() {
     val project = ProjectBuilder.builder().build()
     val task = project.tasks.register("cyclicDeps").get()
-    // A literal cyclic list cannot reach dependsOn — Gradle stores values in a Set, and hashing a
-    // self-referential list overflows before we ever see it. It is reachable only through a
-    // Callable, whose result we expand ourselves without Gradle ever hashing it.
+    // Gradle stores dependsOn in a Set, and hashing a self-referential list overflows — a cycle
+    // is reachable only through a Callable.
     val cyclic = mutableListOf<Any>(":other:jar")
     cyclic.add(cyclic)
     task.dependsOn(java.util.concurrent.Callable { cyclic })
@@ -175,8 +174,7 @@ class ProcessTaskUtilsTest {
     other.tasks.register("jar")
     project.tasks.register("producedByProvider")
     val task = project.tasks.register("consumesProvider").get()
-    // `named().map { }` yields a plain Provider, not a TaskProvider — the shape the old
-    // recovery dropped.
+    // `named().map { }` yields a plain Provider, not a TaskProvider.
     task.dependsOn(project.tasks.named("producedByProvider").map { it })
     task.dependsOn(":other:jar") // forces the bypass
 
@@ -205,8 +203,8 @@ class ProcessTaskUtilsTest {
     java.io.File(project.projectDir, "build.gradle").writeText("")
     val produced = project.tasks.register("producedByGroovyClosure").get()
     val task = project.tasks.register("consumesGroovyClosure").get()
-    // Gradle calls `dependsOn { … }` WITH the task. A Closure is a Callable, so calling it with no
-    // argument throws for any closure that uses its parameter, and the edge is lost.
+    // Gradle passes the task to `dependsOn { … }`; a Closure is a Callable, so a no-arg call
+    // throws.
     task.dependsOn(
         object : Closure<Any?>(this) {
           fun doCall(owner: Task): Any? {
@@ -385,8 +383,7 @@ class ProcessTaskUtilsTest {
 
       val task = project.tasks.register("consumesContainer").get()
       task.dependsOn(":other:jar")
-      // A FileCollection's internals may hold the real resolver, so it is screened, and the
-      // screening must keep the fail-open inputs.
+      // A FileCollection is screened, so the fail-open inputs must survive.
       task.dependsOn(project.files("some.txt").builtBy(builder))
 
       val result =
@@ -406,7 +403,6 @@ class ProcessTaskUtilsTest {
 
     @Test
     fun `test lookupTask splits absolute, relative and nested forms`() {
-      // Real children with real tasks, so a lookup returning nothing fails this test.
       val other = ProjectBuilder.builder().withParent(project).withName("other").build()
       val sub = ProjectBuilder.builder().withParent(project).withName("sub").build()
       val nested = ProjectBuilder.builder().withParent(other).withName("nested").build()
@@ -414,7 +410,6 @@ class ProcessTaskUtilsTest {
       sub.tasks.register("compileJava")
       nested.tasks.register("test")
 
-      // Absolute, relative to the declaring project (root here, so rooted at ":"), and nested.
       assertEquals(":other:jar", lookupTask(project, ":other:jar")?.path)
       assertEquals(":sub:compileJava", lookupTask(project, "sub:compileJava")?.path)
       assertEquals(":other:nested:test", lookupTask(project, ":other:nested:test")?.path)
@@ -458,8 +453,8 @@ class ProcessTaskUtilsTest {
 
     @Test
     fun `test getInputsForTask fails open to the catch-all for a recovered path dependsOn`() {
-      // A qualified path is never resolved to a Task (that would re-enter configuration), so the
-      // dependency walk finds nothing. Under-declaring here would produce a stale cache hit.
+      // :some:other:project is not in the build, so the path cannot resolve and inputs must fail
+      // open.
       val mainTask = project.tasks.register("pathDependentTask").get()
       mainTask.dependsOn(":some:other:project:jar")
 
