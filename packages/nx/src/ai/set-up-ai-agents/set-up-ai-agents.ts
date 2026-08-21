@@ -107,7 +107,7 @@ export async function setupAiAgentsGenerator(
       normalizedOptions,
       true
     );
-    cleanup();
+    await cleanup();
     return setupAiAgentsGeneratorResult;
   } catch (error) {
     return await setupAiAgentsGeneratorImpl(tree, normalizedOptions);
