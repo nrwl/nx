@@ -47,6 +47,7 @@ dotnet new xunit -n MyApp.Tests
 ```
 
 The plugin will automatically detect your .NET projects and configure appropriate Nx targets.
+It also classifies projects as applications or libraries when evaluated MSBuild output types support a consistent inference, and reports the project language plus stable SDK technologies such as ASP.NET Core, .NET MAUI, Blazor, and WebAssembly in project metadata.
 
 #### Step 4: Run Build, Test, and other commands
 

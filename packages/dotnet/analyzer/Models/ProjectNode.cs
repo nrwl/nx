@@ -16,6 +16,11 @@ public record NxProjectGraphNode
     public string Root { get; init; } = string.Empty;
 
     /// <summary>
+    /// The Nx project type when it can be inferred consistently across evaluated target frameworks.
+    /// </summary>
+    public string? ProjectType { get; init; }
+
+    /// <summary>
     /// Nx targets available for this project.
     /// </summary>
     public Dictionary<string, Target> Targets { get; init; } = new();
