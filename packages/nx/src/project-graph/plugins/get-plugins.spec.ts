@@ -57,6 +57,7 @@ describe('reasonToError', () => {
 
 describe('getPluginsSeparated', () => {
   let getPluginsSeparated: typeof import('./get-plugins').getPluginsSeparated;
+  let getPluginsIfLoadedOrLoading: typeof import('./get-plugins').getPluginsIfLoadedOrLoading;
   let loadNxPlugin: jest.Mock;
   // Resolver for each deferred specified-plugin load, keyed by plugin name.
   let pendingPluginLoads: Map<string, (plugin: unknown) => void>;
@@ -82,7 +83,10 @@ describe('getPluginsSeparated', () => {
       return [promise, () => {}];
     });
 
-    ({ getPluginsSeparated } = require('./get-plugins'));
+    ({
+      getPluginsSeparated,
+      getPluginsIfLoadedOrLoading,
+    } = require('./get-plugins'));
   });
 
   function finishLoading(pluginName: string) {
@@ -143,5 +147,35 @@ describe('getPluginsSeparated', () => {
     // resolution would be resolved against a stale project layout — missing
     // its own project — and collapse to the workspace root.
     expect(resetResolvePluginCache).toHaveBeenCalled();
+  });
+
+  describe('getPluginsIfLoadedOrLoading', () => {
+    it('returns undefined before any load and does not trigger one', () => {
+      expect(getPluginsIfLoadedOrLoading()).toBeUndefined();
+      expect(loadNxPlugin).not.toHaveBeenCalled();
+    });
+
+    it('returns an in-flight load without starting a second one', async () => {
+      const load = getPluginsSeparated({ plugins: ['test-a'] });
+      const peek = getPluginsIfLoadedOrLoading();
+      expect(peek).toBeDefined();
+      const loadsWhilePending = loadNxPlugin.mock.calls.length;
+
+      finishLoading('test-a');
+      await load;
+
+      const plugins = await peek;
+      expect(plugins.map((p) => p.name)).toContain('test-a');
+      expect(loadNxPlugin.mock.calls.length).toBe(loadsWhilePending);
+    });
+
+    it('returns the committed set once a load resolves', async () => {
+      const load = getPluginsSeparated({ plugins: ['test-a'] });
+      finishLoading('test-a');
+      await load;
+
+      const plugins = await getPluginsIfLoadedOrLoading();
+      expect(plugins.map((p) => p.name)).toContain('test-a');
+    });
   });
 });

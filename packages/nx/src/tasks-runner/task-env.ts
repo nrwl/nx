@@ -70,6 +70,49 @@ export function getTaskSpecificEnv(task: Task, graph: ProjectGraph) {
   return env;
 }
 
+/**
+ * Reconstructs, at graph-construction time, the env a task would see: the
+ * root dotenv files Nx loaded at init are unloaded from the ambient env, then
+ * the dotenv files the task would load (`.env.<target>`, project-scoped
+ * `.env`, ...) are applied, so a task-scoped file wins over an init-time root
+ * load. The unload compares values, not provenance: a variable whose value
+ * differs from the root file's is kept and wins over the task files, while a
+ * shell-set value equal to the root file's is unloaded like the file's own.
+ *
+ * `createNodes` runs before any task, so the per-task dotenv files that
+ * `getTaskSpecificEnv` loads at run time are not in `process.env` yet. A plugin
+ * inferring targets from a config that reads `process.env` needs those values
+ * to resolve the config the way the task will. This mirrors
+ * `loadDotEnvFilesForTask` but takes the target coordinates directly (there is
+ * no `Task`/graph yet) and gates on `!== 'false'` rather than `=== 'true'`: the
+ * `'true'` marker is only stamped once the graph exists (`run-command.ts`),
+ * which is after this runs. Only the dotenv overlay is reconstructed: run-time
+ * env like `NX_TASK_TARGET_*` or `NX_TASK_HASH` is not included.
+ */
+export function getGraphTimeDotEnvForTask(
+  projectRoot: string,
+  target: string,
+  configuration?: string,
+  nonAtomizedTarget?: string
+): NodeJS.ProcessEnv {
+  // Unload the root dotenv files loaded on init of Nx so the task-scoped files win.
+  const env = unloadDotEnvFiles({ ...process.env });
+  if (process.env.NX_LOAD_DOT_ENV_FILES === 'false') {
+    return env;
+  }
+  const dotEnvFiles = getEnvPathsForTask(
+    projectRoot,
+    target,
+    configuration,
+    nonAtomizedTarget
+  );
+  loadAndExpandDotEnvFile(
+    dotEnvFiles.map((file) => join(workspaceRoot, file)),
+    env
+  );
+  return env;
+}
+
 export function getEnvVariablesForTask(
   task: Task,
   taskSpecificEnv: NodeJS.ProcessEnv,

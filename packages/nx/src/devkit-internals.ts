@@ -78,6 +78,14 @@ export {
   requireWithTsconfigFallback,
 } from './plugins/js/utils/register';
 export { interpolate } from './tasks-runner/utils';
+export { getGraphTimeDotEnvForTask } from './tasks-runner/task-env';
+export { getEnvPathsForTask } from './tasks-runner/task-env-paths';
+export {
+  hashDaemonClientEnv,
+  getDaemonClientEnvGeneration,
+  getAppliedDaemonClientEnv,
+  applyDaemonEnvFromClient,
+} from './daemon/client/daemon-environment';
 export { isCI } from './utils/is-ci';
 export {
   isUsingPrettierInTree,

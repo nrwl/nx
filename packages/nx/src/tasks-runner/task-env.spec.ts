@@ -3,10 +3,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ProjectGraph } from '../config/project-graph';
 import { Task } from '../config/task-graph';
+import { setWorkspaceRoot, workspaceRoot } from '../utils/workspace-root';
 import {
   getEnvFilesForTask,
   getEnvVariablesForTask,
   getForceColorForChild,
+  getGraphTimeDotEnvForTask,
   loadAndExpandDotEnvFile,
 } from './task-env';
 
@@ -303,6 +305,69 @@ describe('getEnvFilesForTask', () => {
         },
       } as any as ProjectGraph)
     );
+  });
+});
+
+describe('getGraphTimeDotEnvForTask', () => {
+  const originalEnv = process.env;
+  const originalWorkspaceRoot = workspaceRoot;
+  let tempDir: string;
+
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+    // The 'true' marker is only stamped once the graph exists; graph-time
+    // resolution must not depend on it being set.
+    delete process.env.NX_LOAD_DOT_ENV_FILES;
+    delete process.env.BASE_URL;
+    tempDir = mkdtempSync(join(tmpdir(), 'nx-graph-env-'));
+    setWorkspaceRoot(tempDir);
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+    setWorkspaceRoot(originalWorkspaceRoot);
+    if (tempDir) {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('loads a target-scoped .env before the run-time marker is stamped', () => {
+    writeFileSync(
+      join(tempDir, '.env.e2e'),
+      'BASE_URL=http://localhost:4301\n'
+    );
+
+    const env = getGraphTimeDotEnvForTask('.', 'e2e');
+
+    expect(env.BASE_URL).toBe('http://localhost:4301');
+  });
+
+  it('resolves a task-scoped value shadowed by an ambient root .env variable', () => {
+    // At Nx init the root .env was loaded into the ambient env. Reconstruction
+    // must unload it so the task-scoped file wins the way it does at run time:
+    // dotenv loading never overrides a key that is already set.
+    writeFileSync(join(tempDir, '.env'), 'BASE_URL=http://localhost:4200\n');
+    process.env.BASE_URL = 'http://localhost:4200';
+    writeFileSync(
+      join(tempDir, '.env.e2e'),
+      'BASE_URL=http://localhost:4301\n'
+    );
+
+    const env = getGraphTimeDotEnvForTask('.', 'e2e');
+
+    expect(env.BASE_URL).toBe('http://localhost:4301');
+  });
+
+  it('does not load dotenv files when NX_LOAD_DOT_ENV_FILES is "false"', () => {
+    process.env.NX_LOAD_DOT_ENV_FILES = 'false';
+    writeFileSync(
+      join(tempDir, '.env.e2e'),
+      'BASE_URL=http://localhost:4301\n'
+    );
+
+    const env = getGraphTimeDotEnvForTask('.', 'e2e');
+
+    expect(env.BASE_URL).toBeUndefined();
   });
 });
 
