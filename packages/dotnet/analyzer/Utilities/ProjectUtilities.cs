@@ -1,4 +1,5 @@
 using Microsoft.Build.Execution;
+using MsbuildAnalyzer.Models;
 
 namespace MsbuildAnalyzer.Utilities;
 
@@ -164,6 +165,24 @@ public static class ProjectUtilities
         var rootWithSep = root + Path.DirectorySeparatorChar;
         return path.StartsWith(rootWithSep, StringComparison.OrdinalIgnoreCase);
     }
+
+    /// <summary>
+    /// A project (or one evaluated target framework of a multi-targeted project) is a test
+    /// project when it opts in via <c>IsTestProject</c> or references the test SDK/platform
+    /// packages — the same signal <see cref="Analyzer"/> uses to decide whether to emit a
+    /// <c>test</c> target, and what <c>metadata.dotnet</c> reports as the <c>test</c> capability.
+    /// </summary>
+    public static bool IsTestProject(Dictionary<string, string> properties, List<PackageReference> packageRefs) =>
+        properties.GetValueOrDefault("IsTestProject") == "true" ||
+        packageRefs.Any(p => p.Include == "Microsoft.NET.Test.Sdk" || p.Include.StartsWith("Microsoft.Testing"));
+
+    /// <summary>
+    /// A project (or one evaluated target framework) is executable when its evaluated
+    /// <c>OutputType</c> is <c>Exe</c> — the same signal <see cref="Analyzer"/> uses to decide
+    /// whether to emit <c>publish</c>/<c>run</c> targets.
+    /// </summary>
+    public static bool IsExecutableProject(Dictionary<string, string> properties) =>
+        properties.GetValueOrDefault("OutputType")?.Equals("Exe", StringComparison.OrdinalIgnoreCase) == true;
 
     /// <summary>
     /// Gets the list of technologies for a project based on its file type and characteristics.
