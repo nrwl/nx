@@ -195,7 +195,11 @@ export {
   readPackageJson,
 } from './project-graph/file-utils';
 export type { FileMapCache } from './project-graph/nx-deps-cache';
-export { readFileMapCache } from './project-graph/nx-deps-cache';
+export {
+  nxFileMap,
+  nxProjectGraph,
+  readFileMapCache,
+} from './project-graph/nx-deps-cache';
 export { isNpmProject } from './project-graph/operators';
 export {
   buildProjectGraphAndSourceMapsWithoutDaemon,
