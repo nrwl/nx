@@ -65,12 +65,11 @@ export default defineConfig({
     testTimeout: 35000,
     // Native .node bindings are not thread-safe across vitest worker threads.
     pool: 'forks',
-    // Pinned rather than derived from the CPU count: this suite runs on a
-    // container-limited CI agent, where the reported core count is the host's,
-    // so an unbounded pool spawns more forks than the container has memory for
-    // and one gets killed mid-run (its file's results are then lost). The jest
-    // preset avoided this by running at maxWorkers: 1.
-    maxWorkers: 4,
+    // Bounded on CI only: the agents are container-limited, and an unbounded
+    // pool there spawns more forks than the container has memory for, so one
+    // gets killed mid-run and its file's results are lost. Locally the default
+    // (derived from the CPU count) is both fine and noticeably faster.
+    maxWorkers: process.env.CI ? 4 : undefined,
     // Node-side (lazy require) resolution needs the same source
     // condition vite's resolve.conditions provides for imports.
     execArgv: ['--conditions=@nx/nx-source'],
