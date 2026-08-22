@@ -138,8 +138,8 @@ export async function getCommonConfig(
           test: TS_ALL_EXT_REGEX,
           use: [
             {
-              // eslint-disable-next-line @nx/enforce-module-boundaries
               loader:
+                // eslint-disable-next-line @nx/enforce-module-boundaries
                 require.resolve('@nx/angular-rspack/loaders/angular-loader'),
             },
           ],
@@ -148,8 +148,8 @@ export async function getCommonConfig(
           test: JS_ALL_EXT_REGEX,
           use: [
             {
-              // eslint-disable-next-line @nx/enforce-module-boundaries
               loader:
+                // eslint-disable-next-line @nx/enforce-module-boundaries
                 require.resolve('@nx/angular-rspack/loaders/angular-partial-transform-loader'),
             },
           ],
