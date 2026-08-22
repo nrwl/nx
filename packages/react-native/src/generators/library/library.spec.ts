@@ -301,9 +301,8 @@ describe('lib', () => {
                 configFile: __dirname + '/.babelrc.js',
               },
             ],
-            '^.+[.](bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp)$': require.resolve(
-              'react-native/jest/assetFileTransformer.js',
-            ),
+            '^.+[.](bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp)$':
+              require.resolve('react-native/jest/assetFileTransformer.js'),
           },
           transformIgnorePatterns: [
             'node_modules/(?!(.pnpm/.+/node_modules/)?(react-native|@react-native(-community)?)/)',

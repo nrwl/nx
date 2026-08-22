@@ -15,6 +15,7 @@ export interface LibraryGeneratorSchema {
   includeBabelRc?: boolean;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   linter?: LinterType;
+  formatter?: 'none' | 'prettier' | 'oxfmt';
   testEnvironment?: 'jsdom' | 'node';
   importPath?: string;
   js?: boolean;

@@ -18,7 +18,7 @@ Certain tasks like end-to-end (e2e) tests, integration tests, or large unit test
 Manually splitting these slow tasks can be complex and require ongoing maintenance. Nx Atomizer solves this by **automatically generating runnable targets for each test file**. For example, a task that takes 10 minutes can be split and distributed as five 2-minute tasks per agent. This allows for:
 
 - parallelization across multiple machines with [Nx Agents](/docs/features/ci-features/distribute-task-execution)
-- faster [flakiness detection & retries](/docs/features/ci-features/flaky-tasks) by isolating and re-running only the failed tests
+- faster [flaky test detection & retries](/docs/features/ci-features/flaky-tasks) by isolating and re-running only the failed tests
 
 ## Enable automated task splitting
 

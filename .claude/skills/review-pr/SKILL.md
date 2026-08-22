@@ -7,7 +7,7 @@ description: >-
   A reproduce-verifier executes a runnable repro only when verification identifies one. The skill
   saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md and never posts it. Claude
   reads/executes PR code only through the sandbox CLI; credentials never enter the sandbox.
-allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(.claude/tools/sandbox *), Bash(bash tools/review-sandbox/*), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), mcp__plugin_linear_linear__get_issue, mcp__plugin_linear_linear__list_comments, Read, Grep, Glob, Skill, Agent
+allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh api repos/nrwl/nx/compare/*), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(.claude/tools/sandbox *), Bash(bash tools/review-sandbox/*), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Bash(awk *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), mcp__plugin_linear_linear__get_issue, mcp__plugin_linear_linear__list_comments, Read, Grep, Glob, Skill, Agent
 argument-hint: '<PR_NUMBER> [--verify-repros]'
 ---
 
@@ -92,7 +92,7 @@ Parse out:
 - `title`, `author.login`, `headRefOid` (the head SHA), `headRefName`, `baseRefName`, `url`
 - `isDraft` — if true, exit early (don't review drafts)
 - **Local dedup:** if `$TRIAGE_DIR/<NUMBER>.md` exists, its frontmatter `head_sha` equals `headRefOid`, its `pipeline_version` equals the current `PIPELINE_VERSION` (see below), and its `verdict` is not `failed`, this PR was already reviewed at this commit — exit with no draft change; log "ALREADY_REVIEWED". A `failed` draft never blocks a retry. To deliberately re-review an unchanged PR, delete the draft file or just say so in the session.
-- **`PIPELINE_VERSION: 8`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
+- **`PIPELINE_VERSION: 9`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
 
 ### Fetch the tracking ticket
 
@@ -259,7 +259,8 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
    ```bash
    if .claude/tools/sandbox exec "$SANDBOX" -- git fetch -q --depth 1 origin "$PRIOR_SHA"; then
      .claude/tools/sandbox exec "$SANDBOX" -- git diff "$PRIOR_SHA".."<HEAD_REF_OID>" \
-       > /tmp/pr-<NUMBER>-incremental.diff
+       > /tmp/pr-<NUMBER>-incremental.diff \
+       || { echo "FATAL: failed to build incremental diff"; exit 1; }
    else
      echo "PRIOR_SHA <PRIOR_SHA> no longer on the remote — force-pushed; reviewing fresh"
    fi
@@ -269,41 +270,65 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
    Set `HAS_PRIOR_CONTEXT=true` only on the success path. **Step 5 gates on that variable, never on the context file existing** — file existence is not a safe signal, because a prior review of the same PR leaves one behind and it would silently narrow this run's scope to a stale delta. (Step 3 of the skill also clears these paths up front, so the two defenses are independent.)
 
-3. **Rebase guard — do not trust the raw range.** If the author rebased between attempts, `$PRIOR_SHA..HEAD` spans every master commit the rebase pulled in — a raw range orders of magnitude larger than the author's true delta. Filename scoping does not fix it, because master churn _inside_ the PR's own files rides along. Detect it cheaply:
+3. **Base-movement guard: do not trust the raw range after the merge base changes.** Resolve both merge bases on the host because credentials never enter the sandbox:
 
    ```bash
-   RANGE_FILES=$(grep -c '^diff --git ' /tmp/pr-<NUMBER>-incremental.diff)
-   PR_FILES=$(gh pr view <NUMBER> --json changedFiles --jq .changedFiles)
+   OLD_MB=$(gh api "repos/nrwl/nx/compare/<BASE_REF_NAME>...$PRIOR_SHA" \
+     --jq .merge_base_commit.sha) \
+     || { echo "FATAL: failed to resolve prior merge base"; exit 1; }
+   NEW_MB=$(gh api "repos/nrwl/nx/compare/<BASE_REF_NAME>...<HEAD_REF_OID>" \
+     --jq .merge_base_commit.sha) \
+     || { echo "FATAL: failed to resolve current merge base"; exit 1; }
+   test -n "$OLD_MB" && test -n "$NEW_MB" \
+     || { echo "FATAL: empty merge-base SHA"; exit 1; }
+   REPLAY_FALLBACK=false
    ```
 
-   If `RANGE_FILES > 2 * PR_FILES` (or the range touches files absent from `gh pr diff --name-only`), the PR was rebased. Rebuild the incremental surface as a **diff-of-diffs** — the PR's patch at `$PRIOR_SHA` vs its patch at HEAD, each taken against its own merge base, so master churn cancels out:
+   If `OLD_MB == NEW_MB`, the raw `$PRIOR_SHA..HEAD` range contains only the branch endpoint delta. Count its changed paths and keep it as the incremental surface:
 
    ```bash
-   # Merge bases come from the host via gh (credentials never enter the sandbox)
-   OLD_MB=$(gh api "repos/nrwl/nx/compare/<BASE_REF_NAME>...$PRIOR_SHA" --jq .merge_base_commit.sha)
-   NEW_MB=$(gh api "repos/nrwl/nx/compare/<BASE_REF_NAME>...<HEAD_REF_OID>" --jq .merge_base_commit.sha)
-   .claude/tools/sandbox exec "$SANDBOX" -- git fetch -q --depth 1 origin "$OLD_MB" "$NEW_MB"
+   if [ "$OLD_MB" = "$NEW_MB" ]; then
+     PATCH_CHANGES=$(awk '/^diff --git / { count++ } END { print count + 0 }' \
+       /tmp/pr-<NUMBER>-incremental.diff) \
+       || { echo "FATAL: failed to count incremental changes"; exit 1; }
+   else
+     .claude/tools/sandbox exec "$SANDBOX" -- \
+       git fetch -q --depth 1 origin "$OLD_MB" "$NEW_MB" \
+       || { echo "FATAL: failed to fetch merge bases"; exit 1; }
+   fi
    ```
 
-   Then keep only files whose per-file patch actually changed between the two sides. Run the whole loop inside one `sandbox exec … -- bash -s` with the script on stdin; its stdout is the new incremental diff on the host:
+   If the merge bases differ, the raw range includes base-branch commits. Rebuild the incremental surface by replaying the prior PR patch onto the current merge base in a temporary Git index, then compare that expected tree with HEAD. Stream the trusted helper from the host into the sandbox; never execute a helper from the PR-controlled checkout. `${CLAUDE_SKILL_DIR}` is substituted when the skill loads, so the input path does not depend on the current working directory:
 
    ```bash
-   .claude/tools/sandbox exec "$SANDBOX" -- bash -s <<'EOF' > /tmp/pr-<NUMBER>-incremental.diff
-   norm() { grep -v -e '^index ' -e '^@@'; }   # blob hashes and hunk offsets shift on every rebase
-   for f in $({ git diff --name-only "$OLD_MB" "$PRIOR_SHA"; git diff --name-only "$NEW_MB" HEAD; } | sort -u); do
-     if ! diff -q <(git diff "$OLD_MB" "$PRIOR_SHA" -- "$f" | norm) \
-                  <(git diff "$NEW_MB" HEAD -- "$f" | norm) >/dev/null; then
-       git diff "$NEW_MB" HEAD -- "$f"
+   if [ "$OLD_MB" != "$NEW_MB" ]; then
+     if .claude/tools/sandbox exec "$SANDBOX" -- bash -s -- \
+       "$OLD_MB" "$PRIOR_SHA" "$NEW_MB" \
+       < "${CLAUDE_SKILL_DIR}/scripts/replay-prior-patch.sh" \
+       > /tmp/pr-<NUMBER>-incremental.diff
+     then
+       PATCH_CHANGES=$(awk '/^diff --git / { count++ } END { print count + 0 }' \
+         /tmp/pr-<NUMBER>-incremental.diff) \
+         || { echo "FATAL: failed to count replayed changes"; exit 1; }
+       case "$PATCH_CHANGES" in
+         ''|*[!0-9]*) echo "FATAL: invalid replayed-change count"; exit 1 ;;
+       esac
+     else
+       REPLAY_STATUS=$?
+       if [ "$REPLAY_STATUS" -eq 10 ]; then
+         REPLAY_FALLBACK=true
+         echo "Prior patch did not replay cleanly; reviewing the full PR diff"
+       else
+         echo "FATAL: failed to rebuild incremental diff (exit $REPLAY_STATUS)"
+         exit 1
+       fi
      fi
-   done
-   EOF
+   fi
    ```
 
-   (Substitute the two merge-base SHAs into the script literally — sandbox exec re-parses args, and the heredoc is quoted, so `$OLD_MB`/`$NEW_MB` won't expand from the host environment.)
+   The helper exits 10 only when `--3way` cannot replay the prior patch; every other nonzero exit is fatal. The temporary index preserves the prior author patch across non-overlapping base churn, including binary changes, modes, symlinks, unusual pathnames, and file-to-directory transitions. If the replay conflicts, the author may have resolved overlapping base changes manually. In that case, `REPLAY_FALLBACK=true` selects the full PR diff in Step 5 and keeps the prior review context; it never treats an uncomparable patch as an empty delta or assigns a numeric change count. If this block reports `FATAL`, stop the review because its evidence is invalid.
 
-   What the delta contains for a flagged file is the PR's **current** patch for that file — reviewable on its own — not the noisy range hunks. Context-line drift from master churn can still flag a file whose author hunks are identical; acceptable — the agent re-reads one file, not four hundred.
-
-   If the rebuilt delta lands under the 40-line evidence threshold, this was a **rebase-only push**: skip the agent fleet entirely, re-verify the carry-forward yourself at HEAD (a rebase can silently drop a previously landed fix — see the distillation rules), and update the draft noting "rebase-only, no author delta".
+   If `REPLAY_FALLBACK=false` and `PATCH_CHANGES` is zero, this was a **base-movement-only push** or an equivalent tree rewrite. Skip the remaining context-building and agent steps, re-verify the carry-forward yourself at HEAD, update the review body with "no author delta", then continue at Step 8 so history and cleanup still run. Any positive count continues to Step 5 regardless of line count; the existing evidence fallback handles a small but real author delta.
 
 4. Write a context file at `/tmp/pr-<NUMBER>.review-context.md` (host-side — the agents `Read` it directly; it is our file, not PR code).
 
@@ -342,11 +367,12 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
    ## Diff since last review (`$PRIOR_SHA..<HEAD>`)
 
-   See /tmp/pr-<NUMBER>-incremental.diff for the new code added since the prior review.
+   <When `REPLAY_FALLBACK=false`: See /tmp/pr-<NUMBER>-incremental.diff for the author delta since the prior review.>
+   <When `REPLAY_FALLBACK=true`: The prior patch did not replay cleanly on the current base, so this attempt reviews the full PR diff. No narrower author delta is safe.>
 
    ## Review focus
 
-   Focus on the diff since the last review. The open items above are already re-checked — carry
+   Focus on the named review target. The open items above are already re-checked; carry
    their status into your report if your dimension owns one, but do not go and re-derive it. Do not
    re-analyze unchanged code from scratch.
 
@@ -355,7 +381,7 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
    Rules for the distillation:
    - Re-check open items once; move fixed ones to **Already fixed**.
-   - On a rebased re-review (step 3 fired), re-verify **Already fixed** items at HEAD too — a rebase can silently drop a landed fix. A dropped one goes back to Open items.
+   - When `OLD_MB != NEW_MB`, re-verify **Already fixed** items at HEAD too. Base movement can silently drop a landed fix. A dropped one goes back to Open items.
    - Never omit an unresolved finding; trim narrative first.
    - Preserve each finding's wording, location, and ask; omit old reproduction/approach/performance/security prose.
    - Carry facts, not a prior verdict's reasoning; keep focus questions neutral.
@@ -722,6 +748,12 @@ installed, an extracted tarball, a `/snap` snapshot.>
 
 ## What to report
 
+You and the author share a goal: get this PR merged without letting bad code
+in. A finding is not a rejection — it is the distance between the PR and merge,
+stated precisely enough that the author can close it. That stance changes
+nothing about rigor (the admission test below still gates every finding); it
+changes what a finding must contain: the defect, the proof, and the way out.
+
 Report **critical** and **important** findings, plus **strengths**. Concrete,
 actionable nice-to-haves (a rename, a restructure, a missing cross-link) may go
 in a terse **Suggestions** list — one line each; vague polish will be discarded.
@@ -790,10 +822,11 @@ not on the bug.
 Two failure modes dominate this pipeline's false positives: defects that were
 already there before the PR, and defects nothing a real user does can reach.
 Both read as legitimate findings, because both describe real code. So every
-Critical/Important finding MUST carry these two lines, immediately under it:
+Critical/Important finding MUST carry these three lines, immediately under it:
 
     NET-NEW: <base evidence — see below>
     TRIGGER: <entry point → input → user-visible failure>
+    FIX: <the concrete change, 1-2 lines — see below>
 
 **NET-NEW** must be one of:
 
@@ -838,9 +871,21 @@ Windows, only in a monorepo above some size, or only with a rarely-used flag
 IS a trigger — name the condition. Cut the ones nothing reaches, not the ones
 few people reach.
 
-Both lines are checked by the caller at trim time. A Critical/Important finding
-that omits either, or whose NET-NEW cites no base evidence, is demoted to
-Suggestions — so a real defect written up without them loses its weight.
+**FIX** names the concrete change: which function, what it should do instead —
+one or two lines, sketch-level, not a patch. You already know the shape from
+proving the TRIGGER; writing it down costs a sentence and turns the finding
+from a verdict into a path to merge. Grade your own confidence: plain `FIX:`
+when you are confident in the shape; `FIX (sketch):` when viable alternatives
+exist or you have not traced every call site — a confidently wrong
+prescription is worse than none. `FIX: unclear — <why>` is legal when the
+right change hinges on a decision only the author or maintainer can make; name
+that decision. Never invent a prescription to fill the line.
+
+NET-NEW and TRIGGER are checked by the caller at trim time. A
+Critical/Important finding that omits either, or whose NET-NEW cites no base
+evidence, is demoted — so a real defect written up without them loses its
+weight. A missing FIX never demotes a finding (the defect is real regardless);
+the caller records the gap in `## Failures` instead.
 When you endorse a debatable design decision (fail-open vs fail-closed,
 normalization, escape hatches, compat trade-offs), say so explicitly in a
 **Maintainer calls** line rather than folding it into an endorsement.
@@ -887,7 +932,9 @@ The proof-of-work line number each agent's definition requires is checked agains
 per dispatch as `<EVIDENCE_FILE>`:
 
 - **First review**, or no usable incremental diff → `/tmp/pr-<NUMBER>.diff`.
+- **Re-review** where `REPLAY_FALLBACK=true` -> `/tmp/pr-<NUMBER>.diff`.
 - **Re-review** where Step 4 set `HAS_PRIOR_CONTEXT=true` **and**
+  `REPLAY_FALLBACK=false` **and**
   `wc -l < /tmp/pr-<NUMBER>-incremental.diff` is at least 40 → `/tmp/pr-<NUMBER>-incremental.diff`.
 
 Pointing the proof at the incremental diff on a re-review does two things at once: it proves the
@@ -1032,7 +1079,7 @@ Agents that emit a `TIERS` line carry a `preexisting=<n>` count; reconcile the s
 
 "Keep in full" is the load-bearing half of that paragraph, and it is the half this step actually fails. Four rules make it enforceable:
 
-- **Enforce the admission test first.** Before anything else, check every Critical/Important finding for its `NET-NEW` and `TRIGGER` lines. Missing either, or a `NET-NEW` that asserts novelty without quoting base evidence ⇒ demote and record one line in `## Failures` naming the agent and the finding. **Demote by reason, not to one bucket:** a finding whose `NET-NEW` shows the defect reproduces at base goes to `### Pre-existing` (it is a real defect, just not this PR's — the maintainer still wants it); one whose `TRIGGER` names an unreachable path, or which is missing either line outright, goes to Suggestions. Dropping a demoted-as-pre-existing finding on the floor is the failure mode here, not mis-tiering it. Do not repair it for them by reading `--ref base` yourself — an agent that filed a finding without checking the base did not establish the defect is the PR's, and confirming it here converts your read into their evidence. The one exception: a `widens` or `claimed-fix` NET-NEW that names the base line but reads thin — verify that one in the sandbox and keep it if it holds. This gate is what stops pre-existing and unreachable findings from reaching the maintainer, and it is the only downgrade you perform without a numbered calibration.
+- **Enforce the admission test first.** Before anything else, check every Critical/Important finding for its `NET-NEW` and `TRIGGER` lines. Missing either, or a `NET-NEW` that asserts novelty without quoting base evidence ⇒ demote and record one line in `## Failures` naming the agent and the finding. **Demote by reason, not to one bucket:** a finding whose `NET-NEW` shows the defect reproduces at base goes to `### Pre-existing` (it is a real defect, just not this PR's — the maintainer still wants it); one whose `TRIGGER` names an unreachable path, or which is missing either line outright, goes to Suggestions. Dropping a demoted-as-pre-existing finding on the floor is the failure mode here, not mis-tiering it. Do not repair it for them by reading `--ref base` yourself — an agent that filed a finding without checking the base did not establish the defect is the PR's, and confirming it here converts your read into their evidence. The one exception: a `widens` or `claimed-fix` NET-NEW that names the base line but reads thin — verify that one in the sandbox and keep it if it holds. This gate is what stops pre-existing and unreachable findings from reaching the maintainer, and it is the only downgrade you perform without a numbered calibration. Separately, check every surviving Critical/Important finding for its `FIX:` line. A missing one never demotes — repair is not admission, and a real defect does not lose weight for lacking a prescription — but record it in `## Failures` naming the agent and finding. Do not write a prescription on the agent's behalf: the agent proved the trigger and knows the fix's shape; you would be guessing.
 - **Never re-tier an agent's finding downward on your own judgment.** Apart from the admission-test gate above, the only sanctioned downgrade is a named calibration from the list below; when you apply one, say which calibration and why in the draft. "It feels minor", "that's just style", "the fix is one character" are not calibrations. An agent that filed something as a finding did so against a rule it was required to name. You are re-checking it against the calibrations, not re-scoring it by taste, and you are not the tier the agent's contract already assigned.
 - **Severity comes from the rule violated, not the size of the fix.** A one-character punctuation change that breaks a committed `STYLE_GUIDE.md` rule vale has no rule for is Important. A three-paragraph rewrite that violates nothing is a Suggestion. Judging by surface form is the specific way this step goes wrong: docs, comment, and naming findings all have tiny diffs, so they read as polish and get swept into a tier that cannot move the verdict.
 - **The 5-bullet cap binds the Suggestions tier only.** It is never a reason to move anything out of Critical, Important, or `### Pre-existing`, and it never licenses a silent merge or drop. If you cut to the cap, name in one line what you cut and why. A reader must never mistake a trimmed list for a complete one.
@@ -1372,6 +1419,8 @@ The adjusted text becomes the final `$REVIEW_BODY`.
 ## Step 6: Format for GitHub
 
 `$REVIEW_BODY` is posted as-is — no header, footer, or tool attribution. It should read like a review a maintainer wrote. The review metadata (commit, date, attempt) lives in the triage file's frontmatter, not in the posted body.
+
+**Write to the author as a collaborator, not a gatekeeper.** The shared goal is merging this PR without letting bad code in, and the body should read that way: every Critical/Important finding keeps its `FIX:` line so the author sees the path to merge next to the defect, and the summary frames what stands between the PR and merge rather than delivering a verdict. Rigor is untouched — collaboration is the framing of the findings, never a reason to soften or drop one.
 
 **Section order.** Grounding first, then what blocks, then what doesn't: `### Close-without-merge check`, `### Reproduction verification`, `### Approach analysis`, `### Security review`, `### Critical`, `### Important`, `### Maintainer calls`, `### Questions for the author`, `### Suggestions`, `### Pre-existing`, `### Strengths`. `### Pre-existing` sits below everything actionable on this PR and carries a one-line preamble saying it is follow-up material that does not affect the verdict — otherwise a reader skimming headers counts it against the author.
 

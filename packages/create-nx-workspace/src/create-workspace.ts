@@ -70,6 +70,13 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     output.setCliName(cliName ?? 'NX');
   }
 
+  // Skip formatting during generation - the single pass at the end covers
+  // everything once dependencies are on disk. A user who set this deliberately
+  // still gets no formatting at all, so remember their value rather than
+  // silently taking it over.
+  const skipFormatRequested = process.env.NX_SKIP_FORMAT === 'true';
+  process.env.NX_SKIP_FORMAT = 'true';
+
   let directory: string;
 
   if (options.template) {
@@ -243,6 +250,47 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     await setupCI(directory, ciProvider, packageManager);
   }
 
+  // Only now are dependencies on disk: the passes inside `@nx/workspace:new`
+  // run before the install, when no formatter resolves yet.
+  if (skipFormatRequested) {
+    process.env.NX_SKIP_FORMAT = 'true';
+  } else {
+    delete process.env.NX_SKIP_FORMAT;
+  }
+
+  if (!skipFormatRequested && workspaceHasFormatter(directory)) {
+    try {
+      const pmc = getPackageManagerCommand(packageManager);
+      // `--all` because git is not initialised yet, so there is nothing to diff
+      // changed files against.
+      await execAndWait(`${pmc.exec} nx format --all`, directory);
+    } catch (e) {
+      // `execAndWait` names a log file only when there was no output at all,
+      // and that file is deleted below - so report the exit code instead.
+      const reason =
+        e?.logFile && e?.message?.includes(e.logFile)
+          ? `The command failed with exit code ${
+              e.exitCode ?? 'unknown'
+            } and produced no output.`
+          : e?.message;
+      output.warn({
+        title: 'Could not format the new workspace.',
+        bodyLines: [
+          'The workspace was created successfully, but its files are not formatted.',
+          ...(reason ? [reason] : []),
+          'Run "nx format:write" inside the workspace to format them.',
+        ],
+      });
+      // Otherwise `initializeGitRepo`'s `git add .` puts an error.log in the
+      // workspace's first commit; the .gitignore templates do not cover it.
+      if (e?.logFile && existsSync(e.logFile)) {
+        try {
+          unlinkSync(e.logFile);
+        } catch {}
+      }
+    }
+  }
+
   let pushedToVcs = VcsPushStatus.SkippedGit;
   let pushFailReason: string | undefined;
 
@@ -412,5 +460,32 @@ function getWorkspaceGlobsFromPreset(preset: string): string[] {
       return ['apps/*'];
     default:
       return ['packages/*'];
+  }
+}
+
+/**
+ * Asks the workspace rather than the caller. `formatter` is only populated for
+ * the known-preset stacks, so trusting it skips the pass for third-party
+ * presets and templates - which is the only formatting those flows get, since
+ * everything before the install runs under `NX_SKIP_FORMAT`.
+ *
+ * Formats when detection cannot run: an unformatted new workspace fails its own
+ * `nx format:check`, which is worse than a spawn that finds nothing to do.
+ */
+function workspaceHasFormatter(directory: string): boolean {
+  try {
+    // nx-ignore-next-line
+    const { detectFormatter } = require(
+      require.resolve('nx/src/devkit-internals', {
+        paths: [directory],
+        // nx-ignore-next-line
+      })
+      // Typed locally: `detectFormatter` is new in this release, so the
+      // published nx these types resolve against does not export it.
+    ) as { detectFormatter: (root: string) => string | null };
+
+    return detectFormatter(directory) !== null;
+  } catch {
+    return true;
   }
 }

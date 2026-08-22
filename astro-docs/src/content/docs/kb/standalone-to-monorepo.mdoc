@@ -50,10 +50,10 @@ For this recipe, we'll assume that the root-level app is named `my-app`. The hig
 
    It can be difficult to know which files are root-level config files and which files are project-specific config files. Here is a non-exhaustive list of config files to help distinguish between the two.
 
-   | Type of Config  | Files                                                                                                                                                                       |
-   | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-   | _Root-level_    | `.eslintignore`, `.eslintrc.base.json`, `.gitignore`, `.prettierignore`, `jest.config.ts`, `jest.preset.js`, `.prettierrc`, `nx.json`, `package.json`, `tsconfig.base.json` |
-   | _Project-level_ | `.eslintrc.json`, `index.html`, `project.json`, `jest.config.app.ts`, `tsconfig.app.json`, `tsconfig.json`, `tsconfig.spec.json`, `vite.config.ts`, `webpack.config.js`     |
+   | Type of Config  | Files                                                                                                                                                                                                           |
+   | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | _Root-level_    | `.eslintignore`, `.eslintrc.base.json`, `.gitignore`, `jest.config.ts`, `jest.preset.js`, `nx.json`, `package.json`, `tsconfig.base.json`, and any formatter config files (e.g. `.prettierrc`, `.oxfmtrc.json`) |
+   | _Project-level_ | `.eslintrc.json`, `index.html`, `project.json`, `jest.config.app.ts`, `tsconfig.app.json`, `tsconfig.json`, `tsconfig.spec.json`, `vite.config.ts`, `webpack.config.js`                                         |
 
    {% aside title="jest.config.app.ts" type="note" %}
    `jest.config.app.ts` in the root should be renamed to `jest.config.ts` when moved to `apps/temp`. Also update the `jestConfig` option in `project.json` to point to `jest.config.ts` instead of `jest.config.app.ts`.

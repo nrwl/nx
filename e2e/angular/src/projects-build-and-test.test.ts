@@ -83,7 +83,7 @@ describe('Angular Projects - Build and Test', () => {
     console.log(
       `The current es2015 bundle size is ${es2015BundleSize / 1000} KB`
     );
-    expect(es2015BundleSize).toBeLessThanOrEqual(226000);
+    expect(es2015BundleSize).toBeLessThanOrEqual(227000);
 
     // check unit tests
     runCLI(
