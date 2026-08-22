@@ -228,6 +228,37 @@ nx build my-app --configuration release
 nx build my-app --configuration debug
 ```
 
+## Multi-targeted projects
+
+A project that declares `<TargetFrameworks>` (plural) builds more than one target framework. An unqualified `nx build` builds them all, but a single host often cannot — an iOS + Windows project has no machine that can build every framework at once. The `frameworkVariants` option lets you opt in to per-target-framework target variants so you can build, cache, and route one framework in isolation.
+
+```json {% meta="{6}" %}
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/dotnet",
+      "options": {
+        "frameworkVariants": true
+      }
+    }
+  ]
+}
+```
+
+With the option enabled, a project declaring `<TargetFrameworks>net10.0;net10.0-ios</TargetFrameworks>` gets these additional build targets alongside the unqualified ones:
+
+- `build-net10.0`, `build-net10.0-ios` - build a single framework (Debug by default)
+- `build-net10.0-release`, `build-net10.0-ios-release` - build a single framework in Release
+
+Each variant passes `--framework` to the .NET CLI, scopes its outputs and cache identity to that framework, and records the framework in its target metadata. The framework is joined to the target name with a hyphen (never a colon), so `nx run my-app:build-net10.0-ios` is unambiguous.
+
+Variants are self-contained: they don't depend on the unqualified build and don't pass `--no-dependencies`, so building one framework lets MSBuild build each referenced project's compatible framework directly instead of triggering an all-framework build. The tradeoff is coarser task-level caching of dependencies; `^production` stays an input so a dependency's source change still invalidates the variant.
+
+Any configuration you set on the `build` target is applied to its variants too, and disabling `build` removes them.
+
+This option is off by default and never changes the unqualified targets. Single-targeted projects are unaffected.
+
 ## Set up CI for your .NET monorepo
 
 In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
