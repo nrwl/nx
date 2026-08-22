@@ -51,7 +51,8 @@ Most of the official plugins come with a `convert-to-inferred` generator. This g
 
 - register the inference plugin in the `plugins` section of `nx.json`
 - migrate executor options into the tool's configuration files (where applicable)
-- clean up `project.json` to remove targets and options that are unnecessary
+- centralize configuration that is shared across the migrated projects into `targetDefaults` in `nx.json` (whole-workspace migrations only, see below)
+- clean up `project.json` to keep only the configuration that deviates from what is inferred or centralized
 
 To get started, run `nx g convert-to-inferred`, and you'll be prompted to choose a plugin to migrate.
 
@@ -74,7 +75,7 @@ We recommend that you check that the configurations are correct before continuin
 
 The `convert-to-inferred` generator removes uses of executors from the corresponding plugin. For example, if `@nx/vite` is migrated, then uses of [`@nx/vite:build`](/docs/technologies/build-tools/vite/executors#build), [`@nx/vite:dev-server`](/docs/technologies/build-tools/vite/executors#dev-server), [`@nx/vite:preview-server`](/docs/technologies/build-tools/vite/executors#preview-server), and [`@nx/vite:test`](/docs/technologies/build-tools/vite/executors#test) executors will be removed.
 
-Target and configuration names are maintained for each project in their `project.json` files. A target may be removed from `project.json` if everything is inferred--that is, options and configurations are not customized. To get the full project details (including all inferred tasks), run:
+Target and configuration names are maintained for each project in their `project.json` files. A target may be removed from `project.json` entirely when nothing is left to store there: either everything is inferred, or the remaining customized options and configurations were shared across the migrated projects and moved into `targetDefaults` in `nx.json` (whole-workspace migrations only). What stays in `project.json` is the per-project deviation. To get the full project details (including all inferred tasks), run:
 
 ```shell
 npx nx show project <project-name>
@@ -129,6 +130,12 @@ The same CLI setup applies to other plugins as well.
 - etc.
 
 Read the recipe on [passing args to commands](/docs/kb/pass-args-to-commands) for more information.
+
+### When inference does not produce the expected target
+
+The migration reads each executor target, then asks the plugin to infer the equivalent task from the tool's configuration files.
+If the plugin finds your project but does not infer a task with the name the migration expects, the migration stops with an error like `The nx plugin found a project inside <root> but did not infer a "<target>" target for it`.
+The [troubleshooting guide](/docs/kb/troubleshoot-convert-to-inferred) explains this error and the related `The nx plugin did not find a project inside ...` error, along with how to resolve each.
 
 ### Configuration file changes
 
@@ -198,6 +205,38 @@ Lastly, you can inspect the `nx.json` file to see a new `plugins` entry. For `@n
 ```
 
 You may change the target name options to change how Nx adds them to the project. For example, if you use `"serveTargetName": "dev"` then you would run `nx dev demo` rather than `nx serve demo` for your Vite project.
+
+### Centralize shared configuration in `targetDefaults`
+
+When you migrate the whole workspace (that is, without `--project`), the generator also looks for configuration that is identical across every migrated project for a target and lifts it into `targetDefaults` in `nx.json`, so it lives in one place instead of being repeated in each `project.json`.
+The entry is scoped to the plugin's targets with a `filter`, so it only applies to the targets this plugin infers:
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "build": [
+      {
+        "filter": { "plugin": "@nx/vite/plugin" },
+        "options": {
+          "config": "./vite.config.ts"
+        }
+      }
+    ]
+  }
+}
+```
+
+Each project's `project.json` then keeps only the options that differ from this shared default.
+Configuration a project overrides in its own `project.json` still wins over the centralized default.
+
+Some projects are excluded from centralization: when a target's identity is authored outside the plugin (a `project.json` `executor` or `command`, or a `package.json` script or `nx.targets` entry), the centralized default does not resolve for that target.
+Those projects keep their full per-project configuration, and the generator prints a warning naming them.
+
+After centralizing, the generator verifies that every migrated target still resolves to the same configuration.
+If the centralized default would also reach a project the generator did not migrate, or the verification cannot confirm the result is equivalent, the generator restores full per-project configuration for the affected targets and prints a warning.
+
+This step is skipped for single-project (`--project`) migrations, since centralizing one project's configuration would leak it onto its siblings.
 
 ## Verify the migration
 

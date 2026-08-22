@@ -406,30 +406,18 @@ describe('Remix - Convert To Inferred', () => {
 
       // ASSERT
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets).toMatchInlineSnapshot(`
-        {
-          "serve": {
-            "options": {
-              "env": {
-                "PORT": "4200",
-              },
-            },
-          },
-        }
-      `);
+      expect(updatedProject.targets).toMatchInlineSnapshot(`{}`);
 
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets).toMatchInlineSnapshot(`
+      expect(updatedProject2.targets).toMatchInlineSnapshot(`{}`);
+      // the serve env config shared by both migrated projects is centralized,
+      // scoped to the remix plugin's targets
+      expect(readNxJson(tree).targetDefaults?.serve).toEqual([
         {
-          "serve": {
-            "options": {
-              "env": {
-                "PORT": "4200",
-              },
-            },
-          },
-        }
-      `);
+          filter: { plugin: '@nx/remix/plugin' },
+          options: { env: { PORT: '4200' } },
+        },
+      ]);
 
       const nxJsonPlugins = readNxJson(tree).plugins;
       const remixPlugin = nxJsonPlugins.find(

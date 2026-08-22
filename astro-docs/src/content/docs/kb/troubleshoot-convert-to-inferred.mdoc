@@ -33,6 +33,22 @@ unconventional, you must rename it back to the standard naming convention before
 For example, if you have a `apps/demo/vite.custom.ts` file and are running `nx g @nx/vite:convert-to-inferred`, you must
 first rename the file to `apps/demo/vite.config.ts` before running the generator.
 
+## Error: The nx plugin found a project but did not infer a target
+
+The migration reads each executor target, then asks the plugin to infer the equivalent task from the tool's configuration files.
+If the plugin finds your project but does not infer a task with the name the migration expects, the migration stops with an error like the following.
+
+```text
+The nx plugin found a project inside apps/demo but did not infer a "build" target for it.
+```
+
+This is not the same as the missing project error above.
+The plugin found the project, so the configuration file is already named correctly.
+The plugin infers only the tasks the tool's configuration file supports, and this configuration file does not support the task the migration is converting.
+For example, `@nx/vite` infers no `serve` task for a configuration that sets `build.lib` without `server.host` or `server.port`, because there is nothing to serve for a library.
+Check the tool's configuration file for the project and add what the plugin needs to infer that task, or migrate that target by hand.
+If the configuration already supports the task, [open an issue](https://github.com/nrwl/nx/issues) with details about your project structure.
+
 ## Next.js: unable to migrate `outputPath`, `generateLockfile` and `includeDevDependenciesInPackageJson` options
 
 The [`outputPath`](/docs/technologies/react/remix/executors#build) option from `@nx/next:build` is ignored because it
