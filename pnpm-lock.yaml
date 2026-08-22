@@ -1175,15 +1175,6 @@ importers:
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
-      prettier-plugin-astro:
-        specifier: ^0.14.1
-        version: 0.14.1
-      prettier-plugin-tailwindcss:
-        specifier: ^0.6.14
-        version: 0.6.14(prettier-plugin-astro@0.14.1)(prettier@3.6.2)
-      pretty-quick:
-        specifier: ^4.2.2
-        version: 4.2.2(prettier@3.6.2)
       react-redux:
         specifier: 8.0.5
         version: 8.0.5(@types/react-dom@18.3.1)(@types/react@18.3.1)(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.7)(@types/react@18.3.1)(react@18.3.1))(react@18.3.1)(redux@4.2.1)
@@ -1348,7 +1339,7 @@ importers:
     dependencies:
       '@astrojs/check':
         specifier: ^0.7.0
-        version: 0.7.0(prettier-plugin-astro@0.14.1)(prettier@3.6.2)(typescript@6.0.3)
+        version: 0.7.0(prettier@3.6.2)(typescript@6.0.3)
       '@astrojs/markdoc':
         specifier: ^0.15.0
         version: 0.15.1(@types/react@18.3.1)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.12.2)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.11.1)(jiti@2.7.0)(less@4.8.1)(lightningcss@1.32.0)(rollup@4.62.4)(sass-embedded@1.97.2)(sass@1.101.0)(terser@5.49.0)(tsx@4.20.5)(typescript@6.0.3)(yaml@2.9.0))(react@18.3.1)
@@ -10268,6 +10259,12 @@ packages:
     os: [linux]
     libc: [glibc]
 
+  '@nx/nx-linux-arm64-gnu@23.2.0-beta.9':
+    resolution: {integrity: sha512-VCLgWgp0H2ljtYZWq4snJuyQj9azQszw2Jo7Wn9Bm4bP4yOACmhVInTXAt5LFuft3m2RNpU56Ff5RctQYsuNdQ==}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
   '@nx/nx-linux-arm64-musl@21.6.2':
     resolution: {integrity: sha512-pB67mhywxV+WrVCiYV/+DgK2lfen3dv8PPgmBN/7qHQUgHqTJSLw7f9upiLlApuVN20qyCaktNT6Nq41Q88NCg==}
     cpu: [arm64]
@@ -10294,6 +10291,12 @@ packages:
 
   '@nx/nx-linux-x64-musl@21.6.2':
     resolution: {integrity: sha512-nEEkb3fBuqL18q6q7oqC1PpRiP8LMCmLf7UkGl6owDzCPy48K36Nept2YjHzABdUN2Wv5kojCWjNpGqhnTZSiw==}
+    cpu: [x64]
+    os: [linux]
+    libc: [musl]
+
+  '@nx/nx-linux-x64-musl@23.2.0-beta.9':
+    resolution: {integrity: sha512-CTcvbwmXAep6dis5W3URZ0gkKZ85N8ZY5PbIiW4i24008e5FMsrCnMQeJ8IJi7fm9OPEx1YZsiz6iUS102X04Q==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
@@ -23043,71 +23046,6 @@ packages:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
 
-  prettier-plugin-astro@0.14.1:
-    resolution: {integrity: sha512-RiBETaaP9veVstE4vUwSIcdATj6dKmXljouXc/DDNwBSPTp8FRkLGDSGFClKsAFeeg+13SB0Z1JZvbD76bigJw==}
-    engines: {node: ^14.15.0 || >=16.0.0}
-
-  prettier-plugin-tailwindcss@0.6.14:
-    resolution: {integrity: sha512-pi2e/+ZygeIqntN+vC573BcW5Cve8zUB0SSAGxqpB4f96boZF4M3phPVoOFCeypwkpRYdi7+jQ5YJJUwrkGUAg==}
-    engines: {node: '>=14.21.3'}
-    peerDependencies:
-      '@ianvs/prettier-plugin-sort-imports': '*'
-      '@prettier/plugin-hermes': '*'
-      '@prettier/plugin-oxc': '*'
-      '@prettier/plugin-pug': '*'
-      '@shopify/prettier-plugin-liquid': '*'
-      '@trivago/prettier-plugin-sort-imports': '*'
-      '@zackad/prettier-plugin-twig': '*'
-      prettier: ^3.0
-      prettier-plugin-astro: '*'
-      prettier-plugin-css-order: '*'
-      prettier-plugin-import-sort: '*'
-      prettier-plugin-jsdoc: '*'
-      prettier-plugin-marko: '*'
-      prettier-plugin-multiline-arrays: '*'
-      prettier-plugin-organize-attributes: '*'
-      prettier-plugin-organize-imports: '*'
-      prettier-plugin-sort-imports: '*'
-      prettier-plugin-style-order: '*'
-      prettier-plugin-svelte: '*'
-    peerDependenciesMeta:
-      '@ianvs/prettier-plugin-sort-imports':
-        optional: true
-      '@prettier/plugin-hermes':
-        optional: true
-      '@prettier/plugin-oxc':
-        optional: true
-      '@prettier/plugin-pug':
-        optional: true
-      '@shopify/prettier-plugin-liquid':
-        optional: true
-      '@trivago/prettier-plugin-sort-imports':
-        optional: true
-      '@zackad/prettier-plugin-twig':
-        optional: true
-      prettier-plugin-astro:
-        optional: true
-      prettier-plugin-css-order:
-        optional: true
-      prettier-plugin-import-sort:
-        optional: true
-      prettier-plugin-jsdoc:
-        optional: true
-      prettier-plugin-marko:
-        optional: true
-      prettier-plugin-multiline-arrays:
-        optional: true
-      prettier-plugin-organize-attributes:
-        optional: true
-      prettier-plugin-organize-imports:
-        optional: true
-      prettier-plugin-sort-imports:
-        optional: true
-      prettier-plugin-style-order:
-        optional: true
-      prettier-plugin-svelte:
-        optional: true
-
   prettier@2.8.7:
     resolution: {integrity: sha512-yPngTo3aXUUmyuTjeTUT75txrf+aMh9FiD7q9ZE/i6r0bPb22g4FsE6Y338PQX1bmfy08i9QQCB7/rcUAVntfw==}
     engines: {node: '>=10.13.0'}
@@ -23157,13 +23095,6 @@ packages:
   pretty-ms@9.3.0:
     resolution: {integrity: sha512-gjVS5hOP+M3wMm5nmNOucbIrqudzs9v/57bWRHQWLYklXqoXKrVfYW2W9+glfGsqtPgpiz5WwyEEB+ksXIx3gQ==}
     engines: {node: '>=18'}
-
-  pretty-quick@4.2.2:
-    resolution: {integrity: sha512-uAh96tBW1SsD34VhhDmWuEmqbpfYc/B3j++5MC/6b3Cb8Ow7NJsvKFhg0eoGu2xXX+o9RkahkTK6sUdd8E7g5w==}
-    engines: {node: '>=14'}
-    hasBin: true
-    peerDependencies:
-      prettier: ^3.0.0
 
   prismjs@1.27.0:
     resolution: {integrity: sha512-t13BGPUlFDR7wRB5kQDG4jjl7XeuH6jbJGt11JHPL96qwsEHNX2+68tFXqc1/k+/jALsbSWJKUOT/hcYAZ5LkA==}
@@ -23971,9 +23902,6 @@ packages:
   rxjs@7.8.2:
     resolution: {integrity: sha512-dhKf903U/PQZY6boNNtAGdWbG85WAbjT/1xYoZIC7FAY0yWapOBQVsVrDl58W86//e1VpMNBtRV4MaXfdMySFA==}
 
-  s.color@0.0.15:
-    resolution: {integrity: sha512-AUNrbEUHeKY8XsYr/DYpl+qk5+aM+DChopnWOPEzn8YKzOhv4l2zH6LzZms3tOZP3wwdOyc0RmTciyi46HLIuA==}
-
   sade@1.8.1:
     resolution: {integrity: sha512-xal3CZX1Xlo/k4ApwCFrHVACi9fBqJ7V+mwhBsuf/1IOKbBy098Fex+Wa/5QMubw09pSZ/u8EY8PWgevJsXp1A==}
     engines: {node: '>=6'}
@@ -24129,9 +24057,6 @@ packages:
     resolution: {integrity: sha512-lKJcskySwAtJ4QRirKrikrWMFa2niAuaGenY2ElHjd55IwHUiur5IdKu6R1hEmGYMs4Qm+6rlRW0RvuAkmcryg==}
     engines: {node: '>=16.0.0'}
     hasBin: true
-
-  sass-formatter@0.7.9:
-    resolution: {integrity: sha512-CWZ8XiSim+fJVG0cFLStwDvft1VI7uvXdCNJYXhDvowiv+DsbD1nXLiQ4zrE5UBvj5DWZJ93cwN0NX5PMsr1Pw==}
 
   sass-loader@16.0.7:
     resolution: {integrity: sha512-w6q+fRHourZ+e+xA1kcsF27iGM6jdB8teexYCfdUw0sYgcDNeZESnDNT9sUmmPm3ooziwUJXGwZJSTF3kOdBfA==}
@@ -24928,9 +24853,6 @@ packages:
     engines: {node: ^18.12.0 || ^20.9.0 || >=22.0}
     peerDependencies:
       postcss: ^8.4.32
-
-  suf-log@2.5.3:
-    resolution: {integrity: sha512-KvC8OPjzdNOe+xQ4XWJV2whQA0aM1kGVczMQ8+dStAO6KfEB140JEVQ9dE76ONZ0/Ylf67ni4tILPJB41U0eow==}
 
   super-regex@1.1.0:
     resolution: {integrity: sha512-WHkws2ZflZe41zj6AolvvmaTrWds/VuyeYr9iPVv/oQeaIoVxMKaushfFWpOGDT+GuBrM/sVqF8KUCYQlSSTdQ==}
@@ -28446,9 +28368,9 @@ snapshots:
       '@csstools/css-tokenizer': 3.0.4
       lru-cache: 10.4.3
 
-  '@astrojs/check@0.7.0(prettier-plugin-astro@0.14.1)(prettier@3.6.2)(typescript@6.0.3)':
+  '@astrojs/check@0.7.0(prettier@3.6.2)(typescript@6.0.3)':
     dependencies:
-      '@astrojs/language-server': 2.15.4(prettier-plugin-astro@0.14.1)(prettier@3.6.2)(typescript@6.0.3)
+      '@astrojs/language-server': 2.15.4(prettier@3.6.2)(typescript@6.0.3)
       chokidar: 3.6.0
       fast-glob: 3.3.3
       kleur: 4.1.5
@@ -28462,7 +28384,7 @@ snapshots:
 
   '@astrojs/internal-helpers@0.6.1': {}
 
-  '@astrojs/language-server@2.15.4(prettier-plugin-astro@0.14.1)(prettier@3.6.2)(typescript@6.0.3)':
+  '@astrojs/language-server@2.15.4(prettier@3.6.2)(typescript@6.0.3)':
     dependencies:
       '@astrojs/compiler': 2.12.2
       '@astrojs/yaml2ts': 0.2.2
@@ -28484,7 +28406,6 @@ snapshots:
       vscode-uri: 3.1.0
     optionalDependencies:
       prettier: 3.6.2
-      prettier-plugin-astro: 0.14.1
     transitivePeerDependencies:
       - typescript
 
@@ -35901,6 +35822,9 @@ snapshots:
   '@nx/nx-linux-arm64-gnu@21.6.2':
     optional: true
 
+  '@nx/nx-linux-arm64-gnu@23.2.0-beta.9':
+    optional: true
+
   '@nx/nx-linux-arm64-musl@21.6.2':
     optional: true
 
@@ -35914,6 +35838,9 @@ snapshots:
     optional: true
 
   '@nx/nx-linux-x64-musl@21.6.2':
+    optional: true
+
+  '@nx/nx-linux-x64-musl@23.2.0-beta.9':
     optional: true
 
   '@nx/nx-win32-arm64-msvc@21.6.2':
@@ -51297,8 +51224,10 @@ snapshots:
       '@nx/nx-darwin-x64': 23.2.0-beta.9
       '@nx/nx-freebsd-x64': 23.2.0-beta.9
       '@nx/nx-linux-arm-gnueabihf': 23.2.0-beta.9
+      '@nx/nx-linux-arm64-gnu': 23.2.0-beta.9
       '@nx/nx-linux-arm64-musl': 23.2.0-beta.9
       '@nx/nx-linux-x64-gnu': 23.2.0-beta.9
+      '@nx/nx-linux-x64-musl': 23.2.0-beta.9
       '@nx/nx-win32-arm64-msvc': 23.2.0-beta.9
       '@nx/nx-win32-x64-msvc': 23.2.0-beta.9
       '@swc-node/register': 1.11.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@6.0.3)
@@ -51435,8 +51364,10 @@ snapshots:
       '@nx/nx-darwin-x64': 23.2.0-beta.9
       '@nx/nx-freebsd-x64': 23.2.0-beta.9
       '@nx/nx-linux-arm-gnueabihf': 23.2.0-beta.9
+      '@nx/nx-linux-arm64-gnu': 23.2.0-beta.9
       '@nx/nx-linux-arm64-musl': 23.2.0-beta.9
       '@nx/nx-linux-x64-gnu': 23.2.0-beta.9
+      '@nx/nx-linux-x64-musl': 23.2.0-beta.9
       '@nx/nx-win32-arm64-msvc': 23.2.0-beta.9
       '@nx/nx-win32-x64-msvc': 23.2.0-beta.9
       '@swc-node/register': 1.11.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@swc/core@1.15.10(@swc/helpers@0.5.23))(@swc/types@0.1.25)(typescript@6.0.3)
@@ -52872,18 +52803,6 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier-plugin-astro@0.14.1:
-    dependencies:
-      '@astrojs/compiler': 2.12.2
-      prettier: 3.6.2
-      sass-formatter: 0.7.9
-
-  prettier-plugin-tailwindcss@0.6.14(prettier-plugin-astro@0.14.1)(prettier@3.6.2):
-    dependencies:
-      prettier: 3.6.2
-    optionalDependencies:
-      prettier-plugin-astro: 0.14.1
-
   prettier@2.8.7:
     optional: true
 
@@ -52931,17 +52850,6 @@ snapshots:
   pretty-ms@9.3.0:
     dependencies:
       parse-ms: 4.0.0
-
-  pretty-quick@4.2.2(prettier@3.6.2):
-    dependencies:
-      '@pkgr/core': 0.2.7
-      ignore: 7.0.5
-      mri: 1.2.0
-      picocolors: 1.1.1
-      picomatch: 4.0.4
-      prettier: 3.6.2
-      tinyexec: 0.3.2
-      tslib: 2.8.1
 
   prismjs@1.27.0: {}
 
@@ -54040,8 +53948,6 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  s.color@0.0.15: {}
-
   sade@1.8.1:
     dependencies:
       mri: 1.2.0
@@ -54171,10 +54077,6 @@ snapshots:
       sass-embedded-unknown-all: 1.97.2
       sass-embedded-win32-arm64: 1.97.2
       sass-embedded-win32-x64: 1.97.2
-
-  sass-formatter@0.7.9:
-    dependencies:
-      suf-log: 2.5.3
 
   sass-loader@16.0.7(@rspack/core@1.6.8(@swc/helpers@0.5.23))(sass-embedded@1.97.2)(sass@1.97.3)(webpack@5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3)):
     dependencies:
@@ -55172,10 +55074,6 @@ snapshots:
       browserslist: 4.28.7
       postcss: 8.5.15
       postcss-selector-parser: 7.1.1
-
-  suf-log@2.5.3:
-    dependencies:
-      s.color: 0.0.15
 
   super-regex@1.1.0:
     dependencies:

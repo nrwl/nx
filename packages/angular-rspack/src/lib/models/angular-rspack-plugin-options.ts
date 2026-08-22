@@ -351,8 +351,10 @@ export interface AngularRspackPluginOptions {
   webWorkerTsConfig?: string;
 }
 
-export interface NormalizedAngularRspackPluginOptions
-  extends Omit<AngularRspackPluginOptions, 'index' | 'scripts' | 'styles'> {
+export interface NormalizedAngularRspackPluginOptions extends Omit<
+  AngularRspackPluginOptions,
+  'index' | 'scripts' | 'styles'
+> {
   appShell: boolean;
   advancedOptimizations: boolean;
   aot: boolean;

@@ -158,7 +158,7 @@ export function Callout({
           ))}
       </div>
       {isOpen && (
-        <div className="px-4 pb-4 pt-0">
+        <div className="px-4 pt-0 pb-4">
           <span className={cx('prose-sm block', ui.textColor)}>{children}</span>
         </div>
       )}

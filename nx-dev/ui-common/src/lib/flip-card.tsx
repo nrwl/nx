@@ -66,7 +66,7 @@ export function FlipCard({
 
 export function FlipCardFront({ children }: { children: ReactNode }) {
   return (
-    <div className="backface-hidden absolute flex h-full w-full flex-col items-center justify-center px-2 text-center text-3xl font-bold">
+    <div className="absolute flex h-full w-full flex-col items-center justify-center px-2 text-center text-3xl font-bold backface-hidden">
       {children}
     </div>
   );
@@ -76,7 +76,7 @@ export function FlipCardBack({ children }: { children: ReactNode }) {
   return (
     <FlipCardContext.Consumer>
       {() => (
-        <div className="my-rotate-y-180 backface-hidden h-full w-full overflow-hidden rounded-md bg-white text-3xl text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100">
+        <div className="my-rotate-y-180 h-full w-full overflow-hidden rounded-md bg-white text-3xl text-zinc-900 backface-hidden dark:bg-zinc-800 dark:text-zinc-100">
           <div className="p-4 text-sm sm:text-sm md:text-sm lg:text-lg">
             {children}
           </div>
