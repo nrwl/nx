@@ -228,6 +228,66 @@ nx build my-app --configuration release
 nx build my-app --configuration debug
 ```
 
+## Multi-targeted projects
+
+A project that declares `<TargetFrameworks>` (plural) builds more than one target framework. An unqualified `nx build` builds them all, but a single host often cannot — an iOS + Windows project has no machine that can build every framework at once. The `frameworkVariants` option lets you opt in to per-target-framework target variants so you can build, cache, and route one framework in isolation.
+
+```json {% meta="{6}" %}
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/dotnet",
+      "options": {
+        "frameworkVariants": true
+      }
+    }
+  ]
+}
+```
+
+With the option enabled, a project declaring `<TargetFrameworks>net10.0;net10.0-ios</TargetFrameworks>` gets these additional build targets alongside the unqualified ones:
+
+- `build-net10.0`, `build-net10.0-ios` - build a single framework (Debug by default)
+- `build-net10.0-release`, `build-net10.0-ios-release` - build a single framework in Release
+
+Each variant passes `--framework` to the .NET CLI, scopes its outputs and cache identity to that framework, and records the framework in its target metadata. The framework is joined to the target name with a hyphen (never a colon), so `nx run my-app:build-net10.0-ios` is unambiguous.
+
+Variants are self-contained: they don't depend on the unqualified build and don't pass `--no-dependencies`, so building one framework lets MSBuild build each referenced project's compatible framework directly instead of triggering an all-framework build. The tradeoff is coarser task-level caching of dependencies; `^production` stays an input so a dependency's source change still invalidates the variant.
+
+Any configuration you set on the `build` target is applied to its variants too, and disabling `build` removes them.
+
+This option is off by default and never changes the unqualified targets. Single-targeted projects are unaffected.
+
+### Runtime identifier variants
+
+Enable the separate `runtimeVariants` option to additionally generate per-RID variants for multi-targeted executables that have runtime identifiers. It is a distinct opt-in from `frameworkVariants` — turning on per-framework build variants does not, on its own, expand the graph with RID variants — and enabling it implies `frameworkVariants`:
+
+```json {% meta="{6}" %}
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/dotnet",
+      "options": {
+        "runtimeVariants": true
+      }
+    }
+  ]
+}
+```
+
+For a project with `<TargetFrameworks>net10.0;net10.0-ios</TargetFrameworks>` and `<RuntimeIdentifiers>ios-arm64</RuntimeIdentifiers>` you get:
+
+- `build-net10.0-ios-ios-arm64-release` - the RID-specific Release build
+- `publish-net10.0-ios-ios-arm64` - publish for that framework and RID
+
+The RID publish passes both `--framework` and `--runtime`, scopes its outputs to the runtime-specific output folder, and depends on the RID-specific build so a `--no-build` publish finds the correct output. The RID Release build is self-contained on the same terms as the framework build variants.
+
+The runtime identifiers come from the evaluated build: the plural `RuntimeIdentifiers` is authoritative when set, otherwise the evaluated singular `RuntimeIdentifier` is used, which for a platform framework may be an SDK default rather than a value you authored. Whether a framework is an executable is evaluated per framework (via `OutputType`), so in a project whose frameworks mix application and library, only the executable frameworks get RID variants.
+
+RID variants require the standard appended output layout, where the framework and runtime identifier are output-path segments and the publish directory is `<OutputPath>/publish`. To avoid declaring cache outputs the build won't write, they are skipped (with a warning) for projects that use `UseArtifactsOutput`, that set `AppendTargetFrameworkToOutputPath` or `AppendRuntimeIdentifierToOutputPath` to `false`, or that set a custom `PublishDir`.
+
 ## Set up CI for your .NET monorepo
 
 In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.

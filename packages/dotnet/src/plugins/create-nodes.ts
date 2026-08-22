@@ -90,6 +90,35 @@ export interface DotNetPluginOptions {
    * Use `targetName` to rename the target, and provide additional options/configurations to merge with the generated target.
    */
   run?: TargetConfigurationWithName | false;
+  /**
+   * When enabled, multi-targeted projects (those declaring `<TargetFrameworks>`)
+   * additionally get per-target-framework build variants alongside the
+   * unqualified targets — for example `build-net10.0-ios` and
+   * `build-net10.0-ios-release`. Each variant passes `--framework` to the .NET
+   * CLI and scopes its outputs and cache identity to that framework.
+   *
+   * Variants are self-contained: they do not depend on the unqualified build,
+   * so building one framework never triggers an all-framework build of the
+   * project or its dependencies. Any configuration you set on the `build`
+   * target is applied to its variants too, and disabling `build` removes them.
+   *
+   * This is opt-in because it expands the task graph, and it never changes the
+   * unqualified targets. Single-targeted projects are unaffected.
+   *
+   * @default false
+   */
+  frameworkVariants?: boolean;
+  /**
+   * When enabled, multi-targeted executables that have runtime identifiers get
+   * per-RID variants — for example `build-net10.0-ios-ios-arm64-release` and
+   * `publish-net10.0-ios-ios-arm64`. This is a separate opt-in from
+   * {@link frameworkVariants}, so opting into per-framework build variants does
+   * not on its own expand the graph with RID variants. Enabling it implies
+   * `frameworkVariants`.
+   *
+   * @default false
+   */
+  runtimeVariants?: boolean;
 }
 
 // MSBuild auto-imports Directory.Build.props/.targets from each ancestor of a project file,
@@ -130,10 +159,26 @@ function mergeUserTargetConfigurations(
 
   const mergedTargets = { ...node.targets };
 
+  // A framework variant's metadata records the unqualified target it derives
+  // from (e.g. `build`), so the same user configuration can be applied to the
+  // variants and they can be removed alongside a disabled base target.
+  const variantsOf = (baseName: string): string[] =>
+    Object.keys(mergedTargets).filter(
+      (name) =>
+        (
+          mergedTargets[name]?.metadata as
+            | { frameworkVariantOf?: string }
+            | undefined
+        )?.frameworkVariantOf === baseName
+    );
+
   for (const { targetOption, defaultTargetName } of targetMappings) {
     // Disabled target from user configuration
     if (targetOption === false) {
       delete mergedTargets[defaultTargetName];
+      for (const variantName of variantsOf(defaultTargetName)) {
+        delete mergedTargets[variantName];
+      }
       continue;
     }
 
@@ -166,6 +211,18 @@ function mergeUserTargetConfigurations(
     // If target was renamed, remove the old target name
     if (isRenamed && mergedTargets[defaultTargetName]) {
       delete mergedTargets[defaultTargetName];
+    }
+
+    // Keep the framework variants consistent with the base target: apply the
+    // same user configuration to each variant. The analyzer already names and
+    // stamps variants with the configured (possibly renamed) target name.
+    if (hasUserConfig) {
+      for (const variantName of variantsOf(actualTargetName)) {
+        mergedTargets[variantName] = mergeTargetConfigurations(
+          userSpecifiedConfig as TargetConfiguration,
+          mergedTargets[variantName]
+        );
+      }
     }
   }
 
@@ -208,6 +265,17 @@ export const createNodes: CreateNodes<DotNetPluginOptions> = [
           'watch',
         runTargetName:
           (normalizedOptions.run && normalizedOptions.run.targetName) || 'run',
+        // Framework variants derive from the build target, so a disabled build
+        // means no variants to generate. Runtime variants imply framework variants.
+        frameworkVariants:
+          ((normalizedOptions.frameworkVariants ?? false) ||
+            (normalizedOptions.runtimeVariants ?? false)) &&
+          normalizedOptions.build !== false,
+        // RID variants additionally build/publish, so they're gated on the
+        // separate runtimeVariants opt-in (and a non-disabled build).
+        runtimeVariants:
+          (normalizedOptions.runtimeVariants ?? false) &&
+          normalizedOptions.build !== false,
       };
 
       const result = await analyzeProjects(

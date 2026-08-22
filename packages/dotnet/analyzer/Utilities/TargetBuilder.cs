@@ -21,7 +21,8 @@ public static partial class TargetBuilder
         string workspaceRoot,
         PluginOptions options,
         NxJsonConfig? nxJson,
-        List<string> directoryBuildInputs)
+        List<string> directoryBuildInputs,
+        List<FrameworkVariant>? frameworkVariants = null)
     {
         var targets = new Dictionary<string, Target>();
 
@@ -52,6 +53,17 @@ public static partial class TargetBuilder
         if (!isExe && !isTest)
         {
             AddPackTarget(targets, projectName, fileName, properties, projectDirectory, workspaceRoot, options, productionInput, directoryBuildInputs);
+        }
+
+        // Opt-in per-target-framework variants for multi-targeted projects. Added last so the
+        // unqualified targets above stay byte-for-byte identical whether or not this runs.
+        // Runtime variants imply framework variants, so either flag enables this pass; the RID
+        // hook inside is separately gated on RuntimeVariants.
+        if ((options.FrameworkVariants || options.RuntimeVariants) && frameworkVariants is { Count: > 1 })
+        {
+            AddFrameworkVariantTargets(
+                targets, fileName, frameworkVariants,
+                projectDirectory, workspaceRoot, options, productionInput, directoryBuildInputs);
         }
 
         return targets;
