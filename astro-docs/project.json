@@ -184,17 +184,22 @@
     },
     "format": {
       "cache": true,
-      "//": "nx format doesn't respect overrides, so we manually run prettier for mdoc files",
-      "command": "prettier **/*.mdoc --check",
+      "//": "oxfmt only formats extensions it knows, so .mdoc files go through --stdin-filepath (see the script)",
+      "command": "node scripts/format-mdoc.mjs --check",
+      "options": {
+        "cwd": "astro-docs"
+      },
       "inputs": [
         "{projectRoot}/**/*.mdoc",
-        "{workspaceRoot}/.prettierrc",
-        "{workspaceRoot}/.prettierignore",
-        "{workspaceRoot}/.editorconfig"
+        "{projectRoot}/scripts/format-mdoc.mjs",
+        "{workspaceRoot}/.oxfmtrc.json"
       ]
     },
     "format:write": {
-      "command": "prettier **/*.mdoc --write"
+      "command": "node scripts/format-mdoc.mjs",
+      "options": {
+        "cwd": "astro-docs"
+      }
     }
   }
 }

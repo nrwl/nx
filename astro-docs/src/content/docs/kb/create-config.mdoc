@@ -141,8 +141,7 @@ export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
   optimization?: boolean | OptimizationOptions;
   outputHashing?: OutputHashing;
   outputPath?:
-    | string
-    | (Required<Pick<OutputPath, 'base'>> & Partial<OutputPath>);
+    string | (Required<Pick<OutputPath, 'base'>> & Partial<OutputPath>);
   polyfills?: string[];
   root?: string;
   scripts?: ScriptOrStyleEntry[];
