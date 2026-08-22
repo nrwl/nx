@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`task planner dependentTasksOutputFiles should depend on dependent tasks output files 1`] = `
+exports[`task planner > dependentTasksOutputFiles > should depend on dependent tasks output files 1`] = `
 {
   "parent:build": [
     "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
@@ -15,7 +15,7 @@ exports[`task planner dependentTasksOutputFiles should depend on dependent tasks
 }
 `;
 
-exports[`task planner should be able to handle multiple filesets per project 1`] = `
+exports[`task planner > should be able to handle multiple filesets per project 1`] = `
 {
   "parent:test": [
     "workspace:[{workspaceRoot}/global1]",
@@ -34,7 +34,7 @@ exports[`task planner should be able to handle multiple filesets per project 1`]
 }
 `;
 
-exports[`task planner should build plans where the project graph has circular dependencies 1`] = `
+exports[`task planner > should build plans where the project graph has circular dependencies 1`] = `
 {
   "child:build": [
     "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
@@ -61,7 +61,7 @@ exports[`task planner should build plans where the project graph has circular de
 }
 `;
 
-exports[`task planner should hash executors 1`] = `
+exports[`task planner > should hash executors 1`] = `
 {
   "proj:lint": [
     "workspace:[{workspaceRoot}/global1]",
@@ -76,7 +76,7 @@ exports[`task planner should hash executors 1`] = `
 }
 `;
 
-exports[`task planner should include npm projects 1`] = `
+exports[`task planner > should include npm projects 1`] = `
 {
   "app:build": [
     "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
@@ -90,7 +90,7 @@ exports[`task planner should include npm projects 1`] = `
 }
 `;
 
-exports[`task planner should make a plan with multiple filesets of a project 1`] = `
+exports[`task planner > should make a plan with multiple filesets of a project 1`] = `
 {
   "parent:build": [
     "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
@@ -111,7 +111,7 @@ exports[`task planner should make a plan with multiple filesets of a project 1`]
 }
 `;
 
-exports[`task planner should plan non-default filesets 1`] = `
+exports[`task planner > should plan non-default filesets 1`] = `
 {
   "parent:build": [
     "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
@@ -127,7 +127,7 @@ exports[`task planner should plan non-default filesets 1`] = `
 }
 `;
 
-exports[`task planner should plan the task where the project has dependencies 1`] = `
+exports[`task planner > should plan the task where the project has dependencies 1`] = `
 {
   "parent:build": [
     "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",

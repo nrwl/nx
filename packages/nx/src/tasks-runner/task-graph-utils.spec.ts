@@ -231,7 +231,7 @@ describe('task graph utils', () => {
       env = process.env;
       process.env = {};
 
-      mockProcessExit = jest
+      mockProcessExit = vi
         .spyOn(process, 'exit')
         .mockImplementation((code: number) => {
           return undefined as never;
@@ -382,8 +382,8 @@ describe('task graph utils', () => {
       expect(() => {
         assertTaskGraphDoesNotContainInvalidTargets(taskGraph);
       }).toThrowErrorMatchingInlineSnapshot(`
-        "The following tasks do not support parallelism but depend on continuous tasks:
-         - a:build -> b:watch"
+        [NonParallelTaskDependsOnContinuousTasksError: The following tasks do not support parallelism but depend on continuous tasks:
+         - a:build -> b:watch]
       `);
     });
 
@@ -412,9 +412,9 @@ describe('task graph utils', () => {
       expect(() => {
         assertTaskGraphDoesNotContainInvalidTargets(taskGraph);
       }).toThrowErrorMatchingInlineSnapshot(`
-        "The following continuous tasks do not support parallelism but are depended on:
+        [DependingOnNonParallelContinuousTaskError: The following continuous tasks do not support parallelism but are depended on:
          - b:watch <- a:build
-        Parallelism must be enabled for a continuous task if it is depended on, as the tasks that depend on it will run in parallel with it."
+        Parallelism must be enabled for a continuous task if it is depended on, as the tasks that depend on it will run in parallel with it.]
       `);
     });
   });

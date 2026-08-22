@@ -3,9 +3,9 @@ import { homedir, tmpdir } from 'os';
 import { join } from 'path';
 import { getPnpmConfigDir, readPnpmYamlConfig } from './pnpm-config';
 
-jest.mock('os', () => ({
-  ...jest.requireActual('os'),
-  homedir: jest.fn(),
+vi.mock('os', async () => ({
+  ...require('os'),
+  homedir: vi.fn(),
 }));
 
 describe('getPnpmConfigDir', () => {
@@ -21,7 +21,7 @@ describe('getPnpmConfigDir', () => {
   });
   afterEach(() => {
     Object.defineProperty(process, 'platform', originalPlatform);
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('returns the XDG_CONFIG_HOME/pnpm dir when XDG_CONFIG_HOME is set', () => {

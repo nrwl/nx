@@ -107,13 +107,13 @@ function setHashWindows(windows: Array<[number, number]>): void {
 }
 
 beforeEach(() => {
-  getEntriesByTypeSpy = jest.spyOn(performance, 'getEntriesByType');
+  getEntriesByTypeSpy = vi.spyOn(performance, 'getEntriesByType');
   setHashWindows([]);
-  jest.spyOn(nxCloudUtils, 'isNxCloudUsed').mockReturnValue(true);
+  vi.spyOn(nxCloudUtils, 'isNxCloudUsed').mockReturnValue(true);
 });
 
 afterEach(() => {
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
 });
 
 /** The env vars the given TestEnv implies (CI short-circuit + distribution flag). */
@@ -1517,7 +1517,7 @@ describe('flushPerformanceReport', () => {
 
   beforeEach(() => {
     logged = undefined;
-    logSpy = jest.spyOn(console, 'log').mockImplementation((msg?: any) => {
+    logSpy = vi.spyOn(console, 'log').mockImplementation((msg?: any) => {
       logged = String(msg);
     });
   });

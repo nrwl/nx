@@ -1,9 +1,9 @@
-jest.mock('../../../utils/git-utils', () => ({
-  hasUncommittedChanges: jest.fn(),
-  tryCommitChanges: jest.fn(),
+vi.mock('../../../utils/git-utils', () => ({
+  hasUncommittedChanges: vi.fn(),
+  tryCommitChanges: vi.fn(),
 }));
-jest.mock('../../../utils/logger', () => ({
-  logger: { info: jest.fn() },
+vi.mock('../../../utils/logger', () => ({
+  logger: { info: vi.fn() },
 }));
 
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs';

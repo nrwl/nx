@@ -5,13 +5,13 @@ import { Tree } from '../../generators/tree';
 
 // Module-level mock container - initialized early so jest.mock factories can reference it
 const mocks = {
-  verifyOrUpdateNxCloudClient: jest.fn(),
+  verifyOrUpdateNxCloudClient: vi.fn(),
 };
 
 const verifyOrUpdateNxCloudClient = mocks.verifyOrUpdateNxCloudClient;
 
-jest.mock('../../nx-cloud/update-manager', () => {
-  const actual = jest.requireActual('../../nx-cloud/update-manager');
+vi.mock('../../nx-cloud/update-manager', async () => {
+  const actual = await vi.importActual('../../nx-cloud/update-manager');
   return {
     ...actual,
     verifyOrUpdateNxCloudClient: (...args: any[]) =>

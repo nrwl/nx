@@ -1,19 +1,22 @@
-const mockRunMigration = jest.fn();
-const mockReadMigrationCollection = jest.fn();
-const mockResolveDocumentationFile = jest.fn();
-const mockLogSkippedInstall = jest.fn();
-const mockChangedDepInstallerCtor = jest.fn();
-const mockStringifiedDeps = jest.fn();
-const mockRunInstall = jest.fn();
-const mockInstallDepsIfChanged = jest.fn();
+const mockRunMigration = vi.fn();
+const mockReadMigrationCollection = vi.fn();
+const mockResolveDocumentationFile = vi.fn();
+const mockLogSkippedInstall = vi.fn();
+const mockChangedDepInstallerCtor = vi.fn();
+const mockStringifiedDeps = vi.fn();
+const mockRunInstall = vi.fn();
+const mockInstallDepsIfChanged = vi.fn();
 let mockSkippedInstall = false;
 let mockInstalled = false;
-jest.mock('../execute-migration', () => ({
+vi.mock('../execute-migration', async () => ({
   // Real implementation: pure formatting, and the ChangedDepInstaller ctor
   // assertions depend on its output.
-  formatSingleMigrationRerunCommand: jest.requireActual('../execute-migration')
-    .formatSingleMigrationRerunCommand,
-  ChangedDepInstaller: jest.fn().mockImplementation((...args: unknown[]) => {
+  formatSingleMigrationRerunCommand: (
+    await vi.importActual('../execute-migration')
+  ).formatSingleMigrationRerunCommand,
+  ChangedDepInstaller: vi.fn().mockImplementation(function (
+    ...args: unknown[]
+  ) {
     mockChangedDepInstallerCtor(...args);
     return {
       installDepsIfChanged: (...called: unknown[]) =>
@@ -37,40 +40,61 @@ jest.mock('../execute-migration', () => ({
     mockResolveDocumentationFile(...args),
 }));
 
-const mockCommit = jest.fn();
-const mockCheckpoint = jest.fn();
-jest.mock('../migrate-commits', () => ({
+const mockCommit = vi.fn();
+const mockCheckpoint = vi.fn();
+vi.mock('../migrate-commits', async () => ({
   // The resolution helpers (resolveCreateCommits, confirmCommitsOnDefaultBranch)
   // stay real: the tests below assert their effect on the worker.
-  ...jest.requireActual('../migrate-commits'),
+  ...(await vi.importActual('../migrate-commits')),
   commitMigrationIfRequested: (...args: unknown[]) => mockCommit(...args),
   commitCheckpointBeforeMigrations: (...args: unknown[]) =>
     mockCheckpoint(...args),
 }));
 
-const mockResolveAgentic = jest.fn();
-jest.mock('../agentic/select', () => ({
-  ...jest.requireActual('../agentic/select'),
+const mockResolveAgentic = vi.fn();
+vi.mock('../agentic/select', async () => ({
+  ...(await vi.importActual('../agentic/select')),
   resolveAgentic: (...args: unknown[]) => mockResolveAgentic(...args),
 }));
 
-const mockRunStep = jest.fn();
-jest.mock('../agentic/run-step', () => ({
+const mockRunStep = vi.fn();
+// worker.ts lazy-requires the agentic modules (CJS channel); replace them
+// in the require channel as well as the import graph.
+import { mockCjsModule } from '../../../internal-testing-utils/cjs-mock';
+mockCjsModule(import.meta.url, '../agentic/run-step', {
+  runAgenticPromptStep: (...args: unknown[]) => mockRunStep(...args),
+});
+vi.mock('../agentic/run-step', () => ({
   runAgenticPromptStep: (...args: unknown[]) => mockRunStep(...args),
 }));
 
-const mockGitignoreFallback = jest.fn();
-jest.mock('../agentic/handoff-gitignore', () => ({
-  ...jest.requireActual('../agentic/handoff-gitignore'),
+const mockGitignoreFallback = vi.fn();
+mockCjsModule(import.meta.url, '../agentic/handoff-gitignore', {
+  ...require('../agentic/handoff-gitignore'),
+  applyAgenticHandoffGitignoreFallback: (...args: unknown[]) =>
+    mockGitignoreFallback(...args),
+});
+vi.mock('../agentic/handoff-gitignore', async () => ({
+  ...(await vi.importActual('../agentic/handoff-gitignore')),
   applyAgenticHandoffGitignoreFallback: (...args: unknown[]) =>
     mockGitignoreFallback(...args),
 }));
 
 // Passthrough spy: the real initRunDir still runs (the runDir assertions below
 // depend on its output) while the call order stays observable.
-const mockInitRunDir = jest.fn();
-jest.mock('../agentic/handoff', () => {
-  const actual = jest.requireActual('../agentic/handoff');
+const mockInitRunDir = vi.fn();
+{
+  const realHandoff = require('../agentic/handoff');
+  mockCjsModule(import.meta.url, '../agentic/handoff', {
+    ...realHandoff,
+    initRunDir: (...args: unknown[]) => {
+      mockInitRunDir(...args);
+      return realHandoff.initRunDir(...args);
+    },
+  });
+}
+vi.mock('../agentic/handoff', async () => {
+  const actual = await vi.importActual('../agentic/handoff');
   return {
     ...actual,
     initRunDir: (...args: unknown[]) => {
@@ -80,12 +104,12 @@ jest.mock('../agentic/handoff', () => {
   };
 });
 
-const mockIsGitRepository = jest.fn();
-const mockGetGitCurrentBranch = jest.fn();
-const mockGetLatestCommitSha = jest.fn();
-const mockGetGitRemoteNames = jest.fn(() => [] as string[]);
-jest.mock('../../../utils/git-utils', () => ({
-  ...jest.requireActual('../../../utils/git-utils'),
+const mockIsGitRepository = vi.fn();
+const mockGetGitCurrentBranch = vi.fn();
+const mockGetLatestCommitSha = vi.fn();
+const mockGetGitRemoteNames = vi.fn(() => [] as string[]);
+vi.mock('../../../utils/git-utils', async () => ({
+  ...(await vi.importActual('../../../utils/git-utils')),
   isGitRepository: (...args: unknown[]) => mockIsGitRepository(...args),
   getGitCurrentBranch: (...args: unknown[]) => mockGetGitCurrentBranch(...args),
   getLatestCommitSha: (...args: unknown[]) => mockGetLatestCommitSha(...args),
@@ -94,47 +118,47 @@ jest.mock('../../../utils/git-utils', () => ({
 
 // Only the recorded (--run-id) path reads the agent environment directly; the
 // standalone path goes through the mocked resolveAgentic above.
-const mockIsInsideAgent = jest.fn();
-jest.mock('../agentic/inception', () => ({
+const mockIsInsideAgent = vi.fn();
+vi.mock('../agentic/inception', () => ({
   isInsideAgent: () => mockIsInsideAgent(),
 }));
 
-const mockGetBaseRef = jest.fn();
-jest.mock('../../../utils/command-line-utils', () => ({
-  ...jest.requireActual('../../../utils/command-line-utils'),
+const mockGetBaseRef = vi.fn();
+vi.mock('../../../utils/command-line-utils', async () => ({
+  ...(await vi.importActual('../../../utils/command-line-utils')),
   getBaseRef: (...args: unknown[]) => mockGetBaseRef(...args),
 }));
 
-const mockReportRunError = jest.fn();
-jest.mock('../migrate-analytics', () => ({
-  ...jest.requireActual('../migrate-analytics'),
+const mockReportRunError = vi.fn();
+vi.mock('../migrate-analytics', async () => ({
+  ...(await vi.importActual('../migrate-analytics')),
   reportMigrateRunError: (...args: unknown[]) => mockReportRunError(...args),
 }));
 
-const mockCanPrompt = jest.fn();
-const mockMigrateConfirm = jest.fn();
-jest.mock('../safe-prompt', () => ({
-  ...jest.requireActual('../safe-prompt'),
+const mockCanPrompt = vi.fn();
+const mockMigrateConfirm = vi.fn();
+vi.mock('../safe-prompt', async () => ({
+  ...(await vi.importActual('../safe-prompt')),
   canPrompt: (...args: unknown[]) => mockCanPrompt(...args),
   migrateConfirm: (...args: unknown[]) => mockMigrateConfirm(...args),
 }));
 
-jest.mock('../../../config/configuration', () => ({
-  ...jest.requireActual('../../../config/configuration'),
+vi.mock('../../../config/configuration', async () => ({
+  ...(await vi.importActual('../../../config/configuration')),
   readNxJson: () => ({}),
 }));
 
 // The agentic preflight reads the installed nx version; the tmp roots used
 // below have no node_modules to resolve it from.
-jest.mock('../../../utils/package-json', () => ({
-  ...jest.requireActual('../../../utils/package-json'),
+vi.mock('../../../utils/package-json', async () => ({
+  ...(await vi.importActual('../../../utils/package-json')),
   readModulePackageJson: () => ({
     packageJson: { name: 'nx', version: '99.0.0' },
     path: '/virtual/nx/package.json',
   }),
 }));
 
-jest.mock('../../../utils/package-manager', () => ({
+vi.mock('../../../utils/package-manager', () => ({
   detectPackageManager: () => 'npm',
   getPackageManagerCommand: () => ({ exec: 'npx', install: 'npm install' }),
 }));
@@ -215,16 +239,14 @@ describe('runSingleMigrationWorker', () => {
   beforeEach(() => {
     root = mkdtempSync(join(tmpdir(), 'nx-migrate-worker-'));
     stdout = '';
-    jest.spyOn(process.stdout, 'write').mockImplementation(((
-      chunk: unknown
-    ) => {
+    vi.spyOn(process.stdout, 'write').mockImplementation(((chunk: unknown) => {
       stdout += String(chunk);
       return true;
     }) as unknown as typeof process.stdout.write);
-    jest.spyOn(output, 'log').mockImplementation(() => {});
-    jest.spyOn(output, 'warn').mockImplementation(() => {});
-    jest.spyOn(logger, 'info').mockImplementation(() => {});
-    jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    vi.spyOn(output, 'log').mockImplementation(() => {});
+    vi.spyOn(output, 'warn').mockImplementation(() => {});
+    vi.spyOn(logger, 'info').mockImplementation(() => {});
+    vi.spyOn(logger, 'warn').mockImplementation(() => {});
 
     mockRunMigration.mockReset().mockResolvedValue({
       changes: [],
@@ -261,7 +283,7 @@ describe('runSingleMigrationWorker', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     rmSync(root, { recursive: true, force: true });
   });
 
@@ -2039,7 +2061,7 @@ describe('runSingleMigrationWorker', () => {
       mockResolveAgentic.mockResolvedValue({ kind: 'inside-agent' });
       writeMigrations([genMig('@nx/js', 'gen')]);
       waives({ agentContext: ['hint for the outer agent'] });
-      const verboseSpy = jest
+      const verboseSpy = vi
         .spyOn(logger, 'verbose')
         .mockImplementation(() => undefined);
 
@@ -2073,7 +2095,7 @@ describe('runSingleMigrationWorker', () => {
       writeMigrations([hybridMig('@nx/js', 'h')]);
       waives({ agentContext: ['hint'] });
       mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc0' });
-      const verboseSpy = jest
+      const verboseSpy = vi
         .spyOn(logger, 'verbose')
         .mockImplementation(() => undefined);
 

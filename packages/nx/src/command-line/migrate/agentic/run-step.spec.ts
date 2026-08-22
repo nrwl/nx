@@ -1,21 +1,21 @@
-jest.mock('./runner', () => ({ runAgentic: jest.fn() }));
-jest.mock('./definitions', () => ({ getAgentDefinition: jest.fn() }));
-jest.mock('./handoff', () => ({
-  ...jest.requireActual('./handoff'),
-  mkdirSafely: jest.fn(),
+vi.mock('./runner', () => ({ runAgentic: vi.fn() }));
+vi.mock('./definitions', () => ({ getAgentDefinition: vi.fn() }));
+vi.mock('./handoff', async () => ({
+  ...(await vi.importActual('./handoff')),
+  mkdirSafely: vi.fn(),
 }));
-jest.mock('../migrate-output', () => ({
-  resetSgrAfterAgent: jest.fn(),
+vi.mock('../migrate-output', () => ({
+  resetSgrAfterAgent: vi.fn(),
 }));
-jest.mock('../../../utils/logger', () => ({
-  logger: { info: jest.fn() },
+vi.mock('../../../utils/logger', () => ({
+  logger: { info: vi.fn() },
 }));
-jest.mock('../../../utils/package-manager', () => ({
-  detectPackageManager: jest.fn().mockReturnValue('npm'),
-  getPackageManagerCommand: jest.fn().mockReturnValue({ exec: 'npx' }),
+vi.mock('../../../utils/package-manager', () => ({
+  detectPackageManager: vi.fn().mockReturnValue('npm'),
+  getPackageManagerCommand: vi.fn().mockReturnValue({ exec: 'npx' }),
 }));
-jest.mock('../../../utils/child-process', () => ({
-  getRunNxBaseCommand: jest.fn().mockReturnValue('npx nx'),
+vi.mock('../../../utils/child-process', () => ({
+  getRunNxBaseCommand: vi.fn().mockReturnValue('npx nx'),
 }));
 
 import { dirname, join } from 'path';
@@ -65,21 +65,21 @@ function configureRun(outcome: HandoffOutcome) {
 describe('runAgenticPromptStep', () => {
   let installDeps: jest.Mock;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     mockRunAgentic.mockReset();
     mockGetDefinition.mockReset();
     // mockClear (not mockReset) — mockReset wipes the factory return
     // values set at jest.mock() time, so detectPackageManager etc. would
     // start returning undefined.
-    const { logger } = jest.requireMock('../../../utils/logger') as {
+    const { logger } = (await import('../../../utils/logger')) as {
       logger: { info: jest.Mock };
     };
     logger.info.mockClear();
-    const { mkdirSafely } = jest.requireMock('./handoff') as {
+    const { mkdirSafely } = (await import('./handoff')) as {
       mkdirSafely: jest.Mock;
     };
     mkdirSafely.mockClear();
-    installDeps = jest.fn().mockResolvedValue(undefined);
+    installDeps = vi.fn().mockResolvedValue(undefined);
   });
 
   it('returns the agent summary and calls installDeps on success', async () => {
@@ -119,7 +119,7 @@ describe('runAgenticPromptStep', () => {
       'test',
       'm1.json'
     );
-    const { mkdirSafely } = jest.requireMock('./handoff') as {
+    const { mkdirSafely } = (await import('./handoff')) as {
       mkdirSafely: jest.Mock;
     };
     expect(mkdirSafely).toHaveBeenCalledWith(
@@ -178,7 +178,7 @@ describe('runAgenticPromptStep', () => {
   });
 
   it('uses "Validation failed" labeling in generic-validation mode failures', async () => {
-    const { logger } = jest.requireMock('../../../utils/logger');
+    const { logger } = await import('../../../utils/logger');
     configureRun({ kind: 'failed', summary: 'tests failed' });
 
     await expect(

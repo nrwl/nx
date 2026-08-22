@@ -2,9 +2,9 @@ import { withEnvironmentVariables } from '../internal-testing-utils/with-environ
 import { shouldUseTui } from './is-tui-enabled';
 import { logger } from '../utils/logger';
 
-jest.mock('../native', () => ({
-  ...jest.requireActual('../native'),
-  isAiAgent: jest.fn(() => false),
+vi.mock('../native', async () => ({
+  ...(await vi.importActual('../native')),
+  isAiAgent: vi.fn(() => false),
   IS_WASM: false,
 }));
 
@@ -161,7 +161,7 @@ describe('shouldUseTui', () => {
   it('should warn if the env is not capable when tui flag is true', () => {
     const original = process.stderr.isTTY;
     process.stderr.isTTY = false;
-    const warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
     withEnvironmentVariables(
       {
         NX_TUI: null,

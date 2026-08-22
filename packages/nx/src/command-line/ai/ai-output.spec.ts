@@ -1,8 +1,9 @@
 import { writeAiOutput, logProgress, writeErrorLog } from './ai-output';
 
 // Mock isAiAgent
-jest.mock('../../native', () => ({
-  isAiAgent: jest.fn(),
+vi.mock('../../native', async (importOriginal) => ({
+  ...(await importOriginal<any>()),
+  isAiAgent: vi.fn(),
 }));
 
 import { isAiAgent } from '../../native';
@@ -12,13 +13,13 @@ describe('shared ai-output', () => {
   let stdoutSpy: jest.SpyInstance;
 
   beforeEach(() => {
-    stdoutSpy = jest.spyOn(process.stdout, 'write').mockImplementation();
+    stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation();
     mockIsAiAgent.mockReturnValue(false);
   });
 
   afterEach(() => {
     stdoutSpy.mockRestore();
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('writeAiOutput', () => {

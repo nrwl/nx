@@ -3,8 +3,8 @@ import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from '../../src/command-line/rele
 import { GithubRemoteReleaseClient } from '../../src/command-line/release/utils/remote-release-clients/github';
 import DefaultChangelogRenderer from './index';
 
-jest.mock('../../src/project-graph/file-map-utils', () => ({
-  createFileMapUsingProjectGraph: jest.fn().mockImplementation(() => {
+vi.mock('../../src/project-graph/file-map-utils', () => ({
+  createFileMapUsingProjectGraph: vi.fn().mockImplementation(() => {
     return Promise.resolve({
       allWorkspaceFiles: [],
       fileMap: {
@@ -186,7 +186,7 @@ describe('ChangelogRenderer', () => {
       });
 
       it('should not collect empty author emails (which would otherwise be attributed to the "find" user via ungh)', async () => {
-        const applyUsernameSpy = jest
+        const applyUsernameSpy = vi
           .spyOn(remoteReleaseClient, 'applyUsernameToAuthors')
           .mockResolvedValue(undefined);
         const renderer = new DefaultChangelogRenderer({

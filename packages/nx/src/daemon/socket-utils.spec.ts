@@ -6,17 +6,17 @@ import {
   getSocketDirFallbackCause,
 } from './tmp-dir';
 
-jest.mock('./tmp-dir', () => ({
-  getDaemonSocketDir: jest.fn(),
-  getPluginSocketDir: jest.fn(),
-  getSocketDir: jest.fn(),
-  getSocketDirFallbackCause: jest.fn(),
-  getRefusedConfiguredSocketDir: jest.fn(),
+vi.mock('./tmp-dir', () => ({
+  getDaemonSocketDir: vi.fn(),
+  getPluginSocketDir: vi.fn(),
+  getSocketDir: vi.fn(),
+  getSocketDirFallbackCause: vi.fn(),
+  getRefusedConfiguredSocketDir: vi.fn(),
 }));
 
 describe('socket path validation', () => {
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('keeps the plugin socket basename prefix and suffix short', () => {

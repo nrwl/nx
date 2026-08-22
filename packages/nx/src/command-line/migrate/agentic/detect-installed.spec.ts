@@ -1,8 +1,8 @@
 import { AgentDefinition } from './types';
 
-jest.mock('which', () => jest.fn());
-jest.mock('fs/promises', () => ({
-  access: jest.fn(),
+vi.mock('which', () => ({ default: vi.fn() }));
+vi.mock('fs/promises', () => ({
+  access: vi.fn(),
   constants: { X_OK: 1 },
 }));
 

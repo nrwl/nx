@@ -219,7 +219,7 @@ describe('target-name cache fallback', () => {
   let warn: jest.SpyInstance;
 
   beforeEach(() => {
-    warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
+    warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -349,7 +349,7 @@ describe('target-name cache fallback', () => {
     // can decide this: `normalizeTarget` skips the lookup when `continuous` is
     // present on the target at all. Without the stub the executor simply fails
     // to resolve here, and the test would pass without exercising the opt-out.
-    const getExecutorInformation = jest
+    const getExecutorInformation = vi
       .spyOn(executorUtils, 'getExecutorInformation')
       .mockReturnValue({ schema: { continuous: true } } as any);
 
@@ -371,7 +371,7 @@ describe('target-name cache fallback', () => {
   it('should not apply when the executor schema makes the target continuous', () => {
     // The paired case: no explicit opt-out, so the schema decides and the
     // target is continuous. Caching it would be invalid.
-    const getExecutorInformation = jest
+    const getExecutorInformation = vi
       .spyOn(executorUtils, 'getExecutorInformation')
       .mockReturnValue({ schema: { continuous: true } } as any);
 

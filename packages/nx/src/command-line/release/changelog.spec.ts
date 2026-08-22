@@ -5,46 +5,46 @@ import { createAPI } from './changelog';
 import type { ReleaseGroupWithName } from './config/filter-release-groups';
 import type { ReleaseGraph } from './utils/release-graph';
 
-jest.mock('../../project-graph/project-graph', () => ({
-  createProjectGraphAsync: jest.fn(),
+vi.mock('../../project-graph/project-graph', () => ({
+  createProjectGraphAsync: vi.fn(),
 }));
 
-jest.mock('../../project-graph/file-map-utils', () => ({
-  createProjectFileMapUsingProjectGraph: jest.fn(),
-  createFileMapUsingProjectGraph: jest.fn(() =>
+vi.mock('../../project-graph/file-map-utils', () => ({
+  createProjectFileMapUsingProjectGraph: vi.fn(),
+  createFileMapUsingProjectGraph: vi.fn(() =>
     Promise.resolve({
       fileMap: { projectFileMap: {}, nonProjectFiles: [] },
     })
   ),
 }));
 
-jest.mock('./utils/git', () => ({
-  ...jest.requireActual('./utils/git'),
-  getCommitHash: jest.fn(() => Promise.resolve('abc123')),
-  getGitDiff: jest.fn(() => Promise.resolve([])),
-  parseCommits: jest.fn(() => []),
-  gitAdd: jest.fn(),
-  gitPush: jest.fn(),
-  gitTag: jest.fn(),
-  sanitizeProjectNameForGitTag: jest.fn((projectName) => projectName),
+vi.mock('./utils/git', async () => ({
+  ...(await vi.importActual('./utils/git')),
+  getCommitHash: vi.fn(() => Promise.resolve('abc123')),
+  getGitDiff: vi.fn(() => Promise.resolve([])),
+  parseCommits: vi.fn(() => []),
+  gitAdd: vi.fn(),
+  gitPush: vi.fn(),
+  gitTag: vi.fn(),
+  sanitizeProjectNameForGitTag: vi.fn((projectName) => projectName),
 }));
 
-jest.mock('./config/version-plans', () => ({
-  ...jest.requireActual('./config/version-plans'),
-  readRawVersionPlans: jest.fn(() => Promise.resolve([])),
-  setResolvedVersionPlansOnGroups: jest.fn(),
+vi.mock('./config/version-plans', async () => ({
+  ...(await vi.importActual('./config/version-plans')),
+  readRawVersionPlans: vi.fn(() => Promise.resolve([])),
+  setResolvedVersionPlansOnGroups: vi.fn(),
 }));
 
-jest.mock('./changelog/version-plan-filtering', () => ({
-  ...jest.requireActual('./changelog/version-plan-filtering'),
-  resolveChangelogFromSHA: jest.fn(() => Promise.resolve('fromsha')),
-  resolveWorkspaceChangelogFromSHA: jest.fn(() => Promise.resolve('fromsha')),
+vi.mock('./changelog/version-plan-filtering', async () => ({
+  ...(await vi.importActual('./changelog/version-plan-filtering')),
+  resolveChangelogFromSHA: vi.fn(() => Promise.resolve('fromsha')),
+  resolveWorkspaceChangelogFromSHA: vi.fn(() => Promise.resolve('fromsha')),
 }));
 
 const MOCK_CHANGELOG_CONTENTS = '## 1.0.0\n\nMocked changelog contents';
 
-jest.mock('./utils/resolve-changelog-renderer', () => ({
-  resolveChangelogRenderer: jest.fn(
+vi.mock('./utils/resolve-changelog-renderer', () => ({
+  resolveChangelogRenderer: vi.fn(
     () =>
       class FakeChangelogRenderer {
         async render() {
@@ -54,25 +54,27 @@ jest.mock('./utils/resolve-changelog-renderer', () => ({
   ),
 }));
 
-jest.mock('./utils/remote-release-clients/remote-release-client', () => ({
-  ...jest.requireActual('./utils/remote-release-clients/remote-release-client'),
-  createRemoteReleaseClient: jest.fn(() =>
+vi.mock('./utils/remote-release-clients/remote-release-client', async () => ({
+  ...(await vi.importActual(
+    './utils/remote-release-clients/remote-release-client'
+  )),
+  createRemoteReleaseClient: vi.fn(() =>
     Promise.resolve({
       remoteReleaseProviderName: 'GitHub',
-      createPostGitTask: jest.fn(),
+      createPostGitTask: vi.fn(),
     })
   ),
 }));
 
-const {
-  createProjectGraphAsync,
-} = require('../../project-graph/project-graph');
-const {
-  createProjectFileMapUsingProjectGraph,
-} = require('../../project-graph/file-map-utils');
-const {
-  resolveChangelogFromSHA,
-} = require('./changelog/version-plan-filtering');
+const { createProjectGraphAsync } = await import(
+  '../../project-graph/project-graph'
+);
+const { createProjectFileMapUsingProjectGraph } = await import(
+  '../../project-graph/file-map-utils'
+);
+const { resolveChangelogFromSHA } = await import(
+  './changelog/version-plan-filtering'
+);
 
 describe('releaseChangelog', () => {
   let tempFs: TempFs;
@@ -82,7 +84,7 @@ describe('releaseChangelog', () => {
   let releaseGraph: ReleaseGraph;
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     tempFs = new TempFs('nx-release-changelog-test');
     await tempFs.createFiles({
@@ -144,20 +146,20 @@ describe('releaseChangelog', () => {
       releaseGroupToFilteredProjects: new Map([
         [releaseGroup, new Set(['pkg-a'])],
       ]),
-      resolveRepositoryTags: jest.fn(),
+      resolveRepositoryTags: vi.fn(),
       filterLog: null,
     } as unknown as ReleaseGraph;
 
-    jest.spyOn(output, 'warn').mockImplementation(() => {});
-    jest.spyOn(output, 'log').mockImplementation(() => {});
-    jest.spyOn(output, 'logSingleLine').mockImplementation(() => {});
-    jest.spyOn(output, 'note').mockImplementation(() => {});
-    jest.spyOn(output, 'error').mockImplementation(() => {});
+    vi.spyOn(output, 'warn').mockImplementation(() => {});
+    vi.spyOn(output, 'log').mockImplementation(() => {});
+    vi.spyOn(output, 'logSingleLine').mockImplementation(() => {});
+    vi.spyOn(output, 'note').mockImplementation(() => {});
+    vi.spyOn(output, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
     tempFs.cleanup();
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   function runReleaseChangelog(

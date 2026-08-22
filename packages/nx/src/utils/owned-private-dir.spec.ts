@@ -22,12 +22,12 @@ import {
 } from './owned-private-dir';
 import { getSocketDir } from '../daemon/tmp-dir';
 
-jest.mock('node:fs', () => {
-  const actual = jest.requireActual('node:fs');
+vi.mock('node:fs', async () => {
+  const actual = await vi.importActual('node:fs');
   return {
     ...actual,
-    lstatSync: jest.fn(actual.lstatSync),
-    fchmodSync: jest.fn(actual.fchmodSync),
+    lstatSync: vi.fn(actual.lstatSync),
+    fchmodSync: vi.fn(actual.fchmodSync),
   };
 });
 
@@ -188,7 +188,7 @@ describe('ensureOwnedPrivateDir', () => {
       // We cannot chown without root, so move our own uid instead. Unlike the
       // retired shared-root predicate, uid 0 gets no special exemption here,
       // so this stays meaningful when the suite itself runs as root.
-      const getuid = jest
+      const getuid = vi
         .spyOn(process, 'getuid')
         .mockReturnValue(process.getuid!() + 1);
       try {
@@ -417,7 +417,7 @@ describe('ensureOwnedPrivateDir', () => {
     });
 
     posixOnly('should refuse the shared container with its own kind', () => {
-      const getuid = jest.spyOn(process, 'getuid').mockReturnValue(501);
+      const getuid = vi.spyOn(process, 'getuid').mockReturnValue(501);
       (lstatSync as jest.Mock).mockReturnValueOnce({
         isDirectory: () => true,
         uid: 1002,
@@ -443,7 +443,7 @@ describe('ensureOwnedPrivateDir', () => {
     });
 
     posixOnly('should accept a root-owned sticky container', () => {
-      const getuid = jest.spyOn(process, 'getuid').mockReturnValue(501);
+      const getuid = vi.spyOn(process, 'getuid').mockReturnValue(501);
       (lstatSync as jest.Mock).mockReturnValueOnce({
         isDirectory: () => true,
         uid: 0,
@@ -513,7 +513,7 @@ describe('ensureOwnedPrivateDir', () => {
         // verdict runs — and Linux is what CI runs, so the guard on this
         // round's headline fix would not have executed anywhere.
         (fchmodSync as jest.Mock).mockImplementationOnce((fd: number) => {
-          jest.requireActual('node:fs').fchmodSync(fd, 0o777);
+          require('node:fs').fchmodSync(fd, 0o777);
           throw Object.assign(new Error('denied'), { code: 'EPERM' });
         });
 
@@ -561,7 +561,7 @@ describe('ensureOwnedPrivateDir', () => {
         const dir = join(base, `peer-owned-${runnerUid}`);
         mkdirSync(dir, { mode: 0o700 });
         chmodSync(dir, 0o700);
-        const getuid = jest.spyOn(process, 'getuid').mockReturnValue(runnerUid);
+        const getuid = vi.spyOn(process, 'getuid').mockReturnValue(runnerUid);
         // Consumed by isSafeSharedRoot; the assertion below gets the real one.
         // uid 1 is neither the runner nor root under either row.
         (lstatSync as jest.Mock).mockReturnValueOnce({
@@ -681,7 +681,7 @@ describe('ensureOwnedPrivateDir', () => {
 
     afterEach(() => {
       process.env = originalEnv;
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     posixOnly(

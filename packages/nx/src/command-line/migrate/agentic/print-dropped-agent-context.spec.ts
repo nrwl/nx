@@ -105,9 +105,7 @@ describe('printDroppedAgentContextForOuterAgent', () => {
   let writeSpy: jest.SpyInstance;
 
   beforeEach(() => {
-    writeSpy = jest
-      .spyOn(process.stdout, 'write')
-      .mockImplementation(() => true);
+    writeSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
   });
   afterEach(() => {
     writeSpy.mockRestore();

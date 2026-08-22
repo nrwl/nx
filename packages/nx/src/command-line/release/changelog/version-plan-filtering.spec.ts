@@ -1,3 +1,7 @@
+// semver's ESM namespace is frozen, so spy at the module-mock level; spy mode
+// keeps the real implementations until a test overrides one.
+vi.mock('semver', { spy: true });
+
 import { RawVersionPlan } from '../config/version-plans';
 import * as execCommandModule from '../utils/exec-command';
 import * as gitUtils from '../utils/git';
@@ -9,9 +13,9 @@ import {
   resolveWorkspaceChangelogFromSHA,
 } from './version-plan-filtering';
 
-jest.mock('../utils/exec-command');
-jest.mock('../utils/git');
-jest.mock('../../../utils/workspace-root', () => ({
+vi.mock('../utils/exec-command');
+vi.mock('../utils/git');
+vi.mock('../../../utils/workspace-root', () => ({
   workspaceRoot: '/',
 }));
 
@@ -23,10 +27,10 @@ describe('version-plan-filtering', () => {
     gitUtils.getLatestGitTagForPattern as jest.Mock;
 
   // Mock resolveRepositoryTags function for testing
-  const mockResolveRepositoryTags = jest.fn().mockResolvedValue([]);
+  const mockResolveRepositoryTags = vi.fn().mockResolvedValue([]);
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('filterVersionPlansByCommitRange', () => {
@@ -85,7 +89,7 @@ describe('version-plan-filtering', () => {
     });
 
     it('should log verbose output when verbose is true', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation();
       const versionPlans = [
         createMockVersionPlan('plan-1.md', '/.nx/version-plans/plan-1.md'),
         createMockVersionPlan('plan-2.md', '/.nx/version-plans/plan-2.md'),
@@ -221,8 +225,8 @@ describe('version-plan-filtering', () => {
     });
 
     it('should extract preid from prerelease version', async () => {
-      const prereleaseSpyOn = jest
-        .spyOn(require('semver'), 'prerelease')
+      const prereleaseSpyOn = vi
+        .mocked((await import('semver')).prerelease)
         .mockReturnValue(['beta', 1]);
       mockGetLatestGitTagForPattern.mockResolvedValue({ tag: 'v2.0.0-beta.1' });
       mockGetCommitHash.mockResolvedValue('prerelease-sha');
@@ -255,8 +259,8 @@ describe('version-plan-filtering', () => {
     });
 
     it('should handle version data with project preids', async () => {
-      const prereleaseSpyOn = jest
-        .spyOn(require('semver'), 'prerelease')
+      const prereleaseSpyOn = vi
+        .mocked((await import('semver')).prerelease)
         .mockImplementation((version) =>
           typeof version === 'string' && version.includes('alpha')
             ? ['alpha', 1]

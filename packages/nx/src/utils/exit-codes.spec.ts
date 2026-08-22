@@ -74,13 +74,13 @@ describe('exitAsInterrupted', () => {
       value: as,
       configurable: true,
     });
-    const removeAllListeners = jest
+    const removeAllListeners = vi
       .spyOn(process, 'removeAllListeners')
       .mockReturnValue(process);
-    const kill = jest
+    const kill = vi
       .spyOn(process, 'kill')
       .mockImplementation((() => true) as never);
-    const exit = jest.spyOn(process, 'exit').mockImplementation((() => {
+    const exit = vi.spyOn(process, 'exit').mockImplementation((() => {
       throw new Error('exited');
     }) as never);
     spies = [removeAllListeners, kill, exit];

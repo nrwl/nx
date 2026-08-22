@@ -1,21 +1,21 @@
 import { addNxToAngularCliRepo } from './index';
 import type { Options } from './types';
 
-jest.mock('./legacy-angular-versions', () => ({
-  getLegacyMigrationFunctionIfApplicable: jest.fn(),
+vi.mock('./legacy-angular-versions', () => ({
+  getLegacyMigrationFunctionIfApplicable: vi.fn(),
 }));
 
-jest.mock('../format', () => ({
-  formatInitWrites: jest.fn(() => Promise.resolve()),
-  recordInitWrite: jest.fn(),
+vi.mock('../format', () => ({
+  formatInitWrites: vi.fn(() => Promise.resolve()),
+  recordInitWrite: vi.fn(),
 }));
 
-jest.mock('../../../../utils/output', () => ({
+vi.mock('../../../../utils/output', () => ({
   output: {
-    log: jest.fn(),
-    success: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
+    log: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
   },
 }));
 
@@ -24,11 +24,11 @@ import { getLegacyMigrationFunctionIfApplicable } from './legacy-angular-version
 
 describe('addNxToAngularCliRepo', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should drain the recorded writes after the migration and before the legacy flow exits', async () => {
-    const legacyMigrationFn = jest.fn().mockResolvedValue(undefined);
+    const legacyMigrationFn = vi.fn().mockResolvedValue(undefined);
     (getLegacyMigrationFunctionIfApplicable as jest.Mock).mockResolvedValue(
       legacyMigrationFn
     );
@@ -42,7 +42,7 @@ describe('addNxToAngularCliRepo', () => {
     // anything the flow only runs after it can never be observed by the
     // assertions below.
     const exitError = new Error('process.exit called');
-    const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
       throw exitError;
     });
 

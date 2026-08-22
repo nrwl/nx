@@ -1,20 +1,20 @@
-jest.mock('../../utils/git-utils', () => ({
-  hasUncommittedChanges: jest.fn(),
-  tryCommitChanges: jest.fn(),
-  getGitCurrentBranch: jest.fn(),
-  getGitRemoteNames: jest.fn(),
+vi.mock('../../utils/git-utils', () => ({
+  hasUncommittedChanges: vi.fn(),
+  tryCommitChanges: vi.fn(),
+  getGitCurrentBranch: vi.fn(),
+  getGitRemoteNames: vi.fn(),
 }));
-jest.mock('../../utils/logger', () => ({
-  logger: { info: jest.fn() },
+vi.mock('../../utils/logger', () => ({
+  logger: { info: vi.fn() },
 }));
-jest.mock('../../utils/output', () => ({
-  output: { warn: jest.fn(), log: jest.fn() },
+vi.mock('../../utils/output', () => ({
+  output: { warn: vi.fn(), log: vi.fn() },
 }));
-jest.mock('../../config/configuration', () => ({
-  readNxJson: jest.fn(),
+vi.mock('../../config/configuration', () => ({
+  readNxJson: vi.fn(),
 }));
-jest.mock('./safe-prompt', () => ({
-  migrateConfirm: jest.fn(),
+vi.mock('./safe-prompt', () => ({
+  migrateConfirm: vi.fn(),
 }));
 
 import { readNxJson } from '../../config/configuration';
@@ -45,7 +45,7 @@ const mockMigrateConfirm = migrateConfirm as jest.Mock;
 
 const ROOT = '/workspace';
 const PREFIX = 'chore: [nx migration] ';
-const installDeps = jest.fn().mockResolvedValue(undefined);
+const installDeps = vi.fn().mockResolvedValue(undefined);
 
 // picocolors wraps logger output in ANSI escapes when the runtime detects a
 // TTY. Strip them in snapshot assertions so the snapshot reads as the
@@ -84,7 +84,7 @@ describe('commitMigrationIfRequested', () => {
 
   it('runs installDeps before checking for uncommitted changes', async () => {
     let installFinished = false;
-    installDeps.mockImplementation(async () => {
+    installDeps.mockImplementation(() => {
       installFinished = true;
     });
     mockHas.mockImplementation(() => {

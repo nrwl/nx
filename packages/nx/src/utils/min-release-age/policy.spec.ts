@@ -1,13 +1,13 @@
 import { readMinReleaseAgePolicy } from './policy';
 
-jest.mock('../package-manager', () => ({
-  detectPackageManager: jest.fn(),
-  getPackageManagerVersion: jest.fn(),
+vi.mock('../package-manager', () => ({
+  detectPackageManager: vi.fn(),
+  getPackageManagerVersion: vi.fn(),
 }));
-jest.mock('./behavior/npm', () => ({ readNpmPolicy: jest.fn() }));
-jest.mock('./behavior/pnpm', () => ({ readPnpmPolicy: jest.fn() }));
-jest.mock('./behavior/yarn', () => ({ readYarnPolicy: jest.fn() }));
-jest.mock('./behavior/bun', () => ({ readBunPolicy: jest.fn() }));
+vi.mock('./behavior/npm', () => ({ readNpmPolicy: vi.fn() }));
+vi.mock('./behavior/pnpm', () => ({ readPnpmPolicy: vi.fn() }));
+vi.mock('./behavior/yarn', () => ({ readYarnPolicy: vi.fn() }));
+vi.mock('./behavior/bun', () => ({ readBunPolicy: vi.fn() }));
 
 import {
   detectPackageManager,
@@ -29,7 +29,7 @@ const readers = {
 
 describe('readMinReleaseAgePolicy (dispatch)', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     for (const reader of Object.values(readers)) {
       reader.mockResolvedValue({ outcome: 'inactive' });
     }

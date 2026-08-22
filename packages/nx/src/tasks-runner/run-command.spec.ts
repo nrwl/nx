@@ -2,7 +2,11 @@ import { TasksRunner } from './tasks-runner';
 import { getRunner } from './run-command';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { join } from 'path';
-import { nxCloudTasksRunnerShell } from '../nx-cloud/nx-cloud-tasks-runner-shell';
+// getRunner loads the runner with a bare require, so compare against the
+// instance from the same channel rather than the vite-imported copy.
+const {
+  nxCloudTasksRunnerShell,
+} = require('../nx-cloud/nx-cloud-tasks-runner-shell');
 import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
 
 describe('getRunner', () => {
@@ -12,11 +16,13 @@ describe('getRunner', () => {
 
   beforeEach(() => {
     nxJson = {};
-    mockRunner = jest.fn();
+    mockRunner = vi.fn();
   });
 
   it('uses default runner when no tasksRunnerOptions are present', () => {
-    jest.mock(join(__dirname, './default-tasks-runner.ts'), () => mockRunner);
+    // getRunner loads the runner with a bare require, so fetch the expected
+    // instance through the same channel rather than mocking the module.
+    const expected = require('./default-tasks-runner').default;
 
     const { tasksRunner } = withEnvironmentVariables(
       {
@@ -25,7 +31,7 @@ describe('getRunner', () => {
       () => getRunner({}, {})
     );
 
-    expect(tasksRunner).toEqual(mockRunner);
+    expect(tasksRunner).toEqual(expected);
   });
 
   it('uses nx-cloud when no tasksRunnerOptions are present and accessToken is specified', () => {
@@ -96,8 +102,6 @@ describe('getRunner', () => {
   });
 
   it('reads options from base properties if no runner options provided', () => {
-    jest.mock(join(__dirname, './default-tasks-runner.ts'), () => mockRunner);
-
     const { runnerOptions } = getRunner(
       {},
       {

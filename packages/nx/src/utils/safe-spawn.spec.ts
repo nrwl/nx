@@ -1,9 +1,9 @@
 import { execFileSync, spawn } from 'child_process';
 import { safeExecFileSync, safeSpawn } from './safe-spawn';
 
-jest.mock('child_process', () => ({
-  spawn: jest.fn(),
-  execFileSync: jest.fn(),
+vi.mock('child_process', () => ({
+  spawn: vi.fn(),
+  execFileSync: vi.fn(),
 }));
 
 describe('safeSpawn', () => {

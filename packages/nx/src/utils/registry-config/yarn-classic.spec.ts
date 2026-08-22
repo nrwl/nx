@@ -1,16 +1,16 @@
 // os.homedir() ignores a runtime process.env.HOME override under jest, and a
 // spyOn does not reach a module's named import either.
-jest.mock('os', () => ({
-  ...jest.requireActual('os'),
-  homedir: jest.fn(() => '/home/user'),
+vi.mock('os', async () => ({
+  ...require('os'),
+  homedir: vi.fn(() => '/home/user'),
 }));
-jest.mock('fs', () => ({
-  ...jest.requireActual('fs'),
-  existsSync: jest.fn(),
-  readFileSync: jest.fn(),
+vi.mock('fs', async () => ({
+  ...require('fs'),
+  existsSync: vi.fn(),
+  readFileSync: vi.fn(),
 }));
-jest.mock('../logger', () => ({
-  logger: { warn: jest.fn(), verbose: jest.fn() },
+vi.mock('../logger', () => ({
+  logger: { warn: vi.fn(), verbose: vi.fn() },
 }));
 
 import * as fs from 'fs';
@@ -88,12 +88,12 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     // Deleting FAKEROOTKEY above puts production on its root home tier whenever
     // the run itself is uid 0 (container CI).
     if (process.platform !== 'win32') {
-      jest.spyOn(process, 'getuid' as any).mockReturnValue(501 as any);
+      vi.spyOn(process, 'getuid' as any).mockReturnValue(501 as any);
     }
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     for (const key of managedEnvKeys) {
       if (savedEnv[key] === undefined) {
         delete process.env[key];
@@ -1785,17 +1785,16 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
   describe('reporting a credential yarn would not send', () => {
     // The overlay cannot stop npm reading the same .npmrc, so npm authenticates
     // on a registry yarn resolved but would have queried anonymously.
-    const warnFor = (packages: string[]): string[] => {
-      const { logger } = require('../logger');
+    const warnFor = async (packages: string[]): string[] => {
+      const { logger } = await import('../logger');
       (logger.warn as jest.Mock).mockClear();
-      jest.isolateModules(() => {
-        const {
-          getYarnClassicSpawnRegistryEnv: fresh,
-        } = require('./yarn-classic');
-        for (const pkg of packages) {
-          fresh(pkg, ROOT);
-        }
-      });
+      vi.resetModules();
+      const { getYarnClassicSpawnRegistryEnv: fresh } = await import(
+        './yarn-classic'
+      );
+      for (const pkg of packages) {
+        fresh(pkg, ROOT);
+      }
       return (logger.warn as jest.Mock).mock.calls.map((call) => call[0]);
     };
 
@@ -1805,8 +1804,8 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
         '//reg-y.example.com/:_authToken=native-token\n';
     });
 
-    it('warns once when npm authenticates on a bridged registry yarn would not', () => {
-      const warnings = warnFor(['is-even', 'is-odd']);
+    it('warns once when npm authenticates on a bridged registry yarn would not', async () => {
+      const warnings = await warnFor(['is-even', 'is-odd']);
       expect(warnings).toHaveLength(1);
       expect(warnings[0]).toContain('//reg-y.example.com/');
       expect(warnings[0]).toContain('yarn would not send it');
@@ -1816,37 +1815,37 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       expect(warnings[0]).not.toContain('Remove that credential');
     });
 
-    it('stays quiet when always-auth makes yarn send the same credential', () => {
+    it('stays quiet when always-auth makes yarn send the same credential', async () => {
       files[`${ROOT}/.npmrc`] += 'always-auth=true\n';
-      expect(warnFor(['is-even'])).toEqual([]);
+      expect(await warnFor(['is-even'])).toEqual([]);
     });
 
-    it('stays quiet for a scoped fetch, which yarn authenticates', () => {
-      expect(warnFor(['@acme/pkg'])).toEqual([]);
+    it('stays quiet for a scoped fetch, which yarn authenticates', async () => {
+      expect(await warnFor(['@acme/pkg'])).toEqual([]);
     });
 
-    it('stays quiet when no registry was bridged', () => {
+    it('stays quiet when no registry was bridged', async () => {
       // npm resolves this registry and this credential on its own, so it would
       // send the same header with or without the overlay.
       delete files[`${ROOT}/.yarnrc`];
       files[`${ROOT}/.npmrc`] =
         'registry=https://reg-y.example.com/\n//reg-y.example.com/:_authToken=native-token\n';
-      expect(warnFor(['is-even'])).toEqual([]);
+      expect(await warnFor(['is-even'])).toEqual([]);
     });
 
-    it('stays quiet when the credential sits in a file npm cannot read', () => {
+    it('stays quiet when the credential sits in a file npm cannot read', async () => {
       files[`${ROOT}/.npmrc`] = '';
       files['/repo/.npmrc'] =
         '//reg-y.example.com/:_authToken=ancestor-token\n';
-      expect(warnFor(['is-even'])).toEqual([]);
+      expect(await warnFor(['is-even'])).toEqual([]);
     });
 
-    it('follows npm up the registry path to a credential darted at the host', () => {
+    it('follows npm up the registry path to a credential darted at the host', async () => {
       files[`${ROOT}/.yarnrc`] =
         'registry "https://reg-y.example.com/artifactory/api/npm/repo/"\n';
       files[`${ROOT}/.npmrc`] =
         '//reg-y.example.com/:_authToken=native-token\n';
-      expect(warnFor(['is-even'])).toHaveLength(1);
+      expect(await warnFor(['is-even'])).toHaveLength(1);
     });
 
     it.each([
@@ -1855,9 +1854,9 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
         'username and _password',
         '//reg-y.example.com/:username=user\n//reg-y.example.com/:_password=cGFzcw==',
       ],
-    ])('recognizes a credential held as %s', (_form, npmrc) => {
+    ])('recognizes a credential held as %s', async (_form, npmrc) => {
       files[`${ROOT}/.npmrc`] = `${npmrc}\n`;
-      expect(warnFor(['is-even'])).toHaveLength(1);
+      expect(await warnFor(['is-even'])).toHaveLength(1);
     });
   });
 });

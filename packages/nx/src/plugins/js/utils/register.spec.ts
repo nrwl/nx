@@ -13,9 +13,18 @@ import {
 } from './register';
 
 // Avoid a real swc registration side effect when exercising getTranspiler.
-jest.mock('@swc-node/register/register', () => ({
-  register: () => () => {},
-}));
+// The source loads this with a bare require (CJS channel), so stub the
+// require cache rather than vi.mock.
+import { createRequire, Module } from 'node:module';
+import { mockCjsModule } from '../../../internal-testing-utils/cjs-mock';
+{
+  const req = createRequire(import.meta.url);
+  const modPath = req.resolve('@swc-node/register/register');
+  const stub = new (Module as any)(modPath);
+  stub.exports = { register: () => () => {} };
+  stub.loaded = true;
+  req.cache[modPath] = stub;
+}
 
 describe('getTsNodeCompilerOptions', () => {
   it('should replace enum value with enum key for module', () => {
@@ -65,11 +74,10 @@ describe('isNativeStripPreferred', () => {
     });
   }
 
-  function loadIsNativeStripPreferred(): boolean {
+  async function loadIsNativeStripPreferred(): boolean {
     let result: boolean;
-    jest.isolateModules(() => {
-      result = require('./register').isNativeStripPreferred();
-    });
+    vi.resetModules();
+    result = (await import('./register')).isNativeStripPreferred();
     return result;
   }
 
@@ -82,65 +90,66 @@ describe('isNativeStripPreferred', () => {
     }
   });
 
-  it('prefers native strip when the runtime supports it', () => {
+  it('prefers native strip when the runtime supports it', async () => {
     setNativeTypescriptSupport('strip');
     delete process.env.NX_PREFER_TS_NODE;
     delete process.env.NX_PREFER_NODE_STRIP_TYPES;
-    expect(loadIsNativeStripPreferred()).toBe(true);
+    expect(await loadIsNativeStripPreferred()).toBe(true);
   });
 
-  it('does not prefer native strip when the runtime lacks support', () => {
+  it('does not prefer native strip when the runtime lacks support', async () => {
     setNativeTypescriptSupport(false);
     delete process.env.NX_PREFER_TS_NODE;
     delete process.env.NX_PREFER_NODE_STRIP_TYPES;
-    expect(loadIsNativeStripPreferred()).toBe(false);
+    expect(await loadIsNativeStripPreferred()).toBe(false);
   });
 
-  it('does not prefer native strip when NX_PREFER_NODE_STRIP_TYPES is false', () => {
+  it('does not prefer native strip when NX_PREFER_NODE_STRIP_TYPES is false', async () => {
     setNativeTypescriptSupport('strip');
     process.env.NX_PREFER_NODE_STRIP_TYPES = 'false';
-    expect(loadIsNativeStripPreferred()).toBe(false);
+    expect(await loadIsNativeStripPreferred()).toBe(false);
   });
 
-  it('does not prefer native strip when NX_PREFER_TS_NODE is true', () => {
+  it('does not prefer native strip when NX_PREFER_TS_NODE is true', async () => {
     setNativeTypescriptSupport('strip');
     process.env.NX_PREFER_TS_NODE = 'true';
     delete process.env.NX_PREFER_NODE_STRIP_TYPES;
-    expect(loadIsNativeStripPreferred()).toBe(false);
+    expect(await loadIsNativeStripPreferred()).toBe(false);
   });
 });
 
 describe('getTranspiler', () => {
   // TS6 requires the suppression flag to avoid hard-erroring on deprecated options.
-  it('sets ignoreDeprecations to "6.0" on TypeScript >= 6', () => {
-    jest.isolateModules(() => {
-      jest.doMock('typescript', () => ({
-        ...jest.requireActual('typescript'),
-        versionMajorMinor: '6.0',
-      }));
-      const { getTranspiler: fresh } =
-        require('./register') as typeof import('./register');
-      const opts: CompilerOptions = {};
-      fresh(opts);
-      expect(opts.ignoreDeprecations).toEqual('6.0');
+  it('sets ignoreDeprecations to "6.0" on TypeScript >= 6', async () => {
+    vi.resetModules();
+    // register.ts lazy-requires typescript (CJS channel); replace it there.
+    mockCjsModule(import.meta.url, 'typescript', {
+      ...require('typescript'),
+      versionMajorMinor: '6.0',
     });
-    jest.unmock('typescript');
+    const { getTranspiler: fresh } = (await import(
+      './register'
+    )) as typeof import('./register');
+    const opts: CompilerOptions = {};
+    fresh(opts);
+    expect(opts.ignoreDeprecations).toEqual('6.0');
+    vi.unmock('typescript');
   });
 
   // TS5 rejects the '6.0' value (TS5103) so the option must stay absent.
-  it('leaves ignoreDeprecations unset on TypeScript < 6', () => {
-    jest.isolateModules(() => {
-      jest.doMock('typescript', () => ({
-        ...jest.requireActual('typescript'),
-        versionMajorMinor: '5.9',
-      }));
-      const { getTranspiler: fresh } =
-        require('./register') as typeof import('./register');
-      const opts: CompilerOptions = {};
-      fresh(opts);
-      expect(opts.ignoreDeprecations).toBeUndefined();
+  it('leaves ignoreDeprecations unset on TypeScript < 6', async () => {
+    vi.resetModules();
+    mockCjsModule(import.meta.url, 'typescript', {
+      ...require('typescript'),
+      versionMajorMinor: '5.9',
     });
-    jest.unmock('typescript');
+    const { getTranspiler: fresh } = (await import(
+      './register'
+    )) as typeof import('./register');
+    const opts: CompilerOptions = {};
+    fresh(opts);
+    expect(opts.ignoreDeprecations).toBeUndefined();
+    vi.unmock('typescript');
   });
 });
 

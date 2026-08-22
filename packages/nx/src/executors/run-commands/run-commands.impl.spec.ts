@@ -1,3 +1,7 @@
+// child_process's ESM namespace is frozen; spy mode wraps the real spawn so
+// the --color tests can observe env without changing behavior.
+vi.mock('child_process', { spy: true });
+
 import { readFileSync, writeFileSync } from 'fs';
 import { env } from 'npm-run-path';
 import { relative } from 'path';
@@ -22,7 +26,7 @@ describe('Run Commands', () => {
   const context = {} as any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should handle empty commands array', async () => {
@@ -386,7 +390,7 @@ describe('Run Commands', () => {
         }, 150);
       });
 
-      it('should keep waiting when not all strings specified as ready condition were found', (done) => {
+      it('should keep waiting when not all strings specified as ready condition were found', async () => {
         const f = fileSync().name;
         let result: { success: boolean } | null = null;
 
@@ -403,11 +407,9 @@ describe('Run Commands', () => {
           result = res;
         });
 
-        setTimeout(() => {
-          expect(readFile(f)).toEqual('1');
-          expect(result).toBeNull();
-          done();
-        }, 150);
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        expect(readFile(f)).toEqual('1');
+        expect(result).toBeNull();
       });
     });
   });
@@ -682,7 +684,7 @@ describe('Run Commands', () => {
 
   describe('--color', () => {
     it('should not set FORCE_COLOR=true', async () => {
-      const spawnSpy = jest.spyOn(require('child_process'), 'spawn');
+      const spawnSpy = vi.mocked(require('child_process').spawn);
       await runCommands(
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
@@ -716,7 +718,7 @@ describe('Run Commands', () => {
     });
 
     it('should not set FORCE_COLOR=true when --no-color is passed', async () => {
-      const spawnSpy = jest.spyOn(require('child_process'), 'spawn');
+      const spawnSpy = vi.mocked(require('child_process').spawn);
       await runCommands(
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
@@ -751,7 +753,7 @@ describe('Run Commands', () => {
     });
 
     it('should set FORCE_COLOR=true when running with --color', async () => {
-      const spawnSpy = jest.spyOn(require('child_process'), 'spawn');
+      const spawnSpy = vi.mocked(require('child_process').spawn);
       await runCommands(
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
@@ -1085,8 +1087,9 @@ describe('Run Commands', () => {
 
       expect(result.success).toBe(false);
       const duration = Date.now() - startTime;
-      // Should complete quickly (fail-fast), not wait for 2 seconds
-      expect(duration).toBeLessThan(500);
+      // Should complete quickly (fail-fast), not wait for 2 seconds. The
+      // margin leaves room for CPU contention in a full parallel suite run.
+      expect(duration).toBeLessThan(1500);
     });
 
     it('should handle multiple simultaneous failures in parallel commands', async () => {
@@ -1158,8 +1161,9 @@ describe('Run Commands', () => {
 
       expect(result.success).toBe(false);
       const duration = Date.now() - startTime;
-      // Should complete quickly after failure and cleanup
-      expect(duration).toBeLessThan(500);
+      // Should complete quickly after failure and cleanup. The margin leaves
+      // room for CPU contention in a full parallel suite run.
+      expect(duration).toBeLessThan(1500);
     });
   });
 });

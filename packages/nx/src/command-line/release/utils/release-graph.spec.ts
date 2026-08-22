@@ -1,9 +1,9 @@
 // Module-level mock container - initialized early so jest.mock factories can reference it
 const mocks = {
-  deriveSpecifierFromConventionalCommits: jest.fn(),
-  deriveSpecifierFromVersionPlan: jest.fn(),
-  resolveVersionActionsForProject: jest.fn(),
-  resolveCurrentVersion: jest.fn(),
+  deriveSpecifierFromConventionalCommits: vi.fn(),
+  deriveSpecifierFromVersionPlan: vi.fn(),
+  resolveVersionActionsForProject: vi.fn(),
+  resolveCurrentVersion: vi.fn(),
 };
 
 // Export for external access (e.g., from test-utils)
@@ -16,13 +16,13 @@ export const mockResolveVersionActionsForProject =
 export const mockResolveCurrentVersion = mocks.resolveCurrentVersion;
 
 // Use jest.mock (hoisted) instead of jest.doMock for more reliable mocking
-jest.mock('../version/derive-specifier-from-conventional-commits', () => ({
+vi.mock('../version/derive-specifier-from-conventional-commits', () => ({
   deriveSpecifierFromConventionalCommits: (...args: any[]) =>
     mocks.deriveSpecifierFromConventionalCommits(...args),
 }));
 
-jest.mock('../version/version-actions', () => {
-  const actual = jest.requireActual('../version/version-actions');
+vi.mock('../version/version-actions', async () => {
+  const actual = await vi.importActual('../version/version-actions');
   return {
     ...actual,
     deriveSpecifierFromVersionPlan: (...args: any[]) =>
@@ -32,8 +32,8 @@ jest.mock('../version/version-actions', () => {
   };
 });
 
-jest.mock('../version/project-logger', () => {
-  const actual = jest.requireActual('../version/project-logger');
+vi.mock('../version/project-logger', async () => {
+  const actual = await vi.importActual('../version/project-logger');
   return {
     ...actual,
     ProjectLogger: class ProjectLogger {
@@ -43,7 +43,7 @@ jest.mock('../version/project-logger', () => {
   };
 });
 
-jest.mock('../version/resolve-current-version', () => ({
+vi.mock('../version/resolve-current-version', () => ({
   resolveCurrentVersion: (...args: any[]) =>
     mocks.resolveCurrentVersion(...args),
 }));
@@ -69,8 +69,8 @@ describe('ReleaseGraph', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
-    jest.resetAllMocks();
+    vi.restoreAllMocks();
+    vi.resetAllMocks();
   });
 
   describe('basic graph construction', () => {
@@ -1229,12 +1229,12 @@ describe('ReleaseGraph', () => {
 
       await expect(releaseGraph.validate(tree)).rejects
         .toThrowErrorMatchingInlineSnapshot(`
-        "The project "pkg-c" does not have a package.json file available in pkg-c/
+      [Error: The project "pkg-c" does not have a package.json file available in pkg-c/
 
-        To fix this you will either need to add a package.json file at that location, or configure "release" within your nx.json to exclude "pkg-c" from the current release group, or amend the "release.version.manifestRootsToUpdate" configuration to point to where the relevant manifest should be.
+      To fix this you will either need to add a package.json file at that location, or configure "release" within your nx.json to exclude "pkg-c" from the current release group, or amend the "release.version.manifestRootsToUpdate" configuration to point to where the relevant manifest should be.
 
-        It is also possible that the project is being processed because of a dependency relationship between what you are directly versioning and the project/release group, in which case you will need to amend your filters to include all relevant projects and release groups."
-      `);
+      It is also possible that the project is being processed because of a dependency relationship between what you are directly versioning and the project/release group, in which case you will need to amend your filters to include all relevant projects and release groups.]
+    `);
     });
   });
 });

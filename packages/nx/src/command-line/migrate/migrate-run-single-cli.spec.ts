@@ -2,35 +2,38 @@
 // Kept in its own file so the module mocks below don't leak into the main
 // migrate spec.
 
-const mockRunSingleMigrationWorker = jest.fn();
-const mockReportRunError = jest.fn();
-const mockReportGenerateError = jest.fn();
+const mockRunSingleMigrationWorker = vi.fn();
+const mockReportRunError = vi.fn();
+const mockReportGenerateError = vi.fn();
 
-jest.mock('./run', () => ({
+// migrate.ts lazy-requires ./run (CJS channel), which vi.mock cannot
+// intercept; replace the module in the require channel instead.
+import { mockCjsModule } from '../../internal-testing-utils/cjs-mock';
+mockCjsModule(import.meta.url, './run', {
   runSingleMigrationWorker: (...args: unknown[]) =>
     mockRunSingleMigrationWorker(...args),
-  runOrchestratorInit: jest.fn(),
-  runOrchestratorReconcile: jest.fn(),
-}));
+  runOrchestratorInit: vi.fn(),
+  runOrchestratorReconcile: vi.fn(),
+});
 
-jest.mock('../../daemon/client/client', () => ({
+vi.mock('../../daemon/client/client', () => ({
   daemonClient: {
-    stop: jest.fn().mockResolvedValue(undefined),
+    stop: vi.fn().mockResolvedValue(undefined),
     enabled: () => false,
-    reset: jest.fn(),
+    reset: vi.fn(),
   },
 }));
 
-jest.mock('./migrate-analytics', () => ({
-  ...jest.requireActual('./migrate-analytics'),
+vi.mock('./migrate-analytics', async () => ({
+  ...(await vi.importActual('./migrate-analytics')),
   reportMigrateRunError: (...args: unknown[]) => mockReportRunError(...args),
   reportMigrateGenerateError: (...args: unknown[]) =>
     mockReportGenerateError(...args),
 }));
 
-const mockReadNxJson = jest.fn();
-jest.mock('../../config/configuration', () => ({
-  ...jest.requireActual('../../config/configuration'),
+const mockReadNxJson = vi.fn();
+vi.mock('../../config/configuration', async () => ({
+  ...(await vi.importActual('../../config/configuration')),
   readNxJson: (...args: unknown[]) => mockReadNxJson(...args),
 }));
 
@@ -46,12 +49,12 @@ describe('migrate() single-migration dispatch', () => {
     mockRunSingleMigrationWorker.mockReset().mockResolvedValue(undefined);
     mockReportRunError.mockReset();
     mockReportGenerateError.mockReset();
-    jest.spyOn(output, 'log').mockImplementation(() => {});
-    jest.spyOn(output, 'warn').mockImplementation(() => {});
-    jest.spyOn(output, 'error').mockImplementation(() => {});
+    vi.spyOn(output, 'log').mockImplementation(() => {});
+    vi.spyOn(output, 'warn').mockImplementation(() => {});
+    vi.spyOn(output, 'error').mockImplementation(() => {});
   });
 
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => vi.restoreAllMocks());
 
   it('passes the raw run-phase flags through to the worker', async () => {
     await migrate(

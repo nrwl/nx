@@ -1,24 +1,24 @@
-jest.mock('../../config/configuration', () => ({
-  readNxJson: jest.fn(() => ({})),
+vi.mock('../../config/configuration', () => ({
+  readNxJson: vi.fn(() => ({})),
 }));
-jest.mock('../../utils/catalog', () => ({
-  resolveCatalogReferenceIfNeeded: jest.fn((_pkg, version) => version),
+vi.mock('../../utils/catalog', () => ({
+  resolveCatalogReferenceIfNeeded: vi.fn((_pkg, version) => version),
 }));
-jest.mock('../../utils/package-manager', () => ({
-  resolvePackageVersionUsingRegistry: jest.fn(),
-  resolvePackageVersionUsingInstallation: jest.fn(),
+vi.mock('../../utils/package-manager', () => ({
+  resolvePackageVersionUsingRegistry: vi.fn(),
+  resolvePackageVersionUsingInstallation: vi.fn(),
 }));
-jest.mock('../../utils/min-release-age/policy', () => ({
-  readMinReleaseAgePolicy: jest.fn(),
+vi.mock('../../utils/min-release-age/policy', () => ({
+  readMinReleaseAgePolicy: vi.fn(),
 }));
-jest.mock('../../utils/min-release-age/resolve', () => ({
-  resolveCompliantVersion: jest.fn(),
+vi.mock('../../utils/min-release-age/resolve', () => ({
+  resolveCompliantVersion: vi.fn(),
 }));
-jest.mock('../../utils/min-release-age/pnpm-exclude-writer', () => ({
-  appendMinimumReleaseAgeExcludes: jest.fn(),
+vi.mock('../../utils/min-release-age/pnpm-exclude-writer', () => ({
+  appendMinimumReleaseAgeExcludes: vi.fn(),
 }));
-jest.mock('./safe-prompt', () => ({
-  migrateConfirm: jest.fn(),
+vi.mock('./safe-prompt', () => ({
+  migrateConfirm: vi.fn(),
 }));
 
 import { readNxJson } from '../../config/configuration';
@@ -86,10 +86,10 @@ describe('isRegistryResolutionEnabled', () => {
   const originalEnv = { ...process.env };
   let warnSpy: jest.SpyInstance;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     resetResolvePackageVersionState();
-    warnSpy = jest
-      .spyOn(require('../../utils/output').output, 'warn')
+    warnSpy = vi
+      .spyOn((await import('../../utils/output')).output, 'warn')
       .mockImplementation(() => {});
     delete process.env.NX_MIGRATE_USE_REGISTRY_RESOLUTION;
     delete process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH;
@@ -173,7 +173,7 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
 
   beforeEach(() => {
     resetResolvePackageVersionState();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     delete process.env.NX_MIGRATE_USE_REGISTRY_RESOLUTION;
     delete process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH;
     delete process.env.CI;
@@ -251,8 +251,8 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
   });
 
   it('logs a one-liner (deduped) when the pick differs from the unconstrained version', async () => {
-    const log = jest
-      .spyOn(require('../../utils/output').output, 'log')
+    const log = vi
+      .spyOn((await import('../../utils/output')).output, 'log')
       .mockImplementation(() => {});
     mockReadPolicy.mockResolvedValue(pnpmPolicy());
     mockResolve.mockResolvedValue({ version: '1.1.1', unconstrained: '1.2.0' });

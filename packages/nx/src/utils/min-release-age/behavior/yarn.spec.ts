@@ -1,9 +1,9 @@
-jest.mock('child_process');
+vi.mock('child_process');
 // os.homedir() reads the native home and ignores a runtime process.env.HOME
 // override inside jest, so mock it to redirect home to a temp dir per test.
-jest.mock('os', () => ({
-  ...jest.requireActual('os'),
-  homedir: jest.fn(() => jest.requireActual('os').homedir()),
+vi.mock('os', async () => ({
+  ...require('os'),
+  homedir: vi.fn(async () => require('os').homedir()),
 }));
 
 import * as childProcess from 'child_process';
@@ -378,7 +378,7 @@ describe('yarn min-release-age behavior', () => {
     });
 
     afterEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       rmSync(tmp, { recursive: true, force: true });
       rmSync(home, { recursive: true, force: true });
       if (savedGateEnv === undefined) {

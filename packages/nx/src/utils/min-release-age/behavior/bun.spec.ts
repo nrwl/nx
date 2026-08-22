@@ -105,9 +105,11 @@ describe('bun min-release-age behavior', () => {
   let nowSpy: jest.SpyInstance;
   beforeAll(() => {
     // Pin the clock so the stability walk's search bound is deterministic.
-    nowSpy = jest.spyOn(Date, 'now').mockReturnValue(NOW);
+    nowSpy = vi.spyOn(Date, 'now').mockReturnValue(NOW);
   });
-  afterAll(() => nowSpy.mockRestore());
+  afterAll(() => {
+    nowSpy.mockRestore();
+  });
 
   describe('pickBunVersion (24h window)', () => {
     const policy = policyWithWindow(24);
