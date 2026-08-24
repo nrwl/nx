@@ -528,8 +528,10 @@ class CLIOutput {
    *
    * The batch's own output is copied straight from the file it was captured
    * into, so an arbitrarily long log costs a fixed amount of memory here.
-   * Nothing is withheld: this rendering is chosen either because the whole log
-   * was asked for, or because no task claimed any of it.
+   * Nothing is withheld: this rendering is chosen because the whole log was
+   * asked for, because no task claimed any of it, or because a task failed — in
+   * which case repeating claimed bytes beside the per-task blocks is deliberate
+   * (see TaskOrchestrator.printGroupedBatchOutput).
    */
   logBatchGroup(
     label: string,

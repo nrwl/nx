@@ -889,9 +889,9 @@ export class TaskOrchestrator {
         // allocate one just to write a cursor-hide escape.
         //
         // When the batch is being folded, printing is deferred to batch end
-        // (printGroupedBatchOutput), which renders by output style: a
-        // full-output run gets the worker's whole log as one fold, anything
-        // else renders each task through the life cycle.
+        // (printGroupedBatchOutput), which always renders each task through the
+        // life cycle and adds the worker's whole log as a fold when the run
+        // asked for full output or any task failed or was stopped.
         if (status !== 'skipped' && !shouldGroupBatchOutput()) {
           this.options.lifeCycle.printTaskTerminalOutput(
             task,
@@ -1072,8 +1072,9 @@ export class TaskOrchestrator {
   }
 
   /**
-   * Renders a batch's whole output as one fold, then a line per task pointing
-   * at it. The fold is labelled with the executor and a run-unique id (the same
+   * Renders a batch's whole output as one fold, plus — unless `redirectLines`
+   * is off — a line per task pointing at it. The fold is labelled with the
+   * executor and a run-unique id (the same
    * executor can run more than one batch), rather than an arbitrary task. Safe
    * to write to `output` directly: grouping implies GitHub Actions implies a
    * non-TTY, static lifecycle.
