@@ -7,6 +7,8 @@ import { existsSync, readFileSync } from 'fs';
 // gate the failure on a flag so every other test here keeps the real fs.
 let mockFailOpenSync = false;
 let mockFailWriteSync = false;
+// Writes a prefix, then fails on the next call - a disk filling mid-chunk.
+let mockPartialWriteBytes: number | null = null;
 jest.mock('fs', () => {
   const actual = jest.requireActual('fs');
   const enospc = () =>
@@ -25,6 +27,13 @@ jest.mock('fs', () => {
     writeSync: (...args: unknown[]) => {
       if (mockFailWriteSync) {
         throw enospc();
+      }
+      if (mockPartialWriteBytes !== null) {
+        const n = mockPartialWriteBytes;
+        mockPartialWriteBytes = null;
+        mockFailWriteSync = true;
+        const [fd, buffer, offset] = args as [number, Buffer, number];
+        return (actual.writeSync as any)(fd, buffer, offset, n);
       }
       return (actual.writeSync as any)(...args);
     },
@@ -420,6 +429,36 @@ describe('BatchProcess', () => {
       expect(forwarded.stdout).toContain('tail of the log');
       batch.discardCapturedOutput();
     } finally {
+      mockFailWriteSync = false;
+      warn.mockRestore();
+    }
+  });
+  it('does not replay bytes that already reached the file when a write fails partway', () => {
+    const child = fakeChildProcess();
+    const warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
+    // The first write lands 5 of the chunk's bytes and the next one fails, so
+    // the file holds a prefix that the fold will replay later.
+    mockPartialWriteBytes = 5;
+
+    try {
+      const { batch, forwarded } = withEnvironmentVariables(FOLDING_ENV, () => {
+        const b = new BatchProcess(child, '@nx/gradle:batch');
+        const f = captureForwarded(() => {
+          (child as any).stdout.emit('data', Buffer.from('HEAD:TAIL\n'));
+        });
+        return { batch: b, forwarded: f };
+      });
+
+      // Forwarding the whole chunk would print HEAD: twice - once live now,
+      // once from the fold - so only the unwritten remainder goes out.
+      expect(readFileSync(batch.getCapturedOutputPath(), 'utf-8')).toEqual(
+        'HEAD:'
+      );
+      expect(forwarded.stdout).toContain('TAIL');
+      expect(forwarded.stdout).not.toContain('HEAD:');
+      batch.discardCapturedOutput();
+    } finally {
+      mockPartialWriteBytes = null;
       mockFailWriteSync = false;
       warn.mockRestore();
     }

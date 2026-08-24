@@ -162,6 +162,12 @@ export class BatchProcess {
       output.writeTaskOutputChunk(chunk, stream);
       return;
     }
+    // Hoisted so the catch can tell how much of this chunk reached the file: a
+    // `writeSync` that fails partway leaves a prefix on disk, and replaying the
+    // whole chunk live would print that prefix twice - once now, once when the
+    // fold reads the file.
+    const bytes = typeof chunk === 'string' ? Buffer.from(chunk) : chunk;
+    let written = 0;
     try {
       if (this.capturedOutputFd === undefined) {
         const dir = join(workspaceDataDirectory, 'batch-outputs');
@@ -178,8 +184,6 @@ export class BatchProcess {
       }
       // Written synchronously so the file is complete the moment the batch ends,
       // with no flush to sequence against the read that renders the fold.
-      const bytes = typeof chunk === 'string' ? Buffer.from(chunk) : chunk;
-      let written = 0;
       while (written < bytes.length) {
         written += writeSync(this.capturedOutputFd, bytes, written);
       }
@@ -199,6 +203,15 @@ export class BatchProcess {
       // non-cascading errors live; unlinking it here would throw away the most
       // useful bytes precisely when the disk is in trouble.
       this.closeCapturedOutput();
+      // Forward only what did not reach the file, and do it before warning.
+      // `output.warn` writes to the terminal as well, so if that is the thing
+      // failing, the bytes this handler was handed must already be out - losing
+      // the warning is survivable, losing task output is what this path exists
+      // to prevent.
+      const unwritten = bytes.subarray(written);
+      if (unwritten.length > 0) {
+        output.writeTaskOutputChunk(unwritten, stream);
+      }
       output.warn({
         title: `Could not capture batch output for ${this.executorName}`,
         bodyLines: [
@@ -206,7 +219,6 @@ export class BatchProcess {
           'Streaming the rest of it live instead; the fold holds what was captured first.',
         ],
       });
-      output.writeTaskOutputChunk(chunk, stream);
     }
   }
 
@@ -241,7 +253,14 @@ export class BatchProcess {
   private releaseCapturedOutput() {
     this.closeCapturedOutput();
     if (this.capturedOutputPath) {
-      rmSync(this.capturedOutputPath, { force: true });
+      try {
+        rmSync(this.capturedOutputPath, { force: true });
+      } catch {
+        // `force` covers a missing file but not a locked one: on Windows an fd
+        // that failed to close still holds a share lock. This runs from
+        // `runBatch`'s finally, where throwing would replace the batch's real
+        // result with a cleanup error, so a stale file is the lesser outcome.
+      }
       this.capturedOutputPath = undefined;
     }
   }
