@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use super::IoSnapshotResolution;
-use super::client::TaskIoSnapshot;
+use super::client::{TaskInputs, TaskIoSnapshot};
 
 pub const BUNDLE_VERSION: u32 = 1;
 pub const BUNDLE_FILE: &str = "snapshots.json";
@@ -34,7 +34,14 @@ pub fn digest(snapshots: &BTreeMap<String, TaskIoSnapshot>) -> String {
 
 pub fn normalize(snapshots: &mut BTreeMap<String, TaskIoSnapshot>) {
     for snapshot in snapshots.values_mut() {
-        sort_unique(&mut snapshot.inputs);
+        match &mut snapshot.inputs {
+            TaskInputs::Flat(globs) => sort_unique(globs),
+            TaskInputs::Structured(inputs) => {
+                inputs.projects.values_mut().for_each(sort_unique);
+                sort_unique(&mut inputs.workspace);
+                inputs.task_outputs.values_mut().for_each(sort_unique);
+            }
+        }
         sort_unique(&mut snapshot.outputs);
     }
 }
@@ -120,8 +127,9 @@ mod tests {
     fn snapshot(commit: &str, inputs: &[&str]) -> TaskIoSnapshot {
         TaskIoSnapshot {
             commit: commit.into(),
-            inputs: inputs.iter().map(|s| s.to_string()).collect(),
+            inputs: TaskInputs::Flat(inputs.iter().map(|s| s.to_string()).collect()),
             outputs: vec![],
+            coverage: None,
         }
     }
 
@@ -146,7 +154,49 @@ mod tests {
         normalize(&mut a);
         normalize(&mut b);
         assert_eq!(digest(&a), digest(&b));
-        assert_eq!(a["app:build"].inputs, vec!["a", "b"]);
+        assert_eq!(
+            a["app:build"].inputs,
+            TaskInputs::Flat(vec!["a".into(), "b".into()])
+        );
+    }
+
+    #[test]
+    fn accepts_flat_and_structured_inputs() {
+        let json = r#"{
+          "flat": { "commit": "c", "inputs": ["b", "a"], "outputs": [] },
+          "structured": {
+            "commit": "c",
+            "inputs": {
+              "projects": { "web": ["src/**/*.ts", "src/**/*.ts"] },
+              "workspace": ["tsconfig.base.json"],
+              "taskOutputs": { "ui:build": ["libs/ui/dist/index.js"] }
+            },
+            "outputs": ["apps/web/dist/**"],
+            "coverage": "complete"
+          }
+        }"#;
+        let mut snapshots: BTreeMap<String, TaskIoSnapshot> = serde_json::from_str(json).unwrap();
+        normalize(&mut snapshots);
+        assert_eq!(
+            snapshots["flat"].inputs,
+            TaskInputs::Flat(vec!["a".into(), "b".into()])
+        );
+        let TaskInputs::Structured(inputs) = &snapshots["structured"].inputs else {
+            panic!("expected structured inputs");
+        };
+        assert_eq!(inputs.projects["web"], vec!["src/**/*.ts"]);
+        assert_eq!(
+            inputs.task_outputs["ui:build"],
+            vec!["libs/ui/dist/index.js"]
+        );
+        assert_eq!(
+            snapshots["structured"].coverage.as_deref(),
+            Some("complete")
+        );
+        // Round-trips through the on-disk bundle unchanged.
+        let text = serde_json::to_string(&snapshots).unwrap();
+        let again: BTreeMap<String, TaskIoSnapshot> = serde_json::from_str(&text).unwrap();
+        assert_eq!(again, snapshots);
     }
 
     #[test]

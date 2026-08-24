@@ -7,11 +7,45 @@ use serde::{Deserialize, Serialize};
 
 use super::FetchFailure;
 
+/// Observed reads pre-classified by Nx Cloud (NXC-4847 §2a). Globs under
+/// `projects` are project-relative; `workspace` holds reads outside any
+/// project root; `task_outputs` maps a producer task id to the paths read from
+/// its observed writes.
 #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct StructuredInputs {
+    #[serde(default)]
+    pub projects: BTreeMap<String, Vec<String>>,
+    #[serde(default)]
+    pub workspace: Vec<String>,
+    #[serde(default)]
+    pub task_outputs: BTreeMap<String, Vec<String>>,
+}
+
+/// The server's interim flat form is still accepted; a consumer treats it as
+/// unclassified.
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(untagged)]
+pub enum TaskInputs {
+    Flat(Vec<String>),
+    Structured(StructuredInputs),
+}
+
+impl Default for TaskInputs {
+    fn default() -> Self {
+        TaskInputs::Flat(Vec::new())
+    }
+}
+
+#[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct TaskIoSnapshot {
     pub commit: String,
-    pub inputs: Vec<String>,
+    pub inputs: TaskInputs,
     pub outputs: Vec<String>,
+    /// `complete` | `empty` | `partial`; absent from the interim server response.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub coverage: Option<String>,
 }
 
 #[derive(Deserialize)]
