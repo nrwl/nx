@@ -252,12 +252,7 @@ import * as UsersActions from './users.actions';
 import { UsersEffects } from './users.effects';
 import { UsersFacade } from './users.facade';
 import { UsersEntity } from './users.models';
-import {
-  USERS_FEATURE_KEY,
-  UsersState,
-  initialUsersState,
-  usersReducer,
-} from './users.reducer';
+import { USERS_FEATURE_KEY, UsersState, initialUsersState, usersReducer } from './users.reducer';
 import * as UsersSelectors from './users.selectors';
 
 interface TestSchema {
@@ -284,11 +279,7 @@ describe('UsersFacade', () => {
       class CustomFeatureModule {}
 
       @NgModule({
-        imports: [
-          StoreModule.forRoot({}),
-          EffectsModule.forRoot([]),
-          CustomFeatureModule,
-        ],
+        imports: [StoreModule.forRoot({}), EffectsModule.forRoot([]), CustomFeatureModule],
       })
       class RootModule {}
       TestBed.configureTestingModule({ imports: [RootModule] });
@@ -404,11 +395,7 @@ describe('UsersEffects', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [],
-      providers: [
-        UsersEffects,
-        provideMockActions(() => actions),
-        provideMockStore(),
-      ],
+      providers: [UsersEffects, provideMockActions(() => actions), provideMockStore()],
     });
 
     effects = TestBed.inject(UsersEffects);
@@ -418,9 +405,7 @@ describe('UsersEffects', () => {
     it('should work', () => {
       actions = hot('-a-|', { a: UsersActions.initUsers() });
 
-      const expected = hot('-a-|', {
-        a: UsersActions.loadUsersSuccess({ users: [] }),
-      });
+      const expected = hot('-a-|', { a: UsersActions.loadUsersSuccess({ users: [] }) });
 
       expect(effects.init$).toBeObservable(expected);
     });
@@ -459,8 +444,7 @@ export interface UsersPartialState {
   readonly [USERS_FEATURE_KEY]: UsersState;
 }
 
-export const usersAdapter: EntityAdapter<UsersEntity> =
-  createEntityAdapter<UsersEntity>();
+export const usersAdapter: EntityAdapter<UsersEntity> = createEntityAdapter<UsersEntity>();
 
 export const initialUsersState: UsersState = usersAdapter.getInitialState({
   // set initial required properties
@@ -469,18 +453,11 @@ export const initialUsersState: UsersState = usersAdapter.getInitialState({
 
 const reducer = createReducer(
   initialUsersState,
-  on(UsersActions.initUsers, (state) => ({
-    ...state,
-    loaded: false,
-    error: null,
-  })),
+  on(UsersActions.initUsers, (state) => ({ ...state, loaded: false, error: null })),
   on(UsersActions.loadUsersSuccess, (state, { users }) =>
     usersAdapter.setAll(users, { ...state, loaded: true }),
   ),
-  on(UsersActions.loadUsersFailure, (state, { error }) => ({
-    ...state,
-    error,
-  })),
+  on(UsersActions.loadUsersFailure, (state, { error }) => ({ ...state, error })),
 );
 
 export function usersReducer(state: UsersState | undefined, action: Action) {
@@ -504,10 +481,7 @@ describe('Users Reducer', () => {
 
   describe('valid Users actions', () => {
     it('loadUsersSuccess should return the list of known Users', () => {
-      const users = [
-        createUsersEntity('PRODUCT-AAA'),
-        createUsersEntity('PRODUCT-zzz'),
-      ];
+      const users = [createUsersEntity('PRODUCT-AAA'), createUsersEntity('PRODUCT-zzz')];
       const action = UsersActions.loadUsersSuccess({ users });
 
       const result: UsersState = usersReducer(initialUsersState, action);
@@ -535,8 +509,7 @@ exports[`ngrx-feature-store NgModule should generate the files with the correct 
 import { USERS_FEATURE_KEY, UsersState, usersAdapter } from './users.reducer';
 
 // Lookup the 'Users' feature state managed by NgRx
-export const selectUsersState =
-  createFeatureSelector<UsersState>(USERS_FEATURE_KEY);
+export const selectUsersState = createFeatureSelector<UsersState>(USERS_FEATURE_KEY);
 
 const { selectAll, selectEntities } = usersAdapter.getSelectors();
 
@@ -550,14 +523,12 @@ export const selectUsersError = createSelector(
   (state: UsersState) => state.error,
 );
 
-export const selectAllUsers = createSelector(
-  selectUsersState,
-  (state: UsersState) => selectAll(state),
+export const selectAllUsers = createSelector(selectUsersState, (state: UsersState) =>
+  selectAll(state),
 );
 
-export const selectUsersEntities = createSelector(
-  selectUsersState,
-  (state: UsersState) => selectEntities(state),
+export const selectUsersEntities = createSelector(selectUsersState, (state: UsersState) =>
+  selectEntities(state),
 );
 
 export const selectSelectedId = createSelector(
@@ -575,11 +546,7 @@ export const selectEntity = createSelector(
 
 exports[`ngrx-feature-store NgModule should generate the files with the correct content 11`] = `
 "import { UsersEntity } from './users.models';
-import {
-  usersAdapter,
-  UsersPartialState,
-  initialUsersState,
-} from './users.reducer';
+import { usersAdapter, UsersPartialState, initialUsersState } from './users.reducer';
 import * as UsersSelectors from './users.selectors';
 
 describe('Users Selectors', () => {

@@ -1,6 +1,6 @@
 import * as pc from 'picocolors';
 import { exec, execSync, type StdioOptions } from 'child_process';
-import { canPrompt, migratePrompt } from './safe-prompt';
+import { canPrompt, migrateChoice, migrateConfirm } from './safe-prompt';
 import { dirname, join } from 'path';
 import { createRequire } from 'module';
 import { joinPathFragments } from '../../utils/path';
@@ -84,7 +84,7 @@ import { readNxJson } from '../../config/configuration';
 import { readInstalledNxBin, runNxArgvSync } from '../../utils/child-process';
 import { daemonClient } from '../../daemon/client/client';
 import { isNxCloudUsed, isNxCloudDisabled } from '../../utils/nx-cloud-utils';
-import { formatFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { formatFileContents } from '../../generators/internal-utils/format-changed-files';
 import {
   ensurePackageHasProvenance,
   getNxPackageGroup,
@@ -292,6 +292,12 @@ export interface MigratorOptions {
   requiredPackages?: ReadonlySet<string>;
 }
 
+interface PendingPackageJsonUpdate {
+  package: string;
+  key: string;
+  update: PackageJsonUpdates[string];
+}
+
 export class Migrator {
   private readonly packageJson?: MigratorOptions['packageJson'];
   private readonly getInstalledPackageVersion: MigratorOptions['getInstalledPackageVersion'];
@@ -305,6 +311,11 @@ export class Migrator {
   private readonly packageUpdates: Record<string, PackageUpdate> = {};
   private readonly collectedVersions: Record<string, string> = {};
   private readonly promptAnswers: Record<string, boolean> = {};
+  private readonly pendingPackageJsonUpdates = new Map<
+    string,
+    PendingPackageJsonUpdate
+  >();
+  private readonly appliedPackageJsonUpdates = new Set<string>();
   private readonly nxInstallation: NxJsonConfiguration['installation'] | null;
   private minVersionWithSkippedUpdates: string | undefined;
 
@@ -347,6 +358,7 @@ export class Migrator {
       version: targetVersion,
       addToPackageJson: false,
     });
+    await this.applyPendingPackageJsonUpdates();
     this.applyIncludeFilter();
 
     const { migrations, promptContents } = await this.createMigrateJson();
@@ -416,43 +428,102 @@ export class Migrator {
       for (const [packageUpdateKey, packageUpdate] of Object.entries(
         packageToCheck.updates
       )) {
-        if (
-          this.areRequirementsMet(packageUpdate.requires) &&
-          !this.areIncompatiblePackagesPresent(
-            packageUpdate.incompatibleWith
-          ) &&
-          (!this.interactive ||
-            (await this.runPackageJsonUpdatesConfirmationPrompt(
-              packageUpdate,
-              packageUpdateKey,
-              packageToCheck.package
-            )))
-        ) {
-          const updateEntries = Object.entries(packageUpdate.packages);
-          // Validate all up front so invalid metadata fails fast, before any
-          // resolution does I/O.
-          for (const [name, update] of updateEntries) {
-            this.validatePackageUpdateVersion(
-              packageToCheck.package,
-              name,
-              update
-            );
-          }
-          // Resolve serially: resolution can prompt (pnpm strict cooldown) and
-          // append to minimumReleaseAgeExclude, so a serial loop avoids
-          // overlapping prompts and keeps packageUpdates ordering stable.
-          for (const [name, update] of updateEntries) {
-            const resolvedUpdate = {
-              ...update,
-              version: await this.resolveVersionForCascade(
-                name,
-                update.version
-              ),
-            };
-            filteredUpdates[name] = resolvedUpdate;
-            this.packageUpdates[name] = resolvedUpdate;
-          }
+        Object.assign(
+          filteredUpdates,
+          await this.applyPackageJsonUpdate(
+            packageToCheck.package,
+            packageUpdateKey,
+            packageUpdate
+          )
+        );
+      }
+
+      await Promise.all(
+        Object.entries(filteredUpdates).map(([name, update]) =>
+          this.buildPackageJsonUpdates(name, update)
+        )
+      );
+    }
+  }
+
+  private async applyPackageJsonUpdate(
+    sourcePackage: string,
+    packageUpdateKey: string,
+    packageUpdate: PackageJsonUpdates[string]
+  ): Promise<Record<string, PackageUpdate>> {
+    const appliedKey = JSON.stringify([sourcePackage, packageUpdateKey]);
+    if (this.appliedPackageJsonUpdates.has(appliedKey)) {
+      this.pendingPackageJsonUpdates.delete(appliedKey);
+      return {};
+    }
+
+    if (
+      !this.areRequirementsMet(packageUpdate.requires) ||
+      this.areIncompatiblePackagesPresent(packageUpdate.incompatibleWith)
+    ) {
+      this.pendingPackageJsonUpdates.set(appliedKey, {
+        package: sourcePackage,
+        key: packageUpdateKey,
+        update: packageUpdate,
+      });
+      return {};
+    }
+
+    this.pendingPackageJsonUpdates.delete(appliedKey);
+    if (
+      this.interactive &&
+      !(await this.runPackageJsonUpdatesConfirmationPrompt(
+        packageUpdate,
+        packageUpdateKey,
+        sourcePackage
+      ))
+    ) {
+      return {};
+    }
+
+    this.appliedPackageJsonUpdates.add(appliedKey);
+    const updateEntries = Object.entries(packageUpdate.packages);
+    // Validate all up front so invalid metadata fails fast, before any
+    // resolution does I/O.
+    for (const [name, update] of updateEntries) {
+      this.validatePackageUpdateVersion(sourcePackage, name, update);
+    }
+
+    const filteredUpdates: Record<string, PackageUpdate> = {};
+    // Resolve serially: resolution can prompt (pnpm strict cooldown) and append
+    // to minimumReleaseAgeExclude, so a serial loop avoids overlapping prompts
+    // and keeps packageUpdates ordering stable.
+    for (const [name, update] of updateEntries) {
+      const resolvedUpdate = {
+        ...update,
+        version: await this.resolveVersionForCascade(name, update.version),
+      };
+      this.addPackageUpdate(name, resolvedUpdate);
+      filteredUpdates[name] = this.packageUpdates[name];
+    }
+
+    return filteredUpdates;
+  }
+
+  private async applyPendingPackageJsonUpdates(): Promise<void> {
+    while (this.pendingPackageJsonUpdates.size) {
+      let applied = false;
+      const filteredUpdates: Record<string, PackageUpdate> = {};
+
+      for (const pending of [...this.pendingPackageJsonUpdates.values()]) {
+        const updates = await this.applyPackageJsonUpdate(
+          pending.package,
+          pending.key,
+          pending.update
+        );
+        if (Object.keys(updates).length) {
+          applied = true;
+          Object.assign(filteredUpdates, updates);
         }
+      }
+
+      if (!applied) {
+        return;
       }
 
       await Promise.all(
@@ -797,7 +868,7 @@ export class Migrator {
   private addPackageUpdate(name: string, packageUpdate: PackageUpdate): void {
     if (
       !this.packageUpdates[name] ||
-      this.gt(packageUpdate.version, this.packageUpdates[name].version)
+      !this.lt(packageUpdate.version, this.packageUpdates[name].version)
     ) {
       this.packageUpdates[name] = packageUpdate;
     }
@@ -916,39 +987,32 @@ export class Migrator {
       return Promise.resolve(false);
     }
 
-    const promptConfig = {
-      name: 'shouldApply',
-      type: 'confirm',
-      message: packageUpdate['x-prompt'],
-      initial: true,
-    };
-
-    if (packageName.startsWith('@nx/')) {
-      // @ts-expect-error -- enquirer types aren't correct, footer does exist
-      promptConfig.footer = () =>
-        pc.dim(
-          `  View migration details at https://nx.dev/nx-api/${packageName.replace(
+    // No footer slot, so the docs link is appended to the message.
+    const detailsLink = packageName.startsWith('@nx/')
+      ? pc.dim(
+          `\n  View migration details at https://nx.dev/nx-api/${packageName.replace(
             '@nx/',
             ''
           )}#${packageUpdateKey.replace(/[-\.]/g, '')}packageupdates`
-        );
-    }
+        )
+      : '';
 
-    return await migratePrompt([promptConfig]).then(
-      ({ shouldApply }: { shouldApply: boolean }) => {
-        this.promptAnswers[promptKey] = shouldApply;
+    return await migrateConfirm({
+      message: `${packageUpdate['x-prompt']}${detailsLink}`,
+      initial: true,
+    }).then((shouldApply: boolean) => {
+      this.promptAnswers[promptKey] = shouldApply;
 
-        if (
-          !shouldApply &&
-          (!this.minVersionWithSkippedUpdates ||
-            lt(packageUpdate.version, this.minVersionWithSkippedUpdates))
-        ) {
-          this.minVersionWithSkippedUpdates = packageUpdate.version;
-        }
-
-        return shouldApply;
+      if (
+        !shouldApply &&
+        (!this.minVersionWithSkippedUpdates ||
+          lt(packageUpdate.version, this.minVersionWithSkippedUpdates))
+      ) {
+        this.minVersionWithSkippedUpdates = packageUpdate.version;
       }
-    );
+
+      return shouldApply;
+    });
   }
 
   private getPackageUpdatePromptKey(
@@ -1067,10 +1131,10 @@ export async function resolveInclude(
     setMigrateIncludeSource('nx-json');
     return configuredInclude;
   }
-  const choices: { name: string; message: string }[] = [
+  const choices: { value: MigrateInclude; label: string }[] = [
     {
-      name: 'required',
-      message:
+      value: 'required',
+      label:
         'Required only (the target package and the packages it ships with)',
     },
   ];
@@ -1082,9 +1146,8 @@ export async function resolveInclude(
     context.interactive !== true
   ) {
     choices.push({
-      name: 'optional',
-      message:
-        'Optional only (the dependency updates those packages recommend)',
+      value: 'optional',
+      label: 'Optional only (the dependency updates those packages recommend)',
     });
   }
   if (!canPrompt(context.interactive)) {
@@ -1092,14 +1155,10 @@ export async function resolveInclude(
     return 'all';
   }
   choices.push({
-    name: 'all',
-    message: 'All (required and optional)',
+    value: 'all',
+    label: 'All (required and optional)',
   });
-  const { include: selected } = await migratePrompt<{
-    include: MigrateInclude;
-  }>({
-    type: 'select',
-    name: 'include',
+  const selected = await migrateChoice<MigrateInclude>({
     message: 'Which packages would you like to migrate?',
     choices,
   });
@@ -2276,7 +2335,7 @@ async function formatCatalogDefinitionFiles(
     };
   });
 
-  const results = await formatFilesWithPrettierIfAvailable(
+  const results = await formatFileContents(
     catalogDefinitionFiles.map(({ path, content }) => ({ path, content })),
     root,
     { silent: true }

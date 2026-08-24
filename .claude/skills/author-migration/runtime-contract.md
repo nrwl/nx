@@ -43,7 +43,7 @@ Shape: `{ "<key>": { version, packages, requires?, incompatibleWith?, "x-prompt"
 
 - A group applies when `installed <= group.version <= target` (inclusive lower bound, unlike migration entries).
 - Only packages already in dependencies/devDependencies are touched unless `addToPackageJson`/`alwaysAddToPackageJson` is set (`true` = dependencies, string = that section; `alwaysAddToPackageJson` wins). Across groups the highest version per package wins; downgrades are filtered at write time.
-- Groups are processed in key order in a single pass, and each accepted group writes into the pending update set that the next group's `requires` is evaluated against. Order ladder groups oldest source major first so multi-major chains work.
+- Groups are evaluated in key order, and each accepted group writes into the pending update set that later gate checks read. A group held by `requires`/`incompatibleWith` is not discarded: after the initial pass, held groups are re-evaluated until no further group applies, so a gate satisfied by a group evaluated later — including another plugin's — still lands. Each group applies at most once. Order ladder groups oldest source major first so multi-major chains work.
 - `incompatibleWith` inverts `requires`: the group is skipped when any listed package's landing version satisfies the range.
 - `ifPackageInstalled` gates a single package's update on another package being installed; no first-party group uses it (gate with `requires` instead).
 - `x-prompt` fires only under `--interactive` outside CI and is deprecated for removal in Nx v24; do not add it.

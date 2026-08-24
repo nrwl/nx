@@ -102,6 +102,7 @@ export default [
             '@nx/cypress',
             '@nx/jest',
             '@nx/playwright',
+            '@nx/vitest',
             'typescript',
             'react',
             'webpack',

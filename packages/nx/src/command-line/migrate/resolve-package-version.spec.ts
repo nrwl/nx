@@ -18,7 +18,7 @@ jest.mock('../../utils/min-release-age/pnpm-exclude-writer', () => ({
   appendMinimumReleaseAgeExcludes: jest.fn(),
 }));
 jest.mock('./safe-prompt', () => ({
-  migratePrompt: jest.fn(),
+  migrateConfirm: jest.fn(),
 }));
 
 import { readNxJson } from '../../config/configuration';
@@ -30,7 +30,7 @@ import { MinReleaseAgeViolationError } from '../../utils/min-release-age/errors'
 import { readMinReleaseAgePolicy } from '../../utils/min-release-age/policy';
 import { appendMinimumReleaseAgeExcludes } from '../../utils/min-release-age/pnpm-exclude-writer';
 import { resolveCompliantVersion } from '../../utils/min-release-age/resolve';
-import { migratePrompt } from './safe-prompt';
+import { migrateConfirm } from './safe-prompt';
 import {
   isRegistryResolutionEnabled,
   resetResolvePackageVersionState,
@@ -43,7 +43,7 @@ const mockUsingInstall = resolvePackageVersionUsingInstallation as jest.Mock;
 const mockReadPolicy = readMinReleaseAgePolicy as jest.Mock;
 const mockResolve = resolveCompliantVersion as jest.Mock;
 const mockWriteExcludes = appendMinimumReleaseAgeExcludes as jest.Mock;
-const mockPrompt = migratePrompt as jest.Mock;
+const mockPrompt = migrateConfirm as jest.Mock;
 
 function pnpmPolicy(
   overrides: Partial<{
@@ -182,7 +182,7 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
     mockUsingInstall.mockResolvedValue('install-resolved');
     // Mirror the writer's real contract: returns the entries it actually added.
     mockWriteExcludes.mockImplementation((_root, entries) => entries);
-    // The strict prompt gates on stdin (the surface enquirer reads).
+    // pnpm's strict prompt gates on stdin, and nx mirrors that gate.
     originalIsTTY = Object.getOwnPropertyDescriptor(
       process.stdin,
       'isTTY'
@@ -406,7 +406,7 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
     mockResolve.mockRejectedValue(
       violation([{ version: '2.0.0', publishedAt: '6h ago' }])
     );
-    mockPrompt.mockResolvedValue({ approved: true });
+    mockPrompt.mockResolvedValue(true);
 
     const result = await resolvePackageVersionRespectingMinReleaseAge(
       'pkg-a',
@@ -427,7 +427,7 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
         { version: '2.0.0', publishedAt: '6h ago' },
       ])
     );
-    mockPrompt.mockResolvedValue({ approved: true });
+    mockPrompt.mockResolvedValue(true);
 
     const result = await resolvePackageVersionRespectingMinReleaseAge(
       'pkg-a',
@@ -444,7 +444,7 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
     mockResolve.mockRejectedValue(
       violation([{ version: '2.0.0', publishedAt: '6h ago' }])
     );
-    mockPrompt.mockResolvedValue({ approved: false });
+    mockPrompt.mockResolvedValue(false);
 
     // The fetcher catch in migrate.ts only rethrows MinReleaseAgeViolationError;
     // a plain Error here would silently fall back to a real PM install.
@@ -472,7 +472,7 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
       .mockRejectedValueOnce(
         violation([{ version: '3.0.0', publishedAt: '5h ago' }])
       );
-    mockPrompt.mockResolvedValue({ approved: true });
+    mockPrompt.mockResolvedValue(true);
 
     await resolvePackageVersionRespectingMinReleaseAge('pkg-a', '^2.0.0');
     const second = await resolvePackageVersionRespectingMinReleaseAge(

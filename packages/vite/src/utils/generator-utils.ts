@@ -1,4 +1,7 @@
-import { addBuildTargetDefaults } from '@nx/devkit/internal';
+import {
+  addBuildTargetDefaults,
+  confirmationPrompt,
+} from '@nx/devkit/internal';
 import {
   joinPathFragments,
   logger,
@@ -619,13 +622,9 @@ async function handleUnsupportedUserProvidedTargetsErrors(
      your changes before converting a project to use Vite, and test the converted project thoroughly before deploying it.
     `
   );
-  const { Confirm } = require('enquirer');
-  const prompt = new Confirm({
-    name: 'question',
+  const shouldConvert = await confirmationPrompt({
     message: `Should we convert the ${validFoundTargetName} target to use the @nx/vite:${executor} executor?`,
-    initial: true,
   });
-  const shouldConvert = await prompt.run();
   if (!shouldConvert) {
     throw new Error(
       `The ${target} target ${userProvidedTargetName} cannot be converted to use the @nx/vite:${executor} executor.
@@ -654,13 +653,9 @@ export async function handleUnknownConfiguration(projectName: string) {
       `
   );
 
-  const { Confirm } = require('enquirer');
-  const prompt = new Confirm({
-    name: 'question',
+  const shouldConvert = await confirmationPrompt({
     message: `Should Nx convert your project to use Vite?`,
-    initial: true,
   });
-  const shouldConvert = await prompt.run();
   if (!shouldConvert) {
     throw new Error(`
       Nx could not verify that your project can be converted to use Vite.

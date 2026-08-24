@@ -5,7 +5,7 @@ import {
   determineFolder,
   determinePresetOptions,
 } from './create-nx-workspace';
-import enquirer from 'enquirer';
+import * as clack from '@clack/prompts';
 import { CnwError } from '../src/utils/error-utils';
 import { Preset } from '../src/utils/preset/preset';
 import {
@@ -18,9 +18,11 @@ import {
 import { join, basename, dirname } from 'path';
 import { tmpdir } from 'os';
 
-jest.mock('enquirer', () => ({
+jest.mock('@clack/prompts', () => ({
   __esModule: true,
-  default: { prompt: jest.fn() },
+  autocomplete: jest.fn(),
+  text: jest.fn(),
+  isCancel: jest.fn(() => false),
 }));
 
 jest.mock('../src/utils/ci/is-ci', () => ({
@@ -68,7 +70,6 @@ describe('determineFolder', () => {
 
   beforeEach(() => {
     originalCwd = process.cwd();
-    (require('enquirer').default.prompt as jest.Mock).mockReset();
   });
 
   afterEach(() => {
@@ -268,13 +269,13 @@ describe('resolveSpecialFolderName', () => {
 });
 
 describe('determineFolder - explicit "." confirmation', () => {
-  const enquirer = require('enquirer').default;
   const { isCI } = require('../src/utils/ci/is-ci');
   let originalCwd: string;
 
   beforeEach(() => {
     originalCwd = process.cwd();
-    (enquirer.prompt as jest.Mock).mockReset();
+    (clack.autocomplete as jest.Mock).mockReset();
+    (clack.text as jest.Mock).mockReset();
     (isCI as jest.Mock).mockReset().mockReturnValue(false);
   });
 
@@ -294,9 +295,7 @@ describe('determineFolder - explicit "." confirmation', () => {
   it('scaffolds in place when the user confirms', async () => {
     const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
     process.chdir(tmpDir);
-    (enquirer.prompt as jest.Mock).mockResolvedValueOnce({
-      useCurrentDir: 'Yes',
-    });
+    (clack.autocomplete as jest.Mock).mockResolvedValueOnce('Yes');
 
     const parsedArgs = dotArgs();
     const result = await determineFolder(parsedArgs);
@@ -304,7 +303,7 @@ describe('determineFolder - explicit "." confirmation', () => {
     expect(result).toBe(basename(tmpDir));
     expect(parsedArgs.workingDir).toBe(dirname(tmpDir));
     expect(parsedArgs.useCurrentDir).toBe(true);
-    expect(enquirer.prompt).toHaveBeenCalledTimes(1);
+    expect(clack.autocomplete).toHaveBeenCalledTimes(1);
 
     rmSync(tmpDir, { recursive: true });
   });
@@ -312,9 +311,8 @@ describe('determineFolder - explicit "." confirmation', () => {
   it('falls back to a named subfolder when the user declines', async () => {
     const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
     process.chdir(tmpDir);
-    (enquirer.prompt as jest.Mock)
-      .mockResolvedValueOnce({ useCurrentDir: 'No' })
-      .mockResolvedValueOnce({ folderName: 'myorg' });
+    (clack.autocomplete as jest.Mock).mockResolvedValueOnce('No');
+    (clack.text as jest.Mock).mockResolvedValueOnce('myorg');
 
     const parsedArgs = dotArgs();
     const result = await determineFolder(parsedArgs);
@@ -324,7 +322,8 @@ describe('determineFolder - explicit "." confirmation', () => {
     // so the subfolder lands under the cwd.
     expect(parsedArgs.useCurrentDir).toBeFalsy();
     expect(parsedArgs.workingDir).toBeUndefined();
-    expect(enquirer.prompt).toHaveBeenCalledTimes(2);
+    expect(clack.autocomplete).toHaveBeenCalledTimes(1);
+    expect(clack.text).toHaveBeenCalledTimes(1);
 
     rmSync(tmpDir, { recursive: true });
   });
@@ -361,16 +360,17 @@ describe('determinePresetOptions', () => {
     interactive: false,
     workspaces: true,
     name: 'myorg',
+    // Values neither resolution can produce on its own while `interactive` is
+    // false, so these tests pin the threading through each stack rather than the
+    // resolved default.
+    linter: 'oxlint',
+    formatter: 'oxfmt',
   } as any;
 
   beforeEach(() => {
     // Recorded calls persist across tests otherwise, so any assertion on which
     // questions were asked would see every earlier test's prompts too.
-    (enquirer.prompt as jest.Mock).mockClear();
-    // A sentinel the prompt could not produce by accident, so what these tests
-    // pin is the threading through each stack rather than the prompt's own
-    // default.
-    (enquirer.prompt as jest.Mock).mockResolvedValue({ linter: 'oxlint' });
+    (clack.autocomplete as jest.Mock).mockClear();
   });
 
   // Every stack must come back with the resolved linter. Once the schemas
@@ -379,6 +379,7 @@ describe('determinePresetOptions', () => {
   // Each stack needs enough non-interactive args to reach its return statement.
   const perStack: Record<string, Record<string, unknown>> = {
     none: { preset: Preset.TsStandalone },
+    web: { preset: Preset.WebComponents },
     react: {
       preset: Preset.ReactMonorepo,
       appName: 'app',
@@ -437,6 +438,37 @@ describe('determinePresetOptions', () => {
     }
   );
 
+  it.each(Object.keys(perStack))(
+    'should thread the resolved formatter through the %s stack',
+    async (stack) => {
+      const result = await determinePresetOptions({
+        ...base,
+        stack,
+        ...perStack[stack],
+      } as any);
+
+      expect(result.formatter).toBe('oxfmt');
+    }
+  );
+
+  // `--no-workspaces` is the case the formatter used to answer for the user:
+  // it took a hardcoded `prettier` while the linter was already asked. Pinning
+  // both here is what stops that gate coming back.
+  it.each(Object.keys(perStack))(
+    'should thread linter and formatter through the %s stack without workspaces',
+    async (stack) => {
+      const result = await determinePresetOptions({
+        ...base,
+        workspaces: false,
+        stack,
+        ...perStack[stack],
+      } as any);
+
+      expect(result.linter).toBe('oxlint');
+      expect(result.formatter).toBe('oxfmt');
+    }
+  );
+
   it('should keep an explicitly passed linter', async () => {
     const result = await determinePresetOptions({
       ...base,
@@ -470,10 +502,125 @@ describe('determinePresetOptions', () => {
       } as any);
 
       expect(result.linter).toBeUndefined();
-      const linterQuestions = (enquirer.prompt as jest.Mock).mock.calls.filter(
-        ([[question]]) => question.name === 'linter'
+      const linterQuestions = (
+        clack.autocomplete as jest.Mock
+      ).mock.calls.filter(([question]) =>
+        String(question?.message ?? '').includes('linter')
       );
       expect(linterQuestions).toHaveLength(0);
+    }
+  );
+});
+
+// The choice list is ordered, not just filtered: the leading entry is both the
+// interactive default and the answer a skipped prompt resolves to. A rewrite
+// that dropped the ordering sent every non-interactive workspace to `none`.
+describe('determineUnitTestRunner', () => {
+  const base = {
+    interactive: false,
+    workspaces: true,
+    name: 'myorg',
+    linter: 'oxlint',
+  } as any;
+
+  const stacks: Record<
+    string,
+    { args: Record<string, unknown>; expected: string; excluded: string }
+  > = {
+    'react (vite)': {
+      args: {
+        stack: 'react',
+        preset: Preset.ReactMonorepo,
+        appName: 'app',
+        framework: 'none',
+        style: 'css',
+        bundler: 'vite',
+        e2eTestRunner: 'playwright',
+        useReactRouter: false,
+        workspaceType: 'integrated',
+      },
+      expected: 'vitest',
+      excluded: '',
+    },
+    'react (webpack)': {
+      args: {
+        stack: 'react',
+        preset: Preset.ReactMonorepo,
+        appName: 'app',
+        framework: 'none',
+        style: 'css',
+        bundler: 'webpack',
+        e2eTestRunner: 'playwright',
+        useReactRouter: false,
+        workspaceType: 'integrated',
+      },
+      expected: 'jest',
+      excluded: '',
+    },
+    vue: {
+      args: {
+        stack: 'vue',
+        preset: Preset.VueMonorepo,
+        appName: 'app',
+        framework: 'none',
+        style: 'css',
+        e2eTestRunner: 'playwright',
+        workspaceType: 'integrated',
+      },
+      expected: 'vitest',
+      excluded: 'jest',
+    },
+    node: {
+      args: {
+        stack: 'node',
+        preset: Preset.NodeMonorepo,
+        appName: 'app',
+        framework: 'none',
+        docker: false,
+        e2eTestRunner: 'jest',
+        workspaceType: 'integrated',
+      },
+      expected: 'jest',
+      excluded: '',
+    },
+  };
+
+  beforeEach(() => {
+    (clack.autocomplete as jest.Mock).mockClear();
+  });
+
+  it.each(Object.keys(stacks))(
+    'should answer %s with its preferred runner when not interactive',
+    async (stack) => {
+      const { args, expected } = stacks[stack];
+
+      const result = await determinePresetOptions({ ...base, ...args } as any);
+
+      expect(result.unitTestRunner).toBe(expected);
+    }
+  );
+
+  it.each(Object.keys(stacks).filter((s) => stacks[s].excluded))(
+    'should not offer %s an excluded runner',
+    async (stack) => {
+      const { args, excluded } = stacks[stack];
+      (clack.autocomplete as jest.Mock).mockImplementation(
+        async ({ options }) => options[0].value
+      );
+
+      await determinePresetOptions({
+        ...base,
+        ...args,
+        interactive: true,
+      } as any);
+
+      const question = (clack.autocomplete as jest.Mock).mock.calls
+        .map(([q]) => q)
+        .find((q) => String(q?.message ?? '').includes('unit test runner'));
+      expect(question).toBeDefined();
+      expect(
+        question.options.map((o: { value: string }) => o.value)
+      ).not.toContain(excluded);
     }
   );
 });

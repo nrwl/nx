@@ -1,4 +1,3 @@
-import enquirer from 'enquirer';
 import yargs from 'yargs';
 import chalk from 'chalk';
 
@@ -26,8 +25,11 @@ import {
   determineNxCloud,
   determineNxCloudV2,
   determinePackageManager,
+  determineFormatterOptions,
   determineTemplate,
+  FORMATTERS,
   LINTERS,
+  type Formatter,
   type Linter,
 } from '../src/internal-utils/prompts';
 import {
@@ -50,9 +52,15 @@ import {
   CnwErrorCode,
   mapErrorToBodyLines,
 } from '../src/utils/error-utils';
+import { exitAsInterrupted } from '../src/utils/exit-codes';
 import { existsSync } from 'fs';
 import { basename, dirname, isAbsolute, join, resolve } from 'path';
 import { isCI } from '../src/utils/ci/is-ci';
+import {
+  selectPrompt,
+  textPrompt,
+  confirmationPrompt,
+} from '../src/internal-utils/prompt-helpers';
 import { isGhCliAvailable } from '../src/utils/git/git';
 import {
   isAiAgent,
@@ -97,7 +105,7 @@ type AngularUnitTestRunner =
 interface BaseArguments extends CreateWorkspaceOptions {
   preset?: Preset;
   linter?: Linter;
-  formatter?: 'none' | 'prettier';
+  formatter?: Formatter;
   workspaces?: boolean;
   useProjectJson?: boolean;
 }
@@ -155,7 +163,7 @@ interface NodeArguments extends BaseArguments {
   appName: string;
   framework: 'none' | 'express' | 'fastify' | 'koa' | 'nest';
   docker: boolean;
-  unitTestRunner: 'none' | 'jest';
+  unitTestRunner: 'none' | 'jest' | 'vitest';
 }
 
 interface WebArguments extends BaseArguments {
@@ -252,6 +260,9 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           .option('formatter', {
             describe: chalk.dim`Code formatter to use.`,
             type: 'string',
+            // Fail at the CLI on a typo rather than downstream in schema
+            // validation, where the message is much further from the cause.
+            choices: FORMATTERS,
           })
           // `choices` is load-bearing, not documentation: `determineLinterOptions`
           // returns `--linter` as-is and nothing downstream validates it — the
@@ -366,8 +377,10 @@ ${chalk.cyan('Documentation:')}
   );
 }
 
-// Node 24 has stricter readline behavior, and enquirer is not checking for closed state
-// when invoking operations, thus you get an ERR_USE_AFTER_CLOSE error.
+// Node 24's stricter readline throws ERR_USE_AFTER_CLOSE when a prompt library
+// operates on a closed interface. Added for enquirer, which this package no
+// longer uses; verify against Node 24 before removing.
+// TODO(v24): drop if @clack/prompts proves not to need it.
 process.on('uncaughtException', (error: unknown) => {
   if (
     error &&
@@ -416,7 +429,7 @@ process.on('SIGINT', async () => {
     });
   }
 
-  process.exit(130); // Standard exit code for SIGINT
+  exitAsInterrupted();
 });
 
 let rawArgs: Arguments;
@@ -499,6 +512,12 @@ async function handleError(error: unknown): Promise<void> {
       aiAgent: isAiAgent(),
     },
   });
+
+  // Cancelling is not a failure: no "Failed to create workspace" banner, and
+  // the process ends as interrupted rather than with a generic error code.
+  if (error instanceof CnwError && error.code === 'CANCELLED') {
+    exitAsInterrupted();
+  }
 
   // Output error in appropriate format
   if (isAiAgent()) {
@@ -807,10 +826,6 @@ async function normalizeArgsMiddleware(
       if (e instanceof CnwError) {
         throw e;
       }
-      // Enquirer throws an empty string when user presses Ctrl+C
-      if (e === '') {
-        process.exit(130);
-      }
       const message = e instanceof Error ? e.message : String(e);
       throw new CnwError('UNKNOWN', message);
     }
@@ -970,31 +985,20 @@ export async function determineFolder(
 }
 
 async function promptCreateInCurrentDir(dirName: string): Promise<boolean> {
-  const { useCurrentDir } = await enquirer.prompt<{
-    useCurrentDir: 'Yes' | 'No';
-  }>([
-    {
-      name: 'useCurrentDir',
-      message: `Create workspace in the current directory (${dirName})? Existing files may be overwritten.`,
-      type: 'autocomplete',
-      choices: [{ name: 'Yes' }, { name: 'No' }],
-      initial: 0,
-    },
-  ]);
-  return useCurrentDir === 'Yes';
+  return confirmationPrompt({
+    message: `Create workspace in the current directory (${dirName})? Existing files may be overwritten.`,
+  });
 }
 
 async function promptForFolder(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<string> {
-  const reply = await enquirer.prompt<{ folderName: string }>([
-    {
-      name: 'folderName',
+  const reply = {
+    folderName: await textPrompt({
       message: `Where would you like to create your workspace?`,
-      initial: 'org',
-      type: 'input',
+      initialValue: 'org',
       skip: !parsedArgs.interactive || isCI(),
-      validate: (value: string): string | true => {
+      validate: (value: string): string | undefined => {
         if (!value) {
           return 'Folder name cannot be empty';
         }
@@ -1004,10 +1008,10 @@ async function promptForFolder(
         if (existsSync(value)) {
           return `The directory '${value}' already exists`;
         }
-        return true;
+        return undefined;
       },
-    },
-  ]);
+    }),
+  };
 
   // Fallback invariants in case validate is bypassed (e.g., in CI or non-interactive mode)
   invariant(
@@ -1067,40 +1071,30 @@ async function determineStack(
     }
   }
 
-  const { stack } = await enquirer.prompt<{
-    stack: 'none' | 'react' | 'angular' | 'node' | 'vue';
-  }>([
-    {
-      name: 'stack',
-      message: `Which stack do you want to use?`,
-      type: 'autocomplete',
-      choices: [
-        {
-          name: `none`,
-          message:
-            process.env.NX_ADD_PLUGINS !== 'false' && parsedArgs.workspaces
-              ? `None:          Configures a TypeScript/JavaScript monorepo.`
-              : `None:          Configures a TypeScript/JavaScript project with minimal structure.`,
-        },
-        {
-          name: `react`,
-          message: `React:         Configures a React application with your framework of choice.`,
-        },
-        {
-          name: `vue`,
-          message: `Vue:           Configures a Vue application with your framework of choice.`,
-        },
-        {
-          name: `angular`,
-          message: `Angular:       Configures a Angular application with modern tooling.`,
-        },
-        {
-          name: `node`,
-          message: `Node:          Configures a Node API application with your framework of choice.`,
-        },
-      ],
-    },
-  ]);
+  const stack = await selectPrompt<
+    'none' | 'react' | 'angular' | 'node' | 'vue'
+  >({
+    message: `Which stack do you want to use?`,
+    choices: [
+      { value: `none` },
+      {
+        value: `react`,
+        label: `React:         Configures a React application with your framework of choice.`,
+      },
+      {
+        value: `vue`,
+        label: `Vue:           Configures a Vue application with your framework of choice.`,
+      },
+      {
+        value: `angular`,
+        label: `Angular:       Configures a Angular application with modern tooling.`,
+      },
+      {
+        value: `node`,
+        label: `Node:          Configures a Node API application with your framework of choice.`,
+      },
+    ],
+  });
 
   return stack;
 }
@@ -1128,41 +1122,17 @@ export async function determinePresetOptions(
 
 /**
  * `web-components` prompts for nothing of its own — `style` and `e2eTestRunner`
- * come from the CLI or fall back downstream — but the preset does generate a
- * lintable app, so it still needs a linter.
+ * come from the CLI or fall back downstream — but the preset does generate an
+ * app that is both linted and formatted, so it needs both answers.
  */
 async function determineWebOptions(
   parsedArgs: yargs.Arguments<WebArguments>
 ): Promise<Partial<WebArguments>> {
-  return { linter: await determineLinterOptions(parsedArgs) };
-}
-
-async function determineFormatterOptions(
-  args: {
-    formatter?: 'none' | 'prettier';
-    interactive?: boolean;
-  },
-  opts?: { preferPrettier?: boolean }
-) {
-  if (args.formatter) return args.formatter;
-  const reply = await enquirer.prompt<{ prettier: 'Yes' | 'No' }>([
-    {
-      name: 'prettier',
-      message: `Would you like to use Prettier for code formatting?`,
-      type: 'autocomplete',
-      choices: [
-        {
-          name: 'Yes',
-        },
-        {
-          name: 'No',
-        },
-      ],
-      initial: opts?.preferPrettier ? 0 : 1,
-      skip: !args.interactive || isCI(),
-    },
-  ]);
-  return reply.prettier === 'Yes' ? 'prettier' : 'none';
+  // Property order is the prompt order here - each `await` runs where it sits.
+  return {
+    formatter: await determineFormatterOptions(parsedArgs),
+    linter: await determineLinterOptions(parsedArgs),
+  };
 }
 
 async function determineNoneOptions(
@@ -1201,7 +1171,9 @@ async function determineNoneOptions(
     }
 
     if (preset === Preset.TS) {
-      return { preset, formatter: 'prettier' };
+      // Asked here too: the workspaces variant above already prompts, and this
+      // preset reaches `@nx/js:init`, which sets the formatter up either way.
+      return { preset, formatter: await determineFormatterOptions(parsedArgs) };
     }
 
     if (parsedArgs.js !== undefined) {
@@ -1209,37 +1181,41 @@ async function determineNoneOptions(
     } else if (preset === Preset.TsStandalone) {
       // Only standalone TS preset generates a default package, so we need to provide --js and --appName options.
       appName = parsedArgs.name;
-      const reply = await enquirer.prompt<{ ts: 'Yes' | 'No' }>([
-        {
-          name: 'ts',
-          message: `Would you like to use TypeScript with this project?`,
-          type: 'autocomplete',
-          choices: [
-            {
-              name: 'Yes',
-            },
-            {
-              name: 'No',
-            },
-          ],
-          initial: 0,
-          skip: !parsedArgs.interactive || isCI(),
-        },
-      ]);
-      js = reply.ts === 'No';
+      js = !(await confirmationPrompt({
+        message: `Would you like to use TypeScript with this project?`,
+        skip: !parsedArgs.interactive || isCI(),
+        skippedValue: true,
+      }));
     }
 
-    // `ts-standalone` is the only preset on this stack that generates a
-    // lintable project; `apps`, `ts` and `npm` reach no generator that takes a
-    // linter, so asking would discard the answer.
+    // `ts-standalone` is the only preset left to ask here: `ts` returned above
+    // with its own prompt, and `apps` and `npm` generate no project, so nothing
+    // downstream would apply an answer. An explicit `--formatter` still carries.
+    const formatter =
+      preset === Preset.TsStandalone
+        ? await determineFormatterOptions(parsedArgs)
+        : parsedArgs.formatter;
+
+    // Same rule for the linter: `ts-standalone` is also the only preset here
+    // that generates a lintable project, so asking would discard the answer.
     const linter =
       preset === Preset.TsStandalone
         ? await determineLinterOptions(parsedArgs)
         : undefined;
 
-    // Omitted rather than set to `undefined`: the caller `Object.assign`s this
-    // over `argv`, so an explicit key would clobber a user's `--linter`.
-    return { preset, js, appName, ...(linter ? { linter } : {}) };
+    // Both keys are omitted rather than set to `undefined`: the caller
+    // `Object.assign`s this over `argv`, so an explicit key would clobber the
+    // user's own flag. Forwarding `--formatter` only when it was given is what
+    // keeps a plain `--preset=npm` identical to before - with nothing set,
+    // `@nx/workspace:new`'s `"default": "none"` applies and no formatter is
+    // installed, which is these presets' long-standing behaviour.
+    return {
+      preset,
+      js,
+      appName,
+      ...(formatter ? { formatter } : {}),
+      ...(linter ? { linter } : {}),
+    };
   }
 }
 
@@ -1257,7 +1233,6 @@ async function determineReactOptions(
   let nextAppDir = false;
   let nextSrcDir = false;
   let linter: undefined | Linter;
-  let formatter: undefined | 'none' | 'prettier';
 
   const workspaces = parsedArgs.workspaces;
 
@@ -1320,72 +1295,60 @@ async function determineReactOptions(
     preset === Preset.NextJs ||
     preset === Preset.NextJsStandalone
   ) {
-    const reply = await enquirer.prompt<{ style: string }>([
-      {
-        name: 'style',
+    const reply = {
+      style: await selectPrompt<string>({
         message: `Default stylesheet format`,
-        initial: 0,
-        type: 'autocomplete',
-        skip: !parsedArgs.interactive || isCI(),
         choices: [
+          { value: 'css', label: 'CSS' },
           {
-            name: 'css',
-            message: 'CSS',
+            value: 'scss',
+            label: 'SASS(.scss)       [ https://sass-lang.com   ]',
           },
           {
-            name: 'scss',
-            message: 'SASS(.scss)       [ https://sass-lang.com   ]',
+            value: 'less',
+            label: 'LESS              [ https://lesscss.org     ]',
           },
           {
-            name: 'less',
-            message: 'LESS              [ https://lesscss.org     ]',
-          },
-          {
-            name: 'styled-components',
-            message:
+            value: 'styled-components',
+            label:
               'styled-components [ https://styled-components.com            ]',
           },
           {
-            name: '@emotion/styled',
-            message:
+            value: '@emotion/styled',
+            label:
               'emotion           [ https://emotion.sh                       ]',
           },
           {
-            name: 'styled-jsx',
-            message:
+            value: 'styled-jsx',
+            label:
               'styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]',
           },
         ],
-      },
-    ]);
+        initial: 'css',
+        skip: !parsedArgs.interactive || isCI(),
+      }),
+    };
     style = reply.style;
   }
 
-  // Asked outside the gate: the linter is independent of package-manager
-  // workspaces, and `--no-workspaces` used to force ESLint without asking.
+  // Asked outside the gate: neither answer depends on package-manager
+  // workspaces, and `--no-workspaces` used to force prettier and ESLint
+  // without asking.
+  const formatter = await determineFormatterOptions(parsedArgs);
   linter = await determineLinterOptions(parsedArgs);
   if (preset === Preset.ReactStandalone || preset === Preset.ReactMonorepo) {
     unitTestRunner = await determineUnitTestRunner(parsedArgs, {
       preferVitest: bundler === 'vite',
     });
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
-  } else if (
-    preset === Preset.NextJs ||
-    preset === Preset.NextJsStandalone ||
-    preset === Preset.ReactNative ||
-    preset === Preset.Expo
-  ) {
+  } else if (preset === Preset.NextJs || preset === Preset.NextJsStandalone) {
+    unitTestRunner = await determineUnitTestRunner(parsedArgs);
+    e2eTestRunner = await determineE2eTestRunner(parsedArgs);
+  } else if (preset === Preset.ReactNative || preset === Preset.Expo) {
     unitTestRunner = await determineUnitTestRunner(parsedArgs, {
       exclude: 'vitest',
     });
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
-  }
-  if (workspaces) {
-    formatter = await determineFormatterOptions(parsedArgs, {
-      preferPrettier: true,
-    });
-  } else {
-    formatter = 'prettier';
   }
 
   return {
@@ -1414,7 +1377,6 @@ async function determineVueOptions(
   let unitTestRunner: undefined | 'none' | 'vitest' = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
   let linter: undefined | Linter;
-  let formatter: undefined | 'none' | 'prettier';
 
   const workspaces = parsedArgs.workspaces;
 
@@ -1455,50 +1417,37 @@ async function determineVueOptions(
   if (parsedArgs.style) {
     style = parsedArgs.style;
   } else {
-    const reply = await enquirer.prompt<{ style: string }>([
-      {
-        name: 'style',
+    const reply = {
+      style: await selectPrompt<string>({
         message: `Default stylesheet format`,
-        initial: 0,
-        type: 'autocomplete',
-        skip: !parsedArgs.interactive || isCI(),
         choices: [
+          { value: 'css', label: 'CSS' },
           {
-            name: 'css',
-            message: 'CSS',
+            value: 'scss',
+            label: 'SASS(.scss)       [ https://sass-lang.com   ]',
           },
           {
-            name: 'scss',
-            message: 'SASS(.scss)       [ https://sass-lang.com   ]',
+            value: 'less',
+            label: 'LESS              [ https://lesscss.org     ]',
           },
-          {
-            name: 'less',
-            message: 'LESS              [ https://lesscss.org     ]',
-          },
-          {
-            name: 'none',
-            message: 'None',
-          },
+          { value: 'none', label: 'None' },
         ],
-      },
-    ]);
+        initial: 'css',
+        skip: !parsedArgs.interactive || isCI(),
+      }),
+    };
     style = reply.style;
   }
 
-  // Asked outside the gate: the linter is independent of package-manager
-  // workspaces, and `--no-workspaces` used to force ESLint without asking.
+  // Asked outside the gate: neither answer depends on package-manager
+  // workspaces, and `--no-workspaces` used to force prettier and ESLint
+  // without asking.
+  const formatter = await determineFormatterOptions(parsedArgs);
   linter = await determineLinterOptions(parsedArgs);
   unitTestRunner = await determineUnitTestRunner(parsedArgs, {
     exclude: 'jest',
   });
   e2eTestRunner = await determineE2eTestRunner(parsedArgs);
-  if (workspaces) {
-    formatter = await determineFormatterOptions(parsedArgs, {
-      preferPrettier: true,
-    });
-  } else {
-    formatter = 'prettier';
-  }
 
   return {
     preset,
@@ -1527,6 +1476,7 @@ async function determineAngularOptions(
   const routing = parsedArgs.routing;
   const prefix = parsedArgs.prefix;
   const zoneless = parsedArgs.zoneless;
+  const workspaces = parsedArgs.workspaces;
 
   if (prefix) {
     // https://github.com/angular/angular-cli/blob/main/packages/schematics/angular/utility/validation.ts#L11-L14
@@ -1576,81 +1526,66 @@ async function determineAngularOptions(
     }
     bundler = parsedArgs.bundler;
   } else {
-    const reply = await enquirer.prompt<{ bundler: 'esbuild' | 'webpack' }>([
-      {
-        name: 'bundler',
+    const reply = {
+      bundler: await selectPrompt<(typeof validAngularBundlers)[number]>({
         message: `Which bundler would you like to use?`,
-        type: 'autocomplete',
-        skip: !parsedArgs.interactive || isCI(),
         choices: [
-          {
-            name: 'esbuild',
-            message: 'esbuild [ https://esbuild.github.io/ ]',
-          },
-          {
-            name: 'rspack',
-            message: 'Rspack [ https://rspack.dev/ ]',
-          },
-          {
-            name: 'webpack',
-            message: 'Webpack [ https://webpack.js.org/ ]',
-          },
+          { value: 'esbuild', label: 'esbuild [ https://esbuild.github.io/ ]' },
+          { value: 'rspack', label: 'Rspack [ https://rspack.dev/ ]' },
+          { value: 'webpack', label: 'Webpack [ https://webpack.js.org/ ]' },
         ],
-        initial: 0,
-      },
-    ]);
+        initial: 'esbuild',
+        skip: !parsedArgs.interactive || isCI(),
+      }),
+    };
     bundler = reply.bundler;
   }
 
   if (parsedArgs.style) {
     style = parsedArgs.style;
   } else {
-    const reply = await enquirer.prompt<{ style: string }>([
-      {
-        name: 'style',
+    const reply = {
+      style: await selectPrompt<string>({
         message: `Default stylesheet format`,
-        initial: 0,
-        type: 'autocomplete',
-        skip: !parsedArgs.interactive || isCI(),
         choices: [
+          { value: 'css', label: 'CSS' },
           {
-            name: 'css',
-            message: 'CSS',
+            value: 'scss',
+            label: 'SASS(.scss)       [ https://sass-lang.com   ]',
           },
           {
-            name: 'scss',
-            message: 'SASS(.scss)       [ https://sass-lang.com   ]',
-          },
-          {
-            name: 'less',
-            message: 'LESS              [ https://lesscss.org     ]',
+            value: 'less',
+            label: 'LESS              [ https://lesscss.org     ]',
           },
         ],
-      },
-    ]);
+        initial: 'css',
+        skip: !parsedArgs.interactive || isCI(),
+      }),
+    };
     style = reply.style;
   }
 
   if (parsedArgs.ssr !== undefined) {
     ssr = parsedArgs.ssr;
   } else {
-    const reply = await enquirer.prompt<{ ssr: 'Yes' | 'No' }>([
-      {
-        name: 'ssr',
+    const reply = {
+      ssr: (await confirmationPrompt({
         message: `Do you want to enable Server-Side Rendering (SSR)${
           bundler !== 'rspack'
             ? ' and Static Site Generation (SSG/Prerendering)?'
             : '?'
         }`,
-        type: 'autocomplete',
-        choices: [{ name: 'Yes' }, { name: 'No' }],
-        initial: 1,
+        initial: false,
         skip: !parsedArgs.interactive || isCI(),
-      },
-    ]);
+        skippedValue: true,
+      }))
+        ? ('Yes' as const)
+        : ('No' as const),
+    };
     ssr = reply.ssr === 'Yes';
   }
 
+  const formatter = await determineFormatterOptions(parsedArgs);
   const linter = await determineLinterOptions(parsedArgs);
 
   if (parsedArgs.unitTestRunner) {
@@ -1658,43 +1593,34 @@ async function determineAngularOptions(
   } else if (!parsedArgs.workspaces) {
     unitTestRunner = undefined;
   } else {
-    unitTestRunner = await enquirer
-      .prompt<{
-        unitTestRunner: 'none' | 'jest' | 'vitest-angular' | 'vitest-analog';
-      }>([
+    unitTestRunner = (await selectPrompt<AngularUnitTestRunner>({
+      message: 'Which unit test runner would you like to use?',
+      skip: !parsedArgs.interactive || isCI(),
+      choices: [
+        ...(bundler === 'esbuild'
+          ? [
+              {
+                value: 'vitest-angular' as const,
+                label:
+                  'Vitest & Angular [ https://vitest.dev/ & https://angular.dev ]',
+              },
+            ]
+          : []),
         {
-          message: 'Which unit test runner would you like to use?',
-          type: 'autocomplete',
-          name: 'unitTestRunner',
-          skip: !parsedArgs.interactive || isCI(),
-          choices: [
-            ...(bundler === 'esbuild'
-              ? [
-                  {
-                    name: 'vitest-angular',
-                    message:
-                      'Vitest & Angular [ https://vitest.dev/ & https://angular.dev ]',
-                  },
-                ]
-              : []),
-            {
-              name: 'vitest-analog',
-              message:
-                'Vitest & Analog  [ https://vitest.dev/ & https://analogjs.org/ ]',
-            },
-            {
-              name: 'jest',
-              message: 'Jest             [ https://jestjs.io/ ]',
-            },
-            {
-              name: 'none',
-              message: 'None',
-            },
-          ],
-          initial: 0,
+          value: 'vitest-analog' as const,
+          label:
+            'Vitest & Analog  [ https://vitest.dev/ & https://analogjs.org/ ]',
         },
-      ])
-      .then((r) => r.unitTestRunner as AngularUnitTestRunner);
+        {
+          value: 'jest' as const,
+          label: 'Jest             [ https://jestjs.io/ ]',
+        },
+        {
+          value: 'none' as const,
+          label: 'None',
+        },
+      ],
+    })) as AngularUnitTestRunner;
   }
 
   e2eTestRunner = await determineE2eTestRunner(parsedArgs);
@@ -1712,6 +1638,8 @@ async function determineAngularOptions(
     prefix,
     zoneless,
     linter,
+    formatter,
+    workspaces,
   };
 }
 
@@ -1723,8 +1651,7 @@ async function determineNodeOptions(
   let framework: 'express' | 'fastify' | 'koa' | 'nest' | 'none';
   let docker: boolean;
   let linter: undefined | Linter;
-  let formatter: undefined | 'none' | 'prettier';
-  let unitTestRunner: undefined | 'none' | 'jest' = undefined;
+  let unitTestRunner: undefined | 'none' | 'jest' | 'vitest' = undefined;
   const workspaces = parsedArgs.workspaces;
 
   if (parsedArgs.preset) {
@@ -1763,41 +1690,26 @@ async function determineNodeOptions(
   if (parsedArgs.docker !== undefined) {
     docker = parsedArgs.docker;
   } else {
-    const reply = await enquirer.prompt<{ docker: 'Yes' | 'No' }>([
-      {
-        name: 'docker',
+    const reply = {
+      docker: (await confirmationPrompt({
         message:
           'Would you like to generate a Dockerfile? [https://docs.docker.com/]',
-        type: 'autocomplete',
+        initial: false,
         skip: !parsedArgs.interactive || isCI(),
-        choices: [
-          {
-            name: 'Yes',
-            hint: 'I want to generate a Dockerfile',
-          },
-          {
-            name: 'No',
-          },
-        ],
-        initial: 1,
-      },
-    ]);
+        skippedValue: true,
+      }))
+        ? ('Yes' as const)
+        : ('No' as const),
+    };
     docker = reply.docker === 'Yes';
   }
 
-  // Asked outside the gate: the linter is independent of package-manager
-  // workspaces, and `--no-workspaces` used to force ESLint without asking.
+  // Asked outside the gate: neither answer depends on package-manager
+  // workspaces, and `--no-workspaces` used to force prettier and ESLint
+  // without asking.
+  const formatter = await determineFormatterOptions(parsedArgs);
   linter = await determineLinterOptions(parsedArgs);
-  unitTestRunner = await determineUnitTestRunner(parsedArgs, {
-    exclude: 'vitest',
-  });
-  if (workspaces) {
-    formatter = await determineFormatterOptions(parsedArgs, {
-      preferPrettier: true,
-    });
-  } else {
-    formatter = 'prettier';
-  }
+  unitTestRunner = await determineUnitTestRunner(parsedArgs);
 
   return {
     preset,
@@ -1814,33 +1726,29 @@ async function determineNodeOptions(
 async function determinePackageBasedOrIntegratedOrStandalone(): Promise<
   'package-based' | 'integrated' | 'standalone'
 > {
-  const { workspaceType } = await enquirer.prompt<{
-    workspaceType: 'standalone' | 'integrated' | 'package-based';
-  }>([
-    {
-      type: 'autocomplete',
-      name: 'workspaceType',
-      message: `Package-based monorepo, integrated monorepo, or standalone project?`,
-      initial: 0,
-      choices: [
-        {
-          name: 'package-based',
-          message:
-            'Package-based Monorepo:     Nx makes it fast, but lets you run things your way.',
-        },
-        {
-          name: 'integrated',
-          message:
-            'Integrated Monorepo:        Nx creates a monorepo that contains multiple projects.',
-        },
-        {
-          name: 'standalone',
-          message:
-            'Standalone:                 Nx creates a single project and makes it fast.',
-        },
-      ],
-    },
-  ]);
+  const workspaceType = await selectPrompt<
+    'standalone' | 'integrated' | 'package-based'
+  >({
+    message: `Package-based monorepo, integrated monorepo, or standalone project?`,
+    choices: [
+      {
+        value: 'package-based',
+        label:
+          'Package-based Monorepo:     Nx makes it fast, but lets you run things your way.',
+      },
+      {
+        value: 'integrated',
+        label:
+          'Integrated Monorepo:        Nx creates a monorepo that contains multiple projects.',
+      },
+      {
+        value: 'standalone',
+        label:
+          'Standalone:                 Nx creates a single project and makes it fast.',
+      },
+    ],
+    initial: 'package-based',
+  });
 
   invariant(
     workspaceType,
@@ -1854,28 +1762,22 @@ async function determinePackageBasedOrIntegratedOrStandalone(): Promise<
 async function determineStandaloneOrMonorepo(): Promise<
   'integrated' | 'standalone'
 > {
-  const { workspaceType } = await enquirer.prompt<{
-    workspaceType: 'standalone' | 'integrated';
-  }>([
-    {
-      type: 'autocomplete',
-      name: 'workspaceType',
-      message: `Integrated monorepo, or standalone project?`,
-      initial: 1,
-      choices: [
-        {
-          name: 'integrated',
-          message:
-            'Integrated Monorepo:  Nx creates a monorepo that contains multiple projects.',
-        },
-        {
-          name: 'standalone',
-          message:
-            'Standalone:           Nx creates a single project and makes it fast.',
-        },
-      ],
-    },
-  ]);
+  const workspaceType = await selectPrompt<'standalone' | 'integrated'>({
+    message: `Integrated monorepo, or standalone project?`,
+    choices: [
+      {
+        value: 'integrated',
+        label:
+          'Integrated Monorepo:  Nx creates a monorepo that contains multiple projects.',
+      },
+      {
+        value: 'standalone',
+        label:
+          'Standalone:           Nx creates a single project and makes it fast.',
+      },
+    ],
+    initial: 'standalone',
+  });
 
   invariant(
     workspaceType,
@@ -1893,15 +1795,15 @@ async function determineAppName(
 ): Promise<string> {
   if (parsedArgs.appName) return parsedArgs.appName;
 
-  const { appName } = await enquirer.prompt<{ appName: string }>([
-    {
-      name: 'appName',
-      message: `Application name`,
-      type: 'input',
-      initial: parsedArgs.name,
-      skip: !parsedArgs.interactive || isCI(),
-    },
-  ]);
+  const appName = await textPrompt({
+    message: `Application name`,
+    initialValue: parsedArgs.name,
+    skip: !parsedArgs.interactive || isCI(),
+    // Reject here so clearing the field re-prompts. The invariant below still
+    // guards the skipped path, where no validator runs.
+    validate: (value) =>
+      value.trim() ? undefined : 'Application name cannot be empty',
+  });
   invariant(appName, 'INVALID_APP_NAME', 'App name cannot be empty');
   return appName;
 }
@@ -1917,35 +1819,25 @@ async function determineReactFramework(
     return 'none';
   }
 
-  const reply = await enquirer.prompt<{
-    framework: 'none' | 'next' | 'expo' | 'react-native';
-  }>([
-    {
-      name: 'framework',
+  const reply = {
+    framework: await selectPrompt<'none' | 'next' | 'expo' | 'react-native'>({
       message: 'What framework would you like to use?',
-      type: 'autocomplete',
       choices: [
         {
-          name: 'none',
-          message: 'None',
+          value: 'none',
+          label: 'None',
           hint: '         I only want react, react-dom or react-router',
         },
+        { value: 'next', label: 'Next.js       [ https://nextjs.org/       ]' },
+        { value: 'expo', label: 'Expo          [ https://expo.io/          ]' },
         {
-          name: 'next',
-          message: 'Next.js       [ https://nextjs.org/       ]',
-        },
-        {
-          name: 'expo',
-          message: 'Expo          [ https://expo.io/          ]',
-        },
-        {
-          name: 'react-native',
-          message: 'React Native  [ https://reactnative.dev/  ]',
+          value: 'react-native',
+          label: 'React Native  [ https://reactnative.dev/  ]',
         },
       ],
-      initial: 0,
-    },
-  ]);
+      initial: 'none',
+    }),
+  };
   return reply.framework;
 }
 
@@ -1953,31 +1845,18 @@ async function determineReactBundler(
   parsedArgs: yargs.Arguments<ReactArguments>
 ): Promise<'webpack' | 'vite' | 'rspack'> {
   if (parsedArgs.bundler) return parsedArgs.bundler;
-  const reply = await enquirer.prompt<{
-    bundler: 'webpack' | 'vite' | 'rspack';
-  }>([
-    {
-      name: 'bundler',
+  const reply = {
+    bundler: await selectPrompt<'webpack' | 'vite' | 'rspack'>({
       message: `Which bundler would you like to use?`,
-      type: 'autocomplete',
-      skip: !parsedArgs.interactive || isCI(),
       choices: [
-        {
-          name: 'vite',
-          message: 'Vite    [ https://vite.dev/     ]',
-        },
-        {
-          name: 'webpack',
-          message: 'Webpack [ https://webpack.js.org/ ]',
-        },
-        {
-          name: 'rspack',
-          message: 'Rspack  [ https://www.rspack.dev/ ]',
-        },
+        { value: 'vite', label: 'Vite    [ https://vite.dev/     ]' },
+        { value: 'webpack', label: 'Webpack [ https://webpack.js.org/ ]' },
+        { value: 'rspack', label: 'Rspack  [ https://www.rspack.dev/ ]' },
       ],
-      initial: 0,
-    },
-  ]);
+      initial: 'vite',
+      skip: !parsedArgs.interactive || isCI(),
+    }),
+  };
   return reply.bundler;
 }
 
@@ -1985,23 +1864,15 @@ async function determineNextAppDir(
   parsedArgs: yargs.Arguments<ReactArguments>
 ): Promise<boolean> {
   if (parsedArgs.nextAppDir !== undefined) return parsedArgs.nextAppDir;
-  const reply = await enquirer.prompt<{ nextAppDir: 'Yes' | 'No' }>([
-    {
-      name: 'nextAppDir',
+  const reply = {
+    nextAppDir: (await confirmationPrompt({
       message: 'Would you like to use the App Router (recommended)?',
-      type: 'autocomplete',
       skip: !parsedArgs.interactive || isCI(),
-      choices: [
-        {
-          name: 'Yes',
-        },
-        {
-          name: 'No',
-        },
-      ],
-      initial: 0,
-    },
-  ]);
+      skippedValue: true,
+    }))
+      ? ('Yes' as const)
+      : ('No' as const),
+  };
   return reply.nextAppDir === 'Yes';
 }
 
@@ -2009,23 +1880,15 @@ async function determineNextSrcDir(
   parsedArgs: yargs.Arguments<ReactArguments>
 ): Promise<boolean> {
   if (parsedArgs.nextSrcDir !== undefined) return parsedArgs.nextSrcDir;
-  const reply = await enquirer.prompt<{ nextSrcDir: 'Yes' | 'No' }>([
-    {
-      name: 'nextSrcDir',
+  const reply = {
+    nextSrcDir: (await confirmationPrompt({
       message: 'Would you like to use the src/ directory?',
-      type: 'autocomplete',
       skip: !parsedArgs.interactive || isCI(),
-      choices: [
-        {
-          name: 'Yes',
-        },
-        {
-          name: 'No',
-        },
-      ],
-      initial: 0,
-    },
-  ]);
+      skippedValue: true,
+    }))
+      ? ('Yes' as const)
+      : ('No' as const),
+  };
   return reply.nextSrcDir === 'Yes';
 }
 
@@ -2033,28 +1896,17 @@ async function determineVueFramework(
   parsedArgs: yargs.Arguments<VueArguments>
 ): Promise<'none' | 'nuxt'> {
   if (!!parsedArgs.framework) return parsedArgs.framework;
-  const reply = await enquirer.prompt<{
-    framework: 'none' | 'nuxt';
-  }>([
-    {
-      name: 'framework',
+  const reply = {
+    framework: await selectPrompt<'none' | 'nuxt'>({
       message: 'What framework would you like to use?',
-      type: 'autocomplete',
-      skip: !parsedArgs.interactive || isCI(),
       choices: [
-        {
-          name: 'none',
-          message: 'None',
-          hint: '         I only want Vue',
-        },
-        {
-          name: 'nuxt',
-          message: 'Nuxt          [ https://nuxt.com/ ]',
-        },
+        { value: 'none', label: 'None', hint: '         I only want Vue' },
+        { value: 'nuxt', label: 'Nuxt          [ https://nuxt.com/ ]' },
       ],
-      initial: 0,
-    },
-  ]);
+      initial: 'none',
+      skip: !parsedArgs.interactive || isCI(),
+    }),
+  };
   return reply.framework;
 }
 
@@ -2062,39 +1914,22 @@ async function determineNodeFramework(
   parsedArgs: yargs.Arguments<NodeArguments>
 ): Promise<'express' | 'fastify' | 'koa' | 'nest' | 'none'> {
   if (!!parsedArgs.framework) return parsedArgs.framework;
-  const reply = await enquirer.prompt<{
-    framework: 'express' | 'fastify' | 'koa' | 'nest' | 'none';
-  }>([
-    {
+  const reply = {
+    framework: await selectPrompt<
+      'express' | 'fastify' | 'koa' | 'nest' | 'none'
+    >({
       message: 'What framework should be used?',
-      type: 'autocomplete',
-      name: 'framework',
-      skip: !parsedArgs.interactive || isCI(),
       choices: [
-        {
-          name: 'none',
-          message: 'None',
-        },
-        {
-          name: 'express',
-          message: 'Express [ https://expressjs.com/ ]',
-        },
-        {
-          name: 'fastify',
-          message: 'Fastify [ https://www.fastify.dev/ ]',
-        },
-        {
-          name: 'koa',
-          message: 'Koa     [ https://koajs.com/      ]',
-        },
-        {
-          name: 'nest',
-          message: 'NestJs  [ https://nestjs.com/     ]',
-        },
+        { value: 'none', label: 'None' },
+        { value: 'express', label: 'Express [ https://expressjs.com/ ]' },
+        { value: 'fastify', label: 'Fastify [ https://www.fastify.dev/ ]' },
+        { value: 'koa', label: 'Koa     [ https://koajs.com/      ]' },
+        { value: 'nest', label: 'NestJs  [ https://nestjs.com/     ]' },
       ],
-      initial: 0,
-    },
-  ]);
+      initial: 'none',
+      skip: !parsedArgs.interactive || isCI(),
+    }),
+  };
   return reply.framework;
 }
 
@@ -2115,39 +1950,34 @@ async function determineUnitTestRunner<T extends 'none' | 'jest' | 'vitest'>(
     return undefined;
   }
 
-  const reply = await enquirer.prompt<{
-    unitTestRunner: 'none' | 'jest' | 'vitest';
-  }>([
-    {
+  // `none` sorts last and the preferred runner first, because the leading
+  // choice is both the interactive default and the answer a skipped prompt
+  // resolves to. Callers pass `exclude` to keep a runner they cannot support
+  // off the list entirely.
+  const choices = (
+    [
+      { value: 'none', label: 'None' },
+      { value: 'jest', label: 'Jest   [ https://jestjs.io/ ]' },
+      { value: 'vitest', label: 'Vitest [ https://vitest.dev/ ]' },
+    ] as const
+  )
+    .filter((t) => !options?.exclude || options.exclude !== t.value)
+    .sort((a, b) => {
+      if (a.value === 'none') return 1;
+      if (b.value === 'none') return -1;
+      if (options?.preferVitest && a.value === 'vitest') return -1;
+      if (options?.preferVitest && b.value === 'vitest') return 1;
+      return 0;
+    });
+
+  const reply = {
+    unitTestRunner: await selectPrompt<'none' | 'jest' | 'vitest'>({
       message: 'Which unit test runner would you like to use?',
-      type: 'autocomplete',
-      name: 'unitTestRunner',
+      choices: [...choices],
+      initial: choices[0].value,
       skip: !parsedArgs.interactive || isCI(),
-      choices: [
-        {
-          name: 'none',
-          message: 'None',
-        },
-        {
-          name: 'jest',
-          message: 'Jest   [ https://jestjs.io/ ]',
-        },
-        {
-          name: 'vitest',
-          message: 'Vitest [ https://vitest.dev/ ]',
-        },
-      ]
-        .filter((t) => !options?.exclude || options.exclude !== t.name)
-        .sort((a, b) => {
-          if (a.name === 'none') return 1;
-          if (b.name === 'none') return -1;
-          if (options?.preferVitest && a.name === 'vitest') return -1;
-          if (options?.preferVitest && b.name === 'vitest') return 1;
-          return 0;
-        }),
-      initial: 0, // This should be either vite or jest
-    },
-  ]);
+    }),
+  };
 
   return reply.unitTestRunner as T;
 }
@@ -2158,31 +1988,21 @@ async function determineE2eTestRunner(
   }>
 ): Promise<'none' | 'cypress' | 'playwright'> {
   if (parsedArgs.e2eTestRunner) return parsedArgs.e2eTestRunner;
-  const reply = await enquirer.prompt<{
-    e2eTestRunner: 'none' | 'cypress' | 'playwright';
-  }>([
-    {
+  const reply = {
+    e2eTestRunner: await selectPrompt<'none' | 'cypress' | 'playwright'>({
       message: 'Test runner to use for end to end (E2E) tests',
-      type: 'autocomplete',
-      name: 'e2eTestRunner',
-      skip: !parsedArgs.interactive || isCI(),
       choices: [
         {
-          name: 'playwright',
-          message: 'Playwright [ https://playwright.dev/ ]',
+          value: 'playwright',
+          label: 'Playwright [ https://playwright.dev/ ]',
         },
-        {
-          name: 'cypress',
-          message: 'Cypress [ https://www.cypress.io/ ]',
-        },
-        {
-          name: 'none',
-          message: 'None',
-        },
+        { value: 'cypress', label: 'Cypress [ https://www.cypress.io/ ]' },
+        { value: 'none', label: 'None' },
       ],
-      initial: 0,
-    },
-  ]);
+      initial: 'playwright',
+      skip: !parsedArgs.interactive || isCI(),
+    }),
+  };
   return reply.e2eTestRunner;
 }
 
@@ -2194,26 +2014,15 @@ async function determineReactRouter(
   if (parsedArgs.routing !== undefined && parsedArgs.routing === false)
     return false;
   if (parsedArgs.useReactRouter !== undefined) return parsedArgs.useReactRouter;
-  const reply = await enquirer.prompt<{
-    response: 'Yes' | 'No';
-  }>([
-    {
+  const reply = {
+    response: (await confirmationPrompt({
       message:
         'Would you like to use React Router for server-side rendering [https://reactrouter.com/]?',
-      type: 'autocomplete',
-      name: 'response',
       skip: !parsedArgs.interactive || isCI(),
-      choices: [
-        {
-          name: 'Yes',
-          hint: 'I want to use React Router. (Vite will be selected as the bundler)',
-        },
-        {
-          name: 'No',
-        },
-      ],
-      initial: 0,
-    },
-  ]);
+      skippedValue: true,
+    }))
+      ? ('Yes' as const)
+      : ('No' as const),
+  };
   return reply.response === 'Yes';
 }

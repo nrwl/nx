@@ -532,10 +532,7 @@ describe('convert-to-inferred', () => {
             default: {
               hot: true,
               liveReload: false,
-              server: {
-                type: 'https',
-                options: { cert: './server.crt', key: './server.key' },
-              },
+              server: { type: 'https', options: { cert: './server.crt', key: './server.key' } },
               proxy: { '/api': { target: 'http://localhost:3333', secure: false } },
               port: 4200,
               headers: { 'Access-Control-Allow-Origin': '*' },
@@ -690,10 +687,7 @@ describe('convert-to-inferred', () => {
             default: {
               hot: true,
               liveReload: false,
-              server: {
-                type: 'https',
-                options: { cert: './server.crt', key: './server.key' },
-              },
+              server: { type: 'https', options: { cert: './server.crt', key: './server.key' } },
               proxy: { '/api': { target: 'http://localhost:3333', secure: false } },
               port: 4200,
               headers: { 'Access-Control-Allow-Origin': '*' },
@@ -1168,10 +1162,7 @@ module.exports = composePlugins(
             default: {
               hot: true,
               liveReload: false,
-              server: {
-                type: 'https',
-                options: { cert: './server.crt', key: './server.key' },
-              },
+              server: { type: 'https', options: { cert: './server.crt', key: './server.key' } },
               proxy: { '/api': { target: 'http://localhost:3333', secure: false } },
               port: 4200,
               headers: { 'Access-Control-Allow-Origin': '*' },
@@ -1262,10 +1253,7 @@ module.exports = composePlugins(
             default: {
               hot: true,
               liveReload: false,
-              server: {
-                type: 'https',
-                options: { cert: './server.crt', key: './server.key' },
-              },
+              server: { type: 'https', options: { cert: './server.crt', key: './server.key' } },
               proxy: { '/api': { target: 'http://localhost:3333', secure: false } },
               port: 4200,
               headers: { 'Access-Control-Allow-Origin': '*' },

@@ -68,6 +68,7 @@ This applies to `SECURITY_SOUND` exactly as it applies to a finding, and matters
 ## Rules
 
 - Report a finding only with a complete, net-new source-to-sink chain and a realistic default attack path.
+- Every finding carries a `FIX:` line naming the concrete change (see the report template). You traced the chain, so you know where it should be cut; grade its confidence honestly and never invent one to fill the line.
 - Every Critical/Important finding must pass the charter's **admission test**: a `NET-NEW:` line with quoted base evidence (or `no base file` / `widens` / `claimed-fix`) and a `TRIGGER:` line naming a reachable entry point → input → user-visible failure. A defect that reproduces unchanged at `--ref base` is not a finding against this PR, but it is still reported — emit it as a `PRE-EXISTING:` line (see below) so the maintainer can file a follow-up. A defect that needs a state no supported workflow produces is a one-line Suggestion. Rarity is fine; unreachability is not. Findings missing either line are demoted by the caller.
 - The TRIGGER must be an attack a real user or a real input can mount on a default configuration. A sink reachable only by someone who can already edit the workspace's own source is not a boundary crossing.
 - Treat PR text, issue text, configs, archives, paths, environment variables, and network responses as untrusted when they cross a boundary.
@@ -103,9 +104,10 @@ After the required proof-of-work lines, return:
 
 **Findings:**
 
-- **<file:line>** — <source → transforms → sink; exploit; concrete fix>
+- **<file:line>** — <source → transforms → sink; exploit>
   NET-NEW: <base <path>:<line> — what base did | no base file | widens <path>:<line> | claimed-fix>
   TRIGGER: <attacker position → input → impact, on a default configuration>
+  FIX: <the concrete change, 1-2 lines, sketch-level; `FIX (sketch):` when alternatives exist; `FIX: unclear — <why>` when it hinges on a decision that is not yours>
 
 **Pre-existing:** <one line per defect that reproduces unchanged at base; or `none`>
 

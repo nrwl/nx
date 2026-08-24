@@ -11,7 +11,7 @@ import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
 import type { ResolvedAgentic } from './agentic/types';
 import { MIGRATE_RUNS_RELATIVE_DIR } from './agentic/types';
-import { migratePrompt } from './safe-prompt';
+import { migrateConfirm } from './safe-prompt';
 
 // `git add -A` captures an orchestrated run's scratch state whenever the
 // ignore rule that normally hides it goes missing mid-run (a checkout, a
@@ -295,13 +295,8 @@ export async function confirmCommitsOnDefaultBranch(args: {
   if (!currentBranch || !defaultBranch || currentBranch !== defaultBranch) {
     return true;
   }
-  const { proceed } = await migratePrompt<{ proceed: boolean }>([
-    {
-      name: 'proceed',
-      type: 'confirm',
-      message: `You're on the default branch '${currentBranch}'. nx migrate will create a commit for each migration on this branch. Continue?`,
-      initial: false,
-    },
-  ]);
-  return proceed;
+  return migrateConfirm({
+    message: `You're on the default branch '${currentBranch}'. nx migrate will create a commit for each migration on this branch. Continue?`,
+    initial: false,
+  });
 }

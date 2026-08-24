@@ -5,6 +5,7 @@ export interface ApplicationGeneratorOptions {
   name?: string;
   frontendProject?: string;
   linter?: LinterType;
+  formatter?: 'none' | 'prettier' | 'oxfmt';
   skipFormat?: boolean;
   skipPackageJson?: boolean;
   tags?: string;

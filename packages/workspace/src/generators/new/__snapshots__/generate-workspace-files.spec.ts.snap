@@ -5848,17 +5848,3 @@ exports[`@nx/workspace:generateWorkspaceFiles should create package scripts for 
   "test": "nx test",
 }
 `;
-
-exports[`@nx/workspace:generateWorkspaceFiles should recommend vscode extensions (angular) 1`] = `
-[
-  "nrwl.angular-console",
-  "esbenp.prettier-vscode",
-]
-`;
-
-exports[`@nx/workspace:generateWorkspaceFiles should recommend vscode extensions 1`] = `
-[
-  "nrwl.angular-console",
-  "esbenp.prettier-vscode",
-]
-`;

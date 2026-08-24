@@ -265,7 +265,10 @@ export function runCreateWorkspace(
     nextAppDir,
     nextSrcDir,
     linter = 'eslint',
-    formatter = 'prettier',
+    // Deliberately NOT `create-nx-workspace`'s default, which is prettier while
+    // oxfmt is pre-1.0: this exercises the oxfmt path across every suite rather
+    // than only the dedicated one. Suites that need prettier pass it explicitly.
+    formatter = 'oxfmt',
     unitTestRunner,
     e2eTestRunner,
     ssr,
@@ -296,7 +299,7 @@ export function runCreateWorkspace(
       | 'vitest-analog'
       | 'none';
     e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
-    formatter?: 'prettier' | 'none';
+    formatter?: 'prettier' | 'oxfmt' | 'none';
     ssr?: boolean;
     framework?: string;
     prefix?: string;

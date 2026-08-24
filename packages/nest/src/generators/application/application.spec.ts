@@ -132,6 +132,24 @@ describe('application generator', () => {
     `);
   });
 
+  it('should set up the formatter it was given', async () => {
+    // The preset forwards `formatter`, and Nest reaches @nx/js:init only through
+    // the Node generator - so dropping it here left the workspace with no
+    // formatter config or dependency at all.
+    const unformatted = createTreeWithEmptyWorkspace({ formatter: 'none' });
+
+    await applicationGenerator(unformatted, {
+      directory: appDirectory,
+      addPlugin: true,
+      formatter: 'prettier',
+    });
+
+    expect(unformatted.exists('.prettierrc')).toBe(true);
+    expect(
+      readJson(unformatted, 'package.json').devDependencies['prettier']
+    ).toBeDefined();
+  });
+
   it('should generate files', async () => {
     await applicationGenerator(tree, {
       linter: 'eslint',
