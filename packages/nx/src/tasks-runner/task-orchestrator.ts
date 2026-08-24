@@ -866,7 +866,8 @@ export class TaskOrchestrator {
         batch,
         this.projectGraph,
         this.fullTaskGraph,
-        env
+        env,
+        printsTaskOutput(this.outputStyle)
       );
 
       // Stream output from batch process to the batch
@@ -1270,9 +1271,15 @@ export class TaskOrchestrator {
 
     const pipeOutput = await this.pipeOutputCapture(task);
     const temporaryOutputPath = this.cache.temporaryOutputPath(task);
-    const streamOutput = isStaticOutputStyle(this.outputStyle)
-      ? false
-      : shouldStreamOutput(task, this.initiatingProject);
+    // `summary` prints log paths rather than logs, and `shouldStreamOutput`
+    // would otherwise stream the initiating project's output in full - the one
+    // task a run-one is most likely to have. Continuous tasks are deliberately
+    // NOT suppressed the same way; see `startContinuousTask`.
+    const streamOutput =
+      isStaticOutputStyle(this.outputStyle) ||
+      !printsTaskOutput(this.outputStyle)
+        ? false
+        : shouldStreamOutput(task, this.initiatingProject);
 
     const env = pipeOutput
       ? getEnvVariablesForTask(
@@ -1596,6 +1603,12 @@ export class TaskOrchestrator {
     const pipeOutput = await this.pipeOutputCapture(task);
     // obtain metadata
     const temporaryOutputPath = this.cache.temporaryOutputPath(task);
+    // Deliberately not gated on `printsTaskOutput`, unlike `runTaskDirectly`.
+    // `SummaryTerminalOutputLifeCycle.printTaskTerminalOutput` is a no-op and it
+    // only reports at `endCommand`, which never runs for a task that does not
+    // end - so suppressing here would leave a `nx serve` under `summary` with a
+    // permanently silent terminal and no file to read yet. Streaming is the only
+    // channel a continuous task has.
     const streamOutput = isStaticOutputStyle(this.outputStyle)
       ? false
       : shouldStreamOutput(task, this.initiatingProject);

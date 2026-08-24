@@ -50,7 +50,8 @@ export class ForkedProcessTaskRunner {
     { id: batchId, executorName, taskGraph: batchTaskGraph }: Batch,
     projectGraph: ProjectGraph,
     fullTaskGraph: TaskGraph,
-    env: NodeJS.ProcessEnv
+    env: NodeJS.ProcessEnv,
+    printsOutput = true
   ): Promise<BatchProcess> {
     const count = Object.keys(batchTaskGraph.tasks).length;
     if (count > 1) {
@@ -80,7 +81,7 @@ export class ForkedProcessTaskRunner {
       getProcessMetricsService().registerBatch(batchId, taskIds, p.pid);
     }
 
-    const cp = new BatchProcess(p, executorName);
+    const cp = new BatchProcess(p, executorName, printsOutput);
     this.processes.add(cp);
 
     cp.onExit(() => {
