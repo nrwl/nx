@@ -23,7 +23,7 @@
     "bundler": {
       "description": "The bundler to use. Choosing 'none' means this library is not buildable.",
       "type": "string",
-      "enum": ["swc", "tsc", "rollup", "vite", "esbuild", "none"],
+      "enum": ["swc", "tsc", "rollup", "vite", "esbuild", "tsdown", "none"],
       "default": "tsc",
       "x-prompt": "Which bundler would you like to use to build the library? Choose 'none' to skip build setup.",
       "x-priority": "important"

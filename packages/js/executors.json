@@ -37,6 +37,11 @@
       "implementation": "./dist/src/executors/verdaccio/verdaccio.impl",
       "schema": "./dist/src/executors/verdaccio/schema.json",
       "description": "Start local registry with verdaccio"
+    },
+    "tsdown": {
+      "implementation": "./src/executors/tsdown/tsdown.impl",
+      "schema": "./src/executors/tsdown/schema.json",
+      "description": "Build a TypeScript library using tsdown (Rolldown-powered)."
     }
   }
 }
