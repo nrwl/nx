@@ -15,7 +15,7 @@ export interface NxShowArgs {
 
 export type ShowProjectsOptions = NxShowArgs & {
   exclude?: string[];
-  files?: string;
+  files?: string[];
   uncommitted?: any;
   untracked?: any;
   base?: string;
@@ -24,6 +24,7 @@ export type ShowProjectsOptions = NxShowArgs & {
   type?: ProjectGraphProjectNode['type'];
   projects?: string[];
   withTarget?: string[];
+  filterByTaskInputs?: boolean;
   verbose?: boolean;
   sep?: string;
 };
@@ -124,6 +125,10 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
         description: 'Show only projects that have a specific target.',
         coerce: parseCSV,
       })
+      .option('filterByTaskInputs', {
+        type: 'boolean',
+        description: 'Narrow affected projects using target inputs.',
+      })
       .option('type', {
         type: 'string',
         description: 'Select only projects of the given type.',
@@ -138,6 +143,8 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
       .implies('files', 'affected')
       .implies('base', 'affected')
       .implies('head', 'affected')
+      .implies('filterByTaskInputs', 'affected')
+      .implies('filterByTaskInputs', 'withTarget')
       .conflicts('sep', 'json')
       .conflicts('json', 'sep')
       .example(
@@ -159,6 +166,10 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
       .example(
         '$0 show projects --affected --exclude=*-e2e',
         'Show affected projects in the workspace, excluding end-to-end projects'
+      )
+      .example(
+        '$0 show projects --affected -t build --filter-by-task-inputs',
+        'Show affected projects whose build inputs changed'
       ) as any,
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {

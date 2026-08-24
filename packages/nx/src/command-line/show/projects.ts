@@ -6,6 +6,10 @@ import {
 } from '../../config/project-graph';
 import { filterAffected } from '../../project-graph/affected/affected-project-graph';
 import {
+  filterAffectedTasksByInputs,
+  type RequestedTask,
+} from '../../project-graph/affected/affected-tasks';
+import {
   FileChange,
   calculateFileChanges,
 } from '../../project-graph/file-utils';
@@ -19,13 +23,22 @@ import {
 } from '../../utils/command-line-utils';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { ShowProjectsOptions } from './command-object';
+import { hasCustomHasher } from './show-target/utils';
 
 export async function showProjectsHandler(
   args: ShowProjectsOptions
 ): Promise<void> {
+  if (args.filterByTaskInputs && !args.affected) {
+    throw new Error('--filter-by-task-inputs requires --affected.');
+  }
+  if (args.filterByTaskInputs && !args.withTarget?.length) {
+    throw new Error('--filter-by-task-inputs requires --with-target.');
+  }
+
   performance.mark('code-loading:end');
   performance.measure('code-loading', 'init-local', 'code-loading:end');
-  let graph = await createProjectGraphAsync();
+  const projectGraph = await createProjectGraphAsync();
+  let graph = projectGraph;
   const nxJson = readNxJson();
   const { nxArgs } = splitArgsIntoNxArgsAndOverrides(
     args,
@@ -36,10 +49,11 @@ export async function showProjectsHandler(
     nxJson
   );
 
+  let touchedFiles: FileChange[] = [];
   // Affected touches dependencies so it needs to be processed first.
   if (args.affected) {
-    const touchedFiles = await getTouchedFiles(nxArgs);
-    graph = await getAffectedGraph(touchedFiles, nxJson, graph);
+    touchedFiles = await getTouchedFiles(nxArgs);
+    graph = await getAffectedGraph(touchedFiles, nxJson, projectGraph);
   }
 
   const filter = filterNodes((node) => {
@@ -68,6 +82,24 @@ export async function showProjectsHandler(
     );
   }
 
+  if (args.filterByTaskInputs) {
+    const candidates = createRequestedTasks(graph, args.withTarget);
+    const projectsWithMatchingInputs = new Set(
+      filterAffectedTasksByInputs(
+        candidates,
+        projectGraph,
+        nxJson,
+        touchedFiles,
+        (task) => hasCustomHasher(task.project, task.target, projectGraph)
+      ).map((task) => task.project)
+    );
+    graph.nodes = Object.fromEntries(
+      Object.entries(graph.nodes).filter(([project]) =>
+        projectsWithMatchingInputs.has(project)
+      )
+    );
+  }
+
   const selectedProjects = new Set(Object.keys(graph.nodes));
 
   if (args.exclude) {
@@ -90,6 +122,17 @@ export async function showProjectsHandler(
   // TODO: Find a better fix for this
   await new Promise((res) => setImmediate(res));
   await output.drain();
+}
+
+function createRequestedTasks(
+  graph: ProjectGraph,
+  targets: string[]
+): RequestedTask[] {
+  return Object.values(graph.nodes).flatMap((node) =>
+    targets
+      .filter((target) => node.data.targets?.[target])
+      .map((target) => ({ project: node.name, target }))
+  );
 }
 
 function getGraphNodesMatchingPatterns(
