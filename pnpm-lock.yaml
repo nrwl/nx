@@ -3069,6 +3069,9 @@ importers:
       '@nx/playwright':
         specifier: workspace:*
         version: link:../playwright
+      '@nx/vitest':
+        specifier: workspace:*
+        version: link:../vitest
       '@nx/webpack':
         specifier: workspace:*
         version: link:../webpack
