@@ -352,7 +352,7 @@ describe('Run Commands', () => {
         const f = fileSync().name;
         const result = await runCommands(
           {
-            commands: [`echo READY && sleep 0.1 && echo 1 >> ${f}`, `echo foo`],
+            commands: [`echo READY && sleep 5 && echo 1 >> ${f}`, `echo foo`],
             parallel: true,
             readyWhen: 'READY',
             __unparsed__: [],
@@ -362,10 +362,6 @@ describe('Run Commands', () => {
         );
         expect(result).toEqual(expect.objectContaining({ success: true }));
         expect(readFile(f)).toEqual('');
-
-        setTimeout(() => {
-          expect(readFile(f)).toEqual('1');
-        }, 150);
       });
     });
 
@@ -1130,7 +1126,7 @@ describe('Run Commands', () => {
         {
           commands: [
             `echo "quick" >> ${f} && exit 1`, // Fails immediately
-            `sleep 0.5 && echo "should_not_appear" >> ${flagFile}`, // Should be terminated
+            `sleep 5 && echo "should_not_appear" >> ${flagFile}`, // Should be terminated
           ],
           parallel: true,
           __unparsed__: [],

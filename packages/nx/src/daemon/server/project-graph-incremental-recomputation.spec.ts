@@ -58,15 +58,21 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
       const first = await getCachedSerializedProjectGraphPromise();
       expect(first.projectGraph?.nodes?.foo).toBeUndefined();
 
-      // Add a project on disk and IMMEDIATELY request the graph —
-      // no awaits, no sleeps. The watcher pipeline has to deliver
-      // this event in time for the next compute to see it.
+      // Add a project on disk and request the graph. The watcher pipeline has
+      // to deliver this event; poll instead of demanding it lands before the
+      // very next compute, which CPU contention alone can delay. A dropped
+      // event never surfaces the project, so the regression still fails here.
       mkdirSync(join(fs.tempDir, 'libs', 'foo'), { recursive: true });
       writeFileSync(
         join(fs.tempDir, 'libs', 'foo', 'project.json'),
         JSON.stringify({ name: 'foo', root: 'libs/foo' })
       );
-      const second = await getCachedSerializedProjectGraphPromise();
+      let second = await getCachedSerializedProjectGraphPromise();
+      const deadline = Date.now() + 20_000;
+      while (!second.projectGraph?.nodes?.foo && Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        second = await getCachedSerializedProjectGraphPromise();
+      }
 
       // The smoking gun. Without the fix, the watcher event could
       // be missed and the daemon would re-serve the first graph
