@@ -94,9 +94,9 @@ impl From<&HashInstruction> for HashInputsBuilder {
                 external: HashSet::from(["AllExternalDependencies".to_string()]),
                 ..Default::default()
             },
-            HashInstruction::ProjectConfiguration(_) | HashInstruction::Cwd(_) => {
-                HashInputsBuilder::default()
-            }
+            HashInstruction::ProjectConfiguration(_)
+            | HashInstruction::Cwd(_)
+            | HashInstruction::Marker(_) => HashInputsBuilder::default(),
             // These variants require external context — callers must match on them
             // explicitly before falling through to `.into()`.
             other => unreachable!(
@@ -353,7 +353,8 @@ impl TaskHasher {
                     | HashInstruction::TaskOutput(_, _)
                     | HashInstruction::External(_)
                     | HashInstruction::AllExternalDependencies
-                    | HashInstruction::JsonFileSet(_) => Some(&value_slots[id as usize]),
+                    | HashInstruction::JsonFileSet(_)
+                    | HashInstruction::Marker(_) => Some(&value_slots[id as usize]),
                 };
 
                 let cached = if should_collect_inputs {
@@ -692,6 +693,7 @@ impl TaskHasher {
                 };
                 (cached_entry.hash, inputs)
             }
+            HashInstruction::Marker(marker) => (hash(marker.as_bytes()), empty),
         };
         Ok((hash, inputs))
     }

@@ -186,6 +186,9 @@ pub enum HashInstruction {
     External(String),
     AllExternalDependencies,
     JsonFileSet(Box<JsonFileSetInput>),
+    /// Run-constant label that keeps hash keys built from different input
+    /// sources (e.g. an I/O snapshot) from ever colliding with native keys.
+    Marker(String),
 }
 
 /// Append-only interner for hash instructions. Plans store `u32` ids into the
@@ -330,6 +333,7 @@ impl fmt::Display for HashInstruction {
                         .unwrap_or_default();
                     format!("{prefix}json:{}{fields_str}{exclude_str}", json.json_path)
                 }
+                HashInstruction::Marker(marker) => marker.clone(),
             }
         )
     }
@@ -338,6 +342,17 @@ impl fmt::Display for HashInstruction {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn marker_display_is_verbatim_and_interns_by_value() {
+        let pool = InstructionPool::new();
+        let a = pool.intern(HashInstruction::Marker("io-snapshot:abc".into()));
+        let b = pool.intern(HashInstruction::Marker("io-snapshot:abc".into()));
+        let c = pool.intern(HashInstruction::Marker("io-snapshot:def".into()));
+        assert_eq!(a, b);
+        assert_ne!(a, c);
+        assert_eq!(&*pool.key(a), "io-snapshot:abc");
+    }
 
     #[test]
     fn pool_key_matches_display_and_is_shared() {
