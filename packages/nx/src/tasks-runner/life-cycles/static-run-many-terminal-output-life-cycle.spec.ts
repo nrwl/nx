@@ -374,7 +374,12 @@ describe('StaticRunManyTerminalOutputLifeCycle', () => {
     });
 
     it('says how much output was withheld', () => {
-      lifeCycle.printTaskTerminalOutput(task, 'success', 'the task body');
+      // Wrapped even though only endCommand is asserted: an unwrapped print
+      // writes a real line into jest's output and leaves the shared CLIOutput
+      // mid-line for whichever test runs next.
+      captureOutput(() =>
+        lifeCycle.printTaskTerminalOutput(task, 'success', 'the task body')
+      );
       lifeCycle.endTasks([taskResult(task, 'success')]);
 
       const result = captureOutput(() => lifeCycle.endCommand());
@@ -385,7 +390,9 @@ describe('StaticRunManyTerminalOutputLifeCycle', () => {
 
     it('does not offer the hint when nothing was withheld', () => {
       lifeCycle = createLifeCycle({ verbose: true });
-      lifeCycle.printTaskTerminalOutput(task, 'success', 'the task body');
+      captureOutput(() =>
+        lifeCycle.printTaskTerminalOutput(task, 'success', 'the task body')
+      );
       lifeCycle.endTasks([taskResult(task, 'success')]);
 
       const result = captureOutput(() => lifeCycle.endCommand());

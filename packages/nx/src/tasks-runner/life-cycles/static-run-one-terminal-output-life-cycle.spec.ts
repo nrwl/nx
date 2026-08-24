@@ -232,8 +232,11 @@ describe('StaticRunOneTerminalOutputLifeCycle', () => {
       const dependency = makeTask('lib');
       const lifeCycle = createLifeCycle({}, [initiating, dependency]);
 
-      // A collapsed dependency success.
-      lifeCycle.printTaskTerminalOutput(dependency, 'success', 'the lib body');
+      // A collapsed dependency success. Wrapped so it does not write into
+      // jest's own output or leave the shared CLIOutput mid-line.
+      captureOutput(() =>
+        lifeCycle.printTaskTerminalOutput(dependency, 'success', 'the lib body')
+      );
       lifeCycle.endTasks([
         taskResult(initiating, 'success'),
         taskResult(dependency, 'success'),
