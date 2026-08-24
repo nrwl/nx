@@ -34,9 +34,13 @@ export function isStaticOutputStyle(outputStyle: string | undefined): boolean {
  * agree on this, so they read it from here rather than each deriving it.
  *
  * Exactly one style collapses, and it is also what a run that named no style
- * gets. The static life cycles also serve `static`, `stream`,
- * `stream-without-prefixes` and, in CI, `dynamic-legacy` — every one of those
- * was asked for explicitly, so none may quietly withhold output.
+ * gets. Every other style prints in full because it was asked for explicitly,
+ * so none may quietly withhold output. Note the static life cycles serve more
+ * styles than the static-sounding ones: `shouldUseDynamicLifeCycle` bails on
+ * `isCI()` before it looks at the style at all, so in CI `dynamic` and `tui`
+ * land here too. This is written as a deny-list for that reason — a new style
+ * prints in full until someone decides otherwise, rather than silently
+ * collapsing because an allow-list did not list it.
  *
  * Resolving the absent case here rather than assigning `outputStyle` upstream is
  * deliberate: the value is also read by the orchestrator to decide whether a
