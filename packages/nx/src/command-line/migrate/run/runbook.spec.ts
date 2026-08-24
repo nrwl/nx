@@ -39,6 +39,8 @@ describe('renderRunbook', () => {
     // file and assigns recorded issues, so nothing tells the agent to write
     // a handoff it has not been handed a path for.
     expect(runbook).toContain('run the\n   `next` command first');
+    expect(runbook).toContain('`no-progress` action');
+    expect(runbook).toContain('report the blocker to the user');
   });
 
   it('pins the workspace package manager and nx invocation', () => {
