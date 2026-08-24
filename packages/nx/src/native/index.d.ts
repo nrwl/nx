@@ -372,6 +372,13 @@ export interface ExternalNode {
   hash?: string
 }
 
+/**
+ * Resolves the I/O snapshot bundle for the workspace's current HEAD, serving
+ * it from the on-disk cache when fresh and fetching from Nx Cloud otherwise.
+ * Never fails the caller: every problem is reported as a `skipped` result.
+ */
+export declare function fetchIoSnapshots(options: IoSnapshotFetchOptions): Promise<IoSnapshotFetchResult>
+
 export interface FileData {
   file: string
   hash: string
@@ -524,6 +531,43 @@ export declare function installNxConsoleForEditor(editor: SupportedEditor): Prom
 export interface InvocationRecord {
   parentPid: number
   taskId: string
+}
+
+export interface IoSnapshotFetchOptions {
+  workspaceRoot: string
+  /** Shared cache root for snapshot bundles (`<cacheDir>/io-snapshots`). */
+  cacheDirectory: string
+  apiUrl: string
+  accessToken?: string
+  nxCloudId?: string
+  clientVersion?: string
+  maxCommits?: number
+  timeoutMs?: number
+  /** Age after which a cached bundle for the same commit is refetched. 0 always refetches. */
+  maxAgeMs?: number
+  retain?: number
+}
+
+export interface IoSnapshotFetchResult {
+  /** `fetched` | `cached` | `skipped` */
+  status: string
+  /** Why the fetch was skipped, or `stale-offline` when a stale bundle was reused. */
+  reason?: string
+  message?: string
+  /** Directory holding `snapshots.json` when status is not `skipped`. */
+  directory?: string
+  resolution?: IoSnapshotResolution
+}
+
+/** What was resolved for a commit; persisted alongside the bundle. */
+export interface IoSnapshotResolution {
+  requestedCommit: string
+  commits: Array<string>
+  sourceCommits: Array<string>
+  digest: string
+  fetchedAt: number
+  clientVersion: string
+  tasks: number
 }
 
 export const IS_WASM: boolean
