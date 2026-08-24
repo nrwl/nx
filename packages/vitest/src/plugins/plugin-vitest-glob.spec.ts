@@ -1,4 +1,4 @@
-import { CreateNodesContext } from '@nx/devkit';
+import { CreateNodesContext, TargetConfiguration } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { join } from 'node:path';
 import { createNodesV2 } from './plugin';
@@ -48,10 +48,8 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
       resolveConfig: jest
         .fn()
         .mockImplementation(async (inlineConfig: Record<string, any>) => {
-          // Emulates the phase ordering of vite's config hooks (pre, then
-          // normal user hooks, then post) for the root value only, which
-          // is all these tests exercise (verified against vite 5.4 and
-          // 8.2).
+          // Emulates vite's config hook phases (pre, user, post) for the
+          // root value only.
           let root = rawRoot;
           const runHook = (plugin: Record<string, any>) => {
             const hook =
@@ -81,15 +79,20 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
     });
   }
 
-  async function getAtomizedTargets(configFile: string): Promise<string[]> {
+  async function getProjectTargets(
+    configFile: string
+  ): Promise<Record<string, TargetConfiguration>> {
     const nodes = await createNodesFunction(
       [configFile],
       { testTargetName: 'test', ciTargetName: 'test-ci' },
       context
     );
     const [, result] = nodes[0];
-    const project = Object.values(result.projects!)[0];
-    return Object.keys(project.targets!)
+    return Object.values(result.projects!)[0].targets!;
+  }
+
+  async function getAtomizedTargets(configFile: string): Promise<string[]> {
+    return Object.keys(await getProjectTargets(configFile))
       .filter((name) => name.startsWith('test-ci--'))
       .sort();
   }
@@ -369,12 +372,7 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
     });
     mockResolvedTestConfig({});
 
-    const nodes = await createNodesFunction(
-      ['libs/lib1/vitest.config.ts'],
-      { testTargetName: 'test', ciTargetName: 'test-ci' },
-      context
-    );
-    const targets = nodes[0][1].projects!['libs/lib1'].targets!;
+    const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
 
     expect(targets['test-ci--src/a.spec.ts'].command).toBe(
       `vitest run src/a.spec.ts --coverage.reportsDirectory="coverage/src/a.spec.ts"`
@@ -396,12 +394,7 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
     });
     mockResolvedTestConfig({});
 
-    const nodes = await createNodesFunction(
-      ['libs/lib1/vitest.config.ts'],
-      { testTargetName: 'test', ciTargetName: 'test-ci' },
-      context
-    );
-    const targets = nodes[0][1].projects!['libs/lib1'].targets!;
+    const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
 
     expect(targets['test-ci--src/a.b.spec.ts'].outputs).toEqual([
       `{projectRoot}/coverage/src/a.b.spec.ts`,
@@ -412,9 +405,8 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
   });
 
   it('should keep atomized coverage directory components within filesystem limits for multibyte paths', async () => {
-    // Two 60-emoji directory components: each is a valid 240-byte name, but
-    // flattened into one component they exceed the common 255-byte limit.
-    // Mirroring the spec path reuses the source's own components verbatim.
+    // Each emoji directory is 240 UTF-8 bytes; flattened into one component
+    // they exceed the common 255-byte limit.
     const emojiDir = '🙂'.repeat(60);
     await temp.createFiles({
       'libs/lib1/vitest.config.ts': '',
@@ -423,12 +415,7 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
     });
     mockResolvedTestConfig({});
 
-    const nodes = await createNodesFunction(
-      ['libs/lib1/vitest.config.ts'],
-      { testTargetName: 'test', ciTargetName: 'test-ci' },
-      context
-    );
-    const targets = nodes[0][1].projects!['libs/lib1'].targets!;
+    const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
 
     const atomOutputs = Object.entries(targets)
       .filter(([name]) => name.startsWith('test-ci--'))
@@ -451,14 +438,9 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
       coverage: { reportsDirectory: `${temp.tempDir}/coverage-abs` },
     });
 
-    const nodes = await createNodesFunction(
-      ['libs/lib1/vitest.config.ts'],
-      { testTargetName: 'test', ciTargetName: 'test-ci' },
-      context
-    );
-    const targets = nodes[0][1].projects!['libs/lib1'].targets!;
+    const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
 
-    // Keep this platform-aware: slash-joining would fail only on Windows.
+    // Join with node:path so the expected absolute command holds on Windows.
     expect(targets['test-ci--src/a.spec.ts'].command).toBe(
       `vitest run src/a.spec.ts --coverage.reportsDirectory="${join(
         temp.tempDir,
@@ -479,15 +461,9 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
     });
     mockResolvedTestConfig({}, `${temp.tempDir}/libs/lib1/test-root`);
 
-    const nodes = await createNodesFunction(
-      ['libs/lib1/vitest.config.ts'],
-      { testTargetName: 'test', ciTargetName: 'test-ci' },
-      context
-    );
-    const targets = nodes[0][1].projects!['libs/lib1'].targets!;
+    const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
 
-    // Vitest resolves the flag against its root, so the declared output must
-    // sit under the root, not directly under the project root.
+    // A relative reportsDirectory resolves against Vitest's root.
     expect(targets['test-ci--test-root/src/a.spec.ts'].command).toBe(
       `vitest run test-root/src/a.spec.ts --coverage.reportsDirectory="coverage/test-root/src/a.spec.ts"`
     );
@@ -504,15 +480,9 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
     });
     mockResolvedTestConfig({}, './test-root');
 
-    const nodes = await createNodesFunction(
-      ['libs/lib1/vitest.config.ts'],
-      { testTargetName: 'test', ciTargetName: 'test-ci' },
-      context
-    );
-    const targets = nodes[0][1].projects!['libs/lib1'].targets!;
+    const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
 
-    // At run time the atom's cwd is the project root, so a relative root
-    // anchors there, and the coverage base under it.
+    // A relative Vitest root resolves against the atom cwd, the project root.
     expect(targets['test-ci--test-root/src/a.spec.ts'].command).toBe(
       `vitest run test-root/src/a.spec.ts --coverage.reportsDirectory="coverage/test-root/src/a.spec.ts"`
     );
@@ -527,15 +497,9 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
       'libs/lib1/package.json': '{"name":"lib1"}',
       'libs/lib1/test-root/src/a.spec.ts': '',
     });
-    // Vitest runs with `test.root` even when a top-level root is also set.
     mockResolvedTestConfig({ root: './test-root' }, './other-root');
 
-    const nodes = await createNodesFunction(
-      ['libs/lib1/vitest.config.ts'],
-      { testTargetName: 'test', ciTargetName: 'test-ci' },
-      context
-    );
-    const targets = nodes[0][1].projects!['libs/lib1'].targets!;
+    const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
 
     expect(targets['test-ci--test-root/src/a.spec.ts'].command).toBe(
       `vitest run test-root/src/a.spec.ts --coverage.reportsDirectory="coverage/test-root/src/a.spec.ts"`
@@ -551,18 +515,12 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
       'libs/lib1/package.json': '{"name":"lib1"}',
       'libs/lib1/hook-root/src/a.spec.ts': '',
     });
-    // Vitest promotes test.root in its pre-enforce config hook, so a later
-    // user hook overriding the top-level root wins at run time.
+    // Vitest promotes test.root before user hooks, so a user root override wins.
     mockResolvedTestConfig({ root: './test-root' }, undefined, () => ({
       root: './hook-root',
     }));
 
-    const nodes = await createNodesFunction(
-      ['libs/lib1/vitest.config.ts'],
-      { testTargetName: 'test', ciTargetName: 'test-ci' },
-      context
-    );
-    const targets = nodes[0][1].projects!['libs/lib1'].targets!;
+    const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
 
     expect(targets['test-ci--hook-root/src/a.spec.ts'].command).toBe(
       `vitest run hook-root/src/a.spec.ts --coverage.reportsDirectory="coverage/hook-root/src/a.spec.ts"`
@@ -582,12 +540,7 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
       coverage: { reportsDirectory: '..coverage' },
     });
 
-    const nodes = await createNodesFunction(
-      ['libs/lib1/vitest.config.ts'],
-      { testTargetName: 'test', ciTargetName: 'test-ci' },
-      context
-    );
-    const targets = nodes[0][1].projects!['libs/lib1'].targets!;
+    const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
 
     expect(targets['test-ci--src/a.spec.ts'].command).toBe(
       `vitest run src/a.spec.ts --coverage.reportsDirectory="..coverage/src/a.spec.ts"`
@@ -607,12 +560,7 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
       coverage: { reportsDirectory: '../../coverage/libs/lib1' },
     });
 
-    const nodes = await createNodesFunction(
-      ['libs/lib1/vitest.config.ts'],
-      { testTargetName: 'test', ciTargetName: 'test-ci' },
-      context
-    );
-    const targets = nodes[0][1].projects!['libs/lib1'].targets!;
+    const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
 
     expect(targets['test-ci--src/a.spec.ts'].command).toBe(
       `vitest run src/a.spec.ts --coverage.reportsDirectory="../../coverage/libs/lib1/src/a.spec.ts"`
@@ -632,12 +580,7 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
       coverage: { reportsDirectory: '../../reports' },
     });
 
-    const nodes = await createNodesFunction(
-      ['libs/lib1/vitest.config.ts'],
-      { testTargetName: 'test', ciTargetName: 'test-ci' },
-      context
-    );
-    const targets = nodes[0][1].projects!['libs/lib1'].targets!;
+    const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
 
     expect(targets['test-ci--src/a.spec.ts'].command).toBe(
       `vitest run src/a.spec.ts --coverage.reportsDirectory="../../reports/libs/lib1/src/a.spec.ts"`

@@ -303,10 +303,8 @@ async function buildVitestTargets(
       // Resolve under `mode: 'test'` to match Vitest, which defaults the Vite
       // mode to 'test'; a config that branches on `command`/`mode` would
       // otherwise enumerate a different spec set here than at test time.
-      // Vite resolves the configured `root` against the invoking cwd before
-      // exposing it, so the resolved value from graph construction differs
-      // from the atom run's. Capture the raw value after all user config
-      // hooks instead, and resolve it below the way the atom run would.
+      // Capture the raw root after user hooks: graph construction and the
+      // atom run resolve it against different cwds.
       let configuredViteRoot: string | undefined;
       const viteServeConfig = await resolveConfig(
         {
@@ -314,11 +312,8 @@ async function buildVitestTargets(
           mode: 'test',
           plugins: [
             {
-              // Mirrors Vitest's own pre-plugin test.root promotion at the
-              // same phase, so later user config hooks observe and can
-              // override the promoted root exactly as they would at run
-              // time. Vitest's options.root fallback is irrelevant: atom
-              // commands pass no --root.
+              // Promotes test.root before user hooks as Vitest does, so a
+              // later hook can override it. No options.root: atoms pass no --root.
               name: 'nx-promote-vitest-root',
               enforce: 'pre' as const,
               config(config: { root?: string; test?: { root?: string } }) {
@@ -355,21 +350,14 @@ async function buildVitestTargets(
       // overwrite one another. The nested flag never enables coverage.
       const coverageReportsDirectory =
         viteServeConfig.test?.coverage?.reportsDirectory || 'coverage';
-      // Atom directories mirror each spec file's path, so they are disjoint
-      // and attributable by construction. A reports directory outside the
-      // project can be shared by several projects, so it gets a project-root
-      // prefix, except when it already ends with the project root as the
-      // nx-generated `../../coverage/<projectRoot>` configs do.
+      // Atom directories mirror spec paths. A shared base outside the project
+      // gets a project-root prefix unless it already ends with it, as the
+      // generated `<offset>/coverage/<projectRoot>` configs do.
       const fullProjectRoot = resolve(context.workspaceRoot, projectRoot);
-      // Vitest resolves a relative reportsDirectory against its resolved
-      // root, not the invoking cwd. The captured root already reflects the
-      // `test.root` promotion mirrored above; map it the way the atom run
-      // would: an omitted root resolves to the atom's cwd, the project
-      // root, a relative one resolves against it, and an absolute one (the
-      // generated configs set `import.meta.dirname`) is used as-is. A root
-      // computed from runtime state such as `process.cwd()` was already
-      // evaluated in this process and cannot be mapped, so it is not
-      // supported.
+      // A relative reportsDirectory resolves against the Vitest root, mapped
+      // here as the atom run would (cwd is the project root). A root computed
+      // from runtime state such as `process.cwd()` cannot be mapped and is
+      // not supported.
       const effectiveVitestRoot = !configuredViteRoot
         ? fullProjectRoot
         : isAbsolute(configuredViteRoot)
@@ -563,9 +551,8 @@ function getOutputs(
 }
 
 /**
- * Whether a `relative()` result leaves the base directory. A `..` prefix is
- * only traversal at a segment boundary; a directory named `..coverage` is a
- * child.
+ * Whether a `relative()` result leaves the base directory. A directory named
+ * `..coverage` is a child, not traversal.
  */
 function isPathOutside(relativePath: string): boolean {
   return (
@@ -576,9 +563,8 @@ function isPathOutside(relativePath: string): boolean {
 }
 
 /**
- * Maps an atom's absolute coverage directory to an Nx output pattern,
- * preferring the narrowest anchor. An absolute path outside the workspace
- * keeps the `{workspaceRoot}`-relative form the non-atomized target uses.
+ * Maps an atom's absolute coverage directory to the narrowest Nx root token;
+ * a path outside the workspace stays `{workspaceRoot}`-relative.
  */
 function normalizeAtomOutputPath(
   absoluteOutputPath: string,
@@ -597,9 +583,8 @@ function normalizeAtomOutputPath(
 }
 
 /**
- * Whether the resolved reports directory's trailing path segments equal the
- * project root. For the root project there are no segments to compare and a
- * prefix would add nothing, so it also holds.
+ * Whether the reports directory ends with the project root's segments. The
+ * root project has none, so it always holds.
  */
 function endsWithProjectRoot(
   resolvedPath: string,
