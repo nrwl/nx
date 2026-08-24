@@ -17,6 +17,7 @@ export async function handleHashTasks(payload: {
   perTaskEnvs: Record<string, NodeJS.ProcessEnv>;
   cwd: string;
   collectInputs?: boolean;
+  ioSnapshots?: { bundleDir?: string };
 }) {
   const { error, projectGraph, rustReferences } =
     await getCachedSerializedProjectGraphPromise();
@@ -41,7 +42,9 @@ export async function handleHashTasks(payload: {
     payload.taskGraph,
     payload.perTaskEnvs,
     payload.cwd,
-    payload.collectInputs
+    payload.collectInputs,
+    // Absent (incl. older clients) ⇒ native hashing.
+    payload.ioSnapshots
   );
   return {
     response,
