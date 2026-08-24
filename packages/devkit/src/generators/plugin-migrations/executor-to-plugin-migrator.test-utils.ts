@@ -98,11 +98,12 @@ export interface SyntheticPlugin {
  */
 export function createSyntheticPlugin(
   inferredTargetFor: InferredTargetFactory = defaultInferredTarget,
-  pluginPath = SYNTHETIC_PLUGIN_PATH
+  pluginPath = SYNTHETIC_PLUGIN_PATH,
+  configGlob = SYNTHETIC_CONFIG_GLOB
 ): SyntheticPlugin {
   let count = 0;
   const createNodes: CreateNodes<SyntheticPluginOptions> = [
-    SYNTHETIC_CONFIG_GLOB,
+    configGlob,
     (configFiles, options) => {
       count++;
       const invocation = count;
@@ -337,6 +338,8 @@ export interface AddProjectOptions {
   targetName?: string;
   executor?: string;
   target?: Partial<TargetConfiguration>;
+  /** marker config file dropped at the project root (defaults to the synthetic plugin's) */
+  configFile?: string;
 }
 
 /**
@@ -371,10 +374,9 @@ export function addExecutorProject(
     } as any,
   };
 
+  const configFile = opts.configFile ?? SYNTHETIC_CONFIG_FILE;
   const configPath =
-    opts.root === '.'
-      ? SYNTHETIC_CONFIG_FILE
-      : `${opts.root}/${SYNTHETIC_CONFIG_FILE}`;
+    opts.root === '.' ? configFile : `${opts.root}/${configFile}`;
   ctx.fs.createFileSync(configPath, '{}');
 
   return project;

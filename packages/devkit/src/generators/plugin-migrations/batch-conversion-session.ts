@@ -2,6 +2,7 @@ import {
   readNxJson,
   type CreateNodes,
   type ExpandedPluginConfiguration,
+  type ProjectGraphProjectNode,
   type Tree,
   logger as devkitLogger,
 } from 'nx/src/devkit-exports';
@@ -33,6 +34,18 @@ export interface DeferredConversionPlan {
   residualByProject: ResidualByProject;
   /** project name -> project root for every migrated project. */
   rootByProject: Map<string, string>;
+  /**
+   * project name -> pre-migration graph node for every migrated project. The
+   * finalize target-default preflight resolves `filter.projects` entries
+   * through the production reader, which matches against the project's node.
+   */
+  graphNodeByProject: Map<string, ProjectGraphProjectNode>;
+  /**
+   * Every project root in the pre-migration graph. With the plans' Phase 1
+   * inferred roots, these are the known owners the finalize pass attributes
+   * errored config files to (closest root wins).
+   */
+  graphRoots: Set<string>;
   /**
    * `"<project>\t<target>"` -> the effective executor the pair resolves to
    * after migration (the inferred target's; a `command` resolves to
@@ -154,10 +167,16 @@ export class BatchConversionSession {
       }
       residualByProject.set(projectName, clonedTargetMap);
     }
+    const graphNodeByProject = new Map<string, ProjectGraphProjectNode>();
+    for (const [projectName, node] of plan.graphNodeByProject) {
+      graphNodeByProject.set(projectName, structuredClone(node));
+    }
     this.pendingPlans.push({
       ...plan,
       residualByProject,
       rootByProject: new Map(plan.rootByProject),
+      graphNodeByProject,
+      graphRoots: new Set(plan.graphRoots),
       inferredExecutorByPair: new Map(plan.inferredExecutorByPair),
       inferredExecutors: new Set(plan.inferredExecutors),
       inferredRoots: new Set(plan.inferredRoots),

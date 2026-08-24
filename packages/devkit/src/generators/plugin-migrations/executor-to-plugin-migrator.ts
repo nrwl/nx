@@ -17,6 +17,7 @@ import {
   type ExpandedPluginConfiguration,
   type NxJsonConfiguration,
   type ProjectGraph,
+  type ProjectGraphProjectNode,
   type TargetConfiguration,
   type TargetDefaultArrayEntry,
   type Tree,
@@ -127,7 +128,7 @@ export interface MigrationScope<T> {
   executorScopes: ExecutorScope<T>[];
 }
 
-function stableStringify(value: unknown): string {
+export function stableStringify(value: unknown): string {
   if (value === null || typeof value !== 'object') {
     return JSON.stringify(value) ?? 'undefined';
   }
@@ -623,7 +624,7 @@ export function computeStrictCommon(
 }
 
 /** `residual` with every property that the strict-common config carries removed. */
-function subtractCommon(
+export function subtractCommon(
   residual: TargetConfiguration,
   common: TargetConfiguration
 ): TargetConfiguration {
@@ -666,7 +667,7 @@ function subtractCommon(
  * every migrated project (mirrors `readTargetDefaultsForExecutor`'s match: the
  * unfiltered entry keyed directly by the executor string).
  */
-function removeDeadExecutorTargetDefault(
+export function removeDeadExecutorTargetDefault(
   nxJson: NxJsonConfiguration,
   executor: string
 ): void {
@@ -683,7 +684,7 @@ function removeDeadExecutorTargetDefault(
  * appended (never merged into an existing one) so the verification pass can
  * revert precisely this entry and nothing else.
  */
-function appendPluginScopedTargetDefault(
+export function appendPluginScopedTargetDefault(
   nxJson: NxJsonConfiguration,
   targetName: string,
   pluginPath: string,
@@ -711,7 +712,7 @@ function appendPluginScopedTargetDefault(
  * value, so the last deep-equal occurrence (append order puts ours last) is
  * the one removed.
  */
-function removeHoistedTargetDefault(
+export function removeHoistedTargetDefault(
   nxJson: NxJsonConfiguration,
   targetName: string,
   entry: TargetDefaultArrayEntry
@@ -751,7 +752,7 @@ function removeHoistedTargetDefault(
  * Read through the Tree so this sees the same in-memory package.json the rest of
  * the generator reads and writes, rather than a possibly-stale copy on disk.
  */
-function packageJsonAuthorsTargetIdentity(
+export function packageJsonAuthorsTargetIdentity(
   tree: Tree,
   root: string | undefined,
   targetName: string
@@ -857,7 +858,7 @@ function isCentralizationSuppressed(tree: Tree): boolean {
   return (centralizationSuppressionDepth.get(tree) ?? 0) > 0;
 }
 
-function isRegistrationOfPlugin(
+export function isRegistrationOfPlugin(
   registration: string | ExpandedPluginConfiguration,
   pluginPath: string
 ): boolean {
@@ -946,7 +947,7 @@ function computeInferredExecutorByPair<T>(
  * the without-entry resolution with the common merged on top; anything else
  * changes behavior, so the target keeps its full residuals.
  */
-function hoistChangesExistingTargetDefaults(
+export function hoistChangesExistingTargetDefaults(
   targetDefaults: NxJsonConfiguration['targetDefaults'],
   targetName: string,
   common: TargetConfiguration,
@@ -955,7 +956,7 @@ function hoistChangesExistingTargetDefaults(
     projectName: string;
     inferredExecutor: string | undefined;
   }[],
-  projectGraph: ProjectGraph
+  projectNodesByName: Record<string, ProjectGraphProjectNode>
 ): boolean {
   const hypotheticalNxJson: NxJsonConfiguration = {
     targetDefaults: structuredClone(targetDefaults) ?? {},
@@ -1009,7 +1010,7 @@ function hoistChangesExistingTargetDefaults(
     checkedContexts.add(contextKey);
     const opts = {
       projectName,
-      projectNode: projectGraph.nodes[projectName],
+      projectNode: projectNodesByName[projectName],
       // The migrated pair's residual carries no executor/command, so the
       // specified layer (this plugin) owns the identity attribution.
       sourcePlugin: pluginPath,
@@ -1251,7 +1252,7 @@ function hoistCommonAndWrite<T>(
           commonByTarget.get(targetName),
           pluginPath,
           eligiblePairs,
-          projectGraph
+          projectGraph.nodes
         )
       ) {
         rejectedTargets.push(targetName);
@@ -1791,6 +1792,19 @@ function includeCoversAllConfigFiles(
   );
 }
 
+/** One harvested verification error, attributable to a plugin registration. */
+export interface HarvestedConfigurationError {
+  message: string;
+  /** The config files the error names (empty for a file-less error). */
+  files: string[];
+  /**
+   * The `nx.json` `plugins` index of the registration that produced the error,
+   * when the plugins were constructed with one (the batch finalize pass does);
+   * `undefined` otherwise.
+   */
+  pluginIndex: number | undefined;
+}
+
 /**
  * Harvest the diagnostic messages and the errored config-file paths from a
  * `ProjectConfigurationsError`. `ProjectConfigurationsError.errors` is a closed
@@ -1800,12 +1814,12 @@ function includeCoversAllConfigFiles(
  * are artifacts of running with no `project.json` layer (nothing supplies names),
  * so they are dropped; `WorkspaceValidityError` carries no file and is exempt.
  */
-function harvestConfigurationErrors(e: ProjectConfigurationsError): {
+export function harvestConfigurationErrors(e: ProjectConfigurationsError): {
   messages: string[];
   erroredConfigFiles: string[];
+  entries: HarvestedConfigurationError[];
 } {
-  const messages: string[] = [];
-  const erroredConfigFiles = new Set<string>();
+  const entries: HarvestedConfigurationError[] = [];
   for (const error of e.errors) {
     if (
       isProjectsWithNoNameError(error) ||
@@ -1813,19 +1827,24 @@ function harvestConfigurationErrors(e: ProjectConfigurationsError): {
     ) {
       continue;
     }
-    messages.push(error.message ?? String(error));
+    const message = error.message ?? String(error);
     if (isAggregateCreateNodesError(error)) {
-      for (const [file] of error.errors) {
-        if (file) {
-          erroredConfigFiles.add(file);
-        }
-      }
+      entries.push({
+        message,
+        files: error.errors
+          .map(([file]) => file)
+          .filter((file): file is string => !!file),
+        pluginIndex: error.pluginIndex,
+      });
     } else if (isMergeNodesError(error)) {
-      if (error.file) {
-        erroredConfigFiles.add(error.file);
-      }
+      entries.push({
+        message,
+        files: error.file ? [error.file] : [],
+        pluginIndex: error.pluginIndex,
+      });
     } else if (isWorkspaceValidityError(error)) {
-      // Carries no config file; its message (pushed above) is enough.
+      // Carries no config file and no plugin attribution.
+      entries.push({ message, files: [], pluginIndex: undefined });
     } else {
       // Exhaustiveness guard: `ProjectConfigurationsError.errors` is a closed
       // union. If a sixth member is added, this assignment stops compiling until
@@ -1834,7 +1853,37 @@ function harvestConfigurationErrors(e: ProjectConfigurationsError): {
       void _exhaustive;
     }
   }
-  return { messages, erroredConfigFiles: [...erroredConfigFiles] };
+  return {
+    messages: entries.map((entry) => entry.message),
+    erroredConfigFiles: [...new Set(entries.flatMap((entry) => entry.files))],
+    entries,
+  };
+}
+
+/**
+ * Attribution map for errored-config ownership: every root the engine knows
+ * owns a project, i.e. graph project roots plus the roots the plugin inference
+ * produced (a project discovered from a config file alone has no graph node;
+ * graph roots win a collision). Keys are normalized for the
+ * `findProjectForPath` walk; values are the raw roots the per-target
+ * migrated-root sets hold.
+ */
+export function buildOwnerRootByPath(
+  graphRoots: Iterable<string>,
+  inferredRoots: Iterable<string>
+): Map<string, string> {
+  const normalizeRoot = (root: string) =>
+    root === '' ? '.' : root.endsWith('/') ? root.slice(0, -1) : root;
+  const ownerRootByPath = new Map<string, string>();
+  for (const root of graphRoots) {
+    ownerRootByPath.set(normalizeRoot(root), root);
+  }
+  for (const root of inferredRoots) {
+    if (!ownerRootByPath.has(normalizeRoot(root))) {
+      ownerRootByPath.set(normalizeRoot(root), root);
+    }
+  }
+  return ownerRootByPath;
 }
 
 /**
@@ -1974,22 +2023,10 @@ async function verifyAndFallback<T>(
     }
   }
 
-  // Attribution map for errored-config ownership: every root the engine knows
-  // owns a project, graph projects plus the roots the plugin itself inferred
-  // in Phase 1 (a project discovered from a config file alone has no graph
-  // node). Keys are normalized for the `findProjectForPath` walk; values are
-  // the raw roots the per-target migrated-root sets hold.
-  const normalizeRoot = (root: string) =>
-    root === '' ? '.' : root.endsWith('/') ? root.slice(0, -1) : root;
-  const ownerRootByPath = new Map<string, string>();
-  for (const node of Object.values(projectGraph.nodes)) {
-    ownerRootByPath.set(normalizeRoot(node.data.root), node.data.root);
-  }
-  for (const root of inferredRoots) {
-    if (!ownerRootByPath.has(normalizeRoot(root))) {
-      ownerRootByPath.set(normalizeRoot(root), root);
-    }
-  }
+  const ownerRootByPath = buildOwnerRootByPath(
+    Object.values(projectGraph.nodes).map((node) => node.data.root),
+    inferredRoots
+  );
   const revertedTargets = new Set<string>();
   for (const [targetName] of hoistedByTarget) {
     const migratedRoots =
@@ -2234,8 +2271,17 @@ function stageDeferredPlan<T>(
   erroredConfigFiles: string[]
 ): void {
   const rootByProject = new Map<string, string>();
+  const graphNodeByProject = new Map<string, ProjectGraphProjectNode>();
   for (const projectName of residualByProject.keys()) {
     rootByProject.set(projectName, projectGraph.nodes[projectName]?.data.root);
+    const node = projectGraph.nodes[projectName];
+    if (node) {
+      graphNodeByProject.set(projectName, node);
+    }
+  }
+  const graphRoots = new Set<string>();
+  for (const node of Object.values(projectGraph.nodes)) {
+    graphRoots.add(node.data.root);
   }
   // Executors of the pre-migration graph targets, for the finalize liveness
   // scan (mirrors the inline scan in `hoistCommonAndWrite`, which reads them
@@ -2262,6 +2308,8 @@ function stageDeferredPlan<T>(
     pluginPreRegistered,
     residualByProject,
     rootByProject,
+    graphNodeByProject,
+    graphRoots,
     inferredExecutorByPair: computeInferredExecutorByPair(
       scope,
       projectGraph,
