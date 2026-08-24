@@ -597,9 +597,9 @@ impl HashPlanner {
             let Some(producer_task) = task_graph.tasks.get(producer) else {
                 continue;
             };
-            for path in paths {
+            for glob in task_output_globs(paths) {
                 instructions.push(HashInstruction::TaskOutput(
-                    path.clone(),
+                    glob,
                     producer_task.outputs.clone(),
                 ));
             }
@@ -1063,6 +1063,32 @@ impl HashPlanner {
     }
 }
 
+/// One TaskOutput glob per producer: plain paths collapse into a brace group
+/// so the producer's outputs are walked once, not once per observed path.
+/// A path carrying glob syntax cannot be grouped and stays on its own.
+fn task_output_globs(paths: &[String]) -> Vec<String> {
+    let mut sorted: Vec<&String> = paths.iter().collect();
+    sorted.sort();
+    sorted.dedup();
+    let (plain, special): (Vec<&String>, Vec<&String>) = sorted
+        .into_iter()
+        .partition(|p| !crate::native::glob::contains_glob_pattern(p));
+    let mut globs: Vec<String> = special.into_iter().cloned().collect();
+    match plain.len() {
+        0 => {}
+        1 => globs.push(plain[0].clone()),
+        _ => globs.push(format!(
+            "{{{}}}",
+            plain
+                .iter()
+                .map(|p| p.as_str())
+                .collect::<Vec<_>>()
+                .join(",")
+        )),
+    }
+    globs
+}
+
 /// Records the negated filesets among `self_inputs` as workspace-relative
 /// patterns owned by `project_name`.
 fn collect_negations(
@@ -1133,6 +1159,45 @@ fn find_external_dependency_node_name<'a>(
 
 #[cfg(test)]
 mod tests {
+    use super::task_output_globs;
+    #[test]
+    fn brace_grouped_task_output_resolves_like_single_paths() {
+        use crate::native::tasks::hashers::resolve_task_output_files;
+        let temp = assert_fs::TempDir::new().unwrap();
+        for f in ["a.js", "b.js", "c.js"] {
+            let path = temp.path().join("dist/libs/child").join(f);
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            std::fs::write(&path, f).unwrap();
+        }
+        let root = temp.path().to_str().unwrap();
+        let outputs = vec!["dist/libs/child".to_string()];
+        let paths = vec![
+            "dist/libs/child/b.js".to_string(),
+            "dist/libs/child/a.js".to_string(),
+        ];
+        let globs = task_output_globs(&paths);
+        assert_eq!(globs, vec!["{dist/libs/child/a.js,dist/libs/child/b.js}"]);
+
+        let mut grouped = resolve_task_output_files(root, &globs[0], &outputs).unwrap();
+        grouped.sort();
+        let mut singles: Vec<String> = paths
+            .iter()
+            .flat_map(|p| resolve_task_output_files(root, p, &outputs).unwrap())
+            .collect();
+        singles.sort();
+        assert_eq!(grouped, singles);
+        assert_eq!(
+            grouped,
+            vec!["dist/libs/child/a.js", "dist/libs/child/b.js"]
+        );
+
+        // Glob syntax in a path is never grouped.
+        assert_eq!(
+            task_output_globs(&["dist/x.js".into(), "dist/{a,b}.js".into()]),
+            vec!["dist/{a,b}.js", "dist/x.js"]
+        );
+    }
+
     use super::VisitedTracker;
 
     #[test]
