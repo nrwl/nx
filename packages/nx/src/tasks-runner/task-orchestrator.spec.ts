@@ -440,8 +440,13 @@ describe('TaskOrchestrator', () => {
       const orchestrator: any = Object.create(TaskOrchestrator.prototype);
       orchestrator.options = {
         lifeCycle: { printTaskTerminalOutput: jest.fn() },
-        ...args,
+        verbose: args.verbose,
       };
+      // Mirrors the real construction: the style is its own constructor
+      // argument, sourced from `nxArgs`, while `options` is the merged runner
+      // options object. Putting the style in `options` here would let a read of
+      // the wrong one pass.
+      orchestrator.outputStyle = args.outputStyle;
       // Object.create bypasses field initializers.
       orchestrator.batchFoldRenders = new Map();
       return orchestrator;
@@ -535,7 +540,7 @@ describe('TaskOrchestrator', () => {
       expect(out).not.toContain('batch @nx/js:tsc');
     });
 
-    it('renders a FAILED batch that reported results per task, not as one fold', () => {
+    it('renders a FAILED batch per task when nothing was captured', () => {
       const orchestrator = createOrchestrator();
       const a = makeTask('a:build');
       const b = makeTask('b:build');
@@ -548,12 +553,76 @@ describe('TaskOrchestrator', () => {
         orchestrator.printGroupedBatchOutput(BATCH, taskResults, undefined)
       );
 
-      // The failing task owns its output, so dumping the worker's whole log
-      // would only add every successful task's body back to the run.
+      // With no captured log there is nothing a fold could add, so each task
+      // renders itself. This is the no-capture case only - see the test below
+      // for what happens when the worker did leave a log behind.
       const print = orchestrator.options.lifeCycle.printTaskTerminalOutput;
       expect(print).toHaveBeenCalledWith(b, 'failure', 'b failed');
       expect(print).toHaveBeenCalledWith(a, 'success', 'a body');
       expect(out).not.toContain('batch @nx/js:tsc');
+    });
+
+    it.each([['failure'], ['stopped']])(
+      'folds a batch with a %s task on the failures-only default, so a diagnostic no task claimed survives',
+      (badStatus) => {
+        const orchestrator = createOrchestrator();
+        const a = makeTask('a:build');
+        const b = makeTask('b:build');
+        const taskResults = [
+          { task: a, status: 'success', code: 0, terminalOutput: 'a body' },
+          {
+            task: b,
+            status: badStatus,
+            code: 1,
+            terminalOutput: 'Error: gradlew batch failed',
+          },
+        ];
+
+        const out = captureStdout(() =>
+          orchestrator.printGroupedBatchOutput(
+            BATCH,
+            taskResults,
+            capturedOutputFile(
+              'FAILURE: Could not determine java version\ncompile error detail'
+            )
+          )
+        );
+
+        // `@nx/maven` and `@nx/gradle` catch their own crash and backfill task
+        // results, so the batch resolves and reaches this path. The bytes that
+        // explain the failure are the ones they attributed to no task - a
+        // config-phase error, an exit-code dump - and they exist only in the
+        // captured log. Rendering per task here would delete the only copy.
+        expect(out).toContain('FAILURE: Could not determine java version');
+        expect(out).toContain('compile error detail');
+        expect(out).toContain('batch @nx/js:tsc 1');
+        expect(
+          orchestrator.options.lifeCycle.printTaskTerminalOutput
+        ).not.toHaveBeenCalled();
+      }
+    );
+
+    it('still collapses an all-green batch on the default, captured log or not', () => {
+      const orchestrator = createOrchestrator();
+      const a = makeTask('a:build');
+      const taskResults = [
+        { task: a, status: 'success', code: 0, terminalOutput: 'a body' },
+      ];
+
+      const out = captureStdout(() =>
+        orchestrator.printGroupedBatchOutput(
+          BATCH,
+          taskResults,
+          capturedOutputFile('noisy build chatter nobody asked for')
+        )
+      );
+
+      // Folding on failure must not become folding always - the whole point of
+      // the default is that a green batch stays quiet.
+      expect(out).not.toContain('noisy build chatter nobody asked for');
+      expect(
+        orchestrator.options.lifeCycle.printTaskTerminalOutput
+      ).toHaveBeenCalledWith(a, 'success', 'a body');
     });
 
     it.each([
@@ -691,13 +760,19 @@ describe('TaskOrchestrator', () => {
         },
       } as Partial<TaskGraph> as TaskGraph;
       orchestrator.fullTaskGraph = orchestrator.taskGraph;
+      // Read through a mutable field so a single orchestrator can render two
+      // batches with different bodies - which is what makes the fold-count map
+      // key load-bearing in `labels each fold with the batch it came from`.
+      orchestrator.capturedForTest = captured;
       orchestrator.forkedProcessTaskRunner = {
         forkProcessForBatch: jest.fn().mockResolvedValue({
           onOutput: jest.fn(),
           onTaskResults: jest.fn(),
           getResults: jest.fn().mockRejectedValue(new Error(EXIT_ERROR)),
           getCapturedOutputPath: () =>
-            captured ? capturedPath(captured) : undefined,
+            orchestrator.capturedForTest
+              ? capturedPath(orchestrator.capturedForTest)
+              : undefined,
           discardCapturedOutput: () => {},
         }),
       };
@@ -768,7 +843,9 @@ describe('TaskOrchestrator', () => {
         await orchestrator.runBatch(batch, {}, 0);
       });
 
-      expect(out).toContain('batch @nx/gradle:batch 1');
+      // Anchored on the redirect line, since a bare `batch @nx/gradle:batch 1`
+      // is also a prefix of the second fold's label.
+      expect(out).toContain('(output in "batch @nx/gradle:batch 1" above)');
       expect(out).toContain('batch @nx/gradle:batch 1:2');
       // Each task's redirect line has to name the fold it belongs to.
       expect(out).toContain('(output in "batch @nx/gradle:batch 1:2" above)');
@@ -776,10 +853,16 @@ describe('TaskOrchestrator', () => {
 
     it('labels each fold with the batch it came from', async () => {
       const second = { ...batch, id: '@nx/gradle:batch 2' };
+      // One orchestrator, so both renders share the fold-count map. Two of them
+      // would each start from an empty map and both count as the first render,
+      // which passes whatever the map is keyed on - including the executor name
+      // this test exists to rule out.
+      const orchestrator = createOrchestrator('first crash', false);
 
       const out = await captureStdout(async () => {
-        await createOrchestrator('first crash', false).runBatch(batch, {}, 0);
-        await createOrchestrator('second crash', false).runBatch(second, {}, 0);
+        await orchestrator.runBatch(batch, {}, 0);
+        orchestrator.capturedForTest = 'second crash';
+        await orchestrator.runBatch(second, {}, 0);
       });
 
       // The same executor can crash more than once in a run, so the label has to
@@ -789,6 +872,9 @@ describe('TaskOrchestrator', () => {
       expect(out).toContain('first crash');
       expect(out).toContain('second crash');
       expect(out).toContain('(output in "batch @nx/gradle:batch 2" above)');
+      // Keyed per executor instead, the second batch would render as a re-run
+      // of the first.
+      expect(out).not.toContain('batch @nx/gradle:batch 2:2');
     });
   });
 });

@@ -930,11 +930,23 @@ export class TaskOrchestrator {
       });
 
       if (shouldGroupBatchOutput()) {
-        this.printGroupedBatchOutput(
-          batch,
-          taskResults,
-          batchProcess.getCapturedOutputPath()
-        );
+        try {
+          this.printGroupedBatchOutput(
+            batch,
+            taskResults,
+            batchProcess.getCapturedOutputPath()
+          );
+        } catch (e) {
+          // The batch already finished and reported these results; only the
+          // rendering of them failed. Letting that reach the catch below would
+          // rewrite every task to `failure` with the printer's stack as its
+          // output - reporting a green build red, and sending those statuses on
+          // to the life cycles and Nx Cloud.
+          output.warn({
+            title: `Could not render output for batch ${batch.id}`,
+            bodyLines: [e.message],
+          });
+        }
       }
 
       return taskResults;
@@ -991,19 +1003,49 @@ export class TaskOrchestrator {
    * requested output style has to reach this path rather than stopping at the
    * life cycle.
    *
-   * A full-output run wants everything the batch emitted, including whatever no
-   * task claimed — a runner summary, a config-phase error — so it gets the
-   * worker's whole log as one fold. Otherwise the batch's own attribution is
-   * trusted and each task renders through the life cycle exactly as in a
-   * non-batch run: failures in full, successes collapsed to a line. A batch
-   * that never reported results is handled by the caller instead.
+   * The worker's whole log is rendered as one fold in two cases. A full-output
+   * run asked for everything it emitted. And any batch with a task that failed
+   * or was stopped gets it too, because a diagnostic that explains a failure is
+   * routinely one no task claimed: `@nx/maven` writes its exit-code dump and
+   * every collected stderr line to the worker's stderr, and `@nx/gradle` emits
+   * configuration-phase errors before the first `> Task :x:y` header tells it
+   * which task to attribute to. Both catch their own crash and backfill task
+   * results, so the batch resolves and lands here rather than in the caller's
+   * failure path — and before this the captured log was discarded unread, which
+   * lost bytes that streamed live on a non-grouped run. The fold is a superset
+   * of the per-task bodies rather than a duplicate of them, since both plugins
+   * tee task output into the worker's stdio on the way to `terminalOutput`.
+   *
+   * Otherwise the batch's own attribution is trusted and each task renders
+   * through the life cycle exactly as in a non-batch run: failures in full,
+   * successes collapsed to a line. A batch that never reported results is
+   * handled by the caller instead.
+   *
+   * Note what the fold path assumes: that everything in a task's
+   * `terminalOutput` also reached the worker's stdio, so replacing the per-task
+   * blocks with the log loses nothing. That holds for the executors this path
+   * exists for, but not universally - `@nx/jest` synthesizes each task's
+   * `terminalOutput` from an aggregated result and never writes those
+   * per-project summaries to stdio, so under `--batch` they are only in the
+   * per-task blocks. It opts out of batching by default.
    */
   private printGroupedBatchOutput(
     batch: Batch,
     taskResults: TaskResult[],
     capturedOutputPath: string | undefined
   ) {
-    if (printsFullTaskOutput(this.options) && capturedOutputPath) {
+    // Read from the same field the streaming decision uses. `this.options`
+    // carries its own `outputStyle` merged from `nx.json`'s tasksRunnerOptions,
+    // and the two disagree whenever the style was not set on the command line -
+    // `init-tasks-runner` passes a populated `options` and no style at all.
+    const printsFullOutput = printsFullTaskOutput({
+      verbose: this.options.verbose,
+      outputStyle: this.outputStyle,
+    });
+    const batchOwnsTheDiagnostic = taskResults.some(
+      (r) => r.status === 'failure' || r.status === 'stopped'
+    );
+    if ((printsFullOutput || batchOwnsTheDiagnostic) && capturedOutputPath) {
       this.printBatchFold(batch, taskResults, { capturedOutputPath });
       return;
     }
