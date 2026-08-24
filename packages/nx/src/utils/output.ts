@@ -67,13 +67,20 @@ export function isLogGroupingEnabled(): boolean {
 }
 
 /**
- * Whether a batch task's output should be collapsed into its per-task log group
- * rather than forwarded live. A batch worker writes its output to stdout/stderr
- * live and also reports the same text back as each task's terminalOutput, which
- * the grouped block prints; forwarding the live copy too would duplicate it
- * outside the group and defeat the fold. This is only worth doing when grouping
- * is on and the user has not asked to stream — an explicit stream style (which
- * sets NX_STREAM_OUTPUT) wants the live copy, folds or not.
+ * Whether a batch task's output should be held back from the live stream and
+ * rendered inside a fold instead. A batch worker writes to stdout/stderr live,
+ * so forwarding that copy would put its bytes outside the group and defeat the
+ * fold; what is held back is written to a file and rendered by the orchestrator.
+ *
+ * Note it is the captured file, not each task's `terminalOutput`, that makes
+ * this lossless. A worker is free to write bytes it attributes to no task —
+ * `@nx/maven`'s exit-code dump, `@nx/gradle`'s configuration phase — and those
+ * appear in no `terminalOutput` at all, so the fold has to be able to fall back
+ * to the file. See `TaskOrchestrator.printGroupedBatchOutput` for when it does.
+ *
+ * This is only worth doing when grouping is on and the user has not asked to
+ * stream — an explicit stream style (which sets NX_STREAM_OUTPUT) wants the
+ * live copy, folds or not.
  */
 export function shouldGroupBatchOutput(): boolean {
   return isLogGroupingEnabled() && process.env.NX_STREAM_OUTPUT !== 'true';
@@ -163,8 +170,8 @@ class CLIOutput {
    * not reliably end in a newline, so writers that must begin on a fresh line
    * ask for one via {@link ensureLineStart} rather than guessing.
    *
-   * Holding that true means every writer that can leave the cursor mid-line is
-   * either routed through this class or declared to it:
+   * Holding that true means a writer that can leave the cursor mid-line has to
+   * be routed through this class or declared to it. The ones that exist today:
    *
    * - This class's own writes, via {@link writeToStream}.
    * - A batch worker's live output, via {@link writeTaskOutputChunk}.
@@ -178,10 +185,23 @@ class CLIOutput {
    *   declares itself via {@link noteExternalWrite} instead, which is why that
    *   exists.
    *
-   * Forked task streaming is the one bypass that is safe, and only because
-   * `addPrefixTransformer` re-emits that output a whole line at a time, always
-   * ending on a line boundary. Anything else writing to stdout during a run
-   * invalidates this and must be routed or declared.
+   * Two bypasses are deliberate and safe, both because they re-emit output a
+   * whole line at a time via `formatPrefixedLines`, which appends `EOL` to every
+   * line it writes: forked task streaming through
+   * `NodeChildProcessWithNonDirectOutput`'s `addPrefixTransformer`, and
+   * `writePrefixedLines` for a main-process `nx:run-commands` under
+   * `NX_PREFIX_OUTPUT`.
+   *
+   * One bypass is known and is NOT safe. With `NX_NATIVE_COMMAND_RUNNER=false`,
+   * `forkProcessLegacy` forks with inherited stdio and yields
+   * `NodeChildProcessWithDirectOutput`, whose child writes straight to this
+   * process's fd 1 at arbitrary boundaries — unroutable and undeclarable from
+   * here. Line tracking is simply wrong on that path; it degrades to the
+   * pre-tracking behavior of a glued marker rather than to anything new. Do not
+   * read this list as closed: it is what is known, and the way to tell you are
+   * adding to it is that you are writing to stdout during a run without going
+   * through {@link writeToStream}, {@link writeTaskOutputChunk} or
+   * {@link noteExternalWrite}.
    */
   private atLineStart = true;
 
@@ -475,7 +495,15 @@ class CLIOutput {
    * for the tasks of a batch rendered as a single log group rather than per
    * task. `note` points the reader at that group.
    */
-  logCommandRedirect(message: string, taskStatus: TaskStatus, note: string) {
+  logCommandRedirect(
+    message: string,
+    // A skipped task never ran, so it has no fold to be redirected to - and the
+    // icon ladder below would render it with the success tick. Excluding it
+    // makes both call sites' `status !== 'skipped'` checks a consequence of the
+    // type rather than a convention to remember.
+    taskStatus: Exclude<TaskStatus, 'skipped'>,
+    note: string
+  ) {
     this.ensureLineStart();
     // A stopped task did not fail; it never got to finish. The TUI summary
     // already draws that distinction, so use the same glyph.
@@ -567,7 +595,7 @@ class CLIOutput {
     return this.addTaskStatus(taskStatus, commandOutput);
   }
 
-  private getStatusIcon(taskStatus: TaskStatus) {
+  private getStatusIcon(taskStatus: TaskStatus): string {
     switch (taskStatus) {
       case 'success':
         return '✅';
@@ -581,6 +609,15 @@ class CLIOutput {
       case 'local-cache':
       case 'remote-cache':
         return '🔁';
+      default: {
+        // The repo compiles with `strict: false`, so a `: string` return type
+        // alone does not reject a fallthrough - `undefined` stays assignable.
+        // This does: a new `TaskStatus` member fails to narrow to `never` here.
+        // Worth the four lines because the gap already shipped once, rendering
+        // `::group::undefined > nx run ...` for a stopped task.
+        const unhandled: never = taskStatus;
+        return unhandled;
+      }
     }
   }
 
