@@ -88,16 +88,22 @@ export function getTaskSpecificEnv(task: Task, graph: ProjectGraph) {
  * `'true'` marker is only stamped once the graph exists (`run-command.ts`),
  * which is after this runs. Only the dotenv overlay is reconstructed: run-time
  * env like `NX_TASK_TARGET_*` or `NX_TASK_HASH` is not included.
+ *
+ * `baseEnv` is the ambient env the overlay applies to, defaulting to the live
+ * `process.env`. A caller that runs config files in-process passes a snapshot
+ * taken under its load lock instead: a concurrent load's transient env writes
+ * would otherwise be read as ambient and mask the task files' values.
  */
 export function getGraphTimeDotEnvForTask(
   projectRoot: string,
   target: string,
   configuration?: string,
-  nonAtomizedTarget?: string
+  nonAtomizedTarget?: string,
+  baseEnv: NodeJS.ProcessEnv = process.env
 ): NodeJS.ProcessEnv {
   // Unload the root dotenv files loaded on init of Nx so the task-scoped files win.
-  const env = unloadDotEnvFiles({ ...process.env });
-  if (process.env.NX_LOAD_DOT_ENV_FILES === 'false') {
+  const env = unloadDotEnvFiles({ ...baseEnv });
+  if (baseEnv.NX_LOAD_DOT_ENV_FILES === 'false') {
     return env;
   }
   const dotEnvFiles = getEnvPathsForTask(

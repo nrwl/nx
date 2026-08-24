@@ -307,11 +307,12 @@ export function hasRelevantPendingDotEnvEvidence(
 }
 
 /**
- * Drops every recorded content hash. The error-path retry and the warm-reuse
- * check force a successor while preserving the queue for its drain, but a
- * recorded hash is not proof the graph that successor serves observed those
- * bytes; kept, it could suppress a callback that lands while the successor
- * reads.
+ * Drops every recorded content hash. Each computation clears on claiming its
+ * generation, bounding every hash to the window since the last claim: an
+ * older hash is not proof the graph a successor serves observed those bytes,
+ * and kept, it could suppress a callback that lands while the successor
+ * reads. The error-path retry and the warm-reuse check also clear when they
+ * force a successor while preserving the queue for its drain.
  */
 export function clearDotEnvFileHashes(): void {
   dotEnvFileHashes.clear();

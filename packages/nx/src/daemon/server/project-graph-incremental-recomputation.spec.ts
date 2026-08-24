@@ -1297,6 +1297,525 @@ describe('pending dotenv replay before serving a graph', () => {
     });
   });
 
+  // A gitignored dotenv edit classified over a committed graph invalidates
+  // directly instead of queueing, so no drain ever drops the hash recorded at
+  // classification. Retained, that hash would suppress a coalesced revert
+  // callback landing while the forced successor reads, and the successor
+  // would serve intermediate content the disk no longer holds.
+  it('recomputes for a revert delivered while a direct-invalidation successor is reading', async () => {
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({}),
+      'package.json': JSON.stringify({ name: 'root' }),
+      '.gitignore': '.env.e2e\n',
+      'libs/foo/project.json': JSON.stringify({
+        name: 'foo',
+        root: 'libs/foo',
+      }),
+      'libs/foo/.env.e2e': 'PORT=4200\n',
+    });
+
+    await jest.isolateModulesAsync(async () => {
+      // The plugin-loader mocks jest.doMock installs in the tests above are
+      // registry-wide and outlive their isolated module graphs.
+      jest.dontMock('../../project-graph/plugins/get-plugins');
+      const { setWorkspaceRoot } = require('../../utils/workspace-root');
+      setWorkspaceRoot(fs.tempDir);
+
+      const makeGate = () => {
+        let release: () => void;
+        const promise = new Promise<void>((resolve) => {
+          release = resolve;
+        });
+        return { promise, release: () => release(), reached: false };
+      };
+      // Park the invalidation-triggered compute B before and after its read
+      // so an edit lands in each window; computes A and C run unimpeded.
+      const bEntry = makeGate();
+      const bExit = makeGate();
+      let retrieveCallCount = 0;
+      jest.doMock('../../project-graph/utils/retrieve-workspace-files', () => {
+        const actual = jest.requireActual(
+          '../../project-graph/utils/retrieve-workspace-files'
+        );
+        return {
+          ...actual,
+          retrieveProjectConfigurations: async (...args: unknown[]) => {
+            const call = ++retrieveCallCount;
+            if (call === 2) {
+              bEntry.reached = true;
+              await bEntry.promise;
+            }
+            const result = await actual.retrieveProjectConfigurations(...args);
+            const env = readFileSync(
+              join(fs.tempDir, 'libs/foo/.env.e2e'),
+              'utf-8'
+            ).trim();
+            result.projects['libs/foo'].tags = [`env:${env}`];
+            if (call === 2) {
+              bExit.reached = true;
+              await bExit.promise;
+            }
+            return result;
+          },
+        };
+      });
+
+      const {
+        getCachedSerializedProjectGraphPromise,
+      } = require('./project-graph-incremental-recomputation');
+      const { handleOutputsChanges } = require('./handle-outputs-changes');
+      const { nxProjectGraph } = require('../../project-graph/nx-deps-cache');
+      const { EventType } = require('../../native');
+
+      const waitFor = async (cond: () => boolean) => {
+        while (!cond()) {
+          await new Promise((r) => setImmediate(r));
+        }
+      };
+      const envPath = join(fs.tempDir, 'libs/foo/.env.e2e');
+      const envEvent = { path: 'libs/foo/.env.e2e', type: EventType.update };
+
+      const first = await getCachedSerializedProjectGraphPromise();
+      expect(first.projectGraph.nodes.foo.data.tags).toEqual(['env:PORT=4200']);
+
+      // Classifying this edit records the hash of the 4301 bytes; the file is
+      // gitignored, so the committed file map does not know it and the path
+      // invalidates directly instead of queueing.
+      writeFileSync(envPath, 'PORT=4301\n');
+      await handleOutputsChanges(null, [envEvent]);
+
+      // The request finds no cached graph and triggers compute B, which reads
+      // an intermediate 4302 whose write the watcher never reports.
+      const second = getCachedSerializedProjectGraphPromise();
+      await waitFor(() => bEntry.reached);
+      writeFileSync(envPath, 'PORT=4302\n');
+      bEntry.release();
+      await waitFor(() => bExit.reached);
+
+      // Back to the classified bytes; with the classification-time hash
+      // retained this event would be suppressed as a byte-identical rewrite
+      // and B would serve the intermediate content.
+      writeFileSync(envPath, 'PORT=4301\n');
+      await handleOutputsChanges(null, [envEvent]);
+      bExit.release();
+
+      const result = await second;
+      expect(result.error).toBeNull();
+      expect(result.projectGraph.nodes.foo.data.tags).toEqual([
+        'env:PORT=4301',
+      ]);
+      expect(retrieveCallCount).toBeGreaterThanOrEqual(3);
+      const persisted = readFileSync(nxProjectGraph, 'utf-8');
+      expect(persisted).toContain('PORT=4301');
+      expect(persisted).not.toContain('PORT=4200');
+      expect(persisted).not.toContain('PORT=4302');
+    });
+  });
+
+  // A tracked dotenv edit queued in the same batch as (or before) a gitignored
+  // one keeps its classification-time hash while the gitignored path forces a
+  // successor, and its stamp predates that successor, so the drain deletes the
+  // hash without marking the successor stale. Only clearing every recorded
+  // hash at the direct invalidation keeps a coalesced revert of the tracked
+  // file from being suppressed while the successor reads.
+  it('recomputes for a tracked-file revert delivered while a successor forced by a gitignored edit is reading', async () => {
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({}),
+      'package.json': JSON.stringify({ name: 'root' }),
+      '.gitignore': '.env.e2e\n',
+      'libs/foo/project.json': JSON.stringify({
+        name: 'foo',
+        root: 'libs/foo',
+      }),
+      'libs/foo/.env.k': 'KPORT=4200\n',
+      'libs/foo/.env.e2e': 'UPORT=9000\n',
+    });
+
+    await jest.isolateModulesAsync(async () => {
+      // The plugin-loader mocks jest.doMock installs in the tests above are
+      // registry-wide and outlive their isolated module graphs.
+      jest.dontMock('../../project-graph/plugins/get-plugins');
+      const { setWorkspaceRoot } = require('../../utils/workspace-root');
+      setWorkspaceRoot(fs.tempDir);
+
+      const makeGate = () => {
+        let release: () => void;
+        const promise = new Promise<void>((resolve) => {
+          release = resolve;
+        });
+        return { promise, release: () => release(), reached: false };
+      };
+      // Park the invalidation-triggered compute B before and after its read
+      // so an edit lands in each window; computes A and C run unimpeded.
+      const bEntry = makeGate();
+      const bExit = makeGate();
+      let retrieveCallCount = 0;
+      jest.doMock('../../project-graph/utils/retrieve-workspace-files', () => {
+        const actual = jest.requireActual(
+          '../../project-graph/utils/retrieve-workspace-files'
+        );
+        return {
+          ...actual,
+          retrieveProjectConfigurations: async (...args: unknown[]) => {
+            const call = ++retrieveCallCount;
+            if (call === 2) {
+              bEntry.reached = true;
+              await bEntry.promise;
+            }
+            const result = await actual.retrieveProjectConfigurations(...args);
+            const tracked = readFileSync(
+              join(fs.tempDir, 'libs/foo/.env.k'),
+              'utf-8'
+            ).trim();
+            const ignored = readFileSync(
+              join(fs.tempDir, 'libs/foo/.env.e2e'),
+              'utf-8'
+            ).trim();
+            result.projects['libs/foo'].tags = [`env:${tracked}|${ignored}`];
+            if (call === 2) {
+              bExit.reached = true;
+              await bExit.promise;
+            }
+            return result;
+          },
+        };
+      });
+
+      const {
+        getCachedSerializedProjectGraphPromise,
+      } = require('./project-graph-incremental-recomputation');
+      const { handleOutputsChanges } = require('./handle-outputs-changes');
+      const { nxProjectGraph } = require('../../project-graph/nx-deps-cache');
+      const { EventType } = require('../../native');
+
+      const waitFor = async (cond: () => boolean) => {
+        while (!cond()) {
+          await new Promise((r) => setImmediate(r));
+        }
+      };
+      const trackedPath = join(fs.tempDir, 'libs/foo/.env.k');
+      const ignoredPath = join(fs.tempDir, 'libs/foo/.env.e2e');
+      const trackedEvent = { path: 'libs/foo/.env.k', type: EventType.update };
+      const ignoredEvent = {
+        path: 'libs/foo/.env.e2e',
+        type: EventType.update,
+      };
+
+      const first = await getCachedSerializedProjectGraphPromise();
+      expect(first.projectGraph.nodes.foo.data.tags).toEqual([
+        'env:KPORT=4200|UPORT=9000',
+      ]);
+
+      // One batch: the tracked edit queues with its 4301 hash recorded while
+      // the gitignored edit invalidates directly, forcing a successor.
+      writeFileSync(trackedPath, 'KPORT=4301\n');
+      writeFileSync(ignoredPath, 'UPORT=9001\n');
+      await handleOutputsChanges(null, [trackedEvent, ignoredEvent]);
+
+      // The request finds no cached graph and triggers compute B, which reads
+      // an intermediate 4302 whose write the watcher never reports.
+      const second = getCachedSerializedProjectGraphPromise();
+      await waitFor(() => bEntry.reached);
+      writeFileSync(trackedPath, 'KPORT=4302\n');
+      bEntry.release();
+      await waitFor(() => bExit.reached);
+
+      // Back to the queued bytes; with the tracked path's hash retained this
+      // event would be suppressed as a byte-identical rewrite, and B's drain
+      // would drop the earlier queued entry as safely pre-dating B.
+      writeFileSync(trackedPath, 'KPORT=4301\n');
+      await handleOutputsChanges(null, [trackedEvent]);
+      bExit.release();
+
+      const result = await second;
+      expect(result.error).toBeNull();
+      expect(result.projectGraph.nodes.foo.data.tags).toEqual([
+        'env:KPORT=4301|UPORT=9001',
+      ]);
+      expect(retrieveCallCount).toBeGreaterThanOrEqual(3);
+      const persisted = readFileSync(nxProjectGraph, 'utf-8');
+      expect(persisted).toContain('KPORT=4301');
+      expect(persisted).not.toContain('KPORT=4200');
+      expect(persisted).not.toContain('KPORT=4302');
+    });
+  });
+
+  // A tracked dotenv edit classified after a direct invalidation but before
+  // the forced successor starts records a fresh hash that no handler-side
+  // clear has seen. Only clearing the hashes when a computation claims its
+  // generation bounds every hash to the window since the last claim, so a
+  // coalesced revert of the tracked file cannot be suppressed while that
+  // successor reads.
+  it('recomputes for a tracked-file revert when the tracked edit was classified between an invalidation and the successor', async () => {
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({}),
+      'package.json': JSON.stringify({ name: 'root' }),
+      '.gitignore': '.env.e2e\n',
+      'libs/foo/project.json': JSON.stringify({
+        name: 'foo',
+        root: 'libs/foo',
+      }),
+      'libs/foo/.env.k': 'KPORT=4200\n',
+      'libs/foo/.env.e2e': 'UPORT=9000\n',
+    });
+
+    await jest.isolateModulesAsync(async () => {
+      // The plugin-loader mocks jest.doMock installs in the tests above are
+      // registry-wide and outlive their isolated module graphs.
+      jest.dontMock('../../project-graph/plugins/get-plugins');
+      const { setWorkspaceRoot } = require('../../utils/workspace-root');
+      setWorkspaceRoot(fs.tempDir);
+
+      const makeGate = () => {
+        let release: () => void;
+        const promise = new Promise<void>((resolve) => {
+          release = resolve;
+        });
+        return { promise, release: () => release(), reached: false };
+      };
+      // Park the invalidation-triggered compute B before and after its read
+      // so an edit lands in each window; computes A and C run unimpeded.
+      const bEntry = makeGate();
+      const bExit = makeGate();
+      let retrieveCallCount = 0;
+      jest.doMock('../../project-graph/utils/retrieve-workspace-files', () => {
+        const actual = jest.requireActual(
+          '../../project-graph/utils/retrieve-workspace-files'
+        );
+        return {
+          ...actual,
+          retrieveProjectConfigurations: async (...args: unknown[]) => {
+            const call = ++retrieveCallCount;
+            if (call === 2) {
+              bEntry.reached = true;
+              await bEntry.promise;
+            }
+            const result = await actual.retrieveProjectConfigurations(...args);
+            const tracked = readFileSync(
+              join(fs.tempDir, 'libs/foo/.env.k'),
+              'utf-8'
+            ).trim();
+            const ignored = readFileSync(
+              join(fs.tempDir, 'libs/foo/.env.e2e'),
+              'utf-8'
+            ).trim();
+            result.projects['libs/foo'].tags = [`env:${tracked}|${ignored}`];
+            if (call === 2) {
+              bExit.reached = true;
+              await bExit.promise;
+            }
+            return result;
+          },
+        };
+      });
+
+      const {
+        getCachedSerializedProjectGraphPromise,
+      } = require('./project-graph-incremental-recomputation');
+      const { handleOutputsChanges } = require('./handle-outputs-changes');
+      const { nxProjectGraph } = require('../../project-graph/nx-deps-cache');
+      const { EventType } = require('../../native');
+
+      const waitFor = async (cond: () => boolean) => {
+        while (!cond()) {
+          await new Promise((r) => setImmediate(r));
+        }
+      };
+      const trackedPath = join(fs.tempDir, 'libs/foo/.env.k');
+      const ignoredPath = join(fs.tempDir, 'libs/foo/.env.e2e');
+      const trackedEvent = { path: 'libs/foo/.env.k', type: EventType.update };
+      const ignoredEvent = {
+        path: 'libs/foo/.env.e2e',
+        type: EventType.update,
+      };
+
+      const first = await getCachedSerializedProjectGraphPromise();
+      expect(first.projectGraph.nodes.foo.data.tags).toEqual([
+        'env:KPORT=4200|UPORT=9000',
+      ]);
+
+      // The gitignored edit invalidates directly, clearing the hashes; the
+      // tracked edit lands in a later callback, so its 4301 hash is recorded
+      // after every handler-side clear has run.
+      writeFileSync(ignoredPath, 'UPORT=9001\n');
+      await handleOutputsChanges(null, [ignoredEvent]);
+      writeFileSync(trackedPath, 'KPORT=4301\n');
+      await handleOutputsChanges(null, [trackedEvent]);
+
+      // The request finds no cached graph and triggers compute B, which reads
+      // an intermediate 4302 whose write the watcher never reports.
+      const second = getCachedSerializedProjectGraphPromise();
+      await waitFor(() => bEntry.reached);
+      writeFileSync(trackedPath, 'KPORT=4302\n');
+      bEntry.release();
+      await waitFor(() => bExit.reached);
+
+      // Back to the queued bytes; with the post-invalidation hash retained
+      // this event would be suppressed as a byte-identical rewrite, and B's
+      // drain would drop the earlier queued entry as safely pre-dating B.
+      writeFileSync(trackedPath, 'KPORT=4301\n');
+      await handleOutputsChanges(null, [trackedEvent]);
+      bExit.release();
+
+      const result = await second;
+      expect(result.error).toBeNull();
+      expect(result.projectGraph.nodes.foo.data.tags).toEqual([
+        'env:KPORT=4301|UPORT=9001',
+      ]);
+      expect(retrieveCallCount).toBeGreaterThanOrEqual(3);
+      const persisted = readFileSync(nxProjectGraph, 'utf-8');
+      expect(persisted).toContain('KPORT=4301');
+      expect(persisted).not.toContain('KPORT=4200');
+      expect(persisted).not.toContain('KPORT=4302');
+    });
+  });
+
+  // The clear that bounds the recorded hashes must run at the generation
+  // claim, not earlier in the kickoff: plugin loading awaits between the two,
+  // and a tracked edit classified in that window records a hash an earlier
+  // clear has already run for, which would then suppress a coalesced revert
+  // landing while the computation reads.
+  it('recomputes for a tracked-file revert when the tracked edit was classified while the successor loads plugins', async () => {
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({}),
+      'package.json': JSON.stringify({ name: 'root' }),
+      '.gitignore': '.env.e2e\n',
+      'libs/foo/project.json': JSON.stringify({
+        name: 'foo',
+        root: 'libs/foo',
+      }),
+      'libs/foo/.env.k': 'KPORT=4200\n',
+      'libs/foo/.env.e2e': 'UPORT=9000\n',
+    });
+
+    await jest.isolateModulesAsync(async () => {
+      const { setWorkspaceRoot } = require('../../utils/workspace-root');
+      setWorkspaceRoot(fs.tempDir);
+
+      const makeGate = () => {
+        let release: () => void;
+        const promise = new Promise<void>((resolve) => {
+          release = resolve;
+        });
+        return { promise, release: () => release(), reached: false };
+      };
+      // Park compute B while it loads plugins (before its generation claim)
+      // and before and after its read; computes A and C run unimpeded.
+      const bPlugins = makeGate();
+      const bEntry = makeGate();
+      const bExit = makeGate();
+      let pluginsCallCount = 0;
+      jest.doMock('../../project-graph/plugins/get-plugins', () => {
+        const actual = jest.requireActual(
+          '../../project-graph/plugins/get-plugins'
+        );
+        return {
+          ...actual,
+          getPluginsSeparated: async (...args: unknown[]) => {
+            const call = ++pluginsCallCount;
+            if (call === 2) {
+              bPlugins.reached = true;
+              await bPlugins.promise;
+            }
+            return actual.getPluginsSeparated(...args);
+          },
+        };
+      });
+      let retrieveCallCount = 0;
+      jest.doMock('../../project-graph/utils/retrieve-workspace-files', () => {
+        const actual = jest.requireActual(
+          '../../project-graph/utils/retrieve-workspace-files'
+        );
+        return {
+          ...actual,
+          retrieveProjectConfigurations: async (...args: unknown[]) => {
+            const call = ++retrieveCallCount;
+            if (call === 2) {
+              bEntry.reached = true;
+              await bEntry.promise;
+            }
+            const result = await actual.retrieveProjectConfigurations(...args);
+            const tracked = readFileSync(
+              join(fs.tempDir, 'libs/foo/.env.k'),
+              'utf-8'
+            ).trim();
+            const ignored = readFileSync(
+              join(fs.tempDir, 'libs/foo/.env.e2e'),
+              'utf-8'
+            ).trim();
+            result.projects['libs/foo'].tags = [`env:${tracked}|${ignored}`];
+            if (call === 2) {
+              bExit.reached = true;
+              await bExit.promise;
+            }
+            return result;
+          },
+        };
+      });
+
+      const {
+        getCachedSerializedProjectGraphPromise,
+      } = require('./project-graph-incremental-recomputation');
+      const { handleOutputsChanges } = require('./handle-outputs-changes');
+      const { nxProjectGraph } = require('../../project-graph/nx-deps-cache');
+      const { EventType } = require('../../native');
+
+      const waitFor = async (cond: () => boolean) => {
+        while (!cond()) {
+          await new Promise((r) => setImmediate(r));
+        }
+      };
+      const trackedPath = join(fs.tempDir, 'libs/foo/.env.k');
+      const ignoredPath = join(fs.tempDir, 'libs/foo/.env.e2e');
+      const trackedEvent = { path: 'libs/foo/.env.k', type: EventType.update };
+      const ignoredEvent = {
+        path: 'libs/foo/.env.e2e',
+        type: EventType.update,
+      };
+
+      const first = await getCachedSerializedProjectGraphPromise();
+      expect(first.projectGraph.nodes.foo.data.tags).toEqual([
+        'env:KPORT=4200|UPORT=9000',
+      ]);
+
+      // The gitignored edit invalidates directly, so the request kicks
+      // compute B, which parks while loading plugins.
+      writeFileSync(ignoredPath, 'UPORT=9001\n');
+      await handleOutputsChanges(null, [ignoredEvent]);
+      const second = getCachedSerializedProjectGraphPromise();
+      await waitFor(() => bPlugins.reached);
+
+      // The tracked edit is classified while B loads plugins: after B was
+      // kicked, before B claims its generation and clears the hashes.
+      writeFileSync(trackedPath, 'KPORT=4301\n');
+      await handleOutputsChanges(null, [trackedEvent]);
+      bPlugins.release();
+
+      // B claims and reads an intermediate 4302 the watcher never reports.
+      await waitFor(() => bEntry.reached);
+      writeFileSync(trackedPath, 'KPORT=4302\n');
+      bEntry.release();
+      await waitFor(() => bExit.reached);
+
+      // Back to the classified bytes; a hash surviving B's claim would
+      // suppress this event and let B serve the intermediate content.
+      writeFileSync(trackedPath, 'KPORT=4301\n');
+      await handleOutputsChanges(null, [trackedEvent]);
+      bExit.release();
+
+      const result = await second;
+      expect(result.error).toBeNull();
+      expect(result.projectGraph.nodes.foo.data.tags).toEqual([
+        'env:KPORT=4301|UPORT=9001',
+      ]);
+      expect(retrieveCallCount).toBeGreaterThanOrEqual(3);
+      const persisted = readFileSync(nxProjectGraph, 'utf-8');
+      expect(persisted).toContain('KPORT=4301');
+      expect(persisted).not.toContain('KPORT=4200');
+      expect(persisted).not.toContain('KPORT=4302');
+    });
+  });
+
   // A slow stale computation assigns currentProjectGraph before it discovers
   // it lost, so after the winner settles that variable can describe an older
   // graph until the loser chains away. The warm-reuse check must classify

@@ -369,6 +369,28 @@ describe('getGraphTimeDotEnvForTask', () => {
 
     expect(env.BASE_URL).toBeUndefined();
   });
+
+  it('bases the reconstruction on the given base env, not the live process.env', () => {
+    // A caller running config files in-process passes the snapshot it took
+    // under its load lock; a concurrent load's transient write to the live env
+    // must not be read as ambient, where it would mask the task file's value.
+    writeFileSync(
+      join(tempDir, '.env.e2e'),
+      'BASE_URL=http://localhost:4301\n'
+    );
+    const snapshot = { ...process.env };
+    process.env.BASE_URL = 'http://localhost:9999';
+
+    const env = getGraphTimeDotEnvForTask(
+      '.',
+      'e2e',
+      undefined,
+      undefined,
+      snapshot
+    );
+
+    expect(env.BASE_URL).toBe('http://localhost:4301');
+  });
 });
 
 describe('getForceColorForChild', () => {

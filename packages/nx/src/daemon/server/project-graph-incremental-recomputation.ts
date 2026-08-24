@@ -541,6 +541,14 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     ...separatedPlugins.defaultPlugins,
   ];
   const myGeneration = ++recomputationGeneration;
+  // A hash recorded before this claim can describe bytes this computation
+  // never reads (a callback classified between a forced invalidation and this
+  // claim records one no handler-side clear has seen), and retained it could
+  // suppress a coalesced revert landing mid-read. Bounding every hash to the
+  // window since the last claim closes that for any successor, however it was
+  // forced. A callback landing after this claim re-records and re-queues, and
+  // its stamp then marks this computation stale at the drain.
+  clearDotEnvFileHashes();
 
   // A newer kickOffRecompute has already replaced
   // cachedSerializedProjectGraphPromise. Returning it lets the async
