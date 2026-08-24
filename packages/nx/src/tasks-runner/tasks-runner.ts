@@ -4,6 +4,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { NxArgs } from '../utils/command-line-utils';
 import { TaskHasher } from '../hasher/task-hasher';
 import { DaemonClient } from '../daemon/client/client';
+import type { IoSnapshotFetchResult } from '../native';
 
 export type TaskStatus =
   | 'success'
@@ -31,5 +32,6 @@ export type TasksRunner<T = unknown> = (
     taskGraph?: TaskGraph;
     hasher?: TaskHasher;
     daemon?: DaemonClient;
+    ioSnapshots?: IoSnapshotFetchResult;
   }
 ) => any | Promise<{ [id: string]: TaskStatus }>;
