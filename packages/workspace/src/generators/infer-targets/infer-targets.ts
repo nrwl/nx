@@ -3,6 +3,7 @@ import {
   GeneratorInformation,
   getGeneratorInformation,
   findInstalledPlugins,
+  withCentralizationSuppressed,
 } from '@nx/devkit/internal';
 import {
   createProjectGraphAsync,
@@ -70,15 +71,27 @@ export async function convertToInferredGenerator(tree: Tree, options: Schema) {
   }
 
   const tasks: GeneratorCallback[] = [];
-  for (const generatorCollection of generatorsToRun) {
+  for (let i = 0; i < generatorsToRun.length; i++) {
+    const generatorCollection = generatorsToRun[i];
     try {
       const generator = generatorCollectionChoices.get(generatorCollection);
       if (generator) {
         const generatorFactory = generator.implementationFactory();
-        const callback = await generatorFactory(tree, {
-          project: options.project,
-          skipFormat: options.skipFormat,
-        });
+        const runGenerator = () =>
+          generatorFactory(tree, {
+            project: options.project,
+            skipFormat: options.skipFormat,
+          });
+        // Each conversion checks nx.json's plugins array to decide whether it
+        // can centralize shared configuration, but every later conversion in
+        // this loop appends its own plugin registration afterwards. Only the
+        // final conversion sees the finished array, so earlier ones run with
+        // centralization suppressed (they keep full per-project configuration,
+        // which is lossless).
+        const callback =
+          i === generatorsToRun.length - 1
+            ? await runGenerator()
+            : await withCentralizationSuppressed(tree, runGenerator);
         if (callback) {
           const task = await callback();
           if (typeof task === 'function') tasks.push(task);
