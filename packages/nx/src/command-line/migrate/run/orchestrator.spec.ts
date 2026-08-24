@@ -4794,6 +4794,280 @@ describe('orchestrator', () => {
         'boom <nx_migrate_step'
       );
     });
+
+    it('escalates the retry options once the step has used its three rearms, withholding the preselected retry', async () => {
+      mockGetLatestCommitSha.mockReturnValue(
+        'beef0001beef0001beef0001beef0001beef0001'
+      );
+      setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'failed', {
+            gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+            treeCleanAtDispense: true,
+            generatorCompleted: true,
+            attempt: 4,
+          }),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
+      expect(block.action).toBe('retry-failed');
+      expect(block.payload.instructions).toContain(
+        'already been retried 3 times'
+      );
+      // Escalate-only: the retry options stay listed, only the blind
+      // continuation is withheld.
+      expect(block.payload.instructions).toContain('retry:');
+      expect(block.payload.next).toBeUndefined();
+    });
+
+    it('keeps the preselected retry while rearms remain below the cap', async () => {
+      mockGetLatestCommitSha.mockReturnValue(
+        'beef0001beef0001beef0001beef0001beef0001'
+      );
+      setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'failed', {
+            gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+            treeCleanAtDispense: true,
+            generatorCompleted: true,
+            attempt: 3,
+          }),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
+      expect(block.payload.instructions).not.toContain('already been retried');
+      expect(block.payload.next).toMatch(/--step-action=retry$/);
+    });
+
+    it('escalates a died step past the cap the same way', async () => {
+      setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'died', {
+            generatorCompleted: true,
+            attempt: 4,
+          }),
+        ],
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
+      expect(block.action).toBe('died');
+      expect(block.payload.instructions).toContain(
+        'already been retried 3 times'
+      );
+      expect(block.payload.instructions).toContain('retry:');
+      expect(block.payload.next).toBeUndefined();
+    });
+
+    it('still honors an explicit retry past the cap', async () => {
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'failed', {
+            generatorCompleted: true,
+            attempt: 4,
+          }),
+        ],
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry',
+      });
+
+      expect(lastBlock().action).toBe('next-step');
+      expect(readRunState(dir).steps[0].attempt).toBe(5);
+    });
+  });
+
+  describe('reconcile: no-progress escalation', () => {
+    it('escalates the third response with no transition between them, keeping the step content', async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'pending')],
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      expect(readRunState(dir).noProgress.consecutiveCount).toBe(1);
+      // The first dispense's own pending->dispensed write lands after its
+      // streak was tracked, so the first re-entry resets rather than
+      // increments; the two later re-entries repeat over unchanged state.
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const blocks = parseBlocks();
+      expect(blocks.map((b) => b.action)).toEqual([
+        'next-step',
+        'next-step',
+        'next-step',
+        'no-progress',
+      ]);
+      const escalated = blocks[3];
+      expect(escalated.payload.instructions).toContain('No progress');
+      expect(escalated.payload.instructions).toContain(
+        'report the blocker to the user'
+      );
+      // The step's own content survives the escalation: acting on it is
+      // still what resolves the loop.
+      expect(escalated.payload.instructions).toContain(
+        'Apply migration @nx/js:gen'
+      );
+      expect(escalated.payload.command).toContain('--run-migration=@nx/js:gen');
+      expect(readRunState(dir).noProgress.consecutiveCount).toBe(3);
+      expect(mockDispense).toHaveBeenLastCalledWith({
+        action: 'no-progress',
+        attempt: 1,
+      });
+    });
+
+    it('resets the streak on a durable transition and counts the next step independently', async () => {
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:a', 'pending'),
+          migStep('step-2', '@nx/js:b', 'pending'),
+        ],
+        plan: [genMig('@nx/js', 'a'), genMig('@nx/js', 'b')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      expect(readRunState(dir).noProgress.consecutiveCount).toBe(2);
+      const fingerprintBefore = readRunState(dir).noProgress.fingerprint;
+      const state = readRunState(dir);
+      writeRunState(dir, {
+        ...state,
+        steps: [
+          {
+            ...state.steps[0],
+            status: 'succeeded',
+            finishedAt: '2026-01-01T00:01:00.000Z',
+          },
+          state.steps[1],
+        ],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(lastBlock().action).toBe('next-step');
+      expect(readRunState(dir).noProgress.consecutiveCount).toBe(1);
+      expect(readRunState(dir).noProgress.fingerprint).not.toBe(
+        fingerprintBefore
+      );
+    });
+
+    it('neither counts nor resets while a live worker is inside the hang threshold', async () => {
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'running', {
+            pid: process.pid,
+            startedAt: new Date().toISOString(),
+          }),
+        ],
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(parseBlocks().map((b) => b.action)).toEqual([
+        'still-running',
+        'still-running',
+        'still-running',
+      ]);
+      expect(readRunState(dir).noProgress).toBeUndefined();
+    });
+
+    it('counts a still-running worker past the hang threshold and escalates', async () => {
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'running', {
+            pid: process.pid,
+            startedAt: new Date(Date.now() - 20 * 60 * 1000).toISOString(),
+          }),
+        ],
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const blocks = parseBlocks();
+      expect(blocks.map((b) => b.action)).toEqual([
+        'still-running',
+        'still-running',
+        'no-progress',
+      ]);
+      expect(blocks[2].payload.instructions).toContain('may be hung');
+      expect(readRunState(dir).noProgress.consecutiveCount).toBe(3);
+    });
+
+    it('counts a running worker that cannot prove a start time instead of exempting it forever', async () => {
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'running', { pid: process.pid }),
+        ],
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(lastBlock().action).toBe('no-progress');
+      expect(readRunState(dir).noProgress.consecutiveCount).toBe(3);
+    });
+
+    it('resets the streak when a counted worker records its generator marker without changing status', async () => {
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'running', {
+            pid: process.pid,
+            startedAt: new Date(Date.now() - 20 * 60 * 1000).toISOString(),
+          }),
+        ],
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      expect(readRunState(dir).noProgress.consecutiveCount).toBe(2);
+      // The marker is durable progress on the same attempt and status; it
+      // must not let the streak run on to a no-progress escalation.
+      const state = readRunState(dir);
+      writeRunState(dir, {
+        ...state,
+        steps: [
+          {
+            ...state.steps[0],
+            generatorCompleted: true,
+            generatorCompletedAtAttempt: 1,
+            generatorMadeChanges: true,
+          },
+        ],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(lastBlock().action).toBe('still-running');
+      expect(readRunState(dir).noProgress.consecutiveCount).toBe(1);
+    });
   });
 
   describe('reconcile: dispense exhaustiveness', () => {
