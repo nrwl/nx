@@ -177,4 +177,36 @@ describe('SummaryTerminalOutputLifeCycle', () => {
 
     expect(out).toContain('--output-style=static');
   });
+  it('does not address a log for a failure that produced no output', () => {
+    const task = makeTask('a:build');
+    const lifeCycle = new SummaryTerminalOutputLifeCycle([task]);
+
+    const result = captureOutput(() => {
+      // A batch executor can report a failure without attributing any output to
+      // the task. `persistTerminalOutputs` skips those, so no file is written -
+      // and a summary whose whole contract is "the log is over there" must not
+      // point at one that does not exist.
+      lifeCycle.endTasks([
+        { task, status: 'failure', code: 1, terminalOutput: undefined } as any,
+      ]);
+      lifeCycle.endCommand();
+    });
+
+    expect(result).toContain('a:build');
+    expect(result).not.toContain('full log:');
+  });
+
+  it('still addresses the log when the failure did produce output', () => {
+    const task = makeTask('a:build');
+    const lifeCycle = new SummaryTerminalOutputLifeCycle([task]);
+
+    const result = captureOutput(() => {
+      lifeCycle.endTasks([
+        { task, status: 'failure', code: 1, terminalOutput: 'boom' } as any,
+      ]);
+      lifeCycle.endCommand();
+    });
+
+    expect(result).toContain('full log:');
+  });
 });
