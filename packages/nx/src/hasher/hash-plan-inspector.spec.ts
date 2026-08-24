@@ -134,6 +134,51 @@ describe('HashPlanInspector', () => {
     tempFs.reset();
   });
 
+  describe('provenance', () => {
+    beforeEach(async () => {
+      await inspector.init();
+    });
+
+    it('labels declared inputs as target, dependency, or native', () => {
+      const inputs = inspector.inspectTaskInputs({
+        project: 'test-app',
+        target: 'build',
+      })['test-app:build'];
+      const sources = new Set(Object.values(inputs.sources));
+      expect(sources.has('snapshot')).toBe(false);
+      expect(inputs.markers).toEqual([]);
+      expect(inputs.sources['nx.json']).toBe('native');
+      const own = inputs.files.filter((f) => f.startsWith('apps/test-app/'));
+      const dep = inputs.files.filter((f) => f.startsWith('libs/test-lib/'));
+      expect(own.length).toBeGreaterThan(0);
+      expect(dep.length).toBeGreaterThan(0);
+      for (const f of own) expect(inputs.sources[f]).toBe('target');
+      for (const f of dep) expect(inputs.sources[f]).toBe('dependency');
+    });
+
+    it('labels filesets as snapshot and reports the marker when an override is present', () => {
+      const inputs = inspector.inspectTaskInputs(
+        { project: 'test-app', target: 'build' },
+        {},
+        {},
+        false,
+        {
+          'test-app:build': {
+            projects: { 'test-app': ['apps/test-app/src/**/*.ts'] },
+            workspace: [],
+            taskOutputs: {},
+            digest: 'abc123',
+          },
+        }
+      )['test-app:build'];
+      expect(inputs.markers).toEqual(['io-snapshot:abc123']);
+      const own = inputs.files.filter((f) => f.startsWith('apps/test-app/'));
+      expect(own.length).toBeGreaterThan(0);
+      for (const f of own) expect(inputs.sources[f]).toBe('snapshot');
+      expect(inputs.sources['nx.json']).toBe('native');
+    });
+  });
+
   describe('inspectHashPlan', () => {
     beforeAll(async () => {
       await inspector.init();

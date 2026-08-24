@@ -2,7 +2,9 @@ use crate::native::tasks::hashers::{
     ProjectFileIndicesCache, collect_json_input_files, collect_project_file_paths_cached,
     collect_workspace_file_paths, resolve_task_output_files,
 };
-use crate::native::tasks::task_hasher::{HashInputs, HashInputsBuilder};
+use crate::native::tasks::task_hasher::{
+    HashInputs, HashInputsBuilder, input_source, is_snapshot_backed, task_project,
+};
 use crate::native::tasks::types::{HashInstruction, HashPlans};
 use crate::native::types::FileData;
 use hashbrown::HashSet;
@@ -97,15 +99,23 @@ impl HashPlanInspector {
         let results: Vec<(&String, HashInputsBuilder)> = hash_plans
             .plans
             .iter()
-            .flat_map(|(task_id, ids)| ids.iter().map(move |id| (task_id, *id)))
+            .flat_map(|(task_id, ids)| {
+                let snapshot_backed = is_snapshot_backed(pool, ids);
+                ids.iter().map(move |id| (task_id, *id, snapshot_backed))
+            })
             .par_bridge()
-            .map(|(task_id, id)| {
+            .map(|(task_id, id, snapshot_backed)| {
                 let instruction_ref = pool.get(id);
                 let builder = self.resolve_instruction_inputs(
                     instruction_ref.value(),
                     &project_file_indices_cache,
                 )?;
-                Ok::<_, anyhow::Error>((task_id, builder))
+                let source = input_source(
+                    instruction_ref.value(),
+                    task_project(task_id),
+                    snapshot_backed,
+                );
+                Ok::<_, anyhow::Error>((task_id, builder.tag(source)))
             })
             .collect::<anyhow::Result<_>>()?;
 

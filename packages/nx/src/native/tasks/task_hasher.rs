@@ -7,7 +7,10 @@ use hashbrown::HashSet;
 use crate::native::{
     hasher::hash,
     project_graph::{types::ProjectGraph, utils::create_project_root_mappings},
-    tasks::types::{HashInstruction, HashPlans},
+    tasks::types::{
+        ALWAYS_ON_WORKSPACE_FILES, HashInstruction, HashPlans, IO_SNAPSHOT_MARKER_PREFIX,
+        InstructionPool,
+    },
     types::{NapiDashMap, SharedStr},
 };
 use crate::native::{
@@ -45,6 +48,82 @@ pub struct HashInputs {
     pub dep_outputs: Vec<String>,
     /// External dependencies
     pub external: Vec<String>,
+    /// Provenance of every value above, keyed by the value itself.
+    #[napi(ts_type = "Record<string, 'snapshot' | 'target' | 'dependency' | 'native'>")]
+    pub sources: HashMap<String, String>,
+    /// Domain markers in the plan, e.g. `io-snapshot:<digest>`.
+    pub markers: Vec<String>,
+}
+
+/// Where an input value came from; see `input_source`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum InputSource {
+    Snapshot,
+    Target,
+    Dependency,
+    Native,
+}
+
+impl InputSource {
+    fn as_str(self) -> &'static str {
+        match self {
+            InputSource::Snapshot => "snapshot",
+            InputSource::Target => "target",
+            InputSource::Dependency => "dependency",
+            InputSource::Native => "native",
+        }
+    }
+}
+
+/// Classifies one instruction's inputs for `HashInputs::sources`. A plan that
+/// carries an io-snapshot marker had its declared filesets replaced, so its
+/// file-bearing instructions are snapshot-sourced; otherwise filesets are
+/// `target` (own project) or `dependency`. Env/runtime/externals/config are
+/// always native.
+pub(crate) fn input_source(
+    instruction: &HashInstruction,
+    task_project: &str,
+    snapshot_backed: bool,
+) -> InputSource {
+    match instruction {
+        HashInstruction::ProjectFileSet(project, _) => {
+            if snapshot_backed {
+                InputSource::Snapshot
+            } else if project == task_project {
+                InputSource::Target
+            } else {
+                InputSource::Dependency
+            }
+        }
+        HashInstruction::WorkspaceFileSet(file_sets) => {
+            if file_sets.iter().eq(ALWAYS_ON_WORKSPACE_FILES.iter()) {
+                InputSource::Native
+            } else if snapshot_backed {
+                InputSource::Snapshot
+            } else {
+                InputSource::Target
+            }
+        }
+        HashInstruction::TaskOutput(_, _) => {
+            if snapshot_backed {
+                InputSource::Snapshot
+            } else {
+                InputSource::Dependency
+            }
+        }
+        _ => InputSource::Native,
+    }
+}
+
+/// True when the plan carries an io-snapshot marker.
+pub(crate) fn is_snapshot_backed(pool: &InstructionPool, ids: &[u32]) -> bool {
+    ids.iter().any(|id| {
+        matches!(&*pool.get(*id), HashInstruction::Marker(m) if m.starts_with(IO_SNAPSHOT_MARKER_PREFIX))
+    })
+}
+
+pub(crate) fn task_project(task_id: &str) -> &str {
+    task_id.split(':').next().unwrap_or(task_id)
 }
 
 /// Internal builder that uses HashSet for O(1) deduplication during accumulation.
@@ -56,6 +135,8 @@ pub(crate) struct HashInputsBuilder {
     pub(crate) environment: HashSet<String>,
     pub(crate) dep_outputs: HashSet<String>,
     pub(crate) external: HashSet<String>,
+    pub(crate) sources: HashMap<String, &'static str>,
+    pub(crate) markers: HashSet<String>,
 }
 
 impl HashInputsBuilder {
@@ -66,6 +147,26 @@ impl HashInputsBuilder {
         self.environment.extend(other.environment);
         self.dep_outputs.extend(other.dep_outputs);
         self.external.extend(other.external);
+        for (value, source) in other.sources {
+            self.sources.entry(value).or_insert(source);
+        }
+        self.markers.extend(other.markers);
+    }
+
+    /// Records `source` for every value currently in the builder.
+    pub(crate) fn tag(mut self, source: InputSource) -> Self {
+        let label = source.as_str();
+        for value in self
+            .files
+            .iter()
+            .chain(self.runtime.iter())
+            .chain(self.environment.iter())
+            .chain(self.dep_outputs.iter())
+            .chain(self.external.iter())
+        {
+            self.sources.entry(value.clone()).or_insert(label);
+        }
+        self
     }
 }
 
@@ -94,9 +195,13 @@ impl From<&HashInstruction> for HashInputsBuilder {
                 external: HashSet::from(["AllExternalDependencies".to_string()]),
                 ..Default::default()
             },
-            HashInstruction::ProjectConfiguration(_)
-            | HashInstruction::Cwd(_)
-            | HashInstruction::Marker(_) => HashInputsBuilder::default(),
+            HashInstruction::Marker(marker) => HashInputsBuilder {
+                markers: HashSet::from([marker.clone()]),
+                ..Default::default()
+            },
+            HashInstruction::ProjectConfiguration(_) | HashInstruction::Cwd(_) => {
+                HashInputsBuilder::default()
+            }
             // These variants require external context — callers must match on them
             // explicitly before falling through to `.into()`.
             other => unreachable!(
@@ -123,6 +228,12 @@ impl From<HashInputsBuilder> for HashInputs {
             environment: to_sorted_vec(builder.environment),
             dep_outputs: to_sorted_vec(builder.dep_outputs),
             external: to_sorted_vec(builder.external),
+            sources: builder
+                .sources
+                .into_iter()
+                .map(|(k, v)| (k, v.to_string()))
+                .collect(),
+            markers: to_sorted_vec(builder.markers),
         }
     }
 }
@@ -312,6 +423,15 @@ impl TaskHasher {
         // Use separate maps: one for hash details, one for input accumulation with HashSet
         let hashes: NapiDashMap<String, HashDetails> = NapiDashMap::new();
         // Only allocate inputs accumulator when someone is listening for inputs
+        let snapshot_backed: HashMap<&String, bool> = if should_collect_inputs {
+            hash_plans
+                .plans
+                .iter()
+                .map(|(task_id, ids)| (task_id, is_snapshot_backed(&hash_plans.pool, ids)))
+                .collect()
+        } else {
+            HashMap::new()
+        };
         let inputs_accum: Option<DashMap<String, HashInputsBuilder>> = if should_collect_inputs {
             Some(DashMap::new())
         } else {
@@ -388,7 +508,15 @@ impl TaskHasher {
 
                         // Accumulate inputs using HashSet for O(1) deduplication (only when collecting)
                         if let Some(ref accum) = inputs_accum {
-                            accum.entry(task_id.to_string()).or_default().extend(inputs);
+                            let source = input_source(
+                                instruction_ref.value(),
+                                task_project(task_id),
+                                snapshot_backed.get(task_id).copied().unwrap_or(false),
+                            );
+                            accum
+                                .entry(task_id.to_string())
+                                .or_default()
+                                .extend(inputs.tag(source));
                         }
 
                         match slot {
@@ -730,5 +858,63 @@ mod tests {
         assert!(Arc::ptr_eq(&first, &second));
         assert!(!Arc::ptr_eq(&first, &other));
         assert_eq!(interner.len(), 2);
+    }
+
+    #[test]
+    fn input_source_classifies_by_marker_and_project() {
+        let own = HashInstruction::ProjectFileSet("web".into(), vec!["web/**/*".into()]);
+        let dep = HashInstruction::ProjectFileSet("ui".into(), vec!["ui/**/*".into()]);
+        let ws = HashInstruction::WorkspaceFileSet(vec!["{workspaceRoot}/x".into()]);
+        let always_on = HashInstruction::WorkspaceFileSet(
+            ALWAYS_ON_WORKSPACE_FILES
+                .iter()
+                .map(|s| s.to_string())
+                .collect(),
+        );
+        let out = HashInstruction::TaskOutput("ui/dist/**".into(), vec!["ui:build".into()]);
+        let env = HashInstruction::Environment("CI".into());
+
+        assert_eq!(input_source(&own, "web", false), InputSource::Target);
+        assert_eq!(input_source(&dep, "web", false), InputSource::Dependency);
+        assert_eq!(input_source(&ws, "web", false), InputSource::Target);
+        assert_eq!(input_source(&out, "web", false), InputSource::Dependency);
+        assert_eq!(input_source(&always_on, "web", false), InputSource::Native);
+        assert_eq!(input_source(&env, "web", false), InputSource::Native);
+
+        assert_eq!(input_source(&own, "web", true), InputSource::Snapshot);
+        assert_eq!(input_source(&dep, "web", true), InputSource::Snapshot);
+        assert_eq!(input_source(&ws, "web", true), InputSource::Snapshot);
+        assert_eq!(input_source(&out, "web", true), InputSource::Snapshot);
+        assert_eq!(input_source(&always_on, "web", true), InputSource::Native);
+        assert_eq!(input_source(&env, "web", true), InputSource::Native);
+    }
+
+    #[test]
+    fn snapshot_backed_requires_an_io_snapshot_marker() {
+        let pool = InstructionPool::new();
+        let plain = pool.intern(HashInstruction::Environment("CI".into()));
+        let other = pool.intern(HashInstruction::Marker("something-else".into()));
+        let io = pool.intern(HashInstruction::Marker("io-snapshot:abc".into()));
+        assert!(!is_snapshot_backed(&pool, &[plain, other]));
+        assert!(is_snapshot_backed(&pool, &[plain, io]));
+        assert_eq!(task_project("web:build:production"), "web");
+    }
+
+    #[test]
+    fn tag_records_sources_and_extend_keeps_first() {
+        let mut a = HashInputsBuilder {
+            files: HashSet::from(["a.ts".to_string()]),
+            ..Default::default()
+        }
+        .tag(InputSource::Snapshot);
+        let b = HashInputsBuilder {
+            files: HashSet::from(["a.ts".to_string(), "b.ts".to_string()]),
+            ..Default::default()
+        }
+        .tag(InputSource::Target);
+        a.extend(b);
+        let inputs: HashInputs = a.into();
+        assert_eq!(inputs.sources["a.ts"], "snapshot");
+        assert_eq!(inputs.sources["b.ts"], "target");
     }
 }
