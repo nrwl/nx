@@ -98,10 +98,10 @@ class ProcessTaskUtilsTest {
   fun `test a task whose dependency set cannot be fully resolved stays cacheable and fails open`() {
     val project = ProjectBuilder.builder().build()
     val task = project.tasks.register("packagesOtherProject").get()
-    // Qualified path forces the bypass; the FileCollection is screened, so the set is knowably
+    // Qualified path forces the bypass; the second path does not exist, so the set is knowably
     // short. Cacheability is Gradle's verdict, not the plugin's: the inputs over-declare instead.
     task.dependsOn(":other:jar")
-    task.dependsOn(project.files("some-input.txt"))
+    task.dependsOn(":missing:jar")
 
     val result =
         processTask(
@@ -381,15 +381,20 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
-    fun `test a screened FileCollection keeps the catch-all even when paths resolve`() {
+    fun `test a FileCollection's builtBy resolves through the safe resolver`() {
       val other = ProjectBuilder.builder().withParent(project).withName("other").build()
-      other.tasks.register("jar")
+      val jar = other.tasks.register("jar").get()
+      jar.outputs.file(java.io.File(workspaceRoot, "other/build/libs/other.jar"))
       val builder = project.tasks.register("builderTask").get()
 
       val task = project.tasks.register("consumesContainer").get()
       task.dependsOn(":other:jar")
-      // A FileCollection is screened, so the fail-open inputs must survive.
-      task.dependsOn(project.files("some.txt").builtBy(builder))
+      // builtBy holds a task and a path string; the string is the deadlock shape (#36668).
+      task.dependsOn(project.files("some.txt").builtBy(builder, ":other:jar"))
+
+      val resolved = getDependsOnTask(task)
+      assertTrue(
+          resolved.containsAll(setOf(jar, builder)), "expected both producers, got $resolved")
 
       val result =
           getInputsForTask(
@@ -401,9 +406,28 @@ class ProcessTaskUtilsTest {
               GitIgnoreClassifier(java.io.File(workspaceRoot)))
 
       assertNotNull(result)
-      assertTrue(
+      assertFalse(
           result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*" },
-          "a screened container must keep the catch-all, got $result")
+          "a fully resolved builtBy must not fail open, got $result")
+      assertTrue(
+          result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar" },
+          "the builtBy producer's outputs must feed precise patterns, got $result")
+    }
+
+    @Test
+    fun `test an input-wired producer is a dependency of a bypassed task`() {
+      val other = ProjectBuilder.builder().withParent(project).withName("other").build()
+      val jar = other.tasks.register("jar").get()
+      val producer = project.tasks.register("producesInput").get()
+      producer.outputs.file(java.io.File(workspaceRoot, "build/produced.txt"))
+
+      val task = project.tasks.register("consumesOutput").get()
+      task.dependsOn(":other:jar")
+      // Gradle's getTaskDependencies() is dependsOn plus inputs; the bypass must keep both halves.
+      task.inputs.files(producer.outputs.files)
+
+      val resolved = getDependsOnTask(task)
+      assertTrue(resolved.containsAll(setOf(jar, producer)), "expected both halves, got $resolved")
     }
 
     @Test

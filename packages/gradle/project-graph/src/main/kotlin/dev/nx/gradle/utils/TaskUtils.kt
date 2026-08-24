@@ -19,8 +19,10 @@ import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.internal.TaskInternal
 import org.gradle.api.internal.provider.ProviderInternal
 import org.gradle.api.internal.provider.TransformBackedProvider
+import org.gradle.api.internal.tasks.CachingTaskDependencyResolveContext
 import org.gradle.api.internal.tasks.DefaultTaskDependency
 import org.gradle.api.internal.tasks.TaskResolver
+import org.gradle.api.internal.tasks.WorkDependencyResolver
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.AbstractCopyTask
 import org.gradle.api.tasks.TaskProvider
@@ -71,9 +73,11 @@ private fun flattenDependsOn(task: Task): List<Any> =
     dependsOnExpansionCache[task]
         ?: computeFlattenDependsOn(task).also { dependsOnExpansionCache[task] = it }
 
+private fun computeFlattenDependsOn(task: Task): List<Any> = flattenValues(task, task.dependsOn)
+
 // `dependsOn: [a, b]` is ONE element. Descend only List/Set/Array — a FileCollection is Iterable
 // too, and iterating one resolves it.
-private fun computeFlattenDependsOn(task: Task): List<Any> {
+private fun flattenValues(task: Task, values: Collection<Any?>): List<Any> {
   val flattened = mutableListOf<Any>()
   // Identity-keyed cycle guard: Gradle's own visitDependencies has none and loops forever.
   val seen = Collections.newSetFromMap(IdentityHashMap<Any, Boolean>())
@@ -106,7 +110,7 @@ private fun computeFlattenDependsOn(task: Task): List<Any> {
       else -> flattened.add(value)
     }
   }
-  task.dependsOn.forEach(::visit)
+  values.forEach(::visit)
   return flattened
 }
 
@@ -163,41 +167,76 @@ private fun safeTaskResolver(owner: Project): TaskResolver =
       @Suppress("unused") fun resolveTask(path: GradlePath): Task? = lookupTask(owner, path.path)
     }
 
+/** The values a [DefaultTaskDependency] was built with; null when they cannot be read. */
+private fun immutableValuesOf(dep: DefaultTaskDependency): Set<*>? =
+    try {
+      DefaultTaskDependency::class.java.getDeclaredField("immutableValues").let {
+        it.isAccessible = true
+        it.get(dep) as? Set<*>
+      }
+    } catch (t: Throwable) {
+      null
+    }
+
 /**
- * Gradle's engine with [safeTaskResolver]. Screening is an allowlist: a value whose internals could
- * hold the real resolver (a FileCollection's builtBy) is counted, never passed in.
+ * Gradle's own resolve context over `dependsOn` + [Task.getInputs] (the two halves of
+ * `getTaskDependencies()`), with every [DefaultTaskDependency] it meets swapped for a copy that
+ * resolves strings through [safeTaskResolver] — only that class resolves a path. Lost values count.
  */
+private class SafeResolveContext
+private constructor(private val owner: Project, private val task: Task, val lost: LostCounter) :
+    CachingTaskDependencyResolveContext<Task>(listOf(WorkDependencyResolver.TASK_AS_TASK, lost)) {
+  constructor(owner: Project, task: Task) : this(owner, task, LostCounter())
+
+  class LostCounter : WorkDependencyResolver<Task> {
+    var count = 0
+
+    override fun resolve(task: Task, node: Any, resolveAction: Action<in Task>): Boolean {
+      count++
+      return true
+    }
+  }
+
+  override fun add(dependency: Any) {
+    super.add(if (dependency is DefaultTaskDependency) screenedCopy(dependency) else dependency)
+  }
+
+  /** Same-project names resolve against the consumer; a producer-relative name counts as lost. */
+  fun screenedCopy(values: Collection<Any?>): DefaultTaskDependency {
+    val copy = DefaultTaskDependency(safeTaskResolver(owner), null)
+    flattenValues(task, values).forEach { value ->
+      if (value is CharSequence) {
+        if (lookupTask(owner, value.toString()) != null) copy.add(value) else lost.count++
+      } else {
+        copy.add(value)
+      }
+    }
+    return copy
+  }
+
+  private fun screenedCopy(dep: DefaultTaskDependency): DefaultTaskDependency {
+    val immutable = immutableValuesOf(dep)
+    if (immutable == null) lost.count++
+    return screenedCopy((immutable ?: emptySet<Any>()) + dep.mutableValues)
+  }
+}
+
+/** Gradle's engine over [SafeResolveContext]; failure keeps the Tasks in hand and fails open. */
 private fun resolveDependsOn(task: Task): DependsOnResolution =
     dependsOnResolutionCache[task]
         ?: computeResolveDependsOn(task).also { dependsOnResolutionCache[task] = it }
 
 private fun computeResolveDependsOn(task: Task): DependsOnResolution {
-  val engineValues = mutableListOf<Any>()
-  var unresolved = 0
-  flattenDependsOn(task).forEach { value ->
-    when (value) {
-      is Task -> engineValues.add(value)
-      is CharSequence ->
-          if (lookupTask(task.project, value.toString()) != null) {
-            engineValues.add(value)
-          } else {
-            unresolved++
-          }
-      is Provider<*> -> engineValues.add(value)
-      else -> unresolved++ // FileCollection, TaskDependency, Buildable, anything unknown
-    }
-  }
+  val context = SafeResolveContext(task.project, task)
   return try {
-    val copy = DefaultTaskDependency(safeTaskResolver(task.project), null)
-    engineValues.forEach { copy.add(it) }
-    DependsOnResolution(copy.getDependencies(task), unresolved)
+    val root = context.screenedCopy(task.dependsOn)
+    root.add(task.inputs)
+    DependsOnResolution(context.getDependencies(task, root), context.lost.count)
   } catch (e: Throwable) {
-    // Engine drift or a rejected value: keep the Tasks in hand, count the rest unresolved so
-    // inputs fail open.
-    task.logger.info("Safe dependsOn resolution failed for ${task.path}: ${e.message}")
-    DependsOnResolution(
-        engineValues.filterIsInstance<Task>().toSet(),
-        unresolved + engineValues.count { it !is Task })
+    task.logger.info("Safe dependency resolution failed for ${task.path}: ${e.message}")
+    val values = flattenDependsOn(task)
+    // The whole inputs half is lost too, so this always fails open.
+    DependsOnResolution(values.filterIsInstance<Task>().toSet(), 1 + values.count { it !is Task })
   }
 }
 
