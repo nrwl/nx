@@ -1027,10 +1027,11 @@ export class TaskOrchestrator {
    * The worker's whole captured log is rendered as a fold above them when the
    * run asked for full output, or when any task failed or was stopped. A
    * diagnostic that explains a failure is routinely one no task claimed:
-   * `@nx/maven` writes its exit-code dump and collected task output to the
-   * worker's stdout - it points slf4j at `System.out` precisely because stderr
-   * carries its result protocol - and `@nx/gradle` emits configuration-phase
-   * errors before the first
+   * `@nx/maven`'s batch impl writes its exit-code dump and failed-task outputs
+   * to the worker's stderr via `console.error`, and the Maven JVM it spawns
+   * points slf4j at `System.out` because its own stderr carries the result
+   * protocol - two layers, two streams, both captured and neither attributed to
+   * a task - and `@nx/gradle` emits configuration-phase errors before the first
    * `> Task :x:y` header tells it which task to attribute to. Both catch their
    * own crash and backfill task results, so the batch resolves and lands here
    * rather than in the caller's failure path.
