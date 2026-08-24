@@ -122,6 +122,69 @@ describe('task planner', () => {
     });
   });
 
+  it('should append an io-snapshot marker only for tasks with an override', async () => {
+    const builder = new ProjectGraphBuilder();
+    builder.addNode({
+      name: 'parent',
+      type: 'lib',
+      data: {
+        root: 'parent',
+        targets: { build: { executor: 'nx:run-commands' } },
+      },
+    });
+    builder.addNode({
+      name: 'child',
+      type: 'lib',
+      data: {
+        root: 'child',
+        targets: { build: { executor: 'nx:run-commands' } },
+      },
+    });
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['parent', 'child'],
+      ['build'],
+      undefined,
+      {},
+      false
+    );
+    const ref = transferProjectGraph(
+      transformProjectGraphForRust(projectGraph)
+    );
+    const planner = new HashPlanner({} as any, ref);
+
+    const withOverride = planner.getPlans(
+      ['parent:build', 'child:build'],
+      taskGraph,
+      {
+        'parent:build': {
+          projects: { parent: ['parent/src/**/*.ts'] },
+          workspace: [],
+          taskOutputs: {},
+          digest: 'abc123',
+        },
+      }
+    );
+    expect(withOverride['parent:build']).toContain('io-snapshot:abc123');
+    expect(withOverride['child:build']).not.toContainEqual(
+      expect.stringMatching(/^io-snapshot:/)
+    );
+
+    // No overrides ⇒ plans are identical to today's.
+    const without = planner.getPlans(
+      ['parent:build', 'child:build'],
+      taskGraph
+    );
+    expect(without['parent:build']).not.toContainEqual(
+      expect.stringMatching(/^io-snapshot:/)
+    );
+    expect(without['parent:build']).toEqual(
+      withOverride['parent:build'].filter((i) => !i.startsWith('io-snapshot:'))
+    );
+  });
+
   it('should plan the task where the project has dependencies', async () => {
     const projectFileMap = {
       parent: [
