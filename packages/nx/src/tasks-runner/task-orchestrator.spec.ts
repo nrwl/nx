@@ -596,9 +596,15 @@ describe('TaskOrchestrator', () => {
         expect(out).toContain('FAILURE: Could not determine java version');
         expect(out).toContain('compile error detail');
         expect(out).toContain('batch @nx/js:tsc 1');
-        expect(
-          orchestrator.options.lifeCycle.printTaskTerminalOutput
-        ).not.toHaveBeenCalled();
+        // The fold carries what no task claimed; the per-task blocks carry the
+        // attribution, and for some plugins output that is in no other place.
+        const print = orchestrator.options.lifeCycle.printTaskTerminalOutput;
+        expect(print).toHaveBeenCalledWith(a, 'success', 'a body');
+        expect(print).toHaveBeenCalledWith(
+          b,
+          badStatus,
+          'Error: gradlew batch failed'
+        );
       }
     );
 
@@ -647,9 +653,13 @@ describe('TaskOrchestrator', () => {
       // bytes no task attributed to itself.
       expect(out).toContain('runner summary no task claimed');
       expect(out).toContain('batch @nx/js:tsc 1');
+      // And the tasks still render themselves. Letting the fold stand in for
+      // them drops anything a plugin reports without writing to stdio.
       expect(
         orchestrator.options.lifeCycle.printTaskTerminalOutput
-      ).not.toHaveBeenCalled();
+      ).toHaveBeenCalledWith(a, 'success', 'a body');
+      // Nothing to redirect to when every task prints its own block.
+      expect(out).not.toContain('output in "batch @nx/js:tsc 1" above');
     });
 
     it('does not fold a batch under the failures-only default', () => {

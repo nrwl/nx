@@ -1003,42 +1003,34 @@ export class TaskOrchestrator {
    * requested output style has to reach this path rather than stopping at the
    * life cycle.
    *
-   * The worker's whole log is rendered as one fold in two cases. A full-output
-   * run asked for everything it emitted. And any batch with a task that failed
-   * or was stopped gets it too, because a diagnostic that explains a failure is
-   * routinely one no task claimed: `@nx/maven` writes its exit-code dump and
-   * every collected stderr line to the worker's stderr, and `@nx/gradle` emits
-   * configuration-phase errors before the first `> Task :x:y` header tells it
-   * which task to attribute to. Both catch their own crash and backfill task
-   * results, so the batch resolves and lands here rather than in the caller's
-   * failure path — and before this the captured log was discarded unread, which
-   * lost bytes that streamed live on a non-grouped run. The fold is a superset
-   * of the per-task bodies rather than a duplicate of them, since both plugins
-   * tee task output into the worker's stdio on the way to `terminalOutput`.
+   * Two things are rendered, and they answer different questions.
    *
-   * Otherwise the batch's own attribution is trusted and each task renders
-   * through the life cycle exactly as in a non-batch run - which for run-many
-   * means failures in full and successes collapsed to a line, and for run-one
-   * additionally means the initiating project prints in full whatever its
-   * status. A batch that never reported results is handled by the caller.
+   * Every task always renders through the life cycle, exactly as in a non-batch
+   * run - failures in full, successes collapsed to a line for run-many, plus the
+   * initiating project in full for run-one. That is what attributes output to a
+   * task, and it is the only place some of it exists: `@nx/jest` synthesizes
+   * each task's `terminalOutput` from an aggregated result and never writes
+   * those per-project summaries to the worker's stdio at all.
    *
-   * The cost of the fold branch is that it replaces per-task rendering
-   * wholesale, so a failing batch prints its successful tasks' bodies too -
-   * these plugins tee every task's output into the worker's stdio, so the log
-   * is not separable into claimed and unclaimed parts. That is a deliberate
-   * trade: an unreadable failure is worse than a verbose one. It also means a
-   * failing `@nx/jest` batch loses the per-project summaries it synthesizes
-   * rather than writes (see the note below), which is the price of the same
-   * decision.
+   * The worker's whole captured log is rendered as a fold above them when the
+   * run asked for full output, or when any task failed or was stopped. A
+   * diagnostic that explains a failure is routinely one no task claimed:
+   * `@nx/maven` writes its exit-code dump and collected stderr to the worker's
+   * stderr, and `@nx/gradle` emits configuration-phase errors before the first
+   * `> Task :x:y` header tells it which task to attribute to. Both catch their
+   * own crash and backfill task results, so the batch resolves and lands here
+   * rather than in the caller's failure path.
    *
-   * Note what the fold path assumes: that everything in a task's
-   * `terminalOutput` also reached the worker's stdio, so replacing the per-task
-   * blocks with the log loses nothing. That holds for `@nx/maven` and
-   * `@nx/gradle`, which tee, but not universally - `@nx/jest` synthesizes each
-   * task's `terminalOutput` from an aggregated result and never writes those
-   * per-project summaries to stdio, so a failing `@nx/jest --batch` run under
-   * grouping does lose them. It opts out of batching by default, which is what
-   * keeps this an edge rather than the common case.
+   * Rendering both duplicates some bytes, deliberately. `@nx/maven` and
+   * `@nx/gradle` tee each task's output into the worker's stdio on the way to
+   * `terminalOutput`, so a failing task's body appears in the fold and again in
+   * its own block. That is bounded - successes stay collapsed, so they add only
+   * a line each, and a crashed batch backfills a short `e.toString()` rather
+   * than a body - and it buys back attribution the fold cannot express. The
+   * alternative, letting the fold replace per-task rendering, silently dropped
+   * `@nx/jest`'s summaries and is what this shape exists to avoid.
+   *
+   * A batch that never reported results is handled by the caller instead.
    */
   private printGroupedBatchOutput(
     batch: Batch,
@@ -1058,8 +1050,14 @@ export class TaskOrchestrator {
       (r) => r.status === 'failure' || r.status === 'stopped'
     );
     if ((printsFullOutput || batchOwnsTheDiagnostic) && capturedOutputPath) {
-      this.printBatchFold(batch, taskResults, { capturedOutputPath });
-      return;
+      // No redirect lines: every task renders itself below, so there is nothing
+      // to redirect anyone to.
+      this.printBatchFold(
+        batch,
+        taskResults,
+        { capturedOutputPath },
+        { redirectLines: false }
+      );
     }
 
     for (const { task, status, terminalOutput } of taskResults) {
@@ -1083,7 +1081,8 @@ export class TaskOrchestrator {
   private printBatchFold(
     batch: Batch,
     taskResults: TaskResult[],
-    body: { capturedOutputPath?: string; trailer?: string }
+    body: { capturedOutputPath?: string; trailer?: string },
+    { redirectLines = true }: { redirectLines?: boolean } = {}
   ) {
     // batch.id is already `<executor> <n>`, numbered per executor when the batch
     // was scheduled. Deriving a second number here would drift from it, since
@@ -1099,6 +1098,9 @@ export class TaskOrchestrator {
         ? 'stopped'
         : 'success';
     output.logBatchGroup(label, body, worst);
+    if (!redirectLines) {
+      return;
+    }
     for (const { task, status } of taskResults) {
       if (status !== 'skipped') {
         output.logCommandRedirect(
