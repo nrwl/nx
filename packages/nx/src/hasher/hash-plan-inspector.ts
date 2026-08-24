@@ -10,6 +10,7 @@ import {
   ExternalObject,
   HashInputs,
   HashPlanner,
+  IoSnapshotOverride,
   HashPlanInspector as NativeHashPlanInspector,
   ProjectGraph as NativeProjectGraph,
   transferProjectGraph,
@@ -63,7 +64,8 @@ export class HashPlanInspector {
     configuration?: string,
     overrides: Record<string, unknown> = {},
     extraTargetDependencies: TargetDependencies = {},
-    excludeTaskDependencies: boolean = false
+    excludeTaskDependencies: boolean = false,
+    ioSnapshotOverrides?: Record<string, IoSnapshotOverride>
   ) {
     const taskGraph = createTaskGraph(
       this.projectGraph,
@@ -77,7 +79,11 @@ export class HashPlanInspector {
     // Generate task IDs for ALL tasks in the task graph (including dependencies)
     const taskIds = Object.keys(taskGraph.tasks);
 
-    const plansReference = this.planner.getPlansReference(taskIds, taskGraph);
+    const plansReference = this.planner.getPlansReference(
+      taskIds,
+      taskGraph,
+      ioSnapshotOverrides
+    );
 
     return this.inspector.inspect(plansReference);
   }
@@ -136,7 +142,8 @@ export class HashPlanInspector {
       string,
       (TargetDependencyConfig | string)[]
     > = {},
-    excludeTaskDependencies: boolean = false
+    excludeTaskDependencies: boolean = false,
+    ioSnapshotOverrides?: Record<string, IoSnapshotOverride>
   ): Record<string, HashInputs> {
     const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
       {
@@ -160,7 +167,11 @@ export class HashPlanInspector {
     );
 
     const taskIds = Object.keys(taskGraph.tasks);
-    const plansReference = this.planner.getPlansReference(taskIds, taskGraph);
+    const plansReference = this.planner.getPlansReference(
+      taskIds,
+      taskGraph,
+      ioSnapshotOverrides
+    );
     return this.inspector.inspectInputs(plansReference);
   }
 }
