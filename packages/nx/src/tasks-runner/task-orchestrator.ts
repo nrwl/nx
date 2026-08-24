@@ -930,23 +930,13 @@ export class TaskOrchestrator {
       });
 
       if (shouldGroupBatchOutput()) {
-        try {
+        this.renderBatchOutputSafely(batch.id, () =>
           this.printGroupedBatchOutput(
             batch,
             taskResults,
             batchProcess.getCapturedOutputPath()
-          );
-        } catch (e) {
-          // The batch already finished and reported these results; only the
-          // rendering of them failed. Letting that reach the catch below would
-          // rewrite every task to `failure` with the printer's stack as its
-          // output - reporting a green build red, and sending those statuses on
-          // to the life cycles and Nx Cloud.
-          output.warn({
-            title: `Could not render output for batch ${batch.id}`,
-            bodyLines: [e.message],
-          });
-        }
+          )
+        );
       }
 
       return taskResults;
@@ -978,10 +968,12 @@ export class TaskOrchestrator {
         const capturedOutputPath = batchProcess?.getCapturedOutputPath();
         const trailer = isBatchStopping ? undefined : e.message;
         if (capturedOutputPath || trailer) {
-          this.printBatchFold(batch, taskResults, {
-            capturedOutputPath,
-            trailer,
-          });
+          this.renderBatchOutputSafely(batch.id, () =>
+            this.printBatchFold(batch, taskResults, {
+              capturedOutputPath,
+              trailer,
+            })
+          );
         }
       }
 
@@ -994,6 +986,26 @@ export class TaskOrchestrator {
         runBatchStart.name,
         runBatchEnd.name
       );
+    }
+  }
+
+  /**
+   * Rendering a batch's output must never change the batch's results. A throw
+   * from the printer would otherwise land in `runBatch`'s own error handling:
+   * on the resolved path it rewrites every task to `failure` with the printer's
+   * stack as its output — reporting a green build red to the life cycles and Nx
+   * Cloud — and on the crash path it escapes `runBatch`, replacing the built
+   * failure results with the printer's error. Both call sites degrade to a
+   * warning here instead.
+   */
+  private renderBatchOutputSafely(batchId: string, render: () => void) {
+    try {
+      render();
+    } catch (e) {
+      output.warn({
+        title: `Could not render output for batch ${batchId}`,
+        bodyLines: [e.message],
+      });
     }
   }
 
