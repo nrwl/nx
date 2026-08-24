@@ -172,6 +172,54 @@ describe('nx release preserve local dependency protocols', () => {
     `);
   });
 
+  it('should replace the workspace protocol with the current version when the dependency group is excluded from the release', async () => {
+    const {
+      workspacePath,
+      pkg1: releasedProject,
+      pkg2: excludedDependency,
+    } = await initializeProject('pnpm');
+
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release = {
+        groups: {
+          released: {
+            projects: [releasedProject],
+            projectsRelationship: 'independent',
+          },
+          excluded: {
+            projects: [excludedDependency],
+            projectsRelationship: 'independent',
+          },
+        },
+        version: {
+          currentVersionResolver: 'git-tag',
+          preserveLocalDependencyProtocols: false,
+          adjustSemverBumpsForZeroMajorVersion: false,
+        },
+      };
+      return nxJson;
+    });
+
+    await runCommandAsync(`git tag ${releasedProject}@1.0.0`);
+    await runCommandAsync(`git tag ${excludedDependency}@4.2.0`);
+
+    // Release only the dependent project. Its dependency remains outside the release set.
+    const output = runCLI(
+      `release version minor --projects ${releasedProject} --dry-run --verbose`,
+      { cwd: workspacePath }
+    );
+
+    expect(output).toContain(
+      `-     "@proj/${excludedDependency}": "workspace:*"`
+    );
+    expect(output).toContain(`+     "@proj/${excludedDependency}": "4.2.0"`);
+    expect(output).toContain(
+      `${excludedDependency} 🏷️  Resolved the current version as 4.2.0`
+    );
+    expect(output).not.toContain(`${excludedDependency} ❓ Applied`);
+    expect(output).not.toContain(`${excludedDependency} ✍️  New version`);
+  });
+
   it('should preserve local dependency protocols when version.preserveLocalDependencyProtocols is not set to false', async () => {
     // The package manager currently does not matter for the versioning behavior, it's imperatively controlled by the user
     const { workspacePath } = await initializeProject('pnpm');
