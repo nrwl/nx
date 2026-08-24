@@ -4,7 +4,12 @@ import type {
   ExpandedPluginConfiguration,
   TargetDefaults,
 } from 'nx/src/devkit-exports';
-import { readNxJson, readJson, updateNxJson } from 'nx/src/devkit-exports';
+import {
+  readNxJson,
+  readJson,
+  updateNxJson,
+  writeJson,
+} from 'nx/src/devkit-exports';
 import {
   AggregateCreateNodesError,
   mergeTargetConfigurations,
@@ -17,6 +22,7 @@ import {
   inferOncePerOptionSet,
   migrateProjectExecutorsToPlugin,
   readTargetDefaultsForExecutor,
+  withCentralizationSuppressed,
 } from './executor-to-plugin-migrator';
 import {
   addExecutorProject,
@@ -1449,9 +1455,7 @@ describe('Phase 3 — strict-common hoist', () => {
       });
     }
     expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'other plugins are registered after this plugin in nx.json'
-      )
+      `convert-to-inferred retained full per-project configuration for target(s) build because another plugin is registered after ${SYNTHETIC_PLUGIN_PATH} in nx.json and may take over those targets; no configuration was lost, but shared configuration remains duplicated.`
     );
     // through REAL resolution with BOTH plugins, the later plugin owns the
     // target's identity, and the residual still preserves the explicit options
@@ -3049,6 +3053,647 @@ describe('Phase 3 — strict-common hoist', () => {
     expect(registration?.include).toBeDefined();
     expect(registration.include).toContain('!packages/legacy/**/*');
   });
+});
+
+describe('Phase 3: target-default preflight', () => {
+  let ctx: FixtureContext;
+
+  afterEach(() => {
+    if (ctx) {
+      teardownFixture(ctx.fs);
+      ctx = undefined;
+    }
+  });
+
+  it('keeps full residuals when the exact entry would displace a glob default', async () => {
+    // The appended exact `build` key would outrank the pre-existing `build*`
+    // glob key for the migrated targets, so the glob's contribution would
+    // silently stop applying to them. The preflight rejects the hoist.
+    ctx = setupFixture('preflight-glob');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.targetDefaults = {
+      'build*': { cache: true, dependsOn: ['^prepare'] },
+    };
+    updateNxJson(ctx.tree, nxJson);
+    const plugin = createSyntheticPlugin();
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    // no exact `build` key was added; the glob default is untouched
+    expect(readNxJson(ctx.tree).targetDefaults).toStrictEqual({
+      'build*': { cache: true, dependsOn: ['^prepare'] },
+    });
+    for (const name of ['app1', 'app2']) {
+      expect(readJson(ctx.tree, `${name}/project.json`).targets.build).toEqual({
+        options: { mode: 'production' },
+      });
+    }
+    expect(warn).toHaveBeenCalledWith(
+      'convert-to-inferred retained full per-project configuration for target(s) build because centralization would change which existing targetDefaults apply; no configuration was lost, but shared configuration remains duplicated.'
+    );
+    // the preflight is an in-memory check, no extra inference pass
+    expect(plugin.inferenceCount()).toBe(2);
+
+    // through the REAL pipeline the glob default still contributes and the
+    // per-project residual preserves the explicit option
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+    for (const name of ['app1', 'app2']) {
+      expect(resolved[name].build.options?.mode).toBe('production');
+      expect(resolved[name].build.dependsOn).toEqual(['^prepare']);
+    }
+  });
+
+  it('does not centralize a target whose name is executor-like; sibling targets still centralize', async () => {
+    // A hoisted `targetDefaults['nx:run-commands']` entry is an EXECUTOR key:
+    // it applies to every target of this plugin whose effective executor is
+    // `nx:run-commands` (here the sibling migrated `build` targets), and
+    // masks their exact `build` key, silently swapping their centralized
+    // config. The preflight must reject the executor-like name outright while
+    // leaving the plain-named sibling's centralization intact.
+    const SERVE_EXECUTOR = '@acme/tool:serve';
+    ctx = setupFixture('preflight-executor-like-name');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+      const project = readJson(ctx.tree, `${name}/project.json`);
+      project.targets['nx:run-commands'] = {
+        executor: SERVE_EXECUTOR,
+        cache: true,
+        outputs: ['{projectRoot}/dist'],
+        options: { config: SYNTHETIC_CONFIG_FILE, lane: 'runner' },
+      };
+      writeJson(ctx.tree, `${name}/project.json`, project);
+      ctx.projectGraph.nodes[name].data.targets = project.targets;
+    }
+    // a two-target plugin (vite-style: one option key per target name)
+    const createNodes: CreateNodes<{
+      buildTargetName?: string;
+      serveTargetName?: string;
+    }> = [
+      SYNTHETIC_CONFIG_GLOB,
+      (configFiles, options) =>
+        configFiles.map((file) => {
+          const dir = dirname(file);
+          const root = dir === '' || dir === '.' ? '.' : dir;
+          const buildName = options?.buildTargetName ?? 'build';
+          const serveName = options?.serveTargetName ?? 'serve';
+          return [
+            file,
+            {
+              projects: {
+                [root]: {
+                  targets: {
+                    [buildName]: defaultInferredTarget(root, buildName),
+                    [serveName]: defaultInferredTarget(root, serveName),
+                  },
+                },
+              },
+            },
+          ] as const;
+        }),
+    ];
+    const cleanTransformer = (target: any) => {
+      if (target.options) {
+        delete target.options.config;
+        if (Object.keys(target.options).length === 0) {
+          delete target.options;
+        }
+      }
+      return target;
+    };
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      SYNTHETIC_PLUGIN_PATH,
+      createNodes,
+      {},
+      [
+        {
+          executors: [SYNTHETIC_EXECUTOR],
+          targetPluginOptionMapper: (targetName: string) => ({
+            buildTargetName: targetName,
+          }),
+          postTargetTransformer: cleanTransformer,
+        },
+        {
+          executors: [SERVE_EXECUTOR],
+          targetPluginOptionMapper: (targetName: string) => ({
+            serveTargetName: targetName,
+          }),
+          postTargetTransformer: cleanTransformer,
+        },
+      ],
+      undefined,
+      { warn } as any
+    );
+
+    // the plain-named target centralizes; the executor-like name is never
+    // added as a targetDefaults key
+    const targetDefaults = readNxJson(ctx.tree).targetDefaults;
+    expect(targetDefaults.build).toContainEqual({
+      filter: { plugin: SYNTHETIC_PLUGIN_PATH },
+      options: { mode: 'production' },
+    });
+    expect(targetDefaults['nx:run-commands']).toBeUndefined();
+    for (const name of ['app1', 'app2']) {
+      const targets = readJson(ctx.tree, `${name}/project.json`).targets;
+      expect(targets.build).toBeUndefined();
+      expect(targets['nx:run-commands']).toEqual({
+        options: { lane: 'runner' },
+      });
+    }
+    expect(warn).toHaveBeenCalledWith(
+      'convert-to-inferred retained full per-project configuration for target(s) nx:run-commands because the target name would resolve as an executor or glob targetDefaults key and could apply to other targets; no configuration was lost, but shared configuration remains duplicated.'
+    );
+
+    // through the REAL pipeline both migrated targets keep their explicit
+    // options; a hoisted `nx:run-commands` key would have won the executor
+    // lookup for the `build` targets and replaced `mode` with `lane`
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      SYNTHETIC_PLUGIN_PATH,
+      createNodes as CreateNodes<SyntheticPluginOptions>
+    );
+    for (const name of ['app1', 'app2']) {
+      expect(resolved[name].build.options?.mode).toBe('production');
+      expect(resolved[name].build.options?.lane).toBeUndefined();
+      expect(resolved[name]['nx:run-commands'].options?.lane).toBe('runner');
+    }
+  });
+
+  it('does not centralize a target whose plain name equals an executor the plugin infers', async () => {
+    // Executor strings are plain strings (no `:` required), so a hoisted
+    // `targetDefaults.runner` key resolves as the EXECUTOR key for the
+    // sibling `build` targets the plugin infers with `executor: 'runner'`,
+    // leaking the runner common onto them. The preflight must reject any
+    // candidate name matching an executor the plugin's inference emits.
+    const RUNNER_EXECUTOR = '@acme/tool:runner';
+    ctx = setupFixture('preflight-plain-name-executor-collision');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+      const project = readJson(ctx.tree, `${name}/project.json`);
+      project.targets.runner = {
+        executor: RUNNER_EXECUTOR,
+        cache: true,
+        outputs: ['{projectRoot}/dist'],
+        options: { config: SYNTHETIC_CONFIG_FILE, lane: 'canary' },
+      };
+      writeJson(ctx.tree, `${name}/project.json`, project);
+      ctx.projectGraph.nodes[name].data.targets = project.targets;
+    }
+    const createNodes: CreateNodes<{
+      buildTargetName?: string;
+      runnerTargetName?: string;
+    }> = [
+      SYNTHETIC_CONFIG_GLOB,
+      (configFiles, options) =>
+        configFiles.map((file) => {
+          const dir = dirname(file);
+          const root = dir === '' || dir === '.' ? '.' : dir;
+          const buildName = options?.buildTargetName ?? 'build';
+          const runnerName = options?.runnerTargetName ?? 'runner';
+          return [
+            file,
+            {
+              projects: {
+                [root]: {
+                  targets: {
+                    // executor-based inferred target whose executor string
+                    // collides with the sibling target's NAME
+                    [buildName]: {
+                      executor: 'runner',
+                      cache: true,
+                      inputs: [
+                        'default',
+                        '^default',
+                        { externalDependencies: ['acme-tool'] },
+                      ],
+                      outputs: ['{projectRoot}/dist'],
+                    },
+                    [runnerName]: defaultInferredTarget(root, runnerName),
+                  },
+                },
+              },
+            },
+          ] as const;
+        }),
+    ];
+    const cleanTransformer = (target: any) => {
+      if (target.options) {
+        delete target.options.config;
+        if (Object.keys(target.options).length === 0) {
+          delete target.options;
+        }
+      }
+      return target;
+    };
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      SYNTHETIC_PLUGIN_PATH,
+      createNodes,
+      {},
+      [
+        {
+          executors: [SYNTHETIC_EXECUTOR],
+          targetPluginOptionMapper: (targetName: string) => ({
+            buildTargetName: targetName,
+          }),
+          postTargetTransformer: cleanTransformer,
+        },
+        {
+          executors: [RUNNER_EXECUTOR],
+          targetPluginOptionMapper: (targetName: string) => ({
+            runnerTargetName: targetName,
+          }),
+          postTargetTransformer: cleanTransformer,
+        },
+      ],
+      undefined,
+      { warn } as any
+    );
+
+    // the colliding name is never added as a targetDefaults key; the sibling
+    // still centralizes
+    const targetDefaults = readNxJson(ctx.tree).targetDefaults;
+    expect(targetDefaults.build).toContainEqual({
+      filter: { plugin: SYNTHETIC_PLUGIN_PATH },
+      options: { mode: 'production' },
+    });
+    expect(targetDefaults.runner).toBeUndefined();
+    for (const name of ['app1', 'app2']) {
+      const targets = readJson(ctx.tree, `${name}/project.json`).targets;
+      expect(targets.build).toBeUndefined();
+      expect(targets.runner).toEqual({ options: { lane: 'canary' } });
+    }
+    expect(warn).toHaveBeenCalledWith(
+      'convert-to-inferred retained full per-project configuration for target(s) runner because the target name would resolve as an executor or glob targetDefaults key and could apply to other targets; no configuration was lost, but shared configuration remains duplicated.'
+    );
+
+    // through the REAL pipeline the build targets never receive the runner
+    // common; a hoisted `runner` key would have resolved as their executor
+    // key and merged `lane` into them
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      SYNTHETIC_PLUGIN_PATH,
+      createNodes as CreateNodes<SyntheticPluginOptions>
+    );
+    for (const name of ['app1', 'app2']) {
+      expect(resolved[name].build.options?.mode).toBe('production');
+      expect(resolved[name].build.options?.lane).toBeUndefined();
+      expect(resolved[name].runner.options?.lane).toBe('canary');
+    }
+  });
+
+  it('keeps full residuals when an executor-keyed default for the inferred executor masks the exact entry', async () => {
+    // The migrated pairs resolve with the INFERRED executor
+    // (`nx:run-commands` for command-based targets), and an executor-keyed
+    // default outranks the exact target-name key; the appended entry would
+    // never resolve and its keys would be silently dropped.
+    ctx = setupFixture('preflight-executor-mask');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.targetDefaults = {
+      build: { cache: true },
+      'nx:run-commands': { options: { color: true } },
+    };
+    updateNxJson(ctx.tree, nxJson);
+    const plugin = createSyntheticPlugin();
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    // no plugin-scoped entry was appended
+    expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({ cache: true });
+    for (const name of ['app1', 'app2']) {
+      expect(readJson(ctx.tree, `${name}/project.json`).targets.build).toEqual({
+        options: { mode: 'production' },
+      });
+    }
+    expect(warn).toHaveBeenCalledWith(
+      'convert-to-inferred retained full per-project configuration for target(s) build because centralization would change which existing targetDefaults apply; no configuration was lost, but shared configuration remains duplicated.'
+    );
+
+    // conservative output preserves the explicit option; a hoisted entry
+    // would have been masked by the executor-keyed default and `mode` lost
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+    for (const name of ['app1', 'app2']) {
+      expect(resolved[name].build.options?.mode).toBe('production');
+      expect(resolved[name].build.options?.color).toBe(true);
+    }
+  });
+});
+
+describe('Phase 3: batch centralization suppression', () => {
+  let ctx: FixtureContext;
+
+  afterEach(() => {
+    if (ctx) {
+      teardownFixture(ctx.fs);
+      ctx = undefined;
+    }
+  });
+
+  it('keeps full residuals for a suppressed conversion even when its registrations form the tail', async () => {
+    // A non-final batch child IS the tail of `plugins` at its own run time
+    // (the later children have not registered yet), so the tail gate alone
+    // would wrongly allow centralizing. Suppression must override it.
+    ctx = setupFixture('suppressed-tail');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    const plugin = createSyntheticPlugin();
+    const warn = jest.fn();
+
+    await withCentralizationSuppressed(ctx.tree, () =>
+      migrateProjectExecutorsToPlugin(
+        ctx.tree,
+        ctx.projectGraph,
+        plugin.pluginPath,
+        plugin.createNodes,
+        { targetName: 'build' },
+        syntheticMigrations(),
+        undefined,
+        { warn } as any
+      )
+    );
+
+    expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({ cache: true });
+    for (const name of ['app1', 'app2']) {
+      expect(readJson(ctx.tree, `${name}/project.json`).targets.build).toEqual({
+        options: { mode: 'production' },
+      });
+    }
+    expect(warn).toHaveBeenCalledWith(
+      'convert-to-inferred retained full per-project configuration for target(s) build because later conversions in this infer-targets batch may add plugins that own those targets; no configuration was lost, but shared configuration remains duplicated.'
+    );
+    // suppression costs no extra inference pass
+    expect(plugin.inferenceCount()).toBe(2);
+  });
+
+  it('clears suppression when the wrapped function throws and composes nested scopes', async () => {
+    ctx = setupFixture('suppression-scope');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    const OTHER_EXECUTOR = '@acme/other:build';
+    const OTHER_PLUGIN_PATH = '@acme/other/plugin';
+    for (const name of ['app3', 'app4']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        executor: OTHER_EXECUTOR,
+        target: {
+          options: { config: SYNTHETIC_CONFIG_FILE, level: 'high' },
+          cache: true,
+          outputs: ['{projectRoot}/dist'],
+        },
+      });
+    }
+    const pluginA = createSyntheticPlugin();
+    const pluginB = createSyntheticPlugin(
+      (root, targetName) => defaultInferredTarget(root, targetName),
+      OTHER_PLUGIN_PATH
+    );
+    const warn = jest.fn();
+
+    // rethrows and clears the scope
+    await expect(
+      withCentralizationSuppressed(ctx.tree, () => {
+        throw new Error('boom');
+      })
+    ).rejects.toThrow('boom');
+
+    // an inner scope exiting must not clear the outer scope
+    await withCentralizationSuppressed(ctx.tree, async () => {
+      await withCentralizationSuppressed(ctx.tree, async () => {});
+      await migrateProjectExecutorsToPlugin(
+        ctx.tree,
+        ctx.projectGraph,
+        pluginA.pluginPath,
+        pluginA.createNodes,
+        { targetName: 'build' },
+        syntheticMigrations(),
+        undefined,
+        { warn } as any
+      );
+    });
+    expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({ cache: true });
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('later conversions in this infer-targets batch')
+    );
+
+    // all scopes exited: the next conversion centralizes again
+    warn.mockClear();
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      pluginB.pluginPath,
+      pluginB.createNodes,
+      { targetName: 'build' },
+      [
+        {
+          executors: [OTHER_EXECUTOR],
+          targetPluginOptionMapper: (targetName: string) => ({ targetName }),
+          postTargetTransformer: (target: any) => {
+            if (target.options) {
+              delete target.options.config;
+              if (Object.keys(target.options).length === 0) {
+                delete target.options;
+              }
+            }
+            return target;
+          },
+        },
+      ],
+      undefined,
+      { warn } as any
+    );
+    expect(readNxJson(ctx.tree).targetDefaults.build).toContainEqual({
+      filter: { plugin: OTHER_PLUGIN_PATH },
+      options: { level: 'high' },
+    });
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('batch: non-final conversions keep per-project configuration, the final one centralizes, and both survive real resolution', async () => {
+    // Mirrors what `infer-targets` does for a multi-plugin batch: every
+    // non-final child runs suppressed (a later child's registration could
+    // otherwise take over its targets after it already centralized), the
+    // final child sees the finished plugins array and centralizes normally.
+    ctx = setupFixture('suppressed-batch');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    const OTHER_EXECUTOR = '@acme/other:build';
+    const OTHER_PLUGIN_PATH = '@acme/other/plugin';
+    for (const name of ['app3', 'app4']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        executor: OTHER_EXECUTOR,
+        target: {
+          options: { config: SYNTHETIC_CONFIG_FILE, level: 'high' },
+          cache: true,
+          outputs: ['{projectRoot}/dist'],
+        },
+      });
+    }
+    const pluginA = createSyntheticPlugin();
+    const pluginB = createSyntheticPlugin(
+      (root, targetName) => defaultInferredTarget(root, targetName),
+      OTHER_PLUGIN_PATH
+    );
+    const warn = jest.fn();
+
+    await withCentralizationSuppressed(ctx.tree, () =>
+      migrateProjectExecutorsToPlugin(
+        ctx.tree,
+        ctx.projectGraph,
+        pluginA.pluginPath,
+        pluginA.createNodes,
+        { targetName: 'build' },
+        syntheticMigrations(),
+        undefined,
+        { warn } as any
+      )
+    );
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      pluginB.pluginPath,
+      pluginB.createNodes,
+      { targetName: 'build' },
+      [
+        {
+          executors: [OTHER_EXECUTOR],
+          targetPluginOptionMapper: (targetName: string) => ({ targetName }),
+          postTargetTransformer: (target: any) => {
+            if (target.options) {
+              delete target.options.config;
+              if (Object.keys(target.options).length === 0) {
+                delete target.options;
+              }
+            }
+            return target;
+          },
+        },
+      ],
+      undefined,
+      { warn } as any
+    );
+
+    // only the final conversion centralizes
+    expect(readNxJson(ctx.tree).targetDefaults.build).toStrictEqual([
+      { cache: true },
+      {
+        filter: { plugin: OTHER_PLUGIN_PATH },
+        options: { level: 'high' },
+      },
+    ]);
+    for (const name of ['app1', 'app2']) {
+      expect(readJson(ctx.tree, `${name}/project.json`).targets.build).toEqual({
+        options: { mode: 'production' },
+      });
+    }
+    for (const name of ['app3', 'app4']) {
+      expect(
+        readJson(ctx.tree, `${name}/project.json`).targets.build
+      ).toBeUndefined();
+    }
+
+    // through the REAL pipeline with BOTH plugins registered, every project
+    // keeps its explicit option; the suppressed child's config sits in
+    // project.json where no later plugin can take it over
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      pluginA.pluginPath,
+      pluginA.createNodes,
+      { [OTHER_PLUGIN_PATH]: pluginB.createNodes }
+    );
+    for (const name of ['app1', 'app2']) {
+      expect(resolved[name].build.options?.mode).toBe('production');
+    }
+    for (const name of ['app3', 'app4']) {
+      expect(resolved[name].build.options?.level).toBe('high');
+    }
+  });
+
+  it.todo(
+    'compatible restatement: an earlier plugin inferring the same target with the same runnable identity keeps the attribution, so the centralized default silently does not apply; needs a post-flush source-map audit'
+  );
 });
 
 describe('Phase 4 — verify + equivalence oracle + fallback', () => {

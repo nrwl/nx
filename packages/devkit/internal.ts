@@ -34,6 +34,7 @@ export { AggregatedLog } from './src/generators/plugin-migrations/aggregate-log-
 export {
   migrateProjectExecutorsToPlugin,
   migrateProjectExecutorsToPluginV1,
+  withCentralizationSuppressed,
   NoTargetsToMigrateError,
   type InferredTargetConfiguration,
 } from './src/generators/plugin-migrations/executor-to-plugin-migrator';

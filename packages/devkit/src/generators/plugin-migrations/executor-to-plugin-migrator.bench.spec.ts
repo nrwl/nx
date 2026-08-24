@@ -123,6 +123,16 @@ describe('executor-to-plugin-migrator benchmark (synthetic ~600 projects)', () =
       roots.push(addBenchProject(ctx, i));
     }
 
+    // Unrelated targetDefaults keys (globs are the worst case: every
+    // resolution scans and sorts them). The target-default preflight must not
+    // scale per migrated pair against these: its per-executor memoization
+    // keeps the whole run's lookups constant.
+    const seededNxJson = JSON.parse(ctx.tree.read('nx.json', 'utf-8'));
+    for (let i = 0; i < 200; i++) {
+      seededNxJson.targetDefaults[`pad-${i}-*`] = { cache: true };
+    }
+    ctx.tree.write('nx.json', JSON.stringify(seededNxJson));
+
     const preBytes = totalConfigBytes(ctx, roots);
 
     await migrateProjectExecutorsToPlugin(

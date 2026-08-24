@@ -32,7 +32,9 @@ import {
   isMultipleProjectsWithSameNameError,
   isWorkspaceValidityError,
   findProjectForPath,
+  isGlobPattern,
   mergeTargetConfigurations,
+  readTargetDefaultsForTarget,
   retrieveProjectConfigurations,
   globalSpinner,
 } from 'nx/src/devkit-internals';
@@ -41,6 +43,7 @@ import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-con
 import { forEachExecutorOptions } from '../executor-options-utils';
 import {
   findTargetDefault,
+  isExactTargetNameKey,
   updateTargetDefault,
 } from '../target-defaults-utils';
 import { deleteMatchingProperties } from './plugin-migration-utils';
@@ -808,6 +811,48 @@ function packageJsonAuthorsTargetIdentity(
   );
 }
 
+// Trees whose migrations must not centralize, depth-counted so nested
+// `withCentralizationSuppressed` scopes compose. Keyed by Tree identity, so an
+// entry cannot leak into another generator invocation.
+const centralizationSuppressionDepth = new WeakMap<Tree, number>();
+
+/**
+ * Run `fn` with target-default centralization suppressed for every migration
+ * operating on `tree`: migrated projects keep their full per-project
+ * configuration and nothing is hoisted into `nx.json` `targetDefaults`.
+ *
+ * A batch runner (`infer-targets`) invoking several convert-to-inferred
+ * generators against one Tree must wrap every non-final conversion: each
+ * conversion's hoist gate checks that the migrated plugin's registrations form
+ * the tail of `nx.json` `plugins`, but a later conversion in the same batch
+ * appends its own registration afterwards, invalidating what the earlier
+ * conversion observed. Suppression is lossless: the retained residuals
+ * produce the same resolved configuration, just without deduplication.
+ */
+export async function withCentralizationSuppressed<T>(
+  tree: Tree,
+  fn: () => T | Promise<T>
+): Promise<T> {
+  centralizationSuppressionDepth.set(
+    tree,
+    (centralizationSuppressionDepth.get(tree) ?? 0) + 1
+  );
+  try {
+    return await fn();
+  } finally {
+    const depth = centralizationSuppressionDepth.get(tree) ?? 1;
+    if (depth <= 1) {
+      centralizationSuppressionDepth.delete(tree);
+    } else {
+      centralizationSuppressionDepth.set(tree, depth - 1);
+    }
+  }
+}
+
+function isCentralizationSuppressed(tree: Tree): boolean {
+  return (centralizationSuppressionDepth.get(tree) ?? 0) > 0;
+}
+
 function isRegistrationOfPlugin(
   registration: string | ExpandedPluginConfiguration,
   pluginPath: string
@@ -840,14 +885,136 @@ function pluginRegistrationsFormTail(
 }
 
 /**
+ * Whether appending the plugin-scoped `targetDefaults[targetName]` entry would
+ * change what the existing target defaults resolve to for any eligible migrated
+ * pair. Two hazards, both invisible to the Phase 4 verification (it merges no
+ * target defaults):
+ *
+ * - Key displacement: an exact target-name key takes precedence over a glob
+ *   key (`build-*`), so appending one can silently stop a glob default from
+ *   contributing to the migrated targets.
+ * - Executor masking: an executor-keyed default for the plugin's INFERRED
+ *   executor (e.g. `nx:run-commands` for command-based inferred targets) takes
+ *   precedence over the exact key, so the appended entry would never resolve
+ *   and its keys would be silently dropped.
+ *
+ * The check resolves the defaults for each pair without and with the
+ * hypothetical entry, through the production reader. The hoist is a pure
+ * "residual moved into a default" only when the with-entry resolution equals
+ * the without-entry resolution with the common merged on top; anything else
+ * changes behavior, so the target keeps its full residuals.
+ */
+function hoistChangesExistingTargetDefaults(
+  targetDefaults: NxJsonConfiguration['targetDefaults'],
+  targetName: string,
+  common: TargetConfiguration,
+  pluginPath: string,
+  eligiblePairs: {
+    projectName: string;
+    inferredExecutor: string | undefined;
+  }[],
+  projectGraph: ProjectGraph
+): boolean {
+  const hypotheticalNxJson: NxJsonConfiguration = {
+    targetDefaults: structuredClone(targetDefaults) ?? {},
+  };
+  appendPluginScopedTargetDefault(
+    hypotheticalNxJson,
+    targetName,
+    pluginPath,
+    common
+  );
+
+  // Per-pair context only matters to `filter.projects` entries under a key
+  // this target's lookup can select (its own name, one of the pairs' effective
+  // executors, or a glob matching the name); everything else resolves purely
+  // from the pair's effective executor, so pairs sharing one resolve
+  // identically and only the first needs checking. The appended entry carries
+  // no `projects` filter, so scanning the current map covers the hypothetical
+  // one too.
+  const pairExecutors = new Set<string>();
+  for (const { inferredExecutor } of eligiblePairs) {
+    if (inferredExecutor !== undefined) {
+      pairExecutors.add(inferredExecutor);
+    }
+  }
+  const hasRelevantProjectScopedEntry = Object.entries(
+    targetDefaults ?? {}
+  ).some(([key, value]) => {
+    // The glob arm mirrors the reader's own selection test exactly; a bare
+    // `minimatch` would over-match keys the reader never treats as globs
+    // (e.g. `?`, which is not in Nx's glob character set).
+    const keyParticipates =
+      key === targetName ||
+      pairExecutors.has(key) ||
+      (isGlobPattern(key) && minimatch(targetName, key));
+    return (
+      keyParticipates &&
+      (Array.isArray(value) ? value : [value ?? {}]).some(
+        (entry) => entry.filter?.projects !== undefined
+      )
+    );
+  });
+  const checkedContexts = new Set<string>();
+
+  for (const { projectName, inferredExecutor } of eligiblePairs) {
+    const contextKey = hasRelevantProjectScopedEntry
+      ? `${projectName}\t${inferredExecutor}`
+      : `${inferredExecutor}`;
+    if (checkedContexts.has(contextKey)) {
+      continue;
+    }
+    checkedContexts.add(contextKey);
+    const opts = {
+      projectName,
+      projectNode: projectGraph.nodes[projectName],
+      // The migrated pair's residual carries no executor/command, so the
+      // specified layer (this plugin) owns the identity attribution.
+      sourcePlugin: pluginPath,
+    };
+    const before = readTargetDefaultsForTarget(
+      targetName,
+      targetDefaults,
+      inferredExecutor,
+      opts
+    );
+    const after = readTargetDefaultsForTarget(
+      targetName,
+      hypotheticalNxJson.targetDefaults,
+      inferredExecutor,
+      opts
+    );
+    // The reader merges a key's later entries on top of earlier ones, and the
+    // appended entry is last, so an unchanged resolution is exactly the prior
+    // result with the common merged over it.
+    const expected =
+      before === null
+        ? structuredClone(common)
+        : mergeTargetConfigurations(
+            structuredClone(common),
+            structuredClone(before)
+          );
+    // stableStringify rather than isDeepEqual: deepStrictEqual also compares
+    // prototype identity, which rejects structurally equal objects here.
+    if (stableStringify(after ?? {}) !== stableStringify(expected)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Phase 3 (centralized variant) — hoist the strict-common residual per target
  * into `nx.json` `targetDefaults[targetName]` as a plugin-scoped array entry,
  * remove the dead executor-keyed entries, and write only per-project
  * deviations to project.json. Used for whole-workspace migrations;
- * single-project mode keeps the full residual. Hoisting also requires the
- * plugin's registrations to form the tail of nx.json `plugins` (see
- * `pluginRegistrationsFormTail`); otherwise every project keeps its full
- * residual.
+ * single-project mode keeps the full residual. Hoisting also requires
+ * centralization not to be suppressed for the Tree (see
+ * `withCentralizationSuppressed`), the plugin's registrations to form the tail
+ * of nx.json `plugins` (see `pluginRegistrationsFormTail`), and the appended
+ * entry to leave existing target-default resolution unchanged (see
+ * `hoistChangesExistingTargetDefaults`); otherwise the affected projects keep
+ * their full residuals.
  *
  * Returns the appended entry per target so the verification pass can revert a
  * hoist that turns out to reach a target the migration did not migrate.
@@ -859,6 +1026,7 @@ function hoistCommonAndWrite<T>(
   residualByProject: ResidualByProject,
   pluginPath: string,
   projectGraph: ProjectGraph,
+  inferredTargetsByOptionSet: InferredTargetsByOptionSet,
   inferredExecutors: Set<string>,
   pluginPreRegistered: boolean,
   logger?: typeof devkitLogger
@@ -937,27 +1105,151 @@ function hoistCommonAndWrite<T>(
     commonByTarget.set(targetName, common);
   }
 
+  // Drop the given targets' centralization (they keep full residuals) and say
+  // why. The retention is lossless: the resolved configuration is unchanged,
+  // only the deduplication into `targetDefaults` is skipped.
+  const retainResiduals = (targetNames: string[], reason: string) => {
+    for (const targetName of targetNames) {
+      commonByTarget.set(targetName, {});
+    }
+    (logger ?? devkitLogger).warn(
+      `convert-to-inferred retained full per-project configuration for target(s) ${targetNames.join(
+        ', '
+      )} because ${reason}; no configuration was lost, but shared configuration remains duplicated.`
+    );
+  };
+  const centralizableTargets = () =>
+    [...commonByTarget.entries()]
+      .filter(([, common]) => Object.keys(common).length > 0)
+      .map(([targetName]) => targetName)
+      .sort();
+
   // A specified plugin registered AFTER the migrated plugin merges later, so a
   // same-name target it authors takes the executor/command attribution;
   // `resolveSourcePlugin` then names that plugin and rejects this plugin's
   // `filter: { plugin }` default, silently dropping the hoisted keys. The
   // verification pass loads only the migrated plugin, so it cannot observe
   // this. Registrations are written before this runs, so the plugins array is
-  // final: hoist only when the migrated plugin's registrations form its tail;
-  // otherwise keep the full residuals (the previous engine's output).
-  if (!pluginRegistrationsFormTail(readNxJson(tree), pluginPath)) {
-    const skippedTargets = [...commonByTarget.entries()]
-      .filter(([, common]) => Object.keys(common).length > 0)
-      .map(([targetName]) => targetName)
-      .sort();
+  // final for THIS generator invocation: hoist only when the migrated plugin's
+  // registrations form its tail; otherwise keep the full residuals (the
+  // previous engine's output). A batch runner invoking several conversions
+  // against one Tree appends more registrations after this one returns, so it
+  // suppresses centralization for every non-final conversion instead; there
+  // the tail check would pass on a plugins array that is not final, and its
+  // warning would name plugins that do not exist in the Tree yet.
+  if (isCentralizationSuppressed(tree)) {
+    const skippedTargets = centralizableTargets();
     if (skippedTargets.length > 0) {
-      for (const targetName of skippedTargets) {
-        commonByTarget.set(targetName, {});
+      retainResiduals(
+        skippedTargets,
+        'later conversions in this infer-targets batch may add plugins that own those targets'
+      );
+    }
+  } else if (!pluginRegistrationsFormTail(readNxJson(tree), pluginPath)) {
+    const skippedTargets = centralizableTargets();
+    if (skippedTargets.length > 0) {
+      retainResiduals(
+        skippedTargets,
+        `another plugin is registered after ${pluginPath} in nx.json and may take over those targets`
+      );
+    }
+  }
+
+  // Target-default preflight: even with the plugin merging last, appending the
+  // exact target-name entry can change what the EXISTING defaults resolve to
+  // for the migrated pairs (see `hoistChangesExistingTargetDefaults`). Checked
+  // per pair with the production reader; a rejected target keeps its full
+  // residuals. In-memory only, no inference or graph pass.
+  const preflightTargets = centralizableTargets();
+  if (preflightTargets.length > 0) {
+    const currentTargetDefaults = readNxJson(tree).targetDefaults;
+    // The effective executor the resolved pair carries after the migration is
+    // the INFERRED target's (command-based targets resolve to
+    // `nx:run-commands`), which decides whether an executor-keyed default
+    // outranks the appended exact key.
+    const inferredExecutorByPair = new Map<string, string | undefined>();
+    for (const executorScope of scope.executorScopes) {
+      for (const [
+        targetName,
+        projectNames,
+      ] of executorScope.targetAndProjects) {
+        const optionSetId =
+          executorScope.inferenceOptionSetIdsByTarget.get(targetName);
+        for (const projectName of projectNames) {
+          const root = projectGraph.nodes[projectName]?.data.root;
+          const inferredTarget = getFullInferredTarget(
+            inferredTargetsByOptionSet,
+            optionSetId,
+            root,
+            targetName
+          );
+          // Mirrors `resolveCommandSyntacticSugar`: a top-level `command`
+          // resolves to the `nx:run-commands` executor.
+          const inferredExecutor =
+            inferredTarget.executor ??
+            (inferredTarget.command ? 'nx:run-commands' : undefined);
+          inferredExecutorByPair.set(
+            `${projectName}\t${targetName}`,
+            inferredExecutor
+          );
+        }
       }
-      (logger ?? devkitLogger).warn(
-        `convert-to-inferred kept per-project configuration for target(s) ${skippedTargets.join(
-          ', '
-        )} instead of centralizing it: other plugins are registered after this plugin in nx.json, and a plugin registered later can take over a target's identity, which would silently drop the centralized configuration. The migrated projects keep the same output as before the migration.`
+    }
+
+    const nonExactNameTargets: string[] = [];
+    const rejectedTargets: string[] = [];
+    for (const targetName of preflightTargets) {
+      // A `targetDefaults` key resolves as an EXECUTOR key for any target
+      // whose effective executor equals it (executor strings are plain
+      // strings, no `:` required), and as a glob key when it contains glob
+      // characters. So a candidate name that is executor-like (`a:b`),
+      // glob-like, or equal to ANY executor this plugin's inference emits
+      // cannot be hoisted: the appended key would apply the common to OTHER
+      // targets of this plugin, invisible to the per-pair check below (it
+      // resolves only the migrated pairs) and to the Phase 4 exposure revert
+      // (it looks only for this target name). Rejecting here also keeps the
+      // surviving candidates non-interacting, so checking each against the
+      // current map alone stays sound.
+      if (
+        !isExactTargetNameKey(targetName) ||
+        inferredExecutors.has(targetName)
+      ) {
+        nonExactNameTargets.push(targetName);
+        continue;
+      }
+      const excludedProjects =
+        excludedProjectsByTarget.get(targetName) ?? new Set<string>();
+      const eligiblePairs = (projectsByTarget.get(targetName) ?? [])
+        .filter((projectName) => !excludedProjects.has(projectName))
+        .map((projectName) => ({
+          projectName,
+          inferredExecutor: inferredExecutorByPair.get(
+            `${projectName}\t${targetName}`
+          ),
+        }));
+      if (
+        hoistChangesExistingTargetDefaults(
+          currentTargetDefaults,
+          targetName,
+          commonByTarget.get(targetName),
+          pluginPath,
+          eligiblePairs,
+          projectGraph
+        )
+      ) {
+        rejectedTargets.push(targetName);
+      }
+    }
+    if (nonExactNameTargets.length > 0) {
+      retainResiduals(
+        nonExactNameTargets,
+        'the target name would resolve as an executor or glob targetDefaults key and could apply to other targets'
+      );
+    }
+    if (rejectedTargets.length > 0) {
+      retainResiduals(
+        rejectedTargets,
+        'centralization would change which existing targetDefaults apply'
       );
     }
   }
@@ -1297,10 +1589,14 @@ export async function inferOncePerOptionSet<T>(
         inferredRoots.add(root);
 
         // Executor-keyed targetDefaults can apply to ANY inferred target name,
-        // so the Phase 3 dead-entry removal must see every emitted executor.
+        // so the Phase 3 dead-entry removal and the target-default preflight
+        // must see every EFFECTIVE executor: a command-based target resolves
+        // to `nx:run-commands` (resolveCommandSyntacticSugar).
         for (const target of Object.values(projectConfig.targets ?? {})) {
           if (target.executor) {
             inferredExecutors.add(target.executor);
+          } else if (target.command) {
+            inferredExecutors.add('nx:run-commands');
           }
         }
 
@@ -2025,6 +2321,7 @@ async function migrateProjects<T>(
       residualByProject,
       pluginPath,
       projectGraph,
+      inferredTargetsByOptionSet,
       inferredExecutors,
       pluginPreRegistered,
       logger
