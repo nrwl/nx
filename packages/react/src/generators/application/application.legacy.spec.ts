@@ -160,6 +160,23 @@ describe('react app generator (legacy)', () => {
     ).toBe(4321);
   });
 
+  it('should write port 0, which asks the dev server for a free port', async () => {
+    await applicationGenerator(appTree, {
+      ...schema,
+      directory: 'ephemeral-app',
+      bundler: 'webpack',
+      port: 0,
+      skipFormat: true,
+    });
+
+    // 0 is schema-valid and meaningful; a truthiness guard here would drop it and
+    // silently serve on the executor's 4200.
+    expect(
+      readProjectConfiguration(appTree, 'ephemeral-app').targets.serve.options
+        .port
+    ).toBe(0);
+  });
+
   it('should accept the deprecated devServerPort from programmatic callers', async () => {
     await applicationGenerator(appTree, {
       ...schema,
