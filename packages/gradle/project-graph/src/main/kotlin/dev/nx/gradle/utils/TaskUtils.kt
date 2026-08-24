@@ -15,7 +15,6 @@ import kotlin.io.path.Path
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.internal.TaskInternal
 import org.gradle.api.internal.provider.ProviderInternal
@@ -110,17 +109,6 @@ private fun computeFlattenDependsOn(task: Task): List<Any> {
   task.dependsOn.forEach(::visit)
   return flattened
 }
-
-/** dependsOn values that yield tasks only by resolving — which would configure the producer. */
-private fun hasUnresolvableDeps(task: Task): Boolean =
-    try {
-      flattenDependsOn(task).any {
-        it is FileCollection || it is org.gradle.api.tasks.TaskDependency
-      }
-    } catch (e: Exception) {
-      task.logger.info("Cannot inspect dependsOn for ${task.path}: ${e.message}")
-      false
-    }
 
 /**
  * Only qualified paths need the bypass: a bare name never triggers a cross-project lookup, so
@@ -262,9 +250,7 @@ private fun processTaskImpl(
   val logger = task.logger
   logger.info("NxProjectReportTask: process $task for $projectRoot")
   val target = mutableMapOf<String, Any?>()
-  // An incomplete dependency set must not be cached: a stale hit is worse than no cache.
-  val dependenciesFullyKnown = !(bypassesTaskDependencies(task) && hasUnresolvableDeps(task))
-  target["cache"] = isCacheable(task) && dependenciesFullyKnown
+  target["cache"] = isCacheable(task)
 
   val continuous = isContinuous(task)
   if (continuous) {

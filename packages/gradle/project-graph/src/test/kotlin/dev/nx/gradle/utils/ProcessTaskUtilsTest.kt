@@ -95,11 +95,11 @@ class ProcessTaskUtilsTest {
   }
 
   @Test
-  fun `test a task whose dependency set cannot be fully resolved is not cacheable`() {
+  fun `test a task whose dependency set cannot be fully resolved stays cacheable and fails open`() {
     val project = ProjectBuilder.builder().build()
     val task = project.tasks.register("packagesOtherProject").get()
-    // Qualified path forces the bypass; the FileCollection is unresolvable — the set is knowably
-    // short.
+    // Qualified path forces the bypass; the FileCollection is screened, so the set is knowably
+    // short. Cacheability is Gradle's verdict, not the plugin's: the inputs over-declare instead.
     task.dependsOn(":other:jar")
     task.dependsOn(project.files("some-input.txt"))
 
@@ -115,15 +115,20 @@ class ProcessTaskUtilsTest {
             gitIgnoreClassifier = GitIgnoreClassifier(project.rootDir),
             project = project)
 
-    assertEquals(
-        false, result["cache"], "caching a short dependency set risks a stale hit: $result")
+    assertEquals(true, result["cache"])
+    val inputs = result["inputs"] as? List<*>
+    assertNotNull(inputs)
+    assertTrue(
+        inputs!!.any {
+          it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*" && it["transitive"] == true
+        },
+        "a short dependency set must over-declare the catch-all, got $result")
   }
 
   @Test
   fun `test a task with a resolvable dependency set stays cacheable`() {
     val project = ProjectBuilder.builder().build()
     val task = project.tasks.register("packagesThisProject").get()
-    // No FileCollection/TaskDependency, so nothing is knowably missing.
     task.dependsOn(":other:jar")
 
     val result =
