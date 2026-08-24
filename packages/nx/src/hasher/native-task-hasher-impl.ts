@@ -15,7 +15,12 @@ import { transformProjectGraphForRust } from '../native/transform-objects';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { readJsonFile } from '../utils/fileutils';
-import { PartialHash, TaskHasherImpl } from './task-hasher';
+import { buildIoSnapshotOverrides } from '../io-snapshots/overrides';
+import {
+  IoSnapshotHashOptions,
+  PartialHash,
+  TaskHasherImpl,
+} from './task-hasher';
 
 export class NativeTaskHasherImpl implements TaskHasherImpl {
   hasher: TaskHasher;
@@ -27,8 +32,8 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
 
   constructor(
     workspaceRoot: string,
-    nxJson: NxJsonConfiguration,
-    projectGraph: ProjectGraph,
+    private readonly nxJson: NxJsonConfiguration,
+    private readonly projectGraph: ProjectGraph,
     externals: NxWorkspaceFilesExternals,
     options: { selectivelyHashTsConfig: boolean }
   ) {
@@ -69,14 +74,16 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     taskGraph: TaskGraph,
     env: NodeJS.ProcessEnv,
     cwd?: string,
-    collectInputs?: boolean
+    collectInputs?: boolean,
+    ioSnapshots?: IoSnapshotHashOptions
   ): Promise<PartialHash> {
     const hashes = await this.hashTasks(
       [task],
       taskGraph,
       { [task.id]: env },
       cwd,
-      collectInputs
+      collectInputs,
+      ioSnapshots
     );
     return hashes[0];
   }
@@ -86,11 +93,23 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     taskGraph: TaskGraph,
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd?: string,
-    collectInputs?: boolean
+    collectInputs?: boolean,
+    ioSnapshots?: IoSnapshotHashOptions
   ): Promise<PartialHash[]> {
+    const overrides =
+      ioSnapshots?.overrides ??
+      (ioSnapshots?.bundleDir
+        ? buildIoSnapshotOverrides(
+            this.projectGraph,
+            taskGraph,
+            this.nxJson,
+            ioSnapshots.bundleDir
+          )?.overrides
+        : undefined);
     const plans = this.planner.getPlansReference(
       tasks.map((t) => t.id),
-      taskGraph
+      taskGraph,
+      overrides
     );
     const shouldCollectInputs =
       collectInputs ?? getTaskIOService().hasTaskInputSubscribers();

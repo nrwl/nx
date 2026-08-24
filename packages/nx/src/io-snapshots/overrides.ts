@@ -61,15 +61,23 @@ const BUNDLE_VERSION = 1;
 export function buildIoSnapshotOverrides(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
-  nxJson: NxJsonConfiguration
+  nxJson: NxJsonConfiguration,
+  /**
+   * A specific bundle directory (the one the client fetched for its HEAD).
+   * Skips the enablement gate and HEAD lookup, so the daemon hashes exactly
+   * what the client resolved.
+   */
+  bundleDir?: string
 ): IoSnapshotOverridesResult | null {
-  if (!isIoSnapshotFetchEnabled(nxJson)) {
+  if (!bundleDir && !isIoSnapshotFetchEnabled(nxJson)) {
     return null;
   }
   const diagnostics: IoSnapshotDiagnostic[] = [];
   const overrides: Record<string, IoSnapshotOverride> = {};
 
-  const bundle = readBundleForHead(diagnostics);
+  const bundle = bundleDir
+    ? readBundle(join(bundleDir, IO_SNAPSHOT_BUNDLE_FILE), diagnostics)
+    : readBundleForHead(diagnostics);
   if (!bundle) {
     return { overrides, diagnostics, resolution: null };
   }
@@ -181,7 +189,16 @@ function readBundleForHead(diagnostics: IoSnapshotDiagnostic[]): Bundle | null {
     diagnostics.push({ reason: 'no-bundle' });
     return null;
   }
-  const file = join(ioSnapshotsCacheDirectory, head, IO_SNAPSHOT_BUNDLE_FILE);
+  return readBundle(
+    join(ioSnapshotsCacheDirectory, head, IO_SNAPSHOT_BUNDLE_FILE),
+    diagnostics
+  );
+}
+
+function readBundle(
+  file: string,
+  diagnostics: IoSnapshotDiagnostic[]
+): Bundle | null {
   let mtimeMs: number;
   try {
     mtimeMs = statSync(file).mtimeMs;
