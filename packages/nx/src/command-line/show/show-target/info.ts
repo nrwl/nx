@@ -441,7 +441,11 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
   console.log(
     `${c.bold('Continuous')}: ${data.continuous}${sourceHint('continuous')}`
   );
-  console.log(`${c.bold('Cache')}: ${data.cache}${sourceHint('cache')}`);
+  const cache =
+    data.cache === 'manual'
+      ? `true ${c.dim('(manual inputs, no I/O snapshot)')}`
+      : data.cache;
+  console.log(`${c.bold('Cache')}: ${cache}${sourceHint('cache')}`);
 
   if (data.inputs && data.inputs.length > 0) {
     console.log(`${c.bold('Inputs')}:`);
