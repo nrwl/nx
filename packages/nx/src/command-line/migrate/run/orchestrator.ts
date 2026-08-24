@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { randomBytes } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 import {
   closeSync,
   constants as fsConstants,
@@ -52,6 +52,7 @@ import {
   CURRENT_RUN_STATE_FORMAT_VERSION,
   SHELL_SAFE_VALUE,
   type MigrateCommitLedgerEntry,
+  type MigrateRunNoProgress,
   type MigrateRunState,
   type MigrateStep,
   type MigrateStepPromptOutcome,
@@ -131,6 +132,15 @@ const PLAN_SNAPSHOT_0 = 'plan-0.json';
 // A running worker older than this may be hung; the still-running dispense
 // escalates so the agent can verify or kill it.
 const HANG_THRESHOLD_MS = 15 * 60 * 1000;
+// Identical responses in a row before the dispense escalates to a
+// 'no-progress' action. A still-running worker is exempt until the hang
+// threshold: waiting on a live worker is not looping.
+const NO_PROGRESS_THRESHOLD = 3;
+// Rearms of one step before its failed/died dispense escalates: the retry
+// guidance flips against retrying and the preselected `next` is withheld, so
+// an agent that follows `next` blindly cannot retry forever. An explicit
+// retry is still honored; the cap never refuses.
+const REARM_ESCALATION_CAP = 3;
 
 export interface RunOrchestratorInitInput {
   root: string;
@@ -1438,25 +1448,31 @@ function advanceAndDispense(root: string, dir: string, runId: string): void {
     completeRun(root, dir, runId, state);
     return;
   }
+  // Track the response streak before emitting: a crash in between costs at
+  // most a count one ahead of what was emitted, and the escalation is
+  // advisory. Only the step responses below count: the completion response
+  // above repeats by design, and a rejected --step-action ends the reconcile
+  // before reaching here, already naming its own fix.
+  const noProgress = trackNoProgress(dir, step);
   switch (step.status) {
     case 'pending':
-      dispenseNextStep(root, dir, runId, state, step);
+      dispenseNextStep(root, dir, runId, state, step, noProgress);
       break;
     case 'dispensed':
       // Re-entry before the worker advanced the step; re-emit its command.
-      emitNextStep(root, runId, state, step);
+      emitNextStep(root, runId, state, step, noProgress);
       break;
     case 'failed':
-      emitRetryFailed(root, runId, state, step);
+      emitRetryFailed(root, runId, state, step, noProgress);
       break;
     case 'died':
-      emitDied(root, runId, state, step);
+      emitDied(root, runId, state, step, noProgress);
       break;
     case 'running':
-      emitStillRunning(root, runId, step);
+      emitStillRunning(root, runId, step, noProgress);
       break;
     case 'awaiting-prompt-outcome':
-      emitAwaitPrompt(root, dir, runId, step);
+      emitAwaitPrompt(root, dir, runId, step, noProgress);
       break;
     case 'succeeded':
     case 'skipped':
@@ -1481,12 +1497,66 @@ function firstActionableStep(state: MigrateRunState): MigrateStep | undefined {
   return state.steps.find((s) => !TERMINAL_STEP_STATUSES.has(s.status));
 }
 
+// One response repeats another when nothing durable happened between them:
+// the fingerprint digests the whole persisted state (minus the streak
+// itself), so any step transition, generator marker, issue settle or claim,
+// or ledger append resets the count, with no per-field enumeration to fall
+// out of date. A response whose own production writes state after the streak
+// is tracked (a fresh dispense's transition, a first await's claims)
+// fingerprints the pre-write state, so its first repeat resets rather than
+// increments: the threshold counts responses with no durable transition
+// between them, exactly as the contract defines identical.
+function responseFingerprint(state: MigrateRunState): string {
+  return createHash('sha256')
+    .update(JSON.stringify({ ...state, noProgress: undefined }))
+    .digest('hex');
+}
+
+// Persists the run-level response streak for the step about to be emitted and
+// returns it once it reaches the escalation threshold; null below it. A
+// still-running worker proven inside the hang threshold neither counts nor
+// resets: the response repeats while the run is legitimately waiting, and the
+// streak it would otherwise touch belongs to responses the agent can act on.
+// The proof needs a parseable start time: a running step without one cannot
+// show it is young, so it counts like any other repeated response (its
+// still-running instructions already say what to check).
+function trackNoProgress(
+  dir: string,
+  step: MigrateStep
+): MigrateRunNoProgress | null {
+  if (step.status === 'running') {
+    const startedAt = step.startedAt ? Date.parse(step.startedAt) : NaN;
+    if (
+      Number.isFinite(startedAt) &&
+      Date.now() - startedAt < HANG_THRESHOLD_MS
+    ) {
+      return null;
+    }
+  }
+  let streak: MigrateRunNoProgress;
+  updateRunState(dir, (fresh) => {
+    const fingerprint = responseFingerprint(fresh);
+    const prev = fresh.noProgress;
+    streak =
+      prev && prev.fingerprint === fingerprint
+        ? { ...prev, consecutiveCount: prev.consecutiveCount + 1 }
+        : {
+            fingerprint,
+            consecutiveCount: 1,
+            firstSeenAt: new Date().toISOString(),
+          };
+    return { ...fresh, noProgress: streak };
+  });
+  return streak.consecutiveCount >= NO_PROGRESS_THRESHOLD ? streak : null;
+}
+
 function dispenseNextStep(
   root: string,
   dir: string,
   runId: string,
   state: MigrateRunState,
-  step: MigrateStep
+  step: MigrateStep,
+  noProgress: MigrateRunNoProgress | null
 ): void {
   // Read the pre-migration baselines (git and package.json reads) before the
   // lock; the dispense transition and the baselines then apply to the fresh
@@ -1521,7 +1591,8 @@ function dispenseNextStep(
     root,
     runId,
     current,
-    current.steps.find((s) => s.id === step.id)
+    current.steps.find((s) => s.id === step.id),
+    noProgress
   );
 }
 
@@ -1529,24 +1600,33 @@ function emitNextStep(
   root: string,
   runId: string,
   state: MigrateRunState,
-  step: MigrateStep
+  step: MigrateStep,
+  noProgress: MigrateRunNoProgress | null
 ): void {
   const migrationId = step.migrationId;
-  emit(root, runId, step, 'next-step', {
-    command: workerCommand(root, migrationId, runId),
-    next: reconcileCommand(root, runId),
-    instructionLines: [
-      `Apply migration ${migrationId} by running the command below, then run the "next" command to record the outcome and get the next step.`,
-      ...renderIssueDigestLines(state, step.id, runId),
-    ],
-  });
+  emit(
+    root,
+    runId,
+    step,
+    'next-step',
+    {
+      command: workerCommand(root, migrationId, runId),
+      next: reconcileCommand(root, runId),
+      instructionLines: [
+        `Apply migration ${migrationId} by running the command below, then run the "next" command to record the outcome and get the next step.`,
+        ...renderIssueDigestLines(state, step.id, runId),
+      ],
+    },
+    noProgress
+  );
 }
 
 function emitRetryFailed(
   root: string,
   runId: string,
   state: MigrateRunState,
-  step: MigrateStep
+  step: MigrateStep,
+  noProgress: MigrateRunNoProgress | null
 ): void {
   const migrationId = step.migrationId;
   // A worker failure records its summary on the outcome; a prompt the agent
@@ -1563,12 +1643,14 @@ function emitRetryFailed(
   const retrySafety: PreMarkerRetrySafety = pending
     ? assessPreMarkerRetry(root, step)
     : { kind: 'safe' };
+  const capReached = rearmCapReached(step);
   const lines = [
     `Migration ${migrationId} failed${summary ? `: ${summary}` : ''}.`,
     `  started from: ${step.gitRefBefore ?? '(unknown)'}`,
     `  current HEAD: ${head ?? '(unknown)'}`,
     `  working tree: ${tree === null ? '(unknown)' : tree ? `\n${tree}` : '(clean)'}`,
     ``,
+    ...(capReached ? [rearmCapLine(step), ``] : []),
     `Decide how to proceed and re-run reconcile with one of:`,
     retryOptionLine(retrySafety, reconcileCommand(root, runId, 'retry')),
   ];
@@ -1590,11 +1672,37 @@ function emitRetryFailed(
   // A step whose generator may still run gets no `next`, whichever retry the
   // checks above would accept: git can vouch for the tracked tree only, and
   // an agent that follows `next` blindly must not rerun a generator over
-  // writes nothing here could see. Choosing a retry has to be explicit.
-  emit(root, runId, step, 'retry-failed', {
-    ...(pending ? {} : { next: reconcileCommand(root, runId, 'retry') }),
-    instructionLines: lines,
-  });
+  // writes nothing here could see. Choosing a retry has to be explicit. The
+  // rearm cap withholds it too: each rearm resets the response streak, so a
+  // blindly-followed retry `next` would loop past every escalation.
+  emit(
+    root,
+    runId,
+    step,
+    'retry-failed',
+    {
+      ...(pending || capReached
+        ? {}
+        : { next: reconcileCommand(root, runId, 'retry') }),
+      instructionLines: lines,
+    },
+    noProgress
+  );
+}
+
+// Whether the step has used up its rearms: attempts beyond the first are all
+// rearms, whichever retry action produced them.
+function rearmCapReached(step: MigrateStep): boolean {
+  return step.attempt - 1 >= REARM_ESCALATION_CAP;
+}
+
+// No availability promise: which retry forms remain is the option list's to
+// say (a pre-marker death may offer none), and the cap itself withholds only
+// the preselected continuation.
+function rearmCapLine(step: MigrateStep): string {
+  return `This migration has already been retried ${
+    step.attempt - 1
+  } times without completing. Repeating an unchanged retry is unlikely to end differently: fix the underlying problem first, choose one of the non-retry options below, or ask the user how to proceed.`;
 }
 
 // Whether the step's generator half may still have to run: it exists and no
@@ -1770,7 +1878,8 @@ function emitDied(
   root: string,
   runId: string,
   state: MigrateRunState,
-  step: MigrateStep
+  step: MigrateStep,
+  noProgress: MigrateRunNoProgress | null
 ): void {
   const migrationId = step.migrationId;
   const ref = step.gitRefBefore;
@@ -1781,12 +1890,14 @@ function emitDied(
   // that keeps the tree as it stands has the rest of the step left to run: a
   // prompt, or the install and commit its worker never reached.
   const resume = !generatorPending(step);
+  const capReached = rearmCapReached(step);
   const lines = [
     `The worker for ${migrationId} died; its process is gone.`,
     `  started from: ${ref ?? '(unknown)'}`,
     `  current HEAD: ${head ?? '(unknown)'}`,
     `  working tree: ${tree === null ? '(unknown)' : tree ? `\n${tree}` : '(clean)'}`,
     ``,
+    ...(capReached ? [rearmCapLine(step), ``] : []),
   ];
   const options: string[] = [];
   if (resume) {
@@ -1842,17 +1953,29 @@ function emitDied(
   // While the generator may still run there is no `next` at all: a reset
   // cannot be verified against writes git does not see, and adopting records
   // a result nothing checked, so an agent that follows `next` blindly must
-  // land on neither.
-  emit(root, runId, step, 'died', {
-    ...(resume ? { next: reconcileCommand(root, runId, 'retry') } : {}),
-    instructionLines: lines,
-  });
+  // land on neither. The rearm cap withholds it for the same reason as in
+  // emitRetryFailed: rearms reset the response streak, so a blind retry
+  // `next` would loop past every escalation.
+  emit(
+    root,
+    runId,
+    step,
+    'died',
+    {
+      ...(resume && !capReached
+        ? { next: reconcileCommand(root, runId, 'retry') }
+        : {}),
+      instructionLines: lines,
+    },
+    noProgress
+  );
 }
 
 function emitStillRunning(
   root: string,
   runId: string,
-  step: MigrateStep
+  step: MigrateStep,
+  noProgress: MigrateRunNoProgress | null
 ): void {
   const migrationId = step.migrationId;
   const ageMs = step.startedAt ? Date.now() - Date.parse(step.startedAt) : 0;
@@ -1866,17 +1989,25 @@ function emitStillRunning(
       )} minutes and may be hung. Verify pid ${step.pid}; either keep waiting, or kill it so the next reconcile can classify it as died.`
     );
   }
-  emit(root, runId, step, 'still-running', {
-    next: reconcileCommand(root, runId),
-    instructionLines: lines,
-  });
+  emit(
+    root,
+    runId,
+    step,
+    'still-running',
+    {
+      next: reconcileCommand(root, runId),
+      instructionLines: lines,
+    },
+    noProgress
+  );
 }
 
 function emitAwaitPrompt(
   root: string,
   dir: string,
   runId: string,
-  step: MigrateStep
+  step: MigrateStep,
+  noProgress: MigrateRunNoProgress | null
 ): void {
   const migrationId = step.migrationId;
   const { package: pkg, name } = splitMigrationId(migrationId);
@@ -1983,10 +2114,17 @@ function emitAwaitPrompt(
   if (rejection.length > 0) {
     lines.push('', ...rejection);
   }
-  emit(root, runId, step, 'await-prompt', {
-    next: reconcileCommand(root, runId),
-    instructionLines: lines,
-  });
+  emit(
+    root,
+    runId,
+    step,
+    'await-prompt',
+    {
+      next: reconcileCommand(root, runId),
+      instructionLines: lines,
+    },
+    noProgress
+  );
 }
 
 // The prompt path the run's latest plan snapshot records for the migration;
@@ -2196,21 +2334,46 @@ function emit(
   runId: string,
   step: MigrateStep,
   action: string,
-  payload: DispensePayload
+  payload: DispensePayload,
+  noProgress: MigrateRunNoProgress | null
 ): void {
+  // At the escalation threshold the whole response becomes the 'no-progress'
+  // action: the step's own instructions and commands are kept below the
+  // escalation so acting on them stays possible, but the action names the
+  // loop, not the step. Never a step status: nothing durable changed, and a
+  // status would have to be walked back once the agent acts.
+  const escalated = noProgress !== null;
+  const effectiveAction = escalated ? 'no-progress' : action;
   const { instructionLines, ...rest } = payload;
-  const withFooter = instructionLines
-    ? [...instructionLines, ...runbookFooterLines(root, runId)]
+  const allLines = escalated
+    ? [...noProgressLines(step, noProgress), ...(instructionLines ?? [])]
+    : instructionLines;
+  const withFooter = allLines
+    ? [...allLines, ...runbookFooterLines(root, runId)]
     : undefined;
   // One sanitized array feeds both, so the block payload says exactly what the
   // human echo said.
   const lines = withFooter ? safeLines(withFooter) : undefined;
-  logToAgent({ title: `nx migrate: ${action}`, bodyLines: lines });
-  emitStepBlock(runId, step.id, action, {
+  logToAgent({ title: `nx migrate: ${effectiveAction}`, bodyLines: lines });
+  emitStepBlock(runId, step.id, effectiveAction, {
     ...rest,
     ...(lines ? { instructions: lines.join('\n') } : {}),
   });
-  reportMigrateOrchestratorDispense({ action, attempt: step.attempt });
+  reportMigrateOrchestratorDispense({
+    action: effectiveAction,
+    attempt: step.attempt,
+  });
+}
+
+function noProgressLines(
+  step: MigrateStep,
+  streak: MigrateRunNoProgress
+): string[] {
+  return [
+    `No progress: this is response ${streak.consecutiveCount} in a row for migration ${step.migrationId} with no change in the run's recorded state since ${streak.firstSeenAt}.`,
+    `Re-running the reconcile command changes nothing on its own; act on the instructions below. If something is blocking you from acting on them, stop looping and report the blocker to the user.`,
+    ``,
+  ];
 }
 
 // Appended to every step dispense and rejected-action response so a session
