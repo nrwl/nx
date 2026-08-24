@@ -265,10 +265,13 @@ For example, an exact target-name entry takes precedence over a glob entry such 
 adding one could stop the glob entry's configuration from applying to the migrated targets.
 The generator prints a warning and keeps the full per-project configuration for that target.
 
-When you convert several plugins in one run of the `infer-targets` generator, only the final
-conversion is eligible to centralize shared configuration.
-The earlier conversions keep full per-project configuration, because a plugin registered by a
-later conversion could take over their targets.
+When you convert several plugins in one run of the `infer-targets` generator, the generator
+defers centralization until every conversion has run and registered its plugin, then centralizes
+the shared configuration for the whole batch in a single pass.
+Because that pass sees the finished plugin list, registrations added by later conversions in the
+same run do not block earlier ones, and every conversion in the batch is eligible to centralize.
+Each conversion is still subject to the skip conditions above and to the verification step below,
+evaluated against the final state of `nx.json`.
 
 A plugin registered earlier than the migrated plugin can remain the source of a target when it
 infers the same target for the same project with the same executor.
