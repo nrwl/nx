@@ -29,6 +29,7 @@ import { isCI } from '../utils/is-ci';
 import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { getBundleInstallDefaultLocation } from '../nx-cloud/update-manager';
 import { logger } from '../utils/logger';
+import { fetchIoSnapshotsForRun } from '../io-snapshots/fetch';
 import {
   createNxKeyLicenseeInformation,
   getNxKeyInformation,
@@ -994,6 +995,9 @@ export async function invokeTasksRunner({
 
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
+  // Must precede hashing: the bundle is the snapshot source for task hashes.
+  const ioSnapshots = await fetchIoSnapshotsForRun(nxJson, runnerOptions);
+
   let hasher = createTaskHasher(projectGraph, nxJson, runnerOptions);
 
   // this is used for two reasons: to fetch all remote cache hits AND
@@ -1028,6 +1032,7 @@ export async function invokeTasksRunner({
       nxJson,
       nxArgs,
       taskGraph,
+      ioSnapshots,
       hasher: {
         hashTask(task: Task, taskGraph_?: TaskGraph, env?: NodeJS.ProcessEnv) {
           if (!taskGraph_) {
