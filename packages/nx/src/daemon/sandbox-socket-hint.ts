@@ -1,4 +1,4 @@
-import { isAiAgent } from '../native';
+import { detectAiAgent, isAiAgent } from '../native';
 import { NX_HOME_TMP_DIR, NX_TMP_DIR } from '../utils/nx-tmp-dir';
 
 /**
@@ -67,11 +67,7 @@ export function sandboxSocketHint({
           '  - Run `nx configure-ai-agents` to write the sandbox allowances Nx needs (Claude Code today). Agent sandboxes usually block writes to their own settings file, so this may have to be run from a regular terminal rather than through the agent.',
         ]
       : []),
-    // A scoped allowlist is not enough on its own: Claude Code's
-    // `allowUnixSockets` permits connecting to a socket but not creating one,
-    // and every caller of this hint is creating a socket or making the first
-    // connection to one that does not exist yet.
-    `  - Allow your sandbox to create unix sockets under ${roots}, not only connect to them, and grant read and write on those directories. Claude Code needs \`allowAllUnixSockets: true\`; a scoped \`allowUnixSockets\` entry only covers connecting to a socket that already exists.`,
+    ...sandboxSpecificRemedy(roots),
     '  - Set NX_SOCKET_DIR to a directory your sandbox allows.',
     // The one remedy that needs no sandbox change at all. Worth naming
     // explicitly: a denied bind is fatal to plugin isolation, so without this
@@ -79,4 +75,34 @@ export function sandboxSocketHint({
     '  - Keep going without sockets: NX_ISOLATE_PLUGINS=false runs plugins in the main process, and NX_DAEMON=false skips the daemon. Both cost performance but need no sandbox changes.',
     'See https://nx.dev/docs/kb/nx-sandbox-unix-sockets for details.',
   ];
+}
+
+/**
+ * The per-agent form of "allow sockets under these roots". Each sandbox gates
+ * socket creation on something different, so a single generic sentence sends
+ * at least one of them to a setting that does not exist:
+ *
+ * - Claude Code gates on the path allowlist. A scoped `allowUnixSockets` entry
+ *   covers binding as well as connecting, so it is sufficient and preferable to
+ *   `allowAllUnixSockets`, which opens every socket on the machine.
+ * - Codex gates on `network_access` instead, and has no path-scoped socket
+ *   setting. `writable_roots` alone does not unblock a bind. That grant is a
+ *   broad one, so it is offered rather than recommended, next to the remedies
+ *   below that need no sandbox change at all.
+ */
+function sandboxSpecificRemedy(roots: string): string[] {
+  switch (detectAiAgent()) {
+    case 'claude':
+      return [
+        `  - Add ${roots} to \`sandbox.network.allowUnixSockets\` and to \`sandbox.filesystem.allowRead\`/\`allowWrite\` in your Claude Code settings. The scoped entry covers creating sockets, not only connecting to them.`,
+      ];
+    case 'codex':
+      return [
+        `  - Codex only permits unix sockets when \`sandbox_workspace_write.network_access\` is true, and has no setting that scopes them to a path. Enabling it also grants network access, so prefer one of the options below unless you want that. If you do enable it, add ${roots} to \`sandbox_workspace_write.writable_roots\` as well.`,
+      ];
+    default:
+      return [
+        `  - Allow your sandbox to create unix sockets under ${roots}, not only connect to them, and grant read and write on those directories.`,
+      ];
+  }
 }

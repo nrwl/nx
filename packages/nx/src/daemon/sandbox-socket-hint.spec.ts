@@ -1,13 +1,17 @@
 import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
-import { isAiAgent } from '../native';
+import { detectAiAgent, isAiAgent } from '../native';
 import { sandboxSocketHint } from './sandbox-socket-hint';
 
 jest.mock('../native', () => ({
   ...jest.requireActual('../native'),
   isAiAgent: jest.fn(() => false),
+  detectAiAgent: jest.fn(() => null),
 }));
 
 const mockIsAiAgent = isAiAgent as jest.MockedFunction<typeof isAiAgent>;
+const mockDetectAiAgent = detectAiAgent as jest.MockedFunction<
+  typeof detectAiAgent
+>;
 
 describe('sandboxSocketHint', () => {
   // Deliberately not the POSIX default (/tmp/.nx/sockets) so that a hardcoded
@@ -16,6 +20,7 @@ describe('sandboxSocketHint', () => {
 
   afterEach(() => {
     mockIsAiAgent.mockReset();
+    mockDetectAiAgent.mockReset();
   });
 
   const hint = (opts?: { certain?: boolean }) =>
@@ -78,12 +83,41 @@ describe('sandboxSocketHint', () => {
     }
   );
 
-  it('should tell sandboxes that only allowlist connections that they must also allow socket creation', () => {
-    // Every caller is creating a socket or making the first connection to one
-    // that does not exist yet, so a connect-only allowlist is never sufficient.
+  it('should point Claude Code at the scoped allowlist rather than the blanket grant', () => {
+    // The scoped entry covers binding, so `allowAllUnixSockets` buys nothing
+    // for Nx while opening every socket on the machine to the sandbox.
     mockIsAiAgent.mockReturnValue(true);
+    mockDetectAiAgent.mockReturnValue('claude');
 
-    expect(hint().join('\n')).toContain('allowAllUnixSockets');
+    const lines = hint().join('\n');
+
+    expect(lines).toContain('allowUnixSockets');
+    expect(lines).not.toContain('allowAllUnixSockets');
+  });
+
+  it('should name the setting Codex actually gates sockets on', () => {
+    // Codex has no path-scoped socket setting: `writable_roots` alone leaves a
+    // bind refused, and `network_access` is the switch that permits it. Naming
+    // Claude's setting here would send Codex users to one that does not exist.
+    mockIsAiAgent.mockReturnValue(true);
+    mockDetectAiAgent.mockReturnValue('codex');
+
+    const lines = hint().join('\n');
+
+    expect(lines).toContain('network_access');
+    expect(lines).toContain('writable_roots');
+    expect(lines).not.toContain('allowUnixSockets');
+  });
+
+  it('should fall back to a setting-agnostic remedy for an unrecognised sandbox', () => {
+    mockIsAiAgent.mockReturnValue(false);
+    mockDetectAiAgent.mockReturnValue(null);
+
+    const lines = hint().join('\n');
+
+    expect(lines).toContain('create unix sockets under');
+    expect(lines).not.toContain('allowUnixSockets');
+    expect(lines).not.toContain('network_access');
   });
 
   it.each([true, false])(

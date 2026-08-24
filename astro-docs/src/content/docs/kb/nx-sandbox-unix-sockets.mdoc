@@ -92,6 +92,21 @@ The allowances only take effect once sandboxing itself is on, which `configure-a
 `allowAllUnixSockets: true` lets sandboxed commands connect to _every_ Unix socket on the machine, including your SSH agent and the Docker daemon socket, which is root-equivalent. It grants nothing extra for Nx. Creating a socket is governed by the path allowlist, so the scoped entry above already covers a fresh daemon, plugin workers, and forked tasks.
 {% /aside %}
 
+## Codex
+
+Codex gates Unix sockets on a different setting, and there is no way to scope them to a path. `sandbox_workspace_write.writable_roots` on its own leaves a bind refused. The switch that permits it is `network_access`, which also grants the sandbox general network access:
+
+```toml
+# .codex/config.toml
+[sandbox_workspace_write]
+network_access = true
+writable_roots = ["/tmp/.nx", "/home/you/.nx"]
+```
+
+`writable_roots` is still needed for the `~/.nx` fallback, which sits outside the areas `workspace-write` makes writable. The entries have to be absolute, since Codex does not expand `~`.
+
+Because that grant is broad, `nx configure-ai-agents` does not write it for you. If you would rather not enable it, the workarounds below need no sandbox changes.
+
 ## Alternative workarounds
 
 If you prefer not to allowlist the socket root, you can disable the Nx features that require sockets. These workarounds come with tradeoffs:
