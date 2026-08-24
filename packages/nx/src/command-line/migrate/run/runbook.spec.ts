@@ -35,6 +35,10 @@ describe('renderRunbook', () => {
     expect(runbook).toContain(
       'Do not run migrations the\norchestrator has not dispensed'
     );
+    // Handed-back work reconciles first: that dispense names the handoff
+    // file and assigns recorded issues, so nothing tells the agent to write
+    // a handoff it has not been handed a path for.
+    expect(runbook).toContain('run the\n   `next` command first');
   });
 
   it('pins the workspace package manager and nx invocation', () => {
@@ -88,6 +92,21 @@ describe('renderRunbook', () => {
     expect(renderRunbook(buildContext({ createCommits: false }))).toContain(
       'This run does not create commits'
     );
+  });
+
+  it('carries the issue-reporting contract: shapes, mapping vocabulary, and update scoping', () => {
+    const runbook = renderRunbook(buildContext());
+
+    expect(runbook).toContain('### Reporting issues');
+    expect(runbook).toContain('.nx/migrate-runs/run-1/issues/');
+    expect(runbook).toContain(
+      '"applicableMigrations": ["<package>:<name>", "<package>"] | "unknown"'
+    );
+    expect(runbook).toContain('"id": "issue-<n>"');
+    expect(runbook).toContain(
+      '`issueUpdates` may only reference issues the digest marks assigned to'
+    );
+    expect(runbook).toContain('rejected');
   });
 
   it('tells the agent a lost prompt block is re-emitted by the reconcile dispense', () => {
