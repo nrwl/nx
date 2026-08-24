@@ -135,8 +135,11 @@
             "description": "A shorthand for using the nx:run-commands executor"
           },
           "cache": {
-            "type": "boolean",
-            "description": "Specifies if the given target should be cacheable"
+            "anyOf": [
+              { "type": "boolean" },
+              { "type": "string", "enum": ["manual"] }
+            ],
+            "description": "Specifies if the given target should be cacheable. \"manual\" caches it from its declared inputs only, never from an I/O snapshot."
           },
           "sandbox": {
             "type": "object",
