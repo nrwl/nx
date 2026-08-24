@@ -153,10 +153,9 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     // TODO(colum): remove when Webpack MF works with Crystal
     addPlugin: !schema.bundler || schema.bundler === 'rspack' ? true : false,
     bundler: schema.bundler ?? 'rspack',
-    // Unlike a plain app, a remote MUST end up with a distinct port: it is written
-    // into the host's manifest and into its own serve target. findFreePort reads the
-    // ports already claimed — which after this generator and updateModuleFederationProject
-    // is exactly the set that matters — so successive remotes step past each other.
+    // Unlike a plain app, a remote needs a port of its own: updateModuleFederationProject
+    // writes it to the serve target, and a dynamic remote's is also recorded in the host
+    // manifest. findFreePort reads the ports already claimed, so remotes step past each other.
     port: schema.port ?? schema.devServerPort ?? findFreePort(host),
   };
 

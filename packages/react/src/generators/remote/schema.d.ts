@@ -6,7 +6,7 @@ export interface Schema {
   classComponent?: boolean;
   compiler?: 'babel' | 'swc';
   port?: number;
-  /** @deprecated Use {@link Schema.port} instead. This option will be removed in Nx v25. */
+  /** @deprecated Use {@link Schema.port} instead. This option will be removed in Nx v24. */
   devServerPort?: number;
   directory: string;
   e2eTestRunner: 'cypress' | 'playwright' | 'none';
