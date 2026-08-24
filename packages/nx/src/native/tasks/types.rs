@@ -207,6 +207,8 @@ pub enum HashInstruction {
 pub struct InstructionPool {
     ids: DashMap<HashInstruction, u32>,
     items: DashMap<u32, HashInstruction>,
+    /// Instruction kind per id, for lock-cheap plan filtering.
+    kinds: parking_lot::RwLock<Vec<InstructionKind>>,
     // Display strings, rendered once per unique instruction at intern time so
     // hashing can hand out shared keys instead of re-rendering per task.
     keys: DashMap<u32, Arc<str>>,
@@ -229,6 +231,14 @@ impl InstructionPool {
             dashmap::mapref::entry::Entry::Occupied(existing) => *existing.get(),
             dashmap::mapref::entry::Entry::Vacant(vacant) => {
                 let id = self.next_id.fetch_add(1, Ordering::Relaxed);
+                let kind = InstructionKind::of(vacant.key());
+                {
+                    let mut kinds = self.kinds.write();
+                    if kinds.len() <= id as usize {
+                        kinds.resize(id as usize + 1, InstructionKind::Other);
+                    }
+                    kinds[id as usize] = kind;
+                }
                 self.items.insert(id, vacant.key().clone());
                 self.keys.insert(id, Arc::from(vacant.key().to_string()));
                 vacant.insert(id);
@@ -254,6 +264,35 @@ impl InstructionPool {
 
     pub fn len(&self) -> usize {
         self.items.len()
+    }
+
+    /// Whether an I/O snapshot replaces this instruction: every declared
+    /// fileset, and TsConfiguration unless the root tsconfig was read.
+    pub fn replaced_by_snapshot(&self, id: u32, keep_tsconfig: bool) -> bool {
+        match self.kinds.read().get(id as usize).copied() {
+            Some(InstructionKind::FileSet) => true,
+            Some(InstructionKind::TsConfiguration) => !keep_tsconfig,
+            _ => false,
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum InstructionKind {
+    FileSet,
+    TsConfiguration,
+    Other,
+}
+
+impl InstructionKind {
+    fn of(instruction: &HashInstruction) -> Self {
+        match instruction {
+            HashInstruction::ProjectFileSet(_, _) | HashInstruction::WorkspaceFileSet(_) => {
+                Self::FileSet
+            }
+            HashInstruction::TsConfiguration(_) => Self::TsConfiguration,
+            _ => Self::Other,
+        }
     }
 }
 
