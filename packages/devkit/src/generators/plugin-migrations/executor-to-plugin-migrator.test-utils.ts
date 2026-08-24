@@ -40,7 +40,7 @@ import { TempFs } from '../../../internal-testing-utils';
  *
  * Every whole-workspace inference pass invokes the plugin's `createNodes`
  * function exactly once, so counting `createNodes` invocations counts
- * whole-workspace inference passes — the cost we care about — regardless of
+ * whole-workspace inference passes, the cost we care about, regardless of
  * which retrieval entry point ran the pass (Phase 1 goes through
  * `getCreateNodesResultsForPlugin`; the Phase 4 verification calls
  * `retrieveProjectConfigurations` directly, once per registration group).
@@ -258,7 +258,7 @@ export function flushTreeToDisk(ctx: FixtureContext): void {
  * runtime. Returns project root -> resolved (effective) target map.
  *
  * Unlike the engine's own verification pass (which deliberately omits the
- * `project.json` layer), this DOES include it — so it can observe cases the
+ * `project.json` layer), this DOES include it, so it can observe cases the
  * verification pass structurally cannot, such as a `filter: { plugin }` default
  * being dropped because a target carries `command`/`executor` in a default
  * layer. Both real default plugins run: `nx/core/project-json` AND
@@ -266,7 +266,7 @@ export function flushTreeToDisk(ctx: FixtureContext): void {
  * package.json script or `nx.targets` entry names it).
  *
  * `extraPlugins` maps additional plugin paths to their `createNodes`, letting a
- * test load OTHER specified plugins registered in nx.json — in registration
+ * test load OTHER specified plugins registered in nx.json, in registration
  * order, so plugin-merge ordering (a later plugin taking a target's identity
  * over) resolves exactly as at runtime.
  */

@@ -41,7 +41,7 @@ jest.mock('nx/src/project-graph/project-graph', () => {
  * a few deviating). It pins the two headline properties of the rewrite:
  *
  *   1. whole-workspace inference passes stay single-digit (O(distinct option
- *      sets) + 1 verify), NOT O(projects) — the previous engine ran
+ *      sets) + 1 verify), NOT O(projects): the previous engine ran
  *      ~(targets + 2*projects) passes, i.e. thousands here.
  *   2. total emitted config (nx.json + every project.json) shrinks materially:
  *      shared config is centralized once instead of duplicated per project.

@@ -455,7 +455,7 @@ describe('convert-to-inferred', () => {
     // Each migrated detox target carries a per-project `command`, which gives it
     // an identity in the project.json (default) layer. Nx's `resolveSourcePlugin`
     // then refuses to apply a `filter: { plugin }` targetDefault to it, so the
-    // shared `options.args` / `configurations` MUST stay in project.json — with
+    // shared `options.args` / `configurations` MUST stay in project.json, with
     // one project the hoist never triggers, but with two it does.
     const emptyExtraConfigurations = {
       'build-android': { production: {} },
@@ -480,8 +480,8 @@ describe('convert-to-inferred', () => {
 
     await convertToInferred(tree, {});
 
-    // The whole build-ios target stays per-project — command, the shared args,
-    // and the production configuration — so `nx build-ios --configuration
+    // The whole build-ios target stays per-project: command, the shared args,
+    // and the production configuration, so `nx build-ios --configuration
     // production` still selects the release build.
     const projectConfig = readProjectConfiguration(tree, project1.name);
     expect(projectConfig.targets['build-ios']).toEqual({

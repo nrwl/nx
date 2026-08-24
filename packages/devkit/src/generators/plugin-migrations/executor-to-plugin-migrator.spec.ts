@@ -174,7 +174,7 @@ describe('whole-workspace inference passes', () => {
   // The engine runs one whole-workspace inference per distinct plugin-option
   // set (Phase 1) plus one verification pass per registration group (Phase 4).
   // A uniform fixture has one option set and one registration group, so
-  // `1 + 1 = 2` — independent of the number of projects either way.
+  // `1 + 1 = 2`: independent of the number of projects either way.
   const EXPECTED_UNIFORM_PASSES =
     1 /* distinctOptionSets */ + 1; /* verify (per registration group) */
 
@@ -392,7 +392,7 @@ describe('computeResidualByProject (Phase 2)', () => {
           structuredClone(fullInferred)
         )
       );
-      // sanity: baselineFinal is the command-based effective config — the
+      // sanity: baselineFinal is the command-based effective config: the
       // inferred run-commands base with the residual's `mode` layered on.
       expect(entry.baselineFinal.executor).toBe('nx:run-commands');
       expect(entry.baselineFinal.options).toEqual({
@@ -529,7 +529,7 @@ describe('computeResidualByProject (Phase 2)', () => {
 
   it('residual equals what a single-project migration writes into project.json', async () => {
     // In single-project (`--project`) mode nothing is hoisted, so the full
-    // residual stays in project.json — the byte-identical guarantee.
+    // residual stays in project.json: the byte-identical guarantee.
     ctx = setupFixture('residual-write');
     const plugin = createSyntheticPlugin();
     for (const name of ['app1', 'app2']) {
@@ -642,7 +642,7 @@ describe('generatedIncludeRoots', () => {
 
   it('falls back (undefined) when a globstar prefix carries glob metacharacters', () => {
     // These end in `/**/*` but the prefix is not a literal root, so they cannot
-    // be reduced to root ownership by string equality — the glob engine must
+    // be reduced to root ownership by string equality: the glob engine must
     // handle them. Previously they were wrongly treated as literal roots.
     for (const include of [
       'apps/*/**/*',
@@ -665,7 +665,7 @@ describe('generatedIncludeRoots', () => {
   });
 });
 
-describe('Phase 3 — strict-common hoist', () => {
+describe('Phase 3: strict-common hoist', () => {
   let ctx: FixtureContext;
 
   afterEach(() => {
@@ -714,7 +714,7 @@ describe('Phase 3 — strict-common hoist', () => {
 
     // Through the REAL Nx resolution pipeline the plugin-scoped default DOES
     // apply (no command/executor in the residual), so every project resolves
-    // the centralized `mode` — the hoist is genuinely equivalent.
+    // the centralized `mode`: the hoist is genuinely equivalent.
     const resolved = await resolveThroughRealPipeline(
       ctx,
       plugin.pluginPath,
@@ -731,7 +731,7 @@ describe('Phase 3 — strict-common hoist', () => {
       addExecutorProject(ctx, { name, root: name, targetName: 'build' });
     }
     // an executor-keyed default that the previous engine inlined into every
-    // project — its non-inferred remainder (`dependsOn`) should hoist once.
+    // project: its non-inferred remainder (`dependsOn`) should hoist once.
     const nxJson = readNxJson(ctx.tree);
     nxJson.targetDefaults ??= {};
     nxJson.targetDefaults[SYNTHETIC_EXECUTOR] = { dependsOn: ['^build'] };
@@ -750,7 +750,7 @@ describe('Phase 3 — strict-common hoist', () => {
     const td = readNxJson(ctx.tree).targetDefaults;
     // dead executor-keyed entry removed
     expect(td[SYNTHETIC_EXECUTOR]).toBeUndefined();
-    // the remainder stays scoped to this plugin's targets — re-homing an
+    // the remainder stays scoped to this plugin's targets: re-homing an
     // executor-scoped `dependsOn` as an unscoped name key would alter task
     // scheduling for every same-named target in the workspace.
     expect(td.build).toStrictEqual([
@@ -805,7 +805,7 @@ describe('Phase 3 — strict-common hoist', () => {
     // A residual carrying `executor`/`command` gives the project's target an
     // identity in the default (project.json) layer, so Nx's
     // `resolveSourcePlugin` refuses to apply a `filter: { plugin }` default to
-    // it — the hoisted keys would be silently dropped. This mirrors @nx/detox,
+    // it: the hoisted keys would be silently dropped. This mirrors @nx/detox,
     // whose postTargetTransformer stamps a per-project `command`.
     ctx = setupFixture('hoist-identity-residual');
     for (const name of ['app1', 'app2']) {
@@ -842,7 +842,7 @@ describe('Phase 3 — strict-common hoist', () => {
       ]
     );
 
-    // the shared `options.shared` must NOT be hoisted — a plugin-scoped default
+    // the shared `options.shared` must NOT be hoisted: a plugin-scoped default
     // would be dropped by Nx because each residual carries `command`.
     expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({ cache: true });
     for (const name of ['app1', 'app2']) {
@@ -901,7 +901,7 @@ describe('Phase 3 — strict-common hoist', () => {
       syntheticMigrations()
     );
 
-    // the shared `mode` must NOT be hoisted — a plugin-scoped default would be
+    // the shared `mode` must NOT be hoisted: a plugin-scoped default would be
     // dropped by Nx because the package.json script authors the target identity.
     expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({ cache: true });
     for (const name of ['app1', 'app2']) {
@@ -925,7 +925,7 @@ describe('Phase 3 — strict-common hoist', () => {
 
   it('excludes projects whose package.json is jsonc (comment / trailing comma), keeping their config', async () => {
     // `JSON.parse` throws on `//` comments and trailing commas, but Nx reads
-    // package.json with a jsonc-tolerant parser — so the real package-json plugin
+    // package.json with a jsonc-tolerant parser, so the real package-json plugin
     // turns the `build` script into an `nx:run-script` target and authors the
     // identity. If the gate used `JSON.parse` it would throw, treat the project
     // as eligible, hoist, and Nx would silently drop the centralized config.
@@ -1050,7 +1050,7 @@ describe('Phase 3 — strict-common hoist', () => {
       syntheticMigrations()
     );
 
-    // NOT hoisted — the nx.targets identity refuses a plugin-scoped default
+    // NOT hoisted: the nx.targets identity refuses a plugin-scoped default
     expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({ cache: true });
     for (const name of ['app1', 'app2']) {
       expect(readJson(ctx.tree, `${name}/project.json`).targets.build).toEqual({
@@ -1110,7 +1110,7 @@ describe('Phase 3 — strict-common hoist', () => {
       syntheticMigrations()
     );
 
-    // the shared `mode` IS hoisted — a package-based workspace no longer blocks it
+    // the shared `mode` IS hoisted: a package-based workspace no longer blocks it
     expect(readNxJson(ctx.tree).targetDefaults.build).toContainEqual({
       filter: { plugin: SYNTHETIC_PLUGIN_PATH },
       options: { mode: 'production' },
@@ -1672,7 +1672,7 @@ describe('Phase 3 — strict-common hoist', () => {
   it('warns (not silently) when projects are kept per-project due to authored identity', async () => {
     // A per-project exclusion is otherwise silent. The migration must surface it,
     // so a partial/total non-centralization is never mistaken for "centralization
-    // did not apply" — the failure mode that hid the customer's denormalization.
+    // did not apply": the failure mode that hid the customer's denormalization.
     ctx = setupFixture('exclusion-warning');
     for (const name of ['clean1', 'clean2']) {
       addExecutorProject(ctx, {
@@ -1731,7 +1731,7 @@ describe('Phase 3 — strict-common hoist', () => {
       });
     }
     // a user-authored default carrying a key that is neither inferred nor part
-    // of any project's residual — it must never be lost or overwritten.
+    // of any project's residual: it must never be lost or overwritten.
     const nxJson = readNxJson(ctx.tree);
     nxJson.targetDefaults.build = { cache: true, options: { verbose: true } };
     updateNxJson(ctx.tree, nxJson);
@@ -1780,7 +1780,7 @@ describe('Phase 3 — strict-common hoist', () => {
       });
     }
     // the user default conflicts with the strict-common residual on the same
-    // options key — every migrated project's own value won over this default
+    // options key: every migrated project's own value won over this default
     // pre-migration, and keeps winning post-migration.
     const nxJson = readNxJson(ctx.tree);
     nxJson.targetDefaults.build = {
@@ -1802,7 +1802,7 @@ describe('Phase 3 — strict-common hoist', () => {
       { warn } as any
     );
 
-    // the user's conflicting default value is never rewritten — any
+    // the user's conflicting default value is never rewritten: any
     // non-migrated target named `build` keeps inheriting `mode: 'development'`.
     // Migrated targets resolve the plugin-scoped entry (document order, last
     // match wins), so they still get `mode: 'production'`.
@@ -1940,7 +1940,7 @@ describe('Phase 3 — strict-common hoist', () => {
     }
     // a pre-existing registration (its own option set, or another plugin after
     // it) can win a migrated pair's identity with this executor via later-wins
-    // merging, shadowed in the graph by the explicit target — removal must
+    // merging, shadowed in the graph by the explicit target: removal must
     // fail open
     const nxJson = readNxJson(ctx.tree);
     nxJson.plugins = [
@@ -2064,7 +2064,7 @@ describe('Phase 3 — strict-common hoist', () => {
         options: { mode: 'production' },
       },
     ]);
-    // centralization completes normally — no fallback churn for the
+    // centralization completes normally: no fallback churn for the
     // array-shaped case anymore
     for (const name of ['app1', 'app2', 'app3']) {
       expect(
@@ -2115,7 +2115,7 @@ describe('Phase 3 — strict-common hoist', () => {
         target: uniformExecutorTarget(),
       });
     }
-    // bystander: same target name, different executor — never migrated
+    // bystander: same target name, different executor, never migrated
     addExecutorProject(ctx, {
       name: 'app3',
       root: 'app3',
@@ -2140,7 +2140,7 @@ describe('Phase 3 — strict-common hoist', () => {
       options: { mode: 'development' },
     });
     // the hoist is plugin-scoped, so the only default a same-named
-    // non-migrated target can resolve is the untouched catch-all — its
+    // non-migrated target can resolve is the untouched catch-all: its
     // effective config cannot change
     expect(readNxJson(ctx.tree).targetDefaults.build).toStrictEqual([
       { cache: true },
@@ -2219,7 +2219,7 @@ describe('Phase 3 — strict-common hoist', () => {
       ]
     );
 
-    // each hoist is scoped to its own plugin — no cross-pollution
+    // each hoist is scoped to its own plugin: no cross-pollution
     expect(readNxJson(ctx.tree).targetDefaults.build).toStrictEqual([
       { cache: true },
       {
@@ -2300,7 +2300,7 @@ describe('Phase 3 — strict-common hoist', () => {
       targetName: 'unrelated',
       executor: '@other/tool:noop',
     });
-    // pre-registered, unscoped — app3 keeps inferring after the migration
+    // pre-registered, unscoped: app3 keeps inferring after the migration
     const nxJson = readNxJson(ctx.tree);
     nxJson.plugins = [SYNTHETIC_PLUGIN_PATH];
     updateNxJson(ctx.tree, nxJson);
@@ -2318,7 +2318,7 @@ describe('Phase 3 — strict-common hoist', () => {
       { warn } as any
     );
 
-    // no hoisted entry survives — the catch-all collapses back to the plain
+    // no hoisted entry survives: the catch-all collapses back to the plain
     // object form
     expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({ cache: true });
     // migrated projects keep their full residuals (previous-engine output)
@@ -2339,7 +2339,7 @@ describe('Phase 3 — strict-common hoist', () => {
   it('M: reverts the hoist when a non-migrated root errors during verification (fail-closed)', async () => {
     // Same shape as L, but the plugin ERRORS on app3 during verification, so
     // app3 is absent from the (partial) verification result. `reachesNonMigrated
-    // Root` cannot see it — the guard must fail closed on the errored config
+    // Root` cannot see it: the guard must fail closed on the errored config
     // file, which sits outside the migrated roots.
     ctx = setupFixture('hoist-errored-root');
     for (const name of ['app1', 'app2']) {
@@ -2506,7 +2506,7 @@ describe('Phase 3 — strict-common hoist', () => {
     // root: `app1/child` is an existing non-migrated project whose config the
     // plugin globs (the parent include covers it). Ancestor-based ownership
     // would attribute the error to `app1` and skip the revert, leaking the
-    // centralized default onto the child once its config is fixed — the error
+    // centralized default onto the child once its config is fixed: the error
     // must be attributed to the CLOSEST project root instead.
     ctx = setupFixture('hoist-errored-nested-child');
     for (const name of ['app1', 'app2']) {
@@ -2601,7 +2601,7 @@ describe('Phase 3 — strict-common hoist', () => {
     // ONLY through plugin inference: no project.json, no graph node, just a
     // config file the plugin turns into a project in Phase 1. A graph-only
     // ownership lookup would attribute its verification error to migrated
-    // `app1` and keep the hoist — the attribution must also see the roots the
+    // `app1` and keep the hoist: the attribution must also see the roots the
     // plugin itself inferred.
     ctx = setupFixture('hoist-errored-inferred-nested');
     for (const name of ['app1', 'app2']) {
@@ -2612,7 +2612,7 @@ describe('Phase 3 — strict-common hoist', () => {
         target: uniformExecutorTarget(),
       });
     }
-    // config file only — the plugin discovers this project
+    // config file only: the plugin discovers this project
     ctx.fs.createFileSync(`app1/child/${SYNTHETIC_CONFIG_FILE}`, '{}');
     const nxJson = readNxJson(ctx.tree);
     nxJson.plugins = [SYNTHETIC_PLUGIN_PATH];
@@ -2688,7 +2688,7 @@ describe('Phase 3 — strict-common hoist', () => {
     // projects, plus one config that fails to load (tools/eslint-rules) sitting
     // outside every migrated root. Folding the errored file into the include-
     // coverage set keeps the registration scoped to the migrated roots, so the
-    // verification pass never infers (and re-errors on) that root — the hoist
+    // verification pass never infers (and re-errors on) that root: the hoist
     // survives instead of denormalizing into every project.
     ctx = setupFixture('errored-root-include-scope');
     const nxJson = readNxJson(ctx.tree);
@@ -2770,7 +2770,7 @@ describe('Phase 3 — strict-common hoist', () => {
       ]
     );
 
-    // the hoist SURVIVES — centralization happened despite the errored root
+    // the hoist SURVIVES: centralization happened despite the errored root
     expect(readNxJson(ctx.tree).targetDefaults.lint).toContainEqual(
       expect.objectContaining({ filter: { plugin: SYNTHETIC_PLUGIN_PATH } })
     );
@@ -2781,7 +2781,7 @@ describe('Phase 3 — strict-common hoist', () => {
       ).toBeUndefined();
     }
     // the registration is SCOPED (not widened workspace-wide): the include is
-    // present, covers the migrated roots, and excludes the errored root — so the
+    // present, covers the migrated roots, and excludes the errored root, so the
     // plugin never infers tools/eslint-rules.
     const registration = readNxJson(ctx.tree).plugins?.find(
       (p): p is ExpandedPluginConfiguration =>
@@ -2885,7 +2885,7 @@ describe('Phase 3 — strict-common hoist', () => {
       ]
     );
 
-    // the hoist SURVIVES — centralization happened
+    // the hoist SURVIVES: centralization happened
     expect(readNxJson(ctx.tree).targetDefaults.lint).toContainEqual(
       expect.objectContaining({ filter: { plugin: SYNTHETIC_PLUGIN_PATH } })
     );
@@ -3753,7 +3753,7 @@ describe('batch conversion session: deferred staging', () => {
   });
 });
 
-describe('Phase 4 — verify + equivalence oracle + fallback', () => {
+describe('Phase 4: verify + equivalence oracle + fallback', () => {
   let ctx: FixtureContext;
 
   afterEach(() => {
@@ -3816,7 +3816,7 @@ describe('Phase 4 — verify + equivalence oracle + fallback', () => {
         options: { mode: 'production' },
       },
     ]);
-    // exactly one warn, naming only the fallback project — and making no
+    // exactly one warn, naming only the fallback project, and making no
     // behavioral-equivalence claim the code cannot check: the restored output
     // matches the pre-centralization engine, but the live inferred
     // configuration diverged, so the warn must ask for manual review instead
@@ -3827,14 +3827,14 @@ describe('Phase 4 — verify + equivalence oracle + fallback', () => {
     expect(warn.mock.calls[0][0]).not.toContain('app2');
     expect(warn.mock.calls[0][0]).not.toContain('behavior is preserved');
     expect(warn.mock.calls[0][0]).toContain('could not be verified');
-    expect(warn.mock.calls[0][0]).toContain('review');
+    expect(warn.mock.calls[0][0]).toContain('Review these targets manually');
   });
 
   it('does not claim an override was kept when the residual is empty', async () => {
     // Pure executor targets: the whole target is inferred, so the residual is
     // `{}` and the fallback "restore" deletes the project.json target. The
     // warning must not assert an override exists or that behavior is
-    // preserved — the divergent inferred config IS the live config.
+    // preserved: the divergent inferred config IS the live config.
     ctx = setupFixture('fallback-empty-residual');
     for (const name of ['app1', 'app2', 'app3']) {
       addExecutorProject(ctx, {
@@ -3870,7 +3870,7 @@ describe('Phase 4 — verify + equivalence oracle + fallback', () => {
       { warn } as any
     );
 
-    // the empty residual removes the target — no override exists
+    // the empty residual removes the target: no override exists
     expect(
       readJson(ctx.tree, 'app3/project.json').targets.build
     ).toBeUndefined();
@@ -3926,7 +3926,7 @@ describe('Phase 4 — verify + equivalence oracle + fallback', () => {
     // The gap: verification errors exist, NO target reverts (the errored config
     // is owned by a migrated root), and the sole fallback is a DIVERGENCE
     // fallback (a verified-but-non-equivalent target). `anyMissingFromVerification`
-    // stays false, so the fallback warning intentionally omits the causes — and
+    // stays false, so the fallback warning intentionally omits the causes, and
     // without a revert the standalone must still surface them, or the errors
     // vanish.
     ctx = setupFixture('divergence-plus-in-root-error');
@@ -4012,7 +4012,7 @@ describe('Phase 4 — verify + equivalence oracle + fallback', () => {
       options: { mode: 'production' },
     });
 
-    // The verification errors must be surfaced — the divergence-only fallback
+    // The verification errors must be surfaced: the divergence-only fallback
     // warning deliberately omits them, so a standalone warning must carry them.
     const allWarnings = warn.mock.calls.map((c) => String(c[0])).join('\n');
     expect(allWarnings).toContain('could not fully verify');
@@ -4058,7 +4058,7 @@ describe('Phase 4 — verify + equivalence oracle + fallback', () => {
     );
     expect(registration).toBeTruthy();
     // app3 is inferrable but not covered, so the include is required and scopes
-    // to exactly the migrated roots — the root project as '*'.
+    // to exactly the migrated roots: the root project as '*'.
     expect(registration.include).toEqual(['*', 'app2/**/*']);
     // app3's executor target and its resolvable defaults are untouched: the
     // hoist is plugin-scoped and app3 sits outside the registration's include

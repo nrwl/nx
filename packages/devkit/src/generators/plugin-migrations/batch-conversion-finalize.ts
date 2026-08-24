@@ -658,7 +658,7 @@ function verifyPairs(
     state.log.warn(
       `convert-to-inferred restored the pre-centralization migration output for ${fallbacks.length} target(s) that could not be verified as equivalent after migration: ${fallbacks.join(
         ', '
-      )}. Centralized nx.json defaults are shadowed where their keys overlap, but the live inferred configuration may differ from the pre-migration behavior — review these targets manually.${causes}`
+      )}. Centralized nx.json defaults are shadowed where their keys overlap, but the live inferred configuration may differ from the pre-migration behavior. Review these targets manually.${causes}`
     );
   }
 

@@ -88,7 +88,7 @@ interface InferenceOptionSet<T> {
   /** Stable id used to keep inference results isolated by option set. */
   id: number;
   /**
-   * The object handed to the plugin's `createNodes` — the raw
+   * The object handed to the plugin's `createNodes`: the raw
    * `targetPluginOptionMapper` output. The engine never merges its own
    * `defaultPluginOptions` into it (that is why `derivePluginFilledDefaults`
    * skips keys already in the defaults). NOTE: the plugin itself may mutate this
@@ -147,7 +147,7 @@ export function stableStringify(value: unknown): string {
 }
 
 /**
- * Phase 0 — Collect (once). Fold `forEachExecutorOptions` over every
+ * Phase 0: Collect (once). Fold `forEachExecutorOptions` over every
  * migration/executor into a single scope object, applying the skip filters with
  * the exact same warn-vs-throw semantics the migrator used before (a
  * `specificProjectToMigrate` skip throws instead of warning). This is the single
@@ -336,7 +336,7 @@ function getFullInferredTarget(
   const inferredTarget = inferredTargetsByName.get(targetName);
   if (!inferredTarget) {
     // The plugin found the project but did not infer a "${targetName}" target
-    // for it under this option set — the migration and inference disagree on
+    // for it under this option set: the migration and inference disagree on
     // the target name.
     throw new Error(
       `The nx plugin found a project inside ${projectRoot} but did not infer a "${targetName}" target for it. File an issue at https://github.com/nrwl/nx with information about your project structure.`
@@ -346,7 +346,7 @@ function getFullInferredTarget(
 }
 
 /**
- * Phase 2 — Per-project residual (in-memory, no inference). For each
+ * Phase 2: Per-project residual (in-memory, no inference). For each
  * `(project, target)` computes the residual exactly as the previous engine did
  * (`mergeTargetConfigurations` with the executor target defaults ->
  * `deleteMatchingProperties` -> input merge -> the plugin's
@@ -441,7 +441,7 @@ export async function computeResidualByProject<T>(
 }
 
 /**
- * Phase 3 (single-project-mode variant) — write the full residual into each
+ * Phase 3 (single-project-mode variant): write the full residual into each
  * project.json, exactly reproducing the previous per-(project, target) write
  * sequence. Single-project mode never centralizes, so this is its permanent
  * write path.
@@ -567,10 +567,10 @@ function isDeepEqual(a: unknown, b: unknown): boolean {
 }
 
 /**
- * Phase 3 — the strict-common residual across ALL migrated projects for a
+ * Phase 3: the strict-common residual across ALL migrated projects for a
  * target: the values that are deep-equal across every project's residual.
  * Granularity: whole value for top-level target props (`inputs`, `outputs`,
- * `cache`, `dependsOn`, `configurations`, …); per-key for `options`. A key is
+ * `cache`, `dependsOn`, `configurations`, ...); per-key for `options`. A key is
  * common only when EVERY residual carries it with an identical value.
  */
 export function computeStrictCommon(
@@ -678,8 +678,8 @@ export function removeDeadExecutorTargetDefault(
 
 /**
  * Append the hoisted common as a plugin-scoped entry after whatever value the
- * key already holds. Existing entries — the workspace catch-all and any
- * user-authored filtered entries — are never modified, so targets outside this
+ * key already holds. Existing entries, the workspace catch-all and any
+ * user-authored filtered entries, are never modified, so targets outside this
  * plugin resolve exactly what they resolved before the migration. The entry is
  * appended (never merged into an existing one) so the verification pass can
  * revert precisely this entry and nothing else.
@@ -1005,7 +1005,7 @@ export function hoistChangesExistingTargetDefaults(
 }
 
 /**
- * Phase 3 (centralized variant) — hoist the strict-common residual per target
+ * Phase 3 (centralized variant): hoist the strict-common residual per target
  * into `nx.json` `targetDefaults[targetName]` as a plugin-scoped array entry,
  * remove the dead executor-keyed entries, and write only per-project
  * deviations to project.json. Used for whole-workspace migrations;
@@ -1233,7 +1233,7 @@ function hoistCommonAndWrite<T>(
         if (!entry) {
           continue;
         }
-        // Excluded projects keep the FULL residual — the plugin-scoped default
+        // Excluded projects keep the FULL residual: the plugin-scoped default
         // won't resolve for them, so nothing may be subtracted. Eligible projects
         // drop the hoisted common and keep only their deviation.
         const toWrite = excludedProjects.has(projectName)
@@ -1480,7 +1480,7 @@ export async function migrateProjectExecutorsToPluginV1<T>(
 }
 
 /**
- * Phase 1 — Infer (once per distinct option set). Runs a whole-workspace
+ * Phase 1: Infer (once per distinct option set). Runs a whole-workspace
  * inference per distinct plugin-option set (usually one) instead of once per
  * target and once per project. Builds `inferredTargetsByOptionSet` (option set
  * id -> project root -> target name -> FULL inferred target; residual
@@ -1550,7 +1550,7 @@ export async function inferOncePerOptionSet<T>(
       )) {
         // Every root the plugin produces a project for. Config files whose
         // owning root is NOT one of these produce no project and can be safely
-        // excluded by an `include` without changing the inferred set — this is
+        // excluded by an `include` without changing the inferred set: this is
         // why include-necessity must be judged against inferred roots, not the
         // raw glob (which also matches package.json/project.json/etc.).
         inferredRoots.add(root);
@@ -1599,7 +1599,7 @@ export async function inferOncePerOptionSet<T>(
   // Keep only config files owned by an inferred project root (i.e. files that
   // actually contribute a project). Include-coverage is decided against these.
   // Ownership is an O(path depth) ancestor walk against the root Set, not an
-  // O(roots) scan per file — both sets scale with project count.
+  // O(roots) scan per file: both sets scale with project count.
   const matchedConfigFiles = [...rawMatchedFiles].filter((file) =>
     isFileOwnedByAnyRoot(file, inferredRoots)
   );
@@ -1616,7 +1616,7 @@ export async function inferOncePerOptionSet<T>(
     // Config files the plugin's glob matched but could not infer this pass.
     // These produced no project (so they're absent from `matchedConfigFiles`),
     // yet the registration step must still keep its `include` scoped when one
-    // sits outside the migrated roots — otherwise the plugin is widened to that
+    // sits outside the migrated roots, otherwise the plugin is widened to that
     // root, re-hits the same failure at verification, and reverts the hoist.
     erroredConfigFiles: [...erroredConfigFiles],
     inferredExecutors,
@@ -1626,7 +1626,7 @@ export async function inferOncePerOptionSet<T>(
 
 /**
  * Whether `file` (workspace-relative) is owned by any root in `roots`. Walks the
- * file's ancestor directories and checks Set membership — O(path depth), not
+ * file's ancestor directories and checks Set membership: O(path depth), not
  * O(roots). Equivalent to `roots.some((root) => isFileUnderRoot(file, root))`:
  * the root project (`.`) owns workspace-root-level files (no path separator),
  * and a nested root owns the file when it is (or is an ancestor directory of)
@@ -1699,7 +1699,7 @@ export function generatedIncludeRoots(
  * can be left unscoped). Plugin inference is a pure function of the matched
  * config-file set, so this answers what the old per-project
  * `arePluginIncludesRequired` re-inference computed without running any
- * additional inference — differing only on matched files that contribute no
+ * additional inference, differing only on matched files that contribute no
  * project: those are invisible here, so an `include` the old diff-based check
  * kept for their sake is now deleted, letting future config files in such
  * locations infer eagerly. The Phase 4 verification pass guards the current
@@ -1707,7 +1707,7 @@ export function generatedIncludeRoots(
  *
  * Every glob this generator emits scopes to a single root (`*` for the root
  * project, a nested-root globstar for the rest), so coverage reduces to root
- * ownership with no glob engine — an O(files * path depth) walk instead of
+ * ownership with no glob engine: an O(files * path depth) walk instead of
  * running minimatch (whose `#matchGlobstar`/`slashSplit` dominate at scale) per
  * (file, glob). Only user-authored includes or any `exclude` fall through.
  */
@@ -1836,7 +1836,7 @@ export function buildOwnerRootByPath(
 }
 
 /**
- * Phase 4 — a single verification inference pass over the whole workspace with
+ * Phase 4: a single verification inference pass over the whole workspace with
  * the updated `nx.json` plugin registrations. One
  * `retrieveProjectConfigurations` call runs every registration for this plugin
  * (the plugin's `createNodes` executes once per registration group). The
@@ -1889,7 +1889,7 @@ async function runVerificationPass<T>(
     };
   } catch (e) {
     if (e instanceof ProjectConfigurationsError) {
-      // Verify against the partial result, but keep the causes — they are the
+      // Verify against the partial result, but keep the causes: they are the
       // only diagnostic for why affected projects fall back or a hoist reverts.
       // Recording the errored config files is what makes the revert fail-closed:
       // a hoist is reverted when an errored file lies outside every migrated root.
@@ -1907,7 +1907,7 @@ async function runVerificationPass<T>(
 }
 
 /**
- * Phase 4 — run the single verification inference pass, then apply the
+ * Phase 4: run the single verification inference pass, then apply the
  * equivalence oracle. `retrieveProjectConfigurations` already merges
  * `targetDefaults` into the inferred targets, so the real post-migration
  * effective config for a target is approximated by `merge(project.json
@@ -1916,13 +1916,13 @@ async function runVerificationPass<T>(
  * 2). CAVEAT: this pass runs with no DEFAULT layer (neither `project.json` nor
  * `package.json`), so it cannot observe cases where a default layer authors a
  * target's identity and thereby changes whether a `targetDefaults` entry applies
- * at all — e.g. a `filter: { plugin }` entry is rejected by
+ * at all, e.g. a `filter: { plugin }` entry is rejected by
  * `resolveSourcePlugin` once the target carries `executor` / `command` in a
  * default layer. That identity can come from the project.json residual itself OR
  * from the package-json plugin (a script or `nx.targets` entry byte-equal to the
  * target name). Those targets are kept per-project at the hoist site (they never
- * reach a plugin-scoped entry), not caught here. Any project that fails —
- * or that the intended target no longer infers for at all — is restored to the
+ * reach a plugin-scoped entry), not caught here. Any project that fails,
+ * or that the intended target no longer infers for at all, is restored to the
  * exact pre-centralization migration output (a full residual; an empty
  * residual removes the target), and every fallback is summarized in a single
  * `logger.warn` that asks for manual review rather than asserting equivalence
@@ -1941,7 +1941,7 @@ async function verifyAndFallback<T>(
   singleProjectMode: boolean,
   logger: typeof devkitLogger | undefined
 ): Promise<void> {
-  // Single-project mode never hoists, so there is nothing to reconcile — and
+  // Single-project mode never hoists, so there is nothing to reconcile, and
   // no reason to pay for a whole-workspace verification inference.
   if (singleProjectMode) {
     return;
@@ -2055,7 +2055,7 @@ async function verifyAndFallback<T>(
     const root = projectGraph.nodes[projectName]?.data?.root;
     for (const [targetName, entry] of targetMap) {
       if (revertedTargets.has(targetName)) {
-        // Restored to the full pre-centralization residual above — already the
+        // Restored to the full pre-centralization residual above: already the
         // previous engine's exact output, so there is nothing left to verify.
         continue;
       }
@@ -2098,7 +2098,7 @@ async function verifyAndFallback<T>(
 
   if (fallbacks.length > 0) {
     // Surface the pass's own errors only when a target vanished from the
-    // verification result — the one fallback class an inference error can
+    // verification result: the one fallback class an inference error can
     // explain. Divergence fallbacks have a verified config; appending
     // unrelated pass errors to them would misattribute the cause.
     const causes =
@@ -2110,7 +2110,7 @@ async function verifyAndFallback<T>(
     (logger ?? devkitLogger).warn(
       `convert-to-inferred restored the pre-centralization migration output for ${fallbacks.length} target(s) that could not be verified as equivalent after migration: ${fallbacks.join(
         ', '
-      )}. Centralized nx.json defaults are shadowed where their keys overlap, but the live inferred configuration may differ from the pre-migration behavior — review these targets manually.${causes}`
+      )}. Centralized nx.json defaults are shadowed where their keys overlap, but the live inferred configuration may differ from the pre-migration behavior. Review these targets manually.${causes}`
     );
   }
 
@@ -2119,7 +2119,7 @@ async function verifyAndFallback<T>(
   // carries them only for a target missing from the verification result (a
   // divergence fallback has a verified config, so attaching unrelated errors to
   // it would misattribute the cause). Fire this standalone warning whenever the
-  // errors were surfaced by neither — i.e. nothing reverted AND no fallback
+  // errors were surfaced by neither, i.e. nothing reverted AND no fallback
   // carried them (no fallback at all, or only divergence fallbacks). Otherwise a
   // broken config file leaves the pass unable to see the whole workspace with no
   // trace. (`verificationErrors` here has already had the no-project-name noise
@@ -2150,7 +2150,7 @@ async function verifyAndFallback<T>(
  * `createNodes` (Phase 1 mutated each option-set object in place if the plugin
  * does so). A key qualifies only if it is not one of our own
  * `defaultPluginOptions` and appears with an identical value across every
- * option set — the signature of a plugin default fill. (A mapper-provided key
+ * option set: the signature of a plugin default fill. (A mapper-provided key
  * that is constant across every option set is indistinguishable and also
  * qualifies; harmless, since per-project options are spread over these.)
  * Reproduces the previous engine's incidental option enrichment without extra
@@ -2298,7 +2298,7 @@ async function migrateProjects<T>(
     pluginPath
   );
 
-  // Phase 0 — Collect (once): scope + filtering + per-project options.
+  // Phase 0: Collect (once). Scope + filtering + per-project options.
   const scope = collectMigrationScope(
     tree,
     projectGraph,
@@ -2309,7 +2309,7 @@ async function migrateProjects<T>(
   );
   const projectConfigsByName = getProjects(tree);
 
-  // Phase 1 — Infer (once per distinct option set) for the whole workspace.
+  // Phase 1: Infer (once per distinct option set) for the whole workspace.
   const nxJson = readNxJson(tree);
   const {
     inferredTargetsByOptionSet,
@@ -2327,7 +2327,7 @@ async function migrateProjects<T>(
     scope
   );
 
-  // Phase 2 — Per-project residual (in-memory, no re-inference). Also captures
+  // Phase 2: Per-project residual (in-memory, no re-inference). Also captures
   // `baselineFinal` (the equivalence oracle consumed in Phase 4).
   const residualByProject = await computeResidualByProject(
     tree,
@@ -2356,7 +2356,7 @@ async function migrateProjects<T>(
     } as Record<string, string>);
   }
 
-  // Phase 3 — one-shot plugin registration + analytic include computation.
+  // Phase 3: one-shot plugin registration + analytic include computation.
   // Runs before the hoist: the hoist is gated on the FINAL position of this
   // plugin's registrations in the plugins array (a later registration of
   // another plugin can take a target's identity over), so the array must be in
@@ -2387,7 +2387,7 @@ async function migrateProjects<T>(
     ? undefined
     : getActiveBatchStaging(tree);
 
-  // Phase 3 — Derive strict-common + write. Single-project mode never hoists
+  // Phase 3: Derive strict-common + write. Single-project mode never hoists
   // (would leak shared config to sibling projects), so it keeps the full
   // residual in project.json, as does a deferred batch conversion (the batch
   // finalize pass hoists later); whole-workspace mode hoists the common config
@@ -2436,7 +2436,7 @@ async function migrateProjects<T>(
       erroredConfigFilesFromInference
     );
   } else {
-    // Phase 4 — single verification inference pass + equivalence oracle. Any
+    // Phase 4: single verification inference pass + equivalence oracle. Any
     // project whose centralized config cannot be verified as equivalent falls
     // back to a full project.json override (summarized in one logger.warn).
     await verifyAndFallback(
@@ -2467,7 +2467,7 @@ function addPluginRegistrations<T>(
   projectGraph: ProjectGraph,
   spinner: typeof globalSpinner,
   // The matched config files owned by an inferred project root (the filtered
-  // subset from the Phase 1 inference — files outside any inferred root
+  // subset from the Phase 1 inference: files outside any inferred root
   // contribute no project and are deliberately excluded). Used to decide
   // analytically whether a registration's `include` globs already cover
   // everything (so it can be left unscoped).
@@ -2478,12 +2478,12 @@ function addPluginRegistrations<T>(
   // unscoped would widen it onto that root, where the verification pass re-hits
   // the failure and reverts the whole hoist. A harmless project-free config (a
   // shared/base config that loads fine) is NOT errored, so it does not keep the
-  // include — the plugin may safely apply workspace-wide over it.
+  // include: the plugin may safely apply workspace-wide over it.
   erroredConfigFiles: string[],
   // The FULL set of config files the plugin's glob matched, regardless of what
   // this migration's inference pass produced a project from. Used to detect
   // config files owned by NON-MIGRATED projects that the plugin would infer once
-  // the registration is workspace-wide — see below.
+  // the registration is workspace-wide, see below.
   rawMatchedConfigFiles: string[]
 ) {
   const nxJson = readNxJson(tree);
@@ -2493,7 +2493,7 @@ function addPluginRegistrations<T>(
   // project the plugin infers only later (cache/error asymmetry) is absent from
   // it, so an unscoped registration would let the verification pass infer that
   // root and `reachesNonMigratedRoot` would revert the whole hoist. Judging
-  // coverage against project-graph membership — not this pass's inference —
+  // coverage against project-graph membership, not this pass's inference,
   // closes that hole. (A config owned by NO project, e.g. a shared/base config,
   // is not counted, so it does not force a scoped include.)
   const migratedRoots = new Set<string>();
