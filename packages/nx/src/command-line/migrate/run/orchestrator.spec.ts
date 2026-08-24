@@ -88,9 +88,11 @@ import {
   migrateRunsDir,
   readRunState,
   runDir,
+  issueFingerprint,
   runHandoffsDir,
   writeRunState,
   type MigrateCommitLedgerEntry,
+  type MigrateRunIssue,
   type MigrateRunState,
   type MigrateStep,
   type MigrateStepStatus,
@@ -227,6 +229,7 @@ describe('orchestrator', () => {
       // The runbook a real init would have written; false leaves it off disk.
       runbook?: string | false;
       validate?: boolean;
+      issues?: MigrateRunIssue[];
     }
   ): string {
     const dir = runDir(root, runId);
@@ -260,6 +263,7 @@ describe('orchestrator', () => {
       ],
       steps: opts.steps,
       commits: opts.commits ?? [],
+      ...(opts.issues ? { issues: opts.issues } : {}),
       ...(opts.checkpointFailed ? { checkpointFailed: true } : {}),
       analytics: {
         startEmitted: opts.startEmitted ?? true,
@@ -2688,6 +2692,401 @@ describe('orchestrator', () => {
       expect(block.payload.instructions).toContain('rejected');
       expect(block.payload.instructions).toContain('invalid JSON');
       expect(block.payload.instructions).toContain('Rewrite the handoff file');
+    });
+  });
+
+  describe('reconcile: issues', () => {
+    const issueEntry = (
+      id: string,
+      extra: Partial<MigrateRunIssue> = {}
+    ): MigrateRunIssue => {
+      const summary = extra.summary ?? `summary of ${id}`;
+      return {
+        id,
+        fingerprint: issueFingerprint(summary),
+        summary,
+        reportedByStepId: 'step-1',
+        applicableStepIds: ['step-2'],
+        disposition: 'recorded',
+        ...extra,
+      };
+    };
+
+    it('records a reported issue, archives its detail, and lists it recorded in the next dispense digest', async () => {
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome'),
+          migStep('step-2', '@nx/js:b', 'pending'),
+        ],
+        plan: [promptMig('@nx/js', 'p'), genMig('@nx/js', 'b')],
+      });
+      writeHandoff(dir, '@nx/js', 'p', {
+        status: 'success',
+        summary: 'prompt applied',
+        issues: [
+          {
+            summary: 'the b migration will need a manual tweak',
+            detail: 'longer notes\nacross lines',
+            applicableMigrations: ['@nx/js:b'],
+          },
+        ],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      // Claims are assigned at an agent-work dispense, never at a worker
+      // dispense: a generator-only step may finish without a handoff to
+      // report through, so its applicable issues must stay claimable.
+      expect(state.issues).toEqual([
+        {
+          id: 'issue-1',
+          fingerprint: expect.stringMatching(/^[0-9a-f]{16}$/),
+          summary: 'the b migration will need a manual tweak',
+          reportedByStepId: 'step-1',
+          applicableStepIds: ['step-2'],
+          disposition: 'recorded',
+        },
+      ]);
+      const archived = JSON.parse(
+        readFileSync(join(dir, 'issues', 'issue-1.json'), 'utf-8')
+      );
+      expect(archived.detail).toBe('longer notes\nacross lines');
+      expect(existsSync(handoffPathIn(dir, '@nx/js', 'p'))).toBe(false);
+      const block = lastBlock();
+      expect(block.action).toBe('next-step');
+      expect(block.payload.instructions).toContain('Known issues');
+      expect(block.payload.instructions).toContain(
+        'issue-1 (recorded): the b migration will need a manual tweak'
+      );
+      expect(block.payload.instructions).not.toContain('"issueUpdates"');
+    });
+
+    it('attaches the issues a handoff resolved to the landed commit entry', async () => {
+      mockCommit.mockResolvedValue({
+        status: 'committed',
+        sha: 'face0009face0009face0009face0009face0009',
+      });
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
+        createCommits: true,
+        plan: [promptMig('@nx/js', 'p')],
+        issues: [
+          issueEntry('issue-1', {
+            applicableStepIds: ['step-1'],
+            claimedByStepId: 'step-1',
+          }),
+        ],
+      });
+      writeHandoff(dir, '@nx/js', 'p', {
+        status: 'success',
+        summary: 'prompt applied',
+        issues: [
+          {
+            summary: 'stale import found and corrected on the way',
+            applicableMigrations: ['@nx/js:p'],
+            disposition: 'resolved',
+          },
+        ],
+        issueUpdates: [{ id: 'issue-1', disposition: 'resolved' }],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const state = readRunState(dir);
+      expect(state.issues.map((i) => [i.id, i.disposition])).toEqual([
+        ['issue-1', 'resolved'],
+        ['issue-2', 'resolved'],
+      ]);
+      expect(state.commits).toEqual([
+        {
+          kind: 'landed',
+          sha: 'face0009face0009face0009face0009face0009',
+          stepIds: ['step-1'],
+          issueIds: ['issue-1', 'issue-2'],
+        },
+      ]);
+    });
+
+    it("reopens the failed attempt's resolved issues when retry-clean discards its tree", async () => {
+      mockGetLatestCommitSha.mockReturnValue(
+        'beef0001beef0001beef0001beef0001beef0001'
+      );
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'failed', {
+            gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+            treeCleanAtDispense: true,
+          }),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+        issues: [
+          issueEntry('issue-1', {
+            disposition: 'resolved',
+            resolvedByStepId: 'step-1',
+            resolvedAtCommitCount: 0,
+            applicableStepIds: ['step-1'],
+          }),
+        ],
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry-clean',
+      });
+
+      const state = readRunState(dir);
+      expect(state.steps[0].attempt).toBe(2);
+      // The reset discarded the fix the failed attempt reported, so the
+      // ledger cannot keep it resolved; recorded puts it back in the
+      // retry's reach.
+      expect(state.issues[0].disposition).toBe('recorded');
+      expect(state.issues[0].resolvedByStepId).toBeUndefined();
+      const archived = JSON.parse(
+        readFileSync(join(dir, 'issues', 'issue-1.json'), 'utf-8')
+      );
+      expect(archived.updates).toEqual([
+        { stepId: 'step-1', disposition: 'recorded' },
+      ]);
+    });
+
+    it('rejects a handoff whose issue report names a migration outside the plan, keeping the step awaiting', async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
+        plan: [promptMig('@nx/js', 'p')],
+      });
+      writeHandoff(dir, '@nx/js', 'p', {
+        status: 'success',
+        summary: 'prompt applied',
+        issues: [
+          { summary: 'a problem', applicableMigrations: ['@nx/js:typo'] },
+        ],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('awaiting-prompt-outcome');
+      expect(state.issues).toBeUndefined();
+      expect(existsSync(handoffPathIn(dir, '@nx/js', 'p'))).toBe(true);
+      const block = lastBlock();
+      expect(block.action).toBe('await-prompt');
+      expect(block.payload.instructions).toContain("not in this run's plan");
+      expect(block.payload.instructions).toContain('Rewrite the handoff file');
+    });
+
+    it('aborts the fold when archiving fails, keeping the handoff so the next reconcile retries it', async () => {
+      const warned: { title: string }[] = [];
+      vi.spyOn(output, 'warn').mockImplementation((opts) => {
+        warned.push(opts as { title: string });
+      });
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
+        createCommits: true,
+        plan: [promptMig('@nx/js', 'p')],
+      });
+      // A non-empty directory at the archive path makes the atomic rename
+      // fail before the fold's state write.
+      mkdirSync(join(dir, 'issues', 'issue-1.json'), { recursive: true });
+      writeFileSync(join(dir, 'issues', 'issue-1.json', 'occupied'), 'x');
+      writeHandoff(dir, '@nx/js', 'p', {
+        status: 'success',
+        summary: 'prompt applied',
+        issues: [{ summary: 'a problem', applicableMigrations: 'unknown' }],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      // No ledger entry may exist without its archived detail, so the whole
+      // fold waits for the archive to become writable, and no side effect
+      // runs first: a commit landed here would be lost, since the retried
+      // fold's commit attempt would see a clean tree.
+      expect(mockCommit).not.toHaveBeenCalled();
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('awaiting-prompt-outcome');
+      expect(state.issues).toBeUndefined();
+      expect(existsSync(handoffPathIn(dir, '@nx/js', 'p'))).toBe(true);
+      expect(
+        warned.some((w) => w.title.includes('could not be archived'))
+      ).toBe(true);
+    });
+
+    it('tolerates a phase-two re-archive failure over intact files with the benign warning', async () => {
+      const warned: { title: string }[] = [];
+      vi.spyOn(output, 'warn').mockImplementation((opts) => {
+        warned.push(opts as { title: string });
+      });
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
+        createCommits: true,
+        plan: [promptMig('@nx/js', 'p')],
+      });
+      writeHandoff(dir, '@nx/js', 'p', {
+        status: 'success',
+        summary: 'prompt applied',
+        issues: [
+          {
+            summary: 'a problem',
+            detail: 'the only copy',
+            applicableMigrations: 'unknown',
+          },
+        ],
+      });
+      // Phase 1's archive write (the first rename onto the file) succeeds;
+      // phase 2's re-archive fails, leaving the phase-1 file intact so the
+      // fold tolerates the failure instead of dropping.
+      const realRename = fs.renameSync;
+      let archiveRenames = 0;
+      vi.spyOn(fs, 'renameSync').mockImplementation(
+        (from: string, to: string) => {
+          if (String(to).includes(join('issues', 'issue-1.json'))) {
+            archiveRenames += 1;
+            if (archiveRenames === 2) {
+              throw Object.assign(new Error('disk full'), { code: 'ENOSPC' });
+            }
+          }
+          return realRename(from, to);
+        }
+      );
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      expect(state.issues[0].id).toBe('issue-1');
+      expect(existsSync(handoffPathIn(dir, '@nx/js', 'p'))).toBe(false);
+      // The verified branch must not claim loss the check just disproved.
+      expect(
+        warned.some((w) => w.title.includes('Re-archiving the issue records'))
+      ).toBe(true);
+      expect(
+        warned.some((w) => w.title.includes('could not be archived'))
+      ).toBe(false);
+    });
+
+    it("carries an absorbed step's resolved issues onto the landed commit that covers it", async () => {
+      // step-1's own commit attempt fails, so its resolution rides nowhere;
+      // step-2's later commit absorbs step-1's tree and must carry the issue
+      // it fixed.
+      mockCommit
+        .mockResolvedValueOnce({ status: 'failed' })
+        .mockResolvedValueOnce({
+          status: 'committed',
+          sha: 'face0011face0011face0011face0011face0011',
+        });
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome'),
+          migStep('step-2', '@nx/js:q', 'awaiting-prompt-outcome'),
+        ],
+        createCommits: true,
+        plan: [promptMig('@nx/js', 'p'), promptMig('@nx/js', 'q')],
+        issues: [
+          issueEntry('issue-1', {
+            applicableStepIds: ['step-1'],
+            claimedByStepId: 'step-1',
+          }),
+        ],
+      });
+      writeHandoff(dir, '@nx/js', 'p', {
+        status: 'success',
+        summary: 'prompt applied',
+        issueUpdates: [{ id: 'issue-1', disposition: 'resolved' }],
+      });
+      writeHandoff(dir, '@nx/js', 'q', {
+        status: 'success',
+        summary: 'prompt applied',
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const state = readRunState(dir);
+      expect(state.issues[0]).toEqual(
+        expect.objectContaining({
+          disposition: 'resolved',
+          resolvedByStepId: 'step-1',
+        })
+      );
+      expect(state.commits).toEqual([
+        { kind: 'failed', stepIds: ['step-1'] },
+        {
+          kind: 'landed',
+          sha: 'face0011face0011face0011face0011face0011',
+          stepIds: ['step-2', 'step-1'],
+          issueIds: ['issue-1'],
+        },
+      ]);
+    });
+
+    it('claims an applicable issue at the agent-work dispense and carries it assigned in the digest', async () => {
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome'),
+            awaitingKind: 'migration-prompt' as const,
+          },
+        ],
+        plan: [promptMig('@nx/js', 'p')],
+        issues: [issueEntry('issue-1', { applicableStepIds: ['step-1'] })],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      // The awaiting step has a handoff to report through, so the dispense
+      // assigns the issue to it and says how to report the result.
+      expect(readRunState(dir).issues[0].claimedByStepId).toBe('step-1');
+      const block = lastBlock();
+      expect(block.action).toBe('await-prompt');
+      expect(block.payload.instructions).toContain(
+        'issue-1 (assigned to this step): summary of issue-1'
+      );
+      expect(block.payload.instructions).toContain('"issueUpdates"');
+    });
+
+    it('lists the unresolved issues in the completion output', async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+        plan: [genMig('@nx/js', 'a')],
+        issues: [
+          issueEntry('issue-1', { applicableStepIds: ['step-1'] }),
+          issueEntry('issue-2', {
+            applicableStepIds: ['step-1'],
+            disposition: 'deferred-final',
+          }),
+          issueEntry('issue-3', {
+            applicableStepIds: ['step-1'],
+            disposition: 'resolved',
+            resolvedByStepId: 'step-1',
+            resolvedAtCommitCount: 0,
+          }),
+        ],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
+      expect(block.action).toBe('complete');
+      expect(block.payload.instructions).toContain(
+        '2 reported issues remain unresolved'
+      );
+      // Every step is terminal here, so the pre-dispense settle demoted the
+      // recorded entry: completion can never label unclaimable work as still
+      // available to a step.
+      expect(readRunState(dir).issues.map((i) => i.disposition)).toEqual([
+        'deferred-final',
+        'deferred-final',
+        'resolved',
+      ]);
+      expect(block.payload.instructions).toContain(
+        'issue-1 (deferred past the migration steps)'
+      );
+      expect(block.payload.instructions).toContain(
+        'issue-2 (deferred past the migration steps)'
+      );
+      expect(block.payload.instructions).not.toContain('issue-3');
     });
   });
 

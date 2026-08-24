@@ -48,15 +48,20 @@ import {
   hasRunState,
   readRunState,
   runDir,
+  writeRunState,
   CURRENT_RUN_STATE_FORMAT_VERSION,
   SHELL_SAFE_VALUE,
   type MigrateCommitLedgerEntry,
   type MigrateRunState,
   type MigrateStep,
   type MigrateStepPromptOutcome,
-  type MigrateStepStatus,
+  TERMINAL_STEP_STATUSES,
 } from './run-state';
-import { updateRunState, withRunCreationLock } from './state-lock';
+import {
+  updateRunState,
+  withRunCreationLock,
+  withRunStateLock,
+} from './state-lock';
 import {
   applyStepEvent,
   commitResultToLedgerEntry,
@@ -99,6 +104,19 @@ import {
   removeAgentWorkPayloads,
 } from './agent-work-payload';
 import {
+  applyReportedIssues,
+  archiveIssues,
+  claimIssuesForStep,
+  applicationArchivesIntact,
+  issueIdsForCommit,
+  parseHandoffIssues,
+  renderIssueDigestLines,
+  renderUnresolvedIssueLines,
+  reopenResolutionsForStep,
+  settleUnclaimableIssues,
+  type IssueArchiveUpdate,
+} from './issues';
+import {
   renderRunbook,
   RUNBOOK_FILE_NAME,
   type RunbookContext,
@@ -113,9 +131,6 @@ const PLAN_SNAPSHOT_0 = 'plan-0.json';
 // A running worker older than this may be hung; the still-running dispense
 // escalates so the agent can verify or kill it.
 const HANG_THRESHOLD_MS = 15 * 60 * 1000;
-
-// Steps in these statuses are done; every other status needs a dispense.
-const TERMINAL_STATUSES = new Set<MigrateStepStatus>(['succeeded', 'skipped']);
 
 export interface RunOrchestratorInitInput {
   root: string;
@@ -792,6 +807,7 @@ export async function runOrchestratorReconcile(
     // against `state`, and a step that was re-armed and failed again in
     // between is a different attempt those checks never saw.
     let freshRejection: string | undefined;
+    let reopenedIssueUpdates: IssueArchiveUpdate[] = [];
     const written = updateRunState(dir, (fresh) => {
       const reapplied = applyStepEvent(fresh, {
         type: 'stepAction',
@@ -803,10 +819,28 @@ export async function runOrchestratorReconcile(
         freshRejection = reapplied.reason;
         return null;
       }
+      // The reset this action requires discarded the failed attempt's tree,
+      // so resolutions that attempt claimed and no landed commit carries are
+      // reverted with the rearm, in the same write.
+      let rearmed = reapplied.state;
+      if (stepAction === 'retry-clean') {
+        const reopened = reopenResolutionsForStep(rearmed, target.id);
+        rearmed = reopened.state;
+        reopenedIssueUpdates = reopened.updates;
+      }
       const next = installFailed
-        ? markInstallFailed(reapplied.state, target.id)
-        : reapplied.state;
-      return entry ? appendCommit(next, entry) : next;
+        ? markInstallFailed(rearmed, target.id)
+        : rearmed;
+      // An adopted commit absorbs uncovered failed steps the same way a fold
+      // commit does, so it carries their resolved issues too.
+      let entryWithIssues = entry;
+      if (entry && entry.kind === 'landed') {
+        const issueIds = issueIdsForCommit(next, entry.stepIds);
+        if (issueIds.length > 0) {
+          entryWithIssues = { ...entry, issueIds };
+        }
+      }
+      return entryWithIssues ? appendCommit(next, entryWithIssues) : next;
     });
     if (freshRejection) {
       emitError(
@@ -818,10 +852,37 @@ export async function runOrchestratorReconcile(
       );
       return;
     }
+    if (reopenedIssueUpdates.length > 0) {
+      // Best-effort like the fold's phase-2 re-archive: run.json already
+      // records the reverted dispositions and stays authoritative, so a
+      // failed append loses only the archive's trail record of the revert.
+      // The sink survives a throw: a shell rebuilt before the failure is
+      // durable and reads healthy on retry, so this pass must warn it.
+      const revertApplication = {
+        state: written,
+        newIssues: [],
+        updates: reopenedIssueUpdates,
+      };
+      const revertReconstructedIds: string[] = [];
+      try {
+        archiveIssues(dir, revertApplication, revertReconstructedIds);
+      } catch (e) {
+        warnToAgent({
+          title: `The reverted issue resolutions for ${target.migrationId} could not be archived (${summarizeError(e)}).`,
+          bodyLines: [
+            `run.json stays authoritative for the dispositions; the archived files under the run's issues directory miss the revert records, so their last entries may still read resolved.`,
+          ],
+        });
+      }
+      warnReconstructedArchives(revertReconstructedIds);
+    }
     state = written;
   }
-  // (d) choose and emit the next dispense.
-  advanceAndDispense(root, dir, runId, state);
+  // (d) choose and emit the next dispense. advanceAndDispense settles
+  // unclaimable issues on its own fresh read first: the folds and step
+  // actions above (and worker-run successes since the last reconcile) can
+  // have turned an issue's last applicable step terminal.
+  advanceAndDispense(root, dir, runId);
 }
 
 function buildSteps(sortedMigrations: PlannedMigration[]): MigrateStep[] {
@@ -837,6 +898,18 @@ function buildSteps(sortedMigrations: PlannedMigration[]): MigrateStep[] {
 }
 
 // --- reconcile phases -------------------------------------------------------
+
+// The runbook points every later consumer at issues/<id>.json for the full
+// details, so a rebuild from run-state fields (the reported detail is gone
+// with the lost file) must not stay silent.
+function warnReconstructedArchives(issueIds: string[]): void {
+  if (issueIds.length === 0) return;
+  warnToAgent({
+    title: `The archived details for ${issueIds.join(
+      ', '
+    )} were missing or unreadable and were rebuilt from the run state; the originally reported detail is lost.`,
+  });
+}
 
 async function foldHandoffs(
   root: string,
@@ -866,10 +939,69 @@ async function foldHandoffs(
     if (generatorChangesApplied(step) && promptOutcome.status === 'skipped') {
       promptOutcome = { ...promptOutcome, status: 'completed' };
     }
-    // The commit and the install are side effects, so they happen before the
-    // fold, outside the lock; the transition and its ledger entry then land in
-    // one fresh-state write. A crash cannot leave the step settled with its
-    // commit forgotten.
+    // Phase 1, under the lock: validate the issue report against fresh
+    // state, apply it, and archive the details. Nothing durable has changed
+    // yet, so a failed archive (or a stale attempt, or an invalid report)
+    // just drops the fold here: the handoff stays and the next reconcile
+    // retries or explains. Archiving before the commit side effect is what
+    // keeps a recoverable archive error from landing a commit a dropped
+    // fold would then never record, and archiving before the terminal state
+    // write is what keeps a ledger entry from ever existing without the
+    // detail file the runbook promises (a folded step is never re-read, so
+    // there would be no path left to retry the archive). A crash after the
+    // archive re-runs the phase identically: only a fold writes issue
+    // entries, only one step can be awaiting at a time, and the archive
+    // writes are idempotent.
+    let ready = false;
+    let archiveError: unknown = null;
+    const reconstructedIssueIds: string[] = [];
+    withRunStateLock(dir, () => {
+      const fresh = readRunState(dir);
+      const applied = applyStepEvent(fresh, {
+        type: 'foldPromptOutcome',
+        stepId: step.id,
+        attempt: step.attempt,
+        promptOutcome,
+      });
+      if (applied.kind === 'error') return;
+      const issues = parseHandoffIssues(result.handoff.extras, fresh, step);
+      if (issues.ok !== true) return;
+      try {
+        // The sink survives a throw: a shell rebuilt before the failure is
+        // durable and reads healthy on the retry, so only this pass can
+        // warn that its original detail is gone.
+        archiveIssues(
+          dir,
+          applyReportedIssues(
+            applied.state,
+            step,
+            issues.issues,
+            issues.updates
+          ),
+          reconstructedIssueIds
+        );
+      } catch (e) {
+        archiveError = e;
+        return;
+      }
+      ready = true;
+    });
+    warnReconstructedArchives(reconstructedIssueIds);
+    if (archiveError !== null) {
+      warnToAgent({
+        title: `The issue details reported by ${
+          step.migrationId
+        } could not be archived (${summarizeError(archiveError)}).`,
+        bodyLines: [
+          `The step's outcome was not folded; fix the underlying problem, then run the reconcile again.`,
+        ],
+      });
+    }
+    if (!ready) continue;
+    // Phase 2: the commit and the install are side effects, so they happen
+    // outside the lock; the transition, the issue application, and the
+    // ledger entry then land in one fresh-state write. A crash cannot leave
+    // the step settled with its commit forgotten.
     const { entry, installFailed } = await foldLedgerEntry(
       root,
       dir,
@@ -877,27 +1009,125 @@ async function foldHandoffs(
       step,
       promptOutcome
     );
-    // The fold re-validates against fresh disk state, on the attempt this
+    // The write re-validates against fresh disk state, on the attempt this
     // handoff was read for. That window is wide (a git commit plus a package
     // install), and 'awaiting-prompt-outcome' recurs, so without the attempt
     // check a concurrent reconcile's retry could take this outcome as its own.
     // A dropped fold is equivalent to the crash-refold window: the commit
     // landed but the ledger misses it.
+    // Written through the lock directly rather than updateRunState (whose
+    // apply callback is contractually pure): the issue application is
+    // re-archived on the state the write actually lands on, since a claim
+    // assigned between the phases can add an update record phase 1 never
+    // saw. The detail files are normally on disk from phase 1, so a failure
+    // here loses only informational records and the fold proceeds with a
+    // warning rather than discarding the landed commit; that tolerance is
+    // earned by re-reading the archives and finding every one of this
+    // handoff's details still held (a file lost since phase 1, or ids
+    // re-minted differently by a concurrent fold, both fail that check).
+    // Anything less drops the fold with the handoff kept as the fallback
+    // store, like a phase-1 failure.
     let folded = false;
-    current = updateRunState(dir, (fresh) => {
+    let updateArchiveError: unknown = null;
+    let detailArchiveError: unknown = null;
+    let archivesDegraded = false;
+    const refoldReconstructedIds: string[] = [];
+    current = withRunStateLock(dir, () => {
+      const fresh = readRunState(dir);
       const applied = applyStepEvent(fresh, {
         type: 'foldPromptOutcome',
         stepId: step.id,
         attempt: step.attempt,
         promptOutcome,
       });
-      if (applied.kind === 'error') return null;
+      if (applied.kind === 'error') return fresh;
+      const issues = parseHandoffIssues(result.handoff.extras, fresh, step);
+      if (issues.ok !== true) return fresh;
+      const application = applyReportedIssues(
+        applied.state,
+        step,
+        issues.issues,
+        issues.updates
+      );
+      try {
+        // Phase 1 wrote these files, so a reconstruction here means one
+        // vanished between the phases; the ids surface that loss. The sink
+        // survives a throw, so a shell rebuilt before a later batch failed
+        // still gets warned.
+        archiveIssues(dir, application, refoldReconstructedIds);
+      } catch (e) {
+        // A landed commit outranks the drop: refolding would re-attempt
+        // its commit against a clean tree as no-changes and lose the
+        // entry (and its issue associations) for good. Phase 1 already
+        // archived this handoff's records durably once, so an archive
+        // that has since vanished is interference a kept handoff could
+        // not durably repair either; the fold proceeds and the
+        // degradation is warned.
+        const intact = applicationArchivesIntact(dir, application);
+        if (entry?.kind !== 'landed' && intact !== true) {
+          detailArchiveError = e;
+          return fresh;
+        }
+        updateArchiveError = e;
+        archivesDegraded = intact !== true;
+      }
       folded = true;
       const next = installFailed
-        ? markInstallFailed(applied.state, step.id)
-        : applied.state;
-      return entry ? appendCommit(next, entry) : next;
+        ? markInstallFailed(application.state, step.id)
+        : application.state;
+      // A landed commit carries the fixes of every issue resolved by a step
+      // it names: the folding step's own resolutions, and those of absorbed
+      // steps whose failed commit attempts left them unattached. Failed and
+      // absent entries associate nothing.
+      let entryWithIssues = entry;
+      if (entry && entry.kind === 'landed') {
+        const issueIds = issueIdsForCommit(next, entry.stepIds);
+        if (issueIds.length > 0) {
+          entryWithIssues = { ...entry, issueIds };
+        }
+      }
+      const written = entryWithIssues
+        ? appendCommit(next, entryWithIssues)
+        : next;
+      writeRunState(dir, written);
+      return written;
     });
+    warnReconstructedArchives(refoldReconstructedIds);
+    if (detailArchiveError !== null) {
+      warnToAgent({
+        title: `The issue details reported by ${
+          step.migrationId
+        } could not be archived (${summarizeError(detailArchiveError)}).`,
+        bodyLines: [
+          `The step's outcome was not folded; fix the underlying problem, then run the reconcile again.`,
+        ],
+      });
+    }
+    if (updateArchiveError !== null) {
+      // Two different situations share the failed re-archive: a degraded
+      // one where files are genuinely missing records, and a benign one
+      // where every file was just verified complete, so warning about
+      // loss there would report damage the check disproved.
+      warnToAgent(
+        archivesDegraded
+          ? {
+              title: `Some issue transition records for ${
+                step.migrationId
+              } could not be archived (${summarizeError(updateArchiveError)}).`,
+              bodyLines: [
+                `run.json stays authoritative for the dispositions; the archived files under the run's issues directory are missing or incomplete for this fold's issues, and its landed commit takes precedence over retrying the archive.`,
+              ],
+            }
+          : {
+              title: `Re-archiving the issue records for ${
+                step.migrationId
+              } failed (${summarizeError(updateArchiveError)}).`,
+              bodyLines: [
+                `Nothing was lost: the fold's records were verified on disk and recorded in run.json. The failed write may point at a disk problem worth checking.`,
+              ],
+            }
+      );
+    }
     // Only the handoff this fold consumed is removed. A rejected fold leaves
     // it in place: it belongs to whichever attempt is on disk now, and that
     // attempt's own reconcile still has to read it. The stored agent-work
@@ -1192,12 +1422,17 @@ async function commitForStep(
 
 // --- dispense ---------------------------------------------------------------
 
-function advanceAndDispense(
-  root: string,
-  dir: string,
-  runId: string,
-  state: MigrateRunState
-): void {
+function advanceAndDispense(root: string, dir: string, runId: string): void {
+  // Demote recorded issues no remaining step can claim before anything is
+  // rendered. Done here, at the single choke point every dispense, retry
+  // prompt, and completion goes through, on a fresh locked read: a step
+  // turned terminal by a concurrent reconcile or worker since the caller's
+  // read must not leave an unclaimable issue labeled recorded in a digest
+  // or the completion report.
+  const state = updateRunState(dir, (fresh) => {
+    const settled = settleUnclaimableIssues(fresh);
+    return settled === fresh ? null : settled;
+  });
   const step = firstActionableStep(state);
   if (!step) {
     completeRun(root, dir, runId, state);
@@ -1209,7 +1444,7 @@ function advanceAndDispense(
       break;
     case 'dispensed':
       // Re-entry before the worker advanced the step; re-emit its command.
-      emitNextStep(root, runId, step);
+      emitNextStep(root, runId, state, step);
       break;
     case 'failed':
       emitRetryFailed(root, runId, state, step);
@@ -1221,11 +1456,11 @@ function advanceAndDispense(
       emitStillRunning(root, runId, step);
       break;
     case 'awaiting-prompt-outcome':
-      emitAwaitPrompt(root, dir, runId, state, step);
+      emitAwaitPrompt(root, dir, runId, step);
       break;
     case 'succeeded':
     case 'skipped':
-      // firstActionableStep already excludes these via TERMINAL_STATUSES;
+      // firstActionableStep already excludes these via TERMINAL_STEP_STATUSES;
       // landing here means an already-terminal step slipped through
       // unclassified rather than being left to stall the run silently.
       throw new Error(
@@ -1243,7 +1478,7 @@ function advanceAndDispense(
 }
 
 function firstActionableStep(state: MigrateRunState): MigrateStep | undefined {
-  return state.steps.find((s) => !TERMINAL_STATUSES.has(s.status));
+  return state.steps.find((s) => !TERMINAL_STEP_STATUSES.has(s.status));
 }
 
 function dispenseNextStep(
@@ -1279,23 +1514,30 @@ function dispenseNextStep(
   if (advancedElsewhere) {
     // Terminates: step statuses only advance, so each re-entry observes
     // strictly later state and lands in a non-pending branch of the dispatch.
-    advanceAndDispense(root, dir, runId, current);
+    advanceAndDispense(root, dir, runId);
     return;
   }
   emitNextStep(
     root,
     runId,
+    current,
     current.steps.find((s) => s.id === step.id)
   );
 }
 
-function emitNextStep(root: string, runId: string, step: MigrateStep): void {
+function emitNextStep(
+  root: string,
+  runId: string,
+  state: MigrateRunState,
+  step: MigrateStep
+): void {
   const migrationId = step.migrationId;
   emit(root, runId, step, 'next-step', {
     command: workerCommand(root, migrationId, runId),
     next: reconcileCommand(root, runId),
     instructionLines: [
       `Apply migration ${migrationId} by running the command below, then run the "next" command to record the outcome and get the next step.`,
+      ...renderIssueDigestLines(state, step.id, runId),
     ],
   });
 }
@@ -1634,7 +1876,6 @@ function emitAwaitPrompt(
   root: string,
   dir: string,
   runId: string,
-  state: MigrateRunState,
   step: MigrateStep
 ): void {
   const migrationId = step.migrationId;
@@ -1644,13 +1885,47 @@ function emitAwaitPrompt(
   // without its directory is what would force the agent to `mkdir -p`. Same
   // reason the classic runner pre-creates it in run-step.ts.
   mkdirSync(dirname(filePath), { recursive: true });
+  // Recorded issues applicable to this step are assigned to it here, at the
+  // agent-work dispense, not when its worker command was dispensed: only a
+  // step that actually handed work back has a handoff to report
+  // `issueUpdates` through. A generator-only step that completes without
+  // parking never claims, so its applicable issues stay claimable by the
+  // next step that parks, and unclaimed ones reach the completion report.
+  // Serial dispensing keeps "first applicable step" deterministic, and a
+  // re-dispense of the same awaiting step re-applies the same claims. The
+  // fresh-status check mirrors dispenseNextStep's: a concurrent reconcile
+  // can have folded or re-armed this step since the caller selected it, and
+  // a claim written then would route issues to an owner that can no longer
+  // hand a valid handoff back. The same mismatch stops this emission: the
+  // selected attempt no longer exists, so its await block would hand the
+  // agent stale work (and could render another step's claims as this
+  // one's); redispatching classifies the fresh state instead.
+  let advancedElsewhere = false;
+  const claimed = updateRunState(dir, (fresh) => {
+    const freshStep = fresh.steps.find((s) => s.id === step.id);
+    if (
+      freshStep?.status !== 'awaiting-prompt-outcome' ||
+      freshStep.attempt !== step.attempt
+    ) {
+      advancedElsewhere = true;
+      return null;
+    }
+    const next = claimIssuesForStep(fresh, step.id);
+    return next === fresh ? null : next;
+  });
+  if (advancedElsewhere) {
+    // Terminates like dispenseNextStep's redispatch: step state only
+    // advances, so each re-entry observes strictly later state.
+    advanceAndDispense(root, dir, runId);
+    return;
+  }
   const validating = step.awaitingKind === 'generator-validation';
   // The plan's prompt path is the ground truth for a prompt park: it anchors
   // the stored-copy check (a same-migration file naming different
   // instructions is rejected) and is what the fallback below re-hands.
   const planPrompt = validating
     ? null
-    : planPromptPath(dir, state, migrationId);
+    : planPromptPath(dir, claimed, migrationId);
   // Re-emit the payload the worker stored when it parked the step, so a
   // session that lost the original block (a compaction, a restart) gets the
   // work restated instead of a pointer into stdout it no longer has. When no
@@ -1700,10 +1975,11 @@ function emitAwaitPrompt(
         ? `Handoff JSON: { "status": "success" | "failed", "summary": "<what you did>" }. If the prompt does not apply here, use "status": "success" and say so in the summary; the migration's generator changes are already applied.`
         : `Handoff JSON: { "status": "success" | "failed", "summary": "<what you did>" }. To mark the prompt not applicable, use "status": "success" with "outcome": "skipped".`
   );
+  lines.push(...renderIssueDigestLines(claimed, step.id, runId));
   // A handoff that exists but can't be read/parsed/validated is a rejection,
   // not a still-awaited outcome. Naming why stops the run from re-emitting the
   // same await forever while the agent leaves the bad file in place.
-  const rejection = describeRejectedHandoff(filePath);
+  const rejection = describeRejectedHandoff(filePath, claimed, step);
   if (rejection.length > 0) {
     lines.push('', ...rejection);
   }
@@ -1746,17 +2022,34 @@ function planPromptPath(
 }
 
 // Empty unless a handoff file is present but unusable; wording mirrors the
-// classic runner's ambiguous-outcome cause lines.
-function describeRejectedHandoff(handoffPath: string): string[] {
+// classic runner's ambiguous-outcome cause lines. A readable handoff whose
+// issue report is invalid is a rejection too: the fold refused to consume it,
+// and only this response can tell the agent why.
+function describeRejectedHandoff(
+  handoffPath: string,
+  state: MigrateRunState,
+  step: MigrateStep
+): string[] {
   const result = readHandoffWithReason(handoffPath);
-  if (result.ok) return [];
+  const followUp = 'Rewrite the handoff file, then run the "next" command.';
+  if (result.ok === true) {
+    const issues = parseHandoffIssues(result.handoff.extras, state, step);
+    if (issues.ok !== true) {
+      return [
+        `The handoff file was rejected: ${
+          (issues as { ok: false; reason: string }).reason
+        }.`,
+        followUp,
+      ];
+    }
+    return [];
+  }
   const { reason, detail } = result as {
     ok: false;
     reason: HandoffReadFailureReason;
     detail?: string;
   };
   if (reason === 'missing') return [];
-  const followUp = 'Rewrite the handoff file, then run the "next" command.';
   switch (reason) {
     case 'read-error':
       return [
@@ -1866,12 +2159,19 @@ function completeRun(
   if (installLine) {
     warnToAgent({ title: installLine });
   }
+  // Unresolved issues survive the run: they are the deferred work the
+  // completion hands to whoever validates the migrated workspace.
+  const issueLines = renderUnresolvedIssueLines(current, runId);
+  if (issueLines.length > 0) {
+    warnToAgent({ title: issueLines[0], bodyLines: issueLines.slice(1) });
+  }
   const instructionLines = [
     `Migrate run ${runId} is complete.`,
     `  applied: ${completed}`,
     `  skipped: ${skipped}`,
     ...(commitDebt ? [debtLine] : []),
     ...(installLine ? [installLine] : []),
+    ...issueLines,
   ];
   logToAgent({ title: 'nx migrate: complete', bodyLines: instructionLines });
   emitStepBlock(runId, '-', 'complete', {

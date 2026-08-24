@@ -175,10 +175,12 @@ import { runSingleMigrationWorker } from './worker';
 import type { RunSingleMigrationWorkerInput } from './worker';
 import {
   createRun,
+  issueFingerprint,
   readRunState,
   runDir,
   writeRunState,
   type MigrateCommitLedgerEntry,
+  type MigrateRunIssue,
   type MigrateRunState,
   type MigrateStep,
   type MigrateStepStatus,
@@ -343,6 +345,7 @@ describe('runSingleMigrationWorker', () => {
       skipInstall?: boolean;
       validate?: boolean;
       commits?: MigrateCommitLedgerEntry[];
+      issues?: MigrateRunIssue[];
     }
   ): string {
     const dir = runDir(root, runId);
@@ -375,6 +378,7 @@ describe('runSingleMigrationWorker', () => {
       })),
       steps: opts.steps,
       commits: opts.commits ?? [],
+      ...(opts.issues ? { issues: opts.issues } : {}),
       analytics: { startEmitted: false, completeEmitted: false },
     };
     writeRunState(dir, state);
@@ -2206,6 +2210,53 @@ describe('runSingleMigrationWorker', () => {
         kind: 'landed',
         sha: 'face0005face0005face0005face0005face0005',
         stepIds: ['step-2', 'step-1'],
+      });
+    });
+
+    it("attaches an absorbed step's uncarried resolved issues to the landed entry", async () => {
+      mockRunMigration.mockResolvedValue({
+        changes: changeList(),
+        nextSteps: [],
+        agentContext: [],
+        logs: '',
+        madeChanges: true,
+      });
+      mockCommit.mockResolvedValue({
+        status: 'committed',
+        sha: 'face0006face0006face0006face0006face0006',
+      });
+      // step-1 resolved issue-1, but its own commit attempt failed; the
+      // commit that absorbs step-1's tree must carry the fix's issue id,
+      // same as the orchestrator's fold and adopt appends.
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:prior', 'failed'),
+          migStep('step-2', '@nx/js:gen', 'dispensed'),
+        ],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+        commits: [{ kind: 'failed', stepIds: ['step-1'] }],
+        issues: [
+          {
+            id: 'issue-1',
+            fingerprint: issueFingerprint('broken build script'),
+            summary: 'broken build script',
+            reportedByStepId: 'step-1',
+            applicableStepIds: ['step-1'],
+            disposition: 'resolved',
+            resolvedByStepId: 'step-1',
+            resolvedAtCommitCount: 0,
+          },
+        ],
+      });
+
+      await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
+
+      expect(readRunState(dir).commits).toContainEqual({
+        kind: 'landed',
+        sha: 'face0006face0006face0006face0006face0006',
+        stepIds: ['step-2', 'step-1'],
+        issueIds: ['issue-1'],
       });
     });
 
