@@ -581,11 +581,13 @@ describe('setup-ai-agents generator', () => {
         ]);
       });
 
-      it('should allow creating unix sockets, not only connecting to existing ones', async () => {
-        // The scoped allowUnixSockets entry covers connecting to a socket that
-        // already exists. Nx binds its own — daemon, plugin workers, forked
-        // tasks — so without this the generator would write allowances that
-        // cannot unblock the failures that send users here in the first place.
+      it('should not grant blanket unix socket access', async () => {
+        // The scoped entry covers binding as well as connecting, so the blanket
+        // grant buys nothing for Nx's own sockets while opening every other
+        // socket on the machine — the Docker and SSH-agent sockets included —
+        // to connections from sandboxed commands. Verified against Claude Code
+        // 2.1.241: with only the scoped roots, a bind under /tmp/.nx and ~/.nx
+        // succeeds and a connect to a socket outside them is refused EPERM.
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
           agents: ['claude'],
@@ -596,7 +598,11 @@ describe('setup-ai-agents generator', () => {
         const config = JSON.parse(
           tree.read('.claude/settings.json')?.toString() ?? '{}'
         );
-        expect(config.sandbox.network.allowAllUnixSockets).toBe(true);
+        expect(config.sandbox.network.allowAllUnixSockets).toBeUndefined();
+        expect(config.sandbox.network.allowUnixSockets).toEqual([
+          '/tmp/.nx',
+          '~/.nx',
+        ]);
       });
 
       it('should preserve existing sandbox socket and filesystem entries without duplicating the nx ones', async () => {

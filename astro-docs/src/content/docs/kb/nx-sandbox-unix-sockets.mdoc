@@ -1,13 +1,13 @@
 ---
 title: Fix Nx Commands Failing in Claude Code Sandbox
-description: Nx commands fail inside Claude Code sandbox because Unix sockets are blocked. Set allowAllUnixSockets to fix daemon, plugin isolation, and forked process errors.
+description: Nx commands fail inside Claude Code sandbox because Unix sockets are blocked. Allowlist the Nx socket root to fix daemon, plugin isolation, and forked process errors.
 keywords:
   [
     Claude Code,
     sandbox,
     Unix sockets,
     Nx daemon,
-    allowAllUnixSockets,
+    allowUnixSockets,
     Seatbelt,
     bubblewrap,
     plugin isolation,
@@ -21,20 +21,7 @@ When running Nx commands inside [Claude Code](https://docs.anthropic.com/en/docs
 
 ## The fix
 
-Add `allowAllUnixSockets: true` to your Claude Code sandbox network settings. You can set this at the project level (`.claude/settings.local.json`) or user level (`~/.claude/settings.json`):
-
-```json
-// .claude/settings.local.json
-{
-  "sandbox": {
-    "network": {
-      "allowAllUnixSockets": true
-    }
-  }
-}
-```
-
-This grants Nx the ability to create and connect to Unix sockets, which it needs for daemon communication, plugin isolation, and forked task execution.
+Allowlist the root Nx puts its sockets under. The entry covers creating sockets as well as connecting to them, which is what the daemon, plugin workers and forked tasks each need.
 
 ## Scoped allowlisting with the Nx socket root
 
@@ -97,13 +84,17 @@ Sockets only land inside your workspace if the home directory can't host them ei
 Code inside the sandbox runs as your user, so this grant does let it write that binary cache, in the same way it can already write your workspace's `node_modules`.
 {% /aside %}
 
-Claude Code's `allowUnixSockets` setting currently only allows _connecting_ to sockets, not _creating_ them. A scoped allowlist works when the daemon is already running (started outside the sandbox, for example from your own terminal), but processes inside the sandbox that need to create sockets, such as a fresh daemon, plugin workers, or forked tasks, still require `allowAllUnixSockets: true`.
+Running `nx configure-ai-agents` writes these to `.claude/settings.json` for you: the scoped socket paths and the read/write grants. Claude Code's sandbox blocks writes to its own settings file, so run it from a regular terminal rather than through the agent.
 
-Running `nx configure-ai-agents` writes all of these to `.claude/settings.json` for you: the scoped socket path, the read/write grants, and `allowAllUnixSockets: true`. Claude Code's sandbox blocks writes to its own settings file, so run it from a regular terminal rather than through the agent.
+The allowances only take effect once sandboxing itself is on, which `configure-ai-agents` deliberately leaves to you. Run `/sandbox` in Claude Code to enable it.
+
+{% aside type="caution" title="Prefer the scoped entry to allowAllUnixSockets" %}
+`allowAllUnixSockets: true` lets sandboxed commands connect to _every_ Unix socket on the machine, including your SSH agent and the Docker daemon socket, which is root-equivalent. It grants nothing extra for Nx. Creating a socket is governed by the path allowlist, so the scoped entry above already covers a fresh daemon, plugin workers, and forked tasks.
+{% /aside %}
 
 ## Alternative workarounds
 
-If you prefer not to enable blanket Unix socket access, you can disable the Nx features that require sockets. These workarounds come with tradeoffs:
+If you prefer not to allowlist the socket root, you can disable the Nx features that require sockets. These workarounds come with tradeoffs:
 
 ### Disable the Nx daemon
 
@@ -122,7 +113,7 @@ NX_ISOLATE_PLUGINS=false nx <command>
 [Plugin isolation](/docs/concepts/mental-model#inferred-tasks) runs each plugin in a separate forked process to prevent conflicts between multiple TypeScript compilers, module-level caches, and global state. Disabling it runs all plugins in the main process, which can cause issues in workspaces with plugins that have conflicting dependencies.
 
 {% aside type="caution" title="Workarounds are not recommended for regular use" %}
-Both environment variables work around the symptom rather than fixing the root cause. The `allowAllUnixSockets` setting is the proper fix and doesn't sacrifice any Nx functionality.
+Both environment variables work around the symptom rather than fixing the root cause. Allowlisting the Nx socket root is the proper fix and doesn't sacrifice any Nx functionality.
 {% /aside %}
 
 ## Socket path environment variables
@@ -135,7 +126,7 @@ For advanced use cases, Nx provides environment variables to override where sock
 | `NX_DAEMON_SOCKET_DIR`           | Legacy alias of `NX_SOCKET_DIR`. Used only when `NX_SOCKET_DIR` is not set. Prefer `NX_SOCKET_DIR`.                                                                                                                                                                                     |
 | `NX_NATIVE_FILE_CACHE_DIRECTORY` | Overrides the native file cache path                                                                                                                                                                                                                                                    |
 
-These are primarily useful for environments with restricted temp directory access (e.g., certain Docker or CI setups). For Claude Code's sandbox, `allowAllUnixSockets: true` is simpler and more reliable.
+These are primarily useful for environments with restricted temp directory access (e.g., certain Docker or CI setups). For Claude Code's sandbox, allowlisting the default roots is simpler and more reliable. If you do override the location, allowlist the directory you point Nx at instead.
 
 {% aside type="caution" title="Keep the socket directory private" %}
 Do not set `NX_SOCKET_DIR` or `NX_DAEMON_SOCKET_DIR` to a location shared with other users or other workspaces. The daemon drives work inside a long-lived process, so another user who can reach its socket could execute code in your daemon.
