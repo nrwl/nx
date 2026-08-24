@@ -173,6 +173,15 @@ pub struct JsonFileSetInput {
     pub exclude_fields: Option<Vec<String>>,
 }
 
+/// Hashed into every task regardless of its inputs (see `HashPlanner::get_plans_internal`).
+pub(crate) const ALWAYS_ON_WORKSPACE_FILES: [&str; 3] = [
+    "{workspaceRoot}/nx.json",
+    "{workspaceRoot}/.gitignore",
+    "{workspaceRoot}/.nxignore",
+];
+
+pub(crate) const IO_SNAPSHOT_MARKER_PREFIX: &str = "io-snapshot:";
+
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub enum HashInstruction {
     WorkspaceFileSet(Vec<String>),

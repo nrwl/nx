@@ -500,6 +500,10 @@ export interface HashInputs {
   depOutputs: Array<string>
   /** External dependencies */
   external: Array<string>
+  /** Provenance of every value above, keyed by the value itself. */
+  sources: Record<string, 'snapshot' | 'target' | 'dependency' | 'native'>
+  /** Domain markers in the plan, e.g. `io-snapshot:<digest>`. */
+  markers: Array<string>
 }
 
 /**
