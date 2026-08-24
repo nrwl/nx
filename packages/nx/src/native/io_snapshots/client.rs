@@ -10,7 +10,8 @@ use super::FetchFailure;
 /// Observed reads pre-classified by Nx Cloud (NXC-4847 §2a). Globs under
 /// `projects` are project-relative; `workspace` holds reads outside any
 /// project root; `task_outputs` maps a producer task id to the paths read from
-/// its observed writes.
+/// its observed writes. An entry's presence means a complete capture — empty
+/// inputs mean the task read nothing.
 #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct StructuredInputs {
@@ -43,9 +44,6 @@ pub struct TaskIoSnapshot {
     pub commit: String,
     pub inputs: TaskInputs,
     pub outputs: Vec<String>,
-    /// `complete` | `empty` | `partial`; absent from the interim server response.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub coverage: Option<String>,
 }
 
 #[derive(Deserialize)]
