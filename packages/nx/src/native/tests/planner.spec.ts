@@ -305,10 +305,15 @@ describe('task planner', () => {
       const plan = planner.getPlans(['parent:build'], taskGraph, {
         'parent:build': {
           ...base,
-          taskOutputs: { 'child:build': ['dist/libs/child/index.js'] },
+          taskOutputs: {
+            'child:build': ['dist/libs/child/index.js', 'dist/libs/child/a.js'],
+          },
         },
       })['parent:build'];
-      expect(plan).toContain('dist/libs/child/index.js:dist/libs/child');
+      // One instruction per producer: plain paths collapse into a brace group.
+      expect(plan).toContain(
+        '{dist/libs/child/a.js,dist/libs/child/index.js}:dist/libs/child'
+      );
     });
 
     it('hashes a task that read nothing from native instructions plus the marker', () => {
