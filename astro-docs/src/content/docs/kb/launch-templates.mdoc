@@ -29,7 +29,7 @@ launch-templates:
 
 ### `launch-templates.<template-name>`
 
-The name of your custom launch template. This name is used via `--distribute-on="<# of agents> <template-name>"` when starting the ci run. Supports one to many uniquely named launch templates.
+The name of your custom launch template. This name is used via [`dte.distribute-on`](/docs/reference/nx-cloud/ci-config#dtedistribute-on) in your `.nx/ci-config.yaml` file, in the form `<# of agents> <template-name>`. Supports one to many uniquely named launch templates.
 Multiple launch templates can be useful for setting up different toolchains (rust, java, node versions) or resources classes for your workspace needs.
 
 ```yaml
@@ -39,8 +39,10 @@ launch-templates:
   template-two:
 ```
 
-```shell
-nx start-ci-run --distribute-on="3 template-one"
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on: 3 template-one
 ```
 
 ### `launch-templates.<template-name>.resource-class`

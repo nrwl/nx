@@ -8,11 +8,27 @@ topics:
 
 Assignment rules allow you to control which tasks can run on which agents. Save on agent costs by provisioning different sizes of agents to suite the individual needs of your tasks. Ensure resource intensive targets like `e2e-ci` and `build` have what they need by using larger agents and with a specified parallelism. Lighter tasks like `lint` and `test` can run on smaller agents.
 
-Assignment rules are defined in `yaml` files within your workspace's `.nx/workflows` directory. You can use assignment rules with [Nx Agents](/docs/features/ci-features/distribute-task-execution).
+Assignment rules are written in `yaml` and reach Nx Cloud through [`dte.assignment-rules`](/docs/reference/nx-cloud/ci-config#dteassignment-rules) in `.nx/ci-config.yaml`. You can use assignment rules with [Nx Agents](/docs/features/ci-features/distribute-task-execution).
 
-{% aside type="caution" title="Run start-ci-run first" %}
-Assignment rules only apply if `npx nx-cloud start-ci-run` runs before any other `nx` command. See [`start-ci-run`](/docs/reference/nx-cloud-cli#nx-cloud-start-ci-run).
-{% /aside %}
+The rules reach a run in one of three ways, and the wrapper differs between them:
+
+- **Inline.** Set `dte.assignment-rules` to the list of rules itself, with no wrapper.
+- **In their own file.** Set `dte.assignment-rules` to that file's path. The file wraps the list in a top-level `assignment-rules:` key.
+- **Alongside your distribution config.** Put an `assignment-rules:` key next to `distribute-on:` in the file that `dte.distribute-on` points at.
+
+The examples below use the second and third forms, since a rules file is easier to review than a long inline list.
+The inline form looks like this:
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on: 5 linux-medium-js
+  assignment-rules:
+    - targets:
+        - e2e-ci
+      run-on:
+        - agent: linux-large-js
+```
 
 ## How to define an assignment rule
 
@@ -339,10 +355,16 @@ assignment-rules:
 Note that the agent types supplied in the `run-on` property will be used to determine which agents will have rules applied to them.
 You can choose to name your agent types anything you want, but they must be set on your agents via the `NX_AGENT_LAUNCH_TEMPLATE` environment variable.
 
-You can then reference your assignment rules file within your `start-ci-run` command:
+You can then reference your assignment rules file from `.nx/ci-config.yaml`:
 
-```shell
-npx nx start-ci-run --distribute-on="manual" --assignment-rules=".nx/workflows/assignment-rules.yaml"
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on: manual
+  assignment-rules: .nx/workflows/assignment-rules.yaml
+lifecycle:
+  stop-after:
+    - e2e-ci
 ```
 
 The following is an example of what this looks like within a Github Actions pipeline:
@@ -357,7 +379,7 @@ jobs:
     steps:
       - ... # setup steps for your main job
 
-      - run: npx nx start-ci-run --distribute-on="manual" --assignment-rules=".nx/workflows/assignment-rules.yaml" --stop-agents-after="e2e-ci"
+      - run: npx nx start-nx-agents
 
       - ... # Nx commands you want to distribute
 
@@ -449,7 +471,18 @@ assignment-rules:
       - agent: linux-large-js
 ```
 
-You can then reference your distribution configuration in your CI pipeline configuration:
+You can then reference your distribution configuration from `.nx/ci-config.yaml`:
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on: .nx/workflows/distribution-config.yaml
+lifecycle:
+  stop-after:
+    - e2e-ci
+```
+
+Your main job starts the run without repeating any of that configuration:
 
 ```yaml {% meta="{9}" %}
 // .github/workflows/main.yaml
@@ -460,7 +493,7 @@ jobs:
     ...
     steps:
       ...
-      - run: npx nx start-ci-run --distribute-on=".nx/workflows/distribution-config.yaml" --stop-agents-after="e2e-ci"
+      - run: npx nx start-nx-agents
       - ..
 ```
 
