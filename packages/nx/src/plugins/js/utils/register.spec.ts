@@ -16,7 +16,10 @@ import {
 // The source loads this with a bare require (CJS channel), so stub the
 // require cache rather than vi.mock.
 import { createRequire, Module } from 'node:module';
-import { mockCjsModule } from '../../../internal-testing-utils/cjs-mock';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+} from '../../../internal-testing-utils/cjs-mock';
 {
   const req = createRequire(import.meta.url);
   const modPath = req.resolve('@swc-node/register/register');
@@ -119,6 +122,12 @@ describe('isNativeStripPreferred', () => {
 });
 
 describe('getTranspiler', () => {
+  // Each case swaps the lazily-required `typescript`; drop the swap afterwards
+  // so the doctored version does not leak into later tests in this file.
+  afterEach(() => {
+    resetCjsMocks();
+  });
+
   // TS6 requires the suppression flag to avoid hard-erroring on deprecated options.
   it('sets ignoreDeprecations to "6.0" on TypeScript >= 6', async () => {
     vi.resetModules();
@@ -133,7 +142,6 @@ describe('getTranspiler', () => {
     const opts: CompilerOptions = {};
     fresh(opts);
     expect(opts.ignoreDeprecations).toEqual('6.0');
-    vi.unmock('typescript');
   });
 
   // TS5 rejects the '6.0' value (TS5103) so the option must stay absent.
@@ -149,7 +157,6 @@ describe('getTranspiler', () => {
     const opts: CompilerOptions = {};
     fresh(opts);
     expect(opts.ignoreDeprecations).toBeUndefined();
-    vi.unmock('typescript');
   });
 });
 

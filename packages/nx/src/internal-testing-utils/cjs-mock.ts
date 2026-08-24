@@ -44,3 +44,25 @@ export function mockCjsModule(
   registry.set(resolved, exportsObj);
   delete req.cache[resolved];
 }
+
+/**
+ * Undo a single `mockCjsModule` registration. `vi.unmock` cannot do this - it
+ * knows nothing about this registry - so a spec that swaps a module for one
+ * test must call this, or the swap leaks into every later test in the file.
+ */
+export function unmockCjsModule(
+  importMetaUrl: string,
+  specifier: string
+): void {
+  const req = createRequire(importMetaUrl);
+  const resolved = req.resolve(specifier);
+  registry.delete(resolved);
+  // The registry short-circuits before the loader caches anything, so drop any
+  // stale entry too and let the next require load the real module.
+  delete req.cache[resolved];
+}
+
+/** Undo every registration; convenient from an `afterEach`. */
+export function resetCjsMocks(): void {
+  registry.clear();
+}

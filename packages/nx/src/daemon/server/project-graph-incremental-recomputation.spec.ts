@@ -15,15 +15,18 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
   });
 
   // Reproduces the spread-test flake shape end-to-end: write a new
-  // project.json then immediately request the graph with no awaits
-  // in between. If the daemon serves a stale cache, the new project
-  // won't appear in the response — that's the bug. With the fix in
-  // place the watcher pipeline delivers the event in time.
+  // project.json, then poll the graph until the watcher event lands. If the
+  // daemon serves a stale cache the project never appears and the poll
+  // exhausts — that's the bug. Note this proves eventual delivery, not
+  // delivery before the next compute: a regression that merely delays the
+  // event passes here.
   //
   // vi.resetModules + fresh imports are required: cache-directory.ts evaluates
   // workspaceDataDirectory as a `const` at module load, so without a
   // fresh module graph the daemon would write its cache into the real
   // workspace under test.
+  // Own timeout: the first graph compute alone runs 10-20s, so the default
+  // leaves no room for the poll and the test dies by timeout, not assertion.
   it('returns a fresh graph reflecting an in-flight project add', async () => {
     fs.createFilesSync({
       'nx.json': JSON.stringify({}),
@@ -68,7 +71,7 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
         JSON.stringify({ name: 'foo', root: 'libs/foo' })
       );
       let second = await getCachedSerializedProjectGraphPromise();
-      const deadline = Date.now() + 20_000;
+      const deadline = Date.now() + 10_000;
       while (!second.projectGraph?.nodes?.foo && Date.now() < deadline) {
         await new Promise((resolve) => setTimeout(resolve, 50));
         second = await getCachedSerializedProjectGraphPromise();
@@ -82,7 +85,7 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
     } finally {
       await watcher.stop();
     }
-  });
+  }, 60_000);
 
   // Covers the freshness-gate path inside kickOffRecompute: if nx.json's
   // `plugins` field changes between kickoff and commit, the in-flight

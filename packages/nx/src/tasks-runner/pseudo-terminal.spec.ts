@@ -18,7 +18,9 @@ describe('PseudoTerminal', () => {
     expect(exitCode).toEqual(0);
   });
 
-  it('should kill a running command', { timeout: 1000 }, async () => {
+  // 1s (the jest-era budget) is too tight once the suite runs files in
+  // parallel: spawning the pty and reaping the kill both contend for CPU.
+  it('should kill a running command', { timeout: 10_000 }, async () => {
     const childProcess = terminal.runCommand(
       'sleep 3 && echo "hello world" > file.txt'
     );
