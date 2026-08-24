@@ -50,7 +50,13 @@ Blacksmith transparently accelerates the `actions/cache` API and offers sticky d
 
 ## Distribution
 
-With Nx, distribution is a single job. `nx run-many` runs every check, and one `--distribute-on` line hands tasks to [Nx Agents](/docs/features/ci-features/distribute-task-execution), assigned continuously from historical timing data, with no matrix and no shard count to maintain.
+With Nx, distribution is a single job. `nx run-many` runs every check, and one `distribute-on` line in [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) hands tasks to [Nx Agents](/docs/features/ci-features/distribute-task-execution), assigned continuously from historical timing data, with no matrix and no shard count to maintain.
+
+```yaml
+# .nx/ci-config.yaml (Nx)
+dte:
+  distribute-on: 8 linux-medium-js
+```
 
 ```yaml
 # .github/workflows/ci.yml (Nx)
@@ -60,7 +66,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: npm ci
-      - run: npx nx-cloud start-ci-run --distribute-on="8 linux-medium-js"
+      - run: npx nx-cloud start-nx-agents
       - run: npx nx run-many -t lint test build e2e
 ```
 
