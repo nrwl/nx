@@ -129,7 +129,6 @@ mod tests {
             commit: commit.into(),
             inputs: TaskInputs::Flat(inputs.iter().map(|s| s.to_string()).collect()),
             outputs: vec![],
-            coverage: None,
         }
     }
 
@@ -171,8 +170,7 @@ mod tests {
               "workspace": ["tsconfig.base.json"],
               "taskOutputs": { "ui:build": ["libs/ui/dist/index.js"] }
             },
-            "outputs": ["apps/web/dist/**"],
-            "coverage": "complete"
+            "outputs": ["apps/web/dist/**"]
           }
         }"#;
         let mut snapshots: BTreeMap<String, TaskIoSnapshot> = serde_json::from_str(json).unwrap();
@@ -188,10 +186,6 @@ mod tests {
         assert_eq!(
             inputs.task_outputs["ui:build"],
             vec!["libs/ui/dist/index.js"]
-        );
-        assert_eq!(
-            snapshots["structured"].coverage.as_deref(),
-            Some("complete")
         );
         // Round-trips through the on-disk bundle unchanged.
         let text = serde_json::to_string(&snapshots).unwrap();
