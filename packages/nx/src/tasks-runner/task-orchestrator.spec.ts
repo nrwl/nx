@@ -887,6 +887,36 @@ describe('TaskOrchestrator', () => {
       }
     );
 
+    it('never folds under --output-style=summary, even when a task failed', async () => {
+      const orchestrator = createOrchestrator({ outputStyle: 'summary' });
+      const a = makeTask('a:build');
+      const b = makeTask('b:build');
+      const taskResults = [
+        { task: a, status: 'success', code: 0, terminalOutput: 'a body' },
+        { task: b, status: 'failure', code: 1, terminalOutput: 'b failed' },
+      ];
+
+      const out = await captureStdout(() =>
+        orchestrator.printGroupedBatchOutput(
+          BATCH,
+          taskResults,
+          capturedOutputFile('the entire gradle build log')
+        )
+      );
+
+      // summary addresses logs by path rather than printing them. The fold
+      // bypasses the life cycle and writes to `output` directly, so without an
+      // explicit check it would dump the whole worker log into exactly the run
+      // that asked not to see it.
+      expect(out).not.toContain('the entire gradle build log');
+      expect(out).not.toContain('batch @nx/js:tsc');
+      // The tasks still report themselves - the summary life cycle is what
+      // turns that into a path.
+      expect(
+        orchestrator.options.lifeCycle.printTaskTerminalOutput
+      ).toHaveBeenCalledWith(b, 'failure', 'b failed');
+    });
+
     it('still collapses an all-green batch on the default, captured log or not', async () => {
       const orchestrator = createOrchestrator();
       const a = makeTask('a:build');
