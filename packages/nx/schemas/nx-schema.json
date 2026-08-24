@@ -1043,8 +1043,11 @@
           }
         },
         "cache": {
-          "type": "boolean",
-          "description": "Specifies if the given target should be cacheable"
+          "anyOf": [
+            { "type": "boolean" },
+            { "type": "string", "enum": ["manual"] }
+          ],
+          "description": "Specifies if the given target should be cacheable. \"manual\" caches it from its declared inputs only, never from an I/O snapshot."
         },
         "syncGenerators": {
           "type": "array",

@@ -269,9 +269,11 @@ export interface TargetConfiguration<T = any> {
   defaultConfiguration?: string;
 
   /**
-   * Determines if Nx is able to cache a given target.
+   * Determines if Nx is able to cache a given target. `'manual'` caches the
+   * target but hashes it from its declared inputs only, never from an I/O
+   * snapshot.
    */
-  cache?: boolean;
+  cache?: boolean | 'manual';
 
   /**
    * Metadata about the target
