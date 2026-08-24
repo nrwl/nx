@@ -52,7 +52,14 @@ export class BatchProcess {
 
   constructor(
     private childProcess: ChildProcess,
-    private executorName: string
+    private executorName: string,
+    /**
+     * Whether the active output style puts task bytes on the terminal at all.
+     * `summary` does not, and its life cycle cannot enforce that here: this
+     * class writes to `output` directly from a stream handler, so without being
+     * told it would print a whole batch into a run that asked for log paths.
+     */
+    private readonly printsOutput: boolean = true
   ) {
     this.childProcess.on('message', (message: BatchMessage) => {
       switch (message.type) {
@@ -101,7 +108,7 @@ export class BatchProcess {
         // tracking accurate for whatever prints next.
         if (shouldGroupBatchOutput()) {
           this.capture(chunk);
-        } else {
+        } else if (this.printsOutput) {
           output.writeTaskOutputChunk(chunk);
         }
 
@@ -119,7 +126,7 @@ export class BatchProcess {
 
         if (shouldGroupBatchOutput()) {
           this.capture(chunk, process.stderr);
-        } else {
+        } else if (this.printsOutput) {
           // Maintain current terminal output behavior
           output.writeTaskOutputChunk(chunk, process.stderr);
         }
@@ -210,7 +217,7 @@ export class BatchProcess {
       // the warning is survivable, losing task output is what this path exists
       // to prevent.
       const unwritten = bytes.subarray(written);
-      if (unwritten.length > 0) {
+      if (unwritten.length > 0 && this.printsOutput) {
         output.writeTaskOutputChunk(unwritten, stream);
       }
       output.warn({

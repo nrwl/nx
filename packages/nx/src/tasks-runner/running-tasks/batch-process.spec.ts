@@ -469,4 +469,41 @@ describe('BatchProcess', () => {
       warn.mockRestore();
     }
   });
+
+  it('prints nothing live when the style does not print task output', () => {
+    const child = fakeChildProcess();
+
+    // No grouping, so this is the branch that forwards live. `summary` reports
+    // each task's log by path, and this class writes to `output` directly from
+    // a stream handler - the life cycle cannot stop it, so it has to be told.
+    const forwarded = withEnvironmentVariables(
+      { GITHUB_ACTIONS: undefined, NX_SKIP_LOG_GROUPING: undefined },
+      () => {
+        const b = new BatchProcess(child, '@nx/js:tsc', false);
+        return captureForwarded(() => {
+          (child as any).stdout.emit('data', Buffer.from('worker chatter\n'));
+          (child as any).stderr.emit('data', Buffer.from('worker warning\n'));
+        });
+      }
+    );
+
+    expect(forwarded.stdout).not.toContain('worker chatter');
+    expect(forwarded.stderr).not.toContain('worker warning');
+  });
+
+  it('still prints live when the style does print task output', () => {
+    const child = fakeChildProcess();
+
+    const forwarded = withEnvironmentVariables(
+      { GITHUB_ACTIONS: undefined, NX_SKIP_LOG_GROUPING: undefined },
+      () => {
+        new BatchProcess(child, '@nx/js:tsc');
+        return captureForwarded(() => {
+          (child as any).stdout.emit('data', Buffer.from('worker chatter\n'));
+        });
+      }
+    );
+
+    expect(forwarded.stdout).toContain('worker chatter');
+  });
 });
