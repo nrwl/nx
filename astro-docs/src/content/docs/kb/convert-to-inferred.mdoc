@@ -55,6 +55,8 @@ Most of the official plugins come with a `convert-to-inferred` generator. This g
   `nx.json` (whole-workspace migrations only, see below)
 - clean up `project.json` to keep only the configuration that deviates from what is inferred or
   centralized
+- remove `targetDefaults` entries keyed by a migrated executor once no target resolves through that
+  executor (whole-workspace migrations only)
 
 To get started, run `nx g convert-to-inferred`, and you'll be prompted to choose a plugin to migrate.
 
