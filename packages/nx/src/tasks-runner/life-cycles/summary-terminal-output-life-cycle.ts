@@ -15,7 +15,11 @@ import type { LifeCycle, TaskResult } from '../life-cycle';
  * the one failure.
  */
 export class SummaryTerminalOutputLifeCycle implements LifeCycle {
-  private readonly failed: { task: Task; code: number }[] = [];
+  private readonly failed: {
+    task: Task;
+    code: number;
+    hasOutput: boolean;
+  }[] = [];
   private readonly stopped: Task[] = [];
   private readonly completed = new Set<string>();
   private succeeded = 0;
@@ -35,11 +39,20 @@ export class SummaryTerminalOutputLifeCycle implements LifeCycle {
   printTaskTerminalOutput(): void {}
 
   endTasks(taskResults: TaskResult[]): void {
-    for (const { task, status, code } of taskResults) {
+    for (const { task, status, code, terminalOutput } of taskResults) {
       this.completed.add(task.id);
       switch (status) {
         case 'failure':
-          this.failed.push({ task, code });
+          // Whether a log file exists is decided here, not at render time:
+          // `persistTerminalOutputs` skips a result whose `terminalOutput` is
+          // undefined, so pointing at its path would address a file nobody
+          // wrote. A batch executor that reports a failure without attributing
+          // output to the task produces exactly that.
+          this.failed.push({
+            task,
+            code,
+            hasOutput: terminalOutput !== undefined,
+          });
           break;
         case 'stopped':
           this.stopped.push(task);
@@ -60,8 +73,8 @@ export class SummaryTerminalOutputLifeCycle implements LifeCycle {
     const skipped = this.tasks.filter((t) => !this.completed.has(t.id)).length;
     const bodyLines: string[] = [];
 
-    for (const { task, code } of this.failed) {
-      bodyLines.push('', ...this.failureBlock(task, code));
+    for (const { task, code, hasOutput } of this.failed) {
+      bodyLines.push('', ...this.failureBlock(task, code, hasOutput));
     }
     if (this.stopped.length > 0) {
       bodyLines.push(
@@ -105,7 +118,7 @@ export class SummaryTerminalOutputLifeCycle implements LifeCycle {
     }: ${parts.join(', ')}`;
   }
 
-  private failureBlock(task: Task, code: number): string[] {
+  private failureBlock(task: Task, code: number, hasOutput: boolean): string[] {
     // formatCommand is what every other renderer uses, so a task reads the same
     // here as it does under --output-style=static.
     const lines = [
@@ -116,8 +129,9 @@ export class SummaryTerminalOutputLifeCycle implements LifeCycle {
 
     // The log is addressed, not reproduced. `hash` is optional on the type but
     // always set by the time a task has run — processTask hashes before it
-    // schedules — so this only guards against printing a bogus path.
-    if (task.hash) {
+    // schedules — so that half only guards against printing a bogus path.
+    // `hasOutput` is the load-bearing half: no output, no file, no address.
+    if (task.hash && hasOutput) {
       lines.push(
         output.dim(`  full log: ${terminalOutputPathForHash(task.hash)}`)
       );
