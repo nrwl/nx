@@ -18,6 +18,10 @@ import {
 import { transformProjectGraphForRust } from '../native/transform-objects';
 import { createProjectRootMappings } from '../project-graph/utils/find-project-for-path';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
+import {
+  buildIoSnapshotOverrides,
+  type IoSnapshotOverridesResult,
+} from '../io-snapshots/overrides';
 import { splitArgsIntoNxArgsAndOverrides } from '../utils/command-line-utils';
 import { getNxWorkspaceFilesFromContext } from '../utils/workspace-context';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -173,5 +177,60 @@ export class HashPlanInspector {
       ioSnapshotOverrides
     );
     return this.inspector.inspectInputs(plansReference);
+  }
+
+  /**
+   * Like inspectTaskInputs(), but resolves I/O snapshot overrides from the
+   * on-disk bundle first so the result matches what hashing uses. Never
+   * fetches. `ioSnapshots` is null when snapshots are disabled.
+   */
+  inspectTaskInputsWithIoSnapshots(
+    { project, target, configuration }: Target,
+    parsedArgs: { [k: string]: any } = {},
+    extraTargetDependencies: Record<
+      string,
+      (TargetDependencyConfig | string)[]
+    > = {},
+    excludeTaskDependencies: boolean = false
+  ): {
+    inputs: Record<string, HashInputs>;
+    ioSnapshots: IoSnapshotOverridesResult | null;
+  } {
+    const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
+      {
+        ...parsedArgs,
+        configuration: configuration,
+        targets: [target],
+      },
+      'run-one',
+      { printWarnings: false },
+      this.nxJson
+    );
+
+    const taskGraph = createTaskGraph(
+      this.projectGraph,
+      extraTargetDependencies,
+      [project],
+      nxArgs.targets,
+      nxArgs.configuration,
+      overrides,
+      excludeTaskDependencies
+    );
+
+    const ioSnapshots = buildIoSnapshotOverrides(
+      this.projectGraph,
+      taskGraph,
+      this.nxJson ?? {}
+    );
+    const taskIds = Object.keys(taskGraph.tasks);
+    const plansReference = this.planner.getPlansReference(
+      taskIds,
+      taskGraph,
+      ioSnapshots?.overrides
+    );
+    return {
+      inputs: this.inspector.inspectInputs(plansReference),
+      ioSnapshots,
+    };
   }
 }
