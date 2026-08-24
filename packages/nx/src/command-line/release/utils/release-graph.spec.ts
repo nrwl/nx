@@ -1320,7 +1320,9 @@ describe('ReleaseGraph', () => {
         .spyOn(releaseGraph, 'resolveRepositoryTags')
         .mockResolvedValue(['projectB@4.2.0']);
       const { resolveCurrentVersion: actualResolveCurrentVersion } =
-        jest.requireActual('../version/resolve-current-version');
+        await vi.importActual<
+          typeof import('../version/resolve-current-version')
+        >('../version/resolve-current-version');
       mockResolveCurrentVersion.mockImplementation(actualResolveCurrentVersion);
 
       await expect(
