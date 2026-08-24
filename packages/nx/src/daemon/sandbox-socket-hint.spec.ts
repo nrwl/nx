@@ -109,6 +109,22 @@ describe('sandboxSocketHint', () => {
     expect(lines).not.toContain('allowUnixSockets');
   });
 
+  it('should send Copilot CLI to the user-level settings file', () => {
+    // Copilot CLI is path-gated like Claude, but reads sandbox policy only from
+    // ~/.copilot/settings.json, so naming a workspace file would send people to
+    // one the CLI ignores. Distinct from `copilot`, which is the VS Code
+    // extension's agent mode.
+    mockIsAiAgent.mockReturnValue(true);
+    mockDetectAiAgent.mockReturnValue('copilot-cli');
+
+    const lines = hint().join('\n');
+
+    expect(lines).toContain('readwritePaths');
+    expect(lines).toContain('~/.copilot/settings.json');
+    expect(lines).not.toContain('allowUnixSockets');
+    expect(lines).not.toContain('network_access');
+  });
+
   it('should fall back to a setting-agnostic remedy for an unrecognised sandbox', () => {
     mockIsAiAgent.mockReturnValue(false);
     mockDetectAiAgent.mockReturnValue(null);

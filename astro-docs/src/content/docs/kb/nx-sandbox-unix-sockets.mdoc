@@ -1,9 +1,11 @@
 ---
-title: Fix Nx Commands Failing in Claude Code Sandbox
-description: Nx commands fail inside Claude Code sandbox because Unix sockets are blocked. Allowlist the Nx socket root to fix daemon, plugin isolation, and forked process errors.
+title: Fix Nx Commands Failing in an AI Agent Sandbox
+description: Nx commands fail inside an agent sandbox because Unix sockets are blocked. Allowlist the Nx socket root in Claude Code, Codex, or Copilot CLI to fix daemon, plugin isolation, and forked process errors.
 keywords:
   [
     Claude Code,
+    Codex,
+    Copilot CLI,
     sandbox,
     Unix sockets,
     Nx daemon,
@@ -17,7 +19,9 @@ topics:
   - 'Troubleshooting'
 ---
 
-When running Nx commands inside [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview)'s sandbox mode, you may see errors related to the Nx daemon, plugin isolation, or forked processes failing to communicate. This happens because Claude Code's sandbox (Seatbelt on macOS, bubblewrap on Linux) blocks Unix socket access by default, and Nx relies on Unix sockets for inter-process communication.
+When running Nx commands inside an AI agent's sandbox, you may see errors related to the Nx daemon, plugin isolation, or forked processes failing to communicate. Agent sandboxes (Seatbelt on macOS, bubblewrap on Linux) block Unix socket access by default, and Nx relies on Unix sockets for inter-process communication.
+
+The sections below cover [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview), Codex, and GitHub Copilot CLI. Each gates sockets on a different setting, so use the one that matches your agent.
 
 ## The fix
 
@@ -106,6 +110,32 @@ writable_roots = ["/tmp/.nx", "/home/you/.nx"]
 `writable_roots` is still needed for the `~/.nx` fallback, which sits outside the areas `workspace-write` makes writable. The entries have to be absolute, since Codex does not expand `~`.
 
 Because that grant is broad, `nx configure-ai-agents` does not write it for you. If you would rather not enable it, the workarounds below need no sandbox changes.
+
+<!-- vale Nx.Headings = NO -->
+
+## GitHub Copilot CLI
+
+<!-- vale Nx.Headings = YES -->
+
+Copilot CLI scopes sockets by path, like Claude Code. Add the Nx socket roots to `sandbox.userPolicy.filesystem.readwritePaths`:
+
+```json
+// ~/.copilot/settings.json
+{
+  "sandbox": {
+    "enabled": true,
+    "userPolicy": {
+      "filesystem": {
+        "readwritePaths": ["/tmp/.nx", "/home/you/.nx"]
+      }
+    }
+  }
+}
+```
+
+Two things to know. Copilot CLI reads its sandbox policy **only from the user-level `~/.copilot/settings.json`**, so a copy committed to the workspace has no effect and `nx configure-ai-agents` cannot write it for you. And command sandboxing is an experimental feature that is off by default, so these settings do nothing until you enable it with `--experimental` and `/sandbox enable`.
+
+The network settings do not help here. `userPolicy.network.allowLocalNetwork` leaves the socket refused, because Copilot gates socket creation on the filesystem policy rather than the network one.
 
 ## Alternative workarounds
 

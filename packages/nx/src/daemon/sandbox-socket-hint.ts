@@ -89,12 +89,19 @@ export function sandboxSocketHint({
  *   setting. `writable_roots` alone does not unblock a bind. That grant is a
  *   broad one, so it is offered rather than recommended, next to the remedies
  *   below that need no sandbox change at all.
+ * - Copilot CLI gates on the path like Claude, but reads its sandbox policy
+ *   only from the user-level settings file, so this is the one agent
+ *   `configure-ai-agents` cannot configure by writing into the workspace.
  */
 function sandboxSpecificRemedy(roots: string): string[] {
   switch (detectAiAgent()) {
     case 'claude':
       return [
         `  - Add ${roots} to \`sandbox.network.allowUnixSockets\` and to \`sandbox.filesystem.allowRead\`/\`allowWrite\` in your Claude Code settings. The scoped entry covers creating sockets, not only connecting to them.`,
+      ];
+    case 'copilot-cli':
+      return [
+        `  - Add ${roots} to \`sandbox.userPolicy.filesystem.readwritePaths\` in \`~/.copilot/settings.json\`. Copilot CLI reads sandbox policy only from that user-level file, so a copy committed to the workspace has no effect.`,
       ];
     case 'codex':
       return [

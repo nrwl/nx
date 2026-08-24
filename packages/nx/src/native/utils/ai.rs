@@ -103,6 +103,23 @@ fn is_codex_ai() -> bool {
     }
 }
 
+/// Detects if the current process is being run by the GitHub Copilot CLI.
+///
+/// `COPILOT_CLI=1` is set by the CLI in the shells it spawns (verified against
+/// 1.0.80, alongside `COPILOT_CLI_BINARY_VERSION` and
+/// `COPILOT_AGENT_SESSION_ID`). Distinct from `is_vscode_ai`, which reports the
+/// VS Code extension's agent mode: the two are different products with
+/// different sandbox configuration, so they must not collapse to one name.
+fn is_copilot_cli_ai() -> bool {
+    match env::var("COPILOT_CLI") {
+        Ok(_) => {
+            debug!("Copilot CLI detected via COPILOT_CLI environment variable");
+            true
+        }
+        Err(_) => false,
+    }
+}
+
 /// Detects which AI agent is running and returns its name.
 /// Returns None if no agent is detected or when running inside the Nx daemon.
 /// Filtering against supported agents should be done on the TypeScript side.
@@ -122,6 +139,8 @@ pub fn detect_ai_agent() -> Option<String> {
         Some("codex".to_string())
     } else if is_gemini_ai() {
         Some("gemini".to_string())
+    } else if is_copilot_cli_ai() {
+        Some("copilot-cli".to_string())
     } else if is_vscode_ai() {
         Some("copilot".to_string())
     } else if is_replit_ai() {
@@ -147,6 +166,7 @@ pub fn is_ai_agent() -> bool {
         || is_opencode_ai()
         || is_codex_ai()
         || is_gemini_ai()
+        || is_copilot_cli_ai()
         || is_vscode_ai();
 
     if is_ai {
@@ -373,6 +393,41 @@ mod tests {
         );
         unsafe {
             env::remove_var("GEMINI_CLI");
+        }
+
+        // Test Copilot CLI detection
+        unsafe {
+            env::set_var("COPILOT_CLI", "1");
+        }
+        assert!(
+            is_copilot_cli_ai(),
+            "Should detect Copilot CLI with COPILOT_CLI"
+        );
+        assert!(is_ai_agent(), "Main function should detect Copilot CLI");
+        assert_eq!(
+            detect_ai_agent(),
+            Some("copilot-cli".to_string()),
+            "detect_ai_agent should return copilot-cli for the Copilot CLI"
+        );
+        unsafe {
+            env::remove_var("COPILOT_CLI");
+        }
+
+        // The CLI and the VS Code extension are different products with
+        // different sandbox configuration, so the CLI must win rather than
+        // being reported as the extension when both are somehow present.
+        unsafe {
+            env::set_var("COPILOT_CLI", "1");
+            env::set_var("VSCODE_AGENT", "1");
+        }
+        assert_eq!(
+            detect_ai_agent(),
+            Some("copilot-cli".to_string()),
+            "the CLI should not be reported as the VS Code extension"
+        );
+        unsafe {
+            env::remove_var("COPILOT_CLI");
+            env::remove_var("VSCODE_AGENT");
         }
 
         // Test VS Code AI detection
