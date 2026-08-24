@@ -1,16 +1,25 @@
 use crate::native::utils::command::create_command;
+use dashmap::DashMap;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
-static MAIN_WORKTREE_ROOT: OnceLock<Option<String>> = OnceLock::new();
+/// Keyed by `workspace_root`: one process can be asked about several roots —
+/// generators run against a virtual tree, and specs resolve real and synthetic
+/// paths in turn — so a single cached answer would be handed out for all of them.
+static MAIN_WORKTREE_ROOTS: OnceLock<DashMap<String, Option<String>>> = OnceLock::new();
 
 /// If `workspace_root` is inside a git worktree, returns the main repo root.
 /// Returns `None` when already in the main repo (or not in a git repo at all).
 #[napi]
 pub fn get_main_worktree_root(workspace_root: String) -> anyhow::Result<Option<String>> {
-    Ok(MAIN_WORKTREE_ROOT
-        .get_or_init(|| resolve_main_worktree_root(&workspace_root).unwrap_or(None))
-        .clone())
+    let cache = MAIN_WORKTREE_ROOTS.get_or_init(DashMap::new);
+    if let Some(cached) = cache.get(&workspace_root) {
+        return Ok(cached.clone());
+    }
+
+    let resolved = resolve_main_worktree_root(&workspace_root).unwrap_or(None);
+    cache.insert(workspace_root, resolved.clone());
+    Ok(resolved)
 }
 
 fn resolve_main_worktree_root(workspace_root: &str) -> anyhow::Result<Option<String>> {
@@ -123,6 +132,44 @@ mod tests {
         assert!(
             !resolved.starts_with(r"\\?\"),
             "expected a plain path, got verbatim: {resolved}"
+        );
+    }
+
+    // The cache is process-global, so an unkeyed one hands the first caller's
+    // answer to every later root. Exercised through the public entry point:
+    // the tests above call `resolve_main_worktree_root` and so never touch it.
+    #[test]
+    fn caches_each_workspace_root_separately() {
+        let tmp = TempDir::new().unwrap();
+        let main = tmp.path().join("main");
+        init_repo(&main);
+
+        let worktree = tmp.path().join("wt");
+        git(&main, &["worktree", "add", worktree.to_str().unwrap()]);
+
+        // Main repo first, so a stale `None` would be what the worktree sees.
+        assert_eq!(
+            get_main_worktree_root(main.to_str().unwrap().to_string()).unwrap(),
+            None
+        );
+
+        let from_worktree = get_main_worktree_root(worktree.to_str().unwrap().to_string())
+            .unwrap()
+            .expect("a linked worktree should resolve to the main repo root");
+        assert_eq!(
+            PathBuf::from(&from_worktree),
+            dunce::canonicalize(&main).unwrap()
+        );
+
+        // Repeat both, now served from the cache, to pin that the entries did
+        // not overwrite one another.
+        assert_eq!(
+            get_main_worktree_root(main.to_str().unwrap().to_string()).unwrap(),
+            None
+        );
+        assert_eq!(
+            get_main_worktree_root(worktree.to_str().unwrap().to_string()).unwrap(),
+            Some(from_worktree)
         );
     }
 }
