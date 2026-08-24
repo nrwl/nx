@@ -9,4 +9,5 @@ export {
   releaseVersion,
   VersionActions,
   AfterAllProjectsVersioned,
+  ResolveVersionForDependency,
 } from '../src/command-line/release';

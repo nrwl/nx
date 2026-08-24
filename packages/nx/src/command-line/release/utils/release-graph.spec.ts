@@ -1237,4 +1237,226 @@ describe('ReleaseGraph', () => {
       `);
     });
   });
+
+  describe('resolving current versions for dependencies outside the release set', () => {
+    it('uses the dependency project configuration and caches the result', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+            __default__ ({ "projectsRelationship": "independent" }):
+              - projectA@1.0.0 [js]
+                -> depends on projectB
+              - projectB@2.5.0 [js]
+          `,
+          {
+            version: {
+              currentVersionResolver: 'disk',
+            },
+          },
+          mockResolveCurrentVersion,
+          { projects: ['projectA'] }
+        );
+      const releaseGraph = await createReleaseGraph({
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters,
+        firstRelease: false,
+        preid: undefined,
+        verbose: false,
+      });
+      mockResolveCurrentVersion.mockClear();
+
+      await expect(
+        releaseGraph.resolveCurrentVersionForDependency(
+          tree,
+          projectGraph,
+          'projectB',
+          ''
+        )
+      ).resolves.toBe('2.5.0');
+      await expect(
+        releaseGraph.resolveCurrentVersionForDependency(
+          tree,
+          projectGraph,
+          'projectB',
+          ''
+        )
+      ).resolves.toBe('2.5.0');
+      expect(mockResolveCurrentVersion).toHaveBeenCalledTimes(1);
+      expect(mockResolveCurrentVersion.mock.calls[0][1].name).toBe('projectB');
+    });
+
+    it('performs git-tag resolution for a filtered-out dependency project', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+            __default__ ({ "projectsRelationship": "independent" }):
+              - projectA@1.0.0 [js]
+                -> depends on projectB
+              - projectB@0.0.0 [js]
+                -> release config overrides { "version": { "currentVersionResolver": "git-tag" } }
+          `,
+          {
+            version: {
+              currentVersionResolver: 'disk',
+            },
+          },
+          mockResolveCurrentVersion,
+          { projects: ['projectA'] }
+        );
+      const releaseGraph = await createReleaseGraph({
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters,
+        firstRelease: false,
+        preid: undefined,
+        verbose: false,
+      });
+      jest
+        .spyOn(releaseGraph, 'resolveRepositoryTags')
+        .mockResolvedValue(['projectB@4.2.0']);
+      const { resolveCurrentVersion: actualResolveCurrentVersion } =
+        jest.requireActual('../version/resolve-current-version');
+      mockResolveCurrentVersion.mockImplementation(actualResolveCurrentVersion);
+
+      await expect(
+        releaseGraph.resolveCurrentVersionForDependency(
+          tree,
+          projectGraph,
+          'projectB',
+          ''
+        )
+      ).resolves.toBe('4.2.0');
+      expect(releaseGraph.cachedLatestMatchingGitTag.get('projectB')).toEqual({
+        tag: 'projectB@4.2.0',
+        extractedVersion: '4.2.0',
+      });
+    });
+
+    it('rejects when the dependency resolver cannot provide a concrete version', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+            __default__ ({ "projectsRelationship": "independent" }):
+              - projectA@1.0.0 [js]
+                -> depends on projectB
+              - projectB@2.5.0 [js]
+                -> release config overrides { "version": { "currentVersionResolver": "none" } }
+          `,
+          {
+            version: {
+              currentVersionResolver: 'disk',
+            },
+          },
+          mockResolveCurrentVersion,
+          { projects: ['projectA'] }
+        );
+      const releaseGraph = await createReleaseGraph({
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters,
+        firstRelease: false,
+        preid: undefined,
+        verbose: false,
+      });
+      mockResolveCurrentVersion.mockResolvedValueOnce(null);
+
+      await expect(
+        releaseGraph.resolveCurrentVersionForDependency(
+          tree,
+          projectGraph,
+          'projectB',
+          ''
+        )
+      ).rejects.toThrow(
+        'its "currentVersionResolver" is set to "none" and did not resolve a version'
+      );
+    });
+
+    it('rejects when the dependency is not configured for Nx Release', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+            __default__ ({ "projectsRelationship": "independent" }):
+              - projectA@1.0.0 [js]
+          `,
+          {
+            version: {
+              currentVersionResolver: 'disk',
+            },
+          },
+          mockResolveCurrentVersion
+        );
+      const releaseGraph = await createReleaseGraph({
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters,
+        firstRelease: false,
+        preid: undefined,
+        verbose: false,
+      });
+
+      await expect(
+        releaseGraph.resolveCurrentVersionForDependency(
+          tree,
+          projectGraph,
+          'external-project',
+          ''
+        )
+      ).rejects.toThrow(
+        'dependency project "external-project" because it is not configured for Nx Release'
+      );
+    });
+
+    it('retains the underlying resolver failure in the actionable error', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+            __default__ ({ "projectsRelationship": "independent" }):
+              - projectA@1.0.0 [js]
+                -> depends on projectB
+              - projectB@2.5.0 [js]
+          `,
+          {
+            version: {
+              currentVersionResolver: 'disk',
+            },
+          },
+          mockResolveCurrentVersion,
+          { projects: ['projectA'] }
+        );
+      const releaseGraph = await createReleaseGraph({
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters,
+        firstRelease: false,
+        preid: undefined,
+        verbose: false,
+      });
+      mockResolveCurrentVersion.mockRejectedValueOnce(
+        new Error('registry is unavailable')
+      );
+
+      await expect(
+        releaseGraph.resolveCurrentVersionForDependency(
+          tree,
+          projectGraph,
+          'projectB',
+          ''
+        )
+      ).rejects.toThrow(
+        'Cannot resolve a concrete current version for dependency project "projectB". registry is unavailable'
+      );
+    });
+  });
 });
