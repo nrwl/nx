@@ -49,7 +49,11 @@ export function addPnpmDeployOutputCacheInputs(
         ref.targetName,
         { [selectedKey]: entries },
         ref.matcherExecutor,
-        { projectName: ref.projectName, projectNode: ref.projectNode }
+        {
+          projectName: ref.projectName,
+          projectNode: ref.projectNode,
+          sourcePlugin: ref.sourcePlugin,
+        }
       )
     : null;
   const effective = mergeTargetConfigurations(ref.target, defaults ?? {});
@@ -68,6 +72,60 @@ export function addPnpmDeployOutputCacheInputs(
   }
   appendInputs(ref.target, missing);
   return 'target';
+}
+
+/**
+ * Variant for a plugin-inferred target, whose generated `inputs` already carry
+ * the settings sources: a repair is only needed when an overlay (a
+ * project-level target entry, exact or glob key, or a matching
+ * `targetDefaults` entry) supplies a replacing `inputs` array that discards
+ * them. The inferred layer is modeled as an array of exactly the settings
+ * inputs: enough for the missing check, and it makes an overlay-less target
+ * come back as nothing missing, so the fallback that would narrow the
+ * plugin's richer array to `DEFAULT_INPUTS` can never be reached: with no
+ * replacing supplier there is nothing to mutate.
+ */
+export function addPnpmDeployOutputCacheInputsToInferredTargetOverlay(
+  ref: MatchedTargetRef,
+  targetDefaults: TargetDefaults | undefined
+): 'target' | 'defaults' | null {
+  const selectedKey = targetDefaults
+    ? selectDefaultsKey(ref, targetDefaults, ref.matcherExecutor)
+    : null;
+  const entries = compatibleDefaultsEntries(ref, selectedKey, targetDefaults);
+  const defaults = entries.length
+    ? readTargetDefaultsForTarget(
+        ref.targetName,
+        { [selectedKey]: entries },
+        ref.matcherExecutor,
+        {
+          projectName: ref.projectName,
+          projectNode: ref.projectNode,
+          sourcePlugin: ref.sourcePlugin,
+        }
+      )
+    : null;
+  const inferredLayer: TargetConfiguration = {
+    inputs: [...PNPM_INSTALL_SETTINGS_INPUTS],
+  };
+  const effective = mergeTargetConfigurations(
+    ref.target,
+    mergeTargetConfigurations(defaults ?? {}, inferredLayer)
+  );
+  const missing = missingSettingsInputs(effective.inputs);
+  if (missing.length === 0) {
+    return null;
+  }
+  if (ref.target.inputs !== undefined) {
+    appendInputs(ref.target, missing);
+    return 'target';
+  }
+  const supplier = lastMatchingInputsSupplier(ref, selectedKey, entries);
+  if (supplier) {
+    appendInputs(supplier, missing);
+    return 'defaults';
+  }
+  return null;
 }
 
 /**

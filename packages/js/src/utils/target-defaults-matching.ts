@@ -14,9 +14,14 @@ export interface DefaultsMatchContext {
   targetName: string;
   projectName: string;
   projectNode: ProjectGraphProjectNode;
-  // the executor as the runtime matcher sees it: the target's own, undefined
-  // when a matching default supplies it (defaults are read pre-merge)
+  // the executor as the runtime matcher sees it: the target's own (undefined
+  // when a matching default supplies it; defaults are read pre-merge), or the
+  // effective nx:run-commands identity for a plugin-inferred command target
   matcherExecutor: string | undefined;
+  // the plugin that originated the target, for `filter.plugin` entries; the
+  // runtime resolves it from the specified layer's identity attribution, so
+  // it is only known for plugin-inferred targets
+  sourcePlugin?: string;
 }
 
 export interface MatchedTargetRef extends DefaultsMatchContext {
@@ -73,18 +78,20 @@ export function lastMatchingInputsSupplier(
   selectedKey: string,
   entries: TargetDefaultArrayEntry[]
 ): TargetDefaultArrayEntry | undefined {
-  return [...entries]
-    .reverse()
-    .find(
-      (entry) =>
-        entry.inputs !== undefined &&
-        readTargetDefaultsForTarget(
-          ref.targetName,
-          { [selectedKey]: [entry] },
-          ref.matcherExecutor,
-          { projectName: ref.projectName, projectNode: ref.projectNode }
-        ) !== null
-    );
+  return [...entries].reverse().find(
+    (entry) =>
+      entry.inputs !== undefined &&
+      readTargetDefaultsForTarget(
+        ref.targetName,
+        { [selectedKey]: [entry] },
+        ref.matcherExecutor,
+        {
+          projectName: ref.projectName,
+          projectNode: ref.projectNode,
+          sourcePlugin: ref.sourcePlugin,
+        }
+      ) !== null
+  );
 }
 
 /** The plain filesets an inputs array names, for a containment check. */
@@ -162,7 +169,11 @@ export function selectDefaultsKey(
       ref.targetName,
       { [key]: targetDefaults[key] },
       ref.matcherExecutor,
-      { projectName: ref.projectName, projectNode: ref.projectNode }
+      {
+        projectName: ref.projectName,
+        projectNode: ref.projectNode,
+        sourcePlugin: ref.sourcePlugin,
+      }
     ) !== null;
   if (
     executorKeyCandidate &&

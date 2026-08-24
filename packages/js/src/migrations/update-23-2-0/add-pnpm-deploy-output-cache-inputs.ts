@@ -1,19 +1,28 @@
 import {
   formatFiles,
   getProjects,
+  globAsync,
   readNxJson,
   updateNxJson,
   updateProjectConfiguration,
+  type NxJsonConfiguration,
   type ProjectConfiguration,
   type ProjectGraphProjectNode,
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
 import {
+  findMatchingConfigFiles,
+  findMatchingTargetNames,
   mergeTargetConfigurations,
   readTargetDefaultsForTarget,
+  resolveCommandSyntacticSugar,
 } from '@nx/devkit/internal';
-import { addPnpmDeployOutputCacheInputs } from '../../utils/pnpm-deploy-output-cache-inputs';
+import { dirname } from 'path';
+import {
+  addPnpmDeployOutputCacheInputs,
+  addPnpmDeployOutputCacheInputsToInferredTargetOverlay,
+} from '../../utils/pnpm-deploy-output-cache-inputs';
 import {
   compatibleDefaultsEntries,
   resolveDefaultsExecutor,
@@ -40,6 +49,24 @@ const DEPLOY_OUTPUT_EXECUTORS: Record<
   '@nx/js:swc': 'generateLockfile',
 };
 
+// The config-file plugins whose inferred build target can emit the deploy
+// output (NxAppWebpackPlugin/NxAppRspackPlugin with generatePackageJson).
+// The globs mirror each plugin's own createNodes pattern; the commands are
+// what each plugin sets on the build target it creates.
+const INFERRED_DEPLOY_PLUGINS: Record<
+  string,
+  { configGlob: string; command: string }
+> = {
+  '@nx/webpack/plugin': {
+    configGlob: '**/webpack.config.{js,ts,mjs,cjs}',
+    command: 'webpack-cli build',
+  },
+  '@nx/rspack/plugin': {
+    configGlob: '**/rspack.config.{js,ts,mjs,mts,cjs,cts}',
+    command: 'rspack build',
+  },
+};
+
 /**
  * Adds the workspace-root pnpm install settings sources to the `inputs` of
  * build targets that emit the pruned pnpm deploy output. The build approvals
@@ -47,7 +74,10 @@ const DEPLOY_OUTPUT_EXECUTORS: Record<
  * without these a revoked approval leaves the task hash unchanged and a cached
  * run replays an output that still grants it. Inferred targets are covered by
  * the `@nx/webpack` and `@nx/rspack` plugins themselves; this migration covers
- * the explicitly configured executor targets.
+ * the explicitly configured executor targets, plus overlays of inferred
+ * targets (a project-level entry, under the exact name or a glob-pattern key
+ * matching it, or a matching `targetDefaults` entry) whose replacing `inputs`
+ * array discards the plugin-generated one.
  */
 export default async function update(tree: Tree) {
   // The deploy output's install settings are pnpm-specific; other package
@@ -126,6 +156,27 @@ export default async function update(tree: Tree) {
     }
   }
 
+  // Overlays of plugin-inferred build targets carry no executor, so the loop
+  // above cannot see them, yet a replacing `inputs` array in one discards the
+  // settings inputs the plugin generates. The plugin adds those inputs without
+  // knowing whether the config enables generatePackageJson (that lives inside
+  // the user's config file), so the overlay repair is equally unconditional.
+  for (const ref of await inferredDeployTargetOverlayRefs(
+    tree,
+    nxJson,
+    projects
+  )) {
+    const changed = addPnpmDeployOutputCacheInputsToInferredTargetOverlay(
+      ref,
+      targetDefaults
+    );
+    if (changed === 'target') {
+      changedProjects.add(ref.projectName);
+    } else if (changed === 'defaults') {
+      defaultsChanged = true;
+    }
+  }
+
   for (const projectName of changedProjects) {
     updateProjectConfiguration(tree, projectName, projects.get(projectName));
   }
@@ -134,6 +185,142 @@ export default async function update(tree: Tree) {
   }
 
   await formatFiles(tree);
+}
+
+/**
+ * One ref per (project, inferred build target) the registered `@nx/webpack` or
+ * `@nx/rspack` config-file plugins would create, resolved the way the plugins
+ * do: their createNodes glob filtered by each registration's include/exclude,
+ * the config file's directory as the project root, and the registration's
+ * `buildTargetName` option. The overlaying project-level entry may sit under
+ * the exact target name or a glob-pattern key matching it; one that replaces
+ * what the target runs disqualifies the target instead.
+ */
+async function inferredDeployTargetOverlayRefs(
+  tree: Tree,
+  nxJson: NxJsonConfiguration | null,
+  projects: Map<string, ProjectConfiguration>
+): Promise<MatchedTargetRef[]> {
+  const rootToProject = new Map<string, string>();
+  for (const [projectName, project] of projects) {
+    rootToProject.set(project.root, projectName);
+  }
+  const refs: MatchedTargetRef[] = [];
+  for (const registration of nxJson?.plugins ?? []) {
+    const pluginName =
+      typeof registration === 'string' ? registration : registration.plugin;
+    const inferredPlugin = INFERRED_DEPLOY_PLUGINS[pluginName];
+    if (!inferredPlugin) {
+      continue;
+    }
+    const options =
+      typeof registration === 'string'
+        ? undefined
+        : (registration.options as { buildTargetName?: string } | undefined);
+    const targetName = options?.buildTargetName ?? 'build';
+    const configFiles = findMatchingConfigFiles(
+      await globAsync(tree, [inferredPlugin.configGlob]),
+      typeof registration === 'string' ? undefined : registration.include,
+      typeof registration === 'string' ? undefined : registration.exclude
+    );
+    for (const configFile of configFiles) {
+      const projectName = rootToProject.get(dirname(configFile));
+      if (!projectName) {
+        continue;
+      }
+      const project = projects.get(projectName);
+      const target = inferredTargetOverlayEntry(project.targets, targetName);
+      // An entry that changes what the target runs is not an overlay; the
+      // executor loop covers the deploy executors among those.
+      if (
+        target &&
+        replacesInferredRunCommandsIdentity(
+          target,
+          inferredPlugin.command,
+          project.root
+        )
+      ) {
+        continue;
+      }
+      refs.push({
+        targetName,
+        projectName,
+        projectNode: {
+          name: projectName,
+          type: 'lib',
+          data: { root: project.root, tags: project.tags },
+        },
+        // the runtime matcher sees the plugin target's effective identity:
+        // its `command` payload resolves to nx:run-commands
+        matcherExecutor: 'nx:run-commands',
+        // the runtime drops the plugin attribution as soon as the project
+        // entry authors an executor or command, restated or not, so a
+        // plugin-filtered defaults entry no longer applies to the target
+        sourcePlugin:
+          target?.executor !== undefined || target?.command !== undefined
+            ? undefined
+            : pluginName,
+        target: target ?? {},
+      });
+    }
+  }
+  return refs;
+}
+
+/**
+ * The project-level entry that overlays the inferred `targetName`. Its key is
+ * the exact name or a glob pattern the name matches; the inferred target
+ * exists before any project-level entry merges, so a matching glob key
+ * overlays it too. When several keys match, each entry merges against the
+ * inferred target independently and the last write wins, so only the last
+ * one applies. A glob key matching an earlier same-file sibling never
+ * surfaces here: the project read already collapsed it onto that sibling and
+ * dropped the key.
+ */
+function inferredTargetOverlayEntry(
+  targets: Record<string, TargetConfiguration> | undefined,
+  targetName: string
+): TargetConfiguration | undefined {
+  const matching = Object.entries(targets ?? {}).filter(
+    ([key]) =>
+      key === targetName ||
+      findMatchingTargetNames(key, [targetName]).length > 0
+  );
+  return matching[matching.length - 1]?.[1];
+}
+
+/**
+ * Whether the entry changes what the inferred run-commands target runs when
+ * merged, resolved with nx's own merge so `"..."` placement and restated
+ * identities land the way the runtime lands them: a merged executor other
+ * than nx:run-commands, an effective command differing from the plugin's, or
+ * a `command`/`commands` clash the run-commands schema rejects. An entry
+ * restating the identity the plugin infers is still an overlay.
+ */
+function replacesInferredRunCommandsIdentity(
+  target: TargetConfiguration,
+  inferredCommand: string,
+  projectRoot: string
+): boolean {
+  // `command` alongside `executor` fails graph construction outright;
+  // there is nothing running to repair.
+  if (target.command && target.executor) {
+    return true;
+  }
+  const merged = mergeTargetConfigurations(
+    resolveCommandSyntacticSugar(target, projectRoot),
+    { executor: 'nx:run-commands', options: { command: inferredCommand } }
+  );
+  if (merged.executor !== 'nx:run-commands') {
+    return true;
+  }
+  // Both present fails the run-commands schema's oneOf; the target cannot run.
+  if (merged.options?.command && merged.options?.commands) {
+    return true;
+  }
+  const command =
+    merged.options?.command ?? merged.options?.commands?.join(' && ');
+  return command !== inferredCommand;
 }
 
 /**

@@ -22,15 +22,14 @@ const SETTINGS_JSON_INPUT = {
 const PNPM_MAJOR_PROBE = {
   runtime: `node -e "try{console.log('pnpm major '+require('child_process').execSync('pnpm --version',{stdio:['ignore','pipe','ignore']}).toString().trim().split('.')[0])}catch{console.log('pnpm major unavailable')}"`,
 };
-// What the migration writes for a target that declared no `inputs`: nx's own
-// default, spelled out, plus the settings sources.
-const DEPLOY_INPUTS = [
-  'default',
-  '^default',
+const SETTINGS_INPUTS = [
   '{workspaceRoot}/pnpm-workspace.yaml',
   SETTINGS_JSON_INPUT,
   PNPM_MAJOR_PROBE,
 ];
+// What the migration writes for a target that declared no `inputs`: nx's own
+// default, spelled out, plus the settings sources.
+const DEPLOY_INPUTS = ['default', '^default', ...SETTINGS_INPUTS];
 
 describe('add-pnpm-deploy-output-cache-inputs migration', () => {
   let tree: Tree;
@@ -604,6 +603,49 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
     );
   });
 
+  it('leaves a target alone when a later glob entry replaced its executor entry', async () => {
+    // same-file entries merge against the lower layers independently and the
+    // last write wins, so the glob entry replaced the whole executor entry:
+    // the target no longer runs the deploy executor
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      targets: {
+        build: {
+          executor: '@nx/webpack:webpack',
+          options: { generatePackageJson: true },
+        },
+        'build*': { inputs: ['{projectRoot}/**/*'] },
+      },
+    });
+
+    await update(tree);
+
+    expect(readProjectConfiguration(tree, 'app1').targets.build).toEqual({
+      inputs: ['{projectRoot}/**/*'],
+    });
+  });
+
+  it('treats a glob entry before the deploy target as a separate target', async () => {
+    // at merge time the glob key precedes the entry creating `build`, so it
+    // becomes a literal target of its own and overlays nothing
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      targets: {
+        'build*': { inputs: ['{projectRoot}/**/*'] },
+        build: {
+          executor: '@nx/webpack:webpack',
+          options: { generatePackageJson: true },
+        },
+      },
+    });
+
+    await update(tree);
+
+    const targets = readProjectConfiguration(tree, 'app1').targets;
+    expect(targets['build*'].inputs).toEqual(['{projectRoot}/**/*']);
+    expect(targets.build.inputs).toEqual(DEPLOY_INPUTS);
+  });
+
   it('is idempotent', async () => {
     addProjectConfiguration(tree, 'app1', {
       root: 'apps/app1',
@@ -621,5 +663,517 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
     expect(readProjectConfiguration(tree, 'app1').targets.build.inputs).toEqual(
       DEPLOY_INPUTS
     );
+  });
+
+  describe('inferred webpack/rspack target overlays', () => {
+    function registerPlugin(
+      plugin:
+        | string
+        | {
+            plugin: string;
+            options?: { buildTargetName?: string };
+            include?: string[];
+            exclude?: string[];
+          }
+    ): void {
+      const nxJson = readNxJson(tree);
+      nxJson.plugins = [...(nxJson.plugins ?? []), plugin];
+      updateNxJson(tree, nxJson);
+    }
+
+    it('appends to a project-level overlay that replaces the inferred inputs', async () => {
+      registerPlugin('@nx/webpack/plugin');
+      tree.write('apps/app1/webpack.config.js', '');
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        targets: {
+          build: { inputs: ['production', '^production'] },
+        },
+      });
+
+      await update(tree);
+
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.inputs
+      ).toEqual(['production', '^production', ...SETTINGS_INPUTS]);
+    });
+
+    it('appends to a glob-key overlay that replaces the inferred inputs', async () => {
+      registerPlugin('@nx/webpack/plugin');
+      tree.write('apps/app1/webpack.config.js', '');
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        targets: {
+          'build*': { inputs: ['production', '^production'] },
+        },
+      });
+
+      await update(tree);
+
+      expect(
+        readProjectConfiguration(tree, 'app1').targets['build*'].inputs
+      ).toEqual(['production', '^production', ...SETTINGS_INPUTS]);
+    });
+
+    it('repairs the inputs a later glob entry merged over the exact one', async () => {
+      registerPlugin('@nx/webpack/plugin');
+      tree.write('apps/app1/webpack.config.js', '');
+      // the project read collapses a glob key onto an earlier same-file
+      // sibling (last write wins), so the migration sees one entry with the
+      // glob entry's content
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        targets: {
+          build: { inputs: ['production', '^production'] },
+          'build*': { inputs: ['{projectRoot}/**/*'] },
+        },
+      });
+
+      await update(tree);
+
+      const targets = readProjectConfiguration(tree, 'app1').targets;
+      expect(targets.build.inputs).toEqual([
+        '{projectRoot}/**/*',
+        ...SETTINGS_INPUTS,
+      ]);
+      expect(targets['build*']).toBeUndefined();
+    });
+
+    it('appends to the exact entry merging after a glob entry', async () => {
+      registerPlugin('@nx/webpack/plugin');
+      tree.write('apps/app1/webpack.config.js', '');
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        targets: {
+          'build*': { inputs: ['{projectRoot}/**/*'] },
+          // merges last, so its array is the effective one
+          build: { inputs: ['production', '^production'] },
+        },
+      });
+
+      await update(tree);
+
+      const targets = readProjectConfiguration(tree, 'app1').targets;
+      expect(targets.build.inputs).toEqual([
+        'production',
+        '^production',
+        ...SETTINGS_INPUTS,
+      ]);
+      expect(targets['build*'].inputs).toEqual(['{projectRoot}/**/*']);
+    });
+
+    it('ignores a glob entry a later exact entry overrides', async () => {
+      registerPlugin('@nx/webpack/plugin');
+      tree.write('apps/app1/webpack.config.js', '');
+      // only the last matching entry applies, and it declares no inputs, so
+      // the plugin-generated inputs stay intact
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        targets: {
+          'build*': { inputs: ['{projectRoot}/**/*'] },
+          build: { outputs: ['{projectRoot}/dist'] },
+        },
+      });
+
+      await update(tree);
+
+      const targets = readProjectConfiguration(tree, 'app1').targets;
+      expect(targets['build*'].inputs).toEqual(['{projectRoot}/**/*']);
+      expect(targets.build.inputs).toBeUndefined();
+    });
+
+    it('leaves an overlay that replaces the run-commands payload alone', async () => {
+      registerPlugin('@nx/webpack/plugin');
+      tree.write('apps/app1/webpack.config.js', '');
+      tree.write('apps/app2/webpack.config.js', '');
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        targets: {
+          build: {
+            options: { command: 'echo custom' },
+            inputs: ['production', '^production'],
+          },
+        },
+      });
+      addProjectConfiguration(tree, 'app2', {
+        root: 'apps/app2',
+        targets: {
+          build: {
+            options: { commands: ['echo one', 'echo two'] },
+            inputs: ['production', '^production'],
+          },
+        },
+      });
+
+      await update(tree);
+
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.inputs
+      ).toEqual(['production', '^production']);
+      expect(
+        readProjectConfiguration(tree, 'app2').targets.build.inputs
+      ).toEqual(['production', '^production']);
+    });
+
+    it('appends to an overlay restating the inferred command', async () => {
+      registerPlugin('@nx/webpack/plugin');
+      tree.write('apps/app1/webpack.config.js', '');
+      tree.write('apps/app2/webpack.config.js', '');
+      // the same command the plugin infers changes nothing when merged, so
+      // the inferred build still runs with the replacing inputs
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        targets: {
+          build: {
+            options: { command: 'webpack-cli build' },
+            inputs: ['production', '^production'],
+          },
+        },
+      });
+      addProjectConfiguration(tree, 'app2', {
+        root: 'apps/app2',
+        targets: {
+          build: {
+            command: 'webpack-cli build',
+            inputs: ['production', '^production'],
+          },
+        },
+      });
+
+      await update(tree);
+
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.inputs
+      ).toEqual(['production', '^production', ...SETTINGS_INPUTS]);
+      expect(
+        readProjectConfiguration(tree, 'app2').targets.build.inputs
+      ).toEqual(['production', '^production', ...SETTINGS_INPUTS]);
+    });
+
+    it('appends to an overlay restating the run-commands executor', async () => {
+      registerPlugin('@nx/webpack/plugin');
+      tree.write('apps/app1/webpack.config.js', '');
+      // no command of its own, so the inferred one survives the merge
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            inputs: ['production', '^production'],
+          },
+        },
+      });
+
+      await update(tree);
+
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.inputs
+      ).toEqual(['production', '^production', ...SETTINGS_INPUTS]);
+    });
+
+    it('appends when the inferred command wins a differing one before a spread', async () => {
+      registerPlugin('@nx/webpack/plugin');
+      tree.write('apps/app1/webpack.config.js', '');
+      // keys before '...' lose to the spread's expansion, so the inferred
+      // command survives and the build still runs
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        targets: {
+          build: {
+            options: { command: 'echo custom', '...': true },
+            inputs: ['production', '^production'],
+          },
+        },
+      });
+
+      await update(tree);
+
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.inputs
+      ).toEqual(['production', '^production', ...SETTINGS_INPUTS]);
+    });
+
+    it('leaves an overlay whose command after a spread replaces the inferred one alone', async () => {
+      registerPlugin('@nx/webpack/plugin');
+      tree.write('apps/app1/webpack.config.js', '');
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        targets: {
+          build: {
+            options: { '...': true, command: 'echo custom' },
+            inputs: ['production', '^production'],
+          },
+        },
+      });
+
+      await update(tree);
+
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.inputs
+      ).toEqual(['production', '^production']);
+    });
+
+    it('appends to the targetDefaults entry replacing the inferred inputs', async () => {
+      registerPlugin('@nx/webpack/plugin');
+      tree.write('apps/app1/webpack.config.js', '');
+      addProjectConfiguration(tree, 'app1', { root: 'apps/app1' });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        build: { inputs: ['production', '^production'] },
+      };
+      updateNxJson(tree, nxJson);
+
+      await update(tree);
+
+      expect(readNxJson(tree).targetDefaults.build.inputs).toEqual([
+        'production',
+        '^production',
+        ...SETTINGS_INPUTS,
+      ]);
+      expect(
+        readProjectConfiguration(tree, 'app1').targets?.build
+      ).toBeUndefined();
+    });
+
+    it('leaves an inferred target without an overlay alone', async () => {
+      registerPlugin('@nx/webpack/plugin');
+      tree.write('apps/app1/webpack.config.js', '');
+      addProjectConfiguration(tree, 'app1', { root: 'apps/app1' });
+
+      await update(tree);
+
+      expect(
+        readProjectConfiguration(tree, 'app1').targets?.build
+      ).toBeUndefined();
+      // the workspace's seeded defaults supply no inputs, so no layer is
+      // narrowed to spell out nx's default
+      expect(readNxJson(tree).targetDefaults).toEqual({
+        build: { cache: true },
+        lint: { cache: true },
+      });
+    });
+
+    it('leaves an overlay that spreads the inferred inputs alone', async () => {
+      registerPlugin('@nx/webpack/plugin');
+      tree.write('apps/app1/webpack.config.js', '');
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        targets: {
+          build: { inputs: ['...', '{projectRoot}/deploy.json'] },
+        },
+      });
+
+      await update(tree);
+
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.inputs
+      ).toEqual(['...', '{projectRoot}/deploy.json']);
+    });
+
+    it("honors the registration's exclude filter", async () => {
+      registerPlugin({
+        plugin: '@nx/webpack/plugin',
+        exclude: ['apps/app1/**'],
+      });
+      tree.write('apps/app1/webpack.config.js', '');
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        targets: {
+          build: { inputs: ['production', '^production'] },
+        },
+      });
+
+      await update(tree);
+
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.inputs
+      ).toEqual(['production', '^production']);
+    });
+
+    it("honors the registration's buildTargetName option", async () => {
+      registerPlugin({
+        plugin: '@nx/webpack/plugin',
+        options: { buildTargetName: 'bundle' },
+      });
+      tree.write('apps/app1/webpack.config.js', '');
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        targets: {
+          bundle: { inputs: ['production', '^production'] },
+          build: { inputs: ['production', '^production'] },
+        },
+      });
+
+      await update(tree);
+
+      const targets = readProjectConfiguration(tree, 'app1').targets;
+      expect(targets.bundle.inputs).toEqual([
+        'production',
+        '^production',
+        ...SETTINGS_INPUTS,
+      ]);
+      expect(targets.build.inputs).toEqual(['production', '^production']);
+    });
+
+    it('skips an overlay that replaces the target identity', async () => {
+      registerPlugin('@nx/webpack/plugin');
+      tree.write('apps/app1/webpack.config.js', '');
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        targets: {
+          build: {
+            executor: '@nx/angular:webpack-browser',
+            inputs: ['production', '^production'],
+          },
+        },
+      });
+
+      await update(tree);
+
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.inputs
+      ).toEqual(['production', '^production']);
+    });
+
+    it('appends to a glob targetDefaults key supplying the inherited inputs', async () => {
+      registerPlugin('@nx/webpack/plugin');
+      tree.write('apps/app1/webpack.config.js', '');
+      addProjectConfiguration(tree, 'app1', { root: 'apps/app1' });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        'build*': { inputs: ['production', '^production'] },
+      };
+      updateNxJson(tree, nxJson);
+
+      await update(tree);
+
+      expect(readNxJson(tree).targetDefaults['build*'].inputs).toEqual([
+        'production',
+        '^production',
+        ...SETTINGS_INPUTS,
+      ]);
+    });
+
+    it('matches a defaults entry filtered to the source plugin', async () => {
+      registerPlugin('@nx/webpack/plugin');
+      tree.write('apps/app1/webpack.config.js', '');
+      addProjectConfiguration(tree, 'app1', { root: 'apps/app1' });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        build: [
+          {
+            filter: { plugin: '@nx/webpack/plugin' },
+            inputs: ['production', '^production'],
+          },
+        ],
+      };
+      updateNxJson(tree, nxJson);
+
+      await update(tree);
+
+      const entries = readNxJson(tree).targetDefaults.build as any[];
+      expect(entries[0].inputs).toEqual([
+        'production',
+        '^production',
+        ...SETTINGS_INPUTS,
+      ]);
+    });
+
+    it('leaves a plugin-filtered defaults entry alone once the overlay restates the executor', async () => {
+      registerPlugin('@nx/webpack/plugin');
+      tree.write('apps/app1/webpack.config.js', '');
+      // an authored executor drops the runtime's plugin attribution, so the
+      // filtered entry never applies to this target and the plugin's own
+      // inputs stay effective
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        targets: { build: { executor: 'nx:run-commands' } },
+      });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        build: [
+          {
+            filter: { plugin: '@nx/webpack/plugin' },
+            inputs: ['production', '^production'],
+          },
+        ],
+      };
+      updateNxJson(tree, nxJson);
+
+      await update(tree);
+
+      const entries = readNxJson(tree).targetDefaults.build as any[];
+      expect(entries[0].inputs).toEqual(['production', '^production']);
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.inputs
+      ).toBeUndefined();
+    });
+
+    it('keeps the plugin attribution for an overlay restating only the options command', async () => {
+      registerPlugin('@nx/webpack/plugin');
+      tree.write('apps/app1/webpack.config.js', '');
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        targets: { build: { options: { command: 'webpack-cli build' } } },
+      });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        build: [
+          {
+            filter: { plugin: '@nx/webpack/plugin' },
+            inputs: ['production', '^production'],
+          },
+        ],
+      };
+      updateNxJson(tree, nxJson);
+
+      await update(tree);
+
+      const entries = readNxJson(tree).targetDefaults.build as any[];
+      expect(entries[0].inputs).toEqual([
+        'production',
+        '^production',
+        ...SETTINGS_INPUTS,
+      ]);
+    });
+
+    it('skips a defaults entry whose projects filter excludes the project', async () => {
+      registerPlugin('@nx/webpack/plugin');
+      tree.write('apps/app1/webpack.config.js', '');
+      addProjectConfiguration(tree, 'app1', { root: 'apps/app1' });
+      addProjectConfiguration(tree, 'other', { root: 'apps/other' });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        build: [
+          {
+            filter: { projects: ['other'] },
+            inputs: ['production', '^production'],
+          },
+        ],
+      };
+      updateNxJson(tree, nxJson);
+
+      await update(tree);
+
+      const entries = readNxJson(tree).targetDefaults.build as any[];
+      expect(entries[0].inputs).toEqual(['production', '^production']);
+    });
+
+    it('repairs an rspack-inferred overlay', async () => {
+      registerPlugin('@nx/rspack/plugin');
+      tree.write('apps/app1/rspack.config.ts', '');
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        targets: {
+          build: { inputs: ['production', '^production'] },
+        },
+      });
+
+      await update(tree);
+
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.inputs
+      ).toEqual(['production', '^production', ...SETTINGS_INPUTS]);
+    });
   });
 });
