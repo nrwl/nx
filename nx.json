@@ -374,11 +374,7 @@
       "options": {
         "testTargetName": "test"
       },
-      "include": [
-        "packages/angular-rspack-compiler/**",
-        "packages/angular-rspack/**",
-        "packages/nx/**"
-      ]
+      "include": ["packages/**/*"]
     },
     {
       "plugin": "@nx/oxlint",
