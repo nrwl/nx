@@ -381,14 +381,87 @@ describe('getProbeEnvDivergence', () => {
     ).toEqual([]);
   });
 
-  it('names NODE_TLS_REJECT_UNAUTHORIZED for an https probe', () => {
+  it('ignores TLS material for a legacy tunnel through an http proxy that no redirect can escape', () => {
+    // Playwright before 1.59.0 never verifies the origin behind an http proxy
+    // tunnel, and neither does the gate on that version, so the material can
+    // only matter where a hop can leave that tunnel.
+    const proxy = { HTTPS_PROXY: 'http://proxy.example:8080' };
+    const taskEnv = { ...proxy, NODE_EXTRA_CA_CERTS: '/certs/ca.pem' };
+    expect(getProbeEnvDivergence([httpsUrl], taskEnv, proxy, true)).toEqual([]);
+    // An http url can only redirect into the same tunnel.
+    expect(getProbeEnvDivergence([httpUrl], taskEnv, proxy, true)).toEqual([]);
+    // A bypass can send a redirect target direct, where it is verified.
+    expect(
+      getProbeEnvDivergence(
+        [httpsUrl],
+        { ...taskEnv, NO_PROXY: 'localhost' },
+        { ...proxy, NO_PROXY: 'localhost' },
+        true
+      )
+    ).toEqual(['NODE_EXTRA_CA_CERTS']);
+    // An https proxy on the http route is dialled with verification.
+    expect(
+      getProbeEnvDivergence(
+        [httpsUrl],
+        { ...taskEnv, HTTP_PROXY: 'https://proxy.example:8443' },
+        { ...proxy, HTTP_PROXY: 'https://proxy.example:8443' },
+        true
+      )
+    ).toEqual(['NODE_EXTRA_CA_CERTS']);
+    // Current versions honor the setting and verify the origin.
+    expect(getProbeEnvDivergence([httpsUrl], taskEnv, proxy)).toEqual([
+      'NODE_EXTRA_CA_CERTS',
+    ]);
+  });
+
+  it('names NODE_TLS_REJECT_UNAUTHORIZED only for the connection to an https proxy', () => {
+    // Every request sets `rejectUnauthorized` itself, which overrides the env
+    // default, so a direct origin verifies the same on both sides.
     expect(
       getProbeEnvDivergence(
         [httpsUrl],
         { NODE_TLS_REJECT_UNAUTHORIZED: '0' },
         {}
       )
+    ).toEqual([]);
+    expect(
+      getProbeEnvDivergence(
+        [httpsUrl],
+        {
+          HTTPS_PROXY: 'http://proxy.example:8080',
+          NODE_TLS_REJECT_UNAUTHORIZED: '0',
+        },
+        { HTTPS_PROXY: 'http://proxy.example:8080' }
+      )
+    ).toEqual([]);
+    const proxy = { HTTPS_PROXY: 'https://proxy.example:8443' };
+    expect(
+      getProbeEnvDivergence(
+        [httpsUrl],
+        { ...proxy, NODE_TLS_REJECT_UNAUTHORIZED: '0' },
+        proxy
+      )
     ).toEqual(['NODE_TLS_REJECT_UNAUTHORIZED']);
+    // Node reads exactly '0'; any other value is the default.
+    expect(
+      getProbeEnvDivergence(
+        [httpsUrl],
+        { ...proxy, NODE_TLS_REJECT_UNAUTHORIZED: '1' },
+        proxy
+      )
+    ).toEqual([]);
+    // An https proxy on the http route only is dialled with the request's own
+    // `rejectUnauthorized`.
+    expect(
+      getProbeEnvDivergence(
+        [httpUrl],
+        {
+          HTTP_PROXY: 'https://proxy.example:8443',
+          NODE_TLS_REJECT_UNAUTHORIZED: '0',
+        },
+        { HTTP_PROXY: 'https://proxy.example:8443' }
+      )
+    ).toEqual([]);
   });
 
   it('ignores a malformed url', () => {
@@ -416,19 +489,33 @@ describe('getProbeEnvDivergence', () => {
 });
 
 describe('taskEnvDivergesFromAmbient', () => {
-  it('is false for an env identical to process.env', () => {
-    expect(taskEnvDivergesFromAmbient({ ...process.env })).toBe(false);
+  it('is false for an env identical to the ambient snapshot', () => {
+    const ambient = { ...process.env };
+    expect(taskEnvDivergesFromAmbient({ ...ambient }, ambient)).toBe(false);
   });
 
   it('is true when a key is added, changed, or removed', () => {
-    expect(taskEnvDivergesFromAmbient({ ...process.env, NX_TEST: '1' })).toBe(
-      true
-    );
-    const withoutOne = { ...process.env };
+    const ambient = { ...process.env };
+    expect(
+      taskEnvDivergesFromAmbient({ ...ambient, NX_TEST: '1' }, ambient)
+    ).toBe(true);
+    const withoutOne = { ...ambient };
     const [firstKey] = Object.keys(withoutOne);
     if (firstKey) {
       delete withoutOne[firstKey];
-      expect(taskEnvDivergesFromAmbient(withoutOne)).toBe(true);
+      expect(taskEnvDivergesFromAmbient(withoutOne, ambient)).toBe(true);
+    }
+  });
+
+  it('compares against the given snapshot, not the live process.env', () => {
+    // A concurrent config load can be mutating the live env; a transient write
+    // there must not register as a divergence of this chain's task env.
+    const ambient = { ...process.env };
+    process.env.NX_TEST_LIVE_WRITE = 'transient';
+    try {
+      expect(taskEnvDivergesFromAmbient({ ...ambient }, ambient)).toBe(false);
+    } finally {
+      delete process.env.NX_TEST_LIVE_WRITE;
     }
   });
 });
@@ -647,6 +734,47 @@ module.exports = {};`
     await loadConfigWithProbeEnv(path, () => undefined);
 
     expect(process.env.PROXY_HOST).toBeUndefined();
+  });
+
+  it('returns an ambient snapshot free of the variables the load wrote', async () => {
+    // Task-env reconstruction after the lock releases bases on this snapshot;
+    // one taken before the restore would carry the config's writes as ambient.
+    process.env.PW_AMBIENT_TEST = 'ambient';
+    const path = writeConfig(
+      'writes-for-snapshot.cjs',
+      `process.env.NO_PROXY = 'localhost';
+process.env.PROXY_HOST = 'proxy.example';
+module.exports = {};`
+    );
+
+    try {
+      const { ambientEnv } = await loadConfigWithProbeEnv(
+        path,
+        () => undefined
+      );
+
+      expect(ambientEnv.NO_PROXY).toBeUndefined();
+      expect(ambientEnv.PROXY_HOST).toBeUndefined();
+      expect(ambientEnv.PW_AMBIENT_TEST).toBe('ambient');
+    } finally {
+      delete process.env.PW_AMBIENT_TEST;
+    }
+  });
+
+  it('includes a client env applied mid-load in the ambient snapshot', async () => {
+    // The client env survives the restore, so the tasks run under it; a
+    // snapshot taken before its reapplication would miss it.
+    const path = writeConfig(
+      'writes-for-client-snapshot.cjs',
+      `${applyClientEnv}({ ...process.env, HTTP_PROXY: 'http://client.example:8080' });
+process.env.NO_PROXY = 'localhost';
+module.exports = {};`
+    );
+
+    const { ambientEnv } = await loadConfigWithProbeEnv(path, () => undefined);
+
+    expect(ambientEnv.HTTP_PROXY).toBe('http://client.example:8080');
+    expect(ambientEnv.NO_PROXY).toBeUndefined();
   });
 
   it('re-applies the client env applied mid-load over the pre-load values', async () => {

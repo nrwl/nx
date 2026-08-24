@@ -1,6 +1,9 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import * as http from 'node:http';
 import { createServer as createHttpServer, type Server } from 'node:http';
 import * as https from 'node:https';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   createServer as createTcpServer,
   getDefaultAutoSelectFamily,
@@ -876,6 +879,69 @@ describe('waitForWebserverExecutor', () => {
       expect(credentials[0]).toBe(
         `Basic ${Buffer.from('user:pa:ss').toString('base64')}`
       );
+    });
+
+    // A workspace whose installed @playwright/test is `version`, for the
+    // probe's version-dependent proxied TLS semantics.
+    const writePlaywrightFixture = (version: string): string => {
+      const dir = mkdtempSync(join(tmpdir(), 'pw-wait-version-'));
+      mkdirSync(join(dir, 'node_modules', '@playwright', 'test'), {
+        recursive: true,
+      });
+      writeFileSync(
+        join(dir, 'node_modules', '@playwright', 'test', 'package.json'),
+        JSON.stringify({ name: '@playwright/test', version })
+      );
+      return dir;
+    };
+    const versionedContext = (root: string) =>
+      ({
+        root,
+        projectName: 'app',
+        projectsConfigurations: { projects: { app: { root: '.' } } },
+      }) as unknown as ExecutorContext;
+
+    it('skips certificate verification for a tunnelled probe when the installed Playwright does', async () => {
+      // Playwright before 1.59.0 forces `rejectUnauthorized` off for a probe
+      // tunnelled to an https url; verifying here would fail a wait that
+      // version's own probe passes.
+      const { release, proxyUrl } = await startTunnellingProxy();
+      process.env.HTTPS_PROXY = proxyUrl;
+      const request = https.request as unknown as jest.Mock;
+      request.mockClear();
+      const root = writePlaywrightFixture('1.36.0');
+
+      try {
+        await waitForWebserverExecutor(
+          { servers: [{ url: 'https://example.test:8443' }], timeout: 300 },
+          versionedContext(root)
+        );
+        release();
+
+        expect(request.mock.calls[0][1].rejectUnauthorized).toBe(false);
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    });
+
+    it('keeps certificate verification for a tunnelled probe on versions that honor it', async () => {
+      const { release, proxyUrl } = await startTunnellingProxy();
+      process.env.HTTPS_PROXY = proxyUrl;
+      const request = https.request as unknown as jest.Mock;
+      request.mockClear();
+      const root = writePlaywrightFixture('1.59.0');
+
+      try {
+        await waitForWebserverExecutor(
+          { servers: [{ url: 'https://example.test:8443' }], timeout: 300 },
+          versionedContext(root)
+        );
+        release();
+
+        expect(request.mock.calls[0][1].rejectUnauthorized).toBe(true);
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
     });
 
     it('sends proxy credentials on an absolute-form request', async () => {

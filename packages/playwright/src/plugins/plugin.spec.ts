@@ -1363,6 +1363,87 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
     }
   });
 
+  it('keeps the gate when a concurrent config load writes a probe variable mid-resolution', async () => {
+    const originalBaseUrl = process.env.BASE_URL;
+    const originalWorkspaceRoot = workspaceRoot;
+    delete process.env.BASE_URL;
+    // Start from no probe variables: an inherited value could mask the
+    // injected proxy divergence (a bare `*` NO_PROXY collapses every route),
+    // letting the test pass against a live-env gate read.
+    const probeVariables = [
+      ...['http_proxy', 'https_proxy', 'all_proxy', 'no_proxy'].flatMap(
+        (name) => [name, name.toUpperCase()]
+      ),
+      'NODE_EXTRA_CA_CERTS',
+      'NODE_TLS_REJECT_UNAUTHORIZED',
+    ];
+    // Snapshot before any delete: Windows env keys are case-insensitive, so
+    // deleting one spelling also clears its alias.
+    const originalProbeValues: Record<string, string | undefined> = {};
+    for (const variable of probeVariables) {
+      originalProbeValues[variable] = process.env[variable];
+    }
+    for (const variable of probeVariables) {
+      delete process.env[variable];
+    }
+    setWorkspaceRoot(tempFs.tempDir);
+    // Config loads run in this process, so another project's load can write
+    // env between this chain's child evaluation and its gate env read. The
+    // gate env must come from the locked ambient snapshot: read from the live
+    // env, the transient write registers as a probe divergence and drops a
+    // gate the task env never diverged on.
+    installFreshConfigEval(() => {
+      process.env.HTTP_PROXY = 'http://transient.example:8080';
+    });
+
+    try {
+      await mockPlaywrightConfig(
+        tempFs,
+        `module.exports = {
+  testDir: 'tests',
+  webServer: {
+    command: 'npx nx run app1:serve',
+    url: process.env.BASE_URL || 'http://localhost:4200',
+    reuseExistingServer: true,
+  },
+};`
+      );
+      await tempFs.createFiles({
+        'tests/run-me.spec.ts': '',
+        '.env.e2e': 'BASE_URL=http://localhost:4301\n',
+      });
+
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        { targetName: 'e2e' },
+        context
+      );
+      const { targets } = results[0][1].projects['.'];
+
+      expect(targets['e2e--wait-for-webserver'].options).toEqual({
+        servers: [{ url: 'http://localhost:4301' }],
+      });
+    } finally {
+      _setChildEval(null);
+      setWorkspaceRoot(originalWorkspaceRoot);
+      // Delete every spelling first, then restore the recorded values, so a
+      // restore is never undone through a case-insensitive alias.
+      for (const variable of probeVariables) {
+        delete process.env[variable];
+      }
+      for (const variable of probeVariables) {
+        if (originalProbeValues[variable] !== undefined) {
+          process.env[variable] = originalProbeValues[variable];
+        }
+      }
+      if (originalBaseUrl === undefined) {
+        delete process.env.BASE_URL;
+      } else {
+        process.env.BASE_URL = originalBaseUrl;
+      }
+    }
+  });
+
   it('creates a separate gate per chain when e2e and e2e-ci resolve different addresses', async () => {
     const originalBaseUrl = process.env.BASE_URL;
     const originalWorkspaceRoot = workspaceRoot;
@@ -1666,6 +1747,93 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
       warn.mockRestore();
       _setChildEval(null);
       setWorkspaceRoot(originalWorkspaceRoot);
+      restoreEnv(savedEnv);
+    }
+  });
+
+  it('keeps the gate for a legacy Playwright whose tunnelled probe never verifies the TLS material', async () => {
+    // Playwright before 1.59.0 skips certificate verification behind an http
+    // proxy tunnel, as does the gate on that version, so a task-scoped CA
+    // bundle changes neither probe and must not cost the gate.
+    const savedEnv = saveEnv(['NODE_EXTRA_CA_CERTS', ...PROXY_ENV_NAMES]);
+    const originalWorkspaceRoot = workspaceRoot;
+    process.env.HTTPS_PROXY = 'http://proxy.example:8080';
+    setWorkspaceRoot(tempFs.tempDir);
+    installFreshConfigEval();
+
+    try {
+      // The project's own copy decides, as it does for the Playwright binary
+      // the task runs, so it sits next to a current workspace-root copy.
+      await tempFs.createFiles({
+        'apps/e2e/project.json': '{}',
+        'apps/e2e/playwright.config.js': LEGACY_TLS_CONFIG,
+        'apps/e2e/tests/run-me.spec.ts': '',
+        '.env.e2e': 'NODE_EXTRA_CA_CERTS=./certs/ca.pem\n',
+        'apps/e2e/node_modules/@playwright/test/package.json':
+          playwrightPackageJson('1.36.0'),
+        'node_modules/@playwright/test/package.json':
+          playwrightPackageJson('1.59.0'),
+      });
+
+      const results = await createNodesFunction(
+        ['apps/e2e/playwright.config.js'],
+        { targetName: 'e2e' },
+        context
+      );
+      const { targets } = results[0][1].projects['apps/e2e'];
+
+      expect(targets['e2e--wait-for-webserver'].options.servers).toEqual([
+        { url: 'https://localhost:4200' },
+      ]);
+    } finally {
+      _setChildEval(null);
+      setWorkspaceRoot(originalWorkspaceRoot);
+      restoreEnv(savedEnv);
+    }
+  });
+
+  it('rebuilds a cached gate when the installed Playwright starts verifying the tunnelled probe', async () => {
+    const savedEnv = saveEnv(['NODE_EXTRA_CA_CERTS', ...PROXY_ENV_NAMES]);
+    const originalWorkspaceRoot = workspaceRoot;
+    process.env.HTTPS_PROXY = 'http://proxy.example:8080';
+    setWorkspaceRoot(tempFs.tempDir);
+    process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+    installFreshConfigEval();
+
+    try {
+      // A linked install can change version without touching the lockfile,
+      // which is the only install input the createNodes hash covers.
+      await tempFs.createFiles({
+        'apps/e2e/project.json': '{}',
+        'apps/e2e/playwright.config.js': LEGACY_TLS_CONFIG,
+        'apps/e2e/tests/run-me.spec.ts': '',
+        '.env.e2e': 'NODE_EXTRA_CA_CERTS=./certs/ca.pem\n',
+        'node_modules/@playwright/test/package.json':
+          playwrightPackageJson('1.36.0'),
+      });
+
+      const run = async () =>
+        (
+          await createNodesFunction(
+            ['apps/e2e/playwright.config.js'],
+            { targetName: 'e2e' },
+            context
+          )
+        )[0][1].projects['apps/e2e'].targets;
+
+      expect((await run())['e2e--wait-for-webserver'].options.servers).toEqual([
+        { url: 'https://localhost:4200' },
+      ]);
+
+      await tempFs.createFile(
+        'node_modules/@playwright/test/package.json',
+        playwrightPackageJson('1.59.0')
+      );
+      expect((await run())['e2e--wait-for-webserver']).toBeUndefined();
+    } finally {
+      _setChildEval(null);
+      setWorkspaceRoot(originalWorkspaceRoot);
+      process.env.NX_CACHE_PROJECT_GRAPH = 'false';
       restoreEnv(savedEnv);
     }
   });
@@ -3606,6 +3774,27 @@ async function mockPlaywrightConfig(
       ? config
       : `module.exports = ${JSON.stringify(config)}`
   );
+}
+
+const PROXY_ENV_NAMES = [
+  'http_proxy',
+  'https_proxy',
+  'all_proxy',
+  'no_proxy',
+].flatMap((name) => [name, name.toUpperCase()]);
+
+// An https server behind the http proxy the legacy TLS tests route through.
+const LEGACY_TLS_CONFIG = `module.exports = {
+  testDir: 'tests',
+  webServer: {
+    command: 'npx nx run app1:serve',
+    url: 'https://localhost:4200',
+    reuseExistingServer: true,
+  },
+};`;
+
+function playwrightPackageJson(version: string): string {
+  return JSON.stringify({ name: '@playwright/test', version });
 }
 
 // Clears the named variables so a developer's ambient proxy or TLS env cannot

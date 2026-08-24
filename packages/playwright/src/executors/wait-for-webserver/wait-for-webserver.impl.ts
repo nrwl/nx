@@ -3,6 +3,8 @@ import { HttpsProxyAgent } from 'https-proxy-agent';
 import * as http from 'node:http';
 import * as https from 'node:https';
 import { connect } from 'node:net';
+import { join } from 'node:path';
+import { installedPlaywrightSkipsProxiedTls } from '../../utils/proxied-tls-verification';
 import {
   resolveProxyForUrl,
   withoutCredentials,
@@ -26,7 +28,7 @@ const NO_OBSERVATION = 'the deadline passed before the server responded';
 
 export async function waitForWebserverExecutor(
   options: Schema,
-  _context: ExecutorContext
+  context: ExecutorContext
 ): Promise<{ success: boolean }> {
   const servers = options.servers ?? [];
   if (servers.length === 0) {
@@ -40,6 +42,9 @@ export async function waitForWebserverExecutor(
     logger.error(`@nx/playwright:wait-for-webserver ${problem}`);
     return { success: false };
   }
+  const skipProxiedTls = installedPlaywrightSkipsProxiedTls(
+    playwrightRequirePaths(context)
+  );
 
   try {
     await Promise.all(
@@ -48,7 +53,8 @@ export async function waitForWebserverExecutor(
         // is how Playwright reads it (`this._options.timeout || 60 * 1e3`).
         waitForServer(
           server,
-          options.timeout || server.timeout || DEFAULT_TIMEOUT
+          options.timeout || server.timeout || DEFAULT_TIMEOUT,
+          skipProxiedTls
         )
       )
     );
@@ -107,7 +113,26 @@ function isValidPort(port: number): boolean {
   return Number.isInteger(port) && port >= 1 && port <= 65535;
 }
 
-async function waitForServer(server: Server, timeout: number): Promise<void> {
+// The directories the task's Playwright install resolves from: the project
+// root, where `playwright test` runs, then the workspace root.
+function playwrightRequirePaths(context: ExecutorContext): string[] {
+  if (context.root == null) {
+    return [];
+  }
+  const projectRoot =
+    context.projectName != null
+      ? context.projectsConfigurations?.projects?.[context.projectName]?.root
+      : undefined;
+  return projectRoot != null
+    ? [join(context.root, projectRoot), context.root]
+    : [context.root];
+}
+
+async function waitForServer(
+  server: Server,
+  timeout: number,
+  skipProxiedTls: boolean
+): Promise<void> {
   const label =
     server.url != null ? redactedHref(server.url) : `port ${server.port}`;
   const deadline = Date.now() + timeout;
@@ -115,7 +140,7 @@ async function waitForServer(server: Server, timeout: number): Promise<void> {
   let lastObserved: string | undefined;
 
   while (true) {
-    const failure = await probeServer(server, deadline);
+    const failure = await probeServer(server, deadline, skipProxiedTls);
     if (failure === null) {
       return;
     }
@@ -138,10 +163,19 @@ async function waitForServer(server: Server, timeout: number): Promise<void> {
 // addresses, or poll the URL for a status from 200 to 403, through whatever
 // proxy the environment configures for it. A port is always probed directly,
 // because Playwright checks one with a raw socket too.
-function probeServer(server: Server, deadline: number): Promise<ProbeFailure> {
+function probeServer(
+  server: Server,
+  deadline: number,
+  skipProxiedTls: boolean
+): Promise<ProbeFailure> {
   return server.port != null
     ? probePort(server.port, deadline)
-    : probeUrl(server.url, server.ignoreHTTPSErrors ?? false, deadline);
+    : probeUrl(
+        server.url,
+        server.ignoreHTTPSErrors ?? false,
+        deadline,
+        skipProxiedTls
+      );
 }
 
 function probePort(port: number, deadline: number): Promise<ProbeFailure> {
@@ -193,16 +227,27 @@ function probePort(port: number, deadline: number): Promise<ProbeFailure> {
 async function probeUrl(
   url: string,
   ignoreHTTPSErrors: boolean,
-  deadline: number
+  deadline: number,
+  skipProxiedTls: boolean
 ): Promise<ProbeFailure> {
   // Validated before any server is probed, so this cannot throw.
   const parsedUrl = new URL(url);
 
-  let response = await requestStatus(parsedUrl, ignoreHTTPSErrors, deadline);
+  let response = await requestStatus(
+    parsedUrl,
+    ignoreHTTPSErrors,
+    deadline,
+    skipProxiedTls
+  );
   if (response.status === 404 && parsedUrl.pathname === '/') {
     const indexUrl = new URL(parsedUrl);
     indexUrl.pathname = '/index.html';
-    response = await requestStatus(indexUrl, ignoreHTTPSErrors, deadline);
+    response = await requestStatus(
+      indexUrl,
+      ignoreHTTPSErrors,
+      deadline,
+      skipProxiedTls
+    );
   }
   if (response.status >= 200 && response.status < 404) {
     return null;
@@ -247,6 +292,7 @@ function requestStatus(
   url: URL,
   ignoreHTTPSErrors: boolean,
   deadline: number,
+  skipProxiedTls: boolean,
   redirects = 0
 ): Promise<UrlResponse> {
   // A chain that ran out of budget still told us the server is answering, so it
@@ -378,7 +424,13 @@ function requestStatus(
           return;
         }
         settle(
-          requestStatus(redirectUrl, ignoreHTTPSErrors, deadline, redirects + 1)
+          requestStatus(
+            redirectUrl,
+            ignoreHTTPSErrors,
+            deadline,
+            skipProxiedTls,
+            redirects + 1
+          )
         );
         return;
       }
@@ -408,6 +460,7 @@ function requestStatus(
           url,
           resolution.proxy,
           requestOptions,
+          skipProxiedTls,
           connecting.signal,
           onResponse
         );
@@ -448,6 +501,7 @@ function proxiedRequest(
   url: URL,
   proxy: URL,
   options: https.RequestOptions,
+  skipProxiedTls: boolean,
   signal: AbortSignal,
   onResponse: (response: http.IncomingMessage) => void
 ): http.ClientRequest {
@@ -456,7 +510,17 @@ function proxiedRequest(
     // The agent dials the proxy itself, so this is the only handle on that
     // connection. A signal in the request options does not reach it.
     agent.connectOpts.signal = signal;
-    return https.request(url, { ...options, agent }, onResponse);
+    return https.request(
+      url,
+      {
+        ...options,
+        // Playwright before 1.59.0 never verifies the origin certificate on
+        // this route, whatever the caller asked for.
+        ...(skipProxiedTls ? { rejectUnauthorized: false } : {}),
+        agent,
+      },
+      onResponse
+    );
   }
   // Playwright's Happy Eyeballs agent also dials the proxy on this route (its
   // CONNECT route above drops it, so that one stays default). Same cast as the

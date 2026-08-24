@@ -34,6 +34,7 @@ import { minimatch } from 'minimatch';
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, join, parse, relative, resolve, sep } from 'node:path';
 import type { Schema as WaitForWebserverSchema } from '../executors/wait-for-webserver/schema';
+import { installedPlaywrightSkipsProxiedTls } from '../utils/proxied-tls-verification';
 import { getReporterOutputs, type ReporterOutput } from '../utils/reporters';
 import {
   getProbeEnvDivergence,
@@ -222,7 +223,14 @@ async function createNodesInternal(
     normalizedOptions,
     dotEnvFileHashes
   );
-  const cacheKey = `${hash}-${hashObject(chainDotEnvPairs)}`;
+  // The gate follows the installed Playwright's probe semantics. A linked
+  // install can cross the version floor without touching the lockfile, so the
+  // key carries the decision rather than trusting the hash to notice.
+  const legacyProxiedTls = installedPlaywrightSkipsProxiedTls([
+    join(context.workspaceRoot, projectRoot),
+    context.workspaceRoot,
+  ]);
+  const cacheKey = `${hash}-${hashObject({ chainDotEnvPairs, legacyProxiedTls })}`;
 
   let playwrightTargets = pluginCache.get(cacheKey);
   if (!playwrightTargets) {
@@ -233,7 +241,8 @@ async function createNodesInternal(
       context,
       pmc,
       externalTsconfigInputs,
-      chainDotEnvPairs
+      chainDotEnvPairs,
+      legacyProxiedTls
     );
     // The key encodes nothing about evaluation success, so caching a failed
     // evaluation's gate-less fallback would make a transient failure (a
@@ -263,7 +272,8 @@ async function buildPlaywrightTargets(
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   externalTsconfigInputs: string[],
-  chainDotEnvPairs: ChainDotEnvPairs
+  chainDotEnvPairs: ChainDotEnvPairs,
+  legacyProxiedTls: boolean
 ): Promise<PlaywrightTargets & { taskEnvEvalFailed: boolean }> {
   // Playwright forbids importing the `@playwright/test` module twice. This would affect running the tests,
   // but we're just reading the config so let's delete the variable they are using to detect this.
@@ -283,6 +293,7 @@ async function buildPlaywrightTargets(
       testIgnore,
     },
     probeEnv: ambientProbeEnv,
+    ambientEnv,
   } = await loadConfigWithProbeEnv(
     join(context.workspaceRoot, configFilePath),
     (config: PlaywrightTestConfig) => ({
@@ -337,6 +348,8 @@ async function buildPlaywrightTargets(
       context.workspaceRoot,
       ambientWebServers,
       ambientProbeEnv,
+      ambientEnv,
+      legacyProxiedTls,
       options.targetName,
       undefined,
       e2eGateName,
@@ -351,6 +364,8 @@ async function buildPlaywrightTargets(
         context.workspaceRoot,
         ambientWebServers,
         ambientProbeEnv,
+        ambientEnv,
+        legacyProxiedTls,
         options.targetName,
         undefined,
         e2eGateName,
@@ -362,6 +377,8 @@ async function buildPlaywrightTargets(
         context.workspaceRoot,
         ambientWebServers,
         ambientProbeEnv,
+        ambientEnv,
+        legacyProxiedTls,
         options.ciTargetName,
         options.targetName,
         ciGateName,
@@ -844,6 +861,8 @@ async function resolveChainWebserver(
   workspaceRoot: string,
   ambientWebServers: ResolvedWebServer[],
   ambientProbeEnv: ProbeEnv,
+  ambientEnv: NodeJS.ProcessEnv,
+  legacyProxiedTls: boolean,
   target: string,
   nonAtomizedTarget: string | undefined,
   gateTarget: string,
@@ -858,13 +877,18 @@ async function resolveChainWebserver(
   let webServers = ambientWebServers;
   let probeEnv = ambientProbeEnv;
   let taskEnvEvalFailed = false;
+  // Base every env reconstruction on the locked ambient snapshot, never on the
+  // live process.env: another config's in-process load can be writing env
+  // concurrently, and a transient write read as ambient would mask the values
+  // this chain's dotenv files set.
   const taskEnv = getGraphTimeDotEnvForTask(
     projectRoot,
     target,
     undefined,
-    nonAtomizedTarget
+    nonAtomizedTarget,
+    ambientEnv
   );
-  if (taskEnvDivergesFromAmbient(taskEnv)) {
+  if (taskEnvDivergesFromAmbient(taskEnv, ambientEnv)) {
     try {
       ({ webServers, probeEnv } = await resolveWebServersUnderEnv(
         configFilePath,
@@ -900,7 +924,14 @@ async function resolveChainWebserver(
     const divergingProbeVars = getProbeEnvDivergence(
       readinessServers,
       { ...probeEnv, NODE_EXTRA_CA_CERTS: taskEnv.NODE_EXTRA_CA_CERTS },
-      getGraphTimeDotEnvForTask(projectRoot, gateTarget)
+      getGraphTimeDotEnvForTask(
+        projectRoot,
+        gateTarget,
+        undefined,
+        undefined,
+        ambientEnv
+      ),
+      legacyProxiedTls
     );
     if (divergingProbeVars.length > 0) {
       readinessServers = [];

@@ -102,11 +102,17 @@ let inProcessLoad: Promise<void> = Promise.resolve();
  * A client env applied mid-load (the daemon forwards it as it arrives) is
  * re-applied over the restored env; restoring the pre-load values alone would
  * revert it.
+ *
+ * `ambientEnv` is a snapshot of the restored env, taken while still holding
+ * the load lock. Task-env reconstruction and comparison after this returns
+ * must base on it rather than on the live `process.env`: the lock is released
+ * on return, so a sibling load's transient writes can be visible in the live
+ * env by then and would be read as ambient.
  */
 export async function loadConfigWithProbeEnv<T extends object, R>(
   configPath: string,
   consume: (config: T) => R
-): Promise<{ consumed: R; probeEnv: ProbeEnv }> {
+): Promise<{ consumed: R; probeEnv: ProbeEnv; ambientEnv: NodeJS.ProcessEnv }> {
   const previous = inProcessLoad;
   let release: () => void;
   inProcessLoad = new Promise<void>((resolve) => (release = resolve));
@@ -114,9 +120,12 @@ export async function loadConfigWithProbeEnv<T extends object, R>(
   try {
     const applySequence = getAppliedDaemonClientEnv()?.sequence;
     const before = { ...process.env };
+    let consumed: R;
+    let probeEnv: ProbeEnv;
     try {
       const config = await loadConfigFile<T>(configPath);
-      return { consumed: consume(config), probeEnv: pickProbeEnv(process.env) };
+      consumed = consume(config);
+      probeEnv = pickProbeEnv(process.env);
     } finally {
       restoreEnv(before);
       const applied = getAppliedDaemonClientEnv();
@@ -124,6 +133,7 @@ export async function loadConfigWithProbeEnv<T extends object, R>(
         applyDaemonEnvFromClient(applied.env);
       }
     }
+    return { consumed, probeEnv, ambientEnv: { ...process.env } };
   } finally {
     release();
   }
@@ -199,15 +209,24 @@ function proxyRoutes(env: NodeJS.ProcessEnv): {
  * Both probes follow redirects, so as soon as one server probes a url the
  * routes for every protocol and host are compared, not only the route the
  * configured url takes: an `https_proxy` for an http url or a `no_proxy` entry
- * for another host can still decide how a redirect target is reached. TLS env
- * is compared unless every url server sets `ignoreHTTPSErrors`, which turns
- * verification off on both sides for every hop, except that the tunnel to an
- * https proxy is verified with the process defaults either way.
+ * for another host can still decide how a redirect target is reached.
+ * `NODE_EXTRA_CA_CERTS` is compared unless every url server sets
+ * `ignoreHTTPSErrors`, which turns verification off on both sides for every
+ * hop, except that the tunnel to an https proxy is verified with the process
+ * defaults either way. With `legacyProxiedTls` (an installed Playwright below
+ * 1.59.0, whose probe never verifies the origin behind a proxy tunnel, and
+ * neither does the gate on that version) it is also left out while every
+ * https hop can only take such a tunnel: an http proxy on the https route, no
+ * https proxy on the http route, and no `no_proxy` entry that could send a
+ * redirect target direct. `NODE_TLS_REJECT_UNAUTHORIZED` only reaches that
+ * tunnel to an https proxy, since every request sets `rejectUnauthorized`
+ * itself, and only its `'0'` state counts.
  */
 export function getProbeEnvDivergence(
   servers: Array<{ url?: string; ignoreHTTPSErrors?: boolean }>,
   taskEnv: NodeJS.ProcessEnv,
-  gateEnv: NodeJS.ProcessEnv
+  gateEnv: NodeJS.ProcessEnv,
+  legacyProxiedTls = false
 ): string[] {
   // A port is probed with a raw TCP connect, and the executor rejects a
   // malformed url up front; env plays no part in either.
@@ -243,15 +262,31 @@ export function getProbeEnvDivergence(
   const tunnelsThroughTlsProxy = [taskRoutes.https, gateRoutes.https].some(
     (route) => route.startsWith('https:')
   );
+  const onlyUnverifiedLegacyTunnels =
+    legacyProxiedTls &&
+    [taskRoutes, gateRoutes].every(
+      (routes) =>
+        routes.https.startsWith('http:') &&
+        !routes.http.startsWith('https:') &&
+        routes.no_proxy === ''
+    );
   if (
-    tunnelsThroughTlsProxy ||
-    urlServers.some((server) => !server.ignoreHTTPSErrors)
+    (tunnelsThroughTlsProxy ||
+      (urlServers.some((server) => !server.ignoreHTTPSErrors) &&
+        !onlyUnverifiedLegacyTunnels)) &&
+    taskEnv.NODE_EXTRA_CA_CERTS !== gateEnv.NODE_EXTRA_CA_CERTS
   ) {
-    for (const variable of TLS_PROBE_VARS) {
-      if (taskEnv[variable] !== gateEnv[variable]) {
-        diverging.add(variable);
-      }
-    }
+    diverging.add('NODE_EXTRA_CA_CERTS');
+  }
+  // Both probes pass `rejectUnauthorized` on every request, which overrides
+  // the env default. Only the proxy agent's own connection to an https proxy
+  // is left to it, and Node reads it as exactly '0'.
+  if (
+    tunnelsThroughTlsProxy &&
+    (taskEnv.NODE_TLS_REJECT_UNAUTHORIZED === '0') !==
+      (gateEnv.NODE_TLS_REJECT_UNAUTHORIZED === '0')
+  ) {
+    diverging.add('NODE_TLS_REJECT_UNAUTHORIZED');
   }
   return [...diverging].sort();
 }
@@ -259,14 +294,17 @@ export function getProbeEnvDivergence(
 /**
  * Whether the task env a chain would run with differs from the graph-time
  * ambient env. Only a difference can change how the config resolves, so an
- * identical env skips the (expensive) child evaluation entirely.
+ * identical env skips the (expensive) child evaluation entirely. `ambientEnv`
+ * is the locked snapshot loadConfigWithProbeEnv returned, not the live
+ * `process.env`, which a concurrent load may be mutating.
  */
 export function taskEnvDivergesFromAmbient(
-  taskEnv: NodeJS.ProcessEnv
+  taskEnv: NodeJS.ProcessEnv,
+  ambientEnv: NodeJS.ProcessEnv
 ): boolean {
-  const keys = new Set([...Object.keys(process.env), ...Object.keys(taskEnv)]);
+  const keys = new Set([...Object.keys(ambientEnv), ...Object.keys(taskEnv)]);
   for (const key of keys) {
-    if (process.env[key] !== taskEnv[key]) {
+    if (ambientEnv[key] !== taskEnv[key]) {
       return true;
     }
   }
