@@ -75,4 +75,57 @@ describe('run-commands output routing', () => {
     expect(index).toBeGreaterThan(-1);
     expect(result[index - 1]).toEqual('\n');
   });
+  // The gluing test above proves the tracker end to end, but only for the
+  // stdout handler - the other three writes in this class could each be
+  // reverted to a raw `process.std*.write` with it still green. This pins every
+  // one of them, and the stream each goes to.
+  it('routes every write in the class through the line tracker', () => {
+    mockSpawned = mockChild();
+    const routed = jest
+      .spyOn(output, 'writeTaskOutputChunk')
+      .mockImplementation(() => {});
+
+    try {
+      new ParallelRunningTasks(
+        {
+          commands: [{ command: 'webpack --watch' }],
+          color: false,
+          cwd: '.',
+          env: {},
+          readyWhenStatus: [],
+          streamOutput: true,
+          envFile: undefined,
+          parallel: true,
+        } as any,
+        { root: '.' } as any,
+        'lib:dev'
+      );
+      // 1. the command header, written at construction
+      const header = routed.mock.calls.map((c) => String(c[0]));
+      expect(header.some((c) => c.includes('webpack --watch'))).toBe(true);
+
+      routed.mockClear();
+      mockSpawned.stdout.emit('data', 'to stdout');
+      expect(routed).toHaveBeenCalledTimes(1);
+      // 2. stdout output goes to stdout
+      expect(String(routed.mock.calls[0][0])).toContain('to stdout');
+      expect(routed.mock.calls[0][1]).toBe(process.stdout);
+
+      routed.mockClear();
+      mockSpawned.stderr.emit('data', 'to stderr');
+      expect(routed).toHaveBeenCalledTimes(1);
+      // 3. stderr keeps its stream rather than being folded into stdout
+      expect(String(routed.mock.calls[0][0])).toContain('to stderr');
+      expect(routed.mock.calls[0][1]).toBe(process.stderr);
+
+      routed.mockClear();
+      mockSpawned.emit('error', new Error('spawn ENOENT'));
+      expect(routed).toHaveBeenCalledTimes(1);
+      // 4. the spawn-failure path, which reports on stderr
+      expect(String(routed.mock.calls[0][0])).toContain('spawn ENOENT');
+      expect(routed.mock.calls[0][1]).toBe(process.stderr);
+    } finally {
+      routed.mockRestore();
+    }
+  });
 });
