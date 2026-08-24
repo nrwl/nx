@@ -7,7 +7,7 @@ import {
   rmSync,
   type Dirent,
 } from 'fs';
-import { randomBytes } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 import { basename, join } from 'path';
 import { writeJsonFile } from '../../../utils/fileutils';
 import { GIT_SHA } from '../../../utils/git-utils';
@@ -16,7 +16,12 @@ import { HANDOFFS_DIR_NAME, MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
 import { RUN_ID_SAFE } from './run-id';
 import { singleLine } from '../text';
 
-export const CURRENT_RUN_STATE_FORMAT_VERSION = 1;
+// v2: the issue ledger (resolver credit and fences, claims, commit issue
+// associations, retry-clean reopens). The fields are optional, so a v1
+// reader would accept the state while its writers ignore every one of those
+// rules (a reset-away fix would stay recorded as resolved); the bump turns
+// that silent corruption into a version refusal.
+export const CURRENT_RUN_STATE_FORMAT_VERSION = 2;
 
 export const RUN_STATE_FILE_NAME = 'run.json';
 /**
@@ -50,8 +55,11 @@ const PLAN_SNAPSHOT_NAME = /^plan-\d+\.json$/;
 const STEP_ID = /^step-\d+$/;
 // Nx numbers issues the way it numbers steps, and the id names the archived
 // detail file inside the run's issues directory, so a tampered value must not
-// resolve outside it.
-const ISSUE_ID = /^issue-\d+$/;
+// resolve outside it. The suffix is bounded: an unbounded one could name a
+// file past the filesystem's component limit, and the allocator minting past
+// it would then produce unwriteable ids forever. The allocator checks its
+// minted ids against this same pattern.
+export const ISSUE_ID = /^issue-\d{1,18}$/;
 /**
  * The runbook is a file Nx writes next to `run.json`, so the recorded value is
  * the one name Nx gives it, pinned whole like PLAN_SNAPSHOT_NAME. A resume
@@ -91,6 +99,13 @@ const MIGRATE_STEP_STATUSES = [
   'died',
 ] as const;
 export type MigrateStepStatus = (typeof MIGRATE_STEP_STATUSES)[number];
+
+// The statuses a step never leaves. Every other status can still advance:
+// 'failed' and 'died' steps can be re-armed into a fresh attempt.
+export const TERMINAL_STEP_STATUSES: ReadonlySet<MigrateStepStatus> = new Set([
+  'succeeded',
+  'skipped',
+]);
 
 const PROMPT_OUTCOME_STATUSES = ['completed', 'skipped', 'failed'] as const;
 export type PromptOutcomeStatus = (typeof PROMPT_OUTCOME_STATUSES)[number];
@@ -205,7 +220,20 @@ export interface MigrateCommitLedgerEntry {
   issueIds?: string[];
 }
 
-const MIGRATE_ISSUE_DISPOSITIONS = [
+/**
+ * Dedup key: the same underlying problem reported twice folds into one
+ * ledger entry. Computed by nx from the normalized summary, so agent text
+ * never becomes a path or command fragment. Lives here because the state
+ * reader enforces the derivation on every persisted entry.
+ */
+export function issueFingerprint(summary: string): string {
+  return createHash('sha256')
+    .update(summary.toLowerCase().replace(/\s+/g, ' ').trim())
+    .digest('hex')
+    .slice(0, 16);
+}
+
+export const MIGRATE_ISSUE_DISPOSITIONS = [
   'recorded',
   'resolved',
   'deferred-final',
@@ -229,6 +257,16 @@ export interface MigrateRunIssue {
   disposition: MigrateIssueDisposition;
   // Set by Nx when a dispense hands the issue to an in-scope step to fix.
   claimedByStepId?: string;
+  // The step whose handoff moved the issue to 'resolved'. A later commit
+  // that absorbs that step's tree carries the fix, so the association
+  // outlives the step's own failed commit attempt. Present only while the
+  // disposition is 'resolved'.
+  resolvedByStepId?: string;
+  // Length of the commits ledger when the current resolution was recorded.
+  // The ledger is append-only, so entries below this index predate the
+  // resolution and cannot carry it, whoever they name. Present exactly
+  // while the disposition is 'resolved'; a reopen drops it with the credit.
+  resolvedAtCommitCount?: number;
 }
 
 export interface MigrateRunAnalytics {
@@ -477,19 +515,108 @@ function hasUniqueIssueIds(issues: unknown[]): boolean {
   );
 }
 
+// A step id names routing, claims, credit, and commit associations
+// everywhere; a duplicate would make every lookup ambiguous, and a valid
+// bare-package report against duplicated steps would write duplicated issue
+// applicability that this same reader then rejects.
+function hasUniqueStepIds(steps: unknown[]): boolean {
+  return (
+    new Set(steps.map((step) => (step as { id: string }).id)).size ===
+    steps.length
+  );
+}
+
+// The fingerprint is the duplicate-report fold key; two entries sharing one
+// would make ledger order decide which entry a report folds into.
+function hasUniqueIssueFingerprints(issues: unknown[]): boolean {
+  return (
+    new Set(
+      issues.map((issue) => (issue as { fingerprint: string }).fingerprint)
+    ).size === issues.length
+  );
+}
+
+// Issue fields that reference the rest of the state, checked after the
+// per-entry shapes: step references must name plan steps, a claim must be
+// one of the issue's own applicable steps (which is how claims are ever
+// assigned), and a resolution stamp must not point past the append-only
+// commits ledger. nx never writes any of these violations, and the helpers
+// that trust the fields (routing, resolver credit, carried checks) cannot
+// repair them.
+function hasSoundIssueRefs(parsed: Record<string, unknown>): boolean {
+  const issues = parsed.issues as {
+    reportedByStepId: string;
+    applicableStepIds: string[] | 'unknown';
+    claimedByStepId?: string;
+    resolvedByStepId?: string;
+    resolvedAtCommitCount?: number;
+  }[];
+  const steps = parsed.steps as { id: string }[];
+  const stepIds = new Set(steps.map((s) => s.id));
+  const stepOrder = new Map(steps.map((s, index) => [s.id, index]));
+  const commitCount = (parsed.commits as unknown[]).length;
+  return issues.every(
+    (issue) =>
+      stepIds.has(issue.reportedByStepId) &&
+      (issue.applicableStepIds === 'unknown' ||
+        (issue.applicableStepIds.every((id) => stepIds.has(id)) &&
+          // Applicability is a plan-ordered set (mints and merges both
+          // emit it that way): a duplicated id would make the normalizing
+          // merge read as newly supplied routing, and an out-of-order
+          // scope is a representation no transition writes, which later
+          // merges would preserve rather than normalize.
+          issue.applicableStepIds.every(
+            (id, index) =>
+              index === 0 ||
+              (stepOrder.get(issue.applicableStepIds[index - 1]) as number) <
+                (stepOrder.get(id) as number)
+          ))) &&
+      (issue.claimedByStepId === undefined ||
+        (Array.isArray(issue.applicableStepIds) &&
+          issue.applicableStepIds.includes(issue.claimedByStepId))) &&
+      (issue.resolvedByStepId === undefined ||
+        stepIds.has(issue.resolvedByStepId)) &&
+      (issue.resolvedAtCommitCount === undefined ||
+        issue.resolvedAtCommitCount <= commitCount)
+  );
+}
+
 function isIssueShape(value: unknown): boolean {
   return (
     isPlainObject(value) &&
     typeof value.id === 'string' &&
     ISSUE_ID.test(value.id) &&
-    isLineSafeString(value.fingerprint) &&
     isLineSafeString(value.summary) &&
+    // The fingerprint is the ledger's identity key; one detached from its
+    // summary would split a problem into independent histories, so the
+    // derivation is enforced, not just the shape.
+    value.fingerprint === issueFingerprint(value.summary as string) &&
     typeof value.reportedByStepId === 'string' &&
     STEP_ID.test(value.reportedByStepId) &&
+    // Concrete applicability is non-empty: reports carry 1+ identifiers and
+    // merges only widen, so [] is unproducible.
     (value.applicableStepIds === 'unknown' ||
-      isStepIdArray(value.applicableStepIds)) &&
+      (isStepIdArray(value.applicableStepIds) &&
+        (value.applicableStepIds as string[]).length > 0)) &&
     isOneOf(MIGRATE_ISSUE_DISPOSITIONS, value.disposition) &&
-    isOptionalMatching(STEP_ID, value.claimedByStepId)
+    isOptionalMatching(STEP_ID, value.claimedByStepId) &&
+    isOptionalMatching(STEP_ID, value.resolvedByStepId) &&
+    // Cross-field invariants: a claim is an assignment in a dispensed
+    // digest, held only while the issue is recorded; resolver credit exists
+    // exactly while the issue is resolved. States outside these break the
+    // helpers built on them (commit association, retry-clean reverts,
+    // update ownership).
+    (value.claimedByStepId === undefined || value.disposition === 'recorded') &&
+    (value.disposition === 'resolved') ===
+      (value.resolvedByStepId !== undefined) &&
+    // The stamp travels with the resolution: a resolution without one has
+    // no carried-commit window, and a stamp without a resolution fences
+    // nothing that exists.
+    (value.disposition === 'resolved') ===
+      (value.resolvedAtCommitCount !== undefined) &&
+    (value.resolvedAtCommitCount === undefined ||
+      (Number.isSafeInteger(value.resolvedAtCommitCount) &&
+        (value.resolvedAtCommitCount as number) >= 0))
   );
 }
 
@@ -539,11 +666,26 @@ function hasValidRunStateShape(parsed: Record<string, unknown>): boolean {
     isOptionalMatching(RUNBOOK_NAME, parsed.runbookPath) &&
     (parsed.rounds as unknown[]).every(isRoundShape) &&
     (parsed.steps as unknown[]).every(isStepShape) &&
+    hasUniqueStepIds(parsed.steps as unknown[]) &&
     (parsed.commits as unknown[]).every(isCommitLedgerEntryShape) &&
     (parsed.issues === undefined ||
       (Array.isArray(parsed.issues) &&
         parsed.issues.every(isIssueShape) &&
-        hasUniqueIssueIds(parsed.issues))) &&
+        hasUniqueIssueIds(parsed.issues) &&
+        hasUniqueIssueFingerprints(parsed.issues) &&
+        hasSoundIssueRefs(parsed))) &&
+    // Commit issueIds are references into the issues ledger, written only
+    // for entries that already existed; a dangling one could make a future
+    // issue's resolution look carried by a commit that predates it.
+    (parsed.commits as { issueIds?: string[] }[]).every(
+      (c) =>
+        c.issueIds === undefined ||
+        c.issueIds.every((id) =>
+          ((parsed.issues as { id: string }[] | undefined) ?? []).some(
+            (i) => i.id === id
+          )
+        )
+    ) &&
     isNoProgressShape(parsed.noProgress) &&
     isAnalyticsShape(parsed.analytics)
   );
@@ -562,7 +704,10 @@ function corruptRunStateError(filePath: string, reason: string): Error {
  * prompt-outcome status, commit kind) needs a
  * `CURRENT_RUN_STATE_FORMAT_VERSION` bump: without it, an older Nx reading
  * the new value would reject the run as corrupt (the closed-set validation
- * fails) instead of refusing with this error's ask for a newer Nx.
+ * fails) instead of refusing with this error's ask for a newer Nx. So does
+ * any addition whose correctness depends on writers honoring new rules,
+ * even when the fields are optional: an older Nx would accept the state and
+ * operate the run without them, silently breaking their invariants.
  */
 export class NewerRunStateFormatError extends Error {
   constructor(message: string) {
@@ -577,8 +722,9 @@ export class NewerRunStateFormatError extends Error {
  * A `formatVersion` newer than {@link CURRENT_RUN_STATE_FORMAT_VERSION} means
  * the run was created by a newer Nx than the one currently running, so the
  * shape may not be interpretable here; this throws rather than attempting a
- * best-effort read. An older `formatVersion` is returned as-is: only v1
- * exists today, so there is nothing to migrate yet.
+ * best-effort read. An older `formatVersion` is returned as-is: v1 predates
+ * the issue ledger, and every v1 field reads unchanged here. A v1 run that
+ * starts carrying issues is restamped to v2 by the fold that records them.
  */
 export function readRunState(runDirPath: string): MigrateRunState {
   const filePath = join(runDirPath, RUN_STATE_FILE_NAME);

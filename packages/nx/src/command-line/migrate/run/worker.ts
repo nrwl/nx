@@ -90,6 +90,7 @@ import {
   latestStoredAgentWorkPayload,
   persistAgentWorkPayload,
 } from './agent-work-payload';
+import { issueIdsForCommit } from './issues';
 
 // Runs exactly one migration, either standalone or recorded into an existing
 // orchestrated run via `--run-id`. Standalone runs keep no durable run state,
@@ -971,14 +972,26 @@ async function commitStepChanges(
 
 // Appends a ledger entry to the freshest on-disk state under the lock. The git
 // commit itself already ran outside the lock; only this pure append is locked.
+// A landed entry carries the resolved issues of every step it names, same as
+// the orchestrator's fold and adopt appends: an absorbed step's resolutions
+// would otherwise land unattached.
 function appendCommit(
   dir: string,
   entry: MigrateCommitLedgerEntry
 ): MigrateRunState {
-  return updateRunState(dir, (fresh) => ({
-    ...fresh,
-    commits: [...fresh.commits, entry],
-  }));
+  return updateRunState(dir, (fresh) => {
+    let withIssues = entry;
+    if (entry.kind === 'landed') {
+      const issueIds = issueIdsForCommit(fresh, entry.stepIds);
+      if (issueIds.length > 0) {
+        withIssues = { ...entry, issueIds };
+      }
+    }
+    return {
+      ...fresh,
+      commits: [...fresh.commits, withIssues],
+    };
+  });
 }
 
 function buildOutcome(
