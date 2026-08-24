@@ -7,6 +7,7 @@ import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { getTaskSpecificEnv } from '../tasks-runner/task-env';
 import { getCustomHasher } from '../tasks-runner/utils';
 import { getDbConnection } from '../utils/db-connection';
+import { buildIoSnapshotOverrides } from '../io-snapshots/overrides';
 import { getInputs, TaskHasher } from './task-hasher';
 
 let taskDetails: TaskDetails;
@@ -27,12 +28,23 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
-  tasksDetails: TaskDetails | null
+  tasksDetails: TaskDetails | null,
+  ioSnapshotBundleDir?: string
 ) {
   performance.mark('hashMultipleTasks:start');
 
   const projects =
     readProjectsConfigurationFromProjectGraph(projectGraph).projects;
+  // A snapshot can make a task depend on producer outputs its declared
+  // inputs never mentioned; those hash after their producers too.
+  const snapshotOverrides = ioSnapshotBundleDir
+    ? buildIoSnapshotOverrides(
+        projectGraph,
+        taskGraph,
+        nxJson,
+        ioSnapshotBundleDir
+      )?.overrides
+    : undefined;
   const tasks = Object.values(taskGraph.tasks);
   const tasksWithHashers = await Promise.all(
     tasks.map(async (task) => {
@@ -48,10 +60,14 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
         return false;
       }
 
-      return !(
-        taskGraph.dependencies[task.id].length > 0 &&
-        getInputs(task, projectGraph, nxJson).depsOutputs.length > 0
-      );
+      if (taskGraph.dependencies[task.id].length === 0) {
+        return true;
+      }
+      const override = snapshotOverrides?.[task.id];
+      if (override) {
+        return Object.keys(override.taskOutputs).length === 0;
+      }
+      return getInputs(task, projectGraph, nxJson).depsOutputs.length === 0;
     })
     .map((t) => t.task);
 
