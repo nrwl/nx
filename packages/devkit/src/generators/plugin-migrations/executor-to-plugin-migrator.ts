@@ -46,6 +46,10 @@ import {
   isExactTargetNameKey,
   updateTargetDefault,
 } from '../target-defaults-utils';
+import {
+  getActiveBatchStaging,
+  type BatchConversionStaging,
+} from './batch-conversion-session';
 import { deleteMatchingProperties } from './plugin-migration-utils';
 
 export type InferredTargetConfiguration = TargetConfiguration & {
@@ -885,6 +889,44 @@ function pluginRegistrationsFormTail(
 }
 
 /**
+ * The effective executor each migrated (project, target) pair resolves to
+ * after the migration: the INFERRED target's executor, with a top-level
+ * `command` resolving to `nx:run-commands` (mirrors
+ * `resolveCommandSyntacticSugar`). Keyed by `"<project>\t<target>"`. Input to
+ * the target-default preflight, inline and at batch finalize.
+ */
+function computeInferredExecutorByPair<T>(
+  scope: MigrationScope<T>,
+  projectGraph: ProjectGraph,
+  inferredTargetsByOptionSet: InferredTargetsByOptionSet
+): Map<string, string | undefined> {
+  const inferredExecutorByPair = new Map<string, string | undefined>();
+  for (const executorScope of scope.executorScopes) {
+    for (const [targetName, projectNames] of executorScope.targetAndProjects) {
+      const optionSetId =
+        executorScope.inferenceOptionSetIdsByTarget.get(targetName);
+      for (const projectName of projectNames) {
+        const root = projectGraph.nodes[projectName]?.data.root;
+        const inferredTarget = getFullInferredTarget(
+          inferredTargetsByOptionSet,
+          optionSetId,
+          root,
+          targetName
+        );
+        const inferredExecutor =
+          inferredTarget.executor ??
+          (inferredTarget.command ? 'nx:run-commands' : undefined);
+        inferredExecutorByPair.set(
+          `${projectName}\t${targetName}`,
+          inferredExecutor
+        );
+      }
+    }
+  }
+  return inferredExecutorByPair;
+}
+
+/**
  * Whether appending the plugin-scoped `targetDefaults[targetName]` entry would
  * change what the existing target defaults resolve to for any eligible migrated
  * pair. Two hazards, both invisible to the Phase 4 verification (it merges no
@@ -1163,38 +1205,13 @@ function hoistCommonAndWrite<T>(
   const preflightTargets = centralizableTargets();
   if (preflightTargets.length > 0) {
     const currentTargetDefaults = readNxJson(tree).targetDefaults;
-    // The effective executor the resolved pair carries after the migration is
-    // the INFERRED target's (command-based targets resolve to
-    // `nx:run-commands`), which decides whether an executor-keyed default
+    // The pair's effective executor decides whether an executor-keyed default
     // outranks the appended exact key.
-    const inferredExecutorByPair = new Map<string, string | undefined>();
-    for (const executorScope of scope.executorScopes) {
-      for (const [
-        targetName,
-        projectNames,
-      ] of executorScope.targetAndProjects) {
-        const optionSetId =
-          executorScope.inferenceOptionSetIdsByTarget.get(targetName);
-        for (const projectName of projectNames) {
-          const root = projectGraph.nodes[projectName]?.data.root;
-          const inferredTarget = getFullInferredTarget(
-            inferredTargetsByOptionSet,
-            optionSetId,
-            root,
-            targetName
-          );
-          // Mirrors `resolveCommandSyntacticSugar`: a top-level `command`
-          // resolves to the `nx:run-commands` executor.
-          const inferredExecutor =
-            inferredTarget.executor ??
-            (inferredTarget.command ? 'nx:run-commands' : undefined);
-          inferredExecutorByPair.set(
-            `${projectName}\t${targetName}`,
-            inferredExecutor
-          );
-        }
-      }
-    }
+    const inferredExecutorByPair = computeInferredExecutorByPair(
+      scope,
+      projectGraph,
+      inferredTargetsByOptionSet
+    );
 
     const nonExactNameTargets: string[] = [];
     const rejectedTargets: string[] = [];
@@ -2195,6 +2212,72 @@ function derivePluginFilledDefaults<T>(
   return filled as Partial<T>;
 }
 
+/**
+ * Deferred (batch) variant of Phase 3's hoist + Phase 4: instead of running
+ * them, capture everything the batch finalize pass needs to run them once over
+ * the whole batch. The session clones the mutable structures at staging time.
+ */
+function stageDeferredPlan<T>(
+  batchStaging: BatchConversionStaging,
+  pluginPath: string,
+  createNodes: CreateNodes<T> | undefined,
+  createNodesV2: CreateNodes<T> | undefined,
+  logger: typeof devkitLogger | undefined,
+  pluginPreRegistered: boolean,
+  scope: MigrationScope<T>,
+  projectGraph: ProjectGraph,
+  residualByProject: ResidualByProject,
+  inferredTargetsByOptionSet: InferredTargetsByOptionSet,
+  inferredExecutors: Set<string>,
+  inferredRoots: Set<string>,
+  matchedConfigFiles: string[],
+  erroredConfigFiles: string[]
+): void {
+  const rootByProject = new Map<string, string>();
+  for (const projectName of residualByProject.keys()) {
+    rootByProject.set(projectName, projectGraph.nodes[projectName]?.data.root);
+  }
+  // Executors of the pre-migration graph targets, for the finalize liveness
+  // scan (mirrors the inline scan in `hoistCommonAndWrite`, which reads them
+  // from the same graph).
+  const graphExecutorByPair = new Map<string, string>();
+  for (const [projectName, node] of Object.entries(projectGraph.nodes)) {
+    for (const [targetName, target] of Object.entries(
+      node.data.targets ?? {}
+    )) {
+      if (target.executor) {
+        graphExecutorByPair.set(
+          `${projectName}\t${targetName}`,
+          target.executor
+        );
+      }
+    }
+  }
+
+  batchStaging.stagePlan({
+    pluginPath,
+    createNodes,
+    createNodesV2,
+    logger,
+    pluginPreRegistered,
+    residualByProject,
+    rootByProject,
+    inferredExecutorByPair: computeInferredExecutorByPair(
+      scope,
+      projectGraph,
+      inferredTargetsByOptionSet
+    ),
+    inferredExecutors,
+    inferredRoots,
+    matchedConfigFiles,
+    erroredConfigFiles,
+    migratedExecutors: scope.executorScopes.map(
+      (executorScope) => executorScope.executor
+    ),
+    graphExecutorByPair,
+  });
+}
+
 async function migrateProjects<T>(
   tree: Tree,
   projectGraph: ProjectGraph,
@@ -2298,13 +2381,23 @@ async function migrateProjects<T>(
     rawMatchedConfigFiles
   );
 
+  // An open batch session (`infer-targets` with several plugins selected)
+  // defers centralization: full residuals are written now and the hoist,
+  // dead-default cleanup, and verification run once at the batch finalize
+  // pass, over every conversion's staged plan. Single-project mode never
+  // centralizes, so it stays on its inline path even inside a batch.
+  const batchStaging = specificProjectToMigrate
+    ? undefined
+    : getActiveBatchStaging(tree);
+
   // Phase 3 — Derive strict-common + write. Single-project mode never hoists
   // (would leak shared config to sibling projects), so it keeps the full
-  // residual in project.json; whole-workspace mode hoists the common config to
-  // a plugin-scoped `targetDefaults` entry and writes only per-project
+  // residual in project.json, as does a deferred batch conversion (the batch
+  // finalize pass hoists later); whole-workspace mode hoists the common config
+  // to a plugin-scoped `targetDefaults` entry and writes only per-project
   // deviations.
   let hoistedByTarget = new Map<string, TargetDefaultArrayEntry>();
-  if (specificProjectToMigrate) {
+  if (specificProjectToMigrate || batchStaging) {
     writeResiduals(
       tree,
       projectConfigsByName,
@@ -2328,22 +2421,41 @@ async function migrateProjects<T>(
     );
   }
 
-  // Phase 4 — single verification inference pass + equivalence oracle. Any
-  // project whose centralized config cannot be verified as equivalent falls
-  // back to a full project.json override (summarized in one logger.warn).
-  await verifyAndFallback(
-    tree,
-    projectGraph,
-    pluginPath,
-    createNodes,
-    createNodesV2,
-    residualByProject,
-    projectConfigsByName,
-    hoistedByTarget,
-    inferredRoots,
-    Boolean(specificProjectToMigrate),
-    logger
-  );
+  if (batchStaging) {
+    stageDeferredPlan(
+      batchStaging,
+      pluginPath,
+      createNodes,
+      createNodesV2,
+      logger,
+      pluginPreRegistered,
+      scope,
+      projectGraph,
+      residualByProject,
+      inferredTargetsByOptionSet,
+      inferredExecutors,
+      inferredRoots,
+      matchedConfigFiles,
+      erroredConfigFilesFromInference
+    );
+  } else {
+    // Phase 4 — single verification inference pass + equivalence oracle. Any
+    // project whose centralized config cannot be verified as equivalent falls
+    // back to a full project.json override (summarized in one logger.warn).
+    await verifyAndFallback(
+      tree,
+      projectGraph,
+      pluginPath,
+      createNodes,
+      createNodesV2,
+      residualByProject,
+      projectConfigsByName,
+      hoistedByTarget,
+      inferredRoots,
+      Boolean(specificProjectToMigrate),
+      logger
+    );
+  }
 
   spinner.succeed(`Migrated configuration for ${projects.size} project(s).\n`);
 

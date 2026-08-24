@@ -24,6 +24,7 @@ import {
   readTargetDefaultsForExecutor,
   withCentralizationSuppressed,
 } from './executor-to-plugin-migrator';
+import { openBatchConversionSession } from './batch-conversion-session';
 import {
   addExecutorProject,
   createSyntheticPlugin,
@@ -3694,6 +3695,320 @@ describe('Phase 3: batch centralization suppression', () => {
   it.todo(
     'compatible restatement: an earlier plugin inferring the same target with the same runnable identity keeps the attribution, so the centralized default silently does not apply; needs a post-flush source-map audit'
   );
+});
+
+describe('batch conversion session: deferred staging', () => {
+  let ctx: FixtureContext;
+
+  afterEach(() => {
+    if (ctx) {
+      teardownFixture(ctx.fs);
+      ctx = undefined;
+    }
+  });
+
+  function addUniformProjects(names: string[]) {
+    for (const name of names) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+  }
+
+  it('defers hoist, dead-default cleanup, and verification for a batch child', async () => {
+    ctx = setupFixture('deferred-child');
+    addUniformProjects(['app1', 'app2']);
+    // An executor-keyed default the inline path would remove as dead (the
+    // migration drops the executor from both projects). Deferred mode must
+    // leave it: cleanup needs batch-global liveness, which only the finalize
+    // pass has. `cache: true` matches the inferred target, so the residuals
+    // stay unchanged by the Phase 2 merge.
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.targetDefaults[SYNTHETIC_EXECUTOR] = { cache: true };
+    updateNxJson(ctx.tree, nxJson);
+    const plugin = createSyntheticPlugin();
+    const warn = jest.fn();
+
+    const session = openBatchConversionSession(ctx.tree);
+    try {
+      await session.runChild(() =>
+        migrateProjectExecutorsToPlugin(
+          ctx.tree,
+          ctx.projectGraph,
+          plugin.pluginPath,
+          plugin.createNodes,
+          { targetName: 'build' },
+          syntheticMigrations(),
+          undefined,
+          { warn } as any
+        )
+      );
+    } finally {
+      session.close();
+    }
+
+    // full residuals, nothing hoisted
+    for (const name of ['app1', 'app2']) {
+      expect(readJson(ctx.tree, `${name}/project.json`).targets.build).toEqual({
+        options: { mode: 'production' },
+      });
+    }
+    const targetDefaults = readNxJson(ctx.tree).targetDefaults;
+    expect(targetDefaults.build).toEqual({ cache: true });
+    // the executor-keyed default survives until finalize decides liveness
+    expect(targetDefaults[SYNTHETIC_EXECUTOR]).toEqual({ cache: true });
+    // registrations are written as in the inline path
+    expect(readNxJson(ctx.tree).plugins).toContainEqual(
+      expect.objectContaining({ plugin: SYNTHETIC_PLUGIN_PATH })
+    );
+    // Phase 1 only: the child runs no verification pass
+    expect(plugin.inferenceCount()).toBe(1);
+    // centralization warnings are deferred along with the decision itself
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('stages a plan with the evidence finalize needs and snapshots plugin registrations around the child', async () => {
+    ctx = setupFixture('deferred-staging');
+    addUniformProjects(['app1', 'app2']);
+    // Not migrated (different executor): only present in the graph snapshot.
+    addExecutorProject(ctx, {
+      name: 'app3',
+      root: 'app3',
+      targetName: 'lint',
+      executor: '@acme/other:lint',
+    });
+    const plugin = createSyntheticPlugin();
+
+    const session = openBatchConversionSession(ctx.tree);
+    try {
+      await session.runChild(async () => {
+        await migrateProjectExecutorsToPlugin(
+          ctx.tree,
+          ctx.projectGraph,
+          plugin.pluginPath,
+          plugin.createNodes,
+          { targetName: 'build' },
+          syntheticMigrations()
+        );
+        // a converter editing registrations after the engine (e.g. renaming
+        // target names in the registration options) must be visible in the
+        // child's after-snapshot
+        const nxJson = readNxJson(ctx.tree);
+        nxJson.plugins.push('@acme/extra/plugin');
+        updateNxJson(ctx.tree, nxJson);
+      });
+    } finally {
+      session.close();
+    }
+
+    expect(session.records).toHaveLength(1);
+    const record = session.records[0];
+    expect(record.pluginsBefore).toEqual([]);
+    expect(record.pluginsAfter).toContainEqual(
+      expect.objectContaining({ plugin: SYNTHETIC_PLUGIN_PATH })
+    );
+    expect(record.pluginsAfter).toContain('@acme/extra/plugin');
+
+    expect(record.plans).toHaveLength(1);
+    const plan = record.plans[0];
+    expect(plan.pluginPath).toBe(SYNTHETIC_PLUGIN_PATH);
+    expect(plan.pluginPreRegistered).toBe(false);
+    expect(plan.migratedExecutors).toEqual([SYNTHETIC_EXECUTOR]);
+    for (const name of ['app1', 'app2']) {
+      const entry = plan.residualByProject.get(name).get('build');
+      expect(entry.residual).toEqual({ options: { mode: 'production' } });
+      expect(entry.baselineFinal.executor).toBe('nx:run-commands');
+      expect(entry.baselineFinal.options.command).toBe('acme-build');
+      expect(plan.rootByProject.get(name)).toBe(name);
+      expect(plan.inferredExecutorByPair.get(`${name}\tbuild`)).toBe(
+        'nx:run-commands'
+      );
+    }
+    expect(plan.inferredExecutors).toEqual(new Set(['nx:run-commands']));
+    expect(plan.inferredRoots).toContain('app1');
+    expect(plan.matchedConfigFiles).toContain(`app1/${SYNTHETIC_CONFIG_FILE}`);
+    expect(plan.erroredConfigFiles).toEqual([]);
+    // graph snapshot covers pairs no plan migrates (finalize liveness input)
+    expect(plan.graphExecutorByPair.get('app3\tlint')).toBe('@acme/other:lint');
+    expect(plan.graphExecutorByPair.get('app1\tbuild')).toBe(
+      SYNTHETIC_EXECUTOR
+    );
+  });
+
+  it('discards staged plans when the child generator fails, and continues with the next child', async () => {
+    ctx = setupFixture('deferred-failed-child');
+    addUniformProjects(['app1', 'app2']);
+    const OTHER_EXECUTOR = '@acme/other:build';
+    const OTHER_PLUGIN_PATH = '@acme/other/plugin';
+    for (const name of ['app3', 'app4']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        executor: OTHER_EXECUTOR,
+        target: uniformExecutorTarget(),
+      });
+    }
+    const pluginA = createSyntheticPlugin();
+    const pluginB = createSyntheticPlugin(
+      (root, targetName) => defaultInferredTarget(root, targetName),
+      OTHER_PLUGIN_PATH
+    );
+
+    const session = openBatchConversionSession(ctx.tree);
+    try {
+      await expect(
+        session.runChild(async () => {
+          await migrateProjectExecutorsToPlugin(
+            ctx.tree,
+            ctx.projectGraph,
+            pluginA.pluginPath,
+            pluginA.createNodes,
+            { targetName: 'build' },
+            syntheticMigrations()
+          );
+          throw new Error('post-engine failure');
+        })
+      ).rejects.toThrow('post-engine failure');
+      expect(session.records).toHaveLength(0);
+
+      await session.runChild(() =>
+        migrateProjectExecutorsToPlugin(
+          ctx.tree,
+          ctx.projectGraph,
+          pluginB.pluginPath,
+          pluginB.createNodes,
+          { targetName: 'build' },
+          [
+            {
+              executors: [OTHER_EXECUTOR],
+              targetPluginOptionMapper: (targetName: string) => ({
+                targetName,
+              }),
+              postTargetTransformer: (target: any) => {
+                if (target.options) {
+                  delete target.options.config;
+                  if (Object.keys(target.options).length === 0) {
+                    delete target.options;
+                  }
+                }
+                return target;
+              },
+            },
+          ]
+        )
+      );
+    } finally {
+      session.close();
+    }
+
+    expect(session.records).toHaveLength(1);
+    expect(session.records[0].plans.map((plan) => plan.pluginPath)).toEqual([
+      OTHER_PLUGIN_PATH,
+    ]);
+  });
+
+  it('runs single-project conversions inline inside a batch and stages nothing', async () => {
+    ctx = setupFixture('deferred-single-project');
+    addUniformProjects(['app1', 'app2']);
+    const plugin = createSyntheticPlugin();
+
+    const session = openBatchConversionSession(ctx.tree);
+    try {
+      await session.runChild(() =>
+        migrateProjectExecutorsToPlugin(
+          ctx.tree,
+          ctx.projectGraph,
+          plugin.pluginPath,
+          plugin.createNodes,
+          { targetName: 'build' },
+          syntheticMigrations(),
+          'app1'
+        )
+      );
+    } finally {
+      session.close();
+    }
+
+    // single-project semantics unchanged: app1 migrated with a full residual,
+    // app2 untouched, no verification pass, nothing staged for finalize
+    expect(readJson(ctx.tree, 'app1/project.json').targets.build).toEqual({
+      options: { mode: 'production' },
+    });
+    expect(readJson(ctx.tree, 'app2/project.json').targets.build.executor).toBe(
+      SYNTHETIC_EXECUTOR
+    );
+    expect(plugin.inferenceCount()).toBe(1);
+    expect(session.records).toHaveLength(1);
+    expect(session.records[0].plans).toHaveLength(0);
+  });
+
+  it('does not nest, rejects reuse after close, and restores inline centralization once closed', async () => {
+    ctx = setupFixture('deferred-lifecycle');
+    addUniformProjects(['app1', 'app2']);
+    const plugin = createSyntheticPlugin();
+
+    const session = openBatchConversionSession(ctx.tree);
+    expect(() => openBatchConversionSession(ctx.tree)).toThrow('already open');
+    session.close();
+    await expect(session.runChild(async () => {})).rejects.toThrow(
+      'has been closed'
+    );
+
+    // with the session closed, the engine is back on the inline path
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations()
+    );
+    expect(readNxJson(ctx.tree).targetDefaults.build).toContainEqual({
+      filter: { plugin: SYNTHETIC_PLUGIN_PATH },
+      options: { mode: 'production' },
+    });
+    // Phase 1 + Phase 4: the inline verification pass runs again
+    expect(plugin.inferenceCount()).toBe(2);
+  });
+
+  it('rejects close while a child is running, keeping the session authoritative for the whole child', async () => {
+    ctx = setupFixture('deferred-close-race');
+    addUniformProjects(['app1', 'app2']);
+    const plugin = createSyntheticPlugin();
+
+    const session = openBatchConversionSession(ctx.tree);
+    let release: () => void;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    const child = session.runChild(async () => {
+      await gate;
+      await migrateProjectExecutorsToPlugin(
+        ctx.tree,
+        ctx.projectGraph,
+        plugin.pluginPath,
+        plugin.createNodes,
+        { targetName: 'build' },
+        syntheticMigrations()
+      );
+    });
+    // closing mid-child would send the child to the inline path (or let it
+    // stage into a successor session); both must stay impossible
+    expect(() => session.close()).toThrow(
+      'while a child conversion is running'
+    );
+    expect(() => openBatchConversionSession(ctx.tree)).toThrow('already open');
+    release();
+    await child;
+
+    // the child ran deferred under this session for its whole duration
+    expect(session.records).toHaveLength(1);
+    expect(session.records[0].plans).toHaveLength(1);
+    expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({ cache: true });
+    session.close();
+  });
 });
 
 describe('Phase 4 — verify + equivalence oracle + fallback', () => {
