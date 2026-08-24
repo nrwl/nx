@@ -626,6 +626,7 @@ describe('TaskOrchestrator', () => {
       // Folding on failure must not become folding always - the whole point of
       // the default is that a green batch stays quiet.
       expect(out).not.toContain('noisy build chatter nobody asked for');
+      expect(out).not.toContain('batch @nx/js:tsc');
       expect(
         orchestrator.options.lifeCycle.printTaskTerminalOutput
       ).toHaveBeenCalledWith(a, 'success', 'a body');
@@ -660,28 +661,6 @@ describe('TaskOrchestrator', () => {
       ).toHaveBeenCalledWith(a, 'success', 'a body');
       // Nothing to redirect to when every task prints its own block.
       expect(out).not.toContain('output in "batch @nx/js:tsc 1" above');
-    });
-
-    it('does not fold a batch under the failures-only default', () => {
-      const orchestrator = createOrchestrator();
-      const a = makeTask('a:build');
-      const taskResults = [
-        { task: a, status: 'success', code: 0, terminalOutput: 'a body' },
-      ];
-
-      const out = captureStdout(() =>
-        orchestrator.printGroupedBatchOutput(
-          BATCH,
-          taskResults,
-          capturedOutputFile('runner summary no task claimed')
-        )
-      );
-
-      expect(out).not.toContain('runner summary no task claimed');
-      expect(out).not.toContain('batch @nx/js:tsc');
-      expect(
-        orchestrator.options.lifeCycle.printTaskTerminalOutput
-      ).toHaveBeenCalledWith(a, 'success', 'a body');
     });
 
     it('skips tasks that never dispatched', () => {
