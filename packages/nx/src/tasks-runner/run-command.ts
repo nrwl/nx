@@ -30,6 +30,8 @@ import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { getBundleInstallDefaultLocation } from '../nx-cloud/update-manager';
 import { logger } from '../utils/logger';
 import { fetchIoSnapshotsForRun } from '../io-snapshots/fetch';
+import { buildIoSnapshotOverrides } from '../io-snapshots/overrides';
+import { formatIoSnapshotSummary } from '../io-snapshots/report';
 import {
   createNxKeyLicenseeInformation,
   getNxKeyInformation,
@@ -1017,6 +1019,7 @@ export async function invokeTasksRunner({
     taskDetails,
     ioSnapshots?.directory
   );
+  reportIoSnapshots(ioSnapshots, projectGraph, taskGraph, nxJson, nxArgs);
   const taskResultsLifecycle = new TaskResultsLifeCycle();
   const compositedLifeCycle: LifeCycle = new CompositeLifeCycle([
     ...constructLifeCycles(lifeCycle, taskGraph, nxJson, nxArgs.skipNxCache),
@@ -1201,6 +1204,33 @@ function loadTasksRunner(modulePath: string): TasksRunner {
         .nxCloudTasksRunnerShell;
     }
     throw e;
+  }
+}
+
+function reportIoSnapshots(
+  ioSnapshots: Awaited<ReturnType<typeof fetchIoSnapshotsForRun>>,
+  projectGraph: ProjectGraph,
+  taskGraph: TaskGraph,
+  nxJson: NxJsonConfiguration,
+  nxArgs: NxArgs
+): void {
+  if (!ioSnapshots) return;
+  const summary = formatIoSnapshotSummary(
+    ioSnapshots.directory
+      ? buildIoSnapshotOverrides(
+          projectGraph,
+          taskGraph,
+          nxJson,
+          ioSnapshots.directory
+        )
+      : null,
+    ioSnapshots
+  );
+  if (!summary) return;
+  if (nxArgs.verbose || process.env.NX_VERBOSE_LOGGING === 'true') {
+    output.note({ title: summary.line, bodyLines: summary.bodyLines });
+  } else {
+    output.log({ title: summary.line });
   }
 }
 
