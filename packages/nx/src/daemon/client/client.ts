@@ -128,7 +128,7 @@ import {
   VersionMismatchError,
 } from './daemon-socket-messenger';
 
-import { getDaemonEnv } from './daemon-environment';
+import { getDaemonEnv, getDaemonSpawnEnv } from './daemon-environment';
 
 /** A refused connect: the errno, and the path it was made against. */
 type ConnectRefusal = {
@@ -1414,7 +1414,7 @@ export class DaemonClient {
         detached: true,
         windowsHide: true,
         shell: false,
-        env: getDaemonEnv(),
+        env: getDaemonSpawnEnv(),
       }
     );
     // The child now owns dup'd copies of the descriptors, so release ours.
