@@ -1,4 +1,4 @@
-// The global jest setup (`scripts/unit-test-setup.js`) mocks
+// The global setup (`vitest.setup.mts`) mocks
 // `nx/src/project-graph/project-graph` to return an empty graph for every
 // test, but this suite is the one place that exercises the real
 // `buildProjectGraphAndSourceMapsWithoutDaemon` implementation, so opt out.
