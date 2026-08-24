@@ -816,48 +816,6 @@ export function packageJsonAuthorsTargetIdentity(
   );
 }
 
-// Trees whose migrations must not centralize, depth-counted so nested
-// `withCentralizationSuppressed` scopes compose. Keyed by Tree identity, so an
-// entry cannot leak into another generator invocation.
-const centralizationSuppressionDepth = new WeakMap<Tree, number>();
-
-/**
- * Run `fn` with target-default centralization suppressed for every migration
- * operating on `tree`: migrated projects keep their full per-project
- * configuration and nothing is hoisted into `nx.json` `targetDefaults`.
- *
- * A batch runner (`infer-targets`) invoking several convert-to-inferred
- * generators against one Tree must wrap every non-final conversion: each
- * conversion's hoist gate checks that the migrated plugin's registrations form
- * the tail of `nx.json` `plugins`, but a later conversion in the same batch
- * appends its own registration afterwards, invalidating what the earlier
- * conversion observed. Suppression is lossless: the retained residuals
- * produce the same resolved configuration, just without deduplication.
- */
-export async function withCentralizationSuppressed<T>(
-  tree: Tree,
-  fn: () => T | Promise<T>
-): Promise<T> {
-  centralizationSuppressionDepth.set(
-    tree,
-    (centralizationSuppressionDepth.get(tree) ?? 0) + 1
-  );
-  try {
-    return await fn();
-  } finally {
-    const depth = centralizationSuppressionDepth.get(tree) ?? 1;
-    if (depth <= 1) {
-      centralizationSuppressionDepth.delete(tree);
-    } else {
-      centralizationSuppressionDepth.set(tree, depth - 1);
-    }
-  }
-}
-
-function isCentralizationSuppressed(tree: Tree): boolean {
-  return (centralizationSuppressionDepth.get(tree) ?? 0) > 0;
-}
-
 export function isRegistrationOfPlugin(
   registration: string | ExpandedPluginConfiguration,
   pluginPath: string
@@ -1051,10 +1009,9 @@ export function hoistChangesExistingTargetDefaults(
  * into `nx.json` `targetDefaults[targetName]` as a plugin-scoped array entry,
  * remove the dead executor-keyed entries, and write only per-project
  * deviations to project.json. Used for whole-workspace migrations;
- * single-project mode keeps the full residual. Hoisting also requires
- * centralization not to be suppressed for the Tree (see
- * `withCentralizationSuppressed`), the plugin's registrations to form the tail
- * of nx.json `plugins` (see `pluginRegistrationsFormTail`), and the appended
+ * single-project mode keeps the full residual. Hoisting also requires the
+ * plugin's registrations to form the tail of nx.json `plugins` (see
+ * `pluginRegistrationsFormTail`), and the appended
  * entry to leave existing target-default resolution unchanged (see
  * `hoistChangesExistingTargetDefaults`); otherwise the affected projects keep
  * their full residuals.
@@ -1176,19 +1133,11 @@ function hoistCommonAndWrite<T>(
   // final for THIS generator invocation: hoist only when the migrated plugin's
   // registrations form its tail; otherwise keep the full residuals (the
   // previous engine's output). A batch runner invoking several conversions
-  // against one Tree appends more registrations after this one returns, so it
-  // suppresses centralization for every non-final conversion instead; there
-  // the tail check would pass on a plugins array that is not final, and its
-  // warning would name plugins that do not exist in the Tree yet.
-  if (isCentralizationSuppressed(tree)) {
-    const skippedTargets = centralizableTargets();
-    if (skippedTargets.length > 0) {
-      retainResiduals(
-        skippedTargets,
-        'later conversions in this infer-targets batch may add plugins that own those targets'
-      );
-    }
-  } else if (!pluginRegistrationsFormTail(readNxJson(tree), pluginPath)) {
+  // against one Tree appends more registrations after this one returns, where
+  // this tail check would pass on a plugins array that is not final; such
+  // invocations never reach this hoist, since a batch child defers
+  // centralization entirely to the finalize pass (see BatchConversionSession).
+  if (!pluginRegistrationsFormTail(readNxJson(tree), pluginPath)) {
     const skippedTargets = centralizableTargets();
     if (skippedTargets.length > 0) {
       retainResiduals(

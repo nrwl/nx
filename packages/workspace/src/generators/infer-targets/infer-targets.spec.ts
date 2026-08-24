@@ -1,39 +1,70 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import type { Tree } from '@nx/devkit';
 import { NoTargetsToMigrateError } from '@nx/devkit/internal';
+import type { BatchConversionSession } from '@nx/devkit/internal';
 import { convertToInferredGenerator } from './infer-targets';
 
-// Tracks the wrapper the generator uses for non-final conversions. The real
-// suppression semantics (Tree-scoped depth counter, effect on hoisting) are
-// covered by the devkit engine specs; here only the wiring is pinned: which
-// conversions run inside the wrapper.
-const mockSuppression = { depth: 0 };
+// The session/finalize semantics (deferred staging, the combined verification
+// pass, failure containment) are covered by the devkit specs; here only the
+// wiring is pinned: which conversions run inside the batch session, when the
+// finalize runs, and when the queued generator callbacks run.
+const events: string[] = [];
+const openedSessions: BatchConversionSession[] = [];
+const finalizeCalls: { tree: Tree; session: BatchConversionSession }[] = [];
+// Replaces the delegate-to-real default so a test can model a finalize whose
+// internal failure was downgraded to a warning (the real contract).
+let finalizeOverride: (() => Promise<void>) | undefined;
 const mockGeneratorImpls: Record<
   string,
   (tree: Tree, options: unknown) => Promise<unknown>
 > = {};
 
-jest.mock('@nx/devkit/internal', () => ({
-  ...jest.requireActual('@nx/devkit/internal'),
-  findInstalledPlugins: () => [
-    { name: '@nx/a' },
-    { name: '@nx/b' },
-    { name: '@nx/c' },
-  ],
-  getGeneratorInformation: (collectionName: string) => ({
-    resolvedCollectionName: collectionName,
-    generatorConfiguration: { hidden: false },
-    implementationFactory: () => mockGeneratorImpls[collectionName],
-  }),
-  withCentralizationSuppressed: async (_tree: Tree, fn: () => unknown) => {
-    mockSuppression.depth++;
-    try {
-      return await fn();
-    } finally {
-      mockSuppression.depth--;
-    }
-  },
-}));
+jest.mock('@nx/devkit/internal', () => {
+  const actual = jest.requireActual('@nx/devkit/internal');
+  return {
+    ...actual,
+    findInstalledPlugins: () => [
+      { name: '@nx/a' },
+      { name: '@nx/b' },
+      { name: '@nx/c' },
+    ],
+    getGeneratorInformation: (collectionName: string) => ({
+      resolvedCollectionName: collectionName,
+      generatorConfiguration: { hidden: false },
+      implementationFactory: () => mockGeneratorImpls[collectionName],
+    }),
+    openBatchConversionSession: (tree: Tree) => {
+      const session = actual.openBatchConversionSession(tree);
+      openedSessions.push(session);
+      const runChild = session.runChild.bind(session);
+      session.runChild = (async (fn: () => unknown) => {
+        events.push('runChild:start');
+        try {
+          return await runChild(fn);
+        } finally {
+          events.push('runChild:end');
+        }
+      }) as typeof session.runChild;
+      const close = session.close.bind(session);
+      session.close = () => {
+        events.push('close');
+        close();
+      };
+      return session;
+    },
+    finalizeBatchConversion: async (
+      tree: Tree,
+      session: BatchConversionSession
+    ) => {
+      events.push('finalize');
+      finalizeCalls.push({ tree, session });
+      if (finalizeOverride) {
+        return finalizeOverride();
+      }
+      return actual.finalizeBatchConversion(tree, session);
+    },
+  };
+});
 
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual('@nx/devkit'),
@@ -42,88 +73,153 @@ jest.mock('@nx/devkit', () => ({
 
 describe('convertToInferredGenerator', () => {
   let tree: Tree;
-  let runs: { collection: string; suppressed: boolean }[];
 
   const registerConversion = (
     collection: string,
     impl?: (tree: Tree, options: unknown) => Promise<unknown>
   ) => {
     mockGeneratorImpls[collection] = jest.fn(async (t, options) => {
-      runs.push({ collection, suppressed: mockSuppression.depth > 0 });
-      return impl?.(t, options);
+      events.push(`child:${collection}`);
+      if (impl) {
+        return impl(t, options);
+      }
+      return () => {
+        events.push(`callback:${collection}`);
+      };
     });
   };
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
-    runs = [];
+    events.length = 0;
+    openedSessions.length = 0;
+    finalizeCalls.length = 0;
+    finalizeOverride = undefined;
     for (const collection of ['@nx/a', '@nx/b', '@nx/c']) {
       registerConversion(collection);
     }
   });
 
-  it('suppresses centralization for every conversion except the final one', async () => {
-    await convertToInferredGenerator(tree, {
+  it('runs every conversion of a multi-plugin batch inside one session, finalizes it, and only then runs the queued callbacks', async () => {
+    const callback = await convertToInferredGenerator(tree, {
       plugins: ['@nx/a', '@nx/b', '@nx/c'],
       skipFormat: true,
     });
 
-    expect(runs).toEqual([
-      { collection: '@nx/a', suppressed: true },
-      { collection: '@nx/b', suppressed: true },
-      { collection: '@nx/c', suppressed: false },
+    // every child ran inside session.runChild, the finalize consumed the same
+    // session after the loop, and no conversion callback ran yet
+    expect(events).toEqual([
+      'runChild:start',
+      'child:@nx/a',
+      'runChild:end',
+      'runChild:start',
+      'child:@nx/b',
+      'runChild:end',
+      'runChild:start',
+      'child:@nx/c',
+      'runChild:end',
+      'finalize',
+      'close',
+    ]);
+    expect(openedSessions).toHaveLength(1);
+    expect(finalizeCalls).toHaveLength(1);
+    expect(finalizeCalls[0].tree).toBe(tree);
+    expect(finalizeCalls[0].session).toBe(openedSessions[0]);
+
+    await callback();
+    expect(events.slice(-3)).toEqual([
+      'callback:@nx/a',
+      'callback:@nx/b',
+      'callback:@nx/c',
     ]);
   });
 
-  it('runs a single conversion unsuppressed', async () => {
-    await convertToInferredGenerator(tree, {
+  it('does not open a session for a single selected plugin and still queues its callback', async () => {
+    registerConversion('@nx/b', async () => () => {
+      events.push('callback:@nx/b');
+      // a callback returning a function queues that task too
+      return () => events.push('inner:@nx/b');
+    });
+
+    const callback = await convertToInferredGenerator(tree, {
       plugins: ['@nx/b'],
       skipFormat: true,
     });
 
-    expect(runs).toEqual([{ collection: '@nx/b', suppressed: false }]);
+    expect(openedSessions).toHaveLength(0);
+    expect(events).toEqual(['child:@nx/b']);
+
+    await callback();
+    expect(events).toEqual(['child:@nx/b', 'callback:@nx/b', 'inner:@nx/b']);
   });
 
-  it('continues the batch when a conversion has no targets to migrate', async () => {
+  it('runs the queued callbacks exactly once when a child has no targets and the finalize fails internally', async () => {
     registerConversion('@nx/b', async () => {
       throw new NoTargetsToMigrateError();
     });
+    // the real finalize never throws: an internal failure is downgraded to a
+    // warning, so the callback queue must run unchanged after it resolves
+    finalizeOverride = async () => {
+      events.push('finalize:internal-failure');
+    };
 
-    await convertToInferredGenerator(tree, {
+    const callback = await convertToInferredGenerator(tree, {
       plugins: ['@nx/a', '@nx/b', '@nx/c'],
       skipFormat: true,
     });
+    await callback();
 
-    // the final conversion still runs unsuppressed after the skipped one
-    expect(runs).toEqual([
-      { collection: '@nx/a', suppressed: true },
-      { collection: '@nx/b', suppressed: true },
-      { collection: '@nx/c', suppressed: false },
+    expect(events).toEqual([
+      'runChild:start',
+      'child:@nx/a',
+      'runChild:end',
+      'runChild:start',
+      'child:@nx/b',
+      'runChild:end',
+      'runChild:start',
+      'child:@nx/c',
+      'runChild:end',
+      'finalize',
+      'finalize:internal-failure',
+      'close',
+      'callback:@nx/a',
+      'callback:@nx/c',
     ]);
   });
 
-  it('keeps earlier conversions suppressed when the final conversion has no targets to migrate', async () => {
-    // The final conversion is only ELIGIBLE to centralize; when it has nothing
-    // to migrate, the earlier conversions have already run suppressed and
-    // nothing centralizes in this run (lossless: full per-project
-    // configuration was written).
+  it('finalizes the batch when the final child has no targets to migrate', async () => {
+    // guards against gating the finalize on the final child's success: the
+    // earlier children's committed plans must still centralize
     registerConversion('@nx/c', async () => {
       throw new NoTargetsToMigrateError();
     });
 
-    await convertToInferredGenerator(tree, {
+    const callback = await convertToInferredGenerator(tree, {
       plugins: ['@nx/a', '@nx/b', '@nx/c'],
       skipFormat: true,
     });
+    await callback();
 
-    expect(runs).toEqual([
-      { collection: '@nx/a', suppressed: true },
-      { collection: '@nx/b', suppressed: true },
-      { collection: '@nx/c', suppressed: false },
+    expect(events).toEqual([
+      'runChild:start',
+      'child:@nx/a',
+      'runChild:end',
+      'runChild:start',
+      'child:@nx/b',
+      'runChild:end',
+      'runChild:start',
+      'child:@nx/c',
+      'runChild:end',
+      'finalize',
+      'close',
+      'callback:@nx/a',
+      'callback:@nx/b',
     ]);
+    expect(finalizeCalls).toHaveLength(1);
+    expect(finalizeCalls[0].session).toBe(openedSessions[0]);
   });
 
-  it('rethrows a fatal conversion error without running later conversions', async () => {
+  it('closes the session without finalizing when a conversion fails fatally', async () => {
     registerConversion('@nx/b', async () => {
       throw new Error('boom');
     });
@@ -135,6 +231,15 @@ describe('convertToInferredGenerator', () => {
       })
     ).rejects.toThrow('boom');
 
-    expect(runs.map((r) => r.collection)).toEqual(['@nx/a', '@nx/b']);
+    expect(events).toEqual([
+      'runChild:start',
+      'child:@nx/a',
+      'runChild:end',
+      'runChild:start',
+      'child:@nx/b',
+      'runChild:end',
+      'close',
+    ]);
+    expect(finalizeCalls).toHaveLength(0);
   });
 });

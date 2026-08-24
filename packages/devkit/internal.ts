@@ -31,10 +31,14 @@ export {
 } from './src/generators/e2e-web-server-info-utils';
 export { forEachExecutorOptions } from './src/generators/executor-options-utils';
 export { AggregatedLog } from './src/generators/plugin-migrations/aggregate-log-util';
+export { finalizeBatchConversion } from './src/generators/plugin-migrations/batch-conversion-finalize';
+export {
+  openBatchConversionSession,
+  type BatchConversionSession,
+} from './src/generators/plugin-migrations/batch-conversion-session';
 export {
   migrateProjectExecutorsToPlugin,
   migrateProjectExecutorsToPluginV1,
-  withCentralizationSuppressed,
   NoTargetsToMigrateError,
   type InferredTargetConfiguration,
 } from './src/generators/plugin-migrations/executor-to-plugin-migrator';

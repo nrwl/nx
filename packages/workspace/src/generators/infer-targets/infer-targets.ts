@@ -3,7 +3,8 @@ import {
   GeneratorInformation,
   getGeneratorInformation,
   findInstalledPlugins,
-  withCentralizationSuppressed,
+  finalizeBatchConversion,
+  openBatchConversionSession,
 } from '@nx/devkit/internal';
 import {
   createProjectGraphAsync,
@@ -71,47 +72,60 @@ export async function convertToInferredGenerator(tree: Tree, options: Schema) {
   }
 
   const tasks: GeneratorCallback[] = [];
-  for (let i = 0; i < generatorsToRun.length; i++) {
-    const generatorCollection = generatorsToRun[i];
-    try {
-      const generator = generatorCollectionChoices.get(generatorCollection);
-      if (generator) {
-        const generatorFactory = generator.implementationFactory();
-        const runGenerator = () =>
-          generatorFactory(tree, {
-            project: options.project,
-            skipFormat: options.skipFormat,
+  // Each conversion checks nx.json's plugins array to decide whether it can
+  // centralize shared configuration, but every later conversion in this loop
+  // appends its own plugin registration afterwards. A batch session defers
+  // centralization to a single finalize pass that observes the finished array,
+  // so every conversion in the batch can centralize; a lone conversion already
+  // sees the finished array and takes the inline path.
+  const session =
+    generatorsToRun.length > 1 ? openBatchConversionSession(tree) : undefined;
+  try {
+    for (const generatorCollection of generatorsToRun) {
+      try {
+        const generator = generatorCollectionChoices.get(generatorCollection);
+        if (generator) {
+          const generatorFactory = generator.implementationFactory();
+          const runGenerator = () =>
+            generatorFactory(tree, {
+              project: options.project,
+              skipFormat: options.skipFormat,
+            });
+          const callback = session
+            ? await session.runChild(runGenerator)
+            : await runGenerator();
+          if (callback) {
+            tasks.push(async () => {
+              const task: unknown = await callback();
+              if (typeof task === 'function') await task();
+            });
+          }
+          output.success({
+            title: `${generatorCollection}:convert-to-inferred - Success`,
           });
-        // Each conversion checks nx.json's plugins array to decide whether it
-        // can centralize shared configuration, but every later conversion in
-        // this loop appends its own plugin registration afterwards. Only the
-        // final conversion sees the finished array, so earlier ones run with
-        // centralization suppressed (they keep full per-project configuration,
-        // which is lossless).
-        const callback =
-          i === generatorsToRun.length - 1
-            ? await runGenerator()
-            : await withCentralizationSuppressed(tree, runGenerator);
-        if (callback) {
-          const task = await callback();
-          if (typeof task === 'function') tasks.push(task);
         }
-        output.success({
-          title: `${generatorCollection}:convert-to-inferred - Success`,
-        });
-      }
-    } catch (e) {
-      if (e instanceof NoTargetsToMigrateError) {
-        output.note({
-          title: `${generatorCollection}:convert-to-inferred - Skipped (No targets to migrate)`,
-        });
-      } else {
-        output.error({
-          title: `${generatorCollection}:convert-to-inferred - Failed`,
-        });
-        throw e;
+      } catch (e) {
+        if (e instanceof NoTargetsToMigrateError) {
+          output.note({
+            title: `${generatorCollection}:convert-to-inferred - Skipped (No targets to migrate)`,
+          });
+        } else {
+          output.error({
+            title: `${generatorCollection}:convert-to-inferred - Failed`,
+          });
+          throw e;
+        }
       }
     }
+
+    if (session) {
+      // Never throws: a failed finalize downgrades to a warning and leaves the
+      // conservative per-project configuration, so the queued callbacks below
+      // still run.
+      await finalizeBatchConversion(tree, session);
+    }
+  } finally {
+    session?.close();
   }
 
   if (!options.skipFormat) {
