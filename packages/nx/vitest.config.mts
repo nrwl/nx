@@ -65,13 +65,11 @@ export default defineConfig({
     testTimeout: 35000,
     // Native .node bindings are not thread-safe across vitest worker threads.
     pool: 'forks',
-    // A worker occasionally fails to terminate within `teardownTimeout` and is
-    // then killed, which surfaces as an unhandled pool error and fails a run in
-    // which every test passed. The jest setup papered over the same leak with
-    // `--forceExit`. NOTE: this only suppresses the error, so a killed worker's
-    // file is silently missing from the results - compare the reported file
-    // count against the expected one when reading a green run.
-    dangerouslyIgnoreUnhandledErrors: true,
+    // Specs that stand up native workspace contexts leave their worker slow to
+    // exit - not stuck, just past the 10s default once the pool is loaded. The
+    // pool then kills it and that file's results are lost. The jest setup hid
+    // the same slowness behind `--forceExit`.
+    teardownTimeout: 60_000,
     // Node-side (lazy require) resolution needs the same source
     // condition vite's resolve.conditions provides for imports.
     execArgv: ['--conditions=@nx/nx-source'],
