@@ -1,13 +1,11 @@
-// This must come before the Hasher import
-
 import {
   expandNamedInput,
   expandSingleProjectInputs,
   filterUsingGlobPatterns,
   splitInputsIntoSelfAndDependencies,
-} from './task-hasher';
+} from './task-inputs';
 
-describe('TaskHasher', () => {
+describe('task inputs', () => {
   describe('splitInputsIntoSelfAndDependencies', () => {
     it('should identify ^{projectRoot}/**/*.ts as a dependency fileset', () => {
       const result = splitInputsIntoSelfAndDependencies(
