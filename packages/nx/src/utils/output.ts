@@ -503,7 +503,7 @@ class CLIOutput {
     message: string,
     // A skipped task never ran, so it has no fold to be redirected to - and the
     // icon ladder below would render it with the success tick. Excluding it
-    // makes both call sites' `status !== 'skipped'` checks a consequence of the
+    // makes the call site's `status !== 'skipped'` check a consequence of the
     // type rather than a convention to remember.
     taskStatus: Exclude<TaskStatus, 'skipped'>,
     note: string
@@ -546,19 +546,25 @@ class CLIOutput {
     this.writeToStream(header);
     this.addNewline();
     this.addNewline();
-    if (body.capturedOutputPath) {
-      this.copyFileToStream(body.capturedOutputPath);
-    }
-    if (body.trailer) {
-      this.ensureLineStart();
-      this.writeToStream(`${body.trailer}${EOL}`);
-    }
-
-    if (grouped) {
-      this.ensureLineStart();
-      this.writeToStream(`${GH_GROUP_SUFFIX}${EOL}`);
-    } else {
-      this.ensureLineStart();
+    try {
+      if (body.capturedOutputPath) {
+        this.copyFileToStream(body.capturedOutputPath);
+      }
+      if (body.trailer) {
+        this.ensureLineStart();
+        this.writeToStream(`${body.trailer}${EOL}`);
+      }
+    } finally {
+      // The header is already on the stream, so an exception while rendering
+      // the body must not skip the terminator: GitHub would fold every line
+      // after this point into a group that never closes, swallowing the rest of
+      // the run's output rather than just this batch's.
+      if (grouped) {
+        this.ensureLineStart();
+        this.writeToStream(`${GH_GROUP_SUFFIX}${EOL}`);
+      } else {
+        this.ensureLineStart();
+      }
     }
   }
 
@@ -617,10 +623,15 @@ class CLIOutput {
         // The repo compiles with `strict: false`, so a `: string` return type
         // alone does not reject a fallthrough - `undefined` stays assignable.
         // This does: a new `TaskStatus` member fails to narrow to `never` here.
-        // Worth the four lines because the gap already shipped once, rendering
+        // Worth the lines because the gap already shipped once, rendering
         // `::group::undefined > nx run ...` for a stopped task.
         const unhandled: never = taskStatus;
-        return unhandled;
+        void unhandled;
+        // Returning `unhandled` would print the status text where an icon goes
+        // (`::group::queued > nx run ...`) for a value that reached us over IPC
+        // or from cache metadata without passing the compiler. No icon reads
+        // better than a wrong one.
+        return '';
       }
     }
   }

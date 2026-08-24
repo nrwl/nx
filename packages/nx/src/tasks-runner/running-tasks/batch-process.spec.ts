@@ -6,17 +6,27 @@ import { existsSync, readFileSync } from 'fs';
 // and a spy on the fs namespace never sees it. Replace the module instead, and
 // gate the failure on a flag so every other test here keeps the real fs.
 let mockFailOpenSync = false;
+let mockFailWriteSync = false;
 jest.mock('fs', () => {
   const actual = jest.requireActual('fs');
+  const enospc = () =>
+    Object.assign(new Error('ENOSPC: no space left on device'), {
+      code: 'ENOSPC',
+    });
   return {
     ...actual,
     openSync: (...args: unknown[]) => {
       if (mockFailOpenSync) {
-        throw Object.assign(new Error('ENOSPC: no space left on device'), {
-          code: 'ENOSPC',
-        });
+        throw enospc();
       }
       return (actual.openSync as any)(...args);
+    },
+    // The likelier real failure: the file opens fine and the disk fills later.
+    writeSync: (...args: unknown[]) => {
+      if (mockFailWriteSync) {
+        throw enospc();
+      }
+      return (actual.writeSync as any)(...args);
     },
   };
 });
@@ -354,6 +364,63 @@ describe('BatchProcess', () => {
       );
     } finally {
       mockFailOpenSync = false;
+      warn.mockRestore();
+    }
+  });
+  it('keeps streaming every later chunk after a capture failure, not just the first', () => {
+    const child = fakeChildProcess();
+    const warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
+    mockFailOpenSync = true;
+
+    try {
+      const forwarded = withEnvironmentVariables(FOLDING_ENV, () => {
+        new BatchProcess(child, '@nx/gradle:batch');
+        return captureForwarded(() => {
+          (child as any).stdout.emit('data', Buffer.from('first\n'));
+          (child as any).stdout.emit('data', Buffer.from('second\n'));
+          (child as any).stderr.emit('data', Buffer.from('on stderr\n'));
+        });
+      });
+
+      // Latching the discard flag would make every chunk after the first return
+      // early - captured nowhere and printed nowhere.
+      expect(forwarded.stdout).toContain('first');
+      expect(forwarded.stdout).toContain('second');
+      // And a stderr chunk has to stay on stderr rather than being folded into
+      // stdout by a fallback that forgot which stream it came from.
+      expect(forwarded.stderr).toContain('on stderr');
+      expect(forwarded.stdout).not.toContain('on stderr');
+    } finally {
+      mockFailOpenSync = false;
+      warn.mockRestore();
+    }
+  });
+
+  it('keeps what it already captured when the disk fills mid-batch', () => {
+    const child = fakeChildProcess();
+    const warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
+
+    try {
+      const { batch, forwarded } = withEnvironmentVariables(FOLDING_ENV, () => {
+        const b = new BatchProcess(child, '@nx/gradle:batch');
+        const f = captureForwarded(() => {
+          (child as any).stdout.emit('data', Buffer.from('head of the log\n'));
+          // Opens fine, fills later - so there are already good bytes on disk.
+          mockFailWriteSync = true;
+          (child as any).stdout.emit('data', Buffer.from('tail of the log\n'));
+        });
+        return { batch: b, forwarded: f };
+      });
+
+      // The head is where a compiler's first non-cascading errors are, so
+      // unlinking the file on failure would discard the most useful part.
+      const path = batch.getCapturedOutputPath();
+      expect(path).toBeDefined();
+      expect(readFileSync(path, 'utf-8')).toContain('head of the log');
+      expect(forwarded.stdout).toContain('tail of the log');
+      batch.discardCapturedOutput();
+    } finally {
+      mockFailWriteSync = false;
       warn.mockRestore();
     }
   });

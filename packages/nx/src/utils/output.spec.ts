@@ -20,13 +20,29 @@ describe('printsFullTaskOutput', () => {
     expect(printsFullTaskOutput({ outputStyle })).toBe(expected);
   });
 
-  it('collapses when no style was named, without the field being assigned one', () => {
+  it('prints a style it has never heard of in full, rather than collapsing it', () => {
+    // The cases above enumerate every style that exists today, so an allow-list
+    // of exactly those would satisfy them all - which is the shape this
+    // predicate must NOT have. A style nobody has classified yet has to print,
+    // so adding one to the union cannot silently start withholding output.
+    expect(printsFullTaskOutput({ outputStyle: 'some-future-style' })).toBe(
+      true
+    );
+  });
+
+  it('collapses when no style was named, without assigning the field', () => {
     // The default is resolved here rather than written onto `outputStyle`,
     // because an absent style is what tells the orchestrator it may still
     // consult `shouldStreamOutput` for a continuous task. Assigning it broke 36
     // e2e tasks once already.
-    expect(printsFullTaskOutput({})).toBe(false);
+    const args: { outputStyle?: string } = {};
+    expect(printsFullTaskOutput(args)).toBe(false);
     expect(printsFullTaskOutput({ outputStyle: undefined })).toBe(false);
+    // Asserting the resolution is not enough - the point is that it happens
+    // here and does not write the default back onto the caller's object, since
+    // the orchestrator reads that same absence to decide streaming.
+    expect('outputStyle' in args).toBe(false);
+    expect(args.outputStyle).toBeUndefined();
   });
 
   it('prints full output under --verbose whatever the style', () => {
@@ -48,7 +64,9 @@ describe('isStaticOutputStyle', () => {
     ['static', true],
     ['static-failures-only', true],
     ['stream', false],
+    ['stream-without-prefixes', false],
     ['dynamic', false],
+    ['dynamic-legacy', false],
     ['tui', false],
   ])('%s is a static style: %s', (style, expected) => {
     expect(isStaticOutputStyle(style)).toBe(expected);

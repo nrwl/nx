@@ -1017,27 +1017,39 @@ export class TaskOrchestrator {
    * tee task output into the worker's stdio on the way to `terminalOutput`.
    *
    * Otherwise the batch's own attribution is trusted and each task renders
-   * through the life cycle exactly as in a non-batch run: failures in full,
-   * successes collapsed to a line. A batch that never reported results is
-   * handled by the caller instead.
+   * through the life cycle exactly as in a non-batch run - which for run-many
+   * means failures in full and successes collapsed to a line, and for run-one
+   * additionally means the initiating project prints in full whatever its
+   * status. A batch that never reported results is handled by the caller.
+   *
+   * The cost of the fold branch is that it replaces per-task rendering
+   * wholesale, so a failing batch prints its successful tasks' bodies too -
+   * these plugins tee every task's output into the worker's stdio, so the log
+   * is not separable into claimed and unclaimed parts. That is a deliberate
+   * trade: an unreadable failure is worse than a verbose one. It also means a
+   * failing `@nx/jest` batch loses the per-project summaries it synthesizes
+   * rather than writes (see the note below), which is the price of the same
+   * decision.
    *
    * Note what the fold path assumes: that everything in a task's
    * `terminalOutput` also reached the worker's stdio, so replacing the per-task
-   * blocks with the log loses nothing. That holds for the executors this path
-   * exists for, but not universally - `@nx/jest` synthesizes each task's
-   * `terminalOutput` from an aggregated result and never writes those
-   * per-project summaries to stdio, so under `--batch` they are only in the
-   * per-task blocks. It opts out of batching by default.
+   * blocks with the log loses nothing. That holds for `@nx/maven` and
+   * `@nx/gradle`, which tee, but not universally - `@nx/jest` synthesizes each
+   * task's `terminalOutput` from an aggregated result and never writes those
+   * per-project summaries to stdio, so a failing `@nx/jest --batch` run under
+   * grouping does lose them. It opts out of batching by default, which is what
+   * keeps this an edge rather than the common case.
    */
   private printGroupedBatchOutput(
     batch: Batch,
     taskResults: TaskResult[],
     capturedOutputPath: string | undefined
   ) {
-    // Read from the same field the streaming decision uses. `this.options`
-    // carries its own `outputStyle` merged from `nx.json`'s tasksRunnerOptions,
-    // and the two disagree whenever the style was not set on the command line -
-    // `init-tasks-runner` passes a populated `options` and no style at all.
+    // Read from the same field the streaming decision uses. `this.options` has
+    // its own `outputStyle`, merged from `nx.json`'s tasksRunnerOptions, so the
+    // two disagree whenever a style is configured there but not named on the
+    // command line - and `init-tasks-runner` passes a populated `options` with
+    // no style argument at all, so on that path only `options` can carry one.
     const printsFullOutput = printsFullTaskOutput({
       verbose: this.options.verbose,
       outputStyle: this.outputStyle,

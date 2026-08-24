@@ -41,6 +41,12 @@ export class BatchProcess {
    * second numbered file that nothing ever cleans up.
    */
   private capturedOutputDiscarded = false;
+  /**
+   * Set when writing the capture failed. Distinct from discarded: the bytes
+   * already on disk are still the best record of the batch, so the file is kept
+   * and rendered, while everything after the failure goes live to the terminal.
+   */
+  private capturedOutputFailed = false;
   private static capturedOutputCount = 0;
 
   constructor(
@@ -111,7 +117,7 @@ export class BatchProcess {
         const text = chunk.toString();
 
         if (shouldGroupBatchOutput()) {
-          this.capture(chunk);
+          this.capture(chunk, process.stderr);
         } else {
           // Maintain current terminal output behavior
           output.writeTaskOutputChunk(chunk, process.stderr);
@@ -141,10 +147,19 @@ export class BatchProcess {
     this.outputCallbacks.push(cb);
   }
 
-  private capture(chunk: string | Buffer) {
+  private capture(
+    chunk: string | Buffer,
+    stream: NodeJS.WriteStream = process.stdout
+  ) {
     // Only a released capture stops recording; a handed-over one keeps
     // appending until the fold is rendered.
     if (this.capturedOutputDiscarded) {
+      return;
+    }
+    if (this.capturedOutputFailed) {
+      // Capture is over, but the output is not optional. Everything from here
+      // goes straight to the terminal, on the stream it arrived on.
+      output.writeTaskOutputChunk(chunk, stream);
       return;
     }
     try {
@@ -175,13 +190,23 @@ export class BatchProcess {
       // otherwise had nothing wrong with it. The capture is an optimization
       // that the common path discards anyway, so give it up and put the bytes
       // back on the terminal instead of losing both them and the run.
-      this.capturedOutputDiscarded = true;
-      this.releaseCapturedOutput();
+      // Latch on a flag of its own rather than reusing the discard flag: that
+      // one makes `capture` return early, which would drop every later chunk
+      // on the floor - captured nowhere and printed nowhere.
+      this.capturedOutputFailed = true;
+      // Close the fd but keep the file. Whatever was written before the failure
+      // is still the head of the batch's log, which is where a compiler's first
+      // non-cascading errors live; unlinking it here would throw away the most
+      // useful bytes precisely when the disk is in trouble.
+      this.closeCapturedOutput();
       output.warn({
         title: `Could not capture batch output for ${this.executorName}`,
-        bodyLines: [e.message, 'Streaming it live instead.'],
+        bodyLines: [
+          e.message,
+          'Streaming the rest of it live instead; the fold holds what was captured first.',
+        ],
       });
-      output.writeTaskOutputChunk(chunk);
+      output.writeTaskOutputChunk(chunk, stream);
     }
   }
 
@@ -214,15 +239,20 @@ export class BatchProcess {
    * opening or writing the file is what failed.
    */
   private releaseCapturedOutput() {
+    this.closeCapturedOutput();
+    if (this.capturedOutputPath) {
+      rmSync(this.capturedOutputPath, { force: true });
+      this.capturedOutputPath = undefined;
+    }
+  }
+
+  /** Closes the fd, keeping the file and its path readable. */
+  private closeCapturedOutput() {
     if (this.capturedOutputFd !== undefined) {
       try {
         closeSync(this.capturedOutputFd);
       } catch {}
       this.capturedOutputFd = undefined;
-    }
-    if (this.capturedOutputPath) {
-      rmSync(this.capturedOutputPath, { force: true });
-      this.capturedOutputPath = undefined;
     }
   }
 
