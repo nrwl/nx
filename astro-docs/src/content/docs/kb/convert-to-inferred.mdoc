@@ -259,6 +259,24 @@ A plugin registered later can take over a target's identity, and the shared defa
 stop applying.
 The generator prints a warning and keeps the full per-project configuration in that case.
 
+Centralization is skipped for a target when adding the shared entry would change which existing
+`targetDefaults` apply to it.
+For example, an exact target-name entry takes precedence over a glob entry such as `build-*`, so
+adding one could stop the glob entry's configuration from applying to the migrated targets.
+The generator prints a warning and keeps the full per-project configuration for that target.
+
+When you convert several plugins in one run of the `infer-targets` generator, only the final
+conversion is eligible to centralize shared configuration.
+The earlier conversions keep full per-project configuration, because a plugin registered by a
+later conversion could take over their targets.
+
+A plugin registered earlier than the migrated plugin can remain the source of a target when it
+infers the same target for the same project with the same executor.
+The generator cannot detect this case, and the centralized default does not apply to that target.
+Review the configuration when two inference plugins produce the same target name and executor for
+the same project.
+For `nx:run-commands` and `nx:run-script` targets, also compare the command or script.
+
 After centralizing, the generator verifies that every migrated target still resolves to the same
 configuration.
 If the centralized default would also reach a project the generator did not migrate, or the
