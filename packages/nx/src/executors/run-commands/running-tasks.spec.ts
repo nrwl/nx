@@ -3,9 +3,10 @@ import { EventEmitter } from 'events';
 import { stripVTControlCharacters } from 'util';
 import { output } from '../../utils/output';
 
-// `running-tasks.ts` imports `spawn` by name, so the binding is resolved at load
-// time and a spy on the child_process namespace never sees it - the module has
-// to be replaced instead.
+// Replaces the module rather than spying. A spy reaches this code only through
+// `require('child_process')`; an `import * as cp` is an interop wrapper under
+// this repo's transform, not the module object, so a spy on it is not observed
+// here (measured: 0 calls). Mocking the module works either way.
 const mockChild = () => {
   const cp: any = new EventEmitter();
   cp.stdout = new EventEmitter();
@@ -100,9 +101,12 @@ describe('run-commands output routing', () => {
         { root: '.' } as any,
         'lib:dev'
       );
-      // 1. the command header, written at construction
-      const header = routed.mock.calls.map((c) => String(c[0]));
-      expect(header.some((c) => c.includes('webpack --watch'))).toBe(true);
+      // 1. the command header, written at construction, on stdout
+      const headerCall = routed.mock.calls.find((c) =>
+        String(c[0]).includes('webpack --watch')
+      );
+      expect(headerCall).toBeDefined();
+      expect(headerCall[1]).toBe(process.stdout);
 
       routed.mockClear();
       mockSpawned.stdout.emit('data', 'to stdout');

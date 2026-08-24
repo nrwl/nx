@@ -2,9 +2,15 @@ import * as figures from 'figures';
 import { EventEmitter } from 'events';
 import { existsSync, readFileSync } from 'fs';
 
-// `capture()` imports openSync by name, so the binding is resolved at load time
-// and a spy on the fs namespace never sees it. Replace the module instead, and
-// gate the failure on a flag so every other test here keeps the real fs.
+// Replaces the module rather than spying, and gates the failure on a flag so
+// every other test here keeps the real fs.
+//
+// A spy would also work, but only through `require('fs')` - NOT through an
+// `import * as fs`, which under this repo's transform is an interop wrapper
+// around the module rather than the module object itself, so mutating it
+// changes nothing `capture()` can see. Measured: namespace spy 0 calls,
+// `require` spy 1, for the same code path. The module mock sidesteps the
+// distinction entirely.
 let mockFailOpenSync = false;
 let mockFailWriteSync = false;
 // Writes a prefix, then fails on the next call - a disk filling mid-chunk.

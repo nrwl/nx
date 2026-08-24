@@ -1027,8 +1027,10 @@ export class TaskOrchestrator {
    * The worker's whole captured log is rendered as a fold above them when the
    * run asked for full output, or when any task failed or was stopped. A
    * diagnostic that explains a failure is routinely one no task claimed:
-   * `@nx/maven` writes its exit-code dump and collected stderr to the worker's
-   * stderr, and `@nx/gradle` emits configuration-phase errors before the first
+   * `@nx/maven` writes its exit-code dump and collected task output to the
+   * worker's stdout - it points slf4j at `System.out` precisely because stderr
+   * carries its result protocol - and `@nx/gradle` emits configuration-phase
+   * errors before the first
    * `> Task :x:y` header tells it which task to attribute to. Both catch their
    * own crash and backfill task results, so the batch resolves and lands here
    * rather than in the caller's failure path.
@@ -1036,9 +1038,13 @@ export class TaskOrchestrator {
    * Rendering both duplicates some bytes, deliberately. `@nx/maven` and
    * `@nx/gradle` tee each task's output into the worker's stdio on the way to
    * `terminalOutput`, so a failing task's body appears in the fold and again in
-   * its own block. That is bounded - successes stay collapsed, so they add only
-   * a line each, and a crashed batch backfills a short `e.toString()` rather
-   * than a body - and it buys back attribution the fold cannot express. The
+   * its own block. That is bounded on the default style, where successes
+   * collapse to a line each and a crashed batch backfills a short
+   * `e.toString()` rather than a body, so the case with the largest fold
+   * duplicates the least. Under a full-output style it is not bounded: every
+   * task prints in full beside a log that already contains it, which is the
+   * price of that style asking for everything. What it buys either way is
+   * attribution the fold cannot express. The
    * alternative, letting the fold replace per-task rendering, silently dropped
    * `@nx/jest`'s summaries and is what this shape exists to avoid.
    *
