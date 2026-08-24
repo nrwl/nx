@@ -998,7 +998,12 @@ export async function invokeTasksRunner({
   // Must precede hashing: the bundle is the snapshot source for task hashes.
   const ioSnapshots = await fetchIoSnapshotsForRun(nxJson, runnerOptions);
 
-  let hasher = createTaskHasher(projectGraph, nxJson, runnerOptions);
+  let hasher = createTaskHasher(
+    projectGraph,
+    nxJson,
+    runnerOptions,
+    ioSnapshots?.directory
+  );
 
   // this is used for two reasons: to fetch all remote cache hits AND
   // to submit everything that is known in advance to Nx Cloud to run in
@@ -1009,7 +1014,8 @@ export async function invokeTasksRunner({
     projectGraph,
     taskGraph,
     nxJson,
-    taskDetails
+    taskDetails,
+    ioSnapshots?.directory
   );
   const taskResultsLifecycle = new TaskResultsLifeCycle();
   const compositedLifeCycle: LifeCycle = new CompositeLifeCycle([
