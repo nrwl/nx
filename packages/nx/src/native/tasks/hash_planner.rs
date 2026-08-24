@@ -21,6 +21,30 @@ use crate::native::tasks::utils;
 use crate::native::utils::find_matching_projects;
 use std::sync::{Arc, OnceLock};
 
+/// Per-task I/O snapshot data supplied by the TS layer once per run. Reads are
+/// pre-classified by the server (NXC-4847 §2a); negations and class mapping are
+/// still applied here against the current declared inputs. `mode` is reserved
+/// for files-only planning.
+#[napi(object)]
+#[derive(Clone, Debug)]
+pub struct IoSnapshotOverride {
+    /// project name → workspace-relative globs under that project's root
+    pub projects: HashMap<String, Vec<String>>,
+    /// workspace-relative globs outside any project root
+    pub workspace: Vec<String>,
+    /// producer task id → observed paths inside that task's outputs
+    pub task_outputs: HashMap<String, Vec<String>>,
+    pub digest: String,
+    #[napi(ts_type = "'hash' | 'files'")]
+    pub mode: Option<String>,
+}
+
+pub type IoSnapshotOverrides = HashMap<String, IoSnapshotOverride>;
+
+fn io_snapshot_marker(digest: &str) -> HashInstruction {
+    HashInstruction::Marker(format!("io-snapshot:{digest}"))
+}
+
 #[napi]
 pub struct HashPlanner {
     nx_json: NxJson,
@@ -111,6 +135,7 @@ impl HashPlanner {
         &self,
         task_ids: Vec<&str>,
         task_graph: TaskGraph,
+        overrides: Option<&IoSnapshotOverrides>,
     ) -> anyhow::Result<HashPlans> {
         let function_start = std::time::Instant::now();
 
@@ -168,6 +193,10 @@ impl HashPlanner {
                     &mut VisitedTracker::new(task.target.project.as_str()),
                 )?);
 
+                if let Some(io) = overrides.and_then(|o| o.get(*id)) {
+                    ids.push(pool.intern(io_snapshot_marker(&io.digest)));
+                }
+
                 ids.sort_unstable();
                 ids.dedup();
 
@@ -207,8 +236,9 @@ impl HashPlanner {
         &self,
         task_ids: Vec<&str>,
         task_graph: TaskGraph,
+        overrides: Option<&IoSnapshotOverrides>,
     ) -> anyhow::Result<HashMap<String, Vec<HashInstruction>>> {
-        let hash_plans = self.get_plans_internal(task_ids, task_graph)?;
+        let hash_plans = self.get_plans_internal(task_ids, task_graph, overrides)?;
         Ok(hash_plans
             .plans
             .into_iter()
@@ -228,9 +258,10 @@ impl HashPlanner {
         &self,
         task_ids: Vec<String>,
         task_graph: TaskGraph,
+        overrides: Option<HashMap<String, IoSnapshotOverride>>,
     ) -> anyhow::Result<HashMap<String, Vec<HashInstruction>>> {
         let task_ids: Vec<&str> = task_ids.iter().map(|s| s.as_str()).collect();
-        self.get_plans_materialized(task_ids, task_graph)
+        self.get_plans_materialized(task_ids, task_graph, overrides.as_ref())
     }
 
     #[napi(ts_return_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
@@ -238,9 +269,10 @@ impl HashPlanner {
         &self,
         task_ids: Vec<String>,
         task_graph: TaskGraph,
+        overrides: Option<HashMap<String, IoSnapshotOverride>>,
     ) -> anyhow::Result<External<HashPlans>> {
         let task_ids: Vec<&str> = task_ids.iter().map(|s| s.as_str()).collect();
-        let plans = self.get_plans_internal(task_ids, task_graph)?;
+        let plans = self.get_plans_internal(task_ids, task_graph, overrides.as_ref())?;
         Ok(External::new(plans))
     }
 

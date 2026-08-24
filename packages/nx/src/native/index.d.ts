@@ -94,8 +94,8 @@ export declare class HashPlanInspector {
 
 export declare class HashPlanner {
   constructor(nxJson: NxJson, projectGraph: ExternalObject<ProjectGraph>)
-  getPlans(taskIds: Array<string>, taskGraph: TaskGraph): Record<string, string[]>
-  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph): ExternalObject<Record<string, Array<HashInstruction>>>
+  getPlans(taskIds: Array<string>, taskGraph: TaskGraph, overrides?: Record<string, IoSnapshotOverride> | undefined | null): Record<string, string[]>
+  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph, overrides?: Record<string, IoSnapshotOverride> | undefined | null): ExternalObject<Record<string, Array<HashInstruction>>>
 }
 
 export declare class HttpRemoteCache {
@@ -557,6 +557,23 @@ export interface IoSnapshotFetchResult {
   /** Directory holding `snapshots.json` when status is not `skipped`. */
   directory?: string
   resolution?: IoSnapshotResolution
+}
+
+/**
+ * Per-task I/O snapshot data supplied by the TS layer once per run. Reads are
+ * pre-classified by the server (NXC-4847 §2a); negations and class mapping are
+ * still applied here against the current declared inputs. `mode` is reserved
+ * for files-only planning.
+ */
+export interface IoSnapshotOverride {
+  /** project name → workspace-relative globs under that project's root */
+  projects: Record<string, Array<string>>
+  /** workspace-relative globs outside any project root */
+  workspace: Array<string>
+  /** producer task id → observed paths inside that task's outputs */
+  taskOutputs: Record<string, Array<string>>
+  digest: string
+  mode?: 'hash' | 'files'
 }
 
 /** What was resolved for a commit; persisted alongside the bundle. */
