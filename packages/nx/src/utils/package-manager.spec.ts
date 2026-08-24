@@ -1,3 +1,4 @@
+import type { Mock, MockInstance } from 'vitest';
 vi.mock('fs', async () => {
   return {
     ...require('fs'),
@@ -813,7 +814,7 @@ describe('package-manager', () => {
   });
 
   describe('getWorkspaceRegistryUrlForDisplay', () => {
-    let execFileSyncMock: jest.SpyInstance;
+    let execFileSyncMock: MockInstance;
     let platform: PropertyDescriptor;
 
     /** Answers `<pm> config get <key>` from `answers`, `undefined` for the rest. */
@@ -832,8 +833,8 @@ describe('package-manager', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValue({
         cli: { packageManager: 'npm' },
       });
-      (existsSync as jest.Mock).mockReturnValue(false);
-      (statSync as jest.Mock).mockImplementation(() => {
+      (existsSync as Mock).mockReturnValue(false);
+      (statSync as Mock).mockImplementation(() => {
         throw new Error('ENOENT: no such file or directory');
       });
       mockGetNpmSpawnRegistryEnv.mockReturnValue({});
@@ -1062,7 +1063,7 @@ describe('package-manager', () => {
         }
         throw new Error(`Unexpected command: ${p}`);
       });
-      (existsSync as jest.Mock).mockImplementation((path: string) =>
+      (existsSync as Mock).mockImplementation((path: string) =>
         path.endsWith('pnpm-workspace.yaml')
       );
       const commands = getPackageManagerCommand('pnpm');
@@ -1081,7 +1082,7 @@ describe('package-manager', () => {
         }
         throw new Error(`Unexpected command: ${p}`);
       });
-      (existsSync as jest.Mock).mockReturnValue(false);
+      (existsSync as Mock).mockReturnValue(false);
       const commands = getPackageManagerCommand('pnpm');
       expect(commands.add).toEqual('pnpm add --config.frozen-lockfile=false');
       expect(commands.addDev).toEqual(
@@ -1091,13 +1092,13 @@ describe('package-manager', () => {
   });
 
   describe('packageRegistryView', () => {
-    let execMock: jest.SpyInstance;
+    let execMock: MockInstance;
 
     beforeEach(() => {
       clearPackageManagerVersionCache();
       // jest.clearAllMocks keeps implementations, so pin the default here or a
       // test's statSync stub would leak into its neighbors.
-      (statSync as jest.Mock).mockImplementation(() => {
+      (statSync as Mock).mockImplementation(() => {
         throw new Error('ENOENT: no such file or directory');
       });
       execMock = vi.spyOn(childProcess, 'execFile').mockImplementation(((
@@ -1147,7 +1148,7 @@ describe('package-manager', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValue({
         cli: { packageManager: 'pnpm' },
       });
-      (existsSync as jest.Mock).mockReturnValue(false);
+      (existsSync as Mock).mockReturnValue(false);
       vi.spyOn(childProcess, 'execSync').mockReturnValue('11.2.0' as any);
       const overlaySpy = mockGetNpmSpawnRegistryEnv.mockReturnValue({});
 
@@ -1165,7 +1166,7 @@ describe('package-manager', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValue({
         cli: { packageManager: 'pnpm' },
       });
-      (existsSync as jest.Mock).mockReturnValue(false);
+      (existsSync as Mock).mockReturnValue(false);
       vi.spyOn(childProcess, 'execSync').mockReturnValue('10.13.1' as any);
       mockGetNpmSpawnRegistryEnv.mockReturnValue({
         npm_config_registry: 'https://sentinel.example.com/',
@@ -1184,7 +1185,7 @@ describe('package-manager', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValue({
         cli: { packageManager: 'pnpm' },
       });
-      (existsSync as jest.Mock).mockReturnValue(false);
+      (existsSync as Mock).mockReturnValue(false);
       vi.spyOn(childProcess, 'execSync').mockReturnValue('11.2.0' as any);
       mockGetNpmSpawnRegistryEnv.mockReturnValue({
         npm_config_registry: 'https://sentinel.example.com/',
@@ -1268,7 +1269,7 @@ describe('package-manager', () => {
         cli: { packageManager: 'bun' },
       });
       vi.spyOn(childProcess, 'execSync').mockReturnValue('1.2.0' as any);
-      (existsSync as jest.Mock).mockImplementation(
+      (existsSync as Mock).mockImplementation(
         (p: string) => p === join(workspaceRoot, 'package.json')
       );
       const overlaySpy = mockGetNpmSpawnRegistryEnv.mockReturnValue({
@@ -1297,7 +1298,7 @@ describe('package-manager', () => {
       });
       // No package.json on disk, so the version resolves through execSync, which
       // this spy owns.
-      (existsSync as jest.Mock).mockReturnValue(false);
+      (existsSync as Mock).mockReturnValue(false);
       const versionSpy = vi
         .spyOn(childProcess, 'execSync')
         .mockReturnValue('1.2.0' as any);
@@ -1352,7 +1353,7 @@ describe('package-manager', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValue({
         cli: { packageManager: 'pnpm' },
       });
-      (existsSync as jest.Mock).mockReturnValue(false);
+      (existsSync as Mock).mockReturnValue(false);
       vi.spyOn(childProcess, 'execSync').mockReturnValue('11.5.0' as any);
       mockGetNpmSpawnRegistryEnv.mockReturnValue({});
       const key = 'npm_config_//reg.example.com/:_authToken';
@@ -1379,7 +1380,7 @@ describe('package-manager', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValue({
         cli: { packageManager: 'pnpm' },
       });
-      (existsSync as jest.Mock).mockReturnValue(false);
+      (existsSync as Mock).mockReturnValue(false);
       vi.spyOn(childProcess, 'execSync').mockReturnValue('11.6.0' as any);
       mockGetNpmSpawnRegistryEnv.mockReturnValue({});
       const key = 'npm_config_//reg.example.com/:_authToken';
@@ -1438,8 +1439,8 @@ describe('package-manager', () => {
 
     it('should resolve config from the Nx installation directory in a non-JS workspace', async () => {
       const installationPath = join(workspaceRoot, '.nx', 'installation');
-      (existsSync as jest.Mock).mockReturnValue(false);
-      (statSync as jest.Mock).mockReturnValue({ isDirectory: () => true });
+      (existsSync as Mock).mockReturnValue(false);
+      (statSync as Mock).mockReturnValue({ isDirectory: () => true });
       const overlaySpy = mockGetNpmSpawnRegistryEnv.mockReturnValue({});
 
       await packageRegistryView('nx', 'latest', ['--json']);
@@ -1450,8 +1451,8 @@ describe('package-manager', () => {
     });
 
     it('should fall back to the workspace root when the Nx installation directory does not exist', async () => {
-      (existsSync as jest.Mock).mockReturnValue(false);
-      (statSync as jest.Mock).mockImplementation(() => {
+      (existsSync as Mock).mockReturnValue(false);
+      (statSync as Mock).mockImplementation(() => {
         throw new Error('ENOENT: no such file or directory');
       });
       mockGetNpmSpawnRegistryEnv.mockReturnValue({});
@@ -1464,10 +1465,10 @@ describe('package-manager', () => {
 
     it('should fall back to the workspace root when the Nx installation path is not a directory', async () => {
       const installationPath = join(workspaceRoot, '.nx', 'installation');
-      (existsSync as jest.Mock).mockImplementation(
+      (existsSync as Mock).mockImplementation(
         (p: string) => p === installationPath
       );
-      (statSync as jest.Mock).mockReturnValue({ isDirectory: () => false });
+      (statSync as Mock).mockReturnValue({ isDirectory: () => false });
       mockGetNpmSpawnRegistryEnv.mockReturnValue({});
 
       await packageRegistryView('nx', 'latest', ['--json']);
@@ -1478,13 +1479,13 @@ describe('package-manager', () => {
   });
 
   describe('packageRegistryPack', () => {
-    let execMock: jest.SpyInstance;
+    let execMock: MockInstance;
 
     beforeEach(() => {
       clearPackageManagerVersionCache();
       // jest.clearAllMocks keeps implementations, so pin the default here or a
       // test's statSync stub would leak into its neighbors.
-      (statSync as jest.Mock).mockImplementation(() => {
+      (statSync as Mock).mockImplementation(() => {
         throw new Error('ENOENT: no such file or directory');
       });
       execMock = vi.spyOn(childProcess, 'execFile').mockImplementation(((
@@ -1539,7 +1540,7 @@ describe('package-manager', () => {
         cli: { packageManager: 'bun' },
       });
       vi.spyOn(childProcess, 'execSync').mockReturnValue('1.2.0' as any);
-      (existsSync as jest.Mock).mockImplementation(
+      (existsSync as Mock).mockImplementation(
         (p: string) => p === join(workspaceRoot, 'package.json')
       );
       const overlaySpy = mockGetNpmSpawnRegistryEnv.mockReturnValue({
@@ -1574,7 +1575,7 @@ describe('package-manager', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValue({
         cli: { packageManager: 'pnpm' },
       });
-      (existsSync as jest.Mock).mockReturnValue(false);
+      (existsSync as Mock).mockReturnValue(false);
       vi.spyOn(childProcess, 'execSync').mockReturnValue('11.5.0' as any);
       mockGetNpmSpawnRegistryEnv.mockReturnValue({});
       const key = 'npm_config_//reg.example.com/:_authToken';
@@ -1627,8 +1628,8 @@ describe('package-manager', () => {
 
     it('should resolve config from the Nx installation directory in a non-JS workspace', async () => {
       const installationPath = join(workspaceRoot, '.nx', 'installation');
-      (existsSync as jest.Mock).mockReturnValue(false);
-      (statSync as jest.Mock).mockReturnValue({ isDirectory: () => true });
+      (existsSync as Mock).mockReturnValue(false);
+      (statSync as Mock).mockReturnValue({ isDirectory: () => true });
       const overlaySpy = mockGetNpmSpawnRegistryEnv.mockReturnValue({});
 
       await packageRegistryPack('/tmp/pack', 'nx', '1.0.0');
@@ -1645,8 +1646,8 @@ describe('package-manager', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValue({
         cli: { packageManager: 'npm' },
       });
-      (existsSync as jest.Mock).mockReturnValue(false);
-      (statSync as jest.Mock).mockImplementation(() => {
+      (existsSync as Mock).mockReturnValue(false);
+      (statSync as Mock).mockImplementation(() => {
         throw new Error('ENOENT: no such file or directory');
       });
       vi.spyOn(childProcess, 'execSync').mockReturnValue('10.0.0' as any);

@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 // os.homedir() ignores a runtime process.env.HOME override under jest, and a
 // spyOn does not affect a module's named import either.
 vi.mock('os', async () => ({
@@ -50,11 +51,11 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
 
   beforeEach(() => {
     files = {};
-    (homedir as jest.Mock).mockReturnValue(HOME);
-    (fs.existsSync as jest.Mock).mockImplementation(
+    (homedir as Mock).mockReturnValue(HOME);
+    (fs.existsSync as Mock).mockImplementation(
       (p: any) => typeof p === 'string' && p in files
     );
-    (fs.readFileSync as jest.Mock).mockImplementation((p: any) => {
+    (fs.readFileSync as Mock).mockImplementation((p: any) => {
       if (typeof p === 'string' && p in files) {
         return files[p];
       }
@@ -844,15 +845,13 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     // opens the home one outright, so the same symlink loop is absent in the
     // first group and exits 1 in the last (measured on 4.10.3).
     function failReadOf(target: string): void {
-      const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
-      (fs.readFileSync as jest.Mock).mockImplementation(
-        (p: any, ...rest: any[]) => {
-          if (p === target) {
-            throw Object.assign(new Error(`ELOOP: ${p}`), { code: 'ELOOP' });
-          }
-          return readFile(p, ...rest);
+      const readFile = (fs.readFileSync as Mock).getMockImplementation();
+      (fs.readFileSync as Mock).mockImplementation((p: any, ...rest: any[]) => {
+        if (p === target) {
+          throw Object.assign(new Error(`ELOOP: ${p}`), { code: 'ELOOP' });
         }
-      );
+        return readFile(p, ...rest);
+      });
     }
 
     it('fails on a home rc file berry would abort on', () => {
@@ -1082,7 +1081,7 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     // (verified on 4.15.0), and npm has no setting that reproduces it.
     const warnOnce = async (rc: string, versions: string[]): string[] => {
       const { logger } = await import('../logger');
-      (logger.warn as jest.Mock).mockClear();
+      (logger.warn as Mock).mockClear();
       projectRc(rc);
       vi.resetModules();
       const { getYarnBerrySpawnRegistryEnv: fresh } = await import(
@@ -1091,7 +1090,7 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
       for (const version of versions) {
         fresh('is-even', ROOT, version);
       }
-      return (logger.warn as jest.Mock).mock.calls.map((call) => call[0]);
+      return (logger.warn as Mock).mock.calls.map((call) => call[0]);
     };
 
     it('reports a global enableNetwork once', async () => {
@@ -1238,7 +1237,7 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
   describe('reporting a credential berry would not send', () => {
     const warnFor = async (packages: string[]): string[] => {
       const { logger } = await import('../logger');
-      (logger.warn as jest.Mock).mockClear();
+      (logger.warn as Mock).mockClear();
       vi.resetModules();
       const { getYarnBerrySpawnRegistryEnv: fresh } = await import(
         './yarn-berry'
@@ -1246,7 +1245,7 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
       for (const pkg of packages) {
         fresh(pkg, ROOT, '4.16.0');
       }
-      return (logger.warn as jest.Mock).mock.calls.map((call) => call[0]);
+      return (logger.warn as Mock).mock.calls.map((call) => call[0]);
     };
 
     beforeEach(() => {

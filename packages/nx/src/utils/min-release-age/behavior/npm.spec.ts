@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 vi.mock('child_process');
 // detectSurfaces reads os.homedir() and the .npmrc files through named imports
 // bound at module load, so a per-test jest.spyOn never intercepts them. Mock at
@@ -373,8 +374,8 @@ describe('npm min-release-age behavior', () => {
   });
 
   describe('readNpmPolicy', () => {
-    const execSyncMock = childProcess.execSync as jest.Mock;
-    const readNpmrcEntriesMock = readNpmrcEntries as jest.Mock;
+    const execSyncMock = childProcess.execSync as Mock;
+    const readNpmrcEntriesMock = readNpmrcEntries as Mock;
 
     // path -> .npmrc contents; absent paths read as missing files.
     let npmrcFiles: Record<string, string>;

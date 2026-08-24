@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { ReleaseGroupWithName } from '../config/filter-release-groups';
 import {
   createCommitMessageValues,
@@ -908,7 +909,7 @@ describe('shared', () => {
     let mockReleaseGraph: ReleaseGraph;
 
     beforeEach(async () => {
-      (readNxJson as jest.Mock).mockReturnValue({});
+      (readNxJson as Mock).mockReturnValue({});
 
       mockProjectGraph = {
         nodes: {

@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import '../internal-testing-utils/mock-fs';
 
 import {
@@ -224,7 +225,7 @@ describe('task graph utils', () => {
   });
 
   describe('validateNoAtomizedTasks', () => {
-    let mockProcessExit: jest.SpyInstance;
+    let mockProcessExit: MockInstance;
     let env: NodeJS.ProcessEnv;
 
     beforeEach(() => {

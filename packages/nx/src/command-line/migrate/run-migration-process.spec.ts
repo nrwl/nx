@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 const mockRunNxOrAngularMigration = vi.fn();
 const mockInstallDepsIfChanged = vi.fn();
 const mockCommitMigrationIfRequested = vi.fn();
@@ -31,8 +32,8 @@ const cjsRequire = createRequire(import.meta.url);
 describe('run-migration-process', () => {
   let written: string[];
   let argvBackup: string[];
-  let writeSpy: jest.SpyInstance;
-  let exitSpy: jest.SpyInstance;
+  let writeSpy: MockInstance;
+  let exitSpy: MockInstance;
 
   beforeEach(() => {
     written = [];

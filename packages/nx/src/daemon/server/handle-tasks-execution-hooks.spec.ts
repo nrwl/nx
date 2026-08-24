@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import {
   handleRunPreTasksExecution,
   handleRunPostTasksExecution,
@@ -33,7 +34,7 @@ describe('Task Execution Hooks', () => {
         argv: testArgv,
       };
 
-      (runPreTasksExecution as jest.Mock).mockResolvedValue([]);
+      (runPreTasksExecution as Mock).mockResolvedValue([]);
 
       await handleRunPreTasksExecution(context);
 
@@ -54,7 +55,7 @@ describe('Task Execution Hooks', () => {
         argv: testArgv,
       };
 
-      (runPreTasksExecution as jest.Mock).mockResolvedValue([]);
+      (runPreTasksExecution as Mock).mockResolvedValue([]);
 
       await handleRunPreTasksExecution(context);
 
@@ -79,7 +80,7 @@ describe('Task Execution Hooks', () => {
         endTime: Date.now() + 1000,
       };
 
-      (runPostTasksExecution as jest.Mock).mockResolvedValue(undefined);
+      (runPostTasksExecution as Mock).mockResolvedValue(undefined);
 
       await handleRunPostTasksExecution(context);
 
@@ -103,7 +104,7 @@ describe('Task Execution Hooks', () => {
         endTime: Date.now() + 1000,
       };
 
-      (runPostTasksExecution as jest.Mock).mockResolvedValue(undefined);
+      (runPostTasksExecution as Mock).mockResolvedValue(undefined);
 
       await handleRunPostTasksExecution(context);
 

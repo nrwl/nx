@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { checkWithPrettier } from './prettier';
 
 // Mirrors `check-with-oxfmt.spec.ts`. `nx format:check` gates CI on this
@@ -14,7 +15,7 @@ import { exec } from 'node:child_process';
 
 describe('checkWithPrettier', () => {
   function respondWith(error: unknown, stdout = '') {
-    (exec as jest.Mock).mockImplementation(
+    (exec as Mock).mockImplementation(
       (_cmd: string, _opts: unknown, callback: Function) => {
         callback(error, stdout);
         return {};
@@ -23,7 +24,7 @@ describe('checkWithPrettier', () => {
   }
 
   afterEach(() => {
-    (exec as jest.Mock).mockReset();
+    (exec as Mock).mockReset();
   });
 
   it('reports nothing to fix when prettier exits 0', async () => {

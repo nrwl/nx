@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { execFileSync, execSync } from 'child_process';
 import { splitArgsIntoNxArgsAndOverrides } from './command-line-utils';
 import { withEnvironmentVariables as withEnvironment } from '../internal-testing-utils/with-environment';
@@ -505,8 +506,8 @@ describe('splitArgs', () => {
   });
 
   describe('resolving the affected base against git', () => {
-    const execFileSyncMock = execFileSync as jest.Mock;
-    const execSyncMock = execSync as jest.Mock;
+    const execFileSyncMock = execFileSync as Mock;
+    const execSyncMock = execSync as Mock;
 
     function splitAffectedArgs(args: Record<string, any>, nxJson = {}) {
       return splitArgsIntoNxArgsAndOverrides(

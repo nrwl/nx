@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -18,7 +19,7 @@ jest.mock('../../../utils/formatters/prettier', () => ({
 describe('formatInitWrites', () => {
   let repoRoot: string;
   let skipFormatBackup: string | undefined;
-  let warn: jest.SpyInstance;
+  let warn: MockInstance;
 
   const UNFORMATTED = '{"name":"x",\n    "private":   true}';
   const FORMATTED = '{\n  "name": "x",\n  "private": true\n}\n';

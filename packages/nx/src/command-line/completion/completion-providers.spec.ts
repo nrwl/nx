@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import {
   existsSync,
   mkdirSync,
@@ -28,7 +29,7 @@ import {
 describe('completion/completion-providers', () => {
   let workspaceRoot: string;
   let originalRoot: string;
-  let readGraphSpy: jest.SpyInstance;
+  let readGraphSpy: MockInstance;
 
   beforeEach(() => {
     workspaceRoot = mkdtempSync(join(tmpdir(), 'nx-completion-spec-'));

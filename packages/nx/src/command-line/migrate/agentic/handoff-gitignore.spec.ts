@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 vi.mock('../../../utils/git-utils', () => ({
   hasUncommittedChanges: vi.fn(),
   tryCommitChanges: vi.fn(),
@@ -17,9 +18,9 @@ import { logger } from '../../../utils/logger';
 import { applyAgenticHandoffGitignoreFallback } from './handoff-gitignore';
 import { isHandoffGitignoreMigration } from './types';
 
-const mockHas = hasUncommittedChanges as jest.Mock;
-const mockTry = tryCommitChanges as jest.Mock;
-const mockInfo = logger.info as jest.Mock;
+const mockHas = hasUncommittedChanges as Mock;
+const mockTry = tryCommitChanges as Mock;
+const mockInfo = logger.info as Mock;
 
 const HANDOFF_GITIGNORE_MIGRATION = {
   package: 'nx',

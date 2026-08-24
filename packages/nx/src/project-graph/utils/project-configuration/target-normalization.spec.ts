@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -216,7 +217,7 @@ describe('validateAndNormalizeProjectRootMap', () => {
 });
 
 describe('target-name cache fallback', () => {
-  let warn: jest.SpyInstance;
+  let warn: MockInstance;
 
   beforeEach(() => {
     warn = vi.spyOn(output, 'warn').mockImplementation(() => {});

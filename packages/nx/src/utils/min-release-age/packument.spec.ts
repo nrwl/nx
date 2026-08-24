@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 vi.mock('../package-manager', () => ({
   packageRegistryView: vi.fn(),
 }));
@@ -5,7 +6,7 @@ vi.mock('../package-manager', () => ({
 import { packageRegistryView } from '../package-manager';
 import { fetchRegistryMetadata } from './packument';
 
-const viewMock = packageRegistryView as jest.Mock;
+const viewMock = packageRegistryView as Mock;
 
 describe('fetchRegistryMetadata', () => {
   afterEach(() => vi.clearAllMocks());

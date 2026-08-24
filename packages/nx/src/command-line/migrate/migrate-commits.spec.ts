@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 vi.mock('../../utils/git-utils', () => ({
   hasUncommittedChanges: vi.fn(),
   tryCommitChanges: vi.fn(),
@@ -33,15 +34,15 @@ import {
 } from './migrate-commits';
 import { migrateConfirm } from './safe-prompt';
 
-const mockHas = hasUncommittedChanges as jest.Mock;
-const mockTry = tryCommitChanges as jest.Mock;
-const mockInfo = logger.info as jest.Mock;
-const mockWarn = output.warn as jest.Mock;
-const mockLog = output.log as jest.Mock;
-const mockCurrentBranch = getGitCurrentBranch as jest.Mock;
-const mockRemoteNames = getGitRemoteNames as jest.Mock;
-const mockReadNxJson = readNxJson as jest.Mock;
-const mockMigrateConfirm = migrateConfirm as jest.Mock;
+const mockHas = hasUncommittedChanges as Mock;
+const mockTry = tryCommitChanges as Mock;
+const mockInfo = logger.info as Mock;
+const mockWarn = output.warn as Mock;
+const mockLog = output.log as Mock;
+const mockCurrentBranch = getGitCurrentBranch as Mock;
+const mockRemoteNames = getGitRemoteNames as Mock;
+const mockReadNxJson = readNxJson as Mock;
+const mockMigrateConfirm = migrateConfirm as Mock;
 
 const ROOT = '/workspace';
 const PREFIX = 'chore: [nx migration] ';

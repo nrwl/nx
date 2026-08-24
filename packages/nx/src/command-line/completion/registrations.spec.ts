@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import {
   existsSync,
   mkdirSync,
@@ -26,7 +27,7 @@ import { getNxCommandHandlers, introspectBuilder } from './command-handlers';
 describe('completion/registrations', () => {
   let workspaceRoot: string;
   let originalRoot: string;
-  let readGraphSpy: jest.SpyInstance;
+  let readGraphSpy: MockInstance;
 
   beforeEach(() => {
     workspaceRoot = mkdtempSync(join(tmpdir(), 'nx-registrations-spec-'));

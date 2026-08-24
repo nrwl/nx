@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { ProvenanceError } from '../../utils/provenance';
 import {
   classifyMigrateFetchFallback,
@@ -110,7 +111,7 @@ describe('GA4 event name length cap', () => {
 // the WASM build, which the no-op guard relies on. Module-level state persists
 // across calls, so each test loads a fresh module instance.
 let mockCustomDimensions: unknown;
-let mockReportEvent: jest.Mock;
+let mockReportEvent: Mock;
 
 vi.mock('../../analytics', () => ({
   get customDimensions() {

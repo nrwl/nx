@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import {
   GraphBuilder,
   setupBeforeEach,
@@ -43,7 +44,7 @@ describe('show target inputs', () => {
 
     await showTargetInputsHandler({ target: 'my-app:build', json: true });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed.files).toContain('apps/my-app/src/main.ts');
     expect(parsed.files).toContain('apps/my-app/src/app.ts');
     expect(parsed.environment).toContain('NX_CLOUD_ENCRYPTION_KEY');
@@ -82,7 +83,7 @@ describe('show target inputs', () => {
 
     await showTargetInputsHandler({ target: 'my-app:build', json: true });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed.files).toContain('apps/my-app/src/main.ts');
     expect(parsed.files).toContain('apps/my-app/src/app.ts');
   });
@@ -124,7 +125,7 @@ describe('show target inputs', () => {
       json: true,
     });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed.files).toContain('apps/my-app/src/main.ts');
   });
 
@@ -183,7 +184,7 @@ describe('show target inputs', () => {
       check: ['apps/my-app/src/main.ts'],
     });
 
-    const logged = (console.log as jest.Mock).mock.calls[0][0];
+    const logged = (console.log as Mock).mock.calls[0][0];
     expect(logged).toContain('apps/my-app/src/main.ts');
     expect(logged).toContain('is an input');
     expect(process.exitCode).toBe(0);
@@ -223,7 +224,7 @@ describe('show target inputs', () => {
       check: ['CI'],
     });
 
-    const logged = (console.log as jest.Mock).mock.calls[0][0];
+    const logged = (console.log as Mock).mock.calls[0][0];
     expect(logged).toContain('CI');
     expect(logged).toContain('is an input');
     expect(logged).toContain('environment');
@@ -284,7 +285,7 @@ describe('show target inputs', () => {
       check: ['dist/libs/dep/index.d.ts'],
     });
 
-    const logged = (console.log as jest.Mock).mock.calls[0][0];
+    const logged = (console.log as Mock).mock.calls[0][0];
     expect(logged).toContain('dist/libs/dep/index.d.ts');
     expect(logged).toContain('is an input');
     expect(logged).toContain('dependentTasksOutputFiles');
@@ -339,14 +340,14 @@ describe('show target inputs', () => {
     });
 
     // Run from inside the project, referring to the dep output relatively.
-    (process.cwd as jest.Mock).mockReturnValue('/workspace/apps/my-app');
+    (process.cwd as Mock).mockReturnValue('/workspace/apps/my-app');
 
     await showTargetInputsHandler({
       target: 'my-app:build',
       check: ['../../dist/libs/dep/index.d.ts'],
     });
 
-    const logged = (console.log as jest.Mock).mock.calls[0][0];
+    const logged = (console.log as Mock).mock.calls[0][0];
     expect(logged).toContain('is an input');
     expect(logged).toContain('dependentTasksOutputFiles');
     expect(process.exitCode).toBe(0);
@@ -386,14 +387,14 @@ describe('show target inputs', () => {
       },
     });
 
-    (process.cwd as jest.Mock).mockReturnValue('/workspace/apps/my-app');
+    (process.cwd as Mock).mockReturnValue('/workspace/apps/my-app');
 
     await showTargetInputsHandler({
       target: 'my-app:build',
       check: ['../../dist/libs/dep/index.d.ts'],
     });
 
-    const logged = (console.log as jest.Mock).mock.calls[0][0];
+    const logged = (console.log as Mock).mock.calls[0][0];
     expect(logged).toContain('is an input');
     expect(logged).toContain('depOutputs');
     expect(process.exitCode).toBe(0);
@@ -433,7 +434,7 @@ describe('show target inputs', () => {
       check: ['apps/my-app/README.md'],
     });
 
-    const logged = (console.log as jest.Mock).mock.calls[0][0];
+    const logged = (console.log as Mock).mock.calls[0][0];
     expect(logged).toContain('apps/my-app/README.md');
     expect(logged).toContain('not');
     expect(process.exitCode).toBe(1);
@@ -473,7 +474,7 @@ describe('show target inputs', () => {
       check: ['./apps/my-app/src/main.ts'],
     });
 
-    const logged = (console.log as jest.Mock).mock.calls[0][0];
+    const logged = (console.log as Mock).mock.calls[0][0];
     expect(logged).toContain('is an input');
     expect(process.exitCode).toBe(0);
   });
@@ -512,7 +513,7 @@ describe('show target inputs', () => {
       check: ['./apps/my-app/src'],
     });
 
-    const allLogged = (console.log as jest.Mock).mock.calls
+    const allLogged = (console.log as Mock).mock.calls
       .map((c) => c[0])
       .join('\n');
     expect(allLogged).toContain('directory containing');
@@ -556,7 +557,7 @@ describe('show target inputs', () => {
       check: ['apps/my-app/src/main.ts', 'CI', 'apps/my-app/README.md'],
     });
 
-    const allLogged = (console.log as jest.Mock).mock.calls
+    const allLogged = (console.log as Mock).mock.calls
       .map((c) => c[0])
       .join('\n');
     expect(allLogged).toContain('were inputs');
@@ -601,7 +602,7 @@ describe('show target inputs', () => {
       check: ['apps/my-app/src/main.ts', 'apps/my-app/src/app.ts'],
     });
 
-    const allLogged = (console.log as jest.Mock).mock.calls
+    const allLogged = (console.log as Mock).mock.calls
       .map((c) => c[0])
       .join('\n');
     expect(allLogged).toContain('were inputs');
@@ -647,7 +648,7 @@ describe('show target inputs', () => {
       ],
     });
 
-    const allLogged = (console.log as jest.Mock).mock.calls
+    const allLogged = (console.log as Mock).mock.calls
       .map((c) => c[0])
       .join('\n');
     expect(allLogged).toContain('apps/my-app/src/main.ts');
@@ -679,7 +680,7 @@ describe('show target inputs', () => {
 
     await showTargetInputsHandler({ target: 'my-app:build' });
 
-    const allLogged = (console.log as jest.Mock).mock.calls
+    const allLogged = (console.log as Mock).mock.calls
       .map((c) => c[0])
       .join('\n');
     expect(allLogged).toContain('custom hasher');
@@ -713,7 +714,7 @@ describe('show target inputs', () => {
       check: ['apps/my-app/src/main.ts'],
     });
 
-    const allLogged = (console.log as jest.Mock).mock.calls
+    const allLogged = (console.log as Mock).mock.calls
       .map((c) => c[0])
       .join('\n');
     expect(allLogged).toContain('custom hasher');
@@ -743,7 +744,7 @@ describe('show target inputs', () => {
 
     await showTargetInputsHandler({ target: 'my-app:build', json: true });
 
-    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
     expect(parsed.warning).toContain('custom hasher');
     expect(process.exitCode).toBe(1);
   });

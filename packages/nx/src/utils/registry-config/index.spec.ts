@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 // Under jest, os.homedir() ignores a process.env.HOME override and a spyOn does
 // not reach a module's named import; mock both to stay off the real filesystem.
 vi.mock('os', async () => ({
@@ -55,11 +56,11 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
 
   beforeEach(() => {
     files = {};
-    (homedir as jest.Mock).mockReturnValue(HOME);
-    (fs.existsSync as jest.Mock).mockImplementation(
+    (homedir as Mock).mockReturnValue(HOME);
+    (fs.existsSync as Mock).mockImplementation(
       (p: any) => typeof p === 'string' && p in files
     );
-    (fs.readFileSync as jest.Mock).mockImplementation((p: any) => {
+    (fs.readFileSync as Mock).mockImplementation((p: any) => {
       if (typeof p === 'string' && p in files) {
         return files[p];
       }
@@ -67,7 +68,7 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
     });
     // Every path in this fixture is a file, which is what pnpm's pre-11.8.0
     // lookup asks about.
-    (fs.statSync as jest.Mock).mockImplementation((p: any) => {
+    (fs.statSync as Mock).mockImplementation((p: any) => {
       if (typeof p === 'string' && p in files) {
         return { isFile: () => true, isDirectory: () => false };
       }
@@ -121,7 +122,7 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
     // it first; this branch returns before touching the filesystem, so no file
     // fixtures.
     const { logger } = await import('../logger');
-    (logger.warn as jest.Mock).mockClear();
+    (logger.warn as Mock).mockClear();
     vi.resetModules();
     const { getNpmSpawnRegistryEnv: fresh } = await import('./index');
     fresh('is-even', ROOT, 'yarn', null);
@@ -131,7 +132,7 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
 
   it('warns once (not per package) when the pnpm version is unknown', async () => {
     const { logger } = await import('../logger');
-    (logger.warn as jest.Mock).mockClear();
+    (logger.warn as Mock).mockClear();
     vi.resetModules();
     const { getNpmSpawnRegistryEnv: fresh } = await import('./index');
     fresh('is-even', ROOT, 'pnpm', null);
@@ -161,7 +162,7 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
 
   it('degrades to no bridging when a resolver throws (root is not a string)', async () => {
     const { logger } = await import('../logger');
-    (logger.verbose as jest.Mock).mockClear();
+    (logger.verbose as Mock).mockClear();
     expect(
       getNpmSpawnRegistryEnv('is-even', undefined as any, 'pnpm', '11.5.0')
     ).toEqual({});
@@ -170,7 +171,7 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
 
   it('warns once (not per package) that a configuration could not be resolved', async () => {
     const { logger } = await import('../logger');
-    (logger.warn as jest.Mock).mockClear();
+    (logger.warn as Mock).mockClear();
     files[`${ROOT}/.yarnrc.yml`] =
       'npmRegistryServer: "https://reg-a/\n  x: [\n';
     vi.resetModules();
@@ -180,28 +181,28 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
     // Verbose is off by default, so without this warning the fallback to npm's
     // own resolution is silent.
     expect(logger.warn).toHaveBeenCalledTimes(1);
-    expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
+    expect((logger.warn as Mock).mock.calls[0][0]).toContain(
       'Could not resolve the yarn configuration'
     );
   });
 
   it('degrades to no bridging when the pnpm global config.yaml does not parse (pnpm dies on it)', async () => {
     const { logger } = await import('../logger');
-    (logger.warn as jest.Mock).mockClear();
+    (logger.warn as Mock).mockClear();
     process.env.XDG_CONFIG_HOME = '/xdg';
     files['/xdg/pnpm/config.yaml'] = '_auth: [unclosed\n';
     vi.resetModules();
     const { getNpmSpawnRegistryEnv: fresh } = await import('./index');
     expect(fresh('is-even', ROOT, 'pnpm', '11.10.0')).toEqual({});
     expect(logger.warn).toHaveBeenCalledTimes(1);
-    expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
+    expect((logger.warn as Mock).mock.calls[0][0]).toContain(
       'Could not resolve the pnpm configuration'
     );
   });
 
   it('degrades to no bridging when a yarn rc file does not parse', async () => {
     const { logger } = await import('../logger');
-    (logger.verbose as jest.Mock).mockClear();
+    (logger.verbose as Mock).mockClear();
     files[`${ROOT}/.yarnrc.yml`] =
       'npmRegistryServer: "https://reg-a.example.com/\n  bad: [unclosed\n';
     files[`${HOME}/.yarnrc.yml`] = 'npmAuthToken: home-token\n';
@@ -215,24 +216,22 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
 
   it('degrades to no bridging when yarn classic hits an unreadable .npmrc (yarn itself dies on it)', async () => {
     const { logger } = await import('../logger');
-    (logger.warn as jest.Mock).mockClear();
+    (logger.warn as Mock).mockClear();
     files[`${ROOT}/.npmrc`] = 'registry=https://reg-a.example.com/';
-    const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
-    (fs.readFileSync as jest.Mock).mockImplementation(
-      (p: any, ...rest: any[]) => {
-        if (p === `${ROOT}/.npmrc`) {
-          throw Object.assign(new Error(`EACCES: ${p}`), { code: 'EACCES' });
-        }
-        return readFile(p, ...rest);
+    const readFile = (fs.readFileSync as Mock).getMockImplementation();
+    (fs.readFileSync as Mock).mockImplementation((p: any, ...rest: any[]) => {
+      if (p === `${ROOT}/.npmrc`) {
+        throw Object.assign(new Error(`EACCES: ${p}`), { code: 'EACCES' });
       }
-    );
+      return readFile(p, ...rest);
+    });
     // yarn itself exits 1 on the unreadable file, so resolving from the rest
     // would promote a registry it never reaches. resetModules keeps the
     // warn-once flag fresh.
     vi.resetModules();
     const { getNpmSpawnRegistryEnv: fresh } = await import('./index');
     expect(fresh('is-even', ROOT, 'yarn', '1.22.22')).toEqual({});
-    expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
+    expect((logger.warn as Mock).mock.calls[0][0]).toContain(
       'Could not resolve the yarn configuration'
     );
   });

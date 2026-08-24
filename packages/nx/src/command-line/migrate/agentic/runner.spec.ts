@@ -1,3 +1,4 @@
+import type { Mock, MockInstance } from 'vitest';
 import { EventEmitter } from 'events';
 import { mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
@@ -21,9 +22,9 @@ import { output } from '../../../utils/output';
 import { adaptSpawnForWindowsShim, runAgentic } from './runner';
 import { AgentDefinition, DetectedInstalledAgent } from './types';
 
-const mockSpawn = spawn as unknown as jest.Mock;
-const mockExecSync = execSync as unknown as jest.Mock;
-const mockPrompt = autocomplete as unknown as jest.Mock;
+const mockSpawn = spawn as unknown as Mock;
+const mockExecSync = execSync as unknown as Mock;
+const mockPrompt = autocomplete as unknown as Mock;
 
 function makeDetected(): DetectedInstalledAgent {
   return {
@@ -51,7 +52,7 @@ type FakeChild = EventEmitter & {
   exitCode: number | null;
   signalCode: NodeJS.Signals | null;
   killed: boolean;
-  kill: jest.Mock<boolean, [NodeJS.Signals?]>;
+  kill: Mock<boolean, [NodeJS.Signals?]>;
 };
 
 function fakeChild(
@@ -80,7 +81,7 @@ describe('runAgentic', () => {
   let handoffFilePath: string;
   let originalListeners: NodeJS.SignalsListener[];
 
-  let warnSpy: jest.SpyInstance;
+  let warnSpy: MockInstance;
   // Suite-scoped so `afterEach` can restore the `process.on` spy even if a
   // test body threw before its inline cleanup — a leaked spy turns the next
   // test's `captureSigintHandlers` into a spy-on-spy.
@@ -195,7 +196,7 @@ describe('runAgentic', () => {
 
   it('passes binary, args, cwd, merged env, and stdio: inherit through to spawn', async () => {
     const definition = makeDefinition();
-    (definition.buildInteractive as jest.Mock).mockReturnValue({
+    (definition.buildInteractive as Mock).mockReturnValue({
       args: ['--flag', 'value'],
       env: { CUSTOM: '1' },
       cwd: '/custom-cwd',
@@ -220,7 +221,7 @@ describe('runAgentic', () => {
 
   it('falls back to workspaceRoot as cwd when the spec omits it', async () => {
     const definition = makeDefinition();
-    (definition.buildInteractive as jest.Mock).mockReturnValue({ args: [] });
+    (definition.buildInteractive as Mock).mockReturnValue({ args: [] });
     spawnWithHandoff({ status: 'success', summary: 'ok' });
 
     await runAgentic({

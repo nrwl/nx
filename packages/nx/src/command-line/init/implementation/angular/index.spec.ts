@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { addNxToAngularCliRepo } from './index';
 import type { Options } from './types';
 
@@ -29,13 +30,13 @@ describe('addNxToAngularCliRepo', () => {
 
   it('should drain the recorded writes after the migration and before the legacy flow exits', async () => {
     const legacyMigrationFn = vi.fn().mockResolvedValue(undefined);
-    (getLegacyMigrationFunctionIfApplicable as jest.Mock).mockResolvedValue(
+    (getLegacyMigrationFunctionIfApplicable as Mock).mockResolvedValue(
       legacyMigrationFn
     );
     // Left pending so the test can observe what runs while the drain is still
     // in flight.
     let resolveDrain: () => void;
-    (formatInitWrites as jest.Mock).mockImplementation(
+    (formatInitWrites as Mock).mockImplementation(
       () => new Promise<void>((resolve) => (resolveDrain = resolve))
     );
     // Throwing stops execution at the exit call like the real exit does, so
@@ -59,7 +60,7 @@ describe('addNxToAngularCliRepo', () => {
       // Migration first: draining before it would flush an empty set, and the
       // files it records would exit unformatted.
       expect(legacyMigrationFn.mock.invocationCallOrder[0]).toBeLessThan(
-        (formatInitWrites as jest.Mock).mock.invocationCallOrder[0]
+        (formatInitWrites as Mock).mock.invocationCallOrder[0]
       );
       // The exit must wait for the drain: un-awaited, the process would die
       // mid-format.

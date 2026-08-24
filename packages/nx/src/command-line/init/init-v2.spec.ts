@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { detectPlugins } from './init-v2';
 
 // Mock dependencies
@@ -15,7 +16,7 @@ vi.mock('../../utils/fileutils', () => ({
 }));
 
 import { readJsonFile } from '../../utils/fileutils';
-const mockReadJsonFile = readJsonFile as jest.Mock;
+const mockReadJsonFile = readJsonFile as Mock;
 
 vi.mock('../../utils/workspace-context', () => ({
   globWithWorkspaceContextSync: vi.fn(() => []),

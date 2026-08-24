@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { join } from 'path';
 import type { ProjectGraph } from '../config/project-graph';
 import type { HashInputs } from '../native';
@@ -61,8 +62,8 @@ const mockGetStructuredInputs = vi.mocked(mockedGetInputs);
 
 // ── Per-test mock spies ──────────────────────────────────────────────────────
 
-let mockInit: jest.Mock;
-let mockInspectTaskInputs: jest.Mock;
+let mockInit: Mock;
+let mockInspectTaskInputs: Mock;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

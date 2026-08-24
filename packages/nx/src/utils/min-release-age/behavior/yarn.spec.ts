@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 vi.mock('child_process');
 // os.homedir() reads the native home and ignores a runtime process.env.HOME
 // override inside jest, so mock it to redirect home to a temp dir per test.
@@ -365,7 +366,7 @@ describe('yarn min-release-age behavior', () => {
   });
 
   describe('readYarnPolicy', () => {
-    const execSyncMock = childProcess.execSync as jest.Mock;
+    const execSyncMock = childProcess.execSync as Mock;
     let tmp: string;
     let home: string;
     const savedGateEnv = process.env.YARN_NPM_MINIMAL_AGE_GATE;
@@ -373,7 +374,7 @@ describe('yarn min-release-age behavior', () => {
     beforeEach(() => {
       tmp = mkdtempSync(join(tmpdir(), 'nx-yarn-mra-'));
       home = mkdtempSync(join(tmpdir(), 'nx-yarn-home-'));
-      (homedir as jest.Mock).mockReturnValue(home);
+      (homedir as Mock).mockReturnValue(home);
       delete process.env.YARN_NPM_MINIMAL_AGE_GATE;
     });
 

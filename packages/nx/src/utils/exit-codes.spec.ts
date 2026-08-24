@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import { exitAsInterrupted, messageToCode } from './exit-codes';
 
 describe('messageToCode', () => {
@@ -64,7 +65,7 @@ describe('messageToCode', () => {
 describe('exitAsInterrupted', () => {
   // Every one of these is stubbed deliberately: unstubbed, `kill` would signal
   // this jest worker and `removeAllListeners` would strip its SIGINT handling.
-  let spies: jest.SpyInstance[];
+  let spies: MockInstance[];
   let platform: PropertyDescriptor | undefined;
 
   function stubProcess(as: NodeJS.Platform) {

@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 vi.mock('../../../native', async (importOriginal) => ({
   ...(await importOriginal<any>()),
   isAiAgent: vi.fn(() => false),
@@ -26,12 +27,12 @@ import { detectInstalledAgents } from './detect-installed';
 import { resolveAgentic } from './select';
 import { DetectedInstalledAgent } from './types';
 
-const mockIsAiAgent = isAiAgent as unknown as jest.Mock;
-const mockPrompt = autocomplete as unknown as jest.Mock;
-const mockDetect = detectInstalledAgents as unknown as jest.Mock;
-const mockOutputLog = output.log as unknown as jest.Mock;
-const mockOutputError = output.error as unknown as jest.Mock;
-const mockOutputWarn = output.warn as unknown as jest.Mock;
+const mockIsAiAgent = isAiAgent as unknown as Mock;
+const mockPrompt = autocomplete as unknown as Mock;
+const mockDetect = detectInstalledAgents as unknown as Mock;
+const mockOutputLog = output.log as unknown as Mock;
+const mockOutputError = output.error as unknown as Mock;
+const mockOutputWarn = output.warn as unknown as Mock;
 
 function detected(
   id: 'claude-code' | 'codex' | 'opencode'

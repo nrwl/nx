@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import { registerCompletion } from './metadata';
 import { tryValueCompletion } from './value-completions';
 
@@ -9,7 +10,7 @@ function argv(...userTokens: string[]): string[] {
 
 describe('completion/value-completions', () => {
   describe('tryValueCompletion', () => {
-    let logSpy: jest.SpyInstance;
+    let logSpy: MockInstance;
     let captured: string[];
 
     beforeEach(() => {

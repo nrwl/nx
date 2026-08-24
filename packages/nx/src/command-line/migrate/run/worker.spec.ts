@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 const mockRunMigration = vi.fn();
 const mockReadMigrationCollection = vi.fn();
 const mockResolveDocumentationFile = vi.fn();
@@ -1985,7 +1986,7 @@ describe('runSingleMigrationWorker', () => {
     };
 
     const logged = () =>
-      (logger.info as jest.Mock).mock.calls
+      (logger.info as Mock).mock.calls
         .map((args) => String(args[0] ?? ''))
         .join('\n');
 

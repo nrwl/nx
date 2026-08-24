@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 const mockSpawn = vi.fn();
 vi.mock('child_process', async () => ({
   ...require('child_process'),
@@ -868,7 +869,7 @@ describe('executeMigrations', () => {
   });
 
   describe('skipAgentic', () => {
-    let infoSpy: jest.SpyInstance;
+    let infoSpy: MockInstance;
 
     const AGENTIC_ENABLED: ResolvedAgentic = {
       kind: 'enabled',

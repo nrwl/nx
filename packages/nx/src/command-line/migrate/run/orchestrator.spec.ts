@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 const mockInit = vi.fn();
 const mockDispense = vi.fn();
 const mockComplete = vi.fn();
@@ -1399,7 +1400,7 @@ describe('orchestrator', () => {
       expect(state.steps[0].status).toBe('succeeded');
       expect(state.steps[0].installFailed).toBe(true);
       expect(state.status).toBe('completed');
-      const warned = (output.warn as jest.Mock).mock.calls
+      const warned = (output.warn as Mock).mock.calls
         .map((call) => JSON.stringify(call[0]))
         .join('\n');
       expect(warned).toContain('registry unreachable');

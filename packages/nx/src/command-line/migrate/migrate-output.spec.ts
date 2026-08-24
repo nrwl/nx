@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import {
   buildDirectiveBlockBodyLines,
   buildRetainedAtSuccessBody,
@@ -373,7 +374,7 @@ describe('migrate-output', () => {
   });
 
   describe('logFailureRecap', () => {
-    let infoSpy: jest.SpyInstance;
+    let infoSpy: MockInstance;
     beforeEach(() => {
       infoSpy = vi.spyOn(logger, 'info').mockImplementation(() => undefined);
     });

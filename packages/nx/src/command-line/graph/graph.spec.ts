@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import type { FileData } from '../../config/project-graph';
 import { HashPlanner } from '../../native';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
@@ -29,13 +30,13 @@ vi.mock('../../utils/all-file-data', () => ({
   allFileData: vi.fn(),
 }));
 
-const createProjectGraphAsyncMock = createProjectGraphAsync as jest.Mock;
-const createTaskGraphMock = createTaskGraph as jest.Mock;
-const allFileDataMock = allFileData as jest.Mock;
-const HashPlannerMock = HashPlanner as unknown as jest.Mock;
+const createProjectGraphAsyncMock = createProjectGraphAsync as Mock;
+const createTaskGraphMock = createTaskGraph as Mock;
+const allFileDataMock = allFileData as Mock;
+const HashPlannerMock = HashPlanner as unknown as Mock;
 
 describe('getExpandedTaskInputs', () => {
-  let getPlansMock: jest.Mock;
+  let getPlansMock: Mock;
 
   // A workspace with a single project `myproj` that has a `build` target and a
   // `test:integration` target (whose name contains a colon).

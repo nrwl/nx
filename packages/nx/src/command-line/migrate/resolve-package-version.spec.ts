@@ -1,3 +1,4 @@
+import type { Mock, MockInstance } from 'vitest';
 vi.mock('../../config/configuration', () => ({
   readNxJson: vi.fn(() => ({})),
 }));
@@ -37,13 +38,13 @@ import {
   resolvePackageVersionRespectingMinReleaseAge,
 } from './resolve-package-version';
 
-const mockReadNxJson = readNxJson as jest.Mock;
-const mockUsingRegistry = resolvePackageVersionUsingRegistry as jest.Mock;
-const mockUsingInstall = resolvePackageVersionUsingInstallation as jest.Mock;
-const mockReadPolicy = readMinReleaseAgePolicy as jest.Mock;
-const mockResolve = resolveCompliantVersion as jest.Mock;
-const mockWriteExcludes = appendMinimumReleaseAgeExcludes as jest.Mock;
-const mockPrompt = migrateConfirm as jest.Mock;
+const mockReadNxJson = readNxJson as Mock;
+const mockUsingRegistry = resolvePackageVersionUsingRegistry as Mock;
+const mockUsingInstall = resolvePackageVersionUsingInstallation as Mock;
+const mockReadPolicy = readMinReleaseAgePolicy as Mock;
+const mockResolve = resolveCompliantVersion as Mock;
+const mockWriteExcludes = appendMinimumReleaseAgeExcludes as Mock;
+const mockPrompt = migrateConfirm as Mock;
 
 function pnpmPolicy(
   overrides: Partial<{
@@ -84,7 +85,7 @@ function violation(blocked: { version: string; publishedAt: string }[]) {
 
 describe('isRegistryResolutionEnabled', () => {
   const originalEnv = { ...process.env };
-  let warnSpy: jest.SpyInstance;
+  let warnSpy: MockInstance;
 
   beforeEach(async () => {
     resetResolvePackageVersionState();

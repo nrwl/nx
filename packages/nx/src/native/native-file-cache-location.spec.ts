@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { fchmodSync as mockedFchmodSync } from 'fs';
 import {
   chmodSync,
@@ -142,7 +143,7 @@ describe('native file cache location', () => {
         const dir = join(base, 'stuck');
         mkdirSync(dir, { mode: 0o777 });
         chmodSync(dir, 0o777);
-        (mockedFchmodSync as jest.Mock).mockImplementationOnce(() => {
+        (mockedFchmodSync as Mock).mockImplementationOnce(() => {
           const error: NodeJS.ErrnoException = new Error('EPERM');
           error.code = 'EPERM';
           throw error;

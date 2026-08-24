@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { readMinReleaseAgePolicy } from './policy';
 
 vi.mock('../package-manager', () => ({
@@ -18,13 +19,13 @@ import { readNpmPolicy } from './behavior/npm';
 import { readPnpmPolicy } from './behavior/pnpm';
 import { readYarnPolicy } from './behavior/yarn';
 
-const detectMock = detectPackageManager as jest.Mock;
-const versionMock = getPackageManagerVersion as jest.Mock;
+const detectMock = detectPackageManager as Mock;
+const versionMock = getPackageManagerVersion as Mock;
 const readers = {
-  npm: readNpmPolicy as jest.Mock,
-  pnpm: readPnpmPolicy as jest.Mock,
-  yarn: readYarnPolicy as jest.Mock,
-  bun: readBunPolicy as jest.Mock,
+  npm: readNpmPolicy as Mock,
+  pnpm: readPnpmPolicy as Mock,
+  yarn: readYarnPolicy as Mock,
+  bun: readBunPolicy as Mock,
 };
 
 describe('readMinReleaseAgePolicy (dispatch)', () => {

@@ -1,3 +1,4 @@
+import type { MockInstance, MockedFunction } from 'vitest';
 import { writeAiOutput, logProgress, writeErrorLog } from './ai-output';
 
 // Mock isAiAgent
@@ -7,10 +8,10 @@ vi.mock('../../native', async (importOriginal) => ({
 }));
 
 import { isAiAgent } from '../../native';
-const mockIsAiAgent = isAiAgent as jest.MockedFunction<typeof isAiAgent>;
+const mockIsAiAgent = isAiAgent as MockedFunction<typeof isAiAgent>;
 
 describe('shared ai-output', () => {
-  let stdoutSpy: jest.SpyInstance;
+  let stdoutSpy: MockInstance;
 
   beforeEach(() => {
     stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation();

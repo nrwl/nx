@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 vi.mock('@clack/prompts', () => ({
   autocomplete: vi.fn(),
   isCancel: vi.fn(() => false),
@@ -6,8 +7,8 @@ vi.mock('@clack/prompts', () => ({
 import { autocomplete, isCancel } from '@clack/prompts';
 import { migrateChoice, migrateConfirm } from './safe-prompt';
 
-const mockAutocomplete = autocomplete as unknown as jest.Mock;
-const mockIsCancel = isCancel as unknown as jest.Mock;
+const mockAutocomplete = autocomplete as unknown as Mock;
+const mockIsCancel = isCancel as unknown as Mock;
 
 describe('migrate prompts', () => {
   beforeEach(() => {

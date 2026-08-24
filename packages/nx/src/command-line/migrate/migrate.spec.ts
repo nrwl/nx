@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 const mocks = {
   prompt: vi.fn(),
   getInstalledNxVersion: vi.fn(),
@@ -6501,7 +6502,7 @@ module.exports = {
 
   describe('resolveMigrationForRun', () => {
     let tmpRoot: string;
-    let warnSpy: jest.SpyInstance;
+    let warnSpy: MockInstance;
 
     const writeInstalledPackage = (
       pkgName: string,

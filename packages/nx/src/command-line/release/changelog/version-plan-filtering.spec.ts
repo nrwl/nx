@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 // semver's ESM namespace is frozen, so spy at the module-mock level; spy mode
 // keeps the real implementations until a test overrides one.
 vi.mock('semver', { spy: true });
@@ -20,11 +21,11 @@ vi.mock('../../../utils/workspace-root', () => ({
 }));
 
 describe('version-plan-filtering', () => {
-  const mockExecCommand = execCommandModule.execCommand as jest.Mock;
-  const mockGetCommitHash = gitUtils.getCommitHash as jest.Mock;
-  const mockGetFirstGitCommit = gitUtils.getFirstGitCommit as jest.Mock;
+  const mockExecCommand = execCommandModule.execCommand as Mock;
+  const mockGetCommitHash = gitUtils.getCommitHash as Mock;
+  const mockGetFirstGitCommit = gitUtils.getFirstGitCommit as Mock;
   const mockGetLatestGitTagForPattern =
-    gitUtils.getLatestGitTagForPattern as jest.Mock;
+    gitUtils.getLatestGitTagForPattern as Mock;
 
   // Mock resolveRepositoryTags function for testing
   const mockResolveRepositoryTags = vi.fn().mockResolvedValue([]);

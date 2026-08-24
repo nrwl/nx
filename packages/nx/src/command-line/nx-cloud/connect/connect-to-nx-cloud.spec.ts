@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 vi.mock('@clack/prompts', () => ({
   autocomplete: vi.fn(),
   isCancel: () => false,
@@ -148,7 +149,7 @@ describe('connect-to-nx-cloud', () => {
 });
 
 describe('nxCloudPrompt option mapping', () => {
-  const mockAutocomplete = autocomplete as unknown as jest.Mock;
+  const mockAutocomplete = autocomplete as unknown as Mock;
 
   beforeEach(() => {
     mockAutocomplete.mockReset();

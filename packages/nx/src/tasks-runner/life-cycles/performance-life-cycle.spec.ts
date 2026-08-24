@@ -1,3 +1,4 @@
+import type { Mock, MockInstance } from 'vitest';
 import * as os from 'node:os';
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
@@ -85,7 +86,7 @@ interface TestEnv {
 // rather than constructor seams. Tests drive the env vars through
 // `withEnvironmentVariables` (auto snapshot/restore) and the helpers through jest
 // spies set up in beforeEach.
-let getEntriesByTypeSpy: jest.SpyInstance;
+let getEntriesByTypeSpy: MockInstance;
 
 /**
  * Make collectHashWindows() observe the given absolute-epoch [start, end] hash
@@ -133,9 +134,7 @@ function makeLifeCycle(
   if (env.windows) {
     setHashWindows(env.windows);
   }
-  (nxCloudUtils.isNxCloudUsed as jest.Mock).mockReturnValue(
-    env.remoteCache ?? true
-  );
+  (nxCloudUtils.isNxCloudUsed as Mock).mockReturnValue(env.remoteCache ?? true);
   return new PerformanceLifeCycle(graph, {
     skipNxCache: env.skipped,
     nxJson: {
@@ -1512,7 +1511,7 @@ describe('buildTimespans', () => {
 });
 
 describe('flushPerformanceReport', () => {
-  let logSpy: jest.SpyInstance;
+  let logSpy: MockInstance;
   let logged: string | undefined;
 
   beforeEach(() => {

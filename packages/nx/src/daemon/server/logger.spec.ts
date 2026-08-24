@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import { serverLogger } from '../logger';
 
 vi.mock('../../utils/versions', async () => ({
@@ -6,7 +7,7 @@ vi.mock('../../utils/versions', async () => ({
 }));
 
 describe('serverLogger', () => {
-  let consoleLogSpy: jest.SpyInstance;
+  let consoleLogSpy: MockInstance;
 
   beforeEach(() => {
     vi.spyOn(global.Date, 'now').mockImplementation(() =>

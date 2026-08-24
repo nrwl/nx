@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { checkWithOxfmt } from './oxfmt';
 
 // `nx format:check` gates CI on this function's verdict, and the branches that
@@ -13,7 +14,7 @@ import { execFile } from 'node:child_process';
 
 describe('checkWithOxfmt', () => {
   function respondWith(error: unknown, stdout = '', stderr = '') {
-    (execFile as jest.Mock).mockImplementation(
+    (execFile as Mock).mockImplementation(
       (_cmd: string, _args: string[], _opts: unknown, callback: Function) => {
         callback(error, stdout, stderr);
         return {};
@@ -22,7 +23,7 @@ describe('checkWithOxfmt', () => {
   }
 
   afterEach(() => {
-    (execFile as jest.Mock).mockReset();
+    (execFile as Mock).mockReset();
   });
 
   it('reports nothing to fix when oxfmt exits 0', async () => {

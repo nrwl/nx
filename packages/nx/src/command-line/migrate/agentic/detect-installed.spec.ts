@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { AgentDefinition } from './types';
 
 vi.mock('which', () => ({ default: vi.fn() }));
@@ -10,8 +11,8 @@ import which from 'which';
 import { access } from 'fs/promises';
 import { detectInstalledAgents } from './detect-installed';
 
-const mockWhich = which as unknown as jest.Mock;
-const mockAccess = access as unknown as jest.Mock;
+const mockWhich = which as unknown as Mock;
+const mockAccess = access as unknown as Mock;
 
 function makeDefinition(
   overrides: Partial<AgentDefinition> & Pick<AgentDefinition, 'id'>

@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 vi.mock('./runner', () => ({ runAgentic: vi.fn() }));
 vi.mock('./definitions', () => ({ getAgentDefinition: vi.fn() }));
 vi.mock('./handoff', async () => ({
@@ -28,8 +29,8 @@ import {
   HandoffOutcome,
 } from './types';
 
-const mockRunAgentic = runAgentic as jest.Mock;
-const mockGetDefinition = getAgentDefinition as jest.Mock;
+const mockRunAgentic = runAgentic as Mock;
+const mockGetDefinition = getAgentDefinition as Mock;
 
 function makeAgentic(): EnabledResolvedAgentic {
   const detected: DetectedInstalledAgent = {
@@ -63,7 +64,7 @@ function configureRun(outcome: HandoffOutcome) {
 }
 
 describe('runAgenticPromptStep', () => {
-  let installDeps: jest.Mock;
+  let installDeps: Mock;
 
   beforeEach(async () => {
     mockRunAgentic.mockReset();
@@ -72,11 +73,11 @@ describe('runAgenticPromptStep', () => {
     // values set at jest.mock() time, so detectPackageManager etc. would
     // start returning undefined.
     const { logger } = (await import('../../../utils/logger')) as {
-      logger: { info: jest.Mock };
+      logger: { info: Mock };
     };
     logger.info.mockClear();
     const { mkdirSafely } = (await import('./handoff')) as {
-      mkdirSafely: jest.Mock;
+      mkdirSafely: Mock;
     };
     mkdirSafely.mockClear();
     installDeps = vi.fn().mockResolvedValue(undefined);
@@ -120,7 +121,7 @@ describe('runAgenticPromptStep', () => {
       'm1.json'
     );
     const { mkdirSafely } = (await import('./handoff')) as {
-      mkdirSafely: jest.Mock;
+      mkdirSafely: Mock;
     };
     expect(mkdirSafely).toHaveBeenCalledWith(
       dirname(expected),
@@ -197,7 +198,7 @@ describe('runAgenticPromptStep', () => {
         },
       })
     ).rejects.toThrow();
-    const messages = (logger.info as jest.Mock).mock.calls
+    const messages = (logger.info as Mock).mock.calls
       .map((c) => String(c[0]))
       .join('\n');
     expect(messages).toContain('Validation failed: tests failed');

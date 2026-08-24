@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { createSerializableError } from '../../utils/serializable-error';
 import { reasonToError } from './get-plugins';
 
@@ -57,7 +58,7 @@ describe('reasonToError', () => {
 
 describe('getPluginsSeparated', () => {
   let getPluginsSeparated: typeof import('./get-plugins').getPluginsSeparated;
-  let loadNxPlugin: jest.Mock;
+  let loadNxPlugin: Mock;
   // Resolver for each deferred specified-plugin load, keyed by plugin name.
   let pendingPluginLoads: Map<string, (plugin: unknown) => void>;
 
@@ -72,7 +73,7 @@ describe('getPluginsSeparated', () => {
     // mock fns persist across tests — clear their recorded calls.
     loadNxPlugin.mockClear();
     (
-      (await import('./resolve-plugin')).resetResolvePluginCache as jest.Mock
+      (await import('./resolve-plugin')).resetResolvePluginCache as Mock
     ).mockClear();
     loadNxPlugin.mockImplementation((plugin: unknown) => {
       const name = typeof plugin === 'string' ? plugin : (plugin as any).plugin;

@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 vi.mock('fs', async () => {
   const actual = await vi.importActual('fs');
   return {
@@ -131,8 +132,8 @@ describe('calculateFileChanges', () => {
   });
 
   describe('reading a file at a revision', () => {
-    const execSyncMock = execSync as jest.Mock;
-    const execFileSyncMock = execFileSync as jest.Mock;
+    const execSyncMock = execSync as Mock;
+    const execFileSyncMock = execFileSync as Mock;
 
     beforeEach(() => {
       vi.spyOn(fs, 'existsSync').mockReturnValue(true);

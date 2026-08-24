@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'fs';
 import { homedir, tmpdir } from 'os';
 import { join } from 'path';
@@ -17,7 +18,7 @@ describe('getPnpmConfigDir', () => {
     Object.defineProperty(process, 'platform', { value: platform });
   }
   beforeEach(() => {
-    (homedir as jest.Mock).mockReturnValue('/home/me');
+    (homedir as Mock).mockReturnValue('/home/me');
   });
   afterEach(() => {
     Object.defineProperty(process, 'platform', originalPlatform);

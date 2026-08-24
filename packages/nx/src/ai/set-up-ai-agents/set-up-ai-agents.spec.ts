@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import { Tree } from '../../generators/tree';
 
@@ -28,7 +29,7 @@ function setAnalytics(tree: Tree, analytics: boolean) {
 
 describe('setup-ai-agents generator', () => {
   let tree: Tree;
-  let getInstalledNxVersionSpy: jest.SpyInstance;
+  let getInstalledNxVersionSpy: MockInstance;
 
   beforeEach(() => {
     // No formatter: these assertions compare against the exact string the
@@ -1240,9 +1241,9 @@ describe('setup-ai-agents generator', () => {
     });
 
     describe('codex config from generated template', () => {
-      let getAiConfigRepoPathSpy: jest.SpyInstance;
-      let existsSyncSpy: jest.SpyInstance;
-      let readFileSyncSpy: jest.SpyInstance;
+      let getAiConfigRepoPathSpy: MockInstance;
+      let existsSyncSpy: MockInstance;
+      let readFileSyncSpy: MockInstance;
 
       const generatedConfig = `[mcp_servers."nx-mcp"]
 command = "npx"

@@ -1,3 +1,4 @@
+import type { Mock, MockInstance } from 'vitest';
 import { format } from './format';
 
 // `nx format` is otherwise covered only by e2e, so the branches that decide
@@ -38,18 +39,18 @@ vi.mock('../../utils/fileutils', async () => ({
 const { detectFormatter } = await import('../../utils/formatters');
 const { getOxfmtBinPath, writeWithOxfmt, checkWithOxfmt } = (await import(
   '../../utils/formatters/oxfmt'
-)) as Record<string, jest.Mock>;
+)) as Record<string, Mock>;
 const { getPrettierPath, writeWithPrettier, checkWithPrettier } = (await import(
   '../../utils/formatters/prettier'
-)) as Record<string, jest.Mock>;
+)) as Record<string, Mock>;
 const { splitArgsIntoNxArgsAndOverrides, parseFiles } = (await import(
   '../../utils/command-line-utils'
-)) as Record<string, jest.Mock>;
+)) as Record<string, Mock>;
 
 describe('nx format', () => {
-  let warn: jest.SpyInstance;
-  let error: jest.SpyInstance;
-  let exit: jest.SpyInstance;
+  let warn: MockInstance;
+  let error: MockInstance;
+  let exit: MockInstance;
 
   class Exited extends Error {}
 

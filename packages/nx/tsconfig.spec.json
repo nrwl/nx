@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "out-tsc/spec",
     "customConditions": ["@nx/nx-source"],
-    "types": ["jest", "vitest/globals", "node"],
+    "types": ["vitest/globals", "node"],
     "composite": true,
     "rootDir": "."
   },

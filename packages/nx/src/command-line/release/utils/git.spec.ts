@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import {
   extractReferencesFromCommit,
   getLatestGitTagForPattern,
@@ -582,7 +583,7 @@ See merge request nx-release-test/nx-release-test!2`,
     it('should return null if execCommand throws an error', async () => {
       // should return null if execCommand throws an error
       (
-        (await import('./exec-command')).execCommand as jest.Mock
+        (await import('./exec-command')).execCommand as Mock
       ).mockImplementationOnce(() => {
         throw new Error('error');
       });

@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 vi.mock('./packument', () => ({
   fetchRegistryMetadata: vi.fn(),
 }));
@@ -10,8 +11,8 @@ import { pickMinReleaseAgeCompliantVersion } from './pick';
 import type { MinReleaseAgePolicy } from './policy';
 import { resolveCompliantVersion } from './resolve';
 
-const mockFetchMetadata = fetchRegistryMetadata as jest.Mock;
-const mockPick = pickMinReleaseAgeCompliantVersion as jest.Mock;
+const mockFetchMetadata = fetchRegistryMetadata as Mock;
+const mockPick = pickMinReleaseAgeCompliantVersion as Mock;
 
 function pnpmPolicy(): MinReleaseAgePolicy {
   return {

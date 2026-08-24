@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import * as packageManager from './package-manager';
 import { ensurePackageHasProvenance } from './provenance';
 
@@ -15,7 +16,7 @@ describe('ensurePackageHasProvenance', () => {
     },
   });
 
-  let packageRegistryViewSpy: jest.SpyInstance;
+  let packageRegistryViewSpy: MockInstance;
   const originalFetch = global.fetch;
   const originalSkip = process.env.NX_SKIP_PROVENANCE_CHECK;
 

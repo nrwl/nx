@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -102,7 +103,7 @@ function policyWithExcludes(
 }
 
 describe('bun min-release-age behavior', () => {
-  let nowSpy: jest.SpyInstance;
+  let nowSpy: MockInstance;
   beforeAll(() => {
     // Pin the clock so the stability walk's search bound is deterministic.
     nowSpy = vi.spyOn(Date, 'now').mockReturnValue(NOW);
