@@ -1,4 +1,5 @@
 use crate::native::utils::command::create_command;
+use crate::native::utils::git::git_stdout;
 use dashmap::DashMap;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
@@ -35,16 +36,13 @@ fn resolve_main_worktree_root(workspace_root: &str) -> anyhow::Result<Option<Str
 
     // In a worktree, .git is a file pointing to the main repo's .git dir.
     // Use git to find the common dir shared across all worktrees.
-    let output = create_command("git")
-        .args(["rev-parse", "--git-common-dir"])
-        .current_dir(workspace_root)
-        .output()?;
-
-    if !output.status.success() {
+    let Some(git_common_dir) = git_stdout(
+        Path::new(workspace_root),
+        &["rev-parse", "--git-common-dir"],
+    ) else {
         return Ok(None);
-    }
-
-    let git_common_dir = String::from_utf8(output.stdout)?.trim().to_string();
+    };
+    let git_common_dir = git_common_dir.trim().to_string();
     let abs_path = if Path::new(&git_common_dir).is_absolute() {
         PathBuf::from(&git_common_dir)
     } else {
@@ -68,6 +66,7 @@ fn resolve_main_worktree_root(workspace_root: &str) -> anyhow::Result<Option<Str
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::native::utils::command::create_command;
     use tempfile::TempDir;
 
     fn git(dir: &Path, args: &[&str]) {
