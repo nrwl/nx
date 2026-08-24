@@ -31,6 +31,7 @@ import {
   isStaticOutputStyle,
   output,
   printsFullTaskOutput,
+  printsTaskOutput,
   shouldGroupBatchOutput,
 } from '../utils/output';
 import { combineOptionsForExecutor, Options } from '../utils/params';
@@ -1073,7 +1074,11 @@ export class TaskOrchestrator {
     const batchOwnsTheDiagnostic = taskResults.some(
       (r) => r.status === 'failure' || r.status === 'stopped'
     );
-    if ((printsFullOutput || batchOwnsTheDiagnostic) && capturedOutputPath) {
+    if (
+      printsTaskOutput(this.outputStyle) &&
+      (printsFullOutput || batchOwnsTheDiagnostic) &&
+      capturedOutputPath
+    ) {
       // No redirect lines: every task renders itself below, so there is nothing
       // to redirect anyone to.
       this.printBatchFold(
