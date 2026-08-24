@@ -2,6 +2,8 @@ import {
   checkFilesAreOutputs,
   getTaskOutputs,
   type TaskOutputs,
+  getTaskIoSnapshotStatus,
+  type IoSnapshotStatus,
 } from '../../../hasher/check-task-files';
 import { createTaskId } from '../../../tasks-runner/utils';
 import type { ShowTargetOutputsOptions } from '../command-object';
@@ -39,7 +41,12 @@ export async function showTargetOutputsHandler(
     return;
   }
 
-  renderOutputs(projectName, targetName, outputs, args);
+  const snapshot = await getTaskIoSnapshotStatus(taskId, {
+    projectGraph: t.graph,
+    nxJson: t.nxJson,
+  });
+
+  renderOutputs(projectName, targetName, outputs, snapshot, args);
 }
 
 // ── Data resolution ─────────────────────────────────────────────────
@@ -82,12 +89,15 @@ function renderOutputs(
   project: string,
   target: string,
   { resolved, expanded, unresolved }: TaskOutputs,
+  snapshot: IoSnapshotStatus,
   args: ShowTargetOutputsOptions
 ) {
   if (args.json) {
     printJson({
       project,
       target,
+      // Outputs are declared-only in v1; the status says how inputs hashed.
+      snapshot,
       outputPaths: resolved,
       expandedOutputs: expanded,
       unresolvedOutputs: unresolved,

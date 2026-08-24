@@ -48,6 +48,7 @@ import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { allFileData } from '../../utils/all-file-data';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
 import { HashPlanner, transferProjectGraph } from '../../native';
+import { buildIoSnapshotOverrides } from '../../io-snapshots/overrides';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
@@ -1120,7 +1121,13 @@ async function createTaskGraphClientResponse(
 
     const taskIds = Object.keys(taskGraph.tasks);
     const plans =
-      taskIds.length > 0 ? planner.getPlans(taskIds, taskGraph) : {};
+      taskIds.length > 0
+        ? planner.getPlans(
+            taskIds,
+            taskGraph,
+            buildIoSnapshotOverrides(graph, taskGraph, nxJson)?.overrides
+          )
+        : {};
 
     performance.mark('task hash plan generation:end');
 
@@ -1257,7 +1264,13 @@ async function createTaskGraphForTargetsAndProjects(
 
     const taskIds = Object.keys(taskGraph.tasks);
     const plans =
-      taskIds.length > 0 ? planner.getPlans(taskIds, taskGraph) : {};
+      taskIds.length > 0
+        ? planner.getPlans(
+            taskIds,
+            taskGraph,
+            buildIoSnapshotOverrides(graph, taskGraph, nxJson)?.overrides
+          )
+        : {};
 
     performance.mark('task hash plan generation:end');
 
@@ -1355,6 +1368,10 @@ function expandInputs(
   const externalInputs: string[] = [];
   const otherInputs: string[] = [];
   inputs.forEach((input) => {
+    // Domain markers are not inputs.
+    if (input.startsWith('io-snapshot:')) {
+      return;
+    }
     // grouped workspace inputs look like workspace:[pattern,otherPattern]
     if (input.startsWith('workspace:[')) {
       const inputs = input.substring(11, input.length - 1).split(',');

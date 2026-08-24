@@ -18,6 +18,7 @@ import { projectHasTargetAndConfiguration } from '../utils/project-graph-utils';
 import { splitTarget } from '../utils/split-target';
 import { workspaceRoot as defaultWorkspaceRoot } from '../utils/workspace-root';
 import { HashPlanInspector } from './hash-plan-inspector';
+import type { IoSnapshotOverridesResult } from '../io-snapshots/overrides';
 import { type ExpandedDepsOutput, getInputs } from './task-hasher';
 
 // ── Module-level context (loaded once per process) ───────────────────────────
@@ -93,6 +94,10 @@ interface TaskIdentity {
 
 const identityCache = new Map<string, TaskIdentity>();
 const hashInputsCache = new Map<string, HashInputs | null>();
+const ioSnapshotResultCache = new Map<
+  string,
+  IoSnapshotOverridesResult | null
+>();
 const outputsCache = new Map<string, string[]>();
 const taskGraphCache = new Map<string, TaskGraph>();
 const depsOutputsCache = new Map<string, ExpandedDepsOutput[]>();
@@ -174,15 +179,50 @@ async function getRawInputs(
 
   // `null` means "this task is absent from the hash plan" — any other failure
   // is a real error and propagates to the caller.
-  const planResult = inspector.inspectTaskInputs({
+  const { inputs, ioSnapshots } = inspector.inspectTaskInputsWithIoSnapshots({
     project,
     target,
     configuration,
   });
 
-  const result = planResult[canonicalTaskId] ?? null;
+  const result = inputs[canonicalTaskId] ?? null;
   hashInputsCache.set(taskId, result);
+  ioSnapshotResultCache.set(taskId, ioSnapshots);
   return result;
+}
+
+export interface IoSnapshotStatus {
+  /** used: hashed from the snapshot; fallback: bundle present but this task hashed natively; none: no bundle / disabled */
+  status: 'used' | 'fallback' | 'none';
+  reason?: string;
+  commit?: string;
+  digest?: string;
+}
+
+export function deriveIoSnapshotStatus(
+  canonicalTaskId: string,
+  result: IoSnapshotOverridesResult | null
+): IoSnapshotStatus {
+  if (!result) {
+    return { status: 'none', reason: 'disabled' };
+  }
+  if (result.overrides[canonicalTaskId]) {
+    return {
+      status: 'used',
+      commit: result.resolution?.requestedCommit,
+      digest: result.resolution?.digest,
+    };
+  }
+  const bundleLevel = result.diagnostics.find(
+    (d) => d.reason === 'no-bundle' || d.reason === 'invalid-bundle'
+  );
+  if (bundleLevel) {
+    return { status: 'none', reason: bundleLevel.reason };
+  }
+  const taskLevel = result.diagnostics.find(
+    (d) => 'taskId' in d && d.taskId === canonicalTaskId
+  );
+  return { status: 'fallback', reason: taskLevel?.reason ?? 'missing' };
 }
 
 function getOutputs(taskId: string, projectGraph: ProjectGraph): string[] {
@@ -547,6 +587,23 @@ export async function getTaskRawInputs(
   return getRawInputs(taskId, ctx);
 }
 
+/**
+ * Whether the task's hash comes from an I/O snapshot, and why not otherwise.
+ * Reads the on-disk bundle only; never fetches.
+ */
+export async function getTaskIoSnapshotStatus(
+  taskId: string,
+  seed?: TaskFileCheckSeed
+): Promise<IoSnapshotStatus> {
+  const ctx = await getContext(seed);
+  await getRawInputs(taskId, ctx);
+  const { canonicalTaskId } = resolveIdentity(taskId, ctx.projectGraph);
+  return deriveIoSnapshotStatus(
+    canonicalTaskId,
+    ioSnapshotResultCache.get(taskId) ?? null
+  );
+}
+
 export interface TaskOutputs {
   /** Output patterns after token substitution — what the task runner will cache. */
   resolved: string[];
@@ -584,6 +641,7 @@ export function _resetContextForTesting(): void {
   cachedContext = null;
   identityCache.clear();
   hashInputsCache.clear();
+  ioSnapshotResultCache.clear();
   outputsCache.clear();
   taskGraphCache.clear();
   depsOutputsCache.clear();

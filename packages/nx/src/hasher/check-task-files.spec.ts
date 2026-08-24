@@ -51,6 +51,7 @@ import {
   checkFilesAreOutputs,
   getTaskOutputs,
   getTaskRawInputs,
+  deriveIoSnapshotStatus,
   _resetContextForTesting,
 } from './check-task-files';
 
@@ -151,6 +152,10 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
       return {
         init: mockInit,
         inspectTaskInputs: mockInspectTaskInputs,
+        inspectTaskInputsWithIoSnapshots: (...args: unknown[]) => ({
+          inputs: mockInspectTaskInputs(...args),
+          ioSnapshots: null,
+        }),
       } as unknown as HashPlanInspector;
     } as any);
 
@@ -1151,5 +1156,68 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
       expect(mockInspectTaskInputs).toHaveBeenCalledTimes(1);
       expect(mockGetOutputs).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+describe('deriveIoSnapshotStatus', () => {
+  const resolution = {
+    requestedCommit: 'abc',
+    commits: ['abc'],
+    sourceCommits: ['abc'],
+    digest: 'd1',
+    fetchedAt: 0,
+    clientVersion: '1',
+    tasks: 1,
+  };
+
+  it('is none with reason disabled when snapshots are off', () => {
+    expect(deriveIoSnapshotStatus('a:build', null)).toEqual({
+      status: 'none',
+      reason: 'disabled',
+    });
+  });
+
+  it('is used with commit and digest when the task has an override', () => {
+    expect(
+      deriveIoSnapshotStatus('a:build', {
+        overrides: {
+          'a:build': {
+            projects: {},
+            workspace: [],
+            taskOutputs: {},
+            digest: 'd1',
+          },
+        },
+        diagnostics: [],
+        resolution,
+      })
+    ).toEqual({ status: 'used', commit: 'abc', digest: 'd1' });
+  });
+
+  it('is none when there is no bundle at all', () => {
+    expect(
+      deriveIoSnapshotStatus('a:build', {
+        overrides: {},
+        diagnostics: [{ reason: 'no-bundle' }],
+        resolution: null,
+      })
+    ).toEqual({ status: 'none', reason: 'no-bundle' });
+  });
+
+  it('is fallback with the task diagnostic reason, defaulting to missing', () => {
+    expect(
+      deriveIoSnapshotStatus('a:build', {
+        overrides: {},
+        diagnostics: [{ reason: 'manual', taskId: 'a:build' }],
+        resolution,
+      })
+    ).toEqual({ status: 'fallback', reason: 'manual' });
+    expect(
+      deriveIoSnapshotStatus('a:build', {
+        overrides: {},
+        diagnostics: [],
+        resolution,
+      })
+    ).toEqual({ status: 'fallback', reason: 'missing' });
   });
 });

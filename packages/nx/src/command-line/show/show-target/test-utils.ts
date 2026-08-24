@@ -116,6 +116,10 @@ vi.mock('../../../hasher/hash-plan-inspector', () => ({
     return {
       init: vi.fn().mockResolvedValue(undefined),
       inspectTaskInputs: vi.fn().mockImplementation(() => mockHashInputs),
+      inspectTaskInputsWithIoSnapshots: vi.fn().mockImplementation(() => ({
+        inputs: mockHashInputs,
+        ioSnapshots: null,
+      })),
     };
   }),
 }));
