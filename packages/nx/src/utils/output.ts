@@ -29,6 +29,20 @@ export function isStaticOutputStyle(outputStyle: string | undefined): boolean {
 }
 
 /**
+ * Whether a style puts task output on the terminal at all.
+ *
+ * `summary` does not - it prints a status line and the path to each task's log,
+ * deliberately addressing the output instead of reproducing it. So every
+ * decision that would put a task's bytes on the terminal has to consult this
+ * first, including ones that bypass the life cycle: the batch renderer folds a
+ * captured worker log directly, and under `summary` that would dump exactly
+ * what the style exists to keep off the screen.
+ */
+export function printsTaskOutput(outputStyle: string | undefined): boolean {
+  return outputStyle !== 'summary';
+}
+
+/**
  * Whether a run prints every task's output in full rather than collapsing the
  * ones that succeeded. Both static life cycles and the batch renderer have to
  * agree on this, so they read it from here rather than each deriving it.
@@ -52,8 +66,9 @@ export function printsFullTaskOutput(args: {
   outputStyle?: string;
 }): boolean {
   return (
-    !!args.verbose ||
-    (args.outputStyle ?? 'static-failures-only') !== 'static-failures-only'
+    printsTaskOutput(args.outputStyle) &&
+    (!!args.verbose ||
+      (args.outputStyle ?? 'static-failures-only') !== 'static-failures-only')
   );
 }
 
