@@ -122,67 +122,230 @@ describe('task planner', () => {
     });
   });
 
-  it('should append an io-snapshot marker only for tasks with an override', async () => {
-    const builder = new ProjectGraphBuilder();
-    builder.addNode({
-      name: 'parent',
-      type: 'lib',
-      data: {
-        root: 'parent',
-        targets: { build: { executor: 'nx:run-commands' } },
-      },
-    });
-    builder.addNode({
-      name: 'child',
-      type: 'lib',
-      data: {
-        root: 'child',
-        targets: { build: { executor: 'nx:run-commands' } },
-      },
-    });
-    const projectGraph = builder.getUpdatedProjectGraph();
-    const taskGraph = createTaskGraph(
-      projectGraph,
-      {},
-      ['parent', 'child'],
-      ['build'],
-      undefined,
-      {},
-      false
-    );
-    const ref = transferProjectGraph(
-      transformProjectGraphForRust(projectGraph)
-    );
-    const planner = new HashPlanner({} as any, ref);
-
-    const withOverride = planner.getPlans(
-      ['parent:build', 'child:build'],
-      taskGraph,
-      {
-        'parent:build': {
-          projects: { parent: ['parent/src/**/*.ts'] },
-          workspace: [],
-          taskOutputs: {},
-          digest: 'abc123',
+  describe('io snapshot overrides', () => {
+    function fixture(opts: { cyclic?: boolean } = {}) {
+      const builder = new ProjectGraphBuilder(undefined, {
+        parent: [
+          { file: 'libs/parent/filea.ts', hash: 'a.hash' },
+          { file: 'libs/parent/package.json', hash: 'p.hash' },
+        ],
+        child: [{ file: 'libs/child/fileb.ts', hash: 'b.hash' }],
+      });
+      builder.addNode({
+        name: 'parent',
+        type: 'lib',
+        data: {
+          root: 'libs/parent',
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              inputs: [
+                'prod',
+                '^prod',
+                { env: 'TESTENV' },
+                { runtime: 'echo runtime123' },
+                { json: '{projectRoot}/package.json', fields: ['version'] },
+              ],
+              outputs: ['{workspaceRoot}/dist/libs/parent'],
+            },
+          },
         },
+      });
+      builder.addNode({
+        name: 'child',
+        type: 'lib',
+        data: {
+          root: 'libs/child',
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              outputs: ['{workspaceRoot}/dist/libs/child'],
+            },
+          },
+        },
+      });
+      builder.addStaticDependency('parent', 'child', 'libs/parent/filea.ts');
+      if (opts.cyclic) {
+        builder.addStaticDependency('child', 'parent', 'libs/child/fileb.ts');
       }
-    );
-    expect(withOverride['parent:build']).toContain('io-snapshot:abc123');
-    expect(withOverride['child:build']).not.toContainEqual(
-      expect.stringMatching(/^io-snapshot:/)
-    );
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        { build: ['^build'] },
+        ['parent'],
+        ['build'],
+        undefined,
+        {}
+      );
+      const nxJson = {
+        namedInputs: { prod: ['default', '!{projectRoot}/**/*.spec.ts'] },
+      } as any;
+      const planner = new HashPlanner(
+        nxJson,
+        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      );
+      return { planner, taskGraph };
+    }
 
-    // No overrides ⇒ plans are identical to today's.
-    const without = planner.getPlans(
-      ['parent:build', 'child:build'],
-      taskGraph
-    );
-    expect(without['parent:build']).not.toContainEqual(
-      expect.stringMatching(/^io-snapshot:/)
-    );
-    expect(without['parent:build']).toEqual(
-      withOverride['parent:build'].filter((i) => !i.startsWith('io-snapshot:'))
-    );
+    const base = {
+      projects: {},
+      workspace: [],
+      taskOutputs: {},
+      digest: 'abc123',
+    };
+
+    it('leaves plans byte-identical when no task has an override', () => {
+      const { planner, taskGraph } = fixture();
+      const plain = planner.getPlans(['parent:build'], taskGraph);
+      expect(plain['parent:build']).toEqual(
+        expect.arrayContaining([
+          'parent:libs/parent/**/*,!libs/parent/**/*.spec.ts',
+          'child:libs/child/**/*,!libs/child/**/*.spec.ts',
+          'parent:TsConfig',
+          'parent:json:libs/parent/package.json[version]',
+        ])
+      );
+      expect(planner.getPlans(['parent:build'], taskGraph, {})).toEqual(plain);
+      expect(
+        planner.getPlans(['parent:build'], taskGraph, { 'child:build': base })[
+          'parent:build'
+        ]
+      ).toEqual(plain['parent:build']);
+      expect(plain['parent:build']).not.toContainEqual(
+        expect.stringMatching(/^io-snapshot:/)
+      );
+    });
+
+    it('replaces declared filesets (self and dependency) with observed reads and keeps negations', () => {
+      const { planner, taskGraph } = fixture();
+      const plan = planner.getPlans(['parent:build'], taskGraph, {
+        'parent:build': {
+          ...base,
+          projects: {
+            parent: ['libs/parent/src/**/*.ts'],
+            child: ['libs/child/src/index.ts'],
+          },
+        },
+      })['parent:build'];
+      expect(plan).toEqual(
+        expect.arrayContaining([
+          'parent:libs/parent/src/**/*.ts,!libs/parent/**/*.spec.ts',
+          'child:libs/child/src/index.ts,!libs/child/**/*.spec.ts',
+          'parent:ProjectConfiguration',
+          'child:ProjectConfiguration',
+          'env:TESTENV',
+          'runtime:echo runtime123',
+          'env:NX_CLOUD_ENCRYPTION_KEY',
+          'workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]',
+          'AllExternalDependencies',
+          'io-snapshot:abc123',
+        ])
+      );
+      // Declared filesets are gone; unread class-mapped files are not emitted.
+      expect(plan).not.toContain(
+        'parent:libs/parent/**/*,!libs/parent/**/*.spec.ts'
+      );
+      expect(plan).not.toContain(
+        'child:libs/child/**/*,!libs/child/**/*.spec.ts'
+      );
+      expect(plan).not.toContain('parent:TsConfig');
+      expect(plan).not.toContain('child:TsConfig');
+      expect(plan).not.toContain(
+        'parent:json:libs/parent/package.json[version]'
+      );
+    });
+
+    it('keeps TsConfig and JsonFileSet only when the trace read those files', () => {
+      const { planner, taskGraph } = fixture();
+      const plan = planner.getPlans(['parent:build'], taskGraph, {
+        'parent:build': {
+          ...base,
+          projects: { parent: ['libs/parent/package.json'] },
+          workspace: ['tsconfig.base.json'],
+        },
+      })['parent:build'];
+      expect(plan).toEqual(
+        expect.arrayContaining([
+          'parent:TsConfig',
+          'child:TsConfig',
+          'parent:json:libs/parent/package.json[version]',
+        ])
+      );
+      // The raw reads are covered by those instructions, so no fileset remains.
+      expect(plan).not.toContainEqual(expect.stringMatching(/^parent:libs\//));
+      expect(plan).not.toContainEqual(
+        expect.stringMatching(/^workspace:\[tsconfig/)
+      );
+    });
+
+    it('drops workspace reads that externals cover and applies the task negations', () => {
+      const { planner, taskGraph } = fixture();
+      const plan = planner.getPlans(['parent:build'], taskGraph, {
+        'parent:build': {
+          ...base,
+          workspace: [
+            'node_modules/foo/index.js',
+            'package.json',
+            'yarn.lock',
+            'tools/x.ts',
+          ],
+        },
+      })['parent:build'];
+      expect(plan).toContain(
+        'workspace:[tools/x.ts,!libs/parent/**/*.spec.ts]'
+      );
+      expect(plan).toContain('AllExternalDependencies');
+      expect(plan).not.toContainEqual(
+        expect.stringMatching(/node_modules|yarn\.lock/)
+      );
+    });
+
+    it("hashes reads inside a producer task's outputs through TaskOutput", () => {
+      const { planner, taskGraph } = fixture();
+      const plan = planner.getPlans(['parent:build'], taskGraph, {
+        'parent:build': {
+          ...base,
+          taskOutputs: { 'child:build': ['dist/libs/child/index.js'] },
+        },
+      })['parent:build'];
+      expect(plan).toContain('dist/libs/child/index.js:dist/libs/child');
+    });
+
+    it('hashes a task that read nothing from native instructions plus the marker', () => {
+      const { planner, taskGraph } = fixture();
+      const plan = planner.getPlans(['parent:build'], taskGraph, {
+        'parent:build': base,
+      })['parent:build'];
+      expect(plan).toEqual(
+        expect.arrayContaining([
+          'parent:ProjectConfiguration',
+          'child:ProjectConfiguration',
+          'env:TESTENV',
+          'runtime:echo runtime123',
+          'io-snapshot:abc123',
+        ])
+      );
+      expect(plan).not.toContainEqual(
+        expect.stringMatching(/^(parent|child):libs\//)
+      );
+      expect(plan).not.toContainEqual(expect.stringMatching(/TsConfig$/));
+    });
+
+    it('applies dependency negations on cyclic graphs too (non-memo traversal)', () => {
+      const { planner, taskGraph } = fixture({ cyclic: true });
+      const plan = planner.getPlans(['parent:build'], taskGraph, {
+        'parent:build': {
+          ...base,
+          projects: { child: ['libs/child/src/index.ts'] },
+        },
+      })['parent:build'];
+      expect(plan).toContain(
+        'child:libs/child/src/index.ts,!libs/child/**/*.spec.ts'
+      );
+      expect(plan).not.toContain(
+        'child:libs/child/**/*,!libs/child/**/*.spec.ts'
+      );
+    });
   });
 
   it('should plan the task where the project has dependencies', async () => {
