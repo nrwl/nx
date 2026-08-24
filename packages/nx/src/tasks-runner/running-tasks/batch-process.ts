@@ -143,25 +143,45 @@ export class BatchProcess {
 
   private capture(chunk: string | Buffer) {
     // Only a released capture stops recording; a handed-over one keeps
-    // appending, so trailing output still reaches the fold.
+    // appending until the fold is rendered.
     if (this.capturedOutputDiscarded) {
       return;
     }
-    if (this.capturedOutputFd === undefined) {
-      const dir = join(workspaceDataDirectory, 'batch-outputs');
-      mkdirSync(dir, { recursive: true });
-      const name = `${this.executorName.replace(/[^a-zA-Z0-9]+/g, '-')}-${
-        process.pid
-      }-${++BatchProcess.capturedOutputCount}.log`;
-      this.capturedOutputPath = join(dir, name);
-      this.capturedOutputFd = openSync(this.capturedOutputPath, 'w');
-    }
-    // Written synchronously so the file is complete the moment the batch ends,
-    // with no flush to sequence against the read that renders the fold.
-    const bytes = typeof chunk === 'string' ? Buffer.from(chunk) : chunk;
-    let written = 0;
-    while (written < bytes.length) {
-      written += writeSync(this.capturedOutputFd, bytes, written);
+    try {
+      if (this.capturedOutputFd === undefined) {
+        const dir = join(workspaceDataDirectory, 'batch-outputs');
+        mkdirSync(dir, { recursive: true });
+        const name = `${this.executorName.replace(/[^a-zA-Z0-9]+/g, '-')}-${
+          process.pid
+        }-${++BatchProcess.capturedOutputCount}.log`;
+        const path = join(dir, name);
+        // Assigned only once the file is actually open, so a path always names
+        // an fd rather than a file that failed to open.
+        const fd = openSync(path, 'w');
+        this.capturedOutputPath = path;
+        this.capturedOutputFd = fd;
+      }
+      // Written synchronously so the file is complete the moment the batch ends,
+      // with no flush to sequence against the read that renders the fold.
+      const bytes = typeof chunk === 'string' ? Buffer.from(chunk) : chunk;
+      let written = 0;
+      while (written < bytes.length) {
+        written += writeSync(this.capturedOutputFd, bytes, written);
+      }
+    } catch (e) {
+      // This runs inside a stream 'data' handler, where a throw is an uncaught
+      // exception rather than something the orchestrator's try can see - so a
+      // full disk or a read-only data directory would take down a run that
+      // otherwise had nothing wrong with it. The capture is an optimization
+      // that the common path discards anyway, so give it up and put the bytes
+      // back on the terminal instead of losing both them and the run.
+      this.capturedOutputDiscarded = true;
+      this.releaseCapturedOutput();
+      output.warn({
+        title: `Could not capture batch output for ${this.executorName}`,
+        bodyLines: [e.message, 'Streaming it live instead.'],
+      });
+      output.writeTaskOutputChunk(chunk);
     }
   }
 
@@ -170,11 +190,13 @@ export class BatchProcess {
    * log grouping, or undefined if nothing was captured. Used to render the whole
    * batch as one fold, so output no task claimed is not lost.
    *
-   * The file is deliberately left open. A worker's stdout can deliver after its
-   * exit event — which is what `getResults()` settles on — and that trailing
-   * output is exactly the kind this fold exists to carry, so it keeps appending
-   * to the same file rather than being dropped or landing in a second one.
-   * Writes are unbuffered, so a reader always sees a complete prefix.
+   * The file is deliberately left open rather than closed here. A worker's
+   * stdout can deliver after its exit event — which is what `getResults()`
+   * settles on — and leaving the fd open keeps such a chunk appending to this
+   * same file instead of minting a second numbered one that nothing cleans up.
+   * The caller reads the file once, synchronously, while rendering the fold, so
+   * anything arriving after that read is not shown; writes are unbuffered, so
+   * the read always sees a complete prefix of what has arrived by then.
    */
   getCapturedOutputPath(): string | undefined {
     return this.capturedOutputPath;
@@ -183,17 +205,24 @@ export class BatchProcess {
   /** Releases the capture file. Safe to call more than once. */
   discardCapturedOutput(): void {
     this.capturedOutputDiscarded = true;
-    this.closeCapturedOutput();
+    this.releaseCapturedOutput();
+  }
+
+  /**
+   * Closes the fd and unlinks the file, leaving no path behind for a caller to
+   * read. Tolerates a partially-initialized capture, since it also runs when
+   * opening or writing the file is what failed.
+   */
+  private releaseCapturedOutput() {
+    if (this.capturedOutputFd !== undefined) {
+      try {
+        closeSync(this.capturedOutputFd);
+      } catch {}
+      this.capturedOutputFd = undefined;
+    }
     if (this.capturedOutputPath) {
       rmSync(this.capturedOutputPath, { force: true });
       this.capturedOutputPath = undefined;
-    }
-  }
-
-  private closeCapturedOutput() {
-    if (this.capturedOutputFd !== undefined) {
-      closeSync(this.capturedOutputFd);
-      this.capturedOutputFd = undefined;
     }
   }
 

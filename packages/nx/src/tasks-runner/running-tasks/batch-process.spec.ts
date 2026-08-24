@@ -1,6 +1,25 @@
 import * as figures from 'figures';
 import { EventEmitter } from 'events';
 import { existsSync, readFileSync } from 'fs';
+
+// `capture()` imports openSync by name, so the binding is resolved at load time
+// and a spy on the fs namespace never sees it. Replace the module instead, and
+// gate the failure on a flag so every other test here keeps the real fs.
+let mockFailOpenSync = false;
+jest.mock('fs', () => {
+  const actual = jest.requireActual('fs');
+  return {
+    ...actual,
+    openSync: (...args: unknown[]) => {
+      if (mockFailOpenSync) {
+        throw Object.assign(new Error('ENOSPC: no space left on device'), {
+          code: 'ENOSPC',
+        });
+      }
+      return (actual.openSync as any)(...args);
+    },
+  };
+});
 import { stripVTControlCharacters } from 'util';
 import type { ChildProcess } from 'child_process';
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
@@ -303,5 +322,39 @@ describe('BatchProcess', () => {
     const index = stdout.indexOf(summary);
     expect(index).toBeGreaterThan(-1);
     expect(stdout[index - 1]).toEqual('\n');
+  });
+  it('keeps the run alive and streams live when the capture cannot be written', () => {
+    const child = fakeChildProcess();
+    const warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
+    // A stream 'data' handler is not inside any try the orchestrator owns, so a
+    // throw here is an uncaught exception that takes down the whole run,
+    // including every task that already passed. ENOSPC and a read-only data
+    // directory both reach this line.
+    mockFailOpenSync = true;
+
+    try {
+      const result = withEnvironmentVariables(FOLDING_ENV, () => {
+        const b = new BatchProcess(child, '@nx/gradle:batch');
+        const forwarded = captureForwarded(() => {
+          expect(() =>
+            (child as any).stdout.emit('data', Buffer.from('gradle output\n'))
+          ).not.toThrow();
+        });
+        return { b, forwarded };
+      });
+
+      // Degraded, not dead: the bytes go to the terminal instead of the file,
+      // so the capture is what is lost rather than the output or the run.
+      expect(result.forwarded.stdout).toContain('gradle output');
+      expect(result.b.getCapturedOutputPath()).toBeUndefined();
+      expect(warn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining('@nx/gradle:batch'),
+        })
+      );
+    } finally {
+      mockFailOpenSync = false;
+      warn.mockRestore();
+    }
   });
 });
