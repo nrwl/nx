@@ -357,13 +357,35 @@ class CLIOutput {
     this.addNewline();
   }
 
+  /**
+   * Waits for queued `process.stdout` to reach the fd. Does not cover stderr, and
+   * resolves without flushing if something has replaced `process.stdout.write` —
+   * the SIGINT silencer in task-orchestrator.ts does exactly that, on purpose.
+   */
   drain(): Promise<void> {
     return new Promise((resolve) => {
-      if (process.stdout.writableNeedDrain) {
-        process.stdout.once('drain', resolve);
-      } else {
+      // Captured once: the deferred cleanup below must detach from the stream it
+      // attached to, not from whatever `process.stdout` is a macrotask later.
+      const stream = process.stdout;
+      // `writableNeedDrain` is only set once the queue passes the high-water mark,
+      // so a shorter queue needs the write callback instead. Waiting on the 'drain'
+      // event alone lets `process.exit()` discard up to highWaterMark of output.
+      if (stream.writableLength === 0) {
         resolve();
+        return;
       }
+      // The reader may already be gone (`nx ... | head`); an unhandled EPIPE would
+      // kill the run. Detach via setImmediate — not in the write callback and not via
+      // process.nextTick: both run before the 'error' event, so the crash comes back.
+      const onError = () => resolve();
+      stream.on('error', onError);
+      // Encoding passed explicitly: a positional (chunk, encoding, callback) stdout
+      // patch that does not normalize drops a two-argument write's callback, and this
+      // would never resolve. The patches in this repo normalize; third-party ones may not.
+      stream.write('', 'utf8', () => {
+        resolve();
+        setImmediate(() => stream.removeListener('error', onError));
+      });
     });
   }
 }

@@ -390,4 +390,45 @@ describe('TaskOrchestrator', () => {
       expect(orchestrator.cache.getBatch).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe('SIGINT output silencing', () => {
+    // The handler replaces process.stdout.write permanently and never restores it,
+    // so anything awaiting a write callback after Ctrl-C depends on this shape.
+    it('invokes the callback from either argument position', async () => {
+      const realStdoutWrite = process.stdout.write;
+      const realStderrWrite = process.stderr.write;
+      const realOn = process.on;
+      try {
+        const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+        orchestrator.tuiEnabled = false;
+        orchestrator.runningContinuousTasks = new Map();
+        orchestrator.cleanup = jest.fn(async () => {});
+        orchestrator.resolveStopPromise = jest.fn();
+
+        const handlers: Record<string, (...args: any[]) => void> = {};
+        jest.spyOn(process, 'on').mockImplementation(((
+          signal: string,
+          fn: any
+        ) => {
+          handlers[signal] = fn;
+          return process;
+        }) as any);
+
+        orchestrator.setupSignalHandlers();
+        handlers['SIGINT']('SIGINT');
+
+        const twoArg = jest.fn();
+        expect((process.stdout.write as any)('x', twoArg)).toBe(true);
+        expect(twoArg).toHaveBeenCalled();
+
+        const threeArg = jest.fn();
+        expect((process.stderr.write as any)('x', 'utf8', threeArg)).toBe(true);
+        expect(threeArg).toHaveBeenCalled();
+      } finally {
+        process.stdout.write = realStdoutWrite;
+        process.stderr.write = realStderrWrite;
+        process.on = realOn;
+      }
+    });
+  });
 });

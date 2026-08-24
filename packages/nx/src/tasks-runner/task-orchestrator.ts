@@ -1895,12 +1895,23 @@ export class TaskOrchestrator {
         // Silence output — pnpm (and similar wrappers) may exit before nx
         // finishes cleanup, returning the shell prompt. Any output after
         // that point would appear after the prompt.
-        const noop = (_chunk, _encoding, callback) => {
-          if (callback) callback();
+        // Handle both overload signatures: dropping write(chunk, cb) would strand
+        // the callback and hang anything awaiting it, such as output.drain().
+        // Typed rather than cast so the compiler keeps checking that.
+        const noop = (
+          _chunk: string | Uint8Array,
+          encodingOrCallback?: BufferEncoding | ((err?: Error) => void),
+          callback?: (err?: Error) => void
+        ): boolean => {
+          const cb =
+            typeof encodingOrCallback === 'function'
+              ? encodingOrCallback
+              : callback;
+          if (cb) cb(null);
           return true;
         };
-        process.stdout.write = noop as any;
-        process.stderr.write = noop as any;
+        process.stdout.write = noop;
+        process.stderr.write = noop;
       }
       this.cleanup().finally(() => {
         if (this.resolveStopPromise) {

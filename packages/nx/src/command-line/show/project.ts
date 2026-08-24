@@ -126,7 +126,5 @@ export async function showProjectHandler(
     }
   }
 
-  // TODO: Find a better fix for this
-  await new Promise((res) => setImmediate(res));
   await output.drain();
 }

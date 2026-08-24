@@ -1,6 +1,7 @@
 import { type Argv, type CommandModule, showHelp } from 'yargs';
 import { handleImport } from '../../utils/handle-import';
 import { logger } from '../../utils/logger';
+import { output } from '../../utils/output';
 import {
   type OutputStyle,
   type RunManyOptions,
@@ -263,6 +264,7 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
     }
 
+    await output.drain();
     process.exit(result);
   },
 };
@@ -303,6 +305,7 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
     }
 
+    await output.drain();
     process.exit(result);
   },
 };
@@ -371,6 +374,7 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
     }
 
+    await output.drain();
     process.exit(result);
   },
 };
@@ -411,6 +415,7 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
     }
 
+    await output.drain();
     process.exit(status);
   },
 };
@@ -453,6 +458,7 @@ const planCommand: CommandModule<NxReleaseArgs, PlanOptions> = {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
     }
 
+    await output.drain();
     process.exit(result);
   },
 };
@@ -465,6 +471,7 @@ const planCheckCommand: CommandModule<NxReleaseArgs, PlanCheckOptions> = {
   handler: async (args) => {
     const release = await handleImport('./plan-check.js', __dirname);
     const result = await release.releasePlanCheckCLIHandler(args);
+    await output.drain();
     process.exit(result);
   },
 };
