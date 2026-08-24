@@ -732,6 +732,91 @@ describe('Enforce Module Boundaries (eslint)', () => {
       expect(failures.length).toEqual(0);
     });
 
+    describe.each([
+      {
+        name: 'a mixed banned and allowed constraint',
+        constraint: {
+          sourceTag: 'api',
+          bannedExternalImports: ['npm-package'],
+          allowedExternalImports: ['npm-package2'],
+        },
+      },
+      {
+        name: 'an allowed-only constraint',
+        constraint: {
+          sourceTag: 'api',
+          allowedExternalImports: ['npm-package2'],
+        },
+      },
+      {
+        name: 'an empty allowed constraint',
+        constraint: { sourceTag: 'api', allowedExternalImports: [] },
+      },
+    ])('nested external imports with $name', ({ constraint }) => {
+      it('should error when importing a project that transitively depends on an external package outside the allowed list', () => {
+        const failures = runRule(
+          { depConstraints: [constraint], checkNestedExternalImports: true },
+          `${process.cwd()}/proj/libs/api/src/index.ts`,
+          `
+              import '@mycompany/impl';
+              import('@mycompany/impl');
+            `,
+          {
+            ...graph,
+            dependencies: {
+              ...graph.dependencies,
+              implName: [
+                {
+                  source: 'implName',
+                  target: 'npm:npm-awesome-package',
+                  type: DependencyType.static,
+                },
+              ],
+            },
+          },
+          fileMap
+        );
+
+        const message =
+          'A project tagged with "api" is not allowed to import "@mycompany/impl". Nested import found at implName';
+        expect(failures.length).toEqual(2);
+        expect(failures[0].message).toEqual(message);
+        expect(failures[1].message).toEqual(message);
+      });
+    });
+
+    it('should not error when importing a project whose transitive external dependencies are in the allowed list', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', allowedExternalImports: ['npm-awesome-*'] },
+          ],
+          checkNestedExternalImports: true,
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import '@mycompany/impl';
+          import('@mycompany/impl');
+        `,
+        {
+          ...graph,
+          dependencies: {
+            ...graph.dependencies,
+            implName: [
+              {
+                source: 'implName',
+                target: 'npm:npm-awesome-package',
+                type: DependencyType.static,
+              },
+            ],
+          },
+        },
+        fileMap
+      );
+
+      expect(failures.length).toEqual(0);
+    });
+
     it('should error when importing transitive npm packages', () => {
       const failures = runRule(
         {

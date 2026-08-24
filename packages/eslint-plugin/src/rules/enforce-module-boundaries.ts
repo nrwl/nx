@@ -754,8 +754,8 @@ export default ESLintUtils.RuleCreator(
           }
           if (
             checkNestedExternalImports &&
-            constraint.bannedExternalImports &&
-            constraint.bannedExternalImports.length
+            (constraint.bannedExternalImports?.length ||
+              constraint.allowedExternalImports)
           ) {
             const matches = hasBannedDependencies(
               transitiveExternalDeps,
