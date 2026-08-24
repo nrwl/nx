@@ -603,6 +603,7 @@ module.exports.copy = nativeBinding.copy
 module.exports.detectAiAgent = nativeBinding.detectAiAgent
 module.exports.EventType = nativeBinding.EventType
 module.exports.expandOutputs = nativeBinding.expandOutputs
+module.exports.fetchIoSnapshots = nativeBinding.fetchIoSnapshots
 module.exports.findImports = nativeBinding.findImports
 module.exports.flushTelemetry = nativeBinding.flushTelemetry
 module.exports.formatDuration = nativeBinding.formatDuration
