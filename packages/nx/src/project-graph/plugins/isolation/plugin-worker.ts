@@ -12,6 +12,7 @@ import { logger } from '../../../utils/logger';
 import { createSerializableError } from '../../../utils/serializable-error';
 import { assertNotForeignWorkspaceMessage } from '../../../daemon/message-types/daemon-message';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
+import { rehydrateTerminalOutputs } from '../task-results-stub';
 import { consumeMessage, isPluginWorkerMessage } from './messaging';
 import { setPluginWorkerHostSocket } from './worker-streaming';
 
@@ -189,7 +190,9 @@ const server = createServer((socket) => {
               return { success: true as const, mutations };
             }),
           postTasksExecution: async ({ context }) =>
-            withErrorHandling(() => plugin.postTasksExecution?.(context)),
+            withErrorHandling(() =>
+              plugin.postTasksExecution?.(rehydrateTerminalOutputs(context))
+            ),
           setWorkerEnv: (env) =>
             withErrorHandling(() => {
               applyDaemonEnvFromClient(env);

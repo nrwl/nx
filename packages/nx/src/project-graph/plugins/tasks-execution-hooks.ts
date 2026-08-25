@@ -7,6 +7,7 @@ import { getPlugins } from './get-plugins';
 import { isOnDaemon } from '../../daemon/is-on-daemon';
 import { daemonClient, isDaemonEnabled } from '../../daemon/client/client';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { stubTerminalOutputs } from './task-results-stub';
 
 export async function runPreTasksExecution(
   pluginContext: PreTasksExecutionContext
@@ -89,6 +90,6 @@ export async function runPostTasksExecution(
       `postTasksExecution:end`
     );
   } else {
-    await daemonClient.runPostTasksExecution(context);
+    await daemonClient.runPostTasksExecution(stubTerminalOutputs(context));
   }
 }

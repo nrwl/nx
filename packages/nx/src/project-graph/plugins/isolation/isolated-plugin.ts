@@ -20,6 +20,7 @@ import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { isSandbox } from '../../../utils/is-sandbox';
 import { logger } from '../../../utils/logger';
 import { ProgressTopics } from '../../../utils/progress-topics';
+import { stubTerminalOutputs } from '../task-results-stub';
 import { waitForSocketConnection } from '../../../utils/wait-for-socket-connection';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import type { RawProjectGraphDependency } from '../../project-graph-builder';
@@ -407,7 +408,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
         this as { postTasksExecution: IsolatedPlugin['postTasksExecution'] }
       ).postTasksExecution = wrap('postTasksExecution', async (context) => {
         const result = await this.sendRequest('postTasksExecution', {
-          context,
+          context: stubTerminalOutputs(context),
         });
         if (result.success === false) {
           throw result.error;
