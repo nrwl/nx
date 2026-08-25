@@ -56,6 +56,42 @@ describe('daemon environment', () => {
       expect(env.COLOR).toBeUndefined();
     });
 
+    it('should exclude package-manager vars not covered by the lowercase prefixes', () => {
+      process.env.PNPM_HOME = '/home/user/.local/share/pnpm';
+      process.env.PNPM_SCRIPT_SRC_DIR = '/some/project/subdir';
+      process.env.COREPACK_ENABLE_STRICT = '0';
+      process.env.COREPACK_ROOT = '/usr/lib/node_modules/corepack';
+
+      const env = getDaemonEnv();
+
+      expect(env.PNPM_HOME).toBeUndefined();
+      expect(env.PNPM_SCRIPT_SRC_DIR).toBeUndefined();
+      expect(env.COREPACK_ENABLE_STRICT).toBeUndefined();
+      expect(env.COREPACK_ROOT).toBeUndefined();
+    });
+
+    it('should exclude the vars git sets when Nx runs from a hook', () => {
+      process.env.GIT_INDEX_FILE = '/repo/.git/index.lock';
+      process.env.GIT_PREFIX = 'packages/nx/';
+      process.env.GIT_REFLOG_ACTION = 'pull';
+      process.env.GIT_AUTHOR_DATE = '@1754990000 +0000';
+      process.env.GIT_COMMITTER_DATE = '@1754990000 +0000';
+
+      const env = getDaemonEnv();
+
+      expect(env.GIT_INDEX_FILE).toBeUndefined();
+      expect(env.GIT_PREFIX).toBeUndefined();
+      expect(env.GIT_REFLOG_ACTION).toBeUndefined();
+      expect(env.GIT_AUTHOR_DATE).toBeUndefined();
+      expect(env.GIT_COMMITTER_DATE).toBeUndefined();
+    });
+
+    it('should exclude NX_CONSOLE', () => {
+      process.env.NX_CONSOLE = 'true';
+
+      expect(getDaemonEnv().NX_CONSOLE).toBeUndefined();
+    });
+
     it('should exclude terminal identification vars', () => {
       process.env.TERM = 'xterm-ghostty';
       process.env.TERM_PROGRAM = 'vscode';
@@ -319,6 +355,36 @@ describe('daemon environment', () => {
       expect(process.env.JAVA_TOOL_OPTIONS).toBeUndefined();
       expect(process.env.ATUIN_SESSION).toBe('daemon-startup-value');
       expect(applyDaemonEnvFromClient(payload)).toEqual([]);
+    });
+
+    it('should apply PATH and NODE_PATH without reporting them as changed', () => {
+      process.env.PATH = '/from/the/daemon';
+      process.env.NODE_PATH = '/from/the/daemon/node_modules';
+
+      const changed = applyDaemonEnvFromClient({
+        ...process.env,
+        PATH: '/from/the/client',
+        NODE_PATH: '/from/the/client/node_modules',
+      });
+
+      expect(changed).toEqual([]);
+      expect(process.env.PATH).toBe('/from/the/client');
+      expect(process.env.NODE_PATH).toBe('/from/the/client/node_modules');
+    });
+
+    it('should report no changes when clients differ only in non-invalidating vars', () => {
+      process.env.JAVA_HOME = '/opt/java';
+      process.env.PATH = '/usr/bin';
+      const daemonEnv = getDaemonEnv();
+
+      // a `pnpm nx` client prepending its own bin dir and setting PNPM_HOME
+      process.env.PATH = '/repo/node_modules/.bin:/usr/bin';
+      process.env.PNPM_HOME = '/home/user/.local/share/pnpm';
+      const clientEnv = getDaemonEnv();
+
+      process.env = daemonEnv;
+
+      expect(applyDaemonEnvFromClient(clientEnv)).toEqual([]);
     });
 
     it('should not delete required settings missing from the client env', () => {

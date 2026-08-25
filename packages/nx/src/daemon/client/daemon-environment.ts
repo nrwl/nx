@@ -64,6 +64,9 @@ const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   'CODEX_THREAD_ID',
   'AI_AGENT',
 
+  // Editors / IDEs
+  'NX_CONSOLE',
+
   // Shell mechanics
   '_',
   'SHLVL',
@@ -144,6 +147,18 @@ const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   // macOS internals
   '__CF_USER_TEXT_ENCODING',
   '__CFBundleIdentifier',
+
+  // Set by git per invocation when Nx runs from a hook. Exact entries rather
+  // than a GIT_ prefix, which would also swallow GIT_DIR.
+  'GIT_INDEX_FILE',
+  'GIT_PREFIX',
+  'GIT_REFLOG_ACTION',
+  'GIT_AUTHOR_NAME',
+  'GIT_AUTHOR_EMAIL',
+  'GIT_AUTHOR_DATE',
+  'GIT_COMMITTER_NAME',
+  'GIT_COMMITTER_EMAIL',
+  'GIT_COMMITTER_DATE',
 ]);
 
 /**
@@ -165,6 +180,8 @@ const DAEMON_ENV_PREFIX_EXCLUSIONS = [
   // Package managers (process-scoped)
   'npm_',
   'pnpm_',
+  'PNPM_',
+  'COREPACK_',
 
   // Nx Cloud runner/agent vars (per-worker values like NX_CLOUD_WORKER_ID
   // and NX_CLOUD_EXECUTION_ID diverge between distributed-execution workers
@@ -212,6 +229,15 @@ const DAEMON_ENV_PATTERN_EXCLUSIONS = [
   // in Electron-spawned shells); regenerated on every login
   /^EFC_\d+(_\d+)?$/,
 ];
+
+/**
+ * Vars the daemon still needs — graph construction resolves executables
+ * through them (`bun` for lockfile parsing, `mvn` for Maven inference) — but
+ * whose value must not invalidate the project graph: `nx`, `pnpm nx` and Nx
+ * Console each prepend their own entries, so reflecting the difference would
+ * recompute a graph that cannot come out any different.
+ */
+const DAEMON_ENV_NON_INVALIDATING_VARS = new Set(['PATH', 'NODE_PATH']);
 
 /**
  * Vars that match an excluded prefix but should still reach the daemon. The
@@ -299,5 +325,7 @@ export function applyDaemonEnvFromClient(newEnv: NodeJS.ProcessEnv): string[] {
       changedKeys.push(key);
     }
   }
-  return changedKeys;
+  return changedKeys.filter(
+    (key) => !DAEMON_ENV_NON_INVALIDATING_VARS.has(key)
+  );
 }
