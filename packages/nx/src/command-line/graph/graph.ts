@@ -47,7 +47,11 @@ import {
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { allFileData } from '../../utils/all-file-data';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
-import { HashPlanner, transferProjectGraph } from '../../native';
+import {
+  expandFilesInput,
+  HashPlanner,
+  transferProjectGraph,
+} from '../../native';
 import { buildIoSnapshotOverrides } from '../../io-snapshots/overrides';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
@@ -1367,6 +1371,7 @@ function expandInputs(
   const projectRootInputs: string[] = [];
   const externalInputs: string[] = [];
   const otherInputs: string[] = [];
+  const filesInputs: string[][] = [];
   inputs.forEach((input) => {
     // Domain markers are not inputs.
     if (input.startsWith('io-snapshot:')) {
@@ -1376,6 +1381,11 @@ function expandInputs(
     if (input.startsWith('workspace:[')) {
       const inputs = input.substring(11, input.length - 1).split(',');
       workspaceRootInputs.push(...inputs);
+      return;
+    }
+    // `files` groups look like files:[glob,!otherGlob] and expand on disk
+    if (input.startsWith('files:[')) {
+      filesInputs.push(input.substring(7, input.length - 1).split(','));
       return;
     }
     const maybeProjectName = input.split(':')[0];
@@ -1401,6 +1411,9 @@ function expandInputs(
   const workspaceRootsExpanded: string[] = getExpandedWorkspaceRoots(
     workspaceRootInputs,
     allWorkspaceFiles
+  );
+  const filesExpanded = filesInputs.flatMap((globs) =>
+    expandFilesInput(workspaceRoot, globs)
   );
 
   const otherInputsExpanded = otherInputs.map((input) => {
@@ -1444,7 +1457,11 @@ function expandInputs(
     }, {});
 
   return {
-    general: [...workspaceRootsExpanded, ...otherInputsExpanded],
+    general: [
+      ...workspaceRootsExpanded,
+      ...filesExpanded,
+      ...otherInputsExpanded,
+    ],
     ...projectRootsExpanded,
     external: externalInputs,
   };

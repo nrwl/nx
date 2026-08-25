@@ -329,6 +329,20 @@
           {
             "type": "object",
             "properties": {
+              "files": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Workspace-relative globs hashed straight from the disk, so gitignored or generated files can be inputs. {projectRoot} and {workspaceRoot} resolve as for filesets; a leading ! negates within the group. Every glob must start with a literal directory."
+              }
+            },
+            "required": ["files"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
               "json": {
                 "type": "string",
                 "description": "Path to a JSON file. Must start with {workspaceRoot} or {projectRoot}. Supports globs."

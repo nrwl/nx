@@ -1,5 +1,5 @@
 use napi::Either;
-use napi::bindgen_prelude::Either9;
+use napi::bindgen_prelude::Either10;
 
 #[napi(object)]
 pub struct InputsInput {
@@ -47,7 +47,12 @@ pub struct JsonInput {
     pub exclude_fields: Option<Vec<String>>,
 }
 
-pub(crate) type JsInputs = Either9<
+#[napi(object)]
+pub struct FilesInput {
+    pub files: Vec<String>,
+}
+
+pub(crate) type JsInputs = Either10<
     InputsInput,
     String,
     FileSetInput,
@@ -57,12 +62,13 @@ pub(crate) type JsInputs = Either9<
     DepsOutputsInput,
     WorkingDirectoryInput,
     JsonInput,
+    FilesInput,
 >;
 
 impl<'a> From<&'a JsInputs> for Input<'a> {
     fn from(value: &'a JsInputs) -> Self {
         match value {
-            Either9::A(inputs) => {
+            Either10::A(inputs) => {
                 if let Some(projects) = &inputs.projects {
                     Input::Projects {
                         input: &inputs.input,
@@ -78,7 +84,7 @@ impl<'a> From<&'a JsInputs> for Input<'a> {
                     }
                 }
             }
-            Either9::B(string) => {
+            Either10::B(string) => {
                 if let Some(rest) = string.strip_prefix('^') {
                     // Check if this is a dependency fileset (starts with {projectRoot} or {workspaceRoot})
                     if rest.starts_with("{projectRoot}") || rest.starts_with("{workspaceRoot}") {
@@ -97,27 +103,28 @@ impl<'a> From<&'a JsInputs> for Input<'a> {
                     Input::String(string)
                 }
             }
-            Either9::C(file_set) => Input::FileSet {
+            Either10::C(file_set) => Input::FileSet {
                 fileset: &file_set.fileset,
                 dependencies: file_set.dependencies.unwrap_or(false),
             },
-            Either9::D(runtime) => Input::Runtime(&runtime.runtime),
-            Either9::E(environment) => Input::Environment(&environment.env),
-            Either9::F(external_dependencies) => {
+            Either10::D(runtime) => Input::Runtime(&runtime.runtime),
+            Either10::E(environment) => Input::Environment(&environment.env),
+            Either10::F(external_dependencies) => {
                 Input::ExternalDependency(&external_dependencies.external_dependencies)
             }
-            Either9::G(deps_outputs) => Input::DepsOutputs {
+            Either10::G(deps_outputs) => Input::DepsOutputs {
                 transitive: deps_outputs.transitive.unwrap_or(false),
                 dependent_tasks_output_files: &deps_outputs.dependent_tasks_output_files,
             },
-            Either9::H(working_directory) => {
+            Either10::H(working_directory) => {
                 Input::WorkingDirectory(&working_directory.working_directory)
             }
-            Either9::I(json_input) => Input::Json {
+            Either10::I(json_input) => Input::Json {
                 json: &json_input.json,
                 fields: json_input.fields.as_deref(),
                 exclude_fields: json_input.exclude_fields.as_deref(),
             },
+            Either10::J(files) => Input::Files(&files.files),
         }
     }
 }
@@ -150,4 +157,5 @@ pub(crate) enum Input<'a> {
         fields: Option<&'a [String]>,
         exclude_fields: Option<&'a [String]>,
     },
+    Files(&'a [String]),
 }

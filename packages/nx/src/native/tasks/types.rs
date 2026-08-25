@@ -176,6 +176,9 @@ pub enum HashInstruction {
     /// Run-constant label that keeps hash keys built from different input
     /// sources (e.g. an I/O snapshot) from ever colliding with native keys.
     Marker(String),
+    /// Workspace-relative globs expanded against the disk at hash time, so
+    /// gitignored and generated files can be inputs. Tokens are pre-resolved.
+    Files(Vec<String>),
 }
 
 /// Append-only interner for hash instructions. Plans store `u32` ids into the
@@ -265,9 +268,9 @@ enum InstructionKind {
 impl InstructionKind {
     fn of(instruction: &HashInstruction) -> Self {
         match instruction {
-            HashInstruction::ProjectFileSet(_, _) | HashInstruction::WorkspaceFileSet(_) => {
-                Self::FileSet
-            }
+            HashInstruction::ProjectFileSet(_, _)
+            | HashInstruction::WorkspaceFileSet(_)
+            | HashInstruction::Files(_) => Self::FileSet,
             HashInstruction::TsConfiguration(_) => Self::TsConfiguration,
             _ => Self::Other,
         }
@@ -360,6 +363,7 @@ impl fmt::Display for HashInstruction {
                     format!("{prefix}json:{}{fields_str}{exclude_str}", json.json_path)
                 }
                 HashInstruction::Marker(marker) => marker.clone(),
+                HashInstruction::Files(globs) => format!("files:[{}]", globs.join(",")),
             }
         )
     }
@@ -390,6 +394,18 @@ mod tests {
         assert_eq!(&*key, instruction.to_string());
         // Every call hands out the same allocation, not a fresh string.
         assert!(Arc::ptr_eq(&key, &pool.key(id)));
+    }
+
+    #[test]
+    fn files_display_lists_globs_in_declared_order() {
+        let instruction = HashInstruction::Files(vec![
+            "libs/ui/dist/**/*.js".into(),
+            "!libs/ui/dist/**/*.map".into(),
+        ]);
+        assert_eq!(
+            instruction.to_string(),
+            "files:[libs/ui/dist/**/*.js,!libs/ui/dist/**/*.map]"
+        );
     }
 
     #[test]

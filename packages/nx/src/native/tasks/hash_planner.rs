@@ -14,7 +14,7 @@ use rayon::prelude::*;
 use std::collections::{BTreeMap, HashMap};
 use tracing::trace;
 
-use crate::native::tasks::hashers::OnceCache;
+use crate::native::tasks::hashers::{OnceCache, validate_files_globs};
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency, get_named_inputs,
 };
@@ -503,7 +503,7 @@ impl HashPlanner {
         );
 
         let mut ids: Vec<u32> = self
-            .gather_self_inputs(project_name, &inputs.self_inputs, snapshot)
+            .gather_self_inputs(project_name, &inputs.self_inputs, snapshot)?
             .into_iter()
             .map(|instruction| pool.intern(instruction))
             .collect();
@@ -722,7 +722,7 @@ impl HashPlanner {
             &mut negations,
         );
         let mut ids: Vec<u32> = self
-            .gather_self_inputs(dep, &dep_inputs.self_inputs, None)
+            .gather_self_inputs(dep, &dep_inputs.self_inputs, None)?
             .into_iter()
             .map(|instruction| pool.intern(instruction))
             .collect();
@@ -873,9 +873,11 @@ impl HashPlanner {
         project_name: &str,
         self_inputs: &[Input],
         snapshot: Option<&SnapshotContext>,
-    ) -> Vec<HashInstruction> {
+    ) -> anyhow::Result<Vec<HashInstruction>> {
         if let Some(snapshot) = snapshot {
-            return self.gather_self_inputs_from_snapshot(project_name, self_inputs, snapshot);
+            // A trace observes the reads a `files` input declares, so it is
+            // replaced like every other declared file input.
+            return Ok(self.gather_self_inputs_from_snapshot(project_name, self_inputs, snapshot));
         }
         let (project_file_sets, workspace_file_sets): (Vec<&str>, Vec<&str>) = self_inputs
             .iter()
@@ -918,6 +920,17 @@ impl HashPlanner {
                     .collect(),
             )]
         };
+        let mut files_inputs = vec![];
+        for input in self_inputs {
+            if let Input::Files(globs) = input {
+                let resolved: Vec<String> = globs
+                    .iter()
+                    .map(|g| resolve_files_glob(g, project_root, project_name))
+                    .collect();
+                validate_files_globs(&resolved)?;
+                files_inputs.push(HashInstruction::Files(resolved));
+            }
+        }
         let runtime_and_env_inputs = self_inputs.iter().filter_map(|i| match i {
             Input::Runtime(runtime) => Some(HashInstruction::Runtime(runtime.to_string())),
             Input::Environment(env) => Some(HashInstruction::Environment(env.to_string())),
@@ -948,11 +961,12 @@ impl HashPlanner {
             _ => None,
         });
 
-        project_inputs
+        Ok(project_inputs
             .into_iter()
             .chain(workspace_file_set_inputs)
+            .chain(files_inputs)
             .chain(runtime_and_env_inputs)
-            .collect()
+            .collect())
     }
 
     /// The non-file half of a snapshot-hashed task's self inputs. Declared
@@ -1056,7 +1070,7 @@ impl HashPlanner {
                     }],
                     &named_inputs,
                 )?;
-                result.extend(self.gather_self_inputs(project, &expanded_input, None))
+                result.extend(self.gather_self_inputs(project, &expanded_input, None)?)
             }
         }
         Ok(result)
@@ -1134,6 +1148,19 @@ fn resolve_tokens(fileset: &str, project_root: &str, project_name: &str) -> Stri
         fileset.replace("{projectRoot}", project_root)
     };
     resolved.replace("{projectName}", project_name)
+}
+
+/// `files` globs are workspace-relative once resolved: `{workspaceRoot}/` is a
+/// no-op prefix here, unlike filesets where the hasher strips it.
+fn resolve_files_glob(glob: &str, project_root: &str, project_name: &str) -> String {
+    let resolved = resolve_tokens(glob, project_root, project_name);
+    match resolved.strip_prefix("!{workspaceRoot}/") {
+        Some(rest) => format!("!{rest}"),
+        None => resolved
+            .strip_prefix("{workspaceRoot}/")
+            .map(str::to_string)
+            .unwrap_or(resolved),
+    }
 }
 
 fn find_external_dependency_node_name<'a>(
