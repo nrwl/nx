@@ -377,7 +377,7 @@ async function getTerminalOutputLifeCycle(
     };
   }
 
-  if (nxArgs.outputStyle === 'summary') {
+  if (nxArgs.resolvedOutputStyle === 'summary') {
     return {
       lifeCycle: new SummaryTerminalOutputLifeCycle(tasks),
       renderIsDone: Promise.resolve(),
@@ -388,7 +388,7 @@ async function getTerminalOutputLifeCycle(
   const useDynamicOutput = shouldUseDynamicLifeCycle(
     tasks,
     runnerOptions,
-    nxArgs.outputStyle
+    nxArgs.specifiedOutputStyle
   );
 
   if (isRunOne) {
@@ -954,13 +954,13 @@ export function setEnvVarsBasedOnArgs(
   // user asked for explicitly still wins over grouping.
   const batchMode = process.env.NX_BATCH_MODE === 'true' || nxArgs.batch;
   if (
-    nxArgs.outputStyle == 'stream' ||
+    nxArgs.specifiedOutputStyle == 'stream' ||
     (batchMode && !isLogGroupingEnabled())
   ) {
     process.env.NX_STREAM_OUTPUT = 'true';
     process.env.NX_PREFIX_OUTPUT = 'true';
   }
-  if (nxArgs.outputStyle == 'stream-without-prefixes') {
+  if (nxArgs.specifiedOutputStyle == 'stream-without-prefixes') {
     process.env.NX_STREAM_OUTPUT = 'true';
     process.env.NX_PREFIX_OUTPUT = 'false';
   }

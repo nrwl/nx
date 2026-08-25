@@ -233,7 +233,11 @@ describe('shared-options', () => {
           async () => {
             const command = withOutputStyleOption(argv);
             const result = await command.parseAsync([]);
-            expect(result.outputStyle).toEqual('summary');
+            // The agent default is inferred, not named: it resolves the render
+            // style without claiming the user asked for it, which is what keeps
+            // the streaming decision reading absence.
+            expect(result.resolvedOutputStyle).toEqual('summary');
+            expect(result.specifiedOutputStyle).toBeUndefined();
           }
         );
       } finally {
