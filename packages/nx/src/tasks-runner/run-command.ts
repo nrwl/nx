@@ -1004,7 +1004,7 @@ export async function invokeTasksRunner({
     projectGraph,
     nxJson,
     runnerOptions,
-    ioSnapshots?.directory
+    ioSnapshots ?? undefined
   );
 
   // this is used for two reasons: to fetch all remote cache hits AND
@@ -1017,7 +1017,7 @@ export async function invokeTasksRunner({
     taskGraph,
     nxJson,
     taskDetails,
-    ioSnapshots?.directory
+    ioSnapshots ?? undefined
   );
   reportIoSnapshots(ioSnapshots, projectGraph, taskGraph, nxJson, nxArgs);
   const taskResultsLifecycle = new TaskResultsLifeCycle();
@@ -1217,12 +1217,7 @@ function reportIoSnapshots(
   if (!ioSnapshots) return;
   const summary = formatIoSnapshotSummary(
     ioSnapshots.directory
-      ? buildIoSnapshotOverrides(
-          projectGraph,
-          taskGraph,
-          nxJson,
-          ioSnapshots.directory
-        )
+      ? buildIoSnapshotOverrides(projectGraph, taskGraph, nxJson, ioSnapshots)
       : null,
     ioSnapshots
   );
