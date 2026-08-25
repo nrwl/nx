@@ -7,6 +7,10 @@
   },
   "rules": {
     "no-duplicate-imports": ["error", { "allowSeparateTypeImports": true }],
+    // A nested config that redefines this rule REPLACES these options; oxlint
+    // does not merge them. A missing entry fails silently (fewer errors, not
+    // more), so restate every path and pattern. scripts/check-oxlint-configs.js
+    // enforces it.
     "no-restricted-imports": [
       "error",
       {

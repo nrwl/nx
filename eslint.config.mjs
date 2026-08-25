@@ -50,10 +50,8 @@ export const baseConfig = [
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       // no-restricted-imports (paths and patterns, including the nx →
       // @nx/devkit boundary) moved to .oxlintrc.json. Projects that need
-      // different lists carry their own nested .oxlintrc.json; packages/nx
-      // and packages/devkit additionally keep file-scoped
-      // @typescript-eslint/no-restricted-imports boundaries in their own
-      // eslint configs.
+      // different lists carry their own nested .oxlintrc.json (packages/nx
+      // and packages/devkit replace the nx boundary group there).
     },
   },
   {

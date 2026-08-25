@@ -30,6 +30,8 @@
   },
   "overrides": [
     {
+      // Runs before the packages are built, so it loads packages/nx's
+      // register helper from source by relative path.
       "files": ["global-setup.ts"],
       "rules": {
         "@nx/enforce-module-boundaries": "off"

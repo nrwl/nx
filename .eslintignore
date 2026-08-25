@@ -4,4 +4,6 @@
 # workspace registers the "@nx" JS plugin twice and fails the whole run.
 # Config-file ignorePatterns cannot express this: oxlint applies it after
 # nested-config discovery; only CLI/ignore-file patterns prune the walk.
-examples
+# ESLint 9 warns that this file is unsupported; that is expected, it is not
+# ESLint's file.
+/examples
