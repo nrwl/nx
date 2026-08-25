@@ -44,6 +44,9 @@ pub struct IoSnapshotFetchOptions {
     pub timeout_ms: Option<u32>,
     /// Age after which a cached bundle for the same commit is refetched. 0 always refetches.
     pub max_age_ms: Option<i64>,
+    /// Age after which a remembered fetch failure for the same commit and API
+    /// URL is retried. Defaults to `max_age_ms`.
+    pub failure_max_age_ms: Option<i64>,
     pub retain: Option<u32>,
 }
 
@@ -201,6 +204,18 @@ pub async fn fetch_io_snapshots(options: IoSnapshotFetchOptions) -> IoSnapshots 
         }
     }
 
+    let failure_max_age = options.failure_max_age_ms.unwrap_or(max_age);
+    if cached.is_none() {
+        if let Some(failure) = store::read_failure(cache_directory, &head) {
+            if failure.api_url == options.api_url && now - failure.at <= failure_max_age {
+                return IoSnapshots::skipped(
+                    "cached-failure",
+                    format!("{} ({})", failure.message, failure.reason),
+                );
+            }
+        }
+    }
+
     let client_version = options
         .client_version
         .clone()
@@ -245,6 +260,18 @@ pub async fn fetch_io_snapshots(options: IoSnapshotFetchOptions) -> IoSnapshots 
                             bundle,
                         );
                     }
+                }
+                if !matches!(failure.reason, "offline" | "timeout") {
+                    store::record_failure(
+                        cache_directory,
+                        &head,
+                        &store::FetchFailure {
+                            api_url: options.api_url.clone(),
+                            reason: failure.reason.into(),
+                            message: failure.message.clone(),
+                            at: now,
+                        },
+                    );
                 }
                 return IoSnapshots::skipped(failure.reason, failure.message);
             }

@@ -128,21 +128,27 @@ pub fn read_resolution(output_directory: &Path, commit: &str) -> Option<IoSnapsh
     (header.version == BUNDLE_VERSION).then_some(header.resolution)
 }
 
-/// Writes the bundle into a sibling temp directory and renames it into place so
-/// readers never observe a partial bundle. A concurrent run that already
-/// published the same commit wins; ours is discarded.
+/// Writes the bundle into a sibling temp directory and swaps it into place, so
+/// a reader always sees either the previous bundle or the new one, never a
+/// gap. Concurrent writers for the same commit: last one in wins.
 pub fn write(output_directory: &Path, bundle: &Bundle) -> io::Result<PathBuf> {
     let commit = &bundle.resolution.requested_commit;
     let target = bundle_dir(output_directory, commit);
     let temp = output_directory.join(format!(".tmp-{}-{}", commit, std::process::id()));
+    let old = output_directory.join(format!(".old-{}-{}", commit, std::process::id()));
     fs::create_dir_all(&temp)?;
     let written = (|| {
         let file = fs::File::create(temp.join(BUNDLE_FILE))?;
         serde_json::to_writer(io::BufWriter::new(file), bundle)?;
         if target.exists() {
-            fs::remove_dir_all(&target)?;
+            fs::rename(&target, &old)?;
         }
-        fs::rename(&temp, &target)
+        let swapped = fs::rename(&temp, &target);
+        if swapped.is_err() && old.exists() && !target.exists() {
+            let _ = fs::rename(&old, &target);
+        }
+        let _ = fs::remove_dir_all(&old);
+        swapped
     })();
     match written {
         Ok(()) => Ok(target),
@@ -155,6 +161,35 @@ pub fn write(output_directory: &Path, bundle: &Bundle) -> io::Result<PathBuf> {
             }
         }
     }
+}
+
+/// A fetch that failed for reasons a retry will not fix (no endpoint, bad
+/// credentials, malformed response); remembered per commit and API URL so the
+/// next commands do not probe Nx Cloud again until it expires.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct FetchFailure {
+    pub api_url: String,
+    pub reason: String,
+    pub message: String,
+    pub at: i64,
+}
+
+const FAILURE_FILE: &str = "failure.json";
+
+pub fn record_failure(output_directory: &Path, commit: &str, failure: &FetchFailure) {
+    let dir = bundle_dir(output_directory, commit);
+    if fs::create_dir_all(&dir).is_err() {
+        return;
+    }
+    if let Ok(file) = fs::File::create(dir.join(FAILURE_FILE)) {
+        let _ = serde_json::to_writer(io::BufWriter::new(file), failure);
+    }
+}
+
+pub fn read_failure(output_directory: &Path, commit: &str) -> Option<FetchFailure> {
+    let file = fs::File::open(bundle_dir(output_directory, commit).join(FAILURE_FILE)).ok()?;
+    serde_json::from_reader(io::BufReader::new(file)).ok()
 }
 
 /// Keeps the newest `retain` bundles (by fetch time) plus `keep`.
@@ -332,6 +367,28 @@ mod tests {
         file.set_modified(later + std::time::Duration::from_secs(5))
             .unwrap();
         assert_eq!(read_bundle(&dir).unwrap_err().reason, "invalid-bundle");
+    }
+
+    #[test]
+    fn remembers_a_fetch_failure_per_commit() {
+        let temp = TempDir::new().unwrap();
+        assert_eq!(read_failure(&temp, "aaa"), None);
+        let failure = FetchFailure {
+            api_url: "https://cloud.example.com".into(),
+            reason: "unsupported-server".into(),
+            message: "404".into(),
+            at: 7,
+        };
+        record_failure(&temp, "aaa", &failure);
+        assert_eq!(read_failure(&temp, "aaa"), Some(failure));
+        // A bundle written later for the same commit replaces the failure marker.
+        let bundle = Bundle {
+            version: BUNDLE_VERSION,
+            resolution: resolution("aaa", 1),
+            snapshots: BTreeMap::new(),
+        };
+        write(&temp, &bundle).unwrap();
+        assert_eq!(read_failure(&temp, "aaa"), None);
     }
 
     #[test]
