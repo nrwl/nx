@@ -598,10 +598,11 @@ function ensureRunbook(
         (fsConstants.O_NONBLOCK ?? 0)
     );
     try {
-      // The descriptor must be the inspected regular file itself. The inode
+      // The descriptor must be the inspected regular file. The inode
       // comparison carries the guarantee where the open flags cannot:
-      // Windows has neither O_NOFOLLOW nor O_NONBLOCK, so a followed
-      // replacement shows up only as a different inode.
+      // Windows has neither O_NOFOLLOW nor O_NONBLOCK, so a followed symlink
+      // shows up only as its target's inode. A same-path unlink and recreate
+      // can reuse the inode number and is not what this guards against.
       const fdStat = fstatSync(fd, { bigint: true });
       if (
         !fdStat.isFile() ||
