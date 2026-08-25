@@ -71,6 +71,7 @@ import {
   mkdtempSync,
   readdirSync,
   readFileSync,
+  renameSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -1636,8 +1637,12 @@ describe('orchestrator', () => {
           const stats = realLstat(p, o);
           if (typeof p === 'string' && p.endsWith('RUNBOOK.md')) {
             spy.mockRestore();
-            rmSync(p);
-            writeFileSync(p, '# not the inspected file\n');
+            // Rename over the path rather than unlink and recreate: ext4
+            // hands a freed inode number straight back to the next create,
+            // which would make the replacement indistinguishable.
+            const replacement = `${p}.replacement`;
+            writeFileSync(replacement, '# not the inspected file\n');
+            renameSync(replacement, p);
           }
           return stats;
         });
