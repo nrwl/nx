@@ -50,16 +50,19 @@ export function shouldUseTui(
   }
 
   if (
-    isStaticOutputStyle(nxArgs.outputStyle) ||
+    isStaticOutputStyle(nxArgs.specifiedOutputStyle) ||
     ['summary', 'stream', 'stream-without-prefixes', 'dynamic-legacy'].includes(
-      nxArgs.outputStyle
+      nxArgs.specifiedOutputStyle
     )
   ) {
     // If the user has specified a non-TUI output style, we disable the TUI
     return false;
   }
 
-  if (nxArgs.outputStyle === 'dynamic' || nxArgs.outputStyle === 'tui') {
+  if (
+    nxArgs.specifiedOutputStyle === 'dynamic' ||
+    nxArgs.specifiedOutputStyle === 'tui'
+  ) {
     return true;
   }
 

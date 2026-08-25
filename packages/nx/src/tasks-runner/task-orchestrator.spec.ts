@@ -739,7 +739,12 @@ describe('TaskOrchestrator', () => {
       // argument, sourced from `nxArgs`, while `options` is the merged runner
       // options object. Putting the style in `options` here would let a read of
       // the wrong one pass.
-      orchestrator.outputStyle = args.outputStyle;
+      // Mirrors the two constructor fields: what the user named, and what the
+      // run renders with. A fixture that set only one would let a read of the
+      // wrong field pass.
+      orchestrator.specifiedOutputStyle = args.outputStyle;
+      orchestrator.resolvedOutputStyle =
+        args.outputStyle ?? 'static-failures-only';
       // Object.create bypasses field initializers.
       orchestrator.batchFoldRenders = new Map();
       return orchestrator;

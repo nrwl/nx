@@ -8,6 +8,8 @@ import { ProjectGraph } from '../config/project-graph';
 import { assertValidGitRevision } from './git-revision';
 import { workspaceRoot } from './workspace-root';
 import { readParallelFromArgsAndEnv } from '../command-line/yargs-utils/shared-options';
+// Type-only, so it erases and cannot deepen the existing cycle with that module.
+import type { OutputStyle } from '../command-line/yargs-utils/shared-options';
 
 export interface RawNxArgs extends NxArgs {
   prod?: boolean;
@@ -37,6 +39,20 @@ export interface NxArgs {
   graph?: string | boolean;
   skipNxCache?: boolean;
   skipRemoteCache?: boolean;
+  /**
+   * The style the user named - CLI flag or `NX_DEFAULT_OUTPUT_STYLE`. Left
+   * undefined when they named none, and that absence is load-bearing: it is how
+   * the streaming and renderer-selection decisions tell "the user wants static"
+   * from "we defaulted to static", which stream continuous tasks differently.
+   */
+  specifiedOutputStyle?: OutputStyle;
+  /**
+   * What the run actually renders with, after the TUI, agent and failures-only
+   * defaults are applied. Always set. Every decision about what to PRINT reads
+   * this; every decision about what the user ASKED FOR reads the field above.
+   */
+  resolvedOutputStyle?: OutputStyle;
+  /** @deprecated Read `specifiedOutputStyle` or `resolvedOutputStyle` instead. */
   outputStyle?: string;
   tui?: boolean;
   nxBail?: boolean;

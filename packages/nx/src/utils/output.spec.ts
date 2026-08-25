@@ -103,3 +103,25 @@ describe('printsTaskOutput', () => {
     }
   });
 });
+describe('the specified/resolved split', () => {
+  // Rows 1 and 2 render identically and stream differently. That difference is
+  // the whole reason the style is carried as two values: one enum cannot say
+  // both "render as failures-only" and "the user did not ask for static, so a
+  // continuous task may still stream". Collapsing them broke 36 e2e tasks.
+  it.each([
+    [undefined, 'static-failures-only', false, false],
+    ['static-failures-only', 'static-failures-only', true, false],
+    ['static', 'static', true, true],
+    ['summary', 'summary', false, false],
+    ['stream', 'stream', false, true],
+    ['tui', 'tui', false, true],
+  ])(
+    'specified=%s resolved=%s suppressesStreaming=%s printsFull=%s',
+    (specified, resolved, suppresses, printsFull) => {
+      expect(isStaticOutputStyle(specified as any)).toBe(suppresses);
+      expect(printsFullTaskOutput({ outputStyle: resolved as any })).toBe(
+        printsFull
+      );
+    }
+  );
+});

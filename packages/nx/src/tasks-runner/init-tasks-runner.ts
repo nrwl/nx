@@ -76,7 +76,9 @@ async function createOrchestrator(
     nxArgs,
     false,
     daemonClient,
-    undefined,
+    // Previously `undefined`, which discarded the style entirely on this path.
+    nxArgs.specifiedOutputStyle,
+    nxArgs.resolvedOutputStyle ?? 'static-failures-only',
     fullTaskGraph
   );
 
