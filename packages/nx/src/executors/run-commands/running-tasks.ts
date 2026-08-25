@@ -464,7 +464,7 @@ class RunningNodeProcess implements RunningTask {
       registerTaskProcessStart(taskId, this.childProcess.pid);
     }
 
-    this.addListeners(commandConfig, streamOutput);
+    this.addListeners(commandConfig);
   }
 
   getResults(): Promise<{ code: number; terminalOutput: string }> {
@@ -533,10 +533,7 @@ class RunningNodeProcess implements RunningTask {
     }
   }
 
-  private addListeners(
-    commandConfig: RunCommandsCommandOptions,
-    streamOutput: boolean
-  ) {
+  private addListeners(commandConfig: RunCommandsCommandOptions) {
     // Named handlers so they can be removed when the child exits.
     // Otherwise each RunningNodeProcess leaks process listeners; with
     // many run-commands tasks this triggers MaxListenersExceededWarning.

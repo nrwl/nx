@@ -21,9 +21,10 @@ export class BatchProcess {
   private outputCallbacks: Array<(output: string) => void> = [];
   /**
    * File holding all stdout/stderr held back from the live stream under log
-   * grouping. It is rendered as a fold — alongside per-task rendering — by a
-   * full-output run, by any batch that crashed or was stopped, and by any batch
-   * that reported a failed or stopped task, so that a diagnostic no task
+   * grouping. It is rendered as a fold by a full-output run and by any batch
+   * that reported a failed or stopped task (alongside per-task rendering), and
+   * by any batch that crashed or was stopped before reporting (with redirect
+   * lines — no per-task blocks exist there), so that a diagnostic no task
    * claimed — a crash, a config-phase error, a runner's summary — is not lost.
    * Only a batch whose every task succeeded on the default style discards it
    * unread. Crashiness is unknowable while capturing, so it is always written.
