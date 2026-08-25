@@ -10274,6 +10274,12 @@ packages:
     os: [linux]
     libc: [glibc]
 
+  '@nx/nx-linux-arm64-gnu@23.2.0-beta.9':
+    resolution: {integrity: sha512-VCLgWgp0H2ljtYZWq4snJuyQj9azQszw2Jo7Wn9Bm4bP4yOACmhVInTXAt5LFuft3m2RNpU56Ff5RctQYsuNdQ==}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
   '@nx/nx-linux-arm64-musl@21.6.2':
     resolution: {integrity: sha512-pB67mhywxV+WrVCiYV/+DgK2lfen3dv8PPgmBN/7qHQUgHqTJSLw7f9upiLlApuVN20qyCaktNT6Nq41Q88NCg==}
     cpu: [arm64]
@@ -10300,6 +10306,12 @@ packages:
 
   '@nx/nx-linux-x64-musl@21.6.2':
     resolution: {integrity: sha512-nEEkb3fBuqL18q6q7oqC1PpRiP8LMCmLf7UkGl6owDzCPy48K36Nept2YjHzABdUN2Wv5kojCWjNpGqhnTZSiw==}
+    cpu: [x64]
+    os: [linux]
+    libc: [musl]
+
+  '@nx/nx-linux-x64-musl@23.2.0-beta.9':
+    resolution: {integrity: sha512-CTcvbwmXAep6dis5W3URZ0gkKZ85N8ZY5PbIiW4i24008e5FMsrCnMQeJ8IJi7fm9OPEx1YZsiz6iUS102X04Q==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
@@ -35907,6 +35919,9 @@ snapshots:
   '@nx/nx-linux-arm64-gnu@21.6.2':
     optional: true
 
+  '@nx/nx-linux-arm64-gnu@23.2.0-beta.9':
+    optional: true
+
   '@nx/nx-linux-arm64-musl@21.6.2':
     optional: true
 
@@ -35920,6 +35935,9 @@ snapshots:
     optional: true
 
   '@nx/nx-linux-x64-musl@21.6.2':
+    optional: true
+
+  '@nx/nx-linux-x64-musl@23.2.0-beta.9':
     optional: true
 
   '@nx/nx-win32-arm64-msvc@21.6.2':
@@ -51303,8 +51321,10 @@ snapshots:
       '@nx/nx-darwin-x64': 23.2.0-beta.9
       '@nx/nx-freebsd-x64': 23.2.0-beta.9
       '@nx/nx-linux-arm-gnueabihf': 23.2.0-beta.9
+      '@nx/nx-linux-arm64-gnu': 23.2.0-beta.9
       '@nx/nx-linux-arm64-musl': 23.2.0-beta.9
       '@nx/nx-linux-x64-gnu': 23.2.0-beta.9
+      '@nx/nx-linux-x64-musl': 23.2.0-beta.9
       '@nx/nx-win32-arm64-msvc': 23.2.0-beta.9
       '@nx/nx-win32-x64-msvc': 23.2.0-beta.9
       '@swc-node/register': 1.11.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@6.0.3)
@@ -51441,8 +51461,10 @@ snapshots:
       '@nx/nx-darwin-x64': 23.2.0-beta.9
       '@nx/nx-freebsd-x64': 23.2.0-beta.9
       '@nx/nx-linux-arm-gnueabihf': 23.2.0-beta.9
+      '@nx/nx-linux-arm64-gnu': 23.2.0-beta.9
       '@nx/nx-linux-arm64-musl': 23.2.0-beta.9
       '@nx/nx-linux-x64-gnu': 23.2.0-beta.9
+      '@nx/nx-linux-x64-musl': 23.2.0-beta.9
       '@nx/nx-win32-arm64-msvc': 23.2.0-beta.9
       '@nx/nx-win32-x64-msvc': 23.2.0-beta.9
       '@swc-node/register': 1.11.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@swc/core@1.15.10(@swc/helpers@0.5.23))(@swc/types@0.1.25)(typescript@6.0.3)
