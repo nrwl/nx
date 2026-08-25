@@ -173,7 +173,7 @@ function declaresCacheTrue(value: TargetDefaultValue | undefined): boolean {
     return false;
   }
   const entries = Array.isArray(value) ? value : [value];
-  let declared: boolean | 'manual' | undefined;
+  let declared: boolean | undefined;
   for (const entry of entries) {
     // `nx.json` is hand-edited; a null or scalar entry would throw here.
     if (!entry || typeof entry !== 'object') continue;
@@ -181,7 +181,7 @@ function declaresCacheTrue(value: TargetDefaultValue | undefined): boolean {
     if (entry.filter) return false;
     declared = entry.cache;
   }
-  return declared === true || declared === 'manual';
+  return declared === true;
 }
 
 /**

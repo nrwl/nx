@@ -174,13 +174,13 @@ function declaresCacheTrue(value: TargetDefaultValue | undefined): boolean {
   if (!value) {
     return false;
   }
-  let declared: boolean | 'manual' | undefined;
+  let declared: boolean | undefined;
   for (const entry of configEntries(value)) {
     if (entry.cache === undefined) continue;
     if (entry.filter) return false;
     declared = entry.cache;
   }
-  return declared === true || declared === 'manual';
+  return declared === true;
 }
 
 /**

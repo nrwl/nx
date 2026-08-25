@@ -1057,11 +1057,12 @@
           }
         },
         "cache": {
-          "anyOf": [
-            { "type": "boolean" },
-            { "type": "string", "enum": ["manual"] }
-          ],
-          "description": "Specifies if the given target should be cacheable. \"manual\" caches it from its declared inputs only, never from an I/O snapshot."
+          "type": "boolean",
+          "description": "Specifies if the given target should be cacheable"
+        },
+        "ioSnapshots": {
+          "type": "boolean",
+          "description": "Set to false to hash this target from its declared inputs only, never from an I/O snapshot."
         },
         "syncGenerators": {
           "type": "array",
