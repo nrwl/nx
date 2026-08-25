@@ -57,10 +57,6 @@ private val dependsOnTaskCache: MutableMap<Task, Set<Task>> =
 private val dependentOutputPatternsCache: MutableMap<Task, Set<String>> =
     Collections.synchronizedMap(WeakHashMap())
 
-/** Escape hatch: keep only the Task objects in dependsOn and fail inputs open. */
-private val skipTaskDependencyResolution: Boolean =
-    System.getenv("NX_GRADLE_SKIP_TASK_DEPS")?.toBoolean() == true
-
 private val dependsOnExpansionCache: MutableMap<Task, List<Any>> =
     Collections.synchronizedMap(WeakHashMap())
 
@@ -871,9 +867,7 @@ private fun getInputsForTaskImpl(
 
     // Fail open for what screening or resolution lost: over-declaring costs a rebuild,
     // under-declaring a stale hit.
-    val recoveredPathDeps =
-        if (skipTaskDependencyResolution || resolveDependsOn(task).unresolved > 0) setOf("**/*")
-        else emptySet()
+    val recoveredPathDeps = if (resolveDependsOn(task).unresolved > 0) setOf("**/*") else emptySet()
 
     val dependentPatterns =
         (taskOwnPatterns + effectiveDependencyPatterns(tasksToProcess) + recoveredPathDeps).toSet()
@@ -935,8 +929,7 @@ private fun computeDependsOnTask(task: Task): Set<Task> {
           emptySet()
         }
 
-    val dependsOnFromTaskDependencies: Set<Task> =
-        if (skipTaskDependencyResolution) emptySet() else resolveDependsOn(task).tasks
+    val dependsOnFromTaskDependencies: Set<Task> = resolveDependsOn(task).tasks
 
     val combinedDependsOn = dependsOnFromTaskDependencies.union(dependsOnFromProperty)
 
