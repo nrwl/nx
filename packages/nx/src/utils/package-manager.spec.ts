@@ -1096,7 +1096,7 @@ describe('package-manager', () => {
 
     beforeEach(() => {
       clearPackageManagerVersionCache();
-      // jest.clearAllMocks keeps implementations, so pin the default here or a
+      // clearAllMocks keeps implementations, so pin the default here or a
       // test's statSync stub would leak into its neighbors.
       (statSync as Mock).mockImplementation(() => {
         throw new Error('ENOENT: no such file or directory');
@@ -1483,7 +1483,7 @@ describe('package-manager', () => {
 
     beforeEach(() => {
       clearPackageManagerVersionCache();
-      // jest.clearAllMocks keeps implementations, so pin the default here or a
+      // clearAllMocks keeps implementations, so pin the default here or a
       // test's statSync stub would leak into its neighbors.
       (statSync as Mock).mockImplementation(() => {
         throw new Error('ENOENT: no such file or directory');

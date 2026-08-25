@@ -1,7 +1,7 @@
 import type { Mock } from 'vitest';
 vi.mock('child_process');
 // detectSurfaces reads os.homedir() and the .npmrc files through named imports
-// bound at module load, so a per-test jest.spyOn never intercepts them. Mock at
+// bound at module load, so a per-test spyOn never intercepts them. Mock at
 // module scope (as yarn.spec.ts does for os) so the host's real ~/.npmrc cannot
 // leak into the config-surface attribution tests.
 vi.mock('os', async () => ({

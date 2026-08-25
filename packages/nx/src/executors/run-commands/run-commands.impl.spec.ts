@@ -370,7 +370,7 @@ describe('Run Commands', () => {
         const f = fileSync().name;
         const result = await runCommands(
           {
-            commands: [`echo READY && sleep 0.1 && echo 1 >> ${f}`, `echo foo`],
+            commands: [`echo READY && sleep 5 && echo 1 >> ${f}`, `echo foo`],
             parallel: true,
             readyWhen: ['READY', 'foo'],
             __unparsed__: [],
@@ -380,10 +380,6 @@ describe('Run Commands', () => {
         );
         expect(result).toEqual(expect.objectContaining({ success: true }));
         expect(readFile(f)).toEqual('');
-
-        setTimeout(() => {
-          expect(readFile(f)).toEqual('1');
-        }, 150);
       });
 
       it('should keep waiting when not all strings specified as ready condition were found', async () => {

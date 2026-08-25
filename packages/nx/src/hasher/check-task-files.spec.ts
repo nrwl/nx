@@ -6,7 +6,7 @@ import { workspaceRoot } from '../utils/workspace-root';
 
 // ── Mocks must be declared BEFORE imports that use them ─────────────────────
 //
-// jest.mock() calls are hoisted to the top of the file by Babel/SWC. We
+// vi.mock() calls are hoisted to the top of the file by vitest's transform. We
 // configure the mock implementations in beforeEach so every test starts with a
 // fresh set of spies. _resetContextForTesting() clears the module-level cache
 // so each test loads a clean context.

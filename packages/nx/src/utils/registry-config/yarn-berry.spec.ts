@@ -1,5 +1,5 @@
 import type { Mock } from 'vitest';
-// os.homedir() ignores a runtime process.env.HOME override under jest, and a
+// os.homedir() ignores a runtime process.env.HOME override under the test runner, and a
 // spyOn does not affect a module's named import either.
 vi.mock('os', async () => ({
   ...require('os'),

@@ -374,7 +374,8 @@
       "options": {
         "testTargetName": "test"
       },
-      "include": ["packages/**/*"]
+      "include": ["packages/**/*"],
+      "exclude": ["**/out-tsc/**"]
     },
     {
       "plugin": "@nx/oxlint",

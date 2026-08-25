@@ -3,7 +3,7 @@ import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/cre
 import { readJson, writeJson } from '../../generators/utils/json';
 import { Tree } from '../../generators/tree';
 
-// Module-level mock container - initialized early so jest.mock factories can reference it
+// Module-level mock container - initialized early so vi.mock factories can reference it
 const mocks = {
   verifyOrUpdateNxCloudClient: vi.fn(),
 };

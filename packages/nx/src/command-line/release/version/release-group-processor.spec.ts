@@ -1,4 +1,4 @@
-// Module-level mock container - initialized early so jest.mock factories can reference it
+// Module-level mock container - initialized early so vi.mock factories can reference it
 const mocks = {
   deriveSpecifierFromConventionalCommits: vi.fn(),
   deriveSpecifierFromVersionPlan: vi.fn(),

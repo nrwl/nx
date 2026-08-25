@@ -60,7 +60,7 @@ describe('migrate prompts', () => {
     it('ends as an interrupt when the user cancels', async () => {
       mockAutocomplete.mockResolvedValueOnce(Symbol.for('clack:cancel'));
       mockIsCancel.mockReturnValue(true);
-      // All three are stubbed on purpose: a real `kill` would signal this jest
+      // All three are stubbed on purpose: a real `kill` would signal this test
       // worker, and a real `removeAllListeners` would strip its SIGINT handling.
       const removeAllListeners = vi
         .spyOn(process, 'removeAllListeners')

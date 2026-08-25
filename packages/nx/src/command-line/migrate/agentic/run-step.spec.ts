@@ -70,7 +70,7 @@ describe('runAgenticPromptStep', () => {
     mockRunAgentic.mockReset();
     mockGetDefinition.mockReset();
     // mockClear (not mockReset) — mockReset wipes the factory return
-    // values set at jest.mock() time, so detectPackageManager etc. would
+    // values set at vi.mock() time, so detectPackageManager etc. would
     // start returning undefined.
     const { logger } = (await import('../../../utils/logger')) as {
       logger: { info: Mock };

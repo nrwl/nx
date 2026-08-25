@@ -206,7 +206,7 @@ describe('the both-configured warning', () => {
     // The warn-once flag is module state; without this reset every case after
     // the first passes for the wrong reason (already warned).
     resetFormatterWarningsForTesting();
-    warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => warn.mockRestore());

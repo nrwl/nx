@@ -1,4 +1,4 @@
-// Module-level mock container - initialized early so jest.mock factories can reference it
+// Module-level mock container - initialized early so vi.mock factories can reference it
 const mocks = {
   deriveSpecifierFromConventionalCommits: vi.fn(),
   deriveSpecifierFromVersionPlan: vi.fn(),
@@ -15,7 +15,8 @@ export const mockResolveVersionActionsForProject =
   mocks.resolveVersionActionsForProject;
 export const mockResolveCurrentVersion = mocks.resolveCurrentVersion;
 
-// Use jest.mock (hoisted) instead of jest.doMock for more reliable mocking
+// Use vi.mock (hoisted by vitest's transform) rather than vi.doMock, which
+// registers too late for the static imports below.
 vi.mock('../version/derive-specifier-from-conventional-commits', () => ({
   deriveSpecifierFromConventionalCommits: (...args: any[]) =>
     mocks.deriveSpecifierFromConventionalCommits(...args),
@@ -1316,9 +1317,9 @@ describe('ReleaseGraph', () => {
         preid: undefined,
         verbose: false,
       });
-      jest
-        .spyOn(releaseGraph, 'resolveRepositoryTags')
-        .mockResolvedValue(['projectB@4.2.0']);
+      vi.spyOn(releaseGraph, 'resolveRepositoryTags').mockResolvedValue([
+        'projectB@4.2.0',
+      ]);
       const { resolveCurrentVersion: actualResolveCurrentVersion } =
         await vi.importActual<
           typeof import('../version/resolve-current-version')

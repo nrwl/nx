@@ -64,7 +64,7 @@ describe('messageToCode', () => {
 
 describe('exitAsInterrupted', () => {
   // Every one of these is stubbed deliberately: unstubbed, `kill` would signal
-  // this jest worker and `removeAllListeners` would strip its SIGINT handling.
+  // this test worker and `removeAllListeners` would strip its SIGINT handling.
   let spies: MockInstance[];
   let platform: PropertyDescriptor | undefined;
 

@@ -524,8 +524,8 @@ describe('runAgentic', () => {
 
   it('passes a SIGINT during the agent run through without crashing and aborts directly afterward', async () => {
     // Invoke runAgentic's SIGINT listener directly. `process.emit('SIGINT',
-    // …)` behaves inconsistently across jest workers (the signal name
-    // collides with jest's own handlers), so we capture exactly the listener
+    // …)` behaves inconsistently across test workers (the signal name
+    // collides with the runner's own handlers), so we capture exactly the listener
     // `runAgentic` registered via a `process.on` spy and trigger it. The
     // capture is restored in `afterEach` regardless of whether this test
     // body completes — see `let sigintCapture` at suite scope.

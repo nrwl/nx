@@ -53,13 +53,7 @@ export default defineConfig({
     watch: false,
     globals: true,
     environment: 'node',
-    include: [
-      'src/**/*.spec.ts',
-      'bin/**/*.spec.ts',
-      'plugins/**/*.spec.ts',
-      'release/**/*.spec.ts',
-      'migrations.spec.ts',
-    ],
+    include: ['**/*.spec.ts'],
     exclude: ['src/native/tui/**', '**/node_modules/**'],
     setupFiles: ['./vitest.setup.mts'],
     testTimeout: 35000,
@@ -72,7 +66,11 @@ export default defineConfig({
     teardownTimeout: 60_000,
     // Node-side (lazy require) resolution needs the same source
     // condition vite's resolve.conditions provides for imports.
-    execArgv: ['--conditions=@nx/nx-source'],
+    execArgv: [
+      '--conditions=@nx/nx-source',
+      '--require',
+      `${import.meta.dirname}/vitest-write-guard.cjs`,
+    ],
     server: {
       deps: {
         external: [/src\/native\/native-bindings\.js/, /\.node$/],

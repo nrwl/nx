@@ -162,7 +162,7 @@ describe('ensureOwnedPrivateDir', () => {
     }
   );
 
-  // Octal strings so the name reads `mode 0705`; jest renders %s in decimal.
+  // Octal strings so the name reads `mode 0705`; the runner renders %s in decimal.
   posixOnly.each(['0755', '0750', '0711', '0705'])(
     'should tighten an existing directory of ours at mode %s to 0700',
     (octalMode: string) => {

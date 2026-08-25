@@ -1,9 +1,8 @@
 /**
- * Vitest port of scripts/unit-test-setup.js (nx-project scope only) plus a
- * jest -> vi compat shim so unmigrated specs can run unchanged where the
- * APIs line up. Known gaps (counted as migration work, not shimmed):
- *  - jest.requireActual is sync; vi only offers async importActual.
- *  - jest.mock is not hoisted by vitest's transform; only vi.mock is.
+ * Vitest port of scripts/unit-test-setup.js (nx-project scope only). There is
+ * deliberately no `jest` alias: a stray `jest.mock` here would not be hoisted
+ * by vitest's transform and would silently fail to intercept, so it must throw
+ * instead.
  */
 import { vi } from 'vitest';
 import * as path from 'path';
@@ -47,34 +46,6 @@ delete process.env.npm_config_user_agent;
 // detection off regardless of how the suite is invoked.
 delete process.env.FORCE_COLOR;
 process.env.NO_COLOR = '1';
-
-// Guard: nothing in a unit test may write the real repo's nx.json. Surfaces
-// the offending test with a stack instead of silently clobbering the file.
-{
-  const guardedTargets = new Set([
-    path.join(realWorkspaceRoot, 'nx.json'),
-    path.join(realWorkspaceRoot, 'package.json'),
-  ]);
-  // Patch the CJS fs object (ESM namespaces are frozen); this covers the
-  // require channel that the source's lazy requires use.
-  const cjsFs: any = createRequire(import.meta.url)('fs');
-  const guard = (name: 'writeFileSync' | 'writeFile') => {
-    const orig: any = cjsFs[name];
-    cjsFs[name] = function (target: any, ...rest: any[]) {
-      if (
-        typeof target === 'string' &&
-        guardedTargets.has(path.resolve(target))
-      ) {
-        throw new Error(
-          `[vitest-setup] A test attempted to ${name} the real workspace file ${target}`
-        );
-      }
-      return orig.call(this, target, ...rest);
-    };
-  };
-  guard('writeFileSync');
-  guard('writeFile');
-}
 
 const emptyProjectGraph = { nodes: {}, dependencies: {} };
 const emptyProjectGraphAndMaps = {
@@ -225,6 +196,3 @@ vi.doMock(packageJsonPath, async () => {
     },
   };
 });
-
-// jest -> vi compat for unmigrated specs.
-(globalThis as any).jest = vi;

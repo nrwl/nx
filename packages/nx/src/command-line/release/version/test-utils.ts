@@ -780,7 +780,7 @@ export async function mockResolveVersionActionsForProjectImplementation(
   }
 
   // Default path: use a self-contained MockJsVersionActions instead of
-  // `jest.requireActual('@nx/js/src/release/version-actions')`. The real
+  // `vi.importActual('@nx/js/src/release/version-actions')`. The real
   // module imports from `@nx/devkit`, which would pull devkit's entire
   // source tree into the test sandbox. Tests that genuinely depend on
   // JsVersionActions behavior (registry resolution, lockfile updates,

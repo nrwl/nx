@@ -88,7 +88,7 @@ describe('formatFilesWithOxfmt', () => {
     expect(formatted.size).toBe(0);
   });
 
-  // `oxfmt.config.mts` is discovered too, but jest can serve neither half of the
+  // `oxfmt.config.mts` is discovered too, but the runner can serve neither half of the
   // loader: its module registry does not implement `require(esm)`, and its vm
   // context has no dynamic-import callback for the `import()` retry. Real Node
   // (the `^20.19.0 || >=22.12.0` oxfmt supports) handles it - measured - so this
