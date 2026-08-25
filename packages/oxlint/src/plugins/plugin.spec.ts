@@ -186,6 +186,39 @@ describe('@nx/oxlint plugin', () => {
     });
   });
 
+  // `#imports` aliases and URLs are valid jsPlugins entries with no graph node;
+  // declaring one fails every task with "could not be found".
+  it('should not declare jsPlugins entries that are not package names as externalDependencies', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"jsPlugins":["#local-plugin","/abs/plugin.js","@nx/oxlint/boundaries-plugin"],"rules":{}}`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+
+    expect(results.projects['libs/a'].targets.lint.inputs).toContainEqual({
+      externalDependencies: ['oxlint', '@nx/oxlint'],
+    });
+  });
+
+  it('should read jsPlugins declared in object form', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"jsPlugins":[{"name":"acme","specifier":"@acme/oxlint-plugin"},{"name":"local","specifier":"./tools/local-plugin.js"}],"rules":{}}`,
+      'tools/local-plugin.js': `export default { meta: {}, rules: {} };`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+    const inputs = results.projects['libs/a'].targets.lint.inputs;
+
+    expect(inputs).toContainEqual({
+      externalDependencies: ['oxlint', '@acme/oxlint-plugin'],
+    });
+    expect(inputs).toContain('{workspaceRoot}/tools/local-plugin.js');
+  });
+
   // Target `inputs` only. The separate per-project list that feeds the plugin's
   // cache key is computed elsewhere and is not observable here — mutating it
   // leaves this test green.

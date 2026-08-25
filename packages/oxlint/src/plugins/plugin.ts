@@ -334,6 +334,10 @@ interface JsPluginDeps {
   files: string[];
 }
 
+// Optionally scoped npm name; the match stops before any subpath.
+const PACKAGE_NAME_PATTERN =
+  /^(?:@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*/;
+
 /**
  * Resolves each config's `extends` chain to workspace-relative target inputs.
  * Oxlint resolves entries relative to the referencing config and only tracks the
@@ -357,7 +361,7 @@ function collectConfigChains(
   // a failed read, so a bad file is not retried per referrer.
   const jsonCache = new Map<
     string,
-    { extends?: string[]; jsPlugins?: string[] } | null
+    { extends?: string[]; jsPlugins?: unknown[] } | null
   >();
   const existsCache = new Map<string, boolean>();
 
@@ -380,19 +384,30 @@ function collectConfigChains(
     const deps: JsPluginDeps = { packages: [], files: [] };
     if (Array.isArray(jsPlugins)) {
       for (const entry of jsPlugins) {
-        if (typeof entry !== 'string' || entry.startsWith('/')) {
+        const specifier =
+          typeof entry === 'string'
+            ? entry
+            : typeof (entry as { specifier?: unknown })?.specifier === 'string'
+              ? (entry as { specifier: string }).specifier
+              : undefined;
+        if (!specifier || specifier.startsWith('/')) {
           continue;
         }
-        if (entry.startsWith('.')) {
-          const resolved = normalize(join(dirname(relativeConfigPath), entry));
-          if (!resolved.startsWith('..')) {
+        if (specifier.startsWith('.')) {
+          const resolved = normalize(
+            join(dirname(relativeConfigPath), specifier)
+          );
+          if (resolved !== '..' && !resolved.startsWith('../')) {
             deps.files.push(resolved);
           }
-        } else {
-          const segments = entry.split('/');
-          deps.packages.push(
-            entry.startsWith('@') ? segments.slice(0, 2).join('/') : segments[0]
-          );
+          continue;
+        }
+        // Only a real package name can be an externalDependency. Anything
+        // else oxlint accepts here (`#imports` aliases, URLs) has no graph
+        // node, and naming it fails every task with "could not be found".
+        const packageName = PACKAGE_NAME_PATTERN.exec(specifier)?.[0];
+        if (packageName) {
+          deps.packages.push(packageName);
         }
       }
     }
@@ -401,12 +416,12 @@ function collectConfigChains(
 
   const readConfig = (
     relativeConfigPath: string
-  ): { extends?: string[]; jsPlugins?: string[] } | null => {
+  ): { extends?: string[]; jsPlugins?: unknown[] } | null => {
     if (jsonCache.has(relativeConfigPath)) {
       return jsonCache.get(relativeConfigPath);
     }
 
-    let json: { extends?: string[]; jsPlugins?: string[] } | null = null;
+    let json: { extends?: string[]; jsPlugins?: unknown[] } | null = null;
     if (configExists(relativeConfigPath)) {
       try {
         json = readJsonFile(join(workspaceRoot, relativeConfigPath), {
