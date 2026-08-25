@@ -1,269 +1,104 @@
-import { readFileSync, statSync } from 'fs';
 import { join } from 'path';
 import type { NxJsonConfiguration } from '../config/nx-json';
 import type { ProjectGraph } from '../config/project-graph';
-import type { Task, TaskGraph } from '../config/task-graph';
+import type { TaskGraph } from '../config/task-graph';
 import {
-  checkFilesGlobs,
-  type IoSnapshotOverride,
+  HashPlanner,
+  loadIoSnapshots,
+  transferProjectGraph,
+  type IoSnapshotDiagnostic,
+  type IoSnapshotReport,
   type IoSnapshotResolution,
+  type IoSnapshots,
 } from '../native';
+import { transformProjectGraphForRust } from '../native/transform-objects';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { getCustomHasher } from '../tasks-runner/utils';
 import { getLatestCommitSha } from '../utils/git-utils';
 import { ioSnapshotsCacheDirectory, isIoSnapshotFetchEnabled } from './fetch';
 
-export type { IoSnapshotOverride, IoSnapshotResolution } from '../native';
-
-export type IoSnapshotDiagnostic =
-  /** Nothing cached for HEAD: not connected, flag off, or never fetched. */
-  | { reason: 'no-bundle' }
-  | { reason: 'invalid-bundle'; file: string; message: string }
-  /** The target opted out with `ioSnapshots: false`. */
-  | { reason: 'disabled'; taskId: string }
-  | { reason: 'custom-hasher'; taskId: string }
-  /** The bundle has no entry for the task. */
-  | { reason: 'missing'; taskId: string }
-  /** A legacy per-project bucket named a project not in the graph; the bucket is skipped. */
-  | { reason: 'unknown-project'; taskId: string; project: string }
-  /** A glob with no literal leading directory would walk the whole workspace. */
-  | { reason: 'root-anchored-glob'; taskId: string; glob: string }
-  | { reason: 'producer-not-in-graph'; taskId: string; producer: string };
-
-export interface IoSnapshotOverridesResult {
-  overrides: Record<string, IoSnapshotOverride>;
-  diagnostics: IoSnapshotDiagnostic[];
-  resolution: IoSnapshotResolution | null;
-}
-
-/** Pre-§2b bundles bucketed reads by project; accepted for one release. */
-interface LegacyStructuredInputs {
-  projects?: Record<string, string[]>;
-  workspace?: string[];
-  taskOutputs?: Record<string, string[]>;
-}
-
-interface BundleEntry {
-  commit: string;
-  /** Workspace-relative collapsed globs; `!` negations pass through. */
-  inputs: string[] | LegacyStructuredInputs;
-  taskOutputs?: Record<string, string[]>;
-  outputs: string[];
-}
-
-interface Bundle {
-  version: number;
-  resolution: IoSnapshotResolution;
-  snapshots: Record<string, BundleEntry>;
-}
+export type {
+  IoSnapshotDiagnostic,
+  IoSnapshotReport,
+  IoSnapshotResolution,
+  IoSnapshots,
+} from '../native';
 
 export const IO_SNAPSHOT_BUNDLE_FILE = 'snapshots.json';
-const BUNDLE_VERSION = 1;
+
+/** Where the fetch for this workspace's HEAD lands; `null` outside a git repo. */
+export function ioSnapshotBundleDirForHead(): string | null {
+  const head = getLatestCommitSha();
+  return head ? join(ioSnapshotsCacheDirectory, head) : null;
+}
 
 /**
- * The one reader of the fetched snapshot bundle (NXC-4846). Lifts
- * `<cacheDir>/io-snapshots/<HEAD>/snapshots.json` into per-task planner
- * overrides. Never fetches and never throws. Returns `null` when snapshots
- * are off for this workspace; callers treat `null` and `{ overrides: {} }`
- * identically for hashing.
+ * The bundle already fetched for HEAD, read from the cache only — never
+ * fetched. `null` when snapshots are off for this workspace, so `nx show` and
+ * `nx graph` resolve exactly what a run would.
+ */
+export function loadIoSnapshotsForHead(
+  nxJson: NxJsonConfiguration
+): IoSnapshots | null {
+  if (!isIoSnapshotFetchEnabled(nxJson)) {
+    return null;
+  }
+  const directory = ioSnapshotBundleDirForHead();
+  return directory ? loadIoSnapshots(directory) : null;
+}
+
+/**
+ * Tasks whose executor ships a custom hasher; they are never hashed from a
+ * snapshot. Detected in TS because executors are resolved here.
+ */
+export function customHasherTaskIds(
+  projectGraph: ProjectGraph,
+  taskGraph: TaskGraph
+): string[] {
+  const projects =
+    readProjectsConfigurationFromProjectGraph(projectGraph).projects;
+  return Object.values(taskGraph.tasks)
+    .filter((task) => {
+      try {
+        return !!getCustomHasher(task, projects);
+      } catch {
+        // An unresolvable executor fails later, at execution; it is not a
+        // reason to withhold a snapshot here.
+        return false;
+      }
+    })
+    .map((task) => task.id);
+}
+
+/**
+ * Reports which tasks in `taskGraph` hash from the snapshot bundle and why
+ * the rest do not, using the planner's own eligibility walk. `snapshots` is
+ * the fetch result, a bundle directory, or omitted to read HEAD's cache.
+ * Returns `null` when snapshots are off. Never fetches, never throws.
+ *
+ * The export name and module path are probed by the Nx Cloud client bundle
+ * to decide whether core handles snapshots; keep both stable.
  */
 export function buildIoSnapshotOverrides(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
-  /**
-   * A specific bundle directory (the one the client fetched for its HEAD).
-   * Skips the enablement gate and HEAD lookup, so the daemon hashes exactly
-   * what the client resolved.
-   */
-  bundleDir?: string
-): IoSnapshotOverridesResult | null {
-  if (!bundleDir && !isIoSnapshotFetchEnabled(nxJson)) {
+  snapshots?: IoSnapshots | string
+): IoSnapshotReport | null {
+  const resolved =
+    typeof snapshots === 'string'
+      ? loadIoSnapshots(snapshots)
+      : (snapshots ?? loadIoSnapshotsForHead(nxJson));
+  if (!resolved) {
     return null;
   }
-  const diagnostics: IoSnapshotDiagnostic[] = [];
-  const overrides: Record<string, IoSnapshotOverride> = {};
-
-  const bundle = bundleDir
-    ? readBundle(join(bundleDir, IO_SNAPSHOT_BUNDLE_FILE), diagnostics)
-    : readBundleForHead(diagnostics);
-  if (!bundle) {
-    return { overrides, diagnostics, resolution: null };
-  }
-
-  const projects =
-    readProjectsConfigurationFromProjectGraph(projectGraph).projects;
-  for (const task of Object.values(taskGraph.tasks)) {
-    const target =
-      projectGraph.nodes[task.target.project]?.data.targets?.[
-        task.target.target
-      ];
-    if (target?.ioSnapshots === false) {
-      diagnostics.push({ reason: 'disabled', taskId: task.id });
-      continue;
-    }
-    if (hasCustomHasher(task, projects)) {
-      diagnostics.push({ reason: 'custom-hasher', taskId: task.id });
-      continue;
-    }
-    const entry = bundle.snapshots[task.id];
-    if (!entry) {
-      diagnostics.push({ reason: 'missing', taskId: task.id });
-      continue;
-    }
-    const override = toOverride(
-      task,
-      entry,
-      bundle.resolution.digest,
-      projectGraph,
-      taskGraph,
-      diagnostics
-    );
-    if (override) {
-      overrides[task.id] = override;
-    }
-  }
-
-  return { overrides, diagnostics, resolution: bundle.resolution };
-}
-
-function toOverride(
-  task: Task,
-  entry: BundleEntry,
-  digest: string,
-  projectGraph: ProjectGraph,
-  taskGraph: TaskGraph,
-  diagnostics: IoSnapshotDiagnostic[]
-): IoSnapshotOverride | null {
-  const files = new Set<string>();
-  let taskOutputs: Record<string, string[]>;
-  if (Array.isArray(entry.inputs)) {
-    entry.inputs.forEach((glob) => files.add(glob));
-    taskOutputs = entry.taskOutputs ?? {};
-  } else {
-    // Legacy bucketed form: project globs are project-relative.
-    for (const [project, globs] of Object.entries(
-      entry.inputs.projects ?? {}
-    )) {
-      const node = projectGraph.nodes[project];
-      if (!node) {
-        diagnostics.push({
-          reason: 'unknown-project',
-          taskId: task.id,
-          project,
-        });
-        continue;
-      }
-      const prefix = node.data.root === '.' ? '' : `${node.data.root}/`;
-      for (const glob of globs) {
-        files.add(
-          glob.startsWith('!')
-            ? `!${prefix}${glob.slice(1)}`
-            : `${prefix}${glob}`
-        );
-      }
-    }
-    (entry.inputs.workspace ?? []).forEach((glob) => files.add(glob));
-    taskOutputs = entry.inputs.taskOutputs ?? entry.taskOutputs ?? {};
-  }
-
-  const scheduled: Record<string, string[]> = {};
-  for (const [producer, paths] of Object.entries(taskOutputs)) {
-    if (!taskGraph.tasks[producer]) {
-      diagnostics.push({
-        reason: 'producer-not-in-graph',
-        taskId: task.id,
-        producer,
-      });
-      return null;
-    }
-    scheduled[producer] = [...paths].sort();
-    // Output reads are hashed from disk like any other read; the producer
-    // entry only orders this task after them.
-    paths.forEach((path) => files.add(path));
-  }
-
-  const sorted = [...files].sort();
-  const rootAnchored = checkFilesGlobs(sorted);
-  if (rootAnchored) {
-    diagnostics.push({
-      reason: 'root-anchored-glob',
-      taskId: task.id,
-      glob: rootAnchored,
-    });
-    return null;
-  }
-  return { files: sorted, taskOutputs: scheduled, digest };
-}
-
-function hasCustomHasher(
-  task: Task,
-  projects: ReturnType<
-    typeof readProjectsConfigurationFromProjectGraph
-  >['projects']
-): boolean {
-  try {
-    return !!getCustomHasher(task, projects);
-  } catch {
-    // An unresolvable executor fails later, at execution; it is not a reason
-    // to withhold a snapshot here.
-    return false;
-  }
-}
-
-let cachedBundle: { file: string; mtimeMs: number; bundle: Bundle } | null =
-  null;
-
-// Long-lived callers (the daemon) re-read only when the file changes.
-function readBundleForHead(diagnostics: IoSnapshotDiagnostic[]): Bundle | null {
-  const head = getLatestCommitSha();
-  if (!head) {
-    diagnostics.push({ reason: 'no-bundle' });
-    return null;
-  }
-  return readBundle(
-    join(ioSnapshotsCacheDirectory, head, IO_SNAPSHOT_BUNDLE_FILE),
-    diagnostics
+  const planner = new HashPlanner(
+    nxJson as any,
+    transferProjectGraph(transformProjectGraphForRust(projectGraph))
   );
-}
-
-function readBundle(
-  file: string,
-  diagnostics: IoSnapshotDiagnostic[]
-): Bundle | null {
-  let mtimeMs: number;
-  try {
-    mtimeMs = statSync(file).mtimeMs;
-  } catch {
-    diagnostics.push({ reason: 'no-bundle' });
-    return null;
-  }
-  if (cachedBundle?.file === file && cachedBundle.mtimeMs === mtimeMs) {
-    return cachedBundle.bundle;
-  }
-  try {
-    const bundle = JSON.parse(readFileSync(file, 'utf8')) as Bundle;
-    if (
-      bundle?.version !== BUNDLE_VERSION ||
-      typeof bundle.resolution?.digest !== 'string' ||
-      typeof bundle.snapshots !== 'object' ||
-      bundle.snapshots === null
-    ) {
-      throw new Error(`not a version ${BUNDLE_VERSION} snapshot bundle`);
-    }
-    cachedBundle = { file, mtimeMs, bundle };
-    return bundle;
-  } catch (e) {
-    diagnostics.push({
-      reason: 'invalid-bundle',
-      file,
-      message: e instanceof Error ? e.message : String(e),
-    });
-    return null;
-  }
-}
-
-/** @internal test hook */
-export function _resetIoSnapshotBundleCache(): void {
-  cachedBundle = null;
+  return planner.ioSnapshotReport(
+    taskGraph,
+    resolved,
+    customHasherTaskIds(projectGraph, taskGraph)
+  );
 }

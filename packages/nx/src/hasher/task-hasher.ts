@@ -11,11 +11,7 @@ import { InputDefinition } from '../config/workspace-json-project-json';
 import { minimatch } from 'minimatch';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import { workspaceRoot } from '../utils/workspace-root';
-import {
-  HashInputs,
-  IoSnapshotOverride,
-  NxWorkspaceFilesExternals,
-} from '../native';
+import { HashInputs, IoSnapshots, NxWorkspaceFilesExternals } from '../native';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 
 // Re-export HashInputs from native module for public API
@@ -93,16 +89,6 @@ export interface TaskHasher {
   ): Promise<Hash[]>;
 }
 
-/**
- * How a hasher sources I/O snapshot overrides. `overrides` wins when present;
- * otherwise `bundleDir` (the fetched bundle for the HEAD the client resolved)
- * is read on demand; neither means native hashing.
- */
-export interface IoSnapshotHashOptions {
-  bundleDir?: string;
-  overrides?: Record<string, IoSnapshotOverride>;
-}
-
 export interface TaskHasherImpl {
   /**
    * Hash `tasks` where each task is keyed in `perTaskEnvs` by `task.id`.
@@ -116,7 +102,7 @@ export interface TaskHasherImpl {
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd?: string,
     collectInputs?: boolean,
-    ioSnapshots?: IoSnapshotHashOptions
+    ioSnapshots?: IoSnapshots
   ): Promise<PartialHash[]>;
 
   hashTask(
@@ -125,7 +111,7 @@ export interface TaskHasherImpl {
     env: NodeJS.ProcessEnv,
     cwd?: string,
     collectInputs?: boolean,
-    ioSnapshots?: IoSnapshotHashOptions
+    ioSnapshots?: IoSnapshots
   ): Promise<PartialHash>;
 }
 
@@ -165,7 +151,7 @@ export class DaemonBasedTaskHasher implements TaskHasher {
     private readonly daemonClient: DaemonClient,
     private readonly runnerOptions: any,
     // The client decides whether snapshots apply; the daemon only obeys.
-    private readonly ioSnapshots?: { bundleDir?: string }
+    private readonly ioSnapshots?: { directory?: string }
   ) {}
 
   async hashTasks(
@@ -174,7 +160,7 @@ export class DaemonBasedTaskHasher implements TaskHasher {
     envOrPerTaskEnvs: NodeJS.ProcessEnv | Record<string, NodeJS.ProcessEnv>,
     _cwd?: string,
     _collectInputs?: boolean,
-    ioSnapshots?: { bundleDir?: string }
+    ioSnapshots?: { directory?: string }
   ): Promise<Hash[]> {
     const collectInputs = getTaskIOService().hasTaskInputSubscribers();
     return this.daemonClient.hashTasks(
@@ -194,7 +180,7 @@ export class DaemonBasedTaskHasher implements TaskHasher {
     env?: NodeJS.ProcessEnv,
     _cwd?: string,
     _collectInputs?: boolean,
-    ioSnapshots?: { bundleDir?: string }
+    ioSnapshots?: { directory?: string }
   ): Promise<Hash> {
     return (
       await this.hashTasks(
@@ -217,7 +203,7 @@ export class InProcessTaskHasher implements TaskHasher {
     private readonly nxJson: NxJsonConfiguration,
     private readonly externalRustReferences: NxWorkspaceFilesExternals | null,
     private readonly options: any,
-    private readonly ioSnapshots?: IoSnapshotHashOptions
+    private readonly ioSnapshots?: IoSnapshots
   ) {
     this.taskHasher = new NativeTaskHasherImpl(
       workspaceRoot,
@@ -236,7 +222,7 @@ export class InProcessTaskHasher implements TaskHasher {
     envOrPerTaskEnvs: NodeJS.ProcessEnv | Record<string, NodeJS.ProcessEnv>,
     cwd?: string,
     collectInputs?: boolean,
-    ioSnapshots?: IoSnapshotHashOptions
+    ioSnapshots?: IoSnapshots
   ): Promise<Hash[]> {
     const hashes = await this.taskHasher.hashTasks(
       tasks,
@@ -257,7 +243,7 @@ export class InProcessTaskHasher implements TaskHasher {
     env?: NodeJS.ProcessEnv,
     cwd?: string,
     collectInputs?: boolean,
-    ioSnapshots?: IoSnapshotHashOptions
+    ioSnapshots?: IoSnapshots
   ): Promise<Hash> {
     const res = await this.taskHasher.hashTask(
       task,

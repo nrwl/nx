@@ -23,10 +23,7 @@ jest.mock('../tasks-runner/utils', () => ({
 }));
 
 import { isIoSnapshotFetchEnabled } from './fetch';
-import {
-  _resetIoSnapshotBundleCache,
-  buildIoSnapshotOverrides,
-} from './overrides';
+import { buildIoSnapshotOverrides, loadIoSnapshotsForHead } from './overrides';
 
 function node(name: string, root: string, targets: Record<string, any>) {
   return { name, type: 'lib' as const, data: { root, targets } };
@@ -47,6 +44,7 @@ const projectGraph: ProjectGraph = {
     }),
   },
   dependencies: { web: [], ui: [], root: [] },
+  externalNodes: {},
 };
 
 function task(project: string, target: string) {
@@ -103,7 +101,6 @@ describe('buildIoSnapshotOverrides', () => {
   beforeEach(() => {
     tempFs = new TempFs('io-snapshot-overrides');
     cacheRoot = join(tempFs.tempDir, 'io-snapshots');
-    _resetIoSnapshotBundleCache();
     (isIoSnapshotFetchEnabled as jest.Mock).mockReturnValue(true);
   });
 
@@ -111,19 +108,25 @@ describe('buildIoSnapshotOverrides', () => {
 
   it('returns null when snapshots are off', () => {
     (isIoSnapshotFetchEnabled as jest.Mock).mockReturnValue(false);
+    expect(loadIoSnapshotsForHead({})).toBeNull();
     expect(buildIoSnapshotOverrides(projectGraph, graph('web:build'), {})).toBe(
       null
     );
   });
 
   it('reports no-bundle when nothing is cached for HEAD', () => {
-    expect(
-      buildIoSnapshotOverrides(projectGraph, graph('web:build'), {})
-    ).toEqual({
-      overrides: {},
-      diagnostics: [{ reason: 'no-bundle' }],
-      resolution: null,
-    });
+    const snapshots = loadIoSnapshotsForHead({});
+    expect(snapshots.status).toBe('skipped');
+    expect(snapshots.reason).toBe('no-bundle');
+    const result = buildIoSnapshotOverrides(
+      projectGraph,
+      graph('web:build'),
+      {}
+    );
+    expect(result.used).toEqual([]);
+    expect(result.resolution).toBeUndefined();
+    expect(result.diagnostics).toHaveLength(1);
+    expect(result.diagnostics[0]).toMatchObject({ reason: 'no-bundle' });
   });
 
   it('rejects an unknown bundle version without throwing', () => {
@@ -133,20 +136,18 @@ describe('buildIoSnapshotOverrides', () => {
       graph('web:build'),
       {}
     );
-    expect(result.overrides).toEqual({});
-    expect(result.diagnostics[0]).toMatchObject({ reason: 'invalid-bundle' });
+    expect(result.used).toEqual([]);
+    expect(result.diagnostics[0]).toMatchObject({
+      reason: 'invalid-bundle',
+      file: expect.stringContaining('snapshots.json'),
+    });
   });
 
-  it('lifts flat entries into one sorted files group per task', () => {
+  it('uses flat entries, including one that read nothing', () => {
     writeBundle({
       'web:build': {
         commit: HEAD,
-        inputs: [
-          'apps/web/src/**/*.ts',
-          '!apps/web/src/**/*.spec.ts',
-          'tsconfig.base.json',
-          'dist/libs/ui/index.js',
-        ],
+        inputs: ['apps/web/src/**/*.ts', 'dist/libs/ui/index.js'],
         taskOutputs: { 'ui:build': ['dist/libs/ui/index.js'] },
         outputs: [],
       },
@@ -157,67 +158,41 @@ describe('buildIoSnapshotOverrides', () => {
       graph('web:build', 'ui:build', 'root:build'),
       {}
     );
-    expect(result.overrides['web:build']).toEqual({
-      files: [
-        '!apps/web/src/**/*.spec.ts',
-        'apps/web/src/**/*.ts',
-        'dist/libs/ui/index.js',
-        'tsconfig.base.json',
-      ],
-      taskOutputs: { 'ui:build': ['dist/libs/ui/index.js'] },
-      digest: 'd1',
-    });
-    // An entry that read nothing is still an override.
-    expect(result.overrides['root:build']).toEqual({
-      files: [],
-      taskOutputs: {},
-      digest: 'd1',
-    });
-    expect(result.diagnostics).toEqual([
-      { reason: 'missing', taskId: 'ui:build' },
+    expect(result.used).toEqual(['root:build', 'web:build']);
+    expect(result.diagnostics.map((d) => [d.reason, d.taskId])).toEqual([
+      ['missing', 'ui:build'],
     ]);
     expect(result.resolution.digest).toBe('d1');
   });
 
-  it('flattens legacy bucketed entries against the project graph', () => {
+  it('flattens legacy bucketed entries and skips unknown projects', () => {
     writeBundle({
       'web:build': {
         commit: HEAD,
         inputs: {
-          projects: {
-            web: ['src/**/*.ts', '!src/**/*.spec.ts'],
-            root: ['package.json'],
-            gone: ['x.ts'],
-          },
+          projects: { web: ['src/**/*.ts'], gone: ['x.ts'] },
           workspace: ['tsconfig.base.json'],
-          taskOutputs: { 'ui:build': ['dist/libs/ui/index.js'] },
+          taskOutputs: {},
         },
         outputs: [],
       },
     });
     const result = buildIoSnapshotOverrides(
       projectGraph,
-      graph('web:build', 'ui:build'),
+      graph('web:build'),
       {}
     );
-    expect(result.overrides['web:build']).toEqual({
-      files: [
-        '!apps/web/src/**/*.spec.ts',
-        'apps/web/src/**/*.ts',
-        'dist/libs/ui/index.js',
-        'package.json',
-        'tsconfig.base.json',
-      ],
-      taskOutputs: { 'ui:build': ['dist/libs/ui/index.js'] },
-      digest: 'd1',
-    });
+    expect(result.used).toEqual(['web:build']);
     expect(result.diagnostics).toEqual([
-      { reason: 'unknown-project', taskId: 'web:build', project: 'gone' },
-      { reason: 'missing', taskId: 'ui:build' },
+      expect.objectContaining({
+        reason: 'unknown-project',
+        taskId: 'web:build',
+        project: 'gone',
+      }),
     ]);
   });
 
-  it('withholds overrides for disabled, custom-hasher, dangling, and root-anchored entries', () => {
+  it('withholds disabled, custom-hasher, dangling, and root-anchored tasks', () => {
     writeBundle({
       'web:build': {
         commit: HEAD,
@@ -238,37 +213,33 @@ describe('buildIoSnapshotOverrides', () => {
       graph('web:build', 'web:lint', 'web:custom', 'ui:build'),
       {}
     );
-    expect(result.overrides).toEqual({});
-    expect(result.diagnostics).toEqual([
-      {
-        reason: 'producer-not-in-graph',
-        taskId: 'web:build',
-        producer: 'gone:build',
-      },
-      { reason: 'disabled', taskId: 'web:lint' },
-      { reason: 'custom-hasher', taskId: 'web:custom' },
-      { reason: 'root-anchored-glob', taskId: 'ui:build', glob: '**/*.gen' },
+    expect(result.used).toEqual([]);
+    expect(result.diagnostics.map((d) => [d.reason, d.taskId])).toEqual([
+      ['root-anchored-glob', 'ui:build'],
+      ['producer-not-in-graph', 'web:build'],
+      ['custom-hasher', 'web:custom'],
+      ['disabled', 'web:lint'],
     ]);
+    expect(result.diagnostics[0].glob).toBe('**/*.gen');
+    expect(result.diagnostics[1].producer).toBe('gone:build');
   });
 
-  it('re-reads the bundle only when the file changes', () => {
+  it('accepts a bundle directory or a loaded handle', () => {
     writeBundle({ 'web:build': { commit: HEAD, inputs: [], outputs: [] } });
-    const first = buildIoSnapshotOverrides(
+    const dir = join(cacheRoot, HEAD);
+    const byDir = buildIoSnapshotOverrides(
       projectGraph,
       graph('web:build'),
-      {}
+      {},
+      dir
     );
-    expect(Object.keys(first.overrides)).toEqual(['web:build']);
-    // Same mtime ⇒ cached parse; a rewrite with a new mtime is picked up.
-    const file = join(cacheRoot, HEAD, 'snapshots.json');
-    const { utimesSync } = require('fs');
-    writeBundle({});
-    utimesSync(file, new Date(Date.now() + 5000), new Date(Date.now() + 5000));
-    const second = buildIoSnapshotOverrides(
+    const byHandle = buildIoSnapshotOverrides(
       projectGraph,
       graph('web:build'),
-      {}
+      {},
+      loadIoSnapshotsForHead({})
     );
-    expect(second.overrides).toEqual({});
+    expect(byDir.used).toEqual(['web:build']);
+    expect(byHandle).toEqual(byDir);
   });
 });
