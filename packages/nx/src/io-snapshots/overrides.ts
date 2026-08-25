@@ -19,7 +19,8 @@ export type IoSnapshotDiagnostic =
   /** Nothing cached for HEAD: not connected, flag off, or never fetched. */
   | { reason: 'no-bundle' }
   | { reason: 'invalid-bundle'; file: string; message: string }
-  | { reason: 'manual'; taskId: string }
+  /** The target opted out with `ioSnapshots: false`. */
+  | { reason: 'disabled'; taskId: string }
   | { reason: 'custom-hasher'; taskId: string }
   /** The bundle has no entry for the task. */
   | { reason: 'missing'; taskId: string }
@@ -97,8 +98,8 @@ export function buildIoSnapshotOverrides(
       projectGraph.nodes[task.target.project]?.data.targets?.[
         task.target.target
       ];
-    if (target?.cache === 'manual') {
-      diagnostics.push({ reason: 'manual', taskId: task.id });
+    if (target?.ioSnapshots === false) {
+      diagnostics.push({ reason: 'disabled', taskId: task.id });
       continue;
     }
     if (hasCustomHasher(task, projects)) {
