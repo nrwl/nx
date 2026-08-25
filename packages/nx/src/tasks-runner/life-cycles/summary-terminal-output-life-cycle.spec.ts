@@ -4,7 +4,7 @@ import type { TaskResult } from '../life-cycle';
 import { TaskStatus } from '../tasks-runner';
 import { SummaryTerminalOutputLifeCycle } from './summary-terminal-output-life-cycle';
 
-jest.mock('../cache', () => ({
+jest.mock('../terminal-output-path', () => ({
   terminalOutputPathForHash: (hash: string) => `/cache/terminalOutputs/${hash}`,
 }));
 
