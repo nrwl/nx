@@ -19,7 +19,7 @@ import { assertSupportedNextVersion } from '../../utils/assert-supported-next-ve
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
 import { updateViteConfigForServerEntry } from './lib/update-vite-config';
-import { eslintConfigNextVersion, tsLibVersion } from '../../utils/versions';
+import { tsLibVersion } from '../../utils/versions';
 import {
   isUsingTsSolutionSetup,
   addProjectToTsSolutionWorkspace,
@@ -68,11 +68,6 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
 
   if (!options.skipPackageJson) {
     const devDependencies: Record<string, string> = {};
-    if (options.linter === 'eslint') {
-      devDependencies['eslint-config-next'] = eslintConfigNextVersion;
-      devDependencies['@next/eslint-plugin-next'] = eslintConfigNextVersion;
-    }
-
     if (options.unitTestRunner && options.unitTestRunner !== 'none') {
       devDependencies['@testing-library/react'] = testingLibraryReactVersion;
       devDependencies['@testing-library/dom'] = testingLibraryDomVersion;
