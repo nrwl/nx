@@ -439,13 +439,13 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
           'myproj:build': {
             id: 'myproj:build',
             target: { project: 'myproj', target: 'build' },
-            used: [],
+            overrides: {},
             outputs: [],
           },
           'dep:build': {
             id: 'dep:build',
             target: { project: 'dep', target: 'build' },
-            used: [],
+            overrides: {},
             outputs: [],
           },
         },
@@ -496,13 +496,13 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
           'myproj:build': {
             id: 'myproj:build',
             target: { project: 'myproj', target: 'build' },
-            used: [],
+            overrides: {},
             outputs: [],
           },
           'dep:build': {
             id: 'dep:build',
             target: { project: 'dep', target: 'build' },
-            used: [],
+            overrides: {},
             outputs: [],
           },
         },
@@ -553,13 +553,13 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
           'myproj:build': {
             id: 'myproj:build',
             target: { project: 'myproj', target: 'build' },
-            used: [],
+            overrides: {},
             outputs: [],
           },
           'dep:build': {
             id: 'dep:build',
             target: { project: 'dep', target: 'build' },
-            used: [],
+            overrides: {},
             outputs: [],
           },
         },
@@ -598,13 +598,13 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
           'myproj:build': {
             id: 'myproj:build',
             target: { project: 'myproj', target: 'build' },
-            used: [],
+            overrides: {},
             outputs: [],
           },
           'dep:build': {
             id: 'dep:build',
             target: { project: 'dep', target: 'build' },
-            used: [],
+            overrides: {},
             outputs: [],
           },
         },
@@ -643,19 +643,19 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
           'myproj:build': {
             id: 'myproj:build',
             target: { project: 'myproj', target: 'build' },
-            used: [],
+            overrides: {},
             outputs: [],
           },
           'mid:build': {
             id: 'mid:build',
             target: { project: 'mid', target: 'build' },
-            used: [],
+            overrides: {},
             outputs: [],
           },
           'deep:build': {
             id: 'deep:build',
             target: { project: 'deep', target: 'build' },
-            used: [],
+            overrides: {},
             outputs: [],
           },
         },
@@ -701,19 +701,19 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
           'myproj:build': {
             id: 'myproj:build',
             target: { project: 'myproj', target: 'build' },
-            used: [],
+            overrides: {},
             outputs: [],
           },
           'mid:build': {
             id: 'mid:build',
             target: { project: 'mid', target: 'build' },
-            used: [],
+            overrides: {},
             outputs: [],
           },
           'deep:build': {
             id: 'deep:build',
             target: { project: 'deep', target: 'build' },
-            used: [],
+            overrides: {},
             outputs: [],
           },
         },
@@ -1170,10 +1170,14 @@ describe('deriveIoSnapshotStatus', () => {
     tasks: 1,
   };
 
-  it('is none with reason disabled when snapshots are off', () => {
-    expect(deriveIoSnapshotStatus('a:build', null)).toEqual({
+  it('is none with the unavailability reason when nothing could be resolved', () => {
+    expect(deriveIoSnapshotStatus('a:build', null, 'not-connected')).toEqual({
       status: 'none',
-      reason: 'disabled',
+      reason: 'not-connected',
+    });
+    expect(deriveIoSnapshotStatus('a:build', null, 'no-head')).toEqual({
+      status: 'none',
+      reason: 'no-head',
     });
   });
 
