@@ -46,9 +46,23 @@ async function loadTypeScriptModule(
   tsconfigFileNames?: string[]
 ): Promise<any> {
   const tsConfigPath = getTypeScriptConfigPath(path, tsconfigFileNames);
+  const modulePath = resolveModulePath(path);
 
   if (!tsConfigPath) {
-    return await loadModuleByExtension(path, extension);
+    // The tsconfig-less path needs the same ESM-registry routing as below:
+    // require() of a sync-ESM .ts serves the stale registry entry on reloads.
+    if (esmRegistryPaths.has(modulePath)) {
+      // Clear first so an ESM-to-CJS rewrite re-evaluates instead of the
+      // import() serving the cached require.cache entry.
+      clearConfigFromRequireCache(modulePath);
+      return unwrapCjsInterop(path, await loadESM(path));
+    }
+    clearConfigFromRequireCache(modulePath);
+    const result = await loadModuleByExtension(path, extension);
+    if (types.isModuleNamespaceObject(result)) {
+      esmRegistryPaths.add(modulePath);
+    }
+    return result;
   }
 
   // loadTsFile was added in nx@23. @nx/devkit's peer range supports older
@@ -65,7 +79,6 @@ async function loadTypeScriptModule(
 
   // require.cache busting cannot invalidate a module the ESM registry
   // holds; reloads of known-ESM paths need a cache-busted import().
-  const modulePath = resolveModulePath(path);
   if (esmRegistryPaths.has(modulePath)) {
     return await loadTsFileViaImport(path, tsConfigPath);
   }

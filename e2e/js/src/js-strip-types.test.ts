@@ -1,11 +1,14 @@
 import {
   checkFilesExist,
   cleanupProject,
+  fileExists,
   newProject,
   packageInstall,
+  readFile,
   readJson,
   removeFile,
   runCLI,
+  tmpProjPath,
   uniq,
   updateFile,
 } from '@nx/e2e-utils';
@@ -389,6 +392,11 @@ export default config;
           `module.exports = { outputDir: './out-ccc' };\n`
         );
         expect(showOutputs(app)).toContain('{projectRoot}/out-ccc');
+
+        // The plugin cache must persist the fresh value under the new file
+        // hash: stop the daemon without clearing workspace data and re-read.
+        runCLI('daemon --stop', { env });
+        expect(showOutputs(app)).toContain('{projectRoot}/out-ccc');
       },
       TEN_MINS_MS
     );
@@ -436,6 +444,62 @@ export default config;
           `module.exports = { outputDir: './out-bbb' };\n`
         );
         expect(showOutputs(app)).toContain('{projectRoot}/out-bbb');
+      },
+      TEN_MINS_MS
+    );
+
+    it(
+      'should serve fresh inferred targets after editing a TS config in a workspace without tsconfig files',
+      () => {
+        // Without a sibling or root tsconfig the loader takes the
+        // tsconfig-less path, which needs the same ESM-registry routing:
+        // require() of a sync-ESM config would otherwise serve the stale
+        // registry entry on reloads.
+        const app = setupPlaywrightApp();
+        const mtsApp = setupPlaywrightApp();
+        updateFile(
+          `${app}/playwright.config.ts`,
+          `export default { outputDir: './out-aaa' };\n`
+        );
+        updateFile(
+          `${mtsApp}/playwright.config.mts`,
+          `export default { outputDir: './out-aaa' };\n`
+        );
+        const rootTsconfigs = ['tsconfig.base.json', 'tsconfig.json'].filter(
+          (f) => fileExists(tmpProjPath(f))
+        );
+        const saved = rootTsconfigs.map((f) => [f, readFile(f)] as const);
+        rootTsconfigs.forEach((f) => removeFile(f));
+        removeFile(`${app}/tsconfig.json`);
+        removeFile(`${mtsApp}/tsconfig.json`);
+        try {
+          expect(showOutputs(app)).toContain('{projectRoot}/out-aaa');
+          expect(showOutputs(mtsApp)).toContain('{projectRoot}/out-aaa');
+
+          updateFile(
+            `${app}/playwright.config.ts`,
+            `export default { outputDir: './out-bbb' };\n`
+          );
+          updateFile(
+            `${mtsApp}/playwright.config.mts`,
+            `export default { outputDir: './out-bbb' };\n`
+          );
+          expect(showOutputs(app)).toContain('{projectRoot}/out-bbb');
+          expect(showOutputs(mtsApp)).toContain('{projectRoot}/out-bbb');
+
+          // Also cover an ESM-to-CJS rewrite: without clearing the cached
+          // module first, the import() would serve the old require.cache
+          // entry.
+          updateFile(
+            `${app}/playwright.config.ts`,
+            `module.exports = { outputDir: './out-ccc' };\n`
+          );
+          expect(showOutputs(app)).toContain('{projectRoot}/out-ccc');
+        } finally {
+          for (const [f, content] of saved) {
+            updateFile(f, content);
+          }
+        }
       },
       TEN_MINS_MS
     );
