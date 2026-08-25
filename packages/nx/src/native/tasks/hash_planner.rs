@@ -14,28 +14,16 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 use tracing::trace;
 
+use crate::native::io_snapshots::IoSnapshots;
 use crate::native::tasks::hashers::{OnceCache, validate_files_globs};
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency, get_named_inputs,
 };
+use crate::native::tasks::snapshot_eligibility::{self, IoSnapshotReport, SnapshotTask};
 use crate::native::tasks::utils;
 use crate::native::utils::find_matching_projects;
+use napi::bindgen_prelude::ClassInstance;
 use std::sync::{Arc, OnceLock};
-
-/// Per-task I/O snapshot data supplied by the TS layer once per run
-/// (NXC-4847 §2b). `files` are the observed reads as workspace-relative globs;
-/// negations and class mapping are applied here against the current declared
-/// inputs. `task_outputs` only schedules the task after its producers.
-#[napi(object)]
-#[derive(Clone, Debug)]
-pub struct IoSnapshotOverride {
-    pub files: Vec<String>,
-    /// producer task id → observed paths inside that task's outputs
-    pub task_outputs: HashMap<String, Vec<String>>,
-    pub digest: String,
-}
-
-pub type IoSnapshotOverrides = HashMap<String, IoSnapshotOverride>;
 
 fn io_snapshot_marker(digest: &str) -> HashInstruction {
     HashInstruction::Marker(format!("io-snapshot:{digest}"))
@@ -60,7 +48,7 @@ const LOCKFILES: [&str; 6] = [
 /// whether a class-mapped file (root tsconfig, a declared `{json}` file) was
 /// actually read. An unparsable glob keeps the native instruction (conservative).
 struct SnapshotContext<'a> {
-    io: &'a IoSnapshotOverride,
+    io: &'a SnapshotTask,
     /// Matcher over the positive observed globs; `None` when there are none.
     observed: Option<crate::native::glob::NxGlobSet>,
     /// A glob failed to parse: treat every class-mapped file as read so the
@@ -69,12 +57,7 @@ struct SnapshotContext<'a> {
 }
 
 impl<'a> SnapshotContext<'a> {
-    /// `None` when a snapshot glob would walk the whole workspace: the task
-    /// then hashes natively (the TS reader reports it), never throws.
-    fn new(io: &'a IoSnapshotOverride) -> Option<Self> {
-        if validate_files_globs(&io.files).is_err() {
-            return None;
-        }
+    fn new(io: &'a SnapshotTask) -> Self {
         let positives: Vec<&str> = io
             .files
             .iter()
@@ -82,26 +65,24 @@ impl<'a> SnapshotContext<'a> {
             .filter(|g| !g.starts_with('!'))
             .collect();
         if positives.is_empty() {
-            return Some(Self {
+            return Self {
                 io,
                 observed: None,
                 unparsable: false,
-            });
+            };
         }
-        Some(
-            match NxGlobSetBuilder::new(&positives).and_then(|b| b.build()) {
-                Ok(set) => Self {
-                    io,
-                    observed: Some(set),
-                    unparsable: false,
-                },
-                Err(_) => Self {
-                    io,
-                    observed: None,
-                    unparsable: true,
-                },
+        match NxGlobSetBuilder::new(&positives).and_then(|b| b.build()) {
+            Ok(set) => Self {
+                io,
+                observed: Some(set),
+                unparsable: false,
             },
-        )
+            Err(_) => Self {
+                io,
+                observed: None,
+                unparsable: true,
+            },
+        }
     }
 
     fn read(&self, path: &str) -> bool {
@@ -207,9 +188,19 @@ impl HashPlanner {
         &self,
         task_ids: Vec<&str>,
         task_graph: TaskGraph,
-        overrides: Option<&IoSnapshotOverrides>,
+        snapshots: Option<&IoSnapshots>,
+        custom_hasher_task_ids: &[String],
     ) -> anyhow::Result<HashPlans> {
         let function_start = std::time::Instant::now();
+        let snapshot_tasks = snapshots.map(|snapshots| {
+            snapshot_eligibility::resolve(
+                snapshots,
+                &task_graph,
+                &self.project_graph,
+                custom_hasher_task_ids,
+            )
+            .tasks
+        });
 
         trace!("Starting get_plans_internal for {} tasks", task_ids.len());
 
@@ -257,9 +248,10 @@ impl HashPlanner {
                     .chain([always_on_id])
                     .collect();
 
-                let snapshot = overrides
-                    .and_then(|o| o.get(*id))
-                    .and_then(SnapshotContext::new);
+                let snapshot = snapshot_tasks
+                    .as_ref()
+                    .and_then(|tasks| tasks.get(*id))
+                    .map(SnapshotContext::new);
                 let mut negations: Negations = Vec::new();
                 ids.extend(self.self_and_deps_inputs(
                     &task.target.project,
@@ -329,9 +321,11 @@ impl HashPlanner {
         &self,
         task_ids: Vec<&str>,
         task_graph: TaskGraph,
-        overrides: Option<&IoSnapshotOverrides>,
+        snapshots: Option<&IoSnapshots>,
+        custom_hasher_task_ids: &[String],
     ) -> anyhow::Result<HashMap<String, Vec<HashInstruction>>> {
-        let hash_plans = self.get_plans_internal(task_ids, task_graph, overrides)?;
+        let hash_plans =
+            self.get_plans_internal(task_ids, task_graph, snapshots, custom_hasher_task_ids)?;
         Ok(hash_plans
             .plans
             .into_iter()
@@ -351,10 +345,41 @@ impl HashPlanner {
         &self,
         task_ids: Vec<String>,
         task_graph: TaskGraph,
-        overrides: Option<HashMap<String, IoSnapshotOverride>>,
+        snapshots: Option<ClassInstance<'_, IoSnapshots>>,
+        custom_hasher_task_ids: Option<Vec<String>>,
     ) -> anyhow::Result<HashMap<String, Vec<HashInstruction>>> {
         let task_ids: Vec<&str> = task_ids.iter().map(|s| s.as_str()).collect();
-        self.get_plans_materialized(task_ids, task_graph, overrides.as_ref())
+        self.get_plans_materialized(
+            task_ids,
+            task_graph,
+            snapshots.as_deref(),
+            custom_hasher_task_ids.as_deref().unwrap_or(&[]),
+        )
+    }
+
+    /// The same eligibility walk `getPlans` performs, reported: which tasks
+    /// hash from their snapshot and why the others do not.
+    #[napi]
+    pub fn io_snapshot_report(
+        &self,
+        task_graph: TaskGraph,
+        snapshots: Option<ClassInstance<'_, IoSnapshots>>,
+        custom_hasher_task_ids: Option<Vec<String>>,
+    ) -> IoSnapshotReport {
+        match snapshots.as_deref() {
+            Some(snapshots) => snapshot_eligibility::resolve(
+                snapshots,
+                &task_graph,
+                &self.project_graph,
+                custom_hasher_task_ids.as_deref().unwrap_or(&[]),
+            )
+            .report(),
+            None => IoSnapshotReport {
+                used: vec![],
+                diagnostics: vec![],
+                resolution: None,
+            },
+        }
     }
 
     #[napi(ts_return_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
@@ -362,10 +387,16 @@ impl HashPlanner {
         &self,
         task_ids: Vec<String>,
         task_graph: TaskGraph,
-        overrides: Option<HashMap<String, IoSnapshotOverride>>,
+        snapshots: Option<ClassInstance<'_, IoSnapshots>>,
+        custom_hasher_task_ids: Option<Vec<String>>,
     ) -> anyhow::Result<External<HashPlans>> {
         let task_ids: Vec<&str> = task_ids.iter().map(|s| s.as_str()).collect();
-        let plans = self.get_plans_internal(task_ids, task_graph, overrides.as_ref())?;
+        let plans = self.get_plans_internal(
+            task_ids,
+            task_graph,
+            snapshots.as_deref(),
+            custom_hasher_task_ids.as_deref().unwrap_or(&[]),
+        )?;
         Ok(External::new(plans))
     }
 
@@ -1049,18 +1080,6 @@ impl HashPlanner {
         }
         Ok(result)
     }
-}
-
-/// The first snapshot glob the `files` hasher would refuse (no literal leading
-/// directory), so the TS bundle reader can withhold that task's override with
-/// a diagnostic instead of the planner throwing.
-#[napi]
-pub fn check_files_globs(globs: Vec<String>) -> Option<String> {
-    globs
-        .iter()
-        .filter(|g| !g.starts_with('!'))
-        .find(|g| validate_files_globs(std::slice::from_ref(*g)).is_err())
-        .cloned()
 }
 
 /// Records the negated filesets among `self_inputs` as workspace-relative

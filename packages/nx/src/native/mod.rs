@@ -16,7 +16,6 @@ pub mod workspace;
 mod config;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod db;
-#[cfg(not(target_arch = "wasm32"))]
 pub mod io_snapshots;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod metrics;
