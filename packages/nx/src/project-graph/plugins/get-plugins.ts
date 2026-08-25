@@ -46,11 +46,21 @@ export interface SeparatedPlugins {
   defaultPlugins: LoadedNxPlugin[];
 }
 
-let warnedAboutIsolationFallback = false;
+/**
+ * Set once a worker has been refused in this process, and read by every later
+ * plugin. Without it each plugin repeats the whole sequence: spawn a worker,
+ * wait for it to die, print the same advice. A workspace with six plugins pays
+ * that six times per command, and nothing about the second attempt can succeed
+ * once the first has been refused for a reason that belongs to the sandbox.
+ *
+ * Process-scoped rather than persisted: the refusal describes the environment
+ * Nx is running in, so it must not follow the workspace into a plain terminal.
+ */
+let isolationRefusedInThisProcess = false;
 
-/** Exported for tests: the fallback warning fires once per process. */
-export function resetIsolationFallbackWarningForTesting() {
-  warnedAboutIsolationFallback = false;
+/** Exported for tests: the fallback latch is process-scoped by design. */
+export function resetIsolationFallbackForTesting() {
+  isolationRefusedInThisProcess = false;
 }
 
 /**
@@ -70,7 +80,7 @@ export const loadingMethod = async (
   root: string,
   index?: number
 ): Promise<readonly [Promise<LoadedNxPlugin>, () => void]> => {
-  if (!isIsolationEnabled()) {
+  if (!isIsolationEnabled() || isolationRefusedInThisProcess) {
     return loadNxPlugin(plugin, root, index);
   }
 
@@ -91,19 +101,20 @@ export const loadingMethod = async (
 
     cleanup();
 
-    // Once per process: every plugin hits the same refusal, and one line of
-    // advice repeated per plugin buries itself.
-    if (!warnedAboutIsolationFallback) {
-      warnedAboutIsolationFallback = true;
-      output.warn({
-        title:
-          'Could not start a plugin worker in this sandbox. Running plugins in the main process instead.',
-        bodyLines: [
-          'Plugins that expect isolation may misbehave, and this is slower than a worker.',
-          ...sandboxSocketHint({ certain: true }),
-        ],
-      });
-    }
+    // Latch before warning, so both the advice and the wasted worker spawns
+    // happen once rather than once per plugin.
+    isolationRefusedInThisProcess = true;
+    output.warn({
+      title:
+        'Could not start a plugin worker in this sandbox. Running plugins in the main process instead.',
+      bodyLines: [
+        'Plugins that expect isolation may misbehave, and this is slower than a worker.',
+        // Not `certain`: this path proves a worker died before it connected,
+        // which a refused socket explains but so does an OOM kill or a broken
+        // install. The errno that would settle it stays in the worker.
+        ...sandboxSocketHint(),
+      ],
+    });
 
     return loadNxPlugin(plugin, root, index);
   }

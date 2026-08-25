@@ -11,7 +11,11 @@ import {
 import { daemonClient } from '../daemon/client/client';
 import { isOnDaemon } from '../daemon/is-on-daemon';
 import { sandboxSocketHint } from '../daemon/sandbox-socket-hint';
-import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
+import {
+  disableDaemonForThisProcess,
+  markDaemonAsDisabled,
+  writeDaemonLogs,
+} from '../daemon/tmp-dir';
 import { FileLock, IS_WASM } from '../native';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import { getCallSites } from '../utils/call-sites';
@@ -470,6 +474,7 @@ export async function createProjectGraphAndSourceMapsAsync(
 
       if (e.internalDaemonError) {
         const errorLogFile = writeDaemonLogs(e.message);
+        const sandboxed = isSandbox();
         output.warn({
           title: `Nx Daemon was not able to compute the project graph.`,
           bodyLines: [
@@ -478,12 +483,22 @@ export async function createProjectGraphAndSourceMapsAsync(
             // sandbox is in play, surface the likely cause and its fix inline.
             // This branch covers every internal daemon error, including ones a
             // sandbox cannot explain, so the issue link stays either way.
-            ...(isSandbox() ? sandboxSocketHint() : []),
+            ...(sandboxed ? sandboxSocketHint() : []),
             `Please file an issue at https://github.com/nrwl/nx`,
-            'Nx Daemon is going to be disabled until you run "nx reset".',
+            sandboxed
+              ? 'Nx Daemon is disabled for this command.'
+              : 'Nx Daemon is going to be disabled until you run "nx reset".',
           ],
         });
-        markDaemonAsDisabled(e.message);
+        // A sandbox refusal describes the environment, not the workspace. The
+        // on-disk marker would follow the checkout into an ordinary terminal
+        // and survive the user fixing their allowlist, since only `nx reset`
+        // clears it.
+        if (sandboxed) {
+          disableDaemonForThisProcess(e.message);
+        } else {
+          markDaemonAsDisabled(e.message);
+        }
         return buildProjectGraphAndSourceMapsWithoutDaemon();
       }
 

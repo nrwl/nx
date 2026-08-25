@@ -46,9 +46,12 @@ The environment variable takes precedence over `nx.json`.
 NX_DAEMON=false nx show projects
 ```
 
-Nx disables the daemon by default in CI, containers, and sandboxed environments, where its
-persistent state or file watching isn't useful.
+Nx disables the daemon by default in CI and containers, where its persistent state or file watching
+isn't useful.
 Set `NX_DAEMON=true` to opt in when a supported long-running environment can reuse the process.
+
+In an AI agent sandbox the daemon runs, but the sandbox has to allow the unix sockets it creates.
+See [Configure agent sandboxes for Nx](/docs/kb/nx-sandbox-unix-sockets).
 
 Nx can't run the daemon in WebAssembly environments, so `NX_DAEMON=true` has no effect there.
 
@@ -115,7 +118,7 @@ accidentally sharing a socket directory.
 
 ## Daemon behavior in containers
 
-Nx automatically disables the daemon in Docker containers, CI environments, and sandboxed AI-agent environments. The daemon's performance benefits come from maintaining state between commands and watching for file changes.
+Nx automatically disables the daemon in Docker containers and CI environments. The daemon's performance benefits come from maintaining state between commands and watching for file changes.
 In ephemeral environments where each command runs in a fresh container, this state cannot be reused, so the overhead of starting a background process provides no benefit.
 
 A persistent development container can benefit from the daemon, but check these constraints before

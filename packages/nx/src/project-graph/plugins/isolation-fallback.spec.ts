@@ -10,10 +10,7 @@ import { loadIsolatedNxPlugin } from './isolation';
 import { loadNxPlugin } from './in-process-loader';
 import { isSandbox } from '../../utils/is-sandbox';
 import { output } from '../../utils/output';
-import {
-  loadingMethod,
-  resetIsolationFallbackWarningForTesting,
-} from './get-plugins';
+import { loadingMethod, resetIsolationFallbackForTesting } from './get-plugins';
 
 const mockIsolated = loadIsolatedNxPlugin as jest.MockedFunction<any>;
 const mockInProcess = loadNxPlugin as jest.MockedFunction<any>;
@@ -36,7 +33,7 @@ describe('plugin isolation fallback', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    resetIsolationFallbackWarningForTesting();
+    resetIsolationFallbackForTesting();
     warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
     mockInProcess.mockReturnValue([Promise.resolve('in-process'), jest.fn()]);
   });
@@ -77,14 +74,20 @@ describe('plugin isolation fallback', () => {
     expect(bodyLines).toContain('<hint>');
   });
 
-  it('warns once even when every plugin hits the same refusal', async () => {
+  it('stops spawning workers once one has been refused', async () => {
+    // Every plugin would otherwise repeat the whole sequence: spawn, wait for
+    // the worker to die, print the same advice.
     mockIsSandbox.mockReturnValue(true);
     mockIsolated.mockReturnValue(isolatedRejecting(startupFailure()));
 
     await loadingMethod('a', '/root');
     await loadingMethod('b', '/root');
+    await loadingMethod('c', '/root');
 
     expect(warn).toHaveBeenCalledTimes(1);
+    // The first plugin tried a worker; the rest went straight in-process.
+    expect(mockIsolated).toHaveBeenCalledTimes(1);
+    expect(mockInProcess).toHaveBeenCalledTimes(3);
   });
 
   it('rethrows a plugin that loaded and then threw', async () => {

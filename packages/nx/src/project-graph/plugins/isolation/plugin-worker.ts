@@ -215,7 +215,12 @@ server.on('error', (err: NodeJS.ErrnoException) => {
   // only mention one when the errno proves it or the environment says so.
   const refusedByOs = err.code === 'EPERM' || err.code === 'EACCES';
   if (refusedByOs || isSandbox()) {
-    console.error(sandboxSocketHint({ certain: refusedByOs }).join('\n'));
+    // `certain` needs both halves. The errno alone proves the OS refused the
+    // bind, which a hardened container or a root-owned socket dir also does, so
+    // asserting a sandbox on it would name the wrong cause with confidence.
+    console.error(
+      sandboxSocketHint({ certain: refusedByOs && isSandbox() }).join('\n')
+    );
   }
   process.exit(1);
 });
