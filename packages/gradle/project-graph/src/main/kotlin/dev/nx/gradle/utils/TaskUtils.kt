@@ -134,16 +134,57 @@ internal fun lookupTask(owner: Project, p: String): Task? {
   }
 }
 
-/**
- * [TaskResolver.resolveTask] took a String in Gradle 8 and a [GradlePath] in 9; the JVM dispatches
- * by exact descriptor, so both are implemented.
- */
-private fun safeTaskResolver(owner: Project): TaskResolver =
-    object : TaskResolver {
-      override fun resolveTask(path: String): Task? = lookupTask(owner, path)
-
-      @Suppress("unused") fun resolveTask(path: GradlePath): Task? = lookupTask(owner, path.path)
+/** A container's own resolver; null when it cannot be read. */
+private fun resolverOf(dep: DefaultTaskDependency): TaskResolver? =
+    try {
+      DefaultTaskDependency::class.java.getDeclaredField("resolver").let {
+        it.isAccessible = true
+        it.get(dep) as? TaskResolver
+      }
+    } catch (t: Throwable) {
+      null
     }
+
+/**
+ * A bare name through a container's own resolver. That branch is lock-free on both majors (it ends
+ * in the project's own `getByName`); only a qualified path enters the build-scoped resolver.
+ * [TaskResolver.resolveTask] took a String in Gradle 8 and a [GradlePath] in 9, hence reflection.
+ */
+private fun resolveBareName(resolver: TaskResolver, name: String): Task? =
+    try {
+      val method =
+          TaskResolver::class.java.methods.first {
+            it.name == "resolveTask" && it.parameterCount == 1 && !it.isBridge
+          }
+      val arg: Any =
+          if (method.parameterTypes[0] == String::class.java) name else GradlePath.path(name)
+      method.invoke(resolver, arg) as? Task
+    } catch (t: Throwable) {
+      null
+    }
+
+/**
+ * Bare names resolve where Gradle would resolve them — in the container's own project via
+ * [original] — and qualified paths through [lookupTask]. A [nested] container whose resolver could
+ * not be read has no safe answer for a bare name. Both JVM descriptors are implemented.
+ */
+private class SafeTaskResolver(
+    private val owner: Project,
+    private val original: TaskResolver?,
+    private val nested: Boolean
+) : TaskResolver {
+  fun resolve(path: String): Task? =
+      when {
+        path.contains(':') -> lookupTask(owner, path)
+        original != null -> resolveBareName(original, path)
+        nested -> null
+        else -> lookupTask(owner, path)
+      }
+
+  override fun resolveTask(path: String): Task? = resolve(path)
+
+  @Suppress("unused") fun resolveTask(path: GradlePath): Task? = resolve(path.path)
+}
 
 /** The values a [DefaultTaskDependency] was built with; null when they cannot be read. */
 private fun immutableValuesOf(dep: DefaultTaskDependency): Set<*>? =
@@ -158,9 +199,9 @@ private fun immutableValuesOf(dep: DefaultTaskDependency): Set<*>? =
 
 /**
  * Gradle's own resolve context, with one interception: a [DefaultTaskDependency] holding a
- * qualified path is swapped for a copy that resolves strings through [safeTaskResolver]. Only that
- * class resolves a path, and only a qualified one deadlocks (#36668); a container without one keeps
- * its own resolver, so a bare name still resolves in its own project. Lost values count.
+ * qualified path is swapped for a copy resolving through [SafeTaskResolver]. Only that class
+ * resolves a path, and only a qualified one deadlocks (#36668); a container without one is passed
+ * through untouched. What cannot be resolved safely is dropped and counted in [lost].
  */
 private class SafeResolveContext
 private constructor(private val owner: Project, private val task: Task, val lost: LostCounter) :
@@ -188,19 +229,23 @@ private constructor(private val owner: Project, private val task: Task, val lost
   }
 
   /**
-   * [nested] values came from a container that may belong to another project, where a bare name
-   * means something else; there only an absolute path is unambiguous.
+   * Strings are pre-resolved so an unknown one is counted rather than handed to the engine as null.
+   * A relative path with a segment (`sub:jar`) inside a [nested] container from another project is
+   * ambiguous and counted.
    */
-  fun screenedCopy(values: Collection<Any?>, nested: Boolean = false): DefaultTaskDependency {
-    val copy = DefaultTaskDependency(safeTaskResolver(owner), null)
+  fun screenedCopy(
+      values: Collection<Any?>,
+      original: TaskResolver? = null,
+      nested: Boolean = false
+  ): DefaultTaskDependency {
+    val resolver = SafeTaskResolver(owner, original, nested)
+    val copy = DefaultTaskDependency(resolver, null)
     flattenValues(task, values).forEach { value ->
       if (value is CharSequence) {
         val path = value.toString()
-        when {
-          nested && !path.startsWith(":") -> lost.count++
-          lookupTask(owner, path) != null -> copy.add(value)
-          else -> lost.count++
-        }
+        val relativeSegments = path.contains(':') && !path.startsWith(":")
+        if (!(nested && relativeSegments) && resolver.resolve(path) != null) copy.add(value)
+        else lost.count++
       } else {
         copy.add(value)
       }
@@ -214,7 +259,7 @@ private constructor(private val owner: Project, private val task: Task, val lost
     val qualified = flattenValues(task, values).any { it is CharSequence && it.contains(':') }
     if (!qualified && immutable != null) return dep
     if (immutable == null) lost.count++
-    return screenedCopy(values, nested = true)
+    return screenedCopy(values, original = resolverOf(dep), nested = true)
   }
 }
 

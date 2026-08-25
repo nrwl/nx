@@ -432,20 +432,21 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
-    fun `test a bare name beside a qualified path in a foreign container is lost, not misresolved`() {
+    fun `test a bare name beside a qualified path in a foreign container resolves in that project`() {
       val other = ProjectBuilder.builder().withParent(project).withName("other").build()
-      other.tasks.register("jar")
+      val jar = other.tasks.register("jar").get()
+      jar.outputs.file(java.io.File(workspaceRoot, "other/build/libs/other.jar"))
       val theirs = other.tasks.register("assemble").get()
       val ours = project.tasks.register("assemble").get()
 
       val task = project.tasks.register("consumesMixedContainer").get()
-      // The qualified path forces a copy, whose resolver is the consumer's; the bare name would
-      // resolve to the wrong task there.
+      // The qualified path forces a copy; the bare name must still go to the container's own
+      // resolver, not the consumer's.
       task.dependsOn(other.files("theirs.txt").builtBy("assemble", ":other:jar"))
 
       val resolved = getDependsOnTask(task)
+      assertTrue(resolved.containsAll(setOf(theirs, jar)), "expected other's tasks, got $resolved")
       assertFalse(ours in resolved, "must not resolve against the consumer, got $resolved")
-      assertFalse(theirs in resolved, "cannot know the producer's project, got $resolved")
       val result =
           getInputsForTask(
               null,
@@ -454,9 +455,12 @@ class ProcessTaskUtilsTest {
               workspaceRoot,
               mutableMapOf(),
               GitIgnoreClassifier(java.io.File(workspaceRoot)))
-      assertTrue(
+      assertFalse(
           result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*" },
-          "a bare name in a copied foreign container must fail open, got $result")
+          "a fully resolved foreign container must not fail open, got $result")
+      assertTrue(
+          result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar" },
+          "the container's producers must feed precise patterns, got $result")
     }
 
     @Test
