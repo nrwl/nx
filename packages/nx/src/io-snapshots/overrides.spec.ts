@@ -137,22 +137,20 @@ describe('buildIoSnapshotOverrides', () => {
     expect(result.diagnostics[0]).toMatchObject({ reason: 'invalid-bundle' });
   });
 
-  it('lifts structured entries into overrides with workspace-relative globs', () => {
+  it('lifts flat entries into one sorted files group per task', () => {
     writeBundle({
       'web:build': {
         commit: HEAD,
-        inputs: {
-          projects: {
-            web: ['src/**/*.ts', '!src/**/*.spec.ts'],
-            ui: ['src/index.ts'],
-            root: ['package.json'],
-          },
-          workspace: ['tsconfig.base.json'],
-          taskOutputs: { 'ui:build': ['dist/libs/ui/index.js'] },
-        },
+        inputs: [
+          'apps/web/src/**/*.ts',
+          '!apps/web/src/**/*.spec.ts',
+          'tsconfig.base.json',
+          'dist/libs/ui/index.js',
+        ],
+        taskOutputs: { 'ui:build': ['dist/libs/ui/index.js'] },
         outputs: [],
       },
-      'root:build': { commit: HEAD, inputs: {}, outputs: [] },
+      'root:build': { commit: HEAD, inputs: [], outputs: [] },
     });
     const result = buildIoSnapshotOverrides(
       projectGraph,
@@ -160,19 +158,18 @@ describe('buildIoSnapshotOverrides', () => {
       {}
     );
     expect(result.overrides['web:build']).toEqual({
-      projects: {
-        web: ['apps/web/src/**/*.ts', '!apps/web/src/**/*.spec.ts'],
-        ui: ['libs/ui/src/index.ts'],
-        root: ['package.json'],
-      },
-      workspace: ['tsconfig.base.json'],
+      files: [
+        '!apps/web/src/**/*.spec.ts',
+        'apps/web/src/**/*.ts',
+        'dist/libs/ui/index.js',
+        'tsconfig.base.json',
+      ],
       taskOutputs: { 'ui:build': ['dist/libs/ui/index.js'] },
       digest: 'd1',
     });
     // An entry that read nothing is still an override.
     expect(result.overrides['root:build']).toEqual({
-      projects: {},
-      workspace: [],
+      files: [],
       taskOutputs: {},
       digest: 'd1',
     });
@@ -182,25 +179,63 @@ describe('buildIoSnapshotOverrides', () => {
     expect(result.resolution.digest).toBe('d1');
   });
 
-  it('withholds overrides for manual, custom-hasher, flat, and dangling entries', () => {
+  it('flattens legacy bucketed entries against the project graph', () => {
     writeBundle({
       'web:build': {
         commit: HEAD,
-        inputs: { taskOutputs: { 'gone:build': ['dist/x'] } },
-        outputs: [],
-      },
-      'web:lint': { commit: HEAD, inputs: {}, outputs: [] },
-      'web:custom': { commit: HEAD, inputs: {}, outputs: [] },
-      'ui:build': { commit: HEAD, inputs: ['libs/ui/src/**'], outputs: [] },
-      'root:build': {
-        commit: HEAD,
-        inputs: { projects: { nope: ['x'] } },
+        inputs: {
+          projects: {
+            web: ['src/**/*.ts', '!src/**/*.spec.ts'],
+            root: ['package.json'],
+            gone: ['x.ts'],
+          },
+          workspace: ['tsconfig.base.json'],
+          taskOutputs: { 'ui:build': ['dist/libs/ui/index.js'] },
+        },
         outputs: [],
       },
     });
     const result = buildIoSnapshotOverrides(
       projectGraph,
-      graph('web:build', 'web:lint', 'web:custom', 'ui:build', 'root:build'),
+      graph('web:build', 'ui:build'),
+      {}
+    );
+    expect(result.overrides['web:build']).toEqual({
+      files: [
+        '!apps/web/src/**/*.spec.ts',
+        'apps/web/src/**/*.ts',
+        'dist/libs/ui/index.js',
+        'package.json',
+        'tsconfig.base.json',
+      ],
+      taskOutputs: { 'ui:build': ['dist/libs/ui/index.js'] },
+      digest: 'd1',
+    });
+    expect(result.diagnostics).toEqual([
+      { reason: 'unknown-project', taskId: 'web:build', project: 'gone' },
+      { reason: 'missing', taskId: 'ui:build' },
+    ]);
+  });
+
+  it('withholds overrides for manual, custom-hasher, dangling, and root-anchored entries', () => {
+    writeBundle({
+      'web:build': {
+        commit: HEAD,
+        inputs: ['dist/x'],
+        taskOutputs: { 'gone:build': ['dist/x'] },
+        outputs: [],
+      },
+      'web:lint': { commit: HEAD, inputs: [], outputs: [] },
+      'web:custom': { commit: HEAD, inputs: [], outputs: [] },
+      'ui:build': {
+        commit: HEAD,
+        inputs: ['libs/ui/a.ts', '**/*.gen'],
+        outputs: [],
+      },
+    });
+    const result = buildIoSnapshotOverrides(
+      projectGraph,
+      graph('web:build', 'web:lint', 'web:custom', 'ui:build'),
       {}
     );
     expect(result.overrides).toEqual({});
@@ -212,13 +247,12 @@ describe('buildIoSnapshotOverrides', () => {
       },
       { reason: 'manual', taskId: 'web:lint' },
       { reason: 'custom-hasher', taskId: 'web:custom' },
-      { reason: 'unclassified', taskId: 'ui:build' },
-      { reason: 'unknown-project', taskId: 'root:build', project: 'nope' },
+      { reason: 'root-anchored-glob', taskId: 'ui:build', glob: '**/*.gen' },
     ]);
   });
 
   it('re-reads the bundle only when the file changes', () => {
-    writeBundle({ 'web:build': { commit: HEAD, inputs: {}, outputs: [] } });
+    writeBundle({ 'web:build': { commit: HEAD, inputs: [], outputs: [] } });
     const first = buildIoSnapshotOverrides(
       projectGraph,
       graph('web:build'),

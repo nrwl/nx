@@ -206,6 +206,7 @@ describe('task planner', () => {
                 { env: 'TESTENV' },
                 { runtime: 'echo runtime123' },
                 { json: '{projectRoot}/package.json', fields: ['version'] },
+                { files: ['{projectRoot}/generated'] },
               ],
               outputs: ['{workspaceRoot}/dist/libs/parent'],
             },
@@ -248,12 +249,8 @@ describe('task planner', () => {
       return { planner, taskGraph };
     }
 
-    const base = {
-      projects: {},
-      workspace: [],
-      taskOutputs: {},
-      digest: 'abc123',
-    };
+    const base = { files: [], taskOutputs: {}, digest: 'abc123' };
+    const NEGATIONS = '!libs/child/**/*.spec.ts,!libs/parent/**/*.spec.ts';
 
     it('leaves plans byte-identical when no task has an override', () => {
       const { planner, taskGraph } = fixture();
@@ -264,6 +261,7 @@ describe('task planner', () => {
           'child:libs/child/**/*,!libs/child/**/*.spec.ts',
           'parent:TsConfig',
           'parent:json:libs/parent/package.json[version]',
+          'files:[libs/parent/generated]',
         ])
       );
       expect(planner.getPlans(['parent:build'], taskGraph, {})).toEqual(plain);
@@ -277,21 +275,19 @@ describe('task planner', () => {
       );
     });
 
-    it('replaces declared filesets (self and dependency) with observed reads and keeps negations', () => {
+    it('replaces declared filesets (self and dependency) with one files group carrying every negation', () => {
       const { planner, taskGraph } = fixture();
       const plan = planner.getPlans(['parent:build'], taskGraph, {
         'parent:build': {
           ...base,
-          projects: {
-            parent: ['libs/parent/src/**/*.ts'],
-            child: ['libs/child/src/index.ts'],
-          },
+          files: ['libs/child/src/index.ts', 'libs/parent/src/**/*.ts'],
         },
       })['parent:build'];
       expect(plan).toEqual(
         expect.arrayContaining([
-          'parent:libs/parent/src/**/*.ts,!libs/parent/**/*.spec.ts',
-          'child:libs/child/src/index.ts,!libs/child/**/*.spec.ts',
+          `files:[libs/child/src/index.ts,libs/parent/src/**/*.ts,${NEGATIONS}]`,
+          // A declared { files } input is not a fileset; it survives.
+          'files:[libs/parent/generated]',
           'parent:ProjectConfiguration',
           'child:ProjectConfiguration',
           'env:TESTENV',
@@ -303,11 +299,8 @@ describe('task planner', () => {
         ])
       );
       // Declared filesets are gone; unread class-mapped files are not emitted.
-      expect(plan).not.toContain(
-        'parent:libs/parent/**/*,!libs/parent/**/*.spec.ts'
-      );
-      expect(plan).not.toContain(
-        'child:libs/child/**/*,!libs/child/**/*.spec.ts'
+      expect(plan).not.toContainEqual(
+        expect.stringMatching(/^(parent|child):libs\//)
       );
       expect(plan).not.toContain('parent:TsConfig');
       expect(plan).not.toContain('child:TsConfig');
@@ -321,8 +314,7 @@ describe('task planner', () => {
       const plan = planner.getPlans(['parent:build'], taskGraph, {
         'parent:build': {
           ...base,
-          projects: { parent: ['libs/parent/package.json'] },
-          workspace: ['tsconfig.base.json'],
+          files: ['libs/parent/package.json', 'tsconfig.base.json'],
         },
       })['parent:build'];
       expect(plan).toEqual(
@@ -332,49 +324,54 @@ describe('task planner', () => {
           'parent:json:libs/parent/package.json[version]',
         ])
       );
-      // The raw reads are covered by those instructions, so no fileset remains.
-      expect(plan).not.toContainEqual(expect.stringMatching(/^parent:libs\//));
+      // Both reads are covered by those instructions: no snapshot group at all.
       expect(plan).not.toContainEqual(
-        expect.stringMatching(/^workspace:\[tsconfig/)
+        expect.stringMatching(/^files:\[(?!libs\/parent\/generated\])/)
       );
     });
 
-    it('drops workspace reads that externals cover and applies the task negations', () => {
+    it('drops reads that externals cover and keeps the rest', () => {
       const { planner, taskGraph } = fixture();
       const plan = planner.getPlans(['parent:build'], taskGraph, {
         'parent:build': {
           ...base,
-          workspace: [
+          files: [
             'node_modules/foo/index.js',
             'package.json',
-            'yarn.lock',
             'tools/x.ts',
+            'yarn.lock',
           ],
         },
       })['parent:build'];
-      expect(plan).toContain(
-        'workspace:[tools/x.ts,!libs/parent/**/*.spec.ts]'
-      );
+      expect(plan).toContain(`files:[tools/x.ts,${NEGATIONS}]`);
       expect(plan).toContain('AllExternalDependencies');
       expect(plan).not.toContainEqual(
         expect.stringMatching(/node_modules|yarn\.lock/)
       );
     });
 
-    it("hashes reads inside a producer task's outputs through TaskOutput", () => {
+    it("hashes reads of a producer task's outputs from disk, not through TaskOutput", () => {
       const { planner, taskGraph } = fixture();
       const plan = planner.getPlans(['parent:build'], taskGraph, {
         'parent:build': {
           ...base,
-          taskOutputs: {
-            'child:build': ['dist/libs/child/index.js', 'dist/libs/child/a.js'],
-          },
+          files: ['dist/libs/child/index.js'],
+          taskOutputs: { 'child:build': ['dist/libs/child/index.js'] },
         },
       })['parent:build'];
-      // One instruction per producer: plain paths collapse into a brace group.
-      expect(plan).toContain(
-        '{dist/libs/child/a.js,dist/libs/child/index.js}:dist/libs/child'
+      expect(plan).toContain(`files:[dist/libs/child/index.js,${NEGATIONS}]`);
+      expect(plan).not.toContainEqual(
+        expect.stringMatching(/^dist\/libs\/child\/index\.js:/)
       );
+    });
+
+    it('falls back to the native plan for a root-anchored snapshot glob instead of throwing', () => {
+      const { planner, taskGraph } = fixture();
+      const plain = planner.getPlans(['parent:build'], taskGraph);
+      const plan = planner.getPlans(['parent:build'], taskGraph, {
+        'parent:build': { ...base, files: ['**/*.gen', 'libs/parent/a.ts'] },
+      });
+      expect(plan).toEqual(plain);
     });
 
     it('hashes a task that read nothing from native instructions plus the marker', () => {
@@ -388,6 +385,7 @@ describe('task planner', () => {
           'child:ProjectConfiguration',
           'env:TESTENV',
           'runtime:echo runtime123',
+          'files:[libs/parent/generated]',
           'io-snapshot:abc123',
         ])
       );
@@ -395,22 +393,18 @@ describe('task planner', () => {
         expect.stringMatching(/^(parent|child):libs\//)
       );
       expect(plan).not.toContainEqual(expect.stringMatching(/TsConfig$/));
+      expect(plan.filter((i) => i.startsWith('files:'))).toEqual([
+        'files:[libs/parent/generated]',
+      ]);
     });
 
     it('applies dependency negations on cyclic graphs too (non-memo traversal)', () => {
       const { planner, taskGraph } = fixture({ cyclic: true });
       const plan = planner.getPlans(['parent:build'], taskGraph, {
-        'parent:build': {
-          ...base,
-          projects: { child: ['libs/child/src/index.ts'] },
-        },
+        'parent:build': { ...base, files: ['libs/child/src/index.ts'] },
       })['parent:build'];
-      expect(plan).toContain(
-        'child:libs/child/src/index.ts,!libs/child/**/*.spec.ts'
-      );
-      expect(plan).not.toContain(
-        'child:libs/child/**/*,!libs/child/**/*.spec.ts'
-      );
+      expect(plan).toContain(`files:[libs/child/src/index.ts,${NEGATIONS}]`);
+      expect(plan).not.toContainEqual(expect.stringMatching(/^child:libs\//));
     });
   });
 

@@ -3,7 +3,11 @@ import { join } from 'path';
 import type { NxJsonConfiguration } from '../config/nx-json';
 import type { ProjectGraph } from '../config/project-graph';
 import type { Task, TaskGraph } from '../config/task-graph';
-import type { IoSnapshotOverride, IoSnapshotResolution } from '../native';
+import {
+  checkFilesGlobs,
+  type IoSnapshotOverride,
+  type IoSnapshotResolution,
+} from '../native';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { getCustomHasher } from '../tasks-runner/utils';
 import { getLatestCommitSha } from '../utils/git-utils';
@@ -19,9 +23,10 @@ export type IoSnapshotDiagnostic =
   | { reason: 'custom-hasher'; taskId: string }
   /** The bundle has no entry for the task. */
   | { reason: 'missing'; taskId: string }
-  /** Interim flat entry; reads are not classified, so no override is built. */
-  | { reason: 'unclassified'; taskId: string }
+  /** A legacy per-project bucket named a project not in the graph; the bucket is skipped. */
   | { reason: 'unknown-project'; taskId: string; project: string }
+  /** A glob with no literal leading directory would walk the whole workspace. */
+  | { reason: 'root-anchored-glob'; taskId: string; glob: string }
   | { reason: 'producer-not-in-graph'; taskId: string; producer: string };
 
 export interface IoSnapshotOverridesResult {
@@ -30,7 +35,8 @@ export interface IoSnapshotOverridesResult {
   resolution: IoSnapshotResolution | null;
 }
 
-interface StructuredInputs {
+/** Pre-§2b bundles bucketed reads by project; accepted for one release. */
+interface LegacyStructuredInputs {
   projects?: Record<string, string[]>;
   workspace?: string[];
   taskOutputs?: Record<string, string[]>;
@@ -38,7 +44,9 @@ interface StructuredInputs {
 
 interface BundleEntry {
   commit: string;
-  inputs: string[] | StructuredInputs;
+  /** Workspace-relative collapsed globs; `!` negations pass through. */
+  inputs: string[] | LegacyStructuredInputs;
+  taskOutputs?: Record<string, string[]>;
   outputs: string[];
 }
 
@@ -102,13 +110,9 @@ export function buildIoSnapshotOverrides(
       diagnostics.push({ reason: 'missing', taskId: task.id });
       continue;
     }
-    if (Array.isArray(entry.inputs)) {
-      diagnostics.push({ reason: 'unclassified', taskId: task.id });
-      continue;
-    }
     const override = toOverride(
       task,
-      entry.inputs,
+      entry,
       bundle.resolution.digest,
       projectGraph,
       taskGraph,
@@ -124,28 +128,46 @@ export function buildIoSnapshotOverrides(
 
 function toOverride(
   task: Task,
-  inputs: StructuredInputs,
+  entry: BundleEntry,
   digest: string,
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
   diagnostics: IoSnapshotDiagnostic[]
 ): IoSnapshotOverride | null {
-  const projects: Record<string, string[]> = {};
-  for (const [project, globs] of Object.entries(inputs.projects ?? {})) {
-    const node = projectGraph.nodes[project];
-    if (!node) {
-      diagnostics.push({ reason: 'unknown-project', taskId: task.id, project });
-      return null;
+  const files = new Set<string>();
+  let taskOutputs: Record<string, string[]>;
+  if (Array.isArray(entry.inputs)) {
+    entry.inputs.forEach((glob) => files.add(glob));
+    taskOutputs = entry.taskOutputs ?? {};
+  } else {
+    // Legacy bucketed form: project globs are project-relative.
+    for (const [project, globs] of Object.entries(
+      entry.inputs.projects ?? {}
+    )) {
+      const node = projectGraph.nodes[project];
+      if (!node) {
+        diagnostics.push({
+          reason: 'unknown-project',
+          taskId: task.id,
+          project,
+        });
+        continue;
+      }
+      const prefix = node.data.root === '.' ? '' : `${node.data.root}/`;
+      for (const glob of globs) {
+        files.add(
+          glob.startsWith('!')
+            ? `!${prefix}${glob.slice(1)}`
+            : `${prefix}${glob}`
+        );
+      }
     }
-    // The bundle stores project-relative globs; ProjectFileSet patterns are
-    // workspace-relative.
-    const prefix = node.data.root === '.' ? '' : `${node.data.root}/`;
-    projects[project] = globs.map((glob) =>
-      glob.startsWith('!') ? `!${prefix}${glob.slice(1)}` : `${prefix}${glob}`
-    );
+    (entry.inputs.workspace ?? []).forEach((glob) => files.add(glob));
+    taskOutputs = entry.inputs.taskOutputs ?? entry.taskOutputs ?? {};
   }
-  const taskOutputs: Record<string, string[]> = {};
-  for (const [producer, paths] of Object.entries(inputs.taskOutputs ?? {})) {
+
+  const scheduled: Record<string, string[]> = {};
+  for (const [producer, paths] of Object.entries(taskOutputs)) {
     if (!taskGraph.tasks[producer]) {
       diagnostics.push({
         reason: 'producer-not-in-graph',
@@ -154,14 +176,23 @@ function toOverride(
       });
       return null;
     }
-    taskOutputs[producer] = [...paths];
+    scheduled[producer] = [...paths].sort();
+    // Output reads are hashed from disk like any other read; the producer
+    // entry only orders this task after them.
+    paths.forEach((path) => files.add(path));
   }
-  return {
-    projects,
-    workspace: [...(inputs.workspace ?? [])],
-    taskOutputs,
-    digest,
-  };
+
+  const sorted = [...files].sort();
+  const rootAnchored = checkFilesGlobs(sorted);
+  if (rootAnchored) {
+    diagnostics.push({
+      reason: 'root-anchored-glob',
+      taskId: task.id,
+      glob: rootAnchored,
+    });
+    return null;
+  }
+  return { files: sorted, taskOutputs: scheduled, digest };
 }
 
 function hasCustomHasher(

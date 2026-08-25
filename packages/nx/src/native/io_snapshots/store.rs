@@ -42,6 +42,9 @@ pub fn normalize(snapshots: &mut BTreeMap<String, TaskIoSnapshot>) {
                 inputs.task_outputs.values_mut().for_each(sort_unique);
             }
         }
+        if let Some(task_outputs) = &mut snapshot.task_outputs {
+            task_outputs.values_mut().for_each(sort_unique);
+        }
         sort_unique(&mut snapshot.outputs);
     }
 }
@@ -128,6 +131,7 @@ mod tests {
         TaskIoSnapshot {
             commit: commit.into(),
             inputs: TaskInputs::Flat(inputs.iter().map(|s| s.to_string()).collect()),
+            task_outputs: None,
             outputs: vec![],
         }
     }
@@ -162,7 +166,12 @@ mod tests {
     #[test]
     fn accepts_flat_and_structured_inputs() {
         let json = r#"{
-          "flat": { "commit": "c", "inputs": ["b", "a"], "outputs": [] },
+          "flat": {
+            "commit": "c",
+            "inputs": ["b", "a", "dist/libs/ui/index.js"],
+            "taskOutputs": { "ui:build": ["dist/libs/ui/index.js"] },
+            "outputs": []
+          },
           "structured": {
             "commit": "c",
             "inputs": {
@@ -177,7 +186,11 @@ mod tests {
         normalize(&mut snapshots);
         assert_eq!(
             snapshots["flat"].inputs,
-            TaskInputs::Flat(vec!["a".into(), "b".into()])
+            TaskInputs::Flat(vec!["a".into(), "b".into(), "dist/libs/ui/index.js".into()])
+        );
+        assert_eq!(
+            snapshots["flat"].task_outputs.as_ref().unwrap()["ui:build"],
+            vec!["dist/libs/ui/index.js"]
         );
         let TaskInputs::Structured(inputs) = &snapshots["structured"].inputs else {
             panic!("expected structured inputs");
