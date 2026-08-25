@@ -385,11 +385,7 @@ export function withOutputStyleOption<T>(
 
         const resolved: OutputStyle =
           (args.outputStyle as OutputStyle) ??
-          (useTui
-            ? 'tui'
-            : isAiAgent() && choices.includes('summary')
-              ? 'summary'
-              : 'static-failures-only');
+          (useTui ? 'tui' : isAiAgent() ? 'summary' : 'static-failures-only');
         (args as any).resolvedOutputStyle = resolved;
 
         // `outputStyle` stays what yargs parsed, except for the TUI, whose
