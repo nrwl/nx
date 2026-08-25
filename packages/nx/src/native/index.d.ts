@@ -94,8 +94,13 @@ export declare class HashPlanInspector {
 
 export declare class HashPlanner {
   constructor(nxJson: NxJson, projectGraph: ExternalObject<ProjectGraph>)
-  getPlans(taskIds: Array<string>, taskGraph: TaskGraph, overrides?: Record<string, IoSnapshotOverride> | undefined | null): Record<string, string[]>
-  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph, overrides?: Record<string, IoSnapshotOverride> | undefined | null): ExternalObject<Record<string, Array<HashInstruction>>>
+  getPlans(taskIds: Array<string>, taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, customHasherTaskIds?: Array<string> | undefined | null): Record<string, string[]>
+  /**
+   * The same eligibility walk `getPlans` performs, reported: which tasks
+   * hash from their snapshot and why the others do not.
+   */
+  ioSnapshotReport(taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, customHasherTaskIds?: Array<string> | undefined | null): IoSnapshotReport
+  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, customHasherTaskIds?: Array<string> | undefined | null): ExternalObject<Record<string, Array<HashInstruction>>>
 }
 
 export declare class HttpRemoteCache {
@@ -109,6 +114,27 @@ export declare class ImportResult {
   sourceProject: string
   dynamicImportExpressions: Array<string>
   staticImportExpressions: Array<string>
+}
+
+/**
+ * The fetched or loaded bundle for one commit, plus what resolving it
+ * reported. Handed to the hash planner as-is; `bundle` is `None` when the
+ * task hashes natively (status `skipped`, or a load failure).
+ */
+export declare class IoSnapshots {
+  /** `fetched` | `cached` | `skipped` */
+  get status(): string
+  /**
+   * Why the fetch was skipped, `stale-offline` when a stale bundle was
+   * reused, or `no-bundle` / `invalid-bundle` from `loadIoSnapshots`.
+   */
+  get reason(): string | null
+  get message(): string | null
+  /** The bundle file a load failure refers to. */
+  get file(): string | null
+  /** Directory holding `snapshots.json` when a bundle was resolved. */
+  get directory(): string | null
+  get resolution(): IoSnapshotResolution | null
 }
 
 export declare class NxCache {
@@ -298,13 +324,6 @@ export declare function canInstallNxConsole(): Promise<boolean>
 
 export declare function canInstallNxConsoleForEditor(editor: SupportedEditor): Promise<boolean>
 
-/**
- * The first snapshot glob the `files` hasher would refuse (no literal leading
- * directory), so the TS bundle reader can withhold that task's override with
- * a diagnostic instead of the planner throwing.
- */
-export declare function checkFilesGlobs(globs: Array<string>): string | null
-
 export declare function closeDbConnection(connection: ExternalObject<NxDbConnection>): void
 
 export declare function connectToNxDb(cacheDir: string, dbName?: string | undefined | null): ExternalObject<NxDbConnection>
@@ -387,7 +406,7 @@ export interface ExternalNode {
  * it from the on-disk cache when fresh and fetching from Nx Cloud otherwise.
  * Never fails the caller: every problem is reported as a `skipped` result.
  */
-export declare function fetchIoSnapshots(options: IoSnapshotFetchOptions): Promise<IoSnapshotFetchResult>
+export declare function fetchIoSnapshots(options: IoSnapshotFetchOptions): Promise<IoSnapshots>
 
 export interface FileData {
   file: string
@@ -551,6 +570,27 @@ export interface InvocationRecord {
   taskId: string
 }
 
+/**
+ * Tasks whose snapshot read another task's outputs: they hash after their
+ * producers ran, because those files only exist then. Needs no project graph,
+ * so the client can call it before the first hashing wave on the daemon path.
+ */
+export declare function ioSnapshotDeferredTaskIds(snapshots: IoSnapshots, taskGraph: TaskGraph): Array<string>
+
+/**
+ * Why a task (or the whole run) hashes natively. `reason` strings are the
+ * contract `nx show`, `nx graph`, and the run summary render.
+ */
+export interface IoSnapshotDiagnostic {
+  reason: string
+  taskId?: string
+  project?: string
+  glob?: string
+  producer?: string
+  file?: string
+  message?: string
+}
+
 export interface IoSnapshotFetchOptions {
   workspaceRoot: string
   /** Shared cache root for snapshot bundles (`<cacheDir>/io-snapshots`). */
@@ -566,28 +606,11 @@ export interface IoSnapshotFetchOptions {
   retain?: number
 }
 
-export interface IoSnapshotFetchResult {
-  /** `fetched` | `cached` | `skipped` */
-  status: string
-  /** Why the fetch was skipped, or `stale-offline` when a stale bundle was reused. */
-  reason?: string
-  message?: string
-  /** Directory holding `snapshots.json` when status is not `skipped`. */
-  directory?: string
+export interface IoSnapshotReport {
+  /** Task ids hashed from their snapshot. */
+  used: Array<string>
+  diagnostics: Array<IoSnapshotDiagnostic>
   resolution?: IoSnapshotResolution
-}
-
-/**
- * Per-task I/O snapshot data supplied by the TS layer once per run
- * (NXC-4847 §2b). `files` are the observed reads as workspace-relative globs;
- * negations and class mapping are applied here against the current declared
- * inputs. `task_outputs` only schedules the task after its producers.
- */
-export interface IoSnapshotOverride {
-  files: Array<string>
-  /** producer task id → observed paths inside that task's outputs */
-  taskOutputs: Record<string, Array<string>>
-  digest: string
 }
 
 /** What was resolved for a commit; persisted alongside the bundle. */
@@ -644,6 +667,12 @@ export interface Link {
   text: string
   href: string
 }
+
+/**
+ * Reads an already-fetched bundle directory without touching the network:
+ * `nx show`/`nx graph` and the daemon load the directory the client resolved.
+ */
+export declare function loadIoSnapshots(directory: string): IoSnapshots
 
 export declare function logDebug(message: string): void
 
@@ -790,6 +819,8 @@ export interface Target {
   options?: string
   configurations?: string
   parallelism?: boolean
+  /** `false` hashes the target from its declared inputs only, never a snapshot. */
+  ioSnapshots?: boolean
 }
 
 /** A representation of the invocation of an Executor */
