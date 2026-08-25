@@ -183,7 +183,7 @@ describe('setEnvVarsBasedOnArgs', () => {
     expect(
       resolveStreaming(
         { NX_BATCH_MODE: 'true', GITHUB_ACTIONS: 'true' },
-        { outputStyle: 'stream' }
+        { specifiedOutputStyle: 'stream' }
       )
     ).toBe(true);
   });
@@ -192,7 +192,7 @@ describe('setEnvVarsBasedOnArgs', () => {
     expect(
       resolveStreaming(
         { GITHUB_ACTIONS: 'true' },
-        { outputStyle: 'stream-without-prefixes' }
+        { specifiedOutputStyle: 'stream-without-prefixes' }
       )
     ).toBe(true);
   });
