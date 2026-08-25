@@ -94,8 +94,8 @@ function describeDiagnostic(d: IoSnapshotDiagnostic): string {
       return `${d.taskId}: uses a custom hasher`;
     case 'missing':
       return `${d.taskId}: no snapshot for this task`;
-    case 'unclassified':
-      return `${d.taskId}: snapshot predates read classification`;
+    case 'root-anchored-glob':
+      return `${d.taskId}: snapshot glob "${d.glob}" is anchored at the workspace root`;
     case 'unknown-project':
       return `${d.taskId}: snapshot references unknown project "${d.project}"`;
     case 'producer-not-in-graph':
