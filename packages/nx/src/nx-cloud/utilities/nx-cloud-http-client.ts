@@ -4,6 +4,7 @@ import {
   type HttpClient,
   type HttpRequestConfig,
 } from '../../utils/http-client';
+import { logger } from '../../utils/logger';
 import { NX_CLOUD_NO_TIMEOUTS, UNLIMITED_TIMEOUT } from './environment';
 
 export function createApiHttpClient(options?: {
@@ -23,10 +24,18 @@ export function createApiHttpClient(options?: {
       join(process.cwd(), options.customProxyConfigPath)
     );
     if (nxCloudProxyConfig) {
-      // nxCloudProxyConfig predates the axios removal: a builder that
-      // received an axios config. The http client honors the axios fields
-      // (baseURL, timeout, headers, httpAgent, httpsAgent, proxy).
-      config = nxCloudProxyConfig(config) ?? config;
+      // Pre-axios-removal contract: a builder that received an axios config
+      const custom = nxCloudProxyConfig(config) ?? config;
+      config = {
+        baseURL: custom.baseURL ?? config.baseURL,
+        timeout: custom.timeout ?? config.timeout,
+        headers: custom.headers,
+      };
+      if (custom.httpAgent || custom.httpsAgent || custom.proxy) {
+        logger.warn(
+          'The agent/proxy options returned by nxCloudProxyConfig are no longer supported for downloading the Nx Cloud client. Set HTTP_PROXY/HTTPS_PROXY/NO_PROXY (and NODE_EXTRA_CA_CERTS for custom certificates) instead.'
+        );
+      }
     }
   }
 

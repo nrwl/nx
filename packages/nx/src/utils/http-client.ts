@@ -1,7 +1,4 @@
 import { PassThrough, Readable } from 'stream';
-import type { Agent as HttpAgent } from 'http';
-import type { Agent as HttpsAgent } from 'https';
-import { logger } from './logger';
 
 export interface HttpRequestConfig {
   method?: string;
@@ -12,21 +9,6 @@ export interface HttpRequestConfig {
   timeout?: number;
   responseType?: 'json' | 'stream';
   signal?: AbortSignal;
-  /**
-   * Axios-compatible fields, honored for nxCloudProxyConfig
-   * (customProxyConfigPath) users. Requests with agents go through
-   * node:http(s), which consumes them the same way axios did.
-   */
-  httpAgent?: HttpAgent;
-  httpsAgent?: HttpsAgent;
-  proxy?:
-    | false
-    | {
-        host: string;
-        port: number;
-        protocol?: string;
-        auth?: { username: string; password: string };
-      };
 }
 
 export interface HttpResponse<T = any> {
@@ -84,6 +66,7 @@ export async function httpRequest<T = any>(
   config: HttpRequestConfig = {}
 ): Promise<HttpResponse<T>> {
   const fullUrl = buildFullUrl(url, config);
+  const { fetchImpl, dispatcher } = resolveFetch();
 
   // Lowercase keys so differently-cased duplicates override instead of
   // sending both values
@@ -118,28 +101,6 @@ export async function httpRequest<T = any>(
         config.timeout
       )
     : null;
-
-  const agentForUrl = fullUrl.startsWith('https:')
-    ? config.httpsAgent
-    : config.httpAgent;
-  if (agentForUrl) {
-    // The agent owns the connection, so an explicit proxy cannot also apply
-    if (config.proxy) {
-      logger.warn(
-        'Both an http(s) agent and a proxy were configured; the agent is used and the proxy option is ignored.'
-      );
-    }
-    return nodeTransportRequest(
-      fullUrl,
-      config,
-      headers,
-      body,
-      controller,
-      timer
-    );
-  }
-
-  const { fetchImpl, dispatcher } = resolveFetch(config);
 
   let res: Response;
   try {
@@ -239,58 +200,6 @@ function buildFullUrl(url: string, config: HttpRequestConfig): string {
   return fullUrl;
 }
 
-let envProxyAgent: any;
-const proxyAgents = new Map<string, any>();
-
-function resolveFetch(config: HttpRequestConfig): {
-  fetchImpl: typeof fetch;
-  dispatcher?: any;
-} {
-  if (config.proxy) {
-    const undici = require('undici');
-    const { host, port, protocol, auth } = config.proxy;
-    const uri = `${(protocol ?? 'http').replace(/:$/, '')}://${host}:${port}`;
-    const token = auth
-      ? `Basic ${Buffer.from(`${auth.username}:${auth.password}`).toString(
-          'base64'
-        )}`
-      : undefined;
-    // Reuse agents so repeated requests don't accumulate connection pools
-    const key = `${uri}|${token ?? ''}`;
-    let dispatcher = proxyAgents.get(key);
-    if (!dispatcher) {
-      dispatcher = new undici.ProxyAgent({
-        uri,
-        ...(token ? { token } : {}),
-      });
-      proxyAgents.set(key, dispatcher);
-    }
-    return { fetchImpl: undici.fetch, dispatcher };
-  }
-  // axios semantics: `proxy: false` opts out of env-based proxying
-  if (config.proxy === false) {
-    return { fetchImpl: fetch };
-  }
-  // Native fetch ignores HTTP(S)_PROXY env vars, which axios honored; route
-  // through undici's EnvHttpProxyAgent (also handles NO_PROXY) when they are set
-  if (
-    process.env.HTTP_PROXY ||
-    process.env.http_proxy ||
-    process.env.HTTPS_PROXY ||
-    process.env.https_proxy
-  ) {
-    const undici = require('undici');
-    envProxyAgent ??= new undici.EnvHttpProxyAgent();
-    return { fetchImpl: undici.fetch, dispatcher: envProxyAgent };
-  }
-  return { fetchImpl: fetch };
-}
-
-// Same limit axios (follow-redirects) used
-const MAX_REDIRECTS = 21;
-
-const SENSITIVE_HEADERS = ['authorization', 'cookie', 'proxy-authorization'];
-
 /**
  * Destroys the stream if no data arrives for `timeout` ms. Resets per chunk,
  * so slow-but-progressing downloads survive while stalls still abort.
@@ -322,149 +231,20 @@ function guardStreamStall(source: Readable, timeout?: number): Readable {
   return out;
 }
 
-/**
- * node:http(s) transport for requests carrying axios-style agent options
- * (nxCloudProxyConfig). fetch cannot consume http.Agent instances.
- */
-function nodeTransportRequest<T>(
-  fullUrl: string,
-  config: HttpRequestConfig,
-  headers: Record<string, string>,
-  body: string | undefined,
-  controller: AbortController,
-  timer: NodeJS.Timeout | null,
-  redirectCount = 0
-): Promise<HttpResponse<T>> {
-  const isHttps = fullUrl.startsWith('https:');
-  const { request } = isHttps ? require('https') : require('http');
-  const agent = isHttps ? config.httpsAgent : config.httpAgent;
+let envProxyAgent: any;
 
-  return new Promise<HttpResponse<T>>((resolve, reject) => {
-    const req = request(
-      fullUrl,
-      {
-        method: config.method ?? 'GET',
-        headers,
-        agent,
-        signal: controller.signal,
-      },
-      (res: import('http').IncomingMessage) => {
-        if (
-          res.statusCode >= 300 &&
-          res.statusCode < 400 &&
-          res.headers.location
-        ) {
-          res.resume();
-          if (redirectCount >= MAX_REDIRECTS) {
-            if (timer) clearTimeout(timer);
-            reject(new Error('Maximum number of redirects exceeded'));
-            return;
-          }
-          try {
-            const location = new URL(res.headers.location, fullUrl).href;
-            const preserveMethod =
-              res.statusCode === 307 || res.statusCode === 308;
-            // 301/302/303 demote to GET, matching fetch/follow-redirects
-            const nextConfig = preserveMethod
-              ? config
-              : { ...config, method: 'GET' };
-            const nextBody = preserveMethod ? body : undefined;
-            const nextHeaders = { ...headers };
-            if (!preserveMethod) {
-              // The body is dropped, so its headers must not survive
-              delete nextHeaders['content-type'];
-              delete nextHeaders['content-length'];
-            }
-            // Don't leak credentials across origins (matches fetch/axios)
-            if (new URL(location).origin !== new URL(fullUrl).origin) {
-              for (const header of Object.keys(nextHeaders)) {
-                if (SENSITIVE_HEADERS.includes(header.toLowerCase())) {
-                  delete nextHeaders[header];
-                }
-              }
-            }
-            resolve(
-              nodeTransportRequest(
-                location,
-                nextConfig,
-                nextHeaders,
-                nextBody,
-                controller,
-                timer,
-                redirectCount + 1
-              )
-            );
-          } catch (e) {
-            // e.g. a malformed location header; reject instead of crashing
-            if (timer) clearTimeout(timer);
-            reject(e);
-          }
-          return;
-        }
-
-        const responseHeaders: Record<string, string> = {};
-        for (const [key, value] of Object.entries(res.headers)) {
-          responseHeaders[key] = Array.isArray(value)
-            ? value.join(', ')
-            : (value ?? '');
-        }
-
-        if (
-          config.responseType === 'stream' &&
-          res.statusCode >= 200 &&
-          res.statusCode < 300
-        ) {
-          if (timer) clearTimeout(timer);
-          resolve({
-            status: res.statusCode,
-            headers: responseHeaders,
-            data: guardStreamStall(res, config.timeout) as any,
-          });
-          return;
-        }
-
-        const chunks: Buffer[] = [];
-        res.on('data', (chunk: Buffer) => chunks.push(chunk));
-        res.on('error', (e: Error) => {
-          if (timer) clearTimeout(timer);
-          reject(e);
-        });
-        res.on('end', () => {
-          if (timer) clearTimeout(timer);
-          const text = Buffer.concat(chunks).toString('utf-8');
-          let data: any;
-          try {
-            data = JSON.parse(text);
-          } catch {
-            data = text;
-          }
-          // 2xx only, like axios's default validateStatus (an unfollowed
-          // 3xx is an error)
-          if (res.statusCode < 200 || res.statusCode >= 300) {
-            reject(
-              new HttpError({
-                status: res.statusCode,
-                headers: responseHeaders,
-                data,
-              })
-            );
-          } else {
-            resolve({
-              status: res.statusCode,
-              headers: responseHeaders,
-              data,
-            });
-          }
-        });
-      }
-    );
-    req.on('error', (e: Error) => {
-      if (timer) clearTimeout(timer);
-      reject(e);
-    });
-    if (body) {
-      req.write(body);
-    }
-    req.end();
-  });
+function resolveFetch(): { fetchImpl: typeof fetch; dispatcher?: any } {
+  // Native fetch ignores HTTP(S)_PROXY env vars, which axios honored; route
+  // through undici's EnvHttpProxyAgent (also handles NO_PROXY) when they are set
+  if (
+    process.env.HTTP_PROXY ||
+    process.env.http_proxy ||
+    process.env.HTTPS_PROXY ||
+    process.env.https_proxy
+  ) {
+    const undici = require('undici');
+    envProxyAgent ??= new undici.EnvHttpProxyAgent();
+    return { fetchImpl: undici.fetch, dispatcher: envProxyAgent };
+  }
+  return { fetchImpl: fetch };
 }

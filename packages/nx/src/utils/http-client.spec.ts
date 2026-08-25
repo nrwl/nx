@@ -1,22 +1,12 @@
-import { Agent, createServer, Server } from 'http';
+import { createServer, Server } from 'http';
 import { AddressInfo } from 'net';
 import { createHttpClient, HttpError, httpRequest } from './http-client';
 
 describe('httpRequest', () => {
   let server: Server;
-  let otherOriginServer: Server;
   let baseUrl: string;
-  let otherOriginUrl: string;
 
   beforeAll(async () => {
-    otherOriginServer = createServer((req, res) => {
-      res.setHeader('content-type', 'application/json');
-      res.end(JSON.stringify({ headers: req.headers }));
-    });
-    await new Promise<void>((resolve) => otherOriginServer.listen(0, resolve));
-    otherOriginUrl = `http://localhost:${
-      (otherOriginServer.address() as AddressInfo).port
-    }`;
     server = createServer((req, res) => {
       let body = '';
       req.on('data', (chunk) => (body += chunk));
@@ -42,14 +32,6 @@ describe('httpRequest', () => {
         } else if (req.url.startsWith('/redirect-no-location')) {
           res.statusCode = 302;
           res.end();
-        } else if (req.url.startsWith('/redirect-bad-location')) {
-          res.statusCode = 302;
-          res.setHeader('location', 'http://[invalid');
-          res.end();
-        } else if (req.url.startsWith('/redirect-cross-origin')) {
-          res.statusCode = 302;
-          res.setHeader('location', `${otherOriginUrl}/echo`);
-          res.end();
         } else if (req.url.startsWith('/redirect')) {
           res.statusCode = 302;
           res.setHeader('location', '/echo');
@@ -68,9 +50,7 @@ describe('httpRequest', () => {
 
   afterAll(async () => {
     server.closeAllConnections();
-    otherOriginServer.closeAllConnections();
     await new Promise((resolve) => server.close(resolve));
-    await new Promise((resolve) => otherOriginServer.close(resolve));
   });
 
   it('should send JSON bodies, custom headers and query params', async () => {
@@ -126,73 +106,17 @@ describe('httpRequest', () => {
     expect(Buffer.concat(chunks).toString()).toBe('plain text response');
   });
 
-  describe('agent support (nxCloudProxyConfig)', () => {
-    it('should route requests through node:http when an agent is provided', async () => {
-      const agent = new Agent();
-      const response = await httpRequest(`${baseUrl}/echo`, {
-        method: 'POST',
-        httpAgent: agent,
-        data: { via: 'agent' },
-      });
-      expect(response.status).toBe(200);
-      expect(response.data.body).toEqual({ via: 'agent' });
-      agent.destroy();
-    });
+  it('should follow redirects', async () => {
+    const response = await httpRequest(`${baseUrl}/redirect`);
+    expect(response.data.url).toBe('/echo');
+  });
 
-    it('should follow redirects and normalize error shapes on the node transport', async () => {
-      const agent = new Agent();
-      const redirected = await httpRequest(`${baseUrl}/redirect`, {
-        httpAgent: agent,
-      });
-      expect(redirected.data.url).toBe('/echo');
-
-      const error: HttpError = await httpRequest(`${baseUrl}/not-found`, {
-        httpAgent: agent,
-      }).catch((e) => e);
-      expect(error).toBeInstanceOf(HttpError);
-      expect(error.response.status).toBe(404);
-      expect(error.response.data).toEqual({ message: 'nope' });
-      agent.destroy();
-    });
-
-    it('should keep credentials on same-origin redirects but strip them cross-origin', async () => {
-      const agent = new Agent();
-      const sameOrigin = await httpRequest(`${baseUrl}/redirect`, {
-        httpAgent: agent,
-        headers: { authorization: 'secret', 'x-safe': 'kept' },
-      });
-      expect(sameOrigin.data.headers['authorization']).toBe('secret');
-
-      const crossOrigin = await httpRequest(
-        `${baseUrl}/redirect-cross-origin`,
-        {
-          httpAgent: agent,
-          headers: { authorization: 'secret', 'x-safe': 'kept' },
-        }
-      );
-      expect(crossOrigin.data.headers['authorization']).toBeUndefined();
-      expect(crossOrigin.data.headers['x-safe']).toBe('kept');
-      agent.destroy();
-    });
-
-    it('should reject a malformed location header instead of crashing', async () => {
-      const agent = new Agent();
-      await expect(
-        httpRequest(`${baseUrl}/redirect-bad-location`, { httpAgent: agent })
-      ).rejects.toThrow();
-      agent.destroy();
-    });
-
-    it('should reject a redirect status without a location header', async () => {
-      const agent = new Agent();
-      const error: HttpError = await httpRequest(
-        `${baseUrl}/redirect-no-location`,
-        { httpAgent: agent }
-      ).catch((e) => e);
-      expect(error).toBeInstanceOf(HttpError);
-      expect(error.status).toBe(302);
-      agent.destroy();
-    });
+  it('should reject a redirect status without a location header', async () => {
+    const error: HttpError = await httpRequest(
+      `${baseUrl}/redirect-no-location`
+    ).catch((e) => e);
+    expect(error).toBeInstanceOf(HttpError);
+    expect(error.status).toBe(302);
   });
 
   it('should abort a stalled stream body after the inactivity timeout', async () => {

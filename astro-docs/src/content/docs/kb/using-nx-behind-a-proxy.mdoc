@@ -1,0 +1,41 @@
+---
+title: Use Nx Behind a Corporate Proxy
+description: Learn how to configure proxy environment variables so Nx can reach Nx Cloud through a corporate proxy, including custom certificate setup.
+filter: 'type:Guides'
+topics:
+  - 'Troubleshooting'
+---
+
+Nx makes a small number of network requests, such as downloading the Nx Cloud client and connecting your workspace to Nx Cloud. On networks that route outbound traffic through a proxy, configure the standard proxy environment variables and Nx picks them up automatically.
+
+## Configure proxy environment variables
+
+Set `HTTPS_PROXY` (and `HTTP_PROXY` for plain HTTP traffic) to your proxy URL:
+
+```shell
+export HTTPS_PROXY=http://proxy.example.com:8080
+```
+
+If your proxy requires credentials, include them in the URL:
+
+```shell
+export HTTPS_PROXY=http://user:password@proxy.example.com:8080
+```
+
+To exclude specific hosts from proxying, list them in `NO_PROXY`:
+
+```shell
+export NO_PROXY=internal.example.com,localhost
+```
+
+## Use custom certificates
+
+If your proxy performs TLS interception with a private certificate authority, point Node.js at the CA bundle with [`NODE_EXTRA_CA_CERTS`](https://nodejs.org/api/cli.html#node_extra_ca_certsfile):
+
+```shell
+export NODE_EXTRA_CA_CERTS=/path/to/company-ca.pem
+```
+
+## Set the variables on CI
+
+Set the same environment variables in your CI provider's configuration so agents behind the proxy can reach Nx Cloud. Most providers offer a way to define environment variables for all pipeline steps, such as the `env` block in GitHub Actions workflows.
