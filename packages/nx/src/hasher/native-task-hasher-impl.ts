@@ -6,6 +6,7 @@ import {
   FileData,
   HasherOptions,
   HashPlanner,
+  IoSnapshots,
   ProjectGraph as NativeProjectGraph,
   NxWorkspaceFilesExternals,
   TaskHasher,
@@ -15,12 +16,8 @@ import { transformProjectGraphForRust } from '../native/transform-objects';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { readJsonFile } from '../utils/fileutils';
-import { buildIoSnapshotOverrides } from '../io-snapshots/overrides';
-import {
-  IoSnapshotHashOptions,
-  PartialHash,
-  TaskHasherImpl,
-} from './task-hasher';
+import { customHasherTaskIds } from '../io-snapshots/overrides';
+import { PartialHash, TaskHasherImpl } from './task-hasher';
 
 export class NativeTaskHasherImpl implements TaskHasherImpl {
   hasher: TaskHasher;
@@ -75,7 +72,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     env: NodeJS.ProcessEnv,
     cwd?: string,
     collectInputs?: boolean,
-    ioSnapshots?: IoSnapshotHashOptions
+    ioSnapshots?: IoSnapshots
   ): Promise<PartialHash> {
     const hashes = await this.hashTasks(
       [task],
@@ -94,22 +91,15 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd?: string,
     collectInputs?: boolean,
-    ioSnapshots?: IoSnapshotHashOptions
+    ioSnapshots?: IoSnapshots
   ): Promise<PartialHash[]> {
-    const overrides =
-      ioSnapshots?.overrides ??
-      (ioSnapshots?.bundleDir
-        ? buildIoSnapshotOverrides(
-            this.projectGraph,
-            taskGraph,
-            this.nxJson,
-            ioSnapshots.bundleDir
-          )?.overrides
-        : undefined);
     const plans = this.planner.getPlansReference(
       tasks.map((t) => t.id),
       taskGraph,
-      overrides
+      ioSnapshots,
+      ioSnapshots
+        ? customHasherTaskIds(this.projectGraph, taskGraph)
+        : undefined
     );
     const shouldCollectInputs =
       collectInputs ?? getTaskIOService().hasTaskInputSubscribers();

@@ -1,6 +1,6 @@
 import { join } from 'path';
 import type { NxJsonConfiguration } from '../config/nx-json';
-import { fetchIoSnapshots, type IoSnapshotFetchResult } from '../native';
+import { fetchIoSnapshots, type IoSnapshots } from '../native';
 import { cacheDir } from '../utils/cache-directory';
 import { logger } from '../utils/logger';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
@@ -8,7 +8,9 @@ import { output } from '../utils/output';
 import { nxVersion } from '../utils/versions';
 import { workspaceRoot } from '../utils/workspace-root';
 
-export type { IoSnapshotFetchResult, IoSnapshotResolution } from '../native';
+export type { IoSnapshotResolution, IoSnapshots } from '../native';
+/** @deprecated use IoSnapshots */
+export type IoSnapshotFetchResult = IoSnapshots;
 
 /** Shared across worktrees: `cacheDir` resolves to the main worktree. */
 export const ioSnapshotsCacheDirectory = join(cacheDir, 'io-snapshots');
@@ -50,7 +52,7 @@ const WARNED_REASONS = new Set([
 export async function fetchIoSnapshotsForRun(
   nxJson: NxJsonConfiguration,
   runnerOptions: IoSnapshotCloudOptions
-): Promise<IoSnapshotFetchResult | null> {
+): Promise<IoSnapshots | null> {
   if (!isIoSnapshotFetchEnabled(nxJson, runnerOptions)) {
     return null;
   }
@@ -75,7 +77,7 @@ function parseMaxAge(value: string | undefined): number | undefined {
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
 }
 
-function report(result: IoSnapshotFetchResult): void {
+function report(result: IoSnapshots): void {
   if (result.status === 'skipped') {
     if (WARNED_REASONS.has(result.reason)) {
       output.warn({

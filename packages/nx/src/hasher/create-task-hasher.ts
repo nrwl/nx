@@ -1,6 +1,7 @@
 import { NxJsonConfiguration } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
 import { daemonClient } from '../daemon/client/client';
+import type { IoSnapshots } from '../native';
 import { getFileMap } from '../project-graph/build-project-graph';
 import {
   DaemonBasedTaskHasher,
@@ -9,20 +10,22 @@ import {
 } from './task-hasher';
 
 /**
- * `ioSnapshotBundleDir` is the fetched I/O snapshot bundle for this run's
- * HEAD (see `fetchIoSnapshotsForRun`); undefined hashes natively.
+ * `ioSnapshots` is this run's fetched bundle (see `fetchIoSnapshotsForRun`);
+ * undefined hashes natively. The daemon receives only its directory and
+ * loads the same bundle itself.
  */
 export function createTaskHasher(
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration,
   runnerOptions?: any,
-  ioSnapshotBundleDir?: string
+  ioSnapshots?: IoSnapshots
 ): TaskHasher {
-  const ioSnapshots = ioSnapshotBundleDir
-    ? { bundleDir: ioSnapshotBundleDir }
-    : undefined;
   if (daemonClient.enabled()) {
-    return new DaemonBasedTaskHasher(daemonClient, runnerOptions, ioSnapshots);
+    return new DaemonBasedTaskHasher(
+      daemonClient,
+      runnerOptions,
+      ioSnapshots?.directory ? { directory: ioSnapshots.directory } : undefined
+    );
   } else {
     const { rustReferences } = getFileMap();
     return new InProcessTaskHasher(
