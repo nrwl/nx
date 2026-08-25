@@ -3,9 +3,12 @@ use dashmap::DashMap;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
-/// Keyed by `workspace_root`: one process can be asked about several roots —
-/// generators run against a virtual tree, and specs resolve real and synthetic
-/// paths in turn — so a single cached answer would be handed out for all of them.
+/// Keyed by `workspace_root`, because the entry point takes one: a cache that
+/// ignores its own argument answers for whichever root asked first.
+///
+/// Only tests resolve more than one root in a process today. Every production
+/// caller passes the single `workspaceRoot`, so this is not the shape of a live
+/// bug — it is what stops the parameter from being a lie.
 static MAIN_WORKTREE_ROOTS: OnceLock<DashMap<String, Option<String>>> = OnceLock::new();
 
 /// If `workspace_root` is inside a git worktree, returns the main repo root.
@@ -161,15 +164,29 @@ mod tests {
             dunce::canonicalize(&main).unwrap()
         );
 
-        // Repeat both, now served from the cache, to pin that the entries did
-        // not overwrite one another.
+        // Repeat both to pin that the entries did not overwrite one another.
         assert_eq!(
             get_main_worktree_root(main.to_str().unwrap().to_string()).unwrap(),
             None
         );
         assert_eq!(
             get_main_worktree_root(worktree.to_str().unwrap().to_string()).unwrap(),
-            Some(from_worktree)
+            Some(from_worktree.clone())
+        );
+
+        // Now prove the second read came from the cache rather than being
+        // recomputed: remove the `.git` file the resolver keys on, so a
+        // recomputation could only answer `None`.
+        std::fs::remove_file(worktree.join(".git")).unwrap();
+        assert_eq!(
+            resolve_main_worktree_root(worktree.to_str().unwrap()).unwrap(),
+            None,
+            "sanity: without .git the resolver cannot find the main root"
+        );
+        assert_eq!(
+            get_main_worktree_root(worktree.to_str().unwrap().to_string()).unwrap(),
+            Some(from_worktree),
+            "the cached entry should survive the repo going away"
         );
     }
 }
