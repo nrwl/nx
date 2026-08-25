@@ -1207,10 +1207,10 @@ describe('deriveIoSnapshotStatus', () => {
     expect(
       deriveIoSnapshotStatus('a:build', {
         overrides: {},
-        diagnostics: [{ reason: 'manual', taskId: 'a:build' }],
+        diagnostics: [{ reason: 'disabled', taskId: 'a:build' }],
         resolution,
       })
-    ).toEqual({ status: 'fallback', reason: 'manual' });
+    ).toEqual({ status: 'fallback', reason: 'disabled' });
     expect(
       deriveIoSnapshotStatus('a:build', {
         overrides: {},
