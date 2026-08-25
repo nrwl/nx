@@ -1,6 +1,6 @@
 import { Task } from '../../config/task-graph';
 import { output } from '../../utils/output';
-import { terminalOutputPathForHash } from '../cache';
+import { terminalOutputPathForHash } from '../terminal-output-path';
 import type { LifeCycle, TaskResult } from '../life-cycle';
 
 /**
