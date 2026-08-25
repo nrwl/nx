@@ -58,6 +58,11 @@ export class BatchProcess {
      * `summary` does not, and its life cycle cannot enforce that here: this
      * class writes to `output` directly from a stream handler, so without being
      * told it would print a whole batch into a run that asked for log paths.
+     *
+     * False makes this capture rather than print. Suppressing the write alone
+     * would drop the bytes entirely off GitHub Actions, where nothing else
+     * captures them - and the worker's own crash output is exactly what no task
+     * ever claims, so it would exist nowhere.
      */
     private readonly printsOutput: boolean = true
   ) {
@@ -106,9 +111,9 @@ export class BatchProcess {
         // current terminal output behavior. These chunks are forwarded raw and
         // routinely end mid-line, so they go through `output` to keep its line
         // tracking accurate for whatever prints next.
-        if (shouldGroupBatchOutput()) {
+        if (shouldGroupBatchOutput() || !this.printsOutput) {
           this.capture(chunk);
-        } else if (this.printsOutput) {
+        } else {
           output.writeTaskOutputChunk(chunk);
         }
 
@@ -124,9 +129,9 @@ export class BatchProcess {
       this.childProcess.stderr.on('data', (chunk) => {
         const text = chunk.toString();
 
-        if (shouldGroupBatchOutput()) {
+        if (shouldGroupBatchOutput() || !this.printsOutput) {
           this.capture(chunk, process.stderr);
-        } else if (this.printsOutput) {
+        } else {
           // Maintain current terminal output behavior
           output.writeTaskOutputChunk(chunk, process.stderr);
         }
@@ -165,8 +170,11 @@ export class BatchProcess {
       return;
     }
     if (this.capturedOutputFailed) {
-      // Capture is over, but the output is not optional. Everything from here
-      // goes straight to the terminal, on the stream it arrived on.
+      // Capture is over, but the output is not optional - so this prints even
+      // when the style says not to. A style that withholds output does so on
+      // the promise that it is readable elsewhere; once the file is gone that
+      // promise cannot be kept, and printing breaks the format while losing
+      // the bytes breaks the contract.
       output.writeTaskOutputChunk(chunk, stream);
       return;
     }
@@ -217,7 +225,7 @@ export class BatchProcess {
       // the warning is survivable, losing task output is what this path exists
       // to prevent.
       const unwritten = bytes.subarray(written);
-      if (unwritten.length > 0 && this.printsOutput) {
+      if (unwritten.length > 0) {
         output.writeTaskOutputChunk(unwritten, stream);
       }
       output.warn({
