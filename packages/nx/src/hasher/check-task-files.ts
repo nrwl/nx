@@ -93,7 +93,10 @@ interface TaskIdentity {
 
 const identityCache = new Map<string, TaskIdentity>();
 const hashInputsCache = new Map<string, HashInputs | null>();
-const ioSnapshotResultCache = new Map<string, IoSnapshotReport | null>();
+const ioSnapshotResultCache = new Map<
+  string,
+  { report: IoSnapshotReport | null; unavailable?: 'not-connected' | 'no-head' }
+>();
 const outputsCache = new Map<string, string[]>();
 const taskGraphCache = new Map<string, TaskGraph>();
 const depsOutputsCache = new Map<string, ExpandedDepsOutput[]>();
@@ -175,20 +178,21 @@ async function getRawInputs(
 
   // `null` means "this task is absent from the hash plan" — any other failure
   // is a real error and propagates to the caller.
-  const { inputs, report } = inspector.inspectTaskInputsWithIoSnapshots({
-    project,
-    target,
-    configuration,
-  });
+  const { inputs, report, unavailable } =
+    inspector.inspectTaskInputsWithIoSnapshots({
+      project,
+      target,
+      configuration,
+    });
 
   const result = inputs[canonicalTaskId] ?? null;
   hashInputsCache.set(taskId, result);
-  ioSnapshotResultCache.set(taskId, report);
+  ioSnapshotResultCache.set(taskId, { report, unavailable });
   return result;
 }
 
 export interface IoSnapshotStatus {
-  /** used: hashed from the snapshot; fallback: bundle present but this task hashed natively; none: no bundle / disabled */
+  /** used: hashed from the snapshot; fallback: bundle present but this task hashed natively; none: nothing to resolve (not-connected, no-head, no-bundle, invalid-bundle) */
   status: 'used' | 'fallback' | 'none';
   reason?: string;
   commit?: string;
@@ -197,10 +201,11 @@ export interface IoSnapshotStatus {
 
 export function deriveIoSnapshotStatus(
   canonicalTaskId: string,
-  result: IoSnapshotReport | null
+  result: IoSnapshotReport | null,
+  unavailable?: 'not-connected' | 'no-head'
 ): IoSnapshotStatus {
   if (!result) {
-    return { status: 'none', reason: 'disabled' };
+    return { status: 'none', reason: unavailable ?? 'not-connected' };
   }
   if (result.used.includes(canonicalTaskId)) {
     return {
@@ -594,9 +599,11 @@ export async function getTaskIoSnapshotStatus(
   const ctx = await getContext(seed);
   await getRawInputs(taskId, ctx);
   const { canonicalTaskId } = resolveIdentity(taskId, ctx.projectGraph);
+  const cached = ioSnapshotResultCache.get(taskId);
   return deriveIoSnapshotStatus(
     canonicalTaskId,
-    ioSnapshotResultCache.get(taskId) ?? null
+    cached?.report ?? null,
+    cached?.unavailable
   );
 }
 
