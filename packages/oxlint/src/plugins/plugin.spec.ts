@@ -186,11 +186,11 @@ describe('@nx/oxlint plugin', () => {
     });
   });
 
-  // `#imports` aliases and URLs are valid jsPlugins entries with no graph node;
-  // declaring one fails every task with "could not be found".
+  // `#imports` aliases and `file:` URLs are valid jsPlugins entries with no
+  // graph node; declaring one fails every task with "could not be found".
   it('should not declare jsPlugins entries that are not package names as externalDependencies', async () => {
     createFiles({
-      '.oxlintrc.json': `{"jsPlugins":["#local-plugin","/abs/plugin.js","@nx/oxlint/boundaries-plugin"],"rules":{}}`,
+      '.oxlintrc.json': `{"jsPlugins":["#local-plugin","/abs/plugin.js","file:///abs/plugin.js","https://cdn.example.com/plugin.js","plugin@1.0.0","@nx/oxlint/boundaries-plugin"],"rules":{}}`,
       'libs/a/project.json': `{"name":"a"}`,
       'libs/a/src/index.ts': `export const a = 1;`,
     });

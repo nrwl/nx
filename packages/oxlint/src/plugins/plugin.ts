@@ -334,9 +334,11 @@ interface JsPluginDeps {
   files: string[];
 }
 
-// Optionally scoped npm name; the match stops before any subpath.
+// A whole npm specifier: optionally scoped name, then a subpath or the end.
+// Group 1 is the package name. Anchored on both sides so `file:`/`https:`
+// URLs and `name@version` never match.
 const PACKAGE_NAME_PATTERN =
-  /^(?:@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*/;
+  /^((?:@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*)(?:\/|$)/;
 
 /**
  * Resolves each config's `extends` chain to workspace-relative target inputs.
@@ -405,7 +407,7 @@ function collectConfigChains(
         // Only a real package name can be an externalDependency. Anything
         // else oxlint accepts here (`#imports` aliases, URLs) has no graph
         // node, and naming it fails every task with "could not be found".
-        const packageName = PACKAGE_NAME_PATTERN.exec(specifier)?.[0];
+        const packageName = PACKAGE_NAME_PATTERN.exec(specifier)?.[1];
         if (packageName) {
           deps.packages.push(packageName);
         }

@@ -44,6 +44,7 @@ const ALLOWED_OMISSIONS = {
   ),
   // Wraps create-nx-workspace, so it imports it.
   'packages/create-nx-plugin/.oxlintrc.json': {
+    extra: 1,
     omits: [...NX_BOUNDARY, 'create-nx-workspace'],
   },
   // Its own nx/bin/*, nx/src/* and nx/plugins/* groups are broader than the
@@ -55,13 +56,15 @@ const ALLOWED_OMISSIONS = {
   // and spec files use the hatch. nxw.ts allows node builtins only, which is
   // broader than every root entry.
   'packages/nx/.oxlintrc.json': {
-    omits: [...NX_BOUNDARY, ...JS_PLUGINS, ...BASE_PATHS],
-    overrides: { 'nxw.ts': NATIVE_BINDINGS },
+    omits: [...NX_BOUNDARY, ...JS_PLUGINS],
+    overrides: { 'nxw.ts': [...NATIVE_BINDINGS, ...BASE_PATHS] },
   },
   // plugins/with-nx.ts ships inside next.config: its "nothing from nx, @nx or
   // relative files" groups are broader than the root patterns.
   'packages/next/.oxlintrc.json': {
-    omits: [...NX_BOUNDARY, ...JS_PLUGINS, ...NATIVE_BINDINGS],
+    overrides: {
+      'plugins/with-nx.ts': [...NX_BOUNDARY, ...JS_PLUGINS, ...NATIVE_BINDINGS],
+    },
   },
 };
 
@@ -109,32 +112,50 @@ const configs = execSync("git ls-files '*/.oxlintrc.json'", {
   .filter((f) => f && !f.startsWith('examples/'));
 
 const failures = [];
+// Every allowance must excuse a real omission somewhere, or it is stale.
+const unusedAllowances = new Set();
+for (const [configPath, allowance] of Object.entries(ALLOWED_OMISSIONS)) {
+  for (const entry of allowance.omits ?? []) {
+    unusedAllowances.add(`${configPath}: ${entry}`);
+  }
+  for (const [files, entries] of Object.entries(allowance.overrides ?? {})) {
+    for (const entry of entries) {
+      unusedAllowances.add(`${configPath} (${files}): ${entry}`);
+    }
+  }
+}
 for (const configPath of configs) {
   const allowance = ALLOWED_OMISSIONS[configPath];
   for (const { where, files, entries } of redefinitions(
     readConfig(configPath)
   )) {
-    const allowed = new Set([
-      ...(allowance?.omits ?? []),
-      ...(files ? (allowance?.overrides?.[files] ?? []) : []),
-    ]);
-    const missing = [
-      ...root.paths.filter(
-        (p) => !entries.paths.includes(p) && !allowed.has(p)
-      ),
-      ...root.patterns.filter(
-        (p) => !entries.patterns.includes(p) && !allowed.has(p)
-      ),
+    const omitted = [
+      ...root.paths.filter((p) => !entries.paths.includes(p)),
+      ...root.patterns.filter((p) => !entries.patterns.includes(p)),
     ];
+    const missing = omitted.filter((entry) => {
+      if (allowance?.omits?.includes(entry)) {
+        unusedAllowances.delete(`${configPath}: ${entry}`);
+        return false;
+      }
+      if (files && allowance?.overrides?.[files]?.includes(entry)) {
+        unusedAllowances.delete(`${configPath} (${files}): ${entry}`);
+        return false;
+      }
+      return true;
+    });
     if (missing.length) {
       failures.push(`${configPath} ${where} is missing: ${missing.join(', ')}`);
     }
   }
 }
+for (const stale of unusedAllowances) {
+  failures.push(`allowance no longer needed: ${stale}`);
+}
 
 if (failures.length) {
   console.error(
-    `${RULE} redefinitions that drop root entries (restate them, or allowlist the omission in scripts/check-oxlint-configs.js):\n\n` +
+    `${RULE} coverage check failed (restate the entry, or fix the allowlist in scripts/check-oxlint-configs.js):\n\n` +
       failures.map((f) => `  - ${f}`).join('\n')
   );
   process.exit(1);
