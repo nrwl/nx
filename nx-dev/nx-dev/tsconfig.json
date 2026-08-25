@@ -39,6 +39,9 @@
   ],
   "references": [
     {
+      "path": "../feature-analytics"
+    },
+    {
       "path": "../ui-primitives"
     },
     {
