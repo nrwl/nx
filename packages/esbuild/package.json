@@ -51,10 +51,14 @@
     "nx": "workspace:*"
   },
   "peerDependencies": {
-    "esbuild": ">=0.19.2 <1.0.0"
+    "esbuild": ">=0.19.2 <1.0.0",
+    "nx": ">= 22 <= 24 || ^23.0.0-0"
   },
   "peerDependenciesMeta": {
     "esbuild": {
+      "optional": true
+    },
+    "nx": {
       "optional": true
     }
   },

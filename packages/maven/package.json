@@ -63,6 +63,14 @@
     "ts-jest": "catalog:jest",
     "typescript": "catalog:typescript"
   },
+  "peerDependencies": {
+    "nx": ">= 22 <= 24 || ^23.0.0-0"
+  },
+  "peerDependenciesMeta": {
+    "nx": {
+      "optional": true
+    }
+  },
   "publishConfig": {
     "access": "public"
   }

@@ -74,9 +74,13 @@
     "tslib": "catalog:typescript"
   },
   "peerDependencies": {
+    "nx": ">= 22 <= 24 || ^23.0.0-0",
     "oxlint": "^1.43.0"
   },
   "peerDependenciesMeta": {
+    "nx": {
+      "optional": true
+    },
     "oxlint": {
       "optional": true
     }

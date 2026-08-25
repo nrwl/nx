@@ -103,10 +103,14 @@
   },
   "peerDependencies": {
     "@nx/web": "workspace:*",
+    "nx": ">= 22 <= 24 || ^23.0.0-0",
     "storybook": ">=8.0.0 <11.0.0"
   },
   "peerDependenciesMeta": {
     "@nx/web": {
+      "optional": true
+    },
+    "nx": {
       "optional": true
     }
   },

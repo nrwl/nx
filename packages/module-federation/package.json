@@ -136,6 +136,7 @@
   "peerDependencies": {
     "@module-federation/enhanced": "^2.0.0",
     "@module-federation/node": "^2.0.0",
+    "nx": ">= 22 <= 24 || ^23.0.0-0",
     "webpack": "^5.0.0"
   },
   "peerDependenciesMeta": {
@@ -143,6 +144,9 @@
       "optional": true
     },
     "@module-federation/node": {
+      "optional": true
+    },
+    "nx": {
       "optional": true
     },
     "webpack": {

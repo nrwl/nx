@@ -92,6 +92,7 @@
   },
   "peerDependencies": {
     "babel-plugin-react-compiler": "^1.0.0",
+    "nx": ">= 22 <= 24 || ^23.0.0-0",
     "react": ">=18.0.0 <20.0.0",
     "react-dom": ">=18.0.0 <20.0.0",
     "@nx/module-federation": "workspace:*",
@@ -109,6 +110,9 @@
       "optional": true
     },
     "http-proxy-middleware": {
+      "optional": true
+    },
+    "nx": {
       "optional": true
     }
   },

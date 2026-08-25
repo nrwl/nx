@@ -76,7 +76,8 @@
     "@nuxt/schema": "^3.0.0 || ^4.0.0",
     "@nuxt/kit": "^3.0.0 || ^4.0.0",
     "@nx/cypress": "workspace:*",
-    "@nx/playwright": "workspace:*"
+    "@nx/playwright": "workspace:*",
+    "nx": ">= 22 <= 24 || ^23.0.0-0"
   },
   "peerDependenciesMeta": {
     "nuxt": {
@@ -92,6 +93,9 @@
       "optional": true
     },
     "@nx/playwright": {
+      "optional": true
+    },
+    "nx": {
       "optional": true
     }
   },

@@ -47,10 +47,14 @@
     "nx": "workspace:*"
   },
   "peerDependencies": {
-    "detox": "^20.0.0"
+    "detox": "^20.0.0",
+    "nx": ">= 22 <= 24 || ^23.0.0-0"
   },
   "peerDependenciesMeta": {
     "detox": {
+      "optional": true
+    },
+    "nx": {
       "optional": true
     }
   },

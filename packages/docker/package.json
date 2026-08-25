@@ -90,5 +90,13 @@
   },
   "devDependencies": {
     "nx": "workspace:*"
+  },
+  "peerDependencies": {
+    "nx": ">= 22 <= 24 || ^23.0.0-0"
+  },
+  "peerDependenciesMeta": {
+    "nx": {
+      "optional": true
+    }
   }
 }

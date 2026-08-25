@@ -109,7 +109,13 @@
     "nx": "workspace:*"
   },
   "peerDependencies": {
+    "nx": ">= 22 <= 24 || ^23.0.0-0",
     "vite": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "nx": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"

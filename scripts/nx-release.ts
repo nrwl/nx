@@ -2,7 +2,7 @@
 import { createProjectGraphAsync, workspaceRoot } from '@nx/devkit';
 import { styleText } from 'node:util';
 import { execSync } from 'node:child_process';
-import { rmSync, writeFileSync, readFileSync } from 'node:fs';
+import { rmSync, writeFileSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { URL } from 'node:url';
 import { isRelativeVersionKeyword } from 'nx/src/command-line/release/utils/semver';
@@ -539,7 +539,6 @@ function determineDistTag(
 
 //TODO(@Coly010): Remove this after fixing up the release peer dep handling
 function hackFixForDevkitPeerDependencies() {
-  const { readFileSync, writeFileSync } = require('fs');
   const devkitPackageJson = JSON.parse(
     readFileSync('./packages/devkit/package.json', 'utf-8')
   );
@@ -557,5 +556,26 @@ function hackFixForDevkitPeerDependencies() {
       './packages/devkit/package.json',
       JSON.stringify(devkitPackageJson, null, 2)
     );
+  }
+
+  // The plugins depending on @nx/devkit re-declare its `nx` peer to forward it,
+  // so every copy of the range has to match whatever devkit ends up publishing.
+  for (const dir of readdirSync('./packages', { withFileTypes: true })) {
+    if (!dir.isDirectory()) {
+      continue;
+    }
+    const packageJsonPath = `./packages/${dir.name}/package.json`;
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
+    if (
+      !packageJson.peerDependencies?.['nx'] ||
+      packageJson.peerDependencies['nx'] ===
+        devkitPackageJson.peerDependencies['nx']
+    ) {
+      continue;
+    }
+    console.log(`Syncing ${packageJson.name} nx peer dependency range.`);
+    packageJson.peerDependencies['nx'] =
+      devkitPackageJson.peerDependencies['nx'];
+    writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
   }
 }

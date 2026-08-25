@@ -89,13 +89,17 @@
   },
   "peerDependencies": {
     "@typescript-eslint/parser": "^8.0.0",
-    "eslint-config-prettier": "catalog:eslint"
+    "eslint-config-prettier": "catalog:eslint",
+    "nx": ">= 22 <= 24 || ^23.0.0-0"
   },
   "peerDependenciesMeta": {
     "@typescript-eslint/parser": {
       "optional": true
     },
     "eslint-config-prettier": {
+      "optional": true
+    },
+    "nx": {
       "optional": true
     }
   },

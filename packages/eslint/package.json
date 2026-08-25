@@ -73,7 +73,8 @@
   "peerDependencies": {
     "@nx/jest": "workspace:*",
     "@zkochan/js-yaml": "0.0.7",
-    "eslint": "^9.0.0 || ^10.0.0"
+    "eslint": "^9.0.0 || ^10.0.0",
+    "nx": ">= 22 <= 24 || ^23.0.0-0"
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
@@ -90,6 +91,9 @@
       "optional": true
     },
     "@zkochan/js-yaml": {
+      "optional": true
+    },
+    "nx": {
       "optional": true
     }
   },

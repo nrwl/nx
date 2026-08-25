@@ -69,7 +69,8 @@
   "peerDependencies": {
     "@nx/cypress": "workspace:*",
     "@nx/playwright": "workspace:*",
-    "@remix-run/dev": "^2.0.0"
+    "@remix-run/dev": "^2.0.0",
+    "nx": ">= 22 <= 24 || ^23.0.0-0"
   },
   "peerDependenciesMeta": {
     "@nx/cypress": {
@@ -79,6 +80,9 @@
       "optional": true
     },
     "@remix-run/dev": {
+      "optional": true
+    },
+    "nx": {
       "optional": true
     }
   },

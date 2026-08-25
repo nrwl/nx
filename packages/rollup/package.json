@@ -95,9 +95,13 @@
     "tslib": "catalog:typescript"
   },
   "peerDependencies": {
+    "nx": ">= 22 <= 24 || ^23.0.0-0",
     "rollup": "^3.0.0 || ^4.0.0"
   },
   "peerDependenciesMeta": {
+    "nx": {
+      "optional": true
+    },
     "rollup": {
       "optional": true
     }

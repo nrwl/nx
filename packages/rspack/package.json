@@ -164,7 +164,8 @@
     "@rspack/cli": "^1.0.0 || ^2.0.0",
     "@rspack/core": "^1.0.0 || ^2.0.0",
     "@rspack/dev-server": "^1.0.0 || ^2.0.0",
-    "@rspack/plugin-react-refresh": "^1.0.0 || ^2.0.0"
+    "@rspack/plugin-react-refresh": "^1.0.0 || ^2.0.0",
+    "nx": ">= 22 <= 24 || ^23.0.0-0"
   },
   "peerDependenciesMeta": {
     "@rspack/cli": {
@@ -177,6 +178,9 @@
       "optional": true
     },
     "@rspack/plugin-react-refresh": {
+      "optional": true
+    },
+    "nx": {
       "optional": true
     }
   },

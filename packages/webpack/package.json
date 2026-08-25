@@ -122,11 +122,15 @@
     "@nx/js": "workspace:*"
   },
   "peerDependencies": {
+    "nx": ">= 22 <= 24 || ^23.0.0-0",
     "webpack": "^5.0.0",
     "webpack-cli": "^5.0.0 || ^6.0.0 || ^7.0.0",
     "webpack-dev-server": "^5.0.0"
   },
   "peerDependenciesMeta": {
+    "nx": {
+      "optional": true
+    },
     "webpack": {
       "optional": true
     },

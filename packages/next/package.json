@@ -68,10 +68,14 @@
   },
   "peerDependencies": {
     "next": ">=14.0.0 <17.0.0",
-    "@nx/webpack": "workspace:*"
+    "@nx/webpack": "workspace:*",
+    "nx": ">= 22 <= 24 || ^23.0.0-0"
   },
   "peerDependenciesMeta": {
     "@nx/webpack": {
+      "optional": true
+    },
+    "nx": {
       "optional": true
     }
   },

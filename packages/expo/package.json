@@ -72,7 +72,8 @@
     "expo": ">=53.0.0",
     "@expo/metro": ">= 55.0.0",
     "metro-config": ">= 0.82.0",
-    "metro-resolver": ">= 0.82.0"
+    "metro-resolver": ">= 0.82.0",
+    "nx": ">= 22 <= 24 || ^23.0.0-0"
   },
   "peerDependenciesMeta": {
     "@nx/cypress": {
@@ -91,6 +92,9 @@
       "optional": true
     },
     "metro-resolver": {
+      "optional": true
+    },
+    "nx": {
       "optional": true
     }
   },

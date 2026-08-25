@@ -101,6 +101,7 @@
     "@nx/rspack": "workspace:*",
     "@nx/webpack": "workspace:*",
     "ng-packagr": "catalog:angular-supported-versions",
+    "nx": ">= 22 <= 24 || ^23.0.0-0",
     "rxjs": "catalog:angular-supported-versions",
     "webpack-merge": "^5.8.0"
   },
@@ -127,6 +128,9 @@
       "optional": true
     },
     "ng-packagr": {
+      "optional": true
+    },
+    "nx": {
       "optional": true
     },
     "webpack-merge": {

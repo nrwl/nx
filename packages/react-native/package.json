@@ -68,11 +68,15 @@
     "tslib": "catalog:typescript"
   },
   "peerDependencies": {
+    "nx": ">= 22 <= 24 || ^23.0.0-0",
     "react-native": ">=0.83.0 <0.85.0",
     "metro-config": ">= 0.82.0",
     "metro-resolver": ">= 0.82.0"
   },
   "peerDependenciesMeta": {
+    "nx": {
+      "optional": true
+    },
     "react-native": {
       "optional": true
     }

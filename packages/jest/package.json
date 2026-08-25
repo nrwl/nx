@@ -92,10 +92,14 @@
   },
   "peerDependencies": {
     "jest": "^29.0.0 || ^30.0.0",
+    "nx": ">= 22 <= 24 || ^23.0.0-0",
     "ts-jest": "^29.0.0"
   },
   "peerDependenciesMeta": {
     "jest": {
+      "optional": true
+    },
+    "nx": {
       "optional": true
     },
     "ts-jest": {
