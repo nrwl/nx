@@ -10,7 +10,7 @@ import {
   ExternalObject,
   HashInputs,
   HashPlanner,
-  IoSnapshotOverride,
+  type IoSnapshots,
   HashPlanInspector as NativeHashPlanInspector,
   ProjectGraph as NativeProjectGraph,
   transferProjectGraph,
@@ -18,10 +18,8 @@ import {
 import { transformProjectGraphForRust } from '../native/transform-objects';
 import { createProjectRootMappings } from '../project-graph/utils/find-project-for-path';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
-import {
-  buildIoSnapshotOverrides,
-  type IoSnapshotOverridesResult,
-} from '../io-snapshots/overrides';
+import { loadIoSnapshotsForHead } from '../io-snapshots/overrides';
+import type { IoSnapshotReport } from '../io-snapshots/report';
 import { splitArgsIntoNxArgsAndOverrides } from '../utils/command-line-utils';
 import { getNxWorkspaceFilesFromContext } from '../utils/workspace-context';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -69,7 +67,7 @@ export class HashPlanInspector {
     overrides: Record<string, unknown> = {},
     extraTargetDependencies: TargetDependencies = {},
     excludeTaskDependencies: boolean = false,
-    ioSnapshotOverrides?: Record<string, IoSnapshotOverride>
+    ioSnapshots?: IoSnapshots
   ) {
     const taskGraph = createTaskGraph(
       this.projectGraph,
@@ -86,7 +84,7 @@ export class HashPlanInspector {
     const plansReference = this.planner.getPlansReference(
       taskIds,
       taskGraph,
-      ioSnapshotOverrides
+      ioSnapshots
     );
 
     return this.inspector.inspect(plansReference);
@@ -147,7 +145,7 @@ export class HashPlanInspector {
       (TargetDependencyConfig | string)[]
     > = {},
     excludeTaskDependencies: boolean = false,
-    ioSnapshotOverrides?: Record<string, IoSnapshotOverride>
+    ioSnapshots?: IoSnapshots
   ): Record<string, HashInputs> {
     const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
       {
@@ -174,15 +172,15 @@ export class HashPlanInspector {
     const plansReference = this.planner.getPlansReference(
       taskIds,
       taskGraph,
-      ioSnapshotOverrides
+      ioSnapshots
     );
     return this.inspector.inspectInputs(plansReference);
   }
 
   /**
-   * Like inspectTaskInputs(), but resolves I/O snapshot overrides from the
-   * on-disk bundle first so the result matches what hashing uses. Never
-   * fetches. `ioSnapshots` is null when snapshots are disabled.
+   * Like inspectTaskInputs(), but loads the I/O snapshot bundle for HEAD
+   * first so the result matches what hashing uses. Never
+   * fetches. `report` is null when snapshots are disabled.
    */
   inspectTaskInputsWithIoSnapshots(
     { project, target, configuration }: Target,
@@ -194,7 +192,7 @@ export class HashPlanInspector {
     excludeTaskDependencies: boolean = false
   ): {
     inputs: Record<string, HashInputs>;
-    ioSnapshots: IoSnapshotOverridesResult | null;
+    report: IoSnapshotReport | null;
   } {
     const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
       {
@@ -217,20 +215,19 @@ export class HashPlanInspector {
       excludeTaskDependencies
     );
 
-    const ioSnapshots = buildIoSnapshotOverrides(
-      this.projectGraph,
-      taskGraph,
-      this.nxJson ?? {}
-    );
+    const snapshots = loadIoSnapshotsForHead(this.nxJson ?? {}) ?? undefined;
     const taskIds = Object.keys(taskGraph.tasks);
     const plansReference = this.planner.getPlansReference(
       taskIds,
       taskGraph,
-      ioSnapshots?.overrides
+      snapshots
     );
+    const report = snapshots
+      ? this.planner.ioSnapshotReport(taskGraph, snapshots)
+      : null;
     return {
       inputs: this.inspector.inspectInputs(plansReference),
-      ioSnapshots,
+      report,
     };
   }
 }

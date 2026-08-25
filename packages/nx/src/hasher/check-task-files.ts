@@ -5,7 +5,7 @@ import type {
   ProjectGraphProjectNode,
 } from '../config/project-graph';
 import type { Task, TaskGraph } from '../config/task-graph';
-import type { HashInputs } from '../native';
+import type { HashInputs, IoSnapshotReport } from '../native';
 import { expandOutputs, matchGlobPaths, matchOutputPaths } from '../native';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
@@ -18,7 +18,6 @@ import { projectHasTargetAndConfiguration } from '../utils/project-graph-utils';
 import { splitTarget } from '../utils/split-target';
 import { workspaceRoot as defaultWorkspaceRoot } from '../utils/workspace-root';
 import { HashPlanInspector } from './hash-plan-inspector';
-import type { IoSnapshotOverridesResult } from '../io-snapshots/overrides';
 import { type ExpandedDepsOutput, getInputs } from './task-hasher';
 
 // ── Module-level context (loaded once per process) ───────────────────────────
@@ -94,10 +93,7 @@ interface TaskIdentity {
 
 const identityCache = new Map<string, TaskIdentity>();
 const hashInputsCache = new Map<string, HashInputs | null>();
-const ioSnapshotResultCache = new Map<
-  string,
-  IoSnapshotOverridesResult | null
->();
+const ioSnapshotResultCache = new Map<string, IoSnapshotReport | null>();
 const outputsCache = new Map<string, string[]>();
 const taskGraphCache = new Map<string, TaskGraph>();
 const depsOutputsCache = new Map<string, ExpandedDepsOutput[]>();
@@ -179,7 +175,7 @@ async function getRawInputs(
 
   // `null` means "this task is absent from the hash plan" — any other failure
   // is a real error and propagates to the caller.
-  const { inputs, ioSnapshots } = inspector.inspectTaskInputsWithIoSnapshots({
+  const { inputs, report } = inspector.inspectTaskInputsWithIoSnapshots({
     project,
     target,
     configuration,
@@ -187,7 +183,7 @@ async function getRawInputs(
 
   const result = inputs[canonicalTaskId] ?? null;
   hashInputsCache.set(taskId, result);
-  ioSnapshotResultCache.set(taskId, ioSnapshots);
+  ioSnapshotResultCache.set(taskId, report);
   return result;
 }
 
@@ -201,12 +197,12 @@ export interface IoSnapshotStatus {
 
 export function deriveIoSnapshotStatus(
   canonicalTaskId: string,
-  result: IoSnapshotOverridesResult | null
+  result: IoSnapshotReport | null
 ): IoSnapshotStatus {
   if (!result) {
     return { status: 'none', reason: 'disabled' };
   }
-  if (result.overrides[canonicalTaskId]) {
+  if (result.used.includes(canonicalTaskId)) {
     return {
       status: 'used',
       commit: result.resolution?.requestedCommit,
@@ -220,7 +216,7 @@ export function deriveIoSnapshotStatus(
     return { status: 'none', reason: bundleLevel.reason };
   }
   const taskLevel = result.diagnostics.find(
-    (d) => 'taskId' in d && d.taskId === canonicalTaskId
+    (d) => d.taskId === canonicalTaskId
   );
   return { status: 'fallback', reason: taskLevel?.reason ?? 'missing' };
 }

@@ -52,7 +52,7 @@ import {
   HashPlanner,
   transferProjectGraph,
 } from '../../native';
-import { buildIoSnapshotOverrides } from '../../io-snapshots/overrides';
+import { loadIoSnapshotsForHead } from '../../io-snapshots/overrides';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
@@ -1129,7 +1129,7 @@ async function createTaskGraphClientResponse(
         ? planner.getPlans(
             taskIds,
             taskGraph,
-            buildIoSnapshotOverrides(graph, taskGraph, nxJson)?.overrides
+            loadIoSnapshotsForHead(nxJson) ?? undefined
           )
         : {};
 
@@ -1272,7 +1272,7 @@ async function createTaskGraphForTargetsAndProjects(
         ? planner.getPlans(
             taskIds,
             taskGraph,
-            buildIoSnapshotOverrides(graph, taskGraph, nxJson)?.overrides
+            loadIoSnapshotsForHead(nxJson) ?? undefined
           )
         : {};
 

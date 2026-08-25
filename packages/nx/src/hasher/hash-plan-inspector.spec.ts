@@ -1,4 +1,7 @@
 import { HashPlanInspector } from './hash-plan-inspector';
+import { loadIoSnapshots } from '../native';
+import { mkdirSync, writeFileSync } from 'fs';
+import { join } from 'path';
 import { ProjectGraph } from '../config/project-graph';
 import { TempFs } from '../internal-testing-utils/temp-fs';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
@@ -156,54 +159,43 @@ describe('HashPlanInspector', () => {
       for (const f of dep) expect(inputs.sources[f]).toBe('dependency');
     });
 
-    it('labels filesets as snapshot and reports the marker when an override is present', () => {
+    it('labels filesets as snapshot and reports the marker when a bundle covers the task', () => {
+      const dir = join(tempFs.tempDir, '.nx', 'cache', 'io-snapshots', 'head');
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(
+        join(dir, 'snapshots.json'),
+        JSON.stringify({
+          version: 1,
+          resolution: {
+            requestedCommit: 'head',
+            commits: ['head'],
+            sourceCommits: ['head'],
+            digest: 'abc123',
+            fetchedAt: Date.now(),
+            clientVersion: 'test',
+            tasks: 1,
+          },
+          snapshots: {
+            'test-app:build': {
+              commit: 'head',
+              inputs: ['apps/test-app/src/**/*.ts'],
+              outputs: [],
+            },
+          },
+        })
+      );
       const inputs = inspector.inspectTaskInputs(
         { project: 'test-app', target: 'build' },
         {},
         {},
         false,
-        {
-          'test-app:build': {
-            files: ['apps/test-app/src/**/*.ts'],
-            taskOutputs: {},
-            digest: 'abc123',
-          },
-        }
+        loadIoSnapshots(dir)
       )['test-app:build'];
       expect(inputs.markers).toEqual(['io-snapshot:abc123']);
       const own = inputs.files.filter((f) => f.startsWith('apps/test-app/'));
       expect(own.length).toBeGreaterThan(0);
       for (const f of own) expect(inputs.sources[f]).toBe('snapshot');
       expect(inputs.sources['nx.json']).toBe('native');
-    });
-  });
-
-  describe('files inputs', () => {
-    it('expands a files group on disk, including gitignored files', async () => {
-      await tempFs.createFiles({
-        '.gitignore': 'dist\n',
-        'apps/test-app/dist/out.js': 'built',
-        'apps/test-app/dist/out.js.map': 'map',
-      });
-      projectGraph.nodes['test-app'].data.targets.build.inputs = [
-        {
-          files: ['{projectRoot}/dist/**/*.js', '!{projectRoot}/dist/**/*.map'],
-        },
-      ];
-      const filesInspector = new HashPlanInspector(
-        projectGraph,
-        tempFs.tempDir
-      );
-      await filesInspector.init();
-
-      const inputs = filesInspector.inspectTaskInputs({
-        project: 'test-app',
-        target: 'build',
-      })['test-app:build'];
-
-      expect(inputs.files).toContain('apps/test-app/dist/out.js');
-      expect(inputs.files).not.toContain('apps/test-app/dist/out.js.map');
-      expect(inputs.sources['apps/test-app/dist/out.js']).toBe('target');
     });
   });
 

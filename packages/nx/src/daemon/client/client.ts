@@ -358,7 +358,7 @@ export class DaemonClient {
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd: string,
     collectInputs?: boolean,
-    ioSnapshots?: { bundleDir?: string }
+    ioSnapshots?: { directory?: string }
   ): Promise<Hash[]> {
     // Task results get written back onto these task objects as the run
     // progresses — hash/hashDetails/timestamps by hashing and the
