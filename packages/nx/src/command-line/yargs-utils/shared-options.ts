@@ -329,6 +329,7 @@ const allOutputStyles = [
   'dynamic',
   'dynamic-legacy',
   'static',
+  'static-failures-only',
   'stream',
   'stream-without-prefixes',
 ] as const;
@@ -342,13 +343,14 @@ export function withOutputStyleOption<T>(
     'dynamic',
     'tui',
     'static',
+    'static-failures-only',
     'stream',
     'stream-without-prefixes',
   ]
 ) {
   return yargs
     .option('outputStyle', {
-      describe: `Defines how Nx emits outputs tasks logs. **tui**: enables the Nx Terminal UI, recommended for local development environments. **dynamic-legacy**: use dynamic-legacy output life cycle, previous content is overwritten or modified as new outputs are added, display minimal logs by default, always show errors. This output format is recommended for local development environments where tui is not supported. **static**: uses static output life cycle, no previous content is rewritten or modified as new outputs are added. This output format is recommened for CI environments. **stream**: nx by default logs output to an internal output stream, enable this option to stream logs to stdout / stderr. **stream-without-prefixes**: nx prefixes the project name the target is running on, use this option remove the project name prefix from output.`,
+      describe: `Defines how Nx emits outputs tasks logs. **tui**: enables the Nx Terminal UI, recommended for local development environments. **dynamic-legacy**: use dynamic-legacy output life cycle, previous content is overwritten or modified as new outputs are added, display minimal logs by default, always show errors. This output format is recommended for local development environments where tui is not supported. **static**: uses static output life cycle, no previous content is rewritten or modified as new outputs are added, and every task prints its full output regardless of status. **static-failures-only**: same as **static**, but successful and cached tasks collapse to a single line, so only failing tasks (and, for a single-project run, the project you asked for) print their full output. This is what Nx uses by default in CI and other non-interactive environments. **stream**: nx by default logs output to an internal output stream, enable this option to stream logs to stdout / stderr. **stream-without-prefixes**: nx prefixes the project name the target is running on, use this option remove the project name prefix from output.`,
       type: 'string',
       choices,
     })

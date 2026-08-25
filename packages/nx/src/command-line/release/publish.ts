@@ -313,6 +313,11 @@ async function runPublishOnProjects(
     { nxJson },
     {
       targets: [requiredTargetName],
+      // Everything this command reports — the registry, the tag, the
+      // package.json diff, the dry-run summary — is printed from inside the
+      // task, so the failures-only default would swallow all of it (under
+      // --dry-run every task succeeds by definition). An explicit
+      // --output-style still wins, since it comes in through the spread.
       outputStyle: 'static',
       ...(args as any),
       // It is possible for workspaces to have circular dependencies between packages and still release them to a registry
