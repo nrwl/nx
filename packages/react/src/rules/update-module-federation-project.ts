@@ -65,9 +65,8 @@ export function updateModuleFederationProject(
     }
   }
 
-  // MF owns its serve target rather than inheriting one: a plugin-driven workspace
-  // leaves no executor targets behind, but MF still needs a dev server to orchestrate
-  // the remotes, so create it when it isn't there.
+  // Must precede the executor assignment below, which dereferences targets.serve:
+  // a plugin-driven workspace has no serve target in project.json to inherit.
   projectConfig.targets.serve ??= {};
   projectConfig.targets.serve.options ??= {};
   if (options.bundler !== 'rspack') {

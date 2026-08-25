@@ -61,9 +61,8 @@ export async function hostGenerator(
     // TODO(colum): remove when Webpack MF works with Crystal
     addPlugin: !schema.bundler || schema.bundler === 'rspack' ? true : false,
     bundler: schema.bundler ?? 'rspack',
-    // The 4200 default lives here rather than in the schema so the application
-    // generator can still tell whether a plain app asked for a port. Remotes are
-    // then numbered from it, so a host always has one to count from.
+    // The schema carries no default, so supply one here: remotes are numbered up
+    // from the host's port (`options.port + 1` below), which needs a concrete value.
     port: schema.port ?? schema.devServerPort ?? 4200,
   };
 

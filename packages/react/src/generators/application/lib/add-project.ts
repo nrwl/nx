@@ -171,6 +171,8 @@ function createRspackServeTarget(
     defaultConfiguration: 'development',
     options: {
       buildTarget: `${options.projectName}:build`,
+      // @nx/rspack:dev-server defaults to 4200 at runtime, not in its schema, so
+      // omitting this is safe but the generated executor docs show no default.
       ...(options.port != null ? { port: options.port } : {}),
       hmr: true,
     },
