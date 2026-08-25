@@ -30,6 +30,10 @@
           {
             "group": ["**/devkit-exports"],
             "message": "Do not import from devkit-exports from the nx package"
+          },
+          {
+            "group": ["**/native-bindings", "**/native-bindings.js"],
+            "message": "Direct imports from native-bindings.js are not allowed. Import from index.js instead."
           }
         ]
       }

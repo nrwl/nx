@@ -103,6 +103,14 @@
           {
             "paths": [
               {
+                "name": "create-nx-workspace",
+                "message": "Please import utils from nx or @nx/devkit instead."
+              },
+              {
+                "name": "node-fetch",
+                "message": "Please default to native fetch instead of 'node-fetch'."
+              },
+              {
                 "name": "@nx/workspace"
               },
               {
