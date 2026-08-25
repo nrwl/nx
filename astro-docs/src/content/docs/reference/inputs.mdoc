@@ -108,6 +108,25 @@ This may cause Nx to rerun some tasks even when files irrelevant to the task hav
 
 To get a better idea of how to use inputs, you can browse some [common input sets](/docs/kb/configure-inputs#common-inputs).
 
+### Files on disk
+
+Source file inputs only see files in the workspace file map, which follows `.gitignore` and `.nxignore`. A gitignored or generated file, such as a build artifact under `dist/` or a generated `.env`, can't be a source file input. A `files` input hashes files straight from the disk instead:
+
+```jsonc
+{
+  "inputs": [
+    { "files": ["{projectRoot}/dist/**/*.js", "!{projectRoot}/dist/**/*.map"] },
+    { "files": ["{workspaceRoot}/.env.generated"] },
+  ],
+}
+```
+
+The `files` property is a list of globs. `{projectRoot}` and `{workspaceRoot}` resolve the same way as for source files, and a leading `!` excludes files within the same `files` group. Each glob must start with a literal directory: `dist/**/*.js` is valid, `**/*.js` isn't, because it would walk the whole workspace on every hash.
+
+Nx expands the globs when it hashes the task, so a new matching file is picked up without a configuration change. A path that names a directory matches everything under it. A path that names a single missing file still takes part in the hash, so the cache key changes when the file appears.
+
+Globs skip the directories the workspace file map never enters: `node_modules`, `.git`, `.nx/cache`, `.nx/workspace-data`, and `.yarn/cache`. An exact path inside one of them, such as `node_modules/foo/package.json`, is read as-is.
+
 ### JSON files
 
 Configuration files such as `package.json` or `tsconfig.base.json` hold fields that are irrelevant to most tasks. Nx can hash a subset of a JSON file so that edits to the remaining fields do not invalidate the cache. JSON inputs are defined like this:

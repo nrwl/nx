@@ -455,6 +455,54 @@ console.log('Build complete');
     );
   }, 120000);
 
+  it('should hash gitignored files declared through a files input', async () => {
+    const lib = uniq('lib');
+    runCLI(`generate @nx/js:lib libs/${lib}`);
+    updateFile('.gitignore', (c) => `${c}\nlibs/${lib}/generated\n`);
+    updateFile(`libs/${lib}/generated/schema.json`, '{"version":1}');
+    updateFile(`libs/${lib}/generated/notes.md`, 'ignored by the input');
+    updateJson(`libs/${lib}/project.json`, (c) => {
+      c.targets['echo'] = {
+        command: 'echo generated',
+        cache: true,
+        inputs: [{ files: ['{projectRoot}/generated/**/*.json'] }],
+      };
+      return c;
+    });
+
+    expect(runCLI(`echo ${lib}`)).not.toContain(
+      'read the output from the cache'
+    );
+    expect(runCLI(`echo ${lib}`)).toContain('read the output from the cache');
+
+    // A change to a matched gitignored file misses the cache.
+    updateFile(`libs/${lib}/generated/schema.json`, '{"version":2}');
+    expect(runCLI(`echo ${lib}`)).not.toContain(
+      'read the output from the cache'
+    );
+
+    // A change to a sibling the glob excludes still hits.
+    updateFile(`libs/${lib}/generated/notes.md`, 'still ignored');
+    expect(runCLI(`echo ${lib}`)).toContain('read the output from the cache');
+
+    // A new matching file is picked up without a configuration change.
+    updateFile(`libs/${lib}/generated/extra.json`, '{}');
+    expect(runCLI(`echo ${lib}`)).not.toContain(
+      'read the output from the cache'
+    );
+
+    const inputs = JSON.parse(
+      runCLI(`show target ${lib}:echo inputs --json`, { silent: true })
+    );
+    expect(inputs.files).toEqual(
+      expect.arrayContaining([
+        `libs/${lib}/generated/extra.json`,
+        `libs/${lib}/generated/schema.json`,
+      ])
+    );
+    expect(inputs.files).not.toContain(`libs/${lib}/generated/notes.md`);
+  }, 120000);
+
   it('should support dependency filesets with ^{projectRoot} syntax', async () => {
     const parent = uniq('parent');
     const child = uniq('child');

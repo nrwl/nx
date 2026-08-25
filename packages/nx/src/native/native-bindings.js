@@ -602,6 +602,7 @@ module.exports.connectToNxDb = nativeBinding.connectToNxDb
 module.exports.copy = nativeBinding.copy
 module.exports.detectAiAgent = nativeBinding.detectAiAgent
 module.exports.EventType = nativeBinding.EventType
+module.exports.expandFilesInput = nativeBinding.expandFilesInput
 module.exports.expandOutputs = nativeBinding.expandOutputs
 module.exports.fetchIoSnapshots = nativeBinding.fetchIoSnapshots
 module.exports.findImports = nativeBinding.findImports
