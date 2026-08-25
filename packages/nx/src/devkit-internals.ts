@@ -316,6 +316,7 @@ export {
   findAllProjectNodeDependencies,
   getSourceDirOfDependentProjects,
 } from './utils/project-graph-utils';
+export { quoteShellArg } from './utils/shell-quoting';
 export type { SyncGeneratorResult } from './utils/sync-generators';
 export { SyncError } from './utils/sync-generators';
 export { nxVersion } from './utils/versions';

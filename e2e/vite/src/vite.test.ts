@@ -546,10 +546,10 @@ export default defineConfig({
         const relativePath = target.slice('test-ci--'.length);
         expect(relativePath).toMatch(/\.spec\.tsx?$/);
         expect(command).toEqual(
-          `vitest run ${relativePath} --coverage.reportsDirectory="${joinPathFragments(
+          `vitest run ${relativePath} --coverage.reportsDirectory=${joinPathFragments(
             reportsDirectory,
             relativePath
-          )}"`
+          )}`
         );
       }
 

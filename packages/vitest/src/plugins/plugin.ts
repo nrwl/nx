@@ -6,6 +6,7 @@ import {
   workspaceDataDirectory,
   deriveGroupNameFromTarget,
   globWithWorkspaceContext,
+  quoteShellArg,
 } from '@nx/devkit/internal';
 import {
   CreateDependencies,
@@ -372,6 +373,13 @@ async function buildVitestTargets(
         !endsWithProjectRoot(resolvedReportsDirectory, projectRoot)
           ? projectRoot
           : '';
+      // The cache only accepts outputs inside the workspace. A base outside it
+      // cannot be declared, and a cache hit would then replay without writing
+      // coverage, so the atoms and their parent are not cached either.
+      const isCoverageCacheable = !isPathOutside(
+        relative(context.workspaceRoot, resolvedReportsDirectory)
+      );
+      const atomOutputs: string[] = [];
 
       for (const relativePath of projectRootRelativeTestPaths) {
         if (relativePath.includes('../')) {
@@ -402,16 +410,20 @@ async function buildVitestTargets(
         dependsOn.push(targetName);
         targets[targetName] = {
           // It does not make sense to run atomized tests in watch mode as they are intended to be run in CI
-          command: `vitest run ${relativePath} --coverage.reportsDirectory="${atomCoverageDirectory}"`,
-          cache: targets[options.testTargetName].cache,
+          command: `vitest run ${quoteShellArg(
+            relativePath
+          )} --coverage.reportsDirectory=${quoteShellArg(atomCoverageDirectory)}`,
+          cache: isCoverageCacheable && targets[options.testTargetName].cache,
           inputs: targets[options.testTargetName].inputs,
-          outputs: [
-            normalizeAtomOutputPath(
-              join(resolvedReportsDirectory, outputSubfolder),
-              fullProjectRoot,
-              context.workspaceRoot
-            ),
-          ],
+          outputs: isCoverageCacheable
+            ? [
+                normalizeAtomOutputPath(
+                  join(resolvedReportsDirectory, outputSubfolder),
+                  fullProjectRoot,
+                  context.workspaceRoot
+                ),
+              ]
+            : [],
           options: {
             cwd: projectRoot,
             env: targets[options.testTargetName].options.env,
@@ -429,15 +441,18 @@ async function buildVitestTargets(
             },
           },
         };
+        atomOutputs.push(...targets[targetName].outputs);
         targetGroup.push(targetName);
       }
 
       if (targetGroup.length > 0) {
         targets[options.ciTargetName] = {
           executor: 'nx:noop',
-          cache: true,
+          cache: isCoverageCacheable,
           inputs: targets[options.testTargetName].inputs,
-          outputs: targets[options.testTargetName].outputs,
+          // Exactly the atom directories: a cache restore replaces each declared
+          // directory, and any wider one can hold other projects' coverage.
+          outputs: atomOutputs,
           dependsOn,
           metadata: {
             technologies: ['vitest'],
@@ -563,8 +578,8 @@ function isPathOutside(relativePath: string): boolean {
 }
 
 /**
- * Maps an atom's absolute coverage directory to the narrowest Nx root token;
- * a path outside the workspace stays `{workspaceRoot}`-relative.
+ * Maps an atom's absolute coverage directory, which must be inside the
+ * workspace, to the narrowest Nx root token.
  */
 function normalizeAtomOutputPath(
   absoluteOutputPath: string,
@@ -575,11 +590,10 @@ function normalizeAtomOutputPath(
   if (!isPathOutside(relativeToProject)) {
     return joinPathFragments('{projectRoot}', relativeToProject);
   }
-  const relativeToWorkspace = relative(workspaceRoot, absoluteOutputPath);
-  if (!isPathOutside(relativeToWorkspace)) {
-    return joinPathFragments('{workspaceRoot}', relativeToWorkspace);
-  }
-  return `{workspaceRoot}/${relativeToWorkspace}`;
+  return joinPathFragments(
+    '{workspaceRoot}',
+    relative(workspaceRoot, absoluteOutputPath)
+  );
 }
 
 /**

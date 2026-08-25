@@ -262,6 +262,7 @@ export {
   parseExecutor,
   parseVersionFromPackageManagerField,
   preventRecursionInGraphConstruction,
+  quoteShellArg,
   readCachedProjectConfiguration,
   readFileIfExisting,
   readFileMapCache,

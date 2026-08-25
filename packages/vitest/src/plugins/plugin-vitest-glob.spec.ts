@@ -375,7 +375,7 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
     const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
 
     expect(targets['test-ci--src/a.spec.ts'].command).toBe(
-      `vitest run src/a.spec.ts --coverage.reportsDirectory="coverage/src/a.spec.ts"`
+      `vitest run src/a.spec.ts --coverage.reportsDirectory=coverage/src/a.spec.ts`
     );
     expect(targets['test-ci--src/a.spec.ts'].outputs).toEqual([
       `{projectRoot}/coverage/src/a.spec.ts`,
@@ -440,13 +440,19 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
 
     const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
 
-    // Join with node:path so the expected absolute command holds on Windows.
+    // Join with node:path so the expected absolute command holds on Windows,
+    // where the backslashes also get the argument quoted.
+    const absoluteDirectory = join(
+      temp.tempDir,
+      'coverage-abs',
+      'libs/lib1/src/a.spec.ts'
+    );
     expect(targets['test-ci--src/a.spec.ts'].command).toBe(
-      `vitest run src/a.spec.ts --coverage.reportsDirectory="${join(
-        temp.tempDir,
-        'coverage-abs',
-        'libs/lib1/src/a.spec.ts'
-      )}"`
+      `vitest run src/a.spec.ts --coverage.reportsDirectory=${
+        process.platform === 'win32'
+          ? `"${absoluteDirectory}"`
+          : absoluteDirectory
+      }`
     );
     expect(targets['test-ci--src/a.spec.ts'].outputs).toEqual([
       `{workspaceRoot}/coverage-abs/libs/lib1/src/a.spec.ts`,
@@ -465,7 +471,7 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
 
     // A relative reportsDirectory resolves against Vitest's root.
     expect(targets['test-ci--test-root/src/a.spec.ts'].command).toBe(
-      `vitest run test-root/src/a.spec.ts --coverage.reportsDirectory="coverage/test-root/src/a.spec.ts"`
+      `vitest run test-root/src/a.spec.ts --coverage.reportsDirectory=coverage/test-root/src/a.spec.ts`
     );
     expect(targets['test-ci--test-root/src/a.spec.ts'].outputs).toEqual([
       `{projectRoot}/test-root/coverage/test-root/src/a.spec.ts`,
@@ -484,7 +490,7 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
 
     // A relative Vitest root resolves against the atom cwd, the project root.
     expect(targets['test-ci--test-root/src/a.spec.ts'].command).toBe(
-      `vitest run test-root/src/a.spec.ts --coverage.reportsDirectory="coverage/test-root/src/a.spec.ts"`
+      `vitest run test-root/src/a.spec.ts --coverage.reportsDirectory=coverage/test-root/src/a.spec.ts`
     );
     expect(targets['test-ci--test-root/src/a.spec.ts'].outputs).toEqual([
       `{projectRoot}/test-root/coverage/test-root/src/a.spec.ts`,
@@ -502,7 +508,7 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
     const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
 
     expect(targets['test-ci--test-root/src/a.spec.ts'].command).toBe(
-      `vitest run test-root/src/a.spec.ts --coverage.reportsDirectory="coverage/test-root/src/a.spec.ts"`
+      `vitest run test-root/src/a.spec.ts --coverage.reportsDirectory=coverage/test-root/src/a.spec.ts`
     );
     expect(targets['test-ci--test-root/src/a.spec.ts'].outputs).toEqual([
       `{projectRoot}/test-root/coverage/test-root/src/a.spec.ts`,
@@ -523,7 +529,7 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
     const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
 
     expect(targets['test-ci--hook-root/src/a.spec.ts'].command).toBe(
-      `vitest run hook-root/src/a.spec.ts --coverage.reportsDirectory="coverage/hook-root/src/a.spec.ts"`
+      `vitest run hook-root/src/a.spec.ts --coverage.reportsDirectory=coverage/hook-root/src/a.spec.ts`
     );
     expect(targets['test-ci--hook-root/src/a.spec.ts'].outputs).toEqual([
       `{projectRoot}/hook-root/coverage/hook-root/src/a.spec.ts`,
@@ -543,7 +549,7 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
     const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
 
     expect(targets['test-ci--src/a.spec.ts'].command).toBe(
-      `vitest run src/a.spec.ts --coverage.reportsDirectory="..coverage/src/a.spec.ts"`
+      `vitest run src/a.spec.ts --coverage.reportsDirectory=..coverage/src/a.spec.ts`
     );
     expect(targets['test-ci--src/a.spec.ts'].outputs).toEqual([
       `{projectRoot}/..coverage/src/a.spec.ts`,
@@ -563,7 +569,7 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
     const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
 
     expect(targets['test-ci--src/a.spec.ts'].command).toBe(
-      `vitest run src/a.spec.ts --coverage.reportsDirectory="../../coverage/libs/lib1/src/a.spec.ts"`
+      `vitest run src/a.spec.ts --coverage.reportsDirectory=../../coverage/libs/lib1/src/a.spec.ts`
     );
     expect(targets['test-ci--src/a.spec.ts'].outputs).toEqual([
       `{workspaceRoot}/coverage/libs/lib1/src/a.spec.ts`,
@@ -583,10 +589,114 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
     const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
 
     expect(targets['test-ci--src/a.spec.ts'].command).toBe(
-      `vitest run src/a.spec.ts --coverage.reportsDirectory="../../reports/libs/lib1/src/a.spec.ts"`
+      `vitest run src/a.spec.ts --coverage.reportsDirectory=../../reports/libs/lib1/src/a.spec.ts`
     );
     expect(targets['test-ci--src/a.spec.ts'].outputs).toEqual([
       `{workspaceRoot}/reports/libs/lib1/src/a.spec.ts`,
     ]);
   });
+
+  it('should quote a coverage directory containing shell metacharacters', async () => {
+    await temp.createFiles({
+      'libs/lib1/vitest.config.ts': '',
+      'libs/lib1/package.json': '{"name":"lib1"}',
+      'libs/lib1/src/a.spec.ts': '',
+    });
+    mockResolvedTestConfig({ coverage: { reportsDirectory: '$HOME/cov' } });
+
+    const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
+
+    // cmd.exe has no literal-preserving quote, so Windows keeps double quotes.
+    expect(targets['test-ci--src/a.spec.ts'].command).toBe(
+      process.platform === 'win32'
+        ? `vitest run src/a.spec.ts --coverage.reportsDirectory="$HOME/cov/src/a.spec.ts"`
+        : `vitest run src/a.spec.ts --coverage.reportsDirectory='$HOME/cov/src/a.spec.ts'`
+    );
+    expect(targets['test-ci--src/a.spec.ts'].outputs).toEqual([
+      `{projectRoot}/$HOME/cov/src/a.spec.ts`,
+    ]);
+  });
+
+  it('should quote a spec path containing shell metacharacters', async () => {
+    await temp.createFiles({
+      'libs/lib1/vitest.config.ts': '',
+      'libs/lib1/package.json': '{"name":"lib1"}',
+      'libs/lib1/src/a b.spec.ts': '',
+    });
+    mockResolvedTestConfig({});
+
+    const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
+
+    expect(targets['test-ci--src/a b.spec.ts'].command).toBe(
+      process.platform === 'win32'
+        ? `vitest run "src/a b.spec.ts" --coverage.reportsDirectory="coverage/src/a b.spec.ts"`
+        : `vitest run 'src/a b.spec.ts' --coverage.reportsDirectory='coverage/src/a b.spec.ts'`
+    );
+  });
+
+  it('should declare exactly the atom coverage directories on the ci parent', async () => {
+    await temp.createFiles({
+      'libs/lib1/vitest.config.ts': '',
+      'libs/lib1/package.json': '{"name":"lib1"}',
+      'libs/lib1/src/a.spec.ts': '',
+      'libs/lib1/src/b.spec.ts': '',
+    });
+    mockResolvedTestConfig({
+      coverage: { reportsDirectory: '../../reports' },
+    });
+
+    const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
+
+    expect(targets['test-ci'].cache).toBe(true);
+    expect(targets['test-ci'].outputs).toEqual([
+      `{workspaceRoot}/reports/libs/lib1/src/a.spec.ts`,
+      `{workspaceRoot}/reports/libs/lib1/src/b.spec.ts`,
+    ]);
+  });
+
+  it('should keep a workspace-root project ci parent off the shared coverage directory a nested project writes under', async () => {
+    await temp.createFiles({
+      'vitest.config.ts': '',
+      'src/root.spec.ts': '',
+      'libs/lib1/vitest.config.ts': '',
+      'libs/lib1/package.json': '{"name":"lib1"}',
+      'libs/lib1/src/a.spec.ts': '',
+    });
+    mockResolvedTestConfig({ include: ['src/**/*.spec.ts'] });
+
+    const targets = await getProjectTargets('vitest.config.ts');
+
+    // The nested project's atoms write under `coverage/libs/lib1/`; a parent
+    // output of `{projectRoot}/coverage` would restore over them.
+    expect(targets['test-ci'].outputs).toEqual([
+      `{projectRoot}/coverage/src/root.spec.ts`,
+    ]);
+  });
+
+  it.each([
+    ['relative', () => '../../../reports'],
+    ['absolute', () => join(temp.tempDir, '..', 'reports')],
+  ])(
+    'should not cache atoms or the ci parent for a %s reportsDirectory outside the workspace',
+    async (_, reportsDirectory) => {
+      await temp.createFiles({
+        'libs/lib1/vitest.config.ts': '',
+        'libs/lib1/package.json': '{"name":"lib1"}',
+        'libs/lib1/src/a.spec.ts': '',
+      });
+      mockResolvedTestConfig({
+        coverage: { reportsDirectory: reportsDirectory() },
+      });
+
+      const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
+
+      expect(targets['test-ci--src/a.spec.ts'].command).toContain(
+        '--coverage.reportsDirectory='
+      );
+      expect(targets['test-ci--src/a.spec.ts'].cache).toBe(false);
+      expect(targets['test-ci--src/a.spec.ts'].outputs).toEqual([]);
+      expect(targets['test-ci'].cache).toBe(false);
+      expect(targets['test-ci'].outputs).toEqual([]);
+    }
+  );
 });
