@@ -86,7 +86,7 @@ describe('collapseExpandedOutputs', () => {
     expect(res).toEqual(['dist/apps/app1']);
   });
 
-  // ~7M paths; runs 2x slower under vitest than jest, so give it headroom.
+  // ~7M paths, so give it headroom.
   it(
     'should collapse long lists of files in nested directories',
     { timeout: 120_000 },

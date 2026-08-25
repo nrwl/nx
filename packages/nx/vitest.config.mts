@@ -32,7 +32,7 @@ export default defineConfig({
   cacheDir: '../../node_modules/.vite/nx/unit',
   plugins: [nativeShim],
   resolve: {
-    // Match the jest-resolver.js behavior: prefer local TS source for nx's
+    // Prefer local TS source for nx's
     // own exports map.
     conditions: ['@nx/nx-source'],
     // Deep imports like nx/src/... and nx/bin/... aren't in the exports map;
