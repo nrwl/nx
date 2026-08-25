@@ -64,6 +64,11 @@ describe('Next.js Applications - Generation', () => {
     expect(runCLI(`build ${libName}`)).toContain(
       `Successfully ran target build for project ${libName}`
     );
+    // check the server entry is bundled next to the client entry
+    checkFilesExist(
+      `dist/${libName}/server.esm.js`,
+      `dist/${libName}/server.d.ts`
+    );
   }, 600_000);
 
   it('should build in dev mode without errors', async () => {
