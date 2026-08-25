@@ -298,6 +298,13 @@ export declare function canInstallNxConsole(): Promise<boolean>
 
 export declare function canInstallNxConsoleForEditor(editor: SupportedEditor): Promise<boolean>
 
+/**
+ * The first snapshot glob the `files` hasher would refuse (no literal leading
+ * directory), so the TS bundle reader can withhold that task's override with
+ * a diagnostic instead of the planner throwing.
+ */
+export declare function checkFilesGlobs(globs: Array<string>): string | null
+
 export declare function closeDbConnection(connection: ExternalObject<NxDbConnection>): void
 
 export declare function connectToNxDb(cacheDir: string, dbName?: string | undefined | null): ExternalObject<NxDbConnection>
@@ -571,20 +578,16 @@ export interface IoSnapshotFetchResult {
 }
 
 /**
- * Per-task I/O snapshot data supplied by the TS layer once per run. Reads are
- * pre-classified by the server (NXC-4847 §2a); negations and class mapping are
- * still applied here against the current declared inputs. `mode` is reserved
- * for files-only planning.
+ * Per-task I/O snapshot data supplied by the TS layer once per run
+ * (NXC-4847 §2b). `files` are the observed reads as workspace-relative globs;
+ * negations and class mapping are applied here against the current declared
+ * inputs. `task_outputs` only schedules the task after its producers.
  */
 export interface IoSnapshotOverride {
-  /** project name → workspace-relative globs under that project's root */
-  projects: Record<string, Array<string>>
-  /** workspace-relative globs outside any project root */
-  workspace: Array<string>
+  files: Array<string>
   /** producer task id → observed paths inside that task's outputs */
   taskOutputs: Record<string, Array<string>>
   digest: string
-  mode?: 'hash' | 'files'
 }
 
 /** What was resolved for a commit; persisted alongside the bundle. */

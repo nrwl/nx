@@ -597,6 +597,7 @@ module.exports.WorkspaceContext = nativeBinding.WorkspaceContext
 module.exports.BatchStatus = nativeBinding.BatchStatus
 module.exports.canInstallNxConsole = nativeBinding.canInstallNxConsole
 module.exports.canInstallNxConsoleForEditor = nativeBinding.canInstallNxConsoleForEditor
+module.exports.checkFilesGlobs = nativeBinding.checkFilesGlobs
 module.exports.closeDbConnection = nativeBinding.closeDbConnection
 module.exports.connectToNxDb = nativeBinding.connectToNxDb
 module.exports.copy = nativeBinding.copy

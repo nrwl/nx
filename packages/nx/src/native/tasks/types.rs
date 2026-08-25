@@ -290,9 +290,11 @@ enum InstructionKind {
 impl InstructionKind {
     fn of(instruction: &HashInstruction) -> Self {
         match instruction {
-            HashInstruction::ProjectFileSet(_, _)
-            | HashInstruction::WorkspaceFileSet(_)
-            | HashInstruction::Files(_) => Self::FileSet,
+            HashInstruction::ProjectFileSet(_, _) | HashInstruction::WorkspaceFileSet(_) => {
+                Self::FileSet
+            }
+            // Declared `files` inputs and snapshot groups survive a snapshot.
+            HashInstruction::Files(_) => Self::Other,
             HashInstruction::TsConfiguration(_) => Self::TsConfiguration,
             _ => Self::Other,
         }

@@ -11,7 +11,7 @@ use crate::native::{
 };
 use napi::bindgen_prelude::External;
 use rayon::prelude::*;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 use tracing::trace;
 
 use crate::native::tasks::hashers::{OnceCache, validate_files_globs};
@@ -22,22 +22,17 @@ use crate::native::tasks::utils;
 use crate::native::utils::find_matching_projects;
 use std::sync::{Arc, OnceLock};
 
-/// Per-task I/O snapshot data supplied by the TS layer once per run. Reads are
-/// pre-classified by the server (NXC-4847 §2a); negations and class mapping are
-/// still applied here against the current declared inputs. `mode` is reserved
-/// for files-only planning.
+/// Per-task I/O snapshot data supplied by the TS layer once per run
+/// (NXC-4847 §2b). `files` are the observed reads as workspace-relative globs;
+/// negations and class mapping are applied here against the current declared
+/// inputs. `task_outputs` only schedules the task after its producers.
 #[napi(object)]
 #[derive(Clone, Debug)]
 pub struct IoSnapshotOverride {
-    /// project name → workspace-relative globs under that project's root
-    pub projects: HashMap<String, Vec<String>>,
-    /// workspace-relative globs outside any project root
-    pub workspace: Vec<String>,
+    pub files: Vec<String>,
     /// producer task id → observed paths inside that task's outputs
     pub task_outputs: HashMap<String, Vec<String>>,
     pub digest: String,
-    #[napi(ts_type = "'hash' | 'files'")]
-    pub mode: Option<String>,
 }
 
 pub type IoSnapshotOverrides = HashMap<String, IoSnapshotOverride>;
@@ -74,34 +69,39 @@ struct SnapshotContext<'a> {
 }
 
 impl<'a> SnapshotContext<'a> {
-    fn new(io: &'a IoSnapshotOverride) -> Self {
+    /// `None` when a snapshot glob would walk the whole workspace: the task
+    /// then hashes natively (the TS reader reports it), never throws.
+    fn new(io: &'a IoSnapshotOverride) -> Option<Self> {
+        if validate_files_globs(&io.files).is_err() {
+            return None;
+        }
         let positives: Vec<&str> = io
-            .projects
-            .values()
-            .flatten()
-            .chain(io.workspace.iter())
+            .files
+            .iter()
             .map(String::as_str)
             .filter(|g| !g.starts_with('!'))
             .collect();
         if positives.is_empty() {
-            return Self {
+            return Some(Self {
                 io,
                 observed: None,
                 unparsable: false,
-            };
+            });
         }
-        match NxGlobSetBuilder::new(&positives).and_then(|b| b.build()) {
-            Ok(set) => Self {
-                io,
-                observed: Some(set),
-                unparsable: false,
+        Some(
+            match NxGlobSetBuilder::new(&positives).and_then(|b| b.build()) {
+                Ok(set) => Self {
+                    io,
+                    observed: Some(set),
+                    unparsable: false,
+                },
+                Err(_) => Self {
+                    io,
+                    observed: None,
+                    unparsable: true,
+                },
             },
-            Err(_) => Self {
-                io,
-                observed: None,
-                unparsable: true,
-            },
-        }
+        )
     }
 
     fn read(&self, path: &str) -> bool {
@@ -257,7 +257,9 @@ impl HashPlanner {
                     .chain([always_on_id])
                     .collect();
 
-                let snapshot = overrides.and_then(|o| o.get(*id)).map(SnapshotContext::new);
+                let snapshot = overrides
+                    .and_then(|o| o.get(*id))
+                    .and_then(SnapshotContext::new);
                 let mut negations: Negations = Vec::new();
                 ids.extend(self.self_and_deps_inputs(
                     &task.target.project,
@@ -276,13 +278,7 @@ impl HashPlanner {
                     // TsConfiguration survives only if the root tsconfig was read.
                     let keep_tsconfig = snapshot.root_tsconfig_read();
                     let own: hashbrown::HashSet<u32> = self
-                        .snapshot_file_instructions(
-                            task,
-                            &inputs.self_inputs,
-                            snapshot,
-                            &negations,
-                            &task_graph,
-                        )
+                        .snapshot_file_instructions(task, &inputs.self_inputs, snapshot, &negations)
                         .into_iter()
                         .map(|instruction| pool.intern(instruction))
                         .collect();
@@ -532,29 +528,17 @@ impl HashPlanner {
         Ok(ids)
     }
 
-    /// File instructions for a task hashed from its I/O snapshot: the observed
-    /// reads bucketed by project, the workspace-level reads minus the files a
-    /// native instruction covers better, reads of other tasks' outputs, and
-    /// the run marker. Negations declared by the visited projects still apply.
+    /// The file half of a snapshot-hashed task: one `files` group of the
+    /// observed reads minus files a native instruction models better, with the
+    /// negations declared by every project the plan visited, plus the marker.
     fn snapshot_file_instructions(
         &self,
         task: &Task,
         self_inputs: &[Input],
         snapshot: &SnapshotContext,
         negations: &Negations,
-        task_graph: &TaskGraph,
     ) -> Vec<HashInstruction> {
         let io = snapshot.io;
-        let mut instructions = Vec::new();
-
-        let negations_for = |project: &str| -> Vec<String> {
-            negations
-                .iter()
-                .filter(|(p, _)| p == project)
-                .map(|(_, pattern)| pattern.clone())
-                .collect()
-        };
-
         let self_project = task.target.project.as_str();
         let project_root = &self.project_graph.nodes[self_project].root;
         // Files a declared `{json}` input covers with field selection.
@@ -566,45 +550,23 @@ impl HashPlanner {
             })
             .collect();
 
-        for (project, globs) in io.projects.iter().collect::<BTreeMap<_, _>>() {
-            if !self.project_graph.nodes.contains_key(project) {
-                continue;
-            }
-            let mut patterns: Vec<String> = globs
-                .iter()
-                .filter(|glob| !covered_by_native_instruction(glob, &json_paths))
-                .cloned()
-                .collect();
-            if patterns.is_empty() {
-                continue;
-            }
-            patterns.extend(negations_for(project));
-            instructions.push(HashInstruction::ProjectFileSet(project.clone(), patterns));
-        }
-
-        let mut workspace: Vec<String> = io
-            .workspace
+        let mut group: Vec<String> = io
+            .files
             .iter()
             .filter(|glob| !covered_by_native_instruction(glob, &json_paths))
             .cloned()
             .collect();
-        if !workspace.is_empty() {
-            workspace.extend(negations_for(self_project));
-            instructions.push(HashInstruction::WorkspaceFileSet(workspace));
+        let mut instructions = Vec::new();
+        if group.iter().any(|glob| !glob.starts_with('!')) {
+            let mut declared_negations: Vec<String> = negations
+                .iter()
+                .map(|(_, pattern)| pattern.clone())
+                .collect();
+            declared_negations.sort();
+            declared_negations.dedup();
+            group.extend(declared_negations);
+            instructions.push(HashInstruction::Files(group));
         }
-
-        for (producer, paths) in io.task_outputs.iter().collect::<BTreeMap<_, _>>() {
-            let Some(producer_task) = task_graph.tasks.get(producer) else {
-                continue;
-            };
-            for glob in task_output_globs(paths) {
-                instructions.push(HashInstruction::TaskOutput(
-                    glob,
-                    producer_task.outputs.clone(),
-                ));
-            }
-        }
-
         instructions.push(io_snapshot_marker(&io.digest));
         instructions
     }
@@ -983,6 +945,18 @@ impl HashPlanner {
             HashInstruction::ProjectConfiguration(project_name.to_string()),
             HashInstruction::TsConfiguration(project_name.to_string()),
         ];
+        // Declared `files` groups are not filesets; they hash from disk as usual.
+        for input in self_inputs {
+            if let Input::Files(globs) = input {
+                let resolved: Vec<String> = globs
+                    .iter()
+                    .map(|g| resolve_files_glob(g, project_root, project_name))
+                    .collect();
+                if validate_files_globs(&resolved).is_ok() {
+                    instructions.push(HashInstruction::Files(resolved));
+                }
+            }
+        }
         instructions.extend(self_inputs.iter().filter_map(|i| match i {
             Input::Runtime(runtime) => Some(HashInstruction::Runtime(runtime.to_string())),
             Input::Environment(env) => Some(HashInstruction::Environment(env.to_string())),
@@ -1077,30 +1051,16 @@ impl HashPlanner {
     }
 }
 
-/// One TaskOutput glob per producer: plain paths collapse into a brace group
-/// so the producer's outputs are walked once, not once per observed path.
-/// A path carrying glob syntax cannot be grouped and stays on its own.
-fn task_output_globs(paths: &[String]) -> Vec<String> {
-    let mut sorted: Vec<&String> = paths.iter().collect();
-    sorted.sort();
-    sorted.dedup();
-    let (plain, special): (Vec<&String>, Vec<&String>) = sorted
-        .into_iter()
-        .partition(|p| !crate::native::glob::contains_glob_pattern(p));
-    let mut globs: Vec<String> = special.into_iter().cloned().collect();
-    match plain.len() {
-        0 => {}
-        1 => globs.push(plain[0].clone()),
-        _ => globs.push(format!(
-            "{{{}}}",
-            plain
-                .iter()
-                .map(|p| p.as_str())
-                .collect::<Vec<_>>()
-                .join(",")
-        )),
-    }
+/// The first snapshot glob the `files` hasher would refuse (no literal leading
+/// directory), so the TS bundle reader can withhold that task's override with
+/// a diagnostic instead of the planner throwing.
+#[napi]
+pub fn check_files_globs(globs: Vec<String>) -> Option<String> {
     globs
+        .iter()
+        .filter(|g| !g.starts_with('!'))
+        .find(|g| validate_files_globs(std::slice::from_ref(*g)).is_err())
+        .cloned()
 }
 
 /// Records the negated filesets among `self_inputs` as workspace-relative
@@ -1186,47 +1146,7 @@ fn find_external_dependency_node_name<'a>(
 
 #[cfg(test)]
 mod tests {
-    use super::task_output_globs;
-    #[test]
-    fn brace_grouped_task_output_resolves_like_single_paths() {
-        use crate::native::tasks::hashers::resolve_task_output_files;
-        let temp = assert_fs::TempDir::new().unwrap();
-        for f in ["a.js", "b.js", "c.js"] {
-            let path = temp.path().join("dist/libs/child").join(f);
-            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-            std::fs::write(&path, f).unwrap();
-        }
-        let root = temp.path().to_str().unwrap();
-        let outputs = vec!["dist/libs/child".to_string()];
-        let paths = vec![
-            "dist/libs/child/b.js".to_string(),
-            "dist/libs/child/a.js".to_string(),
-        ];
-        let globs = task_output_globs(&paths);
-        assert_eq!(globs, vec!["{dist/libs/child/a.js,dist/libs/child/b.js}"]);
-
-        let mut grouped = resolve_task_output_files(root, &globs[0], &outputs).unwrap();
-        grouped.sort();
-        let mut singles: Vec<String> = paths
-            .iter()
-            .flat_map(|p| resolve_task_output_files(root, p, &outputs).unwrap())
-            .collect();
-        singles.sort();
-        assert_eq!(grouped, singles);
-        assert_eq!(
-            grouped,
-            vec!["dist/libs/child/a.js", "dist/libs/child/b.js"]
-        );
-
-        // Glob syntax in a path is never grouped.
-        assert_eq!(
-            task_output_globs(&["dist/x.js".into(), "dist/{a,b}.js".into()]),
-            vec!["dist/{a,b}.js", "dist/x.js"]
-        );
-    }
-
     use super::VisitedTracker;
-
     #[test]
     fn insert_reports_first_insertion_only() {
         let mut visited = VisitedTracker::new("seed");
