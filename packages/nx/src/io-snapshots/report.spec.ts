@@ -41,6 +41,7 @@ describe('formatIoSnapshotSummary', () => {
         { reason: 'missing', taskId: 'd:test' },
         { reason: 'missing', taskId: 'e:test' },
         { reason: 'root-anchored-glob', taskId: 'f:lint', glob: '**/*.ts' },
+        { reason: 'escapes-workspace', taskId: 'g:build', glob: '../x/**' },
       ],
       resolution,
     };
@@ -52,7 +53,7 @@ describe('formatIoSnapshotSummary', () => {
       })
     );
     expect(summary.line).toBe(
-      'I/O snapshots: 2 tasks hashed from snapshot, 4 tasks fell back (2 missing, 1 disabled, 1 root-anchored-glob)'
+      'I/O snapshots: 2 tasks hashed from snapshot, 5 tasks fell back (2 missing, 1 disabled, 1 escapes-workspace, 1 root-anchored-glob)'
     );
     expect(summary.bodyLines).toEqual([
       'bundle: cached at /w/.nx/cache/io-snapshots/abc123',
@@ -61,6 +62,7 @@ describe('formatIoSnapshotSummary', () => {
       'd:test: no snapshot for this task',
       'e:test: no snapshot for this task',
       'f:lint: snapshot glob "**/*.ts" is anchored at the workspace root',
+      'g:build: snapshot glob "../x/**" escapes the workspace',
     ]);
   });
 
