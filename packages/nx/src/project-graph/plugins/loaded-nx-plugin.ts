@@ -18,6 +18,7 @@ import type {
 } from './public-api';
 import { isIsolationEnabled } from './isolation/enabled';
 import { isDaemonEnabled } from '../../daemon/client/client';
+import { rehydrateTerminalOutputs } from './task-results-stub';
 
 /**
  * NOTE: Avoid using `import type` with this class. It causes issues with
@@ -174,8 +175,13 @@ export class LoadedNxPlugin {
     }
 
     if (plugin.postTasksExecution) {
+      // Rehydrated here rather than on receipt from the daemon, so a context
+      // bound for an isolated plugin stays stubbed across that second hop.
       this.postTasksExecution = async (context: PostTasksExecutionContext) =>
-        plugin.postTasksExecution(this.options, context);
+        plugin.postTasksExecution(
+          this.options,
+          rehydrateTerminalOutputs(context)
+        );
     }
   }
 }
