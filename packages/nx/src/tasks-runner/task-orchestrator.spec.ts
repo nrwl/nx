@@ -403,13 +403,27 @@ describe('TaskOrchestrator', () => {
 
   describe('terminal output persistence', () => {
     let terminalOutputsDir: string;
+    let originalCacheFailures: string | undefined;
 
     beforeEach(() => {
       terminalOutputsDir = mkdtempSync(join(tmpdir(), 'nx-terminal-outputs-'));
+      // These tests assert that a FAILED task is not cached, which is only true
+      // while `NX_CACHE_FAILURES` is off - `shouldCacheTaskResult` returns true
+      // for any code when it is set. Reading it from the ambient environment
+      // makes the outcome depend on whatever else ran first: this suite passes
+      // locally and fails in CI, where something sets it. State it here rather
+      // than inherit it.
+      originalCacheFailures = process.env.NX_CACHE_FAILURES;
+      delete process.env.NX_CACHE_FAILURES;
     });
 
     afterEach(() => {
       rmSync(terminalOutputsDir, { recursive: true, force: true });
+      if (originalCacheFailures === undefined) {
+        delete process.env.NX_CACHE_FAILURES;
+      } else {
+        process.env.NX_CACHE_FAILURES = originalCacheFailures;
+      }
     });
 
     function makeTask(id: string, overrides: Partial<Task> = {}): Task {
