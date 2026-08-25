@@ -7,13 +7,13 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use super::IoSnapshotResolution;
-use super::client::{TaskInputs, TaskIoSnapshot};
+use super::bundle::{TaskInputs, TaskIoSnapshot};
 
 pub const BUNDLE_VERSION: u32 = 1;
 pub const BUNDLE_FILE: &str = "snapshots.json";
 
 /// One resolved snapshot set, cached per requested commit.
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Bundle {
     pub version: u32,
@@ -52,6 +52,69 @@ pub fn normalize(snapshots: &mut BTreeMap<String, TaskIoSnapshot>) {
 fn sort_unique(values: &mut Vec<String>) {
     values.sort();
     values.dedup();
+}
+
+/// Why a bundle directory yielded no bundle; mirrors the TS diagnostic reasons.
+#[derive(Debug)]
+pub(crate) struct BundleReadError {
+    pub reason: &'static str,
+    pub file: String,
+    pub message: String,
+}
+
+static BUNDLE_CACHE: std::sync::LazyLock<
+    dashmap::DashMap<PathBuf, (std::time::SystemTime, std::sync::Arc<Bundle>)>,
+> = std::sync::LazyLock::new(dashmap::DashMap::new);
+
+/// Parses `<directory>/snapshots.json`, re-reading only when its mtime changes
+/// so a long-lived daemon serves repeated requests from memory.
+pub(crate) fn read_bundle(directory: &Path) -> Result<std::sync::Arc<Bundle>, BundleReadError> {
+    let file = directory.join(BUNDLE_FILE);
+    let file_name = file.to_string_lossy().into_owned();
+    let mtime = match fs::metadata(&file).and_then(|m| m.modified()) {
+        Ok(mtime) => mtime,
+        Err(err) => {
+            let reason = if err.kind() == io::ErrorKind::NotFound {
+                "no-bundle"
+            } else {
+                "invalid-bundle"
+            };
+            return Err(BundleReadError {
+                reason,
+                file: file_name,
+                message: err.to_string(),
+            });
+        }
+    };
+    if let Some(cached) = BUNDLE_CACHE.get(&file) {
+        if cached.0 == mtime {
+            return Ok(std::sync::Arc::clone(&cached.1));
+        }
+    }
+    let parsed = fs::File::open(&file)
+        .map_err(|e| e.to_string())
+        .and_then(|f| {
+            serde_json::from_reader::<_, Bundle>(io::BufReader::new(f)).map_err(|e| e.to_string())
+        })
+        .and_then(|bundle| {
+            if bundle.version == BUNDLE_VERSION {
+                Ok(bundle)
+            } else {
+                Err(format!("not a version {BUNDLE_VERSION} snapshot bundle"))
+            }
+        });
+    match parsed {
+        Ok(bundle) => {
+            let bundle = std::sync::Arc::new(bundle);
+            BUNDLE_CACHE.insert(file, (mtime, std::sync::Arc::clone(&bundle)));
+            Ok(bundle)
+        }
+        Err(message) => Err(BundleReadError {
+            reason: "invalid-bundle",
+            file: file_name,
+            message,
+        }),
+    }
 }
 
 pub fn read_resolution(output_directory: &Path, commit: &str) -> Option<IoSnapshotResolution> {
@@ -226,6 +289,49 @@ mod tests {
         assert!(read_resolution(&temp, "bbb").is_some());
         assert!(read_resolution(&temp, "aaa").is_none());
         assert!(!temp.join(".tmp-zzz-1").exists());
+    }
+
+    #[test]
+    fn read_bundle_reports_missing_and_invalid_and_caches_by_mtime() {
+        let temp = TempDir::new().unwrap();
+        let dir = temp.join("aaa");
+        let missing = read_bundle(&dir).unwrap_err();
+        assert_eq!(missing.reason, "no-bundle");
+
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(dir.join(BUNDLE_FILE), "{ not json").unwrap();
+        let invalid = read_bundle(&dir).unwrap_err();
+        assert_eq!(invalid.reason, "invalid-bundle");
+        assert!(invalid.file.ends_with(BUNDLE_FILE));
+
+        let mut bundle = Bundle {
+            version: BUNDLE_VERSION,
+            resolution: resolution("aaa", 1),
+            snapshots: BTreeMap::new(),
+        };
+        write(&temp, &bundle).unwrap();
+        let first = read_bundle(&dir).unwrap();
+        assert!(std::sync::Arc::ptr_eq(&first, &read_bundle(&dir).unwrap()));
+
+        bundle.resolution.fetched_at = 2;
+        write(&temp, &bundle).unwrap();
+        let later = std::time::SystemTime::now() + std::time::Duration::from_secs(5);
+        let file = fs::File::options()
+            .write(true)
+            .open(dir.join(BUNDLE_FILE))
+            .unwrap();
+        file.set_modified(later).unwrap();
+        assert_eq!(read_bundle(&dir).unwrap().resolution.fetched_at, 2);
+
+        bundle.version = 99;
+        write(&temp, &bundle).unwrap();
+        let file = fs::File::options()
+            .write(true)
+            .open(dir.join(BUNDLE_FILE))
+            .unwrap();
+        file.set_modified(later + std::time::Duration::from_secs(5))
+            .unwrap();
+        assert_eq!(read_bundle(&dir).unwrap_err().reason, "invalid-bundle");
     }
 
     #[test]

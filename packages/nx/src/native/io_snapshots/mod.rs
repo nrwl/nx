@@ -1,20 +1,33 @@
+pub(crate) mod bundle;
+#[cfg(not(target_arch = "wasm32"))]
 mod client;
+#[cfg(not(target_arch = "wasm32"))]
 mod credentials;
-mod store;
+pub(crate) mod store;
 
 use std::path::Path;
+use std::sync::Arc;
+#[cfg(not(target_arch = "wasm32"))]
 use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
+#[cfg(not(target_arch = "wasm32"))]
 use tracing::trace;
 
+#[cfg(not(target_arch = "wasm32"))]
 use crate::native::utils::git;
+#[cfg(not(target_arch = "wasm32"))]
 use crate::native::utils::time::current_timestamp_millis;
+#[cfg(not(target_arch = "wasm32"))]
 use client::Credentials;
 
+#[cfg(not(target_arch = "wasm32"))]
 const DEFAULT_MAX_COMMITS: u32 = 50;
+#[cfg(not(target_arch = "wasm32"))]
 const DEFAULT_TIMEOUT_MS: u32 = 10_000;
+#[cfg(not(target_arch = "wasm32"))]
 const DEFAULT_MAX_AGE_MS: i64 = 60 * 60 * 1000;
+#[cfg(not(target_arch = "wasm32"))]
 const DEFAULT_RETAIN: u32 = 5;
 
 #[napi(object)]
@@ -48,25 +61,111 @@ pub struct IoSnapshotResolution {
     pub tasks: u32,
 }
 
-#[napi(object)]
-#[derive(Clone, Debug, Default)]
-pub struct IoSnapshotFetchResult {
-    /// `fetched` | `cached` | `skipped`
-    pub status: String,
-    /// Why the fetch was skipped, or `stale-offline` when a stale bundle was reused.
-    pub reason: Option<String>,
-    pub message: Option<String>,
-    /// Directory holding `snapshots.json` when status is not `skipped`.
-    pub directory: Option<String>,
-    pub resolution: Option<IoSnapshotResolution>,
+/// The fetched or loaded bundle for one commit, plus what resolving it
+/// reported. Handed to the hash planner as-is; `bundle` is `None` when the
+/// task hashes natively (status `skipped`, or a load failure).
+#[napi]
+pub struct IoSnapshots {
+    pub(crate) bundle: Option<Arc<store::Bundle>>,
+    status: String,
+    reason: Option<String>,
+    message: Option<String>,
+    file: Option<String>,
+    directory: Option<String>,
 }
 
+#[napi]
+impl IoSnapshots {
+    /// `fetched` | `cached` | `skipped`
+    #[napi(getter)]
+    pub fn status(&self) -> String {
+        self.status.clone()
+    }
+
+    /// Why the fetch was skipped, `stale-offline` when a stale bundle was
+    /// reused, or `no-bundle` / `invalid-bundle` from `loadIoSnapshots`.
+    #[napi(getter)]
+    pub fn reason(&self) -> Option<String> {
+        self.reason.clone()
+    }
+
+    #[napi(getter)]
+    pub fn message(&self) -> Option<String> {
+        self.message.clone()
+    }
+
+    /// The bundle file a load failure refers to.
+    #[napi(getter)]
+    pub fn file(&self) -> Option<String> {
+        self.file.clone()
+    }
+
+    /// Directory holding `snapshots.json` when a bundle was resolved.
+    #[napi(getter)]
+    pub fn directory(&self) -> Option<String> {
+        self.directory.clone()
+    }
+
+    #[napi(getter)]
+    pub fn resolution(&self) -> Option<IoSnapshotResolution> {
+        self.bundle.as_ref().map(|b| b.resolution.clone())
+    }
+
+    pub(crate) fn skipped(reason: &'static str, message: impl Into<String>) -> Self {
+        Self {
+            bundle: None,
+            status: "skipped".into(),
+            reason: Some(reason.into()),
+            message: Some(message.into()),
+            file: None,
+            directory: None,
+        }
+    }
+
+    fn resolved(
+        status: &str,
+        reason: Option<&'static str>,
+        message: Option<String>,
+        directory: &Path,
+        bundle: Arc<store::Bundle>,
+    ) -> Self {
+        Self {
+            bundle: Some(bundle),
+            status: status.into(),
+            reason: reason.map(Into::into),
+            message,
+            file: None,
+            directory: Some(directory.to_string_lossy().into_owned()),
+        }
+    }
+}
+
+/// Reads an already-fetched bundle directory without touching the network:
+/// `nx show`/`nx graph` and the daemon load the directory the client resolved.
+#[napi]
+pub fn load_io_snapshots(directory: String) -> IoSnapshots {
+    let dir = Path::new(&directory);
+    match store::read_bundle(dir) {
+        Ok(bundle) => IoSnapshots::resolved("cached", None, None, dir, bundle),
+        Err(err) => IoSnapshots {
+            bundle: None,
+            status: "skipped".into(),
+            reason: Some(err.reason.into()),
+            message: Some(err.message),
+            file: Some(err.file),
+            directory: None,
+        },
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 #[derive(Debug)]
 pub(crate) struct FetchFailure {
     reason: &'static str,
     message: String,
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl FetchFailure {
     pub(crate) fn new(reason: &'static str, message: impl Into<String>) -> Self {
         Self {
@@ -76,43 +175,29 @@ impl FetchFailure {
     }
 }
 
-fn skipped(reason: &'static str, message: impl Into<String>) -> IoSnapshotFetchResult {
-    IoSnapshotFetchResult {
-        status: "skipped".into(),
-        reason: Some(reason.into()),
-        message: Some(message.into()),
-        ..Default::default()
-    }
-}
-
 /// Resolves the I/O snapshot bundle for the workspace's current HEAD, serving
 /// it from the on-disk cache when fresh and fetching from Nx Cloud otherwise.
 /// Never fails the caller: every problem is reported as a `skipped` result.
+#[cfg(not(target_arch = "wasm32"))]
 #[napi]
-pub async fn fetch_io_snapshots(options: IoSnapshotFetchOptions) -> IoSnapshotFetchResult {
+pub async fn fetch_io_snapshots(options: IoSnapshotFetchOptions) -> IoSnapshots {
     let workspace_root = Path::new(&options.workspace_root);
     let cache_directory = Path::new(&options.cache_directory);
 
     let Some(head) = git::head_sha(workspace_root) else {
-        return skipped("not-a-git-repo", "Could not resolve HEAD");
+        return IoSnapshots::skipped("not-a-git-repo", "Could not resolve HEAD");
     };
 
     let now = current_timestamp_millis();
     let max_age = options.max_age_ms.unwrap_or(DEFAULT_MAX_AGE_MS);
     let cached = store::read_resolution(cache_directory, &head);
+    let bundle_dir = store::bundle_dir(cache_directory, &head);
     if let Some(resolution) = &cached {
         if max_age > 0 && now - resolution.fetched_at <= max_age {
-            trace!("io snapshots for {head} served from cache");
-            return IoSnapshotFetchResult {
-                status: "cached".into(),
-                directory: Some(
-                    store::bundle_dir(cache_directory, &head)
-                        .to_string_lossy()
-                        .into_owned(),
-                ),
-                resolution: Some(resolution.clone()),
-                ..Default::default()
-            };
+            if let Ok(bundle) = store::read_bundle(&bundle_dir) {
+                trace!("io snapshots for {head} served from cache");
+                return IoSnapshots::resolved("cached", None, None, &bundle_dir, bundle);
+            }
         }
     }
 
@@ -127,7 +212,7 @@ pub async fn fetch_io_snapshots(options: IoSnapshotFetchOptions) -> IoSnapshotFe
         client_version: client_version.clone(),
     };
     if credentials.is_empty() {
-        return skipped(
+        return IoSnapshots::skipped(
             "no-credentials",
             "No Nx Cloud access token, Nx Cloud ID, or personal access token found",
         );
@@ -146,24 +231,22 @@ pub async fn fetch_io_snapshots(options: IoSnapshotFetchOptions) -> IoSnapshotFe
         match client::read_snapshots(&options.api_url, &commits, &credentials, timeout).await {
             Ok(snapshots) => snapshots,
             Err(failure) => {
-                if let Some(resolution) = cached {
-                    trace!(
-                        "io snapshot fetch failed ({}); reusing stale bundle",
-                        failure.reason
-                    );
-                    return IoSnapshotFetchResult {
-                        status: "cached".into(),
-                        reason: Some("stale-offline".into()),
-                        message: Some(failure.message),
-                        directory: Some(
-                            store::bundle_dir(cache_directory, &head)
-                                .to_string_lossy()
-                                .into_owned(),
-                        ),
-                        resolution: Some(resolution),
-                    };
+                if cached.is_some() {
+                    if let Ok(bundle) = store::read_bundle(&bundle_dir) {
+                        trace!(
+                            "io snapshot fetch failed ({}); reusing stale bundle",
+                            failure.reason
+                        );
+                        return IoSnapshots::resolved(
+                            "cached",
+                            Some("stale-offline"),
+                            Some(failure.message),
+                            &bundle_dir,
+                            bundle,
+                        );
+                    }
                 }
-                return skipped(failure.reason, failure.message);
+                return IoSnapshots::skipped(failure.reason, failure.message);
             }
         };
 
@@ -187,7 +270,7 @@ pub async fn fetch_io_snapshots(options: IoSnapshotFetchOptions) -> IoSnapshotFe
     };
     let directory = match store::write(cache_directory, &bundle) {
         Ok(dir) => dir,
-        Err(err) => return skipped("write-failed", err.to_string()),
+        Err(err) => return IoSnapshots::skipped("write-failed", err.to_string()),
     };
     store::prune(
         cache_directory,
@@ -195,10 +278,5 @@ pub async fn fetch_io_snapshots(options: IoSnapshotFetchOptions) -> IoSnapshotFe
         &head,
     );
 
-    IoSnapshotFetchResult {
-        status: "fetched".into(),
-        directory: Some(directory.to_string_lossy().into_owned()),
-        resolution: Some(resolution),
-        ..Default::default()
-    }
+    IoSnapshots::resolved("fetched", None, None, &directory, Arc::new(bundle))
 }
