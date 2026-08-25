@@ -4,7 +4,7 @@ import type { TaskResult } from '../life-cycle';
 import { TaskStatus } from '../tasks-runner';
 import { SummaryTerminalOutputLifeCycle } from './summary-terminal-output-life-cycle';
 
-vi.mock('../cache', async () => ({
+vi.mock('../terminal-output-path', async () => ({
   terminalOutputPathForHash: (hash: string) => `/cache/terminalOutputs/${hash}`,
 }));
 
