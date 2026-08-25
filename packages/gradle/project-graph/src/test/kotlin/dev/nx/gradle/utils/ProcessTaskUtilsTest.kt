@@ -98,8 +98,8 @@ class ProcessTaskUtilsTest {
   fun `test a task whose dependency set cannot be fully resolved stays cacheable and fails open`() {
     val project = ProjectBuilder.builder().build()
     val task = project.tasks.register("packagesOtherProject").get()
-    // The second path does not exist, so the set is knowably
-    // short. Cacheability is Gradle's verdict, not the plugin's: the inputs over-declare instead.
+    // Neither path exists, so the set is knowably short. Cacheability is Gradle's verdict, not
+    // the plugin's: the inputs over-declare instead.
     task.dependsOn(":other:jar")
     task.dependsOn(":missing:jar")
 
@@ -123,27 +123,6 @@ class ProcessTaskUtilsTest {
           it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*" && it["transitive"] == true
         },
         "a short dependency set must over-declare the catch-all, got $result")
-  }
-
-  @Test
-  fun `test a task with a resolvable dependency set stays cacheable`() {
-    val project = ProjectBuilder.builder().build()
-    val task = project.tasks.register("packagesThisProject").get()
-    task.dependsOn(":other:jar")
-
-    val result =
-        processTask(
-            task,
-            projectBuildPath = ":project",
-            projectRoot = project.projectDir.path,
-            workspaceRoot = project.rootDir.path,
-            externalNodes = mutableMapOf(),
-            dependencies = mutableSetOf(),
-            targetNameOverrides = emptyMap(),
-            gitIgnoreClassifier = GitIgnoreClassifier(project.rootDir),
-            project = project)
-
-    assertEquals(true, result["cache"])
   }
 
   @Test
@@ -496,6 +475,34 @@ class ProcessTaskUtilsTest {
       assertTrue(theirs in resolved, "expected the other build's task, got $resolved")
       assertFalse(
           ours in resolved, "must not resolve the path in the consumer's build, got $resolved")
+    }
+
+    @Test
+    fun `test a bare name inside another build's container is lost, not guessed`() {
+      val otherBuild = ProjectBuilder.builder().withName("other-build").build()
+      val theirReport = otherBuild.tasks.register("report").get()
+      val theirAssemble = otherBuild.tasks.register("assemble").get()
+      val ourAssemble = project.tasks.register("assemble").get()
+
+      val task = project.tasks.register("aggregates").get()
+      // The absolute path forces a copy; the bare name's project is unknown across builds.
+      task.dependsOn(otherBuild.files("r.txt").builtBy("assemble", ":report").buildDependencies)
+
+      val resolved = getDependsOnTask(task)
+      assertTrue(theirReport in resolved, "the absolute path resolves in that build, got $resolved")
+      assertFalse(ourAssemble in resolved, "must not resolve against the consumer, got $resolved")
+      assertFalse(theirAssemble in resolved, "cannot know the container's project, got $resolved")
+      val result =
+          getInputsForTask(
+              null,
+              task,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              GitIgnoreClassifier(java.io.File(workspaceRoot)))
+      assertTrue(
+          result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*" },
+          "a bare name in a foreign build's container must fail open, got $result")
     }
 
     @Test

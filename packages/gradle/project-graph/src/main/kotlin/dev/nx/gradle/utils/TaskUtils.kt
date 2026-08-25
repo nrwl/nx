@@ -209,8 +209,8 @@ private fun foreignBuildRoot(owner: Project, resolver: TaskResolver): Project? =
 /**
  * Bare names resolve where Gradle would resolve them — in the container's own project via
  * [original] — and qualified paths through [lookupTask], in [foreignRoot]'s build when the
- * container came from another build. A [nested] container whose resolver could not be read has no
- * safe answer for a bare name. Both JVM descriptors are implemented.
+ * container came from another build. A bare name has no safe answer in a [nested] container whose
+ * resolver could not be read, nor in one from another build. Both JVM descriptors are implemented.
  */
 private class SafeTaskResolver(
     private val owner: Project,
@@ -220,8 +220,8 @@ private class SafeTaskResolver(
 ) : TaskResolver {
   fun resolve(path: String): Task? =
       when {
-        foreignRoot != null -> lookupTask(foreignRoot, path)
-        path.contains(':') -> lookupTask(owner, path)
+        path.contains(':') -> lookupTask(foreignRoot ?: owner, path)
+        foreignRoot != null -> null // a bare name's project is unknown across builds
         original != null -> resolveBareName(original, path)
         nested -> null
         else -> lookupTask(owner, path)

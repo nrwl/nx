@@ -147,10 +147,10 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
         const normalizedProjectRoot = projectRoots[i];
         const gradleFilePath = buildFileByProjectRoot[normalizedProjectRoot];
         if (!gradleFilePath) {
-          // No build file reported: an ancestor configures it and the plugin predates
-          // effectiveBuildFile.
+          // No build file anywhere up the ancestry, or an ancestor configures it and the plugin
+          // predates effectiveBuildFile.
           logger.verbose(
-            `[@nx/gradle] no build file reported for "${normalizedProjectRoot}"; skipping it. Upgrade dev.nx.gradle.project-graph if projects are missing.`
+            `[@nx/gradle] no build file reported for "${normalizedProjectRoot}"; skipping it. Add a build file (or run @nx/gradle:init), or upgrade dev.nx.gradle.project-graph if projects are missing.`
           );
           continue;
         }
