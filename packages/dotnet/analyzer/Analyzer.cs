@@ -292,7 +292,10 @@ public static class Analyzer
             "PackageOutputPath",
 
             // Test paths
-            "TestResultsDirectory"
+            "TestResultsDirectory",
+
+            // OpenAPI document paths
+            "OpenApiDocumentsDirectory"
         };
 
         foreach (var prop in propertiesToCollect)

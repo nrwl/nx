@@ -277,6 +277,21 @@ public static partial class TargetBuilder
     }
 
     /// <summary>
+    /// Gets the directory Microsoft.Extensions.ApiDescription.Server writes the
+    /// generated OpenAPI document to, as a fully-qualified Nx-prefixed string.
+    /// The property may point anywhere, so it resolves under the same rules as
+    /// the other outputs. Returns <c>null</c> when the property is unset or the
+    /// path lives outside the workspace.
+    /// </summary>
+    private static string? GetOpenApiDocumentsDirectory(Dictionary<string, string> properties, string projectDirectory, string workspaceRoot)
+    {
+        var openApiDocumentsDirectory = properties.GetValueOrDefault("OpenApiDocumentsDirectory");
+        return string.IsNullOrEmpty(openApiDocumentsDirectory)
+            ? null
+            : ResolvePath(openApiDocumentsDirectory, projectDirectory, workspaceRoot);
+    }
+
+    /// <summary>
     /// Gets the test results directory path, as a fully-qualified Nx-prefixed
     /// string. Returns <c>null</c> when the path lives outside the workspace.
     /// </summary>
