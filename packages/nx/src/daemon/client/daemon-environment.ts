@@ -89,6 +89,9 @@ const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   'COPILOT_CLI_BINARY_VERSION',
   'CLAUDE_PID',
 
+  // Editors / IDEs
+  'NX_CONSOLE',
+
   // Shell mechanics
   '_',
   'SHLVL',
@@ -169,6 +172,18 @@ const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   // macOS internals
   '__CF_USER_TEXT_ENCODING',
   '__CFBundleIdentifier',
+
+  // Set by git per invocation when Nx runs from a hook. Exact entries rather
+  // than a GIT_ prefix, which would also swallow GIT_DIR.
+  'GIT_INDEX_FILE',
+  'GIT_PREFIX',
+  'GIT_REFLOG_ACTION',
+  'GIT_AUTHOR_NAME',
+  'GIT_AUTHOR_EMAIL',
+  'GIT_AUTHOR_DATE',
+  'GIT_COMMITTER_NAME',
+  'GIT_COMMITTER_EMAIL',
+  'GIT_COMMITTER_DATE',
 ]);
 
 /**
@@ -190,6 +205,8 @@ const DAEMON_ENV_PREFIX_EXCLUSIONS = [
   // Package managers (process-scoped)
   'npm_',
   'pnpm_',
+  'PNPM_',
+  'COREPACK_',
 
   // Nx Cloud runner/agent vars (per-worker values like NX_CLOUD_WORKER_ID
   // and NX_CLOUD_EXECUTION_ID diverge between distributed-execution workers
