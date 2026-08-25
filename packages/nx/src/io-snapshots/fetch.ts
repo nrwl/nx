@@ -3,14 +3,13 @@ import type { NxJsonConfiguration } from '../config/nx-json';
 import { fetchIoSnapshots, type IoSnapshots } from '../native';
 import { cacheDir } from '../utils/cache-directory';
 import { logger } from '../utils/logger';
+import { removeTrailingSlash } from '../nx-cloud/utilities/get-cloud-options';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { output } from '../utils/output';
 import { nxVersion } from '../utils/versions';
 import { workspaceRoot } from '../utils/workspace-root';
 
 export type { IoSnapshotResolution, IoSnapshots } from '../native';
-/** @deprecated use IoSnapshots */
-export type IoSnapshotFetchResult = IoSnapshots;
 
 /** Shared across worktrees: `cacheDir` resolves to the main worktree. */
 export const ioSnapshotsCacheDirectory = join(cacheDir, 'io-snapshots');
@@ -37,12 +36,13 @@ export function isIoSnapshotFetchEnabled(
   return override === 'true' || isNxCloudUsed(nxJson);
 }
 
-// Reasons that indicate misconfiguration rather than an expected offline state.
+// Reasons that indicate misconfiguration rather than an expected offline
+// state or a Cloud that simply lacks the endpoint.
 const WARNED_REASONS = new Set([
   'unauthorized',
-  'unsupported-server',
   'invalid-response',
   'write-failed',
+  'insecure-api-url',
 ]);
 
 /**
@@ -57,18 +57,31 @@ export async function fetchIoSnapshotsForRun(
     return null;
   }
 
+  const maxAgeMs = parseMaxAge(process.env.NX_IO_SNAPSHOTS_MAX_AGE);
   const result = await fetchIoSnapshots({
     workspaceRoot,
     cacheDirectory: ioSnapshotsCacheDirectory,
-    apiUrl:
-      process.env.NX_CLOUD_API || runnerOptions.url || 'https://cloud.nx.app',
+    apiUrl: ioSnapshotApiUrl(runnerOptions),
     accessToken: process.env.NX_CLOUD_ACCESS_TOKEN || runnerOptions.accessToken,
     nxCloudId: runnerOptions.nxCloudId,
     clientVersion: `nx/${nxVersion}`,
-    maxAgeMs: parseMaxAge(process.env.NX_IO_SNAPSHOTS_MAX_AGE),
+    maxAgeMs,
+    failureMaxAgeMs: maxAgeMs,
   });
   report(result);
   return result;
+}
+
+// Same precedence as getCloudUrl(), plus the runner's configured url.
+export function ioSnapshotApiUrl(
+  runnerOptions: IoSnapshotCloudOptions
+): string {
+  return removeTrailingSlash(
+    process.env.NX_CLOUD_API ||
+      process.env.NRWL_API ||
+      runnerOptions.url ||
+      'https://cloud.nx.app'
+  );
 }
 
 function parseMaxAge(value: string | undefined): number | undefined {

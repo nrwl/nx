@@ -48,6 +48,17 @@ pub async fn read_snapshots(
     credentials: &Credentials,
     timeout: Duration,
 ) -> Result<BTreeMap<String, TaskIoSnapshot>, FetchFailure> {
+    // Credentials never travel in the clear; a local dev server is the exception.
+    let insecure = api_url.starts_with("http://")
+        && !["http://localhost", "http://127.0.0.1", "http://[::1]"]
+            .iter()
+            .any(|local| api_url.starts_with(local));
+    if insecure {
+        return Err(FetchFailure::new(
+            "insecure-api-url",
+            format!("Refusing to send Nx Cloud credentials to {api_url} over plain HTTP"),
+        ));
+    }
     let mut headers = header::HeaderMap::new();
     if let Some(token) = &credentials.access_token {
         headers.insert(header::AUTHORIZATION, header_value("accessToken", token)?);
