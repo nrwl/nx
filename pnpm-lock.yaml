@@ -1895,6 +1895,9 @@ importers:
       '@nx/nx-dev-feature-ai':
         specifier: workspace:*
         version: link:../feature-ai
+      '@nx/nx-dev-feature-analytics':
+        specifier: workspace:*
+        version: link:../feature-analytics
       '@nx/nx-dev-ui-common':
         specifier: workspace:*
         version: link:../ui-common
