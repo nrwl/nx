@@ -38,11 +38,17 @@ describe('I/O snapshots', () => {
     updateJson(`libs/${lib}/project.json`, (c) => {
       c.targets = {
         ...c.targets,
-        echo: { command: `cat libs/${lib}/src/index.ts && echo $NAME` },
+        echo: {
+          command: `cat libs/${lib}/src/index.ts libs/${lib}/generated/config.json && echo $NAME`,
+        },
       };
       return c;
     });
     updateFile(`libs/${lib}/README.md`, 'unread\n');
+    // A generated, gitignored file the task reads: invisible to filesets,
+    // visible to the snapshot.
+    updateFile(`libs/${lib}/generated/config.json`, '{"v":1}\n');
+    updateFile('.gitignore', (c) => `${c}\n**/generated/\n`);
     seedBundle(lib);
   });
 
@@ -82,12 +88,12 @@ describe('I/O snapshots', () => {
         snapshots: {
           [taskId]: {
             commit: head,
-            // Only the file the command actually reads; README.md is not here.
-            inputs: {
-              projects: { [project]: ['src/index.ts'] },
-              workspace: [],
-              taskOutputs: {},
-            },
+            // Only what the command actually reads; README.md is not here.
+            // Flat, workspace-relative collapsed globs (NXC-4847 §2b).
+            inputs: [
+              `libs/${project}/src/index.ts`,
+              `libs/${project}/generated/config.json`,
+            ],
             outputs: [],
           },
         },
@@ -108,8 +114,12 @@ describe('I/O snapshots', () => {
     // Only the observed read comes from the snapshot; nx.json & co stay native.
     const observed = Object.entries(used.sources)
       .filter(([, source]) => source === 'snapshot')
-      .map(([file]) => file);
-    expect(observed).toEqual([`libs/${lib}/src/index.ts`]);
+      .map(([file]) => file)
+      .sort();
+    expect(observed).toEqual([
+      `libs/${lib}/generated/config.json`,
+      `libs/${lib}/src/index.ts`,
+    ]);
     expect(used.files).not.toContain(`libs/${lib}/README.md`);
     expect(used.sources['nx.json']).toBe('native');
     expect(used.markers).toEqual(['io-snapshot:e2e-digest']);
@@ -136,11 +146,39 @@ describe('I/O snapshots', () => {
     expect(runCLI(`echo ${lib}`, { env: on })).not.toContain(CACHE_HIT);
   }, 120000);
 
+  it('hashes a gitignored generated file the snapshot says was read', () => {
+    expect(runCLI(`echo ${lib}`, { env: on })).toContain(CACHE_HIT);
+    updateFile(`libs/${lib}/generated/config.json`, '{"v":2}\n');
+    expect(runCLI(`echo ${lib}`, { env: on })).not.toContain(CACHE_HIT);
+    expect(runCLI(`echo ${lib}`, { env: on })).toContain(CACHE_HIT);
+  }, 120000);
+
   it('still misses when an environment input changes', () => {
     expect(runCLI(`echo ${lib}`, { env: on })).toContain(CACHE_HIT);
     expect(
       runCLI(`echo ${lib}`, { env: { ...on, NAME: 'changed' } })
     ).not.toContain(CACHE_HIT);
+  }, 120000);
+
+  it('hashes natively for a target that opts out with ioSnapshots: false', () => {
+    updateJson(`libs/${lib}/project.json`, (c) => {
+      c.targets.echo.ioSnapshots = false;
+      return c;
+    });
+    const shown = JSON.parse(
+      runCLI(`show target inputs ${lib}:echo --json`, { env: on })
+    );
+    expect(shown.snapshot).toEqual({ status: 'fallback', reason: 'disabled' });
+    expect(shown.markers).toBeUndefined();
+    // Declared inputs again: the unread README is back in the hash.
+    expect(runCLI(`echo ${lib}`, { env: on })).not.toContain(CACHE_HIT);
+    expect(runCLI(`echo ${lib}`, { env: on })).toContain(CACHE_HIT);
+    updateFile(`libs/${lib}/README.md`, 'opted out sees this\n');
+    expect(runCLI(`echo ${lib}`, { env: on })).not.toContain(CACHE_HIT);
+    updateJson(`libs/${lib}/project.json`, (c) => {
+      delete c.targets.echo.ioSnapshots;
+      return c;
+    });
   }, 120000);
 
   it('hashes natively when the kill switch is set', () => {
