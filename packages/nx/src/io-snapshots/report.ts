@@ -107,6 +107,10 @@ function describeDiagnostic(d: IoSnapshotDiagnostic): string {
       return `${d.taskId}: snapshot references unknown project "${d.project}"`;
     case 'producer-not-in-graph':
       return `${d.taskId}: reads outputs of "${d.producer}", which is not in this task graph`;
+    case 'escapes-workspace':
+      return `${d.taskId}: snapshot glob "${d.glob}" escapes the workspace`;
+    case 'invalid-files-input':
+      return `${d.taskId}: a declared files input is invalid`;
     default:
       return `${d.taskId ? `${d.taskId}: ` : ''}${d.reason}`;
   }
