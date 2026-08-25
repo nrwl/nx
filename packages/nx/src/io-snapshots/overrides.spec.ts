@@ -36,7 +36,7 @@ const projectGraph: ProjectGraph = {
   nodes: {
     web: node('web', 'apps/web', {
       build: { executor: 'nx:run-commands', cache: true },
-      lint: { executor: 'nx:run-commands', cache: 'manual' },
+      lint: { executor: 'nx:run-commands', cache: true, ioSnapshots: false },
       custom: { executor: 'nx:run-commands', cache: true },
     }),
     ui: node('ui', 'libs/ui', {
@@ -217,7 +217,7 @@ describe('buildIoSnapshotOverrides', () => {
     ]);
   });
 
-  it('withholds overrides for manual, custom-hasher, dangling, and root-anchored entries', () => {
+  it('withholds overrides for disabled, custom-hasher, dangling, and root-anchored entries', () => {
     writeBundle({
       'web:build': {
         commit: HEAD,
@@ -245,7 +245,7 @@ describe('buildIoSnapshotOverrides', () => {
         taskId: 'web:build',
         producer: 'gone:build',
       },
-      { reason: 'manual', taskId: 'web:lint' },
+      { reason: 'disabled', taskId: 'web:lint' },
       { reason: 'custom-hasher', taskId: 'web:custom' },
       { reason: 'root-anchored-glob', taskId: 'ui:build', glob: '**/*.gen' },
     ]);

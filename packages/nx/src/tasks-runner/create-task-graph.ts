@@ -404,8 +404,7 @@ export class ProcessTasks {
         qualifiedTarget,
         interpolatedOverrides
       ),
-      // 'manual' is cacheable; it only opts out of snapshot hashing.
-      cache: (project.data.targets[target].cache ?? false) !== false,
+      cache: project.data.targets[target].cache ?? false,
       parallelism: project.data.targets[target].parallelism ?? true,
       continuous: project.data.targets[target].continuous ?? false,
       sandbox: project.data.targets[target].sandbox,
