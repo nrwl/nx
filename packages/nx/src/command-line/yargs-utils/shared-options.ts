@@ -372,7 +372,19 @@ export function withOutputStyleOption<T>(
         // renderer built for that. Assigning here is what selects the summary
         // life cycle; the failures-only default is resolved at render time
         // instead, so it never reaches the orchestrator's streaming decision.
-        if (!args.outputStyle && isAiAgent() && choices.includes('summary')) {
+        //
+        // `NX_TUI=true` is checked because this runs BEFORE the TUI middleware,
+        // and naming a style makes `shouldUseTui` return false on the style
+        // list before it ever reads that variable - so without this, an
+        // explicit opt-in to the TUI would be discarded silently. Agent
+        // detection is ambient (`REPL_ID` is exported into a human's shell),
+        // so the human asking for a renderer has to outrank it.
+        if (
+          !args.outputStyle &&
+          process.env.NX_TUI !== 'true' &&
+          isAiAgent() &&
+          choices.includes('summary')
+        ) {
           args.outputStyle = 'summary';
         }
       },
