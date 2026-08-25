@@ -164,8 +164,15 @@ impl HashPlanInspector {
             }
             HashInstruction::Files(globs) => {
                 let expansion = expand_files(std::path::Path::new(&self.workspace_root), globs)?;
+                // `missing` paths are hashed as a sentinel, so they are real
+                // inputs; report them alongside existing files (e.g. a read of
+                // a dependency's output before the producer has run).
                 Ok(HashInputsBuilder {
-                    files: expansion.files.into_iter().collect(),
+                    files: expansion
+                        .files
+                        .into_iter()
+                        .chain(expansion.missing)
+                        .collect(),
                     ..Default::default()
                 })
             }
