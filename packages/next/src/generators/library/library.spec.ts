@@ -300,6 +300,36 @@ describe('next library', () => {
       expect(appTree.exists('my-buildable-lib/vite.config.mts')).toBeTruthy();
     });
 
+    it('should export the server entry from source for non-buildable libraries', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        linter: 'none',
+        skipFormat: true,
+        skipTsConfig: false,
+        unitTestRunner: 'none',
+        style: 'css',
+        component: false,
+        useProjectJson: false,
+      });
+
+      expect(readJson(tree, 'mylib/package.json').exports)
+        .toMatchInlineSnapshot(`
+        {
+          ".": {
+            "default": "./src/index.ts",
+            "import": "./src/index.ts",
+            "types": "./src/index.ts",
+          },
+          "./package.json": "./package.json",
+          "./server": {
+            "default": "./src/server.ts",
+            "import": "./src/server.ts",
+            "types": "./src/server.ts",
+          },
+        }
+      `);
+    });
+
     it('should create a correct package.json for buildable libraries', async () => {
       await libraryGenerator(tree, {
         directory: 'mylib',

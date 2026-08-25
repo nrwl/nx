@@ -134,6 +134,32 @@ export async function HelloServer() {
     addTsConfigPath(host, `${options.importPath}/server`, [serverEntryPath]);
   }
 
+  const isBuildable =
+    (options.bundler && options.bundler !== 'none') ||
+    options.buildable ||
+    options.publishable;
+  if (isTsSolutionSetup && !isBuildable) {
+    // Non-buildable libs resolve `.` straight to source, so `./server` does the same.
+    const packageJsonPath = joinPathFragments(
+      options.projectRoot,
+      'package.json'
+    );
+    if (host.exists(packageJsonPath)) {
+      updateJson(host, packageJsonPath, (json) => {
+        json.exports ??= {};
+        const serverSource = `./src/server.${options.js ? 'js' : 'ts'}`;
+        json.exports['./server'] = options.js
+          ? serverSource
+          : {
+              types: serverSource,
+              import: serverSource,
+              default: serverSource,
+            };
+        return json;
+      });
+    }
+  }
+
   // Configure Vite and package.json for server entry point when using Vite bundler
   if (options.bundler === 'vite') {
     // Update vite.config.mts to support multiple entry points
