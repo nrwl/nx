@@ -41,6 +41,18 @@ const DEPENDS_ON_FORMS = [
     task: 'pkgInputWired',
     decl: 'dependsOn(":utilities:jar")\n    inputs.files(files("extra-input.txt").builtBy(":list:jar"))',
   },
+  // Nothing qualified in dependsOn at all: the path hides under the inputs, and the plugin must
+  // find it there or hand the string to the deadlocking resolver.
+  {
+    task: 'pkgInputsOnly',
+    decl: 'inputs.files(files("extra-input.txt").builtBy(":list:jar"))',
+  },
+  // A bare Buildable: Gradle's walker visits its dependencies without going through the hook
+  // that swaps in the safe resolver.
+  {
+    task: 'pkgBuildable',
+    decl: 'dependsOn(object : Buildable { override fun getBuildDependencies() = files("extra-input.txt").builtBy(":list:jar").buildDependencies })',
+  },
 ];
 
 const taskKotlin = (name: string, decl: string) => `
@@ -83,7 +95,7 @@ ${taskKotlin('coreReport', 'dependsOn(":list:jar")')}
     updateFile('app/build.gradle.kts', (content) =>
       [
         // Written as a bare name: inside a script `java` is the extension, not the package.
-        `import java.util.concurrent.Callable\n${content}`,
+        `import java.util.concurrent.Callable\nimport org.gradle.api.Buildable\n${content}`,
         ...DEPENDS_ON_FORMS.map(({ task, decl }) => taskKotlin(task, decl)),
         // No task at this path, so the dependency set is knowably short. Never run: Gradle
         // itself rejects the path when planning it.

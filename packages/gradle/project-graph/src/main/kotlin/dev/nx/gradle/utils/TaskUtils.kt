@@ -13,6 +13,7 @@ import java.util.WeakHashMap
 import java.util.concurrent.Callable
 import kotlin.io.path.Path
 import org.gradle.api.Action
+import org.gradle.api.Buildable
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.FileSystemLocation
@@ -21,8 +22,10 @@ import org.gradle.api.internal.provider.ProviderInternal
 import org.gradle.api.internal.provider.TransformBackedProvider
 import org.gradle.api.internal.tasks.CachingTaskDependencyResolveContext
 import org.gradle.api.internal.tasks.DefaultTaskDependency
+import org.gradle.api.internal.tasks.TaskDependencyContainer
 import org.gradle.api.internal.tasks.TaskResolver
 import org.gradle.api.internal.tasks.WorkDependencyResolver
+import org.gradle.api.internal.tasks.WorkNodeAction
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.AbstractCopyTask
 import org.gradle.api.tasks.TaskProvider
@@ -51,19 +54,9 @@ private val dependsOnTaskCache: MutableMap<Task, Set<Task>> =
 private val dependentOutputPatternsCache: MutableMap<Task, Set<String>> =
     Collections.synchronizedMap(WeakHashMap())
 
-/** Escape hatch: force every task down the dependsOn-only path, never TaskDependency. */
+/** Escape hatch: keep only the Task objects in dependsOn and fail inputs open. */
 private val skipTaskDependencyResolution: Boolean =
     System.getenv("NX_GRADLE_SKIP_TASK_DEPS")?.toBoolean() == true
-
-private fun pathStringDeps(task: Task): List<String> {
-  return try {
-    val paths = flattenDependsOn(task).filterIsInstance<CharSequence>()
-    paths.map { it.toString() }.filter { it.isNotEmpty() }
-  } catch (e: Exception) {
-    task.logger.info("Cannot read dependsOn paths for ${task.path}: ${e.message}")
-    emptyList()
-  }
-}
 
 private val dependsOnExpansionCache: MutableMap<Task, List<Any>> =
     Collections.synchronizedMap(WeakHashMap())
@@ -113,21 +106,6 @@ private fun flattenValues(task: Task, values: Collection<Any?>): List<Any> {
   values.forEach(::visit)
   return flattened
 }
-
-/**
- * Only qualified paths need the bypass: a bare name never triggers a cross-project lookup, so
- * leaving it to [org.gradle.api.tasks.TaskDependency] keeps lifecycle-task fidelity.
- */
-private fun qualifiedPathDeps(task: Task): List<String> =
-    pathStringDeps(task).filter { it.contains(':') }
-
-/**
- * The single gate: a qualified path in [org.gradle.api.tasks.TaskDependency] re-enters
- * configuration and deadlocks (#36668). The inputs derivation must fail open on exactly the same
- * tasks, so both sites share this.
- */
-private fun bypassesTaskDependencies(task: Task): Boolean =
-    skipTaskDependencyResolution || qualifiedPathDeps(task).isNotEmpty()
 
 internal data class DependsOnResolution(val tasks: Set<Task>, val unresolved: Int)
 
@@ -179,34 +157,50 @@ private fun immutableValuesOf(dep: DefaultTaskDependency): Set<*>? =
     }
 
 /**
- * Gradle's own resolve context over `dependsOn` + [Task.getInputs] (the two halves of
- * `getTaskDependencies()`), with every [DefaultTaskDependency] it meets swapped for a copy that
- * resolves strings through [safeTaskResolver] — only that class resolves a path. Lost values count.
+ * Gradle's own resolve context, with one interception: a [DefaultTaskDependency] holding a
+ * qualified path is swapped for a copy that resolves strings through [safeTaskResolver]. Only that
+ * class resolves a path, and only a qualified one deadlocks (#36668); a container without one keeps
+ * its own resolver, so a bare name still resolves in its own project. Lost values count.
  */
 private class SafeResolveContext
 private constructor(private val owner: Project, private val task: Task, val lost: LostCounter) :
     CachingTaskDependencyResolveContext<Task>(listOf(WorkDependencyResolver.TASK_AS_TASK, lost)) {
   constructor(owner: Project, task: Task) : this(owner, task, LostCounter())
 
+  /** Counts what the engine cannot turn into a task, except the transform nodes Gradle ignores. */
   class LostCounter : WorkDependencyResolver<Task> {
     var count = 0
 
     override fun resolve(task: Task, node: Any, resolveAction: Action<in Task>): Boolean {
-      count++
+      if (node !is WorkNodeAction && node.javaClass.simpleName != "TransformNodeDependency") count++
       return true
     }
   }
 
   override fun add(dependency: Any) {
-    super.add(if (dependency is DefaultTaskDependency) screenedCopy(dependency) else dependency)
+    when (dependency) {
+      is DefaultTaskDependency -> super.add(screened(dependency))
+      is TaskDependencyContainer -> super.add(dependency)
+      // The walker visits a bare Buildable's dependencies directly, skipping this hook.
+      is Buildable -> add(dependency.buildDependencies)
+      else -> super.add(dependency)
+    }
   }
 
-  /** Same-project names resolve against the consumer; a producer-relative name counts as lost. */
-  fun screenedCopy(values: Collection<Any?>): DefaultTaskDependency {
+  /**
+   * [nested] values came from a container that may belong to another project, where a bare name
+   * means something else; there only an absolute path is unambiguous.
+   */
+  fun screenedCopy(values: Collection<Any?>, nested: Boolean = false): DefaultTaskDependency {
     val copy = DefaultTaskDependency(safeTaskResolver(owner), null)
     flattenValues(task, values).forEach { value ->
       if (value is CharSequence) {
-        if (lookupTask(owner, value.toString()) != null) copy.add(value) else lost.count++
+        val path = value.toString()
+        when {
+          nested && !path.startsWith(":") -> lost.count++
+          lookupTask(owner, path) != null -> copy.add(value)
+          else -> lost.count++
+        }
       } else {
         copy.add(value)
       }
@@ -214,10 +208,13 @@ private constructor(private val owner: Project, private val task: Task, val lost
     return copy
   }
 
-  private fun screenedCopy(dep: DefaultTaskDependency): DefaultTaskDependency {
+  private fun screened(dep: DefaultTaskDependency): TaskDependencyContainer {
     val immutable = immutableValuesOf(dep)
+    val values = (immutable ?: emptySet<Any>()) + dep.mutableValues
+    val qualified = flattenValues(task, values).any { it is CharSequence && it.contains(':') }
+    if (!qualified && immutable != null) return dep
     if (immutable == null) lost.count++
-    return screenedCopy((immutable ?: emptySet<Any>()) + dep.mutableValues)
+    return screenedCopy(values, nested = true)
   }
 }
 
@@ -783,7 +780,7 @@ private fun getInputsForTaskImpl(
     // Fail open for what screening or resolution lost: over-declaring costs a rebuild,
     // under-declaring a stale hit.
     val recoveredPathDeps =
-        if (bypassesTaskDependencies(task) && resolveDependsOn(task).unresolved > 0) setOf("**/*")
+        if (skipTaskDependencyResolution || resolveDependsOn(task).unresolved > 0) setOf("**/*")
         else emptySet()
 
     val dependentPatterns =
@@ -847,18 +844,7 @@ private fun computeDependsOnTask(task: Task): Set<Task> {
         }
 
     val dependsOnFromTaskDependencies: Set<Task> =
-        if (bypassesTaskDependencies(task)) resolveDependsOn(task).tasks
-        else
-            try {
-              task.taskDependencies.getDependencies(task)
-            } catch (e: UnsupportedOperationException) {
-              task.logger.info(
-                  "Cannot access taskDependencies for ${task.path} due to configuration cache restrictions")
-              emptySet()
-            } catch (e: Exception) {
-              task.logger.info("Error calling getDependencies for ${task.path}: ${e.message}")
-              emptySet()
-            }
+        if (skipTaskDependencyResolution) emptySet() else resolveDependsOn(task).tasks
 
     val combinedDependsOn = dependsOnFromTaskDependencies.union(dependsOnFromProperty)
 

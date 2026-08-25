@@ -98,7 +98,7 @@ class ProcessTaskUtilsTest {
   fun `test a task whose dependency set cannot be fully resolved stays cacheable and fails open`() {
     val project = ProjectBuilder.builder().build()
     val task = project.tasks.register("packagesOtherProject").get()
-    // Qualified path forces the bypass; the second path does not exist, so the set is knowably
+    // The second path does not exist, so the set is knowably
     // short. Cacheability is Gradle's verdict, not the plugin's: the inputs over-declare instead.
     task.dependsOn(":other:jar")
     task.dependsOn(":missing:jar")
@@ -181,7 +181,7 @@ class ProcessTaskUtilsTest {
     val task = project.tasks.register("consumesProvider").get()
     // `named().map { }` yields a plain Provider, not a TaskProvider.
     task.dependsOn(project.tasks.named("producedByProvider").map { it })
-    task.dependsOn(":other:jar") // forces the bypass
+    task.dependsOn(":other:jar") // the deadlocking shape (#36668)
 
     val result =
         processTask(
@@ -198,7 +198,7 @@ class ProcessTaskUtilsTest {
     val dependsOn = result["dependsOn"]?.toString() ?: ""
     assertTrue(
         dependsOn.contains("producedByProvider"),
-        "the provider's task must survive the bypass, got $dependsOn")
+        "the provider's task must survive the safe resolution, got $dependsOn")
     assertTrue(dependsOn.contains("jar"), "the path edge must also survive, got $dependsOn")
   }
 
@@ -217,7 +217,7 @@ class ProcessTaskUtilsTest {
             return produced
           }
         })
-    task.dependsOn(":other:jar") // forces the bypass
+    task.dependsOn(":other:jar") // the deadlocking shape (#36668)
 
     val result =
         processTask(
@@ -234,7 +234,7 @@ class ProcessTaskUtilsTest {
     val dependsOn = result["dependsOn"]?.toString() ?: ""
     assertTrue(
         dependsOn.contains("producedByGroovyClosure"),
-        "the closure's task must survive the bypass, got $dependsOn")
+        "the closure's task must survive the safe resolution, got $dependsOn")
   }
 
   @Test
@@ -245,7 +245,7 @@ class ProcessTaskUtilsTest {
     val task = project.tasks.register("consumesClosure").get()
     // `dependsOn { … }` stores a Callable; Gradle resolves it by calling it.
     task.dependsOn(java.util.concurrent.Callable { produced })
-    task.dependsOn(":other:jar") // forces the bypass
+    task.dependsOn(":other:jar") // the deadlocking shape (#36668)
 
     val result =
         processTask(
@@ -262,7 +262,7 @@ class ProcessTaskUtilsTest {
     val dependsOn = result["dependsOn"]?.toString() ?: ""
     assertTrue(
         dependsOn.contains("producedByClosure"),
-        "the closure's task must survive the bypass, got $dependsOn")
+        "the closure's task must survive the safe resolution, got $dependsOn")
   }
 
   @Test
@@ -415,7 +415,70 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
-    fun `test an input-wired producer is a dependency of a bypassed task`() {
+    fun `test a bare name inside another project's container resolves in that project`() {
+      val other = ProjectBuilder.builder().withParent(project).withName("other").build()
+      other.tasks.register("jar")
+      val theirs = other.tasks.register("assemble").get()
+      val ours = project.tasks.register("assemble").get()
+
+      val task = project.tasks.register("consumesTheirFiles").get()
+      task.dependsOn(":other:jar")
+      // No qualified path in the container, so it keeps its own resolver: "assemble" is other's.
+      task.dependsOn(other.files("theirs.txt").builtBy("assemble"))
+
+      val resolved = getDependsOnTask(task)
+      assertTrue(theirs in resolved, "expected the producer's own task, got $resolved")
+      assertFalse(ours in resolved, "must not resolve against the consumer, got $resolved")
+    }
+
+    @Test
+    fun `test a bare name beside a qualified path in a foreign container is lost, not misresolved`() {
+      val other = ProjectBuilder.builder().withParent(project).withName("other").build()
+      other.tasks.register("jar")
+      val theirs = other.tasks.register("assemble").get()
+      val ours = project.tasks.register("assemble").get()
+
+      val task = project.tasks.register("consumesMixedContainer").get()
+      // The qualified path forces a copy, whose resolver is the consumer's; the bare name would
+      // resolve to the wrong task there.
+      task.dependsOn(other.files("theirs.txt").builtBy("assemble", ":other:jar"))
+
+      val resolved = getDependsOnTask(task)
+      assertFalse(ours in resolved, "must not resolve against the consumer, got $resolved")
+      assertFalse(theirs in resolved, "cannot know the producer's project, got $resolved")
+      val result =
+          getInputsForTask(
+              null,
+              task,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              GitIgnoreClassifier(java.io.File(workspaceRoot)))
+      assertTrue(
+          result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*" },
+          "a bare name in a copied foreign container must fail open, got $result")
+    }
+
+    @Test
+    fun `test a Buildable's dependencies pass through the safe resolver`() {
+      val other = ProjectBuilder.builder().withParent(project).withName("other").build()
+      val jar = other.tasks.register("jar").get()
+
+      val task = project.tasks.register("consumesBuildable").get()
+      task.dependsOn(":other:jar")
+      // A bare Buildable is visited by the walker directly, so its path must still be intercepted.
+      val buildable =
+          object : org.gradle.api.Buildable {
+            override fun getBuildDependencies() =
+                project.files("built.txt").builtBy(":other:jar").buildDependencies
+          }
+      task.dependsOn(buildable)
+
+      assertTrue(jar in getDependsOnTask(task), "expected the Buildable's producer")
+    }
+
+    @Test
+    fun `test an input-wired producer is a dependency`() {
       val other = ProjectBuilder.builder().withParent(project).withName("other").build()
       val jar = other.tasks.register("jar").get()
       val producer = project.tasks.register("producesInput").get()
@@ -423,7 +486,7 @@ class ProcessTaskUtilsTest {
 
       val task = project.tasks.register("consumesOutput").get()
       task.dependsOn(":other:jar")
-      // Gradle's getTaskDependencies() is dependsOn plus inputs; the bypass must keep both halves.
+      // Gradle's getTaskDependencies() is dependsOn plus inputs; both halves must be walked.
       task.inputs.files(producer.outputs.files)
 
       val resolved = getDependsOnTask(task)
