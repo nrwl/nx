@@ -574,6 +574,8 @@ export interface InvocationRecord {
  * Tasks whose snapshot read another task's outputs: they hash after their
  * producers ran, because those files only exist then. Needs no project graph,
  * so the client can call it before the first hashing wave on the daemon path.
+ * Opted-out and custom-hasher tasks are not excluded: deferring a task that
+ * ends up hashed natively only delays its hash, it never changes it.
  */
 export declare function ioSnapshotDeferredTaskIds(snapshots: IoSnapshots, taskGraph: TaskGraph): Array<string>
 
@@ -603,8 +605,21 @@ export interface IoSnapshotFetchOptions {
   timeoutMs?: number
   /** Age after which a cached bundle for the same commit is refetched. 0 always refetches. */
   maxAgeMs?: number
+  /**
+   * Age after which a remembered fetch failure for the same commit and API
+   * URL is retried. Defaults to `max_age_ms`.
+   */
+  failureMaxAgeMs?: number
   retain?: number
 }
+
+/**
+ * The eligibility report without a planner: the client prints the run
+ * summary from this on the daemon path, where it never transfers a project
+ * graph. `invalid-files-input` needs nx.json to expand named inputs, so it
+ * is only reported through the planner.
+ */
+export declare function ioSnapshotReport(snapshots: IoSnapshots, taskGraph: TaskGraph, optedOutTaskIds: Array<string>, customHasherTaskIds: Array<string>, projectRoots?: Record<string, string> | undefined | null): IoSnapshotReport
 
 export interface IoSnapshotReport {
   /** Task ids hashed from their snapshot. */

@@ -1,10 +1,26 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
-use crate::native::io_snapshots::bundle::TaskInputs;
+use crate::native::cache::expand_outputs::match_output_paths;
+use crate::native::io_snapshots::bundle::{TaskInputs, TaskIoSnapshot};
 use crate::native::io_snapshots::{IoSnapshotResolution, IoSnapshots};
-use crate::native::project_graph::types::ProjectGraph;
 use crate::native::tasks::hashers::validate_files_globs;
 use crate::native::tasks::types::TaskGraph;
+
+/// What the eligibility walk needs from the workspace. The planner fills it
+/// from the project graph and nx.json; the free `ioSnapshotReport` takes it
+/// from JS so the client never has to transfer a graph just to print a line.
+#[derive(Default)]
+pub(crate) struct EligibilityInputs {
+    /// Tasks whose target sets `ioSnapshots: false`.
+    pub opted_out: HashSet<String>,
+    /// Tasks whose executor ships a custom hasher.
+    pub custom_hasher: HashSet<String>,
+    /// Tasks with a declared `{ files }` glob the hasher would reject; natively
+    /// that is an error, so a snapshot must not paper over it.
+    pub invalid_files_input: HashSet<String>,
+    /// Project name → root, for flattening pre-§2b bucketed bundles.
+    pub project_roots: HashMap<String, String>,
+}
 
 /// A task the hash planner hashes from its snapshot: observed reads as
 /// workspace-relative globs (negations included), and the producer tasks
@@ -78,8 +94,7 @@ impl Resolved {
 pub(crate) fn resolve(
     snapshots: &IoSnapshots,
     task_graph: &TaskGraph,
-    project_graph: &ProjectGraph,
-    custom_hasher_task_ids: &[String],
+    inputs: &EligibilityInputs,
 ) -> Resolved {
     let Some(bundle) = snapshots.bundle.as_ref() else {
         return Resolved {
@@ -105,17 +120,11 @@ pub(crate) fn resolve(
     task_ids.sort();
 
     for task_id in task_ids {
-        let task = &task_graph.tasks[task_id];
-        let opted_out = project_graph
-            .nodes
-            .get(&task.target.project)
-            .and_then(|node| node.targets.get(&task.target.target))
-            .is_some_and(|target| target.io_snapshots == Some(false));
-        if opted_out {
+        if inputs.opted_out.contains(task_id) {
             diagnostics.push(IoSnapshotDiagnostic::task("disabled", task_id));
             continue;
         }
-        if custom_hasher_task_ids.iter().any(|id| id == task_id) {
+        if inputs.custom_hasher.contains(task_id) {
             diagnostics.push(IoSnapshotDiagnostic::task("custom-hasher", task_id));
             continue;
         }
@@ -123,6 +132,10 @@ pub(crate) fn resolve(
             diagnostics.push(IoSnapshotDiagnostic::task("missing", task_id));
             continue;
         };
+        if inputs.invalid_files_input.contains(task_id) {
+            diagnostics.push(IoSnapshotDiagnostic::task("invalid-files-input", task_id));
+            continue;
+        }
 
         let mut files: Vec<String> = Vec::new();
         let task_outputs: BTreeMap<String, Vec<String>> = match &entry.inputs {
@@ -133,16 +146,16 @@ pub(crate) fn resolve(
             TaskInputs::Structured(legacy) => {
                 // Pre-§2b bundles bucket reads by project with project-relative globs.
                 for (project, globs) in &legacy.projects {
-                    let Some(node) = project_graph.nodes.get(project) else {
+                    let Some(root) = inputs.project_roots.get(project) else {
                         let mut diagnostic = IoSnapshotDiagnostic::task("unknown-project", task_id);
                         diagnostic.project = Some(project.clone());
                         diagnostics.push(diagnostic);
                         continue;
                     };
-                    let prefix = if node.root == "." {
+                    let prefix = if root == "." {
                         String::new()
                     } else {
-                        format!("{}/", node.root)
+                        format!("{root}/")
                     };
                     files.extend(globs.iter().map(|glob| match glob.strip_prefix('!') {
                         Some(rest) => format!("!{prefix}{rest}"),
@@ -177,6 +190,19 @@ pub(crate) fn resolve(
 
         files.sort();
         files.dedup();
+        if let Some(glob) = files.iter().find(|g| escapes_workspace(g)) {
+            let mut diagnostic = IoSnapshotDiagnostic::task("escapes-workspace", task_id);
+            diagnostic.glob = Some(glob.clone());
+            diagnostics.push(diagnostic);
+            continue;
+        }
+        // Reads inside a dependency's declared outputs defer the task even if
+        // the server sent no taskOutputs: those files only exist after the
+        // producer ran, and hashing their absence would be a false key.
+        let mut task_outputs = task_outputs;
+        for (producer, paths) in producers_by_declared_outputs(task_id, &files, task_graph) {
+            task_outputs.entry(producer).or_default().extend(paths);
+        }
         if let Some(glob) = files
             .iter()
             .filter(|g| !g.starts_with('!'))
@@ -205,9 +231,114 @@ pub(crate) fn resolve(
     }
 }
 
+/// The eligibility report without a planner: the client prints the run
+/// summary from this on the daemon path, where it never transfers a project
+/// graph. `invalid-files-input` needs nx.json to expand named inputs, so it
+/// is only reported through the planner.
+#[napi]
+pub fn io_snapshot_report(
+    snapshots: &IoSnapshots,
+    task_graph: TaskGraph,
+    opted_out_task_ids: Vec<String>,
+    custom_hasher_task_ids: Vec<String>,
+    project_roots: Option<HashMap<String, String>>,
+) -> IoSnapshotReport {
+    resolve(
+        snapshots,
+        &task_graph,
+        &EligibilityInputs {
+            opted_out: opted_out_task_ids.into_iter().collect(),
+            custom_hasher: custom_hasher_task_ids.into_iter().collect(),
+            invalid_files_input: HashSet::new(),
+            project_roots: project_roots.unwrap_or_default(),
+        },
+    )
+    .report()
+}
+
+/// A glob that would resolve outside the workspace: absolute, drive-lettered,
+/// or carrying a `..` segment. The bundle is server-supplied, so this is the
+/// line that keeps a hostile snapshot from turning hashing into a read oracle.
+fn escapes_workspace(glob: &str) -> bool {
+    let path = glob.strip_prefix('!').unwrap_or(glob);
+    let bytes = path.as_bytes();
+    path.starts_with('/')
+        || path.starts_with('\\')
+        || (bytes.len() >= 2 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':')
+        || path.split(['/', '\\']).any(|segment| segment == "..")
+}
+
+/// Producer tasks (direct and transitive dependencies) whose declared outputs
+/// contain one of the observed reads, with those reads.
+fn producers_by_declared_outputs(
+    task_id: &str,
+    files: &[String],
+    task_graph: &TaskGraph,
+) -> BTreeMap<String, Vec<String>> {
+    let candidates: Vec<String> = files
+        .iter()
+        .filter(|f| !f.starts_with('!'))
+        .cloned()
+        .collect();
+    let mut producers = BTreeMap::new();
+    if candidates.is_empty() {
+        return producers;
+    }
+    let mut visited: HashSet<&str> = HashSet::new();
+    let mut queue: Vec<&str> = vec![task_id];
+    while let Some(current) = queue.pop() {
+        for dep in task_graph.dependencies.get(current).into_iter().flatten() {
+            if !visited.insert(dep.as_str()) {
+                continue;
+            }
+            queue.push(dep);
+            let Some(producer) = task_graph.tasks.get(dep) else {
+                continue;
+            };
+            if producer.outputs.is_empty() {
+                continue;
+            }
+            let Ok(matched) = match_output_paths(producer.outputs.clone(), candidates.clone())
+            else {
+                continue;
+            };
+            let paths: Vec<String> = candidates
+                .iter()
+                .zip(matched)
+                .filter(|(_, hit)| *hit)
+                .map(|(path, _)| path.clone())
+                .collect();
+            if !paths.is_empty() {
+                producers.insert(dep.clone(), paths);
+            }
+        }
+    }
+    producers
+}
+
+fn entry_task_outputs(entry: &TaskIoSnapshot) -> BTreeMap<String, Vec<String>> {
+    match &entry.inputs {
+        TaskInputs::Structured(legacy) if !legacy.task_outputs.is_empty() => {
+            legacy.task_outputs.clone()
+        }
+        _ => entry.task_outputs.clone().unwrap_or_default(),
+    }
+}
+
+fn entry_files(entry: &TaskIoSnapshot) -> Vec<String> {
+    match &entry.inputs {
+        TaskInputs::Flat(globs) => globs.clone(),
+        // Legacy project buckets are project-relative and cannot be matched
+        // against outputs without the graph; the workspace bucket can.
+        TaskInputs::Structured(legacy) => legacy.workspace.clone(),
+    }
+}
+
 /// Tasks whose snapshot read another task's outputs: they hash after their
 /// producers ran, because those files only exist then. Needs no project graph,
 /// so the client can call it before the first hashing wave on the daemon path.
+/// Opted-out and custom-hasher tasks are not excluded: deferring a task that
+/// ends up hashed natively only delays its hash, it never changes it.
 #[napi]
 pub fn io_snapshot_deferred_task_ids(
     snapshots: &IoSnapshots,
@@ -221,24 +352,42 @@ pub fn io_snapshot_deferred_task_ids(
         .keys()
         .filter(|task_id| {
             bundle.snapshots.get(*task_id).is_some_and(|entry| {
-                let producers: Vec<&String> = match &entry.inputs {
-                    TaskInputs::Structured(legacy) if !legacy.task_outputs.is_empty() => {
-                        legacy.task_outputs.keys().collect()
-                    }
-                    _ => entry
-                        .task_outputs
-                        .as_ref()
-                        .map(|outputs| outputs.keys().collect())
-                        .unwrap_or_default(),
-                };
+                let mut producers: Vec<String> = entry_task_outputs(entry).into_keys().collect();
+                producers.extend(
+                    producers_by_declared_outputs(task_id, &entry_files(entry), &task_graph)
+                        .into_keys(),
+                );
                 !producers.is_empty()
                     && producers
                         .iter()
-                        .all(|producer| task_graph.tasks.contains_key(*producer))
+                        .all(|producer| task_graph.tasks.contains_key(producer))
             })
         })
         .cloned()
         .collect();
     deferred.sort();
     deferred
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn detects_globs_that_leave_the_workspace() {
+        for glob in [
+            "../secret.txt",
+            "../**",
+            "libs/../../x",
+            "/etc/passwd",
+            "C:/Users/x",
+            "\\\\server\\share",
+            "!../ignored",
+        ] {
+            assert!(escapes_workspace(glob), "{glob}");
+        }
+        for glob in ["libs/a/..b/c.ts", "dist/**", "!libs/a/**/*.spec.ts", "a..b"] {
+            assert!(!escapes_workspace(glob), "{glob}");
+        }
+    }
 }

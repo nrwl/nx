@@ -11,7 +11,7 @@ use crate::native::{
 };
 use napi::bindgen_prelude::External;
 use rayon::prelude::*;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use tracing::trace;
 
 use crate::native::io_snapshots::IoSnapshots;
@@ -19,7 +19,9 @@ use crate::native::tasks::hashers::{OnceCache, validate_files_globs};
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency, get_named_inputs,
 };
-use crate::native::tasks::snapshot_eligibility::{self, IoSnapshotReport, SnapshotTask};
+use crate::native::tasks::snapshot_eligibility::{
+    self, EligibilityInputs, IoSnapshotReport, SnapshotTask,
+};
 use crate::native::tasks::utils;
 use crate::native::utils::find_matching_projects;
 use napi::bindgen_prelude::ClassInstance;
@@ -196,8 +198,7 @@ impl HashPlanner {
             snapshot_eligibility::resolve(
                 snapshots,
                 &task_graph,
-                &self.project_graph,
-                custom_hasher_task_ids,
+                &self.eligibility_inputs(&task_graph, custom_hasher_task_ids),
             )
             .tasks
         });
@@ -370,8 +371,10 @@ impl HashPlanner {
             Some(snapshots) => snapshot_eligibility::resolve(
                 snapshots,
                 &task_graph,
-                &self.project_graph,
-                custom_hasher_task_ids.as_deref().unwrap_or(&[]),
+                &self.eligibility_inputs(
+                    &task_graph,
+                    custom_hasher_task_ids.as_deref().unwrap_or(&[]),
+                ),
             )
             .report(),
             None => IoSnapshotReport {
@@ -398,6 +401,56 @@ impl HashPlanner {
             custom_hasher_task_ids.as_deref().unwrap_or(&[]),
         )?;
         Ok(External::new(plans))
+    }
+
+    /// What the eligibility walk needs from this planner's graph and nx.json.
+    fn eligibility_inputs(
+        &self,
+        task_graph: &TaskGraph,
+        custom_hasher_task_ids: &[String],
+    ) -> EligibilityInputs {
+        let mut inputs = EligibilityInputs {
+            custom_hasher: custom_hasher_task_ids.iter().cloned().collect(),
+            project_roots: self
+                .project_graph
+                .nodes
+                .iter()
+                .map(|(name, project)| (name.clone(), project.root.clone()))
+                .collect(),
+            ..Default::default()
+        };
+        for (task_id, task) in &task_graph.tasks {
+            let target = self
+                .project_graph
+                .nodes
+                .get(&task.target.project)
+                .and_then(|node| node.targets.get(&task.target.target));
+            if target.is_some_and(|t| t.io_snapshots == Some(false)) {
+                inputs.opted_out.insert(task_id.clone());
+            } else if self.declared_files_invalid(task) {
+                inputs.invalid_files_input.insert(task_id.clone());
+            }
+        }
+        inputs
+    }
+
+    /// A declared `{ files }` glob the hasher would reject is a native error;
+    /// a snapshot must not turn it into a plan with a hole.
+    fn declared_files_invalid(&self, task: &Task) -> bool {
+        let Ok(inputs) = get_inputs(task, &self.project_graph, &self.nx_json) else {
+            return false;
+        };
+        let project = &self.project_graph.nodes[&task.target.project];
+        inputs.self_inputs.iter().any(|input| match input {
+            Input::Files(globs) => {
+                let resolved: Vec<String> = globs
+                    .iter()
+                    .map(|g| resolve_files_glob(g, &project.root, &task.target.project))
+                    .collect();
+                validate_files_globs(&resolved).is_err()
+            }
+            _ => false,
+        })
     }
 
     fn target_input<'a>(
@@ -559,9 +612,11 @@ impl HashPlanner {
         Ok(ids)
     }
 
-    /// The file half of a snapshot-hashed task: one `files` group of the
-    /// observed reads minus files a native instruction models better, with the
-    /// negations declared by every project the plan visited, plus the marker.
+    /// The file half of a snapshot-hashed task: the observed reads minus files
+    /// a native instruction models better, as one `files` group per owning
+    /// project (reads under no project root belong to the task's own project),
+    /// each carrying only that project's declared negations — a dependency's
+    /// `!{workspaceRoot}/…` never suppresses the task's own reads. Plus the marker.
     fn snapshot_file_instructions(
         &self,
         task: &Task,
@@ -581,16 +636,44 @@ impl HashPlanner {
             })
             .collect();
 
-        let mut group: Vec<String> = io
+        // Longest project root first, so nested projects win.
+        let mut roots: Vec<(&str, &str)> = self
+            .project_graph
+            .nodes
+            .iter()
+            .filter(|(_, project)| project.root != ".")
+            .map(|(name, project)| (name.as_str(), project.root.as_str()))
+            .collect();
+        roots.sort_by(|a, b| b.1.len().cmp(&a.1.len()).then(a.0.cmp(b.0)));
+        let owner = |glob: &str| -> &str {
+            let path = glob.strip_prefix('!').unwrap_or(glob);
+            roots
+                .iter()
+                .find(|(_, root)| {
+                    path.strip_prefix(*root)
+                        .is_some_and(|rest| rest.starts_with('/'))
+                })
+                .map(|(name, _)| *name)
+                .unwrap_or(self_project)
+        };
+
+        let mut buckets: BTreeMap<&str, Vec<String>> = BTreeMap::new();
+        for glob in io
             .files
             .iter()
             .filter(|glob| !covered_by_native_instruction(glob, &json_paths))
-            .cloned()
-            .collect();
+        {
+            buckets.entry(owner(glob)).or_default().push(glob.clone());
+        }
+
         let mut instructions = Vec::new();
-        if group.iter().any(|glob| !glob.starts_with('!')) {
+        for (project, mut group) in buckets {
+            if !group.iter().any(|glob| !glob.starts_with('!')) {
+                continue;
+            }
             let mut declared_negations: Vec<String> = negations
                 .iter()
+                .filter(|(p, _)| p == project)
                 .map(|(_, pattern)| pattern.clone())
                 .collect();
             declared_negations.sort();
@@ -976,16 +1059,16 @@ impl HashPlanner {
             HashInstruction::ProjectConfiguration(project_name.to_string()),
             HashInstruction::TsConfiguration(project_name.to_string()),
         ];
-        // Declared `files` groups are not filesets; they hash from disk as usual.
+        // Declared `files` groups are not filesets; they hash from disk as
+        // usual. Eligibility already withheld the snapshot if one is invalid.
         for input in self_inputs {
             if let Input::Files(globs) = input {
-                let resolved: Vec<String> = globs
-                    .iter()
-                    .map(|g| resolve_files_glob(g, project_root, project_name))
-                    .collect();
-                if validate_files_globs(&resolved).is_ok() {
-                    instructions.push(HashInstruction::Files(resolved));
-                }
+                instructions.push(HashInstruction::Files(
+                    globs
+                        .iter()
+                        .map(|g| resolve_files_glob(g, project_root, project_name))
+                        .collect(),
+                ));
             }
         }
         instructions.extend(self_inputs.iter().filter_map(|i| match i {
@@ -1096,22 +1179,22 @@ fn collect_negations(
             if fileset.starts_with('!') {
                 negations.push((
                     project_name.to_string(),
-                    resolve_tokens(fileset, project_root, project_name),
+                    resolve_files_glob(fileset, project_root, project_name),
                 ));
             }
         }
     }
 }
 
-/// Whether an observed workspace-level read is already hashed by a native
-/// instruction that models it better than its raw contents: externals cover
-/// node_modules, the root package.json and lockfiles; TsConfiguration covers
-/// the root tsconfig; JsonFileSet covers a declared `{json}` file.
+/// Whether an observed read is already hashed by a native instruction that
+/// models it better than its raw contents: externals cover node_modules and
+/// lockfiles (the root package.json stays — externals hash resolved versions,
+/// not its scripts); TsConfiguration covers the root tsconfig; JsonFileSet
+/// covers a declared `{json}` file.
 fn covered_by_native_instruction(glob: &str, json_paths: &[String]) -> bool {
     let path = glob.strip_prefix('!').unwrap_or(glob);
     path.starts_with("node_modules/")
         || path.contains("/node_modules/")
-        || path == "package.json"
         || LOCKFILES.contains(&path)
         || ROOT_TSCONFIG_FILES.contains(&path)
         || json_paths.iter().any(|j| j == path)
