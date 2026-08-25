@@ -43,6 +43,24 @@ describe('next library', () => {
     expect(tsconfigTypes).toContain('@nx/next/typings/image.d.ts');
   });
 
+  it('should not install Next.js ESLint packages the library does not use', async () => {
+    const appTree = createTreeWithEmptyWorkspace();
+
+    await libraryGenerator(appTree, {
+      directory: 'my-lib',
+      linter: 'eslint',
+      skipFormat: false,
+      skipTsConfig: false,
+      unitTestRunner: 'jest',
+      style: 'css',
+      component: true,
+    });
+
+    const { devDependencies } = readJson(appTree, 'package.json');
+    expect(devDependencies['eslint-config-next']).toBeUndefined();
+    expect(devDependencies['@next/eslint-plugin-next']).toBeUndefined();
+  });
+
   it('should generate a buildable library', async () => {
     const appTree = createTreeWithEmptyWorkspace();
     await libraryGenerator(appTree, {
