@@ -1,5 +1,21 @@
 import { formatIoSnapshotSummary, ioSnapshotReportToJson } from './report';
-import type { IoSnapshotOverridesResult } from './overrides';
+import type { IoSnapshotReport, IoSnapshots } from '../native';
+
+function fetchResult(
+  partial: Partial<
+    Record<'status' | 'reason' | 'message' | 'file' | 'directory', string>
+  >
+): IoSnapshots {
+  return {
+    status: 'skipped',
+    reason: null,
+    message: null,
+    file: null,
+    directory: null,
+    resolution: null,
+    ...partial,
+  } as unknown as IoSnapshots;
+}
 
 const resolution = {
   requestedCommit: 'abc123',
@@ -11,12 +27,6 @@ const resolution = {
   tasks: 3,
 };
 
-const override = {
-  files: [],
-  taskOutputs: {},
-  digest: 'deadbeef',
-};
-
 describe('formatIoSnapshotSummary', () => {
   it('prints nothing when snapshots are disabled', () => {
     expect(formatIoSnapshotSummary(null, null)).toBeNull();
@@ -24,8 +34,8 @@ describe('formatIoSnapshotSummary', () => {
   });
 
   it('counts used tasks and groups fallbacks by reason', () => {
-    const result: IoSnapshotOverridesResult = {
-      overrides: { 'a:build': override, 'b:build': override },
+    const result: IoSnapshotReport = {
+      used: ['a:build', 'b:build'],
       diagnostics: [
         { reason: 'disabled', taskId: 'c:e2e' },
         { reason: 'missing', taskId: 'd:test' },
@@ -34,10 +44,13 @@ describe('formatIoSnapshotSummary', () => {
       ],
       resolution,
     };
-    const summary = formatIoSnapshotSummary(result, {
-      status: 'cached',
-      directory: '/w/.nx/cache/io-snapshots/abc123',
-    });
+    const summary = formatIoSnapshotSummary(
+      result,
+      fetchResult({
+        status: 'cached',
+        directory: '/w/.nx/cache/io-snapshots/abc123',
+      })
+    );
     expect(summary.line).toBe(
       'I/O snapshots: 2 tasks hashed from snapshot, 4 tasks fell back (2 missing, 1 disabled, 1 root-anchored-glob)'
     );
@@ -52,14 +65,15 @@ describe('formatIoSnapshotSummary', () => {
   });
 
   it('explains a bundle-level failure with the fetch reason', () => {
-    const result: IoSnapshotOverridesResult = {
-      overrides: {},
+    const result: IoSnapshotReport = {
+      used: [],
       diagnostics: [{ reason: 'no-bundle' }],
-      resolution: null,
     };
     expect(
-      formatIoSnapshotSummary(result, { status: 'skipped', reason: 'offline' })
-        .line
+      formatIoSnapshotSummary(
+        result,
+        fetchResult({ status: 'skipped', reason: 'offline' })
+      ).line
     ).toBe('I/O snapshots: none used (offline)');
     expect(
       formatIoSnapshotSummary(
@@ -79,12 +93,14 @@ describe('formatIoSnapshotSummary', () => {
   });
 
   it('serializes the report for --json consumers', () => {
-    const result: IoSnapshotOverridesResult = {
-      overrides: { 'b:build': override, 'a:build': override },
+    const result: IoSnapshotReport = {
+      used: ['b:build', 'a:build'],
       diagnostics: [{ reason: 'disabled', taskId: 'c:e2e' }],
       resolution,
     };
-    expect(ioSnapshotReportToJson(result, { status: 'fetched' })).toEqual({
+    expect(
+      ioSnapshotReportToJson(result, fetchResult({ status: 'fetched' }))
+    ).toEqual({
       fetch: { status: 'fetched', reason: undefined, message: undefined },
       resolution,
       used: ['a:build', 'b:build'],

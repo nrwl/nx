@@ -154,7 +154,7 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
         inspectTaskInputs: mockInspectTaskInputs,
         inspectTaskInputsWithIoSnapshots: (...args: unknown[]) => ({
           inputs: mockInspectTaskInputs(...args),
-          ioSnapshots: null,
+          report: null,
         }),
       } as unknown as HashPlanInspector;
     } as any);
@@ -439,13 +439,13 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
           'myproj:build': {
             id: 'myproj:build',
             target: { project: 'myproj', target: 'build' },
-            overrides: {},
+            used: [],
             outputs: [],
           },
           'dep:build': {
             id: 'dep:build',
             target: { project: 'dep', target: 'build' },
-            overrides: {},
+            used: [],
             outputs: [],
           },
         },
@@ -496,13 +496,13 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
           'myproj:build': {
             id: 'myproj:build',
             target: { project: 'myproj', target: 'build' },
-            overrides: {},
+            used: [],
             outputs: [],
           },
           'dep:build': {
             id: 'dep:build',
             target: { project: 'dep', target: 'build' },
-            overrides: {},
+            used: [],
             outputs: [],
           },
         },
@@ -553,13 +553,13 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
           'myproj:build': {
             id: 'myproj:build',
             target: { project: 'myproj', target: 'build' },
-            overrides: {},
+            used: [],
             outputs: [],
           },
           'dep:build': {
             id: 'dep:build',
             target: { project: 'dep', target: 'build' },
-            overrides: {},
+            used: [],
             outputs: [],
           },
         },
@@ -598,13 +598,13 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
           'myproj:build': {
             id: 'myproj:build',
             target: { project: 'myproj', target: 'build' },
-            overrides: {},
+            used: [],
             outputs: [],
           },
           'dep:build': {
             id: 'dep:build',
             target: { project: 'dep', target: 'build' },
-            overrides: {},
+            used: [],
             outputs: [],
           },
         },
@@ -643,19 +643,19 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
           'myproj:build': {
             id: 'myproj:build',
             target: { project: 'myproj', target: 'build' },
-            overrides: {},
+            used: [],
             outputs: [],
           },
           'mid:build': {
             id: 'mid:build',
             target: { project: 'mid', target: 'build' },
-            overrides: {},
+            used: [],
             outputs: [],
           },
           'deep:build': {
             id: 'deep:build',
             target: { project: 'deep', target: 'build' },
-            overrides: {},
+            used: [],
             outputs: [],
           },
         },
@@ -701,19 +701,19 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
           'myproj:build': {
             id: 'myproj:build',
             target: { project: 'myproj', target: 'build' },
-            overrides: {},
+            used: [],
             outputs: [],
           },
           'mid:build': {
             id: 'mid:build',
             target: { project: 'mid', target: 'build' },
-            overrides: {},
+            used: [],
             outputs: [],
           },
           'deep:build': {
             id: 'deep:build',
             target: { project: 'deep', target: 'build' },
-            overrides: {},
+            used: [],
             outputs: [],
           },
         },
@@ -1180,13 +1180,7 @@ describe('deriveIoSnapshotStatus', () => {
   it('is used with commit and digest when the task has an override', () => {
     expect(
       deriveIoSnapshotStatus('a:build', {
-        overrides: {
-          'a:build': {
-            files: [],
-            taskOutputs: {},
-            digest: 'd1',
-          },
-        },
+        used: ['a:build'],
         diagnostics: [],
         resolution,
       })
@@ -1196,9 +1190,8 @@ describe('deriveIoSnapshotStatus', () => {
   it('is none when there is no bundle at all', () => {
     expect(
       deriveIoSnapshotStatus('a:build', {
-        overrides: {},
+        used: [],
         diagnostics: [{ reason: 'no-bundle' }],
-        resolution: null,
       })
     ).toEqual({ status: 'none', reason: 'no-bundle' });
   });
@@ -1206,14 +1199,14 @@ describe('deriveIoSnapshotStatus', () => {
   it('is fallback with the task diagnostic reason, defaulting to missing', () => {
     expect(
       deriveIoSnapshotStatus('a:build', {
-        overrides: {},
+        used: [],
         diagnostics: [{ reason: 'disabled', taskId: 'a:build' }],
         resolution,
       })
     ).toEqual({ status: 'fallback', reason: 'disabled' });
     expect(
       deriveIoSnapshotStatus('a:build', {
-        overrides: {},
+        used: [],
         diagnostics: [],
         resolution,
       })

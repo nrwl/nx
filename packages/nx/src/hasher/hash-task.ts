@@ -1,13 +1,17 @@
 import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
-import { IS_WASM, TaskDetails } from '../native';
+import {
+  IS_WASM,
+  ioSnapshotDeferredTaskIds,
+  type IoSnapshots,
+  TaskDetails,
+} from '../native';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { getTaskSpecificEnv } from '../tasks-runner/task-env';
 import { getCustomHasher } from '../tasks-runner/utils';
 import { getDbConnection } from '../utils/db-connection';
-import { buildIoSnapshotOverrides } from '../io-snapshots/overrides';
 import { getInputs, TaskHasher } from './task-hasher';
 
 let taskDetails: TaskDetails;
@@ -29,7 +33,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   taskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
   tasksDetails: TaskDetails | null,
-  ioSnapshotBundleDir?: string
+  ioSnapshots?: IoSnapshots
 ) {
   performance.mark('hashMultipleTasks:start');
 
@@ -37,14 +41,9 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     readProjectsConfigurationFromProjectGraph(projectGraph).projects;
   // A snapshot can make a task depend on producer outputs its declared
   // inputs never mentioned; those hash after their producers too.
-  const snapshotOverrides = ioSnapshotBundleDir
-    ? buildIoSnapshotOverrides(
-        projectGraph,
-        taskGraph,
-        nxJson,
-        ioSnapshotBundleDir
-      )?.overrides
-    : undefined;
+  const deferredBySnapshot = ioSnapshots
+    ? new Set(ioSnapshotDeferredTaskIds(ioSnapshots, taskGraph))
+    : null;
   const tasks = Object.values(taskGraph.tasks);
   const tasksWithHashers = await Promise.all(
     tasks.map(async (task) => {
@@ -63,9 +62,8 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
       if (taskGraph.dependencies[task.id].length === 0) {
         return true;
       }
-      const override = snapshotOverrides?.[task.id];
-      if (override) {
-        return Object.keys(override.taskOutputs).length === 0;
+      if (deferredBySnapshot?.has(task.id)) {
+        return false;
       }
       return getInputs(task, projectGraph, nxJson).depsOutputs.length === 0;
     })

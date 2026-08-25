@@ -1,8 +1,11 @@
-import type { IoSnapshotFetchResult } from '../native';
 import type {
   IoSnapshotDiagnostic,
-  IoSnapshotOverridesResult,
-} from './overrides';
+  IoSnapshotReport,
+  IoSnapshotResolution,
+  IoSnapshots,
+} from '../native';
+
+export type { IoSnapshotReport } from '../native';
 
 export interface IoSnapshotSummary {
   /** One line for the default output, e.g. "I/O snapshots: 12 tasks hashed from snapshot, 3 fell back". */
@@ -17,7 +20,7 @@ export interface IoSnapshotReportJson {
     reason?: string;
     message?: string;
   } | null;
-  resolution: IoSnapshotOverridesResult['resolution'];
+  resolution?: IoSnapshotResolution;
   used: string[];
   diagnostics: IoSnapshotDiagnostic[];
 }
@@ -28,16 +31,16 @@ export interface IoSnapshotReportJson {
  * when snapshots are disabled so callers print nothing.
  */
 export function formatIoSnapshotSummary(
-  result: IoSnapshotOverridesResult | null,
-  fetch: IoSnapshotFetchResult | null
+  result: IoSnapshotReport | null,
+  fetch: IoSnapshots | null
 ): IoSnapshotSummary | null {
   if (!result) {
     return null;
   }
-  const used = Object.keys(result.overrides).length;
+  const used = result.used.length;
   const byReason = countByReason(result.diagnostics);
-  const fellBack = result.diagnostics.filter((d) => 'taskId' in d).length;
-  const bundleLevel = result.diagnostics.find((d) => !('taskId' in d));
+  const fellBack = result.diagnostics.filter((d) => d.taskId != null).length;
+  const bundleLevel = result.diagnostics.find((d) => d.taskId == null);
 
   const line = bundleLevel
     ? `I/O snapshots: none used (${describeBundleLevel(bundleLevel, fetch)})`
@@ -66,18 +69,22 @@ export function formatIoSnapshotSummary(
 }
 
 export function ioSnapshotReportToJson(
-  result: IoSnapshotOverridesResult | null,
-  fetch: IoSnapshotFetchResult | null
+  result: IoSnapshotReport | null,
+  fetch: IoSnapshots | null
 ): IoSnapshotReportJson | null {
   if (!result) {
     return null;
   }
   return {
     fetch: fetch
-      ? { status: fetch.status, reason: fetch.reason, message: fetch.message }
+      ? {
+          status: fetch.status,
+          reason: fetch.reason ?? undefined,
+          message: fetch.message ?? undefined,
+        }
       : null,
     resolution: result.resolution,
-    used: Object.keys(result.overrides).sort(),
+    used: [...result.used].sort(),
     diagnostics: result.diagnostics,
   };
 }
@@ -100,12 +107,14 @@ function describeDiagnostic(d: IoSnapshotDiagnostic): string {
       return `${d.taskId}: snapshot references unknown project "${d.project}"`;
     case 'producer-not-in-graph':
       return `${d.taskId}: reads outputs of "${d.producer}", which is not in this task graph`;
+    default:
+      return `${d.taskId ? `${d.taskId}: ` : ''}${d.reason}`;
   }
 }
 
 function describeBundleLevel(
   d: IoSnapshotDiagnostic,
-  fetch: IoSnapshotFetchResult | null
+  fetch: IoSnapshots | null
 ): string {
   if (d.reason === 'invalid-bundle') {
     return `invalid bundle: ${d.message}`;
@@ -118,7 +127,7 @@ function countByReason(
 ): Map<string, number> {
   const counts = new Map<string, number>();
   for (const d of diagnostics) {
-    if ('taskId' in d) {
+    if (d.taskId != null) {
       counts.set(d.reason, (counts.get(d.reason) ?? 0) + 1);
     }
   }
