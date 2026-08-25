@@ -1,7 +1,10 @@
 package dev.nx.gradle.utils
 
+import groovy.lang.Closure
 import java.util.Collections
+import java.util.IdentityHashMap
 import java.util.WeakHashMap
+import java.util.concurrent.Callable
 import org.gradle.api.Action
 import org.gradle.api.Buildable
 import org.gradle.api.Project
@@ -17,8 +20,58 @@ import org.gradle.api.tasks.TaskContainer
 import org.gradle.internal.build.BuildState
 import org.gradle.util.Path as GradlePath
 
+private val dependsOnExpansionCache: MutableMap<Task, List<Any>> =
+    Collections.synchronizedMap(WeakHashMap())
+
+/** Memoized: it invokes user closures, which must not run once per caller. */
+private fun flattenDependsOn(task: Task): List<Any> =
+    dependsOnExpansionCache[task]
+        ?: computeFlattenDependsOn(task).also { dependsOnExpansionCache[task] = it }
+
+private fun computeFlattenDependsOn(task: Task): List<Any> = flattenValues(task, task.dependsOn)
+
+// `dependsOn: [a, b]` is ONE element. Descend only List/Set/Array — a FileCollection is Iterable
+// too, and iterating one resolves it.
+private fun flattenValues(task: Task, values: Collection<Any?>): List<Any> {
+  val flattened = mutableListOf<Any>()
+  // Identity-keyed cycle guard: Gradle's own visitDependencies has none and loops forever.
+  val seen = Collections.newSetFromMap(IdentityHashMap<Any, Boolean>())
+  fun visit(value: Any?) {
+    when (value) {
+      null -> {}
+      is List<*> -> if (seen.add(value)) value.forEach(::visit)
+      is Set<*> -> if (seen.add(value)) value.forEach(::visit)
+      is Array<*> -> if (seen.add(value)) value.forEach(::visit)
+      // Must precede Callable: Closure extends it, and Gradle passes the task to
+      // `dependsOn { … }` — calling with no argument throws.
+      is Closure<*> ->
+          if (seen.add(value)) {
+            try {
+              visit(value.call(task))
+            } catch (e: Exception) {
+              task.logger.info("Cannot expand dependsOn closure for ${task.path}: ${e.message}")
+              flattened.add(value)
+            }
+          }
+      is Callable<*> ->
+          if (seen.add(value)) {
+            try {
+              visit(value.call())
+            } catch (e: Exception) {
+              task.logger.info("Cannot expand dependsOn callable for ${task.path}: ${e.message}")
+              flattened.add(value)
+            }
+          }
+      else -> flattened.add(value)
+    }
+  }
+  values.forEach(::visit)
+  return flattened
+}
+
 internal data class DependsOnResolution(val tasks: Set<Task>, val unresolved: Int)
 
+/** Weak Task keys, not `task.path`: paths collide across included builds. */
 private val dependsOnResolutionCache: MutableMap<Task, DependsOnResolution> =
     Collections.synchronizedMap(WeakHashMap())
 
@@ -227,7 +280,9 @@ private fun computeResolveDependsOn(task: Task): DependsOnResolution {
   return try {
     val root = context.screenedCopy(task.dependsOn)
     root.add(task.inputs)
-    DependsOnResolution(context.getDependencies(task, root), context.lost.count)
+    DependsOnResolution(context.getDependencies(task, root), context.lost.count).also {
+      task.logger.info("Dependencies for ${task.path}: ${it.tasks.map { t -> t.path }}")
+    }
   } catch (e: Throwable) {
     task.logger.info("Safe dependency resolution failed for ${task.path}: ${e.message}")
     val values = flattenDependsOn(task)
@@ -235,3 +290,8 @@ private fun computeResolveDependsOn(task: Task): DependsOnResolution {
     DependsOnResolution(values.filterIsInstance<Task>().toSet(), 1 + values.count { it !is Task })
   }
 }
+
+/**
+ * A task's direct dependencies: both halves of Gradle's `getTaskDependencies()`, resolved safely.
+ */
+fun getDependsOnTask(task: Task): Set<Task> = resolveDependsOn(task).tasks

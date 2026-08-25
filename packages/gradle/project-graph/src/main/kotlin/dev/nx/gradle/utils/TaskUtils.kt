@@ -5,12 +5,9 @@ import dev.nx.gradle.data.Dependency
 import dev.nx.gradle.data.DependsOnEntry
 import dev.nx.gradle.data.ExternalDepData
 import dev.nx.gradle.data.ExternalNode
-import groovy.lang.Closure
 import java.io.File
 import java.util.Collections
-import java.util.IdentityHashMap
 import java.util.WeakHashMap
-import java.util.concurrent.Callable
 import kotlin.io.path.Path
 import org.gradle.api.Action
 import org.gradle.api.Project
@@ -41,60 +38,8 @@ private fun isKotlinCompileTask(task: Task): Boolean =
     kotlinCompileToolClass?.isInstance(task) == true
 
 /** Weak Task keys, not `task.path`: paths collide across included builds. */
-private val dependsOnTaskCache: MutableMap<Task, Set<Task>> =
-    Collections.synchronizedMap(WeakHashMap())
-
 private val dependentOutputPatternsCache: MutableMap<Task, Set<String>> =
     Collections.synchronizedMap(WeakHashMap())
-
-private val dependsOnExpansionCache: MutableMap<Task, List<Any>> =
-    Collections.synchronizedMap(WeakHashMap())
-
-/** Memoized: it invokes user closures, which must not run once per caller. */
-internal fun flattenDependsOn(task: Task): List<Any> =
-    dependsOnExpansionCache[task]
-        ?: computeFlattenDependsOn(task).also { dependsOnExpansionCache[task] = it }
-
-private fun computeFlattenDependsOn(task: Task): List<Any> = flattenValues(task, task.dependsOn)
-
-// `dependsOn: [a, b]` is ONE element. Descend only List/Set/Array — a FileCollection is Iterable
-// too, and iterating one resolves it.
-internal fun flattenValues(task: Task, values: Collection<Any?>): List<Any> {
-  val flattened = mutableListOf<Any>()
-  // Identity-keyed cycle guard: Gradle's own visitDependencies has none and loops forever.
-  val seen = Collections.newSetFromMap(IdentityHashMap<Any, Boolean>())
-  fun visit(value: Any?) {
-    when (value) {
-      null -> {}
-      is List<*> -> if (seen.add(value)) value.forEach(::visit)
-      is Set<*> -> if (seen.add(value)) value.forEach(::visit)
-      is Array<*> -> if (seen.add(value)) value.forEach(::visit)
-      // Must precede Callable: Closure extends it, and Gradle passes the task to
-      // `dependsOn { … }` — calling with no argument throws.
-      is Closure<*> ->
-          if (seen.add(value)) {
-            try {
-              visit(value.call(task))
-            } catch (e: Exception) {
-              task.logger.info("Cannot expand dependsOn closure for ${task.path}: ${e.message}")
-              flattened.add(value)
-            }
-          }
-      is Callable<*> ->
-          if (seen.add(value)) {
-            try {
-              visit(value.call())
-            } catch (e: Exception) {
-              task.logger.info("Cannot expand dependsOn callable for ${task.path}: ${e.message}")
-              flattened.add(value)
-            }
-          }
-      else -> flattened.add(value)
-    }
-  }
-  values.forEach(::visit)
-  return flattened
-}
 
 /**
  * Process a task and convert it into target Going to populate:
@@ -683,33 +628,6 @@ fun getOutputsForTask(task: Task, projectRoot: String, workspaceRoot: String): L
     task.logger.info("Error getting outputs for ${task.path}: ${e.message}")
     task.logger.debug("Stack trace:", e)
     null
-  }
-}
-
-fun getDependsOnTask(task: Task): Set<Task> =
-    dependsOnTaskCache[task] ?: computeDependsOnTask(task).also { dependsOnTaskCache[task] = it }
-
-private fun computeDependsOnTask(task: Task): Set<Task> {
-  return try {
-    val dependsOnFromProperty: Set<Task> =
-        try {
-          flattenDependsOn(task).filterIsInstance<Task>().toSet()
-        } catch (e: Exception) {
-          task.logger.info(
-              "Cannot access task.dependsOn for ${task.path}, possibly due to configuration cache: ${e.message}")
-          emptySet()
-        }
-
-    val dependsOnFromTaskDependencies: Set<Task> = resolveDependsOn(task).tasks
-
-    val combinedDependsOn = dependsOnFromTaskDependencies.union(dependsOnFromProperty)
-
-    task.logger.info("Dependencies for ${task.path}: ${combinedDependsOn.map { it.path }}")
-
-    combinedDependsOn
-  } catch (e: Exception) {
-    task.logger.info("Unexpected error getting dependencies for ${task.path}: ${e.message}")
-    emptySet()
   }
 }
 
