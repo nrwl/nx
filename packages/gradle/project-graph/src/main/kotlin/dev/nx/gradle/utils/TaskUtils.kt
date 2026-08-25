@@ -17,6 +17,7 @@ import org.gradle.api.Buildable
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.internal.GradleInternal
 import org.gradle.api.internal.TaskInternal
 import org.gradle.api.internal.provider.ProviderInternal
 import org.gradle.api.internal.provider.TransformBackedProvider
@@ -28,12 +29,14 @@ import org.gradle.api.internal.tasks.WorkDependencyResolver
 import org.gradle.api.internal.tasks.WorkNodeAction
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.AbstractCopyTask
+import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.AbstractArchiveTask
 import org.gradle.api.tasks.bundling.Compression
 import org.gradle.api.tasks.bundling.Tar
 import org.gradle.api.tasks.compile.AbstractCompile
 import org.gradle.api.tasks.testing.Test as GradleTest
+import org.gradle.internal.build.BuildState
 import org.gradle.util.Path as GradlePath
 
 private val kotlinCompileToolClass: Class<*>? by lazy {
@@ -163,18 +166,61 @@ private fun resolveBareName(resolver: TaskResolver, name: String): Task? =
       null
     }
 
+/** A private field by name, searched up the class hierarchy; null when absent or unreadable. */
+private fun readField(target: Any, name: String): Any? =
+    try {
+      generateSequence<Class<*>>(target.javaClass) { it.superclass }
+          .mapNotNull { c -> c.declaredFields.firstOrNull { it.name == name } }
+          .firstOrNull()
+          ?.let {
+            it.isAccessible = true
+            it.get(target)
+          }
+    } catch (t: Throwable) {
+      null
+    }
+
+/**
+ * The root project of the build a container's resolver belongs to, when that is not [owner]'s
+ * build: an absolute path is only unambiguous within a build, and `includedBuild.task(":x")` hands
+ * the consumer a container bound to the included build. Gradle 9 keeps the build on the resolver
+ * chain; Gradle 8's resolver is the project's task container. Null when it is the same build or
+ * cannot be read.
+ */
+private fun foreignBuildRoot(owner: Project, resolver: TaskResolver): Project? =
+    try {
+      val build =
+          readField(resolver, "build")
+              ?: readField(resolver, "buildTaskResolver")?.let { readField(it, "build") }
+      val ownerGradle = owner.gradle as GradleInternal
+      when {
+        build is BuildState ->
+            if (build === ownerGradle.owner) null else build.mutableModel.rootProject
+        resolver is TaskContainer ->
+            (readField(resolver, "project") as? Project)
+                ?.takeIf { it.gradle !== owner.gradle }
+                ?.rootProject
+        else -> null
+      }
+    } catch (t: Throwable) {
+      null
+    }
+
 /**
  * Bare names resolve where Gradle would resolve them — in the container's own project via
- * [original] — and qualified paths through [lookupTask]. A [nested] container whose resolver could
- * not be read has no safe answer for a bare name. Both JVM descriptors are implemented.
+ * [original] — and qualified paths through [lookupTask], in [foreignRoot]'s build when the
+ * container came from another build. A [nested] container whose resolver could not be read has no
+ * safe answer for a bare name. Both JVM descriptors are implemented.
  */
 private class SafeTaskResolver(
     private val owner: Project,
     private val original: TaskResolver?,
-    private val nested: Boolean
+    private val nested: Boolean,
+    private val foreignRoot: Project? = null
 ) : TaskResolver {
   fun resolve(path: String): Task? =
       when {
+        foreignRoot != null -> lookupTask(foreignRoot, path)
         path.contains(':') -> lookupTask(owner, path)
         original != null -> resolveBareName(original, path)
         nested -> null
@@ -238,7 +284,8 @@ private constructor(private val owner: Project, private val task: Task, val lost
       original: TaskResolver? = null,
       nested: Boolean = false
   ): DefaultTaskDependency {
-    val resolver = SafeTaskResolver(owner, original, nested)
+    val foreignRoot = original?.let { foreignBuildRoot(owner, it) }
+    val resolver = SafeTaskResolver(owner, original, nested, foreignRoot)
     val copy = DefaultTaskDependency(resolver, null)
     flattenValues(task, values).forEach { value ->
       if (value is CharSequence) {

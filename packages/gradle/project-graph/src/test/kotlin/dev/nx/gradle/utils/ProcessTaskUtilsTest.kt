@@ -482,6 +482,23 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
+    fun `test an absolute path from another build resolves in that build`() {
+      // A second ProjectBuilder root is a separate build, as an included build is.
+      val otherBuild = ProjectBuilder.builder().withName("other-build").build()
+      val theirs = otherBuild.tasks.register("report").get()
+      val ours = project.tasks.register("report").get()
+
+      val task = project.tasks.register("aggregates").get()
+      // The container was built in the other build; ":report" means that build's root task.
+      task.dependsOn(otherBuild.files("r.txt").builtBy(":report").buildDependencies)
+
+      val resolved = getDependsOnTask(task)
+      assertTrue(theirs in resolved, "expected the other build's task, got $resolved")
+      assertFalse(
+          ours in resolved, "must not resolve the path in the consumer's build, got $resolved")
+    }
+
+    @Test
     fun `test an input-wired producer is a dependency`() {
       val other = ProjectBuilder.builder().withParent(project).withName("other").build()
       val jar = other.tasks.register("jar").get()
