@@ -116,6 +116,7 @@ function resolveTargetInfoData(t: ResolvedTarget) {
     parallelism: targetConfig.parallelism ?? true,
     continuous: targetConfig.continuous ?? false,
     cache: targetConfig.cache ?? false,
+    ...(targetConfig.ioSnapshots === false ? { ioSnapshots: false } : {}),
     ...(targetConfig.inputs
       ? (() => {
           const expanded = expandInputsForDisplay(
@@ -441,11 +442,12 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
   console.log(
     `${c.bold('Continuous')}: ${data.continuous}${sourceHint('continuous')}`
   );
-  const cache =
-    data.cache === 'manual'
-      ? `true ${c.dim('(manual inputs, no I/O snapshot)')}`
-      : data.cache;
-  console.log(`${c.bold('Cache')}: ${cache}${sourceHint('cache')}`);
+  console.log(`${c.bold('Cache')}: ${data.cache}${sourceHint('cache')}`);
+  if (data.ioSnapshots === false) {
+    console.log(
+      `${c.bold('I/O snapshots')}: ${c.dim('disabled')}${sourceHint('ioSnapshots')}`
+    );
+  }
 
   if (data.inputs && data.inputs.length > 0) {
     console.log(`${c.bold('Inputs')}:`);
