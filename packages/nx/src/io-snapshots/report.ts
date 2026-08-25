@@ -88,8 +88,8 @@ function describeDiagnostic(d: IoSnapshotDiagnostic): string {
       return 'no snapshot bundle for the current commit';
     case 'invalid-bundle':
       return `invalid snapshot bundle ${d.file}: ${d.message}`;
-    case 'manual':
-      return `${d.taskId}: cache is "manual"`;
+    case 'disabled':
+      return `${d.taskId}: ioSnapshots is false`;
     case 'custom-hasher':
       return `${d.taskId}: uses a custom hasher`;
     case 'missing':
