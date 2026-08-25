@@ -15,8 +15,8 @@ let mockFailOpenSync = false;
 let mockFailWriteSync = false;
 // Writes a prefix, then fails on the next call - a disk filling mid-chunk.
 let mockPartialWriteBytes: number | null = null;
-jest.mock('fs', () => {
-  const actual = jest.requireActual('fs');
+vi.mock('fs', async () => {
+  const actual = require('fs');
   const enospc = () =>
     Object.assign(new Error('ENOSPC: no space left on device'), {
       code: 'ENOSPC',
@@ -350,7 +350,7 @@ describe('BatchProcess', () => {
   });
   it('keeps the run alive and streams live when the capture cannot be written', () => {
     const child = fakeChildProcess();
-    const warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
     // A stream 'data' handler is not inside any try the orchestrator owns, so a
     // throw here is an uncaught exception that takes down the whole run,
     // including every task that already passed. ENOSPC and a read-only data
@@ -384,7 +384,7 @@ describe('BatchProcess', () => {
   });
   it('keeps streaming every later chunk after a capture failure, not just the first', () => {
     const child = fakeChildProcess();
-    const warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
     mockFailOpenSync = true;
 
     try {
@@ -413,7 +413,7 @@ describe('BatchProcess', () => {
 
   it('keeps what it already captured when the disk fills mid-batch', () => {
     const child = fakeChildProcess();
-    const warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
 
     try {
       const { batch, forwarded } = withEnvironmentVariables(FOLDING_ENV, () => {
@@ -441,7 +441,7 @@ describe('BatchProcess', () => {
   });
   it('does not replay bytes that already reached the file when a write fails partway', () => {
     const child = fakeChildProcess();
-    const warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
     // The first write lands 5 of the chunk's bytes and the next one fails, so
     // the file holds a prefix that the fold will replay later.
     mockPartialWriteBytes = 5;

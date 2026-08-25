@@ -18,8 +18,8 @@ const mockChild = () => {
   return cp;
 };
 let mockSpawned: any;
-jest.mock('child_process', () => ({
-  ...jest.requireActual('child_process'),
+vi.mock('child_process', async () => ({
+  ...require('child_process'),
   spawn: () => mockSpawned,
 }));
 
@@ -82,7 +82,7 @@ describe('run-commands output routing', () => {
   // one of them, and the stream each goes to.
   it('routes every write in the class through the line tracker', () => {
     mockSpawned = mockChild();
-    const routed = jest
+    const routed = vi
       .spyOn(output, 'writeTaskOutputChunk')
       .mockImplementation(() => {});
 
