@@ -13,6 +13,7 @@ import { output } from '../utils/output';
 import { logger } from '../utils/logger';
 import {
   fetchIoSnapshotsForRun,
+  ioSnapshotApiUrl,
   ioSnapshotsCacheDirectory,
   isIoSnapshotFetchEnabled,
 } from './fetch';
@@ -22,6 +23,7 @@ const ENV_KEYS = [
   'NX_IO_SNAPSHOTS',
   'NX_NO_CLOUD',
   'NX_CLOUD_API',
+  'NRWL_API',
   'NX_CLOUD_ACCESS_TOKEN',
   'NX_IO_SNAPSHOTS_MAX_AGE',
 ];
@@ -86,7 +88,7 @@ describe('fetchIoSnapshotsForRun', () => {
     const result = await fetchIoSnapshotsForRun(enabled, {
       accessToken: 'json-token',
       nxCloudId: 'id',
-      url: 'https://cloud.example.com',
+      url: 'https://cloud.example.com/',
     });
 
     expect(result.status).toBe('fetched');
@@ -97,7 +99,12 @@ describe('fetchIoSnapshotsForRun', () => {
         accessToken: 'env-token',
         nxCloudId: 'id',
         maxAgeMs: 0,
+        failureMaxAgeMs: 0,
       })
+    );
+    process.env.NRWL_API = 'https://enterprise.example.com/';
+    expect(ioSnapshotApiUrl({ url: 'https://cloud.example.com' })).toBe(
+      'https://enterprise.example.com'
     );
     expect(logger.verbose).toHaveBeenCalledWith(
       expect.stringContaining('3 tasks')
@@ -105,11 +112,17 @@ describe('fetchIoSnapshotsForRun', () => {
     expect(output.warn).not.toHaveBeenCalled();
   });
 
-  it('warns only for misconfiguration, not for being offline', async () => {
+  it('warns only for misconfiguration, not for being offline or an old Cloud', async () => {
     fetchMock.mockResolvedValueOnce({
       status: 'skipped',
       reason: 'offline',
       message: 'connect refused',
+    });
+    await fetchIoSnapshotsForRun(enabled, { nxCloudId: 'id' });
+    fetchMock.mockResolvedValueOnce({
+      status: 'skipped',
+      reason: 'unsupported-server',
+      message: '404',
     });
     await fetchIoSnapshotsForRun(enabled, { nxCloudId: 'id' });
     expect(output.warn).not.toHaveBeenCalled();
