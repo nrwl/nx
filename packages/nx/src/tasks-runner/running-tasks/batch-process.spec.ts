@@ -479,7 +479,7 @@ describe('BatchProcess', () => {
     const forwarded = withEnvironmentVariables(
       { GITHUB_ACTIONS: undefined, NX_SKIP_LOG_GROUPING: undefined },
       () => {
-        const b = new BatchProcess(child, '@nx/js:tsc', false);
+        new BatchProcess(child, '@nx/js:tsc', false);
         return captureForwarded(() => {
           (child as any).stdout.emit('data', Buffer.from('worker chatter\n'));
           (child as any).stderr.emit('data', Buffer.from('worker warning\n'));
@@ -505,5 +505,30 @@ describe('BatchProcess', () => {
     );
 
     expect(forwarded.stdout).toContain('worker chatter');
+  });
+  it('captures rather than drops when the style will not print it', () => {
+    const child = fakeChildProcess();
+
+    // No grouping AND a style that prints nothing. Suppressing the live write
+    // without capturing loses the bytes outright - and a batch worker's crash
+    // output is exactly what no task ever claims, so nothing else holds a copy.
+    const batch = withEnvironmentVariables(
+      { GITHUB_ACTIONS: undefined, NX_SKIP_LOG_GROUPING: undefined },
+      () => {
+        const b = new BatchProcess(child, '@nx/gradle:batch', false);
+        captureForwarded(() => {
+          (child as any).stdout.emit(
+            'data',
+            Buffer.from('why the worker died\n')
+          );
+        });
+        return b;
+      }
+    );
+
+    const path = batch.getCapturedOutputPath();
+    expect(path).toBeDefined();
+    expect(readFileSync(path, 'utf-8')).toContain('why the worker died');
+    batch.discardCapturedOutput();
   });
 });

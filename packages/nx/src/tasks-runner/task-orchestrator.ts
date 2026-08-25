@@ -1,5 +1,5 @@
 import { defaultMaxListeners } from 'events';
-import { existsSync, statSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { relative } from 'path';
 import { performance } from 'perf_hooks';
 import * as pc from 'picocolors';
@@ -86,6 +86,22 @@ function resolveBatchTaskStatus(result: {
   status?: TaskStatus;
 }): TaskStatus {
   return result.status ?? (result.success ? 'success' : 'failure');
+}
+
+/**
+ * The captured batch log, or empty if there is nothing readable. Reading it
+ * fully is acceptable only on the crash path: the batch is over, and the
+ * alternative is losing the only copy of why the worker died.
+ */
+function readCapturedBatchLog(path: string | undefined): string {
+  if (!path) {
+    return '';
+  }
+  try {
+    return readFileSync(path, 'utf-8');
+  } catch {
+    return '';
+  }
 }
 
 export class TaskOrchestrator {
@@ -950,6 +966,16 @@ export class TaskOrchestrator {
     } catch (e) {
       const isBatchStopping = this.stopRequested;
 
+      // A style that prints nothing renders no fold, so the captured log has no
+      // other route to a reader - and the worker's crash output is precisely
+      // what no task claims. Carry it in the results instead, so the file
+      // `persistTerminalOutputs` writes holds the reason the worker died rather
+      // than only the orchestrator's exit-code stack, which is what `summary`
+      // addresses by path.
+      const workerLog = printsTaskOutput(this.outputStyle)
+        ? ''
+        : readCapturedBatchLog(batchProcess?.getCapturedOutputPath());
+
       const taskResults = Object.keys(batch.taskGraph.tasks).map((taskId) => {
         const task = this.taskGraph.tasks[taskId];
         if (isBatchStopping) {
@@ -959,19 +985,23 @@ export class TaskOrchestrator {
           task,
           code: 1,
           status: (isBatchStopping ? 'stopped' : 'failure') as TaskStatus,
-          terminalOutput: isBatchStopping ? '' : (e.stack ?? e.message ?? ''),
+          terminalOutput: isBatchStopping
+            ? ''
+            : [workerLog, e.stack ?? e.message ?? '']
+                .filter(Boolean)
+                .join('\n'),
         };
       });
 
       // The worker died without reporting results, so nothing was attributed to
       // a task and no per-task output ran. Everything it wrote went to
-      // stdout/stderr, held back under log grouping — surface it as one fold.
-      // Outside grouping it already streamed live. This matters just as much
-      // when the batch was stopped: every task is marked stopped whether or not
-      // it finished, so the log is the only record of what got through. Only
-      // the exit-code error is dropped there, since it restates the
-      // cancellation.
-      if (shouldGroupBatchOutput()) {
+      // stdout/stderr, held back under grouping or under a style that prints
+      // nothing — surface it as one fold. Outside both, it already streamed
+      // live. This matters just as much when the batch was stopped: every task
+      // is marked stopped whether or not it finished, so the log is the only
+      // record of what got through. Only the exit-code error is dropped there,
+      // since it restates the cancellation.
+      if (shouldGroupBatchOutput() && printsTaskOutput(this.outputStyle)) {
         const capturedOutputPath = batchProcess?.getCapturedOutputPath();
         const trailer = isBatchStopping ? undefined : e.message;
         if (capturedOutputPath || trailer) {
@@ -1770,8 +1800,9 @@ export class TaskOrchestrator {
   /**
    * Guarantee that every task that actually ran leaves its terminal output at
    * `<cacheDir>/terminalOutputs/<hash>`, whatever its cache setting, output
-   * style, or batch membership. That path is what the static output styles
-   * point users and agents at, and what Nx Cloud falls back to reading when a
+   * style, or batch membership. That path is what `--output-style=summary`
+   * addresses each failure by, what the DB cache reads back on a hit
+   * (`build_cached_result`), and what Nx Cloud falls back to reading when a
    * task's in-memory output is undefined, so a task that reaches a terminal
    * state without a file there is a dangling reference.
    *
@@ -1782,9 +1813,10 @@ export class TaskOrchestrator {
    *
    * Written exactly once per task: tasks whose runner owns the file are
    * recorded in `tasksWithPersistedOutput`, and tasks `cache.put` is about to
-   * write are skipped here. Cache replays are skipped too — their output was
-   * read from this very file. Skipped tasks never ran, so there is nothing to
-   * write.
+   * write are skipped here. Cache hits are skipped by status — their output was
+   * read from this very file — except a replayed cached *failure*, which comes
+   * back as `failure` and is rewritten with the bytes it was just read with.
+   * Skipped tasks never ran, so there is nothing to write.
    *
    * Every file written without a cache entry behind it is then registered with
    * the cache, because `removeOldCacheRecords` only collects hashes it finds in

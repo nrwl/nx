@@ -34,9 +34,14 @@ export function isStaticOutputStyle(outputStyle: string | undefined): boolean {
  * `summary` does not - it prints a status line and the path to each task's log,
  * deliberately addressing the output instead of reproducing it. So every
  * decision that would put a task's bytes on the terminal has to consult this
- * first, including ones that bypass the life cycle: the batch renderer folds a
- * captured worker log directly, and under `summary` that would dump exactly
- * what the style exists to keep off the screen.
+ * first, including ones that bypass the life cycle: both batch folds and
+ * `BatchProcess`'s live forward write to `output` directly, and under `summary`
+ * each would dump exactly what the style exists to keep off the screen.
+ *
+ * Withholding is only half of it. Whatever a caller suppresses here has to be
+ * readable somewhere else, because the style's contract is that the output
+ * moved, not that it is gone - `BatchProcess` captures to a file rather than
+ * dropping, and `runBatch`'s crash path folds that file into the task results.
  */
 export function printsTaskOutput(outputStyle: string | undefined): boolean {
   return outputStyle !== 'summary';

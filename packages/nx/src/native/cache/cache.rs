@@ -345,9 +345,16 @@ impl NxCache {
                     // `code` is meaningless for a row that can't be replayed;
                     // the reads all filter it out before it could be read.
                     conn.execute(
+                        // `size` is refreshed only for a row that is still
+                        // output-only: a task rerun with a longer log would
+                        // otherwise keep its first size forever and undercount
+                        // against maxCacheSize. A row with artifacts is owned by
+                        // `record_to_cache`, whose size covers the whole entry.
                         "INSERT INTO cache_outputs (hash, code, size, has_artifacts)
                          VALUES (?1, 0, ?2, 0)
-                         ON CONFLICT(hash) DO UPDATE SET accessed_at = CURRENT_TIMESTAMP",
+                         ON CONFLICT(hash) DO UPDATE SET
+                             accessed_at = CURRENT_TIMESTAMP,
+                             size = CASE WHEN has_artifacts = 0 THEN excluded.size ELSE size END",
                         params![record.hash, record.size],
                     )?;
                 }
