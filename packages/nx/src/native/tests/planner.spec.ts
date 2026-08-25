@@ -226,6 +226,8 @@ describe('task planner', () => {
         type: 'lib',
         data: {
           root: 'libs/child',
+          // The child's own negation must scope to the child's reads.
+          namedInputs: { prod: ['default', '!{workspaceRoot}/**/*.md'] },
           targets: {
             build: {
               executor: 'nx:run-commands',
@@ -296,7 +298,8 @@ describe('task planner', () => {
       return loadIoSnapshots(dir);
     }
 
-    const NEGATIONS = '!libs/child/**/*.spec.ts,!libs/parent/**/*.spec.ts';
+    const PARENT_NEG = '!libs/parent/**/*.spec.ts';
+    const CHILD_NEG = '!**/*.md';
 
     it('leaves plans byte-identical when no task has a snapshot', () => {
       const { planner, taskGraph } = fixture();
@@ -304,7 +307,8 @@ describe('task planner', () => {
       expect(plain['parent:build']).toEqual(
         expect.arrayContaining([
           'parent:libs/parent/**/*,!libs/parent/**/*.spec.ts',
-          'child:libs/child/**/*,!libs/child/**/*.spec.ts',
+          'child:libs/child/**/*',
+          'workspace:[!{workspaceRoot}/**/*.md]',
           'parent:TsConfig',
           'parent:json:libs/parent/package.json[version]',
           'files:[libs/parent/generated]',
@@ -325,20 +329,27 @@ describe('task planner', () => {
       );
     });
 
-    it('replaces declared filesets (self and dependency) with one files group carrying every negation', () => {
+    it('replaces declared filesets (self and dependency) with one files group per owning project, each with its own negations', () => {
       const { planner, taskGraph } = fixture();
       const plan = planner.getPlans(
         ['parent:build'],
         taskGraph,
         snapshotsFor({
           'parent:build': {
-            inputs: ['libs/child/src/index.ts', 'libs/parent/src/**/*.ts'],
+            inputs: [
+              'docs/readme.md',
+              'libs/child/src/index.ts',
+              'libs/parent/src/**/*.ts',
+            ],
           },
         })
       )['parent:build'];
       expect(plan).toEqual(
         expect.arrayContaining([
-          `files:[libs/child/src/index.ts,libs/parent/src/**/*.ts,${NEGATIONS}]`,
+          `files:[libs/child/src/index.ts,${CHILD_NEG}]`,
+          // Reads under no project root belong to the task's own project, so
+          // the dependency's !**/*.md never suppresses docs/readme.md.
+          `files:[docs/readme.md,libs/parent/src/**/*.ts,${PARENT_NEG}]`,
           // A declared { files } input is not a fileset; it survives.
           'files:[libs/parent/generated]',
           'parent:ProjectConfiguration',
@@ -384,7 +395,7 @@ describe('task planner', () => {
       );
     });
 
-    it('drops reads that externals cover and keeps the rest', () => {
+    it('drops reads that externals cover and keeps the rest, including the root package.json', () => {
       const { planner, taskGraph } = fixture();
       const plan = planner.getPlans(
         ['parent:build'],
@@ -400,7 +411,8 @@ describe('task planner', () => {
           },
         })
       )['parent:build'];
-      expect(plan).toContain(`files:[tools/x.ts,${NEGATIONS}]`);
+      // package.json stays: externals hash resolved versions, not its scripts.
+      expect(plan).toContain(`files:[package.json,tools/x.ts,${PARENT_NEG}]`);
       expect(plan).toContain('AllExternalDependencies');
       expect(plan).not.toContainEqual(
         expect.stringMatching(/node_modules|yarn\.lock/)
@@ -418,7 +430,7 @@ describe('task planner', () => {
       const plan = planner.getPlans(['parent:build'], taskGraph, snapshots)[
         'parent:build'
       ];
-      expect(plan).toContain(`files:[dist/libs/child/index.js,${NEGATIONS}]`);
+      expect(plan).toContain(`files:[dist/libs/child/index.js,${PARENT_NEG}]`);
       expect(plan).not.toContainEqual(
         expect.stringMatching(/^dist\/libs\/child\/index\.js:/)
       );
@@ -503,8 +515,85 @@ describe('task planner', () => {
           'parent:build': { inputs: ['libs/child/src/index.ts'] },
         })
       )['parent:build'];
-      expect(plan).toContain(`files:[libs/child/src/index.ts,${NEGATIONS}]`);
+      expect(plan).toContain(`files:[libs/child/src/index.ts,${CHILD_NEG}]`);
       expect(plan).not.toContainEqual(expect.stringMatching(/^child:libs\//));
+    });
+
+    it("defers a task whose reads sit under a producer's declared outputs even without taskOutputs", () => {
+      const { planner, taskGraph } = fixture();
+      const snapshots = snapshotsFor({
+        'parent:build': { inputs: ['dist/libs/child/index.js'] },
+      });
+      expect(ioSnapshotDeferredTaskIds(snapshots, taskGraph)).toEqual([
+        'parent:build',
+      ]);
+      expect(planner.ioSnapshotReport(taskGraph, snapshots).used).toEqual([
+        'parent:build',
+      ]);
+    });
+
+    it('refuses snapshot globs that leave the workspace and plans natively', () => {
+      const { planner, taskGraph } = fixture();
+      const plain = planner.getPlans(['parent:build'], taskGraph);
+      for (const glob of ['../secret.txt', 'libs/../../x', '/etc/passwd']) {
+        const snapshots = snapshotsFor({
+          'parent:build': { inputs: ['libs/parent/a.ts', glob] },
+        });
+        expect(
+          planner.getPlans(['parent:build'], taskGraph, snapshots)
+        ).toEqual(plain);
+        expect(
+          planner
+            .ioSnapshotReport(taskGraph, snapshots)
+            .diagnostics.find((d) => d.taskId === 'parent:build')
+        ).toMatchObject({ reason: 'escapes-workspace', glob });
+      }
+    });
+
+    it('withholds the snapshot when a declared files glob is invalid, so the native error still fires', () => {
+      const builder = new ProjectGraphBuilder(undefined, {
+        parent: [{ file: 'libs/parent/filea.ts', hash: 'a.hash' }],
+      });
+      builder.addNode({
+        name: 'parent',
+        type: 'lib',
+        data: {
+          root: 'libs/parent',
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              inputs: [{ files: ['**/*.gen'] }],
+            },
+          },
+        },
+      });
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['parent'],
+        ['build'],
+        undefined,
+        {}
+      );
+      const planner = new HashPlanner(
+        {} as any,
+        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      );
+      const snapshots = snapshotsFor({
+        'parent:build': { inputs: ['libs/parent/filea.ts'] },
+      });
+      expect(
+        planner.ioSnapshotReport(taskGraph, snapshots).diagnostics
+      ).toEqual([
+        expect.objectContaining({
+          reason: 'invalid-files-input',
+          taskId: 'parent:build',
+        }),
+      ]);
+      expect(() =>
+        planner.getPlans(['parent:build'], taskGraph, snapshots)
+      ).toThrow(/no leading directory/);
     });
 
     it('reports a bundle-level failure once and plans natively', () => {

@@ -80,6 +80,12 @@ pub fn expand_files(workspace_root: &Path, globs: &[String]) -> Result<FilesExpa
             }
             continue;
         };
+        // The prefix is caller-supplied (a snapshot bundle, or config); confine
+        // it to the workspace after symlink resolution, not just lexically.
+        let canonical_root = workspace_root.canonicalize()?;
+        if !start.canonicalize()?.starts_with(&canonical_root) {
+            bail!("The `files` input \"{glob}\" resolves outside the workspace.");
+        }
         if metadata.is_file() {
             files.push(root);
             effective.push(glob.clone());
@@ -99,7 +105,12 @@ pub fn expand_files(workspace_root: &Path, globs: &[String]) -> Result<FilesExpa
             let file_type = entry.file_type();
             let is_file = file_type.is_file()
                 || (file_type.is_symlink()
-                    && std::fs::metadata(entry.path()).is_ok_and(|m| m.is_file()));
+                    && std::fs::metadata(entry.path()).is_ok_and(|m| m.is_file())
+                    // A link pointing out of the workspace is not workspace content.
+                    && entry
+                        .path()
+                        .canonicalize()
+                        .is_ok_and(|target| target.starts_with(&canonical_root)));
             if !is_file {
                 continue;
             }
@@ -232,6 +243,39 @@ mod tests {
 
     fn globs(list: &[&str]) -> Vec<String> {
         list.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn refuses_a_prefix_that_leaves_the_workspace() {
+        let temp = workspace();
+        let outside = temp.path().parent().unwrap().join("outside-secret.txt");
+        std::fs::write(&outside, "secret").unwrap();
+        let err = match expand_files(temp.path(), &globs(&["../outside-secret.txt"])) {
+            Err(err) => err,
+            Ok(_) => panic!("a prefix outside the workspace must be refused"),
+        };
+        assert!(err.to_string().contains("outside the workspace"), "{err}");
+        assert!(expand_files(temp.path(), &globs(&["../**"])).is_err());
+        std::fs::remove_file(outside).unwrap();
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn skips_symlinks_whose_target_leaves_the_workspace() {
+        let temp = workspace();
+        let outside = temp.path().parent().unwrap().join("outside-linked.js");
+        std::fs::write(&outside, "secret").unwrap();
+        std::os::unix::fs::symlink(&outside, temp.path().join("dist/gen/escape.js")).unwrap();
+        std::os::unix::fs::symlink(
+            temp.path().join("dist/other/c.js"),
+            temp.path().join("dist/gen/inside.js"),
+        )
+        .unwrap();
+        let expansion = expand_files(temp.path(), &globs(&["dist/gen/*.js"])).unwrap();
+        assert_eq!(expansion.files, vec!["dist/gen/a.js", "dist/gen/inside.js"]);
+        // An exact path that is itself a link out of the workspace is refused.
+        assert!(expand_files(temp.path(), &globs(&["dist/gen/escape.js"])).is_err());
+        std::fs::remove_file(outside).unwrap();
     }
 
     #[test]
