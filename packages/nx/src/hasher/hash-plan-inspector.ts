@@ -5,6 +5,7 @@ import {
   TargetDependencies,
 } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
+import type { TaskGraph } from '../config/task-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import {
   ExternalObject,
@@ -18,7 +19,12 @@ import {
 import { transformProjectGraphForRust } from '../native/transform-objects';
 import { createProjectRootMappings } from '../project-graph/utils/find-project-for-path';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
-import { loadIoSnapshotsForHead } from '../io-snapshots/overrides';
+import {
+  customHasherTaskIds,
+  loadIoSnapshotsForHead,
+} from '../io-snapshots/overrides';
+import { isIoSnapshotFetchEnabled } from '../io-snapshots/fetch';
+import { getLatestCommitSha } from '../utils/git-utils';
 import type { IoSnapshotReport } from '../io-snapshots/report';
 import { splitArgsIntoNxArgsAndOverrides } from '../utils/command-line-utils';
 import { getNxWorkspaceFilesFromContext } from '../utils/workspace-context';
@@ -84,7 +90,10 @@ export class HashPlanInspector {
     const plansReference = this.planner.getPlansReference(
       taskIds,
       taskGraph,
+      ioSnapshots,
       ioSnapshots
+        ? customHasherTaskIds(this.projectGraph, taskGraph)
+        : undefined
     );
 
     return this.inspector.inspect(plansReference);
@@ -138,7 +147,7 @@ export class HashPlanInspector {
    * Each input is categorized into files, runtime, environment, depOutputs, or external.
    */
   inspectTaskInputs(
-    { project, target, configuration }: Target,
+    target: Target,
     parsedArgs: { [k: string]: any } = {},
     extraTargetDependencies: Record<
       string,
@@ -147,43 +156,28 @@ export class HashPlanInspector {
     excludeTaskDependencies: boolean = false,
     ioSnapshots?: IoSnapshots
   ): Record<string, HashInputs> {
-    const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
-      {
-        ...parsedArgs,
-        configuration: configuration,
-        targets: [target],
-      },
-      'run-one',
-      { printWarnings: false },
-      this.nxJson
-    );
-
-    const taskGraph = createTaskGraph(
-      this.projectGraph,
+    const taskGraph = this.taskGraphFor(
+      target,
+      parsedArgs,
       extraTargetDependencies,
-      [project],
-      nxArgs.targets,
-      nxArgs.configuration,
-      overrides,
       excludeTaskDependencies
     );
-
-    const taskIds = Object.keys(taskGraph.tasks);
-    const plansReference = this.planner.getPlansReference(
-      taskIds,
+    return this.inspectInputsFor(
       taskGraph,
+      ioSnapshots,
       ioSnapshots
+        ? customHasherTaskIds(this.projectGraph, taskGraph)
+        : undefined
     );
-    return this.inspector.inspectInputs(plansReference);
   }
 
   /**
    * Like inspectTaskInputs(), but loads the I/O snapshot bundle for HEAD
-   * first so the result matches what hashing uses. Never
-   * fetches. `report` is null when snapshots are disabled.
+   * first so the result matches what hashing uses. Never fetches. `report`
+   * is null when no bundle could be resolved; `unavailable` says why.
    */
   inspectTaskInputsWithIoSnapshots(
-    { project, target, configuration }: Target,
+    target: Target,
     parsedArgs: { [k: string]: any } = {},
     extraTargetDependencies: Record<
       string,
@@ -193,7 +187,53 @@ export class HashPlanInspector {
   ): {
     inputs: Record<string, HashInputs>;
     report: IoSnapshotReport | null;
+    unavailable?: 'not-connected' | 'no-head';
   } {
+    const taskGraph = this.taskGraphFor(
+      target,
+      parsedArgs,
+      extraTargetDependencies,
+      excludeTaskDependencies
+    );
+    const nxJson = this.nxJson ?? {};
+    if (!isIoSnapshotFetchEnabled(nxJson)) {
+      return {
+        inputs: this.inspectInputsFor(taskGraph),
+        report: null,
+        unavailable: 'not-connected',
+      };
+    }
+    if (!getLatestCommitSha()) {
+      return {
+        inputs: this.inspectInputsFor(taskGraph),
+        report: null,
+        unavailable: 'no-head',
+      };
+    }
+    const snapshots = loadIoSnapshotsForHead(nxJson);
+    if (!snapshots) {
+      return { inputs: this.inspectInputsFor(taskGraph), report: null };
+    }
+    const customHashers = customHasherTaskIds(this.projectGraph, taskGraph);
+    return {
+      inputs: this.inspectInputsFor(taskGraph, snapshots, customHashers),
+      report: this.planner.ioSnapshotReport(
+        taskGraph,
+        snapshots,
+        customHashers
+      ),
+    };
+  }
+
+  private taskGraphFor(
+    { project, target, configuration }: Target,
+    parsedArgs: { [k: string]: any },
+    extraTargetDependencies: Record<
+      string,
+      (TargetDependencyConfig | string)[]
+    >,
+    excludeTaskDependencies: boolean
+  ): TaskGraph {
     const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
       {
         ...parsedArgs,
@@ -204,8 +244,7 @@ export class HashPlanInspector {
       { printWarnings: false },
       this.nxJson
     );
-
-    const taskGraph = createTaskGraph(
+    return createTaskGraph(
       this.projectGraph,
       extraTargetDependencies,
       [project],
@@ -214,20 +253,19 @@ export class HashPlanInspector {
       overrides,
       excludeTaskDependencies
     );
+  }
 
-    const snapshots = loadIoSnapshotsForHead(this.nxJson ?? {}) ?? undefined;
-    const taskIds = Object.keys(taskGraph.tasks);
+  private inspectInputsFor(
+    taskGraph: TaskGraph,
+    ioSnapshots?: IoSnapshots,
+    customHashers?: string[]
+  ): Record<string, HashInputs> {
     const plansReference = this.planner.getPlansReference(
-      taskIds,
+      Object.keys(taskGraph.tasks),
       taskGraph,
-      snapshots
+      ioSnapshots,
+      customHashers
     );
-    const report = snapshots
-      ? this.planner.ioSnapshotReport(taskGraph, snapshots)
-      : null;
-    return {
-      inputs: this.inspector.inspectInputs(plansReference),
-      report,
-    };
+    return this.inspector.inspectInputs(plansReference);
   }
 }

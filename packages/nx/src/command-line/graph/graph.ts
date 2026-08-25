@@ -36,6 +36,7 @@ import { output } from '../../utils/output';
 import { workspaceRoot } from '../../utils/workspace-root';
 
 import { TaskGraph } from '../../config/task-graph';
+import type { NxJsonConfiguration } from '../../config/nx-json';
 import { daemonClient } from '../../daemon/client/client';
 import { getRootTsConfigPath } from '../../plugins/js/utils/typescript';
 import { pruneExternalNodes } from '../../project-graph/operators';
@@ -52,7 +53,10 @@ import {
   HashPlanner,
   transferProjectGraph,
 } from '../../native';
-import { loadIoSnapshotsForHead } from '../../io-snapshots/overrides';
+import {
+  customHasherTaskIds,
+  loadIoSnapshotsForHead,
+} from '../../io-snapshots/overrides';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
@@ -1126,11 +1130,7 @@ async function createTaskGraphClientResponse(
     const taskIds = Object.keys(taskGraph.tasks);
     const plans =
       taskIds.length > 0
-        ? planner.getPlans(
-            taskIds,
-            taskGraph,
-            loadIoSnapshotsForHead(nxJson) ?? undefined
-          )
+        ? getPlansWithIoSnapshots(planner, graph, nxJson, taskIds, taskGraph)
         : {};
 
     performance.mark('task hash plan generation:end');
@@ -1269,11 +1269,7 @@ async function createTaskGraphForTargetsAndProjects(
     const taskIds = Object.keys(taskGraph.tasks);
     const plans =
       taskIds.length > 0
-        ? planner.getPlans(
-            taskIds,
-            taskGraph,
-            loadIoSnapshotsForHead(nxJson) ?? undefined
-          )
+        ? getPlansWithIoSnapshots(planner, graph, nxJson, taskIds, taskGraph)
         : {};
 
     performance.mark('task hash plan generation:end');
@@ -1357,6 +1353,23 @@ export async function getExpandedTaskInputs(
   expandedTaskInputsCache.set(taskId, result);
 
   return result;
+}
+
+/** Plans with the HEAD bundle (never fetching); custom-hasher tasks are excluded like at hash time. */
+function getPlansWithIoSnapshots(
+  planner: HashPlanner,
+  graph: ProjectGraph,
+  nxJson: NxJsonConfiguration,
+  taskIds: string[],
+  taskGraph: TaskGraph
+): Record<string, string[]> {
+  const snapshots = loadIoSnapshotsForHead(nxJson) ?? undefined;
+  return planner.getPlans(
+    taskIds,
+    taskGraph,
+    snapshots,
+    snapshots ? customHasherTaskIds(graph, taskGraph) : undefined
+  );
 }
 
 function expandInputs(
