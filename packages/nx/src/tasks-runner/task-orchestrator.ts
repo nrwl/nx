@@ -1,4 +1,5 @@
 import { defaultMaxListeners } from 'events';
+import type { OutputStyle } from '../command-line/yargs-utils/shared-options';
 import { existsSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { relative } from 'path';
 import { performance } from 'perf_hooks';
@@ -216,7 +217,10 @@ export class TaskOrchestrator {
     private readonly options: NxArgs & DefaultTasksRunnerOptions,
     private readonly bail: boolean,
     private readonly daemon: DaemonClient,
-    private readonly outputStyle: string,
+    /** What the user named; undefined means they named nothing. */
+    private readonly specifiedOutputStyle: OutputStyle | undefined,
+    /** What this run renders with, after defaults. */
+    private readonly resolvedOutputStyle: OutputStyle,
     private readonly fullTaskGraph: TaskGraph = taskGraph
   ) {}
 
@@ -883,7 +887,7 @@ export class TaskOrchestrator {
         this.projectGraph,
         this.fullTaskGraph,
         env,
-        printsTaskOutput(this.outputStyle)
+        printsTaskOutput(this.resolvedOutputStyle)
       );
 
       // Stream output from batch process to the batch
@@ -972,7 +976,7 @@ export class TaskOrchestrator {
       // `persistTerminalOutputs` writes holds the reason the worker died rather
       // than only the orchestrator's exit-code stack, which is what `summary`
       // addresses by path.
-      const workerLog = printsTaskOutput(this.outputStyle)
+      const workerLog = printsTaskOutput(this.resolvedOutputStyle)
         ? ''
         : readCapturedBatchLog(batchProcess?.getCapturedOutputPath());
 
@@ -1001,7 +1005,10 @@ export class TaskOrchestrator {
       // is marked stopped whether or not it finished, so the log is the only
       // record of what got through. Only the exit-code error is dropped there,
       // since it restates the cancellation.
-      if (shouldGroupBatchOutput() && printsTaskOutput(this.outputStyle)) {
+      if (
+        shouldGroupBatchOutput() &&
+        printsTaskOutput(this.resolvedOutputStyle)
+      ) {
         const capturedOutputPath = batchProcess?.getCapturedOutputPath();
         const trailer = isBatchStopping ? undefined : e.message;
         if (capturedOutputPath || trailer) {
@@ -1100,13 +1107,13 @@ export class TaskOrchestrator {
     // no style argument at all, so on that path only `options` can carry one.
     const printsFullOutput = printsFullTaskOutput({
       verbose: this.options.verbose,
-      outputStyle: this.outputStyle,
+      outputStyle: this.resolvedOutputStyle,
     });
     const batchOwnsTheDiagnostic = taskResults.some(
       (r) => r.status === 'failure' || r.status === 'stopped'
     );
     if (
-      printsTaskOutput(this.outputStyle) &&
+      printsTaskOutput(this.resolvedOutputStyle) &&
       (printsFullOutput || batchOwnsTheDiagnostic) &&
       capturedOutputPath
     ) {
@@ -1306,8 +1313,8 @@ export class TaskOrchestrator {
     // task a run-one is most likely to have. Continuous tasks are deliberately
     // NOT suppressed the same way; see `startContinuousTask`.
     const streamOutput =
-      isStaticOutputStyle(this.outputStyle) ||
-      !printsTaskOutput(this.outputStyle)
+      isStaticOutputStyle(this.specifiedOutputStyle) ||
+      !printsTaskOutput(this.resolvedOutputStyle)
         ? false
         : shouldStreamOutput(task, this.initiatingProject);
 
@@ -1639,7 +1646,7 @@ export class TaskOrchestrator {
     // end - so suppressing here would leave a `nx serve` under `summary` with a
     // permanently silent terminal and no file to read yet. Streaming is the only
     // channel a continuous task has.
-    const streamOutput = isStaticOutputStyle(this.outputStyle)
+    const streamOutput = isStaticOutputStyle(this.specifiedOutputStyle)
       ? false
       : shouldStreamOutput(task, this.initiatingProject);
 

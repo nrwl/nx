@@ -366,37 +366,38 @@ export function withOutputStyleOption<T>(
         ) {
           args.outputStyle = process.env.NX_DEFAULT_OUTPUT_STYLE;
         }
+        // Everything above this line is the user naming a style; everything
+        // below infers one. Splitting them here is what lets the rest of the
+        // codebase ask either question without re-deriving it from a single
+        // overloaded field.
+        (args as any).specifiedOutputStyle = args.outputStyle;
       },
       (args) => {
-        // An agent reads output to find the one failure, so default it to the
-        // renderer built for that. Assigning here is what selects the summary
-        // life cycle; the failures-only default is resolved at render time
-        // instead, so it never reaches the orchestrator's streaming decision.
-        //
-        // `NX_TUI=true` is checked because this runs BEFORE the TUI middleware,
-        // and naming a style makes `shouldUseTui` return false on the style
-        // list before it ever reads that variable - so without this, an
-        // explicit opt-in to the TUI would be discarded silently. Agent
-        // detection is ambient (`REPL_ID` is exported into a human's shell),
-        // so the human asking for a renderer has to outrank it.
-        if (
-          !args.outputStyle &&
-          process.env.NX_TUI !== 'true' &&
-          isAiAgent() &&
-          choices.includes('summary')
-        ) {
-          args.outputStyle = 'summary';
-        }
-      },
-      (args) => {
+        // Resolution, in precedence order. `shouldUseTui` reads
+        // `specifiedOutputStyle`, so it sees only what the user named and is
+        // not fed a value inferred here - which is what used to make this
+        // ordering circular. It also reads `NX_TUI` before its own agent check,
+        // so an explicit opt-in beats the agent default without needing a
+        // special case: agent detection is ambient (`REPL_ID` is exported into
+        // a human's shell), and a human asking for a renderer outranks it.
         const useTui = shouldUseTui(readNxJson(), args as NxArgs);
+        process.env.NX_TUI = useTui.toString();
+
+        const resolved: OutputStyle =
+          (args.outputStyle as OutputStyle) ??
+          (useTui
+            ? 'tui'
+            : isAiAgent() && choices.includes('summary')
+              ? 'summary'
+              : 'static-failures-only');
+        (args as any).resolvedOutputStyle = resolved;
+
+        // `outputStyle` stays what yargs parsed, except for the TUI, whose
+        // `check` runs after kebab-case normalization and needs both spellings.
         if (useTui) {
-          // We have to set both of these because `check` runs after the normalization that
-          // handles the kebab-case'd args -> camelCase'd args translation.
           (args as any)['output-style'] = 'tui';
           (args as any).outputStyle = 'tui';
         }
-        process.env.NX_TUI = useTui.toString();
       },
     ]) as Argv<T & { outputStyle: OutputStyle }>;
 }
