@@ -205,6 +205,164 @@ public class TargetBuilderOutputPathsTests
             targets["build"].Outputs);
     }
 
+    // --- OpenApiDocumentsDirectory: the generated document is a build output --
+
+    [Fact]
+    public void Build_WithoutOpenApiDocumentsDirectory_LeavesOutputsUnchanged()
+    {
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["BaseOutputPath"] = "bin\\",
+            ["BaseIntermediateOutputPath"] = "obj\\",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj" },
+            targets["build"].Outputs);
+    }
+
+    [Fact]
+    public void Build_OpenApiDocumentsDirectoryInsideProject_EmitsProjectRootRelativeOutput()
+    {
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["BaseOutputPath"] = "bin\\",
+            ["BaseIntermediateOutputPath"] = "obj\\",
+            ["OpenApiDocumentsDirectory"] = "openapi",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi" },
+            targets["build"].Outputs);
+    }
+
+    [Fact]
+    public void Build_OpenApiDocumentsDirectoryFromMSBuildProjectDirectory_EmitsProjectRootRelativeOutput()
+    {
+        // The form the ASP.NET Core docs recommend:
+        //   <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)/openapi</OpenApiDocumentsDirectory>
+        // MSBuild evaluates this to an absolute path anchored at the project
+        // directory, which must still tokenize as {projectRoot}.
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["BaseOutputPath"] = "bin\\",
+            ["BaseIntermediateOutputPath"] = "obj\\",
+            ["OpenApiDocumentsDirectory"] = Path.Combine(projectDirectory, "openapi"),
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi" },
+            targets["build"].Outputs);
+    }
+
+    [Fact]
+    public void Build_OpenApiDocumentsDirectoryOutsideProject_EmitsWorkspaceRootRelativeOutput()
+    {
+        // OpenApiDocumentsDirectory is a plain MSBuild property and can point
+        // anywhere, for example at a shared contracts folder consumed by a
+        // TypeScript codegen target elsewhere in the workspace.
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["BaseOutputPath"] = "bin\\",
+            ["BaseIntermediateOutputPath"] = "obj\\",
+            ["OpenApiDocumentsDirectory"] = Path.Combine(WorkspaceRoot, "contracts", "foo"),
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{workspaceRoot}/contracts/foo" },
+            targets["build"].Outputs);
+    }
+
+    [Fact]
+    public void Build_OpenApiDocumentsDirectoryOutsideWorkspace_IsDropped()
+    {
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["BaseOutputPath"] = "bin\\",
+            ["BaseIntermediateOutputPath"] = "obj\\",
+            ["OpenApiDocumentsDirectory"] = Path.Combine(Path.GetTempPath(), "outside-ws", "openapi"),
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj" },
+            targets["build"].Outputs);
+    }
+
+    [Fact]
+    public void Build_OpenApiDocumentsDirectoryAtPackageDefault_DoesNotDuplicateObj()
+    {
+        // Microsoft.Extensions.ApiDescription.Server.props defaults the property
+        // to $(BaseIntermediateOutputPath), so merely referencing the package
+        // makes it "set". That must not emit obj a second time.
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["BaseOutputPath"] = "bin\\",
+            ["BaseIntermediateOutputPath"] = "obj\\",
+            ["OpenApiDocumentsDirectory"] = "obj\\",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj" },
+            targets["build"].Outputs);
+    }
+
+    [Fact]
+    public void BuildRelease_OpenApiDocumentsDirectory_EmitsSameOutputAsBuild()
+    {
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["BaseOutputPath"] = "bin\\",
+            ["BaseIntermediateOutputPath"] = "obj\\",
+            ["OpenApiDocumentsDirectory"] = "openapi",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi" },
+            targets["build:release"].Outputs);
+    }
+
+    [Fact]
+    public void Publish_OpenApiDocumentsDirectory_IsNotAddedToNonBuildTargets()
+    {
+        // Only `build` writes the document; publish/pack/test must be untouched.
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["OpenApiDocumentsDirectory"] = "openapi",
+        };
+
+        var exeTargets = BuildTargets(properties, projectDirectory, projectName: "foo", isExe: true);
+        var libTargets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{projectRoot}/bin/publish", "{projectRoot}/obj" },
+            exeTargets["publish"].Outputs);
+        Assert.Equal(
+            new[] { "{projectRoot}/bin/*.nupkg", "{projectRoot}/obj" },
+            libTargets["pack"].Outputs);
+    }
+
     // --- Publish output: configuration is rewritten to match the target -----
 
     [Fact]
