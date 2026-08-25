@@ -245,6 +245,24 @@ If you are using distributed task execution, tasks will still be run simultaneou
 
 {% /aside %}
 
+### I/O snapshots
+
+When your workspace is connected to Nx Cloud, Nx hashes a cacheable task from the files its last CI run actually read instead of from the declared filesets. Set `"ioSnapshots": false` on a target to keep hashing it from its declared inputs only, for example when the task reads the network or enumerates directories:
+
+```json
+// project.json
+{
+  "targets": {
+    "e2e": {
+      "cache": true,
+      "ioSnapshots": false
+    }
+  }
+}
+```
+
+The default is `true`. `ioSnapshots` merges through `targetDefaults` like any other target property, and it only applies to cacheable targets. Set `NX_IO_SNAPSHOTS=false` to turn snapshots off for a whole run. Each run prints one line saying how many tasks hashed from a snapshot and why the rest fell back; `nx show target inputs <task> --json` reports the same status per task.
+
 ### Inputs and named inputs
 
 Each cacheable task needs to define `inputs` which determine whether the task outputs can be retrieved from the cache or the task needs to be re-run. The `namedInputs` defined in `nx.json` or project level configuration are sets of reusable input definitions.

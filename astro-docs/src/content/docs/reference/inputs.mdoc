@@ -121,7 +121,7 @@ Source file inputs only see files in the workspace file map, which follows `.git
 }
 ```
 
-The `files` property is a list of globs. `{projectRoot}` and `{workspaceRoot}` resolve the same way as for source files, and a leading `!` excludes files within the same `files` group. Each glob must start with a literal directory: `dist/**/*.js` is valid, `**/*.js` isn't, because it would walk the whole workspace on every hash.
+The `files` property is a list of globs. `{projectRoot}` and `{workspaceRoot}` resolve the same way as for source files, and a leading `!` excludes files within the same `files` group. Each positive glob must start with a literal directory: `dist/**/*.js` is valid, `**/*.js` isn't, because it would walk the whole workspace on every hash. Negations are exempt.
 
 Nx expands the globs when it hashes the task, so a new matching file is picked up without a configuration change. A path that names a directory matches everything under it. A path that names a single missing file still takes part in the hash, so the cache key changes when the file appears.
 
