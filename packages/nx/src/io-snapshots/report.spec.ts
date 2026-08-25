@@ -12,8 +12,7 @@ const resolution = {
 };
 
 const override = {
-  projects: {},
-  workspace: [],
+  files: [],
   taskOutputs: {},
   digest: 'deadbeef',
 };
@@ -31,6 +30,7 @@ describe('formatIoSnapshotSummary', () => {
         { reason: 'manual', taskId: 'c:e2e' },
         { reason: 'missing', taskId: 'd:test' },
         { reason: 'missing', taskId: 'e:test' },
+        { reason: 'root-anchored-glob', taskId: 'f:lint', glob: '**/*.ts' },
       ],
       resolution,
     };
@@ -39,7 +39,7 @@ describe('formatIoSnapshotSummary', () => {
       directory: '/w/.nx/cache/io-snapshots/abc123',
     });
     expect(summary.line).toBe(
-      'I/O snapshots: 2 tasks hashed from snapshot, 3 tasks fell back (2 missing, 1 manual)'
+      'I/O snapshots: 2 tasks hashed from snapshot, 4 tasks fell back (2 missing, 1 manual, 1 root-anchored-glob)'
     );
     expect(summary.bodyLines).toEqual([
       'bundle: cached at /w/.nx/cache/io-snapshots/abc123',
@@ -47,6 +47,7 @@ describe('formatIoSnapshotSummary', () => {
       'c:e2e: cache is "manual"',
       'd:test: no snapshot for this task',
       'e:test: no snapshot for this task',
+      'f:lint: snapshot glob "**/*.ts" is anchored at the workspace root',
     ]);
   });
 

@@ -164,8 +164,7 @@ describe('HashPlanInspector', () => {
         false,
         {
           'test-app:build': {
-            projects: { 'test-app': ['apps/test-app/src/**/*.ts'] },
-            workspace: [],
+            files: ['apps/test-app/src/**/*.ts'],
             taskOutputs: {},
             digest: 'abc123',
           },
