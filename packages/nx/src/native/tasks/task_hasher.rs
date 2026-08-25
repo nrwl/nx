@@ -939,6 +939,12 @@ mod tests {
         assert_eq!(input_source(&out, "web", true), InputSource::Snapshot);
         assert_eq!(input_source(&always_on, "web", true), InputSource::Native);
         assert_eq!(input_source(&env, "web", true), InputSource::Native);
+
+        // A user-declared { files } input is target; under a snapshot marker the
+        // same instruction carries the observed reads.
+        let files = HashInstruction::Files(vec!["libs/ui/dist/**".into()]);
+        assert_eq!(input_source(&files, "web", false), InputSource::Target);
+        assert_eq!(input_source(&files, "web", true), InputSource::Snapshot);
     }
 
     #[test]
