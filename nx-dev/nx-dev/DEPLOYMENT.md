@@ -202,7 +202,7 @@ included_files = [
 
 | Variable                 | Description                                   | Example                                         |
 | ------------------------ | --------------------------------------------- | ----------------------------------------------- |
-| `NEXT_PUBLIC_FRAMER_URL` | Framer site URL for marketing pages           | `https://ready-knowledge-238309.framer.app`     |
+| `NEXT_PUBLIC_FRAMER_URL` | Framer site URL for marketing pages           | `https://nx.framer.website`                     |
 | `NEXT_PUBLIC_ASTRO_URL`  | Astro docs site URL                           | `https://master--nx-docs.netlify.app`           |
 | `NEXT_PUBLIC_BANNER_URL` | Framer CMS URL for banner data                | `https://your-site.framer.app/api/banners/main` |
 | `BLOG_URL`               | nx-blog site URL for blog/changelog pages     | `https://blog.nx.app`                           |
