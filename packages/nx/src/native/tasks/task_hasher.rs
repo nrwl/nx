@@ -19,11 +19,12 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        CachedTaskOutput, JsonHashResult, ProjectFileIndicesCache, ProjectFileSetCache,
-        WorkspaceFileIndicesCache, WorkspaceFileSetCache, collect_project_file_paths_cached,
-        collect_workspace_file_paths_cached, hash_all_externals, hash_external, hash_json_files,
-        hash_project_config, hash_project_files_cached, hash_task_output,
-        hash_tsconfig_selectively, hash_workspace_files_cached,
+        CachedTaskOutput, FileContentCache, FilesExpansionCache, JsonHashResult,
+        ProjectFileIndicesCache, ProjectFileSetCache, WorkspaceFileIndicesCache,
+        WorkspaceFileSetCache, collect_project_file_paths_cached,
+        collect_workspace_file_paths_cached, expand_files_cached, hash_all_externals,
+        hash_external, hash_files, hash_json_files, hash_project_config, hash_project_files_cached,
+        hash_task_output, hash_tsconfig_selectively, hash_workspace_files_cached, index_file_map,
     },
     types::FileData,
     workspace::types::ProjectFiles,
@@ -109,6 +110,13 @@ pub(crate) fn input_source(
                 InputSource::Snapshot
             } else {
                 InputSource::Dependency
+            }
+        }
+        HashInstruction::Files(_) => {
+            if snapshot_backed {
+                InputSource::Snapshot
+            } else {
+                InputSource::Target
             }
         }
         _ => InputSource::Native,
@@ -312,6 +320,11 @@ pub struct TaskHasher {
     project_file_indices_cache: ProjectFileIndicesCache,
     // Fold over all externals; identical for every task, so computed once.
     all_externals_hash: OnceCell<String>,
+    // `files` inputs: content hashes revalidated by (mtime, size), plus a
+    // path index over the file map so tracked files skip the disk. Both are
+    // built only once a plan carries a `files` instruction.
+    file_content_cache: FileContentCache,
+    workspace_file_index: OnceCell<HashMap<String, u32>>,
 }
 #[napi]
 impl TaskHasher {
@@ -346,7 +359,16 @@ impl TaskHasher {
             workspace_file_indices_cache: WorkspaceFileIndicesCache::new(),
             project_file_indices_cache: ProjectFileIndicesCache::new(),
             all_externals_hash: OnceCell::new(),
+            file_content_cache: FileContentCache::new(),
+            workspace_file_index: OnceCell::new(),
         }
+    }
+
+    fn workspace_file_hash(&self, path: &str) -> Option<String> {
+        self.workspace_file_index
+            .get_or_init(|| index_file_map(&self.all_workspace_files))
+            .get(path)
+            .map(|&i| self.all_workspace_files[i as usize].hash.clone())
     }
 
     /// Hash each task's instructions using the env map keyed by `task.id`.
@@ -391,6 +413,7 @@ impl TaskHasher {
         let task_output_cache = DashMap::new();
         let runtime_cache: DashMap<String, String> = DashMap::new();
         let json_file_set_cache: DashMap<String, JsonHashResult> = DashMap::new();
+        let files_expansion_cache = FilesExpansionCache::new();
         // Deduplicates env-dependent hash values (Environment, Runtime)
         // across tasks; see intern_value. Other instruction types share
         // values through per-id slots instead.
@@ -474,7 +497,8 @@ impl TaskHasher {
                     | HashInstruction::External(_)
                     | HashInstruction::AllExternalDependencies
                     | HashInstruction::JsonFileSet(_)
-                    | HashInstruction::Marker(_) => Some(&value_slots[id as usize]),
+                    | HashInstruction::Marker(_)
+                    | HashInstruction::Files(_) => Some(&value_slots[id as usize]),
                 };
 
                 let cached = if should_collect_inputs {
@@ -501,6 +525,7 @@ impl TaskHasher {
                                 project_file_set_cache: &self.project_file_set_cache,
                                 workspace_file_set_cache: &self.workspace_file_set_cache,
                                 json_file_set_cache: &json_file_set_cache,
+                                files_expansion_cache: &files_expansion_cache,
                                 cwd: cwd_path,
                                 collect_inputs: should_collect_inputs,
                             },
@@ -596,6 +621,7 @@ impl TaskHasher {
             project_file_set_cache,
             workspace_file_set_cache,
             json_file_set_cache,
+            files_expansion_cache,
             cwd,
             collect_inputs,
         }: HashInstructionArgs,
@@ -822,6 +848,31 @@ impl TaskHasher {
                 (cached_entry.hash, inputs)
             }
             HashInstruction::Marker(marker) => (hash(marker.as_bytes()), empty),
+            HashInstruction::Files(globs) => {
+                let workspace_root = Path::new(&self.workspace_root);
+                let expansion = expand_files_cached(
+                    workspace_root,
+                    &instruction.to_string(),
+                    globs,
+                    files_expansion_cache,
+                )?;
+                let hashed = hash_files(
+                    workspace_root,
+                    &expansion,
+                    |path| self.workspace_file_hash(path),
+                    &self.file_content_cache,
+                );
+                trace!(parent: &span, "hash_files: {:?}", now.elapsed());
+                let inputs = if collect_inputs {
+                    HashInputsBuilder {
+                        files: expansion.files.iter().cloned().collect(),
+                        ..Default::default()
+                    }
+                } else {
+                    empty
+                };
+                (hashed, inputs)
+            }
         };
         Ok((hash, inputs))
     }
@@ -838,6 +889,7 @@ struct HashInstructionArgs<'a> {
     project_file_set_cache: &'a ProjectFileSetCache,
     workspace_file_set_cache: &'a WorkspaceFileSetCache,
     json_file_set_cache: &'a DashMap<String, JsonHashResult>,
+    files_expansion_cache: &'a FilesExpansionCache,
     cwd: &'a std::path::Path,
     collect_inputs: bool,
 }

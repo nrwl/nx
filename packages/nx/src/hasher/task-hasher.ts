@@ -500,7 +500,8 @@ export function expandSingleProjectInputs(
         (d as any).externalDependencies ||
         (d as any).dependentTasksOutputFiles ||
         (d as any).workingDirectory ||
-        (d as any).json
+        (d as any).json ||
+        (d as any).files
       ) {
         expanded.push(d);
       } else {

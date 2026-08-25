@@ -122,6 +122,67 @@ describe('task planner', () => {
     });
   });
 
+  describe('files inputs', () => {
+    function planFor(inputs: any[], namedInputs?: Record<string, any[]>) {
+      const builder = new ProjectGraphBuilder();
+      builder.addNode({
+        name: 'parent',
+        type: 'lib',
+        data: {
+          root: 'libs/parent',
+          namedInputs,
+          targets: { build: { executor: 'nx:run-commands', inputs } },
+        },
+      });
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['parent'],
+        ['build'],
+        undefined,
+        {},
+        false
+      );
+      const ref = transferProjectGraph(
+        transformProjectGraphForRust(projectGraph)
+      );
+      return new HashPlanner({} as any, ref).getPlans(
+        ['parent:build'],
+        taskGraph
+      )['parent:build'];
+    }
+
+    it('plans one files instruction per group with tokens resolved', () => {
+      const plan = planFor([
+        'default',
+        {
+          files: ['{projectRoot}/dist/**/*.js', '!{projectRoot}/dist/**/*.map'],
+        },
+        { files: ['{workspaceRoot}/.env.generated'] },
+      ]);
+
+      expect(plan).toContain(
+        'files:[libs/parent/dist/**/*.js,!libs/parent/dist/**/*.map]'
+      );
+      expect(plan).toContain('files:[.env.generated]');
+    });
+
+    it('plans a files input declared through a named input', () => {
+      const plan = planFor(['generated'], {
+        generated: [{ files: ['{projectRoot}/generated'] }],
+      });
+
+      expect(plan).toContain('files:[libs/parent/generated]');
+    });
+
+    it('rejects a files glob without a leading directory', () => {
+      expect(() => planFor([{ files: ['**/*.gen'] }])).toThrow(
+        /no leading directory/
+      );
+    });
+  });
+
   describe('io snapshot overrides', () => {
     function fixture(opts: { cyclic?: boolean } = {}) {
       const builder = new ProjectGraphBuilder(undefined, {

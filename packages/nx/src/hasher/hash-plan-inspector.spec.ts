@@ -179,6 +179,35 @@ describe('HashPlanInspector', () => {
     });
   });
 
+  describe('files inputs', () => {
+    it('expands a files group on disk, including gitignored files', async () => {
+      await tempFs.createFiles({
+        '.gitignore': 'dist\n',
+        'apps/test-app/dist/out.js': 'built',
+        'apps/test-app/dist/out.js.map': 'map',
+      });
+      projectGraph.nodes['test-app'].data.targets.build.inputs = [
+        {
+          files: ['{projectRoot}/dist/**/*.js', '!{projectRoot}/dist/**/*.map'],
+        },
+      ];
+      const filesInspector = new HashPlanInspector(
+        projectGraph,
+        tempFs.tempDir
+      );
+      await filesInspector.init();
+
+      const inputs = filesInspector.inspectTaskInputs({
+        project: 'test-app',
+        target: 'build',
+      })['test-app:build'];
+
+      expect(inputs.files).toContain('apps/test-app/dist/out.js');
+      expect(inputs.files).not.toContain('apps/test-app/dist/out.js.map');
+      expect(inputs.sources['apps/test-app/dist/out.js']).toBe('target');
+    });
+  });
+
   describe('inspectHashPlan', () => {
     beforeAll(async () => {
       await inspector.init();

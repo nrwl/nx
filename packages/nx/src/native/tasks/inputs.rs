@@ -140,7 +140,8 @@ fn split_inputs_into_self_and_deps<'a>(
                 | Input::DepsOutputs { .. }
                 | Input::ExternalDependency(_)
                 | Input::WorkingDirectory(_)
-                | Input::Json { .. } => {
+                | Input::Json { .. }
+                | Input::Files(_) => {
                     acc.1.push(input);
                 }
                 Input::Projects { .. } => {
@@ -228,6 +229,7 @@ pub(super) fn expand_single_project_inputs<'a>(
                     exclude_fields: *exclude_fields,
                 });
             }
+            Input::Files(files) => expanded.push(Input::Files(files)),
             Input::Projects { .. }
             | Input::Inputs {
                 dependencies: true, ..
