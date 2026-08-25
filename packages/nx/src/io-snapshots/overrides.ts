@@ -3,17 +3,15 @@ import type { NxJsonConfiguration } from '../config/nx-json';
 import type { ProjectGraph } from '../config/project-graph';
 import type { TaskGraph } from '../config/task-graph';
 import {
-  HashPlanner,
+  ioSnapshotReport,
   loadIoSnapshots,
-  transferProjectGraph,
   type IoSnapshotDiagnostic,
   type IoSnapshotReport,
   type IoSnapshotResolution,
   type IoSnapshots,
 } from '../native';
-import { transformProjectGraphForRust } from '../native/transform-objects';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
-import { getCustomHasher } from '../tasks-runner/utils';
+import { getExecutorForTask } from '../tasks-runner/utils';
 import { getLatestCommitSha } from '../utils/git-utils';
 import { ioSnapshotsCacheDirectory, isIoSnapshotFetchEnabled } from './fetch';
 
@@ -47,20 +45,35 @@ export function loadIoSnapshotsForHead(
   return directory ? loadIoSnapshots(directory) : null;
 }
 
+const customHasherMemo = new WeakMap<
+  ProjectGraph,
+  WeakMap<TaskGraph, string[]>
+>();
+
 /**
  * Tasks whose executor ships a custom hasher; they are never hashed from a
- * snapshot. Detected in TS because executors are resolved here.
+ * snapshot. Detected in TS because executors are resolved here, by the
+ * factory's presence only — invoking it would load user modules.
  */
 export function customHasherTaskIds(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph
 ): string[] {
+  let byTaskGraph = customHasherMemo.get(projectGraph);
+  if (!byTaskGraph) {
+    byTaskGraph = new WeakMap();
+    customHasherMemo.set(projectGraph, byTaskGraph);
+  }
+  const memoized = byTaskGraph.get(taskGraph);
+  if (memoized) {
+    return memoized;
+  }
   const projects =
     readProjectsConfigurationFromProjectGraph(projectGraph).projects;
-  return Object.values(taskGraph.tasks)
+  const ids = Object.values(taskGraph.tasks)
     .filter((task) => {
       try {
-        return !!getCustomHasher(task, projects);
+        return !!getExecutorForTask(task, projects).hasherFactory;
       } catch {
         // An unresolvable executor fails later, at execution; it is not a
         // reason to withhold a snapshot here.
@@ -68,13 +81,31 @@ export function customHasherTaskIds(
       }
     })
     .map((task) => task.id);
+  byTaskGraph.set(taskGraph, ids);
+  return ids;
+}
+
+/** Tasks whose target sets `ioSnapshots: false`. */
+export function optedOutTaskIds(
+  projectGraph: ProjectGraph,
+  taskGraph: TaskGraph
+): string[] {
+  return Object.values(taskGraph.tasks)
+    .filter(
+      (task) =>
+        projectGraph.nodes[task.target.project]?.data.targets?.[
+          task.target.target
+        ]?.ioSnapshots === false
+    )
+    .map((task) => task.id);
 }
 
 /**
  * Reports which tasks in `taskGraph` hash from the snapshot bundle and why
- * the rest do not, using the planner's own eligibility walk. `snapshots` is
- * the fetch result, a bundle directory, or omitted to read HEAD's cache.
- * Returns `null` when snapshots are off. Never fetches, never throws.
+ * the rest do not, with the same eligibility walk the planner uses, without
+ * building a planner (no project-graph transfer). `snapshots` is the fetch
+ * result, a bundle directory, or omitted to read HEAD's cache. Returns `null`
+ * when snapshots are off. Never fetches, never throws.
  *
  * The export name and module path are probed by the Nx Cloud client bundle
  * to decide whether core handles snapshots; keep both stable.
@@ -92,13 +123,16 @@ export function buildIoSnapshotOverrides(
   if (!resolved) {
     return null;
   }
-  const planner = new HashPlanner(
-    nxJson as any,
-    transferProjectGraph(transformProjectGraphForRust(projectGraph))
-  );
-  return planner.ioSnapshotReport(
-    taskGraph,
+  return ioSnapshotReport(
     resolved,
-    customHasherTaskIds(projectGraph, taskGraph)
+    taskGraph,
+    optedOutTaskIds(projectGraph, taskGraph),
+    customHasherTaskIds(projectGraph, taskGraph),
+    Object.fromEntries(
+      Object.values(projectGraph.nodes).map((node) => [
+        node.name,
+        node.data.root,
+      ])
+    )
   );
 }

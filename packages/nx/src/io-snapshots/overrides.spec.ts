@@ -17,9 +17,9 @@ jest.mock('./fetch', () => ({
   isIoSnapshotFetchEnabled: jest.fn(() => true),
 }));
 jest.mock('../tasks-runner/utils', () => ({
-  getCustomHasher: jest.fn((task: { target: { target: string } }) =>
-    task.target.target === 'custom' ? () => ({}) : null
-  ),
+  getExecutorForTask: jest.fn((task: { target: { target: string } }) => ({
+    hasherFactory: task.target.target === 'custom' ? () => ({}) : undefined,
+  })),
 }));
 
 import { isIoSnapshotFetchEnabled } from './fetch';
