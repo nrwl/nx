@@ -1372,9 +1372,12 @@ function expandInputs(
   const externalInputs: string[] = [];
   const otherInputs: string[] = [];
   const filesInputs: string[][] = [];
+  let snapshotBacked = false;
   inputs.forEach((input) => {
-    // Domain markers are not inputs.
+    // Domain markers are not inputs, but they mean the `files` groups below
+    // are observed reads rather than user-declared inputs.
     if (input.startsWith('io-snapshot:')) {
+      snapshotBacked = true;
       return;
     }
     // grouped workspace inputs look like workspace:[pattern,otherPattern]
@@ -1462,6 +1465,9 @@ function expandInputs(
       ...filesExpanded,
       ...otherInputsExpanded,
     ],
+    // The published panel only renders `general`/`external`, so observed
+    // files stay in `general` and are additionally labelled here.
+    ...(snapshotBacked ? { observed: filesExpanded } : {}),
     ...projectRootsExpanded,
     external: externalInputs,
   };
