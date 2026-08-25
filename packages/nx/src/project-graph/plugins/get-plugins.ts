@@ -13,6 +13,10 @@ import { loadIsolatedNxPlugin } from './isolation';
 import { resetResolvePluginCache } from './resolve-plugin';
 
 import { isIsolationEnabled } from './isolation/enabled';
+import { isPluginWorkerStartupFailure } from './isolation/isolated-plugin';
+import { sandboxSocketHint } from '../../daemon/sandbox-socket-hint';
+import { isSandbox } from '../../utils/is-sandbox';
+import { output } from '../../utils/output';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
 import {
   cleanupPluginTSTranspiler,
@@ -42,14 +46,68 @@ export interface SeparatedPlugins {
   defaultPlugins: LoadedNxPlugin[];
 }
 
-const loadingMethod = (
+let warnedAboutIsolationFallback = false;
+
+/** Exported for tests: the fallback warning fires once per process. */
+export function resetIsolationFallbackWarningForTesting() {
+  warnedAboutIsolationFallback = false;
+}
+
+/**
+ * Loads a plugin in a worker, falling back to this process when the worker
+ * cannot be started inside a sandbox.
+ *
+ * Isolation is preferred: it is what keeps two plugins with conflicting
+ * TypeScript versions or module-level state apart. But a sandbox that has not
+ * been told about the Nx socket root refuses the worker's socket, and failing
+ * the whole command over that is worse than running the plugins here. The
+ * fallback is narrow on purpose. It needs a sandbox *and* a failure to start or
+ * reach the worker; a plugin that loaded and then threw is rethrown, because
+ * rerunning it in-process would bury its actual error.
+ */
+export const loadingMethod = async (
   plugin: PluginConfiguration,
   root: string,
   index?: number
-) =>
-  isIsolationEnabled()
-    ? loadIsolatedNxPlugin(plugin, root, index)
-    : loadNxPlugin(plugin, root, index);
+): Promise<readonly [Promise<LoadedNxPlugin>, () => void]> => {
+  if (!isIsolationEnabled()) {
+    return loadNxPlugin(plugin, root, index);
+  }
+
+  const [isolatedPlugin, cleanup] = await loadIsolatedNxPlugin(
+    plugin,
+    root,
+    index
+  );
+
+  // Awaited here rather than handed on, because the worker failure surfaces on
+  // this promise and the fallback has to happen before the caller sees it.
+  try {
+    return [Promise.resolve(await isolatedPlugin), cleanup] as const;
+  } catch (e) {
+    if (!isSandbox() || !isPluginWorkerStartupFailure(e)) {
+      throw e;
+    }
+
+    cleanup();
+
+    // Once per process: every plugin hits the same refusal, and one line of
+    // advice repeated per plugin buries itself.
+    if (!warnedAboutIsolationFallback) {
+      warnedAboutIsolationFallback = true;
+      output.warn({
+        title:
+          'Could not start a plugin worker in this sandbox. Running plugins in the main process instead.',
+        bodyLines: [
+          'Plugins that expect isolation may misbehave, and this is slower than a worker.',
+          ...sandboxSocketHint({ certain: true }),
+        ],
+      });
+    }
+
+    return loadNxPlugin(plugin, root, index);
+  }
+};
 
 /**
  * Returns all plugins (specified + default) as a flat list.

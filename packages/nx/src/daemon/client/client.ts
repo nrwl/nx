@@ -1568,7 +1568,7 @@ export function daemonPermissionException(socketPath: string, cause: string) {
       `Socket: ${socketPath}`,
       '',
       'Most often the socket belongs to a different user: a daemon left behind by running Nx under `sudo`, a different uid inside a container, or a working copy shared between accounts. If the socket is your own, a sandbox is refusing the connection instead.',
-      'If it belongs to another user, delete the socket above or set NX_SOCKET_DIR to a directory only your user can reach. If you are in a sandbox, allow unix sockets under the Nx socket root — in Claude Code a scoped `allowUnixSockets` only permits connecting, so starting a daemon there needs `allowAllUnixSockets: true`. See https://nx.dev/docs/kb/nx-sandbox-unix-sockets',
+      'If it belongs to another user, delete the socket above or set NX_SOCKET_DIR to a directory only your user can reach. If you are in a sandbox, allow unix sockets under the Nx socket root: `nx configure-ai-agents` writes that for Claude Code, and the agent-specific setting is listed at https://nx.dev/docs/kb/nx-sandbox-unix-sockets',
     ].join('\n')
   );
   (error as any).daemonPermissionError = true;

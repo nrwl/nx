@@ -639,13 +639,15 @@ async function connectToWorker(
   // rather than burning through attempts against a dead socket.
   worker.once('exit', (code) => {
     if (!abortController.signal.aborted) {
-      earlyExitError = new Error(
-        [
-          `Plugin worker for "${name}" exited with code ${code} before the connection was established.`,
-          // The worker's own stderr may be lost with the process; when a
-          // sandbox is in play, name the likely cause and the fix directly.
-          ...(isSandbox() ? sandboxSocketHint() : []),
-        ].join('\n')
+      earlyExitError = markWorkerStartupFailure(
+        new Error(
+          [
+            `Plugin worker for "${name}" exited with code ${code} before the connection was established.`,
+            // The worker's own stderr may be lost with the process; when a
+            // sandbox is in play, name the likely cause and the fix directly.
+            ...(isSandbox() ? sandboxSocketHint() : []),
+          ].join('\n')
+        )
       );
       abortController.abort();
     }
@@ -667,7 +669,28 @@ async function connectToWorker(
   if (earlyExitError) {
     throw earlyExitError;
   }
-  throw new Error(`Failed to start plugin worker for plugin ${name}`);
+  throw markWorkerStartupFailure(
+    new Error(`Failed to start plugin worker for plugin ${name}`)
+  );
+}
+
+/**
+ * Marks a failure to *start or reach* a worker, as distinct from a plugin that
+ * loaded and then threw. Only the former can be retried in-process: swallowing
+ * the latter would rerun a plugin that already failed on its own merits and
+ * bury the real error.
+ */
+export const PLUGIN_WORKER_STARTUP_FAILURE = Symbol.for(
+  'nx.pluginWorkerStartupFailure'
+);
+
+function markWorkerStartupFailure(error: Error): Error {
+  error[PLUGIN_WORKER_STARTUP_FAILURE] = true;
+  return error;
+}
+
+export function isPluginWorkerStartupFailure(error: unknown): boolean {
+  return Boolean(error?.[PLUGIN_WORKER_STARTUP_FAILURE]);
 }
 
 function getTypeName(u: unknown): string {

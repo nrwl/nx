@@ -119,15 +119,18 @@ describe('daemonPermissionException', () => {
   // The KB page attributes connect-not-create to Claude Code's
   // `allowUnixSockets`, not to scoped allowlists at large, so the clause naming
   // the limitation has to name Claude Code in the same breath.
-  it('should scope the allowAllUnixSockets advice to Claude Code', () => {
+  it('should point a sandboxed user at the generator, not at a blanket grant', () => {
+    // Measured on Claude Code 2.1.241: the scoped `allowUnixSockets` entry
+    // permits binding, so `allowAllUnixSockets` buys nothing for Nx and opens
+    // every socket on the machine. Each agent gates sockets on a different
+    // setting, so the message names the generator and the KB page rather than
+    // one agent's key.
     const { message } = daemonPermissionException(socketPath, 'connect EPERM');
 
     expect(message).toContain('allow unix sockets under the Nx socket root');
-    expect(message).toContain(
-      'in Claude Code a scoped `allowUnixSockets` only permits connecting'
-    );
-    expect(message).toContain('allowAllUnixSockets: true');
+    expect(message).toContain('nx configure-ai-agents');
     expect(message).toContain('https://nx.dev/docs/kb/nx-sandbox-unix-sockets');
+    expect(message).not.toContain('allowAllUnixSockets');
   });
 
   // The errno has to be on the first line specifically, not merely somewhere in
