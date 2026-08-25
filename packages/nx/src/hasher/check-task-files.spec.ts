@@ -1182,8 +1182,7 @@ describe('deriveIoSnapshotStatus', () => {
       deriveIoSnapshotStatus('a:build', {
         overrides: {
           'a:build': {
-            projects: {},
-            workspace: [],
+            files: [],
             taskOutputs: {},
             digest: 'd1',
           },
