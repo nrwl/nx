@@ -44,7 +44,6 @@ const ALLOWED_OMISSIONS = {
   ),
   // Wraps create-nx-workspace, so it imports it.
   'packages/create-nx-plugin/.oxlintrc.json': {
-    extra: 1,
     omits: [...NX_BOUNDARY, 'create-nx-workspace'],
   },
   // Its own nx/bin/*, nx/src/* and nx/plugins/* groups are broader than the
@@ -115,6 +114,11 @@ const failures = [];
 // Every allowance must excuse a real omission somewhere, or it is stale.
 const unusedAllowances = new Set();
 for (const [configPath, allowance] of Object.entries(ALLOWED_OMISSIONS)) {
+  for (const key of Object.keys(allowance)) {
+    if (key !== 'omits' && key !== 'overrides') {
+      failures.push(`unknown allowance key "${key}" for ${configPath}`);
+    }
+  }
   for (const entry of allowance.omits ?? []) {
     unusedAllowances.add(`${configPath}: ${entry}`);
   }
