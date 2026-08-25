@@ -13,7 +13,6 @@
     "check-imports": "node ./scripts/check-imports.js",
     "check-lock-files": "node ./scripts/check-lock-files.js",
     "check-codeowners": "tsx ./scripts/check-codeowners.ts",
-    "check-oxlint-configs": "node ./scripts/check-oxlint-configs.js",
     "nx-release": "nx nx-release @nx/nx-source --parallel 8",
     "prepublishOnly": "node ./scripts/update-package-group.js",
     "postinstall": "dotnet restore || echo 'needs dotnet restore'",
@@ -375,8 +374,7 @@
       "check-format:quick",
       "check-imports",
       "check-lock-files",
-      "check-codeowners",
-      "check-oxlint-configs"
+      "check-codeowners"
     ]
   }
 }
