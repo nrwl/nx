@@ -6,7 +6,16 @@ sidebar:
 filter: 'type:Features'
 ---
 
-By default, when you set up [Nx Agents](/docs/features/ci-features/distribute-task-execution) you specify the number and type of agents to use.
+By default, when you set up [Nx Agents](/docs/features/ci-features/distribute-task-execution) you specify the number and type of agents to use in your [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file.
+
+```yaml
+// .nx/ci-config.yaml
+dte:
+  distribute-on: 8 linux-medium-js
+lifecycle:
+  stop-after:
+    - e2e-ci
+```
 
 ```yaml {% meta="{9}" %}
 // .github/workflows/main.yaml"
@@ -17,7 +26,7 @@ jobs:
     ...
     steps:
       ...
-      - run: npx nx start-ci-run --distribute-on="8 linux-medium-js" --stop-agents-after="e2e-ci"
+      - run: npx nx start-nx-agents
       - ...
 ```
 
@@ -25,7 +34,7 @@ This works great, but may not be the most cost-effective way to run your tasks. 
 
 ## Configure dynamic agents based on PR size
 
-You can configure Nx Cloud to execute a different number of agents based on the size of your PR's affected changes. Define any number of **changesets** (the number of agents and types of agents) to use for different sized PRs and pass them in a configuration file to your `start-ci-run` command.
+You can configure Nx Cloud to execute a different number of agents based on the size of your PR's affected changes. Define any number of **changesets** (the number of agents and types of agents) to use for different sized PRs and point `dte.distribute-on` at the file that holds them.
 
 Start by creating a file called `distribution-config.yaml` in the `.nx/workflows` directory of your repo. This file will contain a `distribute-on` property that will be used to define the changesets to use for your PR. You can name your changesets anything you want.
 
@@ -68,7 +77,18 @@ distribute-on:
   extra-large-changeset: 15 linux-medium-js # Distribute on extra-large if 76-100% of projects affected in PR
 ```
 
-You can then reference your distribution configuration in your CI pipeline configuration:
+You can then reference your distribution configuration from `.nx/ci-config.yaml`:
+
+```yaml
+// .nx/ci-config.yaml
+dte:
+  distribute-on: .nx/workflows/distribution-config.yaml
+lifecycle:
+  stop-after:
+    - e2e-ci
+```
+
+Your CI pipeline then starts the agents:
 
 ```yaml {% meta="{9}" %}
 // .github/workflows/main.yaml
@@ -79,7 +99,7 @@ jobs:
     ...
     steps:
       ...
-      - run: npx nx start-ci-run --distribute-on=".nx/workflows/distribution-config.yaml" --stop-agents-after="e2e-ci"
+      - run: npx nx start-nx-agents
       - ...
 ```
 
