@@ -1,7 +1,7 @@
 import type { MockInstance } from 'vitest';
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import { Tree } from '../../generators/tree';
-import { NX_ALLOWLIST_ROOTS } from '../../utils/nx-tmp-dir';
+import { NX_ALLOWLIST_ROOTS } from '../constants';
 
 import { setupAiAgentsGenerator } from './set-up-ai-agents';
 import { SetupAiAgentsGeneratorSchema } from './schema';

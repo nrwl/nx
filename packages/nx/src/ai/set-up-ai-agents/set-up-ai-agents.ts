@@ -27,6 +27,7 @@ import { getInstalledNxVersion } from '../../utils/installed-nx-version';
 import {
   agentsMdPath,
   analyticsDomain,
+  NX_ALLOWLIST_ROOTS,
   claudeMcpJsonPath,
   geminiMdPath,
   getAgentRulesWrapped,
@@ -38,7 +39,6 @@ import {
   opencodeMcpPath,
   rulesRegex,
 } from '../constants';
-import { NX_ALLOWLIST_ROOTS } from '../../utils/nx-tmp-dir';
 import { getAiConfigRepoPath } from '../clone-ai-config-repo';
 import { Agent, supportedAgents } from '../utils';
 import {
@@ -194,9 +194,9 @@ export async function setupAiAgentsGeneratorImpl(
         ...json.sandbox,
         filesystem: {
           ...json.sandbox?.filesystem,
-          allowRead: appendAllMissing(
+          allowRead: withEntries(
             json.sandbox?.filesystem?.allowRead,
-            NX_ALLOWLIST_ROOTS
+            ...NX_ALLOWLIST_ROOTS
           ),
           // Covers the whole tmp root, not just the socket dir: the native
           // binary cache lives under it too, and without the cache a running
@@ -204,9 +204,9 @@ export async function setupAiAgentsGeneratorImpl(
           // which blocks reinstalling or rebuilding dependencies. What keeps
           // users apart is not this allowlist but the 0700 per-uid directories
           // Nx verifies on every use (see ensureOwnedPrivateDir).
-          allowWrite: appendAllMissing(
+          allowWrite: withEntries(
             json.sandbox?.filesystem?.allowWrite,
-            NX_ALLOWLIST_ROOTS
+            ...NX_ALLOWLIST_ROOTS
           ),
         },
         network: {
@@ -215,7 +215,7 @@ export async function setupAiAgentsGeneratorImpl(
           // socket grant does not: Nx needs its sockets either way.
           ...(analyticsEnabled
             ? {
-                allowedDomains: appendIfMissing(
+                allowedDomains: withEntries(
                   json.sandbox?.network?.allowedDomains,
                   analyticsDomain
                 ),
@@ -227,9 +227,9 @@ export async function setupAiAgentsGeneratorImpl(
           // which grants connect access to every socket on the machine —
           // including the Docker and SSH-agent sockets — and grants nothing
           // extra for creating Nx's own.
-          allowUnixSockets: appendAllMissing(
+          allowUnixSockets: withEntries(
             json.sandbox?.network?.allowUnixSockets,
-            NX_ALLOWLIST_ROOTS
+            ...NX_ALLOWLIST_ROOTS
           ),
         },
       },
@@ -477,21 +477,16 @@ export async function setupAiAgentsGeneratorImpl(
   };
 }
 
-function appendIfMissing(
+/**
+ * The user's existing entries in their original order, plus any of `values`
+ * they do not already have. A Set does the deduping, so re-running the
+ * generator is a no-op rather than a growing list.
+ */
+function withEntries(
   existing: string[] | undefined,
-  value: string
+  ...values: readonly string[]
 ): string[] {
-  return existing?.includes(value) ? existing : [...(existing ?? []), value];
-}
-
-function appendAllMissing(
-  existing: string[] | undefined,
-  values: readonly string[]
-): string[] {
-  return values.reduce<string[]>(
-    (acc, value) => appendIfMissing(acc, value),
-    existing ?? []
-  );
+  return [...new Set([...(existing ?? []), ...values])];
 }
 
 function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
