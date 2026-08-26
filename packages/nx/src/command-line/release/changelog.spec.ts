@@ -286,7 +286,7 @@ describe('releaseChangelog', () => {
         file: false,
       } as ReleaseGroupWithName['changelog'];
 
-      releaseGraph.resolveRepositoryTags = jest
+      releaseGraph.resolveRepositoryTags = vi
         .fn()
         .mockResolvedValue(['group-b-v2.0.0', 'group-a-v1.0.0']);
 
