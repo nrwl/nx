@@ -63,7 +63,7 @@ const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   'CODEX_THREAD_ID',
   'SUPERSET_AGENT_ID',
   'GEMINI_CLI',
-  'CODEX_THREAD_ID',
+  'COPILOT_CLI',
   'AI_AGENT',
 
   // Shell mechanics

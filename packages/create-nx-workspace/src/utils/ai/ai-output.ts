@@ -18,6 +18,7 @@ export function isAiAgent(): boolean {
       isClaudeCode() ||
       isOpenCode() ||
       isCodex() ||
+      isCopilotCli() ||
       isReplitAi() ||
       isCursorAi() ||
       isGeminiCli();
@@ -37,6 +38,15 @@ export function isCodex(): boolean {
   return (
     !!process.env.CODEX_THREAD_ID || process.env.SUPERSET_AGENT_ID === 'codex'
   );
+}
+
+/**
+ * `COPILOT_CLI` is set by the GitHub Copilot CLI in the shells it spawns.
+ * Distinct from the VS Code extension's agent mode: different products, and
+ * only the CLI drives `create-nx-workspace` from a shell.
+ */
+export function isCopilotCli(): boolean {
+  return !!process.env.COPILOT_CLI;
 }
 
 export function isReplitAi(): boolean {
@@ -59,6 +69,7 @@ export function detectAiAgentName(): string | null {
   if (isCursorAi()) return 'cursor';
   if (isOpenCode()) return 'opencode';
   if (isCodex()) return 'codex';
+  if (isCopilotCli()) return 'copilot-cli';
   if (isGeminiCli()) return 'gemini';
   return null;
 }
