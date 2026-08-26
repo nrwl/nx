@@ -4,7 +4,9 @@ import type { ConfigLoaderSuccessResult } from 'tsconfig-paths';
 import { findFile } from './nx-tsconfig-paths-find-file';
 
 /**
- * Fallback resolver used when `tsconfig-paths` fails to match an import.
+ * Fallback resolver used when `tsconfig-paths` produces nothing that exists on
+ * disk, whether because no alias matched or because the match pointed at a
+ * missing file.
  *
  * A wildcard alias captures the suffix of the import and substitutes it into
  * the `*` of each mapped path. The `*` is not always trailing, so the suffix
