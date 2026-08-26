@@ -539,6 +539,7 @@ export function runLernaCLI(
       cwd: opts.cwd || tmpProjPath(),
       env: {
         CI: 'true',
+        ...timeoutDiagnosticsEnv(),
         ...(opts.env || getStrippedEnvironmentVariables()),
       },
       encoding: 'utf-8',
@@ -563,7 +564,9 @@ export function runLernaCLI(
       const processOutput = stripVTControlCharacters(
         `${e.stdout ?? ''}\n\n${e.stderr ?? ''}`
       ).trim();
-      const msg = `Command timed out after ${timeoutSec}s: ${command}\n\nProcess output:\n${processOutput}`;
+      const msg = `Command timed out after ${timeoutSec}s: ${command}\n\nProcess output:\n${processOutput}${collectTimeoutDiagnostics(
+        opts.cwd || tmpProjPath()
+      )}`;
       logError(`Command timed out`, msg);
       throw new Error(msg);
     }
