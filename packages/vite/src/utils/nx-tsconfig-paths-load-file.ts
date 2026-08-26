@@ -17,7 +17,10 @@ export function loadFileFromPaths(
   existsSyncImpl: typeof existsSync = existsSync
 ): string {
   let resolvedFile: string;
-  for (const alias in tsconfig.paths) {
+  for (const alias of sortAliasesBySpecificity(
+    Object.keys(tsconfig.paths),
+    importPath
+  )) {
     const paths = tsconfig.paths[alias];
 
     const isWildcard = alias.endsWith('/*');
@@ -71,4 +74,22 @@ export function loadFileFromPaths(
   }
 
   return resolvedFile;
+}
+
+/**
+ * TypeScript picks between competing aliases by specificity, never by
+ * declaration order: an exact hit on a non-wildcard alias first, then the
+ * longest wildcard prefix.
+ */
+function sortAliasesBySpecificity(
+  aliases: string[],
+  importPath: string
+): string[] {
+  const rank = (alias: string) =>
+    alias.endsWith('/*') ? 1 : importPath === alias ? 2 : 0;
+  const prefixLength = (alias: string) => alias.replace(/\/\*$/, '').length;
+
+  return [...aliases].sort(
+    (a, b) => rank(b) - rank(a) || prefixLength(b) - prefixLength(a)
+  );
 }
