@@ -59,6 +59,23 @@ belongs in the corresponding Knowledge Base guide.
   applies to workflows a new flag has superseded.
 - When two sections converge on the same flag or topic after a rewrite, merge them into one.
 
+### 7. One page per feature (the "don't make me hunt" rule)
+
+A feature page answers most of what a new reader arrives with, on the page. Specifics fan out
+to Knowledge Base guides. The questions themselves stay.
+
+**The test:** List the questions a new reader, or an AI answering on their behalf, would ask
+about this feature. If an answer lives only on another page, the feature page is incomplete.
+
+For Nx Cloud that set is what it is, whether it's free, what it adds over Nx Core, how to
+connect, and when Enterprise or self-hosted applies. Spread across three or five pages, a reader
+has to find and visit each one before they can form a view, and a model answering the question
+cites none of them.
+
+Rule 6 trims variants and edge cases off the page. This one keeps every question a reader has to
+answer before they can choose or start. Both push detail to the Knowledge Base. Neither pushes
+the decision there.
+
 ### Sidebar structure
 
 The sidebar has four top-level sections that follow the user journey:
