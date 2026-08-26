@@ -31,7 +31,7 @@ overrides:
   hasown: '2.0.4'
   '@xhmikosr/decompress': '10.2.1'
   websocket-driver: '^0.7.5'
-  tar: '^7.5.19'
+  tar: '^7.5.22'
   seroval: '^1.5.6'
   # astro/ipx/next pull their own sharp; the libvips CVEs (GHSA-f88m-g3jw-g9cj)
   # are only patched from 0.35.0 on.
