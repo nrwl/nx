@@ -4,8 +4,9 @@ import { workspaceRoot } from '@nx/devkit';
 
 // BASE_URL steers the tests and the webServer probe below. Pointing it at a
 // deployed application in CI still starts the local serve dependency Nx infers
-// from the command.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4301';
+// from the command. The fallback is not the serve port: the tests only pass
+// with the address the e2e task env file sets, which this example exercises.
+const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
 
 /**
  * See https://playwright.dev/docs/test-configuration.
