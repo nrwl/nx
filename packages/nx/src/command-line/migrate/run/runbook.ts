@@ -96,6 +96,9 @@ export function renderRunbook(ctx: RunbookContext): string {
     `  \`<nx_migrate_prompt>\` block pointing at an instructions file. Apply`,
     `  those instructions to the workspace. Scope rules for that work:`,
     ...renderAuthorScopeRuleLines().map((line) => `  ${line}`),
+    `  The \`nx migrate\` commands this runbook and the step blocks hand you`,
+    `  (the reconcile, worker and \`next\` commands) are the exception to that`,
+    `  rule: run them as given.`,
   ];
   if (ctx.validate) {
     lines.push(

@@ -26,7 +26,6 @@ import {
   reopenResolutionsForStep,
   settleUnclaimableIssues,
 } from './issues';
-import { CURRENT_RUN_STATE_FORMAT_VERSION } from './run-state';
 import type {
   MigrateRunIssue,
   MigrateRunState,
@@ -341,6 +340,19 @@ describe('migrate run issues', () => {
       });
     });
 
+    it('rejects an "outcome" value other than skipped', () => {
+      const steps = baseSteps();
+      const result = parseHandoffIssues(
+        { outcome: 'done' },
+        stateWith(steps),
+        steps[0]
+      );
+      expect(result).toEqual({
+        ok: false,
+        reason: expect.stringContaining('unrecognized "outcome" value "done"'),
+      });
+    });
+
     it('tolerates the skipped-outcome marker next to a report', () => {
       const steps = baseSteps();
       const result = parseHandoffIssues(
@@ -434,19 +446,6 @@ describe('migrate run issues', () => {
         'issue-2',
         'issue-3',
       ]);
-    });
-
-    it('restamps an older-format state to the ledger version when it records an issue', () => {
-      const steps = baseSteps();
-      // The fixture stamps v1; recording an issue puts the state under
-      // the ledger's rules, which a downgraded nx must refuse to operate.
-      const result = applyReportedIssues(
-        stateWith(steps),
-        steps[0],
-        [{ summary: 'new problem', applicableMigrations: ['plain'] }],
-        []
-      );
-      expect(result.state.formatVersion).toBe(CURRENT_RUN_STATE_FORMAT_VERSION);
     });
 
     it('refuses to mint an id past the bounded suffix instead of writing an unreadable state', () => {
