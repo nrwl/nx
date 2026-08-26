@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
+import { DESCRIPTION, SECTION_NAMES, SECTION_ORDER } from '../utils/llms';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -32,34 +33,6 @@ function stripFrontmatter(content: string): string {
 export const GET: APIRoute = async ({ site }) => {
   const siteUrl = site?.origin ?? 'https://nx.dev';
   const entries: DocEntry[] = [];
-
-  // Preferred section order (same as llms.txt)
-  const sectionOrder = [
-    'quickstart',
-    'getting-started',
-    'concepts',
-    'features',
-    'guides',
-    'extending-nx',
-    'technologies',
-    'reference',
-    'enterprise',
-    'troubleshooting',
-  ];
-
-  // Section display names
-  const sectionNames: Record<string, string> = {
-    'getting-started': 'Getting Started',
-    concepts: 'Core Concepts',
-    features: 'Features',
-    guides: 'Guides',
-    'extending-nx': 'Extending Nx',
-    technologies: 'Technologies',
-    reference: 'Reference',
-    enterprise: 'Enterprise',
-    troubleshooting: 'Troubleshooting',
-    quickstart: 'Quickstart',
-  };
 
   // Get all docs from the content collection (static .mdoc/.mdx files)
   const docs = await getCollection('docs');
@@ -122,8 +95,8 @@ export const GET: APIRoute = async ({ site }) => {
 
   // Sort entries by section order, then by slug within section
   entries.sort((a, b) => {
-    const sectionIndexA = sectionOrder.indexOf(a.section);
-    const sectionIndexB = sectionOrder.indexOf(b.section);
+    const sectionIndexA = SECTION_ORDER.indexOf(a.section);
+    const sectionIndexB = SECTION_ORDER.indexOf(b.section);
     const orderA = sectionIndexA === -1 ? 999 : sectionIndexA;
     const orderB = sectionIndexB === -1 ? 999 : sectionIndexB;
 
@@ -139,7 +112,7 @@ export const GET: APIRoute = async ({ site }) => {
     '',
     '> Complete Nx documentation compiled into a single file for LLM consumption.',
     '',
-    'Nx is a powerful, open-source, technology-agnostic monorepo platform designed to efficiently manage codebases of any scale. From small workspaces to large enterprise monorepos, Nx provides intelligent task execution, caching, and CI optimization.',
+    DESCRIPTION,
     '',
     `This file was generated from ${entries.length} documentation pages.`,
     `Individual pages are available at: ${siteUrl}/docs/{slug}.md`,
@@ -153,7 +126,7 @@ export const GET: APIRoute = async ({ site }) => {
     // Add section header when section changes
     if (entry.section !== currentSection) {
       currentSection = entry.section;
-      const sectionName = sectionNames[currentSection] || currentSection;
+      const sectionName = SECTION_NAMES[currentSection] || currentSection;
       lines.push('');
       lines.push(`# ${sectionName}`);
       lines.push('');

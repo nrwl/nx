@@ -45,6 +45,7 @@
     "build": {
       "dependsOn": [
         "prebuild-banner",
+        "prebuild-agent-skills",
         {
           "projects": [
             "nx",
@@ -172,6 +173,14 @@
         "{projectRoot}/.vale/styles/**/*",
         "{projectRoot}/scripts/vale-changed.mjs"
       ]
+    },
+    "prebuild-agent-skills": {
+      "cache": false,
+      "outputs": ["{projectRoot}/public/.well-known/agent-skills"],
+      "command": "node scripts/sync-agent-skills.mjs",
+      "options": {
+        "cwd": "{projectRoot}"
+      }
     },
     "format": {
       "cache": true,
