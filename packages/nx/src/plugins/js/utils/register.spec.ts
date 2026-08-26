@@ -334,19 +334,13 @@ describe('NodeNext ESM resolve hook (NODENEXT_ESM_RESOLVER_SOURCE)', () => {
 
   let resolve: ResolveHook;
 
-  beforeAll(() => {
-    // Exercise the exact shipped hook source. It's authored as an ESM module
-    // (registered as a `data:` module at runtime), so evaluate it as CommonJS
-    // here - Jest's VM can't honor a `data:` dynamic import without
-    // --experimental-vm-modules.
-    const cjs =
-      NODENEXT_ESM_RESOLVER_SOURCE.replace(
-        'export async function resolve',
-        'async function resolve'
-      ) + '\nmodule.exports = { resolve };';
-    const mod: { exports: { resolve?: ResolveHook } } = { exports: {} };
-    new Function('module', 'exports', cjs)(mod, mod.exports);
-    resolve = mod.exports.resolve!;
+  beforeAll(async () => {
+    // Load the shipped source through the same `data:` module `register()`
+    // builds, so the tests exercise what Node actually registers.
+    const mod = await import(
+      'data:text/javascript,' + encodeURIComponent(NODENEXT_ESM_RESOLVER_SOURCE)
+    );
+    resolve = mod.resolve;
   });
 
   const TS_PARENT = 'file:///ws/src/index.ts';
