@@ -88,7 +88,21 @@ function sanitizeSegment(value: string): string {
   return sanitized || '_';
 }
 
-const HANDOFF_NAME_PREFIX_MAX_LENGTH = 64;
+const HANDOFF_NAME_PREFIX_MAX_BYTES = 64;
+
+// Cuts on code points so a multibyte character is never split, and counts
+// UTF-8 bytes because the filesystem limit is per byte, not per character.
+function truncateUtf8(value: string, maxBytes: number): string {
+  let out = '';
+  let used = 0;
+  for (const ch of value) {
+    const bytes = Buffer.byteLength(ch);
+    if (used + bytes > maxBytes) break;
+    out += ch;
+    used += bytes;
+  }
+  return out;
+}
 
 /**
  * Absolute path of the per-step runner's handoff file for a migration,
@@ -106,10 +120,12 @@ export function stepHandoffPath(
   runDir: string,
   migration: { package: string; name: string }
 ): string {
-  const prefix = [...migration.package.split('/'), migration.name]
-    .map(sanitizeSegment)
-    .join('+')
-    .slice(0, HANDOFF_NAME_PREFIX_MAX_LENGTH);
+  const prefix = truncateUtf8(
+    [...migration.package.split('/'), migration.name]
+      .map(sanitizeSegment)
+      .join('+'),
+    HANDOFF_NAME_PREFIX_MAX_BYTES
+  );
   const hash = createHash('sha256')
     .update(JSON.stringify([migration.package, migration.name]))
     .digest('hex');

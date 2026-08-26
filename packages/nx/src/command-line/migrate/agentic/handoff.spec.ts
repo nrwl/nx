@@ -216,6 +216,28 @@ describe('handoff', () => {
         stepHandoffPath('/run', { package: '@scope/pkg', name: name + 'x' })
       );
     });
+
+    it('bounds the file name by UTF-8 bytes, not characters', () => {
+      const path = stepHandoffPath('/run', {
+        package: 'p',
+        name: '\u754c'.repeat(250),
+      });
+      expect(Buffer.byteLength(basename(path))).toBeLessThanOrEqual(
+        64 + 1 + 64 + '.json'.length
+      );
+      expect(basename(path).startsWith('p+\u754c')).toBe(true);
+    });
+
+    it('never splits a multibyte character at the cut', () => {
+      // 61 bytes of ASCII, then a 4-byte emoji that no longer fits.
+      const path = stepHandoffPath('/run', {
+        package: 'p',
+        name: 'n'.repeat(59) + '\u{1F600}rest',
+      });
+      const prefix = basename(path).slice(0, -('.json'.length + 65));
+      expect(prefix).toBe('p+' + 'n'.repeat(59));
+      expect(prefix).toEqual(expect.not.stringContaining('\uFFFD'));
+    });
   });
 
   describe('runStepHandoffPath', () => {
