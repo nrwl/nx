@@ -1,5 +1,5 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import type { Tree } from '@nx/devkit';
+import { output, type Tree } from '@nx/devkit';
 import { NoTargetsToMigrateError } from '@nx/devkit/internal';
 import type { BatchConversionSession } from '@nx/devkit/internal';
 import { convertToInferredGenerator } from './infer-targets';
@@ -241,5 +241,28 @@ describe('convertToInferredGenerator', () => {
       'close',
     ]);
     expect(finalizeCalls).toHaveLength(0);
+  });
+
+  it('reports the failing conversion when its deferred callback throws', async () => {
+    // The success line for a conversion prints before its callback runs, so a
+    // callback failure must name the conversion it belongs to.
+    registerConversion('@nx/b', async () => () => {
+      throw new Error('boom');
+    });
+    const error = jest.spyOn(output, 'error').mockImplementation(() => {});
+
+    try {
+      const runTasks = await convertToInferredGenerator(tree, {
+        plugins: ['@nx/a', '@nx/b', '@nx/c'],
+        skipFormat: true,
+      });
+
+      await expect(runTasks()).rejects.toThrow('boom');
+      expect(error).toHaveBeenCalledWith({
+        title: '@nx/b:convert-to-inferred - Failed',
+      });
+    } finally {
+      error.mockRestore();
+    }
   });
 });

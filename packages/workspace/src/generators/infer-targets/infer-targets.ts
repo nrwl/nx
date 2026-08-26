@@ -87,8 +87,15 @@ export async function convertToInferredGenerator(tree: Tree, options: Schema) {
             : await runGenerator();
           if (callback) {
             tasks.push(async () => {
-              const task: unknown = await callback();
-              if (typeof task === 'function') await task();
+              try {
+                const task: unknown = await callback();
+                if (typeof task === 'function') await task();
+              } catch (e) {
+                output.error({
+                  title: `${generatorCollection}:convert-to-inferred - Failed`,
+                });
+                throw e;
+              }
             });
           }
           output.success({
