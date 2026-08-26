@@ -104,6 +104,23 @@ describe('nxViteTsPaths', () => {
     );
   });
 
+  it('should substitute the wildcard of a mapped path pointing at a directory', async () => {
+    await tempFs.createFiles({
+      'tsconfig.base.json': JSON.stringify({
+        compilerOptions: {
+          baseUrl: '.',
+          paths: { '@lib/*': ['packages/*/src'] },
+        },
+      }),
+      'packages/one/src/index.ts': '',
+      'app/src/main.ts': '',
+    });
+
+    await expect(resolveWith('@lib/one')).resolves.toEqual(
+      join(tempFs.tempDir, 'packages/one/src/index.ts')
+    );
+  });
+
   it('should resolve paths inherited through extends against the tsconfig that declares them', async () => {
     // No `tsconfig.base.json`: the root-level lookup falls back to the
     // project tsconfig, so both resolution passes share its directory and
