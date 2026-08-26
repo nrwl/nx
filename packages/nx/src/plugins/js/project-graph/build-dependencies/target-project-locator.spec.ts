@@ -624,9 +624,8 @@ describe('TargetProjectLocator', () => {
     });
 
     it('should convert relative file paths to absolute paths before TypeScript module resolution', async () => {
-      const typescriptModule = await import(
-        'nx/src/plugins/js/utils/typescript'
-      );
+      const typescriptModule =
+        await import('nx/src/plugins/js/utils/typescript');
       const resolveModuleByImportSpy = vi
         .spyOn(typescriptModule, 'resolveModuleByImport')
         .mockReturnValue('/root/libs/proj/some-module.ts');
@@ -664,9 +663,8 @@ describe('TargetProjectLocator', () => {
     });
 
     it('should keep absolute file paths as-is for TypeScript module resolution', async () => {
-      const typescriptModule = await import(
-        'nx/src/plugins/js/utils/typescript'
-      );
+      const typescriptModule =
+        await import('nx/src/plugins/js/utils/typescript');
       const resolveModuleByImportSpy = vi
         .spyOn(typescriptModule, 'resolveModuleByImport')
         .mockReturnValue('/root/libs/proj/some-module.ts');

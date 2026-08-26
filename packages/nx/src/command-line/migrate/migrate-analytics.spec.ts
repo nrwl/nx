@@ -123,9 +123,7 @@ vi.mock('../../analytics', () => ({
 describe('migrate-analytics events', () => {
   async function load() {
     vi.resetModules();
-    return (await import(
-      './migrate-analytics'
-    )) as typeof import('./migrate-analytics');
+    return (await import('./migrate-analytics')) as typeof import('./migrate-analytics');
   }
 
   // Params for the first emitted event of the given name.

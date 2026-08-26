@@ -91,7 +91,7 @@ comments as well as for reviewing them, and it is not loaded automatically, so y
 
 ### Code Formatting
 
-After code changes are made, please make sure to format the files with prettier via `npx prettier -- FILE_NAME`
+After code changes are made, please make sure to format the files with oxfmt via `npx oxfmt FILE_NAME`
 
 ### Pre-push Validation
 
