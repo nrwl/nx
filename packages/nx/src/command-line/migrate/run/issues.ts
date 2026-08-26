@@ -13,7 +13,6 @@ import { writeJsonFile } from '../../../utils/fileutils';
 import { MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
 import { singleLine } from '../text';
 import {
-  CURRENT_RUN_STATE_FORMAT_VERSION,
   ISSUE_ID,
   issueFingerprint,
   MIGRATE_ISSUE_DISPOSITIONS,
@@ -118,6 +117,13 @@ export function parseHandoffIssues(
         `the handoff has an unrecognized field ${quoted(
           unknown
         )}; the fields accepted next to "status" and "summary" are "outcome", "issues" and "issueUpdates"`
+      );
+    }
+    if (extras['outcome'] !== undefined && extras['outcome'] !== 'skipped') {
+      return invalid(
+        `the handoff has an unrecognized "outcome" value ${quoted(
+          extras['outcome']
+        )}; the only accepted value is "skipped"`
       );
     }
   }
@@ -373,7 +379,6 @@ export function applyReportedIssues(
   const ledger = [...(state.issues ?? [])];
   const newIssues: IssueApplication['newIssues'] = [];
   const archiveUpdates: IssueArchiveUpdate[] = [];
-  let ledgerChanged = false;
   // Allocate past the highest existing suffix, not from the ledger length:
   // the state reader only checks id syntax and uniqueness, so a sparse
   // ledger (say, a lone issue-2) must not mint a duplicate id that would
@@ -400,7 +405,6 @@ export function applyReportedIssues(
       );
       if (outcome.entry !== existing) {
         ledger[existingIndex] = outcome.entry;
-        ledgerChanged = true;
       }
       if (outcome.archive) {
         archiveUpdates.push({
@@ -472,7 +476,6 @@ export function applyReportedIssues(
               resolvedAtCommitCount: state.commits.length,
             }
           : { ...rest, disposition: update.disposition };
-      ledgerChanged = true;
     }
     // Archived even when the disposition did not move: the note may carry
     // context the ledger has no field for.
@@ -483,18 +486,8 @@ export function applyReportedIssues(
       ...(update.note !== undefined ? { note: update.note } : {}),
     });
   }
-  // The ledger's rules are what v2 refuses older writers over (see
-  // CURRENT_RUN_STATE_FORMAT_VERSION): recording or moving an issue in an
-  // older-stamped run upgrades the stamp, so a later downgrade refuses
-  // instead of operating the ledger blind. Archive-only activity leaves
-  // the stamp alone: a state whose ledger already holds entries acquired
-  // them through a stamping mint or move.
-  const formatVersion =
-    newIssues.length > 0 || ledgerChanged
-      ? Math.max(state.formatVersion, CURRENT_RUN_STATE_FORMAT_VERSION)
-      : state.formatVersion;
   return {
-    state: { ...state, formatVersion, issues: ledger },
+    state: { ...state, issues: ledger },
     newIssues,
     updates: archiveUpdates,
   };

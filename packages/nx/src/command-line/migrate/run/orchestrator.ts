@@ -1,13 +1,8 @@
 import { execSync } from 'child_process';
 import { createHash, randomBytes } from 'crypto';
 import {
-  closeSync,
-  constants as fsConstants,
-  fstatSync,
   lstatSync,
   mkdirSync,
-  openSync,
-  readFileSync,
   renameSync,
   rmSync,
   writeFileSync,
@@ -27,6 +22,7 @@ import { nxVersion } from '../../../utils/versions';
 import {
   stepHandoffPath,
   readHandoffWithReason,
+  readInspectedFile,
   type HandoffReadFailureReason,
 } from '../agentic/handoff';
 import { applyAgenticHandoffGitignoreFallback } from '../agentic/handoff-gitignore';
@@ -587,38 +583,14 @@ function ensureRunbook(
   if (stat?.isFile()) {
     // The read is the proof the entry is usable: a runbook the agent cannot
     // read must not pass the guard, so read errors (an unreadable mode, an
-    // I/O failure) propagate before the run advances. The read goes through
-    // a descriptor: O_NOFOLLOW makes a symlink swapped in after the lstat
-    // fail the open (ELOOP) instead of being followed, and O_NONBLOCK stops
-    // a planted FIFO blocking the open (same guard as owned-private-dir.ts).
-    const fd = openSync(
+    // I/O failure) propagate before the run advances.
+    return readInspectedFile(
       filePath,
-      fsConstants.O_RDONLY |
-        (fsConstants.O_NOFOLLOW ?? 0) |
-        (fsConstants.O_NONBLOCK ?? 0)
+      stat,
+      `${MIGRATE_RUNS_RELATIVE_DIR}/${runId}/${RUNBOOK_FILE_NAME} was replaced while being read; ${continueRunHint(
+        runId
+      )}`
     );
-    try {
-      // The descriptor must be the inspected regular file. The inode
-      // comparison carries the guarantee where the open flags cannot:
-      // Windows has neither O_NOFOLLOW nor O_NONBLOCK, so a followed symlink
-      // shows up only as its target's inode. A same-path unlink and recreate
-      // can reuse the inode number and is not what this guards against.
-      const fdStat = fstatSync(fd, { bigint: true });
-      if (
-        !fdStat.isFile() ||
-        fdStat.dev !== stat.dev ||
-        fdStat.ino !== stat.ino
-      ) {
-        throw new Error(
-          `${MIGRATE_RUNS_RELATIVE_DIR}/${runId}/${RUNBOOK_FILE_NAME} was replaced while being read; ${continueRunHint(
-            runId
-          )}`
-        );
-      }
-      return readFileSync(fd, 'utf-8');
-    } finally {
-      closeSync(fd);
-    }
   }
   if (stat) {
     // A directory here is a corrupted run dir; erasing its contents as a side
@@ -641,7 +613,7 @@ function ensureRunbook(
       `The runbook for run '${runId}' is missing from ${MIGRATE_RUNS_RELATIVE_DIR}/${runId}, and this nx (${nxVersion}) cannot re-render the one nx ${singleLine(
         state.nxVersion
       )} wrote.`,
-      `Restore the file, re-run with the nx version that created the run, or remove ${MIGRATE_RUNS_RELATIVE_DIR}/${runId} to abandon the run (migrations it already applied remain applied).`,
+      `Restore the file (or, if the run was created before runbooks existed, re-run with the nx version that created it), or remove ${MIGRATE_RUNS_RELATIVE_DIR}/${runId} to abandon the run (migrations it already applied remain applied).`,
     ];
     warnToAgent({ title: reason[0], bodyLines: [reason[1]] });
     emitStepBlock(runId, '-', 'error', {
@@ -1638,8 +1610,9 @@ function emitRetryFailed(
   const cleanRetry = canOfferCleanRetry(root, state, step, head);
   // A failure recorded before the generator marker can still have written to
   // the tree (a direct fs or exec side effect, or a crash mid-flush); a
-  // marker means only the install and commit are left, so plain retry is
-  // safe outright. So is retrying a step with no generator half to rerun.
+  // marker means only the handed-back half (a prompt or a validation pass)
+  // or the install and commit are left, so plain retry is safe outright. So
+  // is retrying a step with no generator half to rerun.
   const pending = generatorPending(step);
   const retrySafety: PreMarkerRetrySafety = pending
     ? assessPreMarkerRetry(root, step)
@@ -1764,6 +1737,8 @@ function retryOptionLine(
 // records dirty, a run created before that field existed carries nothing to
 // check, and an unreadable HEAD is no ref at all, so none of the three can be
 // read as a restore point that exists.
+// The debt check is run-wide: a clean retry resets and cleans the whole tree,
+// which would discard every other failed step's uncommitted work as well.
 function canOfferCleanRetry(
   root: string,
   state: MigrateRunState,
@@ -1889,7 +1864,8 @@ function emitDied(
   const cleanRetry = canOfferCleanRetry(root, state, step, head);
   // The generator half is recorded (or the step never had one), so a retry
   // that keeps the tree as it stands has the rest of the step left to run: a
-  // prompt, or the install and commit its worker never reached.
+  // prompt, a validation pass, or the install and commit its worker never
+  // reached.
   const resume = !generatorPending(step);
   const capReached = rearmCapReached(step);
   const lines = [
