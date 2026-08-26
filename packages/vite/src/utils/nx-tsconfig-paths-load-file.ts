@@ -87,11 +87,17 @@ function sortAliasesBySpecificity(
   aliases: string[],
   importPath: string
 ): string[] {
+  const isWildcard = (alias: string) => alias.endsWith('/*');
   const rank = (alias: string) =>
-    alias.endsWith('/*') ? 1 : importPath === alias ? 2 : 0;
+    isWildcard(alias) ? 1 : importPath === alias ? 2 : 0;
   const prefixLength = (alias: string) => alias.replace(/\/\*$/, '').length;
 
-  return [...aliases].sort(
-    (a, b) => rank(b) - rank(a) || prefixLength(b) - prefixLength(a)
-  );
+  return [...aliases].sort((a, b) => {
+    const byRank = rank(b) - rank(a);
+    if (byRank !== 0) return byRank;
+
+    // Prefix length only separates wildcards. Reordering two aliases
+    // TypeScript matches neither way would change resolution for no gain.
+    return isWildcard(a) ? prefixLength(b) - prefixLength(a) : 0;
+  });
 }
