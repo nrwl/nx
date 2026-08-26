@@ -1,11 +1,12 @@
+import type { Mock } from 'vitest';
 import type { NxJsonConfiguration } from '../config/nx-json';
 
-jest.mock('../native', () => ({ fetchIoSnapshots: jest.fn() }));
-jest.mock('../utils/output', () => ({
-  output: { warn: jest.fn() },
+vi.mock('../native', () => ({ fetchIoSnapshots: vi.fn() }));
+vi.mock('../utils/output', () => ({
+  output: { warn: vi.fn() },
 }));
-jest.mock('../utils/logger', () => ({
-  logger: { verbose: jest.fn() },
+vi.mock('../utils/logger', () => ({
+  logger: { verbose: vi.fn() },
 }));
 
 import { fetchIoSnapshots } from '../native';
@@ -18,7 +19,7 @@ import {
   isIoSnapshotFetchEnabled,
 } from './fetch';
 
-const fetchMock = fetchIoSnapshots as jest.Mock;
+const fetchMock = fetchIoSnapshots as Mock;
 const ENV_KEYS = [
   'NX_IO_SNAPSHOTS',
   'NX_NO_CLOUD',
@@ -32,7 +33,7 @@ describe('fetchIoSnapshotsForRun', () => {
   const env: Record<string, string | undefined> = {};
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     for (const key of ENV_KEYS) {
       env[key] = process.env[key];
       delete process.env[key];

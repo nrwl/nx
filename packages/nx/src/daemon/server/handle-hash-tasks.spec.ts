@@ -1,18 +1,22 @@
-const hashTasks = jest.fn().mockResolvedValue([]);
-jest.mock('../../hasher/task-hasher', () => ({
-  InProcessTaskHasher: jest.fn().mockImplementation(() => ({ hashTasks })),
+const hashTasks = vi.fn().mockResolvedValue([]);
+vi.mock('../../hasher/task-hasher', () => ({
+  // A plain function so `new InProcessTaskHasher(...)` works (arrows are not
+  // constructible under vitest's mocks).
+  InProcessTaskHasher: vi.fn().mockImplementation(function () {
+    return { hashTasks };
+  }),
 }));
-jest.mock('./project-graph-incremental-recomputation', () => ({
-  getCachedSerializedProjectGraphPromise: jest.fn().mockResolvedValue({
+vi.mock('./project-graph-incremental-recomputation', () => ({
+  getCachedSerializedProjectGraphPromise: vi.fn().mockResolvedValue({
     error: null,
     projectGraph: { nodes: {}, dependencies: {} },
     rustReferences: null,
   }),
 }));
-jest.mock('../../config/configuration', () => ({ readNxJson: () => ({}) }));
-const mockLoadIoSnapshots = jest.fn((directory: string) => ({ directory }));
+vi.mock('../../config/configuration', () => ({ readNxJson: () => ({}) }));
+const mockLoadIoSnapshots = vi.fn((directory: string) => ({ directory }));
 // Lazy so the hoisted mock factory does not touch the const before it exists.
-jest.mock('../../native', () => ({
+vi.mock('../../native', () => ({
   loadIoSnapshots: (directory: string) => mockLoadIoSnapshots(directory),
 }));
 

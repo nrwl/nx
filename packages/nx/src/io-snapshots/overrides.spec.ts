@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { TempFs } from '../internal-testing-utils/temp-fs';
@@ -7,17 +8,17 @@ import type { TaskGraph } from '../config/task-graph';
 const HEAD = 'a'.repeat(40);
 let cacheRoot: string;
 
-jest.mock('../utils/git-utils', () => ({
-  getLatestCommitSha: jest.fn(() => HEAD),
+vi.mock('../utils/git-utils', () => ({
+  getLatestCommitSha: vi.fn(() => HEAD),
 }));
-jest.mock('./fetch', () => ({
+vi.mock('./fetch', () => ({
   get ioSnapshotsCacheDirectory() {
     return cacheRoot;
   },
-  isIoSnapshotFetchEnabled: jest.fn(() => true),
+  isIoSnapshotFetchEnabled: vi.fn(() => true),
 }));
-jest.mock('../tasks-runner/utils', () => ({
-  getExecutorForTask: jest.fn((task: { target: { target: string } }) => ({
+vi.mock('../tasks-runner/utils', () => ({
+  getExecutorForTask: vi.fn((task: { target: { target: string } }) => ({
     hasherFactory: task.target.target === 'custom' ? () => ({}) : undefined,
   })),
 }));
@@ -101,13 +102,13 @@ describe('buildIoSnapshotOverrides', () => {
   beforeEach(() => {
     tempFs = new TempFs('io-snapshot-overrides');
     cacheRoot = join(tempFs.tempDir, 'io-snapshots');
-    (isIoSnapshotFetchEnabled as jest.Mock).mockReturnValue(true);
+    (isIoSnapshotFetchEnabled as Mock).mockReturnValue(true);
   });
 
   afterEach(() => tempFs.cleanup());
 
   it('returns null when snapshots are off', () => {
-    (isIoSnapshotFetchEnabled as jest.Mock).mockReturnValue(false);
+    (isIoSnapshotFetchEnabled as Mock).mockReturnValue(false);
     expect(loadIoSnapshotsForHead({})).toBeNull();
     expect(buildIoSnapshotOverrides(projectGraph, graph('web:build'), {})).toBe(
       null
