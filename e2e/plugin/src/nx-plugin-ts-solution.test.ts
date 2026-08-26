@@ -22,6 +22,29 @@ import {
   NX_PLUGIN_V2_CONTENTS,
 } from './nx-plugin.fixtures';
 
+function dumpDaemonLog(label: string) {
+  try {
+    const daemonLog = join(
+      tmpProjPath(),
+      '.nx',
+      'workspace-data',
+      'd',
+      'daemon.log'
+    );
+    if (existsSync(daemonLog)) {
+      console.log(
+        `\n========== daemon.log (${label}, trimmed) ==========\n${trimDaemonLog(
+          readFileSync(daemonLog, 'utf-8')
+        )}\n========== end daemon.log ==========\n`
+      );
+    } else {
+      console.log(`[plugin-debug] no daemon log at ${daemonLog} (${label})`);
+    }
+  } catch (e) {
+    console.log(`[plugin-debug] failed to read daemon log (${label}): ${e}`);
+  }
+}
+
 describe('Nx Plugin (TS solution)', () => {
   let workspaceName: string;
 
@@ -33,31 +56,7 @@ describe('Nx Plugin (TS solution)', () => {
   });
 
   afterAll(() => {
-    // The suite shares one long-lived daemon, so dump its log once before
-    // teardown — CI shows why an inferred project went missing (stale graph,
-    // plugin load failure, missed watcher events).
-    try {
-      const daemonLog = join(
-        tmpProjPath(),
-        '.nx',
-        'workspace-data',
-        'd',
-        'daemon.log'
-      );
-      if (existsSync(daemonLog)) {
-        // Trimmed — see trimDaemonLog; the raw log is thousands of lines.
-        console.log(
-          `\n========== daemon.log (trimmed) ==========\n${trimDaemonLog(
-            readFileSync(daemonLog, 'utf-8')
-          )}\n========== end daemon.log ==========\n`
-        );
-      } else {
-        console.log(`[plugin-debug] no daemon log at ${daemonLog}`);
-      }
-    } catch (e) {
-      console.log(`[plugin-debug] failed to read daemon log: ${e}`);
-    }
-
+    dumpDaemonLog('before teardown');
     cleanupProject();
   });
 
@@ -679,6 +678,9 @@ module.exports = (tree) => tree.write('sync-output.txt', workspaceDepMarker);
     );
     createFile(`packages/${inferredProject}/my-project-file`);
 
+    // Preserve diagnostics from the daemon used by the preceding tests before
+    // reset removes its log.
+    dumpDaemonLog('before reset');
     runCLI('reset');
     runCLI('sync');
     expect(readFileSync(join(tmpProjPath(), 'sync-output.txt'), 'utf-8')).toBe(
