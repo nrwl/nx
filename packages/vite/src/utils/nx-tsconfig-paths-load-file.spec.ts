@@ -16,6 +16,8 @@ describe('@nx/vite nx-tsconfig-paths-load-file', () => {
     join(ws, 'packages/exact/thing.ts'),
     join(ws, 'packages/one/src/index.ts'),
     join(ws, 'packages/weird/$&.ts'),
+    join(ws, 'packages/broad/exact/thing.ts'),
+    join(ws, 'packages/narrow/thing.ts'),
   ]);
   const existsSyncImpl = ((path: string) => fs.has(path)) as any;
 
@@ -149,6 +151,26 @@ describe('@nx/vite nx-tsconfig-paths-load-file', () => {
       loadFileFromPaths({ '@repo/ex/*': ['packages/exact/*'] }, '@repo/exact')
     ).toBeUndefined();
   });
+
+  it.each([
+    [
+      'the broader alias',
+      { '@repo': ['packages/broad'], '@repo/exact': ['packages/narrow'] },
+      'packages/broad/exact/thing.ts',
+    ],
+    [
+      'the narrower alias',
+      { '@repo/exact': ['packages/narrow'], '@repo': ['packages/broad'] },
+      'packages/narrow/thing.ts',
+    ],
+  ])(
+    'should keep the declaration order of non-wildcard aliases matching only a prefix, %s first',
+    (_, paths, expected) => {
+      expect(loadFileFromPaths(paths, '@repo/exact/thing')).toEqual(
+        join(ws, expected)
+      );
+    }
+  );
 
   it('should return undefined when no mapped path resolves', () => {
     expect(
