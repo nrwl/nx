@@ -9,6 +9,8 @@ import type { HashInputs, IoSnapshotReport } from '../native';
 import { expandOutputs, matchGlobPaths, matchOutputPaths } from '../native';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
+import { loadIoSnapshotsForHead } from '../io-snapshots/overrides';
+import { observedIoSnapshotOutputs } from '../io-snapshots/outputs';
 import {
   createTaskId,
   getOutputsForTargetAndConfiguration,
@@ -608,12 +610,14 @@ export async function getTaskIoSnapshotStatus(
 }
 
 export interface TaskOutputs {
-  /** Output patterns after token substitution — what the task runner will cache. */
+  /** Output patterns after token substitution — what the task runner will cache. Declared outputs first, then any the snapshot observed the task write. */
   resolved: string[];
   /** `resolved`, expanded against the files currently on disk. */
   expanded: string[];
   /** Configured outputs left out of `resolved` because an option had no value. */
   unresolved: string[];
+  /** Where each `resolved` entry came from. */
+  sources: Record<string, 'declared' | 'snapshot'>;
 }
 
 /**
@@ -625,11 +629,34 @@ export async function getTaskOutputs(
   seed?: TaskFileCheckSeed
 ): Promise<TaskOutputs> {
   const ctx = await getContext(seed);
-  const resolved = getOutputs(taskId, ctx.projectGraph);
+  const declared = getOutputs(taskId, ctx.projectGraph);
+  const sources: Record<string, 'declared' | 'snapshot'> = {};
+  for (const output of declared) sources[output] = 'declared';
+
+  // When a snapshot covers this task, its observed writes are cached on top of
+  // the declared outputs (declared first, deduped). Read-only: never fetches.
+  const resolved = [...declared];
+  const snapshots = loadIoSnapshotsForHead(ctx.nxJson);
+  if (snapshots) {
+    const { canonicalTaskId } = resolveIdentity(taskId, ctx.projectGraph);
+    const taskGraph = getTaskGraph(taskId, ctx.projectGraph);
+    const observed =
+      observedIoSnapshotOutputs(ctx.projectGraph, taskGraph, snapshots)[
+        canonicalTaskId
+      ] ?? [];
+    for (const output of observed) {
+      if (!sources[output]) {
+        sources[output] = 'snapshot';
+        resolved.push(output);
+      }
+    }
+  }
+
   return {
     resolved,
     expanded: expandOutputs(defaultWorkspaceRoot, resolved),
     unresolved: getUnresolvedOutputs(taskId, ctx.projectGraph),
+    sources,
   };
 }
 

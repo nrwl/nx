@@ -33,6 +33,12 @@ export function setMockNxJson(nxJson: Record<string, unknown>) {
 export function setMockHashInputs(inputs: Record<string, HashInputs>) {
   mockHashInputs = inputs;
 }
+export let mockObservedOutputs: Record<string, string[]> = {};
+
+export function setMockObservedOutputs(v: Record<string, string[]>) {
+  mockObservedOutputs = v;
+}
+
 export function setMockExpandedOutputs(outputs: string[] | null) {
   mockExpandedOutputs = outputs;
 }
@@ -109,6 +115,25 @@ vi.mock('../../../tasks-runner/utils', async () => {
   };
 });
 
+vi.mock('../../../io-snapshots/overrides', async () => {
+  const actual = await vi.importActual('../../../io-snapshots/overrides');
+  return {
+    ...actual,
+    // Truthy handle only when a test seeded observed outputs, else null so the
+    // declared-only path runs exactly as in production.
+    loadIoSnapshotsForHead: () =>
+      Object.keys(mockObservedOutputs).length ? ({} as never) : null,
+  };
+});
+
+vi.mock('../../../io-snapshots/outputs', async () => {
+  const actual = await vi.importActual('../../../io-snapshots/outputs');
+  return {
+    ...actual,
+    observedIoSnapshotOutputs: () => mockObservedOutputs,
+  };
+});
+
 vi.mock('../../../hasher/hash-plan-inspector', () => ({
   // A plain function so `new HashPlanInspector(...)` works (arrows are not
   // constructible under vitest's mocks).
@@ -138,6 +163,7 @@ export function setupBeforeEach() {
   performance.mark('init-local');
   mockCwd = '/workspace';
   mockNxJson = {};
+  mockObservedOutputs = {};
   mockHashInputs = {};
   mockExpandedOutputs = null;
   mockSourceMaps = {};

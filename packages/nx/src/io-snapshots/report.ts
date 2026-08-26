@@ -42,12 +42,14 @@ export function formatIoSnapshotSummary(
   const fellBack = result.diagnostics.filter((d) => d.taskId != null).length;
   const bundleLevel = result.diagnostics.find((d) => d.taskId == null);
 
+  const withOutputs = result.tasksWithOutputs?.length ?? 0;
   const line = bundleLevel
     ? `I/O snapshots: none used (${describeBundleLevel(bundleLevel, fetch)})`
-    : `I/O snapshots: ${plural(used, 'task')} hashed from snapshot, ${plural(
-        fellBack,
-        'task'
-      )} fell back${fellBack ? ` (${summarizeReasons(byReason)})` : ''}`;
+    : `I/O snapshots: ${plural(used, 'task')} hashed from snapshot${
+        withOutputs ? ` (${withOutputs} with observed outputs)` : ''
+      }, ${plural(fellBack, 'task')} fell back${
+        fellBack ? ` (${summarizeReasons(byReason)})` : ''
+      }`;
 
   const bodyLines: string[] = [];
   if (fetch) {
