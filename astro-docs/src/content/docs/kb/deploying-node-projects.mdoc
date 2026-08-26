@@ -176,28 +176,30 @@ field:
 ```json
 // apps/my-app/project.json
 {
-  "prune-lockfile": {
-    "dependsOn": ["build"],
-    "cache": true,
-    "executor": "@nx/js:prune-lockfile",
-    "inputs": [
-      "default",
-      "^default",
-      "{workspaceRoot}/pnpm-workspace.yaml",
-      "{workspaceRoot}/package.json",
-      {
-        "runtime": "node -e \"try{console.log('pnpm major '+require('child_process').execSync('pnpm --version',{stdio:['ignore','pipe','ignore']}).toString().trim().split('.')[0])}catch{console.log('pnpm major unavailable')}\""
+  "targets": {
+    "prune-lockfile": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "executor": "@nx/js:prune-lockfile",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/pnpm-workspace.yaml",
+        "{workspaceRoot}/package.json",
+        {
+          "runtime": "node -e \"try{console.log('pnpm major '+require('child_process').execSync('pnpm --version',{stdio:['ignore','pipe','ignore']}).toString().trim().split('.')[0])}catch{console.log('pnpm major unavailable')}\""
+        }
+      ],
+      "outputs": [
+        "{workspaceRoot}/apps/my-app/dist/package.json",
+        "{workspaceRoot}/apps/my-app/dist/pnpm-lock.yaml",
+        "{workspaceRoot}/apps/my-app/dist/pnpm-workspace.yaml",
+        "{workspaceRoot}/apps/my-app/dist/patches",
+        "{workspaceRoot}/apps/my-app/dist/local_path_modules"
+      ],
+      "options": {
+        "buildTarget": "build"
       }
-    ],
-    "outputs": [
-      "{workspaceRoot}/apps/my-app/dist/package.json",
-      "{workspaceRoot}/apps/my-app/dist/pnpm-lock.yaml",
-      "{workspaceRoot}/apps/my-app/dist/pnpm-workspace.yaml",
-      "{workspaceRoot}/apps/my-app/dist/patches",
-      "{workspaceRoot}/apps/my-app/dist/local_path_modules"
-    ],
-    "options": {
-      "buildTarget": "build"
     }
   }
 }
@@ -268,6 +270,63 @@ npx nx docker:build my-app
 # Run the container
 nx docker:run my-app -p 3000:3000
 ```
+
+## Legacy build targets that emit deploy output
+
+In a pnpm workspace, an explicit build target that enables `generatePackageJson` (webpack, rspack,
+vite, and esbuild) or `generateLockfile` (next, remix, tsc, and swc) emits the pruned deploy output
+next to the deployable `package.json`.
+The Nx 23.2 migration adds the pnpm settings inputs to the targets that enable one of those options
+at the time it runs.
+The migration doesn't revisit targets that enable either option later.
+Check the effective inputs of such a target and add any missing entries yourself.
+
+Add them to the layer that supplies the target's effective `inputs`.
+A target-level `inputs` array replaces the `targetDefaults` array instead of merging with it, so
+append to the target's own array when it declares one, and otherwise to the `targetDefaults` entry
+it inherits from.
+A target that inherits nothing needs the Nx defaults spelled out first:
+
+```json
+// apps/my-app/project.json
+{
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "options": {
+        "generatePackageJson": true
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/pnpm-workspace.yaml",
+        {
+          "json": "{workspaceRoot}/package.json",
+          "fields": [
+            "packageManager",
+            "pnpm.onlyBuiltDependencies",
+            "pnpm.neverBuiltDependencies",
+            "pnpm.allowBuilds",
+            "pnpm.supportedArchitectures",
+            "pnpm.patchedDependencies"
+          ]
+        },
+        {
+          "runtime": "node -e \"try{console.log('pnpm major '+require('child_process').execSync('pnpm --version',{stdio:['ignore','pipe','ignore']}).toString().trim().split('.')[0])}catch{console.log('pnpm major unavailable')}\""
+        }
+      ]
+    }
+  }
+}
+```
+
+The `json` input hashes only the fields the deploy output is built from, so dependency bumps in the
+root `package.json` don't invalidate every build.
+
+This doesn't apply to the `prune-lockfile` target above, or to build targets inferred by the
+`@nx/webpack` and `@nx/rspack` plugins, which declare these inputs themselves unless a
+project-level or `targetDefaults` entry replaces their `inputs` array.
+TS Solution Setup rejects `generatePackageJson`, so use the prune workflow instead of re-enabling it.
 
 ## Migrate from `generatePackageJson`
 
