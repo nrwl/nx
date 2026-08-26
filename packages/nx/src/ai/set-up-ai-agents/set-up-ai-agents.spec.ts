@@ -1,6 +1,7 @@
 import type { MockInstance } from 'vitest';
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import { Tree } from '../../generators/tree';
+import { NX_ALLOWLIST_ROOTS } from '../../utils/nx-tmp-dir';
 
 import { setupAiAgentsGenerator } from './set-up-ai-agents';
 import { SetupAiAgentsGeneratorSchema } from './schema';
@@ -440,7 +441,12 @@ describe('setup-ai-agents generator', () => {
         const config = JSON.parse(
           tree.read('.claude/settings.json')?.toString() ?? '{}'
         );
-        expect(config.sandbox).toBeUndefined();
+        // The socket and filesystem grants are still written: Nx needs them
+        // whether or not analytics are on. Only the egress follows the opt-in.
+        expect(config.sandbox.network.allowedDomains).toBeUndefined();
+        expect(config.sandbox.network.allowUnixSockets).toEqual(
+          NX_ALLOWLIST_ROOTS
+        );
       });
 
       it('should not allow analytics requests through the sandbox network filter when no analytics preference is set', async () => {
@@ -454,7 +460,12 @@ describe('setup-ai-agents generator', () => {
         const config = JSON.parse(
           tree.read('.claude/settings.json')?.toString() ?? '{}'
         );
-        expect(config.sandbox).toBeUndefined();
+        // The socket and filesystem grants are still written: Nx needs them
+        // whether or not analytics are on. Only the egress follows the opt-in.
+        expect(config.sandbox.network.allowedDomains).toBeUndefined();
+        expect(config.sandbox.network.allowUnixSockets).toEqual(
+          NX_ALLOWLIST_ROOTS
+        );
       });
 
       it('should leave an existing sandbox network filter untouched when analytics are disabled', async () => {

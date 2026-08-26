@@ -1,8 +1,11 @@
-jest.mock('./isolation/enabled', () => ({ isIsolationEnabled: () => true }));
-jest.mock('./isolation', () => ({ loadIsolatedNxPlugin: jest.fn() }));
-jest.mock('./in-process-loader', () => ({ loadNxPlugin: jest.fn() }));
-jest.mock('../../utils/is-sandbox', () => ({ isSandbox: jest.fn() }));
-jest.mock('../../daemon/sandbox-socket-hint', () => ({
+import type { MockInstance, MockedFunction } from 'vitest';
+vi.mock('./isolation/enabled', async () => ({
+  isIsolationEnabled: () => true,
+}));
+vi.mock('./isolation', async () => ({ loadIsolatedNxPlugin: vi.fn() }));
+vi.mock('./in-process-loader', async () => ({ loadNxPlugin: vi.fn() }));
+vi.mock('../../utils/is-sandbox', async () => ({ isSandbox: vi.fn() }));
+vi.mock('../../daemon/sandbox-socket-hint', async () => ({
   sandboxSocketHint: () => ['<hint>'],
 }));
 
@@ -12,14 +15,14 @@ import { isSandbox } from '../../utils/is-sandbox';
 import { output } from '../../utils/output';
 import { loadingMethod, resetIsolationFallbackForTesting } from './get-plugins';
 
-const mockIsolated = loadIsolatedNxPlugin as jest.MockedFunction<any>;
-const mockInProcess = loadNxPlugin as jest.MockedFunction<any>;
-const mockIsSandbox = isSandbox as jest.MockedFunction<typeof isSandbox>;
+const mockIsolated = loadIsolatedNxPlugin as MockedFunction<any>;
+const mockInProcess = loadNxPlugin as MockedFunction<any>;
+const mockIsSandbox = isSandbox as MockedFunction<typeof isSandbox>;
 
 /** The shape `loadIsolatedNxPlugin` resolves to: [pluginPromise, cleanup]. */
 const isolatedResolving = (value: any) =>
-  Promise.resolve([Promise.resolve(value), jest.fn()]);
-const isolatedRejecting = (err: unknown, cleanup = jest.fn()) =>
+  Promise.resolve([Promise.resolve(value), vi.fn()]);
+const isolatedRejecting = (err: unknown, cleanup = vi.fn()) =>
   Promise.resolve([Promise.reject(err), cleanup]);
 
 const startupFailure = () => {
@@ -29,13 +32,13 @@ const startupFailure = () => {
 };
 
 describe('plugin isolation fallback', () => {
-  let warn: jest.SpyInstance;
+  let warn: MockInstance;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     resetIsolationFallbackForTesting();
-    warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
-    mockInProcess.mockReturnValue([Promise.resolve('in-process'), jest.fn()]);
+    warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
+    mockInProcess.mockReturnValue([Promise.resolve('in-process'), vi.fn()]);
   });
 
   afterEach(() => warn.mockRestore());

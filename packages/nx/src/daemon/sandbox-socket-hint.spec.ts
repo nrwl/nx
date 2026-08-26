@@ -1,17 +1,16 @@
+import type { MockedFunction } from 'vitest';
 import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
 import { detectAiAgent, isAiAgent } from '../native';
 import { sandboxSocketHint } from './sandbox-socket-hint';
 
-jest.mock('../native', () => ({
-  ...jest.requireActual('../native'),
-  isAiAgent: jest.fn(() => false),
-  detectAiAgent: jest.fn(() => null),
+vi.mock('../native', async () => ({
+  ...(await vi.importActual('../native')),
+  isAiAgent: vi.fn(() => false),
+  detectAiAgent: vi.fn(() => null),
 }));
 
-const mockIsAiAgent = isAiAgent as jest.MockedFunction<typeof isAiAgent>;
-const mockDetectAiAgent = detectAiAgent as jest.MockedFunction<
-  typeof detectAiAgent
->;
+const mockIsAiAgent = isAiAgent as MockedFunction<typeof isAiAgent>;
+const mockDetectAiAgent = detectAiAgent as MockedFunction<typeof detectAiAgent>;
 
 describe('sandboxSocketHint', () => {
   // Deliberately not the POSIX default (/tmp/.nx/sockets) so that a hardcoded
