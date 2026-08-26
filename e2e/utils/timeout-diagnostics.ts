@@ -20,7 +20,9 @@ import { join } from 'path';
  * them so they cannot outlive the test.
  */
 
-const dumpDir = join(tmpdir(), 'nx-e2e-handle-dumps');
+// Per test-runner process: pids get reused across runs, so a shared dir could
+// surface a stale dump from an earlier run as this run's survivor.
+const dumpDir = join(tmpdir(), 'nx-e2e-handle-dumps', String(process.pid));
 
 /** Env that makes {@link collectTimeoutDiagnostics} able to read a survivor. */
 export function timeoutDiagnosticsEnv(): Record<string, string> {
