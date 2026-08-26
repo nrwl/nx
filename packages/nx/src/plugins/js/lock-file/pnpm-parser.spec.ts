@@ -28,7 +28,7 @@ vi.mock('node:fs', async () => {
 
 // The artifact collector (pruned-output) reads through 'fs', so mirror the mock
 // there for the stringify -> collect round-trip test.
-jest.mock('fs', () => {
+vi.mock('fs', () => {
   const memFs = require('memfs').fs;
   return {
     ...memFs,

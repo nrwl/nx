@@ -88,13 +88,13 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
 
   afterEach(() => {
     rmSync(tempDir, { recursive: true, force: true });
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   function mockPnpmVersion(version: string) {
-    jest
-      .spyOn(pacakgeManager, 'getPackageManagerVersion')
-      .mockReturnValue(version);
+    vi.spyOn(pacakgeManager, 'getPackageManagerVersion').mockReturnValue(
+      version
+    );
   }
 
   function writeRootWorkspaceYaml(content: string) {
@@ -172,11 +172,11 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
   });
 
   it('fails open (no settings) when the pnpm version cannot be determined', () => {
-    jest
-      .spyOn(pacakgeManager, 'getPackageManagerVersion')
-      .mockImplementation(() => {
+    vi.spyOn(pacakgeManager, 'getPackageManagerVersion').mockImplementation(
+      () => {
         throw new Error('no pnpm on PATH');
-      });
+      }
+    );
     writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');
 
     expectNoSettings(getPrunedPnpmInstallSettingsYaml(tempDir));
@@ -212,7 +212,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
         join(workspaceRoot, 'pnpm-workspace.yaml'),
         'allowBuilds:\n  esbuild: true\n'
       );
-      const readVersion = jest
+      const readVersion = vi
         .spyOn(pacakgeManager, 'getPackageManagerVersion')
         .mockReturnValue('11.2.2');
 
@@ -235,8 +235,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
         join(workspaceRoot, 'pnpm-workspace.yaml'),
         'allowBuilds:\n  esbuild: true\n'
       );
-      jest
-        .spyOn(pacakgeManager, 'getPackageManagerVersion')
+      vi.spyOn(pacakgeManager, 'getPackageManagerVersion')
         .mockImplementationOnce(() => {
           throw new Error('spawn pnpm EAGAIN');
         })
@@ -389,7 +388,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
   ])('warns when the pruned lockfile parses to %s', (_kind, content) => {
     mockPnpmVersion('11.2.2');
     writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
 
     const yaml = getPrunedPnpmInstallSettingsYaml(tempDir, content);
 
@@ -406,7 +405,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
   it('warns when the pruned lockfile carries no document after its start marker', () => {
     mockPnpmVersion('11.2.2');
     writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
 
     // Opens a YAML document and never separates a second one, so the extraction
     // is empty and used to read back as an empty lockfile.
@@ -428,7 +427,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
   it('carries allowBuilds verbatim when the pruned lockfile is unparseable', () => {
     mockPnpmVersion('11.2.2');
     writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
 
     // Distinct from the other unparseable-lockfile cases: the parse is memoized
     // on content, so shared content would warn only on whichever runs first.
@@ -872,7 +871,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
       })
     );
     // The patch file is intentionally NOT written to disk.
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
 
     const { patchFiles, packageJsonPatchedDependencies } =
       getPrunedPnpmPatchArtifacts(
@@ -900,7 +899,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     'warns instead of throwing on a patch path of %p',
     (patchPath) => {
       mockPnpmVersion('11.2.2');
-      const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+      const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
       writeRootWorkspaceYaml(
         `patchedDependencies:\n  is-number@7.0.0: '${patchPath}'\n`
       );
@@ -1206,7 +1205,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
   });
 
   it('resolves the pnpm version once per run even when shipping patches', () => {
-    const versionSpy = jest
+    const versionSpy = vi
       .spyOn(pacakgeManager, 'getPackageManagerVersion')
       .mockReturnValue('11.2.2');
     writeRootWorkspaceYaml(
@@ -1235,13 +1234,13 @@ describe('getPrunedPnpmPackageJsonBuildSettings', () => {
 
   afterEach(() => {
     rmSync(tempDir, { recursive: true, force: true });
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   function mockPnpmVersion(version: string) {
-    jest
-      .spyOn(pacakgeManager, 'getPackageManagerVersion')
-      .mockReturnValue(version);
+    vi.spyOn(pacakgeManager, 'getPackageManagerVersion').mockReturnValue(
+      version
+    );
   }
   function writeRootWorkspaceYaml(content: string) {
     writeFileSync(join(tempDir, 'pnpm-workspace.yaml'), content);
@@ -1439,11 +1438,11 @@ describe('getPrunedPnpmPackageJsonBuildSettings', () => {
   });
 
   it('fails open (null) when the pnpm version cannot be determined', () => {
-    jest
-      .spyOn(pacakgeManager, 'getPackageManagerVersion')
-      .mockImplementation(() => {
+    vi.spyOn(pacakgeManager, 'getPackageManagerVersion').mockImplementation(
+      () => {
         throw new Error('no pnpm on PATH');
-      });
+      }
+    );
     writeRootWorkspaceYaml('onlyBuiltDependencies:\n  - esbuild\n');
 
     expect(getPrunedPnpmPackageJsonBuildSettings(tempDir)).toBeNull();
@@ -1521,7 +1520,7 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
 
   afterEach(() => {
     rmSync(tempDir, { recursive: true, force: true });
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   const lockfileWithTarball = (tarballSpec: string) =>
@@ -1606,7 +1605,7 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
   });
 
   it('warns and skips a tarball resolved outside the workspace root', () => {
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
 
     expect(
       getPrunedPnpmLocalPathArtifacts(
@@ -1620,7 +1619,7 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
   });
 
   it('warns and skips a tarball missing on disk', () => {
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
 
     expect(
       getPrunedPnpmLocalPathArtifacts(
@@ -1755,7 +1754,7 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
   });
 
   it('warns and skips a link: target resolved outside the workspace root', () => {
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
 
     const lockfile = [
       "lockfileVersion: '9.0'",
@@ -1777,7 +1776,7 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
   });
 
   it('warns and skips a link: target missing on disk', () => {
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
 
     const lockfile = [
       "lockfileVersion: '9.0'",
@@ -1797,7 +1796,7 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
   });
 
   it('warns and skips an absolute link: target instead of rebasing it under the workspace root', () => {
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
     // A same-named directory inside the workspace must not be shipped in its place.
     mkdirSync(join(tempDir, 'opt/linked'), { recursive: true });
     writeFileSync(join(tempDir, 'opt/linked/index.js'), 'module.exports={}');
@@ -1822,7 +1821,7 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
   });
 
   it('warns and skips a link: target that resolves to the workspace root itself', () => {
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
     writeFileSync(join(tempDir, 'file-at-root.js'), 'module.exports={}');
 
     const lockfile = [
@@ -1875,7 +1874,7 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
   });
 
   it('warns about a symbolic link inside a shipped directory instead of silently dropping it', () => {
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
     mkdirSync(join(tempDir, 'vendor/linked'), { recursive: true });
     writeFileSync(join(tempDir, 'vendor/linked/index.js'), 'module.exports={}');
     symlinkSync(
@@ -1917,7 +1916,7 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
     ].join('\n');
 
   it('warns and skips a symlinked local-path root resolving outside the workspace', () => {
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
     // The lexical escape check sees vendor/linked, but the symlink resolves
     // outside the workspace; following it would ship the outside tree.
     const outsideDir = mkdtempSync(join(tmpdir(), 'nx-pruned-outside-'));
@@ -1963,7 +1962,7 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
   });
 
   it('warns and skips a local-path root that resolves to the workspace root', () => {
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
     mkdirSync(join(tempDir, 'libs'), { recursive: true });
     writeFileSync(join(tempDir, 'libs/unrelated.js'), 'UNRELATED');
     mkdirSync(join(tempDir, 'vendor'));
@@ -1981,7 +1980,7 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
   });
 
   it('warns and skips a dangling symlinked local-path root', () => {
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
     mkdirSync(join(tempDir, 'vendor'));
     symlinkSync(join(tempDir, 'libs/gone'), join(tempDir, 'vendor/linked'));
 
@@ -1995,7 +1994,7 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
   });
 
   it('warns and skips a symlinked file: tarball', () => {
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
     const outsideDir = mkdtempSync(join(tmpdir(), 'nx-pruned-outside-'));
     try {
       writeFileSync(join(outsideDir, 'real.tgz'), Buffer.from([0, 1, 2, 3]));
@@ -2318,11 +2317,11 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
 
   beforeEach(() => {
     // Isolate from any real catalog config; the catalog test overrides this.
-    jest.spyOn(catalog, 'getCatalogManager').mockReturnValue(null);
+    vi.spyOn(catalog, 'getCatalogManager').mockReturnValue(null);
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('rewrites a file: directory specifier to its shipped location', () => {
@@ -2411,7 +2410,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
   });
 
   it('leaves a target that escapes the workspace root as-is with a warning', () => {
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
     const packageJson: PackageJson = {
       name: 'api',
       version: '0.0.1',
@@ -2427,7 +2426,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
   });
 
   it('leaves an absolute local-path specifier as-is with a warning', () => {
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
     const packageJson: PackageJson = {
       name: 'api',
       version: '0.0.1',
@@ -2443,7 +2442,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
   });
 
   it('leaves a link: to the workspace root itself as-is with a warning', () => {
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
     const packageJson: PackageJson = {
       name: 'api',
       version: '0.0.1',
@@ -2461,7 +2460,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
   it('still moves an unshippable local-path peer into dependencies', () => {
     // pnpm rejects any file:/link: spec under peerDependencies, so even a
     // warned-about target must move or the whole install fails.
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
     const packageJson: PackageJson = {
       name: 'api',
       version: '0.0.1',
@@ -2511,7 +2510,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
   });
 
   it('resolves a catalog: reference before rewriting the local path', () => {
-    jest.spyOn(catalog, 'getCatalogManager').mockReturnValue({
+    vi.spyOn(catalog, 'getCatalogManager').mockReturnValue({
       isCatalogReference: (spec: string) => spec === 'catalog:',
       resolveCatalogReference: () => 'link:../shared',
     } as any);
@@ -2538,7 +2537,7 @@ describe('validatePrunedLocalPathClosure', () => {
 
   afterEach(() => {
     rmSync(tempDir, { recursive: true, force: true });
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   // A pruned lockfile whose root importer links a vendored package.
@@ -2747,7 +2746,7 @@ describe('validatePrunedLocalPathClosure', () => {
   });
 
   it('warns (not fails) when the required dep is only an app devDependency', () => {
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
     writeLinkedManifest({ dependencies: { typescript: '^5.0.0' } });
     const app: PackageJson = {
       name: 'app',
@@ -2768,7 +2767,7 @@ describe('validatePrunedLocalPathClosure', () => {
   });
 
   it('warns (not fails) on a link target peer dependency not visible to the app', () => {
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
     writeLinkedManifest({ peerDependencies: { react: '^18.0.0' } });
     const app: PackageJson = { name: 'app', version: '0.0.1' };
 
@@ -2889,14 +2888,14 @@ describe('warnIncompletePrunedPnpmOutput', () => {
 
   beforeEach(() => {
     tempDir = mkdtempSync(join(tmpdir(), 'nx-pruned-incomplete-'));
-    jest
-      .spyOn(pacakgeManager, 'getPackageManagerVersion')
-      .mockReturnValue('11.2.2');
+    vi.spyOn(pacakgeManager, 'getPackageManagerVersion').mockReturnValue(
+      '11.2.2'
+    );
   });
 
   afterEach(() => {
     rmSync(tempDir, { recursive: true, force: true });
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   const lockfileWith = (body = '') =>
@@ -2905,7 +2904,7 @@ describe('warnIncompletePrunedPnpmOutput', () => {
     );
 
   it('stays silent when the workspace declares nothing the lockfile alone misses', () => {
-    const warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
 
     warnIncompletePrunedPnpmOutput(lockfileWith(), tempDir);
 
@@ -2917,7 +2916,7 @@ describe('warnIncompletePrunedPnpmOutput', () => {
       join(tempDir, 'pnpm-workspace.yaml'),
       'allowBuilds:\n  esbuild: true\n'
     );
-    const warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
 
     warnIncompletePrunedPnpmOutput(
       lockfileWith(
@@ -2941,7 +2940,7 @@ describe('warnIncompletePrunedPnpmOutput', () => {
       join(tempDir, 'pnpm-workspace.yaml'),
       'patchedDependencies:\n  is-number@7.0.0: patches/is-number@7.0.0.patch\n'
     );
-    const warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
 
     warnIncompletePrunedPnpmOutput(
       [
@@ -2963,7 +2962,7 @@ describe('warnIncompletePrunedPnpmOutput', () => {
   it('names the vendored local paths a bare lockfile would drop', () => {
     mkdirSync(join(tempDir, 'vendor/lib'), { recursive: true });
     writeFileSync(join(tempDir, 'vendor/lib/index.js'), 'REAL');
-    const warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
 
     warnIncompletePrunedPnpmOutput(
       lockfileWith(

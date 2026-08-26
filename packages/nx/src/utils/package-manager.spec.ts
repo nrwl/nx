@@ -333,8 +333,8 @@ describe('package-manager', () => {
     });
 
     it('should ignore workspace configuration when detecting the pnpm version', () => {
-      jest.spyOn(fs, 'existsSync').mockReturnValue(false);
-      const execSync = jest
+      vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+      const execSync = vi
         .spyOn(childProcess, 'execSync')
         .mockReturnValue('11.2.2');
 
