@@ -295,10 +295,15 @@ public static partial class TargetBuilder
             return GetArtifactsSubdirectory(properties, workspaceRoot, "ArtifactsPackageOutputName", "package", includeProjectName: false);
         }
 
+        // PackageOutputPath is evaluated at the project's default Configuration,
+        // but pack runs at the Configuration in `properties` (Release). Rewrite
+        // the configuration segment so the declared output matches where the
+        // .nupkg lands, as GetPublishDir does for PublishDir.
         var packageOutputPath = properties.GetValueOrDefault("PackageOutputPath");
         if (!string.IsNullOrEmpty(packageOutputPath))
         {
-            return ResolvePath(packageOutputPath, projectDirectory, workspaceRoot);
+            var resolved = ResolvePath(packageOutputPath, projectDirectory, workspaceRoot);
+            return ApplyConfiguration(resolved, properties.GetValueOrDefault("Configuration"));
         }
 
         return GetOutputPath(properties, projectDirectory, workspaceRoot);

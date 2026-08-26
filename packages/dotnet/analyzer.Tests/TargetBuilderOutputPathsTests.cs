@@ -637,6 +637,28 @@ public class TargetBuilderOutputPathsTests
     }
 
     [Fact]
+    public void Pack_RewritesEvaluatedDebugPackageOutputPathToRelease()
+    {
+        // MSBuild always sets PackageOutputPath, evaluated at the default
+        // (Debug) configuration, but the pack target runs --configuration
+        // Release. Declaring the evaluated value pointed the output at
+        // bin/Debug while the .nupkg was written to bin/Release.
+        var projectDirectory = ProjectDir("libs", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["BaseOutputPath"] = "bin\\",
+            ["BaseIntermediateOutputPath"] = "obj\\",
+            ["PackageOutputPath"] = "bin\\Debug/",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{projectRoot}/bin/Release/*.nupkg", "{projectRoot}/obj" },
+            targets["pack"].Outputs);
+    }
+
+    [Fact]
     public void Pack_ArtifactsLayout_EmitsWorkspaceRootPackageAndObjPaths()
     {
         var projectDirectory = ProjectDir("libs", "foo");
