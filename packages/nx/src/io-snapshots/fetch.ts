@@ -3,6 +3,7 @@ import type { NxJsonConfiguration } from '../config/nx-json';
 import { fetchIoSnapshots, type IoSnapshots } from '../native';
 import { cacheDir } from '../utils/cache-directory';
 import { logger } from '../utils/logger';
+import { ACCESS_TOKEN } from '../nx-cloud/utilities/environment';
 import { removeTrailingSlash } from '../nx-cloud/utilities/get-cloud-options';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { output } from '../utils/output';
@@ -62,7 +63,9 @@ export async function fetchIoSnapshotsForRun(
     workspaceRoot,
     cacheDirectory: ioSnapshotsCacheDirectory,
     apiUrl: ioSnapshotApiUrl(runnerOptions),
-    accessToken: process.env.NX_CLOUD_ACCESS_TOKEN || runnerOptions.accessToken,
+    // Same precedence as the Cloud client: env auth/access token, then
+    // nx-cloud.env, then nx.json.
+    accessToken: ACCESS_TOKEN || runnerOptions.accessToken,
     nxCloudId: runnerOptions.nxCloudId,
     clientVersion: `nx/${nxVersion}`,
     maxAgeMs,

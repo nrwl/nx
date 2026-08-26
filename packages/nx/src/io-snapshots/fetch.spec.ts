@@ -2,6 +2,13 @@ import type { Mock } from 'vitest';
 import type { NxJsonConfiguration } from '../config/nx-json';
 
 vi.mock('../native', () => ({ fetchIoSnapshots: vi.fn() }));
+// The real module resolves the token once at import; mirror its precedence
+// lazily so the env rows below can vary it.
+vi.mock('../nx-cloud/utilities/environment', () => ({
+  get ACCESS_TOKEN() {
+    return process.env.NX_CLOUD_AUTH_TOKEN || process.env.NX_CLOUD_ACCESS_TOKEN;
+  },
+}));
 vi.mock('../utils/output', () => ({
   output: { warn: vi.fn() },
 }));
@@ -25,6 +32,7 @@ const ENV_KEYS = [
   'NX_NO_CLOUD',
   'NX_CLOUD_API',
   'NRWL_API',
+  'NX_CLOUD_AUTH_TOKEN',
   'NX_CLOUD_ACCESS_TOKEN',
   'NX_IO_SNAPSHOTS_MAX_AGE',
 ];
@@ -106,6 +114,12 @@ describe('fetchIoSnapshotsForRun', () => {
     process.env.NRWL_API = 'https://enterprise.example.com/';
     expect(ioSnapshotApiUrl({ url: 'https://cloud.example.com' })).toBe(
       'https://enterprise.example.com'
+    );
+
+    process.env.NX_CLOUD_AUTH_TOKEN = 'auth-token';
+    await fetchIoSnapshotsForRun(enabled, { accessToken: 'json-token' });
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ accessToken: 'auth-token' })
     );
     expect(logger.verbose).toHaveBeenCalledWith(
       expect.stringContaining('3 tasks')
