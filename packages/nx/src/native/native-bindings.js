@@ -624,6 +624,7 @@ module.exports.initializeTelemetryWithSessionId = nativeBinding.initializeTeleme
 module.exports.installNxConsole = nativeBinding.installNxConsole
 module.exports.installNxConsoleForEditor = nativeBinding.installNxConsoleForEditor
 module.exports.ioSnapshotDeferredTaskIds = nativeBinding.ioSnapshotDeferredTaskIds
+module.exports.ioSnapshotOutputs = nativeBinding.ioSnapshotOutputs
 module.exports.ioSnapshotReport = nativeBinding.ioSnapshotReport
 module.exports.IS_WASM = nativeBinding.IS_WASM
 module.exports.isAiAgent = nativeBinding.isAiAgent

@@ -30,6 +30,7 @@ import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { getBundleInstallDefaultLocation } from '../nx-cloud/update-manager';
 import { logger } from '../utils/logger';
 import { fetchIoSnapshotsForRun } from '../io-snapshots/fetch';
+import { applyIoSnapshotOutputs } from '../io-snapshots/outputs';
 import { buildIoSnapshotOverrides } from '../io-snapshots/overrides';
 import { formatIoSnapshotSummary } from '../io-snapshots/report';
 import {
@@ -997,8 +998,12 @@ export async function invokeTasksRunner({
 
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
-  // Must precede hashing: the bundle is the snapshot source for task hashes.
+  // Must precede hashing: the bundle is the snapshot source for task hashes,
+  // and observed outputs join the task outputs the hasher and cache see.
   const ioSnapshots = await fetchIoSnapshotsForRun(nxJson, runnerOptions);
+  if (ioSnapshots) {
+    applyIoSnapshotOutputs(projectGraph, taskGraph, ioSnapshots);
+  }
 
   let hasher = createTaskHasher(
     projectGraph,
