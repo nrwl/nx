@@ -1,5 +1,5 @@
-import { joinPathFragments } from '@nx/devkit';
 import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import type { ConfigLoaderSuccessResult } from 'tsconfig-paths';
 import { findFile } from './nx-tsconfig-paths-find-file';
 
@@ -32,7 +32,7 @@ export function loadFileFromPaths(
       for (const path of paths) {
         // The replacements go through a function because a string replacement
         // would expand `$&` and friends as substitution patterns.
-        const joinedPath = joinPathFragments(
+        const joinedPath = join(
           tsconfig.absoluteBaseUrl,
           isWildcard
             ? path.replace('*', () => suffix)
