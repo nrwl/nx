@@ -48,10 +48,14 @@ export interface SeparatedPlugins {
 
 /**
  * Set once a worker has been refused in this process, and read by every later
- * plugin. Without it each plugin repeats the whole sequence: spawn a worker,
- * wait for it to die, print the same advice. A workspace with six plugins pays
- * that six times per command, and nothing about the second attempt can succeed
- * once the first has been refused for a reason that belongs to the sandbox.
+ * plugin: nothing about a second attempt can succeed once the first has been
+ * refused for a reason that belongs to the sandbox.
+ *
+ * It does not stop the spawns of the plugins already in flight. Callers load
+ * plugins concurrently, so all of them are past the entry check before the
+ * first worker dies; what the latch guarantees is that the advice is printed
+ * once rather than once per plugin, and that anything loaded after the refusal
+ * skips the worker entirely.
  *
  * Process-scoped rather than persisted: the refusal describes the environment
  * Nx is running in, so it must not follow the workspace into a plain terminal.
@@ -101,20 +105,24 @@ export const loadingMethod = async (
 
     cleanup();
 
-    // Latch before warning, so both the advice and the wasted worker spawns
-    // happen once rather than once per plugin.
+    // Read and set in one synchronous step. Concurrently loaded plugins each
+    // arrive here with their own failure, so testing the latch after setting it
+    // is what keeps the advice to one copy.
+    const alreadyRefused = isolationRefusedInThisProcess;
     isolationRefusedInThisProcess = true;
-    output.warn({
-      title:
-        'Could not start a plugin worker in this sandbox. Running plugins in the main process instead.',
-      bodyLines: [
-        'Plugins that expect isolation may misbehave, and this is slower than a worker.',
-        // Not `certain`: this path proves a worker died before it connected,
-        // which a refused socket explains but so does an OOM kill or a broken
-        // install. The errno that would settle it stays in the worker.
-        ...sandboxSocketHint(),
-      ],
-    });
+    if (!alreadyRefused) {
+      output.warn({
+        title:
+          'Could not start a plugin worker in this sandbox. Running plugins in the main process instead.',
+        bodyLines: [
+          'Plugins that expect isolation may misbehave, and this is slower than a worker.',
+          // Not `certain`: this path proves a worker died before it connected,
+          // which denied permission explains but so does an OOM kill or a
+          // broken install. The errno that would settle it stays in the worker.
+          ...sandboxSocketHint(),
+        ],
+      });
+    }
 
     return loadNxPlugin(plugin, root, index);
   }

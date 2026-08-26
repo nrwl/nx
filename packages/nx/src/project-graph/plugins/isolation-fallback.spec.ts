@@ -93,6 +93,28 @@ describe('plugin isolation fallback', () => {
     expect(mockInProcess).toHaveBeenCalledTimes(3);
   });
 
+  it('warns once when every plugin is loaded concurrently', async () => {
+    // The production shape: callers map over the plugins and await them
+    // together, so all of them are past the latch's entry check before the
+    // first worker dies and each arrives at the catch with its own failure.
+    // Awaiting sequentially, as the test above does, hides that.
+    mockIsSandbox.mockReturnValue(true);
+    mockIsolated.mockReturnValue(isolatedRejecting(startupFailure()));
+
+    const loaded = await Promise.all(
+      ['a', 'b', 'c'].map(([p]) => loadingMethod(p, '/root'))
+    );
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    // Every plugin still gets loaded; only the advice is deduped.
+    expect(mockInProcess).toHaveBeenCalledTimes(3);
+    expect(await Promise.all(loaded.map(([plugin]) => plugin))).toEqual([
+      'in-process',
+      'in-process',
+      'in-process',
+    ]);
+  });
+
   it('rethrows a plugin that loaded and then threw', async () => {
     // Falling back here would rerun a plugin that already failed on its own
     // merits and bury the real error.
