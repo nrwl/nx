@@ -169,6 +169,19 @@ export function getPluginResolveConditionNodeArgs(
   ]);
 }
 
+/**
+ * Older supported Node versions cannot scope conditions with registerHooks,
+ * so the daemon must receive them at process startup instead.
+ */
+export function getDaemonResolveConditionNodeArgs(
+  root: string = workspaceRoot
+): string[] {
+  const module = require('node:module') as typeof import('node:module');
+  return typeof module.registerHooks === 'function'
+    ? []
+    : getPluginResolveConditionNodeArgs(root);
+}
+
 export function findNodes(
   node: Node,
   kind: SyntaxKind | SyntaxKind[],
