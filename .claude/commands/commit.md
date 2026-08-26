@@ -13,14 +13,14 @@ Create a git commit following Nx repository standards and validation requirement
 ## What this command does:
 
 1. **Pre-commit validation**: Runs the full validation suite (`pnpm nx prepush`) to ensure code quality
-2. **Formatting**: Automatically formats changed files with Prettier
+2. **Formatting**: Automatically formats changed files with oxfmt
 3. **Testing**: Runs tests on affected projects to validate changes
 4. **Commit creation**: Creates a well-formed commit with proper message formatting (without co-author attribution)
 5. **Status reporting**: Provides clear feedback on the commit process
 
 ## Workflow:
 
-1. Format any modified files with Prettier
+1. Format any modified files with oxfmt
 2. Run the prepush validation suite
 3. If validation passes, stage relevant changes
 4. Create commit with descriptive message
