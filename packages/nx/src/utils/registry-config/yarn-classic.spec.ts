@@ -1,16 +1,17 @@
-// os.homedir() ignores a runtime process.env.HOME override under jest, and a
+import type { Mock } from 'vitest';
+// os.homedir() ignores a runtime process.env.HOME override under the test runner, and a
 // spyOn does not reach a module's named import either.
-jest.mock('os', () => ({
-  ...jest.requireActual('os'),
-  homedir: jest.fn(() => '/home/user'),
+vi.mock('os', async () => ({
+  ...require('os'),
+  homedir: vi.fn(() => '/home/user'),
 }));
-jest.mock('fs', () => ({
-  ...jest.requireActual('fs'),
-  existsSync: jest.fn(),
-  readFileSync: jest.fn(),
+vi.mock('fs', async () => ({
+  ...require('fs'),
+  existsSync: vi.fn(),
+  readFileSync: vi.fn(),
 }));
-jest.mock('../logger', () => ({
-  logger: { warn: jest.fn(), verbose: jest.fn() },
+vi.mock('../logger', () => ({
+  logger: { warn: vi.fn(), verbose: vi.fn() },
 }));
 
 import * as fs from 'fs';
@@ -68,11 +69,11 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
 
   beforeEach(() => {
     files = {};
-    (homedir as jest.Mock).mockReturnValue(HOME);
-    (fs.existsSync as jest.Mock).mockImplementation(
+    (homedir as Mock).mockReturnValue(HOME);
+    (fs.existsSync as Mock).mockImplementation(
       (p: any) => typeof p === 'string' && p in files
     );
-    (fs.readFileSync as jest.Mock).mockImplementation((p: any) => {
+    (fs.readFileSync as Mock).mockImplementation((p: any) => {
       if (typeof p === 'string' && p in files) {
         return files[p];
       }
@@ -88,12 +89,12 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     // Deleting FAKEROOTKEY above puts production on its root home tier whenever
     // the run itself is uid 0 (container CI).
     if (process.platform !== 'win32') {
-      jest.spyOn(process, 'getuid' as any).mockReturnValue(501 as any);
+      vi.spyOn(process, 'getuid' as any).mockReturnValue(501 as any);
     }
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     for (const key of managedEnvKeys) {
       if (savedEnv[key] === undefined) {
         delete process.env[key];
@@ -257,15 +258,13 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     files[`${ROOT}/.yarnrc`] = 'registry "https://reg-proj.example.com/"\n';
     files[`${HOME}/.config/yarn`] =
       '--registry "https://reg-cli.example.com/"\n';
-    const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
-    (fs.readFileSync as jest.Mock).mockImplementation(
-      (p: any, ...rest: any[]) => {
-        if (p === `${HOME}/.config/yarn/config`) {
-          throw Object.assign(new Error(`ENOTDIR: ${p}`), { code: 'ENOTDIR' });
-        }
-        return readFile(p, ...rest);
+    const readFile = (fs.readFileSync as Mock).getMockImplementation();
+    (fs.readFileSync as Mock).mockImplementation((p: any, ...rest: any[]) => {
+      if (p === `${HOME}/.config/yarn/config`) {
+        throw Object.assign(new Error(`ENOTDIR: ${p}`), { code: 'ENOTDIR' });
       }
-    );
+      return readFile(p, ...rest);
+    });
     expect(() => getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toThrow(
       /yarn config at .* could not be read/
     );
@@ -529,7 +528,7 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
 
   const itPosix = process.platform === 'win32' ? it.skip : it;
   itPosix('reads the root /usr/local/share home when running as root', () => {
-    (process.getuid as jest.Mock).mockReturnValue(0);
+    (process.getuid as Mock).mockReturnValue(0);
     files['/usr/local/share/.yarnrc'] =
       'registry "https://reg-root.example.com/"\n';
     expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
@@ -540,7 +539,7 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
   itPosix(
     'expands a ~/ cafile against /usr/local/share when running as root',
     () => {
-      (process.getuid as jest.Mock).mockReturnValue(0);
+      (process.getuid as Mock).mockReturnValue(0);
       files[`${ROOT}/.yarnrc`] = 'cafile "~/certs/ca.pem"\n';
       expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
         npm_config_cafile: resolve('/usr/local/share', 'certs/ca.pem'),
@@ -822,7 +821,7 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     // Under root the /usr/local/share home outranks the real one, so the key
     // yarn resolves is not the one npm reads. The cancellation follows npm's
     // own tiers.
-    (process.getuid as jest.Mock).mockReturnValue(0);
+    (process.getuid as Mock).mockReturnValue(0);
     files['/usr/local/share/.npmrc'] =
       '//cdn.example.com/:_authToken=shadow-token';
     files[`${HOME}/.npmrc`] = '//cdn.example.com/:_authToken=native-token';
@@ -1512,15 +1511,13 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       // yarn propagates the EACCES and exits 1 (verified on 1.22.22), so there
       // is no resolution left to reproduce.
       files[`${ROOT}/.yarnrc`] = 'registry "https://reg-a.example.com/"\n';
-      const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
-      (fs.readFileSync as jest.Mock).mockImplementation(
-        (p: any, ...rest: any[]) => {
-          if (p === `${ROOT}/.yarnrc`) {
-            throw Object.assign(new Error(`EACCES: ${p}`), { code: 'EACCES' });
-          }
-          return readFile(p, ...rest);
+      const readFile = (fs.readFileSync as Mock).getMockImplementation();
+      (fs.readFileSync as Mock).mockImplementation((p: any, ...rest: any[]) => {
+        if (p === `${ROOT}/.yarnrc`) {
+          throw Object.assign(new Error(`EACCES: ${p}`), { code: 'EACCES' });
         }
-      );
+        return readFile(p, ...rest);
+      });
       expect(() => getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toThrow(
         /yarn config at .* could not be read/
       );
@@ -1533,8 +1530,8 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
         // 1.22.22). Skipping it would silently land the workspace on the home
         // registry below it.
         files[`${HOME}/.yarnrc`] = 'registry "https://reg-home.example.com/"\n';
-        const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
-        (fs.readFileSync as jest.Mock).mockImplementation(
+        const readFile = (fs.readFileSync as Mock).getMockImplementation();
+        (fs.readFileSync as Mock).mockImplementation(
           (p: any, ...rest: any[]) => {
             if (p === `${ROOT}/.yarnrc`) {
               throw Object.assign(new Error(`${code}: ${p}`), { code });
@@ -1554,15 +1551,13 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       // 1.22.22). The lookup is what spares it, and the read fault below is
       // what it is spared from: drop the existence check and this goes red.
       files[`${HOME}/.yarnrc`] = 'registry "https://reg-home.example.com/"\n';
-      const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
-      (fs.readFileSync as jest.Mock).mockImplementation(
-        (p: any, ...rest: any[]) => {
-          if (p === `${ROOT}/.npmrc`) {
-            throw Object.assign(new Error(`ELOOP: ${p}`), { code: 'ELOOP' });
-          }
-          return readFile(p, ...rest);
+      const readFile = (fs.readFileSync as Mock).getMockImplementation();
+      (fs.readFileSync as Mock).mockImplementation((p: any, ...rest: any[]) => {
+        if (p === `${ROOT}/.npmrc`) {
+          throw Object.assign(new Error(`ELOOP: ${p}`), { code: 'ELOOP' });
         }
-      );
+        return readFile(p, ...rest);
+      });
       expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
         npm_config_registry: 'https://reg-home.example.com/',
       });
@@ -1575,15 +1570,13 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       // reaches this tier fails its lookup first, so one stands for all of
       // them; the read fault below is what the lookup spares it from.
       files[`${HOME}/.yarnrc`] = 'registry "https://reg-home.example.com/"\n';
-      const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
-      (fs.readFileSync as jest.Mock).mockImplementation(
-        (p: any, ...rest: any[]) => {
-          if (p === `${PREFIX}/etc/yarnrc`) {
-            throw Object.assign(new Error(`ELOOP: ${p}`), { code: 'ELOOP' });
-          }
-          return readFile(p, ...rest);
+      const readFile = (fs.readFileSync as Mock).getMockImplementation();
+      (fs.readFileSync as Mock).mockImplementation((p: any, ...rest: any[]) => {
+        if (p === `${PREFIX}/etc/yarnrc`) {
+          throw Object.assign(new Error(`ELOOP: ${p}`), { code: 'ELOOP' });
         }
-      );
+        return readFile(p, ...rest);
+      });
       expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
         npm_config_registry: 'https://reg-home.example.com/',
       });
@@ -1594,15 +1587,13 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       // it spares EISDIR outright (verified on 1.22.22: exit 0, where the same
       // directory at the project .yarnrc exits 1).
       files[`${ROOT}/.yarnrc`] = 'registry "https://reg-proj.example.com/"\n';
-      const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
-      (fs.readFileSync as jest.Mock).mockImplementation(
-        (p: any, ...rest: any[]) => {
-          if (p === `${HOME}/.config/yarn/config`) {
-            throw Object.assign(new Error(`EISDIR: ${p}`), { code: 'EISDIR' });
-          }
-          return readFile(p, ...rest);
+      const readFile = (fs.readFileSync as Mock).getMockImplementation();
+      (fs.readFileSync as Mock).mockImplementation((p: any, ...rest: any[]) => {
+        if (p === `${HOME}/.config/yarn/config`) {
+          throw Object.assign(new Error(`EISDIR: ${p}`), { code: 'EISDIR' });
         }
-      );
+        return readFile(p, ...rest);
+      });
       expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
         npm_config_registry: 'https://reg-proj.example.com/',
       });
@@ -1612,15 +1603,13 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       // The ungated pass spares ENOENT and EISDIR alone, rethrowing the rest
       // (verified on 1.22.22: exit 1 naming the EACCES).
       files[`${ROOT}/.yarnrc`] = 'registry "https://reg-proj.example.com/"\n';
-      const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
-      (fs.readFileSync as jest.Mock).mockImplementation(
-        (p: any, ...rest: any[]) => {
-          if (p === `${HOME}/.config/yarn/config`) {
-            throw Object.assign(new Error(`EACCES: ${p}`), { code: 'EACCES' });
-          }
-          return readFile(p, ...rest);
+      const readFile = (fs.readFileSync as Mock).getMockImplementation();
+      (fs.readFileSync as Mock).mockImplementation((p: any, ...rest: any[]) => {
+        if (p === `${HOME}/.config/yarn/config`) {
+          throw Object.assign(new Error(`EACCES: ${p}`), { code: 'EACCES' });
         }
-      );
+        return readFile(p, ...rest);
+      });
       expect(() => getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toThrow(
         /yarn config at .* could not be read/
       );
@@ -1630,15 +1619,13 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       // The lookup passes on a directory and the open behind it dies, so this
       // one keeps no EISDIR tolerance (verified on 1.22.22: exit 1).
       files[`${HOME}/.yarnrc`] = 'registry "https://reg-home.example.com/"\n';
-      const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
-      (fs.readFileSync as jest.Mock).mockImplementation(
-        (p: any, ...rest: any[]) => {
-          if (p === `${ROOT}/.yarnrc`) {
-            throw Object.assign(new Error(`EISDIR: ${p}`), { code: 'EISDIR' });
-          }
-          return readFile(p, ...rest);
+      const readFile = (fs.readFileSync as Mock).getMockImplementation();
+      (fs.readFileSync as Mock).mockImplementation((p: any, ...rest: any[]) => {
+        if (p === `${ROOT}/.yarnrc`) {
+          throw Object.assign(new Error(`EISDIR: ${p}`), { code: 'EISDIR' });
         }
-      );
+        return readFile(p, ...rest);
+      });
       expect(() => getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toThrow(
         /yarn config at .* could not be read/
       );
@@ -1649,15 +1636,13 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       // 1.22.22 for both a directory and an unreadable file).
       files[`${PREFIX}/etc/yarnrc`] =
         'registry "https://reg-etc.example.com/"\n';
-      const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
-      (fs.readFileSync as jest.Mock).mockImplementation(
-        (p: any, ...rest: any[]) => {
-          if (p === `${PREFIX}/etc/yarnrc`) {
-            throw Object.assign(new Error(`EACCES: ${p}`), { code: 'EACCES' });
-          }
-          return readFile(p, ...rest);
+      const readFile = (fs.readFileSync as Mock).getMockImplementation();
+      (fs.readFileSync as Mock).mockImplementation((p: any, ...rest: any[]) => {
+        if (p === `${PREFIX}/etc/yarnrc`) {
+          throw Object.assign(new Error(`EACCES: ${p}`), { code: 'EACCES' });
         }
-      );
+        return readFile(p, ...rest);
+      });
       expect(() => getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toThrow(
         /yarn config at .* could not be read/
       );
@@ -1667,15 +1652,13 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       // yarn dies the same way on its .npmrc chain (verified on 1.22.22: EACCES
       // on the workspace .npmrc fails both config get and install).
       files[`${ROOT}/.npmrc`] = 'registry=https://reg-a.example.com/';
-      const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
-      (fs.readFileSync as jest.Mock).mockImplementation(
-        (p: any, ...rest: any[]) => {
-          if (p === `${ROOT}/.npmrc`) {
-            throw Object.assign(new Error(`EACCES: ${p}`), { code: 'EACCES' });
-          }
-          return readFile(p, ...rest);
+      const readFile = (fs.readFileSync as Mock).getMockImplementation();
+      (fs.readFileSync as Mock).mockImplementation((p: any, ...rest: any[]) => {
+        if (p === `${ROOT}/.npmrc`) {
+          throw Object.assign(new Error(`EACCES: ${p}`), { code: 'EACCES' });
         }
-      );
+        return readFile(p, ...rest);
+      });
       expect(() => getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toThrow(
         /\.npmrc at .* could not be read/
       );
@@ -1785,18 +1768,17 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
   describe('reporting a credential yarn would not send', () => {
     // The overlay cannot stop npm reading the same .npmrc, so npm authenticates
     // on a registry yarn resolved but would have queried anonymously.
-    const warnFor = (packages: string[]): string[] => {
-      const { logger } = require('../logger');
-      (logger.warn as jest.Mock).mockClear();
-      jest.isolateModules(() => {
-        const {
-          getYarnClassicSpawnRegistryEnv: fresh,
-        } = require('./yarn-classic');
-        for (const pkg of packages) {
-          fresh(pkg, ROOT);
-        }
-      });
-      return (logger.warn as jest.Mock).mock.calls.map((call) => call[0]);
+    const warnFor = async (packages: string[]): string[] => {
+      const { logger } = await import('../logger');
+      (logger.warn as Mock).mockClear();
+      vi.resetModules();
+      const { getYarnClassicSpawnRegistryEnv: fresh } = await import(
+        './yarn-classic'
+      );
+      for (const pkg of packages) {
+        fresh(pkg, ROOT);
+      }
+      return (logger.warn as Mock).mock.calls.map((call) => call[0]);
     };
 
     beforeEach(() => {
@@ -1805,8 +1787,8 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
         '//reg-y.example.com/:_authToken=native-token\n';
     });
 
-    it('warns once when npm authenticates on a bridged registry yarn would not', () => {
-      const warnings = warnFor(['is-even', 'is-odd']);
+    it('warns once when npm authenticates on a bridged registry yarn would not', async () => {
+      const warnings = await warnFor(['is-even', 'is-odd']);
       expect(warnings).toHaveLength(1);
       expect(warnings[0]).toContain('//reg-y.example.com/');
       expect(warnings[0]).toContain('yarn would not send it');
@@ -1816,37 +1798,37 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       expect(warnings[0]).not.toContain('Remove that credential');
     });
 
-    it('stays quiet when always-auth makes yarn send the same credential', () => {
+    it('stays quiet when always-auth makes yarn send the same credential', async () => {
       files[`${ROOT}/.npmrc`] += 'always-auth=true\n';
-      expect(warnFor(['is-even'])).toEqual([]);
+      expect(await warnFor(['is-even'])).toEqual([]);
     });
 
-    it('stays quiet for a scoped fetch, which yarn authenticates', () => {
-      expect(warnFor(['@acme/pkg'])).toEqual([]);
+    it('stays quiet for a scoped fetch, which yarn authenticates', async () => {
+      expect(await warnFor(['@acme/pkg'])).toEqual([]);
     });
 
-    it('stays quiet when no registry was bridged', () => {
+    it('stays quiet when no registry was bridged', async () => {
       // npm resolves this registry and this credential on its own, so it would
       // send the same header with or without the overlay.
       delete files[`${ROOT}/.yarnrc`];
       files[`${ROOT}/.npmrc`] =
         'registry=https://reg-y.example.com/\n//reg-y.example.com/:_authToken=native-token\n';
-      expect(warnFor(['is-even'])).toEqual([]);
+      expect(await warnFor(['is-even'])).toEqual([]);
     });
 
-    it('stays quiet when the credential sits in a file npm cannot read', () => {
+    it('stays quiet when the credential sits in a file npm cannot read', async () => {
       files[`${ROOT}/.npmrc`] = '';
       files['/repo/.npmrc'] =
         '//reg-y.example.com/:_authToken=ancestor-token\n';
-      expect(warnFor(['is-even'])).toEqual([]);
+      expect(await warnFor(['is-even'])).toEqual([]);
     });
 
-    it('follows npm up the registry path to a credential darted at the host', () => {
+    it('follows npm up the registry path to a credential darted at the host', async () => {
       files[`${ROOT}/.yarnrc`] =
         'registry "https://reg-y.example.com/artifactory/api/npm/repo/"\n';
       files[`${ROOT}/.npmrc`] =
         '//reg-y.example.com/:_authToken=native-token\n';
-      expect(warnFor(['is-even'])).toHaveLength(1);
+      expect(await warnFor(['is-even'])).toHaveLength(1);
     });
 
     it.each([
@@ -1855,9 +1837,9 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
         'username and _password',
         '//reg-y.example.com/:username=user\n//reg-y.example.com/:_password=cGFzcw==',
       ],
-    ])('recognizes a credential held as %s', (_form, npmrc) => {
+    ])('recognizes a credential held as %s', async (_form, npmrc) => {
       files[`${ROOT}/.npmrc`] = `${npmrc}\n`;
-      expect(warnFor(['is-even'])).toHaveLength(1);
+      expect(await warnFor(['is-even'])).toHaveLength(1);
     });
   });
 });

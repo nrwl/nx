@@ -1,15 +1,15 @@
-const mockReadPackageJsonDeps = jest.fn();
-const mockRunInstall = jest.fn();
-const mockLogSkippedInstall = jest.fn();
-jest.mock('../execute-migration', () => ({
+const mockReadPackageJsonDeps = vi.fn();
+const mockRunInstall = vi.fn();
+const mockLogSkippedInstall = vi.fn();
+vi.mock('../execute-migration', () => ({
   readPackageJsonDeps: (...args: unknown[]) => mockReadPackageJsonDeps(...args),
   runInstall: (...args: unknown[]) => mockRunInstall(...args),
   logSkippedPostMigrationInstall: (...args: unknown[]) =>
     mockLogSkippedInstall(...args),
 }));
 
-const mockGetPackageManagerCommand = jest.fn();
-jest.mock('../../../utils/package-manager', () => ({
+const mockGetPackageManagerCommand = vi.fn();
+vi.mock('../../../utils/package-manager', () => ({
   detectPackageManager: () => 'npm',
   getPackageManagerCommand: (...args: unknown[]) =>
     mockGetPackageManagerCommand(...args),

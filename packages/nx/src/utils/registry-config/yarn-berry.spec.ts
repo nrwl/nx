@@ -1,16 +1,17 @@
-// os.homedir() ignores a runtime process.env.HOME override under jest, and a
+import type { Mock } from 'vitest';
+// os.homedir() ignores a runtime process.env.HOME override under the test runner, and a
 // spyOn does not affect a module's named import either.
-jest.mock('os', () => ({
-  ...jest.requireActual('os'),
-  homedir: jest.fn(() => '/home/user'),
+vi.mock('os', async () => ({
+  ...require('os'),
+  homedir: vi.fn(() => '/home/user'),
 }));
-jest.mock('fs', () => ({
-  ...jest.requireActual('fs'),
-  existsSync: jest.fn(),
-  readFileSync: jest.fn(),
+vi.mock('fs', async () => ({
+  ...require('fs'),
+  existsSync: vi.fn(),
+  readFileSync: vi.fn(),
 }));
-jest.mock('../logger', () => ({
-  logger: { warn: jest.fn(), verbose: jest.fn() },
+vi.mock('../logger', () => ({
+  logger: { warn: vi.fn(), verbose: vi.fn() },
 }));
 
 import * as fs from 'fs';
@@ -50,11 +51,11 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
 
   beforeEach(() => {
     files = {};
-    (homedir as jest.Mock).mockReturnValue(HOME);
-    (fs.existsSync as jest.Mock).mockImplementation(
+    (homedir as Mock).mockReturnValue(HOME);
+    (fs.existsSync as Mock).mockImplementation(
       (p: any) => typeof p === 'string' && p in files
     );
-    (fs.readFileSync as jest.Mock).mockImplementation((p: any) => {
+    (fs.readFileSync as Mock).mockImplementation((p: any) => {
       if (typeof p === 'string' && p in files) {
         return files[p];
       }
@@ -844,15 +845,13 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     // opens the home one outright, so the same symlink loop is absent in the
     // first group and exits 1 in the last (measured on 4.10.3).
     function failReadOf(target: string): void {
-      const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
-      (fs.readFileSync as jest.Mock).mockImplementation(
-        (p: any, ...rest: any[]) => {
-          if (p === target) {
-            throw Object.assign(new Error(`ELOOP: ${p}`), { code: 'ELOOP' });
-          }
-          return readFile(p, ...rest);
+      const readFile = (fs.readFileSync as Mock).getMockImplementation();
+      (fs.readFileSync as Mock).mockImplementation((p: any, ...rest: any[]) => {
+        if (p === target) {
+          throw Object.assign(new Error(`ELOOP: ${p}`), { code: 'ELOOP' });
         }
-      );
+        return readFile(p, ...rest);
+      });
     }
 
     it('fails on a home rc file berry would abort on', () => {
@@ -1080,21 +1079,22 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
   describe('a host yarn refuses to reach', () => {
     // enableNetwork: false makes berry exit without contacting the registry
     // (verified on 4.15.0), and npm has no setting that reproduces it.
-    const warnOnce = (rc: string, versions: string[]): string[] => {
-      const { logger } = require('../logger');
-      (logger.warn as jest.Mock).mockClear();
+    const warnOnce = async (rc: string, versions: string[]): string[] => {
+      const { logger } = await import('../logger');
+      (logger.warn as Mock).mockClear();
       projectRc(rc);
-      jest.isolateModules(() => {
-        const { getYarnBerrySpawnRegistryEnv: fresh } = require('./yarn-berry');
-        for (const version of versions) {
-          fresh('is-even', ROOT, version);
-        }
-      });
-      return (logger.warn as jest.Mock).mock.calls.map((call) => call[0]);
+      vi.resetModules();
+      const { getYarnBerrySpawnRegistryEnv: fresh } = await import(
+        './yarn-berry'
+      );
+      for (const version of versions) {
+        fresh('is-even', ROOT, version);
+      }
+      return (logger.warn as Mock).mock.calls.map((call) => call[0]);
     };
 
-    it('reports a global enableNetwork once', () => {
-      const messages = warnOnce(
+    it('reports a global enableNetwork once', async () => {
+      const messages = await warnOnce(
         [
           'npmRegistryServer: https://reg-a.example.com/',
           'enableNetwork: false',
@@ -1105,8 +1105,8 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
       expect(messages[0]).toContain('reg-a.example.com');
     });
 
-    it('reports a per-host enableNetwork for the registry it resolved', () => {
-      const messages = warnOnce(
+    it('reports a per-host enableNetwork for the registry it resolved', async () => {
+      const messages = await warnOnce(
         [
           'npmRegistryServer: https://reg-a.example.com/',
           'networkSettings:',
@@ -1119,8 +1119,8 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
       expect(messages[0]).toContain('reg-a.example.com');
     });
 
-    it('stays quiet when another host is the one cut off', () => {
-      const messages = warnOnce(
+    it('stays quiet when another host is the one cut off', async () => {
+      const messages = await warnOnce(
         [
           'npmRegistryServer: https://reg-a.example.com/',
           'networkSettings:',
@@ -1132,8 +1132,8 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
       expect(messages).toEqual([]);
     });
 
-    it('lets a per-host entry re-enable the network globally turned off', () => {
-      const messages = warnOnce(
+    it('lets a per-host entry re-enable the network globally turned off', async () => {
+      const messages = await warnOnce(
         [
           'npmRegistryServer: https://reg-a.example.com/',
           'enableNetwork: false',
@@ -1146,9 +1146,9 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
       expect(messages).toEqual([]);
     });
 
-    it('reports the env var too', () => {
+    it('reports the env var too', async () => {
       process.env.YARN_ENABLE_NETWORK = 'false';
-      const messages = warnOnce(
+      const messages = await warnOnce(
         'npmRegistryServer: https://reg-a.example.com/\n',
         ['4.16.0']
       );
@@ -1235,16 +1235,17 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
   });
 
   describe('reporting a credential berry would not send', () => {
-    const warnFor = (packages: string[]): string[] => {
-      const { logger } = require('../logger');
-      (logger.warn as jest.Mock).mockClear();
-      jest.isolateModules(() => {
-        const { getYarnBerrySpawnRegistryEnv: fresh } = require('./yarn-berry');
-        for (const pkg of packages) {
-          fresh(pkg, ROOT, '4.16.0');
-        }
-      });
-      return (logger.warn as jest.Mock).mock.calls.map((call) => call[0]);
+    const warnFor = async (packages: string[]): string[] => {
+      const { logger } = await import('../logger');
+      (logger.warn as Mock).mockClear();
+      vi.resetModules();
+      const { getYarnBerrySpawnRegistryEnv: fresh } = await import(
+        './yarn-berry'
+      );
+      for (const pkg of packages) {
+        fresh(pkg, ROOT, '4.16.0');
+      }
+      return (logger.warn as Mock).mock.calls.map((call) => call[0]);
     };
 
     beforeEach(() => {
@@ -1253,18 +1254,18 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
         '//reg-a.example.com/:_authToken=native-token\n';
     });
 
-    it('warns once when npm authenticates on a registry berry resolved', () => {
-      const warnings = warnFor(['is-even', 'is-odd']);
+    it('warns once when npm authenticates on a registry berry resolved', async () => {
+      const warnings = await warnFor(['is-even', 'is-odd']);
       expect(warnings).toHaveLength(1);
       expect(warnings[0]).toContain('//reg-a.example.com/');
       expect(warnings[0]).toContain('Remove that credential from .npmrc');
     });
 
-    it('warns for a scoped fetch too, since berry still reads no .npmrc', () => {
-      expect(warnFor(['@acme/pkg'])).toHaveLength(1);
+    it('warns for a scoped fetch too, since berry still reads no .npmrc', async () => {
+      expect(await warnFor(['@acme/pkg'])).toHaveLength(1);
     });
 
-    it('stays quiet when berry supplies the credential itself', () => {
+    it('stays quiet when berry supplies the credential itself', async () => {
       // The overlay carries berry's own token, which outranks the .npmrc, so
       // npm sends what berry would have sent.
       projectRc(
@@ -1274,25 +1275,25 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
           'npmAlwaysAuth: true',
         ].join('\n') + '\n'
       );
-      expect(warnFor(['is-even'])).toEqual([]);
+      expect(await warnFor(['is-even'])).toEqual([]);
     });
 
-    it('stays quiet when the .npmrc holds nothing for that registry', () => {
+    it('stays quiet when the .npmrc holds nothing for that registry', async () => {
       files[`${ROOT}/.npmrc`] =
         '//other.example.com/:_authToken=native-token\n';
-      expect(warnFor(['is-even'])).toEqual([]);
+      expect(await warnFor(['is-even'])).toEqual([]);
     });
 
-    it('does not count an ambient credential the berry spawn strips', () => {
+    it('does not count an ambient credential the berry spawn strips', async () => {
       // berry ignores npm_config_*, so the spawn strips this ambient token before
       // npm runs.
       files[`${ROOT}/.npmrc`] =
         '//other.example.com/:_authToken=native-token\n';
       process.env['npm_config_//reg-a.example.com/:_authToken'] = 'env-token';
-      expect(warnFor(['is-even'])).toEqual([]);
+      expect(await warnFor(['is-even'])).toEqual([]);
     });
 
-    it('stays quiet on a registry path npm darts below the directory it sits in', () => {
+    it('stays quiet on a registry path npm darts below the directory it sits in', async () => {
       // The overlay writes berry's token on the registry's own directory, which
       // is where npm starts its lookup, so the check has to start there too.
       projectRc(
@@ -1304,10 +1305,10 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
       );
       files[`${ROOT}/.npmrc`] =
         '//reg-a.example.com/npm/:_authToken=native-token\n';
-      expect(warnFor(['is-even'])).toEqual([]);
+      expect(await warnFor(['is-even'])).toEqual([]);
     });
 
-    it('stays quiet when berry authenticates with a client certificate', () => {
+    it('stays quiet when berry authenticates with a client certificate', async () => {
       // npm reads the certificate pair before it walks up to the token, so the
       // .npmrc credential never reaches the wire.
       projectRc(
@@ -1319,14 +1320,14 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
       );
       files[`${ROOT}/.npmrc`] =
         '//reg-a.example.com/npm/:_authToken=native-token\n';
-      expect(warnFor(['is-even'])).toEqual([]);
+      expect(await warnFor(['is-even'])).toEqual([]);
     });
 
-    it('counts a native credential whose key holds an env reference', () => {
+    it('counts a native credential whose key holds an env reference', async () => {
       // npm expands ${VAR} in an .npmrc key, so this token authenticates reg-a.
       process.env.NX_TEST_HOST = 'reg-a.example.com';
       files[`${ROOT}/.npmrc`] = '//${NX_TEST_HOST}/:_authToken=native-token\n';
-      const warnings = warnFor(['is-even']);
+      const warnings = await warnFor(['is-even']);
       expect(warnings).toHaveLength(1);
       expect(warnings[0]).toContain('//reg-a.example.com/');
     });

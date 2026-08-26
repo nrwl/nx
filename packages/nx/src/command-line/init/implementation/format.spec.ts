@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -5,20 +6,10 @@ import { formatInitWrites, recordInitWrite } from './format';
 import { markPackageJsonAsNxProject } from './utils';
 import { output } from '../../../utils/output';
 
-// `filterToPrettierSupportedFiles` reaches prettier through a dynamic import,
-// which jest refuses without `--experimental-vm-modules`. Only that lookup is
-// replaced - the real `writeWithPrettier` still runs, so these tests still
-// prove prettier formatted the file.
-jest.mock('../../../utils/formatters/prettier', () => ({
-  ...jest.requireActual('../../../utils/formatters/prettier'),
-  filterToPrettierSupportedFiles: async (files: string[]) =>
-    files.filter((file) => /\.(json|js|jsx|ts|tsx|md|ya?ml)$/.test(file)),
-}));
-
 describe('formatInitWrites', () => {
   let repoRoot: string;
   let skipFormatBackup: string | undefined;
-  let warn: jest.SpyInstance;
+  let warn: MockInstance;
 
   const UNFORMATTED = '{"name":"x",\n    "private":   true}';
   const FORMATTED = '{\n  "name": "x",\n  "private": true\n}\n';
@@ -28,7 +19,7 @@ describe('formatInitWrites', () => {
     repoRoot = mkdtempSync(join(tmpdir(), 'nx-init-format-'));
     skipFormatBackup = process.env.NX_SKIP_FORMAT;
     delete process.env.NX_SKIP_FORMAT;
-    warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
+    warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
   });
 
   afterEach(async () => {

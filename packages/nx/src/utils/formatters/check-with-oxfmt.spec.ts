@@ -1,19 +1,20 @@
+import type { Mock } from 'vitest';
 import { checkWithOxfmt } from './oxfmt';
 
 // `nx format:check` gates CI on this function's verdict, and the branches that
 // matter most are the ones e2e cannot reach: a formatter that was killed, could
 // not be spawned, or overran its stdout buffer. Those report a *string* `code`
 // (or none at all) rather than an exit code, and must never be read as success.
-jest.mock('node:child_process', () => ({
-  ...jest.requireActual('node:child_process'),
-  execFile: jest.fn(),
+vi.mock('node:child_process', async () => ({
+  ...require('node:child_process'),
+  execFile: vi.fn(),
 }));
 
-const { execFile } = require('node:child_process');
+import { execFile } from 'node:child_process';
 
 describe('checkWithOxfmt', () => {
   function respondWith(error: unknown, stdout = '', stderr = '') {
-    (execFile as jest.Mock).mockImplementation(
+    (execFile as Mock).mockImplementation(
       (_cmd: string, _args: string[], _opts: unknown, callback: Function) => {
         callback(error, stdout, stderr);
         return {};
@@ -22,7 +23,7 @@ describe('checkWithOxfmt', () => {
   }
 
   afterEach(() => {
-    (execFile as jest.Mock).mockReset();
+    (execFile as Mock).mockReset();
   });
 
   it('reports nothing to fix when oxfmt exits 0', async () => {

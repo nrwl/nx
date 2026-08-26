@@ -100,9 +100,6 @@
       }
     },
     "test-native": {},
-    "test": {
-      "inputs": ["...", "{workspaceRoot}/scripts/patched-jest-resolver.js"]
-    },
     "format-native": {
       "command": "cargo fmt",
       "cache": true,

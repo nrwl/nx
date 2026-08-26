@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import {
   parseVcsRemoteUrl,
   getVcsRemoteInfo,
@@ -11,12 +12,12 @@ import {
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 
-jest.mock('child_process');
-jest.mock('fs', () => {
-  const actual: typeof import('fs') = jest.requireActual('fs');
+vi.mock('child_process');
+vi.mock('fs', async () => {
+  const actual: typeof import('fs') = await vi.importActual('fs');
   return {
     ...actual,
-    readFileSync: jest.fn(actual.readFileSync),
+    readFileSync: vi.fn(actual.readFileSync),
   };
 });
 
@@ -159,11 +160,11 @@ describe('git utils tests', () => {
 
   describe('getVcsRemoteInfo', () => {
     afterEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
     });
 
     it('should return VCS info for GitHub remote', () => {
-      (execSync as jest.Mock).mockReturnValue(`
+      (execSync as Mock).mockReturnValue(`
         origin	git@github.com:nrwl/nx.git (fetch)
         origin	git@github.com:nrwl/nx.git (push)
       `);
@@ -175,7 +176,7 @@ describe('git utils tests', () => {
     });
 
     it('should return VCS info for GitLab remote', () => {
-      (execSync as jest.Mock).mockReturnValue(`
+      (execSync as Mock).mockReturnValue(`
         origin	git@gitlab.com:group/project.git (fetch)
         origin	git@gitlab.com:group/project.git (push)
       `);
@@ -187,7 +188,7 @@ describe('git utils tests', () => {
     });
 
     it('should prioritize origin over other remotes', () => {
-      (execSync as jest.Mock).mockReturnValue(`
+      (execSync as Mock).mockReturnValue(`
         upstream	git@gitlab.com:other/project.git (fetch)
         upstream	git@gitlab.com:other/project.git (push)
         origin	git@github.com:nrwl/nx.git (fetch)
@@ -201,13 +202,13 @@ describe('git utils tests', () => {
     });
 
     it('should return null when no remotes exist', () => {
-      (execSync as jest.Mock).mockReturnValue('');
+      (execSync as Mock).mockReturnValue('');
 
       expect(getVcsRemoteInfo()).toBeNull();
     });
 
     it('should return null when execSync throws', () => {
-      (execSync as jest.Mock).mockImplementation(() => {
+      (execSync as Mock).mockImplementation(() => {
         throw new Error('git not found');
       });
 
@@ -217,29 +218,29 @@ describe('git utils tests', () => {
 
   describe('getGitCurrentBranch', () => {
     afterEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
     });
 
     it('should return the current branch name', () => {
-      (execSync as jest.Mock).mockReturnValue('main\n');
+      (execSync as Mock).mockReturnValue('main\n');
 
       expect(getGitCurrentBranch()).toBe('main');
     });
 
     it('should return null for a detached HEAD', () => {
-      (execSync as jest.Mock).mockReturnValue('HEAD\n');
+      (execSync as Mock).mockReturnValue('HEAD\n');
 
       expect(getGitCurrentBranch()).toBeNull();
     });
 
     it('should return null for empty output', () => {
-      (execSync as jest.Mock).mockReturnValue('\n');
+      (execSync as Mock).mockReturnValue('\n');
 
       expect(getGitCurrentBranch()).toBeNull();
     });
 
     it('should return null when execSync throws', () => {
-      (execSync as jest.Mock).mockImplementation(() => {
+      (execSync as Mock).mockImplementation(() => {
         throw new Error('not a git repository');
       });
 
@@ -249,23 +250,23 @@ describe('git utils tests', () => {
 
   describe('getWorkingTreeStatus', () => {
     afterEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
     });
 
     it('should return dirty when git status reports changes', () => {
-      (execSync as jest.Mock).mockReturnValue(' M file.ts\n');
+      (execSync as Mock).mockReturnValue(' M file.ts\n');
 
       expect(getWorkingTreeStatus('/repo')).toBe('dirty');
     });
 
     it('should return clean when git status reports nothing', () => {
-      (execSync as jest.Mock).mockReturnValue('\n');
+      (execSync as Mock).mockReturnValue('\n');
 
       expect(getWorkingTreeStatus('/repo')).toBe('clean');
     });
 
     it('should return unknown, not clean, when the probe throws', () => {
-      (execSync as jest.Mock).mockImplementation(() => {
+      (execSync as Mock).mockImplementation(() => {
         throw new Error('spawn git EAGAIN');
       });
 
@@ -273,7 +274,7 @@ describe('git utils tests', () => {
     });
 
     it('should probe the whole tree with no pathspec when nothing is excluded', () => {
-      (execSync as jest.Mock).mockReturnValue('');
+      (execSync as Mock).mockReturnValue('');
 
       getWorkingTreeStatus('/repo');
 
@@ -284,7 +285,7 @@ describe('git utils tests', () => {
     });
 
     it('should leave excluded paths out of the probe with exclude-only pathspecs', () => {
-      (execSync as jest.Mock).mockReturnValue('');
+      (execSync as Mock).mockReturnValue('');
 
       getWorkingTreeStatus('/repo', ['.nx/migrate-runs', 'tmp']);
 
@@ -297,7 +298,7 @@ describe('git utils tests', () => {
 
   describe('getPathCommitExposure', () => {
     afterEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
     });
 
     function failWithStatus(status: number): Error & { status: number } {
@@ -305,7 +306,7 @@ describe('git utils tests', () => {
     }
 
     it('should return tracked when files under the path are in the index, without consulting check-ignore', () => {
-      (execSync as jest.Mock).mockReturnValueOnce(
+      (execSync as Mock).mockReturnValueOnce(
         '.nx/migrate-runs/run-1/run.json\n'
       );
 
@@ -320,7 +321,7 @@ describe('git utils tests', () => {
     });
 
     it('should return ignored when nothing is tracked and check-ignore matches', () => {
-      (execSync as jest.Mock).mockReturnValueOnce('\n').mockReturnValueOnce('');
+      (execSync as Mock).mockReturnValueOnce('\n').mockReturnValueOnce('');
 
       expect(getPathCommitExposure('.nx/migrate-runs', '/repo')).toBe(
         'ignored'
@@ -335,7 +336,7 @@ describe('git utils tests', () => {
     });
 
     it('should not double the trailing slash when the caller already passes one', () => {
-      (execSync as jest.Mock).mockReturnValueOnce('\n').mockReturnValueOnce('');
+      (execSync as Mock).mockReturnValueOnce('\n').mockReturnValueOnce('');
 
       expect(getPathCommitExposure('.nx/migrate-runs/', '/repo')).toBe(
         'ignored'
@@ -347,7 +348,7 @@ describe('git utils tests', () => {
     });
 
     it('should return unignored when nothing is tracked and check-ignore reports no coverage', () => {
-      (execSync as jest.Mock)
+      (execSync as Mock)
         .mockReturnValueOnce('\n')
         .mockImplementationOnce(() => {
           throw failWithStatus(1);
@@ -359,7 +360,7 @@ describe('git utils tests', () => {
     });
 
     it('should return unknown when the ls-files probe fails', () => {
-      (execSync as jest.Mock).mockImplementationOnce(() => {
+      (execSync as Mock).mockImplementationOnce(() => {
         throw new Error('spawn git EAGAIN');
       });
 
@@ -370,7 +371,7 @@ describe('git utils tests', () => {
     });
 
     it('should return unknown when check-ignore fails for any reason other than "not ignored"', () => {
-      (execSync as jest.Mock)
+      (execSync as Mock)
         .mockReturnValueOnce('\n')
         .mockImplementationOnce(() => {
           throw failWithStatus(128);
@@ -383,10 +384,10 @@ describe('git utils tests', () => {
   });
 
   describe('getUncommittedChangesSnapshot', () => {
-    const mockReadFileSync = fs.readFileSync as jest.Mock;
+    const mockReadFileSync = fs.readFileSync as Mock;
 
     afterEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
     });
 
     function mockGit(map: {
@@ -397,7 +398,7 @@ describe('git utils tests', () => {
       statusThrows?: boolean;
       untrackedThrows?: boolean;
     }): void {
-      (execSync as jest.Mock).mockImplementation((cmd: string) => {
+      (execSync as Mock).mockImplementation((cmd: string) => {
         if (cmd.startsWith('git diff HEAD')) {
           if (map.diffThrows) throw new Error('git diff failed');
           return map.diff ?? '';
@@ -498,11 +499,11 @@ describe('git utils tests', () => {
 
   describe('tryCommitChanges', () => {
     afterEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
     });
 
     it('stages the whole tree and resets nothing when no exclusions are given', () => {
-      (execSync as jest.Mock).mockReturnValue('');
+      (execSync as Mock).mockReturnValue('');
 
       tryCommitChanges('msg', '/workspace');
 
@@ -510,7 +511,7 @@ describe('git utils tests', () => {
         'git add -A',
         expect.objectContaining({ cwd: '/workspace' })
       );
-      const commands = (execSync as jest.Mock).mock.calls.map((c) => c[0]);
+      const commands = (execSync as Mock).mock.calls.map((c) => c[0]);
       expect(commands.some((c) => c.startsWith('git reset'))).toBe(false);
     });
 
@@ -518,11 +519,11 @@ describe('git utils tests', () => {
       // An add-time exclusion pathspec cannot do this: `git add` exits 1 when
       // a pathspec names an ignored directory, and it cannot unstage entries
       // that were staged before this call.
-      (execSync as jest.Mock).mockReturnValue('');
+      (execSync as Mock).mockReturnValue('');
 
       tryCommitChanges('msg', '/workspace', ['.nx/migrate-runs']);
 
-      const commands = (execSync as jest.Mock).mock.calls.map((c) => c[0]);
+      const commands = (execSync as Mock).mock.calls.map((c) => c[0]);
       expect(commands).toEqual([
         'git add -A',
         'git reset -q -- ".nx/migrate-runs"',
@@ -548,7 +549,7 @@ describe('git utils tests', () => {
           stdout: Buffer.from(''),
         }
       );
-      (execSync as jest.Mock).mockImplementation((cmd: string) => {
+      (execSync as Mock).mockImplementation((cmd: string) => {
         if (cmd.startsWith('git commit')) throw originalErr;
         // Production code passes `encoding: 'utf8'` to `execSync`, so
         // mirror that with a string return rather than a Buffer.
@@ -574,11 +575,11 @@ describe('git utils tests', () => {
     const shaB = 'b'.repeat(40);
 
     afterEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
     });
 
     it('returns true when git confirms the ancestry', () => {
-      (execSync as jest.Mock).mockReturnValue('');
+      (execSync as Mock).mockReturnValue('');
 
       expect(isAncestorCommit(shaA, shaB, '/repo')).toBe(true);
       expect(execSync).toHaveBeenCalledWith(
@@ -588,14 +589,14 @@ describe('git utils tests', () => {
     });
 
     it('accepts 64-char object ids from sha256 repositories', () => {
-      (execSync as jest.Mock).mockReturnValue('');
+      (execSync as Mock).mockReturnValue('');
       const sha256 = 'a'.repeat(64);
 
       expect(isAncestorCommit(sha256, sha256, '/repo')).toBe(true);
     });
 
     it('returns false when git rejects or fails', () => {
-      (execSync as jest.Mock).mockImplementation(() => {
+      (execSync as Mock).mockImplementation(() => {
         throw new Error('exit 1');
       });
 

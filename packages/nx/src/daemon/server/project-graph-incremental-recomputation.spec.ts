@@ -15,69 +15,77 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
   });
 
   // Reproduces the spread-test flake shape end-to-end: write a new
-  // project.json then immediately request the graph with no awaits
-  // in between. If the daemon serves a stale cache, the new project
-  // won't appear in the response — that's the bug. With the fix in
-  // place the watcher pipeline delivers the event in time.
+  // project.json, then poll the graph until the watcher event lands. If the
+  // daemon serves a stale cache the project never appears and the poll
+  // exhausts — that's the bug. Note this proves eventual delivery, not
+  // delivery before the next compute: a regression that merely delays the
+  // event passes here.
   //
-  // jest.isolateModulesAsync is required: cache-directory.ts evaluates
+  // vi.resetModules + fresh imports are required: cache-directory.ts evaluates
   // workspaceDataDirectory as a `const` at module load, so without a
   // fresh module graph the daemon would write its cache into the real
   // workspace under test.
+  // Own timeout: the first graph compute alone runs 10-20s, so the default
+  // leaves no room for the poll and the test dies by timeout, not assertion.
   it('returns a fresh graph reflecting an in-flight project add', async () => {
     fs.createFilesSync({
       'nx.json': JSON.stringify({}),
       'package.json': JSON.stringify({ name: 'root' }),
     });
 
-    await jest.isolateModulesAsync(async () => {
-      const { setWorkspaceRoot } = require('../../utils/workspace-root');
-      setWorkspaceRoot(fs.tempDir);
+    vi.resetModules();
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
 
-      const { watchWorkspace } = require('./watcher');
-      const { storeWatcherInstance } = require('./shutdown-utils');
-      const {
-        getCachedSerializedProjectGraphPromise,
-      } = require('./project-graph-incremental-recomputation');
-      const {
-        routeWorkspaceChanges,
-      } = require('./file-watching/route-workspace-changes');
+    const { watchWorkspace } = await import('./watcher');
+    const { storeWatcherInstance } = await import('./shutdown-utils');
+    const { getCachedSerializedProjectGraphPromise } = await import(
+      './project-graph-incremental-recomputation'
+    );
+    const { routeWorkspaceChanges } = await import(
+      './file-watching/route-workspace-changes'
+    );
 
-      const fakeServer = {} as unknown as import('net').Server;
-      const watcher = await watchWorkspace(
-        fakeServer,
-        async (err: unknown, events: { type: string; path: string }[]) => {
-          if (err || !events) return;
-          routeWorkspaceChanges(events);
-        }
-      );
-      storeWatcherInstance(watcher);
-
-      try {
-        // First request — graph has no 'foo' project.
-        const first = await getCachedSerializedProjectGraphPromise();
-        expect(first.projectGraph?.nodes?.foo).toBeUndefined();
-
-        // Add a project on disk and IMMEDIATELY request the graph —
-        // no awaits, no sleeps. The watcher pipeline has to deliver
-        // this event in time for the next compute to see it.
-        mkdirSync(join(fs.tempDir, 'libs', 'foo'), { recursive: true });
-        writeFileSync(
-          join(fs.tempDir, 'libs', 'foo', 'project.json'),
-          JSON.stringify({ name: 'foo', root: 'libs/foo' })
-        );
-        const second = await getCachedSerializedProjectGraphPromise();
-
-        // The smoking gun. Without the fix, the watcher event could
-        // be missed and the daemon would re-serve the first graph
-        // (no 'foo').
-        expect(second.projectGraph?.nodes?.foo).toBeDefined();
-        expect(second.projectGraph?.nodes?.foo?.data?.root).toBe('libs/foo');
-      } finally {
-        await watcher.stop();
+    const fakeServer = {} as unknown as import('net').Server;
+    const watcher = await watchWorkspace(
+      fakeServer,
+      async (err: unknown, events: { type: string; path: string }[]) => {
+        if (err || !events) return;
+        routeWorkspaceChanges(events);
       }
-    });
-  });
+    );
+    storeWatcherInstance(watcher);
+
+    try {
+      // First request — graph has no 'foo' project.
+      const first = await getCachedSerializedProjectGraphPromise();
+      expect(first.projectGraph?.nodes?.foo).toBeUndefined();
+
+      // Add a project on disk and request the graph. The watcher pipeline has
+      // to deliver this event; poll instead of demanding it lands before the
+      // very next compute, which CPU contention alone can delay. A dropped
+      // event never surfaces the project, so the regression still fails here.
+      mkdirSync(join(fs.tempDir, 'libs', 'foo'), { recursive: true });
+      writeFileSync(
+        join(fs.tempDir, 'libs', 'foo', 'project.json'),
+        JSON.stringify({ name: 'foo', root: 'libs/foo' })
+      );
+      let second = await getCachedSerializedProjectGraphPromise();
+      const deadline = Date.now() + 10_000;
+      while (!second.projectGraph?.nodes?.foo && Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        second = await getCachedSerializedProjectGraphPromise();
+      }
+
+      // The smoking gun. Without the fix, the watcher event could
+      // be missed and the daemon would re-serve the first graph
+      // (no 'foo').
+      expect(second.projectGraph?.nodes?.foo).toBeDefined();
+      expect(second.projectGraph?.nodes?.foo?.data?.root).toBe('libs/foo');
+    } finally {
+      await watcher.stop();
+    }
+  }, 60_000);
 
   // Covers the freshness-gate path inside kickOffRecompute: if nx.json's
   // `plugins` field changes between kickoff and commit, the in-flight
@@ -97,61 +105,60 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
       'package.json': JSON.stringify({ name: 'root' }),
     });
 
-    await jest.isolateModulesAsync(async () => {
-      const { setWorkspaceRoot } = require('../../utils/workspace-root');
-      setWorkspaceRoot(fs.tempDir);
+    vi.resetModules();
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
 
-      // Park the first IIFE between its synchronous hash snapshot and
-      // its commit — that gap is the bug window. Real getPluginsSeparated
-      // resolves too fast to rewrite nx.json in between, so we gate it
-      // here to control timing only.
-      let resolveFirstPlugins: () => void;
-      const firstPluginsGate = new Promise<void>((resolve) => {
-        resolveFirstPlugins = resolve;
-      });
-      let pluginsCallCount = 0;
-      jest.doMock('../../project-graph/plugins/get-plugins', () => ({
-        __esModule: true,
-        getPlugins: jest.fn(async () => []),
-        getPluginsSeparated: jest.fn(async () => {
-          pluginsCallCount++;
-          if (pluginsCallCount === 1) {
-            await firstPluginsGate;
-          }
-          return { specifiedPlugins: [], defaultPlugins: [] };
-        }),
-      }));
-
-      const { serverLogger } = require('../logger');
-      const logSpy = jest.spyOn(serverLogger, 'log');
-
-      const {
-        scheduleProjectGraphRecomputation,
-        getCachedSerializedProjectGraphPromise,
-      } = require('./project-graph-incremental-recomputation');
-
-      // Kick off compute #1 — snapshot captured synchronously here.
-      scheduleProjectGraphRecomputation([], ['__trigger.txt'], []);
-
-      // Rewrite nx.json so disk diverges from the snapshot. The IIFE is
-      // still parked on firstPluginsGate, so it hasn't yet read plugins.
-      writeFileSync(
-        join(fs.tempDir, 'nx.json'),
-        JSON.stringify({ plugins: ['./tools/plugin-b'] })
-      );
-
-      // Let compute #1 proceed. It computes, hits the gate, sees disk
-      // hash != snapshot hash, logs the discard, and kicks a successor.
-      resolveFirstPlugins!();
-
-      await getCachedSerializedProjectGraphPromise();
-
-      expect(logSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Discarding stale recompute result')
-      );
-      // First IIFE bailed → kicked successor → at least two getPlugins calls.
-      expect(pluginsCallCount).toBeGreaterThanOrEqual(2);
+    // Park the first IIFE between its synchronous hash snapshot and
+    // its commit — that gap is the bug window. Real getPluginsSeparated
+    // resolves too fast to rewrite nx.json in between, so we gate it
+    // here to control timing only.
+    let resolveFirstPlugins: () => void;
+    const firstPluginsGate = new Promise<void>((resolve) => {
+      resolveFirstPlugins = resolve;
     });
+    let pluginsCallCount = 0;
+    vi.doMock('../../project-graph/plugins/get-plugins', () => ({
+      __esModule: true,
+      getPlugins: vi.fn(async () => []),
+      getPluginsSeparated: vi.fn(async () => {
+        pluginsCallCount++;
+        if (pluginsCallCount === 1) {
+          await firstPluginsGate;
+        }
+        return { specifiedPlugins: [], defaultPlugins: [] };
+      }),
+    }));
+
+    const { serverLogger } = await import('../logger');
+    const logSpy = vi.spyOn(serverLogger, 'log');
+
+    const {
+      scheduleProjectGraphRecomputation,
+      getCachedSerializedProjectGraphPromise,
+    } = await import('./project-graph-incremental-recomputation');
+
+    // Kick off compute #1 — snapshot captured synchronously here.
+    scheduleProjectGraphRecomputation([], ['__trigger.txt'], []);
+
+    // Rewrite nx.json so disk diverges from the snapshot. The IIFE is
+    // still parked on firstPluginsGate, so it hasn't yet read plugins.
+    writeFileSync(
+      join(fs.tempDir, 'nx.json'),
+      JSON.stringify({ plugins: ['./tools/plugin-b'] })
+    );
+
+    // Let compute #1 proceed. It computes, hits the gate, sees disk
+    // hash != snapshot hash, logs the discard, and kicks a successor.
+    resolveFirstPlugins!();
+
+    await getCachedSerializedProjectGraphPromise();
+
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Discarding stale recompute result')
+    );
+    // First IIFE bailed → kicked successor → at least two getPlugins calls.
+    expect(pluginsCallCount).toBeGreaterThanOrEqual(2);
   });
 
   // kickOffRecompute() runs fire-and-forget, so a rejecting prologue used to
@@ -164,60 +171,59 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
       'package.json': JSON.stringify({ name: 'root' }),
     });
 
-    await jest.isolateModulesAsync(async () => {
-      const { setWorkspaceRoot } = require('../../utils/workspace-root');
-      setWorkspaceRoot(fs.tempDir);
+    vi.resetModules();
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
 
-      const pluginLoadError = new Error('plugin boom');
-      let pluginsCallCount = 0;
-      jest.doMock('../../project-graph/plugins/get-plugins', () => ({
-        __esModule: true,
-        getPlugins: jest.fn(async () => []),
-        getPluginsSeparated: jest.fn(async () => {
-          pluginsCallCount++;
-          throw pluginLoadError;
-        }),
-      }));
+    const pluginLoadError = new Error('plugin boom');
+    let pluginsCallCount = 0;
+    vi.doMock('../../project-graph/plugins/get-plugins', () => ({
+      __esModule: true,
+      getPlugins: vi.fn(async () => []),
+      getPluginsSeparated: vi.fn(async () => {
+        pluginsCallCount++;
+        throw pluginLoadError;
+      }),
+    }));
 
-      const {
-        scheduleProjectGraphRecomputation,
-        getCachedSerializedProjectGraphPromise,
-      } = require('./project-graph-incremental-recomputation');
+    const {
+      scheduleProjectGraphRecomputation,
+      getCachedSerializedProjectGraphPromise,
+    } = await import('./project-graph-incremental-recomputation');
 
-      const unhandled: unknown[] = [];
-      const onUnhandled = (reason: unknown) => unhandled.push(reason);
-      process.on('unhandledRejection', onUnhandled);
+    const unhandled: unknown[] = [];
+    const onUnhandled = (reason: unknown) => unhandled.push(reason);
+    process.on('unhandledRejection', onUnhandled);
 
-      try {
-        // Fire-and-forget kickoff — nobody awaits the stored promise.
-        scheduleProjectGraphRecomputation([], ['__trigger.txt'], []);
+    try {
+      // Fire-and-forget kickoff — nobody awaits the stored promise.
+      scheduleProjectGraphRecomputation([], ['__trigger.txt'], []);
 
-        // Let the IIFE reject and give Node room to flag an unhandled rejection.
-        await new Promise((r) => setImmediate(r));
-        await new Promise((r) => setImmediate(r));
-        await new Promise((r) => setImmediate(r));
+      // Let the IIFE reject and give Node room to flag an unhandled rejection.
+      await new Promise((r) => setImmediate(r));
+      await new Promise((r) => setImmediate(r));
+      await new Promise((r) => setImmediate(r));
 
-        // Without the fix this orphaned rejection is unhandled — the crash.
-        expect(
-          unhandled.filter(
-            (r) =>
-              r === pluginLoadError ||
-              (r instanceof Error && r.message.includes('plugin boom'))
-          )
-        ).toEqual([]);
+      // Without the fix this orphaned rejection is unhandled — the crash.
+      expect(
+        unhandled.filter(
+          (r) =>
+            r === pluginLoadError ||
+            (r instanceof Error && r.message.includes('plugin boom'))
+        )
+      ).toEqual([]);
 
-        // A requester gets an errorResult, not a throw.
-        const result = await getCachedSerializedProjectGraphPromise();
-        expect(result.projectGraph).toBeNull();
-        expect(result.error).toBeDefined();
+      // A requester gets an errorResult, not a throw.
+      const result = await getCachedSerializedProjectGraphPromise();
+      expect(result.projectGraph).toBeNull();
+      expect(result.error).toBeDefined();
 
-        // Errored result clears the cache, so the next request retries.
-        const callsBeforeRetry = pluginsCallCount;
-        await getCachedSerializedProjectGraphPromise();
-        expect(pluginsCallCount).toBeGreaterThan(callsBeforeRetry);
-      } finally {
-        process.removeListener('unhandledRejection', onUnhandled);
-      }
-    });
+      // Errored result clears the cache, so the next request retries.
+      const callsBeforeRetry = pluginsCallCount;
+      await getCachedSerializedProjectGraphPromise();
+      expect(pluginsCallCount).toBeGreaterThan(callsBeforeRetry);
+    } finally {
+      process.removeListener('unhandledRejection', onUnhandled);
+    }
   });
 });

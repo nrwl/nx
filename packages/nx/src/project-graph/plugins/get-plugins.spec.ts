@@ -1,24 +1,25 @@
+import type { Mock } from 'vitest';
 import { createSerializableError } from '../../utils/serializable-error';
 import { reasonToError } from './get-plugins';
 
 // Isolation off so loadingMethod() routes to loadNxPlugin, which we mock.
-jest.mock('./isolation/enabled', () => ({
+vi.mock('./isolation/enabled', () => ({
   isIsolationEnabled: () => false,
 }));
-jest.mock('./isolation', () => ({
-  loadIsolatedNxPlugin: jest.fn(),
+vi.mock('./isolation', () => ({
+  loadIsolatedNxPlugin: vi.fn(),
 }));
-jest.mock('../../adapter/angular-json', () => ({
+vi.mock('../../adapter/angular-json', () => ({
   shouldMergeAngularProjects: () => false,
 }));
-jest.mock('./in-process-loader', () => ({
-  loadNxPlugin: jest.fn(),
+vi.mock('./in-process-loader', () => ({
+  loadNxPlugin: vi.fn(),
 }));
 // Resolution of local plugins relies on a cached workspace snapshot;
 // loadSpecifiedNxPlugins must drop it on every reload. Mocked so the test can
 // assert that wiring without touching the real filesystem-backed resolver.
-jest.mock('./resolve-plugin', () => ({
-  resetResolvePluginCache: jest.fn(),
+vi.mock('./resolve-plugin', () => ({
+  resetResolvePluginCache: vi.fn(),
 }));
 
 describe('reasonToError', () => {
@@ -57,17 +58,23 @@ describe('reasonToError', () => {
 
 describe('getPluginsSeparated', () => {
   let getPluginsSeparated: typeof import('./get-plugins').getPluginsSeparated;
-  let loadNxPlugin: jest.Mock;
+  let loadNxPlugin: Mock;
   // Resolver for each deferred specified-plugin load, keyed by plugin name.
   let pendingPluginLoads: Map<string, (plugin: unknown) => void>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Fresh module state per test — getPluginsSeparated caches at module
     // level, so a stale cache would mask the behavior under test.
-    jest.resetModules();
+    vi.resetModules();
     pendingPluginLoads = new Map();
 
-    ({ loadNxPlugin } = require('./in-process-loader'));
+    ({ loadNxPlugin } = await import('./in-process-loader'));
+    // Unlike jest, resetModules does not re-run vi.mock factories, so the
+    // mock fns persist across tests — clear their recorded calls.
+    loadNxPlugin.mockClear();
+    (
+      (await import('./resolve-plugin')).resetResolvePluginCache as Mock
+    ).mockClear();
     loadNxPlugin.mockImplementation((plugin: unknown) => {
       const name = typeof plugin === 'string' ? plugin : (plugin as any).plugin;
       // Default plugins load from absolute paths — resolve them immediately.
@@ -82,7 +89,7 @@ describe('getPluginsSeparated', () => {
       return [promise, () => {}];
     });
 
-    ({ getPluginsSeparated } = require('./get-plugins'));
+    ({ getPluginsSeparated } = await import('./get-plugins'));
   });
 
   function finishLoading(pluginName: string) {
@@ -131,7 +138,7 @@ describe('getPluginsSeparated', () => {
   });
 
   it('drops the cached local-plugin resolution snapshot when loading the specified plugins', async () => {
-    const { resetResolvePluginCache } = require('./resolve-plugin');
+    const { resetResolvePluginCache } = await import('./resolve-plugin');
     expect(resetResolvePluginCache).not.toHaveBeenCalled();
 
     const load = getPluginsSeparated({ plugins: ['test-a'] });

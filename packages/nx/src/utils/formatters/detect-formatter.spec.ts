@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from '../../generators/tree';
 import { TempFs } from '../../internal-testing-utils/temp-fs';
@@ -199,13 +200,13 @@ describe('detectFormatter', () => {
 });
 
 describe('the both-configured warning', () => {
-  let warn: jest.SpyInstance;
+  let warn: MockInstance;
 
   beforeEach(() => {
     // The warn-once flag is module state; without this reset every case after
     // the first passes for the wrong reason (already warned).
     resetFormatterWarningsForTesting();
-    warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => warn.mockRestore());
