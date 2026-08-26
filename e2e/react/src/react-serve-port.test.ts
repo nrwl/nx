@@ -13,32 +13,43 @@ describe('React app dev-server port', () => {
     newProject({
       packages: ['@nx/react', '@nx/webpack', '@nx/cypress'],
     });
-  });
-
-  afterAll(() => cleanupProject());
-
-  // An explicitly requested port must beat a workspace-wide targetDefaults port,
-  // and the generated e2e config must point at the same server the app serves on.
-  // Before this was fixed the serve target honoured --port while the e2e config
-  // kept the targetDefaults port, so cypress waited on a port nothing listened to.
-  it('should honour an explicit --port over targetDefaults, in both the serve target and the e2e config', () => {
-    const app = uniq('port-app');
 
     updateJson('nx.json', (json) => {
       json.targetDefaults ??= {};
       json.targetDefaults.serve = { options: { port: 4300 } };
       return json;
     });
+  });
+
+  afterAll(() => cleanupProject());
+
+  // The plugin path resolves the e2e URL through devkit's
+  // getE2EWebServerInfoForPlugin, which used to re-apply targetDefaults on top of
+  // an already-resolved port and rewrite only the dev-server address.
+  it('should honour an explicit --port in the e2e config on the plugin path', () => {
+    const app = uniq('port-plugin');
 
     runCLI(
       `generate @nx/react:app apps/${app} --bundler=webpack --e2eTestRunner=cypress --port=4321 --no-interactive`
     );
 
-    // the serve target carries the requested port, not the workspace default
+    const cypressConfig = readFile(`apps/${app}-e2e/cypress.config.ts`);
+    expect(cypressConfig).toContain('4321');
+    expect(cypressConfig).not.toContain('4300');
+  });
+
+  // The executor path is the one that writes the port onto the serve target;
+  // with the plugin registered, project.json carries no serve target at all.
+  it('should write an explicit --port onto the serve target on the executor path', () => {
+    const app = uniq('port-executor');
+
+    runCLI(
+      `generate @nx/react:app apps/${app} --bundler=webpack --e2eTestRunner=cypress --port=4321 --addPlugin=false --no-interactive`
+    );
+
     const serve = readJson(`apps/${app}/project.json`).targets.serve;
     expect(serve.options.port).toBe(4321);
 
-    // and the generated cypress config agrees with it
     const cypressConfig = readFile(`apps/${app}-e2e/cypress.config.ts`);
     expect(cypressConfig).toContain('4321');
     expect(cypressConfig).not.toContain('4300');
