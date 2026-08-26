@@ -34,6 +34,7 @@ import { handleImport } from '../../utils/handle-import';
 import { isCI } from '../../utils/is-ci';
 import { isSandbox } from '../../utils/is-sandbox';
 import { output } from '../../utils/output';
+import { isPermissionDenied } from '../../utils/permission-errors';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
 import type {
   FlushSyncGeneratorChangesResult,
@@ -1134,7 +1135,12 @@ export class DaemonClient {
         }
 
         let error: any;
-        if (err.message.startsWith('connect ENOENT')) {
+        if (isPermissionDenied(err)) {
+          // Checked before the ENOENT branch so a refusal can never be read as
+          // an absent socket. The 0700 dir and 0600 socket mean the OS refuses
+          // this rather than the connect silently succeeding.
+          error = daemonPermissionException(socketPath, err.message);
+        } else if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
           error = daemonProcessException(
             [
               'The Daemon Server is not running',
@@ -1144,10 +1150,6 @@ export class DaemonClient {
               ...(isSandbox() ? sandboxSocketHint() : []),
             ].join('\n')
           );
-        } else if (isPermissionErrno(err as NodeJS.ErrnoException)) {
-          // The 0700 dir and 0600 socket mean the OS refuses this rather than the
-          // connect silently succeeding.
-          error = daemonPermissionException(socketPath, err.message);
         } else if (err.message.startsWith('connect ECONNREFUSED')) {
           error = daemonProcessException(
             `A server instance had not been fully shut down. Please try running the command again.`
@@ -1265,7 +1267,7 @@ export class DaemonClient {
           // strips owner write a same-user connect can lose a microsecond race
           // and see EACCES. That costs a specific error rather than a retry — a
           // better trade than a 60s hang.
-          return (stoppedOnRefusal = isPermissionErrno(error));
+          return (stoppedOnRefusal = isPermissionDenied(error));
         },
       }
     );
@@ -1468,10 +1470,10 @@ export class DaemonClient {
       // then the probe's. Recency alone would report a daemon's ENOENT over the
       // EACCES the probe saw a moment earlier, losing the diagnosis.
       const refusal =
-        [polled, probeRefusal].find((r) => r && isPermissionErrno(r.error)) ??
+        [polled, probeRefusal].find((r) => r && isPermissionDenied(r.error)) ??
         polled ??
         probeRefusal;
-      if (refusal && isPermissionErrno(refusal.error)) {
+      if (refusal && isPermissionDenied(refusal.error)) {
         // Reported here rather than as a generic startup failure, so it degrades
         // without disabling the daemon until `nx reset`. Both operands come from
         // the refusal: resolving a path here instead would throw once a daemon
@@ -1537,16 +1539,6 @@ function nxJsonIsNotPresent() {
 }
 
 /**
- * EACCES and EPERM are the two errnos that mean the OS refused us rather than
- * that nothing was listening. They need opposite remedies — a socket owned by
- * someone else versus a sandbox refusing the connect syscall — but they share
- * the property that retrying cannot change the answer.
- */
-export function isPermissionErrno(error: NodeJS.ErrnoException): boolean {
-  return error?.code === 'EACCES' || error?.code === 'EPERM';
-}
-
-/**
  * The operating system refused the connection. Most often the socket belongs to
  * another user, which is the guarantee the owner-only socket directory buys —
  * but a sandbox that denies unix-socket connects produces the same errno, so the
@@ -1568,7 +1560,7 @@ export function daemonPermissionException(socketPath: string, cause: string) {
       `Socket: ${socketPath}`,
       '',
       'Most often the socket belongs to a different user: a daemon left behind by running Nx under `sudo`, a different uid inside a container, or a working copy shared between accounts. If the socket is your own, a sandbox is refusing the connection instead.',
-      'If it belongs to another user, delete the socket above or set NX_SOCKET_DIR to a directory only your user can reach. If you are in a sandbox, allow unix sockets under the Nx socket root: `nx configure-ai-agents` writes that for Claude Code, and the agent-specific setting is listed at https://nx.dev/docs/kb/nx-sandbox-unix-sockets',
+      'If it belongs to another user, delete the socket above or set NX_SOCKET_DIR to a directory only your user can reach. If you are in a sandbox, allow unix sockets under the Nx socket root: `nx configure-ai-agents` writes that for the agents it supports, and the per-agent setting is listed at https://nx.dev/docs/kb/nx-sandbox-unix-sockets',
     ].join('\n')
   );
   (error as any).daemonPermissionError = true;

@@ -11,9 +11,9 @@ import {
   AgentConfiguration,
   configureAgents,
   getAgentConfigurations,
-  isPermissionWriteError,
   supportedAgents,
 } from '../../ai/utils';
+import { isPermissionDenied } from '../../utils/permission-errors';
 import { daemonClient } from '../../daemon/client/client';
 import { installPackageToTmp } from '../../utils/package-json';
 import { output } from '../../utils/output';
@@ -287,7 +287,7 @@ export async function configureAiAgentsHandlerImpl(
         });
       } catch (e) {
         configSpinner.fail('Failed to configure AI agents');
-        if (isPermissionWriteError(e)) {
+        if (isPermissionDenied(e)) {
           output.error({
             title: 'Nx was not permitted to write the AI agent configuration',
             bodyLines: agentConfigWriteBlockedLines(e),
@@ -409,7 +409,7 @@ export async function configureAiAgentsHandlerImpl(
     return;
   } catch (e) {
     configSpinner.fail('Failed to set up AI agents');
-    if (isPermissionWriteError(e)) {
+    if (isPermissionDenied(e)) {
       output.error({
         title: 'Nx was not permitted to write the AI agent configuration',
         bodyLines: agentConfigWriteBlockedLines(e),

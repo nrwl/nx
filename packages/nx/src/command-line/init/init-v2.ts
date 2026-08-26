@@ -43,11 +43,8 @@ import {
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { handleImport } from '../../utils/handle-import';
 import { isAiAgent } from '../../native';
-import {
-  Agent,
-  agentConfigWriteBlockedLines,
-  isPermissionWriteError,
-} from '../../ai/utils';
+import { Agent, agentConfigWriteBlockedLines } from '../../ai/utils';
+import { isPermissionDenied } from '../../utils/permission-errors';
 import { detectAiAgent } from '../../ai/detect-ai-agent';
 import { MessageOptionKey, recordStat } from '../../utils/ab-testing';
 import { ensureAnalyticsPreferenceSet } from '../../utils/analytics-prompt';
@@ -472,7 +469,7 @@ async function runInit(
         results.errors.forEach((e) => output.error(e));
       }
     } catch (e) {
-      if (!isPermissionWriteError(e)) {
+      if (!isPermissionDenied(e)) {
         throw e;
       }
       // Don't fail the whole init over this — everything else succeeded.

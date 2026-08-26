@@ -20,6 +20,7 @@ import { createServer } from 'net';
 import { startAnalytics } from '../../../analytics';
 import { applyDaemonEnvFromClient } from '../../../daemon/client/daemon-environment';
 import { sandboxSocketHint } from '../../../daemon/sandbox-socket-hint';
+import { isPermissionDenied } from '../../../utils/permission-errors';
 import { isSandbox } from '../../../utils/is-sandbox';
 import '../../../utils/perf-logging';
 
@@ -213,14 +214,9 @@ server.on('error', (err: NodeJS.ErrnoException) => {
   // A bind can fail for reasons that have nothing to do with a sandbox
   // (EADDRINUSE from a leftover socket, ENOENT from a reaped socket dir), so
   // only mention one when the errno proves it or the environment says so.
-  const refusedByOs = err.code === 'EPERM' || err.code === 'EACCES';
+  const refusedByOs = isPermissionDenied(err);
   if (refusedByOs || isSandbox()) {
-    // `certain` needs both halves. The errno alone proves the OS refused the
-    // bind, which a hardened container or a root-owned socket dir also does, so
-    // asserting a sandbox on it would name the wrong cause with confidence.
-    console.error(
-      sandboxSocketHint({ certain: refusedByOs && isSandbox() }).join('\n')
-    );
+    console.error(sandboxSocketHint({ certain: refusedByOs }).join('\n'));
   }
   process.exit(1);
 });

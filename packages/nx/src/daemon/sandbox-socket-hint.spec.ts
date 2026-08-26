@@ -61,24 +61,39 @@ describe('sandboxSocketHint', () => {
   });
 
   it.each([true, false])(
-    'should hedge by default, because a sandbox being present is not proof it blocked the socket (isAiAgent: %s)',
+    'should hedge by default, because the caller has no errno proving what failed (isAiAgent: %s)',
     (isAgent: boolean) => {
       mockIsAiAgent.mockReturnValue(isAgent);
 
       expect(hint()[0]).toBe(
-        `A sandbox blocking unix socket access is a common cause. Nx creates its sockets under ${socketRoot}.`
+        `Nx could not use its unix socket under ${socketRoot}. Denied permission on that directory is a common cause.`
       );
     }
   );
 
   it.each([true, false])(
-    'should state the cause outright when the caller has an errno proving it (isAiAgent: %s)',
+    'should state denied permission outright when the caller has an errno proving it (isAiAgent: %s)',
     (isAgent: boolean) => {
       mockIsAiAgent.mockReturnValue(isAgent);
 
       expect(hint({ certain: true })[0]).toBe(
-        `Your sandbox is blocking unix socket access. Nx creates its sockets under ${socketRoot}.`
+        `Nx was denied permission to use its unix socket under ${socketRoot}.`
       );
+    }
+  );
+
+  it.each([true, false])(
+    'should name denied permission rather than asserting a sandbox (isAiAgent: %s)',
+    (isAgent: boolean) => {
+      // A sandbox is the most common source but not the only one — a
+      // root-owned socket dir left by `sudo nx` reads identically — so the
+      // lead line reports what Nx observed and leaves the cause to the list.
+      mockIsAiAgent.mockReturnValue(isAgent);
+
+      for (const certain of [true, false]) {
+        expect(hint({ certain })[0]).toContain('permission');
+        expect(hint({ certain })[0]).not.toContain('sandbox');
+      }
     }
   );
 
@@ -91,6 +106,7 @@ describe('sandboxSocketHint', () => {
     const lines = hint().join('\n');
 
     expect(lines).toContain('allowUnixSockets');
+    expect(lines).toContain('.claude/settings.json');
     expect(lines).not.toContain('allowAllUnixSockets');
   });
 
@@ -105,6 +121,7 @@ describe('sandboxSocketHint', () => {
 
     expect(lines).toContain('network_access');
     expect(lines).toContain('writable_roots');
+    expect(lines).toContain('~/.codex/config.toml');
     expect(lines).not.toContain('allowUnixSockets');
   });
 
@@ -136,14 +153,13 @@ describe('sandboxSocketHint', () => {
   });
 
   it.each([true, false])(
-    'should offer a remedy that needs no sandbox change (isAiAgent: %s)',
+    'should always offer NX_SOCKET_DIR, which needs no sandbox settings change (isAiAgent: %s)',
     (isAgent: boolean) => {
-      // A denied bind is fatal to plugin isolation, and an agent often cannot
-      // write its own sandbox settings, so the hint must always name a way
-      // forward that does not depend on editing sandbox config.
+      // An agent often cannot write its own sandbox settings, so the hint must
+      // name a way forward that does not depend on editing them.
       mockIsAiAgent.mockReturnValue(isAgent);
 
-      expect(hint().join('\n')).toContain('NX_ISOLATE_PLUGINS=false');
+      expect(hint().join('\n')).toContain('NX_SOCKET_DIR');
     }
   );
 
