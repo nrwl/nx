@@ -6,7 +6,9 @@ topics:
   - 'Tasks & caching'
 ---
 
-By default the cache is stored locally in `.nx/cache`. Cache results are stored for a week before they get deleted. You can customize the cache location in the `nx.json` file:
+Nx stores the cache in a per-user directory outside your workspace, `~/.nx/<hash>/cache`, where the hash identifies the repository. Every checkout of one repository shares it, so a task built in one worktree is a cache hit in the others. Cache results are stored for a week before they get deleted.
+
+You can customize the location in the `nx.json` file:
 
 ```json
 // nx.json
@@ -14,3 +16,27 @@ By default the cache is stored locally in `.nx/cache`. Cache results are stored 
   "cacheDirectory": "/tmp/mycache"
 }
 ```
+
+## Why it is outside the workspace
+
+Each repository gets one directory, `~/.nx/<hash>`, holding both `cache` and `workspace-data`. Two things follow from putting it there.
+
+Worktrees share it. A main checkout and every worktree added to it resolve to the same directory, so none of them rebuilds what another already has.
+
+An AI agent sandbox can reach it. A sandbox grants filesystem paths, and `~/.nx` is spelled the same on every machine, so the grant can live in a settings file you commit. An absolute checkout path cannot. `nx configure-ai-agents` writes that grant for the agents it supports.
+
+{% aside type="note" title="If you cache `.nx/cache` in CI" %}
+Nx no longer writes there by default. Point your CI cache step at `~/.nx` instead, or set `NX_CACHE_DIRECTORY` to keep the old location.
+{% /aside %}
+
+## Opting out
+
+Setting `cacheDirectory` opts out of the shared location. Worktrees configuring the same value still share one cache, through the main checkout. Worktrees configuring different values each keep their own. `NX_CACHE_DIRECTORY`, `NX_WORKSPACE_DATA_DIRECTORY` and `NX_PROJECT_GRAPH_CACHE_DIRECTORY` opt out the same way.
+
+## When Nx falls back
+
+When Nx cannot make `~/.nx` owner-only, it uses the checkout's own `.nx` directories instead. A `sudo nx` run that kept your `HOME` is the usual cause, since it leaves the directory owned by root.
+
+A process that cannot write under `~/.nx` at all gets a checkout-local cache. Nx establishes this by writing a marker file rather than by recognizing the caller, so a sandbox Nx has never heard of is covered as long as it denies the write. A sandbox that permits writes to `~/.nx` is not falling back, and does not need to.
+
+`nx reset` clears both the shared directory for the current repository and the checkout's own. Nothing reclaims the directory belonging to a checkout you have since deleted or moved, so remove those by hand.
