@@ -3,20 +3,31 @@ import {
   newProject,
   readFile,
   readJson,
+  reservePorts,
   runCLI,
   uniq,
   updateJson,
 } from '@nx/e2e-utils';
 
 describe('React app dev-server port', () => {
-  beforeAll(() => {
+  // Two distinct ports: one the workspace defaults to, one the generator is asked
+  // for. The test asserts the requested one wins, so they must not be equal.
+  // Reserved rather than hard-coded so a parallel suite cannot serve on either.
+  // Assertions match `localhost:<port>` rather than the bare number: the app name
+  // carries random digits from uniq() that a bare port could match inside.
+  let defaultPort: number;
+  let requestedPort: number;
+
+  beforeAll(async () => {
+    [defaultPort, requestedPort] = await reservePorts(2);
+
     newProject({
       packages: ['@nx/react', '@nx/webpack', '@nx/cypress'],
     });
 
     updateJson('nx.json', (json) => {
       json.targetDefaults ??= {};
-      json.targetDefaults.serve = { options: { port: 4300 } };
+      json.targetDefaults.serve = { options: { port: defaultPort } };
       return json;
     });
   });
@@ -30,12 +41,12 @@ describe('React app dev-server port', () => {
     const app = uniq('port-plugin');
 
     runCLI(
-      `generate @nx/react:app apps/${app} --bundler=webpack --e2eTestRunner=cypress --port=4321 --no-interactive`
+      `generate @nx/react:app apps/${app} --bundler=webpack --e2eTestRunner=cypress --port=${requestedPort} --no-interactive`
     );
 
     const cypressConfig = readFile(`apps/${app}-e2e/cypress.config.ts`);
-    expect(cypressConfig).toContain('4321');
-    expect(cypressConfig).not.toContain('4300');
+    expect(cypressConfig).toContain(`localhost:${requestedPort}`);
+    expect(cypressConfig).not.toContain(`localhost:${defaultPort}`);
   });
 
   // The executor path is the one that writes the port onto the serve target;
@@ -44,14 +55,14 @@ describe('React app dev-server port', () => {
     const app = uniq('port-executor');
 
     runCLI(
-      `generate @nx/react:app apps/${app} --bundler=webpack --e2eTestRunner=cypress --port=4321 --addPlugin=false --no-interactive`
+      `generate @nx/react:app apps/${app} --bundler=webpack --e2eTestRunner=cypress --port=${requestedPort} --addPlugin=false --no-interactive`
     );
 
     const serve = readJson(`apps/${app}/project.json`).targets.serve;
-    expect(serve.options.port).toBe(4321);
+    expect(serve.options.port).toBe(requestedPort);
 
     const cypressConfig = readFile(`apps/${app}-e2e/cypress.config.ts`);
-    expect(cypressConfig).toContain('4321');
-    expect(cypressConfig).not.toContain('4300');
+    expect(cypressConfig).toContain(`localhost:${requestedPort}`);
+    expect(cypressConfig).not.toContain(`localhost:${defaultPort}`);
   });
 });
