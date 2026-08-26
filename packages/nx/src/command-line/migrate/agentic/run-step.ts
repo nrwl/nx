@@ -1,4 +1,4 @@
-import { basename, dirname } from 'path';
+import { basename, dirname, join } from 'path';
 import * as pc from 'picocolors';
 import { getRunNxBaseCommand } from '../../../utils/child-process';
 import { FileChange } from '../../../generators/tree';
@@ -15,7 +15,11 @@ import { buildPromptMigrationUserPrompt } from './prompts/prompt-migration';
 import { AgenticPromptMode, buildSystemPrompt } from './prompts/system-prompt';
 import { getAgentDefinition } from './definitions';
 import { runAgentic } from './runner';
-import { EnabledResolvedAgentic, HandoffOutcome } from './types';
+import {
+  EnabledResolvedAgentic,
+  HANDOFFS_DIR_NAME,
+  HandoffOutcome,
+} from './types';
 
 /**
  * Context describing the deterministic (generator) half of a migration, used
@@ -167,6 +171,7 @@ export async function runAgenticPromptStep(
       runDirName: basename(runDir),
     },
     handoffFilePath,
+    handoffsDir: join(runDir, HANDOFFS_DIR_NAME),
   });
 
   // Some agent TUIs leave cursor/SGR state behind on exit. Reset before our

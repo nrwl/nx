@@ -116,9 +116,7 @@ describe('runAgenticPromptStep', () => {
     const expected = join(
       '/ws/.nx/migrate-runs/20.0.0',
       'handoffs',
-      '@nx',
-      'test',
-      'm1.json'
+      '@nx+test+m1.json'
     );
     const { mkdirSafely } = (await import('./handoff')) as {
       mkdirSafely: Mock;
@@ -129,6 +127,7 @@ describe('runAgenticPromptStep', () => {
     );
     const call = mockRunAgentic.mock.calls[0][0];
     expect(call.handoffFilePath).toBe(expected);
+    expect(call.handoffsDir).toBe(dirname(expected));
     expect(call.invocationContext.systemContext).toContain(expected);
   });
 

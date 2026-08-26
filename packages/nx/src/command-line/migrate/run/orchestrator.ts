@@ -8,7 +8,7 @@ import {
   writeFileSync,
   type BigIntStats,
 } from 'fs';
-import { dirname, join } from 'path';
+import { join } from 'path';
 import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
 import {
   getGitRepositoryStatus,
@@ -20,10 +20,12 @@ import {
 } from '../../../utils/git-utils';
 import { nxVersion } from '../../../utils/versions';
 import {
-  stepHandoffPath,
+  handoffsDirState,
+  runStepHandoffPath,
   readHandoffWithReason,
   readInspectedFile,
   type HandoffReadFailureReason,
+  type HandoffReadResult,
 } from '../agentic/handoff';
 import { applyAgenticHandoffGitignoreFallback } from '../agentic/handoff-gitignore';
 import { MIGRATE_RUNS_RELATIVE_DIR, type HandoffFile } from '../agentic/types';
@@ -44,6 +46,7 @@ import {
   hasRunState,
   readRunState,
   runDir,
+  runHandoffsDir,
   writeRunState,
   CURRENT_RUN_STATE_FORMAT_VERSION,
   SHELL_SAFE_VALUE,
@@ -764,7 +767,7 @@ export async function runOrchestratorReconcile(
     // new attempt. Losing the handoff without the rearm is safe: the step is
     // still failed/died and the agent re-issues the action.
     if (stepAction === 'retry' || stepAction === 'retry-clean') {
-      removeHandoff(dir, target.migrationId);
+      removeHandoff(dir, target.id);
       // A reset-backed retry that dropped the generator marker reruns the
       // generator, so payloads stored by earlier attempts describe a run
       // whose tree was reset away; remove them. Hygiene, not the correctness
@@ -906,9 +909,7 @@ async function foldHandoffs(
   for (const { id } of state.steps) {
     const step = current.steps.find((s) => s.id === id);
     if (step.status !== 'awaiting-prompt-outcome') continue;
-    const result = readHandoffWithReason(
-      handoffPath(dir, splitMigrationId(step.migrationId))
-    );
+    const result = readStepHandoff(dir, step.id);
     if (!result.ok) continue; // still awaiting; the dispense asks to settle it
     let promptOutcome = handoffToPromptOutcome(result.handoff);
     // A skipped handoff on a step whose generator applied changes (a
@@ -1117,7 +1118,7 @@ async function foldHandoffs(
     // payloads go with a terminal outcome; a failed fold keeps them, since a
     // retry re-hands the newest surviving copy.
     if (folded) {
-      removeHandoff(dir, step.migrationId);
+      removeHandoff(dir, step.id);
       if (promptOutcome.status !== 'failed') {
         removeAgentWorkPayloads(dir, step.id, step.attempt);
       }
@@ -1987,12 +1988,13 @@ function emitAwaitPrompt(
   noProgress: MigrateRunNoProgress | null
 ): void {
   const migrationId = step.migrationId;
-  const { package: pkg, name } = splitMigrationId(migrationId);
-  const filePath = handoffPath(dir, { package: pkg, name });
-  // The package id becomes real path segments, so handing over the path
-  // without its directory is what would force the agent to `mkdir -p`. Same
-  // reason the classic runner pre-creates it in run-step.ts.
-  mkdirSync(dirname(filePath), { recursive: true });
+  const filePath = runStepHandoffPath(dir, step.id);
+  // Recreated if the agent removed it, so the handed-over path always has its
+  // parent (an agent that has to `mkdir -p` pays a permission prompt).
+  // Anything else standing in its place is left for the read to reject.
+  if (handoffsDirState(runHandoffsDir(dir)) === 'missing') {
+    mkdirSync(runHandoffsDir(dir));
+  }
   // Recorded issues applicable to this step are assigned to it here, at the
   // agent-work dispense, not when its worker command was dispensed: only a
   // step that actually handed work back has a handoff to report
@@ -2087,7 +2089,7 @@ function emitAwaitPrompt(
   // A handoff that exists but can't be read/parsed/validated is a rejection,
   // not a still-awaited outcome. Naming why stops the run from re-emitting the
   // same await forever while the agent leaves the bad file in place.
-  const rejection = describeRejectedHandoff(filePath, claimed, step);
+  const rejection = describeRejectedHandoff(dir, claimed, step);
   if (rejection.length > 0) {
     lines.push('', ...rejection);
   }
@@ -2141,11 +2143,11 @@ function planPromptPath(
 // issue report is invalid is a rejection too: the fold refused to consume it,
 // and only this response can tell the agent why.
 function describeRejectedHandoff(
-  handoffPath: string,
+  dir: string,
   state: MigrateRunState,
   step: MigrateStep
 ): string[] {
-  const result = readHandoffWithReason(handoffPath);
+  const result = readStepHandoff(dir, step.id);
   const followUp = 'Rewrite the handoff file, then run the "next" command.';
   if (result.ok === true) {
     const issues = parseHandoffIssues(result.handoff.extras, state, step);
@@ -2462,15 +2464,27 @@ function applyEventOrThrow(
   return result.state;
 }
 
-function handoffPath(
-  dir: string,
-  migration: { package: string; name: string }
-): string {
-  return stepHandoffPath(dir, migration);
+function readStepHandoff(dir: string, stepId: string): HandoffReadResult {
+  return readHandoffWithReason(
+    runStepHandoffPath(dir, stepId),
+    runHandoffsDir(dir)
+  );
 }
 
-function removeHandoff(dir: string, migrationId: string): void {
-  rmSync(handoffPath(dir, splitMigrationId(migrationId)), { force: true });
+// Never removes through a replaced handoffs dir: the agent could otherwise
+// point it at a directory holding a file of the step's fixed name and have
+// the orchestrator delete it. A probe failure is treated the same way; the
+// next read reports it.
+function removeHandoff(dir: string, stepId: string): void {
+  let state: ReturnType<typeof handoffsDirState>;
+  try {
+    state = handoffsDirState(runHandoffsDir(dir));
+  } catch {
+    return;
+  }
+  if (state === 'directory') {
+    rmSync(runStepHandoffPath(dir, stepId), { force: true });
+  }
 }
 
 // null means the probe itself failed; the death dispense renders that as
