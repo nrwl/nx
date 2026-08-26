@@ -903,10 +903,14 @@ describe('Phase 3: strict-common hoist', () => {
 
     // the shared `mode` must NOT be hoisted: a plugin-scoped default would be
     // dropped by Nx because the package.json script authors the target identity.
+    // Each project keeps its pre-migration target untouched.
     expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({ cache: true });
     for (const name of ['app1', 'app2']) {
       const pj = readJson(ctx.tree, `${name}/project.json`);
-      expect(pj.targets.build).toEqual({ options: { mode: 'production' } });
+      expect(pj.targets.build).toEqual({
+        executor: SYNTHETIC_EXECUTOR,
+        ...uniformExecutorTarget(),
+      });
     }
 
     // Assert through the REAL Nx resolution pipeline with BOTH default plugins
@@ -919,6 +923,7 @@ describe('Phase 3: strict-common hoist', () => {
       plugin.createNodes
     );
     for (const name of ['app1', 'app2']) {
+      expect(resolved[name].build.executor).toBe(SYNTHETIC_EXECUTOR);
       expect(resolved[name].build.options?.mode).toBe('production');
     }
   });
@@ -958,11 +963,12 @@ describe('Phase 3: strict-common hoist', () => {
       syntheticMigrations()
     );
 
-    // both excluded -> not hoisted; each keeps its full residual
+    // both excluded -> not hoisted; each keeps its pre-migration target
     expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({ cache: true });
     for (const name of ['app1', 'app2']) {
       expect(readJson(ctx.tree, `${name}/project.json`).targets.build).toEqual({
-        options: { mode: 'production' },
+        executor: SYNTHETIC_EXECUTOR,
+        ...uniformExecutorTarget(),
       });
     }
     // through REAL resolution each project resolves its own config (default refused)
@@ -972,6 +978,7 @@ describe('Phase 3: strict-common hoist', () => {
       plugin.createNodes
     );
     for (const name of ['app1', 'app2']) {
+      expect(resolved[name].build.executor).toBe(SYNTHETIC_EXECUTOR);
       expect(resolved[name].build.options?.mode).toBe('production');
     }
   });
@@ -1000,7 +1007,8 @@ describe('Phase 3: strict-common hoist', () => {
       syntheticMigrations()
     );
 
-    // the clean pair centralizes; the broken project is kept per-project
+    // the clean pair centralizes; the broken project keeps its pre-migration
+    // target untouched
     expect(readNxJson(ctx.tree).targetDefaults.build).toContainEqual({
       filter: { plugin: SYNTHETIC_PLUGIN_PATH },
       options: { mode: 'production' },
@@ -1012,7 +1020,8 @@ describe('Phase 3: strict-common hoist', () => {
       readJson(ctx.tree, 'clean2/project.json').targets.build
     ).toBeUndefined();
     expect(readJson(ctx.tree, 'broken/project.json').targets.build).toEqual({
-      options: { mode: 'production' },
+      executor: SYNTHETIC_EXECUTOR,
+      ...uniformExecutorTarget(),
     });
   });
 
@@ -1021,7 +1030,7 @@ describe('Phase 3: strict-common hoist', () => {
     // makes the package-json DEFAULT plugin author the target's identity, so a
     // `filter:{plugin}` default would be refused. With a project.json present the
     // nx.targets entry is genuinely separate from the migrated target, so the
-    // project must be excluded and keep its full residual. Covers the
+    // project must be excluded and keep its pre-migration target. Covers the
     // `nx.targets` arm of the identity gate (the script arm is covered above).
     ctx = setupFixture('hoist-identity-nx-targets');
     for (const name of ['app1', 'app2']) {
@@ -1054,16 +1063,21 @@ describe('Phase 3: strict-common hoist', () => {
     expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({ cache: true });
     for (const name of ['app1', 'app2']) {
       expect(readJson(ctx.tree, `${name}/project.json`).targets.build).toEqual({
-        options: { mode: 'production' },
+        executor: SYNTHETIC_EXECUTOR,
+        ...uniformExecutorTarget(),
       });
     }
+    // through REAL resolution the nx.targets `command` already shadowed the
+    // project.json executor before the migration; the kept target resolves
+    // exactly as it did then
     const resolved = await resolveThroughRealPipeline(
       ctx,
       plugin.pluginPath,
       plugin.createNodes
     );
     for (const name of ['app1', 'app2']) {
-      expect(resolved[name].build.options?.mode).toBe('production');
+      expect(resolved[name].build.executor).toBe('nx:run-commands');
+      expect(resolved[name].build.options).toEqual({ command: 'tsc -b' });
     }
   });
 
@@ -1319,7 +1333,7 @@ describe('Phase 3: strict-common hoist', () => {
     ).toEqual(target);
     expect(warn).toHaveBeenCalledWith(
       expect.stringContaining(
-        'kept the package.json nx.targets entry for target "build" in project "pkg1"'
+        'kept the pre-migration configuration of target "build" in project "pkg1"'
       )
     );
     // through REAL resolution (package-json default plugin included) the
@@ -1393,7 +1407,7 @@ describe('Phase 3: strict-common hoist', () => {
     ).toBeUndefined();
     expect(warn).toHaveBeenCalledWith(
       expect.stringContaining(
-        'kept the package.json nx.targets entry for target "build" in project "pkg1"'
+        'kept the pre-migration configuration of target "build" in project "pkg1"'
       )
     );
     const resolved = await resolveThroughRealPipeline(
@@ -1404,6 +1418,201 @@ describe('Phase 3: strict-common hoist', () => {
     expect(resolved['libs/pkg1'].build.executor).toBe(SYNTHETIC_EXECUTOR);
     expect(resolved['libs/pkg2'].build.executor).not.toBe(SYNTHETIC_EXECUTOR);
     expect(resolved['libs/pkg2'].build.options?.command).toBe('acme-build');
+  });
+
+  it('keeps the pre-migration target of a package-based project with a same-name included script when its residual is not empty', async () => {
+    // Writing the residual (executor removed) back to `nx.targets` lets the
+    // package-json default plugin turn the `build` script into an
+    // `nx:run-script` target that takes the identity over from the inferred
+    // target. Keep the pre-migration target untouched and warn instead.
+    ctx = setupFixture('package-based-residual-script-ww');
+    ctx.tree.write(
+      'package.json',
+      JSON.stringify({
+        name: 'workspace',
+        version: '0.0.1',
+        workspaces: ['libs/*'],
+      })
+    );
+    const target = {
+      executor: SYNTHETIC_EXECUTOR,
+      options: { config: SYNTHETIC_CONFIG_FILE },
+      cache: true,
+      outputs: ['{projectRoot}/dist'],
+      dependsOn: ['^build'],
+    };
+    ctx.tree.write(
+      'libs/pkg1/package.json',
+      JSON.stringify({
+        name: 'pkg1',
+        scripts: { build: 'echo build' },
+        nx: { targets: { build: target } },
+      })
+    );
+    ctx.tree.write(
+      'libs/pkg2/package.json',
+      JSON.stringify({ name: 'pkg2', nx: { targets: { build: target } } })
+    );
+    for (const name of ['pkg1', 'pkg2']) {
+      ctx.projectGraph.nodes[name] = {
+        name,
+        type: 'lib',
+        data: { root: `libs/${name}`, targets: { build: target } } as any,
+      };
+      ctx.fs.createFileSync(`libs/${name}/${SYNTHETIC_CONFIG_FILE}`, '{}');
+    }
+    const plugin = createSyntheticPlugin();
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    expect(
+      readJson(ctx.tree, 'libs/pkg1/package.json').nx.targets.build
+    ).toEqual(target);
+    expect(
+      readJson(ctx.tree, 'libs/pkg2/package.json').nx.targets.build
+    ).toEqual({ dependsOn: ['^build'] });
+    expect(warn.mock.calls.map(([message]) => message)).toEqual([
+      expect.stringContaining(
+        'kept the pre-migration configuration of target "build" in project "pkg1"'
+      ),
+      expect.stringContaining(
+        'kept per-project configuration for 1 project(s) (pkg1) on target(s) build'
+      ),
+    ]);
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+    expect(resolved['libs/pkg1'].build.executor).toBe(SYNTHETIC_EXECUTOR);
+    expect(resolved['libs/pkg1'].build.dependsOn).toEqual(['^build']);
+    expect(resolved['libs/pkg2'].build.executor).not.toBe(SYNTHETIC_EXECUTOR);
+    expect(resolved['libs/pkg2'].build.options?.command).toBe('acme-build');
+    expect(resolved['libs/pkg2'].build.dependsOn).toEqual(['^build']);
+  });
+
+  it('keeps the pre-migration target of a package-based project with a same-name included script when its residual is not empty (--project)', async () => {
+    ctx = setupFixture('package-based-residual-script');
+    ctx.tree.write(
+      'package.json',
+      JSON.stringify({
+        name: 'workspace',
+        version: '0.0.1',
+        workspaces: ['libs/*'],
+      })
+    );
+    const target = {
+      executor: SYNTHETIC_EXECUTOR,
+      options: { config: SYNTHETIC_CONFIG_FILE },
+      cache: true,
+      outputs: ['{projectRoot}/dist'],
+      dependsOn: ['^build'],
+    };
+    ctx.tree.write(
+      'libs/pkg1/package.json',
+      JSON.stringify({
+        name: 'pkg1',
+        scripts: { build: 'echo build' },
+        nx: { targets: { build: target } },
+      })
+    );
+    ctx.projectGraph.nodes.pkg1 = {
+      name: 'pkg1',
+      type: 'lib',
+      data: { root: 'libs/pkg1', targets: { build: target } } as any,
+    };
+    ctx.fs.createFileSync(`libs/pkg1/${SYNTHETIC_CONFIG_FILE}`, '{}');
+    const plugin = createSyntheticPlugin();
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      'pkg1',
+      { warn } as any
+    );
+
+    expect(
+      readJson(ctx.tree, 'libs/pkg1/package.json').nx.targets.build
+    ).toEqual(target);
+    expect(warn.mock.calls.map(([message]) => message)).toEqual([
+      expect.stringContaining(
+        'kept the pre-migration configuration of target "build" in project "pkg1"'
+      ),
+    ]);
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+    expect(resolved['libs/pkg1'].build.executor).toBe(SYNTHETIC_EXECUTOR);
+  });
+
+  it('keeps the pre-migration target of a project.json project whose package.json has a same-name included script', async () => {
+    ctx = setupFixture('project-json-residual-script');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: `apps/${name}`,
+        target: { ...uniformExecutorTarget(), dependsOn: ['^build'] },
+      });
+    }
+    ctx.tree.write(
+      'apps/app1/package.json',
+      JSON.stringify({ name: 'app1', scripts: { build: 'echo build' } })
+    );
+    const app1Target = readJson(ctx.tree, 'apps/app1/project.json').targets
+      .build;
+    const plugin = createSyntheticPlugin();
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    expect(readJson(ctx.tree, 'apps/app1/project.json').targets.build).toEqual(
+      app1Target
+    );
+    expect(
+      readJson(ctx.tree, 'apps/app2/project.json').targets.build.executor
+    ).toBeUndefined();
+    expect(warn.mock.calls.map(([message]) => message)).toEqual([
+      expect.stringContaining(
+        'kept the pre-migration configuration of target "build" in project "app1"'
+      ),
+      expect.stringContaining(
+        'kept per-project configuration for 1 project(s) (app1) on target(s) build'
+      ),
+    ]);
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+    expect(resolved['apps/app1'].build.executor).toBe(SYNTHETIC_EXECUTOR);
+    expect(resolved['apps/app2'].build.executor).not.toBe(SYNTHETIC_EXECUTOR);
+    expect(resolved['apps/app2'].build.options?.command).toBe('acme-build');
   });
 
   it('does not centralize when another plugin is registered after the reused registration', async () => {

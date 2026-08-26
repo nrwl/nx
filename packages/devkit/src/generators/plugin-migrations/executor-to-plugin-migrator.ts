@@ -51,6 +51,15 @@ import {
   getActiveBatchStaging,
   type BatchConversionStaging,
 } from './batch-conversion-session';
+import {
+  excludedProjectsWarning,
+  keptPreMigrationTargetWarning,
+  retainedResidualsWarning,
+  type PackageJsonIdentitySource,
+  revertedTargetsWarning,
+  unverifiedPairsWarning,
+  verificationErrorsWarning,
+} from './conversion-warnings';
 import { deleteMatchingProperties } from './plugin-migration-utils';
 
 export type InferredTargetConfiguration = TargetConfiguration & {
@@ -300,6 +309,18 @@ export interface ResidualEntry {
    * as the equivalence oracle.
    */
   baselineFinal: TargetConfiguration;
+  /**
+   * The explicit target as authored before the migration. Restored when
+   * package.json turns out to author the target's identity (see
+   * `writeResidualTarget`, and the batch finalize for identities that appear
+   * after the write).
+   */
+  preMigrationTarget: TargetConfiguration;
+  /**
+   * Set by the write phase when the pre-migration target was kept untouched
+   * (see `writeResidualTarget`); the verification phase then leaves it alone.
+   */
+  keptPreMigration?: boolean;
 }
 
 /** project name -> (target name -> residual entry) */
@@ -394,6 +415,9 @@ export async function computeResidualByProject<T>(
           projectConfigsByName,
           projectName
         );
+        const preMigrationTarget = structuredClone(
+          projectConfig.targets[targetName]
+        );
         let projectTarget = projectConfig.targets[targetName];
         projectTarget = mergeTargetConfigurations(
           projectTarget,
@@ -432,7 +456,7 @@ export async function computeResidualByProject<T>(
         }
         residualByProject
           .get(projectName)
-          .set(targetName, { residual, baselineFinal });
+          .set(targetName, { residual, baselineFinal, preMigrationTarget });
       }
     }
   }
@@ -461,7 +485,7 @@ function writeResiduals<T>(
         if (!entry) {
           continue;
         }
-        writeResidualTarget(
+        entry.keptPreMigration = !writeResidualTarget(
           tree,
           projectConfigsByName,
           projectName,
@@ -474,7 +498,13 @@ function writeResiduals<T>(
   }
 }
 
-/** Write a single residual target into project.json (or delete it if empty). */
+/**
+ * Write a single residual target into project.json (or delete it if empty).
+ * Returns false, writing nothing, when package.json authors the target's
+ * identity: without the explicit executor an included same-name script (or an
+ * `nx.targets` executor/command) would replace the inferred target in the
+ * default plugin layer, so the pre-migration target is kept as is.
+ */
 function writeResidualTarget(
   tree: Tree,
   projectConfigsByName: Map<string, ProjectConfiguration>,
@@ -482,12 +512,24 @@ function writeResidualTarget(
   targetName: string,
   residual: TargetConfiguration,
   logger?: typeof devkitLogger
-) {
+): boolean {
   const projectConfig = readCachedProjectConfiguration(
     tree,
     projectConfigsByName,
     projectName
   );
+
+  const identitySource = packageJsonAuthorsTargetIdentity(
+    tree,
+    projectConfig.root,
+    targetName
+  );
+  if (identitySource) {
+    (logger ?? devkitLogger).warn(
+      keptPreMigrationTargetWarning(targetName, projectName, identitySource)
+    );
+    return false;
+  }
 
   if (Object.keys(residual).length > 0) {
     projectConfig.targets[targetName] = residual;
@@ -510,20 +552,9 @@ function writeResidualTarget(
   // revert). Delete the entry here and keep the cache writable.
   if (!projectConfig.targets) {
     projectConfig.targets = {};
-    // With the entry gone, an included package.json script with the same name
-    // would author the target in the default plugin layer, replacing the
-    // inferred target with `nx:run-script`. Keep the entry (the pre-migration
-    // executor) in that case so the target's behavior does not change.
-    if (
-      packageJsonAuthorsTargetIdentity(tree, projectConfig.root, targetName)
-    ) {
-      (logger ?? devkitLogger).warn(
-        `convert-to-inferred kept the package.json nx.targets entry for target "${targetName}" in project "${projectName}": an included package.json script with the same name would otherwise replace the inferred target with nx:run-script. The target keeps the same behavior as before the migration; rename or exclude the script, then remove the nx.targets entry to let the inferred target take over.`
-      );
-    } else {
-      deletePackageJsonTarget(tree, projectConfig.root, targetName);
-    }
+    deletePackageJsonTarget(tree, projectConfig.root, targetName);
   }
+  return true;
 }
 
 function deletePackageJsonTarget(
@@ -740,14 +771,15 @@ export function removeHoistedTargetDefault(
 }
 
 /**
- * Whether a project's `package.json` authors an identity for `targetName` in the
- * DEFAULT plugin layer. The package-json plugin turns every included script into
+ * Which `package.json` signal, if any, authors an identity for `targetName` in
+ * the DEFAULT plugin layer. The package-json plugin turns every included script into
  * an `nx:run-script` target and honors `nx.targets`; either way the target gains
  * an `executor`/`command` in a default layer, which makes Nx's
  * `resolveSourcePlugin` refuse a `filter: { plugin }` targetDefault for it.
  * The hoist uses this to keep the full residual per project instead of silently
- * dropping the centralized keys; the empty-residual write uses it to keep the
- * `nx.targets` entry instead of letting a same-name script take the target over.
+ * dropping the centralized keys; the residual write uses it to keep the
+ * pre-migration target instead of letting the package.json identity take the
+ * target over.
  *
  * Read through the Tree so this sees the same in-memory package.json the rest of
  * the generator reads and writes, rather than a possibly-stale copy on disk.
@@ -756,13 +788,13 @@ export function packageJsonAuthorsTargetIdentity(
   tree: Tree,
   root: string | undefined,
   targetName: string
-): boolean {
+): PackageJsonIdentitySource | undefined {
   if (!root) {
-    return false;
+    return undefined;
   }
   const packageJsonPath = join(root, 'package.json');
   if (!tree.exists(packageJsonPath)) {
-    return false;
+    return undefined;
   }
   let packageJson: {
     scripts?: Record<string, unknown>;
@@ -778,7 +810,7 @@ export function packageJsonAuthorsTargetIdentity(
     // trailing commas), so a failure here means inference cannot be trusted for
     // it either. Fail closed: treat the identity as authored rather than hoist
     // on a guess.
-    return true;
+    return 'unparseable';
   }
   const scripts = packageJson?.scripts ?? {};
   // `readTargetsFromPackageJson` turns each *included* script into an
@@ -791,7 +823,7 @@ export function packageJsonAuthorsTargetIdentity(
     ? nxIncludedScripts
     : Object.keys(scripts);
   if (includedScripts.includes(targetName)) {
-    return true;
+    return 'script';
   }
   // The `nx.targets` check below reads PRE-migration state. In a package-based
   // workspace the target being migrated lives in `nx.targets` itself (that is
@@ -806,14 +838,14 @@ export function packageJsonAuthorsTargetIdentity(
   // config in `project.json` (there a package.json `nx.targets` entry is
   // genuinely separate from the migrated target).
   if (!tree.exists(join(root, 'project.json'))) {
-    return false;
+    return undefined;
   }
   // An `nx.targets` entry authors identity only when it says how to run.
   const nxTarget = packageJson?.nx?.targets?.[targetName];
-  return (
-    nxTarget != null &&
+  return nxTarget != null &&
     (nxTarget.executor !== undefined || nxTarget.command !== undefined)
-  );
+    ? 'nxTargets'
+    : undefined;
 }
 
 export function isRegistrationOfPlugin(
@@ -1069,8 +1101,9 @@ function hoistCommonAndWrite<T>(
     //   - the package-json plugin authors it: a package.json script byte-equal
     //     to the target name becomes an `nx:run-script` target (and `nx.targets`
     //     is honored).
-    // Such projects are EXCLUDED from the hoist (they keep the full residual);
-    // the rest are hoist-eligible.
+    // Such projects are EXCLUDED from the hoist (they keep the full residual,
+    // or the pre-migration target when package.json authors the identity, see
+    // `writeResidualTarget`); the rest are hoist-eligible.
     const excludedProjects = new Set<string>();
     const eligibleResiduals: TargetConfiguration[] = [];
     for (let i = 0; i < projects.length; i++) {
@@ -1113,9 +1146,7 @@ function hoistCommonAndWrite<T>(
       commonByTarget.set(targetName, {});
     }
     (logger ?? devkitLogger).warn(
-      `convert-to-inferred retained full per-project configuration for target(s) ${targetNames.join(
-        ', '
-      )} because ${reason}; no configuration was lost, but shared configuration remains duplicated.`
+      retainedResidualsWarning(targetNames, reason)
     );
   };
   const centralizableTargets = () =>
@@ -1239,7 +1270,7 @@ function hoistCommonAndWrite<T>(
         const toWrite = excludedProjects.has(projectName)
           ? structuredClone(entry.residual)
           : subtractCommon(entry.residual, common);
-        writeResidualTarget(
+        entry.keptPreMigration = !writeResidualTarget(
           tree,
           projectConfigsByName,
           projectName,
@@ -1317,9 +1348,10 @@ function hoistCommonAndWrite<T>(
   updateNxJson(tree, nxJson);
 
   // A per-project exclusion is otherwise silent (unlike a Phase 4 revert, which
-  // warns): the excluded projects simply keep their full residual and nothing is
-  // centralized for them. Surface it so a partial or total non-centralization is
-  // never indistinguishable from "centralization did not apply".
+  // warns): the excluded projects simply keep their per-project configuration
+  // and nothing is centralized for them. Surface it so a partial or total
+  // non-centralization is never indistinguishable from "centralization did not
+  // apply".
   const excludedTargets = [...excludedProjectsByTarget.entries()].filter(
     ([, projects]) => projects.size > 0
   );
@@ -1329,14 +1361,9 @@ function hoistCommonAndWrite<T>(
     ].sort();
     const targetNames = excludedTargets
       .map(([targetName]) => targetName)
-      .sort()
-      .join(', ');
+      .sort();
     (logger ?? devkitLogger).warn(
-      `convert-to-inferred kept per-project configuration for ${
-        excludedProjectNames.length
-      } project(s) (${excludedProjectNames.join(
-        ', '
-      )}) on target(s) ${targetNames} instead of centralizing it: their target identity is authored outside the plugin (a project.json executor/command, or a package.json script/nx.targets entry), so a plugin-scoped default would not resolve for them. Those projects keep the same output as before the migration; review them if you expected shared configuration.`
+      excludedProjectsWarning(excludedProjectNames, targetNames)
     );
   }
 
@@ -2016,7 +2043,7 @@ async function verifyAndFallback<T>(
     updateNxJson(tree, nxJson);
     for (const [projectName, targetMap] of residualByProject) {
       for (const [targetName, entry] of targetMap) {
-        if (!revertedTargets.has(targetName)) {
+        if (!revertedTargets.has(targetName) || entry.keptPreMigration) {
           continue;
         }
         writeResidualTarget(
@@ -2031,20 +2058,8 @@ async function verifyAndFallback<T>(
     }
     // A revert can be triggered by an inference error the pass could not
     // inspect; surface those errors so the incomplete verification is not silent.
-    const causes =
-      verificationErrors.length > 0
-        ? ` The verification pass reported errors: ${verificationErrors.join(
-            '; '
-          )}`
-        : '';
     (logger ?? devkitLogger).warn(
-      `convert-to-inferred kept per-project configuration for target(s) ${[
-        ...revertedTargets,
-      ]
-        .sort()
-        .join(
-          ', '
-        )} instead of centralizing it: other projects inferred by this plugin would have inherited the centralized configuration (or the verification pass could not confirm they would not). The migrated projects keep the same output as before centralization.${causes}`
+      revertedTargetsWarning([...revertedTargets].sort(), verificationErrors)
     );
   }
 
@@ -2054,9 +2069,9 @@ async function verifyAndFallback<T>(
   for (const [projectName, targetMap] of residualByProject) {
     const root = projectGraph.nodes[projectName]?.data?.root;
     for (const [targetName, entry] of targetMap) {
-      if (revertedTargets.has(targetName)) {
-        // Restored to the full pre-centralization residual above: already the
-        // previous engine's exact output, so there is nothing left to verify.
+      if (revertedTargets.has(targetName) || entry.keptPreMigration) {
+        // Restored to the full pre-centralization residual above (or never
+        // migrated): already the intended output, nothing left to verify.
         continue;
       }
       const verifiedInferred: TargetConfiguration | undefined =
@@ -2101,16 +2116,11 @@ async function verifyAndFallback<T>(
     // verification result: the one fallback class an inference error can
     // explain. Divergence fallbacks have a verified config; appending
     // unrelated pass errors to them would misattribute the cause.
-    const causes =
-      anyMissingFromVerification && verificationErrors.length > 0
-        ? ` The verification pass reported errors: ${verificationErrors.join(
-            '; '
-          )}`
-        : '';
     (logger ?? devkitLogger).warn(
-      `convert-to-inferred restored the pre-centralization migration output for ${fallbacks.length} target(s) that could not be verified as equivalent after migration: ${fallbacks.join(
-        ', '
-      )}. Centralized nx.json defaults are shadowed where their keys overlap, but the live inferred configuration may differ from the pre-migration behavior. Review these targets manually.${causes}`
+      unverifiedPairsWarning(
+        fallbacks,
+        anyMissingFromVerification ? verificationErrors : []
+      )
     );
   }
 
@@ -2133,14 +2143,8 @@ async function verifyAndFallback<T>(
   ) {
     // Only claim the migrated targets matched when nothing fell back; a
     // divergence fallback means at least one did not.
-    const outcome =
-      fallbacks.length === 0
-        ? ' The migrated targets matched their pre-migration output, but review any workspace configuration the errors reference.'
-        : ' Review any workspace configuration the errors reference.';
     (logger ?? devkitLogger).warn(
-      `convert-to-inferred could not fully verify the migration: the verification inference pass reported errors: ${verificationErrors.join(
-        '; '
-      )}.${outcome}`
+      verificationErrorsWarning(verificationErrors, fallbacks.length > 0)
     );
   }
 }

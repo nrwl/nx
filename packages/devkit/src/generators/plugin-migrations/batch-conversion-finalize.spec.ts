@@ -782,6 +782,8 @@ describe('batch conversion finalize', () => {
           'app3/package.json',
           JSON.stringify({ name: 'app3', scripts: { build: 'echo build' } })
         );
+        // a mode staged on the file the restore rewrites must survive it
+        ctx.tree.changePermissions('app3/project.json', '755');
       },
     ]);
 
@@ -794,15 +796,31 @@ describe('batch conversion finalize', () => {
         readJson(ctx.tree, `${name}/project.json`).targets.build
       ).toBeUndefined();
     }
-    // app3 excluded against the FINAL tree: full residual, exclusion warning
+    // app3 excluded against the FINAL tree: the child's residual write already
+    // removed the executor, so finalize puts the pre-migration target back
     expect(readJson(ctx.tree, 'app3/project.json').targets.build).toEqual({
-      options: { mode: 'production' },
+      executor: SYNTHETIC_EXECUTOR,
+      ...uniformExecutorTarget(),
     });
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0][0]).toContain('1 project(s) (app3)');
-    expect(warn.mock.calls[0][0]).toContain(
-      'their target identity is authored outside the plugin'
+    expect(warn.mock.calls.map(([message]) => message)).toEqual([
+      expect.stringContaining(
+        'kept the pre-migration configuration of target "build" in project "app3": an included package.json script named "build"'
+      ),
+      expect.stringContaining('1 project(s) (app3)'),
+    ]);
+    // through REAL resolution the script does not take the target over
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
     );
+    expect(resolved['app3'].build.executor).toBe(SYNTHETIC_EXECUTOR);
+    expect(resolved['app1'].build.options?.command).toBe('acme-build');
+    expect(
+      ctx.tree
+        .listChanges()
+        .find((change) => change.path === 'app3/project.json')?.options?.mode
+    ).toBe('755');
   });
 
   it("retains a target name that collides with another plan's inferred executor", async () => {

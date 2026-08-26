@@ -5,6 +5,7 @@ import {
   readNxJson,
   serializeJson,
   updateNxJson,
+  writeJson,
   type NxJsonConfiguration,
   type TargetConfiguration,
   type TargetDefaultArrayEntry,
@@ -40,6 +41,14 @@ import {
   type HarvestedConfigurationError,
   type ResidualEntry,
 } from './executor-to-plugin-migrator';
+import {
+  excludedProjectsWarning,
+  keptPreMigrationTargetWarning,
+  retainedResidualsWarning,
+  revertedTargetsWarning,
+  unverifiedPairsWarning,
+  verificationErrorsWarning,
+} from './conversion-warnings';
 
 type Logger = typeof devkitLogger;
 
@@ -70,6 +79,12 @@ interface PlanState {
   firstRegistrationIndex: number;
   targets: Map<string, TargetPlan>;
   packageJsonAuthoredIdentity: boolean;
+  /**
+   * Pairs whose package.json identity appeared after the child wrote the
+   * residual (a later child edited the file); their pre-migration target is
+   * restored before anything else happens.
+   */
+  restoredPairs: Array<PairPlan & { targetName: string }>;
 }
 
 /**
@@ -96,7 +111,7 @@ export async function finalizeBatchConversion(
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     (logger ?? devkitLogger).warn(
-      `convert-to-inferred could not centralize the shared configuration for this batch: ${message}. Every migrated project keeps its full per-project configuration; no configuration was lost, but shared configuration remains duplicated.`
+      `convert-to-inferred could not centralize the shared configuration for this batch: ${message}. Every migrated project keeps its full per-project configuration, but shared configuration remains duplicated.`
     );
   }
 }
@@ -140,6 +155,7 @@ async function runFinalize(
     ),
     targets: new Map<string, TargetPlan>(),
     packageJsonAuthoredIdentity: false,
+    restoredPairs: [],
   }));
   // Plan in final registration order: later-registered plugins merge later, so
   // their proposed entries append after earlier plans' under a shared key.
@@ -167,6 +183,7 @@ async function runFinalize(
 
   for (const state of planStates) {
     planTargets(tree, state);
+    restorePreMigrationTargets(tree, state);
     applyPlanGates(
       state,
       opaqueIndexes,
@@ -301,6 +318,16 @@ function planTargets(tree: Tree, state: PlanState): void {
       );
       if (packageJsonAuthored) {
         state.packageJsonAuthoredIdentity = true;
+        if (!pair.entry.keptPreMigration) {
+          state.restoredPairs.push({ ...pair, targetName });
+          state.log.warn(
+            keptPreMigrationTargetWarning(
+              targetName,
+              pair.projectName,
+              packageJsonAuthored
+            )
+          );
+        }
       }
       const identityAuthored =
         pair.entry.residual.executor !== undefined ||
@@ -316,6 +343,51 @@ function planTargets(tree: Tree, state: PlanState): void {
       eligibleResiduals.length >= 2
         ? computeStrictCommon(eligibleResiduals)
         : {};
+  }
+}
+
+/**
+ * Put back the pre-migration target of every pair whose package.json identity
+ * showed up only after the child wrote the residual. The child's write already
+ * removed the executor, which is exactly what lets the identity take the
+ * target over, so this runs before any gate or verification (an early return
+ * or a thrown verification must not leave the residual in place). Same
+ * outcome as the inline write-time guard, one step later.
+ */
+function restorePreMigrationTargets(tree: Tree, state: PlanState): void {
+  if (state.restoredPairs.length === 0) {
+    return;
+  }
+  const pendingOptionsByPath = new Map(
+    tree.listChanges().map((change) => [change.path, change.options])
+  );
+  for (const { root, targetName, entry } of state.restoredPairs) {
+    const projectJsonPath = join(root, 'project.json');
+    let path: string;
+    if (tree.exists(projectJsonPath)) {
+      path = projectJsonPath;
+      const projectJson = readJson(tree, path);
+      projectJson.targets ??= {};
+      projectJson.targets[targetName] = structuredClone(
+        entry.preMigrationTarget
+      );
+      writeJson(tree, path, projectJson);
+    } else {
+      path = join(root, 'package.json');
+      const packageJson = readJson(tree, path);
+      packageJson.nx ??= {};
+      packageJson.nx.targets ??= {};
+      packageJson.nx.targets[targetName] = structuredClone(
+        entry.preMigrationTarget
+      );
+      writeJson(tree, path, packageJson);
+    }
+    // A write replaces the path's recorded change, dropping any staged
+    // `TreeWriteOptions`; re-apply a mode staged before the finalize pass.
+    const mode = pendingOptionsByPath.get(path)?.mode;
+    if (mode !== undefined) {
+      tree.changePermissions(path, mode);
+    }
   }
 }
 
@@ -337,11 +409,7 @@ function applyPlanGates(
     for (const targetName of targetNames) {
       state.targets.get(targetName).common = {};
     }
-    state.log.warn(
-      `convert-to-inferred retained full per-project configuration for target(s) ${targetNames.join(
-        ', '
-      )} because ${reason}; no configuration was lost, but shared configuration remains duplicated.`
-    );
+    state.log.warn(retainedResidualsWarning(targetNames, reason));
   };
   const centralizableTargets = () =>
     [...state.targets.entries()]
@@ -428,17 +496,8 @@ function emitExcludedProjectsWarning(state: PlanState): void {
       ])
     ),
   ].sort();
-  const targetNames = excludedTargets
-    .map(([targetName]) => targetName)
-    .sort()
-    .join(', ');
-  state.log.warn(
-    `convert-to-inferred kept per-project configuration for ${
-      excludedProjectNames.length
-    } project(s) (${excludedProjectNames.join(
-      ', '
-    )}) on target(s) ${targetNames} instead of centralizing it: their target identity is authored outside the plugin (a project.json executor/command, or a package.json script/nx.targets entry), so a plugin-scoped default would not resolve for them. Those projects keep the same output as before the migration; review them if you expected shared configuration.`
-  );
+  const targetNames = excludedTargets.map(([targetName]) => targetName).sort();
+  state.log.warn(excludedProjectsWarning(excludedProjectNames, targetNames));
 }
 
 async function runCombinedVerificationPass(
@@ -549,18 +608,11 @@ function rejectUnsafeCandidates(
   }
 
   if (revertedTargets.length > 0) {
-    const causes =
-      planErrors.length > 0
-        ? ` The verification pass reported errors: ${planErrors
-            .map((error) => error.message)
-            .join('; ')}`
-        : '';
     state.log.warn(
-      `convert-to-inferred kept per-project configuration for target(s) ${revertedTargets
-        .sort()
-        .join(
-          ', '
-        )} instead of centralizing it: other projects inferred by this plugin would have inherited the centralized configuration (or the verification pass could not confirm they would not). The migrated projects keep the same output as before centralization.${causes}`
+      revertedTargetsWarning(
+        revertedTargets.sort(),
+        planErrors.map((error) => error.message)
+      )
     );
   }
 }
@@ -649,16 +701,13 @@ function verifyPairs(
   }
 
   if (fallbacks.length > 0) {
-    const causes =
-      anyMissingFromVerification && planErrors.length > 0
-        ? ` The verification pass reported errors: ${planErrors
-            .map((error) => error.message)
-            .join('; ')}`
-        : '';
     state.log.warn(
-      `convert-to-inferred restored the pre-centralization migration output for ${fallbacks.length} target(s) that could not be verified as equivalent after migration: ${fallbacks.join(
-        ', '
-      )}. Centralized nx.json defaults are shadowed where their keys overlap, but the live inferred configuration may differ from the pre-migration behavior. Review these targets manually.${causes}`
+      unverifiedPairsWarning(
+        fallbacks,
+        anyMissingFromVerification
+          ? planErrors.map((error) => error.message)
+          : []
+      )
     );
   }
 
@@ -669,14 +718,11 @@ function verifyPairs(
     !anyReverted &&
     !errorsSurfacedByFallbackWarning
   ) {
-    const outcome =
-      fallbacks.length === 0
-        ? ' The migrated targets matched their pre-migration output, but review any workspace configuration the errors reference.'
-        : ' Review any workspace configuration the errors reference.';
     state.log.warn(
-      `convert-to-inferred could not fully verify the migration: the verification inference pass reported errors: ${planErrors
-        .map((error) => error.message)
-        .join('; ')}.${outcome}`
+      verificationErrorsWarning(
+        planErrors.map((error) => error.message),
+        fallbacks.length > 0
+      )
     );
   }
 }
