@@ -227,7 +227,6 @@ describe('orchestrator', () => {
       completeEmitted?: boolean;
       checkpointFailed?: boolean;
       nxVersion?: string;
-      // The runbook a real init would have written; false leaves it off disk.
       runbook?: string | false;
       validate?: boolean;
       issues?: MigrateRunIssue[];
@@ -357,8 +356,6 @@ describe('orchestrator', () => {
       // The step kind is recorded from the plan: it decides how a step whose
       // generator marker is absent may be retried.
       expect(state.steps.map((s) => s.hasGenerator)).toEqual([true, false]);
-      // No migration is dispensed at init: the agent reads the runbook first
-      // and asks for the first step by reconciling.
       expect(state.steps.map((s) => s.status)).toEqual(['pending', 'pending']);
 
       expect(state.rounds[0].planSnapshot).toBe('plan-0.json');
@@ -646,9 +643,7 @@ describe('orchestrator', () => {
         planHash: computePlanHash(migrationsJson),
         plan: migrationsJson.migrations,
       });
-      // The dispense's pre-migration ref read is the last git side effect
-      // before its state write; a concurrent dispense landing there postdates
-      // this reconcile's read of the step as pending.
+      // The pre-migration ref read runs before the dispense's state write, so a concurrent dispense injected there lands after this reconcile read the step as pending.
       mockGetLatestCommitSha.mockImplementationOnce(() => {
         writeRunState(dir, {
           ...readRunState(dir),
@@ -666,7 +661,6 @@ describe('orchestrator', () => {
       const block = lastBlock();
       expect(block.action).toBe('next-step');
       expect(block.step).toBe('step-1');
-      // The concurrent dispense's ref survives; this one did not re-dispense.
       const step = readRunState(dir).steps[0];
       expect(step.gitRefBefore).toBe(
         'beef0002beef0002beef0002beef0002beef0002'
@@ -687,9 +681,7 @@ describe('orchestrator', () => {
         plan: migrationsJson.migrations,
         startEmitted: false,
       });
-      // The init-analytics report fires between the watermark claim and the
-      // response; a concurrent process advancing the run there makes this
-      // init's in-memory snapshot stale.
+      // The init analytics report fires between the watermark claim and the response, so a concurrent advance injected there leaves this init's snapshot stale.
       mockInit.mockImplementationOnce(() => {
         writeRunState(dir, {
           ...readRunState(dir),
@@ -710,8 +702,6 @@ describe('orchestrator', () => {
         validate: undefined,
       });
 
-      // Init dispenses nothing either way; the concurrent progress survives
-      // untouched and the next reconcile picks it up.
       const block = lastBlock();
       expect(block.action).toBe('initialized');
       expect(readRunState(dir).steps[0].status).toBe('succeeded');
@@ -1168,8 +1158,7 @@ describe('orchestrator', () => {
       expect(runbooks).toHaveLength(1);
       expect(runbooks[0].runId).toBe(runId);
       expect(runbooks[0].content).toBe(onDisk);
-      // The runbook lands before the initialized step block, so the contract
-      // is read before the first command is.
+      // The agent must have the contract before it can act on any step block.
       expect(stdout.indexOf('<nx_migrate_runbook')).toBeGreaterThanOrEqual(0);
       expect(stdout.indexOf('<nx_migrate_runbook')).toBeLessThan(
         stdout.indexOf('<nx_migrate_step')
@@ -1205,7 +1194,6 @@ describe('orchestrator', () => {
 
       const runbooks = parseRunbookBlocks();
       expect(runbooks).toHaveLength(1);
-      // The stored bytes verbatim: no re-render from this nx's templates.
       expect(runbooks[0].content).toBe('# stored contract\ncustom bytes\n');
       const block = lastBlock();
       expect(block.action).toBe('initialized');
@@ -1236,7 +1224,7 @@ describe('orchestrator', () => {
       const onDisk = readFileSync(join(dir, 'RUNBOOK.md'), 'utf-8');
       expect(onDisk).toContain('# Nx migrate run run-1');
       expect(parseRunbookBlocks()[0].content).toBe(onDisk);
-      // The re-render also records the path a pre-runbook state was missing.
+      // A state written before runbooks has no runbookPath; the re-render backfills it.
       expect(readRunState(dir).runbookPath).toBe('RUNBOOK.md');
       expect(lastBlock().action).toBe('initialized');
     });
@@ -1260,7 +1248,6 @@ describe('orchestrator', () => {
         'cannot re-render the one nx 1.0.0 wrote'
       );
       expect(block.payload.instructions).toContain('abandon the run');
-      // No runbook was invented and no step was dispensed.
       expect(existsSync(join(dir, 'RUNBOOK.md'))).toBe(false);
       expect(readRunState(dir).steps[0].status).toBe('pending');
     });
@@ -1280,8 +1267,6 @@ describe('orchestrator', () => {
 
       await runOrchestratorInit(initInput(migrationsJson));
 
-      // The re-render landed in a regular file; the link target kept its
-      // bytes.
       expect(lstatSync(join(dir, 'RUNBOOK.md')).isFile()).toBe(true);
       expect(readFileSync(victim, 'utf-8')).toBe('untouched');
       expect(readFileSync(join(dir, 'RUNBOOK.md'), 'utf-8')).toContain(
@@ -1289,8 +1274,7 @@ describe('orchestrator', () => {
       );
     });
 
-    // Directory mode bits do not gate deletion on Windows, and root bypasses
-    // them, so the removal-failure setup only means something rootless POSIX.
+    // Directory mode bits do not gate deletion on Windows, and root bypasses them, so the removal-failure setup only holds on rootless POSIX.
     const rootlessPosix =
       process.platform === 'win32' || process.getuid?.() === 0 ? it.skip : it;
 
@@ -1308,9 +1292,7 @@ describe('orchestrator', () => {
         const victim = join(root, 'victim.md');
         writeFileSync(victim, 'untouched');
         symlinkSync(victim, join(dir, 'RUNBOOK.md'));
-        // A run directory the removal cannot write to: the failed rm must
-        // propagate rather than fall through to a write that would follow the
-        // link.
+        // Removing an entry needs write on the parent, so 0o555 on the run dir is what makes the rm fail.
         chmodSync(dir, 0o555);
         try {
           await expect(
@@ -1343,8 +1325,6 @@ describe('orchestrator', () => {
         createCommits: true,
       });
 
-      // The refusal is side-effect free: no checkpoint commit, no analytics
-      // watermark, no ledger append.
       expect(lastBlock().action).toBe('error');
       expect(mockCheckpoint).not.toHaveBeenCalled();
       expect(mockInit).not.toHaveBeenCalled();
@@ -1455,9 +1435,7 @@ describe('orchestrator', () => {
         nxVersion,
         runbook: false,
       });
-      // The render's package-manager read sits between the missing probe and
-      // the atomic publish; a concurrent repair landing there is renamed
-      // over, so the path only ever holds a complete contract.
+      // The render's package-manager read sits between the missing probe and the atomic publish, so a repair injected there races the publish.
       mockDetectPackageManager.mockImplementationOnce(() => {
         writeFileSync(join(dir, 'RUNBOOK.md'), '# concurrent repair\n');
         return 'npm';
@@ -1487,7 +1465,6 @@ describe('orchestrator', () => {
 
       await runOrchestratorReconcile({ root, runId: 'run-1' });
 
-      // rename replaces the link itself; the target keeps its bytes.
       expect(readFileSync(victim, 'utf-8')).toBe('untouched');
       expect(lstatSync(join(dir, 'RUNBOOK.md')).isFile()).toBe(true);
       expect(readFileSync(join(dir, 'RUNBOOK.md'), 'utf-8')).toContain(
@@ -1503,9 +1480,7 @@ describe('orchestrator', () => {
         nxVersion,
         runbook: false,
       });
-      // Interrupt at the rename itself: the full content is already on disk
-      // under the temp name, which is exactly the crash the atomic publish
-      // must keep away from the real path.
+      // Interrupt at the rename, not at the temp write: this is the crash window the atomic publish exists for.
       const realRename = fs.renameSync.bind(fs);
       const spy = vi
         .spyOn(fs, 'renameSync')
@@ -1521,8 +1496,6 @@ describe('orchestrator', () => {
         runOrchestratorReconcile({ root, runId: 'run-1' })
       ).rejects.toThrow('interrupted publish');
 
-      // The written bytes sit only under the temp name; no truncated file a
-      // later invocation could accept as the contract.
       expect(existsSync(join(dir, 'RUNBOOK.md'))).toBe(false);
       expect(readdirSync(dir).some((n) => n.startsWith('RUNBOOK.md~'))).toBe(
         true
@@ -1544,8 +1517,6 @@ describe('orchestrator', () => {
         nxVersion,
         runbook: false,
       });
-      // Another invocation's orphan; this repair's random-suffix temp never
-      // touches it.
       writeFileSync(join(dir, 'RUNBOOK.md~deadbeef'), 'stale');
 
       await runOrchestratorReconcile({ root, runId: 'run-1' });
@@ -1559,9 +1530,7 @@ describe('orchestrator', () => {
       expect(lastBlock().action).toBe('next-step');
     });
 
-    // These exercise the POSIX-only rejections (O_NOFOLLOW, mkfifo). Windows
-    // lacks both flags; its guard is the inode-identity check, covered for
-    // every platform by the replaced-by-a-different-file test below.
+    // Windows has neither O_NOFOLLOW nor mkfifo; its guard is the inode-identity check, covered for every platform by the replaced-by-a-different-file test below.
     const posixOnly = process.platform === 'win32' ? it.skip : it;
 
     posixOnly(
@@ -1573,8 +1542,6 @@ describe('orchestrator', () => {
         });
         const victim = join(root, 'victim.md');
         writeFileSync(victim, 'secret-bytes');
-        // Swap the entry the moment the orchestrator has inspected it, before
-        // it opens the path for the read.
         const realLstat = fs.lstatSync.bind(fs);
         const spy = vi
           .spyOn(fs, 'lstatSync')
@@ -1592,8 +1559,6 @@ describe('orchestrator', () => {
           runOrchestratorReconcile({ root, runId: 'run-1' })
         ).rejects.toThrow();
 
-        // The link target's bytes never reached the response, and the run
-        // did not advance.
         expect(stdout).not.toContain('secret-bytes');
         expect(readRunState(dir).steps[0].status).toBe('pending');
       }
@@ -1619,8 +1584,6 @@ describe('orchestrator', () => {
             return stats;
           });
 
-        // O_NONBLOCK keeps the open from waiting on a FIFO writer; the
-        // descriptor check then rejects the non-regular entry.
         await expect(
           runOrchestratorReconcile({ root, runId: 'run-1' })
         ).rejects.toThrow(/replaced while being read/);
@@ -1640,9 +1603,7 @@ describe('orchestrator', () => {
           const stats = realLstat(p, o);
           if (typeof p === 'string' && p.endsWith('RUNBOOK.md')) {
             spy.mockRestore();
-            // Rename over the path rather than unlink and recreate: ext4
-            // hands a freed inode number straight back to the next create,
-            // which would make the replacement indistinguishable.
+            // Rename over the path rather than unlink and recreate: ext4 reuses the freed inode number, which would make the replacement indistinguishable.
             const replacement = `${p}.replacement`;
             writeFileSync(replacement, '# not the inspected file\n');
             renameSync(replacement, p);
@@ -1650,8 +1611,7 @@ describe('orchestrator', () => {
           return stats;
         });
 
-      // The inode identity check carries the guarantee even where the open
-      // flags cannot (Windows has no O_NOFOLLOW).
+      // Not POSIX-gated: the inode check is the guarantee where O_NOFOLLOW does not exist.
       await expect(
         runOrchestratorReconcile({ root, runId: 'run-1' })
       ).rejects.toThrow(/replaced while being read/);
@@ -1659,9 +1619,7 @@ describe('orchestrator', () => {
     });
 
     it('completes an all-terminal active run without requiring the runbook', async () => {
-      // The worker marks the last step succeeded but leaves the run active;
-      // this reconcile only has the terminal response left to emit, so a
-      // missing runbook must not leave the run active forever.
+      // The worker marks the last step succeeded but leaves the run active, so a missing runbook here would strand the run active forever.
       const dir = setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
         plan: [genMig('@nx/js', 'a')],
@@ -1715,8 +1673,7 @@ describe('orchestrator', () => {
       expect(block.payload.instructions).not.toContain('Runbook:');
     });
 
-    // Mode bits do not gate reads this way on Windows, and root bypasses
-    // them, so the unreadable-file setup only means something rootless POSIX.
+    // Mode bits do not gate reads this way on Windows, and root bypasses them, so the unreadable-file setup only holds on rootless POSIX.
     const rootlessPosix =
       process.platform === 'win32' || process.getuid?.() === 0 ? it.skip : it;
 
@@ -1732,7 +1689,6 @@ describe('orchestrator', () => {
           await expect(
             runOrchestratorReconcile({ root, runId: 'run-1' })
           ).rejects.toThrow();
-          // The run did not advance while its contract was unavailable.
           expect(readRunState(dir).steps[0].status).toBe('pending');
           expect(parseBlocks()).toHaveLength(0);
         } finally {
@@ -1756,7 +1712,6 @@ describe('orchestrator', () => {
       expect(block.payload.instructions).toContain(
         'cannot re-render the one nx 1.0.0 wrote'
       );
-      // Nothing advanced: the run cannot move without its contract.
       expect(readRunState(dir).steps[0].status).toBe('pending');
     });
 
@@ -1773,8 +1728,7 @@ describe('orchestrator', () => {
     });
 
     it('re-emits completion without requiring the runbook', async () => {
-      // A completed run cannot advance; its terminal response must not hide
-      // behind a missing contract, whichever nx wrote the run.
+      // A completed run cannot advance, so its terminal response must not hinge on the contract, whichever nx wrote the run.
       setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
         plan: [genMig('@nx/js', 'a')],
@@ -1828,8 +1782,7 @@ describe('orchestrator', () => {
     });
 
     it('refuses a fresh init when scratch stays unignored after the fallback had its chance', async () => {
-      // v23+ without the entry planned: the fallback respects the conscious
-      // removal, so coverage cannot appear and the run must not start.
+      // v23+ with no .gitignore entry in the plan: the fallback respects a conscious removal, so coverage never appears.
       mockGetPathCommitExposure.mockReturnValue('unignored');
 
       await expect(
@@ -1868,8 +1821,6 @@ describe('orchestrator', () => {
       });
 
       expect(checkpointSawEntry).toBe(true);
-      // The fallback's standalone commit is suppressed; the checkpoint
-      // carries the .gitignore edit.
       expect(mockTryCommitChanges).not.toHaveBeenCalled();
       expect(findActiveRun(root).active).not.toBeNull();
     });
@@ -1898,13 +1849,12 @@ describe('orchestrator', () => {
         runOrchestratorInit(initInput(true, migrationsJson))
       ).rejects.toThrow(/continue run 'run-1'/);
 
-      // The checkpoint retry (a `git add -A` commit) must not have run.
+      // The checkpoint is a `git add -A` commit, so it must not run while scratch is exposed.
       expect(mockCheckpoint).not.toHaveBeenCalled();
     });
 
     it('refuses a reconcile when scratch became unsafe while the run was paused, before folding handoffs', async () => {
-      // The ordering is load-bearing: folding a completed prompt reaches a
-      // `git add -A`, which would sweep the exposed scratch into the commit.
+      // Folding a completed prompt reaches a `git add -A`, which would sweep the exposed scratch into the commit.
       const dir = setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
         createCommits: true,
@@ -2004,9 +1954,7 @@ describe('orchestrator', () => {
     );
 
     it('folds a skipped handoff on a hybrid prompt as completed, landing the commit', async () => {
-      // The generator half's changes are already applied, so a prompt the
-      // agent marks not applicable still completes the migration; folding it
-      // as skipped would report it as not run and strand the changes as debt.
+      // The generator half already changed the tree, so a not-applicable prompt still completes the migration; folding it as skipped would strand those changes as unreported debt.
       mockCommit.mockResolvedValue({
         status: 'committed',
         sha: 'face0007face0007face0007face0007face0007',
@@ -2047,9 +1995,7 @@ describe('orchestrator', () => {
     });
 
     it('folds a skipped handoff on a no-op hybrid prompt as skipped, without a commit', async () => {
-      // The generator changed nothing, so nothing of the migration is in the
-      // tree; a commit here would `git add -A` unrelated pending diffs under
-      // a migration that changed nothing.
+      // The generator changed nothing, so a commit here would `git add -A` unrelated pending diffs under a migration that touched nothing.
       mockCommit.mockResolvedValue({
         status: 'committed',
         sha: 'face0008face0008face0008face0008face0008',
@@ -2081,9 +2027,7 @@ describe('orchestrator', () => {
     });
 
     it('folds a skipped handoff on a validation pass as completed, landing the commit', async () => {
-      // The generator's changes are already applied, so "validation not
-      // applicable" must complete the migration; folding it as skipped would
-      // report the migration as not run and strand its changes as debt.
+      // The generator's changes are already applied, so "validation not applicable" must complete the migration; folding it as skipped would strand those changes as unreported debt.
       mockCommit.mockResolvedValue({
         status: 'committed',
         sha: 'face0006face0006face0006face0006face0006',
@@ -2167,8 +2111,7 @@ describe('orchestrator', () => {
     });
 
     it('finishes the fold when a stored payload entry cannot be removed', async () => {
-      // The outcome is already recorded by cleanup time; a directory planted
-      // at a payload path must not abort the reconcile that settled the step.
+      // A directory at a payload path fails the removal, and the outcome is already recorded by then, so cleanup's failure must not abort the reconcile.
       const dir = setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
         plan: [promptMig('@nx/js', 'p')],
@@ -2261,8 +2204,7 @@ describe('orchestrator', () => {
       const block = lastBlock();
       expect(block.action).toBe('await-prompt');
       expect(block.payload.instructions).toContain('awaiting your validation');
-      // No skipped outcome is offered: a waived validation still completes
-      // the migration.
+      // A waived validation completes the migration rather than skipping it.
       expect(block.payload.instructions).toContain(
         'If validation does not apply here'
       );
@@ -2338,9 +2280,7 @@ describe('orchestrator', () => {
     });
 
     it('synthesizes the prompt payload from the plan when none is stored', async () => {
-      // An awaiting step offers no retry action, so a dispense that only
-      // pointed backward at stdout the session no longer has could stall a
-      // valid run forever (e.g. one parked before payloads were stored).
+      // An awaiting step offers no retry action, so pointing back at stdout the session no longer has would stall a valid run forever (e.g. one parked before payloads were stored).
       setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
         plan: [promptMig('@nx/js', 'p')],
@@ -2376,8 +2316,6 @@ describe('orchestrator', () => {
     });
 
     it('ignores a payload stored by an earlier attempt, synthesizing from the plan instead', async () => {
-      // The re-armed attempt parks with its own payload; the previous
-      // attempt's stored copy says nothing about the work now awaited.
       const dir = setupRun('run-1', {
         steps: [
           {
@@ -2419,8 +2357,6 @@ describe('orchestrator', () => {
     ] as const)(
       'rejects a stored payload that %s, synthesizing from the plan instead',
       async (_case, content) => {
-        // A misplaced or truncated file must not become the authoritative
-        // instruction for the awaited work.
         const dir = setupRun('run-1', {
           steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
           plan: [promptMig('@nx/js', 'p')],
@@ -2440,8 +2376,6 @@ describe('orchestrator', () => {
     );
 
     it('rejects a stored payload naming different instructions than the plan, synthesizing instead', async () => {
-      // A same-migration file pointing at another instructions file must not
-      // redirect the agent away from what the durable run records.
       const dir = setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
         plan: [promptMig('@nx/js', 'p')],
@@ -2464,8 +2398,6 @@ describe('orchestrator', () => {
     ] as const)(
       'still dispenses the awaiting step when the plan snapshot holds %s',
       async (_case, planContent) => {
-        // A damaged-but-parseable snapshot must degrade to the last-resort
-        // pointer, not abort the reconcile that re-hands the awaited work.
         const dir = setupRun('run-1', {
           steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
           plan: [promptMig('@nx/js', 'p')],
@@ -2794,9 +2726,7 @@ describe('orchestrator', () => {
 
       const state = readRunState(dir);
       expect(state.steps[0].status).toBe('succeeded');
-      // Claims are assigned at an agent-work dispense, never at a worker
-      // dispense: a generator-only step may finish without a handoff to
-      // report through, so its applicable issues must stay claimable.
+      // Claims are assigned only at an agent-work dispense: a generator-only step may finish without a handoff to report through, so its applicable issues must stay claimable.
       expect(state.issues).toEqual([
         {
           id: 'issue-1',
@@ -2898,9 +2828,6 @@ describe('orchestrator', () => {
 
       const state = readRunState(dir);
       expect(state.steps[0].attempt).toBe(2);
-      // The reset discarded the fix the failed attempt reported, so the
-      // ledger cannot keep it resolved; recorded puts it back in the
-      // retry's reach.
       expect(state.issues[0].disposition).toBe('recorded');
       expect(state.issues[0].resolvedByStepId).toBeUndefined();
       const archived = JSON.parse(
@@ -2946,8 +2873,7 @@ describe('orchestrator', () => {
         createCommits: true,
         plan: [promptMig('@nx/js', 'p')],
       });
-      // A non-empty directory at the archive path makes the atomic rename
-      // fail before the fold's state write.
+      // A directory at the archive path defeats the atomic rename, before the fold's state write.
       mkdirSync(join(dir, 'issues', 'issue-1.json'), { recursive: true });
       writeFileSync(join(dir, 'issues', 'issue-1.json', 'occupied'), 'x');
       writeHandoff(dir, '@nx/js', 'p', {
@@ -2958,10 +2884,7 @@ describe('orchestrator', () => {
 
       await runOrchestratorReconcile({ root, runId: 'run-1' });
 
-      // No ledger entry may exist without its archived detail, so the whole
-      // fold waits for the archive to become writable, and no side effect
-      // runs first: a commit landed here would be lost, since the retried
-      // fold's commit attempt would see a clean tree.
+      // No ledger entry may exist without its archived detail, so the fold aborts whole; a commit landed first would be lost, since the retried fold would find a clean tree.
       expect(mockCommit).not.toHaveBeenCalled();
       const state = readRunState(dir);
       expect(state.steps[0].status).toBe('awaiting-prompt-outcome');
@@ -2993,9 +2916,7 @@ describe('orchestrator', () => {
           },
         ],
       });
-      // Phase 1's archive write (the first rename onto the file) succeeds;
-      // phase 2's re-archive fails, leaving the phase-1 file intact so the
-      // fold tolerates the failure instead of dropping.
+      // The second rename is phase 2's re-archive; phase 1's file survives it, so the fold tolerates the failure instead of dropping the detail.
       const realRename = fs.renameSync;
       let archiveRenames = 0;
       vi.spyOn(fs, 'renameSync').mockImplementation(
@@ -3016,7 +2937,6 @@ describe('orchestrator', () => {
       expect(state.steps[0].status).toBe('succeeded');
       expect(state.issues[0].id).toBe('issue-1');
       expect(existsSync(handoffPathIn(dir, '@nx/js', 'p'))).toBe(false);
-      // The verified branch must not claim loss the check just disproved.
       expect(
         warned.some((w) => w.title.includes('Re-archiving the issue records'))
       ).toBe(true);
@@ -3026,9 +2946,6 @@ describe('orchestrator', () => {
     });
 
     it("carries an absorbed step's resolved issues onto the landed commit that covers it", async () => {
-      // step-1's own commit attempt fails, so its resolution rides nowhere;
-      // step-2's later commit absorbs step-1's tree and must carry the issue
-      // it fixed.
       mockCommit
         .mockResolvedValueOnce({ status: 'failed' })
         .mockResolvedValueOnce({
@@ -3093,8 +3010,6 @@ describe('orchestrator', () => {
 
       await runOrchestratorReconcile({ root, runId: 'run-1' });
 
-      // The awaiting step has a handoff to report through, so the dispense
-      // assigns the issue to it and says how to report the result.
       expect(readRunState(dir).issues[0].claimedByStepId).toBe('step-1');
       const block = lastBlock();
       expect(block.action).toBe('await-prompt');
@@ -3130,9 +3045,7 @@ describe('orchestrator', () => {
       expect(block.payload.instructions).toContain(
         '2 reported issues remain unresolved'
       );
-      // Every step is terminal here, so the pre-dispense settle demoted the
-      // recorded entry: completion can never label unclaimable work as still
-      // available to a step.
+      // Every step is terminal, so the pre-dispense settle demoted the recorded entry: completion never lists unclaimable work as still available.
       expect(readRunState(dir).issues.map((i) => i.disposition)).toEqual([
         'deferred-final',
         'deferred-final',
@@ -4259,8 +4172,7 @@ describe('orchestrator', () => {
     });
 
     it('accepts a retry of a failed prompt-only step over a dirty tree', async () => {
-      // There is no generator to rerun: the retry re-prompts the agent over
-      // the tree it already knows, which is the designed recovery.
+      // Nothing is rerun over the dirt: a prompt-only retry just re-prompts the agent over the tree it already knows.
       mockGetWorkingTreeStatus.mockReturnValue('dirty');
       const dir = setupRun('run-1', {
         steps: [
@@ -4281,9 +4193,7 @@ describe('orchestrator', () => {
     });
 
     it('applies retry-clean to a failed step with a restore point, dropping the generator marker', async () => {
-      // A generator that wrote to disk before throwing (a direct fs or exec
-      // side effect) leaves the same partial tree a killed worker does; the
-      // reset-backed retry is the safe path for it too.
+      // A generator that wrote to disk before throwing (direct fs or exec) leaves the same partial tree a killed worker does, so the reset-backed retry fits it too.
       mockGetLatestCommitSha.mockReturnValue(
         'beef0001beef0001beef0001beef0001beef0001'
       );
@@ -4312,8 +4222,7 @@ describe('orchestrator', () => {
     });
 
     it('removes the stored payloads when retry-clean drops the generator marker', async () => {
-      // The reset discards the generator run those payloads describe; the
-      // rerun must not let a later retained retry re-hand stale evidence.
+      // The reset discards the generator run those payloads describe, so a later retained retry must not re-hand them as evidence.
       mockGetLatestCommitSha.mockReturnValue(
         'beef0001beef0001beef0001beef0001beef0001'
       );
@@ -4394,7 +4303,6 @@ describe('orchestrator', () => {
     });
 
     it('keeps the stored payloads on a plain retry', async () => {
-      // The lineage is unbroken: the retained retry re-hands the newest copy.
       const dir = setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:h', 'failed', {
@@ -4877,8 +4785,6 @@ describe('orchestrator', () => {
       expect(block.payload.instructions).toContain(
         'already been retried 3 times'
       );
-      // Escalate-only: the retry options stay listed, only the blind
-      // continuation is withheld.
       expect(block.payload.instructions).toContain('retry:');
       expect(block.payload.next).toBeUndefined();
     });
@@ -4979,8 +4885,6 @@ describe('orchestrator', () => {
       expect(escalated.payload.instructions).toContain(
         'report the blocker to the user'
       );
-      // The step's own content survives the escalation: acting on it is
-      // still what resolves the loop.
       expect(escalated.payload.instructions).toContain(
         'Apply migration @nx/js:gen'
       );
@@ -5106,8 +5010,6 @@ describe('orchestrator', () => {
       await runOrchestratorReconcile({ root, runId: 'run-1' });
       await runOrchestratorReconcile({ root, runId: 'run-1' });
       expect(readRunState(dir).noProgress.consecutiveCount).toBe(2);
-      // The marker is durable progress on the same attempt and status; it
-      // must not let the streak run on to a no-progress escalation.
       const state = readRunState(dir);
       writeRunState(dir, {
         ...state,

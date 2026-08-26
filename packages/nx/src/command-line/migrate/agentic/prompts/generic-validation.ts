@@ -100,7 +100,7 @@ export function buildGenericValidationUserPrompt(
     );
   }
 
-  const targetDiscovery = `discover each project's targets with \`nx show project <name> --json\`, which includes targets inferred by plugins (reading \`project.json\` / \`package.json\` misses those; fall back to it only if the project graph cannot be built) — do not assume \`typecheck\` / \`test\` / \`lint\` exist. If no typecheck-equivalent exists, \`build\` is an acceptable substitute.`;
+  const targetDiscovery = `discover each project's targets with \`nx show project <name> --json\`, which includes targets inferred by plugins (reading \`project.json\` / \`package.json\` misses those; fall back to it only if the project graph cannot be built). Do not assume \`typecheck\` / \`test\` / \`lint\` exist. If no typecheck-equivalent exists, \`build\` is an acceptable substitute.`;
   const firstStep = ctx.impl.hasDiffContext
     ? `1. Inspect this migration's changes. ${renderGitInspectInstruction()} Resolve each affected path to its owning Nx project, then ${targetDiscovery}`
     : `1. Resolve each path in <files_changed> to its owning Nx project, then ${targetDiscovery}`;

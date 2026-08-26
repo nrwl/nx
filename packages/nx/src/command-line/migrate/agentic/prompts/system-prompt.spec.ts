@@ -29,7 +29,7 @@ describe('buildSystemPrompt', () => {
 
   it('renders the nx invocation distinct from the package manager so npm gets `npx nx`', () => {
     const prompt = buildSystemPrompt(ctx);
-    expect(prompt).toMatch(/To invoke nx, use `npx nx …`/);
+    expect(prompt).toMatch(/To invoke nx, use `npx nx \.\.\.`/);
   });
 
   it('honors a package-manager-specific nx invocation (e.g. `pnpm exec nx`)', () => {
@@ -39,7 +39,7 @@ describe('buildSystemPrompt', () => {
       nxInvocation: 'pnpm exec nx',
     });
     expect(prompt).toContain('<package_manager>pnpm</package_manager>');
-    expect(prompt).toMatch(/To invoke nx, use `pnpm exec nx …`/);
+    expect(prompt).toMatch(/To invoke nx, use `pnpm exec nx \.\.\.`/);
   });
 
   it('wraps the opening brief, handoff contract, environment note, and scope rules in their tags', () => {
