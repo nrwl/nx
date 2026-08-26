@@ -499,6 +499,12 @@ export async function createProjectGraphAndSourceMapsAsync(
         } else {
           markDaemonAsDisabled(e.message);
         }
+        // Both writes are only read through `isDaemonDisabled()`, which
+        // `enabled()` consults once and then memoizes. Without clearing that,
+        // every later daemon consumer in this process — task hashing, workspace
+        // context, sync generators — starts the daemon again and waits out the
+        // full connect budget, under a warning saying it is off.
+        daemonClient.reset();
         return buildProjectGraphAndSourceMapsWithoutDaemon();
       }
 
