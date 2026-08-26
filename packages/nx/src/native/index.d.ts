@@ -614,6 +614,12 @@ export interface IoSnapshotFetchOptions {
 }
 
 /**
+ * Observed outputs per eligible task (same walk as hashing), for the runner
+ * to union into `task.outputs` and for `nx show` to label them.
+ */
+export declare function ioSnapshotOutputs(snapshots: IoSnapshots, taskGraph: TaskGraph, optedOutTaskIds: Array<string>, customHasherTaskIds: Array<string>, projectRoots?: Record<string, string> | undefined | null): Record<string, Array<string>>
+
+/**
  * The eligibility report without a planner: the client prints the run
  * summary from this on the daemon path, where it never transfers a project
  * graph. `invalid-files-input` needs nx.json to expand named inputs, so it
@@ -624,6 +630,8 @@ export declare function ioSnapshotReport(snapshots: IoSnapshots, taskGraph: Task
 export interface IoSnapshotReport {
   /** Task ids hashed from their snapshot. */
   used: Array<string>
+  /** Subset of `used` whose snapshot also contributes observed outputs. */
+  tasksWithOutputs: Array<string>
   diagnostics: Array<IoSnapshotDiagnostic>
   resolution?: IoSnapshotResolution
 }

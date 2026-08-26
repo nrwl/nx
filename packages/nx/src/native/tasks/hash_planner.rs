@@ -379,6 +379,7 @@ impl HashPlanner {
             .report(),
             None => IoSnapshotReport {
                 used: vec![],
+                tasks_with_outputs: vec![],
                 diagnostics: vec![],
                 resolution: None,
             },
