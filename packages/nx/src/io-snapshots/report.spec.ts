@@ -36,6 +36,7 @@ describe('formatIoSnapshotSummary', () => {
   it('counts used tasks and groups fallbacks by reason', () => {
     const result: IoSnapshotReport = {
       used: ['a:build', 'b:build'],
+      tasksWithOutputs: ['a:build'],
       diagnostics: [
         { reason: 'disabled', taskId: 'c:e2e' },
         { reason: 'missing', taskId: 'd:test' },
@@ -53,7 +54,7 @@ describe('formatIoSnapshotSummary', () => {
       })
     );
     expect(summary.line).toBe(
-      'I/O snapshots: 2 tasks hashed from snapshot, 5 tasks fell back (2 missing, 1 disabled, 1 escapes-workspace, 1 root-anchored-glob)'
+      'I/O snapshots: 2 tasks hashed from snapshot (1 with observed outputs), 5 tasks fell back (2 missing, 1 disabled, 1 escapes-workspace, 1 root-anchored-glob)'
     );
     expect(summary.bodyLines).toEqual([
       'bundle: cached at /w/.nx/cache/io-snapshots/abc123',
@@ -69,6 +70,7 @@ describe('formatIoSnapshotSummary', () => {
   it('explains a bundle-level failure with the fetch reason', () => {
     const result: IoSnapshotReport = {
       used: [],
+      tasksWithOutputs: [],
       diagnostics: [{ reason: 'no-bundle' }],
     };
     expect(
@@ -97,6 +99,7 @@ describe('formatIoSnapshotSummary', () => {
   it('serializes the report for --json consumers', () => {
     const result: IoSnapshotReport = {
       used: ['b:build', 'a:build'],
+      tasksWithOutputs: [],
       diagnostics: [{ reason: 'disabled', taskId: 'c:e2e' }],
       resolution,
     };
