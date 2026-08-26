@@ -184,7 +184,7 @@
     },
     "format": {
       "cache": true,
-      "//": "oxfmt only formats extensions it knows, so .mdoc files go through --stdin-filepath (see the script)",
+      "//": "oxfmt only formats extensions it knows, so the script mirrors .mdoc files as .md into a temp dir for one oxfmt run",
       "command": "node scripts/format-mdoc.mjs --check",
       "options": {
         "cwd": "astro-docs"
