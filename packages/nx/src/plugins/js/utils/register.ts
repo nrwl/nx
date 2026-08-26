@@ -479,9 +479,8 @@ let sourceGraphHooks: { deregister(): void } | undefined;
  * reached from an explicitly source-loaded entry. Relative source imports are
  * tracked so lazy imports remain in the same graph; third-party modules are not.
  *
- * Needs `module.registerHooks()` (Node 22.15+ / 23.5+). Node forwards the added
- * conditions for CJS from there but for ESM only from 22.19 / 24.5; below that
- * ESM imports keep Node's default conditions. Isolated workers get them at spawn.
+ * Uses `module.registerHooks()` on Node 22.15+ / 23.5+. Earlier supported Node
+ * versions and isolated workers receive the conditions at process startup.
  */
 export function registerSourceGraphResolver(
   entryPath: string,
@@ -511,13 +510,8 @@ export function registerSourceGraphResolver(
 
   sourceGraphHooks ??= module.registerHooks({
     resolve(specifier, context, nextResolve) {
-      const parentUrl = context.parentURL
-        ? normalizeModuleUrl(context.parentURL)
-        : undefined;
-      // This is linear in loaded source plugins. Index by parent URL if it
-      // becomes hot in workspaces with hundreds of in-process plugins.
-      const sourceGraph = parentUrl
-        ? [...sourceGraphs.values()].find((g) => g.modules.has(parentUrl))
+      const sourceGraph = context.parentURL
+        ? findSourceGraph(normalizeModuleUrl(context.parentURL))
         : undefined;
       if (!sourceGraph) {
         return nextResolve(specifier, context);
@@ -549,6 +543,22 @@ export function registerSourceGraphResolver(
       sourceGraphHooks = undefined;
     }
   };
+}
+
+export function refreshSourceGraphResolvers(root: string): void {
+  if (sourceGraphs.size === 0) return;
+  const conditions = getRootTsConfigResolveExportsConditions(root);
+  for (const graph of sourceGraphs.values()) {
+    if (graph.root === root) {
+      graph.conditions = conditions;
+    }
+  }
+}
+
+function findSourceGraph(parentUrl: string): SourceGraph | undefined {
+  return [...sourceGraphs.values()].find((graph) =>
+    graph.modules.has(parentUrl)
+  );
 }
 
 // Node < 22.19 / < 24.5 hands CJS hooks a Set and passes the forwarded value

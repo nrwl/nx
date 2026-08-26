@@ -11,6 +11,7 @@ import {
   isTsEsmSyntaxError,
   NODENEXT_ESM_RESOLVER_SOURCE,
   nodeNextEsmResolveHook,
+  refreshSourceGraphResolvers,
   registerSourceGraphResolver,
   resolveTsNodeEsmCompilerOptions,
 } from './register';
@@ -815,6 +816,47 @@ describe('registerSourceGraphResolver', () => {
       ['import', 'node', 'source'],
     ]);
 
+    cleanup();
+  });
+
+  it('refreshes conditions for a cached source graph', () => {
+    const nodeModule = require('node:module') as typeof import('node:module');
+    let resolveHook: Function;
+    jest
+      .spyOn(nodeModule, 'registerHooks')
+      .mockImplementation(({ resolve }) => {
+        resolveHook = resolve;
+        return { deregister: jest.fn() };
+      });
+    const conditions = jest
+      .spyOn(typescriptUtils, 'getRootTsConfigResolveExportsConditions')
+      .mockReturnValue(['source']);
+
+    const cleanup = registerSourceGraphResolver(
+      '/workspace/plugin.ts',
+      '/workspace',
+      ['@proj/utils']
+    );
+    conditions.mockReturnValue(['updated-source']);
+    refreshSourceGraphResolvers('/workspace');
+
+    const nextResolve = jest.fn(() => ({
+      url: 'file:///workspace/packages/utils/src/index.ts',
+    }));
+    resolveHook(
+      '@proj/utils',
+      {
+        conditions: ['node'],
+        importAttributes: {},
+        parentURL: 'file:///workspace/plugin.ts',
+      },
+      nextResolve
+    );
+
+    expect(nextResolve).toHaveBeenCalledWith(
+      '@proj/utils',
+      expect.objectContaining({ conditions: ['node', 'updated-source'] })
+    );
     cleanup();
   });
 });

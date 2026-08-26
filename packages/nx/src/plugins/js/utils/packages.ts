@@ -11,10 +11,12 @@ export function getWorkspacePackagesMetadata<
   entryPointsToProjectMap: Record<string, T>;
   wildcardEntryPointsToProjectMap: Record<string, T>;
   packageToProjectMap: Record<string, T>;
+  packageManagerWorkspacePackageNames: string[];
 } {
   const entryPointsToProjectMap: Record<string, T> = {};
   const wildcardEntryPointsToProjectMap: Record<string, T> = {};
   const packageToProjectMap: Record<string, T> = {};
+  const packageManagerWorkspacePackageNames: string[] = [];
   for (const project of Object.values(projects)) {
     const metadata = (
       'data' in project ? project.data.metadata : project.metadata
@@ -38,6 +40,8 @@ export function getWorkspacePackagesMetadata<
       // resolution
       continue;
     }
+
+    packageManagerWorkspacePackageNames.push(packageName);
 
     if (packageExports) {
       if (typeof packageExports === 'string') {
@@ -77,6 +81,7 @@ export function getWorkspacePackagesMetadata<
     entryPointsToProjectMap,
     wildcardEntryPointsToProjectMap,
     packageToProjectMap,
+    packageManagerWorkspacePackageNames,
   };
 }
 
