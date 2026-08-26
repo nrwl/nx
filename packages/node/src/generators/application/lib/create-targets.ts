@@ -5,7 +5,10 @@ import {
   TargetConfiguration,
   detectPackageManager,
 } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/internal';
+import {
+  getProjectSourceRoot,
+  PNPM_MAJOR_RUNTIME_INPUT,
+} from '@nx/js/internal';
 import { NormalizedSchema } from './normalized-schema';
 import { getLockFileName } from '@nx/js';
 
@@ -140,17 +143,50 @@ export function getPruneTargets(
   'prune-lockfile': TargetConfiguration;
   'copy-workspace-modules': TargetConfiguration;
 } {
-  const lockFileName =
-    getLockFileName(detectPackageManager() ?? 'npm') ?? 'package-lock.json';
+  const packageManager = detectPackageManager() ?? 'npm';
+  const lockFileName = getLockFileName(packageManager) ?? 'package-lock.json';
+  const pruneLockfileOutputs = [
+    `{workspaceRoot}/${joinPathFragments(outputPath, 'package.json')}`,
+    `{workspaceRoot}/${joinPathFragments(outputPath, lockFileName)}`,
+  ];
+  let pruneLockfileInputs: TargetConfiguration['inputs'] | undefined;
+  if (packageManager === 'pnpm') {
+    // Beside the pruned lockfile the executor emits a settings-only
+    // pnpm-workspace.yaml, a `pnpm patch` workspace emits the referenced `.patch`
+    // files under `patches/`, and any non-workspace local-path deps (`file:`
+    // tarballs/dirs, `link:` targets) ship under `local_path_modules/`; declare
+    // all three so a cache replay restores them and native build-script
+    // approvals, patches, or vendored dependencies are not silently dropped.
+    // The last two are declared for any pnpm since the generator can't know
+    // whether the workspace uses them; Nx tolerates absent outputs.
+    pruneLockfileOutputs.push(
+      `{workspaceRoot}/${joinPathFragments(outputPath, 'pnpm-workspace.yaml')}`,
+      `{workspaceRoot}/${joinPathFragments(outputPath, 'patches')}`,
+      `{workspaceRoot}/${joinPathFragments(outputPath, 'local_path_modules')}`
+    );
+    // The build approvals and `supportedArchitectures` those artifacts carry are
+    // recorded nowhere in the lockfile, so without the root files in the hash a
+    // revoked approval replays the previous artifact, and the ambient pnpm
+    // major (probed at hash time) decides which emitted file carries them.
+    // `default` and `^default` keep what an undeclared `inputs` would have
+    // hashed. Deliberately coarser than the settings-narrowed json input the
+    // bundler build targets use: over-invalidating this small, rarely-run task
+    // costs nothing.
+    pruneLockfileInputs = [
+      'default',
+      '^default',
+      `{workspaceRoot}/pnpm-workspace.yaml`,
+      `{workspaceRoot}/package.json`,
+      PNPM_MAJOR_RUNTIME_INPUT,
+    ];
+  }
   return {
     'prune-lockfile': {
       dependsOn: ['build'],
       cache: true,
       executor: '@nx/js:prune-lockfile',
-      outputs: [
-        `{workspaceRoot}/${joinPathFragments(outputPath, 'package.json')}`,
-        `{workspaceRoot}/${joinPathFragments(outputPath, lockFileName)}`,
-      ],
+      ...(pruneLockfileInputs ? { inputs: pruneLockfileInputs } : {}),
+      outputs: pruneLockfileOutputs,
       options: {
         buildTarget,
       },
