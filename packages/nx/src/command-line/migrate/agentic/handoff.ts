@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import {
   closeSync,
   constants as fsConstants,
@@ -87,25 +88,32 @@ function sanitizeSegment(value: string): string {
   return sanitized || '_';
 }
 
+const HANDOFF_NAME_PREFIX_MAX_LENGTH = 64;
+
 /**
  * Absolute path of the per-step runner's handoff file for a migration,
  * directly inside the run directory's `handoffs/` dir: the pre-authorized
  * write scope stops there, so a handoff placed anywhere else costs an
  * approval prompt. Handoffs never sit in subdirectories, so no path segment
  * the agent could replace with a symlink lies between that dir and the file.
- * The file name joins the package's scope, package and migration name with
- * `+`, which npm rejects in package names and the sanitizer strips from
- * migration names, so two migrations never share a file. Each part is
- * sanitized so the path is always writable on every platform.
+ * The file name is a bounded, sanitized `<scope>+<package>+<name>` prefix
+ * for readability plus a SHA-256 of the raw package and name pair. The
+ * sanitizer folds many characters to `_`, so the prefix alone is ambiguous;
+ * the hash keeps distinct migrations collision-resistant and the bound keeps
+ * the name within the per-component filesystem limit.
  */
 export function stepHandoffPath(
   runDir: string,
   migration: { package: string; name: string }
 ): string {
-  const name = [...migration.package.split('/'), migration.name]
+  const prefix = [...migration.package.split('/'), migration.name]
     .map(sanitizeSegment)
-    .join('+');
-  return join(runDir, HANDOFFS_DIR_NAME, `${name}.json`);
+    .join('+')
+    .slice(0, HANDOFF_NAME_PREFIX_MAX_LENGTH);
+  const hash = createHash('sha256')
+    .update(JSON.stringify([migration.package, migration.name]))
+    .digest('hex');
+  return join(runDir, HANDOFFS_DIR_NAME, `${prefix}-${hash}.json`);
 }
 
 /**

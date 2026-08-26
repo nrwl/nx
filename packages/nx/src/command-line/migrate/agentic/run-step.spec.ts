@@ -19,7 +19,8 @@ vi.mock('../../../utils/child-process', () => ({
   getRunNxBaseCommand: vi.fn().mockReturnValue('npx nx'),
 }));
 
-import { dirname, join } from 'path';
+import { dirname } from 'path';
+import { stepHandoffPath } from './handoff';
 import { runAgentic } from './runner';
 import { getAgentDefinition } from './definitions';
 import { runAgenticPromptStep } from './run-step';
@@ -113,10 +114,12 @@ describe('runAgenticPromptStep', () => {
       installDepsIfChanged: installDeps,
     });
 
-    const expected = join(
+    const expected = stepHandoffPath(
       '/ws/.nx/migrate-runs/20.0.0',
-      'handoffs',
-      '@nx+test+m1.json'
+      makeMigration()
+    );
+    expect(expected).toMatch(
+      /[\\/]handoffs[\\/]@nx\+test\+m1-[0-9a-f]{64}\.json$/
     );
     const { mkdirSafely } = (await import('./handoff')) as {
       mkdirSafely: Mock;

@@ -6,8 +6,9 @@ import {
   symlinkSync,
   writeFileSync,
 } from 'fs';
+import { createHash } from 'crypto';
 import { tmpdir } from 'os';
-import { dirname, join } from 'path';
+import { basename, dirname, join } from 'path';
 import {
   initRunDir,
   handoffsDirState,
@@ -19,6 +20,13 @@ import {
   waitForValidHandoff,
 } from './handoff';
 import { HANDOFFS_DIR_NAME } from './types';
+
+function handoffPath(prefix: string, pkg: string, name: string): string {
+  const hash = createHash('sha256')
+    .update(JSON.stringify([pkg, name]))
+    .digest('hex');
+  return join('/run', 'handoffs', `${prefix}-${hash}.json`);
+}
 
 describe('handoff', () => {
   let workspace: string;
@@ -87,7 +95,7 @@ describe('handoff', () => {
   describe('stepHandoffPath', () => {
     it('places the handoff under the handoffs subtree, the only part of a run directory an agent is pre-authorized to write', () => {
       expect(stepHandoffPath('/run', { package: 'pkg', name: 'm1' })).toBe(
-        join('/run', 'handoffs', 'pkg+m1.json')
+        handoffPath('pkg+m1', 'pkg', 'm1')
       );
     });
 
@@ -97,25 +105,27 @@ describe('handoff', () => {
           package: '@nx/storybook',
           name: 'migrate-css',
         })
-      ).toBe(join('/run', 'handoffs', '@nx+storybook+migrate-css.json'));
+      ).toBe(
+        handoffPath('@nx+storybook+migrate-css', '@nx/storybook', 'migrate-css')
+      );
     });
 
     it('joins an unscoped package and migration name with `+`', () => {
       expect(
         stepHandoffPath('/run', { package: 'plain-pkg', name: 'm1-gen' })
-      ).toBe(join('/run', 'handoffs', 'plain-pkg+m1-gen.json'));
+      ).toBe(handoffPath('plain-pkg+m1-gen', 'plain-pkg', 'm1-gen'));
     });
 
     it('replaces path-traversal segments with `_` so a malformed name cannot escape the run dir', () => {
       expect(
         stepHandoffPath('/run', { package: '@nx/react', name: '..' })
-      ).toBe(join('/run', 'handoffs', '@nx+react+_.json'));
+      ).toBe(handoffPath('@nx+react+_', '@nx/react', '..'));
       expect(
         stepHandoffPath('/run', {
           package: '../escape',
           name: 'm1',
         })
-      ).toBe(join('/run', 'handoffs', '_+escape+m1.json'));
+      ).toBe(handoffPath('_+escape+m1', '../escape', 'm1'));
     });
 
     it('replaces Windows-reserved and control characters with `_`', () => {
@@ -124,13 +134,25 @@ describe('handoff', () => {
           package: '@scope/pkg',
           name: 'bad:name*with?chars',
         })
-      ).toBe(join('/run', 'handoffs', '@scope+pkg+bad_name_with_chars.json'));
+      ).toBe(
+        handoffPath(
+          '@scope+pkg+bad_name_with_chars',
+          '@scope/pkg',
+          'bad:name*with?chars'
+        )
+      );
       expect(
         stepHandoffPath('/run', {
           package: '@scope/pkg',
           name: 'has/slash\\and|pipe',
         })
-      ).toBe(join('/run', 'handoffs', '@scope+pkg+has_slash_and_pipe.json'));
+      ).toBe(
+        handoffPath(
+          '@scope+pkg+has_slash_and_pipe',
+          '@scope/pkg',
+          'has/slash\\and|pipe'
+        )
+      );
     });
 
     it('strips trailing dots/spaces (Windows file-naming rule)', () => {
@@ -139,7 +161,7 @@ describe('handoff', () => {
           package: '@scope/pkg',
           name: 'trailing.   ',
         })
-      ).toBe(join('/run', 'handoffs', '@scope+pkg+trailing.json'));
+      ).toBe(handoffPath('@scope+pkg+trailing', '@scope/pkg', 'trailing.   '));
     });
 
     it.each([
@@ -155,7 +177,7 @@ describe('handoff', () => {
       (input, expected) => {
         expect(
           stepHandoffPath('/run', { package: '@scope/pkg', name: input })
-        ).toBe(join('/run', 'handoffs', `@scope+pkg+${expected}.json`));
+        ).toBe(handoffPath(`@scope+pkg+${expected}`, '@scope/pkg', input));
       }
     );
 
@@ -164,14 +186,35 @@ describe('handoff', () => {
       (input) => {
         expect(
           stepHandoffPath('/run', { package: '@scope/pkg', name: input })
-        ).toBe(join('/run', 'handoffs', `@scope+pkg+${input}.json`));
+        ).toBe(handoffPath(`@scope+pkg+${input}`, '@scope/pkg', input));
       }
     );
 
-    it("strips `+` from a migration name so it cannot forge another migration's file", () => {
-      expect(
-        stepHandoffPath('/run', { package: '@scope/pkg', name: 'a+b' })
-      ).toBe(join('/run', 'handoffs', '@scope+pkg+a_b.json'));
+    it('gives migrations whose sanitized names coincide distinct files', () => {
+      const paths = [
+        { package: '@scope/pkg', name: 'a+b' },
+        { package: '@scope/pkg', name: 'a_b' },
+        { package: '@scope/pkg', name: 'a/b' },
+        { package: '@scope/pkg', name: 'CON' },
+        { package: '@scope/pkg', name: '_CON' },
+        { package: '@scope/pkg', name: 'trailing' },
+        { package: '@scope/pkg', name: 'trailing.' },
+        { package: '@scope/pkg+a', name: 'b' },
+      ].map((migration) => stepHandoffPath('/run', migration));
+      expect(new Set(paths).size).toBe(paths.length);
+      expect(basename(paths[0])).toMatch(
+        /^@scope\+pkg\+a_b-[0-9a-f]{64}\.json$/
+      );
+    });
+
+    it('bounds the file name so a long migration name stays within the per-component filesystem limit', () => {
+      const name = 'n'.repeat(250);
+      const path = stepHandoffPath('/run', { package: '@scope/pkg', name });
+      expect(basename(path)).toHaveLength(64 + 1 + 64 + '.json'.length);
+      expect(basename(path).startsWith('@scope+pkg+nnnn')).toBe(true);
+      expect(path).not.toBe(
+        stepHandoffPath('/run', { package: '@scope/pkg', name: name + 'x' })
+      );
     });
   });
 
