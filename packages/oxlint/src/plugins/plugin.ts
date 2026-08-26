@@ -6,17 +6,23 @@ import {
   globWithWorkspaceContext,
   hashObject,
   PluginCache,
+  TargetProjectLocator,
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
 import {
+  CreateDependencies,
   CreateNodes,
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResult,
+  DependencyType,
   detectPackageManager,
   getPackageManagerCommand,
+  ProjectGraphProjectNode,
+  RawProjectGraphDependency,
   readJsonFile,
   TargetConfiguration,
+  validateDependency,
 } from '@nx/devkit';
 import { getLockFileName, getRootTsConfigFileName } from '@nx/js';
 import {
@@ -73,7 +79,7 @@ const internalCreateNodes = async (
   projectRootsByOxlintRoots: Map<string, string[]>,
   getLintableFilesPerProjectRoot: () => Promise<Map<string, number>>,
   configChainsByConfig: Map<string, string[]>,
-  jsPluginDepsByConfig: Map<string, JsPluginDeps>,
+  jsPluginSpecifiersByConfig: Map<string, string[]>,
   tsconfigChainsByProjectRoot: Map<string, string[]>,
   projectsCache: PluginCache<OxlintProjects>,
   hashByRoot: Map<string, string>,
@@ -114,7 +120,7 @@ const internalCreateNodes = async (
         context,
         pmc,
         configChainsByConfig,
-        jsPluginDepsByConfig,
+        jsPluginSpecifiersByConfig,
         tsconfigChainsByProjectRoot.get(projectRoot) ?? [],
         rootConfig
       );
@@ -175,7 +181,7 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
       existsSync(join(context.workspaceRoot, file))
     );
 
-    const { chains: configChainsByConfig, jsPluginDepsByConfig } =
+    const { chains: configChainsByConfig, jsPluginSpecifiersByConfig } =
       collectConfigChains(oxlintConfigFiles, context.workspaceRoot);
     const tsconfigChainsByProjectRoot = collectTsconfigChainsByProjectRoot(
       projectRoots,
@@ -208,8 +214,11 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
         return [
           ...new Set([
             ...allConfigs,
-            ...allConfigs.flatMap(
-              (config) => jsPluginDepsByConfig.get(config)?.files ?? []
+            ...allConfigs.flatMap((config) =>
+              localJsPluginFiles(
+                config,
+                jsPluginSpecifiersByConfig.get(config) ?? []
+              )
             ),
             // Change which files Oxlint considers lintable, and therefore
             // whether a target is inferred at all.
@@ -234,7 +243,7 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
             projectRootsByOxlintRoots,
             getLintableFilesPerProjectRoot,
             configChainsByConfig,
-            jsPluginDepsByConfig,
+            jsPluginSpecifiersByConfig,
             tsconfigChainsByProjectRoot,
             targetsCache,
             hashByRoot,
@@ -252,6 +261,101 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
 ];
 
 export const createNodesV2 = createNodes;
+
+/**
+ * A config's `jsPlugins` produce the lint results, so every project linted
+ * under that config depends on them. Resolving the specifiers here, against the
+ * finished node set, is what makes a workspace plugin a project edge and an npm
+ * plugin an external edge; `^default` then hashes both. Implicit, because the
+ * config may not be a file of the depending project.
+ */
+export const createDependencies: CreateDependencies<OxlintPluginOptions> = (
+  _options,
+  context
+) => {
+  const oxlintConfigFiles = [
+    ...Object.values(context.fileMap.projectFileMap).flat(),
+    ...context.fileMap.nonProjectFiles,
+  ]
+    .map((file) => file.file)
+    .filter((file) => OXLINT_CONFIG_FILENAMES.includes(basename(file)));
+  if (oxlintConfigFiles.length === 0) {
+    return [];
+  }
+
+  const { chains, jsPluginSpecifiersByConfig } = collectConfigChains(
+    oxlintConfigFiles,
+    context.workspaceRoot
+  );
+  const configsWithPlugins = [...jsPluginSpecifiersByConfig].filter(
+    ([, specifiers]) => specifiers.length > 0
+  );
+  if (configsWithPlugins.length === 0) {
+    return [];
+  }
+
+  const nodes: Record<string, ProjectGraphProjectNode> = {};
+  for (const [name, data] of Object.entries(context.projects)) {
+    nodes[name] = { name, type: null, data };
+  }
+  const locator = new TargetProjectLocator(nodes, context.externalNodes);
+  // Resolution is relative to the config, so it is the same for every project
+  // that config governs.
+  const targetsByConfig = new Map<string, string[]>();
+  const resolveTargets = (config: string): string[] => {
+    let targets = targetsByConfig.get(config);
+    if (!targets) {
+      targets = [];
+      for (const specifier of jsPluginSpecifiersByConfig.get(config) ?? []) {
+        const target = locator.findProjectFromImport(specifier, config);
+        if (target) {
+          targets.push(target);
+        }
+      }
+      targetsByConfig.set(config, targets);
+    }
+    return targets;
+  };
+
+  const dependencies: RawProjectGraphDependency[] = [];
+  for (const [name, project] of Object.entries(context.projects)) {
+    if (
+      !Object.values(project.targets ?? {}).some((target) =>
+        target.metadata?.technologies?.includes('oxlint')
+      )
+    ) {
+      continue;
+    }
+    // Own directory and every ancestor, plus their `extends` chains — the
+    // same set `createNodes` declares as inputs.
+    const governingConfigs = oxlintConfigFiles.filter((config) => {
+      const configDir = dirname(config);
+      return configDir === project.root || isSubDir(configDir, project.root);
+    });
+    const configs = new Set([
+      ...governingConfigs,
+      ...governingConfigs.flatMap((config) => chains.get(config) ?? []),
+    ]);
+    const targets = new Set<string>();
+    for (const config of configs) {
+      for (const target of resolveTargets(config)) {
+        if (target !== name) {
+          targets.add(target);
+        }
+      }
+    }
+    for (const target of targets) {
+      const dependency: RawProjectGraphDependency = {
+        source: name,
+        target,
+        type: DependencyType.implicit,
+      };
+      validateDependency(dependency, context);
+      dependencies.push(dependency);
+    }
+  }
+  return dependencies;
+};
 
 function splitConfigFiles(
   configFiles: readonly string[],
@@ -329,36 +433,24 @@ function splitConfigFiles(
   };
 }
 
-interface JsPluginDeps {
-  packages: string[];
-  files: string[];
-}
-
-// A whole npm specifier: optionally scoped name, then a subpath or the end.
-// Group 1 is the package name. Anchored on both sides so `file:`/`https:`
-// URLs and `name@version` never match.
-const PACKAGE_NAME_PATTERN =
-  /^((?:@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*)(?:\/|$)/;
-
 /**
  * Resolves each config's `extends` chain to workspace-relative target inputs.
  * Oxlint resolves entries relative to the referencing config and only tracks the
  * chain for its LSP, so Nx walks it here or caching goes stale. TypeScript
  * configs are not statically readable, so only the file itself is tracked.
  *
- * Also collects each config's `jsPlugins`: their code produces lint results, so
- * package specifiers become externalDependencies and workspace-relative files
- * become file inputs.
+ * Also collects each config's raw `jsPlugins` specifiers. `createDependencies`
+ * resolves them to graph nodes; `createNodes` only needs the local files.
  */
 function collectConfigChains(
   oxlintConfigFiles: string[],
   workspaceRoot: string
 ): {
   chains: Map<string, string[]>;
-  jsPluginDepsByConfig: Map<string, JsPluginDeps>;
+  jsPluginSpecifiersByConfig: Map<string, string[]>;
 } {
   const result = new Map<string, string[]>();
-  const jsPluginDepsByConfig = new Map<string, JsPluginDeps>();
+  const jsPluginSpecifiersByConfig = new Map<string, string[]>();
   // Shared across configs so the common root config is read once. `null` records
   // a failed read, so a bad file is not retried per referrer.
   const jsonCache = new Map<
@@ -376,14 +468,14 @@ function collectConfigChains(
     return exists;
   };
 
-  const recordJsPluginDeps = (
+  const recordJsPluginSpecifiers = (
     relativeConfigPath: string,
     jsPlugins: unknown
   ): void => {
-    if (jsPluginDepsByConfig.has(relativeConfigPath)) {
+    if (jsPluginSpecifiersByConfig.has(relativeConfigPath)) {
       return;
     }
-    const deps: JsPluginDeps = { packages: [], files: [] };
+    const specifiers: string[] = [];
     if (Array.isArray(jsPlugins)) {
       for (const entry of jsPlugins) {
         const specifier =
@@ -392,28 +484,12 @@ function collectConfigChains(
             : typeof (entry as { specifier?: unknown })?.specifier === 'string'
               ? (entry as { specifier: string }).specifier
               : undefined;
-        if (!specifier || specifier.startsWith('/')) {
-          continue;
-        }
-        if (specifier.startsWith('.')) {
-          const resolved = normalize(
-            join(dirname(relativeConfigPath), specifier)
-          );
-          if (resolved !== '..' && !resolved.startsWith('../')) {
-            deps.files.push(resolved);
-          }
-          continue;
-        }
-        // Only a real package name can be an externalDependency. Anything
-        // else oxlint accepts here (`#imports` aliases, URLs) has no graph
-        // node, and naming it fails every task with "could not be found".
-        const packageName = PACKAGE_NAME_PATTERN.exec(specifier)?.[1];
-        if (packageName) {
-          deps.packages.push(packageName);
+        if (specifier) {
+          specifiers.push(specifier);
         }
       }
     }
-    jsPluginDepsByConfig.set(relativeConfigPath, deps);
+    jsPluginSpecifiersByConfig.set(relativeConfigPath, specifiers);
   };
 
   const readConfig = (
@@ -456,7 +532,7 @@ function collectConfigChains(
       }
 
       const json = readConfig(relativeConfigPath);
-      recordJsPluginDeps(relativeConfigPath, json?.jsPlugins);
+      recordJsPluginSpecifiers(relativeConfigPath, json?.jsPlugins);
 
       if (!Array.isArray(json?.extends)) {
         return;
@@ -483,7 +559,29 @@ function collectConfigChains(
     result.set(configFile, extended);
   }
 
-  return { chains: result, jsPluginDepsByConfig };
+  return { chains: result, jsPluginSpecifiersByConfig };
+}
+
+/**
+ * Workspace-relative paths of a config's relative-path `jsPlugins`. Declared as
+ * file inputs because such a file may sit outside every project (`tools/x.js`
+ * at the root), where no graph edge can reach it.
+ */
+function localJsPluginFiles(
+  relativeConfigPath: string,
+  specifiers: string[]
+): string[] {
+  const files: string[] = [];
+  for (const specifier of specifiers) {
+    if (!specifier.startsWith('.')) {
+      continue;
+    }
+    const resolved = normalize(join(dirname(relativeConfigPath), specifier));
+    if (resolved !== '..' && !resolved.startsWith('../')) {
+      files.push(resolved);
+    }
+  }
+  return files;
 }
 
 /**
@@ -683,7 +781,7 @@ function getProjectUsingOxlintConfig(
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   configChainsByConfig: Map<string, string[]>,
-  jsPluginDepsByConfig: Map<string, JsPluginDeps>,
+  jsPluginSpecifiersByConfig: Map<string, string[]>,
   tsconfigChainOutsideProjectRoot: string[],
   rootConfig: string | undefined
 ): CreateNodesResult['projects'][string] | null {
@@ -722,17 +820,11 @@ function getProjectUsingOxlintConfig(
   const lintPath =
     isRootProject && standaloneSrcPath ? `./${standaloneSrcPath}` : '.';
 
-  const jsPluginPackages = new Set<string>();
-  const jsPluginFiles = new Set<string>();
-  for (const config of configInputs) {
-    const deps = jsPluginDepsByConfig.get(config);
-    for (const pkg of deps?.packages ?? []) {
-      jsPluginPackages.add(pkg);
-    }
-    for (const file of deps?.files ?? []) {
-      jsPluginFiles.add(file);
-    }
-  }
+  const jsPluginFiles = new Set(
+    configInputs.flatMap((config) =>
+      localJsPluginFiles(config, jsPluginSpecifiersByConfig.get(config) ?? [])
+    )
+  );
 
   const targetConfig: TargetConfiguration = {
     command: `oxlint ${lintPath}`,
@@ -752,7 +844,7 @@ function getProjectUsingOxlintConfig(
       ...tsconfigChainOutsideProjectRoot.map(
         (file) => `{workspaceRoot}/${file}`
       ),
-      { externalDependencies: ['oxlint', ...jsPluginPackages] },
+      { externalDependencies: ['oxlint'] },
     ],
     metadata: {
       technologies: ['oxlint'],
