@@ -1,0 +1,41 @@
+{
+  "$schema": "../../node_modules/oxlint/configuration_schema.json",
+  "extends": ["../../.oxlintrc.json"],
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "create-nx-workspace",
+            "message": "Please import utils from nx or @nx/devkit instead."
+          },
+          {
+            "name": "node-fetch",
+            "message": "Please default to native fetch instead of 'node-fetch'."
+          }
+        ],
+        "patterns": [
+          {
+            "group": ["nx/src/plugins/js*", "nx/src/plugins/js*/**"],
+            "message": "Imports from 'nx/src/plugins/js' are not allowed. Use '@nx/js' instead"
+          },
+          {
+            "group": ["**/native-bindings", "**/native-bindings.js"],
+            "message": "Direct imports from native-bindings.js are not allowed. Import from index.js instead."
+          }
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      // Runs before the packages are built, so it loads packages/nx's
+      // register helper from source by relative path.
+      "files": ["global-setup.ts"],
+      "rules": {
+        "@nx/enforce-module-boundaries": "off"
+      }
+    }
+  ]
+}

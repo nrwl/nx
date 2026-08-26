@@ -414,7 +414,6 @@ If you accidentally run this command locally, remove all generated marker files 
 | ------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | `--distribute-on`               | string  | Configure the number of agents, [launch templates](/docs/kb/launch-templates) and [assignment rules](/docs/kb/assignment-rules) for distributed execution              |         |
 | `--assignment-rules`            | string  | Path to the [assignment rules configuration](/docs/kb/assignment-rules#using-assignment-rules-when-you-bring-your-own-compute) for manual distribution.                |         |
-| `--scheduling-constraints`      | string  | Path to a YAML file with same-agent scheduling constraints                                                                                                             |         |
 | `--no-distribution`             | boolean | Disable distribution for this run                                                                                                                                      |         |
 | `--require-explicit-completion` | boolean | Disable automatic completion monitoring and require explicit `nx complete-ci-run`                                                                                      | `false` |
 | `--stop-agents-after`           | string  | Comma-separated list of targets after which agents should terminate                                                                                                    |         |
@@ -427,14 +426,9 @@ If you accidentally run this command locally, remove all generated marker files 
 
 #### Detailed option usage
 
-##### `--scheduling-constraints`
+##### `--assignment-rules`
 
-Point this at a YAML file describing which tasks have to run on the same agent.
-The file is read from disk before the run group is created, and both its contents and its path are sent to Nx Cloud.
-`start-ci-run` exits with an error when the file cannot be read or is empty.
-
-When `--distribute-on` points at a configuration file that already embeds scheduling constraints, the `--scheduling-constraints` file replaces them.
-The same applies to `--assignment-rules`, and the two flags override their embedded counterparts independently.
+When `--distribute-on` points at a configuration file that already embeds assignment rules, the `--assignment-rules` file replaces them.
 
 ##### `--no-distribution`
 

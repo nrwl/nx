@@ -1,10 +1,60 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["typescript", "unicorn", "oxc"],
+  "jsPlugins": ["@nx/oxlint/boundaries-plugin"],
   "categories": {
     "correctness": "error"
   },
   "rules": {
+    "no-duplicate-imports": ["error", { "allowSeparateTypeImports": true }],
+    // A nested config that redefines this rule REPLACES these options; oxlint
+    // does not merge them. A missing entry fails silently (fewer errors, not
+    // more), so restate every path and pattern.
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "create-nx-workspace",
+            "message": "Please import utils from nx or @nx/devkit instead."
+          },
+          {
+            "name": "node-fetch",
+            "message": "Please default to native fetch instead of 'node-fetch'."
+          }
+        ],
+        "patterns": [
+          {
+            "group": ["nx/src/plugins/js*", "nx/src/plugins/js*/**"],
+            "message": "Imports from 'nx/src/plugins/js' are not allowed. Use '@nx/js' instead"
+          },
+          {
+            "group": ["**/native-bindings", "**/native-bindings.js"],
+            "message": "Direct imports from native-bindings.js are not allowed. Import from index.js instead."
+          },
+          {
+            // Published packages must not import 'nx' directly — '@nx/devkit'
+            // (or '@nx/devkit/internal' for first-party-only utilities) is the
+            // compatibility boundary between plugin majors and nx majors. See
+            // packages/devkit/CLAUDE.md. packages/nx and packages/devkit
+            // replace this rule in their own .oxlintrc.json files.
+            //
+            // 'nx/release' is exempt: it is a public, stable entry point whose
+            // runtime API (VersionActions, releasePublish, releaseVersion)
+            // transitively pulls in the project graph, so routing it through
+            // the devkit barrels — which plugin graph hooks load in every
+            // plugin worker — would add ~73 modules to the closure they
+            // eagerly load. Release-extension plugins import it directly.
+            //
+            // Unlike eslint's gitignore-style matching, oxlint globs match the
+            // whole specifier, so the bare 'nx' entry cannot accidentally hit
+            // local paths with an `nx` segment and no regex is needed.
+            "group": ["nx", "nx/**", "!nx/release", "!nx/release/**"],
+            "message": "Import from '@nx/devkit' or '@nx/devkit/internal' instead of 'nx' — devkit is the version-compatibility boundary (see packages/devkit/CLAUDE.md)."
+          }
+        ]
+      }
+    ],
     "no-unused-vars": "off",
     "unicorn/no-useless-fallback-in-spread": "off",
     "no-useless-escape": "off",
@@ -36,5 +86,70 @@
   },
   "env": {
     "builtin": true
-  }
+  },
+  "overrides": [
+    {
+      "files": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
+      "rules": {
+        "@nx/enforce-module-boundaries": [
+          "error",
+          {
+            "enforceBuildableLibDependency": true,
+            "checkDynamicDependenciesExceptions": [".*"],
+            "allow": [],
+            // These cycles are intentional: plugin packages declare graph edges
+            // to their lazy-loaded (ensurePackage) peers, via
+            // `implicitDependencies` in project.json or, for `js`,
+            // devDependencies in package.json. The project graph is cyclic by
+            // design; the task graph is kept acyclic via explicit `dependsOn`
+            // overrides on the relevant build-base targets.
+            "ignoredCircularDependencies": [
+              ["js", "workspace"],
+              ["js", "@nx/oxlint"],
+              ["angular", "workspace"],
+              ["express", "node"],
+              ["nest", "node"],
+              ["nuxt", "vue"]
+            ],
+            "depConstraints": [
+              { "sourceTag": "*", "onlyDependOnLibsWithTags": ["*"] }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // Repo-internal tooling: not published and not an nx project, so it may
+      // reach into nx directly and import across project directories.
+      "files": ["scripts/**"],
+      "rules": {
+        "@nx/enforce-module-boundaries": "off",
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "create-nx-workspace",
+                "message": "Please import utils from nx or @nx/devkit instead."
+              },
+              {
+                "name": "node-fetch",
+                "message": "Please default to native fetch instead of 'node-fetch'."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["nx/src/plugins/js*", "nx/src/plugins/js*/**"],
+                "message": "Imports from 'nx/src/plugins/js' are not allowed. Use '@nx/js' instead"
+              },
+              {
+                "group": ["**/native-bindings", "**/native-bindings.js"],
+                "message": "Direct imports from native-bindings.js are not allowed. Import from index.js instead."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }
