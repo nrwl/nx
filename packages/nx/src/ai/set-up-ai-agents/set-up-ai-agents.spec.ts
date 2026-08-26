@@ -411,6 +411,49 @@ describe('setup-ai-agents generator', () => {
         expect(config.enabledPlugins['nx@nx-claude-plugins']).toBe(true);
       });
 
+      it('should put every sandbox grant in the committed settings file', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+        tree.write(
+          '.claude/settings.json',
+          JSON.stringify({
+            sandbox: {
+              filesystem: {
+                allowRead: ['/existing/read'],
+                allowWrite: ['/existing/write'],
+              },
+            },
+          })
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = readJson(tree, '.claude/settings.json');
+
+        // Every entry is machine-independent, so the committed file is enough
+        // and no per-machine settings file is written. Worktree cache data
+        // lives under ~/.nx, which the ~/.nx grant already covers.
+        expect(tree.exists('.claude/settings.local.json')).toBe(false);
+        expect(config.sandbox.filesystem.allowRead).toEqual([
+          '/existing/read',
+          '/tmp/.nx',
+          '~/.nx',
+        ]);
+        expect(config.sandbox.filesystem.allowWrite).toEqual([
+          '/existing/write',
+          '/tmp/.nx',
+          '~/.nx',
+        ]);
+        expect(config.sandbox.network.allowUnixSockets).toEqual([
+          '/tmp/.nx',
+          '~/.nx',
+        ]);
+        // The scoped entry covers binding, so no blanket grant is written.
+        expect(config.sandbox.network.allowAllUnixSockets).toBeUndefined();
+      });
+
       it('should allow analytics requests through the sandbox network filter when analytics are enabled', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
