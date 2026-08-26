@@ -55,7 +55,7 @@ import {
   mockResolveVersionActionsForProjectImplementation,
 } from './test-utils';
 
-// Using the daemon in unit tests would cause jest to never exit
+// A daemon connection would keep the test process alive after the run
 process.env.NX_DAEMON = 'false';
 
 describe('Multiple Release Groups', () => {

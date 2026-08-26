@@ -84,7 +84,7 @@ interface TestEnv {
 // The lifecycle reads its signals from the environment (CI, distribution) and a
 // couple of helpers (hash windows via perf measures, remote cache via isNxCloudUsed)
 // rather than constructor seams. Tests drive the env vars through
-// `withEnvironmentVariables` (auto snapshot/restore) and the helpers through jest
+// `withEnvironmentVariables` (auto snapshot/restore) and the helpers through `vi`
 // spies set up in beforeEach.
 let getEntriesByTypeSpy: MockInstance;
 
@@ -1573,7 +1573,7 @@ describe('flushPerformanceReport', () => {
           ...envFor({}),
           GITHUB_ACTIONS: 'true',
           GITHUB_STEP_SUMMARY: summaryFile,
-          // Simulate a top-level invocation; `nx test` sets this on the jest task's env.
+          // Simulate a top-level invocation; nx sets this on any task's env.
           NX_TASK_TARGET_PROJECT: null,
         },
         () => {

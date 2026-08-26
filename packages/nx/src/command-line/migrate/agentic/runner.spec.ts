@@ -534,9 +534,9 @@ describe('runAgentic', () => {
     const child = fakeChild();
     mockSpawn.mockImplementation(() => {
       setImmediate(() => {
-        // No expect inside setImmediate — Jest silently swallows throws
-        // here. A missing handler triggers TypeError + timeout, which is
-        // visible.
+        // No expect inside setImmediate: a throw there surfaces as an
+        // unhandled error, not as this test failing. A missing handler
+        // hangs the await into a timeout, which does fail this test.
         localCapture.handlers[0]('SIGINT');
         setImmediate(() => child.emit('exit', 130, 'SIGINT'));
       });
@@ -550,8 +550,8 @@ describe('runAgentic', () => {
       handoffFilePath,
     });
 
-    // Verify the spy captured exactly the runner-registered listener —
-    // post-await so the assertion lives inside Jest's promise chain.
+    // Verify the spy captured exactly the runner-registered listener.
+    // Post-await so a failure is attributed to this test.
     expect(localCapture.handlers).toHaveLength(1);
     // userInterrupted=true short-circuits the ambiguous prompt.
     expect(mockPrompt).not.toHaveBeenCalled();

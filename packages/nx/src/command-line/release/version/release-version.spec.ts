@@ -89,7 +89,7 @@ vi.doMock('nx/src/devkit-exports', async () => {
   };
 });
 
-// Using the daemon in unit tests would cause jest to never exit
+// A daemon connection would keep the test process alive after the run
 process.env.NX_DAEMON = 'false';
 
 type ReleaseVersionGeneratorResult = {

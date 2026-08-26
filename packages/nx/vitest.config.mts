@@ -35,8 +35,8 @@ export default defineConfig({
     // Prefer local TS source for nx's
     // own exports map.
     conditions: ['@nx/nx-source'],
-    // Deep imports like nx/src/... and nx/bin/... aren't in the exports map;
-    // the jest resolver allowed them, so map them straight to source.
+    // `nx` resolves to the published package, which ships dist and no src, so
+    // its `@nx/nx-source` exports point at files that aren't there.
     alias: [
       { find: /^nx\/src\/(.*)$/, replacement: `${import.meta.dirname}/src/$1` },
       { find: /^nx\/bin\/(.*)$/, replacement: `${import.meta.dirname}/bin/$1` },
