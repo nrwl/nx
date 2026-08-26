@@ -1,17 +1,21 @@
+import { join, resolve } from 'node:path';
 import type { ConfigLoaderSuccessResult } from 'tsconfig-paths';
 import { loadFileFromPaths as loadFileFromPathsMain } from './nx-tsconfig-paths-load-file';
 
 describe('@nx/vite nx-tsconfig-paths-load-file', () => {
   const extensions = ['.ts', '.tsx', '.js', '.json'];
+  // `findFile` returns `resolve`d paths, which on Windows carry a drive letter
+  // and backslashes. Anchor the fixtures the same way.
+  const ws = resolve('/ws');
   const fs = new Set<string>([
-    '/ws/packages/foo/angular.ts',
-    '/ws/packages/foo/legacy.js',
-    '/ws/packages/foo/react/index.ts',
-    '/ws/packages/baz/src/index.ts',
-    '/ws/packages/exact/index.ts',
-    '/ws/packages/exact/thing.ts',
-    '/ws/packages/one/src/index.ts',
-    '/ws/packages/weird/$&.ts',
+    join(ws, 'packages/foo/angular.ts'),
+    join(ws, 'packages/foo/legacy.js'),
+    join(ws, 'packages/foo/react/index.ts'),
+    join(ws, 'packages/baz/src/index.ts'),
+    join(ws, 'packages/exact/index.ts'),
+    join(ws, 'packages/exact/thing.ts'),
+    join(ws, 'packages/one/src/index.ts'),
+    join(ws, 'packages/weird/$&.ts'),
   ]);
   const existsSyncImpl = ((path: string) => fs.has(path)) as any;
 
@@ -21,7 +25,7 @@ describe('@nx/vite nx-tsconfig-paths-load-file', () => {
   ) =>
     loadFileFromPathsMain(
       {
-        absoluteBaseUrl: '/ws',
+        absoluteBaseUrl: ws,
         paths,
       } as ConfigLoaderSuccessResult,
       importPath,
@@ -35,7 +39,7 @@ describe('@nx/vite nx-tsconfig-paths-load-file', () => {
         { '@repo/foo/*': ['packages/foo/*.ts'] },
         '@repo/foo/angular'
       )
-    ).toEqual('/ws/packages/foo/angular.ts');
+    ).toEqual(join(ws, 'packages/foo/angular.ts'));
   });
 
   it('should substitute the wildcard in the middle of the mapped path', () => {
@@ -44,7 +48,7 @@ describe('@nx/vite nx-tsconfig-paths-load-file', () => {
         { '@repo/foo/*': ['packages/foo/*/index.ts'] },
         '@repo/foo/react'
       )
-    ).toEqual('/ws/packages/foo/react/index.ts');
+    ).toEqual(join(ws, 'packages/foo/react/index.ts'));
   });
 
   it('should fall through to the next mapped path when the first does not exist', () => {
@@ -53,7 +57,7 @@ describe('@nx/vite nx-tsconfig-paths-load-file', () => {
         { '@repo/foo/*': ['packages/foo/*.ts', 'packages/foo/*/index.ts'] },
         '@repo/foo/react'
       )
-    ).toEqual('/ws/packages/foo/react/index.ts');
+    ).toEqual(join(ws, 'packages/foo/react/index.ts'));
   });
 
   it('should resolve a trailing wildcard mapped path', () => {
@@ -62,7 +66,7 @@ describe('@nx/vite nx-tsconfig-paths-load-file', () => {
         { '@repo/baz/*': ['packages/baz/src/*'] },
         '@repo/baz/index'
       )
-    ).toEqual('/ws/packages/baz/src/index.ts');
+    ).toEqual(join(ws, 'packages/baz/src/index.ts'));
   });
 
   it('should resolve an import with an explicit extension', () => {
@@ -71,7 +75,7 @@ describe('@nx/vite nx-tsconfig-paths-load-file', () => {
         { '@repo/baz/*': ['packages/baz/src/*'] },
         '@repo/baz/index.js'
       )
-    ).toEqual('/ws/packages/baz/src/index.ts');
+    ).toEqual(join(ws, 'packages/baz/src/index.ts'));
   });
 
   it('should not resolve a sibling when the mapped path appends a different extension', () => {
@@ -104,7 +108,7 @@ describe('@nx/vite nx-tsconfig-paths-load-file', () => {
   it('should resolve a non-wildcard alias', () => {
     expect(
       loadFileFromPaths({ '@repo/exact': ['packages/exact'] }, '@repo/exact')
-    ).toEqual('/ws/packages/exact/index.ts');
+    ).toEqual(join(ws, 'packages/exact/index.ts'));
   });
 
   it('should append the subpath of an import matching a non-wildcard alias', () => {
@@ -113,13 +117,13 @@ describe('@nx/vite nx-tsconfig-paths-load-file', () => {
         { '@repo/exact': ['packages/exact'] },
         '@repo/exact/thing'
       )
-    ).toEqual('/ws/packages/exact/thing.ts');
+    ).toEqual(join(ws, 'packages/exact/thing.ts'));
   });
 
   it('should resolve a mid-pattern wildcard pointing at a directory', () => {
     expect(
       loadFileFromPaths({ '@lib/*': ['packages/*/src'] }, '@lib/one')
-    ).toEqual('/ws/packages/one/src/index.ts');
+    ).toEqual(join(ws, 'packages/one/src/index.ts'));
   });
 
   it('should resolve an import with an explicit extension for a non-wildcard alias', () => {
@@ -128,7 +132,7 @@ describe('@nx/vite nx-tsconfig-paths-load-file', () => {
         { '@repo/exact': ['packages/exact'] },
         '@repo/exact/thing.js'
       )
-    ).toEqual('/ws/packages/exact/thing.ts');
+    ).toEqual(join(ws, 'packages/exact/thing.ts'));
   });
 
   it('should not expand $ substitution patterns coming from the import', () => {
@@ -137,7 +141,7 @@ describe('@nx/vite nx-tsconfig-paths-load-file', () => {
         { '@repo/weird/*': ['packages/weird/*.ts'] },
         '@repo/weird/$&'
       )
-    ).toEqual('/ws/packages/weird/$&.ts');
+    ).toEqual(join(ws, 'packages/weird/$&.ts'));
   });
 
   it('should not match an alias that is only a partial prefix of the import', () => {
