@@ -4,6 +4,7 @@ import {
   Tree,
   updateJson,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { nxVersion } from '../../utils/versions';
@@ -14,6 +15,14 @@ describe('init', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+  });
+
+  it('should deny the unrs-resolver build script pulled in by @nx/jest', async () => {
+    await withPnpm(tree, '11.2.2', () => initGenerator(tree, {}));
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+      /['"]?unrs-resolver['"]?: false/
+    );
   });
 
   it('should add dependencies', async () => {

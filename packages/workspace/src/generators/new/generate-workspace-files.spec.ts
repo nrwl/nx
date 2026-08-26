@@ -400,6 +400,108 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     expect(tree.exists('proj/.npmrc')).toBeFalsy();
   });
 
+  it('should record the build scripts the preset dependencies pull in for pnpm 11+', async () => {
+    tree.write('proj/package.json', JSON.stringify({}));
+    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('11.0.0');
+
+    await generateWorkspaceFiles(tree, {
+      name: 'proj',
+      directory: 'proj',
+      preset: Preset.AngularMonorepo,
+      bundler: 'rspack',
+      defaultBase: 'main',
+      packageManager: 'pnpm',
+      isCustomPreset: false,
+    });
+
+    const pnpmWorkspace = tree.read('/proj/pnpm-workspace.yaml', 'utf-8');
+    expect(pnpmWorkspace).toMatchInlineSnapshot(`
+      "autoInstallPeers: true
+      allowBuilds:
+        nx: true
+        '@parcel/watcher': false
+        '@nx/angular-rspack-compiler': true
+        core-js: false
+        esbuild: false
+        lmdb: false
+        msgpackr-extract: false
+      "
+    `);
+  });
+
+  it('should not record the build scripts of preset dependencies that are not installed', async () => {
+    tree.write('proj/package.json', JSON.stringify({}));
+    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('11.0.0');
+
+    await generateWorkspaceFiles(tree, {
+      name: 'proj',
+      directory: 'proj',
+      preset: Preset.AngularMonorepo,
+      bundler: 'webpack',
+      defaultBase: 'main',
+      packageManager: 'pnpm',
+      isCustomPreset: false,
+    });
+
+    const pnpmWorkspace = tree.read('/proj/pnpm-workspace.yaml', 'utf-8');
+    expect(pnpmWorkspace).toMatchInlineSnapshot(`
+      "autoInstallPeers: true
+      allowBuilds:
+        nx: true
+      "
+    `);
+  });
+
+  it('should only list the build scripts to run for pnpm 10.6.0+', async () => {
+    tree.write('proj/package.json', JSON.stringify({}));
+    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('10.6.0');
+
+    await generateWorkspaceFiles(tree, {
+      name: 'proj',
+      directory: 'proj',
+      preset: Preset.AngularMonorepo,
+      bundler: 'rspack',
+      defaultBase: 'main',
+      packageManager: 'pnpm',
+      isCustomPreset: false,
+    });
+
+    const pnpmWorkspace = tree.read('/proj/pnpm-workspace.yaml', 'utf-8');
+    expect(pnpmWorkspace).toMatchInlineSnapshot(`
+      "autoInstallPeers: true
+      onlyBuiltDependencies:
+        - nx
+        - '@nx/angular-rspack-compiler'
+      "
+    `);
+  });
+
+  it('should record the build scripts of a preset that installs @nx/webpack and @nx/jest', async () => {
+    tree.write('proj/package.json', JSON.stringify({}));
+    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('11.0.0');
+
+    await generateWorkspaceFiles(tree, {
+      name: 'proj',
+      directory: 'proj',
+      preset: Preset.ReactMonorepo,
+      bundler: 'webpack',
+      defaultBase: 'main',
+      packageManager: 'pnpm',
+      isCustomPreset: false,
+      workspaces: false,
+    });
+
+    const pnpmWorkspace = tree.read('/proj/pnpm-workspace.yaml', 'utf-8');
+    expect(pnpmWorkspace).toMatchInlineSnapshot(`
+      "autoInstallPeers: true
+      allowBuilds:
+        nx: true
+        unrs-resolver: false
+        '@parcel/watcher': false
+      "
+    `);
+  });
+
   it('should configure the pnpm settings in pnpm-workspace.yaml with allowBuilds for pnpm 11+', async () => {
     tree.write('proj/package.json', JSON.stringify({}));
     jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('11.0.0');

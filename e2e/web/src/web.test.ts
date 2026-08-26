@@ -3,6 +3,7 @@ import {
   checkFilesExist,
   cleanupProject,
   createFile,
+  getSelectedPackageManager,
   isNotWindows,
   killPorts,
   listFiles,
@@ -435,3 +436,25 @@ function setPluginOption(
     );
   });
 }
+
+describe('Web Components Applications - pnpm build scripts', () => {
+  beforeAll(() => newProject({ packages: ['@nx/web', '@nx/vitest'] }));
+  afterAll(() => cleanupProject());
+
+  it('should record an allowBuilds decision for @swc/core on pnpm', () => {
+    if (getSelectedPackageManager() !== 'pnpm') {
+      return;
+    }
+
+    const appName = uniq('app');
+    runCLI(
+      `generate @nx/web:app apps/${appName} --bundler=none --compiler=swc --no-interactive --unitTestRunner=none --e2eTestRunner=none`
+    );
+
+    // pnpm 11 refuses to install deps whose build scripts are neither allowed
+    // nor denied, so the app generator must have recorded a decision
+    expect(readFile('pnpm-workspace.yaml')).toMatch(
+      /['"]@swc\/core['"]: false/
+    );
+  }, 300_000);
+});

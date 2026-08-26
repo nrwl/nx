@@ -7,11 +7,29 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import applicationGenerator from '../application/application.impl';
 import libraryGenerator from './library.impl';
 
 describe('Remix Library Generator', () => {
+  it('should deny the esbuild build script pulled in by vite', async () => {
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+    await withPnpm(tree, '11.2.2', () =>
+      libraryGenerator(tree, {
+        directory: 'test',
+        style: 'css',
+        addPlugin: true,
+        unitTestRunner: 'none',
+      })
+    );
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+      /['"]?esbuild['"]?: false/
+    );
+  });
+
   it('throws when the workspace declares TypeScript 6', async () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     updateJson(tree, 'package.json', (json) => {

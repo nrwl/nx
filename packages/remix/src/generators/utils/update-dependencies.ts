@@ -1,4 +1,9 @@
-import { type Tree, addDependenciesToPackageJson } from '@nx/devkit';
+import {
+  type Tree,
+  addDependenciesToPackageJson,
+  detectPackageManager,
+} from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
 import {
   eslintVersion,
   isbotVersion,
@@ -13,6 +18,12 @@ import {
 } from '../../utils/versions';
 
 export function updateDependencies(tree: Tree) {
+  // Vite 5 depends on esbuild, whose install script only validates the prebuilt
+  // binary that ships as an optional dependency.
+  acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+    esbuild: false,
+  });
+
   return addDependenciesToPackageJson(
     tree,
     {

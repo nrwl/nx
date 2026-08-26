@@ -1,21 +1,33 @@
-import { addPlugin } from '@nx/devkit/internal';
+import { acknowledgeBuildScripts, addPlugin } from '@nx/devkit/internal';
 import {
   type Tree,
   type GeneratorCallback,
   readNxJson,
   createProjectGraphAsync,
   addDependenciesToPackageJson,
+  detectPackageManager,
   formatFiles,
   runTasksInSerial,
 } from '@nx/devkit';
 import { InitGeneratorSchema } from './schema';
 import { createNodes } from '../../plugins/plugin';
 import { nxVersion } from '../../utils/versions';
-import { getRsbuildVersionsForInstalledMajor } from '../../utils/version-utils';
+import {
+  getInstalledRsbuildMajorVersion,
+  getRsbuildVersionsForInstalledMajor,
+} from '../../utils/version-utils';
 import { assertSupportedRsbuildVersion } from '../../utils/assert-supported-rsbuild-version';
 
 export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
   const rsbuildVersions = getRsbuildVersionsForInstalledMajor(tree);
+
+  if (getInstalledRsbuildMajorVersion(tree) === 1) {
+    // @rsbuild/core v1 depends on core-js, whose install script only prints a
+    // funding message.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      'core-js': false,
+    });
+  }
 
   return addDependenciesToPackageJson(
     tree,

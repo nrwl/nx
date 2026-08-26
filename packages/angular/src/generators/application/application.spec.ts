@@ -10,6 +10,7 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
@@ -43,6 +44,21 @@ describe('app', () => {
     } else {
       process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
     }
+  });
+
+  it('should record the build script decisions the angular build tooling pulls in', async () => {
+    await withPnpm(appTree, '11.2.2', () =>
+      generateApp(appTree, 'my-app', {
+        e2eTestRunner: E2eTestRunner.None,
+        unitTestRunner: UnitTestRunner.None,
+      })
+    );
+
+    const pnpmWorkspace = appTree.read('pnpm-workspace.yaml', 'utf-8');
+    expect(pnpmWorkspace).toMatch(/['"]?esbuild['"]?: false/);
+    expect(pnpmWorkspace).toMatch(/['"]?lmdb['"]?: false/);
+    expect(pnpmWorkspace).toMatch(/['"]?msgpackr-extract['"]?: false/);
+    expect(pnpmWorkspace).toMatch(/['"]@parcel\/watcher['"]: false/);
   });
 
   it('should add angular dependencies', async () => {

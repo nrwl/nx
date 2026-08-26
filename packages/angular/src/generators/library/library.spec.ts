@@ -12,6 +12,7 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { createApp } from '../../utils/nx-devkit/testing';
@@ -63,6 +64,37 @@ describe('lib', () => {
     } else {
       process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
     }
+  });
+
+  describe('pnpm 11 build scripts', () => {
+    it('should record the decisions ng-packagr pulls in for a buildable library', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        runLibraryGeneratorWithOpts({
+          buildable: true,
+          unitTestRunner: UnitTestRunner.None,
+          linter: 'none',
+        })
+      );
+
+      const pnpmWorkspace = tree.read('pnpm-workspace.yaml', 'utf-8');
+      expect(pnpmWorkspace).toMatch(/['"]?esbuild['"]?: false/);
+      expect(pnpmWorkspace).toMatch(/['"]@parcel\/watcher['"]: false/);
+    });
+
+    it('should record the decisions @angular/build pulls in for a vitest library', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        runLibraryGeneratorWithOpts({
+          unitTestRunner: UnitTestRunner.VitestAnalog,
+          linter: 'none',
+        })
+      );
+
+      const pnpmWorkspace = tree.read('pnpm-workspace.yaml', 'utf-8');
+      expect(pnpmWorkspace).toMatch(/['"]?esbuild['"]?: false/);
+      expect(pnpmWorkspace).toMatch(/['"]?lmdb['"]?: false/);
+      expect(pnpmWorkspace).toMatch(/['"]?msgpackr-extract['"]?: false/);
+      expect(pnpmWorkspace).toMatch(/['"]@parcel\/watcher['"]: false/);
+    });
   });
 
   it('should run the library generator without erroring if the directory has a trailing slash', async () => {
