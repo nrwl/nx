@@ -254,6 +254,11 @@ plugin (a `project.json` `executor` or `command`, or a `package.json` script or 
 entry), the centralized default does not resolve for that target.
 Those projects keep their full per-project configuration, and the generator prints a warning
 naming them.
+When a `package.json` script with the target's name, or an `nx.targets` entry next to a
+`project.json`, authors the identity, the generator also leaves the target unconverted, because
+removing its executor would let that entry take the target over.
+Rename or exclude the script, or remove that `nx.targets` entry, then rerun the generator to convert
+it.
 
 Centralization is also skipped when other plugins are registered after the migrated plugin in
 `nx.json`.
