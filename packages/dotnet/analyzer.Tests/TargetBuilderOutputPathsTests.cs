@@ -238,7 +238,7 @@ public class TargetBuilderOutputPathsTests
         var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
 
         Assert.Equal(
-            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi/foo*.json" },
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi/foo.json", "{projectRoot}/openapi/foo_*.json" },
             targets["build"].Outputs);
     }
 
@@ -259,7 +259,7 @@ public class TargetBuilderOutputPathsTests
         var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
 
         Assert.Equal(
-            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi/foo*.json" },
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi/foo.json", "{projectRoot}/openapi/foo_*.json" },
             targets["build"].Outputs);
     }
 
@@ -280,7 +280,7 @@ public class TargetBuilderOutputPathsTests
         var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
 
         Assert.Equal(
-            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{workspaceRoot}/contracts/foo/foo*.json" },
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{workspaceRoot}/contracts/foo/foo.json", "{workspaceRoot}/contracts/foo/foo_*.json" },
             targets["build"].Outputs);
     }
 
@@ -300,7 +300,7 @@ public class TargetBuilderOutputPathsTests
         var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
 
         Assert.Equal(
-            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/foo*.json" },
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/foo.json", "{projectRoot}/foo_*.json" },
             targets["build"].Outputs);
     }
 
@@ -318,7 +318,7 @@ public class TargetBuilderOutputPathsTests
         var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
 
         Assert.Equal(
-            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/foo*.json" },
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/foo.json", "{projectRoot}/foo_*.json" },
             targets["build"].Outputs);
     }
 
@@ -336,7 +336,7 @@ public class TargetBuilderOutputPathsTests
         var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
 
         Assert.Equal(
-            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{workspaceRoot}/apps/contracts/foo*.json" },
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{workspaceRoot}/apps/contracts/foo.json", "{workspaceRoot}/apps/contracts/foo_*.json" },
             targets["build"].Outputs);
     }
 
@@ -393,7 +393,7 @@ public class TargetBuilderOutputPathsTests
         var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
 
         Assert.Equal(
-            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi/foo*.json" },
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi/foo.json", "{projectRoot}/openapi/foo_*.json" },
             targets["build:release"].Outputs);
     }
 
@@ -409,6 +409,7 @@ public class TargetBuilderOutputPathsTests
 
         var exeTargets = BuildTargets(properties, projectDirectory, projectName: "foo", isExe: true);
         var libTargets = BuildTargets(properties, projectDirectory, projectName: "foo");
+        var testTargets = BuildTargets(properties, projectDirectory, projectName: "foo", isTest: true);
 
         Assert.Equal(
             new[] { "{projectRoot}/bin/publish", "{projectRoot}/obj" },
@@ -416,6 +417,79 @@ public class TargetBuilderOutputPathsTests
         Assert.Equal(
             new[] { "{projectRoot}/bin/*.nupkg", "{projectRoot}/obj" },
             libTargets["pack"].Outputs);
+        Assert.Equal(
+            new[] { "{projectRoot}/TestResults" },
+            testTargets["test"].Outputs);
+    }
+
+    [Fact]
+    public void Build_OpenApiGenerateDocumentsOptionsWithoutFileName_UsesProjectNameStem()
+    {
+        // --openapi-version and --document-name do not change the stem: the
+        // document name is a suffix the glob's `*` already covers.
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["BaseOutputPath"] = "bin\\",
+            ["BaseIntermediateOutputPath"] = "obj\\",
+            ["OpenApiDocumentsDirectory"] = "openapi",
+            ["OpenApiGenerateDocumentsOptions"] = "--openapi-version v3.1 --document-name internal",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi/foo.json", "{projectRoot}/openapi/foo_*.json" },
+            targets["build"].Outputs);
+    }
+
+    [Fact]
+    public void Build_OpenApiGenerateDocumentsOptionsFileName_OverridesProjectNameStem()
+    {
+        // --file-name replaces the stem dotnet-getdocument writes under, so the
+        // project-name glob would match nothing.
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["BaseOutputPath"] = "bin\\",
+            ["BaseIntermediateOutputPath"] = "obj\\",
+            ["OpenApiDocumentsDirectory"] = "openapi",
+            ["OpenApiGenerateDocumentsOptions"] = "--file-name PublicApi",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi/PublicApi.json", "{projectRoot}/openapi/PublicApi_*.json" },
+            targets["build"].Outputs);
+    }
+
+    [Theory]
+    [InlineData("--file-name PublicApi", "PublicApi")]
+    [InlineData("--file-name=PublicApi", "PublicApi")]
+    [InlineData("--file-name:PublicApi", "PublicApi")]
+    [InlineData("--openapi-version v3.1 --file-name PublicApi", "PublicApi")]
+    [InlineData("--file-name \"PublicApi\"", "PublicApi")]
+    [InlineData("--file-name Public-Api_v2", "Public-Api_v2")]
+    public void Build_OpenApiFileNameOption_IsReadInEverySpelling(string options, string expectedStem)
+    {
+        // The package appends $(OpenApiGenerateDocumentsOptions) to the command
+        // verbatim, and the tool's parser accepts all three separators. It
+        // rejects values outside [A-Za-z0-9_-], so - and _ are the only extras.
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["BaseOutputPath"] = "bin\\",
+            ["BaseIntermediateOutputPath"] = "obj\\",
+            ["OpenApiDocumentsDirectory"] = "openapi",
+            ["OpenApiGenerateDocumentsOptions"] = options,
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj", $"{{projectRoot}}/openapi/{expectedStem}.json", $"{{projectRoot}}/openapi/{expectedStem}_*.json" },
+            targets["build"].Outputs);
     }
 
     // --- Publish output: configuration is rewritten to match the target -----

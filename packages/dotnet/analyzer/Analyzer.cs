@@ -295,7 +295,8 @@ public static class Analyzer
             "TestResultsDirectory",
 
             // OpenAPI document paths
-            "OpenApiDocumentsDirectory"
+            "OpenApiDocumentsDirectory",
+            "OpenApiGenerateDocumentsOptions"
         };
 
         foreach (var prop in propertiesToCollect)
