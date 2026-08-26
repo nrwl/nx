@@ -161,6 +161,8 @@ export default async function update(tree: Tree) {
   // settings inputs the plugin generates. The plugin adds those inputs without
   // knowing whether the config enables generatePackageJson (that lives inside
   // the user's config file), so the overlay repair is equally unconditional.
+  // It appends the runtime probe even where the plugin omits it under a valid
+  // pnpm pin: the repair runs once and the pin can be removed later.
   for (const ref of await inferredDeployTargetOverlayRefs(
     tree,
     nxJson,

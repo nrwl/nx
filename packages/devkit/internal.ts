@@ -252,6 +252,7 @@ export {
   nxVersion,
   orange,
   parseExecutor,
+  parseVersionFromPackageManagerField,
   preventRecursionInGraphConstruction,
   readCachedProjectConfiguration,
   readFileIfExisting,

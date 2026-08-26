@@ -32,6 +32,8 @@ export { isEsmProject } from './src/utils/module-format/is-esm-project';
 export {
   PNPM_INSTALL_SETTINGS_INPUTS,
   PNPM_MAJOR_RUNTIME_INPUT,
+  pnpmInstallSettingsInputsForInferredTarget,
+  shouldIncludePnpmMajorRuntimeInput,
 } from './src/utils/pnpm-install-settings-inputs';
 export { addPnpmDeployOutputCacheInputs } from './src/utils/pnpm-deploy-output-cache-inputs';
 export type { MatchedTargetRef } from './src/utils/target-defaults-matching';

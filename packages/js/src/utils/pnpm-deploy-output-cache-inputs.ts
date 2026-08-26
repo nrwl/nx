@@ -76,12 +76,14 @@ export function addPnpmDeployOutputCacheInputs(
 
 /**
  * Variant for a plugin-inferred target, whose generated `inputs` already carry
- * the settings sources: a repair is only needed when an overlay (a
- * project-level target entry, exact or glob key, or a matching
- * `targetDefaults` entry) supplies a replacing `inputs` array that discards
- * them. The inferred layer is modeled as an array of exactly the settings
- * inputs: enough for the missing check, and it makes an overlay-less target
- * come back as nothing missing, so the fallback that would narrow the
+ * the settings sources (the runtime probe only while the root manifest has no
+ * valid pnpm pin): a repair is only needed when an overlay (a project-level
+ * target entry, exact or glob key, or a matching `targetDefaults` entry)
+ * supplies a replacing `inputs` array that discards them. The repair appends
+ * the full set, probe included, because it runs once and the pin can be
+ * removed later. The inferred layer is modeled as an array of exactly the
+ * settings inputs: enough for the missing check, and it makes an overlay-less
+ * target come back as nothing missing, so the fallback that would narrow the
  * plugin's richer array to `DEFAULT_INPUTS` can never be reached: with no
  * replacing supplier there is nothing to mutate.
  */

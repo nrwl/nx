@@ -21,7 +21,8 @@ import {
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
 import {
   isUsingTsSolutionSetup,
-  PNPM_INSTALL_SETTINGS_INPUTS,
+  pnpmInstallSettingsInputsForInferredTarget,
+  shouldIncludePnpmMajorRuntimeInput,
   addBuildAndWatchDepsTargets,
 } from '@nx/js/internal';
 import { existsSync, readdirSync } from 'fs';
@@ -58,6 +59,10 @@ export const createNodes: CreateNodes<RspackPluginOptions> = [
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
+    const includePnpmMajorRuntimeInput = shouldIncludePnpmMajorRuntimeInput(
+      packageManager,
+      context.workspaceRoot
+    );
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -69,7 +74,8 @@ export const createNodes: CreateNodes<RspackPluginOptions> = [
             isTsSolutionSetup,
             packageManager,
             pmc,
-            lockFileName
+            lockFileName,
+            includePnpmMajorRuntimeInput
           ),
         configFilePaths,
         options,
@@ -94,7 +100,8 @@ async function createNodesInternal(
   isTsSolutionSetup: boolean,
   packageManager: PackageManager,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  lockFileName: string
+  lockFileName: string,
+  includePnpmMajorRuntimeInput: boolean
 ) {
   const projectRoot = dirname(configFilePath);
   // Do not create a project if package.json and project.json isn't there.
@@ -121,7 +128,7 @@ async function createNodesInternal(
   const nodeHash = hashArray([
     hashFile(join(context.workspaceRoot, configFilePath)),
     lockFileHash,
-    hashObject({ ...options, isTsSolutionSetup }),
+    hashObject({ ...options, isTsSolutionSetup, includePnpmMajorRuntimeInput }),
     hashObject(packageJson),
   ]);
   // We do not want to alter how the hash is calculated, so appending the config file path to the hash
@@ -138,7 +145,8 @@ async function createNodesInternal(
         context,
         isTsSolutionSetup,
         packageManager,
-        pmc
+        pmc,
+        includePnpmMajorRuntimeInput
       )
     );
   }
@@ -163,7 +171,8 @@ async function createRspackTargets(
   context: CreateNodesContext,
   isTsSolutionSetup: boolean,
   packageManager: PackageManager,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  includePnpmMajorRuntimeInput: boolean
 ): Promise<RspackTargets> {
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -214,7 +223,11 @@ async function createRspackTargets(
       // The build can emit a pruned pnpm deploy output (NxAppRspackPlugin
       // with generatePackageJson), whose install settings come from these
       // otherwise-unhashed root sources.
-      ...(packageManager === 'pnpm' ? PNPM_INSTALL_SETTINGS_INPUTS : []),
+      ...(packageManager === 'pnpm'
+        ? pnpmInstallSettingsInputsForInferredTarget(
+            includePnpmMajorRuntimeInput
+          )
+        : []),
     ],
     outputs,
   };

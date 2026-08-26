@@ -17,7 +17,10 @@
  *
  * See packages/devkit/CLAUDE.md.
  */
-export { createTempNpmDirectory } from './utils/package-manager';
+export {
+  createTempNpmDirectory,
+  parseVersionFromPackageManagerField,
+} from './utils/package-manager';
 export {
   getExecutorInformation,
   parseExecutor,
