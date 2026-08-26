@@ -283,7 +283,7 @@ describe('package-manager', () => {
         switch (p) {
           case 'yarn --version':
             return '1.22.10';
-          case 'pnpm --version':
+          case 'pnpm --ignore-workspace --version':
             return '5.17.5';
           case 'npm --version':
             return '7.20.3';
@@ -294,6 +294,23 @@ describe('package-manager', () => {
       expect(getPackageManagerVersion('yarn')).toEqual('1.22.10');
       expect(getPackageManagerVersion('pnpm')).toEqual('5.17.5');
       expect(getPackageManagerVersion('npm')).toEqual('7.20.3');
+    });
+
+    it('should ignore workspace configuration when detecting the pnpm version', () => {
+      jest.spyOn(fs, 'existsSync').mockReturnValue(false);
+      const execSync = jest
+        .spyOn(childProcess, 'execSync')
+        .mockReturnValue('11.2.2');
+
+      expect(getPackageManagerVersion('pnpm', '/workspace')).toEqual('11.2.2');
+      expect(execSync).toHaveBeenCalledWith(
+        'pnpm --ignore-workspace --version',
+        {
+          cwd: '/workspace',
+          encoding: 'utf-8',
+          windowsHide: true,
+        }
+      );
     });
 
     it('should detect pnpm package manager version from package.json packageManager', () => {
@@ -976,7 +993,7 @@ describe('package-manager', () => {
     it('should return pnpm publish command with scoped registry when provided for pnpm version >= 9.15.7 < 10.0.0 || >= 10.5.0', () => {
       jest.spyOn(childProcess, 'execSync').mockImplementation((p) => {
         switch (p) {
-          case 'pnpm --version':
+          case 'pnpm --ignore-workspace --version':
             return '9.15.7';
         }
       });
@@ -989,7 +1006,7 @@ describe('package-manager', () => {
     it('should return pnpm publish command without use scoped registry for pnpm version < 9.15.7', () => {
       jest.spyOn(childProcess, 'execSync').mockImplementation((p) => {
         switch (p) {
-          case 'pnpm --version':
+          case 'pnpm --ignore-workspace --version':
             return '9.10.1';
           default:
             throw new Error('Command failed');
@@ -1011,7 +1028,7 @@ describe('package-manager', () => {
 
     it('should return pnpm add commands with --config.frozen-lockfile=false in a workspace', () => {
       jest.spyOn(childProcess, 'execSync').mockImplementation((p) => {
-        if (p === 'pnpm --version') {
+        if (p === 'pnpm --ignore-workspace --version') {
           return '9.15.7';
         }
         throw new Error(`Unexpected command: ${p}`);
@@ -1030,7 +1047,7 @@ describe('package-manager', () => {
 
     it('should return pnpm add commands with --config.frozen-lockfile=false outside a workspace', () => {
       jest.spyOn(childProcess, 'execSync').mockImplementation((p) => {
-        if (p === 'pnpm --version') {
+        if (p === 'pnpm --ignore-workspace --version') {
           return '9.15.7';
         }
         throw new Error(`Unexpected command: ${p}`);
