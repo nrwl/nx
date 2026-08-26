@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import * as stream from 'node:stream';
 import * as yargs from 'yargs';
 
@@ -16,6 +17,7 @@ import {
   withTuiOptions,
 } from './shared-options';
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
+import { isAiAgent } from '../../native';
 
 const argv = yargs.default([]);
 
@@ -225,8 +227,7 @@ describe('shared-options', () => {
       ));
 
     it('should default to summary when driven by an AI agent', async () => {
-      const { isAiAgent } = require('../../native');
-      (isAiAgent as jest.Mock).mockReturnValue(true);
+      (isAiAgent as Mock).mockReturnValue(true);
       try {
         await withEnvironmentVariables(
           { NX_TUI: false, CI: 'false', NX_TUI_SKIP_CAPABILITY_CHECK: 'true' },
@@ -241,13 +242,12 @@ describe('shared-options', () => {
           }
         );
       } finally {
-        (isAiAgent as jest.Mock).mockReturnValue(false);
+        (isAiAgent as Mock).mockReturnValue(false);
       }
     });
 
     it('should let an explicit style beat the AI agent default', async () => {
-      const { isAiAgent } = require('../../native');
-      (isAiAgent as jest.Mock).mockReturnValue(true);
+      (isAiAgent as Mock).mockReturnValue(true);
       try {
         await withEnvironmentVariables(
           { NX_TUI: false, CI: 'false', NX_TUI_SKIP_CAPABILITY_CHECK: 'true' },
@@ -258,7 +258,7 @@ describe('shared-options', () => {
           }
         );
       } finally {
-        (isAiAgent as jest.Mock).mockReturnValue(false);
+        (isAiAgent as Mock).mockReturnValue(false);
       }
     });
 
