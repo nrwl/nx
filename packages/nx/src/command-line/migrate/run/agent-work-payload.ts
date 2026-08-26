@@ -1,11 +1,10 @@
 // Internal to run/: deliberately not re-exported from ./index.
 //
-// Stores the payload of the `<nx_migrate_prompt>` block a recorded worker
-// emits when it parks a step (a prompt to apply, or a validation pass), so a
-// reconcile can re-emit the block for a session that no longer has it (after
-// a compaction or a restart). Keyed by step and attempt: the name is derived,
-// never recorded in run.json, and a re-armed attempt writes its own file
-// instead of inheriting a stale one.
+// Stores the `<nx_migrate_prompt>` payload a recorded worker emits when it
+// parks a step, so a reconcile can re-emit the block for a session that lost
+// it to a compaction or a restart. Keyed by step and attempt: the name is
+// derived rather than recorded in run.json, and a re-armed attempt writes its
+// own file instead of inheriting a stale one.
 
 import { randomBytes } from 'crypto';
 import {
@@ -35,29 +34,20 @@ export function agentWorkPayloadPath(
   );
 }
 
-/**
- * What a stored payload must match to be trusted as the step's handed-back
- * work: the migration it was stored for, the kind of work the step is
- * awaiting, and, for a prompt, the instructions file the plan names.
- */
 export interface ExpectedAgentWorkPayload {
   migrationId: string;
   kind: MigrateStepAwaitingKind;
-  // The prompt path the run's plan records for the migration; a prompt
-  // payload must carry exactly it, so a modified or misplaced file cannot
-  // redirect the agent to different instructions than the durable run's.
-  // Undefined (the plan cannot name one) rejects every prompt payload.
-  // Ignored for a validation payload.
+  // The prompt path the run's plan records; a prompt payload must match it
+  // exactly, so a modified or misplaced file cannot redirect the agent to
+  // other instructions. Undefined deliberately rejects every prompt payload.
   promptPath?: string;
 }
 
 /**
- * Writes the payload atomically (temp file, then rename), so a crash mid-write
- * can only leave the stale temp file behind, never a half-written payload a
- * later read would reject. The random temp suffix matches writeRunState's
- * naming. Failures propagate: a parked step's durable contract includes the
- * stored copy (the runbook promises a lost block is re-emitted), so a caller
- * that cannot store it must fail the attempt rather than park.
+ * Temp file then rename: a crash mid-write leaves only the stale temp file,
+ * never a half-written payload at the real path. Failures propagate, because
+ * the runbook promises a parked step's block is re-emitted, so a caller that
+ * cannot store the payload must fail the attempt rather than park.
  */
 export function persistAgentWorkPayload(
   filePath: string,
@@ -70,20 +60,13 @@ export function persistAgentWorkPayload(
 }
 
 /**
- * Reads a stored payload back, or null when there is nothing usable: the file
- * is missing (the park predates this mechanism), it does not parse to a plain
- * object, or it does not match what the step awaits. The semantic checks keep
- * a truncated, modified, or misplaced file from silently becoming the
- * authoritative instruction: a prompt payload must carry exactly the plan's
- * prompt path for the named migration, a validation payload its `kind`
- * marker. The cases share a
- * remediation and are not distinguished: each caller substitutes a freshly
- * derived payload (the worker re-derives the work it is parking; the
- * reconcile dispense synthesizes one from the plan or the tree-pointing
- * validation marker, pointing at the worker's original emission only when
- * even the plan cannot name the prompt). Re-emission always re-serializes
- * the parsed value through the block writer's escaping, so a tampered file
- * cannot break the block framing.
+ * The stored payload, or null when nothing usable is on disk: the file is
+ * missing (the park predates this mechanism), does not parse to a plain
+ * object, or does not match what the step awaits. Null is undifferentiated on
+ * purpose: every caller's remediation is the same freshly derived payload.
+ * The returned object is never re-emitted as text; both re-emission sites go
+ * back through the block writer's escaping, so a tampered file cannot break
+ * the framing.
  */
 export function readAgentWorkPayload(
   filePath: string,
@@ -118,20 +101,18 @@ export function readAgentWorkPayload(
 }
 
 /**
- * The newest prior attempt's stored payload for a step, or null when none
- * survives. A retained-generator retry re-hands the work an earlier attempt
- * stored: the payload carries the captured generator output the retry itself
- * can no longer recompute.
+ * The newest surviving payload from a prior attempt of the step, or null. A
+ * retained-generator retry re-hands it: it carries the captured generator
+ * output the retry can no longer recompute.
  *
- * The scan never goes below `fromAttempt`, the step's recorded lineage
- * boundary (the attempt its current generator marker was written on): a
- * payload from before it describes a generator run a reset-backed retry
- * discarded, and file removal alone cannot be relied on to invalidate it.
- * An undefined boundary fails closed with no lookup at all: an older nx's
- * rearm drops the field while leaving the files (the run-state format is
- * shared), so without it nothing proves a stored copy belongs to the
- * current lineage. The cost is a fallback emission where a carry may have
- * been legitimate; the alternative is re-handing reset-away evidence.
+ * `fromAttempt` is the step's lineage boundary, the attempt its current
+ * generator marker was written on. Anything below it describes a generator run
+ * a reset-backed retry discarded, and the best-effort file removal cannot be
+ * relied on to invalidate it. Undefined fails closed with no lookup at all: an
+ * older nx's rearm drops the field while leaving the files (the run-state
+ * format is shared), so nothing proves a stored copy belongs to the current
+ * lineage. The cost is a fallback emission where a carry may have been
+ * legitimate.
  */
 export function latestStoredAgentWorkPayload(
   runDirPath: string,
@@ -161,11 +142,9 @@ export function latestStoredAgentWorkPayload(
   return null;
 }
 
-// The attempts that actually have a stored payload file for the step, read
-// from the agent-work directory. A directory that cannot be read reads as
-// empty: the callers' shared remediation is a freshly derived payload, and
-// removal is best effort. The `-attempt-` infix keeps `step-1` from matching
-// `step-12`'s files.
+// An unreadable directory reads as empty: the lookup falls back to a freshly
+// derived payload, and removal is best effort. The `-attempt-` infix keeps
+// `step-1` from matching `step-12`'s files.
 function storedAttemptsForStep(runDirPath: string, stepId: string): number[] {
   let entries: string[];
   try {
@@ -193,24 +172,19 @@ function storedAttemptsForStep(runDirPath: string, stepId: string): number[] {
 }
 
 /**
- * Removes every attempt's stored payload for a step, up to and including
- * `throughAttempt`. Called once the step's outcome settles terminally (a
- * failed fold keeps the files, since a retry still carries them forward) and
- * when a reset-backed retry invalidates them. Best effort per file: the
- * callers run after the outcome or rearm is already decided, so an entry
- * that cannot be removed (a directory planted at the path, a permission
- * failure) is left to whole-run pruning rather than failing the reconcile.
- * A leftover directory can never be re-handed either way: reading it fails,
- * which the reader treats as no stored payload.
+ * Best effort per file: the callers run after the outcome or rearm is already
+ * decided, so an entry that cannot be removed (a permission failure, a
+ * directory planted at the path) is left to whole-run pruning rather than
+ * failing the reconcile. A planted directory is never re-handed either way:
+ * reading it fails, which the reader treats as no stored copy.
  */
 export function removeAgentWorkPayloads(
   runDirPath: string,
   stepId: string,
   throughAttempt: number
 ): void {
-  // Enumerated for the same reason as the lookup: the attempt is a persisted
-  // number, and counting up to it would let a tampered-but-valid value drive
-  // that many synchronous removals.
+  // Enumerated for the same reason as the lookup: a tampered-but-valid attempt
+  // would otherwise drive that many synchronous removals.
   for (const attempt of storedAttemptsForStep(runDirPath, stepId)) {
     if (attempt > throughAttempt) {
       continue;
@@ -219,8 +193,6 @@ export function removeAgentWorkPayloads(
       rmSync(agentWorkPayloadPath(runDirPath, stepId, attempt), {
         force: true,
       });
-    } catch {
-      // See above: best effort per file.
-    }
+    } catch {}
   }
 }

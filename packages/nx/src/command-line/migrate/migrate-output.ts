@@ -51,11 +51,9 @@ export function logAgenticSuccessOutcome(
 }
 
 /**
- * Logs the skip line for a migration that waived its AI step through
- * `skipAgentic`, plus a verbose note for any `agentContext` the waiver
- * dropped. A hybrid waives its paired prompt; a generator-only migration
- * waives the validation pass, so callers must reach here only once they know
- * one was on the table. The note is author-facing, hence `--verbose`.
+ * Callers must already know an agentic step was owed; this only picks which one
+ * the waiver dropped. The dropped-`agentContext` note is aimed at the migration
+ * author, hence `--verbose`.
  */
 export function logWaivedAgenticStep(
   migration: {

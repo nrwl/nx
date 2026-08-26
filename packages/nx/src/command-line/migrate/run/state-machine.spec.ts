@@ -578,8 +578,6 @@ describe('applyStepEvent', () => {
 
       expect(result.kind).toBe('ok');
       if (result.kind === 'ok') {
-        // No landed commit carries the changes, so the rerun re-decides all
-        // of them along with everything else.
         expect(result.state.steps[0].generatorCompleted).toBeUndefined();
         expect(
           result.state.steps[0].generatorCompletedAtAttempt

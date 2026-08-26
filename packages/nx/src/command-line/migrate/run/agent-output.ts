@@ -95,14 +95,12 @@ export function emitPromptBlock(migrationId: string, payload: object): void {
 }
 
 /**
- * Emits the runbook as markdown, not JSON: the block carries the runbook
- * file's bytes so the agent reads exactly what a resume re-emits from disk.
- * A body line that opens or closes an `<nx_migrate_*>` tag is neutralized
- * rather than trusted; the renderer never produces one, so only tampered
- * bytes are altered. "Line start" spans the full terminator set `singleLine`
- * collapses, not just what `^` under `/m` recognizes: a reader that treats
- * NEL or a form feed as a break would otherwise see a break this check
- * did not.
+ * Markdown, not JSON: the block carries the runbook file's bytes, so the agent
+ * reads what a resume re-emits from disk. Lines opening or closing an
+ * `<nx_migrate_*>` tag are neutralized; the renderer never emits one, so only
+ * tampered bytes change. The terminator class is `singleLine`'s full set, not
+ * just what `^` under `/m` matches: a reader that breaks on NEL or a form feed
+ * would otherwise see a line start this check missed.
  */
 export function emitRunbookBlock(runId: string, content: string): void {
   const neutralized = content.replace(

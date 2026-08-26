@@ -1,10 +1,5 @@
-// The run's issue ledger: problems agent sessions observe while driving an
-// orchestrated migrate run. Agents report them through the handoff file
-// (`issues` / `issueUpdates`); nx owns everything else: it validates each
-// report, assigns ids and fingerprints, maps the named migrations to plan
-// steps, claims recorded issues for the step being dispensed, archives full
-// details under the run's issues directory, and renders the bounded digest
-// dispensed steps carry.
+// The run's issue ledger. Agents supply only the handoff's `issues` /
+// `issueUpdates`; ids, fingerprints, routing, claims and archiving are nx's.
 
 import { randomBytes } from 'crypto';
 import { mkdirSync, readFileSync, renameSync } from 'fs';
@@ -28,10 +23,8 @@ import { splitMigrationId } from './state-machine';
 
 const ISSUES_DIR_NAME = 'issues';
 
-// Bounds on a single handoff's issue report. The handoff is agent-written, so
-// every count and length is capped before anything reaches the ledger; a
-// report over a bound is rejected whole for the agent to fix, never trimmed
-// silently.
+// Bounds on one agent-written handoff's issue report. A report over a bound is
+// rejected whole for the agent to fix, never trimmed.
 const MAX_ISSUES_PER_HANDOFF = 20;
 const MAX_ISSUE_UPDATES_PER_HANDOFF = 20;
 const MAX_SUMMARY_CHARS = 500;
@@ -39,16 +32,14 @@ const MAX_DETAIL_CHARS = 8192;
 const MAX_NOTE_CHARS = 1000;
 const MAX_APPLICABLE_MIGRATIONS = 50;
 
-// Bounds on the digest rendered into dispensed steps: at most this many
-// entries, this many bytes of rendered entry lines, and this many characters
-// per summary. Overflow is counted, never silently dropped.
+// Bounds on the digest rendered into dispensed steps. Overflow here is
+// truncated or counted, never rejected the way an over-bound report is.
 const MAX_DIGEST_ENTRIES = 20;
 const MAX_DIGEST_BYTES = 8192;
 const DIGEST_SUMMARY_CHARS = 200;
 
-// An issue as the agent reported it, after validation. `summary` is collapsed
-// to one line (it is rendered into dispensed step content); `detail` is not
-// (it only ever lands in the archived JSON file).
+// `summary` is collapsed to one line because it is rendered into dispensed step
+// content; `detail` is raw and must only reach the archived JSON file.
 export interface ReportedIssue {
   summary: string;
   detail?: string;
@@ -56,8 +47,8 @@ export interface ReportedIssue {
   disposition?: MigrateIssueDisposition;
 }
 
-// A disposition change for an issue the reporting step was assigned.
-// 'recorded' is not a legal target: an update only ever progresses an issue.
+// Only for an issue assigned to the reporting step. Updates only progress an
+// issue, hence no 'recorded' target.
 export interface ReportedIssueUpdate {
   id: string;
   disposition: Exclude<MigrateIssueDisposition, 'recorded'>;
@@ -76,9 +67,8 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-// Unknown keys reject rather than strip: a typoed optional field (e.g.
-// "dispositon") would otherwise silently fall back to the default and
-// mis-route the issue with no signal back to the agent.
+// Unknown keys reject rather than strip: a typoed optional ("dispositon")
+// would otherwise fall back to its default and mis-route the issue silently.
 function unknownKey(
   value: Record<string, unknown>,
   allowed: readonly string[]
@@ -86,8 +76,8 @@ function unknownKey(
   return Object.keys(value).find((key) => !allowed.includes(key));
 }
 
-// A value echoed back into a rejection reason. Collapsed and truncated: it is
-// agent-written, and the reason is rendered into the dispensed step content.
+// Collapsed and truncated because the value is agent-written and the rejection
+// reason is rendered into dispensed step content.
 function quoted(value: unknown): string {
   const text = typeof value === 'string' ? value : JSON.stringify(value);
   const collapsed = singleLine(String(text));
@@ -97,13 +87,11 @@ function quoted(value: unknown): string {
 }
 
 /**
- * Validates the `issues` / `issueUpdates` fields of a handoff against the
- * run's current state. Absent fields parse as empty. Any invalid entry
- * rejects the whole report with a reason the awaiting dispense hands back to
- * the agent, so a typo never half-lands in the ledger. The check covers the
- * handoff's other extra fields too: a misspelled field name (say
- * "issueUpates") would otherwise parse as an absent report and be discarded
- * with the folded handoff, with no signal back to the agent.
+ * Validates a handoff's `issues` / `issueUpdates` against the run's current
+ * state. Absent fields parse as empty; any invalid entry rejects the whole
+ * report with a reason the awaiting dispense hands back to the agent. Also
+ * rejects unrecognized top-level handoff fields: a misspelled "issueUpates"
+ * would otherwise read as an absent report and be discarded with the handoff.
  */
 export function parseHandoffIssues(
   extras: Record<string, unknown> | undefined,
@@ -144,9 +132,8 @@ export function parseHandoffIssues(
     for (let i = 0; i < rawIssues.length; i++) {
       const parsed = parseReportedIssue(rawIssues[i], i, state);
       if (typeof parsed === 'string') return invalid(parsed);
-      // One entry per problem: two same-fingerprint entries would make their
-      // array order decide which disposition lands (the second one would
-      // fold into the first's just-minted entry as a duplicate report).
+      // Rejected rather than folded: array order would decide which disposition
+      // lands, since the second entry folds into the first's just-minted one.
       const fingerprint = issueFingerprint(parsed.summary);
       if (seenFingerprints.has(fingerprint)) {
         return invalid(
@@ -170,8 +157,8 @@ export function parseHandoffIssues(
     for (let i = 0; i < rawUpdates.length; i++) {
       const parsed = parseIssueUpdate(rawUpdates[i], i, state, reportingStep);
       if (typeof parsed === 'string') return invalid(parsed);
-      // One final disposition per issue: sequential updates to the same id
-      // would make the order carry meaning the ledger never records.
+      // Rejected rather than applied in order: the ledger records only the final
+      // disposition, so sequence would carry meaning nothing persists.
       if (seenIds.has(parsed.id)) {
         return invalid(
           `"issueUpdates" lists ${parsed.id} more than once; report one final disposition per issue`
@@ -181,9 +168,8 @@ export function parseHandoffIssues(
       updates.push(parsed);
     }
   }
-  // A handoff may not target one issue through both channels: a report that
-  // folds into an entry an update also moves would make their fixed apply
-  // order (reports, then updates) decide the final disposition.
+  // Rejected rather than ordered: applyReportedIssues applies reports before
+  // updates, so the fixed order would silently decide the final disposition.
   if (issues.length > 0 && updates.length > 0) {
     const updatedIds = new Set(updates.map((u) => u.id));
     for (let i = 0; i < issues.length; i++) {
@@ -220,9 +206,8 @@ function parseReportedIssue(
       unknown
     )}; allowed fields are "summary", "detail", "applicableMigrations" and "disposition"`;
   }
-  // Validate the summary in its normalized form: characters like U+0085 are
-  // line terminators to singleLine but not to trim, so a raw check could
-  // accept a summary that normalizes to the empty string.
+  // Validated after singleLine: U+0085 is a terminator to singleLine but not
+  // to trim, so a raw check would accept a summary that normalizes empty.
   const summary =
     typeof value.summary === 'string'
       ? singleLine(value.summary).trim()
@@ -327,11 +312,8 @@ function parseIssueUpdate(
   };
 }
 
-// Identifier mapping, per the run's contract: a value containing ':' maps
-// only to the step with exactly that migration id; a bare value maps to every
-// step whose package name is exactly equal (scoped names stay whole; nothing
-// splits on '/'). Plan order is the steps' own order, and step ids are
-// unique, so the result needs no dedup.
+// A bare identifier matches the whole package name, scoped names included:
+// nothing splits on '/'. Step ids are unique, so the result needs no dedup.
 function mappedStepIds(identifier: string, state: MigrateRunState): string[] {
   if (identifier.includes(':')) {
     return state.steps
@@ -343,12 +325,8 @@ function mappedStepIds(identifier: string, state: MigrateRunState): string[] {
     .map((s) => s.id);
 }
 
-// A disposition change to archive alongside the ledger, so the issues
-// directory keeps who moved an issue and what the ledger does not carry: an
-// update's note, and a repeated report's refined applicability and detail.
-// A 'recorded' disposition appears only for nx's own transitions (the
-// retry-clean reopen, a repeated-report revival) and for refinements that
-// leave a recorded entry recorded; a handoff update can never target it.
+// Archives the note, detail and refined applicability the ledger has no field
+// for. `disposition` admits 'recorded' (nx's own reopens and revivals).
 export interface IssueArchiveUpdate {
   issueId: string;
   stepId: string;
@@ -360,15 +338,13 @@ export interface IssueArchiveUpdate {
 
 export interface IssueApplication {
   state: MigrateRunState;
-  // New ledger entries paired with the report they came from, for archiving.
   newIssues: { entry: MigrateRunIssue; report: ReportedIssue }[];
   updates: IssueArchiveUpdate[];
 }
 
 /**
- * Applies a validated issue report to the run state. Pure: the caller runs it
- * on fresh state inside the fold's locked write, so ids stay sequential and
- * claim checks hold against what is actually on disk.
+ * Pure. Must run on state read fresh inside the fold's locked write, or ids
+ * collide and the claim checks test state that is no longer on disk.
  */
 export function applyReportedIssues(
   state: MigrateRunState,
@@ -379,12 +355,9 @@ export function applyReportedIssues(
   const ledger = [...(state.issues ?? [])];
   const newIssues: IssueApplication['newIssues'] = [];
   const archiveUpdates: IssueArchiveUpdate[] = [];
-  // Allocate past the highest existing suffix, not from the ledger length:
-  // the state reader only checks id syntax and uniqueness, so a sparse
-  // ledger (say, a lone issue-2) must not mint a duplicate id that would
-  // overwrite another issue's archive and corrupt the state. BigInt because
-  // a number suffix stops incrementing at 2^53 and would re-mint the same
-  // id from there; the digits are exact at any size this way.
+  // Allocate past the highest existing suffix, not from the ledger length: the
+  // reader accepts sparse ids, and a re-minted id would overwrite another
+  // issue's archive file. BigInt because a number suffix stalls at 2^53.
   let nextIdNumber =
     ledger.reduce((max, i) => {
       const suffix = BigInt(i.id.slice('issue-'.length));
@@ -424,9 +397,8 @@ export function applyReportedIssues(
         ? 'unknown'
         : mapApplicableSteps(report.applicableMigrations, state);
     const disposition = resolveDisposition(report, applicableStepIds, state);
-    // The reader bounds accepted suffixes, so only a ledger already at the
-    // bound reaches this; throwing keeps the caller's archive error
-    // handling in charge instead of writing a state the reader rejects.
+    // Reachable only at the reader's 18-digit bound. Throwing hands the caller's
+    // archive error handling the failure instead of writing a state it rejects.
     const id = `issue-${nextIdNumber++}`;
     if (!ISSUE_ID.test(id)) {
       throw new Error(
@@ -452,15 +424,12 @@ export function applyReportedIssues(
   }
   for (const update of updates) {
     const index = ledger.findIndex((i) => i.id === update.id);
-    // Validated by the caller against the same state; an id that vanished
-    // here would mean the ledger dropped entries, which it never does.
+    // Ids were validated against this same state by the caller.
     if (index === -1) continue;
     const existing = ledger[index];
     if (existing.disposition !== update.disposition) {
-      // The claim dies with any move out of 'recorded': it named an
-      // assignment in a digest, and only recorded issues are assigned. The
-      // resolver attribution and its stamp live and die with the
-      // resolution.
+      // The claim and the resolution credit both die with the move: only 'recorded'
+      // issues carry an assignment, and the stamp belongs to this resolution alone.
       const {
         resolvedByStepId: _dropped,
         resolvedAtCommitCount: _fence,
@@ -493,8 +462,6 @@ export function applyReportedIssues(
   };
 }
 
-// What a report means for an existing entry. Absent and explicit 'recorded'
-// both mean "the problem stands": neither asks for a transition by itself.
 type ReportIntent = 'resolved' | 'deferred-final' | 'unresolved';
 
 function reportIntent(report: ReportedIssue): ReportIntent {
@@ -512,19 +479,12 @@ function reportIntent(report: ReportedIssue): ReportIntent {
 }
 
 /**
- * Folds a duplicate report into its existing entry: one cell per (existing
- * disposition x report intent) pair, enumerated exhaustively so a new
- * disposition member fails to compile rather than falling through. Three
- * rules apply across every cell: the report's concrete applicability unions
- * into the entry's (an "unknown" report leaves it as it stands); a recorded
- * entry assigned to another step blocks a resolve/defer intent down to a
- * refinement (an assignment in another step's digest cannot be taken away
- * from outside it, but the report itself is still information); and a cell
- * archives whenever it changed the entry or the report carries detail (the
- * handoff carrying the report is removed on fold, so an unarchived detail
- * would be lost). Claims die with any move out of 'recorded': a claim names
- * an assignment in a dispensed digest, and only recorded issues are
- * assigned.
+ * Folds a duplicate report into its existing entry, one cell per (disposition x
+ * intent) pair. A recorded entry another live step holds blocks a resolve or
+ * defer down to a refinement: an assignment made in that step's digest cannot
+ * be revoked from outside it. Every cell that changed the entry, and every
+ * report carrying detail, must archive: the fold removes the handoff, so
+ * unarchived detail is lost.
  */
 function applyDuplicateReport(
   existing: MigrateRunIssue,
@@ -534,8 +494,8 @@ function applyDuplicateReport(
 ): { entry: MigrateRunIssue; archive: boolean } {
   const intent = reportIntent(report);
   const merged = mergedApplicableStepIds(existing, report, state);
-  // Set inclusion, not a length compare: a corrupt entry with duplicate
-  // scope ids would otherwise read the normalizing merge as new routing.
+  // Set inclusion, not a length compare: a corrupt entry with duplicate scope
+  // ids would otherwise read the normalizing merge as new routing.
   const addedStepIds = !Array.isArray(merged)
     ? []
     : !Array.isArray(existing.applicableStepIds)
@@ -544,9 +504,8 @@ function applyDuplicateReport(
           (id) => !(existing.applicableStepIds as string[]).includes(id)
         );
   const widened = addedStepIds.length > 0;
-  // Only a live assignment blocks: a claimant that turned terminal can
-  // never hand another handoff back, so its claim is stale bookkeeping the
-  // settle sweep releases, not ownership.
+  // Only a live assignment blocks: a terminal claimant can never hand back
+  // another handoff, so its claim is stale bookkeeping, not ownership.
   const claimant =
     existing.disposition === 'recorded' &&
     existing.claimedByStepId !== undefined
@@ -574,9 +533,6 @@ function applyDuplicateReport(
         ...rest,
         applicableStepIds: merged,
         disposition,
-        // The stamp travels with the resolution (I3): only commits appended
-        // from here on can carry it, so nothing older, a previous
-        // resolution's carrier included, can vouch for this fix.
         ...(disposition === 'resolved'
           ? {
               resolvedByStepId: reportingStep.id,
@@ -600,20 +556,14 @@ function applyDuplicateReport(
           return unreachable(intent);
       }
     case 'resolved':
-      // Any duplicate report over a resolved entry means the problem came
-      // back: resolved issues drop out of the digest, so the reporter
-      // cannot be echoing an entry it was shown; it hit the problem again.
+      // A duplicate report over a resolved entry is a recurrence: resolved issues
+      // leave the digest, so the reporter hit the problem again, not echoed it.
       switch (intent) {
         case 'resolved':
-          // A recurrence fixed in place: the credit moves to the new
-          // resolver, whose fresh stamp keeps the old resolution's commits
-          // from vouching for this fix.
+          // Not a no-op: the recurrence re-credits the new resolver and re-stamps.
           return transition('resolved');
         case 'deferred-final':
         case 'unresolved':
-          // Reopen: the resolution attribution dies with its stamp, and
-          // the disposition restarts through the same ladder a first
-          // report takes on the merged applicability.
           return transition(resolveDisposition(report, merged, state));
         default:
           return unreachable(intent);
@@ -627,13 +577,9 @@ function applyDuplicateReport(
         case 'deferred-final':
           return refine();
         case 'unresolved':
-          // Revive only on newly supplied routing that can still claim the
-          // issue: deferred entries are digest-visible, so a repeated
-          // report without new scope may just be echoing one, and a
-          // deferral, explicit or settled, stands until new scope arrives.
-          // The claimable step must be among the ADDED routes: reviving on
-          // a pre-existing route's claimability would let routing to
-          // already-finished work undo a standing deferral.
+          // Revive only on newly ADDED routing that can still claim it: deferred entries
+          // stay digest-visible, so a repeat with no new scope may just be echoing one,
+          // and testing `merged` instead would let a route to finished work reopen it.
           return hasClaimableStep(addedStepIds, state)
             ? transition('recorded')
             : refine();
@@ -645,19 +591,12 @@ function applyDuplicateReport(
   }
 }
 
-// Exhaustiveness backstop: a new disposition or intent member fails to
-// compile at the call site instead of silently falling into a catch-all.
 function unreachable(value: never): never {
   throw new Error(`unexpected value: ${JSON.stringify(value)}`);
 }
 
-// Whether some landed commit already carries the issue's current resolution.
-// Two scopings keep other commits from vouching for it: the commit must name
-// the resolving step (ids attach where the entry's stepIds include the
-// resolver), and it must postdate the resolution itself: the stamp written
-// with the credit fences off everything older, whether that carried a
-// previous resolution of the same issue (the same step's included) or named
-// the pair before the resolution existed at all.
+// A commit carries the resolution only if it names the resolving step AND
+// postdates the stamp: the same step's earlier commits must not vouch for it.
 function resolutionCarried(
   state: MigrateRunState,
   issue: MigrateRunIssue
@@ -673,12 +612,9 @@ function resolutionCarried(
 }
 
 /**
- * The issue ids a landed commit naming `stepIds` carries: issues resolved by
- * one of those steps and not already carried by an earlier landed entry.
- * Attribution rides on the persisted `resolvedByStepId`, so a resolution
- * whose own commit attempt failed still reaches the later commit that
- * absorbs that step's tree. Derived from the final dispositions, never from
- * report order, so the association cannot contradict the ledger.
+ * The issue ids a landed commit naming `stepIds` carries. Attribution rides on
+ * the persisted `resolvedByStepId`, so a resolution whose own commit attempt
+ * failed still reaches the later commit that absorbs that step's tree.
  */
 export function issueIdsForCommit(
   state: MigrateRunState,
@@ -698,21 +634,13 @@ export function issueIdsForCommit(
 }
 
 /**
- * Reverts the resolutions a step's discarded attempt claimed, and releases
- * the step's issue assignments. A retry-clean resets the tree to the step's
- * pre-dispense ref, so a fix that attempt reported as resolved is gone
- * unless a landed commit already carries it; leaving the ledger entry
- * resolved would report a fix that no longer exists and attach its id to
- * whatever the retry eventually lands. Reverted entries go back to
- * 'recorded' where a non-terminal applicable step (the re-armed step
- * included) can pick them up, and to 'deferred-final' otherwise. Claims go
- * with the discarded attempt: an assignment names an agent-work dispense's
- * digest, and the retry may never park for agent work (a no-op generator,
- * say), so a kept claim would render "assigned to this step" with no
- * handoff to report through; the retry's own dispense re-claims what its
- * digest can carry. Pure, like applyReportedIssues; the returned updates
- * are for the archive trail (claim releases are nx's own progression, not
- * archived, like the settle sweep's demotions).
+ * Reverts the resolutions a step's discarded attempt claimed and releases its
+ * issue assignments. A retry-clean resets the tree, so a reported fix is gone
+ * unless a landed commit carries it; leaving the entry resolved would attach
+ * its id to whatever the retry lands next. The claim goes too: the retry may
+ * never park for agent work, so a kept assignment would render "assigned to
+ * this step" with no handoff to answer through. Pure; the returned updates are
+ * the archive trail, which claim releases do not join.
  */
 export function reopenResolutionsForStep(
   state: MigrateRunState,
@@ -756,11 +684,8 @@ export function reopenResolutionsForStep(
     : { state, updates };
 }
 
-// The disposition an entry starts (or, on a reopen, restarts) with. The
-// report's own value wins where it can hold: unknown applicability cannot be
-// claimed, so it goes straight to 'deferred-final' rather than being
-// assigned speculatively, and so does a recorded issue with no claimable
-// applicable step left.
+// Unknown applicability is deferred, not recorded: nothing can claim it, so a
+// 'recorded' entry would sit waiting for an assignment that never comes.
 function resolveDisposition(
   report: ReportedIssue,
   applicableStepIds: string[] | 'unknown',
@@ -775,9 +700,6 @@ function resolveDisposition(
     : 'deferred-final';
 }
 
-// A repeated report's applicability unioned into the entry's: concrete
-// identifiers widen the known scope, an "unknown" report leaves it as it
-// stands.
 function mergedApplicableStepIds(
   existing: MigrateRunIssue,
   report: ReportedIssue,
@@ -795,11 +717,8 @@ function mergedApplicableStepIds(
   return state.steps.map((s) => s.id).filter((id) => combined.has(id));
 }
 
-// Whether any applicable step can still pick the issue up. Non-terminal is
-// the boundary, not 'pending': a step that just failed (the reporting step
-// included, at fold time) can be re-armed, and its retry's agent-work
-// dispense claims recorded issues; deferring on its failure would put the
-// issue out of that retry's reach.
+// Non-terminal is the boundary, not 'pending': a just-failed step can be
+// re-armed, and its retry's dispense claims recorded issues.
 function hasClaimableStep(
   applicableStepIds: string[] | 'unknown',
   state: MigrateRunState
@@ -811,8 +730,6 @@ function hasClaimableStep(
   });
 }
 
-// Union of the mapped step ids across the report's identifiers, deduped, in
-// plan order.
 function mapApplicableSteps(
   identifiers: string[],
   state: MigrateRunState
@@ -827,11 +744,10 @@ function mapApplicableSteps(
 }
 
 /**
- * Assigns the still-recorded issues applicable to the step being dispensed
- * to that step, up to what the digest can publish. Runs inside the
- * dispense's locked write, so serial dispensing makes "first remaining
- * applicable step" deterministic; an issue an earlier applicable step left
- * unresolved is reassigned to the next one.
+ * Claims the still-recorded issues applicable to the step being dispensed, up
+ * to what the digest can publish. Must run inside the dispense's locked write:
+ * serial dispensing is what makes reassignment to the next applicable step
+ * deterministic when an earlier one left the issue unresolved.
  */
 export function claimIssuesForStep(
   state: MigrateRunState,
@@ -839,14 +755,9 @@ export function claimIssuesForStep(
 ): MigrateRunState {
   const issues = state.issues;
   if (!issues) return state;
-  // Claims are bounded by what the digest can publish: an assignment the
-  // digest cannot list is invisible to its assignee (issueUpdates may only
-  // reference digest-marked issues), and once the step turned terminal the
-  // settle sweep would demote work the agent was never shown. The walk
-  // accumulates the same order and caps as the renderer, whose assigned
-  // entries come first, so every claim kept here is guaranteed a digest
-  // line; a claim past the caps (a reassignment pushed it out) is released
-  // back to plain 'recorded'.
+  // Claims are capped to what the digest can publish: an unlisted assignment is
+  // invisible to its assignee, since issueUpdates may only name digest-marked
+  // issues. This walk must mirror the renderer's assigned-first order and caps.
   let count = 0;
   let bytes = 0;
   let changed = false;
@@ -880,17 +791,12 @@ export function claimIssuesForStep(
 }
 
 /**
- * Demotes recorded issues no remaining step can claim to 'deferred-final',
- * and releases claims whose assignee turned terminal while other applicable
- * steps remain. The report-time deferral in resolveDisposition only sees
- * the run as it stood then; a step later turning terminal without resolving
- * its claimed issues (a success without an issueUpdates entry, a skip, an
- * adopt) would otherwise leave 'recorded' entries the routing contract says
- * are still claimable, or a dead assignment posing as ownership. Run before
- * anything renders, so digests and the completion report never label
- * unclaimable work as available. Pure; returns the same state when nothing
- * changes. No archive record: like a report-time deferral, this is the
- * run's own progression, not a step-authored change.
+ * Demotes recorded issues no remaining step can claim, and releases claims
+ * whose assignee turned terminal. Report-time deferral only saw the run as it
+ * stood then, so a step turning terminal later without resolving its claims
+ * leaves entries the routing contract calls claimable, or a dead assignment
+ * posing as ownership. Must run before anything renders. Not archived: this is
+ * the run's own progression, not a step-authored change.
  */
 export function settleUnclaimableIssues(
   state: MigrateRunState
@@ -902,17 +808,13 @@ export function settleUnclaimableIssues(
     if (issue.disposition !== 'recorded') return issue;
     if (!hasClaimableStep(issue.applicableStepIds, state)) {
       changed = true;
-      // The claim goes with the demotion: it named an assignment in a
-      // digest, and a deferred issue is assigned nowhere. Leaving it would
-      // read as active ownership (e.g. to the duplicate-report resolution
-      // rule).
+      // The claim goes with the demotion: a deferred issue is assigned
+      // nowhere, and the state reader rejects a claim on a non-recorded issue.
       const { claimedByStepId: _dropped, ...rest } = issue;
       return { ...rest, disposition: 'deferred-final' as const };
     }
-    // A claim whose assignee turned terminal without resolving the issue is
-    // stale the same way: that step can never hand another handoff back, so
-    // the assignment blocks nothing and would read as active ownership. The
-    // issue stays recorded for the remaining applicable steps to claim.
+    // A terminal assignee can never hand back another handoff, so its claim
+    // blocks nothing and would read as active ownership.
     const claimant =
       issue.claimedByStepId !== undefined
         ? state.steps.find((s) => s.id === issue.claimedByStepId)
@@ -927,16 +829,14 @@ export function settleUnclaimableIssues(
   return changed ? { ...state, issues: next } : state;
 }
 
-// Workspace-relative reference to the run's issues directory, for rendered
-// text.
 function issuesDirRef(runId: string): string {
   return `${MIGRATE_RUNS_RELATIVE_DIR}/${runId}/${ISSUES_DIR_NAME}/`;
 }
 
 /**
- * The bounded "Known issues" digest a work dispense carries: unresolved
- * issues ordered assigned-to-this-step, then recorded, then deferred-final.
- * Empty when the ledger holds nothing unresolved.
+ * The bounded "Known issues" digest a work dispense carries. The assigned-first
+ * order and caps are load-bearing: claimIssuesForStep mirrors them so every
+ * claim it keeps is guaranteed a line here.
  */
 export function renderIssueDigestLines(
   state: MigrateRunState,
@@ -977,10 +877,6 @@ export function renderIssueDigestLines(
   return lines;
 }
 
-/**
- * The unresolved-issues section of the completion output. Same entries as
- * the digest, without a current step to order first.
- */
 export function renderUnresolvedIssueLines(
   state: MigrateRunState,
   runId: string
@@ -1014,9 +910,8 @@ function digestEntry(issue: MigrateRunIssue, label: string): string {
   return `  - ${issue.id} (${label}): ${summary}`;
 }
 
-// Applies the digest bounds to pre-rendered entry lines, counting what they
-// drop. The listed set is a prefix of the ordered entries: the first one over
-// a cap ends the listing, so the assigned-first ordering survives truncation.
+// Breaks at the first entry over a cap rather than skipping it: the listed set
+// must stay a prefix, or the assigned-first ordering would not survive.
 function boundedEntryLines(entries: string[], runId: string): string[] {
   const lines: string[] = [];
   let bytes = 0;
@@ -1052,12 +947,11 @@ export function issueArchivePath(runDirPath: string, issueId: string): string {
 
 /**
  * Archives an application's new issues (with the detail the ledger does not
- * carry) and appends its updates to the archived files. Failures propagate:
- * the caller keeps the handoff file in place as the fallback detail store
- * when archiving fails. Reconstructed issue ids land in `reconstructedIds`
- * as they happen, so a failure in a later batch cannot swallow an earlier
- * reconstruction: the rebuilt shell is already durable, and a retry finds
- * it healthy, so the throw-interrupted pass is the only chance to warn.
+ * carry) and appends its updates to the archived files. Failures propagate;
+ * the caller then keeps the handoff file as the fallback detail store.
+ * `reconstructedIds` is filled as it goes rather than returned alone: a retry
+ * finds a rebuilt shell healthy, so a throw-interrupted pass is the only
+ * chance to warn that an archive was lost.
  */
 export function archiveIssues(
   runDirPath: string,
@@ -1068,8 +962,8 @@ export function archiveIssues(
     const record = { ...newIssueArchiveRecord(entry, report), updates: [] };
     writeIssueArchive(runDirPath, entry.id, record);
   }
-  // One append per issue: the whole batch an application produced for an
-  // issue lands in a single atomic write, so a crash cannot split it.
+  // One append per issue, so an application's whole batch lands in a single
+  // atomic write a crash cannot split.
   const batches = batchUpdatesByIssue(application.updates);
   for (const [issueId, batch] of batches) {
     const reconstructed = appendIssueUpdatesToArchive(
@@ -1086,20 +980,13 @@ export function archiveIssues(
 }
 
 /**
- * Whether every archive this application touches is on disk and holds what
- * phase 1 wrote for it: a new report's file must equal the full
- * first-report record with an EMPTY update list (routing and both
- * dispositions have no other durable copy; the id did not exist before
- * this fold, the same handoff cannot reference it, and nothing runs
- * between the phases, so any update record is not phase 1's output), and
- * each updated issue's records must END with this application's batch,
- * matching the append path's whole-suffix replay rule (a record merely
- * appearing earlier is another event's, not this one's). A shell phase 1
- * rebuilt for a lost archive carries the ledger's identity values and
- * exactly this batch, so it verifies like any other phase-1 output. The
- * fold's phase-2 re-archive may tolerate a write failure only when
- * everything verifies; anything less would leave the removed handoff as
- * the only copy.
+ * Whether every archive this application touches is on disk and still holds
+ * what phase 1 wrote: a new issue's file must equal the first-report record
+ * with an empty update list, and an updated issue's records must END with this
+ * application's batch, matching the append path's whole-suffix replay rule. A
+ * shell rebuilt for a lost archive carries the same identity values, so it
+ * verifies like any other phase-1 output. The fold's phase-2 re-archive checks
+ * this before tolerating a write failure.
  */
 export function applicationArchivesIntact(
   runDirPath: string,
@@ -1164,8 +1051,8 @@ const NEW_ISSUE_ARCHIVE_KEYS = [
   'detail',
 ] as const;
 
-// The persisted first-report record (everything but `updates`); shared by
-// the write path and the intactness check so their shapes cannot drift.
+// Shared by the write path and the intactness check so their shapes cannot
+// drift.
 function newIssueArchiveRecord(
   entry: MigrateRunIssue,
   report: ReportedIssue
@@ -1176,8 +1063,8 @@ function newIssueArchiveRecord(
     summary: entry.summary,
     reportedByStepId: entry.reportedByStepId,
     applicableMigrations: report.applicableMigrations,
-    // Both dispositions, so the file keeps what the reporter asked for
-    // apart from where the ladder actually started the entry.
+    // Both dispositions: the ladder may start the entry somewhere other than what
+    // the reporter asked for, and the file keeps both.
     ...(report.disposition !== undefined
       ? { reportedDisposition: report.disposition }
       : {}),
@@ -1198,8 +1085,8 @@ function batchUpdatesByIssue(
   return batches;
 }
 
-// The persisted form of one archive update record; shared by the append
-// path and the intactness check so their shapes cannot drift.
+// Shared by the append path and the intactness check so their shapes cannot
+// drift.
 function archiveUpdateRecord(update: IssueArchiveUpdate): object {
   return {
     stepId: update.stepId,
@@ -1212,8 +1099,7 @@ function archiveUpdateRecord(update: IssueArchiveUpdate): object {
   };
 }
 
-// Returns true when the archive had to be rebuilt (it was missing or
-// corrupt), so the caller can surface the degraded data.
+// True when the archive had to be rebuilt (missing or corrupt).
 function appendIssueUpdatesToArchive(
   runDirPath: string,
   issueId: string,
@@ -1221,13 +1107,9 @@ function appendIssueUpdatesToArchive(
   state: MigrateRunState
 ): boolean {
   const filePath = issueArchivePath(runDirPath, issueId);
-  // A missing archive is reconstructed from the run state's fields (the
-  // originally reported detail lived only in the lost file) and a corrupt
-  // one replaced the same way; the ledger in run.json stays authoritative
-  // for dispositions either way, and the caller warns from the returned
-  // flag. Any other read failure may hide an intact file, and this is the
-  // only durable copy of the issue's detail, so it propagates into the
-  // caller's abort-or-warn handling instead of being overwritten.
+  // Missing or corrupt archives are rebuilt from run state, which stays
+  // authoritative for dispositions. Any other read error rethrows rather than
+  // overwrite: it may hide an intact file, the only copy of the issue's detail.
   let existing: Record<string, unknown>;
   let reconstructed = false;
   try {
@@ -1248,11 +1130,9 @@ function appendIssueUpdatesToArchive(
   }
   const updates = Array.isArray(existing.updates) ? existing.updates : [];
   const records = batch.map(archiveUpdateRecord);
-  // Skip a batch the archive already ends with: a crash between the archive
-  // writes and the fold's state write re-runs the same application, and the
-  // refold must not duplicate what the crashed attempt appended. Compared as
-  // a whole suffix, since one application can legally append several records
-  // for the same issue.
+  // Skip a batch the archive already ends with: a crash between these writes and
+  // the fold's state write replays the same application. Compared as a whole
+  // suffix, since one application can legally append several records per issue.
   const tail = updates.slice(updates.length - records.length);
   if (
     tail.length === records.length &&
@@ -1267,16 +1147,10 @@ function appendIssueUpdatesToArchive(
   return reconstructed;
 }
 
-// A parseable archive still reconstructs when its identity is gone or
-// wrong: appending onto a hollow or mismatched object would hide the loss
-// behind a file the runbook points at as the full record. The bar is
-// identity only: with the ledger entry in hand, the file's stable identity
-// values (id, fingerprint, summary, reporter) must MATCH it; without the
-// entry, their presence, or the bare id-plus-marker shell, is the most
-// that is restorable. Everything else in the file (routing, dispositions,
-// detail, notes, update records) is informational content this reader does
-// not police: run.json stays authoritative for every behavioral decision,
-// and authenticating archive history is an explicit non-goal.
+// Identity only: id, fingerprint, summary and reporter must match the ledger
+// entry. Everything else is informational and deliberately unpoliced, since
+// run.json decides behavior and authenticating archive history is a non-goal.
+// A hollow or mismatched file rebuilds, rather than hiding the loss.
 function isHealthyArchive(
   value: unknown,
   issueId: string,
@@ -1302,8 +1176,7 @@ function isHealthyArchive(
   return value.reconstructed === true;
 }
 
-// What can be rebuilt for a lost archive from the durable run state alone.
-// The originally reported detail is gone with the file; the marker keeps
+// The originally reported detail is gone with the file; `reconstructed` keeps
 // that loss visible to whoever the digest points here.
 function reconstructedArchiveShell(
   issueId: string,
@@ -1326,8 +1199,8 @@ function reconstructedArchiveShell(
   };
 }
 
-// Atomic like every other run artifact write: temp file in the same
-// directory, then rename, so a crash can only leave a stale temp file.
+// Atomic like every other run artifact write: a crash can only leave a stale
+// temp file, never a partial archive.
 function writeIssueArchive(
   runDirPath: string,
   issueId: string,

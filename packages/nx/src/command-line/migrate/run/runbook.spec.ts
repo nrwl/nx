@@ -35,9 +35,8 @@ describe('renderRunbook', () => {
     expect(runbook).toContain(
       'Do not run migrations the\norchestrator has not dispensed'
     );
-    // Handed-back work reconciles first: that dispense names the handoff
-    // file and assigns recorded issues, so nothing tells the agent to write
-    // a handoff it has not been handed a path for.
+    // Handed-back work reconciles first: that dispense names the handoff file,
+    // so the agent is never told to write one without a path.
     expect(runbook).toContain('run the\n   `next` command first');
     expect(runbook).toContain('`no-progress` action');
     expect(runbook).toContain('report the blocker to the user');
@@ -153,9 +152,8 @@ describe('renderRunbook', () => {
   );
 
   it('never renders a line an agent block parser could take for a block boundary', () => {
-    // The emitter neutralizes such lines defensively, but byte-parity between
-    // the stored file and the emitted block depends on the renderer never
-    // producing one in the first place.
+    // The emitter neutralizes such lines, but byte-parity between the stored
+    // file and the emitted block depends on the renderer never producing one.
     for (const validate of [true, false]) {
       for (const createCommits of [true, false]) {
         const runbook = renderRunbook(

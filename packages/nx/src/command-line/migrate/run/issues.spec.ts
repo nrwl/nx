@@ -78,8 +78,8 @@ describe('migrate run issues', () => {
     analytics: { startEmitted: true, completeEmitted: false },
   });
 
-  // step-1 is the reporting step; step-2/step-3 are future work in two
-  // packages, one scoped.
+  // step-1 is the reporting step; step-2 and step-3 cover a scoped and an
+  // unscoped package.
   const baseSteps = () => [
     step('step-1', '@nx/js:one', 'awaiting-prompt-outcome'),
     step('step-2', '@nx/js:two', 'pending'),
@@ -450,9 +450,7 @@ describe('migrate run issues', () => {
 
     it('refuses to mint an id past the bounded suffix instead of writing an unreadable state', () => {
       const steps = baseSteps();
-      // The reader accepts at most 18 digits; minting past a ledger already
-      // at the bound would write an id the reader rejects and the archive
-      // path cannot name.
+      // The reader caps the id suffix at 18 digits.
       expect(() =>
         applyReportedIssues(
           stateWith(steps, [issue(`issue-${'9'.repeat(18)}`)]),
@@ -634,8 +632,8 @@ describe('migrate run issues', () => {
 
     it('lets a repeated resolved report resolve a deferred issue despite stale claim residue', () => {
       const steps = baseSteps();
-      // States written before claims were stripped on deferral can carry
-      // this residue; ownership must not outlive the recorded disposition.
+      // States written before claims were stripped on deferral can carry this
+      // residue.
       const existing = issue('issue-1', {
         fingerprint: issueFingerprint('same problem'),
         summary: 'same problem',
@@ -703,8 +701,6 @@ describe('migrate run issues', () => {
           resolvedAtCommitCount: 1,
         },
       ]);
-      // The old commit no longer vouches; the new fix reaches its own
-      // commit.
       expect(issueIdsForCommit(result.state, ['step-1'])).toEqual(['issue-1']);
       expect(result.updates).toEqual([
         {
@@ -817,7 +813,6 @@ describe('migrate run issues', () => {
           applicableMigrations: ['plain'],
         },
       ]);
-      // The reverted resolution must not reach a later commit's issue ids.
       expect(issueIdsForCommit(result.state, ['step-1'])).toEqual([]);
     });
 
@@ -1000,8 +995,8 @@ describe('migrate run issues', () => {
         [{ summary: 'same problem', applicableMigrations: 'unknown' }],
         []
       );
-      // step-2 could still claim it, but the report brought no new scope;
-      // an echo of a digest-visible deferral does not override it.
+      // step-2 could still claim it; only the missing new scope keeps the
+      // deferral standing.
       expect(result.state).toEqual(state);
       expect(result.updates).toEqual([]);
     });
@@ -1024,9 +1019,9 @@ describe('migrate run issues', () => {
         [{ summary: 'same problem', applicableMigrations: ['plain'] }],
         []
       );
-      // 'plain' maps only to terminal step-3: new routing, but no new fix
-      // opportunity. The deferral already stood over claimable step-2, so
-      // reviving on it would let routing to finished work undo it.
+      // 'plain' maps only to terminal step-3: routing, but no new fix
+      // opportunity. Reviving on it would let finished work undo a deferral that
+      // already stood over claimable step-2.
       const entry = result.state.issues[0];
       expect(entry.disposition).toBe('deferred-final');
       expect(entry.applicableStepIds).toEqual(['step-2', 'step-3']);
@@ -1102,8 +1097,6 @@ describe('migrate run issues', () => {
         ],
         []
       );
-      // step-1 succeeded without resolving it, so its claim owns nothing;
-      // the step that actually fixed the problem gets the resolution.
       expect(result.state.issues[0].disposition).toBe('resolved');
       expect(result.state.issues[0].resolvedByStepId).toBe('step-2');
       expect(result.state.issues[0].claimedByStepId).toBeUndefined();
@@ -1128,8 +1121,6 @@ describe('migrate run issues', () => {
         ],
         []
       );
-      // The resolution is dropped (the assignee owns the entry); only the
-      // report's applicability is unioned in.
       expect(result.state.issues).toEqual([
         { ...existing, applicableStepIds: ['step-2', 'step-3'] },
       ]);
@@ -1165,7 +1156,6 @@ describe('migrate run issues', () => {
       expect(result.state.issues[0].resolvedByStepId).toBe('step-1');
       // The claim dies with the move out of 'recorded'.
       expect(result.state.issues[0].claimedByStepId).toBeUndefined();
-      // issue-2 was already resolved, so this handoff gets no credit for it.
       expect(result.state.issues[1].resolvedByStepId).toBeUndefined();
       expect(issueIdsForCommit(result.state, ['step-1'])).toEqual(['issue-1']);
       expect(result.updates).toEqual([
@@ -1239,9 +1229,8 @@ describe('migrate run issues', () => {
     });
 
     it('ignores commits below the resolution stamp even for the same resolver', () => {
-      // step-1 resolved issue-1, a commit carried it, the issue reopened,
-      // and step-1 resolved it again; the commit that predates the new
-      // resolution must not make it look landed.
+      // step-1 resolved issue-1, a commit carried it, the issue reopened, and
+      // step-1 resolved it again.
       const state = {
         ...stateWith(baseSteps(), [
           issue('issue-1', {
@@ -1299,8 +1288,6 @@ describe('migrate run issues', () => {
           }),
         ])
       );
-      // step-1 can never hand another handoff back; the issue stays
-      // recorded for step-2 to claim.
       expect(result.issues[0].disposition).toBe('recorded');
       expect(result.issues[0].claimedByStepId).toBeUndefined();
     });
@@ -1367,10 +1354,9 @@ describe('migrate run issues', () => {
     });
 
     it("reverts a re-resolution despite a commit that carried the step's earlier one", () => {
-      // issue-1's resolution by step-1 landed, the issue reopened, and
-      // step-1's retry resolved it again (stamping the ledger length); a
-      // retry-clean discards that second, uncommitted fix. The commit below
-      // the stamp proves only the first.
+      // step-1's first resolution landed, the issue reopened, and its retry
+      // resolved it again (stamping the ledger length at 1); a retry-clean
+      // discards that second, uncommitted fix.
       const steps = [
         step('step-1', '@nx/js:one', 'pending'),
         step('step-2', '@nx/js:two', 'pending'),
@@ -1492,9 +1478,8 @@ describe('migrate run issues', () => {
     });
 
     it('claims only what the digest can publish and releases a claim pushed past the caps', () => {
-      // 21 applicable issues; the digest lists at most 20 entries, so the
-      // 21st must not hold an invisible assignment. It starts with a stale
-      // claim to pin the release branch.
+      // 21 applicable issues against the digest's 20-entry cap, so the 21st must
+      // not hold an invisible assignment; its stale claim pins the release branch.
       const many = Array.from({ length: 21 }, (_, i) =>
         issue(`issue-${i + 1}`, {
           fingerprint: `fp-${i}`,
@@ -1832,7 +1817,7 @@ describe('migrate run issues', () => {
     });
 
     it('reconstructs a parseable archive whose identity fields are gone, reporting the loss', () => {
-      // `{}` parses fine; appending onto it would silently hide that the
+      // Appending onto a parseable-but-empty archive would silently hide that the
       // issue's own record is gone.
       mkdirSync(join(dir, 'issues'), { recursive: true });
       writeFileSync(issueArchivePath(dir, 'issue-1'), '{}');
@@ -1865,8 +1850,6 @@ describe('migrate run issues', () => {
     });
 
     it('reconstructs a shell whose marker lacks its own issue id, reporting the loss', () => {
-      // A bare marker is not an identity; appending onto it would hide that
-      // the issue's own record is gone.
       mkdirSync(join(dir, 'issues'), { recursive: true });
       writeFileSync(issueArchivePath(dir, 'issue-1'), '{"reconstructed":true}');
       const state = stateWith(baseSteps(), [
@@ -1918,9 +1901,8 @@ describe('migrate run issues', () => {
     });
 
     it('reports whether every archive holding the application details survives on disk', () => {
-      // A real application never reports and updates the same issue (the
-      // parser rejects the cross-array collision), so the new report and
-      // the update target different issues.
+      // A real application never reports and updates the same issue (the parser
+      // rejects the cross-array collision), so these target different ones.
       archiveIssues(
         dir,
         application({
@@ -1999,11 +1981,9 @@ describe('migrate run issues', () => {
     });
 
     it("verifies the marked rebuild of a lost archive carrying this application's batch", () => {
-      // Lose an archive and let a phase-1-style pass rebuild it. The
-      // rebuilt shell carries the ledger's identity values and exactly
-      // this batch, so phase 2 accepts it like any other phase-1 output;
-      // rejecting it would make the next pass replace the file and lose
-      // the batch.
+      // The rebuilt shell carries the ledger's identity values and exactly this
+      // batch, so phase 2 must accept it; rejecting it would make the next pass
+      // replace the file and lose the batch.
       const entry = issue('issue-1');
       const first = {
         state: stateWith(baseSteps(), [entry]),

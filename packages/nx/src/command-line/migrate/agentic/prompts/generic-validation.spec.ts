@@ -142,8 +142,6 @@ describe('buildGenericValidationUserPrompt', () => {
         ...baseCtx,
         impl: { ...baseCtx.impl, hasDiffContext },
       });
-      // project.json / package.json miss plugin-inferred targets, so they must
-      // read as a fallback, never as an equivalent discovery path.
       expect(out).toContain('`nx show project <name> --json`');
       expect(out).toContain('targets inferred by plugins');
       // Bare `nx affected` selects the branch delta plus unrelated uncommitted

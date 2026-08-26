@@ -1,15 +1,13 @@
-// Wording shared by the agent system prompt (system-prompt.ts) and the
-// orchestrated run's runbook (run/runbook.ts). Both state the same contracts,
-// so each contract's wording lives here once.
+// Wording the agent system prompt (system-prompt.ts) and the orchestrated
+// run's runbook (run/runbook.ts) must state identically.
 
 export function renderNxInvocationNote(
   packageManager: string,
   nxInvocation: string
 ): string {
-  return `Use \`${packageManager}\` for any package-manager invocation in this workspace. To invoke nx, use \`${nxInvocation} …\`. Do not default to a different package manager based on your own preference.`;
+  return `Use \`${packageManager}\` for any package-manager invocation in this workspace. To invoke nx, use \`${nxInvocation} ...\`. Do not default to a different package manager based on your own preference.`;
 }
 
-// The JSON shape of a handoff file, as rendered lines.
 export function renderHandoffShapeLines(): string[] {
   return [
     `{`,
@@ -19,8 +17,8 @@ export function renderHandoffShapeLines(): string[] {
   ];
 }
 
-// Scope rules for agent work that applies an author-provided migration prompt
-// (prompt-only or hybrid migration).
+// Scope rules for applying an author-provided migration prompt (prompt-only or
+// hybrid migration).
 export function renderAuthorScopeRuleLines(): string[] {
   return [
     `- Apply only the changes the migration prompt asks for.`,
@@ -32,11 +30,10 @@ export function renderAuthorScopeRuleLines(): string[] {
   ];
 }
 
-// Scope rules for framework-owned validation of a generator's output.
 export function renderValidationScopeRuleLines(): string[] {
   return [
     `- Your job is to validate the generator's changes. Inspect the listed changes, run the smallest relevant set of verification tasks, and report findings.`,
-    `- Discover what targets exist before running tasks: \`nx show project <name> --json\` is authoritative, since it includes targets inferred by plugins. Reading a project's \`project.json\` / \`package.json\` misses inferred targets; treat it as an incomplete fallback for when the project graph cannot be built. Do not assume specific target names (\`typecheck\`, \`test\`, \`lint\`) are available — workspaces vary. Run what the project actually has; if no typecheck-equivalent exists, \`build\` is an acceptable substitute.`,
+    `- Discover what targets exist before running tasks: \`nx show project <name> --json\` is authoritative, since it includes targets inferred by plugins. Reading a project's \`project.json\` / \`package.json\` misses inferred targets; treat it as an incomplete fallback for when the project graph cannot be built. Do not assume specific target names (\`typecheck\`, \`test\`, \`lint\`) are available, since workspaces vary. Run what the project actually has; if no typecheck-equivalent exists, \`build\` is an acceptable substitute.`,
     `- You may run nx tasks for verification, scoped to this migration's changes: \`nx affected --files=<changed paths> -t <target>\`, \`nx run <project>:<target>\`, or \`nx run-many -t <target> -p <project1>,<project2>\` where the project list is derived from the changed files. Bare \`nx affected\` (no \`--files\`) selects the branch delta plus everything uncommitted, and unscoped \`nx run-many\` (no \`-p\`) is forbidden.`,
     `- Read-only and artifact-writing inspection commands are permitted: \`nx show project\`, \`nx graph --file <path>\`, reading files. These do not mutate workspace source.`,
     `- You may apply minor fixes only when the issue lies within the scope of what this migration intended to accomplish (e.g. a missing import the generator's template should have produced, a type annotation the template missed). Do not refactor, do not modify unrelated functionality, do not extend the migration's scope, do not touch code the migration was not concerned with. If you are unsure whether a fix is in scope, report it in \`summary\` instead of applying.`,

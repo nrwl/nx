@@ -1,8 +1,6 @@
-// Renders the runbook for an orchestrated migrate run: the self-sufficient
-// contract a master agent session drives the run by. Written to the run
-// directory at init and re-emitted from disk on resume, so its content is
-// version-locked to the Nx that created the run and never depends on plugin
-// skills or the session's memory.
+// Written to the run directory at init and re-emitted from disk on resume, so
+// the contract is version-locked to the Nx that created the run and never
+// depends on plugin skills or the session's memory.
 
 import {
   renderAuthorScopeRuleLines,
@@ -18,9 +16,8 @@ export const RUNBOOK_FILE_NAME = 'RUNBOOK.md';
 export interface RunbookContext {
   runId: string;
   packageManager: string;
-  // Concrete nx invocation for this workspace, e.g. `npx nx`, `pnpm exec nx`.
+  // e.g. `npx nx`, `pnpm exec nx`.
   nxInvocation: string;
-  // The exact command that asks the orchestrator for the run's current state.
   reconcileCommand: string;
   createCommits: boolean;
   validate: boolean;

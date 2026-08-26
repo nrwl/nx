@@ -48,24 +48,19 @@ const PLAN_SNAPSHOT_NAME = /^plan-\d+\.json$/;
  * of the agent without passing the block-safe writer.
  */
 const STEP_ID = /^step-\d+$/;
-// Nx numbers issues the way it numbers steps, and the id names the archived
-// detail file inside the run's issues directory, so a tampered value must not
-// resolve outside it. The suffix is bounded: an unbounded one could name a
-// file past the filesystem's component limit, and the allocator minting past
-// it would then produce unwriteable ids forever. The allocator checks its
-// minted ids against this same pattern.
+// The id names the archived detail file in the run's issues directory, so a
+// tampered value must not resolve outside it. The suffix is bounded so the
+// allocator, which mints against this same pattern, can never produce an id
+// past the filesystem's component limit and then fail forever.
 export const ISSUE_ID = /^issue-\d{1,18}$/;
 /**
- * The runbook is a file Nx writes next to `run.json`, so the recorded value is
- * the one name Nx gives it, pinned whole like PLAN_SNAPSHOT_NAME. A resume
- * joins it to the run directory and re-emits the file's bytes verbatim, so a
- * tampered value naming a sibling (`run.json`, a plan snapshot) would leak
- * that file's content past every line-safety check.
+ * A resume joins this to the run directory and re-emits the file's bytes
+ * verbatim, so a tampered value naming a sibling (`run.json`, a plan
+ * snapshot) would leak that file's bytes past every line-safety check.
  */
 const RUNBOOK_NAME = /^RUNBOOK\.md$/;
-// The terminators `singleLine` collapses. Issue summaries and fingerprints are
-// rendered into dispensed step content, so an embedded terminator could open a
-// forged block at a line start in the stdout the agent scans.
+// The terminators `singleLine` collapses. An embedded one could open a forged
+// block at a line start in the stdout the agent scans.
 const LINE_TERMINATORS = /[\r\n\u000b\u000c\u0085\u2028\u2029]/;
 // Keeps `.nx/migrate-runs` from growing unbounded across many `nx migrate`
 // invocations over the life of a workspace.
@@ -95,8 +90,8 @@ const MIGRATE_STEP_STATUSES = [
 ] as const;
 export type MigrateStepStatus = (typeof MIGRATE_STEP_STATUSES)[number];
 
-// The statuses a step never leaves. Every other status can still advance:
-// 'failed' and 'died' steps can be re-armed into a fresh attempt.
+// 'failed' and 'died' are not terminal: both can be re-armed into a fresh
+// attempt.
 export const TERMINAL_STEP_STATUSES: ReadonlySet<MigrateStepStatus> = new Set([
   'succeeded',
   'skipped',
@@ -105,9 +100,6 @@ export const TERMINAL_STEP_STATUSES: ReadonlySet<MigrateStepStatus> = new Set([
 const PROMPT_OUTCOME_STATUSES = ['completed', 'skipped', 'failed'] as const;
 export type PromptOutcomeStatus = (typeof PROMPT_OUTCOME_STATUSES)[number];
 
-// What kind of agent work a step entering 'awaiting-prompt-outcome' handed
-// off: the prompt half of a hybrid migration, or a validation pass over a
-// generator's changes.
 const MIGRATE_STEP_AWAITING_KINDS = [
   'migration-prompt',
   'generator-validation',
@@ -158,42 +150,27 @@ export interface MigrateStep {
   outcome?: MigrateStepOutcome;
   // Folded from the handoff file at reconcile time.
   promptOutcome?: MigrateStepPromptOutcome;
-  // The kind of agent work the step is awaiting, recorded when it enters
-  // 'awaiting-prompt-outcome'. Dropped on re-arm with the other per-attempt
-  // fields.
+  // Recorded when the step enters 'awaiting-prompt-outcome'; dropped on re-arm
+  // with the other per-attempt fields.
   awaitingKind?: MigrateStepAwaitingKind;
-  // Set once a step's generator half has run, before the commit is attempted,
-  // so a retry after a failed commit or install re-emits only the remaining
-  // agent work (the prompt, or the validation pass) or commits what is
-  // already in the tree, instead of reapplying the changes.
+  // Set after the generator half runs and before the commit is attempted, so a
+  // retry finishes the step instead of reapplying the changes. Dropped with the
+  // four marker fields below when a retry's reset discards those changes.
   generatorCompleted?: boolean;
-  // The attempt the marker was recorded on: the start of the lineage whose
-  // stored agent-work payloads a retry may re-hand. Payloads from earlier
-  // attempts predate a reset-backed retry, so they describe a generator run
-  // whose tree was discarded, and the lookup never crosses this boundary.
-  // Absent fails the lookup closed (no payload is re-handed): an older nx's
-  // rearm drops the field while leaving the files, so absence cannot prove
-  // the stored copies belong to the current lineage. Discarded with the
-  // marker on a clean retry.
+  // The attempt the marker was recorded on: the lineage boundary a retry will
+  // not re-hand stored agent-work payloads from below. Absent must stay
+  // meaningful: an older nx's re-arm drops it while leaving the files.
   generatorCompletedAtAttempt?: number;
-  // Set alongside `generatorCompleted` when the generator waived its AI step
-  // via `skipAgentic`, so a retry does not re-emit a prompt or validation
-  // pass the migration said was unnecessary. Discarded with the marker when a
-  // clean retry reruns the generator, which re-decides the waiver.
+  // Set with the marker when the generator waived its AI step via
+  // `skipAgentic`, so a retry does not re-emit work it called unnecessary.
   agenticWaived?: boolean;
-  // Set alongside `generatorCompleted` when the generator's changes owe the
-  // run's validation pass (validation on, changes made, not waived). A retry
-  // cannot recompute this: the decision needs the generator result, which is
-  // gone with the attempt that ran it. Absent means none was owed, including
-  // on states written by an older nx, whose runs never owed one. Discarded
-  // with the marker on a clean retry.
+  // Set with the marker when the generator's changes owe the run's validation
+  // pass. A retry cannot recompute it (the generator result went with the
+  // attempt that ran it); absent means none was owed, older states included.
   validationOwed?: boolean;
-  // Whether the completed generator changed any files, written with the
-  // marker as an explicit boolean: it decides whether a retry owes a commit,
-  // and a no-op step's commit would absorb unrelated pending diffs under its
-  // name. Absent means the marker came from an older nx that did not record
-  // it, and the retry keeps that version's commit behavior. Discarded with
-  // the marker on a clean retry.
+  // Whether the completed generator changed any files: it decides whether a
+  // retry owes a commit, and a no-op step's commit would absorb unrelated
+  // pending diffs under its name. Absent (an older nx's marker) still commits.
   generatorMadeChanges?: boolean;
   // Set when the run could not install the dependency changes this step left
   // behind, cleared by the next install that lands. The invocation that hit
@@ -216,10 +193,10 @@ export interface MigrateCommitLedgerEntry {
 }
 
 /**
- * Dedup key: the same underlying problem reported twice folds into one
- * ledger entry. Computed by nx from the normalized summary, so agent text
- * never becomes a path or command fragment. Lives here because the state
- * reader enforces the derivation on every persisted entry.
+ * Dedup key: the same underlying problem reported twice folds into one ledger
+ * entry. Derived from the normalized summary, so agent text never becomes a
+ * path or command fragment; the state reader re-checks the derivation on
+ * every persisted entry.
  */
 export function issueFingerprint(summary: string): string {
   return createHash('sha256')
@@ -237,30 +214,22 @@ export type MigrateIssueDisposition =
   (typeof MIGRATE_ISSUE_DISPOSITIONS)[number];
 
 export interface MigrateRunIssue {
-  // 'issue-<n>', assigned by Nx in reporting order. Also names the archived
-  // detail file, `issues/<id>.json`, inside the run directory.
   id: string;
-  // Nx-computed dedup key: the same underlying problem reported twice folds
-  // into one ledger entry.
   fingerprint: string;
   summary: string;
   reportedByStepId: string;
-  // The steps whose migrations the issue applies to, mapped by Nx from the
-  // migration ids the reporting session named; 'unknown' when the report
-  // could not scope it.
+  // Mapped by Nx from the migration ids the reporting session named; 'unknown'
+  // when the report could not scope it.
   applicableStepIds: string[] | 'unknown';
   disposition: MigrateIssueDisposition;
   // Set by Nx when a dispense hands the issue to an in-scope step to fix.
   claimedByStepId?: string;
-  // The step whose handoff moved the issue to 'resolved'. A later commit
-  // that absorbs that step's tree carries the fix, so the association
-  // outlives the step's own failed commit attempt. Present only while the
-  // disposition is 'resolved'.
+  // A later commit that absorbs the step's tree carries the fix, so the
+  // association outlives that step's own failed commit attempt.
   resolvedByStepId?: string;
-  // Length of the commits ledger when the current resolution was recorded.
-  // The ledger is append-only, so entries below this index predate the
-  // resolution and cannot carry it, whoever they name. Present exactly
-  // while the disposition is 'resolved'; a reopen drops it with the credit.
+  // Commits ledger length when the resolution was recorded. The ledger is
+  // append-only, so entries below it predate the resolution and cannot carry
+  // the fix, whoever they name.
   resolvedAtCommitCount?: number;
 }
 
@@ -269,9 +238,8 @@ export interface MigrateRunAnalytics {
   completeEmitted: boolean;
 }
 
-// Consecutive orchestrator responses that repeated the same content with no
-// durable state transition between them. What "the same" means is the
-// orchestrator's fingerprint; this only persists its streak.
+// Consecutive orchestrator responses that repeated content with no durable
+// state transition between them; the orchestrator defines "the same".
 export interface MigrateRunNoProgress {
   fingerprint: string;
   consecutiveCount: number;
@@ -289,11 +257,10 @@ export interface MigrateRunState {
   // The run's install policy, captured from the flags the run was started
   // with: dispensed workers are re-invoked by the loop and never see them.
   skipInstall?: boolean;
-  // The run's validation policy, captured like the install policy: whether
-  // generator changes get a validation pass dispensed over them.
+  // Whether generator changes get a validation pass dispensed over them,
+  // captured like the install policy above.
   validate?: boolean;
-  // Bare name of the runbook file Nx wrote next to run.json; a resume
-  // re-emits its stored bytes.
+  // A bare file name despite the field name; it is joined to the run directory.
   runbookPath?: string;
   rounds: MigrateRunRound[];
   steps: MigrateStep[];
@@ -447,12 +414,9 @@ function isStepShape(value: unknown): boolean {
     typeof value.migrationId === 'string' &&
     SHELL_SAFE_VALUE.test(value.migrationId) &&
     isOneOf(MIGRATE_STEP_STATUSES, value.status) &&
-    // The attempt derives the stored-payload file name a park writes and
-    // filters the enumerated payloads a retry may re-hand (see
-    // agent-work-payload.ts), so it must be a real counter: a fractional or
-    // non-finite value (valid JSON like 1e400 parses to Infinity) breaks the
-    // name round-trip and the range comparison instead of surfacing the
-    // corrupt-state refusal.
+    // The attempt is interpolated into the stored-payload file name and
+    // range-compared against it (agent-work-payload.ts), so a fractional or
+    // non-finite value (JSON's 1e400 parses to Infinity) must be refused here.
     Number.isSafeInteger(value.attempt) &&
     (value.attempt as number) >= 1 &&
     typeof value.dispenseCount === 'number' &&
@@ -468,8 +432,8 @@ function isStepShape(value: unknown): boolean {
     (value.awaitingKind === undefined ||
       isOneOf(MIGRATE_STEP_AWAITING_KINDS, value.awaitingKind)) &&
     isOptionalBoolean(value.generatorCompleted) &&
-    // The lower end of that filter: outside the positive integers up to the
-    // step's attempt it could not name an attempt that exists.
+    // Bounded by the step's attempt: a higher value could not name one that
+    // exists.
     (value.generatorCompletedAtAttempt === undefined ||
       (Number.isSafeInteger(value.generatorCompletedAtAttempt) &&
         (value.generatorCompletedAtAttempt as number) >= 1 &&
@@ -500,9 +464,8 @@ function isCommitLedgerEntryShape(value: unknown): boolean {
   );
 }
 
-// An issue id names the archived detail file, `issues/<id>.json`, so a
-// duplicate would alias two entries onto one file. Runs only after every
-// element passed isIssueShape, so the ids are known to be strings.
+// The id names the archived `issues/<id>.json`, so a duplicate would alias two
+// entries onto one file. Runs after isIssueShape, so the ids are known strings.
 function hasUniqueIssueIds(issues: unknown[]): boolean {
   return (
     new Set(issues.map((issue) => (issue as { id: string }).id)).size ===
@@ -510,10 +473,8 @@ function hasUniqueIssueIds(issues: unknown[]): boolean {
   );
 }
 
-// A step id names routing, claims, credit, and commit associations
-// everywhere; a duplicate would make every lookup ambiguous, and a valid
-// bare-package report against duplicated steps would write duplicated issue
-// applicability that this same reader then rejects.
+// A duplicate would make every step lookup ambiguous, and a bare-package
+// report against it would write applicability this same reader rejects.
 function hasUniqueStepIds(steps: unknown[]): boolean {
   return (
     new Set(steps.map((step) => (step as { id: string }).id)).size ===
@@ -531,13 +492,9 @@ function hasUniqueIssueFingerprints(issues: unknown[]): boolean {
   );
 }
 
-// Issue fields that reference the rest of the state, checked after the
-// per-entry shapes: step references must name plan steps, a claim must be
-// one of the issue's own applicable steps (which is how claims are ever
-// assigned), and a resolution stamp must not point past the append-only
-// commits ledger. nx never writes any of these violations, and the helpers
-// that trust the fields (routing, resolver credit, carried checks) cannot
-// repair them.
+// Cross-entry references, checked after the per-entry shapes so the casts
+// hold. nx never writes these violations, and the helpers that trust the
+// fields (routing, resolver credit, carried checks) cannot repair them.
 function hasSoundIssueRefs(parsed: Record<string, unknown>): boolean {
   const issues = parsed.issues as {
     reportedByStepId: string;
@@ -555,11 +512,9 @@ function hasSoundIssueRefs(parsed: Record<string, unknown>): boolean {
       stepIds.has(issue.reportedByStepId) &&
       (issue.applicableStepIds === 'unknown' ||
         (issue.applicableStepIds.every((id) => stepIds.has(id)) &&
-          // Applicability is a plan-ordered set (mints and merges both
-          // emit it that way): a duplicated id would make the normalizing
-          // merge read as newly supplied routing, and an out-of-order
-          // scope is a representation no transition writes, which later
-          // merges would preserve rather than normalize.
+          // Applicability is a plan-ordered set (mints and merges both emit it that
+          // way): a duplicate would read as newly supplied routing in the normalizing
+          // merge, and an unordered scope is a shape no transition writes.
           issue.applicableStepIds.every(
             (id, index) =>
               index === 0 ||
@@ -582,31 +537,25 @@ function isIssueShape(value: unknown): boolean {
     typeof value.id === 'string' &&
     ISSUE_ID.test(value.id) &&
     isLineSafeString(value.summary) &&
-    // The fingerprint is the ledger's identity key; one detached from its
-    // summary would split a problem into independent histories, so the
-    // derivation is enforced, not just the shape.
+    // The derivation is enforced, not just the shape: a fingerprint detached from
+    // its summary would split one problem into independent histories.
     value.fingerprint === issueFingerprint(value.summary as string) &&
     typeof value.reportedByStepId === 'string' &&
     STEP_ID.test(value.reportedByStepId) &&
-    // Concrete applicability is non-empty: reports carry 1+ identifiers and
-    // merges only widen, so [] is unproducible.
+    // Reports carry 1+ identifiers and merges only widen, so [] is unproducible.
     (value.applicableStepIds === 'unknown' ||
       (isStepIdArray(value.applicableStepIds) &&
         (value.applicableStepIds as string[]).length > 0)) &&
     isOneOf(MIGRATE_ISSUE_DISPOSITIONS, value.disposition) &&
     isOptionalMatching(STEP_ID, value.claimedByStepId) &&
     isOptionalMatching(STEP_ID, value.resolvedByStepId) &&
-    // Cross-field invariants: a claim is an assignment in a dispensed
-    // digest, held only while the issue is recorded; resolver credit exists
-    // exactly while the issue is resolved. States outside these break the
-    // helpers built on them (commit association, retry-clean reverts,
-    // update ownership).
+    // The helpers built on these (commit association, retry-clean reverts, update
+    // ownership) break on a state outside them.
     (value.claimedByStepId === undefined || value.disposition === 'recorded') &&
     (value.disposition === 'resolved') ===
       (value.resolvedByStepId !== undefined) &&
-    // The stamp travels with the resolution: a resolution without one has
-    // no carried-commit window, and a stamp without a resolution fences
-    // nothing that exists.
+    // A resolution without a stamp has no carried-commit window; a stamp without
+    // a resolution fences nothing that exists.
     (value.disposition === 'resolved') ===
       (value.resolvedAtCommitCount !== undefined) &&
     (value.resolvedAtCommitCount === undefined ||
@@ -615,10 +564,9 @@ function isIssueShape(value: unknown): boolean {
   );
 }
 
-// The record controls the no-progress cutoff, so a count outside the positive
-// integers (negative, fractional, non-finite: valid JSON like 1e400 parses to
-// Infinity) or an empty fingerprint could delay it forever or collapse
-// unrelated responses into one streak.
+// The record drives the no-progress cutoff: a count outside the positive
+// integers (JSON's 1e400 parses to Infinity) could delay it forever, and an
+// empty fingerprint would collapse unrelated responses into one streak.
 function isNoProgressShape(value: unknown): boolean {
   return (
     value === undefined ||
@@ -669,9 +617,8 @@ function hasValidRunStateShape(parsed: Record<string, unknown>): boolean {
         hasUniqueIssueIds(parsed.issues) &&
         hasUniqueIssueFingerprints(parsed.issues) &&
         hasSoundIssueRefs(parsed))) &&
-    // Commit issueIds are references into the issues ledger, written only
-    // for entries that already existed; a dangling one could make a future
-    // issue's resolution look carried by a commit that predates it.
+    // Written only for issues that already existed: a dangling id could make a
+    // future issue's resolution look carried by a commit that predates it.
     (parsed.commits as { issueIds?: string[] }[]).every(
       (c) =>
         c.issueIds === undefined ||
@@ -709,12 +656,9 @@ export class NewerRunStateFormatError extends Error {
 }
 
 /**
- * Reads and validates `run.json` from a run directory.
- *
- * A `formatVersion` newer than {@link CURRENT_RUN_STATE_FORMAT_VERSION} means
- * the run was created by a newer Nx than the one currently running, so the
- * shape may not be interpretable here; this throws rather than attempting a
- * best-effort read. An older `formatVersion` is returned as-is.
+ * Reads and validates `run.json` from a run directory. A `formatVersion`
+ * newer than {@link CURRENT_RUN_STATE_FORMAT_VERSION} throws instead of being
+ * read best-effort; an older one is returned as-is.
  */
 export function readRunState(runDirPath: string): MigrateRunState {
   const filePath = join(runDirPath, RUN_STATE_FILE_NAME);

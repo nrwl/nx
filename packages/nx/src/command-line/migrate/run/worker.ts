@@ -552,12 +552,10 @@ async function runRecorded(
   // Version refusal (NewerRunStateFormatError) propagates.
   let state = readRunState(dir);
 
-  // A recorded run never resolves the agentic flow (the outer agent drives
-  // it), and the dispensed command is part of the orchestrated protocol
-  // whoever re-runs it (the driving agent, a subagent it spawned, or a user's
-  // shell). Agent work is therefore always emitted as a structured block:
-  // gating it on ambient agent detection would park the step awaiting an
-  // outcome whose payload was never emitted.
+  // A recorded run never resolves the agentic flow: the outer agent drives it,
+  // and the dispensed command is part of the orchestrated protocol whoever
+  // re-runs it. Gating the block on ambient agent detection would park the
+  // step awaiting an outcome whose payload was never emitted.
   const agenticKind: ResolvedAgentic['kind'] = 'inside-agent';
 
   const migrationId = `${migration.package}:${migration.name}`;
@@ -583,12 +581,9 @@ async function runRecorded(
   });
 
   // A prior attempt's generator half already ran, so this attempt must not
-  // reapply it against a tree that already holds its changes: a hybrid
-  // re-emits only its prompt, a validating generator step re-emits only its
-  // validation pass, and one whose AI step was waived (or that has none) has
-  // nothing left but the install and commit its previous attempt failed on.
-  // Read from the state the start transition returned: a delayed invocation
-  // may have claimed a later attempt whose flag its entry snapshot predates.
+  // reapply it against a tree that already holds its changes. Read from the
+  // state the start transition returned, not the entry snapshot: a delayed
+  // invocation may have claimed a later attempt whose flag `step` predates.
   const startedStep = state.steps.find((s) => s.id === step.id);
   const generatorAlreadyCompleted = startedStep.generatorCompleted === true;
   // The run records its own install policy because dispensed worker commands
@@ -598,9 +593,8 @@ async function runRecorded(
   // The run records the resolved validation policy at init; absent (a state
   // predating the field) falls back to the same default init applies.
   const shouldValidate = state.validate !== false;
-  // Re-installs what changed since the step's persisted baseline before its
-  // work is handed back to the agent on a retry: the prompt or validation may
-  // need the dependencies the earlier attempt's generator added.
+  // Called before a retry hands the step's work back: the prompt or validation
+  // may need the dependencies the earlier attempt's generator added.
   const reinstallFromBaseline = () =>
     recordingInstallFailure(dir, step.id, () =>
       installDepsChangedSinceDispense(
@@ -613,13 +607,7 @@ async function runRecorded(
     );
 
   let outcome: MigrateStepOutcome | undefined;
-  // Set when this attempt handed work back to the agent (a prompt to apply,
-  // or a validation pass over the generator's changes); the step then parks
-  // in 'awaiting-prompt-outcome' instead of succeeding.
   let awaitingKind: MigrateStepAwaitingKind | undefined;
-  // Where this attempt's handed-back payload is stored so a later reconcile
-  // can re-emit the block. Derived from the step and attempt, so a re-armed
-  // attempt writes its own file and never inherits a stale one.
   const payloadPath = agentWorkPayloadPath(dir, step.id, startedStep.attempt);
   try {
     if (isPromptOnlyMigration(migration)) {
@@ -633,8 +621,6 @@ async function runRecorded(
       isHybridMigration(migration)
     ) {
       await reinstallFromBaseline();
-      // An earlier attempt's stored payload carries the captured generator
-      // output this retry cannot recompute; re-hand it when it survives.
       const carried = latestStoredAgentWorkPayload(
         dir,
         step.id,
@@ -663,14 +649,10 @@ async function runRecorded(
       generatorAlreadyCompleted &&
       startedStep.validationOwed === true
     ) {
-      // The earlier attempt's changes owed a validation pass that never
-      // settled (its install, park, or fold failed), so this attempt still
-      // owes it; the persisted flag is the only record, since the decision
-      // needed the generator result that is gone with that attempt. The
-      // captured generator output survives only in that attempt's stored
-      // payload; when it does, it is re-handed, and otherwise the emission
-      // points at the tree. The commit stays with the fold as on a first
-      // attempt. A true waiver never writes the flag.
+      // The persisted flag is the only record that these changes still owe a
+      // validation pass: the decision needed the generator result, which is
+      // gone with the attempt that made it, and a true waiver never writes the
+      // flag. The commit stays with the fold, as on a first attempt.
       await reinstallFromBaseline();
       const carried = latestStoredAgentWorkPayload(
         dir,
@@ -693,9 +675,8 @@ async function runRecorded(
       }
       awaitingKind = 'generator-validation';
     } else if (generatorAlreadyCompleted) {
-      // Reached when the AI step was waived by the earlier attempt, or the
-      // step never owed one (no changes, validation off, or an older-nx
-      // state): only the install and commit are left.
+      // Reached when the earlier attempt waived the AI step, or none was owed
+      // (no changes, validation off, or an older-nx state).
       state = await finishCompletedGenerator(
         dir,
         root,
@@ -739,9 +720,8 @@ async function runRecorded(
         resolvedCollection
       );
 
-      // Mirrors the classic loop: a validation pass is on the table only for
-      // a generator-only migration that changed something, and skipAgentic
-      // waives an AI step only when one was owed.
+      // Mirrors the classic loop's waiver semantics (migrate.ts): the two must
+      // agree on when an AI step was owed for skipAgentic to waive.
       const validationApplies =
         shouldValidate && !isHybridMigration(migration) && changes.length > 0;
       const waivedAgenticStep =
@@ -774,13 +754,12 @@ async function runRecorded(
         );
 
       // Commits follow the run config, not CLI flags, and only when the
-      // generator changed something: a no-op step must not create a commit
-      // (nor a ledger entry) that absorbs prior pending diffs under its name.
-      // A step handing work back (a validation pass, or a hybrid's prompt
-      // half) defers its commit to the fold, so the migration lands as one
-      // commit and a failed hand-back leaves the changes uncommitted for
-      // review, as in the classic loop; the install still runs first because
-      // the agent may run tasks that need what the generator added.
+      // generator changed something: a no-op step's commit would absorb prior
+      // pending diffs under its name. A step handing work back defers its
+      // commit to the fold, so the migration lands as one commit and a failed
+      // hand-back leaves the changes uncommitted for review, as in the classic
+      // loop. The install still runs first: the agent may run tasks that need
+      // what the generator added.
       if (
         state.createCommits &&
         madeChanges &&
@@ -842,9 +821,8 @@ async function runRecorded(
     throw e;
   }
 
-  // Handed-back work (a prompt half, or a validation pass) is applied by a
-  // separate actor, so the step parks in awaiting-prompt-outcome and this
-  // process exits successfully.
+  // Handed-back work is applied by a separate actor, so parking exits
+  // successfully rather than failing the step.
   if (awaitingKind !== undefined) {
     transition(dir, {
       type: 'awaitPromptOutcome',
@@ -921,10 +899,9 @@ async function finishCompletedGenerator(
         `${formatSingleMigrationRerunCommand(migrationId)} --run-id=${runId}`
       )
     );
-  // Same guard as the first attempt: a no-op step's commit would absorb
-  // unrelated pending diffs under its name. Only an explicit false skips it;
-  // absent means an older nx wrote the marker without recording the answer,
-  // and the commit is kept as that version's retries did.
+  // Same no-op guard as the first attempt. Only an explicit false skips the
+  // commit: absent means an older nx wrote the marker without recording the
+  // answer, and the commit is kept as that version's retries did.
   if (!state.createCommits || step.generatorMadeChanges === false) {
     await installDeps();
     return state;
@@ -970,11 +947,10 @@ async function commitStepChanges(
   return entry ? appendCommit(dir, entry) : state;
 }
 
-// Appends a ledger entry to the freshest on-disk state under the lock. The git
-// commit itself already ran outside the lock; only this pure append is locked.
-// A landed entry carries the resolved issues of every step it names, same as
-// the orchestrator's fold and adopt appends: an absorbed step's resolutions
-// would otherwise land unattached.
+// The git commit itself already ran outside the lock; only this pure append is
+// locked. A landed entry carries the resolved issues of every step it names,
+// same as the orchestrator's fold and adopt appends: an absorbed step's
+// resolutions would otherwise land unattached.
 function appendCommit(
   dir: string,
   entry: MigrateCommitLedgerEntry
@@ -1146,11 +1122,8 @@ function printNextSteps(
 interface EmitPromptOptions {
   impl?: { logs: string; changes: FileChange[]; agentContext: string[] };
   resolvedCollection?: ResolvedMigrationCollection;
-  // Set by recorded runs: the payload is stored at this path, before the
-  // block is emitted, so a later reconcile can re-emit it for the parked
-  // step. A failed store throws and fails the attempt: the runbook promises
-  // a lost block is re-emitted, so a step must not park without the copy
-  // that keeps the promise.
+  // Set by recorded runs: the payload is stored here before the block is
+  // emitted, so a later reconcile can re-emit it for the parked step.
   persistPath?: string;
 }
 
@@ -1218,9 +1191,8 @@ function implPayload(impl: {
   };
 }
 
-// Re-hands the work an earlier attempt of the same step stored: the payload
-// is re-persisted under this attempt (the dispense reads only the current
-// attempt's file) and re-emitted as the live block.
+// Re-hands what an earlier attempt stored. The payload is re-persisted under
+// this attempt because the dispense reads only the current attempt's file.
 function reemitCarriedAgentWork(
   migrationId: string,
   kind: MigrateStepAwaitingKind,
@@ -1280,11 +1252,8 @@ function printPromptForUser(
   });
 }
 
-// The validation counterpart of a hybrid's prompt emission: the generator ran
-// without an AI-driven part, and the run's validation pass hands its changes
-// back through a structured block. `impl` is absent on a retry, where the
-// generator ran in an earlier attempt and its captured output is gone; the
-// emission then points at the tree instead.
+// `impl` is absent on a retry, where the generator ran in an earlier attempt
+// and its captured output is gone; the emission then points at the tree.
 function emitValidationBlock(
   root: string,
   migration: PlannedMigration,

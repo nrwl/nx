@@ -28,9 +28,9 @@ const PM_EXEC_PREFIX: Record<string, string> = {
 // CLAUDECODE is the seam nx's agent detection reads.
 const AGENT_ENV = { CLAUDECODE: '1' };
 
-// Only init is gated, so only init carries NX_MIGRATE_ORCHESTRATOR; dispensed
-// commands re-run with AGENT_ENV alone. The other two keep init off the
-// temp-installation path.
+// Only init is gated on NX_MIGRATE_ORCHESTRATOR, so dispensed commands re-run
+// with AGENT_ENV alone. NX_MIGRATE_USE_LOCAL keeps init off the temp nx
+// install and NX_MIGRATE_SKIP_INSTALL skips its pre-migration install.
 const INIT_ENV = {
   ...AGENT_ENV,
   NX_MIGRATE_ORCHESTRATOR: 'true',
@@ -102,8 +102,7 @@ function parseRunbookBlock(output: string): { runId: string; content: string } {
   return { runId: match[1], content: match[2] };
 }
 
-// Init responses are runbook-only: one step block, no dispensed work. Tags are
-// matched with attributes because the runbook prose names them bare.
+// Tags are matched with attributes because the runbook prose names them bare.
 function expectRunbookOnlyResponse(output: string): void {
   expect(output.match(/<nx_migrate_step run-id=/g)).toHaveLength(1);
   expect(output).not.toContain('<nx_migrate_prompt migration=');
@@ -137,8 +136,8 @@ function parseLastPromptBlock(output: string): PromptBlock {
   return last;
 }
 
-// Strips the `<pm exec>` prefix so the rest runs through runCLI. The shape
-// check matters: anything before the prefix is not executable as-is on Windows.
+// The shape check is the assertion: a dispensed command carrying anything
+// ahead of `<pm exec>` would not be executable as-is on Windows.
 function dispensedArgs(command: string): string {
   const tokens = command.split(' ');
   const execTokens = PM_EXEC_PREFIX[getSelectedPackageManager()].split(' ');
@@ -181,7 +180,6 @@ function writeHandoff(block: DispenseBlock, handoff: object | string): void {
   );
 }
 
-// The fake agent; the cap turns an endless loop into a failure.
 function driveToComplete(output: string, maxDispenses = 25): DispenseBlock {
   let block = parseLastDispense(output);
   let dispenses = 0;
@@ -194,7 +192,7 @@ function driveToComplete(output: string, maxDispenses = 25): DispenseBlock {
     if (block.action === 'next-step') {
       runDispensed(block.payload.command);
     } else if (block.action === 'await-prompt') {
-      // So the fold has something to commit.
+      // The fold needs something to commit.
       updateFile(`applied-${block.step}.txt`, 'applied by fake agent');
       writeHandoff(block, {
         status: 'success',
@@ -260,7 +258,8 @@ function setupMigrationPackage(): void {
       };
       `
   );
-  // Must reach the hybrid's prompt payload even with validation off.
+  // Logs and agent context must reach the hybrid's prompt payload even with
+  // validation off.
   updateFile(
     `./node_modules/${PKG}/hybrid-mig.js`,
     `
@@ -271,7 +270,6 @@ function setupMigrationPackage(): void {
       };
       `
   );
-  // Waives the AI step: the prompt half must not be handed back.
   updateFile(
     `./node_modules/${PKG}/waiver-mig.js`,
     `
@@ -481,7 +479,6 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(
       readRunStateFile(init.runId).steps.every((s) => s.status === 'pending')
     ).toBe(true);
-    // Byte-for-byte what was persisted, with the contract's anchors.
     expect(runbook.content).toContain(`# Nx migrate run ${init.runId}`);
     expect(runbook.content).toContain(reconcile);
     expect(runbook.content).toContain(
@@ -528,7 +525,6 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(reemitted.payload.impl.agentContext).toEqual([
       'gen-mig context note',
     ]);
-    // No commit yet: the migration lands as one commit at the fold.
     expect(commitCountFor('gen-mig')).toBe(0);
     writeHandoff(validation, {
       status: 'success',
@@ -583,8 +579,6 @@ describe('migrate orchestrator (dark launch)', () => {
       summary: 'applied by fake agent',
     });
 
-    // Hybrid: only the prompt half is handed back; its changes are applied,
-    // so no skipped offer.
     const third = parseLastDispense(runDispensed(reconcile));
     expect(third.action).toBe('next-step');
     expect(third.payload.command).toContain(
@@ -629,7 +623,6 @@ describe('migrate orchestrator (dark launch)', () => {
       [`${PKG}:prompt-mig`, 'succeeded'],
       [`${PKG}:hybrid-mig`, 'succeeded'],
     ]);
-    // One commit per migration, hybrid included.
     for (const step of state.steps) {
       expect(
         state.commits.filter(
@@ -651,7 +644,6 @@ describe('migrate orchestrator (dark launch)', () => {
       `--run-migration=${PKG}:waiver-mig`
     );
 
-    // skipAgentic: the worker completes the step; commit landed, no prompt.
     const waiverWorkerOutput = runDispensed(first.payload.command);
     expect(waiverWorkerOutput).not.toContain('<nx_migrate_prompt');
     const second = parseLastDispense(runDispensed(first.payload.next));
@@ -666,7 +658,6 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(waiverStep.status).toBe('succeeded');
     expect(commitCountFor('waiver-mig')).toBe(1);
 
-    // A skipped handoff folds the step as skipped with no commit.
     runDispensed(second.payload.command);
     const prompt = parseLastDispense(runDispensed(second.payload.next));
     expect(prompt.action).toBe('await-prompt');
@@ -702,8 +693,8 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(prompt.action).toBe('await-prompt');
     expect(prompt.payload.instructions).not.toContain('was rejected');
 
-    // Applied work is in the tree: a rejection must not fold, commit, or
-    // advance.
+    // Applied work goes in the tree first: a rejection has something it could
+    // wrongly fold or commit.
     updateFile('applied-prompt.txt', 'applied by fake agent');
     const revsBeforeRejection = runCommand('git rev-list --count HEAD').trim();
     const commitsBeforeRejection = readRunStateFile(first.runId).commits.length;
@@ -727,7 +718,6 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(rejectedStep.status).toBe('awaiting-prompt-outcome');
     expect(rejectedStep.attempt).toBe(1);
 
-    // A failed handoff parks the step as failed with the retry decision.
     writeHandoff(rejected, {
       status: 'failed',
       summary: 'blocked by fake agent',
@@ -753,8 +743,6 @@ describe('migrate orchestrator (dark launch)', () => {
     );
     expect(failedStep.status).toBe('failed');
 
-    // Retry re-arms the step; the second attempt's success folds the applied
-    // work into one commit.
     const retried = parseLastDispense(runDispensed(retryCommand));
     expect(retried.action).toBe('next-step');
     expect(retried.payload.command).toContain(
@@ -787,7 +775,6 @@ describe('migrate orchestrator (dark launch)', () => {
     const first = reconcileAfterInit(runInit());
     runDispensed(first.payload.command);
 
-    // Nothing changes between reconciles: the third response escalates.
     const await1 = parseLastDispense(runDispensed(first.payload.next));
     expect(await1.action).toBe('await-prompt');
     const await2 = parseLastDispense(runDispensed(await1.payload.next));
@@ -795,18 +782,15 @@ describe('migrate orchestrator (dark launch)', () => {
     const escalatedOutput = runDispensed(await2.payload.next);
     const escalated = parseLastDispense(escalatedOutput);
     expect(escalated.action).toBe('no-progress');
-    // The parked work is restated under the escalation, prompt block included.
     expect(parseLastPromptBlock(escalatedOutput).payload.prompt).toBe(
       'prompts/prompt-mig.md'
     );
     expect(escalated.payload.instructions).toContain(
       `No progress: this is response 3 in a row for migration ${PKG}:prompt-mig`
     );
-    // The step's own work is kept below the escalation.
     expect(escalated.payload.instructions).toContain('Handoff file:');
     expect(escalated.payload.next).toBeDefined();
 
-    // Acting resets the streak: the fold dispenses the next migration.
     writeHandoff(escalated, {
       status: 'success',
       summary: 'applied by fake agent',
@@ -829,7 +813,7 @@ describe('migrate orchestrator (dark launch)', () => {
     const prompt = parseLastDispense(runDispensed(first.payload.next));
     expect(prompt.action).toBe('await-prompt');
 
-    // A full handoff's worth of issues, scoped to the third migration.
+    // 20 is the most one handoff may report, so the 21st needs a second handoff.
     writeHandoff(prompt, {
       status: 'success',
       summary: 'applied by fake agent',
@@ -839,7 +823,6 @@ describe('migrate orchestrator (dark launch)', () => {
       })),
     });
 
-    // Recorded, archived, and listed unclaimed: they concern a later step.
     const second = parseLastDispense(runDispensed(prompt.payload.next));
     expect(second.action).toBe('next-step');
     expect(second.payload.command).toContain(
@@ -854,7 +837,6 @@ describe('migrate orchestrator (dark launch)', () => {
     );
     expect(archived.summary).toBe('problem 1 found while applying prompt-mig');
 
-    // One more, past the 20-entry cap.
     runDispensed(second.payload.command);
     const promptTwo = parseLastDispense(runDispensed(second.payload.next));
     expect(promptTwo.action).toBe('await-prompt');
@@ -869,8 +851,6 @@ describe('migrate orchestrator (dark launch)', () => {
       ],
     });
 
-    // Claims are capped at what the digest lists (20): the 21st is counted as
-    // omitted, never assigned.
     const third = parseLastDispense(runDispensed(promptTwo.payload.next));
     expect(third.action).toBe('next-step');
     expect(third.payload.command).toContain(
@@ -988,14 +968,12 @@ describe('migrate orchestrator (dark launch)', () => {
     const promptTwo = parseLastDispense(runDispensed(second.payload.next));
     expect(promptTwo.action).toBe('await-prompt');
 
-    // Claims stop where rendering does.
     const state = readRunStateFile(first.runId);
     const stepId = state.steps.find(
       (s) => s.migrationId === `${PKG}:prompt-two`
     ).id;
     const claimed = state.issues.filter((i) => i.claimedByStepId === stepId);
     expect(claimed.length).toBe(14);
-    // Ledger-order prefix.
     expect(claimed.map((i) => i.id)).toEqual(
       state.issues.slice(0, claimed.length).map((i) => i.id)
     );
@@ -1013,7 +991,6 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(promptTwo.payload.instructions).toContain(
       `...and ${20 - claimed.length} more not listed`
     );
-    // Exactly fills the bound; the first unclaimed entry would exceed it.
     let listedBytes = 0;
     for (const issue of claimed) {
       expect(promptTwo.payload.instructions).toContain(entryFor(issue));
@@ -1052,7 +1029,7 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(diedBlock.payload.instructions).toContain('current HEAD:');
     // The killed worker's half-applied change shows up as dirty-tree evidence.
     expect(diedBlock.payload.instructions).toContain('slow-file');
-    // No marker recorded, so no `next`: the agent must choose.
+    // No generator-completion marker recorded, so no `next`: the agent must choose.
     const retryClean = stepActionCommand(runId, 'retry-clean');
     expect(diedBlock.payload.instructions).toContain(retryClean);
     expect(diedBlock.payload.next).toBeUndefined();

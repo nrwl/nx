@@ -367,8 +367,7 @@ describe('runSingleMigrationWorker', () => {
       status: 'active',
       createCommits: opts.createCommits ?? false,
       commitPrefix: 'chore: [nx migration] ',
-      // Off by default so the plain-generator lifecycle tests keep exercising
-      // the no-validation flow; the validation cases opt in explicitly.
+      // Off by default so the lifecycle tests keep exercising the no-validation flow.
       validate: opts.validate ?? false,
       ...(opts.skipInstall ? { skipInstall: true } : {}),
       rounds: rounds.map((r) => ({
@@ -1126,9 +1125,8 @@ describe('runSingleMigrationWorker', () => {
 
       await runSingleMigrationWorker(recordedInput('@nx/js:h', 'run-1'));
 
-      // One commit per migration: the fold commits the generator's and the
-      // prompt's changes together, and a failed prompt leaves both
-      // uncommitted for review, as in the classic loop.
+      // One commit per migration: the fold commits the generator's and the prompt's
+      // changes together, as in the classic loop.
       expect(mockCommit).not.toHaveBeenCalled();
       const state = readRunState(dir);
       expect(state.steps[0].status).toBe('awaiting-prompt-outcome');
@@ -1193,9 +1191,8 @@ describe('runSingleMigrationWorker', () => {
     });
 
     it('fails the attempt instead of parking when the payload cannot be stored', async () => {
-      // A parked step's durable contract includes the stored copy (the
-      // runbook promises a lost block is re-emitted), so a step must not
-      // park without it.
+      // A parked step's durable contract includes the stored copy: the runbook
+      // promises a lost block is re-emitted.
       const dir = setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:p', 'dispensed')],
         migrations: [promptMig('@nx/js', 'p')],
@@ -1243,7 +1240,6 @@ describe('runSingleMigrationWorker', () => {
 
       await runSingleMigrationWorker(recordedInput('@nx/js:h', 'run-1'));
 
-      // The captured generator output rides along instead of being dropped.
       expect(stdout).toContain('"logs": "gen output"');
       expect(
         readFileSync(join(dir, 'agent-work', 'step-1-attempt-2.json'), 'utf-8')
@@ -1294,9 +1290,8 @@ describe('runSingleMigrationWorker', () => {
     });
 
     it('does not re-hand a payload stored before the lineage boundary', async () => {
-      // Attempt 1's payload predates a reset-backed retry: the marker was
-      // re-recorded on attempt 2, so attempt 1's copy describes a generator
-      // run whose tree was reset away, even when its removal failed.
+      // The marker was re-recorded on attempt 2, so attempt 1's copy describes a
+      // generator run whose tree was reset away; its removal is best effort.
       const dir = setupRun('run-1', {
         steps: [
           {
@@ -1375,8 +1370,6 @@ describe('runSingleMigrationWorker', () => {
         validate: true,
       });
       mkdirSync(join(dir, 'agent-work'), { recursive: true });
-      // A prompt payload for another migration must not become this step's
-      // validation instruction.
       writeFileSync(
         join(dir, 'agent-work', 'step-1-attempt-1.json'),
         JSON.stringify({ migrationId: '@nx/other:x', prompt: 'prompts/x.md' })
@@ -1454,10 +1447,8 @@ describe('runSingleMigrationWorker', () => {
     });
 
     it('does not re-hand a stored payload when the lineage boundary is absent', async () => {
-      // An older nx's rearm drops the boundary field while leaving the
-      // files, so absence cannot prove the copy belongs to the current
-      // lineage; the lookup fails closed and the emission points at the
-      // tree.
+      // An older nx's rearm drops the boundary while leaving the files, so absence
+      // cannot prove a copy belongs to this lineage. The lookup fails closed.
       const dir = setupRun('run-1', {
         steps: [
           {
@@ -1799,7 +1790,7 @@ describe('runSingleMigrationWorker', () => {
       expect(step.status).toBe('awaiting-prompt-outcome');
       expect(step.awaitingKind).toBe('generator-validation');
       expect(step.generatorCompleted).toBe(true);
-      // Persisted with the marker so a retry knows the pass is still owed.
+      // Persisted so a retry knows the pass is still owed.
       expect(step.validationOwed).toBe(true);
       // The commit stays with the fold: a failed validation must leave the
       // changes uncommitted for review, as in the classic loop.
@@ -1934,10 +1925,8 @@ describe('runSingleMigrationWorker', () => {
     );
 
     it('re-parks a retried generator step for validation instead of finishing it silently', async () => {
-      // The earlier attempt recorded the owed validation with the marker and
-      // its park or fold never settled the step, so this attempt still owes
-      // the pass. The captured generator output is gone with that attempt, so
-      // the emission points at the tree.
+      // The earlier attempt's owed pass never settled, and its captured generator
+      // output died with it, so the emission points at the tree.
       mockStringifiedDeps.mockReturnValue('{"deps":1}');
       const baseline = depsHash(root);
       mockStringifiedDeps.mockReturnValue('{"deps":2}');
@@ -1961,7 +1950,6 @@ describe('runSingleMigrationWorker', () => {
       });
 
       expect(mockRunMigration).not.toHaveBeenCalled();
-      // Re-installed from the step's baseline before handing the work back.
       expect(mockRunInstall).toHaveBeenCalledWith(
         root,
         'post-migration',
@@ -1981,11 +1969,8 @@ describe('runSingleMigrationWorker', () => {
     });
 
     it('finishes a retried no-change generator without parking for validation or committing', async () => {
-      // The first attempt determined validation did not apply and recorded
-      // that nothing changed; a death between the marker and the success
-      // write must not turn the no-op into agent work, and its retry must
-      // not build a commit whose `git add -A` would absorb unrelated
-      // pending diffs under the no-op's name.
+      // A retried no-op must not build a commit: its `git add -A` would absorb
+      // unrelated pending diffs under the no-op's name.
       mockCommit.mockResolvedValue({
         status: 'committed',
         sha: 'face0001face0001face0001face0001face0001',
@@ -2042,9 +2027,8 @@ describe('runSingleMigrationWorker', () => {
     ] as const)(
       'emits the structured block for a recorded %s step regardless of ambient agent detection',
       async (_kind, migration) => {
-        // Nothing in this environment marks an agent; the dispensed command
-        // is part of the orchestrated protocol either way, and a parked step
-        // must never be awaiting a payload that was not emitted.
+        // Nothing here marks an agent, and the block is emitted anyway: a parked step
+        // must never await a payload that was not emitted.
         mockRunMigration.mockResolvedValue({
           changes: changeList(),
           nextSteps: [],
@@ -2225,9 +2209,8 @@ describe('runSingleMigrationWorker', () => {
         status: 'committed',
         sha: 'face0006face0006face0006face0006face0006',
       });
-      // step-1 resolved issue-1, but its own commit attempt failed; the
-      // commit that absorbs step-1's tree must carry the fix's issue id,
-      // same as the orchestrator's fold and adopt appends.
+      // The commit that absorbs step-1's tree must carry the fix's issue id, same as
+      // the orchestrator's fold and adopt appends.
       const dir = setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:prior', 'failed'),

@@ -272,12 +272,8 @@ describe('run-state', () => {
     });
 
     it('refuses attempt and lineage-boundary values outside the counters nx writes', () => {
-      // Both derive stored-payload file names and filter the enumerated
-      // payloads a retry may re-hand (see agent-work-payload.ts), so a
-      // fractional or non-finite value (valid JSON like 1e400 parses to
-      // Infinity) breaks the name round-trip and the range comparison, and a
-      // boundary past the step's attempt could not name an attempt that
-      // exists.
+      // The attempt names stored payload files and bounds a retry's scan, so a
+      // fractional, non-finite, or past-the-attempt value names no real attempt.
       const dir = join(root, 'run-1');
       mkdirSync(dir, { recursive: true });
       const validStep = {
@@ -321,7 +317,6 @@ describe('run-state', () => {
       );
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
 
-      // The in-range shape still reads.
       writeFileSync(
         join(dir, 'run.json'),
         withStep({ attempt: 2, generatorCompletedAtAttempt: 2 })
@@ -656,15 +651,13 @@ describe('run-state', () => {
       const dir = join(root, 'run-1');
       mkdirSync(dir, { recursive: true });
 
-      // The validation policy decides whether a validation pass is dispensed;
-      // a truthy string must not stand in for it.
+      // A truthy string must not stand in for the flag that gates a validation pass.
       writeFileSync(
         join(dir, 'run.json'),
         JSON.stringify(buildState({ validate: 'yes' as never }))
       );
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
 
-      // awaitingKind is a closed set.
       writeFileSync(
         join(dir, 'run.json'),
         JSON.stringify(
@@ -685,7 +678,6 @@ describe('run-state', () => {
       );
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
 
-      // A commit entry's issueIds must stay inside the id shape Nx assigns.
       writeFileSync(
         join(dir, 'run.json'),
         JSON.stringify(
@@ -700,10 +692,8 @@ describe('run-state', () => {
     });
 
     it('refuses a runbookPath that is not the file name Nx writes', () => {
-      // A resume joins the recorded name to the run directory and re-emits the
-      // file's bytes verbatim, so a tampered value must resolve neither
-      // outside the run directory nor to a sibling file Nx owns, whose
-      // content would leak past every line-safety check.
+      // A resume re-emits the named file's bytes verbatim, so a sibling Nx file
+      // (run.json, a plan snapshot) would leak past every line-safety check.
       const dir = join(root, 'run-1');
       mkdirSync(dir, { recursive: true });
       for (const runbookPath of [
@@ -775,8 +765,8 @@ describe('run-state', () => {
         { ...validIssue, disposition: 'bogus' },
         { ...validIssue, claimedByStepId: 'nope' },
         { ...validIssue, resolvedByStepId: 'nope' },
-        // Cross-field invariants: claims only on recorded entries, resolver
-        // credit and the resolution stamp exactly on resolved ones.
+        // A claim lives only on a recorded entry; resolver credit and the resolution
+        // stamp exactly on a resolved one.
         { ...resolvedIssue, claimedByStepId: 'step-1' },
         { ...validIssue, disposition: 'resolved' },
         { ...validIssue, resolvedByStepId: 'step-1' },
@@ -786,18 +776,17 @@ describe('run-state', () => {
           resolvedByStepId: 'step-1',
         },
         { ...validIssue, resolvedAtCommitCount: 0 },
-        // A negative, non-integer, or past-the-ledger stamp would misplace
-        // the resolution inside the commits ledger.
+        // The stamp indexes the commits ledger, so a value past its end misplaces
+        // the resolution.
         { ...resolvedIssue, resolvedAtCommitCount: -1 },
         { ...resolvedIssue, resolvedAtCommitCount: 1.5 },
         { ...resolvedIssue, resolvedAtCommitCount: 1 },
-        // Step references must name plan steps, and a claim must be one of
-        // the issue's own applicable steps.
         { ...validIssue, reportedByStepId: 'step-9' },
         { ...validIssue, applicableStepIds: ['step-9'] },
         // Applicability is a set; a duplicate would make the normalizing
         // merge read as newly supplied routing.
         { ...validIssue, applicableStepIds: ['step-1', 'step-1'] },
+        // A claim must be one of the issue's own applicable steps.
         { ...validIssue, claimedByStepId: 'step-1' },
         { ...resolvedIssue, resolvedByStepId: 'step-9' },
         { ...validIssue, summary: undefined },
@@ -996,9 +985,8 @@ describe('run-state', () => {
 
       for (const noProgress of [
         { ...valid, fingerprint: 'fp\nforged' },
-        // The record controls the no-progress cutoff, so counts outside the
-        // positive integers could delay it forever, and an empty fingerprint
-        // would collapse unrelated responses into one streak.
+        // A count outside the positive integers could delay the no-progress cutoff
+        // forever, and an empty fingerprint collapses unrelated responses into one streak.
         { ...valid, fingerprint: '' },
         { ...valid, consecutiveCount: '2' },
         { ...valid, consecutiveCount: -1 },
@@ -1014,8 +1002,8 @@ describe('run-state', () => {
         expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
       }
 
-      // Valid JSON numeric notation can carry a non-finite value:
-      // JSON.parse('1e400') is Infinity, which typeof-number checks accept.
+      // JSON.stringify cannot emit a non-finite literal, but JSON.parse('1e400')
+      // is Infinity, which a typeof-number check would accept.
       writeFileSync(
         join(dir, 'run.json'),
         JSON.stringify(buildState({ noProgress: valid })).replace(

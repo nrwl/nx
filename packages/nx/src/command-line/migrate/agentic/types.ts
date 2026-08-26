@@ -12,12 +12,10 @@ export type { AgentId };
 export const MIGRATE_RUNS_RELATIVE_DIR = '.nx/migrate-runs';
 
 /**
- * The one subtree of a run directory an agent writes: its handoff files.
- * Everything beside it is state Nx owns and reads back, the orchestrator's
- * run state and plan snapshots included, so the pre-authorized write scope
- * stops at this segment. Handoff file names derive from step ids or package
- * and migration names, so without it they would occupy the run directory's
- * top level and leave Nx no name it could add there safely.
+ * The one subtree of a run directory an agent writes; everything beside it is
+ * state Nx owns and reads back, so the pre-authorized write scope stops here.
+ * Handoff names derive from step ids or package and migration names, so
+ * flattening them into the run dir would leave Nx no name it could safely add.
  */
 export const HANDOFFS_DIR_NAME = 'handoffs';
 

@@ -152,8 +152,6 @@ export interface RunOrchestratorInitInput {
   skipInstall: boolean;
   // Workspace-local nx version; the v23 cutoff for the .gitignore fallback.
   installedNxVersion: string;
-  // The `--validate` flag as the user passed it (undefined when omitted); the
-  // run records the resolved policy the same way it records skipInstall.
   validate: boolean | undefined;
 }
 
@@ -436,9 +434,6 @@ function resumeRun(root: string, runId: string, state: MigrateRunState): void {
   finishInit(root, dir, runId, resumed, 'resumed', runbook);
 }
 
-// The initialized response that follows says nothing about the steps already
-// behind it, so a resumed run is otherwise indistinguishable from a fresh one
-// that happens to start partway down the plan.
 function announceResume(runId: string, state: MigrateRunState): void {
   const applied = state.steps.filter((s) => s.status === 'succeeded').length;
   const skipped = state.steps.filter((s) => s.status === 'skipped').length;
@@ -518,11 +513,9 @@ function checkpointEntry(
   return null;
 }
 
-// Shared tail of a fresh and a resumed init: emit the init analytics once per
-// run (watermark-guarded), then a runbook-only response. No migration step is
-// dispensed here: the agent reads the runbook first and asks for the run's
-// current step by reconciling, so the contract always lands before the first
-// command does.
+// No migration step is dispensed here: the agent reads the runbook first and
+// asks for the run's current step by reconciling, so the contract always lands
+// before the first command does.
 function finishInit(
   root: string,
   dir: string,
@@ -570,11 +563,10 @@ function finishInit(
   });
 }
 
-// Ensures the run's runbook is present and readable, returning its bytes. A
-// missing file is re-rendered only by the nx version that created the run:
-// the runbook's content is version-locked, and a different nx re-rendering it
-// would silently hand the agent a contract the run was not created under.
-// Returns null after emitting the exit-0 refusal when neither holds.
+// A missing runbook is re-rendered only by the nx version that created the
+// run: its content is version-locked, and a different nx re-rendering it would
+// silently hand the agent a contract the run was not created under. Returns
+// null after emitting the exit-0 refusal instead.
 function ensureRunbook(
   root: string,
   dir: string,
@@ -584,9 +576,9 @@ function ensureRunbook(
   const filePath = join(dir, state.runbookPath ?? RUNBOOK_FILE_NAME);
   const stat = lstatRunbook(filePath);
   if (stat?.isFile()) {
-    // The read is the proof the entry is usable: a runbook the agent cannot
-    // read must not pass the guard, so read errors (an unreadable mode, an
-    // I/O failure) propagate before the run advances.
+    // The read is the proof the entry is usable: read errors (an unreadable
+    // mode, an I/O failure) propagate rather than letting an unreadable
+    // runbook pass the guard.
     return readInspectedFile(
       filePath,
       stat,
@@ -606,9 +598,9 @@ function ensureRunbook(
       );
     }
     // Any other non-regular entry (a symlink most likely) would redirect the
-    // re-render write below outside the run directory; unlink it, without
-    // traversal. Removal failures propagate: falling through to the write
-    // would follow a symlink that could not be removed.
+    // re-render write below outside the run directory. Removal failures
+    // propagate: falling through to the write would follow a symlink that
+    // could not be removed.
     rmSync(filePath, { force: true });
   }
   if (state.nxVersion !== nxVersion) {
@@ -625,15 +617,14 @@ function ensureRunbook(
     return null;
   }
   const content = renderRunbook(runbookContext(root, runId, state));
-  // Published via rename so no reader can ever observe a partial runbook at
-  // the path: partial bytes only exist under the temp name, a crashed repair
-  // leaves the path missing rather than truncated, and rename replaces
-  // whatever sits at the destination (a concurrent repair's identical render,
-  // or a re-planted symlink) without following it. The random suffix matches
-  // writeRunState's temp naming: a pid would collide across PID namespaces
-  // sharing the workspace, and each invocation must only ever touch its own
-  // temp file. 'wx' creates without following links, so anything planted at
-  // the temp name fails the repair instead of redirecting it.
+  // Published via rename so no reader can ever observe a partial runbook: a
+  // crashed repair leaves the path missing rather than truncated, and rename
+  // replaces whatever sits at the destination (a concurrent repair's identical
+  // render, or a re-planted symlink) without following it. The random suffix
+  // matches writeRunState's temp naming: a pid would collide across PID
+  // namespaces sharing the workspace. 'wx' creates without following links, so
+  // anything planted at the temp name fails the repair instead of redirecting
+  // it.
   const tmpPath = `${filePath}~${randomBytes(4).toString('hex')}`;
   writeFileSync(tmpPath, content, { flag: 'wx' });
   renameSync(tmpPath, filePath);
@@ -703,14 +694,12 @@ export async function runOrchestratorReconcile(
     assertScratchDirSafeForCommits(root, continueRunHint(runId));
   }
 
-  // The runbook is the run's persisted contract, and reconcile is the command
-  // a compacted or restarted session recovers through; read, repair, or
-  // refuse it here, before any fold or dispense, so the run can never advance
-  // while the contract is unavailable. A completed run owes no recovery, and
-  // neither does an active run whose steps are all terminal: no work can
-  // advance, the only thing left is to persist and emit the self-contained
-  // terminal response, and hiding it behind a missing contract would leave
-  // the run active forever.
+  // The runbook is the run's persisted contract; read, repair, or refuse it
+  // before any fold or dispense, so the run can never advance while the
+  // contract is unavailable. A completed run, and an active run whose steps are
+  // all terminal, are exempt: no work can advance, the only thing left is the
+  // self-contained terminal response, and hiding it behind a missing contract
+  // would leave the run active forever.
   if (
     state.status !== 'completed' &&
     firstActionableStep(state) !== undefined &&
@@ -839,11 +828,11 @@ export async function runOrchestratorReconcile(
       return;
     }
     if (reopenedIssueUpdates.length > 0) {
-      // Best-effort like the fold's phase-2 re-archive: run.json already
-      // records the reverted dispositions and stays authoritative, so a
-      // failed append loses only the archive's trail record of the revert.
-      // The sink survives a throw: a shell rebuilt before the failure is
-      // durable and reads healthy on retry, so this pass must warn it.
+      // Best-effort: run.json records the reverted dispositions and stays
+      // authoritative, so a failed append loses only the archive's trail record
+      // of the revert. The sink survives a throw: a shell rebuilt before the
+      // failure is durable and reads healthy on retry, so this pass must warn
+      // it.
       const revertApplication = {
         state: written,
         newIssues: [],
@@ -864,10 +853,7 @@ export async function runOrchestratorReconcile(
     }
     state = written;
   }
-  // (d) choose and emit the next dispense. advanceAndDispense settles
-  // unclaimable issues on its own fresh read first: the folds and step
-  // actions above (and worker-run successes since the last reconcile) can
-  // have turned an issue's last applicable step terminal.
+  // (d) choose and emit the next dispense.
   advanceAndDispense(root, dir, runId);
 }
 
@@ -999,18 +985,9 @@ async function foldHandoffs(
     // check a concurrent reconcile's retry could take this outcome as its own.
     // A dropped fold is equivalent to the crash-refold window: the commit
     // landed but the ledger misses it.
-    // Written through the lock directly rather than updateRunState (whose
-    // apply callback is contractually pure): the issue application is
-    // re-archived on the state the write actually lands on, since a claim
-    // assigned between the phases can add an update record phase 1 never
-    // saw. The detail files are normally on disk from phase 1, so a failure
-    // here loses only informational records and the fold proceeds with a
-    // warning rather than discarding the landed commit; that tolerance is
-    // earned by re-reading the archives and finding every one of this
-    // handoff's details still held (a file lost since phase 1, or ids
-    // re-minted differently by a concurrent fold, both fail that check).
-    // Anything less drops the fold with the handoff kept as the fallback
-    // store, like a phase-1 failure.
+    // Written through the lock directly so the issue application is re-archived
+    // on the state the write actually lands on: a claim assigned between the
+    // phases can add an update record phase 1 never saw.
     let folded = false;
     let updateArchiveError: unknown = null;
     let detailArchiveError: unknown = null;
@@ -1059,10 +1036,9 @@ async function foldHandoffs(
       const next = installFailed
         ? markInstallFailed(application.state, step.id)
         : application.state;
-      // A landed commit carries the fixes of every issue resolved by a step
-      // it names: the folding step's own resolutions, and those of absorbed
-      // steps whose failed commit attempts left them unattached. Failed and
-      // absent entries associate nothing.
+      // A landed commit carries the fixes of every issue resolved by a step it
+      // names: the folding step's own resolutions, and those of absorbed steps
+      // whose failed commit attempts left them unattached.
       let entryWithIssues = entry;
       if (entry && entry.kind === 'landed') {
         const issueIds = issueIdsForCommit(next, entry.stepIds);
@@ -1088,10 +1064,6 @@ async function foldHandoffs(
       });
     }
     if (updateArchiveError !== null) {
-      // Two different situations share the failed re-archive: a degraded
-      // one where files are genuinely missing records, and a benign one
-      // where every file was just verified complete, so warning about
-      // loss there would report damage the check disproved.
       warnToAgent(
         archivesDegraded
           ? {
@@ -1112,11 +1084,10 @@ async function foldHandoffs(
             }
       );
     }
-    // Only the handoff this fold consumed is removed. A rejected fold leaves
-    // it in place: it belongs to whichever attempt is on disk now, and that
-    // attempt's own reconcile still has to read it. The stored agent-work
-    // payloads go with a terminal outcome; a failed fold keeps them, since a
-    // retry re-hands the newest surviving copy.
+    // A rejected fold leaves the handoff in place: it belongs to whichever
+    // attempt is on disk now, and that attempt's own reconcile still has to
+    // read it. The stored agent-work payloads go with a terminal outcome; a
+    // failed fold keeps them, since a retry re-hands the newest surviving copy.
     if (folded) {
       removeHandoff(dir, step.id);
       if (promptOutcome.status !== 'failed') {
@@ -1471,29 +1442,26 @@ function firstActionableStep(state: MigrateRunState): MigrateStep | undefined {
   return state.steps.find((s) => !TERMINAL_STEP_STATUSES.has(s.status));
 }
 
-// One response repeats another when nothing durable happened between them:
-// the fingerprint digests the whole persisted state (minus the streak
-// itself), so any step transition, generator marker, issue settle or claim,
-// or ledger append resets the count, with no per-field enumeration to fall
-// out of date. A response whose own production writes state after the streak
-// is tracked (a fresh dispense's transition, a first await's claims)
-// fingerprints the pre-write state, so its first repeat resets rather than
-// increments: the threshold counts responses with no durable transition
-// between them, exactly as the contract defines identical.
+// One response repeats another when nothing durable happened between them: the
+// fingerprint digests the whole persisted state (minus the streak itself), so
+// any durable change resets the count with no per-field enumeration to fall out
+// of date. A response whose own production writes state after the streak is
+// tracked (a fresh dispense's transition, a first await's claims) fingerprints
+// the pre-write state, so its first repeat resets rather than increments: the
+// threshold counts responses with no durable transition between them, exactly
+// as the contract defines identical.
 function responseFingerprint(state: MigrateRunState): string {
   return createHash('sha256')
     .update(JSON.stringify({ ...state, noProgress: undefined }))
     .digest('hex');
 }
 
-// Persists the run-level response streak for the step about to be emitted and
-// returns it once it reaches the escalation threshold; null below it. A
-// still-running worker proven inside the hang threshold neither counts nor
-// resets: the response repeats while the run is legitimately waiting, and the
-// streak it would otherwise touch belongs to responses the agent can act on.
-// The proof needs a parseable start time: a running step without one cannot
-// show it is young, so it counts like any other repeated response (its
-// still-running instructions already say what to check).
+// A still-running worker proven inside the hang threshold neither counts nor
+// resets the streak: the response repeats while the run is legitimately
+// waiting, and the streak it would otherwise touch belongs to responses the
+// agent can act on. The proof needs a parseable start time: a running step
+// without one cannot show it is young, so it counts like any other repeated
+// response (its still-running instructions already say what to check).
 function trackNoProgress(
   dir: string,
   step: MigrateStep
@@ -1690,10 +1658,7 @@ function generatorPending(step: MigrateStep): boolean {
   return step.generatorCompleted !== true && step.hasGenerator !== false;
 }
 
-// Whether the step's generator half ran and left changes in the tree: the
-// marker is recorded and it is not an explicit no-op. Decides how a skipped
-// handoff folds and whether the dispense offers the skipped outcome. Absent
-// generatorMadeChanges (a marker an older nx wrote) counts as applied,
+// Absent generatorMadeChanges (a marker an older nx wrote) counts as applied,
 // keeping that version's fold behavior.
 function generatorChangesApplied(step: MigrateStep): boolean {
   return (
@@ -1863,10 +1828,6 @@ function emitDied(
   const head = getLatestCommitSha(root);
   const tree = dirtyTreeSummary(root);
   const cleanRetry = canOfferCleanRetry(root, state, step, head);
-  // The generator half is recorded (or the step never had one), so a retry
-  // that keeps the tree as it stands has the rest of the step left to run: a
-  // prompt, a validation pass, or the install and commit its worker never
-  // reached.
   const resume = !generatorPending(step);
   const capReached = rearmCapReached(step);
   const lines = [
@@ -1926,14 +1887,13 @@ function emitDied(
   if (!resume) {
     lines.push(UNVERIFIABLE_WRITES_LINE);
   }
-  // `retry` is preselected wherever it is legal: it is the only resolution
-  // that neither discards work nor records a result the run never produced.
-  // While the generator may still run there is no `next` at all: a reset
-  // cannot be verified against writes git does not see, and adopting records
-  // a result nothing checked, so an agent that follows `next` blindly must
-  // land on neither. The rearm cap withholds it for the same reason as in
-  // emitRetryFailed: rearms reset the response streak, so a blind retry
-  // `next` would loop past every escalation.
+  // `retry` is preselected wherever it is legal: it is the only resolution that
+  // neither discards work nor records a result the run never produced. While
+  // the generator may still run there is no `next` at all: a reset cannot be
+  // verified against writes git does not see, and adopting records a result
+  // nothing checked, so an agent that follows `next` blindly must land on
+  // neither. The rearm cap withholds it for the same reason as in
+  // emitRetryFailed.
   emit(
     root,
     runId,
@@ -2030,22 +1990,17 @@ function emitAwaitPrompt(
     return;
   }
   const validating = step.awaitingKind === 'generator-validation';
-  // The plan's prompt path is the ground truth for a prompt park: it anchors
-  // the stored-copy check (a same-migration file naming different
-  // instructions is rejected) and is what the fallback below re-hands.
+  // The plan's prompt path is the ground truth for a prompt park: a stored copy
+  // naming different instructions is rejected against it.
   const planPrompt = validating
     ? null
     : planPromptPath(dir, claimed, migrationId);
-  // Re-emit the payload the worker stored when it parked the step, so a
-  // session that lost the original block (a compaction, a restart) gets the
-  // work restated instead of a pointer into stdout it no longer has. When no
-  // stored copy is usable (the park predates the stored copy, or the file no
-  // longer matches the awaited work), the payload is synthesized from
-  // durable facts instead: the tree-pointing validation marker, or the
-  // plan's prompt path. An awaiting step offers no retry action, so a
-  // dispense that only pointed backward could stall a valid run forever.
-  // Only a plan that cannot name the prompt leaves the backward pointer, as
-  // the last resort.
+  // Re-emit the payload the worker stored when it parked the step, so a session
+  // that lost the original block (a compaction, a restart) gets the work
+  // restated instead of a pointer into stdout it no longer has. An awaiting
+  // step offers no retry action, so a dispense that only pointed backward could
+  // stall a valid run forever; only a plan that cannot name the prompt falls
+  // back to that pointer.
   const payload =
     readAgentWorkPayload(agentWorkPayloadPath(dir, step.id, step.attempt), {
       migrationId,
@@ -2074,11 +2029,9 @@ function emitAwaitPrompt(
       ];
   lines.push(
     `Handoff file: ${filePath}`,
-    // No skipped outcome is offered once a generator's changes are applied
-    // (a validation pass, or a hybrid's prompt half): "not applicable" still
-    // completes the migration, and the fold treats a skipped handoff that
-    // way. A prompt-only step, or a hybrid whose generator was a no-op, can
-    // still be marked skipped: nothing of the migration is in the tree.
+    // The skipped outcome is offered only while nothing of the migration is in
+    // the tree: once a generator's changes are applied, the fold treats a
+    // skipped handoff as completed anyway.
     validating
       ? `Handoff JSON: { "status": "success" | "failed", "summary": "<what you verified>" }. If validation does not apply here, use "status": "success" and say so in the summary.`
       : generatorChangesApplied(step)
@@ -2106,13 +2059,12 @@ function emitAwaitPrompt(
   );
 }
 
-// The prompt path the run's latest plan snapshot records for the migration;
-// null when the snapshot cannot be read, is not the shape nx writes, or does
-// not name one. A damaged-but-parseable snapshot must land on null too: this
-// runs while re-handing an awaiting step's work, and throwing here would
-// keep the run from re-dispensing that work at all. The snapshot name is
-// validated as a bare `plan-<round>.json` at state read, so the join cannot
-// leave the run directory.
+// The prompt path the run's latest plan snapshot records for the migration.
+// Every failure lands on null, damaged-but-parseable snapshots included: this
+// runs while re-handing an awaiting step's work, and throwing here would keep
+// the run from re-dispensing that work at all. The snapshot name is validated
+// as a bare `plan-<round>.json` at state read, so the join cannot leave the run
+// directory.
 function planPromptPath(
   dir: string,
   state: MigrateRunState,
@@ -2138,10 +2090,9 @@ function planPromptPath(
   return null;
 }
 
-// Empty unless a handoff file is present but unusable; wording mirrors the
-// classic runner's ambiguous-outcome cause lines. A readable handoff whose
-// issue report is invalid is a rejection too: the fold refused to consume it,
-// and only this response can tell the agent why.
+// Wording mirrors the classic runner's ambiguous-outcome cause lines. A
+// readable handoff whose issue report is invalid is a rejection too: the fold
+// refused to consume it, and only this response can tell the agent why.
 function describeRejectedHandoff(
   dir: string,
   state: MigrateRunState,
@@ -2276,8 +2227,6 @@ function completeRun(
   if (installLine) {
     warnToAgent({ title: installLine });
   }
-  // Unresolved issues survive the run: they are the deferred work the
-  // completion hands to whoever validates the migrated workspace.
   const issueLines = renderUnresolvedIssueLines(current, runId);
   if (issueLines.length > 0) {
     warnToAgent({ title: issueLines[0], bodyLines: issueLines.slice(1) });
@@ -2317,10 +2266,9 @@ function emit(
   noProgress: MigrateRunNoProgress | null
 ): void {
   // At the escalation threshold the whole response becomes the 'no-progress'
-  // action: the step's own instructions and commands are kept below the
-  // escalation so acting on them stays possible, but the action names the
-  // loop, not the step. Never a step status: nothing durable changed, and a
-  // status would have to be walked back once the agent acts.
+  // action, with the step's own instructions kept below so acting on them stays
+  // possible. Never a step status: nothing durable changed, and a status would
+  // have to be walked back once the agent acts.
   const escalated = noProgress !== null;
   const effectiveAction = escalated ? 'no-progress' : action;
   const { instructionLines, ...rest } = payload;
