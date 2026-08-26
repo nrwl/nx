@@ -4,6 +4,8 @@ import * as http from 'node:http';
 import * as https from 'node:https';
 import { connect } from 'node:net';
 import { join } from 'node:path';
+import { installedPlaywrightVersion } from '../../utils/installed-playwright';
+import { installedPlaywrightReadsNpmConfigProxy } from '../../utils/npm-config-proxy';
 import { installedPlaywrightSkipsProxiedTls } from '../../utils/proxied-tls-verification';
 import {
   resolveProxyForUrl,
@@ -37,14 +39,18 @@ export async function waitForWebserverExecutor(
     );
     return { success: false };
   }
-  const problem = servers.map(findServerProblem).find(Boolean);
+  const playwright = installedPlaywrightVersion(
+    playwrightRequirePaths(context)
+  );
+  const skipProxiedTls = installedPlaywrightSkipsProxiedTls(playwright);
+  const npmConfigProxy = installedPlaywrightReadsNpmConfigProxy(playwright);
+  const problem = servers
+    .map((server) => findServerProblem(server, npmConfigProxy))
+    .find(Boolean);
   if (problem) {
     logger.error(`@nx/playwright:wait-for-webserver ${problem}`);
     return { success: false };
   }
-  const skipProxiedTls = installedPlaywrightSkipsProxiedTls(
-    playwrightRequirePaths(context)
-  );
 
   try {
     await Promise.all(
@@ -54,7 +60,8 @@ export async function waitForWebserverExecutor(
         waitForServer(
           server,
           options.timeout || server.timeout || DEFAULT_TIMEOUT,
-          skipProxiedTls
+          skipProxiedTls,
+          npmConfigProxy
         )
       )
     );
@@ -76,7 +83,10 @@ export default waitForWebserverExecutor;
 // being retried until the timeout and reported as a slow server. An unusable
 // port is also the only input that makes `connect` throw synchronously, which
 // no probe could turn into a failure.
-function findServerProblem(server: Server): string | undefined {
+function findServerProblem(
+  server: Server,
+  npmConfigProxy: boolean
+): string | undefined {
   if (server.port == null && !server.url) {
     return 'requires each server to define a "port" or a "url".';
   }
@@ -93,7 +103,7 @@ function findServerProblem(server: Server): string | undefined {
     // Only the address the wait starts from is checked here. A redirect can
     // cross to a protocol with its own proxy variable, which the probe reports
     // when it gets there.
-    const resolution = resolveProxyForUrl(url);
+    const resolution = resolveProxyForUrl(url, process.env, npmConfigProxy);
     if (resolution.kind === 'unusable') {
       return `${unusableProxyProblem(resolution)}.`;
     }
@@ -131,16 +141,23 @@ function playwrightRequirePaths(context: ExecutorContext): string[] {
 async function waitForServer(
   server: Server,
   timeout: number,
-  skipProxiedTls: boolean
+  skipProxiedTls: boolean,
+  npmConfigProxy: boolean
 ): Promise<void> {
+  // Named the way it is probed: a port wins over a url when both are set.
   const label =
-    server.url != null ? redactedHref(server.url) : `port ${server.port}`;
+    server.port != null ? `port ${server.port}` : redactedHref(server.url);
   const deadline = Date.now() + timeout;
   const schedule = [...RETRY_SCHEDULE];
   let lastObserved: string | undefined;
 
   while (true) {
-    const failure = await probeServer(server, deadline, skipProxiedTls);
+    const failure = await probeServer(
+      server,
+      deadline,
+      skipProxiedTls,
+      npmConfigProxy
+    );
     if (failure === null) {
       return;
     }
@@ -151,7 +168,7 @@ async function waitForServer(
       throw new Error(
         `Timed out after ${timeout}ms waiting for the E2E web server at ${label} to be ready. Last observation: ${
           lastObserved ?? failure
-        }. If the server now listens at a different address, run "nx reset" so the gate is re-inferred from the Playwright config.`
+        }. If the server now listens at a different address, run "nx reset" so the gate is re-inferred from the Playwright config. If a configuration-scoped env file (".env.<target>.<configuration>") sets the address, the gate is inferred without it; set "waitForWebServer" to false on @nx/playwright/plugin instead.`
       );
     }
     const delay = schedule.shift() ?? FALLBACK_RETRY_DELAY;
@@ -166,7 +183,8 @@ async function waitForServer(
 function probeServer(
   server: Server,
   deadline: number,
-  skipProxiedTls: boolean
+  skipProxiedTls: boolean,
+  npmConfigProxy: boolean
 ): Promise<ProbeFailure> {
   return server.port != null
     ? probePort(server.port, deadline)
@@ -174,7 +192,8 @@ function probeServer(
         server.url,
         server.ignoreHTTPSErrors ?? false,
         deadline,
-        skipProxiedTls
+        skipProxiedTls,
+        npmConfigProxy
       );
 }
 
@@ -228,7 +247,8 @@ async function probeUrl(
   url: string,
   ignoreHTTPSErrors: boolean,
   deadline: number,
-  skipProxiedTls: boolean
+  skipProxiedTls: boolean,
+  npmConfigProxy: boolean
 ): Promise<ProbeFailure> {
   // Validated before any server is probed, so this cannot throw.
   const parsedUrl = new URL(url);
@@ -237,7 +257,8 @@ async function probeUrl(
     parsedUrl,
     ignoreHTTPSErrors,
     deadline,
-    skipProxiedTls
+    skipProxiedTls,
+    npmConfigProxy
   );
   if (response.status === 404 && parsedUrl.pathname === '/') {
     const indexUrl = new URL(parsedUrl);
@@ -246,7 +267,8 @@ async function probeUrl(
       indexUrl,
       ignoreHTTPSErrors,
       deadline,
-      skipProxiedTls
+      skipProxiedTls,
+      npmConfigProxy
     );
   }
   if (response.status >= 200 && response.status < 404) {
@@ -293,6 +315,7 @@ function requestStatus(
   ignoreHTTPSErrors: boolean,
   deadline: number,
   skipProxiedTls: boolean,
+  npmConfigProxy: boolean,
   redirects = 0
 ): Promise<UrlResponse> {
   // A chain that ran out of budget still told us the server is answering, so it
@@ -313,7 +336,7 @@ function requestStatus(
 
   // Resolved per URL rather than once per probe so a redirect that changes
   // protocol re-selects the way Playwright's own recursion does.
-  const resolution = resolveProxyForUrl(url);
+  const resolution = resolveProxyForUrl(url, process.env, npmConfigProxy);
   if (resolution.kind === 'unusable') {
     return Promise.resolve({
       href: url.href,
@@ -429,6 +452,7 @@ function requestStatus(
             ignoreHTTPSErrors,
             deadline,
             skipProxiedTls,
+            npmConfigProxy,
             redirects + 1
           )
         );

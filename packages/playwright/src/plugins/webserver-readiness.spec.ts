@@ -414,6 +414,23 @@ describe('getProbeEnvDivergence', () => {
     ]);
   });
 
+  it('compares the npm_config proxy variables only for a Playwright that reads them', () => {
+    // Playwright before 1.59.0 routes by npm's variables ahead of the standard
+    // ones, as does the gate on that version.
+    const npmProxy = { npm_config_http_proxy: 'http://proxy.example:8080' };
+    expect(getProbeEnvDivergence([httpUrl], npmProxy, {})).toEqual([]);
+    expect(getProbeEnvDivergence([httpUrl], npmProxy, {}, false, true)).toEqual(
+      ['npm_config_http_proxy']
+    );
+    // An npm exclusion that reroutes a proxied probe counts on its own.
+    const ambient = { HTTP_PROXY: 'http://proxy.example:8080' };
+    const excluded = { ...ambient, npm_config_no_proxy: 'localhost' };
+    expect(getProbeEnvDivergence([httpUrl], excluded, ambient)).toEqual([]);
+    expect(
+      getProbeEnvDivergence([httpUrl], excluded, ambient, false, true)
+    ).toEqual(['npm_config_no_proxy']);
+  });
+
   it('names NODE_TLS_REJECT_UNAUTHORIZED only for the connection to an https proxy', () => {
     // Every request sets `rejectUnauthorized` itself, which overrides the env
     // default, so a direct origin verifies the same on both sides.

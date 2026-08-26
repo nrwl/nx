@@ -1792,6 +1792,66 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
     }
   });
 
+  it('skips the gate for a legacy Playwright whose probe reads an npm proxy variable from a task env file', async () => {
+    // Playwright before 1.59.0 routes its probe by npm's `npm_config_*` proxy
+    // variables, which a task env file can set where the gate's own env
+    // never has them.
+    const savedEnv = saveEnv(PROXY_ENV_NAMES);
+    const originalWorkspaceRoot = workspaceRoot;
+    setWorkspaceRoot(tempFs.tempDir);
+    installFreshConfigEval();
+    const warn = jest
+      .spyOn(devkitInternal, 'emitPluginWorkerLog')
+      .mockImplementation(() => {});
+
+    try {
+      await tempFs.createFiles({
+        'apps/e2e/project.json': '{}',
+        'apps/e2e/playwright.config.js': `module.exports = {
+  testDir: 'tests',
+  webServer: {
+    command: 'npx nx run app1:serve',
+    url: 'http://localhost:4200',
+    reuseExistingServer: true,
+  },
+};`,
+        'apps/e2e/tests/run-me.spec.ts': '',
+        '.env.e2e': 'npm_config_http_proxy=http://proxy.example:8080\n',
+        'apps/e2e/node_modules/@playwright/test/package.json':
+          playwrightPackageJson('1.36.0'),
+      });
+
+      const run = async () =>
+        (
+          await createNodesFunction(
+            ['apps/e2e/playwright.config.js'],
+            { targetName: 'e2e' },
+            context
+          )
+        )[0][1].projects['apps/e2e'].targets;
+
+      expect((await run())['e2e--wait-for-webserver']).toBeUndefined();
+      expect(warn).toHaveBeenCalledWith(
+        'warn',
+        expect.stringContaining('npm_config_http_proxy')
+      );
+
+      // Current versions ignore the variable, so it changes neither probe.
+      await tempFs.createFile(
+        'apps/e2e/node_modules/@playwright/test/package.json',
+        playwrightPackageJson('1.59.0')
+      );
+      expect((await run())['e2e--wait-for-webserver'].options.servers).toEqual([
+        { url: 'http://localhost:4200' },
+      ]);
+    } finally {
+      warn.mockRestore();
+      _setChildEval(null);
+      setWorkspaceRoot(originalWorkspaceRoot);
+      restoreEnv(savedEnv);
+    }
+  });
+
   it('rebuilds a cached gate when the installed Playwright starts verifying the tunnelled probe', async () => {
     const savedEnv = saveEnv(['NODE_EXTRA_CA_CERTS', ...PROXY_ENV_NAMES]);
     const originalWorkspaceRoot = workspaceRoot;
@@ -3781,6 +3841,10 @@ const PROXY_ENV_NAMES = [
   'https_proxy',
   'all_proxy',
   'no_proxy',
+  'npm_config_http_proxy',
+  'npm_config_https_proxy',
+  'npm_config_proxy',
+  'npm_config_no_proxy',
 ].flatMap((name) => [name, name.toUpperCase()]);
 
 // An https server behind the http proxy the legacy TLS tests route through.

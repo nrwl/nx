@@ -9,6 +9,12 @@ const PROXY_VARS = [
   'ALL_PROXY',
   'no_proxy',
   'NO_PROXY',
+  'npm_config_http_proxy',
+  'NPM_CONFIG_HTTP_PROXY',
+  'npm_config_proxy',
+  'NPM_CONFIG_PROXY',
+  'npm_config_no_proxy',
+  'NPM_CONFIG_NO_PROXY',
 ];
 
 describe('resolveProxyForUrl', () => {
@@ -253,6 +259,70 @@ describe('resolveProxyForUrl', () => {
 
       expect(resolveProxyForUrl(new URL('http://[::1]:4200'))).toEqual({
         kind: 'direct',
+      });
+    });
+  });
+
+  describe('npm_config proxy variables', () => {
+    const url = new URL('http://localhost:4200');
+    const legacy = (target: URL) =>
+      resolveProxyForUrl(target, process.env, true);
+
+    it('ignores them unless asked, like Playwright 1.59.0 and later', () => {
+      process.env.npm_config_http_proxy = 'http://npm.example:8080';
+      process.env.npm_config_proxy = 'http://npm.example:8080';
+
+      expect(resolveProxyForUrl(url)).toEqual({ kind: 'direct' });
+    });
+
+    it('reads them in the order Playwright below 1.59.0 does', () => {
+      // npm_config_<protocol>_proxy, <protocol>_proxy, npm_config_proxy,
+      // all_proxy.
+      process.env.ALL_PROXY = 'http://all.example:8080';
+      expect(legacy(url)).toEqual({
+        kind: 'proxy',
+        proxy: new URL('http://all.example:8080'),
+      });
+
+      process.env.npm_config_proxy = 'http://npm.example:8080';
+      expect(legacy(url)).toEqual({
+        kind: 'proxy',
+        proxy: new URL('http://npm.example:8080'),
+      });
+
+      process.env.HTTP_PROXY = 'http://specific.example:8080';
+      expect(legacy(url)).toEqual({
+        kind: 'proxy',
+        proxy: new URL('http://specific.example:8080'),
+      });
+
+      process.env.npm_config_http_proxy = 'http://npm-specific.example:8080';
+      expect(legacy(url)).toEqual({
+        kind: 'proxy',
+        proxy: new URL('http://npm-specific.example:8080'),
+      });
+    });
+
+    it('lets npm_config_no_proxy override no_proxy', () => {
+      process.env.HTTP_PROXY = 'http://proxy.example:8080';
+      process.env.NO_PROXY = 'localhost';
+      process.env.npm_config_no_proxy = 'other.example';
+
+      expect(legacy(url)).toEqual({
+        kind: 'proxy',
+        proxy: new URL('http://proxy.example:8080'),
+      });
+      expect(resolveProxyForUrl(url)).toEqual({ kind: 'direct' });
+    });
+
+    it('names the npm variable a bad value came from', () => {
+      process.env.npm_config_proxy = 'http://not a proxy';
+
+      expect(legacy(url)).toEqual({
+        kind: 'unusable',
+        variable: 'npm_config_proxy',
+        value: 'http://not a proxy',
+        reason: 'is not a valid url',
       });
     });
   });

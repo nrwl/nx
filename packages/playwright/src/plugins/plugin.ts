@@ -34,6 +34,8 @@ import { minimatch } from 'minimatch';
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, join, parse, relative, resolve, sep } from 'node:path';
 import type { Schema as WaitForWebserverSchema } from '../executors/wait-for-webserver/schema';
+import { installedPlaywrightVersion } from '../utils/installed-playwright';
+import { installedPlaywrightReadsNpmConfigProxy } from '../utils/npm-config-proxy';
 import { installedPlaywrightSkipsProxiedTls } from '../utils/proxied-tls-verification';
 import { getReporterOutputs, type ReporterOutput } from '../utils/reporters';
 import {
@@ -226,11 +228,17 @@ async function createNodesInternal(
   // The gate follows the installed Playwright's probe semantics. A linked
   // install can cross the version floor without touching the lockfile, so the
   // key carries the decision rather than trusting the hash to notice.
-  const legacyProxiedTls = installedPlaywrightSkipsProxiedTls([
+  const playwright = installedPlaywrightVersion([
     join(context.workspaceRoot, projectRoot),
     context.workspaceRoot,
   ]);
-  const cacheKey = `${hash}-${hashObject({ chainDotEnvPairs, legacyProxiedTls })}`;
+  const legacyProxiedTls = installedPlaywrightSkipsProxiedTls(playwright);
+  const npmConfigProxy = installedPlaywrightReadsNpmConfigProxy(playwright);
+  const cacheKey = `${hash}-${hashObject({
+    chainDotEnvPairs,
+    legacyProxiedTls,
+    npmConfigProxy,
+  })}`;
 
   let playwrightTargets = pluginCache.get(cacheKey);
   if (!playwrightTargets) {
@@ -242,7 +250,8 @@ async function createNodesInternal(
       pmc,
       externalTsconfigInputs,
       chainDotEnvPairs,
-      legacyProxiedTls
+      legacyProxiedTls,
+      npmConfigProxy
     );
     // The key encodes nothing about evaluation success, so caching a failed
     // evaluation's gate-less fallback would make a transient failure (a
@@ -273,7 +282,8 @@ async function buildPlaywrightTargets(
   pmc: ReturnType<typeof getPackageManagerCommand>,
   externalTsconfigInputs: string[],
   chainDotEnvPairs: ChainDotEnvPairs,
-  legacyProxiedTls: boolean
+  legacyProxiedTls: boolean,
+  npmConfigProxy: boolean
 ): Promise<PlaywrightTargets & { taskEnvEvalFailed: boolean }> {
   // Playwright forbids importing the `@playwright/test` module twice. This would affect running the tests,
   // but we're just reading the config so let's delete the variable they are using to detect this.
@@ -350,6 +360,7 @@ async function buildPlaywrightTargets(
       ambientProbeEnv,
       ambientEnv,
       legacyProxiedTls,
+      npmConfigProxy,
       options.targetName,
       undefined,
       e2eGateName,
@@ -366,6 +377,7 @@ async function buildPlaywrightTargets(
         ambientProbeEnv,
         ambientEnv,
         legacyProxiedTls,
+        npmConfigProxy,
         options.targetName,
         undefined,
         e2eGateName,
@@ -379,6 +391,7 @@ async function buildPlaywrightTargets(
         ambientProbeEnv,
         ambientEnv,
         legacyProxiedTls,
+        npmConfigProxy,
         options.ciTargetName,
         options.targetName,
         ciGateName,
@@ -863,6 +876,7 @@ async function resolveChainWebserver(
   ambientProbeEnv: ProbeEnv,
   ambientEnv: NodeJS.ProcessEnv,
   legacyProxiedTls: boolean,
+  npmConfigProxy: boolean,
   target: string,
   nonAtomizedTarget: string | undefined,
   gateTarget: string,
@@ -931,7 +945,8 @@ async function resolveChainWebserver(
         undefined,
         ambientEnv
       ),
-      legacyProxiedTls
+      legacyProxiedTls,
+      npmConfigProxy
     );
     if (divergingProbeVars.length > 0) {
       readinessServers = [];

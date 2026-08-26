@@ -1,5 +1,4 @@
-import { getInstalledPackageVersion } from '@nx/devkit/internal';
-import { lt, valid } from 'semver';
+import { installedPlaywrightIsBelow } from './installed-playwright';
 import { minPlaywrightVersionVerifyingProxiedTls } from './versions';
 
 /**
@@ -9,21 +8,15 @@ import { minPlaywrightVersionVerifyingProxiedTls } from './versions';
  * inference follow the installed version: verifying where that version's own
  * probe does not would fail a wait Playwright itself would pass, and counting
  * TLS material that probe never reads would drop a gate for nothing.
- * `requirePaths` are the directories the install is resolved from, the
- * project root first so a pnpm-isolated copy wins over a hoisted one. An
- * unresolvable or unparseable installation reads as verifying, the semantics
- * of current versions.
+ * `version` is the installed version as `installedPlaywrightVersion` reads it;
+ * an unresolvable or unparseable installation (`null`) reads as verifying, the
+ * semantics of current versions.
  */
 export function installedPlaywrightSkipsProxiedTls(
-  requirePaths: string[]
+  version: string | null
 ): boolean {
-  if (requirePaths.length === 0) {
-    return false;
-  }
-  const version = getInstalledPackageVersion('@playwright/test', requirePaths);
-  return (
-    version !== null &&
-    valid(version) !== null &&
-    lt(version, minPlaywrightVersionVerifyingProxiedTls)
+  return installedPlaywrightIsBelow(
+    version,
+    minPlaywrightVersionVerifyingProxiedTls
   );
 }

@@ -53,10 +53,19 @@ export function normalizeWebServers(
 
 // The TLS material Node reads when a probe verifies an https certificate.
 const TLS_PROBE_VARS = ['NODE_EXTRA_CA_CERTS', 'NODE_TLS_REJECT_UNAUTHORIZED'];
-// Every variable a url probe reads to route and verify a request, in both
-// spellings the proxy resolution accepts.
+// The variables a url probe routes a request by, in both spellings the proxy
+// resolution accepts.
+const ROUTE_VARS = ['http_proxy', 'https_proxy', 'all_proxy', 'no_proxy'];
+// The npm-exported ones a Playwright below 1.59.0 reads ahead of them.
+const NPM_CONFIG_ROUTE_VARS = [
+  'npm_config_http_proxy',
+  'npm_config_https_proxy',
+  'npm_config_proxy',
+  'npm_config_no_proxy',
+];
+// Every variable a url probe reads to route and verify a request.
 const PROBE_ENV_VARS = [
-  ...['http_proxy', 'https_proxy', 'all_proxy', 'no_proxy'].flatMap((name) => [
+  ...[...ROUTE_VARS, ...NPM_CONFIG_ROUTE_VARS].flatMap((name) => [
     name,
     name.toUpperCase(),
   ]),
@@ -156,17 +165,21 @@ function restoreEnv(snapshot: NodeJS.ProcessEnv): void {
  * The routes a probe under `env` can take, read as the executor's proxy
  * resolution reads them: the proxy for each protocol a redirect can reach
  * (`<protocol>_proxy`, falling back to `all_proxy`, normalized as it would be
- * dialled) and the `no_proxy` filter as its set of entries. A `no_proxy` that
- * excludes every host, or no proxy at all, sends every hop direct, so both
- * collapse to empty routes and a masked variable never counts as a difference.
+ * dialled) and the `no_proxy` filter as its set of entries, the `npm_config_*`
+ * variables included with `npmConfigProxy`. A `no_proxy` that excludes every
+ * host, or no proxy at all, sends every hop direct, so both collapse to empty
+ * routes and a masked variable never counts as a difference.
  */
-function proxyRoutes(env: NodeJS.ProcessEnv): {
+function proxyRoutes(
+  env: NodeJS.ProcessEnv,
+  npmConfigProxy: boolean
+): {
   http: string;
   https: string;
   no_proxy: string;
 } {
   const route = (protocol: string) => {
-    const resolution = resolveProxyForProtocol(protocol, env);
+    const resolution = resolveProxyForProtocol(protocol, env, npmConfigProxy);
     switch (resolution.kind) {
       case 'direct':
         return '';
@@ -187,7 +200,11 @@ function proxyRoutes(env: NodeJS.ProcessEnv): {
   // `*host` (any suffix) and `host` (exact) are not. A bare `*` excludes every
   // host.
   const entries = [
-    ...new Set(noProxyEntries(env).map((entry) => entry.replace(/^\*\./, '.'))),
+    ...new Set(
+      noProxyEntries(env, npmConfigProxy).map((entry) =>
+        entry.replace(/^\*\./, '.')
+      )
+    ),
   ].sort();
   if (entries.includes('*') || !(http || https)) {
     return { http: '', https: '', no_proxy: '' };
@@ -220,13 +237,17 @@ function proxyRoutes(env: NodeJS.ProcessEnv): {
  * https proxy on the http route, and no `no_proxy` entry that could send a
  * redirect target direct. `NODE_TLS_REJECT_UNAUTHORIZED` only reaches that
  * tunnel to an https proxy, since every request sets `rejectUnauthorized`
- * itself, and only its `'0'` state counts.
+ * itself, and only its `'0'` state counts. With `npmConfigProxy` (an installed
+ * Playwright below 1.59.0, whose probe reads npm's `npm_config_*` proxy
+ * variables ahead of the standard ones, as the gate does on that version) those
+ * variables route the probe and are compared too.
  */
 export function getProbeEnvDivergence(
   servers: Array<{ url?: string; ignoreHTTPSErrors?: boolean }>,
   taskEnv: NodeJS.ProcessEnv,
   gateEnv: NodeJS.ProcessEnv,
-  legacyProxiedTls = false
+  legacyProxiedTls = false,
+  npmConfigProxy = false
 ): string[] {
   // A port is probed with a raw TCP connect, and the executor rejects a
   // malformed url up front; env plays no part in either.
@@ -237,16 +258,19 @@ export function getProbeEnvDivergence(
     return [];
   }
   const diverging = new Set<string>();
-  const taskRoutes = proxyRoutes(taskEnv);
-  const gateRoutes = proxyRoutes(gateEnv);
+  const taskRoutes = proxyRoutes(taskEnv, npmConfigProxy);
+  const gateRoutes = proxyRoutes(gateEnv, npmConfigProxy);
   // Name the raw variables behind a differing route. A proxy route is decided
   // by every proxy variable (`no_proxy` can mask them all); the filter only by
   // `no_proxy`.
+  const readVars = npmConfigProxy
+    ? [...ROUTE_VARS, ...NPM_CONFIG_ROUTE_VARS]
+    : ROUTE_VARS;
   const routeVars =
     taskRoutes.http !== gateRoutes.http || taskRoutes.https !== gateRoutes.https
-      ? ['http_proxy', 'https_proxy', 'all_proxy', 'no_proxy']
+      ? readVars
       : taskRoutes.no_proxy !== gateRoutes.no_proxy
-        ? ['no_proxy']
+        ? readVars.filter((name) => name.endsWith('no_proxy'))
         : [];
   for (const name of routeVars) {
     for (const variable of [name, name.toUpperCase()]) {

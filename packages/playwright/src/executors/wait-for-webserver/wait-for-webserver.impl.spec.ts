@@ -579,6 +579,13 @@ describe('waitForWebserverExecutor', () => {
     expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('run "nx reset" so the gate is re-inferred')
     );
+    // A configuration-scoped env file never reaches the inference, so the
+    // message names the way out of that setup too.
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'set "waitForWebServer" to false on @nx/playwright/plugin'
+      )
+    );
   });
 
   it('bounds each server by its own timeout', async () => {
@@ -882,7 +889,7 @@ describe('waitForWebserverExecutor', () => {
     });
 
     // A workspace whose installed @playwright/test is `version`, for the
-    // probe's version-dependent proxied TLS semantics.
+    // probe's version-dependent semantics.
     const writePlaywrightFixture = (version: string): string => {
       const dir = mkdtempSync(join(tmpdir(), 'pw-wait-version-'));
       mkdirSync(join(dir, 'node_modules', '@playwright', 'test'), {
@@ -943,6 +950,42 @@ describe('waitForWebserverExecutor', () => {
         rmSync(root, { recursive: true, force: true });
       }
     });
+
+    it.each([
+      ['1.36.0', 1],
+      ['1.59.0', 0],
+    ])(
+      'routes by npm_config_http_proxy the way the installed Playwright %s does',
+      async (version, proxied) => {
+        // Playwright before 1.59.0 reads npm's proxy variables ahead of the
+        // standard ones; later versions ignore them.
+        const server = createHttpServer((_req, res) => res.end('ok'));
+        await listen(server, 0);
+        const { port } = server.address() as AddressInfo;
+        const seen: string[] = [];
+        const proxy = createHttpServer((req, res) => {
+          seen.push(req.url);
+          res.statusCode = 200;
+          res.end();
+        });
+        await listen(proxy, 0);
+        const { port: proxyPort } = proxy.address() as AddressInfo;
+        process.env.npm_config_http_proxy = `http://127.0.0.1:${proxyPort}`;
+        const root = writePlaywrightFixture(version);
+
+        try {
+          const result = await waitForWebserverExecutor(
+            { servers: [{ url: `http://127.0.0.1:${port}` }], timeout: 300 },
+            versionedContext(root)
+          );
+
+          expect(result).toEqual({ success: true });
+          expect(seen).toHaveLength(proxied);
+        } finally {
+          rmSync(root, { recursive: true, force: true });
+        }
+      }
+    );
 
     it('sends proxy credentials on an absolute-form request', async () => {
       const seen: Array<string | undefined> = [];
@@ -1109,6 +1152,14 @@ const PROXY_VARS = [
   'ALL_PROXY',
   'no_proxy',
   'NO_PROXY',
+  'npm_config_http_proxy',
+  'NPM_CONFIG_HTTP_PROXY',
+  'npm_config_https_proxy',
+  'NPM_CONFIG_HTTPS_PROXY',
+  'npm_config_proxy',
+  'NPM_CONFIG_PROXY',
+  'npm_config_no_proxy',
+  'NPM_CONFIG_NO_PROXY',
 ];
 
 function listen(server: AnyServer, port: number): Promise<void> {
