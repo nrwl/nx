@@ -1,5 +1,6 @@
 package dev.nx.gradle
 
+import dev.nx.gradle.utils.registerDependsOnCapture
 import java.util.*
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
@@ -63,6 +64,8 @@ class NxProjectGraphReportPlugin : Plugin<Project> {
 
           task.doFirst { it.logger.info("${Date()} Running nxProjectReport for ${project.name}") }
         }
+
+    registerDependsOnCapture(project) { index -> nxProjectReportTask.get().dependsOnIndex = index }
 
     // Ensure all included builds are processed only once using lazy evaluation
     project.gradle.includedBuilds.distinct().forEach { includedBuild ->

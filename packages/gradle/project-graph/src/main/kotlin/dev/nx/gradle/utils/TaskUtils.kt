@@ -616,38 +616,33 @@ fun getOutputsForTask(task: Task, projectRoot: String, workspaceRoot: String): L
   }
 }
 
+/**
+ * Direct dependencies of [task].
+ *
+ * Inside the `nxProjectReport` task action the answer comes from the index captured during the
+ * configuration phase, because resolving a task dependency from an execution worker deadlocks: see
+ * [CapturedTaskDependencies]. Anything the capture did not reach — a task belonging to another
+ * build, for instance — degrades there to the literal `Task` values on the `dependsOn` property,
+ * which needs no resolution.
+ *
+ * Every other caller runs on the build thread, where resolution is safe and gives the complete
+ * answer: `dependsOn` holds raw declared values, and keeping only the literal `Task` instances
+ * would drop edges expressed as providers, such as `jar` reaching `processResources` through the
+ * `classes` lifecycle task.
+ */
 fun getDependsOnTask(task: Task): Set<Task> {
-  // Try to safely get dependencies, with fallback for configuration cache issues
+  CapturedTaskDependencies.lookup(task)?.let { captured ->
+    task.logger.info("Dependencies for ${task.path}: ${captured.map { it.path }}")
+    return captured
+  }
   return try {
-    // First try to get dependencies from task.dependsOn property
-    val dependsOnFromProperty: Set<Task> =
-        try {
-          task.dependsOn.filterIsInstance<Task>().toSet()
-        } catch (e: Exception) {
-          task.logger.info(
-              "Cannot access task.dependsOn for ${task.path}, possibly due to configuration cache: ${e.message}")
-          emptySet()
-        }
-
-    // Then try to get dependencies from taskDependencies (more comprehensive but riskier with
-    // config cache)
-    val dependsOnFromTaskDependencies: Set<Task> =
-        try {
-          task.taskDependencies.getDependencies(task)
-        } catch (e: UnsupportedOperationException) {
-          task.logger.info(
-              "Cannot access taskDependencies for ${task.path} due to configuration cache restrictions")
-          emptySet()
-        } catch (e: Exception) {
-          task.logger.info("Error calling getDependencies for ${task.path}: ${e.message}")
-          emptySet()
-        }
-
-    val combinedDependsOn = dependsOnFromTaskDependencies.union(dependsOnFromProperty)
-
-    task.logger.info("Dependencies for ${task.path}: ${combinedDependsOn.map { it.path }}")
-
-    combinedDependsOn
+    val dependsOnFromProperty = task.dependsOn.filterIsInstance<Task>().toSet()
+    if (CapturedTaskDependencies.isActive()) {
+      task.logger.info(
+          "No captured dependencies for ${task.path}; using the dependsOn property: ${dependsOnFromProperty.map { it.path }}")
+      return dependsOnFromProperty
+    }
+    dependsOnFromProperty + task.taskDependencies.getDependencies(task)
   } catch (e: Exception) {
     task.logger.info("Unexpected error getting dependencies for ${task.path}: ${e.message}")
     emptySet()
