@@ -487,35 +487,62 @@ describe('createConfig', () => {
     }
   }, 10000);
 
-  it.each([
-    ['the dev-server host check is disabled', { disableHostCheck: true }],
-    ['every dev-server host is allowed', { allowedHosts: true as const }],
-  ])(
-    'should allow every host in the engine manifest when %s',
-    async (_, devServer) => {
-      const root = await createSsrProjectRoot();
-      vi.stubEnv('WEBPACK_SERVE', 'true');
-      try {
-        const configs = await _createConfig({
-          ...configBase,
-          root,
-          server: './src/main.server.ts',
-          ssr: { entry: './src/server.ts' },
-          devServer,
-        });
-
-        const serverExportsRule = findServerExportsRule(configs[1]);
-        expect(serverExportsRule.options.engineWiring).toMatchObject({
-          allowedHosts: ['*', 'localhost', '*.localhost', '127.0.0.1', '[::1]'],
+  it('should keep the dev-server hosts in the engine manifest when the host check is disabled', async () => {
+    const root = await createSsrProjectRoot();
+    vi.stubEnv('WEBPACK_SERVE', 'true');
+    try {
+      const configs = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+        devServer: {
           disableHostCheck: true,
-        });
-      } finally {
-        vi.unstubAllEnvs();
-        await rm(root, { recursive: true, force: true });
-      }
-    },
-    10000
-  );
+          allowedHosts: ['.example.com', 'foo.dev'],
+        },
+      });
+
+      const serverExportsRule = findServerExportsRule(configs[1]);
+      expect(serverExportsRule.options.engineWiring).toMatchObject({
+        allowedHosts: [
+          'example.com',
+          '*.example.com',
+          'foo.dev',
+          'localhost',
+          '*.localhost',
+          '127.0.0.1',
+          '[::1]',
+        ],
+        disableHostCheck: true,
+      });
+    } finally {
+      vi.unstubAllEnvs();
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
+  it('should disable the engine host check when every dev-server host is allowed', async () => {
+    const root = await createSsrProjectRoot();
+    vi.stubEnv('WEBPACK_SERVE', 'true');
+    try {
+      const configs = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+        devServer: { allowedHosts: true },
+      });
+
+      const serverExportsRule = findServerExportsRule(configs[1]);
+      expect(serverExportsRule.options.engineWiring).toMatchObject({
+        allowedHosts: ['localhost', '*.localhost', '127.0.0.1', '[::1]'],
+        disableHostCheck: true,
+      });
+    } finally {
+      vi.unstubAllEnvs();
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
 
   it.each(['20.3.17', '20.3.24', '21.1.5', '21.2.0'])(
     'should warn when @angular/ssr %s cannot disable the engine host check',

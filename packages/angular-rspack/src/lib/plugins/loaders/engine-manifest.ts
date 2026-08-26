@@ -107,9 +107,8 @@ export function generateEngineManifestSource(
   __ngRspackAngularAppEngine.ɵallowStaticRouteRender = true;
   ${
     engineWiring.disableHostCheck
-      ? `// The host matcher ignores a literal '*' entry before 21.2.4; this
-  // static skips validation on 20.3.25+ and 21.2.1+ and is an inert write
-  // on older versions, which have no disable mechanism.
+      ? `// Skips validation on 20.3.25+ and 21.2.1+; an inert write on older
+  // versions, which have no disable mechanism.
   __ngRspackAngularAppEngine.ɵdisableAllowedHostsCheck = true;`
       : ''
   }

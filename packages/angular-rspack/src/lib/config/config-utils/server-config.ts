@@ -204,16 +204,16 @@ function installedRspackSupportsVirtualModules(root: string): boolean {
 function getServeModeAllowedHosts(
   devServer: NormalizedDevServerOptions
 ): string[] {
-  const allowedHosts = devServerDisablesHostCheck(devServer)
-    ? ['*']
-    : Array.isArray(devServer.allowedHosts)
-      ? // The dev server matches a leading-dot entry against the apex and
-        // its subdomains; the engine's '*.' form only matches subdomains,
-        // so emit both.
-        devServer.allowedHosts.flatMap((host) =>
-          host.startsWith('.') ? [host.slice(1), `*${host}`] : [host]
-        )
-      : [];
+  // Kept even when the host check is disabled: the versions that cannot
+  // disable it still validate against this list.
+  const allowedHosts = Array.isArray(devServer.allowedHosts)
+    ? // The dev server matches a leading-dot entry against the apex and
+      // its subdomains; the engine's '*.' form only matches subdomains,
+      // so emit both.
+      devServer.allowedHosts.flatMap((host) =>
+        host.startsWith('.') ? [host.slice(1), `*${host}`] : [host]
+      )
+    : [];
   return Array.from(
     new Set([
       ...allowedHosts,
@@ -237,8 +237,7 @@ function devServerDisablesHostCheck(
 
 // Host validation exists from @angular/ssr 20.3.17 / 21.1.5 / 21.2.0, but
 // the engine can only skip it from 20.3.25 / 21.2.1
-// (`ɵdisableAllowedHostsCheck`; a literal '*' entry works from 21.2.4): in
-// between, no mechanism disables the check.
+// (`ɵdisableAllowedHostsCheck`): in between, no mechanism disables the check.
 function warnIfEngineHostCheckNotDisableable(root: string): void {
   const version = getInstalledPackageVersionFromRoot(root, '@angular/ssr');
   if (!version) {
@@ -253,7 +252,7 @@ function warnIfEngineHostCheckNotDisableable(root: string): void {
     (major === 21 && minor === 2 && patch === 0);
   if (cannotDisable) {
     console.warn(
-      `The dev-server host check is disabled, but the installed "@angular/ssr" version (${version}) cannot disable the application engine host validation. Requests from hosts not listed in "devServer.allowedHosts" are rejected with a 400 response. Upgrade "@angular/ssr" to version 21.2.1 or greater, or 20.3.25 or greater within 20.3, to fully disable the check.`
+      `The dev-server host check is disabled, but the installed "@angular/ssr" version (${version}) cannot disable the application engine host validation. Requests from hosts other than the dev-server host, the local hosts, those listed in "devServer.allowedHosts" and, when using AngularNodeAppEngine, those in "NG_ALLOWED_HOSTS" are rejected with a 400 response. Upgrade "@angular/ssr" to version 21.2.1 or greater, or 20.3.25 or greater within 20.3, to fully disable the check.`
     );
   }
 }
