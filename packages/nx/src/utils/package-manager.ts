@@ -352,7 +352,11 @@ export function getPackageManagerVersion(
   }
   if (!version) {
     try {
-      version = execSync(`${packageManager} --version`, {
+      const versionArgs =
+        packageManager === 'pnpm'
+          ? '--ignore-workspace --version'
+          : '--version';
+      version = execSync(`${packageManager} ${versionArgs}`, {
         cwd,
         encoding: 'utf-8',
         windowsHide: true,
