@@ -174,10 +174,13 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
       if (parsed.resultType === 'failed') {
         throw new Error(`Failed loading tsconfig at ${foundTsConfigPath}`);
       }
-      tsConfigPathsEsm = parsed;
+      // `loadConfig` derives `absoluteBaseUrl` from the leaf tsconfig, but
+      // `paths` resolve against the config that declared them.
+      const pathsBaseUrl = resolvePathsBaseUrl(foundTsConfigPath);
+      tsConfigPathsEsm = { ...parsed, absoluteBaseUrl: pathsBaseUrl };
 
       matchTsPathEsm = createMatchPath(
-        resolvePathsBaseUrl(foundTsConfigPath),
+        pathsBaseUrl,
         parsed.paths,
         options.mainFields
       );
@@ -192,9 +195,13 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
         const rootLevelParsed = loadConfig(rootLevelTsConfig);
         logIt('fallback parsed tsconfig: ', rootLevelParsed);
         if (rootLevelParsed.resultType === 'success') {
-          tsConfigPathsFallback = rootLevelParsed;
+          const rootLevelPathsBaseUrl = resolvePathsBaseUrl(rootLevelTsConfig);
+          tsConfigPathsFallback = {
+            ...rootLevelParsed,
+            absoluteBaseUrl: rootLevelPathsBaseUrl,
+          };
           matchTsPathFallback = createMatchPath(
-            resolvePathsBaseUrl(rootLevelTsConfig),
+            rootLevelPathsBaseUrl,
             rootLevelParsed.paths,
             ['main', 'module']
           );
@@ -224,6 +231,9 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
           logIt(
             `Unable to resolve ${importPath} with tsconfig paths. Using fallback file matching.`
           );
+          // The tsconfig the project builds with need not extend the
+          // root-level one, so the second pass covers aliases only the
+          // root-level config declares.
           resolvedFile =
             loadFileFromPathsWithLogging(tsConfigPathsEsm, importPath) ||
             loadFileFromPathsWithLogging(tsConfigPathsFallback, importPath);
