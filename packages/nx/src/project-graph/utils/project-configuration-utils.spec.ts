@@ -1830,6 +1830,57 @@ describe('project-configuration-utils', () => {
       expect(errors).toEqual([]);
     });
 
+    it('should apply a targetDefaults command shorthand to an inferred target that is not redeclared', () => {
+      // The top-level `command` shorthand desugars to an `nx:run-commands`
+      // executor the entry never wrote, which must not make the entry look
+      // incompatible with — and so replace — the inferred target.
+      const specifiedResults = [
+        [
+          [
+            '@nx/js/typescript',
+            'packages/a/tsconfig.lib.json',
+            {
+              projects: {
+                'packages/a': {
+                  name: 'a',
+                  root: 'packages/a',
+                  targets: {
+                    build: {
+                      command: 'tsc --build tsconfig.lib.json',
+                      options: { cwd: 'packages/a' },
+                      cache: true,
+                      inputs: ['inferred-input'],
+                      outputs: ['{projectRoot}/dist'],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const errors = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults as any,
+        [],
+        { targetDefaults: { build: { command: 'echo FROM-TARGET-DEFAULTS' } } },
+        '/tmp/test',
+        errors
+      );
+
+      const buildTarget = result.projectRootMap['packages/a'].targets!['build'];
+      expect(buildTarget.options).toEqual({
+        cwd: 'packages/a',
+        command: 'echo FROM-TARGET-DEFAULTS',
+      });
+      // Fields the entry does not name keep the inferred target's values.
+      expect(buildTarget.cache).toEqual(true);
+      expect(buildTarget.inputs).toEqual(['inferred-input']);
+      expect(buildTarget.outputs).toEqual(['{projectRoot}/dist']);
+      expect(errors).toEqual([]);
+    });
+
     it('should merge multiple specified plugins contributing to the same project', () => {
       const specifiedResults = [
         [

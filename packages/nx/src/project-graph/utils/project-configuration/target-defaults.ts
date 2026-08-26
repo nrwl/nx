@@ -315,6 +315,8 @@ function buildSyntheticTargetsForRoot(
     target: TargetConfiguration;
   }[] = [];
   for (const { index, config } of resolved.matches) {
+    // Read before desugaring, which synthesises an executor for `command`.
+    const authoredExecutor = config.executor;
     const synthetic = resolveCommandSyntacticSugar(deepClone(config), root);
 
     // Compatibility guard, per entry: an entry incompatible with the effective
@@ -331,8 +333,8 @@ function buildSyntheticTargetsForRoot(
     }
 
     // Stamping over an entry that names its own command would discard it
-    // (#36700). Only a replacing default layer needs the stamp: without a
-    // replace an entry that declares no executor already survives the merge.
+    // (#36700), so the stamp is limited to the replacing path it was added
+    // for (#36142).
     const wouldOverwriteAuthoredCommand =
       effective.options !== undefined && authorsCommandIdentity(synthetic);
 
@@ -354,6 +356,11 @@ function buildSyntheticTargetsForRoot(
         const { command, commands, ...rest } = synthetic.options ?? {};
         synthetic.options = { ...rest, ...effective.options };
       }
+    } else if (authoredExecutor === undefined) {
+      // Unstamped, an executor desugaring synthesised for the `command`
+      // shorthand reads as a rival run-commands target and replaces the one
+      // this entry should merge into.
+      delete synthetic.executor;
     }
 
     synthetics.push({ key: resolved.key, index, target: synthetic });
