@@ -64,7 +64,9 @@ If you have any other missing features or limitations, please [let us know](http
 
 {% aside type="note" title="Application engine host validation" %}
 
-Since `@angular/ssr` version 21.2.0 (also backported to 20.3.17 and 21.1.5), the application engine rejects any request whose host is not in its allowlist with a 400 response; earlier versions do not validate hosts.
+Since `@angular/ssr` version 21.2.0 (also backported to 20.3.17 and 21.1.5), the application engine validates the request host against its allowlist; earlier versions do not validate hosts.
+With an allowlist configured, requests from unlisted hosts are rejected with a 400 response.
+Without one, versions before 22 log an error and fall back to client-side rendering, while version 22 and later reject every request.
 Configure the allowed hosts for production with the `security.allowedHosts` option, or with the `NG_ALLOWED_HOSTS` environment variable (comma-separated), which the `AngularNodeAppEngine` API from `@angular/ssr/node` reads.
 While serving, the allowlist automatically includes the dev server host and the common local hosts (`localhost` and its subdomains, `127.0.0.1`, `[::1]`).
 When accessing the served application through another address, such as a LAN IP, add it to `devServer.allowedHosts` or use `NG_ALLOWED_HOSTS`.
