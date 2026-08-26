@@ -1,4 +1,10 @@
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
+import {
+  existsSync,
+  mkdtempSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import {
@@ -246,6 +252,22 @@ describe('handoff', () => {
       writeFileSync(file, JSON.stringify({ status: 'success' }));
       const result = readHandoffWithReason(file);
       expect(result).toEqual({ ok: false, reason: 'shape-mismatch' });
+    });
+
+    it('returns a read-error reason for a symlinked handoff instead of following it', () => {
+      const target = join(workspace, 'target.json');
+      writeFileSync(
+        target,
+        JSON.stringify({ status: 'success', summary: 'x' })
+      );
+      const link = join(workspace, 'link.json');
+      symlinkSync(target, link);
+      const result = readHandoffWithReason(link);
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.reason).toBe('read-error');
+        expect(result.detail).toContain('not a regular file');
+      }
     });
 
     it('returns a shape-mismatch reason for an unknown `status` value', () => {

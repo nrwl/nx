@@ -1,4 +1,14 @@
-import { mkdirSync, readFileSync, rmSync } from 'fs';
+import {
+  closeSync,
+  constants as fsConstants,
+  fstatSync,
+  lstatSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  rmSync,
+  type BigIntStats,
+} from 'fs';
 import { join } from 'path';
 import { rsort } from 'semver';
 import { normalizeVersion } from '../version-utils';
@@ -109,6 +119,43 @@ export type HandoffReadResult =
   | { ok: false; reason: HandoffReadFailureReason; detail?: string };
 
 /**
+ * Reads the regular file `stat` (a `lstatSync` result) describes, refusing to
+ * follow a symlink swapped in after the lstat. The read goes through a
+ * descriptor: O_NOFOLLOW makes such a symlink fail the open (ELOOP) instead
+ * of being followed, and O_NONBLOCK stops a planted FIFO blocking the open
+ * (same guard as owned-private-dir.ts). The inode comparison carries the
+ * guarantee where the open flags cannot: Windows has neither flag, so a
+ * followed symlink shows up only as its target's inode. A same-path unlink
+ * and recreate can reuse the inode number and is not what this guards
+ * against. Read errors propagate: a file the agent cannot read must not pass.
+ */
+export function readInspectedFile(
+  filePath: string,
+  stat: BigIntStats,
+  replacedMessage: string
+): string {
+  const fd = openSync(
+    filePath,
+    fsConstants.O_RDONLY |
+      (fsConstants.O_NOFOLLOW ?? 0) |
+      (fsConstants.O_NONBLOCK ?? 0)
+  );
+  try {
+    const fdStat = fstatSync(fd, { bigint: true });
+    if (
+      !fdStat.isFile() ||
+      fdStat.dev !== stat.dev ||
+      fdStat.ino !== stat.ino
+    ) {
+      throw new Error(replacedMessage);
+    }
+    return readFileSync(fd, 'utf-8');
+  } finally {
+    closeSync(fd);
+  }
+}
+
+/**
  * Reads and validates a handoff file written by an agent. Returns a tagged
  * result so callers (the in-loop poller and the post-exit resolver) can
  * distinguish "file not yet written" from "file written but garbage" — the
@@ -118,7 +165,19 @@ export type HandoffReadResult =
 export function readHandoffWithReason(filePath: string): HandoffReadResult {
   let raw: string;
   try {
-    raw = readFileSync(filePath, 'utf-8');
+    const stat = lstatSync(filePath, { bigint: true });
+    if (!stat.isFile()) {
+      return {
+        ok: false,
+        reason: 'read-error',
+        detail: `${filePath} is not a regular file`,
+      };
+    }
+    raw = readInspectedFile(
+      filePath,
+      stat,
+      `${filePath} was replaced while being read`
+    );
   } catch (err) {
     const code = (err as NodeJS.ErrnoException)?.code;
     if (code === 'ENOENT') return { ok: false, reason: 'missing' };

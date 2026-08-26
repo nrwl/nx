@@ -16,12 +16,7 @@ import { HANDOFFS_DIR_NAME, MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
 import { RUN_ID_SAFE } from './run-id';
 import { singleLine } from '../text';
 
-// v2: the issue ledger (resolver credit and fences, claims, commit issue
-// associations, retry-clean reopens). The fields are optional, so a v1
-// reader would accept the state while its writers ignore every one of those
-// rules (a reset-away fix would stay recorded as resolved); the bump turns
-// that silent corruption into a version refusal.
-export const CURRENT_RUN_STATE_FORMAT_VERSION = 2;
+export const CURRENT_RUN_STATE_FORMAT_VERSION = 1;
 
 export const RUN_STATE_FILE_NAME = 'run.json';
 /**
@@ -704,10 +699,7 @@ function corruptRunStateError(filePath: string, reason: string): Error {
  * prompt-outcome status, commit kind) needs a
  * `CURRENT_RUN_STATE_FORMAT_VERSION` bump: without it, an older Nx reading
  * the new value would reject the run as corrupt (the closed-set validation
- * fails) instead of refusing with this error's ask for a newer Nx. So does
- * any addition whose correctness depends on writers honoring new rules,
- * even when the fields are optional: an older Nx would accept the state and
- * operate the run without them, silently breaking their invariants.
+ * fails) instead of refusing with this error's ask for a newer Nx.
  */
 export class NewerRunStateFormatError extends Error {
   constructor(message: string) {
@@ -722,9 +714,7 @@ export class NewerRunStateFormatError extends Error {
  * A `formatVersion` newer than {@link CURRENT_RUN_STATE_FORMAT_VERSION} means
  * the run was created by a newer Nx than the one currently running, so the
  * shape may not be interpretable here; this throws rather than attempting a
- * best-effort read. An older `formatVersion` is returned as-is: v1 predates
- * the issue ledger, and every v1 field reads unchanged here. A v1 run that
- * starts carrying issues is restamped to v2 by the fold that records them.
+ * best-effort read. An older `formatVersion` is returned as-is.
  */
 export function readRunState(runDirPath: string): MigrateRunState {
   const filePath = join(runDirPath, RUN_STATE_FILE_NAME);

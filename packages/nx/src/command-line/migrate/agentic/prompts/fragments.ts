@@ -1,8 +1,6 @@
-// Semantic fragments shared between the runner-facing prompt builders (the
-// system and user prompts nx feeds a spawned agent) and the master-facing run
-// content (the runbook and dispensed step instructions). Both surfaces state
-// the same contracts, so each contract's wording lives here once and cannot
-// drift between them.
+// Wording shared by the agent system prompt (system-prompt.ts) and the
+// orchestrated run's runbook (run/runbook.ts). Both state the same contracts,
+// so each contract's wording lives here once.
 
 export function renderNxInvocationNote(
   packageManager: string,
