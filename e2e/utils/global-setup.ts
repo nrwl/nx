@@ -96,6 +96,9 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     // same version is republished to the local registry.
     const e2eCacheDir = mkdtempSync(join(tmpdir(), 'nx-e2e-cache-'));
     process.env.npm_config_cache = join(e2eCacheDir, 'npm');
+    // pnpm resolves an exact version from its own metadata cache without asking
+    // the registry; `pnpm_config_` is the prefix it honours for cache-dir.
+    process.env.pnpm_config_cache_dir = join(e2eCacheDir, 'pnpm');
     // yarnv1
     process.env.YARN_CACHE_FOLDER = join(e2eCacheDir, 'yarn');
     // yarnv2
