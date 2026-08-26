@@ -1,5 +1,5 @@
 import { addDependenciesToPackageJson, readJson, type Tree } from '@nx/devkit';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { TempFs, withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { ensureDependencies } from './ensure-dependencies';
 import {
@@ -41,6 +41,24 @@ describe('@nx/vite:init', () => {
       '^4.3.0'
     );
     expect(packageJson.devDependencies['@vitejs/plugin-react']).toBeUndefined();
+  });
+
+  it('should deny the @swc/core build script pulled in by the react swc plugin', () => {
+    withPnpm(tree, '11.2.2', () =>
+      ensureDependencies(tree, { uiFramework: 'react', compiler: 'swc' })
+    );
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+      /['"]@swc\/core['"]: false/
+    );
+  });
+
+  it('should not record a @swc/core decision for the babel react plugin', () => {
+    withPnpm(tree, '11.2.2', () =>
+      ensureDependencies(tree, { uiFramework: 'react' })
+    );
+
+    expect(tree.exists('pnpm-workspace.yaml')).toBe(false);
   });
 
   it('should add swc plugin for react even with older vite', () => {

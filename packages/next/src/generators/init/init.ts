@@ -1,6 +1,7 @@
-import { addPlugin } from '@nx/devkit/internal';
+import { acknowledgeBuildScripts, addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   type GeneratorCallback,
@@ -12,6 +13,7 @@ import {
   getReactDependenciesVersionsToInstall,
   isReact18,
 } from '@nx/react/internal';
+import { coerce, major } from 'semver';
 import { addGitIgnoreEntry } from '../../utils/add-gitignore-entry';
 import { nxVersion } from '../../utils/versions';
 import { getNextDependenciesVersionsToInstall } from '../../utils/version-utils';
@@ -28,6 +30,15 @@ async function updateDependencies(host: Tree, schema: InitSchema) {
     await isReact18(host)
   );
   const reactVersions = await getReactDependenciesVersionsToInstall(host);
+
+  // next 15+ pulls in sharp, whose install script only compiles from source
+  // against a system libvips and is otherwise a no-op; the prebuilt binaries
+  // ship via optional dependencies, so skip it.
+  if (major(coerce(versions.next)) >= 15) {
+    acknowledgeBuildScripts(host, detectPackageManager(host.root), {
+      sharp: false,
+    });
+  }
 
   tasks.push(
     addDependenciesToPackageJson(
