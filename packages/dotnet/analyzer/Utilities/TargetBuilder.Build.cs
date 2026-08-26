@@ -25,7 +25,9 @@ public static partial class TargetBuilder
     {
         var outputPath = GetOutputPath(properties, projectName, projectDirectory, workspaceRoot);
         var intermediatePath = GetIntermediateOutputPath(properties, projectName, projectDirectory, workspaceRoot);
-        var openApiDocumentsPath = GetOpenApiDocumentsDirectory(properties, projectDirectory, workspaceRoot);
+        // The package defaults OpenApiDocumentsDirectory to $(BaseIntermediateOutputPath),
+        // so merely referencing it lands on obj, which is already an output.
+        var openApiDocumentsOutput = GetOpenApiDocumentsOutput(properties, fileName, projectDirectory, workspaceRoot, outputPath, intermediatePath);
         string[] defaultFlags = ["--no-restore", "--no-dependencies"];
 
         var defaultArgs = defaultConfiguration == "Release"
@@ -62,11 +64,8 @@ public static partial class TargetBuilder
                 new { dependentTasksOutputFiles = "**/*" },
                 .. directoryBuildInputs
             ],
-            // OpenApiDocumentsDirectory defaults to $(BaseIntermediateOutputPath),
-            // so without Distinct a project referencing the package repeats obj.
-            Outputs = new[] { outputPath, intermediatePath, openApiDocumentsPath }
+            Outputs = new[] { outputPath, intermediatePath, openApiDocumentsOutput }
                 .Where(p => p is not null)
-                .Distinct()
                 .ToArray()!,
             Metadata = new TargetMetadata
             {
