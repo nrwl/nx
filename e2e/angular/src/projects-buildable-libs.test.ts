@@ -152,10 +152,16 @@ describe('Angular Projects - Buildable Libraries', () => {
     });
 
     // ACT
-    const libOutput = runCLI(`build ${app1} --configuration=development`);
-    const esbuildLibOutput = runCLI(
-      `build ${esbuildApp} --configuration=development`
+    // The buildable lib is a dependency of app1, so the failures-only default
+    // would collapse its ng-packagr body to a single line. An explicit static
+    // keeps the body, which is what the assertion below reads. A cache hit
+    // replays that same body, so the proof that it built from source is the
+    // main.js content check further down, not this line.
+    const libOutput = runCLI(
+      `build ${app1} --configuration=development --output-style=static`
     );
+    // Built for its dist output, asserted on below.
+    runCLI(`build ${esbuildApp} --configuration=development`);
 
     // ASSERT
     expect(libOutput).toContain(

@@ -1,4 +1,4 @@
-import { dirname } from 'path';
+import { basename, dirname } from 'path';
 import * as pc from 'picocolors';
 import { getRunNxBaseCommand } from '../../../utils/child-process';
 import { FileChange } from '../../../generators/tree';
@@ -164,6 +164,7 @@ export async function runAgenticPromptStep(
       systemContext,
       userPrompt,
       workspaceRoot: root,
+      runDirName: basename(runDir),
     },
     handoffFilePath,
   });

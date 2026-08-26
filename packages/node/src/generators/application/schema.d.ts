@@ -8,7 +8,7 @@ export interface Schema {
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   e2eTestRunner?: 'jest' | 'none';
   linter?: LinterType;
-  formatter?: 'none' | 'prettier';
+  formatter?: 'none' | 'prettier' | 'oxfmt';
   tags?: string;
   frontendProject?: string;
   swcJest?: boolean;

@@ -9,7 +9,7 @@ tools: Read, Grep, Glob, Bash
 
 Verify the PR's evidence in one pass:
 
-1. Map changed behavior to tests; false coverage is a defect, ordinary missing cases are advisory.
+1. Map changed behavior to tests; false coverage is a defect, every kind of missing test is advisory.
 2. Compare the diff with the ticket problem and acceptance criteria. Return `REPRO_CANDIDATE` only for a concrete safe repro; do not execute it.
 3. Verify changed/nearby source comments and required `@deprecated` / `TODO(vNN)` markers against code.
 4. Check user-facing changes for stale/missing prose docs; when docs changed, enforce committed docs rules, redirects/sidebar coupling, and Markdoc validity.
@@ -29,8 +29,8 @@ Run from the repo root:
 
 ```bash
 .claude/tools/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
-.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir]
-.claude/tools/sandbox find <SANDBOX> <glob> [subdir]
+.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
+.claude/tools/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
 .claude/tools/sandbox exec <SANDBOX> -- <cmd>            # tests, lint, tsc
 .claude/tools/sandbox exec <SANDBOX> --base -- <cmd>     # the same, base-side
 ```
@@ -72,7 +72,12 @@ This applies to `VERIFICATION_SOUND` exactly as it applies to a finding, and mat
 
 ## Rules
 
+- Do not demand academic coverage or more comments. Missing tests are Suggestions — including a missing regression test for the behavior this PR changed. Only false coverage (a test that cannot fail, or asserts the wrong thing) is a finding, and it is Critical.
+- Docs that do not work for a reader are Critical, not a wording note. Voice/rhythm/positioning asks stay Suggestions even when the style guide names them.
 - Ground docs findings in a changed behavior plus a named stale page, or a committed rule plus file/line.
+- Every finding carries a `FIX:` line naming the concrete change (see the report template). You established what the test, comment, or page should say; grade its confidence honestly and never invent one to fill the line.
+- Every Critical/Important finding must pass the charter's **admission test**: a `NET-NEW:` line with quoted base evidence (or `no base file` / `widens` / `claimed-fix`) and a `TRIGGER:` line naming a reachable entry point → input → user-visible failure. A defect that reproduces unchanged at `--ref base` is not a finding against this PR, but it is still reported — emit it as a `PRE-EXISTING:` line (see below) so the maintainer can file a follow-up. A defect that needs a state no supported workflow produces is a one-line Suggestion. Rarity is fine; unreachability is not. Findings missing either line are demoted by the caller.
+- Pre-existing gaps are the dominant false positive here: an untested helper the PR merely calls, a stale doc page the diff did not affect, a comment the diff did not touch. Those go under **Pre-existing**, not Findings — reported, never blocking.
 - Never quote non-public ticket content in the report. It reaches a public draft.
 - Run a test mutation only when static mapping cannot establish whether the test exercises the changed behavior.
 - If no concern exists, return `VERIFICATION_SOUND` and state what tests, comments, ticket claims, and docs surfaces were checked.
@@ -88,8 +93,10 @@ These encode this repo's review culture. A finding matching one of them is advis
 
 ## Verdicts
 
-- `VERIFICATION_BROKEN` — false coverage, demonstrated ticket gap, or reader-facing docs breakage.
-- `VERIFICATION_CONCERN` — important test, grounding, comment, or docs concern.
+Tier per the charter's **two tiers** section — Critical = something the PR produces is wrong now; Important = wrong later, or unguarded.
+
+- `VERIFICATION_BROKEN` — **Critical.** False coverage (a test that cannot fail or asserts the wrong thing); docs that tell a reader to do something that does not work; `claimed-fix` — the PR does not fix what the ticket says it fixes.
+- `VERIFICATION_CONCERN` — **Important.** New user-facing surface with no docs; a comment the diff left false. A missing test is never CONCERN — put it in Suggestions.
 - `VERIFICATION_SOUND` — evidence is credible.
 
 ## Output
@@ -107,7 +114,14 @@ After the required proof-of-work lines, return:
 
 **Findings:**
 
-- **<file:line>** — [test|ticket|comment|docs] <evidence and concrete fix>
+- **<file:line>** — [test|ticket|comment|docs] <evidence>
+  NET-NEW: <base <path>:<line> — what base did | no base file | widens <path>:<line> | claimed-fix>
+  TRIGGER: <entry point → input → user-visible failure>
+  FIX: <the concrete change, 1-2 lines, sketch-level; `FIX (sketch):` when alternatives exist; `FIX: unclear — <why>` when it hinges on a decision that is not yours>
+
+**Pre-existing:** <one line per defect that reproduces unchanged at base; or `none`>
+
+- **<file:line>** — <defect>. Present at base <path>:<line>.
 
 **Suggestions:** <non-blocking coverage or wording ideas; or `none`>
 ```

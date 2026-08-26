@@ -31,7 +31,7 @@ Everything — reads and runs alike — goes through the `sandbox` CLI, run from
 .claude/tools/sandbox exec <SANDBOX> -- <CMD>            # HEAD side
 .claude/tools/sandbox exec <SANDBOX> --base -- <CMD>     # baseline side
 .claude/tools/sandbox read <SANDBOX> <path> [--ref base] # read without running
-.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir]
+.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
 ```
 
 `exec` already puts the mise toolchain on `PATH` and lands in the right working directory for the side you asked for, so `nx`/`pnpm` resolve without any setup of your own.

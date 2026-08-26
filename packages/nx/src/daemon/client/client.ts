@@ -128,7 +128,7 @@ import {
   VersionMismatchError,
 } from './daemon-socket-messenger';
 
-import { getDaemonEnv } from './daemon-environment';
+import { getDaemonEnv, getDaemonSpawnEnv } from './daemon-environment';
 
 /** A refused connect: the errno, and the path it was made against. */
 type ConnectRefusal = {
@@ -152,6 +152,18 @@ const WAIT_FOR_SERVER_CONFIG = {
   delayMs: 10,
   maxAttempts: 6000, // 6000 * 10ms = 60 seconds
 };
+
+/**
+ * The daemon's workspace watcher died. Nothing it serves will see file changes
+ * again, so a watching client has to restart rather than keep waiting.
+ */
+export class WatcherFailedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'WatcherFailedError';
+    Object.setPrototypeOf(this, WatcherFailedError.prototype);
+  }
+}
 
 export class DaemonClient {
   private readonly nxJson: NxJsonConfiguration | null;
@@ -347,12 +359,28 @@ export class DaemonClient {
     cwd: string,
     collectInputs?: boolean
   ): Promise<Hash[]> {
+    // Task results get written back onto these task objects as the run
+    // progresses — hash/hashDetails/timestamps by hashing and the
+    // orchestrator, terminalOutput by the Nx Cloud life cycle (untyped) —
+    // so a later message would otherwise re-ship every earlier result.
+    const trimmedTasks: Record<string, Task> = {};
+    for (const [id, t] of Object.entries(taskGraph.tasks)) {
+      const {
+        hash,
+        hashDetails,
+        startTime,
+        endTime,
+        terminalOutput,
+        ...strippedTask
+      } = t as Task & { terminalOutput?: string };
+      trimmedTasks[id] = strippedTask as Task;
+    }
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
       runnerOptions,
       perTaskEnvs,
-      tasks,
-      taskGraph,
+      tasks: tasks.map((t) => trimmedTasks[t.id]),
+      taskGraph: { ...taskGraph, tasks: trimmedTasks },
       cwd,
       collectInputs,
     });
@@ -410,6 +438,13 @@ export class DaemonClient {
         (message) => {
           try {
             const parsedMessage = parseMessage<any>(message);
+            if (parsedMessage?.watcherError) {
+              const error = new WatcherFailedError(parsedMessage.watcherError);
+              for (const cb of this.fileWatcherCallbacks.values()) {
+                cb(error, null);
+              }
+              return;
+            }
             // Notify all callbacks
             for (const cb of this.fileWatcherCallbacks.values()) {
               cb(null, parsedMessage);
@@ -1398,7 +1433,7 @@ export class DaemonClient {
         detached: true,
         windowsHide: true,
         shell: false,
-        env: getDaemonEnv(),
+        env: getDaemonSpawnEnv(),
       }
     );
     // The child now owns dup'd copies of the descriptors, so release ours.

@@ -49,6 +49,8 @@ The file has five top-level sections. All are optional, and each falls back to i
 | `nx-agents` | Configuration for the Nx Agents themselves.                         |
 | `overrides` | Per-environment overrides keyed by `NX_CI_EXECUTION_ENV`.           |
 
+For complete pipelines that pair this file with a provider workflow, see [Setting up CI for Nx Cloud](/docs/kb/setup-ci).
+
 ## `lifecycle`
 
 Stop conditions and stall detection for the run group.
@@ -73,7 +75,7 @@ Type: `integer`, minimum `0`. Default: `1`.
 
 ### `lifecycle.heartbeat`
 
-When `true`, Nx Cloud monitors the run for stalled progress and marks it failed if no agent reports in for too long.
+When `true`, Nx Cloud monitors the run for stalled progress and marks it failed if the main job stops reporting in for too long.
 
 Type: `boolean`. Default: `true`.
 
@@ -141,7 +143,7 @@ Type: `boolean`. Default: `true`.
 ### `dte.distribute-on`
 
 How many agents to use and which [launch templates](/docs/kb/launch-templates) to run them on.
-Accepts either a single launch-template string, or a map of changeset sizes to launch-template strings for [dynamic agent allocation](/docs/features/ci-features/dynamic-agents).
+Accepts a single launch-template string, or a map of changeset sizes to launch-template strings for [dynamic agent allocation](/docs/features/ci-features/dynamic-agents).
 
 A launch-template string is one or more `<number> <template-name>` segments separated by commas.
 
@@ -158,6 +160,15 @@ dte:
     small-changeset: 3 linux-medium
     medium-changeset: 6 linux-large
     large-changeset: 10 linux-large
+```
+
+The changeset map can also live in its own file.
+Set `distribute-on` to that file's path and Nx Cloud reads the map from it.
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on: .nx/workflows/distribution-config.yaml
 ```
 
 To bring your own compute instead of using Nx Agents, set `distribute-on: manual`.

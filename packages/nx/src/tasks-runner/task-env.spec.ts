@@ -271,6 +271,39 @@ describe('getEnvFilesForTask', () => {
     const envFiles = getEnvFilesForTask(task, graph);
     expect(envFiles).toMatchSnapshot();
   });
+  it('should ignore target group members the project does not define', () => {
+    const task = {
+      projectRoot: 'libs/test-project',
+      target: {
+        project: 'test-project',
+        target: 'build',
+      },
+    } as any as Task;
+    const graph = {
+      nodes: {
+        'test-project': {
+          data: {
+            targets: {
+              build: {},
+            },
+            metadata: {
+              targetGroups: {
+                build: ['build', 'phantomTarget'],
+              },
+            },
+          },
+        },
+      },
+    } as any as ProjectGraph;
+    expect(() => getEnvFilesForTask(task, graph)).not.toThrow();
+    expect(getEnvFilesForTask(task, graph)).toEqual(
+      getEnvFilesForTask(task, {
+        nodes: {
+          'test-project': { data: { targets: { build: {} } } },
+        },
+      } as any as ProjectGraph)
+    );
+  });
 });
 
 describe('getForceColorForChild', () => {

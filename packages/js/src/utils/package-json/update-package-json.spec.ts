@@ -13,9 +13,21 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '@nx/devkit';
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
+import { generatePrunedDeployOutput } from '@nx/devkit/internal';
 
 jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
+}));
+
+jest.mock('nx/src/plugins/js/lock-file/lock-file', () => ({
+  ...jest.requireActual('nx/src/plugins/js/lock-file/lock-file'),
+  generatePrunedDeployOutput: jest.fn((packageJson) => {
+    // mimic the real contract: a successful prune strips the manifest's baked
+    // pnpm config, and the caller writes the manifest afterwards
+    jest
+      .requireActual('nx/src/plugins/js/lock-file/pruned-output')
+      .stripPrunedLockfilePnpmConfig(packageJson);
+  }),
 }));
 
 describe('getUpdatedPackageJsonContent', () => {
@@ -663,5 +675,187 @@ describe('updatePackageJson', () => {
         "version": "0.0.3",
       }
     `);
+  });
+
+  it('should drop pnpm overrides from the manifest when a lockfile is generated', () => {
+    const fsJson = {
+      'package.json': JSON.stringify(
+        { ...rootPackageJson, pnpm: { overrides: { external1: '1.0.0' } } },
+        null,
+        2
+      ),
+      'libs/lib1/package.json': JSON.stringify(originalPackageJson, null, 2),
+    };
+    vol.fromJSON(fsJson, '/root');
+    const options: UpdatePackageJsonOption = {
+      outputPath: 'dist/libs/lib1',
+      projectRoot: 'libs/lib1',
+      main: 'libs/lib1/main.ts',
+      updateBuildableProjectDepsInPackageJson: true,
+      generateLockfile: true,
+    };
+    updatePackageJson(options, context, undefined, [], fileMap);
+
+    const distPackageJson = JSON.parse(
+      vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
+    );
+    // The accompanying pruned lockfile drops `overrides`, so the manifest must
+    // too, or pnpm <=10 aborts with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
+    expect(distPackageJson.pnpm).toBeUndefined();
+  });
+
+  it('should keep pnpm overrides in the manifest when no lockfile is generated', () => {
+    const fsJson = {
+      'package.json': JSON.stringify(
+        { ...rootPackageJson, pnpm: { overrides: { external1: '1.0.0' } } },
+        null,
+        2
+      ),
+      'libs/lib1/package.json': JSON.stringify(originalPackageJson, null, 2),
+    };
+    vol.fromJSON(fsJson, '/root');
+    const options: UpdatePackageJsonOption = {
+      outputPath: 'dist/libs/lib1',
+      projectRoot: 'libs/lib1',
+      main: 'libs/lib1/main.ts',
+      updateBuildableProjectDepsInPackageJson: true,
+    };
+    updatePackageJson(options, context, undefined, [], fileMap);
+
+    const distPackageJson = JSON.parse(
+      vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
+    );
+    expect(distPackageJson.pnpm).toEqual({ overrides: { external1: '1.0.0' } });
+  });
+
+  it('should drop pnpm config from a verbatim manifest when a lockfile is generated', () => {
+    const fsJson = {
+      'package.json': JSON.stringify(rootPackageJson, null, 2),
+      'libs/lib1/package.json': JSON.stringify(
+        { ...originalPackageJson, pnpm: { overrides: { lib2: '0.0.1' } } },
+        null,
+        2
+      ),
+    };
+    vol.fromJSON(fsJson, '/root');
+    const options: UpdatePackageJsonOption = {
+      outputPath: 'dist/libs/lib1',
+      projectRoot: 'libs/lib1',
+      main: 'libs/lib1/main.ts',
+      // No updateBuildableProjectDepsInPackageJson: exercises the verbatim-manifest
+      // branch, which strips pnpm config directly rather than via createPackageJson.
+      generateLockfile: true,
+    };
+    updatePackageJson(options, context, undefined, [], fileMap);
+
+    const distPackageJson = JSON.parse(
+      vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
+    );
+    // The accompanying pruned lockfile drops `overrides`, so the manifest must too.
+    expect(distPackageJson.pnpm).toBeUndefined();
+  });
+
+  const mockGeneratePrunedDeployOutput =
+    generatePrunedDeployOutput as jest.MockedFunction<
+      typeof generatePrunedDeployOutput
+    >;
+
+  it('generates the deploy output beside the manifest on pnpm', () => {
+    mockGeneratePrunedDeployOutput.mockClear();
+    // Reset so a lockfile written by another test does not skew detection.
+    vol.reset();
+    const fsJson = {
+      'package.json': JSON.stringify(rootPackageJson, null, 2),
+      // A pnpm-lock.yaml makes detectPackageManager report pnpm deterministically.
+      'pnpm-lock.yaml': `lockfileVersion: '9.0'\n`,
+      'libs/lib1/package.json': JSON.stringify(originalPackageJson, null, 2),
+    };
+    vol.fromJSON(fsJson, '/root');
+    const options: UpdatePackageJsonOption = {
+      outputPath: 'dist/libs/lib1',
+      projectRoot: 'libs/lib1',
+      main: 'libs/lib1/main.ts',
+      updateBuildableProjectDepsInPackageJson: true,
+      generateLockfile: true,
+    };
+    updatePackageJson(options, context, undefined, [], fileMap);
+
+    expect(mockGeneratePrunedDeployOutput).toHaveBeenCalledWith(
+      expect.objectContaining({ name: '@org/lib1' }),
+      context.projectGraph,
+      'libs/lib1',
+      {
+        outputDirectory: 'dist/libs/lib1',
+        packageManager: 'pnpm',
+        workspaceRoot: '/root',
+      }
+    );
+  });
+
+  it('leaves the bun decision to the deploy output', () => {
+    mockGeneratePrunedDeployOutput.mockClear();
+    // Reset so a pnpm-lock.yaml written by another test does not skew detection.
+    vol.reset();
+    const fsJson = {
+      'package.json': JSON.stringify(rootPackageJson, null, 2),
+      'bun.lockb': '',
+      'libs/lib1/package.json': JSON.stringify(originalPackageJson, null, 2),
+    };
+    vol.fromJSON(fsJson, '/root');
+    const options: UpdatePackageJsonOption = {
+      outputPath: 'dist/libs/lib1',
+      projectRoot: 'libs/lib1',
+      main: 'libs/lib1/main.ts',
+      updateBuildableProjectDepsInPackageJson: true,
+      generateLockfile: true,
+    };
+    updatePackageJson(options, context, undefined, [], fileMap);
+
+    expect(mockGeneratePrunedDeployOutput).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({ packageManager: 'bun' })
+    );
+  });
+
+  it('writes the manifest with the relocations the deploy output applied on pnpm', () => {
+    mockGeneratePrunedDeployOutput.mockClear();
+    vol.reset();
+    const fsJson = {
+      'package.json': JSON.stringify(rootPackageJson, null, 2),
+      'pnpm-lock.yaml': `lockfileVersion: '9.0'\n`,
+      'libs/lib1/package.json': JSON.stringify(
+        {
+          ...originalPackageJson,
+          dependencies: {
+            ...originalPackageJson.dependencies,
+            vendored: 'link:../../vendor/thing',
+          },
+        },
+        null,
+        2
+      ),
+    };
+    vol.fromJSON(fsJson, '/root');
+    // The deploy output relocates local-path specifiers in the manifest; the
+    // manifest must be written after that mutation lands.
+    mockGeneratePrunedDeployOutput.mockImplementationOnce((manifest) => {
+      manifest.dependencies.vendored = 'link:local_path_modules/vendor/thing';
+    });
+    const options: UpdatePackageJsonOption = {
+      outputPath: 'dist/libs/lib1',
+      projectRoot: 'libs/lib1',
+      main: 'libs/lib1/main.ts',
+      generateLockfile: true,
+    };
+    updatePackageJson(options, context, undefined, [], fileMap);
+
+    const distPackageJson = JSON.parse(
+      vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
+    );
+    expect(distPackageJson.dependencies.vendored).toBe(
+      'link:local_path_modules/vendor/thing'
+    );
   });
 });

@@ -2,11 +2,7 @@
 
 exports[`Host App Generator --ssr should generate the correct files 1`] = `
 "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
-import {
-  BrowserModule,
-  provideClientHydration,
-  withEventReplay,
-} from '@angular/platform-browser';
+import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import { App } from './app';
 import { appRoutes } from './app.routes';
@@ -15,10 +11,7 @@ import { NxWelcome } from './nx-welcome';
 @NgModule({
   declarations: [App, NxWelcome],
   imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
-  providers: [
-    provideBrowserGlobalErrorListeners(),
-    provideClientHydration(withEventReplay()),
-  ],
+  providers: [provideBrowserGlobalErrorListeners(), provideClientHydration(withEventReplay())],
   bootstrap: [App],
 })
 export class AppModule {}
@@ -219,15 +212,11 @@ bootstrapApplication(App, appConfig).catch((err) => console.error(err));
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 2`] = `
-"import {
-  BootstrapContext,
-  bootstrapApplication,
-} from '@angular/platform-browser';
+"import { BootstrapContext, bootstrapApplication } from '@angular/platform-browser';
 import { App } from './app/app';
 import { config } from './app/app.config.server';
 
-const bootstrap = (context: BootstrapContext) =>
-  bootstrapApplication(App, config, context);
+const bootstrap = (context: BootstrapContext) => bootstrapApplication(App, config, context);
 
 export default bootstrap;
 "
@@ -356,16 +345,10 @@ export const appRoutes: Route[] = [
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 8`] = `
-"import {
-  ApplicationConfig,
-  provideBrowserGlobalErrorListeners,
-} from '@angular/core';
+"import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
-import {
-  provideClientHydration,
-  withEventReplay,
-} from '@angular/platform-browser';
+import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -447,15 +430,11 @@ bootstrapApplication(App, appConfig).catch((err) => console.error(err));
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 2`] = `
-"import {
-  BootstrapContext,
-  bootstrapApplication,
-} from '@angular/platform-browser';
+"import { BootstrapContext, bootstrapApplication } from '@angular/platform-browser';
 import { App } from './app/app';
 import { config } from './app/app.config.server';
 
-const bootstrap = (context: BootstrapContext) =>
-  bootstrapApplication(App, config, context);
+const bootstrap = (context: BootstrapContext) => bootstrapApplication(App, config, context);
 
 export default bootstrap;
 "
@@ -585,16 +564,10 @@ export const appRoutes: Route[] = [
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 8`] = `
-"import {
-  ApplicationConfig,
-  provideBrowserGlobalErrorListeners,
-} from '@angular/core';
+"import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
-import {
-  provideClientHydration,
-  withEventReplay,
-} from '@angular/platform-browser';
+import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -668,11 +641,7 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 
 exports[`Host App Generator --ssr should generate the correct files when --typescript=true 1`] = `
 "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
-import {
-  BrowserModule,
-  provideClientHydration,
-  withEventReplay,
-} from '@angular/platform-browser';
+import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import { App } from './app';
 import { appRoutes } from './app.routes';
@@ -681,10 +650,7 @@ import { NxWelcome } from './nx-welcome';
 @NgModule({
   declarations: [App, NxWelcome],
   imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
-  providers: [
-    provideBrowserGlobalErrorListeners(),
-    provideClientHydration(withEventReplay()),
-  ],
+  providers: [provideBrowserGlobalErrorListeners(), provideClientHydration(withEventReplay())],
   bootstrap: [App],
 })
 export class AppModule {}

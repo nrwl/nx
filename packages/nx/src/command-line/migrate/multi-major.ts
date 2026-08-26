@@ -1,4 +1,4 @@
-import { canPrompt, migratePrompt } from './safe-prompt';
+import { canPrompt, migrateChoice } from './safe-prompt';
 import { gt, major, minor, valid } from 'semver';
 import { getInstalledNxVersion } from '../../utils/installed-nx-version';
 import { output } from '../../utils/output';
@@ -99,38 +99,35 @@ async function promptMultiMajorMigration(args: {
   latestInCurrent: string | null;
   latestInNext: string | null;
 }): Promise<string> {
-  const choices: { name: string; message: string }[] = [];
+  const choices: { value: string; label: string }[] = [];
   let recommendedMarked = false;
   if (args.latestInCurrent) {
     choices.push({
-      name: args.latestInCurrent,
-      message: `Migrate to ${args.targetPackage}@${args.latestInCurrent} (latest in current major) [recommended]`,
+      value: args.latestInCurrent,
+      label: `Migrate to ${args.targetPackage}@${args.latestInCurrent} (latest in current major) [recommended]`,
     });
     recommendedMarked = true;
   }
   if (args.latestInNext) {
     choices.push({
-      name: args.latestInNext,
-      message: `Migrate to ${args.targetPackage}@${args.latestInNext} (next major)${
+      value: args.latestInNext,
+      label: `Migrate to ${args.targetPackage}@${args.latestInNext} (next major)${
         recommendedMarked ? '' : ' [recommended]'
       }`,
     });
   }
   choices.push({
-    name: args.target,
-    message: `Migrate directly to ${args.targetPackage}@${args.target}`,
+    value: args.target,
+    label: `Migrate directly to ${args.targetPackage}@${args.target}`,
   });
   output.log({
     title: multiMajorHeader(args.targetPackage, args.installed, args.target),
     bodyLines: multiMajorBodyLines,
   });
-  const { chosen } = await migratePrompt<{ chosen: string }>({
-    type: 'select',
-    name: 'chosen',
+  return migrateChoice<string>({
     message: 'How would you like to proceed?',
     choices,
   });
-  return chosen;
 }
 
 // Flag wins over env var; only the two literal values are honoured.

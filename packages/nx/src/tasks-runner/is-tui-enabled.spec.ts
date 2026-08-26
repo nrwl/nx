@@ -86,20 +86,24 @@ describe('shouldUseTui', () => {
       }
     ));
 
-  it.each(['dynamic-legacy', 'static', 'stream', 'stream-without-prefixes'])(
-    'should be disabled if output-style=%s',
-    (outputStyle) =>
-      withEnvironmentVariables(
-        {
-          NX_TUI: null,
-          CI: 'false',
-        },
-        () => {
-          expect(
-            shouldUseTui({ tui: { enabled: true } }, { outputStyle }, true)
-          ).toBe(false);
-        }
-      )
+  it.each([
+    'dynamic-legacy',
+    'static',
+    'static-failures-only',
+    'stream',
+    'stream-without-prefixes',
+  ])('should be disabled if output-style=%s', (outputStyle) =>
+    withEnvironmentVariables(
+      {
+        NX_TUI: null,
+        CI: 'false',
+      },
+      () => {
+        expect(
+          shouldUseTui({ tui: { enabled: true } }, { outputStyle }, true)
+        ).toBe(false);
+      }
+    )
   );
 
   it.each(['dynamic', 'tui'])('should be enabled if output-style=%s', () =>

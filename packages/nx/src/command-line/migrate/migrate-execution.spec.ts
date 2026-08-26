@@ -566,6 +566,50 @@ describe('ChangedDepInstaller', () => {
     expect(mockSpawn).toHaveBeenCalledTimes(1);
   });
 
+  it('reports installed only once an install actually lands', async () => {
+    // `installed` re-points the recorded run's dependency baseline
+    // (recordInstallLanded), so a value that flips early would let a later
+    // step skip an install that never happened.
+    writePackageJson();
+    const installer = new ChangedDepInstaller(tmpRoot, false);
+    expect(installer.installed).toBe(false);
+    writePackageJson({ dependencies: { foo: '2.0.0' } });
+    const child = new FakeChildProcess();
+    mockSpawn.mockReturnValue(child);
+
+    const promise = installer.installDepsIfChanged();
+    expect(installer.installed).toBe(false);
+    child.emit('close', 0);
+    await promise;
+
+    expect(installer.installed).toBe(true);
+  });
+
+  it('does not report installed when the install fails', async () => {
+    writePackageJson();
+    const installer = new ChangedDepInstaller(tmpRoot, false);
+    writePackageJson({ dependencies: { foo: '2.0.0' } });
+    const child = new FakeChildProcess();
+    mockSpawn.mockReturnValue(child);
+
+    const promise = installer.installDepsIfChanged();
+    child.emit('close', 1);
+
+    await expect(promise).rejects.toThrow();
+    expect(installer.installed).toBe(false);
+  });
+
+  it('does not report installed when the install was skipped', async () => {
+    writePackageJson();
+    const installer = new ChangedDepInstaller(tmpRoot, true);
+    writePackageJson({ dependencies: { foo: '2.0.0' } });
+
+    await installer.installDepsIfChanged();
+
+    expect(installer.skippedInstall).toBe(true);
+    expect(installer.installed).toBe(false);
+  });
+
   it('treats a missing package.json as an empty dependency set, so writing one counts as a change', async () => {
     // tmpRoot has no package.json at construction time.
     const installer = new ChangedDepInstaller(tmpRoot, true);

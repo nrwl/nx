@@ -7,10 +7,10 @@ jest.mock('../../utils/installed-nx-version', () => ({
   getInstalledNxVersion: jest.fn(() => '21.0.0'),
 }));
 const canPromptMock = jest.fn((..._args: unknown[]) => false);
-const migratePromptMock = jest.fn();
+const migrateChoiceMock = jest.fn();
 jest.mock('./safe-prompt', () => ({
   canPrompt: (...args: unknown[]) => canPromptMock(...args),
-  migratePrompt: (...args: unknown[]) => migratePromptMock(...args),
+  migrateChoice: (...args: unknown[]) => migrateChoiceMock(...args),
 }));
 jest.mock('../../utils/output', () => ({
   output: { warn: jest.fn(), log: jest.fn() },
@@ -77,7 +77,7 @@ describe('multi-major analytics decision', () => {
     resolveMock.mockReset();
     canPromptMock.mockReset();
     canPromptMock.mockReturnValue(false);
-    migratePromptMock.mockReset();
+    migrateChoiceMock.mockReset();
     recordPromptMock.mockReset();
   });
 
@@ -153,7 +153,7 @@ describe('multi-major analytics decision', () => {
       resolveMock.mockImplementation((_pkg: string, range: string) =>
         Promise.resolve(range === '^21.0.0' ? '21.9.9' : '22.9.9')
       );
-      migratePromptMock.mockResolvedValue({ chosen });
+      migrateChoiceMock.mockResolvedValue(chosen);
       const result = await maybePromptOrWarnMultiMajorMigration({
         include: 'all',
         options: { interactive: true },

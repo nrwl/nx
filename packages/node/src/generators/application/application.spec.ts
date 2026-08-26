@@ -17,13 +17,20 @@ jest.mock('@nx/devkit', () => {
 });
 
 import {
+  detectPackageManager,
   getProjects,
   readJson,
+  readNxJson,
   readProjectConfiguration,
   Tree,
   updateJson,
+  updateNxJson,
   writeJson,
 } from '@nx/devkit';
+import {
+  PNPM_INSTALL_SETTINGS_INPUTS,
+  TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+} from '@nx/js/internal';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 // nx-ignore-next-line
@@ -828,8 +835,8 @@ describe('app', () => {
           "name",
           "version",
           "private",
-          "nx",
           "dependencies",
+          "nx",
         ]
       `);
       expect(readJson(tree, 'myapp/package.json')).toMatchInlineSnapshot(`
@@ -994,8 +1001,8 @@ describe('app', () => {
           "name",
           "version",
           "private",
-          "nx",
           "dependencies",
+          "nx",
         ]
       `);
     });
@@ -1013,9 +1020,7 @@ describe('app', () => {
         const { readFileSync } = require('fs');
 
         // Reading the SWC compilation config for the spec files
-        const swcJestConfig = JSON.parse(
-          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'),
-        );
+        const swcJestConfig = JSON.parse(readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'));
 
         // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
         swcJestConfig.swcrc = false;
@@ -1306,6 +1311,140 @@ describe('app', () => {
       expect(compilerOptions.moduleResolution).toBe('node10');
       expect(compilerOptions.strict).toBe(false);
       expect(compilerOptions.esModuleInterop).toBe(true);
+    });
+  });
+
+  describe('pnpm deploy-settings inputs', () => {
+    beforeEach(() => {
+      (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+      tree.write('pnpm-lock.yaml', 'lockfileVersion: 9.0\n');
+    });
+
+    it('adds them to the build target defaults in a pnpm workspace', async () => {
+      await applicationGenerator(tree, {
+        directory: 'app1',
+        bundler: 'esbuild',
+        addPlugin: true,
+      });
+
+      expect(
+        readNxJson(tree).targetDefaults['@nx/esbuild:esbuild'].inputs
+      ).toEqual([
+        'default',
+        '^default',
+        TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+        ...PNPM_INSTALL_SETTINGS_INPUTS,
+      ]);
+    });
+
+    it('appends them to a pre-existing build target defaults entry', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        '@nx/esbuild:esbuild': { cache: true, inputs: ['production'] },
+      };
+      updateNxJson(tree, nxJson);
+
+      await applicationGenerator(tree, {
+        directory: 'app1',
+        bundler: 'esbuild',
+        addPlugin: true,
+      });
+
+      expect(
+        readNxJson(tree).targetDefaults['@nx/esbuild:esbuild'].inputs
+      ).toEqual(['production', ...PNPM_INSTALL_SETTINGS_INPUTS]);
+    });
+
+    it('writes them onto the target when the existing defaults entry declares no inputs', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        '@nx/esbuild:esbuild': { cache: true },
+      };
+      updateNxJson(tree, nxJson);
+
+      await applicationGenerator(tree, {
+        directory: 'app1',
+        bundler: 'esbuild',
+        addPlugin: true,
+      });
+
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.inputs
+      ).toEqual(['default', '^default', ...PNPM_INSTALL_SETTINGS_INPUTS]);
+      expect(
+        readNxJson(tree).targetDefaults['@nx/esbuild:esbuild'].inputs
+      ).toBeUndefined();
+    });
+
+    it('writes them onto the target when the only inputs-declaring entry is filtered to another project', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        '@nx/esbuild:esbuild': [
+          { cache: true },
+          { filter: { projects: ['other'] }, inputs: ['production'] },
+        ] as any,
+      };
+      updateNxJson(tree, nxJson);
+
+      await applicationGenerator(tree, {
+        directory: 'app1',
+        bundler: 'esbuild',
+        addPlugin: true,
+      });
+
+      // The filtered entry supplies some other project's array; appending
+      // there would leave app1 hashing only nx's implicit default.
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.inputs
+      ).toEqual(['default', '^default', ...PNPM_INSTALL_SETTINGS_INPUTS]);
+      const entries = readNxJson(tree).targetDefaults[
+        '@nx/esbuild:esbuild'
+      ] as any[];
+      expect(entries[1].inputs).toEqual(['production']);
+    });
+
+    it('completes an existing entry whose json input hashes other manifest fields', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        '@nx/esbuild:esbuild': {
+          inputs: [
+            'default',
+            { json: '{workspaceRoot}/package.json', fields: ['dependencies'] },
+          ],
+        },
+      };
+      updateNxJson(tree, nxJson);
+
+      await applicationGenerator(tree, {
+        directory: 'app1',
+        bundler: 'esbuild',
+        addPlugin: true,
+      });
+
+      expect(
+        readNxJson(tree).targetDefaults['@nx/esbuild:esbuild'].inputs
+      ).toEqual([
+        'default',
+        { json: '{workspaceRoot}/package.json', fields: ['dependencies'] },
+        ...PNPM_INSTALL_SETTINGS_INPUTS,
+      ]);
+    });
+
+    it('adds none of them in a non-pnpm workspace', async () => {
+      (detectPackageManager as jest.Mock).mockReturnValue('npm');
+      tree.delete('pnpm-lock.yaml');
+
+      await applicationGenerator(tree, {
+        directory: 'app1',
+        bundler: 'esbuild',
+        addPlugin: true,
+      });
+
+      expect(
+        readNxJson(tree).targetDefaults['@nx/esbuild:esbuild'].inputs
+      ).not.toEqual(
+        expect.arrayContaining(['{workspaceRoot}/pnpm-workspace.yaml'])
+      );
     });
   });
 });

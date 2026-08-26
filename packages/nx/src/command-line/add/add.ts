@@ -23,10 +23,16 @@ import {
 import { globalSpinner } from '../../utils/spinner';
 import { NxPackageJson } from '../../utils/package-json';
 import { reportNxAddCommand } from '../../analytics';
+import { daemonClient } from '../../daemon/client/client';
 
 export function addHandler(options: AddOptions): Promise<number> {
   return handleErrors(options.verbose, async () => {
     output.addNewline();
+
+    // Package managers write the lock file before node_modules is fully linked,
+    // so a live daemon restarts mid-install and caches a graph whose plugins,
+    // still being relinked, no longer resolve.
+    await daemonClient.stop();
 
     const [pkgName, version] = parsePackageSpecifier(options.packageSpecifier);
     reportNxAddCommand(pkgName, version);

@@ -1,5 +1,5 @@
 import { existsSync } from 'fs';
-import { prompt } from 'enquirer';
+import { confirmationPrompt } from './prompt-helpers';
 import { join } from 'path';
 import { output } from './output';
 import { isCI } from './is-ci';
@@ -52,16 +52,12 @@ export async function promptForAnalyticsPreference(): Promise<boolean> {
       ],
     });
 
-    const { enableAnalytics } = await prompt<{ enableAnalytics: boolean }>({
-      type: 'confirm',
-      name: 'enableAnalytics',
+    return await confirmationPrompt({
       message: 'Share usage data with the Nx team?',
-      initial: true,
+      // Cancelling is a decline, not a failure.
+      onCancel: () => false,
     });
-
-    return enableAnalytics;
   } catch {
-    // User cancelled - default to false
     return false;
   }
 }

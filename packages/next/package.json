@@ -92,6 +92,7 @@
   "devDependencies": {
     "@nx/cypress": "workspace:*",
     "@nx/playwright": "workspace:*",
+    "@nx/vitest": "workspace:*",
     "@nx/webpack": "workspace:*",
     "nx": "workspace:*"
   },

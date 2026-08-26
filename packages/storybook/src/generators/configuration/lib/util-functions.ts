@@ -96,9 +96,7 @@ export function addAngularStorybookTarget(
     options: {
       port: 4400,
       configDir: `${projectConfig.root}/.storybook`,
-      browserTarget: `${projectName}:${
-        ngBuildTarget ? 'build' : 'build-storybook'
-      }`,
+      browserTarget: `${projectName}:${ngBuildTarget ?? 'build-storybook'}`,
       compodoc: false,
     },
     configurations: {
@@ -114,9 +112,7 @@ export function addAngularStorybookTarget(
     options: {
       outputDir: joinPathFragments('dist/storybook', projectName),
       configDir: `${projectConfig.root}/.storybook`,
-      browserTarget: `${projectName}:${
-        ngBuildTarget ? 'build' : 'build-storybook'
-      }`,
+      browserTarget: `${projectName}:${ngBuildTarget ?? 'build-storybook'}`,
       compodoc: false,
     },
     configurations: {

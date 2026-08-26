@@ -1,4 +1,8 @@
-import { forEachExecutorOptions, getNamedInputs } from '@nx/devkit/internal';
+import {
+  selectPrompt,
+  forEachExecutorOptions,
+  getNamedInputs,
+} from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   ensurePackage,
@@ -18,7 +22,6 @@ import {
   type Tree,
 } from '@nx/devkit';
 import type { RspackPluginOptions } from '@nx/rspack/plugin';
-import { prompt } from 'enquirer';
 import { relative, resolve } from 'path';
 import { join } from 'path/posix';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
@@ -319,14 +322,10 @@ async function getProjectToConvert(tree: Tree) {
       projects.add(project);
     });
   }
-  const { project } = await prompt<{ project: string }>({
-    type: 'select',
-    name: 'project',
+  return selectPrompt({
     message: 'Which project would you like to convert to rspack?',
     choices: Array.from(projects),
   });
-
-  return project;
 }
 
 export async function convertToRspack(

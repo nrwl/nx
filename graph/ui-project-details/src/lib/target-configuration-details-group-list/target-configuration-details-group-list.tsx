@@ -129,7 +129,7 @@ export function TargetConfigurationGroupList({
         <p className="mb-2">No targets configured.</p>
         <p>
           There are two ways to create targets:
-          <ul className="ml-6 mt-2 list-disc space-y-2">
+          <ul className="mt-2 ml-6 list-disc space-y-2">
             <li>
               <a
                 href="https://nx.dev/plugin-registry"

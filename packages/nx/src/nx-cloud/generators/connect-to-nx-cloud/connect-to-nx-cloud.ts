@@ -4,7 +4,7 @@ import { Tree } from '../../../generators/tree';
 import { readJson, updateJson } from '../../../generators/utils/json';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import { readNxJson } from '../../../generators/utils/nx-json';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { formatChangedFiles } from '../../../generators/internal-utils/format-changed-files';
 import { createNxCloudOnboardingURL } from '../../utilities/url-shorten';
 import { getCloudUrl } from '../../utilities/get-cloud-options';
 import { join } from 'path';
@@ -228,7 +228,7 @@ export async function connectToNxCloud(
       responseFromCreateNxCloudWorkspaceV2?.nxCloudId,
       schema.directory
     );
-    await formatChangedFilesWithPrettierIfAvailable(tree, {
+    await formatChangedFiles(tree, {
       silent: schema.hideFormatLogs,
     });
     return responseFromCreateNxCloudWorkspaceV2.nxCloudId;
@@ -238,7 +238,7 @@ export async function connectToNxCloud(
       responseFromCreateNxCloudWorkspaceV1?.token,
       schema.directory
     );
-    await formatChangedFilesWithPrettierIfAvailable(tree, {
+    await formatChangedFiles(tree, {
       silent: schema.hideFormatLogs,
     });
     return responseFromCreateNxCloudWorkspaceV1.token;

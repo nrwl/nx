@@ -4,6 +4,7 @@ import {
   findNewMigrateFlag,
   NEW_MIGRATE_FLAGS,
   resolveNewMigrateFlagsRunTarget,
+  targetsExistingRun,
 } from './version-skew-guard';
 
 describe('findNewMigrateFlag', () => {
@@ -30,20 +31,49 @@ describe('findNewMigrateFlag', () => {
     ).toBeUndefined();
   });
 
+  it('includes the step-action flag spellings', () => {
+    expect(NEW_MIGRATE_FLAGS).toContain('--step-action');
+    expect(NEW_MIGRATE_FLAGS).toContain('--stepAction');
+    expect(findNewMigrateFlag(['--step-action=retry'])).toBe('--step-action');
+  });
+
   it('returns the first matching flag among several args', () => {
     expect(
-      findNewMigrateFlag(['--verbose', '--runMigration=x', '--run-migration=x'])
-    ).toBe('--runMigration');
+      findNewMigrateFlag(['--verbose', '--run-id=abc', '--run-migration=x'])
+    ).toBe('--run-id');
   });
 
   it('ignores everything after the -- separator', () => {
-    expect(findNewMigrateFlag(['--', '--run-migration=x'])).toBeUndefined();
+    expect(findNewMigrateFlag(['--', '--run-id=abc'])).toBeUndefined();
     expect(
       findNewMigrateFlag(['--verbose', '--', '--run-migration=x'])
     ).toBeUndefined();
     expect(
-      findNewMigrateFlag(['--runMigration=x', '--', '--run-migration=x'])
-    ).toBe('--runMigration');
+      findNewMigrateFlag(['--run-id=abc', '--', '--run-migration=x'])
+    ).toBe('--run-id');
+  });
+});
+
+describe('targetsExistingRun', () => {
+  it.each(['--run-id', '--runId'])('matches %s, exact or with a value', (f) => {
+    expect(targetsExistingRun([f, 'abc'])).toBe(true);
+    expect(targetsExistingRun([`${f}=abc`])).toBe(true);
+  });
+
+  it('does not match the other new migrate flags', () => {
+    expect(targetsExistingRun(['--run-migration=@nx/js:a'])).toBe(false);
+    expect(targetsExistingRun(['--run-migrations=migrations.json'])).toBe(
+      false
+    );
+    expect(targetsExistingRun(['--step-action=retry'])).toBe(false);
+  });
+
+  it('does not match a longer flag that starts the same way', () => {
+    expect(targetsExistingRun(['--run-ids=abc'])).toBe(false);
+  });
+
+  it('ignores everything after the -- separator', () => {
+    expect(targetsExistingRun(['--', '--run-id=abc'])).toBe(false);
   });
 });
 

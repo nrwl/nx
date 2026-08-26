@@ -83,11 +83,21 @@ Maintaining that logic becomes a CI responsibility.
 ### Distribution with Nx Agents
 
 Nx Agents dynamically assign ready tasks from the task graph to available agent machines.
-The main job keeps the same Nx commands used for a single-machine pipeline:
+The number and type of agents live in a config file, and the main job keeps the same Nx commands
+used for a single-machine pipeline:
+
+```yaml
+# .nx/ci-config.yaml
+# Use eight agents and stop them after build tasks finish.
+dte:
+  distribute-on: 8 linux-medium-js
+lifecycle:
+  stop-after:
+    - build
+```
 
 ```yaml title="main-job.yml"
-# Start eight agents and stop them after build tasks finish.
-- npx nx start-ci-run --distribute-on="8 linux-medium-js" --stop-agents-after=build
+- npx nx start-nx-agents
 - nx affected -t lint test build
 ```
 

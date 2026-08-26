@@ -36,6 +36,7 @@ Page: {pageUrl}
 {% /llm_copy_prompt %}
 
 Connect your workspace to Nx Cloud and run your CI tasks through `nx`. That turns on remote caching, affected, distribution, and self-healing CI.
+Each section below covers one of those in isolation. If you would rather start from a working pipeline, jump to the [complete example](#complete-example).
 
 {% call_to_action variant="default" title="Tour an Nx Cloud workspace" url="https://cloud.nx.app/demo/intro?utm_source=nx-dev&utm_medium=ci-tutorial&utm_campaign=workspace-tour" description="See distributed task execution, caching, and run analytics on a live workspace before you wire up your own CI." /%}
 
@@ -81,7 +82,7 @@ Supported `--ci` values: `github`, `circleci`, `gitlab`, `azure`, `bitbucket-pip
 
 ## Remote caching
 
-Remote cache allows your CI runs to benefit from previous runs. It takes less than 5 minutes to set up and is free for small teams.
+Remote cache allows your CI runs to benefit from previous runs. It takes less than 5 minutes to set up and is free to start.
 
 {% call_to_action variant="default" title="Connect your workspace" url="https://cloud.nx.app/setup/connect-workspace/guide?utm_source=nx-dev&utm_medium=ci-tutorial&utm_campaign=try-nx-cloud" description="Setup takes less than 5 minutes" /%}
 
@@ -122,6 +123,7 @@ dte:
 
 Distribution works with [remote caching](#remote-caching) and enables [task splitting](/docs/features/ci-features/split-e2e-tasks) for Playwright, Vitest, and other tools across machines.
 For every configuration option, see the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
+For the same setup on CircleCI, GitLab, Azure Pipelines, Jenkins, or Bitbucket, see [Setting up CI for Nx Cloud](/docs/kb/setup-ci).
 
 ## Self-healing CI
 
@@ -137,6 +139,68 @@ Add `npx nx fix-ci` as the final step in your workflow. When a task fails, Nx Cl
 The `if: always()` ensures `fix-ci` runs even when prior steps fail. It catches flaky tests, configuration drift, and other issues Nx Cloud can fix without manual debugging.
 
 See [Self-healing CI](/docs/features/ci-features/self-healing-ci) for the trigger model.
+
+## Complete example
+
+The sections above each show one piece. Here they are together as a single GitHub Actions pipeline with remote caching, affected, distribution, and self-healing all enabled.
+
+```yaml
+// .nx/ci-config.yaml
+dte:
+  # Distribute across 3 agents using the linux-medium-js launch template
+  distribute-on: 3 linux-medium-js
+lifecycle:
+  # Shut idle agents down once every build task has been requested
+  stop-after:
+    - build
+```
+
+```yaml
+// .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth: 0 gives Nx the full history it needs to work out what changed
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
+      # Provisions the agents declared in .nx/ci-config.yaml.
+      # Run it before installing dependencies so agents boot while this job installs.
+      - run: npx nx-cloud start-nx-agents
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - run: npm ci
+
+      # Runs lint, test, and build only for projects affected by this change.
+      # Nx Cloud distributes these tasks across the agents started above.
+      - run: npx nx affected -t lint test build
+
+      # Analyzes any failure above and proposes a fix.
+      # if: always() so it still runs when a task fails, which is the case it exists for.
+      - run: npx nx fix-ci
+        if: always()
+```
+
+For the same pipeline on another CI provider, and for provider-specific details such as shallow-clone handling and branch variables, see [Setting up CI for Nx Cloud](/docs/kb/setup-ci).
 
 ## Resources
 

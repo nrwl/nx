@@ -7,4 +7,6 @@
 // explains why.
 import enforceModuleBoundariesRule from './src/rules/enforce-module-boundaries';
 
-export const enforceModuleBoundaries = enforceModuleBoundariesRule;
+// Keep the annotation: the inferred type names RuleModule via a pnpm store path (TS2883).
+export const enforceModuleBoundaries: typeof enforceModuleBoundariesRule =
+  enforceModuleBoundariesRule;

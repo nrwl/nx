@@ -63,7 +63,7 @@ export function ChampionPerks(): JSX.Element {
                   aria-hidden="true"
                 />
                 <HeartIcon
-                  className="absolute inset-0 h-8 w-8 text-purple-500 opacity-0 transition-all group-hover:-translate-y-1 group-hover:translate-x-8 group-hover:opacity-100 dark:text-fuchsia-500"
+                  className="absolute inset-0 h-8 w-8 text-purple-500 opacity-0 transition-all group-hover:translate-x-8 group-hover:-translate-y-1 group-hover:opacity-100 dark:text-fuchsia-500"
                   aria-hidden="true"
                 />
                 <GiftIcon
@@ -71,7 +71,7 @@ export function ChampionPerks(): JSX.Element {
                   aria-hidden="true"
                 />
               </div>
-              <p className="relative mt-4 text-base font-medium leading-6 text-zinc-900 dark:text-zinc-100">
+              <p className="relative mt-4 text-base leading-6 font-medium text-zinc-900 dark:text-zinc-100">
                 <span className="absolute -left-4 h-full w-0.5 bg-blue-500 dark:bg-blue-500"></span>
                 Recognition as a Leader
               </p>
@@ -89,7 +89,7 @@ export function ChampionPerks(): JSX.Element {
                   aria-hidden="true"
                 />
                 <VideoCameraIcon
-                  className="absolute inset-0 h-8 w-8 text-purple-500 opacity-0 transition-all group-hover:-translate-y-1 group-hover:translate-x-8 group-hover:opacity-100 dark:text-fuchsia-500"
+                  className="absolute inset-0 h-8 w-8 text-purple-500 opacity-0 transition-all group-hover:translate-x-8 group-hover:-translate-y-1 group-hover:opacity-100 dark:text-fuchsia-500"
                   aria-hidden="true"
                 />
                 <MicrophoneIcon
@@ -97,7 +97,7 @@ export function ChampionPerks(): JSX.Element {
                   aria-hidden="true"
                 />
               </div>
-              <p className="relative mt-4 text-base font-medium leading-6 text-zinc-900 dark:text-zinc-100">
+              <p className="relative mt-4 text-base leading-6 font-medium text-zinc-900 dark:text-zinc-100">
                 <span className="absolute -left-4 h-full w-0.5 bg-blue-500 dark:bg-blue-500"></span>
                 Content Promotion
               </p>
@@ -116,7 +116,7 @@ export function ChampionPerks(): JSX.Element {
                   aria-hidden="true"
                 />
                 <LightBulbIcon
-                  className="absolute inset-0 h-8 w-8 text-purple-500 opacity-0 transition-all group-hover:-translate-y-1 group-hover:translate-x-8 group-hover:opacity-100 dark:text-fuchsia-500"
+                  className="absolute inset-0 h-8 w-8 text-purple-500 opacity-0 transition-all group-hover:translate-x-8 group-hover:-translate-y-1 group-hover:opacity-100 dark:text-fuchsia-500"
                   aria-hidden="true"
                 />
                 <ChatBubbleBottomCenterTextIcon
@@ -124,7 +124,7 @@ export function ChampionPerks(): JSX.Element {
                   aria-hidden="true"
                 />
               </div>
-              <p className="relative mt-4 text-base font-medium leading-6 text-zinc-900 dark:text-zinc-100">
+              <p className="relative mt-4 text-base leading-6 font-medium text-zinc-900 dark:text-zinc-100">
                 <span className="absolute -left-4 h-full w-0.5 bg-blue-500 dark:bg-blue-500"></span>
                 Special Access
               </p>
@@ -143,7 +143,7 @@ export function ChampionPerks(): JSX.Element {
                   aria-hidden="true"
                 />
                 <UsersIcon
-                  className="absolute inset-0 h-8 w-8 text-purple-500 opacity-0 transition-all group-hover:-translate-y-1 group-hover:translate-x-8 group-hover:opacity-100 dark:text-fuchsia-500"
+                  className="absolute inset-0 h-8 w-8 text-purple-500 opacity-0 transition-all group-hover:translate-x-8 group-hover:-translate-y-1 group-hover:opacity-100 dark:text-fuchsia-500"
                   aria-hidden="true"
                 />
                 <UserPlusIcon
@@ -151,7 +151,7 @@ export function ChampionPerks(): JSX.Element {
                   aria-hidden="true"
                 />
               </div>
-              <p className="relative mt-4 text-base font-medium leading-6 text-zinc-900 dark:text-zinc-100">
+              <p className="relative mt-4 text-base leading-6 font-medium text-zinc-900 dark:text-zinc-100">
                 <span className="absolute -left-4 h-full w-0.5 bg-blue-500 dark:bg-blue-500"></span>
                 Join the Program
               </p>

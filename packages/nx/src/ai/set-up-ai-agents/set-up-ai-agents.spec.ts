@@ -3,7 +3,7 @@ import { Tree } from '../../generators/tree';
 
 import { setupAiAgentsGenerator } from './set-up-ai-agents';
 import { SetupAiAgentsGeneratorSchema } from './schema';
-import { readJson } from '../../generators/utils/json';
+import { readJson, updateJson } from '../../generators/utils/json';
 import { getAgentRulesWrapped } from '../constants';
 import * as installedNxVersionUtils from '../../utils/installed-nx-version';
 import * as cloneModule from '../clone-ai-config-repo';
@@ -22,12 +22,18 @@ jest.mock('fs', () => {
   };
 });
 
+function setAnalytics(tree: Tree, analytics: boolean) {
+  updateJson(tree, 'nx.json', (json) => ({ ...json, analytics }));
+}
+
 describe('setup-ai-agents generator', () => {
   let tree: Tree;
   let getInstalledNxVersionSpy: jest.SpyInstance;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    // No formatter: these assertions compare against the exact string the
+    // generator builds, so any formatting in the loop breaks them.
+    tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
     // Use local implementation instead of fetching from latest
     process.env.NX_AI_FILES_USE_LOCAL = 'true';
 
@@ -404,11 +410,12 @@ describe('setup-ai-agents generator', () => {
         expect(config.enabledPlugins['nx@nx-claude-plugins']).toBe(true);
       });
 
-      it('should allow analytics requests through the sandbox network filter', async () => {
+      it('should allow analytics requests through the sandbox network filter when analytics are enabled', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
           agents: ['claude'],
         };
+        setAnalytics(tree, true);
 
         await setupAiAgentsGenerator(tree, options);
 
@@ -420,11 +427,103 @@ describe('setup-ai-agents generator', () => {
         ]);
       });
 
+      it('should not allow analytics requests through the sandbox network filter when analytics are disabled', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+        setAnalytics(tree, false);
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.sandbox).toBeUndefined();
+      });
+
+      it('should not allow analytics requests through the sandbox network filter when no analytics preference is set', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.sandbox).toBeUndefined();
+      });
+
+      it('should leave an existing sandbox network filter untouched when analytics are disabled', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+        setAnalytics(tree, false);
+
+        tree.write(
+          '.claude/settings.json',
+          JSON.stringify({
+            sandbox: {
+              network: {
+                allowedDomains: ['example.com'],
+              },
+            },
+          })
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.sandbox.network.allowedDomains).toEqual(['example.com']);
+      });
+
+      it('should report the sandbox network filter change when the analytics domain is added', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+        setAnalytics(tree, true);
+
+        const callback = await setupAiAgentsGenerator(tree, options);
+        const { messages } = await callback();
+
+        expect(messages.map((message) => message.title)).toContainEqual(
+          expect.stringContaining('www.google-analytics.com')
+        );
+      });
+
+      it('should not report the sandbox network filter change when the analytics domain is already allowed', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+        setAnalytics(tree, true);
+        tree.write(
+          '.claude/settings.json',
+          JSON.stringify({
+            sandbox: {
+              network: { allowedDomains: ['www.google-analytics.com'] },
+            },
+          })
+        );
+
+        const callback = await setupAiAgentsGenerator(tree, options);
+        const { messages } = await callback();
+
+        expect(messages).toEqual([]);
+      });
+
       it('should preserve existing sandbox allowed domains and not duplicate the analytics domain', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
           agents: ['claude'],
         };
+        setAnalytics(tree, true);
 
         tree.write(
           '.claude/settings.json',

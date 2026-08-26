@@ -1,5 +1,5 @@
 import * as pc from 'picocolors';
-import { prompt } from 'enquirer';
+import { confirmationPrompt } from '../../utils/prompt-helpers';
 import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { prerelease } from 'semver';
 import { dirSync } from 'tmp';
@@ -1309,23 +1309,13 @@ async function filterProjectCommits({
 }
 
 async function promptForRemoteRelease(): Promise<boolean> {
-  try {
-    const result = await prompt<{ confirmation: boolean }>([
-      {
-        name: 'confirmation',
-        message: `Do you want to create a ${
-          remoteReleaseProviderName ?? 'remote'
-        } release anyway?`,
-        type: 'confirm',
-      },
-    ]);
-    return result.confirmation;
-  } catch {
-    // Ensure the cursor is always restored
-    process.stdout.write('\u001b[?25h');
-    // Handle the case where the user exits the prompt with ctrl+c
-    return false;
-  }
+  return confirmationPrompt({
+    message: `Do you want to create a ${
+      remoteReleaseProviderName ?? 'remote'
+    } release anyway?`,
+    // Cancelling declines the release rather than failing the run.
+    onCancel: () => false,
+  });
 }
 
 async function resolveWorkspaceChangelogChanges({

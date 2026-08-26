@@ -1,4 +1,4 @@
-import { prompt } from 'enquirer';
+import { multiselectPrompt } from '../../../../utils/prompt-helpers';
 import { join } from 'path';
 import { readJsonFile, writeJsonFile } from '../../../../utils/fileutils';
 import { nxVersion } from '../../../../utils/versions';
@@ -22,6 +22,7 @@ import { setupStandaloneWorkspace } from './standalone-workspace';
 import type { AngularJsonConfig, Options } from './types';
 import { connectExistingRepoToNxCloudPrompt } from '../../../nx-cloud/connect/connect-to-nx-cloud';
 import { MessageOptionKey } from '../../../../utils/ab-testing';
+import { formatInitWrites, recordInitWrite } from '../format';
 
 const defaultCacheableOperations: string[] = [
   'build',
@@ -44,6 +45,8 @@ export async function addNxToAngularCliRepo(options: Options) {
   if (legacyMigrationFn) {
     output.log({ title: '💽 Running migration for a legacy Angular version' });
     await legacyMigrationFn();
+    // The exit skips the caller's drain, so format the recorded writes here.
+    await formatInitWrites(repoRoot);
     process.exit(0);
   }
 
@@ -93,23 +96,12 @@ async function collectCacheableOperations(options: Options): Promise<string[]> {
         '🧑‍🔧 Please answer the following questions about the targets found in your angular.json in order to generate task runner configuration',
     });
 
-    cacheableOperations = (
-      (await prompt([
-        {
-          type: 'multiselect',
-          name: 'cacheableOperations',
-          initial: defaultCacheableTargetsInWorkspace as any,
-          message:
-            'Which of the following targets are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not)',
-          // enquirer mutates the array below, create a new one to avoid it
-          choices: [...workspaceTargets],
-          /**
-           * limit is missing from the interface but it limits the amount of options shown
-           */
-          limit: process.stdout.rows - 4, // 4 leaves room for the header above, the prompt and some whitespace
-        } as any,
-      ])) as any
-    ).cacheableOperations;
+    cacheableOperations = await multiselectPrompt({
+      message:
+        'Which of the following targets are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not)',
+      choices: workspaceTargets,
+      initialValues: defaultCacheableTargetsInWorkspace,
+    });
   } else {
     cacheableOperations =
       options.cacheable ?? defaultCacheableTargetsInWorkspace;
@@ -164,6 +156,7 @@ function addPluginDependencies(): void {
   packageJson.devDependencies = sortObjectByKeys(packageJson.devDependencies);
 
   writeJsonFile(packageJsonPath, packageJson);
+  recordInitWrite(packageJsonPath);
 }
 
 async function setupWorkspace(

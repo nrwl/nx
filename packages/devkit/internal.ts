@@ -19,6 +19,19 @@ export {
   getCatalogManager,
 } from 'nx/src/devkit-internals';
 
+// Formatter detection and setup. `@nx/js` needs these to write and detect a
+// workspace's formatter config, and it depends on `@nx/devkit` rather than on
+// `nx`, so this is its declared route to them. Against an older nx they arrive
+// as `undefined` rather than as a load error; `@nx/js` turns that into one
+// descriptive error up front (`assertNxSupportsFormatters`) instead of carrying
+// a fallback per call site.
+export {
+  detectFormatterInTree,
+  prettierConfigFiles,
+  oxfmtConfigFiles,
+} from 'nx/src/devkit-internals';
+export type { FormatterType } from 'nx/src/devkit-internals';
+
 // Generators
 export {
   determineArtifactNameAndDirectoryOptions,
@@ -47,7 +60,7 @@ export {
   ensureRootProjectName,
   resolveImportPath,
 } from './src/generators/project-name-and-root-utils';
-export { promptWhenInteractive } from './src/generators/prompt';
+export { isInteractive } from './src/generators/prompt';
 export {
   addBuildTargetDefaults,
   addE2eCiTargetDefaults,
@@ -110,6 +123,7 @@ export {
   CompositeLifeCycle,
   DeletedFileChange,
   type DependsOnEntryLocation,
+  confirmationPrompt,
   // NOTE: distinct from @nx/devkit's public FileChange (generators/tree.ts),
   // which describes a pending Tree write. This one is a per-file diff
   // ({ file, getChanges }), and the two barrels are routinely imported side by
@@ -161,12 +175,14 @@ export {
   createProjectGraphAndSourceMapsAsync,
   createProjectRootMappings,
   createRunManyDynamicOutputRenderer,
+  createTargetDefaultsResults,
   createTaskId,
   daemonClient,
   deduceDefaultBase,
   defaultFileRead,
   deriveGroupNameFromTarget,
   directoryExists,
+  dropEmptyPeerDependencySections,
   expandDependencyConfigSyntaxSugar,
   expandInitiatingTasksThroughNoop,
   expandWildcardTargetConfiguration,
@@ -178,9 +194,11 @@ export {
   findInstalledPlugins,
   findMatchingConfigFiles,
   findMatchingProjects,
+  findMatchingTargetNames,
   findProjectForPath,
   findProjectsNpmDependencies,
   forceRegisterEsmLoader,
+  generatePrunedDeployOutput,
   getCliPath,
   getCustomHasher,
   getDependencyConfigs,
@@ -226,12 +244,15 @@ export {
   killProcessTreeGraceful,
   loadTsFile,
   mergeTargetConfigurations,
+  movePeerDependencyToDependencies,
+  multiselectPrompt,
   normalizeDependencyConfigDefinition,
   normalizeDependencyConfigProjects,
   normalizeTargetDependencyWithStringProjects,
   nxVersion,
   orange,
   parseExecutor,
+  parseVersionFromPackageManagerField,
   preventRecursionInGraphConstruction,
   readCachedProjectConfiguration,
   readFileIfExisting,
@@ -243,12 +264,15 @@ export {
   readProjectAndTargetFromTargetString,
   registerTsConfigPaths,
   registerTsProject,
+  relocatePrunedLocalPathSpec,
   removeTasksFromTaskGraph,
   requireWithTsconfigFallback,
   resetWorkspaceContext,
+  resolveCommandSyntacticSugar,
   runNxSync,
   safeExecFileSync,
   safeSpawn,
+  selectPrompt,
   setWorkspaceRoot,
   setupAiAgentsGenerator,
   setupWorkspaceContext,
@@ -256,8 +280,10 @@ export {
   toNewFormat,
   toOldFormat,
   transformLegacyOutputs,
+  textPrompt,
   unparse,
   validateOutputs,
+  warnUnshippableLocalPathSpec,
   workspaceDataDirectory,
   workspaceRootInner,
 } from 'nx/src/devkit-internals';

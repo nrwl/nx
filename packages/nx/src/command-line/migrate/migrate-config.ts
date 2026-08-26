@@ -19,8 +19,10 @@ const MULTI_MAJOR_MODE_ENV = 'NX_MULTI_MAJOR_MODE';
  * Phase-aware so each option is only filled where it is consumed, and so a
  * config value never trips the mutually-exclusive-flag guards in
  * `parseMigrationsOptions`: `include` and `multiMajorMode` in the generate
- * phase only, `agentic` / `validate` / `createCommits` / `commitPrefix` when
- * running the whole migrations file or a single migration.
+ * phase only; `createCommits` / `commitPrefix` and `agentic` / `validate` when
+ * running the whole migrations file or a standalone single migration. A
+ * `--run-id` invocation takes none of them: a recorded run takes its commit
+ * config from run.json and is driven by the outer agent.
  *
  * `include` is carried as `includeFromConfig` so it is never mistaken for an
  * explicit `--include`: `resolveInclude` applies it only when the resolved
@@ -39,9 +41,16 @@ export function applyNxJsonMigrateDefaults(
   // `--run-migrations` with no value is normalized to '' by yargs, so a defined
   // (even empty-string) value means we're in the run-migrations phase.
   const isRunMigrations = merged.runMigrations !== undefined;
-  const isSingleMigration = merged.runMigration !== undefined;
+  // A bare `--run-id` (orchestrated reconcile) must never take the
+  // generate-options overlay, which would leak `include` etc. from nx.json.
+  const isSingleMigration =
+    merged.runMigration !== undefined || merged.runId !== undefined;
 
-  if (isRunMigrations || isSingleMigration) {
+  // Both overlays are for an invocation that decides these options for
+  // itself, which a `--run-id` invocation never does: the recorded worker and
+  // the reconcile both read the commit config from run.json, and overlaying
+  // `agentic` would trip the `--agentic`/`--run-id` parse conflict.
+  if ((isRunMigrations || isSingleMigration) && merged.runId === undefined) {
     if (
       merged.createCommits === undefined &&
       migrateConfig.createCommits !== undefined

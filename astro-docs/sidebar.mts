@@ -301,15 +301,15 @@ const learnGroups: SidebarItems = [
           },
           {
             label: 'Automate importing projects',
-            link: 'guides/adopting-nx/import-project',
+            link: 'kb/import-project',
           },
           {
             label: 'Manual migrations',
-            link: 'guides/adopting-nx/manual',
+            link: 'kb/manual-migration',
           },
           {
             label: 'Preserving Git histories',
-            link: 'guides/adopting-nx/preserving-git-histories',
+            link: 'kb/preserving-git-histories',
           },
         ],
       },
@@ -570,6 +570,7 @@ const referenceGroups: SidebarItems = [
       },
       { label: 'nxignore', link: 'reference/nxignore' },
       { label: 'Nx Daemon', link: 'reference/nx-daemon' },
+      { label: 'Code formatting', link: 'reference/code-formatting' },
       { label: 'Glossary', link: 'reference/glossary' },
       { label: 'Releases', link: 'reference/releases' },
       { label: 'Nx MCP', link: 'reference/nx-mcp' },

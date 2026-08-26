@@ -7,7 +7,7 @@ description: >-
   A reproduce-verifier executes a runnable repro only when verification identifies one. The skill
   saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md and never posts it. Claude
   reads/executes PR code only through the sandbox CLI; credentials never enter the sandbox.
-allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(.claude/tools/sandbox *), Bash(bash tools/review-sandbox/*), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), mcp__plugin_linear_linear__get_issue, mcp__plugin_linear_linear__list_comments, Read, Grep, Glob, Skill, Agent
+allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh api repos/nrwl/nx/compare/*), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(.claude/tools/sandbox *), Bash(bash tools/review-sandbox/*), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Bash(awk *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), mcp__plugin_linear_linear__get_issue, mcp__plugin_linear_linear__list_comments, Read, Grep, Glob, Skill, Agent
 argument-hint: '<PR_NUMBER> [--verify-repros]'
 ---
 
@@ -41,6 +41,7 @@ Consequences that the rest of this skill depends on:
 - `SANDBOX_IMAGE` — the toolchain image the checkout runs in. Default: `nx-review-sandbox:latest` (built by the `setup-review-sandbox` skill). Claude runs on the host, not in this image.
 - `SANDBOX` — the sandbox id, returned by `sandbox start` in Step 3. There is no default and no name to guess: it is minted per run.
 - `TRIAGE_DIR` — where drafts live. Default: `~/.nx-pr-reviews` (outside the repo — so `git clean` never touches drafts and re-review history survives — and outside `~/.claude`, so the skill never writes into Claude Code's own config dir)
+- `REVIEW_NONINTERACTIVE` — set by headless callers (`review-prs`, the review cron) to skip Step 8.5's grill. Unset in a normal session. Default: unset.
 - `NX_REPO_PATH` — path to the local clone of nrwl/nx this skill ships inside. Default: `git rev-parse --show-toplevel`. Used **only** by the Step 4.5 close-signal checks, which may run before the sandbox exists, and always with a fresh `git fetch` first. It is never used for the PR checkout and is never passed to an agent — agents read base state with `sandbox read --ref base`, which is fetched fresh every run and cannot be stale.
 
 ## Step 1: Pre-flight
@@ -91,7 +92,7 @@ Parse out:
 - `title`, `author.login`, `headRefOid` (the head SHA), `headRefName`, `baseRefName`, `url`
 - `isDraft` — if true, exit early (don't review drafts)
 - **Local dedup:** if `$TRIAGE_DIR/<NUMBER>.md` exists, its frontmatter `head_sha` equals `headRefOid`, its `pipeline_version` equals the current `PIPELINE_VERSION` (see below), and its `verdict` is not `failed`, this PR was already reviewed at this commit — exit with no draft change; log "ALREADY_REVIEWED". A `failed` draft never blocks a retry. To deliberately re-review an unchanged PR, delete the draft file or just say so in the session.
-- **`PIPELINE_VERSION: 8`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
+- **`PIPELINE_VERSION: 9`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
 
 ### Fetch the tracking ticket
 
@@ -189,8 +190,8 @@ Each agent already carries this protocol in its own definition; what follows is 
 
 ```bash
 .claude/tools/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
-.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir]
-.claude/tools/sandbox find <SANDBOX> <glob> [subdir]
+.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
+.claude/tools/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
 .claude/tools/sandbox exec <SANDBOX> [--base] -- <CMD>
 ```
 
@@ -251,24 +252,85 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
    - The `## Review draft` section (the most recent review). This becomes "the prior review."
    - The full `## Prior reviews` section (older reviews, if any). All of them — no cap on history.
 
-   What you pass to the **agents** is a different, much smaller artifact — see step 3. Keep the two straight: full history in your head, distilled carry-forward on disk.
+   What you pass to the **agents** is a different, much smaller artifact — see step 4. Keep the two straight: full history in your head, distilled carry-forward on disk.
 
 2. Compute the incremental diff inside the sandbox, writing it to a host file the agents can `Read`. `$PRIOR_SHA` isn't in the shallow checkout, so fetch it first — and branch on whether that fetch succeeded:
 
    ```bash
    if .claude/tools/sandbox exec "$SANDBOX" -- git fetch -q --depth 1 origin "$PRIOR_SHA"; then
      .claude/tools/sandbox exec "$SANDBOX" -- git diff "$PRIOR_SHA".."<HEAD_REF_OID>" \
-       > /tmp/pr-<NUMBER>-incremental.diff
+       > /tmp/pr-<NUMBER>-incremental.diff \
+       || { echo "FATAL: failed to build incremental diff"; exit 1; }
    else
      echo "PRIOR_SHA <PRIOR_SHA> no longer on the remote — force-pushed; reviewing fresh"
    fi
    ```
 
-   A failed fetch means the author force-pushed and orphaned `$PRIOR_SHA`. Treat that as a **fresh review**: set `HAS_PRIOR_CONTEXT=false`, skip the incremental diff, skip step 3 below entirely, and note the force-push in the draft. Do not fall through with an empty incremental diff — an empty diff reads as "nothing changed since the last review" when in fact the entire branch was rewritten.
+   A failed fetch means the author force-pushed and orphaned `$PRIOR_SHA`. Treat that as a **fresh review**: set `HAS_PRIOR_CONTEXT=false`, skip the incremental diff, skip the remaining steps below entirely, and note the force-push in the draft. Do not fall through with an empty incremental diff — an empty diff reads as "nothing changed since the last review" when in fact the entire branch was rewritten. (GitHub keeps force-pushed head SHAs fetchable for a long time, so this branch is rare — the common rebase case lands in step 3.)
 
-   Set `HAS_PRIOR_CONTEXT=true` only on the success path. **Step 5 gates on that variable, never on the context file existing** — file existence is not a safe signal, because a prior review of the same PR leaves one behind and it would silently narrow this run's scope to a stale delta. (Step 3 also clears these paths up front, so the two defenses are independent.)
+   Set `HAS_PRIOR_CONTEXT=true` only on the success path. **Step 5 gates on that variable, never on the context file existing** — file existence is not a safe signal, because a prior review of the same PR leaves one behind and it would silently narrow this run's scope to a stale delta. (Step 3 of the skill also clears these paths up front, so the two defenses are independent.)
 
-3. Write a context file at `/tmp/pr-<NUMBER>.review-context.md` (host-side — the agents `Read` it directly; it is our file, not PR code).
+3. **Base-movement guard: do not trust the raw range after the merge base changes.** Resolve both merge bases on the host because credentials never enter the sandbox:
+
+   ```bash
+   OLD_MB=$(gh api "repos/nrwl/nx/compare/<BASE_REF_NAME>...$PRIOR_SHA" \
+     --jq .merge_base_commit.sha) \
+     || { echo "FATAL: failed to resolve prior merge base"; exit 1; }
+   NEW_MB=$(gh api "repos/nrwl/nx/compare/<BASE_REF_NAME>...<HEAD_REF_OID>" \
+     --jq .merge_base_commit.sha) \
+     || { echo "FATAL: failed to resolve current merge base"; exit 1; }
+   test -n "$OLD_MB" && test -n "$NEW_MB" \
+     || { echo "FATAL: empty merge-base SHA"; exit 1; }
+   REPLAY_FALLBACK=false
+   ```
+
+   If `OLD_MB == NEW_MB`, the raw `$PRIOR_SHA..HEAD` range contains only the branch endpoint delta. Count its changed paths and keep it as the incremental surface:
+
+   ```bash
+   if [ "$OLD_MB" = "$NEW_MB" ]; then
+     PATCH_CHANGES=$(awk '/^diff --git / { count++ } END { print count + 0 }' \
+       /tmp/pr-<NUMBER>-incremental.diff) \
+       || { echo "FATAL: failed to count incremental changes"; exit 1; }
+   else
+     .claude/tools/sandbox exec "$SANDBOX" -- \
+       git fetch -q --depth 1 origin "$OLD_MB" "$NEW_MB" \
+       || { echo "FATAL: failed to fetch merge bases"; exit 1; }
+   fi
+   ```
+
+   If the merge bases differ, the raw range includes base-branch commits. Rebuild the incremental surface by replaying the prior PR patch onto the current merge base in a temporary Git index, then compare that expected tree with HEAD. Stream the trusted helper from the host into the sandbox; never execute a helper from the PR-controlled checkout. `${CLAUDE_SKILL_DIR}` is substituted when the skill loads, so the input path does not depend on the current working directory:
+
+   ```bash
+   if [ "$OLD_MB" != "$NEW_MB" ]; then
+     if .claude/tools/sandbox exec "$SANDBOX" -- bash -s -- \
+       "$OLD_MB" "$PRIOR_SHA" "$NEW_MB" \
+       < "${CLAUDE_SKILL_DIR}/scripts/replay-prior-patch.sh" \
+       > /tmp/pr-<NUMBER>-incremental.diff
+     then
+       PATCH_CHANGES=$(awk '/^diff --git / { count++ } END { print count + 0 }' \
+         /tmp/pr-<NUMBER>-incremental.diff) \
+         || { echo "FATAL: failed to count replayed changes"; exit 1; }
+       case "$PATCH_CHANGES" in
+         ''|*[!0-9]*) echo "FATAL: invalid replayed-change count"; exit 1 ;;
+       esac
+     else
+       REPLAY_STATUS=$?
+       if [ "$REPLAY_STATUS" -eq 10 ]; then
+         REPLAY_FALLBACK=true
+         echo "Prior patch did not replay cleanly; reviewing the full PR diff"
+       else
+         echo "FATAL: failed to rebuild incremental diff (exit $REPLAY_STATUS)"
+         exit 1
+       fi
+     fi
+   fi
+   ```
+
+   The helper exits 10 only when `--3way` cannot replay the prior patch; every other nonzero exit is fatal. The temporary index preserves the prior author patch across non-overlapping base churn, including binary changes, modes, symlinks, unusual pathnames, and file-to-directory transitions. If the replay conflicts, the author may have resolved overlapping base changes manually. In that case, `REPLAY_FALLBACK=true` selects the full PR diff in Step 5 and keeps the prior review context; it never treats an uncomparable patch as an empty delta or assigns a numeric change count. If this block reports `FATAL`, stop the review because its evidence is invalid.
+
+   If `REPLAY_FALLBACK=false` and `PATCH_CHANGES` is zero, this was a **base-movement-only push** or an equivalent tree rewrite. Skip the remaining context-building and agent steps, re-verify the carry-forward yourself at HEAD, update the review body with "no author delta", then continue at Step 8 so history and cleanup still run. Any positive count continues to Step 5 regardless of line count; the existing evidence fallback handles a small but real author delta.
+
+4. Write a context file at `/tmp/pr-<NUMBER>.review-context.md` (host-side — the agents `Read` it directly; it is our file, not PR code).
 
    **Distill; do not paste.** Every byte here is read by every agent you dispatch, so its cost is multiplied by the whole fleet — on a PR with several prior attempts, pasting full bodies makes the carry-forward the single largest fixed charge in the run, larger for most agents than the diff they are meant to review. Worse, it is mostly inert: the bulk of a prior draft is that round's Reproduction / Approach / Performance / Security prose, which describes work already done and re-verified from scratch this round by the agents that own those dimensions. What an agent genuinely needs from history is short: what is still open, what was already fixed, and which trade-offs are settled so it does not re-litigate them.
 
@@ -305,11 +367,12 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
    ## Diff since last review (`$PRIOR_SHA..<HEAD>`)
 
-   See /tmp/pr-<NUMBER>-incremental.diff for the new code added since the prior review.
+   <When `REPLAY_FALLBACK=false`: See /tmp/pr-<NUMBER>-incremental.diff for the author delta since the prior review.>
+   <When `REPLAY_FALLBACK=true`: The prior patch did not replay cleanly on the current base, so this attempt reviews the full PR diff. No narrower author delta is safe.>
 
    ## Review focus
 
-   Focus on the diff since the last review. The open items above are already re-checked — carry
+   Focus on the named review target. The open items above are already re-checked; carry
    their status into your report if your dimension owns one, but do not go and re-derive it. Do not
    re-analyze unchanged code from scratch.
 
@@ -318,6 +381,7 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
    Rules for the distillation:
    - Re-check open items once; move fixed ones to **Already fixed**.
+   - When `OLD_MB != NEW_MB`, re-verify **Already fixed** items at HEAD too. Base movement can silently drop a landed fix. A dropped one goes back to Open items.
    - Never omit an unresolved finding; trim narrative first.
    - Preserve each finding's wording, location, and ask; omit old reproduction/approach/performance/security prose.
    - Carry facts, not a prior verdict's reasoning; keep focus questions neutral.
@@ -522,7 +586,7 @@ once, deliberately, before the first `Agent` call.
    SHA. If prior needs its own worktree, fetch it into `/work/repo.git`, add a uniquely named
    the prior SHA, then run `sandbox worktree "$SANDBOX" orchestrator-prior base`; it
    runs both required setup commands before returning. A number without its baseline cannot answer
-   "is this net-new?", which is calibration 7's question.
+   "is this net-new?", which is the admission test's first question.
 5. **Measure the corollaries each dimension will ask for, not just the headline conclusion.** This is
    what decides whether the step actually suppresses duplication. An agent whose own question sits
    one hop from your conclusion will rebuild the whole harness to answer that hop, and the
@@ -684,9 +748,144 @@ installed, an extracted tarball, a `/snap` snapshot.>
 
 ## What to report
 
+You and the author share a goal: get this PR merged without letting bad code
+in. A finding is not a rejection — it is the distance between the PR and merge,
+stated precisely enough that the author can close it. That stance changes
+nothing about rigor (the admission test below still gates every finding); it
+changes what a finding must contain: the defect, the proof, and the way out.
+
 Report **critical** and **important** findings, plus **strengths**. Concrete,
 actionable nice-to-haves (a rename, a restructure, a missing cross-link) may go
 in a terse **Suggestions** list — one line each; vague polish will be discarded.
+
+### The two tiers
+
+    Critical   — something this PR produces is WRONG, now.
+    Important  — nothing is wrong now, but the PR leaves something that
+                 will be wrong later, or unguarded against becoming wrong.
+
+Severity is **what happens to an affected user, never how many are affected.**
+Windows-only, large-workspaces-only, one-rare-flag-only — name the condition in
+the TRIGGER line and keep the tier. A Windows user hitting wrong output is
+fully broken, and Windows is a supported platform, not an edge case.
+
+**Critical** — any of:
+
+1. **Wrong output, data loss, or a crash** on a supported path.
+2. **A wrong or misleading error message.** Nx is a CLI: what it prints IS what
+   it produces. A message that routes someone to the wrong cause is wrong
+   output, not a wording problem.
+3. **Docs that tell a reader to do something that does not work.** Same
+   argument — a page is a product surface.
+4. **False coverage** — a test that cannot fail, or asserts the wrong thing.
+   Worse than no test: it certifies the bug as fixed and survives refactors.
+5. **An exploitable source-to-sink path** on a default configuration.
+6. **A breaking change** to a public API, generator schema, or executor option
+   with no migration.
+7. **`claimed-fix`** — the PR does not fix what it says it fixes. The finding is
+   not the bug; it is that merging _closes the issue_, so the bug becomes
+   invisible and untracked.
+
+There is no bounded version of wrong. If something the PR produces is wrong on a
+reachable path, it is Critical — do not soften it because the path is narrow.
+
+**Important** — any of:
+
+1. **`widens`** — a real defect that predates the PR, whose reach the diff
+   extends. Important because the author did not cause it, not because the harm
+   is smaller. Holding a PR for a bug it did not write is contributor-hostile;
+   the root-cause fix belongs in its own PR.
+2. **New user-facing surface with no docs** — a flag or option that works but is
+   undiscoverable.
+3. **A comment the diff left false.** The misleading-error argument aimed at the
+   next maintainer instead of the user.
+4. **A measurable, non-cliff performance regression.** A hang or a scaling cliff
+   is Critical; slower is Important.
+
+**Missing tests are never a finding — Suggestions at most, including for the
+behavior this PR changed.** Absence of a test is not a defect; a test that lies
+is (Critical #4). Ask for the regression test in a one-line Suggestion and let
+the maintainer decide whether to hold the PR for it.
+
+Important still requires a **named mechanism** — the undocumented flag, the
+comment that is now false, the number that regressed. "This feels risky" is
+not an Important finding; it is not a finding.
+
+**Widening that changes the KIND of harm is not `widens` — it is Critical.** If a
+path that only ever saw internal values now takes user config, or a removed guard
+makes an unreachable branch reachable, the buggy line is unchanged but the harm
+is new. File it as a new defect and put the base evidence on the _reachability_,
+not on the bug.
+
+### Admission test (every Critical/Important finding)
+
+Two failure modes dominate this pipeline's false positives: defects that were
+already there before the PR, and defects nothing a real user does can reach.
+Both read as legitimate findings, because both describe real code. So every
+Critical/Important finding MUST carry these three lines, immediately under it:
+
+    NET-NEW: <base evidence — see below>
+    TRIGGER: <entry point → input → user-visible failure>
+    FIX: <the concrete change, 1-2 lines — see below>
+
+**NET-NEW** must be one of:
+
+- `base <path>:<line> — <what the base did instead>` — you read the base file
+  and the behavior differs. Quote it; a bare assertion is not evidence.
+- `no base file` — the file is added by this PR.
+- `widens <path>:<line>` — the defect predates the PR but the diff materially
+  extends it (new call site, new caller passing untrusted input, a guard
+  removed). Say what the diff changed about its reach.
+- `claimed-fix` — the PR's stated purpose is to fix this exact behavior and it
+  does not. Name the ticket/PR-body claim.
+
+If the same defect reproduces unchanged at `--ref base`, it is **pre-existing**
+and it does not block this PR. The reviewer is deciding whether to merge _this
+diff_, not whether the file is perfect. "The PR touched this function, so its
+old bugs are in scope" is the specific mistake — touching a function does not
+adopt it.
+
+**It is still reported.** Emit it under a `PRE-EXISTING:` line instead of
+dropping it — one per defect, no cap, in the same `file:line — defect` shape
+plus the base evidence that proves it predates the diff:
+
+    PRE-EXISTING: <path>:<line> — <defect>. Present at base <path>:<line>.
+
+The maintainer files follow-up tickets from these, so a bare "this is old" is
+useless: the line must stand on its own once separated from the PR that
+surfaced it. This is the one place a defect you are forbidden to block on still
+reaches the reviewer intact — silently discarding it loses work nobody else is
+positioned to redo.
+
+**TRIGGER** must name a path a supported Nx workflow actually reaches: the
+command or public API entry point, the input/config that gets there, and what
+the user sees fail. Not a finding at Critical/Important if reaching it needs a
+state the codebase never produces — an argument no caller passes, an env var no
+supported flow sets, a dependency version outside the supported range, a
+hand-edited internal file, or a `null` that every call site already excludes.
+"A future caller might" is not a trigger; neither is "in theory". Demote those
+to Suggestions, one line, and say what the unreachable precondition is.
+
+Rarity is not the same as unreachability. A path a real user hits only on
+Windows, only in a monorepo above some size, or only with a rarely-used flag
+IS a trigger — name the condition. Cut the ones nothing reaches, not the ones
+few people reach.
+
+**FIX** names the concrete change: which function, what it should do instead —
+one or two lines, sketch-level, not a patch. You already know the shape from
+proving the TRIGGER; writing it down costs a sentence and turns the finding
+from a verdict into a path to merge. Grade your own confidence: plain `FIX:`
+when you are confident in the shape; `FIX (sketch):` when viable alternatives
+exist or you have not traced every call site — a confidently wrong
+prescription is worse than none. `FIX: unclear — <why>` is legal when the
+right change hinges on a decision only the author or maintainer can make; name
+that decision. Never invent a prescription to fill the line.
+
+NET-NEW and TRIGGER are checked by the caller at trim time. A
+Critical/Important finding that omits either, or whose NET-NEW cites no base
+evidence, is demoted — so a real defect written up without them loses its
+weight. A missing FIX never demotes a finding (the defect is real regardless);
+the caller records the gap in `## Failures` instead.
 When you endorse a debatable design decision (fail-open vs fail-closed,
 normalization, escape hatches, compat trade-offs), say so explicitly in a
 **Maintainer calls** line rather than folding it into an endorsement.
@@ -733,7 +932,9 @@ The proof-of-work line number each agent's definition requires is checked agains
 per dispatch as `<EVIDENCE_FILE>`:
 
 - **First review**, or no usable incremental diff → `/tmp/pr-<NUMBER>.diff`.
+- **Re-review** where `REPLAY_FALLBACK=true` -> `/tmp/pr-<NUMBER>.diff`.
 - **Re-review** where Step 4 set `HAS_PRIOR_CONTEXT=true` **and**
+  `REPLAY_FALLBACK=false` **and**
   `wc -l < /tmp/pr-<NUMBER>-incremental.diff` is at least 40 → `/tmp/pr-<NUMBER>-incremental.diff`.
 
 Pointing the proof at the incremental diff on a re-review does two things at once: it proves the
@@ -872,11 +1073,16 @@ Aggregate the surviving agents' output into Critical / Important / Strengths you
 
 **Only critical and important findings drive the verdict.** Keep **Critical**, **Important**, and **Strengths** in full. Suggestions are no longer discarded: distill any **Suggestions** / nice-to-have material into a `### Suggestions` section of at most 5 one-line bullets (`file:line — ask`), keeping only concrete, actionable asks (a rename, a restructure, a doc cross-link) and dropping vague polish. This tier NEVER influences the verdict — it exists because the maintainer's own reviews are largely made of it. The trimmed text is what flows into the steps below (reconciliation in Step 5b, formatting in Step 6).
 
+**Pre-existing defects get their own section, and it is uncapped.** Collect every agent's `PRE-EXISTING:` lines into a `### Pre-existing` section, verbatim, deduped by `file:line`. It never influences the verdict, and it does **not** draw from the Suggestions 5-bullet cap — the two are separate budgets. Suggestions is taste (a rename, a doc cross-link); this is real defects that predate the diff and exist to be turned into follow-up tickets. Capping them, or folding them into Suggestions where they compete with polish for slots, is how they get silently dropped — which is the whole failure this section exists to stop. Omit the section only when there are none.
+
+Agents that emit a `TIERS` line carry a `preexisting=<n>` count; reconcile the section against it exactly as you do `findings=<n>`, and record any shortfall in `## Failures`. The count is the only mechanical check that a pre-existing item survived the trim.
+
 "Keep in full" is the load-bearing half of that paragraph, and it is the half this step actually fails. Four rules make it enforceable:
 
-- **Never re-tier an agent's finding downward on your own judgment.** The only sanctioned downgrade is a named calibration from the list below; when you apply one, say which calibration and why in the draft. "It feels minor", "that's just style", "the fix is one character" are not calibrations. An agent that filed something as a finding did so against a rule it was required to name. You are re-checking it against the calibrations, not re-scoring it by taste, and you are not the tier the agent's contract already assigned.
+- **Enforce the admission test first.** Before anything else, check every Critical/Important finding for its `NET-NEW` and `TRIGGER` lines. Missing either, or a `NET-NEW` that asserts novelty without quoting base evidence ⇒ demote and record one line in `## Failures` naming the agent and the finding. **Demote by reason, not to one bucket:** a finding whose `NET-NEW` shows the defect reproduces at base goes to `### Pre-existing` (it is a real defect, just not this PR's — the maintainer still wants it); one whose `TRIGGER` names an unreachable path, or which is missing either line outright, goes to Suggestions. Dropping a demoted-as-pre-existing finding on the floor is the failure mode here, not mis-tiering it. Do not repair it for them by reading `--ref base` yourself — an agent that filed a finding without checking the base did not establish the defect is the PR's, and confirming it here converts your read into their evidence. The one exception: a `widens` or `claimed-fix` NET-NEW that names the base line but reads thin — verify that one in the sandbox and keep it if it holds. This gate is what stops pre-existing and unreachable findings from reaching the maintainer, and it is the only downgrade you perform without a numbered calibration. Separately, check every surviving Critical/Important finding for its `FIX:` line. A missing one never demotes — repair is not admission, and a real defect does not lose weight for lacking a prescription — but record it in `## Failures` naming the agent and finding. Do not write a prescription on the agent's behalf: the agent proved the trigger and knows the fix's shape; you would be guessing.
+- **Never re-tier an agent's finding downward on your own judgment.** Apart from the admission-test gate above, the only sanctioned downgrade is a named calibration from the list below; when you apply one, say which calibration and why in the draft. "It feels minor", "that's just style", "the fix is one character" are not calibrations. An agent that filed something as a finding did so against a rule it was required to name. You are re-checking it against the calibrations, not re-scoring it by taste, and you are not the tier the agent's contract already assigned.
 - **Severity comes from the rule violated, not the size of the fix.** A one-character punctuation change that breaks a committed `STYLE_GUIDE.md` rule vale has no rule for is Important. A three-paragraph rewrite that violates nothing is a Suggestion. Judging by surface form is the specific way this step goes wrong: docs, comment, and naming findings all have tiny diffs, so they read as polish and get swept into a tier that cannot move the verdict.
-- **The 5-bullet cap binds the Suggestions tier only.** It is never a reason to move anything out of Critical or Important, and it never licenses a silent merge or drop. If you cut to the cap, name in one line what you cut and why. A reader must never mistake a trimmed list for a complete one.
+- **The 5-bullet cap binds the Suggestions tier only.** It is never a reason to move anything out of Critical, Important, or `### Pre-existing`, and it never licenses a silent merge or drop. If you cut to the cap, name in one line what you cut and why. A reader must never mistake a trimmed list for a complete one.
 - **Reconcile per reviewer before writing the draft.** Preserve every Critical/Important finding, or record the named calibration that downgraded it in `## Failures`.
 
 Keep findings distinct from Suggestions: a committed-rule violation is not polish merely because the diff is small.
@@ -897,14 +1103,15 @@ This direction check is yours at trim time. Documentation coverage, committed do
 
 These standing maintainer calibrations encode this repo's review culture. The charter (Step 5) hands them to the agents up front; re-check the surviving findings against them here — anything that slipped through gets downgraded now. A finding matching one of these is at most a compact one-line advisory note in the draft and **never drives the verdict**:
 
-1. **Coverage gaps are advisory.** Missing branches/fixtures never block alone; false coverage (wrong assertion or a test that cannot fail) is a defect.
+1. **Coverage gaps are advisory.** Missing branches, fixtures, and a missing regression test for the changed behavior itself are all Suggestions — they never block. False coverage — a wrong assertion, or a test that cannot fail — is Critical.
 2. Do not demand tests for deprecation warnings, legacy paths, telemetry wiring, or never-throw wrappers; testable logic inside them remains in scope.
 3. Migration silence and retained dependencies are intentional. Flag only silent correctness failures; users may still import a dependency.
 4. `migrations.json` is already inside the migration trust boundary. Flag it only when data crosses a new boundary (for example HTTP or runtime input).
 5. `nx migrate` and `nx release` temp directories are intentional post-mortem artifacts, not leaks.
-6. An Important finding must be net-new versus base/sibling behavior. Deliberate behavior backed by tests and documentation is a callout, not a blocker.
+6. Critical/Important findings must pass the charter's **admission test** — a NET-NEW line with base evidence and a TRIGGER line naming a reachable path. Pre-existing behavior the diff merely touches goes to `### Pre-existing` — reported for follow-up, never blocking. Paths no supported workflow reaches are Suggestions at most. Deliberate behavior backed by tests and documentation is a callout, not a blocker.
 7. Do not demand scattered defensive guards when the invariant can be fixed at its source.
 8. Comment-volume asks are Suggestions. Inaccurate/stale comments and required `@deprecated` / `TODO(vNN)` markers remain blocking.
+9. **Severity ignores population size.** Rarity never demotes a finding; unreachability disqualifies it. Windows-only, large-workspace-only, and rare-flag defects keep their tier — name the condition in TRIGGER. Windows is a supported platform, not an edge case.
 
 ## Step 5a: Run the alternative-approach agent
 
@@ -1213,6 +1420,10 @@ The adjusted text becomes the final `$REVIEW_BODY`.
 
 `$REVIEW_BODY` is posted as-is — no header, footer, or tool attribution. It should read like a review a maintainer wrote. The review metadata (commit, date, attempt) lives in the triage file's frontmatter, not in the posted body.
 
+**Write to the author as a collaborator, not a gatekeeper.** The shared goal is merging this PR without letting bad code in, and the body should read that way: every Critical/Important finding keeps its `FIX:` line so the author sees the path to merge next to the defect, and the summary frames what stands between the PR and merge rather than delivering a verdict. Rigor is untouched — collaboration is the framing of the findings, never a reason to soften or drop one.
+
+**Section order.** Grounding first, then what blocks, then what doesn't: `### Close-without-merge check`, `### Reproduction verification`, `### Approach analysis`, `### Security review`, `### Critical`, `### Important`, `### Maintainer calls`, `### Questions for the author`, `### Suggestions`, `### Pre-existing`, `### Strengths`. `### Pre-existing` sits below everything actionable on this PR and carries a one-line preamble saying it is follow-up material that does not affect the verdict — otherwise a reader skimming headers counts it against the author.
+
 ## Step 7: Determine verdict
 
 Check in this order (first match wins):
@@ -1220,12 +1431,21 @@ Check in this order (first match wins):
 - **Any reviewer recorded as failed** (EVIDENCE line unverifiable after a retry, or the reviewer errored) → `verdict: failed`. This outranks everything below: a review missing a standing dimension is not clean. Name failed reviewers in `## Failures`.
 - Close-without-merge check emitted "Likely superseded" with strong evidence (see Step 4.5) → `verdict: superseded`
 - Close-without-merge check emitted "Likely unnecessary" with strong evidence (see Step 4.5) → `verdict: unnecessary`
-- Has any **Still concerning** or **New concerns** items rated critical → `verdict: needs-changes`
-- Has 3+ items across Still concerning + New concerns → `verdict: needs-changes`
+- Has any **Still concerning** or **New concerns** items rated **critical** → `verdict: needs-changes`
 - Couldn't reach a clear conclusion → `verdict: blocked`
 - Otherwise → `verdict: lgtm`
 
-(For first reviews with no prior context, fall back to the toolkit's Critical/Important categories.)
+(For first reviews with no prior context, fall back to the Critical/Important categories.)
+
+**Only Critical blocks.** There is deliberately no count threshold: Important,
+Suggestions, and `### Pre-existing` never drive the verdict at any quantity. A long
+`### Pre-existing` list is not evidence against the PR — it is evidence the file was
+already in poor shape, which is the author's problem only if their diff caused it. The old "3+ items" rule was a proxy
+for "lots of noise probably means something is wrong" — it was tuned against an Important
+tier that had no definition, and it let three bounded observations block a PR nobody would
+actually hold. The admission test now does that job at the source. A PR with eight
+Important findings and no Critical is `lgtm` with a long list of follow-ups, which is the
+honest answer.
 
 **Verdict values:** `lgtm | needs-changes | blocked | superseded | unnecessary | failed`.
 
@@ -1286,6 +1506,12 @@ HEAD: `<HEAD_SHA_SHORT>` · base: `<BASE_REF>`
 de-identified — this file is host-side, so embargoed context may be named here, and
 must not be copied into the posted body)
 
+## Grill
+
+(omit until Step 8.5 — or `/review-pending-pr-reviews` — walks the maintainer through the
+findings. One line per drop or re-tier, in the maintainer's own words. Its presence is what
+tells the outbox skill this draft has already been evaluated by a human.)
+
 ## Posted
 
 (none yet, or whatever was already there)
@@ -1296,6 +1522,138 @@ must not be copied into the posted body)
 ```
 
 Carry `## Author follow-ups (not for the PR)` forward verbatim on re-review, alongside `## Posted` and `## Failures` — an unanswered question stays open across attempts.
+
+## Step 8.5: Grill the maintainer on the findings (interactive sessions only)
+
+**Skip this step entirely when `$REVIEW_NONINTERACTIVE` is set** — `review-prs` and the review cron
+set it, because nobody is there to answer. Step 8 has already written the draft, so a skipped grill
+costs nothing; this step only ever _refines_ a draft that is already on disk.
+
+**It runs here, before Step 9, because the sandbox must still be alive.** The grill's central
+question — "is this actually pre-existing?" — is answered by reading `--ref base`, and Step 9
+destroys the only copy of the checkout. A grill placed after cleanup can only re-read the host diff,
+which is precisely the evidence the finding already cited. Sub-agent fact-finding depends on this
+too. The cost is that the sandbox lives for the length of the interview: if the maintainer walks
+away mid-grill, stop and run Step 9 anyway rather than leaking a multi-GB sandbox — the draft on
+disk is already valid, and `.claude/tools/sandbox prune` sweeps anything left behind.
+
+**Never answer your own questions.** If a question goes unanswered, stop and leave the draft exactly
+as written. A grill that invents the maintainer's answers is worse than no grill: it edits the draft
+on fabricated authority and launders agent output into apparent human review. Silence means stop, not
+proceed with the obvious answer.
+
+### Brief the maintainer before the first question
+
+**Print this briefing before invoking `/grill-me`. It is not optional.** The maintainer has not read
+the draft — Step 8 wrote it to disk, and nothing has shown it to them. Asking "does this finding
+hold?" about a defect they have never seen makes the question unanswerable, and the honest response
+to an unanswerable question is silence, which this step treats as _stop_. A grill that opens cold
+therefore does not produce a cautious review; it produces no review at all.
+
+```text
+Reviewed PR #<N>: <title>
+<one or two sentences: what the PR actually changes, in plain terms>
+
+Draft verdict: <verdict> — <what drives it: "1 Critical", "no Critical, 6 Important">
+Full draft: <TRIAGE_DIR>/<N>.md
+
+Critical (<n>) — these gate the verdict
+  1. <file:line> — <the claim in one clause>
+  2. …
+
+Important (<n>)
+  3. <file:line> — <the claim in one clause>
+
+Pre-existing (<n>), Suggestions (<n>) — not grilled, listed so you know they exist
+```
+
+Keep it to one line per finding; the detail arrives with the question that needs it. Some drafts run
+to hundreds of KB, and a briefing that reprints the draft is the same failure as no briefing.
+
+### Each question carries its own evidence
+
+A numbered finding in the briefing is a map, not enough to judge by. So every question restates,
+inline, the finding it is about: **the claim**, its `NET-NEW` line, its `TRIGGER` line, and one
+sentence on _why this one is uncertain_ — the specific thing you could not settle from the sandbox.
+Never make the maintainer open the draft to answer, and never refer to a finding by number alone.
+
+If you cannot say what is uncertain about a finding, you have no question — that finding is settled
+and belongs in neither the grill nor its rounds.
+
+Invoke `/grill-me`, scoped to the findings rather than to a plan. It works the tree in **rounds over
+a frontier** — round 1 is every Critical finding (they gate the verdict and are independent of each
+other), round 2 is Important plus whatever round 1 unblocked, round 3 is the consequences. Each
+question carries your recommended answer.
+
+Per finding, ask the three questions the tiers actually turn on:
+
+1. **Does it hold?** Is the defect real as described — not merely plausible.
+2. **Is it this PR's?** Does the `NET-NEW` evidence support it, or is this pre-existing / `widens`?
+3. **Is the tier right?** Critical means something the PR produces is wrong now. Important means
+   wrong later, or unguarded.
+
+Skip a question the draft already answers — the point is to resolve what is genuinely uncertain, not
+to make the maintainer re-read their own review. Do not grill Suggestions; they never affect the
+verdict and are not worth the maintainer's attention.
+
+**Answer factual questions yourself, from the live sandbox.** If a round turns on whether the base
+really behaved differently, read `--ref base` — or dispatch a sub-agent to — rather than asking the
+maintainer to remember. Their answers are for _decisions_; facts are your job, and this is the last
+step where the checkout still exists to settle them.
+
+Apply each round's answers to the draft before asking the next — the maintainer should be able to
+stop after any round and keep what is already decided. Drop the finding, re-tier it, or keep it.
+Then **recompute the verdict** with Step 7's rules — dropping the last Critical moves a PR from `needs-changes` to
+`lgtm`, and that is the whole point of the step.
+
+### Brief again when the frontier is empty
+
+**The grill closes with the same briefing it opened with, re-rendered against the post-grill draft.**
+Symmetry is the point: the opening brief is what the maintainer judged _from_, so the closing brief
+is the only way they can check that what got applied is what they meant. Answers are given one round
+at a time, against one finding at a time — nobody tracks the cumulative effect of six answers in
+their head, and the draft has been silently mutating the whole way.
+
+Show what moved, not just where it landed:
+
+```text
+Grill complete — PR #<N>
+
+Verdict: <before> → <after>          (or "unchanged: <verdict>")
+
+Dropped (<n>)
+  <file:line> — <claim, one clause> — <the maintainer's reason, in their words>
+Re-tiered (<n>)
+  <file:line> — <claim, one clause> — critical→important: <reason>
+Kept (<n>)
+  <file:line> — <claim, one clause>
+
+Draft: <TRIAGE_DIR>/<N>.md
+```
+
+Then ask one closing question: does this match what they decided? A correction here is cheap and
+costs one edit; the same correction after Step 9 costs a whole re-review, because the sandbox that
+could settle it is gone.
+
+**This is a confirmation, not another round.** Do not reopen a settled finding, argue a drop, or
+introduce a concern the grill did not raise — the frontier is empty, and the closing brief has no
+license to refill it. If the maintainer's answer to the closing question opens something genuinely
+new, that is a new round: go back and grill it properly.
+
+Record every drop and re-tier under `## Grill` in the triage file, one line each:
+
+```markdown
+## Grill
+
+- <file:line> — <finding, one clause> — DROPPED: <maintainer's reason, in their words>
+- <file:line> — <finding, one clause> — RETIERED critical→important: <reason>
+```
+
+That section is the tuning data for the criteria in this skill. A reason that recurs across PRs is a
+missing calibration; add it to the "Nx-specific calibration" list rather than re-litigating it every
+review. Rewrite the frontmatter `verdict` and the `## Review draft` body if they changed, then continue to
+Step 9. Step 10's commit and the final "Returning the draft" line then carry the post-grill state,
+so nothing needs re-committing here.
 
 ## Step 9: Cleanup
 

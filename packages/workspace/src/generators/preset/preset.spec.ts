@@ -1,6 +1,6 @@
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
-import { readProjectConfiguration, Tree } from '@nx/devkit';
+import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { presetGenerator } from './preset';
 import { Preset } from '../utils/presets';
@@ -12,12 +12,133 @@ describe('preset', () => {
   beforeEach(() => {
     envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
     delete process.env.ESLINT_USE_FLAT_CONFIG;
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    // The tree carries no formatter config, so detection resolves to none and
+    // the snapshots record raw generator output - double quotes, no comma
+    // spacing, `server:{`. That is
+    // valid code that simply has not been formatted; do not "tidy" it, or the
+    // snapshots stop matching what a caller who asked for no formatter gets.
+    tree = createTreeWithEmptyWorkspace({
+      layout: 'apps-libs',
+      formatter: 'none',
+    });
   });
 
   afterEach(() => {
     if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
     else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+  });
+
+  describe('formatter', () => {
+    // The apps preset generates no project, so nothing downstream configures
+    // the formatter and the choice the user passed would be dropped - the next
+    // generator to run would then pick the default instead.
+    it.each([
+      ['prettier', '.prettierrc', '.oxfmtrc.json'],
+      ['oxfmt', '.oxfmtrc.json', '.prettierrc'],
+    ])(
+      'should honour --formatter=%s on the apps preset',
+      async (formatter, expected, notExpected) => {
+        tree.delete('.prettierrc');
+
+        await presetGenerator(tree, {
+          name: 'apps-preset',
+          preset: Preset.Apps,
+          linter: 'eslint',
+          formatter,
+        } as any);
+
+        expect(tree.exists(expected)).toBe(true);
+        expect(tree.exists(notExpected)).toBe(false);
+        // The config alone is not enough: a workspace configured for a
+        // formatter it never installed fails `nx format` outright.
+        expect(readJson(tree, 'package.json').devDependencies).toHaveProperty(
+          formatter
+        );
+      }
+    );
+
+    it.each([
+      ['prettier', '.prettierrc', '.oxfmtrc.json'],
+      ['oxfmt', '.oxfmtrc.json', '.prettierrc'],
+    ])(
+      'should honour --formatter=%s on the npm preset',
+      async (formatter, expected, notExpected) => {
+        // The npm preset generates no project either, so it had been dropping
+        // --formatter the same way the apps preset did.
+        tree.delete('.prettierrc');
+
+        await presetGenerator(tree, {
+          name: 'npm-preset',
+          preset: Preset.NPM,
+          linter: 'eslint',
+          formatter,
+        } as any);
+
+        expect(tree.exists(expected)).toBe(true);
+        expect(tree.exists(notExpected)).toBe(false);
+        expect(readJson(tree, 'package.json').devDependencies).toHaveProperty(
+          formatter
+        );
+      }
+    );
+
+    it.each([['prettier'], ['oxfmt']])(
+      'should honour --formatter=%s on the ts preset',
+      async (formatter) => {
+        tree.delete('.prettierrc');
+
+        await presetGenerator(tree, {
+          name: 'ts-preset',
+          preset: Preset.TS,
+          linter: 'eslint',
+          formatter,
+        } as any);
+
+        expect(readJson(tree, 'package.json').devDependencies).toHaveProperty(
+          formatter
+        );
+      }
+    );
+
+    it.each([['prettier'], ['oxfmt']])(
+      'should not touch package.json on the ts preset with --skipInstall and --formatter=%s',
+      async (formatter) => {
+        tree.delete('.prettierrc');
+        // The whole file, not just the formatter entry: any change here makes
+        // `installPackagesTask` run a real install, which is exactly what
+        // `--skipInstall` promises not to do.
+        const packageJsonBefore = tree.read('package.json', 'utf-8');
+
+        await presetGenerator(tree, {
+          name: 'ts-preset',
+          preset: Preset.TS,
+          linter: 'eslint',
+          formatter,
+          skipInstall: true,
+        } as any);
+
+        expect(tree.read('package.json', 'utf-8')).toBe(packageJsonBefore);
+        // The choice is not dropped: the config survives, so formatter
+        // detection re-adds the dependency on the next @nx/js:init run.
+        expect(
+          tree.exists(formatter === 'oxfmt' ? '.oxfmtrc.json' : '.prettierrc')
+        ).toBe(true);
+      }
+    );
+
+    it('should configure nothing when the formatter is none', async () => {
+      tree.delete('.prettierrc');
+
+      await presetGenerator(tree, {
+        name: 'apps-preset',
+        preset: Preset.Apps,
+        linter: 'eslint',
+        formatter: 'none',
+      } as any);
+
+      expect(tree.exists('.prettierrc')).toBe(false);
+      expect(tree.exists('.oxfmtrc.json')).toBe(false);
+    });
   });
 
   it(`should create files (preset = angular-monorepo)`, async () => {
@@ -103,8 +224,8 @@ describe('preset', () => {
             main: './src/main.tsx',
             index: './src/index.html',
             baseHref: '/',
-            assets: ['./src/favicon.ico', './src/assets'],
-            styles: ['./src/styles.css'],
+            assets: ["./src/favicon.ico","./src/assets"],
+            styles: ["./src/styles.css"],
             outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
             optimization: process.env['NODE_ENV'] === 'production',
           }),
@@ -259,8 +380,8 @@ describe('preset', () => {
             main: './src/main.tsx',
             index: './src/index.html',
             baseHref: '/',
-            assets: ['./src/favicon.ico', './src/assets'],
-            styles: ['./src/styles.css'],
+            assets: ["./src/favicon.ico","./src/assets"],
+            styles: ["./src/styles.css"],
             outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
             optimization: process.env['NODE_ENV'] === 'production',
           }),

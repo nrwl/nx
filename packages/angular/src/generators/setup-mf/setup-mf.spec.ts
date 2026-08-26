@@ -751,11 +751,7 @@ describe('Init MF', () => {
       describe('App', () => {
         beforeEach(async () => {
           await TestBed.configureTestingModule({
-            imports: [
-              RouterModule.forRoot([{ path: '', component: NxWelcome }]),
-              App,
-              NxWelcome,
-            ],
+            imports: [RouterModule.forRoot([{ path: '', component: NxWelcome }]), App, NxWelcome],
           }).compileComponents();
         });
 

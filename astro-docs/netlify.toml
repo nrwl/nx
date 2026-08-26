@@ -117,9 +117,34 @@ to = "/docs/technologies/typescript/introduction"
 from = "/docs/extending-nx/recipes/create-preset"
 to = "/docs/extending-nx/create-preset"
 
+# Adoption guides moved to the Knowledge Base under the "Adoption" topic (DOC-589)
 [[redirects]]
 from = "/docs/guides/adopting-nx/adding-to-monorepos"
-to = "/docs/guides/adopting-nx/adding-to-monorepo"
+to = "/docs/kb/adding-to-monorepo"
+
+[[redirects]]
+from = "/docs/guides/adopting-nx/adding-to-monorepo"
+to = "/docs/kb/adding-to-monorepo"
+
+[[redirects]]
+from = "/docs/guides/adopting-nx/adding-to-existing-project"
+to = "/docs/kb/adding-to-existing-project"
+
+[[redirects]]
+from = "/docs/guides/adopting-nx/import-project"
+to = "/docs/kb/import-project"
+
+[[redirects]]
+from = "/docs/guides/adopting-nx/manual"
+to = "/docs/kb/manual-migration"
+
+[[redirects]]
+from = "/docs/guides/adopting-nx/preserving-git-histories"
+to = "/docs/kb/preserving-git-histories"
+
+[[redirects]]
+from = "/docs/guides/adopting-nx"
+to = "/docs/kb/adoption"
 
 # Turborepo comparison moved to Comparisons section (#36275)
 [[redirects]]
