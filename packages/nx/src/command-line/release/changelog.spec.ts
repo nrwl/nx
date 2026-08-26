@@ -217,7 +217,7 @@ describe('releaseChangelog', () => {
     });
   });
 
-  describe('independent project changelogs', () => {
+  describe('project changelogs', () => {
     it('should not resolve a changelog from ref for an unversioned dependent project', async () => {
       await tempFs.createFiles({
         'packages/pkg-b/package.json': JSON.stringify({
@@ -271,6 +271,45 @@ describe('releaseChangelog', () => {
           tagPatternValues: {
             projectName: 'pkg-a',
             releaseGroupName: '__default__',
+          },
+        })
+      );
+    });
+
+    it('should resolve a changelog from ref using the fixed release group name', async () => {
+      releaseGroup.name = 'group-a';
+      releaseGroup.projectsRelationship = 'fixed';
+      releaseGroup.projects = ['pkg-a'];
+      releaseGroup.changelog = {
+        createRelease: false,
+        entryWhenNoChanges: false,
+        file: false,
+      } as ReleaseGroupWithName['changelog'];
+
+      releaseGraph.resolveRepositoryTags = jest
+        .fn()
+        .mockResolvedValue(['group-b-v2.0.0', 'group-a-v1.0.0']);
+
+      await runReleaseChangelog({
+        forceChangelogGeneration: true,
+        projects: ['pkg-a'],
+        version: undefined,
+        versionData: {
+          'pkg-a': {
+            currentVersion: '0.0.0',
+            newVersion: '1.0.0',
+            dependentProjects: [],
+          },
+        },
+      });
+
+      expect(resolveChangelogFromSHA).toHaveBeenCalledTimes(1);
+      expect(resolveChangelogFromSHA).toHaveBeenCalledWith(
+        expect.objectContaining({
+          projectRoot: 'packages/pkg-a',
+          tagPatternValues: {
+            projectName: 'pkg-a',
+            releaseGroupName: 'group-a',
           },
         })
       );
