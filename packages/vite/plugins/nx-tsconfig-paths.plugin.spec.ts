@@ -1,5 +1,6 @@
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { join } from 'node:path';
+import * as ts from 'typescript';
 
 // `var` rather than `let`: transitive imports read `workspaceRoot` while the
 // module graph is still loading, before a `let` would leave its temporal dead
@@ -119,5 +120,60 @@ describe('nxViteTsPaths', () => {
     await expect(resolveWith('@repo/util/foo')).resolves.toEqual(
       join(tempFs.tempDir, 'libs/util/foo.ts')
     );
+  });
+
+  describe('when more than one alias resolves', () => {
+    const exact = { '@repo/exact': ['packages/exact'] };
+    const wildcard = { '@repo/*': ['generic/*'] };
+
+    const resolveWithTypeScript = (
+      paths: Record<string, string[]>,
+      moduleResolution: ts.ModuleResolutionKind,
+      module: ts.ModuleKind
+    ) =>
+      ts.resolveModuleName(
+        '@repo/exact',
+        join(tempFs.tempDir, 'app/src/main.ts'),
+        { baseUrl: tempFs.tempDir, paths, module, moduleResolution },
+        ts.sys
+      ).resolvedModule?.resolvedFileName;
+
+    it.each([
+      ['the exact alias is declared first', { ...exact, ...wildcard }],
+      ['the wildcard alias is declared first', { ...wildcard, ...exact }],
+    ])('should pick the alias TypeScript picks when %s', async (_, paths) => {
+      await tempFs.createFiles({
+        'tsconfig.base.json': JSON.stringify({
+          compilerOptions: { baseUrl: '.', paths },
+        }),
+        'packages/exact/index.ts': '',
+        'generic/exact.ts': '',
+        'app/src/main.ts': '',
+      });
+      const expected = join(tempFs.tempDir, 'packages/exact/index.ts');
+
+      expect(
+        resolveWithTypeScript(
+          paths,
+          ts.ModuleResolutionKind.Bundler,
+          ts.ModuleKind.ESNext
+        )
+      ).toEqual(expected);
+      expect(
+        resolveWithTypeScript(
+          paths,
+          ts.ModuleResolutionKind.NodeNext,
+          ts.ModuleKind.NodeNext
+        )
+      ).toEqual(expected);
+      expect(
+        resolveWithTypeScript(
+          paths,
+          ts.ModuleResolutionKind.Node10,
+          ts.ModuleKind.CommonJS
+        )
+      ).toEqual(expected);
+      await expect(resolveWith('@repo/exact')).resolves.toEqual(expected);
+    });
   });
 });
