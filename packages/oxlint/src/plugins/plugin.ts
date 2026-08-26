@@ -273,12 +273,20 @@ export const createDependencies: CreateDependencies<OxlintPluginOptions> = (
   _options,
   context
 ) => {
-  const oxlintConfigFiles = [
-    ...Object.values(context.fileMap.projectFileMap).flat(),
-    ...context.fileMap.nonProjectFiles,
-  ]
-    .map((file) => file.file)
-    .filter((file) => OXLINT_CONFIG_FILENAMES.includes(basename(file)));
+  // Walked rather than flattened: this runs on every graph build, and a copy
+  // of the whole file map is the wrong price for finding a few config files.
+  const oxlintConfigFiles: string[] = [];
+  const collect = (files: { file: string }[]) => {
+    for (const { file } of files) {
+      if (OXLINT_CONFIG_FILENAMES.includes(basename(file))) {
+        oxlintConfigFiles.push(file);
+      }
+    }
+  };
+  for (const files of Object.values(context.fileMap.projectFileMap)) {
+    collect(files);
+  }
+  collect(context.fileMap.nonProjectFiles);
   if (oxlintConfigFiles.length === 0) {
     return [];
   }
@@ -298,7 +306,14 @@ export const createDependencies: CreateDependencies<OxlintPluginOptions> = (
   for (const [name, data] of Object.entries(context.projects)) {
     nodes[name] = { name, type: null, data };
   }
-  const locator = new TargetProjectLocator(nodes, context.externalNodes);
+  // Own resolution cache: the locator's shared default one is never
+  // invalidated, so a plugin resolved before `install` would stay unresolved
+  // for the life of the plugin worker.
+  const locator = new TargetProjectLocator(
+    nodes,
+    context.externalNodes,
+    new Map()
+  );
   // Resolution is relative to the config, so it is the same for every project
   // that config governs.
   const targetsByConfig = new Map<string, string[]>();

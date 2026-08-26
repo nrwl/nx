@@ -176,6 +176,21 @@ describe('@nx/oxlint plugin', () => {
     expect(inputs).toContainEqual({ externalDependencies: ['oxlint'] });
   });
 
+  it('should not declare a local jsPlugin outside the workspace as an input', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"jsPlugins":["../outside/plugin.js","./tools/inside.js"],"rules":{}}`,
+      'tools/inside.js': `export default { meta: {}, rules: {} };`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+    const inputs = results.projects['libs/a'].targets.lint.inputs;
+
+    expect(inputs).toContain('{workspaceRoot}/tools/inside.js');
+    expect(inputs.some((i) => String(i).includes('outside'))).toBe(false);
+  });
+
   it('should declare local jsPlugins of an extended config as file inputs', async () => {
     createFiles({
       '.oxlintrc.json': `{"extends":["./configs/base.json"],"rules":{}}`,
@@ -598,6 +613,25 @@ describe('@nx/oxlint plugin', () => {
 
       expect(await createDependencies({}, ctx)).toEqual([
         { source: 'a', target: 'npm:@acme/oxlint-plugin', type: 'implicit' },
+      ]);
+    });
+
+    it('should not add an edge for a config in an unrelated directory', async () => {
+      createFiles({
+        'libs/b/.oxlintrc.json': `{"jsPlugins":["@acme/oxlint-plugin"],"rules":{}}`,
+        'libs/a/src/index.ts': `export const a = 1;`,
+        'libs/b/src/index.ts': `export const b = 1;`,
+      });
+      const ctx = depsContext(
+        { a: lintedProject('libs/a'), b: lintedProject('libs/b') },
+        external('@acme/oxlint-plugin'),
+        ['libs/b/.oxlintrc.json', 'libs/a/src/index.ts', 'libs/b/src/index.ts']
+      );
+
+      // libs/b's config governs libs/b only; a sibling is neither at nor
+      // below it.
+      expect(await createDependencies({}, ctx)).toEqual([
+        { source: 'b', target: 'npm:@acme/oxlint-plugin', type: 'implicit' },
       ]);
     });
 
