@@ -191,6 +191,9 @@ export function getPluginPathAndName(
   }
 
   const ext = path.extname(pluginPath);
+  isSourcePlugin ||=
+    TS_SOURCE_EXTENSIONS.has(ext) &&
+    isWorkspaceLocalResolution(pluginPath, root);
   // Directory paths fall through to Node's `package.json` `main` resolution
   // which may land on a TS file; only opt out of TS transpiler registration
   // when the resolved path is unambiguously JS.
