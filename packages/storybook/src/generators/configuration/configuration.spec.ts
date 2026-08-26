@@ -8,6 +8,7 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { libraryGenerator } from '@nx/js';
@@ -72,6 +73,36 @@ describe('@nx/storybook:configuration', () => {
           json.devDependencies['storybook'] = storybookVersion;
           return json;
         });
+      });
+
+      it('should deny the @swc/core build script pulled in by @storybook/test-runner', async () => {
+        await withPnpm(tree, '11.2.2', () =>
+          configurationGenerator(tree, {
+            project: 'test-ui-lib',
+            uiFramework: '@storybook/react-vite',
+            interactionTests: true,
+            addPlugin: true,
+          })
+        );
+
+        expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+          /['"]@swc\/core['"]: false/
+        );
+      });
+
+      it('should deny the core-js build script added for react-webpack5 libraries', async () => {
+        await withPnpm(tree, '11.2.2', () =>
+          configurationGenerator(tree, {
+            project: 'test-ui-lib',
+            uiFramework: '@storybook/react-webpack5',
+            interactionTests: false,
+            addPlugin: true,
+          })
+        );
+
+        expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+          /['"]?core-js['"]?: false/
+        );
       });
 
       it('should add angular related dependencies when using Angular as uiFramework', async () => {

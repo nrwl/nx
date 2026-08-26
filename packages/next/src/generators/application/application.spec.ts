@@ -1,3 +1,4 @@
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   getProjects,
@@ -26,6 +27,53 @@ describe('app', () => {
   afterEach(() => {
     if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
     else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+  });
+
+  describe('pnpm 11 build scripts', () => {
+    it('should deny the @swc/core build script for the swc custom server setup', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        applicationGenerator(tree, { directory: uniq(), style: 'css' })
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]@swc\/core['"]: false/
+      );
+    });
+
+    it('should deny the unrs-resolver build script pulled in by eslint-config-next', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        applicationGenerator(tree, {
+          directory: uniq(),
+          style: 'css',
+          linter: 'eslint',
+          unitTestRunner: 'none',
+        })
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]?unrs-resolver['"]?: false/
+      );
+    });
+
+    it('should deny the @parcel/watcher build script pulled in by sass', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        applicationGenerator(tree, { directory: uniq(), style: 'scss' })
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]@parcel\/watcher['"]: false/
+      );
+    });
+
+    it('should not record a @parcel/watcher decision without scss', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        applicationGenerator(tree, { directory: uniq(), style: 'css' })
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
+        '@parcel/watcher'
+      );
+    });
   });
 
   it('should add a .gitkeep file to the public directory', async () => {

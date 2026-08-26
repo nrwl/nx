@@ -1,10 +1,12 @@
 import {
+  acknowledgeBuildScripts,
   selectPrompt,
   forEachExecutorOptions,
   getNamedInputs,
 } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   ensurePackage,
   formatFiles,
   joinPathFragments,
@@ -26,6 +28,7 @@ import { relative, resolve } from 'path';
 import { join } from 'path/posix';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { nxVersion } from '../../utils/versions';
+import { acknowledgeAngularBuildScripts } from '../utils/acknowledge-build-scripts';
 import { versions } from '../utils/version-utils';
 import { createConfig } from './lib/create-config';
 import { getCustomWebpackConfig } from './lib/get-custom-webpack-config';
@@ -714,6 +717,14 @@ export async function convertToRspack(
 
   if (!schema.skipInstall) {
     const { webpackMergeVersion, tsNodeVersion } = versions(tree);
+    acknowledgeAngularBuildScripts(tree);
+    // @nx/angular-rspack-compiler's install script patches `@angular/build`
+    // versions below 20.2.0, so it has to run. core-js only prints a funding
+    // message.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      '@nx/angular-rspack-compiler': true,
+      'core-js': false,
+    });
     const installTask = addDependenciesToPackageJson(
       tree,
       {},

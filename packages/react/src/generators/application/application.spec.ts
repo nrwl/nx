@@ -12,6 +12,7 @@ import {
   updateNxJson,
   writeJson,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
@@ -71,6 +72,38 @@ describe('app', () => {
     } else {
       process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
     }
+  });
+
+  describe('pnpm 11 build scripts', () => {
+    it('should deny the @parcel/watcher build script pulled in by sass', async () => {
+      await withPnpm(appTree, '11.2.2', () =>
+        applicationGenerator(appTree, {
+          ...schema,
+          bundler: 'vite',
+          style: 'scss',
+          e2eTestRunner: 'none',
+        })
+      );
+
+      expect(appTree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]@parcel\/watcher['"]: false/
+      );
+    });
+
+    it('should not record a @parcel/watcher decision without scss', async () => {
+      await withPnpm(appTree, '11.2.2', () =>
+        applicationGenerator(appTree, {
+          ...schema,
+          bundler: 'vite',
+          style: 'css',
+          e2eTestRunner: 'none',
+        })
+      );
+
+      expect(appTree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
+        '@parcel/watcher'
+      );
+    });
   });
 
   describe('not nested', () => {

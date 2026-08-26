@@ -74,9 +74,13 @@ export async function detoxInitGeneratorInternal(host: Tree, schema: Schema) {
 export function updateDependencies(host: Tree, schema: Schema) {
   // The user explicitly asked for detox, and its postinstall builds the
   // framework cache it needs to run at all, so enable it — npm and yarn run
-  // it unconditionally. Transitive deps stay denied.
+  // it unconditionally. Transitive deps stay denied: dtrace-provider (via
+  // bunyan) falls back to a no-op when its build fails, and unrs-resolver (via
+  // @nx/detox's @nx/jest dependency) only fetches a fallback binding.
   acknowledgeBuildScripts(host, detectPackageManager(host.root), {
     detox: true,
+    'dtrace-provider': false,
+    'unrs-resolver': false,
   });
   return addDependenciesToPackageJson(
     host,

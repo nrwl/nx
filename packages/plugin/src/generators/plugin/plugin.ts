@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -11,6 +12,7 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
 import {
   libraryGenerator as jsLibraryGenerator,
   addTsLibDependencies,
@@ -130,6 +132,11 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
     tasks.push(addTsLibDependencies(host));
   }
 
+  // @nx/plugin depends on @nx/jest, so jest 30's unrs-resolver is installed even
+  // without a jest setup. Its postinstall only fetches a fallback binding.
+  acknowledgeBuildScripts(host, detectPackageManager(host.root), {
+    'unrs-resolver': false,
+  });
   tasks.push(
     addDependenciesToPackageJson(
       host,

@@ -10,6 +10,7 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { libraryGenerator } from './library';
 import type { LibraryGeneratorSchema } from './schema';
@@ -42,6 +43,40 @@ describe('lib', () => {
     } else {
       process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
     }
+  });
+
+  describe('pnpm 11 build scripts', () => {
+    it('should deny the esbuild build script for the esbuild bundler', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        libraryGenerator(tree, {
+          ...defaultOptions,
+          directory: 'my-lib',
+          bundler: 'esbuild',
+          unitTestRunner: 'none',
+          linter: 'none',
+        } as LibraryGeneratorSchema)
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]?esbuild['"]?: false/
+      );
+    });
+
+    it('should deny the @swc/core build script for the swc bundler', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        libraryGenerator(tree, {
+          ...defaultOptions,
+          directory: 'my-lib',
+          bundler: 'swc',
+          unitTestRunner: 'none',
+          linter: 'none',
+        } as LibraryGeneratorSchema)
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]@swc\/core['"]: false/
+      );
+    });
   });
 
   it.each`
