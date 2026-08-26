@@ -27,7 +27,7 @@ public static partial class TargetBuilder
         var intermediatePath = GetIntermediateOutputPath(properties, projectName, projectDirectory, workspaceRoot);
         // The package defaults OpenApiDocumentsDirectory to $(BaseIntermediateOutputPath),
         // so merely referencing it lands on obj, which is already an output.
-        var openApiDocumentsOutput = GetOpenApiDocumentsOutput(properties, fileName, projectDirectory, workspaceRoot, outputPath, intermediatePath);
+        var openApiDocumentsOutputs = GetOpenApiDocumentsOutputs(properties, fileName, projectDirectory, workspaceRoot, outputPath, intermediatePath);
         string[] defaultFlags = ["--no-restore", "--no-dependencies"];
 
         var defaultArgs = defaultConfiguration == "Release"
@@ -64,8 +64,9 @@ public static partial class TargetBuilder
                 new { dependentTasksOutputFiles = "**/*" },
                 .. directoryBuildInputs
             ],
-            Outputs = new[] { outputPath, intermediatePath, openApiDocumentsOutput }
+            Outputs = new[] { outputPath, intermediatePath }
                 .Where(p => p is not null)
+                .Concat(openApiDocumentsOutputs)
                 .ToArray()!,
             Metadata = new TargetMetadata
             {

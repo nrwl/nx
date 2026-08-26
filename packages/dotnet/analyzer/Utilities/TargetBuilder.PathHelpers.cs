@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using MsbuildAnalyzer.Models;
 
 namespace MsbuildAnalyzer.Utilities;
@@ -293,14 +294,18 @@ public static partial class TargetBuilder
     }
 
     /// <summary>
-    /// Gets a glob matching the OpenAPI documents dotnet-getdocument writes for
-    /// this project: <c>&lt;MSBuildProjectName&gt;.json</c> plus
-    /// <c>&lt;MSBuildProjectName&gt;_&lt;document&gt;.json</c> per extra document.
-    /// A glob rather than the directory: the directory may be the project root
+    /// Gets globs matching the OpenAPI documents dotnet-getdocument writes for
+    /// this project: <c>&lt;stem&gt;.json</c> for the default document and
+    /// <c>&lt;stem&gt;_&lt;document&gt;.json</c> for every other registered one, where
+    /// the stem comes from <see cref="GetOpenApiDocumentFileName"/>.
+    /// Globs rather than the directory: the directory may be the project root
     /// (the value the ASP.NET Core docs recommend) or shared with other projects.
-    /// Returns <c>null</c> when the directory is already covered by an output.
+    /// Two globs rather than <c>&lt;stem&gt;*.json</c>: the latter would also claim
+    /// siblings that merely share the prefix, and a declared output is removed
+    /// and rewritten on cache restore.
+    /// Returns an empty array when the directory is already covered by an output.
     /// </summary>
-    private static string? GetOpenApiDocumentsOutput(
+    private static string[] GetOpenApiDocumentsOutputs(
         Dictionary<string, string> properties,
         string fileName,
         string projectDirectory,
@@ -310,10 +315,45 @@ public static partial class TargetBuilder
         var directory = GetOpenApiDocumentsDirectory(properties, projectDirectory, workspaceRoot);
         if (directory is null || coveredDirectories.Contains(directory))
         {
-            return null;
+            return [];
         }
 
-        return $"{directory}/{Path.GetFileNameWithoutExtension(fileName)}*.json";
+        var stem = GetOpenApiDocumentFileName(properties, fileName);
+        return [$"{directory}/{stem}.json", $"{directory}/{stem}_*.json"];
+    }
+
+    /// <summary>
+    /// Matches the <c>--file-name</c> option inside
+    /// <c>$(OpenApiGenerateDocumentsOptions)</c>, which the package appends to the
+    /// dotnet-getdocument command verbatim. The tool accepts
+    /// <c>--file-name v</c>, <c>--file-name=v</c> and <c>--file-name:v</c>, and
+    /// rejects any value outside <c>[A-Za-z0-9_-]</c>, so the value never has
+    /// spaces to quote around.
+    /// </summary>
+    private static readonly Regex OpenApiFileNameOption = new(
+        @"--file-name[=:\s]\s*""?(?<name>[^\s""]+)""?",
+        RegexOptions.Compiled);
+
+    /// <summary>
+    /// Gets the file name stem dotnet-getdocument writes documents under:
+    /// <c>&lt;stem&gt;.json</c> for the default document and
+    /// <c>&lt;stem&gt;_&lt;document&gt;.json</c> for the rest. The stem is the project
+    /// name unless <c>$(OpenApiGenerateDocumentsOptions)</c> overrides it with
+    /// <c>--file-name</c>.
+    /// </summary>
+    private static string GetOpenApiDocumentFileName(Dictionary<string, string> properties, string fileName)
+    {
+        var options = properties.GetValueOrDefault("OpenApiGenerateDocumentsOptions");
+        if (!string.IsNullOrWhiteSpace(options))
+        {
+            var match = OpenApiFileNameOption.Match(options);
+            if (match.Success)
+            {
+                return match.Groups["name"].Value;
+            }
+        }
+
+        return Path.GetFileNameWithoutExtension(fileName);
     }
 
     /// <summary>
