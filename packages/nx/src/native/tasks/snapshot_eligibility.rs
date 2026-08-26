@@ -29,6 +29,9 @@ pub(crate) struct EligibilityInputs {
 pub(crate) struct SnapshotTask {
     pub files: Vec<String>,
     pub task_outputs: BTreeMap<String, Vec<String>>,
+    /// Observed writes, confined to the workspace and outside ignored dirs;
+    /// the runner unions them into the task's declared outputs.
+    pub outputs: Vec<String>,
     pub digest: String,
 }
 
@@ -65,6 +68,8 @@ impl IoSnapshotDiagnostic {
 pub struct IoSnapshotReport {
     /// Task ids hashed from their snapshot.
     pub used: Vec<String>,
+    /// Subset of `used` whose snapshot also contributes observed outputs.
+    pub tasks_with_outputs: Vec<String>,
     pub diagnostics: Vec<IoSnapshotDiagnostic>,
     pub resolution: Option<IoSnapshotResolution>,
 }
@@ -79,8 +84,16 @@ impl Resolved {
     pub(crate) fn report(&self) -> IoSnapshotReport {
         let mut used: Vec<String> = self.tasks.keys().cloned().collect();
         used.sort();
+        let mut tasks_with_outputs: Vec<String> = self
+            .tasks
+            .iter()
+            .filter(|(_, task)| !task.outputs.is_empty())
+            .map(|(id, _)| id.clone())
+            .collect();
+        tasks_with_outputs.sort();
         IoSnapshotReport {
             used,
+            tasks_with_outputs,
             diagnostics: self.diagnostics.clone(),
             resolution: self.resolution.clone(),
         }
@@ -219,6 +232,7 @@ pub(crate) fn resolve(
             SnapshotTask {
                 files,
                 task_outputs,
+                outputs: observed_outputs(entry),
                 digest: bundle.resolution.digest.clone(),
             },
         );
@@ -254,6 +268,55 @@ pub fn io_snapshot_report(
         },
     )
     .report()
+}
+
+/// The observed outputs a task's declared outputs get extended with: no
+/// negations, nothing outside the workspace, nothing under node_modules,
+/// .nx or .git (never cache content).
+fn observed_outputs(entry: &TaskIoSnapshot) -> Vec<String> {
+    let mut outputs: Vec<String> = entry
+        .outputs
+        .iter()
+        .filter(|glob| {
+            !glob.starts_with('!') && !escapes_workspace(glob) && !under_ignored_dir(glob)
+        })
+        .cloned()
+        .collect();
+    outputs.sort();
+    outputs.dedup();
+    outputs
+}
+
+fn under_ignored_dir(path: &str) -> bool {
+    path.split(['/', '\\'])
+        .any(|segment| matches!(segment, "node_modules" | ".nx" | ".git"))
+}
+
+/// Observed outputs per eligible task (same walk as hashing), for the runner
+/// to union into `task.outputs` and for `nx show` to label them.
+#[napi]
+pub fn io_snapshot_outputs(
+    snapshots: &IoSnapshots,
+    task_graph: TaskGraph,
+    opted_out_task_ids: Vec<String>,
+    custom_hasher_task_ids: Vec<String>,
+    project_roots: Option<HashMap<String, String>>,
+) -> HashMap<String, Vec<String>> {
+    resolve(
+        snapshots,
+        &task_graph,
+        &EligibilityInputs {
+            opted_out: opted_out_task_ids.into_iter().collect(),
+            custom_hasher: custom_hasher_task_ids.into_iter().collect(),
+            invalid_files_input: HashSet::new(),
+            project_roots: project_roots.unwrap_or_default(),
+        },
+    )
+    .tasks
+    .into_iter()
+    .filter(|(_, task)| !task.outputs.is_empty())
+    .map(|(id, task)| (id, task.outputs))
+    .collect()
 }
 
 /// A glob that would resolve outside the workspace: absolute, drive-lettered,
@@ -372,6 +435,30 @@ pub fn io_snapshot_deferred_task_ids(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn observed_outputs_are_confined_and_skip_cache_dirs() {
+        let entry = TaskIoSnapshot {
+            commit: "c".into(),
+            inputs: TaskInputs::Flat(vec![]),
+            task_outputs: None,
+            outputs: vec![
+                "dist/apps/web/**".into(),
+                "dist/apps/web/**".into(),
+                "apps/web/.next/cache/*".into(),
+                "!dist/apps/web/*.map".into(),
+                "../outside/**".into(),
+                "node_modules/.cache/x".into(),
+                "apps/web/node_modules/.vite/**".into(),
+                ".nx/cache/1".into(),
+                ".git/index".into(),
+            ],
+        };
+        assert_eq!(
+            observed_outputs(&entry),
+            vec!["apps/web/.next/cache/*", "dist/apps/web/**"]
+        );
+    }
 
     #[test]
     fn detects_globs_that_leave_the_workspace() {
