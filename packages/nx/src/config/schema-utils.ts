@@ -1,5 +1,5 @@
 import { existsSync } from 'fs';
-import { join, relative } from 'path';
+import { extname, join, normalize, relative, sep } from 'path';
 import { resolve as resolveExports } from 'resolve.exports';
 import {
   loadTsFile,
@@ -152,18 +152,34 @@ function resolveImplementationWithMetadata(
   for (const maybeImplementation of validImplementations) {
     const maybeImplementationPath = join(directory, maybeImplementation);
     if (existsSync(maybeImplementationPath)) {
-      return { path: maybeImplementationPath, isSource: false };
+      return {
+        path: maybeImplementationPath,
+        isSource: isWorkspaceLocalTsImplementation(maybeImplementationPath),
+      };
     }
 
     try {
+      const resolvedPath = require.resolve(maybeImplementation, {
+        paths: [directory],
+      });
       return {
-        path: require.resolve(maybeImplementation, { paths: [directory] }),
-        isSource: false,
+        path: resolvedPath,
+        isSource: isWorkspaceLocalTsImplementation(resolvedPath),
       };
     } catch {}
   }
 
   throw new ImplementationResolutionError(implementationModulePath, directory);
+}
+
+function isWorkspaceLocalTsImplementation(modulePath: string): boolean {
+  const normalizedRoot = normalize(workspaceRoot);
+  const normalizedPath = normalize(modulePath);
+  return (
+    /\.(?:[cm]?ts|tsx)$/.test(extname(normalizedPath)) &&
+    normalizedPath.startsWith(normalizedRoot + sep) &&
+    !normalizedPath.includes(sep + 'node_modules' + sep)
+  );
 }
 
 export function resolveSchema(
