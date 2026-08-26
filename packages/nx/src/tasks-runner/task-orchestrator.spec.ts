@@ -449,15 +449,15 @@ describe('TaskOrchestrator', () => {
       orchestrator.cache = {
         temporaryOutputPath: (task: Task) =>
           join(terminalOutputsDir, task.hash),
-        put: jest.fn(async (task: Task, terminalOutput: string) => {
+        put: vi.fn(async (task: Task, terminalOutput: string) => {
           // The real cache writes the same file this backstop targets.
           writeFileSync(join(terminalOutputsDir, task.hash), terminalOutput);
         }),
-        recordTerminalOutputs: jest.fn(),
+        recordTerminalOutputs: vi.fn(),
       };
-      orchestrator.recordOutputsHashBatch = jest.fn();
-      orchestrator.complete = jest.fn();
-      orchestrator.scheduleNextTasksAndReleaseThreads = jest.fn();
+      orchestrator.recordOutputsHashBatch = vi.fn();
+      orchestrator.complete = vi.fn();
+      orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
       return orchestrator;
     }
 
@@ -513,7 +513,7 @@ describe('TaskOrchestrator', () => {
       const orchestrator = createOrchestrator();
       const task = makeTask('app:build');
       const writes: string[] = [];
-      orchestrator.cache.put = jest.fn(
+      orchestrator.cache.put = vi.fn(
         async (t: Task, terminalOutput: string) => {
           writes.push(terminalOutput);
           writeFileSync(join(terminalOutputsDir, t.hash), terminalOutput);
