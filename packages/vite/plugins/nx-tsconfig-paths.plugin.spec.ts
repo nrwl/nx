@@ -102,4 +102,22 @@ describe('nxViteTsPaths', () => {
       join(tempFs.tempDir, 'libs/util/index.ts')
     );
   });
+
+  it('should resolve paths inherited through extends against the tsconfig that declares them', async () => {
+    // No `tsconfig.base.json`: the root-level lookup falls back to the
+    // project tsconfig, so both resolution passes share its directory and
+    // nothing masks a base taken from the leaf.
+    await tempFs.createFiles({
+      'tsconfig.json': JSON.stringify({
+        compilerOptions: { paths: { '@repo/util/*': ['libs/util/*'] } },
+      }),
+      'app/tsconfig.json': JSON.stringify({ extends: '../tsconfig.json' }),
+      'libs/util/foo.ts': '',
+      'app/src/main.ts': '',
+    });
+
+    await expect(resolveWith('@repo/util/foo')).resolves.toEqual(
+      join(tempFs.tempDir, 'libs/util/foo.ts')
+    );
+  });
 });
