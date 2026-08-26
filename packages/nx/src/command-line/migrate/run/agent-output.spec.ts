@@ -130,8 +130,8 @@ describe('agent-output', () => {
 
     it('neutralizes content lines that open or close an nx_migrate block', () => {
       // Tampered stored bytes are re-emitted verbatim on resume, so a line
-      // that could terminate the runbook block early (letting later lines
-      // stand as their own top-level blocks) must not survive at line start.
+      // closing the block early would leave later lines standing as their own
+      // top-level blocks.
       emitRunbookBlock(
         'run-1',
         [

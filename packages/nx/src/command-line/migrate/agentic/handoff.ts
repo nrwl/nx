@@ -105,16 +105,9 @@ function truncateUtf8(value: string, maxBytes: number): string {
 }
 
 /**
- * Absolute path of the per-step runner's handoff file for a migration,
- * directly inside the run directory's `handoffs/` dir: the pre-authorized
- * write scope stops there, so a handoff placed anywhere else costs an
- * approval prompt. Handoffs never sit in subdirectories, so no path segment
- * the agent could replace with a symlink lies between that dir and the file.
- * The file name is a bounded, sanitized `<scope>+<package>+<name>` prefix
- * for readability plus a SHA-256 of the raw package and name pair. The
- * sanitizer folds many characters to `_`, so the prefix alone is ambiguous;
- * the hash keeps distinct migrations collision-resistant and the bound keeps
- * the name within the per-component filesystem limit.
+ * Sanitizing folds many characters to `_`, so distinct migrations can share a
+ * prefix. The SHA-256 of the raw package and name is what keeps their handoffs
+ * collision-resistant.
  */
 export function stepHandoffPath(
   runDir: string,
@@ -132,10 +125,7 @@ export function stepHandoffPath(
   return join(runDir, HANDOFFS_DIR_NAME, `${prefix}-${hash}.json`);
 }
 
-/**
- * Absolute path of an orchestrated run step's handoff file, named by the
- * step id, which is unique within the run.
- */
+/** Handoff path for a run step. No hash needed: step ids are unique within the run. */
 export function runStepHandoffPath(runDir: string, stepId: string): string {
   return join(runDir, HANDOFFS_DIR_NAME, `${sanitizeSegment(stepId)}.json`);
 }
@@ -151,10 +141,9 @@ export type HandoffReadResult =
   | { ok: false; reason: HandoffReadFailureReason; detail?: string };
 
 /**
- * Whether the run's handoffs dir is a real directory. The agent owns
- * everything below it, so a symlink in its place would send every handoff
- * read or removal wherever it points. Handoff files sit directly inside it,
- * so this check and the final component's own guard cover the whole path.
+ * `lstat`, not `stat`: a symlink in the handoffs dir's place would send every
+ * handoff read and removal wherever it points. Handoff files sit directly
+ * inside it, so this and the final component's own guard cover the whole path.
  */
 export function handoffsDirState(
   handoffsDir: string
@@ -168,15 +157,12 @@ export function handoffsDirState(
 }
 
 /**
- * Reads the regular file `stat` (a `lstatSync` result) describes, refusing to
- * follow a symlink swapped in after the lstat. The read goes through a
- * descriptor: O_NOFOLLOW makes such a symlink fail the open (ELOOP) instead
- * of being followed, and O_NONBLOCK stops a planted FIFO blocking the open
- * (same guard as owned-private-dir.ts). The inode comparison carries the
- * guarantee where the open flags cannot: Windows has neither flag, so a
- * followed symlink shows up only as its target's inode. A same-path unlink
- * and recreate can reuse the inode number and is not what this guards
- * against. Read errors propagate: a file the agent cannot read must not pass.
+ * Reads the file `stat` describes, refusing a symlink swapped in after the
+ * caller's lstat: O_NOFOLLOW fails the open with ELOOP, and O_NONBLOCK keeps a
+ * planted FIFO from blocking it. Windows has neither flag, so there the inode
+ * comparison is what catches a followed symlink. It does not guard against an
+ * unlink and recreate reusing the inode number. Read errors propagate: a file
+ * the agent cannot read must not pass.
  */
 export function readInspectedFile(
   filePath: string,
@@ -205,12 +191,9 @@ export function readInspectedFile(
 }
 
 /**
- * Reads and validates a handoff file written by an agent, refusing one that
- * does not really sit under `handoffsDir`. Returns a tagged
- * result so callers (the in-loop poller and the post-exit resolver) can
- * distinguish "file not yet written" from "file written but garbage" — the
- * latter is surfaced to the user instead of being collapsed into the same
- * generic ambiguous-outcome prompt.
+ * Splits "not written yet" from "written but garbage" so callers can surface a
+ * malformed handoff instead of collapsing it into the generic
+ * ambiguous-outcome prompt.
  */
 export function readHandoffWithReason(
   filePath: string,

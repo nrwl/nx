@@ -45,13 +45,8 @@ export type StepEvent =
       attempt: number;
       promptOutcome: MigrateStepPromptOutcome;
     }
-  // Emitted between the generator half and the commit attempt, so a retry
-  // after a failed commit or install does not reapply the generator.
-  // `agenticWaived` records whether the generator waived its AI step via
-  // `skipAgentic`, `validationOwed` whether its changes owe the run's
-  // validation pass, and `madeChanges` whether it changed any files (which
-  // decides if a retry owes a commit); a retry cannot recompute any of them
-  // without rerunning the generator, so all three persist with the marker.
+  // Emitted between the generator half and the commit attempt, so a retry after
+  // a failed commit or install does not reapply the generator.
   | {
       type: 'markGeneratorCompleted';
       stepId: string;
@@ -146,14 +141,11 @@ export function applyStepEvent(
       return commit(state, index, {
         ...step,
         generatorCompleted: true,
-        // The lineage boundary for stored agent-work payloads: a retry never
-        // re-hands one from an attempt before the marker's own.
         generatorCompletedAtAttempt: step.attempt,
         ...(event.agenticWaived ? { agenticWaived: true } : {}),
         ...(event.validationOwed ? { validationOwed: true } : {}),
-        // Written as an explicit boolean either way: absent is reserved for
-        // markers an older nx wrote, whose retries keep that version's
-        // commit behavior.
+        // Written even when false, unlike the conditional spreads above: absent is
+        // reserved for markers an older nx wrote.
         generatorMadeChanges: event.madeChanges,
       });
 
@@ -298,9 +290,6 @@ function rearm(
     step.generatorCompletedAtAttempt !== undefined
       ? { generatorCompletedAtAttempt: step.generatorCompletedAtAttempt }
       : {}),
-    // The waiver and the owed validation are facts about the generator run
-    // whose changes the marker preserves; they travel with the marker and are
-    // re-decided when a clean retry reruns the generator.
     ...(keepGeneratorCompleted && step.generatorCompleted && step.agenticWaived
       ? { agenticWaived: true }
       : {}),

@@ -40,7 +40,7 @@ export interface RunAgenticArgs {
   definition: AgentDefinition;
   invocationContext: InvocationContext;
   handoffFilePath: string;
-  /** The run's handoffs dir; a handoff that resolves outside it is refused. */
+  /** Directory the handoff sits in; passing a parent instead skips the symlink guard. */
   handoffsDir: string;
   /** Override the handoff-file poll interval (test seam). */
   handoffPollIntervalMs?: number;
