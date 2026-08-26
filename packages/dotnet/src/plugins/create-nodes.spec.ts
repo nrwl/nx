@@ -1,86 +1,5 @@
-import { ProjectConfiguration, TargetConfiguration } from '@nx/devkit';
-import { mergeTargetConfigurations } from '@nx/devkit/internal';
-import {
-  DotNetPluginOptions,
-  TargetConfigurationWithName,
-} from './create-nodes';
-
-// Import the internal function for testing
-// We'll need to export it or test it indirectly through createNodesV2
-// For now, let's create a mock version to test the logic
-
-/**
- * Merge user-specified target configurations with the generated targets from the analyzer
- * This is a copy of the function from create-nodes.ts for testing purposes
- */
-function mergeUserTargetConfigurations(
-  node: ProjectConfiguration,
-  options: DotNetPluginOptions
-): ProjectConfiguration {
-  if (!node.targets || !options) {
-    return node;
-  }
-
-  const targetMappings: Array<{
-    targetOption: TargetConfigurationWithName | false | undefined;
-    defaultTargetName: string;
-  }> = [
-    { targetOption: options.build, defaultTargetName: 'build' },
-    { targetOption: options.test, defaultTargetName: 'test' },
-    { targetOption: options.clean, defaultTargetName: 'clean' },
-    { targetOption: options.restore, defaultTargetName: 'restore' },
-    { targetOption: options.publish, defaultTargetName: 'publish' },
-    { targetOption: options.pack, defaultTargetName: 'pack' },
-    { targetOption: options.watch, defaultTargetName: 'watch' },
-    { targetOption: options.run, defaultTargetName: 'run' },
-  ];
-
-  const mergedTargets = { ...node.targets };
-
-  for (const { targetOption, defaultTargetName } of targetMappings) {
-    // Disabled target from user configuration
-    if (targetOption === false) {
-      delete mergedTargets[defaultTargetName];
-      continue;
-    }
-
-    // Use empty object as default when option is not provided
-    const { targetName, ...userSpecifiedConfig } = targetOption ?? {};
-    const actualTargetName = targetName ?? defaultTargetName;
-
-    // Find the generated target - it might be under the default name or the user-specified name
-    const generatedTarget =
-      mergedTargets[actualTargetName] ?? mergedTargets[defaultTargetName];
-
-    if (!generatedTarget) {
-      continue;
-    }
-
-    const hasUserConfig = Object.keys(userSpecifiedConfig).length > 0;
-    const isRenamed = actualTargetName !== defaultTargetName;
-
-    // Merge user config with generated target if user config is provided
-    if (hasUserConfig) {
-      mergedTargets[actualTargetName] = mergeTargetConfigurations(
-        userSpecifiedConfig as TargetConfiguration,
-        generatedTarget
-      );
-    } else if (isRenamed) {
-      // If only renaming (no config to merge), just copy the target to the new name
-      mergedTargets[actualTargetName] = { ...generatedTarget };
-    }
-
-    // If target was renamed, remove the old target name
-    if (isRenamed && mergedTargets[defaultTargetName]) {
-      delete mergedTargets[defaultTargetName];
-    }
-  }
-
-  return {
-    ...node,
-    targets: mergedTargets,
-  };
-}
+import { ProjectConfiguration } from '@nx/devkit';
+import { mergeUserTargetConfigurations } from './create-nodes';
 
 describe('@nx/dotnet - createNodes', () => {
   describe('mergeUserTargetConfigurations', () => {
@@ -612,6 +531,73 @@ describe('@nx/dotnet - createNodes', () => {
       expect(buildTargetName).toBe('compile');
       expect(testTargetName).toBe('test');
       expect(cleanTargetName).toBe('cleanup');
+    });
+  });
+
+  describe('atomized test targets', () => {
+    /** A project as the analyzer returns it once test splitting is on. */
+    const atomizedNode = (): ProjectConfiguration => ({
+      root: 'apps/it',
+      name: 'it',
+      targets: {
+        build: { command: 'dotnet build' },
+        test: { command: 'dotnet test' },
+        'test-ci': {
+          executor: 'nx:noop',
+          metadata: { nonAtomizedTarget: 'test' },
+        },
+        'test-ci--Acme.LoginTests': { command: 'dotnet test' },
+        'test-ci--Acme.CheckoutTests': { command: 'dotnet test' },
+      },
+      metadata: {
+        targetGroups: {
+          'TEST (CI)': [
+            'test-ci',
+            'test-ci--Acme.LoginTests',
+            'test-ci--Acme.CheckoutTests',
+          ],
+        },
+      },
+    });
+
+    it('should not merge ci options onto the test target', () => {
+      // These configure how the analyzer generates targets; they are not target
+      // configuration and would be junk properties on the emitted target.
+      const result = mergeUserTargetConfigurations(atomizedNode(), {
+        test: {
+          ciTargetName: 'test-ci',
+          ciGroupName: 'TEST (CI)',
+          ciSplitBy: 'method',
+        },
+      });
+
+      expect(result.targets['test']).toEqual({ command: 'dotnet test' });
+      expect(result.targets['test']).not.toHaveProperty('ciTargetName');
+      expect(result.targets['test']).not.toHaveProperty('ciGroupName');
+      expect(result.targets['test']).not.toHaveProperty('ciSplitBy');
+    });
+
+    it('should still merge real target configuration alongside ci options', () => {
+      const result = mergeUserTargetConfigurations(atomizedNode(), {
+        test: { ciTargetName: 'test-ci', inputs: ['default'] },
+      });
+
+      expect(result.targets['test'].inputs).toEqual(['default']);
+      expect(result.targets['test']).not.toHaveProperty('ciTargetName');
+    });
+
+    it('should leave atomized targets alone when the test target is enabled', () => {
+      const result = mergeUserTargetConfigurations(atomizedNode(), {
+        test: { ciTargetName: 'test-ci' },
+      });
+
+      expect(Object.keys(result.targets).sort()).toEqual([
+        'build',
+        'test',
+        'test-ci',
+        'test-ci--Acme.CheckoutTests',
+        'test-ci--Acme.LoginTests',
+      ]);
     });
   });
 });
