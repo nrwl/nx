@@ -56,6 +56,7 @@ import {
   resetResolvePluginCache,
 } from './resolve-plugin';
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import { join, resolve } from 'node:path';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -110,6 +111,21 @@ describe('resolveSubpathFromExports (via getPluginPathAndName)', () => {
       const s = String(p);
       return s.endsWith('tsconfig.base.json') || s.endsWith('tsconfig.json');
     });
+  });
+
+  it('marks a relative workspace TypeScript plugin as source', () => {
+    const pluginDirectory = join(process.cwd(), 'src/project-graph/plugins');
+    const workspace = resolve(process.cwd(), '../..');
+
+    const result = getPluginPathAndName(
+      './resolve-plugin.ts',
+      [pluginDirectory],
+      {},
+      workspace
+    );
+
+    expect(result.pluginPath).toBe(join(pluginDirectory, 'resolve-plugin.ts'));
+    expect(result.isSourcePlugin).toBe(true);
   });
 
   afterEach(() => {
