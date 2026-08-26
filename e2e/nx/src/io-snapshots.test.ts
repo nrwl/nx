@@ -41,6 +41,23 @@ describe('I/O snapshots', () => {
         echo: {
           command: `cat libs/${lib}/src/index.ts libs/${lib}/generated/config.json && echo $NAME`,
         },
+        // Same command; its bundle entry carries a glob that escapes the workspace.
+        escaping: {
+          command: `cat libs/${lib}/src/index.ts`,
+          cache: true,
+        },
+        // Producer writes dist/out.txt from src; consumer reads it.
+        produce: {
+          command: `mkdir -p libs/${lib}/dist && cat libs/${lib}/src/index.ts > libs/${lib}/dist/out.txt`,
+          cache: true,
+          inputs: ['{projectRoot}/src/**/*'],
+          outputs: ['{projectRoot}/dist'],
+        },
+        consume: {
+          command: `cat libs/${lib}/dist/out.txt`,
+          cache: true,
+          dependsOn: ['produce'],
+        },
       };
       return c;
     });
@@ -83,7 +100,7 @@ describe('I/O snapshots', () => {
           digest: 'e2e-digest',
           fetchedAt: Date.now(),
           clientVersion: 'e2e',
-          tasks: 1,
+          tasks: 3,
         },
         snapshots: {
           [taskId]: {
@@ -94,6 +111,18 @@ describe('I/O snapshots', () => {
               `libs/${project}/src/index.ts`,
               `libs/${project}/generated/config.json`,
             ],
+            outputs: [],
+          },
+          [`${project}:escaping`]: {
+            commit: head,
+            inputs: ['../outside/**'],
+            outputs: [],
+          },
+          // Observed reads inside the producer's outputs, but no taskOutputs:
+          // the consumer must still be hashed after `produce` ran.
+          [`${project}:consume`]: {
+            commit: head,
+            inputs: [`libs/${project}/dist/out.txt`],
             outputs: [],
           },
         },
@@ -158,6 +187,36 @@ describe('I/O snapshots', () => {
     expect(
       runCLI(`echo ${lib}`, { env: { ...on, NAME: 'changed' } })
     ).not.toContain(CACHE_HIT);
+  }, 120000);
+
+  it('falls back when a bundle glob escapes the workspace', () => {
+    const shown = JSON.parse(
+      runCLI(`show target inputs ${lib}:escaping --json`, { env: on })
+    );
+    expect(shown.snapshot).toEqual({
+      status: 'fallback',
+      reason: 'escapes-workspace',
+    });
+    expect(shown.markers).toBeUndefined();
+  });
+
+  it('defers a consumer of dist/ reads until after its producer, even without taskOutputs', () => {
+    // The bundle lists a read under produce's declared outputs but no
+    // taskOutputs, so the backstop must (a) fold that path into consume's
+    // snapshot inputs and (b) hash consume only after produce has written it.
+    const shown = JSON.parse(
+      runCLI(`show target inputs ${lib}:consume --json`, { env: on })
+    );
+    expect(shown.snapshot.status).toBe('used');
+    expect(shown.files).toContain(`libs/${lib}/dist/out.txt`);
+    expect(shown.sources[`libs/${lib}/dist/out.txt`]).toBe('snapshot');
+
+    // Prime the cache, then change the producer's source: dist/out.txt changes,
+    // so the consumer that hashes it must miss rather than reuse a stale key.
+    runCLI(`consume ${lib}`, { env: on });
+    expect(runCLI(`consume ${lib}`, { env: on })).toContain(CACHE_HIT);
+    updateFile(`libs/${lib}/src/index.ts`, (c) => `${c}\n// produce again\n`);
+    expect(runCLI(`consume ${lib}`, { env: on })).not.toContain(CACHE_HIT);
   }, 120000);
 
   it('hashes natively for a target that opts out with ioSnapshots: false', () => {
