@@ -101,15 +101,15 @@ The allowances only take effect once sandboxing itself is on, which `configure-a
 Codex gates Unix sockets on a different setting, and there is no way to scope them to a path. `sandbox_workspace_write.writable_roots` on its own leaves a bind refused. The switch that permits it is `network_access`, which also grants the sandbox general network access:
 
 ```toml
-# .codex/config.toml
+# ~/.codex/config.toml
 [sandbox_workspace_write]
 network_access = true
-writable_roots = ["/tmp/.nx", "/home/you/.nx"]
+writable_roots = ["/tmp/.nx", "/home/<you>/.nx"]
 ```
 
 `writable_roots` is still needed for the `~/.nx` fallback, which sits outside the areas `workspace-write` makes writable. The entries have to be absolute, since Codex does not expand `~`.
 
-Because that grant is broad, `nx configure-ai-agents` does not write it for you. If you would rather not enable it, the workarounds below need no sandbox changes.
+Because that grant is broad, `nx configure-ai-agents` does not write it for you. If you would rather not enable it, see [Alternative workarounds](#alternative-workarounds) below, which need no sandbox changes.
 
 <!-- vale Nx.Headings = NO -->
 
@@ -126,7 +126,7 @@ Copilot CLI scopes sockets by path, like Claude Code. Add the Nx socket roots to
     "enabled": true,
     "userPolicy": {
       "filesystem": {
-        "readwritePaths": ["/tmp/.nx", "/home/you/.nx"]
+        "readwritePaths": ["/tmp/.nx", "/home/<you>/.nx"]
       }
     }
   }
