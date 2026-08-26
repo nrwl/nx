@@ -25,12 +25,12 @@ public static partial class TargetBuilder
             ["Configuration"] = "Release"
         };
 
-        var publishDir = GetPublishDir(releaseProperties, projectName, projectDirectory, workspaceRoot);
+        var publishDir = GetPublishDir(releaseProperties, projectDirectory, workspaceRoot);
         // `dotnet publish` writes incremental-publish state (e.g.
         // obj/<Configuration>/PublishOutputs.<hash>.txt) into the intermediate
         // (obj) directory, so it must be declared as an output alongside the
         // publish directory, mirroring the build target.
-        var intermediatePath = GetIntermediateOutputPath(releaseProperties, projectName, projectDirectory, workspaceRoot);
+        var intermediatePath = GetIntermediateOutputPath(releaseProperties, projectDirectory, workspaceRoot);
 
         string[] defaultFlags = ["--no-build", "--no-dependencies", "--no-restore"];
 
