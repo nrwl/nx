@@ -327,7 +327,9 @@ export const createDependencies: CreateDependencies<OxlintPluginOptions> = (
       continue;
     }
     // Own directory and every ancestor, plus their `extends` chains — the
-    // same set `createNodes` declares as inputs.
+    // same set `createNodes` hashes. A plugin project that depends on a
+    // project it lints closes a cycle here; that is a real circularity, and
+    // the docs say so.
     const governingConfigs = oxlintConfigFiles.filter((config) => {
       const configDir = dirname(config);
       return configDir === project.root || isSubDir(configDir, project.root);
