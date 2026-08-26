@@ -238,17 +238,16 @@ public class TargetBuilderOutputPathsTests
         var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
 
         Assert.Equal(
-            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi" },
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi/foo*.json" },
             targets["build"].Outputs);
     }
 
     [Fact]
     public void Build_OpenApiDocumentsDirectoryFromMSBuildProjectDirectory_EmitsProjectRootRelativeOutput()
     {
-        // The form the ASP.NET Core docs recommend:
-        //   <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)/openapi</OpenApiDocumentsDirectory>
-        // MSBuild evaluates this to an absolute path anchored at the project
-        // directory, which must still tokenize as {projectRoot}.
+        // <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)/openapi</OpenApiDocumentsDirectory>
+        // evaluates to an absolute path anchored at the project directory,
+        // which must still tokenize as {projectRoot}.
         var projectDirectory = ProjectDir("apps", "foo");
         var properties = new Dictionary<string, string>
         {
@@ -260,7 +259,7 @@ public class TargetBuilderOutputPathsTests
         var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
 
         Assert.Equal(
-            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi" },
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi/foo*.json" },
             targets["build"].Outputs);
     }
 
@@ -281,7 +280,63 @@ public class TargetBuilderOutputPathsTests
         var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
 
         Assert.Equal(
-            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{workspaceRoot}/contracts/foo" },
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{workspaceRoot}/contracts/foo/foo*.json" },
+            targets["build"].Outputs);
+    }
+
+    [Fact]
+    public void Build_OpenApiDocumentsDirectoryAtProjectRoot_EmitsDocumentGlobNotDirectory()
+    {
+        // The ASP.NET Core docs recommend `.` to emit the document beside the
+        // project file. The whole project directory must not become an output.
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["BaseOutputPath"] = "bin\\",
+            ["BaseIntermediateOutputPath"] = "obj\\",
+            ["OpenApiDocumentsDirectory"] = ".",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/foo*.json" },
+            targets["build"].Outputs);
+    }
+
+    [Fact]
+    public void Build_OpenApiDocumentsDirectoryAtAbsoluteProjectRoot_EmitsDocumentGlobNotDirectory()
+    {
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["BaseOutputPath"] = "bin\\",
+            ["BaseIntermediateOutputPath"] = "obj\\",
+            ["OpenApiDocumentsDirectory"] = projectDirectory,
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/foo*.json" },
+            targets["build"].Outputs);
+    }
+
+    [Fact]
+    public void Build_OpenApiDocumentsDirectoryRelativeAboveProject_EmitsWorkspaceRootRelativeOutput()
+    {
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["BaseOutputPath"] = "bin\\",
+            ["BaseIntermediateOutputPath"] = "obj\\",
+            ["OpenApiDocumentsDirectory"] = "../contracts",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{workspaceRoot}/apps/contracts/foo*.json" },
             targets["build"].Outputs);
     }
 
@@ -338,7 +393,7 @@ public class TargetBuilderOutputPathsTests
         var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
 
         Assert.Equal(
-            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi" },
+            new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi/foo*.json" },
             targets["build:release"].Outputs);
     }
 

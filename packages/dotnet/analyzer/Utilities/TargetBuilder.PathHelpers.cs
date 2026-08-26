@@ -42,10 +42,11 @@ public static partial class TargetBuilder
             return null;
         }
 
+        // Relative paths are project-relative (MSBuild convention). Anchor them
+        // and fall through so `.` and `..` normalize like absolute paths.
         if (!Path.IsPathRooted(path))
         {
-            var normalized = path.Replace('\\', '/').TrimEnd('/');
-            return string.IsNullOrEmpty(normalized) ? "{projectRoot}" : $"{{projectRoot}}/{normalized}";
+            path = Path.Combine(projectDirectory, path.Replace('\\', '/'));
         }
 
         var normalizedPath = Path.GetFullPath(path);
@@ -278,7 +279,7 @@ public static partial class TargetBuilder
 
     /// <summary>
     /// Gets the directory Microsoft.Extensions.ApiDescription.Server writes the
-    /// generated OpenAPI document to, as a fully-qualified Nx-prefixed string.
+    /// generated OpenAPI documents to, as a fully-qualified Nx-prefixed string.
     /// The property may point anywhere, so it resolves under the same rules as
     /// the other outputs. Returns <c>null</c> when the property is unset or the
     /// path lives outside the workspace.
@@ -289,6 +290,30 @@ public static partial class TargetBuilder
         return string.IsNullOrEmpty(openApiDocumentsDirectory)
             ? null
             : ResolvePath(openApiDocumentsDirectory, projectDirectory, workspaceRoot);
+    }
+
+    /// <summary>
+    /// Gets a glob matching the OpenAPI documents dotnet-getdocument writes for
+    /// this project: <c>&lt;MSBuildProjectName&gt;.json</c> plus
+    /// <c>&lt;MSBuildProjectName&gt;_&lt;document&gt;.json</c> per extra document.
+    /// A glob rather than the directory: the directory may be the project root
+    /// (the value the ASP.NET Core docs recommend) or shared with other projects.
+    /// Returns <c>null</c> when the directory is already covered by an output.
+    /// </summary>
+    private static string? GetOpenApiDocumentsOutput(
+        Dictionary<string, string> properties,
+        string fileName,
+        string projectDirectory,
+        string workspaceRoot,
+        params string?[] coveredDirectories)
+    {
+        var directory = GetOpenApiDocumentsDirectory(properties, projectDirectory, workspaceRoot);
+        if (directory is null || coveredDirectories.Contains(directory))
+        {
+            return null;
+        }
+
+        return $"{directory}/{Path.GetFileNameWithoutExtension(fileName)}*.json";
     }
 
     /// <summary>
