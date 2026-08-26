@@ -286,10 +286,6 @@ describe('releaseChangelog', () => {
         file: false,
       } as ReleaseGroupWithName['changelog'];
 
-      releaseGraph.resolveRepositoryTags = vi
-        .fn()
-        .mockResolvedValue(['group-b-v2.0.0', 'group-a-v1.0.0']);
-
       await runReleaseChangelog({
         forceChangelogGeneration: true,
         projects: ['pkg-a'],
