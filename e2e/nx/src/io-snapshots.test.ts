@@ -1,6 +1,8 @@
 import {
   cleanupProject,
+  fileExists,
   newProject,
+  removeFile,
   runCLI,
   runCommand,
   tmpProjPath,
@@ -58,6 +60,14 @@ describe('I/O snapshots', () => {
           cache: true,
           dependsOn: ['produce'],
         },
+        // Writes two files; only dist/main.txt is declared. dist/extra.txt is
+        // added by the snapshot's observed outputs.
+        writer: {
+          command: `mkdir -p libs/${lib}/dist && echo main > libs/${lib}/dist/main.txt && echo extra > libs/${lib}/dist/extra.txt`,
+          cache: true,
+          inputs: ['{projectRoot}/src/**/*'],
+          outputs: ['{projectRoot}/dist/main.txt'],
+        },
       };
       return c;
     });
@@ -100,7 +110,7 @@ describe('I/O snapshots', () => {
           digest: 'e2e-digest',
           fetchedAt: Date.now(),
           clientVersion: 'e2e',
-          tasks: 3,
+          tasks: 4,
         },
         snapshots: {
           [taskId]: {
@@ -124,6 +134,14 @@ describe('I/O snapshots', () => {
             commit: head,
             inputs: [`libs/${project}/dist/out.txt`],
             outputs: [],
+          },
+          [`${project}:writer`]: {
+            commit: head,
+            inputs: [`libs/${project}/src/index.ts`],
+            outputs: [
+              `libs/${project}/dist/main.txt`,
+              `libs/${project}/dist/extra.txt`,
+            ],
           },
         },
       })
@@ -217,6 +235,39 @@ describe('I/O snapshots', () => {
     expect(runCLI(`consume ${lib}`, { env: on })).toContain(CACHE_HIT);
     updateFile(`libs/${lib}/src/index.ts`, (c) => `${c}\n// produce again\n`);
     expect(runCLI(`consume ${lib}`, { env: on })).not.toContain(CACHE_HIT);
+  }, 120000);
+
+  it('adds a snapshot-observed output to a target and restores it from cache', () => {
+    const shown = JSON.parse(
+      runCLI(`show target outputs ${lib}:writer --json`, { env: on })
+    );
+    expect(shown.outputPaths).toEqual(
+      expect.arrayContaining([
+        `libs/${lib}/dist/main.txt`,
+        `libs/${lib}/dist/extra.txt`,
+      ])
+    );
+    expect(shown.sources[`libs/${lib}/dist/main.txt`]).toBe('declared');
+    expect(shown.sources[`libs/${lib}/dist/extra.txt`]).toBe('snapshot');
+
+    // Prime the cache, delete the undeclared file, replay: a hit restores it
+    // because the snapshot added it to the task's outputs.
+    runCLI(`writer ${lib}`, { env: on });
+    removeFile(`libs/${lib}/dist/extra.txt`);
+    expect(runCLI(`writer ${lib}`, { env: on })).toContain(CACHE_HIT);
+    expect(fileExists(`${tmpProjPath()}/libs/${lib}/dist/extra.txt`)).toBe(
+      true
+    );
+  }, 120000);
+
+  it('does not add snapshot outputs when snapshots are off', () => {
+    const shown = JSON.parse(
+      runCLI(`show target outputs ${lib}:writer --json`, { env: off })
+    );
+    expect(shown.outputPaths).toEqual([`libs/${lib}/dist/main.txt`]);
+    expect(shown.outputPaths).not.toContain(`libs/${lib}/dist/extra.txt`);
+    // declared-only: printJson omits the all-declared sources map? it is present but all declared
+    expect(shown.sources[`libs/${lib}/dist/main.txt`]).toBe('declared');
   }, 120000);
 
   it('hashes natively for a target that opts out with ioSnapshots: false', () => {
