@@ -904,9 +904,8 @@ export function findActiveRun(root: string): {
  */
 export function createRun(root: string, state: MigrateRunState): void {
   const dir = runDir(root, state.runId);
-  // Created up front, and each step's package directory at dispense, so the
-  // agent never has to `mkdir -p`: that costs a workspace-permission prompt in
-  // agents like Claude Code, on every step.
+  // Created up front so the agent never has to `mkdir -p`: that costs a
+  // workspace-permission prompt in agents like Claude Code, on every step.
   mkdirSync(runHandoffsDir(dir), { recursive: true });
   writeRunState(dir, state);
   pruneCompletedRuns(root, state.runId);

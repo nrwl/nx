@@ -78,7 +78,7 @@ const WINDOWS_RESERVED_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i;
  */
 function sanitizeSegment(value: string): string {
   if (value === '.' || value === '..') return '_';
-  let sanitized = value.replace(/[\x00-\x1f<>:"/\\|?*]/g, '_');
+  let sanitized = value.replace(/[\x00-\x1f<>:"/\\|?*+]/g, '_');
   // Windows forbids trailing dots/spaces on file/directory names.
   sanitized = sanitized.replace(/[. ]+$/, '');
   if (WINDOWS_RESERVED_NAMES.test(sanitized)) {
@@ -88,24 +88,32 @@ function sanitizeSegment(value: string): string {
 }
 
 /**
- * Absolute path of the handoff file for a migration step within a run, under
- * the run directory's `handoffs/` subtree: the pre-authorized write scope
- * stops there, so a handoff placed anywhere else costs an approval prompt.
- * The package's scope (if any) becomes a real subdirectory so the package name
- * stays readable; two packages can ship a migration with the same name without
- * colliding because they land in different package subdirectories. Each
- * segment is sanitized so the path is always writable on every platform.
+ * Absolute path of the per-step runner's handoff file for a migration,
+ * directly inside the run directory's `handoffs/` dir: the pre-authorized
+ * write scope stops there, so a handoff placed anywhere else costs an
+ * approval prompt. Handoffs never sit in subdirectories, so no path segment
+ * the agent could replace with a symlink lies between that dir and the file.
+ * The file name joins the package's scope, package and migration name with
+ * `+`, which npm rejects in package names and the sanitizer strips from
+ * migration names, so two migrations never share a file. Each part is
+ * sanitized so the path is always writable on every platform.
  */
 export function stepHandoffPath(
   runDir: string,
   migration: { package: string; name: string }
 ): string {
-  return join(
-    runDir,
-    HANDOFFS_DIR_NAME,
-    ...migration.package.split('/').map(sanitizeSegment),
-    `${sanitizeSegment(migration.name)}.json`
-  );
+  const name = [...migration.package.split('/'), migration.name]
+    .map(sanitizeSegment)
+    .join('+');
+  return join(runDir, HANDOFFS_DIR_NAME, `${name}.json`);
+}
+
+/**
+ * Absolute path of an orchestrated run step's handoff file, named by the
+ * step id, which is unique within the run.
+ */
+export function runStepHandoffPath(runDir: string, stepId: string): string {
+  return join(runDir, HANDOFFS_DIR_NAME, `${sanitizeSegment(stepId)}.json`);
 }
 
 export type HandoffReadFailureReason =
@@ -117,6 +125,23 @@ export type HandoffReadFailureReason =
 export type HandoffReadResult =
   | { ok: true; handoff: HandoffFile }
   | { ok: false; reason: HandoffReadFailureReason; detail?: string };
+
+/**
+ * Whether the run's handoffs dir is a real directory. The agent owns
+ * everything below it, so a symlink in its place would send every handoff
+ * read or removal wherever it points. Handoff files sit directly inside it,
+ * so this check and the final component's own guard cover the whole path.
+ */
+export function handoffsDirState(
+  handoffsDir: string
+): 'directory' | 'missing' | 'other' {
+  try {
+    return lstatSync(handoffsDir).isDirectory() ? 'directory' : 'other';
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException)?.code === 'ENOENT') return 'missing';
+    throw err;
+  }
+}
 
 /**
  * Reads the regular file `stat` (a `lstatSync` result) describes, refusing to
@@ -156,15 +181,29 @@ export function readInspectedFile(
 }
 
 /**
- * Reads and validates a handoff file written by an agent. Returns a tagged
+ * Reads and validates a handoff file written by an agent, refusing one that
+ * does not really sit under `handoffsDir`. Returns a tagged
  * result so callers (the in-loop poller and the post-exit resolver) can
  * distinguish "file not yet written" from "file written but garbage" — the
  * latter is surfaced to the user instead of being collapsed into the same
  * generic ambiguous-outcome prompt.
  */
-export function readHandoffWithReason(filePath: string): HandoffReadResult {
+export function readHandoffWithReason(
+  filePath: string,
+  handoffsDir: string
+): HandoffReadResult {
   let raw: string;
   try {
+    switch (handoffsDirState(handoffsDir)) {
+      case 'missing':
+        return { ok: false, reason: 'missing' };
+      case 'other':
+        return {
+          ok: false,
+          reason: 'read-error',
+          detail: `${handoffsDir} is not a directory`,
+        };
+    }
     const stat = lstatSync(filePath, { bigint: true });
     if (!stat.isFile()) {
       return {
@@ -231,8 +270,11 @@ export function readHandoffWithReason(filePath: string): HandoffReadResult {
  * Used by the polling loop (`waitForValidHandoff`) where every failure mode
  * is "keep waiting" — the file may be missing, mid-write, or being rewritten.
  */
-export function readHandoff(filePath: string): HandoffFile | null {
-  const result = readHandoffWithReason(filePath);
+export function readHandoff(
+  filePath: string,
+  handoffsDir: string
+): HandoffFile | null {
+  const result = readHandoffWithReason(filePath, handoffsDir);
   return result.ok ? result.handoff : null;
 }
 
@@ -246,6 +288,7 @@ export function readHandoff(filePath: string): HandoffFile | null {
  */
 export function waitForValidHandoff(
   handoffFilePath: string,
+  handoffsDir: string,
   options: { intervalMs?: number; signal?: AbortSignal } = {}
 ): Promise<void> {
   const intervalMs = options.intervalMs ?? 500;
@@ -266,7 +309,7 @@ export function waitForValidHandoff(
         onAbort();
         return;
       }
-      if (readHandoff(handoffFilePath) !== null) {
+      if (readHandoff(handoffFilePath, handoffsDir) !== null) {
         signal?.removeEventListener('abort', onAbort);
         resolve();
         return;

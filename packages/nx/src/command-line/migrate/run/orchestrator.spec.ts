@@ -78,10 +78,10 @@ import {
 } from 'fs';
 import { createHash } from 'crypto';
 import { tmpdir } from 'os';
-import { dirname, join } from 'path';
+import { basename, dirname, join } from 'path';
 import { output } from '../../../utils/output';
 import { nxVersion } from '../../../utils/versions';
-import { stepHandoffPath } from '../agentic/handoff';
+import { runStepHandoffPath } from '../agentic/handoff';
 import { runOrchestratorInit, runOrchestratorReconcile } from './orchestrator';
 import { computePlanHash } from './run-id';
 import {
@@ -276,7 +276,10 @@ describe('orchestrator', () => {
   }
 
   function handoffPathIn(dir: string, pkg: string, name: string): string {
-    return stepHandoffPath(dir, { package: pkg, name });
+    const step = readRunState(dir).steps.find(
+      (s) => s.migrationId === `${pkg}:${name}`
+    );
+    return runStepHandoffPath(dir, step.id);
   }
 
   function writeHandoff(
@@ -1932,6 +1935,55 @@ describe('orchestrator', () => {
   });
 
   describe('reconcile: fold handoffs', () => {
+    it('rejects a handoff behind a symlinked handoffs dir instead of following it', async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
+        plan: [promptMig('@nx/js', 'p')],
+      });
+      const handoffPath = handoffPathIn(dir, '@nx/js', 'p');
+      const outside = join(root, 'elsewhere');
+      mkdirSync(outside);
+      writeFileSync(
+        join(outside, basename(handoffPath)),
+        JSON.stringify({ status: 'success', summary: 'done' })
+      );
+      rmSync(dirname(handoffPath), { recursive: true, force: true });
+      symlinkSync(outside, dirname(handoffPath));
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(readRunState(dir).steps[0].status).toBe('awaiting-prompt-outcome');
+      expect(lastBlock().payload.instructions).toContain('could not be read (');
+      expect(lastBlock().payload.instructions).toContain('is not a directory');
+    });
+
+    it('leaves the target behind a symlinked handoffs dir in place on retry', async () => {
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:p', 'failed', { hasGenerator: false }),
+        ],
+        createCommits: false,
+        plan: [promptMig('@nx/js', 'p')],
+      });
+      const handoffPath = handoffPathIn(dir, '@nx/js', 'p');
+      const outside = join(root, 'elsewhere');
+      mkdirSync(outside);
+      writeFileSync(join(outside, basename(handoffPath)), 'keep');
+      rmSync(dirname(handoffPath), { recursive: true, force: true });
+      symlinkSync(outside, dirname(handoffPath));
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry',
+      });
+
+      expect(readRunState(dir).steps[0].attempt).toBe(2);
+      expect(readFileSync(join(outside, basename(handoffPath)), 'utf-8')).toBe(
+        'keep'
+      );
+    });
+
     it.each([
       [{ status: 'success', summary: 'done' }, 'succeeded'],
       [{ status: 'success', summary: 'n/a', outcome: 'skipped' }, 'skipped'],
@@ -2444,19 +2496,20 @@ describe('orchestrator', () => {
       );
     });
 
-    it('creates the handed-over handoff directory so the agent only writes a file', async () => {
-      // The package id becomes real path segments, so the run-creation mkdir
-      // of `handoffs/` alone leaves the agent a path whose parent is missing.
+    it('recreates a removed handoffs dir at the agent-work dispense', async () => {
+      // The handed-over path must have its parent, or the agent pays a
+      // permission prompt for the `mkdir -p`.
       const dir = setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
         plan: [promptMig('@nx/js', 'p')],
       });
-      const packageDir = dirname(handoffPathIn(dir, '@nx/js', 'p'));
-      expect(existsSync(packageDir)).toBe(false);
+      const handoffs = dirname(handoffPathIn(dir, '@nx/js', 'p'));
+      rmSync(handoffs, { recursive: true, force: true });
+      expect(existsSync(handoffs)).toBe(false);
 
       await runOrchestratorReconcile({ root, runId: 'run-1' });
 
-      expect(existsSync(packageDir)).toBe(true);
+      expect(existsSync(handoffs)).toBe(true);
     });
 
     it.each([
