@@ -1,16 +1,17 @@
+import type { Mock } from 'vitest';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 let mockCacheRoot = '';
 
-jest.mock('../../tasks-runner/terminal-output-path', () => ({
+vi.mock('../../tasks-runner/terminal-output-path', async () => ({
   terminalOutputPathForHash: (hash: string) =>
     require('node:path').join(mockCacheRoot, hash),
 }));
 
-jest.mock('../../utils/logger', () => ({
-  logger: { warn: jest.fn() },
+vi.mock('../../utils/logger', async () => ({
+  logger: { warn: vi.fn() },
 }));
 
 import { serialize } from '../../daemon/socket-utils';
@@ -47,7 +48,7 @@ function contextWith(
 describe('task results terminal output stubbing', () => {
   beforeEach(() => {
     mockCacheRoot = mkdtempSync(join(tmpdir(), 'nx-stub-'));
-    (logger.warn as jest.Mock).mockClear();
+    (logger.warn as Mock).mockClear();
   });
 
   afterEach(() => {
@@ -88,9 +89,13 @@ describe('task results terminal output stubbing', () => {
     const output = 'a-very-distinctive-output-marker';
     writeOutput('abc', output);
 
+    // `serialize` returns bytes, not a string. Decoded as latin1 so a byte
+    // buffer is searchable for ASCII either way: an `expect(buffer)
+    // .not.toContain(string)` looks for a matching ELEMENT and so passes on
+    // any buffer, which would make the first assertion here unfalsifiable.
     const wire = serialize(
       stubTerminalOutputs(contextWith({ 'proj:build': result('abc', output) }))
-    );
+    ).toString('latin1');
 
     expect(wire).not.toContain(output);
     expect(wire).toContain('abc');
