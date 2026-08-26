@@ -302,9 +302,7 @@ describe('releaseChangelog', () => {
       expect(resolveChangelogFromSHA).toHaveBeenCalledTimes(1);
       expect(resolveChangelogFromSHA).toHaveBeenCalledWith(
         expect.objectContaining({
-          projectRoot: 'packages/pkg-a',
           tagPatternValues: {
-            projectName: 'pkg-a',
             releaseGroupName: 'group-a',
           },
         })
