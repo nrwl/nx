@@ -18,7 +18,7 @@ import type { NgPackagrOptions } from 'ng-packagr/src/lib/ng-package/options.di'
 import { NgPackage } from 'ng-packagr/src/lib/ng-package/package';
 import { ensureUnixPath } from 'ng-packagr/src/lib/utils/path';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
-import { dirname, join, normalize, relative, resolve } from 'node:path';
+import { dirname, join, normalize, relative, resolve, sep } from 'node:path';
 import { createNgEntryPoint, type NgEntryPointType } from './entry-point';
 
 async function shouldWriteFile(
@@ -155,7 +155,7 @@ export function remapDeclarationMapSources(
   return JSON.stringify(map);
 }
 
-function normalizeEsm2022Path(
+export function normalizeEsm2022Path(
   path: string,
   entryPoint: NgEntryPointType
 ): string {
@@ -164,20 +164,25 @@ function normalizeEsm2022Path(
     return normalizedPath;
   }
 
-  if (
-    normalizedPath.startsWith(
-      join(entryPoint.primaryDestinationPath, 'tmp-esm2022')
-    )
-  ) {
-    return normalizedPath.replace('tmp-esm2022', 'esm2022');
+  // the segments are located from the destination path, since replacing the
+  // first occurrence in the full path would rewrite the destination path itself
+  const tmpEsm2022Dir =
+    join(entryPoint.primaryDestinationPath, 'tmp-esm2022') + sep;
+  if (normalizedPath.startsWith(tmpEsm2022Dir)) {
+    return join(
+      entryPoint.primaryDestinationPath,
+      'esm2022',
+      normalizedPath.slice(tmpEsm2022Dir.length)
+    );
   }
 
-  if (
-    normalizedPath.startsWith(
-      join(entryPoint.primaryDestinationPath, 'tmp-typings')
-    )
-  ) {
-    return normalizedPath.replace('tmp-typings', '');
+  const tmpTypingsDir =
+    join(entryPoint.primaryDestinationPath, 'tmp-typings') + sep;
+  if (normalizedPath.startsWith(tmpTypingsDir)) {
+    return join(
+      entryPoint.primaryDestinationPath,
+      normalizedPath.slice(tmpTypingsDir.length)
+    );
   }
 
   return normalizedPath;

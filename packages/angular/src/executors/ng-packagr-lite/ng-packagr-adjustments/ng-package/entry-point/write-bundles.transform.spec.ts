@@ -1,5 +1,7 @@
 import { dirname, join, relative, resolve } from 'node:path';
+import type { NgEntryPointType } from './entry-point';
 import {
+  normalizeEsm2022Path,
   remapDeclarationMapSources,
   removeSourceMappingUrl,
 } from './write-bundles.transform';
@@ -143,5 +145,68 @@ describe('remapDeclarationMapSources', () => {
     expect(resolve(dirname(newPath), result.sources[1])).toEqual(
       resolve('/tmp/src/lib/foo.ts')
     );
+  });
+});
+
+describe('normalizeEsm2022Path', () => {
+  function entryPointWithDest(destinationPath: string): NgEntryPointType {
+    return { primaryDestinationPath: destinationPath } as NgEntryPointType;
+  }
+
+  it('writes the ESM2022 outputs under esm2022', () => {
+    const dest = resolve('/tmp/dist/my-lib');
+
+    expect(
+      normalizeEsm2022Path(
+        join(dest, 'tmp-esm2022', 'lib', 'foo.js'),
+        entryPointWithDest(dest)
+      )
+    ).toBe(join(dest, 'esm2022', 'lib', 'foo.js'));
+  });
+
+  it('writes the declarations at the destination path', () => {
+    const dest = resolve('/tmp/dist/my-lib');
+
+    expect(
+      normalizeEsm2022Path(
+        join(dest, 'tmp-typings', 'lib', 'foo.d.ts'),
+        entryPointWithDest(dest)
+      )
+    ).toBe(join(dest, 'lib', 'foo.d.ts'));
+  });
+
+  it('rewrites the tmp-esm2022 segment under a destination path carrying the same name', () => {
+    const dest = resolve('/tmp/dist/tmp-esm2022-lib/my-lib');
+
+    expect(
+      normalizeEsm2022Path(
+        join(dest, 'tmp-esm2022', 'lib', 'foo.js'),
+        entryPointWithDest(dest)
+      )
+    ).toBe(join(dest, 'esm2022', 'lib', 'foo.js'));
+  });
+
+  it('rewrites the tmp-typings segment under a destination path carrying the same name', () => {
+    const dest = resolve('/tmp/dist/tmp-typings-lib/my-lib');
+
+    expect(
+      normalizeEsm2022Path(
+        join(dest, 'tmp-typings', 'lib', 'foo.d.ts'),
+        entryPointWithDest(dest)
+      )
+    ).toBe(join(dest, 'lib', 'foo.d.ts'));
+  });
+
+  it('leaves a sibling directory sharing the segment name untouched', () => {
+    const dest = resolve('/tmp/dist/my-lib');
+    const path = join(dest, 'tmp-typings-extra', 'lib', 'foo.d.ts');
+
+    expect(normalizeEsm2022Path(path, entryPointWithDest(dest))).toBe(path);
+  });
+
+  it('leaves the path untouched when there is no destination path', () => {
+    const path = join(resolve('/tmp/dist/my-lib'), 'tmp-typings', 'foo.d.ts');
+
+    expect(normalizeEsm2022Path(path, {} as NgEntryPointType)).toBe(path);
   });
 });
