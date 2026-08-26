@@ -84,7 +84,8 @@ export function getImplementationFactory<T>(
       registerSourceGraphResolver(
         modulePath,
         workspaceRoot,
-        Object.keys(getWorkspacePackagesMetadata(projects).packageToProjectMap)
+        getWorkspacePackagesMetadata(projects)
+          .packageManagerWorkspacePackageNames
       );
     }
     // Route .ts entrypoints through loadTsFile so the native-strip ->

@@ -79,14 +79,13 @@ export async function resolveNxPlugin(
     projectsWithoutInference,
     root
   );
-  const packageToProjectMap = projectsWithoutInference
-    ? getWorkspacePackagesMetadata(projectsWithoutInference).packageToProjectMap
+  const workspacePackageNames = projectsWithoutInference
+    ? getWorkspacePackagesMetadata(projectsWithoutInference)
+        .packageManagerWorkspacePackageNames
     : undefined;
   return {
     ...result,
-    workspacePackageNames: packageToProjectMap
-      ? Object.keys(packageToProjectMap)
-      : [],
+    workspacePackageNames: workspacePackageNames ?? [],
   };
 }
 

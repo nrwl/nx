@@ -21,6 +21,9 @@ vi.mock('./in-process-loader', () => ({
 vi.mock('./resolve-plugin', () => ({
   resetResolvePluginCache: vi.fn(),
 }));
+vi.mock('../../plugins/js/utils/register', () => ({
+  refreshSourceGraphResolvers: vi.fn(),
+}));
 
 describe('reasonToError', () => {
   it('should return the same Error instance when given a real Error', () => {
@@ -182,5 +185,19 @@ describe('getPluginsSeparated', () => {
       const plugins = await getPluginsIfLoadedOrLoading();
       expect(plugins.map((p) => p.name)).toContain('test-a');
     });
+  });
+
+  it('refreshes source graph conditions when returning cached plugins', async () => {
+    const refreshSourceGraphResolvers = (
+      await import('../../plugins/js/utils/register')
+    ).refreshSourceGraphResolvers as Mock;
+    const load = getPluginsSeparated({ plugins: ['test-a'] });
+    finishLoading('test-a');
+    await load;
+
+    refreshSourceGraphResolvers.mockClear();
+    await getPluginsSeparated({ plugins: ['test-a'] });
+
+    expect(refreshSourceGraphResolvers).toHaveBeenCalledTimes(1);
   });
 });

@@ -7,6 +7,7 @@ import {
   readNxJson,
 } from '../../config/nx-json';
 import { hashObject } from '../../hasher/file-hasher';
+import { refreshSourceGraphResolvers } from '../../plugins/js/utils/register';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { loadNxPlugin } from './in-process-loader';
 import { loadIsolatedNxPlugin } from './isolation';
@@ -179,6 +180,7 @@ export async function getPluginsSeparated(
   nxJson: NxJsonConfiguration,
   root = workspaceRoot
 ): Promise<SeparatedPlugins> {
+  refreshSourceGraphResolvers(root);
   const pluginsConfiguration = nxJson.plugins ?? [];
   const pluginsConfigurationHash = hashObject(pluginsConfiguration);
 

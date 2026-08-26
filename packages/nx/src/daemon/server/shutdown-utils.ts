@@ -20,6 +20,7 @@ import {
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
   DAEMON_OUTPUT_LOG_FILE,
 } from '../tmp-dir';
+import { getDaemonResolveConditionNodeArgs } from '../../plugins/js/utils/typescript';
 
 export const SERVER_INACTIVITY_TIMEOUT_MS = 10800000 as const; // 10800000 ms = 3 hours
 
@@ -51,14 +52,18 @@ async function startNewDaemonInBackground() {
   serverLogger.log(`Old daemon __dirname: ${__dirname}`);
   serverLogger.log(`Current process.execPath: ${process.execPath}`);
 
-  const backgroundProcess = spawn(process.execPath, [startScriptPath], {
-    cwd: workspaceRoot,
-    stdio: ['ignore', out.fd, err.fd],
-    detached: true,
-    windowsHide: true,
-    shell: false,
-    env: process.env,
-  });
+  const backgroundProcess = spawn(
+    process.execPath,
+    [...getDaemonResolveConditionNodeArgs(), startScriptPath],
+    {
+      cwd: workspaceRoot,
+      stdio: ['ignore', out.fd, err.fd],
+      detached: true,
+      windowsHide: true,
+      shell: false,
+      env: process.env,
+    }
+  );
   backgroundProcess.unref();
 
   serverLogger.log('Started new daemon process in background');
