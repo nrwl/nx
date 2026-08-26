@@ -375,6 +375,8 @@
     {
       // Spec files are exempt from the internal boundaries but keep the
       // package-wide dependency bans.
+      // Specs exercise the js plugin by package name (dynamic imports too);
+      // the nx boundary group is already absent here for the same reason.
       "files": ["**/*.spec.ts"],
       "rules": {
         "no-restricted-imports": [
@@ -402,10 +404,6 @@
               {
                 "group": ["**/devkit-exports"],
                 "message": "Do not import from devkit-exports from the nx package"
-              },
-              {
-                "group": ["nx/src/plugins/js*", "nx/src/plugins/js*/**"],
-                "message": "Imports from 'nx/src/plugins/js' are not allowed. Use '@nx/js' instead"
               },
               {
                 "group": ["**/native-bindings", "**/native-bindings.js"],
