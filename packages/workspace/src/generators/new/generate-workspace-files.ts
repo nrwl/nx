@@ -13,11 +13,13 @@ import {
   createNxCloudOnboardingURL,
   setupAiAgentsGenerator,
 } from '@nx/devkit/internal';
+import { dump } from '@zkochan/js-yaml';
 import { join } from 'path';
 import { gte } from 'semver';
 import { deduceDefaultBase } from '../../utilities/default-base';
 import { nxVersion } from '../../utils/versions';
 import { Preset } from '../utils/presets';
+import { getPresetBuildScripts } from './generate-preset';
 import type { NormalizedSchema } from './new';
 
 type PresetInfo = {
@@ -344,13 +346,20 @@ function addPnpmSettings(
   options: NormalizedSchema,
   packageManagerVersion: string
 ) {
+  const buildScripts = { nx: true, ...getPresetBuildScripts(options) };
+  // pnpm 10 only understands the allow-list form, so a denied package is simply
+  // left out. pnpm 11 needs an explicit decision for every scripted package.
   const buildAllowlist = gte(packageManagerVersion, '11.0.0')
-    ? `allowBuilds:\n  nx: true`
-    : `onlyBuiltDependencies:\n  - nx`;
+    ? { allowBuilds: buildScripts }
+    : {
+        onlyBuiltDependencies: Object.keys(buildScripts).filter(
+          (pkg) => buildScripts[pkg]
+        ),
+      };
 
   tree.write(
     join(options.directory, 'pnpm-workspace.yaml'),
-    `autoInstallPeers: true\n${buildAllowlist}\n`
+    dump({ autoInstallPeers: true, ...buildAllowlist })
   );
 }
 

@@ -1,4 +1,5 @@
 import {
+  acknowledgeBuildScripts,
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
   isInteractive,
@@ -10,6 +11,7 @@ import {
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
+  detectPackageManager,
   ensurePackage,
   formatFiles,
   generateFiles,
@@ -38,7 +40,10 @@ import { normalizeLinterOption } from '../../utils/generator-prompts';
 import { sortPackageJsonFields } from '../../utils/package-json/sort-fields';
 import { getUpdatedPackageJsonContent } from '../../utils/package-json/update-package-json';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
-import { getSwcDependencies } from '../../utils/swc/add-swc-dependencies';
+import {
+  acknowledgeSwcBuildScripts,
+  getSwcDependencies,
+} from '../../utils/swc/add-swc-dependencies';
 import { getNeededCompilerOptionOverrides } from '../../utils/typescript/configuration';
 import { getTsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
@@ -936,6 +941,11 @@ function addProjectDependencies(
   options: NormalizedLibraryGeneratorOptions
 ): GeneratorCallback {
   if (options.bundler == 'esbuild') {
+    // esbuild's install script only validates the prebuilt binary that ships as
+    // an optional dependency.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      esbuild: false,
+    });
     return addDependenciesToPackageJson(
       tree,
       {},
@@ -971,6 +981,7 @@ function addProjectDependencies(
       true
     );
   } else if (options.bundler === 'swc') {
+    acknowledgeSwcBuildScripts(tree);
     const { dependencies, devDependencies } = getSwcDependencies();
     return addDependenciesToPackageJson(
       tree,

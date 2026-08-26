@@ -9,6 +9,7 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { pluginGenerator } from './plugin';
 import { Schema } from './schema';
@@ -32,6 +33,24 @@ describe('NxPlugin Plugin Generator', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  });
+
+  it('should deny the unrs-resolver build script pulled in by @nx/jest', async () => {
+    await withPnpm(tree, '11.2.2', () =>
+      pluginGenerator(
+        tree,
+        getSchema({
+          skipFormat: true,
+          linter: 'none',
+          unitTestRunner: 'none',
+          e2eTestRunner: 'none',
+        })
+      )
+    );
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+      /['"]?unrs-resolver['"]?: false/
+    );
   });
 
   it('should update the project configuration', async () => {

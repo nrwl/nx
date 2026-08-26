@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -15,7 +16,11 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
+import {
+  acknowledgeBuildScripts,
+  findTargetDefault,
+  upsertTargetDefault,
+} from '@nx/devkit/internal';
 import { assertNotUsingTsSolutionSetup } from '@nx/js/internal';
 import { assertSupportedCypressVersion } from '../../utils/assert-supported-cypress-version';
 import { warnCypressExecutorGenerating } from '../../utils/deprecation';
@@ -116,6 +121,12 @@ function updateDeps(tree: Tree, opts: NormalizeCTOptions) {
     devDeps['@cypress/vite-dev-server'] =
       pkgVersions.cypressViteDevServerVersion;
   } else {
+    // @cypress/webpack-dev-server depends on tsx, which depends on esbuild,
+    // whose install script only validates the prebuilt binary that ships as an
+    // optional dependency.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      esbuild: false,
+    });
     devDeps['@cypress/webpack-dev-server'] = pkgVersions.cypressWebpackVersion;
     devDeps['html-webpack-plugin'] = pkgVersions.htmlWebpackPluginVersion;
   }
