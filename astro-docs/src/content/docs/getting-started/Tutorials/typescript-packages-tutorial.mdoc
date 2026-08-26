@@ -58,7 +58,7 @@ Let's take a look at the structure of our new Nx workspace:
   - package.json
   - tsconfig.base.json
   - tsconfig.json
-  - vitest.config.ts
+  - vitest.config.mts
 
 {% /filetree %}
 
@@ -91,7 +91,7 @@ Running these commands should lead to new directories and files in your workspac
     - animal/
     - zoo/
     - ...
-  - vitest.config.ts
+  - vitest.config.mts
 
 {%/filetree %}
 
@@ -181,7 +181,7 @@ node packages/zoo/dist/index.js
 
 ### Inferred tasks
 
-By default Nx simply runs your `package.json` scripts. However, you can also adopt [Nx technology plugins](/docs/technologies) that help abstract away some of the lower-level config and have Nx manage that. One such thing is to automatically identify tasks that can be run for your project from [tooling configuration files](/docs/concepts/inferred-tasks) such as `package.json` scripts and TypeScript configuration.
+By default Nx simply runs your `package.json` scripts. However, you can also adopt [Nx technology plugins](/docs/technologies) that help abstract away some of the lower-level config and have Nx manage that. One such thing is to automatically identify tasks that can be run for your project from [tooling configuration files](/docs/concepts/mental-model#inferred-tasks) such as `package.json` scripts and TypeScript configuration.
 
 In `nx.json` there's already the `@nx/js` plugin registered which automatically identifies `typecheck` and `build` targets.
 
@@ -626,7 +626,7 @@ Here are some things you can dive into next:
 
 - [Set up CI](/docs/getting-started/setup-ci) with remote caching and self-healing
 - Learn more about the [underlying mental model of Nx](/docs/concepts/mental-model)
-- Learn how to [migrate your existing project to Nx](/docs/guides/adopting-nx/adding-to-existing-project)
+- Learn how to [migrate your existing project to Nx](/docs/kb/adding-to-existing-project)
 - [Learn more about Nx release for publishing packages](/docs/features/manage-releases)
 - Learn about [enforcing boundaries between projects](/docs/features/enforce-module-boundaries)
 

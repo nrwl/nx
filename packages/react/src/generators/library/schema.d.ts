@@ -1,4 +1,4 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 import type { SupportedStyles } from '../../../typings/style';
 
 export interface Schema {
@@ -12,7 +12,7 @@ export interface Schema {
   importPath?: string;
   inSourceTests?: boolean;
   js?: boolean;
-  linter: Linter | LinterType;
+  linter?: LinterType;
   name?: string;
   publishable?: boolean;
   routing?: boolean;
@@ -34,6 +34,8 @@ export interface Schema {
 }
 
 export interface NormalizedSchema extends Schema {
+  // `normalizeOptions` always resolves this, so it is no longer optional.
+  linter: LinterType;
   js: boolean;
   name: string;
   fileName: string;

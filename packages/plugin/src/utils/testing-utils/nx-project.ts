@@ -1,5 +1,6 @@
-import { detectPackageManager, workspaceRoot } from '@nx/devkit';
 import {
+  detectPackageManager,
+  workspaceRoot,
   getPackageManagerCommand,
   readJsonFile,
   writeJsonFile,

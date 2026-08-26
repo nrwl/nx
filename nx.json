@@ -264,12 +264,7 @@
     },
     {
       "plugin": "@nx/js/typescript",
-      "exclude": [
-        "examples/angular-rspack/**/*",
-        "examples/react/**/*",
-        "nx-dev/**/*",
-        "e2e/**/*"
-      ],
+      "exclude": ["examples/**/*", "nx-dev/**/*", "e2e/**/*"],
       "options": {
         "typecheck": true,
         "build": {
@@ -289,7 +284,7 @@
     },
     {
       "plugin": "@nx/playwright/plugin",
-      "exclude": ["examples/react/**"],
+      "exclude": ["examples/**"],
       "options": {
         "targetName": "pw-e2e",
         "ciTargetName": "e2e-ci"
@@ -297,7 +292,7 @@
     },
     {
       "plugin": "@nx/eslint/plugin",
-      "exclude": ["packages/**/__fixtures__/**/*", "examples/react/**/*"],
+      "exclude": ["packages/**/__fixtures__/**/*", "examples/**/*"],
       "options": {
         "targetName": "lint"
       }
@@ -383,12 +378,18 @@
         "packages/angular-rspack-compiler/**",
         "packages/angular-rspack/**"
       ]
+    },
+    {
+      "plugin": "@nx/oxlint",
+      "options": {
+        "targetName": "oxlint"
+      }
     }
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "bust": 3237,
+  "bust": 3238,
   "defaultBase": "master",
   "sync": {
     "applyChanges": true
@@ -530,7 +531,8 @@
             "NX_INFER_ALL_PACKAGE_JSONS",
             "NX_AI_FILES_USE_LOCAL",
             "NX_WINDOWS_PTY_SUPPORT",
-            "NX_ORIGINAL_FORCE_COLOR"
+            "NX_ORIGINAL_FORCE_COLOR",
+            "NX_MIGRATE_ORCHESTRATOR"
           ]
         }
       }

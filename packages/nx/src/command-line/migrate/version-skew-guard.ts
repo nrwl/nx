@@ -3,38 +3,63 @@ import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
 import { normalizeVersion } from './version-utils';
 
-// The first stable release shipping --run-migration. Deliberately the final
-// release rather than its first prerelease: 23.2.0 prereleases published
-// before the feature landed do not carry it, so a prerelease floor would
-// wrongly accept them. The cost is that a later 23.2.0 prerelease that does
-// carry the feature is refused too, which fails toward refusal. Permanent;
-// never bumped at release time, but it must name the release that actually
-// ships the feature: if that slips past 23.2.0, versions in the gap pass
-// this floor and route to a temp CLI that drops the new flags and runs the
-// plan phase instead.
+// The first stable release shipping --run-migration/--run-id. Deliberately
+// the final release rather than its first prerelease: 23.2.0 prereleases
+// published before the feature landed do not carry it, so a prerelease floor
+// would wrongly accept them. The cost is that a later 23.2.0 prerelease that
+// does carry the feature is refused too, which fails toward refusal.
+// Permanent; never bumped at release time, but it must name the release that
+// actually ships the feature: if that slips past 23.2.0, versions in the gap
+// pass this floor and route to a temp CLI that drops the new flags and runs
+// the plan phase instead.
 export const NEW_MIGRATE_FLAGS_FLOOR = '23.2.0';
 
-// yargs accepts both spellings and the raw argv is forwarded verbatim across
-// both migrate hops, so detection must catch each one.
-export const NEW_MIGRATE_FLAGS = ['--run-migration', '--runMigration'] as const;
+// yargs accepts both spellings of each flag and the raw argv is forwarded
+// across both migrate hops, so detection must catch every one.
+export const NEW_MIGRATE_FLAGS = [
+  '--run-migration',
+  '--runMigration',
+  '--run-id',
+  '--runId',
+  '--step-action',
+  '--stepAction',
+] as const;
+
+const RUN_ID_FLAGS = ['--run-id', '--runId'] as const;
 
 /**
  * Matches an exact token or `<flag>=<value>`. The `=` matters: a bare
  * `startsWith` would also match `--run-migrations` (trailing s).
  */
-export function findNewMigrateFlag(argv: string[]): string | undefined {
+function findFlag(
+  argv: string[],
+  flags: readonly string[]
+): string | undefined {
   for (const arg of argv) {
     // Everything after the -- separator is positional data, not options.
     if (arg === '--') {
       return undefined;
     }
-    for (const flag of NEW_MIGRATE_FLAGS) {
+    for (const flag of flags) {
       if (arg === flag || arg.startsWith(`${flag}=`)) {
         return flag;
       }
     }
   }
   return undefined;
+}
+
+export function findNewMigrateFlag(argv: string[]): string | undefined {
+  return findFlag(argv, NEW_MIGRATE_FLAGS);
+}
+
+/**
+ * Whether the invocation names an existing orchestrated run. Such an
+ * invocation has to execute against the workspace-local nx that owns the run's
+ * state under `.nx/migrate-runs`, so it never routes to a temp installation.
+ */
+export function targetsExistingRun(argv: string[]): boolean {
+  return findFlag(argv, RUN_ID_FLAGS) !== undefined;
 }
 
 /**
@@ -154,10 +179,9 @@ export async function resolveNewMigrateFlagsRunTarget(options: {
  * because the invoking nx's version is not forwarded across hop A; the
  * refusal names the workspace update that resolves it.
  *
- * `readLocalNxVersion` returns undefined when no readable nx install exists
- * at or above the workspace root; that case does not block. The hand-off
- * spawns the `nx migrate` wrapper, and without an nx installation to
- * delegate to it exits visibly rather than running anything.
+ * `readLocalNxVersion` returning undefined does not block: the hand-off then
+ * resolves nx as it always does, which may fail visibly or land on another nx
+ * the package manager locates.
  */
 export function assertWorkspaceNxSupportsNewMigrateFlags(options: {
   argv: string[];

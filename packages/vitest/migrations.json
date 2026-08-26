@@ -28,6 +28,12 @@
       "description": "Rename imports of `createNodesV2` from `@nx/vitest` to the canonical `createNodes` export.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+    },
+    "update-23-2-0-use-import-meta-dirname": {
+      "version": "23.2.0-beta.6",
+      "description": "Replace `__dirname` with `import.meta.dirname` in `vite.config.mts`/`vitest.config.mts` files so they work with Vite's `configLoader: 'native'`.",
+      "implementation": "./dist/src/migrations/update-23-2-0/use-import-meta-dirname",
+      "documentation": "./dist/src/migrations/update-23-2-0/use-import-meta-dirname.md"
     }
   },
   "packageJsonUpdates": {

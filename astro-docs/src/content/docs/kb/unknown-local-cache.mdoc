@@ -59,9 +59,9 @@ Storing Nx local cache on a network drive presents security risks, so we prevent
 single task hash - to be accessed without leaving any trace. This is possible due to the network drive's capability to
 allow overwrites.
 
-## How Nx Replay makes sure sharing cache is safe
+## How Nx Cloud protects the remote cache
 
-[Nx Replay](/docs/features/ci-features/remote-cache), the Nx Cloud hosted remote cache, does the following things to make sharing the cache safe:
+[Nx Cloud remote caching](/docs/features/ci-features/remote-cache) uses the following controls:
 
 1. **Immutable Artifacts:** Nx Cloud allows you to create and store new artifacts without the ability to override the
    existing ones. This prevents any possibility of poisoning an existing artifact. This is achieved by managing the

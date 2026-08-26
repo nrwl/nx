@@ -1,10 +1,9 @@
 import { execFileSync } from 'child_process';
 import { writeFileSync, mkdirSync } from 'fs';
 import { dirname, join } from 'path';
-import { prompt } from 'enquirer';
 import { ProjectGraphProjectNode, workspaceRoot } from '@nx/devkit';
-import type { FinalConfigForProject } from 'nx/src/command-line/release/utils/release-graph';
 import { interpolateVersionPattern } from './version-pattern-utils';
+import { selectPrompt, type FinalConfigForProject } from '@nx/devkit/internal';
 
 const DEFAULT_VERSION_SCHEMES = {
   production: '{currentDate|YYMM.DD}.{shortCommitSha}',
@@ -24,7 +23,7 @@ export async function handleDockerVersion(
   finalConfigForProject: FinalConfigForProject,
   dockerVersionScheme?: string,
   dockerVersion?: string,
-  versionActionsVersion?: string
+  versionActionsVersion?: string | null
 ) {
   // If the full docker image reference is provided, use it directly
   const nxDockerImageRefEnvOverride =
@@ -48,6 +47,19 @@ export async function handleDockerVersion(
                 availableVersionSchemes,
                 projectGraphNode.name
               );
+      if (
+        availableVersionSchemes[versionScheme].includes(
+          '{versionActionsVersion}'
+        ) &&
+        versionActionsVersion == null
+      ) {
+        return {
+          newVersion: null,
+          logs: [
+            `Skipped ${projectGraphNode.name}, because no new version was resolved for this project.`,
+          ],
+        };
+      }
       newVersion = calculateNewVersion(
         projectGraphNode.name,
         versionScheme,
@@ -77,28 +89,16 @@ async function promptForNewVersion(
   versionSchemes: Record<string, string>,
   projectName: string
 ) {
-  const { versionScheme } = await prompt<{ versionScheme: string }>({
-    name: 'versionScheme',
-    type: 'select',
+  // Each scheme's resolved pattern renders as its own hint.
+  return selectPrompt({
     message: `What type of docker release would you like to make for project "${projectName}"?`,
     choices: Object.keys(versionSchemes).map((vs) => ({
-      name: vs,
-      message: vs,
       value: vs,
-      description: interpolateVersionPattern(versionSchemes[vs], {
+      hint: interpolateVersionPattern(versionSchemes[vs], {
         projectName,
       }),
     })),
-    // Show only the focused scheme's resolved pattern, not every row's at once.
-    footer: function () {
-      const focused = this.focused as { description?: string };
-      return focused?.description
-        ? this.styles.muted(`  ${focused.description}`)
-        : '';
-    },
-  } as any);
-
-  return versionScheme;
+  });
 }
 
 function calculateNewVersion(

@@ -2,14 +2,16 @@ import * as devkit from '@nx/devkit';
 import {
   formatFiles,
   readJson,
+  readJsonFile,
   type NxJsonConfiguration,
   type Tree,
 } from '@nx/devkit';
 import { createTree } from '@nx/devkit/testing';
 import Ajv from 'ajv';
-import * as nxSchema from 'nx/schemas/nx-schema.json';
 import { Preset } from '../utils/presets';
 import { generateWorkspaceFiles } from './generate-workspace-files';
+
+const nxSchema = readJsonFile(require.resolve('nx/schemas/nx-schema.json'));
 
 jest.mock(
   'nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud',
@@ -168,37 +170,36 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     `);
   });
 
-  it('should recommend vscode extensions', async () => {
-    await generateWorkspaceFiles(tree, {
-      name: 'proj',
-      directory: 'proj',
-      preset: Preset.Apps,
-      defaultBase: 'main',
-      isCustomPreset: false,
-    });
-    const recommendations = readJson<{ recommendations: string[] }>(
-      tree,
-      'proj/.vscode/extensions.json'
-    ).recommendations;
+  // Asserted rather than snapshotted: which extension is recommended now
+  // depends on `--formatter`, and a snapshot would not say why it changed.
+  it.each([
+    ['prettier', true, false],
+    ['oxfmt', false, true],
+    ['none', false, false],
+  ])(
+    'should recommend the extension matching --formatter (%s)',
+    async (formatter, expectPrettier, expectOxc) => {
+      await generateWorkspaceFiles(tree, {
+        name: 'proj',
+        directory: 'proj',
+        preset: Preset.Apps,
+        defaultBase: 'main',
+        isCustomPreset: false,
+        formatter,
+      } as any);
+      const recommendations = readJson<{ recommendations: string[] }>(
+        tree,
+        'proj/.vscode/extensions.json'
+      ).recommendations;
 
-    expect(recommendations).toMatchSnapshot();
-  });
-
-  it('should recommend vscode extensions (angular)', async () => {
-    await generateWorkspaceFiles(tree, {
-      name: 'proj',
-      directory: 'proj',
-      preset: Preset.Apps,
-      defaultBase: 'main',
-      isCustomPreset: false,
-    });
-    const recommendations = readJson<{ recommendations: string[] }>(
-      tree,
-      'proj/.vscode/extensions.json'
-    ).recommendations;
-
-    expect(recommendations).toMatchSnapshot();
-  });
+      expect(recommendations).toContain('nrwl.angular-console');
+      expect(recommendations.includes('esbenp.prettier-vscode')).toBe(
+        expectPrettier
+      );
+      // `oxc.oxc-vscode` is what runs oxfmt in the editor.
+      expect(recommendations.includes('oxc.oxc-vscode')).toBe(expectOxc);
+    }
+  );
 
   it('should create a workspace using NPM preset (npm package manager)', async () => {
     tree.write('/proj/package.json', JSON.stringify({}));

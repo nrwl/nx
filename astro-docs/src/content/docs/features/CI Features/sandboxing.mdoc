@@ -11,7 +11,7 @@ filter: 'type:Features'
 
 Task sandboxing confines each task to the files it declares as `inputs` and `outputs` in your
 [project configuration](/docs/reference/project-configuration)
-(whether explicit or [inferred](/docs/concepts/inferred-tasks)).
+(whether explicit or [inferred](/docs/concepts/mental-model#inferred-tasks)).
 Reading a file the task didn't declare, or writing outside its declared outputs, is a sandbox
 violation.
 Undeclared dependencies have direct implications on [caching](/docs/features/cache-task-results)

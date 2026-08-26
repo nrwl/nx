@@ -276,18 +276,79 @@ export function reportMigrateRunError(opts: {
   });
 }
 
-/**
- * Counts invocations, not completions: emitted as soon as the migration id
- * resolves, while the worker can still stop before running anything.
- */
-export function reportMigrateSingleMigrationInvocation(opts: {
-  migrationType: 'generator' | 'prompt' | 'hybrid';
+export function reportMigrateOrchestratorInit(opts: {
+  migrationCount: number;
+  createCommits: boolean;
 }): void {
   safeReport(() => {
     if (!customDimensions) return;
-    reportEvent('migrate_single_migration_invocation', {
-      [customDimensions.promptChoice]: opts.migrationType,
+    reportEvent('migrate_orchestrator_init', {
+      [customDimensions.createCommits]: opts.createCommits,
+      [customDimensions.migrationCount]: opts.migrationCount,
     });
+  });
+}
+
+/**
+ * One event per orchestrator dispense. The `action` (dispense case) is a
+ * closed enum carried on a reused dimension, read conditioned on the event
+ * name (the same multiplexing pattern as {@link reportMigratePrompt});
+ * `attempt` rides the migration-count dimension.
+ */
+export function reportMigrateOrchestratorDispense(opts: {
+  action: string;
+  attempt: number;
+}): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent('migrate_orchestrator_dispense', {
+      [customDimensions.promptChoice]: opts.action,
+      [customDimensions.migrationCount]: opts.attempt,
+    });
+  });
+}
+
+/**
+ * Terminal funnel event. The two step tallies and the total dispense count
+ * ride reused numeric dimensions, read conditioned on the event name.
+ */
+export function reportMigrateOrchestratorComplete(opts: {
+  completed: number;
+  skipped: number;
+  dispenseCount: number;
+}): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent('migrate_orchestrator_complete', {
+      [customDimensions.appliedCount]: opts.completed,
+      [customDimensions.taskCount]: opts.skipped,
+      [customDimensions.migrationCount]: opts.dispenseCount,
+    });
+  });
+}
+
+/**
+ * Counts invocations, not completions: emitted as soon as the migration id
+ * resolves, while the worker can still stop before running anything.
+ *
+ * An invocation recorded into an orchestrated run (`--run-id`) gets its own
+ * event name. Every other one keeps the name `--run-migration` shipped with,
+ * so that series stays continuous for users who never enable the orchestrator.
+ */
+export function reportMigrateSingleMigrationInvocation(opts: {
+  migrationType: 'generator' | 'prompt' | 'hybrid';
+  orchestrated: boolean;
+}): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent(
+      opts.orchestrated
+        ? 'migrate_single_migration_recorded'
+        : 'migrate_single_migration_invocation',
+      {
+        [customDimensions.promptChoice]: opts.migrationType,
+      }
+    );
   });
 }
 

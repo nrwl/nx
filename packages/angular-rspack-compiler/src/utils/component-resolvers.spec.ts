@@ -1,4 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
+import * as ts from 'typescript';
+
+vi.mock('typescript', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('typescript')>();
+  return { ...actual, createSourceFile: vi.fn(actual.createSourceFile) };
+});
+
 import {
   getStyleUrls,
   getTemplateUrls,
@@ -48,6 +55,115 @@ describe('getStyleUrls', () => {
       export class ButtonComponent {}
       `;
     expect(getStyleUrls(code)).toStrictEqual([]);
+  });
+
+  // Angular's own resolver only reads array literals, so nothing else is
+  // treated as a list of style URLs.
+  it.each([
+    ['an identifier', 'SHARED_STYLES'],
+    ['a conditional', `isDark ? ['dark.scss'] : ['light.scss']`],
+    ['a call expression', 'getSharedStyles()'],
+    ['a property access', 'CONFIG.styles'],
+    ['a const assertion', `['color.scss'] as const`],
+    ['a satisfies expression', `['color.scss'] satisfies string[]`],
+    ['a string literal', `'color.scss'`],
+    ['a method call on an array', `[...SHARED_STYLES].concat('color.scss')`],
+  ])(
+    'should return empty array when styleUrls is %s',
+    (_description, initializer) => {
+      const code = `
+      @Component({
+        styleUrls: ${initializer},
+      })
+      export class ButtonComponent {}
+      `;
+      expect(() => getStyleUrls(code)).not.toThrow();
+      expect(getStyleUrls(code)).toStrictEqual([]);
+    }
+  );
+
+  it.each([
+    ['single-quoted', `'styleUrls'`],
+    ['double-quoted', `"styleUrls"`],
+  ])('should include values from a %s styleUrls key', (_description, key) => {
+    const code = `
+      @Component({
+        ${key}: ['color.scss'],
+      })
+      export class ButtonComponent {}
+      `;
+    expect(getStyleUrls(code)).toStrictEqual(['color.scss']);
+  });
+
+  it('should include values from a quoted styleUrl key', () => {
+    const code = `
+      @Component({
+        'styleUrl': 'theme.scss',
+      })
+      export class ButtonComponent {}
+      `;
+    expect(getStyleUrls(code)).toStrictEqual(['theme.scss']);
+  });
+
+  it('should ignore a computed styleUrls key', () => {
+    const code = `
+      @Component({
+        ['styleUrls']: ['color.scss'],
+      })
+      export class ButtonComponent {}
+      `;
+    expect(getStyleUrls(code)).toStrictEqual([]);
+  });
+
+  it.each([
+    ['a non-literal element', `[SHARED, 'color.scss']`],
+    ['an empty element', `['', 'color.scss']`],
+    ['a spread element', `[...SHARED, 'color.scss']`],
+    ['a substituted template literal', '[`./${theme}.scss`, `color.scss`]'],
+  ])('should skip %s in styleUrls', (_description, initializer) => {
+    const code = `
+      @Component({
+        styleUrls: ${initializer},
+      })
+      export class ButtonComponent {}
+      `;
+    expect(getStyleUrls(code)).toStrictEqual(['color.scss']);
+  });
+
+  it.each([
+    ['an identifier', 'SHARED_STYLE'],
+    ['an empty string', `''`],
+    ['a substituted template literal', '`./${theme}.scss`'],
+  ])('should ignore styleUrl when it is %s', (_description, initializer) => {
+    const code = `
+      @Component({
+        styleUrl: ${initializer},
+      })
+      export class ButtonComponent {}
+      `;
+    expect(getStyleUrls(code)).toStrictEqual([]);
+  });
+
+  it('should keep quotes that are part of the file name', () => {
+    const code = `
+      @Component({
+        styleUrl: "d'accord.scss",
+      })
+      export class ButtonComponent {}
+      `;
+    expect(getStyleUrls(code)).toStrictEqual([`d'accord.scss`]);
+  });
+
+  it('should return a new array on every call', () => {
+    const code = `
+      @Component({
+        styleUrls: ['color.scss'],
+      })
+      export class ButtonComponent {}
+      `;
+    getStyleUrls(code).push('mutated.scss');
+
+    expect(getStyleUrls(code)).toStrictEqual(['color.scss']);
   });
 });
 
@@ -116,6 +232,85 @@ describe('getTemplateUrls', () => {
       export class ButtonComponent {}
       `;
     expect(getTemplateUrls(code)).toStrictEqual([]);
+  });
+
+  it.each([
+    ['an identifier', 'TEMPLATE'],
+    ['an empty string', `''`],
+    ['a substituted template literal', '`./${name}.html`'],
+    ['a call expression', 'getTemplate()'],
+  ])('should ignore templateUrl when it is %s', (_description, initializer) => {
+    const code = `
+      @Component({
+        templateUrl: ${initializer},
+      })
+      export class ButtonComponent {}
+      `;
+    expect(getTemplateUrls(code)).toStrictEqual([]);
+  });
+
+  it('should read a templateUrl written as a template literal', () => {
+    const code = `
+      @Component({
+        templateUrl: \`button.component.html\`,
+      })
+      export class ButtonComponent {}
+      `;
+    expect(getTemplateUrls(code)).toStrictEqual(['button.component.html']);
+  });
+
+  it('should include values from a quoted templateUrl key', () => {
+    const code = `
+      @Component({
+        'templateUrl': 'button.component.html',
+      })
+      export class ButtonComponent {}
+      `;
+    expect(getTemplateUrls(code)).toStrictEqual(['button.component.html']);
+  });
+});
+
+describe('shared parse', () => {
+  it('should parse the code once when both resolvers read it', () => {
+    // unique source so the memo cannot already hold it from an earlier test
+    const code = `
+      @Component({
+        templateUrl: 'shared-parse.component.html',
+        styleUrls: ['shared-parse.component.scss'],
+      })
+      export class SharedParseComponent {}
+      `;
+    vi.mocked(ts.createSourceFile).mockClear();
+
+    getStyleUrls(code);
+    getTemplateUrls(code);
+
+    expect(ts.createSourceFile).toHaveBeenCalledTimes(1);
+  });
+
+  it('should give each resolver its own result for the same code', () => {
+    const code = `
+      @Component({
+        templateUrl: 'button.component.html',
+        styleUrls: ['color.scss'],
+      })
+      export class ButtonComponent {}
+      `;
+
+    expect(getStyleUrls(code)).toStrictEqual(['color.scss']);
+    expect(getTemplateUrls(code)).toStrictEqual(['button.component.html']);
+  });
+
+  it('should return a new array from getTemplateUrls on every call', () => {
+    const code = `
+      @Component({
+        templateUrl: 'button.component.html',
+      })
+      export class ButtonComponent {}
+      `;
+    getTemplateUrls(code).push('mutated.html');
+
+    expect(getTemplateUrls(code)).toStrictEqual(['button.component.html']);
   });
 });
 

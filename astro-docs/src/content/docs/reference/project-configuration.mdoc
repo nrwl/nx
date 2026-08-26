@@ -9,7 +9,7 @@ filter: 'type:References'
 
 A project's configuration is constructed by Nx from three sources:
 
-1. [Tasks inferred by Nx plugins](/docs/concepts/inferred-tasks) from tooling configuration
+1. [Tasks inferred by Nx plugins](/docs/concepts/mental-model#inferred-tasks) from tooling configuration
 2. [Workspace `targetDefaults`](/docs/reference/nx-json#target-defaults) defined in the `nx.json` file
 3. Individual project level configuration files (`package.json` and `project.json`)
 
@@ -530,6 +530,22 @@ This also works when defining a relation for the target of the project itself us
 }
 ```
 
+The expanded syntax also accepts an `options` property, which controls whether the options configured on this target are forwarded to the dependency targets. Like `params`, it can be set to `"forward"` or `"ignore"` and defaults to `"ignore"`.
+
+```json
+{
+  "targets": {
+    "build": {
+      "options": { "out": "dist/mylib" },
+      // forward the options of this target to the dependency target
+      "dependsOn": [{ "target": "pre-build", "options": "forward" }]
+    }
+  }
+}
+```
+
+When the target runs with a configuration, the options of that configuration are merged over the target options before they are forwarded. `params` and `options` are set independently of each other, and when both are forwarded, the params passed on the command line take precedence over the forwarded options.
+
 Additionally, when using the expanded object syntax, you can specify individual projects in version 16 or greater.
 
 ```json
@@ -599,7 +615,7 @@ In the same way that `dependsOn` tells Nx to run another task before running thi
 
 ### Executor/command options
 
-To define what a task does, you must configure which command or executor will run when the task is executed. In the case of [inferred tasks](/docs/concepts/inferred-tasks) you can provide project-specific overrides. As an example, if your repo has projects with a `build` inferred target running the `vite build` command, you can provide some extra options as follows:
+To define what a task does, you must configure which command or executor will run when the task is executed. In the case of [inferred tasks](/docs/concepts/mental-model#inferred-tasks) you can provide project-specific overrides. As an example, if your repo has projects with a `build` inferred target running the `vite build` command, you can provide some extra options as follows:
 
 ```json
 {

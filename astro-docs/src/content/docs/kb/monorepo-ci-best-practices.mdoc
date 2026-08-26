@@ -1,0 +1,458 @@
+---
+title: 'Monorepo CI best practices'
+description: 'Keep monorepo CI fast as the repository grows with affected-only runs, task caching, distribution across agents, e2e splitting, flaky handling, and merge queues.'
+sidebar:
+  label: Monorepo CI best practices
+filter: 'type:Guides'
+topics:
+  - 'Continuous integration'
+---
+
+{% llm_copy_prompt title="Let an AI agent audit your pipeline" %}
+
+Audit this repository's CI pipeline against the practices on the page below.
+Report findings and change nothing until I pick from them.
+
+Start by listing every CI config file and every job, including providers other than the one you
+find first. Then answer each check with `Present`, `Absent`, or `Needs CI access`. Use
+`Needs CI access` for anything the files in this repository can't settle, and don't estimate a
+number you can't derive from them.
+
+1. Selective runs. Does anything limit what runs per change, through CI path filters or graph-based
+   affected detection? If neither, say what runs instead. If path filters are used, trace whether a
+   change to a shared library reaches every job that consumes it, including transitive consumers.
+2. Base commit. How is the base chosen on pull requests, and on pushes to the main branch? Flag a
+   comparison against `HEAD~1`, and flag a shallow checkout, since change detection needs history.
+3. Task caching. Is anything cached beyond the dependency install? Report what the cache key covers
+   and whether results are shared across machines.
+4. Parallelism and distribution. Is there a parallelism setting matched to the runner size, and does
+   work spread across machines? Note any distribution that assigns tasks to machines up front.
+5. Long tasks. Are large test suites split into separately schedulable tasks, or do they run as one?
+6. Flaky tasks. Is there retry or flaky detection, and does it re-run the task rather than the whole
+   pipeline?
+7. Branching and ownership. Is there a merge queue, a `CODEOWNERS` file, and any rule enforcing
+   module boundaries? From the git history, how long do branches usually live before merging?
+
+Then list the changes you'd make, most valuable first, and mark the ones that depend on the
+measurements below.
+
+Ask me for these, or read them from the CI provider if you have access. They set the priority order
+and none of them can come from the repository:
+
+- Wall-clock time per pull request, and the longest single task.
+- Cache hit rate.
+- Time spent queueing, and time agents spend idle.
+- How often pipelines get re-run, and how many of those re-runs pass with no code change.
+
+Page: {pageUrl}
+{% /llm_copy_prompt %}
+
+A monorepo CI pipeline that runs everything on every commit gets slower and more expensive with
+every project you add, and every team contributing to the repository pays for it.
+The practices below keep CI time and cost tied to the size of a change rather than the size of the
+repository.
+
+## Understand CI waste
+
+Four sources of CI waste grow with the monorepo:
+
+- Tasks that run even though the commit couldn't have affected them.
+- Tasks that run again on inputs another machine/job already computed.
+- Tasks that could run at the same time but don't.
+- Tasks re-run because the first failure was flaky.
+
+Faster runners cut execution time, but none of these four go away.
+Measure which source dominates your pipeline first.
+A repository where most pull requests touch one project has a change-detection problem.
+A repository where a shared design system sits upstream of everything has a distribution problem,
+because affected pruning can't help when a change genuinely affects hundreds of projects.
+
+## Selectively run projects and tasks
+
+Running every task for every project on each pull request makes CI duration grow with the monorepo.
+Add enough projects and a one-line change costs as much as a change that touches everything.
+
+There are two ways to skip the projects a change doesn't touch, whether that change arrives as a
+pull request or as a commit on the main branch.
+
+### Path-based filtering
+
+Most CI providers can scope a job to a set of paths, through the GitHub Actions `paths` key or the
+GitLab `rules:changes` key.
+Path filters need no extra tooling, and they work while every service owns its files and imports
+nothing from a sibling.
+
+```yaml
+# .github/workflows/ci-api.yml
+# GitHub Actions without Nx, using path filters
+on:
+  pull_request:
+    # Every path a change to api can arrive through has to be listed here,
+    # including the shared libraries it imports. These must track the workspace
+    # structure by hand. Miss one and the job silently never runs.
+    paths:
+      - 'services/api/**'
+      - 'libs/ui/**'
+      - 'libs/auth/**'
+      - 'package-lock.json'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: npm ci
+      - run: npm test -w services/api
+```
+
+That is one service, and each additional one needs its own workflow with its own path list.
+
+Maintaining path-based filters is expensive:
+
+- A change to `libs/ui` has to be listed by hand in the filter of every consumer, and again in the
+  filter of everything that consumes those consumers.
+- Developers forget to update the filters when projects and dependencies change, so the pipeline
+  goes green on a change it never tested.
+- A lock file or root config change touches no service directory, so it either triggers everything
+  or nothing.
+- Renaming a folder invalidates every filter that mentions it.
+
+### Graph-based affected detection
+
+This derives the same answer from the code instead of from a list you maintain.
+The tool reads your source and manifests, builds a project graph, diffs the commit range, maps the
+changed files to projects, then walks the graph to include every project that depends on them.
+Nothing is maintained by hand, so it can't drift from what the code actually does.
+
+| Concern              | Path filters                               | Graph-based affected                             |
+| -------------------- | ------------------------------------------ | ------------------------------------------------ |
+| **Setup**            | CI config only                             | Requires a tool that builds a project graph      |
+| **Shared code**      | Listed manually per consumer               | Followed automatically, including transitively   |
+| **Drift risk**       | High, filters drift from real dependencies | Low, the graph is derived from source            |
+| **Lockfile changes** | Usually miss or trigger everything         | Tool-dependent, Nx can narrow it to changed deps |
+| **Good fit**         | Independent services, no shared libraries  | Any repository with shared code                  |
+
+With Nx, [`nx affected`](/docs/features/ci-features/affected) covers every project in one job, and
+the workflow stops encoding the workspace structure:
+
+```yaml
+# .github/workflows/ci.yml
+# GitHub Actions with Nx, using affected
+on: pull_request
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          filter: tree:0
+      - run: npm ci
+      - uses: nrwl/nx-set-shas@v5
+      # Selects individual tasks per project rather than whole jobs per path,
+      # so a shared library change runs its consumers and nothing more.
+      - run: npx nx affected -t lint test build
+```
+
+Nothing here names a project or a path, so adding, removing, or renaming projects changes no CI
+config.
+For the complete workflow, including caching and distribution, see the
+[GitHub Actions integration](/docs/features/ci-features/github-integration).
+
+One case needs tuning.
+A lock file change marks every project affected by default, which is safe but expensive.
+Narrow it to the projects whose resolved dependencies actually changed:
+
+```json
+// nx.json
+{
+  "pluginsConfig": {
+    "@nx/js": {
+      "projectsAffectedByDependencyUpdates": "auto"
+    }
+  }
+}
+```
+
+The accepted values are listed under
+[`projectsAffectedByDependencyUpdates`](/docs/reference/nx-json#projectsaffectedbydependencyupdates).
+
+### Choose the right base commit
+
+Change detection is only as correct as the two commits it compares.
+Getting the base commit wrong is the most common bug in a monorepo pipeline, and it's what leaves
+teams unsure which services need rebuilding after a merge.
+
+On a pull request, use the base SHA your provider exposes, which is the commit the pull request
+originated from.
+
+On a push to the main branch, comparing against `HEAD~1` is wrong.
+If the previous run failed or never ran, the work from that commit is never verified.
+Compare against the last commit that produced a successful pipeline, so anything that landed while
+CI was red gets picked back up.
+
+The [`nrwl/nx-set-shas`](https://github.com/nrwl/nx-set-shas) action does this bookkeeping on GitHub
+Actions by setting `NX_BASE` and `NX_HEAD`:
+
+```yaml {% meta="{10-12}" %}
+# .github/workflows/ci.yml
+on: pull_request
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          filter: tree:0
+      - uses: nrwl/nx-set-shas@v5
+      - run: npx nx affected -t lint test build
+```
+
+`fetch-depth: 0` gives change detection real git history, because a depth-one clone has no commit to
+diff against.
+`filter: tree:0` keeps that cheap by fetching commit metadata without file blobs, which is the
+answer to the usual advice that monorepos need shallow clones.
+Sparse checkout is a worse trade, since excluding files the project graph is built from leaves
+change detection incomplete.
+
+Other providers expose the same information under different names.
+The [CI setup guides](/docs/kb/setup-ci) cover how to retrieve the last successful commit on
+CircleCI, GitLab, Azure Pipelines, Jenkins, and Bitbucket.
+
+## Cache task results, not just dependencies
+
+Most pipelines cache the dependency directory and stop there, whether that's `node_modules`, a Cargo
+registry, or a Maven repository.
+Built-in CI caches can store any output you point them at, but teams usually configure them for the
+install step alone, so that's all they save.
+
+A computation cache, also called a task cache, stores the result of each task keyed by a hash of
+that task's declared inputs.
+What goes into the hash depends on how the task is configured, and typically covers:
+
+- Source files for the project, and for its dependencies when the task declares them.
+- Resolved dependency versions.
+- Tool configuration.
+- Declared environment variables.
+
+If the inputs are unchanged, the task is read from the cache instead of being run again.
+That includes both the terminal output and any files the task produced, such as a `dist` folder for
+a build.
+
+Hosted CI runners are commonly ephemeral, so a cache local to one machine starts cold on every run.
+A remote cache lets a job skip work that an earlier job or an earlier pipeline already computed.
+
+### Keep cache keys correct
+
+A cache is only as trustworthy as its inputs and outputs declarations, and getting them wrong fails
+in two directions.
+
+- A task that reads a file nobody declared as an input keeps serving a stale result after that file
+  changes, because the hash never moved. This is a false positive, and it's the dangerous one: a
+  green pipeline shipping a wrong artifact.
+- A task with inputs that are too broad rehashes on changes it doesn't care about and misses cache
+  hits it should have had. This is a false negative, and it just costs money.
+
+Outputs matter the same way.
+A task that writes outside its declared outputs leaves those files missing on the next cache hit.
+
+Prefer tooling that derives inputs from your build configuration rather than asking you to list them
+by hand.
+To enforce the declarations instead of trusting them, Nx Cloud
+[task sandboxing](/docs/features/ci-features/sandboxing) confines each task to its declared inputs
+and outputs and reports a violation when it reads or writes anything else, so an undeclared
+dependency surfaces on the run that introduced it.
+
+Nx caches task results locally with inputs inferred from your tool configuration.
+Sharing those results across machines needs Nx Cloud
+[remote caching](/docs/features/ci-features/remote-cache).
+For how hashing, invalidation, and cache-hit rates behave in practice, see
+[speed up CI with a build cache](/docs/kb/ci-caching).
+
+## Use all cores on each machine
+
+Many tasks can run in parallel because they're independent of each other, and only real dependencies
+force an order.
+Running them concurrently on one runner is the cheapest way to get a first speedup.
+
+```shell
+npx nx affected -t test --parallel=4
+```
+
+Try different values for `--parallel` against your runner specs.
+Too low leaves cores idle, too high makes tasks compete for resources.
+
+Once the affected set outgrows one machine, the next win has to come from more machines.
+
+## Distribute across machines
+
+The common way teams add machines is to split the pipeline into fixed bins, usually one job per
+target:
+
+```plaintext
+lint-job   ->  nx run-many -t lint  --projects=$PROJECTS
+test-job   ->  nx run-many -t test  --projects=$PROJECTS
+build-job  ->  nx run-many -t build --projects=$PROJECTS
+```
+
+Static binning works but is inefficient.
+Bins finish at different times, so machines sit idle while others are still running.
+If there are task dependencies between bins, work is duplicated.
+Worst of all, the right split depends on the pull request, because the affected set changes, so the
+bins can't be configured optimally for every case.
+
+Dynamic distribution assigns ready tasks to whichever agent is free, respecting the task graph, and
+moves artifacts between agents through the shared cache.
+Nx Cloud does this with [Nx Agents](/docs/features/ci-features/distribute-task-execution), from the
+same commands you already run.
+Declare the shape of the run once:
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on: 5 linux-medium-js
+lifecycle:
+  stop-after:
+    - lint
+    - test
+    - build
+```
+
+Then start the agents before your tasks:
+
+```yaml
+# .github/workflows/ci.yml
+- run: npx nx-cloud start-nx-agents
+
+- run: npx nx affected -t lint test build
+```
+
+The task commands don't change, and logs and artifacts are collated back onto the main job, so
+existing post-processing steps keep working.
+
+One refinement is worth adding once distribution is running.
+Heavy targets like `e2e` and `build` need more memory than `lint`.
+[Assignment rules](/docs/kb/assignment-rules) pin matching tasks to specific agent types, so heavy
+work gets large machines and everything else runs on cheap ones.
+
+For a side-by-side comparison of running on one machine against distributing across many, see
+[parallelization and distribution](/docs/concepts/ci-concepts/parallelization-distribution).
+
+## Split slow tasks into smaller ones
+
+Distribution only helps if the work divides.
+An e2e suite that runs as a single task occupies one agent for its whole duration, no matter how
+many machines you provision.
+
+One option is a runner shard flag, which cuts the suite into a fixed number of pieces.
+That carries the static binning problem again, since the pieces are balanced for the suite as it was
+when you picked the number, and they're allocated before the run starts so they can't be scheduled
+around the rest of the graph.
+
+The other option is splitting the files themselves, along whatever the tests actually cover:
+
+```plaintext
+checkout.spec.ts  ->  checkout-cart.spec.ts
+                      checkout-payment.spec.ts
+                      checkout-confirmation.spec.ts
+```
+
+Three files can run on three agents.
+The cost is that you now maintain the division by hand, and files drift back toward being too large
+as tests get added.
+
+Nx Cloud [splits slow tasks by file](/docs/features/ci-features/split-e2e-tasks) once you add the Nx
+plugin for your test runner.
+It creates one task per spec file you already have, without changing your filenames.
+Each task is scheduled and cached like any other, so unchanged specs are read from cache, changed
+ones run, and the results are merged back into a single report.
+
+## Handle flaky tasks
+
+A flaky task fails for reasons unrelated to the change, and the usual response is to re-run the
+whole pipeline.
+That's the most expensive available fix.
+Three executions of a five-minute task cost 15 minutes and can still end red.
+
+Most test runners have a retry option of their own, such as `retries` in Playwright.
+That covers one tool, and a monorepo running several test tools needs something that works across
+all of them.
+
+A general approach needs three things, in order of preference:
+
+- Identify which tasks are flaky, by spotting the ones that produced different results on identical
+  inputs.
+- Deflake them. Fixing the test is the only outcome that removes the cost rather than paying it
+  repeatedly.
+- Re-run the ones that can't be fixed, since some flakiness comes from a network or an external
+  service you don't control.
+
+A task cache makes the first one tractable, because "identical inputs" is already the cache key.
+Nx Cloud [detects flaky tasks](/docs/features/ci-features/flaky-tasks) from that history, re-runs
+only those tasks instead of the whole pipeline, and puts them on a different agent so an environment
+problem doesn't reproduce itself. [Find and fix flaky tests](/docs/kb/flaky-tests-in-ci) before
+they force another full-pipeline retry.
+
+## Use trunk-based development
+
+Trunk-based development keeps everyone working off the main branch, using short-lived feature
+branches.
+Merge early and often, and put unfinished work behind feature flags rather than holding it on a
+branch.
+
+The CI payoff is that a short-lived branch is tested against nearly current code, so a green result
+still means something by the time it merges.
+The longer a branch runs, the further its base drifts from the main branch, and in a monorepo that
+gap surfaces as conflicts and integration failures in projects the author never touched.
+
+## Keep the main branch green
+
+A pull request that passes on its own can still break the main branch, because it was tested against
+a base that didn't include the other pull requests merging alongside it.
+Affected calculations are anchored to the main branch, so once it's broken they're measured against
+a broken baseline.
+
+Merge queues close that gap by testing each change against the post-merge state before it lands.
+The cost objection is that a queue runs CI again for every merge.
+Affected pruning and a remote cache make that affordable, since the queue run is mostly cache hits
+and only the tasks the combination invalidated actually execute.
+Point change detection at the merge commit the queue produces, not at the pull request head.
+
+## Define clear ownership and boundaries
+
+Assign each project to the team that owns its domain.
+A typography tweak in the UI library shouldn't pull a review from the payments team, and a
+`CODEOWNERS` file routes each path to the people who maintain it.
+
+Watch for shared libraries that many teams depend on.
+Those set the floor for everyone's affected set, so a change to one puts most of the workspace into
+CI. They're worth a core team that owns them and reviews changes deliberately.
+
+A library with many dependents inside a single team needs less scrutiny.
+Its blast radius stops at that team's projects, and the slower CI lands on the people who chose the
+design.
+
+Dependencies get added in review, and conventions lose.
+[Module boundary rules](/docs/features/enforce-module-boundaries) fail lint when an import crosses a
+boundary it shouldn't, so a cross-team dependency has to be a deliberate act.
+
+## Set this up with Nx
+
+The Nx CLI builds the project graph from your imports and configuration, runs `nx affected` against
+it, and caches task results locally.
+That much is free and needs no account.
+
+Nx Cloud adds the parts that need a service behind them, including the remote cache, distribution
+across Nx Agents, file-level task splitting, and flaky task detection.
+Both layer onto the CI provider you already use rather than replacing it.
+
+Connect an existing workspace:
+
+```shell
+npx nx connect
+```
+
+Or start from [cloud.nx.app/get-started](https://cloud.nx.app/get-started/).

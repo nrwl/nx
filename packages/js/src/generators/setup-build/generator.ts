@@ -1,6 +1,8 @@
 import {
   addBuildTargetDefaults,
   readTargetDefaultsForTarget,
+  mergeTargetConfigurations,
+  type PackageJson,
 } from '@nx/devkit/internal';
 import {
   ensurePackage,
@@ -18,8 +20,6 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { basename, dirname, join } from 'node:path/posix';
-import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
-import type { PackageJson } from 'nx/src/utils/package-json';
 import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
 import { getImportPath } from '../../utils/get-import-path';
 import {

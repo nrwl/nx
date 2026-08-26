@@ -1,4 +1,4 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 
 export interface ConfigurationGeneratorSchema {
   project: string;
@@ -10,7 +10,7 @@ export interface ConfigurationGeneratorSchema {
   skipFormat?: boolean;
   skipPackageJson?: boolean;
   skipInstall?: boolean;
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   enableTypedLinting?: boolean; // default is false
   /**
    * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
@@ -34,5 +34,5 @@ export interface NormalizedGeneratorOptions
   extends ConfigurationGeneratorSchema {
   addPlugin: boolean;
   directory: string;
-  linter: Linter | LinterType;
+  linter: LinterType;
 }

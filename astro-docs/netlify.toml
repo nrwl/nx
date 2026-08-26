@@ -117,14 +117,44 @@ to = "/docs/technologies/typescript/introduction"
 from = "/docs/extending-nx/recipes/create-preset"
 to = "/docs/extending-nx/create-preset"
 
+# Adoption guides moved to the Knowledge Base under the "Adoption" topic (DOC-589)
 [[redirects]]
 from = "/docs/guides/adopting-nx/adding-to-monorepos"
-to = "/docs/guides/adopting-nx/adding-to-monorepo"
+to = "/docs/kb/adding-to-monorepo"
+
+[[redirects]]
+from = "/docs/guides/adopting-nx/adding-to-monorepo"
+to = "/docs/kb/adding-to-monorepo"
+
+[[redirects]]
+from = "/docs/guides/adopting-nx/adding-to-existing-project"
+to = "/docs/kb/adding-to-existing-project"
+
+[[redirects]]
+from = "/docs/guides/adopting-nx/import-project"
+to = "/docs/kb/import-project"
+
+[[redirects]]
+from = "/docs/guides/adopting-nx/manual"
+to = "/docs/kb/manual-migration"
+
+[[redirects]]
+from = "/docs/guides/adopting-nx/preserving-git-histories"
+to = "/docs/kb/preserving-git-histories"
+
+[[redirects]]
+from = "/docs/guides/adopting-nx"
+to = "/docs/kb/adoption"
 
 # Turborepo comparison moved to Comparisons section (#36275)
 [[redirects]]
 from = "/docs/guides/adopting-nx/nx-vs-turborepo"
 to = "/docs/guides/comparisons/nx-vs-turborepo"
+
+# Turborepo migration guide moved to the Knowledge Base (DOC-571)
+[[redirects]]
+from = "/docs/guides/adopting-nx/from-turborepo"
+to = "/docs/kb/from-turborepo"
 
 # Angular multiple workspace migration page removed (DOC-419)
 [[redirects]]
@@ -180,6 +210,11 @@ to = "/docs/reference/deprecated/self-hosted-cache-packages"
 [[redirects]]
 from = "/docs/getting-started/tutorials/self-healing-ci-tutorial"
 to = "/docs/getting-started/setup-ci"
+
+# Gradle tutorial moved out of tutorials into the Knowledge Base
+[[redirects]]
+from = "/docs/getting-started/tutorials/gradle-tutorial"
+to = "/docs/kb/gradle-tutorial"
 
 # Resource usage consolidated into the Nx Cloud add-ons platform feature pages
 [[redirects]]
@@ -309,7 +344,11 @@ to = "/docs/kb/creating-files"
 
 [[redirects]]
 from = "/docs/extending-nx/intro"
-to = "/docs/kb/intro"
+to = "/docs/kb/add-language-support"
+
+[[redirects]]
+from = "/docs/kb/intro"
+to = "/docs/kb/add-language-support"
 
 [[redirects]]
 from = "/docs/extending-nx/local-executors"
@@ -337,7 +376,11 @@ to = "/docs/kb/performant-project-graph-plugins"
 
 [[redirects]]
 from = "/docs/extending-nx/project-graph-plugins"
-to = "/docs/kb/project-graph-plugins"
+to = "/docs/kb/add-language-support"
+
+[[redirects]]
+from = "/docs/kb/project-graph-plugins"
+to = "/docs/kb/add-language-support"
 
 [[redirects]]
 from = "/docs/extending-nx/publish-plugin"
@@ -349,7 +392,11 @@ to = "/docs/kb/task-running-lifecycle"
 
 [[redirects]]
 from = "/docs/extending-nx/tooling-plugin"
-to = "/docs/kb/tooling-plugin"
+to = "/docs/kb/add-language-support"
+
+[[redirects]]
+from = "/docs/kb/tooling-plugin"
+to = "/docs/kb/add-language-support"
 
 [[redirects]]
 from = "/docs/guides/comparisons/nx-vs-bazel"

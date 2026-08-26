@@ -51,6 +51,38 @@ export function logAgenticSuccessOutcome(
 }
 
 /**
+ * Logs the skip line for a migration that waived its AI step through
+ * `skipAgentic`, plus a verbose note for any `agentContext` the waiver
+ * dropped. A hybrid waives its paired prompt; a generator-only migration
+ * waives the validation pass, so callers must reach here only once they know
+ * one was on the table. Under `inside-agent` only a hybrid can, so the
+ * hand-off dropped alongside is always a prompt's; a waived generator-only
+ * migration keeps its own. The note is author-facing, hence `--verbose`.
+ */
+export function logWaivedAgenticStep(
+  migration: {
+    package: string;
+    name: string;
+    prompt?: string;
+    implementation?: string;
+    factory?: string;
+  },
+  agentContext: string[]
+): void {
+  logger.info(
+    pc.dim(
+      isHybridMigration(migration)
+        ? '↷ Prompt phase skipped. The migration reported nothing left for the AI step to do.'
+        : '↷ Validation skipped. The migration reported its changes need no AI review.'
+    )
+  );
+  if (agentContext.length === 0) return;
+  logger.verbose(
+    `${migration.package}: ${migration.name} returned skipAgentic: true alongside agentContext, which was dropped. agentContext exists to feed the AI step this migration waived.`
+  );
+}
+
+/**
  * Per-migration outcome record consumed by the failure recap. One entry is
  * appended per iteration that returned without throwing; the failing migration
  * has no record.
@@ -99,6 +131,13 @@ export type CommitState =
  * means the migration threw before completing — the executor's catch block
  * records it so the recap can list it under retained-state alongside any
  * other migrations whose commits never landed.
+ *
+ * `waivedAgenticStep` is set when the migration returned `skipAgentic: true`
+ * and something was actually waived: a hybrid's prompt, which is owed in every
+ * agentic mode, or a generator-only migration's validation step, only when it
+ * would have run. Recorded here rather than counted in the executor so the
+ * success tally and the failure recap derive the same number from the same
+ * records instead of threading a counter through both.
  */
 export type MigrationOutcome =
   | {
@@ -106,6 +145,7 @@ export type MigrationOutcome =
       status: 'completed';
       kind: MigrationOutcomeKind;
       commit: CommitState;
+      waivedAgenticStep?: boolean;
     }
   | {
       migration: { package: string; name: string };
@@ -125,6 +165,28 @@ export function countLandedCommits(
   outcomes: ReadonlyArray<MigrationOutcome>
 ): number {
   return outcomes.filter((o) => o.commit.kind === 'landed').length;
+}
+
+/**
+ * Counts the migrations that waived the AI step they would otherwise have
+ * run. Shared by the success tally and the failure recap so the two can't
+ * report different numbers.
+ */
+export function countWaivedAgenticSteps(
+  outcomes: ReadonlyArray<MigrationOutcome>
+): number {
+  return outcomes.filter(
+    (o) => o.status === 'completed' && o.waivedAgenticStep === true
+  ).length;
+}
+
+/**
+ * The recap phrase for waived AI steps. "not needed" rather than
+ * "skipped"/"deferred", which both recaps reserve for work the user still
+ * owes.
+ */
+export function formatWaivedAgenticSteps(count: number): string {
+  return `${count} AI step${count === 1 ? '' : 's'} not needed`;
 }
 
 /**
@@ -177,6 +239,7 @@ export function logFailureRecap(opts: {
   const deferredCount = outcomes.filter(
     (o) => o.status === 'completed' && o.kind === 'deferred'
   ).length;
+  const waivedAgenticCount = countWaivedAgenticSteps(outcomes);
   const notAttempted = totalMigrations - migrationIndex;
   // Walk back to the most recent completed record whose work is anchored to
   // a sha — either its own commit (`landed`), or a later commit that
@@ -240,6 +303,9 @@ export function logFailureRecap(opts: {
     if (deferredCount > 0) {
       parts.push(`${deferredCount} deferred`);
     }
+    if (waivedAgenticCount > 0) {
+      parts.push(formatWaivedAgenticSteps(waivedAgenticCount));
+    }
     logger.info(`${parts.join(', ')}. ${notAttempted} not attempted.`);
     logger.info(`See the per-migration log above for full details.`);
   }
@@ -285,21 +351,29 @@ export function logFailureRecap(opts: {
  * emitting a misleading `0 prompt migrations skipped.` line.
  *
  * Rule (kept coherent across every scenario):
- * - When at least one migration was applied: `<N> migrations applied, <K> commits created[, <D> prompt migrations <skipped|deferred>]`.
+ * - When at least one migration was applied: `<N> migrations applied, <K> commits created[, <D> prompt migrations <skipped|deferred>][, <W> AI steps not needed]`.
  *   The `<K> commits created` part stays even at 0 — it tells the reader work
  *   was applied but not committed (the J4/J8 information made explicit).
  * - When zero migrations were applied but some prompt halves were
- *   skipped/deferred: `<D> prompt migrations <skipped|deferred>` only.
+ *   skipped/deferred: `<D> prompt migrations <skipped|deferred>` only. Waiving
+ *   never adds to `skippedPromptsCount`, so `appliedCount` is non-zero whenever
+ *   `waivedAgenticStepsCount` is, and this branch can't be reached with one.
  * - When zero of either: no body line.
  */
 export function buildTallyBodyLine(opts: {
   appliedCount: number;
   committedShasCount: number;
   skippedPromptsCount: number;
+  waivedAgenticStepsCount: number;
   insideAgent: boolean;
 }): string | null {
-  const { appliedCount, committedShasCount, skippedPromptsCount, insideAgent } =
-    opts;
+  const {
+    appliedCount,
+    committedShasCount,
+    skippedPromptsCount,
+    waivedAgenticStepsCount,
+    insideAgent,
+  } = opts;
   const skipVerb = insideAgent ? 'deferred' : 'skipped';
   if (appliedCount === 0) {
     if (skippedPromptsCount === 0) return null;
@@ -317,6 +391,9 @@ export function buildTallyBodyLine(opts: {
         skippedPromptsCount === 1 ? '' : 's'
       } ${skipVerb}`
     );
+  }
+  if (waivedAgenticStepsCount > 0) {
+    parts.push(formatWaivedAgenticSteps(waivedAgenticStepsCount));
   }
   return `${parts.join(', ')}.`;
 }

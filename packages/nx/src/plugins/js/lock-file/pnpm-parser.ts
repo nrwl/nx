@@ -28,7 +28,8 @@ import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { getCatalogManager } from '../../../utils/catalog';
 import { findNodeMatchingVersion } from './project-graph-pruning';
-import { join, relative, sep } from 'path';
+import { isAbsolute, join, posix, relative, sep } from 'path';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 import { satisfies, validRange } from 'semver';
 
@@ -226,6 +227,23 @@ function findPatchHash(
     (entry) => entry.versionSpecifier === null
   );
   return nameOnlyMatch?.hash;
+}
+
+// Segment-aware: `..` and `../x` escape, a directory literally named `..cache`
+// does not. Absolute targets are resolved against the workspace root.
+function linkTargetEscapesWorkspace(
+  importerPath: string,
+  depVersion: string
+): boolean {
+  const rawTarget = depVersion.slice('link:'.length);
+  if (posix.isAbsolute(rawTarget) || isAbsolute(rawTarget)) {
+    const rel = relative(workspaceRoot, rawTarget);
+    return rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel);
+  }
+  const combined = posix.normalize(
+    posix.join(importerPath === '.' ? '' : importerPath, rawTarget)
+  );
+  return combined === '..' || combined.startsWith('../');
 }
 
 function getNodes(
@@ -508,6 +526,58 @@ function getNodes(
       results[node.name] = node;
     });
   }
+
+  // `link:` dependencies pointing outside the workspace never appear in the
+  // packages section, so nothing above minted a node for them — and a task
+  // input naming one via `externalDependencies` fails hashing with "could not
+  // be found". Mint a node under the bare `npm:<name>`, hashed on the link
+  // path: the hash changes only when the path does, not when the linked
+  // content does, which is how linked dependencies behave everywhere else in
+  // Nx. Links that resolve inside the workspace are workspace projects, not
+  // externals, and are skipped.
+  //
+  // One node per package name, chosen deterministically by visiting importers
+  // root-first, then lexicographically. An `externalDependencies` input names
+  // a package, not a link target, so it could not distinguish two linked
+  // targets anyway.
+  const importerPaths = Object.keys(data.importers ?? {}).sort((a, b) =>
+    a === '.' ? -1 : b === '.' ? 1 : a.localeCompare(b)
+  );
+  for (const importerPath of importerPaths) {
+    const importer = data.importers[importerPath];
+    for (const depType of [
+      'dependencies',
+      'devDependencies',
+      'optionalDependencies',
+    ] as const) {
+      const deps = importer[depType] as Record<string, string> | undefined;
+      if (!deps) {
+        continue;
+      }
+      for (const [depName, depVersion] of Object.entries(deps)) {
+        if (typeof depVersion !== 'string' || !depVersion.startsWith('link:')) {
+          continue;
+        }
+        if (!linkTargetEscapesWorkspace(importerPath, depVersion)) {
+          continue; // inside the workspace -> a workspace project
+        }
+        const bareName = `npm:${depName}`;
+        if (results[bareName]) {
+          continue; // a hoisted registry version or an earlier link wins
+        }
+        results[bareName] = {
+          type: 'npm',
+          name: bareName,
+          data: {
+            version: depVersion,
+            packageName: depName,
+            hash: hashArray([depName, depVersion]),
+          },
+        };
+      }
+    }
+  }
+
   return { nodes: results, keyMap };
 }
 

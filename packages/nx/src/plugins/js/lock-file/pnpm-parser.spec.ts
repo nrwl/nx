@@ -15,6 +15,7 @@ import {
   RawProjectGraphDependency,
 } from '../../../project-graph/project-graph-builder';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
+import { hashArray } from '../../../hasher/file-hasher';
 
 jest.mock('node:fs', () => {
   const memFs = require('memfs').fs;
@@ -3020,7 +3021,8 @@ snapshots:
 
   describe('workspace-only lockfile', () => {
     // pnpm omits the `packages` block entirely when every dependency resolves
-    // to a `link:`/`workspace:` reference, so there is nothing external to lock.
+    // to a `link:`/`workspace:` reference; out-of-workspace links still mint
+    // external nodes.
     const lockFile = `lockfileVersion: '9.0'
 
 settings:
@@ -3037,18 +3039,28 @@ importers:
 `;
 
     beforeEach(() => {
-      // The parser requires `.modules.yaml` to exist; a workspace with no
-      // external packages hoists nothing.
+      // The parser requires `.modules.yaml` to exist; nothing is hoisted
+      // when the lockfile has no packages block.
       vol.fromJSON(
         { 'node_modules/.modules.yaml': 'hoistedDependencies: {}\n' },
         '/root'
       );
     });
 
-    it('should produce no external nodes', () => {
+    it('should produce a node only for the out-of-workspace link', () => {
       const result = getPnpmLockfileNodes(lockFile, '__workspace_only__');
 
-      expect(result.nodes).toEqual({});
+      expect(result.nodes).toEqual({
+        'npm:my-plugin': {
+          type: 'npm',
+          name: 'npm:my-plugin',
+          data: {
+            version: 'link:../my-plugin',
+            packageName: 'my-plugin',
+            hash: hashArray(['my-plugin', 'link:../my-plugin']),
+          },
+        },
+      });
     });
 
     it('should produce no dependencies', () => {
@@ -3065,6 +3077,145 @@ importers:
       expect(
         getPnpmLockfileDependencies(lockFile, '__workspace_only__', ctx, keyMap)
       ).toEqual([]);
+    });
+  });
+
+  describe('linked dependencies', () => {
+    // Out-of-workspace `link:` targets mint external nodes; links inside the
+    // workspace are workspace projects and must not.
+    const lockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      abs-out:
+        specifier: link:/elsewhere/abs-plugin
+        version: link:/elsewhere/abs-plugin
+      is-even:
+        specifier: ^1.0.0
+        version: 1.0.0
+      multi-target:
+        specifier: link:../elsewhere/root-target
+        version: link:../elsewhere/root-target
+    devDependencies:
+      '@scoped/linked-out':
+        specifier: link:../../elsewhere/plugin
+        version: link:../../elsewhere/plugin
+      abs-in:
+        specifier: link:/root/packages/local
+        version: link:/root/packages/local
+      dot-named:
+        specifier: link:..cache/plugin
+        version: link:..cache/plugin
+      linked-in:
+        specifier: link:packages/local
+        version: link:packages/local
+    optionalDependencies:
+      opt-linked:
+        specifier: link:../elsewhere/opt-plugin
+        version: link:../elsewhere/opt-plugin
+
+  packages/local:
+    dependencies:
+      multi-target:
+        specifier: link:../../elsewhere/nested-target
+        version: link:../../elsewhere/nested-target
+
+packages:
+
+  is-even@1.0.0:
+    resolution: {integrity: sha512-LEhnkAdJqic4Dbqn58A0y52IXoHWlsueqQkKfMfdEnIYG8A1sm/GHidKkS6yvXlMoRrkM34csHnXQtOqcb+Jzg==}
+
+snapshots:
+
+  is-even@1.0.0: {}
+`;
+
+    beforeEach(() => {
+      vol.fromJSON(
+        { 'node_modules/.modules.yaml': 'hoistedDependencies: {}\n' },
+        '/root'
+      );
+    });
+
+    it('should create a node for an out-of-workspace link but not an in-workspace one', () => {
+      const { nodes } = getPnpmLockfileNodes(lockFile, '__linked_deps__');
+
+      expect(nodes['npm:@scoped/linked-out']).toEqual({
+        type: 'npm',
+        name: 'npm:@scoped/linked-out',
+        data: {
+          version: 'link:../../elsewhere/plugin',
+          packageName: '@scoped/linked-out',
+          hash: hashArray([
+            '@scoped/linked-out',
+            'link:../../elsewhere/plugin',
+          ]),
+        },
+      });
+      expect(nodes['npm:linked-in']).toBeUndefined();
+      expect(Object.keys(nodes).filter((n) => n.includes('linked-in'))).toEqual(
+        []
+      );
+      expect(nodes['npm:is-even']).toBeDefined();
+    });
+
+    it('should mint nodes for outside links in dependencies and optionalDependencies', () => {
+      const { nodes } = getPnpmLockfileNodes(lockFile, '__linked_dep_types__');
+
+      expect(nodes['npm:abs-out']).toBeDefined();
+      expect(nodes['npm:opt-linked'].data.version).toBe(
+        'link:../elsewhere/opt-plugin'
+      );
+    });
+
+    it('should let the root importer win when several importers link the same name', () => {
+      const { nodes } = getPnpmLockfileNodes(lockFile, '__linked_competing__');
+
+      expect(nodes['npm:multi-target'].data.version).toBe(
+        'link:../elsewhere/root-target'
+      );
+    });
+
+    it('should resolve absolute link targets against the workspace root', () => {
+      const { nodes } = getPnpmLockfileNodes(lockFile, '__linked_abs__');
+
+      expect(nodes['npm:abs-out']).toEqual({
+        type: 'npm',
+        name: 'npm:abs-out',
+        data: {
+          version: 'link:/elsewhere/abs-plugin',
+          packageName: 'abs-out',
+          hash: hashArray(['abs-out', 'link:/elsewhere/abs-plugin']),
+        },
+      });
+      expect(nodes['npm:abs-in']).toBeUndefined();
+    });
+
+    it('should not treat a dot-prefixed directory name as an escape', () => {
+      const { nodes } = getPnpmLockfileNodes(lockFile, '__linked_dotname__');
+
+      expect(nodes['npm:dot-named']).toBeUndefined();
+    });
+
+    it('should not shadow a hoisted registry package with a link from a nested importer', () => {
+      const withNestedLink = lockFile.replace(
+        '  packages/local: {}',
+        `  packages/local:
+    dependencies:
+      is-even:
+        specifier: link:../../../other/is-even
+        version: link:../../../other/is-even`
+      );
+
+      const { nodes } = getPnpmLockfileNodes(withNestedLink, '__linked_dup__');
+
+      expect(nodes['npm:is-even'].data.version).toBe('1.0.0');
     });
   });
 });

@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   getPackageManagerCommand,
@@ -101,6 +101,10 @@ describe('lib', () => {
       // unitTestRunner property is ignored.
       // It only works with our executors.
       expect(tree.exists('my-lib/src/lib/my-lib.spec.ts')).toBeFalsy();
+
+      // `npm-scripts` forces `linter: 'none'` after `normalizeLinterOption` has
+      // already resolved it — nothing else catches a regression there.
+      expect(tree.exists('my-lib/eslint.config.mjs')).toBeFalsy();
     });
 
     it('should generate an empty ts lib using --config=project', async () => {
@@ -923,9 +927,7 @@ describe('lib', () => {
 
                   // Reading the SWC compilation config and remove the "exclude"
                   // for the test files to be compiled by SWC
-                  const { exclude: _, ...swcJestConfig } = JSON.parse(
-                    readFileSync(\`\${__dirname}/.swcrc\`, 'utf-8'),
-                  );
+                  const { exclude: _, ...swcJestConfig } = JSON.parse(readFileSync(\`\${__dirname}/.swcrc\`, 'utf-8'));
 
                   // disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves.
                   // If we do not disable this, SWC Core will read .swcrc and won't transform our test files due to "exclude"
@@ -1626,6 +1628,26 @@ describe('lib', () => {
     });
   });
 
+  describe('--unit-test-runner vitest', () => {
+    it('should not add dependencies when --skipPackageJson', async () => {
+      const before = readJson(tree, 'package.json');
+
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        unitTestRunner: 'vitest',
+        // `addLint` writes its own dependencies regardless of the flag.
+        linter: 'none',
+        skipPackageJson: true,
+        skipFormat: true,
+      });
+
+      // Guards against the assertion passing because the vitest setup never ran.
+      expect(tree.exists('my-lib/vitest.config.mts')).toBeTruthy();
+      expect(readJson(tree, 'package.json')).toEqual(before);
+    });
+  });
+
   describe('--bundler=esbuild', () => {
     it('should add build with esbuild', async () => {
       process.env.ESLINT_USE_FLAT_CONFIG = 'false';
@@ -2240,9 +2262,7 @@ describe('lib', () => {
                   const { readFileSync } = require('fs');
 
                   // Reading the SWC compilation config for the spec files
-                  const swcJestConfig = JSON.parse(
-                    readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'),
-                  );
+                  const swcJestConfig = JSON.parse(readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'));
 
                   // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
                   swcJestConfig.swcrc = false;

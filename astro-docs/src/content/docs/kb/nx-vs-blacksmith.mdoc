@@ -46,11 +46,17 @@ Blacksmith runs whatever your workflow matrix declares, on every push, whether o
 
 Blacksmith transparently accelerates the `actions/cache` API and offers sticky disks, persistent volumes remounted between jobs, for dependencies and Docker layers. This caching is coarse and manual: you declare which paths to store under a key you compute yourself (`path: node_modules`, `key: ${{ hashFiles(...) }}`), so it restores files by key match rather than understanding a task's inputs and outputs. It speeds up restoring state, but a task that already ran with identical inputs still reruns.
 
-[Nx Replay](/docs/features/ci-features/remote-cache) caches at the task level and derives the cache key from each task's actual inputs, so there are no paths or keys to maintain. A build or test computed once, on CI or on a developer laptop, replays everywhere else with its terminal output and artifacts, with [access-controlled, branch-isolated writes](/docs/kb/cache-security).
+[Nx Cloud remote caching](/docs/features/ci-features/remote-cache) caches at the task level and derives the cache key from each task's actual inputs, so there are no paths or keys to maintain. A build or test computed once, on CI or on a developer laptop, replays everywhere else with its terminal output and artifacts, with [access-controlled, branch-isolated writes](/docs/kb/cache-security).
 
 ## Distribution
 
-With Nx, distribution is a single job. `nx run-many` runs every check, and one `--distribute-on` line hands tasks to [Nx Agents](/docs/features/ci-features/distribute-task-execution), assigned continuously from historical timing data, with no matrix and no shard count to maintain.
+With Nx, distribution is a single job. `nx run-many` runs every check, and one `distribute-on` line in [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) hands tasks to [Nx Agents](/docs/features/ci-features/distribute-task-execution), assigned continuously from historical timing data, with no matrix and no shard count to maintain.
+
+```yaml
+# .nx/ci-config.yaml (Nx)
+dte:
+  distribute-on: 8 linux-medium-js
+```
 
 ```yaml
 # .github/workflows/ci.yml (Nx)
@@ -58,9 +64,9 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: npm ci
-      - run: npx nx-cloud start-ci-run --distribute-on="8 linux-medium-js"
+      - run: npx nx-cloud start-nx-agents
       - run: npx nx run-many -t lint test build e2e
 ```
 
@@ -72,19 +78,19 @@ jobs:
   lint:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: npm ci
       - run: npx eslint .
   test:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: npm ci
       - run: npx jest
   build:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: npm ci
       - run: npm run build
   e2e:
@@ -93,7 +99,7 @@ jobs:
       matrix:
         shard: [1, 2, 3, 4] # shard count fixed before the run, rebalanced by hand
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: npm ci
       - run: npx playwright test --shard=${{ matrix.shard }}/4
 ```

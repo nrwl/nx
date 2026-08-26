@@ -265,6 +265,7 @@ function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
 function isNxCloudCommand(command: string): boolean {
   const nxCloudCommands = [
     'start-ci-run',
+    'start-nx-agents',
     'start-agent',
     'stop-all-agents',
     'complete-ci-run',

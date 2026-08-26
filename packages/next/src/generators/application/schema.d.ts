@@ -1,4 +1,4 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 import type { SupportedStyles } from '@nx/react';
 
 export interface Schema {
@@ -7,9 +7,9 @@ export interface Schema {
   style?: SupportedStyles;
   skipFormat?: boolean;
   tags?: string;
-  unitTestRunner?: 'jest' | 'none';
+  unitTestRunner?: 'jest' | 'vitest' | 'none';
   e2eTestRunner?: 'cypress' | 'playwright' | 'none';
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   js?: boolean;
   enableTypedLinting?: boolean;
   /**
@@ -25,6 +25,6 @@ export interface Schema {
   rootProject?: boolean;
   addPlugin?: boolean;
   useTsSolution?: boolean;
-  formatter?: 'prettier' | 'none';
+  formatter?: 'prettier' | 'oxfmt' | 'none';
   useProjectJson?: boolean;
 }

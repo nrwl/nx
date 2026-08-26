@@ -1,5 +1,5 @@
 import { ExecutorContext, workspaceRoot } from '@nx/devkit';
-import runCommandsImpl from 'nx/src/executors/run-commands/run-commands.impl';
+import { runCommandsExecutor as runCommandsImpl } from '@nx/devkit/internal';
 import { MavenExecutorSchema } from './schema';
 import {
   detectMavenExecutable,

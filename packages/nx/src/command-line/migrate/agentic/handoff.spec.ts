@@ -9,6 +9,7 @@ import {
   stepHandoffPath,
   waitForValidHandoff,
 } from './handoff';
+import { HANDOFFS_DIR_NAME } from './types';
 
 describe('handoff', () => {
   let workspace: string;
@@ -75,31 +76,37 @@ describe('handoff', () => {
   });
 
   describe('stepHandoffPath', () => {
+    it('places the handoff under the handoffs subtree, the only part of a run directory an agent is pre-authorized to write', () => {
+      expect(stepHandoffPath('/run', { package: 'pkg', name: 'm1' })).toBe(
+        join('/run', HANDOFFS_DIR_NAME, 'pkg', 'm1.json')
+      );
+    });
+
     it('treats the package scope as a subdirectory', () => {
       expect(
         stepHandoffPath('/run', {
           package: '@nx/storybook',
           name: 'migrate-css',
         })
-      ).toBe(join('/run', '@nx', 'storybook', 'migrate-css.json'));
+      ).toBe(join('/run', 'handoffs', '@nx', 'storybook', 'migrate-css.json'));
     });
 
     it('uses a single segment for unscoped packages', () => {
       expect(
         stepHandoffPath('/run', { package: 'plain-pkg', name: 'm1-gen' })
-      ).toBe(join('/run', 'plain-pkg', 'm1-gen.json'));
+      ).toBe(join('/run', 'handoffs', 'plain-pkg', 'm1-gen.json'));
     });
 
     it('replaces path-traversal segments with `_` so a malformed name cannot escape the run dir', () => {
       expect(
         stepHandoffPath('/run', { package: '@nx/react', name: '..' })
-      ).toBe(join('/run', '@nx', 'react', '_.json'));
+      ).toBe(join('/run', 'handoffs', '@nx', 'react', '_.json'));
       expect(
         stepHandoffPath('/run', {
           package: '../escape',
           name: 'm1',
         })
-      ).toBe(join('/run', '_', 'escape', 'm1.json'));
+      ).toBe(join('/run', 'handoffs', '_', 'escape', 'm1.json'));
     });
 
     it('replaces Windows-reserved and control characters with `_`', () => {
@@ -108,13 +115,17 @@ describe('handoff', () => {
           package: '@scope/pkg',
           name: 'bad:name*with?chars',
         })
-      ).toBe(join('/run', '@scope', 'pkg', 'bad_name_with_chars.json'));
+      ).toBe(
+        join('/run', 'handoffs', '@scope', 'pkg', 'bad_name_with_chars.json')
+      );
       expect(
         stepHandoffPath('/run', {
           package: '@scope/pkg',
           name: 'has/slash\\and|pipe',
         })
-      ).toBe(join('/run', '@scope', 'pkg', 'has_slash_and_pipe.json'));
+      ).toBe(
+        join('/run', 'handoffs', '@scope', 'pkg', 'has_slash_and_pipe.json')
+      );
     });
 
     it('strips trailing dots/spaces (Windows file-naming rule)', () => {
@@ -123,7 +134,7 @@ describe('handoff', () => {
           package: '@scope/pkg',
           name: 'trailing.   ',
         })
-      ).toBe(join('/run', '@scope', 'pkg', 'trailing.json'));
+      ).toBe(join('/run', 'handoffs', '@scope', 'pkg', 'trailing.json'));
     });
 
     it.each([
@@ -139,7 +150,7 @@ describe('handoff', () => {
       (input, expected) => {
         expect(
           stepHandoffPath('/run', { package: '@scope/pkg', name: input })
-        ).toBe(join('/run', '@scope', 'pkg', `${expected}.json`));
+        ).toBe(join('/run', 'handoffs', '@scope', 'pkg', `${expected}.json`));
       }
     );
 
@@ -148,7 +159,7 @@ describe('handoff', () => {
       (input) => {
         expect(
           stepHandoffPath('/run', { package: '@scope/pkg', name: input })
-        ).toBe(join('/run', '@scope', 'pkg', `${input}.json`));
+        ).toBe(join('/run', 'handoffs', '@scope', 'pkg', `${input}.json`));
       }
     );
   });

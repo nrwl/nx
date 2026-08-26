@@ -1,4 +1,4 @@
-import { prompt } from 'enquirer';
+import { selectPrompt } from '../utils/prompt-helpers';
 import { stripVTControlCharacters } from 'node:util';
 
 import type { Observable } from 'rxjs';
@@ -33,7 +33,11 @@ import {
   createNxKeyLicenseeInformation,
   getNxKeyInformation,
 } from '../utils/nx-key';
-import { output } from '../utils/output';
+import {
+  isLogGroupingEnabled,
+  isStaticOutputStyle,
+  output,
+} from '../utils/output';
 import { shouldPrintConfigureAiAgentsDisclaimer } from '../ai/configure-ai-agents-disclaimer';
 import {
   collectEnabledTaskSyncGeneratorsFromTaskGraph,
@@ -64,6 +68,7 @@ import {
   PerformanceLifeCycle,
   flushPerformanceReport,
 } from './life-cycles/performance-life-cycle';
+import { prefetchRemoteCacheOnboardingUrl } from './life-cycles/performance-report';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 import { TaskTelemetryLifeCycle } from './life-cycles/task-telemetry-life-cycle';
 import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
@@ -130,6 +135,10 @@ async function getTerminalOutputLifeCycle(
   if (tasks.length === 1 && !ORIGINAL_TUI_ENV_VALUE) {
     process.env.NX_TUI = 'false';
   }
+
+  // Kick off in the background so the URL is ready by the exit report. A brief
+  // sync preamble (git remote + axios load) runs here; the network call does not.
+  prefetchRemoteCacheOnboardingUrl(nxJson);
 
   if (isTuiEnabled()) {
     const interceptedNxCloudLogs: (string | Uint8Array<ArrayBufferLike>)[] = [];
@@ -886,30 +895,21 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
 
 async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {
   try {
-    const promptConfig = {
-      name: 'applyChanges',
-      type: 'autocomplete',
-      message:
-        'Would you like to sync the identified changes to get your workspace up to date?',
+    // No footer slot, so the opt-out note is part of the message.
+    const applyChanges = await selectPrompt({
+      message: `Would you like to sync the identified changes to get your workspace up to date?${pc.dim(
+        '\nYou can skip this prompt by setting the `sync.applyChanges` option to `true` in your `nx.json`.\nFor more information, refer to the docs: https://nx.dev/concepts/sync-generators.'
+      )}`,
       choices: [
+        { value: 'yes', label: 'Yes, sync the changes and run the tasks' },
         {
-          name: 'yes',
-          message: 'Yes, sync the changes and run the tasks',
-        },
-        {
-          name: 'no',
-          message: 'No, run the tasks without syncing the changes',
+          value: 'no',
+          label: 'No, run the tasks without syncing the changes',
         },
       ],
-      footer: () =>
-        pc.dim(
-          '\nYou can skip this prompt by setting the `sync.applyChanges` option to `true` in your `nx.json`.\nFor more information, refer to the docs: https://nx.dev/concepts/sync-generators.'
-        ),
-    };
-
-    return await prompt<{ applyChanges: 'yes' | 'no' }>([promptConfig]).then(
-      ({ applyChanges }) => applyChanges === 'yes'
-    );
+      onCancel: () => process.exit(1),
+    });
+    return applyChanges === 'yes';
   } catch {
     process.exit(1);
   }
@@ -917,32 +917,18 @@ async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {
 
 async function confirmRunningTasksWithSyncFailures(): Promise<void> {
   try {
-    const promptConfig = {
-      name: 'runTasks',
-      type: 'autocomplete',
-      message:
-        'Would you like to ignore the sync failures and continue running the tasks?',
+    const runTasks = await selectPrompt({
+      message: `Would you like to ignore the sync failures and continue running the tasks?${pc.dim(
+        `\nWhen running in CI and there are sync failures, the tasks won't run. Addressing the errors above is highly recommended to prevent failures in CI.`
+      )}`,
       choices: [
-        {
-          name: 'yes',
-          message: 'Yes, ignore the failures and run the tasks',
-        },
-        {
-          name: 'no',
-          message: `No, don't run the tasks`,
-        },
+        { value: 'yes', label: 'Yes, ignore the failures and run the tasks' },
+        { value: 'no', label: `No, don't run the tasks` },
       ],
-      footer: () =>
-        pc.dim(
-          `\nWhen running in CI and there are sync failures, the tasks won't run. Addressing the errors above is highly recommended to prevent failures in CI.`
-        ),
-    };
+      onCancel: () => process.exit(1),
+    });
 
-    const runTasks = await prompt<{ runTasks: 'yes' | 'no' }>([
-      promptConfig,
-    ]).then(({ runTasks }) => runTasks === 'yes');
-
-    if (!runTasks) {
+    if (runTasks !== 'yes') {
       process.exit(1);
     }
   } catch {
@@ -954,10 +940,14 @@ export function setEnvVarsBasedOnArgs(
   nxArgs: NxArgs,
   loadDotEnvFiles: boolean
 ) {
+  // Batch mode turns on streaming implicitly, but streamed output interleaves
+  // between tasks and so cannot be wrapped in collapsible log groups. Where
+  // grouping applies, let it win over the implicit request; an output style the
+  // user asked for explicitly still wins over grouping.
+  const batchMode = process.env.NX_BATCH_MODE === 'true' || nxArgs.batch;
   if (
     nxArgs.outputStyle == 'stream' ||
-    process.env.NX_BATCH_MODE === 'true' ||
-    nxArgs.batch
+    (batchMode && !isLogGroupingEnabled())
   ) {
     process.env.NX_STREAM_OUTPUT = 'true';
     process.env.NX_PREFIX_OUTPUT = 'true';
@@ -1173,7 +1163,7 @@ function shouldUseDynamicLifeCycle(
   if (!process.stdout.isTTY) return false;
   if (isCI()) return false;
   if (
-    outputStyle === 'static' ||
+    isStaticOutputStyle(outputStyle) ||
     outputStyle === 'stream' ||
     outputStyle === 'stream-without-prefixes'
   )

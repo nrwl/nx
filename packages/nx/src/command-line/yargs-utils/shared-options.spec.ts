@@ -209,6 +209,21 @@ describe('shared-options', () => {
         }
       ));
 
+    it('should leave the style unset when none was given', async () =>
+      withEnvironmentVariables(
+        { NX_TUI: false, CI: 'true', NX_TUI_SKIP_CAPABILITY_CHECK: 'true' },
+        async () => {
+          // The failures-only default is resolved where output is rendered, not
+          // here. outputStyle is also read by the orchestrator to decide whether
+          // a task streams, and naming a static style there stops
+          // shouldStreamOutput from being consulted at all - which silently
+          // stops continuous tasks from streaming.
+          const command = withOutputStyleOption(argv);
+          const result = await command.parseAsync([]);
+          expect(result.outputStyle).toBeUndefined();
+        }
+      ));
+
     it('should use NX_DEFAULT_OUTPUT_STYLE if not set', async () =>
       withEnvironmentVariables(
         {

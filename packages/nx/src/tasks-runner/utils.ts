@@ -26,6 +26,7 @@ import {
   warnLegacyDependsOnMagicString,
 } from './legacy-depends-on-warning';
 import { isGlobPattern } from '../utils/globs';
+import { isLongRunningTargetName } from '../utils/long-running-target';
 import { joinPathFragments } from '../utils/path';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
 import { splitTargetFromNodes } from '../utils/split-target';
@@ -661,15 +662,10 @@ export function isCacheableTask(task: Task): boolean {
 }
 
 function longRunningTask(task: Task) {
-  const t = task.target.target;
   return (
     task.continuous ||
     (!!task.overrides['watch'] && task.overrides['watch'] !== 'false') ||
-    t.endsWith(':watch') ||
-    t.endsWith('-watch') ||
-    t === 'serve' ||
-    t === 'dev' ||
-    t === 'start'
+    isLongRunningTargetName(task.target.target)
   );
 }
 

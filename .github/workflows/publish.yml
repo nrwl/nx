@@ -21,8 +21,8 @@ env:
   DEBUG: napi:*
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
   CYPRESS_INSTALL_BINARY: 0
-  NODE_VERSION: 26.3.0
-  PNPM_VERSION: 11.2.2 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
+  NODE_VERSION: 26.7.0
+  PNPM_VERSION: 11.22.0 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
   NX_GRADLE_PROJECT_GRAPH_TIMEOUT: 600
 
 jobs:
@@ -321,7 +321,7 @@ jobs:
               export PATH="$JAVA_HOME\bin:$PATH"
               java -version
               pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
-    name: stable - ${{ matrix.settings.target }} - node@26.3.0
+    name: stable - ${{ matrix.settings.target }} - node@26.7.0
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -434,7 +434,7 @@ jobs:
           DEBUG: napi:*
           RUSTUP_IO_THREADS: 1
           PLAYWRIGHT_BROWSERS_PATH: 0
-          NODE_VERSION: 26.3.0
+          NODE_VERSION: 26.7.0
           NX_GRADLE_DISABLE: 'true'
           NX_DOTNET_DISABLE: 'true'
           NODE_OPTIONS: '--max-old-space-size=4096'
@@ -448,7 +448,7 @@ jobs:
             env
             whoami
             sudo pkg install -y -f node libnghttp2 www/npm git ca_root_nss
-            sudo npm install --location=global --ignore-scripts pnpm@11.2.2
+            sudo npm install --location=global --ignore-scripts pnpm@11.22.0
             curl https://sh.rustup.rs -sSf --output rustup.sh
             sh rustup.sh -y --profile minimal --default-toolchain stable
             source "$HOME/.cargo/env"
@@ -627,7 +627,7 @@ jobs:
           corepack prepare --activate
 
       - name: Use npm 11.5.2
-        run: npm install -g npm@11.5.2
+        run: npm install -g npm@11.5.2 --ignore-scripts
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

@@ -8,6 +8,22 @@ topics:
 
 [Nx Agents](/docs/features/ci-features/distribute-task-execution) distributes your tasks across multiple machines on every Nx Cloud plan. On the [Nx Enterprise plan](https://nx.dev/enterprise?utm_source=nx.dev&utm_medium=callout&utm_campaign=bring-your-own-compute) you can also bring your own compute, running the agents on your own CI provider instead of Nx Cloud-hosted machines. The recipes below show how to set that up.
 
+Every recipe on this page uses the same [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file.
+Setting `dte.distribute-on` to `manual` tells Nx Cloud to distribute tasks to the agents your own pipeline starts instead of provisioning Nx Agents.
+`lifecycle.stop-after` lists the targets that mark the run complete.
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on: manual
+lifecycle:
+  stop-after:
+    - e2e-ci
+```
+
+The main job in each recipe starts the run with `nx start-nx-agents`, which reads that file.
+The command takes no configuration flags.
+
 {% tabs syncKey="ci-provider" %}
 
 {% tabitem label="GitHub" %}
@@ -64,8 +80,8 @@ jobs:
       - name: Derive appropriate SHAs for base and head for `nx affected` commands
         uses: nrwl/nx-set-shas@v5
 
-      - name: Initialize the Nx Cloud distributed CI run and stop agents when the build tasks are done
-        run: npx nx start-ci-run --distribute-on="manual" --stop-agents-after=e2e-ci
+      - name: Start the Nx Cloud CI run using the settings in .nx/ci-config.yaml
+        run: npx nx start-nx-agents
 
       - name: Check the formatting
         run: npx nx record -- nx format:check
@@ -145,8 +161,8 @@ jobs:
       - run: npm ci
       - nx/set-shas
 
-      # Tell Nx Cloud to use DTE and stop agents when the e2e-ci tasks are done
-      - run: npx nx start-ci-run --distribute-on="manual" --stop-agents-after=e2e-ci
+      # Start the Nx Cloud CI run using the settings in .nx/ci-config.yaml
+      - run: npx nx start-nx-agents
       # Send logs to Nx Cloud for any CLI command
       - run: npx nx record -- nx format:check
       # Lint, test, build and run e2e on agent jobs for everything affected by a change
@@ -273,7 +289,7 @@ jobs:
 
       - script: git branch --track main origin/main
       - script: npm ci
-      - script: npx nx start-ci-run --distribute-on="manual" --stop-agents-after="e2e-ci"
+      - script: npx nx start-nx-agents
       - script: npx nx record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint,test,build,e2e-ci --parallel=2 --configuration=ci
 
@@ -328,7 +344,7 @@ pipelines:
                 - export NX_BRANCH=$BITBUCKET_PR_ID
 
                 - npm ci
-                - npx nx start-ci-run --distribute-on="manual" --stop-agents-after="e2e-ci"
+                - npx nx start-nx-agents
                 - npx nx record -- nx format:check
                 - npx nx affected --target=lint,test,build,e2e-ci --parallel=2
               after-script:
@@ -402,7 +418,7 @@ nx-dte:
   stage: affected
   extends: .base-pipeline
   script:
-    - yarn nx start-ci-run --distribute-on="manual" --stop-agents-after=e2e-ci
+    - yarn nx start-nx-agents
     - yarn nx record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
     - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build,e2e-ci --parallel=2
   # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -450,7 +466,7 @@ pipeline {
                     agent any
                     steps {
                         sh "npm ci"
-                        sh "npx nx start-ci-run --distribute-on='manual' --stop-agents-after='e2e-ci'"
+                        sh "npx nx start-nx-agents"
                         sh "npx nx record -- nx format:check"
                         sh "npx nx affected --base=HEAD~1 -t lint,test,build,e2e-ci --configuration=ci --parallel=2"
                     }
@@ -468,7 +484,7 @@ pipeline {
                     agent any
                     steps {
                         sh "npm ci"
-                        sh "npx nx start-ci-run --distribute-on='manual' --stop-agents-after='e2e-ci'"
+                        sh "npx nx start-nx-agents"
                         sh "npx nx record -- nx format:check"
                         sh "npx nx affected --base origin/${env.CHANGE_TARGET} -t lint,test,build,e2e-ci --parallel=2 --configuration=ci"
                     }

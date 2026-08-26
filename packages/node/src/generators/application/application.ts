@@ -170,7 +170,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
 
   updateTsConfigOptions(tree, options);
 
-  if (options.linter === 'eslint') {
+  if (options.linter !== 'none') {
     const lintTask = await addLintingToApplication(tree, options);
     tasks.push(lintTask);
   }
@@ -198,6 +198,27 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       },
     };
     updateProjectConfiguration(tree, options.name, projectConfig);
+  } else if (options.unitTestRunner === 'vitest') {
+    ensurePackage('@nx/vitest', nxVersion);
+    // CommonJS `require` instead of dynamic ESM `import`: `ensurePackage`
+    // exposes the temp install via `Module._initPaths`, which ESM ignores.
+    const {
+      configurationGenerator,
+    }: typeof import('@nx/vitest/generators') = require('@nx/vitest/generators');
+    const vitestTask = await configurationGenerator(tree, {
+      project: options.name,
+      uiFramework: 'none',
+      coverageProvider: 'v8',
+      testEnvironment: 'node',
+      runtimeTsconfigFileName: 'tsconfig.app.json',
+      // Only the fastify template ships a spec, so the other frameworks would
+      // otherwise fail `nx test` on a freshly generated app.
+      passWithNoTests: true,
+      addPlugin: options.addPlugin,
+      skipPackageJson: options.skipPackageJson,
+      skipFormat: true,
+    });
+    tasks.push(vitestTask);
   } else {
     // No need for default spec file if unit testing is not setup.
     tree.delete(

@@ -6,7 +6,10 @@ import {
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
-import { interpolate } from 'nx/src/tasks-runner/utils';
+import {
+  interpolate,
+  getWorkspacePackagesFromGraph,
+} from '@nx/devkit/internal';
 import { type CopyWorkspaceModulesOptions } from './schema';
 import {
   cpSync,
@@ -17,8 +20,6 @@ import {
 } from 'node:fs';
 import { dirname, join, relative, sep } from 'path';
 import { lstatSync } from 'fs';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { getWorkspacePackagesFromGraph } from 'nx/src/plugins/js/utils/get-workspace-packages-from-graph';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
 
 export default async function copyWorkspaceModules(
@@ -76,7 +77,10 @@ function handleWorkspaceModules(
     logger.verbose(`Copying ${pkgName}.`);
 
     const workspaceModuleProject = workspaceModules.get(pkgName);
-    const workspaceModuleRoot = workspaceModuleProject.data.root;
+    const workspaceModuleRoot = join(
+      workspaceRoot,
+      workspaceModuleProject.data.root
+    );
     const newWorkspaceModulePath = join(workspaceModulesDir, pkgName);
 
     // Copy the module

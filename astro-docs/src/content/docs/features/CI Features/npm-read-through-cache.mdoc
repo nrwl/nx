@@ -57,6 +57,8 @@ registry=http://npm:4873/
 ```
 
 The cache is always reachable from within your cluster at the address above.
+For package-manager-specific setup, private registry routing, and publishing configuration, see
+[Configure the npm proxy cache for Nx Agents](/docs/kb/npm-proxy-cache-setup-for-nx-agents).
 
 {% aside type="note" title="If you publish packages" %}
 If your CI publishes npm packages, set a publish registry so `npm publish` targets your real

@@ -6,7 +6,7 @@ import {
   loadViteDynamicImport,
   loadVitestDynamicImport,
 } from '../../../utils/executor-utils';
-import { isCI } from 'nx/src/devkit-internals';
+import { isCI } from '@nx/devkit/internal';
 
 jest.mock('../../../utils/options-utils', () => ({
   normalizeViteConfigFilePath: jest.fn(),
@@ -15,7 +15,13 @@ jest.mock('../../../utils/executor-utils', () => ({
   loadViteDynamicImport: jest.fn(),
   loadVitestDynamicImport: jest.fn(),
 }));
-jest.mock('nx/src/devkit-internals', () => ({ isCI: jest.fn() }));
+// Spread the actual module: `@nx/devkit/internal` re-exports ~170 names from
+// this module, so a total-replacement factory would resolve every one of them
+// to `undefined` for anything the code under test happens to touch.
+jest.mock('nx/src/devkit-internals', () => ({
+  ...jest.requireActual('nx/src/devkit-internals'),
+  isCI: jest.fn(),
+}));
 
 describe('getOptions', () => {
   const context = {

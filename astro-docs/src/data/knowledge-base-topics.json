@@ -25,6 +25,11 @@
     "description": "Install Nx, keep versions aligned, and update workspaces safely."
   },
   {
+    "id": "adoption",
+    "label": "Adoption",
+    "description": "Add Nx to an existing project or monorepo and move code in from other repositories."
+  },
+  {
     "id": "organizational-decisions",
     "label": "Organizational decisions",
     "description": "Choose a monorepo structure, ownership model, and dependency strategy for your organization."
@@ -38,6 +43,11 @@
     "id": "continuous-integration",
     "label": "Continuous integration",
     "description": "Configure CI pipelines, task distribution, caching, and failure handling."
+  },
+  {
+    "id": "nx-cloud",
+    "label": "Nx Cloud",
+    "description": "Configure Nx Cloud features, access, and integrations."
   },
   {
     "id": "tasks-caching",
@@ -84,6 +94,16 @@
     "id": "dotnet",
     "label": ".NET",
     "description": "Add .NET projects to an Nx workspace and configure incremental builds."
+  },
+  {
+    "id": "java",
+    "label": "Java",
+    "description": "Run Java builds through Nx with caching, affected analysis, and task orchestration."
+  },
+  {
+    "id": "gradle",
+    "label": "Gradle",
+    "description": "Add Nx to a Gradle workspace and run Gradle tasks through Nx."
   },
   {
     "id": "module-federation",

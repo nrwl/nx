@@ -29,7 +29,7 @@ launch-templates:
 
 ### `launch-templates.<template-name>`
 
-The name of your custom launch template. This name is used via `--distribute-on="<# of agents> <template-name>"` when starting the ci run. Supports one to many uniquely named launch templates.
+The name of your custom launch template. This name is used via [`dte.distribute-on`](/docs/reference/nx-cloud/ci-config#dtedistribute-on) in your `.nx/ci-config.yaml` file, in the form `<# of agents> <template-name>`. Supports one to many uniquely named launch templates.
 Multiple launch templates can be useful for setting up different toolchains (rust, java, node versions) or resources classes for your workspace needs.
 
 ```yaml
@@ -39,8 +39,10 @@ launch-templates:
   template-two:
 ```
 
-```shell
-nx start-ci-run --distribute-on="3 template-one"
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on: 3 template-one
 ```
 
 ### `launch-templates.<template-name>.resource-class`
@@ -188,15 +190,21 @@ launch-templates:
 When defined, specifies an existing step file to be used. **Cannot be used when `script` is also defined**
 
 You can find the [list of Nx Cloud reusable steps here](https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps). If you cannot find a reusable step that suits your needs, [you can create your own custom steps](/docs/kb/custom-steps).
+Besides the GitHub shorthand, `uses` accepts workspace-local `file://` paths and full HTTPS URLs from any host serving the raw YAML, not only GitHub. Both are described in [step reference forms](/docs/kb/custom-steps#step-reference-forms).
 
 ```yaml
 // .nx/workflows/agents.yaml
 launch-templates:
   template-one:
     init-steps:
+      # GitHub shorthand (checkout must stay remote, so no file:// here)
       - uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/checkout/main.yaml'
+      # full URL form of the GitHub shorthand
       - name: 'Install Node Modules'
-        uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-node-modules/main.yaml'
+        uses: 'https://raw.githubusercontent.com/nrwl/nx-cloud-workflows/v6/workflow-steps/install-node-modules/main.yaml'
+      # workspace-local file, resolved from the workspace root
+      - name: 'Custom Step'
+        uses: 'file:///.nx/workflows/custom-step.yaml'
 ```
 
 ### `launch-templates.<template-name>.init-steps[*].script`

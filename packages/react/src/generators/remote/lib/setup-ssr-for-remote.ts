@@ -1,5 +1,8 @@
-import { GeneratorCallback, names, offsetFromRoot, Tree } from '@nx/devkit';
 import {
+  GeneratorCallback,
+  names,
+  offsetFromRoot,
+  Tree,
   addDependenciesToPackageJson,
   generateFiles,
   joinPathFragments,

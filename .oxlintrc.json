@@ -1,0 +1,40 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc"],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    "no-unused-vars": "off",
+    "unicorn/no-useless-fallback-in-spread": "off",
+    "no-useless-escape": "off",
+    "no-unused-expressions": "off",
+    "unicorn/no-useless-spread": "off",
+    "no-extra-boolean-cast": "off",
+    "no-control-regex": "off",
+    "typescript/no-wrapper-object-types": "off",
+    "no-useless-catch": "off",
+    "unicorn/no-empty-file": "off",
+    "typescript/prefer-as-const": "off",
+    "no-async-promise-executor": "off",
+    "require-yield": "off",
+    "unicorn/no-new-array": "off",
+    "unicorn/prefer-string-starts-ends-with": "off",
+    "no-unreachable": "off",
+    "unicorn/no-useless-length-check": "off",
+    "no-constant-condition": "off",
+    "no-sparse-arrays": "off",
+    "no-unassigned-vars": "off",
+    "no-unsafe-optional-chaining": "off",
+    "typescript/no-this-alias": "off",
+    "typescript/no-unnecessary-parameter-property-assignment": "off",
+    "no-constant-binary-expression": "off",
+    "no-ex-assign": "off",
+    "no-import-assign": "off",
+    "no-self-assign": "off",
+    "oxc/only-used-in-recursion": "off"
+  },
+  "env": {
+    "builtin": true
+  }
+}

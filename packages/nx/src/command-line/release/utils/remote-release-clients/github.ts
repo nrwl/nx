@@ -1,5 +1,5 @@
 import * as pc from 'picocolors';
-import { prompt } from 'enquirer';
+import { selectPrompt } from '../../../../utils/prompt-helpers';
 import { execFileSync, execSync } from 'node:child_process';
 import { existsSync, promises as fsp } from 'node:fs';
 import { homedir } from 'node:os';
@@ -169,6 +169,12 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
       [...authors.keys()].map(async (authorName) => {
         const meta = authors.get(authorName);
         for (const email of meta.email) {
+          // An empty email makes the URL `/users/find/`, so ungh attributes
+          // the commit to the "find" user rather than the real author.
+          // Non-emails just 404, but skip those too to avoid a wasted lookup.
+          if (!email || !email.includes('@')) {
+            continue;
+          }
           if (email.endsWith('@users.noreply.github.com')) {
             const match = email.match(
               /^(\d+\+)?([^@]+)@users\.noreply\.github\.com$/
@@ -375,29 +381,17 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
 
   private async promptForContinueInGitHub(): Promise<boolean> {
     try {
-      const reply = await prompt<{ open: 'Yes' | 'No' }>([
-        {
-          name: 'open',
-          message:
-            'Do you want to finish creating the release manually in your browser?',
-          type: 'autocomplete',
-          choices: [
-            {
-              name: 'Yes',
-              hint: 'It will pre-populate the form for you',
-            },
-            {
-              name: 'No',
-            },
-          ],
-          initial: 0,
-        },
-      ]);
-      return reply.open === 'Yes';
+      const open = await selectPrompt({
+        message:
+          'Do you want to finish creating the release manually in your browser?',
+        choices: [
+          { value: 'Yes', hint: 'It will pre-populate the form for you' },
+          { value: 'No' },
+        ],
+        onCancel: () => process.exit(1),
+      });
+      return open === 'Yes';
     } catch {
-      // Ensure the cursor is always restored before exiting
-      process.stdout.write('\u001b[?25h');
-      // Handle the case where the user exits the prompt with ctrl+c
       process.exit(1);
     }
   }

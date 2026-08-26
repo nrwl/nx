@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   readJson,
@@ -751,11 +751,7 @@ describe('Init MF', () => {
       describe('App', () => {
         beforeEach(async () => {
           await TestBed.configureTestingModule({
-            imports: [
-              RouterModule.forRoot([{ path: '', component: NxWelcome }]),
-              App,
-              NxWelcome,
-            ],
+            imports: [RouterModule.forRoot([{ path: '', component: NxWelcome }]), App, NxWelcome],
           }).compileComponents();
         });
 

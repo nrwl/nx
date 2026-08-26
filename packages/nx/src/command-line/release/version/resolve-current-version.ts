@@ -1,5 +1,5 @@
 import * as pc from 'picocolors';
-import { prompt } from 'enquirer';
+import { confirmationPrompt } from '../../../utils/prompt-helpers';
 import { NxReleaseVersionConfiguration } from '../../../config/nx-json';
 import type { ProjectGraphProjectNode } from '../../../config/project-graph';
 import type { Tree } from '../../../generators/tree';
@@ -387,17 +387,14 @@ async function handleNoAvailableDiskFallback({
     throw unresolvableCurrentVersionError;
   }
   try {
-    const reply = await prompt<{ useZero: boolean }>([
-      {
-        name: 'useZero',
-        message: `\n${pc.yellow(
-          `Warning: Unable to resolve the current version for "${projectName}" ${currentVersionSourceMessage} and there is no version on disk to fall back to. This is invalid with ${specifierSource} because the new version is determined by relatively bumping the current version.\n\nTo resolve this, ${resolutionSuggestion}, or set an appropriate version in a supported manifest file such as ${validManifestFilenames}`
-        )}. \n\nAlternatively, would you like to continue now by using 0.0.0 as the current version?`,
-        type: 'confirm',
-        initial: false,
-      },
-    ]);
-    if (!reply.useZero) {
+    const useZero = await confirmationPrompt({
+      message: `\n${pc.yellow(
+        `Warning: Unable to resolve the current version for "${projectName}" ${currentVersionSourceMessage} and there is no version on disk to fall back to. This is invalid with ${specifierSource} because the new version is determined by relatively bumping the current version.\n\nTo resolve this, ${resolutionSuggestion}, or set an appropriate version in a supported manifest file such as ${validManifestFilenames}`
+      )}. \n\nAlternatively, would you like to continue now by using 0.0.0 as the current version?`,
+      initial: false,
+      onCancel: () => false,
+    });
+    if (!useZero) {
       // Throw any error to skip the fallback to 0.0.0, may as well use the one we already have
       throw unresolvableCurrentVersionError;
     }

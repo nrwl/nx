@@ -12,6 +12,7 @@ import {
 } from '../../generators/tree';
 import { readJsonFile } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
+import { singleLine } from './text';
 import {
   ArrayPackageGroup,
   NxMigrationsConfiguration,
@@ -241,6 +242,7 @@ export function logSkippedPostMigrationInstall(root: string): void {
 export class ChangedDepInstaller {
   private initialDeps: string;
   private _skippedInstall = false;
+  private _installed = false;
 
   constructor(
     private readonly root: string,
@@ -254,6 +256,15 @@ export class ChangedDepInstaller {
     return this._skippedInstall;
   }
 
+  /**
+   * Whether an install actually ran. Distinct from `!skippedInstall`, which is
+   * only about the skip-install flag: dependencies that never changed leave
+   * both false.
+   */
+  public get installed(): boolean {
+    return this._installed;
+  }
+
   public async installDepsIfChanged(): Promise<void> {
     const currentDeps = getStringifiedPackageJsonDeps(this.root);
     if (this.initialDeps !== currentDeps) {
@@ -261,6 +272,7 @@ export class ChangedDepInstaller {
         this._skippedInstall = true;
       } else {
         await runInstall(this.root, 'post-migration', this.rerunCommand);
+        this._installed = true;
       }
     }
     this.initialDeps = currentDeps;
@@ -282,6 +294,7 @@ export async function runNxOrAngularMigration(
   changes: FileChange[];
   nextSteps: string[];
   agentContext: string[];
+  skipAgentic: boolean;
   logs: string;
   madeChanges: boolean;
 }> {
@@ -290,6 +303,8 @@ export async function runNxOrAngularMigration(
   let changes: FileChange[] = [];
   let nextSteps: string[] = [];
   let agentContext: string[] = [];
+  // Angular schematics have no return channel, so they can never waive it.
+  let skipAgentic = false;
   let logs = '';
   // Angular's `ngResult.changes` is synthesized from the schematic's
   // DryRunEvent stream so Nx and Angular paths can share commit/validation
@@ -297,24 +312,32 @@ export async function runNxOrAngularMigration(
   let madeChanges = false;
   logger.info(pc.dim('→ Running generator…'));
   if (!isAngularMigration(collection, migration.name)) {
-    ({ nextSteps, changes, agentContext, logs } = await runNxMigration(
-      root,
-      collectionPath,
-      collection,
-      migration.name,
-      migration.version,
-      captureGeneratorOutput
-    ));
+    ({ nextSteps, changes, agentContext, skipAgentic, logs } =
+      await runNxMigration(
+        root,
+        collectionPath,
+        collection,
+        migration.name,
+        migration.version,
+        captureGeneratorOutput
+      ));
     madeChanges = changes.length > 0;
 
-    logger.info(`Ran ${migration.name} from ${migration.package}`);
+    logger.info(singleLine(`Ran ${migration.name} from ${migration.package}`));
     if (migration.description) {
-      logger.info(`  ${migration.description}`);
+      logger.info(singleLine(`  ${migration.description}`));
     }
     logger.info('');
     if (!madeChanges) {
       logger.info(`No changes were made\n`);
-      return { changes, nextSteps, agentContext, logs, madeChanges };
+      return {
+        changes,
+        nextSteps,
+        agentContext,
+        skipAgentic,
+        logs,
+        madeChanges,
+      };
     }
 
     logger.info('Changes:');
@@ -335,25 +358,38 @@ export async function runNxOrAngularMigration(
     madeChanges = ngResult.madeChanges;
     logs = ngResult.loggingQueue.join('\n');
 
-    logger.info(`Ran ${migration.name} from ${migration.package}`);
+    logger.info(singleLine(`Ran ${migration.name} from ${migration.package}`));
     if (migration.description) {
-      logger.info(`  ${migration.description}`);
+      logger.info(singleLine(`  ${migration.description}`));
     }
     logger.info('');
     if (!madeChanges) {
       logger.info(`No changes were made\n`);
-      return { changes, nextSteps, agentContext, logs, madeChanges };
+      return {
+        changes,
+        nextSteps,
+        agentContext,
+        skipAgentic,
+        logs,
+        madeChanges,
+      };
     }
 
     logger.info('Changes:');
-    ngResult.loggingQueue.forEach((log) => logger.info('  ' + log));
+    ngResult.loggingQueue.forEach((log) => logger.info(singleLine('  ' + log)));
     logger.info('');
   }
 
-  return { changes, nextSteps, agentContext, logs, madeChanges };
+  return { changes, nextSteps, agentContext, skipAgentic, logs, madeChanges };
 }
 
-export function getStringifiedPackageJsonDeps(root: string): string {
+/**
+ * The workspace's declared dependencies, serialized for equality comparison,
+ * or `null` when package.json could not be read or parsed. Callers that
+ * persist the value across processes need that distinction: an unreadable
+ * package.json is not an empty dependency set.
+ */
+export function readPackageJsonDeps(root: string): string | null {
   try {
     const { dependencies, devDependencies } = readJsonFile<PackageJson>(
       join(root, 'package.json')
@@ -361,10 +397,14 @@ export function getStringifiedPackageJsonDeps(root: string): string {
 
     return JSON.stringify([dependencies, devDependencies]);
   } catch {
-    // We don't really care if the .nx/installation property changes,
-    // whenever nxw is invoked it will handle the dep updates.
-    return '';
+    return null;
   }
+}
+
+export function getStringifiedPackageJsonDeps(root: string): string {
+  // We don't really care if the .nx/installation property changes,
+  // whenever nxw is invoked it will handle the dep updates.
+  return readPackageJsonDeps(root) ?? '';
 }
 
 export async function runNxMigration(
@@ -396,29 +436,36 @@ export async function runNxMigration(
   } else {
     result = await fn(host, {});
   }
-  const { nextSteps, agentContext } = parseMigrationReturn(result);
+  const { nextSteps, agentContext, skipAgentic } = parseMigrationReturn(result);
   host.lock();
   const changes = host.listChanges();
   flushChanges(root, changes);
-  return { changes, nextSteps, agentContext, logs };
+  return { changes, nextSteps, agentContext, skipAgentic, logs };
 }
 
 export function parseMigrationReturn(value: unknown): {
   nextSteps: string[];
   agentContext: string[];
+  skipAgentic: boolean;
 } {
   if (Array.isArray(value)) {
-    return { nextSteps: filterStrings(value), agentContext: [] };
+    return {
+      nextSteps: filterStrings(value),
+      agentContext: [],
+      skipAgentic: false,
+    };
   }
   if (value && typeof value === 'object') {
     const obj = value as Record<string, unknown>;
     return {
       nextSteps: filterStrings(obj.nextSteps),
       agentContext: filterStrings(obj.agentContext),
+      // Strict, so a truthy non-boolean can't opt a migration out of its AI step.
+      skipAgentic: obj.skipAgentic === true,
     };
   }
   // Catches `void`, mistakenly-returned generator callbacks, malformed values.
-  return { nextSteps: [], agentContext: [] };
+  return { nextSteps: [], agentContext: [], skipAgentic: false };
 }
 
 // Bucket-level tolerance: a single non-string entry shouldn't discard the

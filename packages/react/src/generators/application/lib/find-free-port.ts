@@ -1,5 +1,4 @@
-import { Tree } from 'nx/src/generators/tree';
-import { getProjects } from '@nx/devkit';
+import { getProjects, Tree } from '@nx/devkit';
 
 export function findFreePort(host: Tree) {
   const projects = getProjects(host);

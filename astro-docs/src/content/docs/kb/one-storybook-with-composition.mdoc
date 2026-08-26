@@ -84,7 +84,7 @@ Update the `project.json` file of each library to set the `port` option to `4401
 ```
 
 {% aside type="note" title="Inferred tasks vs explicit tasks" %}
-Projects using [inferred tasks](/docs/concepts/inferred-tasks) might not have the `storybook` target defined in the `project.json` file, so you need to add the target with only the `port` option set.
+Projects using [inferred tasks](/docs/concepts/mental-model#inferred-tasks) might not have the `storybook` target defined in the `project.json` file, so you need to add the target with only the `port` option set.
 
 If the project has the `storybook` target explicitly defined in the `project.json` file, you need to update or set the `port` option.
 {% /aside %}
@@ -101,7 +101,7 @@ import { mergeConfig } from 'vite';
 
 const config: StorybookConfig = {
   stories: ['../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
+  addons: [],
   framework: {
     name: '@storybook/react-vite',
     options: {},
@@ -174,7 +174,7 @@ import { mergeConfig } from 'vite';
 
 const config: StorybookConfig = {
   stories: ['../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
+  addons: [],
   framework: {
     name: '@storybook/react-vite',
     options: {},

@@ -2,7 +2,11 @@ import { mkdirSync, readFileSync, rmSync } from 'fs';
 import { join } from 'path';
 import { rsort } from 'semver';
 import { normalizeVersion } from '../version-utils';
-import { HandoffFile, MIGRATE_RUNS_RELATIVE_DIR } from './types';
+import {
+  HANDOFFS_DIR_NAME,
+  HandoffFile,
+  MIGRATE_RUNS_RELATIVE_DIR,
+} from './types';
 
 /** Returns the run directory for a given workspace + run id (target version). */
 export function runDirPath(workspaceRoot: string, runId: string): string {
@@ -74,7 +78,9 @@ function sanitizeSegment(value: string): string {
 }
 
 /**
- * Absolute path of the handoff file for a migration step within a run.
+ * Absolute path of the handoff file for a migration step within a run, under
+ * the run directory's `handoffs/` subtree: the pre-authorized write scope
+ * stops there, so a handoff placed anywhere else costs an approval prompt.
  * The package's scope (if any) becomes a real subdirectory so the package name
  * stays readable; two packages can ship a migration with the same name without
  * colliding because they land in different package subdirectories. Each
@@ -86,6 +92,7 @@ export function stepHandoffPath(
 ): string {
   return join(
     runDir,
+    HANDOFFS_DIR_NAME,
     ...migration.package.split('/').map(sanitizeSegment),
     `${sanitizeSegment(migration.name)}.json`
   );

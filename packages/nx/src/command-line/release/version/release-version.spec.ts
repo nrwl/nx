@@ -19,8 +19,10 @@ jest.mock('./derive-specifier-from-conventional-commits', () => ({
     mocks.deriveSpecifierFromConventionalCommits(...args),
 }));
 
-jest.mock('enquirer', () => ({
-  prompt: (...args: any[]) => mocks.prompt(...args),
+jest.mock('@clack/prompts', () => ({
+  autocomplete: (...args: any[]) => mocks.prompt(...args),
+  text: (...args: any[]) => mocks.prompt(...args),
+  isCancel: () => false,
 }));
 
 jest.mock('./version-actions', () => {
@@ -498,13 +500,13 @@ describe('releaseVersionGenerator (ported tests)', () => {
         stubProcessExit = true;
         // First project will be minor
         mockPrompt
-          .mockReturnValueOnce(Promise.resolve({ specifier: 'minor' }))
+          .mockReturnValueOnce(Promise.resolve('minor'))
           // Next project will be patch
-          .mockReturnValueOnce(Promise.resolve({ specifier: 'patch' }))
+          .mockReturnValueOnce(Promise.resolve('patch'))
           // Final project will be custom explicit version (1.2.3)
           // For custom version, first prompt returns 'custom', then second prompt returns the version
-          .mockReturnValueOnce(Promise.resolve({ specifier: 'custom' }))
-          .mockReturnValueOnce(Promise.resolve({ specifier: '1.2.3' }));
+          .mockReturnValueOnce(Promise.resolve('custom'))
+          .mockReturnValueOnce(Promise.resolve('1.2.3'));
 
         const { nxReleaseConfig, projectGraph, filters } =
           await createNxReleaseConfigAndPopulateWorkspace(

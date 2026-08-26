@@ -7,3 +7,10 @@
 export { versions, getInstalledJestMajorVersion } from './src/utils/versions';
 
 export { findRootJestPreset } from './src/utils/config/config-file';
+
+/**
+ * The Oxlint plugins a Jest-tested project needs. Declared here so the linter
+ * does not have to know what a test runner requires; `@nx/js`'s
+ * `addLintingToProject` reads it through `ensurePackage`.
+ */
+export const oxlintPlugins = ['jest'];

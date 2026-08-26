@@ -26,62 +26,33 @@ const packages: { npmName: string; nxName: string; pkgRoot: string }[] =
   });
 
 /**
- * Score a package name against the user's input for ranking.
- * Lower score = better match. Returns Infinity for no match.
- *
- * Matching is done against the "short name" — the part after the scope
- * (e.g. "react" for "@nx/react") as well as the full name.
- *
- *   0  exact match on short name ("nx" → "nx")
- *   1  exact match on full name
- *   2  short name starts with input ("react" matches "@nx/react-native")
- *   3  full name starts with input
- *   4  short name contains input
- *   5  full name contains input
+ * Match a package name against the user's input, on both the full name and
+ * the "short name" — the part after the scope (e.g. "react" for "@nx/react").
  */
-function packageMatchScore(input: string, name: string): number {
+function packageMatches(input: string, name: string): boolean {
   const lower = input.toLowerCase();
   const fullLower = name.toLowerCase();
   const shortName = fullLower.includes('/')
     ? fullLower.split('/').pop()!
     : fullLower;
-
-  if (shortName === lower) return 0;
-  if (fullLower === lower) return 1;
-  if (shortName.startsWith(lower)) return 2;
-  if (fullLower.startsWith(lower)) return 3;
-  if (shortName.includes(lower)) return 4;
-  if (fullLower.includes(lower)) return 5;
-  return Infinity;
+  return shortName.includes(lower) || fullLower.includes(lower);
 }
 
 async function promptPackages(): Promise<typeof packages> {
-  const { prompt } = require('enquirer');
+  const { autocompleteMultiselect, isCancel } = await import('@clack/prompts');
   // Reserve lines for the prompt header, input, footer hint, and breathing room
   const visibleChoices = Math.max(5, termSize().rows - 4);
-  const result: { packages: string[] } = await prompt({
-    type: 'autocomplete',
-    name: 'packages',
+  const selected = await autocompleteMultiselect<string>({
     message: 'Select packages to copy',
-    choices: packages.map((p) => p.nxName),
-    multiple: true,
-    limit: visibleChoices,
-    suggest(input: string, choices: { name: string; message: string }[]) {
-      if (!input) return choices;
-      return choices
-        .map((ch) => ({ ch, score: packageMatchScore(input, ch.message) }))
-        .filter(({ score }) => score < Infinity)
-        .sort((a, b) => a.score - b.score)
-        .map(({ ch }) => ch);
-    },
+    options: packages.map((p) => ({ value: p.nxName })),
+    maxItems: visibleChoices,
+    filter: (search, option) => packageMatches(search, option.value),
   });
-  if (result.packages.length === 0) {
+  if (isCancel(selected) || selected.length === 0) {
     console.error('No packages selected.');
     process.exit(1);
   }
-  return result.packages.map(
-    (nxName) => packages.find((p) => p.nxName === nxName)!
-  );
+  return selected.map((nxName) => packages.find((p) => p.nxName === nxName)!);
 }
 
 yargs(hideBin(process.argv))

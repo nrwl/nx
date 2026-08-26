@@ -1,4 +1,4 @@
-import { baseConfig } from '../../eslint.config.mjs';
+import { allowDirectNxImports, baseConfig } from '../../eslint.config.mjs';
 import * as jsoncEslintParser from 'jsonc-eslint-parser';
 
 // A later block configuring the same rule replaces its options wholesale, so
@@ -117,8 +117,9 @@ export default [
     },
   },
   {
-    // run/ takes the engine directly: routing it through migrate.ts would
-    // close the cycle the pattern below blocks.
+    // run/ owns the durable run-state format. It takes the engine directly:
+    // routing it through migrate.ts would close the cycle the pattern below
+    // blocks.
     files: ['src/command-line/migrate/run/**/*.ts'],
     rules: {
       '@typescript-eslint/no-restricted-imports': [
@@ -132,11 +133,41 @@ export default [
               message:
                 "Importing migrate.ts from migrate/run closes an import cycle: migrate.ts already imports run's barrel. Import the shared helper modules under migrate/ directly instead.",
             },
+            {
+              group: [
+                '**/utils/output',
+                '**/utils/output.js',
+                '**/utils/logger',
+                '**/utils/logger.js',
+              ],
+              message:
+                'Write agent-facing output through run/agent-output, which collapses line breaks in untrusted values. This stdout also carries the <nx_migrate_*> blocks the driving agent parses, so a value that keeps its own break can forge one.',
+            },
           ],
         },
       ],
+      // Same boundary as the import restriction above: console writes the two
+      // streams the agent reads, with nothing in between.
+      'no-console': 'error',
+      'no-restricted-syntax': [
+        'error',
+        {
+          // Both spellings: `process.stdout.write(...)` and a `stdout` (or
+          // `stderr`) pulled off `process`/`node:process` and written to.
+          selector:
+            "MemberExpression[object.object.name='process'][object.property.name=/^(stdout|stderr)$/][property.name='write'], MemberExpression[object.name=/^(stdout|stderr)$/][property.name='write']",
+          message:
+            'Emit blocks through run/agent-output rather than writing to a stream directly, so framing and escaping stay in one place.',
+        },
+        {
+          selector:
+            'ImportDeclaration[source.value=/^(node:)?process$/] ImportSpecifier[imported.name=/^(stdout|stderr)$/]',
+          message:
+            'Importing a stream here is the same bypass as writing to process.stdout: go through run/agent-output.',
+        },
+      ],
     },
-    ignores: ['**/*.spec.ts'],
+    ignores: ['**/*.spec.ts', '**/run/agent-output.ts'],
   },
   {
     files: ['./package.json', './executors.json', './migrations.json'],
@@ -203,6 +234,7 @@ export default [
             'events',
             'process',
             'prettier',
+            'oxfmt',
             'util',
             '@nx/nx-darwin-x64',
             '@nx/nx-darwin-arm64',
@@ -232,4 +264,14 @@ export default [
   {
     ignores: ['**/__fixtures__/**/*', 'dist', 'native-packages/**/*'],
   },
+  // Scoped to spec files on purpose. `allowDirectNxImports` defaults to matching
+  // every file, so an unscoped append would *replace* (flat config does not merge
+  // rule options) the `@typescript-eslint/no-restricted-imports` configurations
+  // above — silently dropping the `typescript` optional-dependency ban and the
+  // `nx/*` circular-import ban for all of packages/nx. `files` must come AFTER
+  // the spread to win.
+  // Spec files need the exemption because the `**/*.ts` block above redefines
+  // the rule and carries `ignores: ['**/*.spec.ts']`, leaving them on the root
+  // rule.
+  { ...allowDirectNxImports, files: ['**/*.spec.ts'] },
 ];

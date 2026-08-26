@@ -3,11 +3,11 @@ auto-install-peers=true
 enable-pre-post-scripts=true
 
 # Enable lifecycle scripts for specific packages that require them (like post-install)
-enable-scripts=@napi-rs/canvas,sharp,@swc/core,@swc/cli,@swc-node/register,esbuild
+enable-scripts=sharp,@swc/core,@swc/cli,@swc-node/register,esbuild
 
 # Compatibility
 strict-peer-dependencies=false
 lockfile-version-strict=false
 
 # Consistency across environments
-use-node-version=20.19.0 
+use-node-version=20.19.0

@@ -1,5 +1,4 @@
-import { Schema } from '@markdoc/markdoc';
-import markdoc from '@markdoc/markdoc';
+import markdoc, { Schema } from '@markdoc/markdoc';
 const { Tag } = markdoc;
 
 export const tabs: Schema = {

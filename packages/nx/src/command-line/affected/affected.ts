@@ -91,6 +91,7 @@ export async function affected(
             extraTargetDependencies,
             extraOptions
           );
+          await output.drain();
           process.exit(status);
         }
         break;

@@ -1,5 +1,5 @@
 export type Language = 'js' | 'ts';
-export type UnitTestRunner = 'jest' | 'none';
+export type UnitTestRunner = 'jest' | 'vitest' | 'none';
 export type NestSchematic =
   | 'class'
   | 'controller'

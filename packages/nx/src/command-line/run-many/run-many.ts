@@ -76,6 +76,7 @@ export async function runMany(
       extraTargetDependencies,
       extraOptions
     );
+    await output.drain();
     process.exit(status);
   }
 }

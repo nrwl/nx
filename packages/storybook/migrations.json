@@ -435,6 +435,19 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "23.2.0-test-runner": {
+      "version": "23.2.0-beta.8",
+      "requires": {
+        "storybook": ">=10.0.0 <11.0.0",
+        "@storybook/test-runner": "<0.24.0"
+      },
+      "packages": {
+        "@storybook/test-runner": {
+          "version": "^0.24.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

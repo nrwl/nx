@@ -1,9 +1,22 @@
 import * as pc from 'picocolors';
-import { hasUncommittedChanges, tryCommitChanges } from '../../utils/git-utils';
+import { readNxJson } from '../../config/configuration';
+import { getBaseRef } from '../../utils/command-line-utils';
+import {
+  getGitCurrentBranch,
+  getGitRemoteNames,
+  hasUncommittedChanges,
+  tryCommitChanges,
+} from '../../utils/git-utils';
 import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
 import type { ResolvedAgentic } from './agentic/types';
-import { migratePrompt } from './safe-prompt';
+import { MIGRATE_RUNS_RELATIVE_DIR } from './agentic/types';
+import { migrateConfirm } from './safe-prompt';
+
+// `git add -A` captures an orchestrated run's scratch state whenever the
+// ignore rule that normally hides it goes missing mid-run (a checkout, a
+// .gitignore edit, or the migration's own changes).
+const MIGRATE_COMMIT_EXCLUDES = [MIGRATE_RUNS_RELATIVE_DIR];
 
 /**
  * Discriminated result for `commitMigrationIfRequested`. Distinguishes the
@@ -44,9 +57,10 @@ export async function commitMigrationIfRequested(
 ): Promise<CommitResult> {
   if (!shouldCreateCommits) return { status: 'disabled' };
   await installDepsIfChanged();
-  // Generator may have only touched gitignored paths, or the prompt half
-  // made no change — log neutrally instead of as an error.
-  if (!hasUncommittedChanges(root)) {
+  // Generator may have only touched gitignored paths or the excluded scratch
+  // dir, or the prompt half made no change: log neutrally, not as an error.
+  // The probe excludes what the commit excludes, else the commit fails empty.
+  if (!hasUncommittedChanges(root, MIGRATE_COMMIT_EXCLUDES)) {
     logger.info(pc.dim(`- No changes to commit for ${migration.name}.`));
     return { status: 'no-changes' };
   }
@@ -55,7 +69,7 @@ export async function commitMigrationIfRequested(
     pendingMigrations
   );
   try {
-    const sha = tryCommitChanges(commitMessage, root);
+    const sha = tryCommitChanges(commitMessage, root, MIGRATE_COMMIT_EXCLUDES);
     if (sha) return { status: 'committed', sha };
     // null = commit landed but `git rev-parse HEAD` failed (see
     // `tryCommitChanges`). Degraded-but-correct — log yellow, not red.
@@ -115,11 +129,12 @@ export function commitCheckpointBeforeMigrations(
   root: string,
   commitPrefix: string
 ): void {
-  if (!hasUncommittedChanges(root)) return;
+  if (!hasUncommittedChanges(root, MIGRATE_COMMIT_EXCLUDES)) return;
   try {
     const sha = tryCommitChanges(
       `${commitPrefix}checkpoint before running migrations`,
-      root
+      root,
+      MIGRATE_COMMIT_EXCLUDES
     );
     if (sha) {
       logger.info(pc.dim(`- Checkpoint commit created: ${sha}`));
@@ -152,7 +167,9 @@ export function commitCheckpointBeforeMigrations(
  */
 export function resolveCreateCommits(args: {
   createCommits: boolean | undefined;
-  agenticKind: ResolvedAgentic['kind'];
+  // An orchestrated run always takes the agentic defaults, so the two can
+  // never disagree and one field carries both.
+  mode: ResolvedAgentic['kind'] | 'orchestrated';
   isGitRepo: boolean;
   commitPrefixIsCustom?: boolean;
 }): {
@@ -161,7 +178,11 @@ export function resolveCreateCommits(args: {
   warning?: string;
   error?: string;
 } {
-  const { createCommits, agenticKind, isGitRepo, commitPrefixIsCustom } = args;
+  const { createCommits, mode, isGitRepo, commitPrefixIsCustom } = args;
+  // The orchestrator forces the agentic defaults without the `--agentic` flag,
+  // so its warnings must not name a flag the user never passed.
+  const orchestrated = mode === 'orchestrated';
+  const agenticKind = orchestrated ? 'enabled' : mode;
 
   if (createCommits === true && !isGitRepo) {
     return {
@@ -178,7 +199,9 @@ export function resolveCreateCommits(args: {
         effective: false,
         agenticHasDiffContext: false,
         warning:
-          "--no-create-commits was passed alongside --agentic. Without per-migration commits, the agent can't isolate the current migration's changes from earlier migrations in this run. Drop --no-create-commits for accurate per-migration review." +
+          (orchestrated
+            ? "--no-create-commits was passed, but orchestrated migrate runs create per-migration commits by default. Without them, the agent can't isolate the current migration's changes from earlier migrations in this run. Drop --no-create-commits for accurate per-migration review."
+            : "--no-create-commits was passed alongside --agentic. Without per-migration commits, the agent can't isolate the current migration's changes from earlier migrations in this run. Drop --no-create-commits for accurate per-migration review.") +
           (commitPrefixIsCustom
             ? ' Note: the custom --commit-prefix value will have no effect because commits are disabled.'
             : ''),
@@ -191,7 +214,9 @@ export function resolveCreateCommits(args: {
         effective: false,
         agenticHasDiffContext: false,
         warning:
-          '`--agentic` enables per-migration commits by default, but the workspace is not a git repository. Continuing without commits, so the agent will not receive per-file diff context. Run `git init` to enable.' +
+          (orchestrated
+            ? 'Orchestrated migrate runs create per-migration commits by default, but the workspace is not a git repository. Continuing without commits, so the agent will not receive per-file diff context. Run `git init` to enable.'
+            : '`--agentic` enables per-migration commits by default, but the workspace is not a git repository. Continuing without commits, so the agent will not receive per-file diff context. Run `git init` to enable.') +
           (commitPrefixIsCustom
             ? ' The custom --commit-prefix value will have no effect.'
             : ''),
@@ -210,10 +235,58 @@ export function resolveCreateCommits(args: {
   };
 }
 
+// The branch to hold `getBaseRef`'s value against. It may name a remote-tracking
+// ref whose local counterpart drops the remote (the CI-workflow generator writes
+// `origin/<branch>`), yet a local branch can be named `up/feature` while `up` is
+// a remote, so an exact match wins before any stripping and the longest matching
+// remote wins after. `origin` counts even undeclared: the generator assumes it.
+function defaultBranchToCompare(
+  baseRef: string,
+  currentBranch: string | null,
+  root: string
+): string {
+  if (currentBranch === baseRef) {
+    return baseRef;
+  }
+  const remote = [...getGitRemoteNames(root), 'origin']
+    .filter((name) => baseRef.startsWith(`${name}/`))
+    .sort((a, b) => b.length - a.length)[0];
+  return remote ? baseRef.slice(remote.length + 1) : baseRef;
+}
+
 /**
+ * Asks before a run starts committing on the workspace's default branch, and
+ * reports the decision when the answer is no. Returns whether to proceed.
+ *
  * Callers gate this on commits being effective and on prompting being
- * possible, so non-interactive runs (CI, `--no-interactive`) never reach here.
+ * possible, so non-interactive runs (CI, `--no-interactive`) never reach here;
+ * `confirmCommitsOnDefaultBranch` has no guard of its own and would block on a
+ * prompt nobody can answer.
  */
+export async function confirmMigrationCommitsOnDefaultBranch(
+  root: string,
+  whatWouldRun: 'running migrations' | 'running the migration'
+): Promise<boolean> {
+  const currentBranch = getGitCurrentBranch(root);
+  const proceed = await confirmCommitsOnDefaultBranch({
+    currentBranch,
+    defaultBranch: defaultBranchToCompare(
+      getBaseRef(readNxJson(root)),
+      currentBranch,
+      root
+    ),
+  });
+  if (!proceed) {
+    output.log({
+      title: `Skipped ${whatWouldRun} to avoid committing to the default branch '${currentBranch}'.`,
+      bodyLines: [
+        'Switch to a different branch and re-run, or re-run and confirm to proceed.',
+      ],
+    });
+  }
+  return proceed;
+}
+
 export async function confirmCommitsOnDefaultBranch(args: {
   currentBranch: string | null;
   defaultBranch: string | null;
@@ -222,13 +295,8 @@ export async function confirmCommitsOnDefaultBranch(args: {
   if (!currentBranch || !defaultBranch || currentBranch !== defaultBranch) {
     return true;
   }
-  const { proceed } = await migratePrompt<{ proceed: boolean }>([
-    {
-      name: 'proceed',
-      type: 'confirm',
-      message: `You're on the default branch '${currentBranch}'. nx migrate will create a commit for each migration on this branch. Continue?`,
-      initial: false,
-    },
-  ]);
-  return proceed;
+  return migrateConfirm({
+    message: `You're on the default branch '${currentBranch}'. nx migrate will create a commit for each migration on this branch. Continue?`,
+    initial: false,
+  });
 }

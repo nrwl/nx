@@ -1,12 +1,12 @@
 ---
-title: Migrate to Inferred Tasks (Project Crystal)
+title: Migrate to Inferred Tasks
 description: Learn how to convert your Nx workspace from explicit executor configuration to using inferred tasks for reduced configuration and improved caching.
 filter: 'type:Guides'
 topics:
   - 'Tasks & caching'
 ---
 
-In this recipe, you'll learn how to migrate an existing Nx workspace from using executors in `project.json` to using [inferred tasks](/docs/concepts/inferred-tasks).
+In this recipe, you'll learn how to migrate an existing Nx workspace from using executors in `project.json` to using [inferred tasks](/docs/concepts/mental-model#inferred-tasks).
 
 The main benefits of migrating to inferred tasks are
 
@@ -16,7 +16,7 @@ The main benefits of migrating to inferred tasks are
 
 {% youtube
 src="https://youtu.be/wADNsVItnsM"
-title="Project Crystal"
+title="Inferred Tasks"
 /%}
 
 For the best experience, we recommend that you [migrate](/docs/features/automate-updating-dependencies) to the latest Nx version before continuing.
@@ -24,6 +24,16 @@ For the best experience, we recommend that you [migrate](/docs/features/automate
 ```shell
 npx nx migrate latest
 ```
+
+## Enable inferred tasks for older workspaces
+
+If your workspace was upgraded from an Nx version that predates inferred tasks, a migration may have set `useInferencePlugins` to `false` in `nx.json`.
+When `useInferencePlugins` is `false`:
+
+1. A newly generated project will have all targets defined with executors, not with inferred tasks.
+2. Running `nx add @nx/some-plugin` will not register the plugin in `nx.json`, so that plugin will not infer tasks.
+
+Remove the property, or set it to `true`, before you migrate your projects.
 
 ## Migrate all plugins
 

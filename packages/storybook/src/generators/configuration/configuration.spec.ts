@@ -415,6 +415,63 @@ describe('@nx/storybook:configuration', () => {
       });
     });
 
+    describe('story testing', () => {
+      let tree: Tree;
+
+      beforeEach(async () => {
+        tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        await libraryGenerator(tree, {
+          directory: 'test-ui-lib',
+          bundler: 'none',
+          skipFormat: true,
+          addPlugin: true,
+        });
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies ??= {};
+          json.devDependencies['storybook'] = storybookVersion;
+          return json;
+        });
+      });
+
+      it('should install the test runner so the inferred target has a binary', async () => {
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/react-vite',
+          addPlugin: true,
+        });
+
+        const { devDependencies } = readJson(tree, 'package.json');
+        expect(devDependencies['@storybook/test-runner']).toBe('^0.24.0');
+      });
+
+      it('should not install a runner when interactionTests is false', async () => {
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/react-vite',
+          interactionTests: false,
+          addPlugin: true,
+        });
+
+        const { devDependencies } = readJson(tree, 'package.json');
+        expect(devDependencies['@storybook/test-runner']).not.toBeDefined();
+      });
+
+      it('should install the runner the explicit target invokes', async () => {
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/react-vite',
+          addPlugin: false,
+        });
+
+        const { devDependencies } = readJson(tree, 'package.json');
+        expect(devDependencies['@storybook/test-runner']).toBeDefined();
+        const project = readJson(tree, 'test-ui-lib/project.json');
+        expect(project.targets['test-storybook'].options.command).toContain(
+          'test-storybook -c'
+        );
+      });
+    });
+
     describe('basic functionalities', () => {
       let tree: Tree;
 
@@ -1336,6 +1393,81 @@ describe('@nx/storybook:configuration', () => {
         expect(
           packageJson.devDependencies['@storybook/svelte-vite']
         ).toBeDefined();
+      });
+    });
+
+    describe('story testing', () => {
+      it('should install a test runner without a Storybook peer on an 8.1 range', async () => {
+        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        await libraryGenerator(tree, {
+          directory: 'test-ui-lib',
+          bundler: 'none',
+          skipFormat: true,
+          addPlugin: true,
+        });
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies ??= {};
+          json.devDependencies['storybook'] = '~8.1.11';
+          return json;
+        });
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/react-vite',
+          addPlugin: true,
+        });
+
+        // 0.20+ peers storybook ^8.2, so 8.0/8.1 fall back to the 0.17 line.
+        const { devDependencies } = readJson(tree, 'package.json');
+        expect(devDependencies['@storybook/test-runner']).toBe('^0.17.0');
+      });
+
+      it('should install a test runner compatible with a Storybook 8 caret range', async () => {
+        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        await libraryGenerator(tree, {
+          directory: 'test-ui-lib',
+          bundler: 'none',
+          skipFormat: true,
+          addPlugin: true,
+        });
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies ??= {};
+          json.devDependencies['storybook'] = '^8.0.0';
+          return json;
+        });
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/react-vite',
+          addPlugin: true,
+        });
+
+        const { devDependencies } = readJson(tree, 'package.json');
+        expect(devDependencies['@storybook/test-runner']).toBe('^0.21.0');
+      });
+
+      it('should install the test runner major that peers storybook 9', async () => {
+        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        await libraryGenerator(tree, {
+          directory: 'test-ui-lib',
+          bundler: 'none',
+          skipFormat: true,
+          addPlugin: true,
+        });
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies ??= {};
+          json.devDependencies['storybook'] = '9.1.15';
+          return json;
+        });
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/react-vite',
+          addPlugin: true,
+        });
+
+        const { devDependencies } = readJson(tree, 'package.json');
+        expect(devDependencies['@storybook/test-runner']).toBe('^0.23.0');
       });
     });
 

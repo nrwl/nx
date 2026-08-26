@@ -1,4 +1,4 @@
-import { getLatestCommitSha } from 'nx/src/utils/git-utils';
+import { getLatestCommitSha } from '@nx/devkit/internal';
 import { interpolatePattern } from '../utils/interpolate-pattern';
 
 /**

@@ -1,4 +1,4 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 
 export interface Schema {
   appProject?: string;
@@ -8,7 +8,7 @@ export interface Schema {
   importPath?: string;
   inSourceTests?: boolean;
   js?: boolean;
-  linter: Linter | LinterType;
+  linter?: LinterType;
   name?: string;
   publishable?: boolean;
   routing?: boolean;
@@ -33,7 +33,7 @@ export interface NormalizedSchema extends Schema {
   js: boolean;
   name: string;
   projectName: string;
-  linter: Linter | LinterType;
+  linter: LinterType;
   fileName: string;
   projectRoot: string;
   routePath: string;

@@ -6,22 +6,24 @@ import { join } from 'path';
 jest.mock('child_process', () => ({
   spawn: jest.fn(),
   execSync: jest.fn(),
-  // `promisify(exec)` in transitive imports needs a function to wrap.
+  // `promisify(exec)` and `promisify(execFile)` in transitive imports need a function to wrap.
   exec: jest.fn(),
+  execFile: jest.fn(),
 }));
-jest.mock('enquirer', () => ({
-  prompt: jest.fn(),
+jest.mock('@clack/prompts', () => ({
+  autocomplete: jest.fn(),
+  isCancel: () => false,
 }));
 
 import { execSync, spawn } from 'child_process';
-import { prompt } from 'enquirer';
+import { autocomplete } from '@clack/prompts';
 import { output } from '../../../utils/output';
 import { adaptSpawnForWindowsShim, runAgentic } from './runner';
 import { AgentDefinition, DetectedInstalledAgent } from './types';
 
 const mockSpawn = spawn as unknown as jest.Mock;
 const mockExecSync = execSync as unknown as jest.Mock;
-const mockPrompt = prompt as unknown as jest.Mock;
+const mockPrompt = autocomplete as unknown as jest.Mock;
 
 function makeDetected(): DetectedInstalledAgent {
   return {
@@ -166,6 +168,7 @@ describe('runAgentic', () => {
       systemContext: 'sys',
       userPrompt: 'user',
       workspaceRoot,
+      runDirName: '23.0.0',
     } as const;
   }
 
@@ -277,7 +280,7 @@ describe('runAgentic', () => {
         setImmediate(() => child.emit('exit', 0));
         return child;
       });
-      mockPrompt.mockResolvedValue({ choice });
+      mockPrompt.mockResolvedValue(choice);
 
       const outcome = await runAgentic({
         detected: makeDetected(),
@@ -312,7 +315,7 @@ describe('runAgentic', () => {
     ],
   ])('treats %s as exit-with-no-handoff', async (_label, setup) => {
     setup();
-    mockPrompt.mockResolvedValue({ choice: 'abort' });
+    mockPrompt.mockResolvedValue('abort');
 
     const outcome = await runAgentic({
       detected: makeDetected(),
@@ -355,7 +358,7 @@ describe('runAgentic', () => {
       });
       return child;
     });
-    mockPrompt.mockResolvedValue({ choice: 'continue' });
+    mockPrompt.mockResolvedValue('continue');
 
     const outcome = await runAgentic({
       detected: makeDetected(),
@@ -558,7 +561,7 @@ describe('runAgentic', () => {
     mockSpawn.mockImplementation(() => {
       throw new Error('ENOENT: no such file or directory');
     });
-    mockPrompt.mockResolvedValue({ choice: 'abort' });
+    mockPrompt.mockResolvedValue('abort');
 
     await runAgentic({
       detected: makeDetected(),
@@ -570,8 +573,9 @@ describe('runAgentic', () => {
     const lines = ambiguousCauseLines();
     expect(lines.join('\n')).toContain('Could not spawn the agent');
     expect(lines.join('\n')).toContain('ENOENT');
-    // The prompt itself stays single-line — multi-line `message` triggers
-    // enquirer's wrap-asymmetric redraw on narrow terminals.
+    // The prompt stays single-line. Multi-line `message` triggered enquirer's
+    // wrap-asymmetric redraw on narrow terminals; kept because that constraint
+    // is unverified under @clack/prompts, not because the cause still applies.
     expect(mockPrompt.mock.calls[0][0].message).toBe(
       'How should nx migrate proceed?'
     );
@@ -583,7 +587,7 @@ describe('runAgentic', () => {
       setImmediate(() => child.emit('exit', 1, null));
       return child;
     });
-    mockPrompt.mockResolvedValue({ choice: 'abort' });
+    mockPrompt.mockResolvedValue('abort');
 
     await runAgentic({
       detected: makeDetected(),
@@ -607,7 +611,7 @@ describe('runAgentic', () => {
       setImmediate(() => child.emit('exit', 0, null));
       return child;
     });
-    mockPrompt.mockResolvedValue({ choice: 'abort' });
+    mockPrompt.mockResolvedValue('abort');
 
     await runAgentic({
       detected: makeDetected(),
@@ -694,7 +698,7 @@ describe('runAgentic', () => {
       });
       return child;
     });
-    mockPrompt.mockResolvedValue({ choice: 'abort' });
+    mockPrompt.mockResolvedValue('abort');
 
     await runAgentic({
       detected: makeDetected(),

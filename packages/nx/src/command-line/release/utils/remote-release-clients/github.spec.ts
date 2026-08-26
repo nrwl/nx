@@ -101,6 +101,56 @@ describe('GithubRemoteReleaseClient', () => {
     expect(authors.get('Test User')?.username).toBe('from-gh');
   });
 
+  it('should skip empty author emails without querying ungh or the gh api', async () => {
+    // An empty email makes the ungh lookup URL `https://ungh.cc/users/find/`,
+    // so it attributes the commit to the "find" user rather than the real
+    // author. It must be skipped entirely.
+    const authors = new Map<string, { email: Set<string>; username?: string }>([
+      ['Test User', { email: new Set(['']) }],
+    ]);
+
+    await client.applyUsernameToAuthors(authors);
+
+    expect(authors.get('Test User')?.username).toBeUndefined();
+    expect(axiosGetMock).not.toHaveBeenCalled();
+    expect(execFileSyncMock).not.toHaveBeenCalled();
+  });
+
+  it('should skip non-email author values without querying ungh or the gh api', async () => {
+    const authors = new Map<string, { email: Set<string>; username?: string }>([
+      ['Test User', { email: new Set(['not-an-email']) }],
+    ]);
+
+    await client.applyUsernameToAuthors(authors);
+
+    expect(authors.get('Test User')?.username).toBeUndefined();
+    expect(axiosGetMock).not.toHaveBeenCalled();
+    expect(execFileSyncMock).not.toHaveBeenCalled();
+  });
+
+  it('should skip a bad email but still resolve a valid one in the same set', async () => {
+    // The guard must `continue` past the empty email, not `break` out of the
+    // loop, so a valid email later in the set is still looked up.
+    axiosGetMock.mockResolvedValue({
+      data: {
+        user: {
+          username: 'from-ungh',
+        },
+      },
+    });
+    const authors = new Map<string, { email: Set<string>; username?: string }>([
+      ['Test User', { email: new Set(['', 'test@example.com']) }],
+    ]);
+
+    await client.applyUsernameToAuthors(authors);
+
+    expect(authors.get('Test User')?.username).toBe('from-ungh');
+    expect(axiosGetMock).toHaveBeenCalledTimes(1);
+    expect(axiosGetMock).toHaveBeenCalledWith(
+      'https://ungh.cc/users/find/test@example.com'
+    );
+  });
+
   it('should leave the username unset when both lookups fail', async () => {
     axiosGetMock.mockRejectedValue(new Error('ungh unavailable'));
     execFileSyncMock.mockImplementation(() => {

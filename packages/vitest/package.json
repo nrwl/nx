@@ -37,6 +37,9 @@
       "generators": [
         "dist/generators.d.ts"
       ],
+      "internal": [
+        "dist/internal.d.ts"
+      ],
       "executors": [
         "dist/executors.d.ts"
       ]
@@ -56,6 +59,11 @@
       "@nx/nx-source": "./generators.ts",
       "types": "./dist/generators.d.ts",
       "default": "./dist/generators.js"
+    },
+    "./internal": {
+      "@nx/nx-source": "./internal.ts",
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
     },
     "./executors": {
       "@nx/nx-source": "./executors.ts",

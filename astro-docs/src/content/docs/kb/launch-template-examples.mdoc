@@ -69,7 +69,7 @@ common-rust-init-steps: &common-rust-init-steps
       echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
 
 launch-templates:
-  # Custom template name, the name is referenced via --distribute-on="3 my-linux-medium-js"
+  # Custom template name, the name is referenced via 'distribute-on: 3 my-linux-medium-js'
   # You can define as many templates as you need, commonly used to make different sizes or toolchains depending on your workspace needs
   my-linux-medium-js:
     resource-class: 'docker_linux_amd64/medium'
@@ -99,26 +99,34 @@ launch-templates:
     init-steps: *common-rust-init-steps
 ```
 
-These templates can be used by passing the number of agents desired, and the template name via `--distribute-on` when starting your CI run.
+Use these templates by setting the number of agents desired and the template name on `dte.distribute-on` in your [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file.
+Pick whichever template suits the job, swapping `my-linux-medium-js` for `my-linux-large-js` or `my-linux-rust-large`.
 
-```shell
-nx start-ci-run --distribute-on="4 my-linux-medium-js"
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on: 4 my-linux-medium-js
 ```
 
-```shell
-nx start-ci-run --distribute-on="4 my-linux-large-js"
-```
+Your main CI job then starts the agents with [`nx start-nx-agents`](/docs/reference/nx-cloud-cli#nx-cloud-start-nx-agents).
+The command takes no configuration flags, since all configuration lives in the file.
 
 ```shell
-nx start-ci-run --distribute-on="4 my-linux-large-rust"
+npx nx start-nx-agents
 ```
 
 ## Pass environment variables
 
-If you need to send environment variables to agents, you can use the [--with-env-vars](/docs/reference/nx-cloud-cli#withenvvars-nx-agents-only) flag on the `nx start-ci-run` command. You can pass a specific list of environment variables like this:
+If you need to send environment variables to agents, list them under [`nx-agents.with-env-vars`](/docs/reference/nx-cloud/ci-config#nx-agentswith-env-vars). You can pass a specific list of environment variables like this:
 
-```shell
-nx start-ci-run --distribute-on="8 linux-medium-js" --with-env-vars="VAR1,VAR2"
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on: 8 linux-medium-js
+nx-agents:
+  with-env-vars:
+    - VAR1
+    - VAR2
 ```
 
 ## Pass values between steps
@@ -170,11 +178,16 @@ launch-templates:
         uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-node-modules/main.yaml'
 ```
 
-Pass `SOME_AUTH_TOKEN` via `--with-env-vars`
+Pass `SOME_AUTH_TOKEN` via `nx-agents.with-env-vars`
 
-```shell
+```yaml
+# .nx/ci-config.yaml
 # this assumes SOME_AUTH_TOKEN is already defined on the main agent
-nx start-ci-run --distribute-on="5 my-linux-medium-js" --with-env-vars="SOME_AUTH_TOKEN"
+dte:
+  distribute-on: 5 my-linux-medium-js
+nx-agents:
+  with-env-vars:
+    - SOME_AUTH_TOKEN
 ```
 
 ## Custom node version
@@ -194,7 +207,7 @@ You can use [mise](#install-tools-with-mise) to manage node versions alongside o
 ```yaml
 // .nx/workflows/agents.yaml
 launch-templates:
-  node-21:
+  node-22:
     resource-class: 'docker_linux_amd64/medium'
     image: 'ubuntu22.04-node24.14-v1'
     init-steps:
@@ -205,7 +218,7 @@ launch-templates:
         inputs:
           # you can also define a mise.toml in your repo instead of inline tools
           tools: |
-            node=21
+            node=22
       - name: Install Node Modules
         uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-node-modules/main.yaml'
 ```
@@ -226,7 +239,7 @@ If none of these are set, the agent keeps the node version that ships with the i
 ```yaml
 // .nx/workflows/agents.yaml
 launch-templates:
-  node-21:
+  node-22:
     resource-class: 'docker_linux_amd64/medium'
     # note the image version of v9,
     # earlier versions of the base image will not work
@@ -240,7 +253,7 @@ launch-templates:
         inputs:
           # omit this input to read the version from a '.nvmrc'
           # file or the 'volta.node' field in package.json
-          node_version: '21'
+          node_version: '22'
 ```
 
 {% /tabitem %}
@@ -257,7 +270,7 @@ The steps follow the general pattern of:
 ```yaml
 // .nx/workflows/agents.yaml
 launch-templates:
-  node-21:
+  node-22:
     resource-class: 'docker_linux_amd64/medium'
     image: 'ubuntu22.04-node24.14-v1'
     init-steps:
@@ -270,7 +283,7 @@ launch-templates:
           # source the updated profile to get the nvm command available
           source ~/.profile
           # install the needed version of node via nvm
-          nvm install 21.7.3
+          nvm install 22.23.2
           # echo the current path (which now includes the nvm-provided version of node) to NX_CLOUD_ENV
           echo "PATH=$PATH" >> $NX_CLOUD_ENV
       - name: Print node version
@@ -383,7 +396,7 @@ Defining tools inline overrides any `mise.toml` in your repo. This can cause dif
 
 ## AWS CLI
 
-First, define the environment variables on your main agent, where you call [`nx start-ci-run`](/docs/reference/nx-cloud-cli#npx-nxcloud-startcirun). Pass the same environment variables to your agents via the [`--with-env-vars` flag](/docs/reference/nx-cloud-cli#withenvvars-nx-agents-only).
+First, define the environment variables on your main agent, where you call `nx start-nx-agents`. Pass the same environment variables to your agents by listing them under `nx-agents.with-env-vars`.
 
 Minimally the `AWS_REGION` (or `AWS_DEFAULT_REGION`), `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY` environment variables are required.
 
@@ -408,7 +421,7 @@ launch-templates:
     init-steps:
       - name: Install AWS CLI
         uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-aws-cli/main.yaml'
-        # no additional inputs required, as all configuration is via environment variables via --with-env-vars
+        # no additional inputs required, as all configuration is via environment variables via nx-agents.with-env-vars
 ```
 
 {% /tabitem %}
@@ -425,7 +438,7 @@ launch-templates:
     resource-class: 'docker_linux_amd64/medium'
     image: 'ubuntu22.04-node24.14-v1'
     init-steps:
-      # step assumes you've passed all required AWS_* environment variables from the main agent via --with-env-vars
+      # step assumes you've passed all required AWS_* environment variables from the main agent via nx-agents.with-env-vars
       - name: Install AWS CLI
         script: |
           # unzip is required to unzip the AWS CLI installer
@@ -459,10 +472,12 @@ distribute-on:
   large-changeset: 12 linux-medium-js
 ```
 
-Then you can pass the path to the file to the `--distribute-on` parameter.
+Then you can point `dte.distribute-on` at the path to that file.
 
-```shell
-nx start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on: .nx/workflows/dynamic-changesets.yaml
 ```
 
 ## Debugging
