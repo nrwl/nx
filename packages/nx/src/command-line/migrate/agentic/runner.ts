@@ -40,6 +40,8 @@ export interface RunAgenticArgs {
   definition: AgentDefinition;
   invocationContext: InvocationContext;
   handoffFilePath: string;
+  /** The run's handoffs dir; a handoff that resolves outside it is refused. */
+  handoffsDir: string;
   /** Override the handoff-file poll interval (test seam). */
   handoffPollIntervalMs?: number;
   /** Override the SIGINT-to-SIGTERM grace period (test seam). */
@@ -61,6 +63,7 @@ export async function runAgentic(
     definition,
     invocationContext,
     handoffFilePath,
+    handoffsDir,
     handoffPollIntervalMs,
     gracefulExitMs = AGENT_GRACEFUL_EXIT_MS,
     forceKillWaitMs = FORCE_KILL_WAIT_MS,
@@ -82,7 +85,7 @@ export async function runAgentic(
   try {
     child = spawn(adapted.binary, adapted.args, spawnOptions);
   } catch (err) {
-    return resolveFromHandoffOrPrompt(handoffFilePath, false, {
+    return resolveFromHandoffOrPrompt(handoffFilePath, handoffsDir, false, {
       spawnError: err instanceof Error ? err.message : String(err),
     });
   }
@@ -101,7 +104,7 @@ export async function runAgentic(
 
   const handoffWatchAbort = new AbortController();
   const exitPromise = waitForExit(child);
-  const handoffPromise = waitForValidHandoff(handoffFilePath, {
+  const handoffPromise = waitForValidHandoff(handoffFilePath, handoffsDir, {
     signal: handoffWatchAbort.signal,
     intervalMs: handoffPollIntervalMs,
   });
@@ -141,6 +144,7 @@ export async function runAgentic(
 
   return resolveFromHandoffOrPrompt(
     handoffFilePath,
+    handoffsDir,
     userInterruptCount > 0,
     exitInfoToCause(exitInfo)
   );
@@ -341,10 +345,11 @@ function waitForExit(child: ChildProcess): Promise<ExitInfo> {
 
 async function resolveFromHandoffOrPrompt(
   handoffFilePath: string,
+  handoffsDir: string,
   userInterrupted = false,
   cause: AmbiguousCause = {}
 ): Promise<HandoffOutcome> {
-  const read = readHandoffWithReason(handoffFilePath);
+  const read = readHandoffWithReason(handoffFilePath, handoffsDir);
   if (read.ok === true) {
     return {
       kind: read.handoff.status,
