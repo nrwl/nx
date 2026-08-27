@@ -62,7 +62,7 @@ const stageCacheDirectoryConfig = (
 /**
  * The per-user path a consumer would get, or `undefined` when this checkout
  * keeps its own copy or shares through the main checkout. Stands in for what
- * `sharedDataDirectory` resolves to without needing its `perWorkspace` half.
+ * `sharedDataDirectory` resolves to, without going through its unshared half.
  */
 const sharedUserDirFor = (root: string, kind: SharedDataKind) => {
   const location = resolveSharedDataLocation(root);
@@ -251,7 +251,7 @@ describe('shared data location', () => {
       // `finalizeCacheHits` still called that `local-cache` -- a green cache
       // hit that restored nothing.
       //
-      // `getSharedWorktreeDataDir` is what returned that per-user path. Once
+      // `sharedUserDataDir` is what returns that per-user path. Once
       // anything pins a location it must return undefined for BOTH kinds, so
       // there is no per-user path for either consumer to drift onto.
       const pinned = [
@@ -318,6 +318,48 @@ describe('shared data location', () => {
       const written = mockWriteFileSync.mock.calls[0][0] as string;
       expect(written).toContain(sharedDirFor('/main', 'cache'));
       expect(mockUnlinkSync).toHaveBeenCalledWith(written);
+    });
+
+    it('creates the marker exclusively, at a name a peer cannot predict', () => {
+      // `~/.nx` is writable by a sandboxed agent sharing our uid, so a symlink
+      // planted at the marker path would be followed by a plain write --
+      // truncating whatever it points at, outside the granted root, and still
+      // reporting the root writable. `wx` refuses to follow it, and an
+      // unguessable name means there is nothing to aim at in the first place.
+      expect(sharedUserDirFor('/worktree', 'cache')).toBe(
+        sharedDirFor('/main', 'cache')
+      );
+      expect(mockWriteFileSync).toHaveBeenCalledWith(expect.any(String), '', {
+        flag: 'wx',
+      });
+
+      const first = mockWriteFileSync.mock.calls[0][0] as string;
+      resetSharedRootCacheForTesting();
+      expect(sharedUserDirFor('/worktree', 'cache')).toBe(
+        sharedDirFor('/main', 'cache')
+      );
+      const second = mockWriteFileSync.mock.calls.at(-1)[0] as string;
+      expect(second).not.toBe(first);
+    });
+  });
+
+  describe('the shared directory name', () => {
+    it('keys on the canonical spelling, so two spellings share one directory', () => {
+      // `getMainWorktreeRoot` canonicalizes, but the `?? root` fallback uses
+      // `workspaceRoot` verbatim -- and that is NX_WORKSPACE_ROOT_PATH when set,
+      // which Nx Console sets. Hashing the spelling would key a main checkout
+      // and its own worktree to two different trees: no sharing, doubled disk.
+      mockCanonicalDir.mockImplementation((dir: string) =>
+        dir.startsWith('/link') ? dir.replace('/link', '/real') : dir
+      );
+
+      mockGetMainWorktreeRoot.mockReturnValue(null);
+      const viaLink = sharedUserDirFor('/link/repo', 'cache');
+
+      resetSharedRootCacheForTesting();
+      const viaReal = sharedUserDirFor('/real/repo', 'cache');
+
+      expect(viaLink).toBe(viaReal);
     });
   });
 

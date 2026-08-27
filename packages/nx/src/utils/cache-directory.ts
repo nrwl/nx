@@ -1,4 +1,4 @@
-import { createHash } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 import { existsSync, unlinkSync, writeFileSync } from 'fs';
 import { isAbsolute, join } from 'path';
 import type { NxJsonConfiguration } from '../config/nx-json';
@@ -108,13 +108,7 @@ function homeDirIsDistinctFromSharedTmp(): boolean {
   );
 }
 
-/**
- * Establishes every directory the shared layout needs, owner-only.
- *
- * All of them together, and cached per repository, because both kinds have to
- * reach the same verdict: a run whose cache relocated while its DB did not
- * takes a cache hit on artifacts it never wrote. One answer serves both.
- */
+/** Memoizes the verdict below, per repository. */
 const sharedRootUsable = new Map<string, SharedDataLocation>();
 
 /** The establish verdict is cached per process; tests need it cleared. */
@@ -122,6 +116,13 @@ export function resetSharedRootCacheForTesting() {
   sharedRootUsable.clear();
 }
 
+/**
+ * Establishes every directory the shared layout needs, owner-only.
+ *
+ * All of them together, because both kinds have to reach the same verdict: a
+ * run whose cache relocated while its DB did not takes a cache hit on artifacts
+ * it never wrote. One answer serves both.
+ */
 function establishUserRoot(mainRoot: string): DirRefusal | undefined {
   if (!NX_HOME_TMP_DIR || !homeDirIsDistinctFromSharedTmp()) {
     return { kind: 'not-a-directory', dir: NX_HOME_TMP_DIR ?? '~/.nx' };
@@ -155,13 +156,17 @@ function establishUserRoot(mainRoot: string): DirRefusal | undefined {
  * on every write, which is the failure the fallback exists to avoid. Writing is
  * what the caller is about to do, so writing is what gets tested.
  *
- * The marker carries the pid so two processes racing here cannot unlink each
- * other's, and it is removed either way.
+ * The marker name is random and the create is exclusive. `wx` is what stops a
+ * symlink planted at this path being followed: the default `w` would truncate
+ * whatever it points at, outside the granted root, and still report writable.
+ * `~/.nx` is writable by a sandboxed agent sharing our uid, so no ownership
+ * check fires on it. Randomness also keeps the anti-collision property the pid
+ * gave, without making the name guessable. The marker is removed either way.
  */
 function probeWritable(dir: string): DirRefusal | undefined {
-  const marker = join(dir, `.nx-write-probe-${process.pid}`);
+  const marker = join(dir, `.nx-write-probe-${randomBytes(8).toString('hex')}`);
   try {
-    writeFileSync(marker, '');
+    writeFileSync(marker, '', { flag: 'wx' });
     return undefined;
   } catch (e: any) {
     return { kind: 'not-created', dir, code: e?.code };
@@ -221,7 +226,7 @@ function shareableLocation(mainRoot: string): SharedDataLocation {
  */
 function sharedDirName(mainWorktreeRoot: string): string {
   return createHash('sha256')
-    .update(mainWorktreeRoot.toLowerCase())
+    .update(canonicalDir(mainWorktreeRoot).toLowerCase())
     .digest('hex')
     .substring(0, 16);
 }
