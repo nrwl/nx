@@ -682,6 +682,29 @@ export interface ProjectGraph {
 
 export declare function remove(src: string): void
 
+/**
+ * Where the daemon and forked task processes put their sockets. Per run — the
+ * name hashes the pid, and clients read the daemon's path back out of the
+ * process cache rather than deriving it.
+ */
+export declare function resolveDaemonSocketDir(workspaceRoot: string, env?: Record<string, string> | undefined | null): SocketDirDetails
+
+/**
+ * Where the Nx Console socket lives, for whoever binds or connects to it.
+ *
+ * `env` is for callers that load a workspace `.env` into a copy rather than
+ * into their own environment, and `workspaceRoot` for callers that do not run
+ * inside the workspace — Nx Console is both, since it runs in the editor's
+ * extension host.
+ */
+export declare function resolveNxConsoleSocketPath(workspaceRoot: string, env?: Record<string, string> | undefined | null): SocketDirDetails
+
+/**
+ * Plugin worker sockets get their own workspace-scoped directory rather than
+ * sitting in the shared system temp dir, which cannot be locked down.
+ */
+export declare function resolvePluginSocketDir(workspaceRoot: string, env?: Record<string, string> | undefined | null): SocketDirDetails
+
 export declare function restoreTerminal(): void
 
 export declare const enum RunMode {
@@ -691,6 +714,50 @@ export declare const enum RunMode {
 
 export interface RuntimeInput {
   runtime: string
+}
+
+/**
+ * One resolved socket location, and everything `daemon/tmp-dir.ts` needs to
+ * explain it. Every user-facing sentence is rendered on the TypeScript side,
+ * so this carries facts rather than prose.
+ */
+export interface SocketDirDetails {
+  /**
+   * A directory for the daemon and plugin resolvers, the socket file itself
+   * for Nx Console — on Windows its `\\.\pipe
+  x\` name.
+   */
+  path: string
+  /**
+   * Set when `path` is a directory Nx refuses to *be* the socket directory:
+   * `shared-with-other-users`, `nx-managed`, or `os-temp-root`. The caller
+   * throws on it rather than using `path`.
+   */
+  invalidReason?: string
+  /** The preferred root that was skipped, when a later tier was used. */
+  demotedFrom?: string
+  /**
+   * The default-root directory Nx tried before falling back, when there was
+   * one.
+   */
+  attemptedDir?: string
+  /**
+   * The `NX_SOCKET_DIR` that was refused, when that is why this is a
+   * fallback. Tracked apart from the other reasons so a later length error
+   * stops telling someone to shorten a directory refused for another one.
+   */
+  refusedConfiguredDir?: string
+  /** Why that configured directory was refused. */
+  refusalError?: string
+  /**
+   * Whether this landed in the workspace data dir, which the caller warns
+   * about once per process.
+   */
+  usedWorkspaceFallback: boolean
+  /** Deduplicated advice for the refusals collected along the way. */
+  remedies: Array<string>
+  /** Every refusal as one sentence, for `--verbose`. */
+  refusalDetails?: string
 }
 
 export declare const enum SupportedEditor {
