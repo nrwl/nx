@@ -28,6 +28,16 @@ export {
 // TS solution awareness; mirrors Node's nearest-package.json semantics).
 export { isEsmProject } from './src/utils/module-format/is-esm-project';
 
+// Inputs for build targets that emit a pruned pnpm deploy output
+export {
+  PNPM_INSTALL_SETTINGS_INPUTS,
+  PNPM_MAJOR_RUNTIME_INPUT,
+  pnpmInstallSettingsInputsForInferredTarget,
+  shouldIncludePnpmMajorRuntimeInput,
+} from './src/utils/pnpm-install-settings-inputs';
+export { addPnpmDeployOutputCacheInputs } from './src/utils/pnpm-deploy-output-cache-inputs';
+export type { MatchedTargetRef } from './src/utils/target-defaults-matching';
+
 // TS solution setup detection
 export {
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,

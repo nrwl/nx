@@ -108,6 +108,15 @@
     }
   },
   "targetDefaults": {
+    "oxlint": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/.eslintignore",
+        {
+          "externalDependencies": ["oxlint", "@nx/oxlint"]
+        }
+      ]
+    },
     "cleanup-tsconfig": {
       "executor": "nx:run-commands",
       "options": {
@@ -374,10 +383,8 @@
       "options": {
         "testTargetName": "test"
       },
-      "include": [
-        "packages/angular-rspack-compiler/**",
-        "packages/angular-rspack/**"
-      ]
+      "include": ["packages/**/*"],
+      "exclude": ["**/out-tsc/**"]
     },
     {
       "plugin": "@nx/oxlint",

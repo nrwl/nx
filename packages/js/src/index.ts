@@ -23,5 +23,9 @@ export { isValidVariable } from './utils/is-valid-variable';
 // import it.
 export { type LinterType } from './utils/linter';
 
-export { createLockFile, getLockFileName } from '@nx/devkit/internal';
-export { createPackageJson } from '@nx/devkit/internal';
+export {
+  createLockFile,
+  createPackageJson,
+  generatePrunedDeployOutput,
+  getLockFileName,
+} from '@nx/devkit/internal';

@@ -41,8 +41,7 @@ export interface LibraryGeneratorSchema {
   passWithNoTests?: boolean;
 }
 
-export interface NormalizedLibraryGeneratorOptions
-  extends LibraryGeneratorSchema {
+export interface NormalizedLibraryGeneratorOptions extends LibraryGeneratorSchema {
   name: string;
   /** `normalizeOptions` always resolves this, so it is no longer optional. */
   linter: LinterType;

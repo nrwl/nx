@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { checkWithPrettier } from './prettier';
 
 // Mirrors `check-with-oxfmt.spec.ts`. `nx format:check` gates CI on this
@@ -5,16 +6,16 @@ import { checkWithPrettier } from './prettier';
 // reach: a formatter that was killed, could not be spawned, or overran its
 // stdout buffer. Those report a *string* `code` (or none at all) rather than an
 // exit code, and must never be read as success.
-jest.mock('node:child_process', () => ({
-  ...jest.requireActual('node:child_process'),
-  exec: jest.fn(),
+vi.mock('node:child_process', async () => ({
+  ...require('node:child_process'),
+  exec: vi.fn(),
 }));
 
-const { exec } = require('node:child_process');
+import { exec } from 'node:child_process';
 
 describe('checkWithPrettier', () => {
   function respondWith(error: unknown, stdout = '') {
-    (exec as jest.Mock).mockImplementation(
+    (exec as Mock).mockImplementation(
       (_cmd: string, _opts: unknown, callback: Function) => {
         callback(error, stdout);
         return {};
@@ -23,7 +24,7 @@ describe('checkWithPrettier', () => {
   }
 
   afterEach(() => {
-    (exec as jest.Mock).mockReset();
+    (exec as Mock).mockReset();
   });
 
   it('reports nothing to fix when prettier exits 0', async () => {

@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import {
   extractReferencesFromCommit,
   getLatestGitTagForPattern,
@@ -6,8 +7,8 @@ import {
 } from './git';
 import { RepoGitTags } from './repository-git-tags';
 
-jest.mock('./exec-command', () => ({
-  execCommand: jest.fn(() =>
+vi.mock('./exec-command', () => ({
+  execCommand: vi.fn(() =>
     Promise.resolve(`
 x5.0.0
 release/4.😐2.2
@@ -266,7 +267,7 @@ See merge request nx-release-test/nx-release-test!2`,
     const mockResolveTags = mockRepoGitTags.resolveTags.bind(mockRepoGitTags);
 
     afterEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     describe('when releaseTag.strictPreid is false', () => {
@@ -582,7 +583,7 @@ See merge request nx-release-test/nx-release-test!2`,
     it('should return null if execCommand throws an error', async () => {
       // should return null if execCommand throws an error
       (
-        require('./exec-command').execCommand as jest.Mock
+        (await import('./exec-command')).execCommand as Mock
       ).mockImplementationOnce(() => {
         throw new Error('error');
       });

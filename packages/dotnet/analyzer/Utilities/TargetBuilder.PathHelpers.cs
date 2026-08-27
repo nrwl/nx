@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using MsbuildAnalyzer.Models;
 
 namespace MsbuildAnalyzer.Utilities;
@@ -42,10 +43,11 @@ public static partial class TargetBuilder
             return null;
         }
 
+        // Relative paths are project-relative (MSBuild convention). Anchor them
+        // and fall through so `.` and `..` normalize like absolute paths.
         if (!Path.IsPathRooted(path))
         {
-            var normalized = path.Replace('\\', '/').TrimEnd('/');
-            return string.IsNullOrEmpty(normalized) ? "{projectRoot}" : $"{{projectRoot}}/{normalized}";
+            path = Path.Combine(projectDirectory, path.Replace('\\', '/'));
         }
 
         var normalizedPath = Path.GetFullPath(path);
@@ -274,6 +276,84 @@ public static partial class TargetBuilder
         }
 
         return GetOutputPath(properties, projectName, projectDirectory, workspaceRoot);
+    }
+
+    /// <summary>
+    /// Gets the directory Microsoft.Extensions.ApiDescription.Server writes the
+    /// generated OpenAPI documents to, as a fully-qualified Nx-prefixed string.
+    /// The property may point anywhere, so it resolves under the same rules as
+    /// the other outputs. Returns <c>null</c> when the property is unset or the
+    /// path lives outside the workspace.
+    /// </summary>
+    private static string? GetOpenApiDocumentsDirectory(Dictionary<string, string> properties, string projectDirectory, string workspaceRoot)
+    {
+        var openApiDocumentsDirectory = properties.GetValueOrDefault("OpenApiDocumentsDirectory");
+        return string.IsNullOrEmpty(openApiDocumentsDirectory)
+            ? null
+            : ResolvePath(openApiDocumentsDirectory, projectDirectory, workspaceRoot);
+    }
+
+    /// <summary>
+    /// Gets globs matching the OpenAPI documents dotnet-getdocument writes for
+    /// this project: <c>&lt;stem&gt;.json</c> for the default document and
+    /// <c>&lt;stem&gt;_&lt;document&gt;.json</c> for every other registered one, where
+    /// the stem comes from <see cref="GetOpenApiDocumentFileName"/>.
+    /// Globs rather than the directory: the directory may be the project root
+    /// (the value the ASP.NET Core docs recommend) or shared with other projects.
+    /// Two globs rather than <c>&lt;stem&gt;*.json</c>: the latter would also claim
+    /// siblings that merely share the prefix, and a declared output is removed
+    /// and rewritten on cache restore.
+    /// Returns an empty array when the directory is already covered by an output.
+    /// </summary>
+    private static string[] GetOpenApiDocumentsOutputs(
+        Dictionary<string, string> properties,
+        string fileName,
+        string projectDirectory,
+        string workspaceRoot,
+        params string?[] coveredDirectories)
+    {
+        var directory = GetOpenApiDocumentsDirectory(properties, projectDirectory, workspaceRoot);
+        if (directory is null || coveredDirectories.Contains(directory))
+        {
+            return [];
+        }
+
+        var stem = GetOpenApiDocumentFileName(properties, fileName);
+        return [$"{directory}/{stem}.json", $"{directory}/{stem}_*.json"];
+    }
+
+    /// <summary>
+    /// Matches the <c>--file-name</c> option inside
+    /// <c>$(OpenApiGenerateDocumentsOptions)</c>, which the package appends to the
+    /// dotnet-getdocument command verbatim. The tool accepts
+    /// <c>--file-name v</c>, <c>--file-name=v</c> and <c>--file-name:v</c>, and
+    /// rejects any value outside <c>[A-Za-z0-9_-]</c>, so the value never has
+    /// spaces to quote around.
+    /// </summary>
+    private static readonly Regex OpenApiFileNameOption = new(
+        @"--file-name[=:\s]\s*""?(?<name>[^\s""]+)""?",
+        RegexOptions.Compiled);
+
+    /// <summary>
+    /// Gets the file name stem dotnet-getdocument writes documents under:
+    /// <c>&lt;stem&gt;.json</c> for the default document and
+    /// <c>&lt;stem&gt;_&lt;document&gt;.json</c> for the rest. The stem is the project
+    /// name unless <c>$(OpenApiGenerateDocumentsOptions)</c> overrides it with
+    /// <c>--file-name</c>.
+    /// </summary>
+    private static string GetOpenApiDocumentFileName(Dictionary<string, string> properties, string fileName)
+    {
+        var options = properties.GetValueOrDefault("OpenApiGenerateDocumentsOptions");
+        if (!string.IsNullOrWhiteSpace(options))
+        {
+            var match = OpenApiFileNameOption.Match(options);
+            if (match.Success)
+            {
+                return match.Groups["name"].Value;
+            }
+        }
+
+        return Path.GetFileNameWithoutExtension(fileName);
     }
 
     /// <summary>

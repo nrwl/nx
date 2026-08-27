@@ -1,7 +1,8 @@
-const mockInit = jest.fn();
-const mockDispense = jest.fn();
-const mockComplete = jest.fn();
-jest.mock('../migrate-analytics', () => ({
+import type { Mock } from 'vitest';
+const mockInit = vi.fn();
+const mockDispense = vi.fn();
+const mockComplete = vi.fn();
+vi.mock('../migrate-analytics', () => ({
   reportMigrateOrchestratorInit: (...args: unknown[]) => mockInit(...args),
   reportMigrateOrchestratorDispense: (...args: unknown[]) =>
     mockDispense(...args),
@@ -9,32 +10,32 @@ jest.mock('../migrate-analytics', () => ({
     mockComplete(...args),
 }));
 
-const mockStringifiedDeps = jest.fn();
-const mockRunInstall = jest.fn();
-const mockLogSkippedInstall = jest.fn();
-jest.mock('../execute-migration', () => ({
+const mockStringifiedDeps = vi.fn();
+const mockRunInstall = vi.fn();
+const mockLogSkippedInstall = vi.fn();
+vi.mock('../execute-migration', () => ({
   readPackageJsonDeps: (...args: unknown[]) => mockStringifiedDeps(...args),
   runInstall: (...args: unknown[]) => mockRunInstall(...args),
   logSkippedPostMigrationInstall: (...args: unknown[]) =>
     mockLogSkippedInstall(...args),
 }));
 
-const mockCommit = jest.fn();
-const mockCheckpoint = jest.fn();
-jest.mock('../migrate-commits', () => ({
+const mockCommit = vi.fn();
+const mockCheckpoint = vi.fn();
+vi.mock('../migrate-commits', () => ({
   commitMigrationIfRequested: (...args: unknown[]) => mockCommit(...args),
   commitCheckpointBeforeMigrations: (...args: unknown[]) =>
     mockCheckpoint(...args),
 }));
 
-const mockGetGitRepositoryStatus = jest.fn();
-const mockGetLatestCommitSha = jest.fn();
-const mockGetPathCommitExposure = jest.fn();
-const mockGetWorkingTreeStatus = jest.fn();
-const mockIsAncestorCommit = jest.fn();
-const mockTryCommitChanges = jest.fn();
-jest.mock('../../../utils/git-utils', () => ({
-  ...jest.requireActual('../../../utils/git-utils'),
+const mockGetGitRepositoryStatus = vi.fn();
+const mockGetLatestCommitSha = vi.fn();
+const mockGetPathCommitExposure = vi.fn();
+const mockGetWorkingTreeStatus = vi.fn();
+const mockIsAncestorCommit = vi.fn();
+const mockTryCommitChanges = vi.fn();
+vi.mock('../../../utils/git-utils', async () => ({
+  ...(await vi.importActual('../../../utils/git-utils')),
   getGitRepositoryStatus: (...args: unknown[]) =>
     mockGetGitRepositoryStatus(...args),
   getLatestCommitSha: (...args: unknown[]) => mockGetLatestCommitSha(...args),
@@ -50,7 +51,7 @@ jest.mock('../../../utils/git-utils', () => ({
   tryCommitChanges: (...args: unknown[]) => mockTryCommitChanges(...args),
 }));
 
-jest.mock('../../../utils/package-manager', () => ({
+vi.mock('../../../utils/package-manager', () => ({
   detectPackageManager: () => 'npm',
   getPackageManagerCommand: () => ({ exec: 'npx', install: 'npm install' }),
 }));
@@ -100,16 +101,14 @@ describe('orchestrator', () => {
     root = mkdtempSync(join(tmpdir(), 'nx-migrate-orch-'));
     stdout = '';
     logged = [];
-    jest.spyOn(process.stdout, 'write').mockImplementation(((
-      chunk: unknown
-    ) => {
+    vi.spyOn(process.stdout, 'write').mockImplementation(((chunk: unknown) => {
       stdout += String(chunk);
       return true;
     }) as unknown as typeof process.stdout.write);
-    jest.spyOn(output, 'log').mockImplementation((opts) => {
+    vi.spyOn(output, 'log').mockImplementation((opts) => {
       logged.push(opts as { title: string; bodyLines?: string[] });
     });
-    jest.spyOn(output, 'warn').mockImplementation(() => {});
+    vi.spyOn(output, 'warn').mockImplementation(() => {});
 
     mockInit.mockReset();
     mockDispense.mockReset();
@@ -128,7 +127,7 @@ describe('orchestrator', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     rmSync(root, { recursive: true, force: true });
   });
 
@@ -1401,7 +1400,7 @@ describe('orchestrator', () => {
       expect(state.steps[0].status).toBe('succeeded');
       expect(state.steps[0].installFailed).toBe(true);
       expect(state.status).toBe('completed');
-      const warned = (output.warn as jest.Mock).mock.calls
+      const warned = (output.warn as Mock).mock.calls
         .map((call) => JSON.stringify(call[0]))
         .join('\n');
       expect(warned).toContain('registry unreachable');
@@ -1502,7 +1501,7 @@ describe('orchestrator', () => {
 
   describe('reconcile: death detection', () => {
     it('marks a running step with a dead pid as died and offers retry-clean when commits give a restore point', async () => {
-      jest.spyOn(process, 'kill').mockImplementation(() => {
+      vi.spyOn(process, 'kill').mockImplementation(() => {
         throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
       });
       mockGetLatestCommitSha.mockReturnValue(
@@ -1538,7 +1537,7 @@ describe('orchestrator', () => {
     it('classifies a dead worker on a later attempt as died', async () => {
       // The guard compares the observed attempt against the one on disk, so it
       // has to read the step rather than assume a run's first attempt.
-      jest.spyOn(process, 'kill').mockImplementation(() => {
+      vi.spyOn(process, 'kill').mockImplementation(() => {
         throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
       });
       const dir = setupRun('run-1', {
@@ -1564,7 +1563,7 @@ describe('orchestrator', () => {
       // The reset target only accounts for what was committed; edits already
       // in the tree at dispense would be destroyed by it, and an unrecorded
       // tree state cannot be assumed to have been clean.
-      jest.spyOn(process, 'kill').mockImplementation(() => {
+      vi.spyOn(process, 'kill').mockImplementation(() => {
         throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
       });
       setupRun('run-1', {
@@ -1597,7 +1596,7 @@ describe('orchestrator', () => {
     it('offers retry first when the dead worker had already recorded its generator half', async () => {
       // Its generator ran, so the redispensed worker has only the prompt (or
       // the install and commit) left; a reset would throw that work away.
-      jest.spyOn(process, 'kill').mockImplementation(() => {
+      vi.spyOn(process, 'kill').mockImplementation(() => {
         throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
       });
       setupRun('run-1', {
@@ -1625,7 +1624,7 @@ describe('orchestrator', () => {
 
     it('does not offer retry when the dead worker never recorded its generator half', async () => {
       // Keeping that tree could apply the migration twice.
-      jest.spyOn(process, 'kill').mockImplementation(() => {
+      vi.spyOn(process, 'kill').mockImplementation(() => {
         throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
       });
       mockGetLatestCommitSha.mockReturnValue(
@@ -1658,7 +1657,7 @@ describe('orchestrator', () => {
       // The worker died between starting and parking the prompt: nothing was
       // emitted or applied, and there is no generator to rerun. Adopt alone
       // would record a success the run never produced.
-      jest.spyOn(process, 'kill').mockImplementation(() => {
+      vi.spyOn(process, 'kill').mockImplementation(() => {
         throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
       });
       const dir = setupRun('run-1', {
@@ -1697,7 +1696,7 @@ describe('orchestrator', () => {
     });
 
     it('withholds every automatic continuation from a died pre-marker generator step, warning about unseen writes', async () => {
-      jest.spyOn(process, 'kill').mockImplementation(() => {
+      vi.spyOn(process, 'kill').mockImplementation(() => {
         throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
       });
       const dir = setupRun('run-1', {
@@ -1735,7 +1734,7 @@ describe('orchestrator', () => {
     });
 
     it('offers adopt and skip when neither retry is available', async () => {
-      jest.spyOn(process, 'kill').mockImplementation(() => {
+      vi.spyOn(process, 'kill').mockImplementation(() => {
         throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
       });
       setupRun('run-1', {
@@ -2023,7 +2022,7 @@ describe('orchestrator', () => {
     });
 
     it('offers only adopt when the run has no restore point (commits disabled)', async () => {
-      jest.spyOn(process, 'kill').mockImplementation(() => {
+      vi.spyOn(process, 'kill').mockImplementation(() => {
         throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
       });
       const dir = setupRun('run-1', {
@@ -2052,7 +2051,7 @@ describe('orchestrator', () => {
     });
 
     it('reports the working tree as (unknown) when the status probe fails, never as clean', async () => {
-      jest.spyOn(process, 'kill').mockImplementation(() => {
+      vi.spyOn(process, 'kill').mockImplementation(() => {
         throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
       });
       setupRun('run-1', {
@@ -2076,7 +2075,7 @@ describe('orchestrator', () => {
     });
 
     it('offers only adopt when a prior commit is still pending debt', async () => {
-      jest.spyOn(process, 'kill').mockImplementation(() => {
+      vi.spyOn(process, 'kill').mockImplementation(() => {
         throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
       });
       const dir = setupRun('run-1', {
@@ -2103,7 +2102,7 @@ describe('orchestrator', () => {
     });
 
     it('offers only adopt when the init checkpoint failed to land', async () => {
-      jest.spyOn(process, 'kill').mockImplementation(() => {
+      vi.spyOn(process, 'kill').mockImplementation(() => {
         throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
       });
       setupRun('run-1', {
@@ -2129,7 +2128,7 @@ describe('orchestrator', () => {
     });
 
     it('offers only adopt when the dead step has no captured pre-migration ref', async () => {
-      jest.spyOn(process, 'kill').mockImplementation(() => {
+      vi.spyOn(process, 'kill').mockImplementation(() => {
         throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
       });
       setupRun('run-1', {
@@ -2405,7 +2404,7 @@ describe('orchestrator', () => {
       // worker finishing concurrently: when death detection probes the pid, flip
       // the on-disk step to succeeded so the fresh-state markDied is illegal and
       // dropped rather than clobbering the worker's write.
-      jest.spyOn(process, 'kill').mockImplementation(((_pid: number) => {
+      vi.spyOn(process, 'kill').mockImplementation(((_pid: number) => {
         const s = readRunState(dir);
         writeRunState(dir, {
           ...s,
@@ -2420,7 +2419,7 @@ describe('orchestrator', () => {
     });
 
     it('leaves a running step with a live pid untouched and dispenses still-running', async () => {
-      jest.spyOn(process, 'kill').mockReturnValue(true as never);
+      vi.spyOn(process, 'kill').mockReturnValue(true as never);
       const dir = setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:gen', 'running', {
@@ -2441,7 +2440,7 @@ describe('orchestrator', () => {
     });
 
     it('escalates a still-running step older than the hang threshold', async () => {
-      jest.spyOn(process, 'kill').mockReturnValue(true as never);
+      vi.spyOn(process, 'kill').mockReturnValue(true as never);
       const twentyMinAgo = new Date(Date.now() - 20 * 60 * 1000).toISOString();
       setupRun('run-1', {
         steps: [
@@ -2722,7 +2721,7 @@ describe('orchestrator', () => {
     });
 
     it('adopts a died step and commits its working tree at reconcile', async () => {
-      jest.spyOn(process, 'kill').mockReturnValue(true as never);
+      vi.spyOn(process, 'kill').mockReturnValue(true as never);
       mockCommit.mockResolvedValue({
         status: 'committed',
         sha: 'face0004face0004face0004face0004face0004',
@@ -2752,13 +2751,13 @@ describe('orchestrator', () => {
       // The acceptance checks ran against the attempt this reconcile read; a
       // concurrent reconcile can resolve the step and see its next worker
       // attempt die again while this reconcile's adopt commit is running.
-      jest.spyOn(process, 'kill').mockReturnValue(true as never);
+      vi.spyOn(process, 'kill').mockReturnValue(true as never);
       const dir = setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:gen', 'died')],
         createCommits: true,
         plan: [genMig('@nx/js', 'gen')],
       });
-      mockCommit.mockImplementation(async () => {
+      mockCommit.mockImplementation(() => {
         const fresh = readRunState(dir);
         writeRunState(dir, {
           ...fresh,
@@ -2791,7 +2790,7 @@ describe('orchestrator', () => {
     });
 
     it('records the install failure when adopting a died step whose commit could not install', async () => {
-      jest.spyOn(process, 'kill').mockReturnValue(true as never);
+      vi.spyOn(process, 'kill').mockReturnValue(true as never);
       mockRunInstall.mockRejectedValue(new Error('registry unreachable'));
       mockCommit.mockImplementation(async (...args: unknown[]) => {
         await (args[4] as () => Promise<void>)();
@@ -2824,7 +2823,7 @@ describe('orchestrator', () => {
     });
 
     it('installs the adopted dependency changes when the run does not create commits', async () => {
-      jest.spyOn(process, 'kill').mockReturnValue(true as never);
+      vi.spyOn(process, 'kill').mockReturnValue(true as never);
       const dir = setupRun('run-1', {
         steps: [
           // The dead worker edited package.json before dying, so the deps no
@@ -2856,7 +2855,7 @@ describe('orchestrator', () => {
     });
 
     it('records the install failure when adopting without commits and the install fails', async () => {
-      jest.spyOn(process, 'kill').mockReturnValue(true as never);
+      vi.spyOn(process, 'kill').mockReturnValue(true as never);
       mockRunInstall.mockRejectedValue(new Error('registry unreachable'));
       const dir = setupRun('run-1', {
         steps: [

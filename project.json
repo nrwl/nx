@@ -81,7 +81,8 @@
         "nx:lint-native",
         "check-commit",
         "check-format:quick",
-        "check-lock-files"
+        "check-lock-files",
+        "astro-docs:format"
       ]
     }
   }

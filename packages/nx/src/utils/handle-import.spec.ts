@@ -13,13 +13,13 @@ describe('handleImport', () => {
     const esmError = new Error('require() of ES Module not supported');
     (esmError as any).code = 'ERR_REQUIRE_ESM';
 
-    const originalRequire = jest.requireActual('./handle-import');
+    const originalRequire = await vi.importActual('./handle-import');
 
-    jest.resetModules();
+    vi.resetModules();
 
     // Mock require to throw ERR_REQUIRE_ESM for a specific module
     const mockModule = { default: 'esm-value', named: 'named-value' };
-    jest.mock(
+    vi.mock(
       'fake-esm-package',
       () => {
         throw esmError;
@@ -29,7 +29,7 @@ describe('handleImport', () => {
 
     // We can't easily mock dynamic import, so instead test with a real CJS module
     // and verify the error-code branching logic directly
-    const handleImportModule = require('./handle-import');
+    const handleImportModule = await import('./handle-import');
 
     // Verify the function exists and returns from require for CJS
     const result = await handleImportModule.handleImport('path');
