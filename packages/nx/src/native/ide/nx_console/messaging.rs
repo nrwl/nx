@@ -17,7 +17,7 @@ use crate::native::{
         components::tasks_list::{TaskItem, TaskStatus},
         pty::PtyInstance,
     },
-    utils::socket_path::get_full_nx_console_socket_path,
+    utils::socket_path::{legacy_nx_console_socket_path, nx_console_socket_path},
 };
 
 #[derive(Serialize, Deserialize)]
@@ -67,8 +67,32 @@ fn throttled(operation_key: &'static str, throttle_duration: Duration) -> bool {
 
 impl NxConsoleMessageConnection {
     pub async fn new(workspace_root: &str) -> Self {
-        let socket_path = get_full_nx_console_socket_path(workspace_root);
-        let client = IpcTransport::new(&socket_path)
+        let resolved = nx_console_socket_path(workspace_root, None)
+            .inspect_err(|e| trace!("Could not resolve the Nx Console socket: {:?}", e))
+            .ok()
+            .map(|resolution| resolution.path);
+
+        let mut client = match &resolved {
+            Some(socket_path) => Self::dial(socket_path).await,
+            None => None,
+        };
+
+        // An extension that has not yet adopted the resolver is still listening
+        // where both ends used to derive the path for themselves. Without this
+        // it would look to the user like no IDE is running -- there is no
+        // handshake or version field to tell them otherwise.
+        if client.is_none() {
+            let legacy = legacy_nx_console_socket_path(workspace_root);
+            if resolved.as_deref() != Some(legacy.as_path()) {
+                client = Self::dial(&legacy).await;
+            }
+        }
+
+        Self { client }
+    }
+
+    async fn dial(socket_path: &std::path::Path) -> Option<Arc<Client>> {
+        IpcTransport::new(socket_path)
             .await
             .map(|transport| {
                 ClientBuilder::new().build_with_tokio(transport.writer, transport.reader)
@@ -77,9 +101,7 @@ impl NxConsoleMessageConnection {
                 trace!(?socket_path, "Could not connect to Nx Console: {}", e);
             })
             .ok()
-            .map(Arc::new);
-
-        Self { client }
+            .map(Arc::new)
     }
 
     pub fn is_connected(&self) -> bool {
