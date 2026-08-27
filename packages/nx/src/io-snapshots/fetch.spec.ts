@@ -79,6 +79,15 @@ describe('fetchIoSnapshotsForRun', () => {
 
     process.env.NX_IO_SNAPSHOTS = 'true';
     expect(isIoSnapshotFetchEnabled({})).toBe(true);
+
+    // The debug override never beats a disabled Cloud.
+    process.env.NX_NO_CLOUD = 'true';
+    expect(isIoSnapshotFetchEnabled(enabled)).toBe(false);
+    delete process.env.NX_NO_CLOUD;
+    expect(isIoSnapshotFetchEnabled(enabled, { cloud: false })).toBe(false);
+    expect(
+      isIoSnapshotFetchEnabled({ ...enabled, neverConnectToCloud: true })
+    ).toBe(false);
   });
 
   it('passes credentials and cache location to the native fetch', async () => {

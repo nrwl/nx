@@ -5,7 +5,7 @@ import { cacheDir } from '../utils/cache-directory';
 import { logger } from '../utils/logger';
 import { ACCESS_TOKEN } from '../nx-cloud/utilities/environment';
 import { removeTrailingSlash } from '../nx-cloud/utilities/get-cloud-options';
-import { isNxCloudUsed } from '../utils/nx-cloud-utils';
+import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { output } from '../utils/output';
 import { nxVersion } from '../utils/versions';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -31,9 +31,10 @@ export function isIoSnapshotFetchEnabled(
   nxJson: NxJsonConfiguration,
   runnerOptions: IoSnapshotCloudOptions = {}
 ): boolean {
+  // A disabled Cloud wins over everything, including the debug override.
+  if (isNxCloudDisabled(nxJson) || runnerOptions.cloud === false) return false;
   const override = process.env.NX_IO_SNAPSHOTS;
   if (override === 'false') return false;
-  if (runnerOptions.cloud === false) return false;
   return override === 'true' || isNxCloudUsed(nxJson);
 }
 
@@ -114,8 +115,6 @@ function report(result: IoSnapshots): void {
     }: ${resolution.tasks} tasks for ${resolution.requestedCommit.slice(
       0,
       12
-    )} from ${resolution.sourceCommits.length} commit(s), digest ${
-      resolution.digest
-    }`
+    )} from ${resolution.sourceCommits.length} commit(s), digest ${resolution.digest}`
   );
 }
