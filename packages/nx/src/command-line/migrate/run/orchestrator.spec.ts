@@ -2188,6 +2188,70 @@ describe('orchestrator', () => {
       );
     });
 
+    describe('the dispensed format command', () => {
+      // The runbook is written once at init, so the formatter it would name
+      // freezes for the whole run; the dispense re-resolves it after every
+      // earlier step has landed.
+      it('follows a formatter switch made by an earlier step', async () => {
+        writeFileSync(join(root, '.prettierrc'), '{}');
+        setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
+          plan: [promptMig('@nx/js', 'p')],
+        });
+        await runOrchestratorReconcile({ root, runId: 'run-1' });
+        expect(lastBlock().payload.instructions).toContain(
+          'Format command: npx prettier --write --ignore-unknown <paths>'
+        );
+
+        rmSync(join(root, '.prettierrc'));
+        writeFileSync(join(root, '.oxfmtrc.json'), '{}');
+        await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+        expect(lastBlock().payload.instructions).toContain(
+          'Format command: npx oxfmt --no-error-on-unmatched-pattern <paths>'
+        );
+      });
+
+      it('picks up a formatter an earlier step added to a workspace that had none', async () => {
+        setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
+          plan: [promptMig('@nx/js', 'p')],
+        });
+        await runOrchestratorReconcile({ root, runId: 'run-1' });
+        expect(lastBlock().payload.instructions).toContain(
+          'Format command: none (no formatter is configured)'
+        );
+
+        writeFileSync(join(root, '.prettierrc'), '{}');
+        await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+        expect(lastBlock().payload.instructions).toContain(
+          'Format command: npx prettier --write --ignore-unknown <paths>'
+        );
+      });
+
+      it('is not dispensed for a validation pass', async () => {
+        writeFileSync(join(root, '.prettierrc'), '{}');
+        setupRun('run-1', {
+          steps: [
+            {
+              ...migStep('step-1', '@nx/js:gen', 'awaiting-prompt-outcome'),
+              awaitingKind: 'generator-validation' as const,
+            },
+          ],
+          plan: [genMig('@nx/js', 'gen')],
+        });
+
+        await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+        const block = lastBlock();
+        expect(block.payload.instructions).toContain(
+          'awaiting your validation'
+        );
+        expect(block.payload.instructions).not.toContain('Format command:');
+      });
+    });
+
     it('dispenses validation instructions for a step awaiting a validation pass', async () => {
       const dir = setupRun('run-1', {
         steps: [
