@@ -1,0 +1,48 @@
+{
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "$schema": "https://json-schema.org/schema",
+  "title": "Oxlint Lint Target",
+  "description": "Lints a project with Oxlint. Runs in batch mode by default, so one Oxlint process lints every project in the run. Options not listed here are forwarded to Oxlint as CLI flags.",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "lintFilePatterns": {
+      "type": "array",
+      "description": "One or more files/dirs/globs to pass to Oxlint.",
+      "default": ["{projectRoot}"],
+      "items": {
+        "type": "string"
+      }
+    },
+    "format": {
+      "type": "string",
+      "description": "Output format. Rendered by Nx from Oxlint's JSON report, so only these values are supported. `default` matches Oxlint's own terminal output, and switches to `agent` in CI or under an AI agent, as Oxlint does.",
+      "enum": ["default", "agent", "github", "json"],
+      "default": "default"
+    },
+    "args": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        { "type": "string" }
+      ],
+      "description": "Extra arguments appended to the Oxlint command verbatim."
+    },
+    "__unparsed__": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "$default": {
+        "$source": "unparsed"
+      },
+      "x-priority": "internal"
+    }
+  },
+  "additionalProperties": true,
+  "examplesFile": "../../../docs/lint-examples.md"
+}
