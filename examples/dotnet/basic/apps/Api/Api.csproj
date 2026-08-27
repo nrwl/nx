@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!--
-      A plain MSBuild project reference. @nx/dotnet reads it and turns it into an
-      edge in the Nx graph, so `nx build Api` builds Catalog first.
-    -->
     <ProjectReference Include="../../libs/Catalog/Catalog.csproj" />
   </ItemGroup>
 

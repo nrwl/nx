@@ -1,10 +1,5 @@
 <Project>
   <PropertyGroup>
-    <!-- This example is a standalone workspace. Without this file MSBuild walks
-         out of it looking for Directory.Build.props and picks up the one at the
-         Nx repo root, so the example would not build the way a user's copy of
-         it does. Setting the property here both stops that walk and keeps the
-         behavior the root file was after. -->
     <UseSharedCompilation>false</UseSharedCompilation>
   </PropertyGroup>
 </Project>
