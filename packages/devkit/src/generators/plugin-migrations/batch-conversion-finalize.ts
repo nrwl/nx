@@ -43,7 +43,9 @@ import {
 } from './executor-to-plugin-migrator';
 import {
   excludedProjectsWarning,
+  isDroppedTarget,
   keptPreMigrationTargetWarning,
+  type MissingPair,
   retainedResidualsWarning,
   revertedTargetsWarning,
   unverifiedPairsWarning,
@@ -633,8 +635,8 @@ function verifyPairs(
     { root: string; targets: Map<string, TargetConfiguration> }
   >
 ): void {
-  const fallbacks: string[] = [];
-  let anyMissingFromVerification = false;
+  const divergent: string[] = [];
+  const missing: MissingPair[] = [];
   let anyReverted = false;
 
   for (const [targetName, targetPlan] of state.targets) {
@@ -648,8 +650,16 @@ function verifyPairs(
       const verifiedInferred: TargetConfiguration | undefined =
         result.projects?.[pair.root]?.targets?.[targetName];
       if (!verifiedInferred) {
-        anyMissingFromVerification = true;
-        fallbacks.push(`${pair.projectName} > ${targetName}`);
+        // No deviation is planned for a missing pair, so its child-written or
+        // pre-migration target remains
+        missing.push({
+          pair: `${pair.projectName} > ${targetName}`,
+          root: pair.root,
+          removed:
+            !pair.entry.keptPreMigration &&
+            !targetPlan.excludedProjects.has(pair.projectName) &&
+            isDroppedTarget(pair.entry.residual),
+        });
         continue;
       }
 
@@ -663,7 +673,7 @@ function verifyPairs(
       ) {
         // The plugin-scoped default would not resolve for a differently owned
         // pair, so the deviation write would silently drop the common keys.
-        fallbacks.push(`${pair.projectName} > ${targetName}`);
+        divergent.push(`${pair.projectName} > ${targetName}`);
         continue;
       }
 
@@ -682,7 +692,7 @@ function verifyPairs(
         stableStringify(postMigrationFinal) !==
         stableStringify(pair.entry.baselineFinal)
       ) {
-        fallbacks.push(`${pair.projectName} > ${targetName}`);
+        divergent.push(`${pair.projectName} > ${targetName}`);
         continue;
       }
 
@@ -700,19 +710,18 @@ function verifyPairs(
     }
   }
 
-  if (fallbacks.length > 0) {
+  const anyFallback = divergent.length > 0 || missing.length > 0;
+  if (anyFallback) {
     state.log.warn(
       unverifiedPairsWarning(
-        fallbacks,
-        anyMissingFromVerification
-          ? planErrors.map((error) => error.message)
-          : []
+        divergent,
+        missing,
+        missing.length > 0 ? planErrors.map((error) => error.message) : []
       )
     );
   }
 
-  const errorsSurfacedByFallbackWarning =
-    fallbacks.length > 0 && anyMissingFromVerification;
+  const errorsSurfacedByFallbackWarning = missing.length > 0;
   if (
     planErrors.length > 0 &&
     !anyReverted &&
@@ -721,7 +730,7 @@ function verifyPairs(
     state.log.warn(
       verificationErrorsWarning(
         planErrors.map((error) => error.message),
-        fallbacks.length > 0
+        anyFallback
       )
     );
   }

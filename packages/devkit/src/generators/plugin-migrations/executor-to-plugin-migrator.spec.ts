@@ -4241,6 +4241,76 @@ describe('Phase 4: verify + equivalence oracle + fallback', () => {
     expect(warn.mock.calls[0][0]).toContain('could not be verified');
   });
 
+  it('names the root and the dropped targets for pairs the verification pass did not infer', async () => {
+    ctx = setupFixture('fallback-missing');
+    for (const name of ['app1', 'app2', 'app3', 'app4']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: {
+          ...uniformExecutorTarget(),
+          // app2's restored residual keeps a dependsOn, so Nx keeps the target
+          ...(name === 'app2' ? { dependsOn: ['^build'] } : {}),
+        },
+      });
+    }
+    // app2, app3 and app4 vanish from the verification pass without any error
+    let invocation = 0;
+    const createNodes: CreateNodes<SyntheticPluginOptions> = [
+      SYNTHETIC_CONFIG_GLOB,
+      (configFiles, options) => {
+        invocation++;
+        const targetName = options?.targetName ?? 'build';
+        return configFiles.flatMap((file) => {
+          const root = dirname(file);
+          if (invocation >= 2 && root !== 'app1') {
+            return [];
+          }
+          const target = defaultInferredTarget(root, targetName);
+          return [
+            [
+              file,
+              { projects: { [root]: { targets: { [targetName]: target } } } },
+            ],
+          ] as const;
+        });
+      },
+    ];
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      SYNTHETIC_PLUGIN_PATH,
+      createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    expect(readJson(ctx.tree, 'app2/project.json').targets.build).toEqual({
+      options: { mode: 'production' },
+      dependsOn: ['^build'],
+    });
+    for (const name of ['app3', 'app4']) {
+      expect(readJson(ctx.tree, `${name}/project.json`).targets.build).toEqual({
+        options: { mode: 'production' },
+      });
+    }
+    expect(warn).toHaveBeenCalledTimes(1);
+    const message = warn.mock.calls[0][0];
+    expect(message).toContain(
+      'The plugin did not infer app2 > build (root app2), app3 > build (root app3), app4 > build (root app4) on the verification pass.'
+    );
+    expect(message).toContain(
+      'The following targets no longer exist because each restored configuration has no executor, command or dependsOn: app3 > build, app4 > build.'
+    );
+    expect(message).not.toContain('shadowed');
+    expect(message).not.toContain('reported errors');
+  });
+
   it('surfaces verification-pass errors in the fallback warning', async () => {
     ctx = setupFixture('fallback-verify-error');
     for (const name of ['app1', 'app2']) {

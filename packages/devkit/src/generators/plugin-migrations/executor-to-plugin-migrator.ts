@@ -53,7 +53,9 @@ import {
 } from './batch-conversion-session';
 import {
   excludedProjectsWarning,
+  isDroppedTarget,
   keptPreMigrationTargetWarning,
+  type MissingPair,
   retainedResidualsWarning,
   type PackageJsonIdentitySource,
   revertedTargetsWarning,
@@ -2088,8 +2090,8 @@ async function verifyAndFallback<T>(
     );
   }
 
-  const fallbacks: string[] = [];
-  let anyMissingFromVerification = false;
+  const divergent: string[] = [];
+  const missing: MissingPair[] = [];
 
   for (const [projectName, targetMap] of residualByProject) {
     const root = projectGraph.nodes[projectName]?.data?.root;
@@ -2101,9 +2103,6 @@ async function verifyAndFallback<T>(
       }
       const verifiedInferred: TargetConfiguration | undefined =
         verifyResult.projects?.[root]?.targets?.[targetName];
-      if (!verifiedInferred) {
-        anyMissingFromVerification = true;
-      }
 
       let equivalent = false;
       if (verifiedInferred) {
@@ -2123,7 +2122,7 @@ async function verifyAndFallback<T>(
       if (!equivalent) {
         // Drop this project's hoist: restore its full residual as an explicit
         // project.json override (which wins over the shared targetDefaults).
-        writeResidualTarget(
+        const written = writeResidualTarget(
           tree,
           projectConfigsByName,
           projectName,
@@ -2131,20 +2130,31 @@ async function verifyAndFallback<T>(
           structuredClone(entry.residual),
           logger
         );
-        fallbacks.push(`${projectName} > ${targetName}`);
+        const pair = `${projectName} > ${targetName}`;
+        if (verifiedInferred) {
+          divergent.push(pair);
+        } else {
+          missing.push({
+            pair,
+            root,
+            removed: written && isDroppedTarget(entry.residual),
+          });
+        }
       }
     }
   }
 
-  if (fallbacks.length > 0) {
+  const anyFallback = divergent.length > 0 || missing.length > 0;
+  if (anyFallback) {
     // Surface the pass's own errors only when a target vanished from the
     // verification result: the one fallback class an inference error can
     // explain. Divergence fallbacks have a verified config; appending
     // unrelated pass errors to them would misattribute the cause.
     (logger ?? devkitLogger).warn(
       unverifiedPairsWarning(
-        fallbacks,
-        anyMissingFromVerification ? verificationErrors : []
+        divergent,
+        missing,
+        missing.length > 0 ? verificationErrors : []
       )
     );
   }
@@ -2159,8 +2169,7 @@ async function verifyAndFallback<T>(
   // broken config file leaves the pass unable to see the whole workspace with no
   // trace. (`verificationErrors` here has already had the no-project-name noise
   // filtered out, so it means inference genuinely broke.)
-  const errorsSurfacedByFallbackWarning =
-    fallbacks.length > 0 && anyMissingFromVerification;
+  const errorsSurfacedByFallbackWarning = missing.length > 0;
   if (
     verificationErrors.length > 0 &&
     revertedTargets.size === 0 &&
@@ -2169,7 +2178,7 @@ async function verifyAndFallback<T>(
     // Only claim the migrated targets matched when nothing fell back; a
     // divergence fallback means at least one did not.
     (logger ?? devkitLogger).warn(
-      verificationErrorsWarning(verificationErrors, fallbacks.length > 0)
+      verificationErrorsWarning(verificationErrors, anyFallback)
     );
   }
 }

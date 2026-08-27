@@ -692,8 +692,14 @@ describe('batch conversion finalize', () => {
       options: { mode: 'production' },
     });
     expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0][0]).toContain('app2 > build');
     expect(warn.mock.calls[0][0]).toContain('could not be verified');
+    expect(warn.mock.calls[0][0]).toContain(
+      'The plugin did not infer app2 > build (root app2) on the verification pass.'
+    );
+    expect(warn.mock.calls[0][0]).toContain(
+      'The following targets no longer exist because each restored configuration has no executor, command or dependsOn: app2 > build.'
+    );
+    expect(warn.mock.calls[0][0]).not.toContain('shadowed');
     expect(warn.mock.calls[0][0]).toContain('app2 config exploded');
   });
 
@@ -821,6 +827,75 @@ describe('batch conversion finalize', () => {
         .listChanges()
         .find((change) => change.path === 'app3/project.json')?.options?.mode
     ).toBe('755');
+  });
+
+  it('does not report a kept pre-migration target as gone when verification no longer infers it', async () => {
+    ctx = setupFixture('finalize-kept-missing-pair');
+    for (const name of ['app1', 'app2', 'app3']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    // app3's script authors the identity when the child runs, so the child
+    // keeps its pre-migration target; a later child removes the script and
+    // the verification pass then infers nothing at app3
+    ctx.tree.write(
+      'app3/package.json',
+      JSON.stringify({ name: 'app3', scripts: { build: 'echo build' } })
+    );
+    let invocation = 0;
+    const createNodes: CreateNodes<SyntheticPluginOptions> = [
+      SYNTHETIC_CONFIG_GLOB,
+      (configFiles, options) => {
+        invocation++;
+        const targetName = options?.targetName ?? 'build';
+        return configFiles.flatMap((file) => {
+          const root = dirname(file);
+          if (invocation >= 2 && root === 'app3') {
+            return [];
+          }
+          const target = defaultInferredTarget(root, targetName);
+          return [
+            [
+              file,
+              { projects: { [root]: { targets: { [targetName]: target } } } },
+            ],
+          ] as const;
+        });
+      },
+    ];
+    const warn = jest.fn();
+
+    await runBatch([
+      () =>
+        migrateProjectExecutorsToPlugin(
+          ctx.tree,
+          ctx.projectGraph,
+          SYNTHETIC_PLUGIN_PATH,
+          createNodes,
+          { targetName: 'build' },
+          migrationsFor(SYNTHETIC_EXECUTOR),
+          undefined,
+          { warn } as any
+        ),
+      () =>
+        ctx.tree.write('app3/package.json', JSON.stringify({ name: 'app3' })),
+    ]);
+
+    expect(readJson(ctx.tree, 'app3/project.json').targets.build).toEqual({
+      executor: SYNTHETIC_EXECUTOR,
+      ...uniformExecutorTarget(),
+    });
+    const missingWarning = warn.mock.calls
+      .map(([message]) => message)
+      .find((message) => message.includes('could not be verified'));
+    expect(missingWarning).toContain(
+      'The plugin did not infer app3 > build (root app3) on the verification pass.'
+    );
+    expect(missingWarning).not.toContain('no longer exists');
   });
 
   it("retains a target name that collides with another plan's inferred executor", async () => {
