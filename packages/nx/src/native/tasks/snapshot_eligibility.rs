@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use crate::native::cache::expand_outputs::match_output_paths;
 use crate::native::io_snapshots::bundle::{TaskInputs, TaskIoSnapshot};
 use crate::native::io_snapshots::{IoSnapshotResolution, IoSnapshots};
-use crate::native::tasks::hashers::validate_files_globs;
+use crate::native::tasks::hashers::{expand_literal_braces, validate_files_globs};
 use crate::native::tasks::types::TaskGraph;
 
 /// What the eligibility walk needs from the workspace. The planner fills it
@@ -203,7 +203,11 @@ pub(crate) fn resolve(
 
         files.sort();
         files.dedup();
-        if let Some(glob) = files.iter().find(|g| escapes_workspace(g)) {
+        if let Some(glob) = files.iter().find(|g| {
+            expand_literal_braces(g)
+                .iter()
+                .any(|e| escapes_workspace(e))
+        }) {
             let mut diagnostic = IoSnapshotDiagnostic::task("escapes-workspace", task_id);
             diagnostic.glob = Some(glob.clone());
             diagnostics.push(diagnostic);
@@ -457,6 +461,20 @@ mod tests {
         assert_eq!(
             observed_outputs(&entry),
             vec!["apps/web/.next/cache/*", "dist/apps/web/**"]
+        );
+    }
+
+    #[test]
+    fn brace_groups_are_expanded_before_the_escape_check() {
+        assert!(
+            expand_literal_braces("{..,libs}/x.ts")
+                .iter()
+                .any(|e| escapes_workspace(e))
+        );
+        assert!(
+            !expand_literal_braces("{nx,tsconfig.base}.json")
+                .iter()
+                .any(|e| escapes_workspace(e))
         );
     }
 

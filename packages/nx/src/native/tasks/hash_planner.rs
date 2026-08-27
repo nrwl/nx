@@ -15,7 +15,7 @@ use std::collections::{BTreeMap, HashMap};
 use tracing::trace;
 
 use crate::native::io_snapshots::IoSnapshots;
-use crate::native::tasks::hashers::{OnceCache, validate_files_globs};
+use crate::native::tasks::hashers::{OnceCache, expand_literal_braces, validate_files_globs};
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency, get_named_inputs,
 };
@@ -37,6 +37,8 @@ fn io_snapshot_marker(digest: &str) -> HashInstruction {
 type Negations = Vec<(String, String)>;
 
 const ROOT_TSCONFIG_FILES: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
+/// Hashed by the always-on workspace fileset every plan carries.
+const ALWAYS_ON_FILES: [&str; 3] = ["nx.json", ".gitignore", ".nxignore"];
 const LOCKFILES: [&str; 6] = [
     "package-lock.json",
     "npm-shrinkwrap.json",
@@ -658,13 +660,16 @@ impl HashPlanner {
                 .unwrap_or(self_project)
         };
 
+        // Bundles collapse sibling files into brace groups; class mapping needs
+        // the individual names, so observed groups of literals are expanded.
         let mut buckets: BTreeMap<&str, Vec<String>> = BTreeMap::new();
         for glob in io
             .files
             .iter()
+            .flat_map(|glob| expand_literal_braces(glob))
             .filter(|glob| !covered_by_native_instruction(glob, &json_paths))
         {
-            buckets.entry(owner(glob)).or_default().push(glob.clone());
+            buckets.entry(owner(&glob)).or_default().push(glob);
         }
 
         let mut instructions = Vec::new();
@@ -672,6 +677,9 @@ impl HashPlanner {
             if !group.iter().any(|glob| !glob.starts_with('!')) {
                 continue;
             }
+            // Expansion can reorder relative to the bundle's sorted globs.
+            group.sort();
+            group.dedup();
             let mut declared_negations: Vec<String> = negations
                 .iter()
                 .filter(|(p, _)| p == project)
@@ -1191,12 +1199,14 @@ fn collect_negations(
 /// models it better than its raw contents: externals cover node_modules and
 /// lockfiles (the root package.json stays — externals hash resolved versions,
 /// not its scripts); TsConfiguration covers the root tsconfig; JsonFileSet
-/// covers a declared `{json}` file.
+/// covers a declared `{json}` file; the always-on fileset covers nx.json,
+/// .gitignore and .nxignore.
 fn covered_by_native_instruction(glob: &str, json_paths: &[String]) -> bool {
     let path = glob.strip_prefix('!').unwrap_or(glob);
     path.starts_with("node_modules/")
         || path.contains("/node_modules/")
         || LOCKFILES.contains(&path)
+        || ALWAYS_ON_FILES.contains(&path)
         || ROOT_TSCONFIG_FILES.contains(&path)
         || json_paths.iter().any(|j| j == path)
 }
