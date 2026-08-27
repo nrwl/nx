@@ -241,12 +241,33 @@ export function collectMigrationScope<T>(
         }
       );
 
-      if (targetAndProjects.size === 0) {
-        continue;
-      }
-
       for (const [targetName, projs] of targetAndProjects) {
         const inferenceOptions = migration.targetPluginOptionMapper(targetName);
+
+        // One registration cannot map different target names through the same
+        // option; keep the first mapping
+        for (const project of projs) {
+          const existing = pluginOptionsByProject.get(project);
+          const takenOption = Object.keys(inferenceOptions).find(
+            (option) =>
+              existing?.[option] !== undefined &&
+              !isDeepEqual(existing[option], inferenceOptions[option])
+          );
+          if (!takenOption) {
+            continue;
+          }
+          const errorMsg = `The ${targetName} target on project "${project}" cannot be migrated. The "${takenOption}" plugin option is already set to "${existing[takenOption]}" by another target of the project, and the plugin can only infer one target per option. The target keeps its current configuration.`;
+          if (specificProjectToMigrate) {
+            throw new Error(errorMsg);
+          }
+          log.warn(errorMsg);
+          projs.delete(project);
+        }
+        if (projs.size === 0) {
+          targetAndProjects.delete(targetName);
+          continue;
+        }
+
         const key = stableStringify(inferenceOptions);
         if (!optionSetGroupsByKey.has(key)) {
           optionSetGroupsByKey.set(key, {
@@ -273,6 +294,10 @@ export function collectMigrationScope<T>(
             ...inferenceOptions,
           } as T);
         }
+      }
+
+      if (targetAndProjects.size === 0) {
+        continue;
       }
 
       executorScopes.push({

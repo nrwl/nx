@@ -60,6 +60,19 @@ function uniformExecutorTarget() {
   };
 }
 
+/** Adds a second executor target to an existing project (tree and graph). */
+function addSecondExecutorTarget(
+  ctx: FixtureContext,
+  projectName: string,
+  targetName: string
+) {
+  const projectJsonPath = `${projectName}/project.json`;
+  const projectJson = readJson(ctx.tree, projectJsonPath);
+  projectJson.targets[targetName] = { executor: SYNTHETIC_EXECUTOR };
+  writeJson(ctx.tree, projectJsonPath, projectJson);
+  ctx.projectGraph.nodes[projectName].data.targets = projectJson.targets;
+}
+
 function syntheticMigrations() {
   return [
     {
@@ -297,6 +310,48 @@ describe('collectMigrationScope (Phase 0)', () => {
     expect(
       [...scope.executorScopes[0].targetAndProjects.get('build')].sort()
     ).toEqual(['app1', 'app2', 'app3']);
+  });
+
+  it('keeps a second target that maps an already-set plugin option to another value', () => {
+    ctx = setupFixture('collect-scope-option-conflict');
+    addExecutorProject(ctx, { name: 'app1', root: 'app1', targetName: 'test' });
+    addSecondExecutorTarget(ctx, 'app1', 'skiptest');
+    const warn = jest.fn();
+
+    const scope = collectMigrationScope(
+      ctx.tree,
+      ctx.projectGraph,
+      syntheticMigrations(),
+      { targetName: 'build' },
+      undefined,
+      { warn } as any
+    );
+
+    // the first target seen wins; the second stays out of the scope entirely
+    expect([...scope.executorScopes[0].targetAndProjects.keys()]).toEqual([
+      'test',
+    ]);
+    expect(scope.pluginOptionsByProject.get('app1')).toEqual({
+      targetName: 'test',
+    });
+    expect(scope.optionSetGroups.map((group) => group.options)).toEqual([
+      { targetName: 'test' },
+    ]);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain(
+      'The skiptest target on project "app1" cannot be migrated. The "targetName" plugin option is already set to "test"'
+    );
+
+    expect(() =>
+      collectMigrationScope(
+        ctx.tree,
+        ctx.projectGraph,
+        syntheticMigrations(),
+        { targetName: 'build' },
+        'app1',
+        undefined
+      )
+    ).toThrow('The skiptest target on project "app1" cannot be migrated.');
   });
 
   it('throws (not warns) when a specific project cannot be migrated', () => {
@@ -818,6 +873,50 @@ describe('Phase 3: strict-common hoist', () => {
       cache: true,
     });
     expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('leaves a second target of the same plugin option executor-based and keeps its executor default', async () => {
+    ctx = setupFixture('hoist-option-conflict');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, { name, root: name, targetName: 'test' });
+    }
+    addSecondExecutorTarget(ctx, 'app1', 'skiptest');
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.targetDefaults ??= {};
+    nxJson.targetDefaults[SYNTHETIC_EXECUTOR] = { dependsOn: ['^build'] };
+    updateNxJson(ctx.tree, nxJson);
+    const plugin = createSyntheticPlugin();
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    // `skiptest` is untouched, so both targets resolve: `test` inferred,
+    // `skiptest` still through the executor and its executor-keyed default
+    expect(readJson(ctx.tree, 'app1/project.json').targets).toEqual({
+      skiptest: { executor: SYNTHETIC_EXECUTOR },
+    });
+    expect(readNxJson(ctx.tree).targetDefaults[SYNTHETIC_EXECUTOR]).toEqual({
+      dependsOn: ['^build'],
+    });
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+    expect(resolved.app1.test.executor).toBe('nx:run-commands');
+    expect(resolved.app1.skiptest.executor).toBe(SYNTHETIC_EXECUTOR);
+    expect(resolved.app1.skiptest.dependsOn).toEqual(['^build']);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain('skiptest');
   });
 
   it('C: single-project mode does not hoist and leaves siblings untouched', async () => {
