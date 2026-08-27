@@ -19,7 +19,8 @@ Pin the toolchain in the repository so contributors and CI agents resolve the sa
 Clippy. [mise](https://mise.jdx.dev/) drives rustup for you and installs the pinned version on
 checkout:
 
-```toml {% fileName=".mise.toml" %}
+```toml
+# .mise.toml
 [tools]
 rust = "1.90.0"
 ```
@@ -32,7 +33,8 @@ same task rebuilt on an agent come out of the same compiler.
 Nx doesn't link crates. The root `Cargo.toml` lists the members and centralizes shared versions,
 including the path dependencies between local crates:
 
-```toml {% fileName="Cargo.toml" %}
+```toml
+# Cargo.toml
 [workspace]
 resolver = "2"
 members = ["apps/api", "packages/domain", "packages/store"]
@@ -44,7 +46,8 @@ domain = { path = "packages/domain" }
 
 Individual crates then pick those entries up:
 
-```toml {% fileName="packages/store/Cargo.toml" %}
+```toml
+# packages/store/Cargo.toml
 [dependencies]
 serde.workspace = true
 domain.workspace = true
@@ -76,7 +79,8 @@ nx g @monodon/rust:library packages/domain
 For a crate that already exists, add a [`project.json`](/docs/reference/project-configuration) next
 to its `Cargo.toml`:
 
-```json {% fileName="apps/api/project.json" %}
+```json
+// apps/api/project.json
 {
   "name": "api",
   "projectType": "application",
@@ -124,7 +128,8 @@ instead.
 Rust tasks cache like any other task once you tell Nx what a Rust build depends on. Define the
 toolchain and lockfiles as a [named input](/docs/reference/inputs), then apply it to the executors:
 
-```json {% fileName="nx.json" %}
+```json
+// nx.json
 {
   "namedInputs": {
     "rust": [
@@ -165,7 +170,8 @@ nx run-many -t build lint test typecheck
 Task pipelines cross the language boundary too, because Nx treats every task the same regardless of
 what it shells out to. Starting a JavaScript dev server can start the Rust service it talks to:
 
-```json {% fileName="apps/web/package.json" %}
+```json
+// apps/web/package.json
 {
   "nx": {
     "targets": {
@@ -185,7 +191,8 @@ what it shells out to. Starting a JavaScript dev server can start the Rust servi
 
 CI needs the Rust toolchain before it can run a Cargo task, and the same mise pin covers it:
 
-```yaml {% fileName=".github/workflows/ci.yml" %}
+```yaml
+# .github/workflows/ci.yml
 - name: Setup Rust with mise
   uses: jdx/mise-action@v3
 
@@ -204,7 +211,8 @@ To spread those tasks across machines with
 agents as well. A [launch template](/docs/kb/launch-templates) caches the Cargo registry and warms
 the dependency download:
 
-```yaml {% fileName=".nx/workflows/agents.yaml" %}
+```yaml
+# .nx/workflows/agents.yaml
 launch-templates:
   linux-medium-polyglot:
     resource-class: 'docker_linux_amd64/medium'
@@ -234,7 +242,8 @@ launch-templates:
 
 Point the pipeline at that template and every agent can take any task, Cargo or JavaScript:
 
-```yaml {% fileName=".nx/ci-config.yaml" %}
+```yaml
+# .nx/ci-config.yaml
 dte:
   distribute-on: 2 linux-medium-polyglot
 lifecycle:
