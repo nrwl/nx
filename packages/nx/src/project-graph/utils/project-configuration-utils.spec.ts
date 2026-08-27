@@ -1,3 +1,5 @@
+import '../../internal-testing-utils/executor-schemas-from-source';
+
 import {
   ProjectConfiguration,
   TargetConfiguration,

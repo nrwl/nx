@@ -1,3 +1,5 @@
+import '../../../internal-testing-utils/executor-schemas-from-source';
+
 import type { MockInstance } from 'vitest';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
