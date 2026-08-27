@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import type { FileData } from '../../config/project-graph';
 import { HashPlanner } from '../../native';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
@@ -5,36 +6,37 @@ import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { allFileData } from '../../utils/all-file-data';
 import { getExpandedTaskInputs, ProjectGraphClientResponse } from './graph';
 
-jest.mock('../../native', () => ({
-  HashPlanner: jest.fn(),
-  transferProjectGraph: jest.fn((g) => g),
+vi.mock('../../native', async (importOriginal) => ({
+  ...(await importOriginal<any>()),
+  HashPlanner: vi.fn(),
+  transferProjectGraph: vi.fn((g) => g),
 }));
-jest.mock('../../native/transform-objects', () => ({
-  transformProjectGraphForRust: jest.fn((g) => g),
+vi.mock('../../native/transform-objects', () => ({
+  transformProjectGraphForRust: vi.fn((g) => g),
 }));
-jest.mock('../../project-graph/project-graph', () => ({
-  createProjectGraphAsync: jest.fn(),
-  createProjectGraphAndSourceMapsAsync: jest.fn(),
-  handleProjectGraphError: jest.fn(),
+vi.mock('../../project-graph/project-graph', () => ({
+  createProjectGraphAsync: vi.fn(),
+  createProjectGraphAndSourceMapsAsync: vi.fn(),
+  handleProjectGraphError: vi.fn(),
 }));
-jest.mock('../../config/configuration', () => ({
-  readNxJson: jest.fn(() => ({})),
-  workspaceLayout: jest.fn(() => ({ appsDir: '', libsDir: '' })),
+vi.mock('../../config/configuration', () => ({
+  readNxJson: vi.fn(() => ({})),
+  workspaceLayout: vi.fn(() => ({ appsDir: '', libsDir: '' })),
 }));
-jest.mock('../../tasks-runner/create-task-graph', () => ({
-  createTaskGraph: jest.fn(),
+vi.mock('../../tasks-runner/create-task-graph', () => ({
+  createTaskGraph: vi.fn(),
 }));
-jest.mock('../../utils/all-file-data', () => ({
-  allFileData: jest.fn(),
+vi.mock('../../utils/all-file-data', () => ({
+  allFileData: vi.fn(),
 }));
 
-const createProjectGraphAsyncMock = createProjectGraphAsync as jest.Mock;
-const createTaskGraphMock = createTaskGraph as jest.Mock;
-const allFileDataMock = allFileData as jest.Mock;
-const HashPlannerMock = HashPlanner as unknown as jest.Mock;
+const createProjectGraphAsyncMock = createProjectGraphAsync as Mock;
+const createTaskGraphMock = createTaskGraph as Mock;
+const allFileDataMock = allFileData as Mock;
+const HashPlannerMock = HashPlanner as unknown as Mock;
 
 describe('getExpandedTaskInputs', () => {
-  let getPlansMock: jest.Mock;
+  let getPlansMock: Mock;
 
   // A workspace with a single project `myproj` that has a `build` target and a
   // `test:integration` target (whose name contains a colon).
@@ -72,10 +74,14 @@ describe('getExpandedTaskInputs', () => {
   }
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
-    getPlansMock = jest.fn().mockReturnValue({});
-    HashPlannerMock.mockImplementation(() => ({ getPlans: getPlansMock }));
+    getPlansMock = vi.fn().mockReturnValue({});
+    // A plain function so `new HashPlanner(...)` works (arrows are not
+    // constructible under vitest's mocks).
+    HashPlannerMock.mockImplementation(function () {
+      return { getPlans: getPlansMock };
+    });
 
     createProjectGraphAsyncMock.mockResolvedValue({
       nodes: {},

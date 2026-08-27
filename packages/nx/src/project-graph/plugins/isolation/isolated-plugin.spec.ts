@@ -5,16 +5,16 @@ import {
 } from './isolated-plugin';
 
 // We need to mock the dependencies before importing the class
-jest.mock('../../../daemon/socket-utils', () => ({
-  getPluginOsSocketPath: jest.fn(() => '/mock/socket/path'),
+vi.mock('../../../daemon/socket-utils', () => ({
+  getPluginOsSocketPath: vi.fn(() => '/mock/socket/path'),
 }));
 
-jest.mock('../../../utils/installation-directory', () => ({
-  getNxRequirePaths: jest.fn(() => ['/mock/require/path']),
+vi.mock('../../../utils/installation-directory', () => ({
+  getNxRequirePaths: vi.fn(() => ['/mock/require/path']),
 }));
 
-jest.mock('../resolve-plugin', () => ({
-  resolveNxPlugin: jest.fn().mockResolvedValue({
+vi.mock('../resolve-plugin', () => ({
+  resolveNxPlugin: vi.fn().mockResolvedValue({
     name: 'test-plugin',
     pluginPath: '/mock/plugin/path',
     shouldRegisterTSTranspiler: false,
@@ -96,7 +96,7 @@ describe('IsolatedPlugin', () => {
     plugin.shutdownCount = 0;
 
     // Mock spawnAndConnect
-    const spawnAndConnect = jest.fn().mockImplementation(async () => {
+    const spawnAndConnect = vi.fn().mockImplementation(async () => {
       plugin._alive = true;
       plugin.spawnAndConnectCount++;
       return loadResult;
@@ -104,14 +104,14 @@ describe('IsolatedPlugin', () => {
     plugin.spawnAndConnect = spawnAndConnect;
 
     // Mock shutdown
-    const shutdown = jest.fn().mockImplementation(() => {
+    const shutdown = vi.fn().mockImplementation(async () => {
       plugin._alive = false;
       plugin.shutdownCount++;
     });
     plugin.shutdown = shutdown;
 
     // Mock sendRequest to return success by default
-    const sendRequest = jest.fn().mockImplementation(async (type: string) => {
+    const sendRequest = vi.fn().mockImplementation((type: string) => {
       switch (type) {
         case 'createNodes':
           return { success: true, result: [] };
@@ -278,7 +278,7 @@ describe('IsolatedPlugin', () => {
       );
 
       let callCount = 0;
-      sendRequest.mockImplementation(() => {
+      sendRequest.mockImplementation(async () => {
         callCount++;
         return callCount === 1 ? promiseA : promiseB;
       });

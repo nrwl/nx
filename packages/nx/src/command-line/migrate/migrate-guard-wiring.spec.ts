@@ -3,76 +3,80 @@
 // own file so the module mocks below don't leak into the other migrate
 // specs.
 
-const mockResolveRunTarget = jest.fn();
-const mockAssertWorkspaceNx = jest.fn();
-jest.mock('./version-skew-guard', () => ({
-  ...jest.requireActual('./version-skew-guard'),
+const mockResolveRunTarget = vi.fn();
+const mockAssertWorkspaceNx = vi.fn();
+vi.mock('./version-skew-guard', async () => ({
+  ...(await vi.importActual('./version-skew-guard')),
   resolveNewMigrateFlagsRunTarget: (...args: unknown[]) =>
     mockResolveRunTarget(...args),
   assertWorkspaceNxSupportsNewMigrateFlags: (...args: unknown[]) =>
     mockAssertWorkspaceNx(...args),
 }));
 
-const mockEnsurePackageHasProvenance = jest.fn();
-jest.mock('../../utils/provenance', () => ({
-  ...jest.requireActual('../../utils/provenance'),
+const mockEnsurePackageHasProvenance = vi.fn();
+vi.mock('../../utils/provenance', async () => ({
+  ...(await vi.importActual('../../utils/provenance')),
   ensurePackageHasProvenance: (...args: unknown[]) =>
     mockEnsurePackageHasProvenance(...args),
 }));
 
 // Both spawn helpers are mocked: the hand-off calls runNxArgvSync, and
 // connect-to-nx-cloud, which migrate.ts imports, calls runNxSync.
-const mockRunNxSync = jest.fn();
-const mockRunNxArgvSync = jest.fn();
-jest.mock('../../utils/child-process', () => ({
-  ...jest.requireActual('../../utils/child-process'),
+const mockRunNxSync = vi.fn();
+const mockRunNxArgvSync = vi.fn();
+vi.mock('../../utils/child-process', async () => ({
+  ...(await vi.importActual('../../utils/child-process')),
   runNxSync: (...args: unknown[]) => mockRunNxSync(...args),
   runNxArgvSync: (...args: unknown[]) => mockRunNxArgvSync(...args),
 }));
 
 // The temp-CLI hand-off installs nx for real; stubbing the dir it installs
 // into and the commands it runs lets a test shape that installation.
-const mockTmpDirSync = jest.fn();
-jest.mock('tmp', () => ({
-  ...jest.requireActual('tmp'),
+const mockTmpDirSync = vi.fn();
+// migrate.ts lazy-requires tmp (CJS channel), which vi.mock cannot intercept;
+// replace the module in the require channel instead.
+import { mockCjsModule } from '../../internal-testing-utils/cjs-mock';
+import * as realTmp from 'tmp';
+mockCjsModule(import.meta.url, 'tmp', {
+  ...realTmp,
   dirSync: (...args: unknown[]) => mockTmpDirSync(...args),
-}));
+});
 
-const mockExecSync = jest.fn();
-jest.mock('child_process', () => ({
-  ...jest.requireActual('child_process'),
+const mockExecSync = vi.fn();
+vi.mock('child_process', async () => ({
+  ...require('child_process'),
   execSync: (...args: unknown[]) => mockExecSync(...args),
 }));
 
-const mockRunInstall = jest.fn();
-jest.mock('./execute-migration', () => ({
-  ...jest.requireActual('./execute-migration'),
+const mockRunInstall = vi.fn();
+vi.mock('./execute-migration', async () => ({
+  ...(await vi.importActual('./execute-migration')),
   runInstall: (...args: unknown[]) => mockRunInstall(...args),
 }));
 
-const mockResolvePackageVersion = jest.fn();
-jest.mock('./resolve-package-version', () => ({
-  ...jest.requireActual('./resolve-package-version'),
+const mockResolvePackageVersion = vi.fn();
+vi.mock('./resolve-package-version', async () => ({
+  ...(await vi.importActual('./resolve-package-version')),
   resolvePackageVersionRespectingMinReleaseAge: (...args: unknown[]) =>
     mockResolvePackageVersion(...args),
 }));
 
-jest.mock('./run', () => ({
-  runSingleMigrationWorker: jest.fn(),
-  runOrchestratorInit: jest.fn(),
-  runOrchestratorReconcile: jest.fn(),
+vi.mock('./run', () => ({
+  runSingleMigrationWorker: vi.fn(),
+  runOrchestratorInit: vi.fn(),
+  runOrchestratorReconcile: vi.fn(),
 }));
 
-jest.mock('../../daemon/client/client', () => ({
+vi.mock('../../daemon/client/client', () => ({
   daemonClient: {
-    stop: jest.fn().mockResolvedValue(undefined),
+    stop: vi.fn().mockResolvedValue(undefined),
     enabled: () => false,
-    reset: jest.fn(),
+    reset: vi.fn(),
   },
 }));
 
-jest.mock('../../config/configuration', () => ({
-  ...jest.requireActual('../../config/configuration'),
+vi.mock('../../config/configuration', async () => ({
+  ...(await vi.importActual('../../config/configuration')),
   readNxJson: () => ({}),
 }));
 
@@ -110,16 +114,16 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
     mockRunNxArgvSync.mockReset();
     mockRunInstall.mockReset().mockResolvedValue(undefined);
     delete process.env.NX_MIGRATE_SKIP_INSTALL;
-    jest.spyOn(output, 'log').mockImplementation(() => {});
-    jest.spyOn(output, 'warn').mockImplementation(() => {});
-    jest.spyOn(output, 'error').mockImplementation(() => {});
+    vi.spyOn(output, 'log').mockImplementation(() => {});
+    vi.spyOn(output, 'warn').mockImplementation(() => {});
+    vi.spyOn(output, 'error').mockImplementation(() => {});
     // Force both wrapper functions into the temp-installation branch:
     // __dirname (under the repo) must not start with workspaceRoot.
     setWorkspaceRoot('/__guard-wiring-spec-unrelated-root__');
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     setWorkspaceRoot(originalWorkspaceRoot);
     process.argv = originalArgv;
     restoreEnv('NX_MIGRATE_SKIP_INSTALL', originalSkipInstall);
@@ -266,9 +270,9 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
     mockRunNxArgvSync.mockReset();
     mockExecSync.mockReset();
     mockTmpDirSync.mockReset();
-    jest.spyOn(output, 'log').mockImplementation(() => {});
-    jest.spyOn(output, 'warn').mockImplementation(() => {});
-    jest.spyOn(output, 'error').mockImplementation(() => {});
+    vi.spyOn(output, 'log').mockImplementation(() => {});
+    vi.spyOn(output, 'warn').mockImplementation(() => {});
+    vi.spyOn(output, 'error').mockImplementation(() => {});
     delete process.env.NX_USE_LOCAL;
     delete process.env.NX_MIGRATE_USE_LOCAL;
     delete process.env.NX_MIGRATE_CLI_VERSION;
@@ -276,7 +280,7 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     process.argv = originalArgv;
     restoreEnv('NX_USE_LOCAL', originalUseLocal);
     restoreEnv('NX_MIGRATE_USE_LOCAL', originalMigrateUseLocal);

@@ -78,6 +78,10 @@ export const createNodes: CreateNodes = [
                     // directory. Either way an example run from inside this
                     // repo picks up the root one.
                     '{workspaceRoot}/.editorconfig',
+                    // Oxlint reads .eslintignore from every ancestor of its
+                    // working directory, so the example's lint tasks reach the
+                    // root one.
+                    '{workspaceRoot}/.eslintignore',
                     {
                       dependentTasksOutputFiles: '**/*',
                       transitive: true,

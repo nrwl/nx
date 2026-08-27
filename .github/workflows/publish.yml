@@ -343,8 +343,12 @@ jobs:
           corepack enable
           corepack prepare --activate
 
-      - name: Cache cargo
-        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+      # Restore always, but only save from master. A cache written on a tag or PR ref
+      # is scoped to that ref, so nothing can ever read it back — it just consumes the
+      # repo-wide 10GB budget and evicts the master entries these builds depend on.
+      - name: Restore cargo cache
+        id: cargo-cache
+        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: |
             ~/.cargo/registry/index/
@@ -405,6 +409,18 @@ jobs:
         run: ${{ matrix.settings.build }}
         if: ${{ !matrix.settings.docker }}
         shell: bash
+
+      - name: Save cargo cache
+        if: github.ref == 'refs/heads/master' && steps.cargo-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            .cargo-cache
+            target/
+          key: ${{ matrix.settings.target }}-cargo-registry
 
       - name: Upload artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

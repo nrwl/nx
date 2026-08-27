@@ -4,19 +4,6 @@ import * as jsoncEslintParser from 'jsonc-eslint-parser';
 export default [
   ...baseConfig,
   {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          name: 'chalk',
-          message:
-            'Please use `picocolors` in place of `chalk` for rendering terminal colors',
-        },
-      ],
-    },
-  },
-  {
     files: ['./package.json'],
     rules: {
       '@nx/nx-plugin-checks': 'error',

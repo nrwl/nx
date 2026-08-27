@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { ReleaseGroupWithName } from '../config/filter-release-groups';
 import {
   createCommitMessageValues,
@@ -12,15 +13,15 @@ import { filterAffected } from '../../../project-graph/affected/affected-project
 import { calculateFileChanges } from '../../../project-graph/file-utils';
 import { NxArgs } from '../../../utils/command-line-utils';
 
-jest.mock('../../../config/nx-json', () => ({
-  ...jest.requireActual('../../../config/nx-json'),
-  readNxJson: jest.fn(),
+vi.mock('../../../config/nx-json', async () => ({
+  ...(await vi.importActual('../../../config/nx-json')),
+  readNxJson: vi.fn(),
 }));
 
 // Mock getPlugins to return an empty array, avoiding plugin worker spawning
 // while still allowing filterAffected to run its real logic
-jest.mock('../../../project-graph/plugins/get-plugins', () => ({
-  getPlugins: jest.fn().mockResolvedValue([]),
+vi.mock('../../../project-graph/plugins/get-plugins', () => ({
+  getPlugins: vi.fn().mockResolvedValue([]),
 }));
 
 import { createVersionConfig } from './test/test-utils';
@@ -908,7 +909,7 @@ describe('shared', () => {
     let mockReleaseGraph: ReleaseGraph;
 
     beforeEach(async () => {
-      (readNxJson as jest.Mock).mockReturnValue({});
+      (readNxJson as Mock).mockReturnValue({});
 
       mockProjectGraph = {
         nodes: {
@@ -1001,7 +1002,7 @@ describe('shared', () => {
 
       // Create a mock ReleaseGraph with the required method
       mockReleaseGraph = {
-        resolveAffectedFilesPerCommitInProjectGraph: jest.fn(
+        resolveAffectedFilesPerCommitInProjectGraph: vi.fn(
           async (commit: GitCommit, projectGraph: ProjectGraph) => {
             const touchedFiles = calculateFileChanges(commit.affectedFiles, {
               base: `${commit.shortHash}^`,

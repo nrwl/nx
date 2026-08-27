@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import {
   existsSync,
   mkdirSync,
@@ -15,19 +16,19 @@ import { generatePrunedDeployOutput } from './lock-file';
 import { stringifyPnpmLockfile } from './pnpm-parser';
 import { getPrunedPnpmInstallArtifacts } from './pruned-output';
 
-jest.mock('./pnpm-parser', () => ({
-  ...jest.requireActual('./pnpm-parser'),
-  stringifyPnpmLockfile: jest.fn(() => 'PRUNED_LOCKFILE'),
+vi.mock('./pnpm-parser', async () => ({
+  ...(await vi.importActual('./pnpm-parser')),
+  stringifyPnpmLockfile: vi.fn(() => 'PRUNED_LOCKFILE'),
 }));
-jest.mock('./project-graph-pruning', () => ({
-  ...jest.requireActual('./project-graph-pruning'),
-  pruneProjectGraph: jest.fn((graph) => graph),
+vi.mock('./project-graph-pruning', async () => ({
+  ...(await vi.importActual('./project-graph-pruning')),
+  pruneProjectGraph: vi.fn((graph) => graph),
 }));
-jest.mock('./pruned-output', () => ({
-  ...jest.requireActual('./pruned-output'),
-  getPrunedPnpmInstallArtifacts: jest.fn(),
-  rewritePrunedLocalPathSpecifiers: jest.fn(),
-  validatePrunedLocalPathClosure: jest.fn(),
+vi.mock('./pruned-output', async () => ({
+  ...(await vi.importActual('./pruned-output')),
+  getPrunedPnpmInstallArtifacts: vi.fn(),
+  rewritePrunedLocalPathSpecifiers: vi.fn(),
+  validatePrunedLocalPathClosure: vi.fn(),
 }));
 
 // The two sinks are the reason this entry point exists: the file-writing
@@ -52,7 +53,7 @@ describe('generatePrunedDeployOutput sinks', () => {
     vendoredFile = join(tempDir, 'vendor/lib/index.js');
     mkdirSync(join(tempDir, 'vendor/lib'), { recursive: true });
     writeFileSync(vendoredFile, 'VENDORED\n');
-    (getPrunedPnpmInstallArtifacts as jest.Mock).mockReturnValue([
+    (getPrunedPnpmInstallArtifacts as Mock).mockReturnValue([
       { path: 'pnpm-workspace.yaml', content: 'packages: []\n' },
       { path: 'patches/patches/is-number.patch', content: 'THE PATCH\n' },
       {
@@ -64,7 +65,7 @@ describe('generatePrunedDeployOutput sinks', () => {
 
   afterEach(() => {
     rmSync(tempDir, { recursive: true, force: true });
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   function run(outputDirectory: string) {
@@ -154,7 +155,7 @@ describe('generatePrunedDeployOutput sinks', () => {
   });
 
   it('ships nothing for bun and leaves the manifest as authored', () => {
-    const warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
     const outputDirectory = join(tempDir, 'dist');
     const packageJson = { name: 'app', version: '1.0.0' } as PackageJson;
     const emitted: string[] = [];

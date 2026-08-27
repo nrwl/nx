@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import { emitStepBlock, logToAgent } from './agent-output';
 
 const BLOCK_RE =
@@ -5,11 +6,11 @@ const BLOCK_RE =
 
 describe('agent-output', () => {
   let stdout: string;
-  let writeSpy: jest.SpyInstance;
+  let writeSpy: MockInstance;
 
   beforeEach(() => {
     stdout = '';
-    writeSpy = jest
+    writeSpy = vi
       .spyOn(process.stdout, 'write')
       .mockImplementation((chunk: string | Uint8Array) => {
         stdout += chunk.toString();

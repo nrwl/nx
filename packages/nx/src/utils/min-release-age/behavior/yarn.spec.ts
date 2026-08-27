@@ -1,9 +1,10 @@
-jest.mock('child_process');
+import type { Mock } from 'vitest';
+vi.mock('child_process');
 // os.homedir() reads the native home and ignores a runtime process.env.HOME
-// override inside jest, so mock it to redirect home to a temp dir per test.
-jest.mock('os', () => ({
-  ...jest.requireActual('os'),
-  homedir: jest.fn(() => jest.requireActual('os').homedir()),
+// override inside the test runner, so mock it to redirect home to a temp dir per test.
+vi.mock('os', async () => ({
+  ...require('os'),
+  homedir: vi.fn(async () => require('os').homedir()),
 }));
 
 import * as childProcess from 'child_process';
@@ -365,7 +366,7 @@ describe('yarn min-release-age behavior', () => {
   });
 
   describe('readYarnPolicy', () => {
-    const execSyncMock = childProcess.execSync as jest.Mock;
+    const execSyncMock = childProcess.execSync as Mock;
     let tmp: string;
     let home: string;
     const savedGateEnv = process.env.YARN_NPM_MINIMAL_AGE_GATE;
@@ -373,12 +374,12 @@ describe('yarn min-release-age behavior', () => {
     beforeEach(() => {
       tmp = mkdtempSync(join(tmpdir(), 'nx-yarn-mra-'));
       home = mkdtempSync(join(tmpdir(), 'nx-yarn-home-'));
-      (homedir as jest.Mock).mockReturnValue(home);
+      (homedir as Mock).mockReturnValue(home);
       delete process.env.YARN_NPM_MINIMAL_AGE_GATE;
     });
 
     afterEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       rmSync(tmp, { recursive: true, force: true });
       rmSync(home, { recursive: true, force: true });
       if (savedGateEnv === undefined) {

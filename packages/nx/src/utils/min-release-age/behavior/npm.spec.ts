@@ -1,14 +1,15 @@
-jest.mock('child_process');
+import type { Mock } from 'vitest';
+vi.mock('child_process');
 // detectSurfaces reads os.homedir() and the .npmrc files through named imports
-// bound at module load, so a per-test jest.spyOn never intercepts them. Mock at
+// bound at module load, so a per-test spyOn never intercepts them. Mock at
 // module scope (as yarn.spec.ts does for os) so the host's real ~/.npmrc cannot
 // leak into the config-surface attribution tests.
-jest.mock('os', () => ({
-  ...jest.requireActual('os'),
-  homedir: jest.fn(() => '/home/user'),
+vi.mock('os', async () => ({
+  ...require('os'),
+  homedir: vi.fn(() => '/home/user'),
 }));
-jest.mock('../../package-manager-config/npmrc', () => ({
-  readNpmrcEntries: jest.fn(() => null),
+vi.mock('../../package-manager-config/npmrc', () => ({
+  readNpmrcEntries: vi.fn(() => null),
 }));
 
 import * as childProcess from 'child_process';
@@ -21,7 +22,7 @@ import { pickNpmVersion, readNpmPolicy } from './npm';
 // The real parser drives the mocked surface map (path -> contents) so
 // detectSurfaces sees genuine parsing; an absent path reads as a missing
 // file (null).
-const { parseNpmrcContent } = jest.requireActual<
+const { parseNpmrcContent } = await vi.importActual<
   typeof import('../../package-manager-config/npmrc')
 >('../../package-manager-config/npmrc');
 
@@ -373,8 +374,8 @@ describe('npm min-release-age behavior', () => {
   });
 
   describe('readNpmPolicy', () => {
-    const execSyncMock = childProcess.execSync as jest.Mock;
-    const readNpmrcEntriesMock = readNpmrcEntries as jest.Mock;
+    const execSyncMock = childProcess.execSync as Mock;
+    const readNpmrcEntriesMock = readNpmrcEntries as Mock;
 
     // path -> .npmrc contents; absent paths read as missing files.
     let npmrcFiles: Record<string, string>;
@@ -387,7 +388,7 @@ describe('npm min-release-age behavior', () => {
     });
 
     afterEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     function mockConfig(config: Record<string, unknown>) {
