@@ -26,6 +26,10 @@ import {
   isVerboseE2ERun,
 } from './get-env-info';
 import { logError, logInfo } from './log-utils';
+import {
+  collectTimeoutDiagnostics,
+  timeoutDiagnosticsEnv,
+} from './timeout-diagnostics';
 
 export interface RunCmdOpts {
   silenceError?: boolean;
@@ -472,6 +476,7 @@ export function runCLI(
         // Use new versioning by default in e2e tests
         NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
         ...getStrippedEnvironmentVariables(),
+        ...timeoutDiagnosticsEnv(),
         ...opts.env,
       },
       encoding: 'utf-8',
@@ -500,7 +505,9 @@ export function runCLI(
       const processOutput = stripVTControlCharacters(
         `${e.stdout ?? ''}\n\n${e.stderr ?? ''}`
       ).trim();
-      const msg = `Command timed out after ${timeoutSec}s: ${command}\n\nProcess output:\n${processOutput}`;
+      const msg = `Command timed out after ${timeoutSec}s: ${command}\n\nProcess output:\n${processOutput}${collectTimeoutDiagnostics(
+        opts.cwd || tmpProjPath()
+      )}`;
       logError(`Command timed out`, msg);
       throw new Error(msg);
     }
@@ -532,6 +539,7 @@ export function runLernaCLI(
       cwd: opts.cwd || tmpProjPath(),
       env: {
         CI: 'true',
+        ...timeoutDiagnosticsEnv(),
         ...(opts.env || getStrippedEnvironmentVariables()),
       },
       encoding: 'utf-8',
@@ -556,7 +564,9 @@ export function runLernaCLI(
       const processOutput = stripVTControlCharacters(
         `${e.stdout ?? ''}\n\n${e.stderr ?? ''}`
       ).trim();
-      const msg = `Command timed out after ${timeoutSec}s: ${command}\n\nProcess output:\n${processOutput}`;
+      const msg = `Command timed out after ${timeoutSec}s: ${command}\n\nProcess output:\n${processOutput}${collectTimeoutDiagnostics(
+        opts.cwd || tmpProjPath()
+      )}`;
       logError(`Command timed out`, msg);
       throw new Error(msg);
     }
