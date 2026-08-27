@@ -147,7 +147,7 @@ describe('buildGenericValidationUserPrompt', () => {
       // Bare `nx affected` selects the branch delta plus unrelated uncommitted
       // changes, not this migration's changes.
       expect(out).toContain(
-        '`nx affected --files=<changed paths> -t <target>`'
+        '`nx affected --files=<comma-separated changed paths> -t <target>`'
       );
       expect(out).not.toContain('`nx affected -t <target>`');
     }
