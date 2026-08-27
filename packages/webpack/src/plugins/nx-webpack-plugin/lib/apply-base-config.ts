@@ -31,6 +31,38 @@ const extensionAlias = {
 const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
 const mainFields = ['module', 'main'];
 
+// webpack 5.110 widened `optimization.minimize` to accept an object it fills per
+// asset type. The types shipped with 5.x still declare a boolean, so the real
+// shape is spelled out once here instead of being cast at the assignment.
+type MinimizeOption = boolean | Record<string, never>;
+
+type OptimizationWithMinimize = Omit<
+  NonNullable<Configuration['optimization']>,
+  'minimize'
+> & { minimize?: MinimizeOption };
+
+/**
+ * `withNx` builds a raw config that webpack validates, and only the boolean is
+ * schema-valid before 5.110. `NxAppWebpackPlugin` instead mutates options that
+ * are already normalized, which 5.110 fills by setting `.javascript` on
+ * `minimize`, so a boolean throws there.
+ */
+function setMinimizeValue(
+  optimization: OptimizationWithMinimize,
+  shouldMinify: boolean,
+  configIsNormalized: boolean
+): void {
+  if (!shouldMinify) {
+    optimization.minimize = false;
+    return;
+  }
+  if (configIsNormalized) {
+    optimization.minimize = {};
+    return;
+  }
+  optimization.minimize = true;
+}
+
 export function applyBaseConfig(
   options: NormalizedNxAppWebpackPluginOptions,
   config: Partial<WebpackOptionsNormalized | Configuration> = {},
@@ -50,7 +82,7 @@ export function applyBaseConfig(
   options.memoryLimit ??= 2048;
   options.transformers ??= [];
 
-  applyNxIndependentConfig(options, config);
+  applyNxIndependentConfig(options, config, !!useNormalizedEntry);
 
   // Some of the options only work during actual tasks, not when reading the webpack config during CreateNodes.
   if (global.NX_GRAPH_CREATION) return;
@@ -60,7 +92,8 @@ export function applyBaseConfig(
 
 function applyNxIndependentConfig(
   options: NormalizedNxAppWebpackPluginOptions,
-  config: Partial<WebpackOptionsNormalized | Configuration>
+  config: Partial<WebpackOptionsNormalized | Configuration>,
+  configIsNormalized: boolean
 ): void {
   const TerserPlugin =
     require('terser-webpack-plugin') as typeof import('terser-webpack-plugin');
@@ -178,10 +211,6 @@ function applyNxIndependentConfig(
   config.optimization = {
     ...config.optimization,
     sideEffects: true,
-    // webpack normalizes `true` to `{}` before plugins run, so writing the
-    // boolean back onto normalized options trips 5.110.0's per-asset-type
-    // defaults. `{}` is equivalent on every webpack 5; the types widened in 5.110.
-    minimize: shouldMinify ? ({} as unknown as boolean) : false,
     minimizer: [
       options.compiler !== 'swc'
         ? new TerserPlugin({
@@ -216,6 +245,8 @@ function applyNxIndependentConfig(
     runtimeChunk: false,
     concatenateModules: true,
   };
+
+  setMinimizeValue(config.optimization, shouldMinify, configIsNormalized);
 
   config.stats = {
     hash: true,
