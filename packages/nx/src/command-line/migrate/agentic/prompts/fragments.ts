@@ -8,6 +8,11 @@ export function renderNxInvocationNote(
   return `Use \`${packageManager}\` for any package-manager invocation in this workspace. To invoke nx, use \`${nxInvocation} ...\`. Do not default to a different package manager based on your own preference.`;
 }
 
+// One-line form for a dispensed step; the block form is the contract itself.
+export function renderHandoffShapeInline(summaryHint: string): string {
+  return `{ "status": "success" | "failed", "summary": "<${summaryHint}>" }`;
+}
+
 export function renderHandoffShapeLines(): string[] {
   return [
     `{`,

@@ -29,6 +29,7 @@ import {
 } from '../agentic/handoff';
 import { resolveFormatCommand } from '../agentic/format-command';
 import { applyAgenticHandoffGitignoreFallback } from '../agentic/handoff-gitignore';
+import { renderHandoffShapeInline } from '../agentic/prompts/fragments';
 import { MIGRATE_RUNS_RELATIVE_DIR, type HandoffFile } from '../agentic/types';
 import {
   commitCheckpointBeforeMigrations,
@@ -661,8 +662,8 @@ function runbookContext(
     runId,
     packageManager: detectPackageManager(root),
     nxInvocation: `${pmExecPrefix(root)} nx`,
-    reconcileCommand: reconcileCommand(root, runId),
     formatCommand: resolveFormatCommand(root, pmExecPrefix(root)),
+    reconcileCommand: reconcileCommand(root, runId),
     createCommits: state.createCommits,
     // The same `!== false` read the flag itself gets, so a run recorded
     // without the field renders validation on.
@@ -2035,10 +2036,10 @@ function emitAwaitPrompt(
     // the tree: once a generator's changes are applied, the fold treats a
     // skipped handoff as completed anyway.
     validating
-      ? `Handoff JSON: { "status": "success" | "failed", "summary": "<what you verified>" }. If validation does not apply here, use "status": "success" and say so in the summary.`
+      ? `Handoff JSON: ${renderHandoffShapeInline('what you verified')}. If validation does not apply here, use "status": "success" and say so in the summary.`
       : generatorChangesApplied(step)
-        ? `Handoff JSON: { "status": "success" | "failed", "summary": "<what you did>" }. If the prompt does not apply here, use "status": "success" and say so in the summary; the migration's generator changes are already applied.`
-        : `Handoff JSON: { "status": "success" | "failed", "summary": "<what you did>" }. To mark the prompt not applicable, use "status": "success" with "outcome": "skipped".`
+        ? `Handoff JSON: ${renderHandoffShapeInline('what you did')}. If the prompt does not apply here, use "status": "success" and say so in the summary; the migration's generator changes are already applied.`
+        : `Handoff JSON: ${renderHandoffShapeInline('what you did')}. To mark the prompt not applicable, use "status": "success" with "outcome": "skipped".`
   );
   lines.push(...renderIssueDigestLines(claimed, step.id, runId));
   // A handoff that exists but can't be read/parsed/validated is a rejection,
