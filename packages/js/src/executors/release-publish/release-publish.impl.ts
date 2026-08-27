@@ -339,6 +339,8 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
             stdoutData.error?.code?.includes('E404') &&
             stdoutData.error?.summary?.toLowerCase().includes('not found')
           ) &&
+          // pnpm v11+ returns ERR_PNPM_FETCH_404 for packages not in the registry.
+          !(stdoutData.error?.code === 'ERR_PNPM_FETCH_404') &&
           !(
             err.stderr?.toString().includes('E404') &&
             err.stderr?.toString().toLowerCase().includes('not found')

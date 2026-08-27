@@ -125,7 +125,10 @@ describe('nx release first run', () => {
       ).toEqual(1);
       expect(
         releaseOutput1.match(
-          new RegExp('Skipped npm view because --first-release was set', 'g')
+          new RegExp(
+            'Skipped (?:npm|pnpm) view because --first-release was set',
+            'g'
+          )
         ).length
       ).toEqual(3);
 
@@ -160,7 +163,10 @@ describe('nx release first run', () => {
       ).toEqual(1);
       expect(
         releaseOutput2.match(
-          new RegExp('Skipped npm view because --first-release was set', 'g')
+          new RegExp(
+            'Skipped (?:npm|pnpm) view because --first-release was set',
+            'g'
+          )
         ).length
       ).toEqual(3);
     });
@@ -196,7 +202,10 @@ describe('nx release first run', () => {
       ).toEqual(1);
       expect(
         releaseOutput1.match(
-          new RegExp('Skipped npm view because --first-release was set', 'g')
+          new RegExp(
+            'Skipped (?:npm|pnpm) view because --first-release was set',
+            'g'
+          )
         ).length
       ).toEqual(3);
 
@@ -231,7 +240,10 @@ describe('nx release first run', () => {
       ).toEqual(1);
       expect(
         releaseOutput2.match(
-          new RegExp('Skipped npm view because --first-release was set', 'g')
+          new RegExp(
+            'Skipped (?:npm|pnpm) view because --first-release was set',
+            'g'
+          )
         ).length
       ).toEqual(3);
     });

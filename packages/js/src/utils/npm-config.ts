@@ -95,10 +95,13 @@ export async function getNpmRegistry(
  */
 export async function getNpmTag(cwd: string): Promise<string> {
   // npm does not support '@scope:tag' in the npm config, so we only need to check for 'tag'.
-  return getNpmConfigValue('tag', cwd);
+  return (await getNpmConfigValue('tag', cwd)) ?? 'latest';
 }
 
-async function getNpmConfigValue(key: string, cwd: string): Promise<string> {
+async function getNpmConfigValue(
+  key: string,
+  cwd: string
+): Promise<string | undefined> {
   // pnpm v11+ resolves config itself and may be the only binary on PATH (e.g. Node
   // provisioned via `pnpm runtime` / the `pnpm/setup` action, which ships no bundled
   // npm). Everything else resolves config through npm.
