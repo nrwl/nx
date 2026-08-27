@@ -767,6 +767,59 @@ describe('Phase 3: strict-common hoist', () => {
     }
   });
 
+  it('keeps the inputs residual of each project isolated from its siblings', async () => {
+    ctx = setupFixture('hoist-inputs-isolated');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: { options: { config: SYNTHETIC_CONFIG_FILE } },
+      });
+    }
+    // an executor-keyed `inputs` default without an externalDependencies entry:
+    // `custom` is not inferred, so each residual keeps the array and gains the
+    // project's own inferred externalDependencies
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.targetDefaults ??= {};
+    nxJson.targetDefaults[SYNTHETIC_EXECUTOR] = {
+      inputs: ['default', 'custom'],
+    };
+    updateNxJson(ctx.tree, nxJson);
+    const plugin = createSyntheticPlugin((root, targetName) => {
+      const target = defaultInferredTarget(root, targetName);
+      target.inputs = ['default', { externalDependencies: [`dep-${root}`] }];
+      return target;
+    });
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    for (const name of ['app1', 'app2']) {
+      expect(readJson(ctx.tree, `${name}/project.json`).targets.build).toEqual({
+        inputs: [
+          'default',
+          'custom',
+          { externalDependencies: [`dep-${name}`] },
+        ],
+      });
+    }
+    // nothing in common, so no plugin-scoped entry is appended
+    expect(readNxJson(ctx.tree).targetDefaults.build).toStrictEqual({
+      cache: true,
+    });
+    expect(warn).not.toHaveBeenCalled();
+  });
+
   it('C: single-project mode does not hoist and leaves siblings untouched', async () => {
     ctx = setupFixture('hoist-single');
     for (const name of ['app1', 'app2']) {

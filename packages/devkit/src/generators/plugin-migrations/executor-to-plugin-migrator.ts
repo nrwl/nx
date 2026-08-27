@@ -385,12 +385,11 @@ export async function computeResidualByProject<T>(
   const residualByProject: ResidualByProject = new Map();
 
   for (const executorScope of scope.executorScopes) {
-    const targetDefaultsForExecutor = structuredClone(
+    const targetDefaultsForExecutor =
       readTargetDefaultsForExecutor(
         executorScope.executor,
         nxJson.targetDefaults
-      ) ?? {}
-    );
+      ) ?? {};
 
     for (const [targetName, projectNames] of executorScope.targetAndProjects) {
       const optionSetId =
@@ -418,10 +417,11 @@ export async function computeResidualByProject<T>(
         const preMigrationTarget = structuredClone(
           projectConfig.targets[targetName]
         );
-        let projectTarget = projectConfig.targets[targetName];
-        projectTarget = mergeTargetConfigurations(
-          projectTarget,
-          targetDefaultsForExecutor
+        // Later steps mutate the merged target, which may retain nested
+        // references from either input
+        let projectTarget = mergeTargetConfigurations(
+          structuredClone(projectConfig.targets[targetName]),
+          structuredClone(targetDefaultsForExecutor)
         );
         delete projectTarget.executor;
 
