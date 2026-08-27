@@ -6,7 +6,7 @@ topics:
   - 'Tasks & caching'
 ---
 
-Nx stores the cache in a per-user directory outside your workspace, `~/.nx/<hash>/cache`, where the hash identifies the repository. Every checkout of one repository shares it, so a task built in one worktree is a cache hit in the others. Cache results are stored for a week before they get deleted.
+Nx stores the cache in a per-user directory outside your workspace, `~/.nx/<hash>/cache`, where the hash identifies the checkout. A checkout and every worktree added to it share one directory, so a task built in one worktree is a cache hit in the others. A second clone of the same repository is a different checkout, and gets its own. Cache results are stored for a week before they get deleted.
 
 You can customize the location in the `nx.json` file:
 
@@ -19,7 +19,7 @@ You can customize the location in the `nx.json` file:
 
 ## Why it is outside the workspace
 
-Each repository gets one directory, `~/.nx/<hash>`, holding both `cache` and `workspace-data`.
+Each checkout gets one directory, `~/.nx/<hash>`, holding both `cache` and `workspace-data`.
 
 Worktrees share it. A main checkout and every worktree added to it resolve to the same directory, so none of them rebuilds what another already has.
 
