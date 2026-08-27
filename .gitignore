@@ -199,3 +199,6 @@ e2e/**/*.d.ts
 e2e/**/*.d.ts.map
 
 .nx/migrate-runs
+
+# Generated on Netlify builds by astro-docs/scripts/sync-agent-skills.mjs
+astro-docs/public/.well-known/agent-skills

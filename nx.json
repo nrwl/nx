@@ -108,6 +108,15 @@
     }
   },
   "targetDefaults": {
+    "oxlint": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/.eslintignore",
+        {
+          "externalDependencies": ["oxlint", "@nx/oxlint"]
+        }
+      ]
+    },
     "cleanup-tsconfig": {
       "executor": "nx:run-commands",
       "options": {
@@ -374,10 +383,8 @@
       "options": {
         "testTargetName": "test"
       },
-      "include": [
-        "packages/angular-rspack-compiler/**",
-        "packages/angular-rspack/**"
-      ]
+      "include": ["packages/**/*"],
+      "exclude": ["**/out-tsc/**"]
     },
     {
       "plugin": "@nx/oxlint",
@@ -389,7 +396,7 @@
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "bust": 3237,
+  "bust": 3238,
   "defaultBase": "master",
   "sync": {
     "applyChanges": true

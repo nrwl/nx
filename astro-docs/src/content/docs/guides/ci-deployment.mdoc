@@ -73,7 +73,141 @@ module.exports = {
 
 ## Programmatic usage
 
-If you are using a custom setup that does not support the creation of a `package.json` or a lock file, you can still use Nx to generate them via The `createPackageJson` and `createLockFile` functions which are exported from `@nx/js`:
+If you are using a custom setup that does not support the creation of a `package.json` or a lock
+file, you can still use Nx to generate them with functions exported from `@nx/js`:
+
+{% tabs syncKey="nx-version" %}
+
+{% tabitem label="Nx >= 23.2" %}
+
+Use the `createPackageJson` and `generatePrunedDeployOutput` functions:
+
+{% tabs %}
+
+{% tabitem label="Custom script" %}
+
+If you need to use a custom script, to build your application it should look similar to the
+following:
+
+```javascript
+// scripts/create-package-json.js
+const {
+  createProjectGraphAsync,
+  detectPackageManager,
+  writeJsonFile,
+} = require('@nx/devkit');
+const { createPackageJson, generatePrunedDeployOutput } = require('@nx/js');
+
+async function main() {
+  const outputDir = 'dist'; // You can replace this with the output directory you want to use
+  // Detect the package manager you are using (npm, yarn, pnpm, bun)
+  const pm = detectPackageManager();
+  const projectGraph = await createProjectGraphAsync();
+  const projectName = '<project-name>';
+  const packageJson = createPackageJson(projectName, projectGraph, {
+    isProduction: true, // Used to strip any non-prod dependencies
+  });
+
+  // Writes the pruned lock file and, for pnpm, the install-time artifacts it
+  // needs. Mutates "packageJson", so write the manifest after it.
+  generatePrunedDeployOutput(
+    packageJson,
+    projectGraph,
+    projectGraph.nodes[projectName].data.root,
+    { outputDirectory: outputDir, packageManager: pm }
+  );
+
+  writeJsonFile(`${outputDir}/package.json`, packageJson);
+
+  //... Any additional steps you want to run
+}
+
+main();
+```
+
+Then to run the script, update your `package.json` to include the following:
+
+```json
+// package.json
+{
+  "scripts": {
+    "copy-package-json": "node scripts/create-package-json.js",
+    "custom-build": "nx build && npm run copy-package-json"
+  }
+}
+```
+
+Now, you can run `npm run custom-build` to build your application and generate the `package.json`
+and lock file.
+
+You can replace _npm_ with _yarn_, _pnpm_, or _bun_ if you are using those package managers.
+
+{% /tabitem %}
+
+{% tabitem label="Custom executor" %}
+
+```typescript
+// Custom executor
+import { Schema } from './schema';
+import { createPackageJson, generatePrunedDeployOutput } from '@nx/js';
+import {
+  detectPackageManager,
+  ExecutorContext,
+  writeJsonFile,
+} from '@nx/devkit';
+
+export default async function buildExecutor(
+  options: Schema,
+  context: ExecutorContext
+) {
+  // ...your executor code
+  const packageManager = detectPackageManager();
+
+  const packageJson = createPackageJson(
+    context.projectName,
+    context.projectGraph,
+    {
+      root: context.root,
+      isProduction: true, // We want to strip any non-prod dependencies
+    }
+  );
+
+  // do any additional manipulations to "package.json" here
+
+  // Writes the pruned lock file and, for pnpm, the install-time artifacts it
+  // needs. Mutates "packageJson", so write the manifest after it.
+  generatePrunedDeployOutput(
+    packageJson,
+    context.projectGraph,
+    context.projectGraph.nodes[context.projectName].data.root,
+    {
+      outputDirectory: options.outputPath,
+      packageManager,
+      workspaceRoot: context.root,
+    }
+  );
+
+  writeJsonFile(`${options.outputPath}/package.json`, packageJson);
+
+  // any subsequent executor code
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+`generatePrunedDeployOutput` supports npm, yarn, and pnpm.
+Bun has no lock file generation, so the function warns and the output keeps only the `package.json`.
+
+`generatePrunedDeployOutput` doesn't rewrite `workspace:` dependencies or copy workspace libraries
+into the output.
+Use the `@nx/js:prune-lockfile` and `@nx/js:copy-workspace-modules` executors for that.
+
+{% /tabitem %}
+
+{% tabitem label="Nx < 23.2" %}
+
+Use the `createPackageJson` and `createLockFile` functions:
 
 {% tabs %}
 
@@ -85,7 +219,6 @@ If you need to use a custom script, to build your application it should look sim
 // scripts/create-package-json.js
 const {
   createProjectGraphAsync,
-  readCachedProjectGraph,
   detectPackageManager,
   writeJsonFile,
 } = require('@nx/devkit');
@@ -100,15 +233,10 @@ async function main() {
   const outputDir = 'dist'; // You can replace this with the output directory you want to use
   // Detect the package manager you are using (npm, yarn, pnpm, bun)
   const pm = detectPackageManager();
-  let projectGraph = readCachedProjectGraph();
-  if (!projectGraph) {
-    projectGraph = await createProjectGraphAsync();
-  }
-  // You can replace <NX_TASK_TARGET_PROJECT> with the name of the project if you want.
-  const projectName = process.env.NX_TASK_TARGET_PROJECT;
+  const projectGraph = await createProjectGraphAsync();
+  const projectName = '<project-name>';
   const packageJson = createPackageJson(projectName, projectGraph, {
     isProduction: true, // Used to strip any non-prod dependencies
-    root: projectGraph.nodes[projectName].data.root,
   });
 
   const lockFile = createLockFile(
@@ -193,6 +321,13 @@ export default async function buildExecutor(
   // any subsequent executor code
 }
 ```
+
+{% /tabitem %}
+{% /tabs %}
+
+`createLockFile` supports npm, yarn, and pnpm.
+For Bun, it logs a message and returns an empty string, so skip the lock file write and run
+`bun install` in the output directory instead.
 
 {% /tabitem %}
 {% /tabs %}

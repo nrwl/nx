@@ -93,16 +93,25 @@ npx nx connect
 
 Or follow the [Nx Cloud getting started guide](/docs/getting-started/nx-cloud).
 
-Once connected, one extra line
-[distributes tasks across multiple machines](/docs/features/ci-features/distribute-task-execution),
-and `npx nx fix-ci` lets self-healing CI propose fixes when tasks fail.
-Run `start-ci-run` as early as possible, after checkout but before dependencies are installed:
+Once connected, a `.nx/ci-config.yaml` file and one extra step
+[distribute tasks across multiple machines](/docs/features/ci-features/distribute-task-execution).
+`npx nx fix-ci` lets self-healing CI propose fixes when tasks fail.
+Run `start-nx-agents` at the beginning of the main job, after checkout,
+so the agents boot while the main job installs dependencies.
+If your pipeline still passes `start-ci-run` flags, see
+[Migrate from start-ci-run to start-nx-agents](/docs/kb/migrate-to-ci-config).
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on: 3 linux-medium-js
+```
 
 ```yaml
 # .github/workflows/ci.yml
 # ... checkout step as above
 
-- run: npx nx start-ci-run --distribute-on="3 linux-medium-js"
+- run: npx nx start-nx-agents
 
 # ... install and nx-set-shas steps as above
 
@@ -131,6 +140,6 @@ With the Nx Cloud GitHub App installed, every pull request gets:
 
 ## Connect your repository
 
-{% call_to_action title="Get started with Nx Cloud" url="https://cloud.nx.app/get-started/" icon="nxcloud" description="Connect your repository to Nx Cloud" %}
+{% call_to_action title="Get started with Nx Cloud" url="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=website&utm_campaign=github-integration" icon="nxcloud" description="Connect your repository to Nx Cloud" %}
 Get started with Nx Cloud
 {% /call_to_action %}

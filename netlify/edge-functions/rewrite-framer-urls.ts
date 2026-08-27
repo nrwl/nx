@@ -278,6 +278,8 @@ export const config = {
     '/courses/*',
     '/_next/*',
     '/.netlify/*',
+    // Agent discovery endpoints - Next rewrites these to astro-docs
+    '/.well-known/*',
     // Legacy docs paths — must bypass Framer so _redirects 301 rules fire
     '/ci',
     '/ci/*',

@@ -29,8 +29,7 @@ import {
 } from './package-manager';
 import { workspaceRoot } from './workspace-root';
 
-export interface NxProjectPackageJsonConfiguration
-  extends Partial<ProjectConfiguration> {
+export interface NxProjectPackageJsonConfiguration extends Partial<ProjectConfiguration> {
   includedScripts?: string[];
 }
 
@@ -98,6 +97,8 @@ export interface PackageJson {
       libc?: string[];
     };
     ignoredOptionalDependencies?: string[];
+    packageExtensions?: Record<string, unknown>;
+    patchedDependencies?: Record<string, string>;
   };
   overrides?: PackageOverride;
   // npm install-script allowlist (npm 11.16+). Keys are `name`, `name@version`,

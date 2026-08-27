@@ -1,9 +1,9 @@
 {
   "$schema": "https://json-schema.org/schema",
   "cli": "nx",
-  "$id": "NxReactLibrary",
-  "title": "Create a React Library for Nx",
-  "description": "Create a React Library for an Nx workspace.",
+  "$id": "NxNextLibrary",
+  "title": "Create a Next.js Library for Nx",
+  "description": "Create a Next.js library for an Nx workspace. Same output as `@nx/react:library`, plus a `server` entry point for React Server Components and the Next.js type declarations.",
   "type": "object",
   "properties": {
     "directory": {

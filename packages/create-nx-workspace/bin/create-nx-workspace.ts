@@ -163,7 +163,7 @@ interface NodeArguments extends BaseArguments {
   appName: string;
   framework: 'none' | 'express' | 'fastify' | 'koa' | 'nest';
   docker: boolean;
-  unitTestRunner: 'none' | 'jest';
+  unitTestRunner: 'none' | 'jest' | 'vitest';
 }
 
 interface WebArguments extends BaseArguments {
@@ -1341,12 +1341,10 @@ async function determineReactOptions(
       preferVitest: bundler === 'vite',
     });
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
-  } else if (
-    preset === Preset.NextJs ||
-    preset === Preset.NextJsStandalone ||
-    preset === Preset.ReactNative ||
-    preset === Preset.Expo
-  ) {
+  } else if (preset === Preset.NextJs || preset === Preset.NextJsStandalone) {
+    unitTestRunner = await determineUnitTestRunner(parsedArgs);
+    e2eTestRunner = await determineE2eTestRunner(parsedArgs);
+  } else if (preset === Preset.ReactNative || preset === Preset.Expo) {
     unitTestRunner = await determineUnitTestRunner(parsedArgs, {
       exclude: 'vitest',
     });
@@ -1653,7 +1651,7 @@ async function determineNodeOptions(
   let framework: 'express' | 'fastify' | 'koa' | 'nest' | 'none';
   let docker: boolean;
   let linter: undefined | Linter;
-  let unitTestRunner: undefined | 'none' | 'jest' = undefined;
+  let unitTestRunner: undefined | 'none' | 'jest' | 'vitest' = undefined;
   const workspaces = parsedArgs.workspaces;
 
   if (parsedArgs.preset) {
@@ -1711,9 +1709,7 @@ async function determineNodeOptions(
   // without asking.
   const formatter = await determineFormatterOptions(parsedArgs);
   linter = await determineLinterOptions(parsedArgs);
-  unitTestRunner = await determineUnitTestRunner(parsedArgs, {
-    exclude: 'vitest',
-  });
+  unitTestRunner = await determineUnitTestRunner(parsedArgs);
 
   return {
     preset,

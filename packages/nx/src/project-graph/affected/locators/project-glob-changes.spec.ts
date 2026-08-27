@@ -1,8 +1,8 @@
 import { ProjectGraphProjectNode } from '../../../config/project-graph';
 import { DeletedFileChange } from '../../file-utils';
 import { getTouchedProjectsFromProjectGlobChanges } from './project-glob-changes';
-jest.mock('../../../project-graph/plugins/get-plugins', () => ({
-  ...jest.requireActual('../../../project-graph/plugins/get-plugins'),
+vi.mock('../../../project-graph/plugins/get-plugins', async () => ({
+  ...(await vi.importActual('../../../project-graph/plugins/get-plugins')),
   getPlugins: async () => {
     return [
       {

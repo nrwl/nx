@@ -10,7 +10,7 @@ topics:
 
 {% youtube src="https://youtu.be/vBokLJ_F8qs" title="Configure CI access tokens" /%}
 
-The permissions and membership define what developers can access on [nx.app](https://cloud.nx.app?utm_source=nx.dev&utm_medium=docs&utm_campaign=nx-cloud-security), but they don't affect what happens when you run Nx commands in CI. To manage that, you need to provision CI access tokens in your workspace settings, under the `Access Control` tab.
+The permissions and membership define what developers can access on [nx.app](https://cloud.nx.app?utm_source=nx-dev&utm_medium=website&utm_campaign=access-tokens), but they don't affect what happens when you run Nx commands in CI. To manage that, you need to provision CI access tokens in your workspace settings, under the `Access Control` tab.
 Learn more about [cache security best practices](/docs/kb/cache-security).
 
 {% aside type="tip" title="Quickest path: use recommended settings" %}
@@ -276,7 +276,7 @@ We **do not recommend** that you commit an access token to your repository but o
 ```
 
 {% aside type="caution" title="Nx Cloud authentication is changing" %}
-From Nx 19.7 new workspaces are connected to Nx Cloud with a property called `nxCloudId` instead, and we recommend developers use [`nx login`](/docs/reference/nx-cloud-cli#npx-nxcloud-login) to provision their own local [personal access tokens](/docs/kb/personal-access-tokens) for user based authentication.
+From Nx 19.7 new workspaces are connected to Nx Cloud with a property called `nxCloudId` instead, and we recommend developers use [`nx login`](/docs/reference/nx-cloud-cli#nx-cloud-login) to provision their own local [personal access tokens](/docs/kb/personal-access-tokens) for user based authentication.
 {% /aside %}
 
 #### Using `nx-cloud.env`

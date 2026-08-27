@@ -1,6 +1,11 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import type { Tree } from '@nx/devkit';
+import { readJson, writeJson, type Tree } from '@nx/devkit';
 import JsVersionActions from './version-actions';
+
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
+  detectPackageManager: jest.fn(() => 'pnpm'),
+}));
 
 describe('JsVersionActions', () => {
   it('preserves package.json formatting when updating versions and dependencies', async () => {
@@ -191,6 +196,272 @@ describe('JsVersionActions', () => {
     ).rejects.toThrow('is outside the current range');
     expect(tree.read('packages/my-lib/package.json', 'utf-8')).toBe(manifest);
   });
+
+  it('applies workspace ranges to dependency versions supplied by release core', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    writeJson(tree, 'packages/my-lib/package.json', {
+      dependencies: { dependency: 'workspace:^' },
+      peerDependencies: { 'other-dependency': 'workspace:~' },
+      optionalDependencies: { dependency: 'workspace:*' },
+    });
+    const versionActions = await createVersionActions(tree);
+    const resolveVersion = jest.fn();
+
+    await versionActions.updateProjectDependencies(
+      tree,
+      createProjectGraph(),
+      {
+        dependency: '2.5.0',
+        'other-dependency': '3.0.0',
+      },
+      resolveVersion
+    );
+
+    expect(readJson(tree, 'packages/my-lib/package.json')).toEqual({
+      dependencies: { dependency: '^2.5.0' },
+      peerDependencies: { 'other-dependency': '~3.0.0' },
+      optionalDependencies: { dependency: '2.5.0' },
+    });
+    expect(resolveVersion).not.toHaveBeenCalled();
+  });
+
+  describe('local dependencies outside the release set', () => {
+    it('handles protocol preservation independently for each manifest', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      writeJson(tree, 'packages/my-lib/package.json', {
+        dependencies: { dependency: 'workspace:*' },
+      });
+      writeJson(tree, 'dist/packages/my-lib/package.json', {
+        dependencies: { dependency: 'workspace:*' },
+      });
+      const versionActions = await createVersionActions(tree, {
+        manifestRootsToUpdate: [
+          {
+            path: 'packages/my-lib',
+            preserveLocalDependencyProtocols: true,
+          },
+          {
+            path: 'dist/packages/my-lib',
+            preserveLocalDependencyProtocols: false,
+          },
+        ],
+      });
+      const resolveCurrentVersion = jest.fn().mockResolvedValue('2.5.0');
+
+      const logs = await versionActions.updateProjectDependencies(
+        tree,
+        createProjectGraph(),
+        {},
+        resolveCurrentVersion
+      );
+
+      expect(readJson(tree, 'packages/my-lib/package.json')).toEqual({
+        dependencies: { dependency: 'workspace:*' },
+      });
+      expect(readJson(tree, 'dist/packages/my-lib/package.json')).toEqual({
+        dependencies: { dependency: '2.5.0' },
+      });
+      expect(resolveCurrentVersion).toHaveBeenCalledTimes(1);
+      expect(logs).toEqual([
+        '✍️  Updated 1 dependency in manifest: dist/packages/my-lib/package.json',
+      ]);
+    });
+
+    it('preserves each workspace range and only resolves the target once', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      writeJson(tree, 'packages/my-lib/package.json', {
+        dependencies: { dependency: 'workspace:^' },
+        peerDependencies: { dependency: 'workspace:~' },
+      });
+      const versionActions = await createVersionActions(tree);
+      const resolveCurrentVersion = jest.fn().mockResolvedValue('2.5.0');
+
+      await versionActions.updateProjectDependencies(
+        tree,
+        createProjectGraph(),
+        {},
+        resolveCurrentVersion
+      );
+
+      expect(readJson(tree, 'packages/my-lib/package.json')).toEqual({
+        dependencies: { dependency: '^2.5.0' },
+        peerDependencies: { dependency: '~2.5.0' },
+      });
+      expect(resolveCurrentVersion).toHaveBeenCalledTimes(1);
+      expect(resolveCurrentVersion).toHaveBeenCalledWith('dependency');
+    });
+
+    it('honors an explicitly empty version prefix', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      writeJson(tree, 'packages/my-lib/package.json', {
+        dependencies: { dependency: 'workspace:^' },
+      });
+      const versionActions = await createVersionActions(tree, {
+        versionPrefix: '',
+      });
+
+      await versionActions.updateProjectDependencies(
+        tree,
+        createProjectGraph(),
+        {},
+        async () => '2.5.0'
+      );
+
+      expect(readJson(tree, 'packages/my-lib/package.json')).toEqual({
+        dependencies: { dependency: '2.5.0' },
+      });
+    });
+
+    it('passes pinned workspace ranges through without resolving versions', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      writeJson(tree, 'packages/my-lib/package.json', {
+        dependencies: { dependency: 'workspace:^1.2.3' },
+        peerDependencies: {
+          'other-dependency': 'workspace:2.5.0',
+        },
+      });
+      const versionActions = await createVersionActions(tree);
+      const resolveCurrentVersion = jest.fn();
+
+      await versionActions.updateProjectDependencies(
+        tree,
+        createProjectGraph(),
+        {},
+        resolveCurrentVersion
+      );
+
+      expect(readJson(tree, 'packages/my-lib/package.json')).toEqual({
+        dependencies: { dependency: '^1.2.3' },
+        peerDependencies: { 'other-dependency': '2.5.0' },
+      });
+      expect(resolveCurrentVersion).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      {
+        description: 'a relative workspace path',
+        manifestPath: 'packages/my-lib/package.json',
+        dependencyName: 'dependency',
+        specifier: 'workspace:../dependency',
+        expected: '2.5.0',
+      },
+      {
+        description: 'a file path',
+        manifestPath: 'packages/my-lib/package.json',
+        dependencyName: 'dependency',
+        specifier: 'file:../dependency',
+        expected: '2.5.0',
+      },
+      {
+        description: 'a relative workspace path in an output manifest',
+        manifestPath: 'dist/packages/my-lib/package.json',
+        dependencyName: 'dependency',
+        specifier: 'workspace:../dependency',
+        expected: '2.5.0',
+      },
+    ])(
+      'resolves $description using the referenced project',
+      async ({ manifestPath, dependencyName, specifier, expected }) => {
+        const tree = createTreeWithEmptyWorkspace();
+        writeJson(tree, manifestPath, {
+          dependencies: { [dependencyName]: specifier },
+        });
+        const versionActions = await createVersionActions(
+          tree,
+          manifestPath.startsWith('dist/')
+            ? {
+                manifestRootsToUpdate: [
+                  {
+                    path: 'dist/packages/my-lib',
+                    preserveLocalDependencyProtocols: false,
+                  },
+                ],
+              }
+            : undefined
+        );
+        const resolveCurrentVersion = jest.fn().mockResolvedValue('2.5.0');
+
+        await versionActions.updateProjectDependencies(
+          tree,
+          createProjectGraph(),
+          {},
+          resolveCurrentVersion
+        );
+
+        expect(readJson(tree, manifestPath)).toEqual({
+          dependencies: { [dependencyName]: expected },
+        });
+        expect(resolveCurrentVersion).toHaveBeenCalledWith('dependency');
+      }
+    );
+
+    it('leaves plain registry ranges unchanged', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      const manifest = {
+        dependencies: { dependency: '^2.0.0' },
+      };
+      writeJson(tree, 'packages/my-lib/package.json', manifest);
+      const versionActions = await createVersionActions(tree);
+      const resolveCurrentVersion = jest.fn();
+
+      await versionActions.updateProjectDependencies(
+        tree,
+        createProjectGraph(),
+        {},
+        resolveCurrentVersion
+      );
+
+      expect(readJson(tree, 'packages/my-lib/package.json')).toEqual(manifest);
+      expect(resolveCurrentVersion).not.toHaveBeenCalled();
+    });
+
+    it('does not modify any manifest when version resolution fails', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      const sourceManifest = {
+        dependencies: { dependency: 'workspace:*' },
+      };
+      const distManifest = {
+        dependencies: { 'other-dependency': 'workspace:*' },
+      };
+      writeJson(tree, 'packages/my-lib/package.json', sourceManifest);
+      writeJson(tree, 'dist/packages/my-lib/package.json', distManifest);
+      const versionActions = await createVersionActions(tree, {
+        manifestRootsToUpdate: [
+          {
+            path: 'packages/my-lib',
+            preserveLocalDependencyProtocols: false,
+          },
+          {
+            path: 'dist/packages/my-lib',
+            preserveLocalDependencyProtocols: false,
+          },
+        ],
+      });
+      const resolveCurrentVersion = jest.fn(async (projectName: string) => {
+        if (projectName === 'other-dependency') {
+          throw new Error('no current version is available');
+        }
+        return '2.5.0';
+      });
+
+      await expect(
+        versionActions.updateProjectDependencies(
+          tree,
+          createProjectGraph(),
+          {},
+          resolveCurrentVersion
+        )
+      ).rejects.toThrow(
+        'Unable to replace local dependency protocol "workspace:*" for "other-dependency" in manifest "dist/packages/my-lib/package.json". no current version is available'
+      );
+      expect(readJson(tree, 'packages/my-lib/package.json')).toEqual(
+        sourceManifest
+      );
+      expect(readJson(tree, 'dist/packages/my-lib/package.json')).toEqual(
+        distManifest
+      );
+    });
+  });
 });
 
 async function createVersionActions(
@@ -212,6 +483,7 @@ async function createVersionActions(
       manifestRootsToUpdate: [],
       preserveLocalDependencyProtocols: false,
       preserveMatchingDependencyRanges: false,
+      versionPrefix: 'auto',
       ...config,
     } as any
   );
@@ -228,6 +500,14 @@ function createProjectGraph() {
         data: {
           root: 'packages/dependency',
           metadata: { js: { packageName: 'dependency' } },
+        },
+      },
+      'other-dependency': {
+        name: 'other-dependency',
+        type: 'lib',
+        data: {
+          root: 'packages/other-dependency',
+          metadata: { js: { packageName: 'other-dependency' } },
         },
       },
     },

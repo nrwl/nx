@@ -49,6 +49,9 @@ apps/my-app/dist/
 ├── main.js                          # Compiled application
 ├── package.json                     # Pruned production dependencies
 ├── package-lock.json                # Pruned lockfile (or yarn.lock / pnpm-lock.yaml)
+├── pnpm-workspace.yaml              # pnpm only, carries the install settings
+├── patches/                         # pnpm only, if the workspace uses `pnpm patch`
+├── local_path_modules/              # pnpm only, non-workspace file:/link: dependencies
 └── workspace_modules/               # Only present if you have workspace deps
     └── @my-org/
         └── my-lib/
@@ -142,7 +145,83 @@ Add the following targets to your project's `package.json` or `project.json`:
 
 {% /tabs %}
 
-Replace `package-lock.json` in the `outputs` array with `yarn.lock` or `pnpm-lock.yaml` if needed.
+Replace `package-lock.json` in the `outputs` array with `yarn.lock` or `pnpm-lock.yaml` to match
+your package manager.
+
+{% aside type="note" title="Available since Nx 23.2" %}
+Nx 23.2 and later emit `pnpm-workspace.yaml` and, when needed, `patches/` and `local_path_modules/`.
+On older versions, `prune-lockfile` emits only the pruned `package.json` and the pruned lockfile, so
+the pnpm-specific guidance below does not apply.
+{% /aside %}
+
+The emitted `pnpm-workspace.yaml` carries build-script approvals (`allowBuilds`),
+`supportedArchitectures`, and any `patchedDependencies`.
+On pnpm 10 and below it carries none of them, because the emitted `package.json` declares them
+instead, but the file still ships so that every run overwrites the last one.
+Copied `.patch` files keep their original subpath under `patches/`.
+Resolution-time config such as `pnpm.overrides` is dropped from the emitted manifest, because the
+pruned lockfile already bakes it into its resolutions.
+A re-resolve inside the deploy directory, such as an install without the lockfile or adding a
+dependency there, loses those pins.
+
+For pnpm, the complete `prune-lockfile` target declares the extra artifacts in `outputs` so a cached
+run restores them, and the workspace root settings files in `inputs` so revoking a build-script
+approval does not replay a cached output that still grants it.
+The approvals and `supportedArchitectures` live only in those two files, and nothing records them in
+the lockfile.
+The `runtime` input hashes the pnpm major, which decides whether the settings land in the emitted
+`pnpm-workspace.yaml` or the emitted `package.json` when the root manifest has no `packageManager`
+field:
+
+```json
+// apps/my-app/project.json
+{
+  "targets": {
+    "prune-lockfile": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "executor": "@nx/js:prune-lockfile",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/pnpm-workspace.yaml",
+        "{workspaceRoot}/package.json",
+        {
+          "runtime": "node -e \"try{console.log('pnpm major '+require('child_process').execSync('pnpm --version',{stdio:['ignore','pipe','ignore']}).toString().trim().split('.')[0])}catch{console.log('pnpm major unavailable')}\""
+        }
+      ],
+      "outputs": [
+        "{workspaceRoot}/apps/my-app/dist/package.json",
+        "{workspaceRoot}/apps/my-app/dist/pnpm-lock.yaml",
+        "{workspaceRoot}/apps/my-app/dist/pnpm-workspace.yaml",
+        "{workspaceRoot}/apps/my-app/dist/patches",
+        "{workspaceRoot}/apps/my-app/dist/local_path_modules"
+      ],
+      "options": {
+        "buildTarget": "build"
+      }
+    }
+  }
+}
+```
+
+{% aside type="caution" title="Installing the output with --ignore-workspace" %}
+`pnpm install --ignore-workspace` skips a `pnpm-workspace.yaml` sitting beside the output, so the
+settings in it never apply.
+On pnpm 11 and above, a workspace using `pnpm patch` therefore gets an output that installs cleanly
+without the flag and fails with it, because the lockfile declares patches the install no longer
+sees:
+
+```text
+ERR_PNPM_LOCKFILE_CONFIG_MISMATCH  Cannot proceed with the frozen installation. The current "patchedDependencies" configuration doesn't match the value found in the lockfile
+```
+
+Install that output without the flag.
+The emitted file declares an empty `packages` list, which already stops pnpm from treating a parent
+directory as a workspace.
+A workspace with no approvals, architectures, or patches to carry gets a file holding only that
+empty list, so the flag has nothing to skip there.
+{% /aside %}
 
 Then run:
 
@@ -191,6 +270,63 @@ npx nx docker:build my-app
 # Run the container
 nx docker:run my-app -p 3000:3000
 ```
+
+## Legacy build targets that emit deploy output
+
+In a pnpm workspace, an explicit build target that enables `generatePackageJson` (webpack, rspack,
+vite, and esbuild) or `generateLockfile` (next, remix, tsc, and swc) emits the pruned deploy output
+next to the deployable `package.json`.
+The Nx 23.2 migration adds the pnpm settings inputs to the targets that enable one of those options
+at the time it runs.
+The migration doesn't revisit targets that enable either option later.
+Check the effective inputs of such a target and add any missing entries yourself.
+
+Add them to the layer that supplies the target's effective `inputs`.
+A target-level `inputs` array replaces the `targetDefaults` array instead of merging with it, so
+append to the target's own array when it declares one, and otherwise to the `targetDefaults` entry
+it inherits from.
+A target that inherits nothing needs the Nx defaults spelled out first:
+
+```json
+// apps/my-app/project.json
+{
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "options": {
+        "generatePackageJson": true
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/pnpm-workspace.yaml",
+        {
+          "json": "{workspaceRoot}/package.json",
+          "fields": [
+            "packageManager",
+            "pnpm.onlyBuiltDependencies",
+            "pnpm.neverBuiltDependencies",
+            "pnpm.allowBuilds",
+            "pnpm.supportedArchitectures",
+            "pnpm.patchedDependencies"
+          ]
+        },
+        {
+          "runtime": "node -e \"try{console.log('pnpm major '+require('child_process').execSync('pnpm --version',{stdio:['ignore','pipe','ignore']}).toString().trim().split('.')[0])}catch{console.log('pnpm major unavailable')}\""
+        }
+      ]
+    }
+  }
+}
+```
+
+The `json` input hashes only the fields the deploy output is built from, so dependency bumps in the
+root `package.json` don't invalidate every build.
+
+This doesn't apply to the `prune-lockfile` target above, or to build targets inferred by the
+`@nx/webpack` and `@nx/rspack` plugins, which declare these inputs themselves unless a
+project-level or `targetDefaults` entry replaces their `inputs` array.
+TS Solution Setup rejects `generatePackageJson`, so use the prune workflow instead of re-enabling it.
 
 ## Migrate from `generatePackageJson`
 

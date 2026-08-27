@@ -628,8 +628,8 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   #exposeLoaderState(compiler: Compiler) {
     compiler.hooks.compilation.tap(PLUGIN_NAME, (compilation) => {
       (compilation as NgRspackCompilation)[NG_RSPACK_SYMBOL_NAME] = () => ({
-        javascriptTransformer: this
-          .#javascriptTransformer as unknown as JavaScriptTransformer,
+        javascriptTransformer:
+          this.#javascriptTransformer as unknown as JavaScriptTransformer,
         typescriptFileCache: this.#sourceFileCache.typeScriptFileCache,
         babelFileCache: this.#sourceFileCache.babelFileCache,
         useTypeScriptTranspilation: this.#useTypeScriptTranspilation,

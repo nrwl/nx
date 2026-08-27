@@ -16,6 +16,17 @@ Nx Cloud improves many aspects of the CI/CD process:
 - **Cost** - 40% - 75% reduction in CI costs (observed on the Nx OSS monorepo)
 - **Reliability** - by automatically identifying flaky tasks (e2e tests in particular) and re-running them
 
+## What you get with Nx Cloud on top of Nx Core
+
+|                  | Nx Core                                                                                                    | Nx Cloud                                                                                        |
+| ---------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Caching          | Local cache, per machine                                                                                   | Adds a [remote cache](/docs/features/ci-features/remote-cache) shared across your team and CI   |
+| Task scheduling  | Task graph on one machine, [`nx affected`](/docs/features/ci-features/affected) to skip untouched projects | Adds [distribution across agent machines](/docs/features/ci-features/distribute-task-execution) |
+| End-to-end tests | Run as one task per project                                                                                | [Split per file](/docs/features/ci-features/split-e2e-tasks) and distributed                    |
+| Flaky tasks      | You rerun the pipeline                                                                                     | [Detected and rerun](/docs/features/ci-features/flaky-tasks) within the same run                |
+| Failing CI       | You read the logs and fix it                                                                               | [Self-healing CI](/docs/features/ci-features/self-healing-ci) proposes a fix on the PR          |
+| Visibility       | Terminal output for the run in front of you                                                                | Run history, task analytics, and CI observability                                               |
+
 ## Connect your workspace to Nx Cloud
 
 Run the following command in your Nx workspace (make sure you have it pushed to a remote repository first):
@@ -43,6 +54,38 @@ For example:
 ## Nx Cloud features
 
 {% index_page_cards path="features/ci-features" /%}
+
+## Frequently asked questions
+
+### Is Nx Cloud free?
+
+Yes. Nx Cloud starts on the free Hobby plan, which includes 50,000 credits per month, 5 contributors, and 10 concurrent CI connections, with no credit card.
+
+Nx itself is free and open source too. Task running, the project graph, local caching, `nx affected`, generators, and migrations all work without an Nx Cloud account.
+
+### What happens when I use up my credits?
+
+On the Hobby plan, Nx Cloud features turn off once the monthly credits are gone and turn back on at the next reset.
+
+The Team plan has no such cap, and usage beyond the $29 of included credit is billed at $5.50 per 10,000 credits. See [credit pricing](/docs/reference/nx-cloud/credits-pricing) for what each operation costs.
+
+### Do unused credits carry over?
+
+No. Your allowance resets at the start of each billing cycle.
+
+### Is there a plan for open source projects?
+
+Yes. Nx Cloud is free for qualifying open source organizations. [Talk to our engineering team](https://nx.dev/contact/engineering) to get set up.
+
+### Can I get a shared cache without Nx Cloud?
+
+Yes. Build your own server against the [remote cache OpenAPI specification](/docs/kb/self-hosted-caching), in any language. You maintain the storage, authentication, and uptime.
+
+### When should I consider Enterprise or self-hosted options?
+
+The [Enterprise plan](https://nx.dev/enterprise) adds SSO and SAML, dedicated support with SLAs, [conformance rules](/docs/enterprise/conformance), [code owners](/docs/enterprise/owners), and cross-repo visibility.
+
+On a [single-tenant instance](/docs/enterprise/single-tenant/overview) or an on-prem install, you choose the region and the infrastructure your cache and run data live on. For what a standard Nx Cloud workspace sends and stores, see the [privacy policy](https://nx.app/privacy).
 
 ## Learn more
 

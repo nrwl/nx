@@ -1,9 +1,10 @@
-jest.mock('../../../utils/git-utils', () => ({
-  hasUncommittedChanges: jest.fn(),
-  tryCommitChanges: jest.fn(),
+import type { Mock } from 'vitest';
+vi.mock('../../../utils/git-utils', () => ({
+  hasUncommittedChanges: vi.fn(),
+  tryCommitChanges: vi.fn(),
 }));
-jest.mock('../../../utils/logger', () => ({
-  logger: { info: jest.fn() },
+vi.mock('../../../utils/logger', () => ({
+  logger: { info: vi.fn() },
 }));
 
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs';
@@ -17,9 +18,9 @@ import { logger } from '../../../utils/logger';
 import { applyAgenticHandoffGitignoreFallback } from './handoff-gitignore';
 import { isHandoffGitignoreMigration } from './types';
 
-const mockHas = hasUncommittedChanges as jest.Mock;
-const mockTry = tryCommitChanges as jest.Mock;
-const mockInfo = logger.info as jest.Mock;
+const mockHas = hasUncommittedChanges as Mock;
+const mockTry = tryCommitChanges as Mock;
+const mockInfo = logger.info as Mock;
 
 const HANDOFF_GITIGNORE_MIGRATION = {
   package: 'nx',

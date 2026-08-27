@@ -1,9 +1,9 @@
 import * as stream from 'node:stream';
 import * as yargs from 'yargs';
 
-jest.mock('../../native', () => ({
-  ...jest.requireActual('../../native'),
-  isAiAgent: jest.fn(() => false),
+vi.mock('../../native', async () => ({
+  ...(await vi.importActual('../../native')),
+  isAiAgent: vi.fn(() => false),
   IS_WASM: false,
 }));
 
@@ -49,7 +49,7 @@ describe('shared-options', () => {
 
     it('should parse newline-delimited files from stdin', async () => {
       const stdinMock = new stream.PassThrough();
-      jest.spyOn(process, 'stdin', 'get').mockReturnValue(stdinMock as any);
+      vi.spyOn(process, 'stdin', 'get').mockReturnValue(stdinMock as any);
 
       stdinMock.push('file1\nfile2\nfile3\n');
       stdinMock.push(null);
@@ -68,7 +68,7 @@ describe('shared-options', () => {
 
     it('should parse files from stdin split across chunks', async () => {
       const stdinMock = new stream.PassThrough();
-      jest.spyOn(process, 'stdin', 'get').mockReturnValue(stdinMock as any);
+      vi.spyOn(process, 'stdin', 'get').mockReturnValue(stdinMock as any);
 
       stdinMock.push('file1\nfil');
       stdinMock.push('e2\nfile3');
@@ -88,7 +88,7 @@ describe('shared-options', () => {
 
     it('should parse files from stdin and a single --files option', async () => {
       const stdinMock = new stream.PassThrough();
-      jest.spyOn(process, 'stdin', 'get').mockReturnValue(stdinMock as any);
+      vi.spyOn(process, 'stdin', 'get').mockReturnValue(stdinMock as any);
 
       stdinMock.push('file1\nfile2\nfile3\n');
       stdinMock.push(null);
@@ -112,7 +112,7 @@ describe('shared-options', () => {
 
     it('should parse files from stdin and multiple --files options', async () => {
       const stdinMock = new stream.PassThrough();
-      jest.spyOn(process, 'stdin', 'get').mockReturnValue(stdinMock as any);
+      vi.spyOn(process, 'stdin', 'get').mockReturnValue(stdinMock as any);
 
       stdinMock.push('file1\nfile2\n');
       stdinMock.push(null);
@@ -139,7 +139,7 @@ describe('shared-options', () => {
     it('should throw when --stdin is used with a TTY', async () => {
       const stdinMock = new stream.PassThrough();
       Object.defineProperty(stdinMock, 'isTTY', { value: true });
-      jest.spyOn(process, 'stdin', 'get').mockReturnValue(stdinMock as any);
+      vi.spyOn(process, 'stdin', 'get').mockReturnValue(stdinMock as any);
 
       await expect(command.parseAsync(['affected', '--stdin'])).rejects.toThrow(
         /--stdin option requires piped input/
@@ -206,6 +206,21 @@ describe('shared-options', () => {
           const command = withOutputStyleOption(argv);
           const result = await command.parseAsync([]);
           expect(result['output-style']).toEqual('tui');
+        }
+      ));
+
+    it('should leave the style unset when none was given', async () =>
+      withEnvironmentVariables(
+        { NX_TUI: false, CI: 'true', NX_TUI_SKIP_CAPABILITY_CHECK: 'true' },
+        async () => {
+          // The failures-only default is resolved where output is rendered, not
+          // here. outputStyle is also read by the orchestrator to decide whether
+          // a task streams, and naming a static style there stops
+          // shouldStreamOutput from being consulted at all - which silently
+          // stops continuous tasks from streaming.
+          const command = withOutputStyleOption(argv);
+          const result = await command.parseAsync([]);
+          expect(result.outputStyle).toBeUndefined();
         }
       ));
 

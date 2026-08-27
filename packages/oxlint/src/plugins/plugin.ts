@@ -6,17 +6,23 @@ import {
   globWithWorkspaceContext,
   hashObject,
   PluginCache,
+  TargetProjectLocator,
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
 import {
+  CreateDependencies,
   CreateNodes,
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResult,
+  DependencyType,
   detectPackageManager,
   getPackageManagerCommand,
+  ProjectGraphProjectNode,
+  RawProjectGraphDependency,
   readJsonFile,
   TargetConfiguration,
+  validateDependency,
 } from '@nx/devkit';
 import { getLockFileName, getRootTsConfigFileName } from '@nx/js';
 import {
@@ -73,6 +79,7 @@ const internalCreateNodes = async (
   projectRootsByOxlintRoots: Map<string, string[]>,
   getLintableFilesPerProjectRoot: () => Promise<Map<string, number>>,
   configChainsByConfig: Map<string, string[]>,
+  jsPluginSpecifiersByConfig: Map<string, string[]>,
   tsconfigChainsByProjectRoot: Map<string, string[]>,
   projectsCache: PluginCache<OxlintProjects>,
   hashByRoot: Map<string, string>,
@@ -113,6 +120,7 @@ const internalCreateNodes = async (
         context,
         pmc,
         configChainsByConfig,
+        jsPluginSpecifiersByConfig,
         tsconfigChainsByProjectRoot.get(projectRoot) ?? [],
         rootConfig
       );
@@ -173,10 +181,8 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
       existsSync(join(context.workspaceRoot, file))
     );
 
-    const configChainsByConfig = collectConfigChains(
-      oxlintConfigFiles,
-      context.workspaceRoot
-    );
+    const { chains: configChainsByConfig, jsPluginSpecifiersByConfig } =
+      collectConfigChains(oxlintConfigFiles, context.workspaceRoot);
     const tsconfigChainsByProjectRoot = collectTsconfigChainsByProjectRoot(
       projectRoots,
       context.workspaceRoot
@@ -199,12 +205,24 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
         });
         // Deduped: every chain ends at the same root config, and each duplicate
         // is another whole-workspace glob for the hasher.
+        const allConfigs = [
+          ...governingConfigs,
+          ...governingConfigs.flatMap(
+            (config) => configChainsByConfig.get(config) ?? []
+          ),
+        ];
         return [
           ...new Set([
-            ...governingConfigs,
-            ...governingConfigs.flatMap(
-              (config) => configChainsByConfig.get(config) ?? []
+            ...allConfigs,
+            ...allConfigs.flatMap((config) =>
+              localJsPluginFiles(
+                config,
+                jsPluginSpecifiersByConfig.get(config) ?? []
+              )
             ),
+            // Change which files Oxlint considers lintable, and therefore
+            // whether a target is inferred at all.
+            ...ancestorEslintignorePaths(root),
             lockFilePattern,
             ...(tsconfigChainsByProjectRoot.get(root) ?? []),
           ]),
@@ -225,6 +243,7 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
             projectRootsByOxlintRoots,
             getLintableFilesPerProjectRoot,
             configChainsByConfig,
+            jsPluginSpecifiersByConfig,
             tsconfigChainsByProjectRoot,
             targetsCache,
             hashByRoot,
@@ -242,6 +261,118 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
 ];
 
 export const createNodesV2 = createNodes;
+
+/**
+ * A config's `jsPlugins` produce the lint results, so every project linted
+ * under that config depends on them. Resolving the specifiers here, against the
+ * finished node set, is what makes a workspace plugin a project edge and an npm
+ * plugin an external edge; `^default` then hashes both. Implicit, because the
+ * config may not be a file of the depending project.
+ */
+export const createDependencies: CreateDependencies<OxlintPluginOptions> = (
+  _options,
+  context
+) => {
+  // Walked rather than flattened: this runs on every graph build, and a copy
+  // of the whole file map is the wrong price for finding a few config files.
+  const oxlintConfigFiles: string[] = [];
+  const collect = (files: { file: string }[]) => {
+    for (const { file } of files) {
+      if (OXLINT_CONFIG_FILENAMES.includes(basename(file))) {
+        oxlintConfigFiles.push(file);
+      }
+    }
+  };
+  for (const files of Object.values(context.fileMap.projectFileMap)) {
+    collect(files);
+  }
+  collect(context.fileMap.nonProjectFiles);
+  if (oxlintConfigFiles.length === 0) {
+    return [];
+  }
+
+  const { chains, jsPluginSpecifiersByConfig } = collectConfigChains(
+    oxlintConfigFiles,
+    context.workspaceRoot
+  );
+  const configsWithPlugins = [...jsPluginSpecifiersByConfig].filter(
+    ([, specifiers]) => specifiers.length > 0
+  );
+  if (configsWithPlugins.length === 0) {
+    return [];
+  }
+
+  const nodes: Record<string, ProjectGraphProjectNode> = {};
+  for (const [name, data] of Object.entries(context.projects)) {
+    nodes[name] = { name, type: null, data };
+  }
+  // Own resolution cache: the locator's shared default one is never
+  // invalidated, so a plugin resolved before `install` would stay unresolved
+  // for the life of the plugin worker.
+  const locator = new TargetProjectLocator(
+    nodes,
+    context.externalNodes,
+    new Map()
+  );
+  // Resolution is relative to the config, so it is the same for every project
+  // that config governs.
+  const targetsByConfig = new Map<string, string[]>();
+  const resolveTargets = (config: string): string[] => {
+    let targets = targetsByConfig.get(config);
+    if (!targets) {
+      targets = [];
+      for (const specifier of jsPluginSpecifiersByConfig.get(config) ?? []) {
+        const target = locator.findProjectFromImport(specifier, config);
+        if (target) {
+          targets.push(target);
+        }
+      }
+      targetsByConfig.set(config, targets);
+    }
+    return targets;
+  };
+
+  const dependencies: RawProjectGraphDependency[] = [];
+  for (const [name, project] of Object.entries(context.projects)) {
+    if (
+      !Object.values(project.targets ?? {}).some((target) =>
+        target.metadata?.technologies?.includes('oxlint')
+      )
+    ) {
+      continue;
+    }
+    // Own directory and every ancestor, plus their `extends` chains — the
+    // same set `createNodes` hashes. A plugin project that depends on a
+    // project it lints closes a cycle here; that is a real circularity, and
+    // the docs say so.
+    const governingConfigs = oxlintConfigFiles.filter((config) => {
+      const configDir = dirname(config);
+      return configDir === project.root || isSubDir(configDir, project.root);
+    });
+    const configs = new Set([
+      ...governingConfigs,
+      ...governingConfigs.flatMap((config) => chains.get(config) ?? []),
+    ]);
+    const targets = new Set<string>();
+    for (const config of configs) {
+      for (const target of resolveTargets(config)) {
+        if (target !== name) {
+          targets.add(target);
+        }
+      }
+    }
+    for (const target of targets) {
+      const dependency: RawProjectGraphDependency = {
+        source: name,
+        target,
+        type: DependencyType.implicit,
+      };
+      validateDependency(dependency, context);
+      dependencies.push(dependency);
+    }
+  }
+  return dependencies;
+};
 
 function splitConfigFiles(
   configFiles: readonly string[],
@@ -324,15 +455,25 @@ function splitConfigFiles(
  * Oxlint resolves entries relative to the referencing config and only tracks the
  * chain for its LSP, so Nx walks it here or caching goes stale. TypeScript
  * configs are not statically readable, so only the file itself is tracked.
+ *
+ * Also collects each config's raw `jsPlugins` specifiers. `createDependencies`
+ * resolves them to graph nodes; `createNodes` only needs the local files.
  */
 function collectConfigChains(
   oxlintConfigFiles: string[],
   workspaceRoot: string
-): Map<string, string[]> {
+): {
+  chains: Map<string, string[]>;
+  jsPluginSpecifiersByConfig: Map<string, string[]>;
+} {
   const result = new Map<string, string[]>();
+  const jsPluginSpecifiersByConfig = new Map<string, string[]>();
   // Shared across configs so the common root config is read once. `null` records
   // a failed read, so a bad file is not retried per referrer.
-  const jsonCache = new Map<string, { extends?: string[] } | null>();
+  const jsonCache = new Map<
+    string,
+    { extends?: string[]; jsPlugins?: unknown[] } | null
+  >();
   const existsCache = new Map<string, boolean>();
 
   const configExists = (relativeConfigPath: string): boolean => {
@@ -344,14 +485,38 @@ function collectConfigChains(
     return exists;
   };
 
+  const recordJsPluginSpecifiers = (
+    relativeConfigPath: string,
+    jsPlugins: unknown
+  ): void => {
+    if (jsPluginSpecifiersByConfig.has(relativeConfigPath)) {
+      return;
+    }
+    const specifiers: string[] = [];
+    if (Array.isArray(jsPlugins)) {
+      for (const entry of jsPlugins) {
+        const specifier =
+          typeof entry === 'string'
+            ? entry
+            : typeof (entry as { specifier?: unknown })?.specifier === 'string'
+              ? (entry as { specifier: string }).specifier
+              : undefined;
+        if (specifier) {
+          specifiers.push(specifier);
+        }
+      }
+    }
+    jsPluginSpecifiersByConfig.set(relativeConfigPath, specifiers);
+  };
+
   const readConfig = (
     relativeConfigPath: string
-  ): { extends?: string[] } | null => {
+  ): { extends?: string[]; jsPlugins?: unknown[] } | null => {
     if (jsonCache.has(relativeConfigPath)) {
       return jsonCache.get(relativeConfigPath);
     }
 
-    let json: { extends?: string[] } | null = null;
+    let json: { extends?: string[]; jsPlugins?: unknown[] } | null = null;
     if (configExists(relativeConfigPath)) {
       try {
         json = readJsonFile(join(workspaceRoot, relativeConfigPath), {
@@ -384,6 +549,7 @@ function collectConfigChains(
       }
 
       const json = readConfig(relativeConfigPath);
+      recordJsPluginSpecifiers(relativeConfigPath, json?.jsPlugins);
 
       if (!Array.isArray(json?.extends)) {
         return;
@@ -410,7 +576,29 @@ function collectConfigChains(
     result.set(configFile, extended);
   }
 
-  return result;
+  return { chains: result, jsPluginSpecifiersByConfig };
+}
+
+/**
+ * Workspace-relative paths of a config's relative-path `jsPlugins`. Declared as
+ * file inputs because such a file may sit outside every project (`tools/x.js`
+ * at the root), where no graph edge can reach it.
+ */
+function localJsPluginFiles(
+  relativeConfigPath: string,
+  specifiers: string[]
+): string[] {
+  const files: string[] = [];
+  for (const specifier of specifiers) {
+    if (!specifier.startsWith('.')) {
+      continue;
+    }
+    const resolved = normalize(join(dirname(relativeConfigPath), specifier));
+    if (resolved !== '..' && !resolved.startsWith('../')) {
+      files.push(resolved);
+    }
+  }
+  return files;
 }
 
 /**
@@ -568,6 +756,24 @@ async function collectLintableFilesByProjectRoot(
   return lintableFilesPerProjectRoot;
 }
 
+/**
+ * `.eslintignore` candidates in every ancestor directory of the project root,
+ * workspace root included. The project's own directory is excluded — files
+ * there are covered by the `default` input.
+ */
+function ancestorEslintignorePaths(projectRoot: string): string[] {
+  const result: string[] = [];
+  let dir = projectRoot === '.' ? '.' : dirname(projectRoot);
+  while (true) {
+    result.push(dir === '.' ? '.eslintignore' : `${dir}/.eslintignore`);
+    if (dir === '.') {
+      break;
+    }
+    dir = dirname(dir);
+  }
+  return result;
+}
+
 // Only the keys are read, so the value type is left open for both callers.
 function getRootForDirectory(
   directory: string,
@@ -592,6 +798,7 @@ function getProjectUsingOxlintConfig(
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   configChainsByConfig: Map<string, string[]>,
+  jsPluginSpecifiersByConfig: Map<string, string[]>,
   tsconfigChainOutsideProjectRoot: string[],
   rootConfig: string | undefined
 ): CreateNodesResult['projects'][string] | null {
@@ -630,6 +837,12 @@ function getProjectUsingOxlintConfig(
   const lintPath =
     isRootProject && standaloneSrcPath ? `./${standaloneSrcPath}` : '.';
 
+  const jsPluginFiles = new Set(
+    configInputs.flatMap((config) =>
+      localJsPluginFiles(config, jsPluginSpecifiersByConfig.get(config) ?? [])
+    )
+  );
+
   const targetConfig: TargetConfiguration = {
     command: `oxlint ${lintPath}`,
     options: { cwd: projectRoot },
@@ -638,6 +851,13 @@ function getProjectUsingOxlintConfig(
       'default',
       '^default',
       ...configInputs.map((config) => `{workspaceRoot}/${config}`),
+      ...[...jsPluginFiles].map((file) => `{workspaceRoot}/${file}`),
+      // Oxlint layers .eslintignore files from every ancestor of a linted
+      // file; the project's own is covered by `default`. Declared even when
+      // absent, like the extends chain.
+      ...ancestorEslintignorePaths(projectRoot).map(
+        (file) => `{workspaceRoot}/${file}`
+      ),
       ...tsconfigChainOutsideProjectRoot.map(
         (file) => `{workspaceRoot}/${file}`
       ),

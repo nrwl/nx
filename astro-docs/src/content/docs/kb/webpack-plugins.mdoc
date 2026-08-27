@@ -567,7 +567,9 @@ For more information, refer to
 the [Module Federation recipe](/docs/kb/faster-builds-with-module-federation).
 
 {% aside type="note" title="Install @nx/module-federation" %}
-These plugins live in the `@nx/module-federation` package. Install it with your package manager, or use the Nx Module Federation generators (such as `@nx/angular:host`, `@nx/angular:remote`, `@nx/react:host`, or `@nx/react:remote`), which add the dependency for you.
+These plugins live in the `@nx/module-federation` package. Install it with your package manager.
+
+As of Nx v23, the `host` and `remote` generators that previously added it are deprecated. New React micro frontends use the [`@nx/react:consumer` and `@nx/react:provider`](/docs/kb/consumer-and-provider) generators, which wire up the official Module Federation bundler plugins rather than these webpack plugins. For Angular micro frontends, use [`@angular-architects/native-federation`](https://www.npmjs.com/package/@angular-architects/native-federation). See [Micro Frontends with Angular](/docs/kb/angular-micro-frontends) for the setup path.
 {% /aside %}
 
 #### Options

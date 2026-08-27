@@ -1,4 +1,4 @@
-jest.mock('../../generators/internal-utils/format-changed-files');
+vi.mock('../../generators/internal-utils/format-changed-files');
 import { TargetConfiguration } from '../../config/workspace-json-project-json';
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import { readJson, writeJson } from '../../generators/utils/json';

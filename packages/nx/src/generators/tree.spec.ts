@@ -24,8 +24,8 @@ describe('tree', () => {
     let tree: FsTree;
 
     beforeEach(() => {
-      console.error = jest.fn();
-      console.log = jest.fn();
+      console.error = vi.fn();
+      console.log = vi.fn();
 
       dir = dirSync().name;
       mkdirSync(path.join(dir, 'parent/child'), { recursive: true });

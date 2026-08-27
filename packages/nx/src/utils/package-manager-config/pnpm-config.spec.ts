@@ -1,11 +1,12 @@
+import type { Mock } from 'vitest';
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'fs';
 import { homedir, tmpdir } from 'os';
 import { join } from 'path';
 import { getPnpmConfigDir, readPnpmYamlConfig } from './pnpm-config';
 
-jest.mock('os', () => ({
-  ...jest.requireActual('os'),
-  homedir: jest.fn(),
+vi.mock('os', async () => ({
+  ...require('os'),
+  homedir: vi.fn(),
 }));
 
 describe('getPnpmConfigDir', () => {
@@ -17,11 +18,11 @@ describe('getPnpmConfigDir', () => {
     Object.defineProperty(process, 'platform', { value: platform });
   }
   beforeEach(() => {
-    (homedir as jest.Mock).mockReturnValue('/home/me');
+    (homedir as Mock).mockReturnValue('/home/me');
   });
   afterEach(() => {
     Object.defineProperty(process, 'platform', originalPlatform);
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('returns the XDG_CONFIG_HOME/pnpm dir when XDG_CONFIG_HOME is set', () => {

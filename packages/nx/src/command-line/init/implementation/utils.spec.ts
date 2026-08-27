@@ -1,5 +1,5 @@
-jest.mock('./deduce-default-base', () => ({
-  deduceDefaultBase: jest.fn(() => 'main'),
+vi.mock('./deduce-default-base', () => ({
+  deduceDefaultBase: vi.fn(() => 'main'),
 }));
 
 import { mkdtempSync, rmSync } from 'fs';

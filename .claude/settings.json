@@ -9,7 +9,7 @@
       "Bash(git log:*)",
       "Bash(gh issue list:*)",
       "Bash(gh issue view:*)",
-      "Bash(npx prettier:*)",
+      "Bash(npx oxfmt:*)",
       "Bash(nx prepush:*)",
       "Bash(pnpm commit:*)",
       "Bash(rg:*)",
