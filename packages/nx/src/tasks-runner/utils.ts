@@ -8,6 +8,7 @@ import {
 import { CustomHasher, ExecutorConfig } from '../config/misc-interfaces';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
+import { hashObject } from '../hasher/file-hasher';
 import {
   ProjectConfiguration,
   TargetConfiguration,
@@ -685,3 +686,29 @@ export function createTaskId(
   }
   return id;
 }
+
+/**
+ * Identity used by the recursive invocation detector. The task id alone would
+ * report `nx run app:build --flag` invoked from within `app:build` as a loop,
+ * so the overrides are folded in. A real loop re-invokes through a fixed
+ * command, so its overrides stop changing after the first hop and the key
+ * still repeats.
+ *
+ * `__overrides_unparsed__` is dropped, matching how the task hasher treats it:
+ * it restates the other keys as raw argv, down to flag order and spelling.
+ */
+export function createTaskInvocationKey(task: Task): string {
+  const overrides = { ...task.overrides };
+  delete overrides['__overrides_unparsed__'];
+  return `${task.id}${INVOCATION_KEY_SEPARATOR}${hashObject(overrides)}`;
+}
+
+/** Recovers the displayable task id from {@link createTaskInvocationKey}. */
+export function taskIdFromInvocationKey(key: string): string {
+  const separator = key.lastIndexOf(INVOCATION_KEY_SEPARATOR);
+  return separator === -1 ? key : key.slice(0, separator);
+}
+
+// Hex hashes never contain it, so the last one is always the one we appended,
+// even for a task id that contains it.
+const INVOCATION_KEY_SEPARATOR = '|';

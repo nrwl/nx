@@ -65,12 +65,14 @@ import { TaskStatus } from './tasks-runner';
 import { Batch, TasksSchedule } from './tasks-schedule';
 import {
   calculateReverseDeps,
+  createTaskInvocationKey,
   expandInitiatingTasksThroughNoop,
   getExecutorForTask,
   getPrintableCommandArgsForTask,
   getTargetConfigurationForTask,
   removeTasksFromTaskGraph,
   shouldStreamOutput,
+  taskIdFromInvocationKey,
 } from './utils';
 
 type CacheHit = {
@@ -455,11 +457,15 @@ export class TaskOrchestrator {
    */
   private detectTaskInvocationLoop(task: Task): void {
     if (!this.taskInvocationTracker) return;
-    if (this.registeredInvocations.has(task.id)) return;
+    const invocationKey = createTaskInvocationKey(task);
+    if (this.registeredInvocations.has(invocationKey)) return;
 
     let chain: InvocationRecord[] | null;
     try {
-      chain = this.taskInvocationTracker.registerTask(process.pid, task.id);
+      chain = this.taskInvocationTracker.registerTask(
+        process.pid,
+        invocationKey
+      );
     } catch {
       // Loop detection is diagnostic only; a DB failure must not fail the run
       // or be mistaken for a loop.
@@ -467,11 +473,13 @@ export class TaskOrchestrator {
     }
 
     if (!chain) {
-      this.registeredInvocations.add(task.id);
+      this.registeredInvocations.add(invocationKey);
       return;
     }
 
-    const chainDisplay = chain.map((r) => r.taskId).join(' -> ');
+    const chainDisplay = chain
+      .map((r) => taskIdFromInvocationKey(r.taskId))
+      .join(' -> ');
     output.error({
       title: 'Recursive task invocation detected',
       bodyLines: [
@@ -1805,8 +1813,9 @@ export class TaskOrchestrator {
       if (this.completedTasks.has(task.id)) continue;
 
       this.completedTasks.set(task.id, status);
-      this.taskInvocationTracker?.unregisterTask(process.pid, task.id);
-      this.registeredInvocations.delete(task.id);
+      const invocationKey = createTaskInvocationKey(task);
+      this.taskInvocationTracker?.unregisterTask(process.pid, invocationKey);
+      this.registeredInvocations.delete(invocationKey);
 
       if (this.tuiEnabled) {
         this.options.lifeCycle.setTaskStatus(
