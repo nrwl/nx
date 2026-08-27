@@ -241,6 +241,7 @@ export {
   isProjectGraphProjectNode,
   isRelativePath,
   isWholeFileChange,
+  killChildOnHostExit,
   killProcessTreeGraceful,
   loadTsFile,
   mergeTargetConfigurations,
