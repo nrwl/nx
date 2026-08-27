@@ -6,6 +6,7 @@ import {
   setGraph,
   setMockSourceMaps,
   setMockHasCustomHasher,
+  setMockIoSnapshotReport,
 } from './test-utils';
 import { showTargetInfoHandler } from './info';
 
@@ -881,5 +882,87 @@ describe('show target info', () => {
     expect(parsed.dependsOn).toEqual(['my-app:serve']);
     expect(parsed.transitiveTasks).toEqual(['my-app:build']);
     expect(parsed.transitiveTasks).not.toContain('my-app-e2e:e2e:ci');
+  });
+
+  describe('I/O snapshot section', () => {
+    function graphWithLintTarget() {
+      return new GraphBuilder()
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app',
+            name: 'my-app',
+            targets: {
+              lint: {
+                executor: 'nx:run-commands',
+                options: { command: 'eslint .' },
+                inputs: ['{projectRoot}/**/*.ts', { env: 'CI' }],
+              },
+            },
+          },
+          'app'
+        )
+        .build();
+    }
+
+    it('reports a used snapshot and its commit/digest in text and --json', async () => {
+      setGraph(graphWithLintTarget());
+      setMockIoSnapshotReport({
+        used: ['my-app:lint'],
+        tasksWithOutputs: [],
+        diagnostics: [],
+        resolution: {
+          requestedCommit: 'ae6a03f912ab',
+          digest: '049a9c2f7bcd',
+        },
+      });
+
+      await showTargetInfoHandler({ target: 'my-app:lint', verbose: true });
+      const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
+      expect(text).toContain(
+        'I/O snapshot: used — commit ae6a03f9, digest 049a9c2f'
+      );
+      expect(text).toContain('nx show target inputs my-app:lint');
+      // file input tagged, env input not
+      const fileLine = (console.log as Mock).mock.calls
+        .map((c) => c[0])
+        .find((l: string) => l.includes('{projectRoot}/**/*.ts'));
+      expect(fileLine).toContain('(replaced by snapshot)');
+      const envLine = (console.log as Mock).mock.calls
+        .map((c) => c[0])
+        .find((l: string) => l.includes('"env"'));
+      expect(envLine).not.toContain('(replaced by snapshot)');
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint', json: true });
+      const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
+      expect(parsed.snapshot).toEqual({
+        status: 'used',
+        commit: 'ae6a03f912ab',
+        digest: '049a9c2f7bcd',
+      });
+    });
+
+    it('reports a fallback with its reason', async () => {
+      setGraph(graphWithLintTarget());
+      setMockIoSnapshotReport({
+        used: [],
+        tasksWithOutputs: [],
+        diagnostics: [{ reason: 'root-anchored-glob', taskId: 'my-app:lint' }],
+        resolution: { requestedCommit: 'x', digest: 'y' },
+      });
+      await showTargetInfoHandler({ target: 'my-app:lint' });
+      const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
+      expect(text).toContain(
+        'I/O snapshot: fallback (root-anchored-glob) — hashed from the declared inputs above'
+      );
+    });
+
+    it('reports none when there is no snapshot to resolve', async () => {
+      setGraph(graphWithLintTarget());
+      // default mock report is null ⇒ not-connected
+      await showTargetInfoHandler({ target: 'my-app:lint' });
+      const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
+      expect(text).toContain('I/O snapshot: none (not-connected)');
+    });
   });
 });

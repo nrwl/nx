@@ -3,6 +3,10 @@ import type { ProjectGraph } from '../../../config/project-graph';
 import type { InputDefinition } from '../../../config/workspace-json-project-json';
 import type { ConfigurationSourceMaps } from '../../../project-graph/utils/project-configuration/source-maps';
 import { getNamedInputs } from '../../../hasher/task-hasher';
+import {
+  getTaskIoSnapshotStatus,
+  type IoSnapshotStatus,
+} from '../../../hasher/check-task-files';
 import { createTaskGraph } from '../../../tasks-runner/create-task-graph';
 import {
   createTaskId,
@@ -22,7 +26,12 @@ export async function showTargetInfoHandler(
   args: ShowTargetBaseOptions
 ): Promise<void> {
   const t = await resolveTarget(args, { withSourceMaps: true });
-  const data = resolveTargetInfoData(t);
+  const taskId = createTaskId(t.projectName, t.targetName, t.configuration);
+  const snapshot = await getTaskIoSnapshotStatus(taskId, {
+    projectGraph: t.graph,
+    nxJson: t.nxJson,
+  });
+  const data = resolveTargetInfoData(t, snapshot);
   renderTargetInfo(data, args);
 }
 
@@ -36,7 +45,7 @@ interface ExpandedInput {
   originalIndex: number;
 }
 
-function resolveTargetInfoData(t: ResolvedTarget) {
+function resolveTargetInfoData(t: ResolvedTarget, snapshot: IoSnapshotStatus) {
   const {
     projectName,
     targetName,
@@ -117,6 +126,7 @@ function resolveTargetInfoData(t: ResolvedTarget) {
     continuous: targetConfig.continuous ?? false,
     cache: targetConfig.cache ?? false,
     ...(targetConfig.ioSnapshots === false ? { ioSnapshots: false } : {}),
+    snapshot,
     ...(targetConfig.inputs
       ? (() => {
           const expanded = expandInputsForDisplay(
@@ -307,6 +317,41 @@ function findDepConfigIndex(
  * tracking which original input index each expanded item came from.
  * This lets the renderer look up `inputs.${originalIndex}` in the source map.
  */
+/** True for file-shaped inputs (strings, filesets); env/runtime/externalDependencies are not. */
+function isFileInput(value: InputDefinition | string): boolean {
+  if (typeof value === 'string') return true;
+  return !(
+    'env' in value ||
+    'runtime' in value ||
+    'externalDependencies' in value
+  );
+}
+
+function renderSnapshotSection(
+  data: TargetInfoData,
+  c: ReturnType<typeof pc>
+): void {
+  const snap = data.snapshot;
+  const label = c.bold('I/O snapshot');
+  if (snap.status === 'used') {
+    const commit = snap.commit?.slice(0, 8) ?? '?';
+    const digest = snap.digest?.slice(0, 8) ?? '?';
+    console.log(
+      `${label}: ${c.green('used')} — commit ${commit}, digest ${digest} ${c.dim(
+        `(the file inputs above are replaced by the observed reads; see \`nx show target inputs ${data.project}:${data.target}\`)`
+      )}`
+    );
+  } else if (snap.status === 'fallback') {
+    const reason = snap.reason ? ` (${snap.reason})` : '';
+    console.log(
+      `${label}: ${c.yellow('fallback')}${reason} — hashed from the declared inputs above`
+    );
+  } else {
+    const reason = snap.reason ? ` (${snap.reason})` : '';
+    console.log(`${label}: ${c.dim(`none${reason}`)}`);
+  }
+}
+
 function expandInputsForDisplay(
   inputs: (InputDefinition | string)[],
   node: ProjectGraph['nodes'][string],
@@ -473,13 +518,19 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
       }
       return 0;
     });
+    const tagReplaced = args.verbose && data.snapshot.status === 'used';
     for (const { value, sourceIndex } of entries) {
       const display = typeof value === 'string' ? value : JSON.stringify(value);
       const hint =
         sourceIndex !== undefined
           ? sourceHint(`inputs.${sourceIndex}`, 'inputs')
           : '';
-      console.log(`  - ${display}${hint}`);
+      // Only file inputs are replaced by the snapshot; env/runtime/external stay native.
+      const replaced =
+        tagReplaced && isFileInput(value)
+          ? ` ${c.dim('(replaced by snapshot)')}`
+          : '';
+      console.log(`  - ${display}${hint}${replaced}`);
     }
   }
 
@@ -490,6 +541,8 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
       console.log(`  - ${data.outputs[i]}${hint}`);
     }
   }
+
+  renderSnapshotSection(data, c);
 
   // When command is hoisted, hide the corresponding option key from display
   const hoistedOptionKey = data._commandSourceKey?.startsWith('options.')
