@@ -7,7 +7,7 @@ import { TempFs } from '../../internal-testing-utils/temp-fs';
 // which registers a process-global PerformanceObserver. That observer outlives
 // each test's isolated module registry, so a measure emitted by the last real
 // compute would dispatch after teardown and its lazy requires would throw.
-jest.mock('../../utils/perf-logging', () => ({}));
+vi.mock('../../utils/perf-logging', () => ({}));
 
 describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () => {
   let fs: TempFs;
@@ -256,39 +256,38 @@ describe('isKnownWorkspaceFile', () => {
       'libs/foo/src/index.ts': '',
     });
 
-    await jest.isolateModulesAsync(async () => {
-      // The plugin-loader mocks jest.doMock installs in the tests above are
-      // registry-wide and outlive their isolated module graphs.
-      jest.dontMock('../../project-graph/plugins/get-plugins');
-      const { setWorkspaceRoot } = require('../../utils/workspace-root');
-      setWorkspaceRoot(fs.tempDir);
+    vi.resetModules();
+    // The plugin-loader mocks vi.doMock installs in the tests above are
+    // registry-wide and outlive vi.resetModules.
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
 
-      const {
-        getCachedSerializedProjectGraphPromise,
-        scheduleProjectGraphRecomputation,
-        isKnownWorkspaceFile,
-      } = require('./project-graph-incremental-recomputation');
+    const {
+      getCachedSerializedProjectGraphPromise,
+      scheduleProjectGraphRecomputation,
+      isKnownWorkspaceFile,
+    } = await import('./project-graph-incremental-recomputation');
 
-      // Nothing is known before the first recompute commits a map; the caller
-      // (server.ts) then fails safe by invalidating.
-      expect(isKnownWorkspaceFile('package.json')).toBe(false);
+    // Nothing is known before the first recompute commits a map; the caller
+    // (server.ts) then fails safe by invalidating.
+    expect(isKnownWorkspaceFile('package.json')).toBe(false);
 
-      const committed = await getCachedSerializedProjectGraphPromise();
-      expect(committed.error).toBeNull();
+    const committed = await getCachedSerializedProjectGraphPromise();
+    expect(committed.error).toBeNull();
 
-      expect(isKnownWorkspaceFile('package.json')).toBe(true);
-      expect(isKnownWorkspaceFile('libs/foo/src/index.ts')).toBe(true);
-      // Ignored, so filtered out of the map (and never watched).
-      expect(isKnownWorkspaceFile('.env')).toBe(false);
-      expect(isKnownWorkspaceFile('never-existed.env')).toBe(false);
+    expect(isKnownWorkspaceFile('package.json')).toBe(true);
+    expect(isKnownWorkspaceFile('libs/foo/src/index.ts')).toBe(true);
+    // Ignored, so filtered out of the map (and never watched).
+    expect(isKnownWorkspaceFile('.env')).toBe(false);
+    expect(isKnownWorkspaceFile('never-existed.env')).toBe(false);
 
-      // A later commit replaces the map; membership must follow the new map,
-      // not a lookup structure built from the old one.
-      fs.createFileSync('libs/foo/src/other.ts', '');
-      scheduleProjectGraphRecomputation(['libs/foo/src/other.ts'], [], []);
-      await getCachedSerializedProjectGraphPromise();
-      expect(isKnownWorkspaceFile('libs/foo/src/other.ts')).toBe(true);
-    });
+    // A later commit replaces the map; membership must follow the new map,
+    // not a lookup structure built from the old one.
+    fs.createFileSync('libs/foo/src/other.ts', '');
+    scheduleProjectGraphRecomputation(['libs/foo/src/other.ts'], [], []);
+    await getCachedSerializedProjectGraphPromise();
+    expect(isKnownWorkspaceFile('libs/foo/src/other.ts')).toBe(true);
   });
 });
 
@@ -313,25 +312,27 @@ describe('invalidateGraphCache', () => {
       'package.json': JSON.stringify({ name: 'root' }),
     });
 
-    await jest.isolateModulesAsync(async () => {
-      // The plugin-loader mocks jest.doMock installs in the tests above are
-      // registry-wide and outlive their isolated module graphs.
-      jest.dontMock('../../project-graph/plugins/get-plugins');
-      const { setWorkspaceRoot } = require('../../utils/workspace-root');
-      setWorkspaceRoot(fs.tempDir);
+    vi.resetModules();
+    // The plugin-loader mocks vi.doMock installs in the tests above are
+    // registry-wide and outlive vi.resetModules.
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
 
-      // Park the first compute inside its config retrieval, after it claimed
-      // its generation — the window an env-carrying client message can land
-      // in. The mock controls timing, not logic; the real retrieval runs.
-      let releaseFirstRetrieve: () => void;
-      const firstRetrieveGate = new Promise<void>((resolve) => {
-        releaseFirstRetrieve = resolve;
-      });
-      let retrieveCallCount = 0;
-      jest.doMock('../../project-graph/utils/retrieve-workspace-files', () => {
-        const actual = jest.requireActual(
+    // Park the first compute inside its config retrieval, after it claimed
+    // its generation — the window an env-carrying client message can land
+    // in. The mock controls timing, not logic; the real retrieval runs.
+    let releaseFirstRetrieve: () => void;
+    const firstRetrieveGate = new Promise<void>((resolve) => {
+      releaseFirstRetrieve = resolve;
+    });
+    let retrieveCallCount = 0;
+    vi.doMock(
+      '../../project-graph/utils/retrieve-workspace-files',
+      async () => {
+        const actual = (await vi.importActual(
           '../../project-graph/utils/retrieve-workspace-files'
-        );
+        )) as any;
         return {
           ...actual,
           retrieveProjectConfigurations: async (...args: unknown[]) => {
@@ -342,28 +343,26 @@ describe('invalidateGraphCache', () => {
             return actual.retrieveProjectConfigurations(...args);
           },
         };
-      });
-
-      const {
-        getCachedSerializedProjectGraphPromise,
-        invalidateGraphCache,
-      } = require('./project-graph-incremental-recomputation');
-
-      const first = getCachedSerializedProjectGraphPromise();
-      while (retrieveCallCount === 0) {
-        await new Promise((r) => setImmediate(r));
       }
+    );
 
-      invalidateGraphCache();
-      releaseFirstRetrieve!();
+    const { getCachedSerializedProjectGraphPromise, invalidateGraphCache } =
+      await import('./project-graph-incremental-recomputation');
 
-      const result = await first;
-      expect(result.error).toBeNull();
-      expect(result.projectGraph).toBeDefined();
-      // The successor's retrieval, proving the parked compute discarded its
-      // own result and chained instead of committing.
-      expect(retrieveCallCount).toBeGreaterThanOrEqual(2);
-    });
+    const first = getCachedSerializedProjectGraphPromise();
+    while (retrieveCallCount === 0) {
+      await new Promise((r) => setImmediate(r));
+    }
+
+    invalidateGraphCache();
+    releaseFirstRetrieve!();
+
+    const result = await first;
+    expect(result.error).toBeNull();
+    expect(result.projectGraph).toBeDefined();
+    // The successor's retrieval, proving the parked compute discarded its
+    // own result and chained instead of committing.
+    expect(retrieveCallCount).toBeGreaterThanOrEqual(2);
   });
 });
 
@@ -396,27 +395,29 @@ describe('pending dotenv replay before serving a graph', () => {
       'libs/foo/.env.e2e': 'PORT=4200\n',
     });
 
-    await jest.isolateModulesAsync(async () => {
-      // The plugin-loader mocks jest.doMock installs in the tests above are
-      // registry-wide and outlive their isolated module graphs.
-      jest.dontMock('../../project-graph/plugins/get-plugins');
-      const { setWorkspaceRoot } = require('../../utils/workspace-root');
-      setWorkspaceRoot(fs.tempDir);
+    vi.resetModules();
+    // The plugin-loader mocks vi.doMock installs in the tests above are
+    // registry-wide and outlive vi.resetModules.
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
 
-      // Park the first compute after its config retrieval read the old dotenv
-      // content — the window the edit lands in. The injected tag stands in
-      // for a plugin resolving config from the dotenv file at createNodes
-      // time; the mock controls timing and the marker, not the retrieval.
-      let releaseFirstRetrieve: () => void;
-      const firstRetrieveGate = new Promise<void>((resolve) => {
-        releaseFirstRetrieve = resolve;
-      });
-      let firstRetrieveDone = false;
-      let retrieveCallCount = 0;
-      jest.doMock('../../project-graph/utils/retrieve-workspace-files', () => {
-        const actual = jest.requireActual(
+    // Park the first compute after its config retrieval read the old dotenv
+    // content — the window the edit lands in. The injected tag stands in
+    // for a plugin resolving config from the dotenv file at createNodes
+    // time; the mock controls timing and the marker, not the retrieval.
+    let releaseFirstRetrieve: () => void;
+    const firstRetrieveGate = new Promise<void>((resolve) => {
+      releaseFirstRetrieve = resolve;
+    });
+    let firstRetrieveDone = false;
+    let retrieveCallCount = 0;
+    vi.doMock(
+      '../../project-graph/utils/retrieve-workspace-files',
+      async () => {
+        const actual = (await vi.importActual(
           '../../project-graph/utils/retrieve-workspace-files'
-        );
+        )) as any;
         return {
           ...actual,
           retrieveProjectConfigurations: async (...args: unknown[]) => {
@@ -434,50 +435,49 @@ describe('pending dotenv replay before serving a graph', () => {
             return result;
           },
         };
-      });
-
-      const {
-        getCachedSerializedProjectGraphPromise,
-        registerProjectGraphRecomputationListener,
-      } = require('./project-graph-incremental-recomputation');
-      const { handleOutputsChanges } = require('./handle-outputs-changes');
-      const { nxProjectGraph } = require('../../project-graph/nx-deps-cache');
-      const { EventType } = require('../../native');
-
-      const notifiedTags: string[][] = [];
-      registerProjectGraphRecomputationListener(
-        (graph: import('../../config/project-graph').ProjectGraph) => {
-          notifiedTags.push(graph.nodes.foo.data.tags);
-        }
-      );
-
-      const first = getCachedSerializedProjectGraphPromise();
-      while (!firstRetrieveDone) {
-        await new Promise((r) => setImmediate(r));
       }
+    );
 
-      writeFileSync(join(fs.tempDir, 'libs/foo/.env.e2e'), 'PORT=4201\n');
-      // The outputs watcher is the only reporter of gitignored files. No
-      // graph is committed yet, so the event goes unclassified and is queued.
-      await handleOutputsChanges(null, [
-        { path: 'libs/foo/.env.e2e', type: EventType.update },
-      ]);
-      releaseFirstRetrieve!();
+    const {
+      getCachedSerializedProjectGraphPromise,
+      registerProjectGraphRecomputationListener,
+    } = await import('./project-graph-incremental-recomputation');
+    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { nxProjectGraph } =
+      await import('../../project-graph/nx-deps-cache');
+    const { EventType } = await import('../../native');
 
-      const result = await first;
-      expect(result.error).toBeNull();
-      expect(result.projectGraph.nodes.foo.data.tags).toEqual([
-        'env:PORT=4201',
-      ]);
-      // The successor's retrieval, proving the first compute did not serve
-      // the graph built from the old content.
-      expect(retrieveCallCount).toBeGreaterThanOrEqual(2);
-      // The stale graph must be neither notified to listeners nor persisted.
-      expect(notifiedTags).toEqual([['env:PORT=4201']]);
-      const persisted = readFileSync(nxProjectGraph, 'utf-8');
-      expect(persisted).toContain('PORT=4201');
-      expect(persisted).not.toContain('PORT=4200');
-    });
+    const notifiedTags: string[][] = [];
+    registerProjectGraphRecomputationListener(
+      (graph: import('../../config/project-graph').ProjectGraph) => {
+        notifiedTags.push(graph.nodes.foo.data.tags);
+      }
+    );
+
+    const first = getCachedSerializedProjectGraphPromise();
+    while (!firstRetrieveDone) {
+      await new Promise((r) => setImmediate(r));
+    }
+
+    writeFileSync(join(fs.tempDir, 'libs/foo/.env.e2e'), 'PORT=4201\n');
+    // The outputs watcher is the only reporter of gitignored files. No
+    // graph is committed yet, so the event goes unclassified and is queued.
+    await handleOutputsChanges(null, [
+      { path: 'libs/foo/.env.e2e', type: EventType.update },
+    ]);
+    releaseFirstRetrieve!();
+
+    const result = await first;
+    expect(result.error).toBeNull();
+    expect(result.projectGraph.nodes.foo.data.tags).toEqual(['env:PORT=4201']);
+    // The successor's retrieval, proving the first compute did not serve
+    // the graph built from the old content.
+    expect(retrieveCallCount).toBeGreaterThanOrEqual(2);
+    // The stale graph must be neither notified to listeners nor persisted.
+    expect(notifiedTags).toEqual([['env:PORT=4201']]);
+    const persisted = readFileSync(nxProjectGraph, 'utf-8');
+    expect(persisted).toContain('PORT=4201');
+    expect(persisted).not.toContain('PORT=4200');
   });
 
   // The successor itself can read intermediate bytes the watcher never
@@ -498,30 +498,32 @@ describe('pending dotenv replay before serving a graph', () => {
       'libs/foo/.env.e2e': 'PORT=4200\n',
     });
 
-    await jest.isolateModulesAsync(async () => {
-      // The plugin-loader mocks jest.doMock installs in the tests above are
-      // registry-wide and outlive their isolated module graphs.
-      jest.dontMock('../../project-graph/plugins/get-plugins');
-      const { setWorkspaceRoot } = require('../../utils/workspace-root');
-      setWorkspaceRoot(fs.tempDir);
+    vi.resetModules();
+    // The plugin-loader mocks vi.doMock installs in the tests above are
+    // registry-wide and outlive vi.resetModules.
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
 
-      const makeGate = () => {
-        let release: () => void;
-        const promise = new Promise<void>((resolve) => {
-          release = resolve;
-        });
-        return { promise, release: () => release(), reached: false };
-      };
-      // Park compute A after its read, compute B before and after its read,
-      // so edits land in each window; compute C runs unimpeded.
-      const aExit = makeGate();
-      const bEntry = makeGate();
-      const bExit = makeGate();
-      let retrieveCallCount = 0;
-      jest.doMock('../../project-graph/utils/retrieve-workspace-files', () => {
-        const actual = jest.requireActual(
+    const makeGate = () => {
+      let release: () => void;
+      const promise = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      return { promise, release: () => release(), reached: false };
+    };
+    // Park compute A after its read, compute B before and after its read,
+    // so edits land in each window; compute C runs unimpeded.
+    const aExit = makeGate();
+    const bEntry = makeGate();
+    const bExit = makeGate();
+    let retrieveCallCount = 0;
+    vi.doMock(
+      '../../project-graph/utils/retrieve-workspace-files',
+      async () => {
+        const actual = (await vi.importActual(
           '../../project-graph/utils/retrieve-workspace-files'
-        );
+        )) as any;
         return {
           ...actual,
           retrieveProjectConfigurations: async (...args: unknown[]) => {
@@ -547,63 +549,62 @@ describe('pending dotenv replay before serving a graph', () => {
             return result;
           },
         };
-      });
+      }
+    );
 
-      const {
-        getCachedSerializedProjectGraphPromise,
-        registerProjectGraphRecomputationListener,
-      } = require('./project-graph-incremental-recomputation');
-      const { handleOutputsChanges } = require('./handle-outputs-changes');
-      const { nxProjectGraph } = require('../../project-graph/nx-deps-cache');
-      const { EventType } = require('../../native');
+    const {
+      getCachedSerializedProjectGraphPromise,
+      registerProjectGraphRecomputationListener,
+    } = await import('./project-graph-incremental-recomputation');
+    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { nxProjectGraph } =
+      await import('../../project-graph/nx-deps-cache');
+    const { EventType } = await import('../../native');
 
-      const notifiedTags: string[][] = [];
-      registerProjectGraphRecomputationListener(
-        (graph: import('../../config/project-graph').ProjectGraph) => {
-          notifiedTags.push(graph.nodes.foo.data.tags);
-        }
-      );
+    const notifiedTags: string[][] = [];
+    registerProjectGraphRecomputationListener(
+      (graph: import('../../config/project-graph').ProjectGraph) => {
+        notifiedTags.push(graph.nodes.foo.data.tags);
+      }
+    );
 
-      const waitFor = async (cond: () => boolean) => {
-        while (!cond()) {
-          await new Promise((r) => setImmediate(r));
-        }
-      };
-      const envPath = join(fs.tempDir, 'libs/foo/.env.e2e');
-      const envEvent = { path: 'libs/foo/.env.e2e', type: EventType.update };
+    const waitFor = async (cond: () => boolean) => {
+      while (!cond()) {
+        await new Promise((r) => setImmediate(r));
+      }
+    };
+    const envPath = join(fs.tempDir, 'libs/foo/.env.e2e');
+    const envEvent = { path: 'libs/foo/.env.e2e', type: EventType.update };
 
-      // Compute A reads 4200 and parks; the edit to 4201 is queued.
-      const first = getCachedSerializedProjectGraphPromise();
-      await waitFor(() => aExit.reached);
-      writeFileSync(envPath, 'PORT=4201\n');
-      await handleOutputsChanges(null, [envEvent]);
-      aExit.release();
+    // Compute A reads 4200 and parks; the edit to 4201 is queued.
+    const first = getCachedSerializedProjectGraphPromise();
+    await waitFor(() => aExit.reached);
+    writeFileSync(envPath, 'PORT=4201\n');
+    await handleOutputsChanges(null, [envEvent]);
+    aExit.release();
 
-      // A's drain chains to compute B, which reads an intermediate 4202
-      // whose write the watcher never reports.
-      await waitFor(() => bEntry.reached);
-      writeFileSync(envPath, 'PORT=4202\n');
-      bEntry.release();
-      await waitFor(() => bExit.reached);
+    // A's drain chains to compute B, which reads an intermediate 4202
+    // whose write the watcher never reports.
+    await waitFor(() => bEntry.reached);
+    writeFileSync(envPath, 'PORT=4202\n');
+    bEntry.release();
+    await waitFor(() => bExit.reached);
 
-      // Back to the drain-time bytes; this event is B's only chance to be
-      // marked stale, and A committed a graph so it classifies directly.
-      writeFileSync(envPath, 'PORT=4201\n');
-      await handleOutputsChanges(null, [envEvent]);
-      bExit.release();
+    // Back to the drain-time bytes; this event is B's only chance to be
+    // marked stale, and A committed a graph so it classifies directly.
+    writeFileSync(envPath, 'PORT=4201\n');
+    await handleOutputsChanges(null, [envEvent]);
+    bExit.release();
 
-      const result = await first;
-      expect(result.error).toBeNull();
-      expect(result.projectGraph.nodes.foo.data.tags).toEqual([
-        'env:PORT=4201',
-      ]);
-      expect(retrieveCallCount).toBeGreaterThanOrEqual(3);
-      expect(notifiedTags).toEqual([['env:PORT=4201']]);
-      const persisted = readFileSync(nxProjectGraph, 'utf-8');
-      expect(persisted).toContain('PORT=4201');
-      expect(persisted).not.toContain('PORT=4200');
-      expect(persisted).not.toContain('PORT=4202');
-    });
+    const result = await first;
+    expect(result.error).toBeNull();
+    expect(result.projectGraph.nodes.foo.data.tags).toEqual(['env:PORT=4201']);
+    expect(retrieveCallCount).toBeGreaterThanOrEqual(3);
+    expect(notifiedTags).toEqual([['env:PORT=4201']]);
+    const persisted = readFileSync(nxProjectGraph, 'utf-8');
+    expect(persisted).toContain('PORT=4201');
+    expect(persisted).not.toContain('PORT=4200');
+    expect(persisted).not.toContain('PORT=4202');
   });
 
   // The outputs and workspace watchers deliver independently, so an edit to a
@@ -623,23 +624,25 @@ describe('pending dotenv replay before serving a graph', () => {
       'libs/foo/.env.e2e': 'PORT=4200\n',
     });
 
-    await jest.isolateModulesAsync(async () => {
-      // The plugin-loader mocks jest.doMock installs in the tests above are
-      // registry-wide and outlive their isolated module graphs.
-      jest.dontMock('../../project-graph/plugins/get-plugins');
-      const { setWorkspaceRoot } = require('../../utils/workspace-root');
-      setWorkspaceRoot(fs.tempDir);
+    vi.resetModules();
+    // The plugin-loader mocks vi.doMock installs in the tests above are
+    // registry-wide and outlive vi.resetModules.
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
 
-      let releaseFirstRetrieve: () => void;
-      const firstRetrieveGate = new Promise<void>((resolve) => {
-        releaseFirstRetrieve = resolve;
-      });
-      let firstRetrieveDone = false;
-      let retrieveCallCount = 0;
-      jest.doMock('../../project-graph/utils/retrieve-workspace-files', () => {
-        const actual = jest.requireActual(
+    let releaseFirstRetrieve: () => void;
+    const firstRetrieveGate = new Promise<void>((resolve) => {
+      releaseFirstRetrieve = resolve;
+    });
+    let firstRetrieveDone = false;
+    let retrieveCallCount = 0;
+    vi.doMock(
+      '../../project-graph/utils/retrieve-workspace-files',
+      async () => {
+        const actual = (await vi.importActual(
           '../../project-graph/utils/retrieve-workspace-files'
-        );
+        )) as any;
         return {
           ...actual,
           retrieveProjectConfigurations: async (...args: unknown[]) => {
@@ -657,33 +660,30 @@ describe('pending dotenv replay before serving a graph', () => {
             return result;
           },
         };
-      });
-
-      const {
-        getCachedSerializedProjectGraphPromise,
-      } = require('./project-graph-incremental-recomputation');
-      const { handleOutputsChanges } = require('./handle-outputs-changes');
-      const { EventType } = require('../../native');
-
-      const first = getCachedSerializedProjectGraphPromise();
-      while (!firstRetrieveDone) {
-        await new Promise((r) => setImmediate(r));
       }
+    );
 
-      writeFileSync(join(fs.tempDir, 'libs/foo/.env.e2e'), 'PORT=4201\n');
-      // Only the outputs watcher delivers; the workspace watcher is silent.
-      await handleOutputsChanges(null, [
-        { path: 'libs/foo/.env.e2e', type: EventType.update },
-      ]);
-      releaseFirstRetrieve!();
+    const { getCachedSerializedProjectGraphPromise } =
+      await import('./project-graph-incremental-recomputation');
+    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { EventType } = await import('../../native');
 
-      const result = await first;
-      expect(result.error).toBeNull();
-      expect(result.projectGraph.nodes.foo.data.tags).toEqual([
-        'env:PORT=4201',
-      ]);
-      expect(retrieveCallCount).toBeGreaterThanOrEqual(2);
-    });
+    const first = getCachedSerializedProjectGraphPromise();
+    while (!firstRetrieveDone) {
+      await new Promise((r) => setImmediate(r));
+    }
+
+    writeFileSync(join(fs.tempDir, 'libs/foo/.env.e2e'), 'PORT=4201\n');
+    // Only the outputs watcher delivers; the workspace watcher is silent.
+    await handleOutputsChanges(null, [
+      { path: 'libs/foo/.env.e2e', type: EventType.update },
+    ]);
+    releaseFirstRetrieve!();
+
+    const result = await first;
+    expect(result.error).toBeNull();
+    expect(result.projectGraph.nodes.foo.data.tags).toEqual(['env:PORT=4201']);
+    expect(retrieveCallCount).toBeGreaterThanOrEqual(2);
   });
 
   // Once a computation has committed a graph and the file map, a tracked
@@ -703,29 +703,31 @@ describe('pending dotenv replay before serving a graph', () => {
       'libs/foo/.env.e2e': 'PORT=4200\n',
     });
 
-    await jest.isolateModulesAsync(async () => {
-      // The plugin-loader mocks jest.doMock installs in the tests above are
-      // registry-wide and outlive their isolated module graphs.
-      jest.dontMock('../../project-graph/plugins/get-plugins');
-      const { setWorkspaceRoot } = require('../../utils/workspace-root');
-      setWorkspaceRoot(fs.tempDir);
+    vi.resetModules();
+    // The plugin-loader mocks vi.doMock installs in the tests above are
+    // registry-wide and outlive vi.resetModules.
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
 
-      const makeGate = () => {
-        let release: () => void;
-        const promise = new Promise<void>((resolve) => {
-          release = resolve;
-        });
-        return { promise, release: () => release(), reached: false };
-      };
-      // Park computes A and B after their reads so an edit lands in each
-      // window; compute C runs unimpeded.
-      const aExit = makeGate();
-      const bExit = makeGate();
-      let retrieveCallCount = 0;
-      jest.doMock('../../project-graph/utils/retrieve-workspace-files', () => {
-        const actual = jest.requireActual(
+    const makeGate = () => {
+      let release: () => void;
+      const promise = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      return { promise, release: () => release(), reached: false };
+    };
+    // Park computes A and B after their reads so an edit lands in each
+    // window; compute C runs unimpeded.
+    const aExit = makeGate();
+    const bExit = makeGate();
+    let retrieveCallCount = 0;
+    vi.doMock(
+      '../../project-graph/utils/retrieve-workspace-files',
+      async () => {
+        const actual = (await vi.importActual(
           '../../project-graph/utils/retrieve-workspace-files'
-        );
+        )) as any;
         return {
           ...actual,
           retrieveProjectConfigurations: async (...args: unknown[]) => {
@@ -747,59 +749,58 @@ describe('pending dotenv replay before serving a graph', () => {
             return result;
           },
         };
-      });
+      }
+    );
 
-      const {
-        getCachedSerializedProjectGraphPromise,
-        registerProjectGraphRecomputationListener,
-      } = require('./project-graph-incremental-recomputation');
-      const { handleOutputsChanges } = require('./handle-outputs-changes');
-      const { nxProjectGraph } = require('../../project-graph/nx-deps-cache');
-      const { EventType } = require('../../native');
+    const {
+      getCachedSerializedProjectGraphPromise,
+      registerProjectGraphRecomputationListener,
+    } = await import('./project-graph-incremental-recomputation');
+    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { nxProjectGraph } =
+      await import('../../project-graph/nx-deps-cache');
+    const { EventType } = await import('../../native');
 
-      const notifiedTags: string[][] = [];
-      registerProjectGraphRecomputationListener(
-        (graph: import('../../config/project-graph').ProjectGraph) => {
-          notifiedTags.push(graph.nodes.foo.data.tags);
-        }
-      );
+    const notifiedTags: string[][] = [];
+    registerProjectGraphRecomputationListener(
+      (graph: import('../../config/project-graph').ProjectGraph) => {
+        notifiedTags.push(graph.nodes.foo.data.tags);
+      }
+    );
 
-      const waitFor = async (cond: () => boolean) => {
-        while (!cond()) {
-          await new Promise((r) => setImmediate(r));
-        }
-      };
-      const envPath = join(fs.tempDir, 'libs/foo/.env.e2e');
-      const envEvent = { path: 'libs/foo/.env.e2e', type: EventType.update };
+    const waitFor = async (cond: () => boolean) => {
+      while (!cond()) {
+        await new Promise((r) => setImmediate(r));
+      }
+    };
+    const envPath = join(fs.tempDir, 'libs/foo/.env.e2e');
+    const envEvent = { path: 'libs/foo/.env.e2e', type: EventType.update };
 
-      // Compute A reads 4200 and parks; no graph is committed yet, so the
-      // edit to 4201 goes unclassified and is queued.
-      const first = getCachedSerializedProjectGraphPromise();
-      await waitFor(() => aExit.reached);
-      writeFileSync(envPath, 'PORT=4201\n');
-      await handleOutputsChanges(null, [envEvent]);
-      aExit.release();
+    // Compute A reads 4200 and parks; no graph is committed yet, so the
+    // edit to 4201 goes unclassified and is queued.
+    const first = getCachedSerializedProjectGraphPromise();
+    await waitFor(() => aExit.reached);
+    writeFileSync(envPath, 'PORT=4201\n');
+    await handleOutputsChanges(null, [envEvent]);
+    aExit.release();
 
-      // A's drain chains to compute B, which reads 4201 and parks. A
-      // committed its graph and file map, so this edit classifies as
-      // invalidating for a tracked file; only the outputs watcher delivers.
-      await waitFor(() => bExit.reached);
-      writeFileSync(envPath, 'PORT=4202\n');
-      await handleOutputsChanges(null, [envEvent]);
-      bExit.release();
+    // A's drain chains to compute B, which reads 4201 and parks. A
+    // committed its graph and file map, so this edit classifies as
+    // invalidating for a tracked file; only the outputs watcher delivers.
+    await waitFor(() => bExit.reached);
+    writeFileSync(envPath, 'PORT=4202\n');
+    await handleOutputsChanges(null, [envEvent]);
+    bExit.release();
 
-      const result = await first;
-      expect(result.error).toBeNull();
-      expect(result.projectGraph.nodes.foo.data.tags).toEqual([
-        'env:PORT=4202',
-      ]);
-      expect(retrieveCallCount).toBeGreaterThanOrEqual(3);
-      expect(notifiedTags).toEqual([['env:PORT=4202']]);
-      const persisted = readFileSync(nxProjectGraph, 'utf-8');
-      expect(persisted).toContain('PORT=4202');
-      expect(persisted).not.toContain('PORT=4200');
-      expect(persisted).not.toContain('PORT=4201');
-    });
+    const result = await first;
+    expect(result.error).toBeNull();
+    expect(result.projectGraph.nodes.foo.data.tags).toEqual(['env:PORT=4202']);
+    expect(retrieveCallCount).toBeGreaterThanOrEqual(3);
+    expect(notifiedTags).toEqual([['env:PORT=4202']]);
+    const persisted = readFileSync(nxProjectGraph, 'utf-8');
+    expect(persisted).toContain('PORT=4202');
+    expect(persisted).not.toContain('PORT=4200');
+    expect(persisted).not.toContain('PORT=4201');
   });
 
   // An error result is never cached, notified, or persisted, so when a queued
@@ -818,29 +819,30 @@ describe('pending dotenv replay before serving a graph', () => {
       'libs/foo/.env.e2e': 'MODE=bad\n',
     });
 
-    await jest.isolateModulesAsync(async () => {
-      // The plugin-loader mocks jest.doMock installs in the tests above are
-      // registry-wide and outlive their isolated module graphs.
-      jest.dontMock('../../project-graph/plugins/get-plugins');
-      const { setWorkspaceRoot } = require('../../utils/workspace-root');
-      setWorkspaceRoot(fs.tempDir);
-      const {
-        ProjectConfigurationsError,
-      } = require('../../project-graph/error-types');
+    vi.resetModules();
+    // The plugin-loader mocks vi.doMock installs in the tests above are
+    // registry-wide and outlive vi.resetModules.
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
+    const { ProjectConfigurationsError } =
+      await import('../../project-graph/error-types');
 
-      let releaseFirstRetrieve: () => void;
-      const firstRetrieveGate = new Promise<void>((resolve) => {
-        releaseFirstRetrieve = resolve;
-      });
-      let firstRetrieveDone = false;
-      let retrieveCallCount = 0;
-      // Stands in for a plugin whose createNodes fails on the dotenv-derived
-      // config: the retrieval reads the file and throws the structured error
-      // while its content is bad.
-      jest.doMock('../../project-graph/utils/retrieve-workspace-files', () => {
-        const actual = jest.requireActual(
+    let releaseFirstRetrieve: () => void;
+    const firstRetrieveGate = new Promise<void>((resolve) => {
+      releaseFirstRetrieve = resolve;
+    });
+    let firstRetrieveDone = false;
+    let retrieveCallCount = 0;
+    // Stands in for a plugin whose createNodes fails on the dotenv-derived
+    // config: the retrieval reads the file and throws the structured error
+    // while its content is bad.
+    vi.doMock(
+      '../../project-graph/utils/retrieve-workspace-files',
+      async () => {
+        const actual = (await vi.importActual(
           '../../project-graph/utils/retrieve-workspace-files'
-        );
+        )) as any;
         return {
           ...actual,
           retrieveProjectConfigurations: async (...args: unknown[]) => {
@@ -864,34 +866,31 @@ describe('pending dotenv replay before serving a graph', () => {
             return result;
           },
         };
-      });
-
-      const {
-        getCachedSerializedProjectGraphPromise,
-      } = require('./project-graph-incremental-recomputation');
-      const { handleOutputsChanges } = require('./handle-outputs-changes');
-      const { EventType } = require('../../native');
-
-      const first = getCachedSerializedProjectGraphPromise();
-      while (!firstRetrieveDone) {
-        await new Promise((r) => setImmediate(r));
       }
+    );
 
-      writeFileSync(join(fs.tempDir, 'libs/foo/.env.e2e'), 'MODE=good\n');
-      // Only the outputs watcher reports the gitignored file; no graph is
-      // committed yet, so the event is queued.
-      await handleOutputsChanges(null, [
-        { path: 'libs/foo/.env.e2e', type: EventType.update },
-      ]);
-      releaseFirstRetrieve!();
+    const { getCachedSerializedProjectGraphPromise } =
+      await import('./project-graph-incremental-recomputation');
+    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { EventType } = await import('../../native');
 
-      const result = await first;
-      expect(result.error).toBeNull();
-      expect(result.projectGraph.nodes.foo.data.tags).toEqual([
-        'env:MODE=good',
-      ]);
-      expect(retrieveCallCount).toBeGreaterThanOrEqual(2);
-    });
+    const first = getCachedSerializedProjectGraphPromise();
+    while (!firstRetrieveDone) {
+      await new Promise((r) => setImmediate(r));
+    }
+
+    writeFileSync(join(fs.tempDir, 'libs/foo/.env.e2e'), 'MODE=good\n');
+    // Only the outputs watcher reports the gitignored file; no graph is
+    // committed yet, so the event is queued.
+    await handleOutputsChanges(null, [
+      { path: 'libs/foo/.env.e2e', type: EventType.update },
+    ]);
+    releaseFirstRetrieve!();
+
+    const result = await first;
+    expect(result.error).toBeNull();
+    expect(result.projectGraph.nodes.foo.data.tags).toEqual(['env:MODE=good']);
+    expect(retrieveCallCount).toBeGreaterThanOrEqual(2);
   });
 
   // Overflow carries a generation stamp like a queued entry, so a persistent
@@ -910,26 +909,27 @@ describe('pending dotenv replay before serving a graph', () => {
       'libs/foo/.env.e2e': 'MODE=bad\n',
     });
 
-    await jest.isolateModulesAsync(async () => {
-      // The plugin-loader mocks jest.doMock installs in the tests above are
-      // registry-wide and outlive their isolated module graphs.
-      jest.dontMock('../../project-graph/plugins/get-plugins');
-      const { setWorkspaceRoot } = require('../../utils/workspace-root');
-      setWorkspaceRoot(fs.tempDir);
-      const {
-        ProjectConfigurationsError,
-      } = require('../../project-graph/error-types');
+    vi.resetModules();
+    // The plugin-loader mocks vi.doMock installs in the tests above are
+    // registry-wide and outlive vi.resetModules.
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
+    const { ProjectConfigurationsError } =
+      await import('../../project-graph/error-types');
 
-      let releaseFirstRetrieve: () => void;
-      const firstRetrieveGate = new Promise<void>((resolve) => {
-        releaseFirstRetrieve = resolve;
-      });
-      let firstRetrieveDone = false;
-      let retrieveCallCount = 0;
-      jest.doMock('../../project-graph/utils/retrieve-workspace-files', () => {
-        const actual = jest.requireActual(
+    let releaseFirstRetrieve: () => void;
+    const firstRetrieveGate = new Promise<void>((resolve) => {
+      releaseFirstRetrieve = resolve;
+    });
+    let firstRetrieveDone = false;
+    let retrieveCallCount = 0;
+    vi.doMock(
+      '../../project-graph/utils/retrieve-workspace-files',
+      async () => {
+        const actual = (await vi.importActual(
           '../../project-graph/utils/retrieve-workspace-files'
-        );
+        )) as any;
         return {
           ...actual,
           retrieveProjectConfigurations: async (...args: unknown[]) => {
@@ -953,33 +953,33 @@ describe('pending dotenv replay before serving a graph', () => {
             return result;
           },
         };
-      });
-
-      const {
-        getCachedSerializedProjectGraphPromise,
-        getRecomputationGeneration,
-      } = require('./project-graph-incremental-recomputation');
-      const { queuePendingDotEnvEvents } = require('./dotenv-graph-changes');
-
-      const first = getCachedSerializedProjectGraphPromise();
-      while (!firstRetrieveDone) {
-        await new Promise((r) => setImmediate(r));
       }
+    );
 
-      // Overflow the queue mid-computation: the lost events could concern any
-      // dotenv file, so the erroring compute cannot prove its inputs fresh.
-      queuePendingDotEnvEvents(
-        Array.from({ length: 1025 }, (_, i) => `dist/out/.env.${i}`),
-        getRecomputationGeneration()
-      );
-      releaseFirstRetrieve!();
+    const {
+      getCachedSerializedProjectGraphPromise,
+      getRecomputationGeneration,
+    } = await import('./project-graph-incremental-recomputation');
+    const { queuePendingDotEnvEvents } = await import('./dotenv-graph-changes');
 
-      const result = await first;
-      expect(result.error?.name).toBe('DaemonProjectGraphError');
-      expect(result.projectGraph).toBeNull();
-      // Exactly one retry: the second compute outranks the overflow stamp.
-      expect(retrieveCallCount).toBe(2);
-    });
+    const first = getCachedSerializedProjectGraphPromise();
+    while (!firstRetrieveDone) {
+      await new Promise((r) => setImmediate(r));
+    }
+
+    // Overflow the queue mid-computation: the lost events could concern any
+    // dotenv file, so the erroring compute cannot prove its inputs fresh.
+    queuePendingDotEnvEvents(
+      Array.from({ length: 1025 }, (_, i) => `dist/out/.env.${i}`),
+      getRecomputationGeneration()
+    );
+    releaseFirstRetrieve!();
+
+    const result = await first;
+    expect(result.error?.name).toBe('DaemonProjectGraphError');
+    expect(result.projectGraph).toBeNull();
+    // Exactly one retry: the second compute outranks the overflow stamp.
+    expect(retrieveCallCount).toBe(2);
   });
 
   // The error-path retry preserves the queue for the successor's drain, but a
@@ -998,33 +998,34 @@ describe('pending dotenv replay before serving a graph', () => {
       'libs/foo/.env.e2e': 'PORT=4200\n',
     });
 
-    await jest.isolateModulesAsync(async () => {
-      // The plugin-loader mocks jest.doMock installs in the tests above are
-      // registry-wide and outlive their isolated module graphs.
-      jest.dontMock('../../project-graph/plugins/get-plugins');
-      const { setWorkspaceRoot } = require('../../utils/workspace-root');
-      setWorkspaceRoot(fs.tempDir);
-      const {
-        ProjectConfigurationsError,
-      } = require('../../project-graph/error-types');
+    vi.resetModules();
+    // The plugin-loader mocks vi.doMock installs in the tests above are
+    // registry-wide and outlive vi.resetModules.
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
+    const { ProjectConfigurationsError } =
+      await import('../../project-graph/error-types');
 
-      const makeGate = () => {
-        let release: () => void;
-        const promise = new Promise<void>((resolve) => {
-          release = resolve;
-        });
-        return { promise, release: () => release(), reached: false };
-      };
-      // B parks after its read and then fails; C parks before and after its
-      // read so the intermediate write and the revert land in each window.
-      const bExit = makeGate();
-      const cEntry = makeGate();
-      const cExit = makeGate();
-      let retrieveCallCount = 0;
-      jest.doMock('../../project-graph/utils/retrieve-workspace-files', () => {
-        const actual = jest.requireActual(
+    const makeGate = () => {
+      let release: () => void;
+      const promise = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      return { promise, release: () => release(), reached: false };
+    };
+    // B parks after its read and then fails; C parks before and after its
+    // read so the intermediate write and the revert land in each window.
+    const bExit = makeGate();
+    const cEntry = makeGate();
+    const cExit = makeGate();
+    let retrieveCallCount = 0;
+    vi.doMock(
+      '../../project-graph/utils/retrieve-workspace-files',
+      async () => {
+        const actual = (await vi.importActual(
           '../../project-graph/utils/retrieve-workspace-files'
-        );
+        )) as any;
         return {
           ...actual,
           retrieveProjectConfigurations: async (...args: unknown[]) => {
@@ -1054,60 +1055,57 @@ describe('pending dotenv replay before serving a graph', () => {
             return result;
           },
         };
-      });
+      }
+    );
 
-      const {
-        getCachedSerializedProjectGraphPromise,
-        invalidateGraphCache,
-      } = require('./project-graph-incremental-recomputation');
-      const { handleOutputsChanges } = require('./handle-outputs-changes');
-      const { nxProjectGraph } = require('../../project-graph/nx-deps-cache');
-      const { EventType } = require('../../native');
+    const { getCachedSerializedProjectGraphPromise, invalidateGraphCache } =
+      await import('./project-graph-incremental-recomputation');
+    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { nxProjectGraph } =
+      await import('../../project-graph/nx-deps-cache');
+    const { EventType } = await import('../../native');
 
-      const waitFor = async (cond: () => boolean) => {
-        while (!cond()) {
-          await new Promise((r) => setImmediate(r));
-        }
-      };
-      const envPath = join(fs.tempDir, 'libs/foo/.env.e2e');
-      const envEvent = { path: 'libs/foo/.env.e2e', type: EventType.update };
+    const waitFor = async (cond: () => boolean) => {
+      while (!cond()) {
+        await new Promise((r) => setImmediate(r));
+      }
+    };
+    const envPath = join(fs.tempDir, 'libs/foo/.env.e2e');
+    const envEvent = { path: 'libs/foo/.env.e2e', type: EventType.update };
 
-      // Compute A commits a warm graph at 4200.
-      const warm = await getCachedSerializedProjectGraphPromise();
-      expect(warm.error).toBeNull();
+    // Compute A commits a warm graph at 4200.
+    const warm = await getCachedSerializedProjectGraphPromise();
+    expect(warm.error).toBeNull();
 
-      // Compute B reads 4200 and parks; the edit to 4201 arrives mid-flight,
-      // classified against A's committed graph, recording its hash and
-      // queueing the tracked path. B then fails transiently.
-      invalidateGraphCache();
-      const second = getCachedSerializedProjectGraphPromise();
-      await waitFor(() => bExit.reached);
-      writeFileSync(envPath, 'PORT=4201\n');
-      await handleOutputsChanges(null, [envEvent]);
-      bExit.release();
+    // Compute B reads 4200 and parks; the edit to 4201 arrives mid-flight,
+    // classified against A's committed graph, recording its hash and
+    // queueing the tracked path. B then fails transiently.
+    invalidateGraphCache();
+    const second = getCachedSerializedProjectGraphPromise();
+    await waitFor(() => bExit.reached);
+    writeFileSync(envPath, 'PORT=4201\n');
+    await handleOutputsChanges(null, [envEvent]);
+    bExit.release();
 
-      // B's retry starts C, which reads an intermediate 4202 the watcher
-      // never reports separately; the file returns to 4201 before the
-      // callback hashes it.
-      await waitFor(() => cEntry.reached);
-      writeFileSync(envPath, 'PORT=4202\n');
-      cEntry.release();
-      await waitFor(() => cExit.reached);
-      writeFileSync(envPath, 'PORT=4201\n');
-      await handleOutputsChanges(null, [envEvent]);
-      cExit.release();
+    // B's retry starts C, which reads an intermediate 4202 the watcher
+    // never reports separately; the file returns to 4201 before the
+    // callback hashes it.
+    await waitFor(() => cEntry.reached);
+    writeFileSync(envPath, 'PORT=4202\n');
+    cEntry.release();
+    await waitFor(() => cExit.reached);
+    writeFileSync(envPath, 'PORT=4201\n');
+    await handleOutputsChanges(null, [envEvent]);
+    cExit.release();
 
-      const result = await second;
-      expect(result.error).toBeNull();
-      expect(result.projectGraph.nodes.foo.data.tags).toEqual([
-        'env:PORT=4201',
-      ]);
-      expect(retrieveCallCount).toBeGreaterThanOrEqual(4);
-      const persisted = readFileSync(nxProjectGraph, 'utf-8');
-      expect(persisted).toContain('PORT=4201');
-      expect(persisted).not.toContain('PORT=4200');
-      expect(persisted).not.toContain('PORT=4202');
-    });
+    const result = await second;
+    expect(result.error).toBeNull();
+    expect(result.projectGraph.nodes.foo.data.tags).toEqual(['env:PORT=4201']);
+    expect(retrieveCallCount).toBeGreaterThanOrEqual(4);
+    const persisted = readFileSync(nxProjectGraph, 'utf-8');
+    expect(persisted).toContain('PORT=4201');
+    expect(persisted).not.toContain('PORT=4200');
+    expect(persisted).not.toContain('PORT=4202');
   });
 
   // With the graph warm and no computation in flight, a tracked dotenv edit
@@ -1127,18 +1125,20 @@ describe('pending dotenv replay before serving a graph', () => {
       'libs/foo/.env.e2e': 'PORT=4200\n',
     });
 
-    await jest.isolateModulesAsync(async () => {
-      // The plugin-loader mocks jest.doMock installs in the tests above are
-      // registry-wide and outlive their isolated module graphs.
-      jest.dontMock('../../project-graph/plugins/get-plugins');
-      const { setWorkspaceRoot } = require('../../utils/workspace-root');
-      setWorkspaceRoot(fs.tempDir);
+    vi.resetModules();
+    // The plugin-loader mocks vi.doMock installs in the tests above are
+    // registry-wide and outlive vi.resetModules.
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
 
-      let retrieveCallCount = 0;
-      jest.doMock('../../project-graph/utils/retrieve-workspace-files', () => {
-        const actual = jest.requireActual(
+    let retrieveCallCount = 0;
+    vi.doMock(
+      '../../project-graph/utils/retrieve-workspace-files',
+      async () => {
+        const actual = (await vi.importActual(
           '../../project-graph/utils/retrieve-workspace-files'
-        );
+        )) as any;
         return {
           ...actual,
           retrieveProjectConfigurations: async (...args: unknown[]) => {
@@ -1152,35 +1152,33 @@ describe('pending dotenv replay before serving a graph', () => {
             return result;
           },
         };
-      });
+      }
+    );
 
-      const {
-        getCachedSerializedProjectGraphPromise,
-      } = require('./project-graph-incremental-recomputation');
-      const { handleOutputsChanges } = require('./handle-outputs-changes');
-      const { nxProjectGraph } = require('../../project-graph/nx-deps-cache');
-      const { EventType } = require('../../native');
+    const { getCachedSerializedProjectGraphPromise } =
+      await import('./project-graph-incremental-recomputation');
+    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { nxProjectGraph } =
+      await import('../../project-graph/nx-deps-cache');
+    const { EventType } = await import('../../native');
 
-      const first = await getCachedSerializedProjectGraphPromise();
-      expect(first.projectGraph.nodes.foo.data.tags).toEqual(['env:PORT=4200']);
-      expect(retrieveCallCount).toBe(1);
+    const first = await getCachedSerializedProjectGraphPromise();
+    expect(first.projectGraph.nodes.foo.data.tags).toEqual(['env:PORT=4200']);
+    expect(retrieveCallCount).toBe(1);
 
-      writeFileSync(join(fs.tempDir, 'libs/foo/.env.e2e'), 'PORT=4201\n');
-      // Only the outputs watcher delivers; the workspace watcher is silent.
-      await handleOutputsChanges(null, [
-        { path: 'libs/foo/.env.e2e', type: EventType.update },
-      ]);
+    writeFileSync(join(fs.tempDir, 'libs/foo/.env.e2e'), 'PORT=4201\n');
+    // Only the outputs watcher delivers; the workspace watcher is silent.
+    await handleOutputsChanges(null, [
+      { path: 'libs/foo/.env.e2e', type: EventType.update },
+    ]);
 
-      const second = await getCachedSerializedProjectGraphPromise();
-      expect(second.error).toBeNull();
-      expect(second.projectGraph.nodes.foo.data.tags).toEqual([
-        'env:PORT=4201',
-      ]);
-      expect(retrieveCallCount).toBe(2);
-      const persisted = readFileSync(nxProjectGraph, 'utf-8');
-      expect(persisted).toContain('PORT=4201');
-      expect(persisted).not.toContain('PORT=4200');
-    });
+    const second = await getCachedSerializedProjectGraphPromise();
+    expect(second.error).toBeNull();
+    expect(second.projectGraph.nodes.foo.data.tags).toEqual(['env:PORT=4201']);
+    expect(retrieveCallCount).toBe(2);
+    const persisted = readFileSync(nxProjectGraph, 'utf-8');
+    expect(persisted).toContain('PORT=4201');
+    expect(persisted).not.toContain('PORT=4200');
   });
 
   // The reuse-triggered successor can read intermediate bytes the watcher
@@ -1200,29 +1198,31 @@ describe('pending dotenv replay before serving a graph', () => {
       'libs/foo/.env.e2e': 'PORT=4200\n',
     });
 
-    await jest.isolateModulesAsync(async () => {
-      // The plugin-loader mocks jest.doMock installs in the tests above are
-      // registry-wide and outlive their isolated module graphs.
-      jest.dontMock('../../project-graph/plugins/get-plugins');
-      const { setWorkspaceRoot } = require('../../utils/workspace-root');
-      setWorkspaceRoot(fs.tempDir);
+    vi.resetModules();
+    // The plugin-loader mocks vi.doMock installs in the tests above are
+    // registry-wide and outlive vi.resetModules.
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
 
-      const makeGate = () => {
-        let release: () => void;
-        const promise = new Promise<void>((resolve) => {
-          release = resolve;
-        });
-        return { promise, release: () => release(), reached: false };
-      };
-      // Park the reuse-triggered compute B before and after its read so an
-      // edit lands in each window; computes A and C run unimpeded.
-      const bEntry = makeGate();
-      const bExit = makeGate();
-      let retrieveCallCount = 0;
-      jest.doMock('../../project-graph/utils/retrieve-workspace-files', () => {
-        const actual = jest.requireActual(
+    const makeGate = () => {
+      let release: () => void;
+      const promise = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      return { promise, release: () => release(), reached: false };
+    };
+    // Park the reuse-triggered compute B before and after its read so an
+    // edit lands in each window; computes A and C run unimpeded.
+    const bEntry = makeGate();
+    const bExit = makeGate();
+    let retrieveCallCount = 0;
+    vi.doMock(
+      '../../project-graph/utils/retrieve-workspace-files',
+      async () => {
+        const actual = (await vi.importActual(
           '../../project-graph/utils/retrieve-workspace-files'
-        );
+        )) as any;
         return {
           ...actual,
           retrieveProjectConfigurations: async (...args: unknown[]) => {
@@ -1244,57 +1244,55 @@ describe('pending dotenv replay before serving a graph', () => {
             return result;
           },
         };
-      });
+      }
+    );
 
-      const {
-        getCachedSerializedProjectGraphPromise,
-      } = require('./project-graph-incremental-recomputation');
-      const { handleOutputsChanges } = require('./handle-outputs-changes');
-      const { nxProjectGraph } = require('../../project-graph/nx-deps-cache');
-      const { EventType } = require('../../native');
+    const { getCachedSerializedProjectGraphPromise } =
+      await import('./project-graph-incremental-recomputation');
+    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { nxProjectGraph } =
+      await import('../../project-graph/nx-deps-cache');
+    const { EventType } = await import('../../native');
 
-      const waitFor = async (cond: () => boolean) => {
-        while (!cond()) {
-          await new Promise((r) => setImmediate(r));
-        }
-      };
-      const envPath = join(fs.tempDir, 'libs/foo/.env.e2e');
-      const envEvent = { path: 'libs/foo/.env.e2e', type: EventType.update };
+    const waitFor = async (cond: () => boolean) => {
+      while (!cond()) {
+        await new Promise((r) => setImmediate(r));
+      }
+    };
+    const envPath = join(fs.tempDir, 'libs/foo/.env.e2e');
+    const envEvent = { path: 'libs/foo/.env.e2e', type: EventType.update };
 
-      const first = await getCachedSerializedProjectGraphPromise();
-      expect(first.projectGraph.nodes.foo.data.tags).toEqual(['env:PORT=4200']);
+    const first = await getCachedSerializedProjectGraphPromise();
+    expect(first.projectGraph.nodes.foo.data.tags).toEqual(['env:PORT=4200']);
 
-      // Classifying this edit records the hash of the 4201 bytes and queues
-      // the tracked path.
-      writeFileSync(envPath, 'PORT=4201\n');
-      await handleOutputsChanges(null, [envEvent]);
+    // Classifying this edit records the hash of the 4201 bytes and queues
+    // the tracked path.
+    writeFileSync(envPath, 'PORT=4201\n');
+    await handleOutputsChanges(null, [envEvent]);
 
-      // The request finds the queued evidence and triggers compute B, which
-      // reads an intermediate 4202 whose write the watcher never reports.
-      const second = getCachedSerializedProjectGraphPromise();
-      await waitFor(() => bEntry.reached);
-      writeFileSync(envPath, 'PORT=4202\n');
-      bEntry.release();
-      await waitFor(() => bExit.reached);
+    // The request finds the queued evidence and triggers compute B, which
+    // reads an intermediate 4202 whose write the watcher never reports.
+    const second = getCachedSerializedProjectGraphPromise();
+    await waitFor(() => bEntry.reached);
+    writeFileSync(envPath, 'PORT=4202\n');
+    bEntry.release();
+    await waitFor(() => bExit.reached);
 
-      // Back to the queued bytes; with the pre-successor hash retained this
-      // event would be suppressed as a byte-identical rewrite and B would
-      // serve the intermediate content.
-      writeFileSync(envPath, 'PORT=4201\n');
-      await handleOutputsChanges(null, [envEvent]);
-      bExit.release();
+    // Back to the queued bytes; with the pre-successor hash retained this
+    // event would be suppressed as a byte-identical rewrite and B would
+    // serve the intermediate content.
+    writeFileSync(envPath, 'PORT=4201\n');
+    await handleOutputsChanges(null, [envEvent]);
+    bExit.release();
 
-      const result = await second;
-      expect(result.error).toBeNull();
-      expect(result.projectGraph.nodes.foo.data.tags).toEqual([
-        'env:PORT=4201',
-      ]);
-      expect(retrieveCallCount).toBeGreaterThanOrEqual(3);
-      const persisted = readFileSync(nxProjectGraph, 'utf-8');
-      expect(persisted).toContain('PORT=4201');
-      expect(persisted).not.toContain('PORT=4200');
-      expect(persisted).not.toContain('PORT=4202');
-    });
+    const result = await second;
+    expect(result.error).toBeNull();
+    expect(result.projectGraph.nodes.foo.data.tags).toEqual(['env:PORT=4201']);
+    expect(retrieveCallCount).toBeGreaterThanOrEqual(3);
+    const persisted = readFileSync(nxProjectGraph, 'utf-8');
+    expect(persisted).toContain('PORT=4201');
+    expect(persisted).not.toContain('PORT=4200');
+    expect(persisted).not.toContain('PORT=4202');
   });
 
   // A gitignored dotenv edit classified over a committed graph invalidates
@@ -1314,29 +1312,31 @@ describe('pending dotenv replay before serving a graph', () => {
       'libs/foo/.env.e2e': 'PORT=4200\n',
     });
 
-    await jest.isolateModulesAsync(async () => {
-      // The plugin-loader mocks jest.doMock installs in the tests above are
-      // registry-wide and outlive their isolated module graphs.
-      jest.dontMock('../../project-graph/plugins/get-plugins');
-      const { setWorkspaceRoot } = require('../../utils/workspace-root');
-      setWorkspaceRoot(fs.tempDir);
+    vi.resetModules();
+    // The plugin-loader mocks vi.doMock installs in the tests above are
+    // registry-wide and outlive vi.resetModules.
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
 
-      const makeGate = () => {
-        let release: () => void;
-        const promise = new Promise<void>((resolve) => {
-          release = resolve;
-        });
-        return { promise, release: () => release(), reached: false };
-      };
-      // Park the invalidation-triggered compute B before and after its read
-      // so an edit lands in each window; computes A and C run unimpeded.
-      const bEntry = makeGate();
-      const bExit = makeGate();
-      let retrieveCallCount = 0;
-      jest.doMock('../../project-graph/utils/retrieve-workspace-files', () => {
-        const actual = jest.requireActual(
+    const makeGate = () => {
+      let release: () => void;
+      const promise = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      return { promise, release: () => release(), reached: false };
+    };
+    // Park the invalidation-triggered compute B before and after its read
+    // so an edit lands in each window; computes A and C run unimpeded.
+    const bEntry = makeGate();
+    const bExit = makeGate();
+    let retrieveCallCount = 0;
+    vi.doMock(
+      '../../project-graph/utils/retrieve-workspace-files',
+      async () => {
+        const actual = (await vi.importActual(
           '../../project-graph/utils/retrieve-workspace-files'
-        );
+        )) as any;
         return {
           ...actual,
           retrieveProjectConfigurations: async (...args: unknown[]) => {
@@ -1358,58 +1358,56 @@ describe('pending dotenv replay before serving a graph', () => {
             return result;
           },
         };
-      });
+      }
+    );
 
-      const {
-        getCachedSerializedProjectGraphPromise,
-      } = require('./project-graph-incremental-recomputation');
-      const { handleOutputsChanges } = require('./handle-outputs-changes');
-      const { nxProjectGraph } = require('../../project-graph/nx-deps-cache');
-      const { EventType } = require('../../native');
+    const { getCachedSerializedProjectGraphPromise } =
+      await import('./project-graph-incremental-recomputation');
+    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { nxProjectGraph } =
+      await import('../../project-graph/nx-deps-cache');
+    const { EventType } = await import('../../native');
 
-      const waitFor = async (cond: () => boolean) => {
-        while (!cond()) {
-          await new Promise((r) => setImmediate(r));
-        }
-      };
-      const envPath = join(fs.tempDir, 'libs/foo/.env.e2e');
-      const envEvent = { path: 'libs/foo/.env.e2e', type: EventType.update };
+    const waitFor = async (cond: () => boolean) => {
+      while (!cond()) {
+        await new Promise((r) => setImmediate(r));
+      }
+    };
+    const envPath = join(fs.tempDir, 'libs/foo/.env.e2e');
+    const envEvent = { path: 'libs/foo/.env.e2e', type: EventType.update };
 
-      const first = await getCachedSerializedProjectGraphPromise();
-      expect(first.projectGraph.nodes.foo.data.tags).toEqual(['env:PORT=4200']);
+    const first = await getCachedSerializedProjectGraphPromise();
+    expect(first.projectGraph.nodes.foo.data.tags).toEqual(['env:PORT=4200']);
 
-      // Classifying this edit records the hash of the 4301 bytes; the file is
-      // gitignored, so the committed file map does not know it and the path
-      // invalidates directly instead of queueing.
-      writeFileSync(envPath, 'PORT=4301\n');
-      await handleOutputsChanges(null, [envEvent]);
+    // Classifying this edit records the hash of the 4301 bytes; the file is
+    // gitignored, so the committed file map does not know it and the path
+    // invalidates directly instead of queueing.
+    writeFileSync(envPath, 'PORT=4301\n');
+    await handleOutputsChanges(null, [envEvent]);
 
-      // The request finds no cached graph and triggers compute B, which reads
-      // an intermediate 4302 whose write the watcher never reports.
-      const second = getCachedSerializedProjectGraphPromise();
-      await waitFor(() => bEntry.reached);
-      writeFileSync(envPath, 'PORT=4302\n');
-      bEntry.release();
-      await waitFor(() => bExit.reached);
+    // The request finds no cached graph and triggers compute B, which reads
+    // an intermediate 4302 whose write the watcher never reports.
+    const second = getCachedSerializedProjectGraphPromise();
+    await waitFor(() => bEntry.reached);
+    writeFileSync(envPath, 'PORT=4302\n');
+    bEntry.release();
+    await waitFor(() => bExit.reached);
 
-      // Back to the classified bytes; with the classification-time hash
-      // retained this event would be suppressed as a byte-identical rewrite
-      // and B would serve the intermediate content.
-      writeFileSync(envPath, 'PORT=4301\n');
-      await handleOutputsChanges(null, [envEvent]);
-      bExit.release();
+    // Back to the classified bytes; with the classification-time hash
+    // retained this event would be suppressed as a byte-identical rewrite
+    // and B would serve the intermediate content.
+    writeFileSync(envPath, 'PORT=4301\n');
+    await handleOutputsChanges(null, [envEvent]);
+    bExit.release();
 
-      const result = await second;
-      expect(result.error).toBeNull();
-      expect(result.projectGraph.nodes.foo.data.tags).toEqual([
-        'env:PORT=4301',
-      ]);
-      expect(retrieveCallCount).toBeGreaterThanOrEqual(3);
-      const persisted = readFileSync(nxProjectGraph, 'utf-8');
-      expect(persisted).toContain('PORT=4301');
-      expect(persisted).not.toContain('PORT=4200');
-      expect(persisted).not.toContain('PORT=4302');
-    });
+    const result = await second;
+    expect(result.error).toBeNull();
+    expect(result.projectGraph.nodes.foo.data.tags).toEqual(['env:PORT=4301']);
+    expect(retrieveCallCount).toBeGreaterThanOrEqual(3);
+    const persisted = readFileSync(nxProjectGraph, 'utf-8');
+    expect(persisted).toContain('PORT=4301');
+    expect(persisted).not.toContain('PORT=4200');
+    expect(persisted).not.toContain('PORT=4302');
   });
 
   // A tracked dotenv edit queued in the same batch as (or before) a gitignored
@@ -1431,29 +1429,31 @@ describe('pending dotenv replay before serving a graph', () => {
       'libs/foo/.env.e2e': 'UPORT=9000\n',
     });
 
-    await jest.isolateModulesAsync(async () => {
-      // The plugin-loader mocks jest.doMock installs in the tests above are
-      // registry-wide and outlive their isolated module graphs.
-      jest.dontMock('../../project-graph/plugins/get-plugins');
-      const { setWorkspaceRoot } = require('../../utils/workspace-root');
-      setWorkspaceRoot(fs.tempDir);
+    vi.resetModules();
+    // The plugin-loader mocks vi.doMock installs in the tests above are
+    // registry-wide and outlive vi.resetModules.
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
 
-      const makeGate = () => {
-        let release: () => void;
-        const promise = new Promise<void>((resolve) => {
-          release = resolve;
-        });
-        return { promise, release: () => release(), reached: false };
-      };
-      // Park the invalidation-triggered compute B before and after its read
-      // so an edit lands in each window; computes A and C run unimpeded.
-      const bEntry = makeGate();
-      const bExit = makeGate();
-      let retrieveCallCount = 0;
-      jest.doMock('../../project-graph/utils/retrieve-workspace-files', () => {
-        const actual = jest.requireActual(
+    const makeGate = () => {
+      let release: () => void;
+      const promise = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      return { promise, release: () => release(), reached: false };
+    };
+    // Park the invalidation-triggered compute B before and after its read
+    // so an edit lands in each window; computes A and C run unimpeded.
+    const bEntry = makeGate();
+    const bExit = makeGate();
+    let retrieveCallCount = 0;
+    vi.doMock(
+      '../../project-graph/utils/retrieve-workspace-files',
+      async () => {
+        const actual = (await vi.importActual(
           '../../project-graph/utils/retrieve-workspace-files'
-        );
+        )) as any;
         return {
           ...actual,
           retrieveProjectConfigurations: async (...args: unknown[]) => {
@@ -1479,65 +1479,65 @@ describe('pending dotenv replay before serving a graph', () => {
             return result;
           },
         };
-      });
+      }
+    );
 
-      const {
-        getCachedSerializedProjectGraphPromise,
-      } = require('./project-graph-incremental-recomputation');
-      const { handleOutputsChanges } = require('./handle-outputs-changes');
-      const { nxProjectGraph } = require('../../project-graph/nx-deps-cache');
-      const { EventType } = require('../../native');
+    const { getCachedSerializedProjectGraphPromise } =
+      await import('./project-graph-incremental-recomputation');
+    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { nxProjectGraph } =
+      await import('../../project-graph/nx-deps-cache');
+    const { EventType } = await import('../../native');
 
-      const waitFor = async (cond: () => boolean) => {
-        while (!cond()) {
-          await new Promise((r) => setImmediate(r));
-        }
-      };
-      const trackedPath = join(fs.tempDir, 'libs/foo/.env.k');
-      const ignoredPath = join(fs.tempDir, 'libs/foo/.env.e2e');
-      const trackedEvent = { path: 'libs/foo/.env.k', type: EventType.update };
-      const ignoredEvent = {
-        path: 'libs/foo/.env.e2e',
-        type: EventType.update,
-      };
+    const waitFor = async (cond: () => boolean) => {
+      while (!cond()) {
+        await new Promise((r) => setImmediate(r));
+      }
+    };
+    const trackedPath = join(fs.tempDir, 'libs/foo/.env.k');
+    const ignoredPath = join(fs.tempDir, 'libs/foo/.env.e2e');
+    const trackedEvent = { path: 'libs/foo/.env.k', type: EventType.update };
+    const ignoredEvent = {
+      path: 'libs/foo/.env.e2e',
+      type: EventType.update,
+    };
 
-      const first = await getCachedSerializedProjectGraphPromise();
-      expect(first.projectGraph.nodes.foo.data.tags).toEqual([
-        'env:KPORT=4200|UPORT=9000',
-      ]);
+    const first = await getCachedSerializedProjectGraphPromise();
+    expect(first.projectGraph.nodes.foo.data.tags).toEqual([
+      'env:KPORT=4200|UPORT=9000',
+    ]);
 
-      // One batch: the tracked edit queues with its 4301 hash recorded while
-      // the gitignored edit invalidates directly, forcing a successor.
-      writeFileSync(trackedPath, 'KPORT=4301\n');
-      writeFileSync(ignoredPath, 'UPORT=9001\n');
-      await handleOutputsChanges(null, [trackedEvent, ignoredEvent]);
+    // One batch: the tracked edit queues with its 4301 hash recorded while
+    // the gitignored edit invalidates directly, forcing a successor.
+    writeFileSync(trackedPath, 'KPORT=4301\n');
+    writeFileSync(ignoredPath, 'UPORT=9001\n');
+    await handleOutputsChanges(null, [trackedEvent, ignoredEvent]);
 
-      // The request finds no cached graph and triggers compute B, which reads
-      // an intermediate 4302 whose write the watcher never reports.
-      const second = getCachedSerializedProjectGraphPromise();
-      await waitFor(() => bEntry.reached);
-      writeFileSync(trackedPath, 'KPORT=4302\n');
-      bEntry.release();
-      await waitFor(() => bExit.reached);
+    // The request finds no cached graph and triggers compute B, which reads
+    // an intermediate 4302 whose write the watcher never reports.
+    const second = getCachedSerializedProjectGraphPromise();
+    await waitFor(() => bEntry.reached);
+    writeFileSync(trackedPath, 'KPORT=4302\n');
+    bEntry.release();
+    await waitFor(() => bExit.reached);
 
-      // Back to the queued bytes; with the tracked path's hash retained this
-      // event would be suppressed as a byte-identical rewrite, and B's drain
-      // would drop the earlier queued entry as safely pre-dating B.
-      writeFileSync(trackedPath, 'KPORT=4301\n');
-      await handleOutputsChanges(null, [trackedEvent]);
-      bExit.release();
+    // Back to the queued bytes; with the tracked path's hash retained this
+    // event would be suppressed as a byte-identical rewrite, and B's drain
+    // would drop the earlier queued entry as safely pre-dating B.
+    writeFileSync(trackedPath, 'KPORT=4301\n');
+    await handleOutputsChanges(null, [trackedEvent]);
+    bExit.release();
 
-      const result = await second;
-      expect(result.error).toBeNull();
-      expect(result.projectGraph.nodes.foo.data.tags).toEqual([
-        'env:KPORT=4301|UPORT=9001',
-      ]);
-      expect(retrieveCallCount).toBeGreaterThanOrEqual(3);
-      const persisted = readFileSync(nxProjectGraph, 'utf-8');
-      expect(persisted).toContain('KPORT=4301');
-      expect(persisted).not.toContain('KPORT=4200');
-      expect(persisted).not.toContain('KPORT=4302');
-    });
+    const result = await second;
+    expect(result.error).toBeNull();
+    expect(result.projectGraph.nodes.foo.data.tags).toEqual([
+      'env:KPORT=4301|UPORT=9001',
+    ]);
+    expect(retrieveCallCount).toBeGreaterThanOrEqual(3);
+    const persisted = readFileSync(nxProjectGraph, 'utf-8');
+    expect(persisted).toContain('KPORT=4301');
+    expect(persisted).not.toContain('KPORT=4200');
+    expect(persisted).not.toContain('KPORT=4302');
   });
 
   // A tracked dotenv edit classified after a direct invalidation but before
@@ -1559,29 +1559,31 @@ describe('pending dotenv replay before serving a graph', () => {
       'libs/foo/.env.e2e': 'UPORT=9000\n',
     });
 
-    await jest.isolateModulesAsync(async () => {
-      // The plugin-loader mocks jest.doMock installs in the tests above are
-      // registry-wide and outlive their isolated module graphs.
-      jest.dontMock('../../project-graph/plugins/get-plugins');
-      const { setWorkspaceRoot } = require('../../utils/workspace-root');
-      setWorkspaceRoot(fs.tempDir);
+    vi.resetModules();
+    // The plugin-loader mocks vi.doMock installs in the tests above are
+    // registry-wide and outlive vi.resetModules.
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
 
-      const makeGate = () => {
-        let release: () => void;
-        const promise = new Promise<void>((resolve) => {
-          release = resolve;
-        });
-        return { promise, release: () => release(), reached: false };
-      };
-      // Park the invalidation-triggered compute B before and after its read
-      // so an edit lands in each window; computes A and C run unimpeded.
-      const bEntry = makeGate();
-      const bExit = makeGate();
-      let retrieveCallCount = 0;
-      jest.doMock('../../project-graph/utils/retrieve-workspace-files', () => {
-        const actual = jest.requireActual(
+    const makeGate = () => {
+      let release: () => void;
+      const promise = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      return { promise, release: () => release(), reached: false };
+    };
+    // Park the invalidation-triggered compute B before and after its read
+    // so an edit lands in each window; computes A and C run unimpeded.
+    const bEntry = makeGate();
+    const bExit = makeGate();
+    let retrieveCallCount = 0;
+    vi.doMock(
+      '../../project-graph/utils/retrieve-workspace-files',
+      async () => {
+        const actual = (await vi.importActual(
           '../../project-graph/utils/retrieve-workspace-files'
-        );
+        )) as any;
         return {
           ...actual,
           retrieveProjectConfigurations: async (...args: unknown[]) => {
@@ -1607,67 +1609,67 @@ describe('pending dotenv replay before serving a graph', () => {
             return result;
           },
         };
-      });
+      }
+    );
 
-      const {
-        getCachedSerializedProjectGraphPromise,
-      } = require('./project-graph-incremental-recomputation');
-      const { handleOutputsChanges } = require('./handle-outputs-changes');
-      const { nxProjectGraph } = require('../../project-graph/nx-deps-cache');
-      const { EventType } = require('../../native');
+    const { getCachedSerializedProjectGraphPromise } =
+      await import('./project-graph-incremental-recomputation');
+    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { nxProjectGraph } =
+      await import('../../project-graph/nx-deps-cache');
+    const { EventType } = await import('../../native');
 
-      const waitFor = async (cond: () => boolean) => {
-        while (!cond()) {
-          await new Promise((r) => setImmediate(r));
-        }
-      };
-      const trackedPath = join(fs.tempDir, 'libs/foo/.env.k');
-      const ignoredPath = join(fs.tempDir, 'libs/foo/.env.e2e');
-      const trackedEvent = { path: 'libs/foo/.env.k', type: EventType.update };
-      const ignoredEvent = {
-        path: 'libs/foo/.env.e2e',
-        type: EventType.update,
-      };
+    const waitFor = async (cond: () => boolean) => {
+      while (!cond()) {
+        await new Promise((r) => setImmediate(r));
+      }
+    };
+    const trackedPath = join(fs.tempDir, 'libs/foo/.env.k');
+    const ignoredPath = join(fs.tempDir, 'libs/foo/.env.e2e');
+    const trackedEvent = { path: 'libs/foo/.env.k', type: EventType.update };
+    const ignoredEvent = {
+      path: 'libs/foo/.env.e2e',
+      type: EventType.update,
+    };
 
-      const first = await getCachedSerializedProjectGraphPromise();
-      expect(first.projectGraph.nodes.foo.data.tags).toEqual([
-        'env:KPORT=4200|UPORT=9000',
-      ]);
+    const first = await getCachedSerializedProjectGraphPromise();
+    expect(first.projectGraph.nodes.foo.data.tags).toEqual([
+      'env:KPORT=4200|UPORT=9000',
+    ]);
 
-      // The gitignored edit invalidates directly, clearing the hashes; the
-      // tracked edit lands in a later callback, so its 4301 hash is recorded
-      // after every handler-side clear has run.
-      writeFileSync(ignoredPath, 'UPORT=9001\n');
-      await handleOutputsChanges(null, [ignoredEvent]);
-      writeFileSync(trackedPath, 'KPORT=4301\n');
-      await handleOutputsChanges(null, [trackedEvent]);
+    // The gitignored edit invalidates directly, clearing the hashes; the
+    // tracked edit lands in a later callback, so its 4301 hash is recorded
+    // after every handler-side clear has run.
+    writeFileSync(ignoredPath, 'UPORT=9001\n');
+    await handleOutputsChanges(null, [ignoredEvent]);
+    writeFileSync(trackedPath, 'KPORT=4301\n');
+    await handleOutputsChanges(null, [trackedEvent]);
 
-      // The request finds no cached graph and triggers compute B, which reads
-      // an intermediate 4302 whose write the watcher never reports.
-      const second = getCachedSerializedProjectGraphPromise();
-      await waitFor(() => bEntry.reached);
-      writeFileSync(trackedPath, 'KPORT=4302\n');
-      bEntry.release();
-      await waitFor(() => bExit.reached);
+    // The request finds no cached graph and triggers compute B, which reads
+    // an intermediate 4302 whose write the watcher never reports.
+    const second = getCachedSerializedProjectGraphPromise();
+    await waitFor(() => bEntry.reached);
+    writeFileSync(trackedPath, 'KPORT=4302\n');
+    bEntry.release();
+    await waitFor(() => bExit.reached);
 
-      // Back to the queued bytes; with the post-invalidation hash retained
-      // this event would be suppressed as a byte-identical rewrite, and B's
-      // drain would drop the earlier queued entry as safely pre-dating B.
-      writeFileSync(trackedPath, 'KPORT=4301\n');
-      await handleOutputsChanges(null, [trackedEvent]);
-      bExit.release();
+    // Back to the queued bytes; with the post-invalidation hash retained
+    // this event would be suppressed as a byte-identical rewrite, and B's
+    // drain would drop the earlier queued entry as safely pre-dating B.
+    writeFileSync(trackedPath, 'KPORT=4301\n');
+    await handleOutputsChanges(null, [trackedEvent]);
+    bExit.release();
 
-      const result = await second;
-      expect(result.error).toBeNull();
-      expect(result.projectGraph.nodes.foo.data.tags).toEqual([
-        'env:KPORT=4301|UPORT=9001',
-      ]);
-      expect(retrieveCallCount).toBeGreaterThanOrEqual(3);
-      const persisted = readFileSync(nxProjectGraph, 'utf-8');
-      expect(persisted).toContain('KPORT=4301');
-      expect(persisted).not.toContain('KPORT=4200');
-      expect(persisted).not.toContain('KPORT=4302');
-    });
+    const result = await second;
+    expect(result.error).toBeNull();
+    expect(result.projectGraph.nodes.foo.data.tags).toEqual([
+      'env:KPORT=4301|UPORT=9001',
+    ]);
+    expect(retrieveCallCount).toBeGreaterThanOrEqual(3);
+    const persisted = readFileSync(nxProjectGraph, 'utf-8');
+    expect(persisted).toContain('KPORT=4301');
+    expect(persisted).not.toContain('KPORT=4200');
+    expect(persisted).not.toContain('KPORT=4302');
   });
 
   // The clear that bounds the recorded hashes must run at the generation
@@ -1688,44 +1690,46 @@ describe('pending dotenv replay before serving a graph', () => {
       'libs/foo/.env.e2e': 'UPORT=9000\n',
     });
 
-    await jest.isolateModulesAsync(async () => {
-      const { setWorkspaceRoot } = require('../../utils/workspace-root');
-      setWorkspaceRoot(fs.tempDir);
+    vi.resetModules();
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
 
-      const makeGate = () => {
-        let release: () => void;
-        const promise = new Promise<void>((resolve) => {
-          release = resolve;
-        });
-        return { promise, release: () => release(), reached: false };
-      };
-      // Park compute B while it loads plugins (before its generation claim)
-      // and before and after its read; computes A and C run unimpeded.
-      const bPlugins = makeGate();
-      const bEntry = makeGate();
-      const bExit = makeGate();
-      let pluginsCallCount = 0;
-      jest.doMock('../../project-graph/plugins/get-plugins', () => {
-        const actual = jest.requireActual(
-          '../../project-graph/plugins/get-plugins'
-        );
-        return {
-          ...actual,
-          getPluginsSeparated: async (...args: unknown[]) => {
-            const call = ++pluginsCallCount;
-            if (call === 2) {
-              bPlugins.reached = true;
-              await bPlugins.promise;
-            }
-            return actual.getPluginsSeparated(...args);
-          },
-        };
+    const makeGate = () => {
+      let release: () => void;
+      const promise = new Promise<void>((resolve) => {
+        release = resolve;
       });
-      let retrieveCallCount = 0;
-      jest.doMock('../../project-graph/utils/retrieve-workspace-files', () => {
-        const actual = jest.requireActual(
+      return { promise, release: () => release(), reached: false };
+    };
+    // Park compute B while it loads plugins (before its generation claim)
+    // and before and after its read; computes A and C run unimpeded.
+    const bPlugins = makeGate();
+    const bEntry = makeGate();
+    const bExit = makeGate();
+    let pluginsCallCount = 0;
+    vi.doMock('../../project-graph/plugins/get-plugins', async () => {
+      const actual = (await vi.importActual(
+        '../../project-graph/plugins/get-plugins'
+      )) as any;
+      return {
+        ...actual,
+        getPluginsSeparated: async (...args: unknown[]) => {
+          const call = ++pluginsCallCount;
+          if (call === 2) {
+            bPlugins.reached = true;
+            await bPlugins.promise;
+          }
+          return actual.getPluginsSeparated(...args);
+        },
+      };
+    });
+    let retrieveCallCount = 0;
+    vi.doMock(
+      '../../project-graph/utils/retrieve-workspace-files',
+      async () => {
+        const actual = (await vi.importActual(
           '../../project-graph/utils/retrieve-workspace-files'
-        );
+        )) as any;
         return {
           ...actual,
           retrieveProjectConfigurations: async (...args: unknown[]) => {
@@ -1751,69 +1755,69 @@ describe('pending dotenv replay before serving a graph', () => {
             return result;
           },
         };
-      });
+      }
+    );
 
-      const {
-        getCachedSerializedProjectGraphPromise,
-      } = require('./project-graph-incremental-recomputation');
-      const { handleOutputsChanges } = require('./handle-outputs-changes');
-      const { nxProjectGraph } = require('../../project-graph/nx-deps-cache');
-      const { EventType } = require('../../native');
+    const { getCachedSerializedProjectGraphPromise } =
+      await import('./project-graph-incremental-recomputation');
+    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { nxProjectGraph } =
+      await import('../../project-graph/nx-deps-cache');
+    const { EventType } = await import('../../native');
 
-      const waitFor = async (cond: () => boolean) => {
-        while (!cond()) {
-          await new Promise((r) => setImmediate(r));
-        }
-      };
-      const trackedPath = join(fs.tempDir, 'libs/foo/.env.k');
-      const ignoredPath = join(fs.tempDir, 'libs/foo/.env.e2e');
-      const trackedEvent = { path: 'libs/foo/.env.k', type: EventType.update };
-      const ignoredEvent = {
-        path: 'libs/foo/.env.e2e',
-        type: EventType.update,
-      };
+    const waitFor = async (cond: () => boolean) => {
+      while (!cond()) {
+        await new Promise((r) => setImmediate(r));
+      }
+    };
+    const trackedPath = join(fs.tempDir, 'libs/foo/.env.k');
+    const ignoredPath = join(fs.tempDir, 'libs/foo/.env.e2e');
+    const trackedEvent = { path: 'libs/foo/.env.k', type: EventType.update };
+    const ignoredEvent = {
+      path: 'libs/foo/.env.e2e',
+      type: EventType.update,
+    };
 
-      const first = await getCachedSerializedProjectGraphPromise();
-      expect(first.projectGraph.nodes.foo.data.tags).toEqual([
-        'env:KPORT=4200|UPORT=9000',
-      ]);
+    const first = await getCachedSerializedProjectGraphPromise();
+    expect(first.projectGraph.nodes.foo.data.tags).toEqual([
+      'env:KPORT=4200|UPORT=9000',
+    ]);
 
-      // The gitignored edit invalidates directly, so the request kicks
-      // compute B, which parks while loading plugins.
-      writeFileSync(ignoredPath, 'UPORT=9001\n');
-      await handleOutputsChanges(null, [ignoredEvent]);
-      const second = getCachedSerializedProjectGraphPromise();
-      await waitFor(() => bPlugins.reached);
+    // The gitignored edit invalidates directly, so the request kicks
+    // compute B, which parks while loading plugins.
+    writeFileSync(ignoredPath, 'UPORT=9001\n');
+    await handleOutputsChanges(null, [ignoredEvent]);
+    const second = getCachedSerializedProjectGraphPromise();
+    await waitFor(() => bPlugins.reached);
 
-      // The tracked edit is classified while B loads plugins: after B was
-      // kicked, before B claims its generation and clears the hashes.
-      writeFileSync(trackedPath, 'KPORT=4301\n');
-      await handleOutputsChanges(null, [trackedEvent]);
-      bPlugins.release();
+    // The tracked edit is classified while B loads plugins: after B was
+    // kicked, before B claims its generation and clears the hashes.
+    writeFileSync(trackedPath, 'KPORT=4301\n');
+    await handleOutputsChanges(null, [trackedEvent]);
+    bPlugins.release();
 
-      // B claims and reads an intermediate 4302 the watcher never reports.
-      await waitFor(() => bEntry.reached);
-      writeFileSync(trackedPath, 'KPORT=4302\n');
-      bEntry.release();
-      await waitFor(() => bExit.reached);
+    // B claims and reads an intermediate 4302 the watcher never reports.
+    await waitFor(() => bEntry.reached);
+    writeFileSync(trackedPath, 'KPORT=4302\n');
+    bEntry.release();
+    await waitFor(() => bExit.reached);
 
-      // Back to the classified bytes; a hash surviving B's claim would
-      // suppress this event and let B serve the intermediate content.
-      writeFileSync(trackedPath, 'KPORT=4301\n');
-      await handleOutputsChanges(null, [trackedEvent]);
-      bExit.release();
+    // Back to the classified bytes; a hash surviving B's claim would
+    // suppress this event and let B serve the intermediate content.
+    writeFileSync(trackedPath, 'KPORT=4301\n');
+    await handleOutputsChanges(null, [trackedEvent]);
+    bExit.release();
 
-      const result = await second;
-      expect(result.error).toBeNull();
-      expect(result.projectGraph.nodes.foo.data.tags).toEqual([
-        'env:KPORT=4301|UPORT=9001',
-      ]);
-      expect(retrieveCallCount).toBeGreaterThanOrEqual(3);
-      const persisted = readFileSync(nxProjectGraph, 'utf-8');
-      expect(persisted).toContain('KPORT=4301');
-      expect(persisted).not.toContain('KPORT=4200');
-      expect(persisted).not.toContain('KPORT=4302');
-    });
+    const result = await second;
+    expect(result.error).toBeNull();
+    expect(result.projectGraph.nodes.foo.data.tags).toEqual([
+      'env:KPORT=4301|UPORT=9001',
+    ]);
+    expect(retrieveCallCount).toBeGreaterThanOrEqual(3);
+    const persisted = readFileSync(nxProjectGraph, 'utf-8');
+    expect(persisted).toContain('KPORT=4301');
+    expect(persisted).not.toContain('KPORT=4200');
+    expect(persisted).not.toContain('KPORT=4302');
   });
 
   // A slow stale computation assigns currentProjectGraph before it discovers
@@ -1833,30 +1837,32 @@ describe('pending dotenv replay before serving a graph', () => {
       }),
     });
 
-    await jest.isolateModulesAsync(async () => {
-      // The plugin-loader mocks jest.doMock installs in the tests above are
-      // registry-wide and outlive their isolated module graphs.
-      jest.dontMock('../../project-graph/plugins/get-plugins');
-      const { setWorkspaceRoot } = require('../../utils/workspace-root');
-      setWorkspaceRoot(fs.tempDir);
+    vi.resetModules();
+    // The plugin-loader mocks vi.doMock installs in the tests above are
+    // registry-wide and outlive vi.resetModules.
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
 
-      const makeGate = () => {
-        let release: () => void;
-        const promise = new Promise<void>((resolve) => {
-          release = resolve;
-        });
-        return { promise, release: () => release(), reached: false };
-      };
-      // Park compute A inside createAndSerializeProjectGraph, before its
-      // graph is built and assigned to currentProjectGraph. getPlugins is
-      // awaited there right before the build, after every earlier staleness
-      // gate, so the park keeps A's late assignment as the last write.
-      const aPark = makeGate();
-      let retrieveCallCount = 0;
-      jest.doMock('../../project-graph/utils/retrieve-workspace-files', () => {
-        const actual = jest.requireActual(
+    const makeGate = () => {
+      let release: () => void;
+      const promise = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      return { promise, release: () => release(), reached: false };
+    };
+    // Park compute A inside createAndSerializeProjectGraph, before its
+    // graph is built and assigned to currentProjectGraph. getPlugins is
+    // awaited there right before the build, after every earlier staleness
+    // gate, so the park keeps A's late assignment as the last write.
+    const aPark = makeGate();
+    let retrieveCallCount = 0;
+    vi.doMock(
+      '../../project-graph/utils/retrieve-workspace-files',
+      async () => {
+        const actual = (await vi.importActual(
           '../../project-graph/utils/retrieve-workspace-files'
-        );
+        )) as any;
         return {
           ...actual,
           retrieveProjectConfigurations: async (...args: unknown[]) => {
@@ -1873,79 +1879,81 @@ describe('pending dotenv replay before serving a graph', () => {
             return result;
           },
         };
-      });
-      // A plain factory: the module sits in a require cycle, so resolving
-      // the actual inside the factory recurses. getPluginsSeparated resolves
-      // it lazily at call time instead (project discovery needs the real
-      // default plugins); the faked getPlugins only skips dependency hooks
-      // these assertions never read.
-      let pluginsCallCount = 0;
-      jest.doMock('../../project-graph/plugins/get-plugins', () => ({
-        __esModule: true,
-        getPlugins: async () => {
-          const call = ++pluginsCallCount;
-          if (call === 1) {
-            aPark.reached = true;
-            await aPark.promise;
-          }
-          return [];
-        },
-        getPluginsSeparated: (...args: unknown[]) =>
-          jest
-            .requireActual('../../project-graph/plugins/get-plugins')
-            .getPluginsSeparated(...args),
-      }));
-
-      const pgir = require('./project-graph-incremental-recomputation');
-      const {
-        getCachedSerializedProjectGraphPromise,
-        scheduleProjectGraphRecomputation,
-      } = pgir;
-      const { handleOutputsChanges } = require('./handle-outputs-changes');
-      const { EventType } = require('../../native');
-
-      const waitFor = async (cond: () => boolean) => {
-        while (!cond()) {
-          await new Promise((r) => setImmediate(r));
+      }
+    );
+    // A plain factory: the module sits in a require cycle, so resolving
+    // the actual inside the factory recurses. getPluginsSeparated resolves
+    // it lazily at call time instead (project discovery needs the real
+    // default plugins); the faked getPlugins only skips dependency hooks
+    // these assertions never read.
+    let pluginsCallCount = 0;
+    vi.doMock('../../project-graph/plugins/get-plugins', async () => ({
+      __esModule: true,
+      getPlugins: async () => {
+        const call = ++pluginsCallCount;
+        if (call === 1) {
+          aPark.reached = true;
+          await aPark.promise;
         }
-      };
+        return [];
+      },
+      getPluginsSeparated: async (...args: unknown[]) =>
+        (
+          await vi.importActual<
+            typeof import('../../project-graph/plugins/get-plugins')
+          >('../../project-graph/plugins/get-plugins')
+        ).getPluginsSeparated(...args),
+    }));
 
-      // Compute A sees only foo and parks before building and assigning its
-      // graph.
-      const first = getCachedSerializedProjectGraphPromise();
-      await waitFor(() => aPark.reached);
+    const pgir = await import('./project-graph-incremental-recomputation');
+    const {
+      getCachedSerializedProjectGraphPromise,
+      scheduleProjectGraphRecomputation,
+    } = pgir;
+    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { EventType } = await import('../../native');
 
-      // The workspace watcher delivers a new project; the winning compute
-      // builds the graph the cache will serve, with bar as a root.
-      mkdirSync(join(fs.tempDir, 'libs/bar'), { recursive: true });
-      writeFileSync(
-        join(fs.tempDir, 'libs/bar/project.json'),
-        JSON.stringify({ name: 'bar', root: 'libs/bar' })
-      );
-      scheduleProjectGraphRecomputation(['libs/bar/project.json'], [], []);
-      const second = await getCachedSerializedProjectGraphPromise();
-      expect(second.projectGraph.nodes.bar).toBeDefined();
+    const waitFor = async (cond: () => boolean) => {
+      while (!cond()) {
+        await new Promise((r) => setImmediate(r));
+      }
+    };
 
-      // The stale A resumes, builds and assigns its bar-less graph over
-      // currentProjectGraph, and only then chains away.
-      aPark.release();
-      await first;
-      expect(pgir.currentProjectGraph.nodes.bar).toBeUndefined();
+    // Compute A sees only foo and parks before building and assigning its
+    // graph.
+    const first = getCachedSerializedProjectGraphPromise();
+    await waitFor(() => aPark.reached);
 
-      // A gitignored dotenv edit under bar: only the outputs watcher
-      // reports it, and against the overwritten currentProjectGraph the
-      // path classifies under no root, so it queues.
-      writeFileSync(join(fs.tempDir, 'libs/bar/.env.e2e'), 'PORT=7777\n');
-      await handleOutputsChanges(null, [
-        { path: 'libs/bar/.env.e2e', type: EventType.update },
-      ]);
+    // The workspace watcher delivers a new project; the winning compute
+    // builds the graph the cache will serve, with bar as a root.
+    mkdirSync(join(fs.tempDir, 'libs/bar'), { recursive: true });
+    writeFileSync(
+      join(fs.tempDir, 'libs/bar/project.json'),
+      JSON.stringify({ name: 'bar', root: 'libs/bar' })
+    );
+    scheduleProjectGraphRecomputation(['libs/bar/project.json'], [], []);
+    const second = await getCachedSerializedProjectGraphPromise();
+    expect(second.projectGraph.nodes.bar).toBeDefined();
 
-      const countBeforeThird = retrieveCallCount;
-      const third = await getCachedSerializedProjectGraphPromise();
-      expect(third.error).toBeNull();
-      expect(third.projectGraph.nodes.bar.data.tags).toEqual(['env:PORT=7777']);
-      expect(retrieveCallCount).toBe(countBeforeThird + 1);
-    });
+    // The stale A resumes, builds and assigns its bar-less graph over
+    // currentProjectGraph, and only then chains away.
+    aPark.release();
+    await first;
+    expect(pgir.currentProjectGraph.nodes.bar).toBeUndefined();
+
+    // A gitignored dotenv edit under bar: only the outputs watcher
+    // reports it, and against the overwritten currentProjectGraph the
+    // path classifies under no root, so it queues.
+    writeFileSync(join(fs.tempDir, 'libs/bar/.env.e2e'), 'PORT=7777\n');
+    await handleOutputsChanges(null, [
+      { path: 'libs/bar/.env.e2e', type: EventType.update },
+    ]);
+
+    const countBeforeThird = retrieveCallCount;
+    const third = await getCachedSerializedProjectGraphPromise();
+    expect(third.error).toBeNull();
+    expect(third.projectGraph.nodes.bar.data.tags).toEqual(['env:PORT=7777']);
+    expect(retrieveCallCount).toBe(countBeforeThird + 1);
   });
 
   // When the workspace watcher delivers the tracked edit too, its
@@ -1964,29 +1972,31 @@ describe('pending dotenv replay before serving a graph', () => {
       'libs/foo/.env.e2e': 'PORT=4200\n',
     });
 
-    await jest.isolateModulesAsync(async () => {
-      // The plugin-loader mocks jest.doMock installs in the tests above are
-      // registry-wide and outlive their isolated module graphs.
-      jest.dontMock('../../project-graph/plugins/get-plugins');
-      const { setWorkspaceRoot } = require('../../utils/workspace-root');
-      setWorkspaceRoot(fs.tempDir);
+    vi.resetModules();
+    // The plugin-loader mocks vi.doMock installs in the tests above are
+    // registry-wide and outlive vi.resetModules.
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
 
-      const makeGate = () => {
-        let release: () => void;
-        const promise = new Promise<void>((resolve) => {
-          release = resolve;
-        });
-        return { promise, release: () => release(), reached: false };
-      };
-      // Park the workspace-scheduled compute B at its getPlugins await, past
-      // its file read and its collected-file cleanup, so a request races an
-      // in-flight computation deterministically.
-      const bPark = makeGate();
-      let retrieveCallCount = 0;
-      jest.doMock('../../project-graph/utils/retrieve-workspace-files', () => {
-        const actual = jest.requireActual(
+    const makeGate = () => {
+      let release: () => void;
+      const promise = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      return { promise, release: () => release(), reached: false };
+    };
+    // Park the workspace-scheduled compute B at its getPlugins await, past
+    // its file read and its collected-file cleanup, so a request races an
+    // in-flight computation deterministically.
+    const bPark = makeGate();
+    let retrieveCallCount = 0;
+    vi.doMock(
+      '../../project-graph/utils/retrieve-workspace-files',
+      async () => {
+        const actual = (await vi.importActual(
           '../../project-graph/utils/retrieve-workspace-files'
-        );
+        )) as any;
         return {
           ...actual,
           retrieveProjectConfigurations: async (...args: unknown[]) => {
@@ -2000,77 +2010,77 @@ describe('pending dotenv replay before serving a graph', () => {
             return result;
           },
         };
-      });
-      // A plain factory: the module sits in a require cycle, so resolving
-      // the actual inside the factory recurses. getPluginsSeparated resolves
-      // it lazily at call time instead (project discovery needs the real
-      // default plugins); the faked getPlugins only skips dependency hooks
-      // these assertions never read.
-      let pluginsCallCount = 0;
-      jest.doMock('../../project-graph/plugins/get-plugins', () => ({
-        __esModule: true,
-        getPlugins: async () => {
-          const call = ++pluginsCallCount;
-          if (call === 2) {
-            bPark.reached = true;
-            await bPark.promise;
-          }
-          return [];
-        },
-        getPluginsSeparated: (...args: unknown[]) =>
-          jest
-            .requireActual('../../project-graph/plugins/get-plugins')
-            .getPluginsSeparated(...args),
-      }));
-
-      const {
-        getCachedSerializedProjectGraphPromise,
-        scheduleProjectGraphRecomputation,
-      } = require('./project-graph-incremental-recomputation');
-      const { handleOutputsChanges } = require('./handle-outputs-changes');
-      const { EventType } = require('../../native');
-
-      const waitFor = async (cond: () => boolean) => {
-        while (!cond()) {
-          await new Promise((r) => setImmediate(r));
+      }
+    );
+    // A plain factory: the module sits in a require cycle, so resolving
+    // the actual inside the factory recurses. getPluginsSeparated resolves
+    // it lazily at call time instead (project discovery needs the real
+    // default plugins); the faked getPlugins only skips dependency hooks
+    // these assertions never read.
+    let pluginsCallCount = 0;
+    vi.doMock('../../project-graph/plugins/get-plugins', async () => ({
+      __esModule: true,
+      getPlugins: async () => {
+        const call = ++pluginsCallCount;
+        if (call === 2) {
+          bPark.reached = true;
+          await bPark.promise;
         }
-      };
-      const envPath = join(fs.tempDir, 'libs/foo/.env.e2e');
+        return [];
+      },
+      getPluginsSeparated: async (...args: unknown[]) =>
+        (
+          await vi.importActual<
+            typeof import('../../project-graph/plugins/get-plugins')
+          >('../../project-graph/plugins/get-plugins')
+        ).getPluginsSeparated(...args),
+    }));
 
-      const first = await getCachedSerializedProjectGraphPromise();
-      expect(first.projectGraph.nodes.foo.data.tags).toEqual(['env:PORT=4200']);
-      expect(retrieveCallCount).toBe(1);
+    const {
+      getCachedSerializedProjectGraphPromise,
+      scheduleProjectGraphRecomputation,
+    } = await import('./project-graph-incremental-recomputation');
+    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { EventType } = await import('../../native');
 
-      writeFileSync(envPath, 'PORT=4201\n');
-      // Outputs watcher first: the event queues. Workspace watcher second:
-      // the recomputation it schedules reads the new content.
-      await handleOutputsChanges(null, [
-        { path: 'libs/foo/.env.e2e', type: EventType.update },
-      ]);
-      scheduleProjectGraphRecomputation([], ['libs/foo/.env.e2e'], []);
-      await waitFor(() => bPark.reached);
-
-      // A request while B is parked mid-build must chain onto B, not start
-      // a competitor from the queued twin event. The yields let it run its
-      // reuse decision before B is released.
-      const second = getCachedSerializedProjectGraphPromise();
-      for (let i = 0; i < 5; i++) {
+    const waitFor = async (cond: () => boolean) => {
+      while (!cond()) {
         await new Promise((r) => setImmediate(r));
       }
-      bPark.release();
+    };
+    const envPath = join(fs.tempDir, 'libs/foo/.env.e2e');
 
-      const result = await second;
-      expect(result.error).toBeNull();
-      expect(result.projectGraph.nodes.foo.data.tags).toEqual([
-        'env:PORT=4201',
-      ]);
-      expect(retrieveCallCount).toBe(2);
+    const first = await getCachedSerializedProjectGraphPromise();
+    expect(first.projectGraph.nodes.foo.data.tags).toEqual(['env:PORT=4200']);
+    expect(retrieveCallCount).toBe(1);
 
-      // After B settles, the drained queue holds no evidence against it.
-      const third = await getCachedSerializedProjectGraphPromise();
-      expect(third.projectGraph.nodes.foo.data.tags).toEqual(['env:PORT=4201']);
-      expect(retrieveCallCount).toBe(2);
-    });
+    writeFileSync(envPath, 'PORT=4201\n');
+    // Outputs watcher first: the event queues. Workspace watcher second:
+    // the recomputation it schedules reads the new content.
+    await handleOutputsChanges(null, [
+      { path: 'libs/foo/.env.e2e', type: EventType.update },
+    ]);
+    scheduleProjectGraphRecomputation([], ['libs/foo/.env.e2e'], []);
+    await waitFor(() => bPark.reached);
+
+    // A request while B is parked mid-build must chain onto B, not start
+    // a competitor from the queued twin event. The yields let it run its
+    // reuse decision before B is released.
+    const second = getCachedSerializedProjectGraphPromise();
+    for (let i = 0; i < 5; i++) {
+      await new Promise((r) => setImmediate(r));
+    }
+    bPark.release();
+
+    const result = await second;
+    expect(result.error).toBeNull();
+    expect(result.projectGraph.nodes.foo.data.tags).toEqual(['env:PORT=4201']);
+    expect(retrieveCallCount).toBe(2);
+
+    // After B settles, the drained queue holds no evidence against it.
+    const third = await getCachedSerializedProjectGraphPromise();
+    expect(third.projectGraph.nodes.foo.data.tags).toEqual(['env:PORT=4201']);
+    expect(retrieveCallCount).toBe(2);
   });
 
   // An event under a root no served graph knows cannot make the cached graph
@@ -2089,18 +2099,20 @@ describe('pending dotenv replay before serving a graph', () => {
       }),
     });
 
-    await jest.isolateModulesAsync(async () => {
-      // The plugin-loader mocks jest.doMock installs in the tests above are
-      // registry-wide and outlive their isolated module graphs.
-      jest.dontMock('../../project-graph/plugins/get-plugins');
-      const { setWorkspaceRoot } = require('../../utils/workspace-root');
-      setWorkspaceRoot(fs.tempDir);
+    vi.resetModules();
+    // The plugin-loader mocks vi.doMock installs in the tests above are
+    // registry-wide and outlive vi.resetModules.
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
 
-      let retrieveCallCount = 0;
-      jest.doMock('../../project-graph/utils/retrieve-workspace-files', () => {
-        const actual = jest.requireActual(
+    let retrieveCallCount = 0;
+    vi.doMock(
+      '../../project-graph/utils/retrieve-workspace-files',
+      async () => {
+        const actual = (await vi.importActual(
           '../../project-graph/utils/retrieve-workspace-files'
-        );
+        )) as any;
         return {
           ...actual,
           retrieveProjectConfigurations: async (...args: unknown[]) => {
@@ -2117,67 +2129,65 @@ describe('pending dotenv replay before serving a graph', () => {
             return result;
           },
         };
-      });
+      }
+    );
 
-      const {
-        getCachedSerializedProjectGraphPromise,
-        registerProjectGraphRecomputationListener,
-        scheduleProjectGraphRecomputation,
-      } = require('./project-graph-incremental-recomputation');
-      const { handleOutputsChanges } = require('./handle-outputs-changes');
-      const { EventType } = require('../../native');
+    const {
+      getCachedSerializedProjectGraphPromise,
+      registerProjectGraphRecomputationListener,
+      scheduleProjectGraphRecomputation,
+    } = await import('./project-graph-incremental-recomputation');
+    const { handleOutputsChanges } = await import('./handle-outputs-changes');
+    const { EventType } = await import('../../native');
 
-      const notifiedGraphs: import('../../config/project-graph').ProjectGraph[] =
-        [];
-      registerProjectGraphRecomputationListener(
-        (graph: import('../../config/project-graph').ProjectGraph) => {
-          notifiedGraphs.push(graph);
-        }
-      );
-      const waitFor = async (cond: () => boolean) => {
-        while (!cond()) {
-          await new Promise((r) => setImmediate(r));
-        }
-      };
+    const notifiedGraphs: import('../../config/project-graph').ProjectGraph[] =
+      [];
+    registerProjectGraphRecomputationListener(
+      (graph: import('../../config/project-graph').ProjectGraph) => {
+        notifiedGraphs.push(graph);
+      }
+    );
+    const waitFor = async (cond: () => boolean) => {
+      while (!cond()) {
+        await new Promise((r) => setImmediate(r));
+      }
+    };
 
-      const first = await getCachedSerializedProjectGraphPromise();
-      expect(first.projectGraph.nodes.bar).toBeUndefined();
-      expect(retrieveCallCount).toBe(1);
+    const first = await getCachedSerializedProjectGraphPromise();
+    expect(first.projectGraph.nodes.bar).toBeUndefined();
+    expect(retrieveCallCount).toBe(1);
 
-      // A gitignored dotenv file under a directory that is not a project
-      // root yet: only the outputs watcher reports it, and no root of the
-      // served graph classifies it.
-      mkdirSync(join(fs.tempDir, 'libs/bar'), { recursive: true });
-      writeFileSync(join(fs.tempDir, 'libs/bar/.env.e2e'), 'PORT=7777\n');
-      await handleOutputsChanges(null, [
-        { path: 'libs/bar/.env.e2e', type: EventType.update },
-      ]);
+    // A gitignored dotenv file under a directory that is not a project
+    // root yet: only the outputs watcher reports it, and no root of the
+    // served graph classifies it.
+    mkdirSync(join(fs.tempDir, 'libs/bar'), { recursive: true });
+    writeFileSync(join(fs.tempDir, 'libs/bar/.env.e2e'), 'PORT=7777\n');
+    await handleOutputsChanges(null, [
+      { path: 'libs/bar/.env.e2e', type: EventType.update },
+    ]);
 
-      const second = await getCachedSerializedProjectGraphPromise();
-      expect(second.projectGraph.nodes.bar).toBeUndefined();
-      expect(retrieveCallCount).toBe(1);
+    const second = await getCachedSerializedProjectGraphPromise();
+    expect(second.projectGraph.nodes.bar).toBeUndefined();
+    expect(retrieveCallCount).toBe(1);
 
-      // The project lands; the workspace watcher schedules the computation
-      // that knows the root, and its read observes the dotenv content.
-      writeFileSync(
-        join(fs.tempDir, 'libs/bar/project.json'),
-        JSON.stringify({ name: 'bar', root: 'libs/bar' })
-      );
-      scheduleProjectGraphRecomputation(['libs/bar/project.json'], [], []);
-      await waitFor(() =>
-        notifiedGraphs.some((graph) => graph.nodes.bar !== undefined)
-      );
+    // The project lands; the workspace watcher schedules the computation
+    // that knows the root, and its read observes the dotenv content.
+    writeFileSync(
+      join(fs.tempDir, 'libs/bar/project.json'),
+      JSON.stringify({ name: 'bar', root: 'libs/bar' })
+    );
+    scheduleProjectGraphRecomputation(['libs/bar/project.json'], [], []);
+    await waitFor(() =>
+      notifiedGraphs.some((graph) => graph.nodes.bar !== undefined)
+    );
 
-      const third = await getCachedSerializedProjectGraphPromise();
-      expect(third.error).toBeNull();
-      expect(third.projectGraph.nodes.bar.data.tags).toEqual(['env:PORT=7777']);
-      expect(retrieveCallCount).toBe(2);
+    const third = await getCachedSerializedProjectGraphPromise();
+    expect(third.error).toBeNull();
+    expect(third.projectGraph.nodes.bar.data.tags).toEqual(['env:PORT=7777']);
+    expect(retrieveCallCount).toBe(2);
 
-      const fourth = await getCachedSerializedProjectGraphPromise();
-      expect(fourth.projectGraph.nodes.bar.data.tags).toEqual([
-        'env:PORT=7777',
-      ]);
-      expect(retrieveCallCount).toBe(2);
-    });
+    const fourth = await getCachedSerializedProjectGraphPromise();
+    expect(fourth.projectGraph.nodes.bar.data.tags).toEqual(['env:PORT=7777']);
+    expect(retrieveCallCount).toBe(2);
   });
 });

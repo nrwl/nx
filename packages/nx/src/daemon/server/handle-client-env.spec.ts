@@ -1,20 +1,21 @@
+import type { Mock } from 'vitest';
 import { getPluginsIfLoadedOrLoading } from '../../project-graph/plugins/get-plugins';
 import { applyDaemonEnvFromClient } from '../client/daemon-environment';
 import { serverLogger } from '../logger';
 import { handleClientEnv, _setEnvForwardTimeoutMs } from './handle-client-env';
 import { invalidateGraphCache } from './project-graph-incremental-recomputation';
 
-jest.mock('../client/daemon-environment', () => ({
-  applyDaemonEnvFromClient: jest.fn(),
+vi.mock('../client/daemon-environment', () => ({
+  applyDaemonEnvFromClient: vi.fn(),
 }));
-jest.mock('../../project-graph/plugins/get-plugins', () => ({
-  getPluginsIfLoadedOrLoading: jest.fn(),
+vi.mock('../../project-graph/plugins/get-plugins', () => ({
+  getPluginsIfLoadedOrLoading: vi.fn(),
 }));
-jest.mock('./project-graph-incremental-recomputation', () => ({
-  invalidateGraphCache: jest.fn(),
+vi.mock('./project-graph-incremental-recomputation', () => ({
+  invalidateGraphCache: vi.fn(),
 }));
-jest.mock('../logger', () => ({
-  serverLogger: { log: jest.fn() },
+vi.mock('../logger', () => ({
+  serverLogger: { log: vi.fn() },
 }));
 
 describe('handleClientEnv', () => {
@@ -22,9 +23,9 @@ describe('handleClientEnv', () => {
   const flushMicrotasks = () => new Promise(setImmediate);
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (applyDaemonEnvFromClient as jest.Mock).mockReturnValue(['FOO']);
-    (getPluginsIfLoadedOrLoading as jest.Mock).mockReturnValue(undefined);
+    vi.clearAllMocks();
+    (applyDaemonEnvFromClient as Mock).mockReturnValue(['FOO']);
+    (getPluginsIfLoadedOrLoading as Mock).mockReturnValue(undefined);
   });
 
   it('discards the cached graph for a client change a config write already matches', async () => {
@@ -32,16 +33,18 @@ describe('handleClientEnv', () => {
     // next client sends before that client's env arrives; process.env then
     // has nothing to move on, but the graph in flight was computed under the
     // previous client and must not be served to this one.
-    (applyDaemonEnvFromClient as jest.Mock).mockImplementation(
-      jest.requireActual('../client/daemon-environment')
-        .applyDaemonEnvFromClient
+    const actual = await vi.importActual<
+      typeof import('../client/daemon-environment')
+    >('../client/daemon-environment');
+    (applyDaemonEnvFromClient as Mock).mockImplementation(
+      actual.applyDaemonEnvFromClient
     );
     const originalEnv = process.env;
     process.env = { ...originalEnv };
     try {
       const previous = { ...process.env };
       await handleClientEnv(previous);
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       process.env.MASKED_PROBE = 'from-config';
 
       await handleClientEnv({ ...previous, MASKED_PROBE: 'from-config' });
@@ -53,7 +56,7 @@ describe('handleClientEnv', () => {
   });
 
   it('does nothing beyond applying the env when no keys changed', async () => {
-    (applyDaemonEnvFromClient as jest.Mock).mockReturnValue([]);
+    (applyDaemonEnvFromClient as Mock).mockReturnValue([]);
 
     await handleClientEnv(env);
 
@@ -64,12 +67,12 @@ describe('handleClientEnv', () => {
 
   it('awaits worker forwarding before discarding the cached graph', async () => {
     let resolveForward: () => void = () => {};
-    const setWorkerEnv = jest.fn().mockReturnValue(
+    const setWorkerEnv = vi.fn().mockReturnValue(
       new Promise<void>((resolve) => {
         resolveForward = resolve;
       })
     );
-    (getPluginsIfLoadedOrLoading as jest.Mock).mockReturnValue(
+    (getPluginsIfLoadedOrLoading as Mock).mockReturnValue(
       Promise.resolve([{ name: 'a', setWorkerEnv }])
     );
 
@@ -85,19 +88,19 @@ describe('handleClientEnv', () => {
 
   it('holds a no-change client until the in-flight apply completes', async () => {
     let resolveForward: () => void = () => {};
-    const setWorkerEnv = jest.fn().mockReturnValue(
+    const setWorkerEnv = vi.fn().mockReturnValue(
       new Promise<void>((resolve) => {
         resolveForward = resolve;
       })
     );
-    (getPluginsIfLoadedOrLoading as jest.Mock).mockReturnValue(
+    (getPluginsIfLoadedOrLoading as Mock).mockReturnValue(
       Promise.resolve([{ name: 'a', setWorkerEnv }])
     );
 
     const first = handleClientEnv(env);
     // The second client carries the same env the first already wrote to
     // process.env, so its own apply reports no changed keys.
-    (applyDaemonEnvFromClient as jest.Mock).mockReturnValue([]);
+    (applyDaemonEnvFromClient as Mock).mockReturnValue([]);
     let secondSettled = false;
     const second = handleClientEnv(env).then(() => {
       secondSettled = true;
@@ -117,8 +120,8 @@ describe('handleClientEnv', () => {
   it('proceeds after the forward timeout when a worker never acknowledges', async () => {
     _setEnvForwardTimeoutMs(50);
     try {
-      const setWorkerEnv = jest.fn().mockReturnValue(new Promise(() => {}));
-      (getPluginsIfLoadedOrLoading as jest.Mock).mockReturnValue(
+      const setWorkerEnv = vi.fn().mockReturnValue(new Promise(() => {}));
+      (getPluginsIfLoadedOrLoading as Mock).mockReturnValue(
         Promise.resolve([{ name: 'wedged', setWorkerEnv }])
       );
 
@@ -136,13 +139,13 @@ describe('handleClientEnv', () => {
   });
 
   it('settles when a worker fails to receive the env', async () => {
-    (getPluginsIfLoadedOrLoading as jest.Mock).mockReturnValue(
+    (getPluginsIfLoadedOrLoading as Mock).mockReturnValue(
       Promise.resolve([
         {
           name: 'dead',
-          setWorkerEnv: jest.fn().mockRejectedValue(new Error('worker exited')),
+          setWorkerEnv: vi.fn().mockRejectedValue(new Error('worker exited')),
         },
-        { name: 'alive', setWorkerEnv: jest.fn().mockResolvedValue(undefined) },
+        { name: 'alive', setWorkerEnv: vi.fn().mockResolvedValue(undefined) },
       ])
     );
 
@@ -163,7 +166,7 @@ describe('handleClientEnv', () => {
   });
 
   it('settles when an in-flight plugin load fails', async () => {
-    (getPluginsIfLoadedOrLoading as jest.Mock).mockReturnValue(
+    (getPluginsIfLoadedOrLoading as Mock).mockReturnValue(
       Promise.reject(new Error('load failed'))
     );
 
@@ -172,7 +175,7 @@ describe('handleClientEnv', () => {
   });
 
   it('skips plugins without a worker to forward to', async () => {
-    (getPluginsIfLoadedOrLoading as jest.Mock).mockReturnValue(
+    (getPluginsIfLoadedOrLoading as Mock).mockReturnValue(
       Promise.resolve([{ name: 'in-process' }])
     );
 

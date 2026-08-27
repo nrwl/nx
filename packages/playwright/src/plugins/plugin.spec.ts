@@ -4,17 +4,17 @@ import {
   Task,
   workspaceRoot,
 } from '@nx/devkit';
-import { getEnvPathsForTask, setWorkspaceRoot } from '@nx/devkit/internal';
+import {
+  getEnvFilesForTask,
+  getEnvPathsForTask,
+  setWorkspaceRoot,
+} from '@nx/devkit/internal';
 import * as devkitInternal from '@nx/devkit/internal';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import * as jsUtils from '@nx/js';
 import { PlaywrightTestConfig } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-// The run-time dotenv owner resolution lives in the task runner, which the
-// devkit barrels do not re-export.
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { getEnvFilesForTask } from 'nx/src/tasks-runner/task-env';
 import { _clearWarnedUnparseableCommands, createNodesV2 } from './plugin';
 import {
   _setChildEval,

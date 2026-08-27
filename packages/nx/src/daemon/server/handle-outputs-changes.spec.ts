@@ -1,56 +1,59 @@
+import type { Mock, MockInstance } from 'vitest';
 import { EventType, type WatchEvent } from '../../native';
 
-jest.mock('../logger', () => ({
-  serverLogger: { watcherLog: jest.fn() },
+vi.mock('../logger', () => ({
+  serverLogger: { watcherLog: vi.fn() },
 }));
-jest.mock('./outputs-tracking', () => ({
-  disableOutputsTracking: jest.fn(),
-  processFileChangesInOutputs: jest.fn(),
+vi.mock('./outputs-tracking', () => ({
+  disableOutputsTracking: vi.fn(),
+  processFileChangesInOutputs: vi.fn(),
 }));
-jest.mock('./project-graph-incremental-recomputation', () => ({
+vi.mock('./project-graph-incremental-recomputation', () => ({
   currentProjectGraph: undefined,
-  getRecomputationGeneration: jest.fn(() => 7),
-  invalidateGraphCache: jest.fn(),
-  isKnownWorkspaceFile: jest.fn(() => true),
+  getRecomputationGeneration: vi.fn(() => 7),
+  invalidateGraphCache: vi.fn(),
+  isKnownWorkspaceFile: vi.fn(() => true),
 }));
-jest.mock('./dotenv-graph-changes', () => ({
-  classifyDotEnvChanges: jest.fn(() => ({
+vi.mock('./dotenv-graph-changes', () => ({
+  classifyDotEnvChanges: vi.fn(() => ({
     invalidating: [],
     unclassified: [],
   })),
-  queuePendingDotEnvEvents: jest.fn(),
+  queuePendingDotEnvEvents: vi.fn(),
 }));
 
 describe('handleOutputsChanges', () => {
   let handleOutputsChanges: typeof import('./handle-outputs-changes').handleOutputsChanges;
   let getOutputsWatcherTerminalError: typeof import('./handle-outputs-changes').getOutputsWatcherTerminalError;
   let outputsTracking: {
-    disableOutputsTracking: jest.Mock;
-    processFileChangesInOutputs: jest.Mock;
+    disableOutputsTracking: Mock;
+    processFileChangesInOutputs: Mock;
   };
   let recomputation: {
-    invalidateGraphCache: jest.Mock;
-    isKnownWorkspaceFile: jest.Mock;
+    invalidateGraphCache: Mock;
+    isKnownWorkspaceFile: Mock;
   };
   let dotenvChanges: {
-    classifyDotEnvChanges: jest.Mock;
-    queuePendingDotEnvEvents: jest.Mock;
+    classifyDotEnvChanges: Mock;
+    queuePendingDotEnvEvents: Mock;
   };
-  let consoleError: jest.SpyInstance;
+  let consoleError: MockInstance;
 
   const events: WatchEvent[] = [{ path: '.env.e2e', type: EventType.update }];
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // The watcher error flags are module state, so each test gets a fresh
-    // module registry, with the mocks re-required from the same registry the
-    // module under test resolves.
-    jest.resetModules();
+    // module registry. resetModules does not re-run the vi.mock factories, so
+    // the mock fns persist across tests and their recorded calls are cleared.
+    vi.resetModules();
+    vi.clearAllMocks();
     ({ handleOutputsChanges, getOutputsWatcherTerminalError } =
-      require('./handle-outputs-changes') as typeof import('./handle-outputs-changes'));
-    outputsTracking = require('./outputs-tracking');
-    recomputation = require('./project-graph-incremental-recomputation');
-    dotenvChanges = require('./dotenv-graph-changes');
-    consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+      await import('./handle-outputs-changes'));
+    outputsTracking = (await import('./outputs-tracking')) as any;
+    recomputation =
+      (await import('./project-graph-incremental-recomputation')) as any;
+    dotenvChanges = (await import('./dotenv-graph-changes')) as any;
+    consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {

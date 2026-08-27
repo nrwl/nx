@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import type { CompilerOptions } from 'typescript';
 import { JsxEmit, ModuleKind, ScriptTarget } from 'typescript';
 import {
@@ -516,10 +517,10 @@ describe('resolveTsNodeEsmCompilerOptions', () => {
 
 describe('forceRegisterEsmLoader', () => {
   const originalEnv = { ...process.env };
-  let registerSpy: jest.SpyInstance;
+  let registerSpy: MockInstance;
 
   beforeEach(() => {
-    registerSpy = jest
+    registerSpy = vi
       .spyOn(require('node:module'), 'register')
       .mockImplementation(() => undefined);
   });
@@ -529,12 +530,9 @@ describe('forceRegisterEsmLoader', () => {
     process.env = { ...originalEnv };
   });
 
-  function loadForceRegisterEsmLoader(): () => void {
-    let fn: () => void;
-    jest.isolateModules(() => {
-      fn = require('./register').forceRegisterEsmLoader;
-    });
-    return fn;
+  async function loadForceRegisterEsmLoader(): Promise<() => void> {
+    vi.resetModules();
+    return (await import('./register')).forceRegisterEsmLoader;
   }
 
   function registeredSetterOptions(): unknown {
@@ -550,10 +548,10 @@ describe('forceRegisterEsmLoader', () => {
     return JSON.parse(JSON.parse(rhs));
   }
 
-  it('registers a compiler-options setter module before the ts-node/esm loader', () => {
+  it('registers a compiler-options setter module before the ts-node/esm loader', async () => {
     delete process.env.TS_NODE_COMPILER_OPTIONS;
 
-    loadForceRegisterEsmLoader()();
+    (await loadForceRegisterEsmLoader())();
 
     expect(registerSpy).toHaveBeenCalledTimes(2);
     expect(String(registerSpy.mock.calls[1][0])).toMatch(/ts-node\/esm\.mjs$/);
@@ -563,14 +561,14 @@ describe('forceRegisterEsmLoader', () => {
     });
   });
 
-  it('forces nodenext module and resolution over an inherited value', () => {
+  it('forces nodenext module and resolution over an inherited value', async () => {
     process.env.TS_NODE_COMPILER_OPTIONS = JSON.stringify({
       moduleResolution: 'node10',
       module: 'commonjs',
       customConditions: null,
     });
 
-    loadForceRegisterEsmLoader()();
+    (await loadForceRegisterEsmLoader())();
 
     expect(registeredSetterOptions()).toEqual({
       moduleResolution: 'nodenext',
@@ -587,10 +585,10 @@ describe('forceRegisterEsmLoader', () => {
     );
   });
 
-  it('passes a malformed inherited value through for ts-node to reject', () => {
+  it('passes a malformed inherited value through for ts-node to reject', async () => {
     process.env.TS_NODE_COMPILER_OPTIONS = '{oops';
 
-    loadForceRegisterEsmLoader()();
+    (await loadForceRegisterEsmLoader())();
 
     const source = decodeURIComponent(
       String(registerSpy.mock.calls[0][0]).replace('data:text/javascript,', '')
@@ -598,10 +596,10 @@ describe('forceRegisterEsmLoader', () => {
     expect(source).toBe('process.env.TS_NODE_COMPILER_OPTIONS = "{oops";');
   });
 
-  it('does not write a default value into the process env', () => {
+  it('does not write a default value into the process env', async () => {
     delete process.env.TS_NODE_COMPILER_OPTIONS;
 
-    loadForceRegisterEsmLoader()();
+    (await loadForceRegisterEsmLoader())();
 
     expect(process.env.TS_NODE_COMPILER_OPTIONS).toBeUndefined();
   });
