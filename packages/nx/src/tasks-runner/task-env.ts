@@ -173,9 +173,6 @@ function getNxEnvVariablesForForkedProcess(
     FORCE_COLOR: forceColor,
     NX_WORKSPACE_ROOT: workspaceRoot,
     NX_SKIP_NX_CACHE: skipNxCache ? 'true' : undefined,
-    // tracks the root PID for child nx tasks, used to verify nx is infinitely recursing through the same tasks
-    NX_INVOCATION_ROOT_PID:
-      process.env.NX_INVOCATION_ROOT_PID ?? String(process.pid),
     // pids of the forked process's ancestor nx processes, outermost first.
     // Only an ancestor re-invoking a task is a loop — sibling nx processes
     // running the same task are legitimate.
@@ -209,6 +206,14 @@ export function getInvocationAncestorPids(): number[] {
     .split(',')
     .map((pid) => Number(pid))
     .filter((pid) => Number.isInteger(pid) && pid > 0);
+}
+
+/**
+ * Pid of the outermost nx process in this tree, which is this process when it
+ * is the root.
+ */
+export function getInvocationRootPid(): number {
+  return getInvocationAncestorPids()[0] ?? process.pid;
 }
 
 function getNxEnvVariablesForTask(
