@@ -8,7 +8,6 @@ import {
   cacheDirectoryForWorkspace,
   sharedDataDirectory,
   workspaceDataDirectory,
-  workspaceDataDirectoryForWorkspace,
 } from '../../utils/cache-directory';
 import { output } from '../../utils/output';
 import { getNativeFileCacheLocationToDelete } from '../../native/native-file-cache-location';
@@ -203,11 +202,7 @@ function cleanupWorkspaceData() {
       // this process never wrote to -- a sandboxed agent that fell back to its
       // own checkout, or a configured location, yields nothing extra.
       removeIfDistinct(
-        sharedDataDirectory(
-          workspaceRoot,
-          'workspace-data',
-          workspaceDataDirectoryForWorkspace
-        ),
+        sharedDataDirectory(workspaceRoot, 'workspace-data'),
         workspaceDataDirectory
       );
     }

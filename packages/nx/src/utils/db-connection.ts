@@ -18,11 +18,7 @@ const dbConnectionMap = new Map<string, ExternalObject<any>>();
  */
 let _sharedDir: string | undefined;
 function sharedWorkspaceDataDirectory(root: string): string {
-  _sharedDir ??= sharedDataDirectory(
-    root,
-    'workspace-data',
-    workspaceDataDirectoryForWorkspace
-  );
+  _sharedDir ??= sharedDataDirectory(root, 'workspace-data');
   return _sharedDir;
 }
 

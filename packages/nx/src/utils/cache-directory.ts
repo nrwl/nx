@@ -306,25 +306,23 @@ export function sharedUserDataDir(
 /**
  * The directory `kind` resolves to, following the one sharing decision.
  *
- * `perWorkspace` supplies the unshared answer for its kind, which differs
- * between the two: the cache honours a configured `cacheDirectory`, the DB
- * honours `NX_WORKSPACE_DATA_DIRECTORY`. Passing it in rather than importing
- * both keeps this the only place the `share` cases are spelled out.
+ * The shared answer is the same shape for both kinds. The unshared one is not:
+ * the cache honours a configured `cacheDirectory` and the lerna special case,
+ * the DB honours `NX_WORKSPACE_DATA_DIRECTORY`. Which root it applies to is the
+ * only part the sharing decision has a say in.
  */
 export function sharedDataDirectory(
   root: string,
-  kind: SharedDataKind,
-  perWorkspace: (root: string) => string
+  kind: SharedDataKind
 ): string {
   const location = resolveSharedDataLocation(root);
-  switch (location.share) {
-    case 'none':
-      return perWorkspace(root);
-    case 'main':
-      return perWorkspace(location.mainRoot);
-    case 'user':
-      return sharedUserDataDir(location.mainRoot, kind);
+  if (location.share === 'user') {
+    return sharedUserDataDir(location.mainRoot, kind);
   }
+  const target = location.share === 'main' ? location.mainRoot : root;
+  return kind === 'cache'
+    ? cacheDirectoryForWorkspace(target)
+    : workspaceDataDirectoryForWorkspace(target);
 }
 
 /**
@@ -335,11 +333,7 @@ export function sharedDataDirectory(
  * still shared through the main checkout when both checkouts configure the
  * same value. See `resolveSharedDataLocation`.
  */
-export const cacheDir = sharedDataDirectory(
-  workspaceRoot,
-  'cache',
-  cacheDirectoryForWorkspace
-);
+export const cacheDir = sharedDataDirectory(workspaceRoot, 'cache');
 
 export function cacheDirectoryForWorkspace(root: string) {
   return cacheDirectory(root, readCacheDirectoryProperty(root));
