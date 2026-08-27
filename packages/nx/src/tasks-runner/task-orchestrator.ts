@@ -62,6 +62,7 @@ import {
   getEnvVariablesForTask,
   getForceColorForChild,
   getInvocationAncestorPids,
+  getInvocationRootPid,
   getTaskSpecificEnv,
 } from './task-env';
 import { TaskStatus } from './tasks-runner';
@@ -122,7 +123,7 @@ export class TaskOrchestrator {
   private taskInvocationTracker = !IS_WASM
     ? new TaskInvocationTracker(
         getLocalDbConnection(),
-        Number(process.env.NX_INVOCATION_ROOT_PID ?? process.pid),
+        getInvocationRootPid(),
         getInvocationAncestorPids()
       )
     : null;
