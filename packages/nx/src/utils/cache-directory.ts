@@ -3,13 +3,13 @@ import { existsSync, unlinkSync, writeFileSync } from 'fs';
 import { isAbsolute, join } from 'path';
 import type { NxJsonConfiguration } from '../config/nx-json';
 import { readNxJson } from '../config/nx-json';
-import { getMainWorktreeRoot } from '../native';
 import { NX_HOME_TMP_DIR, NX_TMP_DIR, NX_USER_TMP_DIR } from './nx-tmp-dir';
 import {
   canonicalDir,
   type DirRefusal,
   ensureOwnedPrivateDir,
 } from './owned-private-dir';
+import { generateWorkspaceId } from './workspace-id';
 import { workspaceRoot } from './workspace-root';
 
 function absolutePath(root: string, path: string): string {
@@ -81,10 +81,17 @@ export function readCacheDirectoryProperty(root: string): string | undefined {
 /** The data a repository's checkouts share, each in its own directory. */
 export type SharedDataKind = 'cache' | 'workspace-data';
 
-const SHARED_DATA_KINDS: readonly SharedDataKind[] = [
-  'cache',
-  'workspace-data',
-];
+/**
+ * The directory each kind gets under the shared root. `workspace-data` is the
+ * checkout-local name and stays that way in a checkout; what moves to the shared
+ * root is only the DB, so it is named for what it holds.
+ */
+const SHARED_SEGMENT: Record<SharedDataKind, string> = {
+  cache: 'cache',
+  'workspace-data': 'databases',
+};
+
+const SHARED_DATA_KINDS = Object.keys(SHARED_SEGMENT) as SharedDataKind[];
 
 /**
  * Whether `~/.nx` is somewhere other than the shared container.
@@ -114,6 +121,7 @@ const sharedRootUsable = new Map<string, SharedDataLocation>();
 /** The establish verdict is cached per process; tests need it cleared. */
 export function resetSharedRootCacheForTesting() {
   sharedRootUsable.clear();
+  workspaceIds.clear();
 }
 
 /**
@@ -123,16 +131,16 @@ export function resetSharedRootCacheForTesting() {
  * run whose cache relocated while its DB did not takes a cache hit on artifacts
  * it never wrote. One answer serves both.
  */
-function establishUserRoot(mainRoot: string): DirRefusal | undefined {
+function establishUserRoot(workspaceId: string): DirRefusal | undefined {
   if (!NX_HOME_TMP_DIR || !homeDirIsDistinctFromSharedTmp()) {
     return { kind: 'not-a-directory', dir: NX_HOME_TMP_DIR ?? '~/.nx' };
   }
 
-  const repoRoot = join(NX_HOME_TMP_DIR, sharedDirName(mainRoot));
+  const repoRoot = join(NX_HOME_TMP_DIR, sharedDirName(workspaceId));
   const required = [
     NX_HOME_TMP_DIR,
     repoRoot,
-    ...SHARED_DATA_KINDS.map((kind) => join(repoRoot, kind)),
+    ...SHARED_DATA_KINDS.map((kind) => join(repoRoot, SHARED_SEGMENT[kind])),
   ];
 
   for (const dir of required) {
@@ -143,7 +151,7 @@ function establishUserRoot(mainRoot: string): DirRefusal | undefined {
       return result.refusal;
     }
   }
-  return probeWritable(join(repoRoot, 'cache'));
+  return probeWritable(join(repoRoot, SHARED_SEGMENT.cache));
 }
 
 /**
@@ -177,76 +185,76 @@ function probeWritable(dir: string): DirRefusal | undefined {
   }
 }
 
-/**
- * Whether a refusal means this process cannot write outside its own checkout.
- *
- * `mkdir` is what an agent sandbox denies, and `ensureOwnedPrivateDir` reports
- * that as `not-created` carrying the errno. Every other refusal is about `~/.nx`
- * itself -- owned by root after a `sudo nx` that kept `HOME`, or left at a mode
- * Nx will not re-lock -- and says nothing about where the data should go.
- *
- * Testing the actual `mkdir` rather than the agent's name is what makes this
- * cover sandboxes Nx has never heard of. An `access(W_OK)` probe would not:
- * Linux Landlock does not enforce it, so it reports writable in exactly the
- * case this exists for.
- */
-function refusalMeansConfined(refusal: DirRefusal): boolean {
-  return (
-    refusal.kind === 'not-created' &&
-    (refusal.code === 'EPERM' ||
-      refusal.code === 'EACCES' ||
-      refusal.code === 'EROFS')
-  );
-}
-
-/** Where this repository can actually share, cached per repository. */
-function shareableLocation(mainRoot: string): SharedDataLocation {
-  const cached = sharedRootUsable.get(mainRoot);
+/** Where this workspace can actually share, cached per identity. */
+function shareableLocation(workspaceId: string): SharedDataLocation {
+  const cached = sharedRootUsable.get(workspaceId);
   if (cached !== undefined) {
     return cached;
   }
 
-  const refusal = establishUserRoot(mainRoot);
-  const location: SharedDataLocation = !refusal
-    ? { share: 'user', mainRoot }
-    : refusalMeansConfined(refusal)
-      ? { share: 'none' }
-      : { share: 'main', mainRoot };
+  const location: SharedDataLocation = establishUserRoot(workspaceId)
+    ? { share: 'none' }
+    : { share: 'user', workspaceId };
 
-  sharedRootUsable.set(mainRoot, location);
+  sharedRootUsable.set(workspaceId, location);
   return location;
 }
 
 /**
- * Keyed on the main checkout, so every worktree of one repository shares a
- * directory while two clones of the same project do not collide.
+ * The outer segment, with the kind beneath it, so one workspace's shared data
+ * is a single directory: `~/.nx/<id>/{cache,databases}`.
  *
- * This is the outer segment, with the kind beneath it, so one repository's
- * shared data is a single directory: `~/.nx/<hash>/{cache,workspace-data}`.
+ * Hashed rather than used raw. `generateWorkspaceId` returns the Nx Cloud
+ * access token when that is the only identity available, and a token has no
+ * business in a path that reaches `nx reset` output, error messages and CI
+ * logs. Hashing costs nothing here: the input is already an identity, so
+ * unlike a filesystem path it needs no canonicalizing or case folding.
  */
-function sharedDirName(mainWorktreeRoot: string): string {
-  const canonical = canonicalDir(mainWorktreeRoot);
-  // Case-folded only where the filesystem is, so the many spellings that reach
-  // one directory on Windows and macOS key one hash. Linux is case-sensitive:
-  // `/repo/App` and `/repo/app` are two directories there, and folding them
-  // would hand both the same cache.
-  const key =
-    process.platform === 'win32' || process.platform === 'darwin'
-      ? canonical.toLowerCase()
-      : canonical;
-  return createHash('sha256').update(key).digest('hex').substring(0, 16);
+function sharedDirName(workspaceId: string): string {
+  return createHash('sha256')
+    .update(workspaceId)
+    .digest('hex')
+    .substring(0, 16);
+}
+
+/** Memoized so the git calls behind the identity happen once per process. */
+const workspaceIds = new Map<string, string | null>();
+
+/**
+ * This workspace's identity, or null when it has none.
+ *
+ * The Nx Cloud id where there is one, else a key derived from the git remote
+ * (or the first commit). Deliberately not a path: a checkout that is moved or
+ * renamed keeps its identity, and every checkout of the workspace resolves to
+ * the same one -- worktrees because a linked worktree is its own git top
+ * level, separate clones because they share a remote.
+ *
+ * Null for anything with no derivable identity -- not a git repository, or a
+ * shallow clone with no remote. Those keep their own copy.
+ */
+function workspaceIdFor(root: string): string | null {
+  if (!workspaceIds.has(root)) {
+    let id: string | null = null;
+    try {
+      // `readNxJson` throws on malformed `nx.json`, which must not take the
+      // process down: this runs at module scope and there is a better error
+      // waiting further in. `generateWorkspaceId` swallows its own git
+      // failures.
+      id = generateWorkspaceId(root, readNxJson(root));
+    } catch {}
+    workspaceIds.set(root, id);
+  }
+  return workspaceIds.get(root);
 }
 
 /**
  * Where this checkout's shared data lives.
  *
- * `none` keeps its own copy, `main` uses the main checkout's own directories,
- * `user` uses the per-user shared root.
+ * `none` keeps its own copy, `user` uses the per-user shared root.
  */
 export type SharedDataLocation =
   | { share: 'none' }
-  | { share: 'main'; mainRoot: string }
-  | { share: 'user'; mainRoot: string };
+  | { share: 'user'; workspaceId: string };
 
 /**
  * The one decision the cache and the workspace-data DB both follow.
@@ -258,10 +266,8 @@ export type SharedDataLocation =
  * Two predicates is how that happens, so there is only one.
  *
  * The per-user root is preferred for every checkout, not only for linked
- * worktrees. A main checkout that kept its own `.nx` would stop sharing with
- * its worktrees the moment one was added, which is the inconsistency this
- * avoids -- and an agent sandbox can be granted `~/.nx` by a committed
- * settings file, where an absolute checkout path cannot (NXC-4625).
+ * worktrees, and an agent sandbox can be granted `~/.nx` by a committed
+ * settings file where an absolute checkout path cannot (NXC-4625).
  */
 export function resolveSharedDataLocation(root: string): SharedDataLocation {
   // Process-global, and pointing at one location for this run whichever
@@ -275,43 +281,32 @@ export function resolveSharedDataLocation(root: string): SharedDataLocation {
     return { share: 'none' };
   }
 
-  let mainRoot: string;
-  try {
-    // `null` means this checkout is the main one, or is not a git repository
-    // at all. Either way it keys the shared directory itself.
-    mainRoot = getMainWorktreeRoot(root) ?? root;
-  } catch {
-    // Worktree detection is best-effort.
-    mainRoot = root;
+  // A configured location is the user's and is not ours to relocate. This
+  // checkout's own configuration decides it; no other checkout is consulted.
+  if (readCacheDirectoryProperty(root)) {
+    return { share: 'none' };
   }
 
-  const configured = readCacheDirectoryProperty(root);
-  if (configured) {
-    // A configured location is the user's and is not ours to relocate. Two
-    // worktrees configuring the same value are still naming one location
-    // though, so they can still share it -- through the main checkout, the
-    // only root both of them agree on. Different values are different
-    // intents; keep those apart.
-    return readCacheDirectoryProperty(mainRoot) === configured
-      ? { share: 'main', mainRoot }
-      : { share: 'none' };
-  }
-
-  return shareableLocation(mainRoot);
+  const workspaceId = workspaceIdFor(root);
+  return workspaceId ? shareableLocation(workspaceId) : { share: 'none' };
 }
 
 /**
- * The per-user directory a repository's checkouts share for `kind`.
+ * The per-user directory a workspace's checkouts share for `kind`.
  *
  * It lives outside every checkout because an agent sandbox grants paths, and a
  * checkout's absolute path is different on each machine so it cannot be
  * committed to a shared settings file. This root can (NXC-4625).
  */
 export function sharedUserDataDir(
-  mainRoot: string,
+  workspaceId: string,
   kind: SharedDataKind
 ): string {
-  return join(NX_HOME_TMP_DIR, sharedDirName(mainRoot), kind);
+  return join(
+    NX_HOME_TMP_DIR,
+    sharedDirName(workspaceId),
+    SHARED_SEGMENT[kind]
+  );
 }
 
 /**
@@ -319,8 +314,7 @@ export function sharedUserDataDir(
  *
  * The shared answer is the same shape for both kinds. The unshared one is not:
  * the cache honours a configured `cacheDirectory` and the lerna special case,
- * the DB honours `NX_WORKSPACE_DATA_DIRECTORY`. Which root it applies to is the
- * only part the sharing decision has a say in.
+ * the DB honours `NX_WORKSPACE_DATA_DIRECTORY`.
  */
 export function sharedDataDirectory(
   root: string,
@@ -328,19 +322,18 @@ export function sharedDataDirectory(
 ): string {
   const location = resolveSharedDataLocation(root);
   if (location.share === 'user') {
-    return sharedUserDataDir(location.mainRoot, kind);
+    return sharedUserDataDir(location.workspaceId, kind);
   }
-  const target = location.share === 'main' ? location.mainRoot : root;
   return kind === 'cache'
-    ? cacheDirectoryForWorkspace(target)
-    : workspaceDataDirectoryForWorkspace(target);
+    ? cacheDirectoryForWorkspace(root)
+    : workspaceDataDirectoryForWorkspace(root);
 }
 
 /**
  * Path to the directory where Nx stores its cache.
  *
- * Normally the shared per-user directory, so a checkout and every worktree
- * added to it use one cache. A configured `cacheDirectory` is honored instead, and is
+ * Normally the shared per-user directory, so every checkout of the workspace
+ * uses one cache. A configured `cacheDirectory` is honored instead, and is
  * still shared through the main checkout when both checkouts configure the
  * same value. See `resolveSharedDataLocation`.
  */

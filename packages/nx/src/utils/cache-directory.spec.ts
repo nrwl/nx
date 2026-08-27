@@ -1,6 +1,7 @@
 import type { MockedFunction } from 'vitest';
-vi.mock('../native', async () => ({
-  getMainWorktreeRoot: vi.fn(),
+vi.mock('./workspace-id', async () => ({
+  ...(await vi.importActual('./workspace-id')),
+  generateWorkspaceId: vi.fn(),
 }));
 
 vi.mock('./owned-private-dir', async () => {
@@ -32,7 +33,6 @@ import { createHash } from 'crypto';
 import { dirname, join } from 'path';
 import { unlinkSync, writeFileSync } from 'fs';
 import { readNxJson } from '../config/nx-json';
-import { getMainWorktreeRoot } from '../native';
 import {
   resetSharedRootCacheForTesting,
   resolveSharedDataLocation,
@@ -42,17 +42,29 @@ import {
 } from './cache-directory';
 import { NX_HOME_TMP_DIR, NX_TMP_DIR } from './nx-tmp-dir';
 import { canonicalDir, ensureOwnedPrivateDir } from './owned-private-dir';
+import { generateWorkspaceId } from './workspace-id';
 
 const mockEnsureOwnedPrivateDir = ensureOwnedPrivateDir as MockedFunction<
   typeof ensureOwnedPrivateDir
 >;
 const mockCanonicalDir = canonicalDir as MockedFunction<typeof canonicalDir>;
-
 const mockReadNxJson = readNxJson as MockedFunction<typeof readNxJson>;
 const mockWriteFileSync = writeFileSync as MockedFunction<typeof writeFileSync>;
 const mockUnlinkSync = unlinkSync as MockedFunction<typeof unlinkSync>;
+const mockGenerateWorkspaceId = generateWorkspaceId as MockedFunction<
+  typeof generateWorkspaceId
+>;
 
-/** Stage each root's `nx.json` `cacheDirectory`; `undefined` means unset. */
+/** A stand-in for the repo key `deriveRepoKey` produces. */
+const WORKSPACE_ID = 'github.com/acme/repo#';
+
+/** The directory each kind gets under the shared root. */
+const SEGMENT: Record<SharedDataKind, string> = {
+  cache: 'cache',
+  'workspace-data': 'databases',
+};
+
+/** Stage this checkout's `nx.json` `cacheDirectory`; `undefined` means unset. */
 const stageCacheDirectoryConfig = (
   config: Record<string, string | undefined>
 ) =>
@@ -62,34 +74,23 @@ const stageCacheDirectoryConfig = (
 
 /**
  * The per-user path a consumer would get, or `undefined` when this checkout
- * keeps its own copy or shares through the main checkout. Stands in for what
- * `sharedDataDirectory` resolves to, without going through its unshared half.
+ * keeps its own copy. Stands in for what `sharedDataDirectory` resolves to,
+ * without going through its unshared half.
  */
 const sharedUserDirFor = (root: string, kind: SharedDataKind) => {
   const location = resolveSharedDataLocation(root);
   return location.share === 'user'
-    ? sharedUserDataDir(location.mainRoot, kind)
+    ? sharedUserDataDir(location.workspaceId, kind)
     : undefined;
 };
 
-/** Whether this platform's filesystem reaches one directory by many spellings. */
-const caseInsensitiveFs =
-  process.platform === 'win32' || process.platform === 'darwin';
-
-/** Where worktrees of `mainRoot` are expected to share `kind`. */
-const sharedDirFor = (mainRoot: string, kind: 'cache' | 'workspace-data') =>
+/** Where checkouts sharing `workspaceId` are expected to share `kind`. */
+const sharedDirFor = (workspaceId: string, kind: SharedDataKind) =>
   join(
     NX_HOME_TMP_DIR,
-    createHash('sha256')
-      .update(caseInsensitiveFs ? mainRoot.toLowerCase() : mainRoot)
-      .digest('hex')
-      .substring(0, 16),
-    kind
+    createHash('sha256').update(workspaceId).digest('hex').substring(0, 16),
+    SEGMENT[kind]
   );
-
-const mockGetMainWorktreeRoot = getMainWorktreeRoot as MockedFunction<
-  typeof getMainWorktreeRoot
->;
 
 describe('shared data location', () => {
   const cacheEnvVars = [
@@ -107,7 +108,7 @@ describe('shared data location', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetMainWorktreeRoot.mockReturnValue('/main');
+    mockGenerateWorkspaceId.mockReturnValue(WORKSPACE_ID);
     // clearAllMocks drops implementations too, so restore the permissive
     // defaults; rows that need a refusal override them.
     mockEnsureOwnedPrivateDir.mockImplementation((dir: string) => ({
@@ -137,29 +138,30 @@ describe('shared data location', () => {
 
   it('shares a home-rooted directory per kind', () => {
     expect(sharedUserDirFor('/worktree', 'cache')).toBe(
-      sharedDirFor('/main', 'cache')
+      sharedDirFor(WORKSPACE_ID, 'cache')
     );
     expect(sharedUserDirFor('/worktree', 'workspace-data')).toBe(
-      sharedDirFor('/main', 'workspace-data')
+      sharedDirFor(WORKSPACE_ID, 'workspace-data')
     );
   });
 
-  it('nests both kinds under one per-repository directory', () => {
+  it('nests both kinds under one per-workspace directory', () => {
     // Pinned literally rather than derived, so a change to the layout has to
-    // be made here on purpose. `~/.nx/<hash>/<kind>` and not
-    // `~/.nx/<kind>/<hash>`: one repository's worktree data is one directory,
+    // be made here on purpose. `~/.nx/<id>/<segment>` and not
+    // `~/.nx/<segment>/<id>`: one workspace's shared data is one directory,
     // which is also what lets a future sweep reclaim it in a single unlink.
-    mockGetMainWorktreeRoot.mockReturnValue('/main');
-    const hash = createHash('sha256')
-      .update('/main')
+    // The DB's segment is `databases`, not `workspace-data`: only the DB moves
+    // out of the checkout, so it is named for what it holds.
+    const id = createHash('sha256')
+      .update(WORKSPACE_ID)
       .digest('hex')
       .substring(0, 16);
 
     expect(sharedUserDirFor('/worktree', 'cache')).toBe(
-      join(NX_HOME_TMP_DIR, hash, 'cache')
+      join(NX_HOME_TMP_DIR, id, 'cache')
     );
     expect(sharedUserDirFor('/worktree', 'workspace-data')).toBe(
-      join(NX_HOME_TMP_DIR, hash, 'workspace-data')
+      join(NX_HOME_TMP_DIR, id, 'databases')
     );
   });
 
@@ -169,70 +171,81 @@ describe('shared data location', () => {
     );
   });
 
-  it('gives every worktree of one repo the same directory, and two repos different ones', () => {
-    // Sharing is the point: a second worktree that computed its own directory
-    // would rebuild a cache the first one already has.
-    mockGetMainWorktreeRoot.mockReturnValue('/main');
-    const fromA = sharedUserDirFor('/worktree-a', 'cache');
-    const fromB = sharedUserDirFor('/worktree-b', 'cache');
-    expect(fromA).toBe(fromB);
+  describe('the workspace identity', () => {
+    it('gives every checkout sharing an identity the same directory', () => {
+      // Sharing is the point: a second worktree that computed its own
+      // directory would rebuild a cache the first one already has. The
+      // identity does not depend on the path, so it holds for a main checkout
+      // and its worktrees alike.
+      const fromMain = sharedUserDirFor('/main', 'cache');
+      const fromWorktreeA = sharedUserDirFor('/wt-a', 'cache');
+      const fromWorktreeB = sharedUserDirFor('/somewhere/else/wt-b', 'cache');
 
-    mockGetMainWorktreeRoot.mockReturnValue('/other-clone');
-    expect(sharedUserDirFor('/worktree-a', 'cache')).not.toBe(fromA);
-  });
-
-  it('relocates a plain checkout too, keyed on itself', () => {
-    // `getMainWorktreeRoot` returns null both for the main checkout of a repo
-    // and for a directory that is not a git repo at all. Either way it keys
-    // the shared directory itself, so a main checkout and any worktree added
-    // to it later land on the same directory rather than diverging the moment
-    // the first `git worktree add` happens.
-    mockGetMainWorktreeRoot.mockReturnValue(null);
-
-    expect(sharedUserDirFor('/plain-checkout', 'cache')).toBe(
-      sharedDirFor('/plain-checkout', 'cache')
-    );
-  });
-
-  it('agrees between a main checkout and its worktrees', () => {
-    mockGetMainWorktreeRoot.mockReturnValue(null);
-    const fromMain = sharedUserDirFor('/main', 'cache');
-
-    mockGetMainWorktreeRoot.mockReturnValue('/main');
-    expect(sharedUserDirFor('/worktree', 'cache')).toBe(fromMain);
-  });
-
-  it('keys on the local root when worktree detection fails', () => {
-    mockGetMainWorktreeRoot.mockImplementation(() => {
-      throw new Error('not a git worktree');
+      expect(fromWorktreeA).toBe(fromMain);
+      expect(fromWorktreeB).toBe(fromMain);
     });
 
-    expect(sharedUserDirFor('/worktree', 'cache')).toBe(
-      sharedDirFor('/worktree', 'cache')
-    );
+    it('survives a rename of the checkout', () => {
+      // The whole reason for keying on identity rather than a path: renaming
+      // or moving a checkout used to strand its cache and start a new one.
+      const before = sharedUserDirFor('/repos/app', 'cache');
+
+      resetSharedRootCacheForTesting();
+      const afterRename = sharedUserDirFor('/repos/app-renamed', 'cache');
+
+      expect(afterRename).toBe(before);
+    });
+
+    it('gives a different workspace a different directory', () => {
+      const ours = sharedUserDirFor('/worktree', 'cache');
+
+      mockGenerateWorkspaceId.mockReturnValue('github.com/acme/other#');
+      resetSharedRootCacheForTesting();
+
+      expect(sharedUserDirFor('/worktree', 'cache')).not.toBe(ours);
+    });
+
+    it('hashes the identity, so a cloud token never lands in a path', () => {
+      // `generateWorkspaceId` returns `nxCloudAccessToken` when that is the
+      // only identity available. That value reaches `nx reset` output, error
+      // messages and CI logs if it is used raw as a directory name.
+      const token = 'nxcloud-secret-token-value';
+      mockGenerateWorkspaceId.mockReturnValue(token);
+
+      const dir = sharedUserDirFor('/worktree', 'cache');
+
+      expect(dir).toBe(sharedDirFor(token, 'cache'));
+      expect(dir).not.toContain(token);
+    });
+
+    it('keeps its own copy when the workspace has no identity', () => {
+      // Not a git repository, or a shallow clone with no remote. There is
+      // nothing stable to key a shared directory on.
+      mockGenerateWorkspaceId.mockReturnValue(null);
+
+      expect(resolveSharedDataLocation('/worktree')).toEqual({
+        share: 'none',
+      });
+    });
+
+    it('keeps its own copy when reading nx.json throws', () => {
+      // Malformed `nx.json`. This runs at module scope, so it must not take
+      // the process down; there is a better error waiting further in.
+      mockReadNxJson.mockImplementation(() => {
+        throw new Error('unexpected token');
+      });
+
+      expect(resolveSharedDataLocation('/worktree')).toEqual({
+        share: 'none',
+      });
+    });
   });
 
   describe('a configured cacheDirectory', () => {
-    it('shares through the main checkout when both configure the same value', () => {
-      stageCacheDirectoryConfig({
-        '/worktree': '.nx/cache',
-        '/main': '.nx/cache',
-      });
-
-      // Both are naming one location, so they can still share it -- but via the
-      // main checkout rather than the per-user root, since the user chose where.
-      expect(resolveSharedDataLocation('/worktree')).toEqual({
-        share: 'main',
-        mainRoot: '/main',
-      });
-      expect(sharedUserDirFor('/worktree', 'cache')).toBeUndefined();
-    });
-
-    it('keeps its own copy when the two checkouts configure different values', () => {
-      stageCacheDirectoryConfig({
-        '/worktree': '.nx/branch-cache',
-        '/main': '.nx/cache',
-      });
+    it('keeps its own copy, wherever the user pointed it', () => {
+      // A configured location is the user's and is not ours to relocate. Only
+      // this checkout's configuration is consulted.
+      stageCacheDirectoryConfig({ '/worktree': '.nx/cache' });
 
       expect(resolveSharedDataLocation('/worktree')).toEqual({
         share: 'none',
@@ -256,20 +269,11 @@ describe('shared data location', () => {
       // `finalizeCacheHits` still called that `local-cache` -- a green cache
       // hit that restored nothing.
       //
-      // `sharedUserDataDir` is what returns that per-user path. Once
-      // anything pins a location it must return undefined for BOTH kinds, so
-      // there is no per-user path for either consumer to drift onto.
+      // `sharedUserDataDir` is what returns that per-user path. Once anything
+      // pins a location it must return undefined for BOTH kinds, so there is
+      // no per-user path for either consumer to drift onto.
       const pinned = [
-        () =>
-          stageCacheDirectoryConfig({
-            '/worktree': '.nx/c',
-            '/main': '.nx/c',
-          }),
-        () =>
-          stageCacheDirectoryConfig({
-            '/worktree': '.nx/c',
-            '/main': '.nx/other',
-          }),
+        () => stageCacheDirectoryConfig({ '/worktree': '.nx/c' }),
         () => {
           process.env.NX_WORKSPACE_DATA_DIRECTORY = '/pinned';
         },
@@ -282,10 +286,11 @@ describe('shared data location', () => {
         stageCacheDirectoryConfig({});
         delete process.env.NX_WORKSPACE_DATA_DIRECTORY;
         delete process.env.NX_CACHE_DIRECTORY;
+        resetSharedRootCacheForTesting();
         // Unpinned, the per-user root is on offer -- so the assertions below
         // are testing the pin, not a function that always returns undefined.
         expect(sharedUserDirFor('/worktree', 'cache')).toBe(
-          sharedDirFor('/main', 'cache')
+          sharedDirFor(WORKSPACE_ID, 'cache')
         );
 
         pin();
@@ -317,11 +322,11 @@ describe('shared data location', () => {
 
     it('removes the marker it wrote', () => {
       expect(sharedUserDirFor('/worktree', 'cache')).toBe(
-        sharedDirFor('/main', 'cache')
+        sharedDirFor(WORKSPACE_ID, 'cache')
       );
 
       const written = mockWriteFileSync.mock.calls[0][0] as string;
-      expect(written).toContain(sharedDirFor('/main', 'cache'));
+      expect(written).toContain(sharedDirFor(WORKSPACE_ID, 'cache'));
       expect(mockUnlinkSync).toHaveBeenCalledWith(written);
     });
 
@@ -332,7 +337,7 @@ describe('shared data location', () => {
       // reporting the root writable. `wx` refuses to follow it, and an
       // unguessable name means there is nothing to aim at in the first place.
       expect(sharedUserDirFor('/worktree', 'cache')).toBe(
-        sharedDirFor('/main', 'cache')
+        sharedDirFor(WORKSPACE_ID, 'cache')
       );
       expect(mockWriteFileSync).toHaveBeenCalledWith(expect.any(String), '', {
         flag: 'wx',
@@ -341,58 +346,10 @@ describe('shared data location', () => {
       const first = mockWriteFileSync.mock.calls[0][0] as string;
       resetSharedRootCacheForTesting();
       expect(sharedUserDirFor('/worktree', 'cache')).toBe(
-        sharedDirFor('/main', 'cache')
+        sharedDirFor(WORKSPACE_ID, 'cache')
       );
       const second = mockWriteFileSync.mock.calls.at(-1)[0] as string;
       expect(second).not.toBe(first);
-    });
-  });
-
-  describe('the shared directory name', () => {
-    it('folds case only where the filesystem does', () => {
-      // Stubbed rather than read from the host, so both arms run on every
-      // platform -- on a case-insensitive host the Linux arm is what fails if
-      // the fold ever goes back to being unconditional.
-      const realPlatform = process.platform;
-      const namesUnder = (platform: string) => {
-        Object.defineProperty(process, 'platform', { value: platform });
-        mockGetMainWorktreeRoot.mockReturnValue(null);
-        resetSharedRootCacheForTesting();
-        const upper = sharedUserDirFor('/repo/App', 'cache');
-        resetSharedRootCacheForTesting();
-        const lower = sharedUserDirFor('/repo/app', 'cache');
-        return { upper, lower };
-      };
-
-      try {
-        // One directory reached by two spellings: one cache.
-        const darwin = namesUnder('darwin');
-        expect(darwin.upper).toBe(darwin.lower);
-
-        // Two directories: folding them would hand both the same cache.
-        const linux = namesUnder('linux');
-        expect(linux.upper).not.toBe(linux.lower);
-      } finally {
-        Object.defineProperty(process, 'platform', { value: realPlatform });
-      }
-    });
-
-    it('keys on the canonical spelling, so two spellings share one directory', () => {
-      // `getMainWorktreeRoot` canonicalizes, but the `?? root` fallback uses
-      // `workspaceRoot` verbatim -- and that is NX_WORKSPACE_ROOT_PATH when set,
-      // which Nx Console sets. Hashing the spelling would key a main checkout
-      // and its own worktree to two different trees: no sharing, doubled disk.
-      mockCanonicalDir.mockImplementation((dir: string) =>
-        dir.startsWith('/link') ? dir.replace('/link', '/real') : dir
-      );
-
-      mockGetMainWorktreeRoot.mockReturnValue(null);
-      const viaLink = sharedUserDirFor('/link/repo', 'cache');
-
-      resetSharedRootCacheForTesting();
-      const viaReal = sharedUserDirFor('/real/repo', 'cache');
-
-      expect(viaLink).toBe(viaReal);
     });
   });
 
@@ -402,24 +359,10 @@ describe('shared data location', () => {
     // regression in it cannot pass while the decision underneath stays right.
     it('sends both kinds to the shared root when it is usable', () => {
       expect(sharedDataDirectory('/worktree', 'cache')).toBe(
-        sharedDirFor('/main', 'cache')
+        sharedDirFor(WORKSPACE_ID, 'cache')
       );
       expect(sharedDataDirectory('/worktree', 'workspace-data')).toBe(
-        sharedDirFor('/main', 'workspace-data')
-      );
-    });
-
-    it('sends both kinds to the main checkout when it shares through it', () => {
-      stageCacheDirectoryConfig({
-        '/worktree': '.nx/cache',
-        '/main': '.nx/cache',
-      });
-
-      expect(sharedDataDirectory('/worktree', 'cache')).toBe(
-        join('/main', '.nx', 'cache')
-      );
-      expect(sharedDataDirectory('/worktree', 'workspace-data')).toBe(
-        join('/main', '.nx', 'workspace-data')
+        sharedDirFor(WORKSPACE_ID, 'workspace-data')
       );
     });
 
@@ -445,15 +388,13 @@ describe('shared data location', () => {
       );
 
       expect(resolveSharedDataLocation('/worktree')).toEqual({
-        share: 'main',
-        mainRoot: '/main',
+        share: 'none',
       });
       expect(sharedUserDirFor('/worktree', 'cache')).toBeUndefined();
     });
 
-    it('falls back to the main checkout when ~/.nx belongs to someone else', () => {
-      // A `sudo nx` that kept HOME leaves ~/.nx owned by root. That says
-      // nothing about the main checkout, which this user still owns.
+    it('keeps its own copy when ~/.nx belongs to someone else', () => {
+      // A `sudo nx` that kept HOME leaves ~/.nx owned by root.
       mockEnsureOwnedPrivateDir.mockImplementation((dir: string) =>
         dir === NX_HOME_TMP_DIR
           ? ({
@@ -464,18 +405,16 @@ describe('shared data location', () => {
       );
 
       expect(resolveSharedDataLocation('/worktree')).toEqual({
-        share: 'main',
-        mainRoot: '/main',
+        share: 'none',
       });
     });
 
     it.each(['EPERM', 'EACCES', 'EROFS'])(
       'keeps its own copy when mkdir is denied with %s',
       (code) => {
-        // What an agent sandbox does: deny the mkdir outright. The main
-        // checkout is outside that sandbox too, so falling back there would
-        // fail the same way. Testing the mkdir rather than the agent's name is
-        // what makes this cover agents Nx has never heard of.
+        // What an agent sandbox does: deny the mkdir outright. Testing the
+        // mkdir rather than the agent's name is what makes this cover agents
+        // Nx has never heard of.
         mockEnsureOwnedPrivateDir.mockImplementation(
           (dir: string) =>
             ({
@@ -491,29 +430,12 @@ describe('shared data location', () => {
       }
     );
 
-    it('still reaches the main checkout when mkdir fails for an unrelated reason', () => {
-      // ENOSPC is not confinement. Telling it apart from a sandbox denial is
-      // the whole job of the errno check.
-      mockEnsureOwnedPrivateDir.mockImplementation(
-        (dir: string) =>
-          ({
-            status: 'refused',
-            refusal: { kind: 'not-created', dir, code: 'ENOSPC' },
-          }) as any
-      );
-
-      expect(resolveSharedDataLocation('/worktree')).toEqual({
-        share: 'main',
-        mainRoot: '/main',
-      });
-    });
-
     it('establishes both kinds together, so neither can relocate alone', () => {
       // The cache and the DB indexing it must reach the same verdict. If only
       // the cache leaf were establishable, relocating it alone would strand
-      // the DB -- so a refusal anywhere sends both to the main checkout.
+      // the DB -- so a refusal anywhere keeps both in the checkout.
       mockEnsureOwnedPrivateDir.mockImplementation((dir: string) =>
-        dir.includes('workspace-data')
+        dir.includes('databases')
           ? ({
               status: 'refused',
               refusal: { kind: 'not-created', dir },
@@ -527,15 +449,15 @@ describe('shared data location', () => {
 
     it('establishes each level owner-only before handing the path back', () => {
       expect(sharedUserDirFor('/worktree', 'cache')).toBe(
-        sharedDirFor('/main', 'cache')
+        sharedDirFor(WORKSPACE_ID, 'cache')
       );
 
       const guarded = mockEnsureOwnedPrivateDir.mock.calls.map((c) => c[0]);
       expect(guarded).toContain(NX_HOME_TMP_DIR);
-      // The per-repo directory, then each kind beneath it.
-      expect(guarded).toContain(dirname(sharedDirFor('/main', 'cache')));
-      expect(guarded).toContain(sharedDirFor('/main', 'cache'));
-      expect(guarded).toContain(sharedDirFor('/main', 'workspace-data'));
+      // The per-workspace directory, then each segment beneath it.
+      expect(guarded).toContain(dirname(sharedDirFor(WORKSPACE_ID, 'cache')));
+      expect(guarded).toContain(sharedDirFor(WORKSPACE_ID, 'cache'));
+      expect(guarded).toContain(sharedDirFor(WORKSPACE_ID, 'workspace-data'));
     });
   });
 });
