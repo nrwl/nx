@@ -236,15 +236,6 @@ export function createNxJsonFromTurboJson(
     }
   }
 
-  /**
-   * The fact that cacheDir was in use suggests the user had a reason for deviating from the default.
-   * We can't know what that reason was, nor if it would still be applicable in Nx, but we can at least
-   * improve discoverability of the relevant Nx option by explicitly including it with its default value.
-   */
-  if (turboJson.cacheDir) {
-    nxJson.cacheDirectory = '.nx/cache';
-  }
-
   const defaultBase = deduceDefaultBase();
   // Do not add defaultBase if it is inferred to be the Nx default value of main
   if (defaultBase !== 'main') {
