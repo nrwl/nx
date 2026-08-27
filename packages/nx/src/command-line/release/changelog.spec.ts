@@ -66,15 +66,12 @@ vi.mock('./utils/remote-release-clients/remote-release-client', async () => ({
   ),
 }));
 
-const { createProjectGraphAsync } = await import(
-  '../../project-graph/project-graph'
-);
-const { createProjectFileMapUsingProjectGraph } = await import(
-  '../../project-graph/file-map-utils'
-);
-const { resolveChangelogFromSHA } = await import(
-  './changelog/version-plan-filtering'
-);
+const { createProjectGraphAsync } =
+  await import('../../project-graph/project-graph');
+const { createProjectFileMapUsingProjectGraph } =
+  await import('../../project-graph/file-map-utils');
+const { resolveChangelogFromSHA } =
+  await import('./changelog/version-plan-filtering');
 
 describe('releaseChangelog', () => {
   let tempFs: TempFs;

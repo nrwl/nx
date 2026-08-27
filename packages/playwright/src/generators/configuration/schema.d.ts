@@ -30,8 +30,7 @@ export interface ConfigurationGeneratorSchema {
   addPlugin?: boolean;
 }
 
-export interface NormalizedGeneratorOptions
-  extends ConfigurationGeneratorSchema {
+export interface NormalizedGeneratorOptions extends ConfigurationGeneratorSchema {
   addPlugin: boolean;
   directory: string;
   linter: LinterType;

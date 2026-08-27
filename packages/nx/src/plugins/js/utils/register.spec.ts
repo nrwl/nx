@@ -136,9 +136,8 @@ describe('getTranspiler', () => {
       ...require('typescript'),
       versionMajorMinor: '6.0',
     });
-    const { getTranspiler: fresh } = (await import(
-      './register'
-    )) as typeof import('./register');
+    const { getTranspiler: fresh } =
+      (await import('./register')) as typeof import('./register');
     const opts: CompilerOptions = {};
     fresh(opts);
     expect(opts.ignoreDeprecations).toEqual('6.0');
@@ -151,9 +150,8 @@ describe('getTranspiler', () => {
       ...require('typescript'),
       versionMajorMinor: '5.9',
     });
-    const { getTranspiler: fresh } = (await import(
-      './register'
-    )) as typeof import('./register');
+    const { getTranspiler: fresh } =
+      (await import('./register')) as typeof import('./register');
     const opts: CompilerOptions = {};
     fresh(opts);
     expect(opts.ignoreDeprecations).toBeUndefined();

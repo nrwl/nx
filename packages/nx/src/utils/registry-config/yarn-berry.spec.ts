@@ -1084,9 +1084,8 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
       (logger.warn as Mock).mockClear();
       projectRc(rc);
       vi.resetModules();
-      const { getYarnBerrySpawnRegistryEnv: fresh } = await import(
-        './yarn-berry'
-      );
+      const { getYarnBerrySpawnRegistryEnv: fresh } =
+        await import('./yarn-berry');
       for (const version of versions) {
         fresh('is-even', ROOT, version);
       }
@@ -1239,9 +1238,8 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
       const { logger } = await import('../logger');
       (logger.warn as Mock).mockClear();
       vi.resetModules();
-      const { getYarnBerrySpawnRegistryEnv: fresh } = await import(
-        './yarn-berry'
-      );
+      const { getYarnBerrySpawnRegistryEnv: fresh } =
+        await import('./yarn-berry');
       for (const pkg of packages) {
         fresh(pkg, ROOT, '4.16.0');
       }

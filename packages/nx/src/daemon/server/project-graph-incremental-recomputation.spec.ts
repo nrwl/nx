@@ -39,12 +39,10 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
 
     const { watchWorkspace } = await import('./watcher');
     const { storeWatcherInstance } = await import('./shutdown-utils');
-    const { getCachedSerializedProjectGraphPromise } = await import(
-      './project-graph-incremental-recomputation'
-    );
-    const { routeWorkspaceChanges } = await import(
-      './file-watching/route-workspace-changes'
-    );
+    const { getCachedSerializedProjectGraphPromise } =
+      await import('./project-graph-incremental-recomputation');
+    const { routeWorkspaceChanges } =
+      await import('./file-watching/route-workspace-changes');
 
     const fakeServer = {} as unknown as import('net').Server;
     const watcher = await watchWorkspace(

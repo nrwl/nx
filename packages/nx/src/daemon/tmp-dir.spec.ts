@@ -600,9 +600,8 @@ describe('socket directories', () => {
       getSocketDir: collidingSocketDir,
       DAEMON_DIR_FOR_CURRENT_WORKSPACE: workspaceDir,
     } = await import('./tmp-dir');
-    const { ensureOwnedPrivateDir: guard } = await import(
-      '../utils/owned-private-dir'
-    );
+    const { ensureOwnedPrivateDir: guard } =
+      await import('../utils/owned-private-dir');
     (guard as Mock).mockImplementation((d: string) =>
       d.startsWith(SHARED_TMP_ROOT)
         ? { status: 'refused', refusal: { kind: 'not-a-directory', dir: d } }
