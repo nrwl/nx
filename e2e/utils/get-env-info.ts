@@ -148,7 +148,7 @@ process.env.WEBPACK_DEV_SERVER_BASE_PORT ??= String(
 );
 
 export function getStrippedEnvironmentVariables() {
-  return Object.fromEntries(
+  const stripped = Object.fromEntries(
     Object.entries(process.env).filter(([key]) => {
       if (key.startsWith('NX_E2E_')) {
         return true;
@@ -204,4 +204,16 @@ export function getStrippedEnvironmentVariables() {
       return true;
     })
   );
+
+  return {
+    // Nx defaults the cache to the shared per-user `~/.nx/<hash>/cache`, which
+    // is outside the test project. Several suites assert on `.nx/cache`, and the
+    // eviction ones count entries there, so pin it back inside the project. It
+    // also stops concurrent e2e projects evicting each other through one shared
+    // directory. Resolved per call, so it tracks the current project. The filter
+    // above strips `NX_*`, so this cannot be overridden from the parent env -- a
+    // test that needs a different value passes `opts.env`.
+    NX_CACHE_DIRECTORY: tmpProjPath('.nx/cache'),
+    ...stripped,
+  };
 }
