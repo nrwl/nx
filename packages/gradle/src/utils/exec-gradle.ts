@@ -8,6 +8,7 @@ import { existsSync } from 'node:fs';
 import { dirname, join, isAbsolute } from 'node:path';
 import { GradlePluginOptions } from '../plugin/utils/gradle-plugin-options';
 import {
+  killChildOnHostExit,
   killProcessTreeGraceful,
   safeSpawn,
   signalToCode,
@@ -53,6 +54,8 @@ export function execGradleAsync(
       ...restOptions,
     });
 
+    // A plugin worker torn down by `nx reset` would otherwise orphan the build.
+    killChildOnHostExit(cp);
     let stdout = Buffer.from('');
 
     // On abort, kill the entire process tree (gradlew spawns java) and settle

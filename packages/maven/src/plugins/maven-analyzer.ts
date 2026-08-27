@@ -5,6 +5,7 @@ import { MavenAnalysisData, MavenPluginOptions } from './types';
 import { detectMavenExecutable } from '../utils/detect-maven-executable';
 import {
   isCI,
+  killChildOnHostExit,
   killProcessTreeGraceful,
   safeSpawn,
   workspaceDataDirectory,
@@ -108,6 +109,8 @@ export async function runMavenAnalysis(
         cwd: workspaceRoot,
         stdio: 'pipe', // Always use pipe so we can control output
       });
+      // A plugin worker torn down by `nx reset` would otherwise orphan the build.
+      killChildOnHostExit(child);
 
       // On abort, kill the entire process tree and settle immediately — a
       // wedged process that outlives the kill signal would otherwise keep

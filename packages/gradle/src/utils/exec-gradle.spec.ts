@@ -156,6 +156,7 @@ describe('execGradleAsync', () => {
     let captured: any;
     jest.doMock('@nx/devkit/internal', () => ({
       ...jest.requireActual('@nx/devkit/internal'),
+      killChildOnHostExit: jest.fn(),
       safeSpawn: jest.fn((binary, args, options) => {
         captured = { binary, args, options };
         const EventEmitter = require('events');
@@ -189,6 +190,7 @@ describe('execGradleAsync', () => {
     let captured: any;
     jest.doMock('@nx/devkit/internal', () => ({
       ...jest.requireActual('@nx/devkit/internal'),
+      killChildOnHostExit: jest.fn(),
       safeSpawn: jest.fn(() => {
         const EventEmitter = require('events');
         const cp: any = new EventEmitter();
@@ -211,6 +213,7 @@ describe('execGradleAsync', () => {
     const killProcessTreeGraceful = jest.fn(() => Promise.resolve());
     jest.doMock('@nx/devkit/internal', () => ({
       ...jest.requireActual('@nx/devkit/internal'),
+      killChildOnHostExit: jest.fn(),
       safeSpawn: jest.fn(() => {
         const EventEmitter = require('events');
         const cp: any = new EventEmitter();
@@ -231,6 +234,29 @@ describe('execGradleAsync', () => {
 
     await expect(promise).rejects.toBeDefined();
     expect(killProcessTreeGraceful).toHaveBeenCalledWith(123);
+  });
+
+  it('should register the gradle process to be killed on host exit', async () => {
+    const killChildOnHostExit = jest.fn();
+    let spawned: any;
+    jest.doMock('@nx/devkit/internal', () => ({
+      ...jest.requireActual('@nx/devkit/internal'),
+      safeSpawn: jest.fn(() => {
+        const EventEmitter = require('events');
+        spawned = new EventEmitter();
+        spawned.pid = 456;
+        spawned.stdout = new EventEmitter();
+        spawned.stderr = new EventEmitter();
+        setImmediate(() => spawned.emit('exit', 0, null));
+        return spawned;
+      }),
+      killChildOnHostExit,
+    }));
+    const { execGradleAsync } = require('./exec-gradle');
+
+    await execGradleAsync('/ws/gradlew', ['nxProjectGraph']);
+
+    expect(killChildOnHostExit).toHaveBeenCalledWith(spawned);
   });
 
   it('should drop empty args the shell used to swallow', async () => {

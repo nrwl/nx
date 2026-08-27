@@ -3,6 +3,7 @@ import { existsSync } from 'fs';
 import { readJsonFile } from '@nx/devkit';
 import { EventEmitter } from 'events';
 import {
+  killChildOnHostExit,
   killProcessTreeGraceful,
   safeExecFileSync,
   safeSpawn,
@@ -17,6 +18,7 @@ jest.mock('@nx/devkit/internal', () => ({
   safeSpawn: jest.fn(),
   safeExecFileSync: jest.fn(),
   killProcessTreeGraceful: jest.fn().mockResolvedValue(undefined),
+  killChildOnHostExit: jest.fn(),
 }));
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual('@nx/devkit'),
@@ -37,6 +39,27 @@ describe('Maven Analyzer', () => {
   });
 
   describe('runMavenAnalysis', () => {
+    it('should register the maven process to be killed on host exit', async () => {
+      const mockChild = new EventEmitter() as any;
+      mockChild.stdout = new EventEmitter();
+      mockChild.stderr = new EventEmitter();
+      mockChild.pid = 1234;
+
+      (safeSpawn as jest.Mock).mockReturnValue(mockChild);
+      (readJsonFile as jest.Mock).mockReturnValue({
+        projects: [],
+        generatedAt: 0,
+      });
+
+      const promise = runMavenAnalysis(workspaceRoot, {});
+      setImmediate(() => {
+        mockChild.emit('close', 0);
+      });
+      await promise;
+
+      expect(killChildOnHostExit).toHaveBeenCalledWith(mockChild);
+    });
+
     it('should run Maven analysis with default options', async () => {
       const mockChild = new EventEmitter() as any;
       mockChild.stdout = new EventEmitter();
