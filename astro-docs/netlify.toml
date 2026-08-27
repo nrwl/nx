@@ -924,7 +924,11 @@ to = "/docs/kb/overview-angular"
 
 [[redirects]]
 from = "/docs/technologies/test-tools/storybook/guides/overview-react"
-to = "/docs/kb/overview-react"
+to = "/docs/kb/storybook-for-react"
+
+[[redirects]]
+from = "/docs/kb/overview-react"
+to = "/docs/kb/storybook-for-react"
 
 [[redirects]]
 from = "/docs/technologies/test-tools/storybook/guides/overview-vue"
