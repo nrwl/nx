@@ -195,7 +195,7 @@ The following environment variables are ones that you can set to change the beha
 | `NX_TUI_AUTO_EXIT`            | boolean/number | Controls whether the TUI automatically exits after tasks finish. If `true`, exits immediately. If `false`, never exits automatically. If a number, shows a countdown for that many seconds before exiting                                             |
 | `NX_USE_LOCAL`                | boolean        | If set to `true`, Nx will use the locally installed version instead of downloading the latest version from npm for commands like `nx init` and `nx migrate`.                                                                                          |
 | `NX_VERBOSE_LOGGING`          | boolean        | If set to `true`, will print debug information useful for troubleshooting                                                                                                                                                                             |
-| `NX_WORKSPACE_DATA_DIRECTORY` | string         | The project graph cache and some other internal nx caches are stored in `.nx/workspace-data` by default, or in a shared `~/.nx/<hash>/workspace-data` directory when the workspace is a git worktree. Set this variable to use a different directory. |
+| `NX_WORKSPACE_DATA_DIRECTORY` | string         | The project graph database is stored in a shared `~/.nx/<hash>/workspace-data` directory by default, where the hash identifies the repository. Set this variable to use a different directory, which also opts the cache out of its shared location. Daemon logs and this checkout's file map stay in `.nx/workspace-data` either way. |
 
 ### Advanced
 
