@@ -263,6 +263,7 @@ it.
 When multiple targets in one project map different target names to the same plugin option, for
 example two `@nx/jest:jest` targets in one project, a whole-workspace migration converts one of
 them, leaves the conflicting targets unchanged, and prints a warning naming them.
+Once the converted target is inferred, rerun the migration to convert the next one.
 A single-project migration (`--project`) stops with an error instead, because one plugin
 registration can hold only one value for that option.
 
