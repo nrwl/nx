@@ -81,6 +81,9 @@ pub async fn read_snapshots(
     let mut builder = ClientBuilder::new()
         .no_hickory_dns()
         .default_headers(headers)
+        // A black-holed host fails fast; the overall budget still covers a
+        // slow multi-megabyte body.
+        .connect_timeout(timeout.min(Duration::from_secs(3)))
         .timeout(timeout);
     if env::var("NODE_TLS_REJECT_UNAUTHORIZED").as_deref() == Ok("0") {
         builder = builder.danger_accept_invalid_certs(true);
