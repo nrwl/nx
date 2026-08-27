@@ -33,6 +33,13 @@ export function setMockNxJson(nxJson: Record<string, unknown>) {
 export function setMockHashInputs(inputs: Record<string, HashInputs>) {
   mockHashInputs = inputs;
 }
+
+// Controls the report deriveIoSnapshotStatus reads; null ⇒ status none/not-connected.
+export let mockIoSnapshotReport: unknown = null;
+
+export function setMockIoSnapshotReport(report: unknown) {
+  mockIoSnapshotReport = report;
+}
 export let mockObservedOutputs: Record<string, string[]> = {};
 
 export function setMockObservedOutputs(v: Record<string, string[]>) {
@@ -143,7 +150,7 @@ vi.mock('../../../hasher/hash-plan-inspector', () => ({
       inspectTaskInputs: vi.fn().mockImplementation(() => mockHashInputs),
       inspectTaskInputsWithIoSnapshots: vi.fn().mockImplementation(() => ({
         inputs: mockHashInputs,
-        report: null,
+        report: mockIoSnapshotReport,
       })),
     };
   }),
@@ -164,6 +171,7 @@ export function setupBeforeEach() {
   mockCwd = '/workspace';
   mockNxJson = {};
   mockObservedOutputs = {};
+  mockIoSnapshotReport = null;
   mockHashInputs = {};
   mockExpandedOutputs = null;
   mockSourceMaps = {};
