@@ -186,6 +186,7 @@ export function collectMigrationScope<T>(
     for (const executor of migration.executors) {
       const targetAndProjects = new Map<string, Set<string>>();
       const inferenceOptionSetIdsByTarget = new Map<string, number>();
+      const inferenceOptionsByTarget = new Map<string, Partial<T>>();
       // Fresh per executor to preserve the previous per-migrator semantics
       // (each executor got its own migrator + skipped set).
       const skippedForExecutor = new Set<string>();
@@ -236,6 +237,37 @@ export function collectMigrationScope<T>(
             return;
           }
 
+          if (!inferenceOptionsByTarget.has(targetName)) {
+            inferenceOptionsByTarget.set(
+              targetName,
+              migration.targetPluginOptionMapper(targetName)
+            );
+          }
+          const inferenceOptions = inferenceOptionsByTarget.get(targetName);
+
+          // One registration cannot map different target names through the
+          // same option
+          const existing = pluginOptionsByProject.get(projectName);
+          const takenOption = Object.keys(inferenceOptions).find(
+            (option) =>
+              existing?.[option] !== undefined &&
+              !isDeepEqual(existing[option], inferenceOptions[option])
+          );
+          if (takenOption) {
+            const errorMsg = `The ${targetName} target on project "${projectName}" cannot be migrated. The "${takenOption}" plugin option is already set to "${existing[takenOption]}" by another target of the project, and the plugin can only infer one target per option.`;
+            if (specificProjectToMigrate) {
+              throw new Error(errorMsg);
+            }
+            log.warn(
+              `${errorMsg} The target keeps its current configuration; rerun the migration once the other target is inferred to convert it.`
+            );
+            return;
+          }
+          pluginOptionsByProject.set(projectName, {
+            ...(existing ?? ({} as T)),
+            ...inferenceOptions,
+          } as T);
+
           if (!targetAndProjects.has(targetName)) {
             targetAndProjects.set(targetName, new Set());
           }
@@ -244,32 +276,7 @@ export function collectMigrationScope<T>(
       );
 
       for (const [targetName, projs] of targetAndProjects) {
-        const inferenceOptions = migration.targetPluginOptionMapper(targetName);
-
-        // One registration cannot map different target names through the same
-        // option; keep the first mapping
-        for (const project of projs) {
-          const existing = pluginOptionsByProject.get(project);
-          const takenOption = Object.keys(inferenceOptions).find(
-            (option) =>
-              existing?.[option] !== undefined &&
-              !isDeepEqual(existing[option], inferenceOptions[option])
-          );
-          if (!takenOption) {
-            continue;
-          }
-          const errorMsg = `The ${targetName} target on project "${project}" cannot be migrated. The "${takenOption}" plugin option is already set to "${existing[takenOption]}" by another target of the project, and the plugin can only infer one target per option. The target keeps its current configuration.`;
-          if (specificProjectToMigrate) {
-            throw new Error(errorMsg);
-          }
-          log.warn(errorMsg);
-          projs.delete(project);
-        }
-        if (projs.size === 0) {
-          targetAndProjects.delete(targetName);
-          continue;
-        }
-
+        const inferenceOptions = inferenceOptionsByTarget.get(targetName);
         const key = stableStringify(inferenceOptions);
         if (!optionSetGroupsByKey.has(key)) {
           optionSetGroupsByKey.set(key, {
@@ -283,18 +290,10 @@ export function collectMigrationScope<T>(
         optionSetGroup.targetNames.add(targetName);
         inferenceOptionSetIdsByTarget.set(targetName, optionSetGroup.id);
 
-        // Invert to per-project registration options, reusing the single mapper
-        // call above (target-grouped insertion order). One call keeps the
-        // option-set id and the registration options consistent even if a
-        // mapper were impure.
         for (const project of projs) {
           optionSetGroup.migratedRoots.add(
             projectGraph.nodes[project].data.root
           );
-          pluginOptionsByProject.set(project, {
-            ...(pluginOptionsByProject.get(project) ?? ({} as T)),
-            ...inferenceOptions,
-          } as T);
         }
       }
 

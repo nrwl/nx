@@ -314,6 +314,13 @@ describe('collectMigrationScope (Phase 0)', () => {
 
   it('keeps a second target that maps an already-set plugin option to another value', () => {
     ctx = setupFixture('collect-scope-option-conflict');
+    // app0 is walked first and maps `skiptest`; app1's own order (test, then
+    // skiptest) decides which of its targets keeps the mapping
+    addExecutorProject(ctx, {
+      name: 'app0',
+      root: 'app0',
+      targetName: 'skiptest',
+    });
     addExecutorProject(ctx, { name: 'app1', root: 'app1', targetName: 'test' });
     addSecondExecutorTarget(ctx, 'app1', 'skiptest');
     const warn = jest.fn();
@@ -327,19 +334,22 @@ describe('collectMigrationScope (Phase 0)', () => {
       { warn } as any
     );
 
-    // the first target seen wins; the second stays out of the scope entirely
-    expect([...scope.executorScopes[0].targetAndProjects.keys()]).toEqual([
-      'test',
-    ]);
+    expect(scope.executorScopes[0].targetAndProjects).toEqual(
+      new Map([
+        ['skiptest', new Set(['app0'])],
+        ['test', new Set(['app1'])],
+      ])
+    );
     expect(scope.pluginOptionsByProject.get('app1')).toEqual({
       targetName: 'test',
     });
     expect(scope.optionSetGroups.map((group) => group.options)).toEqual([
+      { targetName: 'skiptest' },
       { targetName: 'test' },
     ]);
     expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0][0]).toContain(
-      'The skiptest target on project "app1" cannot be migrated. The "targetName" plugin option is already set to "test"'
+    expect(warn.mock.calls[0][0]).toBe(
+      'The skiptest target on project "app1" cannot be migrated. The "targetName" plugin option is already set to "test" by another target of the project, and the plugin can only infer one target per option. The target keeps its current configuration; rerun the migration once the other target is inferred to convert it.'
     );
 
     expect(() =>
