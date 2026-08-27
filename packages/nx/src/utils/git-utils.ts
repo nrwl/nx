@@ -7,7 +7,6 @@ import {
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import { dirname, join, posix, relative, sep } from 'path';
-import { logger } from './logger';
 
 function execFileAsync(
   file: string,
@@ -684,6 +683,11 @@ export function commitChanges(
       // We don't want to throw during create-nx-workspace
       // because maybe there was an error when setting up git
       // initially.
+      // Required here, not imported: `logger` reaches `daemon/*`, and this
+      // module is on the import path of `cache-directory`, whose bindings
+      // `daemon/tmp-dir.ts` reads at module scope. A static import would make
+      // that a cycle. This is the only logger use in the file.
+      const { logger }: typeof import('./logger') = require('./logger');
       logger.verbose(`Git may not be set up correctly for this new workspace.
         ${err}`);
     } else {
