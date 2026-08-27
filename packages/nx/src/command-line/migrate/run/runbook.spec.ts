@@ -9,7 +9,7 @@ function buildContext(overrides: Partial<RunbookContext> = {}): RunbookContext {
     runId: 'run-1',
     packageManager: 'npm',
     nxInvocation: 'npx nx',
-    formatCommand: 'npx prettier --write --ignore-unknown <paths>',
+    pmExec: 'npx',
     reconcileCommand: 'npx nx migrate --run-id=run-1',
     createCommits: true,
     validate: true,
@@ -87,12 +87,16 @@ describe('renderRunbook', () => {
     expect(withoutValidation).not.toContain("validate the generator's changes");
   });
 
-  it('renders the resolved formatter command on one line, or the no-formatter rule', () => {
-    expect(
-      renderRunbook(buildContext({ formatCommand: 'pnpm exec oxfmt\n<paths>' }))
-    ).toContain('run `pnpm exec oxfmt <paths>` over exactly those files');
-    expect(renderRunbook(buildContext({ formatCommand: null }))).toContain(
-      'This workspace has no formatter configured'
+  it('defers the formatter command to the dispensed step and names the exact replacements', () => {
+    // The runbook outlives every step, so it must not freeze the formatter
+    // resolved at init; the dispense re-resolves it.
+    const runbook = renderRunbook(buildContext({ pmExec: 'pnpm exec' }));
+
+    expect(runbook).toContain(
+      "run the command on the dispensed step's `Format command:` line over exactly the files you created or modified; when that line says none, do not run a formatter."
+    );
+    expect(runbook).toContain(
+      'If this migration itself added or replaced the workspace formatter, run the new one over exactly the files you created or modified instead: `pnpm exec prettier --write --ignore-unknown <paths>` for Prettier, `pnpm exec oxfmt --no-error-on-unmatched-pattern <paths>` for oxfmt.'
     );
   });
 

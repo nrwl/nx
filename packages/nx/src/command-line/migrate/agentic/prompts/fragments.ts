@@ -1,6 +1,8 @@
 // Wording the agent system prompt (system-prompt.ts) and the orchestrated
 // run's runbook (run/runbook.ts) must state identically.
 
+import { formatCommandFor } from '../format-command';
+
 export function renderNxInvocationNote(
   packageManager: string,
   nxInvocation: string
@@ -22,21 +24,56 @@ export function renderHandoffShapeLines(): string[] {
   ];
 }
 
+/**
+ * Where the formatter command comes from. A prompt built right before the
+ * agent runs carries the resolved command; the runbook outlives many steps,
+ * so it points at the `Format command:` line each dispensed step resolves.
+ */
+export type FormatInstruction =
+  | { source: 'command'; command: string | null }
+  | { source: 'dispensed-step' };
+
 // Scope rules for applying an author-provided migration prompt (prompt-only or
 // hybrid migration).
 export function renderAuthorScopeRuleLines(
-  formatCommand: string | null
+  pmExec: string,
+  format: FormatInstruction
 ): string[] {
   return [
     `- Apply only the changes the migration prompt asks for.`,
     `- Do not refactor or update dependencies beyond what the migration prompt directs, and do not reformat files you did not change.`,
-    formatCommand === null
-      ? `- This workspace has no formatter configured; do not run one over your changes.`
-      : `- After applying your changes and before writing the handoff, format the files you created or modified with the workspace's formatter: run \`${formatCommand}\` over exactly those files (the flag keeps the command from failing when some or all of those paths are files the formatter does not handle). Do not use \`nx format:write\` for this: it also selects files changed earlier on the branch and always reformats the root config files.`,
+    renderFormatRule(pmExec, format),
     `- Do not modify files outside the workspace root.`,
     `- Do not run \`nx\` commands that mutate workspace state (\`nx migrate\`, \`nx reset\`, \`nx format:write\`, \`nx run-many\`, generators, etc.). Read-only inspection (\`nx show\`, \`nx graph --file\`, reading files) is fine.`,
     `- If the migration instructions are unclear, internally inconsistent, or conflict with the current workspace state, ask the user for direction (see the handoff contract). Do not guess.`,
   ];
+}
+
+const FORMAT_SCOPE = `over exactly the files you created or modified`;
+const NO_NX_FORMAT = `Do not use \`nx format:write\` for this: it also selects files changed earlier on the branch and always reformats the root config files.`;
+
+function renderFormatRule(pmExec: string, format: FormatInstruction): string {
+  // The command is resolved before the step runs, so the step that adds or
+  // replaces the formatter is the one case it cannot cover; name the exact
+  // replacements so the agent does not have to guess flags.
+  const replacement = `If this migration itself added or replaced the workspace formatter, run the new one ${FORMAT_SCOPE} instead: \`${formatCommandFor(
+    'prettier',
+    pmExec
+  )}\` for Prettier, \`${formatCommandFor('oxfmt', pmExec)}\` for oxfmt.`;
+  switch (format.source) {
+    case 'command':
+      return format.command === null
+        ? `- This workspace has no formatter configured; do not run one over your changes. ${replacement}`
+        : `- After applying your changes and before writing the handoff, run \`${format.command}\` ${FORMAT_SCOPE} (the flag keeps the command from failing when some or all of those paths are files the formatter does not handle). ${replacement} ${NO_NX_FORMAT}`;
+    case 'dispensed-step':
+      return `- After applying your changes and before writing the handoff, run the command on the dispensed step's \`Format command:\` line ${FORMAT_SCOPE}; when that line says none, do not run a formatter. ${replacement} ${NO_NX_FORMAT}`;
+    default: {
+      const unhandled: never = format;
+      throw new Error(
+        `Unhandled format instruction: ${JSON.stringify(unhandled)}`
+      );
+    }
+  }
 }
 
 export function renderValidationScopeRuleLines(): string[] {
