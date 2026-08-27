@@ -597,10 +597,10 @@ function ensureRunbook(
         )}`
       );
     }
-    // Any other non-regular entry (a symlink most likely) would redirect the
-    // re-render write below outside the run directory. Removal failures
-    // propagate: falling through to the write would follow a symlink that
-    // could not be removed.
+    // Any other non-regular entry (a symlink most likely) is cleared before the
+    // rename publish below: POSIX rename replaces it in place, but not every
+    // platform guarantees that, and a removal failure must propagate rather
+    // than leave the entry standing.
     rmSync(filePath, { force: true });
   }
   if (state.nxVersion !== nxVersion) {
