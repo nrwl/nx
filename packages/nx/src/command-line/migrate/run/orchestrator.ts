@@ -662,7 +662,7 @@ function runbookContext(
     runId,
     packageManager: detectPackageManager(root),
     nxInvocation: `${pmExecPrefix(root)} nx`,
-    formatCommand: resolveFormatCommand(root, pmExecPrefix(root)),
+    pmExec: pmExecPrefix(root),
     reconcileCommand: reconcileCommand(root, runId),
     createCommits: state.createCommits,
     // The same `!== false` read the flag itself gets, so a run recorded
@@ -2029,6 +2029,12 @@ function emitAwaitPrompt(
     : [
         `Migration ${migrationId} is a prompt-based migration awaiting your outcome.`,
         `Apply the prompt (see ${blockRef}), then write the handoff file and run the "next" command.`,
+        // Resolved per dispense: an earlier step may have changed the formatter
+        // since the runbook was written.
+        `Format command: ${
+          resolveFormatCommand(root, pmExecPrefix(root)) ??
+          'none (no formatter is configured)'
+        }`,
       ];
   lines.push(
     `Handoff file: ${filePath}`,

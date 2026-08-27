@@ -8,6 +8,7 @@ describe('buildSystemPrompt', () => {
     packageManager: 'npm',
     nxInvocation: 'npx nx',
     formatCommand: 'npx prettier --write --ignore-unknown <paths>',
+    pmExec: 'npx',
   };
 
   it('embeds the workspace root inside its tag', () => {
@@ -150,7 +151,7 @@ describe('buildSystemPrompt', () => {
     it('directs the agent to run the resolved formatter command over only the files it changed, rather than nx format:write', () => {
       const prompt = buildSystemPrompt(ctx);
       expect(prompt).toContain(
-        'run `npx prettier --write --ignore-unknown <paths>` over exactly those files'
+        'run `npx prettier --write --ignore-unknown <paths>` over exactly the files you created or modified'
       );
       // nx format:write cannot be scoped that tightly: it selects the branch
       // delta by default and always appends the root config files, both of
@@ -165,9 +166,9 @@ describe('buildSystemPrompt', () => {
           'pnpm exec oxfmt --no-error-on-unmatched-pattern <paths>',
       });
       expect(prompt).toContain(
-        'run `pnpm exec oxfmt --no-error-on-unmatched-pattern <paths>` over exactly those files'
+        'run `pnpm exec oxfmt --no-error-on-unmatched-pattern <paths>` over exactly the files you created or modified'
       );
-      expect(prompt).not.toContain('prettier');
+      expect(prompt).not.toContain('run `npx prettier');
     });
 
     it('tells the agent not to run a formatter when the workspace has none', () => {
@@ -175,8 +176,29 @@ describe('buildSystemPrompt', () => {
       expect(prompt).toContain(
         'This workspace has no formatter configured; do not run one over your changes.'
       );
-      expect(prompt).not.toContain('format the files you created or modified');
+      expect(prompt).not.toContain(
+        'After applying your changes and before writing the handoff, run'
+      );
     });
+
+    it.each([
+      ['a resolved command', 'npx prettier --write --ignore-unknown <paths>'],
+      ['no formatter', null],
+    ])(
+      'names the exact replacement commands for a migration that changes the formatter itself (%s)',
+      (_name, formatCommand) => {
+        const prompt = buildSystemPrompt({
+          ...ctx,
+          formatCommand,
+          pmExec: 'pnpm exec',
+        });
+        // The command was resolved before the step ran, so only the agent
+        // knows the formatter changed; the flags must not be left to it.
+        expect(prompt).toContain(
+          'If this migration itself added or replaced the workspace formatter, run the new one over exactly the files you created or modified instead: `pnpm exec prettier --write --ignore-unknown <paths>` for Prettier, `pnpm exec oxfmt --no-error-on-unmatched-pattern <paths>` for oxfmt.'
+        );
+      }
+    );
 
     it('lists nx format:write among the forbidden mutating nx commands', () => {
       const prompt = buildSystemPrompt(ctx);

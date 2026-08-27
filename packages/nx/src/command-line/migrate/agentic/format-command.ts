@@ -1,18 +1,15 @@
-import { detectFormatter } from '../../../utils/formatters';
+import { detectFormatter, FormatterType } from '../../../utils/formatters';
 
 /**
  * The command the agent runs over the files it changed, with a `<paths>`
- * placeholder, or `null` when the workspace has no formatter configured.
- * Resolved by nx so the agent never has to detect the formatter itself.
+ * placeholder. The flag keeps paths the formatter does not handle from
+ * failing the command.
  */
-export function resolveFormatCommand(
-  root: string,
+export function formatCommandFor(
+  formatter: FormatterType,
   pmExec: string
-): string | null {
-  const formatter = detectFormatter(root);
+): string {
   switch (formatter) {
-    case null:
-      return null;
     case 'prettier':
       return `${pmExec} prettier --write --ignore-unknown <paths>`;
     case 'oxfmt':
@@ -22,4 +19,18 @@ export function resolveFormatCommand(
       throw new Error(`Unhandled formatter: ${unhandled}`);
     }
   }
+}
+
+/**
+ * Resolved against the workspace as it is now, so it goes stale once a
+ * migration changes the formatter; callers re-resolve per dispense, and the
+ * scope rules name the replacement commands for the step that made the change.
+ * `null` when no formatter is configured.
+ */
+export function resolveFormatCommand(
+  root: string,
+  pmExec: string
+): string | null {
+  const formatter = detectFormatter(root);
+  return formatter === null ? null : formatCommandFor(formatter, pmExec);
 }

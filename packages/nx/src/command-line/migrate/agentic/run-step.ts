@@ -120,6 +120,7 @@ export async function runAgenticPromptStep(
     packageManager: pm,
     nxInvocation: getRunNxBaseCommand(pmCommand, root),
     mode,
+    pmExec: pmCommand.exec,
     formatCommand: resolveFormatCommand(root, pmCommand.exec),
   });
 
