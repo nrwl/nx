@@ -113,6 +113,51 @@ describe('release-publish executor', () => {
       });
     }
 
+    it('should publish a new package when pnpm v11 reports ERR_PNPM_FETCH_404', async () => {
+      mockDetectPackageManager.mockReturnValue('pnpm');
+      mockIsPnpmV11Plus.mockReturnValue(true);
+      mockExecSync.mockReset();
+
+      mockExecSync
+        .mockImplementationOnce(() => {
+          const error: any = new Error('pnpm view failed');
+          error.stdout = Buffer.from(
+            JSON.stringify({
+              error: { code: 'ERR_PNPM_FETCH_404' },
+            })
+          );
+          error.stderr = Buffer.from('');
+          throw error;
+        })
+        .mockReturnValueOnce(Buffer.from('{}') as any);
+
+      jest.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
+        beforeJsonData: '',
+        jsonData: {
+          id: '@scope/test-package@1.0.0',
+          name: '@scope/test-package',
+          version: '1.0.0',
+          size: 100,
+          unpackedSize: 200,
+          shasum: 'abc123',
+          integrity: 'sha512-abc',
+          filename: 'test-package-1.0.0.tgz',
+          files: [],
+          entryCount: 1,
+          bundled: [],
+        },
+        afterJsonData: '',
+      } as any);
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      expect(mockExecSync).toHaveBeenCalledWith(
+        expect.stringMatching(/^pnpm publish/),
+        expect.anything()
+      );
+    });
+
     it('should skip publishing when pnpm reports that the version was previously published', async () => {
       mockDetectPackageManager.mockReturnValue('pnpm');
       mockNpmViewNotFound();

@@ -1,4 +1,4 @@
-import { ExecException } from 'child_process';
+import { exec, ExecException } from 'child_process';
 import { join } from 'path';
 import {
   getNpmRegistry,
@@ -46,10 +46,10 @@ jest.mock('child_process', () => {
               callback(null, 'next', null);
               break;
             case 'pnpm config get @scope:registry':
-              callback(null, 'https://pnpm-scoped-registry.com', null);
+              callback(null, 'https://pnpm-scoped-registry.com/', null);
               break;
             case 'pnpm config get registry':
-              callback(null, 'https://pnpm-registry.com', null);
+              callback(null, 'https://pnpm-registry.com/', null);
               break;
             case 'pnpm config get tag':
               callback(null, 'pnpm-next', null);
@@ -75,6 +75,7 @@ describe('npm-config', () => {
     getPackageManagerVersion as jest.MockedFunction<
       typeof getPackageManagerVersion
     >;
+  const mockExec = exec as jest.MockedFunction<typeof exec>;
 
   beforeEach(() => {
     tempFs = new TempFs('npm-config');
@@ -108,7 +109,7 @@ describe('npm-config', () => {
       mockDetectPackageManager.mockReturnValue('pnpm');
       mockGetPackageManagerVersion.mockReturnValue('11.2.1');
       const registry = await getNpmRegistry(tempFs.tempDir, '@scope');
-      expect(registry).toEqual('https://pnpm-scoped-registry.com');
+      expect(registry).toEqual('https://pnpm-scoped-registry.com/');
     });
 
     it('should resolve tag via pnpm for pnpm v11+', async () => {
@@ -116,6 +117,19 @@ describe('npm-config', () => {
       mockGetPackageManagerVersion.mockReturnValue('11.2.1');
       const tag = await getNpmTag(tempFs.tempDir);
       expect(tag).toEqual('pnpm-next');
+    });
+
+    it('should default to latest when pnpm has no configured tag', async () => {
+      mockDetectPackageManager.mockReturnValue('pnpm');
+      mockGetPackageManagerVersion.mockReturnValue('11.2.1');
+      mockExec.mockImplementationOnce((_: any, __: any, callback: any) => {
+        callback(null, 'undefined', null);
+        return undefined as any;
+      });
+
+      const tag = await getNpmTag(tempFs.tempDir);
+
+      expect(tag).toEqual('latest');
     });
 
     it('should resolve registry via npm for pnpm v10 and below', async () => {
