@@ -5,6 +5,7 @@ import {
   TargetConfiguration,
 } from '@nx/devkit';
 import {
+  ANALYZER_CANCELLED_MESSAGE,
   analyzeProjects,
   isAnalysisErrorResult,
 } from '../analyzer/analyzer-client';
@@ -216,6 +217,11 @@ export const createNodes: CreateNodes<DotNetPluginOptions> = [
       );
 
       if (isAnalysisErrorResult(result)) {
+        if (result.error.message === ANALYZER_CANCELLED_MESSAGE) {
+          // Superseded by a newer analysis — silently return empty rather than
+          // failing the user's command with an internal sentinel.
+          return [];
+        }
         throw result.error;
       }
 
