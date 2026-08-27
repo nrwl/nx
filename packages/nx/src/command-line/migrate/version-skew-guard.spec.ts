@@ -78,7 +78,7 @@ describe('targetsExistingRun', () => {
 });
 
 describe('resolveNewMigrateFlagsRunTarget', () => {
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => vi.restoreAllMocks());
 
   function target(overrides: {
     argv?: string[];
@@ -93,15 +93,15 @@ describe('resolveNewMigrateFlagsRunTarget', () => {
       cliVersionSpec: 'latest',
       fromEnvOverride: false,
       ownNxVersion: '23.2.0',
-      resolveVersion: jest.fn().mockResolvedValue('23.2.0'),
+      resolveVersion: vi.fn().mockResolvedValue('23.2.0'),
       readLocalNxVersion: () => '23.2.0',
       ...overrides,
     });
   }
 
   it('routes to the temp CLI without resolving anything when no new flag is present', async () => {
-    const resolveVersion = jest.fn();
-    const readLocalNxVersion = jest.fn();
+    const resolveVersion = vi.fn();
+    const readLocalNxVersion = vi.fn();
     await expect(
       target({ argv: ['nx@latest'], resolveVersion, readLocalNxVersion })
     ).resolves.toBe('temp-cli');
@@ -112,7 +112,7 @@ describe('resolveNewMigrateFlagsRunTarget', () => {
   it('routes to the temp CLI when the resolved version is at or above the floor', async () => {
     for (const resolved of ['23.2.0', '23.2.1', '23.3.0-beta.1', '24.0.0']) {
       await expect(
-        target({ resolveVersion: jest.fn().mockResolvedValue(resolved) })
+        target({ resolveVersion: vi.fn().mockResolvedValue(resolved) })
       ).resolves.toBe('temp-cli');
     }
   });
@@ -120,14 +120,14 @@ describe('resolveNewMigrateFlagsRunTarget', () => {
   it('treats a 23.2.0 prerelease as below the floor (published prereleases may predate the feature)', async () => {
     await expect(
       target({
-        resolveVersion: jest.fn().mockResolvedValue('23.2.0-beta.1'),
+        resolveVersion: vi.fn().mockResolvedValue('23.2.0-beta.1'),
         readLocalNxVersion: () => '23.2.0',
       })
     ).resolves.toBe('local-nx');
   });
 
   it('does not resolve an already-concrete spec, including v-prefixed', async () => {
-    const resolveVersion = jest.fn();
+    const resolveVersion = vi.fn();
     await expect(
       target({ cliVersionSpec: 'v23.2.0', resolveVersion })
     ).resolves.toBe('temp-cli');
@@ -135,7 +135,7 @@ describe('resolveNewMigrateFlagsRunTarget', () => {
   });
 
   it('falls back to a capable local nx when the temp CLI resolves below the floor', async () => {
-    const resolveVersion = jest.fn().mockResolvedValue('23.1.0');
+    const resolveVersion = vi.fn().mockResolvedValue('23.1.0');
     await expect(
       target({ resolveVersion, readLocalNxVersion: () => '23.2.0' })
     ).resolves.toBe('local-nx');
@@ -147,7 +147,7 @@ describe('resolveNewMigrateFlagsRunTarget', () => {
     // it too; this keeps prerelease dogfooding via npx working.
     await expect(
       target({
-        resolveVersion: jest.fn().mockResolvedValue('23.1.0'),
+        resolveVersion: vi.fn().mockResolvedValue('23.1.0'),
         ownNxVersion: '23.2.0-canary.20260720',
         readLocalNxVersion: () => '23.2.0-canary.20260720',
       })
@@ -157,7 +157,7 @@ describe('resolveNewMigrateFlagsRunTarget', () => {
   it('falls back to a local nx at the floor even when it differs from the running version', async () => {
     await expect(
       target({
-        resolveVersion: jest.fn().mockResolvedValue('23.1.0'),
+        resolveVersion: vi.fn().mockResolvedValue('23.1.0'),
         ownNxVersion: '23.3.0',
         readLocalNxVersion: () => '23.2.0',
       })
@@ -167,7 +167,7 @@ describe('resolveNewMigrateFlagsRunTarget', () => {
   it('refuses when the local nx version cannot be read and the temp CLI is below the floor', async () => {
     await expect(
       target({
-        resolveVersion: jest.fn().mockResolvedValue('23.1.0'),
+        resolveVersion: vi.fn().mockResolvedValue('23.1.0'),
         readLocalNxVersion: () => undefined,
       })
     ).rejects.toThrow(/installed nx version could not be read/);
@@ -176,7 +176,7 @@ describe('resolveNewMigrateFlagsRunTarget', () => {
   it('falls back to a capable local nx when resolution fails (registry error or minimum-release-age violation)', async () => {
     await expect(
       target({
-        resolveVersion: jest
+        resolveVersion: vi
           .fn()
           .mockRejectedValue(new Error('registry lookup failed')),
         readLocalNxVersion: () => '23.2.0',
@@ -186,7 +186,7 @@ describe('resolveNewMigrateFlagsRunTarget', () => {
 
   it('refuses when neither the temp CLI nor the local nx supports the flag', async () => {
     const promise = target({
-      resolveVersion: jest.fn().mockResolvedValue('23.1.0'),
+      resolveVersion: vi.fn().mockResolvedValue('23.1.0'),
       ownNxVersion: '23.2.0',
       readLocalNxVersion: () => '22.5.0',
     });
@@ -206,7 +206,7 @@ describe('resolveNewMigrateFlagsRunTarget', () => {
   it('refuses naming the failed resolution when it fails and the local nx is also too old', async () => {
     await expect(
       target({
-        resolveVersion: jest.fn().mockRejectedValue(new Error('boom')),
+        resolveVersion: vi.fn().mockRejectedValue(new Error('boom')),
         readLocalNxVersion: () => '22.5.0',
       })
     ).rejects.toThrow(/could not be resolved/);
@@ -218,7 +218,7 @@ describe('resolveNewMigrateFlagsRunTarget', () => {
       fromEnvOverride: true,
       // A concrete spec needs no resolution; a capable local nx must not
       // silently win over the user's explicit pin.
-      resolveVersion: jest.fn(),
+      resolveVersion: vi.fn(),
       readLocalNxVersion: () => '24.0.0',
     });
     await expect(promise).rejects.toThrow(
@@ -227,12 +227,12 @@ describe('resolveNewMigrateFlagsRunTarget', () => {
   });
 
   it('still falls back to the local nx when an env-pinned spec fails to resolve, warning that the pin was not honored', async () => {
-    const warnSpy = jest.spyOn(output, 'warn').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(output, 'warn').mockImplementation(() => {});
     await expect(
       target({
         cliVersionSpec: 'next',
         fromEnvOverride: true,
-        resolveVersion: jest.fn().mockRejectedValue(new Error('boom')),
+        resolveVersion: vi.fn().mockRejectedValue(new Error('boom')),
         readLocalNxVersion: () => '23.2.0',
       })
     ).resolves.toBe('local-nx');
@@ -244,10 +244,10 @@ describe('resolveNewMigrateFlagsRunTarget', () => {
   });
 
   it('does not warn when the default spec fails to resolve and the local fallback applies', async () => {
-    const warnSpy = jest.spyOn(output, 'warn').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(output, 'warn').mockImplementation(() => {});
     await expect(
       target({
-        resolveVersion: jest.fn().mockRejectedValue(new Error('boom')),
+        resolveVersion: vi.fn().mockRejectedValue(new Error('boom')),
         readLocalNxVersion: () => '23.2.0',
       })
     ).resolves.toBe('local-nx');
@@ -257,7 +257,7 @@ describe('resolveNewMigrateFlagsRunTarget', () => {
 
 describe('assertWorkspaceNxSupportsNewMigrateFlags', () => {
   it('does nothing and never reads the version when no new flag is present', () => {
-    const readLocalNxVersion = jest.fn();
+    const readLocalNxVersion = vi.fn();
     expect(() =>
       assertWorkspaceNxSupportsNewMigrateFlags({
         argv: ['nx@latest'],

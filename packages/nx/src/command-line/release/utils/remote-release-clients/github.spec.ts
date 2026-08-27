@@ -1,18 +1,21 @@
+import type { Mock } from 'vitest';
 import { GithubRemoteReleaseClient } from './github';
 
-jest.mock('axios', () => ({
-  get: jest.fn(),
+vi.mock('axios', () => {
+  const get = vi.fn();
+  return { get, default: { get } };
+});
+
+vi.mock('node:child_process', async () => ({
+  ...require('node:child_process'),
+  execFileSync: vi.fn(),
+  execSync: require('node:child_process').execSync,
 }));
 
-jest.mock('node:child_process', () => ({
-  ...jest.requireActual('node:child_process'),
-  execFileSync: jest.fn(),
-  execSync: jest.requireActual('node:child_process').execSync,
-}));
+import { execFileSync } from 'node:child_process';
 
-const axiosGetMock = jest.requireMock('axios').get as jest.Mock;
-const execFileSyncMock = jest.requireMock('node:child_process')
-  .execFileSync as jest.Mock;
+const axiosGetMock = (await import('axios')).default.get as Mock;
+const execFileSyncMock = execFileSync as Mock;
 
 describe('GithubRemoteReleaseClient', () => {
   const client = new GithubRemoteReleaseClient(
@@ -26,7 +29,7 @@ describe('GithubRemoteReleaseClient', () => {
   );
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it('should prefer the username returned by ungh', async () => {

@@ -267,8 +267,7 @@ export interface NxAppRspackPluginOptions {
   useLegacyHtmlPlugin?: boolean;
 }
 
-export interface NormalizedNxAppRspackPluginOptions
-  extends NxAppRspackPluginOptions {
+export interface NormalizedNxAppRspackPluginOptions extends NxAppRspackPluginOptions {
   projectName: string;
   root: string;
   projectRoot: string;

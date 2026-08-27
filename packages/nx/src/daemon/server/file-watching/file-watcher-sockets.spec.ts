@@ -1,7 +1,7 @@
 import type { Socket } from 'net';
 
-jest.mock('../server', () => ({ handleResult: jest.fn() }));
-jest.mock('../project-graph-incremental-recomputation', () => ({
+vi.mock('../server', () => ({ handleResult: vi.fn() }));
+vi.mock('../project-graph-incremental-recomputation', () => ({
   currentProjectGraph: undefined,
 }));
 

@@ -63,13 +63,13 @@ describe('findMatchingConfigFiles', () => {
 
 describe('project-configuration-utils', () => {
   describe('mergeCreateNodesResults', () => {
-    it('should substitute gradle-style colon names with project names in dependsOn', () => {
+    it('should substitute gradle-style colon names with project names in dependsOn', async () => {
       const {
         results,
         nxJsonConfiguration,
         workspaceRoot: root,
         errors,
-      } = require('./__fixtures__/merge-create-nodes-args.json');
+      } = await import('./__fixtures__/merge-create-nodes-args.json');
       // results[0] = specified plugin (@acme/gradle), results[1] = default plugin (project.json)
       const result = mergeCreateNodesResults(
         [results[0]],

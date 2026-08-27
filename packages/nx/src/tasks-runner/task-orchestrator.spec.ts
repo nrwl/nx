@@ -6,17 +6,17 @@ import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { TaskOrchestrator } from './task-orchestrator';
 
-performance.mark = jest.fn((name: string) => ({ name }) as PerformanceMark);
-performance.measure = jest.fn();
+performance.mark = vi.fn((name: string) => ({ name }) as PerformanceMark);
+performance.measure = vi.fn();
 
-jest.mock('./task-env', () => ({
-  ...jest.requireActual('./task-env'),
-  getTaskSpecificEnv: jest.fn(() => process.env),
+vi.mock('./task-env', async () => ({
+  ...(await vi.importActual('./task-env')),
+  getTaskSpecificEnv: vi.fn(() => process.env),
 }));
 
-jest.mock('./utils', () => ({
-  ...jest.requireActual('./utils'),
-  getCustomHasher: jest.fn(() => null),
+vi.mock('./utils', async () => ({
+  ...(await vi.importActual('./utils')),
+  getCustomHasher: vi.fn(() => null),
 }));
 
 describe('TaskOrchestrator', () => {
@@ -66,7 +66,7 @@ describe('TaskOrchestrator', () => {
     function createOrchestrator(taskGraph: TaskGraph) {
       let hasherCallCount = 0;
       const hasher = {
-        hashTasks: jest.fn(async (tasks: Task[]) => {
+        hashTasks: vi.fn(async (tasks: Task[]) => {
           hasherCallCount++;
           return tasks.map((t) => ({
             value: `${t.id}|call-${hasherCallCount}`,
@@ -91,20 +91,20 @@ describe('TaskOrchestrator', () => {
       orchestrator.taskDetails = null;
       orchestrator.taskInvocationTracker = null;
       orchestrator.completedTasks = new Map();
-      orchestrator.options = { lifeCycle: { scheduleTask: jest.fn() } };
+      orchestrator.options = { lifeCycle: { scheduleTask: vi.fn() } };
       orchestrator.forkedProcessTaskRunner = {
-        cleanUpBatchProcesses: jest.fn(),
+        cleanUpBatchProcesses: vi.fn(),
       };
-      orchestrator.applyCachedResults = jest.fn().mockResolvedValue([]);
-      orchestrator.preRunSteps = jest.fn();
+      orchestrator.applyCachedResults = vi.fn().mockResolvedValue([]);
+      orchestrator.preRunSteps = vi.fn();
       const hashesAtCacheTime: Record<string, string> = {};
-      orchestrator.postRunSteps = jest.fn(async (results: any[]) => {
+      orchestrator.postRunSteps = vi.fn(async (results: any[]) => {
         for (const r of results) {
           hashesAtCacheTime[r.task.id] = r.task.hash;
           orchestrator.completedTasks.set(r.task.id, r.status);
         }
       });
-      orchestrator.runBatch = jest.fn(async (batch: any) =>
+      orchestrator.runBatch = vi.fn(async (batch: any) =>
         Object.values(batch.taskGraph.tasks).map((task) => ({
           task,
           status: 'success',
@@ -160,7 +160,7 @@ describe('TaskOrchestrator', () => {
       const { orchestrator, hasher } = createOrchestrator(taskGraph);
       // dep resolves from cache, so its outputs are already settled on disk
       // when the consumer's hash is computed
-      orchestrator.applyCachedResults = jest.fn(async (tasks: Task[]) =>
+      orchestrator.applyCachedResults = vi.fn(async (tasks: Task[]) =>
         tasks
           .filter((t) => t.id === 'dep:build')
           .map((task) => ({ task, status: 'local-cache', code: 0 }))
@@ -206,15 +206,15 @@ describe('TaskOrchestrator', () => {
     function createOrchestrator(batchResults: Map<string, any>) {
       const orchestrator: any = Object.create(TaskOrchestrator.prototype);
       orchestrator.cache = {
-        getBatch: jest.fn(async () => batchResults),
-        copyFilesFromCache: jest.fn(),
+        getBatch: vi.fn(async () => batchResults),
+        copyFilesFromCache: vi.fn(),
       };
       orchestrator.cacheMissedHashes = new Set();
-      orchestrator.shouldCopyOutputsFromCacheBatch = jest.fn(
+      orchestrator.shouldCopyOutputsFromCacheBatch = vi.fn(
         async () => new Map()
       );
       orchestrator.options = {
-        lifeCycle: { printTaskTerminalOutput: jest.fn() },
+        lifeCycle: { printTaskTerminalOutput: vi.fn() },
       };
       return orchestrator;
     }
@@ -300,7 +300,7 @@ describe('TaskOrchestrator', () => {
     function createOrchestrator(batchResults: Map<string, any>) {
       const orchestrator: any = Object.create(TaskOrchestrator.prototype);
       orchestrator.cache = {
-        getBatch: jest.fn(async () => batchResults),
+        getBatch: vi.fn(async () => batchResults),
       };
       orchestrator.cacheMissedHashes = new Set();
       return orchestrator;
@@ -384,7 +384,7 @@ describe('TaskOrchestrator', () => {
       orchestrator.groups = [];
       orchestrator.options = {
         parallel: 3,
-        lifeCycle: { scheduleTask: jest.fn() },
+        lifeCycle: { scheduleTask: vi.fn() },
       };
 
       expect(await orchestrator.resolveCachedTasksBulk()).toBe(false);
@@ -439,7 +439,7 @@ describe('TaskOrchestrator', () => {
     ) {
       const orchestrator: any = Object.create(TaskOrchestrator.prototype);
       orchestrator.options = {
-        lifeCycle: { printTaskTerminalOutput: jest.fn() },
+        lifeCycle: { printTaskTerminalOutput: vi.fn() },
         verbose: args.verbose,
       };
       // Mirrors the real construction: the style is its own constructor
@@ -520,7 +520,7 @@ describe('TaskOrchestrator', () => {
       expect(Buffer.concat(queued).toString()).toContain(body);
     });
 
-    it('renders a batch that reported results from each task, never as a batch fold', () => {
+    it('renders a batch that reported results from each task, never as a batch fold', async () => {
       const orchestrator = createOrchestrator();
       const a = makeTask('a:build');
       const b = makeTask('b:build');
@@ -529,7 +529,7 @@ describe('TaskOrchestrator', () => {
         { task: b, status: 'local-cache', code: 0, terminalOutput: 'b body' },
       ];
 
-      const out = captureStdout(() =>
+      const out = await captureStdout(() =>
         orchestrator.printGroupedBatchOutput(BATCH, taskResults, undefined)
       );
 
@@ -540,7 +540,7 @@ describe('TaskOrchestrator', () => {
       expect(out).not.toContain('batch @nx/js:tsc');
     });
 
-    it('renders a FAILED batch per task when nothing was captured', () => {
+    it('renders a FAILED batch per task when nothing was captured', async () => {
       const orchestrator = createOrchestrator();
       const a = makeTask('a:build');
       const b = makeTask('b:build');
@@ -549,7 +549,7 @@ describe('TaskOrchestrator', () => {
         { task: b, status: 'failure', code: 1, terminalOutput: 'b failed' },
       ];
 
-      const out = captureStdout(() =>
+      const out = await captureStdout(() =>
         orchestrator.printGroupedBatchOutput(BATCH, taskResults, undefined)
       );
 
@@ -564,7 +564,7 @@ describe('TaskOrchestrator', () => {
 
     it.each([['failure'], ['stopped']])(
       'folds a batch with a %s task on the failures-only default, so a diagnostic no task claimed survives',
-      (badStatus) => {
+      async (badStatus) => {
         const orchestrator = createOrchestrator();
         const a = makeTask('a:build');
         const b = makeTask('b:build');
@@ -578,7 +578,7 @@ describe('TaskOrchestrator', () => {
           },
         ];
 
-        const out = captureStdout(() =>
+        const out = await captureStdout(() =>
           orchestrator.printGroupedBatchOutput(
             BATCH,
             taskResults,
@@ -608,14 +608,14 @@ describe('TaskOrchestrator', () => {
       }
     );
 
-    it('still collapses an all-green batch on the default, captured log or not', () => {
+    it('still collapses an all-green batch on the default, captured log or not', async () => {
       const orchestrator = createOrchestrator();
       const a = makeTask('a:build');
       const taskResults = [
         { task: a, status: 'success', code: 0, terminalOutput: 'a body' },
       ];
 
-      const out = captureStdout(() =>
+      const out = await captureStdout(() =>
         orchestrator.printGroupedBatchOutput(
           BATCH,
           taskResults,
@@ -635,42 +635,45 @@ describe('TaskOrchestrator', () => {
     it.each([
       ['--output-style=static', { outputStyle: 'static' }],
       ['--verbose', { verbose: true }],
-    ])('renders the whole batch log as one fold under %s', (_name, args) => {
-      const orchestrator = createOrchestrator(args);
-      const a = makeTask('a:build');
-      const taskResults = [
-        { task: a, status: 'success', code: 0, terminalOutput: 'a body' },
-      ];
+    ])(
+      'renders the whole batch log as one fold under %s',
+      async (_name, args) => {
+        const orchestrator = createOrchestrator(args);
+        const a = makeTask('a:build');
+        const taskResults = [
+          { task: a, status: 'success', code: 0, terminalOutput: 'a body' },
+        ];
 
-      const out = captureStdout(() =>
-        orchestrator.printGroupedBatchOutput(
-          BATCH,
-          taskResults,
-          capturedOutputFile('runner summary no task claimed')
-        )
-      );
+        const out = await captureStdout(() =>
+          orchestrator.printGroupedBatchOutput(
+            BATCH,
+            taskResults,
+            capturedOutputFile('runner summary no task claimed')
+          )
+        );
 
-      // A full-output run wants everything the batch emitted, including the
-      // bytes no task attributed to itself.
-      expect(out).toContain('runner summary no task claimed');
-      expect(out).toContain('batch @nx/js:tsc 1');
-      // And the tasks still render themselves. Letting the fold stand in for
-      // them drops anything a plugin reports without writing to stdio.
-      expect(
-        orchestrator.options.lifeCycle.printTaskTerminalOutput
-      ).toHaveBeenCalledWith(a, 'success', 'a body');
-      // Nothing to redirect to when every task prints its own block.
-      expect(out).not.toContain('output in "batch @nx/js:tsc 1" above');
-    });
+        // A full-output run wants everything the batch emitted, including the
+        // bytes no task attributed to itself.
+        expect(out).toContain('runner summary no task claimed');
+        expect(out).toContain('batch @nx/js:tsc 1');
+        // And the tasks still render themselves. Letting the fold stand in for
+        // them drops anything a plugin reports without writing to stdio.
+        expect(
+          orchestrator.options.lifeCycle.printTaskTerminalOutput
+        ).toHaveBeenCalledWith(a, 'success', 'a body');
+        // Nothing to redirect to when every task prints its own block.
+        expect(out).not.toContain('output in "batch @nx/js:tsc 1" above');
+      }
+    );
 
-    it('skips tasks that never dispatched', () => {
+    it('skips tasks that never dispatched', async () => {
       const orchestrator = createOrchestrator();
       const a = makeTask('a:build');
       const taskResults = [
         { task: a, status: 'skipped', code: 1, terminalOutput: '' },
       ];
 
-      captureStdout(() =>
+      await captureStdout(() =>
         orchestrator.printGroupedBatchOutput(BATCH, taskResults, undefined)
       );
 
@@ -728,9 +731,9 @@ describe('TaskOrchestrator', () => {
       const orchestrator: any = Object.create(TaskOrchestrator.prototype);
       orchestrator.options = {
         lifeCycle: {
-          printTaskTerminalOutput: jest.fn(),
-          appendTaskOutput: jest.fn(),
-          setTaskStatus: jest.fn(),
+          printTaskTerminalOutput: vi.fn(),
+          appendTaskOutput: vi.fn(),
+          setTaskStatus: vi.fn(),
         },
       };
       // Object.create bypasses field initializers.
@@ -754,10 +757,10 @@ describe('TaskOrchestrator', () => {
       // key load-bearing in `labels each fold with the batch it came from`.
       orchestrator.capturedForTest = captured;
       orchestrator.forkedProcessTaskRunner = {
-        forkProcessForBatch: jest.fn().mockResolvedValue({
-          onOutput: jest.fn(),
-          onTaskResults: jest.fn(),
-          getResults: jest.fn().mockRejectedValue(new Error(EXIT_ERROR)),
+        forkProcessForBatch: vi.fn().mockResolvedValue({
+          onOutput: vi.fn(),
+          onTaskResults: vi.fn(),
+          getResults: vi.fn().mockRejectedValue(new Error(EXIT_ERROR)),
           getCapturedOutputPath: () =>
             orchestrator.capturedForTest
               ? capturedPath(orchestrator.capturedForTest)

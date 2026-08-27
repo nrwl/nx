@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { win32 } from 'node:path';
 import { getPluginOsSocketPath, getPluginSocketFileName } from './socket-utils';
 import {
@@ -6,17 +7,17 @@ import {
   getSocketDirFallbackCause,
 } from './tmp-dir';
 
-jest.mock('./tmp-dir', () => ({
-  getDaemonSocketDir: jest.fn(),
-  getPluginSocketDir: jest.fn(),
-  getSocketDir: jest.fn(),
-  getSocketDirFallbackCause: jest.fn(),
-  getRefusedConfiguredSocketDir: jest.fn(),
+vi.mock('./tmp-dir', () => ({
+  getDaemonSocketDir: vi.fn(),
+  getPluginSocketDir: vi.fn(),
+  getSocketDir: vi.fn(),
+  getSocketDirFallbackCause: vi.fn(),
+  getRefusedConfiguredSocketDir: vi.fn(),
 }));
 
 describe('socket path validation', () => {
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('keeps the plugin socket basename prefix and suffix short', () => {
@@ -43,8 +44,8 @@ describe('socket path validation', () => {
 
   it('attaches the default-directory failure when its fallback is too long', () => {
     const cause = new Error('unsafe default socket root');
-    (getPluginSocketDir as jest.Mock).mockReturnValue(`/${'a'.repeat(96)}`);
-    (getSocketDirFallbackCause as jest.Mock).mockReturnValue(cause);
+    (getPluginSocketDir as Mock).mockReturnValue(`/${'a'.repeat(96)}`);
+    (getSocketDirFallbackCause as Mock).mockReturnValue(cause);
 
     let thrown!: Error;
     try {
@@ -60,8 +61,8 @@ describe('socket path validation', () => {
   });
 
   it('does not claim an explicit short-path remedy was a fallback', () => {
-    (getPluginSocketDir as jest.Mock).mockReturnValue(`/${'a'.repeat(96)}`);
-    (getSocketDirFallbackCause as jest.Mock).mockReturnValue(undefined);
+    (getPluginSocketDir as Mock).mockReturnValue(`/${'a'.repeat(96)}`);
+    (getSocketDirFallbackCause as Mock).mockReturnValue(undefined);
 
     expect(() => getPluginOsSocketPath('123-0-12345678')).toThrow(
       'Set NX_SOCKET_DIR to a shorter path'
@@ -79,9 +80,9 @@ describe('socket path validation', () => {
     // They already set one, and it was rejected for a reason that has nothing
     // to do with length — a read-only mount, EACCES, a directory they do not
     // own. Repeating the generic advice sends them round in a circle.
-    (getPluginSocketDir as jest.Mock).mockReturnValue(`/${'a'.repeat(96)}`);
-    (getSocketDirFallbackCause as jest.Mock).mockReturnValue(undefined);
-    (getRefusedConfiguredSocketDir as jest.Mock).mockReturnValue(
+    (getPluginSocketDir as Mock).mockReturnValue(`/${'a'.repeat(96)}`);
+    (getSocketDirFallbackCause as Mock).mockReturnValue(undefined);
+    (getRefusedConfiguredSocketDir as Mock).mockReturnValue(
       '/mnt/read-only/sockets'
     );
 

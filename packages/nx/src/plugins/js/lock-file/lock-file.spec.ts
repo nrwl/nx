@@ -1,4 +1,5 @@
 import type { ProjectGraph } from '../../../config/project-graph';
+import { output } from '../../../utils/output';
 import type { PackageJson } from '../../../utils/package-json';
 import { createLockFile, generatePrunedDeployOutput } from './lock-file';
 import { stringifyNpmLockfile } from './npm-parser';
@@ -10,31 +11,31 @@ import {
   warnIncompletePrunedPnpmOutput,
 } from './pruned-output';
 
-jest.mock('node:fs', () => ({
-  ...jest.requireActual('node:fs'),
-  readFileSync: jest.fn(() => 'ROOT_LOCKFILE'),
+vi.mock('node:fs', async () => ({
+  ...(await vi.importActual('node:fs')),
+  readFileSync: vi.fn(() => 'ROOT_LOCKFILE'),
 }));
-jest.mock('./pnpm-parser', () => ({
-  ...jest.requireActual('./pnpm-parser'),
-  stringifyPnpmLockfile: jest.fn(() => 'PRUNED_LOCKFILE'),
+vi.mock('./pnpm-parser', async () => ({
+  ...(await vi.importActual('./pnpm-parser')),
+  stringifyPnpmLockfile: vi.fn(() => 'PRUNED_LOCKFILE'),
 }));
-jest.mock('./npm-parser', () => ({
-  ...jest.requireActual('./npm-parser'),
-  stringifyNpmLockfile: jest.fn(() => 'PRUNED_NPM_LOCKFILE'),
+vi.mock('./npm-parser', async () => ({
+  ...(await vi.importActual('./npm-parser')),
+  stringifyNpmLockfile: vi.fn(() => 'PRUNED_NPM_LOCKFILE'),
 }));
-jest.mock('./project-graph-pruning', () => ({
-  ...jest.requireActual('./project-graph-pruning'),
-  pruneProjectGraph: jest.fn((graph) => graph),
+vi.mock('./project-graph-pruning', async () => ({
+  ...(await vi.importActual('./project-graph-pruning')),
+  pruneProjectGraph: vi.fn((graph) => graph),
 }));
-jest.mock('./pruned-output', () => ({
-  ...jest.requireActual('./pruned-output'),
-  getPrunedPnpmInstallArtifacts: jest.fn(() => []),
-  rewritePrunedLocalPathSpecifiers: jest.fn(),
-  validatePrunedLocalPathClosure: jest.fn(),
-  warnIncompletePrunedPnpmOutput: jest.fn(),
+vi.mock('./pruned-output', async () => ({
+  ...(await vi.importActual('./pruned-output')),
+  getPrunedPnpmInstallArtifacts: vi.fn(() => []),
+  rewritePrunedLocalPathSpecifiers: vi.fn(),
+  validatePrunedLocalPathClosure: vi.fn(),
+  warnIncompletePrunedPnpmOutput: vi.fn(),
 }));
-jest.mock('../../../utils/output', () => ({
-  output: { log: jest.fn(), error: jest.fn(), warn: jest.fn() },
+vi.mock('../../../utils/output', () => ({
+  output: { log: vi.fn(), error: vi.fn(), warn: vi.fn() },
 }));
 
 describe('createLockFile', () => {
@@ -45,7 +46,7 @@ describe('createLockFile', () => {
   };
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('drops the pnpm config the pruned lockfile no longer declares', () => {
@@ -87,7 +88,7 @@ describe('createLockFile', () => {
   });
 
   it('keeps the pnpm config when pruning falls back to the root lockfile', () => {
-    (stringifyPnpmLockfile as jest.Mock).mockImplementationOnce(() => {
+    (stringifyPnpmLockfile as Mock).mockImplementationOnce(() => {
       throw new Error('prune failed');
     });
     const packageJson: PackageJson = {
@@ -149,7 +150,7 @@ describe('generatePrunedDeployOutput', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('relocates local-path specifiers, prunes, and validates the closure for pnpm', () => {
@@ -168,11 +169,8 @@ describe('generatePrunedDeployOutput', () => {
     // the relocation must land in the manifest before the lockfile copies its
     // specifiers
     expect(
-      (rewritePrunedLocalPathSpecifiers as jest.Mock).mock
-        .invocationCallOrder[0]
-    ).toBeLessThan(
-      (stringifyPnpmLockfile as jest.Mock).mock.invocationCallOrder[0]
-    );
+      (rewritePrunedLocalPathSpecifiers as Mock).mock.invocationCallOrder[0]
+    ).toBeLessThan((stringifyPnpmLockfile as Mock).mock.invocationCallOrder[0]);
     expect(validatePrunedLocalPathClosure).toHaveBeenCalledWith(
       packageJson,
       '/root',
@@ -216,7 +214,7 @@ describe('generatePrunedDeployOutput', () => {
       overrides: { foo: '1.0.0' },
       patchedDependencies: { 'foo@1.0.0': 'my-patches/foo.patch' },
     };
-    (stringifyPnpmLockfile as jest.Mock).mockImplementationOnce(() => {
+    (stringifyPnpmLockfile as Mock).mockImplementationOnce(() => {
       throw new Error('pruning failed');
     });
 
@@ -262,7 +260,7 @@ describe('generatePrunedDeployOutput', () => {
   });
 
   it('ships the root lockfile without its local-path artifacts when pruning falls back', () => {
-    (stringifyPnpmLockfile as jest.Mock).mockImplementationOnce(() => {
+    (stringifyPnpmLockfile as Mock).mockImplementationOnce(() => {
       throw new Error('pruning failed');
     });
 
@@ -291,12 +289,12 @@ describe('generatePrunedDeployOutput', () => {
     packageJson.dependencies = { 'vendored-lib': 'file:../../vendor/lib' };
     packageJson.pnpm = { overrides: { foo: '1.0.0' } };
     const original = structuredClone(packageJson);
-    (rewritePrunedLocalPathSpecifiers as jest.Mock).mockImplementationOnce(
+    (rewritePrunedLocalPathSpecifiers as Mock).mockImplementationOnce(
       (pj: PackageJson) => {
         pj.dependencies['vendored-lib'] = 'file:local_path_modules/vendor/lib';
       }
     );
-    (stringifyPnpmLockfile as jest.Mock).mockImplementationOnce(() => {
+    (stringifyPnpmLockfile as Mock).mockImplementationOnce(() => {
       throw new Error('pruning failed');
     });
 
@@ -310,7 +308,6 @@ describe('generatePrunedDeployOutput', () => {
     // specifier must not point at unshipped local_path_modules/, and the pnpm
     // config the root lockfile still declares must be kept.
     expect(packageJson).toEqual(original);
-    const { output } = require('../../../utils/output');
     expect(output.warn).toHaveBeenCalledWith(
       expect.objectContaining({
         title: expect.stringContaining('falls back to the root lockfile'),
@@ -324,7 +321,7 @@ describe('generatePrunedDeployOutput', () => {
   });
 
   it('warns without pnpm-specific guidance when an npm prune falls back', () => {
-    (stringifyNpmLockfile as jest.Mock).mockImplementationOnce(() => {
+    (stringifyNpmLockfile as Mock).mockImplementationOnce(() => {
       throw new Error('npm pruning failed');
     });
 
@@ -334,8 +331,7 @@ describe('generatePrunedDeployOutput', () => {
       workspaceRoot: '/root',
     });
 
-    const { output } = require('../../../utils/output');
-    const [{ bodyLines }] = (output.warn as jest.Mock).mock.calls[0];
+    const [{ bodyLines }] = (output.warn as Mock).mock.calls[0];
     // the cause and the npm remediation, and none of the pnpm-only claims
     expect(bodyLines).toEqual([
       'The lockfile pruning failed: npm pruning failed',

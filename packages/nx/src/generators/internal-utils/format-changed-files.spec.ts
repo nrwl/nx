@@ -29,14 +29,14 @@ describe('formatChangedFiles', () => {
   // formatting it chose. It builds those paths with the platform separator, so
   // on Windows the exclusion only lands if it is normalized first.
   it('does not format excluded paths given with Windows separators', async () => {
-    const write = jest.fn();
+    const write = vi.fn();
     const tree = {
       root,
       exists: (path: string) => path === '.oxfmtrc.json',
       // The ignore chain is read through the tree now; this workspace has no
       // ignore files, so every lookup misses.
       read: () => null,
-      listChanges: jest.fn(() => [
+      listChanges: vi.fn(() => [
         {
           path: 'packages/my-lib/package.json',
           type: 'UPDATE' as const,
@@ -62,13 +62,13 @@ describe('formatChangedFiles', () => {
   // generator just removed, and silently skip a file it was asked to format.
   it('formats a file whose ignore rule the tree removed', async () => {
     writeFileSync(join(root, '.gitignore'), 'packages/my-lib/a.ts\n');
-    const write = jest.fn();
+    const write = vi.fn();
     const tree = {
       root,
       exists: (path: string) => path === '.oxfmtrc.json',
       // The tree's .gitignore no longer carries the rule that disk still has.
       read: (path: string) => (path === '.gitignore' ? '' : null),
-      listChanges: jest.fn(() => [
+      listChanges: vi.fn(() => [
         {
           path: 'packages/my-lib/a.ts',
           type: 'UPDATE' as const,
@@ -91,13 +91,13 @@ describe('formatChangedFiles', () => {
     const packageJson = JSON.stringify({
       devDependencies: { prettier: '^3.6.2' },
     });
-    const write = jest.fn();
+    const write = vi.fn();
     const tree = {
       root,
       exists: (path: string) => path === 'package.json',
       read: (path: string) =>
         path === 'package.json' ? Buffer.from(packageJson) : null,
-      listChanges: jest.fn(() => [
+      listChanges: vi.fn(() => [
         {
           path: 'packages/my-lib/package.json',
           type: 'UPDATE' as const,

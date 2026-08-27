@@ -268,8 +268,7 @@ export interface NxAppWebpackPluginOptions {
   watchDependencies?: boolean;
 }
 
-export interface NormalizedNxAppWebpackPluginOptions
-  extends NxAppWebpackPluginOptions {
+export interface NormalizedNxAppWebpackPluginOptions extends NxAppWebpackPluginOptions {
   projectName: string;
   root: string;
   projectRoot: string;

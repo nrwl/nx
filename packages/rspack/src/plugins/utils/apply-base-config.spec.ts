@@ -176,9 +176,8 @@ describe('apply-base-config libraryTarget handling', () => {
     });
 
     it('emits output.library.type instead of libraryTarget on v2', async () => {
-      const { applyBaseConfig: applyBaseConfigV2 } = await import(
-        './apply-base-config'
-      );
+      const { applyBaseConfig: applyBaseConfigV2 } =
+        await import('./apply-base-config');
       options.target = 'node';
       config.output = {};
       applyBaseConfigV2(options, config);
@@ -187,9 +186,8 @@ describe('apply-base-config libraryTarget handling', () => {
     });
 
     it('clears a user-provided libraryTarget when translating to library.type on v2', async () => {
-      const { applyBaseConfig: applyBaseConfigV2 } = await import(
-        './apply-base-config'
-      );
+      const { applyBaseConfig: applyBaseConfigV2 } =
+        await import('./apply-base-config');
       options.target = 'web';
       config.output = { libraryTarget: 'commonjs' };
       applyBaseConfigV2(options, config);
@@ -198,9 +196,8 @@ describe('apply-base-config libraryTarget handling', () => {
     });
 
     it('clears a stale libraryTarget when the user already set library.type on v2', async () => {
-      const { applyBaseConfig: applyBaseConfigV2 } = await import(
-        './apply-base-config'
-      );
+      const { applyBaseConfig: applyBaseConfigV2 } =
+        await import('./apply-base-config');
       options.target = 'web';
       config.output = {
         libraryTarget: 'umd',

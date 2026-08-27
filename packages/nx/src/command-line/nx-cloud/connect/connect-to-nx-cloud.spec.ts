@@ -1,11 +1,12 @@
-jest.mock('@clack/prompts', () => ({
-  autocomplete: jest.fn(),
+import type { Mock } from 'vitest';
+vi.mock('@clack/prompts', () => ({
+  autocomplete: vi.fn(),
   isCancel: () => false,
 }));
 
-jest.mock('../../../utils/ab-testing', () => ({
-  ...jest.requireActual('../../../utils/ab-testing'),
-  recordStat: jest.fn(),
+vi.mock('../../../utils/ab-testing', async () => ({
+  ...(await vi.importActual('../../../utils/ab-testing')),
+  recordStat: vi.fn(),
 }));
 
 import { autocomplete } from '@clack/prompts';
@@ -148,9 +149,11 @@ describe('connect-to-nx-cloud', () => {
 });
 
 describe('nxCloudPrompt option mapping', () => {
-  const mockAutocomplete = autocomplete as unknown as jest.Mock;
+  const mockAutocomplete = autocomplete as unknown as Mock;
 
-  beforeEach(() => mockAutocomplete.mockReset());
+  beforeEach(() => {
+    mockAutocomplete.mockReset();
+  });
 
   // The message choices are `{ value, name }` with `name` as the display text.
   // Mapping `name` into clack's `value` made the prompt answer with the label,
@@ -175,7 +178,7 @@ describe('nxCloudPrompt option mapping', () => {
 
   it('returns the selected key unchanged', async () => {
     mockAutocomplete.mockImplementationOnce(
-      async ({ options }: { options: { value: string }[] }) =>
+      ({ options }: { options: { value: string }[] }) =>
         options.find((o) => o.value === 'skip')?.value
     );
 

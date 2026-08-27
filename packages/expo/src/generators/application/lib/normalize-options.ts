@@ -7,8 +7,10 @@ import { normalizeLinterOption, isUsingTsSolutionSetup } from '@nx/js/internal';
 import { Schema } from '../schema';
 import type { LinterType } from '@nx/js';
 
-export interface NormalizedSchema
-  extends Omit<Schema, 'name' | 'useTsSolution'> {
+export interface NormalizedSchema extends Omit<
+  Schema,
+  'name' | 'useTsSolution'
+> {
   // `normalizeOptions` always resolves this, so it is no longer optional.
   linter: LinterType;
   className: string;
