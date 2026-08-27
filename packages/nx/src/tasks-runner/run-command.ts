@@ -1220,6 +1220,7 @@ function reportIoSnapshots(
   nxArgs: NxArgs
 ): void {
   if (!ioSnapshots) return;
+  if (!nxArgs.verbose && process.env.NX_VERBOSE_LOGGING !== 'true') return;
   const summary = formatIoSnapshotSummary(
     ioSnapshots.directory
       ? buildIoSnapshotOverrides(projectGraph, taskGraph, nxJson, ioSnapshots)
@@ -1227,11 +1228,7 @@ function reportIoSnapshots(
     ioSnapshots
   );
   if (!summary) return;
-  if (nxArgs.verbose || process.env.NX_VERBOSE_LOGGING === 'true') {
-    output.note({ title: summary.line, bodyLines: summary.bodyLines });
-  } else {
-    output.log({ title: summary.line });
-  }
+  output.note({ title: summary.line, bodyLines: summary.bodyLines });
 }
 
 export function getRunner(

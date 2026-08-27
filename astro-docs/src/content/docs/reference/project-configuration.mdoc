@@ -261,7 +261,7 @@ When your workspace is connected to Nx Cloud, Nx hashes a cacheable task from th
 }
 ```
 
-The default is `true`. `ioSnapshots` merges through `targetDefaults` like any other target property, and it only applies to cacheable targets. Set `NX_IO_SNAPSHOTS=false` to turn snapshots off for a whole run. Each run prints one line saying how many tasks hashed from a snapshot and why the rest fell back; `nx show target inputs <task> --json` reports the same status per task.
+The default is `true`. `ioSnapshots` merges through `targetDefaults` like any other target property, and it only applies to cacheable targets. Set `NX_IO_SNAPSHOTS=false` to turn snapshots off for a whole run. Run with `--verbose` to print one line saying how many tasks hashed from a snapshot and why the rest fell back; `nx show target inputs <task> --json` reports the same status per task.
 
 Snapshots also fill in outputs. When a snapshot covers a task, Nx caches the files the CI run wrote on top of the target's declared `outputs`, so a file the build writes but you never listed still gets cached and restored. Nx never drops a declared output; it only adds observed ones. `nx show target outputs <task>` marks each entry as declared or from the snapshot.
 
