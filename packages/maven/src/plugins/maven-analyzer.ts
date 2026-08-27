@@ -12,6 +12,9 @@ import {
 } from '@nx/devkit/internal';
 
 const DEFAULT_ANALYSIS_TIMEOUT_SECONDS = isCI() ? 600 : 120;
+// setTimeout silently clamps a delay past the 32-bit signed max to 1ms, which
+// would abort immediately — the opposite of what a large value asks for.
+const MAX_TIMEOUT_MS = 2 ** 31 - 1;
 
 let currentAbortController: AbortController | undefined;
 
@@ -26,12 +29,12 @@ export function cancelPendingMavenAnalysis(): void {
   }
 }
 
-function getAnalysisTimeoutMs(): number {
+export function getAnalysisTimeoutMs(): number {
   const envTimeout = process.env.NX_MAVEN_ANALYSIS_TIMEOUT;
   if (envTimeout) {
     const parsed = Number(envTimeout);
     if (!Number.isNaN(parsed) && parsed > 0) {
-      return parsed * 1000;
+      return Math.min(parsed * 1000, MAX_TIMEOUT_MS);
     }
   }
   return DEFAULT_ANALYSIS_TIMEOUT_SECONDS * 1000;

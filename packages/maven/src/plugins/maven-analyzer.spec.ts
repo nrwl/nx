@@ -1,4 +1,4 @@
-import { runMavenAnalysis } from './maven-analyzer';
+import { getAnalysisTimeoutMs, runMavenAnalysis } from './maven-analyzer';
 import { existsSync } from 'fs';
 import { readJsonFile } from '@nx/devkit';
 import { EventEmitter } from 'events';
@@ -35,6 +35,26 @@ describe('Maven Analyzer', () => {
     // Mock mvnd detection to fail by default, so tests use mvnw/mvn
     (safeExecFileSync as jest.Mock).mockImplementation(() => {
       throw new Error('mvnd not found');
+    });
+  });
+
+  describe('getAnalysisTimeoutMs', () => {
+    afterEach(() => {
+      delete process.env.NX_MAVEN_ANALYSIS_TIMEOUT;
+    });
+
+    // setTimeout clamps a delay past the 32-bit signed max to 1ms, so an
+    // unclamped huge value would abort the analysis instantly — the opposite
+    // of what the timeout error tells the user to do.
+    it('should clamp an overflowing NX_MAVEN_ANALYSIS_TIMEOUT', () => {
+      process.env.NX_MAVEN_ANALYSIS_TIMEOUT = '9999999';
+      expect(getAnalysisTimeoutMs()).toBe(2 ** 31 - 1);
+
+      process.env.NX_MAVEN_ANALYSIS_TIMEOUT = 'Infinity';
+      expect(getAnalysisTimeoutMs()).toBe(2 ** 31 - 1);
+
+      process.env.NX_MAVEN_ANALYSIS_TIMEOUT = '30';
+      expect(getAnalysisTimeoutMs()).toBe(30_000);
     });
   });
 
