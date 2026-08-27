@@ -193,9 +193,7 @@
     },
     "port": {
       "type": "number",
-      "description": "The port to use for the development server",
-      "x-prompt": "Which port would you like to use for the dev server?",
-      "default": 4200
+      "description": "The port to use for the development server. Defaults to 4200."
     }
   },
   "required": ["directory"],
