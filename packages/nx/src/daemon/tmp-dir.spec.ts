@@ -1,19 +1,17 @@
 import type { Mock } from 'vitest';
-import { join } from 'node:path';
 import {
-  getDaemonSocketDir,
+  getDaemonSocketPath,
+  getForkedProcessSocketPath,
   getNxConsoleSocketPath,
-  getPluginSocketDir,
-  getRefusedConfiguredSocketDir,
-  getSocketDir,
-  getSocketDirFallbackCause,
+  getPluginSocketPath,
   InvalidSocketDirConfigured,
   resetSocketDirWarningsForTesting,
 } from './tmp-dir';
 import {
-  resolveDaemonSocketDir,
+  resolveDaemonSocketPath,
+  resolveForkedProcessSocketPath,
   resolveNxConsoleSocketPath,
-  resolvePluginSocketDir,
+  resolvePluginSocketPath,
   type SocketDirDetails,
 } from '../native';
 import { logger } from '../utils/logger';
@@ -28,8 +26,9 @@ import { NX_HOME_TMP_DIR, NX_TMP_DIR } from '../utils/nx-tmp-dir';
 // and the tests stage their return value.
 vi.mock('../native', async () => ({
   ...(await vi.importActual('../native')),
-  resolveDaemonSocketDir: vi.fn(),
-  resolvePluginSocketDir: vi.fn(),
+  resolveDaemonSocketPath: vi.fn(),
+  resolveForkedProcessSocketPath: vi.fn(),
+  resolvePluginSocketPath: vi.fn(),
   resolveNxConsoleSocketPath: vi.fn(),
 }));
 
@@ -48,21 +47,29 @@ vi.mock('../utils/logger', () => {
 });
 
 const SOCKET_DIR = '/tmp/.nx/501/sockets/abc123';
+const SOCKET_PATH = `${SOCKET_DIR}/d.sock`;
 
 /** A resolution that succeeded on the preferred root. */
 const resolved = (
   overrides: Partial<SocketDirDetails> = {}
 ): SocketDirDetails => ({
-  path: SOCKET_DIR,
+  path: SOCKET_PATH,
+  dir: SOCKET_DIR,
+  tooLong: false,
   usedWorkspaceFallback: false,
   remedies: [],
   ...overrides,
 });
 
 const stage = (details: SocketDirDetails) => {
-  (resolveDaemonSocketDir as Mock).mockReturnValue(details);
-  (resolvePluginSocketDir as Mock).mockReturnValue(details);
-  (resolveNxConsoleSocketPath as Mock).mockReturnValue(details);
+  for (const resolver of [
+    resolveDaemonSocketPath,
+    resolveForkedProcessSocketPath,
+    resolvePluginSocketPath,
+    resolveNxConsoleSocketPath,
+  ]) {
+    (resolver as Mock).mockReturnValue(details);
+  }
 };
 
 describe('socket directories', () => {
@@ -79,18 +86,20 @@ describe('socket directories', () => {
   });
 
   describe('resolution', () => {
-    it('should resolve the daemon and plugin directories for the current workspace', () => {
-      expect(getSocketDir()).toBe(SOCKET_DIR);
-      expect(getPluginSocketDir()).toBe(SOCKET_DIR);
+    it('should resolve each socket for the current workspace', () => {
+      expect(getDaemonSocketPath()).toBe(SOCKET_PATH);
+      expect(getPluginSocketPath('123-0-abcd')).toBe(SOCKET_PATH);
+      expect(getForkedProcessSocketPath('7')).toBe(SOCKET_PATH);
 
-      expect(resolveDaemonSocketDir).toHaveBeenCalledWith(workspaceRoot);
-      expect(resolvePluginSocketDir).toHaveBeenCalledWith(workspaceRoot);
-    });
-
-    it('should keep the daemon socket file name short', () => {
-      // The whole path is held to 95 characters by assertValidSocketPath, so
-      // the one segment this module chooses is deliberately one letter.
-      expect(getDaemonSocketDir()).toBe(join(SOCKET_DIR, 'd.sock'));
+      expect(resolveDaemonSocketPath).toHaveBeenCalledWith(workspaceRoot);
+      expect(resolvePluginSocketPath).toHaveBeenCalledWith(
+        workspaceRoot,
+        '123-0-abcd'
+      );
+      expect(resolveForkedProcessSocketPath).toHaveBeenCalledWith(
+        workspaceRoot,
+        '7'
+      );
     });
 
     it('should resolve the console socket for another workspace and environment', () => {
@@ -118,32 +127,88 @@ describe('socket directories', () => {
     });
 
     it('should report nothing when the preferred root was used', () => {
-      getSocketDir();
+      getDaemonSocketPath();
 
-      expect(getSocketDirFallbackCause()).toBeUndefined();
-      expect(getRefusedConfiguredSocketDir()).toBeUndefined();
       expect(logger.warn).not.toHaveBeenCalled();
+      expect(logger.verbose).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('a path the platform will not bind', () => {
+    it('should refuse it rather than let the bind fail', () => {
+      // Every socket goes through this, including the Nx Console one, which is
+      // both the longest leaf and the one with no Nx process on the other end
+      // to report a bind error.
+      stage(resolved({ tooLong: true }));
+
+      expect(() => getNxConsoleSocketPath()).toThrow(
+        'exceeds the maximum socket length'
+      );
     });
 
-    it('should clear the previous resolution rather than leak it into the next', () => {
-      // assertValidSocketPath reads both accessors immediately after the call
-      // that produced the path, and one CLI process resolves several.
+    it('should advise a shorter NX_SOCKET_DIR when the user has not set one', () => {
+      stage(resolved({ tooLong: true }));
+
+      expect(() => getDaemonSocketPath()).toThrow(
+        'Set NX_SOCKET_DIR to a shorter path'
+      );
+    });
+
+    it('should not blame a fallback that did not happen', () => {
+      stage(resolved({ tooLong: true }));
+
+      try {
+        getDaemonSocketPath();
+        throw new Error('should have thrown');
+      } catch (e) {
+        expect((e as Error).message).not.toContain('Nx fell back');
+        expect((e as Error).cause).toBeUndefined();
+      }
+    });
+
+    it('should attach why the default directory was rejected', () => {
       stage(
         resolved({
-          path: '/workspace/.nx/workspace-data/d',
-          refusedConfiguredDir: '/tmp/refused',
-          refusalError: '/tmp/refused exists and is not a directory',
+          tooLong: true,
           usedWorkspaceFallback: true,
+          refusalDetails: '/tmp/.nx is owned by uid 0, not by you',
         })
       );
-      getSocketDir();
-      expect(getRefusedConfiguredSocketDir()).toBe('/tmp/refused');
 
-      stage(resolved());
-      getSocketDir();
+      try {
+        getDaemonSocketPath();
+        throw new Error('should have thrown');
+      } catch (e) {
+        expect((e as Error).message).toContain('Nx fell back');
+        expect((e as Error).message).toContain('--verbose');
+        expect(((e as Error).cause as Error).message).toContain(
+          '/tmp/.nx is owned by uid 0, not by you'
+        );
+      }
+    });
 
-      expect(getRefusedConfiguredSocketDir()).toBeUndefined();
-      expect(getSocketDirFallbackCause()).toBeUndefined();
+    it('should stop advising a shorter path once the configured one was refused', () => {
+      // They already set one, and it was rejected for a reason that has nothing
+      // to do with length. Repeating the generic advice sends them in a circle.
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      stage(
+        resolved({
+          tooLong: true,
+          usedWorkspaceFallback: true,
+          refusedConfiguredDir: '/mnt/read-only/sockets',
+          refusalError: '/mnt/read-only/sockets could not be created (EROFS)',
+        })
+      );
+
+      try {
+        getDaemonSocketPath();
+        throw new Error('should have thrown');
+      } catch (e) {
+        const message = (e as Error).message;
+        expect(message).toContain('/mnt/read-only/sockets');
+        expect(message).toContain('could not be used');
+        expect(message).not.toContain('Set NX_SOCKET_DIR to a shorter path');
+      }
     });
   });
 
@@ -156,20 +221,22 @@ describe('socket directories', () => {
       ['os-temp-root', 'is the operating system temp directory'],
       ['nx-managed', 'keeps its own runtime state in'],
     ])('should throw for %s', (invalidReason, sentence) => {
-      stage(resolved({ path: '/tmp', invalidReason }));
+      stage(resolved({ path: '/tmp', dir: '/tmp', invalidReason }));
 
-      expect(() => getSocketDir()).toThrow(InvalidSocketDirConfigured);
-      expect(() => getSocketDir()).toThrow(sentence);
+      expect(() => getDaemonSocketPath()).toThrow(InvalidSocketDirConfigured);
+      expect(() => getDaemonSocketPath()).toThrow(sentence);
     });
 
     it('should carry the directory and the reason on the error', () => {
       // The reason is not decorative: it decides which of the three sentences a
       // user is told, and telling someone their own 0700 directory lets a local
       // attacker execute code would be false.
-      stage(resolved({ path: '/tmp', invalidReason: 'os-temp-root' }));
+      stage(
+        resolved({ path: '/tmp', dir: '/tmp', invalidReason: 'os-temp-root' })
+      );
 
       try {
-        getSocketDir();
+        getDaemonSocketPath();
         throw new Error('should have thrown');
       } catch (e) {
         expect(e).toBeInstanceOf(InvalidSocketDirConfigured);
@@ -182,7 +249,8 @@ describe('socket directories', () => {
   describe('a refused NX_SOCKET_DIR', () => {
     const refused = () =>
       resolved({
-        path: '/workspace/.nx/workspace-data/d',
+        path: '/workspace/.nx/workspace-data/d/d.sock',
+        dir: '/workspace/.nx/workspace-data/d',
         refusedConfiguredDir: '/tmp/too/deep',
         refusalError: '/tmp/too/deep is owned by uid 0, not by you',
         usedWorkspaceFallback: true,
@@ -194,7 +262,7 @@ describe('socket directories', () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       stage(refused());
 
-      getSocketDir();
+      getDaemonSocketPath();
 
       expect(warn).toHaveBeenCalledWith(
         expect.stringContaining('/tmp/too/deep is owned by uid 0, not by you')
@@ -209,30 +277,19 @@ describe('socket directories', () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       stage(refused());
 
-      getSocketDir();
-      getPluginSocketDir();
+      getDaemonSocketPath();
+      getPluginSocketPath('1');
 
       expect(warn).toHaveBeenCalledTimes(1);
       warn.mockRestore();
-    });
-
-    it('should be readable back, apart from the fallback cause', () => {
-      // So a length error stops telling someone to shorten an NX_SOCKET_DIR
-      // that was refused for another reason.
-      vi.spyOn(console, 'warn').mockImplementation(() => {});
-      stage(refused());
-
-      getSocketDir();
-
-      expect(getRefusedConfiguredSocketDir()).toBe('/tmp/too/deep');
-      expect(getSocketDirFallbackCause()).toBeInstanceOf(Error);
     });
   });
 
   describe('the workspace fallback', () => {
     const fellBack = (overrides: Partial<SocketDirDetails> = {}) =>
       resolved({
-        path: '/workspace/.nx/workspace-data/d',
+        path: '/workspace/.nx/workspace-data/d/d.sock',
+        dir: '/workspace/.nx/workspace-data/d',
         attemptedDir: '/tmp/.nx/501/sockets/abc123',
         usedWorkspaceFallback: true,
         refusalDetails: '/tmp/.nx is owned by uid 0, not by you',
@@ -244,7 +301,7 @@ describe('socket directories', () => {
       // Nx's usual roots no longer covers it.
       stage(fellBack());
 
-      getSocketDir();
+      getDaemonSocketPath();
 
       expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining('/workspace/.nx/workspace-data/d')
@@ -260,8 +317,8 @@ describe('socket directories', () => {
       // without the latch a single command repeats this many times.
       stage(fellBack());
 
-      getSocketDir();
-      getPluginSocketDir();
+      getDaemonSocketPath();
+      getPluginSocketPath('1');
 
       expect(logger.warn).toHaveBeenCalledTimes(1);
     });
@@ -273,7 +330,7 @@ describe('socket directories', () => {
         })
       );
 
-      getSocketDir();
+      getDaemonSocketPath();
 
       expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Run `chmod 0700 /tmp/.nx/501` and try again;')
@@ -284,7 +341,7 @@ describe('socket directories', () => {
       (isSandbox as Mock).mockReturnValue(true);
       stage(fellBack());
 
-      getSocketDir();
+      getDaemonSocketPath();
 
       const warned = (logger.warn as Mock).mock.calls[0][0];
       expect(warned).toContain(NX_TMP_DIR);
@@ -296,7 +353,7 @@ describe('socket directories', () => {
     it('should not mention a sandbox when there is none', () => {
       stage(fellBack());
 
-      getSocketDir();
+      getDaemonSocketPath();
 
       expect((logger.warn as Mock).mock.calls[0][0]).not.toContain(
         'sandbox allowlist'
@@ -306,10 +363,9 @@ describe('socket directories', () => {
     it('should say why the other roots were rejected when asked', () => {
       stage(fellBack());
 
-      getSocketDir();
+      getDaemonSocketPath();
 
-      expect(getSocketDirFallbackCause()).toBeInstanceOf(Error);
-      expect((getSocketDirFallbackCause() as Error).message).toContain(
+      expect((logger.verbose as Mock).mock.calls[0][1].message).toContain(
         '/tmp/.nx is owned by uid 0, not by you'
       );
       expect((logger.warn as Mock).mock.calls[0][0]).toContain(
@@ -319,17 +375,19 @@ describe('socket directories', () => {
   });
 
   describe('a demotion to a later root', () => {
-    const demoted = () =>
+    const demoted = (overrides: Partial<SocketDirDetails> = {}) =>
       resolved({
-        path: '/home/me/.nx/sockets/abc123',
+        path: '/home/me/.nx/sockets/abc123/d.sock',
+        dir: '/home/me/.nx/sockets/abc123',
         demotedFrom: '/tmp/.nx/501/sockets',
         refusalDetails: '/tmp/.nx is owned by uid 0, not by you',
+        ...overrides,
       });
 
     it('should be verbose rather than a warning, since nothing failed', () => {
       stage(demoted());
 
-      getSocketDir();
+      getDaemonSocketPath();
 
       expect(logger.warn).not.toHaveBeenCalled();
       expect(logger.verbose).toHaveBeenCalledWith(
@@ -337,16 +395,19 @@ describe('socket directories', () => {
       );
     });
 
-    it('should still record a cause', () => {
-      // assertValidSocketPath keys its "run with --verbose" block off it, and
-      // without it a later length failure reads as though the user chose the
-      // path.
-      stage(demoted());
+    it('should name the skipped root if the demoted path then proves too long', () => {
+      // Without this the length failure reads as though the user chose the path.
+      stage(demoted({ tooLong: true }));
 
-      getSocketDir();
-
-      expect(getSocketDirFallbackCause()).toBeInstanceOf(Error);
-      expect(getRefusedConfiguredSocketDir()).toBeUndefined();
+      try {
+        getDaemonSocketPath();
+        throw new Error('should have thrown');
+      } catch (e) {
+        expect((e as Error).message).toContain('Nx fell back');
+        expect(((e as Error).cause as Error).message).toContain(
+          '/tmp/.nx/501/sockets'
+        );
+      }
     });
   });
 });

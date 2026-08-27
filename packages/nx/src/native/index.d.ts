@@ -683,11 +683,14 @@ export interface ProjectGraph {
 export declare function remove(src: string): void
 
 /**
- * Where the daemon and forked task processes put their sockets. Per run — the
- * name hashes the pid, and clients read the daemon's path back out of the
- * process cache rather than deriving it.
+ * The daemon's own socket. Per run — the directory name hashes the pid, and
+ * clients read the daemon's path back out of the process cache rather than
+ * deriving it.
  */
-export declare function resolveDaemonSocketDir(workspaceRoot: string, env?: Record<string, string> | undefined | null): SocketDirDetails
+export declare function resolveDaemonSocketPath(workspaceRoot: string, env?: Record<string, string> | undefined | null): SocketDirDetails
+
+/** A forked task process's socket, in the daemon's per-run directory. */
+export declare function resolveForkedProcessSocketPath(workspaceRoot: string, id: string, env?: Record<string, string> | undefined | null): SocketDirDetails
 
 /**
  * Where the Nx Console socket lives, for whoever binds or connects to it.
@@ -703,7 +706,7 @@ export declare function resolveNxConsoleSocketPath(workspaceRoot: string, env?: 
  * Plugin worker sockets get their own workspace-scoped directory rather than
  * sitting in the shared system temp dir, which cannot be locked down.
  */
-export declare function resolvePluginSocketDir(workspaceRoot: string, env?: Record<string, string> | undefined | null): SocketDirDetails
+export declare function resolvePluginSocketPath(workspaceRoot: string, id: string, env?: Record<string, string> | undefined | null): SocketDirDetails
 
 export declare function restoreTerminal(): void
 
@@ -722,12 +725,16 @@ export interface RuntimeInput {
  * so this carries facts rather than prose.
  */
 export interface SocketDirDetails {
-  /**
-   * A directory for the daemon and plugin resolvers, the socket file itself
-   * for Nx Console — on Windows its `\\.\pipe
-  x\` name.
-   */
+  /** The socket itself — on Windows its `\\.\pipe
+  x\` name. */
   path: string
+  /** The directory holding it, for the caller that deletes it on shutdown. */
+  dir: string
+  /**
+   * Whether `path` exceeds what the platform will bind. Reported rather than
+   * thrown because which advice is correct depends on the other fields.
+   */
+  tooLong: boolean
   /**
    * Set when `path` is a directory Nx refuses to *be* the socket directory:
    * `shared-with-other-users`, `nx-managed`, or `os-temp-root`. The caller

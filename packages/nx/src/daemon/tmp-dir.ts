@@ -15,9 +15,10 @@ import { rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'path';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import {
-  resolveDaemonSocketDir,
+  resolveDaemonSocketPath,
+  resolveForkedProcessSocketPath,
   resolveNxConsoleSocketPath,
-  resolvePluginSocketDir,
+  resolvePluginSocketPath,
   type SocketDirDetails,
 } from '../native';
 import { NX_HOME_TMP_DIR, NX_TMP_DIR } from '../utils/nx-tmp-dir';
@@ -80,14 +81,6 @@ export const DAEMON_OUTPUT_LOG_FILE = join(
   'daemon.log'
 );
 
-export const getDaemonSocketDir = () =>
-  join(
-    getSocketDir(),
-    // Kept intentionally short to stay under the socket/named pipe path length
-    // limit enforced by `assertValidSocketPath` in socket-utils.ts.
-    'd.sock'
-  );
-
 export function writeDaemonLogs(error?: string) {
   const file = join(DAEMON_DIR_FOR_CURRENT_WORKSPACE, 'daemon-error.log');
   writeFileSync(file, error);
@@ -125,8 +118,6 @@ export function isDaemonDisabled() {
   }
 }
 
-let socketDirFallbackCause: unknown;
-let refusedConfiguredSocketDir: string | undefined;
 let warnedAboutWorkspaceFallback = false;
 let warnedAboutConfiguredSocketDir = false;
 
@@ -138,21 +129,6 @@ let warnedAboutConfiguredSocketDir = false;
 export function resetSocketDirWarningsForTesting() {
   warnedAboutWorkspaceFallback = false;
   warnedAboutConfiguredSocketDir = false;
-}
-
-export function getSocketDirFallbackCause(): unknown {
-  return socketDirFallbackCause;
-}
-
-/**
- * The NX_SOCKET_DIR that was refused, if that is why we are in the fallback.
- * Reflects the most recent resolution only — both accessors are cleared on
- * every resolution, and the daemon and plugin socket paths each drive one. Read
- * it immediately after the call that produced the path, which is what
- * `assertValidSocketPath` does.
- */
-export function getRefusedConfiguredSocketDir(): string | undefined {
-  return refusedConfiguredSocketDir;
 }
 
 /**
@@ -181,15 +157,7 @@ function adopt(details: SocketDirDetails): string {
     );
   }
 
-  socketDirFallbackCause = undefined;
-  refusedConfiguredSocketDir = undefined;
-
   if (details.refusedConfiguredDir !== undefined) {
-    // Tracked separately from socketDirFallbackCause so the length error stops
-    // telling someone to shorten an NX_SOCKET_DIR that was refused for another
-    // reason.
-    refusedConfiguredSocketDir = details.refusedConfiguredDir;
-    socketDirFallbackCause = new Error(details.refusalError);
     // Never swap out a configured directory silently — the substitute is longer
     // and would resurface as a length complaint about a path the user never set.
     // Latched: a task-per-PseudoTerminal command resolves this once per task.
@@ -199,15 +167,10 @@ function adopt(details: SocketDirDetails): string {
         `Nx could not use the configured socket directory ${details.refusedConfiguredDir}: ${details.refusalError}\nFalling back to ${details.path}.`
       );
     }
-    return details.path;
+    return assertWithinBudget(details);
   }
 
   if (details.usedWorkspaceFallback) {
-    socketDirFallbackCause = new Error(
-      `Nx could not establish any of its default socket directories${
-        details.refusalDetails ? `: ${details.refusalDetails}` : ''
-      }.`
-    );
     const logger = lazyLogger();
     logger.verbose(
       `Nx could not use the default socket ${
@@ -215,7 +178,7 @@ function adopt(details: SocketDirDetails): string {
           ? `directory ${details.attemptedDir}`
           : 'directories'
       }. Falling back to ${details.path}.`,
-      socketDirFallbackCause
+      fallbackCause(details)
     );
     // Warned rather than verbose: the workspace path grows with checkout depth,
     // so this is where the 95-character budget is most likely to trip, and an
@@ -243,35 +206,92 @@ function adopt(details: SocketDirDetails): string {
           .join(' ')
       );
     }
-    return details.path;
+    return assertWithinBudget(details);
   }
 
   if (details.demotedFrom !== undefined) {
-    // Verbose, not warn: nothing failed. The cause is still set because
-    // `assertValidSocketPath` keys its "run with --verbose" block off it, and
-    // without it a later length failure reads as though the user chose the path.
-    socketDirFallbackCause = new Error(
-      `Nx could not establish its preferred socket root ${details.demotedFrom}, so it used ${details.path}.`
-    );
+    // Verbose, not warn: nothing failed.
     lazyLogger().verbose(
       `Nx could not use the default socket directory ${details.demotedFrom}. Using ${details.path} instead.` +
         (details.refusalDetails ? ` ${details.refusalDetails}.` : '')
     );
   }
 
-  return details.path;
+  return assertWithinBudget(details);
 }
 
-export function getSocketDir() {
-  return adopt(resolveDaemonSocketDir(workspaceRoot));
+/**
+ * Why this is not the preferred location, or `undefined` when it is. Kept as
+ * the error's `cause` so `--verbose` can show what the sentence summarizes.
+ */
+function fallbackCause(details: SocketDirDetails): Error | undefined {
+  if (details.refusalError !== undefined) {
+    return new Error(details.refusalError);
+  }
+  if (details.usedWorkspaceFallback) {
+    return new Error(
+      `Nx could not establish any of its default socket directories${
+        details.refusalDetails ? `: ${details.refusalDetails}` : ''
+      }.`
+    );
+  }
+  if (details.demotedFrom !== undefined) {
+    return new Error(
+      `Nx could not establish its preferred socket root ${details.demotedFrom}, so it used ${details.dir}.`
+    );
+  }
+  return undefined;
+}
+
+/**
+ * The native side measures; the sentence is decided here, from the same
+ * resolution that produced the path. Which advice is correct turns on *why*
+ * the path is long: a user who already set `NX_SOCKET_DIR` and had it refused
+ * for an unrelated reason is not helped by being told to set a shorter one.
+ */
+function assertWithinBudget(details: SocketDirDetails): string {
+  if (!details.tooLong) {
+    return details.path;
+  }
+  const cause = fallbackCause(details);
+  throw new Error(
+    [
+      'Attempted to open socket that exceeds the maximum socket length.',
+      ...(details.usedWorkspaceFallback || details.demotedFrom !== undefined
+        ? [
+            `Nx fell back to ${details.dir} because the default socket directory could not be used.`,
+            'Run the command with --verbose to see why the default directory was rejected.',
+          ]
+        : []),
+      '',
+      details.refusedConfiguredDir === undefined
+        ? `Set NX_SOCKET_DIR to a shorter path (e.g. ${
+            process.platform === 'win32' ? '%TMP%/nx-tmp' : '/tmp/nx-tmp'
+          }) to avoid this issue.`
+        : // Saying "set a shorter path" here would be advice they already
+          // followed: they set one, and it was refused for another reason.
+          `The directory set in NX_SOCKET_DIR (${details.refusedConfiguredDir}) could not be used — see the warning above — so Nx fell back to a longer path.\nPoint NX_SOCKET_DIR at a short directory your user owns.`,
+    ].join('\n'),
+    cause === undefined ? undefined : { cause }
+  );
+}
+
+/** The daemon's own socket. */
+export function getDaemonSocketPath(): string {
+  return adopt(resolveDaemonSocketPath(workspaceRoot));
+}
+
+/** A forked task process's socket, in the daemon's per-run directory. */
+export function getForkedProcessSocketPath(id: string): string {
+  return adopt(resolveForkedProcessSocketPath(workspaceRoot, id));
 }
 
 /**
  * Plugin worker sockets get their own workspace-scoped directory rather than
  * sitting in the shared system temp dir, which cannot be locked down.
  */
-export function getPluginSocketDir() {
-  return adopt(resolvePluginSocketDir(workspaceRoot));
+export function getPluginSocketPath(id: string): string {
+  return adopt(resolvePluginSocketPath(workspaceRoot, id));
 }
 
 /**
@@ -296,6 +316,10 @@ export function getNxConsoleSocketPath(
 
 export function removeSocketDir() {
   try {
-    rmSync(getSocketDir(), { recursive: true, force: true });
+    // The directory, not the socket: the daemon's whole per-run directory goes.
+    rmSync(resolveDaemonSocketPath(workspaceRoot).dir, {
+      recursive: true,
+      force: true,
+    });
   } catch (e) {}
 }

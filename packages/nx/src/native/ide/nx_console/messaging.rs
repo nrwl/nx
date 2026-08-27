@@ -17,7 +17,7 @@ use crate::native::{
         components::tasks_list::{TaskItem, TaskStatus},
         pty::PtyInstance,
     },
-    utils::socket_path::{legacy_nx_console_socket_path, nx_console_socket_path},
+    utils::socket_path::{SocketKind, legacy_nx_console_socket_path, resolve_socket_path},
 };
 
 #[derive(Serialize, Deserialize)]
@@ -67,7 +67,7 @@ fn throttled(operation_key: &'static str, throttle_duration: Duration) -> bool {
 
 impl NxConsoleMessageConnection {
     pub async fn new(workspace_root: &str) -> Self {
-        let resolved = nx_console_socket_path(workspace_root, None)
+        let resolved = resolve_socket_path(SocketKind::NxConsole, workspace_root, None)
             .inspect_err(|e| trace!("Could not resolve the Nx Console socket: {:?}", e))
             .ok()
             .map(|resolution| resolution.path);
