@@ -1,3 +1,13 @@
+/**
+ * Directory guards for Nx's runtime state: create a directory only when it is
+ * ours and unreachable by other users on this machine.
+ *
+ * `native/utils/owned_dir.rs` implements the same rules and must change with
+ * this file. That copy is the one everything else uses — this one exists
+ * because the native binding loader has to place and lock down the `.node`
+ * before Rust can be called, so it is the only caller that cannot reach the
+ * native implementation. Node builtins only, for the same reason.
+ */
 import {
   closeSync,
   constants,
@@ -47,15 +57,15 @@ export type OwnedPrivateDir = string & {
   readonly [ownedPrivateDirBrand]: true;
 };
 
-/** Why a guard refused a directory. Data, not a sentence: `remedyFor` decides on it. */
+/** Why a guard refused a directory. Data, not a sentence. */
 export type DirRefusal =
   | { kind: 'not-created'; dir: string; code?: string }
   | { kind: 'not-inspectable'; dir: string; code?: string }
   | { kind: 'not-a-directory'; dir: string; symlink?: true }
   // Separate kinds, not one with a flag: which advice is correct turns on which
-  // directory was refused, so it has to be the discriminant `remedyFor` branches
-  // on. Root can take over the shared container; it cannot help with a per-user
-  // directory.
+  // directory was refused, so it has to be the discriminant `remedy_for` (now in
+  // native/utils/owned_dir.rs) branches on. Root can take over the shared
+  // container; it cannot help with a per-user directory.
   | { kind: 'foreign-owner'; dir: string; uid: number }
   | { kind: 'foreign-shared-container'; dir: string; uid: number }
   | { kind: 'not-tightenable'; dir: string; mode: number }
@@ -117,48 +127,6 @@ export function describeRefusal(r: DirRefusal): string {
       throw new Error(
         `Unhandled directory refusal: ${(unhandled as any).kind}`
       );
-    }
-  }
-}
-
-/** Single-quoted for a shell, so a path with a space or quote survives a paste. */
-const shellQuote = (s: string): string => `'${s.replace(/'/g, `'\\''`)}'`;
-
-/** What the user can do about a refusal, or `undefined` when there is nothing. */
-export function remedyFor(r: DirRefusal): string | undefined {
-  switch (r.kind) {
-    case 'not-a-directory':
-      return r.symlink
-        ? `${r.dir} is a symlink where Nx expects a directory. If you did not create it, treat it as hostile: remove the link itself (not what it points at) and run the command again.`
-        : undefined;
-    case 'foreign-owner':
-      return `${r.dir} belongs to another user on this machine, so Nx cannot keep its own directory there. Set NX_SOCKET_DIR to a short directory your user owns, or move it aside — which you can do yourself if you own the directory it sits in, and otherwise needs an administrator.`;
-    case 'not-tightenable':
-      // Both producers reach here having already established that the directory
-      // is ours, so `chmod` is the user's to run. Names no cause: one producer
-      // is a mount that discards the mode, the other is any `chmod` failure.
-      return `${r.dir} is reachable by other users (mode ${asMode(
-        r.mode
-      )}) and Nx could not restrict it. Run \`chmod 0700 ${shellQuote(
-        r.dir
-      )}\` and try again; if the mode does not stick, set NX_SOCKET_DIR to a short directory on a filesystem that keeps POSIX permissions.`;
-    case 'foreign-shared-container':
-      // Unreachable today: `isSafeSharedRoot` denies with this kind only when
-      // `stats.uid !== 0`, so a root-owned container never reaches here.
-      if (r.uid === 0) {
-        return undefined;
-      }
-      const q = shellQuote(r.dir);
-      return `${r.dir} belongs to another user on this machine, so Nx cannot keep a private directory beneath it. Ask an administrator to hand it to root with \`sudo chown root ${q} && sudo chmod 1777 ${q}\`; every user can then keep their own directory under it.`;
-    case 'not-created':
-    case 'not-inspectable':
-    case 'peer-writable-not-sticky':
-      return undefined;
-    default: {
-      // Matches `describeRefusal`'s arm, so a new kind cannot ship with a
-      // sentence and no advice — which is how `not-tightenable` went unadvised.
-      const unhandled: never = r;
-      return undefined;
     }
   }
 }
@@ -279,30 +247,6 @@ export function isSafeSharedRoot(dir: string): GuardResult<SafeSharedRoot> {
       : deny({ kind: 'peer-writable-not-sticky', dir, mode: stats.mode });
   } catch (e: any) {
     return deny({ kind: 'not-inspectable', dir, code: e?.code });
-  }
-}
-
-/**
- * Whether other users on this machine can write into `dir`. Gates whether a
- * refusal message may cite other users, so it must not over-report: `false` on
- * Windows, where libuv synthesizes `st_mode` from the READONLY attribute and
- * reports an ordinary per-account directory as `0666`, and `false` on a path
- * that cannot be inspected.
- *
- * `statSync`, not `lstatSync`: the question is about the directory that will be
- * used, not the link pointing at it. Link modes mislead in both directions —
- * Linux creates symlinks `0777`, macOS applies the umask. Nothing here decides
- * whether a path is accepted, so following the link costs nothing the guards
- * do not already re-check.
- */
-export function isPeerWritable(dir: string): boolean {
-  if (process.platform === 'win32') {
-    return false;
-  }
-  try {
-    return !!(statSync(dir).mode & 0o022);
-  } catch {
-    return false;
   }
 }
 
