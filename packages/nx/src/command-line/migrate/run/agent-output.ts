@@ -100,11 +100,13 @@ export function emitPromptBlock(migrationId: string, payload: object): void {
  * `<nx_migrate_*>` tag are neutralized; the renderer never emits one, so only
  * tampered bytes change. The terminator class is `singleLine`'s full set, not
  * just what `^` under `/m` matches: a reader that breaks on NEL or a form feed
- * would otherwise see a line start this check missed.
+ * would otherwise see a line start this check missed. `\p{Cf}` joins `\s` in
+ * the leading class: `\s` excludes zero-width format characters, which a
+ * reader renders as nothing.
  */
 export function emitRunbookBlock(runId: string, content: string): void {
   const neutralized = content.replace(
-    /(^|[\r\n\u000b\u000c\u0085\u2028\u2029])(\s*)<(?=\/?nx_migrate_)/g,
+    /(^|[\r\n\u000b\u000c\u0085\u2028\u2029])([\s\p{Cf}]*)<(?=\/?nx_migrate_)/giu,
     '$1$2\\u003c'
   );
   writeBlock('nx_migrate_runbook', [['run-id', runId]], neutralized);
