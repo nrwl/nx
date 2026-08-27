@@ -150,6 +150,11 @@
     "url": "https://github.com/enio-ireland/enio/tree/develop/packages/typedoc#readme"
   },
   {
+    "name": "@hyperfrontend/features",
+    "description": "SDK, CLI, and dev server for building, embedding, and orchestrating hyperfrontend micro-frontend features.",
+    "url": "https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/features"
+  },
+  {
     "name": "@nxext/svelte",
     "description": "Nx plugin to use Svelte within nx workspaces",
     "url": "https://github.com/nxext/nx-extensions/tree/master/packages/svelte"
