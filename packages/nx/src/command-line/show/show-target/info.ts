@@ -329,7 +329,8 @@ function isFileInput(value: InputDefinition | string): boolean {
 
 function renderSnapshotSection(
   data: TargetInfoData,
-  c: ReturnType<typeof pc>
+  c: ReturnType<typeof pc>,
+  verbose: boolean
 ): void {
   const snap = data.snapshot;
   const label = c.bold('I/O snapshot');
@@ -346,7 +347,8 @@ function renderSnapshotSection(
     console.log(
       `${label}: ${c.yellow('fallback')}${reason} — hashed from the declared inputs above`
     );
-  } else {
+  } else if (verbose) {
+    // Every non-Cloud target would otherwise print this on each nx show target.
     const reason = snap.reason ? ` (${snap.reason})` : '';
     console.log(`${label}: ${c.dim(`none${reason}`)}`);
   }
@@ -542,7 +544,7 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
     }
   }
 
-  renderSnapshotSection(data, c);
+  renderSnapshotSection(data, c, !!args.verbose);
 
   // When command is hoisted, hide the corresponding option key from display
   const hoistedOptionKey = data._commandSourceKey?.startsWith('options.')
