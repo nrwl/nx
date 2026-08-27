@@ -225,10 +225,16 @@ function shareableLocation(mainRoot: string): SharedDataLocation {
  * shared data is a single directory: `~/.nx/<hash>/{cache,workspace-data}`.
  */
 function sharedDirName(mainWorktreeRoot: string): string {
-  return createHash('sha256')
-    .update(canonicalDir(mainWorktreeRoot).toLowerCase())
-    .digest('hex')
-    .substring(0, 16);
+  const canonical = canonicalDir(mainWorktreeRoot);
+  // Case-folded only where the filesystem is, so the many spellings that reach
+  // one directory on Windows and macOS key one hash. Linux is case-sensitive:
+  // `/repo/App` and `/repo/app` are two directories there, and folding them
+  // would hand both the same cache.
+  const key =
+    process.platform === 'win32' || process.platform === 'darwin'
+      ? canonical.toLowerCase()
+      : canonical;
+  return createHash('sha256').update(key).digest('hex').substring(0, 16);
 }
 
 /**
@@ -333,8 +339,8 @@ export function sharedDataDirectory(
 /**
  * Path to the directory where Nx stores its cache.
  *
- * Normally the shared per-user directory, so every checkout of the repository
- * uses one cache. A configured `cacheDirectory` is honored instead, and is
+ * Normally the shared per-user directory, so a checkout and every worktree
+ * added to it use one cache. A configured `cacheDirectory` is honored instead, and is
  * still shared through the main checkout when both checkouts configure the
  * same value. See `resolveSharedDataLocation`.
  */

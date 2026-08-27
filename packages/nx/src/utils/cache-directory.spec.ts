@@ -36,6 +36,7 @@ import { getMainWorktreeRoot } from '../native';
 import {
   resetSharedRootCacheForTesting,
   resolveSharedDataLocation,
+  sharedDataDirectory,
   type SharedDataKind,
   sharedUserDataDir,
 } from './cache-directory';
@@ -71,12 +72,16 @@ const sharedUserDirFor = (root: string, kind: SharedDataKind) => {
     : undefined;
 };
 
+/** Whether this platform's filesystem reaches one directory by many spellings. */
+const caseInsensitiveFs =
+  process.platform === 'win32' || process.platform === 'darwin';
+
 /** Where worktrees of `mainRoot` are expected to share `kind`. */
 const sharedDirFor = (mainRoot: string, kind: 'cache' | 'workspace-data') =>
   join(
     NX_HOME_TMP_DIR,
     createHash('sha256')
-      .update(mainRoot.toLowerCase())
+      .update(caseInsensitiveFs ? mainRoot.toLowerCase() : mainRoot)
       .digest('hex')
       .substring(0, 16),
     kind
@@ -344,6 +349,34 @@ describe('shared data location', () => {
   });
 
   describe('the shared directory name', () => {
+    it('folds case only where the filesystem does', () => {
+      // Stubbed rather than read from the host, so both arms run on every
+      // platform -- on a case-insensitive host the Linux arm is what fails if
+      // the fold ever goes back to being unconditional.
+      const realPlatform = process.platform;
+      const namesUnder = (platform: string) => {
+        Object.defineProperty(process, 'platform', { value: platform });
+        mockGetMainWorktreeRoot.mockReturnValue(null);
+        resetSharedRootCacheForTesting();
+        const upper = sharedUserDirFor('/repo/App', 'cache');
+        resetSharedRootCacheForTesting();
+        const lower = sharedUserDirFor('/repo/app', 'cache');
+        return { upper, lower };
+      };
+
+      try {
+        // One directory reached by two spellings: one cache.
+        const darwin = namesUnder('darwin');
+        expect(darwin.upper).toBe(darwin.lower);
+
+        // Two directories: folding them would hand both the same cache.
+        const linux = namesUnder('linux');
+        expect(linux.upper).not.toBe(linux.lower);
+      } finally {
+        Object.defineProperty(process, 'platform', { value: realPlatform });
+      }
+    });
+
     it('keys on the canonical spelling, so two spellings share one directory', () => {
       // `getMainWorktreeRoot` canonicalizes, but the `?? root` fallback uses
       // `workspaceRoot` verbatim -- and that is NX_WORKSPACE_ROOT_PATH when set,
@@ -360,6 +393,45 @@ describe('shared data location', () => {
       const viaReal = sharedUserDirFor('/real/repo', 'cache');
 
       expect(viaLink).toBe(viaReal);
+    });
+  });
+
+  describe('sharedDataDirectory', () => {
+    // The rest of this file goes through `resolveSharedDataLocation`. These
+    // exercise the exported dispatch every consumer actually calls, so a
+    // regression in it cannot pass while the decision underneath stays right.
+    it('sends both kinds to the shared root when it is usable', () => {
+      expect(sharedDataDirectory('/worktree', 'cache')).toBe(
+        sharedDirFor('/main', 'cache')
+      );
+      expect(sharedDataDirectory('/worktree', 'workspace-data')).toBe(
+        sharedDirFor('/main', 'workspace-data')
+      );
+    });
+
+    it('sends both kinds to the main checkout when it shares through it', () => {
+      stageCacheDirectoryConfig({
+        '/worktree': '.nx/cache',
+        '/main': '.nx/cache',
+      });
+
+      expect(sharedDataDirectory('/worktree', 'cache')).toBe(
+        join('/main', '.nx', 'cache')
+      );
+      expect(sharedDataDirectory('/worktree', 'workspace-data')).toBe(
+        join('/main', '.nx', 'workspace-data')
+      );
+    });
+
+    it('keeps both kinds in this checkout when it shares nothing', () => {
+      stageCacheDirectoryConfig({ '/worktree': '.nx/other' });
+
+      expect(sharedDataDirectory('/worktree', 'cache')).toBe(
+        join('/worktree', '.nx', 'other')
+      );
+      expect(sharedDataDirectory('/worktree', 'workspace-data')).toBe(
+        join('/worktree', '.nx', 'workspace-data')
+      );
     });
   });
 
