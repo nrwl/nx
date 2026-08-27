@@ -1,5 +1,4 @@
-import { createHash } from 'node:crypto';
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   logger,
@@ -161,13 +160,10 @@ async function runAnalyzer(
   //   }
   // }
 
-  // Prepare CLI arguments
+  // Nothing here may contain a double quote: on Windows `safeSpawn` routes a bare binary
+  // name through cmd.exe, whose quoting cannot express one, so it refuses the argument.
+  // That is why the options JSON goes over stdin instead (see below).
   const args = [analyzerPath, workspaceRoot];
-
-  // Add plugin options as JSON string if provided
-  if (options) {
-    args.push(JSON.stringify(options));
-  }
 
   // Cancel any in-flight analyzer from a previous call, then create a fresh controller.
   cancelPendingAnalysis();
@@ -224,13 +220,17 @@ async function runAnalyzer(
         }
       });
 
-      // Stream the file list over stdin. The analyzer partitions paths by
-      // filename, so we just send everything in one block.
+      // Stream the options JSON, then the file list, over stdin. The first line is
+      // always written, empty when there are no options, so the analyzer never has to
+      // infer whether one was sent. The analyzer partitions paths by filename, so we
+      // just send everything in one block.
       // EPIPE if the analyzer dies early. Surfaced via `close` only when the
       // child also exits non-zero; a stdin error with a clean exit means the
       // analyzer read a truncated file list.
       child.stdin?.on('error', () => {});
-      child.stdin?.end(files.join('\n'));
+      child.stdin?.end(
+        [options ? JSON.stringify(options) : '', ...files].join('\n')
+      );
     });
   } catch (error) {
     if (signal.reason === 'cancelled') {

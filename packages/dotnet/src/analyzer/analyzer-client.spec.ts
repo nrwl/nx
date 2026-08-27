@@ -60,7 +60,7 @@ describe('analyzeProjects', () => {
     } = require('./analyzer-client'));
   });
 
-  it('should stream the file list over stdin and parse stdout', async () => {
+  it('should stream the options then the file list over stdin and parse stdout', async () => {
     const child = fakeChild();
     mocks.safeSpawn.mockReturnValue(child);
 
@@ -81,10 +81,30 @@ describe('analyzeProjects', () => {
       nodesByFile: { 'a/a.csproj': {} },
       referencesByRoot: {},
     });
-    expect(child.stdin.end).toHaveBeenCalledWith('a/a.csproj\nb/b.csproj');
+    expect(child.stdin.end).toHaveBeenCalledWith(
+      `${JSON.stringify({
+        buildTargetName: 'build',
+      })}\na/a.csproj\nb/b.csproj`
+    );
+    // The options must NOT be in argv: a double quote there is refused by cmd.exe
+    // quoting on Windows, which is what `safeSpawn` applies to a bare binary name.
     const [binary, args] = mocks.safeSpawn.mock.calls[0];
     expect(binary).toBe('dotnet');
-    expect(args[2]).toBe(JSON.stringify({ buildTargetName: 'build' }));
+    expect(args).toHaveLength(2);
+    expect(args.some((a: string) => a.includes('"'))).toBe(false);
+  });
+
+  it('should write an empty options line when no options are given', async () => {
+    const child = fakeChild();
+    mocks.safeSpawn.mockReturnValue(child);
+
+    const promise = analyzeProjects(['a/a.csproj']);
+    await new Promise(setImmediate);
+    child.stdout.emit('data', '{"nodesByFile":{},"referencesByRoot":{}}');
+    child.emit('close', 0);
+    await promise;
+
+    expect(child.stdin.end).toHaveBeenCalledWith('\na/a.csproj');
   });
 
   it('should register the analyzer process to be killed on host exit', async () => {
