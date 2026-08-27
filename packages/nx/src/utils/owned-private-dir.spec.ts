@@ -15,13 +15,10 @@ import { join } from 'node:path';
 import {
   describeRefusal,
   type DirRefusal,
-  isPeerWritable,
   ensureOwnedPrivateDir,
   ensureSafeSharedRoot,
   isSafeSharedRoot,
-  remedyFor,
 } from './owned-private-dir';
-import { getSocketDir } from '../daemon/tmp-dir';
 
 vi.mock('node:fs', async () => {
   const actual = await vi.importActual('node:fs');
@@ -35,7 +32,11 @@ vi.mock('node:fs', async () => {
 // Real filesystem behavior is used throughout except for the foreign-owner
 // result that cannot be staged without another uid. What is verified here is
 // the property that cannot be mocked convincingly: a planted symlink is refused
-// rather than followed, and the socket directory is wired through the guard.
+// rather than followed.
+//
+// Only what the native binding loader reaches is covered here. The advice a
+// refusal carries, and every socket path built on these guards, moved to
+// native/utils/owned_dir.rs and native/utils/socket_path.rs with their tests.
 const posixOnly = platform() === 'win32' ? it.skip : it;
 
 // Every sentence a user reads about a refused directory is produced here, so
@@ -143,7 +144,6 @@ describe('ensureOwnedPrivateDir', () => {
         dir: squatted,
         symlink: true,
       });
-      expect(remedyFor((verdict as any).refusal)).toContain('remove the link');
     }
   );
 
@@ -247,8 +247,6 @@ describe('ensureOwnedPrivateDir', () => {
 
       expect(verdict.status).toBe('refused');
       expect((verdict as any).refusal.kind).toBe('foreign-owner');
-      // Would tell the owner of a home directory to chmod 1777 it.
-      expect(remedyFor((verdict as any).refusal)).not.toContain('chmod 1777');
     }
   );
 
@@ -290,133 +288,6 @@ describe('ensureOwnedPrivateDir', () => {
       }
     );
 
-    posixOnly(
-      'should tell the user to chown a container owned by another unprivileged user to root',
-      () => {
-        const currentUid = process.getuid!();
-        (lstatSync as Mock).mockReturnValueOnce({
-          isDirectory: () => true,
-          uid: currentUid === 1 ? 2 : 1,
-          mode: 0o41777,
-        });
-
-        // Refusing is not actionable on its own: only root can take the
-        // container over, and until someone does every other user falls back.
-        const verdict = isSafeSharedRoot('/tmp/.nx');
-        expect(verdict.status).toBe('refused');
-        expect(remedyFor((verdict as any).refusal)).toContain(
-          "sudo chown root '/tmp/.nx'"
-        );
-      }
-    );
-
-    // Called on a literal refusal, not on whatever a guard happens to return.
-    // Routed through isSafeSharedRoot these rows staged uids it *accepts*, so
-    // the verdict was 'ok', remedyFor was never called, and the assertion
-    // degenerated to expect(undefined).toBeUndefined().
-    it('should offer no remedy for a container root already owns', () => {
-      // The uid-0 exemption belongs to the shared container: root owning it is
-      // the provisioned state, not a problem to report.
-      expect(
-        remedyFor({
-          kind: 'foreign-shared-container',
-          dir: '/tmp/.nx',
-          uid: 0,
-        })
-      ).toBeUndefined();
-    });
-
-    it('should not offer the chown remedy for a per-user directory', () => {
-      // The per-user kind, not the shared container's: handing this to root
-      // cannot help, because ensureOwnedPrivateDir has no uid-0 exemption.
-      const remedy = remedyFor({
-        kind: 'foreign-owner',
-        dir: '/tmp/.nx/501/sockets',
-        uid: 1002,
-      });
-      expect(remedy).not.toContain('chown');
-      expect(remedy).not.toContain('1777');
-      // Positive, not just negative: the negative pair alone survives replacing
-      // the whole sentence with one that drops both the path and the escape
-      // hatch, which is the only lever this user reliably has.
-      expect(remedy).toContain('/tmp/.nx/501/sockets');
-      expect(remedy).toContain('NX_SOCKET_DIR');
-      // Both halves of the condition. Who can clear the directory depends on
-      // who owns its parent, and dropping either half survives every other
-      // assertion here.
-      expect(remedy).toContain('yourself');
-      expect(remedy).toContain('administrator');
-    });
-
-    it('should offer the chmod the owner can actually run', () => {
-      const remedy = remedyFor({
-        kind: 'not-tightenable',
-        dir: '/tmp/.nx/501/sockets',
-        mode: 0o40777,
-      });
-      // The action, not just the path: ownership is established before this
-      // kind can be produced, so `chmod` is the user's to run — and the
-      // relocation is the fallback for when the mode does not stick.
-      expect(remedy).toContain("chmod 0700 '/tmp/.nx/501/sockets'");
-      expect(remedy).toContain('0777');
-      expect(remedy).toContain('NX_SOCKET_DIR');
-      // Never the shared-container advice: it names an owner who cannot help.
-      expect(remedy).not.toContain('chown');
-      expect(remedy).not.toContain('1777');
-      expect(remedy).not.toContain('belongs to another user');
-    });
-
-    it('should not offer to remove a per-user directory', () => {
-      // The refusal carries no mode — the foreign-owner deny precedes the mode
-      // check — so `rm` is not advice this branch can give.
-      const remedy = remedyFor({
-        kind: 'foreign-owner',
-        dir: '/tmp/.nx/501',
-        uid: 1002,
-      });
-      expect(remedy).not.toMatch(/remove it/i);
-    });
-
-    it('should still point a per-user directory at NX_SOCKET_DIR when root owns it', () => {
-      // Reachable after one `sudo nx` that kept your HOME, or in a
-      // root-provisioned image run as a non-root user. The uid-0 exemption in
-      // `remedyFor` belongs to the shared container, so this shape still gets
-      // advice.
-      expect(
-        remedyFor({ kind: 'foreign-owner', dir: '/home/me/.nx', uid: 0 })
-      ).toContain('NX_SOCKET_DIR');
-    });
-
-    it('should offer the chown remedy for the shared container', () => {
-      expect(
-        remedyFor({
-          kind: 'foreign-shared-container',
-          dir: '/tmp/.nx',
-          uid: 1002,
-        })
-      ).toContain("sudo chown root '/tmp/.nx' && sudo chmod 1777 '/tmp/.nx'");
-    });
-
-    it('should quote a path so a space survives the paste', () => {
-      expect(
-        remedyFor({
-          kind: 'foreign-shared-container',
-          dir: '/home/some user/.nx',
-          uid: 1002,
-        })
-      ).toContain("sudo chown root '/home/some user/.nx'");
-    });
-
-    it('should escape an embedded quote so the pasted command still parses', () => {
-      expect(
-        remedyFor({
-          kind: 'foreign-shared-container',
-          dir: "/home/o'brien/.nx",
-          uid: 1002,
-        })
-      ).toContain("sudo chown root '/home/o'\\''brien/.nx'");
-    });
-
     posixOnly('should refuse the shared container with its own kind', () => {
       const getuid = vi.spyOn(process, 'getuid').mockReturnValue(501);
       (lstatSync as Mock).mockReturnValueOnce({
@@ -435,12 +306,6 @@ describe('ensureOwnedPrivateDir', () => {
       } finally {
         getuid.mockRestore();
       }
-    });
-
-    posixOnly('should offer no remedy for a container that is absent', () => {
-      const verdict = isSafeSharedRoot(join(base, 'missing'));
-      expect(verdict.status).toBe('refused');
-      expect(remedyFor((verdict as any).refusal)).toBeUndefined();
     });
 
     posixOnly('should accept a root-owned sticky container', () => {
@@ -629,79 +494,4 @@ describe('ensureOwnedPrivateDir', () => {
       expect(ensureOwnedPrivateDir(planted).status).toBe('refused');
     }
   );
-
-  describe('isPeerWritable', () => {
-    // The alarming refusal message is gated on this, so it has to answer about
-    // the directory rather than the platform: os.tmpdir() is a world-writable
-    // /tmp on Linux but a private 0700 /var/folders/... on macOS.
-    posixOnly.each([
-      [0o1777, true],
-      [0o777, true],
-      [0o770, true],
-      [0o702, true],
-      [0o700, false],
-      [0o755, false],
-      [0o750, false],
-    ])('should report mode %s as peer-writable=%s', (mode, expected) => {
-      const dir = join(base, `mode-${mode.toString(8)}`);
-      mkdirSync(dir, { mode });
-      chmodSync(dir, mode);
-
-      expect(isPeerWritable(dir)).toBe(expected);
-    });
-
-    it('should not claim a path it cannot inspect is peer-writable', () => {
-      // This gates the claim that another local user can execute code, so an
-      // unreadable path must not be reported as shared.
-      expect(isPeerWritable(join(base, 'missing'))).toBe(false);
-    });
-
-    posixOnly(
-      'should answer for the directory a link points at, not the link',
-      () => {
-        // Linux creates symlinks 0777, so lstat would report this private
-        // target as peer-writable. The inverse holds on macOS, where symlink()
-        // takes the umask and a 0755 link hides a world-writable target.
-        const target = join(base, 'link-target');
-        mkdirSync(target, { mode: 0o700 });
-        chmodSync(target, 0o700);
-        const link = join(base, 'link-to-target');
-        symlinkSync(target, link);
-
-        expect(isPeerWritable(link)).toBe(false);
-      }
-    );
-  });
-
-  describe('socket directory wiring', () => {
-    const originalEnv = process.env;
-
-    beforeEach(() => {
-      process.env = { ...originalEnv };
-    });
-
-    afterEach(() => {
-      process.env = originalEnv;
-      vi.restoreAllMocks();
-    });
-
-    posixOnly(
-      'should not hand back a socket dir that was pre-planted as a symlink',
-      () => {
-        const victim = join(base, 'victim');
-        mkdirSync(victim, { mode: 0o755 });
-        chmodSync(victim, 0o755);
-        const squatted = join(base, 'squatted');
-        symlinkSync(victim, squatted);
-        // Trailing slash: without resolve() in configuredSocketDir it defeats
-        // O_NOFOLLOW and the victim gets chmod-ed.
-        process.env.NX_SOCKET_DIR = squatted + '/';
-
-        const dir = getSocketDir();
-
-        expect(dir).not.toEqual(squatted);
-        expect(lstatSync(victim).mode & 0o777).toBe(0o755);
-      }
-    );
-  });
 });
