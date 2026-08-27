@@ -4,6 +4,9 @@ import { GradlePluginOptions } from './gradle-plugin-options';
 import { isCI } from '@nx/devkit/internal';
 
 const DEFAULT_GRAPH_TIMEOUT_SECONDS = isCI() ? 600 : 120;
+// setTimeout silently clamps a delay past the 32-bit signed max to 1ms, which
+// would abort immediately — the opposite of what a large value asks for.
+const MAX_TIMEOUT_MS = 2 ** 31 - 1;
 const GRADLE_LOCK_TIMEOUT_MESSAGE = 'Timeout waiting to lock';
 // Gradle gives up on a contended lock (e.g. buildLogic.lock held by another
 // build in the same project) after ~60s, so at the 120s local default one wait
@@ -31,7 +34,7 @@ export function getGraphTimeoutMs(): number {
   if (envTimeout) {
     const parsed = Number(envTimeout);
     if (!Number.isNaN(parsed) && parsed > 0) {
-      return parsed * 1000;
+      return Math.min(parsed * 1000, MAX_TIMEOUT_MS);
     }
   }
   return DEFAULT_GRAPH_TIMEOUT_SECONDS * 1000;

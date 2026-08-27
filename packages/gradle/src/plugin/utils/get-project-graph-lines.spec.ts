@@ -1,5 +1,8 @@
 import { execGradleAsync } from '../../utils/exec-gradle';
-import { getNxProjectGraphLines } from './get-project-graph-lines';
+import {
+  getGraphTimeoutMs,
+  getNxProjectGraphLines,
+} from './get-project-graph-lines';
 
 jest.mock('../../utils/exec-gradle', () => ({
   ...jest.requireActual('../../utils/exec-gradle'),
@@ -86,6 +89,20 @@ describe('getNxProjectGraphLines', () => {
       ],
     });
     expect(execGradleAsyncMock).toHaveBeenCalledTimes(1);
+  });
+
+  // setTimeout clamps a delay past the 32-bit signed max to 1ms, so an
+  // unclamped huge value would abort the build instantly — the opposite of
+  // what the timeout error tells the user to do.
+  it('should clamp an overflowing NX_GRADLE_PROJECT_GRAPH_TIMEOUT', () => {
+    process.env.NX_GRADLE_PROJECT_GRAPH_TIMEOUT = '9999999';
+    expect(getGraphTimeoutMs()).toBe(2 ** 31 - 1);
+
+    process.env.NX_GRADLE_PROJECT_GRAPH_TIMEOUT = 'Infinity';
+    expect(getGraphTimeoutMs()).toBe(2 ** 31 - 1);
+
+    process.env.NX_GRADLE_PROJECT_GRAPH_TIMEOUT = '30';
+    expect(getGraphTimeoutMs()).toBe(30_000);
   });
 
   it('should not retry other gradle failures', async () => {
