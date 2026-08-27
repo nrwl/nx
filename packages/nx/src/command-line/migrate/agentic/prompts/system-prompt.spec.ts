@@ -7,6 +7,7 @@ describe('buildSystemPrompt', () => {
       '/abs/workspace/.nx/migrate-runs/23.0.0/step-1.json',
     packageManager: 'npm',
     nxInvocation: 'npx nx',
+    formatCommand: 'npx prettier --write --ignore-unknown <paths>',
   };
 
   it('embeds the workspace root inside its tag', () => {
@@ -146,18 +147,35 @@ describe('buildSystemPrompt', () => {
   });
 
   describe('formatting the agent’s changes (author mode)', () => {
-    it('directs the agent to format only the files it changed, via Prettier rather than nx format:write', () => {
+    it('directs the agent to run the resolved formatter command over only the files it changed, rather than nx format:write', () => {
       const prompt = buildSystemPrompt(ctx);
-      expect(prompt).toMatch(
-        /format the files you created or modified .* run it over exactly those files/
+      expect(prompt).toContain(
+        'run `npx prettier --write --ignore-unknown <paths>` over exactly those files'
       );
-      // Without --ignore-unknown, a changed path Prettier has no parser for
-      // (.gitignore, .env) fails the whole instructed command.
-      expect(prompt).toContain('--ignore-unknown');
       // nx format:write cannot be scoped that tightly: it selects the branch
       // delta by default and always appends the root config files, both of
       // which the scope rules forbid touching.
       expect(prompt).toMatch(/Do not use `nx format:write` for this/);
+    });
+
+    it('renders the oxfmt command verbatim when that is the resolved formatter', () => {
+      const prompt = buildSystemPrompt({
+        ...ctx,
+        formatCommand:
+          'pnpm exec oxfmt --no-error-on-unmatched-pattern <paths>',
+      });
+      expect(prompt).toContain(
+        'run `pnpm exec oxfmt --no-error-on-unmatched-pattern <paths>` over exactly those files'
+      );
+      expect(prompt).not.toContain('prettier');
+    });
+
+    it('tells the agent not to run a formatter when the workspace has none', () => {
+      const prompt = buildSystemPrompt({ ...ctx, formatCommand: null });
+      expect(prompt).toContain(
+        'This workspace has no formatter configured; do not run one over your changes.'
+      );
+      expect(prompt).not.toContain('format the files you created or modified');
     });
 
     it('lists nx format:write among the forbidden mutating nx commands', () => {

@@ -9,6 +9,7 @@ function buildContext(overrides: Partial<RunbookContext> = {}): RunbookContext {
     runId: 'run-1',
     packageManager: 'npm',
     nxInvocation: 'npx nx',
+    formatCommand: 'npx prettier --write --ignore-unknown <paths>',
     reconcileCommand: 'npx nx migrate --run-id=run-1',
     createCommits: true,
     validate: true,
@@ -84,6 +85,15 @@ describe('renderRunbook', () => {
     }
     expect(withValidation).toContain("validate the generator's changes");
     expect(withoutValidation).not.toContain("validate the generator's changes");
+  });
+
+  it('renders the resolved formatter command on one line, or the no-formatter rule', () => {
+    expect(
+      renderRunbook(buildContext({ formatCommand: 'pnpm exec oxfmt\n<paths>' }))
+    ).toContain('run `pnpm exec oxfmt <paths>` over exactly those files');
+    expect(renderRunbook(buildContext({ formatCommand: null }))).toContain(
+      'This workspace has no formatter configured'
+    );
   });
 
   it('describes commit ownership per the run commit policy', () => {
