@@ -957,12 +957,30 @@ describe('show target info', () => {
       );
     });
 
-    it('reports none when there is no snapshot to resolve', async () => {
+    it('hides the none status unless --verbose, and shows it with --verbose', async () => {
       setGraph(graphWithLintTarget());
       // default mock report is null ⇒ not-connected
       await showTargetInfoHandler({ target: 'my-app:lint' });
-      const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
-      expect(text).toContain('I/O snapshot: none (not-connected)');
+      const quiet = (console.log as Mock).mock.calls
+        .map((c) => c[0])
+        .join('\n');
+      expect(quiet).not.toContain('I/O snapshot:');
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint', verbose: true });
+      const verbose = (console.log as Mock).mock.calls
+        .map((c) => c[0])
+        .join('\n');
+      expect(verbose).toContain('I/O snapshot: none (not-connected)');
+
+      // --json carries the snapshot even when the text section is hidden.
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint', json: true });
+      const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
+      expect(parsed.snapshot).toEqual({
+        status: 'none',
+        reason: 'not-connected',
+      });
     });
   });
 });
