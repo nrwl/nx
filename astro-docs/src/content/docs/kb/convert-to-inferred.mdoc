@@ -260,6 +260,12 @@ removing its executor would let that entry take the target over.
 Rename or exclude the script, or remove that `nx.targets` entry, then rerun the generator to convert
 it.
 
+When multiple targets in one project map different target names to the same plugin option, for
+example two `@nx/jest:jest` targets in one project, a whole-workspace migration converts one of
+them, leaves the conflicting targets unchanged, and prints a warning naming them.
+A single-project migration (`--project`) stops with an error instead, because one plugin
+registration can hold only one value for that option.
+
 Centralization is also skipped when other plugins are registered after the migrated plugin in
 `nx.json`.
 A plugin registered later can take over a target's identity, and the shared default would then
