@@ -53,6 +53,9 @@ exceptions:
   - Kubernetes
   - Gradle
   - Maven
+  - Rust
+  - Cargo
+  - Clippy
   - Node.js
   - Deno
   - Bun
