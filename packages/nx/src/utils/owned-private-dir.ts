@@ -217,20 +217,24 @@ export function canonicalDir(dir: string): string {
   const missing: string[] = [];
   let candidate = resolved;
 
-  for (;;) {
+  // Terminates at the filesystem root, where `dirname` is a fixed point.
+  while (dirname(candidate) !== candidate) {
     try {
       return join(realpathSync(candidate), ...missing);
     } catch (e: any) {
       if (e?.code !== 'ENOENT') {
         return resolved;
       }
-      const parent = dirname(candidate);
-      if (parent === candidate) {
-        return resolved;
-      }
       missing.unshift(basename(candidate));
-      candidate = parent;
+      candidate = dirname(candidate);
     }
+  }
+
+  // The root itself: resolve it directly rather than walking past it.
+  try {
+    return join(realpathSync(candidate), ...missing);
+  } catch {
+    return resolved;
   }
 }
 
