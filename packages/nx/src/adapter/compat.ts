@@ -80,6 +80,7 @@ export const allowedWorkspaceExtensions = [
   'cacheDirectory',
   'useDaemonProcess',
   'useInferencePlugins',
+  'neverConfigureAiAgents',
   'neverConnectToCloud',
   'analytics',
   'sync',

@@ -3,6 +3,8 @@ import type { HandlerResult } from './server';
 import { serverLogger } from '../logger';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { getLatestNxTmpPath } from './latest-nx';
+import { readNxJson } from '../../config/nx-json';
+import { isConfigureAiAgentsEnabled } from '../../ai/is-configure-ai-agents-enabled';
 
 const emptyStatus: ConfigureAiAgentsStatusResponse = {
   fullyConfiguredAgents: [],
@@ -20,6 +22,14 @@ const log = (...messageParts: unknown[]) => {
 };
 
 export async function handleGetConfigureAiAgentsStatus(): Promise<HandlerResult> {
+  if (!isConfigureAiAgentsEnabledSafe()) {
+    log('Skipping agent configuration status because it is disabled');
+    return {
+      response: { ...emptyStatus },
+      description: 'handleGetConfigureAiAgentsStatus',
+    };
+  }
+
   if (cachedStatus !== null) {
     log('Returning cached agent configuration status');
     return {
@@ -85,6 +95,14 @@ export async function handleResetConfigureAiAgentsStatus(): Promise<HandlerResul
     response: { success: true },
     description: 'handleResetConfigureAiAgentsStatus',
   };
+}
+
+function isConfigureAiAgentsEnabledSafe(): boolean {
+  try {
+    return isConfigureAiAgentsEnabled(readNxJson(workspaceRoot));
+  } catch {
+    return isConfigureAiAgentsEnabled(null);
+  }
 }
 
 async function computeAgentStatuses(): Promise<ConfigureAiAgentsStatusResponse> {

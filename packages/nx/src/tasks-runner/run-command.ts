@@ -39,6 +39,7 @@ import {
   output,
 } from '../utils/output';
 import { shouldPrintConfigureAiAgentsDisclaimer } from '../ai/configure-ai-agents-disclaimer';
+import { isConfigureAiAgentsEnabled } from '../ai/is-configure-ai-agents-enabled';
 import {
   collectEnabledTaskSyncGeneratorsFromTaskGraph,
   flushSyncGeneratorChanges,
@@ -608,7 +609,7 @@ export async function runCommandForTasks(
       printSummary();
     }
 
-    await printConfigureAiAgentsDisclaimer();
+    await printConfigureAiAgentsDisclaimer(nxJson);
 
     const nxKey = await nxKeyPromise;
     if (nxKey) logger.log(createNxKeyLicenseeInformation(nxKey));
@@ -628,8 +629,13 @@ export async function runCommandForTasks(
   }
 }
 
-async function printConfigureAiAgentsDisclaimer(): Promise<void> {
+async function printConfigureAiAgentsDisclaimer(
+  nxJson: NxJsonConfiguration
+): Promise<void> {
   try {
+    if (!isConfigureAiAgentsEnabled(nxJson)) {
+      return;
+    }
     if (!daemonClient.enabled() || !(await daemonClient.isServerAvailable())) {
       return;
     }
