@@ -47,7 +47,7 @@ const PLAN_SNAPSHOT_NAME = /^plan-\d+\.json$/;
  * transition with, and the worker throws that reason, which puts it in front
  * of the agent without passing the block-safe writer.
  */
-const STEP_ID = /^step-\d+$/;
+const STEP_ID = /^step-\d{1,18}$/;
 // The id names the archived detail file in the run's issues directory, so a
 // tampered value must not resolve outside it. The suffix is bounded so the
 // allocator, which mints against this same pattern, can never produce an id
