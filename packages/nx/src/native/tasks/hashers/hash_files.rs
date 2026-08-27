@@ -40,15 +40,55 @@ pub struct FilesExpansion {
     pub missing: Vec<String>,
 }
 
+/// Expands brace groups whose alternatives are all literal names into the
+/// exact paths they stand for (`{nx,tsconfig.base}.json` → `nx.json`,
+/// `tsconfig.base.json`; several groups multiply out). A group with a wildcard
+/// or a nested brace is left as-is. Snapshot bundles collapse sibling files
+/// this way, and a group of literals at the workspace root names exact files,
+/// not a walk.
+pub(crate) fn expand_literal_braces(glob: &str) -> Vec<String> {
+    let negated = glob.starts_with('!');
+    let body = glob.strip_prefix('!').unwrap_or(glob);
+    let Some(open) = body.find('{') else {
+        return vec![glob.to_string()];
+    };
+    let Some(close) = body[open..].find('}').map(|i| open + i) else {
+        return vec![glob.to_string()];
+    };
+    let alternatives: Vec<&str> = body[open + 1..close].split(',').collect();
+    let literal = alternatives.len() > 1
+        && alternatives
+            .iter()
+            .all(|a| !a.is_empty() && !a.contains(['*', '?', '[', ']', '{', '}', '/', '\\']));
+    if !literal {
+        return vec![glob.to_string()];
+    }
+    let prefix = if negated { "!" } else { "" };
+    alternatives
+        .iter()
+        .flat_map(|alternative| {
+            let expanded = format!("{}{}{}", &body[..open], alternative, &body[close + 1..]);
+            expand_literal_braces(&expanded)
+        })
+        .map(|expanded| {
+            let expanded = expanded.strip_prefix('!').unwrap_or(&expanded).to_string();
+            format!("{prefix}{expanded}")
+        })
+        .collect()
+}
+
 /// Rejects globs with no literal leading directory (`**/*`, `*.gen`): a walk
-/// from the workspace root is never what was meant.
+/// from the workspace root is never what was meant. A root-level brace group
+/// of literal names is fine: it expands to exact files.
 pub(crate) fn validate_files_globs(globs: &[String]) -> Result<()> {
     for glob in globs.iter().filter(|g| !g.starts_with('!')) {
-        let (root, _) = partition_glob(glob)?;
-        if root.is_empty() {
-            bail!(
-                "The `files` input \"{glob}\" has no leading directory, so it would walk the whole workspace. Start it with the directory that holds the files."
-            );
+        for expanded in expand_literal_braces(glob) {
+            let (root, _) = partition_glob(&expanded)?;
+            if root.is_empty() {
+                bail!(
+                    "The `files` input \"{glob}\" has no leading directory, so it would walk the whole workspace. Start it with the directory that holds the files."
+                );
+            }
         }
     }
     Ok(())
@@ -68,7 +108,12 @@ pub fn expand_files(workspace_root: &Path, globs: &[String]) -> Result<FilesExpa
     let mut files: Vec<String> = Vec::new();
     let mut missing: Vec<String> = Vec::new();
 
-    for glob in globs.iter().filter(|g| !g.starts_with('!')) {
+    let positives: Vec<String> = globs
+        .iter()
+        .filter(|g| !g.starts_with('!'))
+        .flat_map(|g| expand_literal_braces(g))
+        .collect();
+    for glob in &positives {
         let (root, patterns) = partition_glob(glob)?;
         if root.is_empty() {
             bail!("The `files` input \"{glob}\" has no leading directory.");
@@ -76,7 +121,10 @@ pub fn expand_files(workspace_root: &Path, globs: &[String]) -> Result<FilesExpa
         let start = workspace_root.join(&root);
         let Ok(metadata) = std::fs::metadata(&start) else {
             if patterns.is_empty() {
+                // Keep the pattern in the group so the final filter retains
+                // the missing path alongside the files other globs matched.
                 missing.push(root);
+                effective.push(glob.clone());
             }
             continue;
         };
@@ -243,6 +291,50 @@ mod tests {
 
     fn globs(list: &[&str]) -> Vec<String> {
         list.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn expands_literal_brace_groups() {
+        assert_eq!(
+            expand_literal_braces("{nx,tsconfig.base}.json"),
+            vec!["nx.json", "tsconfig.base.json"]
+        );
+        assert_eq!(
+            expand_literal_braces("tools/{a,b}/{x,y}.ts"),
+            vec![
+                "tools/a/x.ts",
+                "tools/a/y.ts",
+                "tools/b/x.ts",
+                "tools/b/y.ts"
+            ]
+        );
+        assert_eq!(expand_literal_braces("!{a,b}.md"), vec!["!a.md", "!b.md"]);
+        for unchanged in [
+            "{a,*}.json",
+            "{a,{b,c}}.json",
+            "dist/**",
+            "{a}.json",
+            "{a,b/c}.ts",
+        ] {
+            assert_eq!(expand_literal_braces(unchanged), vec![unchanged]);
+        }
+    }
+
+    #[test]
+    fn accepts_a_root_brace_group_of_literals_and_rejects_wildcards_there() {
+        let temp = workspace();
+        temp.child("nx.json").write_str("{}").unwrap();
+        temp.child("tsconfig.base.json").write_str("{}").unwrap();
+        let group = globs(&["{nx,tsconfig.base,missing}.json"]);
+        validate_files_globs(&group).unwrap();
+        let expansion = expand_files(temp.path(), &group).unwrap();
+        assert_eq!(expansion.files, vec!["nx.json", "tsconfig.base.json"]);
+        assert_eq!(expansion.missing, vec!["missing.json"]);
+        assert!(validate_files_globs(&globs(&["{nx,*}.json"])).is_err());
+        assert!(validate_files_globs(&globs(&["{*,nx}.json"])).is_err());
+        // In-directory groups keep matching as before.
+        let nested = expand_files(temp.path(), &globs(&["dist/gen/{a,nested/b}.js"])).unwrap();
+        assert_eq!(nested.files, vec!["dist/gen/a.js", "dist/gen/nested/b.js"]);
     }
 
     #[test]

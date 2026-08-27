@@ -596,6 +596,47 @@ describe('task planner', () => {
       ).toThrow(/no leading directory/);
     });
 
+    it('accepts the root brace groups real bundles use and class-maps their members', () => {
+      const { planner, taskGraph } = fixture();
+      const snapshots = snapshotsFor({
+        'parent:build': {
+          inputs: [
+            '{nx,tsconfig,tsconfig.base}.json',
+            '{Cargo,rust-toolchain}.toml',
+            'libs/parent/src/**/*.ts',
+            'tools/{a,b}/index.ts',
+          ],
+        },
+      });
+      const report = planner.ioSnapshotReport(taskGraph, snapshots);
+      expect(report.used).toEqual(['parent:build']);
+      const plan = planner.getPlans(['parent:build'], taskGraph, snapshots)[
+        'parent:build'
+      ];
+      // tsconfig members keep TsConfig; nx.json is in the always-on set; the
+      // rest are hashed as the exact files they name.
+      expect(plan).toContain('parent:TsConfig');
+      expect(plan).toContain(
+        `files:[Cargo.toml,libs/parent/src/**/*.ts,rust-toolchain.toml,tools/a/index.ts,tools/b/index.ts,${PARENT_NEG}]`
+      );
+      expect(
+        plan
+          .filter((i) => i.startsWith('files:'))
+          .some((i) => /nx\.json|\{nx/.test(i))
+      ).toBe(false);
+      expect(plan).toContain('io-snapshot:abc123');
+
+      // A wildcard inside a root group is still a walk from the root.
+      const wildcard = snapshotsFor({
+        'parent:build': { inputs: ['{nx,*}.json'] },
+      });
+      expect(
+        planner
+          .ioSnapshotReport(taskGraph, wildcard)
+          .diagnostics.find((d) => d.taskId === 'parent:build')
+      ).toMatchObject({ reason: 'root-anchored-glob' });
+    });
+
     it('reports a bundle-level failure once and plans natively', () => {
       const { planner, taskGraph } = fixture();
       const missing = loadIoSnapshots(join(tempFs.tempDir, 'nope'));
