@@ -63,14 +63,26 @@ pub(crate) enum SocketDirOutcome {
     ConfiguredRefused { configured: PathBuf, error: String },
 }
 
-/// A resolved socket location, plus everything the caller needs to explain it.
-///
-/// `path` is a directory for the daemon and plugin kinds and the socket file
-/// itself for Nx Console — on Windows, the `\\.\pipe\nx\` name, which is not a
-/// filesystem path at all.
+/// A directory the tier chain established, before the socket's own name is
+/// known. Internal: `resolve_socket_path` turns one of these into a resolution.
+struct EstablishedDir {
+    dir: PathBuf,
+    outcome: SocketDirOutcome,
+    refusals: Vec<DirRefusal>,
+}
+
+/// A resolved socket, plus everything the caller needs to explain it.
 #[derive(Debug, Clone)]
 pub(crate) struct SocketDirResolution {
+    /// The established directory. Always a real directory, on every platform.
+    pub(crate) dir: PathBuf,
+    /// The socket itself — on Windows the `\\.\pipe\nx\` name, which is not a
+    /// filesystem path at all.
     pub(crate) path: PathBuf,
+    /// Whether the path, before the Windows pipe prefix, exceeds
+    /// `MAX_SOCKET_PATH`. Reported rather than thrown: the caller composes the
+    /// sentence, and which advice is correct depends on `outcome`.
+    pub(crate) too_long: bool,
     pub(crate) outcome: SocketDirOutcome,
     /// Why the tiers above this one were skipped. Can name any directory a tier
     /// establishes, so it is not always the tier root itself.
@@ -407,20 +419,42 @@ fn workspace_socket_dir(workspace_root: &str, env: Option<&HashMap<String, Strin
     workspace_data_directory(workspace_root, env).join("d")
 }
 
-/// Which leaf directory to place under the winning root.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// The longest socket path the platform will accept. A `sun_path` is 104 bytes
+/// on macOS and 108 on Linux; 95 leaves room for the longest leaf below.
+pub(crate) const MAX_SOCKET_PATH: usize = 95;
+
+/// Which socket is being resolved. Each variant knows both the directory it
+/// belongs in and what it is called, so the whole path is built in one place
+/// and measured against `MAX_SOCKET_PATH` before anything tries to bind it.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum SocketKind {
     Daemon,
-    Plugin,
+    /// A forked task process, which shares the daemon's per-run directory.
+    ForkedProcess(String),
+    Plugin(String),
     NxConsole,
 }
 
 impl SocketKind {
-    fn leaf_for(self, root: &Path, workspace_root: &str) -> PathBuf {
+    fn dir_for(&self, root: &Path, workspace_root: &str) -> PathBuf {
         match self {
-            SocketKind::Daemon => daemon_socket_dir_name(root, workspace_root),
-            SocketKind::Plugin => plugin_socket_dir_name(root, workspace_root),
+            SocketKind::Daemon | SocketKind::ForkedProcess(_) => {
+                daemon_socket_dir_name(root, workspace_root)
+            }
+            SocketKind::Plugin(_) => plugin_socket_dir_name(root, workspace_root),
             SocketKind::NxConsole => nx_console_socket_dir_name(root, workspace_root),
+        }
+    }
+
+    /// Kept short, and readable rather than hashed: `pid` and counter identify a
+    /// worker at a glance, and the whole path has only `MAX_SOCKET_PATH`
+    /// characters to spend.
+    fn file_name(&self) -> String {
+        match self {
+            SocketKind::Daemon => "d.sock".to_string(),
+            SocketKind::ForkedProcess(id) => format!("fp{id}.sock"),
+            SocketKind::Plugin(id) => format!("p{id}.sock"),
+            SocketKind::NxConsole => "nx-console.sock".to_string(),
         }
     }
 }
@@ -459,11 +493,33 @@ enum Placement {
 /// non-recursively at `0700` with its ownership re-checked, so a caller that
 /// created the directory itself would leave an intermediate at the ambient
 /// umask, which the next run refuses.
-pub(crate) fn resolve_socket_dir(
+/// The socket for `kind`: the first root whose containment could be
+/// established, the leaf directory for the workspace, and the socket's own
+/// name — built and measured in one place so no caller can produce a path the
+/// platform will refuse to bind.
+pub(crate) fn resolve_socket_path(
     kind: SocketKind,
     workspace_root: &str,
     env: Option<&HashMap<String, String>>,
 ) -> Result<SocketDirResolution, SocketDirError> {
+    let established = resolve_socket_dir(&kind, workspace_root, env)?;
+    let path = established.dir.join(kind.file_name());
+    Ok(SocketDirResolution {
+        // Measured before the Windows prefix: the limit is on the filesystem
+        // path, and a pipe name is not one.
+        too_long: path.as_os_str().len() > MAX_SOCKET_PATH,
+        path: to_socket_path(&path),
+        dir: established.dir,
+        outcome: established.outcome,
+        refusals: established.refusals,
+    })
+}
+
+fn resolve_socket_dir(
+    kind: &SocketKind,
+    workspace_root: &str,
+    env: Option<&HashMap<String, String>>,
+) -> Result<EstablishedDir, SocketDirError> {
     if let Some(configured) = configured_socket_dir(env) {
         return establish_socket_dir(
             &configured,
@@ -483,7 +539,7 @@ pub(crate) fn resolve_socket_dir(
     };
 
     establish_socket_dir(
-        &kind.leaf_for(&tiers[index].root, workspace_root),
+        &kind.dir_for(&tiers[index].root, workspace_root),
         Placement::DefaultRoot {
             // Set only on a demotion, and names the tier that was skipped, so a
             // later length failure can say the path was not the one Nx wanted.
@@ -501,7 +557,7 @@ fn establish_socket_dir(
     mut refusals: Vec<DirRefusal>,
     workspace_root: &str,
     env: Option<&HashMap<String, String>>,
-) -> Result<SocketDirResolution, SocketDirError> {
+) -> Result<EstablishedDir, SocketDirError> {
     // A default root has already had its containment established by the tier it
     // came from; a configured one is the user's to create. Its parents are made
     // separately from the leaf: creating and locking down in one step would
@@ -517,8 +573,8 @@ fn establish_socket_dir(
     };
 
     match parents.or_else(|| ensure_owned_private_dir(dir).err()) {
-        None => Ok(SocketDirResolution {
-            path: dir.to_path_buf(),
+        None => Ok(EstablishedDir {
+            dir: dir.to_path_buf(),
             outcome: match placement {
                 Placement::Configured => SocketDirOutcome::Configured,
                 Placement::DefaultRoot {
@@ -540,8 +596,8 @@ fn establish_socket_dir(
                 // Never swap out a configured directory silently — the
                 // substitute is longer and would resurface as a length
                 // complaint about a path the user never set.
-                Placement::Configured => Ok(SocketDirResolution {
-                    path: establish_workspace_socket_dir(workspace_root, env)?,
+                Placement::Configured => Ok(EstablishedDir {
+                    dir: establish_workspace_socket_dir(workspace_root, env)?,
                     outcome: SocketDirOutcome::ConfiguredRefused {
                         configured: dir.to_path_buf(),
                         error,
@@ -559,9 +615,9 @@ fn fall_back_to_workspace(
     refusals: Vec<DirRefusal>,
     workspace_root: &str,
     env: Option<&HashMap<String, String>>,
-) -> Result<SocketDirResolution, SocketDirError> {
-    Ok(SocketDirResolution {
-        path: establish_workspace_socket_dir(workspace_root, env)?,
+) -> Result<EstablishedDir, SocketDirError> {
+    Ok(EstablishedDir {
+        dir: establish_workspace_socket_dir(workspace_root, env)?,
         outcome: SocketDirOutcome::WorkspaceFallback { attempted },
         refusals,
     })
@@ -584,24 +640,6 @@ fn establish_workspace_socket_dir(
     ensure_owned_private_dir(&dir)
         .map(|()| dir)
         .map_err(|refusal| SocketDirError::NothingEstablishable { refusal })
-}
-
-/// The Nx Console socket, for whoever binds or connects to it.
-///
-/// Nx Console is the server and Nx the client, so the extension listens where
-/// this says and Nx dials it. Both go through this one function on purpose: the
-/// root is chosen at runtime from a chain that can demote, so a second
-/// derivation cannot track it.
-///
-/// Windows gets the pipe name, not the path it is built from. Node can neither
-/// bind nor connect to the bare form.
-pub(crate) fn nx_console_socket_path(
-    workspace_root: &str,
-    env: Option<&HashMap<String, String>>,
-) -> Result<SocketDirResolution, SocketDirError> {
-    let mut resolved = resolve_socket_dir(SocketKind::NxConsole, workspace_root, env)?;
-    resolved.path = to_socket_path(&resolved.path.join("nx-console.sock"));
-    Ok(resolved)
 }
 
 /// What both ends derived for themselves before the resolver owned the answer.
@@ -634,9 +672,13 @@ fn to_socket_path(path: &Path) -> PathBuf {
 #[napi(object)]
 #[derive(Default)]
 pub struct SocketDirDetails {
-    /// A directory for the daemon and plugin resolvers, the socket file itself
-    /// for Nx Console — on Windows its `\\.\pipe\nx\` name.
+    /// The socket itself — on Windows its `\\.\pipe\nx\` name.
     pub path: String,
+    /// The directory holding it, for the caller that deletes it on shutdown.
+    pub dir: String,
+    /// Whether `path` exceeds what the platform will bind. Reported rather than
+    /// thrown because which advice is correct depends on the other fields.
+    pub too_long: bool,
     /// Set when `path` is a directory Nx refuses to *be* the socket directory:
     /// `shared-with-other-users`, `nx-managed`, or `os-temp-root`. The caller
     /// throws on it rather than using `path`.
@@ -668,6 +710,8 @@ fn display(path: &Path) -> String {
 fn to_details(resolution: SocketDirResolution) -> SocketDirDetails {
     let mut details = SocketDirDetails {
         path: display(&resolution.path),
+        dir: display(&resolution.dir),
+        too_long: resolution.too_long,
         refusal_details: (!resolution.refusals.is_empty()).then(|| resolution.describe_refusals()),
         remedies: resolution.remedies(),
         ..Default::default()
@@ -724,16 +768,30 @@ fn into_details(
     }
 }
 
-/// Where the daemon and forked task processes put their sockets. Per run — the
-/// name hashes the pid, and clients read the daemon's path back out of the
-/// process cache rather than deriving it.
+/// The daemon's own socket. Per run — the directory name hashes the pid, and
+/// clients read the daemon's path back out of the process cache rather than
+/// deriving it.
 #[napi]
-pub fn resolve_daemon_socket_dir(
+pub fn resolve_daemon_socket_path(
     workspace_root: String,
     env: Option<HashMap<String, String>>,
 ) -> napi::Result<SocketDirDetails> {
-    into_details(resolve_socket_dir(
+    into_details(resolve_socket_path(
         SocketKind::Daemon,
+        &workspace_root,
+        env.as_ref(),
+    ))
+}
+
+/// A forked task process's socket, in the daemon's per-run directory.
+#[napi]
+pub fn resolve_forked_process_socket_path(
+    workspace_root: String,
+    id: String,
+    env: Option<HashMap<String, String>>,
+) -> napi::Result<SocketDirDetails> {
+    into_details(resolve_socket_path(
+        SocketKind::ForkedProcess(id),
         &workspace_root,
         env.as_ref(),
     ))
@@ -742,12 +800,13 @@ pub fn resolve_daemon_socket_dir(
 /// Plugin worker sockets get their own workspace-scoped directory rather than
 /// sitting in the shared system temp dir, which cannot be locked down.
 #[napi]
-pub fn resolve_plugin_socket_dir(
+pub fn resolve_plugin_socket_path(
     workspace_root: String,
+    id: String,
     env: Option<HashMap<String, String>>,
 ) -> napi::Result<SocketDirDetails> {
-    into_details(resolve_socket_dir(
-        SocketKind::Plugin,
+    into_details(resolve_socket_path(
+        SocketKind::Plugin(id),
         &workspace_root,
         env.as_ref(),
     ))
@@ -764,7 +823,11 @@ pub fn resolve_nx_console_socket_path(
     workspace_root: String,
     env: Option<HashMap<String, String>>,
 ) -> napi::Result<SocketDirDetails> {
-    into_details(nx_console_socket_path(&workspace_root, env.as_ref()))
+    into_details(resolve_socket_path(
+        SocketKind::NxConsole,
+        &workspace_root,
+        env.as_ref(),
+    ))
 }
 
 #[cfg(test)]
@@ -823,6 +886,58 @@ mod tests {
         );
     }
 
+    /// Forked task processes deliberately share the daemon's per-run directory.
+    #[test]
+    fn every_kind_names_its_own_socket() {
+        assert_eq!(SocketKind::Daemon.file_name(), "d.sock");
+        assert_eq!(
+            SocketKind::ForkedProcess("1-0-ab".into()).file_name(),
+            "fp1-0-ab.sock"
+        );
+        assert_eq!(
+            SocketKind::Plugin("123-0-12345678".into()).file_name(),
+            "p123-0-12345678.sock"
+        );
+        assert_eq!(SocketKind::NxConsole.file_name(), "nx-console.sock");
+
+        let root = PathBuf::from("/tmp/sockets");
+        assert_eq!(
+            SocketKind::ForkedProcess("1-0-ab".into()).dir_for(&root, "/workspace/one"),
+            SocketKind::Daemon.dir_for(&root, "/workspace/one")
+        );
+    }
+
+    /// The longest leaf, under the deepest default root, for the longest Windows
+    /// account name we budget for. Pins the headroom the file names are chosen
+    /// against; the check itself is on the whole path at resolution time.
+    #[test]
+    fn the_longest_plugin_socket_still_fits_the_budget() {
+        let windows_temp = format!("C:\\Users\\{}\\AppData\\Local\\Temp", "u".repeat(18));
+        let path = format!(
+            "{windows_temp}\\{}\\{}",
+            "f".repeat(8),
+            SocketKind::Plugin("9999999999-z-ffffffff".into()).file_name()
+        );
+
+        assert_eq!(path.len(), 83);
+        assert!(path.len() <= MAX_SOCKET_PATH);
+    }
+
+    #[test]
+    fn a_path_over_the_budget_is_reported_rather_than_thrown() {
+        let ws = workspace();
+        let configured = std::env::temp_dir().join("nx-len").join("a".repeat(90));
+        let env = env_with(&[("NX_SOCKET_DIR", &configured.to_string_lossy())]);
+
+        let resolved = resolve_socket_path(SocketKind::Daemon, &root_of(&ws), Some(&env))
+            .expect("should resolve");
+
+        assert!(resolved.too_long);
+        // Still handed back: the caller decides which advice the length failure
+        // should carry, and that turns on why the path is what it is.
+        assert!(resolved.path.ends_with("d.sock"));
+    }
+
     #[test]
     fn a_configured_socket_dir_is_used_and_locked_down() {
         let temp = TempDir::new().unwrap();
@@ -830,10 +945,10 @@ mod tests {
         let configured = temp.path().join("sockets");
         let env = env_with(&[("NX_SOCKET_DIR", &configured.to_string_lossy())]);
 
-        let resolved = resolve_socket_dir(SocketKind::Daemon, &root_of(&ws), Some(&env))
+        let resolved = resolve_socket_path(SocketKind::Daemon, &root_of(&ws), Some(&env))
             .expect("should resolve");
 
-        assert_eq!(resolved.path, configured);
+        assert_eq!(resolved.dir, configured);
         assert_eq!(resolved.outcome, SocketDirOutcome::Configured);
         assert!(configured.is_dir());
     }
@@ -849,9 +964,9 @@ mod tests {
 
         assert!(configured_socket_dir(Some(&env)).is_none());
         // And the resolution does not land on the working directory.
-        let resolved = resolve_socket_dir(SocketKind::Daemon, &root_of(&ws), Some(&env))
+        let resolved = resolve_socket_path(SocketKind::Daemon, &root_of(&ws), Some(&env))
             .expect("should resolve");
-        assert_ne!(resolved.path, std::env::current_dir().unwrap());
+        assert_ne!(resolved.dir, std::env::current_dir().unwrap());
     }
 
     #[test]
@@ -859,7 +974,7 @@ mod tests {
         let ws = workspace();
         let env = env_with(&[("NX_SOCKET_DIR", &system_tmp_dir().to_string_lossy())]);
 
-        let error = resolve_socket_dir(SocketKind::Daemon, &root_of(&ws), Some(&env))
+        let error = resolve_socket_path(SocketKind::Daemon, &root_of(&ws), Some(&env))
             .expect_err("should refuse");
 
         assert!(matches!(
@@ -876,7 +991,7 @@ mod tests {
         let ws = workspace();
         let env = env_with(&[("NX_SOCKET_DIR", &nx_user_tmp_dir().to_string_lossy())]);
 
-        let error = resolve_socket_dir(SocketKind::Daemon, &root_of(&ws), Some(&env))
+        let error = resolve_socket_path(SocketKind::Daemon, &root_of(&ws), Some(&env))
             .expect_err("should refuse");
 
         assert!(matches!(
@@ -899,10 +1014,10 @@ mod tests {
         std::fs::write(&blocker, "").unwrap();
         let env = env_with(&[("NX_SOCKET_DIR", &blocker.to_string_lossy())]);
 
-        let resolved = resolve_socket_dir(SocketKind::Daemon, &root_of(&ws), Some(&env))
+        let resolved = resolve_socket_path(SocketKind::Daemon, &root_of(&ws), Some(&env))
             .expect("should fall back");
 
-        assert_eq!(resolved.path, ws.path().join(".nx/workspace-data/d"));
+        assert_eq!(resolved.dir, ws.path().join(".nx/workspace-data/d"));
         assert!(
             matches!(resolved.outcome, SocketDirOutcome::ConfiguredRefused { configured, .. } if configured == blocker)
         );
@@ -920,10 +1035,10 @@ mod tests {
             ("NX_WORKSPACE_DATA_DIRECTORY", &data_dir.to_string_lossy()),
         ]);
 
-        let resolved = resolve_socket_dir(SocketKind::Daemon, &root_of(&ws), Some(&env))
+        let resolved = resolve_socket_path(SocketKind::Daemon, &root_of(&ws), Some(&env))
             .expect("should fall back");
 
-        assert_eq!(resolved.path, data_dir.join("d"));
+        assert_eq!(resolved.dir, data_dir.join("d"));
     }
 
     /// A Lerna repo that has not adopted `nx.json` is kept out of `.nx`, so the
@@ -944,8 +1059,10 @@ mod tests {
         let one = workspace();
         let two = workspace();
 
-        let first = nx_console_socket_path(&root_of(&one), None).expect("should resolve");
-        let second = nx_console_socket_path(&root_of(&two), None).expect("should resolve");
+        let first = resolve_socket_path(SocketKind::NxConsole, &root_of(&one), None)
+            .expect("should resolve");
+        let second = resolve_socket_path(SocketKind::NxConsole, &root_of(&two), None)
+            .expect("should resolve");
 
         assert!(first.path.ends_with("nx-console.sock"));
         assert_ne!(first.path, second.path);
@@ -957,8 +1074,10 @@ mod tests {
     fn the_console_socket_is_stable_across_calls() {
         let ws = workspace();
 
-        let first = nx_console_socket_path(&root_of(&ws), None).expect("should resolve");
-        let second = nx_console_socket_path(&root_of(&ws), None).expect("should resolve");
+        let first = resolve_socket_path(SocketKind::NxConsole, &root_of(&ws), None)
+            .expect("should resolve");
+        let second = resolve_socket_path(SocketKind::NxConsole, &root_of(&ws), None)
+            .expect("should resolve");
 
         assert_eq!(first.path, second.path);
     }
@@ -991,11 +1110,11 @@ mod tests {
         std::os::unix::fs::symlink(&victim, &squatted).unwrap();
         let env = env_with(&[("NX_SOCKET_DIR", &format!("{}/", squatted.display()))]);
 
-        let resolved = resolve_socket_dir(SocketKind::Daemon, &root_of(&ws), Some(&env))
+        let resolved = resolve_socket_path(SocketKind::Daemon, &root_of(&ws), Some(&env))
             .expect("should fall back");
 
-        assert_ne!(resolved.path, squatted);
-        assert_ne!(resolved.path, victim);
+        assert_ne!(resolved.dir, squatted);
+        assert_ne!(resolved.dir, victim);
         use std::os::unix::fs::MetadataExt;
         assert_eq!(
             std::fs::symlink_metadata(&victim).unwrap().mode() & 0o777,
@@ -1006,7 +1125,9 @@ mod tests {
     #[test]
     fn remedies_are_deduplicated_in_the_order_they_were_collected() {
         let resolution = SocketDirResolution {
-            path: PathBuf::from("/tmp/x"),
+            dir: PathBuf::from("/tmp/x"),
+            path: PathBuf::from("/tmp/x/d.sock"),
+            too_long: false,
             outcome: SocketDirOutcome::Preferred,
             refusals: vec![
                 DirRefusal::NotTightenable {
