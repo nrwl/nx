@@ -1,12 +1,11 @@
 import type { MockInstance } from 'vitest';
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import { Tree } from '../../generators/tree';
-import { NX_ALLOWLIST_ROOTS } from '../constants';
 
 import { setupAiAgentsGenerator } from './set-up-ai-agents';
 import { SetupAiAgentsGeneratorSchema } from './schema';
 import { readJson, updateJson } from '../../generators/utils/json';
-import { getAgentRulesWrapped } from '../constants';
+import { getAgentRulesWrapped, NX_ALLOWLIST_ROOTS } from '../constants';
 import * as installedNxVersionUtils from '../../utils/installed-nx-version';
 import * as cloneModule from '../clone-ai-config-repo';
 import * as fs from 'fs';
