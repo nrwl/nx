@@ -1953,7 +1953,7 @@ function emitAwaitPrompt(
   // parent (an agent that has to `mkdir -p` pays a permission prompt).
   // Anything else standing in its place is left for the read to reject.
   if (handoffsDirState(runHandoffsDir(dir)) === 'missing') {
-    mkdirSync(runHandoffsDir(dir));
+    mkdirSync(runHandoffsDir(dir), { recursive: true });
   }
   // Recorded issues applicable to this step are assigned to it here, at the
   // agent-work dispense, not when its worker command was dispensed: only a
