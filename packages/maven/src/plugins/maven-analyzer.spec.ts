@@ -1,8 +1,9 @@
-import { runMavenAnalysis } from './maven-analyzer';
+import { getAnalysisTimeoutMs, runMavenAnalysis } from './maven-analyzer';
 import { existsSync } from 'fs';
 import { readJsonFile } from '@nx/devkit';
 import { EventEmitter } from 'events';
 import {
+  killChildOnHostExit,
   killProcessTreeGraceful,
   safeExecFileSync,
   safeSpawn,
@@ -17,6 +18,7 @@ jest.mock('@nx/devkit/internal', () => ({
   safeSpawn: jest.fn(),
   safeExecFileSync: jest.fn(),
   killProcessTreeGraceful: jest.fn().mockResolvedValue(undefined),
+  killChildOnHostExit: jest.fn(),
 }));
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual('@nx/devkit'),
@@ -36,7 +38,48 @@ describe('Maven Analyzer', () => {
     });
   });
 
+  describe('getAnalysisTimeoutMs', () => {
+    afterEach(() => {
+      delete process.env.NX_MAVEN_ANALYSIS_TIMEOUT;
+    });
+
+    // setTimeout clamps a delay past the 32-bit signed max to 1ms, so an
+    // unclamped huge value would abort the analysis instantly — the opposite
+    // of what the timeout error tells the user to do.
+    it('should clamp an overflowing NX_MAVEN_ANALYSIS_TIMEOUT', () => {
+      process.env.NX_MAVEN_ANALYSIS_TIMEOUT = '9999999';
+      expect(getAnalysisTimeoutMs()).toBe(2 ** 31 - 1);
+
+      process.env.NX_MAVEN_ANALYSIS_TIMEOUT = 'Infinity';
+      expect(getAnalysisTimeoutMs()).toBe(2 ** 31 - 1);
+
+      process.env.NX_MAVEN_ANALYSIS_TIMEOUT = '30';
+      expect(getAnalysisTimeoutMs()).toBe(30_000);
+    });
+  });
+
   describe('runMavenAnalysis', () => {
+    it('should register the maven process to be killed on host exit', async () => {
+      const mockChild = new EventEmitter() as any;
+      mockChild.stdout = new EventEmitter();
+      mockChild.stderr = new EventEmitter();
+      mockChild.pid = 1234;
+
+      (safeSpawn as jest.Mock).mockReturnValue(mockChild);
+      (readJsonFile as jest.Mock).mockReturnValue({
+        projects: [],
+        generatedAt: 0,
+      });
+
+      const promise = runMavenAnalysis(workspaceRoot, {});
+      setImmediate(() => {
+        mockChild.emit('close', 0);
+      });
+      await promise;
+
+      expect(killChildOnHostExit).toHaveBeenCalledWith(mockChild);
+    });
+
     it('should run Maven analysis with default options', async () => {
       const mockChild = new EventEmitter() as any;
       mockChild.stdout = new EventEmitter();
