@@ -170,13 +170,18 @@ function applyNxIndependentConfig(
     ...(config.ignoreWarnings ?? []),
   ];
 
+  const shouldMinify =
+    typeof options.optimization === 'object'
+      ? !!options.optimization.scripts
+      : !!options.optimization;
+
   config.optimization = {
     ...config.optimization,
     sideEffects: true,
-    minimize:
-      typeof options.optimization === 'object'
-        ? !!options.optimization.scripts
-        : !!options.optimization,
+    // webpack normalizes `true` to `{}` before plugins run, so writing the
+    // boolean back onto normalized options trips 5.110.0's per-asset-type
+    // defaults. `{}` is equivalent on every webpack 5; the types widened in 5.110.
+    minimize: shouldMinify ? ({} as unknown as boolean) : false,
     minimizer: [
       options.compiler !== 'swc'
         ? new TerserPlugin({
