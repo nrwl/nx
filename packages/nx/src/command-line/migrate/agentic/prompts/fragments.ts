@@ -19,11 +19,15 @@ export function renderHandoffShapeLines(): string[] {
 
 // Scope rules for applying an author-provided migration prompt (prompt-only or
 // hybrid migration).
-export function renderAuthorScopeRuleLines(): string[] {
+export function renderAuthorScopeRuleLines(
+  formatCommand: string | null
+): string[] {
   return [
     `- Apply only the changes the migration prompt asks for.`,
     `- Do not refactor or update dependencies beyond what the migration prompt directs, and do not reformat files you did not change.`,
-    `- After applying your changes and before writing the handoff, format the files you created or modified so they match the workspace's style. If the workspace uses Prettier, run it over exactly those files through the workspace package manager (e.g. \`npx prettier --write --ignore-unknown <paths>\` in an npm workspace; \`--ignore-unknown\` keeps paths Prettier has no parser for from failing the command); if it has no formatter configured, skip this. Do not use \`nx format:write\` for this: it also selects files changed earlier on the branch and always reformats the root config files.`,
+    formatCommand === null
+      ? `- This workspace has no formatter configured; do not run one over your changes.`
+      : `- After applying your changes and before writing the handoff, format the files you created or modified with the workspace's formatter: run \`${formatCommand}\` over exactly those files (the flag keeps the command from failing when some or all of those paths are files the formatter does not handle). Do not use \`nx format:write\` for this: it also selects files changed earlier on the branch and always reformats the root config files.`,
     `- Do not modify files outside the workspace root.`,
     `- Do not run \`nx\` commands that mutate workspace state (\`nx migrate\`, \`nx reset\`, \`nx format:write\`, \`nx run-many\`, generators, etc.). Read-only inspection (\`nx show\`, \`nx graph --file\`, reading files) is fine.`,
     `- If the migration instructions are unclear, internally inconsistent, or conflict with the current workspace state, ask the user for direction (see the handoff contract). Do not guess.`,

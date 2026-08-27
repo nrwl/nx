@@ -8,6 +8,7 @@ import {
   getPackageManagerCommand,
 } from '../../../utils/package-manager';
 import { resetSgrAfterAgent } from '../migrate-output';
+import { resolveFormatCommand } from './format-command';
 import { mkdirSafely, stepHandoffPath } from './handoff';
 import { buildGenericValidationUserPrompt } from './prompts/generic-validation';
 import { buildHybridPromptUserPrompt } from './prompts/hybrid-prompt-migration';
@@ -112,12 +113,14 @@ export async function runAgenticPromptStep(
     `handoff directory for ${migration.name}`
   );
   const pm = detectPackageManager(root);
+  const pmCommand = getPackageManagerCommand(pm, root);
   const systemContext = buildSystemPrompt({
     workspaceRoot: root,
     handoffFileAbsolutePath: handoffFilePath,
     packageManager: pm,
-    nxInvocation: getRunNxBaseCommand(getPackageManagerCommand(pm, root), root),
+    nxInvocation: getRunNxBaseCommand(pmCommand, root),
     mode,
+    formatCommand: resolveFormatCommand(root, pmCommand.exec),
   });
 
   let userPrompt: string;

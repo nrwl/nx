@@ -18,6 +18,8 @@ export interface RunbookContext {
   packageManager: string;
   // e.g. `npx nx`, `pnpm exec nx`.
   nxInvocation: string;
+  // See `resolveFormatCommand`; null when the workspace has no formatter.
+  formatCommand: string | null;
   reconcileCommand: string;
   createCommits: boolean;
   validate: boolean;
@@ -92,7 +94,9 @@ export function renderRunbook(ctx: RunbookContext): string {
     `- A migration with an AI-driven part makes its worker emit a`,
     `  \`<nx_migrate_prompt>\` block pointing at an instructions file. Apply`,
     `  those instructions to the workspace. Scope rules for that work:`,
-    ...renderAuthorScopeRuleLines().map((line) => `  ${line}`),
+    ...renderAuthorScopeRuleLines(
+      ctx.formatCommand === null ? null : singleLine(ctx.formatCommand)
+    ).map((line) => `  ${line}`),
     `  The \`nx migrate\` commands this runbook and the step blocks hand you`,
     `  (the reconcile, worker and \`next\` commands) are the exception to that`,
     `  rule: run them as given.`,
