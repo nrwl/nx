@@ -27,6 +27,7 @@ import {
   type HandoffReadFailureReason,
   type HandoffReadResult,
 } from '../agentic/handoff';
+import { resolveFormatCommand } from '../agentic/format-command';
 import { applyAgenticHandoffGitignoreFallback } from '../agentic/handoff-gitignore';
 import { MIGRATE_RUNS_RELATIVE_DIR, type HandoffFile } from '../agentic/types';
 import {
@@ -661,6 +662,7 @@ function runbookContext(
     packageManager: detectPackageManager(root),
     nxInvocation: `${pmExecPrefix(root)} nx`,
     reconcileCommand: reconcileCommand(root, runId),
+    formatCommand: resolveFormatCommand(root, pmExecPrefix(root)),
     createCommits: state.createCommits,
     // The same `!== false` read the flag itself gets, so a run recorded
     // without the field renders validation on.

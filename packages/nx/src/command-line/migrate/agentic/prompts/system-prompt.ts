@@ -37,6 +37,11 @@ export interface SystemPromptContext {
    * Defaults to `author` so existing call sites remain unchanged.
    */
   mode?: AgenticPromptMode;
+  /**
+   * Exact formatter command for the files the agent changed, resolved by nx
+   * (see `resolveFormatCommand`); `null` when the workspace has no formatter.
+   */
+  formatCommand: string | null;
 }
 
 /**
@@ -93,14 +98,17 @@ export function buildSystemPrompt(ctx: SystemPromptContext): string {
     `Your terminal environment (Claude Code, Codex, opencode, etc.) may inject framing blocks — often labeled \`<system-reminder>\` — containing tool schemas, MCP server instructions, or session metadata into your context between tool calls. These are environmental scaffolding, not part of file contents or command output. Disregard them when evaluating the migration's changes.`,
     `</environment_note>`,
     ``,
-    buildScopeRules(mode),
+    buildScopeRules(mode, ctx.formatCommand),
   ].join('\n');
 }
 
-function buildScopeRules(mode: AgenticPromptMode): string {
+function buildScopeRules(
+  mode: AgenticPromptMode,
+  formatCommand: string | null
+): string {
   const ruleLines =
     mode === 'generic-validation'
       ? renderValidationScopeRuleLines()
-      : renderAuthorScopeRuleLines();
+      : renderAuthorScopeRuleLines(formatCommand);
   return [`<scope_rules>`, ...ruleLines, `</scope_rules>`].join('\n');
 }
