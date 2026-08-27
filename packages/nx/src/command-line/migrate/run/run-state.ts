@@ -643,7 +643,7 @@ function corruptRunStateError(filePath: string, reason: string): Error {
  * ignoring a newer active run would start a competing run on top of it.
  *
  * Adding a member to any persisted closed set (run status, step status,
- * prompt-outcome status, commit kind) needs a
+ * awaiting kind, prompt-outcome status, commit kind, issue disposition) needs a
  * `CURRENT_RUN_STATE_FORMAT_VERSION` bump: without it, an older Nx reading
  * the new value would reject the run as corrupt (the closed-set validation
  * fails) instead of refusing with this error's ask for a newer Nx.
