@@ -1252,7 +1252,7 @@ describe('orchestrator', () => {
       expect(readRunState(dir).steps[0].status).toBe('pending');
     });
 
-    it('removes a non-regular entry at the runbook path instead of writing through it', async () => {
+    it('replaces a non-regular entry at the runbook path with the re-rendered runbook', async () => {
       const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
       const dir = setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:a', 'pending')],
