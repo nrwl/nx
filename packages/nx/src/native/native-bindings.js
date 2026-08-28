@@ -602,6 +602,7 @@ module.exports.canInstallNxConsoleForEditor = nativeBinding.canInstallNxConsoleF
 module.exports.closeDbConnection = nativeBinding.closeDbConnection
 module.exports.connectToNxDb = nativeBinding.connectToNxDb
 module.exports.copy = nativeBinding.copy
+module.exports.dependentOutputEdges = nativeBinding.dependentOutputEdges
 module.exports.detectAiAgent = nativeBinding.detectAiAgent
 module.exports.EventType = nativeBinding.EventType
 module.exports.expandFilesInput = nativeBinding.expandFilesInput
