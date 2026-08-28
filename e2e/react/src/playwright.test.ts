@@ -155,7 +155,11 @@ describe('React Playwright e2e tests', () => {
       // atomized target is refused without Nx Cloud unless told otherwise.
       for (const target of ['e2e', 'e2e-ci']) {
         const result = runCLI(`run ${e2eProject}:${target}`, {
-          env: { DEBUG: 'pw:webserver', NX_SKIP_ATOMIZER_VALIDATION: 'true' },
+          env: {
+            DEBUG: 'pw:webserver',
+            NX_SKIP_ATOMIZER_VALIDATION: 'true',
+            BASE_URL: `http://localhost:${port}`,
+          },
           redirectStderr: true,
         });
         expect(result).toContain('WebServer is already available');
