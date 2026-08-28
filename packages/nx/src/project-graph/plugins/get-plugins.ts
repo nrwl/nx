@@ -7,11 +7,17 @@ import {
   readNxJson,
 } from '../../config/nx-json';
 import { hashObject } from '../../hasher/file-hasher';
-import { refreshSourceGraphResolvers } from '../../plugins/js/utils/register';
+import {
+  hasSourceGraphResolvers,
+  refreshSourceGraphResolvers,
+} from '../../plugins/js/utils/register';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { loadNxPlugin } from './in-process-loader';
 import { loadIsolatedNxPlugin } from './isolation';
-import { resetResolvePluginCache } from './resolve-plugin';
+import {
+  refreshWorkspacePackageNames,
+  resetResolvePluginCache,
+} from './resolve-plugin';
 
 import { isIsolationEnabled } from './isolation/enabled';
 import {
@@ -180,7 +186,6 @@ export async function getPluginsSeparated(
   nxJson: NxJsonConfiguration,
   root = workspaceRoot
 ): Promise<SeparatedPlugins> {
-  refreshSourceGraphResolvers(root);
   const pluginsConfiguration = nxJson.plugins ?? [];
   const pluginsConfigurationHash = hashObject(pluginsConfiguration);
 
@@ -189,8 +194,18 @@ export async function getPluginsSeparated(
     cachedSeparatedPlugins &&
     pluginsConfigurationHash === currentPluginsConfigurationHash
   ) {
+    // The plugin instance can outlive the workspace-project snapshot used to
+    // register it, so refresh package names before a later lazy import runs.
+    refreshSourceGraphResolvers(
+      root,
+      hasSourceGraphResolvers(root)
+        ? await refreshWorkspacePackageNames(root)
+        : undefined
+    );
     return cachedSeparatedPlugins;
   }
+
+  refreshSourceGraphResolvers(root);
 
   // A concurrent call is already loading this exact plugin set — share its
   // load rather than starting a second one that would race the module-level
