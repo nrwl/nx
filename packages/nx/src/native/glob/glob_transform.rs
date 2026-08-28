@@ -111,8 +111,7 @@ fn build_segment(
             | GlobGroup::NonSpecialGroup(_) => {
                 build_segment(&built_glob, &group[1..], is_last_segment, is_negative)
             }
-            // Preserving behavior is only used for output-root partitioning.
-            // Pattern conversion keeps the existing invalid-group recovery.
+            // Skip ungrouped special characters when building converted patterns.
             GlobGroup::UngroupedSpecialChar(_) => {
                 build_segment(existing, &group[1..], is_last_segment, is_negative)
             }
@@ -139,8 +138,8 @@ fn static_segment(group: &[GlobGroup]) -> Option<String> {
 }
 
 pub fn partition_glob(glob: &str) -> anyhow::Result<(String, Vec<String>)> {
-    // The static root needs literal path text, unlike glob conversion where
-    // ungrouped special characters are intentionally discarded for compatibility.
+    // Preserve ungrouped special characters so scoped directories such as
+    // `packages/@acme` remain part of the static root.
     let (negated, groups) = parse_glob_preserving_ungrouped_special_chars(glob)?;
     // Partition glob into leading directories and patterns that should be matched
     let mut has_patterns = false;

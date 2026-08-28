@@ -158,12 +158,13 @@ fn parse_segment(
         "parse_segment",
         many_till(
             context("glob_group", |input| {
+                // check if the special character is part of a group
                 let group_input = match ungrouped_special_char_behavior {
                     UngroupedSpecialCharBehavior::Discard => {
-                        // Preserve the existing invalid-group recovery used by
-                        // convert_glob and its callers.
                         match special_char_with_no_group(input) {
+                            // if there was no (, then we know that the special character is not part of a group, we can return this input
                             Ok((no_group_input, _)) => no_group_input,
+                            // otherwise, there was a ( after the special character, so we need to parse the original input
                             Err(_) => input,
                         }
                     }
@@ -234,8 +235,8 @@ pub fn parse_glob(input: &str) -> anyhow::Result<(bool, Vec<Vec<GlobGroup<'_>>>)
     parse_glob_with_behavior(input, UngroupedSpecialCharBehavior::Discard)
 }
 
-/// Retains ungrouped special characters for callers that need the original path text
-/// while leaving `parse_glob`'s invalid-group compatibility behavior unchanged.
+/// Retains ungrouped special characters so literal path segments such as
+/// `packages/@acme` can be reconstructed after parsing.
 pub fn parse_glob_preserving_ungrouped_special_chars(
     input: &str,
 ) -> anyhow::Result<(bool, Vec<Vec<GlobGroup<'_>>>)> {
