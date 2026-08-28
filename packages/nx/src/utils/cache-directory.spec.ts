@@ -80,7 +80,7 @@ const stageCacheDirectoryConfig = (
 const sharedUserDirFor = (root: string, kind: SharedDataKind) => {
   const location = resolveSharedDataLocation(root);
   return location.share === 'user'
-    ? sharedUserDataDir(location.workspaceId, kind)
+    ? sharedUserDataDir(location.dirName, kind)
     : undefined;
 };
 
@@ -218,6 +218,19 @@ describe('shared data location', () => {
       expect(dir).not.toContain(token);
     });
 
+    it('never carries the raw identity in the resolved location', () => {
+      // The struct is exported. `generateWorkspaceId` returns the Nx Cloud
+      // access token when that is the only identity, so carrying it here would
+      // be one `debugLog(location)` away from putting a credential in a log.
+      const token = 'nxcloud_SUPER_SECRET_TOKEN';
+      mockGenerateWorkspaceId.mockReturnValue(token);
+
+      const location = resolveSharedDataLocation('/worktree');
+
+      expect(location.share).toBe('user');
+      expect(JSON.stringify(location)).not.toContain(token);
+    });
+
     it('keeps its own copy when the workspace has no identity', () => {
       // Not a git repository, or a shallow clone with no remote. There is
       // nothing stable to key a shared directory on.
@@ -250,6 +263,22 @@ describe('shared data location', () => {
       expect(resolveSharedDataLocation('/worktree')).toEqual({
         share: 'none',
       });
+    });
+
+    it('freezes the verdict for the life of the process', () => {
+      // `cacheDir` is a module-scope const, so the cache's answer is fixed at
+      // import. The daemon reflects client env after startup via
+      // `applyDaemonEnvFromClient`, and NX_CACHE_DIRECTORY is in no exclusion
+      // list -- so re-deciding on each call would let a later
+      // `getDbConnection()` answer `none` while `cacheDir` is already shared.
+      // Cache and DB in different scopes is the torn state one predicate
+      // exists to prevent.
+      const first = resolveSharedDataLocation('/worktree');
+      expect(first.share).toBe('user');
+
+      process.env.NX_CACHE_DIRECTORY = '/pinned-after-the-fact';
+
+      expect(resolveSharedDataLocation('/worktree')).toEqual(first);
     });
 
     it('keeps its own copy when an env var pins the location', () => {
@@ -294,6 +323,13 @@ describe('shared data location', () => {
         );
 
         pin();
+        // The verdict is frozen per process, so a pin applied after one was
+        // already reached does not move it -- that freeze is what keeps the
+        // cache and the DB from answering differently later in the same
+        // process. Reset to model a process that starts with the pin in place,
+        // which is how a user actually sets one.
+        resetSharedRootCacheForTesting();
+
         expect(sharedUserDirFor('/worktree', 'cache')).toBeUndefined();
         expect(sharedUserDirFor('/worktree', 'workspace-data')).toBeUndefined();
       }
@@ -319,6 +355,23 @@ describe('shared data location', () => {
         });
       }
     );
+
+    it('keeps its own copy when only the databases leaf is unwritable', () => {
+      // A sandbox policy can grant one leaf and deny the other. Establishing
+      // says nothing about it -- the mkdir is a no-op on a directory that
+      // already exists and is already ours -- so probing only the cache would
+      // send both kinds to the shared root and then EPERM on the DB.
+      mockWriteFileSync.mockImplementation((target: any) => {
+        if (String(target).includes('databases')) {
+          throw Object.assign(new Error('EACCES'), { code: 'EACCES' });
+        }
+        return undefined;
+      });
+
+      expect(resolveSharedDataLocation('/worktree')).toEqual({
+        share: 'none',
+      });
+    });
 
     it('removes the marker it wrote', () => {
       expect(sharedUserDirFor('/worktree', 'cache')).toBe(

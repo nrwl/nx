@@ -122,6 +122,7 @@ const sharedRootUsable = new Map<string, SharedDataLocation>();
 export function resetSharedRootCacheForTesting() {
   sharedRootUsable.clear();
   workspaceIds.clear();
+  resolvedLocations.clear();
 }
 
 /**
@@ -151,7 +152,18 @@ function establishUserRoot(workspaceId: string): DirRefusal | undefined {
       return result.refusal;
     }
   }
-  return probeWritable(join(repoRoot, SHARED_SEGMENT.cache));
+  // Both leaves, not just the cache. A sandbox policy can grant one and deny
+  // the other, and establishing them says nothing about that: the mkdir is a
+  // no-op on a directory that already exists and is already ours. Probing only
+  // the cache would send both kinds to the shared root and then EPERM on the
+  // DB -- the failure this probe exists to prevent, one directory over.
+  for (const kind of SHARED_DATA_KINDS) {
+    const refusal = probeWritable(join(repoRoot, SHARED_SEGMENT[kind]));
+    if (refusal) {
+      return refusal;
+    }
+  }
+  return undefined;
 }
 
 /**
@@ -194,7 +206,7 @@ function shareableLocation(workspaceId: string): SharedDataLocation {
 
   const location: SharedDataLocation = establishUserRoot(workspaceId)
     ? { share: 'none' }
-    : { share: 'user', workspaceId };
+    : { share: 'user', dirName: sharedDirName(workspaceId) };
 
   sharedRootUsable.set(workspaceId, location);
   return location;
@@ -219,6 +231,20 @@ function sharedDirName(workspaceId: string): string {
 
 /** Memoized so the git calls behind the identity happen once per process. */
 const workspaceIds = new Map<string, string | null>();
+
+/**
+ * The verdict, frozen per root for the life of the process.
+ *
+ * `cacheDir` is a module-scope const, so the cache's answer is fixed at import.
+ * Re-deciding on each call would let the DB reach a different one later in the
+ * same process: `NX_CACHE_DIRECTORY` is not in `DAEMON_ENV_VARS_EXCLUSIONS` and
+ * matches no prefix, so `applyDaemonEnvFromClient` can set it in the daemon
+ * after startup. A first `getDbConnection()` after that would answer `none`
+ * while `cacheDir` is already shared -- cache and DB in different scopes, which
+ * is the torn state one predicate exists to prevent. Freezing it is what makes
+ * "one decision" true over time and not just at a single call.
+ */
+const resolvedLocations = new Map<string, SharedDataLocation>();
 
 /**
  * This workspace's identity, or null when it has none.
@@ -254,7 +280,10 @@ function workspaceIdFor(root: string): string | null {
  */
 export type SharedDataLocation =
   | { share: 'none' }
-  | { share: 'user'; workspaceId: string };
+  // The hashed directory name, never the identity it came from: that identity
+  // is the Nx Cloud access token when no other one exists, and this struct is
+  // exported -- one `debugLog(location)` from putting a credential in a log.
+  | { share: 'user'; dirName: string };
 
 /**
  * The one decision the cache and the workspace-data DB both follow.
@@ -270,6 +299,15 @@ export type SharedDataLocation =
  * settings file where an absolute checkout path cannot (NXC-4625).
  */
 export function resolveSharedDataLocation(root: string): SharedDataLocation {
+  let location = resolvedLocations.get(root);
+  if (location === undefined) {
+    location = computeSharedDataLocation(root);
+    resolvedLocations.set(root, location);
+  }
+  return location;
+}
+
+function computeSharedDataLocation(root: string): SharedDataLocation {
   // Process-global, and pointing at one location for this run whichever
   // checkout asks. There is nothing left to share, so this is settled before
   // anything touches git or the filesystem.
@@ -299,14 +337,10 @@ export function resolveSharedDataLocation(root: string): SharedDataLocation {
  * committed to a shared settings file. This root can (NXC-4625).
  */
 export function sharedUserDataDir(
-  workspaceId: string,
+  dirName: string,
   kind: SharedDataKind
 ): string {
-  return join(
-    NX_HOME_TMP_DIR,
-    sharedDirName(workspaceId),
-    SHARED_SEGMENT[kind]
-  );
+  return join(NX_HOME_TMP_DIR, dirName, SHARED_SEGMENT[kind]);
 }
 
 /**
@@ -322,7 +356,7 @@ export function sharedDataDirectory(
 ): string {
   const location = resolveSharedDataLocation(root);
   if (location.share === 'user') {
-    return sharedUserDataDir(location.workspaceId, kind);
+    return sharedUserDataDir(location.dirName, kind);
   }
   return kind === 'cache'
     ? cacheDirectoryForWorkspace(root)
@@ -333,9 +367,9 @@ export function sharedDataDirectory(
  * Path to the directory where Nx stores its cache.
  *
  * Normally the shared per-user directory, so every checkout of the workspace
- * uses one cache. A configured `cacheDirectory` is honored instead, and is
- * still shared through the main checkout when both checkouts configure the
- * same value. See `resolveSharedDataLocation`.
+ * uses one cache. A configured `cacheDirectory` is honored instead, resolved
+ * against the root that asks -- so two checkouts share a configured location
+ * only when the value is absolute. See `resolveSharedDataLocation`.
  */
 export const cacheDir = sharedDataDirectory(workspaceRoot, 'cache');
 
