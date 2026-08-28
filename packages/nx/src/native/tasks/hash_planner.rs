@@ -428,7 +428,8 @@ impl HashPlanner {
                 .nodes
                 .get(&task.target.project)
                 .and_then(|node| node.targets.get(&task.target.target));
-            if target.is_some_and(|t| t.io_snapshots == Some(false)) {
+            if target.is_some_and(|t| t.sandbox.as_ref().is_some_and(|s| s.enabled == Some(false)))
+            {
                 inputs.opted_out.insert(task_id.clone());
             } else if self.declared_files_invalid(task) {
                 inputs.invalid_files_input.insert(task_id.clone());

@@ -20,8 +20,14 @@ pub struct Target {
     pub options: Option<String>,
     pub configurations: Option<String>,
     pub parallelism: Option<bool>,
+    pub sandbox: Option<TargetSandbox>,
+}
+
+#[napi(object)]
+#[derive(Default)]
+pub struct TargetSandbox {
     /// `false` hashes the target from its declared inputs only, never a snapshot.
-    pub io_snapshots: Option<bool>,
+    pub enabled: Option<bool>,
 }
 
 #[napi(object)]

@@ -221,6 +221,14 @@ export type InputDefinition =
   | { workingDirectory: 'relative' | 'absolute' }
   | JsonInput;
 
+export interface TargetSandbox {
+  /**
+   * Set to false to hash this target from its declared inputs only, never
+   * from an I/O snapshot.
+   */
+  enabled?: boolean;
+}
+
 /**
  * Target's configuration
  */
@@ -274,10 +282,9 @@ export interface TargetConfiguration<T = any> {
   cache?: boolean;
 
   /**
-   * Set to false to hash this target from its declared inputs only, never
-   * from an I/O snapshot.
+   * Sandboxing behavior for this target.
    */
-  ioSnapshots?: boolean;
+  sandbox?: TargetSandbox;
 
   /**
    * Metadata about the target

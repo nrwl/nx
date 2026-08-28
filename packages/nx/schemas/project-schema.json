@@ -138,9 +138,15 @@
             "type": "boolean",
             "description": "Specifies if the given target should be cacheable"
           },
-          "ioSnapshots": {
-            "type": "boolean",
-            "description": "Set to false to hash this target from its declared inputs only, never from an I/O snapshot."
+          "sandbox": {
+            "type": "object",
+            "description": "Sandboxing behavior for this target.",
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "description": "Set to false to hash this target from its declared inputs only, never from an I/O snapshot."
+              }
+            }
           },
           "continuous": {
             "type": "boolean",

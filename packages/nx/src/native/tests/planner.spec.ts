@@ -219,7 +219,7 @@ describe('task planner', () => {
               ],
               outputs: ['{workspaceRoot}/dist/libs/parent'],
             },
-            lint: { executor: 'nx:run-commands', ioSnapshots: false },
+            lint: { executor: 'nx:run-commands', sandbox: { enabled: false } },
           },
         },
       });
