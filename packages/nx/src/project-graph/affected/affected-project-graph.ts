@@ -1,18 +1,39 @@
 import { FileChange, readPackageJson } from '../file-utils';
-import {
-  getImplicitlyTouchedProjects,
-  getTouchedProjects,
-} from './locators/workspace-projects';
 import { getTouchedProjects as getJSTouchedProjects } from '../../plugins/js/project-graph/affected/touched-projects';
-import {
-  AffectedProjectGraphContext,
-  TouchedProjectLocator,
-} from './affected-project-graph-models';
+import { AffectedProjectGraphContext } from './affected-project-graph-models';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { reverse } from '../operators';
 import { readNxJson } from '../../config/configuration';
-import { getTouchedProjectsFromProjectGlobChanges } from './locators/project-glob-changes';
+import {
+  ExternalObject,
+  locateTouchedProjects,
+  ProjectGraph as NativeProjectGraph,
+  transferProjectGraph,
+} from '../../native';
+import { transformProjectGraphForRust } from '../../native/transform-objects';
+import { workspaceRoot } from '../../utils/workspace-root';
+import { getGlobPatternsOfPlugins } from '../utils/retrieve-workspace-files';
+import { getPlugins } from '../plugins/get-plugins';
+
+/**
+ * `nx release` calls filterAffected once per commit with the same graph, so the
+ * marshal has to be per-graph rather than per-call. Keyed by identity like
+ * `reverse` in ../operators, but weak so a replaced graph is collectable.
+ */
+const marshalledGraphs = new WeakMap<
+  ProjectGraph,
+  ExternalObject<NativeProjectGraph>
+>();
+
+function marshalGraph(graph: ProjectGraph): ExternalObject<NativeProjectGraph> {
+  let marshalled = marshalledGraphs.get(graph);
+  if (!marshalled) {
+    marshalled = transferProjectGraph(transformProjectGraphForRust(graph));
+    marshalledGraphs.set(graph, marshalled);
+  }
+  return marshalled;
+}
 
 export async function filterAffected(
   graph: ProjectGraph,
@@ -21,39 +42,60 @@ export async function filterAffected(
   packageJson: any = readPackageJson(),
   projectDeletionAffectsAllProjects = true
 ): Promise<ProjectGraph> {
-  // Additional affected logic should be in this array.
-  const touchedProjectLocators: TouchedProjectLocator[] = [
-    getTouchedProjects,
-    getImplicitlyTouchedProjects,
-    getTouchedProjectsFromProjectGlobChanges,
-    getJSTouchedProjects,
-  ];
-
-  const touchedProjects = [];
-  for (const locator of touchedProjectLocators) {
-    performance.mark(locator.name + ':start');
-    const projects = await locator(
-      touchedFiles,
-      graph.nodes,
-      nxJson,
-      packageJson,
-      graph,
-      projectDeletionAffectsAllProjects
-    );
-    performance.mark(locator.name + ':end');
-    performance.measure(
-      locator.name,
-      locator.name + ':start',
-      locator.name + ':end'
-    );
-    touchedProjects.push(...projects);
-  }
+  performance.mark('locateTouchedProjects:start');
+  const touchedProjects = await locateTouchedProjects(
+    marshalGraph(graph),
+    nxJson,
+    touchedFiles.map((f) => f.file),
+    {
+      projectGlobPatterns: await getProjectGlobPatterns(nxJson),
+      projectDeletionAffectsAllProjects,
+      workspaceRoot,
+    },
+    // Takes only paths, so the closure carries the FileChange objects: their
+    // lazy getChanges() cannot cross the native boundary.
+    [
+      async () =>
+        getJSTouchedProjects(
+          touchedFiles,
+          graph.nodes,
+          nxJson,
+          packageJson,
+          graph,
+          projectDeletionAffectsAllProjects
+        ),
+    ]
+  );
+  performance.mark('locateTouchedProjects:end');
+  performance.measure(
+    'locateTouchedProjects',
+    'locateTouchedProjects:start',
+    'locateTouchedProjects:end'
+  );
 
   return filterAffectedProjects(graph, {
     projectGraphNodes: graph.nodes,
     nxJson,
     touchedProjects,
   });
+}
+
+/** Resolved here because `getPlugins` is async and starts plugin workers. */
+async function getProjectGlobPatterns(
+  nxJson: NxJsonConfiguration
+): Promise<string[]> {
+  // TODO: We need a quicker way to get patterns that should not
+  // require starting up plugin workers
+  if (process.env.NX_FORCE_REUSE_CACHED_GRAPH === 'true') {
+    return [
+      '**/package.json',
+      '**/project.json',
+      'project.json',
+      'package.json',
+    ];
+  }
+  const plugins = (await getPlugins(nxJson)).filter((p) => !!p.createNodes);
+  return getGlobPatternsOfPlugins(plugins);
 }
 
 // -----------------------------------------------------------------------------

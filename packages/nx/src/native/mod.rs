@@ -1,3 +1,4 @@
+pub mod affected;
 pub mod cache;
 pub mod glob;
 pub mod hasher;
