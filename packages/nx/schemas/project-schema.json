@@ -224,6 +224,10 @@
               "dependencies": {
                 "type": "boolean",
                 "description": "Include files matching the fileset for all the project dependencies of this target."
+              },
+              "includeIgnored": {
+                "type": "boolean",
+                "description": "Hash the glob straight from disk instead of the workspace file map, so gitignored or generated files can be inputs. A missing exact path still takes part in the hash. A ! negation only filters includeIgnored matches when it also sets includeIgnored: true. Self inputs only."
               }
             },
             "required": ["fileset"],
@@ -325,20 +329,6 @@
               }
             },
             "required": ["dependentTasksOutputFiles"],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "files": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "description": "Workspace-relative globs hashed straight from the disk, so gitignored or generated files can be inputs. {projectRoot} and {workspaceRoot} resolve as for filesets; a leading ! negates within the group. Every glob must start with a literal directory."
-              }
-            },
-            "required": ["files"],
             "additionalProperties": false
           },
           {

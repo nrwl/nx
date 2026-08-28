@@ -212,24 +212,14 @@ export type InputDefinition =
   | { input: string; projects: string | string[] }
   | { input: string; dependencies: true }
   | { input: string }
-  | { fileset: string }
-  | { fileset: string; dependencies: true }
+  | { fileset: string; includeIgnored?: boolean }
+  | { fileset: string; dependencies: true; includeIgnored?: boolean }
   | { runtime: string }
   | { externalDependencies: string[] }
   | { dependentTasksOutputFiles: string; transitive?: boolean }
   | { env: string }
   | { workingDirectory: 'relative' | 'absolute' }
-  | JsonInput
-  | FilesInput;
-
-/**
- * Files hashed straight from the disk, so gitignored or generated files can be
- * inputs. Globs are workspace-relative; `{projectRoot}` and `{workspaceRoot}`
- * resolve as for filesets and `!` negates within the group.
- */
-export interface FilesInput {
-  files: string[];
-}
+  | JsonInput;
 
 /**
  * Target's configuration

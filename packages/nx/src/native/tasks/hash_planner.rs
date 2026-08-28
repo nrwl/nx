@@ -445,12 +445,13 @@ impl HashPlanner {
         };
         let project = &self.project_graph.nodes[&task.target.project];
         inputs.self_inputs.iter().any(|input| match input {
-            Input::Files(globs) => {
-                let resolved: Vec<String> = globs
-                    .iter()
-                    .map(|g| resolve_files_glob(g, &project.root, &task.target.project))
-                    .collect();
-                validate_files_globs(&resolved).is_err()
+            Input::FileSet {
+                fileset,
+                include_ignored: true,
+                ..
+            } => {
+                let resolved = resolve_files_glob(fileset, &project.root, &task.target.project);
+                validate_files_globs(std::slice::from_ref(&resolved)).is_err()
             }
             _ => false,
         })
@@ -964,10 +965,27 @@ impl HashPlanner {
             // replaced like every other declared file input.
             return Ok(self.gather_self_inputs_from_snapshot(project_name, self_inputs, snapshot));
         }
+        // `includeIgnored` filesets hash from disk (one aggregated `Files`
+        // group, so cross-entry negations still filter); the rest use the map.
+        let ignored_file_sets: Vec<&str> = self_inputs
+            .iter()
+            .filter_map(|input| match input {
+                Input::FileSet {
+                    fileset,
+                    include_ignored: true,
+                    ..
+                } => Some(*fileset),
+                _ => None,
+            })
+            .collect();
         let (project_file_sets, workspace_file_sets): (Vec<&str>, Vec<&str>) = self_inputs
             .iter()
             .filter_map(|input| match input {
-                Input::FileSet { fileset, .. } => Some(*fileset),
+                Input::FileSet {
+                    fileset,
+                    include_ignored: false,
+                    ..
+                } => Some(*fileset),
                 _ => None,
             })
             .partition(|file_set| {
@@ -1006,15 +1024,13 @@ impl HashPlanner {
             )]
         };
         let mut files_inputs = vec![];
-        for input in self_inputs {
-            if let Input::Files(globs) = input {
-                let resolved: Vec<String> = globs
-                    .iter()
-                    .map(|g| resolve_files_glob(g, project_root, project_name))
-                    .collect();
-                validate_files_globs(&resolved)?;
-                files_inputs.push(HashInstruction::Files(resolved));
-            }
+        if !ignored_file_sets.is_empty() {
+            let resolved: Vec<String> = ignored_file_sets
+                .iter()
+                .map(|g| resolve_files_glob(g, project_root, project_name))
+                .collect();
+            validate_files_globs(&resolved)?;
+            files_inputs.push(HashInstruction::Files(resolved));
         }
         let runtime_and_env_inputs = self_inputs.iter().filter_map(|i| match i {
             Input::Runtime(runtime) => Some(HashInstruction::Runtime(runtime.to_string())),
@@ -1068,17 +1084,21 @@ impl HashPlanner {
             HashInstruction::ProjectConfiguration(project_name.to_string()),
             HashInstruction::TsConfiguration(project_name.to_string()),
         ];
-        // Declared `files` groups are not filesets; they hash from disk as
-        // usual. Eligibility already withheld the snapshot if one is invalid.
-        for input in self_inputs {
-            if let Input::Files(globs) = input {
-                instructions.push(HashInstruction::Files(
-                    globs
-                        .iter()
-                        .map(|g| resolve_files_glob(g, project_root, project_name))
-                        .collect(),
-                ));
-            }
+        // `includeIgnored` filesets hash from disk regardless of the trace,
+        // aggregated into one group so cross-entry negations still filter.
+        let ignored: Vec<String> = self_inputs
+            .iter()
+            .filter_map(|input| match input {
+                Input::FileSet {
+                    fileset,
+                    include_ignored: true,
+                    ..
+                } => Some(resolve_files_glob(fileset, project_root, project_name)),
+                _ => None,
+            })
+            .collect();
+        if !ignored.is_empty() {
+            instructions.push(HashInstruction::Files(ignored));
         }
         instructions.extend(self_inputs.iter().filter_map(|i| match i {
             Input::Runtime(runtime) => Some(HashInstruction::Runtime(runtime.to_string())),
@@ -1184,7 +1204,12 @@ fn collect_negations(
 ) {
     let project_root = &project_graph.nodes[project_name].root;
     for input in self_inputs {
-        if let Input::FileSet { fileset, .. } = input {
+        if let Input::FileSet {
+            fileset,
+            include_ignored: false,
+            ..
+        } = input
+        {
             if fileset.starts_with('!') {
                 negations.push((
                     project_name.to_string(),
