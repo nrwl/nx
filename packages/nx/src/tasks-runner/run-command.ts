@@ -50,6 +50,15 @@ import {
 } from '../utils/sync-generators';
 import { workspaceRoot } from '../utils/workspace-root';
 import { createTaskGraph } from './create-task-graph';
+import { pruneTaskGraphToSelection } from './prune-task-graph-to-selection';
+
+/**
+ * Tasks the caller selected. Their dependency closure is added back, so an
+ * affected task's upstream still runs or restores from cache.
+ */
+export interface TaskSelection {
+  taskIds: string[];
+}
 import { isTuiEnabled, ORIGINAL_TUI_ENV_VALUE } from './is-tui-enabled';
 import {
   CompositeLifeCycle,
@@ -440,9 +449,10 @@ function createTaskGraphAndRunValidations(
   extraOptions: {
     excludeTaskDependencies: boolean;
     loadDotEnvFiles: boolean;
-  }
+  },
+  taskSelection?: TaskSelection
 ) {
-  const taskGraph = createTaskGraph(
+  let taskGraph = createTaskGraph(
     projectGraph,
     extraTargetDependencies,
     projectNames,
@@ -451,6 +461,11 @@ function createTaskGraphAndRunValidations(
     overrides,
     extraOptions.excludeTaskDependencies
   );
+
+  // Before validation, so a cycle or atomizer error names what will actually run.
+  if (taskSelection) {
+    taskGraph = pruneTaskGraphToSelection(taskGraph, taskSelection.taskIds);
+  }
 
   assertTaskGraphDoesNotContainInvalidTargets(taskGraph);
 
@@ -490,7 +505,8 @@ export async function runCommand(
   overrides: any,
   initiatingProject: string | null,
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
-  extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
+  extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean },
+  taskSelection?: TaskSelection
 ): Promise<NodeJS.Process['exitCode']> {
   const status = await handleErrors(
     process.env.NX_VERBOSE_LOGGING === 'true',
@@ -557,7 +573,8 @@ export async function runCommandForTasks(
   overrides: any,
   initiatingProject: string | null,
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
-  extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
+  extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean },
+  taskSelection?: TaskSelection
 ): Promise<{ taskResults: TaskResults; completed: boolean }> {
   // Kick off the license lookup in the background so it overlaps with task
   // execution. The log itself is deferred to the print site below so it
@@ -574,7 +591,8 @@ export async function runCommandForTasks(
     nxArgs,
     overrides,
     extraTargetDependencies,
-    extraOptions
+    extraOptions,
+    taskSelection
   );
 
   const tasks = Object.values(taskGraph.tasks);
@@ -678,7 +696,8 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
   nxArgs: NxArgs,
   overrides: any,
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
-  extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
+  extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean },
+  taskSelection?: TaskSelection
 ): Promise<{
   projectGraph: ProjectGraph;
   taskGraph: TaskGraph;
@@ -689,7 +708,8 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     projectNames,
     nxArgs,
     overrides,
-    extraOptions
+    extraOptions,
+    taskSelection
   );
 
   if (nxArgs.skipSync || isCI()) {
@@ -842,7 +862,8 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
       await confirmRunningTasksWithSyncFailures();
     }
 
-    // Re-create project graph and task graph
+    // Re-create project graph and task graph. The selection is re-applied
+    // rather than carried, since a sync generator may have removed a task.
     projectGraph = await createProjectGraphAsync();
     taskGraph = createTaskGraphAndRunValidations(
       projectGraph,
@@ -850,7 +871,8 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
       projectNames,
       nxArgs,
       overrides,
-      extraOptions
+      extraOptions,
+      taskSelection
     );
 
     const successTitle = anySyncGeneratorsFailed
