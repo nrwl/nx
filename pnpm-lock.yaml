@@ -3371,7 +3371,7 @@ importers:
         version: 1.60.0
       https-proxy-agent:
         specifier: 'catalog:'
-        version: 7.0.6
+        version: 7.0.6(supports-color@10.2.2)
       minimatch:
         specifier: ^10.2.5
         version: 10.2.5
