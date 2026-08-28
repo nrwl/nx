@@ -30,7 +30,8 @@ const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   'NX_SET_CLI',
   'NX_INVOKED_BY_RUNNER',
   // NX_LOAD_DOT_ENV_FILES is intentionally NOT excluded: it must reach the
-  // daemon so graph-time dotenv resolution honors the user's opt-out.
+  // daemon so graph-time dotenv resolution honors the user's opt-out. It is
+  // sent normalized rather than reflected — see normalizedLoadDotEnvFiles.
   'NX_SKIP_NX_CACHE',
   'NX_CACHE_FAILURES',
   'NX_REJECT_UNKNOWN_LOCAL_CACHE',
@@ -258,7 +259,19 @@ export function hashDaemonClientEnv(): string {
       env[key] = process.env[key];
     }
   }
+  env.NX_LOAD_DOT_ENV_FILES = normalizedLoadDotEnvFiles();
   return hashObject(env);
+}
+
+/**
+ * `NX_LOAD_DOT_ENV_FILES` as its meaning rather than its spelling. `run-command`
+ * stamps `'true'` once the graph exists, so a task child sends it where its
+ * parent sent nothing; every reader outside the task runner treats both alike
+ * (`!== 'false'`). Reflecting the spelling would flip the daemon env on each
+ * alternation and discard the graph cache both ways.
+ */
+function normalizedLoadDotEnvFiles(): 'true' | 'false' {
+  return process.env.NX_LOAD_DOT_ENV_FILES === 'false' ? 'false' : 'true';
 }
 
 export function getDaemonEnv() {
@@ -268,6 +281,7 @@ export function getDaemonEnv() {
       env[key] = process.env[key];
     }
   }
+  env.NX_LOAD_DOT_ENV_FILES = normalizedLoadDotEnvFiles();
   return Object.assign(env, DAEMON_ENV_REQUIRED_SETTINGS);
 }
 

@@ -384,6 +384,42 @@ describe('daemon environment', () => {
       expect(process.env.NX_LOAD_DOT_ENV_FILES).toBeUndefined();
       expect(changed).toContain('NX_LOAD_DOT_ENV_FILES');
     });
+
+    it('is sent as its meaning, so an unset shell and a stamped task child agree', () => {
+      delete process.env.NX_LOAD_DOT_ENV_FILES;
+      expect(getDaemonEnv().NX_LOAD_DOT_ENV_FILES).toBe('true');
+      // run-command stamps 'true' once the graph exists and task children
+      // inherit it; sending that spelling would read as an env change.
+      process.env.NX_LOAD_DOT_ENV_FILES = 'true';
+      expect(getDaemonEnv().NX_LOAD_DOT_ENV_FILES).toBe('true');
+    });
+
+    it('reports no change as a run alternates between the two spellings', () => {
+      // `nx build`, then a task child carrying the stamp, then `nx show`.
+      // getDaemonEnv reads the client's env while applyDaemonEnvFromClient
+      // writes the daemon's, so swap the client value in only for the send.
+      const send = (shellValue: string | undefined) => {
+        const daemonValue = process.env.NX_LOAD_DOT_ENV_FILES;
+        if (shellValue === undefined) delete process.env.NX_LOAD_DOT_ENV_FILES;
+        else process.env.NX_LOAD_DOT_ENV_FILES = shellValue;
+        const sent = getDaemonEnv() as Record<string, string>;
+        if (daemonValue === undefined) delete process.env.NX_LOAD_DOT_ENV_FILES;
+        else process.env.NX_LOAD_DOT_ENV_FILES = daemonValue;
+        return sent;
+      };
+
+      applyDaemonEnvFromClient(send(undefined));
+      expect(applyDaemonEnvFromClient(send('true'))).not.toContain(
+        'NX_LOAD_DOT_ENV_FILES'
+      );
+      expect(applyDaemonEnvFromClient(send(undefined))).not.toContain(
+        'NX_LOAD_DOT_ENV_FILES'
+      );
+      // A genuine opt-out is still a change.
+      expect(applyDaemonEnvFromClient(send('false'))).toContain(
+        'NX_LOAD_DOT_ENV_FILES'
+      );
+    });
   });
 
   describe('getDaemonClientEnvGeneration', () => {
