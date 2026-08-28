@@ -125,6 +125,7 @@ import {
   removeSocketDir,
 } from '../tmp-dir';
 import { sandboxSocketHint } from '../sandbox-socket-hint';
+import { SOCKET_REFUSED_EXIT_CODE } from '../../utils/socket-refused-exit-code';
 import {
   DaemonSocketMessenger,
   VersionMismatchError,
@@ -1450,6 +1451,17 @@ export class DaemonClient {
     // The child now owns dup'd copies of the descriptors, so release ours.
     closeSync(outFd);
     closeSync(errFd);
+
+    // A refused bind leaves no socket, so the poll below sees only ENOENT and
+    // cannot tell a sandbox refusal from a daemon that has not come up yet. The
+    // server exits with SOCKET_REFUSED_EXIT_CODE when its own bind hits
+    // EPERM/EACCES, which is the only way that errno reaches this process.
+    // Attached before `unref` so the listener is registered before the child can
+    // exit; `unref` only stops the child holding the event loop open.
+    let daemonRefusedSocket = false;
+    backgroundProcess.once('exit', (code) => {
+      daemonRefusedSocket = code === SOCKET_REFUSED_EXIT_CODE;
+    });
     // if this process is the process that spawned the daemon,
     // the daemon env is already up to date
     this.envReflectionSent = true;
@@ -1486,10 +1498,13 @@ export class DaemonClient {
       throw daemonProcessException(
         [
           'Failed to start or connect to the Nx Daemon process.',
-          // The daemon can fail to start for many reasons; only surface the
-          // sandbox guidance when we know a sandbox is in play, where it is
-          // the most likely cause.
-          ...(isSandbox() ? sandboxSocketHint() : []),
+          // The daemon can fail to start for many reasons, so the guidance is
+          // withheld unless its own errno proved a refusal or the environment
+          // already says a sandbox is in play. The errno arm is what reaches an
+          // agent whose sandbox `isSandbox()` cannot see, such as Copilot CLI.
+          ...(daemonRefusedSocket || isSandbox()
+            ? sandboxSocketHint({ certain: daemonRefusedSocket })
+            : []),
         ].join('\n')
       );
     }
@@ -1560,7 +1575,7 @@ export function daemonPermissionException(socketPath: string, cause: string) {
       `Socket: ${socketPath}`,
       '',
       'Most often the socket belongs to a different user: a daemon left behind by running Nx under `sudo`, a different uid inside a container, or a working copy shared between accounts. If the socket is your own, a sandbox is refusing the connection instead.',
-      'If it belongs to another user, delete the socket above or set NX_SOCKET_DIR to a directory only your user can reach. If you are in a sandbox, allow unix sockets under the Nx socket root: `nx configure-ai-agents` writes that for the agents it supports, and the per-agent setting is listed at https://nx.dev/docs/kb/nx-sandbox-unix-sockets',
+      'If it belongs to another user, delete the socket above or set NX_SOCKET_DIR to a directory only your user can reach. If you are in a sandbox, allow unix sockets under the Nx socket root: `nx configure-ai-agents` writes that for Claude Code, and the per-agent setting is listed at https://nx.dev/docs/kb/nx-sandbox-unix-sockets',
     ].join('\n')
   );
   (error as any).daemonPermissionError = true;

@@ -21,6 +21,7 @@ import { startAnalytics } from '../../../analytics';
 import { applyDaemonEnvFromClient } from '../../../daemon/client/daemon-environment';
 import { sandboxSocketHint } from '../../../daemon/sandbox-socket-hint';
 import { isPermissionDenied } from '../../../utils/permission-errors';
+import { SOCKET_REFUSED_EXIT_CODE } from '../../../utils/socket-refused-exit-code';
 import { isSandbox } from '../../../utils/is-sandbox';
 import '../../../utils/perf-logging';
 
@@ -211,14 +212,16 @@ server.on('error', (err: NodeJS.ErrnoException) => {
   console.error(
     `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) failed to listen on ${socketPath}: ${err.message}`
   );
-  // A bind can fail for reasons that have nothing to do with a sandbox
-  // (EADDRINUSE from a leftover socket, ENOENT from a reaped socket dir), so
-  // only mention one when the errno proves it or the environment says so.
+  // A bind can fail for reasons permission does not explain (EADDRINUSE from a
+  // leftover socket, ENOENT from a reaped socket dir), so print the hint only
+  // when the errno proves a refusal or the environment says a sandbox is here.
   const refusedByOs = isPermissionDenied(err);
   if (refusedByOs || isSandbox()) {
     console.error(sandboxSocketHint({ certain: refusedByOs }).join('\n'));
   }
-  process.exit(1);
+  // The host cannot see this errno, and stderr may be lost with the process, so
+  // the exit code is what tells it a refusal happened rather than a crash.
+  process.exit(refusedByOs ? SOCKET_REFUSED_EXIT_CODE : 1);
 });
 // A worker killed without its 'end' handler leaves the socket behind. Colliding
 // takes a recycled host pid landing on the same counter *and* the same 4 random

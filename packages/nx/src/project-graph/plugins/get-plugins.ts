@@ -13,9 +13,13 @@ import { loadIsolatedNxPlugin } from './isolation';
 import { resetResolvePluginCache } from './resolve-plugin';
 
 import { isIsolationEnabled } from './isolation/enabled';
-import { isPluginWorkerStartupFailure } from './isolation/isolated-plugin';
+import {
+  isPluginWorkerSocketRefusal,
+  isPluginWorkerStartupFailure,
+} from './isolation/isolated-plugin';
 import { sandboxSocketHint } from '../../daemon/sandbox-socket-hint';
 import { isSandbox } from '../../utils/is-sandbox';
+import { isAiAgent } from '../../native';
 import { output } from '../../utils/output';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
 import {
@@ -68,16 +72,19 @@ export function resetIsolationFallbackForTesting() {
 }
 
 /**
- * Loads a plugin in a worker, falling back to this process when the worker
- * cannot be started inside a sandbox.
+ * Loads a plugin in a worker, falling back to this process when the worker's
+ * socket was refused.
  *
  * Isolation is preferred: it is what keeps two plugins with conflicting
  * TypeScript versions or module-level state apart. But a sandbox that has not
  * been told about the Nx socket root refuses the worker's socket, and failing
  * the whole command over that is worse than running the plugins here. The
- * fallback is narrow on purpose. It needs a sandbox *and* a failure to start or
- * reach the worker; a plugin that loaded and then threw is rethrown, because
- * rerunning it in-process would bury its actual error.
+ * fallback is narrow on purpose. It needs a failure to start or reach the
+ * worker, plus either a detectable sandbox or the worker's own EPERM/EACCES
+ * exit code under an AI agent — the second arm is what covers an agent whose
+ * sandbox sets no variable `isSandbox()` reads. A plugin that loaded and then
+ * threw is rethrown, because rerunning it in-process would bury its actual
+ * error.
  */
 export const loadingMethod = async (
   plugin: PluginConfiguration,
@@ -99,7 +106,17 @@ export const loadingMethod = async (
   try {
     return [Promise.resolve(await isolatedPlugin), cleanup] as const;
   } catch (e) {
-    if (!isSandbox() || !isPluginWorkerStartupFailure(e)) {
+    // Proof, kept separate from policy. The errno the worker saw is what makes
+    // the message certain; whether that errno is also grounds for degrading is a
+    // different question, and conflating them made the warning assert a sandbox
+    // for agents the hint itself declines to name.
+    const provenRefusal = isPluginWorkerSocketRefusal(e);
+    // An agent is required alongside the errno, so a refusal on an ordinary
+    // workstation still surfaces rather than silently losing isolation.
+    if (
+      !isPluginWorkerStartupFailure(e) ||
+      !((provenRefusal && isAiAgent()) || isSandbox())
+    ) {
       throw e;
     }
 
@@ -112,14 +129,19 @@ export const loadingMethod = async (
     isolationRefusedInThisProcess = true;
     if (!alreadyRefused) {
       output.warn({
-        title:
-          'Could not start a plugin worker in this sandbox. Running plugins in the main process instead.',
+        // Names what Nx observed, not what it infers. `isAiAgent()` is broader
+        // than the agents `sandboxSpecificRemedy` will name a setting for, so a
+        // title asserting a sandbox could sit above a body that deliberately
+        // does not.
+        title: provenRefusal
+          ? 'Nx was denied permission to create a plugin worker socket. Running plugins in the main process instead.'
+          : 'Could not start a plugin worker. Running plugins in the main process instead.',
         bodyLines: [
           'Plugins that expect isolation may misbehave, and this is slower than a worker.',
-          // Not `certain`: this path proves a worker died before it connected,
-          // which denied permission explains but so does an OOM kill or a
-          // broken install. The errno that would settle it stays in the worker.
-          ...sandboxSocketHint(),
+          // `certain` on the errno alone. Reaching here via `isSandbox()` proves
+          // only that a worker died before it connected, which denied permission
+          // explains but so does an OOM kill or a broken install.
+          ...sandboxSocketHint({ certain: provenRefusal }),
         ],
       });
     }

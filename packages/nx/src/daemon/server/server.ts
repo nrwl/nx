@@ -1,4 +1,6 @@
 import { chmodSync, existsSync } from 'fs';
+import { isPermissionDenied } from '../../utils/permission-errors';
+import { SOCKET_REFUSED_EXIT_CODE } from '../../utils/socket-refused-exit-code';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
 import { deserialize, serialize } from 'v8';
@@ -754,6 +756,16 @@ export async function startServer(): Promise<Server> {
   }, 20).unref();
 
   return new Promise(async (resolve, reject) => {
+    // `listen` reports a failed bind asynchronously on the server, which the
+    // try below cannot catch — without this an EACCES became an uncaught
+    // exception whose only trace was the daemon log the client never reads.
+    // The exit code is what carries the errno to the client, which otherwise
+    // sees only a missing socket and cannot tell a refusal from a cold start.
+    server.on('error', (error: NodeJS.ErrnoException) => {
+      serverLogger.log(`Failed to listen on: ${socketPath} (${error.message})`);
+      process.exit(isPermissionDenied(error) ? SOCKET_REFUSED_EXIT_CODE : 1);
+    });
+
     try {
       server.listen(socketPath, async () => {
         try {

@@ -25,9 +25,21 @@ vi.mock('../tmp-dir', async () => {
   };
 });
 
+const daemonExit = vi.hoisted(() => ({ code: null as number | null }));
+
 vi.mock('child_process', async () => ({
   ...require('child_process'),
-  spawn: vi.fn(() => ({ pid: 4242, unref: vi.fn() })),
+  spawn: vi.fn(() => ({
+    pid: 4242,
+    unref: vi.fn(),
+    // A daemon whose bind was refused exits before the poll gives up, so the
+    // listener fires synchronously here rather than being left dangling.
+    once: vi.fn((event: string, cb: (code: number | null) => void) => {
+      if (event === 'exit' && daemonExit.code !== null) {
+        cb(daemonExit.code);
+      }
+    }),
+  })),
 }));
 
 vi.mock('../../utils/wait-for-socket-connection', () => ({
@@ -48,6 +60,7 @@ import { waitForSocketConnection } from '../../utils/wait-for-socket-connection'
 import { clientLogger } from '../logger';
 import { readDaemonProcessJsonCache } from '../cache';
 import { DAEMON_OUTPUT_LOG_FILE as logFile } from '../tmp-dir';
+import { SOCKET_REFUSED_EXIT_CODE } from '../../utils/socket-refused-exit-code';
 import {
   daemonClient,
   daemonPermissionException,
@@ -189,6 +202,7 @@ describe('startInBackground', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    daemonExit.code = null;
     rmSync(logFile, { force: true });
   });
 
@@ -232,6 +246,32 @@ describe('startInBackground', () => {
 
     expect((error as any).internalDaemonError).toBe(true);
     expect((error as any).daemonPermissionError).toBeUndefined();
+  });
+
+  // The daemon binds in a detached child, so a refusal reaches the client only
+  // as a missing socket — ENOENT, which is also what a cold start looks like.
+  // The child's exit code is the only way that errno crosses the process
+  // boundary, and it is the sole evidence available under an agent whose
+  // sandbox `isSandbox()` cannot see, such as Copilot CLI.
+  it('should surface socket guidance when the daemon exits having been refused its bind', async () => {
+    refuse('ENOENT');
+    daemonExit.code = SOCKET_REFUSED_EXIT_CODE;
+
+    const error = await daemonClient.startInBackground().catch((e) => e);
+
+    expect(error.message).toContain('denied permission');
+    expect(error.message).toContain('NX_SOCKET_DIR');
+  });
+
+  it('should stay quiet about sockets when the daemon died for some other reason', async () => {
+    // An OOM kill or a broken install exits non-zero too; only the refusal code
+    // means the operating system said no.
+    refuse('ENOENT');
+    daemonExit.code = 1;
+
+    const error = await daemonClient.startInBackground().catch((e) => e);
+
+    expect(error.message).not.toContain('NX_SOCKET_DIR');
   });
 
   // A refusal describes one startup attempt. Retained across a reset it would

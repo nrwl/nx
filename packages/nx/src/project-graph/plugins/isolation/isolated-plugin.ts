@@ -8,6 +8,7 @@ import type { PluginConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
 import { serverLogger } from '../../../daemon/logger';
 import { sandboxSocketHint } from '../../../daemon/sandbox-socket-hint';
+import { SOCKET_REFUSED_EXIT_CODE } from '../../../utils/socket-refused-exit-code';
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
 import {
   consumeMessagesFromSocket,
@@ -639,15 +640,23 @@ async function connectToWorker(
   // rather than burning through attempts against a dead socket.
   worker.once('exit', (code) => {
     if (!abortController.signal.aborted) {
+      // The worker sets this code only after an EPERM/EACCES on its own bind,
+      // so it is proof of a refusal rather than an inference from the
+      // environment — the only evidence available under an agent whose sandbox
+      // sets no variable `isSandbox()` reads.
+      const refused = code === SOCKET_REFUSED_EXIT_CODE;
       earlyExitError = markWorkerStartupFailure(
         new Error(
           [
             `Plugin worker for "${name}" exited with code ${code} before the connection was established.`,
-            // The worker's own stderr may be lost with the process; when a
-            // sandbox is in play, name the likely cause and the fix directly.
-            ...(isSandbox() ? sandboxSocketHint() : []),
+            // The worker's own stderr may be lost with the process, so the
+            // cause and the fix are repeated here.
+            ...(refused || isSandbox()
+              ? sandboxSocketHint({ certain: refused })
+              : []),
           ].join('\n')
-        )
+        ),
+        refused
       );
       abortController.abort();
     }
@@ -684,13 +693,30 @@ export const PLUGIN_WORKER_STARTUP_FAILURE = Symbol.for(
   'nx.pluginWorkerStartupFailure'
 );
 
-function markWorkerStartupFailure(error: Error): Error {
+/**
+ * Set when the worker exited with the socket-refused code. Narrower than
+ * {@link PLUGIN_WORKER_STARTUP_FAILURE}, which covers every way a worker can
+ * fail to come up, and is what lets the caller degrade on a refusal without
+ * also degrading for an OOM kill or a broken install.
+ */
+export const PLUGIN_WORKER_SOCKET_REFUSED = Symbol.for(
+  'nx.pluginWorkerSocketRefused'
+);
+
+function markWorkerStartupFailure(error: Error, refused = false): Error {
   error[PLUGIN_WORKER_STARTUP_FAILURE] = true;
+  if (refused) {
+    error[PLUGIN_WORKER_SOCKET_REFUSED] = true;
+  }
   return error;
 }
 
 export function isPluginWorkerStartupFailure(error: unknown): boolean {
   return Boolean(error?.[PLUGIN_WORKER_STARTUP_FAILURE]);
+}
+
+export function isPluginWorkerSocketRefusal(error: unknown): boolean {
+  return Boolean(error?.[PLUGIN_WORKER_SOCKET_REFUSED]);
 }
 
 function getTypeName(u: unknown): string {
