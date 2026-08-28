@@ -4,6 +4,7 @@
 //! `dependencies` as `HashMap<String, Vec<String>>`, with no edge `type` or
 //! `source`, so it cannot rebuild what `filterAffected` returns.
 
+pub mod dependent_outputs;
 pub mod tasks;
 
 use napi::bindgen_prelude::*;

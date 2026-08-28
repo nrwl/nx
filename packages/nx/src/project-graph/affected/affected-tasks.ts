@@ -2,8 +2,10 @@ import { NxJsonConfiguration } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { TaskGraph } from '../../config/task-graph';
 import { TargetDependencies } from '../../config/nx-json';
-import { affectedTasks as nativeAffectedTasks } from '../../native';
-import { getInputs } from '../../hasher/task-hasher';
+import {
+  affectedTasks as nativeAffectedTasks,
+  dependentOutputEdges,
+} from '../../native';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { projectHasTarget } from '../../utils/project-graph-utils';
 import { FileChange } from '../file-utils';
@@ -152,6 +154,16 @@ export async function computeAffectedTasks(
 
   const own = new Set(fileMatches.affected);
 
+  // Which upstream task's outputs each task reads. TaskOutput is excluded from
+  // direct file matching (its artifacts are gitignored and unbuilt, so they can
+  // never appear in a diff), so this is the only thing carrying that signal.
+  const producersOf = new Map<string, string[]>();
+  for (const { consumer, producer } of dependentOutputEdges(plans, taskGraph)) {
+    const existing = producersOf.get(consumer);
+    if (existing) existing.push(producer);
+    else producersOf.set(consumer, [producer]);
+  }
+
   // Seed only what a file intersection genuinely cannot see. For ordinary
   // source files the matcher is precise, and seeding every task of the owning
   // project there would just reproduce project granularity.
@@ -182,7 +194,7 @@ export async function computeAffectedTasks(
   }
 
   return {
-    affectedTaskIds: propagate(own, taskGraph, projectGraph, nxJson),
+    affectedTaskIds: propagate(own, taskGraph, producersOf),
     taskGraph,
     matches: fileMatches.matches ?? undefined,
     planningContext,
@@ -190,65 +202,30 @@ export async function computeAffectedTasks(
 }
 
 /**
- * Propagates affectedness along `dependentTasksOutputFiles` edges.
+ * Propagates affectedness from a producer to the tasks that read its outputs.
  *
  * A consumer reads its dependency's build artifacts, which are gitignored and do
- * not exist yet, so the dependency's *inputs* are what decide the consumer. Three
- * bits per task carried over a topological order give that in O(V+E), where
- * unioning the upstream file sets would copy a shared ancestor once per path
- * through a diamond.
+ * not exist yet, so the dependency's *inputs* are what decide the consumer. The
+ * edges come from `dependentOutputEdges`, which covers both an explicit
+ * `dependentTasksOutputFiles` input and an `includeIgnored` fileset that overlaps
+ * a producer's declared outputs. Walking them in topological order propagates a
+ * chain in O(V+E), where unioning upstream file sets would copy a shared
+ * ancestor once per path through a diamond.
  */
 function propagate(
   own: Set<string>,
   taskGraph: TaskGraph,
-  projectGraph: ProjectGraph,
-  nxJson: NxJsonConfiguration
+  producersOf: Map<string, string[]>
 ): Set<string> {
-  const order = topologicalOrder(taskGraph);
   const affected = new Set(own);
-  const reach = new Set<string>();
-
-  for (const taskId of order) {
-    const deps = taskGraph.dependencies[taskId] ?? [];
-    if (!deps.length) continue;
-
-    let directHit = false;
-    let reachHit = false;
-    for (const dep of deps) {
-      if (affected.has(dep)) directHit = true;
-      if (affected.has(dep) || reach.has(dep)) reachHit = true;
-    }
-    if (reachHit) reach.add(taskId);
+  for (const taskId of topologicalOrder(taskGraph)) {
     if (affected.has(taskId)) continue;
-
-    const depsOutputs = getDepsOutputs(taskId, taskGraph, projectGraph, nxJson);
-    if (!depsOutputs.length) continue;
-    const wantsTransitive = depsOutputs.some((d) => d.transitive === true);
-    const wantsDirect = depsOutputs.some((d) => d.transitive !== true);
-
-    if ((wantsDirect && directHit) || (wantsTransitive && reachHit)) {
+    const producers = producersOf.get(taskId);
+    if (producers?.some((producer) => affected.has(producer))) {
       affected.add(taskId);
-      reach.add(taskId);
     }
   }
   return affected;
-}
-
-function getDepsOutputs(
-  taskId: string,
-  taskGraph: TaskGraph,
-  projectGraph: ProjectGraph,
-  nxJson: NxJsonConfiguration
-): Array<{ transitive?: boolean }> {
-  const task = taskGraph.tasks[taskId];
-  if (!task || !projectGraph.nodes[task.target.project]) return [];
-  try {
-    return getInputs(task, projectGraph, nxJson).depsOutputs ?? [];
-  } catch {
-    // A target whose inputs cannot be expanded cannot be reasoned about; the
-    // file intersection already had its say.
-    return [];
-  }
 }
 
 /**
