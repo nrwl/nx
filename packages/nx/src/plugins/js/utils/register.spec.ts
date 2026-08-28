@@ -819,7 +819,7 @@ describe('registerSourceGraphResolver', () => {
     cleanup();
   });
 
-  it('refreshes conditions for a cached source graph', () => {
+  it('refreshes conditions and package names for a cached source graph', () => {
     const nodeModule = require('node:module') as typeof import('node:module');
     let resolveHook: Function;
     jest
@@ -838,13 +838,13 @@ describe('registerSourceGraphResolver', () => {
       ['@proj/utils']
     );
     conditions.mockReturnValue(['updated-source']);
-    refreshSourceGraphResolvers('/workspace');
+    refreshSourceGraphResolvers('/workspace', ['@proj/new-package']);
 
     const nextResolve = jest.fn(() => ({
       url: 'file:///workspace/packages/utils/src/index.ts',
     }));
     resolveHook(
-      '@proj/utils',
+      '@proj/new-package',
       {
         conditions: ['node'],
         importAttributes: {},
@@ -854,7 +854,7 @@ describe('registerSourceGraphResolver', () => {
     );
 
     expect(nextResolve).toHaveBeenCalledWith(
-      '@proj/utils',
+      '@proj/new-package',
       expect.objectContaining({ conditions: ['node', 'updated-source'] })
     );
     cleanup();

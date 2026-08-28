@@ -44,6 +44,12 @@ let projectsWithoutInferencePromise: Promise<
   typeof projectsWithoutInference
 > | null = null;
 
+async function getProjectsWithoutInference(root: string) {
+  projectsWithoutInferencePromise ??=
+    retrieveProjectConfigurationsWithoutPluginInference(root);
+  return (projectsWithoutInference ??= await projectsWithoutInferencePromise);
+}
+
 export async function resolveNxPlugin(
   moduleName: string,
   root: string,
@@ -67,9 +73,7 @@ export async function resolveNxPlugin(
       !resolvedFromNode ||
       isWorkspaceLocalResolution(resolvedFromNode, root)
     ) {
-      projectsWithoutInferencePromise ??=
-        retrieveProjectConfigurationsWithoutPluginInference(root);
-      projectsWithoutInference ??= await projectsWithoutInferencePromise;
+      projectsWithoutInference = await getProjectsWithoutInference(root);
     }
   }
 
@@ -87,6 +91,14 @@ export async function resolveNxPlugin(
     ...result,
     workspacePackageNames: workspacePackageNames ?? [],
   };
+}
+
+export async function refreshWorkspacePackageNames(
+  root: string
+): Promise<string[]> {
+  resetResolvePluginCache();
+  return getWorkspacePackagesMetadata(await getProjectsWithoutInference(root))
+    .packageManagerWorkspacePackageNames;
 }
 
 /**
