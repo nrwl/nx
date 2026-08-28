@@ -2,8 +2,8 @@ import type { Serializable } from 'child_process';
 import type { Socket } from 'net';
 import type { PluginConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
-import { serialize } from '../../../daemon/socket-utils';
-import { writeMessage } from '../../../utils/consume-messages-from-socket';
+import { sendMessage } from '../../../daemon/socket-utils';
+
 import { workspaceRoot } from '../../../utils/workspace-root';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import type {
@@ -311,5 +311,5 @@ export function sendMessageOverSocket(
 ): void {
   // Stamped here rather than in each constructor, mirroring the daemon.
   message.workspaceRoot = workspaceRoot;
-  writeMessage(socket, serialize(message));
+  sendMessage(socket, message);
 }

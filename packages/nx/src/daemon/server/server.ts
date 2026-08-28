@@ -8,6 +8,7 @@ import { hashArray } from '../../hasher/file-hasher';
 import { hashFile } from '../../native';
 import {
   consumeMessagesFromSocket,
+  describeMessage,
   isJsonMessage,
   parseMessage,
 } from '../../utils/consume-messages-from-socket';
@@ -258,10 +259,9 @@ async function handleMessage(socket: Socket, data: Buffer) {
       socket,
       `Invalid payload from the client`,
       new Error(
-        `Unsupported payload sent to daemon server: ${unparsedPayload.toString(
-          'utf8',
-          0,
-          200
+        `Unsupported payload sent to daemon server: ${describeMessage(
+          unparsedPayload,
+          { maxBytes: 200 }
         )}`
       )
     );

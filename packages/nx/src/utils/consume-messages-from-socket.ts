@@ -225,6 +225,69 @@ export function isJsonMessage(message: Buffer): boolean {
 }
 
 /**
+ * Widest slice of `window` that holds only whole utf8 characters. Cutting at an
+ * arbitrary byte leaves a partial sequence, and a partial sequence decodes to
+ * U+FFFD, which is the corruption `describeMessage` exists to avoid. A slice
+ * taken from the end can also begin mid-character, so both edges are trimmed.
+ */
+function trimToCharBoundary(window: Buffer, from: 'start' | 'end'): Buffer {
+  const isContinuation = (byte: number) => (byte & 0xc0) === 0x80;
+
+  if (from === 'end') {
+    let offset = 0;
+    while (offset < window.length && isContinuation(window[offset])) {
+      offset++;
+    }
+    return window.subarray(offset);
+  }
+
+  let lead = window.length - 1;
+  while (lead >= 0 && isContinuation(window[lead])) {
+    lead--;
+  }
+  if (lead < 0) {
+    return window.subarray(0, 0);
+  }
+
+  const byte = window[lead];
+  const width = byte >= 0xf0 ? 4 : byte >= 0xe0 ? 3 : byte >= 0xc0 ? 2 : 1;
+
+  // Keep the trailing sequence only when the cut did not land inside it.
+  return lead + width <= window.length ? window : window.subarray(0, lead);
+}
+
+/**
+ * Render part of a message for an error message. A v8 payload is binary, so it
+ * is rendered as hex: decoding it as utf8 replaces every byte above 0x7f with
+ * U+FFFD, starting with the 0xFF header that identifies the format.
+ */
+export function describeMessage(
+  message: Buffer,
+  { maxBytes = 300, from = 'start' }: DescribeMessageOptions = {}
+): string {
+  const json = isJsonMessage(message);
+  const window =
+    from === 'end'
+      ? message.subarray(Math.max(0, message.length - maxBytes))
+      : message.subarray(0, maxBytes);
+  const slice = json ? trimToCharBoundary(window, from) : window;
+  const elided = message.length - slice.length;
+
+  return [
+    `${json ? 'json' : 'v8'}, ${message.length} bytes` +
+      (elided > 0
+        ? `, ${from === 'end' ? 'last' : 'first'} ${slice.length} shown`
+        : ''),
+    json ? slice.toString('utf8') : slice.toString('hex'),
+  ].join('\n');
+}
+
+export interface DescribeMessageOptions {
+  maxBytes?: number;
+  from?: 'start' | 'end';
+}
+
+/**
  * Parse a message produced by `serialize()` in `daemon/socket-utils.ts`.
  */
 export function parseMessage<T = unknown>(message: Buffer): T {

@@ -1,5 +1,5 @@
 import type { Socket } from 'net';
-import { writeMessage } from '../../utils/consume-messages-from-socket';
+
 import { ProgressTopic } from '../../utils/progress-topics';
 import { isOnDaemon } from '../is-on-daemon';
 import { serverLogger } from '../logger';
@@ -9,7 +9,7 @@ import {
   EmitLogMessage,
   UPDATE_PROGRESS_MESSAGE,
 } from '../message-types/streaming-messages';
-import { serialize } from '../socket-utils';
+import { sendMessage } from '../socket-utils';
 
 const topicSubscribers = new Map<ProgressTopic, Set<Socket>>();
 
@@ -66,7 +66,7 @@ export function writeStreamingMessage(
 ) {
   try {
     serverLogger.log('Streaming message to client:', description);
-    writeMessage(socket, serialize(payload), (err) => {
+    sendMessage(socket, payload, undefined, (err) => {
       if (err) {
         console.log(
           `Streaming message write error (client likely disconnected): ${err.message}`

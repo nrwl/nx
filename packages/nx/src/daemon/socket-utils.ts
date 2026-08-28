@@ -1,4 +1,5 @@
 import { unlinkSync } from 'fs';
+import type { Socket } from 'net';
 import { platform, tmpdir } from 'os';
 import { dirname, join, resolve } from 'path';
 import {
@@ -11,6 +12,7 @@ import {
 import { createSerializableError } from '../utils/serializable-error';
 import { isV8SerializerEnabled } from './is-v8-serializer-enabled';
 import { serialize as v8_serialize } from 'v8';
+import { writeMessage } from '../utils/consume-messages-from-socket';
 
 export const isWindows = platform() === 'win32';
 
@@ -143,4 +145,21 @@ export function serialize(data: any, force?: 'v8' | 'json'): Buffer {
   return force
     ? serializeAs(data, force)
     : serializeWithFallback(data, isV8SerializerEnabled() ? 'v8' : 'json');
+}
+
+/**
+ * Serialize `data` and write it as one framed message.
+ *
+ * Lives here rather than in `writeMessage` so the framing stays a byte-level
+ * primitive: `utils/consume-messages-from-socket` is shared by callers that
+ * already hold bytes, and having it reach back into the daemon's serializer
+ * would invert the dependency.
+ */
+export function sendMessage(
+  socket: Socket,
+  data: any,
+  force?: 'v8' | 'json',
+  callback?: (err?: Error) => void
+): void {
+  writeMessage(socket, serialize(data, force), callback);
 }

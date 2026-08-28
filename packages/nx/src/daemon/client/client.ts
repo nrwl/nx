@@ -28,7 +28,10 @@ import {
 import { getPluginResolveConditionNodeArgs } from '../../plugins/js/utils/typescript';
 import { preventRecursionInGraphConstruction } from '../../project-graph/project-graph';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
-import { parseMessage } from '../../utils/consume-messages-from-socket';
+import {
+  describeMessage,
+  parseMessage,
+} from '../../utils/consume-messages-from-socket';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
 import { handleImport } from '../../utils/handle-import';
 import { isCI } from '../../utils/is-ci';
@@ -1384,10 +1387,9 @@ export class DaemonClient {
         return this.currentResolve(parsedResult);
       }
     } catch (e) {
-      const endOfResponse =
-        serializedResult.length > 300
-          ? serializedResult.toString('utf8', serializedResult.length - 300)
-          : serializedResult.toString('utf8');
+      const endOfResponse = describeMessage(serializedResult, {
+        from: 'end',
+      });
       this.currentReject(
         daemonProcessException(
           [

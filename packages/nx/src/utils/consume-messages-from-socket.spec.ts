@@ -8,6 +8,7 @@ import {
   consumeMessagesFromSocket,
   frameHeader,
   isJsonMessage,
+  describeMessage,
   MESSAGE_HEADER_PREFIX,
   parseMessage,
   writeMessage,
@@ -221,6 +222,87 @@ describe('parseMessage', () => {
     expect(parsed.when.toISOString()).toBe(date.toISOString());
     expect(Array.from(parsed.buf)).toEqual([1, 2, 3]);
     expect(parsed.big).toBe(7n);
+  });
+});
+
+describe('describeMessage', () => {
+  it('shows a JSON payload as text', () => {
+    const described = describeMessage(Buffer.from('{"a":1}', 'utf8'));
+
+    expect(described).toContain('json, 7 bytes');
+    expect(described).toContain('{"a":1}');
+  });
+
+  it('shows a v8 payload as hex rather than mangling it through utf8', () => {
+    // Decoding v8 bytes as utf8 replaces everything above 0x7f with U+FFFD,
+    // starting with the 0xFF header, so the excerpt loses the one byte that
+    // identifies the format.
+    const described = describeMessage(v8Serialize({ a: 1 }));
+
+    expect(described).toContain('v8,');
+    expect(described).toContain('ff0f');
+    expect(described).not.toContain('\ufffd');
+  });
+
+  it('reports how much of a truncated message is shown', () => {
+    const message = Buffer.from('x'.repeat(1000), 'utf8');
+
+    expect(describeMessage(message, { maxBytes: 10 })).toContain(
+      '1000 bytes, first 10 shown'
+    );
+    expect(describeMessage(message, { maxBytes: 10, from: 'end' })).toContain(
+      '1000 bytes, last 10 shown'
+    );
+  });
+
+  it('does not claim truncation when the whole message fits', () => {
+    expect(
+      describeMessage(Buffer.from('{}', 'utf8'), { maxBytes: 300 })
+    ).not.toContain('shown');
+  });
+
+  it.each(['start', 'end'] as const)(
+    'never splits a utf8 character when truncating from the %s',
+    (from) => {
+      // Every cut offset, because a single hand-picked maxBytes lands on a
+      // character boundary by luck as often as not.
+      const message = Buffer.from(
+        JSON.stringify({ path: '/src/日本語テスト.ts', tag: 'unicode' }),
+        'utf8'
+      );
+
+      for (let maxBytes = 1; maxBytes <= message.length; maxBytes++) {
+        expect({
+          maxBytes,
+          described: describeMessage(message, { maxBytes, from }),
+        }).toEqual({
+          maxBytes,
+          described: expect.not.stringContaining('\ufffd'),
+        });
+      }
+    }
+  );
+
+  it('keeps the excerpt a substring of the original', () => {
+    const payload = JSON.stringify({ path: '/src/日本語テスト.ts' });
+    const message = Buffer.from(payload, 'utf8');
+
+    for (let maxBytes = 1; maxBytes <= message.length; maxBytes++) {
+      const body = describeMessage(message, { maxBytes, from: 'end' })
+        .split('\n')
+        .slice(1)
+        .join('\n');
+      expect(payload.endsWith(body)).toBe(true);
+    }
+  });
+
+  it('takes the requested end of the message', () => {
+    const message = Buffer.from('STARTmiddleEND', 'utf8');
+
+    expect(describeMessage(message, { maxBytes: 3, from: 'end' })).toContain(
+      'END'
+    );
+    expect(describeMessage(message, { maxBytes: 5 })).toContain('START');
   });
 });
 

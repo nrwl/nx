@@ -25,7 +25,7 @@ import {
   parseMessage,
 } from '../utils/consume-messages-from-socket';
 import { Serializable } from 'child_process';
-import { isWindows, serialize } from '../daemon/socket-utils';
+import { isWindows, sendMessage } from '../daemon/socket-utils';
 
 /**
  * Remove a stale socket file if it exists.
@@ -115,19 +115,13 @@ export class PseudoIPCServer {
 
   sendMessageToChildren(message: Serializable) {
     this.sockets.forEach((socket) => {
-      writeMessage(
-        socket,
-        serialize({ type: 'TO_CHILDREN_FROM_PARENT', message })
-      );
+      sendMessage(socket, { type: 'TO_CHILDREN_FROM_PARENT', message });
     });
   }
 
   sendMessageToChild(id: string, message: Serializable) {
     this.sockets.forEach((socket) => {
-      writeMessage(
-        socket,
-        serialize({ type: 'TO_CHILDREN_FROM_PARENT', id, message })
-      );
+      sendMessage(socket, { type: 'TO_CHILDREN_FROM_PARENT', id, message });
     });
   }
 
@@ -155,20 +149,14 @@ export class PseudoIPCClient {
   constructor(private path: string) {}
 
   sendMessageToParent(message: Serializable) {
-    writeMessage(
-      this.socket,
-      serialize({ type: 'TO_PARENT_FROM_CHILDREN', message })
-    );
+    sendMessage(this.socket, { type: 'TO_PARENT_FROM_CHILDREN', message });
   }
 
   notifyChildIsReady(id: string) {
-    writeMessage(
-      this.socket,
-      serialize({
-        type: 'CHILD_READY',
-        message: id,
-      } as PseudoIPCMessage)
-    );
+    sendMessage(this.socket, {
+      type: 'CHILD_READY',
+      message: id,
+    } as PseudoIPCMessage);
   }
 
   onMessageFromParent(

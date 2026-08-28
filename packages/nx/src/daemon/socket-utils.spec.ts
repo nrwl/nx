@@ -1,9 +1,11 @@
+import type { Socket } from 'net';
 import type { Mock } from 'vitest';
 import { win32 } from 'node:path';
 import { deserialize as v8_deserialize } from 'v8';
 import {
   getPluginOsSocketPath,
   getPluginSocketFileName,
+  sendMessage,
   serialize,
   serializeWithFallback,
 } from './socket-utils';
@@ -192,5 +194,31 @@ describe('serialize', () => {
         process.env.NX_USE_V8_SERIALIZER = previous;
       }
     }
+  });
+});
+
+describe('sendMessage', () => {
+  it('frames the serialized payload as one message', () => {
+    const writes: Buffer[] = [];
+    const socket = {
+      write: (data: Buffer) => writes.push(data),
+    } as unknown as Socket;
+
+    sendMessage(socket, { a: 1 }, 'json');
+
+    const [header, payload] = writes;
+    expect(header.toString('ascii')).toBe(`NX_MSG_${payload.length}:`);
+    expect(payload.toString('utf8')).toBe('{"a":1}');
+  });
+
+  it('passes the forced format through to the serializer', () => {
+    const writes: Buffer[] = [];
+    const socket = {
+      write: (data: Buffer) => writes.push(data),
+    } as unknown as Socket;
+
+    sendMessage(socket, { a: 1 }, 'v8');
+
+    expect(writes[1][0]).toBe(0xff);
   });
 });
