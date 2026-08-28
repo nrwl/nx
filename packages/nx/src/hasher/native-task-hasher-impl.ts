@@ -13,6 +13,7 @@ import {
   transferProjectGraph,
 } from '../native';
 import { transformProjectGraphForRust } from '../native/transform-objects';
+import type { TaskPlanningContext } from './task-planning-context';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { readJsonFile } from '../utils/fileutils';
@@ -32,11 +33,14 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     private readonly nxJson: NxJsonConfiguration,
     private readonly projectGraph: ProjectGraph,
     externals: NxWorkspaceFilesExternals,
-    options: { selectivelyHashTsConfig: boolean }
+    options: { selectivelyHashTsConfig: boolean },
+    planningContext?: TaskPlanningContext
   ) {
-    this.projectGraphRef = transferProjectGraph(
-      transformProjectGraphForRust(projectGraph)
-    );
+    // Reuses the marshal and planner memo when affected already built them for
+    // this graph; otherwise this is the only phase that needs them.
+    this.projectGraphRef =
+      planningContext?.projectGraphRef ??
+      transferProjectGraph(transformProjectGraphForRust(projectGraph));
 
     this.allWorkspaceFilesRef = externals.allWorkspaceFiles;
     this.projectFileMapRef = externals.projectFiles;
@@ -53,7 +57,8 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       }
     }
 
-    this.planner = new HashPlanner(nxJson, this.projectGraphRef);
+    this.planner =
+      planningContext?.planner ?? new HashPlanner(nxJson, this.projectGraphRef);
     this.hasher = new TaskHasher(
       workspaceRoot,
       this.projectGraphRef,

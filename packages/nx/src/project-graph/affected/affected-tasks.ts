@@ -7,7 +7,11 @@ import { getInputs } from '../../hasher/task-hasher';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { projectHasTarget } from '../../utils/project-graph-utils';
 import { FileChange } from '../file-utils';
-import { getSharedPlanner, marshalGraph } from './marshal-graph';
+import {
+  createTaskPlanningContext,
+  TaskPlanningContext,
+} from '../../hasher/task-planning-context';
+import { marshalGraph } from './marshal-graph';
 import { filterAffected } from './affected-project-graph';
 import {
   buildDeclaredProjectReferences,
@@ -21,6 +25,8 @@ export interface AffectedTasksResult {
   taskGraph: TaskGraph;
   /** taskId -> changed files that matched. Only when `collectMatches`. */
   matches?: Record<string, string[]>;
+  /** Hand to the runner so the survivors are not planned a second time. */
+  planningContext?: TaskPlanningContext;
 }
 
 export interface ComputeAffectedTasksOptions {
@@ -128,11 +134,14 @@ export async function computeAffectedTasks(
   );
   const taskIds = Object.keys(taskGraph.tasks);
 
+  // filterAffected already marshalled this graph; reuse it.
   const graphRef = marshalGraph(projectGraph);
-  const plans = getSharedPlanner(projectGraph, nxJson).getPlansReference(
-    taskIds,
-    taskGraph
+  const planningContext = createTaskPlanningContext(
+    projectGraph,
+    nxJson,
+    graphRef
   );
+  const plans = planningContext.planner.getPlansReference(taskIds, taskGraph);
 
   const fileMatches = nativeAffectedTasks(
     graphRef,
@@ -176,6 +185,7 @@ export async function computeAffectedTasks(
     affectedTaskIds: propagate(own, taskGraph, projectGraph, nxJson),
     taskGraph,
     matches: fileMatches.matches ?? undefined,
+    planningContext,
   };
 }
 
