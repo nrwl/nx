@@ -632,6 +632,7 @@ module.exports.isAiAgent = nativeBinding.isAiAgent
 module.exports.isEditorInstalled = nativeBinding.isEditorInstalled
 module.exports.killProcessTree = nativeBinding.killProcessTree
 module.exports.killProcessTreeGraceful = nativeBinding.killProcessTreeGraceful
+module.exports.locateTouchedProjects = nativeBinding.locateTouchedProjects
 module.exports.logDebug = nativeBinding.logDebug
 module.exports.matchGlobPaths = nativeBinding.matchGlobPaths
 module.exports.matchOutputPaths = nativeBinding.matchOutputPaths
