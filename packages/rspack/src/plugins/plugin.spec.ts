@@ -79,6 +79,13 @@ describe('@nx/rspack', () => {
                   "build": {
                     "cache": true,
                     "command": "rspack build",
+                    "configurations": {
+                      "development": {
+                        "args": [
+                          "--node-env=development",
+                        ],
+                      },
+                    },
                     "dependsOn": [
                       "^build",
                     ],
