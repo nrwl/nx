@@ -5,7 +5,7 @@ import { Tree } from '../../generators/tree';
 import { setupAiAgentsGenerator } from './set-up-ai-agents';
 import { SetupAiAgentsGeneratorSchema } from './schema';
 import { readJson, updateJson } from '../../generators/utils/json';
-import { getAgentRulesWrapped } from '../constants';
+import { getAgentRulesWrapped, NX_ALLOWLIST_ROOTS } from '../constants';
 import * as installedNxVersionUtils from '../../utils/installed-nx-version';
 import * as cloneModule from '../clone-ai-config-repo';
 import * as fs from 'fs';
@@ -440,7 +440,12 @@ describe('setup-ai-agents generator', () => {
         const config = JSON.parse(
           tree.read('.claude/settings.json')?.toString() ?? '{}'
         );
-        expect(config.sandbox).toBeUndefined();
+        // The socket and filesystem grants are still written: Nx needs them
+        // whether or not analytics are on. Only the egress follows the opt-in.
+        expect(config.sandbox.network.allowedDomains).toBeUndefined();
+        expect(config.sandbox.network.allowUnixSockets).toEqual(
+          NX_ALLOWLIST_ROOTS
+        );
       });
 
       it('should not allow analytics requests through the sandbox network filter when no analytics preference is set', async () => {
@@ -454,7 +459,12 @@ describe('setup-ai-agents generator', () => {
         const config = JSON.parse(
           tree.read('.claude/settings.json')?.toString() ?? '{}'
         );
-        expect(config.sandbox).toBeUndefined();
+        // The socket and filesystem grants are still written: Nx needs them
+        // whether or not analytics are on. Only the egress follows the opt-in.
+        expect(config.sandbox.network.allowedDomains).toBeUndefined();
+        expect(config.sandbox.network.allowUnixSockets).toEqual(
+          NX_ALLOWLIST_ROOTS
+        );
       });
 
       it('should leave an existing sandbox network filter untouched when analytics are disabled', async () => {
@@ -547,6 +557,104 @@ describe('setup-ai-agents generator', () => {
         expect(config.sandbox.network.allowedDomains).toEqual([
           'example.com',
           'www.google-analytics.com',
+        ]);
+      });
+
+      it('should allow nx socket usage through the sandbox', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        // Both roots the socket chain may use. Allowing only /tmp/.nx leaves
+        // every user on a machine where a peer created it first uncovered,
+        // since Nx then falls back to ~/.nx.
+        expect(config.sandbox.network.allowUnixSockets).toEqual([
+          '/tmp/.nx',
+          '~/.nx',
+        ]);
+        expect(config.sandbox.filesystem.allowRead).toEqual([
+          '/tmp/.nx',
+          '~/.nx',
+        ]);
+        // Covers the tmp root, not just the socket dir: the native binary cache
+        // lives under it, and without it a running daemon pins the binding
+        // inside node_modules.
+        expect(config.sandbox.filesystem.allowWrite).toEqual([
+          '/tmp/.nx',
+          '~/.nx',
+        ]);
+      });
+
+      it('should not grant blanket unix socket access', async () => {
+        // The scoped entry covers binding as well as connecting, so the blanket
+        // grant buys nothing for Nx's own sockets while opening every other
+        // socket on the machine — the Docker and SSH-agent sockets included —
+        // to connections from sandboxed commands. Verified against Claude Code
+        // 2.1.241: with only the scoped roots, a bind under /tmp/.nx and ~/.nx
+        // succeeds and a connect to a socket outside them is refused EPERM.
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.sandbox.network.allowAllUnixSockets).toBeUndefined();
+        expect(config.sandbox.network.allowUnixSockets).toEqual([
+          '/tmp/.nx',
+          '~/.nx',
+        ]);
+      });
+
+      it('should preserve existing sandbox socket and filesystem entries without duplicating the nx ones', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        tree.write(
+          '.claude/settings.json',
+          JSON.stringify({
+            sandbox: {
+              filesystem: {
+                allowWrite: ['~/.gradle', '/tmp/.nx'],
+              },
+              network: {
+                allowUnixSockets: ['/var/run/docker.sock', '/tmp/.nx'],
+              },
+            },
+          })
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        // The pre-existing entries survive in place, ours is not duplicated,
+        // and the root that was missing is appended rather than replacing them.
+        expect(config.sandbox.filesystem.allowWrite).toEqual([
+          '~/.gradle',
+          '/tmp/.nx',
+          '~/.nx',
+        ]);
+        expect(config.sandbox.filesystem.allowRead).toEqual([
+          '/tmp/.nx',
+          '~/.nx',
+        ]);
+        expect(config.sandbox.network.allowUnixSockets).toEqual([
+          '/var/run/docker.sock',
+          '/tmp/.nx',
+          '~/.nx',
         ]);
       });
 

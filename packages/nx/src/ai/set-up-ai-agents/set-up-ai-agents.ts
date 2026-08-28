@@ -27,6 +27,7 @@ import { getInstalledNxVersion } from '../../utils/installed-nx-version';
 import {
   agentsMdPath,
   analyticsDomain,
+  NX_ALLOWLIST_ROOTS,
   claudeMcpJsonPath,
   geminiMdPath,
   getAgentRulesWrapped,
@@ -183,11 +184,55 @@ export async function setupAiAgentsGeneratorImpl(
         ...json.enabledPlugins,
         'nx@nx-claude-plugins': true,
       },
-      // Widening the sandbox's egress is only justified while events are
-      // actually being sent, so it follows the workspace's analytics opt-in.
-      ...(analyticsEnabled
-        ? { sandbox: allowAnalyticsDomain(json.sandbox) }
-        : {}),
+      // Allow Nx unix socket usage (daemon, plugin workers, forked processes)
+      // through Claude Code's sandbox, and analytics requests when the
+      // workspace has them on. Nx also copies its native binary into a cache
+      // under the same fixed tmp root before loading it, so the read/write
+      // grants cover that too. The root is a fixed /tmp path on macOS and
+      // Linux, so these entries are machine-independent and safe to commit.
+      sandbox: {
+        ...json.sandbox,
+        filesystem: {
+          ...json.sandbox?.filesystem,
+          allowRead: withEntries(
+            json.sandbox?.filesystem?.allowRead,
+            ...NX_ALLOWLIST_ROOTS
+          ),
+          // Covers the whole tmp root, not just the socket dir: the native
+          // binary cache lives under it too, and without the cache a running
+          // daemon keeps an open handle on the binding inside node_modules,
+          // which blocks reinstalling or rebuilding dependencies. What keeps
+          // users apart is not this allowlist but the 0700 per-uid directories
+          // Nx verifies on every use (see ensureOwnedPrivateDir).
+          allowWrite: withEntries(
+            json.sandbox?.filesystem?.allowWrite,
+            ...NX_ALLOWLIST_ROOTS
+          ),
+        },
+        network: {
+          ...json.sandbox?.network,
+          // Egress follows the workspace's analytics opt-in (#36663). The
+          // socket grant does not: Nx needs its sockets either way.
+          ...(analyticsEnabled
+            ? {
+                allowedDomains: withEntries(
+                  json.sandbox?.network?.allowedDomains,
+                  analyticsDomain
+                ),
+              }
+            : {}),
+          // Covers binding as well as connecting, so a fresh daemon, a plugin
+          // worker and a forked task can each create their own socket under
+          // these roots. Deliberately scoped rather than `allowAllUnixSockets`,
+          // which grants connect access to every socket on the machine —
+          // including the Docker and SSH-agent sockets — and grants nothing
+          // extra for creating Nx's own.
+          allowUnixSockets: withEntries(
+            json.sandbox?.network?.allowUnixSockets,
+            ...NX_ALLOWLIST_ROOTS
+          ),
+        },
+      },
     }));
 
     // Clean up .mcp.json (nx-mcp now handled by plugin)
@@ -432,17 +477,16 @@ export async function setupAiAgentsGeneratorImpl(
   };
 }
 
-function allowAnalyticsDomain(sandbox: any) {
-  const allowedDomains: string[] = sandbox?.network?.allowedDomains ?? [];
-  return {
-    ...sandbox,
-    network: {
-      ...sandbox?.network,
-      allowedDomains: allowedDomains.includes(analyticsDomain)
-        ? allowedDomains
-        : [...allowedDomains, analyticsDomain],
-    },
-  };
+/**
+ * The user's existing entries in their original order, plus any of `values`
+ * they do not already have. A Set does the deduping, so re-running the
+ * generator is a no-op rather than a growing list.
+ */
+function withEntries(
+  existing: string[] | undefined,
+  ...values: readonly string[]
+): string[] {
+  return [...new Set([...(existing ?? []), ...values])];
 }
 
 function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {

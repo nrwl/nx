@@ -118,7 +118,25 @@ export function markDaemonAsDisabled(reason: string) {
   writeFileSync(join(DAEMON_DIR_FOR_CURRENT_WORKSPACE, 'disabled'), reason);
 }
 
+let disabledForThisProcess: string | undefined;
+
+/**
+ * Turns the daemon off for this process only, leaving no marker behind.
+ *
+ * For a cause that belongs to the environment rather than to the workspace: a
+ * sandbox refusing the socket says nothing about the next run from an ordinary
+ * terminal, and the marker `markDaemonAsDisabled` writes would follow the
+ * checkout there. It would also survive the user doing exactly what Nx told
+ * them to do, since nothing clears it but `nx reset`.
+ */
+export function disableDaemonForThisProcess(reason: string) {
+  disabledForThisProcess = reason;
+}
+
 export function isDaemonDisabled() {
+  if (disabledForThisProcess !== undefined) {
+    return true;
+  }
   try {
     statSync(join(DAEMON_DIR_FOR_CURRENT_WORKSPACE, 'disabled'));
     return true;
