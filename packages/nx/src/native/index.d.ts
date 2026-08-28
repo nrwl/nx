@@ -303,6 +303,15 @@ export interface AffectedOptions {
   workspaceRoot: string
 }
 
+export declare function affectedTasks(projectGraph: ExternalObject<ProjectGraph>, hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, changedFiles: Array<string>, collectMatches?: boolean | undefined | null): AffectedTasks
+
+export interface AffectedTasks {
+  /** Task ids with at least one changed file among their plan's file inputs. */
+  affected: Array<string>
+  /** taskId -> the changed files that matched. Only when `collectMatches`. */
+  matches?: Record<string, Array<string>>
+}
+
 export interface BatchInfo {
   executorName: string
   taskIds: Array<string>
