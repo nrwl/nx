@@ -552,6 +552,7 @@ function registerSourceGraphHooks(module: typeof import('node:module')): {
           specifier,
           context.parentURL!,
           sourceGraph,
+          context.conditions,
           hasRequireCondition(context.conditions)
         );
         result = resolvedPath
@@ -584,19 +585,22 @@ function registerSourceGraphHooks(module: typeof import('node:module')): {
  * whichever direction loads first. Rewriting the member's workspace-package
  * request to its resolved path before the caches see it keeps conditioned
  * results out of them; the resolve hook still covers ESM and
- * `require.resolve`.
+ * `require.resolve`. Resolve hooks only run inside `Module._load` itself, so
+ * the patch cannot see Node's real condition context and reconstructs it via
+ * `getProcessRequireConditions`.
  */
 function patchCjsModuleLoad(): () => void {
   const Module = require('node:module') as any;
   const { pathToFileURL } = require('node:url') as typeof import('node:url');
   const originalLoad = Module._load;
-  Module._load = function (
+  let deactivated = false;
+  const patchedLoad = function (
     this: unknown,
     request: string,
     parent: { filename?: string } | undefined,
     ...rest: unknown[]
   ) {
-    if (parent?.filename) {
+    if (!deactivated && parent?.filename) {
       const graph = sourceGraphModulePaths.get(parent.filename);
       if (
         graph &&
@@ -606,6 +610,7 @@ function patchCjsModuleLoad(): () => void {
           request,
           pathToFileURL(parent.filename).href,
           graph,
+          getProcessRequireConditions(),
           true
         );
         if (resolvedPath) {
@@ -619,8 +624,15 @@ function patchCjsModuleLoad(): () => void {
     }
     return originalLoad.call(this, request, parent, ...rest);
   };
+  Module._load = patchedLoad;
   return () => {
-    Module._load = originalLoad;
+    // Another patch may have wrapped ours in the meantime; restoring would
+    // discard it, so turn ours into a pass-through instead.
+    if (Module._load === patchedLoad) {
+      Module._load = originalLoad;
+    } else {
+      deactivated = true;
+    }
   };
 }
 
@@ -632,6 +644,7 @@ export function refreshSourceGraphResolvers(
   root: string,
   getWorkspacePackageNames?: () => string[]
 ): void {
+  workspacePackageExportsCache.clear();
   if (sourceGraphs.size === 0) return;
   const conditions = getRootTsConfigResolveExportsConditions(root);
   const packageNames = getWorkspacePackageNames
@@ -723,10 +736,56 @@ function hasRequireCondition(
   return false;
 }
 
+let processRequireConditions: string[] | undefined;
+
+/**
+ * The condition set Node hands CJS resolve hooks, reconstructed for the
+ * `Module._load` patch where no hook context exists. `module-sync` is
+ * unconditional: every runtime with `module.registerHooks` (22.15+ / 23.5+)
+ * already supports it (22.10+).
+ */
+function getProcessRequireConditions(): string[] {
+  if (!processRequireConditions) {
+    const nodeOptions = process.env.NODE_OPTIONS;
+    processRequireConditions = [
+      'require',
+      'node',
+      'node-addons',
+      ...getUserConditionsFromArgs(process.execArgv ?? []),
+      ...(nodeOptions
+        ? getUserConditionsFromArgs(nodeOptions.split(/\s+/))
+        : []),
+      'module-sync',
+    ];
+  }
+  return processRequireConditions;
+}
+
+function getUserConditionsFromArgs(args: string[]): string[] {
+  const conditions: string[] = [];
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === '--conditions' || arg === '-C') {
+      if (args[i + 1]) {
+        conditions.push(args[i + 1]);
+      }
+    } else if (arg.startsWith('--conditions=')) {
+      conditions.push(arg.slice('--conditions='.length));
+    }
+  }
+  return conditions;
+}
+
+// Parsed exports maps per package.json path. Node's own loader caches
+// package.json for the process lifetime; refreshSourceGraphResolvers clears
+// this so a daemon recompute picks up manifest changes.
+const workspacePackageExportsCache = new Map<string, any>();
+
 function resolveFromWorkspacePackageExports(
   specifier: string,
   parentUrl: string,
   graph: SourceGraph,
+  contextConditions: Iterable<string> | undefined,
   isRequire: boolean
 ): string | null {
   try {
@@ -739,14 +798,24 @@ function resolveFromWorkspacePackageExports(
     if (!packageJsonPath) {
       return null;
     }
-    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
-    if (!packageJson.exports) {
+    let packageExports = workspacePackageExportsCache.get(packageJsonPath);
+    if (packageExports === undefined) {
+      packageExports =
+        JSON.parse(readFileSync(packageJsonPath, 'utf-8')).exports ?? null;
+      workspacePackageExportsCache.set(packageJsonPath, packageExports);
+    }
+    if (!packageExports) {
       return null;
     }
     const matches = resolveExports(
-      { name: packageName, exports: packageJson.exports },
+      { name: packageName, exports: packageExports },
       '.' + specifier.slice(packageName.length),
-      { conditions: graph.conditions, require: isRequire }
+      {
+        // The union, not the graph conditions alone: a member must match the
+        // same user --conditions and module-sync keys as every other consumer.
+        conditions: [...(contextConditions ?? []), ...graph.conditions],
+        require: isRequire,
+      }
     );
     if (!matches || !matches.length) {
       return null;
