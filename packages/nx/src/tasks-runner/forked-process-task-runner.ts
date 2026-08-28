@@ -83,7 +83,7 @@ export class ForkedProcessTaskRunner {
       getProcessMetricsService().registerBatch(batchId, taskIds, p.pid);
     }
 
-    const cp = new BatchProcess(p, executorName, printsOutput);
+    const cp = new BatchProcess(p, executorName, printsOutput, batchId);
     this.processes.add(cp);
 
     cp.onExit(() => {

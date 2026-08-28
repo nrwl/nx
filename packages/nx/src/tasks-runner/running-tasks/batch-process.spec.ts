@@ -15,6 +15,9 @@ let mockFailOpenSync = false;
 let mockFailWriteSync = false;
 // Writes a prefix, then fails on the next call - a disk filling mid-chunk.
 let mockPartialWriteBytes: number | null = null;
+// Fails the next N writes and then recovers - a momentarily full disk, which is
+// the case the capture retries rather than gives up on.
+let mockFailWriteSyncTimes = 0;
 vi.mock('fs', async () => {
   const actual = require('fs');
   const enospc = () =>
@@ -32,6 +35,10 @@ vi.mock('fs', async () => {
     // The likelier real failure: the file opens fine and the disk fills later.
     writeSync: (...args: unknown[]) => {
       if (mockFailWriteSync) {
+        throw enospc();
+      }
+      if (mockFailWriteSyncTimes > 0) {
+        mockFailWriteSyncTimes--;
         throw enospc();
       }
       if (mockPartialWriteBytes !== null) {
@@ -530,5 +537,105 @@ describe('BatchProcess', () => {
     expect(path).toBeDefined();
     expect(readFileSync(path, 'utf-8')).toContain('why the worker died');
     batch.discardCapturedOutput();
+  });
+
+  it('recovers the capture after a transient write failure, naming the gap', () => {
+    const child = fakeChildProcess();
+    const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
+
+    try {
+      const { batch, forwarded } = withEnvironmentVariables(FOLDING_ENV, () => {
+        const b = new BatchProcess(
+          child,
+          '@nx/gradle:batch',
+          true,
+          '@nx/gradle:batch 1'
+        );
+        const f = captureForwarded(() => {
+          (child as any).stdout.emit('data', Buffer.from('before\n'));
+          mockFailWriteSyncTimes = 1;
+          (child as any).stdout.emit('data', Buffer.from('during\n'));
+          (child as any).stdout.emit('data', Buffer.from('after\n'));
+        });
+        return { batch: b, forwarded: f };
+      });
+
+      const captured = readFileSync(batch.getCapturedOutputPath(), 'utf-8');
+      // The head survives the failure and the file keeps filling afterwards,
+      // rather than the capture ending on the first bad write.
+      expect(captured).toContain('before');
+      expect(captured).toContain('after');
+      // The bytes that missed the file went to the terminal instead, so the
+      // file says so rather than reading as continuous prose with a hole.
+      expect(captured).not.toContain('during');
+      expect(captured).toContain('capture interrupted');
+      expect(forwarded.stdout).toContain('during');
+      batch.discardCapturedOutput();
+    } finally {
+      mockFailWriteSyncTimes = 0;
+      warn.mockRestore();
+    }
+  });
+
+  it('reopens the same file rather than orphaning what it captured', () => {
+    const child = fakeChildProcess();
+    const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
+
+    try {
+      const { batch, first } = withEnvironmentVariables(FOLDING_ENV, () => {
+        const b = new BatchProcess(
+          child,
+          '@nx/gradle:batch',
+          true,
+          '@nx/gradle:batch 1'
+        );
+        captureForwarded(() => {
+          (child as any).stdout.emit('data', Buffer.from('head\n'));
+        });
+        const p1 = b.getCapturedOutputPath();
+        captureForwarded(() => {
+          mockFailWriteSyncTimes = 1;
+          (child as any).stdout.emit('data', Buffer.from('lost\n'));
+          (child as any).stdout.emit('data', Buffer.from('tail\n'));
+        });
+        return { batch: b, first: p1 };
+      });
+
+      // A counter-derived name minted a second file here, leaving the head
+      // unreferenced on disk and the reader seeing only post-failure bytes.
+      expect(batch.getCapturedOutputPath()).toEqual(first);
+      expect(readFileSync(first, 'utf-8')).toContain('head');
+      batch.discardCapturedOutput();
+    } finally {
+      mockFailWriteSyncTimes = 0;
+      warn.mockRestore();
+    }
+  });
+
+  it('gives up on the capture once the failures stop looking transient', () => {
+    const child = fakeChildProcess();
+    const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
+
+    try {
+      const forwarded = withEnvironmentVariables(FOLDING_ENV, () => {
+        new BatchProcess(child, '@nx/gradle:batch', true, '@nx/gradle:batch 1');
+        return captureForwarded(() => {
+          mockFailWriteSyncTimes = 10;
+          for (let i = 0; i < 5; i++) {
+            (child as any).stdout.emit('data', Buffer.from(`chunk${i}\n`));
+          }
+        });
+      });
+
+      // Every chunk still reaches a reader, and a permanently unwritable data
+      // directory does not warn once per chunk on the way.
+      for (let i = 0; i < 5; i++) {
+        expect(forwarded.stdout).toContain(`chunk${i}`);
+      }
+      expect(warn.mock.calls.length).toBeLessThanOrEqual(2);
+    } finally {
+      mockFailWriteSyncTimes = 0;
+      warn.mockRestore();
+    }
   });
 });
