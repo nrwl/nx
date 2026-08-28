@@ -1,32 +1,33 @@
+import type { Mock, MockInstance } from 'vitest';
 import { mkdirSync, existsSync, writeFileSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { dirSync } from 'tmp';
 
-jest.mock('../logger', () => ({
+vi.mock('../logger', () => ({
   serverLogger: {
-    log: jest.fn(),
-    watcherLog: jest.fn(),
-    requestLog: jest.fn(),
+    log: vi.fn(),
+    watcherLog: vi.fn(),
+    requestLog: vi.fn(),
   },
 }));
-jest.mock('../cache', () => ({ deleteDaemonJsonProcessCache: jest.fn() }));
-jest.mock('../../project-graph/plugins/get-plugins', () => ({
-  cleanupPlugins: jest.fn(),
+vi.mock('../cache', () => ({ deleteDaemonJsonProcessCache: vi.fn() }));
+vi.mock('../../project-graph/plugins/get-plugins', () => ({
+  cleanupPlugins: vi.fn(),
 }));
-jest.mock('../../analytics', () => ({ flushAnalytics: jest.fn() }));
-jest.mock('../tmp-dir', () => ({
+vi.mock('../../analytics', () => ({ flushAnalytics: vi.fn() }));
+vi.mock('../tmp-dir', () => ({
   DAEMON_DIR_FOR_CURRENT_WORKSPACE: '/tmp/nx-daemon-spec',
   DAEMON_OUTPUT_LOG_FILE: '/tmp/nx-daemon-spec/daemon.log',
 }));
-jest.mock('../../utils/provenance', () => ({
-  ensurePackageHasProvenance: jest.fn().mockResolvedValue(undefined),
+vi.mock('../../utils/provenance', () => ({
+  ensurePackageHasProvenance: vi.fn().mockResolvedValue(undefined),
 }));
-jest.mock('../../utils/package-manager', () => ({
-  detectPackageManager: jest.fn().mockReturnValue('npm'),
+vi.mock('../../utils/package-manager', () => ({
+  detectPackageManager: vi.fn().mockReturnValue('npm'),
 }));
-jest.mock('../../utils/package-json', () => ({
-  installPackageToTmpAsync: jest.fn(),
+vi.mock('../../utils/package-json', () => ({
+  installPackageToTmpAsync: vi.fn(),
 }));
 
 /**
@@ -49,22 +50,22 @@ function createFakeInstallDir(): string {
 describe('shutdown-utils', () => {
   let handleServerProcessTermination: typeof import('./shutdown-utils').handleServerProcessTermination;
   let respondWithErrorAndExit: typeof import('./shutdown-utils').respondWithErrorAndExit;
-  let exitSpy: jest.SpyInstance;
+  let exitSpy: MockInstance;
   let tempDir: string;
 
   const server = { close: (cb: () => void) => cb() } as any;
   const socket = { write: (_: string, cb: () => void) => cb() } as any;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Both shutdown-utils and latest-nx keep module-level state (the in-flight
     // shutdown, the cached install), so each test needs fresh copies.
-    jest.resetModules();
-    jest.clearAllMocks();
+    vi.resetModules();
+    vi.clearAllMocks();
 
     tempDir = createFakeInstallDir();
     const { installPackageToTmpAsync } =
-      require('../../utils/package-json') as {
-        installPackageToTmpAsync: jest.Mock;
+      (await import('../../utils/package-json')) as unknown as {
+        installPackageToTmpAsync: Mock;
       };
     installPackageToTmpAsync.mockResolvedValue({
       tempDir,
@@ -73,22 +74,20 @@ describe('shutdown-utils', () => {
       },
     });
 
-    jest.spyOn(console, 'error').mockImplementation(() => {});
-    ({
-      handleServerProcessTermination,
-      respondWithErrorAndExit,
-    } = require('./shutdown-utils'));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    ({ handleServerProcessTermination, respondWithErrorAndExit } =
+      await import('./shutdown-utils'));
   });
 
   afterEach(async () => {
     exitSpy?.mockRestore();
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     await rm(tempDir, { recursive: true, force: true });
   });
 
   /** Seeds the daemon's cached `nx@latest` install, as a live daemon would hold. */
   async function primeLatestNxInstall() {
-    const { getLatestNxTmpPath } = require('./latest-nx');
+    const { getLatestNxTmpPath } = await import('./latest-nx');
     await expect(getLatestNxTmpPath()).resolves.toBe(tempDir);
     expect(existsSync(tempDir)).toBe(true);
   }
@@ -96,7 +95,7 @@ describe('shutdown-utils', () => {
   /** Records whether the install still existed the first time the process tried to exit. */
   function spyOnExit(): () => boolean | undefined {
     let existedAtFirstExit: boolean | undefined;
-    exitSpy = jest.spyOn(process, 'exit').mockImplementation(((): never => {
+    exitSpy = vi.spyOn(process, 'exit').mockImplementation(((): never => {
       existedAtFirstExit ??= existsSync(tempDir);
       return undefined as never;
     }) as never);
@@ -156,9 +155,8 @@ describe('shutdown-utils', () => {
     await primeLatestNxInstall();
     const existedAtFirstExit = spyOnExit();
 
-    const {
-      DaemonProjectGraphError,
-    } = require('../../project-graph/error-types');
+    const { DaemonProjectGraphError } =
+      await import('../../project-graph/error-types');
     await respondWithErrorAndExit(
       socket,
       'a description',
