@@ -23,6 +23,9 @@ describe('migrate-ui-api git invocations', () => {
   const execFileSyncMock = execFileSync as Mock;
 
   beforeEach(() => {
+    // Importing the module under test resolves `cacheDir` at load, which shells
+    // out to git; those calls land on the mocks before the first test runs.
+    vi.clearAllMocks();
     execSyncMock.mockReturnValue('');
     execFileSyncMock.mockReturnValue('');
   });
