@@ -546,12 +546,22 @@ export function registerSourceGraphResolver(
   };
 }
 
-export function refreshSourceGraphResolvers(root: string): void {
+export function hasSourceGraphResolvers(root: string): boolean {
+  return [...sourceGraphs.values()].some((graph) => graph.root === root);
+}
+
+export function refreshSourceGraphResolvers(
+  root: string,
+  workspacePackageNames?: string[]
+): void {
   if (sourceGraphs.size === 0) return;
   const conditions = getRootTsConfigResolveExportsConditions(root);
   for (const graph of sourceGraphs.values()) {
     if (graph.root === root) {
       graph.conditions = conditions;
+      if (workspacePackageNames) {
+        graph.packageNames = new Set(workspacePackageNames);
+      }
     }
   }
 }

@@ -19,9 +19,11 @@ vi.mock('./in-process-loader', () => ({
 // loadSpecifiedNxPlugins must drop it on every reload. Mocked so the test can
 // assert that wiring without touching the real filesystem-backed resolver.
 vi.mock('./resolve-plugin', () => ({
+  refreshWorkspacePackageNames: vi.fn(async () => ['@proj/new-package']),
   resetResolvePluginCache: vi.fn(),
 }));
 vi.mock('../../plugins/js/utils/register', () => ({
+  hasSourceGraphResolvers: vi.fn(() => false),
   refreshSourceGraphResolvers: vi.fn(),
 }));
 
@@ -76,9 +78,14 @@ describe('getPluginsSeparated', () => {
     // Unlike jest, resetModules does not re-run vi.mock factories, so the
     // mock fns persist across tests — clear their recorded calls.
     loadNxPlugin.mockClear();
-    (
-      (await import('./resolve-plugin')).resetResolvePluginCache as Mock
-    ).mockClear();
+    const { refreshWorkspacePackageNames, resetResolvePluginCache } =
+      await import('./resolve-plugin');
+    (refreshWorkspacePackageNames as Mock).mockClear();
+    (resetResolvePluginCache as Mock).mockClear();
+    const { hasSourceGraphResolvers, refreshSourceGraphResolvers } =
+      await import('../../plugins/js/utils/register');
+    (hasSourceGraphResolvers as Mock).mockReset().mockReturnValue(false);
+    (refreshSourceGraphResolvers as Mock).mockClear();
     loadNxPlugin.mockImplementation((plugin: unknown) => {
       const name = typeof plugin === 'string' ? plugin : (plugin as any).plugin;
       // Default plugins load from absolute paths — resolve them immediately.
@@ -199,5 +206,23 @@ describe('getPluginsSeparated', () => {
     await getPluginsSeparated({ plugins: ['test-a'] });
 
     expect(refreshSourceGraphResolvers).toHaveBeenCalledTimes(1);
+  });
+
+  it('refreshes workspace package names for a cached source graph', async () => {
+    const { refreshWorkspacePackageNames } = await import('./resolve-plugin');
+    const { hasSourceGraphResolvers, refreshSourceGraphResolvers } =
+      await import('../../plugins/js/utils/register');
+    const load = getPluginsSeparated({ plugins: ['test-a'] }, '/workspace');
+    finishLoading('test-a');
+    await load;
+
+    (hasSourceGraphResolvers as Mock).mockReturnValue(true);
+    (refreshSourceGraphResolvers as Mock).mockClear();
+    await getPluginsSeparated({ plugins: ['test-a'] }, '/workspace');
+
+    expect(refreshWorkspacePackageNames).toHaveBeenCalledWith('/workspace');
+    expect(refreshSourceGraphResolvers).toHaveBeenCalledWith('/workspace', [
+      '@proj/new-package',
+    ]);
   });
 });
