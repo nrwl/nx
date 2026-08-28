@@ -8,8 +8,10 @@ import {
   openSync,
   statSync,
   type Stats,
+  realpathSync,
 } from 'node:fs';
 import { userInfo } from 'node:os';
+import { basename, dirname, join, resolve } from 'node:path';
 
 // Phantom brands: each guard's success arm carries its own, so one guard's
 // verdict cannot be passed where another's is expected.
@@ -195,6 +197,44 @@ function chmodRealDirectory(path: string, mode: number): boolean {
     return false;
   } finally {
     closeSync(fd);
+  }
+}
+
+/**
+ * The spelling to compare a directory by. `resolve` does not dereference
+ * symlinks, and on macOS `/tmp` is a symlink to `/private/tmp`, so an
+ * exact-match list would wave through an alias of a root it means to refuse.
+ *
+ * Resolves the longest ancestor that exists and re-appends the rest: Nx's own
+ * roots are absent before its first run, and canonicalizing whole paths only
+ * would degrade this to a string match on exactly a fresh machine.
+ *
+ * Only `ENOENT` walks up — any other errno means the path exists and cannot be
+ * read through, which `ensureOwnedPrivateDir` cannot establish either.
+ */
+export function canonicalDir(dir: string): string {
+  const resolved = resolve(dir);
+  const missing: string[] = [];
+  let candidate = resolved;
+
+  // Terminates at the filesystem root, where `dirname` is a fixed point.
+  while (dirname(candidate) !== candidate) {
+    try {
+      return join(realpathSync(candidate), ...missing);
+    } catch (e: any) {
+      if (e?.code !== 'ENOENT') {
+        return resolved;
+      }
+      missing.unshift(basename(candidate));
+      candidate = dirname(candidate);
+    }
+  }
+
+  // The root itself: resolve it directly rather than walking past it.
+  try {
+    return join(realpathSync(candidate), ...missing);
+  } catch {
+    return resolved;
   }
 }
 
