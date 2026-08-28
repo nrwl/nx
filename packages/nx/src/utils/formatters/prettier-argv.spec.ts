@@ -1,12 +1,13 @@
+import type { Mock } from 'vitest';
 import { execFile, execFileSync } from 'node:child_process';
 import { checkWithPrettier, writeWithPrettier } from './prettier';
 
-jest.mock('node:child_process', () => ({
-  execFile: jest.fn(),
-  execFileSync: jest.fn(),
+vi.mock('node:child_process', () => ({
+  execFile: vi.fn(),
+  execFileSync: vi.fn(),
 }));
-jest.mock('../package-json', () => ({
-  readModulePackageJson: jest.fn(() => ({
+vi.mock('../package-json', () => ({
+  readModulePackageJson: vi.fn(() => ({
     packageJson: { bin: 'bin/prettier.cjs', version: '3.6.2' },
     path: '/ws/node_modules/prettier/package.json',
   })),
@@ -30,12 +31,12 @@ function patternsFrom(args: string[]): string[] {
 }
 
 describe('prettier is spawned with argv, not a shell string', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => vi.clearAllMocks());
 
   it('hands writeWithPrettier patterns to prettier unaltered', () => {
     writeWithPrettier(HOSTILE);
 
-    const [bin, args] = (execFileSync as unknown as jest.Mock).mock.calls[0];
+    const [bin, args] = (execFileSync as unknown as Mock).mock.calls[0];
     expect(bin).toBe(process.execPath);
     expect(patternsFrom(args)).toEqual(HOSTILE);
   });
@@ -43,7 +44,7 @@ describe('prettier is spawned with argv, not a shell string', () => {
   it('hands checkWithPrettier patterns to prettier unaltered', () => {
     void checkWithPrettier(HOSTILE);
 
-    const [bin, args] = (execFile as unknown as jest.Mock).mock.calls[0];
+    const [bin, args] = (execFile as unknown as Mock).mock.calls[0];
     expect(bin).toBe(process.execPath);
     expect(patternsFrom(args)).toEqual(HOSTILE);
   });
