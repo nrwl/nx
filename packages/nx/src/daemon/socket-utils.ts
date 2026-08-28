@@ -100,40 +100,47 @@ export function serializeResult(
   )}, "projectGraph": ${serializedProjectGraph}, "sourceMaps": ${serializedSourceMaps} }`;
 }
 
+function serializeAs(data: any, format: 'v8' | 'json'): Buffer {
+  return format === 'v8'
+    ? v8_serialize(data)
+    : Buffer.from(JSON.stringify(data), 'utf8');
+}
+
 /**
- * Helper to serialize data either using v8 serialization or JSON serialization, based on
- * the user's preference and the success of each method. Should only be used by "client" side
- * connections, daemon or other servers should respond based on the type of serialization used
- * by the client it is communicating with.
+ * Serialize using `preferred`, falling back to the other format when it throws.
+ * Neither format subsumes the other: JSON cannot represent a BigInt and hits the
+ * max string length far sooner, while v8 cannot clone a function.
  *
  * @param data Data to serialize
- * @param force Forces one serialization method over the other
+ * @param preferred Format to attempt first
+ * @returns Serialized data as bytes ready to be framed onto a socket
+ */
+export function serializeWithFallback(
+  data: any,
+  preferred: 'v8' | 'json'
+): Buffer {
+  try {
+    return serializeAs(data, preferred);
+  } catch (e) {
+    const fallback = preferred === 'v8' ? 'json' : 'v8';
+    console.warn(
+      `Data could not be serialized using ${preferred} serialization: ${e}. Falling back to ${fallback} serialization.`
+    );
+    return serializeAs(data, fallback);
+  }
+}
+
+/**
+ * Serialize data for IPC using the format the user configured.
+ *
+ * @param data Data to serialize
+ * @param force Use this format without falling back. For callers whose data is
+ *              known to be unrepresentable in the other format, where a fallback
+ *              would only swap one failure for a less obvious one.
  * @returns Serialized data as bytes ready to be framed onto a socket
  */
 export function serialize(data: any, force?: 'v8' | 'json'): Buffer {
-  if (force === 'v8' || isV8SerializerEnabled()) {
-    try {
-      return v8_serialize(data);
-    } catch (e) {
-      if (force !== 'v8') {
-        console.warn(
-          `Data could not be serialized using v8 serialization: ${e}. Falling back to JSON serialization.`
-        );
-        return Buffer.from(JSON.stringify(data), 'utf8');
-      }
-      throw e;
-    }
-  } else {
-    try {
-      return Buffer.from(JSON.stringify(data), 'utf8');
-    } catch (e) {
-      if (force !== 'json') {
-        console.warn(
-          `Data could not be serialized using JSON.stringify: ${e}. Falling back to v8 serialization.`
-        );
-        return v8_serialize(data);
-      }
-      throw e;
-    }
-  }
+  return force
+    ? serializeAs(data, force)
+    : serializeWithFallback(data, isV8SerializerEnabled() ? 'v8' : 'json');
 }
