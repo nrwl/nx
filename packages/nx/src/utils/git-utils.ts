@@ -6,7 +6,7 @@ import {
 } from 'child_process';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
-import { dirname, join, posix, relative, sep } from 'path';
+import { dirname, join, posix, relative, resolve, sep } from 'path';
 
 function execFileAsync(
   file: string,
@@ -313,7 +313,188 @@ export function parseVcsRemoteUrl(url: string): VcsRemoteInfo | null {
   return null;
 }
 
+/**
+ * Where `directory`'s repository keeps its working root and its shared config.
+ *
+ * Walking up for `.git` is what lets the caller answer "which repo, and where
+ * am I inside it" without spawning git. It also reports the root as the caller
+ * referred to it, where `git rev-parse --show-toplevel` reports the realpath —
+ * relevant wherever a path crosses a symlink, macOS's /tmp being the common
+ * case.
+ *
+ * A linked worktree and a submodule both have `.git` as a FILE holding
+ * `gitdir: <path>`, and their remotes live in the shared common dir rather than
+ * in that per-worktree gitdir, which `commondir` names when it is not the
+ * gitdir itself.
+ */
+export function locateGitDir(
+  directory: string
+): { gitRoot: string; commonDir: string } | null {
+  let current = resolve(directory);
+  for (;;) {
+    const dotGit = join(current, '.git');
+    let entry: fs.Stats | undefined;
+    try {
+      entry = fs.statSync(dotGit);
+    } catch {
+      entry = undefined;
+    }
+
+    if (entry?.isDirectory()) {
+      return { gitRoot: current, commonDir: dotGit };
+    }
+
+    if (entry?.isFile()) {
+      try {
+        const pointer = fs
+          .readFileSync(dotGit, 'utf8')
+          .match(/^gitdir:\s*(.+)$/m);
+        if (!pointer) {
+          return null;
+        }
+        const gitDir = resolve(current, pointer[1].trim());
+        let commonDir = gitDir;
+        try {
+          const shared = fs
+            .readFileSync(join(gitDir, 'commondir'), 'utf8')
+            .trim();
+          if (shared) {
+            commonDir = resolve(gitDir, shared);
+          }
+        } catch {
+          // No commondir file: the gitdir is the common dir.
+        }
+        return { gitRoot: current, commonDir };
+      } catch {
+        return null;
+      }
+    }
+
+    const parent = dirname(current);
+    if (parent === current) {
+      return null;
+    }
+    current = parent;
+  }
+}
+
+/**
+ * Remote name -> url from a git config file, or null when this parser cannot
+ * answer for the whole file.
+ *
+ * Null on `include`/`includeIf` specifically: git resolves those by reading
+ * other files, so a remote could live somewhere this does not look, and
+ * answering from a partial view would be worse than paying for git.
+ */
+function parseGitConfigRemotes(
+  contents: string
+): Record<string, string> | null {
+  const remotes: Record<string, string> = {};
+  let remoteName: string | null = null;
+
+  for (const rawLine of contents.split('\n')) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#') || line.startsWith(';')) {
+      continue;
+    }
+
+    if (line.startsWith('[')) {
+      const close = line.indexOf(']');
+      const section = (
+        close === -1 ? line.slice(1) : line.slice(1, close)
+      ).trim();
+      if (/^include(If)?\b/i.test(section)) {
+        return null;
+      }
+      const named = section.match(/^remote\s+"(.*)"$/i);
+      remoteName = named ? named[1] : null;
+      continue;
+    }
+
+    if (!remoteName) {
+      continue;
+    }
+    const equals = line.indexOf('=');
+    if (equals === -1) {
+      continue;
+    }
+    if (line.slice(0, equals).trim().toLowerCase() !== 'url') {
+      continue;
+    }
+    // First url wins, matching git's own last-definition-per-key only insofar
+    // as a single config file rarely repeats it; a repeat sends us to git.
+    if (remotes[remoteName] === undefined) {
+      remotes[remoteName] = line
+        .slice(equals + 1)
+        .trim()
+        .replace(/^"(.*)"$/, '$1');
+    }
+  }
+
+  return remotes;
+}
+
+/** `origin`, then `upstream`, then `base`, then whichever came first. */
+function selectRemote(
+  found: Record<string, VcsRemoteInfo>,
+  first: VcsRemoteInfo | null
+): VcsRemoteInfo | null {
+  for (const remote of ['origin', 'upstream', 'base']) {
+    if (found[remote]) {
+      return found[remote];
+    }
+  }
+  return first;
+}
+
+/**
+ * The remote read straight from `.git/config`, or null when that cannot settle
+ * it and git itself has to be asked.
+ *
+ * Worth having because this runs on the import path of every Nx process:
+ * `cacheDir` is resolved at module scope, which reaches the repo identity, and
+ * `git remote -v` spawns a shell and git to answer a question a file read
+ * answers in microseconds.
+ */
+function remoteInfoFromGitConfig(directory: string): VcsRemoteInfo | null {
+  try {
+    const located = locateGitDir(directory);
+    if (!located) {
+      return null;
+    }
+
+    const contents = fs.readFileSync(join(located.commonDir, 'config'), 'utf8');
+    const remotes = parseGitConfigRemotes(contents);
+    if (!remotes) {
+      return null;
+    }
+
+    const found: Record<string, VcsRemoteInfo> = {};
+    let first: VcsRemoteInfo | null = null;
+    for (const [name, url] of Object.entries(remotes)) {
+      const info = parseVcsRemoteUrl(url);
+      if (info && !found[name]) {
+        found[name] = info;
+        first ??= info;
+      }
+    }
+
+    return selectRemote(found, first);
+  } catch {
+    return null;
+  }
+}
+
 export function getVcsRemoteInfo(directory?: string): VcsRemoteInfo | null {
+  const fromConfig = remoteInfoFromGitConfig(directory ?? process.cwd());
+  if (fromConfig) {
+    return fromConfig;
+  }
+
+  // Reached when there is no readable config, no remote in it, or an `include`
+  // this parser will not follow. Note for anyone running a spec that asserts no
+  // subprocess: a repository with no remote at all lands here every time, so
+  // the shell-out is on the failure path rather than gone.
   try {
     const gitRemote = execSync('git remote -v', {
       stdio: 'pipe',
@@ -328,7 +509,6 @@ export function getVcsRemoteInfo(directory?: string): VcsRemoteInfo | null {
     }
 
     const lines = gitRemote.split('\n').filter((line) => line.trim());
-    const remotesPriority = ['origin', 'upstream', 'base'];
     const foundRemotes: { [key: string]: VcsRemoteInfo } = {};
     let firstRemote: VcsRemoteInfo | null = null;
 
@@ -348,21 +528,21 @@ export function getVcsRemoteInfo(directory?: string): VcsRemoteInfo | null {
       }
     }
 
-    // Return high-priority remote if found
-    for (const remote of remotesPriority) {
-      if (foundRemotes[remote]) {
-        return foundRemotes[remote];
-      }
-    }
-
-    // Return first found remote
-    return firstRemote;
+    return selectRemote(foundRemotes, firstRemote);
   } catch (e) {
     return null;
   }
 }
 
 export function getGitRootPath(cwd?: string): string {
+  const located = locateGitDir(cwd ?? process.cwd());
+  if (located) {
+    return located.gitRoot;
+  }
+
+  // Outside a repository this throws, which is what `getGitRootRelativePath`
+  // turns into null. Kept as the fallback rather than the primary so the common
+  // case pays no subprocess.
   return execFileSync('git', ['rev-parse', '--show-toplevel'], {
     cwd,
     windowsHide: true,

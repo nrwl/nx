@@ -11,6 +11,8 @@ import {
 } from './git-utils';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 
 vi.mock('child_process');
 vi.mock('fs', async () => {
@@ -159,7 +161,18 @@ describe('git utils tests', () => {
   });
 
   describe('getVcsRemoteInfo', () => {
+    // Outside any repository, so no `.git/config` can be found and the git
+    // command below is genuinely what answers. Without this the tests read this
+    // checkout's own remote, which is `nrwl/nx` — the same value two of them
+    // assert, so they would pass no matter what the mock returned.
+    let nonGitDir: string;
+
+    beforeEach(() => {
+      nonGitDir = fs.mkdtempSync(join(tmpdir(), 'nx-no-git-'));
+    });
+
     afterEach(() => {
+      fs.rmSync(nonGitDir, { recursive: true, force: true });
       vi.resetAllMocks();
     });
 
@@ -169,7 +182,7 @@ describe('git utils tests', () => {
         origin	git@github.com:nrwl/nx.git (push)
       `);
 
-      expect(getVcsRemoteInfo()).toEqual({
+      expect(getVcsRemoteInfo(nonGitDir)).toEqual({
         domain: 'github.com',
         slug: 'nrwl/nx',
       });
@@ -181,7 +194,7 @@ describe('git utils tests', () => {
         origin	git@gitlab.com:group/project.git (push)
       `);
 
-      expect(getVcsRemoteInfo()).toEqual({
+      expect(getVcsRemoteInfo(nonGitDir)).toEqual({
         domain: 'gitlab.com',
         slug: 'group/project',
       });
@@ -195,7 +208,7 @@ describe('git utils tests', () => {
         origin	git@github.com:nrwl/nx.git (push)
       `);
 
-      expect(getVcsRemoteInfo()).toEqual({
+      expect(getVcsRemoteInfo(nonGitDir)).toEqual({
         domain: 'github.com',
         slug: 'nrwl/nx',
       });
@@ -204,7 +217,7 @@ describe('git utils tests', () => {
     it('should return null when no remotes exist', () => {
       (execSync as Mock).mockReturnValue('');
 
-      expect(getVcsRemoteInfo()).toBeNull();
+      expect(getVcsRemoteInfo(nonGitDir)).toBeNull();
     });
 
     it('should return null when execSync throws', () => {
@@ -212,7 +225,122 @@ describe('git utils tests', () => {
         throw new Error('git not found');
       });
 
-      expect(getVcsRemoteInfo()).toBeNull();
+      expect(getVcsRemoteInfo(nonGitDir)).toBeNull();
+    });
+  });
+
+  // The happy path, and why this exists: `cacheDir` resolves at module scope and
+  // reaches the repo identity, so `git remote -v` used to spawn a shell and git
+  // on the import path of every Nx process.
+  describe('getVcsRemoteInfo reading .git/config directly', () => {
+    let repo: string;
+
+    const writeConfig = (dir: string, contents: string) => {
+      fs.mkdirSync(join(dir, '.git'), { recursive: true });
+      fs.writeFileSync(join(dir, '.git', 'config'), contents);
+    };
+
+    beforeEach(() => {
+      repo = fs.mkdtempSync(join(tmpdir(), 'nx-git-config-'));
+    });
+
+    afterEach(() => {
+      fs.rmSync(repo, { recursive: true, force: true });
+      vi.resetAllMocks();
+    });
+
+    it('should read the remote without spawning git', () => {
+      writeConfig(
+        repo,
+        '[remote "origin"]\n\turl = git@github.com:nrwl/nx.git\n'
+      );
+
+      expect(getVcsRemoteInfo(repo)).toEqual({
+        domain: 'github.com',
+        slug: 'nrwl/nx',
+      });
+      expect(execSync).not.toHaveBeenCalled();
+    });
+
+    it('should find the config from a subdirectory', () => {
+      writeConfig(
+        repo,
+        '[remote "origin"]\n\turl = git@github.com:nrwl/nx.git\n'
+      );
+      const nested = join(repo, 'packages', 'nx');
+      fs.mkdirSync(nested, { recursive: true });
+
+      expect(getVcsRemoteInfo(nested)).toEqual({
+        domain: 'github.com',
+        slug: 'nrwl/nx',
+      });
+      expect(execSync).not.toHaveBeenCalled();
+    });
+
+    it('should apply the same remote priority as the git output path', () => {
+      writeConfig(
+        repo,
+        '[remote "upstream"]\n\turl = git@gitlab.com:other/project.git\n' +
+          '[remote "origin"]\n\turl = git@github.com:nrwl/nx.git\n'
+      );
+
+      expect(getVcsRemoteInfo(repo)).toEqual({
+        domain: 'github.com',
+        slug: 'nrwl/nx',
+      });
+    });
+
+    it('should defer to git when the config includes another file', () => {
+      // git resolves include/includeIf by reading elsewhere; a remote could live
+      // in a file this parser never opens, so answering from here would be a
+      // guess. Falling through is the point of the test.
+      writeConfig(
+        repo,
+        '[include]\n\tpath = ../shared.config\n' +
+          '[remote "origin"]\n\turl = git@github.com:nrwl/nx.git\n'
+      );
+      (execSync as Mock).mockReturnValue(
+        'origin\tgit@gitlab.com:group/project.git (fetch)\n'
+      );
+
+      expect(getVcsRemoteInfo(repo)).toEqual({
+        domain: 'gitlab.com',
+        slug: 'group/project',
+      });
+      expect(execSync).toHaveBeenCalled();
+    });
+
+    it('should read a linked worktree config through its common dir', () => {
+      // A linked worktree's `.git` is a FILE pointing at a per-worktree gitdir,
+      // and remotes live in the shared common dir rather than in it.
+      writeConfig(
+        repo,
+        '[remote "origin"]\n\turl = git@github.com:nrwl/nx.git\n'
+      );
+      const gitDir = join(repo, '.git', 'worktrees', 'wt');
+      fs.mkdirSync(gitDir, { recursive: true });
+      fs.writeFileSync(join(gitDir, 'commondir'), '../..\n');
+
+      const worktree = fs.mkdtempSync(join(tmpdir(), 'nx-git-wt-'));
+      fs.writeFileSync(join(worktree, '.git'), `gitdir: ${gitDir}\n`);
+
+      try {
+        expect(getVcsRemoteInfo(worktree)).toEqual({
+          domain: 'github.com',
+          slug: 'nrwl/nx',
+        });
+        expect(execSync).not.toHaveBeenCalled();
+      } finally {
+        fs.rmSync(worktree, { recursive: true, force: true });
+      }
+    });
+
+    it('should defer to git when the config names no remote', () => {
+      writeConfig(repo, '[core]\n\tbare = false\n');
+      (execSync as Mock).mockReturnValue('');
+
+      expect(getVcsRemoteInfo(repo)).toBeNull();
+      expect(execSync).toHaveBeenCalled();
     });
   });
 
