@@ -79,7 +79,10 @@ export async function affected(
       extraTargetDependencies,
       excludeTaskDependencies: extraOptions.excludeTaskDependencies,
     });
-    taskSelection = { taskIds: [...affectedTasks.affectedTaskIds] };
+    taskSelection = {
+      taskIds: [...affectedTasks.affectedTaskIds],
+      planningContext: affectedTasks.planningContext,
+    };
     // runCommand still seeds the graph from projects; the prune is what narrows
     // it back down to the selected tasks and their dependencies.
     const owning = new Set(

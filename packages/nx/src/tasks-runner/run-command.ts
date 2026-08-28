@@ -51,6 +51,7 @@ import {
 import { workspaceRoot } from '../utils/workspace-root';
 import { createTaskGraph } from './create-task-graph';
 import { pruneTaskGraphToSelection } from './prune-task-graph-to-selection';
+import type { TaskPlanningContext } from '../hasher/task-planning-context';
 
 /**
  * Tasks the caller selected. Their dependency closure is added back, so an
@@ -58,6 +59,8 @@ import { pruneTaskGraphToSelection } from './prune-task-graph-to-selection';
  */
 export interface TaskSelection {
   taskIds: string[];
+  /** Reused by the hasher so the survivors are not planned a second time. */
+  planningContext?: TaskPlanningContext;
 }
 import { isTuiEnabled, ORIGINAL_TUI_ENV_VALUE } from './is-tui-enabled';
 import {
@@ -626,6 +629,7 @@ export async function runCommandForTasks(
       loadDotEnvFiles: extraOptions.loadDotEnvFiles,
       initiatingProject,
       initiatingTasks,
+      planningContext: taskSelection?.planningContext,
     });
 
     await renderIsDone.finally(() => restoreTerminal?.());
@@ -1006,6 +1010,7 @@ export async function invokeTasksRunner({
   loadDotEnvFiles,
   initiatingProject,
   initiatingTasks,
+  planningContext,
 }: {
   tasks: Task[];
   projectGraph: ProjectGraph;
@@ -1016,6 +1021,7 @@ export async function invokeTasksRunner({
   loadDotEnvFiles: boolean;
   initiatingProject: string | null;
   initiatingTasks: Task[];
+  planningContext?: TaskPlanningContext;
 }): Promise<{ [id: string]: TaskResult }> {
   setEnvVarsBasedOnArgs(nxArgs, loadDotEnvFiles);
 
@@ -1024,7 +1030,12 @@ export async function invokeTasksRunner({
 
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
-  let hasher = createTaskHasher(projectGraph, nxJson, runnerOptions);
+  let hasher = createTaskHasher(
+    projectGraph,
+    nxJson,
+    runnerOptions,
+    planningContext
+  );
 
   // this is used for two reasons: to fetch all remote cache hits AND
   // to submit everything that is known in advance to Nx Cloud to run in

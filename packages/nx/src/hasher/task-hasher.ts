@@ -10,6 +10,7 @@ import { hashArray } from './file-hasher';
 import { InputDefinition } from '../config/workspace-json-project-json';
 import { minimatch } from 'minimatch';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
+import type { TaskPlanningContext } from './task-planning-context';
 import { workspaceRoot } from '../utils/workspace-root';
 import { HashInputs, NxWorkspaceFilesExternals } from '../native';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
@@ -222,7 +223,8 @@ export class InProcessTaskHasher implements TaskHasher {
     private readonly projectGraph: ProjectGraph,
     private readonly nxJson: NxJsonConfiguration,
     private readonly externalRustReferences: NxWorkspaceFilesExternals | null,
-    private readonly options: any
+    private readonly options: any,
+    private readonly planningContext?: TaskPlanningContext
   ) {
     this.taskHasher = new NativeTaskHasherImpl(
       workspaceRoot,
@@ -231,7 +233,8 @@ export class InProcessTaskHasher implements TaskHasher {
       this.externalRustReferences,
       {
         selectivelyHashTsConfig: this.options?.selectivelyHashTsConfig ?? false,
-      }
+      },
+      this.planningContext
     );
   }
 
