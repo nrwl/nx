@@ -58,7 +58,7 @@ export async function affected(
   const projectGraph = await createProjectGraphAsync({
     exitOnError: true,
   });
-  const granularity = resolveAffectedGranularity(nxJson);
+  const granularity = resolveAffectedGranularity();
   // Task granularity needs a target to select against, so `nx graph --affected`
   // and the deprecated print-affected stay project-grained.
   const useTasks =
