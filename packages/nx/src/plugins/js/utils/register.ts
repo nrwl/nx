@@ -1,5 +1,6 @@
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'path';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync, realpathSync } from 'fs';
+import { resolve as resolveExports } from 'resolve.exports';
 import type { TsConfigOptions } from 'ts-node';
 import type { CompilerOptions } from 'typescript';
 import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
@@ -468,20 +469,27 @@ type SourceGraph = {
   conditions: string[];
   modules: Set<string>;
   packageNames: Set<string>;
+  refCount: number;
   root: string;
 };
 
 const sourceGraphs = new Map<string, SourceGraph>();
+const sourceGraphModules = new Map<string, SourceGraph>();
+const sourceGraphModulePaths = new Map<string, SourceGraph>();
 let sourceGraphHooks: { deregister(): void } | undefined;
 
 /**
  * Apply workspace export conditions only to known workspace-package imports
  * reached from an explicitly source-loaded entry. Relative source imports are
  * tracked so lazy imports remain in the same graph; third-party modules are not.
+ * Registrations are reference counted per entry, so the graph is released only
+ * by the last of its cleanups.
  *
- * Uses `module.registerHooks()` on Node 22.15+ / 23.5+. Earlier supported Node
- * versions rely on isolated plugin workers, which receive the conditions at
- * process startup.
+ * Uses `module.registerHooks()` plus a scoped CJS `Module._load` patch (see
+ * `patchCjsModuleLoad`) on Node 22.15+ / 23.5+. Earlier runtimes get no
+ * scoped conditions on this path; isolated plugin workers still receive them
+ * at process startup, and `NODE_OPTIONS=--conditions` remains the escape
+ * hatch.
  */
 export function registerSourceGraphResolver(
   entryPath: string,
@@ -495,54 +503,124 @@ export function registerSourceGraphResolver(
 
   const { pathToFileURL } = require('node:url') as typeof import('node:url');
   const entryUrl = normalizeModuleUrl(pathToFileURL(entryPath).href);
-  const graph = sourceGraphs.get(entryUrl);
-  if (graph) {
-    graph.conditions = getRootTsConfigResolveExportsConditions(root);
-    graph.packageNames = new Set(workspacePackageNames);
-    return () => {};
+  const existing = sourceGraphs.get(entryUrl);
+  if (existing) {
+    existing.conditions = getRootTsConfigResolveExportsConditions(root);
+    existing.packageNames = new Set(workspacePackageNames);
+    existing.refCount++;
+    return createSourceGraphCleanup(entryUrl);
   }
 
-  sourceGraphs.set(entryUrl, {
+  const graph: SourceGraph = {
     conditions: getRootTsConfigResolveExportsConditions(root),
-    modules: new Set([entryUrl]),
+    modules: new Set(),
     packageNames: new Set(workspacePackageNames),
+    refCount: 1,
     root,
-  });
+  };
+  sourceGraphs.set(entryUrl, graph);
+  trackSourceGraphModule(entryUrl, graph);
 
-  sourceGraphHooks ??= module.registerHooks({
+  sourceGraphHooks ??= registerSourceGraphHooks(module);
+
+  return createSourceGraphCleanup(entryUrl);
+}
+
+function registerSourceGraphHooks(module: typeof import('node:module')): {
+  deregister(): void;
+} {
+  const { pathToFileURL } = require('node:url') as typeof import('node:url');
+  const hooks = module.registerHooks({
     resolve(specifier, context, nextResolve) {
       const sourceGraph = context.parentURL
-        ? findSourceGraph(normalizeModuleUrl(context.parentURL))
+        ? sourceGraphModules.get(normalizeModuleUrl(context.parentURL))
         : undefined;
       if (!sourceGraph) {
         return nextResolve(specifier, context);
       }
 
-      const result = sourceGraph.packageNames.has(
-        getPackageNameFromSpecifier(specifier)
-      )
-        ? nextResolve(specifier, {
-            ...context,
-            conditions: appendConditions(
-              context.conditions,
-              sourceGraph.conditions
-            ),
-          })
-        : nodeNextEsmResolveHook(specifier, context, nextResolve);
+      let result: { url: string; shortCircuit?: boolean };
+      if (
+        sourceGraph.packageNames.has(getPackageNameFromSpecifier(specifier))
+      ) {
+        // Resolved authoritatively rather than by delegating with extra
+        // conditions: the default resolution would store the conditioned
+        // result in CJS caches keyed without conditions (see
+        // patchCjsModuleLoad). On failure, fall through to the default
+        // resolution with the context untouched.
+        const resolvedPath = resolveFromWorkspacePackageExports(
+          specifier,
+          context.parentURL!,
+          sourceGraph,
+          hasRequireCondition(context.conditions)
+        );
+        result = resolvedPath
+          ? { url: pathToFileURL(resolvedPath).href, shortCircuit: true }
+          : nextResolve(specifier, context);
+      } else {
+        result = nodeNextEsmResolveHook(specifier, context, nextResolve);
+      }
 
       if (isWorkspaceModuleUrl(result.url, sourceGraph.root)) {
-        sourceGraph.modules.add(normalizeModuleUrl(result.url));
+        trackSourceGraphModule(normalizeModuleUrl(result.url), sourceGraph);
       }
       return result;
     },
   });
+  const restoreCjsModuleLoad = patchCjsModuleLoad();
+  return {
+    deregister() {
+      restoreCjsModuleLoad();
+      hooks.deregister();
+    },
+  };
+}
 
-  return () => {
-    sourceGraphs.delete(entryUrl);
-    if (sourceGraphs.size === 0) {
-      sourceGraphHooks?.deregister();
-      sourceGraphHooks = undefined;
+/**
+ * `Module._load` serves same-directory repeat resolutions from caches keyed
+ * on parent directory + request. Those caches are read before resolve hooks
+ * run and written even for hook-short-circuited resolutions, so a graph
+ * member and a same-directory non-member would share one resolution in
+ * whichever direction loads first. Rewriting the member's workspace-package
+ * request to its resolved path before the caches see it keeps conditioned
+ * results out of them; the resolve hook still covers ESM and
+ * `require.resolve`.
+ */
+function patchCjsModuleLoad(): () => void {
+  const Module = require('node:module') as any;
+  const { pathToFileURL } = require('node:url') as typeof import('node:url');
+  const originalLoad = Module._load;
+  Module._load = function (
+    this: unknown,
+    request: string,
+    parent: { filename?: string } | undefined,
+    ...rest: unknown[]
+  ) {
+    if (parent?.filename) {
+      const graph = sourceGraphModulePaths.get(parent.filename);
+      if (
+        graph &&
+        graph.packageNames.has(getPackageNameFromSpecifier(request))
+      ) {
+        const resolvedPath = resolveFromWorkspacePackageExports(
+          request,
+          pathToFileURL(parent.filename).href,
+          graph,
+          true
+        );
+        if (resolvedPath) {
+          const url = pathToFileURL(resolvedPath).href;
+          if (isWorkspaceModuleUrl(url, graph.root)) {
+            trackSourceGraphModule(url, graph);
+          }
+          return originalLoad.call(this, resolvedPath, parent, ...rest);
+        }
+      }
     }
+    return originalLoad.call(this, request, parent, ...rest);
+  };
+  return () => {
+    Module._load = originalLoad;
   };
 }
 
@@ -569,26 +647,141 @@ export function refreshSourceGraphResolvers(
   }
 }
 
-function findSourceGraph(parentUrl: string): SourceGraph | undefined {
-  return [...sourceGraphs.values()].find((graph) =>
-    graph.modules.has(parentUrl)
-  );
+function trackSourceGraphModule(url: string, graph: SourceGraph): void {
+  graph.modules.add(url);
+  if (!sourceGraphModules.has(url)) {
+    sourceGraphModules.set(url, graph);
+    try {
+      const { fileURLToPath } =
+        require('node:url') as typeof import('node:url');
+      sourceGraphModulePaths.set(fileURLToPath(url), graph);
+    } catch {
+      // non-file URLs have no CJS filename to track
+    }
+  }
 }
 
-// Node < 22.19 / < 24.5 hands CJS hooks a Set and passes the forwarded value
-// straight to resolvers that call `.has()`; newer Node rejects anything but an
-// array. Return the shape we were given (@types/node only knows the array).
-function appendConditions(
-  current: Iterable<string> | undefined,
-  additions: string[]
-): string[] {
-  const merged = new Set(current);
-  for (const condition of additions) {
-    merged.add(condition);
+function createSourceGraphCleanup(entryUrl: string): () => void {
+  let released = false;
+  return () => {
+    if (released) {
+      return;
+    }
+    released = true;
+    const graph = sourceGraphs.get(entryUrl);
+    if (!graph || --graph.refCount > 0) {
+      return;
+    }
+    sourceGraphs.delete(entryUrl);
+    untrackSourceGraphModules(graph);
+    if (sourceGraphs.size === 0) {
+      sourceGraphHooks?.deregister();
+      sourceGraphHooks = undefined;
+    }
+  };
+}
+
+function untrackSourceGraphModules(graph: SourceGraph): void {
+  const { fileURLToPath } = require('node:url') as typeof import('node:url');
+  for (const url of graph.modules) {
+    if (sourceGraphModules.get(url) !== graph) {
+      continue;
+    }
+    let replacement: SourceGraph | undefined;
+    for (const other of sourceGraphs.values()) {
+      if (other.modules.has(url)) {
+        replacement = other;
+        break;
+      }
+    }
+    if (replacement) {
+      sourceGraphModules.set(url, replacement);
+    } else {
+      sourceGraphModules.delete(url);
+    }
+    try {
+      const path = fileURLToPath(url);
+      if (replacement) {
+        sourceGraphModulePaths.set(path, replacement);
+      } else {
+        sourceGraphModulePaths.delete(path);
+      }
+    } catch {
+      // non-file URLs were never tracked by path
+    }
   }
-  return (
-    Array.isArray(current) || !current ? [...merged] : merged
-  ) as string[];
+}
+
+function hasRequireCondition(
+  conditions: Iterable<string> | undefined
+): boolean {
+  for (const condition of conditions ?? []) {
+    if (condition === 'require') {
+      return true;
+    }
+  }
+  return false;
+}
+
+function resolveFromWorkspacePackageExports(
+  specifier: string,
+  parentUrl: string,
+  graph: SourceGraph,
+  isRequire: boolean
+): string | null {
+  try {
+    const { fileURLToPath } = require('node:url') as typeof import('node:url');
+    const packageName = getPackageNameFromSpecifier(specifier);
+    const packageJsonPath = findWorkspacePackageJson(
+      packageName,
+      dirname(fileURLToPath(parentUrl))
+    );
+    if (!packageJsonPath) {
+      return null;
+    }
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
+    if (!packageJson.exports) {
+      return null;
+    }
+    const matches = resolveExports(
+      { name: packageName, exports: packageJson.exports },
+      '.' + specifier.slice(packageName.length),
+      { conditions: graph.conditions, require: isRequire }
+    );
+    if (!matches || !matches.length) {
+      return null;
+    }
+    const packageRoot = dirname(packageJsonPath);
+    for (const match of matches) {
+      const candidate = join(packageRoot, match);
+      if (existsSync(candidate)) {
+        // realpath so package-manager symlinks land on the workspace source
+        // path, keeping the resolved module trackable as a graph member.
+        return realpathSync(candidate);
+      }
+    }
+  } catch {
+    // fall back to the default resolution
+  }
+  return null;
+}
+
+function findWorkspacePackageJson(
+  packageName: string,
+  fromDir: string
+): string | null {
+  let dir = fromDir;
+  while (true) {
+    const candidate = join(dir, 'node_modules', packageName, 'package.json');
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+    const parent = dirname(dir);
+    if (parent === dir) {
+      return null;
+    }
+    dir = parent;
+  }
 }
 
 function getPackageNameFromSpecifier(specifier: string): string {
@@ -599,6 +792,9 @@ function getPackageNameFromSpecifier(specifier: string): string {
 }
 
 function normalizeModuleUrl(url: string): string {
+  if (!url.includes('?') && !url.includes('#')) {
+    return url;
+  }
   try {
     const normalized = new URL(url);
     normalized.search = '';
