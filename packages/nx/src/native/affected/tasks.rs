@@ -16,10 +16,9 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::native::affected::normalize_path;
+use crate::native::affected::project_paths::{ProjectRoots, normalize_path};
 use crate::native::glob::build_glob_set;
 use crate::native::project_graph::types::ProjectGraph;
-use crate::native::project_graph::utils::{find_project_for_path, normalize_project_root};
 use crate::native::tasks::hashers::globs_from_workspace_globs;
 use crate::native::tasks::types::{HashInstruction, HashPlans};
 
@@ -60,61 +59,52 @@ pub(crate) fn compute_affected_tasks(
     let files: Vec<String> = changed_files.iter().map(|f| normalize_path(f)).collect();
     // Resolved once per changed file rather than once per (file, instruction):
     // ProjectFileSet is the only kind that needs it, and many tasks share one.
-    let owners: Vec<Option<String>> = {
-        let root_map: HashMap<String, String> = graph
-            .nodes
-            .iter()
-            .map(|(name, project)| (normalize_project_root(&project.root), name.clone()))
-            .collect();
-        files
-            .iter()
-            .map(|file| find_project_for_path(file, &root_map).map(String::from))
-            .collect()
-    };
+    let roots = ProjectRoots::new(graph);
+    let owners: Vec<Option<&str>> = files.iter().map(|file| roots.owner_of(file)).collect();
 
     // One entry per interned instruction actually referenced by some plan.
     let mut ids: Vec<u32> = hash_plans.plans.values().flatten().copied().collect();
     ids.par_sort_unstable();
     ids.dedup();
 
+    // Only instructions that matched something are kept, so membership alone
+    // answers the common question without touching the indices.
     let matched_by_id: HashMap<u32, Vec<usize>> = ids
         .par_iter()
         .map(|&id| {
-            let instruction = hash_plans.pool.get(id);
-            let hits = match_instruction(instruction.value(), &files, &owners)?;
+            let hits = match_instruction(hash_plans.pool.get(id).value(), &files, &owners)?;
             Ok::<_, anyhow::Error>((id, hits))
         })
-        .filter(|entry| entry.as_ref().map(|(_, h)| !h.is_empty()).unwrap_or(true))
+        .filter(|entry| entry.as_ref().map_or(true, |(_, hits)| !hits.is_empty()))
         .collect::<anyhow::Result<HashMap<_, _>>>()?;
 
-    let mut affected: Vec<String> = Vec::new();
-    let mut matches: HashMap<String, Vec<String>> = HashMap::new();
-    for (task_id, plan) in &hash_plans.plans {
-        let hits: Vec<usize> = plan
-            .iter()
-            .filter_map(|id| matched_by_id.get(id))
-            .flatten()
-            .copied()
-            .collect();
-        if hits.is_empty() {
-            continue;
-        }
-        affected.push(task_id.clone());
-        if collect_matches {
-            let mut paths: Vec<String> =
-                hits.into_iter().map(|i| changed_files[i].clone()).collect();
-            paths.sort();
-            paths.dedup();
-            matches.insert(task_id.clone(), paths);
-        }
-    }
+    let mut affected: Vec<String> = hash_plans
+        .plans
+        .par_iter()
+        .filter(|(_, plan)| plan.iter().any(|id| matched_by_id.contains_key(id)))
+        .map(|(task_id, _)| task_id.clone())
+        .collect();
     // `plans` is a HashMap, so sort for a reproducible answer.
-    affected.sort();
+    affected.par_sort_unstable();
 
-    Ok(AffectedTasks {
-        affected,
-        matches: collect_matches.then_some(matches),
-    })
+    let matches = collect_matches.then(|| {
+        affected
+            .par_iter()
+            .map(|task_id| {
+                let mut paths: Vec<String> = hash_plans.plans[task_id]
+                    .iter()
+                    .filter_map(|id| matched_by_id.get(id))
+                    .flatten()
+                    .map(|&i| changed_files[i].clone())
+                    .collect();
+                paths.sort();
+                paths.dedup();
+                (task_id.clone(), paths)
+            })
+            .collect()
+    });
+
+    Ok(AffectedTasks { affected, matches })
 }
 
 /// Indices of the changed files this instruction would hash.
@@ -126,7 +116,7 @@ pub(crate) fn compute_affected_tasks(
 fn match_instruction(
     instruction: &HashInstruction,
     files: &[String],
-    owners: &[Option<String>],
+    owners: &[Option<&str>],
 ) -> anyhow::Result<Vec<usize>> {
     match instruction {
         HashInstruction::WorkspaceFileSet(file_sets) => {
@@ -144,9 +134,7 @@ fn match_instruction(
             Ok(files
                 .iter()
                 .enumerate()
-                .filter(|(i, f)| {
-                    owners[*i].as_deref() == Some(project.as_str()) && glob.is_match(f)
-                })
+                .filter(|(i, f)| owners[*i] == Some(project.as_str()) && glob.is_match(f))
                 .map(|(i, _)| i)
                 .collect())
         }
@@ -159,15 +147,15 @@ fn match_instruction(
         }
         HashInstruction::JsonFileSet(json) => {
             if let Some(project) = json.project_name.as_deref() {
-                let glob = build_glob_set(&[json.json_path.clone()])?;
+                let glob = build_glob_set(std::slice::from_ref(&json.json_path))?;
                 Ok(files
                     .iter()
                     .enumerate()
-                    .filter(|(i, f)| owners[*i].as_deref() == Some(project) && glob.is_match(f))
+                    .filter(|(i, f)| owners[*i] == Some(project) && glob.is_match(f))
                     .map(|(i, _)| i)
                     .collect())
             } else {
-                let globs = globs_from_workspace_globs(&[json.json_path.clone()]);
+                let globs = globs_from_workspace_globs(std::slice::from_ref(&json.json_path));
                 if globs.is_empty() {
                     return Ok(vec![]);
                 }
