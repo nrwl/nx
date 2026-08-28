@@ -480,6 +480,49 @@ describe('git utils tests', () => {
         expect(execSync).toHaveBeenCalled();
       }
     );
+
+    // mkfifo is POSIX-only; on Windows there is nothing to plant.
+    (process.platform === 'win32' ? it.skip : it)(
+      'should defer to git when the config is a FIFO rather than a file',
+      async () => {
+        // The sibling the symlink test's comment names. `O_NONBLOCK` is what
+        // makes opening one safe: without it `open` waits for a writer that
+        // never comes, and this resolves at module scope of
+        // `cache-directory.ts`, so every command in the workspace hangs before
+        // printing anything.
+        //
+        // Note the failure mode if `O_NONBLOCK` is ever dropped: this test
+        // HANGS rather than failing, until the suite timeout kills it. That is
+        // a worse signal than a red assertion and a far better one than leaving
+        // the flag uncovered -- a hung git-utils suite means look at the open
+        // flags in `readOwnedFileSync`.
+        //
+        // `child_process` is mocked in this file, so the FIFO has to be created
+        // through the real module; with the mock it is never created at all and
+        // this passes vacuously.
+        const realCp =
+          await vi.importActual<typeof import('child_process')>(
+            'child_process'
+          );
+        writeConfig(
+          repo,
+          '[remote "origin"]\n\turl = git@github.com:nrwl/nx.git\n'
+        );
+        const configPath = join(repo, '.git', 'config');
+        fs.rmSync(configPath);
+        realCp.execFileSync('mkfifo', [configPath]);
+        expect(fs.lstatSync(configPath).isFIFO()).toBe(true);
+        (execSync as Mock).mockReturnValue(
+          'origin\tgit@github.com:nrwl/nx.git (fetch)\n'
+        );
+
+        expect(getVcsRemoteInfo(repo)).toEqual({
+          domain: 'github.com',
+          slug: 'nrwl/nx',
+        });
+        expect(execSync).toHaveBeenCalled();
+      }
+    );
   });
 
   describe('getGitCurrentBranch', () => {
