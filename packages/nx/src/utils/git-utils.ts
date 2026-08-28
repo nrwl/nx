@@ -371,58 +371,77 @@ export function locateGitDir(
   directory: string
 ): { gitRoot: string; commonDir: string } | null {
   let current = resolve(directory);
-  for (;;) {
-    const dotGit = join(current, '.git');
-    let entry: fs.Stats | undefined;
-    try {
-      entry = fs.statSync(dotGit);
-    } catch {
-      entry = undefined;
-    }
 
-    if (entry?.isDirectory()) {
-      // A directory named `.git` is not a repository. Git checks this before
-      // reading config, and asking git is what this function replaced -- so
-      // without it a `.git` planted in any writable ancestor (`/tmp` is 1777)
-      // decides the workspace identity for everything beneath it.
-      if (
-        !fs.existsSync(join(dotGit, 'HEAD')) ||
-        !fs.existsSync(join(dotGit, 'objects'))
-      ) {
-        return null;
-      }
-      // Shape says it is a repository; ownership says it is ours. A real
-      // repository belonging to another user passes the check above, and git
-      // refuses exactly that (`safe.directory`, CVE-2022-24765). `lstat`
-      // inside also refuses a symlink standing in for `.git`.
-      return isOwnedRealDirectory(dotGit)
-        ? { gitRoot: current, commonDir: dotGit }
-        : null;
+  // Terminates at the filesystem root, where `dirname` is a fixed point.
+  while (dirname(current) !== current) {
+    const located = gitDirAt(current);
+    if (located !== undefined) {
+      return located;
     }
+    current = dirname(current);
+  }
 
-    if (entry?.isFile()) {
-      const pointer = readOwnedFileSync(dotGit)?.match(/^gitdir:\s*(.+)$/m);
-      if (!pointer) {
-        return null;
-      }
-      const gitDir = resolve(current, pointer[1].trim());
-      // No commondir file: the gitdir is its own common dir.
-      const shared = readOwnedFileSync(join(gitDir, 'commondir'))?.trim();
-      const commonDir = shared ? resolve(gitDir, shared) : gitDir;
-      // `gitdir:` and `commondir` are paths taken from file contents, so this
-      // branch can be pointed anywhere; the directory checks above apply to it
-      // just as much.
-      return isOwnedRealDirectory(commonDir)
-        ? { gitRoot: current, commonDir }
-        : null;
-    }
+  // The root itself: check it directly rather than walking past it.
+  return gitDirAt(current) ?? null;
+}
 
-    const parent = dirname(current);
-    if (parent === current) {
+/**
+ * The repository whose working root is `directory`, or:
+ *
+ * - `null` when a `.git` is there but is not one we will read, which ends the
+ *   walk rather than continuing past it -- git would not look further either.
+ * - `undefined` when there is no `.git` there at all, so the caller keeps
+ *   walking up.
+ */
+function gitDirAt(
+  directory: string
+): { gitRoot: string; commonDir: string } | null | undefined {
+  const dotGit = join(directory, '.git');
+  let entry: fs.Stats | undefined;
+  try {
+    entry = fs.statSync(dotGit);
+  } catch {
+    return undefined;
+  }
+
+  if (entry.isDirectory()) {
+    // A directory named `.git` is not a repository. Git checks this before
+    // reading config, and asking git is what this function replaced -- so
+    // without it a `.git` planted in any writable ancestor (`/tmp` is 1777)
+    // decides the workspace identity for everything beneath it.
+    if (
+      !fs.existsSync(join(dotGit, 'HEAD')) ||
+      !fs.existsSync(join(dotGit, 'objects'))
+    ) {
       return null;
     }
-    current = parent;
+    // Shape says it is a repository; ownership says it is ours. A real
+    // repository belonging to another user passes the check above, and git
+    // refuses exactly that (`safe.directory`, CVE-2022-24765). `lstat`
+    // inside also refuses a symlink standing in for `.git`.
+    return isOwnedRealDirectory(dotGit)
+      ? { gitRoot: directory, commonDir: dotGit }
+      : null;
   }
+
+  if (entry.isFile()) {
+    const pointer = readOwnedFileSync(dotGit)?.match(/^gitdir:\s*(.+)$/m);
+    if (!pointer) {
+      return null;
+    }
+    const gitDir = resolve(directory, pointer[1].trim());
+    // No commondir file: the gitdir is its own common dir.
+    const shared = readOwnedFileSync(join(gitDir, 'commondir'))?.trim();
+    const commonDir = shared ? resolve(gitDir, shared) : gitDir;
+    // `gitdir:` and `commondir` are paths taken from file contents, so this
+    // branch can be pointed anywhere; the directory checks above apply to it
+    // just as much.
+    return isOwnedRealDirectory(commonDir)
+      ? { gitRoot: directory, commonDir }
+      : null;
+  }
+
+  return undefined;
 }
 
 /**
