@@ -18,13 +18,11 @@ public static partial class TargetBuilder
         string productionInput,
         List<string> directoryBuildInputs)
     {
-        // Create a copy of properties with Configuration=Release
-        var releaseProperties = new Dictionary<string, string>(properties)
-        {
-            ["Configuration"] = "Release"
-        };
+        // The configuration MSBuild evaluated the paths at; the target runs at Release.
+        var defaultConfiguration = properties.GetValueOrDefault("Configuration");
+        var releaseProperties = WithConfiguration(properties, "Release");
 
-        var packageOutputPath = GetPackageOutputPath(releaseProperties, projectDirectory, workspaceRoot);
+        var packageOutputPath = GetPackageOutputPath(releaseProperties, defaultConfiguration, projectDirectory, workspaceRoot);
         // `dotnet pack` writes intermediate state into the intermediate (obj)
         // directory, so it must be declared as an output alongside the package
         // output, mirroring the build target.

@@ -19,13 +19,11 @@ public static partial class TargetBuilder
         string productionInput,
         List<string> directoryBuildInputs)
     {
-        // Create a copy of properties with Configuration=Release
-        var releaseProperties = new Dictionary<string, string>(properties)
-        {
-            ["Configuration"] = "Release"
-        };
+        // The configuration MSBuild evaluated the paths at; the target runs at Release.
+        var defaultConfiguration = properties.GetValueOrDefault("Configuration");
+        var releaseProperties = WithConfiguration(properties, "Release");
 
-        var publishDir = GetPublishDir(releaseProperties, projectDirectory, workspaceRoot);
+        var publishDir = GetPublishDir(releaseProperties, defaultConfiguration, projectDirectory, workspaceRoot);
         // `dotnet publish` writes incremental-publish state (e.g.
         // obj/<Configuration>/PublishOutputs.<hash>.txt) into the intermediate
         // (obj) directory, so it must be declared as an output alongside the
