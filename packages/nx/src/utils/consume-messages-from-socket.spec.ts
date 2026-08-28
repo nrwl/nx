@@ -8,6 +8,7 @@ import {
   consumeMessagesFromSocket,
   frameHeader,
   isJsonMessage,
+  DEFAULT_MAX_MESSAGE_SIZE,
   describeMessage,
   MESSAGE_HEADER_PREFIX,
   parseMessage,
@@ -217,6 +218,82 @@ describe('parseMessage', () => {
     expect(Array.from(parsed.buf)).toEqual([1, 2, 3]);
     expect(parsed.big).toBe(7n);
   });
+});
+
+describe('the message size limit', () => {
+  const withEnv = (value: string | undefined, fn: () => void) => {
+    const previous = process.env.NX_MAX_MESSAGE_SIZE;
+    if (value === undefined) delete process.env.NX_MAX_MESSAGE_SIZE;
+    else process.env.NX_MAX_MESSAGE_SIZE = value;
+    try {
+      fn();
+    } finally {
+      if (previous === undefined) delete process.env.NX_MAX_MESSAGE_SIZE;
+      else process.env.NX_MAX_MESSAGE_SIZE = previous;
+    }
+  };
+
+  const feedHeaderFor = (bytes: number) => {
+    const errors: Error[] = [];
+    const messages: Buffer[] = [];
+    const feed = consumeMessagesFromSocket(
+      (m) => messages.push(m),
+      (e) => errors.push(e)
+    );
+    // The header alone is enough: the limit is enforced before the payload is
+    // buffered, so an oversized message never gets to allocate.
+    feed(Buffer.from(`${MESSAGE_HEADER_PREFIX}${bytes}:`, 'ascii'));
+    return { errors, messages };
+  };
+
+  it('rejects a declared length above the limit before buffering it', () => {
+    const { errors } = withEnvReturn('1024', () => feedHeaderFor(1025));
+
+    expect(errors).toHaveLength(1);
+    expect(errors[0].message).toContain('exceeds the 1024 byte limit');
+    expect(errors[0].message).toContain('NX_MAX_MESSAGE_SIZE');
+  });
+
+  it('accepts a declared length at the limit', () => {
+    const { errors } = withEnvReturn('1024', () => feedHeaderFor(1024));
+
+    expect(errors).toEqual([]);
+  });
+
+  it('removes the ceiling when set to 0', () => {
+    const { errors } = withEnvReturn('0', () =>
+      feedHeaderFor(DEFAULT_MAX_MESSAGE_SIZE + 1)
+    );
+
+    expect(errors).toEqual([]);
+  });
+
+  it('defaults to a ceiling above the string limit it replaced', () => {
+    // Anything that previously worked was capped at MAX_STRING_LENGTH, so the
+    // default has to clear that comfortably or this PR regresses the payloads
+    // it exists to support.
+    expect(DEFAULT_MAX_MESSAGE_SIZE).toBeGreaterThan(536_870_888);
+  });
+
+  it('falls back to the default when the value is not a byte count', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { errors } = withEnvReturn('lots', () =>
+      feedHeaderFor(DEFAULT_MAX_MESSAGE_SIZE + 1)
+    );
+
+    expect(errors).toHaveLength(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining('NX_MAX_MESSAGE_SIZE')
+    );
+  });
+
+  function withEnvReturn<T>(value: string | undefined, fn: () => T): T {
+    let out!: T;
+    withEnv(value, () => {
+      out = fn();
+    });
+    return out;
+  }
 });
 
 describe('describeMessage', () => {

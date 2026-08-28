@@ -12,6 +12,7 @@ import { SOCKET_REFUSED_EXIT_CODE } from '../../../utils/socket-refused-exit-cod
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
 import {
   consumeMessagesFromSocket,
+  describeMessage,
   parseMessage,
 } from '../../../utils/consume-messages-from-socket';
 import { getPluginResolveConditionNodeArgs } from '../../../plugins/js/utils/typescript';
@@ -234,7 +235,20 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   }
 
   private handleSocketData = (raw: Buffer) => {
-    const message = parseMessage<any>(raw);
+    let message: any;
+    try {
+      message = parseMessage<any>(raw);
+    } catch (e) {
+      // Runs inside a synchronous socket 'data' callback, so a throw here
+      // becomes an uncaughtException in the host process rather than a failed
+      // plugin call.
+      logger.error(
+        `[plugin-client] "${this.name}" sent a message that could not be parsed: ${
+          e instanceof Error ? e.message : e
+        }\nReceived: ${describeMessage(raw)}`
+      );
+      return;
+    }
     if (isPluginWorkerNotification(message)) {
       handlePluginWorkerNotification(message);
       return;

@@ -8,6 +8,32 @@ const MESSAGE_HEADER_PREFIX_BYTES = Buffer.from(MESSAGE_HEADER_PREFIX, 'ascii');
 // is a desynchronized stream rather than a very large message.
 const MAX_HEADER_LENGTH = MESSAGE_HEADER_PREFIX.length + 16 + 1;
 
+/**
+ * Ceiling on a single message, in bytes. Payloads are buffered outside the V8
+ * heap, so `--max-old-space-size` does not bound them and a peer that declares
+ * a huge length would otherwise be allowed to stream until the machine gives
+ * out. The default is four times the ~0.5GiB string ceiling that used to cap
+ * every message, so it clears any payload that previously worked or was meant
+ * to. Set `NX_MAX_MESSAGE_SIZE` to another byte count to change it, or to 0 to
+ * remove the ceiling.
+ */
+export const DEFAULT_MAX_MESSAGE_SIZE = 2 * 1024 * 1024 * 1024;
+
+export function getMaxMessageSize(): number {
+  const configured = process.env.NX_MAX_MESSAGE_SIZE;
+  if (configured === undefined || configured === '') {
+    return DEFAULT_MAX_MESSAGE_SIZE;
+  }
+  const parsed = Number(configured);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    console.warn(
+      `NX_MAX_MESSAGE_SIZE must be a non-negative number of bytes, but was "${configured}". Using the default of ${DEFAULT_MAX_MESSAGE_SIZE}.`
+    );
+    return DEFAULT_MAX_MESSAGE_SIZE;
+  }
+  return parsed;
+}
+
 const ZERO = '0'.charCodeAt(0);
 const NINE = '9'.charCodeAt(0);
 
@@ -46,6 +72,9 @@ export function consumeMessagesFromSocket(
   let buffered = 0;
   let expectedPayloadLength: number | null = null;
   let broken = false;
+  // Read once per socket so a test or a caller can change it between
+  // connections without paying the lookup on every frame.
+  const maxMessageSize = getMaxMessageSize();
 
   const fail = (message: string) => {
     broken = true;
@@ -139,6 +168,13 @@ export function consumeMessagesFromSocket(
       if (byte === MESSAGE_HEADER_TERMINATOR) {
         if (digits === 0) {
           fail(`Message header carried no length.`);
+          return null;
+        }
+        if (maxMessageSize > 0 && value > maxMessageSize) {
+          fail(
+            `Message of ${value} bytes exceeds the ${maxMessageSize} byte limit. ` +
+              `Set NX_MAX_MESSAGE_SIZE to raise it, or to 0 to remove it.`
+          );
           return null;
         }
         discard(i + 1);
