@@ -2,16 +2,13 @@ import { NxJsonConfiguration } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { TaskGraph } from '../../config/task-graph';
 import { TargetDependencies } from '../../config/nx-json';
-import {
-  affectedTasks as nativeAffectedTasks,
-  HashPlanner,
-} from '../../native';
+import { affectedTasks as nativeAffectedTasks } from '../../native';
 import { getInputs } from '../../hasher/task-hasher';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { projectHasTarget } from '../../utils/project-graph-utils';
 import { FileChange } from '../file-utils';
-import { marshalGraph } from './marshal-graph';
-import { runTouchedProjectLocators } from './affected-projects';
+import { getSharedPlanner, marshalGraph } from './marshal-graph';
+import { filterAffected } from './affected-project-graph';
 
 export interface AffectedTasksResult {
   /** Tasks that are themselves affected — NOT their dependency closure. */
@@ -60,12 +57,50 @@ export async function computeAffectedTasks(
     excludeTaskDependencies = false,
   } = opts;
 
-  // Seed with every project that has one of the targets, not every project:
-  // with a single target, createTaskGraph tries to create a task for projects
-  // that lack it and createTask throws.
+  // Bound the work by the project-grained answer first. A task can only be
+  // affected if a changed file reaches its plan, and every route there marks
+  // the owning project: its own files, a dependency's files inlined by `^`
+  // inputs (whose dependents the reverse walk picks up), and `{workspaceRoot}`
+  // filesets (which getImplicitlyTouchedProjects attributes). So
+  // projects-of(affected tasks) is a subset of the project-grained set, and
+  // planning anything outside it is wasted — which for a docs-only change is
+  // every task in the workspace.
+  const affectedProjects = new Set(
+    Object.keys(
+      (
+        await filterAffected(
+          projectGraph,
+          touchedFiles,
+          nxJson,
+          opts.packageJson,
+          opts.projectDeletionAffectsAllProjects
+        )
+      ).nodes
+    )
+  );
+
+  // Only projects that have one of the targets: with a single target,
+  // createTaskGraph tries to create a task for projects that lack it and
+  // createTask throws.
   const candidates = Object.values(projectGraph.nodes)
-    .filter((node) => targets.some((t) => projectHasTarget(node, t)))
+    .filter(
+      (node) =>
+        affectedProjects.has(node.name) &&
+        targets.some((t) => projectHasTarget(node, t))
+    )
     .map((node) => node.name);
+
+  if (!candidates.length) {
+    return {
+      affectedTaskIds: new Set(),
+      taskGraph: {
+        roots: [],
+        tasks: {},
+        dependencies: {},
+        continuousDependencies: {},
+      },
+    };
+  }
 
   const taskGraph = createTaskGraph(
     projectGraph,
@@ -79,8 +114,10 @@ export async function computeAffectedTasks(
   const taskIds = Object.keys(taskGraph.tasks);
 
   const graphRef = marshalGraph(projectGraph);
-  const planner = new HashPlanner(nxJson as any, graphRef);
-  const plans = planner.getPlansReference(taskIds, taskGraph);
+  const plans = getSharedPlanner(projectGraph, nxJson).getPlansReference(
+    taskIds,
+    taskGraph
+  );
 
   const fileMatches = nativeAffectedTasks(
     graphRef,
@@ -91,23 +128,12 @@ export async function computeAffectedTasks(
 
   const own = new Set(fileMatches.affected);
 
-  // Project-level seeds: every task of a project a locator marked touched.
-  const touchedProjects = new Set(
-    (
-      await runTouchedProjectLocators(
-        projectGraph,
-        touchedFiles,
-        nxJson,
-        opts.packageJson,
-        opts.projectDeletionAffectsAllProjects
-      )
-    ).map((t) => t.project)
-  );
-  if (touchedProjects.size) {
-    for (const taskId of taskIds) {
-      if (touchedProjects.has(taskGraph.tasks[taskId].target.project)) {
-        own.add(taskId);
-      }
+  // Seeds for what a file intersection cannot see: ProjectConfiguration
+  // resolves to no files, lockfile and external changes are not paths, and a
+  // blanket trigger has no fileset. Those all surface as a touched project.
+  for (const taskId of taskIds) {
+    if (affectedProjects.has(taskGraph.tasks[taskId].target.project)) {
+      own.add(taskId);
     }
   }
 
