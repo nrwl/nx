@@ -972,6 +972,53 @@ describe('registerSourceGraphResolver', () => {
 
     expect(getWorkspacePackageNames).not.toHaveBeenCalled();
   });
+
+  it('identity-restores Module._load on the last cleanup when nothing else patched it', () => {
+    captureResolveHook();
+    vi.spyOn(
+      typescriptUtils,
+      'getRootTsConfigResolveExportsConditions'
+    ).mockReturnValue(['source']);
+    const nodeModule = require('node:module') as any;
+    const originalLoad = nodeModule._load;
+
+    const cleanup = registerSourceGraphResolver(join(root, 'plugin.ts'), root, [
+      '@proj/utils',
+    ]);
+    expect(nodeModule._load).not.toBe(originalLoad);
+
+    cleanup();
+    expect(nodeModule._load).toBe(originalLoad);
+  });
+
+  it('leaves a later Module._load patch in place and neutralizes its own', () => {
+    captureResolveHook();
+    vi.spyOn(
+      typescriptUtils,
+      'getRootTsConfigResolveExportsConditions'
+    ).mockReturnValue(['source']);
+    const nodeModule = require('node:module') as any;
+    const originalLoad = nodeModule._load;
+
+    const cleanup = registerSourceGraphResolver(join(root, 'plugin.ts'), root, [
+      '@proj/utils',
+    ]);
+    const ourPatched = nodeModule._load;
+    const wrapper = function (this: unknown, ...args: unknown[]) {
+      return ourPatched.apply(this, args);
+    };
+    nodeModule._load = wrapper;
+    try {
+      cleanup();
+      expect(nodeModule._load).toBe(wrapper);
+      // The neutralized patch still passes loads through.
+      expect(nodeModule._load('node:path', undefined, false)).toBe(
+        require('node:path')
+      );
+    } finally {
+      nodeModule._load = originalLoad;
+    }
+  });
 });
 
 // The scoping guarantee cannot be pinned with a mocked nextResolve: the defect
@@ -1074,6 +1121,110 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
         sibling: 'dist',
         siblingAfterCleanup: 'dist',
       });
+    },
+    120_000
+  );
+});
+
+// The graph conditions must union with the runtime's own conditions, not
+// replace them: a graph member resolving with only the graph conditions would
+// miss user --conditions and module-sync keys that every other consumer of the
+// same workspace package matches, forking one package into two live copies.
+describe('registerSourceGraphResolver CJS runtime condition union', () => {
+  const registerHooksAvailable =
+    typeof (require('node:module') as { registerHooks?: unknown })
+      .registerHooks === 'function';
+
+  let tempFs: InstanceType<typeof TempFs>;
+  let workspaceDir: string;
+  let runScript: string;
+
+  beforeAll(() => {
+    const req = createRequire(import.meta.url);
+    const swcRegisterPath = req.resolve('@swc-node/register/register');
+    const registerTsPath = fileURLToPath(
+      new URL('./register.ts', import.meta.url)
+    );
+
+    tempFs = new TempFs('source-graph-cjs-conditions', false);
+    workspaceDir = join(tempFs.tempDir, 'workspace');
+    runScript = join(tempFs.tempDir, 'run.cjs');
+    const graphEntry = join(workspaceDir, 'graph-entry.cjs');
+    const sibling = join(workspaceDir, 'sibling.cjs');
+
+    tempFs.createFilesSync({
+      'workspace/graph-entry.cjs':
+        "module.exports = { user: require('@proj/user-pkg'), dual: require('@proj/dual') };\n",
+      'workspace/sibling.cjs':
+        "module.exports = { user: require('@proj/user-pkg'), dual: require('@proj/dual') };\n",
+      // A user condition key ahead of the graph's development condition.
+      'workspace/node_modules/@proj/user-pkg/package.json': JSON.stringify({
+        name: '@proj/user-pkg',
+        exports: {
+          '.': {
+            userA: './user/index.js',
+            development: './src/index.js',
+            default: './dist/index.js',
+          },
+        },
+      }),
+      'workspace/node_modules/@proj/user-pkg/user/index.js':
+        "module.exports = 'user';\n",
+      'workspace/node_modules/@proj/user-pkg/src/index.js':
+        "module.exports = 'source';\n",
+      'workspace/node_modules/@proj/user-pkg/dist/index.js':
+        "module.exports = 'dist';\n",
+      // A module-sync key ahead of the require key, as dual-mode packages
+      // publish to hand require() and import() one shared copy.
+      'workspace/node_modules/@proj/dual/package.json': JSON.stringify({
+        name: '@proj/dual',
+        exports: {
+          '.': {
+            'module-sync': './esm/index.js',
+            require: './cjs/index.js',
+            default: './esm/index.js',
+          },
+        },
+      }),
+      'workspace/node_modules/@proj/dual/esm/index.js':
+        "module.exports = 'esm';\n",
+      'workspace/node_modules/@proj/dual/cjs/index.js':
+        "module.exports = 'cjs';\n",
+      'run.cjs': [
+        `require(${JSON.stringify(swcRegisterPath)}).register({ esModuleInterop: true });`,
+        `const { registerSourceGraphResolver } = require(${JSON.stringify(registerTsPath)});`,
+        `const entry = ${JSON.stringify(graphEntry)};`,
+        `const sibling = ${JSON.stringify(sibling)};`,
+        `const cleanup = registerSourceGraphResolver(entry, ${JSON.stringify(workspaceDir)}, ['@proj/user-pkg', '@proj/dual']);`,
+        `const results = { entry: require(entry), sibling: require(sibling) };`,
+        `cleanup();`,
+        `console.log(JSON.stringify(results));`,
+      ].join('\n'),
+    });
+  });
+
+  afterAll(() => {
+    tempFs.cleanup();
+  });
+
+  it.runIf(registerHooksAvailable)(
+    'applies user --conditions and module-sync to graph members like any other consumer',
+    () => {
+      const stdout = execFileSync(
+        process.execPath,
+        ['--conditions=userA', runScript],
+        {
+          cwd: workspaceDir,
+          env: { ...process.env, NX_WORKSPACE_ROOT_PATH: workspaceDir },
+          encoding: 'utf8',
+        }
+      );
+      const results = JSON.parse(stdout.trim().split('\n').pop()!);
+      expect(results.sibling).toEqual({ user: 'user', dual: 'esm' });
+      // The member sees the userA key, not the graph-condition fallback.
+      expect(results.entry.user).toBe('user');
+      // The member binds the same copy Node picks for everyone else.
+      expect(results.entry.dual).toBe(results.sibling.dual);
     },
     120_000
   );
