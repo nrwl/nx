@@ -13,7 +13,7 @@ import {
 import { getClientEnvironment } from '../../../utils/environment-variables';
 import { NormalizedEsBuildExecutorOptions } from '../schema';
 import { getEntryPoints } from '../../../utils/get-entry-points';
-import { join, relative } from 'path';
+import { join } from 'path';
 
 const ESM_FILE_EXTENSION = '.js';
 const CJS_FILE_EXTENSION = '.cjs';
@@ -35,6 +35,8 @@ export function buildEsbuildOptions(
 
   const esbuildOptions: esbuild.BuildOptions = {
     ...options.userDefinedBuildOptions,
+    // Nx-computed paths are workspace-root-relative, not cwd-relative.
+    absWorkingDir: context.root,
     entryNames:
       options.outputHashing === 'all' ? '[dir]/[name].[hash]' : '[dir]/[name]',
     bundle: options.bundle,
@@ -44,7 +46,7 @@ export function buildEsbuildOptions(
     platform: options.platform,
     target: options.target,
     metafile: options.metafile,
-    tsconfig: relative(process.cwd(), join(context.root, options.tsConfig)),
+    tsconfig: join(context.root, options.tsConfig),
     sourcemap:
       (options.sourcemap ?? options.userDefinedBuildOptions?.sourcemap) ||
       false,
