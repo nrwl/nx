@@ -209,12 +209,14 @@ describe('terminal outputs on disk', () => {
 
       expect(results).toContain('1 failed');
       expect(results).toContain(`nx run ${lib}:echo`);
-      // 1, not the 3 the task actually exits with. `completeTasks` rebuilds
-      // `TaskResult.code` from the status rather than carrying the code the
-      // process returned, so every failure reaches a life cycle as 1 - long
-      // before this style existed, and shared with task history and Nx Cloud.
-      // Asserting 3 here would be asserting a fix to that, not to this.
-      expect(results).toContain('(exit 1)');
+      // No exit code is printed. `completeTasks` rebuilds `TaskResult.code`
+      // from the status rather than carrying the code the process returned, so
+      // every failure reaches a life cycle as 1 - this task exits 3 and would
+      // have rendered `(exit 1)`. Rather than print a number that is always 1
+      // to a reader whose job is to machine-read the line, the style prints
+      // none. Carrying the real code through `TaskResult` would change what
+      // task history and Nx Cloud record, which is its own change.
+      expect(results).not.toContain('(exit');
       // Bounded regardless of how much the task logged.
       expect(nonEmptyLines(results).length).toBeLessThanOrEqual(30);
 

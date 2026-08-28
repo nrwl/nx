@@ -82,7 +82,7 @@ describe('SummaryTerminalOutputLifeCycle', () => {
     expect(out.split('\n').filter((l) => l.trim()).length).toBeLessThan(6);
   });
 
-  it('prints the failure, its exit code, and the path to its full log', () => {
+  it('prints the failure and the path to its full log', () => {
     const a = makeTask('a');
     const b = makeTask('b');
     const lifeCycle = new SummaryTerminalOutputLifeCycle([a, b]);
@@ -98,7 +98,9 @@ describe('SummaryTerminalOutputLifeCycle', () => {
     expect(out).toContain('1 succeeded');
     expect(out).toContain('1 failed');
     expect(out).toContain('nx run b:test');
-    expect(out).toContain('(exit 1)');
+    // No exit code: `TaskResult.code` is rebuilt from the status, so it is
+    // always 0 or 1 and would misreport a 137 or a 127 as 1.
+    expect(out).not.toContain('(exit');
     expect(out).toContain('full log: /cache/terminalOutputs/hash-b');
     // The log is addressed, not reproduced.
     expect(out).not.toContain('boom line 1');

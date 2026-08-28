@@ -17,7 +17,6 @@ import type { LifeCycle, TaskResult } from '../life-cycle';
 export class SummaryTerminalOutputLifeCycle implements LifeCycle {
   private readonly failed: {
     task: Task;
-    code: number;
     hasOutput: boolean;
   }[] = [];
   private readonly stopped: Task[] = [];
@@ -39,7 +38,7 @@ export class SummaryTerminalOutputLifeCycle implements LifeCycle {
   printTaskTerminalOutput(): void {}
 
   endTasks(taskResults: TaskResult[]): void {
-    for (const { task, status, code, terminalOutput } of taskResults) {
+    for (const { task, status, terminalOutput } of taskResults) {
       this.completed.add(task.id);
       switch (status) {
         case 'failure':
@@ -50,7 +49,6 @@ export class SummaryTerminalOutputLifeCycle implements LifeCycle {
           // output to the task produces exactly that.
           this.failed.push({
             task,
-            code,
             hasOutput: terminalOutput !== undefined,
           });
           break;
@@ -73,8 +71,8 @@ export class SummaryTerminalOutputLifeCycle implements LifeCycle {
     const skipped = this.tasks.filter((t) => !this.completed.has(t.id)).length;
     const bodyLines: string[] = [];
 
-    for (const { task, code, hasOutput } of this.failed) {
-      bodyLines.push('', ...this.failureBlock(task, code, hasOutput));
+    for (const { task, hasOutput } of this.failed) {
+      bodyLines.push('', ...this.failureBlock(task, hasOutput));
     }
     if (this.stopped.length > 0) {
       bodyLines.push(
@@ -118,13 +116,15 @@ export class SummaryTerminalOutputLifeCycle implements LifeCycle {
     }: ${parts.join(', ')}`;
   }
 
-  private failureBlock(task: Task, code: number, hasOutput: boolean): string[] {
-    // formatCommand is what every other renderer uses, so a task reads the same
-    // here as it does under --output-style=static.
+  private failureBlock(task: Task, hasOutput: boolean): string[] {
+    // No exit code: `completeTasks` rebuilds `TaskResult.code` from the status,
+    // so every failure arrives as 1 and a task killed with 137 or a missing
+    // binary's 127 would all render `(exit 1)`. Printing a number that is
+    // always 1 to a reader whose job is to machine-read this line is worse than
+    // printing none. formatCommand is what every other renderer uses, so a task
+    // reads the same here as it does under --output-style=static.
     const lines = [
-      `${output.colors.red('✖')} ${output.formatCommand(task.id)}  ${output.dim(
-        `(exit ${code})`
-      )}`,
+      `${output.colors.red('✖')} ${output.formatCommand(task.id)}`,
     ];
 
     // The log is addressed, not reproduced. `hash` is optional on the type but
