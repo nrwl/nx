@@ -1,30 +1,34 @@
+import type { Mock } from 'vitest';
 import { dirSync } from 'tmp';
 
-jest.mock('../logger', () => ({
-  serverLogger: { log: jest.fn() },
+vi.mock('../logger', () => ({
+  serverLogger: { log: vi.fn() },
 }));
-jest.mock('../../utils/provenance', () => ({
-  ensurePackageHasProvenance: jest.fn().mockResolvedValue(undefined),
+vi.mock('../../utils/provenance', () => ({
+  ensurePackageHasProvenance: vi.fn().mockResolvedValue(undefined),
 }));
-jest.mock('../../utils/package-manager', () => ({
-  detectPackageManager: jest.fn().mockReturnValue('npm'),
+vi.mock('../../utils/package-manager', () => ({
+  detectPackageManager: vi.fn().mockReturnValue('npm'),
 }));
-jest.mock('../../utils/package-json', () => ({
-  installPackageToTmpAsync: jest.fn(),
+vi.mock('../../utils/package-json', () => ({
+  installPackageToTmpAsync: vi.fn(),
 }));
 
 describe('cleanupLatestNx', () => {
   let getLatestNxTmpPath: typeof import('./latest-nx').getLatestNxTmpPath;
   let cleanupLatestNx: typeof import('./latest-nx').cleanupLatestNx;
-  let installPackageToTmpAsync: jest.Mock;
+  let installPackageToTmpAsync: Mock;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // latest-nx caches the install in module-level state, so each test needs a
     // fresh copy of the module - and of the mock it resolves against.
-    jest.resetModules();
-    jest.clearAllMocks();
-    ({ installPackageToTmpAsync } = require('../../utils/package-json'));
-    ({ getLatestNxTmpPath, cleanupLatestNx } = require('./latest-nx'));
+    vi.resetModules();
+    vi.clearAllMocks();
+    ({ installPackageToTmpAsync } =
+      (await import('../../utils/package-json')) as unknown as {
+        installPackageToTmpAsync: Mock;
+      });
+    ({ getLatestNxTmpPath, cleanupLatestNx } = await import('./latest-nx'));
   });
 
   function stubInstall(cleanup: () => Promise<void>) {
@@ -52,7 +56,7 @@ describe('cleanupLatestNx', () => {
   });
 
   it('removes the installation only once', async () => {
-    const cleanup = jest.fn().mockResolvedValue(undefined);
+    const cleanup = vi.fn().mockResolvedValue(undefined);
     stubInstall(cleanup);
 
     await getLatestNxTmpPath();
@@ -81,7 +85,7 @@ describe('cleanupLatestNx', () => {
   });
 
   it('removes a re-installed copy that was pulled after an earlier cleanup', async () => {
-    const cleanup = jest.fn().mockResolvedValue(undefined);
+    const cleanup = vi.fn().mockResolvedValue(undefined);
     stubInstall(cleanup);
 
     await getLatestNxTmpPath();
@@ -104,7 +108,7 @@ describe('cleanupLatestNx', () => {
     await getLatestNxTmpPath();
     await cleanupLatestNx();
 
-    const { serverLogger } = require('../logger');
+    const { serverLogger } = await import('../logger');
     expect(serverLogger.log).toHaveBeenCalledWith(
       expect.stringContaining('could not be removed'),
       tempDir
@@ -127,12 +131,12 @@ describe('cleanupLatestNx', () => {
     await getLatestNxTmpPath();
 
     // Race a real timer so a broken timeout fails as an assertion rather than
-    // hanging until jest's, which would skip the `useRealTimers` below.
+    // hanging until vitest's, which would skip the `useRealTimers` below.
     const realSetTimeout = setTimeout;
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     try {
       const pending = cleanupLatestNx();
-      jest.advanceTimersByTime(10_000);
+      vi.advanceTimersByTime(10_000);
       await expect(
         Promise.race([
           pending.then(() => 'gave up'),
@@ -142,7 +146,7 @@ describe('cleanupLatestNx', () => {
         ])
       ).resolves.toBe('gave up');
     } finally {
-      jest.useRealTimers();
+      vi.useRealTimers();
     }
   });
 });
