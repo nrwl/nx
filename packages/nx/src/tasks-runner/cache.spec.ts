@@ -1,28 +1,33 @@
+import type { Mock } from 'vitest';
 import { DbCache, formatCacheSize, parseMaxCacheSize } from './cache';
 import { output } from '../utils/output';
 import type { Task } from '../config/task-graph';
 
 const nativeCache = {
-  get: jest.fn().mockReturnValue(null),
-  getBatch: jest.fn().mockReturnValue([]),
-  put: jest.fn().mockReturnValue([]),
-  applyRemoteCacheResults: jest.fn(),
+  get: vi.fn().mockReturnValue(null),
+  getBatch: vi.fn().mockReturnValue([]),
+  put: vi.fn().mockReturnValue([]),
+  applyRemoteCacheResults: vi.fn(),
   cacheDirectory: '/tmp/nx-cache',
 };
 
-jest.mock('../native', () => ({
+vi.mock('../native', () => ({
   IS_WASM: false,
-  NxCache: jest.fn().mockImplementation(() => nativeCache),
-  HttpRemoteCache: jest.fn(),
-  getDefaultMaxCacheSize: jest.fn().mockReturnValue(0),
+  // A plain function, not an arrow: vitest calls the implementation with `new`,
+  // and arrows are not constructable.
+  NxCache: vi.fn(function () {
+    return nativeCache;
+  }),
+  HttpRemoteCache: vi.fn(),
+  getDefaultMaxCacheSize: vi.fn().mockReturnValue(0),
 }));
-jest.mock('../utils/db-connection', () => ({ getDbConnection: jest.fn() }));
-jest.mock('../config/nx-json', () => ({ readNxJson: jest.fn(() => ({})) }));
-jest.mock('./task-io-service', () => ({
-  getTaskIOService: () => ({ notifyTaskOutputs: jest.fn() }),
+vi.mock('../utils/db-connection', () => ({ getDbConnection: vi.fn() }));
+vi.mock('../config/nx-json', () => ({ readNxJson: vi.fn(() => ({})) }));
+vi.mock('./task-io-service', () => ({
+  getTaskIOService: () => ({ notifyTaskOutputs: vi.fn() }),
 }));
-jest.mock('../utils/output', () => ({
-  output: { warn: jest.fn(), error: jest.fn(), note: jest.fn() },
+vi.mock('../utils/output', () => ({
+  output: { warn: vi.fn(), error: vi.fn(), note: vi.fn() },
 }));
 
 /** Mirrors how napi surfaces a fatal error from `cache/errors.rs`. */
@@ -44,24 +49,22 @@ describe('remote cache failures', () => {
     outputs: [],
   } as unknown as Task;
 
-  function cacheWithRemote(remote: Record<string, jest.Mock>): DbCache {
+  function cacheWithRemote(remote: Record<string, Mock>): DbCache {
     const cache = new DbCache({ nxCloudRemoteCache: null as any });
     (cache as any).remoteCache = remote;
     return cache;
   }
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     nativeCache.get.mockReturnValue(null);
     nativeCache.put.mockReturnValue([]);
   });
 
   it('should treat a failed retrieve as a cache miss', async () => {
     const cache = cacheWithRemote({
-      retrieve: jest
-        .fn()
-        .mockRejectedValue(recoverableError('connection reset')),
-      store: jest.fn(),
+      retrieve: vi.fn().mockRejectedValue(recoverableError('connection reset')),
+      store: vi.fn(),
     });
 
     await expect(cache.get(task)).resolves.toBeNull();
@@ -70,8 +73,8 @@ describe('remote cache failures', () => {
 
   it('should rethrow a fatal retrieve failure', async () => {
     const cache = cacheWithRemote({
-      retrieve: jest.fn().mockRejectedValue(fatalError('unsafe artifact')),
-      store: jest.fn(),
+      retrieve: vi.fn().mockRejectedValue(fatalError('unsafe artifact')),
+      store: vi.fn(),
     });
 
     await expect(cache.get(task)).rejects.toThrow('unsafe artifact');
@@ -79,8 +82,8 @@ describe('remote cache failures', () => {
   });
 
   it('should not fail the run when the upload fails', async () => {
-    const store = jest.fn().mockRejectedValue(recoverableError('stalled'));
-    const cache = cacheWithRemote({ retrieve: jest.fn(), store });
+    const store = vi.fn().mockRejectedValue(recoverableError('stalled'));
+    const cache = cacheWithRemote({ retrieve: vi.fn(), store });
 
     await expect(cache.put(task, 'output', [], 0)).resolves.toBeUndefined();
     expect(output.warn).toHaveBeenCalledTimes(1);
@@ -88,8 +91,8 @@ describe('remote cache failures', () => {
 
   it('should rethrow a fatal upload failure', async () => {
     const cache = cacheWithRemote({
-      retrieve: jest.fn(),
-      store: jest.fn().mockRejectedValue(fatalError('read-only token')),
+      retrieve: vi.fn(),
+      store: vi.fn().mockRejectedValue(fatalError('read-only token')),
     });
 
     await expect(cache.put(task, 'output', [], 0)).rejects.toThrow(
@@ -100,11 +103,11 @@ describe('remote cache failures', () => {
   // Regression guard: catching inside tryAndRetry instead of around it would
   // silently remove retries, so a single blip would stop reaching the cache.
   it('should still retry a failing upload before giving up', async () => {
-    const store = jest
+    const store = vi
       .fn()
       .mockRejectedValueOnce(recoverableError('blip'))
       .mockResolvedValueOnce(true);
-    const cache = cacheWithRemote({ retrieve: jest.fn(), store });
+    const cache = cacheWithRemote({ retrieve: vi.fn(), store });
 
     await cache.put(task, 'output', [], 0);
 
@@ -115,8 +118,8 @@ describe('remote cache failures', () => {
   // A remote outage must not also cost the local cache entry.
   it('should still write locally when the upload fails', async () => {
     const cache = cacheWithRemote({
-      retrieve: jest.fn(),
-      store: jest.fn().mockRejectedValue(recoverableError('stalled')),
+      retrieve: vi.fn(),
+      store: vi.fn().mockRejectedValue(recoverableError('stalled')),
     });
 
     await cache.put(task, 'output', [], 0);
