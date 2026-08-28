@@ -99,6 +99,13 @@ describe('@nx/webpack/plugin', () => {
                   "build-something": {
                     "cache": true,
                     "command": "webpack-cli build",
+                    "configurations": {
+                      "development": {
+                        "env": {
+                          "NODE_ENV": "development",
+                        },
+                      },
+                    },
                     "dependsOn": [
                       "^build-something",
                     ],
