@@ -135,6 +135,18 @@ describe('@nx/vitest', () => {
       expect(nodes).toMatchSnapshot();
     });
 
+    it('should not set projectType so it does not override the type from other plugins', async () => {
+      const nodes = await createNodesFunction(
+        ['vitest.config.ts'],
+        {
+          testTargetName: 'test',
+        },
+        context
+      );
+
+      expect(nodes[0][1].projects!['.'].projectType).toBeUndefined();
+    });
+
     it('should create nodes with ci target name', async () => {
       const nodes = await createNodesFunction(
         ['vitest.config.ts'],

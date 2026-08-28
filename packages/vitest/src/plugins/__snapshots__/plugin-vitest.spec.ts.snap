@@ -8,7 +8,6 @@ exports[`@nx/vitest root project should create nodes 1`] = `
       "projects": {
         ".": {
           "metadata": {},
-          "projectType": "library",
           "root": ".",
           "targets": {
             "test": {
@@ -84,7 +83,6 @@ exports[`@nx/vitest root project should create nodes with ci target name 1`] = `
               ],
             },
           },
-          "projectType": "library",
           "root": ".",
           "targets": {
             "e2e-ci": {
@@ -308,7 +306,6 @@ exports[`@nx/vitest root project should create nodes with ci target name and ci 
               ],
             },
           },
-          "projectType": "library",
           "root": ".",
           "targets": {
             "e2e-ci": {
