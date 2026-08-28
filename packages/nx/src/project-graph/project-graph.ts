@@ -479,10 +479,10 @@ export async function createProjectGraphAndSourceMapsAsync(
           title: `Nx Daemon was not able to compute the project graph.`,
           bodyLines: [
             `Log file with the error: ${errorLogFile}`,
-            // Agents act on what reaches stdout, not on log files — when a
-            // sandbox is in play, surface the likely cause and its fix inline.
-            // This branch covers every internal daemon error, including ones a
-            // sandbox cannot explain, so the issue link stays either way.
+            // Inline rather than left to the log file, which an agent will
+            // not open. This branch covers every internal daemon error,
+            // including ones a sandbox cannot explain, so the issue link stays
+            // either way.
             ...(sandboxed ? sandboxSocketHint() : []),
             `Please file an issue at https://github.com/nrwl/nx`,
             sandboxed

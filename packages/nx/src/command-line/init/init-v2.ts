@@ -473,7 +473,7 @@ async function runInit(
         throw e;
       }
       // Don't fail the whole init over this — everything else succeeded.
-      // output.warn writes to stdout, which is what a driving agent reads.
+      // Warned rather than thrown so the rest of the init result still stands.
       output.warn({
         title: 'AI agent configuration could not be written from this process',
         bodyLines: agentConfigWriteBlockedLines(e),

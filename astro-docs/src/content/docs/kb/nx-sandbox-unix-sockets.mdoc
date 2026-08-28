@@ -21,13 +21,11 @@ topics:
 
 When running Nx commands inside an AI agent's sandbox, you may see errors related to the Nx daemon, plugin isolation, or forked processes failing to communicate. Agent sandboxes (Seatbelt on macOS, bubblewrap on Linux) block Unix socket access by default, and Nx relies on Unix sockets for inter-process communication.
 
-The sections below cover [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview), Codex, and GitHub Copilot CLI. Each gates sockets on a different setting, so use the one that matches your agent.
-
-## The fix
-
 Allowlist the root Nx puts its sockets under. The entry covers creating sockets as well as connecting to them, which is what the daemon, plugin workers and forked tasks each need.
 
-## Scoped allowlisting with the Nx socket root
+The sections below cover [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview), Codex, and GitHub Copilot CLI. Each gates sockets on a different setting, so use the one that matches your agent.
+
+## Claude Code
 
 The daemon, forked task processes and plugin workers put their sockets beneath one stable root on macOS and Linux: `/tmp/.nx`, unless overridden via `NX_SOCKET_DIR`. When that root can't be used they move to `~/.nx`, so allowlist both. Neither path varies between machines or users, which makes the rule suitable for team-wide project settings:
 
@@ -49,44 +47,6 @@ The daemon, forked task processes and plugin workers put their sockets beneath o
 `~` expands to the home directory of whoever runs Nx, so one committed entry covers every user. Wildcards don't work in these settings, so each entry has to be a literal path.
 
 The write grant covers `/tmp/.nx` rather than only its `sockets` descendants because the first Nx run also has to create the root. Nx copies its compiled native binding into a cache under the same root before loading it, which the grant needs to cover too.
-
-## Where sockets go, and in what order
-
-Setting `$NX_SOCKET_DIR` replaces this list rather than joining it: the value is used exactly as given, and a configured directory Nx can't use sends it straight to the workspace with a warning instead of quietly substituting a longer path you never asked for.
-
-Otherwise Nx uses the first of these it can establish. It creates each directory and verifies it afterwards, not before: a check that ran first would leave a window in which someone else could swap the path between the check and the use.
-
-1. **`/tmp/.nx/<uid>/sockets`** needs `/tmp/.nx` to belong to you or to `root`, and to be sticky if anyone else can write to it. The two directories beneath it have to be yours and mode `0700`.
-1. **`~/.nx/sockets`** needs both directories to be yours and mode `0700`. There's no container check here, because nobody else can write to your home directory.
-1. **`<workspaceRoot>/.nx/workspace-data/d`** is the last resort. Its length grows with the depth of your checkout, so a deeply nested workspace can push a socket past the 95-character limit Nx enforces. Nx sets that conservative guard to sit under the operating system's own cap on socket paths.
-
-The native binding cache doesn't follow sockets down that list. It lives at `/tmp/.nx/<uid>/native-cache/<nxVersion>` or nowhere. When that can't be established, Nx skips the cache and loads the binding in place from `node_modules`. A skipped cache costs one file copy, while a skipped socket costs you the daemon, so only sockets keep looking.
-
-None of this applies on Windows. Named pipes aren't filesystem objects, so sockets stay directly under `%TMP%`, with no per-user segment and no second location.
-
-{% aside type="note" title="What keeps these directories private" %}
-The allowlist decides which paths the sandbox can reach. It is not what separates users from each other.
-
-Nx puts the user ID directly beneath the stable container: `/tmp/.nx/<uid>`. It creates that user directory and every directory beneath it with mode `0700`, then re-checks each one before use: it must be owned by the current user, be a real directory rather than a symlink, and carry no group or other permissions.
-
-Nx also verifies the `/tmp/.nx` container itself, and accepts it when either you or `root` owns it. On a single-user machine, in a container, or in a sandbox, that's already true: the first Nx run creates the container and you own it, so none of this needs setting up.
-
-Machines with more than one user are the exception. Whoever runs Nx first owns the container, and a directory's owner can rename the entries inside it whatever its permissions say. So Nx does not put your private directory beneath a container someone else owns. An administrator can create the container up front to cover everyone:
-
-```shell
-sudo install -d -m 1777 -o root -g root /tmp/.nx
-```
-
-That one command is the entire setup. Each user then creates their own `/tmp/.nx/<uid>`, `sockets`, and `native-cache` directories beneath it.
-
-Without it, the first person to run Nx on the machine gets the shared container and everyone after them moves on to `~/.nx`. Usually that's because a colleague got there first, though the same check is what refuses a container someone claimed deliberately. Your home directory needs no such check, because nobody else can write there, so it needs no setup at all.
-
-A per-user directory can still end up belonging to someone else: `root`, after one `sudo nx` run that kept your `HOME`, or a colleague who created `/tmp/.nx/<your-uid>` before you did. When no location works, Nx warns, and `--verbose` explains what it refused. A fall from `/tmp/.nx` to `~/.nx` is silent, because nothing is broken there, and `--verbose` names the directory it skipped and why. You can move it aside yourself when you own the directory it sits in, either your home directory or a `/tmp/.nx` your own first run created. When `root` owns that parent, an administrator has to. Once it's out of the way Nx recreates it on the next run, and pointing `NX_SOCKET_DIR` at a directory you own gets you working meanwhile.
-
-Sockets only land inside your workspace if the home directory can't host them either. That's safe rather than broken, and it's the one case where the socket path grows long enough to matter.
-
-Code inside the sandbox runs as your user, so this grant does let it write that binary cache, in the same way it can already write your workspace's `node_modules`.
-{% /aside %}
 
 Running `nx configure-ai-agents` writes these to `.claude/settings.json` for you: the scoped socket paths and the read/write grants. Claude Code's sandbox blocks writes to its own settings file, so run it from a regular terminal rather than through the agent.
 
@@ -126,16 +86,56 @@ Copilot CLI scopes sockets by path, like Claude Code. Add the Nx socket roots to
     "enabled": true,
     "userPolicy": {
       "filesystem": {
-        "readwritePaths": ["/tmp/.nx", "/home/<you>/.nx"]
+        "readwritePaths": ["/tmp/.nx", "~/.nx"]
       }
     }
   }
 }
 ```
 
-Two things to know. Copilot CLI reads its sandbox policy **only from the user-level `~/.copilot/settings.json`**, so a copy committed to the workspace has no effect and `nx configure-ai-agents` cannot write it for you. And command sandboxing is an experimental feature that is off by default, so these settings do nothing until you enable it with `--experimental` and `/sandbox enable`.
+Unlike Codex, Copilot CLI expands `~`, so the home entry is the same string for every user.
+
+Two things to know. The sandbox policy is read **only from the user-level `~/.copilot/settings.json`**, so a copy committed to the workspace has no effect and `nx configure-ai-agents` cannot write it for you. And command sandboxing is an experimental feature that is off by default, so these settings do nothing until you enable it with `--experimental` and `/sandbox enable`.
 
 The network settings do not help here. `userPolicy.network.allowLocalNetwork` leaves the socket refused, because Copilot gates socket creation on the filesystem policy rather than the network one.
+
+## Where sockets go, and in what order
+
+Setting `$NX_SOCKET_DIR` replaces this list rather than joining it: the value is used exactly as given, and a configured directory Nx can't use sends it straight to the workspace with a warning instead of quietly substituting a longer path you never asked for.
+
+Otherwise Nx uses the first of these it can establish. It creates each directory and verifies it afterwards, not before: a check that ran first would leave a window in which someone else could swap the path between the check and the use.
+
+1. **`/tmp/.nx/<uid>/sockets`** needs `/tmp/.nx` to belong to you or to `root`, and to be sticky if anyone else can write to it. The two directories beneath it have to be yours and mode `0700`.
+1. **`~/.nx/sockets`** needs both directories to be yours and mode `0700`. There's no container check here, because nobody else can write to your home directory.
+1. **`<workspaceRoot>/.nx/workspace-data/d`** is the last resort. Its length grows with the depth of your checkout, so a deeply nested workspace can push a socket past the 95-character limit Nx enforces. Nx sets that conservative guard to sit under the operating system's own cap on socket paths.
+
+The native binding cache doesn't follow sockets down that list. It lives at `/tmp/.nx/<uid>/native-cache/<nxVersion>` or nowhere. When that can't be established, Nx skips the cache and loads the binding in place from `node_modules`. A skipped cache costs one file copy, while a skipped socket costs you the daemon, so only sockets keep looking.
+
+None of this applies on Windows. Named pipes aren't filesystem objects, so sockets stay directly under `%TMP%`, with no per-user segment and no second location.
+
+{% aside type="note" title="What keeps these directories private" %}
+The allowlist decides which paths the sandbox can reach. It is not what separates users from each other.
+
+Nx puts the user ID directly beneath the stable container: `/tmp/.nx/<uid>`. It creates that user directory and every directory beneath it with mode `0700`, then re-checks each one before use: it must be owned by the current user, be a real directory rather than a symlink, and carry no group or other permissions.
+
+Nx also verifies the `/tmp/.nx` container itself, and accepts it when either you or `root` owns it. On a single-user machine, in a container, or in a sandbox, that's already true: the first Nx run creates the container and you own it, so none of this needs setting up.
+
+Machines with more than one user are the exception. Whoever runs Nx first owns the container, and a directory's owner can rename the entries inside it whatever its permissions say. So Nx does not put your private directory beneath a container someone else owns. An administrator can create the container up front to cover everyone:
+
+```shell
+sudo install -d -m 1777 -o root -g root /tmp/.nx
+```
+
+That one command is the entire setup. Each user then creates their own `/tmp/.nx/<uid>`, `sockets`, and `native-cache` directories beneath it.
+
+Without it, the first person to run Nx on the machine gets the shared container and everyone after them moves on to `~/.nx`. Usually that's because a colleague got there first, though the same check is what refuses a container someone claimed deliberately. Your home directory needs no such check, because nobody else can write there, so it needs no setup at all.
+
+A per-user directory can still end up belonging to someone else: `root`, after one `sudo nx` run that kept your `HOME`, or a colleague who created `/tmp/.nx/<your-uid>` before you did. When no location works, Nx warns, and `--verbose` explains what it refused. A fall from `/tmp/.nx` to `~/.nx` is silent, because nothing is broken there, and `--verbose` names the directory it skipped and why. You can move it aside yourself when you own the directory it sits in, either your home directory or a `/tmp/.nx` your own first run created. When `root` owns that parent, an administrator has to. Once it's out of the way Nx recreates it on the next run, and pointing `NX_SOCKET_DIR` at a directory you own gets you working meanwhile.
+
+Sockets only land inside your workspace if the home directory can't host them either. That's safe rather than broken, and it's the one case where the socket path grows long enough to matter.
+
+Code inside the sandbox runs as your user, so this grant does let it write that binary cache, in the same way it can already write your workspace's `node_modules`.
+{% /aside %}
 
 ## Alternative workarounds
 

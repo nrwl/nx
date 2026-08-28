@@ -133,11 +133,6 @@ export function disableDaemonForThisProcess(reason: string) {
   disabledForThisProcess = reason;
 }
 
-/** Exported for tests: the in-memory disable is process-scoped by design. */
-export function resetProcessDaemonDisableForTesting() {
-  disabledForThisProcess = undefined;
-}
-
 export function isDaemonDisabled() {
   if (disabledForThisProcess !== undefined) {
     return true;

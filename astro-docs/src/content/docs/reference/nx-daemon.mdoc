@@ -75,7 +75,7 @@ and forked process sockets, and per workspace for the plugin worker sockets.
 The workspace location is used directly rather than getting a directory beneath it, so sockets there are
 per workspace whichever kind they are.
 For what each location requires, see
-[Configure Claude Code sandboxes for Nx](/docs/kb/nx-sandbox-unix-sockets).
+[Fix Nx commands failing in an AI agent sandbox](/docs/kb/nx-sandbox-unix-sockets).
 
 Setting `NX_SOCKET_DIR` does not add a fourth entry to that list. It replaces it.
 The value becomes the socket directory itself rather than a root to create one under, and it gets no

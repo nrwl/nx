@@ -1,11 +1,13 @@
 import {
   confirmThirdPartyPreset,
+  determineAiAgents,
   determineFormatterOptions,
   determineLinterOptions,
   determineNxCloudV2,
   determineTemplate,
 } from './prompts';
 import * as clack from '@clack/prompts';
+import { detectAiAgentName } from '../utils/ai/ai-output';
 
 jest.mock('../utils/ci/is-ci', () => ({
   isCI: jest.fn(() => false),
@@ -309,5 +311,33 @@ describe('determineFormatterOptions', () => {
         ]),
       })
     );
+  });
+});
+
+describe('determineAiAgents', () => {
+  const mockDetect = detectAiAgentName as jest.Mock;
+
+  afterEach(() => mockDetect.mockReset());
+
+  it('should configure an agent the generator has a branch for', async () => {
+    mockDetect.mockReturnValue('claude');
+
+    expect(await determineAiAgents({} as any)).toEqual(['claude']);
+  });
+
+  it('should not configure copilot-cli, which detection reports but the generator cannot set up', async () => {
+    // Detection is broader than `supportedAgents`. Passing this through would
+    // run setupAiAgentsGenerator with an agent no `hasAgent` branch matches:
+    // no rules file, but still the unconditional .claude/* .gitignore entries.
+    // Copilot CLI configuration is tracked separately (NXC-4622).
+    mockDetect.mockReturnValue('copilot-cli');
+
+    expect(await determineAiAgents({} as any)).toEqual([]);
+  });
+
+  it('should return nothing when no agent is detected', async () => {
+    mockDetect.mockReturnValue(null);
+
+    expect(await determineAiAgents({} as any)).toEqual([]);
   });
 });
