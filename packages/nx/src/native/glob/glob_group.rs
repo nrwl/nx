@@ -17,6 +17,8 @@ pub enum GlobGroup<'a> {
     NegatedFileName(Cow<'a, str>),
     // !(a|b|c)*
     NegatedWildcard(Cow<'a, str>),
+    // ?, +, or @ not followed by an extglob group
+    BareExtglobPrefix(char),
     NonSpecialGroup(Cow<'a, str>),
     NonSpecial(Cow<'a, str>),
 }
@@ -50,6 +52,7 @@ impl<'a> Display for GlobGroup<'a> {
                     write!(f, "{}*", s)
                 }
             }
+            GlobGroup::BareExtglobPrefix(prefix) => write!(f, "{}", prefix),
             GlobGroup::NonSpecial(s) => write!(f, "{}", s),
         }
     }

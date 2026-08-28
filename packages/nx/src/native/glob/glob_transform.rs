@@ -1,6 +1,6 @@
 use super::contains_glob_pattern;
 use crate::native::glob::glob_group::GlobGroup;
-use crate::native::glob::glob_parser::parse_glob;
+use crate::native::glob::glob_parser::{parse_glob, parse_glob_preserving_bare_extglob_prefixes};
 use itertools::Either::{Left, Right};
 use itertools::Itertools;
 use std::collections::HashSet;
@@ -111,6 +111,11 @@ fn build_segment(
             | GlobGroup::NonSpecialGroup(_) => {
                 build_segment(&built_glob, &group[1..], is_last_segment, is_negative)
             }
+            // Preserving mode is only used for output-root partitioning.
+            // Pattern conversion keeps the existing invalid-group recovery.
+            GlobGroup::BareExtglobPrefix(_) => {
+                build_segment(existing, &group[1..], is_last_segment, is_negative)
+            }
         }
     } else if is_negative {
         vec![GlobType::Negative(existing.to_string())]
@@ -119,21 +124,37 @@ fn build_segment(
     }
 }
 
+fn static_segment(group: &[GlobGroup]) -> Option<String> {
+    let mut segment = String::new();
+    for glob_part in group {
+        match glob_part {
+            GlobGroup::NonSpecial(value) if !contains_glob_pattern(value) => {
+                segment.push_str(value)
+            }
+            GlobGroup::BareExtglobPrefix(prefix @ ('@' | '+')) => segment.push(*prefix),
+            _ => return None,
+        }
+    }
+    Some(segment)
+}
+
 pub fn partition_glob(glob: &str) -> anyhow::Result<(String, Vec<String>)> {
-    let (negated, groups) = parse_glob(glob)?;
+    // The static root needs literal path text, unlike glob conversion where
+    // bare extglob prefixes are intentionally consumed for compatibility.
+    let (negated, groups) = parse_glob_preserving_bare_extglob_prefixes(glob)?;
     // Partition glob into leading directories and patterns that should be matched
     let mut has_patterns = false;
     let (leading_dir_segments, pattern_segments): (Vec<String>, _) = groups
         .into_iter()
         .filter(|group| !group.is_empty())
-        .partition_map(|group| match &group[0] {
-            GlobGroup::NonSpecial(value) if !contains_glob_pattern(&value) && !has_patterns => {
-                Left(value.to_string())
+        .partition_map(|group| {
+            if !has_patterns {
+                if let Some(segment) = static_segment(&group) {
+                    return Left(segment);
+                }
             }
-            _ => {
-                has_patterns = true;
-                Right(group)
-            }
+            has_patterns = true;
+            Right(group)
         });
 
     Ok((
@@ -296,6 +317,24 @@ mod test {
         let (leading_dirs, globs) = super::partition_glob("dist/app/").unwrap();
         assert_eq!(leading_dirs, "dist/app");
         assert_eq!(globs, [] as [String; 0]);
+    }
+
+    #[test]
+    fn should_partition_literal_extglob_prefixes() {
+        let (leading_dirs, globs) =
+            super::partition_glob("packages/@acme/producer/dist/**/*.d.ts").unwrap();
+        assert_eq!(leading_dirs, "packages/@acme/producer/dist");
+        assert_eq!(globs, ["**/*.d.ts"]);
+
+        let (leading_dirs, globs) =
+            super::partition_glob("packages/a+b/producer/dist/**/*.d.ts").unwrap();
+        assert_eq!(leading_dirs, "packages/a+b/producer/dist");
+        assert_eq!(globs, ["**/*.d.ts"]);
+
+        let (leading_dirs, globs) =
+            super::partition_glob("packages/@(acme|other)/dist/**/*.d.ts").unwrap();
+        assert_eq!(leading_dirs, "packages");
+        assert_eq!(globs, ["{acme,other}/dist/**/*.d.ts"]);
     }
 
     #[test]
