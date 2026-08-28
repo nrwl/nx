@@ -19,6 +19,11 @@ run-name: ${{ github.event.inputs.pr && format('PR Release for {0}', github.even
 
 env:
   DEBUG: napi:*
+  # Published binaries must never be built incrementally: the root Cargo.toml
+  # turns incremental on for the release profile so local rebuilds are fast, and
+  # incremental partitioning changes codegen. This must reach every build below,
+  # including the docker and FreeBSD ones, which forward env explicitly.
+  CARGO_INCREMENTAL: '0'
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
   CYPRESS_INSTALL_BINARY: 0
   NODE_VERSION: 26.7.0
@@ -396,6 +401,7 @@ jobs:
             -e PNPM_VERSION \
             -e NX_GRADLE_PROJECT_GRAPH_TIMEOUT \
             -e NX_VERBOSE_LOGGING \
+            -e CARGO_INCREMENTAL \
             -v ${{ github.workspace }}/.cargo-cache/git/db:/usr/local/cargo/git/db \
             -v ${{ github.workspace }}/.cargo/registry/cache:/usr/local/cargo/registry/cache \
             -v ${{ github.workspace }}/.cargo/registry/index:/usr/local/cargo/registry/index \
@@ -449,6 +455,7 @@ jobs:
         env:
           DEBUG: napi:*
           RUSTUP_IO_THREADS: 1
+          CARGO_INCREMENTAL: '0'
           PLAYWRIGHT_BROWSERS_PATH: 0
           NODE_VERSION: 26.7.0
           NX_GRADLE_DISABLE: 'true'
@@ -458,7 +465,7 @@ jobs:
           operating_system: freebsd
           version: '14.0'
           architecture: x86-64
-          environment_variables: DEBUG RUSTUP_IO_THREADS CI PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE NX_DOTNET_DISABLE NODE_OPTIONS
+          environment_variables: DEBUG RUSTUP_IO_THREADS CARGO_INCREMENTAL CI PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE NX_DOTNET_DISABLE NODE_OPTIONS
           shell: bash
           run: |
             env
