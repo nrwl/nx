@@ -175,7 +175,7 @@ export default defineConfig({
         `generate @nx/next:app apps/${appName} --e2eTestRunner=none --no-interactive `
       );
       runCLI(
-        `generate @nx/next:component apps/${appName}/components/btn --no-interactive`
+        `generate @nx/next:component apps/${appName}/src/components/btn --no-interactive`
       );
 
       runCLI(
