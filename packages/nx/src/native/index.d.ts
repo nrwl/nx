@@ -306,6 +306,16 @@ export declare class WorkspaceContext {
   getFilesInDirectory(directory: string): Array<string>
 }
 
+export interface AffectedOptions {
+  /**
+   * `createNodes` globs of every loaded plugin. Resolved in TypeScript because
+   * `getPlugins` is async and spawns plugin workers.
+   */
+  projectGlobPatterns: Array<string>
+  projectDeletionAffectsAllProjects: boolean
+  workspaceRoot: string
+}
+
 export interface BatchInfo {
   executorName: string
   taskIds: Array<string>
@@ -624,6 +634,15 @@ export interface Link {
   text: string
   href: string
 }
+
+/**
+ * Runs every locator and returns the touched project names, in locator order,
+ * unsorted overall and with duplicates. Callers dedupe by walking the graph.
+ *
+ * Every branch is deterministic, and must stay so: this order reaches
+ * `result.nodes` insertion order and so `nx show projects --affected`.
+ */
+export declare function locateTouchedProjects(projectGraph: ExternalObject<ProjectGraph>, nxJson: NxJson, touchedFiles: Array<string>, options: AffectedOptions, jsLocators: Array<(files: string[]) => Promise<string[]>>): Promise<Array<string>>
 
 export declare function logDebug(message: string): void
 
