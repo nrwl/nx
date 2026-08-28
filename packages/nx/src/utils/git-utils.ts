@@ -7,6 +7,7 @@ import {
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import { dirname, join, posix, relative, resolve, sep } from 'path';
+import { isOwnedRealDirectory } from './owned-private-dir';
 
 function execFileAsync(
   file: string,
@@ -327,6 +328,45 @@ export function parseVcsRemoteUrl(url: string): VcsRemoteInfo | null {
  * in that per-worktree gitdir, which `commondir` names when it is not the
  * gitdir itself.
  */
+/**
+ * Contents of `path`, or null unless it is a regular file belonging to us.
+ *
+ * Three flags carry three separate guarantees, and the read needs all of them:
+ * `O_NOFOLLOW` refuses a symlink, keeping the read inside the repository;
+ * `O_NONBLOCK` stops a FIFO blocking the open forever, which at module scope of
+ * `cache-directory.ts` would hang every command in the workspace before it
+ * printed anything; and taking the type and owner from `fstat` on the
+ * descriptor that is then read leaves no window for the path to be swapped
+ * between the check and the read.
+ */
+function readOwnedFileSync(path: string): string | null {
+  let fd: number | undefined;
+  try {
+    fd = fs.openSync(
+      path,
+      fs.constants.O_RDONLY |
+        (fs.constants.O_NOFOLLOW ?? 0) |
+        (fs.constants.O_NONBLOCK ?? 0)
+    );
+    const stats = fs.fstatSync(fd);
+    if (
+      !stats.isFile() ||
+      (typeof process.getuid === 'function' && stats.uid !== process.getuid())
+    ) {
+      return null;
+    }
+    return fs.readFileSync(fd, 'utf8');
+  } catch {
+    return null;
+  } finally {
+    if (fd !== undefined) {
+      try {
+        fs.closeSync(fd);
+      } catch {}
+    }
+  }
+}
+
 export function locateGitDir(
   directory: string
 ): { gitRoot: string; commonDir: string } | null {
@@ -351,33 +391,30 @@ export function locateGitDir(
       ) {
         return null;
       }
-      return { gitRoot: current, commonDir: dotGit };
+      // Shape says it is a repository; ownership says it is ours. A real
+      // repository belonging to another user passes the check above, and git
+      // refuses exactly that (`safe.directory`, CVE-2022-24765). `lstat`
+      // inside also refuses a symlink standing in for `.git`.
+      return isOwnedRealDirectory(dotGit)
+        ? { gitRoot: current, commonDir: dotGit }
+        : null;
     }
 
     if (entry?.isFile()) {
-      try {
-        const pointer = fs
-          .readFileSync(dotGit, 'utf8')
-          .match(/^gitdir:\s*(.+)$/m);
-        if (!pointer) {
-          return null;
-        }
-        const gitDir = resolve(current, pointer[1].trim());
-        let commonDir = gitDir;
-        try {
-          const shared = fs
-            .readFileSync(join(gitDir, 'commondir'), 'utf8')
-            .trim();
-          if (shared) {
-            commonDir = resolve(gitDir, shared);
-          }
-        } catch {
-          // No commondir file: the gitdir is the common dir.
-        }
-        return { gitRoot: current, commonDir };
-      } catch {
+      const pointer = readOwnedFileSync(dotGit)?.match(/^gitdir:\s*(.+)$/m);
+      if (!pointer) {
         return null;
       }
+      const gitDir = resolve(current, pointer[1].trim());
+      // No commondir file: the gitdir is its own common dir.
+      const shared = readOwnedFileSync(join(gitDir, 'commondir'))?.trim();
+      const commonDir = shared ? resolve(gitDir, shared) : gitDir;
+      // `gitdir:` and `commondir` are paths taken from file contents, so this
+      // branch can be pointed anywhere; the directory checks above apply to it
+      // just as much.
+      return isOwnedRealDirectory(commonDir)
+        ? { gitRoot: current, commonDir }
+        : null;
     }
 
     const parent = dirname(current);
@@ -488,15 +525,10 @@ function remoteInfoFromGitConfig(directory: string): VcsRemoteInfo | null {
       return null;
     }
 
-    // `lstat` rather than opening blind: a FIFO here would block `open`
-    // forever, and this runs at module scope of `cache-directory.ts`, so every
-    // command in that workspace would hang before printing anything. Refusing a
-    // symlink in the same check also keeps the read inside the repository.
-    const configPath = join(located.commonDir, 'config');
-    if (!fs.lstatSync(configPath).isFile()) {
+    const contents = readOwnedFileSync(join(located.commonDir, 'config'));
+    if (contents === null) {
       return null;
     }
-    const contents = fs.readFileSync(configPath, 'utf8');
     const remotes = parseGitConfigRemotes(contents);
     if (!remotes) {
       return null;

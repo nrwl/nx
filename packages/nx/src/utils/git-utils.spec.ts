@@ -339,6 +339,57 @@ describe('git utils tests', () => {
       }
     });
 
+    // Everything a test creates belongs to the test, so a foreign owner is
+    // simulated from the other side: pretend to be a different uid.
+    (typeof process.getuid === 'function' ? it : it.skip)(
+      'should defer to git for a .git directory belonging to someone else',
+      () => {
+        // Shape alone does not settle it: a real repository owned by another
+        // user has HEAD and objects. The walk goes up past the workspace into
+        // directories the caller may not own, and git refuses a foreign-owned
+        // repository for this reason (safe.directory, CVE-2022-24765).
+        writeConfig(
+          repo,
+          '[remote "origin"]\n\turl = git@github.com:attacker/planted.git\n'
+        );
+        const notUs = vi
+          .spyOn(process, 'getuid')
+          .mockReturnValue(process.getuid!() + 1);
+        (execSync as Mock).mockReturnValue('');
+
+        try {
+          expect(getVcsRemoteInfo(repo)).toBeNull();
+          expect(execSync).toHaveBeenCalled();
+        } finally {
+          notUs.mockRestore();
+        }
+      }
+    );
+
+    (typeof process.getuid === 'function' ? it : it.skip)(
+      'should defer to git for a config file belonging to someone else',
+      () => {
+        // Separate from the directory check: the file is what gets read, and
+        // the owner is taken from fstat on the descriptor that is read.
+        writeConfig(
+          repo,
+          '[remote "origin"]\n\turl = git@github.com:attacker/planted.git\n'
+        );
+        const fstat = vi.spyOn(fs, 'fstatSync').mockReturnValue({
+          isFile: () => true,
+          uid: process.getuid!() + 1,
+        } as fs.Stats);
+        (execSync as Mock).mockReturnValue('');
+
+        try {
+          expect(getVcsRemoteInfo(repo)).toBeNull();
+          expect(execSync).toHaveBeenCalled();
+        } finally {
+          fstat.mockRestore();
+        }
+      }
+    );
+
     it('should defer to git when the config names no remote', () => {
       writeConfig(repo, '[core]\n\tbare = false\n');
       (execSync as Mock).mockReturnValue('');

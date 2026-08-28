@@ -1,20 +1,5 @@
 import type { Mock } from 'vitest';
 
-// Hoisted above the imports because `utils/cache-directory` resolves `cacheDir`
-// at module scope, and resolving it derives the workspace identity from git.
-// This file mocks `fs` wholesale, so the identity's `.git/config` fast path
-// cannot read anything and it falls back to spawning git — which the
-// no-subprocess assertion below would then attribute to `undoMigration`. Any of
-// the three cache env vars settles the location before anything touches git, so
-// this keeps the assertion blunt and honest rather than narrowing it.
-//
-// Not restored afterwards: vitest runs each spec file in its own fork
-// (`pool: 'forks'`, isolation on), so this cannot reach another file. Revisit
-// if that config ever turns isolation off.
-vi.hoisted(() => {
-  process.env.NX_CACHE_DIRECTORY ??= '/tmp/nx-migrate-ui-api-spec-cache';
-});
-
 vi.mock('child_process');
 vi.mock('fs');
 import { execFileSync, execSync, spawn } from 'child_process';
