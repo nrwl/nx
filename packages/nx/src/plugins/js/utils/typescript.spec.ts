@@ -43,30 +43,15 @@ describe('readTsConfigOptions', () => {
 });
 
 describe('getDaemonResolveConditionNodeArgs', () => {
-  it('uses process conditions only when registerHooks is unavailable', async () => {
+  it('does not pass plugin conditions to the daemon', async () => {
     const fs = new TempFs('daemon-conditions');
     await fs.createFiles({
       'tsconfig.json': JSON.stringify({
         compilerOptions: { customConditions: ['source'] },
       }),
     });
-    const nodeModule = require('node:module') as typeof import('node:module');
-    const registerHooks = nodeModule.registerHooks;
 
-    try {
-      (nodeModule as any).registerHooks = jest.fn();
-      expect(getDaemonResolveConditionNodeArgs(fs.tempDir)).toEqual([]);
-
-      (nodeModule as any).registerHooks = undefined;
-      expect(getDaemonResolveConditionNodeArgs(fs.tempDir)).toEqual([
-        '--conditions',
-        'source',
-        '--conditions',
-        'development',
-      ]);
-    } finally {
-      (nodeModule as any).registerHooks = registerHooks;
-      fs.cleanup();
-    }
+    expect(getDaemonResolveConditionNodeArgs()).toEqual([]);
+    fs.cleanup();
   });
 });
