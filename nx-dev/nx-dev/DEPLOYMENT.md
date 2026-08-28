@@ -332,7 +332,7 @@ This is especially important when updating `NEXT_PUBLIC_FRAMER_URL`, `NEXT_PUBLI
 
 ## Deploy Previews
 
-- **nx-dev (Next.js):** `https://deploy-preview-{PR}--nxdev.netlify.app`
+- **nx-dev (Next.js):** `https://deploy-preview-{PR}--nx-dev.netlify.app`
 - **astro-docs:** `https://deploy-preview-{PR}--nx-docs.netlify.app`
 
 During deploy previews, the Next.js app automatically configures `NEXT_PUBLIC_ASTRO_URL` to point to the matching Astro preview based on `REVIEW_ID`.

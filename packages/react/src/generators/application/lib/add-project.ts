@@ -171,6 +171,9 @@ function createRspackServeTarget(
     defaultConfiguration: 'development',
     options: {
       buildTarget: `${options.projectName}:build`,
+      // @nx/rspack:dev-server defaults to 4200 at runtime, not in its schema, so
+      // omitting this is safe but the generated executor docs show no default.
+      ...(options.port != null ? { port: options.port } : {}),
       hmr: true,
     },
     configurations: {
@@ -262,6 +265,9 @@ function createServeTarget(options: NormalizedSchema): TargetConfiguration {
     defaultConfiguration: 'development',
     options: {
       buildTarget: `${options.projectName}:build`,
+      // Only when asked: @nx/webpack:dev-server already defaults to 4200, so writing
+      // it unrequested would just restate the executor's own default.
+      ...(options.port != null ? { port: options.port } : {}),
       hmr: true,
     },
     configurations: {

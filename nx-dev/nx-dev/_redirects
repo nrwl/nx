@@ -346,6 +346,8 @@
 /features/plugin-features/use-code-generators /docs/features/generate-code 301
 
 # --- makeMoreConceptsSubmenu ---
+# Must precede the wildcard: /concepts/more-concepts/monorepo-nx-enterprise has no rule.
+/more-concepts/monorepo-nx-enterprise /docs/kb/folder-structure 301
 /more-concepts /concepts/more-concepts 301
 /more-concepts/* /concepts/more-concepts/:splat 301
 
@@ -1352,7 +1354,7 @@
 
 # --- DOC-556: broken backlink targets (Ahrefs site audit, 2026-07-17) ---
 # Legacy URLs with external referring pages that currently 404.
-/storybook/overview-react /docs/technologies/test-tools/storybook 301
+/storybook/overview-react /docs/kb/storybook-for-react 301
 /angular /docs/technologies/angular/introduction 301
 /web /docs/getting-started/intro 301
 /nx/reset /docs/reference/nx-commands#nx-reset 301
