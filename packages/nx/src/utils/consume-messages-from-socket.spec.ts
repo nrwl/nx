@@ -125,60 +125,54 @@ describe('consumeMessagesFromSocket', () => {
     expect(errors[0].message).toContain('non-digit');
   });
 
-  it('stops consuming once the stream is broken', () => {
-    const { messages, errors, feed } = collect();
-    feed(Buffer.from('garbage', 'utf8'));
-    feed(json({ one: 1 }));
-    expect(messages).toEqual([]);
-    expect(errors).toHaveLength(1);
-  });
-
-  it('times out a message that never completes', () => {
+  it('holds a partial message indefinitely rather than timing out', () => {
     vi.useFakeTimers();
     try {
       const { messages, errors, feed } = collect();
       const wire = json({ one: 1 });
       feed(wire.subarray(0, wire.length - 2));
 
+      // An idle timer here could only fire from the timers phase, which runs
+      // before poll: a reader blocked in its own data handler would have the
+      // deadline pass before the bytes it is waiting on are delivered, and the
+      // stream would be killed while the peer was healthy.
+      vi.advanceTimersByTime(10 * 60_000);
       expect(errors).toEqual([]);
-      vi.advanceTimersByTime(60_000);
 
-      expect(messages).toEqual([]);
-      expect(errors).toHaveLength(1);
-      expect(errors[0].message).toContain('Timed out');
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it('does not time out while chunks keep arriving', () => {
-    vi.useFakeTimers();
-    try {
-      const { messages, errors, feed } = collect();
-      const wire = json({ one: 1 });
-      feed(wire.subarray(0, 5));
-      vi.advanceTimersByTime(45_000);
-      feed(wire.subarray(5, 9));
-      vi.advanceTimersByTime(45_000);
-      feed(wire.subarray(9));
-
-      expect(errors).toEqual([]);
+      feed(wire.subarray(wire.length - 2));
       expect(messages).toEqual([{ one: 1 }]);
     } finally {
       vi.useRealTimers();
     }
   });
 
-  it('stops the timer once every buffered message is delivered', () => {
+  it('leaves no timer holding the event loop open', () => {
     vi.useFakeTimers();
     try {
-      const { errors, feed } = collect();
-      feed(json({ one: 1 }));
-      vi.advanceTimersByTime(120_000);
-      expect(errors).toEqual([]);
+      const { feed } = collect();
+      feed(json({ one: 1 }).subarray(0, 6));
+
+      expect(vi.getTimerCount()).toBe(0);
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('rejects a zero-length frame instead of delivering an empty message', () => {
+    const { messages, errors, feed } = collect();
+    feed(Buffer.from(`${MESSAGE_HEADER_PREFIX}0:`, 'ascii'));
+
+    expect(messages).toEqual([]);
+    expect(errors).toHaveLength(1);
+    expect(errors[0].message).toContain('zero-length');
+  });
+
+  it('stops consuming once the stream is broken', () => {
+    const { messages, errors, feed } = collect();
+    feed(Buffer.from('garbage', 'utf8'));
+    feed(json({ one: 1 }));
+    expect(messages).toEqual([]);
+    expect(errors).toHaveLength(1);
   });
 });
 

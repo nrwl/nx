@@ -202,9 +202,23 @@ const server = createServer(async (socket) => {
 
   socket.on(
     'data',
-    consumeMessagesFromSocket(async (message) => {
-      await handleMessage(socket, message);
-    })
+    consumeMessagesFromSocket(
+      async (message) => {
+        // A rejection here would otherwise be unhandled and take the daemon
+        // down with it, failing every other client's request too.
+        await handleMessage(socket, message).catch(async (e) => {
+          await respondWithError(socket, 'Error handling message', e);
+        });
+      },
+      (err) => {
+        serverLogger.log(`Framing error: ${err.message}`);
+        // The stream cannot resynchronize, so close it and let the client
+        // observe the disconnect instead of waiting on a reply.
+        respondWithError(socket, 'Malformed message', err).finally(() =>
+          socket.destroy()
+        );
+      }
+    )
   );
 
   socket.on('error', (e) => {
@@ -492,7 +506,12 @@ async function handleMessage(socket: Socket, data: Buffer) {
     await respondWithErrorAndExit(
       socket,
       `Invalid payload from the client`,
-      new Error(`Unsupported payload sent to daemon server: ${unparsedPayload}`)
+      new Error(
+        `Unsupported payload sent to daemon server: ${describeMessage(
+          unparsedPayload,
+          { maxBytes: 200 }
+        )}`
+      )
     );
   }
 }

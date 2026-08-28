@@ -1,5 +1,4 @@
 import type { Socket } from 'net';
-
 import { ProgressTopic } from '../../utils/progress-topics';
 import { isOnDaemon } from '../is-on-daemon';
 import { serverLogger } from '../logger';

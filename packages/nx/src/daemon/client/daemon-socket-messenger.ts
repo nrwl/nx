@@ -62,13 +62,22 @@ export class DaemonSocketMessenger {
 
     this.socket.on(
       'data',
-      consumeMessagesFromSocket(async (message) => {
-        clientLogger.log(
-          '[Messenger] Received message, length:',
-          message.length
-        );
-        onData(message);
-      })
+      consumeMessagesFromSocket(
+        async (message) => {
+          clientLogger.log(
+            '[Messenger] Received message, length:',
+            message.length
+          );
+          onData(message);
+        },
+        // A framing failure leaves the socket open and writable, so nothing
+        // else settles the in-flight request. Route it to the same handler as
+        // a socket error rather than waiting for the keep-alive timeout.
+        (err) => {
+          clientLogger.log('[Messenger] Framing error:', err.message);
+          onError(err);
+        }
+      )
     );
 
     clientLogger.log('[Messenger] listen() complete');

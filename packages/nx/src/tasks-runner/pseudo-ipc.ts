@@ -86,19 +86,29 @@ export class PseudoIPCServer {
   private registerChildMessages(socket: Socket) {
     socket.on(
       'data',
-      consumeMessagesFromSocket(async (rawMessage) => {
-        const { type, message } = parseMessage<PseudoIPCMessage>(rawMessage);
-        if (type === 'TO_PARENT_FROM_CHILDREN') {
+      consumeMessagesFromSocket(
+        async (rawMessage) => {
+          const { type, message } = parseMessage<PseudoIPCMessage>(rawMessage);
+          if (type === 'TO_PARENT_FROM_CHILDREN') {
+            for (const childMessage of this.childMessages) {
+              childMessage.onMessage(message);
+            }
+          } else if (type === 'CHILD_READY') {
+            const childId = message as string;
+            if (this.childReadyMap.has(childId)) {
+              this.childReadyMap.get(childId)();
+            }
+          }
+        },
+        // Nothing resynchronizes a length-prefixed stream, so report it the
+        // same way a socket error is reported and let the peer see the close.
+        (err) => {
           for (const childMessage of this.childMessages) {
-            childMessage.onMessage(message);
+            childMessage.onError?.(err);
           }
-        } else if (type === 'CHILD_READY') {
-          const childId = message as string;
-          if (this.childReadyMap.has(childId)) {
-            this.childReadyMap.get(childId)();
-          }
+          socket.destroy();
         }
-      })
+      )
     );
 
     socket.on('close', () => {
@@ -177,7 +187,7 @@ export class PseudoIPCClient {
             onMessage(message);
           }
         }
-      })
+      }, onError)
     );
 
     this.socket.on('close', onClose);

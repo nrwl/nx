@@ -8,14 +8,6 @@ const MESSAGE_HEADER_PREFIX_BYTES = Buffer.from(MESSAGE_HEADER_PREFIX, 'ascii');
 // is a desynchronized stream rather than a very large message.
 const MAX_HEADER_LENGTH = MESSAGE_HEADER_PREFIX.length + 16 + 1;
 
-/**
- * How long a partially received message may sit with no further bytes before
- * the stream is treated as broken. A peer that dies mid-write normally closes
- * the socket; this only covers the case where it stops writing but holds the
- * connection open.
- */
-export const INCOMPLETE_MESSAGE_TIMEOUT_MS = 60_000;
-
 const ZERO = '0'.charCodeAt(0);
 const NINE = '9'.charCodeAt(0);
 
@@ -53,36 +45,13 @@ export function consumeMessagesFromSocket(
   let chunks: Buffer[] = [];
   let buffered = 0;
   let expectedPayloadLength: number | null = null;
-  let idleTimer: NodeJS.Timeout | undefined;
   let broken = false;
-
-  const disarmIdleTimer = () => {
-    if (idleTimer) {
-      clearTimeout(idleTimer);
-      idleTimer = undefined;
-    }
-  };
-
-  const armIdleTimer = () => {
-    disarmIdleTimer();
-    if (buffered === 0) {
-      return;
-    }
-    idleTimer = setTimeout(() => {
-      fail(
-        `Timed out after ${INCOMPLETE_MESSAGE_TIMEOUT_MS}ms waiting for the rest of a message. ` +
-          `Expected ${expectedPayloadLength ?? 'a header'} bytes, received ${buffered}.`
-      );
-    }, INCOMPLETE_MESSAGE_TIMEOUT_MS);
-    idleTimer.unref?.();
-  };
 
   const fail = (message: string) => {
     broken = true;
     chunks = [];
     buffered = 0;
     expectedPayloadLength = null;
-    disarmIdleTimer();
     onError(new MessageFramingError(message));
   };
 
@@ -204,14 +173,14 @@ export function consumeMessagesFromSocket(
         if (length === null) break;
         expectedPayloadLength = length;
       }
+      if (expectedPayloadLength === 0) {
+        fail('Message header declared a zero-length payload.');
+        break;
+      }
       if (buffered < expectedPayloadLength) break;
       const payload = take(expectedPayloadLength);
       expectedPayloadLength = null;
       callback(payload);
-    }
-
-    if (!broken) {
-      armIdleTimer();
     }
   };
 }

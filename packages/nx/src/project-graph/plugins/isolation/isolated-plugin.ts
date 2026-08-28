@@ -193,7 +193,16 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     };
     worker.on('exit', this.exitHandler);
 
-    socket.on('data', consumeMessagesFromSocket(this.handleSocketData));
+    socket.on(
+      'data',
+      consumeMessagesFromSocket(this.handleSocketData, (err) => {
+        // Nothing else settles the pending hook promises on a framing
+        // failure, so surface it the same way a dead worker would.
+        this.exitHandler?.();
+        socket.destroy();
+        console.error(err.message);
+      })
+    );
 
     return this.sendLoadMessage();
   }
