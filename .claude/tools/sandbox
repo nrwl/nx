@@ -22,8 +22,19 @@ const path = require('path');
 
 const STATE_DIR = path.join(os.homedir(), '.nx-sandboxes');
 const STATE_FILE = path.join(STATE_DIR, 'sandboxes.json');
+const LOCK_DIR = path.join(STATE_DIR, 'registry.lock');
+const LOCK_TIMEOUT_MS = 30_000;
+const LOCK_STALE_MS = 120_000;
 const CONTAINER_ROOT = '/work/nx';
 const CONTAINER_BASE = '/work/base';
+
+// Which session owns a container. `prune` refuses to kill anything it does not
+// own, so an unset id means "claim nothing" rather than "claim everything".
+const SESSION_ID = process.env.CLAUDE_CODE_SESSION_ID || '';
+const OWNER_LABEL = 'nx-sandbox.session';
+// A container younger than this may belong to a `start` that has not written
+// its row yet, so `prune` leaves it alone regardless of ownership.
+const ORPHAN_GRACE_MS = 120_000;
 
 // ---------------------------------------------------------------- state
 
@@ -37,7 +48,83 @@ function readState() {
 
 function writeState(state) {
   fs.mkdirSync(STATE_DIR, { recursive: true });
-  fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2) + '\n');
+  // Write-then-rename: a reader must never observe a half-written registry.
+  // Several `/review-pr` panes read this file constantly, and a torn read
+  // parses as "no sandboxes", which reads exactly like a clean cleanup.
+  const tmp = `${STATE_FILE}.tmp.${process.pid}`;
+  fs.writeFileSync(tmp, JSON.stringify(state, null, 2) + '\n');
+  fs.renameSync(tmp, STATE_FILE);
+}
+
+/**
+ * Hold an exclusive lock across processes for the duration of `fn`.
+ *
+ * `mkdir` is the primitive: it is atomic create-if-not-exists on every POSIX
+ * filesystem, unlike an `existsSync` + `writeFile` pair, which has the same
+ * check-then-act race this lock exists to remove.
+ */
+function withStateLock(fn) {
+  fs.mkdirSync(STATE_DIR, { recursive: true });
+  const deadline = Date.now() + LOCK_TIMEOUT_MS;
+  for (;;) {
+    try {
+      fs.mkdirSync(LOCK_DIR);
+      break;
+    } catch (e) {
+      if (e.code !== 'EEXIST') throw e;
+      // A crashed holder would otherwise wedge every future invocation, so an
+      // old lock is broken rather than waited on. The window is generous: the
+      // longest legitimate hold is a `pnpm install`, and that no longer runs
+      // under the lock at all.
+      let age = Infinity;
+      try {
+        age = Date.now() - fs.statSync(LOCK_DIR).mtimeMs;
+      } catch {
+        continue; // holder released it between the mkdir and the stat
+      }
+      if (age > LOCK_STALE_MS) {
+        try {
+          fs.rmSync(LOCK_DIR, { recursive: true, force: true });
+        } catch {}
+        continue;
+      }
+      if (Date.now() > deadline)
+        die(
+          `timed out after ${LOCK_TIMEOUT_MS / 1000}s waiting for the registry lock (${LOCK_DIR}).\n` +
+            `If no other sandbox command is running, remove that directory.`
+        );
+      // Coarse spin. Every critical section here is a few filesystem ops, so
+      // contention resolves in milliseconds; sleeping longer would cost more
+      // than it saves.
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 25);
+    }
+  }
+  try {
+    return fn();
+  } finally {
+    try {
+      fs.rmSync(LOCK_DIR, { recursive: true, force: true });
+    } catch {}
+  }
+}
+
+/**
+ * Read-modify-write the registry atomically.
+ *
+ * Every mutation must go through this. The bug it removes: `readState()`,
+ * then slow work, then `writeState()` writes back a snapshot taken before
+ * other sessions made their changes, silently deleting their rows. Observed
+ * with parallel `/review-pr` panes — a sandbox "vanished" from `list` while
+ * its container was still running, and rows deleted by one pane were
+ * resurrected by another. Never hold this across a container operation.
+ */
+function updateState(mutator) {
+  return withStateLock(() => {
+    const state = readState();
+    const out = mutator(state);
+    writeState(state);
+    return out;
+  });
 }
 
 function getSandbox(id) {
@@ -218,6 +305,11 @@ function cmdStart(argv) {
       '-d',
       '--name',
       container,
+      // Stamped so `prune` can tell its own leaked containers from another
+      // session's live ones. The registry cannot answer that: an orphan is by
+      // definition a container with no row.
+      '--label',
+      `${OWNER_LABEL}=${SESSION_ID}`,
       ...(iso.runtimeArgs || []),
       '--cap-drop',
       'ALL',
@@ -247,8 +339,19 @@ function cmdStart(argv) {
       baseRef: opts.base ? `refs/remotes/origin/${opts.base}` : null,
       isolation: iso.isolation,
       exec: iso.exec,
+      session: SESSION_ID,
       createdAt: nowIso(),
     };
+
+    // Register BEFORE the checkout, not after it. The checkout shallow-fetches
+    // a whole repo, so registering afterwards left the container visible to
+    // `docker ps` but absent from the registry for tens of seconds — long
+    // enough for a concurrent `prune` to read it as an orphan and `rm -f` a
+    // container another session was still setting up. Measured twice on one
+    // review. The row is removed again if the checkout fails.
+    updateState((state) => {
+      state.sandboxes[id] = sb;
+    });
 
     if (opts.checkout) {
       const script = [
@@ -272,14 +375,19 @@ function cmdStart(argv) {
       const r2 = execIn(sb, script.join('\n'));
       if (r2.status !== 0) {
         run(backend.bin, ['rm', '-f', container], { stdio: 'ignore' });
+        updateState((state) => {
+          delete state.sandboxes[id];
+        });
         die(`checkout failed:\n${r2.stderr || r2.stdout}`);
       }
     }
   }
 
-  const state = readState();
-  state.sandboxes[id] = sb;
-  writeState(state);
+  // Idempotent for container mode (registered above); this is what registers a
+  // local sandbox, which has no container and so no early-registration window.
+  updateState((state) => {
+    state.sandboxes[id] = sb;
+  });
 
   if (opts.json) {
     process.stdout.write(JSON.stringify(sb, null, 2) + '\n');
@@ -741,9 +849,9 @@ function cmdView(argv) {
     exec: minTier(want, parent.exec),
     createdAt: nowIso(),
   };
-  const state = readState();
-  state.sandboxes[viewId] = view;
-  writeState(state);
+  updateState((state) => {
+    state.sandboxes[viewId] = view;
+  });
 
   if (opts.json)
     return process.stdout.write(JSON.stringify(view, null, 2) + '\n');
@@ -764,10 +872,8 @@ function ownerRow(state, sb) {
  * view triggering an install records it where the next caller looks.
  */
 function ensureInstalled(sb, dir, label) {
-  const state = readState();
-  const owner = ownerRow(state, sb);
-  owner.installed = owner.installed || {};
-  if (owner.installed[label]) return owner.installed[label];
+  const cached = ownerRow(readState(), sb).installed?.[label];
+  if (cached) return cached;
 
   // --frozen-lockfile first: a fallback install rewrites the lockfile, silently
   // changing what every other agent is reading. It still runs, because a lockfile
@@ -789,8 +895,16 @@ function ensureInstalled(sb, dir, label) {
       : 'FAILED';
   // A failure is recorded too. Retrying it per agent turns one environment fault
   // into N slow identical faults, and the review still needs to say it happened.
-  owner.installed[label] = result;
-  writeState(state);
+  //
+  // Re-read under the lock rather than writing back the snapshot this function
+  // opened with: the install above takes minutes, and every row created by
+  // another session in that window would otherwise be erased. This was the
+  // single largest source of lost rows.
+  updateState((state) => {
+    const owner = ownerRow(state, sb);
+    owner.installed = owner.installed || {};
+    owner.installed[label] = result;
+  });
   if (result === 'FAILED') process.stderr.write(out + '\n');
   return result;
 }
@@ -875,8 +989,7 @@ function cmdWorktree(argv) {
       : execIn(sb, `mkdir -p /work/mutations\n${script}`, { dir: sb.root });
   if (r.status !== 0) die(`worktree creation failed:\n${r.stderr || r.stdout}`);
 
-  const state = readState();
-  state.sandboxes[mutId] = {
+  const mutation = {
     ...sb,
     id: mutId,
     derivedFrom: sb.viewOf || id,
@@ -890,11 +1003,14 @@ function cmdWorktree(argv) {
     worktreeOf: sb.root,
     createdAt: nowIso(),
   };
-  writeState(state);
+  updateState((state) => {
+    state.sandboxes[mutId] = mutation;
+  });
 
-  const install = ensureInstalled(state.sandboxes[mutId], dir, `mut-${owner}`);
+  // Outside the lock: this installs, which takes minutes.
+  const install = ensureInstalled(mutation, dir, `mut-${owner}`);
   process.stdout.write(
-    `${mutId}\n\nmutation worktree of ${id} (${side}) · exec=${state.sandboxes[mutId].exec} · install ${install}\n` +
+    `${mutId}\n\nmutation worktree of ${id} (${side}) · exec=${mutation.exec} · install ${install}\n` +
       (install === 'FAILED'
         ? `The tree exists but has no node_modules: report the dynamic check as unavailable.\n`
         : '')
@@ -917,30 +1033,41 @@ function removeHostWorktree(sb) {
 function cmdStop(argv) {
   const id = argv[0];
   if (!id) die('usage: sandbox stop <id>');
-  const state = readState();
-  const sb = state.sandboxes[id];
+  const snapshot = readState();
+  const sb = snapshot.sandboxes[id];
   if (!sb) die(`unknown sandbox '${id}'`);
   // Stopping a view or mutation drops the row only — the container belongs to
   // the checkout they were derived from.
   const derived = sb.viewOf || sb.derivedFrom;
+  // A view or mutation outliving the checkout it points at would hand out a
+  // dangling id.
+  const children = derived
+    ? []
+    : Object.entries(snapshot.sandboxes)
+        .filter(([, v]) => v.viewOf === id || v.derivedFrom === id)
+        .map(([vid]) => vid);
+
+  // Container and git work happen OUTSIDE the lock: `docker rm -f` can take
+  // seconds, and holding the registry that long would stall every other pane.
   if (sb.mode === 'container' && !derived) {
     run(sb.backend, ['rm', '-f', sb.container], { stdio: 'ignore' });
   }
   removeHostWorktree(sb);
-  delete state.sandboxes[id];
-  // A view or mutation outliving the checkout it points at would hand out a
-  // dangling id.
-  let dropped = 0;
-  if (!derived) {
+  for (const vid of children) removeHostWorktree(snapshot.sandboxes[vid]);
+
+  const dropped = updateState((state) => {
+    delete state.sandboxes[id];
+    let n = 0;
+    // Re-derive from fresh state: another pane may have added a view of this
+    // checkout while the container was being torn down.
     for (const [vid, v] of Object.entries(state.sandboxes)) {
-      if (v.viewOf === id || v.derivedFrom === id) {
-        removeHostWorktree(v);
+      if (!derived && (v.viewOf === id || v.derivedFrom === id)) {
         delete state.sandboxes[vid];
-        dropped++;
+        n++;
       }
     }
-  }
-  writeState(state);
+    return n;
+  });
   process.stdout.write(
     `stopped ${id}${dropped ? ` (and ${dropped} derived id${dropped === 1 ? '' : 's'})` : ''}\n`
   );
@@ -962,18 +1089,33 @@ function cmdList() {
   }
 }
 
-/** Drop registry entries whose container is gone, and any container we leaked. */
-function cmdPrune() {
-  const state = readState();
-  let dropped = 0;
-  for (const [id, sb] of Object.entries(state.sandboxes)) {
+/**
+ * Drop registry entries whose container is gone, and any container WE leaked.
+ *
+ * "We" is load-bearing. This used to kill every `nx-sandbox-*` container absent
+ * from the registry, which meant one pane's cleanup could destroy a container
+ * another pane had just created and not yet registered. Two containers were
+ * killed that way during a single parallel review. A container is now only
+ * killed when it carries this session's owner label and is old enough that no
+ * in-flight `start` could still be setting it up. `--force` restores the old
+ * behaviour for a deliberate machine-wide sweep.
+ */
+function cmdPrune(argv = []) {
+  const opts = parseFlags(argv, { force: 'boolean', 'dry-run': 'boolean' });
+  const force = !!opts.force;
+  const dryRun = !!opts['dry-run'];
+
+  // Liveness is probed before taking the lock; `docker inspect` per row is far
+  // slower than the mutation itself.
+  const probe = readState();
+  const gone = [];
+  for (const [id, sb] of Object.entries(probe.sandboxes)) {
     // A host worktree whose directory is already gone still holds a registration
     // in the user's repo, so unregister before dropping the row either way.
     if (sb.worktreeOf && sb.mode === 'local') {
       if (!fs.existsSync(sb.root)) {
-        removeHostWorktree(sb);
-        delete state.sandboxes[id];
-        dropped++;
+        if (!dryRun) removeHostWorktree(sb);
+        gone.push(id);
       }
       continue;
     }
@@ -981,36 +1123,79 @@ function cmdPrune() {
     const alive =
       run(sb.backend, ['inspect', sb.container], { stdio: 'ignore' }).status ===
       0;
-    if (!alive) {
-      delete state.sandboxes[id];
-      dropped++;
-    }
+    if (!alive) gone.push(id);
   }
-  writeState(state);
+
+  const dropped = dryRun
+    ? gone.length
+    : updateState((state) => {
+        let n = 0;
+        for (const id of gone) {
+          // Re-check under the lock: a row may have been recreated meanwhile.
+          if (state.sandboxes[id]) {
+            delete state.sandboxes[id];
+            n++;
+          }
+        }
+        return n;
+      });
+  const state = readState();
 
   const backend = pickBackend();
   let killed = 0;
+  const skipped = [];
   if (backend) {
     const ps = run(backend.bin, ['ps', '-aq', '--filter', 'name=nx-sandbox-']);
+    // A failure here must not read as "no containers": that is how a broken
+    // daemon turns into a silent no-op that still reports success.
+    if (ps.status !== 0) {
+      process.stderr.write(
+        `sandbox: could not list containers, skipping the orphan sweep:\n${(ps.stderr || '').trim()}\n`
+      );
+    }
     const live = new Set(
       Object.values(state.sandboxes)
         .filter((s) => s.container)
         .map((s) => s.container)
     );
     for (const cid of (ps.stdout || '').split('\n').filter(Boolean)) {
-      const name = (
-        run(backend.bin, ['inspect', '-f', '{{.Name}}', cid]).stdout || ''
-      )
-        .trim()
-        .replace(/^\//, '');
-      if (!live.has(name)) {
-        run(backend.bin, ['rm', '-f', cid], { stdio: 'ignore' });
-        killed++;
+      const meta = run(backend.bin, [
+        'inspect',
+        '-f',
+        `{{.Name}}\t{{index .Config.Labels "${OWNER_LABEL}"}}\t{{.Created}}`,
+        cid,
+      ]);
+      const [rawName, owner, created] = (meta.stdout || '').trim().split('\t');
+      const name = (rawName || '').replace(/^\//, '');
+      if (!name || live.has(name)) continue;
+
+      if (!force) {
+        // Unlabelled containers predate this ownership scheme, or belong to a
+        // session that did not identify itself. Either way they are not ours
+        // to destroy.
+        if (!SESSION_ID || !owner || owner !== SESSION_ID) {
+          skipped.push(`${name} (owned by another session)`);
+          continue;
+        }
+        const age = Date.now() - Date.parse(created);
+        if (!(age > ORPHAN_GRACE_MS)) {
+          skipped.push(
+            `${name} (younger than the ${ORPHAN_GRACE_MS / 1000}s grace)`
+          );
+          continue;
+        }
       }
+      if (!dryRun) run(backend.bin, ['rm', '-f', cid], { stdio: 'ignore' });
+      killed++;
     }
   }
   process.stdout.write(
-    `pruned ${dropped} stale entr${dropped === 1 ? 'y' : 'ies'}, ${killed} orphaned container(s)\n`
+    `${dryRun ? '[dry-run] would prune' : 'pruned'} ${dropped} stale ` +
+      `entr${dropped === 1 ? 'y' : 'ies'}, ${killed} orphaned container(s)\n` +
+      (skipped.length
+        ? `left ${skipped.length} unregistered container(s) alone: ${skipped.join(', ')}\n` +
+          `  (use --force to sweep containers this session does not own)\n`
+        : '')
   );
 }
 
@@ -1187,7 +1372,9 @@ const USAGE = `sandbox — uniform access to a checkout, isolated or local
   view   <id> [--exec screened|none]           second id onto the same checkout, narrowed
   worktree <id> <owner> [head|base]            private installed tree an agent may mutate;
                                                local mode cuts it under ~/.nx-sandboxes/worktrees
-  stop   <id> | list | prune | doctor [--image <img>]
+  stop   <id> | list | doctor [--image <img>]
+  prune  [--dry-run] [--force]                 drops dead rows; only removes containers this
+                                               session owns, unless --force sweeps all of them
 
 exec tiers: none < screened < full. 'screened' rejects commands that obviously
 write (git checkout, rm, pnpm install, > redirects) so a review cannot mutate
