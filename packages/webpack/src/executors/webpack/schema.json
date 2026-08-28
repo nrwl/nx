@@ -265,6 +265,10 @@
       "type": "boolean",
       "description": "Extract CSS into a `.css` file."
     },
+    "cssModuleHashFunction": {
+      "type": "string",
+      "description": "Hash algorithm used to generate CSS module class names. Defaults to `md5`, which FIPS-restricted OpenSSL rejects. Changing it renames generated class names."
+    },
     "subresourceIntegrity": {
       "type": "boolean",
       "description": "Enables the use of subresource integrity validation."
