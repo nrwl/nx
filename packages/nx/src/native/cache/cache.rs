@@ -322,12 +322,14 @@ impl NxCache {
     /// would accumulate forever. The row carries `has_artifacts = 0` so it can
     /// never be served as a cache hit.
     ///
-    /// On conflict only `accessed_at` moves. Nothing else ever touches these
-    /// rows — the reads filter them out, so they would otherwise age from the
-    /// first write and be collected out from under a task that is still being
-    /// run daily. Leaving `has_artifacts` and `size` alone keeps a rewrite
-    /// from demoting a real entry written by `put`, or from replacing its size
-    /// (which covers artifacts) with the size of the terminal output alone.
+    /// On conflict `accessed_at` always moves: the reads filter these rows out,
+    /// so they would otherwise age from the first write and be collected out
+    /// from under a task that is still being run daily. `size` moves only while
+    /// the row is still output-only (`has_artifacts = 0`), so a task rerun with
+    /// a longer log stops undercounting against `maxCacheSize`. `has_artifacts`
+    /// is never touched, and a row that already has artifacts keeps the size
+    /// `put` recorded, so a rewrite can neither demote a real entry nor replace
+    /// its whole-entry size with the terminal output's.
     #[napi]
     pub fn record_terminal_outputs(
         &mut self,

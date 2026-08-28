@@ -52,9 +52,12 @@ export function printsTaskOutput(outputStyle: string | undefined): boolean {
  * ones that succeeded. Both static life cycles and the batch renderer have to
  * agree on this, so they read it from here rather than each deriving it.
  *
- * Exactly one style collapses, and it is also what a run that named no style
- * gets. Every other style prints in full because it was asked for explicitly,
- * so none may quietly withhold output. Note the static life cycles serve more
+ * Two styles collapse. `static-failures-only` shows only what failed, and is
+ * what a run that named no style gets; `summary` withholds task output
+ * altogether, addressing each log by path instead, and outranks `verbose` -
+ * asking for more detail cannot turn a style whose whole contract is "the
+ * output is on disk" back into one that prints. Every other style prints in
+ * full because it was asked for explicitly. Note the static life cycles serve more
  * styles than the static-sounding ones: `shouldUseDynamicLifeCycle` bails on
  * `isCI()` before it looks at the style at all, so in CI `dynamic` and `tui`
  * land here too. This is written as a deny-list for that reason — a new style
