@@ -341,6 +341,16 @@ export function locateGitDir(
     }
 
     if (entry?.isDirectory()) {
+      // A directory named `.git` is not a repository. Git checks this before
+      // reading config, and asking git is what this function replaced -- so
+      // without it a `.git` planted in any writable ancestor (`/tmp` is 1777)
+      // decides the workspace identity for everything beneath it.
+      if (
+        !fs.existsSync(join(dotGit, 'HEAD')) ||
+        !fs.existsSync(join(dotGit, 'objects'))
+      ) {
+        return null;
+      }
       return { gitRoot: current, commonDir: dotGit };
     }
 
@@ -406,6 +416,13 @@ function parseGitConfigRemotes(
       if (/^include(If)?\b/i.test(section)) {
         return null;
       }
+      // `git remote -v` prints the rewritten url; resolving `insteadOf` here
+      // would mean reimplementing the longest-prefix match, so defer instead.
+      // A rewrite in the *global* config stays an accepted divergence: this
+      // parser deliberately never opens `~/.gitconfig`.
+      if (/^url\s+"/i.test(section)) {
+        return null;
+      }
       const named = section.match(/^remote\s+"(.*)"$/i);
       remoteName = named ? named[1] : null;
       continue;
@@ -421,13 +438,21 @@ function parseGitConfigRemotes(
     if (line.slice(0, equals).trim().toLowerCase() !== 'url') {
       continue;
     }
-    // First url wins, matching git's own last-definition-per-key only insofar
-    // as a single config file rarely repeats it; a repeat sends us to git.
+    const raw = line.slice(equals + 1).trim();
+    // Git ends a value at an unquoted `#`/`;` and honours `\` escapes. Both are
+    // enough to change the url, and reimplementing them is how a parser starts
+    // answering confidently wrong, so hand the file to git when either appears.
+    if (/[#;\\]/.test(raw)) {
+      return null;
+    }
+    const value = raw.replace(/^"(.*)"$/, '$1');
+    if (value.includes('"')) {
+      return null;
+    }
+    // `remote.<name>.url` is multi-valued and git fetches from the first, so
+    // taking the first here matches it.
     if (remotes[remoteName] === undefined) {
-      remotes[remoteName] = line
-        .slice(equals + 1)
-        .trim()
-        .replace(/^"(.*)"$/, '$1');
+      remotes[remoteName] = value;
     }
   }
 
@@ -463,7 +488,15 @@ function remoteInfoFromGitConfig(directory: string): VcsRemoteInfo | null {
       return null;
     }
 
-    const contents = fs.readFileSync(join(located.commonDir, 'config'), 'utf8');
+    // `lstat` rather than opening blind: a FIFO here would block `open`
+    // forever, and this runs at module scope of `cache-directory.ts`, so every
+    // command in that workspace would hang before printing anything. Refusing a
+    // symlink in the same check also keeps the read inside the repository.
+    const configPath = join(located.commonDir, 'config');
+    if (!fs.lstatSync(configPath).isFile()) {
+      return null;
+    }
+    const contents = fs.readFileSync(configPath, 'utf8');
     const remotes = parseGitConfigRemotes(contents);
     if (!remotes) {
       return null;

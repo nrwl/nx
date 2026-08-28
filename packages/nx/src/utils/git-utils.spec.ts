@@ -235,8 +235,12 @@ describe('git utils tests', () => {
   describe('getVcsRemoteInfo reading .git/config directly', () => {
     let repo: string;
 
+    // `HEAD` and `objects/` too: `locateGitDir` refuses a bare `.git` directory
+    // without them, so a fixture lacking them would exercise the refusal rather
+    // than the parser.
     const writeConfig = (dir: string, contents: string) => {
-      fs.mkdirSync(join(dir, '.git'), { recursive: true });
+      fs.mkdirSync(join(dir, '.git', 'objects'), { recursive: true });
+      fs.writeFileSync(join(dir, '.git', 'HEAD'), 'ref: refs/heads/main\n');
       fs.writeFileSync(join(dir, '.git', 'config'), contents);
     };
 
@@ -342,6 +346,89 @@ describe('git utils tests', () => {
       expect(getVcsRemoteInfo(repo)).toBeNull();
       expect(execSync).toHaveBeenCalled();
     });
+
+    it('should defer to git when a url carries an inline comment', () => {
+      // Git ends a value at an unquoted `#`; parsing it here would carry the
+      // trailer into the slug and on into the Nx Cloud onboarding payload.
+      writeConfig(
+        repo,
+        '[remote "origin"]\n\turl = git@github.com:nrwl/nx.git # mirror\n'
+      );
+      (execSync as Mock).mockReturnValue(
+        'origin\tgit@github.com:nrwl/nx.git (fetch)\n'
+      );
+
+      expect(getVcsRemoteInfo(repo)).toEqual({
+        domain: 'github.com',
+        slug: 'nrwl/nx',
+      });
+      expect(execSync).toHaveBeenCalled();
+    });
+
+    it('should defer to git when a url carries an insteadOf rewrite', () => {
+      // `git remote -v` prints the rewritten url; this parser reads the raw one.
+      writeConfig(
+        repo,
+        '[url "git@github.com:"]\n\tinsteadOf = https://mirror.internal/\n' +
+          '[remote "origin"]\n\turl = https://mirror.internal/nrwl/nx.git\n'
+      );
+      (execSync as Mock).mockReturnValue(
+        'origin\tgit@github.com:nrwl/nx.git (fetch)\n'
+      );
+
+      expect(getVcsRemoteInfo(repo)).toEqual({
+        domain: 'github.com',
+        slug: 'nrwl/nx',
+      });
+      expect(execSync).toHaveBeenCalled();
+    });
+
+    it('should ignore a .git directory that is not a repository', () => {
+      // Only a config file: git reports "not a git repository" here, so an
+      // ancestor `.git` planted in a writable directory must not decide the
+      // identity of everything beneath it.
+      fs.mkdirSync(join(repo, '.git'), { recursive: true });
+      fs.writeFileSync(
+        join(repo, '.git', 'config'),
+        '[remote "origin"]\n\turl = git@github.com:attacker/planted.git\n'
+      );
+      (execSync as Mock).mockReturnValue('');
+
+      expect(getVcsRemoteInfo(repo)).toBeNull();
+    });
+
+    // Windows needs elevation to create symlinks; the guard is the same either way.
+    it.skipIf(process.platform === 'win32')(
+      'should defer to git when the config is a symlink out of the repository',
+      () => {
+        // `readFileSync` follows a symlink and succeeds, so without an `lstat`
+        // check the identity comes from a file outside the repository. The
+        // motivating sibling is a FIFO, which blocks `open` forever -- and this
+        // resolves at module scope of `cache-directory.ts`, so every command in
+        // the workspace would hang before printing anything.
+        writeConfig(
+          repo,
+          '[remote "origin"]\n\turl = git@github.com:nrwl/nx.git\n'
+        );
+        const outside = join(repo, 'planted.config');
+        fs.writeFileSync(
+          outside,
+          '[remote "origin"]\n\turl = git@github.com:attacker/planted.git\n'
+        );
+        const configPath = join(repo, '.git', 'config');
+        fs.rmSync(configPath);
+        fs.symlinkSync(outside, configPath);
+        (execSync as Mock).mockReturnValue(
+          'origin\tgit@github.com:nrwl/nx.git (fetch)\n'
+        );
+
+        expect(getVcsRemoteInfo(repo)).toEqual({
+          domain: 'github.com',
+          slug: 'nrwl/nx',
+        });
+        expect(execSync).toHaveBeenCalled();
+      }
+    );
   });
 
   describe('getGitCurrentBranch', () => {
