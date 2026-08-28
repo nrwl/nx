@@ -7,6 +7,7 @@
 pub mod dependent_outputs;
 mod implicit_dependencies;
 mod project_glob_changes;
+mod project_paths;
 pub mod tasks;
 #[cfg(test)]
 mod test_support;
@@ -55,7 +56,7 @@ pub async fn locate_touched_projects(
         JsLocator,
     >,
 ) -> Result<Vec<String>> {
-    let graph = Arc::clone(&*project_graph);
+    let graph = Arc::clone(project_graph);
     let mut touched: Vec<String> = Vec::new();
 
     touched.extend(touched_projects(&graph, &touched_files));
