@@ -452,10 +452,11 @@ export interface FileMap {
 export interface FileSetInput {
   fileset: string
   dependencies?: boolean
-}
-
-export interface FilesInput {
-  files: Array<string>
+  /**
+   * Hash the glob straight from disk (so gitignored/generated files count)
+   * instead of the workspace file map. Self inputs only.
+   */
+  includeIgnored?: boolean
 }
 
 export declare function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
@@ -765,7 +766,7 @@ export interface MetricsUpdate {
 
 /** Stripped version of the NxJson interface for use in rust */
 export interface NxJson {
-  namedInputs?: Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput | FilesInput>>
+  namedInputs?: Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput>>
 }
 
 export interface NxWorkspaceFiles {
@@ -827,7 +828,7 @@ export interface ProcessMetrics {
 
 export interface Project {
   root: string
-  namedInputs?: Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput | FilesInput>>
+  namedInputs?: Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput>>
   tags?: Array<string>
   targets: Record<string, Target>
 }
@@ -875,7 +876,7 @@ export interface SystemInfo {
 
 export interface Target {
   executor?: string
-  inputs?: Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput | FilesInput>
+  inputs?: Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput>
   outputs?: Array<string>
   options?: string
   configurations?: string

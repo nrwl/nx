@@ -229,8 +229,11 @@ describe('TaskHasher', () => {
   });
 
   describe('expandSingleProjectInputs', () => {
-    it('should pass through files inputs unchanged', () => {
-      const input = { files: ['{projectRoot}/dist/**/*.js'] };
+    it('should pass through includeIgnored filesets unchanged', () => {
+      const input = {
+        fileset: '{projectRoot}/dist/**/*.js',
+        includeIgnored: true,
+      };
       expect(expandSingleProjectInputs([input], {})).toEqual([input]);
     });
 

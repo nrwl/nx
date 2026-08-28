@@ -465,7 +465,12 @@ console.log('Build complete');
       c.targets['echo'] = {
         command: 'echo generated',
         cache: true,
-        inputs: [{ files: ['{projectRoot}/generated/**/*.json'] }],
+        inputs: [
+          {
+            fileset: '{projectRoot}/generated/**/*.json',
+            includeIgnored: true,
+          },
+        ],
       };
       return c;
     });

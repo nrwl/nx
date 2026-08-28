@@ -160,33 +160,35 @@ describe('task planner', () => {
       )['parent:build'];
     }
 
-    it('plans one files instruction per group with tokens resolved', () => {
+    it('aggregates includeIgnored filesets into one files instruction with tokens resolved', () => {
       const plan = planFor([
         'default',
-        {
-          files: ['{projectRoot}/dist/**/*.js', '!{projectRoot}/dist/**/*.map'],
-        },
-        { files: ['{workspaceRoot}/.env.generated'] },
+        { fileset: '{projectRoot}/dist/**/*.js', includeIgnored: true },
+        { fileset: '!{projectRoot}/dist/**/*.map', includeIgnored: true },
+        { fileset: '{workspaceRoot}/.env.generated', includeIgnored: true },
       ]);
 
-      expect(plan).toContain(
-        'files:[libs/parent/dist/**/*.js,!libs/parent/dist/**/*.map]'
-      );
-      expect(plan).toContain('files:[.env.generated]');
+      const files = plan.filter((i) => i.startsWith('files:'));
+      expect(files).toHaveLength(1);
+      expect(files[0]).toContain('libs/parent/dist/**/*.js');
+      expect(files[0]).toContain('.env.generated');
+      expect(files[0]).toContain('!libs/parent/dist/**/*.map');
     });
 
     it('plans a files input declared through a named input', () => {
       const plan = planFor(['generated'], {
-        generated: [{ files: ['{projectRoot}/generated'] }],
+        generated: [
+          { fileset: '{projectRoot}/generated', includeIgnored: true },
+        ],
       });
 
       expect(plan).toContain('files:[libs/parent/generated]');
     });
 
     it('rejects a files glob without a leading directory', () => {
-      expect(() => planFor([{ files: ['**/*.gen'] }])).toThrow(
-        /no leading directory/
-      );
+      expect(() =>
+        planFor([{ fileset: '{workspaceRoot}/**', includeIgnored: true }])
+      ).toThrow(/no leading directory/);
     });
   });
 
@@ -213,7 +215,7 @@ describe('task planner', () => {
                 { env: 'TESTENV' },
                 { runtime: 'echo runtime123' },
                 { json: '{projectRoot}/package.json', fields: ['version'] },
-                { files: ['{projectRoot}/generated'] },
+                { fileset: '{projectRoot}/generated', includeIgnored: true },
               ],
               outputs: ['{workspaceRoot}/dist/libs/parent'],
             },
@@ -562,7 +564,7 @@ describe('task planner', () => {
           targets: {
             build: {
               executor: 'nx:run-commands',
-              inputs: [{ files: ['**/*.gen'] }],
+              inputs: [{ fileset: '{workspaceRoot}/**', includeIgnored: true }],
             },
           },
         },
