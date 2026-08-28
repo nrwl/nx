@@ -6,7 +6,7 @@ import { dirname, join } from 'node:path';
 // `var` so the getter below can read it during module initialization, when
 // modules pulled in by the import chain resolve paths from the workspace root.
 var mockWorkspaceRoot: string | undefined;
-jest.mock('./workspace-root', () => ({
+vi.mock('./workspace-root', () => ({
   get workspaceRoot() {
     return mockWorkspaceRoot ?? process.cwd();
   },
