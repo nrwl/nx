@@ -1,36 +1,13 @@
-use std::collections::HashMap;
-
+use super::project_paths::{ProjectRoots, normalize_path};
 use crate::native::project_graph::types::ProjectGraph;
-use crate::native::project_graph::utils::{find_project_for_path, normalize_project_root};
 
 /// Maps each changed file to the project that owns it.
-///
-/// The mapping is built here rather than with `create_project_root_mappings`,
-/// which normalizes the project *name* into the value instead of the root into
-/// the key and so cannot match a project whose root is `""`.
 pub(super) fn touched_projects(graph: &ProjectGraph, touched_files: &[String]) -> Vec<String> {
-    let root_map: HashMap<String, String> = graph
-        .nodes
-        .iter()
-        .map(|(name, project)| (normalize_project_root(&project.root), name.clone()))
-        .collect();
-
+    let roots = ProjectRoots::new(graph);
     touched_files
         .iter()
-        .filter_map(|file| find_project_for_path(normalize_path(file), &root_map).map(String::from))
+        .filter_map(|file| roots.owner_of(&normalize_path(file)).map(String::from))
         .collect()
-}
-
-/// Mirrors `normalizePath` in `packages/nx/src/utils/path.ts`: strip a Windows
-/// drive letter, then swap separators. Root keys are unix-style, and `--files`
-/// reaches us exactly as the user typed it, so a Windows path matches nothing
-/// without this.
-pub(super) fn normalize_path(path: &str) -> String {
-    let without_drive = match path.as_bytes() {
-        [drive, b':', ..] if drive.is_ascii_alphabetic() => &path[2..],
-        _ => path,
-    };
-    without_drive.replace('\\', "/")
 }
 
 #[cfg(test)]
@@ -103,7 +80,7 @@ mod tests {
 
     /// The TypeScript original normalized the root into the map key, so a
     /// root-level project is reachable. `create_project_root_mappings` does not,
-    /// which is why this module builds its own mapping.
+    /// which is why `ProjectRoots` builds its own mapping.
     #[test]
     fn finds_a_project_whose_root_is_empty() {
         let g = graph(vec![("root", project(""))]);
