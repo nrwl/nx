@@ -36,6 +36,9 @@ import {
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
 } from '../../project-graph/utils/retrieve-workspace-files';
+import { getWorkspacePackagesMetadata } from '../../plugins/js/utils/packages';
+import { refreshSourceGraphResolvers } from '../../plugins/js/utils/register';
+import { clearRootTsConfigCustomConditionsCache } from '../../plugins/js/utils/typescript';
 import { fileExists } from '../../utils/fileutils';
 import {
   resetWorkspaceContext,
@@ -164,6 +167,16 @@ function kickOffRecompute() {
         if (servedGraphCandidate?.graph === result.projectGraph) {
           servedGraphState = servedGraphCandidate;
         }
+        // The daemon is long-lived: drop the cached tsconfig conditions and
+        // push this graph's package names to registered source-graph resolvers.
+        const { nodes } = result.projectGraph;
+        clearRootTsConfigCustomConditionsCache();
+        refreshSourceGraphResolvers(
+          workspaceRoot,
+          () =>
+            getWorkspacePackagesMetadata(nodes)
+              .packageManagerWorkspacePackageNames
+        );
         notifyProjectGraphRecomputationListeners(
           result.projectGraph,
           result.sourceMaps,
