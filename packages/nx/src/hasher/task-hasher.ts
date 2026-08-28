@@ -11,6 +11,7 @@ import { hashArray } from './file-hasher';
 import { InputDefinition } from '../config/workspace-json-project-json';
 import { minimatch } from 'minimatch';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
+import type { TaskPlanningContext } from './task-planning-context';
 import { workspaceRoot } from '../utils/workspace-root';
 import { HashInputs, IoSnapshots, NxWorkspaceFilesExternals } from '../native';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
@@ -231,7 +232,8 @@ export class InProcessTaskHasher implements TaskHasher {
     private readonly externalRustReferences: NxWorkspaceFilesExternals | null,
     private readonly options: any,
     /** This run's snapshot set; the daemon passes one per request instead. */
-    private readonly ioSnapshots?: IoSnapshots
+    private readonly ioSnapshots?: IoSnapshots,
+    private readonly planningContext?: TaskPlanningContext
   ) {
     this.taskHasher = new NativeTaskHasherImpl(
       workspaceRoot,
@@ -240,7 +242,8 @@ export class InProcessTaskHasher implements TaskHasher {
       this.externalRustReferences,
       {
         selectivelyHashTsConfig: this.options?.selectivelyHashTsConfig ?? false,
-      }
+      },
+      this.planningContext
     );
   }
 
