@@ -321,6 +321,20 @@ mod tests {
         values.iter().map(|v| Either9::B(v.to_string())).collect()
     }
 
+    fn fileset_inputs(values: &[(&str, bool)]) -> Vec<JsInputs> {
+        use crate::native::types::FileSetInput;
+        values
+            .iter()
+            .map(|(fileset, include_ignored)| {
+                Either9::C(FileSetInput {
+                    fileset: (*fileset).to_string(),
+                    dependencies: None,
+                    include_ignored: Some(*include_ignored),
+                })
+            })
+            .collect()
+    }
+
     fn target_with_inputs(inputs: &[&str]) -> Target {
         Target {
             inputs: Some(string_inputs(inputs)),
@@ -445,6 +459,29 @@ mod tests {
         assert_eq!(
             implicitly_touched_projects(&g, &nx_json_with_files_named_input(), &files(&["a.txt"]))
                 .unwrap(),
+            vec!["a"]
+        );
+    }
+
+    #[test]
+    fn includes_disk_backed_filesets_in_implicit_projects() {
+        let mut a = project("a");
+        a.targets = HashMap::from([(
+            "build".to_string(),
+            Target {
+                inputs: Some(fileset_inputs(&[("{workspaceRoot}/generated", true)])),
+                ..Default::default()
+            },
+        )]);
+        let g = graph(vec![("a", a), ("b", project("b"))]);
+
+        assert_eq!(
+            implicitly_touched_projects(
+                &g,
+                &nx_json_with_files_named_input(),
+                &files(&["generated"])
+            )
+            .unwrap(),
             vec!["a"]
         );
     }
