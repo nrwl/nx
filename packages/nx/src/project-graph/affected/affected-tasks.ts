@@ -9,6 +9,9 @@ import {
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { projectHasTarget } from '../../utils/project-graph-utils';
 import { FileChange } from '../file-utils';
+import { existsSync } from 'fs';
+import { join } from 'path';
+import { workspaceRoot } from '../../utils/workspace-root';
 import {
   createTaskPlanningContext,
   TaskPlanningContext,
@@ -167,18 +170,16 @@ export async function computeAffectedTasks(
   //                                object and resolves to no files at all.
   //   a lockfile                   External and AllExternalDependencies are
   //                                package names, not paths.
-  //   a blanket trigger            A deleted project config invalidates the
-  //                                graph with no fileset to match; it shows up
-  //                                as every project being touched.
-  const blanket =
-    projectGrained.size === Object.keys(projectGraph.nodes).length;
-  const blindSpotProjects = blanket
-    ? affectedProjects
-    : projectsOwningBlindSpotChanges(
-        touchedFiles,
-        projectGraph,
-        projectGrained
-      );
+  //   a deleted project config     The project it described is gone, so no
+  //                                surviving task has a fileset that names it.
+  //
+  // `nx.json` needs no seed: every plan carries it in the always-on workspace
+  // fileset, so the matcher already reaches every task precisely.
+  const blindSpotProjects = projectsOwningBlindSpotChanges(
+    touchedFiles,
+    projectGraph,
+    affectedProjects
+  );
 
   if (blindSpotProjects.size) {
     for (const taskId of taskIds) {
@@ -274,23 +275,30 @@ const LOCK_FILES = new Set([
 
 /**
  * Projects whose tasks must be seeded because a changed file is invisible to
- * glob matching. A lockfile change is workspace-wide, so it seeds everything the
- * project-grained pass already selected.
+ * glob matching.
+ *
+ * Two cases widen to everything the project-grained pass selected, because
+ * neither leaves a pattern for the matcher to hit: a lockfile change, whose
+ * effect is carried by external package names rather than paths, and a deleted
+ * project config, whose project is no longer in the graph at all. The deletion
+ * check mirrors `projects_from_project_glob_changes`, which decides the same
+ * thing by asking whether the file is still on disk.
  */
 function projectsOwningBlindSpotChanges(
   touchedFiles: FileChange[],
   projectGraph: ProjectGraph,
-  projectGrained: Set<string>
+  affectedProjects: Set<string>
 ): Set<string> {
   const seeds = new Set<string>();
   for (const { file } of touchedFiles) {
     const name = file.slice(file.lastIndexOf('/') + 1);
     if (LOCK_FILES.has(name)) {
-      // External dependency names never appear in a diff, so which task the
-      // change reaches cannot be narrowed here.
-      return projectGrained;
+      return affectedProjects;
     }
     if (!PROJECT_CONFIG_FILES.has(name)) continue;
+    if (!existsSync(join(workspaceRoot, file))) {
+      return affectedProjects;
+    }
     for (const [project, node] of Object.entries(projectGraph.nodes)) {
       if (file === `${node.data.root}/${name}`) {
         seeds.add(project);
