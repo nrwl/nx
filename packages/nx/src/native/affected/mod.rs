@@ -6,6 +6,7 @@
 
 mod implicit_dependencies;
 mod project_glob_changes;
+pub mod tasks;
 #[cfg(test)]
 mod test_support;
 mod touched_projects;
