@@ -528,6 +528,8 @@ function collectConfigChains(
       } catch {
         // A malformed config drops its chain from the task inputs rather than
         // failing graph construction, matching `readCachedJson` in @nx/js.
+        // `oxlint.config.ts`/`.mts` land here too: their chains and jsPlugins
+        // are out of scope, so they get neither file inputs nor graph edges.
         json = null;
       }
     }
@@ -761,7 +763,8 @@ async function collectLintableFilesByProjectRoot(
 /**
  * `.eslintignore` candidates in every ancestor directory of the project root,
  * workspace root included. The project's own directory is excluded — files
- * there are covered by the `default` input.
+ * there are covered by the `default` input — except at the workspace root,
+ * which is its own ancestor and so keeps its `.eslintignore`.
  */
 function ancestorEslintignorePaths(projectRoot: string): string[] {
   const result: string[] = [];

@@ -60,9 +60,19 @@ const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   'CURSOR_TRACE_ID',
   'COMPOSER_NO_INTERACTION',
   'OPENCODE',
-  'GEMINI_CLI',
   'CODEX_THREAD_ID',
+  'SUPERSET_AGENT_ID',
+  'GEMINI_CLI',
+  'COPILOT_CLI',
   'AI_AGENT',
+
+  // Set per session or per release alongside the detection vars above, so they
+  // churn the daemon's environment across sessions of the same agent. Named
+  // rather than prefix-matched: COPILOT_HOME and COPILOT_GITHUB_TOKEN share the
+  // prefix and are kept on purpose, and CLAUDE_PID is not under CLAUDE_CODE_.
+  'COPILOT_AGENT_SESSION_ID',
+  'COPILOT_CLI_BINARY_VERSION',
+  'CLAUDE_PID',
 
   // Shell mechanics
   '_',

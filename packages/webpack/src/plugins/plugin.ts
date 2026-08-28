@@ -201,6 +201,11 @@ async function createWebpackTargets(
   targets[options.buildTargetName] = {
     command: `webpack-cli build`,
     options: { cwd: projectRoot, env: { NODE_ENV: 'production' } },
+    configurations: {
+      development: {
+        env: { NODE_ENV: 'development' },
+      },
+    },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
     inputs: [
