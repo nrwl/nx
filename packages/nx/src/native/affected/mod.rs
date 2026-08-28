@@ -4,6 +4,8 @@
 //! `dependencies` as `HashMap<String, Vec<String>>`, with no edge `type` or
 //! `source`, so it cannot rebuild what `filterAffected` returns.
 
+pub mod tasks;
+
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::ThreadsafeFunction;
 use std::borrow::Cow;
