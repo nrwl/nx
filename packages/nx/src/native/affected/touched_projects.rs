@@ -25,7 +25,7 @@ pub(super) fn touched_projects(graph: &ProjectGraph, touched_files: &[String]) -
 /// drive letter, then swap separators. Root keys are unix-style, and `--files`
 /// reaches us exactly as the user typed it, so a Windows path matches nothing
 /// without this.
-fn normalize_path(path: &str) -> String {
+pub(super) fn normalize_path(path: &str) -> String {
     let without_drive = match path.as_bytes() {
         [drive, b':', ..] if drive.is_ascii_alphabetic() => &path[2..],
         _ => path,

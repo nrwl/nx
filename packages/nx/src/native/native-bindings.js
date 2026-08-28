@@ -594,6 +594,7 @@ module.exports.TaskDetails = nativeBinding.TaskDetails
 module.exports.TaskHasher = nativeBinding.TaskHasher
 module.exports.TaskInvocationTracker = nativeBinding.TaskInvocationTracker
 module.exports.WorkspaceContext = nativeBinding.WorkspaceContext
+module.exports.affectedTasks = nativeBinding.affectedTasks
 module.exports.BatchStatus = nativeBinding.BatchStatus
 module.exports.canInstallNxConsole = nativeBinding.canInstallNxConsole
 module.exports.canInstallNxConsoleForEditor = nativeBinding.canInstallNxConsoleForEditor
