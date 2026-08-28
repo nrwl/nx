@@ -91,7 +91,7 @@ Options:
     {
       "NODE_ENV": "production"
     }
-Configurations: production
+Configurations: development, production
 
 "
 `;
