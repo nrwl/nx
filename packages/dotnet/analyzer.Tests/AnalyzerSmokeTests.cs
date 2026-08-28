@@ -78,6 +78,7 @@ public class AnalyzerSmokeTests : IDisposable
         };
 
         using var process = Process.Start(startInfo)!;
+        process.StandardInput.WriteLine(string.Empty);
         process.StandardInput.WriteLine(projectFile);
         process.StandardInput.Close();
 
