@@ -232,7 +232,7 @@ public static partial class TargetBuilder
     /// Gets the publish output directory path, as a fully-qualified Nx-prefixed
     /// string. Returns <c>null</c> when the path lives outside the workspace.
     /// </summary>
-    private static string? GetPublishDir(Dictionary<string, string> properties, string projectDirectory, string workspaceRoot)
+    private static string? GetPublishDir(Dictionary<string, string> properties, string? defaultConfiguration, string projectDirectory, string workspaceRoot)
     {
         if (UsesArtifactsOutput(properties))
         {
@@ -250,7 +250,7 @@ public static partial class TargetBuilder
         if (!string.IsNullOrEmpty(publishDir))
         {
             var resolved = ResolvePath(publishDir, projectDirectory, workspaceRoot);
-            return ApplyConfiguration(resolved, properties.GetValueOrDefault("Configuration"));
+            return ApplyConfiguration(resolved, defaultConfiguration, properties.GetValueOrDefault("Configuration"));
         }
 
         var outputPath = GetOutputPath(properties, projectDirectory, workspaceRoot);
@@ -258,14 +258,18 @@ public static partial class TargetBuilder
     }
 
     /// <summary>
-    /// Rewrites any <c>Debug</c>/<c>Release</c> path segment to the given
-    /// configuration. Used for paths (like PublishDir) that MSBuild evaluates at
-    /// the default configuration but a target consumes at another. A no-op when
-    /// the configuration is empty or the path contains no configuration segment.
+    /// Rewrites the segments MSBuild produced from <paramref name="defaultConfiguration"/>
+    /// to <paramref name="targetConfiguration"/>. Used for paths (like PublishDir) that
+    /// MSBuild evaluates at the project's default configuration but a target consumes at
+    /// another. Matching the evaluated default exactly, rather than any Debug/Release
+    /// segment, leaves a directory that merely happens to be named `release` alone.
+    /// A no-op when either configuration is unknown.
     /// </summary>
-    private static string? ApplyConfiguration(string? path, string? configuration)
+    private static string? ApplyConfiguration(string? path, string? defaultConfiguration, string? targetConfiguration)
     {
-        if (string.IsNullOrEmpty(path) || string.IsNullOrEmpty(configuration))
+        if (string.IsNullOrEmpty(path)
+            || string.IsNullOrEmpty(defaultConfiguration)
+            || string.IsNullOrEmpty(targetConfiguration))
         {
             return path;
         }
@@ -273,10 +277,9 @@ public static partial class TargetBuilder
         var segments = path.Split('/');
         for (var i = 0; i < segments.Length; i++)
         {
-            if (segments[i].Equals("Debug", StringComparison.OrdinalIgnoreCase) ||
-                segments[i].Equals("Release", StringComparison.OrdinalIgnoreCase))
+            if (segments[i].Equals(defaultConfiguration, StringComparison.Ordinal))
             {
-                segments[i] = configuration;
+                segments[i] = targetConfiguration;
             }
         }
 
@@ -287,7 +290,7 @@ public static partial class TargetBuilder
     /// Gets the package output directory path, as a fully-qualified Nx-prefixed
     /// string. Returns <c>null</c> when the path lives outside the workspace.
     /// </summary>
-    private static string? GetPackageOutputPath(Dictionary<string, string> properties, string projectDirectory, string workspaceRoot)
+    private static string? GetPackageOutputPath(Dictionary<string, string> properties, string? defaultConfiguration, string projectDirectory, string workspaceRoot)
     {
         if (UsesArtifactsOutput(properties))
         {
@@ -303,7 +306,7 @@ public static partial class TargetBuilder
         if (!string.IsNullOrEmpty(packageOutputPath))
         {
             var resolved = ResolvePath(packageOutputPath, projectDirectory, workspaceRoot);
-            return ApplyConfiguration(resolved, properties.GetValueOrDefault("Configuration"));
+            return ApplyConfiguration(resolved, defaultConfiguration, properties.GetValueOrDefault("Configuration"));
         }
 
         return GetOutputPath(properties, projectDirectory, workspaceRoot);

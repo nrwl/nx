@@ -580,6 +580,7 @@ public class TargetBuilderOutputPathsTests
         var projectDirectory = ProjectDir("apps", "foo");
         var properties = new Dictionary<string, string>
         {
+            ["Configuration"] = "Debug",
             ["PublishDir"] = "bin\\Debug\\publish\\",
         };
 
@@ -646,6 +647,7 @@ public class TargetBuilderOutputPathsTests
         var projectDirectory = ProjectDir("libs", "foo");
         var properties = new Dictionary<string, string>
         {
+            ["Configuration"] = "Debug",
             ["BaseOutputPath"] = "bin\\",
             ["BaseIntermediateOutputPath"] = "obj\\",
             ["PackageOutputPath"] = "bin\\Debug/",
@@ -668,5 +670,83 @@ public class TargetBuilderOutputPathsTests
         Assert.Equal(
             new[] { "{workspaceRoot}/artifacts/package/*.nupkg", "{workspaceRoot}/artifacts/obj/foo" },
             targets["pack"].Outputs);
+    }
+
+    // --- Regressions: comparer preservation and configuration matching -------
+
+    [Fact]
+    public void Pack_NonCanonicallyCasedPackageOutputPath_IsStillHonoured()
+    {
+        // CollectProperties hands the builders a case-insensitive dictionary,
+        // because MSBuild reports whatever spelling the project (or an
+        // environment variable, which is a global property) declared. The
+        // Release copy must keep that comparer or pack silently declares bin/.
+        var projectDirectory = ProjectDir("libs", "foo");
+        var properties = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["configuration"] = "Debug",
+            ["packageoutputpath"] = "custompkg/",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{projectRoot}/custompkg/*.nupkg", "{projectRoot}/obj" },
+            targets["pack"].Outputs);
+    }
+
+    [Fact]
+    public void Publish_NonCanonicallyCasedPublishDir_IsStillHonoured()
+    {
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["configuration"] = "Debug",
+            ["publishdir"] = "custompub/",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo", isExe: true);
+
+        Assert.Equal(
+            new[] { "{projectRoot}/custompub", "{projectRoot}/obj" },
+            targets["publish"].Outputs);
+    }
+
+    [Fact]
+    public void Pack_LeavesLiteralReleaseDirectoryAlone()
+    {
+        // The directory is named "release" in its own right, not produced from
+        // $(Configuration) - rewriting it to "Release" pointed the glob at a
+        // directory pack never writes (and never matches on a case-sensitive
+        // filesystem).
+        var projectDirectory = ProjectDir("libs", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["Configuration"] = "Debug",
+            ["PackageOutputPath"] = "nupkgs/release/",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{projectRoot}/nupkgs/release/*.nupkg", "{projectRoot}/obj" },
+            targets["pack"].Outputs);
+    }
+
+    [Fact]
+    public void Publish_LeavesLiteralReleaseDirectoryAlone()
+    {
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["Configuration"] = "Debug",
+            ["PublishDir"] = "out/release/",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo", isExe: true);
+
+        Assert.Equal(
+            new[] { "{projectRoot}/out/release", "{projectRoot}/obj" },
+            targets["publish"].Outputs);
     }
 }
