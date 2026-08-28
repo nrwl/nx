@@ -24,6 +24,7 @@ describe('cypress-component-configuration generator', () => {
 
   it('should setup nextjs app', async () => {
     await applicationGenerator(tree, {
+      linter: 'eslint',
       directory: 'demo',
       style: 'css',
     });
@@ -43,9 +44,7 @@ describe('cypress-component-configuration generator', () => {
     );
     expect(readJson(tree, 'demo/cypress/tsconfig.json')).toMatchSnapshot();
     expect(tree.read('demo/cypress.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "const {
-        nxComponentTestingPreset,
-      } = require('@nx/next/plugins/component-testing');
+      "const { nxComponentTestingPreset } = require('@nx/next/plugins/component-testing');
       const { defineConfig } = require('cypress');
       module.exports = defineConfig({
         component: {
@@ -106,6 +105,7 @@ describe('cypress-component-configuration generator', () => {
   it('should import "mount" from "cypress/react18" when cypress version is lower than v14', async () => {
     mockedInstalledCypressMajorVersion.mockReturnValue(13);
     await applicationGenerator(tree, {
+      linter: 'eslint',
       directory: 'demo',
       style: 'css',
     });
@@ -171,9 +171,7 @@ describe('cypress-component-configuration generator', () => {
     );
     expect(readJson(tree, 'demo/cypress/tsconfig.json')).toMatchSnapshot();
     expect(tree.read('demo/cypress.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "const {
-        nxComponentTestingPreset,
-      } = require('@nx/next/plugins/component-testing');
+      "const { nxComponentTestingPreset } = require('@nx/next/plugins/component-testing');
       const { defineConfig } = require('cypress');
       module.exports = defineConfig({
         component: {

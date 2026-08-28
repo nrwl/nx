@@ -1,0 +1,230 @@
+// Dispatch-level tests for `migrate()` on the single-migration entry point.
+// Kept in its own file so the module mocks below don't leak into the main
+// migrate spec.
+
+const mockRunSingleMigrationWorker = vi.fn();
+const mockReportRunError = vi.fn();
+const mockReportGenerateError = vi.fn();
+
+// migrate.ts lazy-requires ./run (CJS channel), which vi.mock cannot
+// intercept; replace the module in the require channel instead.
+import { mockCjsModule } from '../../internal-testing-utils/cjs-mock';
+mockCjsModule(import.meta.url, './run', {
+  runSingleMigrationWorker: (...args: unknown[]) =>
+    mockRunSingleMigrationWorker(...args),
+  runOrchestratorInit: vi.fn(),
+  runOrchestratorReconcile: vi.fn(),
+});
+
+vi.mock('../../daemon/client/client', () => ({
+  daemonClient: {
+    stop: vi.fn().mockResolvedValue(undefined),
+    enabled: () => false,
+    reset: vi.fn(),
+  },
+}));
+
+vi.mock('./migrate-analytics', async () => ({
+  ...(await vi.importActual('./migrate-analytics')),
+  reportMigrateRunError: (...args: unknown[]) => mockReportRunError(...args),
+  reportMigrateGenerateError: (...args: unknown[]) =>
+    mockReportGenerateError(...args),
+}));
+
+const mockReadNxJson = vi.fn();
+vi.mock('../../config/configuration', async () => ({
+  ...(await vi.importActual('../../config/configuration')),
+  readNxJson: (...args: unknown[]) => mockReadNxJson(...args),
+}));
+
+import { output } from '../../utils/output';
+import { NpmPeerDepsInstallError } from './execute-migration';
+import { migrate } from './migrate';
+
+const ROOT = '/virtual-root';
+
+describe('migrate() single-migration dispatch', () => {
+  beforeEach(() => {
+    mockReadNxJson.mockReset().mockReturnValue({});
+    mockRunSingleMigrationWorker.mockReset().mockResolvedValue(undefined);
+    mockReportRunError.mockReset();
+    mockReportGenerateError.mockReset();
+    vi.spyOn(output, 'log').mockImplementation(() => {});
+    vi.spyOn(output, 'warn').mockImplementation(() => {});
+    vi.spyOn(output, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it('passes the raw run-phase flags through to the worker', async () => {
+    await migrate(
+      ROOT,
+      {
+        runMigration: '@nx/js:gen',
+        agentic: 'claude-code',
+        validate: false,
+        createCommits: true,
+        commitPrefix: 'chore: migrate ',
+        interactive: false,
+        skipInstall: true,
+        verbose: false,
+      },
+      ['--run-migration=@nx/js:gen', '--agentic=claude-code']
+    );
+
+    expect(mockRunSingleMigrationWorker).toHaveBeenCalledTimes(1);
+    // toStrictEqual, not toMatchObject: extra keys riding along in the worker
+    // input must fail the test, even undefined-valued ones.
+    expect(mockRunSingleMigrationWorker.mock.calls[0][0]).toStrictEqual({
+      root: ROOT,
+      runMigration: '@nx/js:gen',
+      runId: undefined,
+      agentic: 'claude-code',
+      validate: false,
+      createCommits: true,
+      commitPrefix: 'chore: migrate ',
+      interactive: false,
+      skipInstall: true,
+      isVerbose: false,
+    });
+  });
+
+  describe('run-phase parse-error funnel routing', () => {
+    it('reports a single-migration parse error through the run funnel, not the generate funnel', async () => {
+      // An empty --run-migration fails to parse with `runMigrations`
+      // undefined, so only the run-phase classification keeps it out of the
+      // generate funnel.
+      const exit = await migrate(ROOT, { runMigration: '' }, [
+        '--run-migration',
+      ]);
+
+      expect(exit).toBe(1);
+      expect(mockReportRunError).toHaveBeenCalledWith(
+        expect.objectContaining({ code: 'other' })
+      );
+      expect(mockReportGenerateError).not.toHaveBeenCalled();
+    });
+
+    it('reports a run-phase flag conflict through the run funnel, not the generate funnel', async () => {
+      const exit = await migrate(
+        ROOT,
+        { runMigration: 'a', stepAction: 'retry' },
+        ['--run-migration=a', '--step-action=retry']
+      );
+
+      expect(exit).toBe(1);
+      expect(mockReportRunError).toHaveBeenCalledWith(
+        expect.objectContaining({ code: 'other' })
+      );
+      expect(mockReportGenerateError).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('single-migration run-error reporting', () => {
+    it('reports npm_install and exits without rethrowing when the worker fails on a peer-deps install', async () => {
+      mockRunSingleMigrationWorker.mockRejectedValue(
+        new NpmPeerDepsInstallError()
+      );
+
+      const exit = await migrate(
+        ROOT,
+        { runMigration: '@nx/js:gen', skipInstall: true },
+        ['--run-migration=@nx/js:gen']
+      );
+
+      expect(exit).toBe(1);
+      expect(mockReportRunError).toHaveBeenCalledTimes(1);
+      expect(mockReportRunError).toHaveBeenCalledWith(
+        expect.objectContaining({ code: 'npm_install' })
+      );
+    });
+
+    it('reports other worker failures through the run funnel and still fails', async () => {
+      mockRunSingleMigrationWorker.mockRejectedValue(new Error('boom'));
+
+      const exit = await migrate(
+        ROOT,
+        { runMigration: '@nx/js:gen', skipInstall: true },
+        ['--run-migration=@nx/js:gen']
+      );
+
+      expect(exit).toBe(1);
+      expect(mockReportRunError).toHaveBeenCalledTimes(1);
+      expect(mockReportRunError).toHaveBeenCalledWith(
+        expect.objectContaining({ code: 'other' })
+      );
+    });
+  });
+
+  describe('nx.json migrate defaults', () => {
+    it('applies the run-phase options from nx.json and still reaches the worker', async () => {
+      mockReadNxJson.mockReturnValue({
+        migrate: { agentic: true, commitPrefix: 'custom: ', validate: false },
+      });
+
+      await migrate(
+        ROOT,
+        { runMigration: '@nx/js:gen', skipInstall: true, verbose: false },
+        ['--run-migration=@nx/js:gen']
+      );
+
+      expect(mockRunSingleMigrationWorker).toHaveBeenCalledTimes(1);
+      expect(mockRunSingleMigrationWorker.mock.calls[0][0]).toMatchObject({
+        agentic: true,
+        validate: false,
+        commitPrefix: 'custom: ',
+        createCommits: undefined,
+      });
+    });
+
+    it('is shielded from the top-level commit-prefix assert when nx.json sets only a custom prefix', async () => {
+      // A custom prefix with no commits and no `agentic` is what trips the
+      // top-level commit-prefix assert; this path must bypass it and reach the
+      // worker.
+      mockReadNxJson.mockReturnValue({
+        migrate: { commitPrefix: 'custom: ' },
+      });
+
+      await migrate(
+        ROOT,
+        { runMigration: '@nx/js:gen', skipInstall: true, verbose: false },
+        ['--run-migration=@nx/js:gen']
+      );
+
+      expect(mockRunSingleMigrationWorker).toHaveBeenCalledTimes(1);
+      expect(mockRunSingleMigrationWorker.mock.calls[0][0]).toMatchObject({
+        commitPrefix: 'custom: ',
+        createCommits: undefined,
+      });
+    });
+
+    it('shields a dispensed invocation (--run-migration with --run-id) the same way', async () => {
+      mockReadNxJson.mockReturnValue({
+        migrate: { agentic: true, commitPrefix: 'custom: ' },
+      });
+
+      await migrate(
+        ROOT,
+        {
+          runMigration: '@nx/js:gen',
+          runId: '20260721T000000-abcd',
+          skipInstall: true,
+          verbose: false,
+        },
+        ['--run-migration=@nx/js:gen', '--run-id=20260721T000000-abcd']
+      );
+
+      expect(mockRunSingleMigrationWorker).toHaveBeenCalledTimes(1);
+      expect(mockRunSingleMigrationWorker.mock.calls[0][0]).toMatchObject({
+        // A recorded worker commits per the run's config, so nx.json's commit
+        // options are not overlaid onto it either; the yargs default stands.
+        commitPrefix: 'chore: [nx migration] ',
+        // The nx.json agentic default must not leak into a recorded run; it
+        // would trip the --agentic/--run-id parse conflict.
+        agentic: undefined,
+        runMigration: '@nx/js:gen',
+        runId: '20260721T000000-abcd',
+      });
+    });
+  });
+});

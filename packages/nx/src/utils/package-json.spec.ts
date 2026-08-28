@@ -1,4 +1,4 @@
-jest.mock('child_process');
+vi.mock('child_process');
 
 import { join } from 'path';
 import * as childProcess from 'child_process';
@@ -34,28 +34,28 @@ describe('buildTargetFromScript', () => {
 
 describe('installPackageToTmp', () => {
   afterEach(() => {
-    jest.restoreAllMocks();
-    jest.clearAllMocks();
+    vi.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should always disable lifecycle scripts via environment variables', () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'nx-install-test-'));
-    const cleanup = jest.fn(() =>
+    const cleanup = vi.fn(() =>
       rmSync(tempDir, { recursive: true, force: true })
     );
-    jest.spyOn(pacakgeManager, 'createTempNpmDirectory').mockReturnValue({
+    vi.spyOn(pacakgeManager, 'createTempNpmDirectory').mockReturnValue({
       dir: tempDir,
       cleanup,
     });
-    jest
-      .spyOn(pacakgeManager, 'getPackageManagerVersion')
-      .mockReturnValue('4.0.0');
-    jest.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
+    vi.spyOn(pacakgeManager, 'getPackageManagerVersion').mockReturnValue(
+      '4.0.0'
+    );
+    vi.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
       preInstall: 'yarn set version 4.0.0',
       addDev: 'yarn add -D',
       ignoreScriptsFlag: undefined,
     } as any);
-    const execSyncSpy = jest
+    const execSyncSpy = vi
       .spyOn(childProcess, 'execSync')
       .mockReturnValue('' as any);
 
@@ -77,21 +77,21 @@ describe('installPackageToTmp', () => {
 
   it('should use the workspace `addDev` verbatim for pnpm (preserves `-w` when pnpm-workspace.yaml is present)', () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'nx-install-test-'));
-    const cleanup = jest.fn(() =>
+    const cleanup = vi.fn(() =>
       rmSync(tempDir, { recursive: true, force: true })
     );
-    jest.spyOn(pacakgeManager, 'createTempNpmDirectory').mockReturnValue({
+    vi.spyOn(pacakgeManager, 'createTempNpmDirectory').mockReturnValue({
       dir: tempDir,
       cleanup,
     });
-    jest
-      .spyOn(pacakgeManager, 'getPackageManagerVersion')
-      .mockReturnValue('9.0.0');
-    jest.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
+    vi.spyOn(pacakgeManager, 'getPackageManagerVersion').mockReturnValue(
+      '9.0.0'
+    );
+    vi.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
       addDev: 'pnpm add -Dw --config.frozen-lockfile=false',
       ignoreScriptsFlag: '--ignore-scripts',
     } as any);
-    const execSyncSpy = jest
+    const execSyncSpy = vi
       .spyOn(childProcess, 'execSync')
       .mockReturnValue('' as any);
 
@@ -107,33 +107,35 @@ describe('installPackageToTmp', () => {
 
   it('should omit peer dependencies so peers resolve from the workspace, not the temp dir', () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'nx-install-test-'));
-    const cleanup = jest.fn(() =>
+    const cleanup = vi.fn(() =>
       rmSync(tempDir, { recursive: true, force: true })
     );
-    jest.spyOn(pacakgeManager, 'createTempNpmDirectory').mockReturnValue({
+    vi.spyOn(pacakgeManager, 'createTempNpmDirectory').mockReturnValue({
       dir: tempDir,
       cleanup,
     });
-    jest
-      .spyOn(pacakgeManager, 'getPackageManagerVersion')
-      .mockReturnValue('10.0.0');
-    jest.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
+    vi.spyOn(pacakgeManager, 'getPackageManagerVersion').mockReturnValue(
+      '10.0.0'
+    );
+    vi.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
       addDev: 'npm install -D',
       ignoreScriptsFlag: '--ignore-scripts',
     } as any);
-    const execSyncSpy = jest
+    const execSyncSpy = vi
       .spyOn(childProcess, 'execSync')
       .mockReturnValue('' as any);
 
-    // npm: peers are omitted via `--omit=peer`
+    // npm: `--legacy-peer-deps`, not `--omit=peer`. npm marks a package as a peer
+    // if anything in the tree peer-depends on it, so `--omit=peer` also prunes
+    // packages that are real dependencies of the installed package.
     installPackageToTmp('@nx/cypress', '1.0.0', 'npm');
     expect(execSyncSpy.mock.calls[0][0]).toBe(
-      'npm install -D @nx/cypress@1.0.0 --omit=peer --ignore-scripts'
+      'npm install -D @nx/cypress@1.0.0 --legacy-peer-deps --ignore-scripts'
     );
 
-    // bun: also accepts `--omit=peer`
+    // bun: `--omit=peer` is safe here, bun does not over-prune the way npm does
     execSyncSpy.mockClear();
-    jest.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
+    vi.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
       addDev: 'bun add -D',
       ignoreScriptsFlag: undefined,
     } as any);
@@ -144,7 +146,7 @@ describe('installPackageToTmp', () => {
 
     // pnpm: peers are omitted by disabling auto-install
     execSyncSpy.mockClear();
-    jest.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
+    vi.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
       addDev: 'pnpm add -Dw --config.frozen-lockfile=false',
       ignoreScriptsFlag: '--ignore-scripts',
     } as any);
@@ -155,7 +157,7 @@ describe('installPackageToTmp', () => {
 
     // yarn: Berry does not auto-install peers, so no flag is added
     execSyncSpy.mockClear();
-    jest.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
+    vi.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
       addDev: 'yarn add -D',
       ignoreScriptsFlag: undefined,
     } as any);
@@ -654,14 +656,6 @@ const dependencies = [
   ...Object.keys(rootPackageJson.devDependencies),
 ];
 
-const exclusions = new Set([
-  // @types/js-yaml doesn't define a main field, but does define exports.
-  // exports doesn't contain 'package.json', and main is an empty line.
-  // This means the function fails.
-  '@types/js-yaml',
-  '@webcontainer/api',
-]);
-
 // Skip packages this monorepo publishes — pnpm symlinks them into
 // `node_modules/<name>` from `packages/<name>`, so resolving them counts as
 // a cross-project read in CI's sandbox even though it would be a normal
@@ -671,11 +665,12 @@ const isPublishedHere = (name: string) =>
   name === 'nx' || name.startsWith('@nx/') || name.startsWith('create-nx-');
 
 describe('readModulePackageJson', () => {
-  it.each(
-    dependencies.filter((x) => !exclusions.has(x) && !isPublishedHere(x))
-  )(`should be able to find %s`, (s) => {
-    expect(() => readModulePackageJson(s)).not.toThrow();
-  });
+  it.each(dependencies.filter((x) => !isPublishedHere(x)))(
+    `should be able to find %s`,
+    (s) => {
+      expect(() => readModulePackageJson(s)).not.toThrow();
+    }
+  );
 });
 
 describe('getDependencyVersionFromPackageJson', () => {
@@ -887,9 +882,7 @@ describe('getDependencyVersionFromPackageJson', () => {
 
   describe('with catalog references', () => {
     beforeEach(() => {
-      jest
-        .spyOn(pacakgeManager, 'detectPackageManager')
-        .mockReturnValue('pnpm');
+      vi.spyOn(pacakgeManager, 'detectPackageManager').mockReturnValue('pnpm');
       tree.write(
         'pnpm-workspace.yaml',
         `

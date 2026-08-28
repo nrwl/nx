@@ -5,7 +5,7 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
-import { PackageJson } from 'nx/src/utils/package-json';
+import { PackageJson } from '@nx/devkit/internal';
 
 export function hasGenerator(
   tree: Tree,

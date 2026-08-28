@@ -1,39 +1,46 @@
+import type { MockInstance } from 'vitest';
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import { Tree } from '../../generators/tree';
 
 import { setupAiAgentsGenerator } from './set-up-ai-agents';
 import { SetupAiAgentsGeneratorSchema } from './schema';
-import { readJson } from '../../generators/utils/json';
+import { readJson, updateJson } from '../../generators/utils/json';
 import { getAgentRulesWrapped } from '../constants';
 import * as installedNxVersionUtils from '../../utils/installed-nx-version';
 import * as cloneModule from '../clone-ai-config-repo';
 import * as fs from 'fs';
 
-jest.mock('fs', () => {
-  const actual = jest.requireActual('fs');
+vi.mock('fs', async () => {
+  const actual = await vi.importActual('fs');
   return {
     ...actual,
-    existsSync: jest
+    existsSync: vi
       .fn()
       .mockImplementation((...args: any[]) => actual.existsSync(...args)),
-    readFileSync: jest
+    readFileSync: vi
       .fn()
       .mockImplementation((...args: any[]) => actual.readFileSync(...args)),
   };
 });
 
+function setAnalytics(tree: Tree, analytics: boolean) {
+  updateJson(tree, 'nx.json', (json) => ({ ...json, analytics }));
+}
+
 describe('setup-ai-agents generator', () => {
   let tree: Tree;
-  let getInstalledNxVersionSpy: jest.SpyInstance;
+  let getInstalledNxVersionSpy: MockInstance;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    // No formatter: these assertions compare against the exact string the
+    // generator builds, so any formatting in the loop breaks them.
+    tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
     // Use local implementation instead of fetching from latest
     process.env.NX_AI_FILES_USE_LOCAL = 'true';
 
     // Mock getInstalledNxVersion to return Nx 22+ by default
     // This ensures existing tests pass by defaulting to the new format
-    getInstalledNxVersionSpy = jest
+    getInstalledNxVersionSpy = vi
       .spyOn(installedNxVersionUtils, 'getInstalledNxVersion')
       .mockReturnValue('22.0.0');
   });
@@ -404,11 +411,12 @@ describe('setup-ai-agents generator', () => {
         expect(config.enabledPlugins['nx@nx-claude-plugins']).toBe(true);
       });
 
-      it('should allow analytics requests through the sandbox network filter', async () => {
+      it('should allow analytics requests through the sandbox network filter when analytics are enabled', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
           agents: ['claude'],
         };
+        setAnalytics(tree, true);
 
         await setupAiAgentsGenerator(tree, options);
 
@@ -420,11 +428,103 @@ describe('setup-ai-agents generator', () => {
         ]);
       });
 
+      it('should not allow analytics requests through the sandbox network filter when analytics are disabled', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+        setAnalytics(tree, false);
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.sandbox).toBeUndefined();
+      });
+
+      it('should not allow analytics requests through the sandbox network filter when no analytics preference is set', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.sandbox).toBeUndefined();
+      });
+
+      it('should leave an existing sandbox network filter untouched when analytics are disabled', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+        setAnalytics(tree, false);
+
+        tree.write(
+          '.claude/settings.json',
+          JSON.stringify({
+            sandbox: {
+              network: {
+                allowedDomains: ['example.com'],
+              },
+            },
+          })
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.sandbox.network.allowedDomains).toEqual(['example.com']);
+      });
+
+      it('should report the sandbox network filter change when the analytics domain is added', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+        setAnalytics(tree, true);
+
+        const callback = await setupAiAgentsGenerator(tree, options);
+        const { messages } = await callback();
+
+        expect(messages.map((message) => message.title)).toContainEqual(
+          expect.stringContaining('www.google-analytics.com')
+        );
+      });
+
+      it('should not report the sandbox network filter change when the analytics domain is already allowed', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+        setAnalytics(tree, true);
+        tree.write(
+          '.claude/settings.json',
+          JSON.stringify({
+            sandbox: {
+              network: { allowedDomains: ['www.google-analytics.com'] },
+            },
+          })
+        );
+
+        const callback = await setupAiAgentsGenerator(tree, options);
+        const { messages } = await callback();
+
+        expect(messages).toEqual([]);
+      });
+
       it('should preserve existing sandbox allowed domains and not duplicate the analytics domain', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
           agents: ['claude'],
         };
+        setAnalytics(tree, true);
 
         tree.write(
           '.claude/settings.json',
@@ -715,7 +815,7 @@ describe('setup-ai-agents generator', () => {
 
       it('should not delete .gemini/skills when .agents/skills does not exist', async () => {
         // Mock getAiConfigRepoPath to fail so .agents/skills is not created
-        const spy = jest
+        const spy = vi
           .spyOn(cloneModule, 'getAiConfigRepoPath')
           .mockImplementation(() => {
             throw new Error('no network');
@@ -1141,9 +1241,9 @@ describe('setup-ai-agents generator', () => {
     });
 
     describe('codex config from generated template', () => {
-      let getAiConfigRepoPathSpy: jest.SpyInstance;
-      let existsSyncSpy: jest.SpyInstance;
-      let readFileSyncSpy: jest.SpyInstance;
+      let getAiConfigRepoPathSpy: MockInstance;
+      let existsSyncSpy: MockInstance;
+      let readFileSyncSpy: MockInstance;
 
       const generatedConfig = `[mcp_servers."nx-mcp"]
 command = "npx"
@@ -1158,12 +1258,12 @@ config_file = ".codex/agents/ci-monitor-subagent.toml"
 `;
 
       beforeEach(() => {
-        getAiConfigRepoPathSpy = jest
+        getAiConfigRepoPathSpy = vi
           .spyOn(cloneModule, 'getAiConfigRepoPath')
           .mockReturnValue('/fake/repo');
 
         const originalExistsSync = fs.existsSync;
-        existsSyncSpy = jest
+        existsSyncSpy = vi
           .spyOn(fs, 'existsSync')
           .mockImplementation((path: any) => {
             if (
@@ -1188,7 +1288,7 @@ config_file = ".codex/agents/ci-monitor-subagent.toml"
           });
 
         const originalReadFileSync = fs.readFileSync;
-        readFileSyncSpy = jest
+        readFileSyncSpy = vi
           .spyOn(fs, 'readFileSync')
           .mockImplementation((path: any, ...args: any[]) => {
             if (
@@ -1409,7 +1509,7 @@ sandbox_mode = "read-only"
         // Mock readFileSync to fail only for package.json so it falls back to default version
         // but allow other file reads (needed for generateFiles)
         const originalReadFileSync = fs.readFileSync;
-        const readFileSyncSpy = jest
+        const readFileSyncSpy = vi
           .spyOn(fs, 'readFileSync')
           .mockImplementation((path: any, ...args: any[]) => {
             if (

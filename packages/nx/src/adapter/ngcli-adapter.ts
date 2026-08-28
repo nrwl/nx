@@ -77,6 +77,12 @@ import {
   resolveSchema,
 } from '../config/schema-utils';
 import { handleImport } from '../utils/handle-import';
+import {
+  selectPrompt,
+  multiselectPrompt,
+  textPrompt,
+  confirmationPrompt,
+} from '../utils/prompt-helpers';
 import { resolveNxTokensInOptions } from '../project-graph/utils/project-configuration/target-merging';
 
 function getProjectGraph(): Promise<ProjectGraph> {
@@ -1007,8 +1013,72 @@ function createPromptProvider() {
       }
     });
 
-    return require('enquirer').prompt(questions);
+    // Angular hands over a whole form at once; clack asks one question at a
+    // time, so they are run in order and the answers reassembled.
+    return (async () => {
+      const answers: Record<string, any> = {};
+      for (const question of questions) {
+        answers[question.name] = await askSchematicQuestion(question);
+      }
+      return answers;
+    })();
   };
+
+  async function askSchematicQuestion(question: Prompt): Promise<any> {
+    const validate = question.validate
+      ? (value: string) => {
+          const result = question.validate!(value);
+          if (result === true) return undefined;
+          return typeof result === 'string' ? result : 'Invalid value';
+        }
+      : undefined;
+
+    const choices = (question.choices ?? []).map((c) =>
+      typeof c === 'string' ? { value: c } : { value: c.name, label: c.message }
+    );
+
+    switch (question.type) {
+      case 'confirm':
+        return confirmationPrompt({
+          message: question.message,
+          initial: question.initial !== false,
+        });
+      case 'select':
+        return selectPrompt({
+          message: question.message,
+          choices,
+          initial: question.initial,
+        });
+      case 'multiselect':
+        return multiselectPrompt({
+          message: question.message,
+          choices,
+          initialValues: question.initial,
+        });
+      case 'numeral': {
+        // No numeric prompt; the answer is parsed back so callers still get a
+        // number rather than the typed string.
+        const answer = await textPrompt({
+          message: question.message,
+          initialValue:
+            question.initial === undefined
+              ? undefined
+              : String(question.initial),
+          validate: (value) =>
+            value !== '' && !Number.isNaN(Number(value))
+              ? validate?.(value)
+              : 'Please enter a number',
+        });
+        return Number(answer);
+      }
+      default:
+        return textPrompt({
+          message: question.message,
+          initialValue: question.initial,
+          validate,
+        });
+    }
+  }
 }
 
 export async function runMigration(

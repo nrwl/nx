@@ -16,6 +16,8 @@ describe('<%= cliName %>', () => {
   });
 
 
+  // This test shells out synchronously, so its budget has to cover a cold
+  // package manager cache. Otherwise work that succeeded still fails on return.
   it('should be installed', () => {
     projectDirectory = createTestProject();
 
@@ -24,7 +26,7 @@ describe('<%= cliName %>', () => {
       cwd: projectDirectory,
       stdio: 'inherit',
     });
-  });
+  }, 180_000);
 });
 
 /**

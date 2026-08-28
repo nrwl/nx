@@ -21,22 +21,83 @@ When running Nx commands inside [Claude Code](https://docs.anthropic.com/en/docs
 
 ## The fix
 
-Add `allowAllUnixSockets: true` to your Claude Code sandbox permissions. You can set this at the project level (`.claude/settings.local.json`) or user level (`~/.claude/settings.json`):
+Add `allowAllUnixSockets: true` to your Claude Code sandbox network settings. You can set this at the project level (`.claude/settings.local.json`) or user level (`~/.claude/settings.json`):
 
 ```json
 // .claude/settings.local.json
 {
-  "permissions": {
-    "allowAllUnixSockets": true
+  "sandbox": {
+    "network": {
+      "allowAllUnixSockets": true
+    }
   }
 }
 ```
 
 This grants Nx the ability to create and connect to Unix sockets, which it needs for daemon communication, plugin isolation, and forked task execution.
 
-## Why `allowAllUnixSockets` instead of specific paths
+## Scoped allowlisting with the Nx socket root
 
-Claude Code's `allowUnixSockets` setting accepts specific socket paths, but Nx generates socket paths dynamically using `process.pid`, a counter, and `performance.now()`. These paths change on every run and can't be predicted ahead of time. Allowlisting individual paths isn't feasible, so `allowAllUnixSockets: true` is the recommended approach.
+The daemon, forked task processes and plugin workers put their sockets beneath one stable root on macOS and Linux: `/tmp/.nx`, unless overridden via `NX_SOCKET_DIR`. When that root can't be used they move to `~/.nx`, so allowlist both. Neither path varies between machines or users, which makes the rule suitable for team-wide project settings:
+
+```json
+// .claude/settings.json
+{
+  "sandbox": {
+    "filesystem": {
+      "allowRead": ["/tmp/.nx", "~/.nx"],
+      "allowWrite": ["/tmp/.nx", "~/.nx"]
+    },
+    "network": {
+      "allowUnixSockets": ["/tmp/.nx", "~/.nx"]
+    }
+  }
+}
+```
+
+`~` expands to the home directory of whoever runs Nx, so one committed entry covers every user. Wildcards don't work in these settings, so each entry has to be a literal path.
+
+The write grant covers `/tmp/.nx` rather than only its `sockets` descendants because the first Nx run also has to create the root. Nx copies its compiled native binding into a cache under the same root before loading it, which the grant needs to cover too.
+
+## Where sockets go, and in what order
+
+Setting `$NX_SOCKET_DIR` replaces this list rather than joining it: the value is used exactly as given, and a configured directory Nx can't use sends it straight to the workspace with a warning instead of quietly substituting a longer path you never asked for.
+
+Otherwise Nx uses the first of these it can establish. It creates each directory and verifies it afterwards, not before: a check that ran first would leave a window in which someone else could swap the path between the check and the use.
+
+1. **`/tmp/.nx/<uid>/sockets`** needs `/tmp/.nx` to belong to you or to `root`, and to be sticky if anyone else can write to it. The two directories beneath it have to be yours and mode `0700`.
+1. **`~/.nx/sockets`** needs both directories to be yours and mode `0700`. There's no container check here, because nobody else can write to your home directory.
+1. **`<workspaceRoot>/.nx/workspace-data/d`** is the last resort. Its length grows with the depth of your checkout, so a deeply nested workspace can push a socket past the 95-character limit Nx enforces. Nx sets that conservative guard to sit under the operating system's own cap on socket paths.
+
+The native binding cache doesn't follow sockets down that list. It lives at `/tmp/.nx/<uid>/native-cache/<nxVersion>` or nowhere. When that can't be established, Nx skips the cache and loads the binding in place from `node_modules`. A skipped cache costs one file copy, while a skipped socket costs you the daemon, so only sockets keep looking.
+
+None of this applies on Windows. Named pipes aren't filesystem objects, so sockets stay directly under `%TMP%`, with no per-user segment and no second location.
+
+{% aside type="note" title="What keeps these directories private" %}
+The allowlist decides which paths the sandbox can reach. It is not what separates users from each other.
+
+Nx puts the user ID directly beneath the stable container: `/tmp/.nx/<uid>`. It creates that user directory and every directory beneath it with mode `0700`, then re-checks each one before use: it must be owned by the current user, be a real directory rather than a symlink, and carry no group or other permissions.
+
+Nx also verifies the `/tmp/.nx` container itself, and accepts it when either you or `root` owns it. On a single-user machine, in a container, or in a sandbox, that's already true: the first Nx run creates the container and you own it, so none of this needs setting up.
+
+Machines with more than one user are the exception. Whoever runs Nx first owns the container, and a directory's owner can rename the entries inside it whatever its permissions say. So Nx does not put your private directory beneath a container someone else owns. An administrator can create the container up front to cover everyone:
+
+```shell
+sudo install -d -m 1777 -o root -g root /tmp/.nx
+```
+
+That one command is the entire setup. Each user then creates their own `/tmp/.nx/<uid>`, `sockets`, and `native-cache` directories beneath it.
+
+Without it, the first person to run Nx on the machine gets the shared container and everyone after them moves on to `~/.nx`. Usually that's because a colleague got there first, though the same check is what refuses a container someone claimed deliberately. Your home directory needs no such check, because nobody else can write there, so it needs no setup at all.
+
+A per-user directory can still end up belonging to someone else: `root`, after one `sudo nx` run that kept your `HOME`, or a colleague who created `/tmp/.nx/<your-uid>` before you did. When no location works, Nx warns, and `--verbose` explains what it refused. A fall from `/tmp/.nx` to `~/.nx` is silent, because nothing is broken there, and `--verbose` names the directory it skipped and why. You can move it aside yourself when you own the directory it sits in, either your home directory or a `/tmp/.nx` your own first run created. When `root` owns that parent, an administrator has to. Once it's out of the way Nx recreates it on the next run, and pointing `NX_SOCKET_DIR` at a directory you own gets you working meanwhile.
+
+Sockets only land inside your workspace if the home directory can't host them either. That's safe rather than broken, and it's the one case where the socket path grows long enough to matter.
+
+Code inside the sandbox runs as your user, so this grant does let it write that binary cache, in the same way it can already write your workspace's `node_modules`.
+{% /aside %}
+
+Claude Code's `allowUnixSockets` setting currently only allows _connecting_ to sockets, not _creating_ them. A scoped allowlist works when the daemon is already running (started outside the sandbox, for example from your own terminal), but processes inside the sandbox that need to create sockets, such as a fresh daemon, plugin workers, or forked tasks, still require `allowAllUnixSockets: true`.
 
 ## Alternative workarounds
 
@@ -48,7 +109,7 @@ If you prefer not to enable blanket Unix socket access, you can disable the Nx f
 NX_DAEMON=false nx <command>
 ```
 
-The [Nx daemon](/docs/concepts/nx-daemon) keeps a persistent process running to speed up repeated operations. Disabling it means Nx starts fresh on every invocation, resulting in slower cold starts (especially in large workspaces).
+The [Nx daemon](/docs/reference/nx-daemon) keeps a persistent process running to speed up repeated operations. Disabling it means Nx starts fresh on every invocation, resulting in slower cold starts (especially in large workspaces).
 
 ### Disable plugin isolation
 
@@ -56,7 +117,7 @@ The [Nx daemon](/docs/concepts/nx-daemon) keeps a persistent process running to 
 NX_ISOLATE_PLUGINS=false nx <command>
 ```
 
-[Plugin isolation](/docs/concepts/inferred-tasks) runs each plugin in a separate forked process to prevent conflicts between multiple TypeScript compilers, module-level caches, and global state. Disabling it runs all plugins in the main process, which can cause issues in workspaces with plugins that have conflicting dependencies.
+[Plugin isolation](/docs/concepts/mental-model#inferred-tasks) runs each plugin in a separate forked process to prevent conflicts between multiple TypeScript compilers, module-level caches, and global state. Disabling it runs all plugins in the main process, which can cause issues in workspaces with plugins that have conflicting dependencies.
 
 {% aside type="caution" title="Workarounds are not recommended for regular use" %}
 Both environment variables work around the symptom rather than fixing the root cause. The `allowAllUnixSockets` setting is the proper fix and doesn't sacrifice any Nx functionality.
@@ -66,10 +127,14 @@ Both environment variables work around the symptom rather than fixing the root c
 
 For advanced use cases, Nx provides environment variables to override where socket files are created:
 
-| Variable                         | Description                                                                                         |
-| -------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `NX_SOCKET_DIR`                  | Overrides the directory for all Nx sockets (daemon, forked process, and plugin)                     |
-| `NX_DAEMON_SOCKET_DIR`           | Legacy alias of `NX_SOCKET_DIR`. Used only when `NX_SOCKET_DIR` is not set. Prefer `NX_SOCKET_DIR`. |
-| `NX_NATIVE_FILE_CACHE_DIRECTORY` | Overrides the native file cache path                                                                |
+| Variable                         | Description                                                                                                                                                                                                                                                                             |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NX_SOCKET_DIR`                  | Overrides the directory for all Nx sockets (daemon, forked process, and plugin). Replaces the default locations listed above rather than joining them. Must name a directory only your user can reach. Nx rejects the system temp directory and its own container/cache roots outright. |
+| `NX_DAEMON_SOCKET_DIR`           | Legacy alias of `NX_SOCKET_DIR`. Used only when `NX_SOCKET_DIR` is not set. Prefer `NX_SOCKET_DIR`.                                                                                                                                                                                     |
+| `NX_NATIVE_FILE_CACHE_DIRECTORY` | Overrides the native file cache path                                                                                                                                                                                                                                                    |
 
 These are primarily useful for environments with restricted temp directory access (e.g., certain Docker or CI setups). For Claude Code's sandbox, `allowAllUnixSockets: true` is simpler and more reliable.
+
+{% aside type="caution" title="Keep the socket directory private" %}
+Do not set `NX_SOCKET_DIR` or `NX_DAEMON_SOCKET_DIR` to a location shared with other users or other workspaces. The daemon drives work inside a long-lived process, so another user who can reach its socket could execute code in your daemon.
+{% /aside %}

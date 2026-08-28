@@ -1,5 +1,4 @@
-import { exec } from 'child_process';
-import { execSync } from 'child_process';
+import { exec, execSync } from 'child_process';
 
 const MAX_CONCURRENCY = 8;
 

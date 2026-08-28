@@ -20,7 +20,8 @@ overrides:
   handlebars: '4.7.9'
   minimist: '^1.2.6'
   underscore: '^1.13.8'
-  brace-expansion: '5.0.6'
+  brace-expansion: '5.0.9'
+  axios: '1.18.1'
   minimatch: '^10.2.5'
   shell-quote: '^1.8.4'
   tmp: '~0.2.7'
@@ -30,14 +31,22 @@ overrides:
   hasown: '2.0.4'
   '@xhmikosr/decompress': '10.2.1'
   websocket-driver: '^0.7.5'
-  tar: '^7.5.19'
+  tar: '^7.5.22'
+  seroval: '^1.5.6'
+  # astro/ipx/next pull their own sharp; the libvips CVEs (GHSA-f88m-g3jw-g9cj)
+  # are only patched from 0.35.0 on.
+  'sharp@<0.35.0': '^0.35.3'
+  # Only the 0.1.x line is affected by the ReDoS (GHSA-37ch-88jc-xwx2);
+  # express 5 / nestjs pull 8.x and 3.x, which must stay put.
+  'path-to-regexp@<0.1.13': '^0.1.13'
 onlyBuiltDependencies:
   - '@nestjs/core'
   - 'nx'
 patchedDependencies:
   '@astrojs/starlight': 'patches/@astrojs__starlight.patch'
 catalog:
-  '@babel/core': '^7.23.2'
+  '@babel/core': '^7.29.6'
+  '@clack/prompts': '^1.7.0'
   '@heroicons/react': '^2.1.4'
   '@module-federation/enhanced': '^2.3.3'
   '@playwright/test': '^1.36.0'
@@ -45,9 +54,8 @@ catalog:
   '@zkochan/js-yaml': '0.0.7'
   ajv: '^8.0.0'
   chalk: '^4.1.0'
-  enquirer: '~2.3.6'
   gpt3-tokenizer: '^1.1.5'
-  http-proxy-middleware: '^3.0.5'
+  http-proxy-middleware: '^3.0.7'
   http-server: '^14.1.0'
   jsonc-parser: '^3.2.0'
   minimatch: '10.2.5'
@@ -69,23 +77,23 @@ catalog:
   yargs-parser: '21.1.1'
 catalogs:
   angular:
-    '@angular-devkit/architect': '~0.2200.0'
-    '@angular-devkit/build-angular': '~22.0.0'
-    '@angular-devkit/core': '~22.0.0'
-    '@angular-devkit/schematics': '~22.0.0'
-    '@angular/build': '~22.0.0'
-    '@angular/cli': '~22.0.0'
-    '@angular/common': '~22.0.0'
-    '@angular/compiler': '~22.0.0'
-    '@angular/compiler-cli': '~22.0.0'
-    '@angular/core': '~22.0.0'
-    '@angular/localize': '~22.0.0'
-    '@angular/platform-browser': '~22.0.0'
-    '@angular/platform-server': '~22.0.0'
-    '@angular/router': '~22.0.0'
-    '@angular/ssr': '~22.0.0'
-    '@schematics/angular': '~22.0.0'
-    ng-packagr: '~22.0.0'
+    '@angular-devkit/architect': '~0.2201.0'
+    '@angular-devkit/build-angular': '~22.1.0'
+    '@angular-devkit/core': '~22.1.0'
+    '@angular-devkit/schematics': '~22.1.0'
+    '@angular/build': '~22.1.0'
+    '@angular/cli': '~22.1.0'
+    '@angular/common': '~22.1.0'
+    '@angular/compiler': '~22.1.0'
+    '@angular/compiler-cli': '~22.1.0'
+    '@angular/core': '~22.1.0'
+    '@angular/localize': '~22.1.0'
+    '@angular/platform-browser': '~22.1.0'
+    '@angular/platform-server': '~22.1.0'
+    '@angular/router': '~22.1.0'
+    '@angular/ssr': '~22.1.0'
+    '@schematics/angular': '~22.1.0'
+    ng-packagr: '~22.1.0'
     zone.js: '~0.16.2'
   angular-supported-versions:
     '@angular-devkit/build-angular': '>= 20.0.0 < 23.0.0'
@@ -109,12 +117,12 @@ catalogs:
     sass-embedded: '^1.97.2'
     sass-loader: '^16.0.7'
   eslint:
-    '@angular-eslint/eslint-plugin': '^22.0.0'
-    '@angular-eslint/eslint-plugin-template': '^22.0.0'
-    '@angular-eslint/template-parser': '^22.0.0'
+    '@angular-eslint/eslint-plugin': '^22.1.0'
+    '@angular-eslint/eslint-plugin-template': '^22.1.0'
+    '@angular-eslint/template-parser': '^22.1.0'
     '@typescript-eslint/type-utils': '^8.0.0'
     '@typescript-eslint/utils': '^8.0.0'
-    angular-eslint: '^22.0.0'
+    angular-eslint: '^22.1.0'
     eslint-config-prettier: '^10.0.0'
   jest:
     '@jest/globals': '30.3.0'
@@ -149,7 +157,6 @@ catalogs:
   typescript:
     '@phenomnomnominal/tsquery': '~6.2.0'
     '@types/node': '^24.11.0'
-    ts-morph: '^28.0.0'
     ts-node: '10.9.1'
     tsconfig-paths: '^4.1.2'
     tslib: '^2.3.0'
@@ -167,6 +174,7 @@ catalogs:
 allowBuilds:
   '@nestjs/core': true
   '@parcel/watcher': false
+  '@scarf/scarf': false
   '@swc/core': false
   '@tailwindcss/oxide': false
   core-js: false

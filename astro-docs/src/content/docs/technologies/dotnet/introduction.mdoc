@@ -164,6 +164,8 @@ Once a .NET project file has been identified, the targets are created with the c
 - `watch` - Watches the project for changes and rebuilds (automatically marked as continuous)
 - `run` - Runs the application (for executable projects)
 
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/dotnet`.
+
 ### Target availability
 
 Not all targets are available for every project type. The plugin intelligently determines which targets to create based on the project type:

@@ -1,14 +1,17 @@
 ---
-title: 'What is a Task Pipeline'
-description: 'Learn how Nx manages task dependencies and execution order in monorepo workspaces, ensuring proper build sequences for interconnected projects.'
+title: Task pipeline configuration
+description: Learn how to configure task dependencies so Nx runs work in the correct order and parallelizes independent tasks.
 sidebar:
   order: 1
 filter: 'type:Concepts'
 ---
 
-If you have a monorepo workspace (or modularized app), you rarely just run one task. Almost certainly there are relationships among the projects in the workspace and hence tasks need to follow a certain order.
+Projects in a monorepo often depend on one another.
+A build for an application might require build artifacts from several libraries, while unrelated
+builds can run at the same time.
+Nx uses the project graph and task pipeline configuration to determine that order.
 
-As you can see in the graph visualization below, the `myreactapp` project depends on other projects. Therefore, when running the build for `myreactapp`, these dependencies need to be built first so that `myreactapp` can use the resulting build artifacts.
+In this project graph, `myreactapp` depends on `feat-products`, which depends on `shared-ui`:
 
 {% graph height="450px" %}
 
@@ -59,46 +62,55 @@ As you can see in the graph visualization below, the `myreactapp` project depend
 
 {% /graph %}
 
-While you could manage these relationships on your own and set up custom scripts to build all projects in the proper order (e.g. first build `shared-ui`, then `feat-products` and finally `myreactapp`), that kind of approach is not scalable and would need constant maintenance as you keep changing and adding projects to your workspace.
+A script could build `shared-ui`, then `feat-products`, and then `myreactapp`.
+That script would duplicate information already available in the project graph and would need updates
+whenever project dependencies changed.
 
-This becomes even more evident when you run tasks in parallel. You cannot just naively run all of them at the same time. Instead, the task orchestrator needs to respect the order of the tasks so that it builds libraries first and then resumes building the apps that depend on those libraries in parallel.
+Task pipelines express the ordering rule instead.
+Nx applies the rule to the current project graph and runs as many independent tasks in parallel as the
+pipeline permits.
 
-![task-graph-execution](../../../assets/concepts/mental-model/task-graph-execution.svg)
+![Tasks running in dependency order and in parallel](../../../assets/concepts/mental-model/task-graph-execution.svg)
 
-Define task dependencies in the form of "rules", which are then followed when running tasks. There's a [detailed recipe](/docs/kb/defining-task-pipeline) but here's the high-level overview:
+## Define task dependencies
+
+Use `dependsOn` in `targetDefaults` to define workspace-wide task dependencies:
 
 ```jsonc title="nx.json"
 {
-  ...
   "targetDefaults": {
     "build": {
-      "dependsOn": ["^build", "prebuild"]
+      "dependsOn": ["^build", "prebuild"],
     },
     "test": {
-      "dependsOn": ["build"]
-    }
-  }
+      "dependsOn": ["build"],
+    },
+  },
 }
 ```
 
-{% aside type="caution" title="Older versions of Nx" %}
-Older versions of Nx used targetDependencies instead of targetDefaults. `targetDependencies` was removed in version 16, with `targetDefaults` replacing its use case.
-{% /aside %}
+With this configuration, `nx test myproj` produces the following sequence:
 
-When running `nx test myproj`, the above configuration would tell Nx to
+1. Nx adds `myproj:test` to the task graph.
+1. Because `test` depends on `build`, Nx adds `myproj:build`.
+1. Because `build` depends on `prebuild`, Nx adds `myproj:prebuild`.
+1. The `^build` entry adds `build` tasks for projects that `myproj` depends on.
+1. Nx runs each task when its dependencies are complete.
 
-1. Run the `test` command for `myproj`
-2. But since there's a dependency defined from `test` to `build` (see `"dependsOn" :["build"]`), Nx runs `build` for `myproj` first.
-3. `build` itself defines a dependency on `prebuild` (on the same project) as well as `build` of all the dependencies. Therefore, it will run the `prebuild` script and will run the `build` script for all the dependencies.
+Nx doesn't wait for every build to finish before starting every test.
+It runs independent tasks in parallel while respecting the graph constraints.
 
-Note, Nx doesn't have to run all builds before it starts running tests. The task orchestrator will run as many tasks in parallel as possible as long as the constraints are met.
+The caret in `^build` means "run the target on project dependencies."
+Without the caret, `prebuild` and `build` refer to targets on the same project.
 
-These rules can be defined globally in the `nx.json` file or locally per project in the `package.json` or `project.json` files.
-
-## Configure it for your own project
+Define shared rules in `nx.json`.
+Use the `nx.targets` section of `package.json`, or `project.json`, when one project needs a different
+pipeline.
 
 {% aside type="tip" title="Learn by doing" %}
-Try the [Configuring Tasks](/docs/getting-started/tutorials/configuring-tasks) tutorial to apply these concepts in your own workspace.
+Follow the [configuring tasks tutorial](/docs/getting-started/tutorials/configuring-tasks) to create
+a task pipeline in a workspace.
 {% /aside %}
 
-Learn about all the details of how to configure [task pipelines in the according recipe section](/docs/kb/defining-task-pipeline).
+For all `dependsOn` forms and project-specific examples, see
+[define a task pipeline](/docs/kb/defining-task-pipeline).

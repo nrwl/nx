@@ -191,8 +191,10 @@ const messageOptions: Record<string, MessageData[]> = {
         { value: 'gitlab', name: 'Gitlab' },
         { value: 'azure', name: 'Azure DevOps' },
         { value: 'bitbucket-pipelines', name: 'BitBucket Pipelines' },
-        { value: 'circleci', name: 'Circle CI' },
-        { value: 'skip', name: '\nDo it later' },
+        // Trailing newline puts a blank line before "Do it later". A leading
+        // one would split that choice from its own radio marker.
+        { value: 'circleci', name: 'Circle CI\n' },
+        { value: 'skip', name: 'Do it later' },
       ],
       footer: `\nSelf-healing CI, remote caching, and task distribution are provided by Nx Cloud: ${NX_CLOUD_HYPERLINK}`,
       fallback: { value: 'skip', key: 'setupNxCloud' },
@@ -244,7 +246,6 @@ interface MessageData {
   initial: number;
   choices: Array<{ value: string; name: string }>;
   footer: string;
-  hint?: string;
   fallback?: { value: string; key: MessageKey };
   completionMessage: CompletionMessageKey;
 }

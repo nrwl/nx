@@ -7,6 +7,22 @@ sidebar:
 filter: 'type:Features'
 ---
 
+{% llm_copy_prompt title="Prompt an agent to set this up" previewLines=8 %}
+
+Set up this Nx workspace to work with AI coding agents.
+
+1. Confirm the workspace has an `nx.json` and `nx` in `package.json`. If Nx is missing, stop and ask me before running `npx nx@latest init`.
+2. Ask me which agents to configure. The supported values are `claude`, `codex`, `copilot`, `cursor`, `gemini`, and `opencode`. Do not guess from what happens to be installed on my machine.
+3. Run `npx nx configure-ai-agents --agents <agents> --no-interactive` with the values I gave you.
+4. Verify with `npx nx configure-ai-agents --check=all` and show me the output.
+
+The command writes agent rules (`AGENTS.md`, `CLAUDE.md`, and equivalents), MCP server config, and the Nx agent skills. Show me the diff and let me review it. Do not commit on my behalf.
+
+If a step fails, surface the error rather than retrying. For what the integration provides and how to configure agents by hand, follow {pageUrl}.
+
+Page: {pageUrl}
+{% /llm_copy_prompt %}
+
 AI coding assistants often hallucinate outdated Nx commands and lack context about your workspace structure. Without workspace awareness, they suggest commands that don't exist or miss project relationships entirely.
 
 The Nx AI integration gives assistants accurate, real-time information about your workspace, projects, and available commands, making them smarter when working in an Nx monorepo and more autonomous when iterating on CI failures.
@@ -35,6 +51,8 @@ npx skills add nrwl/nx-ai-agents-config
 ```
 
 This copies the skills into your workspace but does not install the Claude Code plugin.
+
+Agents that discover skills over HTTP can read the same set from [https://nx.dev/.well-known/agent-skills/index.json](https://nx.dev/.well-known/agent-skills/index.json).
 
 Watch [our Youtube video](https://youtu.be/8gdvIz2r_QM) for a full walkthrough.
 

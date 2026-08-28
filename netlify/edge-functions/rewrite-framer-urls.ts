@@ -278,6 +278,8 @@ export const config = {
     '/courses/*',
     '/_next/*',
     '/.netlify/*',
+    // Agent discovery endpoints - Next rewrites these to astro-docs
+    '/.well-known/*',
     // Legacy docs paths — must bypass Framer so _redirects 301 rules fire
     '/ci',
     '/ci/*',
@@ -337,6 +339,14 @@ export const config = {
     '/troubleshooting/*',
     '/using-nx',
     '/using-nx/*',
+    // Legacy backlink targets sitting under Framer- and blog-proxied routes.
+    // Exact paths only, so the proxies keep serving everything else.
+    '/blog/2024-05-08-nx-19-release',
+    '/blog/evolving-nx',
+    '/cypress/overview',
+    '/jest/overview',
+    '/more-concepts/monorepo-nx-enterprise',
+    '/storybook/overview-react',
     '/ai',
     '/advent-of-code',
     '/launch-nx',

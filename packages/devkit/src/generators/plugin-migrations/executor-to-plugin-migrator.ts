@@ -16,6 +16,7 @@ import {
   type ProjectGraph,
   type TargetConfiguration,
   type Tree,
+  logger as devkitLogger,
 } from 'nx/src/devkit-exports';
 import {
   LoadedNxPlugin,
@@ -29,7 +30,6 @@ import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-con
 import { forEachExecutorOptions } from '../executor-options-utils';
 import { findTargetDefault } from '../target-defaults-utils';
 import { deleteMatchingProperties } from './plugin-migration-utils';
-import { logger as devkitLogger } from 'nx/src/devkit-exports';
 
 export type InferredTargetConfiguration = TargetConfiguration & {
   name: string;

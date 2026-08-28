@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { readJson, Tree, updateJson, writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -231,9 +231,7 @@ describe('e2eProjectGenerator', () => {
         import { readFileSync } from 'fs';
 
         // Reading the SWC compilation config for the spec files
-        const swcJestConfig = JSON.parse(
-          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'),
-        );
+        const swcJestConfig = JSON.parse(readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'));
 
         // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
         swcJestConfig.swcrc = false;
@@ -301,9 +299,7 @@ describe('e2eProjectGenerator', () => {
         import { readFileSync } from 'fs';
 
         // Reading the SWC compilation config for the spec files
-        const swcJestConfig = JSON.parse(
-          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'),
-        );
+        const swcJestConfig = JSON.parse(readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'));
 
         // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
         swcJestConfig.swcrc = false;
@@ -347,5 +343,29 @@ describe('e2eProjectGenerator', () => {
         "
       `);
     });
+  });
+  it('should enable the jest oxlint plugin for the e2e project', async () => {
+    writeJson(tree, 'package.json', {
+      name: '@proj/source',
+      devDependencies: { oxlint: '^1.70.0' },
+    });
+    writeJson(tree, 'nx.json', { plugins: ['@nx/oxlint'] });
+
+    await applicationGenerator(tree, {
+      directory: 'api',
+      framework: 'express',
+      linter: 'oxlint',
+      e2eTestRunner: 'none',
+      addPlugin: true,
+    });
+    await e2eProjectGenerator(tree, {
+      projectType: 'server',
+      project: 'api',
+      addPlugin: true,
+    });
+
+    // The e2e specs are Jest, so the project needs its own config to turn the
+    // Jest rules on; inheriting the root config alone would not.
+    expect(readJson(tree, 'api-e2e/.oxlintrc.json').plugins).toContain('jest');
   });
 });

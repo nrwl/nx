@@ -43,6 +43,24 @@ describe('next library', () => {
     expect(tsconfigTypes).toContain('@nx/next/typings/image.d.ts');
   });
 
+  it('should not install Next.js ESLint packages the library does not use', async () => {
+    const appTree = createTreeWithEmptyWorkspace();
+
+    await libraryGenerator(appTree, {
+      directory: 'my-lib',
+      linter: 'eslint',
+      skipFormat: false,
+      skipTsConfig: false,
+      unitTestRunner: 'jest',
+      style: 'css',
+      component: true,
+    });
+
+    const { devDependencies } = readJson(appTree, 'package.json');
+    expect(devDependencies['eslint-config-next']).toBeUndefined();
+    expect(devDependencies['@next/eslint-plugin-next']).toBeUndefined();
+  });
+
   it('should generate a buildable library', async () => {
     const appTree = createTreeWithEmptyWorkspace();
     await libraryGenerator(appTree, {
@@ -298,6 +316,36 @@ describe('next library', () => {
       });
 
       expect(appTree.exists('my-buildable-lib/vite.config.mts')).toBeTruthy();
+    });
+
+    it('should export the server entry from source for non-buildable libraries', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        linter: 'none',
+        skipFormat: true,
+        skipTsConfig: false,
+        unitTestRunner: 'none',
+        style: 'css',
+        component: false,
+        useProjectJson: false,
+      });
+
+      expect(readJson(tree, 'mylib/package.json').exports)
+        .toMatchInlineSnapshot(`
+        {
+          ".": {
+            "default": "./src/index.ts",
+            "import": "./src/index.ts",
+            "types": "./src/index.ts",
+          },
+          "./package.json": "./package.json",
+          "./server": {
+            "default": "./src/server.ts",
+            "import": "./src/server.ts",
+            "types": "./src/server.ts",
+          },
+        }
+      `);
     });
 
     it('should create a correct package.json for buildable libraries', async () => {

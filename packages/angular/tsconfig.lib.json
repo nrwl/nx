@@ -27,16 +27,7 @@
   "include": ["**/*.ts"],
   "references": [
     {
-      "path": "../webpack/tsconfig.lib.json"
-    },
-    {
       "path": "../web/tsconfig.lib.json"
-    },
-    {
-      "path": "../rspack/tsconfig.lib.json"
-    },
-    {
-      "path": "../module-federation/tsconfig.lib.json"
     },
     {
       "path": "../js/tsconfig.lib.json"
@@ -52,6 +43,18 @@
     },
     {
       "path": "../vitest/tsconfig.lib.json"
+    },
+    {
+      "path": "../storybook/tsconfig.lib.json"
+    },
+    {
+      "path": "../webpack/tsconfig.lib.json"
+    },
+    {
+      "path": "../rspack/tsconfig.lib.json"
+    },
+    {
+      "path": "../module-federation/tsconfig.lib.json"
     },
     {
       "path": "../playwright/tsconfig.lib.json"

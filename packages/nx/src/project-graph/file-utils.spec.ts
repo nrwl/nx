@@ -1,13 +1,14 @@
-jest.mock('fs', () => {
-  const actual = jest.requireActual('fs');
+import type { Mock } from 'vitest';
+vi.mock('fs', async () => {
+  const actual = await vi.importActual('fs');
   return {
     ...actual,
-    existsSync: jest
+    existsSync: vi
       .fn()
       .mockImplementation((...args) => actual.existsSync(...args)),
   };
 });
-jest.mock('child_process');
+vi.mock('child_process');
 import {
   calculateFileChanges,
   DeletedFileChange,
@@ -22,7 +23,7 @@ import ignore = require('ignore');
 
 describe('calculateFileChanges', () => {
   it('should return a whole file change by default for files that exist', () => {
-    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true);
     const changes = calculateFileChanges(
       ['proj/index.ts'],
       undefined,
@@ -85,7 +86,7 @@ describe('calculateFileChanges', () => {
   });
 
   it('should pick up deleted changes for deleted files', () => {
-    jest.spyOn(fs, 'existsSync').mockReturnValue(false);
+    vi.spyOn(fs, 'existsSync').mockReturnValue(false);
     const changes = calculateFileChanges(
       ['i-dont-exist.json'],
       {
@@ -101,7 +102,7 @@ describe('calculateFileChanges', () => {
   });
 
   it('should return lock file changes for bun.lockb files', () => {
-    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true);
     const changes = calculateFileChanges(
       ['bun.lockb'],
       {
@@ -131,18 +132,18 @@ describe('calculateFileChanges', () => {
   });
 
   describe('reading a file at a revision', () => {
-    const execSyncMock = execSync as jest.Mock;
-    const execFileSyncMock = execFileSync as jest.Mock;
+    const execSyncMock = execSync as Mock;
+    const execFileSyncMock = execFileSync as Mock;
 
     beforeEach(() => {
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+      vi.spyOn(fs, 'existsSync').mockReturnValue(true);
       // `git rev-parse --show-toplevel`, used to make the path repo-relative
       execSyncMock.mockReturnValue(Buffer.from(`${workspaceRoot}\n`));
       execFileSyncMock.mockReturnValue(Buffer.from('{}'));
     });
 
     afterEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
     });
 
     function readProjJsonAtBase(base: string) {

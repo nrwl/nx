@@ -5,10 +5,11 @@ import {
   TargetConfiguration,
 } from '@nx/devkit';
 import {
+  ANALYZER_CANCELLED_MESSAGE,
   analyzeProjects,
   isAnalysisErrorResult,
 } from '../analyzer/analyzer-client';
-import { mergeTargetConfigurations } from 'nx/src/project-graph/utils/project-configuration-utils';
+import { mergeTargetConfigurations } from '@nx/devkit/internal';
 
 export type TargetConfigurationWithName = Partial<TargetConfiguration> & {
   /**
@@ -216,6 +217,14 @@ export const createNodes: CreateNodes<DotNetPluginOptions> = [
       );
 
       if (isAnalysisErrorResult(result)) {
+        if (result.error.message === ANALYZER_CANCELLED_MESSAGE) {
+          // Superseded by a newer analysis — silently return empty rather than
+          // failing the user's command with an internal sentinel.
+          // Safe only because the daemon drops this compute at its
+          // `stalePostCreateNodes` guard before createDependencies runs; that one
+          // would throw on the cache this run deliberately did not write.
+          return [];
+        }
         throw result.error;
       }
 

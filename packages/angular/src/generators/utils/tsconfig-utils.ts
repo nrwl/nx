@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/internal';
+import { createTreeParseConfigHost, ensureTypescript } from '@nx/js/internal';
 import { dirname } from 'node:path';
 import type * as ts from 'typescript';
 
@@ -26,16 +26,11 @@ export function readCompilerOptionsFromTsConfig(
   tsConfigPath: string
 ): ts.CompilerOptions {
   const ts = ensureTypescript();
-  const tsSysFromTree: ts.System = {
-    ...ts.sys,
-    readDirectory: () => [],
-    readFile: (path) => tree.read(path, 'utf-8'),
-    fileExists: (path) => tree.exists(path),
-  };
+  const host = createTreeParseConfigHost(tree);
 
   const parsed = ts.parseJsonConfigFileContent(
-    ts.readConfigFile(tsConfigPath, tsSysFromTree.readFile).config,
-    tsSysFromTree,
+    ts.readConfigFile(tsConfigPath, host.readFile).config,
+    host,
     dirname(tsConfigPath)
   );
 

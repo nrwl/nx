@@ -4,9 +4,8 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Course, Lesson } from '@nx/nx-dev-data-access-courses';
 import { renderMarkdown } from '@nx/nx-dev-ui-markdoc';
-import { YouTube } from '@nx/nx-dev-ui-common';
+import { YouTube, Header } from '@nx/nx-dev-ui-common';
 import { cx } from '@nx/nx-dev-ui-primitives';
-import { Header } from '@nx/nx-dev-ui-common';
 
 interface LessonPlayerProps {
   course: Course;

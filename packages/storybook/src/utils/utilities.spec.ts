@@ -275,6 +275,13 @@ describe('testing utilities', () => {
         });
       });
 
+      it('should treat the modern angular application builder as the ng build target', () => {
+        const result = findStorybookAndBuildTargetsAndCompiler({
+          build: { executor: '@angular/build:application' },
+        });
+        expect(result.ngBuildTarget).toEqual('build');
+      });
+
       it('should find correct targets and compiler for the provided web app config', () => {
         const result = findStorybookAndBuildTargetsAndCompiler(
           targetVariations.web

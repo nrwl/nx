@@ -1,0 +1,154 @@
+---
+title: Nx with Oxlint
+description: Set up and use the @nx/oxlint plugin with inferred tasks, type-aware linting, and experimental module-boundary enforcement.
+sidebar:
+  label: Introduction
+weight: 2
+filter: 'type:References'
+---
+
+[Oxlint](https://oxc.rs/docs/guide/usage/linter/) is a linter written in Rust.
+The `@nx/oxlint` plugin runs it as a cacheable Nx task, so a change re-lints only the projects it affects.
+
+{% aside type="caution" title="Experimental" %}
+`@nx/oxlint` is experimental. The module boundaries bridge depends on the Oxlint JavaScript plugin API, which Oxlint excludes from its semantic versioning policy and can change in any release.
+{% /aside %}
+
+## Set up
+
+```shell
+nx add @nx/oxlint
+```
+
+This installs `oxlint` if it is not already installed, registers `@nx/oxlint`, and creates a root `.oxlintrc.json` if the workspace has no Oxlint config.
+
+After this, the application and library generators follow the workspace.
+Run `nx g @nx/react:app` with no `--linter` and Nx sets up Oxlint, because the workspace now has it.
+An ESLint workspace gets ESLint, and a workspace part-way through a migration gets Oxlint.
+Nx asks only when the workspace has no linter at all, and sets up no linter when the prompt cannot run, such as in CI.
+Pass `--linter` to choose for a single project.
+
+`@nx/oxlint` requires Oxlint 1.70.0 or later. The generators stop with an error on anything older.
+
+## Inferred tasks
+
+`@nx/oxlint` infers a lint task for projects governed by an Oxlint config. It recognizes the four config files Oxlint discovers on its own:
+
+- `.oxlintrc.json`
+- `.oxlintrc.jsonc`
+- `oxlint.config.ts`
+- `oxlint.config.mts`
+
+A project gets a task when it contains files Oxlint can lint. The workspace root also needs a `package.json` and a `src` or `lib` directory, so a standalone workspace that keeps its sources elsewhere gets no root task. Documentation-only and non-JavaScript projects get no target, and giving one a config of its own does not change that: Oxlint reports `No files found to lint` where it has nothing to read.
+
+View the inferred task with:
+
+```shell
+nx show project my-project --web
+```
+
+### Task inputs
+
+Inferred tasks declare the Oxlint config, every config reachable through
+`extends`, `.eslintignore` files in the project's ancestor directories, local
+`jsPlugins` files, and any `tsconfig.json` referenced from outside the project
+root. Changing any of them invalidates the cache.
+
+A `jsPlugins` package or workspace project becomes a dependency of every project
+linted under that config, so upgrading or editing the plugin invalidates the
+cache and marks those projects as affected.
+
+## Editor setup
+
+Install the official [Oxc extension](https://marketplace.visualstudio.com/items?itemName=oxc.oxc-vscode) (`oxc.oxc-vscode`) for VS Code and Cursor. `nx add @nx/oxlint` appends it to `.vscode/extensions.json` when that file already exists.
+
+Oxc also ships extensions for Zed, JetBrains IDEs, and Neovim. Any editor with LSP support can use `oxlint --lsp` as its language server.
+
+## Config file format
+
+Oxlint walks up from each file to the nearest config, and that config replaces the one above it rather than merging into it. A project config needs an `extends` pointing back at the config above it, or that config's `categories` and `rules` stop applying to the project. The generators write that `extends` whenever they create a project config, targeting the closest ancestor config rather than the workspace root. A config you wrote yourself keeps whatever `extends` it already has.
+
+Two configs in one directory is an error, not a precedence, so pick one format per directory. Prefer `.oxlintrc.json`:
+
+- `oxlint.config.ts` only works on a Node runtime that can run TypeScript directly, which means Node 22.18 or later. Node 20 cannot, even though Oxlint's error message suggests otherwise, and Oxlint's standalone binary cannot either.
+- Only JSON configs get their `extends` chain tracked as task inputs. Nx can't read a TypeScript config statically.
+- Framework generators can only register Oxlint plugins into a JSON config. When the nearest config above a project is TypeScript they can still update a project that already has its own `.oxlintrc.json`, but they can't create one. `nx g @nx/react:app --linter=oxlint` warns and leaves the `plugins` array to you. A TypeScript config further up doesn't block anything, because the nearest one is what Oxlint resolves to.
+
+## Task naming
+
+Oxlint is designed to run alongside ESLint during a migration, so the plugin claims the first available name from:
+
+1. `lint`
+2. `oxlint`
+3. `oxlint:lint`
+4. `oxlint-lint`
+
+A workspace with no other linter gets `lint`. A workspace where ESLint already owns `lint` gets `oxlint`.
+
+## Customizing the task
+
+To change how one project is linted, add arguments to the inferred target in its `project.json`. Use `args` rather than `command`: replacing the command drops the inferred `cache` and `inputs` with it, so the task stops being cached.
+
+```json
+{
+  "targets": {
+    "lint": {
+      "options": {
+        "args": ["--type-aware"]
+      }
+    }
+  }
+}
+```
+
+The plugin itself takes one option, `targetName`. `nx add @nx/oxlint` already writes it into `nx.json` with the name it picked from the list above, so edit that entry when you want a different one:
+
+```json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/oxlint",
+      "options": { "targetName": "oxlint" }
+    }
+  ]
+}
+```
+
+Which files Oxlint lints is not an Nx setting. Oxlint selects those itself. Narrow them with `ignorePatterns` in `.oxlintrc.json`, or scope individual rules with `overrides`.
+
+## Type-aware linting
+
+The Oxlint type-aware rules need the `oxlint-tsgolint` package, which bundles its own TypeScript compiler. Your workspace's TypeScript version doesn't matter.
+
+Turn them on for a single run with `nx lint my-app --type-aware`, which Nx forwards to the underlying command. To make it permanent, override the target as shown in [Customizing the task](#customizing-the-task).
+
+## Module boundaries
+
+`@nx/oxlint` exposes the project-graph-aware `enforce-module-boundaries` rule as an Oxlint JavaScript plugin. Register the bridge in `.oxlintrc.json`:
+
+```json
+{
+  "jsPlugins": ["@nx/oxlint/boundaries-plugin"],
+  "rules": {
+    "@nx/enforce-module-boundaries": [
+      "error",
+      {
+        "depConstraints": []
+      }
+    ]
+  }
+}
+```
+
+{% aside type="caution" title="A workspace plugin can't depend on what it lints" %}
+A plugin that lives in your workspace must not depend on a project it lints. That
+dependency is circular — the plugin is already a dependency of everything linted
+under its config — so a pipeline such as `dependsOn: ["^build"]` fails with a
+circular-dependency error. Set `NX_IGNORE_CYCLES=true` to run it anyway.
+{% /aside %}
+
+`depConstraints` takes the same syntax as it does under ESLint. To tag projects and write constraints, see [enforce module boundaries](/docs/features/enforce-module-boundaries).
+
+{% aside type="note" title="Dependency checks aren't available" %}
+Oxlint doesn't lint JSON files, so the `@nx/dependency-checks` rule cannot run on Oxlint. Keep ESLint for that check.
+{% /aside %}

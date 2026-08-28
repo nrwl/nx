@@ -1,6 +1,6 @@
 import { type CreateNodesContext } from '@nx/devkit';
 import { createNodes } from './router-plugin';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { join } from 'path';
 

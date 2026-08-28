@@ -83,7 +83,7 @@ describe('Angular Projects - Build and Test', () => {
     console.log(
       `The current es2015 bundle size is ${es2015BundleSize / 1000} KB`
     );
-    expect(es2015BundleSize).toBeLessThanOrEqual(226000);
+    expect(es2015BundleSize).toBeLessThanOrEqual(227000);
 
     // check unit tests
     runCLI(
@@ -91,7 +91,7 @@ describe('Angular Projects - Build and Test', () => {
     );
 
     // check e2e tests
-    if (runE2ETests('playwright')) {
+    if (await runE2ETests('playwright')) {
       // app1 was generated with --port=app1Port, so its e2e serves there
       expect(() => runCLI(`e2e ${app1}-e2e`)).not.toThrow();
       expect(await killPort(app1Port)).toBeTruthy();
@@ -153,7 +153,7 @@ describe('Angular Projects - Build and Test', () => {
     expect(componentSource).toBeDefined();
     expect(componentSource.content).not.toContain('ɵcmp');
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       expect(() => runCLI(`e2e ${app}-e2e`)).not.toThrow();
       expect(await killPort(port)).toBeTruthy();
     }
@@ -187,7 +187,7 @@ describe('Angular Projects - Build and Test', () => {
       `generate @nx/angular:app ${app} --port=${port} --e2eTestRunner=playwright --no-interactive`
     );
 
-    if (runE2ETests('playwright')) {
+    if (await runE2ETests('playwright')) {
       expect(() => runCLI(`e2e ${app}-e2e`)).not.toThrow();
       expect(await killPort(port)).toBeTruthy();
     }

@@ -25,11 +25,9 @@ Both tools are easy to set up and get started, and both cover the same basics: t
 - Task sandboxing, code generation, polyglot support, and release management.
 - A CI platform with distribution, flaky-task handling, and self-healing.
 
-Adoption isn't the trade-off it sounds like: Nx works with your existing scripts and is adopted incrementally, so a Turborepo workspace can move over without a rewrite.
+Nx also asks for less task configuration to get there, because it runs your `package.json` scripts with sensible default inputs and [plugins](/docs/concepts/nx-plugins) can infer the rest from your tool configs. Turborepo has you declare inputs and outputs in `turbo.json` and repeat them on every cacheable task.
 
-{% aside type="note" title="Benchmarks" %}
-All benchmarks on this page use the same [pnpm workspace](https://github.com/meeroslav/pnpm-workspace-baseline) migrated with both tools.
-{% /aside %}
+Adoption isn't the trade-off it sounds like: Nx works with your existing scripts and is adopted incrementally, so a Turborepo workspace can move over without a rewrite.
 
 | Topic                                           | Nx                                                                          | Turborepo                                                 |
 | ----------------------------------------------- | --------------------------------------------------------------------------- | --------------------------------------------------------- |
@@ -46,19 +44,25 @@ All benchmarks on this page use the same [pnpm workspace](https://github.com/mee
 | [Observability](#observability)                 | Integrated dashboards and AI-powered run analysis                           | Experimental OpenTelemetry (OTLP) export                  |
 | [Developer experience](#developer-experience)   | TUI, IDE extensions, and interactive project graph                          | Basic TUI and LSP support                                 |
 
+## Nx CLI and Nx Cloud
+
+The [Nx CLI](https://github.com/nrwl/nx) is free and open source. Task graph, local caching, `nx affected`, generators, and `nx release` run from the CLI on any CI provider.
+
+[Nx Cloud](/docs/features/ci-features) is the hosted layer: remote caching, task distribution, self-healing CI, and sandboxing. Turborepo divides along the same line, with an open source CLI and remote caching as a hosted service.
+
 ## Onboarding
 
-Nx works with your existing `package.json` scripts out of the box. Add the `nx` package to your workspace and you immediately get task orchestration, affected detection, and local caching, without writing any task configuration. Running `npx nx init` detects your tooling, adds the relevant plugins, and scaffolds `nx.json`.
+Nx works with your existing `package.json` scripts out of the box. Add the `nx` package to your workspace and you get task orchestration, affected detection, and local caching without writing any task configuration.
 
-Turborepo requires every task to be explicitly declared in `turbo.json` before anything runs, even if the same tasks already work with your package manager directly:
+### A minimal Nx setup
 
-```plaintext
-• turbo 2.8.7
-  × Missing tasks in project
-  ╰─▶   × Could not find task `build` in project
+Take a pnpm workspace with ten packages, each with a `build`, `test`, and `lint` script, and no Nx in it yet:
+
+```shell
+npx nx init
 ```
 
-The difference shows up in how much configuration each tool needs before a `build` is cached correctly. Nx plugins read your tool config and automatically configure each build's inputs and outputs, so turning on caching is a single flag:
+Answer the prompts to mark `build`, `test`, and `lint` cacheable, with `dist` as the `build` output:
 
 ```jsonc
 // nx.json
@@ -66,11 +70,37 @@ The difference shows up in how much configuration each tool needs before a `buil
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "targetDefaults": {
     "build": {
+      "outputs": ["{projectRoot}/dist"],
+      "cache": true,
+    },
+    "test": {
+      "cache": true,
+    },
+    "lint": {
       "cache": true,
     },
   },
 }
 ```
+
+This is all the configuration needed. Nx runs the `package.json` scripts the ten packages already have, so none of those files change.
+
+```shell
+nx run-many -t build
+nx affected -t build
+```
+
+Run `nx run-many -t build` twice and the second run restores all ten `dist` directories from cache. Edit one package and `nx affected -t build` narrows to that package and the packages that depend on it.
+
+Turborepo requires every task to be explicitly declared in `turbo.json` before anything runs, even if the same tasks already work with your package manager directly:
+
+```plaintext
+• turbo 2.10.9
+  × Missing tasks in project
+  ╰─▶   × Could not find task `build` in project
+```
+
+The difference shows up in how much configuration each tool needs before a `build` is cached correctly. In the `nx.json` above, Nx already knows what to hash, so `"cache": true` is the whole declaration.
 
 Turborepo caches by default, but without input scoping a change to any file, tests included, invalidates the build cache. Scoping it means enumerating the inputs on each task:
 
@@ -87,9 +117,9 @@ Turborepo caches by default, but without input scoping a change to any file, tes
 }
 ```
 
-Nx configures the inputs and outputs for you. Turborepo has you declare them, and repeat them on every cacheable task. The [Caching](#caching) section shows how that compounds across a workspace.
+The [Caching](#caching) section shows how that repetition compounds across a workspace.
 
-For a full walkthrough, see [Adding Nx to your Existing Project](/docs/guides/adopting-nx/adding-to-existing-project). If you're coming from Turborepo, see [Migrating from Turborepo to Nx](/docs/guides/adopting-nx/from-turborepo).
+For a full walkthrough, see [Adding Nx to your Existing Project](/docs/kb/adding-to-existing-project). If you're coming from Turborepo, see [Migrating from Turborepo to Nx](/docs/kb/from-turborepo).
 
 ## Running tasks
 
@@ -260,7 +290,7 @@ Both tools offer code generation, but the depth differs significantly.
 
 Turborepo provides `turbo gen`, built on [Plop.js](https://plopjs.com/). It scaffolds files from templates and supports custom action functions for programmatic steps. What it doesn't have is AST-level code modification, awareness of the project graph, or a migration and codemod system.
 
-Nx generators are built on top of [Nx Devkit](/docs/kb/intro), a full programmatic API for workspace manipulation. Generators can read and modify the project graph, perform AST-level TypeScript transforms, and compose with other generators. You can create [local workspace generators](/docs/features/generate-code#creating-custom-generators) that encode your team's specific patterns.
+Nx generators are built on top of [Nx Devkit](/docs/reference/devkit), a full programmatic API for workspace manipulation. Generators can read and modify the project graph, perform AST-level TypeScript transforms, and compose with other generators. You can create [local workspace generators](/docs/features/generate-code#creating-custom-generators) that encode your team's specific patterns.
 
 The real value isn't raw scaffolding, AI can do that too. It's deterministic, convention-aware generation. **AI agents can invoke your generators to produce code matching your patterns from the start.** This is faster and more token-efficient than generating everything from scratch.
 
@@ -302,30 +332,9 @@ Turborepo supports CI through remote caching (Vercel Remote Cache) plus flags li
 
 ![Nx Cloud CI report integrated into a GitHub PR](../../../assets/guides/adopting-nx/ci-report.avif)
 
-### Single-machine CI performance
-
-On a single CI runner with no cache hits, Nx is measurably faster.
-Its Rust-powered task scheduler produces a more optimal execution order, and its file hashing and cache restoration are more efficient.
-
-![Nx 21m 56s vs Turborepo 25m 32s on a single CI runner](../../../assets/guides/adopting-nx/single-machine.avif)
-
-| Tool      | Duration | Difference  |
-| --------- | -------- | ----------- |
-| Nx        | 21m 56s  | N/A         |
-| Turborepo | 25m 32s  | ~16% slower |
-
-A 16% gap may sound modest, but on a 30-minute pipeline that's nearly 4 minutes saved on every run. Note that these numbers are without any cache optimization, with both tools running out of the box on the same codebase.
-
 ### Distributed CI
 
 When a single machine is no longer enough, the tools diverge significantly.
-
-On the same workspace distributed across 4 machines:
-
-| Metric         | Nx Agents      | Turborepo (binning) |
-| -------------- | -------------- | ------------------- |
-| Total duration | 9m 20s         | 19m 18s             |
-| Agent spread   | 5m 1s - 9m 16s | 2m 50s - 18m 20s    |
 
 {% tabs %}
 {% tabitem label="Nx Agents" %}
@@ -344,8 +353,7 @@ On the same workspace distributed across 4 machines:
 {% /tabitem %}
 {% /tabs %}
 
-Turborepo is 2x slower even on this small sample.
-One Turborepo agent ran for 18 minutes while another sat idle after 3 minutes. The gap grows with more machines.
+With static binning, one agent finishes early and sits idle while another carries the long tail, and the imbalance grows with more machines.
 
 **The core difference is declarative vs imperative**:
 
@@ -438,24 +446,25 @@ Turborepo provides basic LSP support for `turbo.json`.
 
 ## Who should pick which
 
-Nx fits when any of these apply:
+Pick Nx when any of these apply:
 
-- You want task running and caching that grow into distributed CI, sandboxing, and release management.
-- Your repository spans more than JavaScript, with Java, .NET, Python, or Rust alongside it.
-- You want code generation, automated migrations, or self-healing and flaky-task handling on CI.
-- You want editor integration and an interactive project graph.
+- You want caching and affected detection without writing task configuration. `nx init` sets it up, `nx run-many` and `nx affected` run it, and [the complete `nx.json` for a ten-package workspace](#a-minimal-nx-setup) is one `targetDefaults` block.
+- You are a small team and want the configuration to stay small. There are no per-package task declarations to write and no input lists to repeat, so adding a package adds no configuration.
+- You expect the workspace to outgrow one CI machine, gain a second language, or start publishing packages. Distributed CI, polyglot plugins, and `nx release` are already in the tool when you get there.
+- You want an interactive project graph, editor integration, and AI agents that can read the same graph.
 
-Turborepo is enough only when:
+Pick Turborepo when any of these apply:
 
-- Your workspace is JS/TS-only and you want a focused task runner with caching.
-- Remote caching and `--affected` cover your CI needs, without distribution or self-healing.
-- You prefer a minimal configuration surface over a broader platform.
+- Your workspace is JS/TS-only and will stay that way, and one CI machine keeps your pipeline short enough that you never need to distribute it.
+- Task running and caching are all you want from a build tool, with no code generation, release management, module boundaries, or CI beyond remote caching on the roadmap.
 
-Nx adopts incrementally on your existing scripts, so a Turborepo workspace can move over without a rewrite.
+Team size is not the dividing line. A small team gets the [same `nx.json`](#a-minimal-nx-setup) and the same `nx affected` as a large one, and what the large one turns on later is distribution, sandboxing, and self-healing CI.
+
+Nx adopts incrementally on your existing scripts, and `nx init` reads an existing `turbo.json` and converts it, so moving over later is not a rewrite. Setting up either tool takes about the same effort, and `nx init` plus plugins make the Nx side easier, so there is little reason to start on Turborepo first.
 
 ## Resources
 
 {% cards cols=2 %}
-{% card title="Migrate from Turborepo to Nx" description="Step-by-step migration with config and command mapping" url="/docs/guides/adopting-nx/from-turborepo" /%}
-{% card title="Add Nx to an existing project" description="Adopt Nx incrementally without rewriting tool configuration" url="/docs/guides/adopting-nx/adding-to-existing-project" /%}
+{% card title="Migrate from Turborepo to Nx" description="Step-by-step migration with config and command mapping" url="/docs/kb/from-turborepo" /%}
+{% card title="Add Nx to an existing project" description="Adopt Nx incrementally without rewriting tool configuration" url="/docs/kb/adding-to-existing-project" /%}
 {% /cards %}

@@ -13,12 +13,12 @@ import { getRootTsConfigFileName, resolveModuleByImport } from '@nx/js';
 import { TargetProjectLocator } from '@nx/js/internal';
 import { AST_NODE_TYPES, TSESLint, TSESTree } from '@typescript-eslint/utils';
 import * as path from 'node:path';
+import { getPath, pathExists } from './graph-utils';
 import {
   findProjectForPath,
   ProjectRootMappings,
-} from 'nx/src/project-graph/utils/find-project-for-path';
-import { readFileIfExisting } from 'nx/src/utils/fileutils';
-import { getPath, pathExists } from './graph-utils';
+  readFileIfExisting,
+} from '@nx/devkit/internal';
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 type SingleSourceTagConstraint = {
@@ -450,6 +450,19 @@ export function hasBuildExecutor(
 const ESLINT_REGEX = /node_modules.*[\/\\]eslint(?:\.js)?$/;
 const JEST_REGEX = /node_modules\/.bin\/jest$/; // when we run unit tests in jest
 const NRWL_CLI_REGEX = /nx[\/\\]dist[\/\\]bin[\/\\]run-executor\.js$/;
+// `@nx/oxlint` runs this rule through Oxlint's JS-plugin bridge, where argv[1]
+// is `node_modules/oxlint/bin/oxlint`. Without this, `ensureGlobalProjectGraph`
+// (project-graph-utils.ts) never memoizes and every linted file re-reads the
+// whole project graph.
+const OXLINT_REGEX = /node_modules.*[\/\\]oxlint(?:\.js)?$/;
+
+// `oxlint --lsp` is the same binary, and it is how the oxc editor extension
+// starts its server — so the language server matches the regex above and has to
+// be excluded by flag instead. JS plugins do load in LSP mode, so without this
+// the long-lived editor process would pin a graph from startup.
+function isOxlintTerminalRun(argv: string[]): boolean {
+  return !!argv[1].match(OXLINT_REGEX) && !argv.includes('--lsp');
+}
 
 export function isTerminalRun(): boolean {
   return (
@@ -457,6 +470,7 @@ export function isTerminalRun(): boolean {
     (!!process.argv[1].match(NRWL_CLI_REGEX) ||
       !!process.argv[1].match(JEST_REGEX) ||
       !!process.argv[1].match(ESLINT_REGEX) ||
+      isOxlintTerminalRun(process.argv) ||
       !!process.argv[1].endsWith('/bin/jest.js'))
   );
 }

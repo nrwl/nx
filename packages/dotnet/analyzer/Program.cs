@@ -6,11 +6,14 @@ using MsbuildAnalyzer.Models;
 using MsbuildAnalyzer.Utilities;
 
 // Parse input - either from stdin or command line arguments
-// Format (stdin): newline-separated file paths. Files are partitioned here by name:
+// Format (stdin): the plugin options JSON on the first line, empty for defaults, then
+//   newline-separated file paths. Files are partitioned here by name:
 //   .csproj/.fsproj/.vbproj go to projectFiles, the canonical Directory.* files go to
 //   directoryFiles. MSBuild evaluation finds those directory files on its own; we need
 //   them in this process to declare the right per-project inputs back to Nx.
-// Args: MsbuildAnalyzer <workspace-root> [plugin-options-json]
+//   Options travel on stdin rather than in argv because argv reaches cmd.exe on Windows,
+//   which cannot carry the JSON's double quotes.
+// Args: MsbuildAnalyzer <workspace-root>
 
 string workspaceRoot;
 List<string> projectFiles;
@@ -28,21 +31,23 @@ if (Console.IsInputRedirected)
     // Read from stdin
     if (args.Length < 1)
     {
-        Console.Error.WriteLine("Usage (stdin mode): MsbuildAnalyzer <workspace-root> [plugin-options-json]");
+        Console.Error.WriteLine("Usage (stdin mode): MsbuildAnalyzer <workspace-root>");
         Console.Error.WriteLine("  workspace-root: Absolute path to the workspace root");
-        Console.Error.WriteLine("  plugin-options-json: JSON string with plugin options (optional)");
-        Console.Error.WriteLine("  Project files should be provided via stdin (newline-separated)");
+        Console.Error.WriteLine("  stdin: plugin options JSON on the first line (empty for defaults),");
+        Console.Error.WriteLine("         then the project files, newline-separated");
         return 1;
     }
 
     workspaceRoot = args[0];
 
-    // Parse plugin options if provided
-    if (args.Length >= 2 && !string.IsNullOrEmpty(args[1]))
+    // First stdin line is the options JSON. An empty line means "use defaults", so the
+    // caller always writes the line and never has to signal its absence some other way.
+    var optionsLine = Console.ReadLine();
+    if (!string.IsNullOrWhiteSpace(optionsLine))
     {
         try
         {
-            pluginOptions = JsonSerializer.Deserialize<PluginOptions>(args[1], new JsonSerializerOptions
+            pluginOptions = JsonSerializer.Deserialize<PluginOptions>(optionsLine, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             });
@@ -87,8 +92,9 @@ else
         Console.Error.WriteLine("  workspace-root: Absolute path to the workspace root");
         Console.Error.WriteLine("  project-files: Relative paths to .csproj/.fsproj/.vbproj files from workspace root");
         Console.Error.WriteLine();
-        Console.Error.WriteLine("Alternative (stdin mode): MsbuildAnalyzer <workspace-root> [plugin-options-json] < files.txt");
-        Console.Error.WriteLine("  Provide project files via stdin (newline-separated)");
+        Console.Error.WriteLine("Alternative (stdin mode): MsbuildAnalyzer <workspace-root> < input.txt");
+        Console.Error.WriteLine("  First stdin line is the plugin options JSON (empty for defaults),");
+        Console.Error.WriteLine("  followed by the project files, newline-separated");
         return 1;
     }
 

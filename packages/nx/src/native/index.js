@@ -1,15 +1,11 @@
 const { join, basename } = require('path');
-const {
-  copyFileSync,
-  existsSync,
-  mkdirSync,
-  renameSync,
-  statSync,
-  unlinkSync,
-} = require('fs');
+const { copyFileSync, renameSync, statSync, unlinkSync } = require('fs');
+const { createHash } = require('crypto');
 const Module = require('module');
 const { nxVersion } = require('../utils/versions');
-const { getNativeFileCacheLocation } = require('./native-file-cache-location');
+const {
+  ensureSecureNativeFileCacheLocation,
+} = require('./native-file-cache-location');
 
 const MAX_COPY_RETRIES = 3;
 
@@ -73,6 +69,14 @@ function statsOrNull(path) {
   }
 }
 
+function removeIfPresent(path) {
+  try {
+    unlinkSync(path);
+  } catch {
+    // Ignore cleanup errors
+  }
+}
+
 function isNoExecError(e) {
   return e.code === 'EACCES' || e.code === 'EPERM';
 }
@@ -95,20 +99,44 @@ Module._load = function (request, parent, isMain) {
     const nativeLocation = require.resolve(modulePath);
     const fileName = basename(nativeLocation);
 
-    // we copy the file to a workspace-scoped tmp directory and prefix with nxVersion to avoid stale files being loaded
-    const nativeFileCacheLocation = getNativeFileCacheLocation();
+    // null when the cache dir cannot be created *and trusted*; loading in place
+    // from node_modules is safer than loading out of a directory we don't own.
+    const nativeFileCacheLocation = ensureSecureNativeFileCacheLocation();
+    if (!nativeFileCacheLocation) {
+      return originalLoad.apply(this, [nativeLocation, parent, isMain]);
+    }
+
+    // nxVersion alone is not enough: in a source checkout it is the placeholder
+    // 0.0.1 for every worktree, so hashing the resolved binding path keeps each
+    // checkout in its own entry.
+    const cacheKey =
+      nxVersion +
+      '-' +
+      createHash('sha256')
+        .update(nativeLocation)
+        .digest('hex')
+        .substring(0, 12);
+
     // This is a path to copy to, not the one that gets loaded
     const tmpTmpFile = join(
       nativeFileCacheLocation,
-      nxVersion + '-' + Math.random() + fileName
+      cacheKey + '-' + Math.random() + fileName
     );
     // This is the path that will get loaded
-    const tmpFile = join(nativeFileCacheLocation, nxVersion + '-' + fileName);
-    const expectedFileSize = statSync(nativeLocation).size;
+    const tmpFile = join(nativeFileCacheLocation, cacheKey + '-' + fileName);
+    const sourceStats = statSync(nativeLocation);
+    const expectedFileSize = sourceStats.size;
     const existingFileStats = statsOrNull(tmpFile);
 
-    // If the file to be loaded already exists, just load it
-    if (existingFileStats?.size === expectedFileSize) {
+    // Size alone does not detect a rebuilt binding: a small Rust edit routinely
+    // produces a byte-identical size. The copy is taken after the build, so a
+    // cache entry older than the source means the source was rebuilt since.
+    const isFresh =
+      existingFileStats?.size === expectedFileSize &&
+      existingFileStats.mtimeMs >= sourceStats.mtimeMs;
+
+    // If the file to be loaded already exists and is current, just load it
+    if (isFresh) {
       try {
         return originalLoad.apply(this, [tmpFile, parent, isMain]);
       } catch (e) {
@@ -119,20 +147,36 @@ Module._load = function (request, parent, isMain) {
         throw e;
       }
     }
-    if (!existsSync(nativeFileCacheLocation)) {
-      mkdirSync(nativeFileCacheLocation, { recursive: true });
-    }
 
     // Retry copying up to 3 times, validating after each copy
+    let attemptsMade = 0;
+    let cacheError = null;
     for (let attempt = 1; attempt <= MAX_COPY_RETRIES; attempt++) {
+      attemptsMade = attempt;
       // First copy to a unique location for each process
-      copyFileSync(nativeLocation, tmpTmpFile);
+      try {
+        copyFileSync(nativeLocation, tmpTmpFile);
+      } catch (e) {
+        // Permission errors won't heal on retry, and a throwing copy can still
+        // have left a partial file behind.
+        cacheError = e;
+        removeIfPresent(tmpTmpFile);
+        break;
+      }
 
       // Validate the copy - check file size matches expected
       const copiedFileStats = statsOrNull(tmpTmpFile);
       if (copiedFileStats?.size === expectedFileSize) {
         // Copy succeeded, rename to final location and load
-        renameSync(tmpTmpFile, tmpFile);
+        try {
+          renameSync(tmpTmpFile, tmpFile);
+        } catch (e) {
+          // Unguarded, this throws out of `require` and native-bindings.js
+          // reports it as a missing optional dependency, which it is not.
+          cacheError = e;
+          removeIfPresent(tmpTmpFile);
+          break;
+        }
         try {
           return originalLoad.apply(this, [tmpFile, parent, isMain]);
         } catch (e) {
@@ -145,16 +189,15 @@ Module._load = function (request, parent, isMain) {
       }
 
       // Copy failed validation, clean up the malformed file
-      try {
-        unlinkSync(tmpTmpFile);
-      } catch {
-        // Ignore cleanup errors
-      }
+      removeIfPresent(tmpTmpFile);
     }
 
-    // All retries failed - warn and load from original location
+    // Name the errno: ENOSPC, EROFS, EACCES and EDQUOT are all actionable and
+    // otherwise indistinguishable.
     console.warn(
-      `Warning: Failed to copy native module to cache after ${MAX_COPY_RETRIES} attempts. ` +
+      `Warning: Failed to copy native module to cache after ${attemptsMade} attempt${
+        attemptsMade === 1 ? '' : 's'
+      }${cacheError ? ` (${cacheError.code ?? cacheError.message})` : ''}. ` +
         `Loading from original location instead. ` +
         `This may cause file locking issues on Windows.`
     );

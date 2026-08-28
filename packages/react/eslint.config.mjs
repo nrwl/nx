@@ -5,32 +5,6 @@ export default [
   ...baseConfig,
   { ignores: ['dist'] },
   {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          name: 'chalk',
-          message:
-            'Please use `picocolors` in place of `chalk` for rendering terminal colors',
-        },
-      ],
-    },
-  },
-  {
-    files: ['**/*.ts'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        '@nx/workspace',
-        '@angular-devkit/core',
-        '@angular-devkit/schematics',
-        '@angular-devkit/architect',
-      ],
-    },
-    ignores: ['./src/migrations/**'],
-  },
-  {
     files: [
       './package.json',
       './generators.json',
@@ -68,7 +42,6 @@ export default [
             '@nx/vite',
             '@nx/vitest',
             '@nx/webpack',
-            '@babel/preset-react',
             '@module-federation/node',
             '@phenomnomnominal/tsquery',
             '@pmmmwh/react-refresh-webpack-plugin',

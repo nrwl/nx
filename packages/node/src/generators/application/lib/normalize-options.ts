@@ -3,7 +3,7 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/internal';
-import { isUsingTsSolutionSetup } from '@nx/js/internal';
+import { isUsingTsSolutionSetup, normalizeLinterOption } from '@nx/js/internal';
 import { Schema } from '../schema';
 import { NormalizedSchema } from './normalized-schema';
 
@@ -54,7 +54,7 @@ export async function normalizeOptions(
     appProjectRoot,
     importPath,
     parsedTags,
-    linter: options.linter ?? 'eslint',
+    linter: await normalizeLinterOption(host, options.linter),
     unitTestRunner: options.unitTestRunner ?? 'jest',
     rootProject: options.rootProject ?? false,
     port: options.port ?? 3000,

@@ -1,9 +1,10 @@
 /**
  * @category Ng CLI Adapter
  */
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 export {
   wrapAngularDevkitSchematic,
   mockSchematicsForTesting,
   NxScopedHost,
+  createBuilderContext,
 } from 'nx/src/adapter/ngcli-adapter';

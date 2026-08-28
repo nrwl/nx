@@ -12,13 +12,15 @@ import {
   writeJsonFile,
 } from '@nx/devkit';
 
-import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { gradleConfigAndTestGlob } from '../../utils/split-config-files';
 import { nxVersion } from '../../utils/versions';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getNxProjectGraphLines } from './get-project-graph-lines';
 import { GradlePluginOptions, normalizeOptions } from './gradle-plugin-options';
-import { hashObject } from 'nx/src/devkit-internals';
+import {
+  hashWithWorkspaceContext,
+  workspaceDataDirectory,
+  hashObject,
+} from '@nx/devkit/internal';
 
 // the output json file from the gradle plugin
 export interface ProjectGraphReport {
@@ -28,6 +30,11 @@ export interface ProjectGraphReport {
   dependencies: Array<StaticDependency>;
   externalNodes?: Record<string, ProjectGraphExternalNode>;
   buildFiles?: string[];
+  /**
+   * Project root -> the build file that configures it, derived here (not plugin-reported). Flat
+   * `buildFiles` loses the pairing; no entry means the report named no build file.
+   */
+  buildFileByProjectRoot?: Record<string, string>;
 }
 
 export interface ProjectGraphReportCache extends ProjectGraphReport {
@@ -212,6 +219,7 @@ export function processNxProjectGraph(
     externalNodes: {},
   };
   const allBuildFiles = new Set<string>();
+  const buildFileByProjectRoot: Record<string, string> = {};
 
   while (index < projectGraphLines.length) {
     const line = projectGraphLines[index].trim();
@@ -251,6 +259,15 @@ export function processNxProjectGraph(
         projectGraphReportJson.buildFiles.forEach((buildFile) =>
           allBuildFiles.add(buildFile)
         );
+        // One report describes one project, so its single build file is that project's.
+        const [buildFile] = projectGraphReportJson.buildFiles;
+        if (buildFile) {
+          for (const projectRoot of Object.keys(
+            projectGraphReportJson.nodes ?? {}
+          )) {
+            buildFileByProjectRoot[projectRoot] = buildFile;
+          }
+        }
       }
     }
     index++;
@@ -258,6 +275,8 @@ export function processNxProjectGraph(
 
   // Convert Set to array for the final result
   projectGraphReportForAllProjects.buildFiles = Array.from(allBuildFiles);
+  projectGraphReportForAllProjects.buildFileByProjectRoot =
+    buildFileByProjectRoot;
 
   return projectGraphReportForAllProjects;
 }

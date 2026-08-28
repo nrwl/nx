@@ -8,15 +8,17 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
-import { connectToNxCloud } from 'nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
-import { createNxCloudOnboardingURL } from 'nx/src/nx-cloud/utilities/url-shorten';
+import {
+  connectToNxCloud,
+  createNxCloudOnboardingURL,
+  setupAiAgentsGenerator,
+} from '@nx/devkit/internal';
 import { join } from 'path';
 import { gte } from 'semver';
 import { deduceDefaultBase } from '../../utilities/default-base';
 import { nxVersion } from '../../utils/versions';
 import { Preset } from '../utils/presets';
 import type { NormalizedSchema } from './new';
-import { setupAiAgentsGenerator } from 'nx/src/ai/set-up-ai-agents/set-up-ai-agents';
 
 type PresetInfo = {
   generateAppCmd?: string;
@@ -291,6 +293,10 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     ...(options as object),
     nxVersion,
     packageManager: options.packageManager,
+    // After the spread and always defined: `formatter` is optional on the
+    // schema, and EJS throws a ReferenceError on a key that is absent rather
+    // than treating it as undefined.
+    formatter: options.formatter ?? 'none',
   });
 }
 

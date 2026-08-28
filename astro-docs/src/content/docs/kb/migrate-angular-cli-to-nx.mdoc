@@ -22,7 +22,7 @@ This command will install the correct version of Nx based on your Angular versio
 
 This will enable you to use the Nx CLI in your existing Angular CLI workspace while keeping your existing file structure in place. The following changes will be made in your repo to enable Nx:
 
-- The `nx`, `@nx/workspace` and `prettier` packages will be installed.
+- The `nx` and `@nx/workspace` packages will be installed.
 - An `nx.json` file will be created in the root of your workspace.
 - The `angular.json` file is split into separate `project.json` files for each project.
 
@@ -45,7 +45,7 @@ The command applies the following changes to your workspace:
 
 ### Importing additional Angular CLI projects
 
-If you have multiple Angular CLI workspaces that you want to consolidate into a single Nx monorepo, you can use [`nx import`](/docs/guides/adopting-nx/import-project) to bring additional projects into an existing Nx workspace while preserving their git history.
+If you have multiple Angular CLI workspaces that you want to consolidate into a single Nx monorepo, you can use [`nx import`](/docs/kb/import-project) to bring additional projects into an existing Nx workspace while preserving their git history.
 
 After the changes are applied, your workspace file structure should look similar to the one below:
 
@@ -77,8 +77,6 @@ After the changes are applied, your workspace file structure should look similar
   - tools/
   - .editorconfig
   - .gitignore
-  - .prettierignore
-  - .prettierrc
   - nx.json
   - package.json
   - README.md
@@ -108,6 +106,6 @@ Learn more about the advantages of Nx in the following guides:
 - [Computation Caching](/docs/concepts/how-caching-works)
 - [Rebuilding and Retesting What is Affected](/docs/features/ci-features/affected)
 - [Integrate with Editors](/docs/getting-started/editor-setup)
-- [Advanced Angular Micro Frontends with Dynamic Module Federation](/docs/kb/dynamic-module-federation-with-angular)
+- [Micro Frontends with Angular](/docs/kb/angular-micro-frontends)
 
 {% linkcard title="Nx and the Angular CLI" description="Differences between Nx and the Angular CLI" href="/docs/kb/nx-and-angular" /%}

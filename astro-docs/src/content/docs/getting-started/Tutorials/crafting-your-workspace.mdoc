@@ -21,7 +21,7 @@ Tutorial: {pageUrl}
 
 The Nx CLI is a task orchestrator, caching layer, and intelligence layer for monorepos. It works on top of your existing tools and repo structure. It doesn't replace your package manager, build tools, or test frameworks. It makes them faster and smarter.
 
-Nx works with any repo structure and plays well with tools you already use: pnpm workspaces, yarn workspaces, uv for Python, Gradle for Java, and more. The conventions shown below are recommendations, not requirements. Bring your own structure and Nx adapts to it.
+Nx works with any TypeScript/JavaScript (TS/JS) monorepo, as well as other languages such as .NET, Java, and Python. The core is language and framework agnostic, and plays well with tools you already use: pnpm workspaces, yarn workspaces, uv for Python, Gradle for Java, and more. The conventions shown below are recommendations, not requirements. Bring your own structure and Nx adapts to it.
 
 {% aside type="note" title="Tutorial Series" %}
 
@@ -287,7 +287,7 @@ Some workspaces use TypeScript `paths` in `tsconfig.base.json` to link projects.
 
 Nx is not limited to JavaScript. It works with any language or build tool:
 
-- **Gradle**: Nx detects Gradle projects and provides caching, affected analysis, and task orchestration. See the [Gradle tutorial](/docs/getting-started/tutorials/gradle-tutorial).
+- **Gradle**: Nx detects Gradle projects and provides caching, affected analysis, and task orchestration. See the [Gradle tutorial](/docs/kb/gradle-tutorial).
 - **Any tool**: If it runs from the command line, Nx can cache and orchestrate it.
 
 Nx adapts to your project layout rather than imposing one. Use the folder structure and dependency management conventions established by your language's ecosystem. Nx adds task orchestration, caching, and CI optimization on top of whatever you already have.

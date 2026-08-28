@@ -14,6 +14,7 @@ import {
   writeJson,
 } from 'nx/src/devkit-exports';
 import {
+  isMultipleProjectsWithSameNameError,
   isProjectConfigurationsError,
   isProjectsWithNoNameError,
   LoadedNxPlugin,
@@ -135,8 +136,10 @@ async function _addPluginInternal<PluginOptions>(
         // Errors are okay for this because we're only running 1 plugin
         if (isProjectConfigurationsError(e)) {
           projConfigs = e.partialProjectConfigurationsResult;
-          // ignore errors from projects with no name
-          if (!e.errors.every(isProjectsWithNoNameError)) {
+          // Ignore errors about project names: running a single plugin in
+          // isolation cannot resolve the real project names, and they are
+          // irrelevant for determining the plugin options.
+          if (!e.errors.every(isProjectNameError)) {
             throw e;
           }
         } else {
@@ -183,8 +186,10 @@ async function _addPluginInternal<PluginOptions>(
       // Errors are okay for this because we're only running 1 plugin
       if (isProjectConfigurationsError(e)) {
         projConfigs = e.partialProjectConfigurationsResult;
-        // ignore errors from projects with no name
-        if (!e.errors.every(isProjectsWithNoNameError)) {
+        // Ignore errors about project names: running a single plugin in
+        // isolation cannot resolve the real project names, and they are
+        // irrelevant for determining the plugin options.
+        if (!e.errors.every(isProjectNameError)) {
           throw e;
         }
       } else {
@@ -210,6 +215,10 @@ async function _addPluginInternal<PluginOptions>(
   if (shouldUpdatePackageJsonScripts) {
     updatePackageScripts(tree, projConfigs);
   }
+}
+
+function isProjectNameError(e: unknown): boolean {
+  return isProjectsWithNoNameError(e) || isMultipleProjectsWithSameNameError(e);
 }
 
 type TargetCommand = {

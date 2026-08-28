@@ -219,7 +219,7 @@ describe('resolveCurrentVersion', () => {
           ''
         )
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"For project "test", the "currentVersionResolver" is set to "disk" but it is using "versionActions" of type "TestVersionActionsWithoutManifest". This is invalid because "TestVersionActionsWithoutManifest" does not support a manifest file. You should use a different "currentVersionResolver" or use a different "versionActions" implementation that supports a manifest file"`
+        `[Error: For project "test", the "currentVersionResolver" is set to "disk" but it is using "versionActions" of type "TestVersionActionsWithoutManifest". This is invalid because "TestVersionActionsWithoutManifest" does not support a manifest file. You should use a different "currentVersionResolver" or use a different "versionActions" implementation that supports a manifest file]`
       );
     });
   });

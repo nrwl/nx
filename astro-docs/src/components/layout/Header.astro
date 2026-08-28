@@ -29,8 +29,8 @@ const versions = [
 const currentVersion = versions.find((v) => v.current);
 ---
 
-<div class="flex items-center justify-between h-full gap-4">
-  <div class="flex items-center gap-2 flex-shrink-0">
+<div class="flex h-full items-center justify-between gap-4">
+  <div class="flex flex-shrink-0 items-center gap-2">
     <a href={import.meta.env.SITE} class="flex items-center no-underline">
       <Image
         src={nxLogoDark}
@@ -41,21 +41,21 @@ const currentVersion = versions.find((v) => v.current);
       <Image
         src={nxLogoLight}
         alt="Nx"
-        class="h-12 w-auto hidden dark:block"
+        class="hidden h-12 w-auto dark:block"
         loading="eager"
       />
     </a>
     <a
       id="header-docs-home-link"
       href="/docs/getting-started/intro"
-      class="px-3.5 py-2 text-sm font-medium text-slate-600 hover:text-blue-500 rounded-md transition-colors whitespace-nowrap no-underline dark:text-slate-200 dark:hover:text-sky-500"
+      class="rounded-md px-3.5 py-2 text-sm font-medium whitespace-nowrap text-slate-600 no-underline transition-colors hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
     >
       Docs
     </a>
     <!-- Version Switcher -->
     <div class="relative ml-1">
       <button
-        class="version-trigger flex items-center gap-1 px-2 py-1 text-sm bg-transparent hover:text-blue-500"
+        class="version-trigger flex items-center gap-1 bg-transparent px-2 py-1 text-sm hover:text-blue-500"
         aria-expanded="false"
         aria-haspopup="true"
       >
@@ -64,7 +64,7 @@ const currentVersion = versions.find((v) => v.current);
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 20 20"
           fill="currentColor"
-          class="w-3 h-3 transition-transform version-icon"
+          class="version-icon h-3 w-3 transition-transform"
         >
           <path
             fill-rule="evenodd"
@@ -73,14 +73,14 @@ const currentVersion = versions.find((v) => v.current);
         </svg>
       </button>
       <div
-        class="version-menu absolute top-full left-0 mt-1 min-w-[8rem] bg-white border border-slate-200 rounded-md shadow-lg opacity-0 invisible translate-y-1 transition-all z-50 dark:bg-slate-900 dark:border-slate-800"
+        class="version-menu invisible absolute top-full left-0 z-50 mt-1 min-w-[8rem] translate-y-1 rounded-md border border-slate-200 bg-white opacity-0 shadow-lg transition-all dark:border-slate-800 dark:bg-slate-900"
       >
         <div class="py-1">
           {
             versions.map((item) => (
               <a
                 href={item.href}
-                class={`block px-4 py-2 text-sm no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60 ${item.current ? 'text-blue-600 font-semibold dark:text-sky-400' : 'text-slate-700 dark:text-slate-300'}`}
+                class={`block px-4 py-2 text-sm no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60 ${item.current ? 'font-semibold text-blue-600 dark:text-sky-400' : 'text-slate-700 dark:text-slate-300'}`}
                 aria-current={item.current ? 'page' : undefined}
               >
                 <span class="flex items-center justify-between">
@@ -96,18 +96,18 @@ const currentVersion = versions.find((v) => v.current);
       </div>
     </div>
   </div>
-  <nav class="hidden lg:flex items-center gap-1 ml-8 flex-shrink-0">
+  <nav class="ml-8 hidden flex-shrink-0 items-center gap-1 lg:flex">
     <a
       href={`${nxDevUrl}/blog`}
-      class="px-3 py-2 text-sm font-medium text-slate-600 hover:text-blue-500 rounded-md transition-colors whitespace-nowrap no-underline dark:text-slate-200 dark:hover:text-sky-500"
+      class="rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap text-slate-600 no-underline transition-colors hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
     >
       Blog
     </a>
 
     <!-- Resources Dropdown -->
-    <div class="relative nav-dropdown">
+    <div class="nav-dropdown relative">
       <button
-        class="dropdown-trigger flex items-center gap-1 px-3 py-2 text-sm bg-transparent hover:text-blue-500 rounded-md transition-colors whitespace-nowrap dark:text-slate-200 dark:hover:text-sky-500"
+        class="dropdown-trigger flex items-center gap-1 rounded-md bg-transparent px-3 py-2 text-sm whitespace-nowrap transition-colors hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
         aria-expanded="false"
         aria-haspopup="true"
       >
@@ -116,7 +116,7 @@ const currentVersion = versions.find((v) => v.current);
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 20 20"
           fill="currentColor"
-          class="w-4 h-4 transition-transform dropdown-icon"
+          class="dropdown-icon h-4 w-4 transition-transform"
         >
           <path
             fill-rule="evenodd"
@@ -125,22 +125,22 @@ const currentVersion = versions.find((v) => v.current);
         </svg>
       </button>
       <div
-        class="dropdown-menu absolute top-full left-0 mt-2 w-[32rem] bg-slate-50/95 backdrop-blur-sm rounded-lg shadow-lg ring-1 ring-slate-200/40 opacity-0 invisible translate-y-1 transition-all z-50 dark:bg-slate-950/95 dark:ring-slate-800/60"
+        class="dropdown-menu invisible absolute top-full left-0 z-50 mt-2 w-[32rem] translate-y-1 rounded-lg bg-slate-50/95 opacity-0 shadow-lg ring-1 ring-slate-200/40 backdrop-blur-sm transition-all dark:bg-slate-950/95 dark:ring-slate-800/60"
       >
         <div class="grid grid-cols-2 gap-6 p-6">
           <!-- Learn Section -->
           <div class="space-y-1">
             <h5
-              class="text-xs font-semibold uppercase tracking-wider text-slate-500 px-2 pb-2 dark:text-slate-400"
+              class="px-2 pb-2 text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400"
             >
               Learn
             </h5>
             <a
               href={`${nxDevUrl}/webinars`}
-              class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60"
+              class="flex items-center gap-3 rounded-md px-2 py-2 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
             >
               <svg
-                class="w-5 h-5 text-slate-400 dark:text-slate-500"
+                class="h-5 w-5 text-slate-400 dark:text-slate-500"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -160,10 +160,10 @@ const currentVersion = versions.find((v) => v.current);
             </a>
             <a
               href={`${nxDevUrl}/courses`}
-              class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60"
+              class="flex items-center gap-3 rounded-md px-2 py-2 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
             >
               <svg
-                class="w-5 h-5 text-slate-400 dark:text-slate-500"
+                class="h-5 w-5 text-slate-400 dark:text-slate-500"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -187,10 +187,10 @@ const currentVersion = versions.find((v) => v.current);
             </a>
             <a
               href="https://go.nrwl.io/nx-newsletter"
-              class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60"
+              class="flex items-center gap-3 rounded-md px-2 py-2 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
             >
               <svg
-                class="w-5 h-5 text-slate-400 dark:text-slate-500"
+                class="h-5 w-5 text-slate-400 dark:text-slate-500"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -210,10 +210,10 @@ const currentVersion = versions.find((v) => v.current);
             </a>
             <a
               href={`${nxDevUrl}/community`}
-              class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60"
+              class="flex items-center gap-3 rounded-md px-2 py-2 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
             >
               <svg
-                class="w-5 h-5 text-slate-400 dark:text-slate-500"
+                class="h-5 w-5 text-slate-400 dark:text-slate-500"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -233,10 +233,10 @@ const currentVersion = versions.find((v) => v.current);
             </a>
             <a
               href="https://go.nx.dev/community"
-              class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60"
+              class="flex items-center gap-3 rounded-md px-2 py-2 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
             >
               <svg
-                class="w-5 h-5 text-slate-400 dark:text-slate-500"
+                class="h-5 w-5 text-slate-400 dark:text-slate-500"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 fill="currentColor"
@@ -252,10 +252,10 @@ const currentVersion = versions.find((v) => v.current);
             </a>
             <a
               href={`${nxDevUrl}/resources?filterBy=book`}
-              class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60"
+              class="flex items-center gap-3 rounded-md px-2 py-2 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
             >
               <svg
-                class="w-5 h-5 text-slate-400 dark:text-slate-500"
+                class="h-5 w-5 text-slate-400 dark:text-slate-500"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -275,10 +275,10 @@ const currentVersion = versions.find((v) => v.current);
             </a>
             <a
               href={`${nxDevUrl}/resources?filterBy=case-study`}
-              class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60"
+              class="flex items-center gap-3 rounded-md px-2 py-2 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
             >
               <svg
-                class="w-5 h-5 text-slate-400 dark:text-slate-500"
+                class="h-5 w-5 text-slate-400 dark:text-slate-500"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -298,10 +298,10 @@ const currentVersion = versions.find((v) => v.current);
             </a>
             <a
               href={`${nxDevUrl}/resources?filterBy=whitepaper`}
-              class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60"
+              class="flex items-center gap-3 rounded-md px-2 py-2 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
             >
               <svg
-                class="w-5 h-5 text-slate-400 dark:text-slate-500"
+                class="h-5 w-5 text-slate-400 dark:text-slate-500"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -325,16 +325,16 @@ const currentVersion = versions.find((v) => v.current);
             <!-- Events Section -->
             <div class="space-y-1">
               <h5
-                class="text-xs font-semibold uppercase tracking-wider text-slate-500 px-2 pb-2 dark:text-slate-400"
+                class="px-2 pb-2 text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400"
               >
                 Events
               </h5>
               <a
                 href="https://www.youtube.com/playlist?list=PLakNactNC1dE8KLQ5zd3fQwu_yQHjTmR5"
-                class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60"
+                class="flex items-center gap-3 rounded-md px-2 py-2 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
               >
                 <svg
-                  class="w-5 h-5 text-slate-400 dark:text-slate-500"
+                  class="h-5 w-5 text-slate-400 dark:text-slate-500"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -355,16 +355,16 @@ const currentVersion = versions.find((v) => v.current);
             <!-- Company Section -->
             <div class="space-y-1">
               <h5
-                class="text-xs font-semibold uppercase tracking-wider text-slate-500 px-2 pb-2 dark:text-slate-400"
+                class="px-2 pb-2 text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400"
               >
                 Company
               </h5>
               <a
                 href={`${nxDevUrl}/company`}
-                class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60"
+                class="flex items-center gap-3 rounded-md px-2 py-2 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
               >
                 <svg
-                  class="w-5 h-5 text-slate-400 dark:text-slate-500"
+                  class="h-5 w-5 text-slate-400 dark:text-slate-500"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -384,10 +384,10 @@ const currentVersion = versions.find((v) => v.current);
               </a>
               <a
                 href={`${nxDevUrl}/customers`}
-                class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60"
+                class="flex items-center gap-3 rounded-md px-2 py-2 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
               >
                 <svg
-                  class="w-5 h-5 text-slate-400 dark:text-slate-500"
+                  class="h-5 w-5 text-slate-400 dark:text-slate-500"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -407,10 +407,10 @@ const currentVersion = versions.find((v) => v.current);
               </a>
               <a
                 href={`${nxDevUrl}/partners`}
-                class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60"
+                class="flex items-center gap-3 rounded-md px-2 py-2 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
               >
                 <svg
-                  class="w-5 h-5 text-slate-400 dark:text-slate-500"
+                  class="h-5 w-5 text-slate-400 dark:text-slate-500"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -434,40 +434,40 @@ const currentVersion = versions.find((v) => v.current);
       </div>
     </div>
 
-    <div class="h-6 w-px bg-slate-200 mx-1 dark:bg-slate-700"></div>
+    <div class="mx-1 h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
     <a
       id="header-nx-cloud-link"
       href={`${nxDevUrl}/nx-cloud`}
-      class="px-3 py-2 text-sm font-medium text-slate-600 hover:text-blue-500 rounded-md transition-colors whitespace-nowrap no-underline dark:text-slate-200 dark:hover:text-sky-500"
+      class="rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap text-slate-600 no-underline transition-colors hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
     >
       Nx Cloud
     </a>
     <a
       id="header-pricing-link"
-      href={`${nxDevUrl}/nx-cloud#plans`}
-      class="px-3 py-2 text-sm font-medium text-slate-600 hover:text-blue-500 rounded-md transition-colors whitespace-nowrap no-underline dark:text-slate-200 dark:hover:text-sky-500"
+      href={`${nxDevUrl}/pricing`}
+      class="rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap text-slate-600 no-underline transition-colors hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
     >
       Pricing
     </a>
-    <div class="h-6 w-px bg-slate-200 mx-1 dark:bg-slate-700"></div>
+    <div class="mx-1 h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
     <a
       id="header-enterprise-link"
       href={`${nxDevUrl}/enterprise`}
-      class="px-3 py-2 text-sm font-semibold text-slate-600 hover:text-blue-500 rounded-md transition-colors whitespace-nowrap no-underline dark:text-slate-200 dark:hover:text-sky-500"
+      class="rounded-md px-3 py-2 text-sm font-semibold whitespace-nowrap text-slate-600 no-underline transition-colors hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
     >
       Enterprise
     </a>
   </nav>
-  <div class="flex-1 max-w-sm mx-4 print:hidden">
+  <div class="mx-4 max-w-sm flex-1 print:hidden">
     {shouldRenderSearch && <Search />}
   </div>
-  <div class="hidden md:flex items-center gap-4 print:hidden">
+  <div class="hidden items-center gap-4 md:flex print:hidden">
     <!-- CTA Buttons - Hide on screens smaller than xl (1280px) -->
-    <div class="hidden xl:flex items-center gap-2">
+    <div class="hidden items-center gap-2 xl:flex">
       <a
         id="header-contact-btn"
         href={`${nxDevUrl}/contact`}
-        class="inline-flex items-center justify-center px-2.5 py-1.5 text-sm font-medium rounded-md transition no-underline border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm"
+        class="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm font-medium text-slate-700 no-underline shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
         title="Contact Us"
       >
         Contact
@@ -477,18 +477,18 @@ const currentVersion = versions.find((v) => v.current);
         href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=documentation-header&utm_campaign=try-nx-cloud"
         target="_blank"
         rel="noopener noreferrer"
-        class="inline-flex items-center justify-center px-2.5 py-1.5 text-sm font-medium rounded-md transition no-underline bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 hover:bg-zinc-900 dark:hover:bg-white shadow-sm"
+        class="inline-flex items-center justify-center rounded-md bg-zinc-950 px-2.5 py-1.5 text-sm font-medium text-white no-underline shadow-sm transition hover:bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white"
         title="Get started"
       >
         Get started
       </a>
     </div>
     <!-- Social Icons - Hide on screens smaller than 2xl (1536px) -->
-    <div class="hidden 2xl:flex items-center gap-4">
+    <div class="hidden items-center gap-4 2xl:flex">
       <SocialIcons />
     </div>
     <div
-      class="after:content-[''] after:h-8 after:border-l after:border-slate-200 dark:after:border-slate-700"
+      class="after:h-8 after:border-l after:border-slate-200 after:content-[''] dark:after:border-slate-700"
     >
     </div>
     <!-- Theme Switcher - Always visible (highest priority) -->

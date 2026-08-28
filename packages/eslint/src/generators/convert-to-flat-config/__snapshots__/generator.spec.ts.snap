@@ -37,11 +37,7 @@ const globals = require('globals');
 
 module.exports = [
   ...nx.configs['flat/base'],
-  {
-    languageOptions: {
-      globals: { ...globals.browser, myCustomGlobal: 'readonly' },
-    },
-  },
+  { languageOptions: { globals: { ...globals.browser, myCustomGlobal: 'readonly' } } },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
@@ -459,11 +455,7 @@ import globals from 'globals';
 
 export default [
   ...nx.configs['flat/base'],
-  {
-    languageOptions: {
-      globals: { ...globals.browser, myCustomGlobal: 'readonly' },
-    },
-  },
+  { languageOptions: { globals: { ...globals.browser, myCustomGlobal: 'readonly' } } },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {

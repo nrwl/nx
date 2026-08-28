@@ -208,11 +208,16 @@ export function getPackageManagerCommand({
   }[packageManager.trim() as PackageManager];
 }
 
-export function runE2ETests(runner?: 'cypress' | 'playwright') {
+export async function runE2ETests(runner?: 'cypress' | 'playwright') {
   if (process.env.NX_E2E_RUN_E2E === 'true') {
+    // Cypress unzips into a cache shared by the whole machine, so this has to
+    // finish before the suite starts running tests.
     if (!runner || runner === 'cypress') {
-      ensureCypressInstallation();
+      await ensureCypressInstallation();
     }
+    // Playwright is deliberately not awaited: `npx playwright install
+    // --with-deps` takes longer than a test's timeout, so waiting on it here
+    // fails the suite outright.
     if (!runner || runner === 'playwright') {
       ensurePlaywrightBrowsersInstallation();
     }

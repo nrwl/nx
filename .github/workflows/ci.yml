@@ -13,6 +13,10 @@ env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
   NX_CLOUD_ENABLE_METRICS_COLLECTION: 'true'
   PNPM_HOME: ~/.pnpm
+  # See the root Cargo.toml: the release profile is incremental for local dev.
+  # CI builds cold, so incremental only inflates the cargo cache.
+  # Note this does NOT reach Nx Agents - see .nx/workflows/agents.yaml.
+  CARGO_INCREMENTAL: '0'
   # Pin corepack to the pnpm version from packageManager. Without this, corepack
   # falls back to "latest" in directories that have no packageManager field
   # (e.g. e2e temp dirs) instead of the repo's pinned pnpm.
@@ -75,7 +79,7 @@ jobs:
         uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
@@ -108,7 +112,7 @@ jobs:
           pnpm nx run-many -t check-imports check-lock-files check-codeowners --parallel=1 --no-dte &
           pids+=($!)
 
-          pnpm nx affected --targets=lint,test,build,e2e,e2e-ci,format-native,lint-native,gradle:build-ci,vale,run,validate-example &
+          pnpm nx affected --targets=lint,oxlint,test,build,e2e,e2e-ci,format-native,lint-native,gradle:build-ci,vale,run,validate-example &
           pids+=($!)
 
           for pid in "${pids[@]}"; do
@@ -291,7 +295,7 @@ jobs:
         uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: ${{ steps.pnpm-cache-macos.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 

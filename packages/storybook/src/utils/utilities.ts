@@ -101,6 +101,7 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
     '@angular-devkit/build-angular:application',
     '@angular-devkit/build-angular:browser',
     '@angular-devkit/build-angular:browser-esbuild',
+    '@angular/build:application',
   ];
 
   for (const target in targets) {
@@ -109,19 +110,15 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
         targets[target].executor === '@angular-devkit/build-angular:browser' ||
         targets[target].executor ===
           '@angular-devkit/build-angular:browser-esbuild' ||
-        targets[target].executor === '@angular-devkit/build-angular:application'
+        targets[target].executor ===
+          '@angular-devkit/build-angular:application' ||
+        targets[target].executor === '@angular/build:application'
       ) {
         /**
-         * Not looking for '@nx/angular:ng-packagr-lite' or any other
-         * @nx/angular:* executors.
-         * Only looking for '@angular-devkit/build-angular:browser'
-         * because the '@nx/angular:ng-packagr-lite' executor
-         * (and maybe the other custom executors)
-         * does not support styles and extra options, so the user
-         * will be forced to switch to build-storybook to add extra options.
-         *
-         * So we might as well use the build-storybook by default to
-         * avoid any errors.
+         * Only the official Angular application/browser builders. The
+         * '@nx/angular:*' executors (ng-packagr-lite and friends) do not
+         * support styles and extra options, so a project on one of those is
+         * better served by build-storybook, which can carry those options.
          */
         returnObject.ngBuildTarget = target;
       } else if (targets[target].executor.includes('vite')) {

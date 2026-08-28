@@ -1,6 +1,8 @@
-const mockPrompt = jest.fn();
-jest.mock('enquirer', () => ({
-  prompt: (...args: any[]) => mockPrompt(...args),
+const mockPrompt = vi.fn();
+const mockIsCancel = vi.fn(() => false);
+vi.mock('@clack/prompts', () => ({
+  autocomplete: (...args: any[]) => mockPrompt(...args),
+  isCancel: (...args: any[]) => mockIsCancel(...args),
 }));
 
 import { mkdtempSync, writeFileSync } from 'fs';
@@ -17,17 +19,22 @@ describe('analytics-prompt', () => {
   let originalStdinIsTTY: boolean | undefined;
   let originalStdoutIsTTY: boolean | undefined;
 
-  let mockIsCI = jest.spyOn(isCi, 'isCI');
-  let mockReadNxJson = jest.spyOn(nxJson, 'readNxJson');
-  let mockReadJsonFile = jest.spyOn(fileUtils, 'readJsonFile');
-  let mockWriteFormattedJsonFile = jest
+  let mockIsCI = vi.spyOn(isCi, 'isCI');
+  let mockReadNxJson = vi.spyOn(nxJson, 'readNxJson');
+  let mockReadJsonFile = vi.spyOn(fileUtils, 'readJsonFile');
+  let mockWriteFormattedJsonFile = vi
     .spyOn(writeFormattedModule, 'writeFormattedJsonFile')
     .mockResolvedValue(undefined);
-  let mockOutputLog = jest.spyOn(outputModule.output, 'log');
-  let mockOutputSuccess = jest.spyOn(outputModule.output, 'success');
+  let mockOutputLog = vi.spyOn(outputModule.output, 'log');
+  let mockOutputSuccess = vi.spyOn(outputModule.output, 'success');
 
   beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
+
+    // vi.resetAllMocks restores a spy's ORIGINAL implementation (unlike
+    // jest), so the write stub must be re-applied or the real function
+    // writes the repo's actual nx.json.
+    mockWriteFormattedJsonFile.mockResolvedValue(undefined);
 
     // Prevent output from writing to stdout during tests
     mockOutputLog.mockImplementation(() => {});
@@ -99,7 +106,7 @@ describe('analytics-prompt', () => {
 
       mockReadNxJson.mockReturnValue({});
       mockReadJsonFile.mockReturnValue({});
-      mockPrompt.mockResolvedValue({ enableAnalytics: true });
+      mockPrompt.mockResolvedValue('Yes');
 
       await ensureAnalyticsPreferenceSet();
 
@@ -116,7 +123,7 @@ describe('analytics-prompt', () => {
       process.stdout.isTTY = true;
       mockReadNxJson.mockReturnValue({});
       mockReadJsonFile.mockReturnValue({});
-      mockPrompt.mockResolvedValue({ enableAnalytics: false });
+      mockPrompt.mockResolvedValue('No');
 
       await ensureAnalyticsPreferenceSet();
 
@@ -133,7 +140,8 @@ describe('analytics-prompt', () => {
       process.stdout.isTTY = true;
       mockReadNxJson.mockReturnValue({});
       mockReadJsonFile.mockReturnValue({});
-      mockPrompt.mockRejectedValue(new Error('User cancelled'));
+      mockPrompt.mockResolvedValue(Symbol.for('clack:cancel'));
+      mockIsCancel.mockReturnValueOnce(true);
 
       await ensureAnalyticsPreferenceSet();
 
@@ -201,7 +209,7 @@ describe('analytics-prompt', () => {
     it("prompts, saves, and returns 'yes' when accepted", async () => {
       mockIsCI.mockReturnValue(false);
       mockReadNxJson.mockReturnValue({});
-      mockPrompt.mockResolvedValue({ enableAnalytics: true });
+      mockPrompt.mockResolvedValue('Yes');
 
       expect(await ensureAnalyticsPreferenceSet(root, true)).toBe('yes');
       expect(mockWriteFormattedJsonFile).toHaveBeenCalledWith(
@@ -213,7 +221,7 @@ describe('analytics-prompt', () => {
     it("prompts, saves, and returns 'no' when declined", async () => {
       mockIsCI.mockReturnValue(false);
       mockReadNxJson.mockReturnValue({});
-      mockPrompt.mockResolvedValue({ enableAnalytics: false });
+      mockPrompt.mockResolvedValue('No');
 
       expect(await ensureAnalyticsPreferenceSet(root, true)).toBe('no');
       expect(mockWriteFormattedJsonFile).toHaveBeenCalledWith(

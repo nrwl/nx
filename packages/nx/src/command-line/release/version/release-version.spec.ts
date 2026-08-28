@@ -1,9 +1,9 @@
-// Module-level mock container - initialized early so jest.mock factories can reference it
+// Module-level mock container - initialized early so vi.mock factories can reference it
 const mocks = {
-  deriveSpecifierFromConventionalCommits: jest.fn(),
-  deriveSpecifierFromVersionPlan: jest.fn(),
-  resolveVersionActionsForProject: jest.fn(),
-  prompt: jest.fn(),
+  deriveSpecifierFromConventionalCommits: vi.fn(),
+  deriveSpecifierFromVersionPlan: vi.fn(),
+  resolveVersionActionsForProject: vi.fn(),
+  prompt: vi.fn(),
 };
 
 // Aliases for test usage
@@ -14,35 +14,21 @@ const mockResolveVersionActionsForProject =
   mocks.resolveVersionActionsForProject;
 const mockPrompt = mocks.prompt;
 
-jest.mock('./derive-specifier-from-conventional-commits', () => ({
+vi.mock('./derive-specifier-from-conventional-commits', () => ({
   deriveSpecifierFromConventionalCommits: (...args: any[]) =>
     mocks.deriveSpecifierFromConventionalCommits(...args),
 }));
 
-jest.mock('enquirer', () => ({
-  prompt: (...args: any[]) => mocks.prompt(...args),
+vi.mock('@clack/prompts', () => ({
+  autocomplete: (...args: any[]) => mocks.prompt(...args),
+  text: (...args: any[]) => mocks.prompt(...args),
+  isCancel: () => false,
 }));
 
-jest.mock('./version-actions', () => {
-  // Defer the actual module access to avoid timing issues with ESM
-  let cachedActual: any = null;
-  const getActual = () => {
-    if (!cachedActual) {
-      cachedActual = jest.requireActual('./version-actions');
-    }
-    return cachedActual;
-  };
-
+vi.mock('./version-actions', async (importOriginal) => {
+  const actual = await importOriginal<any>();
   return {
-    get NOOP_VERSION_ACTIONS() {
-      return getActual().NOOP_VERSION_ACTIONS;
-    },
-    get VersionActions() {
-      return getActual().VersionActions;
-    },
-    get SemverBumpType() {
-      return getActual().SemverBumpType;
-    },
+    ...actual,
     deriveSpecifierFromVersionPlan: (...args: any[]) =>
       mocks.deriveSpecifierFromVersionPlan(...args),
     resolveVersionActionsForProject: (...args: any[]) =>
@@ -50,8 +36,8 @@ jest.mock('./version-actions', () => {
   };
 });
 
-jest.mock('./project-logger', () => {
-  const actual = jest.requireActual('./project-logger');
+vi.mock('./project-logger', async () => {
+  const actual = await vi.importActual('./project-logger');
   return {
     ...actual,
     // Don't slow down or add noise to unit tests output unnecessarily
@@ -85,7 +71,7 @@ import { SemverBumpType } from './version-actions';
 const originalExit = process.exit;
 let stubProcessExit = false;
 
-const processExitSpy = jest
+const processExitSpy = vi
   .spyOn(process, 'exit')
   .mockImplementation((...args) => {
     if (stubProcessExit) {
@@ -94,16 +80,16 @@ const processExitSpy = jest
     return originalExit(...args);
   });
 
-const mockDetectPackageManager = jest.fn();
-jest.doMock('nx/src/devkit-exports', () => {
-  const devkit = jest.requireActual('nx/src/devkit-exports');
+const mockDetectPackageManager = vi.fn();
+vi.doMock('nx/src/devkit-exports', async () => {
+  const devkit = await vi.importActual('nx/src/devkit-exports');
   return {
     ...devkit,
     detectPackageManager: mockDetectPackageManager,
   };
 });
 
-// Using the daemon in unit tests would cause jest to never exit
+// A daemon connection would keep the test process alive after the run
 process.env.NX_DAEMON = 'false';
 
 type ReleaseVersionGeneratorResult = {
@@ -210,7 +196,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     stubProcessExit = false;
   });
   afterAll(() => {
@@ -308,9 +294,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
 
       tree.delete('my-lib/package.json');
 
-      const outputSpy = jest
-        .spyOn(output, 'error')
-        .mockImplementation(() => {});
+      const outputSpy = vi.spyOn(output, 'error').mockImplementation(() => {});
 
       await releaseVersionGeneratorForTest(tree, {
         nxReleaseConfig,
@@ -498,13 +482,13 @@ describe('releaseVersionGenerator (ported tests)', () => {
         stubProcessExit = true;
         // First project will be minor
         mockPrompt
-          .mockReturnValueOnce(Promise.resolve({ specifier: 'minor' }))
+          .mockReturnValueOnce(Promise.resolve('minor'))
           // Next project will be patch
-          .mockReturnValueOnce(Promise.resolve({ specifier: 'patch' }))
+          .mockReturnValueOnce(Promise.resolve('patch'))
           // Final project will be custom explicit version (1.2.3)
           // For custom version, first prompt returns 'custom', then second prompt returns the version
-          .mockReturnValueOnce(Promise.resolve({ specifier: 'custom' }))
-          .mockReturnValueOnce(Promise.resolve({ specifier: '1.2.3' }));
+          .mockReturnValueOnce(Promise.resolve('custom'))
+          .mockReturnValueOnce(Promise.resolve('1.2.3'));
 
         const { nxReleaseConfig, projectGraph, filters } =
           await createNxReleaseConfigAndPopulateWorkspace(
@@ -1478,11 +1462,9 @@ describe('releaseVersionGenerator (ported tests)', () => {
           },
         });
 
-      const outputSpy = jest
-        .spyOn(output, 'error')
-        .mockImplementationOnce(() => {
-          return undefined as never;
-        });
+      const outputSpy = vi.spyOn(output, 'error').mockImplementationOnce(() => {
+        return undefined as never;
+      });
 
       await releaseVersionGeneratorForTest(tree, {
         nxReleaseConfig,

@@ -59,6 +59,23 @@ belongs in the corresponding Knowledge Base guide.
   applies to workflows a new flag has superseded.
 - When two sections converge on the same flag or topic after a rewrite, merge them into one.
 
+### 7. One page per feature (the "don't make me hunt" rule)
+
+A feature page answers most of what a new reader arrives with, on the page. Specifics fan out
+to Knowledge Base guides. The questions themselves stay.
+
+**The test:** List the questions a new reader, or an AI answering on their behalf, would ask
+about this feature. If an answer lives only on another page, the feature page is incomplete.
+
+For Nx Cloud that set is what it is, whether it's free, what it adds over Nx Core, how to
+connect, and when Enterprise or self-hosted applies. Spread across three or five pages, a reader
+has to find and visit each one before they can form a view, and a model answering the question
+cites none of them.
+
+Rule 6 trims variants and edge cases off the page. This one keeps every question a reader has to
+answer before they can choose or start. Both push detail to the Knowledge Base. Neither pushes
+the decision there.
+
 ### Sidebar structure
 
 The sidebar has four top-level sections that follow the user journey:
@@ -76,10 +93,66 @@ Sentence-level edits don't fix AI voice in longform pieces. The structural tells
 
 Each substantive point lives in exactly one section. Other sections link or reference it in one phrase. They don't re-explain.
 
+### No rhetorical-question setups
+
+Asking the reader a question you then answer yourself is a framing device, not information.
+It delays the point by a sentence and is one of the clearest generated-text tells.
+
+- Don't: "A monorepo pipeline starts with a question a single-project pipeline never has to ask. Given this commit, what actually needs to run?"
+- Do: "A monorepo CI pipeline that runs everything on every commit gets slower with every project you add."
+
+**The test:** Grep for `?`. Outside an FAQ heading, rewrite each one as the claim it was setting up.
+
 ### No drama-beat echoes
 
-A short sentence (under ~10 words) immediately after a long one, restating the long one for emphasis, is an AI tic.
+Two adjacent sentences covering the same content, one short and one longer, read as generated in either order.
+
+A short sentence (under ~10 words) immediately after a long one, restating the long one for emphasis, is the classic form.
 Cover the short sentence with your thumb. If nothing is lost, cut it.
+
+The reverse is just as common in AI drafts: a short claim followed by a longer sentence that re-explains it.
+
+- Don't: "That is one service. Each additional service needs its own workflow with its own path list."
+- Do: "That is one service, and each additional one needs its own workflow with its own path list."
+
+**The test:** If two adjacent sentences share a subject and the second adds no new fact, merge them.
+
+### Cut signpost openers
+
+A short sentence that announces what a paragraph is about, before the paragraph says it, is a
+label rather than a claim. This one survives the drama-beat test, because the sentences after it
+do add facts, so sweep for it separately.
+
+- Don't: "CI is the other gap. Turborepo scales past one machine through manual binning, while Nx Agents distributes at the task level."
+- Do: "Turborepo scales past one machine through manual binning, while Nx Agents distributes at the task level."
+
+Naming a count is the same move ("Two smaller differences.", "Three things to know."). Either
+fold the label into the sentence that follows or delete it. A real list gets bullets and an
+introductory line instead.
+
+**The test:** Delete the first sentence of each paragraph. If the paragraph still says everything
+it said before, leave it deleted.
+
+### Cut significance clauses
+
+Naming a property and then explaining why the reader should care about it is a generated shape.
+"X is quiet, which is what makes it expensive." "X is silent, and that's the problem."
+Make the claim directly instead.
+
+- Don't: "The failure is quiet, which is what makes it expensive:"
+- Do: "Maintaining path-based filters is expensive:"
+
+**The test:** Grep for "which is what makes", "and that's why", "which is the problem". Each one is a sentence that hasn't decided what it's claiming.
+
+### Don't invent specifics the reader's context decides
+
+Numbers that sound concrete but are the writer guessing read as filler, and they age badly.
+Branch lifetimes, team sizes, review counts, and repository sizes belong to the reader.
+
+- Don't: "feature branches that live hours or days instead of weeks"
+- Do: "short-lived feature branches"
+
+**The test:** For each number, ask whether it came from evidence or from imagination. This is the specificity half of "Match claims to evidence."
 
 ### No restatement closers
 
@@ -111,8 +184,11 @@ breath, split one and merge two others.
 "Claim: elaboration, elaboration, elaboration" is fine once per section.
 Repeated, it's a fingerprint.
 
+When the text after the colon is a list of items, make it a real bulleted list
+rather than a run-on sentence.
+
 **The test:** Grep for mid-sentence colons. More than one or two per screen
-of prose, rewrite the extras as plain sentences.
+of prose, rewrite the extras as plain sentences or as bullets.
 
 ### Vary bullet structure
 
@@ -138,9 +214,9 @@ Run passes in this order. Structural first, vocabulary last.
 
 1. Canonical-home audit: where does each substantive point live?
 2. Repetition count: grep your two or three core findings. If a finding appears more than twice in prose, the third is probably redundant.
-3. Drama-beat sweep.
+3. Drama-beat sweep, both orders. Read the first sentence of each paragraph on its own and cut the ones that only label it. Also grep for `?` and for significance clauses ("which is what makes", "and that's why").
 4. Closer pass.
-5. Claim audit: for each absolute and each counterfactual, check what evidence in the doc supports that strength. Weaken or cite.
+5. Claim audit: for each absolute and each counterfactual, check what evidence in the doc supports that strength. Weaken or cite. Check invented numbers the same way.
 6. End-to-end consistency read.
 7. Vocabulary grep (cheapest, lowest value).
 
@@ -209,6 +285,7 @@ Edit AI-assisted drafts so they don't read like AI wrote them. Phrase-level pass
 - Excessive use of "robust", "leverage", "utilize", "facilitate", "comprehensive", "aforementioned."
 - TED-talk verbs: "delve", "underscore" (as verb), "foster", "empower", "embark", "unlock", "harness". Replace with the concrete action.
 - Filler adjectives: "meticulous", "crucial", "pivotal", "paramount", "intricate", "multifaceted".
+- Inflated nouns for ordinary things: a "fleet" of CI machines, an "arsenal" of tools, a "suite" of capabilities. Name the thing.
 - Lists where every item starts with the same grammatical structure repeated 5+ times with slight variation. Vary your phrasing.
 
 ### Self-referential writing

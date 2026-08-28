@@ -2,6 +2,10 @@ import {
   calculateHashesForCreateNodes,
   getNamedInputs,
   PluginCache,
+  hashObject,
+  workspaceDataDirectory,
+  deriveGroupNameFromTarget,
+  globWithWorkspaceContext,
 } from '@nx/devkit/internal';
 import {
   CreateDependencies,
@@ -25,10 +29,6 @@ import { readFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import type { ResolvedConfig } from 'vite';
 import type { InlineConfig } from 'vitest/node';
-import { hashObject } from 'nx/src/hasher/file-hasher';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
-import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import {
   loadViteDynamicImport,
   loadVitestConfigDynamicImport,

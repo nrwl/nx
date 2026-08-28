@@ -33,13 +33,31 @@ If you haven't already connected to Nx Cloud, run the following command:
 npx nx@latest connect
 ```
 
+{% call_to_action title="Connect from your browser" url="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=website&utm_campaign=self-healing-ci" icon="nxcloud" description="Sign in to Nx Cloud and connect your repository without the CLI" /%}
+
+For the full pipeline walkthrough, see [Setting Up CI](/docs/getting-started/setup-ci).
+
 Next, check the [Nx Cloud workspace settings](https://cloud.nx.app/go/workspace/settings/self-healing-ci) in the Nx Cloud web application to ensure that "Self-Healing CI" is enabled.
 
 ### Configure your CI pipeline
 
-Add a step to your CI configuration's "main" job that runs the `fix-ci` command. It doesn't matter exactly what this job is called, it is whichever job in your config where you invoke `nx start-ci-run` and kick off your `nx run-many` or `nx affected` commands.
+Add a step to your CI configuration's "main" job that runs the `fix-ci` command. It doesn't matter exactly what this job is called, it is whichever job in your config where you invoke `nx start-nx-agents` and kick off your `nx run-many` or `nx affected` commands.
 
 By default, your CI provider will only run the step if the previous steps succeeded, but by definition we want to run Self-Healing CI even when previous steps fail. Therefore make sure you are using a condition of `if: always()` or equivalent to ensure it runs even when previous steps fail:
+
+These examples distribute tasks across Nx Agents, so they also need a `.nx/ci-config.yaml` file at the workspace root.
+See the [CI configuration file reference](/docs/reference/nx-cloud/ci-config) for every key you can set.
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on: 3 linux-medium-js
+lifecycle:
+  stop-after:
+    - lint
+    - test
+    - build
+```
 
 {% tabs %}
 
@@ -53,12 +71,12 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      # Your existing steps which check out the repo, start-ci-run, install
+      # Your existing steps which check out the repo, start-nx-agents, install
       # dependencies, etc.
       # These are just illustrative examples...
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
-      - run: npx nx start-ci-run
+      - run: npx nx start-nx-agents
       - run: npm ci
       - run: npx nx affected -t lint test build
 
@@ -79,9 +97,9 @@ stages:
 main:
   stage: build
   script:
-    # Your existing steps which check out the repo, start-ci-run, install
+    # Your existing steps which check out the repo, start-nx-agents, install
     # dependencies, etc.
-    - npx nx start-ci-run
+    - npx nx start-nx-agents
     - npm ci
     - npx nx affected -t lint test build
   # NEW: Add this section at the end of your job if you don't
@@ -105,13 +123,13 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-  # Your existing steps which check out the repo, start-ci-run, install
+  # Your existing steps which check out the repo, start-nx-agents, install
   # dependencies, etc.
   # These are just illustrative examples...
   - task: NodeTool@0
     inputs:
       versionSpec: '22.x'
-  - script: npx nx start-ci-run
+  - script: npx nx start-nx-agents
   - script: npm ci
   - script: npx nx affected -t lint test build
 
@@ -134,10 +152,10 @@ pipelines:
       - step:
           name: CI
           script:
-            # Your existing steps which start-ci-run, install
+            # Your existing steps which start-nx-agents, install
             # dependencies, etc.
             # These are just illustrative examples...
-            - npx nx start-ci-run
+            - npx nx start-nx-agents
             - npm ci
             - npx nx affected -t lint test build
           after-script:
@@ -176,8 +194,8 @@ Self-Healing CI configuration is primarily managed through your [Nx Cloud worksp
 
 Control which failing tasks Nx Cloud will actively try and fix for pull request CI pipeline executions.
 
-{% aside type="note" title="CLI Override Available" %}
-This is analogous to the `--fix-tasks` flag on `nx start-ci-run`. Anything set on the CLI will take precedence over the settings here.
+{% aside type="note" title="Configuration override available" %}
+This is analogous to [`ai.fix-tasks-patterns`](/docs/reference/nx-cloud/ci-config#aifix-tasks-patterns) in `.nx/ci-config.yaml`. Anything set there takes precedence over the settings here.
 {% /aside %}
 
 You can choose between two modes:
@@ -202,8 +220,8 @@ Automatically commit code change suggestions to the PR branch **when ALL of thes
 2. The AI agent is **highly confident** that the suggested code change will fix the failing task
 3. The suggestion has been **explicitly verified** to fix the failing task
 
-{% aside type="note" title="CLI Override Available" %}
-This is analogous to the `--auto-apply-fixes` flag on `nx start-ci-run`. Anything set on the CLI will take precedence over the settings here.
+{% aside type="note" title="Configuration override available" %}
+This is analogous to [`ai.auto-apply-patterns`](/docs/reference/nx-cloud/ci-config#aiauto-apply-patterns) in `.nx/ci-config.yaml`. Anything set there takes precedence over the settings here.
 {% /aside %}
 
 #### Deterministic Nx checks
@@ -311,6 +329,12 @@ If a fix is 90% correct but needs minor adjustments:
 2. Run the provided command in your terminal
 3. Make your adjustments and commit
 
+The provided command takes the form below. The fix identifier is shown in the Nx Cloud UI and in the PR/MR comment. Pass `--no-interactive` to disable prompting.
+
+```shell
+nx apply-locally <fix-identifier>
+```
+
 ![Apply Self-Healing Fixes Locally](../../../../assets/features/self-healing-apply-locally.avif)
 
 ### Reverting a fix
@@ -320,10 +344,10 @@ If you accidentally applied a fix, you can:
 1. Manually revert the Git commit
 2. Use the "Revert changes" button in the Nx Cloud diff viewer
 
-## Advanced: CLI overrides
+## Advanced: Configuration overrides
 
 {% aside type="caution" title="Prefer workspace settings" %}
-We recommend configuring Self-Healing CI through **[workspace settings](https://cloud.nx.app/go/workspace/settings/self-healing-ci)** in the Nx Cloud dashboard. CLI overrides should only be used for temporary, branch-specific adjustments.
+We recommend configuring Self-Healing CI through **[workspace settings](https://cloud.nx.app/go/workspace/settings/self-healing-ci)** in the Nx Cloud dashboard. Configuration overrides should only be used for temporary, branch-specific adjustments.
 {% /aside %}
 
 {% youtube
@@ -331,63 +355,50 @@ We recommend configuring Self-Healing CI through **[workspace settings](https://
   title="Specify Which Tasks to Fix"
 /%}
 
-### When to use CLI overrides
+### When to use configuration overrides
 
 - **Temporarily disable** Self-Healing CI on a sensitive branch
 - **Test configurations** before committing to workspace settings
 
-### Available flags
+### Available settings
 
-Pass these flags to `nx start-ci-run`:
+Set these under `ai` in your [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file:
 
-| Flag                 | Description                                 | Example                       |
-| -------------------- | ------------------------------------------- | ----------------------------- |
-| `--fix-tasks`        | Override which tasks are eligible for fixes | `--fix-tasks="*lint*,*test*"` |
-| `--auto-apply-fixes` | Override which tasks can be auto-applied    | `--auto-apply-fixes="*lint*"` |
-
-### Disabling features via CLI
-
-Use an empty string to **disable** a feature for a specific CI run:
-
-```shell
-# Disable fix generation entirely for this run
-npx nx start-ci-run --fix-tasks=""
-
-# Disable auto-apply entirely for this run
-npx nx start-ci-run --auto-apply-fixes=""
-```
-
-Both flags treat empty string consistently as an explicit "disable" override.
+| Key                   | Description                                 | Example                |
+| --------------------- | ------------------------------------------- | ---------------------- |
+| `fix-tasks-patterns`  | Override which tasks are eligible for fixes | `['*lint*', '*test*']` |
+| `auto-apply-patterns` | Override which tasks can be auto-applied    | `['*lint*']`           |
 
 ### Pattern syntax
 
-Patterns use glob syntax to match task names:
+Patterns use glob syntax to match task names, and a `!` prefix negates a pattern:
 
-```shell
-# Only fix lint and test tasks
-npx nx start-ci-run --fix-tasks="*lint*,*test*"
-
-# Fix everything except e2e tasks
-npx nx start-ci-run --fix-tasks="!*e2e*"
-
-# Auto-apply only lint fixes
-npx nx start-ci-run --auto-apply-fixes="lint"
+```yaml
+# .nx/ci-config.yaml
+ai:
+  # Fix lint and test tasks, but never e2e
+  fix-tasks-patterns:
+    - '*lint*'
+    - '*test*'
+    - '!*e2e*'
+  # Auto-apply only lint fixes
+  auto-apply-patterns:
+    - lint
 ```
 
 ### Precedence rules
 
-When both workspace settings and CLI overrides are present:
+When both workspace settings and `.nx/ci-config.yaml` are present:
 
-1. **CLI override** (if provided) always takes precedence
-2. Falls back to **workspace settings** if no CLI override
-3. Empty string (`""`) is an explicit "disable", not "use defaults"
+1. **`.nx/ci-config.yaml`** takes precedence for the keys it sets
+2. Falls back to **workspace settings** for the keys it does not set
 
 ### Viewing applied configuration
 
-After your CI runs, navigate to the CIPE → **Configurations** tab to see:
+After your CI runs, navigate to the CIPE, then the **Configurations** tab to see:
 
 - What workspace settings were relevant at the time of the CI pipeline execution
-- What CLI overrides were applied, if any
+- What the configuration file supplied, if anything
 - What the final, effective configuration was
 
 ---

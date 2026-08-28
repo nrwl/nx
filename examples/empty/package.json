@@ -1,0 +1,23 @@
+{
+  "name": "examples-empty",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "postinstall": "cd ../.. && pnpm nx run-many -t build -p nx js @nx/oxlint angular react vue playwright vite vitest web --skip-sync",
+    "validate": "nx run-many -t lint,test,build,e2e"
+  },
+  "devDependencies": {
+    "@nx/angular": "link:../../packages/angular",
+    "@nx/devkit": "link:../../packages/devkit",
+    "@nx/js": "link:../../packages/js",
+    "@nx/oxlint": "link:../../packages/oxlint",
+    "@nx/playwright": "link:../../packages/playwright",
+    "@nx/react": "link:../../packages/react",
+    "@nx/vite": "link:../../packages/vite",
+    "@nx/vitest": "link:../../packages/vitest",
+    "@nx/vue": "link:../../packages/vue",
+    "@nx/web": "link:../../packages/web",
+    "nx": "link:../../packages/nx",
+    "typescript": "~5.9.2"
+  }
+}

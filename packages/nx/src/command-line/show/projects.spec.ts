@@ -11,25 +11,25 @@ let graph: ProjectGraph = {
   externalNodes: {},
 };
 
-jest.mock('../../project-graph/project-graph', () => ({
-  ...(jest.requireActual(
+vi.mock('../../project-graph/project-graph', async () => ({
+  ...((await vi.importActual(
     '../../project-graph/project-graph'
-  ) as typeof import('../../project-graph/project-graph')),
-  createProjectGraphAsync: jest
+  )) as typeof import('../../project-graph/project-graph')),
+  createProjectGraphAsync: vi
     .fn()
     .mockImplementation(() => Promise.resolve(graph)),
 }));
 
-performance.mark = jest.fn();
-performance.measure = jest.fn();
+performance.mark = vi.fn();
+performance.measure = vi.fn();
 
 describe('show projects', () => {
   beforeEach(() => {
-    jest.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => {});
     performance.mark('init-local');
   });
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should print out projects with provided seperator value', async () => {

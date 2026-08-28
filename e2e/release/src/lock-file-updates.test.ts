@@ -25,7 +25,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/\d*B package\.json/g, 'XXXB package.json')
         .replaceAll(/size:\s*\d*\s?B/g, 'size: XXXB')
         .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
-        .replaceAll(/[a-fA-F0-9]{7}/g, '{COMMIT_SHA}')
+        .replaceAll(/\b[a-fA-F0-9]{7}\b/g, '{COMMIT_SHA}')
         .replaceAll(/Test @[\w\d]+/g, 'Test @{COMMIT_AUTHOR}')
         // Normalize the version title date.
         .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
@@ -114,6 +114,38 @@ describe('nx release lock file updates', () => {
     const filesChanges = runCommand('git diff --name-only HEAD');
 
     expect(filesChanges).toMatchInlineSnapshot(`
+      {project-name}/package.json
+      {project-name}/package.json
+      {project-name}/package.json
+      package-lock.json
+
+    `);
+  });
+
+  it('should include lock file and all package.json files in the git commit when using npm', async () => {
+    initializeProject('npm');
+
+    updateJson('package.json', (json) => {
+      json.workspaces = [pkg1, pkg2, pkg3];
+      return json;
+    });
+
+    runCommand(`npm install`);
+
+    // workaround for NXC-143
+    runCLI('reset');
+
+    runCommand(`git add .`);
+    runCommand(`git commit -m "chore: initial commit"`);
+
+    const versionOutput = runCLI(`release version 999.9.9 --git-commit`);
+
+    expect(versionOutput.match(/NX   Updating npm lock file/g).length).toBe(1);
+
+    // Verify the COMMITTED files (not just working tree changes)
+    const committedFiles = runCommand('git show --name-only --pretty="" HEAD');
+
+    expect(committedFiles).toMatchInlineSnapshot(`
       {project-name}/package.json
       {project-name}/package.json
       {project-name}/package.json

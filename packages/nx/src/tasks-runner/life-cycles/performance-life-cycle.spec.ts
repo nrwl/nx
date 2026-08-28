@@ -1,3 +1,4 @@
+import type { Mock, MockInstance } from 'vitest';
 import * as os from 'node:os';
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
@@ -83,9 +84,9 @@ interface TestEnv {
 // The lifecycle reads its signals from the environment (CI, distribution) and a
 // couple of helpers (hash windows via perf measures, remote cache via isNxCloudUsed)
 // rather than constructor seams. Tests drive the env vars through
-// `withEnvironmentVariables` (auto snapshot/restore) and the helpers through jest
+// `withEnvironmentVariables` (auto snapshot/restore) and the helpers through `vi`
 // spies set up in beforeEach.
-let getEntriesByTypeSpy: jest.SpyInstance;
+let getEntriesByTypeSpy: MockInstance;
 
 /**
  * Make collectHashWindows() observe the given absolute-epoch [start, end] hash
@@ -107,13 +108,13 @@ function setHashWindows(windows: Array<[number, number]>): void {
 }
 
 beforeEach(() => {
-  getEntriesByTypeSpy = jest.spyOn(performance, 'getEntriesByType');
+  getEntriesByTypeSpy = vi.spyOn(performance, 'getEntriesByType');
   setHashWindows([]);
-  jest.spyOn(nxCloudUtils, 'isNxCloudUsed').mockReturnValue(true);
+  vi.spyOn(nxCloudUtils, 'isNxCloudUsed').mockReturnValue(true);
 });
 
 afterEach(() => {
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
 });
 
 /** The env vars the given TestEnv implies (CI short-circuit + distribution flag). */
@@ -133,9 +134,7 @@ function makeLifeCycle(
   if (env.windows) {
     setHashWindows(env.windows);
   }
-  (nxCloudUtils.isNxCloudUsed as jest.Mock).mockReturnValue(
-    env.remoteCache ?? true
-  );
+  (nxCloudUtils.isNxCloudUsed as Mock).mockReturnValue(env.remoteCache ?? true);
   return new PerformanceLifeCycle(graph, {
     skipNxCache: env.skipped,
     nxJson: {
@@ -736,16 +735,16 @@ describe('cache reporting', () => {
 
     expect(s.remoteCacheEnabled).toBe(false);
     const report = formatReport(s);
-    // No-TTY jest env → no hyperlinks → the tagged URL prints verbatim.
+    // No-TTY test env → no hyperlinks → the tagged URL prints verbatim.
     expect(report).toContain('sharing a cache across your team and CI');
     expect(report).toContain(
-      'https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache'
+      'https://cloud.nx.app/get-started?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache'
     );
   });
 
   it('renders the remote-cache rec as a whole-phrase OSC 8 link (no raw URL) on a hyperlink terminal', () => {
     // FORCE_HYPERLINK overrides the TTY/CI checks in supportsHyperlinks, turning the
-    // OSC 8 hyperlinks on inside the no-TTY jest env.
+    // OSC 8 hyperlinks on inside the no-TTY test env.
     const prev = process.env.FORCE_HYPERLINK;
     process.env.FORCE_HYPERLINK = '1';
     try {
@@ -760,11 +759,11 @@ describe('cache reporting', () => {
       // the hidden target — never a raw URL. Sequence: ESC]8;; <target> BEL <phrase>.
       const OSC8 = ']8;;';
       expect(report).toContain(
-        `${OSC8}https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cacheDrastically reduce your run duration by sharing a cache across your team and CI`
+        `${OSC8}https://cloud.nx.app/get-started?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cacheDrastically reduce your run duration by sharing a cache across your team and CI`
       );
       // The URL must never appear as plain visible text: every occurrence is
       // immediately preceded by the OSC 8 target preamble.
-      const url = 'https://nx.dev/ci/features/remote-cache';
+      const url = 'https://cloud.nx.app/get-started';
       for (
         let i = report.indexOf(url);
         i !== -1;
@@ -882,7 +881,7 @@ describe('exit summary payload (TUI countdown)', () => {
       expect(payload.links).toEqual([
         {
           text: 'Drastically reduce your run duration by sharing a cache across your team and CI',
-          href: 'https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache',
+          href: 'https://cloud.nx.app/get-started?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache',
         },
       ]);
       expect(
@@ -1177,7 +1176,7 @@ describe('formatReport', () => {
           Recoverable time:  <1ms
 
           Recommendations:
-            - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache.
+            - Drastically reduce your run duration by sharing a cache across your team and CI → https://cloud.nx.app/get-started?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache.
             - Speed up or split the longest tasks on the critical path:
                 b    30.0s
                 a    10.0s"
@@ -1272,7 +1271,7 @@ describe('formatReportMarkdown', () => {
 
       ### Recommendations
 
-      - [Drastically reduce your run duration by sharing a cache across your team and CI](https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache).
+      - [Drastically reduce your run duration by sharing a cache across your team and CI](https://cloud.nx.app/get-started?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache).
       - Speed up or split the longest tasks on the critical path:
         - \`a\` — 45.0s"
     `);
@@ -1342,7 +1341,7 @@ describe('formatReportMarkdown', () => {
     })!;
 
     expect(formatReportMarkdown(s, '')).toContain(
-      '[Drastically reduce your run duration by sharing a cache across your team and CI](https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache)'
+      '[Drastically reduce your run duration by sharing a cache across your team and CI](https://cloud.nx.app/get-started?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache)'
     );
   });
 });
@@ -1512,12 +1511,12 @@ describe('buildTimespans', () => {
 });
 
 describe('flushPerformanceReport', () => {
-  let logSpy: jest.SpyInstance;
+  let logSpy: MockInstance;
   let logged: string | undefined;
 
   beforeEach(() => {
     logged = undefined;
-    logSpy = jest.spyOn(console, 'log').mockImplementation((msg?: any) => {
+    logSpy = vi.spyOn(console, 'log').mockImplementation((msg?: any) => {
       logged = String(msg);
     });
   });
@@ -1574,7 +1573,7 @@ describe('flushPerformanceReport', () => {
           ...envFor({}),
           GITHUB_ACTIONS: 'true',
           GITHUB_STEP_SUMMARY: summaryFile,
-          // Simulate a top-level invocation; `nx test` sets this on the jest task's env.
+          // Simulate a top-level invocation; nx sets this on any task's env.
           NX_TASK_TARGET_PROJECT: null,
         },
         () => {

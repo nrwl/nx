@@ -1,2 +1,2 @@
-export * from 'nx/src/tasks-runner/tasks-runner';
+export { TaskStatus, TasksRunner } from '@nx/devkit/internal';
 export { Task } from '@nx/devkit';

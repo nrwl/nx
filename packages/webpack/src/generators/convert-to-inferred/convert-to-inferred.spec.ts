@@ -15,7 +15,7 @@ import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { getRelativeProjectJsonSchemaPath } from 'nx/src/generators/utils/project-configuration';
+import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 import type { WebpackPluginOptions } from '../../plugins/plugin';
 import { convertToInferred } from './convert-to-inferred';
 
@@ -532,10 +532,7 @@ describe('convert-to-inferred', () => {
             default: {
               hot: true,
               liveReload: false,
-              server: {
-                type: 'https',
-                options: { cert: './server.crt', key: './server.key' },
-              },
+              server: { type: 'https', options: { cert: './server.crt', key: './server.key' } },
               proxy: { '/api': { target: 'http://localhost:3333', secure: false } },
               port: 4200,
               headers: { 'Access-Control-Allow-Origin': '*' },
@@ -690,10 +687,7 @@ describe('convert-to-inferred', () => {
             default: {
               hot: true,
               liveReload: false,
-              server: {
-                type: 'https',
-                options: { cert: './server.crt', key: './server.key' },
-              },
+              server: { type: 'https', options: { cert: './server.crt', key: './server.key' } },
               proxy: { '/api': { target: 'http://localhost:3333', secure: false } },
               port: 4200,
               headers: { 'Access-Control-Allow-Origin': '*' },
@@ -1151,10 +1145,7 @@ module.exports = composePlugins(
             default: {
               hot: true,
               liveReload: false,
-              server: {
-                type: 'https',
-                options: { cert: './server.crt', key: './server.key' },
-              },
+              server: { type: 'https', options: { cert: './server.crt', key: './server.key' } },
               proxy: { '/api': { target: 'http://localhost:3333', secure: false } },
               port: 4200,
               headers: { 'Access-Control-Allow-Origin': '*' },
@@ -1245,10 +1236,7 @@ module.exports = composePlugins(
             default: {
               hot: true,
               liveReload: false,
-              server: {
-                type: 'https',
-                options: { cert: './server.crt', key: './server.key' },
-              },
+              server: { type: 'https', options: { cert: './server.crt', key: './server.key' } },
               proxy: { '/api': { target: 'http://localhost:3333', secure: false } },
               port: 4200,
               headers: { 'Access-Control-Allow-Origin': '*' },

@@ -1,7 +1,7 @@
 import { exec } from 'child_process';
 import { existsSync } from 'fs';
-import { PackageJson } from 'nx/src/utils/package-json';
 import { join, relative } from 'path';
+import { PackageJson } from '@nx/devkit/internal';
 
 export async function parseRegistryOptions(
   cwd: string,

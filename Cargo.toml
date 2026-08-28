@@ -1,9 +1,11 @@
 
 [workspace]
 resolver = '2'
-members = [
-	'packages/nx',
-]
+members = ['packages/nx']
 
 [profile.release]
 lto = true
+# Rebuilding after a one-line Rust change drops from ~21s to ~4.5s. CI opts out
+# via CARGO_INCREMENTAL=0 (.nx/workflows/agents.yaml and the GitHub workflows) so
+# published binaries are never built incrementally.
+incremental = true

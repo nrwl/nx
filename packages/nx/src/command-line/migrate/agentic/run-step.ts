@@ -1,4 +1,4 @@
-import { dirname } from 'path';
+import { basename, dirname } from 'path';
 import * as pc from 'picocolors';
 import { getRunNxBaseCommand } from '../../../utils/child-process';
 import { FileChange } from '../../../generators/tree';
@@ -38,6 +38,17 @@ export interface AgenticStepResult {
    * accordingly.
    */
   ambiguous: boolean;
+}
+
+/**
+ * `runStep` travels in the context rather than being imported by its call
+ * sites, so this module loads only where the context is built, behind an
+ * agentic-enabled gate.
+ */
+export interface AgenticRunContext {
+  agentic: EnabledResolvedAgentic;
+  runDir: string;
+  runStep: typeof runAgenticPromptStep;
 }
 
 export interface RunAgenticPromptStepInput {
@@ -153,6 +164,7 @@ export async function runAgenticPromptStep(
       systemContext,
       userPrompt,
       workspaceRoot: root,
+      runDirName: basename(runDir),
     },
     handoffFilePath,
   });

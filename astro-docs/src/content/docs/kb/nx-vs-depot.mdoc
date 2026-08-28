@@ -30,7 +30,7 @@ Depot Cache doesn't even support Nx, and for a monorepo raw machine speed matter
 | Topic                                                             | Nx Cloud                                                 | Depot                                                     |
 | ----------------------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------- |
 | [Model](#model)                                                   | Task-graph platform on top of your existing CI           | Faster runners, container builds, and a CI engine         |
-| [Remote caching](#remote-caching)                                 | Nx Replay caches Nx tasks across developers and CI       | Depot Cache supports Turborepo, Bazel, Gradle, but not Nx |
+| [Remote caching](#remote-caching)                                 | Nx Cloud caches Nx tasks across developers and CI        | Depot Cache supports Turborepo, Bazel, Gradle, but not Nx |
 | [Cache security](#cache-security)                                 | Enforced branch-scoped isolation against cache poisoning | Shared namespace, isolation left to your cache keys       |
 | [Affected detection](#affected-detection)                         | `nx affected` prunes tasks before anything runs          | Not available                                             |
 | [Distribution](#distribution)                                     | Task-level distribution with dynamic balancing           | Job-level scheduling, sharding is manual                  |
@@ -47,7 +47,7 @@ What Depot doesn't see is your workspace. Every job still runs whatever your pip
 
 Depot Cache is a remote cache backend for Turborepo, Bazel, Gradle, sccache, and Pants. Nx is not a supported tool. For Nx workspaces, Depot's docs point to filesystem caching paired with generic CI cache actions.
 
-[Nx Replay](/docs/features/ci-features/remote-cache) is built for Nx tasks: every developer machine and CI run shares one cache, plugins derive correct inputs and outputs from your tool configuration, and replayed tasks restore terminal output and artifacts exactly.
+[Nx Cloud remote caching](/docs/features/ci-features/remote-cache) is built for Nx tasks: every developer machine and CI run shares one cache, plugins derive correct inputs and outputs from your tool configuration, and replayed tasks restore terminal output and artifacts exactly.
 
 ## Cache security
 

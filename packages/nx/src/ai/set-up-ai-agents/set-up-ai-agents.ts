@@ -2,10 +2,12 @@ import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { major } from 'semver';
 import TOML from 'smol-toml';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { formatChangedFiles } from '../../generators/internal-utils/format-changed-files';
 import { Tree } from '../../generators/tree';
 import { generateFiles } from '../../generators/utils/generate-files';
 import { readJson, updateJson, writeJson } from '../../generators/utils/json';
+import { readNxJson } from '../../generators/utils/nx-json';
+import { isAnalyticsEnabled } from '../../utils/analytics-enabled';
 import {
   canInstallNxConsoleForEditor,
   installNxConsoleForEditor,
@@ -131,6 +133,8 @@ export async function setupAiAgentsGeneratorImpl(
 ): Promise<() => Promise<ModificationResults>> {
   const hasAgent = (agent: Agent) => options.agents.includes(agent);
   const nxVersion = getInstalledNxVersion() ?? getDeclaredNxVersionOrDefault();
+  const analyticsEnabled = isAnalyticsEnabled(readNxJson(tree));
+  let addedAnalyticsDomain = false;
 
   const agentsMd = agentsMdPath(options.directory);
 
@@ -157,6 +161,12 @@ export async function setupAiAgentsGeneratorImpl(
     if (!tree.exists(claudeSettingsPath)) {
       writeJson(tree, claudeSettingsPath, {});
     }
+    const allowedDomains: string[] | undefined = readJson(
+      tree,
+      claudeSettingsPath
+    ).sandbox?.network?.allowedDomains;
+    addedAnalyticsDomain =
+      analyticsEnabled && !allowedDomains?.includes(analyticsDomain);
     updateJson(tree, claudeSettingsPath, (json) => ({
       ...json,
       extraKnownMarketplaces: {
@@ -173,21 +183,11 @@ export async function setupAiAgentsGeneratorImpl(
         ...json.enabledPlugins,
         'nx@nx-claude-plugins': true,
       },
-      // Allow Nx analytics requests through Claude Code's sandbox network filter
-      sandbox: {
-        ...json.sandbox,
-        network: {
-          ...json.sandbox?.network,
-          allowedDomains: json.sandbox?.network?.allowedDomains?.includes(
-            analyticsDomain
-          )
-            ? json.sandbox.network.allowedDomains
-            : [
-                ...(json.sandbox?.network?.allowedDomains ?? []),
-                analyticsDomain,
-              ],
-        },
-      },
+      // Widening the sandbox's egress is only justified while events are
+      // actually being sent, so it follows the workspace's analytics opt-in.
+      ...(analyticsEnabled
+        ? { sandbox: allowAnalyticsDomain(json.sandbox) }
+        : {}),
     }));
 
     // Clean up .mcp.json (nx-mcp now handled by plugin)
@@ -352,12 +352,21 @@ export async function setupAiAgentsGeneratorImpl(
     '.claude/settings.local.json'
   );
 
-  await formatChangedFilesWithPrettierIfAvailable(tree);
+  await formatChangedFiles(tree);
 
   // we use the check variable to determine if we should actually make changes or just report what would be changed
   return async (check: boolean = false) => {
     const messages: CLINoteMessageConfig[] = [];
     const errors: CLIErrorMessageConfig[] = [];
+    if (addedAnalyticsDomain) {
+      messages.push({
+        title: `Allowed ${analyticsDomain} through Claude Code's sandbox network filter`,
+        bodyLines: [
+          `Nx sends analytics there because this workspace sets "analytics": true in nx.json.`,
+          `Set it to false to opt out, then remove the domain from .claude/settings.json.`,
+        ],
+      });
+    }
     if (hasAgent('copilot')) {
       try {
         if (
@@ -420,6 +429,19 @@ export async function setupAiAgentsGeneratorImpl(
       messages,
       errors,
     };
+  };
+}
+
+function allowAnalyticsDomain(sandbox: any) {
+  const allowedDomains: string[] = sandbox?.network?.allowedDomains ?? [];
+  return {
+    ...sandbox,
+    network: {
+      ...sandbox?.network,
+      allowedDomains: allowedDomains.includes(analyticsDomain)
+        ? allowedDomains
+        : [...allowedDomains, analyticsDomain],
+    },
   };
 }
 

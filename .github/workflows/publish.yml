@@ -19,10 +19,15 @@ run-name: ${{ github.event.inputs.pr && format('PR Release for {0}', github.even
 
 env:
   DEBUG: napi:*
+  # Published binaries must never be built incrementally: the root Cargo.toml
+  # turns incremental on for the release profile so local rebuilds are fast, and
+  # incremental partitioning changes codegen. This must reach every build below,
+  # including the docker and FreeBSD ones, which forward env explicitly.
+  CARGO_INCREMENTAL: '0'
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
   CYPRESS_INSTALL_BINARY: 0
-  NODE_VERSION: 26.3.0
-  PNPM_VERSION: 11.2.2 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
+  NODE_VERSION: 26.7.0
+  PNPM_VERSION: 11.22.0 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
   NX_GRADLE_PROJECT_GRAPH_TIMEOUT: 600
 
 jobs:
@@ -321,7 +326,7 @@ jobs:
               export PATH="$JAVA_HOME\bin:$PATH"
               java -version
               pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
-    name: stable - ${{ matrix.settings.target }} - node@26.3.0
+    name: stable - ${{ matrix.settings.target }} - node@26.7.0
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -343,8 +348,12 @@ jobs:
           corepack enable
           corepack prepare --activate
 
-      - name: Cache cargo
-        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+      # Restore always, but only save from master. A cache written on a tag or PR ref
+      # is scoped to that ref, so nothing can ever read it back — it just consumes the
+      # repo-wide 10GB budget and evicts the master entries these builds depend on.
+      - name: Restore cargo cache
+        id: cargo-cache
+        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: |
             ~/.cargo/registry/index/
@@ -392,6 +401,7 @@ jobs:
             -e PNPM_VERSION \
             -e NX_GRADLE_PROJECT_GRAPH_TIMEOUT \
             -e NX_VERBOSE_LOGGING \
+            -e CARGO_INCREMENTAL \
             -v ${{ github.workspace }}/.cargo-cache/git/db:/usr/local/cargo/git/db \
             -v ${{ github.workspace }}/.cargo/registry/cache:/usr/local/cargo/registry/cache \
             -v ${{ github.workspace }}/.cargo/registry/index:/usr/local/cargo/registry/index \
@@ -405,6 +415,18 @@ jobs:
         run: ${{ matrix.settings.build }}
         if: ${{ !matrix.settings.docker }}
         shell: bash
+
+      - name: Save cargo cache
+        if: github.ref == 'refs/heads/master' && steps.cargo-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            .cargo-cache
+            target/
+          key: ${{ matrix.settings.target }}-cargo-registry
 
       - name: Upload artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -433,8 +455,9 @@ jobs:
         env:
           DEBUG: napi:*
           RUSTUP_IO_THREADS: 1
+          CARGO_INCREMENTAL: '0'
           PLAYWRIGHT_BROWSERS_PATH: 0
-          NODE_VERSION: 26.3.0
+          NODE_VERSION: 26.7.0
           NX_GRADLE_DISABLE: 'true'
           NX_DOTNET_DISABLE: 'true'
           NODE_OPTIONS: '--max-old-space-size=4096'
@@ -442,13 +465,13 @@ jobs:
           operating_system: freebsd
           version: '14.0'
           architecture: x86-64
-          environment_variables: DEBUG RUSTUP_IO_THREADS CI PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE NX_DOTNET_DISABLE NODE_OPTIONS
+          environment_variables: DEBUG RUSTUP_IO_THREADS CARGO_INCREMENTAL CI PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE NX_DOTNET_DISABLE NODE_OPTIONS
           shell: bash
           run: |
             env
             whoami
             sudo pkg install -y -f node libnghttp2 www/npm git ca_root_nss
-            sudo npm install --location=global --ignore-scripts pnpm@11.2.2
+            sudo npm install --location=global --ignore-scripts pnpm@11.22.0
             curl https://sh.rustup.rs -sSf --output rustup.sh
             sh rustup.sh -y --profile minimal --default-toolchain stable
             source "$HOME/.cargo/env"
@@ -573,6 +596,7 @@ jobs:
       - resolve-required-data
       - build-freebsd
       - build
+      - report-pending-publish
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
@@ -580,6 +604,38 @@ jobs:
         with:
           repository: ${{ needs.resolve-required-data.outputs.repo || github.repository }}
           ref: ${{ needs.resolve-required-data.outputs.ref || github.ref }}
+
+      # Built here (rather than inline in the `with:` block below) to keep the construction
+      # style consistent with the other Slack-posting steps in this file.
+      - name: Build Slack reaction payload
+        id: approved-reaction
+        if: ${{ needs.report-pending-publish.outputs.slack_thread_ts }}
+        env:
+          THREAD_TS: ${{ needs.report-pending-publish.outputs.slack_thread_ts }}
+        run: |
+          PAYLOAD=$(jq -nc --arg ts "$THREAD_TS" '{
+            channel: "C024JCL7TST",
+            timestamp: $ts,
+            name: "white_check_mark"
+          }')
+          echo "payload=$PAYLOAD" >> "$GITHUB_OUTPUT"
+
+      # Best-effort acknowledgement that the manual review gate has been passed and the
+      # publish is proceeding, expressed as a ✅ reaction on the original pending-review
+      # message (rather than a threaded reply) so the approval doesn't add extra noise to
+      # the channel. Requires the SLACK_BOT_TOKEN secret to carry the `reactions:write`
+      # scope and a valid ts to react to; if either is missing this step no-ops without
+      # affecting the actual publish below.
+      - name: React to Slack message to indicate publish was approved
+        id: notify-approved
+        if: ${{ needs.report-pending-publish.outputs.slack_thread_ts }}
+        continue-on-error: true
+        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
+        with:
+          method: reactions.add
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          errors: true
+          payload: ${{ steps.approved-reaction.outputs.payload }}
 
       - name: Set verbose logging from debug mode
         if: runner.debug == '1'
@@ -594,7 +650,7 @@ jobs:
           corepack prepare --activate
 
       - name: Use npm 11.5.2
-        run: npm install -g npm@11.5.2
+        run: npm install -g npm@11.5.2 --ignore-scripts
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -664,27 +720,148 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     continue-on-error: true  # Don't fail the workflow if notification fails
+    outputs:
+      slack_thread_ts: ${{ steps.notify.outputs.ts }}
     steps:
-      - name: Send Slack notification
-        uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
-        with:
-          status: ${{ job.status }}
-          notification_title: >-
-            ${{ needs.resolve-required-data.outputs.pr_number &&
-                format('📦 PR #{0} Publish Pending Review', needs.resolve-required-data.outputs.pr_number) ||
-                '📦 Publish Pending Review' }}
-          message_format: >-
-            ${{ needs.resolve-required-data.outputs.pr_number &&
-                format('Version {0} from PR #{1} by @{2} is being published to NPM - manual review is required',
-                       needs.resolve-required-data.outputs.version,
-                       needs.resolve-required-data.outputs.pr_number,
-                       needs.resolve-required-data.outputs.pr_author) ||
-                format('Version {0} is being published to NPM - manual review is required',
-                       needs.resolve-required-data.outputs.version) }}
-          footer: '<{run_url}|View Workflow Run>'
-          mention_users: 'U9NPA6C90' # Jason
+      # Decide who to mention: pinging the person who triggered the run themselves is
+      # pointless noise (they already know they're publishing), and mentioning a whole
+      # group invites the bystander effect where everyone assumes someone else will
+      # review it. So we mention Jason by default, unless *he* is the triggering actor,
+      # in which case we mention Craigory and Jack instead.
+      #
+      # Jason Jean's GitHub login is `FrozenPandaz` - confirmed via his GitHub profile
+      # (github.com/FrozenPandaz, which displays "Jason Jean" as the account's real
+      # name) and cross-checked against his extensive merged-PR history on nrwl/nx.
+      - name: Determine which reviewers to mention
+        id: reviewers
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
+          TRIGGERING_ACTOR: ${{ github.triggering_actor }}
+        run: |
+          if [ "$TRIGGERING_ACTOR" = "FrozenPandaz" ]; then
+            echo "mentions=<@U020RK8EMRR> <@UD688H84E>" >> "$GITHUB_OUTPUT" # Craigory Coppola + Jack Hsu
+          else
+            echo "mentions=<@U9NPA6C90>" >> "$GITHUB_OUTPUT" # Jason Jean
+          fi
+
+      # Built here (rather than inline in the payload below) to avoid fragile nested
+      # GitHub Actions expressions inside a YAML block, and so the conditional PR/non-PR
+      # wording stays readable.
+      - name: Build Slack message payload
+        id: message
+        env:
+          VERSION: ${{ needs.resolve-required-data.outputs.version }}
+          PR_NUMBER: ${{ needs.resolve-required-data.outputs.pr_number }}
+          PR_AUTHOR: ${{ needs.resolve-required-data.outputs.pr_author }}
+          MENTIONS: ${{ steps.reviewers.outputs.mentions }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -n "$PR_NUMBER" ]; then
+            TITLE_TEXT="📦 PR #${PR_NUMBER} Publish Pending Review"
+            MAIN_TEXT="*Version ${VERSION}* from PR #${PR_NUMBER} by @${PR_AUTHOR} is being published to NPM - manual review is required ${MENTIONS}"
+          else
+            TITLE_TEXT="📦 Publish Pending Review"
+            MAIN_TEXT="*Version ${VERSION}* is being published to NPM - manual review is required ${MENTIONS}"
+          fi
+          PAYLOAD=$(jq -nc \
+            --arg title "$TITLE_TEXT" \
+            --arg main "$MAIN_TEXT" \
+            --arg run_url "$RUN_URL" \
+            '{
+              channel: "C024JCL7TST",
+              text: $title,
+              attachments: [
+                {
+                  color: "good",
+                  blocks: [
+                    {
+                      type: "section",
+                      text: { type: "mrkdwn", text: $main }
+                    },
+                    {
+                      type: "context",
+                      elements: [
+                        { type: "mrkdwn", text: ("<" + $run_url + "|View Workflow Run>") }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }')
+          echo "payload=$PAYLOAD" >> "$GITHUB_OUTPUT"
+
+      # Uses the bot-token based slack-github-action (rather than the incoming-webhook
+      # based ravsamhq/notify-slack-action used previously) because only a bot token can
+      # return a message `ts`, which downstream jobs need in order to post threaded
+      # replies once the publish is approved and once it completes. Requires the
+      # SLACK_BOT_TOKEN repo secret (a Slack bot token with chat:write + chat:write.public
+      # scopes); until that secret exists this step - and therefore the whole job, which
+      # is continue-on-error - fails harmlessly without blocking the publish.
+      - name: Send Slack notification
+        id: notify
+        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          errors: true
+          payload: ${{ steps.message.outputs.payload }}
+
+  report-published:
+    name: Report Successful Publish to Slack
+    if: ${{ github.repository_owner == 'nrwl' }}
+    needs:
+      - resolve-required-data
+      - publish
+      - report-pending-publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true  # Don't fail the workflow if notification fails
+    steps:
+      # Only fires once `publish` has actually succeeded - if `publish` fails, GitHub
+      # skips this job by default since it's a listed `needs` dependency that didn't succeed.
+      - name: Build Slack message payload
+        id: message
+        env:
+          VERSION: ${{ needs.resolve-required-data.outputs.version }}
+          THREAD_TS: ${{ needs.report-pending-publish.outputs.slack_thread_ts }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          MAIN_TEXT="*Version ${VERSION}* was published to NPM successfully."
+          PAYLOAD=$(jq -nc \
+            --arg main "$MAIN_TEXT" \
+            --arg ts "$THREAD_TS" \
+            --arg run_url "$RUN_URL" \
+            '{
+              channel: "C024JCL7TST",
+              text: "🎉 Published Successfully",
+              thread_ts: $ts,
+              attachments: [
+                {
+                  color: "good",
+                  blocks: [
+                    {
+                      type: "section",
+                      text: { type: "mrkdwn", text: $main }
+                    },
+                    {
+                      type: "context",
+                      elements: [
+                        { type: "mrkdwn", text: ("<" + $run_url + "|View Workflow Run>") }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }')
+          echo "payload=$PAYLOAD" >> "$GITHUB_OUTPUT"
+
+      - name: Send Slack notification
+        if: ${{ needs.report-pending-publish.outputs.slack_thread_ts }}
+        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          errors: true
+          payload: ${{ steps.message.outputs.payload }}
 
   pr_failure_comment:
     # Run this job if it is a PR release, running on the nrwl origin, and any of the required jobs failed

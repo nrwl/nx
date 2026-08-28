@@ -1,14 +1,14 @@
 [[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    Content-Security-Policy = "frame-ancestors 'none'"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
-    # Agent discovery via RFC 8288 Link headers (see https://isitagentready.com/.well-known/agent-skills/link-headers/SKILL.md)
-    # Points AI agents/crawlers at machine-readable entry points hosted on nx.dev.
+for = "/*"
+[headers.values]
+X-Frame-Options = "DENY"
+Content-Security-Policy = "frame-ancestors 'none'"
+Referrer-Policy = "strict-origin-when-cross-origin"
+Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+# Agent discovery via RFC 8288 Link headers (see https://isitagentready.com/.well-known/agent-skills/link-headers/SKILL.md)
+# Points AI agents/crawlers at machine-readable entry points hosted on nx.dev.
 
-    Link = '''</llms.txt>; rel="describedby"; type="text/plain", </llms-full.txt>; rel="service-doc"; type="text/plain", </sitemap.xml>; rel="sitemap"; type="application/xml"'''
+Link = '''</llms.txt>; rel="describedby"; type="text/plain", </llms-full.txt>; rel="service-doc"; type="text/plain", </sitemap.xml>; rel="sitemap"; type="application/xml"'''
 
 
 # Disable gradle and maven plugins on Netlify
@@ -117,14 +117,44 @@ to = "/docs/technologies/typescript/introduction"
 from = "/docs/extending-nx/recipes/create-preset"
 to = "/docs/extending-nx/create-preset"
 
+# Adoption guides moved to the Knowledge Base under the "Adoption" topic (DOC-589)
 [[redirects]]
 from = "/docs/guides/adopting-nx/adding-to-monorepos"
-to = "/docs/guides/adopting-nx/adding-to-monorepo"
+to = "/docs/kb/adding-to-monorepo"
+
+[[redirects]]
+from = "/docs/guides/adopting-nx/adding-to-monorepo"
+to = "/docs/kb/adding-to-monorepo"
+
+[[redirects]]
+from = "/docs/guides/adopting-nx/adding-to-existing-project"
+to = "/docs/kb/adding-to-existing-project"
+
+[[redirects]]
+from = "/docs/guides/adopting-nx/import-project"
+to = "/docs/kb/import-project"
+
+[[redirects]]
+from = "/docs/guides/adopting-nx/manual"
+to = "/docs/kb/manual-migration"
+
+[[redirects]]
+from = "/docs/guides/adopting-nx/preserving-git-histories"
+to = "/docs/kb/preserving-git-histories"
+
+[[redirects]]
+from = "/docs/guides/adopting-nx"
+to = "/docs/kb/adoption"
 
 # Turborepo comparison moved to Comparisons section (#36275)
 [[redirects]]
 from = "/docs/guides/adopting-nx/nx-vs-turborepo"
 to = "/docs/guides/comparisons/nx-vs-turborepo"
+
+# Turborepo migration guide moved to the Knowledge Base (DOC-571)
+[[redirects]]
+from = "/docs/guides/adopting-nx/from-turborepo"
+to = "/docs/kb/from-turborepo"
 
 # Angular multiple workspace migration page removed (DOC-419)
 [[redirects]]
@@ -180,6 +210,11 @@ to = "/docs/reference/deprecated/self-hosted-cache-packages"
 [[redirects]]
 from = "/docs/getting-started/tutorials/self-healing-ci-tutorial"
 to = "/docs/getting-started/setup-ci"
+
+# Gradle tutorial moved out of tutorials into the Knowledge Base
+[[redirects]]
+from = "/docs/getting-started/tutorials/gradle-tutorial"
+to = "/docs/kb/gradle-tutorial"
 
 # Resource usage consolidated into the Nx Cloud add-ons platform feature pages
 [[redirects]]
@@ -309,7 +344,11 @@ to = "/docs/kb/creating-files"
 
 [[redirects]]
 from = "/docs/extending-nx/intro"
-to = "/docs/kb/intro"
+to = "/docs/kb/add-language-support"
+
+[[redirects]]
+from = "/docs/kb/intro"
+to = "/docs/kb/add-language-support"
 
 [[redirects]]
 from = "/docs/extending-nx/local-executors"
@@ -337,7 +376,11 @@ to = "/docs/kb/performant-project-graph-plugins"
 
 [[redirects]]
 from = "/docs/extending-nx/project-graph-plugins"
-to = "/docs/kb/project-graph-plugins"
+to = "/docs/kb/add-language-support"
+
+[[redirects]]
+from = "/docs/kb/project-graph-plugins"
+to = "/docs/kb/add-language-support"
 
 [[redirects]]
 from = "/docs/extending-nx/publish-plugin"
@@ -349,7 +392,11 @@ to = "/docs/kb/task-running-lifecycle"
 
 [[redirects]]
 from = "/docs/extending-nx/tooling-plugin"
-to = "/docs/kb/tooling-plugin"
+to = "/docs/kb/add-language-support"
+
+[[redirects]]
+from = "/docs/kb/tooling-plugin"
+to = "/docs/kb/add-language-support"
 
 [[redirects]]
 from = "/docs/guides/comparisons/nx-vs-bazel"
@@ -729,11 +776,11 @@ to = "/docs/kb/micro-frontend-architecture"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/concepts/module-federation-and-nx"
-to = "/docs/kb/module-federation-and-nx"
+to = "/docs/technologies/module-federation/introduction"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/concepts/nx-module-federation-technical-overview"
-to = "/docs/kb/nx-module-federation-technical-overview"
+to = "/docs/kb/nx-module-federation-plugin"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/consumer-and-provider"
@@ -741,19 +788,19 @@ to = "/docs/kb/consumer-and-provider"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/guides/create-a-host"
-to = "/docs/kb/create-a-host"
+to = "/docs/kb/consumer-and-provider"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/guides/create-a-remote"
-to = "/docs/kb/create-a-remote"
+to = "/docs/kb/consumer-and-provider"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/guides/federate-a-module"
-to = "/docs/kb/federate-a-module"
+to = "/docs/kb/consumer-and-provider"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/guides/nx-module-federation-dev-server-plugin"
-to = "/docs/kb/nx-module-federation-dev-server-plugin"
+to = "/docs/kb/nx-module-federation-plugin"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/guides/nx-module-federation-plugin"
@@ -805,7 +852,7 @@ to = "/docs/kb/deploy-nextjs-to-vercel"
 
 [[redirects]]
 from = "/docs/technologies/react/guides/module-federation-with-ssr"
-to = "/docs/kb/react-module-federation-with-ssr"
+to = "/docs/kb/consumer-and-provider"
 
 [[redirects]]
 from = "/docs/technologies/react/guides/react-compiler"
@@ -877,7 +924,11 @@ to = "/docs/kb/overview-angular"
 
 [[redirects]]
 from = "/docs/technologies/test-tools/storybook/guides/overview-react"
-to = "/docs/kb/overview-react"
+to = "/docs/kb/storybook-for-react"
+
+[[redirects]]
+from = "/docs/kb/overview-react"
+to = "/docs/kb/storybook-for-react"
 
 [[redirects]]
 from = "/docs/technologies/test-tools/storybook/guides/overview-vue"
@@ -1071,6 +1122,47 @@ to = "/docs/kb/vue"
 [[redirects]]
 from = "/docs/knowledge-base/webpack"
 to = "/docs/kb/webpack"
+# DOC-555: module federation prune + decisions stub removal
+[[redirects]]
+from = "/docs/kb/module-federation-and-nx"
+to = "/docs/technologies/module-federation/introduction"
+
+[[redirects]]
+from = "/docs/kb/nx-module-federation-technical-overview"
+to = "/docs/kb/nx-module-federation-plugin"
+
+[[redirects]]
+from = "/docs/kb/create-a-host"
+to = "/docs/kb/consumer-and-provider"
+
+[[redirects]]
+from = "/docs/kb/create-a-remote"
+to = "/docs/kb/consumer-and-provider"
+
+[[redirects]]
+from = "/docs/kb/federate-a-module"
+to = "/docs/kb/consumer-and-provider"
+
+[[redirects]]
+from = "/docs/kb/nx-module-federation-dev-server-plugin"
+to = "/docs/kb/nx-module-federation-plugin"
+
+[[redirects]]
+from = "/docs/kb/react-module-federation-with-ssr"
+to = "/docs/kb/consumer-and-provider"
+
+[[redirects]]
+from = "/docs/technologies/module-federation/concepts"
+to = "/docs/technologies/module-federation/introduction"
+
+[[redirects]]
+from = "/docs/technologies/module-federation/guides"
+to = "/docs/technologies/module-federation/introduction"
+
+[[redirects]]
+from = "/docs/concepts/decisions"
+to = "/docs/kb/monorepo-vs-polyrepo"
+
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]
 from = "/docs/*"

@@ -89,7 +89,7 @@ test('renders remotes', async ({ page }) => {
   expect(await items.nth(2).innerText()).toContain('${capitalize(remote2)}');
 });`
     );
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const e2eProcess = await runCommandUntil(
         `e2e ${host}-e2e`,
         (output) =>

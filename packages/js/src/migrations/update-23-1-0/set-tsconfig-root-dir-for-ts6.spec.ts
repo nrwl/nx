@@ -1,10 +1,10 @@
 import { readJson, type Tree } from '@nx/devkit';
-import { FsTree } from 'nx/src/generators/tree';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 
 import migration from './set-tsconfig-root-dir-for-ts6';
+import { FsTree } from '@nx/devkit/internal';
 
 describe('set-tsconfig-root-dir-for-ts6 migration', () => {
   let root: string;

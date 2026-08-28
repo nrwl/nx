@@ -71,10 +71,6 @@ const learnGroups: SidebarItems = [
             label: 'Reducing boilerplate',
             link: 'getting-started/tutorials/reducing-configuration-boilerplate',
           },
-          {
-            label: 'Gradle monorepo',
-            link: 'getting-started/tutorials/gradle-tutorial',
-          },
         ],
       },
     ],
@@ -94,12 +90,7 @@ const learnGroups: SidebarItems = [
         label: 'Types of configuration',
         link: 'concepts/types-of-configuration',
       },
-      {
-        label: 'Executors and configurations',
-        link: 'concepts/executors-and-configurations',
-      },
       { label: 'Nx plugins', link: 'concepts/nx-plugins' },
-      { label: 'Inferred tasks', link: 'concepts/inferred-tasks' },
       {
         label: 'Building blocks of fast CI',
         link: 'concepts/ci-concepts/building-blocks-fast-ci',
@@ -108,7 +99,6 @@ const learnGroups: SidebarItems = [
         label: 'Parallelization and distribution',
         link: 'concepts/ci-concepts/parallelization-distribution',
       },
-      { label: 'Nx Daemon', link: 'concepts/nx-daemon' },
     ],
   },
   {
@@ -120,7 +110,11 @@ const learnGroups: SidebarItems = [
         label: 'Cache task results',
         link: 'features/cache-task-results',
       },
-      { label: 'Enhance your LLM', link: 'features/enhance-ai' },
+      { label: 'Enhance your coding agent', link: 'features/enhance-ai' },
+      {
+        label: 'Multi-language support',
+        link: 'features/multi-language-support',
+      },
       {
         label: 'Code organization',
         collapsed: true,
@@ -166,7 +160,7 @@ const learnGroups: SidebarItems = [
           },
           { label: 'Affected', link: 'features/ci-features/affected' },
           {
-            label: 'Remote cache (Nx Replay)',
+            label: 'Remote caching',
             link: 'features/ci-features/remote-cache',
           },
           {
@@ -307,19 +301,15 @@ const learnGroups: SidebarItems = [
           },
           {
             label: 'Automate importing projects',
-            link: 'guides/adopting-nx/import-project',
+            link: 'kb/import-project',
           },
           {
             label: 'Manual migrations',
-            link: 'guides/adopting-nx/manual',
+            link: 'kb/manual-migration',
           },
           {
             label: 'Preserving Git histories',
-            link: 'guides/adopting-nx/preserving-git-histories',
-          },
-          {
-            label: 'Migrating from Turborepo',
-            link: 'guides/adopting-nx/from-turborepo',
+            link: 'kb/preserving-git-histories',
           },
         ],
       },
@@ -456,6 +446,7 @@ const technologiesGroups: SidebarItems = [
             link: 'technologies/module-federation/introduction',
           },
           { label: 'ESLint', link: 'technologies/eslint/introduction' },
+          { label: 'Oxlint', link: 'technologies/oxlint/introduction' },
         ],
       },
       {
@@ -578,11 +569,17 @@ const referenceGroups: SidebarItems = [
         link: 'reference/environment-variables',
       },
       { label: 'nxignore', link: 'reference/nxignore' },
+      { label: 'Nx Daemon', link: 'reference/nx-daemon' },
+      { label: 'Code formatting', link: 'reference/code-formatting' },
       { label: 'Glossary', link: 'reference/glossary' },
       { label: 'Releases', link: 'reference/releases' },
       { label: 'Nx MCP', link: 'reference/nx-mcp' },
       { label: 'Nx Console settings', link: 'reference/nx-console-settings' },
       { label: 'Nx Cloud CLI', link: 'reference/nx-cloud-cli' },
+      {
+        label: 'CI configuration file',
+        link: 'reference/nx-cloud/ci-config',
+      },
       { label: 'Telemetry', link: 'reference/telemetry' },
       {
         label: 'TypeScript',
@@ -664,6 +661,11 @@ const referenceGroups: SidebarItems = [
           ...getTechnologyAPIItems('eslint', undefined, 'ESLint'),
           ...getTechnologyAPIItems('eslint-plugin', 'eslint', 'ESLint Plugin'),
         ],
+      },
+      {
+        label: 'Oxlint',
+        collapsed: true,
+        items: [...getTechnologyAPIItems('oxlint', undefined, 'Oxlint')],
       },
       {
         label: 'Webpack',

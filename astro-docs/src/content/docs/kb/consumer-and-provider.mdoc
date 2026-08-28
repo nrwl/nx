@@ -37,7 +37,7 @@ Generated tree:
 ```text
 apps/my-provider/
 ├── package.json          # name, scripts, MF + framework deps
-├── vite.config.ts        # (or rsbuild/rspack equivalent) with federation plugin
+├── vite.config.mts       # (or rsbuild/rspack equivalent) with federation plugin
 ├── index.html
 ├── src/
 │   ├── index.ts          # `import('./bootstrap')` indirection (required)
@@ -59,7 +59,7 @@ Generated tree:
 ```text
 apps/my-consumer/
 ├── package.json
-├── vite.config.ts        # NO build-time `remotes:` block
+├── vite.config.mts       # NO build-time `remotes:` block
 ├── index.html
 ├── src/
 │   ├── index.ts          # `import('./bootstrap')`

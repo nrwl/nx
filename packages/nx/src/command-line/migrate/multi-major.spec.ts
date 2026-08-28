@@ -1,22 +1,22 @@
-const resolveMock = jest.fn();
-jest.mock('./resolve-package-version', () => ({
+const resolveMock = vi.fn();
+vi.mock('./resolve-package-version', () => ({
   resolvePackageVersionRespectingMinReleaseAge: (...args: unknown[]) =>
     resolveMock(...args),
 }));
-jest.mock('../../utils/installed-nx-version', () => ({
-  getInstalledNxVersion: jest.fn(() => '21.0.0'),
+vi.mock('../../utils/installed-nx-version', () => ({
+  getInstalledNxVersion: vi.fn(() => '21.0.0'),
 }));
-const canPromptMock = jest.fn((..._args: unknown[]) => false);
-const migratePromptMock = jest.fn();
-jest.mock('./safe-prompt', () => ({
+const canPromptMock = vi.fn((..._args: unknown[]) => false);
+const migrateChoiceMock = vi.fn();
+vi.mock('./safe-prompt', () => ({
   canPrompt: (...args: unknown[]) => canPromptMock(...args),
-  migratePrompt: (...args: unknown[]) => migratePromptMock(...args),
+  migrateChoice: (...args: unknown[]) => migrateChoiceMock(...args),
 }));
-jest.mock('../../utils/output', () => ({
-  output: { warn: jest.fn(), log: jest.fn() },
+vi.mock('../../utils/output', () => ({
+  output: { warn: vi.fn(), log: vi.fn() },
 }));
-const recordPromptMock = jest.fn();
-jest.mock('./migrate-analytics', () => ({
+const recordPromptMock = vi.fn();
+vi.mock('./migrate-analytics', () => ({
   reportMigratePrompt: (...args: unknown[]) => recordPromptMock(...args),
 }));
 
@@ -33,7 +33,11 @@ const gradualArgs = {
 };
 
 describe('multi-major minimum-release-age probe', () => {
-  beforeEach(() => resolveMock.mockReset());
+  beforeEach(() => {
+    // vitest calls a function returned from a hook as cleanup; mockReset()
+    // returns the mock, so never return it.
+    resolveMock.mockReset();
+  });
 
   it('probes each candidate major side-effect-free (applySideEffects: false)', async () => {
     resolveMock.mockImplementation((_pkg: string, range: string) =>
@@ -77,7 +81,7 @@ describe('multi-major analytics decision', () => {
     resolveMock.mockReset();
     canPromptMock.mockReset();
     canPromptMock.mockReturnValue(false);
-    migratePromptMock.mockReset();
+    migrateChoiceMock.mockReset();
     recordPromptMock.mockReset();
   });
 
@@ -153,7 +157,7 @@ describe('multi-major analytics decision', () => {
       resolveMock.mockImplementation((_pkg: string, range: string) =>
         Promise.resolve(range === '^21.0.0' ? '21.9.9' : '22.9.9')
       );
-      migratePromptMock.mockResolvedValue({ chosen });
+      migrateChoiceMock.mockResolvedValue(chosen);
       const result = await maybePromptOrWarnMultiMajorMigration({
         include: 'all',
         options: { interactive: true },

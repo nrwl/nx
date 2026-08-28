@@ -1,27 +1,30 @@
+import type { Mock, MockInstance } from 'vitest';
 import { EventEmitter } from 'events';
 import { mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
-jest.mock('child_process', () => ({
-  spawn: jest.fn(),
-  execSync: jest.fn(),
-  // `promisify(exec)` in transitive imports needs a function to wrap.
-  exec: jest.fn(),
+vi.mock('child_process', () => ({
+  spawn: vi.fn(),
+  execSync: vi.fn(),
+  // `promisify(exec)` and `promisify(execFile)` in transitive imports need a function to wrap.
+  exec: vi.fn(),
+  execFile: vi.fn(),
 }));
-jest.mock('enquirer', () => ({
-  prompt: jest.fn(),
+vi.mock('@clack/prompts', () => ({
+  autocomplete: vi.fn(),
+  isCancel: () => false,
 }));
 
 import { execSync, spawn } from 'child_process';
-import { prompt } from 'enquirer';
+import { autocomplete } from '@clack/prompts';
 import { output } from '../../../utils/output';
 import { adaptSpawnForWindowsShim, runAgentic } from './runner';
 import { AgentDefinition, DetectedInstalledAgent } from './types';
 
-const mockSpawn = spawn as unknown as jest.Mock;
-const mockExecSync = execSync as unknown as jest.Mock;
-const mockPrompt = prompt as unknown as jest.Mock;
+const mockSpawn = spawn as unknown as Mock;
+const mockExecSync = execSync as unknown as Mock;
+const mockPrompt = autocomplete as unknown as Mock;
 
 function makeDetected(): DetectedInstalledAgent {
   return {
@@ -38,7 +41,7 @@ function makeDefinition(): AgentDefinition {
     displayName: 'Claude Code',
     binaryNames: ['claude'],
     wellKnownPaths: () => [],
-    buildInteractive: jest.fn(() => ({
+    buildInteractive: vi.fn(() => ({
       args: ['--system-prompt', 'sys', 'user'],
       cwd: '/workspace',
     })),
@@ -49,7 +52,7 @@ type FakeChild = EventEmitter & {
   exitCode: number | null;
   signalCode: NodeJS.Signals | null;
   killed: boolean;
-  kill: jest.Mock<boolean, [NodeJS.Signals?]>;
+  kill: Mock<boolean, [NodeJS.Signals?]>;
 };
 
 function fakeChild(
@@ -59,7 +62,7 @@ function fakeChild(
   ee.exitCode = null;
   ee.signalCode = null;
   ee.killed = false;
-  ee.kill = jest.fn((signal?: NodeJS.Signals) => {
+  ee.kill = vi.fn((signal?: NodeJS.Signals) => {
     if (ee.killed) return false;
     ee.killed = true;
     if (opts.exitOnKill) {
@@ -78,7 +81,7 @@ describe('runAgentic', () => {
   let handoffFilePath: string;
   let originalListeners: NodeJS.SignalsListener[];
 
-  let warnSpy: jest.SpyInstance;
+  let warnSpy: MockInstance;
   // Suite-scoped so `afterEach` can restore the `process.on` spy even if a
   // test body threw before its inline cleanup — a leaked spy turns the next
   // test's `captureSigintHandlers` into a spy-on-spy.
@@ -93,7 +96,7 @@ describe('runAgentic', () => {
     mockSpawn.mockReset();
     mockExecSync.mockReset();
     mockPrompt.mockReset();
-    warnSpy = jest.spyOn(output, 'warn').mockImplementation(() => {});
+    warnSpy = vi.spyOn(output, 'warn').mockImplementation(() => {});
     sigintCapture = null;
     originalListeners = process.listeners('SIGINT') as NodeJS.SignalsListener[];
   });
@@ -137,7 +140,7 @@ describe('runAgentic', () => {
   } {
     const handlers: NodeJS.SignalsListener[] = [];
     const realOn = process.on.bind(process);
-    const spy = jest
+    const spy = vi
       .spyOn(process, 'on')
       .mockImplementation((event: string | symbol, listener: any) => {
         if (event === 'SIGINT') handlers.push(listener);
@@ -166,6 +169,7 @@ describe('runAgentic', () => {
       systemContext: 'sys',
       userPrompt: 'user',
       workspaceRoot,
+      runDirName: '23.0.0',
     } as const;
   }
 
@@ -192,7 +196,7 @@ describe('runAgentic', () => {
 
   it('passes binary, args, cwd, merged env, and stdio: inherit through to spawn', async () => {
     const definition = makeDefinition();
-    (definition.buildInteractive as jest.Mock).mockReturnValue({
+    (definition.buildInteractive as Mock).mockReturnValue({
       args: ['--flag', 'value'],
       env: { CUSTOM: '1' },
       cwd: '/custom-cwd',
@@ -217,7 +221,7 @@ describe('runAgentic', () => {
 
   it('falls back to workspaceRoot as cwd when the spec omits it', async () => {
     const definition = makeDefinition();
-    (definition.buildInteractive as jest.Mock).mockReturnValue({ args: [] });
+    (definition.buildInteractive as Mock).mockReturnValue({ args: [] });
     spawnWithHandoff({ status: 'success', summary: 'ok' });
 
     await runAgentic({
@@ -277,7 +281,7 @@ describe('runAgentic', () => {
         setImmediate(() => child.emit('exit', 0));
         return child;
       });
-      mockPrompt.mockResolvedValue({ choice });
+      mockPrompt.mockResolvedValue(choice);
 
       const outcome = await runAgentic({
         detected: makeDetected(),
@@ -312,7 +316,7 @@ describe('runAgentic', () => {
     ],
   ])('treats %s as exit-with-no-handoff', async (_label, setup) => {
     setup();
-    mockPrompt.mockResolvedValue({ choice: 'abort' });
+    mockPrompt.mockResolvedValue('abort');
 
     const outcome = await runAgentic({
       detected: makeDetected(),
@@ -355,7 +359,7 @@ describe('runAgentic', () => {
       });
       return child;
     });
-    mockPrompt.mockResolvedValue({ choice: 'continue' });
+    mockPrompt.mockResolvedValue('continue');
 
     const outcome = await runAgentic({
       detected: makeDetected(),
@@ -520,8 +524,8 @@ describe('runAgentic', () => {
 
   it('passes a SIGINT during the agent run through without crashing and aborts directly afterward', async () => {
     // Invoke runAgentic's SIGINT listener directly. `process.emit('SIGINT',
-    // …)` behaves inconsistently across jest workers (the signal name
-    // collides with jest's own handlers), so we capture exactly the listener
+    // …)` behaves inconsistently across test workers (the signal name
+    // collides with the runner's own handlers), so we capture exactly the listener
     // `runAgentic` registered via a `process.on` spy and trigger it. The
     // capture is restored in `afterEach` regardless of whether this test
     // body completes — see `let sigintCapture` at suite scope.
@@ -530,9 +534,9 @@ describe('runAgentic', () => {
     const child = fakeChild();
     mockSpawn.mockImplementation(() => {
       setImmediate(() => {
-        // No expect inside setImmediate — Jest silently swallows throws
-        // here. A missing handler triggers TypeError + timeout, which is
-        // visible.
+        // No expect inside setImmediate: a throw there surfaces as an
+        // unhandled error, not as this test failing. A missing handler
+        // hangs the await into a timeout, which does fail this test.
         localCapture.handlers[0]('SIGINT');
         setImmediate(() => child.emit('exit', 130, 'SIGINT'));
       });
@@ -546,8 +550,8 @@ describe('runAgentic', () => {
       handoffFilePath,
     });
 
-    // Verify the spy captured exactly the runner-registered listener —
-    // post-await so the assertion lives inside Jest's promise chain.
+    // Verify the spy captured exactly the runner-registered listener.
+    // Post-await so a failure is attributed to this test.
     expect(localCapture.handlers).toHaveLength(1);
     // userInterrupted=true short-circuits the ambiguous prompt.
     expect(mockPrompt).not.toHaveBeenCalled();
@@ -558,7 +562,7 @@ describe('runAgentic', () => {
     mockSpawn.mockImplementation(() => {
       throw new Error('ENOENT: no such file or directory');
     });
-    mockPrompt.mockResolvedValue({ choice: 'abort' });
+    mockPrompt.mockResolvedValue('abort');
 
     await runAgentic({
       detected: makeDetected(),
@@ -570,8 +574,9 @@ describe('runAgentic', () => {
     const lines = ambiguousCauseLines();
     expect(lines.join('\n')).toContain('Could not spawn the agent');
     expect(lines.join('\n')).toContain('ENOENT');
-    // The prompt itself stays single-line — multi-line `message` triggers
-    // enquirer's wrap-asymmetric redraw on narrow terminals.
+    // The prompt stays single-line. Multi-line `message` triggered enquirer's
+    // wrap-asymmetric redraw on narrow terminals; kept because that constraint
+    // is unverified under @clack/prompts, not because the cause still applies.
     expect(mockPrompt.mock.calls[0][0].message).toBe(
       'How should nx migrate proceed?'
     );
@@ -583,7 +588,7 @@ describe('runAgentic', () => {
       setImmediate(() => child.emit('exit', 1, null));
       return child;
     });
-    mockPrompt.mockResolvedValue({ choice: 'abort' });
+    mockPrompt.mockResolvedValue('abort');
 
     await runAgentic({
       detected: makeDetected(),
@@ -607,7 +612,7 @@ describe('runAgentic', () => {
       setImmediate(() => child.emit('exit', 0, null));
       return child;
     });
-    mockPrompt.mockResolvedValue({ choice: 'abort' });
+    mockPrompt.mockResolvedValue('abort');
 
     await runAgentic({
       detected: makeDetected(),
@@ -694,7 +699,7 @@ describe('runAgentic', () => {
       });
       return child;
     });
-    mockPrompt.mockResolvedValue({ choice: 'abort' });
+    mockPrompt.mockResolvedValue('abort');
 
     await runAgentic({
       detected: makeDetected(),

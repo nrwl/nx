@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import { getProjects, readProjectConfiguration, Tree } from '@nx/devkit';
@@ -35,6 +35,7 @@ describe('web app generator (legacy)', () => {
 
   it('should setup webpack configuration', async () => {
     await applicationGenerator(tree, {
+      linter: 'eslint',
       directory: 'my-app',
     });
     const project = readProjectConfiguration(tree, 'my-app');
@@ -142,6 +143,7 @@ describe('web app generator (legacy)', () => {
 
   it('should add targets for vite', async () => {
     await applicationGenerator(tree, {
+      linter: 'eslint',
       directory: 'my-vite-app',
       bundler: 'vite',
     });

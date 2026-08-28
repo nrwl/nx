@@ -1,8 +1,8 @@
 import { ProjectGraphProjectNode } from '../../../config/project-graph';
 import { DeletedFileChange } from '../../file-utils';
 import { getTouchedProjectsFromProjectGlobChanges } from './project-glob-changes';
-jest.mock('../../../project-graph/plugins/get-plugins', () => ({
-  ...jest.requireActual('../../../project-graph/plugins/get-plugins'),
+vi.mock('../../../project-graph/plugins/get-plugins', async () => ({
+  ...(await vi.importActual('../../../project-graph/plugins/get-plugins')),
   getPlugins: async () => {
     return [
       {
@@ -43,6 +43,34 @@ describe('getTouchedProjectsFromProjectGlobChanges', () => {
       }
     );
     expect(result).toEqual(['proj1', 'proj2', 'proj3']);
+  });
+
+  it('should allow the conservative project deletion fallback to be disabled', async () => {
+    const nodes = {
+      proj1: makeProjectGraphNode('proj1'),
+      proj2: makeProjectGraphNode('proj2'),
+      proj3: makeProjectGraphNode('proj3'),
+    };
+    const result = await getTouchedProjectsFromProjectGlobChanges(
+      [
+        {
+          file: 'libs/removed/project.json',
+          getChanges: () => [new DeletedFileChange()],
+        },
+      ],
+      nodes,
+      {
+        plugins: [],
+      },
+      {},
+      {
+        nodes,
+        dependencies: {},
+      },
+      false
+    );
+
+    expect(result).toEqual([]);
   });
 });
 

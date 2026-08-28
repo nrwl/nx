@@ -132,8 +132,27 @@ describe('application generator', () => {
     `);
   });
 
+  it('should set up the formatter it was given', async () => {
+    // The preset forwards `formatter`, and Nest reaches @nx/js:init only through
+    // the Node generator - so dropping it here left the workspace with no
+    // formatter config or dependency at all.
+    const unformatted = createTreeWithEmptyWorkspace({ formatter: 'none' });
+
+    await applicationGenerator(unformatted, {
+      directory: appDirectory,
+      addPlugin: true,
+      formatter: 'prettier',
+    });
+
+    expect(unformatted.exists('.prettierrc')).toBe(true);
+    expect(
+      readJson(unformatted, 'package.json').devDependencies['prettier']
+    ).toBeDefined();
+  });
+
   it('should generate files', async () => {
     await applicationGenerator(tree, {
+      linter: 'eslint',
       directory: appDirectory,
       addPlugin: true,
     });
@@ -160,6 +179,85 @@ describe('application generator', () => {
     expect(
       tree.exists(`${appDirectory}/src/app/app.service.spec.ts`)
     ).toBeTruthy();
+  });
+
+  it('should generate spec files and a vitest config when unitTestRunner is vitest', async () => {
+    await applicationGenerator(tree, {
+      directory: appDirectory,
+      unitTestRunner: 'vitest',
+      e2eTestRunner: 'none',
+      addPlugin: true,
+    });
+
+    expect(tree.exists(`${appDirectory}/vitest.config.mts`)).toBeTruthy();
+    expect(tree.exists(`${appDirectory}/jest.config.cts`)).toBeFalsy();
+    expect(
+      tree.exists(`${appDirectory}/src/app/app.controller.spec.ts`)
+    ).toBeTruthy();
+    expect(
+      tree.exists(`${appDirectory}/src/app/app.service.spec.ts`)
+    ).toBeTruthy();
+  });
+
+  describe('vitest requires vite 8', () => {
+    const setViteVersion = (version: string) =>
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies = { ...json.devDependencies, vite: version };
+        return json;
+      });
+
+    it.each(['^7.0.0', '7.3.6', '~6.2.0'])(
+      'should throw when vite is %s',
+      async (version) => {
+        setViteVersion(version);
+
+        await expect(
+          applicationGenerator(tree, {
+            directory: appDirectory,
+            unitTestRunner: 'vitest',
+            e2eTestRunner: 'none',
+            addPlugin: true,
+          })
+        ).rejects.toThrow(/requires Vite 8 or later/);
+      }
+    );
+
+    it('should not throw when vite is 8', async () => {
+      setViteVersion('^8.0.0');
+
+      await expect(
+        applicationGenerator(tree, {
+          directory: appDirectory,
+          unitTestRunner: 'vitest',
+          e2eTestRunner: 'none',
+          addPlugin: true,
+        })
+      ).resolves.toBeDefined();
+    });
+
+    it('should not throw when vite is not installed', async () => {
+      await expect(
+        applicationGenerator(tree, {
+          directory: appDirectory,
+          unitTestRunner: 'vitest',
+          e2eTestRunner: 'none',
+          addPlugin: true,
+        })
+      ).resolves.toBeDefined();
+    });
+
+    it('should not throw for jest on an older vite', async () => {
+      setViteVersion('^7.0.0');
+
+      await expect(
+        applicationGenerator(tree, {
+          directory: appDirectory,
+          unitTestRunner: 'jest',
+          e2eTestRunner: 'none',
+          addPlugin: true,
+        })
+      ).resolves.toBeDefined();
+    });
   });
 
   it('should configure tsconfig correctly', async () => {
@@ -291,6 +389,7 @@ describe('application generator', () => {
 
     it('should add project references when using TS solution', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         unitTestRunner: 'jest',
         addPlugin: true,
@@ -510,6 +609,7 @@ describe('application generator', () => {
 
     it('should generate project.json if useProjectJson is true', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         e2eTestRunner: 'jest',
         useProjectJson: true,

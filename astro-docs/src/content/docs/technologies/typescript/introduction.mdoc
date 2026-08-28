@@ -1,6 +1,6 @@
 ---
 title: Nx with TypeScript
-description: Nx scales your TypeScript monorepo with caching, distributed task execution, and affected-only builds.
+description: Nx scales your TypeScript or JavaScript monorepo with caching, distributed task execution, and affected-only builds.
 keywords: [typescript, javascript, js, ts]
 sidebar:
   label: Introduction
@@ -83,7 +83,7 @@ If your repository uses package manager workspaces, Nx uses those settings to fi
 
 ### Tasks inferred from your tooling configuration
 
-Nx [plugins](/docs/concepts/nx-plugins) for tools like TypeScript, Vite, Playwright, and Jest [infer task configuration](/docs/concepts/inferred-tasks) from your existing tooling config files, keeping those files as the single source of truth. Because a config file like `vite.config.ts` exists, Nx knows the project can run a `build` task with Vite, and it reads the config to set the correct [cache](/docs/features/cache-task-results) outputs. The TypeScript-specific inference is covered in [how the TypeScript plugin infers tasks](#how-the-typescript-plugin-infers-tasks).
+Nx [plugins](/docs/concepts/nx-plugins) for tools like TypeScript, Vite, Playwright, and Jest [infer task configuration](/docs/concepts/mental-model#inferred-tasks) from your existing tooling config files, keeping those files as the single source of truth. Because a config file like `vite.config.ts` exists, Nx knows the project can run a `build` task with Vite, and it reads the config to set the correct [cache](/docs/features/cache-task-results) outputs. The TypeScript-specific inference is covered in [how the TypeScript plugin infers tasks](#how-the-typescript-plugin-infers-tasks).
 
 ### TypeScript project references kept in sync
 
@@ -166,13 +166,13 @@ Verify the plugin is setup:
    nx report
    ```
 
-2. Ensure inferred project targets are working:
+2. Ensure inferred tasks are working:
 
    ```shell
    nx show projects --with-target=typecheck
    ```
 
-3. Inspect a specific project configuration for the `typecheck`/`build` target, depending on your project configuration:
+3. Inspect a specific project configuration for the `typecheck`/`build` task, depending on your project configuration:
 
    ```shell
    nx show project <ts-project-name>
@@ -360,30 +360,40 @@ Configure `@nx/js/typescript` in the `plugins` array in `nx.json`:
     {
       "plugin": "@nx/js/typescript",
       "options": {
+        "compiler": "tsc",
         "typecheck": {
-          "targetName": "typecheck"
+          "targetName": "typecheck",
+          "configName": "tsconfig.json"
         },
         "build": {
           "targetName": "build",
           "configName": "tsconfig.lib.json",
           "buildDepsName": "build-deps",
-          "watchDepsName": "watch-deps"
-        }
+          "watchDepsName": "watch-deps",
+          "skipBuildCheck": false
+        },
+        "verboseOutput": false
       }
     }
   ]
 }
 ```
 
-| Option                 | Description                                               | Default             |
-| ---------------------- | --------------------------------------------------------- | ------------------- |
-| `typecheck.targetName` | Name of the typecheck task                                | `typecheck`         |
-| `build.targetName`     | Name of the build task                                    | `build`             |
-| `build.configName`     | The tsconfig file used for builds                         | `tsconfig.lib.json` |
-| `build.buildDepsName`  | Name of the task for building all dependencies            | `build-deps`        |
-| `build.watchDepsName`  | Name of the task for watching and rebuilding dependencies | `watch-deps`        |
+| Option                 | Description                                                                   | Default             |
+| ---------------------- | ----------------------------------------------------------------------------- | ------------------- |
+| `compiler`             | Compiler used by the typecheck and build tasks: `tsc` or `tsgo`.              | `tsc`               |
+| `typecheck`            | Enables typecheck inference; set to `false` to disable it.                    | enabled             |
+| `typecheck.targetName` | Name of the cached typecheck task.                                            | `typecheck`         |
+| `typecheck.configName` | The tsconfig file used for typechecking.                                      | `tsconfig.json`     |
+| `build`                | Enables build inference; set to `false` or omit it to disable build tasks.    | disabled            |
+| `build.targetName`     | Name of the cached build task.                                                | `build`             |
+| `build.configName`     | The tsconfig file used for builds.                                            | `tsconfig.lib.json` |
+| `build.buildDepsName`  | Name of the task for building all dependencies.                               | `build-deps`        |
+| `build.watchDepsName`  | Name of the task for watching and rebuilding dependencies.                    | `watch-deps`        |
+| `build.skipBuildCheck` | Allows build inference without package exports that point to compiled output. | `false`             |
+| `verboseOutput`        | Adds TypeScript's `--verbose` flag to the underlying commands.                | `false`             |
 
-Set `typecheck` or `build` to `false` to disable that task entirely.
+The `typecheck` and `build` tasks are cached, with inputs and outputs based on your TypeScript configuration, and depend on the corresponding tasks in dependency projects.
 
 ### Exclude or include specific projects
 
@@ -429,6 +439,8 @@ nx show project <my-project>
 ```
 
 Or open the [project details view in Nx Console](/docs/kb/console-project-details#_top).
+
+A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter for these tasks must use the exact identifier `@nx/js/typescript`.
 
 ## Set up CI for your TypeScript monorepo
 

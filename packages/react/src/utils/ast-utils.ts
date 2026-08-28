@@ -378,12 +378,12 @@ export function addInitialRoutes(
     <br/>
     <hr/>
     <br/>
-    <div role="navigation">
+    <nav>
       <ul>
         <li><Link to="/">Home</Link></li>
         <li><Link to="/page-2">Page 2</Link></li>
       </ul>
-    </div>
+    </nav>
     <Routes>
       <Route
         path="/"

@@ -326,7 +326,7 @@ Be sure to [view the existing inputs](#viewing-the-inputs-of-a-task) and start f
 
 Inputs of a task are configured in the `inputs` array on the target. This can be done in several different places:
 
-- Nx Plugins often [infer inputs for tasks](/docs/concepts/inferred-tasks) which run other tools.
+- Nx Plugins often [infer inputs for tasks](/docs/concepts/mental-model#inferred-tasks) which run other tools.
   - In doing so, they will also define some reasonable defaults for the `inputs` of those tasks.
 - The `inputs` array in the `targetDefaults` for a set of targets in `nx.json`.
 - The `inputs` array for a specific target in the project configuration file.

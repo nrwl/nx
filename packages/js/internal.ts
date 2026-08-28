@@ -4,22 +4,19 @@
 // internal consumers and may change without semver protection. Consider it
 // the @nx/js equivalent of `@nx/devkit/internal`.
 
-// Re-exports of nx-source internals (need `no-restricted-imports` overrides).
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+// Re-exports of nx-source internals.
 export {
   forceRegisterEsmLoader,
   loadTsFile,
   registerTsProject,
   registerTsConfigPaths,
   requireWithTsconfigFallback,
-} from 'nx/src/plugins/js/utils/register';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+} from '@nx/devkit/internal';
 export {
   TargetProjectLocator,
   isBuiltinModuleImport,
-} from 'nx/src/plugins/js/project-graph/build-dependencies/target-project-locator';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-export { findProjectsNpmDependencies } from 'nx/src/plugins/js/package-json/create-package-json';
+} from '@nx/devkit/internal';
+export { findProjectsNpmDependencies } from '@nx/devkit/internal';
 
 // Raw tsconfig walkers (the other AST utils ship via the public @nx/js entry)
 export {
@@ -30,6 +27,16 @@ export {
 // Module-format detection for generators (project package.json `type` field +
 // TS solution awareness; mirrors Node's nearest-package.json semantics).
 export { isEsmProject } from './src/utils/module-format/is-esm-project';
+
+// Inputs for build targets that emit a pruned pnpm deploy output
+export {
+  PNPM_INSTALL_SETTINGS_INPUTS,
+  PNPM_MAJOR_RUNTIME_INPUT,
+  pnpmInstallSettingsInputsForInferredTarget,
+  shouldIncludePnpmMajorRuntimeInput,
+} from './src/utils/pnpm-install-settings-inputs';
+export { addPnpmDeployOutputCacheInputs } from './src/utils/pnpm-deploy-output-cache-inputs';
+export type { MatchedTargetRef } from './src/utils/target-defaults-matching';
 
 // TS solution setup detection
 export {
@@ -50,6 +57,10 @@ export {
 // the public @nx/js entry. getTsConfigBaseOptions is public too, but is
 // re-exported here so internal consumers can import it from @nx/js/internal.
 export { getTsConfigBaseOptions } from './src/utils/typescript/create-ts-config';
+export {
+  createTreeParseConfigHost,
+  type TreeParseConfigHost,
+} from './src/utils/typescript/ts-config';
 export { ensureTypescript } from './src/utils/typescript/ensure-typescript';
 export {
   getRangeMinimum,
@@ -102,6 +113,11 @@ export {
   normalizeLinterOption,
   normalizeUnitTestRunnerOption,
 } from './src/utils/generator-prompts';
+export { detectLinters } from './src/utils/linter';
+export {
+  addLintingToProject,
+  type AddLintingToProjectOptions,
+} from './src/utils/add-linting-to-project';
 export { createGlobPatternsForDependencies } from './src/utils/generate-globs';
 export { getImportPath } from './src/utils/get-import-path';
 export { stripGlobToBaseDir } from './src/utils/strip-glob-to-base-dir';

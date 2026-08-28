@@ -1,13 +1,14 @@
+import type { Mock } from 'vitest';
 import { readMinReleaseAgePolicy } from './policy';
 
-jest.mock('../package-manager', () => ({
-  detectPackageManager: jest.fn(),
-  getPackageManagerVersion: jest.fn(),
+vi.mock('../package-manager', () => ({
+  detectPackageManager: vi.fn(),
+  getPackageManagerVersion: vi.fn(),
 }));
-jest.mock('./behavior/npm', () => ({ readNpmPolicy: jest.fn() }));
-jest.mock('./behavior/pnpm', () => ({ readPnpmPolicy: jest.fn() }));
-jest.mock('./behavior/yarn', () => ({ readYarnPolicy: jest.fn() }));
-jest.mock('./behavior/bun', () => ({ readBunPolicy: jest.fn() }));
+vi.mock('./behavior/npm', () => ({ readNpmPolicy: vi.fn() }));
+vi.mock('./behavior/pnpm', () => ({ readPnpmPolicy: vi.fn() }));
+vi.mock('./behavior/yarn', () => ({ readYarnPolicy: vi.fn() }));
+vi.mock('./behavior/bun', () => ({ readBunPolicy: vi.fn() }));
 
 import {
   detectPackageManager,
@@ -18,18 +19,18 @@ import { readNpmPolicy } from './behavior/npm';
 import { readPnpmPolicy } from './behavior/pnpm';
 import { readYarnPolicy } from './behavior/yarn';
 
-const detectMock = detectPackageManager as jest.Mock;
-const versionMock = getPackageManagerVersion as jest.Mock;
+const detectMock = detectPackageManager as Mock;
+const versionMock = getPackageManagerVersion as Mock;
 const readers = {
-  npm: readNpmPolicy as jest.Mock,
-  pnpm: readPnpmPolicy as jest.Mock,
-  yarn: readYarnPolicy as jest.Mock,
-  bun: readBunPolicy as jest.Mock,
+  npm: readNpmPolicy as Mock,
+  pnpm: readPnpmPolicy as Mock,
+  yarn: readYarnPolicy as Mock,
+  bun: readBunPolicy as Mock,
 };
 
 describe('readMinReleaseAgePolicy (dispatch)', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     for (const reader of Object.values(readers)) {
       reader.mockResolvedValue({ outcome: 'inactive' });
     }

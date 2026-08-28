@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   getProjects,
@@ -195,6 +195,9 @@ describe('lib', () => {
       expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
       expect(packageJson.devDependencies['postcss']).toBeDefined();
       expect(packageJson.devDependencies['autoprefixer']).toBeDefined();
+
+      const libPackageJson = readJson(tree, 'my-lib/package.json');
+      expect(libPackageJson.private).toBeUndefined();
     });
 
     it('should update package.json when buildable', async () => {
@@ -209,6 +212,7 @@ describe('lib', () => {
 
       const libPackageJson = readJson(tree, 'my-lib/package.json');
       expect(libPackageJson.dependencies?.['tslib']).toBeFalsy();
+      expect(libPackageJson.private).toBe(true);
     });
 
     it('should create project configuration', async () => {
@@ -823,14 +827,8 @@ describe('lib', () => {
             imports: [
               BrowserModule,
               RouterModule.forRoot([
-                {
-                  path: 'my-lib',
-                  loadChildren: () => import('@proj/my-lib').then((m) => m.MyLibModule),
-                },
-                {
-                  path: 'my-lib2',
-                  loadChildren: () => import('@proj/my-lib2').then((m) => m.MyLib2Module),
-                },
+                { path: 'my-lib', loadChildren: () => import('@proj/my-lib').then((m) => m.MyLibModule) },
+                { path: 'my-lib2', loadChildren: () => import('@proj/my-lib2').then((m) => m.MyLib2Module) },
               ]),
             ],
             declarations: [App],
@@ -1157,6 +1155,79 @@ describe('lib', () => {
   });
 
   describe('--linter', () => {
+    // `linter` has neither a schema default nor an in-code default, so leaving
+    // it unset follows the workspace instead of hardcoding ESLint.
+    describe('workspace detection', () => {
+      const installOxlint = () =>
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies = {
+            ...json.devDependencies,
+            oxlint: '^1.70.0',
+          };
+          return json;
+        });
+
+      // The key must be ABSENT, not `undefined`. `normalizeOptions` spreads the
+      // caller's schema over its defaults, so a present-but-undefined `linter`
+      // overrides them and silently skips the code path the CLI actually takes.
+      const runWithoutLinter = () =>
+        generateTestLibrary(tree, {
+          directory: 'my-lib',
+          publishable: false,
+          buildable: false,
+          skipFormat: true,
+          unitTestRunner: UnitTestRunner.Jest,
+          strict: true,
+          standalone: false,
+        } as Schema);
+
+      it('should set up oxlint when the workspace already uses it', async () => {
+        installOxlint();
+
+        await runWithoutLinter();
+
+        expect(tree.exists('my-lib/.oxlintrc.json')).toBe(true);
+        expect(
+          readJson(tree, 'package.json').devDependencies['@nx/eslint']
+        ).toBeUndefined();
+      });
+
+      it('should set up eslint when the workspace already uses it', async () => {
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies = { ...json.devDependencies, eslint: '^9.0.0' };
+          return json;
+        });
+
+        await runWithoutLinter();
+
+        expect(tree.exists('my-lib/.oxlintrc.json')).toBe(false);
+        expect(
+          readJson(tree, 'package.json').devDependencies['@nx/eslint']
+        ).toBeDefined();
+      });
+
+      // `detectLinters` comes back empty for a workspace with no linter, so an
+      // opt-out is preserved rather than having ESLint inferred for it.
+      it('should set up no linter when the workspace has none', async () => {
+        await runWithoutLinter();
+
+        expect(tree.exists('my-lib/.oxlintrc.json')).toBe(false);
+        const { devDependencies = {} } = readJson(tree, 'package.json');
+        expect(devDependencies['@nx/eslint']).toBeUndefined();
+      });
+
+      it('should let an explicit linter win over detection', async () => {
+        installOxlint();
+
+        await runLibraryGeneratorWithOpts({ linter: 'eslint' });
+
+        expect(tree.exists('my-lib/.oxlintrc.json')).toBe(false);
+        expect(
+          readJson(tree, 'package.json').devDependencies['@nx/eslint']
+        ).toBeDefined();
+      });
+    });
+
     describe('eslint', () => {
       it('should add valid eslint JSON configuration which extends from Nx presets (flat config)', async () => {
         tree.write('eslint.config.cjs', '');

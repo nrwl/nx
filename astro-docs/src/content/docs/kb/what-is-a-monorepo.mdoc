@@ -8,7 +8,7 @@ topics:
 ---
 
 A **monorepo** is a single repository containing multiple distinct projects, with well-defined relationships between them.
-The projects can be applications, libraries, or tools, and they can use the same stack or different ones.
+The projects can be applications, libraries, or tools, and they can use the same stack or different ones - most commonly JavaScript and TypeScript, but any language works.
 A monorepo is not a monolith: each project inside it stays separate and can be built, tested, and deployed on its own.
 
 The "well-defined relationships" part matters.
@@ -59,6 +59,23 @@ Large companies that use monorepos don't just put all the code in one place, and
 Package manager workspaces ([npm](/docs/kb/npm-workspaces), [pnpm](/docs/kb/pnpm-workspaces), [Yarn](/docs/kb/yarn-workspaces), and [Bun](/docs/kb/bun-workspaces)) solve a different problem: they install and link local packages so projects can import each other.
 They don't build a task graph, cache results, or detect which projects a change affects.
 Lerna adds versioning and publishing on top, and modern Lerna delegates task running to Nx.
+
+## What tools do you need for a monorepo?
+
+Monorepo tools fall into a few categories, and most workspaces combine them:
+
+- **Package manager workspaces** install and link local packages so projects can import each other, as covered above.
+
+- **Build systems** add the layer workspaces lack: task orchestration, caching, and affected detection. This is the category Nx is in, alongside tools like Turborepo, Bazel, and Rush.
+
+- **Versioning and publishing tools** coordinate releases of multiple packages. Nx covers this with [nx release](/docs/features/manage-releases), and standalone tools include Changesets.
+
+- **CI capabilities** keep pipelines fast as the repository grows: remote caching, distributed task execution, and flaky-task handling, provided by Nx Cloud.
+
+For a side-by-side view of the landscape, see [monorepo.tools](https://monorepo.tools).
+For how Nx compares to specific tools, see
+[Nx vs Turborepo](/docs/kb/nx-vs-turborepo), [Nx vs Lerna](/docs/kb/nx-vs-lerna),
+[Nx vs Rush Stack](/docs/kb/nx-vs-rush-stack), and [Nx vs Bazel](/docs/kb/nx-vs-bazel).
 
 ## Why do AI coding agents work better in monorepos?
 

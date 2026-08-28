@@ -1,6 +1,11 @@
-import { formatFiles, GeneratorCallback, readNxJson, Tree } from '@nx/devkit';
+import {
+  formatFiles,
+  GeneratorCallback,
+  readNxJson,
+  Tree,
+  runTasksInSerial,
+} from '@nx/devkit';
 
-import { runTasksInSerial } from '@nx/devkit';
 import applicationGenerator from '../application/application.impl';
 import setupGenerator from '../setup/setup.impl';
 import { normalizeOptions } from './lib/normalize-options';

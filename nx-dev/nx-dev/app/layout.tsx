@@ -1,3 +1,4 @@
+import { POSTHOG_SNIPPET } from '@nx/nx-dev-feature-analytics';
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import '../styles/main.css';
@@ -72,6 +73,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           name="msapplication-TileColor"
           content="#DA532C"
           key="windows-tile-color"
+        />
+        <script
+          data-cookieconsent="ignore"
+          dangerouslySetInnerHTML={{ __html: POSTHOG_SNIPPET }}
         />
         <script
           type="text/javascript"

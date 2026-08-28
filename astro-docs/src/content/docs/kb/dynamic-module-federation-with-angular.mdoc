@@ -8,6 +8,10 @@ topics:
   - 'Angular'
 ---
 
+{% aside type="caution" title="Deprecated: Angular Module Federation" %}
+The `@nx/angular` `host` and `remote` generators and Module Federation executors used on this page are deprecated in Nx v23 and will be removed in v24. Existing workspaces keep working in the meantime. For the supported Angular micro frontend path, see [Micro Frontends with Angular](/docs/kb/angular-micro-frontends).
+{% /aside %}
+
 Dynamic Module Federation is a technique that allows an application to determine the location of its remote applications at runtime. It helps to achieve the use case of **"Build once, deploy everywhere"**.
 
 "Build once, deploy everywhere" is the concept of being able to create a single build artifact of your application and deploy it to multiple environments such as staging and production.

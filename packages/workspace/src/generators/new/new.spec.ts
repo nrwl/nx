@@ -95,6 +95,56 @@ describe('new', () => {
       expect(readJson(tree, 'my-workspace/package.json')).toMatchSnapshot();
     });
 
+    it('should not add typescript for presets that scaffold nothing', async () => {
+      for (const preset of [Preset.Apps, Preset.NPM]) {
+        tree = createTree();
+        tree.root = process.cwd();
+
+        await newGenerator(tree, {
+          ...defaultOptions,
+          name: 'my-workspace',
+          directory: 'my-workspace',
+          appName: 'app',
+          preset,
+        });
+
+        const { devDependencies } = readJson(tree, 'my-workspace/package.json');
+        expect(devDependencies).not.toHaveProperty('typescript');
+      }
+    });
+
+    it('should generate necessary npm dependencies for ts preset', async () => {
+      await newGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-workspace',
+        directory: 'my-workspace',
+        appName: 'app',
+        preset: Preset.TS,
+      });
+
+      const { devDependencies } = readJson(tree, 'my-workspace/package.json');
+      expect(devDependencies).toStrictEqual({
+        '@nx/js': nxVersion,
+        '@nx/workspace': nxVersion,
+        nx: nxVersion,
+        typescript: typescriptVersion,
+      });
+    });
+
+    it('should not add typescript for ts-standalone preset when using js', async () => {
+      await newGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-workspace',
+        directory: 'my-workspace',
+        appName: 'app',
+        preset: Preset.TsStandalone,
+        js: true,
+      });
+
+      const { devDependencies } = readJson(tree, 'my-workspace/package.json');
+      expect(devDependencies).not.toHaveProperty('typescript');
+    });
+
     it('should generate necessary npm dependencies for react preset', async () => {
       await newGenerator(tree, {
         ...defaultOptions,
@@ -111,6 +161,7 @@ describe('new', () => {
         '@nx/vite': nxVersion,
         '@nx/workspace': nxVersion,
         nx: nxVersion,
+        typescript: typescriptVersion,
       });
     });
 
@@ -131,6 +182,7 @@ describe('new', () => {
         '@nx/vite': nxVersion,
         '@nx/workspace': nxVersion,
         nx: nxVersion,
+        typescript: typescriptVersion,
       });
     });
 
@@ -150,6 +202,7 @@ describe('new', () => {
         '@nx/cypress': nxVersion,
         '@nx/workspace': nxVersion,
         nx: nxVersion,
+        typescript: typescriptVersion,
       });
     });
 

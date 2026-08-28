@@ -1,7 +1,7 @@
 import { CreateNodesContext } from '@nx/devkit';
 import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { globWithWorkspaceContext } from '@nx/devkit/internal';
 import { createNodesV2 } from './plugin';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 

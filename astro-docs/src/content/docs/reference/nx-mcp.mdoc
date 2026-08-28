@@ -17,7 +17,8 @@ To configure your Nx workspace for AI agents (MCP, skills, and more), run `npx n
 The Nx MCP server works best alongside [agent skills](/docs/features/enhance-ai). Skills handle domain knowledge — workspace exploration, code generation, task execution — while the MCP server provides connectivity to Nx Cloud and task monitoring. For background on this approach, see our blog post on [why we deleted most of our MCP tools](/blog/why-we-deleted-most-of-our-mcp-tools).
 {% /aside %}
 
-For an overview of how Nx enhances AI assistants and powerful use cases, see the [Enhance Your LLM](/docs/features/enhance-ai) guide.
+For an overview of how Nx gives coding agents workspace context, see
+[enhance your AI coding agent](/docs/features/enhance-ai).
 
 ## Installation
 
@@ -68,7 +69,7 @@ If you're using Cursor or VS Code, install the [Nx Console extension](/docs/gett
 
 > If your preferred client is not listed, configure your client to run `npx nx mcp` (Nx >= 21.4) or `npx nx-mcp@latest` (older versions) to start the Nx MCP server.
 
-### Claude code
+### Claude Code
 
 {% aside type="tip" title="Using Claude Code sandboxes?" %}
 With Claude Code sandboxes, you need to allow Unix socket access. See [Nx Fails in Claude Code Sandbox](/docs/kb/nx-sandbox-unix-sockets) for more information.

@@ -1,31 +1,54 @@
 ---
-title: Building Blocks of Fast CI
-description: Learn how Nx features combine to create optimized CI pipelines through fast tools, reduced waste, and efficient task distribution
+title: Building blocks of fast CI
+description: Learn how affected tasks, caching, parallelism, and distribution work together to reduce CI time.
 filter: 'type:Concepts'
 ---
 
-Nx has many features that make your CI faster. Each of these features speeds up your CI in a different way, so that enabling an individual feature will have an immediate impact. These features are also designed to complement each other so that you can use them together to create a fully optimized CI pipeline.
+Fast CI starts with three layers: fast individual tasks, less unnecessary work, and enough compute to
+run independent tasks concurrently.
+Nx plugins, the project graph, task orchestration, and Nx Cloud address those layers together.
 
-## Use fast build tools
+## Use fast tools
 
-The purpose of a CI pipeline is to run tasks like `build`, `test`, `lint` and `e2e`. You use different tools to run these tasks (like Webpack or Vite for you `build` task). If the individual tasks in your CI pipeline are slow, then your overall CI pipeline will be slow. Nx has two ways to help with this.
+A CI pipeline runs tasks such as `build`, `test`, `lint`, and `e2e`.
+The tools behind those tasks set the minimum execution time for a cache miss.
+Use current tools and configuration before adding more CI machines.
 
-Nx provides plugins for popular tools that make it easy to update to the latest version of that tool and [automatically updates](/docs/features/automate-updating-dependencies) your configuration files to take advantage of enhancements in the tool. The tool authors are always looking for ways to improve their product and the best way to get the most out of the tool you're using is to make sure you're on the latest version. Also, the recommended configuration settings for a tool will change over time so even if you're on the latest version of a tool, you may be using a slower version of it because you don't know about a new configuration setting. [`nx migrate`](/docs/features/automate-updating-dependencies) will automatically change the default settings of in your tooling config to use the latest recommended settings so that your repo won't be left behind.
+Nx can run tasks for any technology.
+Plugins provide deeper integrations for build tools such as
+[Vite](/docs/technologies/build-tools/vite/introduction) and
+[Rspack](/docs/technologies/build-tools/rspack/introduction), along with frameworks and test tools.
+Plugin migrations can update tool configuration when recommended settings change.
+The common plugin interface also makes it practical to compare tools without replacing Nx task
+orchestration.
 
-Because Nx plugins have a consistent interface for how they are invoked and how they interact with the codebase, it is easier to try out a different tool to see if it is better than what you're currently using. Newer tools that were created with different technologies or different design decisions can be orders of magnitude faster than your existing tools. Or the new tool might not help your project. Browse through the [list of Nx plugins](/docs/plugin-registry), like [vite](/docs/technologies/build-tools/vite/introduction) or [rspack](/docs/technologies/build-tools/rspack/introduction), and try it out on your project with the default settings already configured for you.
+Browse the [plugin registry](/docs/plugin-registry) for prebuilt integrations.
 
-## Reduce wasted time
+## Reduce unnecessary work
 
-In a monorepo, most PRs do not affect the entire codebase, so there's no need to run every test in CI for that PR. Nx provides the [`nx affected`](/docs/features/ci-features/affected) command to make sure that only the tests that need to be executed are run for a particular PR.
+Most pull requests in a monorepo don't affect every project.
+Use [`nx affected`](/docs/features/ci-features/affected) to run tasks only for projects affected by a
+change and projects that depend on them.
 
-Even if a particular project was affected by a PR, this could be the third time this same PR was run through CI and the build for this project was already run for this same exact set of files twice before. If you enable [remote caching](/docs/features/ci-features/remote-cache), you can make sure that you never run the same command on the same code twice.
+Some affected tasks may have already run with the same inputs.
+[Remote caching](/docs/features/ci-features/remote-cache) lets developer machines and CI jobs share
+those results, so Nx can restore terminal output and artifacts instead of repeating the task.
 
-For a more detailed analysis of how these features reduce wasted time in different scenarios, read the [Reduce Wasted Time in CI guide](/docs/kb/reduce-waste)
+Affected calculations reduce the task graph before execution.
+Caching removes repeated work from the remaining graph.
+For a scenario-by-scenario explanation, see [reduce waste in CI](/docs/kb/reduce-waste).
 
-## Parallelize and distribute tasks efficiently
+## Parallelize and distribute tasks
 
-Every time you use Nx to run a task, Nx will attempt to run the task and all its dependent tasks in parallel in the most efficient way possible. Because Nx knows about [task pipelines](/docs/concepts/task-pipeline-configuration), it can run all the prerequisite tasks first. Nx will automatically run tasks in parallel processes up to the limit defined in the `parallel` property in `nx.json`.
+Nx runs independent tasks in parallel while respecting
+[task pipeline](/docs/concepts/task-pipeline-configuration) dependencies.
+Set a workspace-wide concurrency limit with `parallel` in `nx.json`, or use a command-line option such
+as `nx affected -t test --parallel=4` for one run.
 
-There's a limit to how many tasks can be run in parallel on the same machine, but the logic that Nx uses to assign tasks to parallel processes can also be used by Nx Cloud to efficiently [distribute tasks across multiple agent machines](/docs/features/ci-features/distribute-task-execution). Once those tasks are run, the [remote cache](/docs/features/ci-features/remote-cache) is used to replay those task results on the main machine. After the pipeline is finished, it looks like all the tasks were run on a single machine - but much faster than a single machine could do it.
+A single machine eventually becomes the bottleneck.
+[Nx Agents](/docs/features/ci-features/distribute-task-execution) distribute the task graph across
+multiple machines and dynamically assign ready tasks to available agents.
+Remote caching transfers task artifacts between machines, including back to the main job.
 
-For a detailed analysis of different strategies for running tasks concurrently, read the [Parallelization and Distribution guide](/docs/concepts/ci-concepts/parallelization-distribution)
+For the tradeoffs between parallelization and distribution in CI, see
+[parallelization and distribution](/docs/concepts/ci-concepts/parallelization-distribution).

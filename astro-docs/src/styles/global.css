@@ -544,3 +544,13 @@ table code {
     opacity: 1;
   }
 }
+
+/* Terminal blocks that show a `$ ` prompt (see ec.config.mjs): the command
+   keeps its syntax highlighting, the prompt and sample output stay muted. */
+.expressive-code .ec-line .shell-prompt {
+  color: var(--sl-color-gray-3);
+  user-select: none;
+}
+.expressive-code .ec-line.is-output .code span {
+  color: var(--sl-color-gray-3);
+}

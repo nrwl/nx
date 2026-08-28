@@ -65,6 +65,14 @@ export function createGradleProject(
     // gradle init's template doesn't include it, so events for those
     // files leak through the daemon's watcher and cause recompute storms.
     appendToGitignore(cwd, '.kotlin/');
+    // Compile Kotlin inside each Gradle daemon instead of the per-user Kotlin
+    // compile daemon, which is shared by every e2e workspace on the agent
+    // and stalls all of them when its heap fills. The Gradle daemon then
+    // hosts the compiler, so raise it above Gradle's 512m default.
+    appendFileSync(
+      join(cwd, 'gradle.properties'),
+      '\nkotlin.compiler.execution.strategy=in-process\norg.gradle.jvmargs=-Xmx2g\n'
+    );
   }
 
   try {

@@ -1,5 +1,4 @@
-import { getDependencyVersionFromPackageJson } from '@nx/devkit';
-import type { Tree } from 'nx/src/generators/tree';
+import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
 import { clean, coerce, major } from 'semver';
 
 /**
