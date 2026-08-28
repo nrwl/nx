@@ -9,8 +9,8 @@ use nom::{Finish, IResult};
 use std::borrow::Cow;
 
 #[derive(Clone, Copy)]
-enum BareExtglobPrefixMode {
-    Consume,
+enum UngroupedSpecialCharBehavior {
+    Discard,
     Preserve,
 }
 
@@ -32,11 +32,11 @@ fn special_char_with_no_group(input: &str) -> IResult<&str, &str, VerboseError<&
     })(input)
 }
 
-fn bare_extglob_prefix(input: &str) -> IResult<&str, GlobGroup<'_>, VerboseError<&str>> {
+fn ungrouped_special_char(input: &str) -> IResult<&str, GlobGroup<'_>, VerboseError<&str>> {
     context(
-        "bare_extglob_prefix",
-        map(alt((tag("?"), tag("+"), tag("@"))), |prefix: &str| {
-            GlobGroup::BareExtglobPrefix(prefix.chars().next().unwrap())
+        "ungrouped_special_char",
+        map(alt((tag("?"), tag("+"), tag("@"))), |character: &str| {
+            GlobGroup::UngroupedSpecialChar(character.chars().next().unwrap())
         }),
     )(input)
 }
@@ -152,14 +152,14 @@ fn separated_group_items(input: &str) -> IResult<&str, Cow<'_, str>, VerboseErro
 
 fn parse_segment(
     input: &str,
-    bare_prefix_mode: BareExtglobPrefixMode,
+    ungrouped_special_char_behavior: UngroupedSpecialCharBehavior,
 ) -> IResult<&str, Vec<GlobGroup<'_>>, VerboseError<&str>> {
     context(
         "parse_segment",
         many_till(
             context("glob_group", |input| {
-                let group_input = match bare_prefix_mode {
-                    BareExtglobPrefixMode::Consume => {
+                let group_input = match ungrouped_special_char_behavior {
+                    UngroupedSpecialCharBehavior::Discard => {
                         // Preserve the existing invalid-group recovery used by
                         // convert_glob and its callers.
                         match special_char_with_no_group(input) {
@@ -167,7 +167,7 @@ fn parse_segment(
                             Err(_) => input,
                         }
                     }
-                    BareExtglobPrefixMode::Preserve => input,
+                    UngroupedSpecialCharBehavior::Preserve => input,
                 };
                 alt((
                     simple_group,
@@ -179,7 +179,7 @@ fn parse_segment(
                     negated_wildcard,
                     negated_group,
                     brace_group_with_empty_item,
-                    bare_extglob_prefix,
+                    ungrouped_special_char,
                     non_special_character,
                 ))(group_input)
             }),
@@ -191,12 +191,12 @@ fn parse_segment(
 
 fn separated_segments(
     input: &str,
-    bare_prefix_mode: BareExtglobPrefixMode,
+    ungrouped_special_char_behavior: UngroupedSpecialCharBehavior,
 ) -> IResult<&str, Vec<Vec<GlobGroup<'_>>>, VerboseError<&str>> {
     separated_list0(
         tag("/"),
         map_parser(take_till(|c| c == '/'), move |segment| {
-            parse_segment(segment, bare_prefix_mode)
+            parse_segment(segment, ungrouped_special_char_behavior)
         }),
     )(input)
 }
@@ -214,12 +214,12 @@ fn negated_glob(input: &str) -> (&str, bool) {
     }
 }
 
-fn parse_glob_with_mode(
+fn parse_glob_with_behavior(
     input: &str,
-    bare_prefix_mode: BareExtglobPrefixMode,
+    ungrouped_special_char_behavior: UngroupedSpecialCharBehavior,
 ) -> anyhow::Result<(bool, Vec<Vec<GlobGroup<'_>>>)> {
     let (input, negated) = negated_glob(input);
-    let result = separated_segments(input, bare_prefix_mode).finish();
+    let result = separated_segments(input, ungrouped_special_char_behavior).finish();
     if let Ok((_, result)) = result {
         Ok((negated, result))
     } else {
@@ -231,15 +231,15 @@ fn parse_glob_with_mode(
 }
 
 pub fn parse_glob(input: &str) -> anyhow::Result<(bool, Vec<Vec<GlobGroup<'_>>>)> {
-    parse_glob_with_mode(input, BareExtglobPrefixMode::Consume)
+    parse_glob_with_behavior(input, UngroupedSpecialCharBehavior::Discard)
 }
 
-/// Retains bare extglob prefixes for callers that need the original path text
+/// Retains ungrouped special characters for callers that need the original path text
 /// while leaving `parse_glob`'s invalid-group compatibility behavior unchanged.
-pub fn parse_glob_preserving_bare_extglob_prefixes(
+pub fn parse_glob_preserving_ungrouped_special_chars(
     input: &str,
 ) -> anyhow::Result<(bool, Vec<Vec<GlobGroup<'_>>>)> {
-    parse_glob_with_mode(input, BareExtglobPrefixMode::Preserve)
+    parse_glob_with_behavior(input, UngroupedSpecialCharBehavior::Preserve)
 }
 
 #[cfg(test)]
@@ -405,20 +405,20 @@ mod test {
     }
 
     #[test]
-    fn should_preserve_bare_extglob_prefixes_when_requested() {
-        let result = super::parse_glob_preserving_bare_extglob_prefixes("@scope/a+b").unwrap();
+    fn should_preserve_ungrouped_special_chars_when_requested() {
+        let result = super::parse_glob_preserving_ungrouped_special_chars("@scope/a+b").unwrap();
         assert_eq!(
             result,
             (
                 false,
                 vec![
                     vec![
-                        GlobGroup::BareExtglobPrefix('@'),
+                        GlobGroup::UngroupedSpecialChar('@'),
                         GlobGroup::NonSpecial("scope".into())
                     ],
                     vec![
                         GlobGroup::NonSpecial("a".into()),
-                        GlobGroup::BareExtglobPrefix('+'),
+                        GlobGroup::UngroupedSpecialChar('+'),
                         GlobGroup::NonSpecial("b".into())
                     ]
                 ]

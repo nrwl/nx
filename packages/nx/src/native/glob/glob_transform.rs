@@ -1,6 +1,6 @@
 use super::contains_glob_pattern;
 use crate::native::glob::glob_group::GlobGroup;
-use crate::native::glob::glob_parser::{parse_glob, parse_glob_preserving_bare_extglob_prefixes};
+use crate::native::glob::glob_parser::{parse_glob, parse_glob_preserving_ungrouped_special_chars};
 use itertools::Either::{Left, Right};
 use itertools::Itertools;
 use std::collections::HashSet;
@@ -111,9 +111,9 @@ fn build_segment(
             | GlobGroup::NonSpecialGroup(_) => {
                 build_segment(&built_glob, &group[1..], is_last_segment, is_negative)
             }
-            // Preserving mode is only used for output-root partitioning.
+            // Preserving behavior is only used for output-root partitioning.
             // Pattern conversion keeps the existing invalid-group recovery.
-            GlobGroup::BareExtglobPrefix(_) => {
+            GlobGroup::UngroupedSpecialChar(_) => {
                 build_segment(existing, &group[1..], is_last_segment, is_negative)
             }
         }
@@ -131,7 +131,7 @@ fn static_segment(group: &[GlobGroup]) -> Option<String> {
             GlobGroup::NonSpecial(value) if !contains_glob_pattern(value) => {
                 segment.push_str(value)
             }
-            GlobGroup::BareExtglobPrefix(prefix @ ('@' | '+')) => segment.push(*prefix),
+            GlobGroup::UngroupedSpecialChar(character @ ('@' | '+')) => segment.push(*character),
             _ => return None,
         }
     }
@@ -140,8 +140,8 @@ fn static_segment(group: &[GlobGroup]) -> Option<String> {
 
 pub fn partition_glob(glob: &str) -> anyhow::Result<(String, Vec<String>)> {
     // The static root needs literal path text, unlike glob conversion where
-    // bare extglob prefixes are intentionally consumed for compatibility.
-    let (negated, groups) = parse_glob_preserving_bare_extglob_prefixes(glob)?;
+    // ungrouped special characters are intentionally discarded for compatibility.
+    let (negated, groups) = parse_glob_preserving_ungrouped_special_chars(glob)?;
     // Partition glob into leading directories and patterns that should be matched
     let mut has_patterns = false;
     let (leading_dir_segments, pattern_segments): (Vec<String>, _) = groups
