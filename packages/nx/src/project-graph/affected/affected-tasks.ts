@@ -9,6 +9,10 @@ import { projectHasTarget } from '../../utils/project-graph-utils';
 import { FileChange } from '../file-utils';
 import { getSharedPlanner, marshalGraph } from './marshal-graph';
 import { filterAffected } from './affected-project-graph';
+import {
+  buildDeclaredProjectReferences,
+  expandOverDeclaredReferences,
+} from './declared-project-references';
 
 export interface AffectedTasksResult {
   /** Tasks that are themselves affected — NOT their dependency closure. */
@@ -65,7 +69,7 @@ export async function computeAffectedTasks(
   // projects-of(affected tasks) is a subset of the project-grained set, and
   // planning anything outside it is wasted — which for a docs-only change is
   // every task in the workspace.
-  const affectedProjects = new Set(
+  const projectGrained = new Set(
     Object.keys(
       (
         await filterAffected(
@@ -77,6 +81,17 @@ export async function computeAffectedTasks(
         )
       ).nodes
     )
+  );
+
+  // The reverse walk only follows project-graph edges, so it misses the two
+  // target-configuration shapes that name a project directly. Expanding here
+  // keeps the candidate set a true superset; without it a change to a project
+  // referenced only by `inputs[].projects` or a cross-project `dependsOn`
+  // silently selects nothing — which is how project-grained affected behaves
+  // today.
+  const affectedProjects = expandOverDeclaredReferences(
+    projectGrained,
+    buildDeclaredProjectReferences(projectGraph)
   );
 
   // Only projects that have one of the targets: with a single target,
@@ -128,12 +143,32 @@ export async function computeAffectedTasks(
 
   const own = new Set(fileMatches.affected);
 
-  // Seeds for what a file intersection cannot see: ProjectConfiguration
-  // resolves to no files, lockfile and external changes are not paths, and a
-  // blanket trigger has no fileset. Those all surface as a touched project.
-  for (const taskId of taskIds) {
-    if (affectedProjects.has(taskGraph.tasks[taskId].target.project)) {
-      own.add(taskId);
+  // Seed only what a file intersection genuinely cannot see. For ordinary
+  // source files the matcher is precise, and seeding every task of the owning
+  // project there would just reproduce project granularity.
+  //
+  //   project.json / package.json  ProjectConfiguration hashes the config
+  //                                object and resolves to no files at all.
+  //   a lockfile                   External and AllExternalDependencies are
+  //                                package names, not paths.
+  //   a blanket trigger            A deleted project config invalidates the
+  //                                graph with no fileset to match; it shows up
+  //                                as every project being touched.
+  const blanket =
+    projectGrained.size === Object.keys(projectGraph.nodes).length;
+  const blindSpotProjects = blanket
+    ? affectedProjects
+    : projectsOwningBlindSpotChanges(
+        touchedFiles,
+        projectGraph,
+        projectGrained
+      );
+
+  if (blindSpotProjects.size) {
+    for (const taskId of taskIds) {
+      if (blindSpotProjects.has(taskGraph.tasks[taskId].target.project)) {
+        own.add(taskId);
+      }
     }
   }
 
@@ -245,4 +280,42 @@ function topologicalOrder(taskGraph: TaskGraph): string[] {
     order.push(...ids.filter((id) => !seen.has(id)));
   }
   return order;
+}
+
+const PROJECT_CONFIG_FILES = new Set(['project.json', 'package.json']);
+const LOCK_FILES = new Set([
+  'package-lock.json',
+  'yarn.lock',
+  'pnpm-lock.yaml',
+  'bun.lock',
+  'bun.lockb',
+]);
+
+/**
+ * Projects whose tasks must be seeded because a changed file is invisible to
+ * glob matching. A lockfile change is workspace-wide, so it seeds everything the
+ * project-grained pass already selected.
+ */
+function projectsOwningBlindSpotChanges(
+  touchedFiles: FileChange[],
+  projectGraph: ProjectGraph,
+  projectGrained: Set<string>
+): Set<string> {
+  const seeds = new Set<string>();
+  for (const { file } of touchedFiles) {
+    const name = file.slice(file.lastIndexOf('/') + 1);
+    if (LOCK_FILES.has(name)) {
+      // External dependency names never appear in a diff, so which task the
+      // change reaches cannot be narrowed here.
+      return projectGrained;
+    }
+    if (!PROJECT_CONFIG_FILES.has(name)) continue;
+    for (const [project, node] of Object.entries(projectGraph.nodes)) {
+      if (file === `${node.data.root}/${name}`) {
+        seeds.add(project);
+        break;
+      }
+    }
+  }
+  return seeds;
 }
