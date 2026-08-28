@@ -157,12 +157,7 @@ export async function computeAffectedTasks(
   // Which upstream task's outputs each task reads. TaskOutput is excluded from
   // direct file matching (its artifacts are gitignored and unbuilt, so they can
   // never appear in a diff), so this is the only thing carrying that signal.
-  const producersOf = new Map<string, string[]>();
-  for (const { consumer, producer } of dependentOutputEdges(plans, taskGraph)) {
-    const existing = producersOf.get(consumer);
-    if (existing) existing.push(producer);
-    else producersOf.set(consumer, [producer]);
-  }
+  const producersOf = dependentOutputEdges(plans, taskGraph);
 
   // Seed only what a file intersection genuinely cannot see. For ordinary
   // source files the matcher is precise, and seeding every task of the owning
@@ -215,13 +210,12 @@ export async function computeAffectedTasks(
 function propagate(
   own: Set<string>,
   taskGraph: TaskGraph,
-  producersOf: Map<string, string[]>
+  producersOf: Record<string, string[]>
 ): Set<string> {
   const affected = new Set(own);
   for (const taskId of topologicalOrder(taskGraph)) {
     if (affected.has(taskId)) continue;
-    const producers = producersOf.get(taskId);
-    if (producers?.some((producer) => affected.has(producer))) {
+    if (producersOf[taskId]?.some((producer) => affected.has(producer))) {
       affected.add(taskId);
     }
   }
