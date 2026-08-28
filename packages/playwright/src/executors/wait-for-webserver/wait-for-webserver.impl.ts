@@ -540,6 +540,7 @@ function proxiedRequest(
         ...options,
         // Playwright before 1.59.0 never verifies the origin certificate on
         // this route, whatever the caller asked for.
+        // TODO(v25): drop once minSupportedPlaywrightVersion reaches 1.59.0.
         ...(skipProxiedTls ? { rejectUnauthorized: false } : {}),
         agent,
       },

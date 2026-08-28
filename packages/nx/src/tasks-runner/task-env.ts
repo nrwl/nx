@@ -103,7 +103,13 @@ export function getGraphTimeDotEnvForTask(
 ): NodeJS.ProcessEnv {
   // Unload the root dotenv files loaded on init of Nx so the task-scoped files win.
   const env = unloadDotEnvFiles({ ...baseEnv });
-  if (baseEnv.NX_LOAD_DOT_ENV_FILES === 'false') {
+  // Fall back to the live env when the snapshot has no entry: Windows resolves
+  // `process.env` case-insensitively but a plain snapshot keeps whichever
+  // spelling was exported, so a lowercase opt-out is invisible here otherwise.
+  if (
+    (baseEnv.NX_LOAD_DOT_ENV_FILES ?? process.env.NX_LOAD_DOT_ENV_FILES) ===
+    'false'
+  ) {
     return env;
   }
   const dotEnvFiles = getEnvPathsForTask(

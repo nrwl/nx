@@ -9,6 +9,9 @@ import { TempFs } from '../../internal-testing-utils/temp-fs';
 // compute would dispatch after teardown and its lazy requires would throw.
 vi.mock('../../utils/perf-logging', () => ({}));
 
+// These cases drive a real compute, so they need working plugin-worker
+// isolation. Where forked workers cannot start (containers, agent sandboxes)
+// every case stalls to the suite timeout; run with NX_ISOLATE_PLUGINS=false.
 describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () => {
   let fs: TempFs;
 
