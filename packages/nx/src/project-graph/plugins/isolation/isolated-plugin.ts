@@ -224,7 +224,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     await this._connectPromise;
   }
 
-  private handleSocketData = (raw: string) => {
+  private handleSocketData = (raw: Buffer) => {
     const message = parseMessage<any>(raw);
     if (isPluginWorkerNotification(message)) {
       handlePluginWorkerNotification(message);

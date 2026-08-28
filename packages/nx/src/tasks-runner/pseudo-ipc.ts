@@ -21,7 +21,7 @@ import { connect, Server, Socket } from 'net';
 import { unlinkSync } from 'fs';
 import {
   consumeMessagesFromSocket,
-  MESSAGE_END_SEQ,
+  writeMessage,
   parseMessage,
 } from '../utils/consume-messages-from-socket';
 import { Serializable } from 'child_process';
@@ -115,16 +115,19 @@ export class PseudoIPCServer {
 
   sendMessageToChildren(message: Serializable) {
     this.sockets.forEach((socket) => {
-      socket.write(serialize({ type: 'TO_CHILDREN_FROM_PARENT', message }));
-      // send EOT to indicate that the message has been fully written
-      socket.write(MESSAGE_END_SEQ);
+      writeMessage(
+        socket,
+        serialize({ type: 'TO_CHILDREN_FROM_PARENT', message })
+      );
     });
   }
 
   sendMessageToChild(id: string, message: Serializable) {
     this.sockets.forEach((socket) => {
-      socket.write(serialize({ type: 'TO_CHILDREN_FROM_PARENT', id, message }));
-      socket.write(MESSAGE_END_SEQ);
+      writeMessage(
+        socket,
+        serialize({ type: 'TO_CHILDREN_FROM_PARENT', id, message })
+      );
     });
   }
 
@@ -152,20 +155,20 @@ export class PseudoIPCClient {
   constructor(private path: string) {}
 
   sendMessageToParent(message: Serializable) {
-    this.socket.write(serialize({ type: 'TO_PARENT_FROM_CHILDREN', message }));
-    // send EOT to indicate that the message has been fully written
-    this.socket.write(MESSAGE_END_SEQ);
+    writeMessage(
+      this.socket,
+      serialize({ type: 'TO_PARENT_FROM_CHILDREN', message })
+    );
   }
 
   notifyChildIsReady(id: string) {
-    this.socket.write(
+    writeMessage(
+      this.socket,
       serialize({
         type: 'CHILD_READY',
         message: id,
       } as PseudoIPCMessage)
     );
-    // send EOT to indicate that the message has been fully written
-    this.socket.write(MESSAGE_END_SEQ);
   }
 
   onMessageFromParent(

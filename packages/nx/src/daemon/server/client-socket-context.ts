@@ -1,5 +1,5 @@
 import type { Socket } from 'net';
-import { MESSAGE_END_SEQ } from '../../utils/consume-messages-from-socket';
+import { writeMessage } from '../../utils/consume-messages-from-socket';
 import { ProgressTopic } from '../../utils/progress-topics';
 import { isOnDaemon } from '../is-on-daemon';
 import { serverLogger } from '../logger';
@@ -54,7 +54,7 @@ export function assertOnDaemon(helperName: string) {
 
 /**
  * Writes a streaming message over the given socket using the daemon's
- * configured serialization format and terminated with MESSAGE_END_SEQ.
+ * configured serialization format, length-prefixed like any other message.
  * Errors are logged to the daemon's stdout (redirected to the daemon
  * log) rather than propagated — a disconnected client shouldn't tear
  * down the current request handler or other subscribers.
@@ -66,7 +66,7 @@ export function writeStreamingMessage(
 ) {
   try {
     serverLogger.log('Streaming message to client:', description);
-    socket.write(serialize(payload) + MESSAGE_END_SEQ, (err) => {
+    writeMessage(socket, serialize(payload), (err) => {
       if (err) {
         console.log(
           `Streaming message write error (client likely disconnected): ${err.message}`

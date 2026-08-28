@@ -1,15 +1,16 @@
 import { chmodSync, existsSync } from 'fs';
+import { serialize } from 'v8';
 import { isPermissionDenied } from '../../utils/permission-errors';
 import { SOCKET_REFUSED_EXIT_CODE } from '../../utils/socket-refused-exit-code';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
-import { deserialize, serialize } from 'v8';
 import { startAnalytics } from '../../analytics';
 import { hashArray } from '../../hasher/file-hasher';
 import { hashFile } from '../../native';
 import {
   consumeMessagesFromSocket,
   isJsonMessage,
+  parseMessage,
 } from '../../utils/consume-messages-from-socket';
 import '../../utils/perf-logging';
 import { nxVersion } from '../../utils/versions';
@@ -224,7 +225,7 @@ const server = createServer(async (socket) => {
 });
 registerProcessTerminationListeners();
 
-async function handleMessage(socket: Socket, data: string) {
+async function handleMessage(socket: Socket, data: Buffer) {
   if (workspaceWatcherError) {
     await respondWithErrorAndExit(
       socket,
@@ -245,24 +246,24 @@ async function handleMessage(socket: Socket, data: string) {
 
   const unparsedPayload = data;
   let payload;
-  let mode: 'json' | 'v8' = 'json';
+  // Reply in the format the client used.
+  const mode: 'json' | 'v8' = isJsonMessage(unparsedPayload) ? 'json' : 'v8';
 
   serverLogger.log(`Received raw message of length ${unparsedPayload.length}`);
 
   try {
-    // JSON Message
-    if (isJsonMessage(unparsedPayload)) {
-      payload = JSON.parse(unparsedPayload);
-    } else {
-      // V8 Serialized Message
-      payload = deserialize(Buffer.from(unparsedPayload, 'binary'));
-      mode = 'v8';
-    }
+    payload = parseMessage<any>(unparsedPayload);
   } catch (e) {
     await respondWithErrorAndExit(
       socket,
       `Invalid payload from the client`,
-      new Error(`Unsupported payload sent to daemon server: ${unparsedPayload}`)
+      new Error(
+        `Unsupported payload sent to daemon server: ${unparsedPayload.toString(
+          'utf8',
+          0,
+          200
+        )}`
+      )
     );
   }
   serverLogger.log(`Received ${mode} message of type ${payload.type}`);
@@ -518,7 +519,7 @@ export async function handleResult(
     );
     const response =
       typeof hr.response === 'string'
-        ? hr.response
+        ? Buffer.from(hr.response, 'utf8')
         : serializeUnserializedResult(hr.response, mode);
     serverLogger.log(`Responding to ${type} message`);
     await respondToClient(socket, response, hr.description);
@@ -791,10 +792,10 @@ export async function startServer(): Promise<Server> {
 function serializeUnserializedResult(
   response: boolean | object,
   mode: 'json' | 'v8'
-) {
+): Buffer {
   if (mode === 'json') {
-    return JSON.stringify(response);
+    return Buffer.from(JSON.stringify(response), 'utf8');
   } else {
-    return serialize(response).toString('binary');
+    return serialize(response);
   }
 }

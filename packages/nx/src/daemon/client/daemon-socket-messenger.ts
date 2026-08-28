@@ -2,7 +2,7 @@ import { Socket } from 'net';
 import { performance } from 'perf_hooks';
 import {
   consumeMessagesFromSocket,
-  MESSAGE_END_SEQ,
+  writeMessage,
 } from '../../utils/consume-messages-from-socket';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { clientLogger } from '../logger';
@@ -43,14 +43,12 @@ export class DaemonSocketMessenger {
       'daemon-message-serialization-start-' + messageToDaemon.type,
       'daemon-message-serialization-end-' + messageToDaemon.type
     );
-    this.socket.write(serialized);
-    // send EOT to indicate that the message has been fully written
-    this.socket.write(MESSAGE_END_SEQ);
+    writeMessage(this.socket, serialized);
     clientLogger.log('[Messenger] Message sent');
   }
 
   listen(
-    onData: (message: string) => void,
+    onData: (message: Buffer) => void,
     onClose: () => void = () => {},
     onError: (err: Error) => void = () => {}
   ): DaemonSocketMessenger {

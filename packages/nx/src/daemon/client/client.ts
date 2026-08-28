@@ -1349,7 +1349,7 @@ export class DaemonClient {
     }
   }
 
-  private handleMessage(serializedResult: string) {
+  private handleMessage(serializedResult: Buffer) {
     try {
       performance.mark('result-parse-start-' + this.currentMessage.type);
       const parsedResult = parseMessage<any>(serializedResult);
@@ -1386,8 +1386,8 @@ export class DaemonClient {
     } catch (e) {
       const endOfResponse =
         serializedResult.length > 300
-          ? serializedResult.substring(serializedResult.length - 300)
-          : serializedResult;
+          ? serializedResult.toString('utf8', serializedResult.length - 300)
+          : serializedResult.toString('utf8');
       this.currentReject(
         daemonProcessException(
           [

@@ -108,32 +108,30 @@ export function serializeResult(
  *
  * @param data Data to serialize
  * @param force Forces one serialization method over the other
- * @returns Serialized data as a string
+ * @returns Serialized data as bytes ready to be framed onto a socket
  */
-export function serialize(data: any, force?: 'v8' | 'json'): string {
+export function serialize(data: any, force?: 'v8' | 'json'): Buffer {
   if (force === 'v8' || isV8SerializerEnabled()) {
     try {
-      return v8_serialize(data).toString('binary');
+      return v8_serialize(data);
     } catch (e) {
       if (force !== 'v8') {
         console.warn(
           `Data could not be serialized using v8 serialization: ${e}. Falling back to JSON serialization.`
         );
-        // Fall back to JSON serialization
-        return JSON.stringify(data);
+        return Buffer.from(JSON.stringify(data), 'utf8');
       }
       throw e;
     }
   } else {
     try {
-      return JSON.stringify(data);
+      return Buffer.from(JSON.stringify(data), 'utf8');
     } catch (e) {
       if (force !== 'json') {
-        // Fall back to v8 serialization
         console.warn(
           `Data could not be serialized using JSON.stringify: ${e}. Falling back to v8 serialization.`
         );
-        return v8_serialize(data).toString('binary');
+        return v8_serialize(data);
       }
       throw e;
     }
