@@ -170,16 +170,12 @@ export function getPluginResolveConditionNodeArgs(
 }
 
 /**
- * Older supported Node versions cannot scope conditions with registerHooks,
- * so the daemon must receive them at process startup instead.
+ * Plugin conditions must never apply to the daemon process: built generators
+ * run there too. Older Node versions rely on the isolated plugin worker,
+ * which receives its conditions separately at startup.
  */
-export function getDaemonResolveConditionNodeArgs(
-  root: string = workspaceRoot
-): string[] {
-  const module = require('node:module') as typeof import('node:module');
-  return typeof module.registerHooks === 'function'
-    ? []
-    : getPluginResolveConditionNodeArgs(root);
+export function getDaemonResolveConditionNodeArgs(): string[] {
+  return [];
 }
 
 export function findNodes(

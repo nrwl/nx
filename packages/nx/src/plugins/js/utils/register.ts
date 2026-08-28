@@ -480,7 +480,8 @@ let sourceGraphHooks: { deregister(): void } | undefined;
  * tracked so lazy imports remain in the same graph; third-party modules are not.
  *
  * Uses `module.registerHooks()` on Node 22.15+ / 23.5+. Earlier supported Node
- * versions and isolated workers receive the conditions at process startup.
+ * versions rely on isolated plugin workers, which receive the conditions at
+ * process startup.
  */
 export function registerSourceGraphResolver(
   entryPath: string,
