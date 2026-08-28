@@ -139,12 +139,16 @@ describe('React Playwright e2e tests', () => {
         ? ((json.nx ??= {}).targets ??= {})
         : (json.targets ??= {});
       targets[serveTarget] = {
-        command: 'node -e "setTimeout(() => {}, 5000)" && vite',
+        command: `node -e "setTimeout(() => {}, 5000)" && vite preview --port ${port}`,
         options: { cwd: appName },
         continuous: true,
       };
       return JSON.stringify(json, null, 2);
     });
+    // Both the Playwright config and the target must be updated before Nx
+    // infers the readiness gate. Reset the daemon to discard the old 4300
+    // address that may still be cached from project generation.
+    runCLI('reset');
 
     try {
       // Playwright logs which of the two it did under this debug scope. The
