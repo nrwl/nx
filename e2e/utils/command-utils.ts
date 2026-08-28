@@ -255,7 +255,7 @@ export function runCommandAsync(
           NX_DAEMON: opts.daemon === false ? 'false' : 'true',
           // Use new versioning by default in e2e tests
           NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
-          ...(opts.env || getStrippedEnvironmentVariables()),
+          ...(opts.env || getStrippedEnvironmentVariables(opts.cwd)),
           FORCE_COLOR: 'false',
         },
         encoding: 'utf-8',
@@ -471,7 +471,7 @@ export function runCLI(
         NX_DAEMON: opts.daemon === false ? 'false' : 'true',
         // Use new versioning by default in e2e tests
         NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
-        ...getStrippedEnvironmentVariables(),
+        ...getStrippedEnvironmentVariables(opts.cwd),
         ...opts.env,
       },
       encoding: 'utf-8',
@@ -532,7 +532,7 @@ export function runLernaCLI(
       cwd: opts.cwd || tmpProjPath(),
       env: {
         CI: 'true',
-        ...(opts.env || getStrippedEnvironmentVariables()),
+        ...(opts.env || getStrippedEnvironmentVariables(opts.cwd)),
       },
       encoding: 'utf-8',
       stdio: 'pipe',
