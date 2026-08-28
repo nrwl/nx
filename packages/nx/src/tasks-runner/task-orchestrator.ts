@@ -43,6 +43,7 @@ import {
   DbCache,
   dbCacheEnabled,
   getCache,
+  terminalOutputPathForHash,
 } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
@@ -980,18 +981,34 @@ export class TaskOrchestrator {
         ? ''
         : readCapturedBatchLog(batchProcess?.getCapturedOutputPath());
 
-      const taskResults = Object.keys(batch.taskGraph.tasks).map((taskId) => {
+      // One worker died, so one log explains every task in the batch. It is
+      // unbounded by design (batch-process.ts: a Gradle batch spans the whole
+      // command), so it is carried by the first task alone and the rest address
+      // that copy. Inlining it into all of them wrote a byte-identical
+      // unbounded file per task, each charged in full against `maxCacheSize`,
+      // and recorded one task's bytes as another's in task history and Nx Cloud.
+      const batchTaskIds = Object.keys(batch.taskGraph.tasks);
+      const logHolder = workerLog ? batchTaskIds[0] : undefined;
+      const logHolderHash = logHolder
+        ? this.taskGraph.tasks[logHolder]?.hash
+        : undefined;
+      const logPointer =
+        logHolderHash &&
+        `batch worker log: ${terminalOutputPathForHash(logHolderHash)}`;
+
+      const taskResults = batchTaskIds.map((taskId) => {
         const task = this.taskGraph.tasks[taskId];
         if (isBatchStopping) {
           task.endTime = Date.now();
         }
+        const stack = e.stack ?? e.message ?? '';
         return {
           task,
           code: 1,
           status: (isBatchStopping ? 'stopped' : 'failure') as TaskStatus,
           terminalOutput: isBatchStopping
             ? ''
-            : [workerLog, e.stack ?? e.message ?? '']
+            : (taskId === logHolder ? [workerLog, stack] : [stack, logPointer])
                 .filter(Boolean)
                 .join('\n'),
         };
@@ -1100,11 +1117,12 @@ export class TaskOrchestrator {
     taskResults: TaskResult[],
     capturedOutputPath: string | undefined
   ) {
-    // Read from the same field the streaming decision uses. `this.options` has
-    // its own `outputStyle`, merged from `nx.json`'s tasksRunnerOptions, so the
-    // two disagree whenever a style is configured there but not named on the
-    // command line - and `init-tasks-runner` passes a populated `options` with
-    // no style argument at all, so on that path only `options` can carry one.
+    // Reads `resolvedOutputStyle` - what the run actually renders with. The
+    // streaming decision deliberately reads `specifiedOutputStyle` instead,
+    // since it has to tell a named style from an inferred default. `this.options`
+    // has its own `outputStyle`, merged from `nx.json`'s tasksRunnerOptions, so
+    // the two disagree whenever a style is configured there but not named on the
+    // command line.
     const printsFullOutput = printsFullTaskOutput({
       verbose: this.options.verbose,
       outputStyle: this.resolvedOutputStyle,
