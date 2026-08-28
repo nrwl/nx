@@ -294,6 +294,7 @@ fn projects_from_project_glob_changes(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::native::types::FileSetInput;
 
     fn project(root: &str) -> Project {
         Project {
@@ -319,6 +320,20 @@ mod tests {
 
     fn string_inputs(values: &[&str]) -> Vec<JsInputs> {
         values.iter().map(|v| Either10::B(v.to_string())).collect()
+    }
+
+    fn fileset_inputs(values: &[(&str, bool)]) -> Vec<JsInputs> {
+        values
+            .iter()
+            .map(|(fileset, include_ignored)| {
+                Either10::C(FileSetInput {
+                    fileset: (*fileset).to_string(),
+                    dependencies: None,
+                    include_ignored: Some(*include_ignored),
+                    force: None,
+                })
+            })
+            .collect()
     }
 
     fn target_with_inputs(inputs: &[&str]) -> Target {
