@@ -497,6 +497,17 @@ describe('daemon environment', () => {
       expect(hashDaemonClientEnv()).toEqual(without);
     });
 
+    it('is stable across the two NX_LOAD_DOT_ENV_FILES spellings that mean the same', () => {
+      // The digest keys the plugin cache, so it has to collapse the stamped
+      // 'true' and an unset value exactly as getDaemonEnv does.
+      delete process.env.NX_LOAD_DOT_ENV_FILES;
+      const unset = hashDaemonClientEnv();
+      process.env.NX_LOAD_DOT_ENV_FILES = 'true';
+      expect(hashDaemonClientEnv()).toEqual(unset);
+      process.env.NX_LOAD_DOT_ENV_FILES = 'false';
+      expect(hashDaemonClientEnv()).not.toEqual(unset);
+    });
+
     it('is stable when an excluded env var changes', () => {
       delete process.env.NX_TUI;
       delete process.env.ITERM_SESSION_ID;

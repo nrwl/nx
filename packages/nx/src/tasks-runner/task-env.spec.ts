@@ -370,6 +370,29 @@ describe('getGraphTimeDotEnvForTask', () => {
     expect(env.BASE_URL).toBeUndefined();
   });
 
+  it('honors the opt-out from the live env when the base env snapshot lacks it', () => {
+    // Windows resolves process.env case-insensitively while a plain snapshot
+    // keeps whichever spelling was exported, so a lowercase opt-out is absent
+    // from the snapshot the playwright plugin passes but live all the same.
+    process.env.NX_LOAD_DOT_ENV_FILES = 'false';
+    writeFileSync(
+      join(tempDir, '.env.e2e'),
+      'BASE_URL=http://localhost:4301\n'
+    );
+    const snapshotWithoutTheKey = { ...process.env };
+    delete snapshotWithoutTheKey.NX_LOAD_DOT_ENV_FILES;
+
+    const env = getGraphTimeDotEnvForTask(
+      '.',
+      'e2e',
+      undefined,
+      undefined,
+      snapshotWithoutTheKey
+    );
+
+    expect(env.BASE_URL).toBeUndefined();
+  });
+
   it('bases the reconstruction on the given base env, not the live process.env', () => {
     // A caller running config files in-process passes the snapshot it took
     // under its load lock; a concurrent load's transient write to the live env

@@ -12,6 +12,8 @@ vi.mock('../../utils/perf-logging', () => ({}));
 // These cases drive a real compute, so they need working plugin-worker
 // isolation. Where forked workers cannot start (containers, agent sandboxes)
 // every case stalls to the suite timeout; run with NX_ISOLATE_PLUGINS=false.
+// The first case additionally needs real watcher event delivery, which a
+// container filesystem does not provide, and fails there either way.
 describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () => {
   let fs: TempFs;
 
