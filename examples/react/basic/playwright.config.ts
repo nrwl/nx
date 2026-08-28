@@ -2,7 +2,10 @@ import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 
-// For CI, you may want to set BASE_URL to the deployed application.
+// BASE_URL steers the tests and the webServer probe below. Pointing it at a
+// deployed application in CI still starts the local serve dependency Nx infers
+// from the command. The fallback is not the serve port: the tests only pass
+// with the address the e2e task env file sets, which this example exercises.
 const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
 
 /**
@@ -22,7 +25,7 @@ export default defineConfig({
    * lets the @nx/playwright plugin derive a dependsOn on the serve target. */
   webServer: {
     command: 'npx nx run examples-react-basic:serve',
-    url: 'http://localhost:4200',
+    url: baseURL,
     reuseExistingServer: true,
     cwd: __dirname,
   },

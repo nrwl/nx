@@ -133,10 +133,14 @@ export default defineConfig({
   webServer: {
     command: 'npm run start',
     port: 4200,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
   },
 });
 ```
+
+Set `reuseExistingServer` to `true` rather than `!process.env.CI`.
+When the `command` runs an Nx task, Nx then runs that task as a dependency and waits for the server before the tests start.
+See [the Playwright plugin page](/docs/technologies/test-tools/playwright/introduction#nxplaywright-configuration) for the command forms it recognizes.
 
 ```json
 // nx.json

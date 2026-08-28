@@ -47,6 +47,12 @@ import {
   subscribeClientToTopic,
   unsubscribeClientFromTopic,
 } from './client-socket-context';
+import {
+  clearDotEnvFileHashes,
+  drainPendingDotEnvEvents,
+  hasPendingDotEnvEvidence,
+  hasRelevantPendingDotEnvEvidence,
+} from './dotenv-graph-changes';
 import { notifyFileChangeListeners } from './file-watching/file-change-events';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { notifyProjectGraphListenerSockets } from './project-graph-listener-sockets';
@@ -94,6 +100,19 @@ let knownExternalNodes: Record<string, ProjectGraphExternalNode> = {};
 let fileChangeCounter = 0;
 let recomputationGeneration = 0;
 
+// The graph the settled cached promise serves, with the generation its
+// computation claimed. Set only when a computation's own success becomes the
+// cached result; any newer kickoff or invalidation clears it, so non-null
+// means the cached promise is settled and this is exactly what it serves. The
+// warm-reuse dotenv check classifies against this, never against
+// `currentProjectGraph`: a slow stale computation overwrites that after the
+// winner settles and only then chains away. The candidate is written by the
+// computation itself (which knows its generation) and promoted by
+// kickOffRecompute after the outer plugin-hash and cached-pointer identity
+// checks, which can still reject the result.
+let servedGraphState: { graph: ProjectGraph; generation: number } | null = null;
+let servedGraphCandidate: typeof servedGraphState = null;
+
 // True after the first successful persistProjectGraphToDisk call. Until
 // that happens, "project-graph.json missing on disk" is the expected
 // state (we just haven't written it yet) and must not trigger a reset.
@@ -108,6 +127,9 @@ let cacheHasBeenPersisted = false;
  * (see spread.test.ts "middle plugin" flake).
  */
 function kickOffRecompute() {
+  // The cached pointer is about to hold an unsettled promise, so whatever the
+  // previous state described is no longer what the cache serves.
+  servedGraphState = null;
   let myPromise: Promise<SerializedProjectGraph>;
   myPromise = (async () => {
     // Must resolve, never reject: kickOffRecompute() runs fire-and-forget, so
@@ -136,6 +158,12 @@ function kickOffRecompute() {
         cachedSerializedProjectGraphPromise === myPromise &&
         result.projectGraph
       ) {
+        // The graph identity ties the candidate's generation to exactly this
+        // result; a chained result never matches (its computation's kickoff
+        // replaced the cached pointer, failing the identity check above).
+        if (servedGraphCandidate?.graph === result.projectGraph) {
+          servedGraphState = servedGraphCandidate;
+        }
         notifyProjectGraphRecomputationListeners(
           result.projectGraph,
           result.sourceMaps,
@@ -202,6 +230,37 @@ export async function getCachedSerializedProjectGraphPromise(
     // stale graph. Placed right before the read so no microtask gap
     // separates them.
     await new Promise(setImmediate);
+
+    // The queue can hold evidence against the settled cached graph itself: a
+    // tracked dotenv edit only the outputs watcher has delivered yet queues
+    // without invalidating, and the workspace watcher's recomputation may lag
+    // this request. Classified against the exact graph the cache serves; an
+    // in-flight computation needs no check here because its own pre-serve
+    // replay consumes the queue. Content hashes are dropped before the
+    // successor can read, as in the error retry: one recorded when the edit
+    // was classified could suppress a revert landing mid-read. Fails toward
+    // recomputing, since a stale graph on a dotenv edit is the bug this
+    // prevents.
+    try {
+      if (
+        servedGraphState &&
+        hasRelevantPendingDotEnvEvidence(
+          servedGraphState.graph,
+          servedGraphState.generation
+        )
+      ) {
+        clearDotEnvFileHashes();
+        invalidateGraphCache();
+      }
+    } catch (e) {
+      serverLogger.log(
+        `Failed to check pending dotenv changes against the cached graph; recomputing to be safe: ${
+          e instanceof Error ? e.message : e
+        }`
+      );
+      clearDotEnvFileHashes();
+      invalidateGraphCache();
+    }
 
     // If no compute exists or events are still in collected*, kick one off.
     // Otherwise reuse whatever is already in flight or cached.
@@ -415,13 +474,63 @@ async function processCollectedUpdatedAndDeletedFiles(
   }
 }
 
+/**
+ * Discards the cached graph when a graph input outside the file watcher's view
+ * (e.g. the daemon env) changes. Clearing the cached promise makes the next
+ * request trigger a fresh computation; the generation bump marks any in-flight
+ * compute stale so it chains to that successor instead of committing, because
+ * a compute passing its chainToLatest checks would serve a graph built under
+ * the old input to whoever already awaits it.
+ */
 export function invalidateGraphCache() {
-  // Clear the cached promise so the next request triggers a fresh computation.
   // We intentionally do NOT call getCachedSerializedProjectGraphPromise() here
   // because assigning its return Promise to the module-level variable causes a
   // deadlock: the async function resumes, sees the variable is non-null (pointing
   // at its own Promise), takes the "reuse" branch, and awaits itself forever.
   cachedSerializedProjectGraphPromise = null;
+  ++recomputationGeneration;
+  servedGraphState = null;
+}
+
+/**
+ * The current recomputation generation, stamped on queued dotenv events so
+ * the pre-serve drain can prove whether a computation started before an
+ * event arrived.
+ */
+export function getRecomputationGeneration(): number {
+  return recomputationGeneration;
+}
+
+// isKnownWorkspaceFile's membership set, derived lazily from the map object it
+// was built from; every `fileMapWithFiles` write clears it, so a replaced map
+// generation is not retained through the memo.
+let knownWorkspaceFiles: Set<string> | undefined;
+let knownWorkspaceFilesSource: typeof fileMapWithFiles;
+
+/**
+ * Whether the ignore-filtered workspace file map knows `path`. The workspace
+ * watcher applies the same ignore rules, so a change to a known file also
+ * reaches scheduleProjectGraphRecomputation; an unknown file is either
+ * ignored, or created since the last recompute committed.
+ */
+export function isKnownWorkspaceFile(path: string): boolean {
+  if (!fileMapWithFiles) {
+    return false;
+  }
+  if (knownWorkspaceFilesSource !== fileMapWithFiles) {
+    const { projectFileMap, nonProjectFiles } = fileMapWithFiles.fileMap;
+    knownWorkspaceFiles = new Set<string>();
+    for (const { file } of nonProjectFiles) {
+      knownWorkspaceFiles.add(file);
+    }
+    for (const files of Object.values(projectFileMap)) {
+      for (const { file } of files) {
+        knownWorkspaceFiles.add(file);
+      }
+    }
+    knownWorkspaceFilesSource = fileMapWithFiles;
+  }
+  return knownWorkspaceFiles.has(path);
 }
 
 async function processFilesAndCreateAndSerializeProjectGraph(
@@ -432,6 +541,14 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     ...separatedPlugins.defaultPlugins,
   ];
   const myGeneration = ++recomputationGeneration;
+  // A hash recorded before this claim can describe bytes this computation
+  // never reads (a callback classified between a forced invalidation and this
+  // claim records one no handler-side clear has seen), and retained it could
+  // suppress a coalesced revert landing mid-read. Bounding every hash to the
+  // window since the last claim closes that for any successor, however it was
+  // forced. A callback landing after this claim re-records and re-queues, and
+  // its stamp then marks this computation stale at the drain.
+  clearDotEnvFileHashes();
 
   // A newer kickOffRecompute has already replaced
   // cachedSerializedProjectGraphPromise. Returning it lets the async
@@ -505,6 +622,8 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     // chainToLatest above without touching `fileMapWithFiles`, so they
     // can't clobber a newer compute's write.
     fileMapWithFiles = fileMapUpdate.fileMap;
+    knownWorkspaceFiles = undefined;
+    knownWorkspaceFilesSource = undefined;
     storedWorkspaceConfigHash = fileMapUpdate.configHash;
     if (fileMapUpdate.knownExternalNodes) {
       knownExternalNodes = fileMapUpdate.knownExternalNodes;
@@ -542,16 +661,71 @@ async function processFilesAndCreateAndSerializeProjectGraph(
       g.error && isAggregateProjectGraphError(g.error) && g.error.errors?.length
         ? g.error
         : null;
-    if (g.error && !aggregate) return errorResult(g.error);
+
+    // An error result is never cached, notified, or persisted, so a queued
+    // dotenv edit that may already have fixed the failing input earns one
+    // retry instead of surfacing the error. The peek consumes nothing (a
+    // successful successor's drain classifies the entries against a real
+    // graph, which these branches may lack: `g.projectGraph` can be null
+    // here) and a persistent error retries once, because the successor
+    // claims a generation above every recorded stamp. Content hashes are
+    // dropped, though: one recorded during this failed computation could
+    // suppress a callback landing while the successor reads. The catch at
+    // the end of this function stays excluded: a throw there can predate
+    // projectConfigurationsResult and the plugin hooks' balancing, and the
+    // next request recomputes at a fresh generation anyway.
+    const retryForPendingDotEnv = () => {
+      if (!hasPendingDotEnvEvidence(myGeneration)) return null;
+      clearDotEnvFileHashes();
+      invalidateGraphCache();
+      return chainToLatest(false);
+    };
+
+    if (g.error && !aggregate) {
+      return retryForPendingDotEnv() ?? errorResult(g.error);
+    }
     if (aggregate) errors.push(...aggregate.errors);
-    if (errors.length === 0) return g;
-    return errorResult(
-      new DaemonProjectGraphError(
-        errors,
-        g.projectGraph,
-        projectConfigurationsResult.sourceMaps
-      )
-    );
+    if (errors.length > 0) {
+      return (
+        retryForPendingDotEnv() ??
+        errorResult(
+          new DaemonProjectGraphError(
+            errors,
+            g.projectGraph,
+            projectConfigurationsResult.sourceMaps
+          )
+        )
+      );
+    }
+
+    // Replay the dotenv events no committed root could classify on arrival
+    // against the graph about to be served. Runs after the last staleness
+    // gate so a stale compute leaves the queue for its successor, and only
+    // on the success path: an error result is never notified or persisted.
+    // Queue evidence is decisive here even for files the workspace watcher
+    // tracks: the two watchers deliver independently, so tracking alone does
+    // not prove that watcher's recomputation was already scheduled.
+    let staleDotEnv: boolean;
+    try {
+      const pending = drainPendingDotEnvEvents(g.projectGraph, myGeneration);
+      staleDotEnv = pending.overflowed || pending.invalidating.length > 0;
+    } catch (e) {
+      serverLogger.log(
+        `Failed to re-check pending dotenv changes; recomputing to be safe: ${
+          e instanceof Error ? e.message : e
+        }`
+      );
+      staleDotEnv = true;
+    }
+    if (staleDotEnv) {
+      // This graph read the file before the queued edit landed. The bump plus
+      // chain hands every awaiting caller the successor's result and keeps
+      // this one from being notified or persisted.
+      invalidateGraphCache();
+      return chainToLatest(false);
+    }
+    servedGraphCandidate = { graph: g.projectGraph, generation: myGeneration };
+    return g;
   } catch (err) {
     return errorResult(err);
   }
@@ -675,7 +849,11 @@ async function createAndSerializeProjectGraph({
 
 async function resetInternalState() {
   cachedSerializedProjectGraphPromise = undefined;
+  servedGraphState = null;
+  servedGraphCandidate = null;
   fileMapWithFiles = undefined;
+  knownWorkspaceFiles = undefined;
+  knownWorkspaceFilesSource = undefined;
   currentProjectFileMapCache = undefined;
   currentProjectGraph = undefined;
   currentSourceMaps = undefined;
