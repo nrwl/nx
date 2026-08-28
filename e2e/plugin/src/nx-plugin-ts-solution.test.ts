@@ -637,6 +637,8 @@ export const createNodesV2: CreateNodesV2<PluginOptions> = [
       return pkg;
     });
 
+    // Both sync generators run in the same daemon process; scoped conditions
+    // must resolve the workspace package per entry (built vs source).
     createFile(
       `packages/${plugin}/generators.json`,
       JSON.stringify({
@@ -644,6 +646,10 @@ export const createNodesV2: CreateNodesV2<PluginOptions> = [
           sync: {
             factory: './dist/generators/sync.js',
             schema: './dist/generators/schema.json',
+          },
+          'sync-source': {
+            factory: './src/generators/sync-source.ts',
+            schema: './src/generators/sync-source-schema.json',
           },
         },
       })
@@ -655,6 +661,18 @@ export const createNodesV2: CreateNodesV2<PluginOptions> = [
 module.exports = (tree) => tree.write('sync-output.txt', workspaceDepMarker);
 `
     );
+    createFile(
+      `packages/${plugin}/src/generators/sync-source-schema.json`,
+      '{}'
+    );
+    createFile(
+      `packages/${plugin}/src/generators/sync-source.ts`,
+      `import { workspaceDepMarker } from '@${workspaceName}/${lib}';
+
+export default (tree: any) =>
+  tree.write('sync-source-output.txt', workspaceDepMarker);
+`
+    );
 
     updateJson(`nx.json`, (nxJson) => {
       nxJson.plugins ??= [];
@@ -663,7 +681,10 @@ module.exports = (tree) => tree.write('sync-output.txt', workspaceDepMarker);
         options: { inferredTags: ['deps-tag'] },
       });
       nxJson.sync = {
-        globalGenerators: [`@${workspaceName}/${plugin}:sync`],
+        globalGenerators: [
+          `@${workspaceName}/${plugin}:sync`,
+          `@${workspaceName}/${plugin}:sync-source`,
+        ],
       };
       return nxJson;
     });
@@ -678,14 +699,14 @@ module.exports = (tree) => tree.write('sync-output.txt', workspaceDepMarker);
     );
     createFile(`packages/${inferredProject}/my-project-file`);
 
-    // Preserve diagnostics from the daemon used by the preceding tests before
-    // reset removes its log.
-    dumpDaemonLog('before reset');
     runCLI('reset');
     runCLI('sync');
     expect(readFileSync(join(tmpProjPath(), 'sync-output.txt'), 'utf-8')).toBe(
       builtMarker
     );
+    expect(
+      readFileSync(join(tmpProjPath(), 'sync-source-output.txt'), 'utf-8')
+    ).toBe(sourceMarker);
 
     const configuration = JSON.parse(
       runCLI(`show project ${inferredProject} --json`)
