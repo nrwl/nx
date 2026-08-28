@@ -530,7 +530,8 @@
             "NX_AI_FILES_USE_LOCAL",
             "NX_WINDOWS_PTY_SUPPORT",
             "NX_ORIGINAL_FORCE_COLOR",
-            "NX_MIGRATE_ORCHESTRATOR"
+            "NX_MIGRATE_ORCHESTRATOR",
+            "NX_CSS_MODULE_HASH_FUNCTION"
           ]
         }
       }
