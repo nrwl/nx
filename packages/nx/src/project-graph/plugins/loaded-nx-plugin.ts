@@ -12,13 +12,15 @@ import type {
   CreateNodesContext,
   CreateNodesResult,
   NxPlugin,
-  PostTasksExecutionContext,
   PreTasksExecutionContext,
   ProjectsMetadata,
 } from './public-api';
 import { isIsolationEnabled } from './isolation/enabled';
 import { isDaemonEnabled } from '../../daemon/client/client';
-import { rehydrateTerminalOutputs } from './task-results-stub';
+import {
+  rehydrateTerminalOutputs,
+  type MaybeStubbedPostTasksExecutionContext,
+} from './task-results-stub';
 
 /**
  * NOTE: Avoid using `import type` with this class. It causes issues with
@@ -49,7 +51,7 @@ export class LoadedNxPlugin {
     context: PreTasksExecutionContext
   ) => Promise<NodeJS.ProcessEnv>;
   readonly postTasksExecution?: (
-    context: PostTasksExecutionContext
+    context: MaybeStubbedPostTasksExecutionContext
   ) => Promise<void>;
 
   readonly options?: unknown;
@@ -175,9 +177,12 @@ export class LoadedNxPlugin {
     }
 
     if (plugin.postTasksExecution) {
-      // Rehydrated here rather than on receipt from the daemon, so a context
-      // bound for an isolated plugin stays stubbed across that second hop.
-      this.postTasksExecution = async (context: PostTasksExecutionContext) =>
+      // The single rehydration point: every transport hands its context
+      // straight here, so a context bound for an isolated plugin stays stubbed
+      // across that second hop rather than being read and re-stubbed.
+      this.postTasksExecution = async (
+        context: MaybeStubbedPostTasksExecutionContext
+      ) =>
         plugin.postTasksExecution(
           this.options,
           rehydrateTerminalOutputs(context)

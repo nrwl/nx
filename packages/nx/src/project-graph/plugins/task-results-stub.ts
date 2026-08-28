@@ -1,12 +1,14 @@
 import { existsSync, readFileSync } from 'node:fs';
+import { basename } from 'node:path';
 import type { TaskResult, TaskResults } from '../../tasks-runner/life-cycle';
 import { terminalOutputPathForHash } from '../../tasks-runner/terminal-output-path';
 import { logger } from '../../utils/logger';
 import type { PostTasksExecutionContext } from './public-api';
 
 /**
- * A {@link PostTasksExecutionContext} whose terminal outputs have been replaced
- * by the paths holding them, so it can cross a process boundary.
+ * A {@link PostTasksExecutionContext} whose terminal outputs have been lifted
+ * out of `taskResults` and into a map of the paths holding them, so it can
+ * cross a process boundary.
  *
  * `taskResults` carries every task's full output inline, which on a large
  * workspace exceeds V8's maximum string length: `serialize` tries
@@ -15,38 +17,55 @@ import type { PostTasksExecutionContext } from './public-api';
  * The bytes are already on disk at `<cacheDir>/terminalOutputs/<hash>`, so
  * transports carry paths and each receiver reads them back before any plugin
  * sees the context.
+ *
+ * The paths live here rather than in `terminalOutput` so that field never
+ * holds two meanings: a stubbed result carries no `terminalOutput` at all, so
+ * a transport that forgets to rehydrate hands a plugin a missing value rather
+ * than a filename shaped exactly like real output. The map is required, so a
+ * stubbed context cannot typecheck without one.
  */
 export type StubbedPostTasksExecutionContext = PostTasksExecutionContext & {
   /**
-   * Ids in `taskResults` whose `terminalOutput` holds a path rather than the
-   * output. Out of band because a task can print anything, so no in-band
-   * marker is safe from a task that prints it.
+   * Path to the terminal output of each stubbed task, keyed by task id. Out of
+   * band because a task can print anything, so no in-band marker is safe from
+   * a task that prints it.
    */
-  stubbedTerminalOutputs?: string[];
+  stubbedTerminalOutputs: Record<string, string>;
 };
 
+export type MaybeStubbedPostTasksExecutionContext =
+  | PostTasksExecutionContext
+  | StubbedPostTasksExecutionContext;
+
+function isStubbed(
+  context: MaybeStubbedPostTasksExecutionContext
+): context is StubbedPostTasksExecutionContext {
+  return !!(context as StubbedPostTasksExecutionContext).stubbedTerminalOutputs;
+}
+
 /**
- * Swaps in paths ahead of a transport. Idempotent, so a context that was
+ * Swaps outputs out for paths ahead of a transport. Idempotent, so a context
  * already stubbed for the daemon can be passed on to a plugin worker as-is.
  */
 export function stubTerminalOutputs(
-  context: PostTasksExecutionContext | StubbedPostTasksExecutionContext
-): StubbedPostTasksExecutionContext {
+  context: MaybeStubbedPostTasksExecutionContext
+): MaybeStubbedPostTasksExecutionContext {
   if (!context.taskResults) {
     return context;
   }
 
-  const stubbed = new Set(
-    (context as StubbedPostTasksExecutionContext).stubbedTerminalOutputs ?? []
-  );
+  const stubbedTerminalOutputs: Record<string, string> = {
+    ...(isStubbed(context) ? context.stubbedTerminalOutputs : {}),
+  };
   const taskResults: TaskResults = {};
   let swapped = false;
 
   for (const [id, result] of Object.entries(context.taskResults)) {
-    const path = stubbablePath(result, stubbed.has(id));
+    const path = id in stubbedTerminalOutputs ? null : stubbablePath(result);
     if (path) {
-      stubbed.add(id);
-      taskResults[id] = { ...result, terminalOutput: path };
+      const { terminalOutput, ...withoutOutput } = result;
+      stubbedTerminalOutputs[id] = path;
+      taskResults[id] = withoutOutput as TaskResult;
       swapped = true;
     } else {
       taskResults[id] = result;
@@ -55,12 +74,12 @@ export function stubTerminalOutputs(
 
   // Nothing to swap: hand back the context as it came, so a run with no
   // outputs on disk sends exactly what it sent before. Covers the
-  // already-stubbed case too, which keeps its own list by staying untouched.
+  // already-stubbed case too, which keeps its own map by staying untouched.
   if (!swapped) {
     return context;
   }
 
-  return { ...context, taskResults, stubbedTerminalOutputs: [...stubbed] };
+  return { ...context, taskResults, stubbedTerminalOutputs };
 }
 
 /**
@@ -68,22 +87,19 @@ export function stubTerminalOutputs(
  * is every in-process plugin run without the daemon.
  */
 export function rehydrateTerminalOutputs(
-  context: StubbedPostTasksExecutionContext
+  context: MaybeStubbedPostTasksExecutionContext
 ): PostTasksExecutionContext {
-  if (!context.stubbedTerminalOutputs?.length) {
+  if (!isStubbed(context)) {
     return context;
   }
 
   const taskResults: TaskResults = { ...context.taskResults };
-  for (const id of context.stubbedTerminalOutputs) {
+  for (const [id, path] of Object.entries(context.stubbedTerminalOutputs)) {
     const result = taskResults[id];
     if (!result) {
       continue;
     }
-    taskResults[id] = {
-      ...result,
-      terminalOutput: readTerminalOutput(result.terminalOutput),
-    };
+    taskResults[id] = { ...result, terminalOutput: readTerminalOutput(path) };
   }
 
   const { stubbedTerminalOutputs, ...rehydrated } = {
@@ -98,18 +114,19 @@ export function rehydrateTerminalOutputs(
  * before it was hashed has no path, and a task that never ran has no file —
  * both keep whatever they already carry rather than losing it.
  */
-function stubbablePath(
-  result: TaskResult,
-  alreadyStubbed: boolean
-): string | null {
-  if (alreadyStubbed || result.terminalOutput === undefined) {
+function stubbablePath(result: TaskResult): string | null {
+  if (result.terminalOutput === undefined) {
     return null;
   }
   const hash = result.task?.hash;
   if (!hash) {
     return null;
   }
-  const path = terminalOutputPathForHash(hash);
+  // `getCustomHasher` lets a plugin return any string, and this one reaches a
+  // read, so the sink is kept inside the cache dir here rather than trusted to
+  // the hasher. A hash that needed stripping resolves to a file that does not
+  // exist, which falls back to sending the output inline.
+  const path = terminalOutputPathForHash(basename(hash));
   return existsSync(path) ? path : null;
 }
 
