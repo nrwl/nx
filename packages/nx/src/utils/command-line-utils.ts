@@ -52,7 +52,11 @@ export interface NxArgs {
    * this; every decision about what the user ASKED FOR reads the field above.
    */
   resolvedOutputStyle?: OutputStyle;
-  /** @deprecated Read `specifiedOutputStyle` or `resolvedOutputStyle` instead. */
+  /**
+   * @deprecated Read `specifiedOutputStyle` for what the user named, or
+   * `resolvedOutputStyle` for what the run renders with. This will be removed
+   * in Nx 24.
+   */
   outputStyle?: string;
   tui?: boolean;
   nxBail?: boolean;

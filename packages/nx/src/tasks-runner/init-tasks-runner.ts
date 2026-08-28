@@ -75,7 +75,10 @@ async function createOrchestrator(
     nxArgs,
     false,
     daemonClient,
-    // Previously `undefined`, which discarded the style entirely on this path.
+    // These come from `nx.json`'s runner options rather than argv - the caller
+    // passes `{}` and `getRunnerOptions` merges only what `nx.json` names - so
+    // this path renders `static-failures-only` unless a style is configured
+    // there. `--output-style` does not reach `runDiscreteTasks`/`runContinuousTasks`.
     nxArgs.specifiedOutputStyle,
     nxArgs.resolvedOutputStyle ?? 'static-failures-only',
     fullTaskGraph
