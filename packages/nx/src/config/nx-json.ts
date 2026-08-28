@@ -989,6 +989,14 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   useInferencePlugins?: boolean;
 
   /**
+   * Set this to true to disable automatic AI agent configuration checks.
+   * Nx will not print the update disclaimer after task runs, and the daemon
+   * will not compute agent configuration status in the background. Explicit
+   * `nx configure-ai-agents` commands remain available.
+   */
+  neverConfigureAiAgents?: boolean;
+
+  /**
    * Setting this to true will cause all attempts to setup your workspace to Nx Cloud to fail.
    * This value does not prevent using Nx Cloud if already connected.
    * Use NX_NO_CLOUD=true env var or the `--no-cloud` arg to prevent using Nx Cloud when running commands.

@@ -1222,6 +1222,21 @@ You can also use objects with `matcher` and `explanation` properties to document
 - **evaluated**: Rule violations are reported but don't cause failures (exit code 0)
 - **disabled**: Rule is not evaluated at all
 
+## Disable automatic AI agent configuration checks
+
+Set `neverConfigureAiAgents` to `true` when you do not want Nx to check whether AI agent configuration files match its generated files.
+
+This setting disables the post-task update disclaimer and the daemon's background agent configuration check. You can still run `nx configure-ai-agents` explicitly.
+
+```json
+// nx.json
+{
+  "neverConfigureAiAgents": true
+}
+```
+
+Set `NX_NEVER_CONFIGURE_AI_AGENTS=true` to disable the check for one invocation. The environment variable takes precedence over `nx.json`. Set it to `false` to enable the check for one invocation when the workspace setting disables it.
+
 ## Analytics
 
 The `analytics` property controls whether Nx collects usage telemetry. When not set, Nx prompts you on first run in an interactive terminal.
