@@ -232,7 +232,7 @@ fn collect_filesets<'a>(
 ) {
     for input in inputs {
         match input {
-            Either10::B(value) => {
+            Either9::B(value) => {
                 if let Some(referenced) = named_inputs.get(value.as_str()) {
                     if visiting.insert(value.as_str()) {
                         collect_filesets(referenced, named_inputs, visiting, out);
@@ -242,7 +242,7 @@ fn collect_filesets<'a>(
                     out.push(rest);
                 }
             }
-            Either10::C(file_set) => {
+            Either9::C(file_set) => {
                 if let Some(rest) = file_set.fileset.strip_prefix(WORKSPACE_ROOT) {
                     out.push(rest);
                 }
@@ -318,7 +318,20 @@ mod tests {
     }
 
     fn string_inputs(values: &[&str]) -> Vec<JsInputs> {
-        values.iter().map(|v| Either10::B(v.to_string())).collect()
+        values.iter().map(|v| Either9::B(v.to_string())).collect()
+    }
+
+    fn fileset_inputs(values: &[(&str, bool)]) -> Vec<JsInputs> {
+        values
+            .iter()
+            .map(|(fileset, include_ignored)| {
+                Either9::C(FileSetInput {
+                    fileset: (*fileset).to_string(),
+                    dependencies: None,
+                    include_ignored: Some(*include_ignored),
+                })
+            })
+            .collect()
     }
 
     fn target_with_inputs(inputs: &[&str]) -> Target {
