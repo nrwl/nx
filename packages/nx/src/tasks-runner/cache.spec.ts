@@ -64,9 +64,7 @@ describe('remote cache failures', () => {
 
   it('should treat a failed retrieve as a cache miss', async () => {
     const cache = cacheWithRemote({
-      retrieve: jest
-        .fn()
-        .mockRejectedValue(recoverableError('connection reset')),
+      retrieve: vi.fn().mockRejectedValue(recoverableError('connection reset')),
       store: vi.fn(),
     });
 
@@ -106,7 +104,7 @@ describe('remote cache failures', () => {
   // Regression guard: catching inside tryAndRetry instead of around it would
   // silently remove retries, so a single blip would stop reaching the cache.
   it('should still retry a failing upload before giving up', async () => {
-    const store = jest
+    const store = vi
       .fn()
       .mockRejectedValueOnce(recoverableError('blip'))
       .mockResolvedValueOnce(true);
