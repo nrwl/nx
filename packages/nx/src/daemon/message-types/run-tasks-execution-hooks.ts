@@ -1,5 +1,5 @@
 import type { PreTasksExecutionContext } from '../../project-graph/plugins';
-import type { StubbedPostTasksExecutionContext } from '../../project-graph/plugins/task-results-stub';
+import type { MaybeStubbedPostTasksExecutionContext } from '../../project-graph/plugins/task-results-stub';
 
 export const PRE_TASKS_EXECUTION = 'PRE_TASKS_EXECUTION' as const;
 export const POST_TASKS_EXECUTION = 'POST_TASKS_EXECUTION' as const;
@@ -10,7 +10,7 @@ export type HandlePreTasksExecutionMessage = {
 };
 export type HandlePostTasksExecutionMessage = {
   type: typeof POST_TASKS_EXECUTION;
-  context: StubbedPostTasksExecutionContext;
+  context: MaybeStubbedPostTasksExecutionContext;
 };
 
 export function isHandlePreTasksExecutionMessage(

@@ -1,7 +1,5 @@
-import type {
-  PostTasksExecutionContext,
-  PreTasksExecutionContext,
-} from '../../project-graph/plugins/public-api';
+import type { PreTasksExecutionContext } from '../../project-graph/plugins/public-api';
+import type { MaybeStubbedPostTasksExecutionContext } from '../../project-graph/plugins/task-results-stub';
 import {
   runPostTasksExecution,
   runPreTasksExecution,
@@ -24,7 +22,7 @@ export async function handleRunPreTasksExecution(
   }
 }
 export async function handleRunPostTasksExecution(
-  context: PostTasksExecutionContext
+  context: MaybeStubbedPostTasksExecutionContext
 ) {
   try {
     await runPostTasksExecution(context);
