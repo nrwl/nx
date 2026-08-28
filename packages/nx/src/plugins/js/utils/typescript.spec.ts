@@ -1,5 +1,7 @@
 import {
+  clearRootTsConfigCustomConditionsCache,
   getDaemonResolveConditionNodeArgs,
+  getRootTsConfigCustomConditions,
   readTsConfigOptions,
 } from './typescript';
 import { join } from 'path';
@@ -39,6 +41,39 @@ describe('readTsConfigOptions', () => {
       configFilePath: undefined,
       strict: true,
     });
+  });
+});
+
+describe('getRootTsConfigCustomConditions', () => {
+  let fs: TempFs;
+  beforeEach(() => {
+    fs = new TempFs('custom-conditions');
+    clearRootTsConfigCustomConditionsCache();
+  });
+  afterEach(() => {
+    fs.cleanup();
+    clearRootTsConfigCustomConditionsCache();
+  });
+
+  it('caches conditions per root until explicitly cleared', async () => {
+    await fs.createFiles({
+      'tsconfig.json': JSON.stringify({
+        compilerOptions: { customConditions: ['source'] },
+      }),
+    });
+
+    expect(getRootTsConfigCustomConditions(fs.tempDir)).toEqual(['source']);
+
+    fs.writeFile(
+      'tsconfig.json',
+      JSON.stringify({ compilerOptions: { customConditions: ['updated'] } })
+    );
+
+    // The change is invisible until the cache is invalidated.
+    expect(getRootTsConfigCustomConditions(fs.tempDir)).toEqual(['source']);
+
+    clearRootTsConfigCustomConditionsCache();
+    expect(getRootTsConfigCustomConditions(fs.tempDir)).toEqual(['updated']);
   });
 });
 

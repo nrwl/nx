@@ -6,6 +6,7 @@ import {
   getWorkspacePackagesMetadata,
   matchImportToWildcardEntryPointsToProjectMap,
 } from '../../plugins/js/utils/packages';
+import { refreshSourceGraphResolvers } from '../../plugins/js/utils/register';
 import { getRootTsConfigResolveExportsConditions } from '../../plugins/js/utils/typescript';
 import { readJsonFile } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
@@ -46,7 +47,19 @@ let projectsWithoutInferencePromise: Promise<
 
 async function getProjectsWithoutInference(root: string) {
   projectsWithoutInferencePromise ??=
-    retrieveProjectConfigurationsWithoutPluginInference(root);
+    retrieveProjectConfigurationsWithoutPluginInference(root).then(
+      (projects) => {
+        // Source graphs registered against an older snapshot would keep its
+        // package names; push the rebuilt set to them.
+        refreshSourceGraphResolvers(
+          root,
+          () =>
+            getWorkspacePackagesMetadata(projects)
+              .packageManagerWorkspacePackageNames
+        );
+        return projects;
+      }
+    );
   return (projectsWithoutInference ??= await projectsWithoutInferencePromise);
 }
 
@@ -91,14 +104,6 @@ export async function resolveNxPlugin(
     ...result,
     workspacePackageNames: workspacePackageNames ?? [],
   };
-}
-
-export async function refreshWorkspacePackageNames(
-  root: string
-): Promise<string[]> {
-  resetResolvePluginCache();
-  return getWorkspacePackagesMetadata(await getProjectsWithoutInference(root))
-    .packageManagerWorkspacePackageNames;
 }
 
 /**

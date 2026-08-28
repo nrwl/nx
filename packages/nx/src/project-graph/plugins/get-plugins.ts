@@ -7,17 +7,11 @@ import {
   readNxJson,
 } from '../../config/nx-json';
 import { hashObject } from '../../hasher/file-hasher';
-import {
-  hasSourceGraphResolvers,
-  refreshSourceGraphResolvers,
-} from '../../plugins/js/utils/register';
+import { refreshSourceGraphResolvers } from '../../plugins/js/utils/register';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { loadNxPlugin } from './in-process-loader';
 import { loadIsolatedNxPlugin } from './isolation';
-import {
-  refreshWorkspacePackageNames,
-  resetResolvePluginCache,
-} from './resolve-plugin';
+import { resetResolvePluginCache } from './resolve-plugin';
 
 import { isIsolationEnabled } from './isolation/enabled';
 import {
@@ -194,14 +188,7 @@ export async function getPluginsSeparated(
     cachedSeparatedPlugins &&
     pluginsConfigurationHash === currentPluginsConfigurationHash
   ) {
-    // The plugin instance can outlive the workspace-project snapshot used to
-    // register it, so refresh package names before a later lazy import runs.
-    refreshSourceGraphResolvers(
-      root,
-      hasSourceGraphResolvers(root)
-        ? await refreshWorkspacePackageNames(root)
-        : undefined
-    );
+    refreshSourceGraphResolvers(root);
     return cachedSeparatedPlugins;
   }
 

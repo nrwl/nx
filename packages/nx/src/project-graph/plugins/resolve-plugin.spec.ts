@@ -23,8 +23,13 @@ vi.mock('../../plugins/js/utils/packages', () => ({
   getWorkspacePackagesMetadata: vi.fn(() => ({
     entryPointsToProjectMap: entryPointsToProjectMapMock,
     wildcardEntryPointsToProjectMap: {},
+    packageManagerWorkspacePackageNames: ['@proj/from-snapshot'],
   })),
   matchImportToWildcardEntryPointsToProjectMap: vi.fn(() => null),
+}));
+
+vi.mock('../../plugins/js/utils/register', () => ({
+  refreshSourceGraphResolvers: vi.fn(),
 }));
 
 vi.mock('../../utils/workspace-root', () => ({
@@ -54,6 +59,7 @@ vi.mock('../../project-graph/utils/find-project-for-path', () => ({
 import {
   getPluginPathAndName,
   resetResolvePluginCache,
+  resolveNxPlugin,
 } from './resolve-plugin';
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { join, resolve } from 'node:path';
@@ -111,21 +117,6 @@ describe('resolveSubpathFromExports (via getPluginPathAndName)', () => {
       const s = String(p);
       return s.endsWith('tsconfig.base.json') || s.endsWith('tsconfig.json');
     });
-  });
-
-  it('marks a relative workspace TypeScript plugin as source', () => {
-    const pluginDirectory = join(process.cwd(), 'src/project-graph/plugins');
-    const workspace = resolve(process.cwd(), '../..');
-
-    const result = getPluginPathAndName(
-      './resolve-plugin.ts',
-      [pluginDirectory],
-      {},
-      workspace
-    );
-
-    expect(result.pluginPath).toBe(join(pluginDirectory, 'resolve-plugin.ts'));
-    expect(result.isSourcePlugin).toBe(true);
   });
 
   afterEach(() => {
@@ -253,5 +244,63 @@ describe('resolveSubpathFromExports (via getPluginPathAndName)', () => {
         root
       )
     ).toThrow(/Unable to resolve local plugin/);
+  });
+});
+
+describe('getPluginPathAndName', () => {
+  beforeEach(() => {
+    resetResolvePluginCache();
+    existsSyncMock.mockImplementation(() => false);
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('marks a relative workspace TypeScript plugin as source', () => {
+    const workspace = resolve(__dirname, '../../..');
+
+    const result = getPluginPathAndName(
+      './resolve-plugin.ts',
+      [__dirname],
+      {},
+      workspace
+    );
+
+    expect(result.pluginPath).toBe(join(__dirname, 'resolve-plugin.ts'));
+    expect(result.isSourcePlugin).toBe(true);
+  });
+});
+
+describe('resolveNxPlugin', () => {
+  beforeEach(() => {
+    resetResolvePluginCache();
+    existsSyncMock.mockImplementation(() => false);
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('pushes package names to source graph resolvers only when the workspace snapshot is rebuilt', async () => {
+    const { refreshSourceGraphResolvers } =
+      await import('../../plugins/js/utils/register');
+
+    await expect(
+      resolveNxPlugin('@scope/missing-plugin', root, [])
+    ).rejects.toThrow();
+
+    expect(refreshSourceGraphResolvers).toHaveBeenCalledTimes(1);
+    const [refreshedRoot, getPackageNames] = vi.mocked(
+      refreshSourceGraphResolvers
+    ).mock.calls[0];
+    expect(refreshedRoot).toBe(root);
+    expect(getPackageNames?.()).toEqual(['@proj/from-snapshot']);
+
+    // A second resolution reuses the cached snapshot and must not push again.
+    await expect(
+      resolveNxPlugin('@scope/missing-plugin', root, [])
+    ).rejects.toThrow();
+    expect(refreshSourceGraphResolvers).toHaveBeenCalledTimes(1);
   });
 });

@@ -112,9 +112,14 @@ export function getRootTsConfigPath(): string | null {
   return tsConfigFileName ? join(workspaceRoot, tsConfigFileName) : null;
 }
 
+const customConditionsCache = new Map<string, string[]>();
 export function getRootTsConfigCustomConditions(
   root: string = workspaceRoot
 ): string[] {
+  if (customConditionsCache.has(root)) {
+    return customConditionsCache.get(root)!;
+  }
+
   // Resolve via the TypeScript API rather than a raw JSON read so that
   // `customConditions` inherited through `extends` chains are honored —
   // matches what TypeScript itself sees when resolving package exports.
@@ -135,7 +140,12 @@ export function getRootTsConfigCustomConditions(
     break;
   }
 
+  customConditionsCache.set(root, conditions);
   return conditions;
+}
+
+export function clearRootTsConfigCustomConditionsCache(): void {
+  customConditionsCache.clear();
 }
 
 /**
@@ -171,8 +181,9 @@ export function getPluginResolveConditionNodeArgs(
 
 /**
  * Plugin conditions must never apply to the daemon process: built generators
- * run there too. Older Node versions rely on the isolated plugin worker,
- * which receives its conditions separately at startup.
+ * run there too. Runtimes without `module.registerHooks` get no scoped
+ * conditions on this path; isolated plugin workers still receive them at
+ * startup, and `NODE_OPTIONS=--conditions` remains the escape hatch.
  */
 export function getDaemonResolveConditionNodeArgs(): string[] {
   return [];

@@ -546,21 +546,24 @@ export function registerSourceGraphResolver(
   };
 }
 
-export function hasSourceGraphResolvers(root: string): boolean {
-  return [...sourceGraphs.values()].some((graph) => graph.root === root);
-}
-
+/**
+ * The package-names thunk runs only when a source graph exists, so callers
+ * may hand it a walk over the full project graph without paying for it here.
+ */
 export function refreshSourceGraphResolvers(
   root: string,
-  workspacePackageNames?: string[]
+  getWorkspacePackageNames?: () => string[]
 ): void {
   if (sourceGraphs.size === 0) return;
   const conditions = getRootTsConfigResolveExportsConditions(root);
+  const packageNames = getWorkspacePackageNames
+    ? new Set(getWorkspacePackageNames())
+    : undefined;
   for (const graph of sourceGraphs.values()) {
     if (graph.root === root) {
       graph.conditions = conditions;
-      if (workspacePackageNames) {
-        graph.packageNames = new Set(workspacePackageNames);
+      if (packageNames) {
+        graph.packageNames = packageNames;
       }
     }
   }

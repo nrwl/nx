@@ -19,11 +19,9 @@ vi.mock('./in-process-loader', () => ({
 // loadSpecifiedNxPlugins must drop it on every reload. Mocked so the test can
 // assert that wiring without touching the real filesystem-backed resolver.
 vi.mock('./resolve-plugin', () => ({
-  refreshWorkspacePackageNames: vi.fn(async () => ['@proj/new-package']),
   resetResolvePluginCache: vi.fn(),
 }));
 vi.mock('../../plugins/js/utils/register', () => ({
-  hasSourceGraphResolvers: vi.fn(() => false),
   refreshSourceGraphResolvers: vi.fn(),
 }));
 
@@ -78,13 +76,10 @@ describe('getPluginsSeparated', () => {
     // Unlike jest, resetModules does not re-run vi.mock factories, so the
     // mock fns persist across tests — clear their recorded calls.
     loadNxPlugin.mockClear();
-    const { refreshWorkspacePackageNames, resetResolvePluginCache } =
-      await import('./resolve-plugin');
-    (refreshWorkspacePackageNames as Mock).mockClear();
+    const { resetResolvePluginCache } = await import('./resolve-plugin');
     (resetResolvePluginCache as Mock).mockClear();
-    const { hasSourceGraphResolvers, refreshSourceGraphResolvers } =
+    const { refreshSourceGraphResolvers } =
       await import('../../plugins/js/utils/register');
-    (hasSourceGraphResolvers as Mock).mockReset().mockReturnValue(false);
     (refreshSourceGraphResolvers as Mock).mockClear();
     loadNxPlugin.mockImplementation((plugin: unknown) => {
       const name = typeof plugin === 'string' ? plugin : (plugin as any).plugin;
@@ -195,34 +190,32 @@ describe('getPluginsSeparated', () => {
   });
 
   it('refreshes source graph conditions when returning cached plugins', async () => {
-    const refreshSourceGraphResolvers = (
-      await import('../../plugins/js/utils/register')
-    ).refreshSourceGraphResolvers as Mock;
-    const load = getPluginsSeparated({ plugins: ['test-a'] });
-    finishLoading('test-a');
-    await load;
-
-    refreshSourceGraphResolvers.mockClear();
-    await getPluginsSeparated({ plugins: ['test-a'] });
-
-    expect(refreshSourceGraphResolvers).toHaveBeenCalledTimes(1);
-  });
-
-  it('refreshes workspace package names for a cached source graph', async () => {
-    const { refreshWorkspacePackageNames } = await import('./resolve-plugin');
-    const { hasSourceGraphResolvers, refreshSourceGraphResolvers } =
+    const { refreshSourceGraphResolvers } =
       await import('../../plugins/js/utils/register');
     const load = getPluginsSeparated({ plugins: ['test-a'] }, '/workspace');
     finishLoading('test-a');
     await load;
 
-    (hasSourceGraphResolvers as Mock).mockReturnValue(true);
     (refreshSourceGraphResolvers as Mock).mockClear();
     await getPluginsSeparated({ plugins: ['test-a'] }, '/workspace');
 
-    expect(refreshWorkspacePackageNames).toHaveBeenCalledWith('/workspace');
-    expect(refreshSourceGraphResolvers).toHaveBeenCalledWith('/workspace', [
-      '@proj/new-package',
-    ]);
+    // Conditions only; no package-names thunk on the cached path.
+    expect(refreshSourceGraphResolvers).toHaveBeenCalledTimes(1);
+    expect(refreshSourceGraphResolvers).toHaveBeenCalledWith('/workspace');
+  });
+
+  it('does not rebuild the local-plugin resolution snapshot on a cache hit', async () => {
+    const { resetResolvePluginCache } = await import('./resolve-plugin');
+    const load = getPluginsSeparated({ plugins: ['test-a'] });
+    finishLoading('test-a');
+    await load;
+
+    (resetResolvePluginCache as Mock).mockClear();
+    await getPluginsSeparated({ plugins: ['test-a'] });
+
+    // Dropping the snapshot forces a full workspace re-glob on the next
+    // resolution, so the cached path must never do it. Fresh package names
+    // reach source graph resolvers from the recompute sites instead.
+    expect(resetResolvePluginCache).not.toHaveBeenCalled();
   });
 });
