@@ -5,6 +5,7 @@
 //! `source`, so it cannot rebuild what `filterAffected` returns.
 
 pub mod dependent_outputs;
+mod project_paths;
 pub mod tasks;
 
 use napi::bindgen_prelude::*;
@@ -15,9 +16,9 @@ use std::path::Path;
 use std::sync::Arc;
 use tracing::warn;
 
+use crate::native::affected::project_paths::{ProjectRoots, normalize_path};
 use crate::native::glob::build_glob_set;
 use crate::native::project_graph::types::{Project, ProjectGraph, Target};
-use crate::native::project_graph::utils::{find_project_for_path, normalize_project_root};
 use crate::native::types::{JsInputs, NxJson};
 
 /// A locator implemented in JavaScript, called once per run with the changed paths.
@@ -53,7 +54,7 @@ pub async fn locate_touched_projects(
         JsLocator,
     >,
 ) -> Result<Vec<String>> {
-    let graph = Arc::clone(&*project_graph);
+    let graph = Arc::clone(project_graph);
     let mut touched: Vec<String> = Vec::new();
 
     touched.extend(touched_projects(&graph, &touched_files));
@@ -77,33 +78,12 @@ pub async fn locate_touched_projects(
 }
 
 /// Maps each changed file to the project that owns it.
-///
-/// The mapping is built here rather than with `create_project_root_mappings`,
-/// which normalizes the project *name* into the value instead of the root into
-/// the key and so cannot match a project whose root is `""`.
 fn touched_projects(graph: &ProjectGraph, touched_files: &[String]) -> Vec<String> {
-    let root_map: HashMap<String, String> = graph
-        .nodes
-        .iter()
-        .map(|(name, project)| (normalize_project_root(&project.root), name.clone()))
-        .collect();
-
+    let roots = ProjectRoots::new(graph);
     touched_files
         .iter()
-        .filter_map(|file| find_project_for_path(normalize_path(file), &root_map).map(String::from))
+        .filter_map(|file| roots.owner_of(&normalize_path(file)).map(String::from))
         .collect()
-}
-
-/// Mirrors `normalizePath` in `packages/nx/src/utils/path.ts`: strip a Windows
-/// drive letter, then swap separators. Root keys are unix-style, and `--files`
-/// reaches us exactly as the user typed it, so a Windows path matches nothing
-/// without this.
-fn normalize_path(path: &str) -> String {
-    let without_drive = match path.as_bytes() {
-        [drive, b':', ..] if drive.is_ascii_alphabetic() => &path[2..],
-        _ => path,
-    };
-    without_drive.replace('\\', "/")
 }
 
 /// What a matched implicit pattern marks affected.
