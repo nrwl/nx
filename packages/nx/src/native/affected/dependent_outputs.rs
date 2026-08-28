@@ -9,7 +9,7 @@
 //!
 //!   `Files(globs)` comes from an `includeIgnored` fileset. I/O tracing turns an
 //!   observed read of a generated artifact into one of these, which can preclude
-//!   the explicit input entirely — the plan then reads a dependency's build
+//!   the explicit input entirely. The plan then reads a dependency's build
 //!   output with no `TaskOutput` anywhere in it.
 //!
 //! Both are matched pattern-to-pattern against the producer's *declared*
@@ -19,19 +19,12 @@
 //! every task that has not been built yet, which is exactly backwards.
 
 use napi::bindgen_prelude::*;
-use std::collections::{HashMap, HashSet, VecDeque};
+use rayon::prelude::*;
+use std::collections::HashMap;
 
 use crate::native::tasks::types::{HashInstruction, HashPlans, TaskGraph};
 
-#[napi(object)]
-pub struct DependentOutputEdge {
-    /// The task whose plan reads the artifact.
-    pub consumer: String,
-    /// The task that declares it as an output.
-    pub producer: String,
-}
-
-/// Consumer -> producer edges for every task in `hash_plans`.
+/// Consumer task id -> the upstream task ids whose declared outputs it reads.
 ///
 /// Producers are searched over the consumer's whole dependency closure rather
 /// than its direct dependencies. `TaskOutput` does not record whether its
@@ -39,139 +32,233 @@ pub struct DependentOutputEdge {
 /// producer sits, so the closure is the only scope that cannot miss an edge.
 /// Over-reporting an edge costs a task that was going to be a cache hit;
 /// missing one skips a task that needed to run.
-#[napi]
+#[napi(ts_return_type = "Record<string, Array<string>>")]
 pub fn dependent_output_edges(
     #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
     hash_plans: &External<HashPlans>,
     task_graph: TaskGraph,
-) -> Vec<DependentOutputEdge> {
+) -> HashMap<String, Vec<String>> {
     compute_dependent_output_edges(hash_plans, &task_graph)
 }
 
 pub(crate) fn compute_dependent_output_edges(
     hash_plans: &HashPlans,
     task_graph: &TaskGraph,
-) -> Vec<DependentOutputEdge> {
-    let mut edges = Vec::new();
+) -> HashMap<String, Vec<String>> {
+    let reads = resolve_reads(hash_plans);
+    if reads.is_empty() {
+        return HashMap::new();
+    }
+    let index = TaskIndex::new(task_graph);
 
-    for (consumer, plan) in &hash_plans.plans {
-        // Owned, because the pool hands out a guard that cannot outlive the
-        // lookup it came from.
-        let mut consumer_globs: Vec<String> = Vec::new();
-        let mut declared_outputs: Vec<Vec<String>> = Vec::new();
+    hash_plans
+        .plans
+        .par_iter()
+        .map_init(
+            || Traversal::new(index.len()),
+            |traversal, (consumer, plan)| {
+                let plan_reads: Vec<&InstructionReads> =
+                    plan.iter().filter_map(|id| reads.get(id)).collect();
+                if plan_reads.is_empty() {
+                    return None;
+                }
+                let from = index.position(consumer)?;
+                let mut producers: Vec<String> = traversal
+                    .upstream_of(&index, from)
+                    .filter(|&producer| {
+                        let outputs = &index.outputs[producer];
+                        !outputs.is_empty() && plan_reads.iter().any(|read| read.matches(outputs))
+                    })
+                    .map(|producer| index.ids[producer].clone())
+                    .collect();
+                // The closure walk order is not meaningful; sort for a stable answer.
+                producers.sort_unstable();
+                (!producers.is_empty()).then(|| (consumer.clone(), producers))
+            },
+        )
+        .flatten()
+        .collect()
+}
 
-        for id in plan {
-            match hash_plans.pool.get(*id).value() {
-                HashInstruction::Files(globs) => consumer_globs.extend(globs.iter().cloned()),
-                HashInstruction::TaskOutput(_, outputs) => declared_outputs.push(outputs.clone()),
-                _ => {}
-            }
+/// What one interned instruction reads that an upstream task could produce.
+///
+/// Resolved once per distinct instruction rather than once per task. A glob set
+/// shared by a thousand tasks is interned to one id, so it is reduced here once.
+enum InstructionReads {
+    /// Literal prefixes of the positive globs in an `includeIgnored` fileset.
+    Globs(Vec<String>),
+    /// Literal prefixes of the positive outputs a `TaskOutput` carries. It was
+    /// cloned from one producer's `outputs`, so it identifies that producer by
+    /// equality rather than overlap.
+    Declared(Vec<String>),
+}
+
+impl InstructionReads {
+    fn matches(&self, output_prefixes: &[String]) -> bool {
+        match self {
+            Self::Declared(prefixes) => prefixes == output_prefixes,
+            Self::Globs(globs) => globs
+                .iter()
+                .any(|glob| output_prefixes.iter().any(|out| paths_overlap(glob, out))),
         }
+    }
+}
 
-        if consumer_globs.is_empty() && declared_outputs.is_empty() {
-            continue;
-        }
+fn resolve_reads(hash_plans: &HashPlans) -> HashMap<u32, InstructionReads> {
+    let mut ids: Vec<u32> = hash_plans.plans.values().flatten().copied().collect();
+    ids.par_sort_unstable();
+    ids.dedup();
 
-        for producer in upstream_task_ids(task_graph, consumer) {
-            let Some(task) = task_graph.tasks.get(&producer) else {
-                continue;
+    ids.into_par_iter()
+        .filter_map(|id| {
+            let reads = match hash_plans.pool.get(id).value() {
+                HashInstruction::Files(globs) => InstructionReads::Globs(positive_prefixes(globs)),
+                HashInstruction::TaskOutput(_, outputs) => {
+                    InstructionReads::Declared(positive_prefixes(outputs))
+                }
+                _ => return None,
             };
-            if task.outputs.is_empty() {
-                continue;
-            }
-            // An explicit TaskOutput was built from this producer's outputs, so
-            // the vectors are equal rather than merely overlapping.
-            let explicit = declared_outputs.iter().any(|o| *o == task.outputs);
-            let inferred = !explicit
-                && consumer_globs
-                    .iter()
-                    .any(|glob| overlaps_any_output(glob, &task.outputs));
-            if explicit || inferred {
-                edges.push(DependentOutputEdge {
-                    consumer: consumer.clone(),
-                    producer,
-                });
-            }
-        }
-    }
-
-    edges.sort_by(|a, b| (&a.consumer, &a.producer).cmp(&(&b.consumer, &b.producer)));
-    edges
+            Some((id, reads))
+        })
+        .collect()
 }
 
-/// Every task reachable from `start` through `dependencies`, excluding itself.
-/// `continuous_dependencies` are not traversed: a watch or serve task does not
-/// produce the artifacts a hash reads, matching `collect_task_dependencies`.
-fn upstream_task_ids(task_graph: &TaskGraph, start: &str) -> Vec<String> {
-    let mut seen = HashSet::new();
-    let mut queue = VecDeque::from([start.to_string()]);
-    let mut out = Vec::new();
-
-    while let Some(id) = queue.pop_front() {
-        let Some(deps) = task_graph.dependencies.get(&id) else {
-            continue;
-        };
-        for dep in deps {
-            if seen.insert(dep.clone()) {
-                out.push(dep.clone());
-                queue.push_back(dep.clone());
-            }
-        }
-    }
-    out
-}
-
-/// Whether a consumer glob could match something produced under any of the
-/// producer's outputs. Negated patterns on either side subtract, so neither can
-/// establish an edge on its own.
-fn overlaps_any_output(consumer_glob: &str, outputs: &[String]) -> bool {
-    if consumer_glob.starts_with('!') {
-        return false;
-    }
-    outputs
+fn positive_prefixes(patterns: &[String]) -> Vec<String> {
+    patterns
         .iter()
-        .filter(|output| !output.starts_with('!'))
-        .any(|output| paths_overlap(consumer_glob, output))
+        .filter(|pattern| !pattern.starts_with('!'))
+        .map(|pattern| literal_prefix(pattern).to_string())
+        .collect()
+}
+
+/// The task graph flattened to positions, so the closure walk moves over
+/// integers instead of hashing and cloning task ids at every hop.
+struct TaskIndex<'a> {
+    ids: Vec<&'a String>,
+    positions: HashMap<&'a str, usize>,
+    dependencies: Vec<Vec<usize>>,
+    /// Positive declared outputs, reduced to their literal prefix once per task
+    /// rather than once per (consumer, producer) pair.
+    outputs: Vec<Vec<String>>,
+}
+
+impl<'a> TaskIndex<'a> {
+    fn new(task_graph: &'a TaskGraph) -> Self {
+        let ids: Vec<&String> = task_graph.tasks.keys().collect();
+        let positions: HashMap<&str, usize> = ids
+            .iter()
+            .enumerate()
+            .map(|(i, id)| (id.as_str(), i))
+            .collect();
+
+        let dependencies = ids
+            .iter()
+            .map(|id| {
+                task_graph
+                    .dependencies
+                    .get(*id)
+                    .map(|deps| {
+                        deps.iter()
+                            .filter_map(|dep| positions.get(dep.as_str()).copied())
+                            .collect()
+                    })
+                    .unwrap_or_default()
+            })
+            .collect();
+
+        let outputs = ids
+            .iter()
+            .map(|id| positive_prefixes(&task_graph.tasks[*id].outputs))
+            .collect();
+
+        Self {
+            ids,
+            positions,
+            dependencies,
+            outputs,
+        }
+    }
+
+    fn len(&self) -> usize {
+        self.ids.len()
+    }
+
+    fn position(&self, id: &str) -> Option<usize> {
+        self.positions.get(id).copied()
+    }
+}
+
+/// Reusable depth-first walk. `seen` is stamped with the current run rather than
+/// cleared, so one allocation serves every consumer on a rayon worker.
+struct Traversal {
+    seen: Vec<u32>,
+    run: u32,
+    stack: Vec<usize>,
+    reached: Vec<usize>,
+}
+
+impl Traversal {
+    fn new(len: usize) -> Self {
+        Self {
+            seen: vec![0; len],
+            run: 0,
+            stack: Vec::new(),
+            reached: Vec::new(),
+        }
+    }
+
+    /// Every task reachable from `from` through `dependencies`, excluding itself
+    /// unless a cycle leads back. `continuous_dependencies` are not traversed: a
+    /// watch or serve task does not produce the artifacts a hash reads, matching
+    /// `collect_task_dependencies`.
+    fn upstream_of(&mut self, index: &TaskIndex<'_>, from: usize) -> impl Iterator<Item = usize> {
+        self.run += 1;
+        self.stack.clear();
+        self.reached.clear();
+        self.stack.push(from);
+        self.seen[from] = self.run;
+
+        while let Some(current) = self.stack.pop() {
+            for &dep in &index.dependencies[current] {
+                if self.seen[dep] != self.run {
+                    self.seen[dep] = self.run;
+                    self.reached.push(dep);
+                    self.stack.push(dep);
+                }
+            }
+        }
+        self.reached.iter().copied()
+    }
 }
 
 /// Directory containment between two patterns, compared on their literal
-/// prefixes because neither side is a concrete path.
-///
+/// prefixes because neither side is a concrete path. An empty prefix means the
+/// pattern leads with a wildcard and could match anywhere.
+fn paths_overlap(a: &str, b: &str) -> bool {
+    a.is_empty() || b.is_empty() || is_path_prefix(a, b) || is_path_prefix(b, a)
+}
+
 /// Segment-wise, so `dist/libs/ui` does not contain `dist/libs/ui-legacy` the
 /// way a plain `starts_with` would.
-fn paths_overlap(a: &str, b: &str) -> bool {
-    let a = literal_prefix(a);
-    let b = literal_prefix(b);
-    // An empty prefix means the pattern starts with a wildcard and could match
-    // anywhere, so it overlaps everything.
-    if a.is_empty() || b.is_empty() {
-        return true;
-    }
-    let (shorter, longer) = if a.len() <= b.len() { (a, b) } else { (b, a) };
-    let mut short_segments = shorter.split('/');
-    let mut long_segments = longer.split('/');
-    loop {
-        match (short_segments.next(), long_segments.next()) {
-            (Some(s), Some(l)) if s == l => continue,
-            (Some(_), _) => return false,
-            (None, _) => return true,
-        }
-    }
+fn is_path_prefix(prefix: &str, path: &str) -> bool {
+    path == prefix
+        || path
+            .strip_prefix(prefix)
+            .is_some_and(|rest| rest.starts_with('/'))
 }
 
 /// The leading path segments of a glob that contain no wildcard, so
-/// `dist/libs/ui/**/*.js` reduces to `dist/libs/ui`.
+/// `dist/libs/ui/**/*.js` reduces to `dist/libs/ui`. A pattern whose first
+/// segment is already a wildcard reduces to `""`, which overlaps everything.
 fn literal_prefix(pattern: &str) -> &str {
     let pattern = pattern.strip_prefix('!').unwrap_or(pattern);
-    let end = pattern
-        .find(|c| matches!(c, '*' | '?' | '[' | '{' | '(' | '!'))
-        .unwrap_or(pattern.len());
-    let truncated = &pattern[..end];
+    let Some(wildcard) = pattern.find(['*', '?', '[', '{', '(']) else {
+        return pattern.trim_end_matches('/');
+    };
     // Back up to the last complete segment: `dist/li*` must not claim `dist/li`.
-    match truncated.rfind('/') {
-        Some(slash) if end < pattern.len() => &pattern[..slash],
-        _ => truncated.trim_end_matches('/'),
-    }
+    pattern[..wildcard]
+        .rfind('/')
+        .map_or("", |slash| &pattern[..slash])
 }
 
 #[cfg(test)]
@@ -180,31 +267,23 @@ mod tests {
     use crate::native::tasks::types::{InstructionPool, Task};
     use std::sync::Arc;
 
-    fn task(id: &str, outputs: &[&str]) -> Task {
-        Task::new(id.split(':').next().unwrap(), id.split(':').nth(1).unwrap())
-            .with_outputs(outputs.iter().map(|o| o.to_string()).collect())
-            .with_project_root("test")
-    }
-
     fn graph(tasks: Vec<(&str, &[&str])>, deps: Vec<(&str, Vec<&str>)>) -> TaskGraph {
         TaskGraph {
             roots: vec![],
             tasks: tasks
                 .into_iter()
                 .map(|(id, outputs)| {
-                    let mut t = task(id, outputs);
-                    t.id = id.to_string();
-                    (id.to_string(), t)
+                    let (project, target) = id.split_once(':').unwrap();
+                    let mut task = Task::new(project, target)
+                        .with_outputs(outputs.iter().map(|o| o.to_string()).collect())
+                        .with_project_root("test");
+                    task.id = id.to_string();
+                    (id.to_string(), task)
                 })
                 .collect(),
             dependencies: deps
                 .into_iter()
-                .map(|(id, ds)| {
-                    (
-                        id.to_string(),
-                        ds.into_iter().map(String::from).collect::<Vec<_>>(),
-                    )
-                })
+                .map(|(id, ds)| (id.to_string(), ds.into_iter().map(String::from).collect()))
                 .collect(),
             continuous_dependencies: HashMap::new(),
         }
@@ -230,117 +309,15 @@ mod tests {
         v.iter().map(|s| s.to_string()).collect()
     }
 
-    fn edges_of(p: &HashPlans, g: &TaskGraph) -> Vec<(String, String)> {
+    fn producers_of(p: &HashPlans, g: &TaskGraph, consumer: &str) -> Vec<String> {
         compute_dependent_output_edges(p, g)
-            .into_iter()
-            .map(|e| (e.consumer, e.producer))
-            .collect()
+            .remove(consumer)
+            .unwrap_or_default()
     }
 
-    // --- literal_prefix / paths_overlap -------------------------------------
-
-    #[test]
-    fn literal_prefix_stops_at_the_last_whole_segment() {
-        assert_eq!(literal_prefix("dist/libs/ui/**/*.js"), "dist/libs/ui");
-        assert_eq!(literal_prefix("dist/li*"), "dist");
-        assert_eq!(literal_prefix("dist/libs/ui"), "dist/libs/ui");
-        assert_eq!(literal_prefix("!dist/libs/ui/**"), "dist/libs/ui");
-        assert_eq!(literal_prefix("**/*.js"), "");
-    }
-
-    /// The `libs/a` vs `libs/a-legacy` trap: a plain prefix compare says these
-    /// overlap.
-    #[test]
-    fn overlap_is_compared_segment_wise() {
-        assert!(paths_overlap("dist/libs/ui/**/*.js", "dist/libs/ui"));
-        assert!(paths_overlap("dist/libs/ui", "dist/libs/ui/**"));
-        assert!(!paths_overlap("dist/libs/ui-legacy/**", "dist/libs/ui"));
-        assert!(!paths_overlap("dist/apps/web/**", "dist/libs/ui"));
-    }
-
-    // --- edge inference ------------------------------------------------------
-
-    #[test]
-    fn explicit_task_output_yields_an_edge() {
-        let g = graph(
-            vec![("app:build", &[]), ("ui:build", &["dist/libs/ui"])],
-            vec![("app:build", vec!["ui:build"])],
-        );
-        let p = plans(vec![(
-            "app:build",
-            vec![HashInstruction::TaskOutput(
-                "**/*.js".into(),
-                strings(&["dist/libs/ui"]),
-            )],
-        )]);
-        assert_eq!(
-            edges_of(&p, &g),
-            vec![("app:build".to_string(), "ui:build".to_string())]
-        );
-    }
-
-    /// The case I/O tracing produces: an observed read of a generated artifact
-    /// becomes an includeIgnored fileset, and no `dependentTasksOutputFiles`
-    /// input is declared at all.
-    #[test]
-    fn an_include_ignored_fileset_overlapping_outputs_yields_an_edge() {
-        let g = graph(
-            vec![("app:build", &[]), ("ui:build", &["dist/libs/ui"])],
-            vec![("app:build", vec!["ui:build"])],
-        );
-        let p = plans(vec![(
-            "app:build",
-            vec![HashInstruction::Files(strings(&["dist/libs/ui/**/*.js"]))],
-        )]);
-        assert_eq!(
-            edges_of(&p, &g),
-            vec![("app:build".to_string(), "ui:build".to_string())]
-        );
-    }
-
-    #[test]
-    fn a_fileset_that_does_not_overlap_yields_no_edge() {
-        let g = graph(
-            vec![("app:build", &[]), ("ui:build", &["dist/libs/ui"])],
-            vec![("app:build", vec!["ui:build"])],
-        );
-        let p = plans(vec![(
-            "app:build",
-            vec![HashInstruction::Files(strings(&[
-                "generated/openapi/**/*.ts",
-            ]))],
-        )]);
-        assert!(edges_of(&p, &g).is_empty());
-    }
-
-    #[test]
-    fn negated_patterns_do_not_establish_an_edge() {
-        let g = graph(
-            vec![("app:build", &[]), ("ui:build", &["dist/libs/ui"])],
-            vec![("app:build", vec!["ui:build"])],
-        );
-        // Consumer-side negation.
-        let p = plans(vec![(
-            "app:build",
-            vec![HashInstruction::Files(strings(&["!dist/libs/ui/**/*.map"]))],
-        )]);
-        assert!(edges_of(&p, &g).is_empty());
-
-        // Producer-side negation.
-        let g2 = graph(
-            vec![("app:build", &[]), ("ui:build", &["!dist/libs/ui"])],
-            vec![("app:build", vec!["ui:build"])],
-        );
-        let p2 = plans(vec![(
-            "app:build",
-            vec![HashInstruction::Files(strings(&["dist/libs/ui/**/*.js"]))],
-        )]);
-        assert!(edges_of(&p2, &g2).is_empty());
-    }
-
-    #[test]
-    fn a_transitive_producer_is_reached() {
-        let g = graph(
+    /// app -> ui -> core, each producing into its own dist directory.
+    fn chain() -> TaskGraph {
+        graph(
             vec![
                 ("app:build", &[]),
                 ("ui:build", &["dist/libs/ui"]),
@@ -350,15 +327,135 @@ mod tests {
                 ("app:build", vec!["ui:build"]),
                 ("ui:build", vec!["core:build"]),
             ],
+        )
+    }
+
+    /// `paths_overlap` compares prefixes, which is what the caller passes.
+    fn overlaps(a: &str, b: &str) -> bool {
+        paths_overlap(literal_prefix(a), literal_prefix(b))
+    }
+
+    fn reading(globs: &[&str]) -> Vec<HashInstruction> {
+        vec![HashInstruction::Files(strings(globs))]
+    }
+
+    // --- pattern helpers ------------------------------------------------------
+
+    #[test]
+    fn literal_prefix_stops_at_the_last_whole_segment() {
+        assert_eq!(literal_prefix("dist/libs/ui/**/*.js"), "dist/libs/ui");
+        assert_eq!(literal_prefix("dist/li*"), "dist");
+        assert_eq!(literal_prefix("dist/libs/ui"), "dist/libs/ui");
+        assert_eq!(literal_prefix("dist/libs/ui/"), "dist/libs/ui");
+        assert_eq!(literal_prefix("!dist/libs/ui/**"), "dist/libs/ui");
+        assert_eq!(literal_prefix("**/*.js"), "");
+    }
+
+    /// The `libs/a` vs `libs/a-legacy` trap: a plain prefix compare says these
+    /// overlap.
+    #[test]
+    fn overlap_is_compared_segment_wise() {
+        assert!(overlaps("dist/libs/ui/**/*.js", "dist/libs/ui"));
+        assert!(overlaps("dist/libs/ui", "dist/libs/ui/**"));
+        assert!(!overlaps("dist/libs/ui-legacy/**", "dist/libs/ui"));
+        assert!(!overlaps("dist/apps/web/**", "dist/libs/ui"));
+    }
+
+    /// A pattern with no literal segment could match anywhere, so it has to
+    /// overlap rather than be silently dropped. `createTaskGraph` resolves
+    /// `{workspaceRoot}` and `{projectRoot}` before an output reaches here, so
+    /// in practice only a genuine leading wildcard lands in this branch.
+    #[test]
+    fn a_leading_wildcard_overlaps_everything() {
+        assert!(overlaps("**/*.js", "dist/libs/ui"));
+        assert!(overlaps("{workspaceRoot}/dist", "anything/at/all"));
+    }
+
+    /// A brace group is a wildcard, but the `*` before it truncates first, so
+    /// the prefix stays useful.
+    #[test]
+    fn a_brace_group_does_not_collapse_the_prefix() {
+        assert_eq!(
+            literal_prefix("packages/ui/dist/**/*.{d.ts,d.cts}"),
+            "packages/ui/dist"
         );
-        // app reads core's output directly, two hops down.
+        assert!(!overlaps(
+            "packages/ui/dist/**/*.{d.ts}",
+            "packages/other/dist"
+        ));
+    }
+
+    // --- edge inference -------------------------------------------------------
+
+    #[test]
+    fn explicit_task_output_yields_an_edge() {
+        let g = chain();
         let p = plans(vec![(
             "app:build",
-            vec![HashInstruction::Files(strings(&["dist/libs/core/**/*.js"]))],
+            vec![HashInstruction::TaskOutput(
+                "**/*.js".into(),
+                strings(&["dist/libs/ui"]),
+            )],
         )]);
+        assert_eq!(producers_of(&p, &g, "app:build"), strings(&["ui:build"]));
+    }
+
+    /// The case I/O tracing produces: an observed read of a generated artifact
+    /// becomes an includeIgnored fileset, and no `dependentTasksOutputFiles`
+    /// input is declared at all.
+    #[test]
+    fn an_include_ignored_fileset_overlapping_outputs_yields_an_edge() {
+        let g = chain();
+        let p = plans(vec![("app:build", reading(&["dist/libs/ui/**/*.js"]))]);
+        assert_eq!(producers_of(&p, &g, "app:build"), strings(&["ui:build"]));
+    }
+
+    #[test]
+    fn a_fileset_that_does_not_overlap_yields_no_edge() {
+        let g = chain();
+        let p = plans(vec![("app:build", reading(&["generated/openapi/**/*.ts"]))]);
+        assert!(producers_of(&p, &g, "app:build").is_empty());
+    }
+
+    #[test]
+    fn a_negated_consumer_glob_does_not_establish_an_edge() {
+        let g = chain();
+        let p = plans(vec![("app:build", reading(&["!dist/libs/ui/**/*.map"]))]);
+        assert!(producers_of(&p, &g, "app:build").is_empty());
+    }
+
+    #[test]
+    fn a_negated_producer_output_does_not_establish_an_edge() {
+        let g = graph(
+            vec![("app:build", &[]), ("ui:build", &["!dist/libs/ui"])],
+            vec![("app:build", vec!["ui:build"])],
+        );
+        let p = plans(vec![("app:build", reading(&["dist/libs/ui/**/*.js"]))]);
+        assert!(producers_of(&p, &g, "app:build").is_empty());
+    }
+
+    #[test]
+    fn a_direct_producer_is_reached() {
+        let g = chain();
+        let p = plans(vec![("app:build", reading(&["dist/libs/ui/**/*.js"]))]);
+        assert_eq!(producers_of(&p, &g, "app:build"), strings(&["ui:build"]));
+    }
+
+    #[test]
+    fn a_transitive_producer_is_reached() {
+        let g = chain();
+        // app reads core's output directly, two hops down.
+        let p = plans(vec![("app:build", reading(&["dist/libs/core/**/*.js"]))]);
+        assert_eq!(producers_of(&p, &g, "app:build"), strings(&["core:build"]));
+    }
+
+    #[test]
+    fn reading_the_whole_dist_tree_reaches_every_producer_in_the_closure() {
+        let g = chain();
+        let p = plans(vec![("app:build", reading(&["dist/**/*.js"]))]);
         assert_eq!(
-            edges_of(&p, &g),
-            vec![("app:build".to_string(), "core:build".to_string())]
+            producers_of(&p, &g, "app:build"),
+            strings(&["core:build", "ui:build"])
         );
     }
 
@@ -368,11 +465,8 @@ mod tests {
             vec![("app:build", &[]), ("unrelated:build", &["dist/libs/ui"])],
             vec![("app:build", vec![])],
         );
-        let p = plans(vec![(
-            "app:build",
-            vec![HashInstruction::Files(strings(&["dist/libs/ui/**/*.js"]))],
-        )]);
-        assert!(edges_of(&p, &g).is_empty());
+        let p = plans(vec![("app:build", reading(&["dist/libs/ui/**/*.js"]))]);
+        assert!(producers_of(&p, &g, "app:build").is_empty());
     }
 
     #[test]
@@ -381,10 +475,32 @@ mod tests {
             vec![("app:build", &[]), ("ui:build", &[])],
             vec![("app:build", vec!["ui:build"])],
         );
+        let p = plans(vec![("app:build", reading(&["dist/libs/ui/**/*.js"]))]);
+        assert!(producers_of(&p, &g, "app:build").is_empty());
+    }
+
+    #[test]
+    fn a_cycle_terminates() {
+        let g = graph(
+            vec![("a:build", &["dist/a"]), ("b:build", &["dist/b"])],
+            vec![("a:build", vec!["b:build"]), ("b:build", vec!["a:build"])],
+        );
+        let p = plans(vec![("a:build", reading(&["dist/**"]))]);
+        // The walk terminates, and a task is never its own producer even when a
+        // cycle leads back to it.
+        assert_eq!(producers_of(&p, &g, "a:build"), strings(&["b:build"]));
+    }
+
+    #[test]
+    fn a_plan_with_no_output_reading_instruction_yields_nothing() {
+        let g = chain();
         let p = plans(vec![(
             "app:build",
-            vec![HashInstruction::Files(strings(&["dist/libs/ui/**/*.js"]))],
+            vec![HashInstruction::ProjectFileSet(
+                "app".into(),
+                strings(&["apps/app/**/*"]),
+            )],
         )]);
-        assert!(edges_of(&p, &g).is_empty());
+        assert!(compute_dependent_output_edges(&p, &g).is_empty());
     }
 }

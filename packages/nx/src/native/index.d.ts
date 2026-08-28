@@ -349,15 +349,8 @@ export declare function connectToNxDb(cacheDir: string, dbName?: string | undefi
 
 export declare function copy(src: string, dest: string): number
 
-export interface DependentOutputEdge {
-  /** The task whose plan reads the artifact. */
-  consumer: string
-  /** The task that declares it as an output. */
-  producer: string
-}
-
 /**
- * Consumer -> producer edges for every task in `hash_plans`.
+ * Consumer task id -> the upstream task ids whose declared outputs it reads.
  *
  * Producers are searched over the consumer's whole dependency closure rather
  * than its direct dependencies. `TaskOutput` does not record whether its
@@ -366,7 +359,7 @@ export interface DependentOutputEdge {
  * Over-reporting an edge costs a task that was going to be a cache hit;
  * missing one skips a task that needed to run.
  */
-export declare function dependentOutputEdges(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, taskGraph: TaskGraph): Array<DependentOutputEdge>
+export declare function dependentOutputEdges(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, taskGraph: TaskGraph): Record<string, Array<string>>
 
 export interface DepsOutputsInput {
   dependentTasksOutputFiles: string
