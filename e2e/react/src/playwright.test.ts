@@ -2,6 +2,7 @@ import {
   createFile,
   fileExists,
   readFile,
+  reservePort,
   runCLI,
   runE2ETests,
   cleanupProject,
@@ -108,11 +109,20 @@ describe('React Playwright e2e tests', () => {
       return;
     }
     const e2eProject = `${appName}-e2e`;
+    const port = await reservePort();
     const [, serveTarget] =
       readFile(`${e2eProject}/playwright.config.mts`).match(
         new RegExp(`nx run ${appName}:(\\S+)'`)
       ) ?? [];
     expect(serveTarget).toBeDefined();
+    let originalConfig = '';
+    updateFile(`${e2eProject}/playwright.config.mts`, (content) => {
+      originalConfig = content;
+      return content.replace(
+        /url: 'http:\/\/[^']*'/,
+        `url: 'http://localhost:${port}'`
+      );
+    });
     // Delay the server so Playwright's own probe surely misses when nothing
     // waited for the server first; the argument would break command inference
     // on the webServer command, so it goes on the target instead. A different
@@ -149,6 +159,7 @@ describe('React Playwright e2e tests', () => {
       }
     } finally {
       updateFile(projectConfig, originalProjectConfig);
+      updateFile(`${e2eProject}/playwright.config.mts`, originalConfig);
     }
   });
 
