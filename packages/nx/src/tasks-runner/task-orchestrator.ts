@@ -59,6 +59,7 @@ import {
   getTaskSpecificEnv,
 } from './task-env';
 import { TaskStatus } from './tasks-runner';
+import { getTaskIOService } from './task-io-service';
 import { Batch, TasksSchedule } from './tasks-schedule';
 import {
   calculateReverseDeps,
@@ -201,6 +202,7 @@ export class TaskOrchestrator {
   async init() {
     this.setupSignalHandlers();
     this.taskInvocationTracker?.cleanupStale();
+    this.registerTaskSandboxConfigurations();
 
     // Init the ForkedProcessTaskRunner, TasksSchedule, and Cache
     await Promise.all([
@@ -215,6 +217,24 @@ export class TaskOrchestrator {
     if (this.tuiEnabled) {
       const estimatedTimings = this.tasksSchedule.getEstimatedTaskTimings();
       this.options.lifeCycle.setEstimatedTaskTimings(estimatedTimings);
+    }
+  }
+
+  /**
+   * Registers each task's `sandbox` target configuration with the
+   * TaskIOService so PID reporting is suppressed for tasks whose target
+   * opted out of sandboxing.
+   */
+  private registerTaskSandboxConfigurations(): void {
+    const ioService = getTaskIOService();
+    for (const task of Object.values(this.taskGraph.tasks)) {
+      const sandbox = getTargetConfigurationForTask(
+        task,
+        this.projectGraph
+      )?.sandbox;
+      if (sandbox) {
+        ioService.registerTaskSandboxConfiguration(task.id, sandbox);
+      }
     }
   }
 

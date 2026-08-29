@@ -174,6 +174,30 @@ export interface TargetMetadata {
   };
 }
 
+/**
+ * Configuration for observed-IO sandboxing of a target's tasks.
+ */
+export interface TargetSandboxConfiguration {
+  /**
+   * Whether tasks for this target are tracked by the sandbox.
+   * Defaults to true. When false, no IO tracing is reported for the
+   * task, so no sandbox report is produced.
+   */
+  enabled?: boolean;
+
+  /**
+   * Workspace-relative glob patterns for reads that should be excluded
+   * from sandboxing reports.
+   */
+  ignoredReads?: string[];
+
+  /**
+   * Workspace-relative glob patterns for writes that should be excluded
+   * from sandboxing reports.
+   */
+  ignoredWrites?: string[];
+}
+
 export interface TargetDependencyConfig {
   /**
    * A list of projects that have `target`.
@@ -272,6 +296,11 @@ export interface TargetConfiguration<T = any> {
    * Determines if Nx is able to cache a given target.
    */
   cache?: boolean;
+
+  /**
+   * Configures observed-IO sandboxing for tasks of this target.
+   */
+  sandbox?: TargetSandboxConfiguration;
 
   /**
    * Metadata about the target

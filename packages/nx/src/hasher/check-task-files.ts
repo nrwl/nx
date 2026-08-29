@@ -392,10 +392,31 @@ function classifyInput(
   const path = toWorkspaceRelativePath(candidate.path);
   if (raw.files.includes(path)) return 'files';
   if (raw.depOutputs.includes(path)) return 'depOutputs';
+  if (matchesDependentTaskOutputs(taskId, path, ctx)) {
+    return 'dependentTasksOutputFiles';
+  }
 
-  return matchesDependentTaskOutputs(taskId, path, ctx)
-    ? 'dependentTasksOutputFiles'
+  return matchesSandboxIgnoredGlobs(taskId, path, 'ignoredReads', ctx)
+    ? 'sandboxIgnored'
     : null;
+}
+
+/**
+ * Matches a path against the `sandbox.ignoredReads` / `sandbox.ignoredWrites`
+ * globs of the task's target. A match means the file access is deliberately
+ * excluded from sandboxing reports, so a violation consumer treats it as
+ * reconciled rather than unexpected.
+ */
+function matchesSandboxIgnoredGlobs(
+  taskId: string,
+  path: string,
+  kind: 'ignoredReads' | 'ignoredWrites',
+  ctx: LoadedContext
+): boolean {
+  const { target, projectNode } = resolveIdentity(taskId, ctx.projectGraph);
+  const globs = projectNode.data.targets?.[target]?.sandbox?.[kind];
+  if (!globs?.length) return false;
+  return matchGlobPaths(globs.map(normalizePath), [path])[0];
 }
 
 // ── API (exported from devkit-internals) ─────────────────────────────────────
@@ -418,7 +439,8 @@ export type InputCategory =
   | 'dependentTasksOutputFiles'
   | 'runtime'
   | 'environment'
-  | 'external';
+  | 'external'
+  | 'sandboxIgnored';
 
 export interface InputCandidate {
   /** The value as supplied — matched verbatim against environment/runtime/external. */
@@ -435,7 +457,9 @@ export interface InputCandidate {
  *   - a file in the task's materialized `depOutputs` (upstream has run);
  *   - a file matching a `dependentTasksOutputFiles` glob declared on the task
  *     that lies inside the declared outputs of an upstream task in the task
- *     graph (static — works even when upstream tasks have not yet run).
+ *     graph (static — works even when upstream tasks have not yet run);
+ *   - a file matching a `sandbox.ignoredReads` glob of the task's target
+ *     (deliberately excluded from sandboxing reports).
  *
  * `categories` records the rule each matched value satisfied. Paths may be
  * workspace-relative or absolute; absolute ones are relativized against the
@@ -496,6 +520,8 @@ export async function checkFilesAreInputs(
  * Uses the same path-matching logic as the task runner (directory containment
  * + glob matching through the native `globset` engine), including negated
  * (`!`-prefixed) patterns acting as exclusions over the whole pattern set.
+ * A file matching a `sandbox.ignoredWrites` glob of the task's target also
+ * counts as matched — it is deliberately excluded from sandboxing reports.
  *
  * Paths may be workspace-relative or absolute; absolute ones are relativized
  * against the workspace root. An output pattern whose `{options.*}` token has no
@@ -517,14 +543,15 @@ export async function checkFilesAreOutputs(
   // malformed task, even when the file list is empty.
   resolveIdentity(taskId, ctx.projectGraph);
   const patterns = getOutputs(taskId, ctx.projectGraph);
-  const results = matchOutputPaths(
-    patterns,
-    files.map(toWorkspaceRelativePath)
-  );
+  const relativePaths = files.map(toWorkspaceRelativePath);
+  const results = matchOutputPaths(patterns, relativePaths);
   const matched: string[] = [];
   const unmatched: string[] = [];
   files.forEach((file, i) => {
-    if (results[i]) {
+    if (
+      results[i] ||
+      matchesSandboxIgnoredGlobs(taskId, relativePaths[i], 'ignoredWrites', ctx)
+    ) {
       matched.push(file);
     } else {
       unmatched.push(file);
