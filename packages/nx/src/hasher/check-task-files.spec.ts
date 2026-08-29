@@ -1136,6 +1136,84 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
 
   // ── caching ──────────────────────────────────────────────────────────────
 
+  describe('sandbox ignored globs', () => {
+    function buildGraphWithSandbox(): ProjectGraph {
+      const graph = buildGraph();
+      (graph.nodes['myproj'].data.targets['build'] as any).sandbox = {
+        ignoredReads: ['tmp/reads/**'],
+        ignoredWrites: ['tmp/writes/**'],
+      };
+      return graph;
+    }
+
+    beforeEach(() => {
+      mockCreateProjectGraphAsync.mockResolvedValue(buildGraphWithSandbox());
+    });
+
+    it('matches an input against sandbox.ignoredReads with the sandboxIgnored category', async () => {
+      mockInspectTaskInputs.mockReturnValue({
+        'myproj:build': makeHashInputs(['libs/myproj/src/index.ts']),
+      });
+
+      const result = await checkFilesAreInputs('myproj:build', [
+        'tmp/reads/cache.json',
+        'tmp/other/cache.json',
+      ]);
+
+      expect(result.matched).toEqual(['tmp/reads/cache.json']);
+      expect(result.unmatched).toEqual(['tmp/other/cache.json']);
+      expect(result.categories.get('tmp/reads/cache.json')).toBe(
+        'sandboxIgnored'
+      );
+    });
+
+    it('prefers the declared input category over sandboxIgnored', async () => {
+      mockInspectTaskInputs.mockReturnValue({
+        'myproj:build': makeHashInputs(['tmp/reads/declared.json']),
+      });
+
+      const result = await checkFilesAreInputs('myproj:build', [
+        'tmp/reads/declared.json',
+      ]);
+
+      expect(result.matched).toEqual(['tmp/reads/declared.json']);
+      expect(result.categories.get('tmp/reads/declared.json')).toBe('files');
+    });
+
+    it('matches an output against sandbox.ignoredWrites', async () => {
+      mockGetOutputs.mockReturnValue(['dist/**']);
+
+      const result = await checkFilesAreOutputs('myproj:build', [
+        'dist/main.js',
+        'tmp/writes/scratch.log',
+        'tmp/other/scratch.log',
+      ]);
+
+      expect(result.matched).toEqual([
+        'dist/main.js',
+        'tmp/writes/scratch.log',
+      ]);
+      expect(result.unmatched).toEqual(['tmp/other/scratch.log']);
+    });
+
+    it('does not match ignored globs of a different kind', async () => {
+      mockInspectTaskInputs.mockReturnValue({
+        'myproj:build': makeHashInputs([]),
+      });
+      mockGetOutputs.mockReturnValue([]);
+
+      const inputs = await checkFilesAreInputs('myproj:build', [
+        'tmp/writes/scratch.log',
+      ]);
+      expect(inputs.unmatched).toEqual(['tmp/writes/scratch.log']);
+
+      const outputs = await checkFilesAreOutputs('myproj:build', [
+        'tmp/reads/cache.json',
+      ]);
+      expect(outputs.unmatched).toEqual(['tmp/reads/cache.json']);
+    });
+  });
+
   describe('caching across calls', () => {
     it('does not call underlying APIs more than once per taskId', async () => {
       mockInspectTaskInputs.mockReturnValue({

@@ -138,6 +138,32 @@
             "type": "boolean",
             "description": "Specifies if the given target should be cacheable"
           },
+          "sandbox": {
+            "type": "object",
+            "description": "Configures observed-IO sandboxing for tasks of this target",
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "default": true,
+                "description": "Whether tasks for this target are tracked by the sandbox"
+              },
+              "ignoredReads": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Workspace-relative glob patterns for reads excluded from sandboxing reports"
+              },
+              "ignoredWrites": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Workspace-relative glob patterns for writes excluded from sandboxing reports"
+              }
+            },
+            "additionalProperties": false
+          },
           "continuous": {
             "type": "boolean",
             "default": false,

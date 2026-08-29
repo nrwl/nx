@@ -1,3 +1,4 @@
+import type { TargetSandboxConfiguration } from '../config/workspace-json-project-json';
 import { getProcessMetricsService } from './process-metrics-service';
 
 /**
@@ -49,6 +50,34 @@ class TaskIOService {
   private pidCallbacks: TaskPidCallback[] = [];
   private taskInputCallbacks: TaskInputCallback[] = [];
   private taskOutputsCallbacks: TaskOutputsCallback[] = [];
+
+  /**
+   * Task IDs whose target opted out of sandboxing via
+   * `sandbox: { enabled: false }`. PID updates for these tasks are
+   * suppressed so no IO tracing (and therefore no sandbox report) is
+   * produced for them.
+   */
+  private sandboxDisabledTaskIds = new Set<string>();
+
+  /**
+   * Register the sandbox configuration of a task before it runs.
+   * Only the disabled state is retained; a task without a registered
+   * config is treated as sandbox-enabled.
+   */
+  registerTaskSandboxConfiguration(
+    taskId: string,
+    config: TargetSandboxConfiguration | undefined
+  ): void {
+    if (config?.enabled === false) {
+      this.sandboxDisabledTaskIds.add(taskId);
+    } else {
+      this.sandboxDisabledTaskIds.delete(taskId);
+    }
+  }
+
+  isTaskSandboxDisabled(taskId: string): boolean {
+    return this.sandboxDisabledTaskIds.has(taskId);
+  }
 
   /**
    * Subscribe to task PID updates.
@@ -131,9 +160,13 @@ class TaskIOService {
 
   /**
    * Registers a PID to a task and notifies subscribers.
+   * No-op for tasks whose target disabled sandboxing.
    * @param update The TaskPidUpdate containing taskId and pid.
    */
   notifyPidUpdate(update: TaskPidUpdate): void {
+    if (this.sandboxDisabledTaskIds.has(update.taskId)) {
+      return;
+    }
     for (const cb of this.pidCallbacks) {
       try {
         cb(update);
