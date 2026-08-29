@@ -8,7 +8,6 @@ use fs_extra::remove_items;
 use rayon::prelude::*;
 use regex::Regex;
 use rusqlite::{params, types::Value};
-use sysinfo::Disks;
 
 use crate::native::cache::expand_outputs::_expand_outputs;
 use crate::native::cache::file_ops::{_copy, copy_outputs_into_workspace};
@@ -478,17 +477,16 @@ impl NxCache {
 
 #[napi]
 fn get_default_max_cache_size(cache_path: String) -> i64 {
-    let disks = Disks::new_with_refreshed_list();
-    let cache_path = PathBuf::from(cache_path);
-
-    for disk in disks.list() {
-        if cache_path.starts_with(disk.mount_point()) {
-            return (disk.total_space() as f64 * 0.1) as i64;
-        }
+    // 10% of the volume the cache lives on. `statvfs` needs a path that
+    // exists, and the cache dir is created lazily, so probe the nearest
+    // existing ancestor.
+    let mut path = PathBuf::from(cache_path);
+    while !path.exists() && path.pop() {}
+    match fs4::total_space(&path) {
+        Ok(total) => (total as f64 * 0.1) as i64,
+        // Default to 100gb
+        Err(_) => 100 * 1024 * 1024 * 1024,
     }
-
-    // Default to 100gb
-    100 * 1024 * 1024 * 1024
 }
 
 fn try_and_retry<T, F>(mut f: F) -> anyhow::Result<T>
@@ -566,6 +564,20 @@ fn escapes_workspace(path: &Path) -> bool {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn default_max_cache_size_probes_the_nearest_existing_ancestor() {
+        let dir = std::env::temp_dir();
+        let existing = get_default_max_cache_size(dir.to_string_lossy().to_string());
+        let nested = get_default_max_cache_size(
+            dir.join("nx-does-not-exist")
+                .join("cache")
+                .to_string_lossy()
+                .to_string(),
+        );
+        assert!(existing > 0);
+        assert_eq!(nested, existing);
+    }
 
     #[cfg(unix)]
     #[test]
