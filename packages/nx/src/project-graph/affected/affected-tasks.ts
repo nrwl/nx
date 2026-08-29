@@ -193,7 +193,10 @@ export async function computeAffectedTasks(
     affectedTaskIds: propagate(own, taskGraph, producersOf),
     taskGraph,
     matches: fileMatches.matches ?? undefined,
-    planningContext,
+    // The plans ride along so the hasher can narrow them instead of building
+    // its own. Every task it will be asked about is in here, since the pruned
+    // graph is a subset of the one planned above.
+    planningContext: { ...planningContext, plans },
   };
 }
 

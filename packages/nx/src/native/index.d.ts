@@ -861,6 +861,18 @@ export interface RuntimeInput {
   runtime: string
 }
 
+/**
+ * Narrows an existing set of plans to `task_ids`, sharing the instruction pool
+ * rather than re-planning.
+ *
+ * Returns `None` when any requested task has no plan, which is the caller's
+ * signal that the plans were built for a different task set and cannot answer
+ * for this one. A plan depends on the task graph only through the dependent
+ * output instructions, so a subset is sound exactly when every kept task's
+ * dependency closure survived intact.
+ */
+export declare function subsetHashPlans(plans: ExternalObject<Record<string, Array<HashInstruction>>>, taskIds: Array<string>): ExternalObject<Record<string, Array<HashInstruction>>> | null
+
 export declare const enum SupportedEditor {
   VSCode = 0,
   VSCodeInsiders = 1,

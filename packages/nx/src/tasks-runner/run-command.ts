@@ -476,6 +476,12 @@ function createTaskGraphAndRunValidations(
         bodyLines: [`${cycle.join(' --> ')}`],
       });
       makeAcyclic(taskGraph);
+      // Dropping edges changes which upstream outputs a task reads, so the
+      // plans affected built no longer describe this graph. The planner itself
+      // is still valid, only its answers for these tasks are not.
+      if (taskSelection?.planningContext) {
+        taskSelection.planningContext.plans = undefined;
+      }
     } else {
       output.error({
         title: `Could not execute command because the task graph has a circular dependency`,
