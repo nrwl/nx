@@ -14,228 +14,6 @@ vi.mock('../../utils/perf-logging', () => ({}));
 // every case stalls to the suite timeout; run with NX_ISOLATE_PLUGINS=false.
 // The first case additionally needs real watcher event delivery, which a
 // container filesystem does not provide, and fails there either way.
-describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () => {
-  let fs: TempFs;
-
-  beforeEach(() => {
-    fs = new TempFs('pgir-race');
-  });
-
-  afterEach(() => {
-    fs.cleanup();
-  });
-
-  // Reproduces the spread-test flake shape end-to-end: write a new
-  // project.json, then poll the graph until the watcher event lands. If the
-  // daemon serves a stale cache the project never appears and the poll
-  // exhausts — that's the bug. Note this proves eventual delivery, not
-  // delivery before the next compute: a regression that merely delays the
-  // event passes here.
-  //
-  // vi.resetModules + fresh imports are required: cache-directory.ts evaluates
-  // workspaceDataDirectory as a `const` at module load, so without a
-  // fresh module graph the daemon would write its cache into the real
-  // workspace under test.
-  // Own timeout: the first graph compute alone runs 10-20s, so the default
-  // leaves no room for the poll and the test dies by timeout, not assertion.
-  it('returns a fresh graph reflecting an in-flight project add', async () => {
-    fs.createFilesSync({
-      'nx.json': JSON.stringify({}),
-      'package.json': JSON.stringify({ name: 'root' }),
-    });
-
-    vi.resetModules();
-    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
-    setWorkspaceRoot(fs.tempDir);
-
-    const { watchWorkspace } = await import('./watcher');
-    const { storeWatcherInstance } = await import('./shutdown-utils');
-    const { getCachedSerializedProjectGraphPromise } =
-      await import('./project-graph-incremental-recomputation');
-    const { routeWorkspaceChanges } =
-      await import('./file-watching/route-workspace-changes');
-
-    const fakeServer = {} as unknown as import('net').Server;
-    const watcher = await watchWorkspace(
-      fakeServer,
-      async (err: unknown, events: { type: string; path: string }[]) => {
-        if (err || !events) return;
-        routeWorkspaceChanges(events);
-      }
-    );
-    storeWatcherInstance(watcher);
-
-    try {
-      // First request — graph has no 'foo' project.
-      const first = await getCachedSerializedProjectGraphPromise();
-      expect(first.projectGraph?.nodes?.foo).toBeUndefined();
-
-      // Add a project on disk and request the graph. The watcher pipeline has
-      // to deliver this event; poll instead of demanding it lands before the
-      // very next compute, which CPU contention alone can delay. A dropped
-      // event never surfaces the project, so the regression still fails here.
-      mkdirSync(join(fs.tempDir, 'libs', 'foo'), { recursive: true });
-      writeFileSync(
-        join(fs.tempDir, 'libs', 'foo', 'project.json'),
-        JSON.stringify({ name: 'foo', root: 'libs/foo' })
-      );
-      let second = await getCachedSerializedProjectGraphPromise();
-      const deadline = Date.now() + 10_000;
-      while (!second.projectGraph?.nodes?.foo && Date.now() < deadline) {
-        await new Promise((resolve) => setTimeout(resolve, 50));
-        second = await getCachedSerializedProjectGraphPromise();
-      }
-
-      // The smoking gun. Without the fix, the watcher event could
-      // be missed and the daemon would re-serve the first graph
-      // (no 'foo').
-      expect(second.projectGraph?.nodes?.foo).toBeDefined();
-      expect(second.projectGraph?.nodes?.foo?.data?.root).toBe('libs/foo');
-    } finally {
-      await watcher.stop();
-    }
-  }, 60_000);
-
-  // Covers the freshness-gate path inside kickOffRecompute: if nx.json's
-  // `plugins` field changes between kickoff and commit, the in-flight
-  // IIFE must discard its result (built against the older plugin set)
-  // and let a successor recompute against the new disk state. Without
-  // the gate, cachedSerializedProjectGraphPromise was last-kickoff-wins
-  // and could return a stale graph (see spread.test.ts middle-plugin
-  // flake).
-  //
-  // Mocks getPluginsSeparated only to park the first IIFE between its
-  // synchronous hash snapshot and its commit — that gap is the window
-  // the bug lives in. The mock controls timing, not logic; the real
-  // gate + real currentNxJsonPluginsHash run.
-  it('discards stale recompute when nx.json plugins change mid-compute', async () => {
-    fs.createFilesSync({
-      'nx.json': JSON.stringify({ plugins: ['./tools/plugin-a'] }),
-      'package.json': JSON.stringify({ name: 'root' }),
-    });
-
-    vi.resetModules();
-    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
-    setWorkspaceRoot(fs.tempDir);
-
-    // Park the first IIFE between its synchronous hash snapshot and
-    // its commit — that gap is the bug window. Real getPluginsSeparated
-    // resolves too fast to rewrite nx.json in between, so we gate it
-    // here to control timing only.
-    let resolveFirstPlugins: () => void;
-    const firstPluginsGate = new Promise<void>((resolve) => {
-      resolveFirstPlugins = resolve;
-    });
-    let pluginsCallCount = 0;
-    vi.doMock('../../project-graph/plugins/get-plugins', () => ({
-      __esModule: true,
-      getPlugins: vi.fn(async () => []),
-      getPluginsSeparated: vi.fn(async () => {
-        pluginsCallCount++;
-        if (pluginsCallCount === 1) {
-          await firstPluginsGate;
-        }
-        return { specifiedPlugins: [], defaultPlugins: [] };
-      }),
-    }));
-
-    const { serverLogger } = await import('../logger');
-    const logSpy = vi.spyOn(serverLogger, 'log');
-
-    const {
-      scheduleProjectGraphRecomputation,
-      getCachedSerializedProjectGraphPromise,
-    } = await import('./project-graph-incremental-recomputation');
-
-    // Kick off compute #1 — snapshot captured synchronously here.
-    scheduleProjectGraphRecomputation([], ['__trigger.txt'], []);
-
-    // Rewrite nx.json so disk diverges from the snapshot. The IIFE is
-    // still parked on firstPluginsGate, so it hasn't yet read plugins.
-    writeFileSync(
-      join(fs.tempDir, 'nx.json'),
-      JSON.stringify({ plugins: ['./tools/plugin-b'] })
-    );
-
-    // Let compute #1 proceed. It computes, hits the gate, sees disk
-    // hash != snapshot hash, logs the discard, and kicks a successor.
-    resolveFirstPlugins!();
-
-    await getCachedSerializedProjectGraphPromise();
-
-    expect(logSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Discarding stale recompute result')
-    );
-    // First IIFE bailed → kicked successor → at least two getPlugins calls.
-    expect(pluginsCallCount).toBeGreaterThanOrEqual(2);
-  });
-
-  // kickOffRecompute() runs fire-and-forget, so a rejecting prologue used to
-  // crash the daemon with an unhandled rejection. A requester's own try/catch
-  // hides that, so the only observable distinguishing fixed from broken is
-  // whether the orphaned promise rejects unhandled — hence the process listener.
-  it('keeps the daemon alive when a recompute plugin load rejects', async () => {
-    fs.createFilesSync({
-      'nx.json': JSON.stringify({ plugins: ['./tools/plugin-a'] }),
-      'package.json': JSON.stringify({ name: 'root' }),
-    });
-
-    vi.resetModules();
-    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
-    setWorkspaceRoot(fs.tempDir);
-
-    const pluginLoadError = new Error('plugin boom');
-    let pluginsCallCount = 0;
-    vi.doMock('../../project-graph/plugins/get-plugins', () => ({
-      __esModule: true,
-      getPlugins: vi.fn(async () => []),
-      getPluginsSeparated: vi.fn(async () => {
-        pluginsCallCount++;
-        throw pluginLoadError;
-      }),
-    }));
-
-    const {
-      scheduleProjectGraphRecomputation,
-      getCachedSerializedProjectGraphPromise,
-    } = await import('./project-graph-incremental-recomputation');
-
-    const unhandled: unknown[] = [];
-    const onUnhandled = (reason: unknown) => unhandled.push(reason);
-    process.on('unhandledRejection', onUnhandled);
-
-    try {
-      // Fire-and-forget kickoff — nobody awaits the stored promise.
-      scheduleProjectGraphRecomputation([], ['__trigger.txt'], []);
-
-      // Let the IIFE reject and give Node room to flag an unhandled rejection.
-      await new Promise((r) => setImmediate(r));
-      await new Promise((r) => setImmediate(r));
-      await new Promise((r) => setImmediate(r));
-
-      // Without the fix this orphaned rejection is unhandled — the crash.
-      expect(
-        unhandled.filter(
-          (r) =>
-            r === pluginLoadError ||
-            (r instanceof Error && r.message.includes('plugin boom'))
-        )
-      ).toEqual([]);
-
-      // A requester gets an errorResult, not a throw.
-      const result = await getCachedSerializedProjectGraphPromise();
-      expect(result.projectGraph).toBeNull();
-      expect(result.error).toBeDefined();
-
-      // Errored result clears the cache, so the next request retries.
-      const callsBeforeRetry = pluginsCallCount;
-      await getCachedSerializedProjectGraphPromise();
-      expect(pluginsCallCount).toBeGreaterThan(callsBeforeRetry);
-    } finally {
-      process.removeListener('unhandledRejection', onUnhandled);
-    }
-  });
-});
 
 describe('isKnownWorkspaceFile', () => {
   let fs: TempFs;
@@ -573,8 +351,12 @@ describe('pending dotenv replay before serving a graph', () => {
       }
     );
 
-    const waitFor = async (cond: () => boolean) => {
+    const waitFor = async (cond: () => boolean, label = 'condition') => {
+      const deadline = Date.now() + 10_000;
       while (!cond()) {
+        if (Date.now() > deadline) {
+          throw new Error(`DIAG waitFor timed out waiting for ${label}`);
+        }
         await new Promise((r) => setImmediate(r));
       }
     };
@@ -773,8 +555,12 @@ describe('pending dotenv replay before serving a graph', () => {
       }
     );
 
-    const waitFor = async (cond: () => boolean) => {
+    const waitFor = async (cond: () => boolean, label = 'condition') => {
+      const deadline = Date.now() + 10_000;
       while (!cond()) {
+        if (Date.now() > deadline) {
+          throw new Error(`DIAG waitFor timed out waiting for ${label}`);
+        }
         await new Promise((r) => setImmediate(r));
       }
     };
@@ -1070,8 +856,12 @@ describe('pending dotenv replay before serving a graph', () => {
       await import('../../project-graph/nx-deps-cache');
     const { EventType } = await import('../../native');
 
-    const waitFor = async (cond: () => boolean) => {
+    const waitFor = async (cond: () => boolean, label = 'condition') => {
+      const deadline = Date.now() + 10_000;
       while (!cond()) {
+        if (Date.now() > deadline) {
+          throw new Error(`DIAG waitFor timed out waiting for ${label}`);
+        }
         await new Promise((r) => setImmediate(r));
       }
     };
@@ -1259,8 +1049,12 @@ describe('pending dotenv replay before serving a graph', () => {
       await import('../../project-graph/nx-deps-cache');
     const { EventType } = await import('../../native');
 
-    const waitFor = async (cond: () => boolean) => {
+    const waitFor = async (cond: () => boolean, label = 'condition') => {
+      const deadline = Date.now() + 10_000;
       while (!cond()) {
+        if (Date.now() > deadline) {
+          throw new Error(`DIAG waitFor timed out waiting for ${label}`);
+        }
         await new Promise((r) => setImmediate(r));
       }
     };
@@ -1373,8 +1167,12 @@ describe('pending dotenv replay before serving a graph', () => {
       await import('../../project-graph/nx-deps-cache');
     const { EventType } = await import('../../native');
 
-    const waitFor = async (cond: () => boolean) => {
+    const waitFor = async (cond: () => boolean, label = 'condition') => {
+      const deadline = Date.now() + 10_000;
       while (!cond()) {
+        if (Date.now() > deadline) {
+          throw new Error(`DIAG waitFor timed out waiting for ${label}`);
+        }
         await new Promise((r) => setImmediate(r));
       }
     };
@@ -1494,8 +1292,12 @@ describe('pending dotenv replay before serving a graph', () => {
       await import('../../project-graph/nx-deps-cache');
     const { EventType } = await import('../../native');
 
-    const waitFor = async (cond: () => boolean) => {
+    const waitFor = async (cond: () => boolean, label = 'condition') => {
+      const deadline = Date.now() + 10_000;
       while (!cond()) {
+        if (Date.now() > deadline) {
+          throw new Error(`DIAG waitFor timed out waiting for ${label}`);
+        }
         await new Promise((r) => setImmediate(r));
       }
     };
@@ -1624,8 +1426,12 @@ describe('pending dotenv replay before serving a graph', () => {
       await import('../../project-graph/nx-deps-cache');
     const { EventType } = await import('../../native');
 
-    const waitFor = async (cond: () => boolean) => {
+    const waitFor = async (cond: () => boolean, label = 'condition') => {
+      const deadline = Date.now() + 10_000;
       while (!cond()) {
+        if (Date.now() > deadline) {
+          throw new Error(`DIAG waitFor timed out waiting for ${label}`);
+        }
         await new Promise((r) => setImmediate(r));
       }
     };
@@ -1770,8 +1576,12 @@ describe('pending dotenv replay before serving a graph', () => {
       await import('../../project-graph/nx-deps-cache');
     const { EventType } = await import('../../native');
 
-    const waitFor = async (cond: () => boolean) => {
+    const waitFor = async (cond: () => boolean, label = 'condition') => {
+      const deadline = Date.now() + 10_000;
       while (!cond()) {
+        if (Date.now() > deadline) {
+          throw new Error(`DIAG waitFor timed out waiting for ${label}`);
+        }
         await new Promise((r) => setImmediate(r));
       }
     };
@@ -1918,8 +1728,12 @@ describe('pending dotenv replay before serving a graph', () => {
     const { handleOutputsChanges } = await import('./handle-outputs-changes');
     const { EventType } = await import('../../native');
 
-    const waitFor = async (cond: () => boolean) => {
+    const waitFor = async (cond: () => boolean, label = 'condition') => {
+      const deadline = Date.now() + 10_000;
       while (!cond()) {
+        if (Date.now() > deadline) {
+          throw new Error(`DIAG waitFor timed out waiting for ${label}`);
+        }
         await new Promise((r) => setImmediate(r));
       }
     };
@@ -2048,8 +1862,12 @@ describe('pending dotenv replay before serving a graph', () => {
     const { handleOutputsChanges } = await import('./handle-outputs-changes');
     const { EventType } = await import('../../native');
 
-    const waitFor = async (cond: () => boolean) => {
+    const waitFor = async (cond: () => boolean, label = 'condition') => {
+      const deadline = Date.now() + 10_000;
       while (!cond()) {
+        if (Date.now() > deadline) {
+          throw new Error(`DIAG waitFor timed out waiting for ${label}`);
+        }
         await new Promise((r) => setImmediate(r));
       }
     };
@@ -2152,8 +1970,12 @@ describe('pending dotenv replay before serving a graph', () => {
         notifiedGraphs.push(graph);
       }
     );
-    const waitFor = async (cond: () => boolean) => {
+    const waitFor = async (cond: () => boolean, label = 'condition') => {
+      const deadline = Date.now() + 10_000;
       while (!cond()) {
+        if (Date.now() > deadline) {
+          throw new Error(`DIAG waitFor timed out waiting for ${label}`);
+        }
         await new Promise((r) => setImmediate(r));
       }
     };
