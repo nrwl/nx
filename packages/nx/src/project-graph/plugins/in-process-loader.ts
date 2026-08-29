@@ -3,10 +3,7 @@
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
 import { getNxRequirePaths } from '../../utils/installation-directory';
-import {
-  PackageJson,
-  readModulePackageJsonWithoutFallbacks,
-} from '../../utils/package-json';
+import type { PackageJson } from '../../utils/package-json';
 import { readJsonFile } from '../../utils/fileutils';
 
 import type { PluginConfiguration } from '../../config/nx-json';
@@ -29,6 +26,10 @@ export function readPluginPackageJson(
   json: PackageJson;
 } {
   try {
+    // Lazy: package-json pulls in catalog, package-manager and target merging,
+    // none of which a plugin worker needs to import a plugin.
+    const { readModulePackageJsonWithoutFallbacks } =
+      require('../../utils/package-json') as typeof import('../../utils/package-json');
     const result = readModulePackageJsonWithoutFallbacks(pluginName, paths);
     return {
       json: result.packageJson,
