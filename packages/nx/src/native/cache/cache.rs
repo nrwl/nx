@@ -953,6 +953,20 @@ mod test {
         );
     }
 
+    #[test]
+    fn default_max_cache_size_probes_the_nearest_existing_ancestor() {
+        let dir = std::env::temp_dir();
+        let existing = get_default_max_cache_size(dir.to_string_lossy().to_string());
+        let nested = get_default_max_cache_size(
+            dir.join("nx-does-not-exist")
+                .join("cache")
+                .to_string_lossy()
+                .to_string(),
+        );
+        assert!(existing > 0);
+        assert_eq!(nested, existing);
+    }
+
     #[cfg(unix)]
     #[test]
     fn normalize_outputs_relativizes_in_workspace_absolute_paths() {
