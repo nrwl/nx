@@ -69,6 +69,31 @@ describe('DaemonSocketMessenger framing failures', () => {
     expect(errors[0].message).toContain('out of sync');
   });
 
+  it('closing the messenger destroys the socket so recovery can run', () => {
+    // Every recovery path in the daemon client is keyed on the socket 'close'
+    // event, and a framing failure emits neither 'close' nor 'error' on its
+    // own. close() is what turns the reported error into a recoverable one.
+    const socket = new EventEmitter() as unknown as Socket;
+    let destroyed = false;
+    (socket as any).write = () => true;
+    (socket as any).destroy = () => {
+      destroyed = true;
+      socket.emit('close');
+    };
+
+    const closes: number[] = [];
+    const messenger = new DaemonSocketMessenger(socket).listen(
+      () => {},
+      () => closes.push(1),
+      () => {}
+    );
+
+    messenger.close();
+
+    expect(destroyed).toBe(true);
+    expect(closes).toHaveLength(1);
+  });
+
   it('does not report an error for a healthy stream', () => {
     const { socket, errors, messages } = listenOn();
     const payload = Buffer.from('{"ok":true}', 'utf8');

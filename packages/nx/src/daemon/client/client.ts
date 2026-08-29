@@ -482,6 +482,9 @@ export class DaemonClient {
           for (const cb of this.fileWatcherCallbacks.values()) {
             cb(err, null);
           }
+          // Close so 'close' fires and the reconnect path runs; a framing
+          // failure would otherwise leave this channel silent forever.
+          this.fileWatcherMessenger?.close();
         }
       );
       this.fileWatcherMessenger.sendMessage({
@@ -583,7 +586,9 @@ export class DaemonClient {
             }
             process.exit(1);
           }
-          // Other errors during reconnection - let retry loop handle
+          // The retry loop is driven by 'close', which a framing failure does
+          // not emit, so close explicitly to hand off to it.
+          this.fileWatcherMessenger?.close();
         }
       );
 
@@ -677,6 +682,7 @@ export class DaemonClient {
           for (const cb of this.projectGraphListenerCallbacks.values()) {
             cb(err, null);
           }
+          this.projectGraphListenerMessenger?.close();
         }
       );
       this.projectGraphListenerMessenger.sendMessage({
@@ -777,7 +783,9 @@ export class DaemonClient {
             }
             process.exit(1);
           }
-          // Other errors during reconnection - let retry loop handle
+          // The retry loop is driven by 'close', which a framing failure does
+          // not emit, so close explicitly to hand off to it.
+          this.projectGraphListenerMessenger?.close();
         }
       );
 
@@ -1134,8 +1142,14 @@ export class DaemonClient {
         }
       },
       (err) => {
+        // Every recovery path below is keyed on the socket 'close' event, and a
+        // framing failure emits neither 'close' nor 'error'. Without the
+        // teardown at the end of this handler the connection stays open and
+        // permanently deaf, and the next request waits out the keep-alive.
         if (!err.message) {
-          return this.currentReject(daemonProcessException(err.toString()));
+          this.currentReject(daemonProcessException(err.toString()));
+          this.socketMessenger?.close();
+          return;
         }
 
         let error: any;
@@ -1166,6 +1180,7 @@ export class DaemonClient {
           error = daemonProcessException(err.toString());
         }
         this.currentReject(error);
+        this.socketMessenger?.close();
       }
     );
   }
