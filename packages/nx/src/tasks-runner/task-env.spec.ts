@@ -9,6 +9,7 @@ import {
   getEnvVariablesForTask,
   getForceColorForChild,
   getGraphTimeDotEnvForTask,
+  getTaskSpecificEnv,
   loadAndExpandDotEnvFile,
   unloadDotEnvFile,
 } from './task-env';
@@ -182,6 +183,116 @@ describe(loadAndExpandDotEnvFile.name, () => {
       GREETING: 'hello-alice',
       ENDPOINT: 'http://alpha:3000',
     });
+  });
+  it('skips candidate files that do not exist and still loads the ones that do', () => {
+    tempDir = mkdtempSync(join(tmpdir(), 'nx-task-env-'));
+    const present = join(tempDir, '.env');
+    writeFileSync(present, 'FROM_FILE=yes\n');
+
+    const environmentVariables: NodeJS.ProcessEnv = {};
+    const result = loadAndExpandDotEnvFile(
+      [join(tempDir, '.env.build.local'), present, join(tempDir, '.env.build')],
+      environmentVariables
+    );
+
+    expect(environmentVariables.FROM_FILE).toBe('yes');
+    expect(result.error).toBeUndefined();
+
+    // The same list again is served from the parse cache.
+    const again: NodeJS.ProcessEnv = {};
+    loadAndExpandDotEnvFile(
+      [join(tempDir, '.env.build.local'), present],
+      again
+    );
+    expect(again.FROM_FILE).toBe('yes');
+  });
+
+  it('keeps the dotenv error for a single named file that is missing', () => {
+    tempDir = mkdtempSync(join(tmpdir(), 'nx-task-env-'));
+
+    const result = loadAndExpandDotEnvFile(join(tempDir, '.env.missing'), {});
+
+    expect((result.error as NodeJS.ErrnoException)?.code).toBe('ENOENT');
+  });
+
+  it('returns an empty parse when no file in the list exists', () => {
+    tempDir = mkdtempSync(join(tmpdir(), 'nx-task-env-'));
+    const environmentVariables: NodeJS.ProcessEnv = { KEEP: '1' };
+
+    const result = loadAndExpandDotEnvFile(
+      [join(tempDir, '.env.a'), join(tempDir, '.env.b')],
+      environmentVariables
+    );
+
+    expect(result.parsed).toEqual({});
+    expect(result.error).toBeUndefined();
+    expect(environmentVariables).toEqual({ KEEP: '1' });
+  });
+});
+
+describe(getTaskSpecificEnv.name, () => {
+  const originalEnv = process.env;
+  const originalWorkspaceRoot = workspaceRoot;
+  let tempDir: string;
+
+  const graph = {
+    nodes: {
+      p: {
+        name: 'p',
+        type: 'lib',
+        data: { root: 'p', targets: { build: {} } },
+      },
+    },
+    dependencies: {},
+  } as unknown as ProjectGraph;
+  const task = (id: string) =>
+    ({
+      id,
+      target: { project: 'p', target: 'build' },
+      projectRoot: 'p',
+      overrides: {},
+      outputs: [],
+    }) as unknown as Task;
+
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+    tempDir = mkdtempSync(join(tmpdir(), 'nx-task-env-'));
+    setWorkspaceRoot(tempDir);
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+    setWorkspaceRoot(originalWorkspaceRoot);
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  it('unloads the root dotenv files, and re-reads them once they change', () => {
+    writeFileSync(join(tempDir, '.env'), 'ROOT_ONLY=first\n');
+    process.env.ROOT_ONLY = 'first';
+    expect(
+      getTaskSpecificEnv(task('p:build:a'), graph).ROOT_ONLY
+    ).toBeUndefined();
+
+    // A different length so the stat signature changes even within one tick.
+    writeFileSync(join(tempDir, '.env'), 'ROOT_ONLY=second-value\n');
+    process.env.ROOT_ONLY = 'second-value';
+    expect(
+      getTaskSpecificEnv(task('p:build:b'), graph).ROOT_ONLY
+    ).toBeUndefined();
+
+    // A value the file no longer defines is kept.
+    rmSync(join(tempDir, '.env'));
+    expect(getTaskSpecificEnv(task('p:build:c'), graph).ROOT_ONLY).toBe(
+      'second-value'
+    );
+  });
+
+  it('hands every task its own copy of the base env', () => {
+    const a = getTaskSpecificEnv(task('p:build:x'), graph);
+    const b = getTaskSpecificEnv(task('p:build:y'), graph);
+    expect(a).not.toBe(b);
+    a.MUTATED = '1';
+    expect(b.MUTATED).toBeUndefined();
   });
 });
 
