@@ -108,9 +108,19 @@ export function consumeMessagesFromSocket(
     if (length === 0) {
       return Buffer.alloc(0);
     }
+    // A socket chunk usually carries several whole messages, so slice the
+    // leading one out in place rather than allocating and copying for each.
+    // The payload is parsed by the callback before the next read, so sharing
+    // the chunk's memory does not retain it.
     if (chunks[0].length === length) {
       buffered -= length;
       return chunks.shift();
+    }
+    if (chunks[0].length > length) {
+      const out = chunks[0].subarray(0, length);
+      chunks[0] = chunks[0].subarray(length);
+      buffered -= length;
+      return out;
     }
     const out = Buffer.allocUnsafe(length);
     let offset = 0;
