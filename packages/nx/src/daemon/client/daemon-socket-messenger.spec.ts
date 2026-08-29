@@ -1,8 +1,10 @@
 import { EventEmitter } from 'events';
 import type { Socket } from 'net';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { frameHeader } from '../../utils/consume-messages-from-socket';
-import { MESSAGE_HEADER_PREFIX } from '../../utils/consume-messages-from-socket';
+import {
+  frameHeader,
+  MESSAGE_HEADER_PREFIX,
+} from '../../utils/consume-messages-from-socket';
 import { DaemonSocketMessenger } from './daemon-socket-messenger';
 
 describe('DaemonSocketMessenger', () => {
