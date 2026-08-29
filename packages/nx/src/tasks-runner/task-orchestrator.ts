@@ -2110,6 +2110,9 @@ export class TaskOrchestrator {
   }
 
   private cleanUpUnneededContinuousTasks() {
+    // Nothing to stop; skip the full task scan this would otherwise do on
+    // every completion.
+    if (this.runningContinuousTasks.size === 0) return;
     const incompleteTasks = this.tasksSchedule.getIncompleteTasks();
     const neededContinuousTasks = new Set<string>();
     for (const task of incompleteTasks) {
