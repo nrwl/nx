@@ -3,6 +3,7 @@ import { ProjectGraph } from '../config/project-graph';
 import {
   ExternalObject,
   HashPlanner,
+  HashInstruction,
   ProjectGraph as NativeProjectGraph,
   transferProjectGraph,
 } from '../native';
@@ -28,6 +29,12 @@ import { transformProjectGraphForRust } from '../native/transform-objects';
 export interface TaskPlanningContext {
   projectGraphRef: ExternalObject<NativeProjectGraph>;
   planner: HashPlanner;
+  /**
+   * Plans for the task set affected already walked. The hasher narrows these to
+   * the tasks it was given instead of planning them again; it falls back when
+   * they cannot answer, so this is an optimisation and never a contract.
+   */
+  plans?: ExternalObject<Record<string, Array<HashInstruction>>>;
 }
 
 export function createTaskPlanningContext(

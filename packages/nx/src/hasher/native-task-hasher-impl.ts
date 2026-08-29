@@ -16,6 +16,7 @@ import {
 import type { IgnoredIndexReader } from '../native';
 import { transformProjectGraphForRust } from '../native/transform-objects';
 import type { TaskPlanningContext } from './task-planning-context';
+import { subsetHashPlans } from '../native';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { readJsonFile } from '../utils/fileutils';
@@ -25,6 +26,7 @@ import { PartialHash, TaskHasherImpl } from './task-hasher';
 export class NativeTaskHasherImpl implements TaskHasherImpl {
   hasher: TaskHasher;
   planner: HashPlanner;
+  private readonly planningContext?: TaskPlanningContext;
   projectGraphRef: ExternalObject<NativeProjectGraph>;
   allWorkspaceFilesRef: ExternalObject<FileData[]>;
   projectFileMapRef: ExternalObject<Record<string, FileData[]>>;
@@ -72,6 +74,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
 
     this.planner =
       planningContext?.planner ?? new HashPlanner(nxJson, this.projectGraphRef);
+    this.planningContext = planningContext;
     this.hasher = new TaskHasher(
       workspaceRoot,
       this.projectGraphRef,
@@ -137,7 +140,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       unplanned = unplanned.filter((id) => !(id in hashes));
     }
     if (unplanned.length > 0) {
-      const plans = this.plan(unplanned, taskGraph, ioSnapshots);
+      const plans = this.plansFor(unplanned, taskGraph, ioSnapshots);
       Object.assign(
         hashes,
         this.hasher.hashPlans(plans, envs, resolvedCwd, shouldCollectInputs)
@@ -175,14 +178,11 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     collectInputs?: boolean,
     ioSnapshots?: IoSnapshots
   ): Promise<Record<string, PartialHash>> {
-    const plans = this.plan(
-      tasks.map((t) => t.id),
-      taskGraph,
-      ioSnapshots
-    );
+    const taskIds = tasks.map((t) => t.id);
+    const plans = this.plansFor(taskIds, taskGraph, ioSnapshots);
     this.upfrontPlans = {
       fingerprint: taskGraphFingerprint(taskGraph, ioSnapshots),
-      taskIds: new Set(tasks.map((t) => t.id)),
+      taskIds: new Set(taskIds),
       plans,
     };
     const shouldCollectInputs =
@@ -193,6 +193,29 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       cwd ?? process.cwd(),
       shouldCollectInputs
     );
+  }
+
+  /**
+   * Affected already planned a superset of these tasks. Narrowing that answer
+   * skips a second pass over the same planner, which costs about as much as
+   * the first even with the subtree memo warm. Falls back to planning when the
+   * plans cannot answer for a task, the signal that they describe some other
+   * task graph.
+   */
+  private plansFor(
+    taskIds: string[],
+    taskGraph: TaskGraph,
+    ioSnapshots?: IoSnapshots
+  ): ReturnType<HashPlanner['getPlansReference']> {
+    // Affected plans without snapshots, so they cannot answer a run that has them.
+    const planned = ioSnapshots ? undefined : this.planningContext?.plans;
+    if (planned) {
+      const subset = subsetHashPlans(planned, taskIds);
+      if (subset) {
+        return subset;
+      }
+    }
+    return this.plan(taskIds, taskGraph, ioSnapshots);
   }
 }
 
