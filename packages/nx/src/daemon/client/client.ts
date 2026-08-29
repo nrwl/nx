@@ -30,6 +30,7 @@ import { preventRecursionInGraphConstruction } from '../../project-graph/project
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
 import {
   describeMessage,
+  MessageFramingError,
   parseMessage,
 } from '../../utils/consume-messages-from-socket';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
@@ -171,6 +172,12 @@ export class WatcherFailedError extends Error {
   }
 }
 
+/**
+ * A framing failure repeats on every redial, so the watcher channels stop
+ * re-dialing once this many land back to back without a message in between.
+ */
+const MAX_CONSECUTIVE_FRAMING_FAILURES = 3;
+
 export class DaemonClient {
   private readonly nxJson: NxJsonConfiguration | null;
 
@@ -203,6 +210,7 @@ export class DaemonClient {
   // Shared file watcher connection state
   private fileWatcherMessenger: DaemonSocketMessenger | undefined;
   private fileWatcherReconnecting: boolean = false;
+  private fileWatcherFramingFailures = 0;
   private fileWatcherCallbacks: Map<
     string,
     (
@@ -226,6 +234,7 @@ export class DaemonClient {
   // Shared project graph listener connection state
   private projectGraphListenerMessenger: DaemonSocketMessenger | undefined;
   private projectGraphListenerReconnecting: boolean = false;
+  private projectGraphListenerFramingFailures = 0;
   private projectGraphListenerCallbacks: Map<
     string,
     (
@@ -444,6 +453,8 @@ export class DaemonClient {
         (message) => {
           try {
             const parsedMessage = parseMessage<any>(message);
+            // A delivered message means the stream is healthy again.
+            this.fileWatcherFramingFailures = 0;
             if (parsedMessage?.watcherError) {
               const error = new WatcherFailedError(parsedMessage.watcherError);
               for (const cb of this.fileWatcherCallbacks.values()) {
@@ -482,6 +493,9 @@ export class DaemonClient {
           for (const cb of this.fileWatcherCallbacks.values()) {
             cb(err, null);
           }
+          if (err instanceof MessageFramingError) {
+            this.fileWatcherFramingFailures++;
+          }
           // Close so 'close' fires and the reconnect path runs; a framing
           // failure would otherwise leave this channel silent forever.
           this.fileWatcherMessenger?.close();
@@ -509,6 +523,22 @@ export class DaemonClient {
   private async reconnectFileWatcher() {
     // Guard against concurrent reconnection attempts
     if (this.fileWatcherReconnecting) {
+      return;
+    }
+
+    // The concurrency guard above is cleared before this method recurses, so it
+    // bounds overlap rather than iterations. A framing failure is deterministic
+    // — re-dialing replays it — so without this the channel would reconnect and
+    // re-fail forever. Reaching a payload over NX_MAX_MESSAGE_SIZE does exactly
+    // that on every notification.
+    if (this.fileWatcherFramingFailures > MAX_CONSECUTIVE_FRAMING_FAILURES) {
+      clientLogger.log(
+        `[FileWatcher] Giving up after ${this.fileWatcherFramingFailures} consecutive framing failures`
+      );
+      this.fileWatcherReconnecting = false;
+      for (const cb of this.fileWatcherCallbacks.values()) {
+        cb('closed', null);
+      }
       return;
     }
 
@@ -560,6 +590,8 @@ export class DaemonClient {
         (message) => {
           try {
             const parsedMessage = parseMessage<any>(message);
+            // A delivered message means the stream is healthy again.
+            this.fileWatcherFramingFailures = 0;
             for (const cb of this.fileWatcherCallbacks.values()) {
               cb(null, parsedMessage);
             }
@@ -585,6 +617,9 @@ export class DaemonClient {
               cb('closed', null);
             }
             process.exit(1);
+          }
+          if (err instanceof MessageFramingError) {
+            this.fileWatcherFramingFailures++;
           }
           // The retry loop is driven by 'close', which a framing failure does
           // not emit, so close explicitly to hand off to it.
@@ -651,6 +686,8 @@ export class DaemonClient {
         (message) => {
           try {
             const parsedMessage = parseMessage<any>(message);
+            // A delivered message means the stream is healthy again.
+            this.projectGraphListenerFramingFailures = 0;
             // Notify all callbacks
             for (const cb of this.projectGraphListenerCallbacks.values()) {
               cb(null, parsedMessage);
@@ -682,6 +719,9 @@ export class DaemonClient {
           for (const cb of this.projectGraphListenerCallbacks.values()) {
             cb(err, null);
           }
+          if (err instanceof MessageFramingError) {
+            this.projectGraphListenerFramingFailures++;
+          }
           this.projectGraphListenerMessenger?.close();
         }
       );
@@ -705,6 +745,22 @@ export class DaemonClient {
   private async reconnectProjectGraphListener() {
     // Guard against concurrent reconnection attempts
     if (this.projectGraphListenerReconnecting) {
+      return;
+    }
+
+    // See reconnectFileWatcher: a framing failure repeats on every redial, so
+    // the concurrency guard alone cannot bound it.
+    if (
+      this.projectGraphListenerFramingFailures >
+      MAX_CONSECUTIVE_FRAMING_FAILURES
+    ) {
+      clientLogger.log(
+        `[ProjectGraphListener] Giving up after ${this.projectGraphListenerFramingFailures} consecutive framing failures`
+      );
+      this.projectGraphListenerReconnecting = false;
+      for (const cb of this.projectGraphListenerCallbacks.values()) {
+        cb('closed', null);
+      }
       return;
     }
 
@@ -757,6 +813,8 @@ export class DaemonClient {
         (message) => {
           try {
             const parsedMessage = parseMessage<any>(message);
+            // A delivered message means the stream is healthy again.
+            this.projectGraphListenerFramingFailures = 0;
             for (const cb of this.projectGraphListenerCallbacks.values()) {
               cb(null, parsedMessage);
             }
@@ -782,6 +840,9 @@ export class DaemonClient {
               cb('closed', null);
             }
             process.exit(1);
+          }
+          if (err instanceof MessageFramingError) {
+            this.projectGraphListenerFramingFailures++;
           }
           // The retry loop is driven by 'close', which a framing failure does
           // not emit, so close explicitly to hand off to it.
