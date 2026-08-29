@@ -151,6 +151,9 @@ function getProjectType(
 
   // If it doesn't have any common library entry points, assume it is an application
   const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
+  if (!existsSync(packageJsonPath)) {
+    return 'lib';
+  }
   try {
     const packageJson = readJsonFile<PackageJson>(packageJsonPath);
     if (
