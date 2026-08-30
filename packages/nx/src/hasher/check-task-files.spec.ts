@@ -11,6 +11,14 @@ import { workspaceRoot } from '../utils/workspace-root';
 // fresh set of spies. _resetContextForTesting() clears the module-level cache
 // so each test loads a clean context.
 
+// loadIoSnapshotsForHead reads a fetched bundle from disk, so leaving it real
+// makes these tests pass locally and fail on CI, where Nx Cloud has fetched
+// one. Pin it absent; the snapshot path has its own tests.
+vi.mock('../io-snapshots/overrides', async (importOriginal) => ({
+  ...(await importOriginal<any>()),
+  loadIoSnapshotsForHead: vi.fn(() => null),
+}));
+
 vi.mock('../project-graph/project-graph', () => ({
   createProjectGraphAsync: vi.fn(),
 }));
