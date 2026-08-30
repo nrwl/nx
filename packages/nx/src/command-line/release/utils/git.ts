@@ -348,12 +348,13 @@ export async function gitAdd({
   if (deletedFiles?.length > 0) {
     const changedTrackedFiles = await getChangedTrackedFiles(cwd);
     for (const f of deletedFiles ?? []) {
-      const isFileIgnored = await isIgnored(f, cwd);
+      const normalized = f.replace(/\\/g, '/');
+      const isFileIgnored = await isIgnored(normalized, cwd);
       if (isFileIgnored) {
-        ignoredFiles.push(f);
+        ignoredFiles.push(normalized);
         // git add will fail if trying to add an untracked file that doesn't exist
-      } else if (changedTrackedFiles.has(f) || dryRun) {
-        filesToAdd.push(f);
+      } else if (changedTrackedFiles.has(normalized) || dryRun) {
+        filesToAdd.push(normalized);
       }
     }
   }
