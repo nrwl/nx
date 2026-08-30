@@ -1,8 +1,13 @@
-import { setOutput } from '@actions/core';
+import { setOutput, summary } from '@actions/core';
 import { ensureDirSync, readJsonSync, writeJsonSync } from 'fs-extra';
 import isCI from 'is-ci';
 import { dirname, join } from 'path';
-import { formatGhReport, getSlackMessageJson } from './format-slack-message';
+import {
+  formatGhReport,
+  getSlackMessageJson,
+  toMarkdown,
+  toSlackSections,
+} from './format-slack-message';
 import { ReportData } from './model';
 import { getScopeLabels, scrapeIssues } from './scrape-issues';
 import { getTrendData } from './stats';
@@ -16,14 +21,21 @@ async function main() {
   );
   const trendData = getTrendData(currentData, oldData);
   const scopeLabels = await getScopeLabels();
-  const sections = formatGhReport(currentData, trendData, oldData, {
+  const report = formatGhReport(currentData, trendData, oldData, {
     unlabeledIssuesUrl: getUnlabeledUrl('issue', scopeLabels),
     unlabeledPrsUrl: getUnlabeledUrl('pr', scopeLabels),
   });
+  const markdown = toMarkdown(report);
   if (process.env.GITHUB_ACTIONS) {
-    setOutput('SLACK_MESSAGE', getSlackMessageJson(sections));
+    setOutput(
+      'SLACK_MESSAGE',
+      getSlackMessageJson(report.title, toSlackSections(report))
+    );
   }
-  console.log(sections.join('\n').replace(/\<(.*?)\|(.*?)\>/g, '[$2]($1)'));
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    await summary.addRaw(markdown).write();
+  }
+  console.log(markdown);
   saveCacheData(currentData);
 }
 

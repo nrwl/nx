@@ -6,13 +6,17 @@ const SLACK_SECTION_TEXT_LIMIT = 3000;
 const TABLE_HEADER_LINES = 2;
 const NPM_HEALTH_URL = 'https://npm-burst.com/package/nx/health/';
 
-export function getSlackMessageJson(sections: string[]) {
-  return {
-    blocks: sections.map((text) => ({
-      type: 'section',
-      text: { type: 'mrkdwn', text },
-    })),
-  };
+export interface Link {
+  label: string;
+  url: string;
+}
+
+export interface FormattedReport {
+  title: string;
+  links: Link[];
+  notes: string[];
+  tables: { title: string; markdown: string }[];
+  footer: Link;
 }
 
 export interface ReportLinks {
@@ -31,19 +35,11 @@ export function formatGhReport(
   trendData: TrendData,
   prevData: Partial<ReportData>,
   links: ReportLinks
-): string[] {
+): FormattedReport {
   const prevDate = prevData.collectedDate
     ? new Date(prevData.collectedDate)
     : undefined;
   const sinceDate = formatDate(getSinceDate(prevDate));
-
-  const header = [
-    `Issue & PR Report for ${currentData.collectedDate} <${links.unlabeledIssuesUrl}|[view unlabeled issues]> <${links.unlabeledPrsUrl}|[view unlabeled PRs]>`,
-    ...(prevData.collectedDate
-      ? [`Previous Report: ${prevData.collectedDate}`]
-      : []),
-    `Closed, created and merged counts are since ${sinceDate}. Ages are for open items, in days.`,
-  ].join('\n');
 
   const rows = (
     sortBy: (d: ScopeData) => number,
@@ -112,14 +108,64 @@ export function formatGhReport(
     ]
   );
 
-  const footer = `<${NPM_HEALTH_URL}|nx package health on npm-burst>`;
+  return {
+    title: `Issue & PR Report for ${currentData.collectedDate}`,
+    links: [
+      { label: 'view unlabeled issues', url: links.unlabeledIssuesUrl },
+      { label: 'view unlabeled PRs', url: links.unlabeledPrsUrl },
+    ],
+    notes: [
+      ...(prevData.collectedDate
+        ? [`Previous Report: ${prevData.collectedDate}`]
+        : []),
+      `Closed, created and merged counts are since ${sinceDate}. Ages are for open items, in days.`,
+    ],
+    tables: [
+      { title: 'Issues', markdown: issueTable },
+      { title: 'Pull requests', markdown: prTable },
+    ],
+    footer: { label: 'nx package health on npm-burst', url: NPM_HEALTH_URL },
+  };
+}
 
+export function toSlackSections(report: FormattedReport): string[] {
+  const slackLink = (l: Link) => `<${l.url}|${l.label}>`;
+  const header = [
+    [
+      `*${report.title}*`,
+      ...report.links.map((l) => `<${l.url}|[${l.label}]>`),
+    ].join(' '),
+    ...report.notes,
+  ].join('\n');
   return [
     header,
-    ...splitIntoBlocks(issueTable, TABLE_HEADER_LINES),
-    ...splitIntoBlocks(prTable, TABLE_HEADER_LINES),
-    footer,
+    ...report.tables.flatMap((t) => [
+      `*${t.title}*`,
+      ...splitIntoBlocks(t.markdown, TABLE_HEADER_LINES),
+    ]),
+    slackLink(report.footer),
   ];
+}
+
+export function toMarkdown(report: FormattedReport): string {
+  const mdLink = (l: Link) => `[${l.label}](${l.url})`;
+  return [
+    `# ${report.title}`,
+    report.notes.join('  \n'),
+    report.links.map(mdLink).join(' · '),
+    ...report.tables.flatMap((t) => [`## ${t.title}`, t.markdown]),
+    mdLink(report.footer),
+  ].join('\n\n');
+}
+
+export function getSlackMessageJson(fallbackText: string, sections: string[]) {
+  return {
+    text: fallbackText,
+    blocks: sections.map((text) => ({
+      type: 'section',
+      text: { type: 'mrkdwn', text },
+    })),
+  };
 }
 
 function count(label: string, pick: (r: Row) => [number, number | null]) {

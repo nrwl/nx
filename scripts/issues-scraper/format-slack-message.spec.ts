@@ -4,6 +4,8 @@ import {
   formatGhReport,
   getSlackMessageJson,
   splitIntoBlocks,
+  toMarkdown,
+  toSlackSections,
 } from './format-slack-message';
 import { ReportData, ScopeData, ScopeTrend, TrendData } from './model';
 
@@ -29,10 +31,7 @@ const current: ReportData = {
   scopes: {
     'scope: small': stats(1),
     'scope: big': stats(5),
-    'scope: none': {
-      ...stats(0),
-      issues: { ...stats(0).issues, closed: 1 },
-    },
+    'scope: none': { ...stats(0), issues: { ...stats(0).issues, closed: 1 } },
   },
   collectedDate: 'Aug 30 2026',
 };
@@ -52,75 +51,129 @@ const links = {
 };
 
 const squash = (s: string) => s.replace(/ +/g, ' ');
+const rowLabels = (table: string) =>
+  table
+    .split('\n')
+    .filter((l) => l.startsWith('|'))
+    .slice(2)
+    .map((l) => l.split('|')[1].trim());
 
 describe('formatGhReport', () => {
-  const sections = formatGhReport(current, trends, previous, links);
-  const [header, issues, prs, footer] = sections;
+  const report = formatGhReport(current, trends, previous, links);
+  const [issues, prs] = report.tables;
 
-  it('returns the header, issue table, PR table and footer as separate sections', () => {
-    assert.equal(sections.length, 4);
-    assert.match(header, /Aug 30 2026/);
-    assert.match(
-      header,
-      /<https:\/\/example.com\/issues\|\[view unlabeled issues\]>/
-    );
-    assert.match(
-      header,
-      /<https:\/\/example.com\/prs\|\[view unlabeled PRs\]>/
-    );
-    assert.match(header, /Previous Report: Aug 23 2026/);
-    assert.match(issues, /Issues.*Bugs.*Closed.*Avg Age.*P95 Age/);
-    assert.match(prs, /Open.*Created.*Merged.*Closed.*Avg Age.*P95 Age/);
+  it('describes the report with a title, links, notes, two titled tables and a footer link', () => {
+    assert.equal(report.title, 'Issue & PR Report for Aug 30 2026');
+    assert.deepEqual(report.links, [
+      { label: 'view unlabeled issues', url: 'https://example.com/issues' },
+      { label: 'view unlabeled PRs', url: 'https://example.com/prs' },
+    ]);
+    assert.deepEqual(report.notes, [
+      'Previous Report: Aug 23 2026',
+      'Closed, created and merged counts are since Aug 23 2026. Ages are for open items, in days.',
+    ]);
+    assert.equal(issues.title, 'Issues');
+    assert.equal(prs.title, 'Pull requests');
+    assert.deepEqual(report.footer, {
+      label: 'nx package health on npm-burst',
+      url: 'https://npm-burst.com/package/nx/health/',
+    });
+  });
+
+  it('omits the previous-report note on a first run', () => {
+    const first = formatGhReport(current, trends, {}, links);
+    assert.equal(first.notes.length, 1);
+    assert.doesNotMatch(first.notes[0], /Previous/);
   });
 
   it('lists Everything, then Unscoped, then scopes by descending open count', () => {
-    const rows = (table: string) =>
-      table
-        .split('\n')
-        .filter((l) => l.startsWith('|'))
-        .slice(2)
-        .map((l) => l.split('|')[1].trim());
     const expected = ['Everything', 'Unscoped', 'scope: big', 'scope: small'];
-    assert.deepEqual(rows(issues), [...expected, 'scope: none']);
-    assert.deepEqual(rows(prs), expected);
+    assert.deepEqual(rowLabels(issues.markdown), [...expected, 'scope: none']);
+    assert.deepEqual(rowLabels(prs.markdown), expected);
   });
 
   it('renders counts with deltas and ages in days', () => {
-    const issues = squash(sections[1]);
-    const prs = squash(sections[2]);
+    assert.match(issues.markdown, /Issues.*Bugs.*Closed.*Avg Age.*P95 Age/);
     assert.match(
-      issues,
+      prs.markdown,
+      /Open.*Created.*Merged.*Closed.*Avg Age.*P95 Age/
+    );
+    assert.match(
+      squash(issues.markdown),
       /\| Everything \| 9 \(\+1\) \| 9 \(\+1\) \| 9 \(\+1\) \| 90d \(\+1\) \| 180d \(\+1\) \|/
     );
     assert.match(
-      issues,
+      squash(issues.markdown),
       /\| Unscoped \| 2 \(-1\) \| 2 \(-1\) \| 2 \(-1\) \| 20d \(-1\) \| 40d \(-1\) \|/
     );
-    assert.match(prs, /\| scope: small \| 1 \| 1 \| 1 \| 1 \| 3d \| 4d \|/);
+    assert.match(
+      squash(prs.markdown),
+      /\| scope: small \| 1 \| 1 \| 1 \| 1 \| 3d \| 4d \|/
+    );
   });
 
   it('shows a dash for ages when nothing is open', () => {
-    const issues = squash(sections[1]);
-    const prs = squash(sections[2]);
-    assert.match(issues, /\| scope: none \| 0 \| 0 \| 1 \| - \| - \|/);
-  });
-
-  it('omits scope rows with no activity at all from a table', () => {
-    assert.doesNotMatch(prs, /scope: none/);
-  });
-
-  it('links to the npm-burst package health page in the footer', () => {
     assert.match(
-      footer,
-      /<https:\/\/npm-burst.com\/package\/nx\/health\/\|[^>]+>/
+      squash(issues.markdown),
+      /\| scope: none \| 0 \| 0 \| 1 \| - \| - \|/
     );
   });
 
-  it('wraps every table section in a code fence', () => {
+  it('omits scope rows with no activity at all from a table', () => {
+    assert.doesNotMatch(prs.markdown, /scope: none/);
+  });
+});
+
+describe('toSlackSections', () => {
+  const sections = toSlackSections(
+    formatGhReport(current, trends, previous, links)
+  );
+
+  it('emits header, a bold label plus fenced chunks per table, then the footer', () => {
+    assert.equal(sections.length, 6);
+    const [header, issuesLabel, issues, prsLabel, prs, footer] = sections;
+    assert.equal(
+      header,
+      [
+        '*Issue & PR Report for Aug 30 2026* <https://example.com/issues|[view unlabeled issues]> <https://example.com/prs|[view unlabeled PRs]>',
+        'Previous Report: Aug 23 2026',
+        'Closed, created and merged counts are since Aug 23 2026. Ages are for open items, in days.',
+      ].join('\n')
+    );
+    assert.equal(issuesLabel, '*Issues*');
+    assert.equal(prsLabel, '*Pull requests*');
     for (const section of [issues, prs]) {
-      assert.ok(section.startsWith('```\n'));
+      assert.ok(section.startsWith('```\n| Scope'));
       assert.ok(section.endsWith('\n```'));
     }
+    assert.equal(
+      footer,
+      '<https://npm-burst.com/package/nx/health/|nx package health on npm-burst>'
+    );
+  });
+});
+
+describe('toMarkdown', () => {
+  const markdown = toMarkdown(formatGhReport(current, trends, previous, links));
+
+  it('renders headings, plain links and unfenced tables for GitHub', () => {
+    assert.match(markdown, /^# Issue & PR Report for Aug 30 2026\n/);
+    assert.match(
+      markdown,
+      /\[view unlabeled issues\]\(https:\/\/example.com\/issues\)/
+    );
+    assert.match(
+      markdown,
+      /\[view unlabeled PRs\]\(https:\/\/example.com\/prs\)/
+    );
+    assert.match(markdown, /\n## Issues\n\n\| Scope/);
+    assert.match(markdown, /\n## Pull requests\n\n\| Scope/);
+    assert.match(
+      markdown,
+      /\[nx package health on npm-burst\]\(https:\/\/npm-burst.com\/package\/nx\/health\/\)/
+    );
+    assert.doesNotMatch(markdown, /```/);
+    assert.doesNotMatch(markdown, /<https/);
   });
 });
 
@@ -161,8 +214,9 @@ describe('splitIntoBlocks', () => {
 });
 
 describe('getSlackMessageJson', () => {
-  it('emits one mrkdwn section block per text section', () => {
-    assert.deepEqual(getSlackMessageJson(['one', 'two']), {
+  it('emits a notification fallback and one mrkdwn section block per text section', () => {
+    assert.deepEqual(getSlackMessageJson('Report title', ['one', 'two']), {
+      text: 'Report title',
       blocks: [
         { type: 'section', text: { type: 'mrkdwn', text: 'one' } },
         { type: 'section', text: { type: 'mrkdwn', text: 'two' } },
