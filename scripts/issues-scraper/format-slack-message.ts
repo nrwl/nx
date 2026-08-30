@@ -1,88 +1,173 @@
-import { ReportData, TrendData } from './model';
-import { getSinceDate } from './scrape-issues';
 import { table } from 'markdown-factory';
+import { ReportData, ScopeData, ScopeTrend, TrendData } from './model';
+import { getSinceDate } from './scrape-issues';
 
-export function getSlackMessageJson(body: string) {
+const SLACK_SECTION_TEXT_LIMIT = 3000;
+const TABLE_HEADER_LINES = 2;
+const NPM_HEALTH_URL = 'https://npm-burst.com/package/nx/health/';
+
+export function getSlackMessageJson(sections: string[]) {
   return {
-    blocks: [
-      {
-        type: 'section',
-        text: {
-          text: body,
-          type: 'mrkdwn',
-        },
-      },
-    ],
+    blocks: sections.map((text) => ({
+      type: 'section',
+      text: { type: 'mrkdwn', text },
+    })),
   };
 }
+
+export interface ReportLinks {
+  unlabeledIssuesUrl: string;
+  unlabeledPrsUrl: string;
+}
+
+type Row = {
+  label: string;
+  data: ScopeData;
+  trend: ScopeTrend;
+};
 
 export function formatGhReport(
   currentData: ReportData,
   trendData: TrendData,
-  prevData: ReportData,
-  unlabeledIssuesUrl: string
-): string {
-  const formattedIssueDelta = formatDelta(trendData.totalIssueCount);
-  const formattedBugDelta = formatDelta(trendData.totalBugCount);
-
-  const header = `Issue Report for ${currentData.collectedDate} <${unlabeledIssuesUrl}|[view unlabeled]>
-\`\`\`
-Totals, Issues: ${currentData.totalIssueCount} ${formattedIssueDelta} Bugs: ${currentData.totalBugCount} ${formattedBugDelta}\n\n`;
-
+  prevData: Partial<ReportData>,
+  links: ReportLinks
+): string[] {
   const prevDate = prevData.collectedDate
     ? new Date(prevData.collectedDate)
     : undefined;
-  const closedSinceDate = getSinceDate(prevDate)
-    .toDateString()
-    .split(' ')
-    .slice(1)
-    .join(' ');
+  const sinceDate = formatDate(getSinceDate(prevDate));
 
-  const bodyLines: string[] = [
+  const header = [
+    `Issue & PR Report for ${currentData.collectedDate} <${links.unlabeledIssuesUrl}|[view unlabeled issues]> <${links.unlabeledPrsUrl}|[view unlabeled PRs]>`,
     ...(prevData.collectedDate
       ? [`Previous Report: ${prevData.collectedDate}`]
       : []),
-    `Untriaged: ${currentData.untriagedIssueCount} ${formatDelta(
-      trendData.untriagedIssueCount
-    )}`,
-    `Closed since ${closedSinceDate}: ${currentData.totalClosed} ${formatDelta(
-      trendData.totalClosed
-    )}`,
+    `Closed, created and merged counts are since ${sinceDate}. Ages are for open items, in days.`,
+  ].join('\n');
+
+  const rows = (
+    sortBy: (d: ScopeData) => number,
+    activity: (d: ScopeData) => number[]
+  ): Row[] => [
+    { label: 'Everything', data: currentData.all, trend: trendData.all },
+    {
+      label: 'Unscoped',
+      data: currentData.unscoped,
+      trend: trendData.unscoped,
+    },
+    ...Object.entries(currentData.scopes)
+      .filter(([, data]) => activity(data).some((n) => n > 0))
+      .sort(([, a], [, b]) => sortBy(b) - sortBy(a))
+      .map(([scope, data]) => ({
+        label: scope,
+        data,
+        trend: trendData.scopes[scope],
+      })),
   ];
 
-  const sorted = Object.entries(currentData.scopes)
-    .sort(([, a], [, b]) => b.count - a.count)
-    .map(([scope, x]) => ({
-      ...x,
-      scope,
-    }));
-
-  bodyLines.push(
-    table(sorted, [
-      {
-        field: 'scope',
-        label: 'Scope',
-      },
-      {
-        label: 'Issues',
-        mapFn: (el) =>
-          `${el.count} ${formatDelta(trendData.scopes[el.scope].count)}`,
-      },
-      {
-        label: 'Bugs',
-        mapFn: (el) =>
-          `${el.bugCount} ${formatDelta(trendData.scopes[el.scope].bugCount)}`,
-      },
-      {
-        label: 'Closed',
-        mapFn: (el) =>
-          `${el.closed} ${formatDelta(trendData.scopes[el.scope].closed)}`,
-      },
-    ])
+  const issueTable = table<Row>(
+    rows(
+      (d) => d.issues.count,
+      (d) => [d.issues.count, d.issues.bugCount, d.issues.closed]
+    ),
+    [
+      { label: 'Scope', field: 'label' },
+      count('Issues', (r) => [r.data.issues.count, r.trend.issues.count]),
+      count('Bugs', (r) => [r.data.issues.bugCount, r.trend.issues.bugCount]),
+      count('Closed', (r) => [r.data.issues.closed, r.trend.issues.closed]),
+      age('Avg Age', (r) => [
+        r.data.issues.count,
+        r.data.issues.avgAge,
+        r.trend.issues.avgAge,
+      ]),
+      age('P95 Age', (r) => [
+        r.data.issues.count,
+        r.data.issues.p95Age,
+        r.trend.issues.p95Age,
+      ]),
+    ]
   );
 
-  const footer = '```';
-  return header + bodyLines.join('\n') + footer;
+  const prTable = table<Row>(
+    rows(
+      (d) => d.prs.open,
+      (d) => [d.prs.open, d.prs.created, d.prs.merged, d.prs.closed]
+    ),
+    [
+      { label: 'Scope', field: 'label' },
+      count('Open', (r) => [r.data.prs.open, r.trend.prs.open]),
+      count('Created', (r) => [r.data.prs.created, r.trend.prs.created]),
+      count('Merged', (r) => [r.data.prs.merged, r.trend.prs.merged]),
+      count('Closed', (r) => [r.data.prs.closed, r.trend.prs.closed]),
+      age('Avg Age', (r) => [
+        r.data.prs.open,
+        r.data.prs.avgAge,
+        r.trend.prs.avgAge,
+      ]),
+      age('P95 Age', (r) => [
+        r.data.prs.open,
+        r.data.prs.p95Age,
+        r.trend.prs.p95Age,
+      ]),
+    ]
+  );
+
+  const footer = `<${NPM_HEALTH_URL}|nx package health on npm-burst>`;
+
+  return [
+    header,
+    ...splitIntoBlocks(issueTable, TABLE_HEADER_LINES),
+    ...splitIntoBlocks(prTable, TABLE_HEADER_LINES),
+    footer,
+  ];
+}
+
+function count(label: string, pick: (r: Row) => [number, number | null]) {
+  return {
+    label,
+    mapFn: (r: Row) => {
+      const [value, delta] = pick(r);
+      return `${value} ${formatDelta(delta)}`.trim();
+    },
+  };
+}
+
+function age(label: string, pick: (r: Row) => [number, number, number | null]) {
+  return {
+    label,
+    mapFn: (r: Row) => {
+      const [openCount, value, delta] = pick(r);
+      if (openCount === 0) {
+        return '-';
+      }
+      return `${value}d ${formatDelta(delta)}`.trim();
+    },
+  };
+}
+
+export function splitIntoBlocks(text: string, headerLines = 0): string[] {
+  const lines = text.split('\n');
+  const header = lines.slice(0, headerLines);
+  const fence = (body: string[]) => `\`\`\`\n${body.join('\n')}\n\`\`\``;
+  const blocks: string[] = [];
+  let current = [...header];
+  for (const line of lines.slice(headerLines)) {
+    if (
+      current.length > header.length &&
+      fence([...current, line]).length > SLACK_SECTION_TEXT_LIMIT
+    ) {
+      blocks.push(fence(current));
+      current = [...header];
+    }
+    current.push(line);
+  }
+  blocks.push(fence(current));
+  return blocks;
+}
+
+function formatDate(date: Date): string {
+  // Format is like: Mar 03 2023
+  return date.toDateString().split(' ').slice(1).join(' ');
 }
 
 function formatDelta(delta: number | null): string {
