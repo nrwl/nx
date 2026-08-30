@@ -1,4 +1,5 @@
 import type { Mock } from 'vitest';
+import { output } from '../../../../utils/output';
 import { GithubRemoteReleaseClient } from './github';
 
 vi.mock('axios', () => {
@@ -12,10 +13,16 @@ vi.mock('node:child_process', async () => ({
   execSync: require('node:child_process').execSync,
 }));
 
+vi.mock('../../../../utils/prompt-helpers', () => ({
+  selectPrompt: vi.fn(),
+}));
+
 import { execFileSync } from 'node:child_process';
+import { selectPrompt } from '../../../../utils/prompt-helpers';
 
 const axiosGetMock = (await import('axios')).default.get as Mock;
 const execFileSyncMock = execFileSync as Mock;
+const selectPromptMock = selectPrompt as Mock;
 
 describe('GithubRemoteReleaseClient', () => {
   const client = new GithubRemoteReleaseClient(
@@ -167,5 +174,60 @@ describe('GithubRemoteReleaseClient', () => {
       client.applyUsernameToAuthors(authors)
     ).resolves.toBeUndefined();
     expect(authors.get('Test User')?.username).toBeUndefined();
+  });
+
+  describe('handleError', () => {
+    const repoData = {
+      hostname: 'github.com',
+      slug: 'nrwl/nx',
+      apiBaseUrl: 'https://api.github.com',
+    };
+
+    async function printedErrorBody(
+      client: GithubRemoteReleaseClient
+    ): Promise<string> {
+      const errorSpy = vi.spyOn(output, 'error').mockImplementation(() => {});
+      selectPromptMock.mockResolvedValue('No');
+      const originalExitCode = process.exitCode;
+      try {
+        await (client as any).handleError(
+          { response: { data: { message: 'Bad credentials' } } },
+          { url: 'https://github.com/nrwl/nx/releases/new', requestData: {} }
+        );
+      } finally {
+        process.exitCode = originalExitCode;
+      }
+      expect(errorSpy).toHaveBeenCalledTimes(1);
+      const printed = errorSpy.mock.calls[0][0].bodyLines.join('\n');
+      errorSpy.mockRestore();
+      return printed;
+    }
+
+    it('should redact the token in the API error output', async () => {
+      const token = 'ghp_secret';
+      const clientWithToken = new GithubRemoteReleaseClient(repoData, false, {
+        token,
+        headerName: 'Authorization',
+      });
+
+      const printed = await printedErrorBody(clientWithToken);
+
+      expect(printed).not.toContain(token);
+      expect(printed).toContain(
+        'Token Header: Authorization: Bearer <redacted>'
+      );
+    });
+
+    it('should report when no token was configured', async () => {
+      const clientWithoutToken = new GithubRemoteReleaseClient(
+        repoData,
+        false,
+        null
+      );
+
+      const printed = await printedErrorBody(clientWithoutToken);
+
+      expect(printed).toContain('Token Header: none');
+    });
   });
 });

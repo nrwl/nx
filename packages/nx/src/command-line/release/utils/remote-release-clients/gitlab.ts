@@ -234,7 +234,7 @@ export class GitLabRemoteReleaseClient extends RemoteReleaseClient<GitLabRelease
             `---`,
             `Request Data:`,
             `Repo: ${this.getRemoteRepoData<GitLabRepoData>()?.slug}`,
-            `Token Header Data: ${this.tokenHeader}`,
+            `Token Header: ${this.getRedactedTokenHeader()}`,
             `Body: ${JSON.stringify(result.requestData)}`,
           ],
         });

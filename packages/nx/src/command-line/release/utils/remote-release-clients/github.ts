@@ -341,7 +341,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
             `---`,
             `Request Data:`,
             `Repo: ${this.getRemoteRepoData<GithubRepoData>()?.slug}`,
-            `Token Header Data: ${this.tokenHeader}`,
+            `Token Header: ${this.getRedactedTokenHeader()}`,
             `Body: ${JSON.stringify(result.requestData)}`,
           ],
         });
