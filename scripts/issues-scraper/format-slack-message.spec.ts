@@ -5,7 +5,7 @@ import {
   getSlackMessageJson,
   splitIntoBlocks,
   toMarkdown,
-  toSlackSections,
+  toSlackBlocks,
 } from './format-slack-message';
 import { ReportData, ScopeData, ScopeTrend, TrendData } from './model';
 
@@ -124,32 +124,85 @@ describe('formatGhReport', () => {
   });
 });
 
-describe('toSlackSections', () => {
-  const sections = toSlackSections(
+describe('toSlackBlocks', () => {
+  const blocks = toSlackBlocks(
     formatGhReport(current, trends, previous, links)
   );
+  const types = blocks.map((b) => b.type);
 
-  it('emits header, a bold label plus fenced chunks per table, then the footer', () => {
-    assert.equal(sections.length, 6);
-    const [header, issuesLabel, issues, prsLabel, prs, footer] = sections;
-    assert.equal(
-      header,
-      [
-        '*Issue & PR Report for Aug 30 2026* <https://example.com/issues|[view unlabeled issues]> <https://example.com/prs|[view unlabeled PRs]>',
-        'Previous Report: Aug 23 2026',
-        'Closed, created and merged counts are since Aug 23 2026. Ages are for open items, in days.',
-      ].join('\n')
-    );
-    assert.equal(issuesLabel, '*Issues*');
-    assert.equal(prsLabel, '*Pull requests*');
-    for (const section of [issues, prs]) {
-      assert.ok(section.startsWith('```\n| Scope'));
-      assert.ok(section.endsWith('\n```'));
+  it('lays out header, context notes, links, then a labelled fenced table per section, then a context footer', () => {
+    assert.deepEqual(types, [
+      'header',
+      'context',
+      'section',
+      'section',
+      'divider',
+      'section',
+      'section',
+      'divider',
+      'section',
+      'section',
+      'context',
+    ]);
+  });
+
+  it('puts the title in a plain_text header and the notes in a context block', () => {
+    assert.deepEqual(blocks[0], {
+      type: 'header',
+      text: { type: 'plain_text', text: 'Issue & PR Report for Aug 30 2026' },
+    });
+    assert.deepEqual(blocks[1], {
+      type: 'context',
+      elements: [
+        {
+          type: 'mrkdwn',
+          text: 'Previous Report: Aug 23 2026\nClosed, created and merged counts are since Aug 23 2026. Ages are for open items, in days.',
+        },
+      ],
+    });
+  });
+
+  it('renders each link as its own mrkdwn section and the footer as a context link', () => {
+    assert.deepEqual(blocks[2], {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: '<https://example.com/issues|view unlabeled issues>',
+      },
+    });
+    assert.deepEqual(blocks[3], {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: '<https://example.com/prs|view unlabeled PRs>',
+      },
+    });
+    assert.deepEqual(blocks[10], {
+      type: 'context',
+      elements: [
+        {
+          type: 'mrkdwn',
+          text: '<https://npm-burst.com/package/nx/health/|nx package health on npm-burst>',
+        },
+      ],
+    });
+  });
+
+  it('labels each table in bold and fences its chunks', () => {
+    assert.deepEqual(blocks[5], {
+      type: 'section',
+      text: { type: 'mrkdwn', text: '*Issues*' },
+    });
+    assert.deepEqual(blocks[8], {
+      type: 'section',
+      text: { type: 'mrkdwn', text: '*Pull requests*' },
+    });
+    for (const block of [blocks[6], blocks[9]]) {
+      assert.equal(block.type, 'section');
+      const text = (block as { text: { text: string } }).text.text;
+      assert.ok(text.startsWith('```\n| Scope'));
+      assert.ok(text.endsWith('\n```'));
     }
-    assert.equal(
-      footer,
-      '<https://npm-burst.com/package/nx/health/|nx package health on npm-burst>'
-    );
   });
 });
 
@@ -214,13 +267,10 @@ describe('splitIntoBlocks', () => {
 });
 
 describe('getSlackMessageJson', () => {
-  it('emits a notification fallback and one mrkdwn section block per text section', () => {
-    assert.deepEqual(getSlackMessageJson('Report title', ['one', 'two']), {
-      text: 'Report title',
-      blocks: [
-        { type: 'section', text: { type: 'mrkdwn', text: 'one' } },
-        { type: 'section', text: { type: 'mrkdwn', text: 'two' } },
-      ],
-    });
+  it('uses the title as the notification fallback and the rendered blocks', () => {
+    const report = formatGhReport(current, trends, previous, links);
+    const json = getSlackMessageJson(report);
+    assert.equal(json.text, 'Issue & PR Report for Aug 30 2026');
+    assert.deepEqual(json.blocks, toSlackBlocks(report));
   });
 });

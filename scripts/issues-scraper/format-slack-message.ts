@@ -128,22 +128,32 @@ export function formatGhReport(
   };
 }
 
-export function toSlackSections(report: FormattedReport): string[] {
+type SlackBlock =
+  | { type: 'header'; text: { type: 'plain_text'; text: string } }
+  | { type: 'section'; text: { type: 'mrkdwn'; text: string } }
+  | { type: 'context'; elements: { type: 'mrkdwn'; text: string }[] }
+  | { type: 'divider' };
+
+export function toSlackBlocks(report: FormattedReport): SlackBlock[] {
   const slackLink = (l: Link) => `<${l.url}|${l.label}>`;
-  const header = [
-    [
-      `*${report.title}*`,
-      ...report.links.map((l) => `<${l.url}|[${l.label}]>`),
-    ].join(' '),
-    ...report.notes,
-  ].join('\n');
+  const section = (text: string): SlackBlock => ({
+    type: 'section',
+    text: { type: 'mrkdwn', text },
+  });
+  const context = (text: string): SlackBlock => ({
+    type: 'context',
+    elements: [{ type: 'mrkdwn', text }],
+  });
   return [
-    header,
+    { type: 'header', text: { type: 'plain_text', text: report.title } },
+    context(report.notes.join('\n')),
+    ...report.links.map((l) => section(slackLink(l))),
     ...report.tables.flatMap((t) => [
-      `*${t.title}*`,
-      ...splitIntoBlocks(t.markdown, TABLE_HEADER_LINES),
+      { type: 'divider' } as SlackBlock,
+      section(`*${t.title}*`),
+      ...splitIntoBlocks(t.markdown, TABLE_HEADER_LINES).map(section),
     ]),
-    slackLink(report.footer),
+    context(slackLink(report.footer)),
   ];
 }
 
@@ -158,14 +168,8 @@ export function toMarkdown(report: FormattedReport): string {
   ].join('\n\n');
 }
 
-export function getSlackMessageJson(fallbackText: string, sections: string[]) {
-  return {
-    text: fallbackText,
-    blocks: sections.map((text) => ({
-      type: 'section',
-      text: { type: 'mrkdwn', text },
-    })),
-  };
+export function getSlackMessageJson(report: FormattedReport) {
+  return { text: report.title, blocks: toSlackBlocks(report) };
 }
 
 function count(label: string, pick: (r: Row) => [number, number | null]) {

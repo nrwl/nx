@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "0 0 * * 0"
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Skip the Slack message and leave the cached report data untouched. The report still goes to the job summary.
+        type: boolean
+        default: true
 
 permissions:
   issues: read
@@ -56,12 +61,14 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: ${{ !inputs.dry_run }}
         with:
           name: cached-issue-data
           path: ./scripts/issues-scraper/cached/data.json
 
       - name: Send GitHub Action trigger data to Slack workflow
         id: slack
+        if: ${{ !inputs.dry_run }}
         uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
         with:
           webhook: ${{ secrets.SLACK_ISSUES_REPORT_URL }}

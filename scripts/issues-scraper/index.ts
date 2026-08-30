@@ -6,7 +6,6 @@ import {
   formatGhReport,
   getSlackMessageJson,
   toMarkdown,
-  toSlackSections,
 } from './format-slack-message';
 import { ReportData } from './model';
 import { getScopeLabels, scrapeIssues } from './scrape-issues';
@@ -27,10 +26,7 @@ async function main() {
   });
   const markdown = toMarkdown(report);
   if (process.env.GITHUB_ACTIONS) {
-    setOutput(
-      'SLACK_MESSAGE',
-      getSlackMessageJson(report.title, toSlackSections(report))
-    );
+    setOutput('SLACK_MESSAGE', getSlackMessageJson(report));
   }
   if (process.env.GITHUB_STEP_SUMMARY) {
     await summary.addRaw(markdown).write();
