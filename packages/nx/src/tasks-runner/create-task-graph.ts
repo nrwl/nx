@@ -407,6 +407,7 @@ export class ProcessTasks {
       cache: project.data.targets[target].cache ?? false,
       parallelism: project.data.targets[target].parallelism ?? true,
       continuous: project.data.targets[target].continuous ?? false,
+      sandbox: project.data.targets[target].sandbox,
     };
   }
 
