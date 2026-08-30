@@ -1,4 +1,4 @@
-import type { JsonInput } from '../native';
+import type { JsonInput, TaskSandboxConfiguration } from '../native';
 import type { PackageJson } from '../utils/package-json';
 import type {
   NxJsonConfiguration,
@@ -176,27 +176,11 @@ export interface TargetMetadata {
 
 /**
  * Configuration for observed-IO sandboxing of a target's tasks.
+ *
+ * The same shape rides on each Task instance (`Task['sandbox']`), so the
+ * type is shared with the native task definition.
  */
-export interface TargetSandboxConfiguration {
-  /**
-   * Whether tasks for this target are tracked by the sandbox.
-   * Defaults to true. When false, no IO tracing is reported for the
-   * task, so no sandbox report is produced.
-   */
-  enabled?: boolean;
-
-  /**
-   * Workspace-relative glob patterns for reads that should be excluded
-   * from sandboxing reports.
-   */
-  ignoredReads?: string[];
-
-  /**
-   * Workspace-relative glob patterns for writes that should be excluded
-   * from sandboxing reports.
-   */
-  ignoredWrites?: string[];
-}
+export type TargetSandboxConfiguration = TaskSandboxConfiguration;
 
 export interface TargetDependencyConfig {
   /**
