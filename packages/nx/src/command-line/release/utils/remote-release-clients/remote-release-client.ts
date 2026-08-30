@@ -67,6 +67,16 @@ export abstract class RemoteReleaseClient<
     return this.remoteRepoData as T | null;
   }
 
+  protected getRedactedTokenHeader(): string {
+    if (!this.tokenData) {
+      return 'none';
+    }
+    const { headerName } = this.tokenData;
+    return headerName === 'Authorization'
+      ? `${headerName}: Bearer <redacted>`
+      : `${headerName}: <redacted>`;
+  }
+
   /**
    * Create a post git task that will be executed by nx release changelog after performing any relevant
    * git operations, if the user has opted into remote release creation.
