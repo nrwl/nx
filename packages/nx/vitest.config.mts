@@ -56,7 +56,11 @@ export default defineConfig({
     include: ['**/*.spec.ts'],
     exclude: ['src/native/tui/**', '**/node_modules/**'],
     setupFiles: ['./vitest.setup.mts'],
-    testTimeout: 35000,
+    // project-graph-incremental-recomputation.spec.ts stands up real native
+    // watchers and graph recomputes; its slowest test measured 42.4s on CI
+    // against the previous 35s limit, and the same test swings 7-23s locally
+    // depending on pool load. 90s clears the measured worst case by 2x.
+    testTimeout: 90_000,
     // Native .node bindings are not thread-safe across vitest worker threads.
     pool: 'forks',
     // Specs that stand up native workspace contexts leave their worker slow to
