@@ -38,6 +38,24 @@ pub struct Task {
     pub parallelism: Option<bool>,
     /// This denotes if the task runs continuously
     pub continuous: Option<bool>,
+    /// The target's observed-IO sandbox configuration, if declared
+    pub sandbox: Option<TaskSandboxConfiguration>,
+}
+
+/// Observed-IO sandbox configuration of a task's target
+#[napi(object)]
+#[derive(Default, Clone, Debug, PartialEq, Eq)]
+pub struct TaskSandboxConfiguration {
+    /// Whether tasks for this target are tracked by the sandbox.
+    /// Defaults to true. When false, no IO tracing is reported for the
+    /// task, so no sandbox report is produced.
+    pub enabled: Option<bool>,
+    /// Workspace-relative glob patterns for reads that should be excluded
+    /// from sandboxing reports.
+    pub ignored_reads: Option<Vec<String>>,
+    /// Workspace-relative glob patterns for writes that should be excluded
+    /// from sandboxing reports.
+    pub ignored_writes: Option<Vec<String>>,
 }
 
 impl Task {

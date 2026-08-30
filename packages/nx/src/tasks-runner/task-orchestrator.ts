@@ -202,7 +202,6 @@ export class TaskOrchestrator {
   async init() {
     this.setupSignalHandlers();
     this.taskInvocationTracker?.cleanupStale();
-    this.registerTaskSandboxConfigurations();
 
     // Init the ForkedProcessTaskRunner, TasksSchedule, and Cache
     await Promise.all([
@@ -217,24 +216,6 @@ export class TaskOrchestrator {
     if (this.tuiEnabled) {
       const estimatedTimings = this.tasksSchedule.getEstimatedTaskTimings();
       this.options.lifeCycle.setEstimatedTaskTimings(estimatedTimings);
-    }
-  }
-
-  /**
-   * Registers each task's `sandbox` target configuration with the
-   * TaskIOService so PID reporting is suppressed for tasks whose target
-   * opted out of sandboxing.
-   */
-  private registerTaskSandboxConfigurations(): void {
-    const ioService = getTaskIOService();
-    for (const task of Object.values(this.taskGraph.tasks)) {
-      const sandbox = getTargetConfigurationForTask(
-        task,
-        this.projectGraph
-      )?.sandbox;
-      if (sandbox) {
-        ioService.registerTaskSandboxConfiguration(task.id, sandbox);
-      }
     }
   }
 
@@ -434,6 +415,15 @@ export class TaskOrchestrator {
   // region Processing Scheduled Tasks
   private async processTask(taskId: string): Promise<NodeJS.ProcessEnv> {
     const task = this.taskGraph.tasks[taskId];
+    if (task.sandbox) {
+      // Suppresses PID reporting for tasks whose target opted out of
+      // sandboxing (`sandbox: { enabled: false }`), so no sandbox report is
+      // produced for them. Both run paths await processTask before spawning.
+      getTaskIOService().registerTaskSandboxConfiguration(
+        task.id,
+        task.sandbox
+      );
+    }
     const taskSpecificEnv = getTaskSpecificEnv(task, this.projectGraph);
 
     if (!task.hash) {
