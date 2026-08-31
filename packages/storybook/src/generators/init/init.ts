@@ -36,9 +36,8 @@ function checkDependenciesInstalled(
   const storybookVersionToInstall = getStorybookVersionToInstall(host);
   devDependencies['storybook'] = storybookVersionToInstall;
 
-  // storybook depends on esbuild-register, which depends on esbuild, whose
-  // install script only validates the prebuilt binary that ships as an optional
-  // dependency.
+  // storybook depends on esbuild, whose install script only validates the
+  // prebuilt binary that ships as an optional dependency.
   acknowledgeBuildScripts(host, detectPackageManager(host.root), {
     esbuild: false,
   });

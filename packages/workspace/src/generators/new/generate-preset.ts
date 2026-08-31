@@ -16,8 +16,14 @@ import yargsParser from 'yargs-parser';
 import { fork, ForkOptions } from 'child_process';
 import { getNxRequirePaths } from '@nx/devkit/internal';
 
-export function addPresetDependencies(host: Tree, options: NormalizedSchema) {
-  const { dependencies, dev } = getPresetDependencies(options);
+export type PresetDependencies = ReturnType<typeof getPresetDependencies>;
+
+export function addPresetDependencies(
+  host: Tree,
+  options: NormalizedSchema,
+  presetDependencies: PresetDependencies
+) {
+  const { dependencies, dev } = presetDependencies;
   return addDependenciesToPackageJson(
     host,
     dependencies,
@@ -48,15 +54,19 @@ const presetDependencyBuildScripts: Record<string, Record<string, boolean>> = {
   '@nx/jest': { 'unrs-resolver': false },
   '@nx/nest': { 'unrs-resolver': false },
   '@nx/node': { 'unrs-resolver': false },
+  // Both optionally depend on @nx/detox, which depends on @nx/jest. pnpm
+  // installs optionalDependencies by default.
+  '@nx/expo': { 'unrs-resolver': false },
+  '@nx/react-native': { 'unrs-resolver': false },
   // Both depend on sass, which pulls in @parcel/watcher.
   '@nx/rspack': { '@parcel/watcher': false },
   '@nx/webpack': { '@parcel/watcher': false },
 };
 
-export function getPresetBuildScripts(
-  options: NormalizedSchema
-): Record<string, boolean> {
-  const { dependencies, dev } = getPresetDependencies(options);
+export function getPresetBuildScripts({
+  dependencies,
+  dev,
+}: PresetDependencies): Record<string, boolean> {
   // The conditional entries are keyed unconditionally and left `undefined` when
   // they don't apply, so the version is what says a package gets installed.
   const declared: Record<string, string | undefined> = {
@@ -164,7 +174,7 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
 // `typescript` is pinned here rather than left to `@nx/js:init` so it lands in
 // package.json before the first install. Otherwise npm resolves tsquery's
 // `typescript: >3.0.0` peer to 7.x, whose entry point dropped the compiler API.
-function getPresetDependencies({
+export function getPresetDependencies({
   preset,
   presetVersion,
   bundler,
