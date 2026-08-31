@@ -1,10 +1,8 @@
 import { join } from 'node:path';
 
 /**
- * File name of the virtual module carrying the engine manifest registration.
- * The angular-partial-transform loader must skip it by name: its source
- * mentions `@angular` but there is no on-disk file for the transformer
- * worker to read.
+ * File name of the virtual module carrying the engine manifest registration,
+ * resolved against the project root to form its absolute path.
  */
 export const ENGINE_MANIFEST_VIRTUAL_NAME =
   '__ng-rspack-ssr-entry-manifest__.js';

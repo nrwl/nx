@@ -1,5 +1,4 @@
 import { readFile } from 'node:fs/promises';
-import { basename } from 'node:path';
 import { LoaderContext, RawSourceMap } from '@rspack/core';
 import { toTypeScriptFileCacheKey } from '@nx/angular-rspack-compiler';
 import { NG_RSPACK_SYMBOL_NAME, NgRspackCompilation } from '../../models';
@@ -7,10 +6,14 @@ import {
   extractInlineSourceMap,
   isForwardableSourceMap,
 } from './inline-source-map';
-import { ENGINE_MANIFEST_VIRTUAL_NAME } from './engine-manifest';
+
+export interface AngularPartialTransformLoaderOptions {
+  /** Absolute path of the engine manifest virtual module. */
+  engineManifestPath: string;
+}
 
 export default function loader(
-  this: LoaderContext<unknown>,
+  this: LoaderContext<AngularPartialTransformLoaderOptions>,
   content: string,
   inputMap?: string | RawSourceMap
 ) {
@@ -54,7 +57,7 @@ export default function loader(
     // The engine manifest virtual module mentions '@angular' but needs no
     // transform, and it has no on-disk file for the transformer worker to
     // read.
-    if (basename(request) === ENGINE_MANIFEST_VIRTUAL_NAME) {
+    if (request === this.getOptions().engineManifestPath) {
       callback(null, content, chainMap);
       return;
     }

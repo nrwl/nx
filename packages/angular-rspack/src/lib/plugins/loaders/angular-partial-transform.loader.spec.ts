@@ -5,7 +5,10 @@ import type {
 } from '@nx/angular-rspack-compiler';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NG_RSPACK_SYMBOL_NAME, type NgRspackCompilation } from '../../models';
-import { default as angularPartialTransformLoader } from './angular-partial-transform.loader';
+import {
+  default as angularPartialTransformLoader,
+  type AngularPartialTransformLoaderOptions,
+} from './angular-partial-transform.loader';
 
 const { readFileMock } = vi.hoisted(() => ({ readFileMock: vi.fn() }));
 vi.mock('node:fs/promises', async (importOriginal) => ({
@@ -28,10 +31,12 @@ describe('angular-partial-transform.loader', () => {
         angularCompilationFailed,
       }),
     }) as unknown as NgRspackCompilation;
+  const engineManifestPath = '/root/__ng-rspack-ssr-entry-manifest__.js';
   const thisValue = {
     async: vi.fn(() => callback),
     _compilation: {},
-  } as unknown as LoaderContext<unknown>;
+    getOptions: () => ({ engineManifestPath }),
+  } as unknown as LoaderContext<AngularPartialTransformLoaderOptions>;
   const chainMap = {
     version: 3,
     sources: ['/path/to/file-original.ts'],
@@ -70,7 +75,7 @@ describe('angular-partial-transform.loader', () => {
       {
         ...thisValue,
         _compilation: makeCompilation(),
-        resourcePath: '/root/__ng-rspack-ssr-entry-manifest__.js',
+        resourcePath: engineManifestPath,
       },
       `import '@angular/ssr';`,
       chainMap
@@ -85,6 +90,25 @@ describe('angular-partial-transform.loader', () => {
     expect(transformData).not.toHaveBeenCalled();
   });
 
+  it('should transform a file that only shares the engine manifest file name', () => {
+    transformFile.mockResolvedValue(Buffer.from('transformed'));
+
+    angularPartialTransformLoader.call(
+      {
+        ...thisValue,
+        _compilation: makeCompilation(),
+        resourcePath: '/root/nested/__ng-rspack-ssr-entry-manifest__.js',
+      },
+      `import '@angular/ssr';`,
+      chainMap
+    );
+
+    expect(transformFile).toHaveBeenCalledWith(
+      '/root/nested/__ng-rspack-ssr-entry-manifest__.js',
+      false,
+      false
+    );
+  });
   it('should pass content through when the angular compilation failed', () => {
     angularPartialTransformLoader.call(
       {
