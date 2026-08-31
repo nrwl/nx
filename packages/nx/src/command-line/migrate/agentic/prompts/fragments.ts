@@ -50,6 +50,9 @@ export function renderAuthorScopeRuleLines(
 }
 
 const FORMAT_SCOPE = `over exactly the files you created or modified`;
+// oxfmt with no paths formats every file under cwd (its no-target default,
+// with or without the flag), so the no-files case must be said explicitly.
+const NO_FILES = `If you created or modified no files, do not run it.`;
 const NO_NX_FORMAT = `Do not use \`nx format:write\` for this: it also selects files changed earlier on the branch and always reformats the root config files.`;
 
 function renderFormatRule(pmExec: string, format: FormatInstruction): string {
@@ -59,7 +62,7 @@ function renderFormatRule(pmExec: string, format: FormatInstruction): string {
   const replacement = `If this migration itself added or replaced the workspace formatter, run the new one ${FORMAT_SCOPE} instead: \`${formatCommandFor(
     'prettier',
     pmExec
-  )}\` for Prettier, \`${formatCommandFor('oxfmt', pmExec)}\` for oxfmt.`;
+  )}\` for Prettier, \`${formatCommandFor('oxfmt', pmExec)}\` for oxfmt. ${NO_FILES}`;
   switch (format.source) {
     case 'command':
       return format.command === null
