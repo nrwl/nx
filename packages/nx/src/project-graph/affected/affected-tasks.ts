@@ -1,10 +1,15 @@
 import { NxJsonConfiguration, TargetDependencies } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { TaskGraph } from '../../config/task-graph';
-import { affectedTasks as nativeAffectedTasks } from '../../native';
+import {
+  affectedTasks as nativeAffectedTasks,
+  TaskInputMatches,
+  touchedTaskInputMatches,
+} from '../../native';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { runnableForTarget } from '../../utils/project-graph-utils';
 import { FileChange, readPackageJson } from '../file-utils';
+import type { AffectedReason } from './affected-reasons';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
   createTaskPlanningContext,
@@ -14,12 +19,15 @@ import { DependencyChanges } from './affected-project-graph-models';
 import { getProjectGlobPatterns } from './affected-projects';
 import { lockFileDependencyChanges } from '../../plugins/js/project-graph/affected/lock-file-changes';
 import { packageJsonDependencyChanges } from '../../plugins/js/project-graph/affected/npm-packages';
+import { AUTO_AFFECTED_LOCK_FILES } from '../../plugins/js/lock-file/lock-file';
 
 export interface AffectedTasksResult {
   /** Tasks that are themselves affected — NOT their dependency closure. */
   affectedTaskIds: Set<string>;
   /** The full, unpruned graph the answer was computed over. */
   taskGraph: TaskGraph;
+  /** Every reason that applies, per affected task. Only when `explain`. */
+  reasons?: Record<string, AffectedReason[]>;
   /** Hand to the runner so the survivors are not planned a second time. */
   planningContext?: TaskPlanningContext;
 }
@@ -34,6 +42,8 @@ export interface ComputeAffectedTasksOptions {
   extraTargetDependencies?: TargetDependencies;
   excludeTaskDependencies?: boolean;
   packageJson?: any;
+  /** Collect why each task was selected. Costs an extra native pass. */
+  explain?: boolean;
 }
 
 /**
@@ -90,6 +100,7 @@ export async function computeAffectedTasks(
   const planningContext = createTaskPlanningContext(projectGraph, nxJson);
   const plans = planningContext.planner.getPlansReference(taskIds, taskGraph);
 
+  const changedPaths = touchedFiles.map((f) => f.file);
   const dependencies = dependencyChanges(
     projectGraph,
     touchedFiles,
@@ -101,7 +112,7 @@ export async function computeAffectedTasks(
     planningContext.projectGraphRef,
     plans,
     taskGraph,
-    touchedFiles.map((f) => f.file),
+    changedPaths,
     {
       projectGlobPatterns: await getProjectGlobPatterns(nxJson),
       workspaceRoot,
@@ -113,9 +124,29 @@ export async function computeAffectedTasks(
     }
   );
 
+  // A second native pass, so the selection path stays a membership test.
+  const inputMatches = opts.explain
+    ? touchedTaskInputMatches(
+        planningContext.projectGraphRef,
+        plans,
+        changedPaths,
+        dependencies.externals,
+        dependencies.allExternals
+      )
+    : undefined;
+
   return {
     affectedTaskIds: new Set(selection.affected),
     taskGraph,
+    reasons: opts.explain
+      ? taskReasons(
+          selection,
+          inputMatches ?? {},
+          dependencies,
+          changedPaths,
+          taskGraph
+        )
+      : undefined,
     // The plans ride along so the hasher narrows them instead of building its
     // own. Every task it will be asked about is in here, since the pruned graph
     // is a subset of the one planned above.
@@ -150,4 +181,78 @@ function dependencyChanges(
     allExternals: changes.some((c) => c.allExternals),
     projects: changes.flatMap((c) => c.projects),
   };
+}
+
+/**
+ * Why each selected task is in the answer.
+ *
+ * Assembled after the fact rather than accumulated during selection, so the
+ * selection path costs nothing when `--explain` is off. Every reason that
+ * applies is listed: a task can match a changed file, hash a package that
+ * moved, and read an affected producer, all at once.
+ */
+function taskReasons(
+  selection: {
+    affected: string[];
+    producersOf: Record<string, string[]>;
+    deletedProjectConfigs: string[];
+  },
+  inputMatches: Record<string, TaskInputMatches>,
+  dependencies: DependencyChanges,
+  changedPaths: string[],
+  taskGraph: TaskGraph
+): Record<string, AffectedReason[]> {
+  // What a plan hashing every external saw change.
+  const dependencyFiles = changedPaths.filter(
+    (file) =>
+      file === 'package.json' ||
+      (AUTO_AFFECTED_LOCK_FILES as readonly string[]).includes(file)
+  );
+  const named = new Map<string, AffectedReason[]>();
+  for (const { project, ...reason } of dependencies.projects) {
+    named.set(project, [...(named.get(project) ?? []), reason]);
+  }
+
+  const reasons: Record<string, AffectedReason[]> = {};
+  for (const taskId of selection.affected) {
+    const forTask: AffectedReason[] = [];
+    const matches = inputMatches[taskId];
+
+    for (const match of matches?.files ?? []) {
+      forTask.push({
+        kind: 'input-file',
+        file: match.file,
+        pattern: match.pattern,
+      });
+    }
+    for (const pkg of matches?.packages ?? []) {
+      forTask.push({ kind: 'npm-package', package: pkg });
+    }
+    if (matches?.allExternals) {
+      for (const file of dependencyFiles) {
+        forTask.push({ kind: 'external-dependencies', file });
+      }
+    }
+
+    // Only the affected producers: the walk records the edges it crossed.
+    for (const producer of selection.producersOf[taskId] ?? []) {
+      forTask.push({ kind: 'dependent-output', producer });
+    }
+
+    const project = taskGraph.tasks[taskId]?.target.project;
+    for (const reason of (project && named.get(project)) ?? []) {
+      forTask.push(reason);
+    }
+
+    // A deleted config seeded every task. Only worth saying when nothing
+    // narrower applies, or it would repeat on every line.
+    if (!forTask.length) {
+      for (const file of selection.deletedProjectConfigs) {
+        forTask.push({ kind: 'deleted-project-configuration', file });
+      }
+    }
+
+    reasons[taskId] = forTask;
+  }
+  return reasons;
 }

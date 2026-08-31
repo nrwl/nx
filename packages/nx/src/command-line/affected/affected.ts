@@ -21,6 +21,8 @@ import { readNxJson } from '../../config/configuration';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { generateGraph } from '../graph/graph';
 import { computeAffectedTasks } from '../../project-graph/affected/affected-tasks';
+import { filterAffectedWithReasons } from '../../project-graph/affected/affected-project-graph';
+import { printAffectedExplanation } from '../../project-graph/affected/print-explanation';
 import { resolveAffectedGranularity } from '../../project-graph/affected/granularity';
 import type { TaskSelection } from '../../tasks-runner/run-command';
 
@@ -78,7 +80,20 @@ export async function affected(
       overrides,
       extraTargetDependencies,
       excludeTaskDependencies: extraOptions.excludeTaskDependencies,
+      explain: nxArgs.explain,
     });
+
+    // --explain reports the selection rather than acting on it: someone asking
+    // why a task is affected does not also want it to run.
+    if (nxArgs.explain) {
+      printAffectedExplanation(
+        affectedTasks.reasons ?? {},
+        'Affected tasks',
+        nxArgs
+      );
+      await output.drain();
+      process.exit(0);
+    }
     taskSelection = {
       taskIds: [...affectedTasks.affectedTaskIds],
       planningContext: affectedTasks.planningContext,
@@ -104,6 +119,16 @@ export async function affected(
     );
     projects = [...owning].map((name) => projectGraph.nodes[name]);
   } else {
+    if (nxArgs.explain) {
+      const { reasons } = await filterAffectedWithReasons(
+        projectGraph,
+        calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
+        nxJson
+      );
+      printAffectedExplanation(reasons, 'Affected projects', nxArgs);
+      await output.drain();
+      process.exit(0);
+    }
     projects = await getAffectedGraphNodes(nxArgs, projectGraph);
   }
 
