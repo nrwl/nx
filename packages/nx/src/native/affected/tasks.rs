@@ -13,7 +13,7 @@
 
 use napi::bindgen_prelude::*;
 use rayon::prelude::*;
-use std::collections::HashMap;
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use crate::native::affected::project_paths::{ProjectRoots, normalize_path};
@@ -22,31 +22,22 @@ use crate::native::project_graph::types::ProjectGraph;
 use crate::native::tasks::hashers::globs_from_workspace_globs;
 use crate::native::tasks::types::{HashInstruction, HashPlans};
 
-#[napi(object)]
-pub struct AffectedTasks {
-    /// Task ids with at least one changed file among their plan's file inputs.
-    pub affected: Vec<String>,
-    /// taskId -> the changed files that matched. Only when `collectMatches`.
-    pub matches: Option<HashMap<String, Vec<String>>>,
-}
-
 /// The root tsconfig names `TsConfiguration` hashes, in the hasher's own
 /// preference order (`hash_tsconfig`).
 const ROOT_TSCONFIGS: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
 
+/// Task ids with at least one changed file among their plan's file inputs.
 #[napi]
 pub fn affected_tasks(
     project_graph: &External<Arc<ProjectGraph>>,
     #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
     hash_plans: &External<HashPlans>,
     changed_files: Vec<String>,
-    collect_matches: Option<bool>,
-) -> Result<AffectedTasks> {
+) -> Result<Vec<String>> {
     Ok(compute_affected_tasks(
         project_graph,
         hash_plans,
         &changed_files,
-        collect_matches.unwrap_or(false),
     )?)
 }
 
@@ -54,8 +45,7 @@ pub(crate) fn compute_affected_tasks(
     graph: &ProjectGraph,
     hash_plans: &HashPlans,
     changed_files: &[String],
-    collect_matches: bool,
-) -> anyhow::Result<AffectedTasks> {
+) -> anyhow::Result<Vec<String>> {
     let files: Vec<String> = changed_files.iter().map(|f| normalize_path(f)).collect();
     // Resolved once per changed file rather than once per (file, instruction):
     // ProjectFileSet is the only kind that needs it, and many tasks share one.
@@ -67,119 +57,78 @@ pub(crate) fn compute_affected_tasks(
     ids.par_sort_unstable();
     ids.dedup();
 
-    // Only instructions that matched something are kept, so membership alone
-    // answers the common question without touching the indices.
-    let matched_by_id: HashMap<u32, Vec<usize>> = ids
+    // Only whether an instruction matched, never which files: the selection is
+    // a membership question, and nothing downstream reads the per-file detail.
+    let matched: HashSet<u32> = ids
         .par_iter()
         .map(|&id| {
-            let hits = match_instruction(hash_plans.pool.get(id).value(), &files, &owners)?;
-            Ok::<_, anyhow::Error>((id, hits))
+            let hit = instruction_matches(hash_plans.pool.get(id).value(), &files, &owners)?;
+            Ok::<_, anyhow::Error>((id, hit))
         })
-        .filter(|entry| entry.as_ref().map_or(true, |(_, hits)| !hits.is_empty()))
-        .collect::<anyhow::Result<HashMap<_, _>>>()?;
+        .filter(|entry| entry.as_ref().map_or(true, |&(_, hit)| hit))
+        .map(|entry| entry.map(|(id, _)| id))
+        .collect::<anyhow::Result<HashSet<_>>>()?;
 
     let mut affected: Vec<String> = hash_plans
         .plans
         .par_iter()
-        .filter(|(_, plan)| plan.iter().any(|id| matched_by_id.contains_key(id)))
+        .filter(|(_, plan)| plan.iter().any(|id| matched.contains(id)))
         .map(|(task_id, _)| task_id.clone())
         .collect();
     // `plans` is a HashMap, so sort for a reproducible answer.
     affected.par_sort_unstable();
-
-    let matches = collect_matches.then(|| {
-        affected
-            .par_iter()
-            .map(|task_id| {
-                let mut paths: Vec<String> = hash_plans.plans[task_id]
-                    .iter()
-                    .filter_map(|id| matched_by_id.get(id))
-                    .flatten()
-                    .map(|&i| changed_files[i].clone())
-                    .collect();
-                paths.sort();
-                paths.dedup();
-                (task_id.clone(), paths)
-            })
-            .collect()
-    });
-
-    Ok(AffectedTasks { affected, matches })
+    Ok(affected)
 }
 
-/// Indices of the changed files this instruction would hash.
+/// Whether any changed file is one this instruction would hash.
 ///
 /// `TaskOutput` is deliberately absent: it resolves to a dependent task's build
 /// artifacts, which are gitignored and do not exist yet when affected runs, so
 /// intersecting it is always empty and misleadingly so. Dependency changes reach
 /// a consumer through task-edge propagation instead.
-fn match_instruction(
+fn instruction_matches(
     instruction: &HashInstruction,
     files: &[String],
     owners: &[Option<&str>],
-) -> anyhow::Result<Vec<usize>> {
+) -> anyhow::Result<bool> {
+    // Scoped to one project, the way the hasher scopes the same globs with
+    // project_file_map, or workspace-wide when there is no owner to match.
+    let any_matching = |globs: &[String], project: Option<&str>| -> anyhow::Result<bool> {
+        if globs.is_empty() {
+            return Ok(false);
+        }
+        let glob = build_glob_set(globs)?;
+        Ok(files.iter().zip(owners).any(|(file, owner)| {
+            project.is_none_or(|project| *owner == Some(project)) && glob.is_match(file)
+        }))
+    };
+
     match instruction {
         HashInstruction::WorkspaceFileSet(file_sets) => {
-            let globs = globs_from_workspace_globs(file_sets);
-            if globs.is_empty() {
-                return Ok(vec![]);
-            }
-            let glob = build_glob_set(&globs)?;
-            Ok(matching(files, |f| glob.is_match(f)))
+            any_matching(&globs_from_workspace_globs(file_sets), None)
         }
         HashInstruction::ProjectFileSet(project, file_sets) => {
-            let glob = build_glob_set(file_sets)?;
-            // Membership stands in for "is in project_file_map[project]", which
-            // is how the hasher scopes the same globs.
-            Ok(files
-                .iter()
-                .enumerate()
-                .filter(|(i, f)| owners[*i] == Some(project.as_str()) && glob.is_match(f))
-                .map(|(i, _)| i)
-                .collect())
+            any_matching(file_sets, Some(project))
         }
         // Disk-expanded globs. A changed file is tracked by definition, so a
         // match here is the tracked case; untracked paths a `files` input covers
         // never appear in a diff and are handled by propagation.
-        HashInstruction::Files(globs) => {
-            let glob = build_glob_set(globs)?;
-            Ok(matching(files, |f| glob.is_match(f)))
-        }
-        HashInstruction::JsonFileSet(json) => {
-            if let Some(project) = json.project_name.as_deref() {
-                let glob = build_glob_set(std::slice::from_ref(&json.json_path))?;
-                Ok(files
-                    .iter()
-                    .enumerate()
-                    .filter(|(i, f)| owners[*i] == Some(project) && glob.is_match(f))
-                    .map(|(i, _)| i)
-                    .collect())
-            } else {
-                let globs = globs_from_workspace_globs(std::slice::from_ref(&json.json_path));
-                if globs.is_empty() {
-                    return Ok(vec![]);
-                }
-                let glob = build_glob_set(&globs)?;
-                Ok(matching(files, |f| glob.is_match(f)))
-            }
-        }
+        HashInstruction::Files(globs) => any_matching(globs, None),
+        HashInstruction::JsonFileSet(json) => match json.project_name.as_deref() {
+            Some(project) => any_matching(std::slice::from_ref(&json.json_path), Some(project)),
+            None => any_matching(
+                &globs_from_workspace_globs(std::slice::from_ref(&json.json_path)),
+                None,
+            ),
+        },
         HashInstruction::TsConfiguration(_) => {
-            Ok(matching(files, |f| ROOT_TSCONFIGS.contains(&f.as_str())))
+            Ok(files.iter().any(|f| ROOT_TSCONFIGS.contains(&f.as_str())))
         }
         // Not judgeable from a diff: runtime output, env, external deps, the
         // project config object, cwd, and the snapshot marker. Blanket locators
         // cover the ones that can still invalidate a task.
-        _ => Ok(vec![]),
+        _ => Ok(false),
     }
-}
-
-fn matching(files: &[String], predicate: impl Fn(&String) -> bool) -> Vec<usize> {
-    files
-        .iter()
-        .enumerate()
-        .filter(|(_, f)| predicate(f))
-        .map(|(i, _)| i)
-        .collect()
 }
 
 #[cfg(test)]
@@ -187,6 +136,7 @@ mod tests {
     use super::*;
     use crate::native::project_graph::types::Project;
     use crate::native::tasks::types::InstructionPool;
+    use std::collections::HashMap;
 
     fn graph(roots: &[(&str, &str)]) -> ProjectGraph {
         ProjectGraph {
@@ -227,9 +177,7 @@ mod tests {
         changed: &[&str],
     ) -> Vec<String> {
         let p = plans("a:build", instructions);
-        compute_affected_tasks(g, &p, &strings(changed), false)
-            .unwrap()
-            .affected
+        compute_affected_tasks(g, &p, &strings(changed)).unwrap()
     }
 
     #[test]
@@ -364,29 +312,6 @@ mod tests {
         assert!(affected_for(&g, vec![instruction], &["config/local.json"]).is_empty());
     }
 
-    #[test]
-    fn reports_which_files_matched_when_asked() {
-        let g = graph(&[("a", "libs/a")]);
-        let p = plans(
-            "a:build",
-            vec![HashInstruction::ProjectFileSet(
-                "a".into(),
-                strings(&["libs/a/**/*.ts"]),
-            )],
-        );
-        let result = compute_affected_tasks(
-            &g,
-            &p,
-            &strings(&["libs/a/x.ts", "libs/a/y.ts", "README.md"]),
-            true,
-        )
-        .unwrap();
-        assert_eq!(
-            result.matches.unwrap().get("a:build").unwrap(),
-            &strings(&["libs/a/x.ts", "libs/a/y.ts"])
-        );
-    }
-
     /// `plans` is a HashMap, so the answer has to be sorted or it varies per run.
     #[test]
     fn the_affected_list_is_sorted() {
@@ -403,7 +328,7 @@ mod tests {
                 ("m:build".to_string(), vec![id]),
             ]),
         };
-        let result = compute_affected_tasks(&g, &p, &strings(&["x.txt"]), false).unwrap();
-        assert_eq!(result.affected, strings(&["a:build", "m:build", "z:build"]));
+        let affected = compute_affected_tasks(&g, &p, &strings(&["x.txt"])).unwrap();
+        assert_eq!(affected, strings(&["a:build", "m:build", "z:build"]));
     }
 }
