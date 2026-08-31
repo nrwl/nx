@@ -66,7 +66,7 @@ export function renderRunbook(ctx: RunbookContext): string {
     ``,
     `Drive the run as a loop:`,
     ``,
-    `1. Run \`${reconcile}\`. The response contains a \`<nx_migrate_step>\``,
+    `1. Run \`${reconcile}\`. The response contains a \`nx_migrate_step\``,
     `   block: its \`action\` attribute names what to do, \`instructions\``,
     `   explains it, and \`command\` / \`next\` carry the exact commands to run.`,
     `2. Do what the block says. For a \`next-step\` action, run the given`,
@@ -92,7 +92,7 @@ export function renderRunbook(ctx: RunbookContext): string {
     `Some steps hand work back to you:`,
     ``,
     `- A migration with an AI-driven part makes its worker emit a`,
-    `  \`<nx_migrate_prompt>\` block pointing at an instructions file. Apply`,
+    `  \`nx_migrate_prompt\` block pointing at an instructions file. Apply`,
     `  those instructions to the workspace. Scope rules for that work:`,
     ...renderAuthorScopeRuleLines(singleLine(ctx.pmExec), {
       source: 'dispensed-step',
@@ -111,7 +111,7 @@ export function renderRunbook(ctx: RunbookContext): string {
   }
   lines.push(
     ``,
-    `If a step's \`<nx_migrate_prompt>\` block is no longer in your context`,
+    `If a step's \`nx_migrate_prompt\` block is no longer in your context`,
     `(after a compaction or a restart), run \`${reconcile}\`; the awaiting`,
     `step's dispense re-emits it.`,
     ``,
