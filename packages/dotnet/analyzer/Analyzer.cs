@@ -127,6 +127,23 @@ public static class Analyzer
                         throw new InvalidOperationException("ProjectInstance is null.");
                     }
 
+                    var targetFrameworkNodes = nodes
+                        .Where(n => !string.IsNullOrEmpty(n.ProjectInstance?.GetPropertyValue("TargetFramework")))
+                        .ToList();
+                    if (targetFrameworkNodes.Count == 0)
+                    {
+                        targetFrameworkNodes = nodes;
+                    }
+
+                    var evaluatedProperties = targetFrameworkNodes
+                        .Where(n => n.ProjectInstance is not null)
+                        .Select(n => CollectProperties(n.ProjectInstance!))
+                        .ToList();
+                    var technologyPackageRefs = AggregatePackageReferences(
+                        targetFrameworkNodes
+                            .Where(n => n.ProjectInstance is not null)
+                            .Select(n => CollectPackageReferences(n.ProjectInstance!)));
+
                     var projectRoot = ProjectUtilities.GetRelativeProjectRoot(projectPath, workspaceRoot);
                     var relativeProjectFile = ProjectUtilities.GetRelativeProjectFile(projectPath, workspaceRoot);
 
@@ -176,10 +193,14 @@ public static class Analyzer
                     {
                         Name = projectName,
                         Root = projectRoot,
+                        ProjectType = ProjectUtilities.InferProjectType(evaluatedProperties, isTest),
                         Targets = targets,
                         Metadata = new Models.ProjectMetadata
                         {
-                            Technologies = ProjectUtilities.GetTechnologies(projectPath)
+                            Technologies = ProjectUtilities.GetTechnologies(
+                                projectPath,
+                                evaluatedProperties,
+                                technologyPackageRefs)
                         }
                     };
 
@@ -220,6 +241,15 @@ public static class Analyzer
         }
 
         return packageRefs;
+    }
+
+    internal static List<PackageReference> AggregatePackageReferences(
+        IEnumerable<IEnumerable<PackageReference>> packageReferencesByTargetFramework)
+    {
+        return packageReferencesByTargetFramework
+            .SelectMany(packageReferences => packageReferences)
+            .Distinct()
+            .ToList();
     }
 
     /// <summary>
@@ -267,6 +297,10 @@ public static class Analyzer
             "OutputType",
             "AssemblyName",
             "IsTestProject",
+            "UsingMicrosoftNETSdkWeb",
+            "UsingMicrosoftNETSdkBlazorWebAssembly",
+            "UsingMicrosoftNETSdkWebAssembly",
+            "UseMaui",
 
             // Build configuration
             "Configuration",

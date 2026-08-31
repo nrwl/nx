@@ -12,6 +12,8 @@ import {
   createSimpleDotNetWorkspace,
   createWebApiWorkspace,
   addProjectReference,
+  createDotNetProject,
+  updateProjectFile,
 } from './utils/create-dotnet-project';
 
 describe('.NET Plugin', () => {
@@ -19,6 +21,14 @@ describe('.NET Plugin', () => {
     newProject({ packages: [] });
     runCLI(`add @nx/dotnet`);
     createSimpleDotNetWorkspace();
+    createDotNetProject({ name: 'BlazorWasm', type: 'blazorwasm' });
+    createDotNetProject({ name: 'Executable.Tests', type: 'xunit' });
+    updateProjectFile('Executable.Tests', (content) =>
+      content.replace(
+        '</PropertyGroup>',
+        '  <OutputType>Exe</OutputType>\n</PropertyGroup>'
+      )
+    );
   });
 
   afterAll(() => cleanupProject());
@@ -33,12 +43,16 @@ describe('.NET Plugin', () => {
       expect(projectsData).toContain('MyApp');
       expect(projectsData).toContain('MyLibrary');
       expect(projectsData).toContain('MyApp.Tests');
+      expect(projectsData).toContain('BlazorWasm');
+      expect(projectsData).toContain('Executable.Tests');
     });
 
     it('should show project details with .NET targets', () => {
       const projectDetails = runCLI(`show project MyApp --json`);
       const details = JSON.parse(projectDetails);
 
+      expect(details.projectType).toBe('application');
+      expect(details.metadata.technologies).toEqual(['dotnet', 'C#']);
       expect(details.targets).toHaveProperty('build');
       expect(details.targets).toHaveProperty('clean');
       expect(details.targets).toHaveProperty('restore');
@@ -54,6 +68,8 @@ describe('.NET Plugin', () => {
       const projectDetails = runCLI(`show project MyLibrary --json`);
       const details = JSON.parse(projectDetails);
 
+      expect(details.projectType).toBe('library');
+      expect(details.metadata.technologies).toEqual(['dotnet', 'C#']);
       expect(details.targets).toHaveProperty('build');
       expect(details.targets).toHaveProperty('clean');
       expect(details.targets).toHaveProperty('restore');
@@ -65,8 +81,31 @@ describe('.NET Plugin', () => {
       const projectDetails = runCLI(`show project MyApp.Tests --json`);
       const details = JSON.parse(projectDetails);
 
+      expect(details.projectType).toBe('library');
+      expect(details.metadata.technologies).toEqual(['dotnet', 'C#']);
       expect(details.targets).toHaveProperty('build');
       expect(details.targets).toHaveProperty('test');
+    });
+
+    it('should leave executable test projects unclassified', () => {
+      const projectDetails = runCLI(`show project Executable.Tests --json`);
+      const details = JSON.parse(projectDetails);
+
+      expect(details.projectType).toBeUndefined();
+      expect(details.targets).toHaveProperty('test');
+    });
+
+    it('should expose Blazor WebAssembly technologies', () => {
+      const projectDetails = runCLI(`show project BlazorWasm --json`);
+      const details = JSON.parse(projectDetails);
+
+      expect(details.metadata.technologies).toEqual([
+        'dotnet',
+        'C#',
+        'Blazor',
+        'Blazor WebAssembly',
+        'WebAssembly',
+      ]);
     });
   });
 
@@ -139,6 +178,18 @@ describe('.NET Plugin', () => {
       expect(projectsData).toContain('Core');
       expect(projectsData).toContain('Core.Tests');
       expect(projectsData).toContain('WebApi.Tests');
+    });
+
+    it('should expose web application metadata', () => {
+      const projectDetails = runCLI(`show project WebApi --json`);
+      const details = JSON.parse(projectDetails);
+
+      expect(details.projectType).toBe('application');
+      expect(details.metadata.technologies).toEqual([
+        'dotnet',
+        'C#',
+        'ASP.NET Core',
+      ]);
     });
 
     it('should build projects in dependency order', () => {
