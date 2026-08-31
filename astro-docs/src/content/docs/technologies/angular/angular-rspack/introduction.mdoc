@@ -53,24 +53,42 @@ Please note that Angular Rspack support is still experimental and is not yet con
 The following are known limitations and missing features of Angular Rspack:
 
 - The `static` output mode (build-time prerendering of the full application) is not supported.
-- Server routes marked for build-time prerendering (`RenderMode.Prerender`) are rendered at request time instead.
-  Each request repeats the full render and critical CSS inlining, without the response streaming and critical CSS caching applied to server-rendered routes.
-- The server route configuration is extracted at runtime on the first request of each server process, rather than at build time.
-  Route configuration errors surface at request time instead of build time.
+- `RenderMode.Prerender` does not produce build-time output.
+  Routes marked with it render at request time, repeating the full render on each request.
+  Response streaming does not apply.
+  When `inlineCriticalCss` is enabled, each request also repeats the critical CSS inlining.
+- The server route configuration is extracted at runtime, not at build time.
+  Each server process extracts it while handling its first application request.
+  Route configuration errors therefore surface on that request.
 - Automatic content security policy generation (`security.autoCsp`) is not supported.
-- Locale inlining (`localize`) disables the `@angular/ssr` application engine wiring, so it cannot be used by server entries written against the application engine APIs and cannot be combined with the `outputMode` option.
+- Locale inlining (`localize`) disables the `@angular/ssr` application engine wiring.
+  Server entries that rely on the engine wiring fail at startup.
+  The `outputMode` option cannot be combined with it.
+- With `@rspack/core` before 1.5, the engine manifests are registered inside the server entry.
+  They run before the entry's own statements, but after its imports.
+  An engine constructed at module scope of an imported module does not find them.
 
 If you have any other missing features or limitations, please [let us know](https://github.com/nrwl/angular-rspack/issues/new).
 
 {% aside type="note" title="Application engine host validation" %}
 
-Since `@angular/ssr` version 21.2.0 (also backported to 20.3.17 and 21.1.5), the application engine validates the request host against its allowlist; earlier versions do not validate hosts.
-With an allowlist configured, requests from unlisted hosts are rejected with a 400 response.
-Without one, versions before 22 log an error and fall back to client-side rendering, while version 22 and later reject every request.
-Configure the allowed hosts for production with the `security.allowedHosts` option, or with the `NG_ALLOWED_HOSTS` environment variable (comma-separated), which the `AngularNodeAppEngine` API from `@angular/ssr/node` reads.
-While serving, the allowlist automatically includes the dev server host and the common local hosts (`localhost` and its subdomains, `127.0.0.1`, `[::1]`).
-When accessing the served application through another address, such as a LAN IP, add it to `devServer.allowedHosts` or use `NG_ALLOWED_HOSTS`.
-Disabling the host check entirely while serving (`devServer.disableHostCheck` or `devServer.allowedHosts: true`) requires `@angular/ssr` version 21.2.1 or greater (also backported to 20.3.25).
+- Host validation is available from `@angular/ssr` 21.2.0.
+  It is also available from 20.3.17 within Angular 20 and from 21.1.5 within Angular 21.1.
+  Earlier versions do not validate hosts.
+- With an allowlist configured, requests from unlisted hosts get a 400 response.
+- With an empty allowlist, version 22 and later reject every request.
+  The earlier validating versions log an error and fall back to client-side rendering.
+- Disabling the check requires `@angular/ssr` 21.2.1, or 20.3.25 within Angular 20.3.
+
+Configure the allowed hosts for production with the `security.allowedHosts` option.
+The `AngularNodeAppEngine` API from `@angular/ssr/node` also reads `NG_ALLOWED_HOSTS`.
+It holds a comma-separated list, and only the versions that validate hosts read it.
+
+While serving, the allowlist automatically includes the common local hosts.
+Those are `localhost` and its subdomains, `127.0.0.1`, and `[::1]`.
+It also includes the dev server host, bracketed when it is an IPv6 literal.
+Add another address, such as a LAN IP, to `devServer.allowedHosts` or `NG_ALLOWED_HOSTS`.
+Disable the check entirely with `devServer.disableHostCheck` or `devServer.allowedHosts: true`.
 
 {% /aside %}
 
