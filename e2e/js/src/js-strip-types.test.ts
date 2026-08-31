@@ -465,14 +465,15 @@ export default config;
           `${mtsApp}/playwright.config.mts`,
           `export default { outputDir: './out-aaa' };\n`
         );
-        const rootTsconfigs = ['tsconfig.base.json', 'tsconfig.json'].filter(
-          (f) => fileExists(tmpProjPath(f))
-        );
-        const saved = rootTsconfigs.map((f) => [f, readFile(f)] as const);
-        rootTsconfigs.forEach((f) => removeFile(f));
-        removeFile(`${app}/tsconfig.json`);
-        removeFile(`${mtsApp}/tsconfig.json`);
+        const tsconfigs = [
+          'tsconfig.base.json',
+          'tsconfig.json',
+          `${app}/tsconfig.json`,
+          `${mtsApp}/tsconfig.json`,
+        ].filter((f) => fileExists(tmpProjPath(f)));
+        const saved = tsconfigs.map((f) => [f, readFile(f)] as const);
         try {
+          tsconfigs.forEach((f) => removeFile(f));
           expect(showOutputs(app)).toContain('{projectRoot}/out-aaa');
           expect(showOutputs(mtsApp)).toContain('{projectRoot}/out-aaa');
 

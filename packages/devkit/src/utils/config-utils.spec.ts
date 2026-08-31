@@ -211,4 +211,15 @@ describe('unwrapCjsInterop', () => {
 
     expect(unwrapCjsInterop(path, module, {})).toBe(module);
   });
+
+  it('should preserve a default-less namespace that require() cached', () => {
+    // require() of synchronous ESM caches the namespace itself, so an entry
+    // exists for a load the CJS pipeline never handled.
+    const module = { named: { value: 1 } };
+    const cache = {
+      [path]: { exports: module } as unknown as NodeModule,
+    };
+
+    expect(unwrapCjsInterop(path, module, cache)).toBe(module);
+  });
 });

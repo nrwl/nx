@@ -112,7 +112,7 @@ async function loadTypeScriptModule(
 }
 
 // Resolved paths of configs that require() loaded as synchronous ESM;
-// reloads of these route through loadTsFileViaImport. On globalThis so the
+// reloads of these route through a cache-busted import(). On globalThis so the
 // state survives clearRequireCache evicting this module itself (a
 // workspace-linked devkit resolves outside node_modules).
 const esmRegistryPaths: Set<string> = ((globalThis as any)[
@@ -302,11 +302,9 @@ async function loadTsFileViaImport(
 }
 
 // Some loaders emit CJS for a dynamic import, wrapping module.exports in
-// namespace.default (with or without an __esModule marker). Unwrap only when
-// require.cache proves the load went through the CJS pipeline; genuine ESM
-// never populates require.cache, so its exports are preserved. The entry
-// existence check keeps a default-less ESM namespace from matching on
-// undefined === undefined.
+// namespace.default (the __esModule marker is optional), so cache identity is
+// the discriminator: a require(esm) entry holds the namespace itself, and the
+// entry check stops a default-less namespace from matching undefined.
 export function unwrapCjsInterop(
   path: string,
   module: unknown,
