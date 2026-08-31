@@ -368,6 +368,11 @@ async function buildVitestTargets(
         effectiveVitestRoot,
         coverageReportsDirectory
       );
+      // Vitest refuses a reports directory equal to its root or cwd, and redirecting
+      // under it would point each atom at its own spec path for coverage to delete.
+      const vitestRejectsReportsDirectory =
+        relative(effectiveVitestRoot, resolvedReportsDirectory) === '' ||
+        relative(fullProjectRoot, resolvedReportsDirectory) === '';
       const atomSubfolderPrefix =
         isPathOutside(relative(fullProjectRoot, resolvedReportsDirectory)) &&
         !endsWithProjectRoot(resolvedReportsDirectory, projectRoot)
@@ -410,20 +415,25 @@ async function buildVitestTargets(
         dependsOn.push(targetName);
         targets[targetName] = {
           // It does not make sense to run atomized tests in watch mode as they are intended to be run in CI
-          command: `vitest run ${quoteShellArg(
-            relativePath
-          )} --coverage.reportsDirectory=${quoteShellArg(atomCoverageDirectory)}`,
+          command: `vitest run ${quoteShellArg(relativePath)}${
+            vitestRejectsReportsDirectory
+              ? ''
+              : ` --coverage.reportsDirectory=${quoteShellArg(
+                  atomCoverageDirectory
+                )}`
+          }`,
           cache: isCoverageCacheable && targets[options.testTargetName].cache,
           inputs: targets[options.testTargetName].inputs,
-          outputs: isCoverageCacheable
-            ? [
-                normalizeAtomOutputPath(
-                  join(resolvedReportsDirectory, outputSubfolder),
-                  fullProjectRoot,
-                  context.workspaceRoot
-                ),
-              ]
-            : [],
+          outputs:
+            isCoverageCacheable && !vitestRejectsReportsDirectory
+              ? [
+                  normalizeAtomOutputPath(
+                    join(resolvedReportsDirectory, outputSubfolder),
+                    fullProjectRoot,
+                    context.workspaceRoot
+                  ),
+                ]
+              : [],
           options: {
             cwd: projectRoot,
             env: targets[options.testTargetName].options.env,

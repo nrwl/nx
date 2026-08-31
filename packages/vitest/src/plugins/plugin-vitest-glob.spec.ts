@@ -596,6 +596,51 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
     ]);
   });
 
+  it.each(['.', './'])(
+    'should not redirect coverage for the reportsDirectory `%s`, which resolves to the vitest root',
+    async (reportsDirectory) => {
+      await temp.createFiles({
+        'libs/lib1/vitest.config.ts': '',
+        'libs/lib1/package.json': '{"name":"lib1"}',
+        'libs/lib1/src/a.spec.ts': '',
+      });
+      mockResolvedTestConfig({ coverage: { reportsDirectory } });
+
+      const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
+
+      // Redirecting would point the atom at its own spec file, which Vitest's
+      // coverage cleanup deletes. Vitest rejects the directory instead.
+      expect(targets['test-ci--src/a.spec.ts'].command).toBe(
+        'vitest run src/a.spec.ts'
+      );
+      expect(targets['test-ci--src/a.spec.ts'].cache).toBe(true);
+      expect(targets['test-ci--src/a.spec.ts'].outputs).toEqual([]);
+      expect(targets['test-ci'].outputs).toEqual([]);
+    }
+  );
+
+  it('should not redirect coverage for a reportsDirectory that resolves to the atom cwd', async () => {
+    await temp.createFiles({
+      'libs/lib1/vitest.config.ts': '',
+      'libs/lib1/package.json': '{"name":"lib1"}',
+      'libs/lib1/test-root/src/a.spec.ts': '',
+    });
+    // Vitest also rejects its cwd. The base resolves from the configured root
+    // back to the project root, which is the atom cwd.
+    mockResolvedTestConfig(
+      { coverage: { reportsDirectory: '..' } },
+      './test-root'
+    );
+
+    const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
+
+    expect(targets['test-ci--test-root/src/a.spec.ts'].command).toBe(
+      'vitest run test-root/src/a.spec.ts'
+    );
+    expect(targets['test-ci--test-root/src/a.spec.ts'].outputs).toEqual([]);
+    expect(targets['test-ci'].outputs).toEqual([]);
+  });
+
   it('should quote a coverage directory containing shell metacharacters', async () => {
     await temp.createFiles({
       'libs/lib1/vitest.config.ts': '',
