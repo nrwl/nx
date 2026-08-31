@@ -36,6 +36,20 @@ export function getMaxMessageSize(): number {
   return parsed;
 }
 
+/**
+ * `nx reset` only helps while a daemon is enabled: it and its plugin workers keep the
+ * limit they were spawned with, and the var is excluded from the daemon env hash so
+ * changing it restarts nothing. Every other reader re-reads the env per invocation.
+ * Required lazily because the daemon client imports this module.
+ */
+function daemonHoldsItsOwnLimit(): boolean {
+  try {
+    return require('../daemon/client/client').daemonClient.enabled();
+  } catch {
+    return true;
+  }
+}
+
 const ZERO = '0'.charCodeAt(0);
 const NINE = '9'.charCodeAt(0);
 
@@ -185,8 +199,10 @@ export function consumeMessagesFromSocket(
         if (maxMessageSize > 0 && value > maxMessageSize) {
           fail(
             `Message of ${value} bytes exceeds the ${maxMessageSize} byte limit. ` +
-              `Set NX_MAX_MESSAGE_SIZE to raise it, or to 0 to remove it, ` +
-              `then run \`nx reset\` so a running daemon picks up the change.`
+              `Set NX_MAX_MESSAGE_SIZE to raise it, or to 0 to remove it.` +
+              (daemonHoldsItsOwnLimit()
+                ? ` Then run \`nx reset\`, since a running daemon and the plugin workers it spawns keep the limit they started with.`
+                : '')
           );
           return null;
         }

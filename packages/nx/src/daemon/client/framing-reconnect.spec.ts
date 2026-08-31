@@ -48,8 +48,9 @@ describe('watcher channels under a repeating framing failure', () => {
     (client as any).reconnectFileWatcher();
     await new Promise((r) => setTimeout(r, 1500));
 
-    // Bounded: a handful of redials, not tens of thousands.
-    expect(connections).toBeLessThanOrEqual(6);
+    // Exactly MAX_CONSECUTIVE_FRAMING_FAILURES dials, then the give-up path.
+    // A loose bound here would not notice the guard drifting by one.
+    expect(connections).toBe(3);
     expect(states).toContain('closed');
   }, 20000);
 });
