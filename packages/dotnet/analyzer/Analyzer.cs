@@ -158,6 +158,11 @@ public static class Analyzer
                         directoryFilesByDir
                     );
 
+                    // For opt-in per-framework variants, collect the evaluated inner builds
+                    // (one MSBuild ProjectGraph node per target framework). Only multi-targeted
+                    // projects (more than one distinct framework) get variants.
+                    var frameworkVariants = CollectFrameworkVariants(nodes, pluginOptions);
+
                     var targets = TargetBuilder.BuildTargets(
                         projectName,
                         Path.GetFileName(projectPath),
@@ -169,7 +174,8 @@ public static class Analyzer
                         workspaceRoot,
                         pluginOptions,
                         nxJson,
-                        directoryBuildInputs
+                        directoryBuildInputs,
+                        frameworkVariants
                     );
 
                     nodesByFile[relativeProjectFile] = new NxProjectGraphNode
@@ -204,6 +210,58 @@ public static class Analyzer
             NodesByFile = nodesByFile,
             ReferencesByRoot = referencesByRoot
         };
+    }
+
+    /// <summary>
+    /// Collects the evaluated inner builds of a multi-targeted project as
+    /// <see cref="FrameworkVariant"/> descriptors. Returns null unless framework
+    /// variants are enabled and the project has more than one distinct target
+    /// framework, so single-targeted projects are never expanded.
+    /// </summary>
+    private static List<FrameworkVariant>? CollectFrameworkVariants(
+        List<ProjectGraphNode> nodes,
+        PluginOptions pluginOptions)
+    {
+        if (!pluginOptions.FrameworkVariants && !pluginOptions.RuntimeVariants)
+        {
+            return null;
+        }
+
+        // Inner builds are the ProjectGraph nodes that carry an evaluated
+        // TargetFramework; the outer build of a multi-targeted project has none.
+        var variants = nodes
+            .Where(n => n.ProjectInstance is not null &&
+                        !string.IsNullOrEmpty(n.ProjectInstance.GetPropertyValue("TargetFramework")))
+            .Select(n =>
+            {
+                var props = CollectProperties(n.ProjectInstance!);
+                return new FrameworkVariant
+                {
+                    TargetFramework = n.ProjectInstance!.GetPropertyValue("TargetFramework"),
+                    Properties = props,
+                    IsExecutable = IsExecutableProject(props),
+                    RuntimeIdentifiers = CollectRuntimeIdentifiers(n.ProjectInstance!)
+                };
+            })
+            .GroupBy(v => v.TargetFramework, StringComparer.Ordinal)
+            .Select(g => g.First())
+            .OrderBy(v => v.TargetFramework, StringComparer.Ordinal)
+            .ToList();
+
+        return variants.Count > 1 ? variants : null;
+    }
+
+    /// <summary>
+    /// Collects the runtime identifiers evaluated for an inner build. The plural
+    /// <c>RuntimeIdentifiers</c> is authoritative when non-empty; otherwise the
+    /// evaluated singular <c>RuntimeIdentifier</c> (which may be an SDK default) is
+    /// used. Returns an empty list when neither is set.
+    /// </summary>
+    private static List<string> CollectRuntimeIdentifiers(ProjectInstance project)
+    {
+        return ProjectUtilities.ResolveRuntimeIdentifiers(
+            project.GetPropertyValue("RuntimeIdentifier"),
+            project.GetPropertyValue("RuntimeIdentifiers"));
     }
 
     private static List<PackageReference> CollectPackageReferences(ProjectInstance project)
@@ -277,6 +335,12 @@ public static class Analyzer
             "UseArtifactsOutput",
             "ArtifactsPath",
             "ArtifactsPivots",
+
+            // Output-layout switches that determine whether framework/runtime
+            // identifier segments are appended to the output path (RID variants
+            // rely on the standard appended layout).
+            "AppendTargetFrameworkToOutputPath",
+            "AppendRuntimeIdentifierToOutputPath",
 
             // Output paths
             "OutputPath",

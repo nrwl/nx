@@ -37,10 +37,23 @@ function mergeUserTargetConfigurations(
 
   const mergedTargets = { ...node.targets };
 
+  const variantsOf = (baseName: string): string[] =>
+    Object.keys(mergedTargets).filter(
+      (name) =>
+        (
+          mergedTargets[name]?.metadata as
+            | { frameworkVariantOf?: string }
+            | undefined
+        )?.frameworkVariantOf === baseName
+    );
+
   for (const { targetOption, defaultTargetName } of targetMappings) {
     // Disabled target from user configuration
     if (targetOption === false) {
       delete mergedTargets[defaultTargetName];
+      for (const variantName of variantsOf(defaultTargetName)) {
+        delete mergedTargets[variantName];
+      }
       continue;
     }
 
@@ -73,6 +86,16 @@ function mergeUserTargetConfigurations(
     // If target was renamed, remove the old target name
     if (isRenamed && mergedTargets[defaultTargetName]) {
       delete mergedTargets[defaultTargetName];
+    }
+
+    // Keep the framework variants consistent with the base target.
+    if (hasUserConfig) {
+      for (const variantName of variantsOf(actualTargetName)) {
+        mergedTargets[variantName] = mergeTargetConfigurations(
+          userSpecifiedConfig as TargetConfiguration,
+          mergedTargets[variantName]
+        );
+      }
     }
   }
 
@@ -612,6 +635,109 @@ describe('@nx/dotnet - createNodes', () => {
       expect(buildTargetName).toBe('compile');
       expect(testTargetName).toBe('test');
       expect(cleanTargetName).toBe('cleanup');
+    });
+  });
+
+  describe('frameworkVariants option', () => {
+    it('should default to false when not provided', () => {
+      const options: DotNetPluginOptions = {};
+      expect(options.frameworkVariants ?? false).toBe(false);
+    });
+
+    it('should pass through the opt-in value', () => {
+      const options: DotNetPluginOptions = { frameworkVariants: true };
+      expect(options.frameworkVariants ?? false).toBe(true);
+    });
+
+    it('should be disabled when the build target is disabled', () => {
+      const options: DotNetPluginOptions = {
+        frameworkVariants: true,
+        build: false,
+      };
+      expect(
+        (options.frameworkVariants ?? false) && options.build !== false
+      ).toBe(false);
+    });
+  });
+
+  describe('runtimeVariants option', () => {
+    // Mirrors the analyzerOptions computation in create-nodes.ts.
+    const frameworkEnabled = (o: DotNetPluginOptions) =>
+      ((o.frameworkVariants ?? false) || (o.runtimeVariants ?? false)) &&
+      o.build !== false;
+    const runtimeEnabled = (o: DotNetPluginOptions) =>
+      (o.runtimeVariants ?? false) && o.build !== false;
+
+    it('should default to false', () => {
+      expect(runtimeEnabled({})).toBe(false);
+    });
+
+    it('should imply framework variants when enabled', () => {
+      const options: DotNetPluginOptions = { runtimeVariants: true };
+      expect(runtimeEnabled(options)).toBe(true);
+      expect(frameworkEnabled(options)).toBe(true);
+    });
+
+    it('should not enable runtime variants from frameworkVariants alone', () => {
+      const options: DotNetPluginOptions = { frameworkVariants: true };
+      expect(frameworkEnabled(options)).toBe(true);
+      expect(runtimeEnabled(options)).toBe(false);
+    });
+
+    it('should be disabled when the build target is disabled', () => {
+      const options: DotNetPluginOptions = {
+        runtimeVariants: true,
+        build: false,
+      };
+      expect(runtimeEnabled(options)).toBe(false);
+      expect(frameworkEnabled(options)).toBe(false);
+    });
+  });
+
+  describe('framework variant merging', () => {
+    const nodeWithVariant = (): ProjectConfiguration => ({
+      root: 'apps/my-app',
+      name: 'my-app',
+      targets: {
+        build: {
+          executor: 'nx:run-commands',
+          options: { command: 'dotnet build' },
+        },
+        'build-net10.0': {
+          executor: 'nx:run-commands',
+          options: { command: 'dotnet build --framework net10.0' },
+          metadata: { frameworkVariantOf: 'build' } as never,
+        },
+      },
+    });
+
+    it('should apply user build config to framework variants', () => {
+      const result = mergeUserTargetConfigurations(nodeWithVariant(), {
+        build: { options: { verbose: true } },
+      });
+
+      expect(result.targets?.['build-net10.0']?.options).toEqual({
+        command: 'dotnet build --framework net10.0',
+        verbose: true,
+      });
+    });
+
+    it('should remove framework variants when build is disabled', () => {
+      const result = mergeUserTargetConfigurations(nodeWithVariant(), {
+        build: false,
+      });
+
+      expect(result.targets?.build).toBeUndefined();
+      expect(result.targets?.['build-net10.0']).toBeUndefined();
+    });
+
+    it('should not touch variants of other base targets', () => {
+      const node = nodeWithVariant();
+      const result = mergeUserTargetConfigurations(node, {
+        test: { options: { logger: 'console' } },
+      });
+
+      expect(result.targets?.['build-net10.0']).toBeDefined();
     });
   });
 });
