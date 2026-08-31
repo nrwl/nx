@@ -1,7 +1,4 @@
-import {
-  NxJsonConfiguration,
-  TargetDependencies,
-} from '../../config/nx-json';
+import { NxJsonConfiguration, TargetDependencies } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { TaskGraph } from '../../config/task-graph';
 import {
