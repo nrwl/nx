@@ -694,7 +694,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
       );
 
       const message =
-        'A project tagged with "api" is not allowed to import "@mycompany/impl". Nested import found at implName';
+        'A project tagged with "api" is not allowed to import "@mycompany/impl". Nested import of "npm-package" found at implName';
       expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(message);
       expect(failures[1].message).toEqual(message);
@@ -778,7 +778,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
         );
 
         const message =
-          'A project tagged with "api" is not allowed to import "@mycompany/impl". Nested import found at implName';
+          'A project tagged with "api" is not allowed to import "@mycompany/impl". Nested import of "npm-awesome-package" found at implName';
         expect(failures.length).toEqual(2);
         expect(failures[0].message).toEqual(message);
         expect(failures[1].message).toEqual(message);
@@ -815,6 +815,47 @@ describe('Enforce Module Boundaries (eslint)', () => {
       );
 
       expect(failures.length).toEqual(0);
+    });
+
+    it('should report the project owning the nested import when the banned package is more than one hop away', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', bannedExternalImports: ['npm-package'] },
+          ],
+          checkNestedExternalImports: true,
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import '@mycompany/impl';
+        `,
+        {
+          ...graph,
+          dependencies: {
+            ...graph.dependencies,
+            implName: [
+              {
+                source: 'implName',
+                target: 'impl2Name',
+                type: DependencyType.static,
+              },
+            ],
+            impl2Name: [
+              {
+                source: 'impl2Name',
+                target: 'npm:npm-package',
+                type: DependencyType.static,
+              },
+            ],
+          },
+        },
+        fileMap
+      );
+
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toEqual(
+        'A project tagged with "api" is not allowed to import "@mycompany/impl". Nested import of "npm-package" found at impl2Name'
+      );
     });
 
     it('should error when importing transitive npm packages', () => {
