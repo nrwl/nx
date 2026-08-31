@@ -1,4 +1,4 @@
-import { type NgPackagr, ngPackagr } from 'ng-packagr';
+import type { NgPackagr } from 'ng-packagr';
 
 export async function getNgPackagrInstance(): Promise<NgPackagr> {
   const { getWriteBundlesTransformProvider } = await import(
@@ -7,6 +7,7 @@ export async function getNgPackagrInstance(): Promise<NgPackagr> {
   const { getStylesheetProcessorFactoryProvider } = await import(
     '../../utilities/ng-packagr/stylesheet-processor.di.js'
   );
+  const { ngPackagr } = await import('ng-packagr');
 
   const packagr = ngPackagr();
   packagr.withProviders([
