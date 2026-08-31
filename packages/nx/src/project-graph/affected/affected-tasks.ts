@@ -4,6 +4,8 @@ import type { ProjectConfiguration } from '../../config/workspace-json-project-j
 import { TaskGraph } from '../../config/task-graph';
 import {
   affectedTasks as nativeAffectedTasks,
+  explainAffectedTasks,
+  type AffectedTaskExplanation,
   type FileRevisions,
   type IoSnapshots,
 } from '../../native';
@@ -34,6 +36,7 @@ import type { NxArgs } from '../../utils/command-line-utils';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { logger } from '../../utils/logger';
 import { DaemonProjectGraphError, ProjectGraphError } from '../error-types';
+import type { AffectedReason } from './affected-reasons';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
   createTaskPlanningContext,
@@ -46,6 +49,7 @@ import { isOnDaemon } from '../../daemon/is-on-daemon';
 import { getProjectGlobPatterns } from './affected-projects';
 import { lockFileDependencyChanges } from '../../plugins/js/project-graph/affected/lock-file-changes';
 import { packageJsonDependencyChanges } from '../../plugins/js/project-graph/affected/npm-packages';
+import { AUTO_AFFECTED_LOCK_FILES } from '../../plugins/js/lock-file/lock-file';
 
 /**
  * Whether `nx affected` selects the individual tasks whose inputs a change
@@ -68,6 +72,8 @@ export interface AffectedTasksResult {
   taskGraph: TaskGraph;
   /** What the run executes: the affected tasks and what they depend on. */
   taskSelection: TaskSelection;
+  /** Every reason that applies, per affected task. Only when `explain`. */
+  reasons?: Record<string, AffectedReason[]>;
 }
 
 export interface ComputeAffectedTasksOptions {
@@ -88,6 +94,8 @@ export interface ComputeAffectedTasksOptions {
   /** This command's I/O snapshot set. Selection plans with it, as the run hashes with it. */
   ioSnapshotOutcome?: IoSnapshotOutcome | null;
   selectivelyHashTsConfig?: boolean;
+  /** Collect why each task was selected. Costs an extra native pass. */
+  explain?: boolean;
 }
 
 export type FileChangeArgs = Pick<NxArgs, 'base' | 'head' | 'files'>;
@@ -141,7 +149,9 @@ export async function computeAffectedTasks(
     };
   }
 
-  if (!isOnDaemon() && daemonClient.enabled()) {
+  // Explaining runs nothing, so there is no run to share the daemon's plans
+  // with, and reasons would have to cross back from it.
+  if (!opts.explain && !isOnDaemon() && daemonClient.enabled()) {
     try {
       const selection = await daemonClient.selectAffectedTasks(request);
       return {
@@ -174,12 +184,14 @@ export async function computeAffectedTasks(
       touchedFiles: opts.touchedFiles,
       packageJson: opts.packageJson,
       ioSnapshots,
+      explain: opts.explain,
     }
   );
   return {
     projectGraph,
     affectedTaskIds: selection.affectedTaskIds,
     taskGraph: selection.taskGraph,
+    reasons: selection.reasons,
     taskSelection: {
       ...selection.taskSelection,
       // The planner remembers what selection planned, so the run's hashing reuses it.
@@ -206,15 +218,18 @@ export async function selectAffectedTasks(
     ),
     packageJson,
     ioSnapshots,
+    explain = false,
   }: {
     touchedFiles?: FileChange[];
     packageJson?: any;
     ioSnapshots?: IoSnapshots;
+    explain?: boolean;
   } = {}
 ): Promise<{
   affectedTaskIds: Set<string>;
   taskGraph: TaskGraph;
   taskSelection: TaskSelection;
+  reasons?: Record<string, AffectedReason[]>;
 }> {
   const { targets } = request;
   // Only projects that have one of the targets: with a single target,
@@ -269,29 +284,46 @@ export async function selectAffectedTasks(
   const namedProjects = new Set(dependencies.projects.map((t) => t.project));
   const projects =
     readProjectsConfigurationFromProjectGraph(projectGraph).projects;
+  const options = {
+    projectGlobPatterns: await getProjectGlobPatterns(nxJson),
+    workspaceRoot,
+    alwaysTouchedTaskIds: taskIds.filter(
+      (id) =>
+        namedProjects.has(taskGraph.tasks[id].target.project) ||
+        hasCustomHasher(taskGraph.tasks[id], projects)
+    ),
+    changedExternals: dependencies.externals,
+    changedExternalTypes: dependencies.changedExternalTypes,
+    excludedProjects: request.exclude.length
+      ? findMatchingProjects(request.exclude, projectGraph.nodes)
+      : [],
+    targets,
+    revisions: fileRevisions(request.fileChangeArgs),
+    selectivelyHashTsConfig: request.selectivelyHashTsConfig ?? false,
+  };
   const selection = nativeAffectedTasks(
     planningContext.projectGraphRef,
     plans,
     taskGraph,
     request.changedFiles,
-    {
-      projectGlobPatterns: await getProjectGlobPatterns(nxJson),
-      workspaceRoot,
-      alwaysTouchedTaskIds: taskIds.filter(
-        (id) =>
-          namedProjects.has(taskGraph.tasks[id].target.project) ||
-          hasCustomHasher(taskGraph.tasks[id], projects)
-      ),
-      changedExternals: dependencies.externals,
-      changedExternalTypes: dependencies.changedExternalTypes,
-      excludedProjects: request.exclude.length
-        ? findMatchingProjects(request.exclude, projectGraph.nodes)
-        : [],
-      targets,
-      revisions: fileRevisions(request.fileChangeArgs),
-      selectivelyHashTsConfig: request.selectivelyHashTsConfig ?? false,
-    }
+    options
   );
+  // A second native pass, so the selection path stays a membership test.
+  const reasons = explain
+    ? taskReasons(
+        selection.affected,
+        explainAffectedTasks(
+          planningContext.projectGraphRef,
+          plans,
+          taskGraph,
+          request.changedFiles,
+          options
+        ),
+        dependencies,
+        request.changedFiles,
+        taskGraph
+      )
+    : undefined;
 
   // The run builds from the owning projects, so only their requested tasks
   // take the CLI overrides there; every other task is a dependency.
@@ -312,6 +344,7 @@ export async function selectAffectedTasks(
   return {
     affectedTaskIds: new Set(selection.affected),
     taskGraph,
+    reasons,
     taskSelection: {
       // Edges that disagree on a dependency's overrides leave it to a build
       // from the owning projects, which settles them the way the run always has.
@@ -393,4 +426,74 @@ function dependencyChanges(
     ],
     projects: changes.flatMap((c) => c.projects),
   };
+}
+
+/**
+ * Why each selected task is in the answer.
+ *
+ * Assembled after the fact rather than accumulated during selection, so the
+ * selection path costs nothing when `--explain` is off. Every reason that
+ * applies is listed: a task can match a changed file, hash a package that
+ * moved, and read an affected producer, all at once.
+ */
+function taskReasons(
+  affected: string[],
+  explanation: AffectedTaskExplanation,
+  dependencies: DependencyChanges,
+  changedPaths: string[],
+  taskGraph: TaskGraph
+): Record<string, AffectedReason[]> {
+  // What a plan hashing every external saw change.
+  const dependencyFiles = changedPaths.filter(
+    (file) =>
+      file === 'package.json' ||
+      (AUTO_AFFECTED_LOCK_FILES as readonly string[]).includes(file)
+  );
+  const named = new Map<string, AffectedReason[]>();
+  for (const { project, ...reason } of dependencies.projects) {
+    named.set(project, [...(named.get(project) ?? []), reason]);
+  }
+
+  const reasons: Record<string, AffectedReason[]> = {};
+  for (const taskId of affected) {
+    const forTask: AffectedReason[] = [];
+    const matches = explanation.inputMatches[taskId];
+
+    for (const match of matches?.files ?? []) {
+      forTask.push({
+        kind: 'input-file',
+        file: match.file,
+        pattern: match.pattern,
+      });
+    }
+    for (const pkg of matches?.packages ?? []) {
+      forTask.push({ kind: 'npm-package', package: pkg });
+    }
+    if (matches?.allExternals) {
+      for (const file of dependencyFiles) {
+        forTask.push({ kind: 'external-dependencies', file });
+      }
+    }
+
+    // Only the reached producers: the walk records the edges it crossed.
+    for (const producer of explanation.producersOf[taskId] ?? []) {
+      forTask.push({ kind: 'dependent-output', producer });
+    }
+
+    const project = taskGraph.tasks[taskId]?.target.project;
+    for (const reason of (project && named.get(project)) ?? []) {
+      forTask.push(reason);
+    }
+
+    // A deleted config seeded every task. Only worth saying when nothing
+    // narrower applies, or it would repeat on every line.
+    if (!forTask.length) {
+      for (const file of explanation.deletedProjectConfigs) {
+        forTask.push({ kind: 'deleted-project-configuration', file });
+      }
+    }
+
+    reasons[taskId] = forTask;
+  }
+  return reasons;
 }

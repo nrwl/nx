@@ -11,7 +11,7 @@ use tracing::{debug, trace};
 use super::changed_contents::{ChangedContents, FileRevisions};
 use super::dependency_closure::dependency_closure;
 use super::dependent_outputs::compute_dependent_output_edges;
-use super::touched::{ChangedExternals, touched_tasks};
+use super::touched::{ChangedExternals, TaskInputMatches, compute_input_matches, touched_tasks};
 use crate::native::glob::build_glob_set;
 use crate::native::project_graph::types::ProjectGraph;
 use crate::native::tasks::types::{HashPlans, TaskGraph};
@@ -96,6 +96,7 @@ pub(crate) fn compute_affected_task_selection(
             &configs,
             options,
         )?
+        .tasks
     } else {
         debug!("a project config was deleted, so every task is affected");
         task_graph.tasks.keys().cloned().collect()
@@ -133,6 +134,114 @@ pub(crate) fn compute_affected_task_selection(
     Ok(AffectedTaskSelection { affected, required })
 }
 
+/// What a change reached before `targets` and `--exclude` narrow it, and the
+/// output-read edges it was carried along.
+struct Reached {
+    tasks: Vec<String>,
+    producers_of: HashMap<String, Vec<String>>,
+}
+
+/// Why the change reached each task. Covers every task it reached, not just
+/// the selection, so a reason naming a producer can be looked up too.
+#[napi(object)]
+pub struct AffectedTaskExplanation {
+    /// Consumer -> the reached producers whose outputs it reads.
+    pub producers_of: HashMap<String, Vec<String>>,
+    /// Changed project configs no longer on disk. Every task was seeded for them.
+    pub deleted_project_configs: Vec<String>,
+    /// Per reached task, the changed files and moved packages among its inputs.
+    #[napi(ts_type = "Record<string, TaskInputMatches>")]
+    pub input_matches: HashMap<String, TaskInputMatches>,
+}
+
+/// Separate from `affected_tasks` because the explanation costs a string per
+/// match and only `--explain` reads it; the selection path stays a membership
+/// test over interned instruction ids.
+#[napi]
+pub fn explain_affected_tasks(
+    project_graph: &External<Arc<ProjectGraph>>,
+    #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
+    hash_plans: &External<HashPlans>,
+    task_graph: TaskGraph,
+    changed_files: Vec<String>,
+    options: AffectedTasksOptions,
+) -> Result<AffectedTaskExplanation> {
+    Ok(compute_affected_task_explanation(
+        project_graph,
+        hash_plans,
+        &task_graph,
+        &changed_files,
+        &options,
+    )?)
+}
+
+/// Walks what selection walks, then keeps the edges it crossed and what matched.
+pub(crate) fn compute_affected_task_explanation(
+    graph: &ProjectGraph,
+    hash_plans: &HashPlans,
+    task_graph: &TaskGraph,
+    changed_files: &[String],
+    options: &AffectedTasksOptions,
+) -> anyhow::Result<AffectedTaskExplanation> {
+    let (configs, deleted) = changed_project_configs(changed_files, options);
+    let Reached {
+        tasks: reached,
+        producers_of,
+    } = if deleted.is_empty() {
+        reached_by_change(
+            graph,
+            hash_plans,
+            task_graph,
+            changed_files,
+            &configs,
+            options,
+        )?
+    } else {
+        Reached {
+            tasks: task_graph.tasks.keys().cloned().collect(),
+            producers_of: compute_dependent_output_edges(hash_plans, task_graph),
+        }
+    };
+    let reached: HashSet<&str> = reached.iter().map(String::as_str).collect();
+
+    // Only the edges the walk crossed: a reached consumer and a reached producer.
+    let producers_of = producers_of
+        .into_iter()
+        .filter(|(consumer, _)| reached.contains(consumer.as_str()))
+        .filter_map(|(consumer, producers)| {
+            let mut hit: Vec<String> = producers
+                .into_iter()
+                .filter(|producer| reached.contains(producer.as_str()))
+                .collect();
+            hit.sort_unstable();
+            hit.dedup();
+            (!hit.is_empty()).then_some((consumer, hit))
+        })
+        .collect();
+
+    let externals = ChangedExternals::new(
+        &options.changed_externals,
+        &options.changed_external_types,
+        &graph.external_nodes,
+    );
+    let contents = ChangedContents::new(
+        graph,
+        &options.workspace_root,
+        options.revisions.as_ref(),
+        changed_files,
+        options.selectively_hash_ts_config,
+    );
+    let mut input_matches =
+        compute_input_matches(graph, hash_plans, changed_files, &externals, &contents)?;
+    input_matches.retain(|id, _| reached.contains(id.as_str()));
+
+    Ok(AffectedTaskExplanation {
+        producers_of,
+        deleted_project_configs: deleted,
+        input_matches,
+    })
+}
+
 /// The tasks a change touches directly, the always-touched ones, and every
 /// task reading their outputs, before filtering to the requested targets.
 fn reached_by_change(
@@ -142,7 +251,7 @@ fn reached_by_change(
     changed_files: &[String],
     configs: &[String],
     options: &AffectedTasksOptions,
-) -> anyhow::Result<Vec<String>> {
+) -> anyhow::Result<Reached> {
     let touched_start = Instant::now();
     let externals = ChangedExternals::new(
         &options.changed_externals,
@@ -188,7 +297,10 @@ fn reached_by_change(
         reached.len(),
         propagate_start.elapsed()
     );
-    Ok(reached)
+    Ok(Reached {
+        tasks: reached,
+        producers_of,
+    })
 }
 
 /// Changed paths that are project configuration, split by whether the file is
@@ -849,5 +961,59 @@ mod tests {
 
         assert_eq!(s.affected, strings(&["app:build"]));
         assert_eq!(s.required, strings(&["app:build", "app:prebuild"]));
+    }
+
+    /// The explanation keeps what selection narrows away, so a reason naming a
+    /// dependency-only producer can still be looked up.
+    #[test]
+    fn the_explanation_keeps_the_dependency_only_tasks_a_change_crossed() {
+        let p = hash_plans(&[
+            ("app:prebuild", vec![reads_x()]),
+            (
+                "app:build",
+                vec![HashInstruction::IgnoredFileSet(strings(&["dist/gen/**"]))],
+            ),
+            ("app:lint", vec![]),
+        ]);
+        let tg = task_graph(
+            &[
+                ("app:prebuild", &["dist/gen"]),
+                ("app:build", &[]),
+                ("app:lint", &[]),
+            ],
+            &[("app:build", &["app:prebuild"])],
+        );
+        let options = AffectedTasksOptions {
+            targets: strings(&["build"]),
+            ..options(&[])
+        };
+
+        let e = compute_affected_task_explanation(
+            &graph(&[("app", "apps/app"), ("lib", "libs/lib")]),
+            &p,
+            &tg,
+            &strings(&["x.txt"]),
+            &options,
+        )
+        .unwrap();
+
+        assert_eq!(
+            e.producers_of,
+            HashMap::from([("app:build".to_string(), strings(&["app:prebuild"]))])
+        );
+        assert_eq!(e.input_matches["app:prebuild"].files[0].file, "x.txt");
+        assert!(!e.input_matches.contains_key("app:build"));
+        assert!(e.deleted_project_configs.is_empty());
+    }
+
+    #[test]
+    fn the_explanation_names_a_deleted_project_config() {
+        let g = graph(&[("a", "packages/nx")]);
+        let p = hash_plans(&[("a:build", vec![])]);
+        let tg = task_graph(&[("a:build", &[])], &[]);
+        let deleted = "packages/nx/does-not-exist/project.json";
+        let e = compute_affected_task_explanation(&g, &p, &tg, &strings(&[deleted]), &options(&[]))
+            .unwrap();
+        assert_eq!(e.deleted_project_configs, strings(&[deleted]));
     }
 }
