@@ -21,8 +21,9 @@ export interface EngineWiringOptions {
   allowedHosts: string[];
   /**
    * Skips the engine host validation while serving. Effective from
-   * `@angular/ssr` 20.3.25 / 21.2.1 (`ɵdisableAllowedHostsCheck`); older
-   * versions have no disable mechanism and keep validating against
+   * `@angular/ssr` 20.3.25 / 21.2.1 (`ɵdisableAllowedHostsCheck`). The
+   * versions from the introduction of host validation (20.3.17 / 21.1.5) up
+   * to those have no disable mechanism and keep validating against
    * `allowedHosts`.
    */
   disableHostCheck?: boolean;

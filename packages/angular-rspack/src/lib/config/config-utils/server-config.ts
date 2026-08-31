@@ -74,10 +74,10 @@ export async function getServerConfig(
             .join(posix.sep),
           indexOutputName: normalizedOptions.index?.output,
           supportedLocales: { [i18n.sourceLocale]: '' },
-          // An empty allowlist matches no host: since @angular/ssr 22 the
-          // engine rejects every request, older versions fall back to CSR.
-          // Serving must allow the dev-server hosts instead of the
-          // production allowlist.
+          // An empty allowlist matches no host: from @angular/ssr 22 the
+          // engine rejects every request, and the earlier versions that
+          // validate fall back to CSR. Serving must allow the dev-server
+          // hosts instead of the production allowlist.
           allowedHosts: isDevServer
             ? getServeModeAllowedHosts(normalizedOptions.devServer)
             : (normalizedOptions.security?.allowedHosts ?? []),

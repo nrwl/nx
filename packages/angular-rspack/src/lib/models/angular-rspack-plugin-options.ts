@@ -265,6 +265,17 @@ export interface AngularRspackPluginOptions {
   ngswConfigPath?: string;
   optimization?: boolean | OptimizationOptions;
   outputHashing?: OutputHashing;
+  /**
+   * Defines the build output target. Only 'server' is currently supported:
+   * it requires the `server` and `ssr.entry` options and the `@angular/ssr`
+   * package, and disables build-time prerendering (`prerender`/`appShell`).
+   * The `@angular/ssr` application engine wiring itself is active for any
+   * SSR build with `@angular/ssr` installed, with or without this option,
+   * except when locale inlining is enabled.
+   * 'static' (build-time prerendering of the full application) is not
+   * supported yet and is rejected.
+   */
+  outputMode?: 'server' | 'static';
   outputPath?:
     | string
     | (Required<Pick<OutputPath, 'base'>> & Partial<OutputPath>);
@@ -292,17 +303,6 @@ export interface AngularRspackPluginOptions {
          */
         discoverRoutes?: boolean;
       };
-  /**
-   * Defines the build output target. Only 'server' is currently supported:
-   * it requires the `server` and `ssr.entry` options and the `@angular/ssr`
-   * package, and disables build-time prerendering (`prerender`/`appShell`).
-   * The `@angular/ssr` application engine wiring itself is active for any
-   * SSR build with `@angular/ssr` installed, with or without this option,
-   * except when locale inlining is enabled.
-   * 'static' (build-time prerendering of the full application) is not
-   * supported yet and is rejected.
-   */
-  outputMode?: 'server' | 'static';
   /**
    * Do not use the real path when resolving modules. If unset then will default to `true` if NodeJS option --preserve-symlinks is set.
    */
