@@ -735,7 +735,7 @@ export declare function loadIoSnapshots(directory: string): IoSnapshots
  * Every branch is deterministic, and must stay so: this order reaches
  * `result.nodes` insertion order and so `nx show projects --affected`.
  */
-export declare function locateTouchedProjects(projectGraph: ExternalObject<ProjectGraph>, nxJson: NxJson, touchedFiles: Array<string>, options: AffectedOptions, jsLocators: Array<(files: string[]) => Promise<string[]>>): Promise<Array<string>>
+export declare function locateTouchedProjects(projectGraph: ExternalObject<ProjectGraph>, nxJson: NxJson, touchedFiles: Array<string>, options: AffectedOptions, jsLocators: Array<(files: string[]) => Promise<TouchedProject[]>>): Promise<Array<TouchedProject>>
 
 export declare function logDebug(message: string): void
 
@@ -1017,6 +1017,26 @@ export interface TaskTarget {
 }
 
 export declare function testOnlyTransferFileMap(projectFiles: Record<string, Array<FileData>>, nonProjectFiles: Array<FileData>): NxWorkspaceFilesExternals
+
+/**
+ * One locator's finding: a project, and enough about the signal to explain it.
+ *
+ * `kind` is a discriminant the TypeScript side narrows on; the payload fields
+ * are populated per kind rather than modelled as a union, because napi objects
+ * carry no tag. A locator that cannot attribute a single file leaves `file`
+ * unset rather than inventing one.
+ */
+export interface TouchedProject {
+  project: string
+  kind: string
+  /** The changed file that triggered it, when one file is responsible. */
+  file?: string
+  /**
+   * The `{workspaceRoot}` fileset or plugin glob that matched, when the
+   * signal came from a pattern rather than from ownership.
+   */
+  pattern?: string
+}
 
 /** Track an event using the global telemetry instance */
 export declare function trackEvent(eventName: string, parameters?: Record<string, string> | undefined | null): void

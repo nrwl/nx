@@ -1,4 +1,5 @@
 import type { Change, FileChange } from '../file-utils';
+import type { TouchedProject } from './affected-reasons';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import {
   ProjectGraph,
@@ -19,5 +20,5 @@ export interface TouchedProjectLocator<T extends Change = Change> {
     packageJson?: any,
     projectGraph?: ProjectGraph,
     projectDeletionAffectsAllProjects?: boolean
-  ): string[] | Promise<string[]>;
+  ): TouchedProject[] | Promise<TouchedProject[]>;
 }

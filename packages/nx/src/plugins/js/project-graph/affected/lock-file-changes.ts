@@ -1,4 +1,5 @@
 import { TouchedProjectLocator } from '../../../../project-graph/affected/affected-project-graph-models';
+import type { TouchedProject } from '../../../../project-graph/affected/affected-reasons';
 import {
   FileChange,
   isLockFileChange,
@@ -28,8 +29,14 @@ export const getTouchedProjectsFromLockFile: TouchedProjectLocator<
   nxJson,
   packageJson,
   projectGraph
-): string[] => {
+): TouchedProject[] => {
   const { projectsAffectedByDependencyUpdates } = readJsPluginConfig(nxJson);
+  const fromLockFile = (projects: string[]): TouchedProject[] =>
+    projects.map((project) => ({
+      project,
+      kind: 'lockfile' as const,
+      file: changedLockFile?.file,
+    }));
 
   const changedLockFile = fileChanges.find((f) =>
     AUTO_AFFECTED_LOCK_FILES.includes(
@@ -38,21 +45,32 @@ export const getTouchedProjectsFromLockFile: TouchedProjectLocator<
   );
 
   if (projectsAffectedByDependencyUpdates === 'auto') {
+    // External node names, which filterAffected reverse-walks to projects, so
+    // the name is the package rather than a workspace project.
     return getAutoAffected(
       changedLockFile,
       projectGraphNodes,
       projectGraph,
       packageJson
-    );
+    ).map((name) => ({
+      project: name,
+      kind: name.startsWith('npm:')
+        ? ('npm-package' as const)
+        : ('lockfile' as const),
+      package: name.startsWith('npm:') ? name : undefined,
+      file: changedLockFile?.file,
+    }));
   } else if (Array.isArray(projectsAffectedByDependencyUpdates)) {
-    return findMatchingProjects(
-      projectsAffectedByDependencyUpdates,
-      projectGraphNodes
+    return fromLockFile(
+      findMatchingProjects(
+        projectsAffectedByDependencyUpdates,
+        projectGraphNodes
+      )
     );
   }
 
   if (changedLockFile) {
-    return Object.values(projectGraphNodes).map((p) => p.name);
+    return fromLockFile(Object.values(projectGraphNodes).map((p) => p.name));
   }
   return [];
 };
