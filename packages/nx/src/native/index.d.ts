@@ -343,6 +343,15 @@ export declare function connectToNxDb(cacheDir: string, dbName?: string | undefi
 
 export declare function copy(src: string, dest: string): number
 
+export declare function dependentOutputReads(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, taskGraph: TaskGraph): DependentOutputReads
+
+export interface DependentOutputReads {
+  /** Consumer -> the upstream tasks whose declared outputs it reads. */
+  producers: Record<string, Array<string>>
+  /** Consumers carrying an `includeIgnored` read, which names no producer. */
+  readsIgnoredOutputs: Array<string>
+}
+
 export interface DepsOutputsInput {
   dependentTasksOutputFiles: string
   transitive?: boolean
@@ -877,6 +886,8 @@ export interface Target {
   options?: string
   configurations?: string
   parallelism?: boolean
+  /** `false` hashes the target from its declared inputs only, never a snapshot. */
+  ioSnapshots?: boolean
 }
 
 /** A representation of the invocation of an Executor */
@@ -905,8 +916,6 @@ export interface Task {
   parallelism?: boolean
   /** This denotes if the task runs continuously */
   continuous?: boolean
-  /** The target's observed-IO sandbox configuration, if declared */
-  sandbox?: TaskSandboxConfiguration
 }
 
 /** Graph of Tasks to be executed */
@@ -952,32 +961,6 @@ export interface TaskRun {
   start: number
   end: number
 }
-
-/** Observed-IO sandbox configuration of a task's target */
-export interface TaskSandboxConfiguration {
-  /**
-   * Whether tasks for this target are tracked by the sandbox.
-   * Defaults to true. When false, no IO tracing is reported for the
-   * task, so no sandbox report is produced.
-   */
-  enabled?: boolean
-  /**
-   * Workspace-relative glob patterns for reads that should be excluded
-   * from sandboxing reports. The first path segment cannot contain `*`,
-   * and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
-   * pattern to a directory instead of leading with `**`.
-   */
-  ignoredReads?: Array<string>
-  /**
-   * Workspace-relative glob patterns for writes that should be excluded
-   * from sandboxing reports. The first path segment cannot contain `*`,
-   * and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
-   * pattern to a directory instead of leading with `**`.
-   */
-  ignoredWrites?: Array<string>
-}
-
-export declare function tasksReadingDependentOutputs(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>): Array<string>
 
 export declare const enum TaskStatus {
   Success = 0,
