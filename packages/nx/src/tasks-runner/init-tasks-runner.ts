@@ -13,6 +13,7 @@ import { createTaskHasher } from '../hasher/create-task-hasher';
 import type { ProjectGraph } from '../config/project-graph';
 import { daemonClient } from '../daemon/client/client';
 import { RunningTask } from './running-tasks/running-task';
+import { SharedRunningTask } from './running-tasks/shared-running-task';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 
 async function createOrchestrator(
@@ -140,7 +141,14 @@ export async function runDiscreteTasks(
     }
   );
 
-  return [...batchResults, ...taskResults];
+  const results = [...batchResults, ...taskResults];
+  // Callers like Nx Cloud agents create an orchestrator per invocation in a
+  // long-lived process and gather every result before acting on any, so wait
+  // for settlement and release the orchestrator's process-level listeners
+  // before returning. Rejected handles stay rejected for the caller.
+  await Promise.allSettled(results);
+  await orchestrator.dispose();
+  return results;
 }
 
 export async function runContinuousTasks(
@@ -157,11 +165,26 @@ export async function runContinuousTasks(
     nxJson,
     lifeCycle
   );
-  return tasks.reduce(
+  const runningTasks = tasks.reduce(
     (current, task, index) => {
       current[task.id] = orchestrator.startContinuousTask(task, index);
       return current;
     },
     {} as Record<string, Promise<RunningTask>>
   );
+  // Unlike runDiscreteTasks, this must resolve at task start: callers keep
+  // the RunningTask handles to kill later, so disposal has to be deferred
+  // until every task actually exits.
+  Promise.allSettled(
+    Object.entries(runningTasks).map(async ([taskId, promise]) => {
+      const runningTask = await promise;
+      // A shared task is owned by another nx process; this orchestrator has
+      // no child to protect for it, so disposal does not wait on it.
+      if (runningTask instanceof SharedRunningTask) {
+        return;
+      }
+      await orchestrator.waitForContinuousTaskExit(taskId);
+    })
+  ).then(() => orchestrator.dispose());
+  return runningTasks;
 }

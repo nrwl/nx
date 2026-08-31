@@ -30,7 +30,12 @@ export function getTasksHistoryLifeCycle():
 
 export class TaskHistoryLifeCycle implements LifeCycle {
   private startTimings: Record<string, number> = {};
-  private pendingResults = new Map<string, TaskResult>();
+  // Holds no terminalOutput: this singleton outlives every run in the
+  // process, and agents complete thousands of tasks in one process.
+  private pendingResults = new Map<
+    string,
+    Pick<TaskResult, 'task' | 'code' | 'status'>
+  >();
   private taskRuns = new Map<string, TaskRun>();
   private taskHistory: TaskHistory | null = getTaskHistory();
   private flakyTasks: string[];
@@ -51,28 +56,31 @@ export class TaskHistoryLifeCycle implements LifeCycle {
   }
 
   async endTasks(taskResults: TaskResult[]) {
-    for (const taskResult of taskResults) {
-      this.pendingResults.set(taskResult.task.id, taskResult);
+    for (const { task, code, status } of taskResults) {
+      this.pendingResults.set(task.id, { task, code, status });
     }
   }
 
   async endCommand() {
+    const pendingResults = Array.from(this.pendingResults.values());
+    this.pendingResults.clear();
+
     if (!this.taskHistory) {
       return;
     }
 
     // Build TaskRun objects now — task.hash is guaranteed to be set by this point
-    for (const [, taskResult] of this.pendingResults) {
-      this.taskRuns.set(taskResult.task.hash, {
-        hash: taskResult.task.hash,
-        target: taskResult.task.target,
-        code: taskResult.code,
-        status: taskResult.status,
-        start:
-          taskResult.task.startTime ?? this.startTimings[taskResult.task.id],
-        end: taskResult.task.endTime ?? Date.now(),
-        cacheable: taskResult.task.cache === true,
+    for (const { task, code, status } of pendingResults) {
+      this.taskRuns.set(task.hash, {
+        hash: task.hash,
+        target: task.target,
+        code,
+        status,
+        start: task.startTime ?? this.startTimings[task.id],
+        end: task.endTime ?? Date.now(),
+        cacheable: task.cache === true,
       });
+      delete this.startTimings[task.id];
     }
 
     const runs = [];
