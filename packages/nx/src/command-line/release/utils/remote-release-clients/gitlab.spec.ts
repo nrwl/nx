@@ -67,5 +67,39 @@ describe('GitLabRemoteReleaseClient', () => {
 
       expect(printed).toContain('Token Header: none');
     });
+
+    it('should redact the token in the unknown-error dump', async () => {
+      const token = 'glpat-secret';
+      const clientWithToken = new GitLabRemoteReleaseClient(repoData, false, {
+        token,
+        headerName: 'PRIVATE-TOKEN',
+      });
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+      selectPromptMock.mockResolvedValue('No');
+      const originalExitCode = process.exitCode;
+
+      try {
+        await (clientWithToken as any).handleError(
+          {
+            message: 'Network Error',
+            config: { headers: { 'PRIVATE-TOKEN': token } },
+            request: { _header: `PRIVATE-TOKEN: ${token}` },
+          },
+          { url: 'https://gitlab.com/nrwl/nx/-/releases/new', requestData: {} }
+        );
+      } finally {
+        process.exitCode = originalExitCode;
+      }
+
+      const logged = logSpy.mock.calls.map((args) => args.join(' ')).join('\n');
+      expect(logged).not.toContain(token);
+      expect(logged).toContain('<redacted>');
+      expect(logged).toContain('Network Error');
+      logSpy.mockRestore();
+      consoleErrorSpy.mockRestore();
+    });
   });
 });

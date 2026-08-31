@@ -1,3 +1,4 @@
+import { inspect } from 'node:util';
 import type { AxiosRequestConfig } from 'axios';
 import axios from 'axios';
 import type { PostGitTask } from '../../changelog';
@@ -65,6 +66,13 @@ export abstract class RemoteReleaseClient<
 
   getRemoteRepoData<T extends RemoteRepoData>(): T | null {
     return this.remoteRepoData as T | null;
+  }
+
+  protected inspectWithRedactedToken(error: unknown): string {
+    const inspected = inspect(error);
+    return this.tokenData
+      ? inspected.split(this.tokenData.token).join('<redacted>')
+      : inspected;
   }
 
   protected getRedactedTokenHeader(): string {
