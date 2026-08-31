@@ -1,4 +1,5 @@
 import type { Change, FileChange } from '../file-utils';
+import type { TouchedProject } from './affected-reasons';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import {
   ProjectGraph,
@@ -20,8 +21,8 @@ export interface DependencyChanges {
   externals: string[];
   /** The change could not be pinned to packages, so every external counts. */
   allExternals: boolean;
-  /** Workspace projects the change names outright. */
-  projects: string[];
+  /** Workspace projects the change names outright, with why. */
+  projects: TouchedProject[];
 }
 
 export interface TouchedProjectLocator<T extends Change = Change> {
@@ -32,5 +33,5 @@ export interface TouchedProjectLocator<T extends Change = Change> {
     packageJson?: any,
     projectGraph?: ProjectGraph,
     projectDeletionAffectsAllProjects?: boolean
-  ): string[] | Promise<string[]>;
+  ): TouchedProject[] | Promise<TouchedProject[]>;
 }

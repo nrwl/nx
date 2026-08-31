@@ -119,7 +119,7 @@ export async function computeAffectedTasks(
     nxJson,
     opts.packageJson
   );
-  const namedProjects = new Set(dependencies.projects);
+  const namedProjects = new Set(dependencies.projects.map((t) => t.project));
   const selection = nativeAffectedTasks(
     planningContext.projectGraphRef,
     plans,
@@ -172,6 +172,6 @@ function dependencyChanges(
   return {
     externals: [...new Set(changes.flatMap((c) => c.externals))],
     allExternals: changes.some((c) => c.allExternals),
-    projects: [...new Set(changes.flatMap((c) => c.projects))],
+    projects: changes.flatMap((c) => c.projects),
   };
 }
