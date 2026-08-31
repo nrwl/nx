@@ -338,13 +338,18 @@ export function findTransitiveExternalDependencies(
   }
 
   const externalDependencies = [];
+  const seen = new Set<string>();
   for (let i = 0; i < allReachableProjects.length; i++) {
     const dependencies = graph.dependencies[allReachableProjects[i]];
     if (dependencies) {
       for (let d = 0; d < dependencies.length; d++) {
         const dependency = dependencies[d];
         if (graph.externalNodes[dependency.target]) {
-          externalDependencies.push(dependency);
+          const key = `${dependency.source}|${graph.externalNodes[dependency.target].data.packageName}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            externalDependencies.push(dependency);
+          }
         }
       }
     }
