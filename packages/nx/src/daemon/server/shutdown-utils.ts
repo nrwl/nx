@@ -9,7 +9,7 @@ import {
   ProjectGraphError,
 } from '../../project-graph/error-types';
 import { cleanupPlugins } from '../../project-graph/plugins/get-plugins';
-import { MESSAGE_END_SEQ } from '../../utils/consume-messages-from-socket';
+import { writeMessage } from '../../utils/consume-messages-from-socket';
 import { cleanupLatestNx } from './latest-nx';
 import { flushAnalytics } from '../../analytics';
 import { spawn } from 'child_process';
@@ -166,14 +166,14 @@ export function resetInactivityTimeout(cb: () => void): void {
 
 export function respondToClient(
   socket: Socket,
-  response: string,
+  response: Buffer,
   description: string
 ) {
   return new Promise(async (res) => {
     if (description) {
       serverLogger.requestLog(`Responding to the client.`, description);
     }
-    socket.write(response + MESSAGE_END_SEQ, (err) => {
+    writeMessage(socket, response, (err) => {
       if (err) {
         serverLogger.log(
           `Socket write error (client likely disconnected): ${err.message}`
@@ -208,7 +208,11 @@ export async function respondWithError(
   console.error(normalizedError.stack);
 
   // Respond with the original error
-  await respondToClient(socket, serializeResult(error, null, null), null);
+  await respondToClient(
+    socket,
+    Buffer.from(serializeResult(error, null, null), 'utf8'),
+    null
+  );
 }
 
 export async function respondWithErrorAndExit(

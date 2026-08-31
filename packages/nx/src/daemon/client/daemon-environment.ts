@@ -15,6 +15,11 @@ const DAEMON_ENV_OVERRIDABLE_SETTINGS = {
  * (e.g. PATH, JAVA_HOME, GRADLE_HOME) should be allowed through.
  */
 const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
+  // The message-size ceiling is read when a connection is accepted, before the
+  // client's env could apply, so reflecting it would hand one client's value to
+  // the next client's connection. Pinned at daemon spawn instead; see
+  // getDaemonSpawnEnv.
+  'NX_MAX_MESSAGE_SIZE',
   // Nx task-scoped vars
   'NX_TASK_TARGET_CONFIGURATION',
   'NX_TASK_TARGET_PROJECT',
@@ -131,4 +136,19 @@ export function getDaemonEnv() {
     }
   }
   return Object.assign(env, DAEMON_ENV_REQUIRED_SETTINGS);
+}
+
+/**
+ * Env for spawning the daemon process. On top of the reflected env it re-adds
+ * NX_MAX_MESSAGE_SIZE, which is excluded from reflection (see above) so one
+ * client cannot change the ceiling for another. The value here therefore holds
+ * for the daemon's whole lifetime, and changing it needs a daemon restart
+ * (`nx reset`).
+ */
+export function getDaemonSpawnEnv() {
+  const env = getDaemonEnv();
+  if (process.env.NX_MAX_MESSAGE_SIZE !== undefined) {
+    env.NX_MAX_MESSAGE_SIZE = process.env.NX_MAX_MESSAGE_SIZE;
+  }
+  return env;
 }
