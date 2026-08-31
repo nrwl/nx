@@ -709,6 +709,6 @@ export function taskIdFromInvocationKey(key: string): string {
   return separator === -1 ? key : key.slice(0, separator);
 }
 
-// Hex hashes never contain it, so the last one is always the one we appended,
-// even for a task id that contains it.
+// The hash is a decimal xxh3_64 string, so it never contains the separator: the
+// last one is always the one we appended, even for a task id that contains it.
 const INVOCATION_KEY_SEPARATOR = '|';
