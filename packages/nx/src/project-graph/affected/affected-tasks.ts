@@ -8,6 +8,7 @@ import {
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { projectHasTarget } from '../../utils/project-graph-utils';
 import { FileChange } from '../file-utils';
+import { AUTO_AFFECTED_LOCK_FILES } from '../../plugins/js/lock-file/lock-file';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -27,8 +28,6 @@ export interface AffectedTasksResult {
   affectedTaskIds: Set<string>;
   /** The full, unpruned graph the answer was computed over. */
   taskGraph: TaskGraph;
-  /** taskId -> changed files that matched. Only when `collectMatches`. */
-  matches?: Record<string, string[]>;
   /** Hand to the runner so the survivors are not planned a second time. */
   planningContext?: TaskPlanningContext;
 }
@@ -44,7 +43,6 @@ export interface ComputeAffectedTasksOptions {
   excludeTaskDependencies?: boolean;
   packageJson?: any;
   projectDeletionAffectsAllProjects?: boolean;
-  collectMatches?: boolean;
 }
 
 /**
@@ -138,23 +136,19 @@ export async function computeAffectedTasks(
   );
   const taskIds = Object.keys(taskGraph.tasks);
 
-  // filterAffected already marshalled this graph; reuse it.
+  // marshalGraph is keyed on the graph, so this is the marshal filterAffected
+  // already paid for.
   const graphRef = marshalGraph(projectGraph);
-  const planningContext = createTaskPlanningContext(
-    projectGraph,
-    nxJson,
-    graphRef
-  );
+  const planningContext = createTaskPlanningContext(projectGraph, nxJson);
   const plans = planningContext.planner.getPlansReference(taskIds, taskGraph);
 
-  const fileMatches = nativeAffectedTasks(
-    graphRef,
-    plans,
-    touchedFiles.map((f) => f.file),
-    opts.collectMatches ?? false
+  const own = new Set(
+    nativeAffectedTasks(
+      graphRef,
+      plans,
+      touchedFiles.map((f) => f.file)
+    )
   );
-
-  const own = new Set(fileMatches.affected);
 
   // Which upstream task's outputs each task reads. TaskOutput is excluded from
   // direct file matching (its artifacts are gitignored and unbuilt, so they can
@@ -191,7 +185,6 @@ export async function computeAffectedTasks(
   return {
     affectedTaskIds: propagate(own, taskGraph, producersOf),
     taskGraph,
-    matches: fileMatches.matches ?? undefined,
     // The plans ride along so the hasher can narrow them instead of building
     // its own. Every task it will be asked about is in here, since the pruned
     // graph is a subset of the one planned above.
@@ -267,13 +260,7 @@ function topologicalOrder(taskGraph: TaskGraph): string[] {
 }
 
 const PROJECT_CONFIG_FILES = new Set(['project.json', 'package.json']);
-const LOCK_FILES = new Set([
-  'package-lock.json',
-  'yarn.lock',
-  'pnpm-lock.yaml',
-  'bun.lock',
-  'bun.lockb',
-]);
+const LOCK_FILES = new Set<string>(AUTO_AFFECTED_LOCK_FILES);
 
 /**
  * Projects whose tasks must be seeded because a changed file is invisible to
