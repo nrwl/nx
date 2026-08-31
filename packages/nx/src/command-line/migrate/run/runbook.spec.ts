@@ -96,7 +96,7 @@ describe('renderRunbook', () => {
       "run the command on the dispensed step's `Format command:` line over exactly the files you created or modified; when that line says none, do not run a formatter."
     );
     expect(runbook).toContain(
-      'If this migration itself added or replaced the workspace formatter, run the new one over exactly the files you created or modified instead: `pnpm exec prettier --write --ignore-unknown <paths>` for Prettier, `pnpm exec oxfmt --no-error-on-unmatched-pattern <paths>` for oxfmt.'
+      'If this migration itself added or replaced the workspace formatter, run the new one over exactly the files you created or modified instead: `pnpm exec prettier --write --ignore-unknown <paths>` for Prettier, `pnpm exec oxfmt --no-error-on-unmatched-pattern <paths>` for oxfmt. If you created or modified no files, do not run it.'
     );
   });
 
