@@ -5,12 +5,16 @@ import { MavenAnalysisData, MavenPluginOptions } from './types';
 import { detectMavenExecutable } from '../utils/detect-maven-executable';
 import {
   isCI,
+  killChildOnHostExit,
   killProcessTreeGraceful,
   safeSpawn,
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
 
 const DEFAULT_ANALYSIS_TIMEOUT_SECONDS = isCI() ? 600 : 120;
+// setTimeout silently clamps a delay past the 32-bit signed max to 1ms, which
+// would abort immediately — the opposite of what a large value asks for.
+const MAX_TIMEOUT_MS = 2 ** 31 - 1;
 
 let currentAbortController: AbortController | undefined;
 
@@ -25,12 +29,12 @@ export function cancelPendingMavenAnalysis(): void {
   }
 }
 
-function getAnalysisTimeoutMs(): number {
+export function getAnalysisTimeoutMs(): number {
   const envTimeout = process.env.NX_MAVEN_ANALYSIS_TIMEOUT;
   if (envTimeout) {
     const parsed = Number(envTimeout);
     if (!Number.isNaN(parsed) && parsed > 0) {
-      return parsed * 1000;
+      return Math.min(parsed * 1000, MAX_TIMEOUT_MS);
     }
   }
   return DEFAULT_ANALYSIS_TIMEOUT_SECONDS * 1000;
@@ -108,6 +112,8 @@ export async function runMavenAnalysis(
         cwd: workspaceRoot,
         stdio: 'pipe', // Always use pipe so we can control output
       });
+      // A plugin worker torn down by `nx reset` would otherwise orphan the build.
+      killChildOnHostExit(child);
 
       // On abort, kill the entire process tree and settle immediately — a
       // wedged process that outlives the kill signal would otherwise keep

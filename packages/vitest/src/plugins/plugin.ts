@@ -73,10 +73,7 @@ export interface VitestPluginOptions {
   discoverTestFiles?: 'glob' | 'vitest';
 }
 
-type VitestTargets = Pick<
-  ProjectConfiguration,
-  'targets' | 'metadata' | 'projectType'
->;
+type VitestTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
 /**
  * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
@@ -166,13 +163,12 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
           if (!cached) {
             return { projects: {} };
           }
-          const { projectType, metadata, targets } = cached;
+          const { metadata, targets } = cached;
 
           const project: ProjectConfiguration = {
             root: projectRoot,
             targets,
             metadata,
-            projectType,
           };
 
           return {
@@ -395,7 +391,7 @@ async function buildVitestTargets(
     }
   }
 
-  return { targets, metadata, projectType: 'library' };
+  return { targets, metadata };
 }
 
 async function testTarget(

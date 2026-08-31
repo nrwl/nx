@@ -1,3 +1,5 @@
+import { hashObject } from '../../hasher/file-hasher';
+
 const DAEMON_ENV_REQUIRED_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
   NX_CACHE_PROJECTS_CONFIG: 'false',
@@ -27,7 +29,9 @@ const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   'NX_FORKED_TASK_EXECUTOR',
   'NX_SET_CLI',
   'NX_INVOKED_BY_RUNNER',
-  'NX_LOAD_DOT_ENV_FILES',
+  // NX_LOAD_DOT_ENV_FILES is intentionally NOT excluded: it must reach the
+  // daemon so graph-time dotenv resolution honors the user's opt-out. It is
+  // sent normalized rather than reflected — see normalizedLoadDotEnvFiles.
   'NX_SKIP_NX_CACHE',
   'NX_CACHE_FAILURES',
   'NX_REJECT_UNKNOWN_LOCAL_CACHE',
@@ -60,9 +64,19 @@ const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   'CURSOR_TRACE_ID',
   'COMPOSER_NO_INTERACTION',
   'OPENCODE',
-  'GEMINI_CLI',
   'CODEX_THREAD_ID',
+  'SUPERSET_AGENT_ID',
+  'GEMINI_CLI',
+  'COPILOT_CLI',
   'AI_AGENT',
+
+  // Set per session or per release alongside the detection vars above, so they
+  // churn the daemon's environment across sessions of the same agent. Named
+  // rather than prefix-matched: COPILOT_HOME and COPILOT_GITHUB_TOKEN share the
+  // prefix and are kept on purpose, and CLAUDE_PID is not under CLAUDE_CODE_.
+  'COPILOT_AGENT_SESSION_ID',
+  'COPILOT_CLI_BINARY_VERSION',
+  'CLAUDE_PID',
 
   // Shell mechanics
   '_',
@@ -238,6 +252,38 @@ function isExcludedEnvVar(key: string): boolean {
   return DAEMON_ENV_PREFIX_EXCLUSIONS.some((prefix) => key.startsWith(prefix));
 }
 
+/**
+ * Digest of the client-controlled portion of the daemon env: the vars
+ * `getDaemonEnv` would send, minus the required settings the daemon pins
+ * itself. Skipping those yields the same digest whether the process is a
+ * daemon plugin worker (which has them set) or a daemonless one (which
+ * typically does not).
+ */
+export function hashDaemonClientEnv(): string {
+  const env: Record<string, string> = {};
+  for (const key in process.env) {
+    if (
+      !isExcludedEnvVar(key) &&
+      !Object.hasOwn(DAEMON_ENV_REQUIRED_SETTINGS, key)
+    ) {
+      env[key] = process.env[key];
+    }
+  }
+  env.NX_LOAD_DOT_ENV_FILES = normalizedLoadDotEnvFiles();
+  return hashObject(env);
+}
+
+/**
+ * `NX_LOAD_DOT_ENV_FILES` as its meaning rather than its spelling. `run-command`
+ * stamps `'true'` once the graph exists, so a task child sends it where its
+ * parent sent nothing; every reader outside the task runner treats both alike
+ * (`!== 'false'`). Reflecting the spelling would flip the daemon env on each
+ * alternation and discard the graph cache both ways.
+ */
+function normalizedLoadDotEnvFiles(): 'true' | 'false' {
+  return process.env.NX_LOAD_DOT_ENV_FILES === 'false' ? 'false' : 'true';
+}
+
 export function getDaemonEnv() {
   const env: NodeJS.ProcessEnv = { ...DAEMON_ENV_OVERRIDABLE_SETTINGS };
   for (const key in process.env) {
@@ -245,7 +291,22 @@ export function getDaemonEnv() {
       env[key] = process.env[key];
     }
   }
+  env.NX_LOAD_DOT_ENV_FILES = normalizedLoadDotEnvFiles();
   return Object.assign(env, DAEMON_ENV_REQUIRED_SETTINGS);
+}
+
+let clientEnvGeneration = 0;
+let clientEnvApplySequence = 0;
+let appliedClientEnv: NodeJS.ProcessEnv | undefined;
+
+/**
+ * Count of client env applications that changed at least one variable, in
+ * `process.env` or against the previously applied client env. Digest equality
+ * alone cannot guard a cache write: an env that changed and changed back
+ * mid-pass yields the pass-start digest again, while the count still moves.
+ */
+export function getDaemonClientEnvGeneration(): number {
+  return clientEnvGeneration;
 }
 
 /**
@@ -273,14 +334,35 @@ export function getDaemonSpawnEnv() {
 }
 
 /**
+ * A copy of the env the last `applyDaemonEnvFromClient` call applied, with a
+ * sequence that advances on every call, or `undefined` before the first. For a
+ * caller that let code it ran (a user config, say) write over `process.env`
+ * and has to put the client's env back: the generation cannot tell it an apply
+ * happened, since an apply whose values the config had already written changes
+ * nothing.
+ */
+export function getAppliedDaemonClientEnv():
+  | { sequence: number; env: NodeJS.ProcessEnv }
+  | undefined {
+  return appliedClientEnv
+    ? { sequence: clientEnvApplySequence, env: { ...appliedClientEnv } }
+    : undefined;
+}
+
+/**
  * Without the deletion step, a var set by one client (e.g.
  * `NX_PREFER_NODE_STRIP_TYPES=true` or `JAVA_TOOL_OPTIONS=...` for a single
  * command) would persist in the daemon and leak into every subsequent
  * client's project-graph computation. Deletion skips excluded vars and
  * required settings, which the daemon owns and clients should not control.
+ *
+ * The returned keys are those `process.env` moved on plus those the client's
+ * env moved on since the last applied one: a value a config wrote mid-load can
+ * already match what the next client sends, and the graph computed under the
+ * previous client is stale all the same.
  */
 export function applyDaemonEnvFromClient(newEnv: NodeJS.ProcessEnv): string[] {
-  const changedKeys: string[] = [];
+  const changedKeys = new Set<string>();
   const allKeys = new Set([
     ...Object.keys(process.env),
     ...Object.keys(newEnv),
@@ -289,15 +371,30 @@ export function applyDaemonEnvFromClient(newEnv: NodeJS.ProcessEnv): string[] {
     if (key in newEnv) {
       if (process.env[key] !== newEnv[key]) {
         process.env[key] = newEnv[key];
-        changedKeys.push(key);
+        changedKeys.add(key);
       }
     } else if (
       !isExcludedEnvVar(key) &&
       !Object.hasOwn(DAEMON_ENV_REQUIRED_SETTINGS, key)
     ) {
       delete process.env[key];
-      changedKeys.push(key);
+      changedKeys.add(key);
     }
   }
-  return changedKeys;
+  if (appliedClientEnv) {
+    for (const key of new Set([
+      ...Object.keys(appliedClientEnv),
+      ...Object.keys(newEnv),
+    ])) {
+      if (appliedClientEnv[key] !== newEnv[key]) {
+        changedKeys.add(key);
+      }
+    }
+  }
+  if (changedKeys.size > 0) {
+    clientEnvGeneration++;
+  }
+  clientEnvApplySequence++;
+  appliedClientEnv = { ...newEnv };
+  return [...changedKeys];
 }

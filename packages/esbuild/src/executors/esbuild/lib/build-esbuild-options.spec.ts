@@ -59,13 +59,13 @@ describe('buildEsbuildOptions', () => {
       define: expect.objectContaining({
         'process.env.NODE_ENV': '"test"',
       }),
+      absWorkingDir: context.root,
       entryNames: '[dir]/[name]',
       entryPoints: ['apps/myapp/src/index.ts'],
       format: 'esm',
       platform: 'browser',
       outfile: 'dist/apps/myapp/index.js',
-      tsconfig:
-        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
+      tsconfig: path.join(context.root, 'apps/myapp/tsconfig.app.json'),
       external: [],
       outExtension: {
         '.js': '.js',
@@ -102,13 +102,13 @@ describe('buildEsbuildOptions', () => {
       define: expect.objectContaining({
         'process.env.NODE_ENV': '"test"',
       }),
+      absWorkingDir: context.root,
       entryNames: '[dir]/[name]',
       entryPoints: ['apps/myapp/src/index.ts', 'apps/myapp/src/extra-entry.ts'],
       format: 'esm',
       platform: 'browser',
       outdir: 'dist/apps/myapp',
-      tsconfig:
-        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
+      tsconfig: path.join(context.root, 'apps/myapp/tsconfig.app.json'),
       external: [],
       outExtension: {
         '.js': '.js',
@@ -144,13 +144,13 @@ describe('buildEsbuildOptions', () => {
       define: expect.objectContaining({
         'process.env.NODE_ENV': '"test"',
       }),
+      absWorkingDir: context.root,
       entryNames: '[dir]/[name]',
       entryPoints: ['apps/myapp/src/index.ts'],
       format: 'cjs',
       platform: 'browser',
       outfile: 'dist/apps/myapp/index.cjs',
-      tsconfig:
-        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
+      tsconfig: path.join(context.root, 'apps/myapp/tsconfig.app.json'),
       external: [],
       outExtension: {
         '.js': '.cjs',
@@ -183,13 +183,13 @@ describe('buildEsbuildOptions', () => {
       )
     ).toEqual({
       bundle: true,
+      absWorkingDir: context.root,
       entryNames: '[dir]/[name]',
       entryPoints: ['apps/myapp/src/index.ts'],
       format: 'cjs',
       platform: 'node',
       outfile: 'dist/apps/myapp/index.cjs',
-      tsconfig:
-        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
+      tsconfig: path.join(context.root, 'apps/myapp/tsconfig.app.json'),
       external: [],
       outExtension: {
         '.js': '.cjs',
@@ -226,13 +226,13 @@ describe('buildEsbuildOptions', () => {
       )
     ).toEqual({
       bundle: true,
+      absWorkingDir: context.root,
       entryNames: '[dir]/[name]',
       entryPoints: ['apps/myapp/src/index.ts'],
       format: 'esm',
       platform: 'node',
       outfile: 'dist/apps/myapp/index.mjs',
-      tsconfig:
-        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
+      tsconfig: path.join(context.root, 'apps/myapp/tsconfig.app.json'),
       external: [],
       outExtension: {
         '.js': '.mjs',
@@ -267,13 +267,13 @@ describe('buildEsbuildOptions', () => {
       )
     ).toEqual({
       bundle: true,
+      absWorkingDir: context.root,
       entryNames: '[dir]/[name]',
       entryPoints: ['apps/myapp/src/index.ts'],
       format: 'cjs',
       platform: 'node',
       outfile: 'dist/apps/myapp/index.js',
-      tsconfig:
-        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
+      tsconfig: path.join(context.root, 'apps/myapp/tsconfig.app.json'),
       external: [],
       outExtension: {
         '.js': '.js',
@@ -309,13 +309,13 @@ describe('buildEsbuildOptions', () => {
       )
     ).toEqual({
       bundle: true,
+      absWorkingDir: context.root,
       entryNames: '[dir]/[name]',
       entryPoints: ['apps/myapp/src/index.ts'],
       format: 'esm',
       platform: 'node',
       outfile: 'dist/apps/myapp/index.js',
-      tsconfig:
-        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
+      tsconfig: path.join(context.root, 'apps/myapp/tsconfig.app.json'),
       external: [],
       outExtension: {
         '.js': '.js',
@@ -350,13 +350,13 @@ describe('buildEsbuildOptions', () => {
       )
     ).toEqual({
       bundle: true,
+      absWorkingDir: context.root,
       entryNames: '[dir]/[name]',
       entryPoints: ['apps/myapp/src/index.ts'],
       format: 'esm',
       platform: 'node',
       outfile: 'dist/apps/myapp/index.js',
-      tsconfig:
-        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
+      tsconfig: path.join(context.root, 'apps/myapp/tsconfig.app.json'),
       external: ['bar', 'foo'],
       outExtension: {
         '.js': '.js',
@@ -388,13 +388,13 @@ describe('buildEsbuildOptions', () => {
       )
     ).toEqual({
       bundle: false,
+      absWorkingDir: context.root,
       entryNames: '[dir]/[name]',
       entryPoints: ['apps/myapp/src/index.ts'],
       format: 'esm',
       platform: 'node',
       outdir: 'dist/apps/myapp',
-      tsconfig:
-        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
+      tsconfig: path.join(context.root, 'apps/myapp/tsconfig.app.json'),
       external: undefined,
       outExtension: {
         '.js': '.js',
@@ -427,13 +427,13 @@ describe('buildEsbuildOptions', () => {
       )
     ).toEqual({
       bundle: true,
+      absWorkingDir: context.root,
       entryNames: '[dir]/[name]',
       entryPoints: ['apps/myapp/src/index.ts'],
       format: 'esm',
       platform: 'node',
       outfile: 'dist/apps/myapp/index.js',
-      tsconfig:
-        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
+      tsconfig: path.join(context.root, 'apps/myapp/tsconfig.app.json'),
       external: ['foo', 'baz'],
       outExtension: {
         '.js': '.js',
@@ -468,13 +468,13 @@ describe('buildEsbuildOptions', () => {
       )
     ).toEqual({
       bundle: true,
+      absWorkingDir: context.root,
       entryNames: '[dir]/[name]',
       entryPoints: ['apps/myapp/src/index.ts'],
       format: 'esm',
       platform: 'node',
       outfile: 'dist/apps/myapp/index.js',
-      tsconfig:
-        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
+      tsconfig: path.join(context.root, 'apps/myapp/tsconfig.app.json'),
       external: ['bar', 'foo'],
       outExtension: {
         '.js': '.js',
@@ -508,13 +508,13 @@ describe('buildEsbuildOptions', () => {
       )
     ).toEqual({
       bundle: false,
+      absWorkingDir: context.root,
       entryNames: '[dir]/[name]',
       entryPoints: ['apps/myapp/src/index.ts'],
       format: 'esm',
       platform: 'node',
       outdir: 'dist/apps/myapp',
-      tsconfig:
-        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
+      tsconfig: path.join(context.root, 'apps/myapp/tsconfig.app.json'),
       external: undefined,
       sourcemap: true,
       outExtension: {
@@ -547,13 +547,13 @@ describe('buildEsbuildOptions', () => {
       )
     ).toEqual({
       bundle: false,
+      absWorkingDir: context.root,
       entryNames: '[dir]/[name]',
       entryPoints: ['apps/myapp/src/index.ts'],
       format: 'esm',
       platform: 'node',
       outdir: 'dist/apps/myapp',
-      tsconfig:
-        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
+      tsconfig: path.join(context.root, 'apps/myapp/tsconfig.app.json'),
       external: undefined,
       metafile: undefined,
       minify: undefined,
@@ -588,13 +588,13 @@ describe('buildEsbuildOptions', () => {
       )
     ).toEqual({
       bundle: false,
+      absWorkingDir: context.root,
       entryNames: '[dir]/[name]',
       entryPoints: ['apps/myapp/src/index.ts'],
       format: 'esm',
       platform: 'node',
       outdir: 'dist/apps/myapp',
-      tsconfig:
-        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
+      tsconfig: path.join(context.root, 'apps/myapp/tsconfig.app.json'),
       external: undefined,
       sourcemap: true,
       metafile: undefined,
@@ -630,13 +630,13 @@ describe('buildEsbuildOptions', () => {
       )
     ).toEqual({
       bundle: false,
+      absWorkingDir: context.root,
       entryNames: '[dir]/[name]',
       entryPoints: ['apps/myapp/src/index.ts'],
       format: 'esm',
       platform: 'node',
       outdir: 'dist/apps/myapp',
-      tsconfig:
-        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
+      tsconfig: path.join(context.root, 'apps/myapp/tsconfig.app.json'),
       external: undefined,
       sourcemap: true,
       metafile: undefined,

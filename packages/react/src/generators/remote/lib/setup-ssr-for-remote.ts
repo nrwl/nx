@@ -53,12 +53,12 @@ export async function setupSsrForRemote(
             ),
             mainServer: `./server.ts`,
           },
-          port: Number(options?.devServerPort) || 4200,
+          port: Number(options?.port) || 4200,
           appName,
         }
       : {
           ...options,
-          port: Number(options?.devServerPort) || 4200,
+          port: Number(options?.port) || 4200,
           appName,
           tmpl: '',
           browserBuildOutputPath: project.targets.build?.options?.outputPath,
@@ -94,7 +94,7 @@ export async function setupSsrForRemote(
     executor: 'nx:run-commands',
     defaultConfiguration: 'development',
     options: {
-      command: `PORT=${options.devServerPort ?? 4200} node ${joinPathFragments(
+      command: `PORT=${options.port ?? 4200} node ${joinPathFragments(
         serverOutputPath,
         serverOutputName
       )}`,

@@ -65,9 +65,13 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     };
   }
 
+  const sourceRoot = options.src
+    ? joinPathFragments(options.appProjectRoot, 'src')
+    : options.appProjectRoot;
+
   const project: ProjectConfiguration = {
     root: options.appProjectRoot,
-    sourceRoot: options.appProjectRoot,
+    sourceRoot,
     projectType: 'application',
     targets,
     tags: options.parsedTags,
@@ -88,8 +92,9 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     if (options.projectName !== options.importPath) {
       packageJson.nx = { name: options.projectName };
     }
+    packageJson.nx ??= {};
+    packageJson.nx.sourceRoot = sourceRoot;
     if (options.parsedTags?.length) {
-      packageJson.nx ??= {};
       packageJson.nx.tags = options.parsedTags;
     }
   } else {

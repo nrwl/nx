@@ -8,6 +8,10 @@ packages:
   - 'astro-docs'
   # examples/ contains standalone pnpm workspaces with their own lockfiles
   - 'packages/nx/native-packages/*'
+# pnpm 11 defaults this to "install", so `pnpm run <script>` silently installs -
+# preinstall/postinstall included - when it thinks node_modules drifted. Nx runs
+# script targets through `pnpm run`, so that lands inside unrelated tasks.
+verifyDepsBeforeRun: warn
 minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
   - 'nx'
@@ -57,6 +61,7 @@ catalog:
   gpt3-tokenizer: '^1.1.5'
   http-proxy-middleware: '^3.0.7'
   http-server: '^14.1.0'
+  https-proxy-agent: '^7.0.6'
   jsonc-parser: '^3.2.0'
   minimatch: '10.2.5'
   next-seo: '^5.13.0'

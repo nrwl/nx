@@ -135,7 +135,7 @@ Nx stores two things for each cached task:
 Both are restored transparently. Other tools and scripts see the same files and output as if the task had actually run.
 
 {% aside type="note" title="Where is the cache stored?" %}
-Local cache is stored in `.nx/cache` by default. Run `nx reset` to clear all local cached results. If you've connected to Nx Cloud, remote cache entries are managed separately.
+Local cache is stored in `~/.nx/<id>/cache` by default, shared by every checkout of the workspace. Run `nx reset` to clear all local cached results. If you've connected to Nx Cloud, remote cache entries are managed separately.
 {% /aside %}
 
 ## Inputs and outputs

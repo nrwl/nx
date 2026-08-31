@@ -211,6 +211,11 @@ async function createRspackTargets(
       args: ['--node-env=production'],
       env,
     },
+    configurations: {
+      development: {
+        args: ['--node-env=development'],
+      },
+    },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
     inputs: [

@@ -153,7 +153,11 @@ export async function determineAiAgents(
     return [];
   }
   const detected = detectAiAgentName();
-  if (detected) {
+  // Detection is broader than what the generator can configure — `copilot-cli`
+  // is reported so CNW can switch to agent output, but has no generator branch,
+  // and `copilot` is the VS Code extension, whose branch installs Nx Console.
+  // Mirrors the same guard in nx's `ai/detect-ai-agent.ts`.
+  if (detected && supportedAgents.includes(detected as Agent)) {
     return [detected as Agent];
   }
   return [];

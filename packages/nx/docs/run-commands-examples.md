@@ -90,6 +90,39 @@ or simply with:
 nx run frontend:create-script --name=example
 ```
 
+Keep in mind that any command in the list that does not include interpolation will still have all passed arguments forwarded to it by default. For example, given:
+
+```json
+"create-script": {
+    "executor": "nx:run-commands",
+    "options": {
+        "commands": [
+          "echo {args.name}",
+          "echo done"
+        ],
+        "parallel": false
+    }
+}
+```
+
+running `nx run frontend:create-script --name=example` also appends `--name=example` to the second command, executing `echo done --name=example`. Set `forwardAllArgs` to `false` on the commands that should not receive the arguments:
+
+```json
+"create-script": {
+    "executor": "nx:run-commands",
+    "options": {
+        "commands": [
+          "echo {args.name}",
+          {
+            "command": "echo done",
+            "forwardAllArgs": false
+          }
+        ],
+        "parallel": false
+    }
+}
+```
+
 ##### Arguments forwarding
 
 When interpolation is not present in the command, all arguments are forwarded to the command by default.

@@ -82,6 +82,7 @@ export interface WebpackExecutorOptions {
   crossOrigin?: 'none' | 'anonymous' | 'use-credentials';
   deployUrl?: string;
   extractCss?: boolean;
+  cssModuleHashFunction?: string;
   generateIndexHtml?: boolean;
   index?: string;
   postcssConfig?: string;
