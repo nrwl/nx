@@ -38,6 +38,8 @@ export interface NxArgs {
   select?: string;
   graph?: string | boolean;
   skipNxCache?: boolean;
+  explain?: boolean;
+  json?: boolean;
   skipRemoteCache?: boolean;
   /**
    * The style the user named - CLI flag or `NX_DEFAULT_OUTPUT_STYLE`. Left

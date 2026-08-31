@@ -435,6 +435,19 @@ export interface AffectedOptions {
   workspaceRoot: string
 }
 
+/**
+ * Why the change reached each task. Covers every task it reached, not just
+ * the selection, so a reason naming a producer can be looked up too.
+ */
+export interface AffectedTaskExplanation {
+  /** Consumer -> the reached producers whose outputs it reads. */
+  producersOf: Record<string, Array<string>>
+  /** Changed project configs no longer on disk. Every task was seeded for them. */
+  deletedProjectConfigs: Array<string>
+  /** Per reached task, the changed files and moved packages among its inputs. */
+  inputMatches: Record<string, TaskInputMatches>
+}
+
 export declare function affectedTasks(projectGraph: ExternalObject<ProjectGraph>, hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, taskGraph: TaskGraph, changedFiles: Array<string>, options: AffectedTasksOptions): AffectedTaskSelection
 
 export interface AffectedTaskSelection {
@@ -629,6 +642,13 @@ export declare function expandFilesInput(workspaceRoot: string, globs: Array<str
 
 export declare function expandOutputs(directory: string, entries: Array<string>): Array<string>
 
+/**
+ * Separate from `affected_tasks` because the explanation costs a string per
+ * match and only `--explain` reads it; the selection path stays a membership
+ * test over interned instruction ids.
+ */
+export declare function explainAffectedTasks(projectGraph: ExternalObject<ProjectGraph>, hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, taskGraph: TaskGraph, changedFiles: Array<string>, options: AffectedTasksOptions): AffectedTaskExplanation
+
 export interface ExternalDependenciesInput {
   externalDependencies: Array<string>
 }
@@ -814,6 +834,16 @@ export declare function initializeTelemetry(connection: ExternalObject<NxDbConne
  * session ID from their parent process via env var.
  */
 export declare function initializeTelemetryWithSessionId(sessionId: string, workspaceId: string, userId: string | undefined | null, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): void
+
+/** A changed file that reached a task, and the input pattern it reached it by. */
+export interface InputMatch {
+  file: string
+  /**
+   * The fileset that matched. Absent for an instruction with no pattern to
+   * name, such as the root tsconfig.
+   */
+  pattern?: string
+}
 
 export interface InputsInput {
   input: string
@@ -1159,6 +1189,18 @@ export interface TaskHashDetails {
   implicitDeps?: Record<string, string>
   /** Hash of the runtime environment which the task was executed */
   runtime?: Record<string, string>
+}
+
+/**
+ * What reached one task: the files its filesets matched and the packages it
+ * hashes that moved.
+ */
+export interface TaskInputMatches {
+  files: Array<InputMatch>
+  /** External node names the plan hashes one by one that moved. */
+  packages: Array<string>
+  /** The plan hashes every external dependency, and one moved. */
+  allExternals: boolean
 }
 
 /**
