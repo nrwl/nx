@@ -174,7 +174,8 @@ export class WatcherFailedError extends Error {
 
 /**
  * A framing failure repeats on every redial, so the watcher channels stop
- * re-dialing once this many land back to back without a message in between.
+ * re-dialing once more than this many land back to back without a message in
+ * between.
  */
 const MAX_CONSECUTIVE_FRAMING_FAILURES = 3;
 
