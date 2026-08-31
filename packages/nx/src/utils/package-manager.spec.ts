@@ -1033,6 +1033,19 @@ describe('package-manager', () => {
       );
     });
 
+    it('should return pnpm publish command without scoped registry for pnpm version >= 12.0.0', () => {
+      vi.spyOn(childProcess, 'execSync').mockImplementation((p) => {
+        switch (p) {
+          case 'pnpm --ignore-workspace --version':
+            return '12.0.0';
+        }
+      });
+      const commands = getPackageManagerCommand('pnpm');
+      expect(commands.publish(...publishCmdParam)).toEqual(
+        'pnpm publish "dist/packages/my-pkg" --json --"registry=https://registry.npmjs.org/" --tag=latest --no-git-checks'
+      );
+    });
+
     it('should return pnpm publish command without use scoped registry for pnpm version < 9.15.7', () => {
       vi.spyOn(childProcess, 'execSync').mockImplementation((p) => {
         switch (p) {
