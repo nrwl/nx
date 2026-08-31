@@ -11,12 +11,14 @@ export interface Schema {
   routing?: boolean;
   appProject?: string;
   unitTestRunner: 'jest' | 'vitest' | 'none';
+  inSourceTests?: boolean;
   linter: Linter | LinterType;
   component?: boolean;
   publishable?: boolean;
   /** @deprecated Use bundler instead. */
   buildable?: boolean;
   bundler?: 'none' | 'vite' | 'rollup';
+  compiler?: 'babel' | 'swc';
   importPath?: string;
   js?: boolean;
   globalCss?: boolean;
