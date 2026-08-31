@@ -2181,6 +2181,9 @@ describe('orchestrator', () => {
       expect(block.action).toBe('await-prompt');
       expect(block.payload.instructions).toContain('awaiting your outcome');
       expect(block.payload.instructions).toContain(
+        'Handoff JSON: { "status": "success" | "failed", "summary": "<what you did>" }'
+      );
+      expect(block.payload.instructions).toContain(
         'To mark the prompt not applicable'
       );
       expect(block.payload.instructions).toContain(
@@ -2268,6 +2271,9 @@ describe('orchestrator', () => {
       const block = lastBlock();
       expect(block.action).toBe('await-prompt');
       expect(block.payload.instructions).toContain('awaiting your validation');
+      expect(block.payload.instructions).toContain(
+        'Handoff JSON: { "status": "success" | "failed", "summary": "<what you verified>" }'
+      );
       // A waived validation completes the migration rather than skipping it.
       expect(block.payload.instructions).toContain(
         'If validation does not apply here'

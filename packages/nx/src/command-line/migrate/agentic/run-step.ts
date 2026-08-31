@@ -121,7 +121,12 @@ export async function runAgenticPromptStep(
     nxInvocation: getRunNxBaseCommand(pmCommand, root),
     mode,
     pmExec: pmCommand.exec,
-    formatCommand: resolveFormatCommand(root, pmCommand.exec),
+    // Validation prompts carry no format rule, so don't probe the workspace
+    // (detectFormatter can warn) for a command the prompt would discard.
+    formatCommand:
+      mode === 'generic-validation'
+        ? null
+        : resolveFormatCommand(root, pmCommand.exec),
   });
 
   let userPrompt: string;

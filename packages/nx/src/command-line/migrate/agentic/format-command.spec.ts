@@ -1,6 +1,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
+import { resetFormatterWarningsForTesting } from '../../../utils/formatters';
 import { resolveFormatCommand } from './format-command';
 
 describe('resolveFormatCommand', () => {
@@ -8,6 +9,8 @@ describe('resolveFormatCommand', () => {
 
   beforeEach(() => {
     root = mkdtempSync(join(tmpdir(), 'nx-format-command-'));
+    // The both-configured warning is warn-once module state.
+    resetFormatterWarningsForTesting();
   });
 
   afterEach(() => {
@@ -31,6 +34,17 @@ describe('resolveFormatCommand', () => {
 
     expect(resolveFormatCommand(root, 'npx')).toBe(
       'npx oxfmt --no-error-on-unmatched-pattern <paths>'
+    );
+  });
+
+  it('falls back to a formatter declared as a root dependency when no config exists', () => {
+    writeFileSync(
+      join(root, 'package.json'),
+      JSON.stringify({ devDependencies: { prettier: '^3.0.0' } })
+    );
+
+    expect(resolveFormatCommand(root, 'npx')).toBe(
+      'npx prettier --write --ignore-unknown <paths>'
     );
   });
 });
