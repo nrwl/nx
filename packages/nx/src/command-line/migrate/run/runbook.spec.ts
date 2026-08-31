@@ -29,7 +29,7 @@ describe('renderRunbook', () => {
   it('describes the loop against the step block the orchestrator emits', () => {
     const runbook = renderRunbook(buildContext());
 
-    expect(runbook).toContain('`<nx_migrate_step>`');
+    expect(runbook).toContain('`nx_migrate_step`');
     expect(runbook).toContain(
       'until the orchestrator reports the run `complete`'
     );
@@ -128,7 +128,7 @@ describe('renderRunbook', () => {
     const runbook = renderRunbook(buildContext());
 
     expect(runbook).toContain(
-      "If a step's `<nx_migrate_prompt>` block is no longer in your context"
+      "If a step's `nx_migrate_prompt` block is no longer in your context"
     );
     expect(runbook).toContain('re-emits it');
   });
@@ -165,15 +165,16 @@ describe('renderRunbook', () => {
     }
   );
 
-  it('never renders a line an agent block parser could take for a block boundary', () => {
-    // The emitter neutralizes such lines, but byte-parity between the stored
-    // file and the emitted block depends on the renderer never producing one.
+  it('never renders the literal tag sequence the emitter neutralizes', () => {
+    // The emitter escapes every `<` opening or closing an `<nx_migrate_*>`
+    // tag, so byte-parity between the stored file and the emitted block
+    // depends on the renderer never producing the sequence at all.
     for (const validate of [true, false]) {
       for (const createCommits of [true, false]) {
         const runbook = renderRunbook(
           buildContext({ validate, createCommits })
         );
-        expect(/^\s*<\/?nx_migrate_/m.test(runbook)).toBe(false);
+        expect(/<\/?nx_migrate_/i.test(runbook)).toBe(false);
       }
     }
   });
