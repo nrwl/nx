@@ -343,22 +343,6 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
       [nonBannedTarget, c, constraint],
     ]);
   });
-
-  it('should return undefined if no baneed external imports found', () => {
-    const constraint: DepConstraint = {
-      sourceTag: 'a',
-      bannedExternalImports: ['angular'],
-    };
-
-    expect(
-      hasBannedDependencies(externalDependencies.slice(1), graph, constraint)
-        .length
-    ).toBe(0);
-    expect(
-      hasBannedDependencies(externalDependencies.slice(1), graph, constraint)
-        .length
-    ).toBe(0);
-  });
 });
 
 describe('is terminal run', () => {

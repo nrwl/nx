@@ -267,19 +267,22 @@ export function getSourceFilePath(sourceFileName: string, projectPath: string) {
 function isConstraintBanningProject(
   externalProject: ProjectGraphExternalNode,
   constraint: DepConstraint,
-  imp: string
+  importSpecifier: string
 ): boolean {
   const { allowedExternalImports, bannedExternalImports } = constraint;
   const { packageName } = externalProject.data;
 
-  if (imp !== packageName && !imp.startsWith(`${packageName}/`)) {
+  if (
+    importSpecifier !== packageName &&
+    !importSpecifier.startsWith(`${packageName}/`)
+  ) {
     return false;
   }
 
   /* Check if import is banned... */
   if (
     bannedExternalImports?.some((importDefinition) =>
-      mapGlobToRegExp(importDefinition).test(imp)
+      mapGlobToRegExp(importDefinition).test(importSpecifier)
     )
   ) {
     return true;
@@ -288,8 +291,8 @@ function isConstraintBanningProject(
   /* ... then check if there is a whitelist and if there is a match in the whitelist.  */
   return allowedExternalImports?.every(
     (importDefinition) =>
-      !imp.startsWith(packageName) ||
-      !mapGlobToRegExp(importDefinition).test(imp)
+      !importSpecifier.startsWith(packageName) ||
+      !mapGlobToRegExp(importDefinition).test(importSpecifier)
   );
 }
 
