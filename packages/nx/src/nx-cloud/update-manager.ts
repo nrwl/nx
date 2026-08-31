@@ -98,6 +98,7 @@ export async function verifyOrUpdateNxCloudClient(options?: {
         throw new NxCloudEnterpriseOutdatedError(apiUrl);
       }
 
+      markBundleInUse(currentBundle.version);
       const nxCloudClient = require(currentBundle.fullPath);
       if (nxCloudClient.commands === undefined) {
         throw new NxCloudEnterpriseOutdatedError(apiUrl);
@@ -112,6 +113,7 @@ export async function verifyOrUpdateNxCloudClient(options?: {
     if (verifyBundleResponse.data.valid) {
       debugLog('Currently installed bundle is valid');
       writeBundleVerificationLock();
+      markBundleInUse(currentBundle.version);
       return {
         version: currentBundle.version,
         nxCloudClient: require(currentBundle.fullPath),
@@ -139,6 +141,7 @@ export async function verifyOrUpdateNxCloudClient(options?: {
 
     debugLog('Done: ', fullPath);
 
+    markBundleInUse(version);
     const nxCloudClient = require(fullPath);
 
     if (nxCloudClient.commands === undefined) {
@@ -153,6 +156,7 @@ export async function verifyOrUpdateNxCloudClient(options?: {
 
   debugLog('Done: ', currentBundle.fullPath);
 
+  markBundleInUse(currentBundle.version);
   return {
     version: currentBundle.version,
     nxCloudClient: require(currentBundle.fullPath),
@@ -196,6 +200,55 @@ export function getBundleInstallDefaultLocation() {
 
 const runnerBundleInstallDirectory = getBundleInstallDefaultLocation();
 
+// Held (never unlocked) for the lifetime of the process so that cleanup in
+// other processes can tell the bundle is still in use — the light client keeps
+// requiring files from its directory long after this module returns. The
+// kernel releases the locks when the process exits. Module-level so the
+// FileLock objects are never garbage collected, which would drop the flock.
+const inUseMarkers = new Map<string, InstanceType<typeof FileLock>>();
+
+function markBundleInUse(version: string): void {
+  if (IS_WASM || inUseMarkers.has(version)) {
+    return;
+  }
+  const markerPath = join(
+    runnerBundleInstallDirectory,
+    `.in-use-${version}-${process.pid}.lock`
+  );
+  // Cleanup in another process can unlink an unlocked marker between the
+  // FileLock constructor and lock(), leaving this lock on a deleted inode
+  // that no other process can see; retry until the locked file is on disk.
+  while (true) {
+    const marker = new FileLock(markerPath);
+    marker.lock();
+    if (existsSync(markerPath)) {
+      inUseMarkers.set(version, marker);
+      return;
+    }
+    marker.unlock();
+  }
+}
+
+function isBundleInUse(version: string): boolean {
+  if (IS_WASM) {
+    return false;
+  }
+  const markerPrefix = `.in-use-${version}-`;
+  for (const fileName of readdirSync(runnerBundleInstallDirectory)) {
+    if (!fileName.startsWith(markerPrefix)) {
+      continue;
+    }
+    const markerPath = join(runnerBundleInstallDirectory, fileName);
+    if (new FileLock(markerPath).locked) {
+      return true;
+    }
+    // Unlocked marker means its process died; remove it so it doesn't
+    // accumulate.
+    rmSync(markerPath, { force: true });
+  }
+  return false;
+}
+
 function getLatestInstalledRunnerBundle(): CloudBundleInstall | null {
   if (!existsSync(runnerBundleInstallDirectory)) {
     mkdirSync(runnerBundleInstallDirectory, { recursive: true });
@@ -224,6 +277,11 @@ function getLatestInstalledRunnerBundle(): CloudBundleInstall | null {
       return null;
     }
 
+    // Multiple bundles can coexist while an older one is still in use by a
+    // running process; the most recently installed one is the one to run.
+    installedBundles.sort(
+      (a, b) => statSync(b.fullPath).mtimeMs - statSync(a.fullPath).mtimeMs
+    );
     return installedBundles[0];
   } catch (e: any) {
     console.log('Could not read runner bundle path:', e.message);
@@ -453,10 +511,13 @@ function removeOldClientBundles(currentInstallVersion: string) {
     const fileOrFolderPath = join(runnerBundleInstallDirectory, fileOrFolder);
 
     // Only directories are bundles. The lock files must survive: a lock on a
-    // deleted file no longer excludes processes that reopen the path.
+    // deleted file no longer excludes processes that reopen the path. A
+    // bundle another live process is running from must survive too — deleting
+    // it breaks that process's lazy requires.
     if (
       fileOrFolder !== currentInstallVersion &&
-      statSync(fileOrFolderPath).isDirectory()
+      statSync(fileOrFolderPath).isDirectory() &&
+      !isBundleInUse(fileOrFolder)
     ) {
       rmSync(fileOrFolderPath, { recursive: true });
     }
