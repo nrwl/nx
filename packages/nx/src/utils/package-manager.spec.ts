@@ -1020,31 +1020,37 @@ describe('package-manager', () => {
       );
     });
 
-    it('should return pnpm publish command with scoped registry when provided for pnpm version >= 9.15.7 < 10.0.0 || >= 10.5.0', () => {
-      vi.spyOn(childProcess, 'execSync').mockImplementation((p) => {
-        switch (p) {
-          case 'pnpm --ignore-workspace --version':
-            return '9.15.7';
-        }
-      });
-      const commands = getPackageManagerCommand('pnpm');
-      expect(commands.publish(...publishCmdParam)).toEqual(
-        'pnpm publish "dist/packages/my-pkg" --json --"@org:registry=https://registry.npmjs.org/" --tag=latest --no-git-checks'
-      );
-    });
+    it.each(['9.15.7', '10.5.0', '10.99.0'])(
+      'should return pnpm publish command with scoped registry when provided for pnpm version %s',
+      (pnpmVersion) => {
+        vi.spyOn(childProcess, 'execSync').mockImplementation((p) => {
+          switch (p) {
+            case 'pnpm --ignore-workspace --version':
+              return pnpmVersion;
+          }
+        });
+        const commands = getPackageManagerCommand('pnpm');
+        expect(commands.publish(...publishCmdParam)).toEqual(
+          'pnpm publish "dist/packages/my-pkg" --json --"@org:registry=https://registry.npmjs.org/" --tag=latest --no-git-checks'
+        );
+      }
+    );
 
-    it('should return pnpm publish command without scoped registry for pnpm version >= 12.0.0', () => {
-      vi.spyOn(childProcess, 'execSync').mockImplementation((p) => {
-        switch (p) {
-          case 'pnpm --ignore-workspace --version':
-            return '12.0.0';
-        }
-      });
-      const commands = getPackageManagerCommand('pnpm');
-      expect(commands.publish(...publishCmdParam)).toEqual(
-        'pnpm publish "dist/packages/my-pkg" --json --"registry=https://registry.npmjs.org/" --tag=latest --no-git-checks'
-      );
-    });
+    it.each(['11.0.0', '12.1.0'])(
+      'should return pnpm publish command with config-scoped registry for pnpm version %s',
+      (pnpmVersion) => {
+        vi.spyOn(childProcess, 'execSync').mockImplementation((p) => {
+          switch (p) {
+            case 'pnpm --ignore-workspace --version':
+              return pnpmVersion;
+          }
+        });
+        const commands = getPackageManagerCommand('pnpm');
+        expect(commands.publish(...publishCmdParam)).toEqual(
+          'pnpm publish "dist/packages/my-pkg" --json --"config.@org:registry=https://registry.npmjs.org/" --tag=latest --no-git-checks'
+        );
+      }
+    );
 
     it('should return pnpm publish command without use scoped registry for pnpm version < 9.15.7', () => {
       vi.spyOn(childProcess, 'execSync').mockImplementation((p) => {
