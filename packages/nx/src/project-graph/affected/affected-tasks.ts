@@ -266,7 +266,7 @@ export async function selectAffectedTasks(
     nxJson,
     packageJson
   );
-  const namedProjects = new Set(dependencies.projects);
+  const namedProjects = new Set(dependencies.projects.map((t) => t.project));
   const projects =
     readProjectsConfigurationFromProjectGraph(projectGraph).projects;
   const selection = nativeAffectedTasks(
@@ -391,6 +391,6 @@ function dependencyChanges(
     changedExternalTypes: [
       ...new Set(changes.flatMap((c) => c.changedExternalTypes)),
     ],
-    projects: [...new Set(changes.flatMap((c) => c.projects))],
+    projects: changes.flatMap((c) => c.projects),
   };
 }

@@ -3,7 +3,17 @@ import { ProjectGraph } from '../../../../config/project-graph';
 import { jsonDiff, JsonDiffType } from '../../../../utils/json-diff';
 import { logger } from '../../../../utils/logger';
 import { WholeFileChange } from '../../../../project-graph/file-utils';
-import { getTouchedNpmPackages } from './npm-packages';
+import type { TouchedProject } from '../../../../project-graph/affected/affected-reasons';
+import { getTouchedNpmPackages as locategetTouchedNpmPackages } from './npm-packages';
+// These specs assert *which* projects a locator selects. The locator now returns
+// a reason per project, so unwrap to names here rather than restating 70-odd
+// assertions; the reasons themselves are covered in affected-reasons.spec.ts.
+const getTouchedNpmPackages = (
+  ...args: Parameters<typeof locategetTouchedNpmPackages>
+) =>
+  (locategetTouchedNpmPackages(...args) as TouchedProject[]).map(
+    (t) => t.project
+  );
 
 describe('getTouchedNpmPackages', () => {
   let projectsConfigurations;

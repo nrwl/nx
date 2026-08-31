@@ -6,11 +6,31 @@ import {
 } from '../../../../utils/json-diff';
 import { getRootTsConfigFileName } from '../../utils/typescript';
 import { TouchedProjectLocator } from '../../../../project-graph/affected/affected-project-graph-models';
+import type { TouchedProject } from '../../../../project-graph/affected/affected-reasons';
 import { ProjectGraphProjectNode } from '../../../../config/project-graph';
 
 export const getTouchedProjectsFromTsConfig: TouchedProjectLocator<
   WholeFileChange | JsonChange
-> = (touchedFiles, _a, _b, _c, graph): string[] => {
+> = (touchedFiles, a, b, c, graph): TouchedProject[] => {
+  const rootTsConfig = getRootTsConfigFileName();
+  return locateTouchedProjectsFromTsConfig(touchedFiles, a, b, c, graph).map(
+    (project) => ({
+      project,
+      kind: 'tsconfig' as const,
+      file: rootTsConfig ?? undefined,
+    })
+  );
+};
+
+const locateTouchedProjectsFromTsConfig = (
+  touchedFiles: Parameters<
+    TouchedProjectLocator<WholeFileChange | JsonChange>
+  >[0],
+  _a: Parameters<TouchedProjectLocator>[1],
+  _b: Parameters<TouchedProjectLocator>[2],
+  _c: Parameters<TouchedProjectLocator>[3],
+  graph: Parameters<TouchedProjectLocator>[4]
+): string[] => {
   const rootTsConfig = getRootTsConfigFileName();
   if (!rootTsConfig) {
     return [];

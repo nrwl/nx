@@ -21,7 +21,34 @@ use crate::native::types::NxJson;
 /// below would not reflect. Never hold one of these on a `#[napi]` struct — it
 /// keeps an event-loop reference and the host never exits.
 pub type JsLocator =
-    ThreadsafeFunction<Vec<String>, Promise<Vec<String>>, Vec<String>, Status, false>;
+    ThreadsafeFunction<Vec<String>, Promise<Vec<TouchedProject>>, Vec<String>, Status, false>;
+
+/// One locator's finding: a project, and enough about the signal to explain it.
+///
+/// `kind` is a discriminant the TypeScript side narrows on; the payload fields
+/// are populated per kind rather than modelled as a union, because napi objects
+/// carry no tag. A locator that cannot attribute a single file leaves `file`
+/// unset rather than inventing one.
+#[napi(object)]
+#[derive(Clone, Debug)]
+pub struct TouchedProject {
+    pub project: String,
+    pub kind: String,
+    /// The changed file that triggered it, when one file is responsible.
+    pub file: Option<String>,
+    /// The `{workspaceRoot}` fileset or plugin glob that matched, when the
+    /// signal came from a pattern rather than from ownership.
+    pub pattern: Option<String>,
+}
+
+/// A changed file the project owns, by root.
+pub const KIND_PROJECT_FILE: &str = "project-file";
+/// A `{workspaceRoot}` fileset a target declares as an input.
+pub const KIND_IMPLICIT_DEPENDENCY: &str = "implicit-dependency";
+/// `nx.json`, which can restructure the task graph, so every project is marked.
+pub const KIND_WORKSPACE_CONFIGURATION: &str = "workspace-configuration";
+/// A project config that no longer exists on disk, so its project is gone.
+pub const KIND_DELETED_PROJECT_CONFIGURATION: &str = "deleted-project-configuration";
 
 #[napi(object)]
 pub struct AffectedOptions {
@@ -43,12 +70,12 @@ pub async fn locate_touched_projects(
     nx_json: NxJson,
     touched_files: Vec<String>,
     options: AffectedOptions,
-    #[napi(ts_arg_type = "Array<(files: string[]) => Promise<string[]>>")] js_locators: Vec<
+    #[napi(ts_arg_type = "Array<(files: string[]) => Promise<TouchedProject[]>>")] js_locators: Vec<
         JsLocator,
     >,
-) -> Result<Vec<String>> {
+) -> Result<Vec<TouchedProject>> {
     let graph = Arc::clone(project_graph);
-    let mut touched: Vec<String> = Vec::new();
+    let mut touched: Vec<TouchedProject> = Vec::new();
 
     touched.extend(touched_projects(&graph, &touched_files));
     touched.extend(implicitly_touched_projects(
@@ -78,6 +105,9 @@ pub fn directly_touched_projects(
     touched_files: Vec<String>,
 ) -> Vec<String> {
     touched_projects(project_graph, &touched_files)
+        .into_iter()
+        .map(|touched| touched.project)
+        .collect()
 }
 
 /// Sorted, because `ProjectGraph.nodes` is a `HashMap` and callers surface this
@@ -87,4 +117,30 @@ pub(super) fn all_project_names(graph: &ProjectGraph) -> Vec<String> {
     let mut names: Vec<String> = graph.nodes.keys().cloned().collect();
     names.sort();
     names
+}
+
+/// Every project, each carrying the same reason. Used by the two blanket
+/// triggers, where the signal is workspace-wide rather than project-specific.
+pub(super) fn all_projects_touched_by(
+    graph: &ProjectGraph,
+    kind: &str,
+    file: Option<&String>,
+    pattern: Option<&str>,
+) -> Vec<TouchedProject> {
+    all_project_names(graph)
+        .into_iter()
+        .map(|project| TouchedProject {
+            project,
+            kind: kind.to_string(),
+            file: file.cloned(),
+            pattern: pattern.map(String::from),
+        })
+        .collect()
+}
+
+/// The locator tests assert *which* projects are marked, so each shadows its
+/// locator with a wrapper through this. Reasons get their own tests.
+#[cfg(test)]
+pub(super) fn names(touched: Vec<TouchedProject>) -> Vec<String> {
+    touched.into_iter().map(|t| t.project).collect()
 }

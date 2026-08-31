@@ -6,6 +6,9 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { FileChange, isDeletedFile } from '../file-utils';
 import { getTouchedProjects as getJSTouchedProjects } from '../../plugins/js/project-graph/affected/touched-projects';
 import { transformProjectGraphForLocators } from '../../native/transform-objects';
+import type { TouchedProject } from './affected-reasons';
+
+export type { TouchedProject };
 
 /** Runs every locator and returns what each one marked, duplicates included. */
 export async function runTouchedProjectLocators(
@@ -14,8 +17,8 @@ export async function runTouchedProjectLocators(
   nxJson: NxJsonConfiguration,
   packageJson?: any,
   projectDeletionAffectsAllProjects = true
-): Promise<string[]> {
-  return locateTouchedProjects(
+): Promise<TouchedProject[]> {
+  const native = await locateTouchedProjects(
     transformProjectGraphForLocators(graph),
     nxJson,
     touchedFiles.map((f) => f.file),
@@ -42,6 +45,9 @@ export async function runTouchedProjectLocators(
         ),
     ]
   );
+  // `kind` crosses napi as a bare string; the values are our own Rust
+  // constants, so this narrows rather than converts.
+  return native as TouchedProject[];
 }
 
 /** Resolved here because the native side takes the patterns, not the plugins. */

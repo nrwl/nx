@@ -14,13 +14,15 @@ export async function filterAffected(
   projectDeletionAffectsAllProjects = true
 ): Promise<ProjectGraph> {
   performance.mark('locateTouchedProjects:start');
-  const touchedProjects = await runTouchedProjectLocators(
-    graph,
-    touchedFiles,
-    nxJson,
-    packageJson,
-    projectDeletionAffectsAllProjects
-  );
+  const touchedProjects = (
+    await runTouchedProjectLocators(
+      graph,
+      touchedFiles,
+      nxJson,
+      packageJson,
+      projectDeletionAffectsAllProjects
+    )
+  ).map((t) => t.project);
   performance.mark('locateTouchedProjects:end');
   performance.measure(
     'locateTouchedProjects',
