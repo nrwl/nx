@@ -87,6 +87,13 @@ type MigrationDefinition<T> = {
   postTargetTransformer: PostTargetTransformer;
   skipProjectFilter?: SkipProjectFilter;
   skipTargetFilter?: SkipTargetFilter;
+  /**
+   * Let several targets of a project map different target names through the
+   * same plugin option (last write wins) instead of keeping the later targets
+   * executor-based. Only for migrations that reconcile the resulting
+   * registration afterwards, like the detox one.
+   */
+  allowSharedOptionOverwrite?: boolean;
 };
 
 /**
@@ -259,7 +266,7 @@ export function collectMigrationScope<T>(
               existing?.[option] !== undefined &&
               !isDeepEqual(existing[option], inferenceOptions[option])
           );
-          if (takenOption) {
+          if (takenOption && !migration.allowSharedOptionOverwrite) {
             const errorMsg = `The ${targetName} target on project "${projectName}" cannot be migrated. The "${takenOption}" plugin option is already set to "${existing[takenOption]}" by another target of the project, and the plugin can only infer one target per option.`;
             if (specificProjectToMigrate) {
               throw new Error(errorMsg);
@@ -1494,6 +1501,7 @@ export async function migrateProjectExecutorsToPlugin<T>(
     postTargetTransformer: PostTargetTransformer;
     skipProjectFilter?: SkipProjectFilter;
     skipTargetFilter?: SkipTargetFilter;
+    allowSharedOptionOverwrite?: boolean;
   }>,
   specificProjectToMigrate?: string,
   logger?: typeof devkitLogger
@@ -1525,6 +1533,7 @@ export async function migrateProjectExecutorsToPluginV1<T>(
     postTargetTransformer: PostTargetTransformer;
     skipProjectFilter?: SkipProjectFilter;
     skipTargetFilter?: SkipTargetFilter;
+    allowSharedOptionOverwrite?: boolean;
   }>,
   specificProjectToMigrate?: string
 ): Promise<Map<string, Record<string, string>>> {
@@ -2335,6 +2344,7 @@ async function migrateProjects<T>(
     postTargetTransformer: PostTargetTransformer;
     skipProjectFilter?: SkipProjectFilter;
     skipTargetFilter?: SkipTargetFilter;
+    allowSharedOptionOverwrite?: boolean;
   }>,
   specificProjectToMigrate?: string,
   logger?: typeof devkitLogger

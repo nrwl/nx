@@ -364,6 +364,36 @@ describe('collectMigrationScope (Phase 0)', () => {
     ).toThrow('The skiptest target on project "app1" cannot be migrated.');
   });
 
+  it('lets a second target overwrite a shared plugin option when the migration allows it', () => {
+    ctx = setupFixture('collect-scope-option-overwrite');
+    addExecutorProject(ctx, { name: 'app1', root: 'app1', targetName: 'test' });
+    addSecondExecutorTarget(ctx, 'app1', 'skiptest');
+    const warn = jest.fn();
+
+    const scope = collectMigrationScope(
+      ctx.tree,
+      ctx.projectGraph,
+      syntheticMigrations().map((migration) => ({
+        ...migration,
+        allowSharedOptionOverwrite: true,
+      })),
+      { targetName: 'build' },
+      undefined,
+      { warn } as any
+    );
+
+    expect(scope.executorScopes[0].targetAndProjects).toEqual(
+      new Map([
+        ['test', new Set(['app1'])],
+        ['skiptest', new Set(['app1'])],
+      ])
+    );
+    expect(scope.pluginOptionsByProject.get('app1')).toEqual({
+      targetName: 'skiptest',
+    });
+    expect(warn).not.toHaveBeenCalled();
+  });
+
   it('throws (not warns) when a specific project cannot be migrated', () => {
     ctx = setupFixture('collect-scope-throw');
     addExecutorProject(ctx, {

@@ -46,6 +46,9 @@ export async function convertToInferred(tree: Tree, options: Schema) {
         targetPluginOptionMapper: (targetName) => ({
           buildTargetName: targetName, // We should use "build" instead of "build-ios" or "build-android". We'll handle this later.
         }),
+        // Both platform targets map to buildTargetName; the registrations are
+        // rewritten to the generic "build" below.
+        allowSharedOptionOverwrite: true,
       },
       {
         executors: ['@nx/detox:test'],
@@ -56,6 +59,9 @@ export async function convertToInferred(tree: Tree, options: Schema) {
         targetPluginOptionMapper: (targetName) => ({
           testTargetName: targetName, // We should use "test" instead of "test-ios" or "test-android". We'll handle this later.
         }),
+        // Both platform targets map to testTargetName; the registrations are
+        // rewritten to the generic "test" below.
+        allowSharedOptionOverwrite: true,
       },
     ],
     options.project
