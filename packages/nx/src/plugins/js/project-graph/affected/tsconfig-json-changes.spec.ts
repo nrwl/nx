@@ -1,6 +1,16 @@
 import { WholeFileChange } from '../../../../project-graph/file-utils';
 import { jsonDiff } from '../../../../utils/json-diff';
-import { getTouchedProjectsFromTsConfig } from './tsconfig-json-changes';
+import type { TouchedProject } from '../../../../project-graph/affected/affected-reasons';
+import { getTouchedProjectsFromTsConfig as locategetTouchedProjectsFromTsConfig } from './tsconfig-json-changes';
+// These specs assert *which* projects a locator selects. The locator now returns
+// a reason per project, so unwrap to names here rather than restating 70-odd
+// assertions; the reasons themselves are covered in affected-reasons.spec.ts.
+const getTouchedProjectsFromTsConfig = (
+  ...args: Parameters<typeof locategetTouchedProjectsFromTsConfig>
+) =>
+  (locategetTouchedProjectsFromTsConfig(...args) as TouchedProject[]).map(
+    (t) => t.project
+  );
 import * as tsUtils from '../../utils/typescript';
 import { DependencyType, ProjectGraph } from '../../../../config/project-graph';
 
