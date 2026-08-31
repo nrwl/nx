@@ -111,6 +111,14 @@
                 "message": "Please default to native fetch instead of 'node-fetch'."
               },
               {
+                "name": "chalk",
+                "message": "Please use `picocolors` in place of `chalk` for rendering terminal colors"
+              },
+              {
+                "name": "fs-extra",
+                "message": "Please use native functionality in place of `fs-extra` for file-system interaction"
+              },
+              {
                 "name": "@nx/workspace"
               },
               {
@@ -130,7 +138,7 @@
                 "allowTypeImports": true
               },
               {
-                "group": ["./**/*"],
+                "group": [".", "..", "./**", "../**"],
                 "message": "Inline functions instead of importing relative files. Relative files are not available in dist.",
                 "allowTypeImports": true
               },
@@ -140,7 +148,7 @@
                 "allowTypeImports": true
               },
               {
-                "group": ["nx/**/*"],
+                "group": ["nx", "nx/**/*"],
                 "message": "Do not import Nx package.",
                 "allowTypeImports": true
               }
