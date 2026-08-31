@@ -279,6 +279,10 @@ describe('convert-to-inferred', () => {
     const projectConfig = readProjectConfiguration(tree, project.name);
 
     expect(rnPlugin).toBeDefined();
+    expect(rnPlugin.options).toMatchObject({
+      startTargetName: 'start',
+      syncDepsTargetName: 'sync-deps',
+    });
     expect(projectConfig.targets).toEqual({
       'bundle-android': {
         executor: '@nx/react-native:bundle',

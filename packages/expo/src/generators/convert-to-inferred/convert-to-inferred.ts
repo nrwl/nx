@@ -95,6 +95,11 @@ export async function convertToInferred(tree: Tree, options: Schema) {
           migrationLogs,
           processRunOptions
         ),
+        skipTargetFilter: (targetOptions) =>
+          targetOptions.platform === 'ios' ||
+          targetOptions.platform === 'android'
+            ? false
+            : 'Set the "platform" option to "ios" or "android" before migrating this target.',
         targetPluginOptionMapper: (targetName) => {
           // Assumption: There are no targets with the same name but different platforms.
           // Most users will likely keep the `run-ios` and `run-android` target names that are generated.
