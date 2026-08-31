@@ -217,8 +217,7 @@ mod tests {
                 &g,
                 vec![HashInstruction::ProjectFileSet(
                     "a".into(),
-                    strings(&["libs/a/**/*.ts"])
-                , false)],
+                    strings(&["libs/a/**/*.ts"]), false)],
                 &["libs/a/src/deleted.ts"]
             ),
             vec!["a:build"]
