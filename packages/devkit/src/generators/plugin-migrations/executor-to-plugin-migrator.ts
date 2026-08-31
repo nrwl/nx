@@ -174,6 +174,12 @@ export function collectMigrationScope<T>(
 ): MigrationScope<T> {
   const log = logger ?? devkitLogger;
   const pluginOptionsByProject = new Map<string, T>();
+  // Same content as pluginOptionsByProject, accumulated in walk order so the
+  // conflict check below sees options claimed by earlier targets.
+  // pluginOptionsByProject itself is populated in the grouping loop to keep
+  // its target-grouped insertion order, which addPluginRegistrations turns
+  // into the registration order in nx.json.
+  const claimedOptionsByProject = new Map<string, T>();
   const executorScopes: ExecutorScope<T>[] = [];
   const optionSetGroupsByKey = new Map<string, InferenceOptionSet<T>>();
 
@@ -247,7 +253,7 @@ export function collectMigrationScope<T>(
 
           // One registration cannot map different target names through the
           // same option
-          const existing = pluginOptionsByProject.get(projectName);
+          const existing = claimedOptionsByProject.get(projectName);
           const takenOption = Object.keys(inferenceOptions).find(
             (option) =>
               existing?.[option] !== undefined &&
@@ -263,7 +269,7 @@ export function collectMigrationScope<T>(
             );
             return;
           }
-          pluginOptionsByProject.set(projectName, {
+          claimedOptionsByProject.set(projectName, {
             ...(existing ?? ({} as T)),
             ...inferenceOptions,
           } as T);
@@ -294,6 +300,10 @@ export function collectMigrationScope<T>(
           optionSetGroup.migratedRoots.add(
             projectGraph.nodes[project].data.root
           );
+          pluginOptionsByProject.set(project, {
+            ...(pluginOptionsByProject.get(project) ?? ({} as T)),
+            ...inferenceOptions,
+          } as T);
         }
       }
 
