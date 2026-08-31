@@ -224,7 +224,11 @@ function getServeModeAllowedHosts(
       '*.localhost',
       '127.0.0.1',
       '[::1]',
-      devServer.host,
+      // The engine matches against the request URL hostname, which brackets
+      // IPv6 literals: a `::` bind address arrives as `[::]`.
+      devServer.host.includes(':') && !devServer.host.startsWith('[')
+        ? `[${devServer.host}]`
+        : devServer.host,
     ])
   );
 }

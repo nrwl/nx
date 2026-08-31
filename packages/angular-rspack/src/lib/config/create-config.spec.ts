@@ -544,6 +544,45 @@ describe('createConfig', () => {
     }
   }, 10000);
 
+  it.each([
+    ['0.0.0.0', ['0.0.0.0']],
+    ['::', ['[::]']],
+    ['[::]', ['[::]']],
+    ['fe80::1', ['[fe80::1]']],
+    ['host.docker.internal', ['host.docker.internal']],
+    ['192.168.1.10', ['192.168.1.10']],
+  ] as [string, string[]][])(
+    'should seed the engine allowlist with the dev-server host "%s"',
+    async (host, expected) => {
+      const root = await createSsrProjectRoot();
+      vi.stubEnv('WEBPACK_SERVE', 'true');
+      try {
+        const configs = await _createConfig({
+          ...configBase,
+          root,
+          server: './src/main.server.ts',
+          ssr: { entry: './src/server.ts' },
+          devServer: { host },
+        });
+
+        const serverExportsRule = findServerExportsRule(configs[1]);
+        expect(serverExportsRule.options.engineWiring).toMatchObject({
+          allowedHosts: [
+            'localhost',
+            '*.localhost',
+            '127.0.0.1',
+            '[::1]',
+            ...expected,
+          ],
+        });
+      } finally {
+        vi.unstubAllEnvs();
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+    10000
+  );
+
   it.each(['20.3.17', '20.3.24', '21.1.5', '21.2.0'])(
     'should warn when @angular/ssr %s cannot disable the engine host check',
     async (ssrVersion) => {
