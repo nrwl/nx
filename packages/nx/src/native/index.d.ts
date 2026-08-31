@@ -497,18 +497,6 @@ export declare function connectToNxDb(cacheDir: string, dbName?: string | undefi
 
 export declare function copy(src: string, dest: string): number
 
-/**
- * Consumer task id -> the upstream task ids whose declared outputs it reads.
- *
- * Producers are searched over the consumer's whole dependency closure rather
- * than its direct dependencies. `TaskOutput` does not record whether its
- * `transitive` flag was set, and an observed read cannot say how deep the
- * producer sits, so the closure is the only scope that cannot miss an edge.
- * Over-reporting an edge costs a task that was going to be a cache hit;
- * missing one skips a task that needed to run.
- */
-export declare function dependentOutputEdges(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, taskGraph: TaskGraph): Record<string, Array<string>>
-
 export interface DepsOutputsInput {
   dependentTasksOutputFiles: string
   transitive?: boolean
@@ -1112,6 +1100,39 @@ export interface TaskRun {
   code: number
   start: number
   end: number
+}
+
+/** Observed-IO sandbox configuration of a task's target */
+export interface TaskSandboxConfiguration {
+  /**
+   * Whether tasks for this target are tracked by the sandbox.
+   * Defaults to true. When false, no IO tracing is reported for the
+   * task, so no sandbox report is produced.
+   */
+  enabled?: boolean
+  /**
+   * Workspace-relative glob patterns for reads that should be excluded
+   * from sandboxing reports. The first path segment cannot contain `*`,
+   * and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
+   * pattern to a directory instead of leading with `**`.
+   */
+  ignoredReads?: Array<string>
+  /**
+   * Workspace-relative glob patterns for writes that should be excluded
+   * from sandboxing reports. The first path segment cannot contain `*`,
+   * and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
+   * pattern to a directory instead of leading with `**`.
+   */
+  ignoredWrites?: Array<string>
+  /**
+   * Whether a recorded IO snapshot backfills this target's declared inputs
+   * and outputs. Defaults to true. When false, the task hashes from its
+   * declared filesets and caches its declared outputs, even though its IO is
+   * still recorded. Reads and writes are one switch: a task whose hash came
+   * from the recording but whose cache did not would describe a state that
+   * never ran.
+   */
+  backfill?: boolean
 }
 
 export declare const enum TaskStatus {
