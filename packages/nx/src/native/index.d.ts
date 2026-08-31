@@ -304,6 +304,15 @@ export interface AffectedOptions {
 }
 
 /**
+ * The same selection, plus which file reached each task and how.
+ *
+ * Separate from `affected_tasks` because the explanation costs a string per
+ * match and only `--explain` reads it; the selection path stays a membership
+ * test over interned instruction ids.
+ */
+export declare function affectedTaskInputMatches(projectGraph: ExternalObject<ProjectGraph>, hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, changedFiles: Array<string>): Record<string, Array<InputMatch>>
+
+/**
  * Task ids with at least one changed file among their plan's file inputs.
  *
  * `changed_project_configs` is the subset of `changed_files` that is project
@@ -585,6 +594,16 @@ export declare function initializeTelemetry(connection: ExternalObject<NxDbConne
  * session ID from their parent process via env var.
  */
 export declare function initializeTelemetryWithSessionId(sessionId: string, workspaceId: string, userId: string | undefined | null, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): void
+
+/** A changed file that reached a task, and the input pattern it reached it by. */
+export interface InputMatch {
+  file: string
+  /**
+   * The fileset that matched. Absent for an instruction with no pattern to
+   * name, such as the root tsconfig.
+   */
+  pattern?: string
+}
 
 export interface InputsInput {
   input: string

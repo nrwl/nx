@@ -80,3 +80,34 @@ export function formatAffectedReason(reason: AffectedReason): string {
       return `reads the outputs of ${reason.producer}, which is affected`;
   }
 }
+
+/**
+ * Renders `--explain` output: one block per entity, its reasons beneath it.
+ *
+ * Entities with no reason are still listed, with a line saying so, because a
+ * blank is indistinguishable from a bug when you are troubleshooting. That
+ * happens when a task is selected by propagation from a producer that has since
+ * been filtered out of the printed set.
+ */
+export function formatAffectedExplanation(
+  reasons: Record<string, AffectedReason[]>,
+  heading: string
+): string {
+  const names = Object.keys(reasons).sort();
+  if (!names.length) {
+    return `Nothing affected.`;
+  }
+  const lines = [`${heading} (${names.length}):`, ''];
+  for (const name of names) {
+    lines.push(`  ${name}`);
+    const forName = reasons[name] ?? [];
+    if (!forName.length) {
+      lines.push(`    - selected, but no reason was recorded`);
+    }
+    for (const reason of forName) {
+      lines.push(`    - ${formatAffectedReason(reason)}`);
+    }
+    lines.push('');
+  }
+  return lines.join('\n');
+}

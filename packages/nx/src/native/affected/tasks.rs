@@ -13,7 +13,7 @@
 
 use napi::bindgen_prelude::*;
 use rayon::prelude::*;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use crate::native::affected::project_paths::{ProjectRoots, normalize_path};
@@ -22,6 +22,16 @@ use crate::native::project_graph::types::ProjectGraph;
 use crate::native::tasks::hash_planner::ROOT_TSCONFIG_FILES;
 use crate::native::tasks::hashers::globs_from_workspace_globs;
 use crate::native::tasks::types::{HashInstruction, HashPlans};
+
+/// A changed file that reached a task, and the input pattern it reached it by.
+#[napi(object)]
+#[derive(Clone, Debug)]
+pub struct InputMatch {
+    pub file: String,
+    /// The fileset that matched. Absent for an instruction with no pattern to
+    /// name, such as the root tsconfig.
+    pub pattern: Option<String>,
+}
 
 /// Task ids with at least one changed file among their plan's file inputs.
 ///
@@ -42,6 +52,74 @@ pub fn affected_tasks(
         &changed_files,
         &changed_project_configs,
     )?)
+}
+
+/// The same selection, plus which file reached each task and how.
+///
+/// Separate from `affected_tasks` because the explanation costs a string per
+/// match and only `--explain` reads it; the selection path stays a membership
+/// test over interned instruction ids.
+#[napi(ts_return_type = "Record<string, Array<InputMatch>>")]
+pub fn affected_task_input_matches(
+    project_graph: &External<Arc<ProjectGraph>>,
+    #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
+    hash_plans: &External<HashPlans>,
+    changed_files: Vec<String>,
+) -> Result<HashMap<String, Vec<InputMatch>>> {
+    Ok(compute_input_matches(
+        project_graph,
+        hash_plans,
+        &changed_files,
+    )?)
+}
+
+pub(crate) fn compute_input_matches(
+    graph: &ProjectGraph,
+    hash_plans: &HashPlans,
+    changed_files: &[String],
+) -> anyhow::Result<HashMap<String, Vec<InputMatch>>> {
+    let files: Vec<String> = changed_files.iter().map(|f| normalize_path(f)).collect();
+    let roots = ProjectRoots::new(graph);
+    let owners: Vec<Option<&str>> = files.iter().map(|file| roots.owner_of(file)).collect();
+
+    let mut ids: Vec<u32> = hash_plans.plans.values().flatten().copied().collect();
+    ids.par_sort_unstable();
+    ids.dedup();
+
+    // Per instruction, every file it matched and the pattern that did it. Only
+    // instructions that matched something are kept.
+    let matched: HashMap<u32, Vec<InputMatch>> = ids
+        .par_iter()
+        .map(|&id| {
+            let hits = instruction_matches_detail(
+                hash_plans.pool.get(id).value(),
+                &files,
+                &owners,
+                changed_files,
+            )?;
+            Ok::<_, anyhow::Error>((id, hits))
+        })
+        .filter(|entry| entry.as_ref().map_or(true, |(_, hits)| !hits.is_empty()))
+        .collect::<anyhow::Result<HashMap<_, _>>>()?;
+
+    Ok(hash_plans
+        .plans
+        .par_iter()
+        .filter_map(|(task_id, plan)| {
+            let mut hits: Vec<InputMatch> = plan
+                .iter()
+                .filter_map(|id| matched.get(id))
+                .flatten()
+                .cloned()
+                .collect();
+            if hits.is_empty() {
+                return None;
+            }
+            hits.sort_by(|a, b| a.file.cmp(&b.file).then(a.pattern.cmp(&b.pattern)));
+            hits.dedup_by(|a, b| a.file == b.file && a.pattern == b.pattern);
+            Some((task_id.clone(), hits))
+        })
+        .collect())
 }
 
 pub(crate) fn compute_affected_tasks(
@@ -102,6 +180,75 @@ pub(crate) fn compute_affected_tasks(
 /// artifacts, which are gitignored and do not exist yet when affected runs, so
 /// intersecting it is always empty and misleadingly so. Dependency changes reach
 /// a consumer through task-edge propagation instead.
+/// The files an instruction matched, and which pattern reached each.
+///
+/// Mirrors `instruction_matches`, but reports rather than short-circuits. The
+/// whole glob set decides the match, so negations still exclude; the individual
+/// positives are then tested only to name the one responsible.
+fn instruction_matches_detail(
+    instruction: &HashInstruction,
+    files: &[String],
+    owners: &[Option<&str>],
+    raw_files: &[String],
+) -> anyhow::Result<Vec<InputMatch>> {
+    let collect = |globs: &[String], project: Option<&str>| -> anyhow::Result<Vec<InputMatch>> {
+        if globs.is_empty() {
+            return Ok(vec![]);
+        }
+        let full = build_glob_set(globs)?;
+        let positives: Vec<(&String, _)> = globs
+            .iter()
+            .filter(|glob| !glob.starts_with('!'))
+            .map(|glob| build_glob_set(std::slice::from_ref(glob)).map(|set| (glob, set)))
+            .collect::<anyhow::Result<Vec<_>>>()?;
+
+        let mut matches = Vec::new();
+        for (i, file) in files.iter().enumerate() {
+            if project.is_some_and(|project| owners[i] != Some(project)) {
+                continue;
+            }
+            if !full.is_match(file) {
+                continue;
+            }
+            matches.push(InputMatch {
+                // The path as it was given, not the normalized form, so it reads
+                // back the same as the diff the user is looking at.
+                file: raw_files[i].clone(),
+                pattern: positives
+                    .iter()
+                    .find(|(_, set)| set.is_match(file))
+                    .map(|(glob, _)| (*glob).clone()),
+            });
+        }
+        Ok(matches)
+    };
+
+    match instruction {
+        HashInstruction::WorkspaceFileSet(file_sets) => {
+            collect(&globs_from_workspace_globs(file_sets), None)
+        }
+        HashInstruction::ProjectFileSet(project, file_sets) => collect(file_sets, Some(project)),
+        HashInstruction::Files(globs) => collect(globs, None),
+        HashInstruction::JsonFileSet(json) => match json.project_name.as_deref() {
+            Some(project) => collect(std::slice::from_ref(&json.json_path), Some(project)),
+            None => collect(
+                &globs_from_workspace_globs(std::slice::from_ref(&json.json_path)),
+                None,
+            ),
+        },
+        HashInstruction::TsConfiguration(_) => Ok(files
+            .iter()
+            .enumerate()
+            .filter(|(_, file)| ROOT_TSCONFIGS.contains(&file.as_str()))
+            .map(|(i, _)| InputMatch {
+                file: raw_files[i].clone(),
+                pattern: None,
+            })
+            .collect()),
+        _ => Ok(vec![]),
+    }
+}
+
 fn instruction_matches(
     instruction: &HashInstruction,
     files: &[String],

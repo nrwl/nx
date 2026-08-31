@@ -4,7 +4,11 @@ import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
-import { filterAffected } from '../../project-graph/affected/affected-project-graph';
+import {
+  filterAffected,
+  filterAffectedWithReasons,
+} from '../../project-graph/affected/affected-project-graph';
+import { printAffectedExplanation } from '../../project-graph/affected/print-explanation';
 import {
   FileChange,
   calculateFileChanges,
@@ -39,6 +43,17 @@ export async function showProjectsHandler(
   // Affected touches dependencies so it needs to be processed first.
   if (args.affected) {
     const touchedFiles = await getTouchedFiles(nxArgs);
+    if (nxArgs.explain) {
+      // Reports the selection rather than filtering to it, so the later
+      // --projects and --withTarget filters would only obscure the answer.
+      const { reasons } = await filterAffectedWithReasons(
+        graph,
+        touchedFiles,
+        nxJson
+      );
+      printAffectedExplanation(reasons, 'Affected projects', nxArgs);
+      return;
+    }
     graph = await getAffectedGraph(touchedFiles, nxJson, graph);
   }
 
