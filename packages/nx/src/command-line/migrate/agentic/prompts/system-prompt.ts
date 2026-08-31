@@ -34,12 +34,14 @@ export interface SystemPromptContext {
    *   a generator's output. Constraints allow scoped task execution and minor
    *   in-scope fixes.
    *
-   * Defaults to `author` so existing call sites remain unchanged.
+   * Defaults to `author`.
    */
   mode?: AgenticPromptMode;
   /**
    * Exact formatter command for the files the agent changed, resolved by nx
    * (see `resolveFormatCommand`); `null` when the workspace has no formatter.
+   * Ignored for `generic-validation` prompts, which carry no format rule;
+   * callers may pass `null` there without probing the workspace.
    */
   formatCommand: string | null;
   // Package manager exec prefix (`npx`, `pnpm exec`); names the replacement
