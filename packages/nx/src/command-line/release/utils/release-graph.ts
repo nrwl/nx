@@ -47,6 +47,7 @@ export interface FinalConfigForProject {
   preserveMatchingDependencyRanges: NxReleaseVersionConfiguration['preserveMatchingDependencyRanges'];
   adjustSemverBumpsForZeroMajorVersion: NxReleaseVersionConfiguration['adjustSemverBumpsForZeroMajorVersion'];
   applyPreidToDependents: NxReleaseVersionConfiguration['applyPreidToDependents'];
+  dependentBumpType: NxReleaseVersionConfiguration['dependentBumpType'];
   versionActionsOptions: NxReleaseVersionConfiguration['versionActionsOptions'];
   manifestRootsToUpdate: Array<
     Exclude<
@@ -1028,6 +1029,17 @@ Valid values are: ${validReleaseVersionPrefixes
       false;
 
     /**
+     * dependentBumpType
+     *
+     * Controls the semver bump type applied to dependents when a dependency
+     * is versioned. Defaults to 'patch' for backward compatibility.
+     */
+    const dependentBumpType =
+      projectVersionConfig?.dependentBumpType ??
+      releaseGroupVersionConfig?.dependentBumpType ??
+      'patch';
+
+    /**
      * fallbackCurrentVersionResolver, defaults to disk when performing a first release, otherwise undefined
      */
     const fallbackCurrentVersionResolver =
@@ -1073,6 +1085,7 @@ Valid values are: ${validReleaseVersionPrefixes
       preserveMatchingDependencyRanges,
       adjustSemverBumpsForZeroMajorVersion,
       applyPreidToDependents,
+      dependentBumpType,
       versionActionsOptions,
       manifestRootsToUpdate,
       dockerOptions,
