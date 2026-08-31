@@ -138,6 +138,15 @@ describe('processGradleDependencies', () => {
     ]);
   });
 
+  it('should strip single quotes from project names in composite builds', () => {
+    const depFilePath = join(
+        __dirname,
+        'utils/__mocks__/gradle-composite-dependencies-quoted.txt'
+    );
+    const dependencies = processGradleDependencies(depFilePath);
+    expect(Array.from(dependencies)).toEqual([':hemera-api', ':commons-web']);
+  });
+
   it('should process gradle dependencies with regular build', () => {
     const depFilePath = join(
       __dirname,
