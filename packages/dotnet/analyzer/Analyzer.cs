@@ -256,55 +256,24 @@ public static class Analyzer
         return projectRefs;
     }
 
+    /// <summary>
+    /// Snapshots the project's evaluated MSBuild properties. Every property is
+    /// captured rather than a curated list: the helpers that read them look up
+    /// by name, so a list is one more thing to keep in sync and a typo in it
+    /// fails silently. Empty values are skipped so callers can treat a missing
+    /// key and an unset property alike.
+    /// </summary>
     private static Dictionary<string, string> CollectProperties(ProjectInstance project)
     {
-        var properties = new Dictionary<string, string>();
-        var propertiesToCollect = new[]
+        // MSBuild property names are case-insensitive; matching that here keeps
+        // a project that spells one <outputpath> readable to the helpers.
+        var properties = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var property in project.Properties)
         {
-            // Project identification
-            "TargetFramework",
-            "TargetFrameworks",
-            "OutputType",
-            "AssemblyName",
-            "IsTestProject",
-
-            // Build configuration
-            "Configuration",
-            "Platform",
-            "RuntimeIdentifier",
-
-            // Artifacts output (new SDK layout)
-            "UseArtifactsOutput",
-            "ArtifactsPath",
-            "ArtifactsPivots",
-
-            // Output paths
-            "OutputPath",
-            "OutDir",
-            "BaseIntermediateOutputPath",
-            "IntermediateOutputPath",
-            "BaseOutputPath",
-
-            // Publish paths
-            "PublishDir",
-
-            // Package paths
-            "PackageOutputPath",
-
-            // Test paths
-            "TestResultsDirectory",
-
-            // OpenAPI document paths
-            "OpenApiDocumentsDirectory",
-            "OpenApiGenerateDocumentsOptions"
-        };
-
-        foreach (var prop in propertiesToCollect)
-        {
-            var val = project.GetPropertyValue(prop);
-            if (!string.IsNullOrEmpty(val))
+            if (!string.IsNullOrEmpty(property.EvaluatedValue))
             {
-                properties[prop] = val;
+                properties[property.Name] = property.EvaluatedValue;
             }
         }
 
