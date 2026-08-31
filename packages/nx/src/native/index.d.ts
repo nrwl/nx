@@ -685,6 +685,16 @@ export declare function initializeTelemetry(connection: ExternalObject<NxDbConne
  */
 export declare function initializeTelemetryWithSessionId(sessionId: string, workspaceId: string, userId: string | undefined | null, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): void
 
+/** A changed file that reached a task, and the input pattern it reached it by. */
+export interface InputMatch {
+  file: string
+  /**
+   * The fileset that matched. Absent for an instruction with no pattern to
+   * name, such as the root tsconfig.
+   */
+  pattern?: string
+}
+
 export interface InputsInput {
   input: string
   dependencies?: boolean
@@ -1056,6 +1066,18 @@ export interface TaskHashDetails {
 }
 
 /**
+ * What reached one task: the files its filesets matched and the packages it
+ * hashes that moved.
+ */
+export interface TaskInputMatches {
+  files: Array<InputMatch>
+  /** External node names the plan hashes one by one that moved. */
+  packages: Array<string>
+  /** The plan hashes every external dependency, and one moved. */
+  allExternals: boolean
+}
+
+/**
  * The result of a completed Task.
  *
  * Task timing information (start and end timestamps) is available
@@ -1143,6 +1165,15 @@ export interface TouchedProject {
    */
   pattern?: string
 }
+
+/**
+ * What reached each touched task, and how.
+ *
+ * Separate from `affected_tasks` because the explanation costs a string per
+ * match and only `--explain` reads it; the selection path stays a membership
+ * test over interned instruction ids.
+ */
+export declare function touchedTaskInputMatches(projectGraph: ExternalObject<ProjectGraph>, hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, changedFiles: Array<string>, changedExternals: Array<string>, allExternalsChanged: boolean): Record<string, TaskInputMatches>
 
 /** Track an event using the global telemetry instance */
 export declare function trackEvent(eventName: string, parameters?: Record<string, string> | undefined | null): void

@@ -228,6 +228,15 @@ export function withAffectedOptions(yargs: Argv) {
         'Change the way Nx is calculating the affected command by providing directly changed files from stdin, one file per line.',
       type: 'boolean',
     })
+    .option('explain', {
+      describe:
+        'Print why each project or task was considered affected, instead of running anything.',
+      type: 'boolean',
+    })
+    .option('json', {
+      describe: 'Emit the output as JSON.',
+      type: 'boolean',
+    })
     .option('uncommitted', {
       describe: 'Uncommitted changes.',
       type: 'boolean',
