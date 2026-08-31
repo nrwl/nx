@@ -2015,23 +2015,23 @@ importers:
   nx-dev/ui-courses:
     dependencies:
       '@nx/nx-dev-data-access-courses':
-        specifier: file:../data-access-courses
-        version: file:nx-dev/data-access-courses
+        specifier: workspace:*
+        version: link:../data-access-courses
       '@nx/nx-dev-data-access-documents':
-        specifier: file:../data-access-documents
-        version: file:nx-dev/data-access-documents
+        specifier: workspace:*
+        version: link:../data-access-documents
       '@nx/nx-dev-ui-blog':
-        specifier: file:../ui-blog
-        version: file:nx-dev/ui-blog
+        specifier: workspace:*
+        version: link:../ui-blog
       '@nx/nx-dev-ui-common':
-        specifier: file:../ui-common
-        version: file:nx-dev/ui-common
+        specifier: workspace:*
+        version: link:../ui-common
       '@nx/nx-dev-ui-icons':
-        specifier: file:../ui-icons
+        specifier: workspace:*
         version: link:../ui-icons
       '@nx/nx-dev-ui-markdoc':
-        specifier: file:../ui-markdoc
-        version: file:nx-dev/ui-markdoc
+        specifier: workspace:*
+        version: link:../ui-markdoc
       '@nx/nx-dev-ui-primitives':
         specifier: workspace:*
         version: link:../ui-primitives
@@ -10259,21 +10259,6 @@ packages:
     resolution: {integrity: sha512-szsgrcB2T/SOC0rVk5bMGNQ/Q44tF4EYmxrUEp4BIDEzglEQpl48LT9RTcWCI9CzIZxE6gg8rmFFQhoXvkferQ==}
     cpu: [x64]
     os: [darwin]
-
-  '@nx/nx-dev-data-access-courses@file:nx-dev/data-access-courses':
-    resolution: {directory: nx-dev/data-access-courses, type: directory}
-
-  '@nx/nx-dev-data-access-documents@file:nx-dev/data-access-documents':
-    resolution: {directory: nx-dev/data-access-documents, type: directory}
-
-  '@nx/nx-dev-ui-blog@file:nx-dev/ui-blog':
-    resolution: {directory: nx-dev/ui-blog, type: directory}
-
-  '@nx/nx-dev-ui-common@file:nx-dev/ui-common':
-    resolution: {directory: nx-dev/ui-common, type: directory}
-
-  '@nx/nx-dev-ui-markdoc@file:nx-dev/ui-markdoc':
-    resolution: {directory: nx-dev/ui-markdoc, type: directory}
 
   '@nx/nx-freebsd-x64@21.6.2':
     resolution: {integrity: sha512-Hw6eOsdtD21j/B514eRJzgX03ew8ErFCfxWtjLwl7wB31Dw4nZbScj2FNDTc0xtg6oXCkw5Gt5uFKI5QFQUVfg==}
@@ -37341,52 +37326,6 @@ snapshots:
 
   '@nx/nx-darwin-x64@23.2.0-beta.9':
     optional: true
-
-  '@nx/nx-dev-data-access-courses@file:nx-dev/data-access-courses':
-    dependencies:
-      '@nx/nx-dev-data-access-documents': link:nx-dev/data-access-documents
-      '@nx/nx-dev-ui-markdoc': link:nx-dev/ui-markdoc
-
-  '@nx/nx-dev-data-access-documents@file:nx-dev/data-access-documents':
-    dependencies:
-      '@nx/devkit': link:packages/devkit
-      '@nx/nx-dev-models-document': link:nx-dev/models-document
-      '@nx/nx-dev-models-package': link:nx-dev/models-package
-      '@nx/nx-dev-ui-markdoc': link:nx-dev/ui-markdoc
-
-  '@nx/nx-dev-ui-blog@file:nx-dev/ui-blog':
-    dependencies:
-      '@nx/nx-dev-data-access-documents': link:nx-dev/data-access-documents
-      '@nx/nx-dev-feature-search': link:nx-dev/feature-search
-      '@nx/nx-dev-ui-common': link:nx-dev/ui-common
-      '@nx/nx-dev-ui-icons': link:nx-dev/ui-icons
-      '@nx/nx-dev-ui-markdoc': link:nx-dev/ui-markdoc
-      '@nx/nx-dev-ui-primitives': link:nx-dev/ui-primitives
-
-  '@nx/nx-dev-ui-common@file:nx-dev/ui-common':
-    dependencies:
-      '@nx/nx-dev-feature-analytics': link:nx-dev/feature-analytics
-      '@nx/nx-dev-feature-search': link:nx-dev/feature-search
-      '@nx/nx-dev-models-document': link:nx-dev/models-document
-      '@nx/nx-dev-models-menu': link:nx-dev/models-menu
-      '@nx/nx-dev-ui-animations': link:nx-dev/ui-animations
-      '@nx/nx-dev-ui-icons': link:nx-dev/ui-icons
-      '@nx/nx-dev-ui-primitives': link:nx-dev/ui-primitives
-      '@nx/nx-dev-ui-references': link:nx-dev/ui-references
-      '@nx/nx-dev-ui-theme': link:nx-dev/ui-theme
-
-  '@nx/nx-dev-ui-markdoc@file:nx-dev/ui-markdoc':
-    dependencies:
-      '@nx/devkit': link:packages/devkit
-      '@nx/graph-internal-ui-project-details': link:graph/ui-project-details
-      '@nx/graph-ui-common': link:graph/ui-common
-      '@nx/graph-ui-icons': link:graph/ui-icons
-      '@nx/nx-dev-feature-analytics': link:nx-dev/feature-analytics
-      '@nx/nx-dev-ui-common': link:nx-dev/ui-common
-      '@nx/nx-dev-ui-fence': link:nx-dev/ui-fence
-      '@nx/nx-dev-ui-icons': link:nx-dev/ui-icons
-      '@nx/nx-dev-ui-primitives': link:nx-dev/ui-primitives
-      '@nx/nx-dev-ui-theme': link:nx-dev/ui-theme
 
   '@nx/nx-freebsd-x64@21.6.2':
     optional: true
