@@ -497,6 +497,15 @@ export declare function connectToNxDb(cacheDir: string, dbName?: string | undefi
 
 export declare function copy(src: string, dest: string): number
 
+export declare function dependentOutputReads(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, taskGraph: TaskGraph): DependentOutputReads
+
+export interface DependentOutputReads {
+  /** Consumer -> the upstream tasks whose declared outputs it reads. */
+  producers: Record<string, Array<string>>
+  /** Consumers carrying an `includeIgnored` read, which names no producer. */
+  readsIgnoredOutputs: Array<string>
+}
+
 export interface DepsOutputsInput {
   dependentTasksOutputFiles: string
   transitive?: boolean
