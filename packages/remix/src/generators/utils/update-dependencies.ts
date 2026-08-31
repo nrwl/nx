@@ -18,7 +18,7 @@ import {
 } from '../../utils/versions';
 
 export function updateDependencies(tree: Tree) {
-  // Vite 5 depends on esbuild, whose install script only validates the prebuilt
+  // Vite depends on esbuild, whose install script only validates the prebuilt
   // binary that ships as an optional dependency.
   acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
     esbuild: false,
