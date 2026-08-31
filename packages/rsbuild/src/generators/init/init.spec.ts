@@ -37,17 +37,13 @@ describe('init', () => {
 
       await withPnpm(tree, '11.2.2', () => initGenerator(tree, {}));
 
-      expect(tree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
-        'core-js'
-      );
+      expect(tree.exists('pnpm-workspace.yaml')).toBe(false);
     });
 
     it('should not record a core-js decision when @rsbuild/core is not installed', async () => {
       await withPnpm(tree, '11.2.2', () => initGenerator(tree, {}));
 
-      expect(tree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
-        'core-js'
-      );
+      expect(tree.exists('pnpm-workspace.yaml')).toBe(false);
     });
   });
 });
