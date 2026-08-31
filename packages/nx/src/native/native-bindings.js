@@ -640,6 +640,7 @@ module.exports.SupportedEditor = nativeBinding.SupportedEditor
 module.exports.sweepBatchOutputs = nativeBinding.sweepBatchOutputs
 module.exports.TaskStatus = nativeBinding.TaskStatus
 module.exports.testOnlyTransferFileMap = nativeBinding.testOnlyTransferFileMap
+module.exports.touchedTaskInputMatches = nativeBinding.touchedTaskInputMatches
 module.exports.trackEvent = nativeBinding.trackEvent
 module.exports.trackPageView = nativeBinding.trackPageView
 module.exports.transferProjectGraph = nativeBinding.transferProjectGraph

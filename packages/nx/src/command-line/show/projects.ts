@@ -4,9 +4,13 @@ import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
-import { filterAffected } from '../../project-graph/affected/affected-project-graph';
+import {
+  filterAffected,
+  filterAffectedWithReasons,
+} from '../../project-graph/affected/affected-project-graph';
 import { computeAffectedTasks } from '../../project-graph/affected/affected-tasks';
 import { resolveAffectedGranularity } from '../../project-graph/affected/granularity';
+import { printAffectedExplanation } from '../../project-graph/affected/print-explanation';
 import {
   FileChange,
   calculateFileChanges,
@@ -57,7 +61,16 @@ export async function showProjectsHandler(
         nxJson,
         targets: args.withTarget,
         touchedFiles,
+        explain: nxArgs.explain,
       });
+      if (nxArgs.explain) {
+        printAffectedExplanation(
+          affectedTasks.reasons ?? {},
+          'Affected tasks',
+          nxArgs
+        );
+        return;
+      }
       const owning = new Set(
         [...affectedTasks.affectedTaskIds].map(
           (id) => affectedTasks.taskGraph.tasks[id].target.project
@@ -69,6 +82,16 @@ export async function showProjectsHandler(
           Object.entries(graph.nodes).filter(([name]) => owning.has(name))
         ),
       };
+    } else if (nxArgs.explain) {
+      // Reports the selection rather than filtering to it, so the later
+      // --projects and --withTarget filters would only obscure the answer.
+      const { reasons } = await filterAffectedWithReasons(
+        graph,
+        touchedFiles,
+        nxJson
+      );
+      printAffectedExplanation(reasons, 'Affected projects', nxArgs);
+      return;
     } else {
       graph = await getAffectedGraph(touchedFiles, nxJson, graph);
     }
