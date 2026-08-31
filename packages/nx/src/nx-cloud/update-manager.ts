@@ -5,6 +5,7 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
+  renameSync,
   rmSync,
   statSync,
   writeFileSync,
@@ -18,6 +19,7 @@ import type { CloudTaskRunnerOptions } from './nx-cloud-tasks-runner-shell';
 import * as tar from 'tar-stream';
 import { cacheDir } from '../utils/cache-directory';
 import { createHash } from 'crypto';
+import { FileLock, IS_WASM } from '../native';
 import { TasksRunner } from '../tasks-runner/tasks-runner';
 import { RemoteCacheV2 } from '../tasks-runner/default-tasks-runner';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -198,9 +200,13 @@ function getLatestInstalledRunnerBundle(): CloudBundleInstall | null {
       runnerBundleInstallDirectory
     )
       .filter((potentialDirectory) => {
-        return statSync(
-          join(runnerBundleInstallDirectory, potentialDirectory)
-        ).isDirectory();
+        // '.tmp-*' directories are in-progress or crashed downloads
+        return (
+          !potentialDirectory.startsWith('.') &&
+          statSync(
+            join(runnerBundleInstallDirectory, potentialDirectory)
+          ).isDirectory()
+        );
       })
       .map((fileOrDirectory) => ({
         version: fileOrDirectory,
@@ -322,6 +328,50 @@ async function downloadAndExtractClientBundle(
   version: string,
   url: string
 ): Promise<string> {
+  const bundleExtractLocation = join(runnerBundleInstallDirectory, version);
+
+  // Parallel nx processes race to install bundles: the first process to take
+  // the lock downloads, the rest wait for the bundle to appear. The flock is
+  // released by the kernel if the holder dies, so no stale-lock cleanup is
+  // needed. Under WASM the lock is unavailable and downloads run unserialized.
+  const lock = !IS_WASM
+    ? new FileLock(join(runnerBundleInstallDirectory, 'download.lock'))
+    : null;
+  let locked = lock?.locked;
+  while (locked) {
+    debugLog(
+      'Another process is downloading the client bundle, waiting for it to complete'
+    );
+    await lock.wait();
+    if (existsSync(bundleExtractLocation)) {
+      debugLog('Using client bundle downloaded by another process');
+      return bundleExtractLocation;
+    }
+    // The other process installed a different version or failed, so this
+    // process still needs to download.
+    locked = lock.check();
+  }
+  lock?.lock();
+  try {
+    return await downloadAndExtractBundle(
+      axios,
+      runnerBundleInstallDirectory,
+      version,
+      url,
+      bundleExtractLocation
+    );
+  } finally {
+    lock?.unlock();
+  }
+}
+
+async function downloadAndExtractBundle(
+  axios: AxiosInstance,
+  runnerBundleInstallDirectory: string,
+  version: string,
+  url: string,
+  bundleExtractLocation: string
+): Promise<string> {
   let resp;
   try {
     resp = await axios.get(url, {
@@ -332,48 +382,62 @@ async function downloadAndExtractClientBundle(
     throw e;
   }
 
-  const bundleExtractLocation = join(runnerBundleInstallDirectory, version);
+  // Extract into a temp directory and rename into place afterwards, so a
+  // failed or interrupted download never leaves a partial bundle at the
+  // path other processes require it from.
+  const tempExtractLocation = join(
+    runnerBundleInstallDirectory,
+    `.tmp-${version}-${process.pid}`
+  );
+  mkdirSync(tempExtractLocation, { recursive: true });
 
-  if (!existsSync(bundleExtractLocation)) {
-    mkdirSync(bundleExtractLocation);
-  }
-  return new Promise((res, rej) => {
-    const extract = tar.extract();
-    extract.on('entry', function (headers, stream, next) {
-      if (headers.type === 'directory') {
-        const directoryPath = join(bundleExtractLocation, headers.name);
-        if (!existsSync(directoryPath)) {
-          mkdirSync(directoryPath, { recursive: true });
-        }
-        next();
-
-        stream.resume();
-      } else if (headers.type === 'file') {
-        const outputFilePath = join(bundleExtractLocation, headers.name);
-        const writeStream = createWriteStream(outputFilePath);
-        stream.pipe(writeStream);
-
-        // Continue the tar stream after the write stream closes
-        writeStream.on('close', () => {
+  try {
+    await new Promise<void>((res, rej) => {
+      const extract = tar.extract();
+      extract.on('entry', function (headers, stream, next) {
+        if (headers.type === 'directory') {
+          const directoryPath = join(tempExtractLocation, headers.name);
+          if (!existsSync(directoryPath)) {
+            mkdirSync(directoryPath, { recursive: true });
+          }
           next();
-        });
 
-        stream.resume();
-      }
+          stream.resume();
+        } else if (headers.type === 'file') {
+          const outputFilePath = join(tempExtractLocation, headers.name);
+          const writeStream = createWriteStream(outputFilePath);
+          stream.pipe(writeStream);
+
+          // Continue the tar stream after the write stream closes
+          writeStream.on('close', () => {
+            next();
+          });
+
+          stream.resume();
+        }
+      });
+
+      extract.on('error', (e) => {
+        rej(e);
+      });
+
+      extract.on('finish', function () {
+        res();
+      });
+
+      resp.data.pipe(createGunzip()).pipe(extract);
     });
 
-    extract.on('error', (e) => {
-      rej(e);
-    });
+    rmSync(bundleExtractLocation, { recursive: true, force: true });
+    renameSync(tempExtractLocation, bundleExtractLocation);
+  } catch (e) {
+    rmSync(tempExtractLocation, { recursive: true, force: true });
+    throw e;
+  }
 
-    extract.on('finish', function () {
-      removeOldClientBundles(version);
-      writeBundleVerificationLock();
-      res(bundleExtractLocation);
-    });
-
-    resp.data.pipe(createGunzip()).pipe(extract);
-  });
+  removeOldClientBundles(version);
+  writeBundleVerificationLock();
+  return bundleExtractLocation;
 }
 
 function removeOldClientBundles(currentInstallVersion: string) {
@@ -382,7 +446,12 @@ function removeOldClientBundles(currentInstallVersion: string) {
   for (let fileOrFolder of filesAndFolders) {
     const fileOrFolderPath = join(runnerBundleInstallDirectory, fileOrFolder);
 
-    if (fileOrFolder !== currentInstallVersion) {
+    // Only directories are bundles. The lock files must survive: a lock on a
+    // deleted file no longer excludes processes that reopen the path.
+    if (
+      fileOrFolder !== currentInstallVersion &&
+      statSync(fileOrFolderPath).isDirectory()
+    ) {
       rmSync(fileOrFolderPath, { recursive: true });
     }
   }
