@@ -343,14 +343,16 @@ export declare function connectToNxDb(cacheDir: string, dbName?: string | undefi
 
 export declare function copy(src: string, dest: string): number
 
-export declare function dependentOutputReads(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, taskGraph: TaskGraph): DependentOutputReads
-
-export interface DependentOutputReads {
-  /** Consumer -> the upstream tasks whose declared outputs it reads. */
-  producers: Record<string, Array<string>>
-  /** Consumers carrying an `includeIgnored` read, which names no producer. */
-  readsIgnoredOutputs: Array<string>
-}
+/**
+ * Consumer task id -> the upstream task ids whose declared outputs it reads.
+ *
+ * Producers are searched over the whole dependency closure, not just direct
+ * dependencies: `TaskOutput` does not record whether its `transitive` flag was
+ * set, and an observed read cannot say how deep the producer sits. Over-
+ * reporting an edge costs a task that was going to be a cache hit; missing one
+ * skips a task that needed to run.
+ */
+export declare function dependentOutputEdges(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, taskGraph: TaskGraph): Record<string, Array<string>>
 
 export interface DepsOutputsInput {
   dependentTasksOutputFiles: string

@@ -3,7 +3,7 @@ import { ProjectGraph } from '../../config/project-graph';
 import { TaskGraph } from '../../config/task-graph';
 import {
   affectedTasks as nativeAffectedTasks,
-  dependentOutputReads,
+  dependentOutputEdges,
 } from '../../native';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { projectHasTarget } from '../../utils/project-graph-utils';
@@ -153,7 +153,7 @@ export async function computeAffectedTasks(
   // Tasks that read an upstream task's artifacts. Those are excluded from
   // direct file matching, because they are gitignored and unbuilt and so can
   // never appear in a diff; this is the only thing carrying that signal.
-  const reads = dependentOutputReads(plans, taskGraph);
+  const producersOf = dependentOutputEdges(plans, taskGraph);
 
   // Seed only what a file intersection genuinely cannot see. For ordinary
   // source files the matcher is precise, and seeding every task of the owning
@@ -183,7 +183,7 @@ export async function computeAffectedTasks(
   }
 
   return {
-    affectedTaskIds: propagate(own, taskGraph, reads),
+    affectedTaskIds: propagate(own, taskGraph, producersOf),
     taskGraph,
     // The plans ride along so the hasher can narrow them instead of building
     // its own. Every task it will be asked about is in here, since the pruned
@@ -193,46 +193,25 @@ export async function computeAffectedTasks(
 }
 
 /**
- * Propagates affectedness to the tasks that read an upstream task's artifacts.
+ * Propagates affectedness from a producer to the tasks that read its outputs.
  *
- * A consumer reads its dependency's build output, which is gitignored and does
- * not exist yet, so the dependency's *inputs* are what decide the consumer.
- *
- * `dependentTasksOutputFiles` names its producer exactly, so those consumers
- * are decided by that producer alone: a sibling dependency changing does not
- * reach them. An `includeIgnored` read names nothing, so it falls back to
- * `hasAffectedUpstream`, the reachability bit — a task carries it when any
- * dependency is affected or carries it in turn. Dependencies come first in
- * topological order, so one pass settles a whole chain in O(V+E), where
- * materialising each task's closure would revisit a shared ancestor once per
- * path through a diamond.
+ * A consumer reads its dependency's build artifacts, which are gitignored and do
+ * not exist yet, so the dependency's *inputs* are what decide the consumer. The
+ * edges come from `dependentOutputEdges`, which resolves both an explicit
+ * `dependentTasksOutputFiles` input and an `includeIgnored` fileset overlapping a
+ * producer's declared outputs. Walking them in topological order propagates a
+ * chain in O(V+E), where unioning upstream file sets would copy a shared
+ * ancestor once per path through a diamond.
  */
 function propagate(
   own: Set<string>,
   taskGraph: TaskGraph,
-  reads: {
-    producers: Record<string, string[]>;
-    readsIgnoredOutputs: string[];
-  }
+  producersOf: Record<string, string[]>
 ): Set<string> {
   const affected = new Set(own);
-  const readsIgnored = new Set(reads.readsIgnoredOutputs);
-  const hasAffectedUpstream = new Set<string>();
-
   for (const taskId of topologicalOrder(taskGraph)) {
-    // Set before the affected check: reachability has to pass through a task
-    // that is not itself selected.
-    const upstream = (taskGraph.dependencies[taskId] ?? []).some(
-      (dep) => affected.has(dep) || hasAffectedUpstream.has(dep)
-    );
-    if (upstream) {
-      hasAffectedUpstream.add(taskId);
-    }
     if (affected.has(taskId)) continue;
-
-    if (reads.producers[taskId]?.some((producer) => affected.has(producer))) {
-      affected.add(taskId);
-    } else if (upstream && readsIgnored.has(taskId)) {
+    if (producersOf[taskId]?.some((producer) => affected.has(producer))) {
       affected.add(taskId);
     }
   }
