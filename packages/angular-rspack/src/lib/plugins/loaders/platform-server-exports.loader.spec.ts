@@ -1,4 +1,4 @@
-import type { LoaderContext } from '@rspack/core';
+import type { LoaderContext, RawSourceMap } from '@rspack/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   default as platformServerExportsLoader,
@@ -21,16 +21,32 @@ describe('platform-server-exports.loader', () => {
     allowedHosts: ['example.com'],
   };
 
-  function runLoader(
+  function invokeLoader(
     content: string,
-    options: PlatformServerExportsLoaderOptions
-  ): string {
+    options: PlatformServerExportsLoaderOptions,
+    map?: string | RawSourceMap
+  ): { source: string; map: string | RawSourceMap | undefined } {
     const thisValue = {
       getOptions: () => options,
       callback,
     } as unknown as LoaderContext<PlatformServerExportsLoaderOptions>;
-    platformServerExportsLoader.call(thisValue, content, undefined);
-    return callback.mock.calls[0][1] as string;
+    platformServerExportsLoader.call(thisValue, content, map);
+    return {
+      source: callback.mock.calls[0][1] as string,
+      map: callback.mock.calls[0][2] as string | RawSourceMap | undefined,
+    };
+  }
+
+  function runLoader(
+    content: string,
+    options: PlatformServerExportsLoaderOptions
+  ): string {
+    return invokeLoader(content, options).source;
+  }
+
+  /** The number of lines the loader emitted before the original content. */
+  function emittedPrefixLines(source: string): number {
+    return source.slice(0, source.indexOf(userContent)).split('\n').length - 1;
   }
 
   beforeEach(() => {
@@ -189,6 +205,108 @@ describe('platform-server-exports.loader', () => {
     expect(result).toContain(
       `export { default as __ngRspackMainServerBootstrap } from "/root/src/main.server.ts";`
     );
+  });
+
+  describe('sourcemaps', () => {
+    const incomingMappings = 'AAAA,CAAC;AACD';
+    const incomingMap: RawSourceMap = {
+      version: 3,
+      file: 'main.server.js',
+      sources: ['main.server.ts'],
+      names: [],
+      mappings: incomingMappings,
+    };
+    const prefixCases: [string, PlatformServerExportsLoaderOptions][] = [
+      ['nothing', { angularSSRInstalled: false, isZoneJsInstalled: false }],
+      [
+        'the zone.js import',
+        { angularSSRInstalled: false, isZoneJsInstalled: true },
+      ],
+      [
+        'the inlined engine manifest',
+        { angularSSRInstalled: true, isZoneJsInstalled: true, engineWiring },
+      ],
+      [
+        'the engine manifest module import',
+        {
+          angularSSRInstalled: true,
+          isZoneJsInstalled: false,
+          engineWiring: {
+            ...engineWiring,
+            manifestModuleRequest: '/root/__manifest__.js',
+          },
+        },
+      ],
+    ];
+
+    it.each(prefixCases)(
+      'should shift an object sourcemap past %s',
+      (_, options) => {
+        const { source, map } = invokeLoader(userContent, options, {
+          ...incomingMap,
+        });
+
+        expect(map).toStrictEqual({
+          ...incomingMap,
+          mappings: `${';'.repeat(
+            emittedPrefixLines(source)
+          )}${incomingMappings}`,
+        });
+      }
+    );
+
+    it.each(prefixCases)(
+      'should shift a string sourcemap past %s',
+      (_, options) => {
+        const { source, map } = invokeLoader(
+          userContent,
+          options,
+          JSON.stringify(incomingMap)
+        );
+
+        expect(typeof map).toBe('string');
+        expect(JSON.parse(map as string)).toStrictEqual({
+          ...incomingMap,
+          mappings: `${';'.repeat(
+            emittedPrefixLines(source)
+          )}${incomingMappings}`,
+        });
+      }
+    );
+
+    it('should forward a malformed sourcemap unchanged', () => {
+      const { map } = invokeLoader(
+        userContent,
+        { angularSSRInstalled: false, isZoneJsInstalled: true },
+        '{ not json'
+      );
+
+      expect(map).toBe('{ not json');
+    });
+
+    it('should forward a sourcemap rspack would reject unchanged', () => {
+      const unusable = {
+        version: 3,
+        mappings: null,
+      } as unknown as RawSourceMap;
+
+      const { map } = invokeLoader(
+        userContent,
+        { angularSSRInstalled: false, isZoneJsInstalled: true },
+        unusable
+      );
+
+      expect(map).toBe(unusable);
+    });
+
+    it('should pass through a missing sourcemap', () => {
+      const { map } = invokeLoader(userContent, {
+        angularSSRInstalled: false,
+        isZoneJsInstalled: true,
+      });
+
+      expect(map).toBeUndefined();
+    });
   });
 
   it('should not wire the engine when @angular/ssr is not installed', () => {

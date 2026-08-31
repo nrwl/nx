@@ -6,6 +6,9 @@ import {
   generateEngineManifestSource,
   type EngineWiringOptions,
 } from './engine-manifest';
+import { isForwardableSourceMap } from './inline-source-map';
+
+type LoaderSourceMap = Parameters<LoaderDefinitionFunction>[1];
 
 export interface PlatformServerExportsLoaderOptions {
   angularSSRInstalled: boolean;
@@ -24,12 +27,12 @@ export interface PlatformServerExportsLoaderOptions {
 export default function loader(
   this: LoaderContext<PlatformServerExportsLoaderOptions>,
   content: string,
-  map: Parameters<LoaderDefinitionFunction>[1]
+  map: LoaderSourceMap
 ) {
   const { angularSSRInstalled, isZoneJsInstalled, engineWiring } =
     this.getOptions();
 
-  let prologue = '';
+  let prologue: string | undefined;
   let epilogue = `
   // EXPORTS added by @nx/angular-rspack
   export { renderApplication, renderModule, ɵSERVER_CONTEXT } from '@angular/platform-server';
@@ -60,16 +63,53 @@ export default function loader(
     `;
   }
 
-  let source = `${prologue}
-${content}
-${epilogue}`;
+  const prefix = [
+    isZoneJsInstalled ? `import 'zone.js/node';` : undefined,
+    prologue,
+  ]
+    .filter((section) => section !== undefined)
+    .map((section) => `${section}\n`)
+    .join('');
 
-  if (isZoneJsInstalled) {
-    source = `import 'zone.js/node';
-    ${source}`;
-  }
-
-  this.callback(null, source, map);
+  this.callback(
+    null,
+    `${prefix}${content}\n${epilogue}`,
+    shiftSourceMap(map, prefix)
+  );
 
   return;
+}
+
+/**
+ * Moves every mapping down by the number of lines emitted before the original
+ * content. Source Map v3 `mappings` holds one `;`-separated group per
+ * generated line, so leading empty groups shift the lines and leave the
+ * columns untouched. A map that cannot be parsed or that rspack would reject
+ * is forwarded as it arrived.
+ */
+function shiftSourceMap(map: LoaderSourceMap, prefix: string): LoaderSourceMap {
+  const lineCount = prefix.split('\n').length - 1;
+  if (map === undefined || lineCount === 0) {
+    return map;
+  }
+
+  let parsed: unknown = map;
+  if (typeof map === 'string') {
+    try {
+      parsed = JSON.parse(map);
+    } catch {
+      return map;
+    }
+  }
+
+  if (!isForwardableSourceMap(parsed)) {
+    return map;
+  }
+
+  const shifted = {
+    ...parsed,
+    mappings: `${';'.repeat(lineCount)}${parsed.mappings}`,
+  };
+
+  return typeof map === 'string' ? JSON.stringify(shifted) : shifted;
 }
