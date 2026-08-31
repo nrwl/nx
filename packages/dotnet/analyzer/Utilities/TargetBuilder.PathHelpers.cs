@@ -274,8 +274,10 @@ public static partial class TargetBuilder
             return path;
         }
 
+        // Segment 0 is the {projectRoot}/{workspaceRoot} token every ResolvePath
+        // result carries, and a Configuration value could otherwise match it.
         var segments = path.Split('/');
-        for (var i = 0; i < segments.Length; i++)
+        for (var i = 1; i < segments.Length; i++)
         {
             if (segments[i].Equals(defaultConfiguration, StringComparison.Ordinal))
             {
