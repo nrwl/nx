@@ -64,6 +64,8 @@ const LINTABLE_EXTENSIONS = [
   'astro',
 ];
 const LINTABLE_FILES_GLOB = `**/*.{${LINTABLE_EXTENSIONS.join(',')}}`;
+// The one rule that looks across projects; every other rule sees one file.
+const BOUNDARIES_PLUGIN_SPECIFIER = '@nx/oxlint/boundaries-plugin';
 const PROJECT_CONFIG_FILENAMES = ['project.json', 'package.json'];
 const OXLINT_CONFIG_GLOB = combineGlobPatterns([
   ...OXLINT_CONFIG_FILENAMES.map((f) => `**/${f}`),
@@ -846,18 +848,39 @@ function getProjectUsingOxlintConfig(
     )
   );
 
+  const lintableFiles = `{projectRoot}/${LINTABLE_FILES_GLOB}`;
+  const usesBoundariesBridge = configInputs.some((config) =>
+    (jsPluginSpecifiersByConfig.get(config) ?? []).includes(
+      BOUNDARIES_PLUGIN_SPECIFIER
+    )
+  );
+
   const targetConfig: TargetConfiguration = {
     command: `oxlint ${lintPath}`,
     options: { cwd: projectRoot },
     cache: true,
     inputs: [
-      'default',
-      '^default',
+      // Only what Oxlint can lint, so a README or JSON edit is not a re-lint.
+      { fileset: lintableFiles },
+      // The bridge checks the project graph, which a dependency's imports and
+      // package.json shape.
+      ...(usesBoundariesBridge
+        ? [
+            { fileset: lintableFiles, dependencies: true as const },
+            {
+              fileset: '{projectRoot}/package.json',
+              dependencies: true as const,
+            },
+          ]
+        : []),
+      // Configs, ignore files and tsconfigs inside the project.
+      {
+        fileset: `{projectRoot}/**/{${[...OXLINT_CONFIG_FILENAMES, '.eslintignore', 'tsconfig*.json'].join(',')}}`,
+      },
       ...configInputs.map((config) => `{workspaceRoot}/${config}`),
       ...[...jsPluginFiles].map((file) => `{workspaceRoot}/${file}`),
       // Oxlint layers .eslintignore files from every ancestor of a linted
-      // file; the project's own is covered by `default`. Declared even when
-      // absent, like the extends chain.
+      // file. Declared even when absent, like the extends chain.
       ...ancestorEslintignorePaths(projectRoot).map(
         (file) => `{workspaceRoot}/${file}`
       ),
