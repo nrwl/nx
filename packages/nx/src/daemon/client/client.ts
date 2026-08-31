@@ -174,8 +174,7 @@ export class WatcherFailedError extends Error {
 
 /**
  * A framing failure repeats on every redial, so the watcher channels stop
- * re-dialing once more than this many land back to back without a message in
- * between.
+ * re-dialing once this many land back to back without a message in between.
  */
 const MAX_CONSECUTIVE_FRAMING_FAILURES = 3;
 
@@ -532,7 +531,7 @@ export class DaemonClient {
     // — re-dialing replays it — so without this the channel would reconnect and
     // re-fail forever. Reaching a payload over NX_MAX_MESSAGE_SIZE does exactly
     // that on every notification.
-    if (this.fileWatcherFramingFailures > MAX_CONSECUTIVE_FRAMING_FAILURES) {
+    if (this.fileWatcherFramingFailures >= MAX_CONSECUTIVE_FRAMING_FAILURES) {
       clientLogger.log(
         `[FileWatcher] Giving up after ${this.fileWatcherFramingFailures} consecutive framing failures`
       );
@@ -752,7 +751,7 @@ export class DaemonClient {
     // See reconnectFileWatcher: a framing failure repeats on every redial, so
     // the concurrency guard alone cannot bound it.
     if (
-      this.projectGraphListenerFramingFailures >
+      this.projectGraphListenerFramingFailures >=
       MAX_CONSECUTIVE_FRAMING_FAILURES
     ) {
       clientLogger.log(

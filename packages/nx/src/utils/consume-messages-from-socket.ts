@@ -15,7 +15,9 @@ const MAX_HEADER_LENGTH = MESSAGE_HEADER_PREFIX.length + 16 + 1;
  * out. The default is four times the ~0.5GiB string ceiling that used to cap
  * every message, so it clears any payload that previously worked or was meant
  * to. Set `NX_MAX_MESSAGE_SIZE` to another byte count to change it, or to 0 to
- * remove the ceiling.
+ * remove the ceiling. The daemon reads it from the env it was spawned with —
+ * clients do not reflect it (see DAEMON_ENV_VARS_EXCLUSIONS) — so changing it
+ * needs a daemon restart (`nx reset`).
  */
 export const DEFAULT_MAX_MESSAGE_SIZE = 2 * 1024 * 1024 * 1024;
 
@@ -183,7 +185,8 @@ export function consumeMessagesFromSocket(
         if (maxMessageSize > 0 && value > maxMessageSize) {
           fail(
             `Message of ${value} bytes exceeds the ${maxMessageSize} byte limit. ` +
-              `Set NX_MAX_MESSAGE_SIZE to raise it, or to 0 to remove it.`
+              `Set NX_MAX_MESSAGE_SIZE to raise it, or to 0 to remove it, ` +
+              `then run \`nx reset\` so a running daemon picks up the change.`
           );
           return null;
         }
@@ -272,9 +275,9 @@ function trimToCharBoundary(window: Buffer, from: 'start' | 'end'): Buffer {
 }
 
 /**
- * Render part of a message for an error message. A v8 payload is binary, so it
- * is rendered as hex: decoding it as utf8 replaces every byte above 0x7f with
- * U+FFFD, starting with the 0xFF header that identifies the format.
+ * Render part of a message for an error message. A v8 payload is binary rather
+ * than utf8 text — its 0xFF header alone can never decode — so it is rendered
+ * as hex instead of as U+FFFD-riddled mojibake.
  */
 export function describeMessage(
   message: Buffer,

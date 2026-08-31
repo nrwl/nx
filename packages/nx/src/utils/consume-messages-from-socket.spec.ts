@@ -194,8 +194,8 @@ describe('isJsonMessage', () => {
   it.each([[{ a: 1 }], [[1, 2, 3]], [new Date()], [42], ['hello'], [true]])(
     'treats the v8 encoding of %j as non-JSON',
     (value) => {
-      // Byte-level detection also covers bare v8 primitives, which the previous
-      // string-prefix check could not distinguish from their JSON spelling.
+      // Bare v8 primitives still carry the 0xFF version header, so detection
+      // never confuses them with their JSON spelling.
       expect(isJsonMessage(v8Serialize(value))).toBe(false);
     }
   );
