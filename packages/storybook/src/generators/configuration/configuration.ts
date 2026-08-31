@@ -10,6 +10,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { acknowledgeBuildScripts } from '@nx/devkit/internal';
+import { gte, minVersion } from 'semver';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import { StorybookConfigureSchema } from './schema';
@@ -200,9 +201,18 @@ export async function configurationGeneratorInternal(
   }
 
   if (schema.interactionTests) {
+    const testRunnerVersion = versions(tree).testRunnerVersion;
     // @storybook/test-runner depends on @swc/core.
     acknowledgeSwcBuildScripts(tree);
-    devDeps['@storybook/test-runner'] = versions(tree).testRunnerVersion;
+    if (gte(minVersion(testRunnerVersion), '0.24.0')) {
+      // Only the 0.24 line runs on jest 30, which reaches unrs-resolver
+      // through jest-resolve. The lines Storybook 8 and 9 select are on
+      // jest 29, which resolves without it.
+      acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+        'unrs-resolver': false,
+      });
+    }
+    devDeps['@storybook/test-runner'] = testRunnerVersion;
   }
 
   if (schema.tsConfiguration) {

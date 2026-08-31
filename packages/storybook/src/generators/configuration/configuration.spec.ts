@@ -75,7 +75,7 @@ describe('@nx/storybook:configuration', () => {
         });
       });
 
-      it('should deny the @swc/core build script pulled in by @storybook/test-runner', async () => {
+      it('should deny the build scripts pulled in by @storybook/test-runner', async () => {
         await withPnpm(tree, '11.2.2', () =>
           configurationGenerator(tree, {
             project: 'test-ui-lib',
@@ -85,9 +85,9 @@ describe('@nx/storybook:configuration', () => {
           })
         );
 
-        expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
-          /['"]@swc\/core['"]: false/
-        );
+        const pnpmWorkspace = tree.read('pnpm-workspace.yaml', 'utf-8');
+        expect(pnpmWorkspace).toMatch(/['"]@swc\/core['"]: false/);
+        expect(pnpmWorkspace).toMatch(/['"]?unrs-resolver['"]?: false/);
       });
 
       it('should deny the core-js build script added for react-webpack5 libraries', async () => {
@@ -1500,6 +1500,37 @@ describe('@nx/storybook:configuration', () => {
         const { devDependencies } = readJson(tree, 'package.json');
         expect(devDependencies['@storybook/test-runner']).toBe('^0.23.0');
       });
+
+      it.each(['~8.1.11', '^8.0.0', '9.1.15'])(
+        'should not deny unrs-resolver on storybook %s, whose test runner runs on jest 29',
+        async (storybookRange) => {
+          const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+          await libraryGenerator(tree, {
+            directory: 'test-ui-lib',
+            bundler: 'none',
+            skipFormat: true,
+            addPlugin: true,
+          });
+          updateJson(tree, 'package.json', (json) => {
+            json.devDependencies ??= {};
+            json.devDependencies['storybook'] = storybookRange;
+            return json;
+          });
+
+          await withPnpm(tree, '11.2.2', () =>
+            configurationGenerator(tree, {
+              project: 'test-ui-lib',
+              uiFramework: '@storybook/react-vite',
+              interactionTests: true,
+              addPlugin: true,
+            })
+          );
+
+          const pnpmWorkspace = tree.read('pnpm-workspace.yaml', 'utf-8');
+          expect(pnpmWorkspace).toMatch(/['"]@swc\/core['"]: false/);
+          expect(pnpmWorkspace).not.toContain('unrs-resolver');
+        }
+      );
     });
 
     describe('basic functionalities', () => {

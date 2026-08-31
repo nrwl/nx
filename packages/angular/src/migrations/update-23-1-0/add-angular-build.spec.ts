@@ -192,9 +192,7 @@ describe('add-angular-build migration', () => {
 
       await withPnpm(tree, '11.2.2', () => migration(tree));
 
-      expect(tree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
-        'allowBuilds'
-      );
+      expect(tree.exists('pnpm-workspace.yaml')).toBe(false);
     });
   });
 });
