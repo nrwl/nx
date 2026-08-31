@@ -599,6 +599,7 @@ public class TargetBuilderOutputPathsTests
         var projectDirectory = ProjectDir("apps", "foo");
         var properties = new Dictionary<string, string>
         {
+            ["Configuration"] = "Debug",
             ["PublishDir"] = "dist-publish",
         };
 
