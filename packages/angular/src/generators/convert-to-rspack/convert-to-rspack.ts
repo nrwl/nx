@@ -29,6 +29,7 @@ import { nxVersion } from '../../utils/versions';
 import { supportsSsrAllowedHosts, versions } from '../utils/version-utils';
 import { createConfig } from './lib/create-config';
 import { getCustomWebpackConfig } from './lib/get-custom-webpack-config';
+import { mergeServerTsConfig } from './lib/merge-server-tsconfig';
 import { updateTsconfig } from './lib/update-tsconfig';
 import { validateSupportedBuildExecutor } from './lib/validate-supported-executor';
 import type { ConvertToRspackSchema } from './schema';
@@ -346,6 +347,8 @@ export async function convertToRspack(
   const configurationOptions: Record<string, Record<string, any>> = {};
   let buildTarget: { name: string; config: TargetConfiguration } | undefined;
   let serveTarget: { name: string; config: TargetConfiguration } | undefined;
+  let buildTsConfigPath: string | undefined;
+  let serverTsConfigPath: string | undefined;
   const targetsToRemove: string[] = [];
   let customWebpackConfigPath: string | undefined;
 
@@ -379,6 +382,7 @@ export async function convertToRspack(
           );
         }
       }
+      buildTsConfigPath = target.options?.tsConfig;
       buildTarget = { name: targetName, config: target };
       targetsToRemove.push(targetName);
     } else if (
@@ -392,6 +396,7 @@ export async function convertToRspack(
         project.root
       );
       createConfigOptions.server = './src/main.server.ts';
+      serverTsConfigPath = target.options?.tsConfig;
       targetsToRemove.push(targetName);
     } else if (
       target.executor === '@angular-devkit/build-angular:dev-server' ||
@@ -481,6 +486,14 @@ export async function convertToRspack(
     customWebpackConfigInfo?.isWebpackConfigFunction
   );
   updateTsconfig(tree, project.root);
+  if (serverTsConfigPath) {
+    mergeServerTsConfig(
+      tree,
+      project.root,
+      serverTsConfigPath,
+      buildTsConfigPath
+    );
+  }
 
   for (const targetName of targetsToRemove) {
     delete project.targets[targetName];

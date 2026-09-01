@@ -12,6 +12,7 @@ import { join } from 'path';
 import { readCompilerOptionsFromTsConfig } from '../../utils/tsconfig-utils';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
+import { SERVER_APP_CONFIG_FILE } from './constants';
 
 export function setServerTsConfigOptionsForSingleProgramBuild(
   tree: Tree,
@@ -85,7 +86,7 @@ export function generateTsConfigServerJsonForBrowserBuilder(
     exclude.add(`src/${options.main}`);
     exclude.add(`src/${options.serverFileName}`);
     if (options.standalone) {
-      exclude.add('src/app/app.config.server.ts');
+      exclude.add(SERVER_APP_CONFIG_FILE);
     }
     json.exclude = Array.from(exclude);
     return json;
