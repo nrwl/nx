@@ -298,7 +298,7 @@
     },
     "transformers": {
       "type": "array",
-      "description": "List of TypeScript Compiler Transfomers Plugins.",
+      "description": "List of TypeScript Compiler Transformers Plugins. Not supported by rspack, which compiles TypeScript with `builtin:swc-loader`. Setting this option has no effect and logs a warning.",
       "aliases": ["tsPlugins"],
       "items": {
         "$ref": "#/definitions/transformerPattern"
