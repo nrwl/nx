@@ -789,6 +789,19 @@ function ancestorIgnorePaths(projectRoot: string): string[] {
 }
 
 /**
+ * Escape the gitignore metacharacters in a path so `--ignore-pattern` matches it
+ * literally. The value crosses two languages and `quoteShellArg` only covers the
+ * shell: to Oxlint's matcher `[`, `]`, `*` and `?` are pattern syntax, and a
+ * trailing space is stripped unless escaped — so `/a[b]` excludes `ab` while
+ * leaving `a[b]` walked, which is both a miss and a silent over-exclusion.
+ */
+function escapeIgnorePattern(pattern: string): string {
+  return pattern
+    .replace(/([\\[\]*?])/g, '\\$1')
+    .replace(/ +$/, (spaces) => spaces.replace(/ /g, '\\ '));
+}
+
+/**
  * Direct child project roots for each project root, keyed by the parent. A root
  * belongs to its NEAREST enclosing root, so a grandchild lands under the child
  * rather than the grandparent — which is what keeps an outer project from
@@ -929,7 +942,8 @@ function getProjectUsingOxlintConfig(
     nestedRootsByParent,
     isRootProject && standaloneSrcPath ? standaloneSrcPath : ''
   ).map(
-    (relativeRoot) => `--ignore-pattern ${quoteShellArg(`/${relativeRoot}`)}`
+    (relativeRoot) =>
+      `--ignore-pattern ${quoteShellArg(escapeIgnorePattern(`/${relativeRoot}`))}`
   );
 
   const jsPluginFiles = new Set(

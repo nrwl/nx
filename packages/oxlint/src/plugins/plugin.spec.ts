@@ -376,6 +376,44 @@ describe('@nx/oxlint plugin', () => {
     }
   );
 
+  // `--ignore-pattern` takes a gitignore pattern, not a path, so a `[` or `*` in a
+  // directory name is pattern syntax. Unescaped, `/a[b]` excludes `ab` and leaves
+  // `a[b]` walked -- a silent over-exclusion and a missed prune at once.
+  (process.platform === 'win32' ? it.skip : it)(
+    'should exclude a nested root whose name contains glob metacharacters',
+    async () => {
+      createFiles({
+        '.oxlintrc.json': `{"rules":{}}`,
+        'libs/a/project.json': `{"name":"a"}`,
+        'libs/a/index.ts': `export const a = 1;`,
+        'libs/a/n[x]/project.json': `{"name":"a-nested"}`,
+        'libs/a/n[x]/index.ts': `export const n = 1;`,
+        // Owned by `a`. An unescaped `/n[x]` is a character class matching this.
+        'libs/a/nx/keep.ts': `export const k = 1;`,
+      });
+
+      const results = await invokeCreateNodesOnMatchingFiles(context);
+      const command = results.projects['libs/a'].targets.lint.command;
+      const oxlint = join(
+        require.resolve('oxlint/package.json'),
+        '..',
+        'bin',
+        'oxlint'
+      );
+
+      const linted = execFileSync(
+        'sh',
+        ['-c', command.replace(/^oxlint /, `"${oxlint}" --debug=files `)],
+        { cwd: join(tempFs.tempDir, 'libs/a'), encoding: 'utf-8' }
+      )
+        .trim()
+        .split('\n')
+        .sort();
+
+      expect(linted).toEqual(['index.ts', 'nx/keep.ts']);
+    }
+  );
+
   it('should declare local jsPlugins as file inputs but never as externalDependencies', async () => {
     createFiles({
       '.oxlintrc.json': `{"jsPlugins":["@nx/oxlint/boundaries-plugin","./tools/local-plugin.js",{"name":"acme","specifier":"@acme/oxlint-plugin"},{"name":"local","specifier":"./tools/other-plugin.js"}],"rules":{}}`,
