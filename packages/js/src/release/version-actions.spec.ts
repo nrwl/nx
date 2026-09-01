@@ -1,11 +1,70 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { readJson, writeJson, type Tree } from '@nx/devkit';
+import { safeSpawn } from '@nx/devkit/internal';
 import JsVersionActions from './version-actions';
+import * as npmConfigModule from '../utils/npm-config';
 
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual('@nx/devkit'),
   detectPackageManager: jest.fn(() => 'pnpm'),
 }));
+jest.mock('@nx/devkit/internal', () => ({
+  ...jest.requireActual('@nx/devkit/internal'),
+  safeSpawn: jest.fn(),
+}));
+
+describe('readCurrentVersionFromRegistry', () => {
+  // registry and tag come back from `npm config get`, i.e. verbatim from a
+  // workspace .npmrc an install script can write.
+  const TAG_PAYLOAD = 'latest; touch NX_PWNED';
+  const REGISTRY_PAYLOAD = 'https://r.example.com/"; touch NX_PWNED; "';
+
+  afterEach(() => jest.restoreAllMocks());
+
+  it('passes an injected registry and tag to npm as single argv elements', async () => {
+    jest.spyOn(npmConfigModule, 'parseRegistryOptions').mockResolvedValue({
+      registry: REGISTRY_PAYLOAD,
+      tag: TAG_PAYLOAD,
+      registryConfigKey: 'registry',
+    });
+    (safeSpawn as jest.Mock).mockImplementation(() => {
+      const { EventEmitter } = require('events');
+      const { PassThrough } = require('stream');
+      const child: any = new EventEmitter();
+      child.stdout = new PassThrough();
+      child.stderr = new PassThrough();
+      process.nextTick(() => {
+        child.stdout.end('1.2.3\n');
+        child.stderr.end('');
+        setImmediate(() => child.emit('close', 0));
+      });
+      return child;
+    });
+
+    const tree = createTreeWithEmptyWorkspace();
+    writeJson(tree, 'packages/my-lib/package.json', {
+      name: 'my-lib',
+      version: '1.0.0',
+    });
+    const versionActions = await createVersionActions(tree);
+
+    const { currentVersion } =
+      await versionActions.readCurrentVersionFromRegistry(tree, {} as any);
+
+    expect(currentVersion).toBe('1.2.3');
+    expect(safeSpawn).toHaveBeenCalledWith(
+      'npm',
+      [
+        'view',
+        'my-lib',
+        'version',
+        `--registry=${REGISTRY_PAYLOAD}`,
+        `--tag=${TAG_PAYLOAD}`,
+      ],
+      expect.anything()
+    );
+  });
+});
 
 describe('JsVersionActions', () => {
   it('preserves package.json formatting when updating versions and dependencies', async () => {
