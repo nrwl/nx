@@ -1,6 +1,6 @@
 mod dep_outputs;
 mod hash_plan_inspector;
-mod hash_planner;
+pub(crate) mod hash_planner;
 pub mod hashers;
 mod inputs;
 pub mod snapshot_eligibility;

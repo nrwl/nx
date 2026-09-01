@@ -255,10 +255,14 @@ fn projects_from_project_glob_changes(
     };
     let workspace_root = Path::new(&options.workspace_root);
 
-    // Raw, not normalized: the TypeScript this replaced matched and stat'd the
-    // path exactly as given. Normalizing here would make a Windows path absolute
-    // after the drive letter is stripped, and `Path::join` drops the base on an
-    // absolute component, so the probe would stat outside the workspace.
+    // Raw, not normalized, to match the TypeScript this replaced, which globbed
+    // and stat'd the path exactly as given.
+    //
+    // This is parity, not containment. `Path::join` drops the base on an
+    // absolute component, so a raw `/etc/project.json` or `C:\...` still stats
+    // outside the workspace, and `..` escapes by ordinary resolution. Nothing
+    // here confines the probe; it only decides whether the file exists, and a
+    // path that leaves the workspace was never a project config anyway.
     for file in touched_files {
         if !glob.is_match(file) {
             continue;
