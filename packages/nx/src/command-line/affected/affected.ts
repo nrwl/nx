@@ -15,13 +15,15 @@ import {
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
 import { projectHasTarget } from '../../utils/project-graph-utils';
-import { filterAffected } from '../../project-graph/affected/affected-project-graph';
+import {
+  filterAffected,
+  filterAffectedWithReasons,
+} from '../../project-graph/affected/affected-project-graph';
 import { TargetDependencyConfig } from '../../config/workspace-json-project-json';
 import { readNxJson } from '../../config/configuration';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { generateGraph } from '../graph/graph';
 import { computeAffectedTasks } from '../../project-graph/affected/affected-tasks';
-import { filterAffectedWithReasons } from '../../project-graph/affected/affected-project-graph';
 import { printAffectedExplanation } from '../../project-graph/affected/print-explanation';
 import { isExplaining } from '../../project-graph/affected/affected-reasons';
 import { resolveAffectedGranularity } from '../../project-graph/affected/granularity';

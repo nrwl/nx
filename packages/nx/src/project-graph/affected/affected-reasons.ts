@@ -84,10 +84,10 @@ export function formatAffectedReason(reason: AffectedReason): string {
 /**
  * Renders `--explain` output: one block per entity, its reasons beneath it.
  *
- * Entities with no reason are still listed, with a line saying so, because a
- * blank is indistinguishable from a bug when you are troubleshooting. That
- * happens when a task is selected by propagation from a producer that has since
- * been filtered out of the printed set.
+ * An entity with no reason is still listed, with a line saying so, because a
+ * blank line is indistinguishable from a bug when you are troubleshooting. Only
+ * the task path can produce one: project reasons are only ever created by
+ * recording one, so a project with none is absent rather than empty.
  */
 export function formatAffectedExplanation(
   reasons: Record<string, AffectedReason[]>,

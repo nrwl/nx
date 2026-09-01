@@ -45,8 +45,9 @@ export const getTouchedProjectsFromLockFile: TouchedProjectLocator<
   );
 
   if (projectsAffectedByDependencyUpdates === 'auto') {
-    // External node names, which filterAffected reverse-walks to projects, so
-    // the name is the package rather than a workspace project.
+    // Usually external node names, which filterAffected reverse-walks to
+    // projects. The all-projects fallbacks return workspace project names
+    // instead, which is what the `npm:` test below is for.
     return getAutoAffected(
       changedLockFile,
       projectGraphNodes,

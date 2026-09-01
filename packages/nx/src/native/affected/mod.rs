@@ -139,9 +139,10 @@ fn implicitly_touched_projects(
     nx_json: &NxJson,
     touched_files: &[String],
 ) -> Result<Vec<TouchedProject>> {
-    // BTreeMap so the pattern scan is reproducible. Order does not change the
-    // result either way: an `AllProjects` hit returns every project whenever it
-    // is reached, and the rest accumulate into a set.
+    // BTreeMap so the pattern scan is reproducible. An `AllProjects` hit returns
+    // every project whenever it is reached, and the rest accumulate per project
+    // in scan order, so this is what makes the reported reasons deterministic
+    // rather than merely making the set of projects deterministic.
     let mut implicits: std::collections::BTreeMap<&str, Implicit> = Default::default();
     implicits.insert("nx.json", Implicit::AllProjects);
 
