@@ -33,8 +33,6 @@ export type FormatInstruction =
   | { source: 'command'; command: string | null }
   | { source: 'dispensed-step' };
 
-// Scope rules for applying an author-provided migration prompt (prompt-only or
-// hybrid migration).
 export function renderAuthorScopeRuleLines(
   pmExec: string,
   format: FormatInstruction

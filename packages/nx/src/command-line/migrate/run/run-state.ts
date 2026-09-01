@@ -3,13 +3,13 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
-  renameSync,
   rmSync,
   type Dirent,
 } from 'fs';
-import { createHash, randomBytes } from 'crypto';
+import { createHash } from 'crypto';
 import { basename, join } from 'path';
 import { writeJsonFile } from '../../../utils/fileutils';
+import { publishFileAtomically } from './atomic-write';
 import { GIT_SHA } from '../../../utils/git-utils';
 import { nxVersion } from '../../../utils/versions';
 import { HANDOFFS_DIR_NAME, MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
@@ -736,9 +736,7 @@ export function writeRunState(
   state: MigrateRunState
 ): void {
   const filePath = join(runDirPath, RUN_STATE_FILE_NAME);
-  const tmpPath = `${filePath}~${randomBytes(4).toString('hex')}`;
-  writeJsonFile(tmpPath, state);
-  renameSync(tmpPath, filePath);
+  publishFileAtomically(filePath, (tmpPath) => writeJsonFile(tmpPath, state));
 }
 
 // ENOENT is the ordinary "no runs yet" answer. Any other failure (EACCES,

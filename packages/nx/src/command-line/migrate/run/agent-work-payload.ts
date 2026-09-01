@@ -1,21 +1,18 @@
 // Internal to run/: deliberately not re-exported from ./index.
 //
-// Stores the `<nx_migrate_prompt>` payload a recorded worker emits when it
-// parks a step, so a reconcile can re-emit the block for a session that lost
-// it to a compaction or a restart. Keyed by step and attempt: the name is
-// derived rather than recorded in run.json, and a re-armed attempt writes its
-// own file instead of inheriting a stale one.
+// Persists each parked payload by step and attempt, so a reconcile can re-emit
+// it after a compaction or restart without reusing payloads from discarded
+// attempts.
 
-import { randomBytes } from 'crypto';
 import {
   mkdirSync,
   readdirSync,
   readFileSync,
-  renameSync,
   rmSync,
   writeFileSync,
 } from 'fs';
 import { dirname, join } from 'path';
+import { publishFileAtomically } from './atomic-write';
 import type { MigrateStepAwaitingKind } from './run-state';
 
 const AGENT_WORK_DIR_NAME = 'agent-work';
@@ -44,19 +41,18 @@ export interface ExpectedAgentWorkPayload {
 }
 
 /**
- * Temp file then rename: a crash mid-write leaves only the stale temp file,
- * never a half-written payload at the real path. Failures propagate, because
- * the runbook promises a parked step's block is re-emitted, so a caller that
- * cannot store the payload must fail the attempt rather than park.
+ * Failures propagate: the runbook promises a parked step's block is
+ * re-emitted, so a caller that cannot store the payload must fail the attempt
+ * rather than park.
  */
 export function persistAgentWorkPayload(
   filePath: string,
   payload: object
 ): void {
   mkdirSync(dirname(filePath), { recursive: true });
-  const tmpPath = `${filePath}~${randomBytes(4).toString('hex')}`;
-  writeFileSync(tmpPath, JSON.stringify(payload, null, 2));
-  renameSync(tmpPath, filePath);
+  publishFileAtomically(filePath, (tmpPath) =>
+    writeFileSync(tmpPath, JSON.stringify(payload, null, 2))
+  );
 }
 
 /**
@@ -101,18 +97,9 @@ export function readAgentWorkPayload(
 }
 
 /**
- * The newest surviving payload from a prior attempt of the step, or null. A
- * retained-generator retry re-hands it: it carries the captured generator
- * output the retry can no longer recompute.
- *
- * `fromAttempt` is the step's lineage boundary, the attempt its current
- * generator marker was written on. Anything below it describes a generator run
- * a reset-backed retry discarded, and the best-effort file removal cannot be
- * relied on to invalidate it. Undefined fails closed with no lookup at all: an
- * older nx's rearm drops the field while leaving the files (the run-state
- * format is shared), so nothing proves a stored copy belongs to the current
- * lineage. The cost is a fallback emission where a carry may have been
- * legitimate.
+ * Returns the newest payload from the current generator lineage, or null.
+ * `fromAttempt` excludes generator runs discarded by reset-backed retries; an
+ * absent boundary fails closed for states written by older Nx.
  */
 export function latestStoredAgentWorkPayload(
   runDirPath: string,

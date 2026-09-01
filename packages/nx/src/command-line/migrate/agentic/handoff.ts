@@ -142,8 +142,7 @@ export type HandoffReadResult =
 
 /**
  * `lstat`, not `stat`: a symlink in the handoffs dir's place would send every
- * handoff read and removal wherever it points. Handoff files sit directly
- * inside it, so this and the final component's own guard cover the whole path.
+ * handoff read and removal wherever it points.
  */
 export function handoffsDirState(
   handoffsDir: string
