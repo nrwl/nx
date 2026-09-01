@@ -30,6 +30,12 @@ import { join, resolve } from 'node:path';
 // SELECTED_PM is declared as an input on this task so the cache can't serve an
 // npm-built template to a pnpm agent.
 const PACKAGE_MANAGERS = [process.env.SELECTED_PM || 'npm'];
+// Every spec file that calls newProject() starts on one of these two: 133 of 150
+// on `apps` (mostly by defaulting to it) and 17 on `ts`. The long-tail presets
+// (react-standalone, nuxt, angular-*) only reach create-nx-workspace through
+// runCreateWorkspace(), which the workspace-create suites use deliberately to
+// exercise the real thing and which this template must not replace.
+const PRESETS = ['apps', 'ts'];
 const SCOPE = 'proj';
 const listenAddress = 'localhost';
 const port = process.env.NX_LOCAL_REGISTRY_PORT ?? '4873';
@@ -49,19 +55,25 @@ const version =
 console.log(
   `Building e2e base workspaces with create-nx-workspace@${version} -> ${outputRoot}`
 );
-console.log(`Package managers: ${PACKAGE_MANAGERS.join(', ')}`);
-
-const results = await Promise.allSettled(
-  PACKAGE_MANAGERS.map((pm) => buildTemplate(pm))
+console.log(
+  `Package managers: ${PACKAGE_MANAGERS.join(', ')} | presets: ${PRESETS.join(', ')}`
 );
 
-const failures = PACKAGE_MANAGERS.map((pm, i) => [pm, results[i]]).filter(
-  ([, r]) => r.status === 'rejected'
+const combos = PACKAGE_MANAGERS.flatMap((pm) =>
+  PRESETS.map((preset) => ({ pm, preset }))
 );
-for (const [pm, r] of failures) {
-  console.error(`Failed to build the ${pm} base workspace:`, r.reason);
+const results = await Promise.allSettled(combos.map((c) => buildTemplate(c)));
+
+const failures = combos
+  .map((c, i) => [c, results[i]])
+  .filter(([, r]) => r.status === 'rejected');
+for (const [{ pm, preset }, r] of failures) {
+  console.error(
+    `Failed to build the ${pm}/${preset} base workspace:`,
+    r.reason
+  );
 }
-if (failures.length === PACKAGE_MANAGERS.length) {
+if (failures.length === combos.length) {
   // Every template failed: the fallback path would silently absorb this and every
   // spec file would pay the cold start again, so fail loudly instead.
   process.exit(1);
@@ -91,10 +103,11 @@ function registryEnv(cacheRoot) {
   };
 }
 
-/** @param {string} pm */
-async function buildTemplate(pm) {
-  const work = mkdtempSync(join(tmpdir(), `nx-e2e-base-${pm}-`));
-  const cacheRoot = mkdtempSync(join(tmpdir(), `nx-e2e-base-cache-${pm}-`));
+/** @param {{ pm: string, preset: string }} combo */
+async function buildTemplate({ pm, preset }) {
+  const slug = `${pm}-${preset}`;
+  const work = mkdtempSync(join(tmpdir(), `nx-e2e-base-${slug}-`));
+  const cacheRoot = mkdtempSync(join(tmpdir(), `nx-e2e-base-cache-${slug}-`));
   const env = registryEnv(cacheRoot);
 
   // Mirror the flags runCreateWorkspace() defaults to for { preset: 'apps' };
@@ -102,7 +115,7 @@ async function buildTemplate(pm) {
   // workspaces the fallback path produces.
   const command = [
     `npx --yes create-nx-workspace@${version} ${SCOPE}`,
-    `--preset=apps`,
+    `--preset=${preset}`,
     `--package-manager=${pm}`,
     `--no-interactive`,
     `--linter=eslint`,
@@ -121,7 +134,7 @@ async function buildTemplate(pm) {
       // best-effort; a missing daemon is fine
     }
 
-    const dest = join(outputRoot, pm);
+    const dest = join(outputRoot, pm, preset);
     rmSync(dest, { recursive: true, force: true });
     // dereference: false keeps pnpm's relative node_modules symlinks intact.
     cpSync(projDir, dest, { recursive: true, dereference: false });

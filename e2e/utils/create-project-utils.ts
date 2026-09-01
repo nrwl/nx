@@ -91,17 +91,16 @@ export function openInEditor(projectDirectory: string = tmpProjPath()) {
  * for the currently selected CLI.
  */
 /**
- * PROTOTYPE: locate a pre-built base workspace template for the given package
- * manager, produced by the `populate-e2e-base-workspace` task and restored via Nx
- * cache on each agent. Returns null when absent (newProject then builds it the
- * original way), when disabled, or for non-default presets. Existence of the dir is
- * the package-manager gate — only npm is pre-built today.
+ * Locate a pre-built base workspace template for this package manager and preset,
+ * produced by the `populate-e2e-base-workspace` task and restored via Nx cache on
+ * each agent. Existence of the directory is the only gate, so a combination that
+ * isn't pre-built just falls back to building the workspace the original way.
  */
 function sharedBaseWorkspacePath(
   packageManager: string,
   preset: string
 ): string | null {
-  if (process.env.NX_E2E_SKIP_SHARED_BASE === 'true' || preset !== 'apps') {
+  if (process.env.NX_E2E_SKIP_SHARED_BASE === 'true') {
     return null;
   }
   const candidate = join(
@@ -111,7 +110,8 @@ function sharedBaseWorkspacePath(
     'dist',
     'local-registry',
     'proj-backup',
-    packageManager
+    packageManager,
+    preset
   );
   return directoryExists(candidate) ? candidate : null;
 }
@@ -144,9 +144,8 @@ export function newProject({
       const createNxWorkspaceStart = performance.mark(
         'create-nx-workspace:start'
       );
-      // PROTOTYPE: if the populate-e2e-base-workspace task pre-built a base template
-      // (restored via Nx cache on each agent), seed from it instead of running the
-      // ~40s create-nx-workspace. Falls back to the original build when absent.
+      // Seed from the pre-built template when one exists for this package
+      // manager and preset, instead of running the ~40-70s create-nx-workspace.
       const sharedBase = sharedBaseWorkspacePath(packageManager, preset);
       if (sharedBase) {
         ensureDirSync(e2eCwd);
