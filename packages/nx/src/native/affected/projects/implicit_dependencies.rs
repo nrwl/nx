@@ -105,6 +105,7 @@ pub(super) fn implicitly_touched_projects(
                     kind: KIND_IMPLICIT_DEPENDENCY.to_string(),
                     file: Some(file.clone()),
                     pattern: Some(pattern.to_string()),
+                    package: None,
                 })
         })
         .collect())
