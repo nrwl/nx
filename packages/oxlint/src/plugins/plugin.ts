@@ -791,7 +791,7 @@ function ancestorIgnorePaths(projectRoot: string): string[] {
 /**
  * Escape the gitignore metacharacters in a path so `--ignore-pattern` matches it
  * literally. The value crosses two languages and `quoteShellArg` only covers the
- * shell: to Oxlint's matcher `[`, `]`, `*` and `?` are pattern syntax, and a
+ * shell: to Oxlint's matcher `\`, `[`, `]`, `*` and `?` are pattern syntax, and a
  * trailing space is stripped unless escaped — so `/a[b]` excludes `ab` while
  * leaving `a[b]` walked, which is both a miss and a silent over-exclusion.
  */
@@ -862,7 +862,7 @@ function nestedProjectRoots(
     );
 }
 
-// Only the keys are read, so the value type is left open for both callers.
+// Only the keys are read, so the value type is left open for all callers.
 function getRootForDirectory(
   directory: string,
   roots: Map<string, unknown>

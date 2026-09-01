@@ -304,6 +304,44 @@ describe('@nx/oxlint plugin', () => {
     expect(results.projects['a/b/c'].targets.lint.command).toBe('oxlint .');
   });
 
+  // cwd and the walk root differ only for a root-level project, and a pattern
+  // anchors to the cwd. That is the one load-bearing shape the string assertions
+  // cannot see, so run it.
+  (process.platform === 'win32' ? it.skip : it)(
+    'should exclude only the nested root when a root project lints ./src',
+    async () => {
+      createFiles({
+        '.oxlintrc.json': `{"rules":{}}`,
+        'package.json': `{"name":"root-workspace","nx":{}}`,
+        'src/index.ts': `export const a = 1;`,
+        'src/nested/project.json': `{"name":"nested"}`,
+        'src/nested/index.ts': `export const n = 1;`,
+        // Owned by the root project, and shares the nested root's basename.
+        'src/deep/nested/keep.ts': `export const k = 1;`,
+      });
+
+      const results = await invokeCreateNodesOnMatchingFiles(context);
+      const command = results.projects['.'].targets.lint.command;
+      const oxlint = join(
+        require.resolve('oxlint/package.json'),
+        '..',
+        'bin',
+        'oxlint'
+      );
+
+      const linted = execFileSync(
+        'sh',
+        ['-c', command.replace(/^oxlint /, `"${oxlint}" --debug=files `)],
+        { cwd: tempFs.tempDir, encoding: 'utf-8' }
+      )
+        .trim()
+        .split('\n')
+        .sort();
+
+      expect(linted).toEqual(['src/deep/nested/keep.ts', 'src/index.ts']);
+    }
+  );
+
   // A root reaches the shell verbatim, so a directory name is shell code unless
   // it is escaped. Escaped, not dropped: the exclusion still applies.
   (process.platform === 'win32' ? it.skip : it)(
@@ -538,8 +576,10 @@ describe('@nx/oxlint plugin', () => {
     });
   });
 
-  // Without the root short-circuit, `lintPath` falls through to `.` and the root
-  // project gets `oxlint .`, re-linting every sub-project on top of its own target.
+  // Without the root short-circuit a root project with no `src` or `lib` takes `.`
+  // as its lint path and gets a task of its own. The nested-project exclusions
+  // keep that task off the sub-projects' files, but the redundant target remains,
+  // so the short-circuit is what removes it.
   it('should not give a root project a task when it has no src or lib', async () => {
     createFiles({
       '.oxlintrc.json': `{"rules":{}}`,
