@@ -8,8 +8,25 @@ import {
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { join } from 'path';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
+import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
 import { addVSCodeDebugConfiguration } from '../../../utils/vscode-debug-config';
 import { NormalizedSchema } from './normalized-schema';
+
+function bundlerPluginOptions(options: NormalizedSchema) {
+  return {
+    outputPath: options.isUsingTsSolutionConfig
+      ? 'dist'
+      : joinPathFragments(
+          offsetFromRoot(options.appProjectRoot),
+          'dist',
+          options.rootProject ? options.name : options.appProjectRoot
+        ),
+    main: './src/main' + (options.js ? '.js' : '.ts'),
+    tsConfig: './tsconfig.app.json',
+    assets: ['./src/assets'],
+    generatePackageJson: !options.isUsingTsSolutionConfig,
+  };
+}
 
 export function addAppFiles(tree: Tree, options: NormalizedSchema) {
   generateFiles(
@@ -28,25 +45,22 @@ export function addAppFiles(tree: Tree, options: NormalizedSchema) {
       ),
       webpackPluginOptions:
         hasWebpackPlugin(tree) && options.addPlugin !== false
-          ? {
-              outputPath: options.isUsingTsSolutionConfig
-                ? 'dist'
-                : joinPathFragments(
-                    offsetFromRoot(options.appProjectRoot),
-                    'dist',
-                    options.rootProject ? options.name : options.appProjectRoot
-                  ),
-              main: './src/main' + (options.js ? '.js' : '.ts'),
-              tsConfig: './tsconfig.app.json',
-              assets: ['./src/assets'],
-              generatePackageJson: !options.isUsingTsSolutionConfig,
-            }
+          ? bundlerPluginOptions(options)
+          : null,
+      rspackPluginOptions:
+        hasRspackPlugin(tree) && options.addPlugin !== false
+          ? bundlerPluginOptions(options)
           : null,
     }
   );
 
-  if (options.bundler !== 'webpack') {
-    tree.delete(joinPathFragments(options.appProjectRoot, 'webpack.config.js'));
+  // files/common holds a config for every bundler; drop the ones not chosen.
+  for (const bundler of ['webpack', 'rspack']) {
+    if (options.bundler !== bundler) {
+      tree.delete(
+        joinPathFragments(options.appProjectRoot, `${bundler}.config.js`)
+      );
+    }
   }
 
   if (options.framework && options.framework !== 'none') {

@@ -49,6 +49,42 @@ export function getWebpackBuildConfig(
   };
 }
 
+export function getRspackBuildConfig(
+  tree: Tree,
+  project: ProjectConfiguration,
+  options: NormalizedSchema
+): TargetConfiguration {
+  const sourceRoot = getProjectSourceRoot(project, tree);
+  return {
+    executor: `@nx/rspack:rspack`,
+    outputs: ['{options.outputPath}'],
+    defaultConfiguration: 'production',
+    options: {
+      target: 'node',
+      outputPath: options.outputPath,
+      main: joinPathFragments(
+        sourceRoot,
+        'main' + (options.js ? '.js' : '.ts')
+      ),
+      tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
+      assets: [joinPathFragments(sourceRoot, 'assets')],
+      rspackConfig: joinPathFragments(
+        options.appProjectRoot,
+        'rspack.config.js'
+      ),
+      generatePackageJson: options.isUsingTsSolutionConfig ? undefined : true,
+    },
+    configurations: {
+      development: {
+        outputHashing: 'none',
+      },
+      production: {
+        ...(options.docker && { generateLockfile: true }),
+      },
+    },
+  };
+}
+
 export function getEsBuildConfig(
   tree: Tree,
   project: ProjectConfiguration,
