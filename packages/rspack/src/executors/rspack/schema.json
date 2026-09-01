@@ -298,8 +298,9 @@
     },
     "transformers": {
       "type": "array",
-      "description": "List of TypeScript Compiler Transformers Plugins. Not supported by rspack, which compiles TypeScript with `builtin:swc-loader`. Setting this option has no effect and logs a warning.",
+      "description": "List of TypeScript Compiler Transformers Plugins.",
       "aliases": ["tsPlugins"],
+      "x-deprecated": "Not supported by rspack, which compiles TypeScript with `builtin:swc-loader`. This option has no effect. Use `@nx/webpack` for projects that need a TypeScript transformer.",
       "items": {
         "$ref": "#/definitions/transformerPattern"
       }

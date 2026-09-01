@@ -279,7 +279,6 @@ describe('apply-base-config unsupported transformers warning', () => {
   let options: NormalizedNxAppRspackPluginOptions;
 
   beforeEach(() => {
-    jest.resetModules();
     options = {
       root: '/test',
       projectRoot: 'apps/test',
@@ -293,7 +292,8 @@ describe('apply-base-config unsupported transformers warning', () => {
     delete global.NX_GRAPH_CREATION;
   });
 
-  async function runWithSpy() {
+  // Re-require so the set of already-warned projects starts empty.
+  function loadFresh() {
     let warn!: jest.SpyInstance;
     let applyBaseConfigFresh!: typeof applyBaseConfig;
     jest.isolateModules(() => {
@@ -304,28 +304,26 @@ describe('apply-base-config unsupported transformers warning', () => {
     return { warn, applyBaseConfigFresh };
   }
 
-  it('warns when the option is set', async () => {
-    const { warn, applyBaseConfigFresh } = await runWithSpy();
+  function warnedAboutTransformers(warn: jest.SpyInstance): boolean {
+    return warn.mock.calls.some((call) =>
+      String(call[0]).includes('`transformers` option is not supported')
+    );
+  }
+
+  it('warns when the option is set', () => {
+    const { warn, applyBaseConfigFresh } = loadFresh();
 
     applyBaseConfigFresh(options, {});
 
-    expect(
-      warn.mock.calls.some((call) =>
-        String(call[0]).includes('`transformers` option is not supported')
-      )
-    ).toBe(true);
+    expect(warnedAboutTransformers(warn)).toBe(true);
   });
 
-  it('stays silent during graph creation', async () => {
+  it('stays silent during graph creation', () => {
     global.NX_GRAPH_CREATION = true;
-    const { warn, applyBaseConfigFresh } = await runWithSpy();
+    const { warn, applyBaseConfigFresh } = loadFresh();
 
     applyBaseConfigFresh(options, {});
 
-    expect(
-      warn.mock.calls.some((call) =>
-        String(call[0]).includes('`transformers` option is not supported')
-      )
-    ).toBe(false);
+    expect(warnedAboutTransformers(warn)).toBe(false);
   });
 });
