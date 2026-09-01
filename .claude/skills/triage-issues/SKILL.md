@@ -65,7 +65,7 @@ gh issue list --repo nrwl/nx --state open --limit 15 \
 malformed `scope:gradle` label alongside the well-formed ones.
 
 That query mirrors the scraper, so it finds everything that counts as untriaged. The scraper's bar is
-the floor, though — an issue is only genuinely *worked* when it has a **scope label, a priority, and
+the floor, though — an issue is only genuinely _worked_ when it has a **scope label, a priority, and
 an owner**. Sweeping for issues missing any of the three finds real gaps the Slack number doesn't:
 
 ```bash
@@ -89,7 +89,7 @@ anything:
 - **A `Steps to Reproduce` section containing only `1.` is empty.** The bug form seeds that literal
   value (`1-bug.yml`, `id: reproduction`), so the section is present and required on every issue
   whether or not anyone typed into it. Presence of the heading proves nothing.
-- **`type: bug` proves nothing either.** The form applies it on submit. Its *absence* is the more
+- **`type: bug` proves nothing either.** The form applies it on submit. Its _absence_ is the more
   useful signal: an issue with no labels at all was filed outside the template — through the API, or
   by an agent — so none of the form's required fields are guaranteed to be there. Check each one.
 - **Strip the `nx report` block before you go looking for package names.** The report lists every
@@ -98,7 +98,7 @@ anything:
 
 ## 3. Has this already been handled?
 
-The most valuable thing triage does is take issues *off* the pile. Do this before any expensive work
+The most valuable thing triage does is take issues _off_ the pile. Do this before any expensive work
 — there is no point reproducing a bug someone already has a PR open for.
 
 ### Is a PR already in flight?
@@ -138,13 +138,13 @@ gh search issues --repo nrwl/nx --limit 15 "<3-5 distinctive terms from the titl
   comment carries its own `authorAssociation`; the issue itself does not, so pull the reporter's
   standing separately if you need it (`gh api repos/nrwl/nx/issues/<N> --jq .author_association`). If
   a maintainer (`OWNER`, `MEMBER`, `COLLABORATOR`) asked a question and nobody answered, the issue is
-  waiting on them — leave it alone. If the reporter *did* answer, remove the `blocked:` label.
+  waiting on them — leave it alone. If the reporter _did_ answer, remove the `blocked:` label.
 
 ### Other grounds for proposing a close
 
 - **Reporter or a commenter confirmed it's resolved** → `completed`.
 - **Root cause is upstream** and the upstream fix has shipped → `not planned`, linking upstream.
-- **The reported version is two or more majors behind** → this is *not* grounds for a close on its
+- **The reported version is two or more majors behind** → this is _not_ grounds for a close on its
   own. Re-run the reproduction against canary (Step 7) and let the result decide.
 
 ### What not to close
@@ -154,20 +154,20 @@ runs that countdown, and it resets when the reporter replies. Closing by hand ov
 may have deliberately kept the issue alive, and it does the bot's job twice. Apply the `blocked:`
 label and let the timer run.
 
-Every close is a *proposal* — staged, then approved by a human (Step 10). Nothing here closes an
+Every close is a _proposal_ — staged, then approved by a human (Step 10). Nothing here closes an
 issue directly.
 
 ## 4. Completeness gate
 
 Judge against what `.github/ISSUE_TEMPLATE/1-bug.yml` actually collects:
 
-| Field | Form requires it | What it's for |
-| --- | --- | --- |
-| Current / Expected Behavior | yes | Can be a single word and still pass validation — read them. |
-| **GitHub Repo** | **no** | The most valuable field is optional, so it's the one most often absent. |
-| Steps to Reproduce | yes | Often just the seeded `1.`. |
-| Nx Report | yes | Version, OS, node, package manager. Without it you cannot check staleness. |
-| Failure logs, PM version, OS | no | Nice to have; never block on these alone. |
+| Field                        | Form requires it | What it's for                                                              |
+| ---------------------------- | ---------------- | -------------------------------------------------------------------------- |
+| Current / Expected Behavior  | yes              | Can be a single word and still pass validation — read them.                |
+| **GitHub Repo**              | **no**           | The most valuable field is optional, so it's the one most often absent.    |
+| Steps to Reproduce           | yes              | Often just the seeded `1.`.                                                |
+| Nx Report                    | yes              | Version, OS, node, package manager. Without it you cannot check staleness. |
+| Failure logs, PM version, OS | no               | Nice to have; never block on these alone.                                  |
 
 Then pick at most one blocker:
 
@@ -221,14 +221,14 @@ Three tiers. Do them in order and stop when one answers.
 
 ### Two modes, and the one that gets wrongly skipped
 
-| Mode | What the issue gives you | What the sandbox does |
-| --- | --- | --- |
-| **A — clone** | a repo or sandbox URL | clone it, install, run the failing command |
+| Mode           | What the issue gives you                                            | What the sandbox does                                         |
+| -------------- | ------------------------------------------------------------------- | ------------------------------------------------------------- |
+| **A — clone**  | a repo or sandbox URL                                               | clone it, install, run the failing command                    |
 | **B — replay** | self-contained steps from `create-nx-workspace` plus concrete edits | scaffold the workspace from those steps, then run the command |
 
 **Never skip an issue just because there is no repo to clone.** Mode B is the normal shape for core,
 hashing and CLI bugs, where the setup is ten lines and a repo would be overkill — a good Mode B report
-is *more* runnable than a stale repo, not less. Steps qualify when they start from a command anyone
+is _more_ runnable than a stale repo, not less. Steps qualify when they start from a command anyone
 can run and every later step is a concrete edit or command. "Configure module federation and build"
 does not qualify.
 
@@ -270,11 +270,11 @@ Always start on the **reported** version. Then:
 
 The repro outcome outranks every guess made in Steps 5-8. Revise labels and priority to match:
 
-| Outcome | Labels | Priority |
-| --- | --- | --- |
-| Reproduces on latest or canary | remove `blocked: repro needed` | keep, or raise one level if it blocks build/serve/test/generate |
-| Reproduces on reported, clean on latest | remove `blocked: repro needed` | propose a close as `completed` |
-| Does not reproduce anywhere | add `blocked: more info needed` | cap at low |
+| Outcome                                 | Labels                          | Priority                                                        |
+| --------------------------------------- | ------------------------------- | --------------------------------------------------------------- |
+| Reproduces on latest or canary          | remove `blocked: repro needed`  | keep, or raise one level if it blocks build/serve/test/generate |
+| Reproduces on reported, clean on latest | remove `blocked: repro needed`  | propose a close as `completed`                                  |
+| Does not reproduce anywhere             | add `blocked: more info needed` | cap at low                                                      |
 
 "Does not reproduce" is a finding, not a failure, and never grounds for a close on its own — it means
 your environment differed, not that the reporter is wrong. Say exactly what you ran and what you got,
@@ -338,15 +338,15 @@ cannot see or PR, and it wastes the time of the person who takes it.
 **Check where the change would land.** If it's under `packages/`, `graph/`, `astro-docs/` or another
 in-repo directory, it's contributable. It is not contributable when the fix lives in:
 
-| Area | Where the fix actually lives |
-| --- | --- |
-| the published `@nx/graph` package | closed source — self-describes as "Internal utilities for Nx graph visualization, not intended for external use" |
-| `@nx/s3-cache`, `@nx/gcs-cache`, `@nx/azure-cache`, `@nx/shared-fs-cache` | Powerpack cache plugins, closed source |
-| `@nx/powerpack-*` | Powerpack, closed source |
-| Nx Console (the editor extensions, nxls) | separate repo, `nrwl/nx-console` |
-| Nx Cloud (dashboards, runners, self-healing service) | separate service |
+| Area                                                                      | Where the fix actually lives                                                                                     |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| the published `@nx/graph` package                                         | closed source — self-describes as "Internal utilities for Nx graph visualization, not intended for external use" |
+| `@nx/s3-cache`, `@nx/gcs-cache`, `@nx/azure-cache`, `@nx/shared-fs-cache` | Powerpack cache plugins, closed source                                                                           |
+| `@nx/powerpack-*`                                                         | Powerpack, closed source                                                                                         |
+| Nx Console (the editor extensions, nxls)                                  | separate repo, `nrwl/nx-console`                                                                                 |
+| Nx Cloud (dashboards, runners, self-healing service)                      | separate service                                                                                                 |
 
-**The graph is the one that catches people.** The repo *does* ship graph UI source — `graph/client`,
+**The graph is the one that catches people.** The repo _does_ ship graph UI source — `graph/client`,
 `graph/ui-project-details`, `graph/ui-render-config` and friends are all in-tree. Those in-tree
 packages then `import from '@nx/graph'`, which is the closed one. So "it's a graph bug" decides
 nothing: grep for the code you would change. Under `graph/` it's contributable; resolving into
@@ -355,7 +355,7 @@ nothing: grep for the code you would change. Under `graph/` it's contributable; 
 When the fix isn't contributable, don't propose `community` — say in the report that the team handles
 it internally, and if the label is already on the issue, propose removing it.
 
-When you *do* propose `community`, the comment should carry the specifics: the root cause, the file
+When you _do_ propose `community`, the comment should carry the specifics: the root cause, the file
 to change, roughly what the change is, and how to test it. If a reproduction validated a fix, put
 that in — a community comment with a proven diff is worth ten with a hypothesis.
 
