@@ -804,13 +804,19 @@ function nestedProjectRoots(
   lintDir: string
 ): string[] {
   const prefix = projectRoot === '.' ? '' : `${projectRoot}/`;
-  return projectRoots
-    .filter((root) => root !== projectRoot && root.startsWith(prefix))
-    .map((root) => root.slice(prefix.length))
-    .filter(
-      (rel) => !lintDir || rel === lintDir || rel.startsWith(`${lintDir}/`)
-    )
-    .sort();
+  return (
+    projectRoots
+      .filter((root) => root !== projectRoot && root.startsWith(prefix))
+      .map((root) => root.slice(prefix.length))
+      .filter(
+        (rel) => !lintDir || rel === lintDir || rel.startsWith(`${lintDir}/`)
+      )
+      .sort()
+      // Excluding `b` already prunes `b/c`, so emitting both only lengthens the
+      // command and rehashes every ancestor task whenever a deeper project is
+      // added.
+      .filter((rel, _index, all) => !all.some((r) => rel.startsWith(`${r}/`)))
+  );
 }
 
 // Only the keys are read, so the value type is left open for both callers.

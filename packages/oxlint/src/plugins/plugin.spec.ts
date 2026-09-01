@@ -280,6 +280,30 @@ describe('@nx/oxlint plugin', () => {
     );
   });
 
+  // Excluding a root already prunes everything under it, so a deeper root would
+  // be redundant — and would rehash every ancestor task when it is added.
+  it('should not emit a nested root already covered by a shallower one', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'a/project.json': `{"name":"a"}`,
+      'a/index.ts': `export const a = 1;`,
+      'a/b/project.json': `{"name":"b"}`,
+      'a/b/index.ts': `export const b = 1;`,
+      'a/b/c/project.json': `{"name":"c"}`,
+      'a/b/c/index.ts': `export const c = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+
+    expect(results.projects['a'].targets.lint.command).toBe(
+      'oxlint --ignore-pattern /b .'
+    );
+    expect(results.projects['a/b'].targets.lint.command).toBe(
+      'oxlint --ignore-pattern /c .'
+    );
+    expect(results.projects['a/b/c'].targets.lint.command).toBe('oxlint .');
+  });
+
   // A root reaches the shell verbatim, so a directory name is shell code unless
   // it is escaped. Escaped, not dropped: the exclusion still applies.
   (process.platform === 'win32' ? it.skip : it)(
