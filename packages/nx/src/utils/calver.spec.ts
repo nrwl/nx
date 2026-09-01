@@ -40,6 +40,14 @@ describe('calver', () => {
       }
     });
 
+    it('handles the zero-padded build segment cloud bundles use', () => {
+      // Real installed bundle tags look like 2608.30.0002. Lexically '0002'
+      // sorts below '1', so only numeric comparison orders these correctly.
+      expect(sign(compareCalver('2608.30.0002', '2608.30.1'))).toBe(1);
+      expect(sign(compareCalver('2608.30.0002', '2608.30.0010'))).toBe(-1);
+      expect(compareCalver('2608.30.0002', '2608.30.2')).toBe(0);
+    });
+
     it('sorts highest-first when used as a descending comparator', () => {
       const installed = ['2510.28.5', '2511.1.0', '2510.28.15', '2510.30.1'];
       installed.sort((a, b) => compareCalver(b, a));
