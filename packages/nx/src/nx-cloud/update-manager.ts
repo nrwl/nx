@@ -18,7 +18,7 @@ import { debugLog } from './debug-logger';
 import type { CloudTaskRunnerOptions } from './nx-cloud-tasks-runner-shell';
 import * as tar from 'tar-stream';
 import { cacheDir } from '../utils/cache-directory';
-import { createHash } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 import { FileLock, IS_WASM } from '../native';
 import { TasksRunner } from '../tasks-runner/tasks-runner';
 import { RemoteCacheV2 } from '../tasks-runner/default-tasks-runner';
@@ -346,7 +346,7 @@ async function downloadAndExtractClientBundle(
   // on disk for the process running from it. The flock is released by the
   // kernel if the holder dies, so no stale-lock cleanup is needed. Under WASM
   // the lock is unavailable and downloads run unserialized.
-  const start = Date.now();
+  const recordBeforeContending = readDownloadLockRecord();
   const lock = !IS_WASM ? new FileLock(downloadLockFilePath) : null;
   let locked = lock?.locked;
   let contended = false;
@@ -379,13 +379,16 @@ async function downloadAndExtractClientBundle(
   lock?.lock();
   try {
     // A process that acquired the lock between the check above and lock()
-    // may have installed a bundle already; the lockfile is fresher than this
-    // call only in that case, so a stale record from a past install can never
-    // shadow a server-instructed download (e.g. a rollback).
+    // may have installed a bundle already. Only a record that changed since
+    // this call started proves that, so a leftover record from a past install
+    // can never shadow a server-instructed download (e.g. a rollback).
     const installedBundle = readBundleInstalledByLockHolder(
       runnerBundleInstallDirectory
     );
-    if (installedBundle && getDownloadLockWriteTime() > start) {
+    if (
+      installedBundle &&
+      readDownloadLockRecord() !== recordBeforeContending
+    ) {
       if (compareBundleVersions(installedBundle.version, version) >= 0) {
         debugLog(
           'Using client bundle downloaded by another process: ',
@@ -400,7 +403,7 @@ async function downloadAndExtractClientBundle(
       );
     }
 
-    writeFileSync(downloadLockFilePath, version, 'utf-8');
+    writeDownloadLockRecord(version);
     const fullPath = await downloadAndExtractBundle(
       axios,
       runnerBundleInstallDirectory,
@@ -414,18 +417,27 @@ async function downloadAndExtractClientBundle(
   }
 }
 
-function getDownloadLockWriteTime(): number {
+// The lockfile records "<version> <nonce>". The nonce makes every install a
+// distinct record, so a waiter can tell "an install finished while I waited"
+// from "this record is left over from a past run" by comparing the record it
+// read before contending. Timestamps cannot answer that: filesystem mtime
+// granularity is coarser than the race window.
+function readDownloadLockRecord(): string {
   try {
-    return statSync(downloadLockFilePath).mtimeMs;
+    return readFileSync(downloadLockFilePath, 'utf-8').trim();
   } catch {
-    return 0;
+    return '';
   }
+}
+
+function writeDownloadLockRecord(version: string): void {
+  writeFileSync(downloadLockFilePath, `${version} ${randomUUID()}`, 'utf-8');
 }
 
 // Bundle versions are dotted calver tags (e.g. 2510.28.15). Non-numeric
 // segments compare lexically so unexpected formats still order
 // deterministically.
-function compareBundleVersions(a: string, b: string): number {
+export function compareBundleVersions(a: string, b: string): number {
   const aSegments = a.split('.');
   const bSegments = b.split('.');
   const length = Math.max(aSegments.length, bSegments.length);
@@ -448,16 +460,12 @@ function compareBundleVersions(a: string, b: string): number {
 function readBundleInstalledByLockHolder(
   runnerBundleInstallDirectory: string
 ): CloudBundleInstall | null {
-  try {
-    const version = readFileSync(downloadLockFilePath, 'utf-8').trim();
-    if (!version) {
-      return null;
-    }
-    const fullPath = join(runnerBundleInstallDirectory, version);
-    return existsSync(fullPath) ? { version, fullPath } : null;
-  } catch {
+  const version = readDownloadLockRecord().split(' ')[0];
+  if (!version) {
     return null;
   }
+  const fullPath = join(runnerBundleInstallDirectory, version);
+  return existsSync(fullPath) ? { version, fullPath } : null;
 }
 
 async function downloadAndExtractBundle(
