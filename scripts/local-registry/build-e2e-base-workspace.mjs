@@ -1,28 +1,35 @@
 // @ts-check
 /**
- * PROTOTYPE: pre-build a bare e2e base workspace once, up front, so the atomized
- * `e2e-ci--*` tasks don't each pay the ~40s `create-nx-workspace` cold start.
+ * Pre-build bare e2e base workspaces once, up front, so the atomized `e2e-ci--*`
+ * tasks don't each pay the ~40-70s `create-nx-workspace` cold start.
  *
  * Runs as the `populate-e2e-base-workspace` task (sibling to
  * `populate-local-registry-storage`). Its output dir is declared as a cached Nx
  * output, so it is restored to every distributed agent the same way the verdaccio
- * storage is — which is what makes the template shareable across machines.
+ * storage is — which is what makes the templates shareable across machines.
  *
  * The consumer side is `newProject()` in e2e/utils/create-project-utils.ts: when a
- * template exists for the package manager, it seeds the per-test workspace from it
- * instead of running create-nx-workspace. If the template is absent, newProject
- * falls back to its original lazy build — so this task is purely additive/safe.
+ * template exists for the selected package manager, it seeds the per-test workspace
+ * from it instead of running create-nx-workspace. If the template is absent,
+ * newProject falls back to its original lazy build.
  *
- * Scope (prototype): npm only. npm installs real files, so a copied tree is portable
- * across agents. pnpm symlinks into a store that wouldn't be restored, so it's left
- * to the existing lazy path for now.
+ * One template per package manager, built in parallel — the agents run pnpm
+ * (.nx/workflows/agents.yaml) while the macOS job runs npm, so npm-only templates
+ * would never engage on Linux. pnpm's node_modules symlinks into a store outside
+ * the workspace; newProject already reinstalls after copying a pnpm workspace to
+ * relink them, so the copied tree only has to be good enough for that reinstall.
  */
 import { execSync } from 'node:child_process';
 import { cpSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-const PACKAGE_MANAGERS = ['npm'];
+// Only the package manager the specs will actually select. Templates are ~177MB
+// each, and every spec but a handful uses getSelectedPackageManager(); suites that
+// pass an explicit packageManager just miss the template and take the fallback.
+// SELECTED_PM is declared as an input on this task so the cache can't serve an
+// npm-built template to a pnpm agent.
+const PACKAGE_MANAGERS = [process.env.SELECTED_PM || 'npm'];
 const SCOPE = 'proj';
 const listenAddress = 'localhost';
 const port = process.env.NX_LOCAL_REGISTRY_PORT ?? '4873';
@@ -32,56 +39,97 @@ const outputRoot = resolve(process.cwd(), 'dist/local-registry/proj-backup');
 
 await waitForRegistry();
 
-// Point package managers at the local verdaccio, with a fresh cache (same policy as
-// global-setup: avoid serving a stale `nx@X.Y.Z` that was republished with new bits).
-process.env.npm_config_registry = registry;
-process.env[`npm_config_//${listenAddress}:${port}/:_authToken`] = authToken;
-const cacheDir = mkdtempSync(join(tmpdir(), 'nx-e2e-base-cache-'));
-process.env.npm_config_cache = join(cacheDir, 'npm');
-process.env.NX_SKIP_PROVENANCE_CHECK = 'true';
-process.env.CI = 'true';
-// The nx packages were just published to verdaccio (publish date = now). A user's
-// ~/.npmrc `min-release-age` would filter them out as "too fresh" and fail to resolve
-// create-nx-workspace. Bypass it (harmless in CI, where it isn't set).
-process.env.npm_config_min_release_age = '0';
-
 const version =
   process.env.PUBLISHED_VERSION ||
-  execSync('npm view nx@latest version', { encoding: 'utf-8' }).trim();
+  execSync('npm view nx@latest version', {
+    encoding: 'utf-8',
+    env: registryEnv(mkdtempSync(join(tmpdir(), 'nx-e2e-base-probe-'))),
+  }).trim();
+
 console.log(
-  `Building e2e base workspace(s) with create-nx-workspace@${version} -> ${outputRoot}`
+  `Building e2e base workspaces with create-nx-workspace@${version} -> ${outputRoot}`
+);
+console.log(`Package managers: ${PACKAGE_MANAGERS.join(', ')}`);
+
+const results = await Promise.allSettled(
+  PACKAGE_MANAGERS.map((pm) => buildTemplate(pm))
 );
 
-for (const pm of PACKAGE_MANAGERS) {
+const failures = PACKAGE_MANAGERS.map((pm, i) => [pm, results[i]]).filter(
+  ([, r]) => r.status === 'rejected'
+);
+for (const [pm, r] of failures) {
+  console.error(`Failed to build the ${pm} base workspace:`, r.reason);
+}
+if (failures.length === PACKAGE_MANAGERS.length) {
+  // Every template failed: the fallback path would silently absorb this and every
+  // spec file would pay the cold start again, so fail loudly instead.
+  process.exit(1);
+}
+
+/**
+ * Point a package manager at the local verdaccio, with a cache dir of its own so
+ * parallel builds don't contend over a shared one.
+ * @param {string} cacheRoot
+ */
+function registryEnv(cacheRoot) {
+  return {
+    ...process.env,
+    CI: 'true',
+    NX_SKIP_PROVENANCE_CHECK: 'true',
+    npm_config_registry: registry,
+    [`npm_config_//${listenAddress}:${port}/:_authToken`]: authToken,
+    npm_config_cache: join(cacheRoot, 'npm'),
+    // The nx packages were just published to verdaccio (publish date = now). A
+    // user's `min-release-age` would filter them out as "too fresh" and fail to
+    // resolve create-nx-workspace. Harmless in CI, where it isn't set.
+    npm_config_min_release_age: '0',
+    // pnpm 11 reads pnpm_config_* rather than npm_config_*.
+    pnpm_config_registry: registry,
+    [`pnpm_config_//${listenAddress}:${port}/:_authToken`]: authToken,
+    pnpm_config_minimum_release_age: '0',
+  };
+}
+
+/** @param {string} pm */
+async function buildTemplate(pm) {
   const work = mkdtempSync(join(tmpdir(), `nx-e2e-base-${pm}-`));
-  // Mirror the essential flags runCreateWorkspace() uses for { preset: 'apps' }.
+  const cacheRoot = mkdtempSync(join(tmpdir(), `nx-e2e-base-cache-${pm}-`));
+  const env = registryEnv(cacheRoot);
+
+  // Mirror the flags runCreateWorkspace() defaults to for { preset: 'apps' };
+  // a template built with different flags would silently diverge from the
+  // workspaces the fallback path produces.
   const command = [
     `npx --yes create-nx-workspace@${version} ${SCOPE}`,
     `--preset=apps`,
     `--package-manager=${pm}`,
     `--no-interactive`,
     `--linter=eslint`,
-    // Must track runCreateWorkspace()'s defaults, or seeded workspaces silently
-    // diverge from the ones the fallback path builds.
     `--formatter=oxfmt`,
     `--nxCloud=skip`,
   ].join(' ');
 
-  execSync(command, { cwd: work, stdio: 'inherit', env: process.env });
-
-  const projDir = join(work, SCOPE);
-  // Stop the daemon so the cached copy doesn't carry a live socket/pid.
   try {
-    execSync('npx nx reset', { cwd: projDir, stdio: 'pipe', env: process.env });
-  } catch {
-    // best-effort; a missing daemon is fine
-  }
+    execSync(command, { cwd: work, stdio: 'inherit', env });
 
-  const dest = join(outputRoot, pm);
-  rmSync(dest, { recursive: true, force: true });
-  cpSync(projDir, dest, { recursive: true });
-  rmSync(work, { recursive: true, force: true });
-  console.log(`Wrote base workspace template: ${dest}`);
+    const projDir = join(work, SCOPE);
+    // Stop the daemon so the cached copy doesn't carry a live socket/pid.
+    try {
+      execSync('npx nx reset', { cwd: projDir, stdio: 'pipe', env });
+    } catch {
+      // best-effort; a missing daemon is fine
+    }
+
+    const dest = join(outputRoot, pm);
+    rmSync(dest, { recursive: true, force: true });
+    // dereference: false keeps pnpm's relative node_modules symlinks intact.
+    cpSync(projDir, dest, { recursive: true, dereference: false });
+    console.log(`Wrote base workspace template: ${dest}`);
+  } finally {
+    rmSync(work, { recursive: true, force: true });
+    rmSync(cacheRoot, { recursive: true, force: true });
+  }
 }
 
 async function waitForRegistry() {
