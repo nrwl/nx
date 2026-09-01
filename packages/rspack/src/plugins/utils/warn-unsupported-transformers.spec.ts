@@ -13,26 +13,35 @@ describe('@nx/rspack unsupported transformers warning', () => {
   it('warns when the user sets transformers', () => {
     const { warn, mod } = setup();
 
-    mod.warnUnsupportedTransformers(true);
+    mod.warnUnsupportedTransformers(true, 'apps/demo');
 
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0][0]).toContain('transformers');
     expect(warn.mock.calls[0][0]).toContain('builtin:swc-loader');
   });
 
-  it('warns once per process so watch rebuilds do not repeat it', () => {
+  it('warns once per project so watch rebuilds do not repeat it', () => {
     const { warn, mod } = setup();
 
-    mod.warnUnsupportedTransformers(true);
-    mod.warnUnsupportedTransformers(true);
+    mod.warnUnsupportedTransformers(true, 'apps/demo');
+    mod.warnUnsupportedTransformers(true, 'apps/demo');
 
     expect(warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('warns for every affected project in the same process', () => {
+    const { warn, mod } = setup();
+
+    mod.warnUnsupportedTransformers(true, 'apps/one');
+    mod.warnUnsupportedTransformers(true, 'apps/two');
+
+    expect(warn).toHaveBeenCalledTimes(2);
   });
 
   it('does not warn when the user sets no transformers', () => {
     const { warn, mod } = setup();
 
-    mod.warnUnsupportedTransformers(false);
+    mod.warnUnsupportedTransformers(false, 'apps/demo');
 
     expect(warn).not.toHaveBeenCalled();
   });

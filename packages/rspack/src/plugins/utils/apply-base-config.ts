@@ -54,7 +54,7 @@ export function applyBaseConfig(
   } = {}
 ): void {
   // Read before the default below, which would otherwise hide that the user set
-  // the option. Reported further down, once graph creation is ruled out.
+  // the option.
   const hasTransformers = !!options.transformers?.length;
 
   // Defaults that was applied from executor schema previously.
@@ -74,7 +74,7 @@ export function applyBaseConfig(
   // Some of the options only work during actual tasks, not when reading the rspack config during CreateNodes.
   if (global.NX_GRAPH_CREATION) return;
 
-  warnUnsupportedTransformers(hasTransformers);
+  warnUnsupportedTransformers(hasTransformers, options.projectRoot);
 
   applyNxDependentConfig(options, config, { useNormalizedEntry }, rspackCore);
 }
