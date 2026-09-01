@@ -38,6 +38,15 @@ const extensionAlias = {
 };
 const mainFields = ['module', 'main'];
 
+// @rspack/core@2 reads `cache: true` as a persistent cache and rejects the
+// config because it carries no `maxAge`; it wants the object form instead. v1
+// only types `cache` as a boolean, so the object is cast for it.
+function defaultCache(rspackCore: typeof import('@rspack/core')): boolean {
+  return getRspackCoreMajorVersion(rspackCore) >= 2
+    ? ({ type: 'memory' } as unknown as boolean)
+    : true;
+}
+
 export function applyBaseConfig(
   options: NormalizedNxAppRspackPluginOptions,
   config: Partial<RspackOptionsNormalized | Configuration> = {},
@@ -109,7 +118,7 @@ function applyNxIndependentConfig(
       ? options.cache
       : (options.target === 'node' || options.target === 'async-node') &&
           options.watch
-        ? true
+        ? defaultCache(rspackCore)
         : undefined;
 
   config.devtool =
@@ -490,8 +499,8 @@ function applyNxDependentConfig(
 
   config.externals = externals;
 
-  // Enabled for performance
-  config.cache = 'cache' in options ? options.cache : true;
+  // Enabled for performance.
+  config.cache = 'cache' in options ? options.cache : defaultCache(rspackCore);
   config.module = {
     ...config.module,
     rules: [

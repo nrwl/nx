@@ -274,3 +274,40 @@ describe('apply-base-config ts-checker rootDir (TS6059 prevention)', () => {
     expect(capturedPluginConfigs[0].typescript.build).toBe(true);
   });
 });
+
+describe('apply-base-config cache', () => {
+  let options: NormalizedNxAppRspackPluginOptions;
+  let config: Partial<Configuration>;
+
+  beforeEach(() => {
+    options = {
+      root: '/test',
+      projectRoot: 'apps/test',
+      target: 'node',
+    } as NormalizedNxAppRspackPluginOptions;
+    config = {};
+    global.NX_GRAPH_CREATION = false;
+  });
+
+  afterEach(() => {
+    delete global.NX_GRAPH_CREATION;
+  });
+
+  // @rspack/core v2 reads `cache: true` as a persistent cache and rejects the
+  // config because it carries no `maxAge`.
+  it('should default the cache to the form the installed rspack accepts', () => {
+    const major = Number(
+      require('@rspack/core/package.json').version.split('.')[0]
+    );
+
+    applyBaseConfig(options, config);
+
+    expect(config.cache).toEqual(major >= 2 ? { type: 'memory' } : true);
+  });
+
+  it('should keep a cache the user configured', () => {
+    applyBaseConfig({ ...options, cache: false }, config);
+
+    expect(config.cache).toBe(false);
+  });
+});
