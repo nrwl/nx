@@ -189,6 +189,57 @@ describe('setupSSR', () => {
       expect(nxJson.targetDefaults.server).toBeUndefined();
     });
 
+    it('should configure the allowed hosts', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
+
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.options.security
+      ).toStrictEqual({ allowedHosts: [] });
+    });
+
+    it('should not overwrite the configured allowed hosts', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
+      const project = readProjectConfiguration(tree, 'app1');
+      project.targets.build.options.security = {
+        allowedHosts: ['example.com'],
+      };
+      updateProjectConfiguration(tree, 'app1', project);
+
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.options.security
+      ).toStrictEqual({ allowedHosts: ['example.com'] });
+    });
+
+    it('should not configure the allowed hosts when "@angular/ssr" does not support them', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { ...json.dependencies, '@angular/ssr': '21.1.4' },
+      }));
+
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.options.security
+      ).toBeUndefined();
+    });
+
     it('should support object output option using a custom "outputPath.browser" and "outputPath.server" values', async () => {
       const tree = createTreeWithEmptyWorkspace();
       await generateTestApplication(tree, {
