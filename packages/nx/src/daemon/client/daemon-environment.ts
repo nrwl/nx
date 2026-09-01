@@ -45,6 +45,11 @@ const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   // resolves its root at startup before any client env is applied. The spawn
   // env keeps it so that startup resolution honors the pinned root.
   'NX_WORKSPACE_ROOT_PATH',
+  // The message-size ceiling is read when a connection is accepted, before the
+  // client's env could apply, so reflecting it would hand one client's value
+  // to the next client's connection. Pinned at daemon spawn instead; see
+  // getDaemonSpawnEnv.
+  'NX_MAX_MESSAGE_SIZE',
 
   // Nx UI/logging vars (don't affect graph structure)
   'NX_TUI',
@@ -321,6 +326,9 @@ export function getDaemonClientEnvGeneration(): number {
  *   the pin, a root without markers under an ancestor that has them
  *   resolves to the ancestor and the daemon publishes its socket under the
  *   wrong workspace.
+ * - NX_MAX_MESSAGE_SIZE: excluded from reflection (see above), so the value
+ *   here holds for the daemon's whole lifetime. Changing it therefore needs a
+ *   daemon restart (`nx reset`).
  */
 export function getDaemonSpawnEnv() {
   const env = getDaemonEnv();
@@ -329,6 +337,9 @@ export function getDaemonSpawnEnv() {
   }
   if (process.env.NX_WORKSPACE_ROOT_PATH !== undefined) {
     env.NX_WORKSPACE_ROOT_PATH = process.env.NX_WORKSPACE_ROOT_PATH;
+  }
+  if (process.env.NX_MAX_MESSAGE_SIZE !== undefined) {
+    env.NX_MAX_MESSAGE_SIZE = process.env.NX_MAX_MESSAGE_SIZE;
   }
   return env;
 }

@@ -3,13 +3,14 @@ import { isPermissionDenied } from '../../utils/permission-errors';
 import { SOCKET_REFUSED_EXIT_CODE } from '../../utils/socket-refused-exit-code';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
-import { deserialize, serialize } from 'v8';
 import { startAnalytics } from '../../analytics';
 import { hashArray } from '../../hasher/file-hasher';
 import { hashFile } from '../../native';
 import {
   consumeMessagesFromSocket,
+  describeMessage,
   isJsonMessage,
+  parseMessage,
 } from '../../utils/consume-messages-from-socket';
 import '../../utils/perf-logging';
 import { nxVersion } from '../../utils/versions';
@@ -94,6 +95,7 @@ import {
   getFullOsSocketPath,
   isWindows,
   killSocketOrPath,
+  serializeWithFallback,
 } from '../socket-utils';
 import { registerFileChangeListener } from './file-watching/file-change-events';
 import { routeWorkspaceChanges } from './file-watching/route-workspace-changes';
@@ -200,9 +202,23 @@ const server = createServer(async (socket) => {
 
   socket.on(
     'data',
-    consumeMessagesFromSocket(async (message) => {
-      await handleMessage(socket, message);
-    })
+    consumeMessagesFromSocket(
+      async (message) => {
+        // A rejection here would otherwise be unhandled and take the daemon
+        // down with it, failing every other client's request too.
+        await handleMessage(socket, message).catch(async (e) => {
+          await respondWithError(socket, 'Error handling message', e);
+        });
+      },
+      (err) => {
+        serverLogger.log(`Framing error: ${err.message}`);
+        // The stream cannot resynchronize, so close it and let the client
+        // observe the disconnect instead of waiting on a reply.
+        respondWithError(socket, 'Malformed message', err).finally(() =>
+          socket.destroy()
+        );
+      }
+    )
   );
 
   socket.on('error', (e) => {
@@ -224,7 +240,7 @@ const server = createServer(async (socket) => {
 });
 registerProcessTerminationListeners();
 
-async function handleMessage(socket: Socket, data: string) {
+async function handleMessage(socket: Socket, data: Buffer) {
   if (workspaceWatcherError) {
     await respondWithErrorAndExit(
       socket,
@@ -245,24 +261,23 @@ async function handleMessage(socket: Socket, data: string) {
 
   const unparsedPayload = data;
   let payload;
-  let mode: 'json' | 'v8' = 'json';
+  // Reply in the format the client used.
+  const mode: 'json' | 'v8' = isJsonMessage(unparsedPayload) ? 'json' : 'v8';
 
   serverLogger.log(`Received raw message of length ${unparsedPayload.length}`);
 
   try {
-    // JSON Message
-    if (isJsonMessage(unparsedPayload)) {
-      payload = JSON.parse(unparsedPayload);
-    } else {
-      // V8 Serialized Message
-      payload = deserialize(Buffer.from(unparsedPayload, 'binary'));
-      mode = 'v8';
-    }
+    payload = parseMessage<any>(unparsedPayload);
   } catch (e) {
     await respondWithErrorAndExit(
       socket,
       `Invalid payload from the client`,
-      new Error(`Unsupported payload sent to daemon server: ${unparsedPayload}`)
+      new Error(
+        `Unsupported payload sent to daemon server: ${describeMessage(
+          unparsedPayload,
+          { maxBytes: 200 }
+        )}`
+      )
     );
   }
   serverLogger.log(`Received ${mode} message of type ${payload.type}`);
@@ -491,7 +506,12 @@ async function handleMessage(socket: Socket, data: string) {
     await respondWithErrorAndExit(
       socket,
       `Invalid payload from the client`,
-      new Error(`Unsupported payload sent to daemon server: ${unparsedPayload}`)
+      new Error(
+        `Unsupported payload sent to daemon server: ${describeMessage(
+          unparsedPayload,
+          { maxBytes: 200 }
+        )}`
+      )
     );
   }
 }
@@ -518,8 +538,8 @@ export async function handleResult(
     );
     const response =
       typeof hr.response === 'string'
-        ? hr.response
-        : serializeUnserializedResult(hr.response, mode);
+        ? Buffer.from(hr.response, 'utf8')
+        : serializeWithFallback(hr.response, mode);
     serverLogger.log(`Responding to ${type} message`);
     await respondToClient(socket, response, hr.description);
   }
@@ -787,14 +807,4 @@ export async function startServer(): Promise<Server> {
       reject(err);
     }
   });
-}
-function serializeUnserializedResult(
-  response: boolean | object,
-  mode: 'json' | 'v8'
-) {
-  if (mode === 'json') {
-    return JSON.stringify(response);
-  } else {
-    return serialize(response).toString('binary');
-  }
 }

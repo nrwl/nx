@@ -276,6 +276,22 @@ describe('daemon environment', () => {
 
       expect('NX_WORKSPACE_ROOT_PATH' in getDaemonSpawnEnv()).toBe(false);
     });
+
+    it('should keep NX_MAX_MESSAGE_SIZE so the daemon starts with the spawning client message limit', () => {
+      process.env.NX_MAX_MESSAGE_SIZE = '1048576';
+
+      expect(getDaemonSpawnEnv().NX_MAX_MESSAGE_SIZE).toBe('1048576');
+      // not reflected: a later client's value must not govern another
+      // client's connection, whose parser reads the limit before any client
+      // env is applied
+      expect(getDaemonEnv().NX_MAX_MESSAGE_SIZE).toBeUndefined();
+    });
+
+    it('should not add NX_MAX_MESSAGE_SIZE when the client does not have it', () => {
+      delete process.env.NX_MAX_MESSAGE_SIZE;
+
+      expect('NX_MAX_MESSAGE_SIZE' in getDaemonSpawnEnv()).toBe(false);
+    });
   });
 
   describe('applyDaemonEnvFromClient', () => {
@@ -301,6 +317,15 @@ describe('daemon environment', () => {
       expect(changed).not.toContain('TERM_PROGRAM');
       expect(process.env.ATUIN_SESSION).toBe('daemon-startup-value');
       expect(process.env.TERM_PROGRAM).toBe('ghostty');
+    });
+
+    it('should keep the spawn-time NX_MAX_MESSAGE_SIZE across clients that do not set it', () => {
+      process.env.NX_MAX_MESSAGE_SIZE = '1048576';
+
+      const changed = applyDaemonEnvFromClient({});
+
+      expect(changed).not.toContain('NX_MAX_MESSAGE_SIZE');
+      expect(process.env.NX_MAX_MESSAGE_SIZE).toBe('1048576');
     });
 
     it('should converge after one application of a client env payload', () => {

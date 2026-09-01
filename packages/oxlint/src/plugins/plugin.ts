@@ -64,6 +64,10 @@ const LINTABLE_EXTENSIONS = [
   'astro',
 ];
 const LINTABLE_FILES_GLOB = `**/*.{${LINTABLE_EXTENSIONS.join(',')}}`;
+// Oxlint honours both, so both decide which files it lints.
+const IGNORE_FILENAMES = ['.eslintignore', '.gitignore'];
+// The one rule that looks across projects; every other rule sees one file.
+const BOUNDARIES_PLUGIN_SPECIFIER = '@nx/oxlint/boundaries-plugin';
 const PROJECT_CONFIG_FILENAMES = ['project.json', 'package.json'];
 const OXLINT_CONFIG_GLOB = combineGlobPatterns([
   ...OXLINT_CONFIG_FILENAMES.map((f) => `**/${f}`),
@@ -222,7 +226,7 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
             ),
             // Change which files Oxlint considers lintable, and therefore
             // whether a target is inferred at all.
-            ...ancestorEslintignorePaths(root),
+            ...ancestorIgnorePaths(root),
             lockFilePattern,
             ...(tsconfigChainsByProjectRoot.get(root) ?? []),
           ]),
@@ -759,16 +763,18 @@ async function collectLintableFilesByProjectRoot(
 }
 
 /**
- * `.eslintignore` candidates in every ancestor directory of the project root,
+ * Ignore-file candidates in every ancestor directory of the project root,
  * workspace root included. The project's own directory is excluded — files
- * there are covered by the `default` input — except at the workspace root,
- * which is its own ancestor and so keeps its `.eslintignore`.
+ * there are covered by the in-project ignore-file input — except at the
+ * workspace root, which is its own ancestor and so keeps its ignore files.
  */
-function ancestorEslintignorePaths(projectRoot: string): string[] {
+function ancestorIgnorePaths(projectRoot: string): string[] {
   const result: string[] = [];
   let dir = projectRoot === '.' ? '.' : dirname(projectRoot);
   while (true) {
-    result.push(dir === '.' ? '.eslintignore' : `${dir}/.eslintignore`);
+    for (const filename of IGNORE_FILENAMES) {
+      result.push(dir === '.' ? filename : `${dir}/${filename}`);
+    }
     if (dir === '.') {
       break;
     }
@@ -846,19 +852,40 @@ function getProjectUsingOxlintConfig(
     )
   );
 
+  const lintableFiles = `{projectRoot}/${LINTABLE_FILES_GLOB}`;
+  const usesBoundariesBridge = configInputs.some((config) =>
+    (jsPluginSpecifiersByConfig.get(config) ?? []).includes(
+      BOUNDARIES_PLUGIN_SPECIFIER
+    )
+  );
+
   const targetConfig: TargetConfiguration = {
     command: `oxlint ${lintPath}`,
     options: { cwd: projectRoot },
     cache: true,
     inputs: [
-      'default',
-      '^default',
+      // Only what Oxlint can lint, so a README or JSON edit is not a re-lint.
+      { fileset: lintableFiles },
+      // The bridge checks the project graph, which a dependency's imports and
+      // package.json shape.
+      ...(usesBoundariesBridge
+        ? [
+            { fileset: lintableFiles, dependencies: true as const },
+            {
+              fileset: '{projectRoot}/package.json',
+              dependencies: true as const,
+            },
+          ]
+        : []),
+      // Configs, ignore files and tsconfigs inside the project.
+      {
+        fileset: `{projectRoot}/**/{${[...OXLINT_CONFIG_FILENAMES, ...IGNORE_FILENAMES, 'tsconfig*.json'].join(',')}}`,
+      },
       ...configInputs.map((config) => `{workspaceRoot}/${config}`),
       ...[...jsPluginFiles].map((file) => `{workspaceRoot}/${file}`),
-      // Oxlint layers .eslintignore files from every ancestor of a linted
-      // file; the project's own is covered by `default`. Declared even when
-      // absent, like the extends chain.
-      ...ancestorEslintignorePaths(projectRoot).map(
+      // Oxlint layers ignore files from every ancestor of a linted file.
+      // Declared even when absent, like the extends chain.
+      ...ancestorIgnorePaths(projectRoot).map(
         (file) => `{workspaceRoot}/${file}`
       ),
       ...tsconfigChainOutsideProjectRoot.map(

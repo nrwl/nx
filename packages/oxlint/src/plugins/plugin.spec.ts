@@ -13,6 +13,9 @@ jest.mock('nx/src/utils/cache-directory', () => ({
   workspaceDataDirectory: 'tmp/oxlint-project-graph-cache',
 }));
 
+const LINTABLE_FILES =
+  '{projectRoot}/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,svelte,astro}';
+
 describe('@nx/oxlint plugin', () => {
   let context: CreateNodesContext;
   let tempFs: TempFs;
@@ -127,10 +130,9 @@ describe('@nx/oxlint plugin', () => {
 
     expect(results.projects['libs/a'].targets.lint.inputs).toEqual(
       expect.arrayContaining([
-        // Without these the task stops hashing the project's own source, so Nx
+        // Without this the task stops hashing the project's own source, so Nx
         // replays a cached pass after an edit.
-        'default',
-        '^default',
+        { fileset: LINTABLE_FILES },
         '{workspaceRoot}/.oxlintrc.json',
         '{workspaceRoot}/configs/base.json',
         { externalDependencies: ['oxlint'] },
@@ -138,9 +140,9 @@ describe('@nx/oxlint plugin', () => {
     );
   });
 
-  // Oxlint layers .eslintignore files from every ancestor of a linted file,
-  // which changes which files are linted.
-  it('should declare ancestor .eslintignore files as inputs', async () => {
+  // Oxlint cannot lint a README or a JSON file, and no named input is used,
+  // so a workspace's `default` definition does not decide what re-lints.
+  it('should hash only lintable files and not use named inputs', async () => {
     createFiles({
       '.oxlintrc.json': `{"rules":{}}`,
       'libs/a/project.json': `{"name":"a"}`,
@@ -150,11 +152,72 @@ describe('@nx/oxlint plugin', () => {
     const results = await invokeCreateNodesOnMatchingFiles(context);
     const inputs = results.projects['libs/a'].targets.lint.inputs;
 
-    expect(inputs).toContain('{workspaceRoot}/.eslintignore');
-    expect(inputs).toContain('{workspaceRoot}/libs/.eslintignore');
-    // The project's own directory is covered by `default`.
-    expect(inputs).not.toContain('{workspaceRoot}/libs/a/.eslintignore');
+    expect(inputs.filter((i) => typeof i === 'string')).not.toContain(
+      'default'
+    );
+    expect(inputs).not.toContain('^default');
+    expect(inputs).toContainEqual({ fileset: LINTABLE_FILES });
+    expect(inputs).toContainEqual({
+      fileset:
+        '{projectRoot}/**/{.oxlintrc.json,.oxlintrc.jsonc,oxlint.config.ts,oxlint.config.mts,.eslintignore,.gitignore,tsconfig*.json}',
+    });
   });
+
+  // Only the boundaries bridge reads other projects, so without it a change
+  // in a dependency must not re-lint the dependents.
+  it('should not hash dependencies without the boundaries bridge', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+    const inputs = results.projects['libs/a'].targets.lint.inputs;
+
+    expect(inputs.some((i) => (i as any).dependencies === true)).toBe(false);
+  });
+
+  it('should hash dependencies when the boundaries bridge is configured', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"jsPlugins":["@nx/oxlint/boundaries-plugin"],"rules":{}}`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+    const inputs = results.projects['libs/a'].targets.lint.inputs;
+
+    expect(inputs).toContainEqual({
+      fileset: LINTABLE_FILES,
+      dependencies: true,
+    });
+    expect(inputs).toContainEqual({
+      fileset: '{projectRoot}/package.json',
+      dependencies: true,
+    });
+  });
+
+  // Oxlint layers ignore files from every ancestor of a linted file, which
+  // changes which files are linted.
+  it.each(['.eslintignore', '.gitignore'])(
+    'should declare ancestor %s files as inputs',
+    async (filename) => {
+      createFiles({
+        '.oxlintrc.json': `{"rules":{}}`,
+        'libs/a/project.json': `{"name":"a"}`,
+        'libs/a/src/index.ts': `export const a = 1;`,
+      });
+
+      const results = await invokeCreateNodesOnMatchingFiles(context);
+      const inputs = results.projects['libs/a'].targets.lint.inputs;
+
+      expect(inputs).toContain(`{workspaceRoot}/${filename}`);
+      expect(inputs).toContain(`{workspaceRoot}/libs/${filename}`);
+      // The project's own directory is covered by its own fileset.
+      expect(inputs).not.toContain(`{workspaceRoot}/libs/a/${filename}`);
+    }
+  );
 
   it('should declare local jsPlugins as file inputs but never as externalDependencies', async () => {
     createFiles({
