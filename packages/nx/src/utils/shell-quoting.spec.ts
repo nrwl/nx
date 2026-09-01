@@ -108,9 +108,25 @@ describe('quoteShellArg', () => {
       );
     });
 
+    it.each([
+      ['a line feed', 'latest\nwhoami'],
+      ['a carriage return', 'latest\rwhoami'],
+    ])('refuses %s: %j', (_, value) => {
+      expect(() => quoteShellArg(value)).toThrow(
+        'would end the command line and leave the rest of the argument to be read as commands'
+      );
+    });
+
     it('leaves a percent sign unquoted, since quoting cannot stop %VAR%', () => {
       expect(quoteShellArg('%USERNAME%')).toBe('%USERNAME%');
     });
+  });
+
+  // The refusal above is Windows-only because a single-quoted run does hold a
+  // line break, so POSIX needs no equivalent.
+  it('contains a line break on POSIX, where single quotes hold it', () => {
+    setPlatform('linux');
+    expect(quoteShellArg('latest\nwhoami')).toBe(`'latest\nwhoami'`);
   });
 
   it('treats a caret as ordinary text on POSIX, where it has no meaning', () => {
