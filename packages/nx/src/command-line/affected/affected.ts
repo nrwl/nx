@@ -80,14 +80,14 @@ export async function affected(
       overrides,
       extraTargetDependencies,
       excludeTaskDependencies: extraOptions.excludeTaskDependencies,
-      explain: nxArgs.explain,
+      explain: nxArgs.explain !== undefined,
     });
 
     // --explain reports the selection rather than acting on it: someone asking
     // why a task is affected does not also want it to run.
-    if (nxArgs.explain) {
+    if (nxArgs.explain !== undefined) {
       printAffectedExplanation(affectedTasks.reasons ?? {}, 'Affected tasks', {
-        json: overrides.json === true || overrides.json === 'true',
+        json: nxArgs.explain === 'json',
       });
       await output.drain();
       process.exit(0);
@@ -117,14 +117,14 @@ export async function affected(
     );
     projects = [...owning].map((name) => projectGraph.nodes[name]);
   } else {
-    if (nxArgs.explain) {
+    if (nxArgs.explain !== undefined) {
       const { reasons } = await filterAffectedWithReasons(
         projectGraph,
         calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
         nxJson
       );
       printAffectedExplanation(reasons, 'Affected projects', {
-        json: overrides.json === true || overrides.json === 'true',
+        json: nxArgs.explain === 'json',
       });
       await output.drain();
       process.exit(0);
