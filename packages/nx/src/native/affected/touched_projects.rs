@@ -17,6 +17,7 @@ pub(super) fn touched_projects(
                 kind: KIND_PROJECT_FILE.to_string(),
                 file: Some(file.clone()),
                 pattern: None,
+                package: None,
             })
         })
         .collect()
