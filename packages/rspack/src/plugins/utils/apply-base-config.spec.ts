@@ -274,3 +274,58 @@ describe('apply-base-config ts-checker rootDir (TS6059 prevention)', () => {
     expect(capturedPluginConfigs[0].typescript.build).toBe(true);
   });
 });
+
+describe('apply-base-config unsupported transformers warning', () => {
+  let options: NormalizedNxAppRspackPluginOptions;
+
+  beforeEach(() => {
+    jest.resetModules();
+    options = {
+      root: '/test',
+      projectRoot: 'apps/test',
+      target: 'node',
+      transformers: [{ name: 'some-transformer' }],
+    } as NormalizedNxAppRspackPluginOptions;
+    global.NX_GRAPH_CREATION = false;
+  });
+
+  afterEach(() => {
+    delete global.NX_GRAPH_CREATION;
+  });
+
+  async function runWithSpy() {
+    let warn!: jest.SpyInstance;
+    let applyBaseConfigFresh!: typeof applyBaseConfig;
+    jest.isolateModules(() => {
+      const { logger } = require('@nx/devkit');
+      warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+      applyBaseConfigFresh = require('./apply-base-config').applyBaseConfig;
+    });
+    return { warn, applyBaseConfigFresh };
+  }
+
+  it('warns when the option is set', async () => {
+    const { warn, applyBaseConfigFresh } = await runWithSpy();
+
+    applyBaseConfigFresh(options, {});
+
+    expect(
+      warn.mock.calls.some((call) =>
+        String(call[0]).includes('`transformers` option is not supported')
+      )
+    ).toBe(true);
+  });
+
+  it('stays silent during graph creation', async () => {
+    global.NX_GRAPH_CREATION = true;
+    const { warn, applyBaseConfigFresh } = await runWithSpy();
+
+    applyBaseConfigFresh(options, {});
+
+    expect(
+      warn.mock.calls.some((call) =>
+        String(call[0]).includes('`transformers` option is not supported')
+      )
+    ).toBe(false);
+  });
+});

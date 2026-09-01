@@ -22,6 +22,7 @@ import { NormalizedNxAppRspackPluginOptions } from './models';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { getNonBuildableLibs } from './get-non-buildable-libs';
 import { isServeMode } from '../../utils/is-serve-mode';
+import { warnUnsupportedTransformers } from './warn-unsupported-transformers';
 
 const IGNORED_RSPACK_WARNINGS = [
   /The comment file/i,
@@ -52,6 +53,10 @@ export function applyBaseConfig(
     compiler?: Compiler;
   } = {}
 ): void {
+  // Read before the default below, which would otherwise hide that the user set
+  // the option. Reported further down, once graph creation is ruled out.
+  const hasTransformers = !!options.transformers?.length;
+
   // Defaults that was applied from executor schema previously.
   options.externalDependencies ??= 'all';
   options.fileReplacements ??= [];
@@ -68,6 +73,8 @@ export function applyBaseConfig(
 
   // Some of the options only work during actual tasks, not when reading the rspack config during CreateNodes.
   if (global.NX_GRAPH_CREATION) return;
+
+  warnUnsupportedTransformers(hasTransformers);
 
   applyNxDependentConfig(options, config, { useNormalizedEntry }, rspackCore);
 }
