@@ -133,7 +133,6 @@ export async function verifyOrUpdateNxCloudClient(options?: {
 
     const installedBundle = await downloadAndExtractClientBundle(
       axios,
-      runnerBundleInstallDirectory,
       version,
       url
     );
@@ -337,9 +336,8 @@ function hashDirectory(dir: string): string {
   return createHash('sha256').update(combinedHashes).digest('hex');
 }
 
-async function downloadAndExtractClientBundle(
+export async function downloadAndExtractClientBundle(
   axios: AxiosInstance,
-  runnerBundleInstallDirectory: string,
   version: string,
   url: string
 ): Promise<CloudBundleInstall> {
@@ -360,9 +358,7 @@ async function downloadAndExtractClientBundle(
       'Another process is downloading the client bundle, waiting for it to complete'
     );
     await lock.wait();
-    const installedBundle = readBundleInstalledByLockHolder(
-      runnerBundleInstallDirectory
-    );
+    const installedBundle = readBundleInstalledByLockHolder();
     if (installedBundle) {
       if (gte(installedBundle.version, version)) {
         debugLog(
@@ -387,9 +383,7 @@ async function downloadAndExtractClientBundle(
     // may have installed a bundle already. Only a record that changed since
     // this call started proves that, so a leftover record from a past install
     // can never shadow a server-instructed download (e.g. a rollback).
-    const installedBundle = readBundleInstalledByLockHolder(
-      runnerBundleInstallDirectory
-    );
+    const installedBundle = readBundleInstalledByLockHolder();
     if (
       installedBundle &&
       readDownloadLockRecord() !== recordBeforeContending
@@ -411,7 +405,6 @@ async function downloadAndExtractClientBundle(
     writeDownloadLockRecord(version);
     const fullPath = await downloadAndExtractBundle(
       axios,
-      runnerBundleInstallDirectory,
       version,
       url,
       contended
@@ -439,9 +432,7 @@ function writeDownloadLockRecord(version: string): void {
   writeFileSync(downloadLockFilePath, `${version} ${randomUUID()}`, 'utf-8');
 }
 
-function readBundleInstalledByLockHolder(
-  runnerBundleInstallDirectory: string
-): CloudBundleInstall | null {
+function readBundleInstalledByLockHolder(): CloudBundleInstall | null {
   const version = readDownloadLockRecord().split(' ')[0];
   if (!version) {
     return null;
@@ -452,7 +443,6 @@ function readBundleInstalledByLockHolder(
 
 async function downloadAndExtractBundle(
   axios: AxiosInstance,
-  runnerBundleInstallDirectory: string,
   version: string,
   url: string,
   contended: boolean
@@ -512,7 +502,13 @@ async function downloadAndExtractBundle(
         res();
       });
 
-      resp.data.pipe(createGunzip()).pipe(extract);
+      // A failure on the response or gunzip stream is not forwarded to
+      // `extract`, so without these the promise never settles: the download
+      // lock stays held and every other nx process waits on it forever.
+      const gunzip = createGunzip();
+      resp.data.on('error', rej);
+      gunzip.on('error', rej);
+      resp.data.pipe(gunzip).pipe(extract);
     });
 
     rmSync(bundleExtractLocation, { recursive: true, force: true });
