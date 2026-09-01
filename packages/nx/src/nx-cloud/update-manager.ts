@@ -223,6 +223,11 @@ function getLatestInstalledRunnerBundle(): CloudBundleInstall | null {
       return null;
     }
 
+    // A contended install can leave multiple bundles on disk; run the
+    // highest version.
+    installedBundles.sort((a, b) =>
+      compareBundleVersions(b.version, a.version)
+    );
     return installedBundles[0];
   } catch (e: any) {
     console.log('Could not read runner bundle path:', e.message);
@@ -335,13 +340,16 @@ async function downloadAndExtractClientBundle(
 ): Promise<CloudBundleInstall> {
   // Parallel nx processes race to install bundles, possibly with different
   // versions. The first process to take the lock downloads and records its
-  // version in the lockfile; the rest wait and adopt whichever bundle the
-  // holder installed instead of downloading — and possibly deleting — a
-  // competing one. The flock is released by the kernel if the holder dies, so
-  // no stale-lock cleanup is needed. Under WASM the lock is unavailable and
-  // downloads run unserialized.
+  // version in the lockfile; the rest wait and, when the lock clears, adopt
+  // the holder's bundle unless their own target is a higher calver tag — then
+  // they download it as a contended install, which leaves the holder's bundle
+  // on disk for the process running from it. The flock is released by the
+  // kernel if the holder dies, so no stale-lock cleanup is needed. Under WASM
+  // the lock is unavailable and downloads run unserialized.
+  const start = Date.now();
   const lock = !IS_WASM ? new FileLock(downloadLockFilePath) : null;
   let locked = lock?.locked;
+  let contended = false;
   while (locked) {
     debugLog(
       'Another process is downloading the client bundle, waiting for it to complete'
@@ -351,28 +359,90 @@ async function downloadAndExtractClientBundle(
       runnerBundleInstallDirectory
     );
     if (installedBundle) {
+      if (compareBundleVersions(installedBundle.version, version) >= 0) {
+        debugLog(
+          'Using client bundle downloaded by another process: ',
+          installedBundle.version
+        );
+        return installedBundle;
+      }
+      contended = true;
       debugLog(
-        'Using client bundle downloaded by another process: ',
+        'Another process downloaded an older bundle: ',
         installedBundle.version
       );
-      return installedBundle;
     }
-    // The other process failed, so this process still needs to download.
+    // The other process failed or installed an older version, so this process
+    // still needs to download.
     locked = lock.check();
   }
   lock?.lock();
   try {
+    // A process that acquired the lock between the check above and lock()
+    // may have installed a bundle already; the lockfile is fresher than this
+    // call only in that case, so a stale record from a past install can never
+    // shadow a server-instructed download (e.g. a rollback).
+    const installedBundle = readBundleInstalledByLockHolder(
+      runnerBundleInstallDirectory
+    );
+    if (installedBundle && getDownloadLockWriteTime() > start) {
+      if (compareBundleVersions(installedBundle.version, version) >= 0) {
+        debugLog(
+          'Using client bundle downloaded by another process: ',
+          installedBundle.version
+        );
+        return installedBundle;
+      }
+      contended = true;
+      debugLog(
+        'Another process downloaded an older bundle: ',
+        installedBundle.version
+      );
+    }
+
     writeFileSync(downloadLockFilePath, version, 'utf-8');
     const fullPath = await downloadAndExtractBundle(
       axios,
       runnerBundleInstallDirectory,
       version,
-      url
+      url,
+      contended
     );
     return { version, fullPath };
   } finally {
     lock?.unlock();
   }
+}
+
+function getDownloadLockWriteTime(): number {
+  try {
+    return statSync(downloadLockFilePath).mtimeMs;
+  } catch {
+    return 0;
+  }
+}
+
+// Bundle versions are dotted calver tags (e.g. 2510.28.15). Non-numeric
+// segments compare lexically so unexpected formats still order
+// deterministically.
+function compareBundleVersions(a: string, b: string): number {
+  const aSegments = a.split('.');
+  const bSegments = b.split('.');
+  const length = Math.max(aSegments.length, bSegments.length);
+  for (let i = 0; i < length; i++) {
+    const aSegment = aSegments[i] ?? '';
+    const bSegment = bSegments[i] ?? '';
+    if (aSegment === bSegment) {
+      continue;
+    }
+    const aNumber = Number(aSegment);
+    const bNumber = Number(bSegment);
+    if (!Number.isNaN(aNumber) && !Number.isNaN(bNumber)) {
+      return aNumber - bNumber;
+    }
+    return aSegment < bSegment ? -1 : 1;
+  }
+  return 0;
 }
 
 function readBundleInstalledByLockHolder(
@@ -394,7 +464,8 @@ async function downloadAndExtractBundle(
   axios: AxiosInstance,
   runnerBundleInstallDirectory: string,
   version: string,
-  url: string
+  url: string,
+  contended: boolean
 ): Promise<string> {
   const bundleExtractLocation = join(runnerBundleInstallDirectory, version);
 
@@ -461,7 +532,12 @@ async function downloadAndExtractBundle(
     throw e;
   }
 
-  removeOldClientBundles(version);
+  // On a contended install another process just installed — and is running
+  // from — an older bundle; leave it on disk and let a later uncontended
+  // install clean it up.
+  if (!contended) {
+    removeOldClientBundles(version);
+  }
   writeBundleVerificationLock();
   return bundleExtractLocation;
 }
