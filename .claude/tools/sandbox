@@ -480,6 +480,13 @@ function cmdStart(argv) {
     const container = ensureHost(backend, iso, opts.image);
     const work = reviewRoot(id);
 
+    // No --checkout means the caller wants an empty private directory in the
+    // shared host rather than a worktree of the nx repo. That is what a
+    // reproduction needs: it clones a stranger's repo and installs it with its
+    // own package manager, and fetching that into the shared object store would
+    // mix an untrusted history into the repo every review reads.
+    const scratch = !opts.checkout;
+
     sb = {
       id,
       mode: 'container',
@@ -493,7 +500,9 @@ function cmdStart(argv) {
       checkout: opts.checkout || null,
       ref: opts.ref || null,
       work,
-      root: `${work}/nx`,
+      // A scratch workspace has no `nx` subtree to point at.
+      root: scratch ? work : `${work}/nx`,
+      scratch: scratch || undefined,
       base: opts.base ? `${work}/base` : null,
       // Per-review refs, never `refs/remotes/origin/<base>`. In a shared repo
       // that remote-tracking ref is one ref for every review, so the next
@@ -518,6 +527,16 @@ function cmdStart(argv) {
     updateState((state) => {
       state.sandboxes[id] = sb;
     });
+
+    if (scratch) {
+      const r1 = execIn(sb, `mkdir -p ${work}`, { dir: WORK_ROOT, stdio: 'ignore' });
+      if (r1.status !== 0) {
+        updateState((state) => {
+          delete state.sandboxes[id];
+        });
+        die(`failed to create the workspace for ${id}`);
+      }
+    }
 
     if (opts.checkout) {
       // The shared repo is an object store, not a checkout: it is bare, so
@@ -1037,11 +1056,16 @@ function cmdExec(argv) {
   // version of this — base self-healing while head silently ran without
   // node_modules — turned a forgotten setup call into "command not found" from
   // an agent, which reads as the change being broken.
-  ensureInstalled(
-    sb,
-    opts.base ? sb.base : sb.root,
-    opts.base ? 'base' : 'head'
-  );
+  // A scratch workspace has no nx checkout, so there is nothing to install and
+  // `mise install && pnpm install` would fail in an empty directory. Whatever
+  // lives here installs itself, with its own package manager.
+  if (!sb.scratch) {
+    ensureInstalled(
+      sb,
+      opts.base ? sb.base : sb.root,
+      opts.base ? 'base' : 'head'
+    );
+  }
   const r = execIn(sb, script, {
     stdio: 'inherit',
     dir: opts.base ? sb.base : sb.root,
@@ -1147,6 +1171,8 @@ function cmdInstall(argv) {
   if (!id) die('usage: sandbox install <id> [--base]');
   const sb = getSandbox(id);
   const opts = parseFlags(argv.slice(1), { base: 'boolean' });
+  if (sb.scratch)
+    die(`sandbox ${id} is a scratch workspace: it has no nx checkout to install`);
   if (opts.base && !sb.base)
     die(`sandbox ${id} has no base worktree (start it with --base <ref>)`);
   const result = ensureInstalled(
@@ -1737,6 +1763,8 @@ const USAGE = `sandbox — uniform access to a checkout, isolated or local
 
   start  --local <path> [--allow-exec]         register a host dir; exec=screened unless --allow-exec
   start  --image <img> [--checkout <url> --ref <r> [--base <r>]]
+                                               without --checkout: an empty private workspace in
+                                               the shared host, for code that installs itself
   read   <id> <path> [--range a,b] [--ref <sha>] [-n]
   grep   <id> <pattern> [subdir] [--ref <sha>]
   find   <id> <glob> [subdir] [--ref <sha>]
