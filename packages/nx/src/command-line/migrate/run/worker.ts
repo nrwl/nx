@@ -90,7 +90,7 @@ import {
   latestStoredAgentWorkPayload,
   persistAgentWorkPayload,
 } from './agent-work-payload';
-import { issueIdsForCommit } from './issues';
+import { attachIssueIdsToCommitEntry } from './issues';
 
 // Runs exactly one migration, either standalone or recorded into an existing
 // orchestrated run via `--run-id`. Standalone runs keep no durable run state,
@@ -955,19 +955,10 @@ function appendCommit(
   dir: string,
   entry: MigrateCommitLedgerEntry
 ): MigrateRunState {
-  return updateRunState(dir, (fresh) => {
-    let withIssues = entry;
-    if (entry.kind === 'landed') {
-      const issueIds = issueIdsForCommit(fresh, entry.stepIds);
-      if (issueIds.length > 0) {
-        withIssues = { ...entry, issueIds };
-      }
-    }
-    return {
-      ...fresh,
-      commits: [...fresh.commits, withIssues],
-    };
-  });
+  return updateRunState(dir, (fresh) => ({
+    ...fresh,
+    commits: [...fresh.commits, attachIssueIdsToCommitEntry(fresh, entry)],
+  }));
 }
 
 function buildOutcome(
