@@ -6,6 +6,28 @@ nobody.
 
 ## How to write them
 
+- **Attribute derived analysis to triage, not to the maintainer.** These post from a maintainer's
+  account. Anything you worked out yourself — a reproduction, a source-level mechanism, a version
+  bisect — goes inside a collapsed **Triage notes** `<details>` block, with blank lines around every
+  tag or GitHub renders it as raw HTML:
+
+  ```markdown
+  <details>
+  <summary>
+
+  #### Triage notes — automated triage, reviewed before posting.
+
+  </summary>
+
+  <the evidence>
+
+  </details>
+
+  <the request to the reporter, in plain prose>
+  ```
+
+  Keep the actual request outside the block so the human is the one asking. A reply that is purely a
+  request (no findings) needs no block at all. Full rationale in the skill's Step 11.
 - **Say what you need and why one sentence of it matters.** "We need a repro" is the stale bot's line.
   "The `nx report` shows 21.2.0 but the option you're using landed in 21.4 — which version is the
   failure on?" gets an answer.
