@@ -111,3 +111,8 @@ export function formatAffectedExplanation(
   }
   return lines.join('\n');
 }
+
+/** Whether `--explain` was asked for at all, in any of its forms. */
+export function isExplaining(value: string | boolean | undefined): boolean {
+  return value !== undefined && value !== false;
+}

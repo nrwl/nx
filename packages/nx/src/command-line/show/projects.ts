@@ -9,6 +9,7 @@ import {
   filterAffectedWithReasons,
 } from '../../project-graph/affected/affected-project-graph';
 import { printAffectedExplanation } from '../../project-graph/affected/print-explanation';
+import { isExplaining } from '../../project-graph/affected/affected-reasons';
 import { computeAffectedTasks } from '../../project-graph/affected/affected-tasks';
 import { resolveAffectedGranularity } from '../../project-graph/affected/granularity';
 import {
@@ -61,13 +62,15 @@ export async function showProjectsHandler(
         nxJson,
         targets: args.withTarget,
         touchedFiles,
-        explain: nxArgs.explain !== undefined,
+        explain: isExplaining(nxArgs.explain),
       });
-      if (nxArgs.explain !== undefined) {
+      if (isExplaining(nxArgs.explain)) {
         printAffectedExplanation(
           affectedTasks.reasons ?? {},
           'Affected tasks',
-          { json: nxArgs.explain === 'json' || args.json }
+          // show projects declares its own --json, which has no executor to
+          // pass through to.
+          args.json ? 'stdout' : nxArgs.explain
         );
         await output.drain();
         return;
@@ -83,7 +86,7 @@ export async function showProjectsHandler(
           Object.entries(graph.nodes).filter(([name]) => owning.has(name))
         ),
       };
-    } else if (nxArgs.explain !== undefined) {
+    } else if (isExplaining(nxArgs.explain)) {
       // Reports the selection rather than filtering to it, so the later
       // --projects and --withTarget filters would only obscure the answer.
       const { reasons } = await filterAffectedWithReasons(
@@ -91,9 +94,11 @@ export async function showProjectsHandler(
         touchedFiles,
         nxJson
       );
-      printAffectedExplanation(reasons, 'Affected projects', {
-        json: nxArgs.explain === 'json' || args.json,
-      });
+      printAffectedExplanation(
+        reasons,
+        'Affected projects',
+        args.json ? 'stdout' : nxArgs.explain
+      );
       await output.drain();
       return;
     } else {

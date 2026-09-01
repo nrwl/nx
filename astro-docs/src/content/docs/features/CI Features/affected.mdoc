@@ -252,7 +252,7 @@ nx affected -t build --explain
 
 Each entry lists every reason that applies, so a project reached through two different dependencies reports both. To follow a chain, look up the project named in a reason.
 
-Add `--explain=json` for the same data keyed by project.
+Pass `--explain=stdout` for the same data as JSON, or `--explain=reasons.json` to write it to a file.
 
 `nx show projects --affected --explain` explains the project list the same way.
 

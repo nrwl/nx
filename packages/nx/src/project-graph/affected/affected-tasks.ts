@@ -156,7 +156,10 @@ export async function computeAffectedTasks(
   // these paths are configuration and resolves that instruction against the
   // project they belong to. Decided here because it needs the plugins'
   // createNodes globs, which are async to resolve.
-  const projectConfigChanges = await changedProjectConfigs(touchedFiles, nxJson);
+  const projectConfigChanges = await changedProjectConfigs(
+    touchedFiles,
+    nxJson
+  );
   const own = new Set(
     nativeAffectedTasks(graphRef, plans, changedPaths, projectConfigChanges)
   );

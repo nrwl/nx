@@ -36,7 +36,7 @@ export interface NxArgs {
   select?: string;
   graph?: string | boolean;
   skipNxCache?: boolean;
-  explain?: string;
+  explain?: string | boolean;
   json?: boolean;
   skipRemoteCache?: boolean;
   outputStyle?: string;
