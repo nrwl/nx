@@ -62,7 +62,7 @@ runtime, and resource limits. What is still yours to get right:
 - **Never mount a host path.** The CLI gives you no way to; do not reach around it.
 - **Always `stop` the id when you are done.** The workspace is a real directory in a long-lived
   container, not a `--rm` container that cleans itself.
-- **Lanes share the container.** Isolation *between* sandboxes is not claimed — that is a deliberate
+- **Lanes share the container.** Isolation _between_ sandboxes is not claimed — that is a deliberate
   disk trade. So do not assume a fixed port is free, and if a run looks poisoned by a neighbour,
   `stop` it and start a fresh id rather than debugging the contamination.
 
@@ -127,16 +127,16 @@ echo "REPRO_EXIT=${PIPESTATUS[0]}"
 Three things in there are load-bearing, each of which has already cost a run:
 
 - **Do not impose a package manager.** `packageManager: yarn@4.15.0` is authoritative and corepack
-  honours it; a pnpm shim *refusing* under that field is corepack working, not a bug to route around.
+  honours it; a pnpm shim _refusing_ under that field is corepack working, not a bug to route around.
   Installing a yarn-4 workspace with npm invents failures that belong to your harness rather than to
   the issue — an `ERESOLVE` on a prerelease range is the usual one, and reaching for
   `--legacy-peer-deps` treats the symptom of a switch you should not have made.
-- **`set -e` alone is not enough.** A pipeline's status is its *last* command's, so `install | tail`
+- **`set -e` alone is not enough.** A pipeline's status is its _last_ command's, so `install | tail`
   succeeds even when the install failed. Hence `pipefail`, and the explicit `PIPESTATUS[0]` for the
   repro command, whose non-zero exit is the result rather than an error.
 - **Do not delete the lockfile.** Deleting it re-resolves the whole tree and changes what you are
   testing. Let the workspace's own package manager update it after the version rewrite. Only remove
-  it if the install fails *because* of it, and say so in the report.
+  it if the install fails _because_ of it, and say so in the report.
 
 To install from somewhere other than public npm, prefix the install:
 `npm_config_registry=<NX_REGISTRY> $PM install`.
