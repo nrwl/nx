@@ -8,6 +8,7 @@ import {
   PluginCache,
   TargetProjectLocator,
   workspaceDataDirectory,
+  quoteShellArg,
 } from '@nx/devkit/internal';
 import {
   CreateDependencies,
@@ -66,11 +67,6 @@ const LINTABLE_EXTENSIONS = [
 const LINTABLE_FILES_GLOB = `**/*.{${LINTABLE_EXTENSIONS.join(',')}}`;
 // Oxlint honours both, so both decide which files it lints.
 const IGNORE_FILENAMES = ['.eslintignore', '.gitignore'];
-// A project root reaches a shell verbatim: `run-commands` spawns the inferred
-// command with `shell: true`, and inside double quotes `$`, a backtick and `"`
-// are all still live. Roots outside a plain path-segment sequence are skipped
-// rather than escaped, which costs only the double-linting the base already did.
-const SHELL_SAFE_PROJECT_ROOT = /^[\w.@+-]+(?:\/[\w.@+-]+)*$/;
 // The one rule that looks across projects; every other rule sees one file.
 const BOUNDARIES_PLUGIN_SPECIFIER = '@nx/oxlint/boundaries-plugin';
 const PROJECT_CONFIG_FILENAMES = ['project.json', 'package.json'];
@@ -884,9 +880,9 @@ function getProjectUsingOxlintConfig(
     projectRoot,
     projectRoots,
     isRootProject && standaloneSrcPath ? standaloneSrcPath : ''
-  )
-    .filter((relativeRoot) => SHELL_SAFE_PROJECT_ROOT.test(relativeRoot))
-    .map((relativeRoot) => `--ignore-pattern "/${relativeRoot}"`);
+  ).map(
+    (relativeRoot) => `--ignore-pattern ${quoteShellArg(`/${relativeRoot}`)}`
+  );
 
   const jsPluginFiles = new Set(
     configInputs.flatMap((config) =>

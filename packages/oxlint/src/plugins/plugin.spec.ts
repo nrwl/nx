@@ -1,7 +1,7 @@
 import { CreateDependenciesContext, CreateNodesContext } from '@nx/devkit';
 import { minimatch } from 'minimatch';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-import { mkdirSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import {
@@ -235,7 +235,7 @@ describe('@nx/oxlint plugin', () => {
     const results = await invokeCreateNodesOnMatchingFiles(context);
 
     expect(results.projects['libs/a'].targets.lint.command).toBe(
-      'oxlint --ignore-pattern "/nested" .'
+      'oxlint --ignore-pattern /nested .'
     );
     // The nested project still lints its own files, through its own target.
     expect(results.projects['libs/a/nested'].targets.lint.command).toBe(
@@ -258,7 +258,7 @@ describe('@nx/oxlint plugin', () => {
     const results = await invokeCreateNodesOnMatchingFiles(context);
 
     expect(results.projects['libs/a'].targets.lint.command).toBe(
-      'oxlint --ignore-pattern "/nested" .'
+      'oxlint --ignore-pattern /nested .'
     );
   });
 
@@ -276,25 +276,44 @@ describe('@nx/oxlint plugin', () => {
     const results = await invokeCreateNodesOnMatchingFiles(context);
 
     expect(results.projects['.'].targets.lint.command).toBe(
-      'oxlint --ignore-pattern "/src/nested" ./src'
+      'oxlint --ignore-pattern /src/nested ./src'
     );
   });
 
-  // A root reaches the shell verbatim, so anything that is not a plain path
-  // segment sequence is skipped instead of escaped.
-  it('should skip a nested root that is not shell-safe', async () => {
-    createFiles({
-      '.oxlintrc.json': `{"rules":{}}`,
-      'libs/a/project.json': `{"name":"a"}`,
-      'libs/a/src/index.ts': `export const a = 1;`,
-      'libs/a/n$(touch PWNED)/project.json': `{"name":"a-evil"}`,
-      'libs/a/n$(touch PWNED)/index.ts': `export const e = 1;`,
-    });
+  // A root reaches the shell verbatim, so a directory name is shell code unless
+  // it is escaped. Escaped, not dropped: the exclusion still applies.
+  (process.platform === 'win32' ? it.skip : it)(
+    'should escape a nested root containing shell metacharacters',
+    async () => {
+      createFiles({
+        '.oxlintrc.json': `{"rules":{}}`,
+        'libs/a/project.json': `{"name":"a"}`,
+        'libs/a/src/index.ts': `export const a = 1;`,
+        'libs/a/n$(touch PWNED)/project.json': `{"name":"a-evil"}`,
+        'libs/a/n$(touch PWNED)/index.ts': `export const e = 1;`,
+      });
 
-    const results = await invokeCreateNodesOnMatchingFiles(context);
+      const results = await invokeCreateNodesOnMatchingFiles(context);
+      const command = results.projects['libs/a'].targets.lint.command;
+      const cwd = join(tempFs.tempDir, 'libs/a');
 
-    expect(results.projects['libs/a'].targets.lint.command).toBe('oxlint .');
-  });
+      const argv = execFileSync('sh', ['-c', `printf '%s\\n' ${command}`], {
+        cwd,
+        encoding: 'utf-8',
+      })
+        .trim()
+        .split('\n');
+
+      // The name survives intact as one argument, and nothing ran.
+      expect(argv).toEqual([
+        'oxlint',
+        '--ignore-pattern',
+        '/n$(touch PWNED)',
+        '.',
+      ]);
+      expect(existsSync(join(cwd, 'PWNED'))).toBe(false);
+    }
+  );
 
   // The string assertions above cannot see what a shell and Oxlint actually do
   // with the emitted argument, which is where both the anchoring and the quoting
