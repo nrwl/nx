@@ -29,7 +29,8 @@
     "migrate-to-pnpm-version": "node ./scripts/migrate-to-pnpm-version.js",
     "analyze-docs": "node tools/scripts/analyze-docs.mjs",
     "update-all-repos": "nx run update-repos:update-all-repos --parallel 5",
-    "copy-built-package": "tsx scripts/copy-built-package"
+    "copy-built-package": "tsx scripts/copy-built-package",
+    "triage-tui": ".claude/tools/triage review"
   },
   "devDependencies": {
     "@actions/core": "^1.10.0",

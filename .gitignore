@@ -202,3 +202,6 @@ e2e/**/*.d.ts.map
 
 # Generated on Netlify builds by astro-docs/scripts/sync-agent-skills.mjs
 astro-docs/public/.well-known/agent-skills
+
+# Staged issue-triage records (.claude/tools/triage)
+.nx-issue-triage
