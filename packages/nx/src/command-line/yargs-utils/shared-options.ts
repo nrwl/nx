@@ -229,13 +229,20 @@ export function withAffectedOptions(yargs: Argv) {
       type: 'boolean',
     })
     .option('explain', {
-      describe:
-        'Print why each project or task was considered affected, instead of running anything. Pass --explain=json for machine-readable output.',
       type: 'string',
-      // Declared as a string so `--explain=json` selects the format. `--json`
-      // stays undeclared, because executors are commonly given it and a
-      // declared option never reaches them.
-      coerce: (value: string | boolean) => (value === true ? '' : value),
+      describe:
+        'Print why each project or task was considered affected, instead of running anything. Pass a file path to save the reasons as JSON instead. Pass "stdout" to print the JSON to the terminal.',
+      // Same shape as `--graph` above, and for the same reason: the value is a
+      // destination, and a bare `--explain` has to arrive as a boolean.
+      // `--json` is deliberately not declared alongside it, because every
+      // builder taking these options also runs tasks, and a declared option
+      // never reaches the executor.
+      coerce: (value) =>
+        value === '' || value === 'true' || value === true
+          ? true
+          : value === 'false' || value === false
+            ? false
+            : value,
     })
     .option('uncommitted', {
       describe: 'Uncommitted changes.',
