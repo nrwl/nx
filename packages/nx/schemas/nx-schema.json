@@ -1053,6 +1053,11 @@
           "type": "object",
           "description": "Configures observed-IO sandboxing for tasks of this target",
           "properties": {
+            "...": {
+              "type": "boolean",
+              "const": true,
+              "description": "Merges with the inherited sandbox configuration instead of replacing it. Keys before this token defer to the inherited value; keys after it win."
+            },
             "enabled": {
               "type": "boolean",
               "default": true,
