@@ -378,6 +378,22 @@ script is standard practice here, and on an issue where `CI=true` is listed unde
 it work" it silently reproduces the passing case. Read the report's own list of what avoids the
 problem, and check it against the flags you are about to set.
 
+**Your own environment is a flag you did not set.** `CI` is the one you choose; these are set for you,
+and each one silently reroutes the code under test:
+
+| Set by | What it changes |
+| --- | --- |
+| `CLAUDECODE=1`, and the other `CLAUDE*` vars | `isAiAgent()` returns true, and `shouldUseTui()` returns false on it. Every TUI test an agent runs is on the non-TUI path unless the vars are stripped. |
+| The pty you run under | `is-tui-enabled.ts` gates on `process.stdout.columns > 0 && rows > 0`. A pty with no winsize (lefthook's inner pty reports 0x0) refuses the TUI outright. |
+| `SANDBOX_RUNTIME=1` | `isSandbox()` is true inside the review sandbox, which some paths branch on. |
+
+The failure is always the same shape: the arm you believe is exercising the feature is quietly
+exercising its absence, and it comes back clean. **Assert the state you are testing rather than
+inferring it** — call the predicate (`shouldUseTui()`, `isAiAgent()`) from inside the harness and
+print it, or find a byte-level tell such as the alternate-screen sequence `CSI ?1049h`. `#36579` was
+measured twice on the non-TUI path, once for the explicit `--outputStyle=stream` and once for
+`isAiAgent()`, before anyone checked.
+
 **Reproductions are cheaper than they look, because they share one container.** `sandbox start` hands
 out a workspace inside the _same_ long-lived host, so a second reproduction is a directory and an
 install, not a new container — which is exactly why "a run is too expensive for this one" does not
