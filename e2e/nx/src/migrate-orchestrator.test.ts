@@ -431,7 +431,7 @@ async function killWorkerAndReconcile(initOutput: string): Promise<{
         process.kill(-worker.pid, 'SIGKILL');
       }
     } catch {
-      // Already exited.
+      // Cleanup is best effort; the worker may already have exited.
     }
     await workerExited;
   }
@@ -724,7 +724,6 @@ describe('migrate orchestrator (dark launch)', () => {
     });
     const retryBlock = parseLastDispense(runDispensed(rejected.payload.next));
     expect(retryBlock.action).toBe('retry-failed');
-    // A failed outcome folds nothing: no commit until the step succeeds.
     expect(runCommand('git rev-list --count HEAD').trim()).toBe(
       revsBeforeRejection
     );

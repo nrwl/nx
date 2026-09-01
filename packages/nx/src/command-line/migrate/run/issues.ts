@@ -1,10 +1,10 @@
 // The run's issue ledger. Agents supply only the handoff's `issues` /
 // `issueUpdates`; ids, fingerprints, routing, claims and archiving are nx's.
 
-import { randomBytes } from 'crypto';
-import { mkdirSync, readFileSync, renameSync } from 'fs';
+import { mkdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { writeJsonFile } from '../../../utils/fileutils';
+import { publishFileAtomically } from './atomic-write';
 import { MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
 import { singleLine } from '../text';
 import {
@@ -12,6 +12,7 @@ import {
   issueFingerprint,
   MIGRATE_ISSUE_DISPOSITIONS,
   TERMINAL_STEP_STATUSES,
+  type MigrateCommitLedgerEntry,
   type MigrateIssueDisposition,
   type MigrateRunIssue,
   type MigrateRunState,
@@ -634,13 +635,23 @@ export function issueIdsForCommit(
 }
 
 /**
- * Reverts the resolutions a step's discarded attempt claimed and releases its
- * issue assignments. A retry-clean resets the tree, so a reported fix is gone
- * unless a landed commit carries it; leaving the entry resolved would attach
- * its id to whatever the retry lands next. The claim goes too: the retry may
- * never park for agent work, so a kept assignment would render "assigned to
- * this step" with no handoff to answer through. Pure; the returned updates are
- * the archive trail, which claim releases do not join.
+ * Attaches the issue ids a landed entry carries; non-landed entries pass
+ * through. Every commit append (worker, fold, adopt) routes through this so
+ * attribution cannot diverge between terminal paths.
+ */
+export function attachIssueIdsToCommitEntry(
+  state: MigrateRunState,
+  entry: MigrateCommitLedgerEntry
+): MigrateCommitLedgerEntry {
+  if (entry.kind !== 'landed') return entry;
+  const issueIds = issueIdsForCommit(state, entry.stepIds);
+  return issueIds.length > 0 ? { ...entry, issueIds } : entry;
+}
+
+/**
+ * Reverts resolutions not carried by a landed commit and releases claims
+ * during a reset-backed retry. Returned disposition changes form the archive
+ * trail; claim releases do not.
  */
 export function reopenResolutionsForStep(
   state: MigrateRunState,
@@ -791,12 +802,9 @@ export function claimIssuesForStep(
 }
 
 /**
- * Demotes recorded issues no remaining step can claim, and releases claims
- * whose assignee turned terminal. Report-time deferral only saw the run as it
- * stood then, so a step turning terminal later without resolving its claims
- * leaves entries the routing contract calls claimable, or a dead assignment
- * posing as ownership. Must run before anything renders. Not archived: this is
- * the run's own progression, not a step-authored change.
+ * Before rendering, release terminal claims and defer issues no remaining
+ * step can claim; report-time routing can become stale as steps finish. Do
+ * not archive Nx-driven progression.
  */
 export function settleUnclaimableIssues(
   state: MigrateRunState
@@ -980,13 +988,9 @@ export function archiveIssues(
 }
 
 /**
- * Whether every archive this application touches is on disk and still holds
- * what phase 1 wrote: a new issue's file must equal the first-report record
- * with an empty update list, and an updated issue's records must END with this
- * application's batch, matching the append path's whole-suffix replay rule. A
- * shell rebuilt for a lost archive carries the same identity values, so it
- * verifies like any other phase-1 output. The fold's phase-2 re-archive checks
- * this before tolerating a write failure.
+ * Verifies the archive state expected after phase 1. New-issue fields must
+ * match the report and have no updates; existing-issue updates must end with
+ * this application's whole batch.
  */
 export function applicationArchivesIntact(
   runDirPath: string,
@@ -1199,8 +1203,6 @@ function reconstructedArchiveShell(
   };
 }
 
-// Atomic like every other run artifact write: a crash can only leave a stale
-// temp file, never a partial archive.
 function writeIssueArchive(
   runDirPath: string,
   issueId: string,
@@ -1208,7 +1210,5 @@ function writeIssueArchive(
 ): void {
   mkdirSync(issuesDir(runDirPath), { recursive: true });
   const filePath = issueArchivePath(runDirPath, issueId);
-  const tmpPath = `${filePath}~${randomBytes(4).toString('hex')}`;
-  writeJsonFile(tmpPath, content);
-  renameSync(tmpPath, filePath);
+  publishFileAtomically(filePath, (tmpPath) => writeJsonFile(tmpPath, content));
 }
