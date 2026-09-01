@@ -57,6 +57,8 @@ The following are known limitations and missing features of Angular Rspack:
   Routes marked with it render at request time, repeating the full render on each request.
   Response streaming does not apply.
   When `inlineCriticalCss` is enabled, each request also repeats the critical CSS inlining.
+  The `prerender` build option does render at build time.
+  Use it to list the routes to prerender.
 - The server route configuration is extracted at runtime, not at build time.
   Each server process extracts it while handling its first application request.
   Route configuration errors therefore surface on that request.
