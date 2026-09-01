@@ -303,8 +303,14 @@ export interface AffectedOptions {
   workspaceRoot: string
 }
 
-/** Task ids with at least one changed file among their plan's file inputs. */
-export declare function affectedTasks(projectGraph: ExternalObject<ProjectGraph>, hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, changedFiles: Array<string>): Array<string>
+/**
+ * Task ids with at least one changed file among their plan's file inputs.
+ *
+ * `changed_project_configs` is the subset of `changed_files` that is project
+ * configuration, decided in TypeScript because it needs the plugins'
+ * createNodes globs.
+ */
+export declare function affectedTasks(projectGraph: ExternalObject<ProjectGraph>, hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, changedFiles: Array<string>, changedProjectConfigs: Array<string>): Array<string>
 
 export interface BatchInfo {
   executorName: string

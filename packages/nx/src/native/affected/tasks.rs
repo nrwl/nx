@@ -27,17 +27,23 @@ use crate::native::tasks::types::{HashInstruction, HashPlans};
 const ROOT_TSCONFIGS: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
 
 /// Task ids with at least one changed file among their plan's file inputs.
+///
+/// `changed_project_configs` is the subset of `changed_files` that is project
+/// configuration, decided in TypeScript because it needs the plugins'
+/// createNodes globs.
 #[napi]
 pub fn affected_tasks(
     project_graph: &External<Arc<ProjectGraph>>,
     #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
     hash_plans: &External<HashPlans>,
     changed_files: Vec<String>,
+    changed_project_configs: Vec<String>,
 ) -> Result<Vec<String>> {
     Ok(compute_affected_tasks(
         project_graph,
         hash_plans,
         &changed_files,
+        &changed_project_configs,
     )?)
 }
 
@@ -45,12 +51,20 @@ pub(crate) fn compute_affected_tasks(
     graph: &ProjectGraph,
     hash_plans: &HashPlans,
     changed_files: &[String],
+    changed_project_configs: &[String],
 ) -> anyhow::Result<Vec<String>> {
     let files: Vec<String> = changed_files.iter().map(|f| normalize_path(f)).collect();
     // Resolved once per changed file rather than once per (file, instruction):
     // ProjectFileSet is the only kind that needs it, and many tasks share one.
     let roots = ProjectRoots::new(graph);
     let owners: Vec<Option<&str>> = files.iter().map(|file| roots.owner_of(file)).collect();
+
+    // The projects whose configuration changed. ProjectConfiguration resolves to
+    // no files, so nothing else in the plan can see this.
+    let reconfigured: HashSet<&str> = changed_project_configs
+        .iter()
+        .filter_map(|file| roots.owner_of(&normalize_path(file)))
+        .collect();
 
     // One entry per interned instruction actually referenced by some plan.
     let mut ids: Vec<u32> = hash_plans.plans.values().flatten().copied().collect();
@@ -62,7 +76,12 @@ pub(crate) fn compute_affected_tasks(
     let matched: HashSet<u32> = ids
         .par_iter()
         .map(|&id| {
-            let hit = instruction_matches(hash_plans.pool.get(id).value(), &files, &owners)?;
+            let hit = instruction_matches(
+                hash_plans.pool.get(id).value(),
+                &files,
+                &owners,
+                &reconfigured,
+            )?;
             Ok::<_, anyhow::Error>((id, hit))
         })
         .filter(|entry| entry.as_ref().map_or(true, |&(_, hit)| hit))
@@ -90,6 +109,7 @@ fn instruction_matches(
     instruction: &HashInstruction,
     files: &[String],
     owners: &[Option<&str>],
+    reconfigured: &HashSet<&str>,
 ) -> anyhow::Result<bool> {
     // Scoped to one project, the way the hasher scopes the same globs with
     // project_file_map, or workspace-wide when there is no owner to match.
@@ -123,6 +143,13 @@ fn instruction_matches(
         },
         HashInstruction::TsConfiguration(_) => {
             Ok(files.iter().any(|f| ROOT_TSCONFIGS.contains(&f.as_str())))
+        }
+        // Hashes the project's config object, which resolves to no files, so it
+        // is matched on the config having changed rather than on a fileset. The
+        // planner splices one of these per dependency, which is what carries a
+        // dependency's config change to its consumers.
+        HashInstruction::ProjectConfiguration(project) => {
+            Ok(reconfigured.contains(project.as_str()))
         }
         // Not judgeable from a diff: runtime output, env, external deps, the
         // project config object, cwd, and the snapshot marker. Blanket locators
@@ -177,7 +204,7 @@ mod tests {
         changed: &[&str],
     ) -> Vec<String> {
         let p = plans("a:build", instructions);
-        compute_affected_tasks(g, &p, &strings(changed)).unwrap()
+        compute_affected_tasks(g, &p, &strings(changed), &[]).unwrap()
     }
 
     #[test]
@@ -312,6 +339,33 @@ mod tests {
         assert!(affected_for(&g, vec![instruction], &["config/local.json"]).is_empty());
     }
 
+    /// ProjectConfiguration resolves to no files, so only a changed config for
+    /// that exact project can match it. This is what carries a dependency's
+    /// config change to its consumers, whose plans each carry one.
+    #[test]
+    fn project_configuration_matches_only_its_own_changed_config() {
+        let g = graph(&[("a", "libs/a"), ("b", "libs/b")]);
+        let p = plans(
+            "consumer:build",
+            vec![HashInstruction::ProjectConfiguration("a".into())],
+        );
+        let config_a = strings(&["libs/a/project.json"]);
+        let config_b = strings(&["libs/b/project.json"]);
+
+        let hit = compute_affected_tasks(&g, &p, &config_a, &config_a).unwrap();
+        assert_eq!(hit, strings(&["consumer:build"]));
+
+        // Another project's config leaves it alone.
+        let miss = compute_affected_tasks(&g, &p, &config_b, &config_b).unwrap();
+        assert!(miss.is_empty());
+
+        // A source file in the same project is not a config change, so this
+        // does not widen back out to project granularity.
+        let source =
+            compute_affected_tasks(&g, &p, &strings(&["libs/a/src/index.ts"]), &[]).unwrap();
+        assert!(source.is_empty());
+    }
+
     /// `plans` is a HashMap, so the answer has to be sorted or it varies per run.
     #[test]
     fn the_affected_list_is_sorted() {
@@ -328,7 +382,7 @@ mod tests {
                 ("m:build".to_string(), vec![id]),
             ]),
         };
-        let affected = compute_affected_tasks(&g, &p, &strings(&["x.txt"])).unwrap();
+        let affected = compute_affected_tasks(&g, &p, &strings(&["x.txt"]), &[]).unwrap();
         assert_eq!(affected, strings(&["a:build", "m:build", "z:build"]));
     }
 }
