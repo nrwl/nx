@@ -86,11 +86,9 @@ export async function affected(
     // --explain reports the selection rather than acting on it: someone asking
     // why a task is affected does not also want it to run.
     if (nxArgs.explain) {
-      printAffectedExplanation(
-        affectedTasks.reasons ?? {},
-        'Affected tasks',
-        nxArgs
-      );
+      printAffectedExplanation(affectedTasks.reasons ?? {}, 'Affected tasks', {
+        json: overrides.json === true || overrides.json === 'true',
+      });
       await output.drain();
       process.exit(0);
     }
@@ -125,7 +123,9 @@ export async function affected(
         calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
         nxJson
       );
-      printAffectedExplanation(reasons, 'Affected projects', nxArgs);
+      printAffectedExplanation(reasons, 'Affected projects', {
+        json: overrides.json === true || overrides.json === 'true',
+      });
       await output.drain();
       process.exit(0);
     }

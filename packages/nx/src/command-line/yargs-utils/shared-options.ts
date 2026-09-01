@@ -233,10 +233,6 @@ export function withAffectedOptions(yargs: Argv) {
         'Print why each project or task was considered affected, instead of running anything.',
       type: 'boolean',
     })
-    .option('json', {
-      describe: 'Emit the output as JSON.',
-      type: 'boolean',
-    })
     .option('uncommitted', {
       describe: 'Uncommitted changes.',
       type: 'boolean',
