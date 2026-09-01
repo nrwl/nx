@@ -197,8 +197,12 @@ Set `ciTargetName` to enable the [Atomizer](/docs/features/ci-features/split-e2e
 
 When coverage is enabled, each atomized task writes its report to a directory under the configured
 `reportsDirectory` that mirrors the spec file's path.
-A project reporting to `coverage/apps/my-app` gets `coverage/apps/my-app/src/a.spec.ts/lcov.info`
-for the `src/a.spec.ts` task, so a tool configured with a fixed report path needs a glob instead.
+A project reporting to `coverage/apps/my-app` gets
+`coverage/apps/my-app/src/a.spec.ts/coverage-final.json` for the `src/a.spec.ts` task, so a tool
+configured with a fixed report path needs a glob instead.
+Nx inserts the project root before the spec path for a `reportsDirectory` outside the project,
+unless the directory already ends with it.
+`../../reports` for `apps/my-app` gives `reports/apps/my-app/src/a.spec.ts`.
 Nx caches only outputs inside the workspace, so atomized tasks and their CI parent run uncached
 when `reportsDirectory` resolves outside it.
 
