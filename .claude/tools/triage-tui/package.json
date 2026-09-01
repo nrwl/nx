@@ -3,10 +3,9 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "ink": "^5.2.1",
-    "react": "catalog:react"
-  },
-  "devDependencies": {
-    "tsx": "^4.20.5"
+    "@opentui/core": "0.5.9",
+    "@opentui/react": "^0.5.9",
+    "react": "^19.2.0",
+    "ws": "^8.18.0"
   }
 }
