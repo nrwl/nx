@@ -1,0 +1,618 @@
+#!/usr/bin/env node
+'use strict';
+
+/**
+ * triage — a staging area for issue mutations, so nothing reaches GitHub
+ * unreviewed.
+ *
+ * An agent triaging issues produces label changes, assignees and public comments.
+ * Applying those directly means the first time a human sees a mistake, it is
+ * already on a public issue and cannot be unsent. So the agent writes its intent
+ * to a file here, a human approves it in `triage review`, and only then does
+ * anything hit `gh`.
+ *
+ * Records are markdown with YAML frontmatter because both parties edit them: the
+ * agent writes them, and the human fixes a wrong label or rewrites a clumsy
+ * comment in $EDITOR without going back through the agent.
+ *
+ * Everything except `review` runs on node builtins alone. That matters because
+ * `apply` is the step that must work in a fresh clone, before `pnpm install`,
+ * and in CI. Only the TUI needs ink, and only the TUI pays for it.
+ */
+
+const { spawnSync } = require('child_process');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+// `triage list | head` is how anyone reads a long queue. Without this the next
+// write raises an unhandled EPIPE and the verb dies with a stack trace printed
+// over output it already produced successfully.
+process.stdout.on('error', (e) => {
+  if (e.code === 'EPIPE') process.exit(0);
+  throw e;
+});
+
+const REPO = process.env.TRIAGE_REPO || 'nrwl/nx';
+const ROOT = path.resolve(__dirname, '..', '..');
+const STATE_DIR = process.env.TRIAGE_DIR || path.join(ROOT, '.nx-issue-triage');
+
+// Owned by .github/workflows/{schedule-stale,lock-threads}.yml. Setting either
+// by hand desynchronizes the bot that manages it.
+const BOT_OWNED = new Set(['stale', 'outdated']);
+
+// Each of these is watched by an actions/stale pass: 7 days of silence adds
+// `stale`, 21 more close the issue. Two at once means two countdowns and two
+// nag comments for one problem.
+const STALE_TIMERS = new Set([
+  'blocked: repro needed',
+  'blocked: more info needed',
+  'blocked: retry with latest',
+]);
+
+// gh issue close --reason accepts exactly these. `duplicate` is first-class:
+// routing duplicates through `not planned` loses that signal on the issue.
+const CLOSE_REASONS = new Set(['completed', 'not planned', 'duplicate']);
+
+const OWNERS_FILE = path.join(__dirname, 'triage-owners.json');
+const ROTATION_FILE = path.join(STATE_DIR, '.rotation.json');
+
+const STATUSES = [
+  'pending',
+  'approved',
+  'changes-requested',
+  'rejected',
+  'applied',
+  'failed',
+];
+
+const LIST_KEYS = new Set(['add_labels', 'remove_labels']);
+
+// ---------------------------------------------------------------- frontmatter
+
+/**
+ * A deliberately small YAML subset: `key: scalar`, and `key:` followed by
+ * `  - item` lines. Humans hand-edit these files, so anything outside the subset
+ * throws with a line number rather than being skipped — a dropped line here
+ * means a label silently not applied, which is invisible at every layer above.
+ */
+function parseFrontmatter(text, file) {
+  const front = {};
+  let key = null;
+  text.split('\n').forEach((raw, i) => {
+    const line = raw.replace(/\s+$/, '');
+    const at = `${file}:${i + 2}`;
+    if (!line || line.trimStart().startsWith('#')) return;
+
+    const item = line.match(/^ {2}- (.*)$/);
+    if (item) {
+      if (!key || !Array.isArray(front[key])) {
+        throw new Error(`${at}: list item outside a list key`);
+      }
+      front[key].push(unquote(item[1], at));
+      return;
+    }
+
+    const pair = line.match(/^([A-Za-z_][A-Za-z0-9_]*):(?: (.*))?$/);
+    if (!pair) throw new Error(`${at}: cannot parse ${JSON.stringify(raw)}`);
+    key = pair[1];
+    const value = pair[2];
+    if (value === undefined || value === '') {
+      front[key] = LIST_KEYS.has(key) ? [] : '';
+    } else if (value === '[]') {
+      front[key] = [];
+    } else {
+      front[key] = unquote(value, at);
+    }
+  });
+  return front;
+}
+
+function unquote(value, at) {
+  const v = value.trim();
+  if (v.startsWith("'")) {
+    if (!v.endsWith("'") || v.length < 2) throw new Error(`${at}: unterminated quote`);
+    return v.slice(1, -1).replace(/''/g, "'");
+  }
+  if (v.startsWith('"')) {
+    if (!v.endsWith('"') || v.length < 2) throw new Error(`${at}: unterminated quote`);
+    return v.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+  }
+  return v;
+}
+
+function quote(value) {
+  return `'${String(value).replace(/'/g, "''")}'`;
+}
+
+function serializeFrontmatter(front) {
+  const lines = [];
+  for (const [key, value] of Object.entries(front)) {
+    if (Array.isArray(value)) {
+      if (!value.length) {
+        lines.push(`${key}: []`);
+      } else {
+        lines.push(`${key}:`);
+        for (const item of value) lines.push(`  - ${quote(item)}`);
+      }
+    } else if (typeof value === 'number') {
+      lines.push(`${key}: ${value}`);
+    } else {
+      lines.push(`${key}: ${quote(value ?? '')}`);
+    }
+  }
+  return lines.join('\n');
+}
+
+// -------------------------------------------------------------------- records
+
+const recordPath = (n) => path.join(STATE_DIR, `${n}.md`);
+
+function readRecord(n) {
+  const file = recordPath(n);
+  if (!fs.existsSync(file)) fail(`no staged record for #${n} (looked in ${rel(file)})`);
+  const text = fs.readFileSync(file, 'utf8');
+  const m = text.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+  if (!m) fail(`${rel(file)}: missing YAML frontmatter`);
+  let front;
+  try {
+    front = parseFrontmatter(m[1], rel(file));
+  } catch (e) {
+    fail(e.message);
+  }
+  return { front, body: m[2], file };
+}
+
+function writeRecord(front, body) {
+  fs.mkdirSync(STATE_DIR, { recursive: true });
+  const file = recordPath(front.issue);
+  fs.writeFileSync(file, `---\n${serializeFrontmatter(front)}\n---\n\n${body.trim()}\n`);
+  return file;
+}
+
+function listRecords() {
+  if (!fs.existsSync(STATE_DIR)) return [];
+  return fs
+    .readdirSync(STATE_DIR)
+    .filter((f) => /^\d+\.md$/.test(f))
+    .map((f) => readRecord(parseInt(f, 10)))
+    .sort((a, b) => Number(a.front.issue) - Number(b.front.issue));
+}
+
+/** Body sections are `## Name` headings. A missing section reads as empty. */
+function section(body, name) {
+  for (const part of body.split(/^## /m)) {
+    const nl = part.indexOf('\n');
+    const heading = (nl === -1 ? part : part.slice(0, nl)).trim();
+    if (heading === name) return nl === -1 ? '' : part.slice(nl + 1).trim();
+  }
+  return '';
+}
+
+function buildBody({ comment, rationale, feedback }) {
+  const parts = [];
+  parts.push(`## Comment\n\n${(comment || '').trim() || '_none_'}`);
+  parts.push(`## Rationale\n\n${(rationale || '').trim() || '_none given_'}`);
+  if ((feedback || '').trim()) parts.push(`## Feedback\n\n${feedback.trim()}`);
+  return parts.join('\n\n');
+}
+
+// ------------------------------------------------------------------ validation
+
+function validate(front) {
+  const problems = [];
+  if (!/^\d+$/.test(String(front.issue))) problems.push('issue must be a number');
+  if (!STATUSES.includes(front.status)) {
+    problems.push(`status must be one of ${STATUSES.join(', ')}`);
+  }
+  const add = front.add_labels || [];
+  const remove = front.remove_labels || [];
+
+  for (const label of [...add, ...remove]) {
+    if (BOT_OWNED.has(label)) {
+      problems.push(`"${label}" is bot-owned; the workflows manage it, not us`);
+    }
+  }
+  const timers = add.filter((l) => STALE_TIMERS.has(l));
+  if (timers.length > 1) {
+    problems.push(`two stale countdowns at once: ${timers.join(' + ')}`);
+  }
+  for (const label of add) {
+    if (remove.includes(label)) problems.push(`"${label}" is both added and removed`);
+  }
+  if (front.assign && !/^[A-Za-z0-9-]+$/.test(front.assign)) {
+    problems.push(`assign "${front.assign}" is not a GitHub login`);
+  }
+  if (front.close_reason && !CLOSE_REASONS.has(front.close_reason)) {
+    problems.push(
+      `close_reason "${front.close_reason}" must be one of ${[...CLOSE_REASONS].join(', ')}`
+    );
+  }
+  return problems;
+}
+
+// ----------------------------------------------------------------------- verbs
+
+function cmdStage(args) {
+  const raw = args.includes('--json')
+    ? args[args.indexOf('--json') + 1]
+    : fs.readFileSync(0, 'utf8');
+  if (!raw || !raw.trim()) {
+    fail('nothing on stdin. Usage: triage stage < payload.json');
+  }
+  let payload;
+  try {
+    payload = JSON.parse(raw);
+  } catch (e) {
+    fail(`payload is not valid JSON: ${e.message}`);
+  }
+
+  const existing = fs.existsSync(recordPath(payload.issue))
+    ? readRecord(payload.issue)
+    : null;
+  if (existing && existing.front.status === 'applied' && !args.includes('--force')) {
+    fail(`#${payload.issue} was already applied. Pass --force to stage a new round.`);
+  }
+
+  const front = {
+    issue: Number(payload.issue),
+    title: payload.title || '',
+    url: payload.url || `https://github.com/${REPO}/issues/${payload.issue}`,
+    status: 'pending',
+    staged: new Date().toISOString(),
+    add_labels: payload.add_labels || [],
+    remove_labels: payload.remove_labels || [],
+    assign: payload.assign || '',
+    repro: payload.repro || '',
+    linked_pr: payload.linked_pr || '',
+    close_reason: payload.close_reason || '',
+  };
+
+  const problems = validate(front);
+  // Closing without saying why is the one mutation a reporter cannot argue
+  // with, so it does not get to be the quiet one.
+  if (front.close_reason && !(payload.comment || '').trim()) {
+    problems.push('a close needs a comment explaining it');
+  }
+  if (problems.length) fail(`refusing to stage #${front.issue}:\n  - ${problems.join('\n  - ')}`);
+
+  const file = writeRecord(
+    front,
+    buildBody({
+      comment: payload.comment,
+      rationale: payload.rationale,
+      // A restage answers previous feedback; keep it visible until applied.
+      feedback: existing ? section(existing.body, 'Feedback') : '',
+    })
+  );
+  console.log(rel(file));
+}
+
+function cmdList(args) {
+  const wanted = flag(args, '--status');
+  let records = listRecords();
+  if (wanted) records = records.filter((r) => r.front.status === wanted);
+  if (args.includes('--json')) {
+    console.log(JSON.stringify(records.map((r) => r.front), null, 2));
+    return;
+  }
+  if (!records.length) {
+    console.log(wanted ? `no records with status ${wanted}` : 'nothing staged');
+    return;
+  }
+  for (const { front, body } of records) {
+    const labels = [
+      ...(front.add_labels || []).map((l) => `+${l}`),
+      ...(front.remove_labels || []).map((l) => `-${l}`),
+    ].join(', ');
+    const bits = [labels];
+    if (front.assign) bits.push(`@${front.assign}`);
+    if (section(body, 'Comment') !== '_none_') bits.push('comment');
+    console.log(
+      `${String(front.status).padEnd(17)} #${front.issue}  ${truncate(front.title, 58)}`
+    );
+    console.log(`${' '.repeat(18)}${bits.filter(Boolean).join('  ') || '(no changes)'}`);
+  }
+}
+
+function cmdShow(args) {
+  const n = requireIssue(args);
+  process.stdout.write(fs.readFileSync(recordPath(n), 'utf8'));
+}
+
+function cmdSet(args) {
+  const n = requireIssue(args);
+  const status = args[1];
+  if (!STATUSES.includes(status)) {
+    fail(`unknown status "${status}". One of: ${STATUSES.join(', ')}`);
+  }
+  const { front, body } = readRecord(n);
+  front.status = status;
+  const note = flag(args, '--note');
+  const merged = note
+    ? buildBody({
+        comment: section(body, 'Comment'),
+        rationale: section(body, 'Rationale'),
+        feedback: note,
+      })
+    : body;
+  writeRecord(front, merged);
+  console.log(`#${n} -> ${status}`);
+}
+
+function cmdFeedback(args) {
+  const records = listRecords().filter((r) => r.front.status === 'changes-requested');
+  if (args.includes('--json')) {
+    console.log(
+      JSON.stringify(
+        records.map((r) => ({ ...r.front, feedback: section(r.body, 'Feedback') })),
+        null,
+        2
+      )
+    );
+    return;
+  }
+  if (!records.length) {
+    console.log('no changes requested');
+    return;
+  }
+  for (const { front, body } of records) {
+    console.log(`#${front.issue}  ${front.title}`);
+    console.log(indent(section(body, 'Feedback') || '(no note left)'));
+    console.log('');
+  }
+}
+
+function cmdApply(args) {
+  const dryRun = args.includes('--dry-run');
+  const explicit = args.filter((a) => /^\d+$/.test(a)).map(Number);
+  let records = listRecords().filter((r) => r.front.status === 'approved');
+  if (explicit.length) records = records.filter((r) => explicit.includes(Number(r.front.issue)));
+
+  if (!records.length) {
+    console.log('nothing approved to apply');
+    return;
+  }
+
+  for (const { front, body } of records) {
+    const problems = validate(front);
+    if (problems.length) {
+      console.error(`#${front.issue}: refusing to apply:\n  - ${problems.join('\n  - ')}`);
+      continue;
+    }
+
+    const steps = [];
+    const edit = [];
+    for (const l of front.add_labels || []) edit.push('--add-label', l);
+    for (const l of front.remove_labels || []) edit.push('--remove-label', l);
+    if (front.assign) edit.push('--add-assignee', front.assign);
+    if (edit.length) steps.push(['issue', 'edit', String(front.issue), '--repo', REPO, ...edit]);
+
+    const comment = section(body, 'Comment');
+    let commentFile = null;
+    if (comment && comment !== '_none_') {
+      // --body-file, never --body: comment prose contains backticks and quotes,
+      // and argv is not a safe place to carry either.
+      commentFile = path.join(os.tmpdir(), `triage-${front.issue}-${Date.now()}.md`);
+      fs.writeFileSync(commentFile, comment + '\n');
+      steps.push(['issue', 'comment', String(front.issue), '--repo', REPO, '--body-file', commentFile]);
+    }
+
+    // Last, and only after the comment: closing first would land the
+    // explanation on an already-closed thread.
+    if (front.close_reason) {
+      steps.push([
+        'issue',
+        'close',
+        String(front.issue),
+        '--repo',
+        REPO,
+        '--reason',
+        front.close_reason,
+      ]);
+    }
+
+    if (!steps.length) {
+      console.log(`#${front.issue}: nothing to do`);
+      continue;
+    }
+
+    let failed = null;
+    for (const argv of steps) {
+      console.log(`  gh ${argv.map(showArg).join(' ')}`);
+      if (dryRun) continue;
+      const res = spawnSync('gh', argv, { encoding: 'utf8' });
+      if (res.status !== 0) {
+        failed = (res.stderr || res.stdout || `gh exited ${res.status}`).trim();
+        break;
+      }
+    }
+    if (commentFile) fs.rmSync(commentFile, { force: true });
+    if (dryRun) continue;
+
+    front.status = failed ? 'failed' : 'applied';
+    front.applied = new Date().toISOString();
+    writeRecord(
+      front,
+      failed
+        ? buildBody({
+            comment: section(body, 'Comment'),
+            rationale: section(body, 'Rationale'),
+            feedback: `Apply failed:\n\n${failed}`,
+          })
+        : body
+    );
+    console.log(failed ? `#${front.issue}: FAILED — ${failed}` : `#${front.issue}: applied`);
+  }
+}
+
+function cmdReview() {
+  // Both of these fail deep inside ink or the module loader if left to chance,
+  // and the resulting React stack trace buries the one-line diagnosis.
+  if (!process.stdin.isTTY) {
+    fail(
+      'triage review needs a terminal.\n' +
+        'Non-interactively, use: triage list, triage show <N>, triage set <N> <status>.'
+    );
+  }
+
+  // The TUI is a workspace package that owns ink and tsx; prefer its own
+  // node_modules and fall back to the root store, which is where a hoisted
+  // install puts them.
+  const TUI_DIR = path.join(__dirname, 'triage-tui');
+  const roots = [path.join(TUI_DIR, 'node_modules'), path.join(ROOT, 'node_modules')];
+  const resolve = (rel_) => roots.map((r) => path.join(r, rel_)).find((f) => fs.existsSync(f));
+
+  const tsxCli = resolve(path.join('tsx', 'dist', 'cli.mjs'));
+  if (!tsxCli || !resolve('ink')) {
+    fail(
+      'triage review needs ink and tsx: run `pnpm install` first.\n' +
+        'Everything else (list, show, set, feedback, apply) works without them.'
+    );
+  }
+  const res = spawnSync(process.execPath, [tsxCli, path.join(TUI_DIR, 'index.tsx')], {
+    stdio: 'inherit',
+    env: { ...process.env, TRIAGE_DIR: STATE_DIR, TRIAGE_REPO: REPO },
+  });
+  process.exit(res.status ?? 0);
+}
+
+/**
+ * Next owner for a scope, rotating through the configured logins.
+ *
+ * Rotation advances when a proposal is staged, not when it is applied, so a
+ * rejected proposal still consumes a turn. That is the cheap direction to be
+ * wrong in: the alternative is rereading every record on every call, and the
+ * cost of being one out of order is nil.
+ */
+function cmdOwner(args) {
+  const scope = args.find((a) => !a.startsWith('--'));
+  if (!scope) fail('which scope? e.g. triage owner "scope: core"');
+  if (!fs.existsSync(OWNERS_FILE)) fail(`no owners table at ${rel(OWNERS_FILE)}`);
+
+  const owners = JSON.parse(fs.readFileSync(OWNERS_FILE, 'utf8')).owners || {};
+  const row = owners[scope];
+  if (row === undefined) {
+    fail(`"${scope}" is not in ${rel(OWNERS_FILE)}. Add a row, or derive from git history.`);
+  }
+  if (!row.length) {
+    // Silence is a real answer here: it means fall back to git history rather
+    // than pick someone arbitrary.
+    console.log('');
+    console.error(`no configured owner for "${scope}" — derive one from recent commits`);
+    process.exit(0);
+  }
+
+  let rotation = {};
+  if (fs.existsSync(ROTATION_FILE)) {
+    try {
+      rotation = JSON.parse(fs.readFileSync(ROTATION_FILE, 'utf8'));
+    } catch {
+      rotation = {};
+    }
+  }
+  const next = (rotation[scope] ?? -1) + 1;
+  rotation[scope] = next;
+  if (!args.includes('--peek')) {
+    fs.mkdirSync(STATE_DIR, { recursive: true });
+    fs.writeFileSync(ROTATION_FILE, JSON.stringify(rotation, null, 2));
+  }
+  console.log(row[next % row.length]);
+}
+
+function cmdRm(args) {
+  const n = requireIssue(args);
+  fs.rmSync(recordPath(n), { force: true });
+  console.log(`removed #${n}`);
+}
+
+function cmdPrune() {
+  let n = 0;
+  for (const { front, file } of listRecords()) {
+    if (front.status === 'applied' || front.status === 'rejected') {
+      fs.rmSync(file, { force: true });
+      n += 1;
+    }
+  }
+  console.log(`pruned ${n} settled record${n === 1 ? '' : 's'}`);
+}
+
+// ----------------------------------------------------------------------- utils
+
+function flag(args, name) {
+  const i = args.indexOf(name);
+  return i === -1 ? null : args[i + 1];
+}
+
+function requireIssue(args) {
+  const n = args.find((a) => /^\d+$/.test(a));
+  if (!n) fail('which issue? Pass an issue number.');
+  return Number(n);
+}
+
+const rel = (p) => path.relative(ROOT, p) || p;
+const indent = (s) => s.split('\n').map((l) => `    ${l}`).join('\n');
+const truncate = (s, n) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
+const showArg = (a) => (/[\s'"]/.test(a) ? JSON.stringify(a) : a);
+
+function fail(message) {
+  console.error(message);
+  process.exit(1);
+}
+
+const HELP = `triage — stage issue mutations, review them, then apply.
+
+  stage              read a JSON payload on stdin and write a pending record
+  list [--status S]  one line per record        [--json]
+  show <N>           print a record verbatim
+  review             interactive approval TUI, also "pnpm triage-tui"
+  set <N> <status>   set status by hand         [--note "..."]
+  feedback           records where changes were requested, and why  [--json]
+  owner <scope>      next owner for a scope, round-robin      [--peek]
+  apply [<N>...]     apply approved records via gh    [--dry-run]
+  rm <N> | prune     drop one record, or all settled ones
+
+Records live in ${rel(STATE_DIR)}/<N>.md — markdown, hand-editable.
+Staged records start pending. The TUI moves them to approved, rejected, or
+changes-requested (with a note the agent reads back via "triage feedback").
+apply then writes applied or failed.
+`;
+
+function main() {
+  const [verb, ...args] = process.argv.slice(2);
+  const verbs = {
+    stage: cmdStage,
+    list: cmdList,
+    show: cmdShow,
+    review: cmdReview,
+    set: cmdSet,
+    feedback: cmdFeedback,
+    owner: cmdOwner,
+    apply: cmdApply,
+    rm: cmdRm,
+    prune: cmdPrune,
+  };
+  if (!verb || verb === 'help' || verb === '--help') {
+    console.log(HELP);
+    return;
+  }
+  if (!verbs[verb]) fail(`unknown verb "${verb}"\n\n${HELP}`);
+  verbs[verb](args);
+}
+
+// The TUI drives the same record functions rather than reimplementing the
+// frontmatter format. Two parsers for one file format is how a hand-edit starts
+// meaning different things to different verbs.
+if (require.main === module) main();
+
+module.exports = {
+  STATE_DIR,
+  STATUSES,
+  buildBody,
+  listRecords,
+  readRecord,
+  recordPath,
+  section,
+  validate,
+  writeRecord,
+};
