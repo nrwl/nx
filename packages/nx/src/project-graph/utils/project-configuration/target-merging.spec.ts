@@ -441,6 +441,65 @@ describe('target merging', () => {
       expect(result.cache).not.toBeDefined();
     });
   });
+
+  describe('sandbox', () => {
+    it('should take the base sandbox when the target does not define one', () => {
+      const result = mergeTargetConfigurations(
+        { executor: 'nx:run-commands' },
+        {
+          executor: 'nx:run-commands',
+          sandbox: { enabled: false, ignoredReads: ['tmp/**'] },
+        }
+      );
+      expect(result.sandbox).toEqual({
+        enabled: false,
+        ignoredReads: ['tmp/**'],
+      });
+    });
+
+    it('should replace the base sandbox wholesale when the target defines one', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          sandbox: { ignoredWrites: ['scratch/**'] },
+        },
+        {
+          executor: 'nx:run-commands',
+          sandbox: { enabled: false, ignoredReads: ['tmp/**'] },
+        }
+      );
+      expect(result.sandbox).toEqual({ ignoredWrites: ['scratch/**'] });
+    });
+
+    it('should shallow-merge with the base sandbox via the spread token', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          sandbox: {
+            '...': true,
+            ignoredWrites: ['scratch/**'],
+          } as any,
+        },
+        {
+          executor: 'nx:run-commands',
+          sandbox: { enabled: false, ignoredReads: ['tmp/**'] },
+        }
+      );
+      expect(result.sandbox).toEqual({
+        enabled: false,
+        ignoredReads: ['tmp/**'],
+        ignoredWrites: ['scratch/**'],
+      });
+    });
+
+    it('should not be merged for incompatible targets', () => {
+      const result = mergeTargetConfigurations(
+        { executor: 'foo' },
+        { executor: 'bar', sandbox: { enabled: false } }
+      );
+      expect(result.sandbox).not.toBeDefined();
+    });
+  });
 });
 
 describe('spread syntax in mergeTargetConfigurations', () => {
