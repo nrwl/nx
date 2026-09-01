@@ -20,6 +20,7 @@ import * as tar from 'tar-stream';
 import { cacheDir } from '../utils/cache-directory';
 import { createHash, randomUUID } from 'crypto';
 import { FileLock, IS_WASM } from '../native';
+import { compareCalver, gte } from '../utils/calver';
 import { TasksRunner } from '../tasks-runner/tasks-runner';
 import { RemoteCacheV2 } from '../tasks-runner/default-tasks-runner';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -225,9 +226,7 @@ function getLatestInstalledRunnerBundle(): CloudBundleInstall | null {
 
     // A contended install can leave multiple bundles on disk; run the
     // highest version.
-    installedBundles.sort((a, b) =>
-      compareBundleVersions(b.version, a.version)
-    );
+    installedBundles.sort((a, b) => compareCalver(b.version, a.version));
     return installedBundles[0];
   } catch (e: any) {
     console.log('Could not read runner bundle path:', e.message);
@@ -359,7 +358,7 @@ async function downloadAndExtractClientBundle(
       runnerBundleInstallDirectory
     );
     if (installedBundle) {
-      if (compareBundleVersions(installedBundle.version, version) >= 0) {
+      if (gte(installedBundle.version, version)) {
         debugLog(
           'Using client bundle downloaded by another process: ',
           installedBundle.version
@@ -389,7 +388,7 @@ async function downloadAndExtractClientBundle(
       installedBundle &&
       readDownloadLockRecord() !== recordBeforeContending
     ) {
-      if (compareBundleVersions(installedBundle.version, version) >= 0) {
+      if (gte(installedBundle.version, version)) {
         debugLog(
           'Using client bundle downloaded by another process: ',
           installedBundle.version
@@ -432,29 +431,6 @@ function readDownloadLockRecord(): string {
 
 function writeDownloadLockRecord(version: string): void {
   writeFileSync(downloadLockFilePath, `${version} ${randomUUID()}`, 'utf-8');
-}
-
-// Bundle versions are dotted calver tags (e.g. 2510.28.15). Non-numeric
-// segments compare lexically so unexpected formats still order
-// deterministically.
-export function compareBundleVersions(a: string, b: string): number {
-  const aSegments = a.split('.');
-  const bSegments = b.split('.');
-  const length = Math.max(aSegments.length, bSegments.length);
-  for (let i = 0; i < length; i++) {
-    const aSegment = aSegments[i] ?? '';
-    const bSegment = bSegments[i] ?? '';
-    if (aSegment === bSegment) {
-      continue;
-    }
-    const aNumber = Number(aSegment);
-    const bNumber = Number(bSegment);
-    if (!Number.isNaN(aNumber) && !Number.isNaN(bNumber)) {
-      return aNumber - bNumber;
-    }
-    return aSegment < bSegment ? -1 : 1;
-  }
-  return 0;
 }
 
 function readBundleInstalledByLockHolder(
