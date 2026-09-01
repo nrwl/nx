@@ -139,5 +139,41 @@ describe('GitLabRemoteReleaseClient', () => {
       logSpy.mockRestore();
       consoleErrorSpy.mockRestore();
     });
+
+    it('should redact the token when it contains a line break', async () => {
+      const token = 'glpat-secret';
+      // Node strips CR/LF from outgoing header values, so the dump holds the
+      // stripped token while tokenData still carries the line break.
+      const clientWithToken = new GitLabRemoteReleaseClient(repoData, false, {
+        token: `${token.slice(0, 4)}\r\n${token.slice(4)}`,
+        headerName: 'PRIVATE-TOKEN',
+      });
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+      selectPromptMock.mockResolvedValue('No');
+      const originalExitCode = process.exitCode;
+
+      try {
+        await (clientWithToken as any).handleError(
+          {
+            message: 'Network Error',
+            config: { headers: { 'PRIVATE-TOKEN': `${token}` } },
+            request: { _header: `PRIVATE-TOKEN: ${token}` },
+          },
+          { url: 'https://gitlab.com/nrwl/nx/-/releases/new', requestData: {} }
+        );
+      } finally {
+        process.exitCode = originalExitCode;
+      }
+
+      expect(typeof logSpy.mock.calls[0][0]).toBe('string');
+      const logged = logSpy.mock.calls.map((args) => args.join(' ')).join('\n');
+      expect(logged).not.toContain(token);
+      expect(logged).toContain('<redacted>');
+      logSpy.mockRestore();
+      consoleErrorSpy.mockRestore();
+    });
   });
 });

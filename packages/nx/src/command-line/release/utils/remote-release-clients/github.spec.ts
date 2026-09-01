@@ -301,5 +301,41 @@ describe('GithubRemoteReleaseClient', () => {
       logSpy.mockRestore();
       consoleErrorSpy.mockRestore();
     });
+
+    it('should redact the token when it contains a line break', async () => {
+      const token = 'ghp_secret';
+      // Node strips CR/LF from outgoing header values, so the dump holds the
+      // stripped token while tokenData still carries the line break.
+      const clientWithToken = new GithubRemoteReleaseClient(repoData, false, {
+        token: `${token.slice(0, 4)}\r\n${token.slice(4)}`,
+        headerName: 'Authorization',
+      });
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+      selectPromptMock.mockResolvedValue('No');
+      const originalExitCode = process.exitCode;
+
+      try {
+        await (clientWithToken as any).handleError(
+          {
+            message: 'Network Error',
+            config: { headers: { Authorization: `Bearer ${token}` } },
+            request: { _header: `Authorization: Bearer ${token}` },
+          },
+          { url: 'https://github.com/nrwl/nx/releases/new', requestData: {} }
+        );
+      } finally {
+        process.exitCode = originalExitCode;
+      }
+
+      expect(typeof logSpy.mock.calls[0][0]).toBe('string');
+      const logged = logSpy.mock.calls.map((args) => args.join(' ')).join('\n');
+      expect(logged).not.toContain(token);
+      expect(logged).toContain('<redacted>');
+      logSpy.mockRestore();
+      consoleErrorSpy.mockRestore();
+    });
   });
 });

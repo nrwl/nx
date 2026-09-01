@@ -70,14 +70,20 @@ export abstract class RemoteReleaseClient<
 
   protected inspectWithRedactedToken(error: unknown): string {
     const inspected = inspect(error);
-    // Axios trims header values, and inspect() escapes them while leaving the
-    // token bare in message/stack, so the dump can hold either rendering.
-    // Redact both; they coincide for a token with nothing to escape.
+    // The dump can hold a different string than the raw token: axios trims
+    // header values, node strips CR/LF from them, and inspect() escapes the
+    // result while leaving the token bare in message/stack. Redact every
+    // rendering; the Set collapses them for an ordinary token.
     const token = this.tokenData?.token?.trim();
     if (!token) {
       return inspected;
     }
-    return [...new Set([token, inspect(token).slice(1, -1)])].reduce(
+    const needles = new Set([
+      token,
+      token.replace(/[\r\n]/g, ''),
+      inspect(token).slice(1, -1),
+    ]);
+    return [...needles].reduce(
       (text, needle) => text.split(needle).join('<redacted>'),
       inspected
     );
