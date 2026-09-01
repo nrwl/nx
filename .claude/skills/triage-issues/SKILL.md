@@ -94,7 +94,7 @@ one, and the sweep then reports done having seen a fraction of the queue.
 
 **Stage a record for every issue the query returns.** Staging is cheap — reading an issue and choosing
 labels, a priority and an owner costs no container and no network beyond the fetch. The expensive step
-is reproduction, and that is a *separate* decision (Step 7): a record stages fine with `repro: not
+is reproduction, and that is a _separate_ decision (Step 7): a record stages fine with `repro: not
 run`, and reproductions follow for the subset where the outcome would change the verdict.
 
 Work through the queue in batches of about ten if that keeps the reading manageable — but **a batch is
@@ -155,7 +155,7 @@ Before judging any issue, from its slice:
 - **A `Steps to Reproduce` section containing only `1.` is empty.** The bug form seeds that literal
   value (`1-bug.yml`, `id: reproduction`), so the section is present and required on every issue
   whether or not anyone typed into it. Presence of the heading proves nothing.
-- **`type: bug` proves nothing either.** The form applies it on submit. Its *absence* is the more
+- **`type: bug` proves nothing either.** The form applies it on submit. Its _absence_ is the more
   useful signal: an issue with no labels at all was filed outside the template — through the API, or
   by an agent — so none of the form's required fields are guaranteed to be there. Check each one.
 - **Strip the `nx report` block before you go looking for package names.** The report lists every
@@ -168,7 +168,7 @@ the end — the reviewer is watching records land and the TUI refreshes as they 
 
 ## 3. Has this already been handled?
 
-The most valuable thing triage does is take issues *off* the pile. Do this before any expensive work
+The most valuable thing triage does is take issues _off_ the pile. Do this before any expensive work
 — there is no point reproducing a bug someone already has a PR open for.
 
 ### Is a PR already in flight?
@@ -188,7 +188,7 @@ gh pr view <PR> --repo nrwl/nx --json state,mergedAt,title
 - **Open** → someone is on it. Do not spend a reproduction run on it. Record it as `linked_pr` and
   move on — but **still give it an assignee** (Step 9). An open PR does not mean the issue is
   someone's; the PR author is often an outside contributor, and the issue still needs the maintainer
-  who will *review* that PR. That is who the assignee names.
+  who will _review_ that PR. That is who the assignee names.
 
 If no PR is linked but you suspect one exists, search before concluding there isn't:
 `gh pr list --repo nrwl/nx --state open --search "<key terms>"`.
@@ -241,13 +241,13 @@ gh search issues --repo nrwl/nx --limit 15 "<3-5 distinctive terms from the titl
 - **Ball is already in the reporter's court** → read the last comment whose author isn't a bot. Each
   comment carries its own `authorAssociation` in the Step 2 payload, and so does the issue itself. If
   a maintainer (`OWNER`, `MEMBER`, `COLLABORATOR`) asked a question and nobody answered, the issue is
-  waiting on them — leave it alone. If the reporter *did* answer, remove the `blocked:` label.
+  waiting on them — leave it alone. If the reporter _did_ answer, remove the `blocked:` label.
 
 ### Other grounds for proposing a close
 
 - **Reporter or a commenter confirmed it's resolved** → `completed`.
 - **Root cause is upstream** and the upstream fix has shipped → `not planned`, linking upstream.
-- **The reported version is two or more majors behind** → this is *not* grounds for a close on its
+- **The reported version is two or more majors behind** → this is _not_ grounds for a close on its
   own. Re-run the reproduction against canary (Step 7) and let the result decide.
 
 ### What not to close
@@ -257,20 +257,20 @@ runs that countdown, and it resets when the reporter replies. Closing by hand ov
 may have deliberately kept the issue alive, and it does the bot's job twice. Apply the `blocked:`
 label and let the timer run.
 
-Every close is a *proposal* — staged, then approved by a human (Step 10). Nothing here closes an
+Every close is a _proposal_ — staged, then approved by a human (Step 10). Nothing here closes an
 issue directly.
 
 ## 4. Completeness gate
 
 Judge against what `.github/ISSUE_TEMPLATE/1-bug.yml` actually collects:
 
-| Field | Form requires it | What it's for |
-| --- | --- | --- |
-| Current / Expected Behavior | yes | Can be a single word and still pass validation — read them. |
-| **GitHub Repo** | **no** | The most valuable field is optional, so it's the one most often absent. |
-| Steps to Reproduce | yes | Often just the seeded `1.`. |
-| Nx Report | yes | Version, OS, node, package manager. Without it you cannot check staleness. |
-| Failure logs, PM version, OS | no | Nice to have; never block on these alone. |
+| Field                        | Form requires it | What it's for                                                              |
+| ---------------------------- | ---------------- | -------------------------------------------------------------------------- |
+| Current / Expected Behavior  | yes              | Can be a single word and still pass validation — read them.                |
+| **GitHub Repo**              | **no**           | The most valuable field is optional, so it's the one most often absent.    |
+| Steps to Reproduce           | yes              | Often just the seeded `1.`.                                                |
+| Nx Report                    | yes              | Version, OS, node, package manager. Without it you cannot check staleness. |
+| Failure logs, PM version, OS | no               | Nice to have; never block on these alone.                                  |
 
 Then pick at most one blocker:
 
@@ -309,7 +309,7 @@ At least one, always. Full mapping in `references/labels.md`; the rules that mat
 - `os: windows` — the `nx report` shows win32 **and** the failure is plausibly platform-specific
   (paths, separators, permissions, command length). Not just because the reporter uses Windows. This is
   a claim you can check rather than assume: a Windows VM is reachable from here (see Step 7), so
-  "platform-specific" is testable in both directions — including confirming a bug does *not* need Windows.
+  "platform-specific" is testable in both directions — including confirming a bug does _not_ need Windows.
 - `community` — small, well-scoped, and the fix location is obvious from the issue. This is the
   "good first issue" signal, so only use it when a newcomer really could land it.
 - `blocked: third-party` — the bug is in a dependency. Link the upstream issue, or say that filing
@@ -344,7 +344,7 @@ run` should have a linked PR or a `blocked: repro needed` label. Any record with
 talked yourself out of.
 
 Everything else gets a run. "The report is detailed enough that a run would only confirm it" is not
-an exemption — a detailed report is the *easiest* thing to run, and detailed reports have been wrong.
+an exemption — a detailed report is the _easiest_ thing to run, and detailed reports have been wrong.
 Neither is "the mechanism is obvious from the source": reading tells you what the code should do, and
 a run tells you what it does.
 
@@ -353,14 +353,14 @@ a run tells you what it does.
 Every line below was written into a real `repro: not run` field on a record in this repo, sounded
 reasonable at the time, and was wrong. If your reasoning is about to rhyme with one of these, run it.
 
-| What the record said | Why it does not hold | Do this |
-| --- | --- | --- |
-| "The root cause is confirmed against current master" | Reading verifies the *mechanism* while assuming the *symptom*. A grep can only agree with you. | Run the steps, then cite the source as the explanation of what you saw. |
-| "The distinguishing ingredient is <tool>'s managed pty / sandbox / wrapper, and faking it reproduces the passing case" | Correct, and the conclusion is backwards: do not fake it. The tool is installable. | `npm i <tool>` in the container and run the real thing. |
-| "Corroborated from the other direction by the reproduction on #NNNNN" | A sibling issue's run is evidence about the sibling. Two issues that look like one mechanism are exactly the pair where one turns out to be different. | Run this one too. It is a directory and an install. |
-| "It is a long-lived foreground process, so capturing it means killing it on a timer and reading partial output" | That is what a timeout is for, and partial output is the evidence. A watcher that hangs *is* the finding. | `timeout 60 <cmd>; echo EXIT=$?` and report what came out. |
-| "The report is a structural comparison rather than a failure" | Then the run is trivially cheap and produces the actual tree instead of a described one. Reporters mis-transcribe trees. | Generate both, `diff -r` them, paste the diff. |
-| "It needs a browser / a live dev server pair" | The only one on this list that can be legitimate — but it applies to the *observation*, not the whole run. | Run the scaffold anyway, report how far it got, and say precisely which step needed eyes. |
+| What the record said                                                                                                   | Why it does not hold                                                                                                                                   | Do this                                                                                   |
+| ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| "The root cause is confirmed against current master"                                                                   | Reading verifies the _mechanism_ while assuming the _symptom_. A grep can only agree with you.                                                         | Run the steps, then cite the source as the explanation of what you saw.                   |
+| "The distinguishing ingredient is <tool>'s managed pty / sandbox / wrapper, and faking it reproduces the passing case" | Correct, and the conclusion is backwards: do not fake it. The tool is installable.                                                                     | `npm i <tool>` in the container and run the real thing.                                   |
+| "Corroborated from the other direction by the reproduction on #NNNNN"                                                  | A sibling issue's run is evidence about the sibling. Two issues that look like one mechanism are exactly the pair where one turns out to be different. | Run this one too. It is a directory and an install.                                       |
+| "It is a long-lived foreground process, so capturing it means killing it on a timer and reading partial output"        | That is what a timeout is for, and partial output is the evidence. A watcher that hangs _is_ the finding.                                              | `timeout 60 <cmd>; echo EXIT=$?` and report what came out.                                |
+| "The report is a structural comparison rather than a failure"                                                          | Then the run is trivially cheap and produces the actual tree instead of a described one. Reporters mis-transcribe trees.                               | Generate both, `diff -r` them, paste the diff.                                            |
+| "It needs a browser / a live dev server pair"                                                                          | The only one on this list that can be legitimate — but it applies to the _observation_, not the whole run.                                             | Run the scaffold anyway, report how far it got, and say precisely which step needed eyes. |
 
 The shape they share: each substitutes **reading, or reasoning about a neighbour, for running**, and
 each produces a confident-sounding record. State the excuse out loud before accepting it — written
@@ -379,7 +379,7 @@ it work" it silently reproduces the passing case. Read the report's own list of 
 problem, and check it against the flags you are about to set.
 
 **Reproductions are cheaper than they look, because they share one container.** `sandbox start` hands
-out a workspace inside the *same* long-lived host, so a second reproduction is a directory and an
+out a workspace inside the _same_ long-lived host, so a second reproduction is a directory and an
 install, not a new container — which is exactly why "a run is too expensive for this one" does not
 hold up across a sweep. Keep one sandbox for a run of issues and `stop` the id when the batch is done,
 rather than starting and tearing one down per issue.
@@ -393,14 +393,14 @@ either closes the issue or names the missing ingredient. Say exactly what you ra
 
 ### Two modes, and the one that gets wrongly skipped
 
-| Mode | What the issue gives you | What the sandbox does |
-| --- | --- | --- |
-| **A — clone** | a repo or sandbox URL | clone it, install, run the failing command |
+| Mode           | What the issue gives you                                            | What the sandbox does                                         |
+| -------------- | ------------------------------------------------------------------- | ------------------------------------------------------------- |
+| **A — clone**  | a repo or sandbox URL                                               | clone it, install, run the failing command                    |
 | **B — replay** | self-contained steps from `create-nx-workspace` plus concrete edits | scaffold the workspace from those steps, then run the command |
 
 **Never skip an issue just because there is no repo to clone.** Mode B is the normal shape for core,
 hashing and CLI bugs, where the setup is ten lines and a repo would be overkill — a good Mode B report
-is *more* runnable than a stale repo, not less. Steps qualify when they start from a command anyone
+is _more_ runnable than a stale repo, not less. Steps qualify when they start from a command anyone
 can run and every later step is a concrete edit or command. "Configure module federation and build"
 does not qualify.
 
@@ -411,7 +411,7 @@ for a source-reading verdict instead is choosing the weaker evidence when the st
 generator invocation away. Prose like "vague steps" or "needs a whole workspace" is the tell that you
 are rationalizing; if our own generators can stand it up, stand it up.
 
-Reading the source is a legitimate *supplement* — it explains the mechanism a run only demonstrates —
+Reading the source is a legitimate _supplement_ — it explains the mechanism a run only demonstrates —
 but it is not a substitute. A run can contradict you; reading cannot.
 
 When a Mode B scaffold reproduces, consider handing the reporter the artifact rather than a
@@ -443,14 +443,14 @@ Never run a repro command on the host.
 ### The sandbox is Linux — check whether the OS is the variable
 
 The sandbox container is Linux, so it reproduces most issues faithfully and a handful not at all. Before
-you write "not reproducible here", ask whether the OS *is* the mechanism:
+you write "not reproducible here", ask whether the OS _is_ the mechanism:
 
-| Mechanism | Reproduces in the Linux sandbox? |
-| --- | --- |
-| `cmd.exe` splitting an unquoted path, `%VAR%` expansion, `\` separators | **no** — needs Windows |
-| Path length limits, file locking, reserved filenames, case-insensitivity | **no** — needs Windows |
-| macOS-only APIs, `kevent`, Keychain, code signing | **no** — needs the host |
-| Everything else — task graph, hashing, caching, generators, executors | yes |
+| Mechanism                                                                | Reproduces in the Linux sandbox? |
+| ------------------------------------------------------------------------ | -------------------------------- |
+| `cmd.exe` splitting an unquoted path, `%VAR%` expansion, `\` separators  | **no** — needs Windows           |
+| Path length limits, file locking, reserved filenames, case-insensitivity | **no** — needs Windows           |
+| macOS-only APIs, `kevent`, Keychain, code signing                        | **no** — needs the host          |
+| Everything else — task graph, hashing, caching, generators, executors    | yes                              |
 
 **A Windows VM is available on this machine, so `os: windows` is not automatically unrunnable.** Parallels
 hosts a `Windows 11` VM that has node, npm and git, and `prlctl exec` drives it non-interactively:
@@ -492,11 +492,11 @@ Always start on the **reported** version. Then:
 
 The repro outcome outranks every guess made in Steps 5-8. Revise labels and priority to match:
 
-| Outcome | Labels | Priority |
-| --- | --- | --- |
-| Reproduces on latest or canary | remove `blocked: repro needed` | keep, or raise one level if it blocks build/serve/test/generate |
-| Reproduces on reported, clean on latest | remove `blocked: repro needed` | propose a close as `completed` |
-| Does not reproduce anywhere | add `blocked: more info needed` | cap at low |
+| Outcome                                 | Labels                          | Priority                                                        |
+| --------------------------------------- | ------------------------------- | --------------------------------------------------------------- |
+| Reproduces on latest or canary          | remove `blocked: repro needed`  | keep, or raise one level if it blocks build/serve/test/generate |
+| Reproduces on reported, clean on latest | remove `blocked: repro needed`  | propose a close as `completed`                                  |
+| Does not reproduce anywhere             | add `blocked: more info needed` | cap at low                                                      |
 
 "Does not reproduce" is a finding, not a failure, and never grounds for a close on its own — it means
 your environment differed, not that the reporter is wrong. Say exactly what you ran and what you got,
@@ -654,15 +654,15 @@ cannot see or PR, and it wastes the time of the person who takes it.
 **Check where the change would land.** If it's under `packages/`, `graph/`, `astro-docs/` or another
 in-repo directory, it's contributable. It is not contributable when the fix lives in:
 
-| Area | Where the fix actually lives |
-| --- | --- |
-| the published `@nx/graph` package | closed source — self-describes as "Internal utilities for Nx graph visualization, not intended for external use" |
-| `@nx/s3-cache`, `@nx/gcs-cache`, `@nx/azure-cache`, `@nx/shared-fs-cache` | Powerpack cache plugins, closed source |
-| `@nx/powerpack-*` | Powerpack, closed source |
-| Nx Console (the editor extensions, nxls) | separate repo, `nrwl/nx-console` |
-| Nx Cloud (dashboards, runners, self-healing service) | separate service |
+| Area                                                                      | Where the fix actually lives                                                                                     |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| the published `@nx/graph` package                                         | closed source — self-describes as "Internal utilities for Nx graph visualization, not intended for external use" |
+| `@nx/s3-cache`, `@nx/gcs-cache`, `@nx/azure-cache`, `@nx/shared-fs-cache` | Powerpack cache plugins, closed source                                                                           |
+| `@nx/powerpack-*`                                                         | Powerpack, closed source                                                                                         |
+| Nx Console (the editor extensions, nxls)                                  | separate repo, `nrwl/nx-console`                                                                                 |
+| Nx Cloud (dashboards, runners, self-healing service)                      | separate service                                                                                                 |
 
-**The graph is the one that catches people.** The repo *does* ship graph UI source — `graph/client`,
+**The graph is the one that catches people.** The repo _does_ ship graph UI source — `graph/client`,
 `graph/ui-project-details`, `graph/ui-render-config` and friends are all in-tree. Those in-tree
 packages then `import from '@nx/graph'`, which is the closed one. So "it's a graph bug" decides
 nothing: grep for the code you would change. Under `graph/` it's contributable; resolving into
@@ -671,7 +671,7 @@ nothing: grep for the code you would change. Under `graph/` it's contributable; 
 When the fix isn't contributable, don't propose `community` — say in the report that the team handles
 it internally, and if the label is already on the issue, propose removing it.
 
-When you *do* propose `community`, the comment should carry the specifics: the root cause, the file
+When you _do_ propose `community`, the comment should carry the specifics: the root cause, the file
 to change, roughly what the change is, and how to test it. If a reproduction validated a fix, put
 that in — a community comment with a proven diff is worth ten with a hypothesis.
 
@@ -679,7 +679,7 @@ that in — a community comment with a proven diff is worth ten with a hypothesi
 
 ### Attribute the analysis — don't write in the maintainer's voice
 
-A triage comment is posted from a maintainer's account, so anything you write reads as *their*
+A triage comment is posted from a maintainer's account, so anything you write reads as _their_
 technical judgement, permanently and in public. Findings you derived — a reproduction you ran, a
 mechanism you read out of the source — must be visibly marked as triage notes rather than blended
 into the maintainer's own words.
@@ -696,10 +696,11 @@ to the reporter outside it in plain prose:
 </summary>
 
 Reproduced on 23.2.0-beta.11 from the steps above:
-
 ```
---output-style=stream  -> 5000 lines
---output-style=static  -> 0 of 5000
+
+--output-style=stream -> 5000 lines
+--output-style=static -> 0 of 5000
+
 ```
 
 Both runs exit 0, so the loss is silent.
@@ -728,11 +729,11 @@ than the issue being triaged, and an unfolded wall of that buries the one senten
 supposed to act on. The summary line is what everyone reads; the evidence is there for whoever wants
 it.
 
-A comment that is *only* a request to the reporter (a `blocked:` follow-up, a duplicate pointer) needs
+A comment that is _only_ a request to the reporter (a `blocked:` follow-up, a duplicate pointer) needs
 no block at all — there is no derived analysis in it to attribute, and wrapping a single question in a
 collapsed section just hides it.
 
-**And never the inverse either: a comment that is *only* a collapsed block.** Someone opening the
+**And never the inverse either: a comment that is _only_ a collapsed block.** Someone opening the
 issue then sees a single summary line and nothing else, which reads as a bot dropping an artifact on
 their thread. That is the exact impression the attribution split exists to avoid, so a bare
 `<details>` defeats the point of using one. **Always write something in the open.** There is always
