@@ -14,8 +14,9 @@ export type { TouchedProject };
 /**
  * Runs every locator and returns what each one marked, duplicates included.
  *
- * Provenance is captured here rather than inside `TouchedProjectLocator`, whose
- * `string[]` return the four JS-plugin locators still use.
+ * Each locator reports its own reason: `TouchedProjectLocator` returns
+ * `TouchedProject[]`, and the native side returns the same shape. This only
+ * bridges the napi type to the TypeScript one.
  */
 export async function runTouchedProjectLocators(
   graph: ProjectGraph,
