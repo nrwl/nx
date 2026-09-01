@@ -21,6 +21,9 @@ import {
 } from './handoff';
 import { HANDOFFS_DIR_NAME } from './types';
 
+// Mirrors the production hash for the property tests over sanitization and
+// collisions; the literal filenames below are the contract's independent
+// oracle, so never rewrite them in terms of this helper.
 function handoffPath(prefix: string, pkg: string, name: string): string {
   const hash = createHash('sha256')
     .update(JSON.stringify([pkg, name]))
@@ -95,7 +98,11 @@ describe('handoff', () => {
   describe('stepHandoffPath', () => {
     it('places the handoff under the handoffs subtree, the only part of a run directory an agent is pre-authorized to write', () => {
       expect(stepHandoffPath('/run', { package: 'pkg', name: 'm1' })).toBe(
-        handoffPath('pkg+m1', 'pkg', 'm1')
+        join(
+          '/run',
+          'handoffs',
+          'pkg+m1-05ea13721e9fe88ecfc919eb77195957c3f31a5fda24c3eac1af3081028c8437.json'
+        )
       );
     });
 
@@ -106,14 +113,24 @@ describe('handoff', () => {
           name: 'migrate-css',
         })
       ).toBe(
-        handoffPath('@nx+storybook+migrate-css', '@nx/storybook', 'migrate-css')
+        join(
+          '/run',
+          'handoffs',
+          '@nx+storybook+migrate-css-e97a7bbd1f6d8f7efee3f102337f1daf50e4a35e2a5dd789410a27359be74e57.json'
+        )
       );
     });
 
     it('joins an unscoped package and migration name with `+`', () => {
       expect(
         stepHandoffPath('/run', { package: 'plain-pkg', name: 'm1-gen' })
-      ).toBe(handoffPath('plain-pkg+m1-gen', 'plain-pkg', 'm1-gen'));
+      ).toBe(
+        join(
+          '/run',
+          'handoffs',
+          'plain-pkg+m1-gen-afe76ee463c4880afbcff2d62c35d97c71ae72a546316c0269b6f4eb4c126dbc.json'
+        )
+      );
     });
 
     it('replaces path-traversal segments with `_` so a malformed name cannot escape the run dir', () => {
