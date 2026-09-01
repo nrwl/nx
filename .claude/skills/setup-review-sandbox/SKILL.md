@@ -106,4 +106,4 @@ Reviews clean up after themselves (`sandbox stop` deletes the review's `/work/<i
 .claude/tools/sandbox prune --host    # destroy the shared host; next start rebuilds it cold
 ```
 
-Both refuse while any sandbox row is live — they would be deleting files a running review is reading. `--host` is also the way to recycle after an image rebuild, and the mitigation worth knowing about: reviews share a pnpm store, so a malicious PR could in principle poison it for a later review. That stays inside the container and cannot reach the host, but it can corrupt a later review's findings.
+Both refuse while any sandbox row is live — they would be deleting files a running review is reading. After an image rebuild you do not need `--host` to pick the new toolchain up: the host is named after the image's resolved id, so the next `start` builds a fresh one on its own. `--host` is how you reclaim the superseded host's several GB, and the mitigation worth knowing about: reviews share a pnpm store, so a malicious PR could in principle poison it for a later review. That stays inside the container and cannot reach the host, but it can corrupt a later review's findings.
