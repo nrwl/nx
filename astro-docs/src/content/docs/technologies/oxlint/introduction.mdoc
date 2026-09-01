@@ -41,6 +41,8 @@ Pass `--linter` to choose for a single project.
 
 A project gets a task when it contains files Oxlint can lint. The workspace root also needs a `package.json` and a `src` or `lib` directory, so a standalone workspace that keeps its sources elsewhere gets no root task. Documentation-only and non-JavaScript projects get no target, and giving one a config of its own does not change that: Oxlint reports `No files found to lint` where it has nothing to read.
 
+A project's task skips the roots of any projects nested inside it, so Oxlint lints each file once, under the project that owns it.
+
 View the inferred task with:
 
 ```shell
