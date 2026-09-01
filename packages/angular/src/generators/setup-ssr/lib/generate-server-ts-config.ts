@@ -13,7 +13,7 @@ import { readCompilerOptionsFromTsConfig } from '../../utils/tsconfig-utils';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
 
-export function setServerTsConfigOptionsForApplicationBuilder(
+export function setServerTsConfigOptionsForSingleProgramBuild(
   tree: Tree,
   options: NormalizedGeneratorOptions
 ) {

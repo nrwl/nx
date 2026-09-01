@@ -10,6 +10,12 @@ export interface Schema {
   hydration?: boolean;
   skipFormat?: boolean;
   skipPackageJson?: boolean;
+  /**
+   * Internal. The project's build is converted to `@nx/angular-rspack` right
+   * after this generator runs, so the setup must match what the rspack build
+   * supports rather than the build executor the project has right now.
+   */
+  isRspack?: boolean;
 }
 
 export interface NormalizedGeneratorOptions extends Schema {

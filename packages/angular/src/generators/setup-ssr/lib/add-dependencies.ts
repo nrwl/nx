@@ -8,11 +8,11 @@ import {
   getInstalledAngularDevkitVersion,
   versions,
 } from '../../utils/version-utils';
+import type { NormalizedGeneratorOptions } from '../schema';
 
 export function addDependencies(
   tree: Tree,
-  isUsingApplicationBuilder: boolean,
-  isUsingWebpackBuilder: boolean
+  options: NormalizedGeneratorOptions
 ): void {
   const pkgVersions = versions(tree);
 
@@ -31,14 +31,15 @@ export function addDependencies(
     getInstalledAngularDevkitVersion(tree) ?? pkgVersions.angularDevkitVersion;
   dependencies['@angular/ssr'] = angularDevkitVersion;
 
-  if (!isUsingApplicationBuilder) {
+  if (options.isUsingApplicationBuilder) {
+    dependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
+  } else if (!options.isRspack) {
+    // The rspack conversion removes the targets that use these packages
     devDependencies['browser-sync'] = pkgVersions.browserSyncVersion;
-    if (isUsingWebpackBuilder) {
+    if (options.isUsingWebpackBuilder) {
       devDependencies['@nx/webpack'] = nxVersion;
       devDependencies['webpack-merge'] = pkgVersions.webpackMergeVersion;
     }
-  } else {
-    dependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
   }
 
   addDependenciesToPackageJson(
