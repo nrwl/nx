@@ -82,7 +82,7 @@ const internalCreateNodes = async (
   options: OxlintPluginOptions,
   context: CreateNodesContext,
   projectRootsByOxlintRoots: Map<string, string[]>,
-  projectRoots: string[],
+  nestedRootsByParent: Map<string, string[]>,
   getLintableFilesPerProjectRoot: () => Promise<Map<string, number>>,
   configChainsByConfig: Map<string, string[]>,
   jsPluginSpecifiersByConfig: Map<string, string[]>,
@@ -122,7 +122,7 @@ const internalCreateNodes = async (
       const project = getProjectUsingOxlintConfig(
         configFilePath,
         projectRoot,
-        projectRoots,
+        nestedRootsByParent,
         options,
         context,
         pmc,
@@ -166,6 +166,7 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
 
     const { oxlintConfigFiles, projectRoots, projectRootsByOxlintRoots } =
       splitConfigFiles(configFiles, context.workspaceRoot);
+    const nestedRootsByParent = nestedRootsByParentRoot(projectRoots);
 
     // The glob also matches `**/package.json`, so this callback runs in every
     // workspace, Oxlint or not. Bail before the chain walks and the hashing.
@@ -248,7 +249,7 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
             fileOptions,
             fileContext,
             projectRootsByOxlintRoots,
-            projectRoots,
+            nestedRootsByParent,
             getLintableFilesPerProjectRoot,
             configChainsByConfig,
             jsPluginSpecifiersByConfig,
@@ -788,9 +789,58 @@ function ancestorIgnorePaths(projectRoot: string): string[] {
 }
 
 /**
- * Project roots below `projectRoot`, relative to it and limited to `lintDir`
- * when the lint walk starts there. An excluded root either has its own inferred
- * target or owns nothing lintable, so pruning it drops no lint coverage.
+ * Direct child project roots for each project root, keyed by the parent. A root
+ * belongs to its NEAREST enclosing root, so a grandchild lands under the child
+ * rather than the grandparent — which is what keeps an outer project from
+ * emitting an exclusion that a shallower one already covers.
+ *
+ * Built once per run: resolving each root's parent by walking up is linear in
+ * the workspace, where asking every project which roots sit below it is not.
+ */
+function nestedRootsByParentRoot(
+  projectRoots: string[]
+): Map<string, string[]> {
+  const roots = new Set(projectRoots);
+  const byParent = new Map<string, string[]>();
+  const claim = (parent: string, root: string) => {
+    const claimed = byParent.get(parent);
+    if (claimed) {
+      claimed.push(root);
+    } else {
+      byParent.set(parent, [root]);
+    }
+  };
+
+  for (const root of projectRoots) {
+    let dir = root;
+    while (true) {
+      const parent = dirname(dir);
+      if (parent === dir) {
+        // Nothing above claimed it, so a root project takes it if there is one.
+        if (root !== '.' && roots.has('.')) {
+          claim('.', root);
+        }
+        break;
+      }
+      if (roots.has(parent)) {
+        claim(parent, root);
+        break;
+      }
+      dir = parent;
+    }
+  }
+
+  for (const claimed of byParent.values()) {
+    claimed.sort();
+  }
+  return byParent;
+}
+
+/**
+ * The project roots nested directly below `projectRoot`, relative to it and
+ * limited to `lintDir` when the lint walk starts there. An excluded root either
+ * has its own inferred target or owns nothing lintable, so pruning it drops no
+ * lint coverage.
  *
  * Callers must emit each one anchored (`/dir`) and never as `dir/**`. A gitignore
  * pattern is anchored only when it contains a slash, so a bare single-segment
@@ -800,23 +850,15 @@ function ancestorIgnorePaths(projectRoot: string): string[] {
  */
 function nestedProjectRoots(
   projectRoot: string,
-  projectRoots: string[],
+  nestedRootsByParent: Map<string, string[]>,
   lintDir: string
 ): string[] {
   const prefix = projectRoot === '.' ? '' : `${projectRoot}/`;
-  return (
-    projectRoots
-      .filter((root) => root !== projectRoot && root.startsWith(prefix))
-      .map((root) => root.slice(prefix.length))
-      .filter(
-        (rel) => !lintDir || rel === lintDir || rel.startsWith(`${lintDir}/`)
-      )
-      .sort()
-      // Excluding `b` already prunes `b/c`, so emitting both only lengthens the
-      // command and rehashes every ancestor task whenever a deeper project is
-      // added.
-      .filter((rel, _index, all) => !all.some((r) => rel.startsWith(`${r}/`)))
-  );
+  return (nestedRootsByParent.get(projectRoot) ?? [])
+    .map((root) => root.slice(prefix.length))
+    .filter(
+      (rel) => !lintDir || rel === lintDir || rel.startsWith(`${lintDir}/`)
+    );
 }
 
 // Only the keys are read, so the value type is left open for both callers.
@@ -839,7 +881,7 @@ function getRootForDirectory(
 function getProjectUsingOxlintConfig(
   configFilePath: string,
   projectRoot: string,
-  projectRoots: string[],
+  nestedRootsByParent: Map<string, string[]>,
   options: OxlintPluginOptions,
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
@@ -884,7 +926,7 @@ function getProjectUsingOxlintConfig(
     isRootProject && standaloneSrcPath ? `./${standaloneSrcPath}` : '.';
   const nestedIgnoreArgs = nestedProjectRoots(
     projectRoot,
-    projectRoots,
+    nestedRootsByParent,
     isRootProject && standaloneSrcPath ? standaloneSrcPath : ''
   ).map(
     (relativeRoot) => `--ignore-pattern ${quoteShellArg(`/${relativeRoot}`)}`
