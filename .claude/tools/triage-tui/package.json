@@ -1,0 +1,12 @@
+{
+  "name": "@nx-tools/triage-tui",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "ink": "^5.2.1",
+    "react": "catalog:react"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.5"
+  }
+}
