@@ -66,6 +66,11 @@ const LINTABLE_EXTENSIONS = [
 const LINTABLE_FILES_GLOB = `**/*.{${LINTABLE_EXTENSIONS.join(',')}}`;
 // Oxlint honours both, so both decide which files it lints.
 const IGNORE_FILENAMES = ['.eslintignore', '.gitignore'];
+// A project root reaches a shell verbatim: `run-commands` spawns the inferred
+// command with `shell: true`, and inside double quotes `$`, a backtick and `"`
+// are all still live. Roots outside a plain path-segment sequence are skipped
+// rather than escaped, which costs only the double-linting the base already did.
+const SHELL_SAFE_PROJECT_ROOT = /^[\w.@+-]+(?:\/[\w.@+-]+)*$/;
 // The one rule that looks across projects; every other rule sees one file.
 const BOUNDARIES_PLUGIN_SPECIFIER = '@nx/oxlint/boundaries-plugin';
 const PROJECT_CONFIG_FILENAMES = ['project.json', 'package.json'];
@@ -788,13 +793,14 @@ function ancestorIgnorePaths(projectRoot: string): string[] {
 
 /**
  * Project roots below `projectRoot`, relative to it and limited to `lintDir`
- * when the lint walk starts there. Each is linted, and hashed, by its own
- * inferred target, so the outer project must not lint them a second time.
+ * when the lint walk starts there. An excluded root either has its own inferred
+ * target or owns nothing lintable, so pruning it drops no lint coverage.
  *
- * Callers must emit these as the bare directory, double-quoted: `dir/**` matches
- * only entries inside `dir`, so Oxlint still descends and reads that directory's
- * ignore files, and `run-commands` spawns the command through a shell that would
- * glob-expand an unquoted pattern.
+ * Callers must emit each one anchored (`/dir`) and never as `dir/**`. A gitignore
+ * pattern is anchored only when it contains a slash, so a bare single-segment
+ * root would also match a same-named directory the outer project owns; and
+ * `dir/**` matches only entries inside `dir`, leaving Oxlint free to descend and
+ * read that directory's ignore files.
  */
 function nestedProjectRoots(
   projectRoot: string,
@@ -878,7 +884,9 @@ function getProjectUsingOxlintConfig(
     projectRoot,
     projectRoots,
     isRootProject && standaloneSrcPath ? standaloneSrcPath : ''
-  ).map((relativeRoot) => `--ignore-pattern "${relativeRoot}"`);
+  )
+    .filter((relativeRoot) => SHELL_SAFE_PROJECT_ROOT.test(relativeRoot))
+    .map((relativeRoot) => `--ignore-pattern "/${relativeRoot}"`);
 
   const jsPluginFiles = new Set(
     configInputs.flatMap((config) =>

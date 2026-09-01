@@ -235,7 +235,7 @@ describe('@nx/oxlint plugin', () => {
     const results = await invokeCreateNodesOnMatchingFiles(context);
 
     expect(results.projects['libs/a'].targets.lint.command).toBe(
-      'oxlint --ignore-pattern "nested" .'
+      'oxlint --ignore-pattern "/nested" .'
     );
     // The nested project still lints its own files, through its own target.
     expect(results.projects['libs/a/nested'].targets.lint.command).toBe(
@@ -243,32 +243,75 @@ describe('@nx/oxlint plugin', () => {
     );
   });
 
-  // `nx:run-commands` spawns the inferred command with `shell: true`, so asserting
-  // the string cannot catch an argument the shell rewrites before Oxlint sees it.
+  // A pattern is anchored only when it contains a slash, so a bare single-segment
+  // root would also match a same-named directory the outer project owns.
+  it('should not exclude an outer-owned directory sharing the nested root name', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/nested/project.json': `{"name":"a-nested"}`,
+      'libs/a/nested/index.ts': `export const n = 1;`,
+      // Owned by `a`, not by the nested project, and must keep being linted.
+      'libs/a/src/nested/deep.ts': `export const d = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+
+    expect(results.projects['libs/a'].targets.lint.command).toBe(
+      'oxlint --ignore-pattern "/nested" .'
+    );
+  });
+
+  // A root reaches the shell verbatim, so anything that is not a plain path
+  // segment sequence is skipped instead of escaped.
+  it('should skip a nested root that is not shell-safe', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+      'libs/a/n$(touch PWNED)/project.json': `{"name":"a-evil"}`,
+      'libs/a/n$(touch PWNED)/index.ts': `export const e = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+
+    expect(results.projects['libs/a'].targets.lint.command).toBe('oxlint .');
+  });
+
+  // The string assertions above cannot see what a shell and Oxlint actually do
+  // with the emitted argument, which is where both the anchoring and the quoting
+  // matter. Run the real command and check the resulting file set.
   (process.platform === 'win32' ? it.skip : it)(
-    'should emit nested exclusions that survive the shell',
+    'should exclude only the nested root when the command is executed',
     async () => {
       createFiles({
         '.oxlintrc.json': `{"rules":{}}`,
         'libs/a/project.json': `{"name":"a"}`,
-        'libs/a/src/index.ts': `export const a = 1;`,
-        // Several visible entries: an unquoted glob would expand to all of them.
+        'libs/a/index.ts': `export const a = 1;`,
         'libs/a/nested/project.json': `{"name":"a-nested"}`,
-        'libs/a/nested/README.md': `# nested`,
-        'libs/a/nested/src/index.ts': `export const n = 1;`,
+        'libs/a/nested/index.ts': `export const n = 1;`,
+        'libs/a/src/nested/deep.ts': `export const d = 1;`,
       });
 
       const results = await invokeCreateNodesOnMatchingFiles(context);
       const command = results.projects['libs/a'].targets.lint.command;
+      const oxlint = join(
+        require.resolve('oxlint/package.json'),
+        '..',
+        'bin',
+        'oxlint'
+      );
 
-      const argv = execFileSync('sh', ['-c', `printf '%s\\n' ${command}`], {
-        cwd: join(tempFs.tempDir, 'libs/a'),
-        encoding: 'utf-8',
-      })
+      const linted = execFileSync(
+        'sh',
+        ['-c', command.replace(/^oxlint /, `"${oxlint}" --debug=files `)],
+        { cwd: join(tempFs.tempDir, 'libs/a'), encoding: 'utf-8' }
+      )
         .trim()
-        .split('\n');
+        .split('\n')
+        .sort();
 
-      expect(argv).toEqual(['oxlint', '--ignore-pattern', 'nested', '.']);
+      expect(linted).toEqual(['index.ts', 'src/nested/deep.ts']);
     }
   );
 
