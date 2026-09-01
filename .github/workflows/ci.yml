@@ -39,6 +39,8 @@ jobs:
       NX_CLOUD_EXPERIMENTAL_POLLING: 'true'
       NX_CLOUD_CONTINUOUS_ASSIGNMENT: 'true'
       NX_CLOUD_VERBOSE_LOGGING: 'true'
+      NX_CLOUD_USE_IO_SNAPSHOTS: 'true'
+
 
     steps:
       - name: Checkout
