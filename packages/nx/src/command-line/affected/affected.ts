@@ -95,27 +95,27 @@ export async function affected(
       excludeTaskDependencies: extraOptions.excludeTaskDependencies,
       exclude: nxArgs.exclude,
       ...(await runnerInputsForSelection(nxArgs, nxJson)),
-      explain: nxArgs.explain,
+      explain: nxArgs.explain !== undefined,
     }));
     // --explain reports the selection rather than acting on it: someone asking
     // why a task is affected does not also want it to run.
-    if (nxArgs.explain) {
+    if (nxArgs.explain !== undefined) {
       printAffectedExplanation(reasons ?? {}, 'Affected tasks', {
-        json: overrides.json === true || overrides.json === 'true',
+        json: nxArgs.explain === 'json',
       });
       await output.drain();
       process.exit(0);
     }
   } else {
     projectGraph = await createProjectGraphAsync({ exitOnError: true });
-    if (nxArgs.explain) {
+    if (nxArgs.explain !== undefined) {
       const { reasons } = await filterAffectedWithReasons(
         projectGraph,
         calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
         nxJson
       );
       printAffectedExplanation(reasons, 'Affected projects', {
-        json: overrides.json === true || overrides.json === 'true',
+        json: nxArgs.explain === 'json',
       });
       await output.drain();
       process.exit(0);
