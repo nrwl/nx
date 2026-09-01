@@ -81,6 +81,7 @@ const internalCreateNodes = async (
   options: OxlintPluginOptions,
   context: CreateNodesContext,
   projectRootsByOxlintRoots: Map<string, string[]>,
+  projectRoots: string[],
   getLintableFilesPerProjectRoot: () => Promise<Map<string, number>>,
   configChainsByConfig: Map<string, string[]>,
   jsPluginSpecifiersByConfig: Map<string, string[]>,
@@ -120,6 +121,7 @@ const internalCreateNodes = async (
       const project = getProjectUsingOxlintConfig(
         configFilePath,
         projectRoot,
+        projectRoots,
         options,
         context,
         pmc,
@@ -245,6 +247,7 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
             fileOptions,
             fileContext,
             projectRootsByOxlintRoots,
+            projectRoots,
             getLintableFilesPerProjectRoot,
             configChainsByConfig,
             jsPluginSpecifiersByConfig,
@@ -783,6 +786,26 @@ function ancestorIgnorePaths(projectRoot: string): string[] {
   return result;
 }
 
+/**
+ * Project roots below `projectRoot`, relative to it and limited to `lintDir`
+ * when the lint walk starts there. Each is linted, and hashed, by its own
+ * inferred target, so the outer project must not lint them a second time.
+ */
+function nestedProjectRoots(
+  projectRoot: string,
+  projectRoots: string[],
+  lintDir: string
+): string[] {
+  const prefix = projectRoot === '.' ? '' : `${projectRoot}/`;
+  return projectRoots
+    .filter((root) => root !== projectRoot && root.startsWith(prefix))
+    .map((root) => root.slice(prefix.length))
+    .filter(
+      (rel) => !lintDir || rel === lintDir || rel.startsWith(`${lintDir}/`)
+    )
+    .sort();
+}
+
 // Only the keys are read, so the value type is left open for both callers.
 function getRootForDirectory(
   directory: string,
@@ -803,6 +826,7 @@ function getRootForDirectory(
 function getProjectUsingOxlintConfig(
   configFilePath: string,
   projectRoot: string,
+  projectRoots: string[],
   options: OxlintPluginOptions,
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
@@ -845,6 +869,11 @@ function getProjectUsingOxlintConfig(
   const isRootProject = projectRoot === '.';
   const lintPath =
     isRootProject && standaloneSrcPath ? `./${standaloneSrcPath}` : '.';
+  const nestedIgnoreArgs = nestedProjectRoots(
+    projectRoot,
+    projectRoots,
+    isRootProject && standaloneSrcPath ? standaloneSrcPath : ''
+  ).map((relativeRoot) => `--ignore-pattern ${relativeRoot}/**`);
 
   const jsPluginFiles = new Set(
     configInputs.flatMap((config) =>
@@ -860,7 +889,7 @@ function getProjectUsingOxlintConfig(
   );
 
   const targetConfig: TargetConfiguration = {
-    command: `oxlint ${lintPath}`,
+    command: `oxlint ${[...nestedIgnoreArgs, lintPath].join(' ')}`,
     options: { cwd: projectRoot },
     cache: true,
     inputs: [

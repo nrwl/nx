@@ -219,6 +219,28 @@ describe('@nx/oxlint plugin', () => {
     }
   );
 
+  // Oxlint lints every file below the directory it runs in, so without this a
+  // nested project's files are linted twice and hashed only by the inner task.
+  it('should exclude nested projects from the outer lint', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+      'libs/a/nested/project.json': `{"name":"a-nested"}`,
+      'libs/a/nested/src/index.ts': `export const n = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+
+    expect(results.projects['libs/a'].targets.lint.command).toBe(
+      'oxlint --ignore-pattern nested/** .'
+    );
+    // The nested project still lints its own files, through its own target.
+    expect(results.projects['libs/a/nested'].targets.lint.command).toBe(
+      'oxlint .'
+    );
+  });
+
   it('should declare local jsPlugins as file inputs but never as externalDependencies', async () => {
     createFiles({
       '.oxlintrc.json': `{"jsPlugins":["@nx/oxlint/boundaries-plugin","./tools/local-plugin.js",{"name":"acme","specifier":"@acme/oxlint-plugin"},{"name":"local","specifier":"./tools/other-plugin.js"}],"rules":{}}`,
