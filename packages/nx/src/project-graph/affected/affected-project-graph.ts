@@ -75,6 +75,9 @@ export async function filterAffectedWithReasons(
     record(project, reason);
   }
 
+  // External nodes are reached by the walk and carry reasons of their own, but
+  // they are not projects: listing them would inflate the count and print
+  // npm:lodash@4.17.21 under a "projects" heading.
   return {
     graph: filterAffectedProjects(
       graph,
@@ -85,7 +88,9 @@ export async function filterAffectedWithReasons(
       },
       record
     ),
-    reasons,
+    reasons: Object.fromEntries(
+      Object.entries(reasons).filter(([name]) => !!graph.nodes[name])
+    ),
   };
 }
 
@@ -130,7 +135,12 @@ function addAffectedNodes(
   // `record` dedupes, since a pair joined by more than one edge arrives here
   // once per edge.
   if (reachedFrom) {
-    record(startingProject, { kind: 'dependency', dependency: reachedFrom });
+    record(
+      startingProject,
+      reversed.externalNodes[reachedFrom]
+        ? { kind: 'npm-package', package: reachedFrom }
+        : { kind: 'dependency', dependency: reachedFrom }
+    );
   }
   if (visited.has(startingProject)) return;
   const reversedNode = reversed.nodes[startingProject];
