@@ -790,6 +790,11 @@ function ancestorIgnorePaths(projectRoot: string): string[] {
  * Project roots below `projectRoot`, relative to it and limited to `lintDir`
  * when the lint walk starts there. Each is linted, and hashed, by its own
  * inferred target, so the outer project must not lint them a second time.
+ *
+ * Callers must emit these as the bare directory, double-quoted: `dir/**` matches
+ * only entries inside `dir`, so Oxlint still descends and reads that directory's
+ * ignore files, and `run-commands` spawns the command through a shell that would
+ * glob-expand an unquoted pattern.
  */
 function nestedProjectRoots(
   projectRoot: string,
@@ -873,7 +878,7 @@ function getProjectUsingOxlintConfig(
     projectRoot,
     projectRoots,
     isRootProject && standaloneSrcPath ? standaloneSrcPath : ''
-  ).map((relativeRoot) => `--ignore-pattern ${relativeRoot}/**`);
+  ).map((relativeRoot) => `--ignore-pattern "${relativeRoot}"`);
 
   const jsPluginFiles = new Set(
     configInputs.flatMap((config) =>
