@@ -70,9 +70,16 @@ export abstract class RemoteReleaseClient<
 
   protected inspectWithRedactedToken(error: unknown): string {
     const inspected = inspect(error);
-    return this.tokenData
-      ? inspected.split(this.tokenData.token).join('<redacted>')
-      : inspected;
+    // Axios trims header values and inspect() escapes them, so the rendered dump
+    // can hold a different string than the raw token. Redact both forms.
+    const token = this.tokenData?.token?.trim();
+    if (!token) {
+      return inspected;
+    }
+    return [token, inspect(token).slice(1, -1)].reduce(
+      (text, needle) => text.split(needle).join('<redacted>'),
+      inspected
+    );
   }
 
   protected getRedactedTokenHeader(): string {

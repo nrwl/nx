@@ -94,10 +94,48 @@ describe('GitLabRemoteReleaseClient', () => {
         process.exitCode = originalExitCode;
       }
 
+      // join() would stringify an object to [object Object], making the
+      // not.toContain() assertion below pass vacuously.
+      expect(typeof logSpy.mock.calls[0][0]).toBe('string');
       const logged = logSpy.mock.calls.map((args) => args.join(' ')).join('\n');
       expect(logged).not.toContain(token);
       expect(logged).toContain('<redacted>');
       expect(logged).toContain('Network Error');
+      logSpy.mockRestore();
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should redact the token when it has trailing whitespace', async () => {
+      const token = 'glpat-secret';
+      // Axios trims header values, so the dump holds the trimmed token while
+      // tokenData still carries the untrimmed value read from the environment.
+      const clientWithToken = new GitLabRemoteReleaseClient(repoData, false, {
+        token: `${token}\n`,
+        headerName: 'PRIVATE-TOKEN',
+      });
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+      selectPromptMock.mockResolvedValue('No');
+      const originalExitCode = process.exitCode;
+
+      try {
+        await (clientWithToken as any).handleError(
+          {
+            message: 'Network Error',
+            config: { headers: { 'PRIVATE-TOKEN': `${token}` } },
+            request: { _header: `PRIVATE-TOKEN: ${token}` },
+          },
+          { url: 'https://gitlab.com/nrwl/nx/-/releases/new', requestData: {} }
+        );
+      } finally {
+        process.exitCode = originalExitCode;
+      }
+
+      const logged = logSpy.mock.calls.map((args) => args.join(' ')).join('\n');
+      expect(logged).not.toContain(token);
+      expect(logged).toContain('<redacted>');
       logSpy.mockRestore();
       consoleErrorSpy.mockRestore();
     });
