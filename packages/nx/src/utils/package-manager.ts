@@ -98,12 +98,22 @@ export interface PackageManagerCommands {
   run: (script: string, args?: string) => string;
   // Make this required once bun adds programatically support for reading config https://github.com/oven-sh/bun/issues/7140
   getRegistryUrl?: string;
+  /**
+   * @deprecated Use `publishArgv` instead, which needs no shell off Windows.
+   * This will be removed in Nx 24.
+   */
   publish: (
     packageRoot: string,
     registry: string,
     registryConfigKey: string,
     tag: string
   ) => string;
+  publishArgv: (
+    packageRoot: string,
+    registry: string,
+    registryConfigKey: string,
+    tag: string
+  ) => { command: string; args: string[] };
   // yarn berry doesn't support ignoring scripts via flag
   ignoreScriptsFlag?: string;
 }
@@ -179,6 +189,17 @@ export function isWorkspacesEnabled(
 }
 
 /**
+ * The registry and tag reach `publish` from `.npmrc`, which an install script
+ * can write, so every token is quoted before it becomes shell syntax.
+ */
+function publishCommandFromArgv({
+  command,
+  args,
+}: ReturnType<PackageManagerCommands['publishArgv']>): string {
+  return [command, ...args].map(quoteShellArg).join(' ');
+}
+
+/**
  * Returns commands for the package manager used in the workspace.
  * By default, the package manager is derived based on the lock file,
  * but it can also be passed in explicitly.
@@ -207,6 +228,22 @@ export function getPackageManagerCommand(
         useBerry = true;
       }
 
+      const publishArgv: PackageManagerCommands['publishArgv'] = (
+        packageRoot,
+        registry,
+        registryConfigKey,
+        tag
+      ) => ({
+        command: 'npm',
+        args: [
+          'publish',
+          packageRoot,
+          '--json',
+          `--${registryConfigKey}=${registry}`,
+          `--tag=${tag}`,
+        ],
+      });
+
       // new versions of yarn only support ignoring scripts via .yarnrc.yml
       return {
         preInstall: `yarn set version ${yarnVersion}`,
@@ -229,8 +266,8 @@ export function getPackageManagerCommand(
         getRegistryUrl: useBerry
           ? 'yarn config get npmRegistryServer'
           : 'yarn config get registry',
-        publish: (packageRoot, registry, registryConfigKey, tag) =>
-          `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
+        publish: (...args) => publishCommandFromArgv(publishArgv(...args)),
+        publishArgv,
         ignoreScriptsFlag: useBerry ? undefined : `--ignore-scripts`,
       };
     },
@@ -259,6 +296,30 @@ export function getPackageManagerCommand(
       }
 
       const isPnpmWorkspace = existsSync(join(root, 'pnpm-workspace.yaml'));
+
+      const publishArgv: PackageManagerCommands['publishArgv'] = (
+        packageRoot,
+        registry,
+        registryConfigKey,
+        tag
+      ) => ({
+        command: 'pnpm',
+        args: [
+          'publish',
+          packageRoot,
+          '--json',
+          `--${
+            configForm
+              ? `config.${registryConfigKey}`
+              : scopedForm
+                ? registryConfigKey
+                : 'registry'
+          }=${registry}`,
+          `--tag=${tag}`,
+          '--no-git-checks',
+        ],
+      });
+
       return {
         install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
         ciInstall: 'pnpm install --frozen-lockfile',
@@ -283,18 +344,28 @@ export function getPackageManagerCommand(
         list: 'pnpm ls --depth 100',
         why: 'pnpm why',
         getRegistryUrl: 'pnpm config get registry',
-        publish: (packageRoot, registry, registryConfigKey, tag) =>
-          `pnpm publish "${packageRoot}" --json --"${
-            configForm
-              ? `config.${registryConfigKey}`
-              : scopedForm
-                ? registryConfigKey
-                : 'registry'
-          }=${registry}" --tag=${tag} --no-git-checks`,
+        publish: (...args) => publishCommandFromArgv(publishArgv(...args)),
+        publishArgv,
         ignoreScriptsFlag: '--ignore-scripts',
       };
     },
     npm: () => {
+      const publishArgv: PackageManagerCommands['publishArgv'] = (
+        packageRoot,
+        registry,
+        registryConfigKey,
+        tag
+      ) => ({
+        command: 'npm',
+        args: [
+          'publish',
+          packageRoot,
+          '--json',
+          `--${registryConfigKey}=${registry}`,
+          `--tag=${tag}`,
+        ],
+      });
+
       return {
         install: 'npm install',
         ciInstall: 'npm ci',
@@ -309,12 +380,28 @@ export function getPackageManagerCommand(
         list: 'npm ls',
         why: 'npm explain',
         getRegistryUrl: 'npm config get registry',
-        publish: (packageRoot, registry, registryConfigKey, tag) =>
-          `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
+        publish: (...args) => publishCommandFromArgv(publishArgv(...args)),
+        publishArgv,
         ignoreScriptsFlag: '--ignore-scripts',
       };
     },
     bun: () => {
+      const publishArgv: PackageManagerCommands['publishArgv'] = (
+        packageRoot,
+        registry,
+        _registryConfigKey,
+        tag
+      ) => ({
+        command: 'bun',
+        args: [
+          'publish',
+          `--cwd=${packageRoot}`,
+          '--json',
+          `--registry=${registry}`,
+          `--tag=${tag}`,
+        ],
+      });
+
       // bun doesn't current support programmatically reading config https://github.com/oven-sh/bun/issues/7140
       return {
         install: 'bun install',
@@ -329,8 +416,8 @@ export function getPackageManagerCommand(
         list: 'bun pm ls',
         why: 'bun why',
         // Unlike npm, bun publish does not support a custom registryConfigKey option
-        publish: (packageRoot, registry, registryConfigKey, tag) =>
-          `bun publish --cwd="${packageRoot}" --json --registry="${registry}" --tag=${tag}`,
+        publish: (...args) => publishCommandFromArgv(publishArgv(...args)),
+        publishArgv,
         ignoreScriptsFlag: '--ignore-scripts',
       };
     },
