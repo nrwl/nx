@@ -67,8 +67,8 @@ export const writeBundlesTransform = (_options: NgPackagrOptions) => {
         // its declaration map is dropped above, so don't leave a reference behind
         content = removeSourceMappingUrl(content);
       } else if (normalizedPath.endsWith('.d.ts.map')) {
-        // Declaration maps under tmp-typings land one directory up, so their
-        // source paths need rebasing; maps that don't move are left untouched.
+        // declaration maps under tmp-typings land one directory up, so their
+        // source paths need rebasing
         content = remapDeclarationMapSources(path, normalizedPath, content);
       }
 
@@ -85,12 +85,9 @@ export const writeBundlesTransform = (_options: NgPackagrOptions) => {
       await mkdir(entryPoint.destinationPath, { recursive: true });
     }
 
-    // Adjust the remaining entry points and the package node once the primary
-    // one is reached
     if (!entryPoint.isSecondaryEntryPoint) {
-      // the package manifest maps every entry point and is written while the
-      // primary one is in progress, so the rest need their destination files
-      // adjusted by now even though they may not have been processed yet
+      // the primary manifest reads every entry point, so adjust any that have
+      // not been processed yet
       for (const node of graph.filter(byEntryPoint())) {
         if (node === entryPointNode) {
           continue;
@@ -140,8 +137,7 @@ export function remapDeclarationMapSources(
     return content;
   }
   // ng-packagr forces `sourceRoot: ''`, so sources are relative to the map file.
-  // A non-empty root is prepended to each source, so the entries are not plain
-  // map-relative paths and rebasing them on their own would be wrong.
+  // A non-empty root is prepended to each source, so rebasing them alone is wrong.
   if (map.sourceRoot) {
     return content;
   }
@@ -164,8 +160,7 @@ export function normalizeEsm2022Path(
     return normalizedPath;
   }
 
-  // the segments are located from the destination path, since replacing the
-  // first occurrence in the full path would rewrite the destination path itself
+  // rewrite only below the destination path, which may itself contain the segment
   const tmpEsm2022Dir =
     join(entryPoint.primaryDestinationPath, 'tmp-esm2022') + sep;
   if (normalizedPath.startsWith(tmpEsm2022Dir)) {

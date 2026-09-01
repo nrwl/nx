@@ -183,8 +183,7 @@ describe('Angular Projects - Buildable Libraries', () => {
     );
     expect(libOutput).toContain(`nx run ${app1}:build:development`);
 
-    // the development configuration keeps declarationMap enabled, so the lib
-    // emits declaration maps that must still resolve to its sources
+    // the development configuration keeps declarationMap enabled
     const declarationMap = `dist/${buildableLib}/lib/${
       names(buildableLib).fileName
     }-module.d.ts.map`;

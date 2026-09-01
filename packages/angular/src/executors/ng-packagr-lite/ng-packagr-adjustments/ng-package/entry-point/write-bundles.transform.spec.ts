@@ -44,8 +44,7 @@ describe('removeSourceMappingUrl', () => {
 
 describe('remapDeclarationMapSources', () => {
   const dest = resolve('/tmp/dist/my-lib');
-  // ngc emits declaration maps under tmp-typings; the transform moves them up
-  // one directory by dropping the tmp-typings segment.
+  // ngc emits declaration maps under tmp-typings; normalization removes that segment.
   const originalPath = join(dest, 'tmp-typings', 'lib', 'foo.d.ts.map');
   const newPath = join(dest, 'lib', 'foo.d.ts.map');
 
@@ -61,7 +60,6 @@ describe('remapDeclarationMapSources', () => {
   }
 
   it('rebases sources so they still point at the original source after the move up a directory', () => {
-    // source path as ngc emits it, relative to the tmp-typings location
     const emitted = relative(
       dirname(originalPath),
       resolve('/tmp/src/lib/foo.ts')
@@ -76,7 +74,6 @@ describe('remapDeclarationMapSources', () => {
     const { sources } = JSON.parse(result);
     // one fewer '../' now that the map lives one directory higher
     expect(sources).toEqual(['../../../src/lib/foo.ts']);
-    // the rebased path resolves to the same absolute source file
     expect(resolve(dirname(newPath), sources[0])).toEqual(
       resolve('/tmp/src/lib/foo.ts')
     );
