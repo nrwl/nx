@@ -145,7 +145,6 @@ export async function verifyOrUpdateNxCloudClient(options?: {
 
     const installedBundle = await downloadAndExtractClientBundle(
       httpClient,
-      runnerBundleInstallDirectory,
       version,
       url
     );
@@ -349,9 +348,8 @@ function hashDirectory(dir: string): string {
   return createHash('sha256').update(combinedHashes).digest('hex');
 }
 
-async function downloadAndExtractClientBundle(
+export async function downloadAndExtractClientBundle(
   httpClient: HttpClient,
-  runnerBundleInstallDirectory: string,
   version: string,
   url: string
 ): Promise<CloudBundleInstall> {
@@ -372,9 +370,7 @@ async function downloadAndExtractClientBundle(
       'Another process is downloading the client bundle, waiting for it to complete'
     );
     await lock.wait();
-    const installedBundle = readBundleInstalledByLockHolder(
-      runnerBundleInstallDirectory
-    );
+    const installedBundle = readBundleInstalledByLockHolder();
     if (installedBundle) {
       if (gte(installedBundle.version, version)) {
         debugLog(
@@ -399,9 +395,7 @@ async function downloadAndExtractClientBundle(
     // may have installed a bundle already. Only a record that changed since
     // this call started proves that, so a leftover record from a past install
     // can never shadow a server-instructed download (e.g. a rollback).
-    const installedBundle = readBundleInstalledByLockHolder(
-      runnerBundleInstallDirectory
-    );
+    const installedBundle = readBundleInstalledByLockHolder();
     if (
       installedBundle &&
       readDownloadLockRecord() !== recordBeforeContending
@@ -423,7 +417,6 @@ async function downloadAndExtractClientBundle(
     writeDownloadLockRecord(version);
     const fullPath = await downloadAndExtractBundle(
       httpClient,
-      runnerBundleInstallDirectory,
       version,
       url,
       contended
@@ -451,9 +444,7 @@ function writeDownloadLockRecord(version: string): void {
   writeFileSync(downloadLockFilePath, `${version} ${randomUUID()}`, 'utf-8');
 }
 
-function readBundleInstalledByLockHolder(
-  runnerBundleInstallDirectory: string
-): CloudBundleInstall | null {
+function readBundleInstalledByLockHolder(): CloudBundleInstall | null {
   const version = readDownloadLockRecord().split(' ')[0];
   if (!version) {
     return null;
@@ -464,7 +455,6 @@ function readBundleInstalledByLockHolder(
 
 async function downloadAndExtractBundle(
   httpClient: HttpClient,
-  runnerBundleInstallDirectory: string,
   version: string,
   url: string,
   contended: boolean
