@@ -83,6 +83,18 @@ export async function affected(
       taskIds: [...affectedTasks.affectedTaskIds],
       planningContext: affectedTasks.planningContext,
     };
+    // --exclude is honoured in getAffectedGraphNodes, which this branch does
+    // not call. Dropping it would restart a project someone deliberately took
+    // out of the pipeline.
+    if (nxArgs.exclude?.length) {
+      const excluded = new Set(
+        findMatchingProjects(nxArgs.exclude, projectGraph.nodes)
+      );
+      taskSelection.taskIds = taskSelection.taskIds.filter(
+        (id) => !excluded.has(affectedTasks.taskGraph.tasks[id].target.project)
+      );
+    }
+
     // runCommand still seeds the graph from projects; the prune is what narrows
     // it back down to the selected tasks and their dependencies.
     const owning = new Set(
