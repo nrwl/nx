@@ -132,12 +132,13 @@ exports[`@nx/vitest root project should create nodes with ci target name 1`] = `
                 ],
               },
               "outputs": [
-                "{projectRoot}/coverage",
+                "{projectRoot}/coverage/src/test-1.ts",
+                "{projectRoot}/coverage/src/test-2.ts",
               ],
             },
             "e2e-ci--src/test-1.ts": {
               "cache": true,
-              "command": "vitest run src/test-1.ts",
+              "command": "vitest run src/test-1.ts --coverage.reportsDirectory=coverage/src/test-1.ts",
               "inputs": [
                 "default",
                 "^production",
@@ -181,12 +182,12 @@ exports[`@nx/vitest root project should create nodes with ci target name 1`] = `
                 "env": undefined,
               },
               "outputs": [
-                "{projectRoot}/coverage",
+                "{projectRoot}/coverage/src/test-1.ts",
               ],
             },
             "e2e-ci--src/test-2.ts": {
               "cache": true,
-              "command": "vitest run src/test-2.ts",
+              "command": "vitest run src/test-2.ts --coverage.reportsDirectory=coverage/src/test-2.ts",
               "inputs": [
                 "default",
                 "^production",
@@ -230,7 +231,7 @@ exports[`@nx/vitest root project should create nodes with ci target name 1`] = `
                 "env": undefined,
               },
               "outputs": [
-                "{projectRoot}/coverage",
+                "{projectRoot}/coverage/src/test-2.ts",
               ],
             },
             "test": {
@@ -355,12 +356,13 @@ exports[`@nx/vitest root project should create nodes with ci target name and ci 
                 ],
               },
               "outputs": [
-                "{projectRoot}/coverage",
+                "{projectRoot}/coverage/src/test-1.ts",
+                "{projectRoot}/coverage/src/test-2.ts",
               ],
             },
             "e2e-ci--src/test-1.ts": {
               "cache": true,
-              "command": "vitest run src/test-1.ts",
+              "command": "vitest run src/test-1.ts --coverage.reportsDirectory=coverage/src/test-1.ts",
               "inputs": [
                 "default",
                 "^production",
@@ -404,12 +406,12 @@ exports[`@nx/vitest root project should create nodes with ci target name and ci 
                 "env": undefined,
               },
               "outputs": [
-                "{projectRoot}/coverage",
+                "{projectRoot}/coverage/src/test-1.ts",
               ],
             },
             "e2e-ci--src/test-2.ts": {
               "cache": true,
-              "command": "vitest run src/test-2.ts",
+              "command": "vitest run src/test-2.ts --coverage.reportsDirectory=coverage/src/test-2.ts",
               "inputs": [
                 "default",
                 "^production",
@@ -453,7 +455,7 @@ exports[`@nx/vitest root project should create nodes with ci target name and ci 
                 "env": undefined,
               },
               "outputs": [
-                "{projectRoot}/coverage",
+                "{projectRoot}/coverage/src/test-2.ts",
               ],
             },
             "test": {
