@@ -18,6 +18,9 @@ import {
 } from '../../hasher/task-planning-context';
 import { marshalGraph } from './marshal-graph';
 import { filterAffected } from './affected-project-graph';
+import { getProjectGlobPatterns } from './affected-projects';
+import { combineGlobPatterns } from '../../utils/globs';
+import { minimatch } from 'minimatch';
 import {
   buildDeclaredProjectReferences,
   expandOverDeclaredReferences,
@@ -171,7 +174,8 @@ export async function computeAffectedTasks(
   const blindSpotProjects = projectsOwningBlindSpotChanges(
     touchedFiles,
     projectGraph,
-    affectedProjects
+    affectedProjects,
+    await getProjectGlobPatterns(nxJson)
   );
 
   if (blindSpotProjects.size) {
@@ -271,29 +275,72 @@ const LOCK_FILES = new Set<string>(AUTO_AFFECTED_LOCK_FILES);
  * effect is carried by external package names rather than paths, and a deleted
  * project config, whose project is no longer in the graph at all. The deletion
  * check mirrors `projects_from_project_glob_changes`, which decides the same
- * thing by asking whether the file is still on disk.
+ * thing by asking whether the file is still on disk, and uses the same plugin
+ * globs so a `build.gradle` or a `.csproj` counts as a config the way a
+ * `project.json` does.
+ *
+ * A surviving config seeds its own project *and everything that depends on it*.
+ * `ProjectConfiguration` is spliced into a consumer's plan for each of its
+ * dependencies and is real hash entropy, but it resolves to no files, so the
+ * matcher cannot see it and the consumer would otherwise be missed.
  */
 function projectsOwningBlindSpotChanges(
   touchedFiles: FileChange[],
   projectGraph: ProjectGraph,
-  affectedProjects: Set<string>
+  affectedProjects: Set<string>,
+  projectGlobs: string[]
 ): Set<string> {
+  const configGlob = projectGlobs.length
+    ? combineGlobPatterns(projectGlobs)
+    : undefined;
   const seeds = new Set<string>();
+  const dependents = reverseDependencies(projectGraph);
+
   for (const { file } of touchedFiles) {
     const name = file.slice(file.lastIndexOf('/') + 1);
     if (LOCK_FILES.has(name)) {
       return affectedProjects;
     }
-    if (!PROJECT_CONFIG_FILES.has(name)) continue;
+    const isConfig =
+      PROJECT_CONFIG_FILES.has(name) ||
+      (configGlob && minimatch(file, configGlob, { dot: true }));
+    if (!isConfig) continue;
     if (!existsSync(join(workspaceRoot, file))) {
       return affectedProjects;
     }
     for (const [project, node] of Object.entries(projectGraph.nodes)) {
-      if (file === `${node.data.root}/${name}`) {
-        seeds.add(project);
+      if (node.data.root && file.startsWith(`${node.data.root}/`)) {
+        addWithDependents(project, dependents, seeds);
         break;
       }
     }
   }
   return seeds;
+}
+
+/** project -> the projects that depend on it, one hop. */
+function reverseDependencies(
+  projectGraph: ProjectGraph
+): Map<string, string[]> {
+  const dependents = new Map<string, string[]>();
+  for (const [project, deps] of Object.entries(projectGraph.dependencies)) {
+    for (const { target } of deps) {
+      const list = dependents.get(target);
+      if (list) list.push(project);
+      else dependents.set(target, [project]);
+    }
+  }
+  return dependents;
+}
+
+function addWithDependents(
+  project: string,
+  dependents: Map<string, string[]>,
+  into: Set<string>
+): void {
+  if (into.has(project)) return;
+  into.add(project);
+  for (const dependent of dependents.get(project) ?? []) {
+    addWithDependents(dependent, dependents, into);
+  }
 }

@@ -870,6 +870,14 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
 
     // Re-create project graph and task graph. The selection is re-applied
     // rather than carried, since a sync generator may have removed a task.
+    //
+    // The planning context goes with the old graph. Its marshalled graph and
+    // the planner built over it describe the pre-sync workspace, and a sync
+    // generator rewriting tsconfig references moves inferred target outputs, so
+    // reusing it would hash against a workspace that no longer exists.
+    if (taskSelection) {
+      taskSelection.planningContext = undefined;
+    }
     projectGraph = await createProjectGraphAsync();
     taskGraph = createTaskGraphAndRunValidations(
       projectGraph,
