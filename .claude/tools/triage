@@ -54,8 +54,70 @@ const STALE_TIMERS = new Set([
 // routing duplicates through `not planned` loses that signal on the issue.
 const CLOSE_REASONS = new Set(['completed', 'not planned', 'duplicate']);
 
-const OWNERS_FILE = path.join(__dirname, 'triage-owners.json');
+/**
+ * A write-ahead copy of every record, kept OUTSIDE the state directory.
+ *
+ * The state directory is gitignored, so it has no history to fall back on, and
+ * anything that clears it — an `rm -rf` from a neighbouring agent, a stale test
+ * fixture, a botched cleanup — takes hours of triage with it. That has happened.
+ * The journal is not a second source of truth: nothing reads it during normal
+ * operation, and `recover` only ever restores records that are MISSING.
+ */
+const JOURNAL = path.join(os.homedir(), '.nx-triage', 'journal.jsonl');
+const JOURNAL_MAX_BYTES = 8 * 1024 * 1024;
+
+const OWNERS_FILE = path.join(__dirname, 'triage-owners.md');
 const ROTATION_FILE = path.join(STATE_DIR, '.rotation.json');
+
+/**
+ * Two append-only logs carrying the live session in each direction.
+ *
+ * events   TUI/CLI -> supervising agent. Every record write lands here, so the
+ *          agent's monitor tails one file instead of polling every record and
+ *          diffing, and sees the note the reviewer typed at the moment it is
+ *          typed.
+ * commands agent -> any running TUI. Lets the agent push a record it just
+ *          restaged into view instead of the reviewer having to guess that `r`
+ *          is now needed.
+ *
+ * Append-only and offset-read on purpose: several TUIs and several agents may
+ * be attached at once, and a file each side rewrites is a file they race on.
+ */
+/**
+ * Applied records move here. They are done — keeping them in the review list
+ * means the reviewer scrolls past a growing wall of finished work to reach the
+ * few rows that still need a decision. Moved rather than deleted: the record is
+ * the only account of what was actually written to a public issue.
+ */
+const ARCHIVE_DIR = path.join(STATE_DIR, '.archive');
+
+const EVENTS_FILE = path.join(STATE_DIR, 'events.jsonl');
+const COMMANDS_FILE = path.join(STATE_DIR, 'commands.jsonl');
+
+/**
+ * Best-effort, exactly like the journal: a bus that cannot be written must
+ * never fail the record write it was reporting on.
+ */
+function appendJsonl(file, obj) {
+  try {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.appendFileSync(file, JSON.stringify({ ts: new Date().toISOString(), ...obj }) + '\n');
+  } catch {
+    /* the bus is a convenience, never a dependency */
+  }
+}
+
+/**
+ * Tell any attached TUI its list is stale.
+ *
+ * Every verb that changes WHICH records are in the review list has to call this
+ * — apply archives them, rm and prune delete them, and none of that is visible
+ * to a TUI that only re-reads on a keypress. The reviewer is then looking at a
+ * record that is already on GitHub, with no way to know.
+ */
+function notifyReload() {
+  appendJsonl(COMMANDS_FILE, { type: 'reload' });
+}
 
 const STATUSES = [
   'pending',
@@ -66,7 +128,12 @@ const STATUSES = [
   'failed',
 ];
 
-const LIST_KEYS = new Set(['add_labels', 'remove_labels']);
+const LIST_KEYS = new Set([
+  'add_labels',
+  'remove_labels',
+  'current_labels',
+  'current_assignees',
+]);
 
 // ---------------------------------------------------------------- frontmatter
 
@@ -148,9 +215,23 @@ function serializeFrontmatter(front) {
 
 const recordPath = (n) => path.join(STATE_DIR, `${n}.md`);
 
+/**
+ * Where record <n> actually lives, live directory first, or null.
+ *
+ * Anything that reads or tests for a record by number must go through this:
+ * archiving moved applied records out from under `recordPath`, and every
+ * direct `recordPath` reader silently stopped seeing them.
+ */
+function resolveRecordPath(n) {
+  const live = recordPath(n);
+  if (fs.existsSync(live)) return live;
+  const archived = path.join(ARCHIVE_DIR, `${n}.md`);
+  return fs.existsSync(archived) ? archived : null;
+}
+
 function readRecord(n) {
-  const file = recordPath(n);
-  if (!fs.existsSync(file)) fail(`no staged record for #${n} (looked in ${rel(file)})`);
+  const file = resolveRecordPath(n);
+  if (!file) fail(`no staged record for #${n} (looked in ${rel(recordPath(n))})`);
   const text = fs.readFileSync(file, 'utf8');
   const m = text.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
   if (!m) fail(`${rel(file)}: missing YAML frontmatter`);
@@ -166,17 +247,106 @@ function readRecord(n) {
 function writeRecord(front, body) {
   fs.mkdirSync(STATE_DIR, { recursive: true });
   const file = recordPath(front.issue);
-  fs.writeFileSync(file, `---\n${serializeFrontmatter(front)}\n---\n\n${body.trim()}\n`);
+
+  // Read the prior status before overwriting, so the event carries the
+  // transition rather than just the destination. "pending -> approved" and a
+  // re-save that changed only the note look identical without it.
+  let from = null;
+  try {
+    if (fs.existsSync(file)) from = readRecord(front.issue).front.status || null;
+  } catch {
+    from = null;
+  }
+
+  const content = `---\n${serializeFrontmatter(front)}\n---\n\n${body.trim()}\n`;
+  fs.writeFileSync(file, content);
+  journal(front.issue, content);
+
+  const note = (section(body, 'Feedback') || '').split('\n').find((l) => l.trim()) || '';
+  appendJsonl(EVENTS_FILE, {
+    type: from === null ? 'staged' : from === front.status ? 'updated' : 'status',
+    issue: front.issue,
+    title: front.title || '',
+    from,
+    to: front.status,
+    close_reason: front.close_reason || '',
+    note: note.trim().slice(0, 240),
+  });
   return file;
 }
 
-function listRecords() {
-  if (!fs.existsSync(STATE_DIR)) return [];
-  return fs
-    .readdirSync(STATE_DIR)
-    .filter((f) => /^\d+\.md$/.test(f))
-    .map((f) => readRecord(parseInt(f, 10)))
-    .sort((a, b) => Number(a.front.issue) - Number(b.front.issue));
+/**
+ * Best-effort: a journal that failed to write must never fail the write it was
+ * protecting. Both the TUI and the CLI reach this through writeRecord, so a
+ * status change or a note typed in the TUI is journalled too — those are the
+ * parts a re-stage cannot reconstruct.
+ */
+function journal(issue, content) {
+  try {
+    fs.mkdirSync(path.dirname(JOURNAL), { recursive: true });
+    if (fs.existsSync(JOURNAL) && fs.statSync(JOURNAL).size > JOURNAL_MAX_BYTES) {
+      compactJournal();
+    }
+    fs.appendFileSync(
+      JOURNAL,
+      JSON.stringify({ ts: new Date().toISOString(), dir: STATE_DIR, issue, content }) + '\n'
+    );
+  } catch {
+    /* the journal is a safety net, not a dependency */
+  }
+}
+
+/** Keep only the newest entry per issue per directory. */
+function compactJournal() {
+  const latest = new Map();
+  for (const line of fs.readFileSync(JOURNAL, 'utf8').split('\n')) {
+    if (!line.trim()) continue;
+    try {
+      const e = JSON.parse(line);
+      latest.set(`${e.dir}\u0000${e.issue}`, e);
+    } catch {
+      /* a torn line is not worth losing the rest of the journal over */
+    }
+  }
+  fs.writeFileSync(
+    JOURNAL,
+    [...latest.values()].map((e) => JSON.stringify(e)).join('\n') + '\n'
+  );
+}
+
+function listRecords({ includeArchived = false } = {}) {
+  const dirs = [STATE_DIR];
+  if (includeArchived) dirs.push(ARCHIVE_DIR);
+  const seen = new Set();
+  const out = [];
+  for (const dir of dirs) {
+    if (!fs.existsSync(dir)) continue;
+    for (const f of fs.readdirSync(dir)) {
+      if (!/^\d+\.md$/.test(f)) continue;
+      const n = parseInt(f, 10);
+      if (seen.has(n)) continue;
+      seen.add(n);
+      out.push(readRecord(n));
+    }
+  }
+  return out.sort((a, b) => Number(a.front.issue) - Number(b.front.issue));
+}
+
+/**
+ * Move a finished record out of the review list. Best-effort: failing to tidy
+ * up must never turn a successful apply into a reported failure, since the
+ * mutation it describes has already reached GitHub and cannot be retried
+ * safely.
+ */
+function archiveRecord(n) {
+  try {
+    const from = recordPath(n);
+    if (!fs.existsSync(from)) return;
+    fs.mkdirSync(ARCHIVE_DIR, { recursive: true });
+    fs.renameSync(from, path.join(ARCHIVE_DIR, `${n}.md`));
+  } catch {
+    /* the record stays in the list; harmless */
+  }
 }
 
 /** Body sections are `## Name` headings. A missing section reads as empty. */
@@ -233,7 +403,68 @@ function validate(front) {
 
 // ----------------------------------------------------------------------- verbs
 
-function cmdStage(args) {
+/**
+ * The issue's labels and assignees as GitHub has them right now.
+ *
+ * Recorded at stage time so review can distinguish a mutation from a no-op: a
+ * record that lists `+scope: core` and `@leosvelperez` looks identical whether
+ * it changes anything or restates what is already there, and a reviewer cannot
+ * approve what they cannot see the shape of.
+ *
+ * Best-effort by design. Offline, rate-limited or unauthenticated, this returns
+ * null and the reviewer sees today's undecorated rendering — a stage must not
+ * fail because the network did.
+ */
+function fetchCurrent(issue) {
+  if (process.env.TRIAGE_NO_FETCH) return null;
+  const res = spawnSync(
+    'gh',
+    ['issue', 'view', String(issue), '--repo', REPO, '--json', 'labels,assignees'],
+    { encoding: 'utf8', timeout: 15000 }
+  );
+  if (res.status !== 0 || !res.stdout) return null;
+  try {
+    const d = JSON.parse(res.stdout);
+    return {
+      labels: (d.labels || []).map((l) => l.name),
+      assignees: (d.assignees || []).map((a) => a.login),
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Normalise a comment's Markdown before it is stored.
+ *
+ * Comments get authored with hand-placed line breaks inside paragraphs. GitHub
+ * joins those when it renders, so the posted result is already fine — but the
+ * stored record diffs a whole paragraph when one word changes, and a reviewer
+ * who opens it in `$EDITOR` has to re-wrap by hand after every edit.
+ *
+ * `proseWrap: 'never'` joins them and aligns Markdown tables. Verified against
+ * a real record: it leaves the blank lines inside a `<details>` block alone,
+ * which the collapsed Triage notes block depends on — GitHub only parses
+ * Markdown inside `<details>` when the tags are blank-line separated, so a
+ * formatter that tightened those would silently post raw HTML.
+ *
+ * Best-effort by design. Formatting is a nicety and staging is the job, so a
+ * missing dependency or a parse error falls back to the text as written rather
+ * than refusing the record.
+ */
+async function formatMarkdown(text) {
+  if (!text || !text.trim()) return text || '';
+  try {
+    const { format } = require('oxfmt');
+    const { code, errors } = await format('comment.md', text, { proseWrap: 'never' });
+    if (errors && errors.length) return text;
+    return code.trimEnd();
+  } catch {
+    return text;
+  }
+}
+
+async function cmdStage(args) {
   const raw = args.includes('--json')
     ? args[args.indexOf('--json') + 1]
     : fs.readFileSync(0, 'utf8');
@@ -247,9 +478,9 @@ function cmdStage(args) {
     fail(`payload is not valid JSON: ${e.message}`);
   }
 
-  const existing = fs.existsSync(recordPath(payload.issue))
-    ? readRecord(payload.issue)
-    : null;
+  // Resolve through the archive too, or restaging an applied issue silently
+  // loses the "already applied" guard and starts a second round unannounced.
+  const existing = resolveRecordPath(payload.issue) ? readRecord(payload.issue) : null;
   if (existing && existing.front.status === 'applied' && !args.includes('--force')) {
     fail(`#${payload.issue} was already applied. Pass --force to stage a new round.`);
   }
@@ -268,10 +499,23 @@ function cmdStage(args) {
     close_reason: payload.close_reason || '',
   };
 
+  // Carry a previous capture forward rather than dropping it, so a restage
+  // after a review note does not lose the diff the reviewer was reading.
+  const current = fetchCurrent(front.issue) ||
+    (existing
+      ? { labels: existing.front.current_labels, assignees: existing.front.current_assignees }
+      : null);
+  if (current && current.labels) {
+    front.current_labels = current.labels;
+    front.current_assignees = current.assignees || [];
+  }
+
+  const comment = await formatMarkdown(payload.comment);
+
   const problems = validate(front);
   // Closing without saying why is the one mutation a reporter cannot argue
   // with, so it does not get to be the quiet one.
-  if (front.close_reason && !(payload.comment || '').trim()) {
+  if (front.close_reason && !comment.trim()) {
     problems.push('a close needs a comment explaining it');
   }
   if (problems.length) fail(`refusing to stage #${front.issue}:\n  - ${problems.join('\n  - ')}`);
@@ -279,7 +523,7 @@ function cmdStage(args) {
   const file = writeRecord(
     front,
     buildBody({
-      comment: payload.comment,
+      comment,
       rationale: payload.rationale,
       // A restage answers previous feedback; keep it visible until applied.
       feedback: existing ? section(existing.body, 'Feedback') : '',
@@ -290,7 +534,10 @@ function cmdStage(args) {
 
 function cmdList(args) {
   const wanted = flag(args, '--status');
-  let records = listRecords();
+  // Applied records are archived, so asking for them by status implies wanting
+  // the archive too — otherwise `--status applied` reports nothing forever.
+  const includeArchived = args.includes('--all') || wanted === 'applied';
+  let records = listRecords({ includeArchived });
   if (wanted) records = records.filter((r) => r.front.status === wanted);
   if (args.includes('--json')) {
     console.log(JSON.stringify(records.map((r) => r.front), null, 2));
@@ -317,7 +564,9 @@ function cmdList(args) {
 
 function cmdShow(args) {
   const n = requireIssue(args);
-  process.stdout.write(fs.readFileSync(recordPath(n), 'utf8'));
+  const file = resolveRecordPath(n);
+  if (!file) fail(`no staged record for #${n}`);
+  process.stdout.write(fs.readFileSync(file, 'utf8'));
 }
 
 function cmdSet(args) {
@@ -442,13 +691,19 @@ function cmdApply(args) {
           })
         : body
     );
+    // A failure stays in the list: it still needs a human.
+    if (!failed) archiveRecord(front.issue);
     console.log(failed ? `#${front.issue}: FAILED — ${failed}` : `#${front.issue}: applied`);
   }
+
+  // Once, after the whole batch: a reload per record would make the TUI jump
+  // under the reviewer's hands mid-apply.
+  if (!dryRun) notifyReload();
 }
 
 function cmdReview() {
-  // Both of these fail deep inside ink or the module loader if left to chance,
-  // and the resulting React stack trace buries the one-line diagnosis.
+  // Both of these fail deep inside the renderer or the module loader if left to
+  // chance, and the resulting stack trace buries the one-line diagnosis.
   if (!process.stdin.isTTY) {
     fail(
       'triage review needs a terminal.\n' +
@@ -456,48 +711,241 @@ function cmdReview() {
     );
   }
 
-  // The TUI is a workspace package that owns ink and tsx; prefer its own
-  // node_modules and fall back to the root store, which is where a hoisted
-  // install puts them.
-  const TUI_DIR = path.join(__dirname, 'triage-tui');
-  const roots = [path.join(TUI_DIR, 'node_modules'), path.join(ROOT, 'node_modules')];
-  const resolve = (rel_) => roots.map((r) => path.join(r, rel_)).find((f) => fs.existsSync(f));
-
-  const tsxCli = resolve(path.join('tsx', 'dist', 'cli.mjs'));
-  if (!tsxCli || !resolve('ink')) {
+  // Bun, not node. opentui's renderer is native FFI with no node build yet — the
+  // node bundle throws "OpenTUI native FFI is not available for this runtime
+  // yet" — so this is the one part of the toolchain that does not run on the
+  // repo's node/pnpm.
+  if (spawnSync('bun', ['--version'], { encoding: 'utf8' }).status !== 0) {
     fail(
-      'triage review needs ink and tsx: run `pnpm install` first.\n' +
-        'Everything else (list, show, set, feedback, apply) works without them.'
+      'triage review needs Bun: https://bun.sh  (curl -fsSL https://bun.sh/install | bash)\n' +
+        'Everything else (list, show, set, feedback, apply) runs on node and needs nothing extra.\n' +
+        'Prefer Bun >= 1.4: 1.3.x prints a harmless malloc error on quit.'
     );
   }
-  const res = spawnSync(process.execPath, [tsxCli, path.join(TUI_DIR, 'index.tsx')], {
+  const TUI_DIR = path.join(__dirname, 'triage-tui');
+  if (!fs.existsSync(path.join(TUI_DIR, 'node_modules', '@opentui'))) {
+    fail('triage review needs its dependencies: run `pnpm install` first.');
+  }
+
+  const res = spawnSync('bun', [path.join(TUI_DIR, 'index.tsx')], {
     stdio: 'inherit',
     env: { ...process.env, TRIAGE_DIR: STATE_DIR, TRIAGE_REPO: REPO },
   });
-  process.exit(res.status ?? 0);
+  // Bun 1.3.x aborts during opentui's native teardown when the app holds other
+  // event-loop handles — ours are the fs watcher and the command poll. It fires
+  // after the screen is restored and the summary is printed, so the review
+  // itself succeeded. Bisected: a bare renderer exits 0; add an interval and an
+  // fs.watch and it exits 5 with `malloc: pointer being freed was not
+  // allocated`, even through opentui's own ctrl-c path. Same shape as upstream
+  // anomalyco/opentui#1405, which pins it on destroy() leaving a handle
+  // registered on the loop.
+  //
+  // Bun 1.4.0 exits 0 with no error, measured A/B on the same records — so this
+  // mapping only protects 1.3.x and can go once that is the floor. Note the
+  // opentui maintainer has not merged 1.4 support yet (#1400), so 1.3 stays the
+  // supported runtime for now even though it is the noisier one.
+  process.exit(res.status === 5 ? 0 : (res.status ?? 0));
 }
 
 /**
- * Next owner for a scope, rotating through the configured logins.
+ * Parse the owners table out of markdown into the shape the rest of this file
+ * expects: `{ roster, people, owners }`.
+ *
+ * Markdown rather than JSON because the load-bearing part of this table is
+ * prose — the guidance an agent reads before overriding a pick — and multi
+ * sentence guidance crammed into a single JSON string is unreadable to author
+ * and unreviewable in a diff.
+ *
+ * Deliberately forgiving about formatting and strict about names. Whitespace,
+ * blank lines and the alignment row are all ignored; a handle that is not on
+ * the roster is a hard error. That asymmetry is the point: prose can drift
+ * without consequence, but a stale name silently keeps receiving issues.
+ */
+function parseOwnersMarkdown(src) {
+  const roster = new Map();
+  const people = {};
+  const owners = {};
+  // `| a | b | c |` -> ['a','b','c'], dropping the alignment row.
+  const cells = (line) => {
+    const t = line.trim();
+    if (!t.startsWith('|')) return null;
+    if (/^\|[\s:|-]+\|$/.test(t)) return null;
+    return t.slice(1, -1).split('|').map((c) => c.trim());
+  };
+  const handle = (c) => (c.match(/^`?([A-Za-z0-9_-]+)`?$/) || [])[1] || null;
+
+  let section = null; // 'roster' | 'people' | 'areas'
+  let key = null; // current ### heading
+  let prose = [];
+  const flushProse = () => {
+    const text = prose.join(' ').replace(/\s+/g, ' ').trim();
+    prose = [];
+    return text;
+  };
+
+  for (const line of src.split('\n')) {
+    const h2 = line.match(/^##\s+(.+?)\s*$/);
+    const h3 = line.match(/^###\s+(.+?)\s*$/);
+    if (h2 && !h3) {
+      if (section === 'people' && key) people[key].note ||= flushProse();
+      if (section === 'areas' && key) owners[key].guidance ||= flushProse();
+      const name = h2[1].toLowerCase();
+      section = name.startsWith('roster')
+        ? 'roster'
+        : name.startsWith('people')
+          ? 'people'
+          : name.startsWith('area')
+            ? 'areas'
+            : null;
+      key = null;
+      prose = [];
+      continue;
+    }
+    if (h3) {
+      if (section === 'people' && key) people[key].note ||= flushProse();
+      if (section === 'areas' && key) owners[key].guidance ||= flushProse();
+      key = h3[1].trim();
+      prose = [];
+      if (section === 'people') people[key] = {};
+      if (section === 'areas') owners[key] = { guidance: '', candidates: [] };
+      continue;
+    }
+
+    // Any table line is consumed here, including the alignment row that `cells`
+    // rejects — otherwise it falls through and lands in the guidance prose.
+    if (line.trim().startsWith('|')) {
+      const row = cells(line);
+      if (!row) continue;
+      if (section === 'roster' && row.length >= 2) {
+        const h = handle(row[0]);
+        // The header row's first cell ("Handle") parses as a handle too; a
+        // roster entry always names a person in column two, headers do not.
+        if (h && h.toLowerCase() !== 'handle') roster.set(h, row[1]);
+      } else if (section === 'areas' && key && row.length >= 1) {
+        const h = handle(row[0]);
+        if (h && h.toLowerCase() === 'handle') continue; // header
+        const weight = row[1] === '' || row[1] == null ? undefined : Number(row[1]);
+        const note = row[2] || '';
+        if (h) {
+          owners[key].candidates.push({ login: h, weight, note });
+        } else if (/defer/i.test(row[0])) {
+          owners[key].candidates.push({ defer: 'scope', weight, note });
+        }
+      }
+      continue;
+    }
+
+    if (section === 'people' && key) {
+      const w = line.match(/^weight:\s*(-?\d+)\s*$/);
+      if (w) {
+        people[key].weight = Number(w[1]);
+        continue;
+      }
+    }
+    if (line.trim() && !line.trim().startsWith('#')) prose.push(line.trim());
+  }
+  if (section === 'people' && key) people[key].note ||= flushProse();
+  if (section === 'areas' && key) owners[key].guidance ||= flushProse();
+
+  // The assertion the roster exists for. A handle that is not on it is either a
+  // typo or someone who has left — both route real issues to a dead end, and
+  // both are invisible until someone notices an assignee never responded.
+  const unknown = [];
+  for (const [label, row] of Object.entries(owners)) {
+    for (const c of row.candidates) {
+      if (c.login && !roster.has(c.login)) unknown.push(`${label} -> ${c.login}`);
+    }
+  }
+  for (const login of Object.keys(people)) {
+    if (!roster.has(login)) unknown.push(`people -> ${login}`);
+  }
+  if (unknown.length) {
+    fail(
+      `${rel(OWNERS_FILE)} names handles that are not on the roster:\n  ` +
+        unknown.join('\n  ') +
+        `\nAdd them under "## Roster", or remove the rows — someone who has left must not stay in a rotation.`
+    );
+  }
+  return { roster: Object.fromEntries(roster), people, owners };
+}
+
+/**
+ * Resolve a scope's candidates, folding the global `people` defaults into each
+ * one. A per-candidate weight overrides the person's default; absent both, 1.
+ */
+function candidatesFor(table, scope) {
+  const row = (table.owners || {})[scope];
+  if (row === undefined) return undefined;
+  const people = table.people || {};
+  return {
+    guidance: row.guidance || '',
+    candidates: (row.candidates || []).map((c) => {
+      const person = people[c.login] || {};
+      const weight = c.weight ?? person.weight ?? 1;
+      const note = c.note || person.note || '';
+      // A `defer` candidate is a share of the rotation that belongs to another
+      // row rather than to a person — it keeps a bias ("usually Craigory, he
+      // has the Windows box") from silently becoming an override.
+      return { login: c.login || null, defer: c.defer || null, weight, note };
+    }),
+  };
+}
+
+/**
+ * Smooth weighted round-robin (the nginx algorithm).
+ *
+ * Plain round-robin ignores weight; expanding the list by weight honors it but
+ * clusters, so a 3:1 row hands the same person three consecutive issues in one
+ * sweep — exactly the pile-up the rotation exists to prevent. Smooth WRR
+ * interleaves instead (A B A C A B rather than A A A B B C) while still
+ * converging on the configured ratio.
+ *
+ * Deterministic on purpose. A random draw would be defensible statistically but
+ * makes a staged queue impossible to reason about on review, and impossible to
+ * reproduce when someone asks why an issue went where it did.
+ */
+function pickWeighted(candidates, state) {
+  const total = candidates.reduce((sum, c) => sum + Math.max(0, c.weight), 0);
+  if (total <= 0) return null;
+  let best = null;
+  for (const c of candidates) {
+    if (c.weight <= 0) continue; // 0 means "listed, never auto-suggested"
+    state[c.login] = (state[c.login] ?? 0) + c.weight;
+    if (best === null || state[c.login] > state[best.login]) best = c;
+  }
+  if (best) state[best.login] -= total;
+  return best;
+}
+
+/**
+ * Suggest an owner for a scope.
+ *
+ * The login goes to stdout so `$(triage owner "scope: core")` still yields just
+ * the login; the guidance and the weighted field go to stderr, where the agent
+ * reads them but command substitution does not. The suggestion is advisory —
+ * the guidance exists to be acted on, not just displayed.
  *
  * Rotation advances when a proposal is staged, not when it is applied, so a
  * rejected proposal still consumes a turn. That is the cheap direction to be
- * wrong in: the alternative is rereading every record on every call, and the
- * cost of being one out of order is nil.
+ * wrong in.
  */
 function cmdOwner(args) {
   const scope = args.find((a) => !a.startsWith('--'));
   if (!scope) fail('which scope? e.g. triage owner "scope: core"');
   if (!fs.existsSync(OWNERS_FILE)) fail(`no owners table at ${rel(OWNERS_FILE)}`);
 
-  const owners = JSON.parse(fs.readFileSync(OWNERS_FILE, 'utf8')).owners || {};
-  const row = owners[scope];
+  const table = parseOwnersMarkdown(fs.readFileSync(OWNERS_FILE, 'utf8'));
+  const row = candidatesFor(table, scope);
+  const deferTo = flag(args, '--scope');
   if (row === undefined) {
     fail(`"${scope}" is not in ${rel(OWNERS_FILE)}. Add a row, or derive from git history.`);
   }
-  if (!row.length) {
-    // Silence is a real answer here: it means fall back to git history rather
-    // than pick someone arbitrary.
+
+  if (row.guidance) console.error(`guidance for "${scope}": ${row.guidance}`);
+
+  if (!row.candidates.length) {
+    // Silence on stdout is a real answer: fall back to git history rather than
+    // pick someone arbitrary.
     console.log('');
     console.error(`no configured owner for "${scope}" — derive one from recent commits`);
     process.exit(0);
@@ -511,19 +959,114 @@ function cmdOwner(args) {
       rotation = {};
     }
   }
-  const next = (rotation[scope] ?? -1) + 1;
-  rotation[scope] = next;
+  const state = rotation[scope] && typeof rotation[scope] === 'object' ? rotation[scope] : {};
+  const pick = pickWeighted(row.candidates, state);
+
+  for (const c of row.candidates) {
+    const mark = pick && c === pick ? '->' : '  ';
+    const who = c.defer ? `(defer to ${c.defer})` : c.login;
+    const weight = c.weight <= 0 ? 'never auto-suggested' : `weight ${c.weight}`;
+    console.error(`${mark} ${who} (${weight})${c.note ? ` — ${c.note}` : ''}`);
+  }
+
+  // The deferred share belongs to another row. Resolve it here so the caller
+  // still gets one login on stdout and the bias stays honest end to end.
+  if (pick && pick.defer) {
+    if (!deferTo) {
+      console.log('');
+      console.error(
+        `this turn defers to the ${pick.defer} rotation — re-run with --scope "<scope label>"`
+      );
+      process.exit(0);
+    }
+    if (!args.includes('--peek')) {
+      rotation[scope] = state;
+      fs.mkdirSync(STATE_DIR, { recursive: true });
+      fs.writeFileSync(ROTATION_FILE, JSON.stringify(rotation, null, 2));
+    }
+    console.error(`deferring to "${deferTo}" for this one`);
+    return cmdOwner([deferTo, ...args.filter((a) => a === '--peek')]);
+  }
+
+  if (!pick) {
+    console.log('');
+    console.error(`every candidate for "${scope}" is weighted 0 — pick deliberately`);
+    process.exit(0);
+  }
+
   if (!args.includes('--peek')) {
+    rotation[scope] = state;
     fs.mkdirSync(STATE_DIR, { recursive: true });
     fs.writeFileSync(ROTATION_FILE, JSON.stringify(rotation, null, 2));
   }
-  console.log(row[next % row.length]);
+  console.error('suggestion only — override it when the issue names a better owner, and say why');
+  console.log(pick.login);
+}
+
+/**
+ * Restore records the state directory has lost.
+ *
+ * Only ever writes a record that is MISSING. A record present on disk is the
+ * live one by definition — the journal is older by construction, so preferring
+ * it would quietly roll back whatever was just decided.
+ */
+function cmdRecover(args) {
+  if (!fs.existsSync(JOURNAL)) {
+    console.log(`no journal at ${JOURNAL.replace(os.homedir(), '~')}`);
+    return;
+  }
+  const latest = new Map();
+  for (const line of fs.readFileSync(JOURNAL, 'utf8').split('\n')) {
+    if (!line.trim()) continue;
+    try {
+      const e = JSON.parse(line);
+      if (e.dir === STATE_DIR) latest.set(String(e.issue), e);
+    } catch {
+      /* skip a torn line */
+    }
+  }
+  if (!latest.size) {
+    console.log(`journal holds nothing for ${rel(STATE_DIR)}`);
+    return;
+  }
+
+  const entries = [...latest.values()].sort((a, b) => Number(a.issue) - Number(b.issue));
+  if (args.includes('--list')) {
+    for (const e of entries) {
+      const status = (e.content.match(/^status: '([^']*)'/m) || [])[1] || '?';
+      const here = Boolean(resolveRecordPath(e.issue));
+      console.log(
+        `#${String(e.issue).padEnd(6)} ${status.padEnd(18)} ${e.ts.slice(0, 19)}  ${here ? 'present' : 'MISSING'}`
+      );
+    }
+    return;
+  }
+
+  let restored = 0;
+  fs.mkdirSync(STATE_DIR, { recursive: true });
+  for (const e of entries) {
+    // Archived counts as present: an applied record is not missing, and
+    // restoring it would put a mutation that is already on GitHub back in the
+    // review list looking undecided.
+    if (resolveRecordPath(e.issue)) continue;
+    fs.writeFileSync(recordPath(e.issue), e.content);
+    console.log(`restored #${e.issue} (as of ${e.ts.slice(0, 19)})`);
+    restored += 1;
+  }
+  console.log(
+    restored
+      ? `${restored} record${restored === 1 ? '' : 's'} restored`
+      : 'nothing missing — every journalled record is already on disk'
+  );
 }
 
 function cmdRm(args) {
   const n = requireIssue(args);
-  fs.rmSync(recordPath(n), { force: true });
+  const file = resolveRecordPath(n);
+  if (!file) fail(`no record for #${n}`);
+  fs.rmSync(file, { force: true });
   console.log(`removed #${n}`);
+  notifyReload();
 }
 
 function cmdPrune() {
@@ -535,6 +1078,7 @@ function cmdPrune() {
     }
   }
   console.log(`pruned ${n} settled record${n === 1 ? '' : 's'}`);
+  notifyReload();
 }
 
 // ----------------------------------------------------------------------- utils
@@ -555,6 +1099,34 @@ const indent = (s) => s.split('\n').map((l) => `    ${l}`).join('\n');
 const truncate = (s, n) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
 const showArg = (a) => (/[\s'"]/.test(a) ? JSON.stringify(a) : a);
 
+/**
+ * Push a command to any TUI attached to this state directory.
+ *
+ * Fire-and-forget: nothing here waits for or confirms delivery, because there
+ * may be no TUI open and that is a normal state, not an error. The record on
+ * disk stays the source of truth either way — a missed command costs the
+ * reviewer one `r`, never correctness.
+ */
+function cmdNotify(args) {
+  const [action, ...rest] = args;
+  const actions = {
+    reload: () => ({ type: 'reload', issue: rest[0] ? Number(rest[0]) : null }),
+    select: () => {
+      if (!rest[0]) fail('which issue? e.g. triage notify select 36775');
+      return { type: 'select', issue: Number(rest[0]) };
+    },
+    message: () => {
+      const text = rest.join(' ').trim();
+      if (!text) fail('nothing to say. e.g. triage notify message "restaged #36775"');
+      return { type: 'message', text };
+    },
+  };
+  if (!action || !actions[action]) {
+    fail('usage: triage notify <reload [N] | select <N> | message "text">');
+  }
+  appendJsonl(COMMANDS_FILE, actions[action]());
+}
+
 function fail(message) {
   console.error(message);
   process.exit(1);
@@ -563,22 +1135,29 @@ function fail(message) {
 const HELP = `triage — stage issue mutations, review them, then apply.
 
   stage              read a JSON payload on stdin and write a pending record
-  list [--status S]  one line per record        [--json]
+  list [--status S]  one line per record   [--json] [--all: include archived]
   show <N>           print a record verbatim
   review             interactive approval TUI, also "pnpm triage-tui"
   set <N> <status>   set status by hand         [--note "..."]
   feedback           records where changes were requested, and why  [--json]
   owner <scope>      next owner for a scope, round-robin      [--peek]
   apply [<N>...]     apply approved records via gh    [--dry-run]
+  recover [--list]   restore records the state dir lost (journal is outside it)
+  notify <action>    push to a live TUI: reload [N] | select <N> | message "..."
   rm <N> | prune     drop one record, or all settled ones
 
-Records live in ${rel(STATE_DIR)}/<N>.md — markdown, hand-editable.
+Records live in ${rel(STATE_DIR)}/<N>.md — markdown, hand-editable. Every write is
+journalled to ~/.nx-triage/journal.jsonl, outside that directory, so \`recover\`
+can restore records if it is cleared. Set TRIAGE_DIR to point somewhere else —
+do that for tests rather than deleting the real one.
 Staged records start pending. The TUI moves them to approved, rejected, or
 changes-requested (with a note the agent reads back via "triage feedback").
-apply then writes applied or failed.
+apply then writes applied or failed, and moves applied records into
+<state>/.archive so the review list only holds what still needs a decision.
+\`list --all\` and \`show <N>\` still reach them.
 `;
 
-function main() {
+async function main() {
   const [verb, ...args] = process.argv.slice(2);
   const verbs = {
     stage: cmdStage,
@@ -588,7 +1167,9 @@ function main() {
     set: cmdSet,
     feedback: cmdFeedback,
     owner: cmdOwner,
+    recover: cmdRecover,
     apply: cmdApply,
+    notify: cmdNotify,
     rm: cmdRm,
     prune: cmdPrune,
   };
@@ -597,15 +1178,20 @@ function main() {
     return;
   }
   if (!verbs[verb]) fail(`unknown verb "${verb}"\n\n${HELP}`);
-  verbs[verb](args);
+  // `stage` formats Markdown through oxfmt, which is async; the rest are sync
+  // and awaiting a non-promise is harmless.
+  await verbs[verb](args);
 }
 
 // The TUI drives the same record functions rather than reimplementing the
 // frontmatter format. Two parsers for one file format is how a hand-edit starts
 // meaning different things to different verbs.
-if (require.main === module) main();
+if (require.main === module) main().catch((e) => fail(e && e.message ? e.message : String(e)));
 
 module.exports = {
+  ARCHIVE_DIR,
+  COMMANDS_FILE,
+  EVENTS_FILE,
   STATE_DIR,
   STATUSES,
   buildBody,
