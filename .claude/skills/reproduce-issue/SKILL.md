@@ -1,12 +1,14 @@
 ---
 name: reproduce-issue
-description: The single skill for reproducing an nx issue. Given a GitHub issue number (human entry) OR explicit repro parameters (agent entry), it runs the reproduction ENTIRELY inside an isolated Docker sandbox — gVisor on Linux, the Docker VM on macOS — so the untrusted repro's install scripts and commands never execute on the host, then reports whether it reproduces. Called by humans via "/reproduce-issue #N", "reproduce this bug", "does this reproduce", and by the reproduce-verifier agent (Level 2). Nothing lands on the host.
-allowed-tools: Read, Grep, Glob, Bash(uname *), Bash(gh issue view *), Bash(gh issue list *), Bash(docker run *), Bash(docker cp *), Bash(docker rm *), Bash(docker info *), Bash(docker pull *)
+description: The single skill for reproducing an nx issue. Given a GitHub issue number (human entry) OR explicit repro parameters (agent entry), it runs the reproduction inside the shared sandbox host through `.claude/tools/sandbox`, so the untrusted repro's install scripts and commands never execute on the host, then reports whether it reproduces. Called by humans via "/reproduce-issue #N", "reproduce this bug", "does this reproduce", and by the reproduce-verifier agent (Level 2). Nothing lands on the host.
+allowed-tools: Read, Grep, Glob, Write(/tmp/**), Bash(.claude/tools/sandbox *), Bash(gh issue view *), Bash(gh issue list *), Bash(rm -f /tmp/*)
 ---
 
 # Reproduce an issue (sandboxed)
 
-Reproduce an nx bug **entirely inside an isolated container** and report the outcome. The untrusted repro — its `install` (arbitrary postinstall scripts) and its repro command — runs only in the sandbox, never on the host. `--rm` destroys everything on exit; nothing touches the host filesystem.
+Reproduce an nx bug **inside the sandbox** and report the outcome. The untrusted repro — its `install` (arbitrary postinstall scripts) and its repro command — runs only there, never on the host.
+
+Everything goes through `.claude/tools/sandbox`. That CLI owns the container: which isolation runtime applies on this platform, the hardening flags, the shared host, and teardown. **Do not run `docker` yourself** — hand-rolling it is how a repro ends up unisolated on one platform and nobody notices. That is enforced rather than trusted: `allowed-tools` above grants no `docker` at all, and the only writes it permits are the script under `/tmp` and removing it again.
 
 This is the one reproduction engine in the repo. It has two front doors:
 
@@ -31,93 +33,113 @@ The caller passes these directly:
 - **`node-image:<img>`** (optional) — base image matching the issue's Node (default `node:22`; public images are multi-arch → native on Apple Silicon).
 - **`expect:<reported symptom>`** (optional), **`setup:"<files/steps>"`** (optional) — files to create in the workspace first.
 
-## Platform (where the sandbox boundary comes from)
+## Preflight
 
-Run `uname -s` once:
+One command. It reports the platform, the backend, and the isolation tier the CLI will use:
 
-- **Linux** → add `--runtime=runsc` to `docker run` (gVisor is the sandbox).
-- **macOS (`Darwin`)** → **omit `--runtime=runsc`** (the Docker VM is the sandbox). Verify `docker info` works; if not, tell the user to `colima start` (or start Docker Desktop / OrbStack).
+```bash
+.claude/tools/sandbox doctor
+```
 
-The command below shows the Linux form — on macOS drop `--runtime=runsc`, keep the rest.
+`isolation=vm` (macOS) or `isolation=runsc` (Linux) with `exec=full` means you are good. Anything
+else prints its own fix — usually the `setup-review-sandbox` skill. On Linux without gVisor the CLI
+**refuses to run**, rather than quietly falling back to plain runc.
 
-## Preflight — check the environment, fail with a FIX (not a mystery)
+For `nx-build` mode only, the toolchain image must exist:
 
-Before running anything, verify prerequisites in order and **stop at the first miss, printing the one-line fix**. Most misses point at the `setup-review-sandbox` skill, which installs/builds everything.
+```bash
+.claude/tools/sandbox doctor --image nx-review-sandbox:latest
+```
 
-1. **Docker is up:**
+## Safety rails
 
-   ```bash
-   docker info >/dev/null 2>&1 && echo up || echo MISSING
-   ```
+The CLI enforces the container ones for you — `--cap-drop ALL`, `no-new-privileges`, the isolation
+runtime, and resource limits. What is still yours to get right:
 
-   Miss → Linux: `sudo systemctl start docker`. macOS: `colima start` (or open Docker Desktop). Or run `setup-review-sandbox`.
-
-2. **Container networking works** (the check that would have caught the `veth` breakage):
-
-   ```bash
-   docker run --rm --network none alpine true   # A: is the sandbox itself OK?
-   docker run --rm alpine true                  # B: is networking OK?
-   ```
-
-   If **A passes but B fails** with `veth ... operation not supported` → networking is broken (usually a kernel update left `veth` unloadable). Fix: `sudo modprobe veth`; if that errors with a BTF/version mismatch, **reboot** (the running kernel no longer matches its modules).
-
-3. **Isolation runtime (platform-specific):**
-   - **Linux** — gVisor registered as a Docker runtime?
-     ```bash
-     docker info --format '{{range $k,$v := .Runtimes}}{{$k}} {{end}}' | grep -q runsc && echo ok || echo MISSING
-     ```
-     Miss → run `setup-review-sandbox` (installs + registers `runsc`).
-   - **macOS** — the Docker VM (Colima / Docker Desktop) _is_ the sandbox; step 1 already covered it. No `runsc`.
-
-4. **(PR-build mode ONLY) the toolchain image exists:**
-   ```bash
-   docker image inspect nx-review-sandbox:latest >/dev/null 2>&1 && echo ok || echo MISSING
-   ```
-   Miss → run `setup-review-sandbox` (builds it from `tools/review-sandbox/Dockerfile`). **Skip this check** when reproducing against a _published_ nx version — that path needs only steps 1–3 and a public `node` image.
-
-If all needed checks pass, proceed.
-
-## Safety rails (do NOT break these)
-
-- The untrusted repro runs **only** in the container. **Never `-v` a host path in.** nx comes from a registry (or `docker cp`-ed tarballs), never a mount.
-- Always pass: `--cap-drop ALL`, `--security-opt no-new-privileges`, `--memory 4g --cpus 4 --pids-limit 2048`, `--rm`; plus `--runtime=runsc` on Linux.
-- Network is ON (clone + install need it). gVisor still protects the host kernel; on macOS the VM protects the host.
-- One `docker` command per Bash call. (Chaining inside the container's `bash -c '...'` is one host command, which is fine.)
+- **Never pass a repro URL to `--checkout`.** That fetches into `/work/.repo`, the object store every
+  review shares, mixing a stranger's history into the repo reviewers read. Start **without**
+  `--checkout` to get an empty private workspace, and clone inside it.
+- **Never mount a host path.** The CLI gives you no way to; do not reach around it.
+- **Always `stop` the id when you are done.** The workspace is a real directory in a long-lived
+  container, not a `--rm` container that cleans itself.
+- **Lanes share the container.** Isolation *between* sandboxes is not claimed — that is a deliberate
+  disk trade. So do not assume a fixed port is free, and if a run looks poisoned by a neighbour,
+  `stop` it and start a fresh id rather than debugging the contamination.
 
 ## Run
 
-Detect platform, then a single host command does clone/create → dep-rewrite → install → repro, all inside the sandbox:
+Three commands: start a workspace, pipe a script into it, stop it.
 
 ```bash
-# RUNTIME="--runtime=runsc"   on Linux
-# RUNTIME=""                   on macOS
-docker run --rm $RUNTIME \
-  --cap-drop ALL --security-opt no-new-privileges \
-  --memory 4g --cpus 4 --pids-limit 2048 \
-  node:22 bash -c '
-    set -e
-    git clone --depth 1 <GIT_URL> /repro          # repo: form
-    # -- or -- npx --yes create-nx-workspace <ARGS> --directory /repro   # create: form
-    cd /repro
-
-    node -e '"'"'
-      const fs=require("fs"),p=JSON.parse(fs.readFileSync("package.json","utf8")),v=process.argv[1];
-      for (const s of ["dependencies","devDependencies"]) for (const n of Object.keys(p[s]||{}))
-        if (n==="nx"||n.startsWith("@nx/")||n.startsWith("@nrwl/")) p[s][n]=v;
-      fs.writeFileSync("package.json", JSON.stringify(p,null,2)+"\n");
-    '"'"' <NX_VERSION>
-
-    rm -f package-lock.json pnpm-lock.yaml yarn.lock
-    PM=npm; test -f pnpm-workspace.yaml && PM=pnpm
-    npm i -g pnpm@11 >/dev/null 2>&1 || true
-    npm_config_registry=<NX_REGISTRY> $PM install
-
-    ( timeout 300 <REPRO_COMMAND> ); echo "REPRO_EXIT=$?"
-    echo "kernel: $(uname -r)"
-  '
+ID=$(.claude/tools/sandbox start --image node:22 | head -1)
+.claude/tools/sandbox exec "$ID" -- bash -s < /tmp/repro-<N>.sh
+.claude/tools/sandbox stop "$ID"
 ```
 
-Substitute `<GIT_URL>`/`<ARGS>`, `<NX_VERSION>`, `<NX_REGISTRY>` (default `https://registry.npmjs.org`), and `<REPRO_COMMAND>`.
+**Write the script to a file with the Write tool and pipe it in.** `exec` joins its argv with spaces after `--`, so an
+inline script loses its quoting — a `node -e '...'` one-liner arrives mangled, fails, and reads as
+the repro failing. `bash -s` on stdin passes heredocs, nested quotes and all through untouched.
+
+Use `node:22` by default, or the image matching the issue's Node version. Public node images are
+multi-arch, so they run native on Apple Silicon.
+
+### The script
+
+```bash
+set -euo pipefail          # pipefail matters: see "surface the real error" below
+
+git clone --depth 1 <GIT_URL> repro     # repo: form
+# -- or -- npx --yes create-nx-workspace <ARGS> --directory repro   # create: form
+cd repro
+
+# Pin the nx version under test.
+node -e '
+  const fs=require("fs"), p=JSON.parse(fs.readFileSync("package.json","utf8")), v=process.argv[1];
+  for (const s of ["dependencies","devDependencies"]) for (const n of Object.keys(p[s]||{}))
+    if (n==="nx"||n.startsWith("@nx/")||n.startsWith("@nrwl/")) p[s][n]=v;
+  fs.writeFileSync("package.json", JSON.stringify(p,null,2)+"\n");
+' <NX_VERSION>
+
+# Use the workspace's OWN package manager, in the order that actually decides it.
+PM=$(node -p "try{(require('./package.json').packageManager||'').split('@')[0]}catch(e){''}")
+if [ -z "$PM" ]; then
+  if   [ -f pnpm-lock.yaml ]; then PM=pnpm
+  elif [ -f yarn.lock      ]; then PM=yarn
+  elif [ -f bun.lockb      ]; then PM=bun
+  else                             PM=npm
+  fi
+fi
+corepack enable >/dev/null 2>&1 || true
+echo "package manager: $PM"
+
+# Surface the real error instead of dying silently.
+if ! $PM install >/tmp/install.log 2>&1; then
+  echo "SETUP_FAILED: $PM install"
+  tail -40 /tmp/install.log
+  exit 1
+fi
+
+set +e
+timeout 300 <REPRO_COMMAND> 2>&1 | tee /tmp/repro.log
+echo "REPRO_EXIT=${PIPESTATUS[0]}"
+```
+
+Three things in there are load-bearing, each of which has already cost a run:
+
+- **Do not impose a package manager.** `packageManager: yarn@4.15.0` is authoritative and corepack
+  honours it; a pnpm shim *refusing* under that field is corepack working, not a bug to route around.
+  Installing a yarn-4 workspace with npm invents failures that belong to your harness rather than to
+  the issue — an `ERESOLVE` on a prerelease range is the usual one, and reaching for
+  `--legacy-peer-deps` treats the symptom of a switch you should not have made.
+- **`set -e` alone is not enough.** A pipeline's status is its *last* command's, so `install | tail`
+  succeeds even when the install failed. Hence `pipefail`, and the explicit `PIPESTATUS[0]` for the
+  repro command, whose non-zero exit is the result rather than an error.
+- **Do not delete the lockfile.** Deleting it re-resolves the whole tree and changes what you are
+  testing. Let the workspace's own package manager update it after the version rewrite. Only remove
+  it if the install fails *because* of it, and say so in the report.
+
+To install from somewhere other than public npm, prefix the install:
+`npm_config_registry=<NX_REGISTRY> $PM install`.
 
 ## Classify + report
 
@@ -143,43 +165,56 @@ output (tail ~20 lines):
 
 ## PR-build mode — build nx from source in the sandbox (`nx-build`)
 
-When `nx-build:<git-ref>` is given, do everything in **one `nx-review-sandbox` container** (it carries the mise toolchain incl. **java + dotnet**, required by nx's `@nx/dotnet`/`@nx/gradle` graph plugins). One container, `localhost` throughout — no host build, no host verdaccio, no `host.docker.internal`, no listen-address change:
+When `nx-build:<git-ref>` is given, let the CLI provide the nx checkout. It fetches into the shared
+object store and installs with the warm pnpm store, so you are not cloning and installing nx from
+scratch the way a hand-rolled container had to:
 
 ```bash
-# RUNTIME="--runtime=runsc"  on Linux, ""  on macOS
-docker run --rm $RUNTIME \
-  --cap-drop ALL --security-opt no-new-privileges \
-  --memory 20g --cpus 6 --pids-limit 8192 --tmpfs /work:rw,exec,size=16g \
-  -e CI=true -e NX_DAEMON=false \
-  nx-review-sandbox:latest bash -c '
-    set -e
-    # 1. build nx from the PR commit
-    cd /work
-    git clone --filter=blob:none https://github.com/nrwl/nx nx && cd nx
-    git checkout <GIT_REF>
-    mise install && pnpm install --frozen-lockfile
-    PORT=4873
-    pnpm nx local-registry @nx/nx-source --port=$PORT >/tmp/verdaccio.log 2>&1 &
-    for i in $(seq 1 60); do curl -sf http://localhost:$PORT/-/ping >/dev/null 2>&1 && break; sleep 1; done
-    NX_LOCAL_REGISTRY_PORT=$PORT pnpm nx populate-local-registry-storage @nx/nx-source
-    NXV=$(node -p "require(\"/work/nx/dist/packages/nx/package.json\").version")
-
-    # 2. reproduce against that build — same container, localhost registry
-    cd /work
-    git clone --depth 1 <GIT_URL> repro     # or: npx --yes create-nx-workspace <ARGS> --directory repro
-    cd repro
-    # rewrite nx/@nx/@nrwl deps to "$NXV" (same node one-liner as the Run section)
-    rm -f package-lock.json pnpm-lock.yaml yarn.lock
-    npm_config_registry=http://localhost:$PORT pnpm install
-    ( timeout 300 <REPRO_COMMAND> ); echo "REPRO_EXIT=$?"
-    echo "kernel: $(uname -r)"
-  '
+ID=$(.claude/tools/sandbox start --image nx-review-sandbox:latest \
+       --checkout https://github.com/nrwl/nx --ref <GIT_REF> | head -1)
+.claude/tools/sandbox install "$ID"                     # mise + pnpm, idempotent
+.claude/tools/sandbox exec "$ID" -- bash -s < /tmp/build-<N>.sh
+.claude/tools/sandbox stop "$ID"
 ```
 
-Because verdaccio and the repro live in the **same** container, the registry is plain `localhost` — the reachability/listen-address problems a host verdaccio would create simply don't exist. Classify the result exactly as in "Classify + report".
+The image matters: `nx-review-sandbox` carries the mise toolchain including **java and dotnet**, which
+nx's `@nx/dotnet` and `@nx/gradle` graph plugins need. Build it with `setup-review-sandbox`.
 
-Prerequisite: the `nx-review-sandbox` image (`setup-review-sandbox`). The nx build is heavy (~several min + several GB) — RAM-backed via the tmpfs above so it stays off the host disk.
+`exec` starts you in the nx checkout, so the repro goes in a sibling directory of the same private
+workspace — no absolute paths, and one `stop` removes both:
+
+```bash
+set -euo pipefail
+
+# 1. serve this build. Pick a FREE port: the container is shared, so 4873 may
+#    belong to another lane's verdaccio.
+PORT=$(node -e 'const s=require("net").createServer();s.listen(0,()=>{console.log(s.address().port);s.close()})')
+pnpm nx local-registry @nx/nx-source --port=$PORT >/tmp/verdaccio.log 2>&1 &
+for i in $(seq 1 60); do curl -sf http://localhost:$PORT/-/ping >/dev/null 2>&1 && break; sleep 1; done
+NX_LOCAL_REGISTRY_PORT=$PORT pnpm nx populate-local-registry-storage @nx/nx-source
+NXV=$(node -p 'require("./dist/packages/nx/package.json").version')
+
+# 2. reproduce against it, beside the checkout, in the same container
+mkdir -p ../repro && cd ../repro
+# clone / create, rewrite deps to "$NXV", detect PM — exactly as in "The script"
+npm_config_registry=http://localhost:$PORT $PM install
+```
+
+Verdaccio and the repro share the container, so the registry is plain `localhost` — none of the
+listen-address or `host.docker.internal` problems a host-side verdaccio would create.
+
+Classify the result exactly as in "Classify + report".
 
 ## Cleanup
 
-`--rm` destroys the container and everything in it on exit. Nothing persists on the host. Stray sandbox containers/images: `/sandbox-prune`.
+```bash
+.claude/tools/sandbox stop <id>      # removes the workspace; the shared host stays up
+```
+
+Stopping is not optional here. The old `--rm` container cleaned itself; a sandbox workspace is a
+directory in a container that outlives it, and the host is deliberately left running because the warm
+store is what makes the next run cheap.
+
+If runs are stacking up: `.claude/tools/sandbox list`, then `prune` for dead rows, `prune --store` to
+reclaim the shared pnpm store, or `prune --host` to destroy the host outright. Both `--store` and
+`--host` refuse while any sandbox is live.
