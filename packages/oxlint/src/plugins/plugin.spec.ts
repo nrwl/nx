@@ -159,7 +159,7 @@ describe('@nx/oxlint plugin', () => {
     expect(inputs).toContainEqual({ fileset: LINTABLE_FILES });
     expect(inputs).toContainEqual({
       fileset:
-        '{projectRoot}/**/{.oxlintrc.json,.oxlintrc.jsonc,oxlint.config.ts,oxlint.config.mts,.eslintignore,tsconfig*.json}',
+        '{projectRoot}/**/{.oxlintrc.json,.oxlintrc.jsonc,oxlint.config.ts,oxlint.config.mts,.eslintignore,.gitignore,tsconfig*.json}',
     });
   });
 
@@ -198,23 +198,26 @@ describe('@nx/oxlint plugin', () => {
     });
   });
 
-  // Oxlint layers .eslintignore files from every ancestor of a linted file,
-  // which changes which files are linted.
-  it('should declare ancestor .eslintignore files as inputs', async () => {
-    createFiles({
-      '.oxlintrc.json': `{"rules":{}}`,
-      'libs/a/project.json': `{"name":"a"}`,
-      'libs/a/src/index.ts': `export const a = 1;`,
-    });
+  // Oxlint layers ignore files from every ancestor of a linted file, which
+  // changes which files are linted.
+  it.each(['.eslintignore', '.gitignore'])(
+    'should declare ancestor %s files as inputs',
+    async (filename) => {
+      createFiles({
+        '.oxlintrc.json': `{"rules":{}}`,
+        'libs/a/project.json': `{"name":"a"}`,
+        'libs/a/src/index.ts': `export const a = 1;`,
+      });
 
-    const results = await invokeCreateNodesOnMatchingFiles(context);
-    const inputs = results.projects['libs/a'].targets.lint.inputs;
+      const results = await invokeCreateNodesOnMatchingFiles(context);
+      const inputs = results.projects['libs/a'].targets.lint.inputs;
 
-    expect(inputs).toContain('{workspaceRoot}/.eslintignore');
-    expect(inputs).toContain('{workspaceRoot}/libs/.eslintignore');
-    // The project's own directory is covered by its own fileset.
-    expect(inputs).not.toContain('{workspaceRoot}/libs/a/.eslintignore');
-  });
+      expect(inputs).toContain(`{workspaceRoot}/${filename}`);
+      expect(inputs).toContain(`{workspaceRoot}/libs/${filename}`);
+      // The project's own directory is covered by its own fileset.
+      expect(inputs).not.toContain(`{workspaceRoot}/libs/a/${filename}`);
+    }
+  );
 
   it('should declare local jsPlugins as file inputs but never as externalDependencies', async () => {
     createFiles({
