@@ -3066,6 +3066,42 @@ describe('orchestrator', () => {
       ]);
     });
 
+    it("attaches a died step's uncarried resolved issues to the adopted commit entry", async () => {
+      vi.spyOn(process, 'kill').mockReturnValue(true as never);
+      mockCommit.mockResolvedValue({
+        status: 'committed',
+        sha: 'face0012face0012face0012face0012face0012',
+      });
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'died')],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+        issues: [
+          issueEntry('issue-1', {
+            applicableStepIds: ['step-1'],
+            disposition: 'resolved',
+            resolvedByStepId: 'step-1',
+            resolvedAtCommitCount: 0,
+          }),
+        ],
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'adopt',
+      });
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      expect(state.commits).toContainEqual({
+        kind: 'landed',
+        sha: 'face0012face0012face0012face0012face0012',
+        stepIds: ['step-1'],
+        issueIds: ['issue-1'],
+      });
+    });
+
     it('claims an applicable issue at the agent-work dispense and carries it assigned in the digest', async () => {
       const dir = setupRun('run-1', {
         steps: [
