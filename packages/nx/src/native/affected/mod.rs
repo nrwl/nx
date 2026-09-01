@@ -46,6 +46,10 @@ pub struct TouchedProject {
     /// The `{workspaceRoot}` fileset or plugin glob that matched, when the
     /// signal came from a pattern rather than from ownership.
     pub pattern: Option<String>,
+    /// The external package whose version moved. Set by the JS locators, which
+    /// return through this same struct, so it has to be declared here or napi
+    /// drops it on the way back.
+    pub package: Option<String>,
 }
 
 /// A changed file the project owns, by root.
@@ -116,6 +120,7 @@ fn touched_projects(graph: &ProjectGraph, touched_files: &[String]) -> Vec<Touch
                 kind: KIND_PROJECT_FILE.to_string(),
                 file: Some(file.clone()),
                 pattern: None,
+                package: None,
             })
         })
         .collect()
@@ -206,6 +211,7 @@ fn implicitly_touched_projects(
                     kind: KIND_IMPLICIT_DEPENDENCY.to_string(),
                     file: Some(file.clone()),
                     pattern: Some(pattern.to_string()),
+                    package: None,
                 })
         })
         .collect())
@@ -235,6 +241,7 @@ fn all_projects_touched_by(
             kind: kind.to_string(),
             file: file.cloned(),
             pattern: pattern.map(String::from),
+            package: None,
         })
         .collect()
 }

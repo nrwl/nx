@@ -47,8 +47,10 @@ export async function runTouchedProjectLocators(
         ),
     ]
   );
-  // `kind` crosses napi as a bare string; the values are our own Rust
-  // constants, so this narrows rather than converts.
+  // `kind` crosses napi as a bare string, so the union is asserted rather than
+  // checked. The values come from the native constants and from the JS locators
+  // this call passes in, which are the only producers; nothing validates that at
+  // runtime, so a new locator kind has to be added to AffectedReasonKind by hand.
   return native as TouchedProject[];
 }
 

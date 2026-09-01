@@ -1055,6 +1055,12 @@ export interface TouchedProject {
    * signal came from a pattern rather than from ownership.
    */
   pattern?: string
+  /**
+   * The external package whose version moved. Set by the JS locators, which
+   * return through this same struct, so it has to be declared here or napi
+   * drops it on the way back.
+   */
+  package?: string
 }
 
 /** Track an event using the global telemetry instance */
