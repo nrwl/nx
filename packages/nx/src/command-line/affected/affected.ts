@@ -23,6 +23,7 @@ import { generateGraph } from '../graph/graph';
 import { computeAffectedTasks } from '../../project-graph/affected/affected-tasks';
 import { filterAffectedWithReasons } from '../../project-graph/affected/affected-project-graph';
 import { printAffectedExplanation } from '../../project-graph/affected/print-explanation';
+import { isExplaining } from '../../project-graph/affected/affected-reasons';
 import { resolveAffectedGranularity } from '../../project-graph/affected/granularity';
 import type { TaskSelection } from '../../tasks-runner/run-command';
 
@@ -80,15 +81,17 @@ export async function affected(
       overrides,
       extraTargetDependencies,
       excludeTaskDependencies: extraOptions.excludeTaskDependencies,
-      explain: nxArgs.explain !== undefined,
+      explain: isExplaining(nxArgs.explain),
     });
 
     // --explain reports the selection rather than acting on it: someone asking
     // why a task is affected does not also want it to run.
-    if (nxArgs.explain !== undefined) {
-      printAffectedExplanation(affectedTasks.reasons ?? {}, 'Affected tasks', {
-        json: nxArgs.explain === 'json',
-      });
+    if (isExplaining(nxArgs.explain)) {
+      printAffectedExplanation(
+        affectedTasks.reasons ?? {},
+        'Affected tasks',
+        nxArgs.explain
+      );
       await output.drain();
       process.exit(0);
     }
@@ -117,15 +120,13 @@ export async function affected(
     );
     projects = [...owning].map((name) => projectGraph.nodes[name]);
   } else {
-    if (nxArgs.explain !== undefined) {
+    if (isExplaining(nxArgs.explain)) {
       const { reasons } = await filterAffectedWithReasons(
         projectGraph,
         calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
         nxJson
       );
-      printAffectedExplanation(reasons, 'Affected projects', {
-        json: nxArgs.explain === 'json',
-      });
+      printAffectedExplanation(reasons, 'Affected projects', nxArgs.explain);
       await output.drain();
       process.exit(0);
     }
