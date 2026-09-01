@@ -21,7 +21,11 @@ export function app(): express.Express {
     ? join(distFolder, 'index.original.html')
     : join(distFolder, 'index.html');
 
-  const commonEngine = new CommonEngine();
+  const commonEngine = new CommonEngine(<%_ if (supportsAllowedHosts) { _%>{
+    // The engine rejects any host that is not listed here. Add the hosts this
+    // server is reached through before deploying it, or set NG_ALLOWED_HOSTS.
+    allowedHosts: ['localhost', '127.0.0.1', '[::1]'],
+  }<%_ } _%>);
 
   server.set('view engine', 'html');
   server.set('views', distFolder);

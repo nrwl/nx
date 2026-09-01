@@ -3,7 +3,10 @@ import { generateFiles, readProjectConfiguration } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
 import { join } from 'path';
 import { isZonelessApp } from '../../../utils/zoneless';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import {
+  getInstalledAngularVersionInfo,
+  supportsSsrAllowedHosts,
+} from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
 import { DEFAULT_BROWSER_DIR } from './constants';
 
@@ -41,6 +44,7 @@ export function addServerFile(tree: Tree, options: NormalizedGeneratorOptions) {
     zoneless,
     useDefaultImport: angularMajorVersion >= 21,
     angularMajorVersion,
+    supportsAllowedHosts: supportsSsrAllowedHosts(tree),
     tpl: '',
   });
 }

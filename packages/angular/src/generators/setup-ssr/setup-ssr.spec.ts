@@ -937,6 +937,25 @@ describe('setupSSR', () => {
         `);
     });
 
+    it('should not configure the allowed hosts in the server file when "@angular/ssr" does not support them', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        bundler: 'webpack',
+        skipFormat: true,
+      });
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { ...json.dependencies, '@angular/ssr': '20.3.16' },
+      }));
+
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+      expect(tree.read('app1/src/server.ts', 'utf-8')).toContain(
+        'const commonEngine = new CommonEngine();'
+      );
+    });
+
     it('should import from `zone.js/node` in the server file for the browser builder in angular versions lower than v21', async () => {
       const tree = createTreeWithEmptyWorkspace();
       updateJson(tree, 'package.json', (json) => ({
