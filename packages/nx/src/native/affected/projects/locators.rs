@@ -39,6 +39,10 @@ pub struct TouchedProject {
     /// The `{workspaceRoot}` fileset or plugin glob that matched, when the
     /// signal came from a pattern rather than from ownership.
     pub pattern: Option<String>,
+    /// The external package whose version moved. Set by the JS locators, which
+    /// return through this same struct, so it has to be declared here or napi
+    /// drops it on the way back.
+    pub package: Option<String>,
 }
 
 /// A changed file the project owns, by root.
@@ -134,6 +138,7 @@ pub(super) fn all_projects_touched_by(
             kind: kind.to_string(),
             file: file.cloned(),
             pattern: pattern.map(String::from),
+            package: None,
         })
         .collect()
 }
