@@ -245,7 +245,7 @@ describe('@nx/oxlint plugin', () => {
 
   // A pattern is anchored only when it contains a slash, so a bare single-segment
   // root would also match a same-named directory the outer project owns.
-  it('should not exclude an outer-owned directory sharing the nested root name', async () => {
+  it('should emit the nested root as an anchored pattern', async () => {
     createFiles({
       '.oxlintrc.json': `{"rules":{}}`,
       'libs/a/project.json': `{"name":"a"}`,

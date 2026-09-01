@@ -813,33 +813,21 @@ function escapeIgnorePattern(pattern: string): string {
 function nestedRootsByParentRoot(
   projectRoots: string[]
 ): Map<string, string[]> {
-  const roots = new Set(projectRoots);
+  // getRootForDirectory reads only the keys.
+  const roots = new Map(projectRoots.map((root) => [root, true]));
   const byParent = new Map<string, string[]>();
-  const claim = (parent: string, root: string) => {
+
+  for (const root of projectRoots) {
+    const parent = getRootForDirectory(dirname(root), roots);
+    // A workspace-root project is its own ancestor, so it must not claim itself.
+    if (parent === null || parent === root) {
+      continue;
+    }
     const claimed = byParent.get(parent);
     if (claimed) {
       claimed.push(root);
     } else {
       byParent.set(parent, [root]);
-    }
-  };
-
-  for (const root of projectRoots) {
-    let dir = root;
-    while (true) {
-      const parent = dirname(dir);
-      if (parent === dir) {
-        // Nothing above claimed it, so a root project takes it if there is one.
-        if (root !== '.' && roots.has('.')) {
-          claim('.', root);
-        }
-        break;
-      }
-      if (roots.has(parent)) {
-        claim(parent, root);
-        break;
-      }
-      dir = parent;
     }
   }
 
@@ -941,10 +929,18 @@ function getProjectUsingOxlintConfig(
     projectRoot,
     nestedRootsByParent,
     isRootProject && standaloneSrcPath ? standaloneSrcPath : ''
-  ).map(
-    (relativeRoot) =>
-      `--ignore-pattern ${quoteShellArg(escapeIgnorePattern(`/${relativeRoot}`))}`
-  );
+  )
+    // `quoteShellArg` documents that it cannot keep `%` literal through cmd.exe,
+    // so on Windows such a root is left unexcluded rather than excluded wrongly:
+    // it gets linted twice, which is what happened before this exclusion existed.
+    .filter(
+      (relativeRoot) =>
+        process.platform !== 'win32' || !relativeRoot.includes('%')
+    )
+    .map(
+      (relativeRoot) =>
+        `--ignore-pattern ${quoteShellArg(escapeIgnorePattern(`/${relativeRoot}`))}`
+    );
 
   const jsPluginFiles = new Set(
     configInputs.flatMap((config) =>
