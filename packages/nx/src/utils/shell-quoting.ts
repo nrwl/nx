@@ -21,6 +21,13 @@
 const SHELL_META_CHARS = /[|&;<>()$`\\!"'*?[\]{}~#\s]/;
 
 /**
+ * A line break ends a cmd.exe command line whatever the quoting, so no quoted
+ * run can carry one. POSIX single quotes hold a newline fine, which is why the
+ * refusal in `quoteShellArg` is Windows-only.
+ */
+export const LINE_BREAK = /[\r\n]/;
+
+/**
  * Check if a string contains shell metacharacters that require quoting.
  * These characters have special meaning in shell and would be interpreted
  * incorrectly if not quoted (e.g., | for pipe, & for background, etc.)
@@ -52,10 +59,16 @@ export function isAlreadyQuoted(str: string): boolean {
  * @throws on Windows when the argument contains a double quote, which ends that
  * run, since cmd.exe recognizes no backslash escape. Carrying one means
  * caret-escaping every metacharacter instead, doubled for a `.cmd` shim, which
- * this path does not implement.
+ * this path does not implement. Also throws on a line break, which ends the
+ * command line itself and so survives no quoting at all.
  */
 export function quoteShellArg(arg: string): string {
   const isWindows = process.platform === 'win32';
+  if (isWindows && LINE_BREAK.test(arg)) {
+    throw new Error(
+      `Cannot safely pass ${arg} to cmd.exe as a single argument: a line break inside it would end the command line and leave the rest of the argument to be read as commands. Remove the line break and run the command again.`
+    );
+  }
   if (isWindows && arg.includes('"')) {
     throw new Error(
       `Cannot safely pass ${arg} to cmd.exe as a single argument: a double quote inside it would end the quoting and leave the rest of the argument to be read as commands. Remove the double quote and run the command again.`
