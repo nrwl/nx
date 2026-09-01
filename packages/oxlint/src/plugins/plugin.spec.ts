@@ -262,6 +262,24 @@ describe('@nx/oxlint plugin', () => {
     );
   });
 
+  // A root-level project walks `./src` while still running from the workspace
+  // root, and a pattern anchors to the cwd rather than to the walk root.
+  it('should anchor a nested root under a standalone root project', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'package.json': `{"name":"root-workspace","nx":{}}`,
+      'src/index.ts': `export const a = 1;`,
+      'src/nested/project.json': `{"name":"nested"}`,
+      'src/nested/index.ts': `export const n = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+
+    expect(results.projects['.'].targets.lint.command).toBe(
+      'oxlint --ignore-pattern "/src/nested" ./src'
+    );
+  });
+
   // A root reaches the shell verbatim, so anything that is not a plain path
   // segment sequence is skipped instead of escaped.
   it('should skip a nested root that is not shell-safe', async () => {
