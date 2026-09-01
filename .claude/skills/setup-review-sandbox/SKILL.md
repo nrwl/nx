@@ -1,7 +1,7 @@
 ---
 name: setup-review-sandbox
 description: One-time setup of the sandbox prerequisites used by the reproduce-issue skill and the reproduce-verifier agent — Docker, the isolation runtime (gVisor on Linux / Colima on macOS), healthy container networking, and the nx-review-sandbox toolchain image (built from the repo's mise.toml). Idempotent; re-run any time to verify or repair. Use when the user says "set up the review sandbox", "install the sandbox prereqs", "build the sandbox image", or a reproduce-issue preflight reports something MISSING.
-allowed-tools: Read, Grep, Glob, Bash(uname *), Bash(docker info *), Bash(docker run *), Bash(docker build *), Bash(docker image inspect *), Bash(docker images *), Bash(command -v *), Bash(lsmod *), Bash(bash tools/review-sandbox/*)
+allowed-tools: Read, Grep, Glob, Bash(uname *), Bash(docker info *), Bash(docker run *), Bash(docker build *), Bash(docker image inspect *), Bash(docker images *), Bash(command -v *), Bash(lsmod *), Bash(bash tools/review-sandbox/*), Bash(.claude/tools/sandbox *)
 ---
 
 # Set up the review sandbox (one-time)
@@ -77,7 +77,9 @@ bash tools/review-sandbox/build-image.sh
 
 The script builds from a **minimal context** — five entries, ~2 MB, almost all of it the lockfile — and never `.` (the repo root), which would ship the whole monorepo (node_modules / .git / dist — many GB) to the daemon. All five entries are load-bearing; the Dockerfile explains what each omission breaks.
 
-This installs the repo's exact toolchain — node/java/dotnet/maven/rust/bun via mise — and warms the pnpm store so reviews link packages instead of downloading them. Takes a while and several GB (the warm store is ~2.6 GB of that). Requires steps 1 + 3 to pass first (build needs working networking). If disk is tight, `/sandbox-prune` first.
+This installs the repo's exact toolchain — node/java/dotnet/maven/rust/bun via mise — and warms the pnpm store so reviews link packages instead of downloading them. Takes a while and several GB (the warm store is ~2.6 GB of that). Requires steps 1 + 3 to pass first (build needs working networking).
+
+Note that the store is warm but **read-only**, living in an image layer: the first review in a container has to copy the part its lockfile touches up into the writable layer (~2.3 GB, minutes) before it can hardlink to it. That is why reviews share one host container per image — the copy-up is then paid once rather than once per PR, and a second review's install measures ~0.39 GB and ~12 s.
 
 ## 5. Verify (smoke test)
 
@@ -94,3 +96,14 @@ docker run --rm $RUNTIME nx-review-sandbox:latest bash -c '
 ```
 
 Green when: the kernel is NOT your host kernel, and node/java/dotnet report versions. Report a concise ✅/❌ per step and what (if anything) the user still needs to run.
+
+## 6. Reclaiming the disk
+
+Reviews clean up after themselves (`sandbox stop` deletes the review's `/work/<id>` subtree), and `sandbox prune` sweeps subtrees whose registry row is gone. What neither touches is the shared state, because that state is the cache:
+
+```bash
+.claude/tools/sandbox prune --store   # pnpm store prune + git gc in the shared repo
+.claude/tools/sandbox prune --host    # destroy the shared host; next start rebuilds it cold
+```
+
+Both refuse while any sandbox row is live — they would be deleting files a running review is reading. `--host` is also the way to recycle after an image rebuild, and the mitigation worth knowing about: reviews share a pnpm store, so a malicious PR could in principle poison it for a later review. That stays inside the container and cannot reach the host, but it can corrupt a later review's findings.
