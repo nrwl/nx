@@ -1,7 +1,6 @@
-import { exec } from 'child_process';
 import { existsSync } from 'fs';
 import { join, relative } from 'path';
-import { PackageJson } from '@nx/devkit/internal';
+import { PackageJson, safeSpawn } from '@nx/devkit/internal';
 
 export async function parseRegistryOptions(
   cwd: string,
@@ -98,19 +97,33 @@ export async function getNpmTag(cwd: string): Promise<string> {
 
 async function getNpmConfigValue(key: string, cwd: string): Promise<string> {
   try {
-    const result = await execAsync(`npm config get ${key}`, cwd);
+    const result = await npmConfigGet(key, cwd);
     return result === 'undefined' ? undefined : result;
   } catch (e) {
     return Promise.resolve(undefined);
   }
 }
 
-async function execAsync(command: string, cwd: string): Promise<string> {
+// `key` carries the package's own scope, so it goes to npm as an argument
+// rather than through a shell.
+async function npmConfigGet(key: string, cwd: string): Promise<string> {
   // Must be non-blocking async to allow spinner to render
   return new Promise<string>((resolve, reject) => {
-    exec(command, { cwd, windowsHide: true }, (error, stdout, stderr) => {
-      if (error) {
-        return reject((stderr ? `${stderr}\n` : '') + error);
+    const child = safeSpawn('npm', ['config', 'get', key], {
+      cwd,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.setEncoding('utf-8').on('data', (chunk) => (stdout += chunk));
+    child.stderr.setEncoding('utf-8').on('data', (chunk) => (stderr += chunk));
+    child.on('error', reject);
+    child.on('close', (code) => {
+      if (code !== 0) {
+        return reject(
+          (stderr ? `${stderr}\n` : '') +
+            `npm config get ${key} exited with code ${code}`
+        );
       }
       return resolve(stdout.trim());
     });
