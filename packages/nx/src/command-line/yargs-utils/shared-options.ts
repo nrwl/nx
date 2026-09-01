@@ -230,8 +230,12 @@ export function withAffectedOptions(yargs: Argv) {
     })
     .option('explain', {
       describe:
-        'Print why each project or task was considered affected, instead of running anything.',
-      type: 'boolean',
+        'Print why each project or task was considered affected, instead of running anything. Pass --explain=json for machine-readable output.',
+      type: 'string',
+      // Declared as a string so `--explain=json` selects the format. `--json`
+      // stays undeclared, because executors are commonly given it and a
+      // declared option never reaches them.
+      coerce: (value: string | boolean) => (value === true ? '' : value),
     })
     .option('uncommitted', {
       describe: 'Uncommitted changes.',
