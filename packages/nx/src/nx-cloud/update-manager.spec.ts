@@ -6,10 +6,12 @@ import {
   readdirSync,
   readFileSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { dirname, join } from 'path';
+import { type ChildProcess, spawn } from 'child_process';
 import { Readable } from 'stream';
 import * as tar from 'tar-stream';
 import { createGzip } from 'zlib';
@@ -48,6 +50,56 @@ function axiosFailing(error: Error): AxiosInstance {
   } as unknown as AxiosInstance;
 }
 
+// A stand-in for a second nx process contending for the download lock. It
+// takes the real native flock on the real lockfile and writes the same
+// "<version> <nonce>" record, so the code under test is exercised against a
+// genuine cross-process holder rather than a stub.
+const PEER_SOURCE = `
+const { FileLock } = require(process.argv[2]);
+const fs = require('fs');
+const path = require('path');
+const { randomUUID } = require('crypto');
+
+const [installDir, version, holdMs, mode] = process.argv.slice(3);
+const lockPath = path.join(installDir, 'download.lock');
+
+const lock = new FileLock(lockPath);
+lock.lock();
+fs.writeFileSync(lockPath, version + ' ' + randomUUID(), 'utf-8');
+fs.writeFileSync(path.join(installDir, 'peer-holds.flag'), '', 'utf-8');
+
+setTimeout(() => {
+  if (mode === 'install') {
+    const dir = path.join(installDir, version);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'index.js'), 'peer bundle', 'utf-8');
+  }
+  lock.unlock();
+}, Number(holdMs));
+`;
+
+// import.meta is unavailable under the CommonJS spec build, so walk up from
+// the cwd instead - it differs between a direct vitest run and an nx one.
+function findNativeBindings(): string {
+  let dir = process.cwd();
+  while (true) {
+    for (const rel of [
+      'src/native/native-bindings.js',
+      'packages/nx/src/native/native-bindings.js',
+    ]) {
+      const candidate = join(dir, rel);
+      if (existsSync(candidate)) return candidate;
+    }
+    const parent = dirname(dir);
+    if (parent === dir) throw new Error('could not locate native bindings');
+    dir = parent;
+  }
+}
+
+const nativeBindings = findNativeBindings();
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 describe('update-manager bundle download', () => {
   let workspace: string;
   let installDir: string;
@@ -82,7 +134,7 @@ describe('update-manager bundle download', () => {
 
   const bundleDirs = () =>
     readdirSync(installDir)
-      .filter((f) => !f.includes('.lock'))
+      .filter((f) => statSync(join(installDir, f)).isDirectory())
       .sort();
 
   it('extracts the downloaded tarball into a directory named for the version', async () => {
@@ -234,5 +286,147 @@ describe('update-manager bundle download', () => {
     ).rejects.toThrow();
 
     expect(bundleDirs()).toEqual([]);
+  });
+});
+
+describe('update-manager download lock', () => {
+  let workspace: string;
+  let installDir: string;
+  let updateManager: UpdateManager;
+  let peers: ChildProcess[];
+
+  beforeEach(async () => {
+    workspace = mkdtempSync(join(tmpdir(), 'nx-update-manager-lock-'));
+    writeFileSync(join(workspace, 'nx.json'), '{}');
+
+    vi.resetModules();
+    const { setWorkspaceRoot } = await import('../utils/workspace-root');
+    setWorkspaceRoot(workspace);
+    const { resetSharedRootCacheForTesting } =
+      await import('../utils/cache-directory');
+    resetSharedRootCacheForTesting();
+
+    updateManager = await import('./update-manager');
+    installDir = updateManager.getBundleInstallDefaultLocation();
+    mkdirSync(installDir, { recursive: true });
+    peers = [];
+  });
+
+  afterEach(() => {
+    for (const peer of peers) peer.kill();
+    rmSync(workspace, { recursive: true, force: true });
+    rmSync(installDir, { recursive: true, force: true });
+  });
+
+  const bundleDirs = () =>
+    readdirSync(installDir)
+      .filter((f) => statSync(join(installDir, f)).isDirectory())
+      .sort();
+
+  /** Starts a peer holding the lock and resolves once it actually holds it. */
+  async function startPeer(options: {
+    version: string;
+    holdMs: number;
+    installs: boolean;
+  }): Promise<void> {
+    const script = join(workspace, 'peer.js');
+    writeFileSync(script, PEER_SOURCE, 'utf-8');
+    peers.push(
+      spawn(
+        process.execPath,
+        [
+          script,
+          nativeBindings,
+          installDir,
+          options.version,
+          String(options.holdMs),
+          options.installs ? 'install' : 'fail',
+        ],
+        { stdio: 'ignore' }
+      )
+    );
+
+    const flag = join(installDir, 'peer-holds.flag');
+    for (let i = 0; i < 400 && !existsSync(flag); i++) await sleep(25);
+    if (!existsSync(flag)) throw new Error('peer never took the lock');
+  }
+
+  it('adopts the bundle a peer installed when it is not older', async () => {
+    const axios = axiosServing(bundleTarball({ 'index.js': 'mine' }));
+    await startPeer({ version: '2608.31.0001', holdMs: 300, installs: true });
+
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      axios,
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(installed.version).toBe('2608.31.0001');
+    expect(axios.get).not.toHaveBeenCalled();
+    expect(readFileSync(join(installed.fullPath, 'index.js'), 'utf-8')).toBe(
+      'peer bundle'
+    );
+  });
+
+  it('downloads its own bundle when the peer installed an older one', async () => {
+    const axios = axiosServing(bundleTarball({ 'index.js': 'mine' }));
+    await startPeer({ version: '2608.29.0001', holdMs: 300, installs: true });
+
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      axios,
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(installed.version).toBe('2608.30.0002');
+    expect(axios.get).toHaveBeenCalledOnce();
+  });
+
+  it('leaves the peer bundle in place on a contended install', async () => {
+    // The peer is still running from 2608.29.0001; deleting it would break
+    // that process's lazy requires. This is the original defect.
+    await startPeer({ version: '2608.29.0001', holdMs: 300, installs: true });
+
+    await updateManager.downloadAndExtractClientBundle(
+      axiosServing(bundleTarball({ 'index.js': 'mine' })),
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(bundleDirs()).toEqual(['2608.29.0001', '2608.30.0002']);
+    expect(
+      readFileSync(join(installDir, '2608.29.0001', 'index.js'), 'utf-8')
+    ).toBe('peer bundle');
+  });
+
+  it('takes over the download when the peer released the lock without installing', async () => {
+    mkdirSync(join(installDir, '2608.28.0001'), { recursive: true });
+    const axios = axiosServing(bundleTarball({ 'index.js': 'mine' }));
+    await startPeer({ version: '2608.31.0001', holdMs: 300, installs: false });
+
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      axios,
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(installed.version).toBe('2608.30.0002');
+    expect(axios.get).toHaveBeenCalledOnce();
+    // Uncontended, so the stale bundle is cleaned up as usual.
+    expect(bundleDirs()).toEqual(['2608.30.0002']);
+  });
+
+  it('waits for the peer rather than racing it', async () => {
+    const axios = axiosServing(bundleTarball({ 'index.js': 'mine' }));
+    await startPeer({ version: '2608.31.0001', holdMs: 600, installs: true });
+
+    const start = Date.now();
+    await updateManager.downloadAndExtractClientBundle(
+      axios,
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(Date.now() - start).toBeGreaterThanOrEqual(400);
   });
 });
