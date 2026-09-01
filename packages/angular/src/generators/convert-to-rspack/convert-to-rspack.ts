@@ -26,7 +26,7 @@ import { relative, resolve } from 'path';
 import { join } from 'path/posix';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { nxVersion } from '../../utils/versions';
-import { versions } from '../utils/version-utils';
+import { supportsSsrAllowedHosts, versions } from '../utils/version-utils';
 import { createConfig } from './lib/create-config';
 import { getCustomWebpackConfig } from './lib/get-custom-webpack-config';
 import { updateTsconfig } from './lib/update-tsconfig';
@@ -459,6 +459,14 @@ export async function convertToRspack(
       createConfigOptions.appShell = true;
       targetsToRemove.push(targetName);
     }
+  }
+
+  if (createConfigOptions.ssr && supportsSsrAllowedHosts(tree)) {
+    // The engine matches the request host against this list and an unset list
+    // matches nothing, so surface it for the deployment to fill in. Serving
+    // seeds its own hosts and does not read it.
+    createConfigOptions.security ??= {};
+    createConfigOptions.security.allowedHosts ??= [];
   }
 
   const customWebpackConfigInfo = customWebpackConfigPath

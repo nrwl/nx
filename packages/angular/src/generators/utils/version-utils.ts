@@ -1,6 +1,9 @@
 import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
-import { getDeclaredPackageVersion } from '@nx/devkit/internal';
-import { coerce, major } from 'semver';
+import {
+  getDeclaredPackageVersion,
+  getInstalledPackageVersionFromTree,
+} from '@nx/devkit/internal';
+import { coerce, gte, major } from 'semver';
 import {
   backwardCompatibleVersions,
   type PackageCompatVersions,
@@ -41,6 +44,30 @@ export function getInstalledPackageVersionInfo(tree: Tree, pkgName: string) {
   const version = getDependencyVersionFromPackageJson(tree, pkgName);
 
   return version ? { major: major(coerce(version)), version } : null;
+}
+
+/**
+ * Whether the installed `@angular/ssr` accepts an allowed hosts configuration.
+ * The application engine and `CommonEngine` validate the request host against
+ * it, and an unset allowlist matches nothing.
+ */
+export function supportsSsrAllowedHosts(tree: Tree): boolean {
+  const version =
+    getInstalledPackageVersionFromTree(tree, '@angular/ssr') ??
+    getDeclaredPackageVersion(tree, '@angular/ssr');
+  if (!version) {
+    return false;
+  }
+
+  // Released in 20.3.17, 21.1.5 and 21.2.0, and never backported to 21.0
+  const majorVersion = major(version);
+  if (majorVersion === 20) {
+    return gte(version, '20.3.17');
+  }
+  if (majorVersion === 21) {
+    return gte(version, '21.1.5');
+  }
+  return majorVersion > 21;
 }
 
 export function versions(tree: Tree): PackageCompatVersions;

@@ -10,9 +10,17 @@ import { DEFAULT_BROWSER_DIR } from './constants';
 export function addServerFile(tree: Tree, options: NormalizedGeneratorOptions) {
   const project = readProjectConfiguration(tree, options.project);
   const { outputPath } = project.targets.build.options;
-  const browserDistDirectory = options.isUsingApplicationBuilder
-    ? getApplicationBuilderBrowserOutputPath(outputPath)
-    : outputPath;
+  const usesApplicationEngine =
+    options.isUsingApplicationBuilder || options.isRspack;
+  let browserDistDirectory: string;
+  if (options.isRspack) {
+    // rspack always emits the browser bundle under the default directory name
+    browserDistDirectory = DEFAULT_BROWSER_DIR;
+  } else if (options.isUsingApplicationBuilder) {
+    browserDistDirectory = getApplicationBuilderBrowserOutputPath(outputPath);
+  } else {
+    browserDistDirectory = outputPath;
+  }
 
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   const pathToFiles = join(
@@ -20,9 +28,7 @@ export function addServerFile(tree: Tree, options: NormalizedGeneratorOptions) {
     '..',
     'files',
     'v20+',
-    options.isUsingApplicationBuilder
-      ? 'application-builder'
-      : 'server-builder',
+    usesApplicationEngine ? 'application-builder' : 'server-builder',
     'server'
   );
 

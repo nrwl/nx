@@ -2,10 +2,8 @@ import { logShowProjectCommand } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   formatFiles,
-  generateFiles,
   GeneratorCallback,
   installPackagesTask,
-  joinPathFragments,
   offsetFromRoot,
   readNxJson,
   Tree,
@@ -20,7 +18,6 @@ import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies'
 import { assertNotUsingTsSolutionSetup } from '../utils/validations';
 import {
   getInstalledAngularDevkitVersion,
-  getInstalledAngularVersionInfo,
   versions,
 } from '../utils/version-utils';
 import {
@@ -110,27 +107,6 @@ export async function applicationGenerator(
       skipInstall: options.skipPackageJson,
       skipFormat: true,
     });
-
-    if (options.ssr) {
-      const { major: angularMajorVersion } =
-        getInstalledAngularVersionInfo(tree);
-      generateFiles(
-        tree,
-        joinPathFragments(__dirname, './files/rspack-ssr'),
-        options.appProjectSourceRoot,
-        {
-          pathToDistFolder: joinPathFragments(
-            offsetFromRoot(options.appProjectRoot),
-            options.outputPath,
-            'browser'
-          ),
-          zoneless: options.zoneless,
-          useDefaultImport: angularMajorVersion >= 21,
-          angularMajorVersion,
-          tmpl: '',
-        }
-      );
-    }
   }
 
   if (!options.skipPackageJson) {

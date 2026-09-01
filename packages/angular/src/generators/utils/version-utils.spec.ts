@@ -1,9 +1,10 @@
-import { updateJson, type Tree } from '@nx/devkit';
+import { updateJson, writeJson, type Tree } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   getInstalledAngularMajorVersion,
   getInstalledAngularVersion,
+  supportsSsrAllowedHosts,
 } from './version-utils';
 
 describe('angularVersionUtils', () => {
@@ -104,5 +105,47 @@ catalogs:
       expect(getInstalledAngularVersion(tree)).toBe('17.3.0');
       expect(getInstalledAngularMajorVersion(tree)).toBe(17);
     });
+  });
+});
+
+describe('supportsSsrAllowedHosts', () => {
+  test.each([
+    ['19.2.0', false],
+    ['20.3.16', false],
+    ['20.3.17', true],
+    ['20.3.25', true],
+    ['21.0.9', false],
+    ['21.1.4', false],
+    ['21.1.5', true],
+    ['21.2.0', true],
+    ['22.0.0', true],
+  ])('should return %s for "@angular/ssr" %s', (ssrVersion, expected) => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { '@angular/ssr': ssrVersion },
+    }));
+
+    expect(supportsSsrAllowedHosts(tree)).toBe(expected);
+  });
+
+  it('should use the installed version rather than the declared range', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { '@angular/ssr': '~20.3.0' },
+    }));
+    writeJson(tree, 'node_modules/@angular/ssr/package.json', {
+      name: '@angular/ssr',
+      version: '20.3.25',
+    });
+
+    expect(supportsSsrAllowedHosts(tree)).toBe(true);
+  });
+
+  it('should return false when "@angular/ssr" is not there', () => {
+    const tree = createTreeWithEmptyWorkspace();
+
+    expect(supportsSsrAllowedHosts(tree)).toBe(false);
   });
 });
