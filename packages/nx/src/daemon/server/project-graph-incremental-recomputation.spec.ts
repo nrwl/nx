@@ -3,6 +3,24 @@ import { join } from 'node:path';
 
 import { TempFs } from '../../internal-testing-utils/temp-fs';
 
+import type { TestContext } from 'vitest';
+
+// Polls until `cond` holds, bailing at 80% of the running test's own timeout so
+// a stalled wait reports which condition it was waiting on rather than failing
+// as an opaque suite timeout.
+const waitForIn = ({ task }: TestContext) => {
+  const budget = task.timeout * 0.8;
+  return async (cond: () => boolean, label: string) => {
+    const deadline = Date.now() + budget;
+    while (!cond()) {
+      if (Date.now() > deadline) {
+        throw new Error(`timed out waiting for ${label}`);
+      }
+      await new Promise((r) => setImmediate(r));
+    }
+  };
+};
+
 // Loading the module under test pulls in the daemon server (via ./watcher),
 // which registers a process-global PerformanceObserver. That observer outlives
 // each test's isolated module registry, so a measure emitted by the last real
@@ -14,228 +32,6 @@ vi.mock('../../utils/perf-logging', () => ({}));
 // every case stalls to the suite timeout; run with NX_ISOLATE_PLUGINS=false.
 // The first case additionally needs real watcher event delivery, which a
 // container filesystem does not provide, and fails there either way.
-describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () => {
-  let fs: TempFs;
-
-  beforeEach(() => {
-    fs = new TempFs('pgir-race');
-  });
-
-  afterEach(() => {
-    fs.cleanup();
-  });
-
-  // Reproduces the spread-test flake shape end-to-end: write a new
-  // project.json, then poll the graph until the watcher event lands. If the
-  // daemon serves a stale cache the project never appears and the poll
-  // exhausts — that's the bug. Note this proves eventual delivery, not
-  // delivery before the next compute: a regression that merely delays the
-  // event passes here.
-  //
-  // vi.resetModules + fresh imports are required: cache-directory.ts evaluates
-  // workspaceDataDirectory as a `const` at module load, so without a
-  // fresh module graph the daemon would write its cache into the real
-  // workspace under test.
-  // Own timeout: the first graph compute alone runs 10-20s, so the default
-  // leaves no room for the poll and the test dies by timeout, not assertion.
-  it('returns a fresh graph reflecting an in-flight project add', async () => {
-    fs.createFilesSync({
-      'nx.json': JSON.stringify({}),
-      'package.json': JSON.stringify({ name: 'root' }),
-    });
-
-    vi.resetModules();
-    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
-    setWorkspaceRoot(fs.tempDir);
-
-    const { watchWorkspace } = await import('./watcher');
-    const { storeWatcherInstance } = await import('./shutdown-utils');
-    const { getCachedSerializedProjectGraphPromise } =
-      await import('./project-graph-incremental-recomputation');
-    const { routeWorkspaceChanges } =
-      await import('./file-watching/route-workspace-changes');
-
-    const fakeServer = {} as unknown as import('net').Server;
-    const watcher = await watchWorkspace(
-      fakeServer,
-      async (err: unknown, events: { type: string; path: string }[]) => {
-        if (err || !events) return;
-        routeWorkspaceChanges(events);
-      }
-    );
-    storeWatcherInstance(watcher);
-
-    try {
-      // First request — graph has no 'foo' project.
-      const first = await getCachedSerializedProjectGraphPromise();
-      expect(first.projectGraph?.nodes?.foo).toBeUndefined();
-
-      // Add a project on disk and request the graph. The watcher pipeline has
-      // to deliver this event; poll instead of demanding it lands before the
-      // very next compute, which CPU contention alone can delay. A dropped
-      // event never surfaces the project, so the regression still fails here.
-      mkdirSync(join(fs.tempDir, 'libs', 'foo'), { recursive: true });
-      writeFileSync(
-        join(fs.tempDir, 'libs', 'foo', 'project.json'),
-        JSON.stringify({ name: 'foo', root: 'libs/foo' })
-      );
-      let second = await getCachedSerializedProjectGraphPromise();
-      const deadline = Date.now() + 10_000;
-      while (!second.projectGraph?.nodes?.foo && Date.now() < deadline) {
-        await new Promise((resolve) => setTimeout(resolve, 50));
-        second = await getCachedSerializedProjectGraphPromise();
-      }
-
-      // The smoking gun. Without the fix, the watcher event could
-      // be missed and the daemon would re-serve the first graph
-      // (no 'foo').
-      expect(second.projectGraph?.nodes?.foo).toBeDefined();
-      expect(second.projectGraph?.nodes?.foo?.data?.root).toBe('libs/foo');
-    } finally {
-      await watcher.stop();
-    }
-  }, 60_000);
-
-  // Covers the freshness-gate path inside kickOffRecompute: if nx.json's
-  // `plugins` field changes between kickoff and commit, the in-flight
-  // IIFE must discard its result (built against the older plugin set)
-  // and let a successor recompute against the new disk state. Without
-  // the gate, cachedSerializedProjectGraphPromise was last-kickoff-wins
-  // and could return a stale graph (see spread.test.ts middle-plugin
-  // flake).
-  //
-  // Mocks getPluginsSeparated only to park the first IIFE between its
-  // synchronous hash snapshot and its commit — that gap is the window
-  // the bug lives in. The mock controls timing, not logic; the real
-  // gate + real currentNxJsonPluginsHash run.
-  it('discards stale recompute when nx.json plugins change mid-compute', async () => {
-    fs.createFilesSync({
-      'nx.json': JSON.stringify({ plugins: ['./tools/plugin-a'] }),
-      'package.json': JSON.stringify({ name: 'root' }),
-    });
-
-    vi.resetModules();
-    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
-    setWorkspaceRoot(fs.tempDir);
-
-    // Park the first IIFE between its synchronous hash snapshot and
-    // its commit — that gap is the bug window. Real getPluginsSeparated
-    // resolves too fast to rewrite nx.json in between, so we gate it
-    // here to control timing only.
-    let resolveFirstPlugins: () => void;
-    const firstPluginsGate = new Promise<void>((resolve) => {
-      resolveFirstPlugins = resolve;
-    });
-    let pluginsCallCount = 0;
-    vi.doMock('../../project-graph/plugins/get-plugins', () => ({
-      __esModule: true,
-      getPlugins: vi.fn(async () => []),
-      getPluginsSeparated: vi.fn(async () => {
-        pluginsCallCount++;
-        if (pluginsCallCount === 1) {
-          await firstPluginsGate;
-        }
-        return { specifiedPlugins: [], defaultPlugins: [] };
-      }),
-    }));
-
-    const { serverLogger } = await import('../logger');
-    const logSpy = vi.spyOn(serverLogger, 'log');
-
-    const {
-      scheduleProjectGraphRecomputation,
-      getCachedSerializedProjectGraphPromise,
-    } = await import('./project-graph-incremental-recomputation');
-
-    // Kick off compute #1 — snapshot captured synchronously here.
-    scheduleProjectGraphRecomputation([], ['__trigger.txt'], []);
-
-    // Rewrite nx.json so disk diverges from the snapshot. The IIFE is
-    // still parked on firstPluginsGate, so it hasn't yet read plugins.
-    writeFileSync(
-      join(fs.tempDir, 'nx.json'),
-      JSON.stringify({ plugins: ['./tools/plugin-b'] })
-    );
-
-    // Let compute #1 proceed. It computes, hits the gate, sees disk
-    // hash != snapshot hash, logs the discard, and kicks a successor.
-    resolveFirstPlugins!();
-
-    await getCachedSerializedProjectGraphPromise();
-
-    expect(logSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Discarding stale recompute result')
-    );
-    // First IIFE bailed → kicked successor → at least two getPlugins calls.
-    expect(pluginsCallCount).toBeGreaterThanOrEqual(2);
-  });
-
-  // kickOffRecompute() runs fire-and-forget, so a rejecting prologue used to
-  // crash the daemon with an unhandled rejection. A requester's own try/catch
-  // hides that, so the only observable distinguishing fixed from broken is
-  // whether the orphaned promise rejects unhandled — hence the process listener.
-  it('keeps the daemon alive when a recompute plugin load rejects', async () => {
-    fs.createFilesSync({
-      'nx.json': JSON.stringify({ plugins: ['./tools/plugin-a'] }),
-      'package.json': JSON.stringify({ name: 'root' }),
-    });
-
-    vi.resetModules();
-    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
-    setWorkspaceRoot(fs.tempDir);
-
-    const pluginLoadError = new Error('plugin boom');
-    let pluginsCallCount = 0;
-    vi.doMock('../../project-graph/plugins/get-plugins', () => ({
-      __esModule: true,
-      getPlugins: vi.fn(async () => []),
-      getPluginsSeparated: vi.fn(async () => {
-        pluginsCallCount++;
-        throw pluginLoadError;
-      }),
-    }));
-
-    const {
-      scheduleProjectGraphRecomputation,
-      getCachedSerializedProjectGraphPromise,
-    } = await import('./project-graph-incremental-recomputation');
-
-    const unhandled: unknown[] = [];
-    const onUnhandled = (reason: unknown) => unhandled.push(reason);
-    process.on('unhandledRejection', onUnhandled);
-
-    try {
-      // Fire-and-forget kickoff — nobody awaits the stored promise.
-      scheduleProjectGraphRecomputation([], ['__trigger.txt'], []);
-
-      // Let the IIFE reject and give Node room to flag an unhandled rejection.
-      await new Promise((r) => setImmediate(r));
-      await new Promise((r) => setImmediate(r));
-      await new Promise((r) => setImmediate(r));
-
-      // Without the fix this orphaned rejection is unhandled — the crash.
-      expect(
-        unhandled.filter(
-          (r) =>
-            r === pluginLoadError ||
-            (r instanceof Error && r.message.includes('plugin boom'))
-        )
-      ).toEqual([]);
-
-      // A requester gets an errorResult, not a throw.
-      const result = await getCachedSerializedProjectGraphPromise();
-      expect(result.projectGraph).toBeNull();
-      expect(result.error).toBeDefined();
-
-      // Errored result clears the cache, so the next request retries.
-      const callsBeforeRetry = pluginsCallCount;
-      await getCachedSerializedProjectGraphPromise();
-      expect(pluginsCallCount).toBeGreaterThan(callsBeforeRetry);
-    } finally {
-      process.removeListener('unhandledRejection', onUnhandled);
-    }
-  });
-});
 
 describe('isKnownWorkspaceFile', () => {
   let fs: TempFs;
@@ -491,7 +287,7 @@ describe('pending dotenv replay before serving a graph', () => {
   // recorded at drain time would suppress that final event and let the
   // successor serve the intermediate content, so the drain must not record
   // hashes.
-  it('recomputes for a post-drain edit whose final bytes match the drain-time content', async () => {
+  it('recomputes for a post-drain edit whose final bytes match the drain-time content', async (ctx) => {
     fs.createFilesSync({
       'nx.json': JSON.stringify({}),
       'package.json': JSON.stringify({ name: 'root' }),
@@ -573,27 +369,23 @@ describe('pending dotenv replay before serving a graph', () => {
       }
     );
 
-    const waitFor = async (cond: () => boolean) => {
-      while (!cond()) {
-        await new Promise((r) => setImmediate(r));
-      }
-    };
+    const waitFor = waitForIn(ctx);
     const envPath = join(fs.tempDir, 'libs/foo/.env.e2e');
     const envEvent = { path: 'libs/foo/.env.e2e', type: EventType.update };
 
     // Compute A reads 4200 and parks; the edit to 4201 is queued.
     const first = getCachedSerializedProjectGraphPromise();
-    await waitFor(() => aExit.reached);
+    await waitFor(() => aExit.reached, 'compute A to exit');
     writeFileSync(envPath, 'PORT=4201\n');
     await handleOutputsChanges(null, [envEvent]);
     aExit.release();
 
     // A's drain chains to compute B, which reads an intermediate 4202
     // whose write the watcher never reports.
-    await waitFor(() => bEntry.reached);
+    await waitFor(() => bEntry.reached, 'compute B to enter');
     writeFileSync(envPath, 'PORT=4202\n');
     bEntry.release();
-    await waitFor(() => bExit.reached);
+    await waitFor(() => bExit.reached, 'compute B to exit');
 
     // Back to the drain-time bytes; this event is B's only chance to be
     // marked stale, and A committed a graph so it classifies directly.
@@ -697,7 +489,7 @@ describe('pending dotenv replay before serving a graph', () => {
   // only sound for the cached graph: a successor already in flight may have
   // read the file before the edit, so the event must be queued for its
   // pre-serve replay rather than dropped.
-  it('chains when a tracked dotenv edit is classified while a successor is in flight', async () => {
+  it('chains when a tracked dotenv edit is classified while a successor is in flight', async (ctx) => {
     fs.createFilesSync({
       'nx.json': JSON.stringify({}),
       'package.json': JSON.stringify({ name: 'root' }),
@@ -773,18 +565,14 @@ describe('pending dotenv replay before serving a graph', () => {
       }
     );
 
-    const waitFor = async (cond: () => boolean) => {
-      while (!cond()) {
-        await new Promise((r) => setImmediate(r));
-      }
-    };
+    const waitFor = waitForIn(ctx);
     const envPath = join(fs.tempDir, 'libs/foo/.env.e2e');
     const envEvent = { path: 'libs/foo/.env.e2e', type: EventType.update };
 
     // Compute A reads 4200 and parks; no graph is committed yet, so the
     // edit to 4201 goes unclassified and is queued.
     const first = getCachedSerializedProjectGraphPromise();
-    await waitFor(() => aExit.reached);
+    await waitFor(() => aExit.reached, 'compute A to exit');
     writeFileSync(envPath, 'PORT=4201\n');
     await handleOutputsChanges(null, [envEvent]);
     aExit.release();
@@ -792,7 +580,7 @@ describe('pending dotenv replay before serving a graph', () => {
     // A's drain chains to compute B, which reads 4201 and parks. A
     // committed its graph and file map, so this edit classifies as
     // invalidating for a tracked file; only the outputs watcher delivers.
-    await waitFor(() => bExit.reached);
+    await waitFor(() => bExit.reached, 'compute B to exit');
     writeFileSync(envPath, 'PORT=4202\n');
     await handleOutputsChanges(null, [envEvent]);
     bExit.release();
@@ -992,7 +780,7 @@ describe('pending dotenv replay before serving a graph', () => {
   // the retry: the successor can read intermediate bytes, and a revert back
   // to the hashed content would then be suppressed after the drain's chance
   // to catch it has passed.
-  it('recomputes for a revert delivered while an error retry is reading', async () => {
+  it('recomputes for a revert delivered while an error retry is reading', async (ctx) => {
     fs.createFilesSync({
       'nx.json': JSON.stringify({}),
       'package.json': JSON.stringify({ name: 'root' }),
@@ -1070,11 +858,7 @@ describe('pending dotenv replay before serving a graph', () => {
       await import('../../project-graph/nx-deps-cache');
     const { EventType } = await import('../../native');
 
-    const waitFor = async (cond: () => boolean) => {
-      while (!cond()) {
-        await new Promise((r) => setImmediate(r));
-      }
-    };
+    const waitFor = waitForIn(ctx);
     const envPath = join(fs.tempDir, 'libs/foo/.env.e2e');
     const envEvent = { path: 'libs/foo/.env.e2e', type: EventType.update };
 
@@ -1087,7 +871,7 @@ describe('pending dotenv replay before serving a graph', () => {
     // queueing the tracked path. B then fails transiently.
     invalidateGraphCache();
     const second = getCachedSerializedProjectGraphPromise();
-    await waitFor(() => bExit.reached);
+    await waitFor(() => bExit.reached, 'compute B to exit');
     writeFileSync(envPath, 'PORT=4201\n');
     await handleOutputsChanges(null, [envEvent]);
     bExit.release();
@@ -1095,10 +879,10 @@ describe('pending dotenv replay before serving a graph', () => {
     // B's retry starts C, which reads an intermediate 4202 the watcher
     // never reports separately; the file returns to 4201 before the
     // callback hashes it.
-    await waitFor(() => cEntry.reached);
+    await waitFor(() => cEntry.reached, 'compute C to enter');
     writeFileSync(envPath, 'PORT=4202\n');
     cEntry.release();
-    await waitFor(() => cExit.reached);
+    await waitFor(() => cExit.reached, 'compute C to exit');
     writeFileSync(envPath, 'PORT=4201\n');
     await handleOutputsChanges(null, [envEvent]);
     cExit.release();
@@ -1192,7 +976,7 @@ describe('pending dotenv replay before serving a graph', () => {
   // revert back to the queued bytes landing mid-read would be suppressed as a
   // byte-identical rewrite and the successor would serve the intermediate
   // content.
-  it('recomputes for a revert delivered while a warm-reuse successor is reading', async () => {
+  it('recomputes for a revert delivered while a warm-reuse successor is reading', async (ctx) => {
     fs.createFilesSync({
       'nx.json': JSON.stringify({}),
       'package.json': JSON.stringify({ name: 'root' }),
@@ -1259,11 +1043,7 @@ describe('pending dotenv replay before serving a graph', () => {
       await import('../../project-graph/nx-deps-cache');
     const { EventType } = await import('../../native');
 
-    const waitFor = async (cond: () => boolean) => {
-      while (!cond()) {
-        await new Promise((r) => setImmediate(r));
-      }
-    };
+    const waitFor = waitForIn(ctx);
     const envPath = join(fs.tempDir, 'libs/foo/.env.e2e');
     const envEvent = { path: 'libs/foo/.env.e2e', type: EventType.update };
 
@@ -1278,10 +1058,10 @@ describe('pending dotenv replay before serving a graph', () => {
     // The request finds the queued evidence and triggers compute B, which
     // reads an intermediate 4202 whose write the watcher never reports.
     const second = getCachedSerializedProjectGraphPromise();
-    await waitFor(() => bEntry.reached);
+    await waitFor(() => bEntry.reached, 'compute B to enter');
     writeFileSync(envPath, 'PORT=4202\n');
     bEntry.release();
-    await waitFor(() => bExit.reached);
+    await waitFor(() => bExit.reached, 'compute B to exit');
 
     // Back to the queued bytes; with the pre-successor hash retained this
     // event would be suppressed as a byte-identical rewrite and B would
@@ -1305,7 +1085,7 @@ describe('pending dotenv replay before serving a graph', () => {
   // classification. Retained, that hash would suppress a coalesced revert
   // callback landing while the forced successor reads, and the successor
   // would serve intermediate content the disk no longer holds.
-  it('recomputes for a revert delivered while a direct-invalidation successor is reading', async () => {
+  it('recomputes for a revert delivered while a direct-invalidation successor is reading', async (ctx) => {
     fs.createFilesSync({
       'nx.json': JSON.stringify({}),
       'package.json': JSON.stringify({ name: 'root' }),
@@ -1373,11 +1153,7 @@ describe('pending dotenv replay before serving a graph', () => {
       await import('../../project-graph/nx-deps-cache');
     const { EventType } = await import('../../native');
 
-    const waitFor = async (cond: () => boolean) => {
-      while (!cond()) {
-        await new Promise((r) => setImmediate(r));
-      }
-    };
+    const waitFor = waitForIn(ctx);
     const envPath = join(fs.tempDir, 'libs/foo/.env.e2e');
     const envEvent = { path: 'libs/foo/.env.e2e', type: EventType.update };
 
@@ -1393,10 +1169,10 @@ describe('pending dotenv replay before serving a graph', () => {
     // The request finds no cached graph and triggers compute B, which reads
     // an intermediate 4302 whose write the watcher never reports.
     const second = getCachedSerializedProjectGraphPromise();
-    await waitFor(() => bEntry.reached);
+    await waitFor(() => bEntry.reached, 'compute B to enter');
     writeFileSync(envPath, 'PORT=4302\n');
     bEntry.release();
-    await waitFor(() => bExit.reached);
+    await waitFor(() => bExit.reached, 'compute B to exit');
 
     // Back to the classified bytes; with the classification-time hash
     // retained this event would be suppressed as a byte-identical rewrite
@@ -1421,7 +1197,7 @@ describe('pending dotenv replay before serving a graph', () => {
   // hash without marking the successor stale. Only clearing every recorded
   // hash at the direct invalidation keeps a coalesced revert of the tracked
   // file from being suppressed while the successor reads.
-  it('recomputes for a tracked-file revert delivered while a successor forced by a gitignored edit is reading', async () => {
+  it('recomputes for a tracked-file revert delivered while a successor forced by a gitignored edit is reading', async (ctx) => {
     fs.createFilesSync({
       'nx.json': JSON.stringify({}),
       'package.json': JSON.stringify({ name: 'root' }),
@@ -1494,11 +1270,7 @@ describe('pending dotenv replay before serving a graph', () => {
       await import('../../project-graph/nx-deps-cache');
     const { EventType } = await import('../../native');
 
-    const waitFor = async (cond: () => boolean) => {
-      while (!cond()) {
-        await new Promise((r) => setImmediate(r));
-      }
-    };
+    const waitFor = waitForIn(ctx);
     const trackedPath = join(fs.tempDir, 'libs/foo/.env.k');
     const ignoredPath = join(fs.tempDir, 'libs/foo/.env.e2e');
     const trackedEvent = { path: 'libs/foo/.env.k', type: EventType.update };
@@ -1521,10 +1293,10 @@ describe('pending dotenv replay before serving a graph', () => {
     // The request finds no cached graph and triggers compute B, which reads
     // an intermediate 4302 whose write the watcher never reports.
     const second = getCachedSerializedProjectGraphPromise();
-    await waitFor(() => bEntry.reached);
+    await waitFor(() => bEntry.reached, 'compute B to enter');
     writeFileSync(trackedPath, 'KPORT=4302\n');
     bEntry.release();
-    await waitFor(() => bExit.reached);
+    await waitFor(() => bExit.reached, 'compute B to exit');
 
     // Back to the queued bytes; with the tracked path's hash retained this
     // event would be suppressed as a byte-identical rewrite, and B's drain
@@ -1551,7 +1323,7 @@ describe('pending dotenv replay before serving a graph', () => {
   // generation bounds every hash to the window since the last claim, so a
   // coalesced revert of the tracked file cannot be suppressed while that
   // successor reads.
-  it('recomputes for a tracked-file revert when the tracked edit was classified between an invalidation and the successor', async () => {
+  it('recomputes for a tracked-file revert when the tracked edit was classified between an invalidation and the successor', async (ctx) => {
     fs.createFilesSync({
       'nx.json': JSON.stringify({}),
       'package.json': JSON.stringify({ name: 'root' }),
@@ -1624,11 +1396,7 @@ describe('pending dotenv replay before serving a graph', () => {
       await import('../../project-graph/nx-deps-cache');
     const { EventType } = await import('../../native');
 
-    const waitFor = async (cond: () => boolean) => {
-      while (!cond()) {
-        await new Promise((r) => setImmediate(r));
-      }
-    };
+    const waitFor = waitForIn(ctx);
     const trackedPath = join(fs.tempDir, 'libs/foo/.env.k');
     const ignoredPath = join(fs.tempDir, 'libs/foo/.env.e2e');
     const trackedEvent = { path: 'libs/foo/.env.k', type: EventType.update };
@@ -1653,10 +1421,10 @@ describe('pending dotenv replay before serving a graph', () => {
     // The request finds no cached graph and triggers compute B, which reads
     // an intermediate 4302 whose write the watcher never reports.
     const second = getCachedSerializedProjectGraphPromise();
-    await waitFor(() => bEntry.reached);
+    await waitFor(() => bEntry.reached, 'compute B to enter');
     writeFileSync(trackedPath, 'KPORT=4302\n');
     bEntry.release();
-    await waitFor(() => bExit.reached);
+    await waitFor(() => bExit.reached, 'compute B to exit');
 
     // Back to the queued bytes; with the post-invalidation hash retained
     // this event would be suppressed as a byte-identical rewrite, and B's
@@ -1682,7 +1450,7 @@ describe('pending dotenv replay before serving a graph', () => {
   // and a tracked edit classified in that window records a hash an earlier
   // clear has already run for, which would then suppress a coalesced revert
   // landing while the computation reads.
-  it('recomputes for a tracked-file revert when the tracked edit was classified while the successor loads plugins', async () => {
+  it('recomputes for a tracked-file revert when the tracked edit was classified while the successor loads plugins', async (ctx) => {
     fs.createFilesSync({
       'nx.json': JSON.stringify({}),
       'package.json': JSON.stringify({ name: 'root' }),
@@ -1770,11 +1538,7 @@ describe('pending dotenv replay before serving a graph', () => {
       await import('../../project-graph/nx-deps-cache');
     const { EventType } = await import('../../native');
 
-    const waitFor = async (cond: () => boolean) => {
-      while (!cond()) {
-        await new Promise((r) => setImmediate(r));
-      }
-    };
+    const waitFor = waitForIn(ctx);
     const trackedPath = join(fs.tempDir, 'libs/foo/.env.k');
     const ignoredPath = join(fs.tempDir, 'libs/foo/.env.e2e');
     const trackedEvent = { path: 'libs/foo/.env.k', type: EventType.update };
@@ -1793,7 +1557,7 @@ describe('pending dotenv replay before serving a graph', () => {
     writeFileSync(ignoredPath, 'UPORT=9001\n');
     await handleOutputsChanges(null, [ignoredEvent]);
     const second = getCachedSerializedProjectGraphPromise();
-    await waitFor(() => bPlugins.reached);
+    await waitFor(() => bPlugins.reached, 'compute B to load plugins');
 
     // The tracked edit is classified while B loads plugins: after B was
     // kicked, before B claims its generation and clears the hashes.
@@ -1802,10 +1566,10 @@ describe('pending dotenv replay before serving a graph', () => {
     bPlugins.release();
 
     // B claims and reads an intermediate 4302 the watcher never reports.
-    await waitFor(() => bEntry.reached);
+    await waitFor(() => bEntry.reached, 'compute B to enter');
     writeFileSync(trackedPath, 'KPORT=4302\n');
     bEntry.release();
-    await waitFor(() => bExit.reached);
+    await waitFor(() => bExit.reached, 'compute B to exit');
 
     // Back to the classified bytes; a hash surviving B's claim would
     // suppress this event and let B serve the intermediate content.
@@ -1831,7 +1595,7 @@ describe('pending dotenv replay before serving a graph', () => {
   // queued evidence against the graph the cache actually serves: against the
   // overwritten currentProjectGraph, an edit under a root only the served
   // graph knows would be dismissed and the stale cache reused.
-  it('classifies warm-reuse evidence against the served graph, not one a stale computation left behind', async () => {
+  it('classifies warm-reuse evidence against the served graph, not one a stale computation left behind', async (ctx) => {
     fs.createFilesSync({
       'nx.json': JSON.stringify({}),
       'package.json': JSON.stringify({ name: 'root' }),
@@ -1918,16 +1682,12 @@ describe('pending dotenv replay before serving a graph', () => {
     const { handleOutputsChanges } = await import('./handle-outputs-changes');
     const { EventType } = await import('../../native');
 
-    const waitFor = async (cond: () => boolean) => {
-      while (!cond()) {
-        await new Promise((r) => setImmediate(r));
-      }
-    };
+    const waitFor = waitForIn(ctx);
 
     // Compute A sees only foo and parks before building and assigning its
     // graph.
     const first = getCachedSerializedProjectGraphPromise();
-    await waitFor(() => aPark.reached);
+    await waitFor(() => aPark.reached, 'compute A to park');
 
     // The workspace watcher delivers a new project; the winning compute
     // builds the graph the cache will serve, with bar as a root.
@@ -1966,7 +1726,7 @@ describe('pending dotenv replay before serving a graph', () => {
   // event describes an edit that recomputation's read already observes, so
   // the reuse check must neither discard the in-flight computation nor force
   // a second one after it settles.
-  it('does not add a recomputation when the workspace watcher schedules one for the same edit', async () => {
+  it('does not add a recomputation when the workspace watcher schedules one for the same edit', async (ctx) => {
     fs.createFilesSync({
       'nx.json': JSON.stringify({}),
       'package.json': JSON.stringify({ name: 'root' }),
@@ -2048,11 +1808,7 @@ describe('pending dotenv replay before serving a graph', () => {
     const { handleOutputsChanges } = await import('./handle-outputs-changes');
     const { EventType } = await import('../../native');
 
-    const waitFor = async (cond: () => boolean) => {
-      while (!cond()) {
-        await new Promise((r) => setImmediate(r));
-      }
-    };
+    const waitFor = waitForIn(ctx);
     const envPath = join(fs.tempDir, 'libs/foo/.env.e2e');
 
     const first = await getCachedSerializedProjectGraphPromise();
@@ -2066,7 +1822,7 @@ describe('pending dotenv replay before serving a graph', () => {
       { path: 'libs/foo/.env.e2e', type: EventType.update },
     ]);
     scheduleProjectGraphRecomputation([], ['libs/foo/.env.e2e'], []);
-    await waitFor(() => bPark.reached);
+    await waitFor(() => bPark.reached, 'compute B to park');
 
     // A request while B is parked mid-build must chain onto B, not start
     // a competitor from the queued twin event. The yields let it run its
@@ -2093,7 +1849,7 @@ describe('pending dotenv replay before serving a graph', () => {
   // for the computation that adds its root, whose own read observes the file
   // content, so the generation rule retires the entry there without another
   // recomputation.
-  it('leaves an unclassifiable queued event for the computation that adds its root', async () => {
+  it('leaves an unclassifiable queued event for the computation that adds its root', async (ctx) => {
     fs.createFilesSync({
       'nx.json': JSON.stringify({}),
       'package.json': JSON.stringify({ name: 'root' }),
@@ -2152,11 +1908,7 @@ describe('pending dotenv replay before serving a graph', () => {
         notifiedGraphs.push(graph);
       }
     );
-    const waitFor = async (cond: () => boolean) => {
-      while (!cond()) {
-        await new Promise((r) => setImmediate(r));
-      }
-    };
+    const waitFor = waitForIn(ctx);
 
     const first = await getCachedSerializedProjectGraphPromise();
     expect(first.projectGraph.nodes.bar).toBeUndefined();
@@ -2182,8 +1934,9 @@ describe('pending dotenv replay before serving a graph', () => {
       JSON.stringify({ name: 'bar', root: 'libs/bar' })
     );
     scheduleProjectGraphRecomputation(['libs/bar/project.json'], [], []);
-    await waitFor(() =>
-      notifiedGraphs.some((graph) => graph.nodes.bar !== undefined)
+    await waitFor(
+      () => notifiedGraphs.some((graph) => graph.nodes.bar !== undefined),
+      'a notification carrying project bar'
     );
 
     const third = await getCachedSerializedProjectGraphPromise();

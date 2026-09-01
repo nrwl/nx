@@ -576,14 +576,10 @@ async function startPluginWorker(name: string) {
     ...process.env,
     ...(isWorkerTypescript
       ? {
-          TS_NODE_PROJECT: path.join(
+          SWC_NODE_PROJECT: path.join(
             __dirname,
             '../../../../tsconfig.lib.json'
           ),
-          TS_NODE_COMPILER_OPTIONS: JSON.stringify({
-            moduleResolution: 'node',
-            module: 'commonjs',
-          }),
         }
       : {}),
   };
@@ -603,7 +599,9 @@ async function startPluginWorker(name: string) {
       // Spawn the worker with the same resolve conditions Nx uses for plugin
       // entries so the plugin's transitive workspace imports resolve to source.
       ...getPluginResolveConditionNodeArgs(),
-      ...(isWorkerTypescript ? ['--require', 'ts-node/register'] : []),
+      // swc transpiles without type-checking: ~7x faster to boot, and this is
+      // paid once per worker spawn.
+      ...(isWorkerTypescript ? ['--require', '@swc-node/register'] : []),
       workerPath,
       ipcPath,
       name,
