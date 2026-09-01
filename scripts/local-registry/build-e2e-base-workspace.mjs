@@ -61,7 +61,9 @@ for (const pm of PACKAGE_MANAGERS) {
     `--package-manager=${pm}`,
     `--no-interactive`,
     `--linter=eslint`,
-    `--formatter=prettier`,
+    // Must track runCreateWorkspace()'s defaults, or seeded workspaces silently
+    // diverge from the ones the fallback path builds.
+    `--formatter=oxfmt`,
     `--nxCloud=skip`,
   ].join(' ');
 
