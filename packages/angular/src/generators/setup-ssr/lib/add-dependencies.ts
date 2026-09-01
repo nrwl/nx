@@ -7,6 +7,7 @@ import { nxVersion } from '../../../utils/versions';
 import {
   getInstalledAngularDevkitVersion,
   versions,
+  withSsrAllowedHostsSupport,
 } from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
 
@@ -29,7 +30,10 @@ export function addDependencies(
 
   const angularDevkitVersion =
     getInstalledAngularDevkitVersion(tree) ?? pkgVersions.angularDevkitVersion;
-  dependencies['@angular/ssr'] = angularDevkitVersion;
+  // The setup below configures the allowed hosts when the version allows it,
+  // so ask for one that does rather than for whichever the range resolves to
+  dependencies['@angular/ssr'] =
+    withSsrAllowedHostsSupport(angularDevkitVersion);
 
   if (options.isUsingApplicationBuilder) {
     dependencies['@angular-devkit/build-angular'] = angularDevkitVersion;

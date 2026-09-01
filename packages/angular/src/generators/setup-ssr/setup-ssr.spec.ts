@@ -240,6 +240,30 @@ describe('setupSSR', () => {
       ).toBeUndefined();
     });
 
+    it('should raise the declared "@angular/ssr" range so the allowed hosts can be configured', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { '@angular/core': '~20.3.0' },
+        devDependencies: { '@angular-devkit/build-angular': '~20.3.0' },
+      }));
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
+
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+      // the declared range is raised so every version it allows accepts the
+      // option, however the package manager resolves it
+      expect(readJson(tree, 'package.json').dependencies['@angular/ssr']).toBe(
+        '~20.3.17'
+      );
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.options.security
+      ).toStrictEqual({ allowedHosts: [] });
+    });
+
     it('should support object output option using a custom "outputPath.browser" and "outputPath.server" values', async () => {
       const tree = createTreeWithEmptyWorkspace();
       await generateTestApplication(tree, {
