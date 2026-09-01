@@ -288,12 +288,21 @@ function isolationFor(backend) {
 // ------------------------------------------------------------- shared host
 
 /**
- * The shared host's name is derived from the image, so a rebuilt-but-identical
- * image reuses the warm host and a genuinely different image gets its own.
+ * The shared host's name is derived from the image's RESOLVED ID, not its tag.
+ * `build-image.sh` rebuilds `nx-review-sandbox:latest` in place, so a
+ * tag-derived name would hand every later review the host still running the
+ * old toolchain. Keying on the id starts a fresh host instead, and leaves the
+ * superseded one for `prune --host`.
+ *
+ * Falls back to the tag when the id will not resolve — the image is absent,
+ * and the `docker run` below is about to fail on its own terms.
  */
-function hostNameFor(image) {
+function hostNameFor(backend, image) {
+  const imageId = (
+    run(backend.bin, ['image', 'inspect', '-f', '{{.Id}}', image]).stdout || ''
+  ).trim();
   let h = 0;
-  for (const c of image) h = (Math.imul(h, 31) + c.charCodeAt(0)) | 0;
+  for (const c of imageId || image) h = (Math.imul(h, 31) + c.charCodeAt(0)) | 0;
   return `nx-sandbox-host-${(h >>> 0).toString(36)}`;
 }
 
@@ -307,7 +316,7 @@ function hostNameFor(image) {
  * be the same check-then-act race the registry lock exists to remove.
  */
 function ensureHost(backend, iso, image) {
-  const name = hostNameFor(image);
+  const name = hostNameFor(backend, image);
 
   const state = () =>
     (
@@ -398,10 +407,16 @@ function withHostRepoLock(sb, script) {
     `set -e
 locked=
 for i in $(seq 1 600); do
-  if mkdir ${HOST_REPO}.lock 2>/dev/null; then locked=1; break; fi
-  # Break a lock left by a crashed holder rather than wedging every later start.
-  if [ -n "$(find ${HOST_REPO}.lock -maxdepth 0 -mmin +2 2>/dev/null)" ]; then
-    rmdir ${HOST_REPO}.lock 2>/dev/null || true
+  if mkdir ${HOST_REPO}.lock 2>/dev/null; then
+    echo $$ > ${HOST_REPO}.lock/owner
+    locked=1
+    break
+  fi
+  # Break a lock a crashed holder left behind. Must stay well above the 120s
+  # this loop waits: equal to it, a waiter reaches the staleness test before
+  # its own timeout and evicts a holder that is merely on a slow fetch.
+  if [ -n "$(find ${HOST_REPO}.lock -maxdepth 0 -mmin +10 2>/dev/null)" ]; then
+    rm -rf ${HOST_REPO}.lock 2>/dev/null || true
   fi
   sleep 0.2
 done
@@ -411,7 +426,9 @@ if [ -z "$locked" ]; then
   echo "timed out waiting for ${HOST_REPO}.lock" >&2
   exit 1
 fi
-trap 'rmdir ${HOST_REPO}.lock 2>/dev/null || true' EXIT
+# Release only a lock we still own: an evicted holder that removed the
+# directory unconditionally would take its successor's lock with it.
+trap 'if [ "$(cat ${HOST_REPO}.lock/owner 2>/dev/null)" = "$$" ]; then rm -rf ${HOST_REPO}.lock 2>/dev/null || true; fi' EXIT
 ${script}`,
     { dir: WORK_ROOT }
   );
