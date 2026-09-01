@@ -36,7 +36,7 @@ fn io_snapshot_marker(digest: &str) -> HashInstruction {
 /// time, so removing a negation re-admits the observed reads it excluded.
 type Negations = Vec<(String, String)>;
 
-const ROOT_TSCONFIG_FILES: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
+pub(crate) const ROOT_TSCONFIG_FILES: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
 /// Hashed by the always-on workspace fileset every plan carries.
 const ALWAYS_ON_FILES: [&str; 3] = ["nx.json", ".gitignore", ".nxignore"];
 const LOCKFILES: [&str; 6] = [

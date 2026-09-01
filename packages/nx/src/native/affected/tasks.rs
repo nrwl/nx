@@ -19,12 +19,9 @@ use std::sync::Arc;
 use crate::native::affected::project_paths::{ProjectRoots, normalize_path};
 use crate::native::glob::build_glob_set;
 use crate::native::project_graph::types::ProjectGraph;
+use crate::native::tasks::hash_planner::ROOT_TSCONFIG_FILES;
 use crate::native::tasks::hashers::globs_from_workspace_globs;
 use crate::native::tasks::types::{HashInstruction, HashPlans};
-
-/// The root tsconfig names `TsConfiguration` hashes, in the hasher's own
-/// preference order (`hash_tsconfig`).
-const ROOT_TSCONFIGS: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
 
 /// Task ids with at least one changed file among their plan's file inputs.
 ///
@@ -141,9 +138,9 @@ fn instruction_matches(
                 None,
             ),
         },
-        HashInstruction::TsConfiguration(_) => {
-            Ok(files.iter().any(|f| ROOT_TSCONFIGS.contains(&f.as_str())))
-        }
+        HashInstruction::TsConfiguration(_) => Ok(files
+            .iter()
+            .any(|f| ROOT_TSCONFIG_FILES.contains(&f.as_str()))),
         // Hashes the project's config object, which resolves to no files, so it
         // is matched on the config having changed rather than on a fileset. The
         // planner splices one of these per dependency, which is what carries a
@@ -237,7 +234,7 @@ mod tests {
     /// deleted path is in no file index, so a resolved list could never contain
     /// it and every rename would be missed.
     #[test]
-    fn a_deleted_file_still_matches() {
+    fn matches_a_path_with_no_file_behind_it() {
         let g = graph(&[("a", "libs/a")]);
         assert_eq!(
             affected_for(
@@ -288,7 +285,7 @@ mod tests {
     #[test]
     fn tsconfiguration_matches_either_root_tsconfig() {
         let g = graph(&[("a", "libs/a")]);
-        for file in ROOT_TSCONFIGS {
+        for file in ROOT_TSCONFIG_FILES {
             assert_eq!(
                 affected_for(
                     &g,
