@@ -32,9 +32,13 @@ export async function filterAffected(
 }
 
 /**
- * The same filter, plus why each project is in it. Collecting the reasons costs
- * one map insert per project, so `filterAffected` goes through here rather than
- * the two paths drifting.
+ * The same filter, plus why each project is in it. `filterAffected` goes through
+ * here so the two do not drift.
+ *
+ * Collecting costs one key construction and set lookup per traversed dependency
+ * edge, not per project, and it is not gated on `--explain`, so every
+ * `filterAffected` caller pays it. That includes `nx release`, which calls it
+ * once per commit.
  */
 export async function filterAffectedWithReasons(
   graph: ProjectGraph,
