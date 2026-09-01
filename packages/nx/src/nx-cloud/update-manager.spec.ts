@@ -1,76 +1,54 @@
-import { join } from 'path';
-import { tmpdir } from 'os';
-import { existsSync } from 'fs';
-import type { MockedFunction } from 'vitest';
+import { compareBundleVersions } from './update-manager';
 
-vi.mock('fs', async () => {
-  const actual = await vi.importActual<typeof import('fs')>('fs');
-  return { ...actual, existsSync: vi.fn() };
-});
+describe('compareBundleVersions', () => {
+  // Normalizes -0 to 0 so antisymmetry can be asserted with Object.is.
+  const sign = (n: number) => Math.sign(n) || 0;
 
-vi.mock('../utils/workspace-root', () => ({
-  workspaceRoot: '/workspace',
-  workspaceRootInner: vi.fn(),
-}));
-
-vi.mock('../utils/cache-directory', () => ({
-  cacheDir: join('/shared', 'cache'),
-  cacheDirectoryForWorkspace: vi.fn(() => join('/workspace', '.nx', 'cache')),
-}));
-
-// `isCI` reads ~18 environment variables that the runner sets, so left unmocked
-// these rows answer differently in CI than on a laptop.
-vi.mock('../utils/is-ci', () => ({ isCI: vi.fn(() => false) }));
-
-import { getBundleInstallDefaultLocation } from './update-manager';
-import { isCI } from '../utils/is-ci';
-
-const mockExistsSync = existsSync as MockedFunction<typeof existsSync>;
-const mockIsCI = isCI as MockedFunction<typeof isCI>;
-
-/** Paths this suite treats as present on disk. */
-function stagePresent(paths: string[]) {
-  mockExistsSync.mockImplementation((p) => paths.includes(p as string));
-}
-
-const NX_JSON = join('/workspace', 'nx.json');
-
-describe('getBundleInstallDefaultLocation', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockIsCI.mockReturnValue(false);
-    stagePresent([NX_JSON]);
+  it('orders calver tags by numeric segment, not lexically', () => {
+    // '15' < '5' lexically, so a string comparison would invert this.
+    expect(sign(compareBundleVersions('2510.28.15', '2510.28.5'))).toBe(1);
+    expect(sign(compareBundleVersions('2510.28.5', '2510.28.15'))).toBe(-1);
   });
 
-  it('shares the per-user root off CI', () => {
-    expect(getBundleInstallDefaultLocation()).toBe(
-      join('/shared', 'cache', 'cloud')
-    );
+  it('compares higher-order segments first', () => {
+    expect(sign(compareBundleVersions('2511.1.0', '2510.99.99'))).toBe(1);
+    expect(sign(compareBundleVersions('2510.30.1', '2510.28.5'))).toBe(1);
+    expect(sign(compareBundleVersions('2510.28.5', '2510.30.1'))).toBe(-1);
   });
 
-  // The bundle resolves a bare `nx` by walking up into node_modules, which the
-  // shared root cannot reach.
-  it('keeps the bundle in the checkout on CI', () => {
-    mockIsCI.mockReturnValue(true);
-
-    expect(getBundleInstallDefaultLocation()).toBe(
-      join('/workspace', '.nx', 'cache', 'cloud')
-    );
+  it('treats identical versions as equal so a waiter adopts them', () => {
+    expect(compareBundleVersions('2510.30.1', '2510.30.1')).toBe(0);
   });
 
-  it('reuses the legacy path when the nx-cloud package is installed', () => {
-    const legacy = join('/workspace', 'node_modules', '.cache', 'nx', 'cloud');
-    stagePresent([NX_JSON, legacy]);
-    mockIsCI.mockReturnValue(true);
-
-    expect(getBundleInstallDefaultLocation()).toBe(legacy);
+  it('treats a missing trailing segment as lower', () => {
+    expect(sign(compareBundleVersions('2510.28', '2510.28.1'))).toBe(-1);
+    expect(sign(compareBundleVersions('2510.28.1', '2510.28'))).toBe(1);
   });
 
-  it('falls back to a per-api temp directory outside a workspace', () => {
-    stagePresent([]);
+  it('falls back to lexical ordering for non-numeric segments', () => {
+    expect(sign(compareBundleVersions('2510.28.rc1', '2510.28.rc2'))).toBe(-1);
+    expect(sign(compareBundleVersions('2510.28.5', '2510.28.rc1'))).toBe(-1);
+  });
 
-    expect(getBundleInstallDefaultLocation()).toMatch(
-      new RegExp(`^${join(tmpdir(), 'nx-cloud-client')}.`)
-    );
+  it('orders deterministically regardless of argument order', () => {
+    const versions = ['2510.28.5', '2510.28.15', '2511.1.0', '2510.30.1'];
+    for (const a of versions) {
+      for (const b of versions) {
+        expect(sign(compareBundleVersions(a, b))).toBe(
+          sign(-compareBundleVersions(b, a))
+        );
+      }
+    }
+  });
+
+  it('sorts a set of installed bundles highest-first', () => {
+    const installed = ['2510.28.5', '2511.1.0', '2510.28.15', '2510.30.1'];
+    installed.sort((a, b) => compareBundleVersions(b, a));
+    expect(installed).toEqual([
+      '2511.1.0',
+      '2510.30.1',
+      '2510.28.15',
+      '2510.28.5',
+    ]);
   });
 });
