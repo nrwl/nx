@@ -1,6 +1,7 @@
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
+  joinPathFragments,
   NxJsonConfiguration,
   readJson,
   readProjectConfiguration,
@@ -494,6 +495,29 @@ describe('setupSSR', () => {
       expect(
         readProjectConfiguration(tree, 'app1').targets.build.options.outputPath
       ).toBe('dist/app1/browser');
+    });
+
+    it('should reference the server tsconfig with a path relative to the project tsconfig', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await generateTestApplication(tree, {
+        directory: 'apps/app1',
+        standalone: false,
+        bundler: 'webpack',
+        skipFormat: true,
+      });
+
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+      const { references } = readJson(tree, 'apps/app1/tsconfig.json');
+      const serverReference = references.find((reference) =>
+        reference.path.endsWith('tsconfig.server.json')
+      );
+      expect(serverReference).toStrictEqual({
+        path: './tsconfig.server.json',
+      });
+      expect(
+        tree.exists(joinPathFragments('apps/app1', serverReference.path))
+      ).toBe(true);
     });
   });
 

@@ -75,9 +75,8 @@ export function generateTsConfigServerJsonForBrowserBuilder(
   );
   updateJson(tree, joinPathFragments(project.root, 'tsconfig.json'), (json) => {
     json.references ??= [];
-    json.references.push({
-      path: tsconfigServerPath,
-    });
+    // TypeScript resolves a reference relative to the file declaring it
+    json.references.push({ path: './tsconfig.server.json' });
     return json;
   });
 
