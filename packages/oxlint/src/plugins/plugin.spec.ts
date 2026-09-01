@@ -235,7 +235,7 @@ describe('@nx/oxlint plugin', () => {
     const results = await invokeCreateNodesOnMatchingFiles(context);
 
     expect(results.projects['libs/a'].targets.lint.command).toBe(
-      'oxlint --ignore-pattern /nested .'
+      'oxlint . --ignore-pattern /nested'
     );
     // The nested project still lints its own files, through its own target.
     expect(results.projects['libs/a/nested'].targets.lint.command).toBe(
@@ -258,7 +258,7 @@ describe('@nx/oxlint plugin', () => {
     const results = await invokeCreateNodesOnMatchingFiles(context);
 
     expect(results.projects['libs/a'].targets.lint.command).toBe(
-      'oxlint --ignore-pattern /nested .'
+      'oxlint . --ignore-pattern /nested'
     );
   });
 
@@ -276,7 +276,7 @@ describe('@nx/oxlint plugin', () => {
     const results = await invokeCreateNodesOnMatchingFiles(context);
 
     expect(results.projects['.'].targets.lint.command).toBe(
-      'oxlint --ignore-pattern /src/nested ./src'
+      'oxlint ./src --ignore-pattern /src/nested'
     );
   });
 
@@ -296,10 +296,10 @@ describe('@nx/oxlint plugin', () => {
     const results = await invokeCreateNodesOnMatchingFiles(context);
 
     expect(results.projects['a'].targets.lint.command).toBe(
-      'oxlint --ignore-pattern /b .'
+      'oxlint . --ignore-pattern /b'
     );
     expect(results.projects['a/b'].targets.lint.command).toBe(
-      'oxlint --ignore-pattern /c .'
+      'oxlint . --ignore-pattern /c'
     );
     expect(results.projects['a/b/c'].targets.lint.command).toBe('oxlint .');
   });
@@ -331,9 +331,9 @@ describe('@nx/oxlint plugin', () => {
       // The name survives intact as one argument, and nothing ran.
       expect(argv).toEqual([
         'oxlint',
+        '.',
         '--ignore-pattern',
         '/n$(touch PWNED)',
-        '.',
       ]);
       expect(existsSync(join(cwd, 'PWNED'))).toBe(false);
     }

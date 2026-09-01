@@ -956,7 +956,7 @@ function getProjectUsingOxlintConfig(
   );
 
   const targetConfig: TargetConfiguration = {
-    command: `oxlint ${[...nestedIgnoreArgs, lintPath].join(' ')}`,
+    command: `oxlint ${[lintPath, ...nestedIgnoreArgs].join(' ')}`,
     options: { cwd: projectRoot },
     cache: true,
     inputs: [
