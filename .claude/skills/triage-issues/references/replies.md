@@ -28,6 +28,7 @@ nobody.
 
   Keep the actual request outside the block so the human is the one asking. A reply that is purely a
   request (no findings) needs no block at all. Full rationale in the skill's Step 11.
+
 - **Say what you need and why one sentence of it matters.** "We need a repro" is the stale bot's line.
   "The `nx report` shows 21.2.0 but the option you're using landed in 21.4 — which version is the
   failure on?" gets an answer.
@@ -48,7 +49,7 @@ nobody.
 > [If reproducible on https://github.com/nrwl/nx-examples, that repo works too.]
 >
 > Right now the part we can't reconstruct is `<the specific gap: the project configuration, the
-> executor options, how the libraries are wired>`.
+executor options, how the libraries are wired>`.
 
 ## More information needed
 
@@ -70,13 +71,13 @@ nobody.
 ## Looks fixed on a newer version
 
 > This reproduces on `<reported version>` but not on `<current version>` — `<commit or PR, if you
-> found it>` looks like the fix. Could you try upgrading and let us know? Happy to reopen if it's
+found it>` looks like the fix. Could you try upgrading and let us know? Happy to reopen if it's
 > still there.
 
 ## Duplicate
 
 > This looks like the same problem as #`<N>`, which has `<a reproduction / an open PR / more
-> discussion>`. Closing in favor of that one so the discussion stays in one place — please follow
+discussion>`. Closing in favor of that one so the discussion stays in one place — please follow
 > along there, and say so if you think these are actually different.
 
 ## Feature request
