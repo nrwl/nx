@@ -1,21 +1,29 @@
+import { writeFileSync } from 'fs';
 import { output } from '../../utils/output';
 import { AffectedReason, formatAffectedExplanation } from './affected-reasons';
 
 /**
- * Prints `--explain` output, as JSON when `--json` was also passed.
+ * Prints `--explain` output.
  *
- * JSON goes to stdout unadorned so it can be piped; the human form goes through
- * `output` so it is formatted like the rest of the CLI.
+ * `destination` is what the flag was given, following `--graph`: `true` is a
+ * bare `--explain` and prints the human form, `"stdout"` prints JSON, and any
+ * other string is a file to write the JSON to.
  */
 export function printAffectedExplanation(
   reasons: Record<string, AffectedReason[]>,
   heading: string,
-  args: { json?: boolean }
+  destination: string | boolean | undefined
 ): void {
-  if (args.json) {
+  if (destination === 'stdout') {
     console.log(JSON.stringify(reasons, null, 2));
     return;
   }
+  if (typeof destination === 'string' && destination) {
+    writeFileSync(destination, JSON.stringify(reasons, null, 2));
+    output.success({ title: `Reasons written to ${destination}` });
+    return;
+  }
+
   const rendered = formatAffectedExplanation(reasons, heading);
   if (!Object.keys(reasons).length) {
     output.log({ title: rendered });
