@@ -10,13 +10,17 @@ import type { PostTasksExecutionContext } from './public-api';
  * out of `taskResults` and into a map of the paths holding them, so it can
  * cross a process boundary.
  *
- * `taskResults` carries every task's full output inline, which on a large
- * workspace exceeds V8's maximum string length: `serialize` tries
- * `JSON.stringify` and falls back to `v8.serialize(...).toString('binary')`,
- * and both have to materialize the payload as a single string, so both throw.
- * The bytes are already on disk at `<cacheDir>/terminalOutputs/<hash>`, so
- * transports carry paths and each receiver reads them back before any plugin
- * sees the context.
+ * `taskResults` carries every task's full output inline, so the sender builds
+ * every one of those strings, copies them into the serialized payload and
+ * pushes the whole thing across the socket, once per boundary. The bytes are
+ * already on disk at `<cacheDir>/terminalOutputs/<hash>`, so transports carry
+ * paths and each receiver reads them back before any plugin sees the context.
+ *
+ * This is no longer a crash fix. The fallback used to be
+ * `v8.serialize(...).toString('binary')`, which put an oversized payload back
+ * through V8's maximum string length after `JSON.stringify` had already hit it,
+ * so both arms threw. `serialize` returns bytes now and the ceiling is gone;
+ * what is left is the cost of moving the payload at all.
  *
  * The paths live here rather than in `terminalOutput` so that field never
  * holds two meanings: a stubbed result carries no `terminalOutput` at all, so

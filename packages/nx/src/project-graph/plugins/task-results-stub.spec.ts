@@ -92,8 +92,8 @@ describe('task results terminal output stubbing', () => {
     expect(rehydrated).not.toHaveProperty('stubbedTerminalOutputs');
   });
 
-  // The bug this exists to fix: both JSON.stringify and the v8 fallback have to
-  // materialize the payload as one string, so the bytes must not be in it.
+  // The cost this exists to remove: the sender builds every output string and
+  // copies it into the serialized payload, so the bytes must not be in it.
   it('keeps the output out of the serialized payload', () => {
     const output = 'a-very-distinctive-output-marker';
     writeOutput('abc', output);
