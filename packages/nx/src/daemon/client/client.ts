@@ -21,10 +21,8 @@ import {
   DaemonProjectGraphError,
   ProjectGraphError,
 } from '../../project-graph/error-types';
-import {
-  PostTasksExecutionContext,
-  PreTasksExecutionContext,
-} from '../../project-graph/plugins/public-api';
+import { PreTasksExecutionContext } from '../../project-graph/plugins/public-api';
+import type { MaybeStubbedPostTasksExecutionContext } from '../../project-graph/plugins/task-results-stub';
 import { getPluginResolveConditionNodeArgs } from '../../plugins/js/utils/typescript';
 import { preventRecursionInGraphConstruction } from '../../project-graph/project-graph';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
@@ -1047,7 +1045,7 @@ export class DaemonClient {
   }
 
   async runPostTasksExecution(
-    context: PostTasksExecutionContext
+    context: MaybeStubbedPostTasksExecutionContext
   ): Promise<void> {
     const message: HandlePostTasksExecutionMessage = {
       type: POST_TASKS_EXECUTION,
