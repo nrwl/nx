@@ -58,8 +58,7 @@ impl HashPlanInspector {
                 let strings = match instruction {
                     // File-set instructions: resolve to actual file paths
                     HashInstruction::WorkspaceFileSet(_)
-                    | HashInstruction::ProjectFileSet(_, _)
-                    | HashInstruction::Files(_) => {
+                    | HashInstruction::ProjectFileSet(_, _, _) => {
                         let builder = self
                             .resolve_instruction_inputs(instruction, &project_file_indices_cache)?;
                         builder
@@ -150,7 +149,7 @@ impl HashPlanInspector {
                     ..Default::default()
                 })
             }
-            HashInstruction::ProjectFileSet(project_name, file_sets) => {
+            HashInstruction::ProjectFileSet(project_name, file_sets, false) => {
                 let files = collect_project_file_paths_cached(
                     project_name,
                     file_sets,
@@ -162,7 +161,7 @@ impl HashPlanInspector {
                     ..Default::default()
                 })
             }
-            HashInstruction::Files(globs) => {
+            HashInstruction::ProjectFileSet(_, globs, true) => {
                 let expansion = expand_files(std::path::Path::new(&self.workspace_root), globs)?;
                 // `missing` paths are hashed as a sentinel, so they are real
                 // inputs; report them alongside existing files (e.g. a read of

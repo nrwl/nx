@@ -87,7 +87,7 @@ pub(crate) fn input_source(
     snapshot_backed: bool,
 ) -> InputSource {
     match instruction {
-        HashInstruction::ProjectFileSet(project, _) => {
+        HashInstruction::ProjectFileSet(project, _, _) => {
             if snapshot_backed {
                 InputSource::Snapshot
             } else if project == task_project {
@@ -110,13 +110,6 @@ pub(crate) fn input_source(
                 InputSource::Snapshot
             } else {
                 InputSource::Dependency
-            }
-        }
-        HashInstruction::Files(_) => {
-            if snapshot_backed {
-                InputSource::Snapshot
-            } else {
-                InputSource::Target
             }
         }
         _ => InputSource::Native,
@@ -490,15 +483,14 @@ impl TaskHasher {
                     HashInstruction::Environment(_) | HashInstruction::Runtime(_) => None,
                     HashInstruction::WorkspaceFileSet(_)
                     | HashInstruction::Cwd(_)
-                    | HashInstruction::ProjectFileSet(_, _)
+                    | HashInstruction::ProjectFileSet(_, _, _)
                     | HashInstruction::ProjectConfiguration(_)
                     | HashInstruction::TsConfiguration(_)
                     | HashInstruction::TaskOutput(_, _)
                     | HashInstruction::External(_)
                     | HashInstruction::AllExternalDependencies
                     | HashInstruction::JsonFileSet(_)
-                    | HashInstruction::Marker(_)
-                    | HashInstruction::Files(_) => Some(&value_slots[id as usize]),
+                    | HashInstruction::Marker(_) => Some(&value_slots[id as usize]),
                 };
 
                 let cached = if should_collect_inputs {
@@ -679,7 +671,37 @@ impl TaskHasher {
                 trace!(parent: &span, "hash_cwd: {:?}", now.elapsed());
                 (hashed_cwd, empty)
             }
-            HashInstruction::ProjectFileSet(project_name, file_sets) => {
+            HashInstruction::ProjectFileSet(_, globs, true) => {
+                let workspace_root = Path::new(&self.workspace_root);
+                let expansion = expand_files_cached(
+                    workspace_root,
+                    &instruction.to_string(),
+                    globs,
+                    files_expansion_cache,
+                )?;
+                let hashed = hash_files(
+                    workspace_root,
+                    &expansion,
+                    |path| self.workspace_file_hash(path),
+                    &self.file_content_cache,
+                );
+                trace!(parent: &span, "hash_files: {:?}", now.elapsed());
+                let inputs = if collect_inputs {
+                    HashInputsBuilder {
+                        files: expansion
+                            .files
+                            .iter()
+                            .chain(expansion.missing.iter())
+                            .cloned()
+                            .collect(),
+                        ..Default::default()
+                    }
+                } else {
+                    empty
+                };
+                (hashed, inputs)
+            }
+            HashInstruction::ProjectFileSet(project_name, file_sets, false) => {
                 let hashed = hash_project_files_cached(
                     project_name,
                     file_sets,
@@ -848,36 +870,6 @@ impl TaskHasher {
                 (cached_entry.hash, inputs)
             }
             HashInstruction::Marker(marker) => (hash(marker.as_bytes()), empty),
-            HashInstruction::Files(globs) => {
-                let workspace_root = Path::new(&self.workspace_root);
-                let expansion = expand_files_cached(
-                    workspace_root,
-                    &instruction.to_string(),
-                    globs,
-                    files_expansion_cache,
-                )?;
-                let hashed = hash_files(
-                    workspace_root,
-                    &expansion,
-                    |path| self.workspace_file_hash(path),
-                    &self.file_content_cache,
-                );
-                trace!(parent: &span, "hash_files: {:?}", now.elapsed());
-                let inputs = if collect_inputs {
-                    HashInputsBuilder {
-                        files: expansion
-                            .files
-                            .iter()
-                            .chain(expansion.missing.iter())
-                            .cloned()
-                            .collect(),
-                        ..Default::default()
-                    }
-                } else {
-                    empty
-                };
-                (hashed, inputs)
-            }
         };
         Ok((hash, inputs))
     }
@@ -919,8 +911,8 @@ mod tests {
 
     #[test]
     fn input_source_classifies_by_marker_and_project() {
-        let own = HashInstruction::ProjectFileSet("web".into(), vec!["web/**/*".into()]);
-        let dep = HashInstruction::ProjectFileSet("ui".into(), vec!["ui/**/*".into()]);
+        let own = HashInstruction::ProjectFileSet("web".into(), vec!["web/**/*".into()], false);
+        let dep = HashInstruction::ProjectFileSet("ui".into(), vec!["ui/**/*".into()], false);
         let ws = HashInstruction::WorkspaceFileSet(vec!["{workspaceRoot}/x".into()]);
         let always_on = HashInstruction::WorkspaceFileSet(
             ALWAYS_ON_WORKSPACE_FILES
@@ -945,10 +937,18 @@ mod tests {
         assert_eq!(input_source(&always_on, "web", true), InputSource::Native);
         assert_eq!(input_source(&env, "web", true), InputSource::Native);
 
-        // A user-declared { files } input is target; under a snapshot marker the
-        // same instruction carries the observed reads.
-        let files = HashInstruction::Files(vec!["libs/ui/dist/**".into()]);
+        // A disk-backed group is attributed like any other project fileset:
+        // the task's own project is target, another project's is dependency.
+        // Under a snapshot marker it carries the observed reads.
+        let files =
+            HashInstruction::ProjectFileSet("web".into(), vec!["apps/web/gen/**".into()], true);
+        let dep_files =
+            HashInstruction::ProjectFileSet("ui".into(), vec!["libs/ui/dist/**".into()], true);
         assert_eq!(input_source(&files, "web", false), InputSource::Target);
+        assert_eq!(
+            input_source(&dep_files, "web", false),
+            InputSource::Dependency
+        );
         assert_eq!(input_source(&files, "web", true), InputSource::Snapshot);
     }
 

@@ -639,7 +639,8 @@ impl HashPlanner {
             })
             .collect();
 
-        // Longest project root first, so nested projects win.
+        // Longest project root first, so nested projects win. A project rooted
+        // at "." cannot be prefix-matched, so it is the fallback owner instead.
         let mut roots: Vec<(&str, &str)> = self
             .project_graph
             .nodes
@@ -648,6 +649,13 @@ impl HashPlanner {
             .map(|(name, project)| (name.as_str(), project.root.as_str()))
             .collect();
         roots.sort_by(|a, b| b.1.len().cmp(&a.1.len()).then(a.0.cmp(b.0)));
+        let unowned = self
+            .project_graph
+            .nodes
+            .iter()
+            .find(|(_, project)| project.root == ".")
+            .map(|(name, _)| name.as_str())
+            .unwrap_or(self_project);
         let owner = |glob: &str| -> &str {
             let path = glob.strip_prefix('!').unwrap_or(glob);
             roots
@@ -657,7 +665,7 @@ impl HashPlanner {
                         .is_some_and(|rest| rest.starts_with('/'))
                 })
                 .map(|(name, _)| *name)
-                .unwrap_or(self_project)
+                .unwrap_or(unowned)
         };
 
         // Bundles collapse sibling files into brace groups; class mapping needs
@@ -688,7 +696,11 @@ impl HashPlanner {
             declared_negations.sort();
             declared_negations.dedup();
             group.extend(declared_negations);
-            instructions.push(HashInstruction::Files(group));
+            instructions.push(HashInstruction::ProjectFileSet(
+                project.to_string(),
+                group,
+                true,
+            ));
         }
         instructions.push(io_snapshot_marker(&io.digest));
         instructions
@@ -1006,6 +1018,7 @@ impl HashPlanner {
                         .iter()
                         .map(|f| resolve_tokens(f, project_root, project_name))
                         .collect(),
+                    false,
                 ),
                 HashInstruction::ProjectConfiguration(project_name.to_string()),
                 HashInstruction::TsConfiguration(project_name.to_string()),
@@ -1029,7 +1042,11 @@ impl HashPlanner {
                 .map(|g| resolve_files_glob(g, project_root, project_name))
                 .collect();
             validate_files_globs(&resolved)?;
-            files_inputs.push(HashInstruction::Files(resolved));
+            files_inputs.push(HashInstruction::ProjectFileSet(
+                project_name.to_string(),
+                resolved,
+                true,
+            ));
         }
         let runtime_and_env_inputs = self_inputs.iter().filter_map(|i| match i {
             Input::Runtime(runtime) => Some(HashInstruction::Runtime(runtime.to_string())),
@@ -1097,7 +1114,11 @@ impl HashPlanner {
             })
             .collect();
         if !ignored.is_empty() {
-            instructions.push(HashInstruction::Files(ignored));
+            instructions.push(HashInstruction::ProjectFileSet(
+                project_name.to_string(),
+                ignored,
+                true,
+            ));
         }
         instructions.extend(self_inputs.iter().filter_map(|i| match i {
             Input::Runtime(runtime) => Some(HashInstruction::Runtime(runtime.to_string())),

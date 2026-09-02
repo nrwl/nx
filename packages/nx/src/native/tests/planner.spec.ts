@@ -182,7 +182,7 @@ describe('task planner', () => {
         ],
       });
 
-      expect(plan).toContain('files:[libs/parent/generated]');
+      expect(plan).toContain('files:parent:[libs/parent/generated]');
     });
 
     it('rejects a files glob without a leading directory', () => {
@@ -313,7 +313,7 @@ describe('task planner', () => {
           'workspace:[!{workspaceRoot}/**/*.md]',
           'parent:TsConfig',
           'parent:json:libs/parent/package.json[version]',
-          'files:[libs/parent/generated]',
+          'files:parent:[libs/parent/generated]',
         ])
       );
       expect(
@@ -348,12 +348,12 @@ describe('task planner', () => {
       )['parent:build'];
       expect(plan).toEqual(
         expect.arrayContaining([
-          `files:[libs/child/src/index.ts,${CHILD_NEG}]`,
+          `files:child:[libs/child/src/index.ts,${CHILD_NEG}]`,
           // Reads under no project root belong to the task's own project, so
           // the dependency's !**/*.md never suppresses docs/readme.md.
-          `files:[docs/readme.md,libs/parent/src/**/*.ts,${PARENT_NEG}]`,
+          `files:parent:[docs/readme.md,libs/parent/src/**/*.ts,${PARENT_NEG}]`,
           // A declared { files } input is not a fileset; it survives.
-          'files:[libs/parent/generated]',
+          'files:parent:[libs/parent/generated]',
           'parent:ProjectConfiguration',
           'child:ProjectConfiguration',
           'env:TESTENV',
@@ -393,7 +393,9 @@ describe('task planner', () => {
         ])
       );
       expect(plan).not.toContainEqual(
-        expect.stringMatching(/^files:\[(?!libs\/parent\/generated\])/)
+        expect.stringMatching(
+          /^files:parent:[^:]+:\[(?!libs\/parent\/generated\])/
+        )
       );
     });
 
@@ -414,7 +416,9 @@ describe('task planner', () => {
         })
       )['parent:build'];
       // package.json stays: externals hash resolved versions, not its scripts.
-      expect(plan).toContain(`files:[package.json,tools/x.ts,${PARENT_NEG}]`);
+      expect(plan).toContain(
+        `files:parent:[package.json,tools/x.ts,${PARENT_NEG}]`
+      );
       expect(plan).toContain('AllExternalDependencies');
       expect(plan).not.toContainEqual(
         expect.stringMatching(/node_modules|yarn\.lock/)
@@ -432,7 +436,9 @@ describe('task planner', () => {
       const plan = planner.getPlans(['parent:build'], taskGraph, snapshots)[
         'parent:build'
       ];
-      expect(plan).toContain(`files:[dist/libs/child/index.js,${PARENT_NEG}]`);
+      expect(plan).toContain(
+        `files:parent:[dist/libs/child/index.js,${PARENT_NEG}]`
+      );
       expect(plan).not.toContainEqual(
         expect.stringMatching(/^dist\/libs\/child\/index\.js:/)
       );
@@ -495,7 +501,7 @@ describe('task planner', () => {
           'child:ProjectConfiguration',
           'env:TESTENV',
           'runtime:echo runtime123',
-          'files:[libs/parent/generated]',
+          'files:parent:[libs/parent/generated]',
           'io-snapshot:abc123',
         ])
       );
@@ -504,7 +510,7 @@ describe('task planner', () => {
       );
       expect(plan).not.toContainEqual(expect.stringMatching(/TsConfig$/));
       expect(plan.filter((i) => i.startsWith('files:'))).toEqual([
-        'files:[libs/parent/generated]',
+        'files:parent:[libs/parent/generated]',
       ]);
     });
 
@@ -517,7 +523,9 @@ describe('task planner', () => {
           'parent:build': { inputs: ['libs/child/src/index.ts'] },
         })
       )['parent:build'];
-      expect(plan).toContain(`files:[libs/child/src/index.ts,${CHILD_NEG}]`);
+      expect(plan).toContain(
+        `files:child:[libs/child/src/index.ts,${CHILD_NEG}]`
+      );
       expect(plan).not.toContainEqual(expect.stringMatching(/^child:libs\//));
     });
 
@@ -619,7 +627,7 @@ describe('task planner', () => {
       // rest are hashed as the exact files they name.
       expect(plan).toContain('parent:TsConfig');
       expect(plan).toContain(
-        `files:[Cargo.toml,libs/parent/src/**/*.ts,rust-toolchain.toml,tools/a/index.ts,tools/b/index.ts,${PARENT_NEG}]`
+        `files:parent:[Cargo.toml,libs/parent/src/**/*.ts,rust-toolchain.toml,tools/a/index.ts,tools/b/index.ts,${PARENT_NEG}]`
       );
       expect(
         plan
