@@ -967,7 +967,15 @@ export class TaskOrchestrator {
         );
       }
 
-      return taskResults;
+      // The worker reported results, but its own stderr is not any task's
+      // output and has no route to a reader under a style that prints nothing:
+      // the fold above needs `shouldGroupBatchOutput`, `printGroupedBatchOutput`
+      // needs `printsTaskOutput` on top of that, and `discardCapturedOutput`
+      // unlinks the file when this method returns.
+      return this.attachBatchWorkerLog(
+        taskResults,
+        batchProcess.getCapturedOutputPath()
+      );
     } catch (e) {
       const isBatchStopping = this.stopRequested;
 
@@ -1048,6 +1056,62 @@ export class TaskOrchestrator {
         runBatchEnd.name
       );
     }
+  }
+
+  /**
+   * Gives the batch worker's captured log to the results that need it, for a
+   * style that prints nothing and so renders no fold.
+   *
+   * Only when something failed. A batch whose tasks all succeeded has nothing
+   * the worker's chatter would explain, and `summary`'s contract is that a
+   * failure's log is readable, not that every byte the run produced is.
+   *
+   * One worker means one log, so a single task carries it and the rest address
+   * that copy. Inlining it into each would write a byte-identical unbounded
+   * file per task, every one charged in full against `maxCacheSize`.
+   */
+  private attachBatchWorkerLog<
+    T extends { task: Task; status: TaskStatus; terminalOutput?: string },
+  >(results: T[], capturedOutputPath: string | undefined): T[] {
+    if (printsTaskOutput(this.resolvedOutputStyle)) {
+      return results;
+    }
+    const failures = results.filter(
+      (r) => r.status === 'failure' || r.status === 'stopped'
+    );
+    if (!failures.length) {
+      return results;
+    }
+    const workerLog = readCapturedBatchLog(capturedOutputPath);
+    if (!workerLog) {
+      return results;
+    }
+
+    const holder = failures[0];
+    const holderHash = holder.task?.hash;
+    const pointer =
+      holderHash &&
+      `batch worker log: ${terminalOutputPathForHash(holderHash)}`;
+
+    return results.map((result) => {
+      if (result === holder) {
+        return {
+          ...result,
+          terminalOutput: [workerLog, result.terminalOutput]
+            .filter(Boolean)
+            .join('\n'),
+        };
+      }
+      if (pointer && failures.includes(result)) {
+        return {
+          ...result,
+          terminalOutput: [result.terminalOutput, pointer]
+            .filter(Boolean)
+            .join('\n'),
+        };
+      }
+      return result;
+    });
   }
 
   /**
