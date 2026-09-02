@@ -119,6 +119,57 @@ describe('validateAndNormalizeProjectRootMap', () => {
     expect(projectRootMap['libs/a/ui'].name).toEqual('ui');
   });
 
+  describe('sandbox validation through the real merge pipeline', () => {
+    // The root-map tests below construct shapes the pipeline cannot produce.
+    // This one goes through mergeCreateNodesResults so a falsy sandbox is
+    // proven to reach validation the way an authored project.json would.
+    const resultsFor = (sandbox: unknown) => [
+      [
+        [
+          'nx/core/project-json',
+          'libs/a/ui/project.json',
+          {
+            projects: {
+              'libs/a/ui': {
+                name: 'a-ui',
+                root: 'libs/a/ui',
+                targets: { build: { executor: 'nx:run-commands', sandbox } },
+              },
+            },
+          },
+        ],
+      ],
+    ];
+
+    it('rejects sandbox: false authored on a project', async () => {
+      const { mergeCreateNodesResults } =
+        await import('../project-configuration-utils');
+      expect(() =>
+        mergeCreateNodesResults(
+          resultsFor(false) as any,
+          [],
+          {} as any,
+          tempFs.tempDir,
+          []
+        )
+      ).toThrow(/"sandbox" configuration for target "build"/);
+    });
+
+    it('accepts a well-formed sandbox authored on a project', async () => {
+      const { mergeCreateNodesResults } =
+        await import('../project-configuration-utils');
+      expect(() =>
+        mergeCreateNodesResults(
+          resultsFor({ enabled: false, ignoredReads: ['tmp/**'] }) as any,
+          [],
+          {} as any,
+          tempFs.tempDir,
+          []
+        )
+      ).not.toThrow();
+    });
+  });
+
   describe('sandbox validation', () => {
     const projectRootMapWithSandbox = (sandbox: unknown) => ({
       'libs/a/ui': {
