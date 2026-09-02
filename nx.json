@@ -531,7 +531,26 @@
             "NX_WINDOWS_PTY_SUPPORT",
             "NX_ORIGINAL_FORCE_COLOR",
             "NX_MIGRATE_ORCHESTRATOR",
-            "NX_CSS_MODULE_HASH_FUNCTION"
+            "NX_CSS_MODULE_HASH_FUNCTION",
+            "NX_BUILDABLE_LIBRARIES_TASK_GRAPH",
+            "NX_BUILD_LIBS_FROM_SOURCE",
+            "NX_BUILD_TARGET",
+            "NX_CNW_FLOW_VARIANT",
+            "NX_CYPRESS_COMPONENT_TEST",
+            "NX_CYPRESS_TARGET_CONFIGURATION",
+            "NX_E2E_PRESET_VERSION",
+            "NX_FILE_TO_RUN",
+            "NX_GENERATED_TSCONFIG_PATH",
+            "NX_MAPPINGS",
+            "NX_MF_DEV_REMOTES",
+            "NX_MF_DEV_SERVER_STATIC_REMOTES",
+            "NX_NEXT_DIR",
+            "NX_NEXT_OUTPUT_PATH",
+            "NX_NEXT_PUBLIC_DIR",
+            "NX_REACT_NATIVE_DEBUG",
+            "NX_SERVE_STATIC_BUILD_RUNNING",
+            "NX_SKIP_GH_PUSH",
+            "NX_TSCONFIG_PATH"
           ]
         }
       }
