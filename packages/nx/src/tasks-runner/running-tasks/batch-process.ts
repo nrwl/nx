@@ -219,10 +219,13 @@ export class BatchProcess {
       if (this.capturedOutputFd === undefined) {
         const dir = join(workspaceDataDirectory, 'batch-outputs');
         mkdirSync(dir, { recursive: true });
-        // Derived from the batch id rather than a counter, so reopening after a
-        // failed write returns to the same file. A counter minted a new name on
-        // every reopen, orphaning the bytes captured so far - which is where a
-        // compiler's first non-cascading errors are.
+        // Every component is fixed for the life of this instance, so reopening
+        // after a failed write returns to the same file. Deriving any part of
+        // it at open time minted a new name on every reopen, orphaning the
+        // bytes captured so far - which is where a compiler's first
+        // non-cascading errors are. The batch id names it for a human reading
+        // the directory; `captureSeq` is what actually makes it unique, since
+        // the id falls back to the executor name.
         const name = `${this.batchId.replace(/[^a-zA-Z0-9]+/g, '-')}-${
           process.pid
         }-${this.captureSeq}.log`;
@@ -320,7 +323,7 @@ export class BatchProcess {
    * The file is deliberately left open rather than closed here. A worker's
    * stdout can deliver after its exit event — which is what `getResults()`
    * settles on — and leaving the fd open keeps such a chunk appending to this
-   * same file instead of minting a second numbered one that nothing cleans up.
+   * same file rather than opening a second one that nothing cleans up.
    * The caller reads the file once, synchronously, while rendering the fold, so
    * anything arriving after that read is not shown; writes are unbuffered, so
    * the read always sees a complete prefix of what has arrived by then.
