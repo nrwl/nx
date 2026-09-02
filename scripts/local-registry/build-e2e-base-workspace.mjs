@@ -79,13 +79,37 @@ if (failures.length === combos.length) {
 }
 
 /**
+ * Drop the vars Nx sets for this task before handing the environment to
+ * create-nx-workspace. NODE_PATH and NX_* point back at this repo, so a child nx
+ * resolves @nx/devkit and nx to packages/*\/dist instead of the versions it just
+ * installed from verdaccio — the template would then be built against unpublished
+ * code. Mirrors getStrippedEnvironmentVariables() in e2e/utils/get-env-info.ts.
+ */
+function strippedEnv() {
+  const allowed = new Set([
+    'NX_ADD_PLUGINS',
+    'NX_ISOLATE_PLUGINS',
+    'NX_VERBOSE_LOGGING',
+    'NX_NATIVE_LOGGING',
+    'NX_USE_LOCAL',
+  ]);
+  return Object.fromEntries(
+    Object.entries(process.env).filter(([key]) => {
+      if (key === 'NODE_PATH' || key === 'JEST_WORKER_ID') return false;
+      if (key.startsWith('NX_E2E_')) return true;
+      return !key.startsWith('NX_') || allowed.has(key);
+    })
+  );
+}
+
+/**
  * Point a package manager at the local verdaccio, with a cache dir of its own so
  * parallel builds don't contend over a shared one.
  * @param {string} cacheRoot
  */
 function registryEnv(cacheRoot) {
   return {
-    ...process.env,
+    ...strippedEnv(),
     CI: 'true',
     NX_SKIP_PROVENANCE_CHECK: 'true',
     npm_config_registry: registry,
