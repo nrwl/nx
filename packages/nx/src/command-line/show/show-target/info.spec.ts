@@ -6,6 +6,7 @@ import {
   setGraph,
   setMockSourceMaps,
   setMockHasCustomHasher,
+  setMockInputGlobs,
   setMockIoSnapshotReport,
 } from './test-utils';
 import { showTargetInfoHandler } from './info';
@@ -903,6 +904,65 @@ describe('show target info', () => {
         )
         .build();
     }
+
+    it('prints the observed reads per project in place of the declared filesets', async () => {
+      setGraph(graphWithLintTarget());
+      setMockIoSnapshotReport({
+        used: ['my-app:lint'],
+        tasksWithOutputs: [],
+        diagnostics: [],
+        resolution: { requestedCommit: 'ae6a03f912ab', digest: '049a9c2f7bcd' },
+      });
+      setMockInputGlobs({
+        'my-app:lint': [
+          {
+            project: 'my-app',
+            globs: ['apps/my-app/src/main.ts', '!apps/my-app/**/*.spec.ts'],
+            includeIgnored: true,
+            fromSnapshot: true,
+          },
+          {
+            project: 'ui',
+            globs: ['libs/ui/src/index.ts'],
+            includeIgnored: true,
+            fromSnapshot: true,
+          },
+        ],
+      });
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint', verbose: true });
+      const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
+
+      // The observed reads, grouped by the project that owns them.
+      expect(text).toContain('observed reads (3 globs across 2 projects)');
+      expect(text).toContain('the observed reads are listed above');
+      expect(text).toContain('apps/my-app/src/main.ts');
+      expect(text).toContain('!apps/my-app/**/*.spec.ts');
+      expect(text).toContain('libs/ui/src/index.ts');
+      // The declared filesets they replace are gone, not merely tagged.
+      expect(text).not.toContain('{projectRoot}/**/*.ts');
+      expect(text).not.toContain('(replaced by snapshot)');
+      // Non-file inputs are never replaced by a snapshot.
+      expect(text).toContain('"env"');
+    });
+
+    it('keeps the declared filesets tagged when no observed reads resolved', async () => {
+      setGraph(graphWithLintTarget());
+      setMockIoSnapshotReport({
+        used: ['my-app:lint'],
+        tasksWithOutputs: [],
+        diagnostics: [],
+        resolution: { requestedCommit: 'ae6a03f912ab', digest: '049a9c2f7bcd' },
+      });
+      setMockInputGlobs({});
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint', verbose: true });
+      const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
+      expect(text).toContain('{projectRoot}/**/*.ts');
+      expect(text).not.toContain('globs across');
+    });
 
     it('reports a used snapshot and its commit/digest in text and --json', async () => {
       setGraph(graphWithLintTarget());

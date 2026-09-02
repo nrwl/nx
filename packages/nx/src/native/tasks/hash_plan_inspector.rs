@@ -13,6 +13,21 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
 
+/// One file-input group of a task's hash plan, as globs rather than resolved
+/// paths. `project` is `None` for workspace-level groups.
+#[napi(object)]
+#[derive(Clone, Debug)]
+pub struct EffectiveInputGroup {
+    pub project: Option<String>,
+    pub globs: Vec<String>,
+    /// Disk-backed: an I/O snapshot's observed reads, or a declared
+    /// `includeIgnored` fileset. Gitignored and generated files count.
+    pub include_ignored: bool,
+    /// True when this task hashes from an I/O snapshot, so the groups are the
+    /// observed reads rather than the declared filesets.
+    pub from_snapshot: bool,
+}
+
 #[napi]
 pub struct HashPlanInspector {
     all_workspace_files: Arc<Vec<FileData>>,
@@ -80,6 +95,46 @@ impl HashPlanInspector {
                 acc.entry(task_id.clone()).or_default().extend(strings);
                 acc
             }))
+    }
+
+    /// The file-input groups of each task's plan, as globs. Unlike `inspect`
+    /// and `inspect_inputs` this does not touch the disk or the file map, so
+    /// it stays cheap on plans whose globs expand to thousands of files.
+    #[napi]
+    pub fn inspect_input_globs(
+        &self,
+        #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
+        hash_plans: &External<HashPlans>,
+    ) -> HashMap<String, Vec<EffectiveInputGroup>> {
+        let pool = &hash_plans.pool;
+        hash_plans
+            .plans
+            .iter()
+            .map(|(task_id, ids)| {
+                let from_snapshot = is_snapshot_backed(pool, ids);
+                let groups = ids
+                    .iter()
+                    .filter_map(|id| match &*pool.get(*id) {
+                        HashInstruction::ProjectFileSet(project, globs, include_ignored) => {
+                            Some(EffectiveInputGroup {
+                                project: Some(project.clone()),
+                                globs: globs.clone(),
+                                include_ignored: *include_ignored,
+                                from_snapshot,
+                            })
+                        }
+                        HashInstruction::WorkspaceFileSet(globs) => Some(EffectiveInputGroup {
+                            project: None,
+                            globs: globs.clone(),
+                            include_ignored: false,
+                            from_snapshot,
+                        }),
+                        _ => None,
+                    })
+                    .collect();
+                (task_id.clone(), groups)
+            })
+            .collect()
     }
 
     /// Like `inspect()` but returns structured `HashInputs` objects instead of flat strings.

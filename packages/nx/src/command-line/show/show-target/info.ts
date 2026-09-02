@@ -1,9 +1,11 @@
+import type { EffectiveInputGroup } from '../../../native';
 import type { NxJsonConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
 import type { InputDefinition } from '../../../config/workspace-json-project-json';
 import type { ConfigurationSourceMaps } from '../../../project-graph/utils/project-configuration/source-maps';
 import { getNamedInputs } from '../../../hasher/task-hasher';
 import {
+  getTaskEffectiveInputGroups,
   getTaskIoSnapshotStatus,
   type IoSnapshotStatus,
 } from '../../../hasher/check-task-files';
@@ -31,7 +33,16 @@ export async function showTargetInfoHandler(
     projectGraph: t.graph,
     nxJson: t.nxJson,
   });
-  const data = resolveTargetInfoData(t, snapshot);
+  // A snapshot-backed task hashes its observed reads, not the declared
+  // filesets, so the declared list would be inputs that are not inputs.
+  const effectiveGroups =
+    snapshot.status === 'used'
+      ? await getTaskEffectiveInputGroups(taskId, {
+          projectGraph: t.graph,
+          nxJson: t.nxJson,
+        })
+      : [];
+  const data = resolveTargetInfoData(t, snapshot, effectiveGroups);
   renderTargetInfo(data, args);
 }
 
@@ -45,7 +56,11 @@ interface ExpandedInput {
   originalIndex: number;
 }
 
-function resolveTargetInfoData(t: ResolvedTarget, snapshot: IoSnapshotStatus) {
+function resolveTargetInfoData(
+  t: ResolvedTarget,
+  snapshot: IoSnapshotStatus,
+  effectiveGroups: EffectiveInputGroup[] = []
+) {
   const {
     projectName,
     targetName,
@@ -129,6 +144,7 @@ function resolveTargetInfoData(t: ResolvedTarget, snapshot: IoSnapshotStatus) {
       ? { sandbox: { enabled: false } }
       : {}),
     snapshot,
+    ...(effectiveGroups.length > 0 ? { effectiveInputs: effectiveGroups } : {}),
     ...(targetConfig.inputs
       ? (() => {
           const expanded = expandInputsForDisplay(
@@ -329,6 +345,38 @@ function isFileInput(value: InputDefinition | string): boolean {
   );
 }
 
+/**
+ * The globs a snapshot-backed task actually hashes, grouped by the project
+ * that owns them. Printed in place of the declared filesets those reads
+ * replace.
+ */
+function renderEffectiveInputs(
+  data: TargetInfoData,
+  c: ReturnType<typeof pc>,
+  args: ShowTargetBaseOptions
+): void {
+  const groups = data.effectiveInputs;
+  if (!groups?.length) return;
+  const total = groups.reduce((n, g) => n + g.globs.length, 0);
+  console.log(
+    `  ${c.dim(`observed reads (${total} globs across ${groups.length} projects):`)}`
+  );
+  const sorted = [...groups].sort((a, b) =>
+    (a.project ?? '').localeCompare(b.project ?? '')
+  );
+  for (const group of sorted) {
+    console.log(`    ${c.bold(group.project ?? '{workspaceRoot}')}:`);
+    const globs = args.verbose ? group.globs : group.globs.slice(0, 5);
+    for (const glob of globs) {
+      console.log(`      - ${glob}`);
+    }
+    const hidden = group.globs.length - globs.length;
+    if (hidden > 0) {
+      console.log(`      ${c.dim(`... ${hidden} more (--verbose)`)}`);
+    }
+  }
+}
+
 function renderSnapshotSection(
   data: TargetInfoData,
   c: ReturnType<typeof pc>,
@@ -339,10 +387,13 @@ function renderSnapshotSection(
   if (snap.status === 'used') {
     const commit = snap.commit?.slice(0, 8) ?? '?';
     const digest = snap.digest?.slice(0, 8) ?? '?';
+    // The Inputs section already lists the observed reads when they resolved;
+    // only point elsewhere when it is still showing the declared filesets.
+    const note = data.effectiveInputs?.length
+      ? `(the observed reads are listed above; see \`nx show target inputs ${data.project}:${data.target}\` for the files they match)`
+      : `(the file inputs above are replaced by the observed reads; see \`nx show target inputs ${data.project}:${data.target}\`)`;
     console.log(
-      `${label}: ${c.green('used')} — commit ${commit}, digest ${digest} ${c.dim(
-        `(the file inputs above are replaced by the observed reads; see \`nx show target inputs ${data.project}:${data.target}\`)`
-      )}`
+      `${label}: ${c.green('used')} — commit ${commit}, digest ${digest} ${c.dim(note)}`
     );
   } else if (snap.status === 'fallback') {
     const reason = snap.reason ? ` (${snap.reason})` : '';
@@ -522,20 +573,26 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
       }
       return 0;
     });
-    const tagReplaced = args.verbose && data.snapshot.status === 'used';
+    // Under a snapshot the declared filesets are not hashed. When the observed
+    // reads resolved they are printed in their place; otherwise the declared
+    // ones stay, tagged. env/runtime/external are never replaced.
+    const hasGroups = !!data.effectiveInputs?.length;
+    const tagReplaced =
+      args.verbose && data.snapshot.status === 'used' && !hasGroups;
     for (const { value, sourceIndex } of entries) {
+      if (hasGroups && isFileInput(value)) continue;
       const display = typeof value === 'string' ? value : JSON.stringify(value);
       const hint =
         sourceIndex !== undefined
           ? sourceHint(`inputs.${sourceIndex}`, 'inputs')
           : '';
-      // Only file inputs are replaced by the snapshot; env/runtime/external stay native.
       const replaced =
         tagReplaced && isFileInput(value)
           ? ` ${c.dim('(replaced by snapshot)')}`
           : '';
       console.log(`  - ${display}${hint}${replaced}`);
     }
+    renderEffectiveInputs(data, c, args);
   }
 
   if (data.outputs && data.outputs.length > 0) {
