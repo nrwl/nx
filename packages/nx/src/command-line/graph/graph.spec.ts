@@ -17,6 +17,14 @@ vi.mock('../../native', async (importOriginal) => ({
 vi.mock('../../native/transform-objects', () => ({
   transformProjectGraphForRust: vi.fn((g) => g),
 }));
+// loadIoSnapshotsForHead reads a fetched bundle from disk, so leaving it real
+// makes these tests pass locally and fail on CI, where Nx Cloud has fetched
+// one. Pin it absent; the snapshot path has its own tests.
+vi.mock('../../io-snapshots/overrides', async (importOriginal) => ({
+  ...(await importOriginal<any>()),
+  loadIoSnapshotsForHead: vi.fn(() => null),
+}));
+
 vi.mock('../../project-graph/project-graph', () => ({
   createProjectGraphAsync: vi.fn(),
   createProjectGraphAndSourceMapsAsync: vi.fn(),
