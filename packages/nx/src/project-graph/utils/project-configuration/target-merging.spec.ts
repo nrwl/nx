@@ -478,7 +478,7 @@ describe('target merging', () => {
           sandbox: {
             '...': true,
             ignoredWrites: ['scratch/**'],
-          } as any,
+          },
         },
         {
           executor: 'nx:run-commands',
@@ -498,6 +498,76 @@ describe('target merging', () => {
         { executor: 'bar', sandbox: { enabled: false } }
       );
       expect(result.sandbox).not.toBeDefined();
+    });
+
+    it('should resolve the spread token inside ignoredReads', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          sandbox: { ignoredReads: ['...', 'tmp/**'] },
+        },
+        {
+          executor: 'nx:run-commands',
+          sandbox: { ignoredReads: ['dist/**'] },
+        }
+      );
+      expect(result.sandbox).toEqual({
+        ignoredReads: ['dist/**', 'tmp/**'],
+      });
+    });
+
+    it('should resolve the spread token inside ignoredWrites under an object spread', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          sandbox: {
+            '...': true,
+            ignoredWrites: ['...', 'scratch/**'],
+          },
+        },
+        {
+          executor: 'nx:run-commands',
+          sandbox: { enabled: false, ignoredWrites: ['dist/**'] },
+        }
+      );
+      expect(result.sandbox).toEqual({
+        enabled: false,
+        ignoredWrites: ['dist/**', 'scratch/**'],
+      });
+    });
+
+    it('should not mutate the target it was given', () => {
+      const target = {
+        executor: 'nx:run-commands',
+        sandbox: { ignoredReads: ['...', 'tmp/**'] },
+      };
+      const before = JSON.stringify(target);
+
+      mergeTargetConfigurations(target, {
+        executor: 'nx:run-commands',
+        sandbox: { ignoredReads: ['dist/**'] },
+      });
+
+      expect(JSON.stringify(target)).toEqual(before);
+    });
+
+    it('should never leave a literal spread token on the merged globs', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          sandbox: { ignoredReads: ['...'], ignoredWrites: ['...'] },
+        },
+        {
+          executor: 'nx:run-commands',
+          sandbox: { ignoredReads: ['dist/**'], ignoredWrites: ['out/**'] },
+        }
+      );
+      expect(result.sandbox.ignoredReads).not.toContain('...');
+      expect(result.sandbox.ignoredWrites).not.toContain('...');
+      expect(result.sandbox).toEqual({
+        ignoredReads: ['dist/**'],
+        ignoredWrites: ['out/**'],
+      });
     });
   });
 });
