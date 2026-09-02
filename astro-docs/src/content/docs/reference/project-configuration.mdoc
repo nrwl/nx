@@ -247,7 +247,7 @@ If you are using distributed task execution, tasks will still be run simultaneou
 
 ### I/O snapshots
 
-When your workspace is connected to Nx Cloud, Nx hashes a cacheable task from the files its last CI run actually read instead of from the declared filesets. Set `"ioSnapshots": false` on a target to keep hashing it from its declared inputs only, for example when the task reads the network or enumerates directories:
+When your workspace is connected to Nx Cloud, Nx hashes a cacheable task from the files its last CI run actually read instead of from the declared filesets. Set [`sandbox.enabled`](#sandbox) to `false` on a target to keep hashing it from its declared inputs only, for example when the task reads the network or enumerates directories:
 
 ```json
 // project.json
@@ -255,13 +255,13 @@ When your workspace is connected to Nx Cloud, Nx hashes a cacheable task from th
   "targets": {
     "e2e": {
       "cache": true,
-      "ioSnapshots": false
+      "sandbox": { "enabled": false }
     }
   }
 }
 ```
 
-The default is `true`. `ioSnapshots` merges through `targetDefaults` like any other target property, and it only applies to cacheable targets. Set `NX_IO_SNAPSHOTS=false` to turn snapshots off for a whole run. Run with `--verbose` to print one line saying how many tasks hashed from a snapshot and why the rest fell back. `nx show target <task>` reports the snapshot status for a target, and `nx show target inputs <task> --json` reports it per task.
+`enabled` defaults to `true`, and this only applies to cacheable targets. The same property controls whether Nx tracks the task's reads and writes at all — see [Sandbox](#sandbox) for the full shape and for how it merges through `targetDefaults`. Set `NX_IO_SNAPSHOTS=false` to turn snapshots off for a whole run. Run with `--verbose` to print one line saying how many tasks hashed from a snapshot and why the rest fell back. `nx show target <task>` reports the snapshot status for a target, and `nx show target inputs <task> --json` reports it per task.
 
 Snapshots also fill in outputs. When a snapshot covers a task, Nx caches the files the CI run wrote on top of the target's declared `outputs`, so a file the build writes but you never listed still gets cached and restored. Nx never drops a declared output; it only adds observed ones. `nx show target outputs <task>` marks each entry as declared or from the snapshot.
 

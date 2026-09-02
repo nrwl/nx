@@ -59,7 +59,7 @@ describe('formatIoSnapshotSummary', () => {
     expect(summary.bodyLines).toEqual([
       'bundle: cached at /w/.nx/cache/io-snapshots/abc123',
       'commit abc123, digest deadbeef, 3 tasks in bundle',
-      'c:e2e: ioSnapshots is false',
+      'c:e2e: sandbox.enabled is false',
       'd:test: no snapshot for this task',
       'e:test: no snapshot for this task',
       'f:lint: snapshot glob "**/*.ts" is anchored at the workspace root',

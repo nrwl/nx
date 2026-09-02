@@ -98,7 +98,7 @@ function describeDiagnostic(d: IoSnapshotDiagnostic): string {
     case 'invalid-bundle':
       return `invalid snapshot bundle ${d.file}: ${d.message}`;
     case 'disabled':
-      return `${d.taskId}: ioSnapshots is false`;
+      return `${d.taskId}: sandbox.enabled is false`;
     case 'custom-hasher':
       return `${d.taskId}: uses a custom hasher`;
     case 'missing':

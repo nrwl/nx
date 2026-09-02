@@ -270,9 +270,9 @@ describe('I/O snapshots', () => {
     expect(shown.sources[`libs/${lib}/dist/main.txt`]).toBe('declared');
   }, 120000);
 
-  it('hashes natively for a target that opts out with ioSnapshots: false', () => {
+  it('hashes natively for a target that opts out with sandbox.enabled: false', () => {
     updateJson(`libs/${lib}/project.json`, (c) => {
-      c.targets.echo.ioSnapshots = false;
+      c.targets.echo.sandbox = { enabled: false };
       return c;
     });
     const shown = JSON.parse(
@@ -286,7 +286,7 @@ describe('I/O snapshots', () => {
     updateFile(`libs/${lib}/README.md`, 'opted out sees this\n');
     expect(runCLI(`echo ${lib}`, { env: on })).not.toContain(CACHE_HIT);
     updateJson(`libs/${lib}/project.json`, (c) => {
-      delete c.targets.echo.ioSnapshots;
+      delete c.targets.echo.sandbox;
       return c;
     });
   }, 120000);

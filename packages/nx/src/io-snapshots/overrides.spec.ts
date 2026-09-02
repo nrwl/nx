@@ -34,7 +34,11 @@ const projectGraph: ProjectGraph = {
   nodes: {
     web: node('web', 'apps/web', {
       build: { executor: 'nx:run-commands', cache: true },
-      lint: { executor: 'nx:run-commands', cache: true, ioSnapshots: false },
+      lint: {
+        executor: 'nx:run-commands',
+        cache: true,
+        sandbox: { enabled: false },
+      },
       custom: { executor: 'nx:run-commands', cache: true },
     }),
     ui: node('ui', 'libs/ui', {
