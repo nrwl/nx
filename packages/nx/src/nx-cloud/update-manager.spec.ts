@@ -7,6 +7,7 @@ import {
   readFileSync,
   rmSync,
   statSync,
+  symlinkSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
@@ -225,6 +226,20 @@ describe('update-manager bundle download', () => {
 
     expect(existsSync(join(installDir, 'verify.lock'))).toBe(true);
     expect(existsSync(join(installDir, 'download.lock'))).toBe(true);
+  });
+
+  it('survives an entry it cannot stat while cleaning up old bundles', async () => {
+    // A concurrent cleanup can unlink an entry between the readdir and the
+    // stat. A broken symlink reproduces that failure deterministically.
+    symlinkSync(join(installDir, 'gone'), join(installDir, '2608.29.0001'));
+
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      axiosServing(bundleTarball({ 'index.js': '' })),
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(installed.version).toBe('2608.30.0002');
   });
 
   it('leaves no bundle behind when the download request fails', async () => {
