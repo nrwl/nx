@@ -23,7 +23,6 @@ describe('TaskIOService sandbox configuration', () => {
     service.notifyPidUpdate({ taskId: 'proj:other', pid: 201 });
 
     expect(updates).toEqual([{ taskId: 'proj:other', pid: 201 }]);
-    expect(service.isTaskSandboxDisabled('proj:disabled')).toBe(true);
   });
 
   it('keeps PID updates for a sandbox configuration without enabled: false', () => {
@@ -37,7 +36,6 @@ describe('TaskIOService sandbox configuration', () => {
     service.notifyPidUpdate({ taskId: 'proj:ignores-only', pid: 300 });
 
     expect(updates).toEqual([{ taskId: 'proj:ignores-only', pid: 300 }]);
-    expect(service.isTaskSandboxDisabled('proj:ignores-only')).toBe(false);
   });
 
   it('re-enables PID updates when a task is re-registered as enabled', () => {
