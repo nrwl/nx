@@ -4,7 +4,6 @@ use std::path::{Path, PathBuf};
 use tracing::{debug, trace};
 
 use crate::native::glob::{build_glob_set, contains_glob_pattern, glob_transform::partition_glob};
-use crate::native::logger::enable_logger;
 use crate::native::utils::Normalize;
 use crate::native::walker::{nx_walker, nx_walker_sync};
 
@@ -250,7 +249,6 @@ pub fn get_files_for_outputs_batch(
     directory: String,
     entries_batch: Vec<Vec<String>>,
 ) -> anyhow::Result<Vec<Vec<String>>> {
-    enable_logger();
     let directory = Path::new(&directory);
     entries_batch
         .into_par_iter()
@@ -566,8 +564,6 @@ mod test {
         use crate::native::cache::file_ops::_copy;
         use std::os::unix::fs::symlink;
 
-        enable_logger();
-
         let workspace = TempDir::new().unwrap();
         let cache = TempDir::new().unwrap();
 
@@ -715,8 +711,6 @@ mod test {
                 .map(|n| n.get())
                 .unwrap_or(1)
         }
-
-        enable_logger();
 
         let initial_count = get_thread_count();
 

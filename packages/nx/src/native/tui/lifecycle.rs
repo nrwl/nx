@@ -13,7 +13,6 @@ use napi::{Status, bindgen_prelude::Unknown};
 #[cfg(not(test))]
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
 #[cfg(not(test))]
-use crate::native::logger::enable_logger;
 use crate::native::pseudo_terminal::pseudo_terminal::{MasterArc, ParserArc, WriterArc};
 use crate::native::tasks::types::{Task, TaskGraph, TaskResult};
 
@@ -463,8 +462,6 @@ impl AppLifeCycle {
         done_callback: ThreadsafeFunction<(), Unknown<'static>, (), Status, false>,
     ) -> napi::Result<()> {
         debug!("AppLifeCycle::__init called");
-
-        enable_logger();
 
         // Always start in FullScreen mode
         let initial_mode = TuiMode::FullScreen;
