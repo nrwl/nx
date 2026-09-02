@@ -50,6 +50,15 @@ export class BatchProcess {
   private capturedOutputFailed = false;
   /** Consecutive write failures. A transient one is retried; see MAX below. */
   private capturedOutputFailures = 0;
+  private static captureSeq = 0;
+  /**
+   * Discriminates this capture file from every other in the process. Assigned
+   * once here rather than at open time: a value minted inside the lazy open
+   * changed the name on every reopen, orphaning what had already been captured.
+   * `batchId` alone is not enough, since it defaults to the executor name for
+   * callers that do not pass one.
+   */
+  private readonly captureSeq = ++BatchProcess.captureSeq;
   /**
    * A failed write is usually transient (a momentarily full disk), and under
    * `summary` this file is the only copy the reader ever sees, so one failure
@@ -216,7 +225,7 @@ export class BatchProcess {
         // compiler's first non-cascading errors are.
         const name = `${this.batchId.replace(/[^a-zA-Z0-9]+/g, '-')}-${
           process.pid
-        }.log`;
+        }-${this.captureSeq}.log`;
         const path = join(dir, name);
         // Truncate on the first open and append after, so a reopen extends this
         // run's file while a stale one left by a dead run whose pid was recycled
@@ -251,6 +260,10 @@ export class BatchProcess {
       while (written < bytes.length) {
         written += writeSync(this.capturedOutputFd, bytes, written);
       }
+      // Consecutive, so a batch that writes for an hour and hiccups three times
+      // far apart keeps capturing. Only an unbroken run of failures, which is
+      // what an unwritable directory looks like, gives up.
+      this.capturedOutputFailures = 0;
     } catch (e) {
       // This runs inside a stream 'data' handler, where a throw is an uncaught
       // exception rather than something the orchestrator's try can see - so a
