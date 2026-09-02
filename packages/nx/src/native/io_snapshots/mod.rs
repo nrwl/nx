@@ -12,7 +12,10 @@ use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 #[cfg(not(target_arch = "wasm32"))]
-use tracing::trace;
+use tracing::{debug, trace};
+
+#[cfg(not(target_arch = "wasm32"))]
+use crate::native::logger::enable_logger;
 
 #[cfg(not(target_arch = "wasm32"))]
 use crate::native::utils::git;
@@ -184,12 +187,20 @@ impl FetchFailure {
 #[cfg(not(target_arch = "wasm32"))]
 #[napi]
 pub async fn fetch_io_snapshots(options: IoSnapshotFetchOptions) -> IoSnapshots {
+    // Nothing else on this path installs the tracing subscriber.
+    enable_logger();
+
     let workspace_root = Path::new(&options.workspace_root);
     let cache_directory = Path::new(&options.cache_directory);
 
     let Some(head) = git::head_sha(workspace_root) else {
         return IoSnapshots::skipped("not-a-git-repo", "Could not resolve HEAD");
     };
+    trace!(
+        "io snapshots: resolving {head} from {} (cache {})",
+        options.api_url,
+        cache_directory.display()
+    );
 
     let now = current_timestamp_millis();
     let max_age = options.max_age_ms.unwrap_or(DEFAULT_MAX_AGE_MS);
@@ -198,7 +209,10 @@ pub async fn fetch_io_snapshots(options: IoSnapshotFetchOptions) -> IoSnapshots 
     if let Some(resolution) = &cached {
         if max_age > 0 && now - resolution.fetched_at <= max_age {
             if let Ok(bundle) = store::read_bundle(&bundle_dir) {
-                trace!("io snapshots for {head} served from cache");
+                debug!(
+                    "io snapshots: {head} served from cache ({} task(s), digest {})",
+                    bundle.resolution.tasks, bundle.resolution.digest
+                );
                 return IoSnapshots::resolved("cached", None, None, &bundle_dir, bundle);
             }
         }
@@ -208,6 +222,11 @@ pub async fn fetch_io_snapshots(options: IoSnapshotFetchOptions) -> IoSnapshots 
     if cached.is_none() {
         if let Some(failure) = store::read_failure(cache_directory, &head) {
             if failure.api_url == options.api_url && now - failure.at <= failure_max_age {
+                debug!(
+                    "io snapshots: replaying the cached {} failure for {head}; delete {} or set NX_IO_SNAPSHOTS_MAX_AGE=0 to retry",
+                    failure.reason,
+                    bundle_dir.display()
+                );
                 return IoSnapshots::skipped(
                     "cached-failure",
                     format!("{} ({})", failure.message, failure.reason),
@@ -227,6 +246,10 @@ pub async fn fetch_io_snapshots(options: IoSnapshotFetchOptions) -> IoSnapshots 
         client_version: client_version.clone(),
     };
     if credentials.is_empty() {
+        debug!(
+            "io snapshots: no Nx Cloud credentials resolved for {}",
+            options.api_url
+        );
         return IoSnapshots::skipped(
             "no-credentials",
             "No Nx Cloud access token, Nx Cloud ID, or personal access token found",
@@ -242,6 +265,12 @@ pub async fn fetch_io_snapshots(options: IoSnapshotFetchOptions) -> IoSnapshots 
     }
 
     let timeout = Duration::from_millis(options.timeout_ms.unwrap_or(DEFAULT_TIMEOUT_MS) as u64);
+    debug!(
+        "io snapshots: requesting {} commit(s) from {} (timeout {}ms)",
+        commits.len(),
+        options.api_url,
+        timeout.as_millis()
+    );
     let mut snapshots =
         match client::read_snapshots(&options.api_url, &commits, &credentials, timeout).await {
             Ok(snapshots) => snapshots,
@@ -273,6 +302,10 @@ pub async fn fetch_io_snapshots(options: IoSnapshotFetchOptions) -> IoSnapshots 
                         },
                     );
                 }
+                debug!(
+                    "io snapshots: fetch failed ({}): {}",
+                    failure.reason, failure.message
+                );
                 return IoSnapshots::skipped(failure.reason, failure.message);
             }
         };
@@ -299,6 +332,19 @@ pub async fn fetch_io_snapshots(options: IoSnapshotFetchOptions) -> IoSnapshots 
         Ok(dir) => dir,
         Err(err) => return IoSnapshots::skipped("write-failed", err.to_string()),
     };
+    if resolution.tasks == 0 {
+        debug!(
+            "io snapshots: Nx Cloud has no snapshots for any of the {} commit(s) ending at {head}; every task falls back to its declared inputs",
+            resolution.commits.len()
+        );
+    } else {
+        debug!(
+            "io snapshots: fetched {} task(s) from {} commit(s), digest {}",
+            resolution.tasks,
+            resolution.source_commits.len(),
+            resolution.digest
+        );
+    }
     store::prune(
         cache_directory,
         options.retain.unwrap_or(DEFAULT_RETAIN) as usize,
