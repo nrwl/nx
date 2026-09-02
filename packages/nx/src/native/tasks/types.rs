@@ -188,7 +188,11 @@ pub enum HashInstruction {
     Runtime(String),
     Environment(String),
     Cwd(CwdMode),
-    ProjectFileSet(String, Vec<String>),
+    /// Globs for one project. `include_ignored` picks the backing store:
+    /// `false` filters the project's tracked file map, `true` expands against
+    /// the disk so gitignored and generated files count (declared
+    /// `includeIgnored` filesets and I/O snapshot reads).
+    ProjectFileSet(String, Vec<String>, bool),
     ProjectConfiguration(String),
     TsConfiguration(String),
     TaskOutput(String, Vec<String>),
@@ -198,9 +202,6 @@ pub enum HashInstruction {
     /// Run-constant label that keeps hash keys built from different input
     /// sources (e.g. an I/O snapshot) from ever colliding with native keys.
     Marker(String),
-    /// Workspace-relative globs expanded against the disk at hash time, so
-    /// gitignored and generated files can be inputs. Tokens are pre-resolved.
-    Files(Vec<String>),
 }
 
 /// Append-only interner for hash instructions. Plans store `u32` ids into the
@@ -290,11 +291,12 @@ enum InstructionKind {
 impl InstructionKind {
     fn of(instruction: &HashInstruction) -> Self {
         match instruction {
-            HashInstruction::ProjectFileSet(_, _) | HashInstruction::WorkspaceFileSet(_) => {
+            HashInstruction::ProjectFileSet(_, _, false) | HashInstruction::WorkspaceFileSet(_) => {
                 Self::FileSet
             }
-            // Declared `files` inputs and snapshot groups survive a snapshot.
-            HashInstruction::Files(_) => Self::Other,
+            // Disk-backed groups are the snapshot's own reads, or declared
+            // `includeIgnored` inputs; neither is replaced by a snapshot.
+            HashInstruction::ProjectFileSet(_, _, true) => Self::Other,
             HashInstruction::TsConfiguration(_) => Self::TsConfiguration,
             _ => Self::Other,
         }
@@ -349,8 +351,16 @@ impl fmt::Display for HashInstruction {
             "{}",
             match self {
                 HashInstruction::AllExternalDependencies => "AllExternalDependencies".to_string(),
-                HashInstruction::ProjectFileSet(project_name, file_set) => {
-                    format!("{project_name}:{}", file_set.join(","))
+                HashInstruction::ProjectFileSet(project_name, file_set, include_ignored) => {
+                    // Leading marker: the two backing stores must never share a
+                    // pool key, or an interned hash would be reused across them.
+                    let prefix = if *include_ignored { "files:" } else { "" };
+                    let globs = file_set.join(",");
+                    if *include_ignored {
+                        format!("{prefix}{project_name}:[{globs}]")
+                    } else {
+                        format!("{project_name}:{globs}")
+                    }
                 }
                 HashInstruction::WorkspaceFileSet(file_set) =>
                     format!("workspace:[{}]", file_set.join(",")),
@@ -387,7 +397,6 @@ impl fmt::Display for HashInstruction {
                     format!("{prefix}json:{}{fields_str}{exclude_str}", json.json_path)
                 }
                 HashInstruction::Marker(marker) => marker.clone(),
-                HashInstruction::Files(globs) => format!("files:[{}]", globs.join(",")),
             }
         )
     }
@@ -422,13 +431,26 @@ mod tests {
 
     #[test]
     fn files_display_lists_globs_in_declared_order() {
-        let instruction = HashInstruction::Files(vec![
-            "libs/ui/dist/**/*.js".into(),
-            "!libs/ui/dist/**/*.map".into(),
-        ]);
+        let instruction = HashInstruction::ProjectFileSet(
+            "ui".into(),
+            vec![
+                "libs/ui/dist/**/*.js".into(),
+                "!libs/ui/dist/**/*.map".into(),
+            ],
+            true,
+        );
         assert_eq!(
             instruction.to_string(),
-            "files:[libs/ui/dist/**/*.js,!libs/ui/dist/**/*.map]"
+            "files:ui:[libs/ui/dist/**/*.js,!libs/ui/dist/**/*.map]"
+        );
+    }
+
+    #[test]
+    fn the_two_backing_stores_never_share_a_pool_key() {
+        let globs = vec!["libs/ui/**/*.ts".to_string()];
+        assert_ne!(
+            HashInstruction::ProjectFileSet("ui".into(), globs.clone(), false).to_string(),
+            HashInstruction::ProjectFileSet("ui".into(), globs, true).to_string()
         );
     }
 
