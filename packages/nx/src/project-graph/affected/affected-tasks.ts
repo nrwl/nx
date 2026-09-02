@@ -3,11 +3,13 @@ import { ProjectGraph } from '../../config/project-graph';
 import { TaskGraph } from '../../config/task-graph';
 import {
   affectedTasks as nativeAffectedTasks,
+  affectedTaskInputMatches,
   dependentOutputEdges,
 } from '../../native';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { projectHasTarget } from '../../utils/project-graph-utils';
 import { FileChange } from '../file-utils';
+import type { AffectedReason } from './affected-reasons';
 import { AUTO_AFFECTED_LOCK_FILES } from '../../plugins/js/lock-file/lock-file';
 import { existsSync } from 'fs';
 import { join } from 'path';
@@ -31,6 +33,8 @@ export interface AffectedTasksResult {
   affectedTaskIds: Set<string>;
   /** The full, unpruned graph the answer was computed over. */
   taskGraph: TaskGraph;
+  /** Every reason that applies, per affected task. Only when `explain`. */
+  reasons?: Record<string, AffectedReason[]>;
   /** Hand to the runner so the survivors are not planned a second time. */
   planningContext?: TaskPlanningContext;
 }
@@ -46,6 +50,8 @@ export interface ComputeAffectedTasksOptions {
   excludeTaskDependencies?: boolean;
   packageJson?: any;
   projectDeletionAffectsAllProjects?: boolean;
+  /** Collect why each task was selected. Costs an extra native pass. */
+  explain?: boolean;
 }
 
 /**
@@ -145,6 +151,7 @@ export async function computeAffectedTasks(
   const planningContext = createTaskPlanningContext(projectGraph, nxJson);
   const plans = planningContext.planner.getPlansReference(taskIds, taskGraph);
 
+  const changedPaths = touchedFiles.map((f) => f.file);
   // ProjectConfiguration resolves to no files, so the matcher is told which of
   // these paths are configuration and resolves that instruction against the
   // project they belong to. Decided here because it needs the plugins'
@@ -154,13 +161,13 @@ export async function computeAffectedTasks(
     nxJson
   );
   const own = new Set(
-    nativeAffectedTasks(
-      graphRef,
-      plans,
-      touchedFiles.map((f) => f.file),
-      projectConfigChanges
-    )
+    nativeAffectedTasks(graphRef, plans, changedPaths, projectConfigChanges)
   );
+
+  // A second native pass, so the selection path stays a membership test.
+  const inputMatches = opts.explain
+    ? affectedTaskInputMatches(graphRef, plans, changedPaths)
+    : undefined;
 
   // Tasks that read an upstream task's artifacts. Those are excluded from
   // direct file matching, because they are gitignored and unbuilt and so can
@@ -194,14 +201,89 @@ export async function computeAffectedTasks(
     }
   }
 
+  const affectedTaskIds = propagate(own, taskGraph, producersOf);
+
   return {
-    affectedTaskIds: propagate(own, taskGraph, producersOf),
+    affectedTaskIds,
+    reasons: opts.explain
+      ? taskReasons(
+          affectedTaskIds,
+          own,
+          inputMatches ?? {},
+          producersOf,
+          taskGraph,
+          blindSpotProjects,
+          touchedFiles
+        )
+      : undefined,
     taskGraph,
     // The plans ride along so the hasher can narrow them instead of building
     // its own. Every task it will be asked about is in here, since the pruned
     // graph is a subset of the one planned above.
     planningContext: { ...planningContext, plans },
   };
+}
+
+/**
+ * Why each selected task is in the answer.
+ *
+ * Assembled after the fact rather than accumulated during selection, so the
+ * selection path costs nothing when `--explain` is off. Every reason that
+ * applies is listed: a task can match a changed file, read an affected
+ * producer, and sit in a project whose lockfile moved, all at once.
+ */
+function taskReasons(
+  affected: Set<string>,
+  own: Set<string>,
+  inputMatches: Record<string, { file: string; pattern?: string }[]>,
+  producersOf: Record<string, string[]>,
+  taskGraph: TaskGraph,
+  blindSpotProjects: Set<string>,
+  touchedFiles: FileChange[]
+): Record<string, AffectedReason[]> {
+  const blindSpotFiles = touchedFiles
+    .map((f) => f.file)
+    .filter((file) => {
+      const name = file.slice(file.lastIndexOf('/') + 1);
+      return LOCK_FILES.has(name) || PROJECT_CONFIG_FILES.has(name);
+    });
+
+  const reasons: Record<string, AffectedReason[]> = {};
+  for (const taskId of affected) {
+    const forTask: AffectedReason[] = [];
+
+    for (const match of inputMatches[taskId] ?? []) {
+      forTask.push({
+        kind: 'input-file',
+        file: match.file,
+        pattern: match.pattern,
+      });
+    }
+
+    for (const producer of producersOf[taskId] ?? []) {
+      if (affected.has(producer)) {
+        forTask.push({ kind: 'dependent-output', producer });
+      }
+    }
+
+    // A seeded task has no fileset that names the change, so the file that
+    // seeded it is the only thing worth reporting.
+    if (own.has(taskId) && !inputMatches[taskId]?.length) {
+      const project = taskGraph.tasks[taskId]?.target.project;
+      if (project && blindSpotProjects.has(project)) {
+        for (const file of blindSpotFiles) {
+          const name = file.slice(file.lastIndexOf('/') + 1);
+          forTask.push({
+            kind: LOCK_FILES.has(name) ? 'lockfile' : 'project-file',
+            file,
+          });
+        }
+      }
+    }
+
+    reasons[taskId] = forTask;
+  }
+  return reasons;
 }
 
 /**

@@ -4,7 +4,14 @@ import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
-import { filterAffected } from '../../project-graph/affected/affected-project-graph';
+import {
+  filterAffected,
+  filterAffectedWithReasons,
+} from '../../project-graph/affected/affected-project-graph';
+import { printAffectedExplanation } from '../../project-graph/affected/print-explanation';
+import { isExplaining } from '../../project-graph/affected/affected-reasons';
+import { computeAffectedTasks } from '../../project-graph/affected/affected-tasks';
+import { resolveAffectedGranularity } from '../../project-graph/affected/granularity';
 import {
   FileChange,
   calculateFileChanges,
@@ -39,7 +46,64 @@ export async function showProjectsHandler(
   // Affected touches dependencies so it needs to be processed first.
   if (args.affected) {
     const touchedFiles = await getTouchedFiles(nxArgs);
-    graph = await getAffectedGraph(touchedFiles, nxJson, graph);
+
+    // With a target in hand, answer the question the target implies: which
+    // projects have an affected *task* for it, not which affected projects
+    // happen to define it. Without this, `show projects --affected -t build`
+    // and `affected -t build` disagree, and the documented CI pattern is to
+    // feed the first into the second.
+    if (
+      resolveAffectedGranularity() === 'task' &&
+      args.withTarget?.length &&
+      !args.projects
+    ) {
+      const affectedTasks = await computeAffectedTasks({
+        projectGraph: graph,
+        nxJson,
+        targets: args.withTarget,
+        touchedFiles,
+        explain: isExplaining(nxArgs.explain),
+      });
+      if (isExplaining(nxArgs.explain)) {
+        printAffectedExplanation(
+          affectedTasks.reasons ?? {},
+          'Affected tasks',
+          // show projects declares its own --json, which has no executor to
+          // pass through to.
+          args.json ? 'stdout' : nxArgs.explain
+        );
+        await output.drain();
+        return;
+      }
+      const owning = new Set(
+        [...affectedTasks.affectedTaskIds].map(
+          (id) => affectedTasks.taskGraph.tasks[id].target.project
+        )
+      );
+      graph = {
+        ...graph,
+        nodes: Object.fromEntries(
+          Object.entries(graph.nodes).filter(([name]) => owning.has(name))
+        ),
+      };
+    } else if (isExplaining(nxArgs.explain)) {
+      // Reports the selection rather than filtering to it, so the later
+      // --projects and --withTarget filters would only obscure the answer.
+      const { reasons } = await filterAffectedWithReasons(
+        graph,
+        touchedFiles,
+        nxJson
+      );
+      printAffectedExplanation(
+        reasons,
+        'Affected projects',
+        args.json ? 'stdout' : nxArgs.explain
+      );
+      await output.drain();
+      return;
+    } else {
+      graph = await getAffectedGraph(touchedFiles, nxJson, graph);
+    }
   }
 
   const filter = filterNodes((node) => {

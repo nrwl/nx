@@ -15,12 +15,17 @@ import {
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
 import { projectHasTarget } from '../../utils/project-graph-utils';
-import { filterAffected } from '../../project-graph/affected/affected-project-graph';
+import {
+  filterAffected,
+  filterAffectedWithReasons,
+} from '../../project-graph/affected/affected-project-graph';
 import { TargetDependencyConfig } from '../../config/workspace-json-project-json';
 import { readNxJson } from '../../config/configuration';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { generateGraph } from '../graph/graph';
 import { computeAffectedTasks } from '../../project-graph/affected/affected-tasks';
+import { printAffectedExplanation } from '../../project-graph/affected/print-explanation';
+import { isExplaining } from '../../project-graph/affected/affected-reasons';
 import { resolveAffectedGranularity } from '../../project-graph/affected/granularity';
 import type { TaskSelection } from '../../tasks-runner/run-command';
 
@@ -78,7 +83,20 @@ export async function affected(
       overrides,
       extraTargetDependencies,
       excludeTaskDependencies: extraOptions.excludeTaskDependencies,
+      explain: isExplaining(nxArgs.explain),
     });
+
+    // --explain reports the selection rather than acting on it: someone asking
+    // why a task is affected does not also want it to run.
+    if (isExplaining(nxArgs.explain)) {
+      printAffectedExplanation(
+        affectedTasks.reasons ?? {},
+        'Affected tasks',
+        nxArgs.explain
+      );
+      await output.drain();
+      process.exit(0);
+    }
     taskSelection = {
       taskIds: [...affectedTasks.affectedTaskIds],
       planningContext: affectedTasks.planningContext,
@@ -104,6 +122,16 @@ export async function affected(
     );
     projects = [...owning].map((name) => projectGraph.nodes[name]);
   } else {
+    if (isExplaining(nxArgs.explain)) {
+      const { reasons } = await filterAffectedWithReasons(
+        projectGraph,
+        calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
+        nxJson
+      );
+      printAffectedExplanation(reasons, 'Affected projects', nxArgs.explain);
+      await output.drain();
+      process.exit(0);
+    }
     projects = await getAffectedGraphNodes(nxArgs, projectGraph);
   }
 

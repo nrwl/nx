@@ -304,6 +304,15 @@ export interface AffectedOptions {
 }
 
 /**
+ * The same selection, plus which file reached each task and how.
+ *
+ * Separate from `affected_tasks` because the explanation costs a string per
+ * match and only `--explain` reads it; the selection path stays a membership
+ * test over interned instruction ids.
+ */
+export declare function affectedTaskInputMatches(projectGraph: ExternalObject<ProjectGraph>, hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, changedFiles: Array<string>): Record<string, Array<InputMatch>>
+
+/**
  * Task ids with at least one changed file among their plan's file inputs.
  *
  * `changed_project_configs` is the subset of `changed_files` that is project
@@ -586,6 +595,16 @@ export declare function initializeTelemetry(connection: ExternalObject<NxDbConne
  */
 export declare function initializeTelemetryWithSessionId(sessionId: string, workspaceId: string, userId: string | undefined | null, nxVersion: string, packageManagerName: string, packageManagerVersion: string | undefined | null, nodeVersion: string, osArch: string, osPlatform: string, osRelease: string, isCi: boolean, isNxCloud: boolean): void
 
+/** A changed file that reached a task, and the input pattern it reached it by. */
+export interface InputMatch {
+  file: string
+  /**
+   * The fileset that matched. Absent for an instruction with no pattern to
+   * name, such as the root tsconfig.
+   */
+  pattern?: string
+}
+
 export interface InputsInput {
   input: string
   dependencies?: boolean
@@ -735,7 +754,7 @@ export declare function loadIoSnapshots(directory: string): IoSnapshots
  * Every branch is deterministic, and must stay so: this order reaches
  * `result.nodes` insertion order and so `nx show projects --affected`.
  */
-export declare function locateTouchedProjects(projectGraph: ExternalObject<ProjectGraph>, nxJson: NxJson, touchedFiles: Array<string>, options: AffectedOptions, jsLocators: Array<(files: string[]) => Promise<string[]>>): Promise<Array<string>>
+export declare function locateTouchedProjects(projectGraph: ExternalObject<ProjectGraph>, nxJson: NxJson, touchedFiles: Array<string>, options: AffectedOptions, jsLocators: Array<(files: string[]) => Promise<TouchedProject[]>>): Promise<Array<TouchedProject>>
 
 export declare function logDebug(message: string): void
 
@@ -1017,6 +1036,32 @@ export interface TaskTarget {
 }
 
 export declare function testOnlyTransferFileMap(projectFiles: Record<string, Array<FileData>>, nonProjectFiles: Array<FileData>): NxWorkspaceFilesExternals
+
+/**
+ * One locator's finding: a project, and enough about the signal to explain it.
+ *
+ * `kind` is a discriminant the TypeScript side narrows on; the payload fields
+ * are populated per kind rather than modelled as a union, because napi objects
+ * carry no tag. A locator that cannot attribute a single file leaves `file`
+ * unset rather than inventing one.
+ */
+export interface TouchedProject {
+  project: string
+  kind: string
+  /** The changed file that triggered it, when one file is responsible. */
+  file?: string
+  /**
+   * The `{workspaceRoot}` fileset or plugin glob that matched, when the
+   * signal came from a pattern rather than from ownership.
+   */
+  pattern?: string
+  /**
+   * The external package whose version moved. Set by the JS locators, which
+   * return through this same struct, so it has to be declared here or napi
+   * drops it on the way back.
+   */
+  package?: string
+}
 
 /** Track an event using the global telemetry instance */
 export declare function trackEvent(eventName: string, parameters?: Record<string, string> | undefined | null): void

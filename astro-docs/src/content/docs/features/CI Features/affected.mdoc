@@ -229,6 +229,33 @@ You can also visualize the affected projects using the [Nx graph](/docs/features
 nx graph --affected
 ```
 
+## Understanding why something is affected
+
+When something is in the affected set and you can't see why, add `--explain`. Nx prints what it selected and what put it there, then exits without running anything:
+
+```shell
+nx affected -t build --explain
+```
+
+```text
+ NX   Affected projects (3)
+
+  ui
+    - owns changed file libs/ui/src/index.ts
+
+  app
+    - depends on ui, which is affected
+
+  admin
+    - depends on ui, which is affected
+```
+
+Each entry lists every reason that applies, so a project reached through two different dependencies reports both. To follow a chain, look up the project named in a reason.
+
+Pass `--explain=stdout` for the same data as JSON, or `--explain=reasons.json` to write it to a file.
+
+`nx show projects --affected --explain` explains the project list the same way.
+
 ## Best paired with remote caching and distribution
 
 Using `nx affected` is a powerful tool to reduce the amount of compute that needs to be run. However, this might not be sufficient to significantly speed up your CI pipeline. For example:

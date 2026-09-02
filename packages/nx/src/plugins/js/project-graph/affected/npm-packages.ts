@@ -9,6 +9,7 @@ import {
 } from '../../../../utils/json-diff';
 import { logger } from '../../../../utils/logger';
 import { TouchedProjectLocator } from '../../../../project-graph/affected/affected-project-graph-models';
+import type { TouchedProject } from '../../../../project-graph/affected/affected-reasons';
 import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
@@ -18,7 +19,25 @@ import { getPackageNameFromImportPath } from '../../../../utils/get-package-name
 
 export const getTouchedNpmPackages: TouchedProjectLocator<
   WholeFileChange | JsonChange
-> = (touchedFiles, _, nxJson, packageJson, projectGraph): string[] => {
+> = (touchedFiles, nodes, nxJson, packageJson, graph): TouchedProject[] =>
+  locateTouchedNpmPackages(touchedFiles, nodes, nxJson, packageJson, graph).map(
+    (name) => ({
+      project: name,
+      kind: 'npm-package' as const,
+      package: name.startsWith('npm:') ? name : undefined,
+      file: 'package.json',
+    })
+  );
+
+const locateTouchedNpmPackages = (
+  touchedFiles: Parameters<
+    TouchedProjectLocator<WholeFileChange | JsonChange>
+  >[0],
+  _: Parameters<TouchedProjectLocator>[1],
+  nxJson: Parameters<TouchedProjectLocator>[2],
+  packageJson: Parameters<TouchedProjectLocator>[3],
+  projectGraph: Parameters<TouchedProjectLocator>[4]
+): string[] => {
   const packageJsonChange = touchedFiles.find((f) => f.file === 'package.json');
   if (!packageJsonChange) return [];
 
