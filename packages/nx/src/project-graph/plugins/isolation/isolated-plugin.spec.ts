@@ -172,6 +172,47 @@ describe('IsolatedPlugin', () => {
     });
   });
 
+  describe('settling pending requests when a worker is lost', () => {
+    function pluginWithTwoPendingRequests() {
+      const plugin: any = Object.create(IsolatedPlugin.prototype);
+      plugin.name = 'test-plugin';
+      plugin._alive = true;
+      plugin.responseHandlers = new Map();
+      const errors: Error[] = [];
+      for (const tx of ['1', '2']) {
+        plugin.responseHandlers.set(tx, {
+          onMessage: vi.fn(),
+          onError: (e: Error) => errors.push(e),
+        });
+      }
+      return { plugin, errors };
+    }
+
+    it('hands the caller-supplied error to every pending request', () => {
+      const { plugin, errors } = pluginWithTwoPendingRequests();
+
+      plugin.failPendingRequests(new Error('worker sent something unreadable'));
+
+      expect(errors.map((e) => e.message)).toEqual([
+        'worker sent something unreadable',
+        'worker sent something unreadable',
+      ]);
+      expect(plugin.responseHandlers.size).toBe(0);
+    });
+
+    it('takes the worker out of service without settling anything', () => {
+      const { plugin, errors } = pluginWithTwoPendingRequests();
+      plugin._connectPromise = Promise.resolve();
+
+      plugin.markUnusable();
+
+      expect(plugin._alive).toBe(false);
+      expect(plugin._connectPromise).toBeNull();
+      expect(errors).toEqual([]);
+      expect(plugin.responseHandlers.size).toBe(2);
+    });
+  });
+
   describe('lifecycle integration', () => {
     it('should shutdown after single-hook plugin completes', async () => {
       const { plugin, shutdown } = createTestPlugin(

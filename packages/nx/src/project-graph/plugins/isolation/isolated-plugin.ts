@@ -177,41 +177,59 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     this.registerProcessMetrics();
 
     this.exitHandler = (code: number | null, signal: NodeJS.Signals | null) => {
-      this._alive = false;
-      this._connectPromise = null;
-      if (this.worker?.stdout) {
-        this.worker.stdout.unpipe(process.stdout);
-      }
-      if (this.worker?.stderr) {
-        this.worker.stderr.unpipe(process.stderr);
-      }
-      // Reject all pending requests
-      const error = new Error(
-        `Plugin worker "${this.name}" exited unexpectedly ${describeWorkerExit(
-          code,
-          signal
-        )}.`
+      this.markUnusable();
+      this.failPendingRequests(
+        new Error(
+          `Plugin worker "${this.name}" exited unexpectedly ${describeWorkerExit(
+            code,
+            signal
+          )}.`
+        )
       );
-      for (const { onError } of this.responseHandlers.values()) {
-        onError(error);
-      }
-      this.responseHandlers.clear();
     };
     worker.on('exit', this.exitHandler);
 
     socket.on(
       'data',
       consumeMessagesFromSocket(this.handleSocketData, (err) => {
-        // Nothing else settles the pending hook promises on a framing
-        // failure, so surface it the same way a dead worker would.
-        // No process died here, so there is no code or signal to report.
-        this.exitHandler?.(null, null);
+        // The worker is still running here; it is the stream that failed, so
+        // reporting this as an exit would send whoever reads it hunting for a
+        // dead process. The framing error names the bytes it choked on, so it
+        // travels with the error rather than only reaching stderr.
+        this.markUnusable();
         socket.destroy();
-        console.error(err.message);
+        this.failPendingRequests(
+          new Error(
+            `Plugin worker "${this.name}" sent a message the host could not read, ` +
+              `so its connection was dropped. ${err.message}`
+          )
+        );
       })
     );
 
     return this.sendLoadMessage();
+  }
+
+  /**
+   * Drops the worker from service without judging why. The next hook call
+   * respawns it through `ensureAlive`.
+   */
+  private markUnusable(): void {
+    this._alive = false;
+    this._connectPromise = null;
+    if (this.worker?.stdout) {
+      this.worker.stdout.unpipe(process.stdout);
+    }
+    if (this.worker?.stderr) {
+      this.worker.stderr.unpipe(process.stderr);
+    }
+  }
+
+  private failPendingRequests(error: Error): void {
+    for (const { onError } of this.responseHandlers.values()) {
+      onError(error);
+    }
+    this.responseHandlers.clear();
   }
 
   /**
