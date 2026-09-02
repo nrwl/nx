@@ -1,4 +1,10 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { join } from 'node:path';
 
 import { TempFs } from '../../internal-testing-utils/temp-fs';
@@ -1947,5 +1953,124 @@ describe('pending dotenv replay before serving a graph', () => {
     const fourth = await getCachedSerializedProjectGraphPromise();
     expect(fourth.projectGraph.nodes.bar.data.tags).toEqual(['env:PORT=7777']);
     expect(retrieveCallCount).toBe(2);
+  });
+});
+
+describe('handleWatcherRescan', () => {
+  let fs: TempFs;
+
+  beforeEach(() => {
+    fs = new TempFs('pgir-rescan');
+  });
+
+  afterEach(() => {
+    fs.cleanup();
+    delete (global as any).NX_DAEMON;
+  });
+
+  it('recovers file changes the watcher never delivered', async () => {
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({}),
+      'package.json': JSON.stringify({ name: 'root' }),
+      'libs/foo/project.json': JSON.stringify({
+        name: 'foo',
+        root: 'libs/foo',
+      }),
+      'libs/foo/src/index.ts': 'original',
+      'libs/foo/src/stale.ts': '',
+    });
+
+    vi.resetModules();
+    // The plugin-loader mocks vi.doMock installs in the tests above are
+    // registry-wide and outlive vi.resetModules.
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    // handleWatcherRescan runs on the daemon, where the context wrappers
+    // take their direct path.
+    (global as any).NX_DAEMON = true;
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
+
+    const {
+      getCachedSerializedProjectGraphPromise,
+      handleWatcherRescan,
+      isKnownWorkspaceFile,
+    } = await import('./project-graph-incremental-recomputation');
+
+    const first = await getCachedSerializedProjectGraphPromise();
+    expect(first.error).toBeNull();
+    expect(first.projectGraph.nodes.foo).toBeDefined();
+    expect(isKnownWorkspaceFile('libs/bar/project.json')).toBe(false);
+
+    // Dropped events: the workspace moves on with no watcher batch at all.
+    writeFileSync(join(fs.tempDir, 'libs/foo/src/index.ts'), 'changed');
+    mkdirSync(join(fs.tempDir, 'libs/bar'), { recursive: true });
+    writeFileSync(
+      join(fs.tempDir, 'libs/bar/project.json'),
+      JSON.stringify({ name: 'bar', root: 'libs/bar' })
+    );
+    rmSync(join(fs.tempDir, 'libs/foo/src/stale.ts'));
+
+    await handleWatcherRescan();
+
+    const second = await getCachedSerializedProjectGraphPromise();
+    expect(second.error).toBeNull();
+    expect(second.projectGraph.nodes.bar).toBeDefined();
+    expect(isKnownWorkspaceFile('libs/bar/project.json')).toBe(true);
+    expect(isKnownWorkspaceFile('libs/foo/src/stale.ts')).toBe(false);
+  });
+
+  it('keeps the cached graph when the re-walk finds no differences', async () => {
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({}),
+      'package.json': JSON.stringify({ name: 'root' }),
+    });
+
+    vi.resetModules();
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    (global as any).NX_DAEMON = true;
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
+
+    const { getCachedSerializedProjectGraphPromise, handleWatcherRescan } =
+      await import('./project-graph-incremental-recomputation');
+
+    const first = await getCachedSerializedProjectGraphPromise();
+    expect(first.error).toBeNull();
+
+    await handleWatcherRescan();
+
+    // Same result object: no invalidation happened, the cached compute
+    // survived the rescan.
+    const second = await getCachedSerializedProjectGraphPromise();
+    expect(second).toBe(first);
+  });
+});
+
+describe('diffFileData', () => {
+  it('classifies created, updated, unchanged and deleted files', async () => {
+    const { diffFileData } =
+      await import('./project-graph-incremental-recomputation');
+
+    const diff = diffFileData(
+      [
+        { file: 'a.ts', hash: '1' },
+        { file: 'b.ts', hash: '2' },
+        { file: 'c.ts', hash: '3' },
+      ],
+      [
+        { file: 'b.ts', hash: '2' },
+        { file: 'c.ts', hash: 'changed' },
+        { file: 'd.ts', hash: '4' },
+      ]
+    );
+
+    expect(diff.createdFiles).toEqual(['d.ts']);
+    // Created files carry their hash too: the collector needs one for every
+    // file it records, created or updated.
+    expect(diff.updatedFiles).toEqual([
+      { file: 'c.ts', hash: 'changed' },
+      { file: 'd.ts', hash: '4' },
+    ]);
+    expect(diff.deletedFiles).toEqual(['a.ts']);
   });
 });

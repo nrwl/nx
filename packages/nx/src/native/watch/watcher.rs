@@ -116,6 +116,10 @@ struct WatchPipeline {
     ignore_globs: Arc<NxGlobSet>,
 
     accumulator: HashMap<PathBuf, WatchEventInternal>,
+    /// The backend reported dropped events (notify's Rescan flag, e.g. an
+    /// inotify queue overflow). Per-path events are incomplete from that
+    /// moment, so the next flush emits a single rescan event instead.
+    pending_rescan: bool,
     burst_start: Option<Instant>,
     flush_deadline: Option<Instant>,
 }
@@ -156,6 +160,7 @@ impl WatchPipeline {
             #[cfg(not(target_os = "macos"))]
             ignore_globs: build_ignore_glob_set(),
             accumulator: HashMap::new(),
+            pending_rescan: false,
             burst_start: None,
             flush_deadline: None,
         })
@@ -182,11 +187,24 @@ impl WatchPipeline {
     }
 
     fn snapshot_events(&self) -> Vec<WatchEvent> {
+        // A rescan supersedes the accumulated events: the consumer re-walks,
+        // which covers everything a per-path event could have said.
+        if self.pending_rescan {
+            return vec![WatchEvent {
+                path: String::new(),
+                r#type: EventType::rescan,
+            }];
+        }
         self.accumulator.values().map(|e| e.into()).collect()
+    }
+
+    fn has_pending(&self) -> bool {
+        !self.accumulator.is_empty() || self.pending_rescan
     }
 
     fn reset_burst(&mut self) {
         self.accumulator.clear();
+        self.pending_rescan = false;
         self.burst_start = None;
         self.flush_deadline = None;
     }
@@ -265,6 +283,15 @@ impl WatchPipeline {
                 return Ok(());
             }
         };
+
+        if event.need_rescan() {
+            tracing::warn!("backend dropped events (rescan flag); scheduling a rescan flush");
+            self.pending_rescan = true;
+            let now = Instant::now();
+            let bs = *self.burst_start.get_or_insert(now);
+            self.flush_deadline = Some((now + IDLE_WINDOW).min(bs + MAX_WAIT));
+            return Ok(());
+        }
 
         let raw = RawWatchEvent::new(event);
 
@@ -353,7 +380,7 @@ impl WatchPipeline {
                         // FORCE_FLUSH_QUIET window so a trickle isn't cut
                         // mid-stream. Bounded by FORCE_FLUSH_MAX.
                         let deadline = handler_started_at + FORCE_FLUSH_MAX;
-                        let mut burst_in_progress = !self.accumulator.is_empty();
+                        let mut burst_in_progress = self.has_pending();
                         while fatal.is_none() {
                             let now = Instant::now();
                             if now >= deadline {
@@ -406,7 +433,7 @@ impl WatchPipeline {
                     Err(_) => break, // struct dropped or stop() called
                 },
                 default(idle_wait) => {
-                    if !self.accumulator.is_empty() {
+                    if self.has_pending() {
                         let events = self.snapshot_events();
                         debug!(count = events.len(), "idle-window emitting events");
                         for e in &events {
@@ -586,6 +613,37 @@ mod tests {
 
     fn find_event<'a>(events: &'a [WatchEvent], name: &str) -> Option<&'a WatchEvent> {
         events.iter().find(|e| e.path.ends_with(name))
+    }
+
+    #[test]
+    fn rescan_flag_supersedes_accumulated_events() {
+        use notify::event::{CreateKind, Flag};
+
+        let dir = tempdir().expect("tempdir");
+        let canonical = dir.path().canonicalize().expect("canonicalize tempdir");
+        let mut pipeline = WatchPipeline::new(
+            canonical.to_str().expect("utf-8 path").to_string(),
+            &[],
+            false,
+        )
+        .expect("pipeline");
+
+        let file = canonical.join("file.txt");
+        fs::write(&file, "x").expect("write");
+        let create = notify::Event::new(notify::EventKind::Create(CreateKind::File)).add_path(file);
+        pipeline.ingest_event(Ok(create)).expect("ingest create");
+        assert!(pipeline.has_pending());
+
+        let overflow = notify::Event::new(notify::EventKind::Other).set_flag(Flag::Rescan);
+        pipeline.ingest_event(Ok(overflow)).expect("ingest rescan");
+
+        let events = pipeline.snapshot_events();
+        assert_eq!(events.len(), 1);
+        assert!(matches!(events[0].r#type, EventType::rescan));
+        assert_eq!(events[0].path, "");
+
+        pipeline.reset_burst();
+        assert!(!pipeline.has_pending());
     }
 
     #[test]
