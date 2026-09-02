@@ -78,9 +78,15 @@ const topics = id.startsWith('kb/') ? (entry.data.topics ?? []) : [];
     private onIdle = (cb: IdleRequestCallback) =>
       (window.requestIdleCallback || ((cb) => setTimeout(cb, 1)))(cb);
 
+    private tabVisibilityObserver: MutationObserver | undefined;
+
     constructor() {
       super();
       this.tocContainer = this.querySelector('.toc-container');
+      // Run synchronously (not via requestIdleCallback) so a heading inside
+      // an inactive tab panel never flashes in the ToC before JS hides it.
+      this.syncTabHiddenEntries();
+      this.observeTabVisibility();
       this.onIdle(() => this.init());
     }
 
@@ -113,6 +119,48 @@ const topics = id.startsWith('kb/') ? (entry.data.topics ?? []) : [];
           behavior: prefersReducedMotion ? 'auto' : 'smooth',
         });
       }
+    }
+
+    /**
+     * Starlight hides inactive `<Tabs>` panels by setting `role="tabpanel"`
+     * plus the `hidden` attribute on all but the active panel (see
+     * https://github.com/withastro/starlight/blob/main/packages/starlight/src/user-components/tabs-processor.ts).
+     * `generateToC.ts` lists every heading regardless of tab nesting, so we
+     * hide/show the corresponding ToC `<li>` ourselves based on whether its
+     * target heading sits inside a hidden tab panel.
+     *
+     * There's no public Starlight event for tab switches, so this relies on
+     * that internal `hidden`-attribute behavior — re-check this on Starlight
+     * version bumps.
+     */
+    private isInHiddenTabPanel(el: Element | null): boolean {
+      if (!el) return false;
+      if (el.matches('[role="tabpanel"][hidden]')) return true;
+      return this.isInHiddenTabPanel(el.parentElement);
+    }
+
+    private syncTabHiddenEntries = (): void => {
+      const links = Array.from(this.querySelectorAll<HTMLAnchorElement>('a'));
+      for (const link of links) {
+        const li = link.closest('li');
+        if (!li) continue;
+        const slug = decodeURIComponent(link.hash.slice(1));
+        const heading = slug ? document.getElementById(slug) : null;
+        li.classList.toggle('toc-hidden', this.isInHiddenTabPanel(heading));
+      }
+    };
+
+    private observeTabVisibility(): void {
+      const main = document.querySelector('main');
+      if (!main) return;
+      this.tabVisibilityObserver = new MutationObserver(() =>
+        this.syncTabHiddenEntries()
+      );
+      this.tabVisibilityObserver.observe(main, {
+        attributes: true,
+        attributeFilter: ['hidden'],
+        subtree: true,
+      });
     }
 
     private init = (): void => {
@@ -256,6 +304,11 @@ const topics = id.startsWith('kb/') ? (entry.data.topics ?? []) : [];
     .kb-article-topics a:focus-visible {
       outline: 2px solid var(--sl-color-accent-high);
       outline-offset: 3px;
+    }
+
+    /* Hide ToC entries whose heading lives inside an inactive tab panel */
+    .toc-container .toc-hidden {
+      display: none;
     }
 
     /* Container with proper scrolling */
