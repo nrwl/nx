@@ -8,30 +8,29 @@
  * output, so it is restored to every distributed agent the same way the verdaccio
  * storage is — which is what makes the templates shareable across machines.
  *
- * The consumer side is `newProject()` in e2e/utils/create-project-utils.ts: when a
- * template exists for the selected package manager, it seeds the per-test workspace
- * from it instead of running create-nx-workspace. If the template is absent,
+ * The consumer side is `newProject()` in e2e/utils/create-project-utils.ts: it
+ * looks for <package-manager>/<preset> and seeds the per-test workspace from it
+ * instead of running create-nx-workspace. A missing directory is not an error —
  * newProject falls back to its original lazy build.
  *
- * One template per package manager, built in parallel — the agents run pnpm
- * (.nx/workflows/agents.yaml) while the macOS job runs npm, so npm-only templates
- * would never engage on Linux. pnpm's node_modules symlinks into a store outside
- * the workspace; newProject already reinstalls after copying a pnpm workspace to
- * relink them, so the copied tree only has to be good enough for that reinstall.
+ * The whole package-manager × preset matrix is built in parallel so no call site
+ * has to fall back. pnpm and yarn link node_modules into a store outside the
+ * workspace; newProject already reinstalls after copying such a workspace to
+ * relink it, so a copied tree only has to be good enough for that reinstall.
  */
 import { execSync } from 'node:child_process';
 import { cpSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-// Only the package manager the specs will actually select. Templates are ~177MB
-// each, and every spec but a handful uses getSelectedPackageManager(); suites that
-// pass an explicit packageManager just miss the template and take the fallback.
-// SELECTED_PM is declared as an input on this task so the cache can't serve an
-// npm-built template to a pnpm agent.
-const PACKAGE_MANAGERS = [process.env.SELECTED_PM || 'npm'];
-// Every spec file that calls newProject() starts on one of these two: 133 of 150
-// on `apps` (mostly by defaulting to it) and 17 on `ts`. The long-tail presets
+// Every package manager newProject() can be asked for: most call sites take
+// getSelectedPackageManager(), the rest either pin one or iterate all four
+// (see affected-auto-lockfile.test.ts). Building the full matrix means no call
+// site pays create-nx-workspace. Not keyed on SELECTED_PM -- the output is the
+// same whatever the agent selects, so keying it would only split the cache.
+const PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn', 'bun'];
+// The only presets newProject() is ever given: of its 208 call sites, 183 use
+// `apps` (nearly all by defaulting to it) and 25 use `ts`. The long-tail presets
 // (react-standalone, nuxt, angular-*) only reach create-nx-workspace through
 // runCreateWorkspace(), which the workspace-create suites use deliberately to
 // exercise the real thing and which this template must not replace.
