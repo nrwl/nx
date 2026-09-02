@@ -124,7 +124,9 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   private readonly shouldRegisterTSTranspiler: boolean;
 
   private lifecycle: PluginLifecycleManager;
-  private exitHandler: (() => void) | null = null;
+  private exitHandler:
+    | ((code: number | null, signal: NodeJS.Signals | null) => void)
+    | null = null;
 
   /**
    * Creates and loads an isolated plugin worker.
@@ -174,7 +176,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
 
     this.registerProcessMetrics();
 
-    this.exitHandler = () => {
+    this.exitHandler = (code: number | null, signal: NodeJS.Signals | null) => {
       this._alive = false;
       this._connectPromise = null;
       if (this.worker?.stdout) {
@@ -185,7 +187,10 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       }
       // Reject all pending requests
       const error = new Error(
-        `Plugin worker "${this.name}" exited unexpectedly.`
+        `Plugin worker "${this.name}" exited unexpectedly ${describeWorkerExit(
+          code,
+          signal
+        )}.`
       );
       for (const { onError } of this.responseHandlers.values()) {
         onError(error);
@@ -199,7 +204,8 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       consumeMessagesFromSocket(this.handleSocketData, (err) => {
         // Nothing else settles the pending hook promises on a framing
         // failure, so surface it the same way a dead worker would.
-        this.exitHandler?.();
+        // No process died here, so there is no code or signal to report.
+        this.exitHandler?.(null, null);
         socket.destroy();
         console.error(err.message);
       })
@@ -659,7 +665,7 @@ async function connectToWorker(
 
   // If the worker exits before we connect, abort polling immediately
   // rather than burning through attempts against a dead socket.
-  worker.once('exit', (code) => {
+  worker.once('exit', (code, signal) => {
     if (!abortController.signal.aborted) {
       // The worker sets this code only after an EPERM/EACCES on its own bind,
       // so it is proof of a refusal rather than an inference from the
@@ -669,7 +675,10 @@ async function connectToWorker(
       earlyExitError = markWorkerStartupFailure(
         new Error(
           [
-            `Plugin worker for "${name}" exited with code ${code} before the connection was established.`,
+            `Plugin worker for "${name}" exited ${describeWorkerExit(
+              code,
+              signal
+            )} before the connection was established.`,
             // The worker's own stderr may be lost with the process, so the
             // cause and the fix are repeated here.
             ...(refused || isSandbox()
@@ -723,6 +732,26 @@ export const PLUGIN_WORKER_STARTUP_FAILURE = Symbol.for(
 export const PLUGIN_WORKER_SOCKET_REFUSED = Symbol.for(
   'nx.pluginWorkerSocketRefused'
 );
+
+/**
+ * Describes how a worker died for an error message. A `null` code with a signal
+ * is an outside kill rather than anything the worker chose, and SIGKILL is what
+ * an out-of-memory kill looks like, so both are called out by name.
+ */
+export function describeWorkerExit(
+  code: number | null,
+  signal: NodeJS.Signals | null
+): string {
+  if (signal) {
+    return signal === 'SIGKILL'
+      ? `(killed by ${signal}, commonly an out-of-memory kill)`
+      : `(killed by ${signal})`;
+  }
+  if (code !== null) {
+    return `(exit code ${code})`;
+  }
+  return '(no exit code or signal reported)';
+}
 
 function markWorkerStartupFailure(error: Error, refused = false): Error {
   error[PLUGIN_WORKER_STARTUP_FAILURE] = true;

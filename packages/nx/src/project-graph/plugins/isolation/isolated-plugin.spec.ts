@@ -1,4 +1,5 @@
 import {
+  describeWorkerExit,
   getPluginWorkerSocketId,
   IsolatedPlugin,
   LoadResultPayload,
@@ -140,6 +141,36 @@ describe('IsolatedPlugin', () => {
       sendRequest,
     };
   }
+
+  describe('worker exit descriptions', () => {
+    it('reports a non-zero exit code', () => {
+      expect(describeWorkerExit(1, null)).toBe('(exit code 1)');
+    });
+
+    it('reports a zero exit code rather than dropping it as falsy', () => {
+      expect(describeWorkerExit(0, null)).toBe('(exit code 0)');
+    });
+
+    it('reports the signal when the worker was killed', () => {
+      expect(describeWorkerExit(null, 'SIGTERM')).toBe('(killed by SIGTERM)');
+    });
+
+    it('calls out SIGKILL as a likely out-of-memory kill', () => {
+      expect(describeWorkerExit(null, 'SIGKILL')).toBe(
+        '(killed by SIGKILL, commonly an out-of-memory kill)'
+      );
+    });
+
+    it('prefers the signal when both are present', () => {
+      expect(describeWorkerExit(0, 'SIGKILL')).toContain('SIGKILL');
+    });
+
+    it('says so when neither is reported', () => {
+      expect(describeWorkerExit(null, null)).toBe(
+        '(no exit code or signal reported)'
+      );
+    });
+  });
 
   describe('lifecycle integration', () => {
     it('should shutdown after single-hook plugin completes', async () => {
