@@ -11,8 +11,8 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { ciWorkflowGenerator } from './ci-workflow';
 import { vol } from 'memfs';
 
-jest.mock('child_process', () => {
-  const cp = jest.requireActual('child_process');
+vi.mock('child_process', async () => {
+  const cp = await vi.importActual<any>('child_process');
   return {
     ...cp,
     execSync: (...args) => {
@@ -25,16 +25,16 @@ jest.mock('child_process', () => {
   };
 });
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
   workspaceRoot: '/root',
 }));
 
-jest.mock('fs', () => {
-  const memFs = require('memfs').fs;
-  const actualFs = jest.requireActual<any>('fs');
+vi.mock('fs', async () => {
+  const memFs = (await vi.importActual<any>('memfs')).fs;
+  const actualFs = await vi.importActual<any>('fs');
   return {
-    ...jest.requireActual<any>('fs'),
+    ...actualFs,
     existsSync: (p) =>
       p.endsWith('yarn.lock') ||
       p.endsWith('pnpm-lock.yaml') ||
