@@ -51,10 +51,14 @@ pub struct TaskSandboxConfiguration {
     /// task, so no sandbox report is produced.
     pub enabled: Option<bool>,
     /// Workspace-relative glob patterns for reads that should be excluded
-    /// from sandboxing reports.
+    /// from sandboxing reports. The first path segment cannot contain `*`,
+    /// and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
+    /// pattern to a directory instead of leading with `**`.
     pub ignored_reads: Option<Vec<String>>,
     /// Workspace-relative glob patterns for writes that should be excluded
-    /// from sandboxing reports.
+    /// from sandboxing reports. The first path segment cannot contain `*`,
+    /// and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
+    /// pattern to a directory instead of leading with `**`.
     pub ignored_writes: Option<Vec<String>>,
 }
 
