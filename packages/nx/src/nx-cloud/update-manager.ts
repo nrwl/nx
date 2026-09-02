@@ -571,9 +571,16 @@ function removeOldClientBundles(currentInstallVersion: string) {
 
   for (let fileOrFolder of filesAndFolders) {
     // '.state' holds the control files. A '.tmp-*' left by a crashed extract
-    // is still reclaimed here: this runs after our own was renamed away, and
-    // the lock means no other process is extracting.
-    if (fileOrFolder === currentInstallVersion || fileOrFolder === '.state') {
+    // is reclaimed here, which is safe only because this runs after our own
+    // was renamed away and the download lock means no other process is
+    // extracting. Under WASM there is no lock, so a concurrent extract may
+    // still own that directory: leaving it costs disk, deleting it would
+    // fail that process's install.
+    if (
+      fileOrFolder === currentInstallVersion ||
+      fileOrFolder === '.state' ||
+      (IS_WASM && fileOrFolder.startsWith('.tmp-'))
+    ) {
       continue;
     }
     const fileOrFolderPath = join(runnerBundleInstallDirectory, fileOrFolder);
