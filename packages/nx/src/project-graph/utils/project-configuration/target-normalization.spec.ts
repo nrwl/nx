@@ -119,6 +119,82 @@ describe('validateAndNormalizeProjectRootMap', () => {
     expect(projectRootMap['libs/a/ui'].name).toEqual('ui');
   });
 
+  describe('sandbox validation', () => {
+    const projectRootMapWithSandbox = (sandbox: unknown) => ({
+      'libs/a/ui': {
+        root: 'libs/a/ui',
+        name: 'a-ui',
+        targets: { build: { executor: 'nx:run-commands', sandbox } },
+      },
+    });
+
+    it('should reject a non-object sandbox', () => {
+      expect(() =>
+        validateAndNormalizeProjectRootMap(
+          tempFs.tempDir,
+          projectRootMapWithSandbox(false) as any,
+          {}
+        )
+      ).toThrow(/"sandbox" configuration for target "build" in project "a-ui"/);
+    });
+
+    it('should reject a string where a glob array is required', () => {
+      expect(() =>
+        validateAndNormalizeProjectRootMap(
+          tempFs.tempDir,
+          projectRootMapWithSandbox({ ignoredReads: 'tmp/**' }) as any,
+          {}
+        )
+      ).toThrow(
+        /"sandbox.ignoredReads" for target "build" in project "a-ui" must be an array of glob patterns, but it is a string/
+      );
+    });
+
+    it('should reject a non-string element inside a glob array', () => {
+      expect(() =>
+        validateAndNormalizeProjectRootMap(
+          tempFs.tempDir,
+          projectRootMapWithSandbox({ ignoredWrites: ['ok/**', 7] }) as any,
+          {}
+        )
+      ).toThrow(/"sandbox.ignoredWrites\[1\]".*must be a glob pattern string/);
+    });
+
+    it('should reject a non-boolean enabled', () => {
+      expect(() =>
+        validateAndNormalizeProjectRootMap(
+          tempFs.tempDir,
+          projectRootMapWithSandbox({ enabled: 'false' }) as any,
+          {}
+        )
+      ).toThrow(/"sandbox.enabled".*must be a boolean, but it is a string/);
+    });
+
+    it('should accept a well-formed sandbox', () => {
+      expect(() =>
+        validateAndNormalizeProjectRootMap(
+          tempFs.tempDir,
+          projectRootMapWithSandbox({
+            enabled: false,
+            ignoredReads: ['tmp/**'],
+            ignoredWrites: ['scratch/**'],
+          }) as any,
+          {}
+        )
+      ).not.toThrow();
+    });
+
+    it('should accept a target with no sandbox', () => {
+      expect(() =>
+        validateAndNormalizeProjectRootMap(
+          tempFs.tempDir,
+          projectRootMapWithSandbox(undefined) as any,
+          {}
+        )
+      ).not.toThrow();
+    });
+  });
+
   it('should fall back to the folder name when project.json cannot be parsed', () => {
     tempFs.createFilesSync({
       'libs/a/ui/project.json': 'not json',
