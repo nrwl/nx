@@ -43,7 +43,6 @@ import {
   DbCache,
   dbCacheEnabled,
   getCache,
-  terminalOutputPathForHash,
 } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
@@ -979,48 +978,29 @@ export class TaskOrchestrator {
     } catch (e) {
       const isBatchStopping = this.stopRequested;
 
-      // A style that prints nothing renders no fold, so the captured log has no
-      // other route to a reader - and the worker's crash output is precisely
-      // what no task claims. Carry it in the results instead, so the file
-      // `persistTerminalOutputs` writes holds the reason the worker died rather
-      // than only the orchestrator's exit-code stack, which is what `summary`
-      // addresses by path.
-      const workerLog = printsTaskOutput(this.resolvedOutputStyle)
-        ? ''
-        : readCapturedBatchLog(batchProcess?.getCapturedOutputPath());
-
-      // One worker died, so one log explains every task in the batch. It is
-      // unbounded by design (batch-process.ts: a Gradle batch spans the whole
-      // command), so it is carried by the first task alone and the rest address
-      // that copy. Inlining it into all of them wrote a byte-identical
-      // unbounded file per task, each charged in full against `maxCacheSize`,
-      // and recorded one task's bytes as another's in task history and Nx Cloud.
-      const batchTaskIds = Object.keys(batch.taskGraph.tasks);
-      const logHolder = workerLog ? batchTaskIds[0] : undefined;
-      const logHolderHash = logHolder
-        ? this.taskGraph.tasks[logHolder]?.hash
-        : undefined;
-      const logPointer =
-        logHolderHash &&
-        `batch worker log: ${terminalOutputPathForHash(logHolderHash)}`;
-
-      const taskResults = batchTaskIds.map((taskId) => {
+      const taskResults = Object.keys(batch.taskGraph.tasks).map((taskId) => {
         const task = this.taskGraph.tasks[taskId];
         if (isBatchStopping) {
           task.endTime = Date.now();
         }
-        const stack = e.stack ?? e.message ?? '';
         return {
           task,
           code: 1,
           status: (isBatchStopping ? 'stopped' : 'failure') as TaskStatus,
-          terminalOutput: isBatchStopping
-            ? ''
-            : (taskId === logHolder ? [workerLog, stack] : [stack, logPointer])
-                .filter(Boolean)
-                .join('\n'),
+          terminalOutput: isBatchStopping ? '' : (e.stack ?? e.message ?? ''),
         };
       });
+
+      // The same handoff the results path uses, rather than a second copy of
+      // it: a style that prints nothing renders no fold, so the captured log
+      // reaches a reader only by riding in the results, and a crashed worker's
+      // output is exactly what no task claims. A stopped batch passes no path
+      // because its tasks carry no output at all and the fold below is where
+      // its partial log belongs.
+      const withWorkerLog = this.attachBatchWorkerLog(
+        taskResults,
+        isBatchStopping ? undefined : batchProcess?.getCapturedOutputPath()
+      );
 
       // The worker died without reporting results, so nothing was attributed to
       // a task and no per-task output ran. Everything it wrote went to
@@ -1046,7 +1026,7 @@ export class TaskOrchestrator {
         }
       }
 
-      return taskResults;
+      return withWorkerLog;
     } finally {
       batchProcess?.discardCapturedOutput();
       const runBatchEnd = performance.mark('TaskOrchestrator-run-batch:end');
@@ -1087,11 +1067,14 @@ export class TaskOrchestrator {
       return results;
     }
 
+    // Names the task rather than a path. `task.hash` is still preliminary here:
+    // `applyFromCacheOrRunBatch` clears and recomputes it for any depsOutputs
+    // task that ran, failures included, before `persistTerminalOutputs` writes
+    // under the NEW hash. A path minted from the hash as it stands would address
+    // a file nothing ever writes. The reader loses nothing, since the holder
+    // failed too and `summary` prints its own `full log:` line.
     const holder = failures[0];
-    const holderHash = holder.task?.hash;
-    const pointer =
-      holderHash &&
-      `batch worker log: ${terminalOutputPathForHash(holderHash)}`;
+    const pointer = `batch worker log: reported with ${holder.task.id}`;
 
     return results.map((result) => {
       if (result === holder) {
