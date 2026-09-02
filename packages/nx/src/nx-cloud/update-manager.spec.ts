@@ -106,36 +106,28 @@ const nativeBindings = findNativeBindings();
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-// The install directory is derived from cacheDirectory(), which honours these
-// ahead of workspaceRoot. They are ENVIRONMENT rather than module state, so
-// setWorkspaceRoot and resetSharedRootCacheForTesting cannot correct them, and
-// afterEach rmSync's whatever installDir resolved to.
-const CACHE_ENV_VARS = [
-  'NX_CACHE_DIRECTORY',
-  'NX_WORKSPACE_DATA_DIRECTORY',
-  'NX_PROJECT_GRAPH_CACHE_DIRECTORY',
-];
-const originalCacheEnv: Record<string, string | undefined> = {};
+// The install directory is derived from cacheDirectory(). Scrubbing the
+// environment is not enough to contain it: the root it falls back to is
+// derived from git identity, which GIT_DIR redirects, so a fixture can still
+// resolve onto a real workspace's cache. NX_CACHE_DIRECTORY takes precedence
+// over every other input, so PINNING it into the fixture is positive control
+// rather than the absence of an override.
+const CACHE_DIR_ENV = 'NX_CACHE_DIRECTORY';
+let originalCacheDirEnv: string | undefined;
 
-function scrubCacheEnv(): void {
-  for (const key of CACHE_ENV_VARS) {
-    originalCacheEnv[key] = process.env[key];
-    delete process.env[key];
-  }
+function pinCacheDirTo(workspace: string): void {
+  process.env[CACHE_DIR_ENV] = join(workspace, '.nx', 'cache');
 }
 
-function restoreCacheEnv(): void {
-  for (const key of CACHE_ENV_VARS) {
-    const value = originalCacheEnv[key];
-    if (value === undefined) delete process.env[key];
-    else process.env[key] = value;
-  }
+function restoreCacheDirEnv(): void {
+  if (originalCacheDirEnv === undefined) delete process.env[CACHE_DIR_ENV];
+  else process.env[CACHE_DIR_ENV] = originalCacheDirEnv;
 }
 
 /**
- * Nothing in this file may touch a path outside its fixture. Asserted before
+ * Nothing in this file may touch a path outside its fixture. Checked before
  * any test runs rather than inside one, because afterEach's recursive rmSync
- * is itself a destructive sink and a per-test assertion never guarded it.
+ * is itself a destructive sink that no per-test assertion guards.
  */
 function assertContainedInFixture(installDir: string, workspace: string): void {
   if (!installDir.startsWith(workspace)) {
@@ -147,11 +139,29 @@ function assertContainedInFixture(installDir: string, workspace: string): void {
   }
 }
 
+/**
+ * The recursive delete, refusing any path outside the fixture. The guard lives
+ * on the sink because everything else that has kept this file contained has
+ * been accidental: a throwing beforeEach leaves installDir already assigned,
+ * and the escape has only been survivable while the target happened not to
+ * exist yet.
+ */
+function removeFixtureDir(dir: string, workspace: string): void {
+  if (!dir || !dir.startsWith(workspace)) {
+    return;
+  }
+  rmSync(dir, { recursive: true, force: true });
+}
+
 describe('update-manager bundle download', () => {
   let workspace: string;
   let installDir: string;
   let updateManager: UpdateManager;
   let consoleError: ReturnType<typeof vi.spyOn>;
+
+  beforeAll(() => {
+    originalCacheDirEnv = process.env[CACHE_DIR_ENV];
+  });
 
   beforeEach(async () => {
     workspace = mkdtempSync(join(tmpdir(), 'nx-update-manager-'));
@@ -159,7 +169,8 @@ describe('update-manager bundle download', () => {
     // the root looks like a workspace.
     writeFileSync(join(workspace, 'nx.json'), '{}');
 
-    scrubCacheEnv();
+    // Before resetModules: the module graph reads this at import time.
+    pinCacheDirTo(workspace);
 
     vi.resetModules();
     const { setWorkspaceRoot } = await import('../utils/workspace-root');
@@ -179,10 +190,10 @@ describe('update-manager bundle download', () => {
   afterEach(() => {
     consoleError.mockRestore();
     rmSync(workspace, { recursive: true, force: true });
-    rmSync(installDir, { recursive: true, force: true });
+    removeFixtureDir(installDir, workspace);
   });
 
-  afterAll(restoreCacheEnv);
+  afterAll(restoreCacheDirEnv);
 
   const bundleDirs = () =>
     readdirSync(installDir)
@@ -520,11 +531,16 @@ describe('update-manager download lock', () => {
   let updateManager: UpdateManager;
   let peers: ChildProcess[];
 
+  beforeAll(() => {
+    originalCacheDirEnv = process.env[CACHE_DIR_ENV];
+  });
+
   beforeEach(async () => {
     workspace = mkdtempSync(join(tmpdir(), 'nx-update-manager-lock-'));
     writeFileSync(join(workspace, 'nx.json'), '{}');
 
-    scrubCacheEnv();
+    // Before resetModules: the module graph reads this at import time.
+    pinCacheDirTo(workspace);
 
     vi.resetModules();
     const { setWorkspaceRoot } = await import('../utils/workspace-root');
@@ -558,10 +574,10 @@ describe('update-manager download lock', () => {
       )
     );
     rmSync(workspace, { recursive: true, force: true });
-    rmSync(installDir, { recursive: true, force: true });
+    removeFixtureDir(installDir, workspace);
   });
 
-  afterAll(restoreCacheEnv);
+  afterAll(restoreCacheDirEnv);
 
   const bundleDirs = () =>
     readdirSync(installDir)
