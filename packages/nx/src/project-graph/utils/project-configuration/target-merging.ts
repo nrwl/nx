@@ -4,6 +4,7 @@ import {
   ProjectMetadata,
   TargetConfiguration,
   TargetMetadata,
+  TargetSandboxConfiguration,
 } from '../../../config/workspace-json-project-json';
 import {
   recordSourceMapKeysByIndex,
@@ -231,6 +232,71 @@ function mergeConfigurationValue(
   return merged;
 }
 
+// `sandbox` keeps replace-unless-`'...'` semantics at the object level, but its
+// values still have to be merged per key: neither the wholesale replace nor
+// `mergeObjectWithSpread` recurses, so an `ignoredReads: ['...', 'tmp/**']`
+// would otherwise reach the task graph with `'...'` intact — a glob matching
+// nothing, silently dropping the inherited patterns.
+function mergeSandbox(
+  newSandbox: TargetSandboxConfiguration | undefined,
+  baseSandbox: TargetSandboxConfiguration | undefined,
+  projectConfigSourceMap?: Record<string, SourceInformation>,
+  sourceInformation?: SourceInformation,
+  targetIdentifier?: string,
+  deferSpreadsWithoutBase?: boolean
+): TargetSandboxConfiguration | undefined {
+  if (newSandbox === undefined) {
+    return baseSandbox;
+  }
+
+  const sourceMapContext = projectConfigSourceMap
+    ? {
+        sourceMap: projectConfigSourceMap,
+        key: `${targetIdentifier}.sandbox`,
+        sourceInformation,
+      }
+    : undefined;
+
+  // Object level first: this settles which keys survive, their order, and
+  // their source-map attribution.
+  const merged = getMergeValueResult(
+    baseSandbox,
+    newSandbox,
+    sourceMapContext,
+    deferSpreadsWithoutBase
+  );
+
+  if (!merged || typeof merged !== 'object') {
+    return merged;
+  }
+
+  // Copy before resolving: with no object-level spread `getMergeValueResult`
+  // returns `newSandbox` itself, and writing through it would edit the
+  // caller's target in place, corrupting later merge layers.
+  const resolved = { ...merged };
+
+  // Then re-resolve any key the target authored as an array, so a nested
+  // `'...'` expands against the inherited value rather than surviving as a
+  // literal element.
+  for (const key of Object.keys(resolved)) {
+    if (!Array.isArray(newSandbox[key])) continue;
+    resolved[key] = getMergeValueResult(
+      baseSandbox?.[key],
+      newSandbox[key],
+      projectConfigSourceMap
+        ? {
+            sourceMap: projectConfigSourceMap,
+            key: `${targetIdentifier}.sandbox.${key}`,
+            sourceInformation,
+          }
+        : undefined,
+      deferSpreadsWithoutBase
+    );
+  }
+
+  return resolved;
+}
+
 function mergeConfigurations<T extends Object>(
   newConfigurations: Record<string, T> | undefined,
   baseConfigurations: Record<string, T> | undefined,
@@ -455,6 +521,7 @@ export function mergeTargetConfigurations(
   const skipForOwnMerge = new Set<string>([
     'options',
     'configurations',
+    'sandbox',
     NX_SPREAD_TOKEN,
   ]);
 
@@ -608,6 +675,22 @@ export function mergeTargetConfigurations(
     if (projectConfigSourceMap && target.configurations) {
       projectConfigSourceMap[`${targetIdentifier}.configurations`] =
         sourceInformation;
+    }
+  }
+
+  // merge sandbox if either side declares one
+  // as with options, an incompatible target discards the base
+  if (target.sandbox || (isCompatible && baseTarget?.sandbox)) {
+    const mergedSandbox = mergeSandbox(
+      target.sandbox,
+      isCompatible ? baseTarget?.sandbox : undefined,
+      projectConfigSourceMap,
+      sourceInformation,
+      targetIdentifier,
+      deferSpreadsWithoutBase
+    );
+    if (mergedSandbox !== undefined) {
+      result.sandbox = mergedSandbox;
     }
   }
 
