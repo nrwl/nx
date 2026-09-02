@@ -982,7 +982,15 @@ describe('TaskOrchestrator', () => {
       expect(withLog[1].terminalOutput).not.toContain(
         'gradlew: OutOfMemoryError'
       );
-      expect(withLog[1].terminalOutput).toContain('batch worker log:');
+      // Names the task, not a path built from its hash. The hash is still
+      // preliminary here - applyFromCacheOrRunBatch re-hashes depsOutputs tasks
+      // that ran, failures included, before persistTerminalOutputs writes under
+      // the new one - so a path minted now addresses a file nothing writes.
+      expect(withLog[1].terminalOutput).toContain(
+        'batch worker log: reported with a:build'
+      );
+      expect(withLog[1].terminalOutput).not.toContain('terminalOutputs');
+      expect(withLog[1].terminalOutput).not.toContain('hash-a');
     });
 
     it('leaves an all-green batch alone, so its chatter is not persisted', () => {
@@ -1232,6 +1240,25 @@ describe('TaskOrchestrator', () => {
         'gradlew: OutOfMemoryError in the daemon'
       );
       expect(results[0].terminalOutput).toContain('a failed');
+    });
+
+    // The fold tests above all run under grouping, where the handoff is a no-op,
+    // so none of them notice if the crash path stops calling it. Under summary
+    // the results are the only route the captured log has.
+    it("carries a crashed batch's log in its results under summary", async () => {
+      const orchestrator = createOrchestrator(
+        'FAILURE: Could not resolve all dependencies',
+        false
+      );
+      orchestrator.resolvedOutputStyle = 'summary';
+
+      const results: any = await orchestrator.runBatch(batch, {}, 0);
+
+      expect(results[0].status).toEqual('failure');
+      expect(results[0].terminalOutput).toContain(
+        'FAILURE: Could not resolve all dependencies'
+      );
+      expect(results[0].terminalOutput).toContain(EXIT_ERROR);
     });
 
     it("surfaces a crashed batch's captured log alongside the exit error", async () => {
