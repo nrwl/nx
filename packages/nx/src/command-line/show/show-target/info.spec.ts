@@ -937,8 +937,12 @@ describe('show target info', () => {
       // The observed reads, grouped by the project that owns them.
       expect(text).toContain('observed reads (3 globs across 2 projects)');
       expect(text).toContain('the observed reads are listed above');
-      expect(text).toContain('apps/my-app/src/main.ts');
-      expect(text).toContain('!apps/my-app/**/*.spec.ts');
+      // Globs inside the owning project read as {projectRoot}, like the
+      // declared inputs; the header carries the real root.
+      expect(text).toContain('my-app (apps/my-app)');
+      expect(text).toContain('{projectRoot}/src/main.ts');
+      expect(text).toContain('!{projectRoot}/**/*.spec.ts');
+      // A project absent from the graph keeps its workspace-relative glob.
       expect(text).toContain('libs/ui/src/index.ts');
       // The declared filesets they replace are gone, not merely tagged.
       expect(text).not.toContain('{projectRoot}/**/*.ts');
