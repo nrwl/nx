@@ -11,7 +11,7 @@ use crate::native::tasks::types::TaskGraph;
 /// from JS so the client never has to transfer a graph just to print a line.
 #[derive(Default)]
 pub(crate) struct EligibilityInputs {
-    /// Tasks whose target sets `ioSnapshots: false`.
+    /// Tasks whose target sets `sandbox.enabled: false`.
     pub opted_out: HashSet<String>,
     /// Tasks whose executor ships a custom hasher.
     pub custom_hasher: HashSet<String>,

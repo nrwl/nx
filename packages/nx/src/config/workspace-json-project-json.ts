@@ -290,12 +290,6 @@ export interface TargetConfiguration<T = any> {
   cache?: boolean;
 
   /**
-   * Set to false to hash this target from its declared inputs only, never
-   * from an I/O snapshot.
-   */
-  ioSnapshots?: boolean;
-
-  /**
    * Configures observed-IO sandboxing for tasks of this target.
    */
   sandbox?: TargetSandboxConfiguration;

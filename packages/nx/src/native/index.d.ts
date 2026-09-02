@@ -843,8 +843,6 @@ export interface Target {
   options?: string
   configurations?: string
   parallelism?: boolean
-  /** `false` hashes the target from its declared inputs only, never a snapshot. */
-  ioSnapshots?: boolean
 }
 
 /** A representation of the invocation of an Executor */

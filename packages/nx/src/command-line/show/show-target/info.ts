@@ -125,7 +125,9 @@ function resolveTargetInfoData(t: ResolvedTarget, snapshot: IoSnapshotStatus) {
     parallelism: targetConfig.parallelism ?? true,
     continuous: targetConfig.continuous ?? false,
     cache: targetConfig.cache ?? false,
-    ...(targetConfig.ioSnapshots === false ? { ioSnapshots: false } : {}),
+    ...(targetConfig.sandbox?.enabled === false
+      ? { sandbox: { enabled: false } }
+      : {}),
     snapshot,
     ...(targetConfig.inputs
       ? (() => {
@@ -490,9 +492,9 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
     `${c.bold('Continuous')}: ${data.continuous}${sourceHint('continuous')}`
   );
   console.log(`${c.bold('Cache')}: ${data.cache}${sourceHint('cache')}`);
-  if (data.ioSnapshots === false) {
+  if (data.sandbox?.enabled === false) {
     console.log(
-      `${c.bold('I/O snapshots')}: ${c.dim('disabled')}${sourceHint('ioSnapshots')}`
+      `${c.bold('I/O snapshots')}: ${c.dim('disabled')}${sourceHint('sandbox')}`
     );
   }
 

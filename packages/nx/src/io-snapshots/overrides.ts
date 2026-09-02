@@ -85,7 +85,7 @@ export function customHasherTaskIds(
   return ids;
 }
 
-/** Tasks whose target sets `ioSnapshots: false`. */
+/** Tasks whose target sets `sandbox.enabled: false`. */
 export function optedOutTaskIds(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph
@@ -95,7 +95,7 @@ export function optedOutTaskIds(
       (task) =>
         projectGraph.nodes[task.target.project]?.data.targets?.[
           task.target.target
-        ]?.ioSnapshots === false
+        ]?.sandbox?.enabled === false
     )
     .map((task) => task.id);
 }
