@@ -28,7 +28,9 @@
         "...",
         "{workspaceRoot}/scripts/vitest-setup.mts",
         "{workspaceRoot}/scripts/vitest-nx-source-resolver.mts",
-        "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js"
+        "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js",
+        "{workspaceRoot}/**/tsconfig.json",
+        "{workspaceRoot}/.editorconfig"
       ]
     }
   },
