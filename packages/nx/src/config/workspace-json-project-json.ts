@@ -175,12 +175,20 @@ export interface TargetMetadata {
 }
 
 /**
+ * Authoring form of a property merged key-by-key: permits the `'...'` spread
+ * token alongside the resolved keys. Merging resolves the token, so it never
+ * appears on the resolved shape.
+ */
+export type Spreadable<T> = T & { '...'?: true };
+
+/**
  * Configuration for observed-IO sandboxing of a target's tasks.
  *
- * The same shape rides on each Task instance (`Task['sandbox']`), so the
- * type is shared with the native task definition.
+ * The resolved shape rides on each Task instance (`Task['sandbox']`), which is
+ * why it is shared with the native task definition. Authoring additionally
+ * permits `'...'`, which target merging resolves away.
  */
-export type TargetSandboxConfiguration = TaskSandboxConfiguration;
+export type TargetSandboxConfiguration = Spreadable<TaskSandboxConfiguration>;
 
 export interface TargetDependencyConfig {
   /**
