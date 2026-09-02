@@ -106,6 +106,47 @@ const nativeBindings = findNativeBindings();
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+// The install directory is derived from cacheDirectory(), which honours these
+// ahead of workspaceRoot. They are ENVIRONMENT rather than module state, so
+// setWorkspaceRoot and resetSharedRootCacheForTesting cannot correct them, and
+// afterEach rmSync's whatever installDir resolved to.
+const CACHE_ENV_VARS = [
+  'NX_CACHE_DIRECTORY',
+  'NX_WORKSPACE_DATA_DIRECTORY',
+  'NX_PROJECT_GRAPH_CACHE_DIRECTORY',
+];
+const originalCacheEnv: Record<string, string | undefined> = {};
+
+function scrubCacheEnv(): void {
+  for (const key of CACHE_ENV_VARS) {
+    originalCacheEnv[key] = process.env[key];
+    delete process.env[key];
+  }
+}
+
+function restoreCacheEnv(): void {
+  for (const key of CACHE_ENV_VARS) {
+    const value = originalCacheEnv[key];
+    if (value === undefined) delete process.env[key];
+    else process.env[key] = value;
+  }
+}
+
+/**
+ * Nothing in this file may touch a path outside its fixture. Asserted before
+ * any test runs rather than inside one, because afterEach's recursive rmSync
+ * is itself a destructive sink and a per-test assertion never guarded it.
+ */
+function assertContainedInFixture(installDir: string, workspace: string): void {
+  if (!installDir.startsWith(workspace)) {
+    throw new Error(
+      `Refusing to run: install directory resolved outside the fixture.\n` +
+        `  fixture:   ${workspace}\n` +
+        `  resolved:  ${installDir}`
+    );
+  }
+}
+
 describe('update-manager bundle download', () => {
   let workspace: string;
   let installDir: string;
@@ -118,6 +159,8 @@ describe('update-manager bundle download', () => {
     // the root looks like a workspace.
     writeFileSync(join(workspace, 'nx.json'), '{}');
 
+    scrubCacheEnv();
+
     vi.resetModules();
     const { setWorkspaceRoot } = await import('../utils/workspace-root');
     setWorkspaceRoot(workspace);
@@ -127,6 +170,7 @@ describe('update-manager bundle download', () => {
 
     updateManager = await import('./update-manager');
     installDir = updateManager.getBundleInstallDefaultLocation();
+    assertContainedInFixture(installDir, workspace);
     mkdirSync(installDir, { recursive: true });
 
     consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -137,6 +181,8 @@ describe('update-manager bundle download', () => {
     rmSync(workspace, { recursive: true, force: true });
     rmSync(installDir, { recursive: true, force: true });
   });
+
+  afterAll(restoreCacheEnv);
 
   const bundleDirs = () =>
     readdirSync(installDir)
@@ -353,6 +399,10 @@ describe('update-manager bundle download', () => {
     // path, so cleanup must never unlink these.
     mkdirSync(join(installDir, '.state'), { recursive: true });
     writeFileSync(join(installDir, '.state', 'verify.lock'), '123');
+    // A pre-upgrade orphan at the root: an older nx may still hold its flock,
+    // and this is what gates production's isDirectory() check. The .state
+    // assertions below cannot gate it, since cleanup skips .state by name.
+    writeFileSync(join(installDir, 'verify.lock'), '123');
     mkdirSync(join(installDir, '2608.29.0001'), { recursive: true });
 
     await updateManager.downloadAndExtractClientBundle(
@@ -361,6 +411,7 @@ describe('update-manager bundle download', () => {
       'https://example.com/bundle.tar.gz'
     );
 
+    expect(existsSync(join(installDir, 'verify.lock'))).toBe(true);
     expect(existsSync(join(installDir, '.state', 'verify.lock'))).toBe(true);
     expect(existsSync(join(installDir, '.state', 'download.lock'))).toBe(true);
     expect(existsSync(join(installDir, '.state', 'download.record'))).toBe(
@@ -473,6 +524,8 @@ describe('update-manager download lock', () => {
     workspace = mkdtempSync(join(tmpdir(), 'nx-update-manager-lock-'));
     writeFileSync(join(workspace, 'nx.json'), '{}');
 
+    scrubCacheEnv();
+
     vi.resetModules();
     const { setWorkspaceRoot } = await import('../utils/workspace-root');
     setWorkspaceRoot(workspace);
@@ -482,6 +535,7 @@ describe('update-manager download lock', () => {
 
     updateManager = await import('./update-manager');
     installDir = updateManager.getBundleInstallDefaultLocation();
+    assertContainedInFixture(installDir, workspace);
     mkdirSync(installDir, { recursive: true });
     peers = [];
   });
@@ -506,6 +560,8 @@ describe('update-manager download lock', () => {
     rmSync(workspace, { recursive: true, force: true });
     rmSync(installDir, { recursive: true, force: true });
   });
+
+  afterAll(restoreCacheEnv);
 
   const bundleDirs = () =>
     readdirSync(installDir)
