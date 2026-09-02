@@ -195,6 +195,20 @@ const downloadLockFilePath = join(
   'download.lock'
 );
 
+// The record lives beside the lockfile rather than inside it. Windows
+// byte-range locks are mandatory and handle-scoped, so writing to a file this
+// process holds an exclusive lock on fails with ERROR_LOCK_VIOLATION. It also
+// matches the convention elsewhere in nx: project-graph.lock and run.json.lock
+// are never written to.
+const downloadRecordFilePath = join(
+  runnerBundleInstallDirectory,
+  'download.record'
+);
+
+// A version names a directory that is created and later deleted, so a value
+// from the server must not be able to escape the install directory.
+const VALID_BUNDLE_VERSION = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+
 function getLatestInstalledRunnerBundle(): CloudBundleInstall | null {
   if (!existsSync(runnerBundleInstallDirectory)) {
     mkdirSync(runnerBundleInstallDirectory, { recursive: true });
@@ -343,7 +357,11 @@ export async function downloadAndExtractClientBundle(
   // on disk for the process running from it. The flock is released by the
   // kernel if the holder dies, so no stale-lock cleanup is needed. Under WASM
   // the lock is unavailable and downloads run unserialized.
-  const recordBeforeContending = readDownloadLockRecord();
+  if (!VALID_BUNDLE_VERSION.test(version)) {
+    throw new Error(`Invalid Nx Cloud client bundle version: ${version}`);
+  }
+
+  const recordBeforeContending = readDownloadRecord();
   const lock = !IS_WASM ? new FileLock(downloadLockFilePath) : null;
   let locked = lock?.locked;
   let contended = false;
@@ -352,7 +370,7 @@ export async function downloadAndExtractClientBundle(
       'Another process is downloading the client bundle, waiting for it to complete'
     );
     await lock.wait();
-    const installedBundle = readBundleInstalledByLockHolder();
+    const installedBundle = bundleInstalledSince(recordBeforeContending);
     if (installedBundle) {
       if (gte(installedBundle.version, version)) {
         debugLog(
@@ -373,15 +391,10 @@ export async function downloadAndExtractClientBundle(
   }
   lock?.lock();
   try {
-    // A process that acquired the lock between the check above and lock()
-    // may have installed a bundle already. Only a record that changed since
-    // this call started proves that, so a leftover record from a past install
-    // can never shadow a server-instructed download (e.g. a rollback).
-    const installedBundle = readBundleInstalledByLockHolder();
-    if (
-      installedBundle &&
-      readDownloadLockRecord() !== recordBeforeContending
-    ) {
+    // A process that acquired the lock between the check above and lock() may
+    // have completed an install already.
+    const installedBundle = bundleInstalledSince(recordBeforeContending);
+    if (installedBundle) {
       if (gte(installedBundle.version, version)) {
         debugLog(
           'Using client bundle downloaded by another process: ',
@@ -396,7 +409,6 @@ export async function downloadAndExtractClientBundle(
       );
     }
 
-    writeDownloadLockRecord(version);
     const fullPath = await downloadAndExtractBundle(
       axios,
       version,
@@ -409,26 +421,36 @@ export async function downloadAndExtractClientBundle(
   }
 }
 
-// The lockfile records "<version> <nonce>". The nonce makes every install a
-// distinct record, so a waiter can tell "an install finished while I waited"
-// from "this record is left over from a past run" by comparing the record it
-// read before contending. Timestamps cannot answer that: filesystem mtime
-// granularity is coarser than the race window.
-function readDownloadLockRecord(): string {
+// Records "<version> <nonce>", written only once an install has COMPLETED.
+// The nonce makes every install distinct, so a waiter can tell "an install
+// finished while I waited" from "this record is left over from a past run" by
+// comparing the record it read before contending. Timestamps cannot answer
+// that: filesystem mtime granularity is coarser than the race window.
+function readDownloadRecord(): string {
   try {
-    return readFileSync(downloadLockFilePath, 'utf-8').trim();
+    return readFileSync(downloadRecordFilePath, 'utf-8').trim();
   } catch {
     return '';
   }
 }
 
-function writeDownloadLockRecord(version: string): void {
-  writeFileSync(downloadLockFilePath, `${version} ${randomUUID()}`, 'utf-8');
+function writeDownloadRecord(version: string): void {
+  writeFileSync(downloadRecordFilePath, `${version} ${randomUUID()}`, 'utf-8');
 }
 
-function readBundleInstalledByLockHolder(): CloudBundleInstall | null {
-  const version = readDownloadLockRecord().split(' ')[0];
-  if (!version) {
+/**
+ * The bundle an install completed during this call, or null. Requires the
+ * record to have changed since `recordBefore` was read: a directory existing
+ * proves only that some earlier run left one there, and an install
+ * interrupted on a released nx leaves exactly that.
+ */
+function bundleInstalledSince(recordBefore: string): CloudBundleInstall | null {
+  const record = readDownloadRecord();
+  if (record === recordBefore) {
+    return null;
+  }
+  const version = record.split(' ')[0];
+  if (!version || !VALID_BUNDLE_VERSION.test(version)) {
     return null;
   }
   const fullPath = join(runnerBundleInstallDirectory, version);
@@ -483,8 +505,15 @@ async function downloadAndExtractBundle(
           writeStream.on('close', () => {
             next();
           });
+          writeStream.on('error', rej);
 
           stream.resume();
+        } else {
+          // Any other entry type still has to advance the stream. Calling
+          // neither next() nor resume() stalls tar-stream, and this process is
+          // holding the download lock while it stalls.
+          stream.resume();
+          next();
         }
       });
 
@@ -507,6 +536,10 @@ async function downloadAndExtractBundle(
 
     rmSync(bundleExtractLocation, { recursive: true, force: true });
     renameSync(tempExtractLocation, bundleExtractLocation);
+    // Recorded only now: the record is the signal that a bundle at this
+    // version was installed by this process, which is what lets a waiter
+    // adopt it instead of downloading again.
+    writeDownloadRecord(version);
   } catch (e) {
     rmSync(tempExtractLocation, { recursive: true, force: true });
     throw e;
