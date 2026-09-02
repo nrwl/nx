@@ -55,8 +55,9 @@ export class BatchProcess {
    * Discriminates this capture file from every other in the process. Assigned
    * once here rather than at open time: a value minted inside the lazy open
    * changed the name on every reopen, orphaning what had already been captured.
-   * `batchId` alone is not enough, since it defaults to the executor name for
-   * callers that do not pass one.
+   * `batchId` alone is not enough: `TasksSchedule.batchCounters` is per
+   * instance, so a second schedule in the same process mints `<executor> 1`
+   * again and the pid does not separate them either.
    */
   private readonly captureSeq = ++BatchProcess.captureSeq;
   /**
@@ -91,9 +92,10 @@ export class BatchProcess {
      */
     private readonly printsOutput: boolean = true,
     /**
-     * Names the capture file, so a reopen after a failed write lands on the
-     * same one. Already unique per run (`<executor> <n>`, from `TasksSchedule`)
-     * and already carries the executor, so it is the whole name.
+     * Labels the capture file so it is identifiable in `batch-outputs/`. Carries
+     * the executor already (`<executor> <n>`, from `TasksSchedule`), and is one
+     * of the three components of the name; `captureSeq` is what makes it
+     * unique.
      */
     private readonly batchId: string = executorName
   ) {
@@ -224,8 +226,8 @@ export class BatchProcess {
         // it at open time minted a new name on every reopen, orphaning the
         // bytes captured so far - which is where a compiler's first
         // non-cascading errors are. The batch id names it for a human reading
-        // the directory; `captureSeq` is what actually makes it unique, since
-        // the id falls back to the executor name.
+        // the directory; `captureSeq` is what actually makes it unique, since a
+        // second `TasksSchedule` in the same process re-mints the same id.
         const name = `${this.batchId.replace(/[^a-zA-Z0-9]+/g, '-')}-${
           process.pid
         }-${this.captureSeq}.log`;

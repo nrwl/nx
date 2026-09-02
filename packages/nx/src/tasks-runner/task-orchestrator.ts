@@ -994,12 +994,14 @@ export class TaskOrchestrator {
       // The same handoff the results path uses, rather than a second copy of
       // it: a style that prints nothing renders no fold, so the captured log
       // reaches a reader only by riding in the results, and a crashed worker's
-      // output is exactly what no task claims. A stopped batch passes no path
-      // because its tasks carry no output at all and the fold below is where
-      // its partial log belongs.
+      // output is exactly what no task claims. A stopped batch is included: its
+      // partial log is the only record of what got through before the
+      // cancellation, and the fold below cannot carry it under `summary`
+      // because that gate gets `printsTaskOutput` too, so without this the
+      // `finally` unlinks the only copy.
       const withWorkerLog = this.attachBatchWorkerLog(
         taskResults,
-        isBatchStopping ? undefined : batchProcess?.getCapturedOutputPath()
+        batchProcess?.getCapturedOutputPath()
       );
 
       // The worker died without reporting results, so nothing was attributed to
