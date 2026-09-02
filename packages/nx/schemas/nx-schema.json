@@ -664,6 +664,10 @@
               "dependencies": {
                 "type": "boolean",
                 "description": "Include files matching the fileset for all the project dependencies of this target."
+              },
+              "includeIgnored": {
+                "type": "boolean",
+                "description": "Hash the glob straight from disk instead of the workspace file map, so gitignored or generated files can be inputs. A missing exact path still takes part in the hash. A ! negation only filters includeIgnored matches when it also sets includeIgnored: true. Self inputs only."
               }
             },
             "required": ["fileset"],

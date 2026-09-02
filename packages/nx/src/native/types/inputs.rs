@@ -12,6 +12,9 @@ pub struct InputsInput {
 pub struct FileSetInput {
     pub fileset: String,
     pub dependencies: Option<bool>,
+    /// Hash the glob straight from disk (so gitignored/generated files count)
+    /// instead of the workspace file map. Self inputs only.
+    pub include_ignored: Option<bool>,
 }
 
 #[napi(object)]
@@ -85,6 +88,7 @@ impl<'a> From<&'a JsInputs> for Input<'a> {
                         Input::FileSet {
                             fileset: rest,
                             dependencies: true,
+                            include_ignored: false,
                         }
                     } else {
                         // This is a named input reference (existing behavior)
@@ -100,6 +104,7 @@ impl<'a> From<&'a JsInputs> for Input<'a> {
             Either9::C(file_set) => Input::FileSet {
                 fileset: &file_set.fileset,
                 dependencies: file_set.dependencies.unwrap_or(false),
+                include_ignored: file_set.include_ignored.unwrap_or(false),
             },
             Either9::D(runtime) => Input::Runtime(&runtime.runtime),
             Either9::E(environment) => Input::Environment(&environment.env),
@@ -132,6 +137,7 @@ pub(crate) enum Input<'a> {
     FileSet {
         fileset: &'a str,
         dependencies: bool,
+        include_ignored: bool,
     },
     Runtime(&'a str),
     Environment(&'a str),

@@ -5,10 +5,16 @@ import type {
   ProjectGraphProjectNode,
 } from '../config/project-graph';
 import type { Task, TaskGraph } from '../config/task-graph';
-import type { HashInputs } from '../native';
+import type {
+  EffectiveInputGroup,
+  HashInputs,
+  IoSnapshotReport,
+} from '../native';
 import { expandOutputs, matchGlobPaths, matchOutputPaths } from '../native';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
+import { loadIoSnapshotsForHead } from '../io-snapshots/overrides';
+import { observedIoSnapshotOutputs } from '../io-snapshots/outputs';
 import {
   createTaskId,
   getOutputsForTargetAndConfiguration,
@@ -93,6 +99,10 @@ interface TaskIdentity {
 
 const identityCache = new Map<string, TaskIdentity>();
 const hashInputsCache = new Map<string, HashInputs | null>();
+const ioSnapshotResultCache = new Map<
+  string,
+  { report: IoSnapshotReport | null; unavailable?: 'not-connected' | 'no-head' }
+>();
 const outputsCache = new Map<string, string[]>();
 const taskGraphCache = new Map<string, TaskGraph>();
 const depsOutputsCache = new Map<string, ExpandedDepsOutput[]>();
@@ -174,15 +184,52 @@ async function getRawInputs(
 
   // `null` means "this task is absent from the hash plan" — any other failure
   // is a real error and propagates to the caller.
-  const planResult = inspector.inspectTaskInputs({
-    project,
-    target,
-    configuration,
-  });
+  const { inputs, report, unavailable } =
+    inspector.inspectTaskInputsWithIoSnapshots({
+      project,
+      target,
+      configuration,
+    });
 
-  const result = planResult[canonicalTaskId] ?? null;
+  const result = inputs[canonicalTaskId] ?? null;
   hashInputsCache.set(taskId, result);
+  ioSnapshotResultCache.set(taskId, { report, unavailable });
   return result;
+}
+
+export interface IoSnapshotStatus {
+  /** used: hashed from the snapshot; fallback: bundle present but this task hashed natively; none: nothing to resolve (not-connected, no-head, no-bundle, invalid-bundle) */
+  status: 'used' | 'fallback' | 'none';
+  reason?: string;
+  commit?: string;
+  digest?: string;
+}
+
+export function deriveIoSnapshotStatus(
+  canonicalTaskId: string,
+  result: IoSnapshotReport | null,
+  unavailable?: 'not-connected' | 'no-head'
+): IoSnapshotStatus {
+  if (!result) {
+    return { status: 'none', reason: unavailable ?? 'not-connected' };
+  }
+  if (result.used.includes(canonicalTaskId)) {
+    return {
+      status: 'used',
+      commit: result.resolution?.requestedCommit,
+      digest: result.resolution?.digest,
+    };
+  }
+  const bundleLevel = result.diagnostics.find(
+    (d) => d.reason === 'no-bundle' || d.reason === 'invalid-bundle'
+  );
+  if (bundleLevel) {
+    return { status: 'none', reason: bundleLevel.reason };
+  }
+  const taskLevel = result.diagnostics.find(
+    (d) => d.taskId === canonicalTaskId
+  );
+  return { status: 'fallback', reason: taskLevel?.reason ?? 'missing' };
 }
 
 function getOutputs(taskId: string, projectGraph: ProjectGraph): string[] {
@@ -547,13 +594,57 @@ export async function getTaskRawInputs(
   return getRawInputs(taskId, ctx);
 }
 
+/**
+ * Whether the task's hash comes from an I/O snapshot, and why not otherwise.
+ * Reads the on-disk bundle only; never fetches.
+ */
+export async function getTaskIoSnapshotStatus(
+  taskId: string,
+  seed?: TaskFileCheckSeed
+): Promise<IoSnapshotStatus> {
+  const ctx = await getContext(seed);
+  await getRawInputs(taskId, ctx);
+  const { canonicalTaskId } = resolveIdentity(taskId, ctx.projectGraph);
+  const cached = ioSnapshotResultCache.get(taskId);
+  return deriveIoSnapshotStatus(
+    canonicalTaskId,
+    cached?.report ?? null,
+    cached?.unavailable
+  );
+}
+
+/**
+ * The file-input groups a task actually hashes, as globs. For a
+ * snapshot-backed task these are the observed reads; otherwise they are the
+ * declared filesets after token resolution.
+ */
+export async function getTaskEffectiveInputGroups(
+  taskId: string,
+  seed?: TaskFileCheckSeed
+): Promise<EffectiveInputGroup[]> {
+  const ctx = await getContext(seed);
+  const { project, target, configuration, canonicalTaskId } = resolveIdentity(
+    taskId,
+    ctx.projectGraph
+  );
+  const inspector = await ctx.getInspector();
+  const groups = inspector.inspectTaskInputGlobs({
+    project,
+    target,
+    configuration,
+  });
+  return groups[canonicalTaskId] ?? [];
+}
+
 export interface TaskOutputs {
-  /** Output patterns after token substitution — what the task runner will cache. */
+  /** Output patterns after token substitution — what the task runner will cache. Declared outputs first, then any the snapshot observed the task write. */
   resolved: string[];
   /** `resolved`, expanded against the files currently on disk. */
   expanded: string[];
   /** Configured outputs left out of `resolved` because an option had no value. */
   unresolved: string[];
+  /** Where each `resolved` entry came from. */
+  sources: Record<string, 'declared' | 'snapshot'>;
 }
 
 /**
@@ -565,11 +656,34 @@ export async function getTaskOutputs(
   seed?: TaskFileCheckSeed
 ): Promise<TaskOutputs> {
   const ctx = await getContext(seed);
-  const resolved = getOutputs(taskId, ctx.projectGraph);
+  const declared = getOutputs(taskId, ctx.projectGraph);
+  const sources: Record<string, 'declared' | 'snapshot'> = {};
+  for (const output of declared) sources[output] = 'declared';
+
+  // When a snapshot covers this task, its observed writes are cached on top of
+  // the declared outputs (declared first, deduped). Read-only: never fetches.
+  const resolved = [...declared];
+  const snapshots = loadIoSnapshotsForHead(ctx.nxJson);
+  if (snapshots) {
+    const { canonicalTaskId } = resolveIdentity(taskId, ctx.projectGraph);
+    const taskGraph = getTaskGraph(taskId, ctx.projectGraph);
+    const observed =
+      observedIoSnapshotOutputs(ctx.projectGraph, taskGraph, snapshots)[
+        canonicalTaskId
+      ] ?? [];
+    for (const output of observed) {
+      if (!sources[output]) {
+        sources[output] = 'snapshot';
+        resolved.push(output);
+      }
+    }
+  }
+
   return {
     resolved,
     expanded: expandOutputs(defaultWorkspaceRoot, resolved),
     unresolved: getUnresolvedOutputs(taskId, ctx.projectGraph),
+    sources,
   };
 }
 
@@ -584,6 +698,7 @@ export function _resetContextForTesting(): void {
   cachedContext = null;
   identityCache.clear();
   hashInputsCache.clear();
+  ioSnapshotResultCache.clear();
   outputsCache.clear();
   taskGraphCache.clear();
   depsOutputsCache.clear();

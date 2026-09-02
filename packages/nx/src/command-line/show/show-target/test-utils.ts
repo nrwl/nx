@@ -33,6 +33,26 @@ export function setMockNxJson(nxJson: Record<string, unknown>) {
 export function setMockHashInputs(inputs: Record<string, HashInputs>) {
   mockHashInputs = inputs;
 }
+
+// Controls the report deriveIoSnapshotStatus reads; null ⇒ status none/not-connected.
+export let mockIoSnapshotReport: unknown = null;
+
+export function setMockIoSnapshotReport(report: unknown) {
+  mockIoSnapshotReport = report;
+}
+// The per-project glob groups `nx show target` renders for a snapshot-backed
+// task; keyed by canonical task id like the real inspector.
+export let mockInputGlobs: Record<string, unknown[]> = {};
+
+export function setMockInputGlobs(groups: Record<string, unknown[]>) {
+  mockInputGlobs = groups;
+}
+export let mockObservedOutputs: Record<string, string[]> = {};
+
+export function setMockObservedOutputs(v: Record<string, string[]>) {
+  mockObservedOutputs = v;
+}
+
 export function setMockExpandedOutputs(outputs: string[] | null) {
   mockExpandedOutputs = outputs;
 }
@@ -109,6 +129,25 @@ vi.mock('../../../tasks-runner/utils', async () => {
   };
 });
 
+vi.mock('../../../io-snapshots/overrides', async () => {
+  const actual = await vi.importActual('../../../io-snapshots/overrides');
+  return {
+    ...actual,
+    // Truthy handle only when a test seeded observed outputs, else null so the
+    // declared-only path runs exactly as in production.
+    loadIoSnapshotsForHead: () =>
+      Object.keys(mockObservedOutputs).length ? ({} as never) : null,
+  };
+});
+
+vi.mock('../../../io-snapshots/outputs', async () => {
+  const actual = await vi.importActual('../../../io-snapshots/outputs');
+  return {
+    ...actual,
+    observedIoSnapshotOutputs: () => mockObservedOutputs,
+  };
+});
+
 vi.mock('../../../hasher/hash-plan-inspector', () => ({
   // A plain function so `new HashPlanInspector(...)` works (arrows are not
   // constructible under vitest's mocks).
@@ -116,6 +155,11 @@ vi.mock('../../../hasher/hash-plan-inspector', () => ({
     return {
       init: vi.fn().mockResolvedValue(undefined),
       inspectTaskInputs: vi.fn().mockImplementation(() => mockHashInputs),
+      inspectTaskInputsWithIoSnapshots: vi.fn().mockImplementation(() => ({
+        inputs: mockHashInputs,
+        report: mockIoSnapshotReport,
+      })),
+      inspectTaskInputGlobs: vi.fn().mockImplementation(() => mockInputGlobs),
     };
   }),
 }));
@@ -134,6 +178,9 @@ export function setupBeforeEach() {
   performance.mark('init-local');
   mockCwd = '/workspace';
   mockNxJson = {};
+  mockObservedOutputs = {};
+  mockInputGlobs = {};
+  mockIoSnapshotReport = null;
   mockHashInputs = {};
   mockExpandedOutputs = null;
   mockSourceMaps = {};

@@ -36,6 +36,7 @@ import { output } from '../../utils/output';
 import { workspaceRoot } from '../../utils/workspace-root';
 
 import { TaskGraph } from '../../config/task-graph';
+import type { NxJsonConfiguration } from '../../config/nx-json';
 import { daemonClient } from '../../daemon/client/client';
 import { getRootTsConfigPath } from '../../plugins/js/utils/typescript';
 import { pruneExternalNodes } from '../../project-graph/operators';
@@ -47,7 +48,15 @@ import {
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { allFileData } from '../../utils/all-file-data';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
-import { HashPlanner, transferProjectGraph } from '../../native';
+import {
+  expandFilesInput,
+  HashPlanner,
+  transferProjectGraph,
+} from '../../native';
+import {
+  customHasherTaskIds,
+  loadIoSnapshotsForHead,
+} from '../../io-snapshots/overrides';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
@@ -1120,7 +1129,9 @@ async function createTaskGraphClientResponse(
 
     const taskIds = Object.keys(taskGraph.tasks);
     const plans =
-      taskIds.length > 0 ? planner.getPlans(taskIds, taskGraph) : {};
+      taskIds.length > 0
+        ? getPlansWithIoSnapshots(planner, graph, nxJson, taskIds, taskGraph)
+        : {};
 
     performance.mark('task hash plan generation:end');
 
@@ -1257,7 +1268,9 @@ async function createTaskGraphForTargetsAndProjects(
 
     const taskIds = Object.keys(taskGraph.tasks);
     const plans =
-      taskIds.length > 0 ? planner.getPlans(taskIds, taskGraph) : {};
+      taskIds.length > 0
+        ? getPlansWithIoSnapshots(planner, graph, nxJson, taskIds, taskGraph)
+        : {};
 
     performance.mark('task hash plan generation:end');
 
@@ -1342,6 +1355,23 @@ export async function getExpandedTaskInputs(
   return result;
 }
 
+/** Plans with the HEAD bundle (never fetching); custom-hasher tasks are excluded like at hash time. */
+function getPlansWithIoSnapshots(
+  planner: HashPlanner,
+  graph: ProjectGraph,
+  nxJson: NxJsonConfiguration,
+  taskIds: string[],
+  taskGraph: TaskGraph
+): Record<string, string[]> {
+  const snapshots = loadIoSnapshotsForHead(nxJson) ?? undefined;
+  return planner.getPlans(
+    taskIds,
+    taskGraph,
+    snapshots,
+    snapshots ? customHasherTaskIds(graph, taskGraph) : undefined
+  );
+}
+
 function expandInputs(
   inputs: string[],
   project: ProjectGraphProjectNode,
@@ -1354,11 +1384,24 @@ function expandInputs(
   const projectRootInputs: string[] = [];
   const externalInputs: string[] = [];
   const otherInputs: string[] = [];
+  const filesInputs: string[][] = [];
+  let snapshotBacked = false;
   inputs.forEach((input) => {
+    // Domain markers are not inputs, but they mean the `files` groups below
+    // are observed reads rather than user-declared inputs.
+    if (input.startsWith('io-snapshot:')) {
+      snapshotBacked = true;
+      return;
+    }
     // grouped workspace inputs look like workspace:[pattern,otherPattern]
     if (input.startsWith('workspace:[')) {
       const inputs = input.substring(11, input.length - 1).split(',');
       workspaceRootInputs.push(...inputs);
+      return;
+    }
+    // `files` groups look like files:[glob,!otherGlob] and expand on disk
+    if (input.startsWith('files:[')) {
+      filesInputs.push(input.substring(7, input.length - 1).split(','));
       return;
     }
     const maybeProjectName = input.split(':')[0];
@@ -1384,6 +1427,9 @@ function expandInputs(
   const workspaceRootsExpanded: string[] = getExpandedWorkspaceRoots(
     workspaceRootInputs,
     allWorkspaceFiles
+  );
+  const filesExpanded = filesInputs.flatMap((globs) =>
+    expandFilesInput(workspaceRoot, globs)
   );
 
   const otherInputsExpanded = otherInputs.map((input) => {
@@ -1427,7 +1473,14 @@ function expandInputs(
     }, {});
 
   return {
-    general: [...workspaceRootsExpanded, ...otherInputsExpanded],
+    general: [
+      ...workspaceRootsExpanded,
+      ...filesExpanded,
+      ...otherInputsExpanded,
+    ],
+    // The published panel only renders `general`/`external`, so observed
+    // files stay in `general` and are additionally labelled here.
+    ...(snapshotBacked ? { observed: filesExpanded } : {}),
     ...projectRootsExpanded,
     external: externalInputs,
   };

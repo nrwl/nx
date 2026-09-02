@@ -173,19 +173,35 @@ pub struct JsonFileSetInput {
     pub exclude_fields: Option<Vec<String>>,
 }
 
+/// Hashed into every task regardless of its inputs (see `HashPlanner::get_plans_internal`).
+pub(crate) const ALWAYS_ON_WORKSPACE_FILES: [&str; 3] = [
+    "{workspaceRoot}/nx.json",
+    "{workspaceRoot}/.gitignore",
+    "{workspaceRoot}/.nxignore",
+];
+
+pub(crate) const IO_SNAPSHOT_MARKER_PREFIX: &str = "io-snapshot:";
+
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub enum HashInstruction {
     WorkspaceFileSet(Vec<String>),
     Runtime(String),
     Environment(String),
     Cwd(CwdMode),
-    ProjectFileSet(String, Vec<String>),
+    /// Globs for one project. `include_ignored` picks the backing store:
+    /// `false` filters the project's tracked file map, `true` expands against
+    /// the disk so gitignored and generated files count (declared
+    /// `includeIgnored` filesets and I/O snapshot reads).
+    ProjectFileSet(String, Vec<String>, bool),
     ProjectConfiguration(String),
     TsConfiguration(String),
     TaskOutput(String, Vec<String>),
     External(String),
     AllExternalDependencies,
     JsonFileSet(Box<JsonFileSetInput>),
+    /// Run-constant label that keeps hash keys built from different input
+    /// sources (e.g. an I/O snapshot) from ever colliding with native keys.
+    Marker(String),
 }
 
 /// Append-only interner for hash instructions. Plans store `u32` ids into the
@@ -195,6 +211,8 @@ pub enum HashInstruction {
 pub struct InstructionPool {
     ids: DashMap<HashInstruction, u32>,
     items: DashMap<u32, HashInstruction>,
+    /// Instruction kind per id, for lock-cheap plan filtering.
+    kinds: parking_lot::RwLock<Vec<InstructionKind>>,
     // Display strings, rendered once per unique instruction at intern time so
     // hashing can hand out shared keys instead of re-rendering per task.
     keys: DashMap<u32, Arc<str>>,
@@ -217,6 +235,14 @@ impl InstructionPool {
             dashmap::mapref::entry::Entry::Occupied(existing) => *existing.get(),
             dashmap::mapref::entry::Entry::Vacant(vacant) => {
                 let id = self.next_id.fetch_add(1, Ordering::Relaxed);
+                let kind = InstructionKind::of(vacant.key());
+                {
+                    let mut kinds = self.kinds.write();
+                    if kinds.len() <= id as usize {
+                        kinds.resize(id as usize + 1, InstructionKind::Other);
+                    }
+                    kinds[id as usize] = kind;
+                }
                 self.items.insert(id, vacant.key().clone());
                 self.keys.insert(id, Arc::from(vacant.key().to_string()));
                 vacant.insert(id);
@@ -242,6 +268,38 @@ impl InstructionPool {
 
     pub fn len(&self) -> usize {
         self.items.len()
+    }
+
+    /// Whether an I/O snapshot replaces this instruction: every declared
+    /// fileset, and TsConfiguration unless the root tsconfig was read.
+    pub fn replaced_by_snapshot(&self, id: u32, keep_tsconfig: bool) -> bool {
+        match self.kinds.read().get(id as usize).copied() {
+            Some(InstructionKind::FileSet) => true,
+            Some(InstructionKind::TsConfiguration) => !keep_tsconfig,
+            _ => false,
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum InstructionKind {
+    FileSet,
+    TsConfiguration,
+    Other,
+}
+
+impl InstructionKind {
+    fn of(instruction: &HashInstruction) -> Self {
+        match instruction {
+            HashInstruction::ProjectFileSet(_, _, false) | HashInstruction::WorkspaceFileSet(_) => {
+                Self::FileSet
+            }
+            // Disk-backed groups are the snapshot's own reads, or declared
+            // `includeIgnored` inputs; neither is replaced by a snapshot.
+            HashInstruction::ProjectFileSet(_, _, true) => Self::Other,
+            HashInstruction::TsConfiguration(_) => Self::TsConfiguration,
+            _ => Self::Other,
+        }
     }
 }
 
@@ -293,8 +351,16 @@ impl fmt::Display for HashInstruction {
             "{}",
             match self {
                 HashInstruction::AllExternalDependencies => "AllExternalDependencies".to_string(),
-                HashInstruction::ProjectFileSet(project_name, file_set) => {
-                    format!("{project_name}:{}", file_set.join(","))
+                HashInstruction::ProjectFileSet(project_name, file_set, include_ignored) => {
+                    // Leading marker: the two backing stores must never share a
+                    // pool key, or an interned hash would be reused across them.
+                    let prefix = if *include_ignored { "files:" } else { "" };
+                    let globs = file_set.join(",");
+                    if *include_ignored {
+                        format!("{prefix}{project_name}:[{globs}]")
+                    } else {
+                        format!("{project_name}:{globs}")
+                    }
                 }
                 HashInstruction::WorkspaceFileSet(file_set) =>
                     format!("workspace:[{}]", file_set.join(",")),
@@ -330,6 +396,7 @@ impl fmt::Display for HashInstruction {
                         .unwrap_or_default();
                     format!("{prefix}json:{}{fields_str}{exclude_str}", json.json_path)
                 }
+                HashInstruction::Marker(marker) => marker.clone(),
             }
         )
     }
@@ -338,6 +405,17 @@ impl fmt::Display for HashInstruction {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn marker_display_is_verbatim_and_interns_by_value() {
+        let pool = InstructionPool::new();
+        let a = pool.intern(HashInstruction::Marker("io-snapshot:abc".into()));
+        let b = pool.intern(HashInstruction::Marker("io-snapshot:abc".into()));
+        let c = pool.intern(HashInstruction::Marker("io-snapshot:def".into()));
+        assert_eq!(a, b);
+        assert_ne!(a, c);
+        assert_eq!(&*pool.key(a), "io-snapshot:abc");
+    }
 
     #[test]
     fn pool_key_matches_display_and_is_shared() {
@@ -349,6 +427,31 @@ mod tests {
         assert_eq!(&*key, instruction.to_string());
         // Every call hands out the same allocation, not a fresh string.
         assert!(Arc::ptr_eq(&key, &pool.key(id)));
+    }
+
+    #[test]
+    fn files_display_lists_globs_in_declared_order() {
+        let instruction = HashInstruction::ProjectFileSet(
+            "ui".into(),
+            vec![
+                "libs/ui/dist/**/*.js".into(),
+                "!libs/ui/dist/**/*.map".into(),
+            ],
+            true,
+        );
+        assert_eq!(
+            instruction.to_string(),
+            "files:ui:[libs/ui/dist/**/*.js,!libs/ui/dist/**/*.map]"
+        );
+    }
+
+    #[test]
+    fn the_two_backing_stores_never_share_a_pool_key() {
+        let globs = vec!["libs/ui/**/*.ts".to_string()];
+        assert_ne!(
+            HashInstruction::ProjectFileSet("ui".into(), globs.clone(), false).to_string(),
+            HashInstruction::ProjectFileSet("ui".into(), globs, true).to_string()
+        );
     }
 
     #[test]

@@ -51,6 +51,7 @@ import {
   checkFilesAreOutputs,
   getTaskOutputs,
   getTaskRawInputs,
+  deriveIoSnapshotStatus,
   _resetContextForTesting,
 } from './check-task-files';
 
@@ -151,6 +152,10 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
       return {
         init: mockInit,
         inspectTaskInputs: mockInspectTaskInputs,
+        inspectTaskInputsWithIoSnapshots: (...args: unknown[]) => ({
+          inputs: mockInspectTaskInputs(...args),
+          report: null,
+        }),
       } as unknown as HashPlanInspector;
     } as any);
 
@@ -1151,5 +1156,64 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
       expect(mockInspectTaskInputs).toHaveBeenCalledTimes(1);
       expect(mockGetOutputs).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+describe('deriveIoSnapshotStatus', () => {
+  const resolution = {
+    requestedCommit: 'abc',
+    commits: ['abc'],
+    sourceCommits: ['abc'],
+    digest: 'd1',
+    fetchedAt: 0,
+    clientVersion: '1',
+    tasks: 1,
+  };
+
+  it('is none with the unavailability reason when nothing could be resolved', () => {
+    expect(deriveIoSnapshotStatus('a:build', null, 'not-connected')).toEqual({
+      status: 'none',
+      reason: 'not-connected',
+    });
+    expect(deriveIoSnapshotStatus('a:build', null, 'no-head')).toEqual({
+      status: 'none',
+      reason: 'no-head',
+    });
+  });
+
+  it('is used with commit and digest when the task has an override', () => {
+    expect(
+      deriveIoSnapshotStatus('a:build', {
+        used: ['a:build'],
+        diagnostics: [],
+        resolution,
+      })
+    ).toEqual({ status: 'used', commit: 'abc', digest: 'd1' });
+  });
+
+  it('is none when there is no bundle at all', () => {
+    expect(
+      deriveIoSnapshotStatus('a:build', {
+        used: [],
+        diagnostics: [{ reason: 'no-bundle' }],
+      })
+    ).toEqual({ status: 'none', reason: 'no-bundle' });
+  });
+
+  it('is fallback with the task diagnostic reason, defaulting to missing', () => {
+    expect(
+      deriveIoSnapshotStatus('a:build', {
+        used: [],
+        diagnostics: [{ reason: 'disabled', taskId: 'a:build' }],
+        resolution,
+      })
+    ).toEqual({ status: 'fallback', reason: 'disabled' });
+    expect(
+      deriveIoSnapshotStatus('a:build', {
+        used: [],
+        diagnostics: [],
+        resolution,
+      })
+    ).toEqual({ status: 'fallback', reason: 'missing' });
   });
 });

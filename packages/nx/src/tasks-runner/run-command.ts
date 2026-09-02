@@ -29,6 +29,10 @@ import { isCI } from '../utils/is-ci';
 import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { getBundleInstallDefaultLocation } from '../nx-cloud/update-manager';
 import { logger } from '../utils/logger';
+import { fetchIoSnapshotsForRun } from '../io-snapshots/fetch';
+import { applyIoSnapshotOutputs } from '../io-snapshots/outputs';
+import { buildIoSnapshotOverrides } from '../io-snapshots/overrides';
+import { formatIoSnapshotSummary } from '../io-snapshots/report';
 import {
   createNxKeyLicenseeInformation,
   getNxKeyInformation,
@@ -994,7 +998,19 @@ export async function invokeTasksRunner({
 
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
-  let hasher = createTaskHasher(projectGraph, nxJson, runnerOptions);
+  // Must precede hashing: the bundle is the snapshot source for task hashes,
+  // and observed outputs join the task outputs the hasher and cache see.
+  const ioSnapshots = await fetchIoSnapshotsForRun(nxJson, runnerOptions);
+  if (ioSnapshots) {
+    applyIoSnapshotOutputs(projectGraph, taskGraph, ioSnapshots);
+  }
+
+  let hasher = createTaskHasher(
+    projectGraph,
+    nxJson,
+    runnerOptions,
+    ioSnapshots ?? undefined
+  );
 
   // this is used for two reasons: to fetch all remote cache hits AND
   // to submit everything that is known in advance to Nx Cloud to run in
@@ -1005,8 +1021,10 @@ export async function invokeTasksRunner({
     projectGraph,
     taskGraph,
     nxJson,
-    taskDetails
+    taskDetails,
+    ioSnapshots ?? undefined
   );
+  reportIoSnapshots(ioSnapshots, projectGraph, taskGraph, nxJson, nxArgs);
   const taskResultsLifecycle = new TaskResultsLifeCycle();
   const compositedLifeCycle: LifeCycle = new CompositeLifeCycle([
     ...constructLifeCycles(lifeCycle, taskGraph, nxJson, nxArgs.skipNxCache),
@@ -1028,6 +1046,7 @@ export async function invokeTasksRunner({
       nxJson,
       nxArgs,
       taskGraph,
+      ioSnapshots,
       hasher: {
         hashTask(task: Task, taskGraph_?: TaskGraph, env?: NodeJS.ProcessEnv) {
           if (!taskGraph_) {
@@ -1191,6 +1210,25 @@ function loadTasksRunner(modulePath: string): TasksRunner {
     }
     throw e;
   }
+}
+
+function reportIoSnapshots(
+  ioSnapshots: Awaited<ReturnType<typeof fetchIoSnapshotsForRun>>,
+  projectGraph: ProjectGraph,
+  taskGraph: TaskGraph,
+  nxJson: NxJsonConfiguration,
+  nxArgs: NxArgs
+): void {
+  if (!ioSnapshots) return;
+  if (!nxArgs.verbose && process.env.NX_VERBOSE_LOGGING !== 'true') return;
+  const summary = formatIoSnapshotSummary(
+    ioSnapshots.directory
+      ? buildIoSnapshotOverrides(projectGraph, taskGraph, nxJson, ioSnapshots)
+      : null,
+    ioSnapshots
+  );
+  if (!summary) return;
+  output.note({ title: summary.line, bodyLines: summary.bodyLines });
 }
 
 export function getRunner(

@@ -5,12 +5,47 @@ import {
   setupAfterEach,
   setGraph,
   setMockExpandedOutputs,
+  setMockObservedOutputs,
 } from './test-utils';
 import { showTargetOutputsHandler } from './outputs';
 
 describe('show target outputs', () => {
   beforeEach(setupBeforeEach);
   afterEach(setupAfterEach);
+
+  it('adds snapshot-observed outputs to the declared ones and labels each', async () => {
+    setGraph(
+      new GraphBuilder()
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app',
+            name: 'my-app',
+            targets: {
+              build: {
+                executor: '@nx/web:build',
+                outputs: ['{projectRoot}/dist'],
+              },
+            },
+          },
+          'app'
+        )
+        .build()
+    );
+    setMockObservedOutputs({
+      'my-app:build': ['apps/my-app/dist/extra.txt'],
+    });
+
+    await showTargetOutputsHandler({ target: 'my-app:build', json: true });
+
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
+    // declared first, observed appended, deduped
+    expect(parsed.outputPaths).toEqual([
+      'apps/my-app/dist',
+      'apps/my-app/dist/extra.txt',
+    ]);
+    expect(parsed.sources['apps/my-app/dist']).toBe('declared');
+    expect(parsed.sources['apps/my-app/dist/extra.txt']).toBe('snapshot');
+  });
 
   it('should resolve output interpolation with {projectRoot}', async () => {
     setGraph(
