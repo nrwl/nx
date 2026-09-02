@@ -7,7 +7,7 @@ import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { getTaskSpecificEnv } from '../tasks-runner/task-env';
 import { getCustomHasher } from '../tasks-runner/utils';
 import { getDbConnection } from '../utils/db-connection';
-import { getInputs, TaskHasher } from './task-hasher';
+import { getDependenciesWithOutputsToHash, TaskHasher } from './task-hasher';
 
 let taskDetails: TaskDetails;
 
@@ -48,9 +48,9 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
         return false;
       }
 
-      return !(
-        taskGraph.dependencies[task.id].length > 0 &&
-        getInputs(task, projectGraph, nxJson).depsOutputs.length > 0
+      return (
+        getDependenciesWithOutputsToHash(task, taskGraph, projectGraph, nxJson)
+          .length === 0
       );
     })
     .map((t) => t.task);

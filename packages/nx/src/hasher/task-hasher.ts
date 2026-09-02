@@ -352,6 +352,47 @@ export function getInputs(
   return { selfInputs, depsInputs, depsOutputs, projectInputs, depsFilesets };
 }
 
+/**
+ * Ids of dependency tasks whose outputs feed `task`'s hash through a
+ * `dependentTasksOutputFiles` input. Mirrors `process_tasks_outputs` in
+ * native/tasks/dep_outputs.rs: a dependency with no `outputs` contributes
+ * nothing, so it does not need to finish before `task` can be hashed.
+ */
+export function getDependenciesWithOutputsToHash(
+  task: Task,
+  taskGraph: TaskGraph,
+  projectGraph: ProjectGraph,
+  nxJson: NxJsonConfiguration
+): string[] {
+  const { depsOutputs } = getInputs(task, projectGraph, nxJson);
+  if (depsOutputs.length === 0) {
+    return [];
+  }
+  // The transitive set is a superset of the direct one, so any transitive
+  // entry widens the walk for all of them.
+  const transitive = depsOutputs.some((d) => d.transitive);
+
+  const result: string[] = [];
+  const visited = new Set<string>();
+  const queue = [task.id];
+  while (queue.length > 0) {
+    const current = queue.shift();
+    for (const depId of taskGraph.dependencies[current] ?? []) {
+      if (visited.has(depId)) continue;
+      visited.add(depId);
+      const dep = taskGraph.tasks[depId];
+      if (!dep) continue;
+      if (dep.outputs.length > 0) {
+        result.push(depId);
+      }
+      if (transitive) {
+        queue.push(depId);
+      }
+    }
+  }
+  return result;
+}
+
 export function splitInputsIntoSelfAndDependencies(
   inputs: ReadonlyArray<InputDefinition | string>,
   namedInputs: { [inputName: string]: ReadonlyArray<InputDefinition | string> }
