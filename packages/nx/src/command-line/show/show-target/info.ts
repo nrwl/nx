@@ -144,7 +144,20 @@ function resolveTargetInfoData(
       ? { sandbox: { enabled: false } }
       : {}),
     snapshot,
-    ...(effectiveGroups.length > 0 ? { effectiveInputs: effectiveGroups } : {}),
+    ...(effectiveGroups.length > 0
+      ? {
+          effectiveInputs: effectiveGroups.map((group) => {
+            const root = group.project
+              ? graph.nodes[group.project]?.data?.root
+              : undefined;
+            return {
+              ...group,
+              projectRoot: root,
+              globs: group.globs.map((glob) => tokenizeProjectRoot(glob, root)),
+            };
+          }),
+        }
+      : {}),
     ...(targetConfig.inputs
       ? (() => {
           const expanded = expandInputsForDisplay(
@@ -346,6 +359,26 @@ function isFileInput(value: InputDefinition | string): boolean {
 }
 
 /**
+ * Rewrites a workspace-relative glob to `{projectRoot}`-relative when it sits
+ * inside the owning project, matching how the declared inputs above are
+ * written. Negations keep their leading `!`.
+ */
+function tokenizeProjectRoot(glob: string, root: string | undefined): string {
+  if (!root) return glob;
+  const negated = glob.startsWith('!');
+  const path = negated ? glob.slice(1) : glob;
+  const token = root === '.' ? path : tokenizeUnder(path, root);
+  return negated ? `!${token}` : token;
+}
+
+function tokenizeUnder(path: string, root: string): string {
+  if (path === root) return '{projectRoot}';
+  return path.startsWith(`${root}/`)
+    ? `{projectRoot}/${path.slice(root.length + 1)}`
+    : path;
+}
+
+/**
  * The globs a snapshot-backed task actually hashes, grouped by the project
  * that owns them. Printed in place of the declared filesets those reads
  * replace.
@@ -365,7 +398,11 @@ function renderEffectiveInputs(
     (a.project ?? '').localeCompare(b.project ?? '')
   );
   for (const group of sorted) {
-    console.log(`    ${c.bold(group.project ?? '{workspaceRoot}')}:`);
+    const root = group.projectRoot;
+    const header = group.project
+      ? `${c.bold(group.project)}${root ? c.dim(` (${root})`) : ''}`
+      : c.bold('{workspaceRoot}');
+    console.log(`    ${header}:`);
     const globs = args.verbose ? group.globs : group.globs.slice(0, 5);
     for (const glob of globs) {
       console.log(`      - ${glob}`);
