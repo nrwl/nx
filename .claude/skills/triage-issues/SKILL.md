@@ -381,11 +381,11 @@ problem, and check it against the flags you are about to set.
 **Your own environment is a flag you did not set.** `CI` is the one you choose; these are set for you,
 and each one silently reroutes the code under test:
 
-| Set by | What it changes |
-| --- | --- |
-| `CLAUDECODE=1`, and the other `CLAUDE*` vars | `isAiAgent()` returns true, and `shouldUseTui()` returns false on it. Every TUI test an agent runs is on the non-TUI path unless the vars are stripped. |
-| The pty you run under | `is-tui-enabled.ts` gates on `process.stdout.columns > 0 && rows > 0`. A pty with no winsize (lefthook's inner pty reports 0x0) refuses the TUI outright. |
-| `SANDBOX_RUNTIME=1` | `isSandbox()` is true inside the review sandbox, which some paths branch on. |
+| Set by                                       | What it changes                                                                                                                                           |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CLAUDECODE=1`, and the other `CLAUDE*` vars | `isAiAgent()` returns true, and `shouldUseTui()` returns false on it. Every TUI test an agent runs is on the non-TUI path unless the vars are stripped.   |
+| The pty you run under                        | `is-tui-enabled.ts` gates on `process.stdout.columns > 0 && rows > 0`. A pty with no winsize (lefthook's inner pty reports 0x0) refuses the TUI outright. |
+| `SANDBOX_RUNTIME=1`                          | `isSandbox()` is true inside the review sandbox, which some paths branch on.                                                                              |
 
 The failure is always the same shape: the arm you believe is exercising the feature is quietly
 exercising its absence, and it comes back clean. **Assert the state you are testing rather than
@@ -393,6 +393,21 @@ inferring it** — call the predicate (`shouldUseTui()`, `isAiAgent()`) from ins
 print it, or find a byte-level tell such as the alternate-screen sequence `CSI ?1049h`. `#36579` was
 measured twice on the non-TUI path, once for the explicit `--outputStyle=stream` and once for
 `isAiAgent()`, before anyone checked.
+
+**Driving the TUI in a loop has three traps, and each one costs an iteration.** They surfaced
+reproducing `#36520`, where the arms had to run unattended 160 times per version:
+
+- **`tui.autoExit: 0` means never auto-exit**, not "exit immediately". On 22.6+ the zero is a
+  duration, so a loop set that way hangs forever waiting for a keypress. Use `true`.
+- **22.7.x deliberately keeps the TUI open after a task fails**, and `--tuiAutoExit=true` does not
+  override it. An unattended run therefore hangs on exactly the case you are trying to measure. Feed
+  it a quit: `{ sleep 8; printf 'q'; } | script -qec "..." /dev/null`.
+- **`--tui` and `--outputStyle` are mutually exclusive.** Passing both makes nx print its help and
+  exit 1, which reads as the reproduction failing rather than as a bad invocation. The two axes
+  cannot be crossed; vary them separately.
+
+Give the pty a real size while you are at it (`stty rows 50 cols 200`), or the capability check
+refuses the TUI and you measure the non-TUI path again.
 
 **Reproductions are cheaper than they look, because they share one container.** `sandbox start` hands
 out a workspace inside the _same_ long-lived host, so a second reproduction is a directory and an
