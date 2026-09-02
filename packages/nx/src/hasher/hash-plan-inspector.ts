@@ -11,6 +11,7 @@ import {
   ExternalObject,
   HashInputs,
   HashPlanner,
+  type EffectiveInputGroup,
   type IoSnapshots,
   HashPlanInspector as NativeHashPlanInspector,
   ProjectGraph as NativeProjectGraph,
@@ -253,6 +254,40 @@ export class HashPlanInspector {
       overrides,
       excludeTaskDependencies
     );
+  }
+
+  /**
+   * The file-input groups of each task's plan, as globs. When a task hashes
+   * from an I/O snapshot these are the observed reads, not the declared
+   * filesets, so callers can render what is actually hashed.
+   */
+  inspectTaskInputGlobs(
+    target: Target,
+    parsedArgs: { [k: string]: any } = {},
+    extraTargetDependencies: Record<
+      string,
+      (TargetDependencyConfig | string)[]
+    > = {},
+    excludeTaskDependencies: boolean = false
+  ): Record<string, EffectiveInputGroup[]> {
+    const taskGraph = this.taskGraphFor(
+      target,
+      parsedArgs,
+      extraTargetDependencies,
+      excludeTaskDependencies
+    );
+    const nxJson = this.nxJson ?? {};
+    const snapshots =
+      isIoSnapshotFetchEnabled(nxJson) && getLatestCommitSha()
+        ? loadIoSnapshotsForHead(nxJson)
+        : null;
+    const plansReference = this.planner.getPlansReference(
+      Object.keys(taskGraph.tasks),
+      taskGraph,
+      snapshots ?? undefined,
+      snapshots ? customHasherTaskIds(this.projectGraph, taskGraph) : undefined
+    );
+    return this.inspector.inspectInputGlobs(plansReference);
   }
 
   private inspectInputsFor(

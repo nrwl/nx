@@ -40,6 +40,13 @@ export let mockIoSnapshotReport: unknown = null;
 export function setMockIoSnapshotReport(report: unknown) {
   mockIoSnapshotReport = report;
 }
+// The per-project glob groups `nx show target` renders for a snapshot-backed
+// task; keyed by canonical task id like the real inspector.
+export let mockInputGlobs: Record<string, unknown[]> = {};
+
+export function setMockInputGlobs(groups: Record<string, unknown[]>) {
+  mockInputGlobs = groups;
+}
 export let mockObservedOutputs: Record<string, string[]> = {};
 
 export function setMockObservedOutputs(v: Record<string, string[]>) {
@@ -152,6 +159,7 @@ vi.mock('../../../hasher/hash-plan-inspector', () => ({
         inputs: mockHashInputs,
         report: mockIoSnapshotReport,
       })),
+      inspectTaskInputGlobs: vi.fn().mockImplementation(() => mockInputGlobs),
     };
   }),
 }));
@@ -171,6 +179,7 @@ export function setupBeforeEach() {
   mockCwd = '/workspace';
   mockNxJson = {};
   mockObservedOutputs = {};
+  mockInputGlobs = {};
   mockIoSnapshotReport = null;
   mockHashInputs = {};
   mockExpandedOutputs = null;

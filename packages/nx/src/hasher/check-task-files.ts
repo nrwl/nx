@@ -5,7 +5,11 @@ import type {
   ProjectGraphProjectNode,
 } from '../config/project-graph';
 import type { Task, TaskGraph } from '../config/task-graph';
-import type { HashInputs, IoSnapshotReport } from '../native';
+import type {
+  EffectiveInputGroup,
+  HashInputs,
+  IoSnapshotReport,
+} from '../native';
 import { expandOutputs, matchGlobPaths, matchOutputPaths } from '../native';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
@@ -607,6 +611,29 @@ export async function getTaskIoSnapshotStatus(
     cached?.report ?? null,
     cached?.unavailable
   );
+}
+
+/**
+ * The file-input groups a task actually hashes, as globs. For a
+ * snapshot-backed task these are the observed reads; otherwise they are the
+ * declared filesets after token resolution.
+ */
+export async function getTaskEffectiveInputGroups(
+  taskId: string,
+  seed?: TaskFileCheckSeed
+): Promise<EffectiveInputGroup[]> {
+  const ctx = await getContext(seed);
+  const { project, target, configuration, canonicalTaskId } = resolveIdentity(
+    taskId,
+    ctx.projectGraph
+  );
+  const inspector = await ctx.getInspector();
+  const groups = inspector.inspectTaskInputGlobs({
+    project,
+    target,
+    configuration,
+  });
+  return groups[canonicalTaskId] ?? [];
 }
 
 export interface TaskOutputs {

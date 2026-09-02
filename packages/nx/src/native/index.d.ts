@@ -82,6 +82,12 @@ export declare class HashPlanInspector {
   /** @deprecated Use `inspectInputs()` instead for structured output. */
   inspect(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, string[]>
   /**
+   * The file-input groups of each task's plan, as globs. Unlike `inspect`
+   * and `inspect_inputs` this does not touch the disk or the file map, so
+   * it stays cheap on plans whose globs expand to thousands of files.
+   */
+  inspectInputGlobs(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, Array<EffectiveInputGroup>>
+  /**
    * Like `inspect()` but returns structured `HashInputs` objects instead of flat strings.
    * Each `HashInstruction` is categorized into the appropriate bucket (files, runtime,
    * environment, depOutputs, external). TsConfiguration is resolved to the root tsconfig
@@ -341,6 +347,25 @@ export interface DepsOutputsInput {
  * Filtering against supported agents should be done on the TypeScript side.
  */
 export declare function detectAiAgent(): string | null
+
+/**
+ * One file-input group of a task's hash plan, as globs rather than resolved
+ * paths. `project` is `None` for workspace-level groups.
+ */
+export interface EffectiveInputGroup {
+  project?: string
+  globs: Array<string>
+  /**
+   * Disk-backed: an I/O snapshot's observed reads, or a declared
+   * `includeIgnored` fileset. Gitignored and generated files count.
+   */
+  includeIgnored: boolean
+  /**
+   * True when this task hashes from an I/O snapshot, so the groups are the
+   * observed reads rather than the declared filesets.
+   */
+  fromSnapshot: boolean
+}
 
 export interface EnvironmentInput {
   env: string
