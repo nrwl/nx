@@ -628,6 +628,10 @@ Use `ignoredReads` and `ignoredWrites` to keep tracking the target while excludi
 }
 ```
 
+{% aside type="caution" title="Not every glob is supported" %}
+The first path segment cannot contain `*`, so `**/generated/**` is rejected. `?`, `!`, `[`, `]` and extglobs are also unsupported. Anchor the pattern to a directory instead, such as `libs/*/generated/**`.
+{% /aside %}
+
 A target that defines `sandbox` replaces the inherited configuration rather than adding to it. Use the [spread token](#spread-token) to merge instead, either at the object level to keep inherited keys, or inside `ignoredReads` and `ignoredWrites` to keep inherited patterns.
 
 ```json

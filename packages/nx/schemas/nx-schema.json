@@ -1068,14 +1068,14 @@
               "items": {
                 "type": "string"
               },
-              "description": "Workspace-relative glob patterns for reads excluded from sandboxing reports"
+              "description": "Workspace-relative glob patterns for reads excluded from sandboxing reports. The first path segment cannot contain '*', and '?', '!', '[', ']' and extglobs are not supported; anchor the pattern to a directory instead of leading with '**'."
             },
             "ignoredWrites": {
               "type": "array",
               "items": {
                 "type": "string"
               },
-              "description": "Workspace-relative glob patterns for writes excluded from sandboxing reports"
+              "description": "Workspace-relative glob patterns for writes excluded from sandboxing reports. The first path segment cannot contain '*', and '?', '!', '[', ']' and extglobs are not supported; anchor the pattern to a directory instead of leading with '**'."
             }
           },
           "additionalProperties": false
