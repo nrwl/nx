@@ -58,6 +58,10 @@ pub enum EventType {
     update,
     #[allow(non_camel_case_types)]
     create,
+    /// The kernel dropped events (e.g. an inotify queue overflow); per-path
+    /// events cannot be trusted complete and consumers must re-walk.
+    #[allow(non_camel_case_types)]
+    rescan,
 }
 
 #[derive(Debug, Clone)]

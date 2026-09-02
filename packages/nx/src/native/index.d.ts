@@ -357,7 +357,12 @@ export interface EventDimensions {
 export declare const enum EventType {
   delete = 'delete',
   update = 'update',
-  create = 'create'
+  create = 'create',
+  /**
+   * The kernel dropped events (e.g. an inotify queue overflow); per-path
+   * events cannot be trusted complete and consumers must re-walk.
+   */
+  rescan = 'rescan'
 }
 
 export declare function expandOutputs(directory: string, entries: Array<string>): Array<string>
