@@ -229,6 +229,48 @@ describe('update-manager bundle download', () => {
     }
   });
 
+  it('leaves temp directories alone when there is no lock to make reclaiming them safe', async () => {
+    // Under WASM downloads run unserialized, so a '.tmp-*' may belong to an
+    // extract happening right now rather than to a dead process.
+    vi.resetModules();
+    // Unmocked in the finally below: if this test fails before unmocking, the
+    // stub FileLock leaks into every later lock test and they all fail with it.
+    vi.doMock('../native', () => ({
+      IS_WASM: true,
+      FileLock: class {
+        locked = false;
+        lock() {}
+        unlock() {}
+        check() {
+          return false;
+        }
+        wait() {
+          return Promise.resolve();
+        }
+      },
+    }));
+    try {
+      const wasmManager: UpdateManager = await import('./update-manager');
+      const wasmInstallDir = wasmManager.getBundleInstallDefaultLocation();
+      mkdirSync(join(wasmInstallDir, '.tmp-2608.29.0001-999'), {
+        recursive: true,
+      });
+
+      await wasmManager.downloadAndExtractClientBundle(
+        axiosServing(bundleTarball({ 'index.js': '' })),
+        '2608.30.0002',
+        'https://example.com/bundle.tar.gz'
+      );
+
+      expect(existsSync(join(wasmInstallDir, '.tmp-2608.29.0001-999'))).toBe(
+        true
+      );
+    } finally {
+      vi.doUnmock('../native');
+      vi.resetModules();
+    }
+  });
+
   it('keeps the state directory when cleaning up old bundles', async () => {
     mkdirSync(join(installDir, '2608.29.0001'), { recursive: true });
     // A crashed extract leaves this behind and nothing else reclaims it.
