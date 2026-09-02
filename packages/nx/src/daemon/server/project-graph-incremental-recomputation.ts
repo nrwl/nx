@@ -38,7 +38,9 @@ import {
 } from '../../project-graph/utils/retrieve-workspace-files';
 import { fileExists } from '../../utils/fileutils';
 import {
+  getAllFileDataInContext,
   resetWorkspaceContext,
+  setupWorkspaceContext,
   updateFilesInContext,
 } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -393,6 +395,99 @@ export function scheduleProjectGraphRecomputation(
       kickOffRecompute();
     }
   }
+}
+
+export interface FileDataDiff {
+  createdFiles: string[];
+  updatedFiles: Array<{ file: string; hash: string }>;
+  deletedFiles: string[];
+}
+
+export function diffFileData(
+  before: FileData[],
+  after: FileData[]
+): FileDataDiff {
+  const beforeHashes = new Map(before.map((f) => [f.file, f.hash]));
+  const createdFiles: string[] = [];
+  const updatedFiles: Array<{ file: string; hash: string }> = [];
+  for (const f of after) {
+    const previousHash = beforeHashes.get(f.file);
+    if (previousHash === undefined) {
+      createdFiles.push(f.file);
+      updatedFiles.push({ file: f.file, hash: f.hash });
+    } else {
+      if (previousHash !== f.hash) {
+        updatedFiles.push({ file: f.file, hash: f.hash });
+      }
+      beforeHashes.delete(f.file);
+    }
+  }
+  return {
+    createdFiles,
+    updatedFiles,
+    deletedFiles: [...beforeHashes.keys()],
+  };
+}
+
+/**
+ * The watcher reported dropped events (a kernel event-queue overflow), so the
+ * per-path stream cannot be trusted complete. Recover by re-walking the
+ * workspace and diffing it against the context's known files, then feed the
+ * synthesized changes through the same collection and notification path a
+ * normal watcher batch takes.
+ */
+export async function handleWatcherRescan(): Promise<void> {
+  performance.mark('watcher-rescan-start');
+  const before = await getAllFileDataInContext(workspaceRoot);
+  resetWorkspaceContext();
+  setupWorkspaceContext(workspaceRoot);
+  const after = await getAllFileDataInContext(workspaceRoot);
+  performance.mark('watcher-rescan-end');
+  performance.measure(
+    're-walk workspace after watcher rescan',
+    'watcher-rescan-start',
+    'watcher-rescan-end'
+  );
+
+  const { createdFiles, updatedFiles, deletedFiles } = diffFileData(
+    before,
+    after
+  );
+  if (updatedFiles.length === 0 && deletedFiles.length === 0) {
+    serverLogger.watcherLog(
+      'Rescan re-walk found no differences; keeping the cached graph.'
+    );
+    return;
+  }
+  serverLogger.watcherLog(
+    `Rescan re-walk recovered ${createdFiles.length} created, ${
+      updatedFiles.length - createdFiles.length
+    } updated and ${deletedFiles.length} deleted file(s).`
+  );
+
+  ++fileChangeCounter;
+  const createdFileSet = new Set(createdFiles);
+  const updatedFileNames: string[] = [];
+  for (const { file, hash } of updatedFiles) {
+    collectedDeletedFiles.delete(file);
+    collectedUpdatedFiles.set(file, { version: fileChangeCounter, hash });
+    if (!createdFileSet.has(file)) {
+      updatedFileNames.push(file);
+    }
+  }
+  for (const file of deletedFiles) {
+    collectedUpdatedFiles.delete(file);
+    collectedDeletedFiles.set(file, fileChangeCounter);
+  }
+
+  notifyFileChangeListeners({
+    createdFiles,
+    updatedFiles: updatedFileNames,
+    deletedFiles,
+  });
+  notifyFileWatcherSockets(createdFiles, updatedFileNames, deletedFiles);
+  ++recomputationGeneration;
+  kickOffRecompute();
 }
 
 export function registerProjectGraphRecomputationListener(
