@@ -231,6 +231,8 @@ describe('update-manager bundle download', () => {
 
   it('keeps the state directory when cleaning up old bundles', async () => {
     mkdirSync(join(installDir, '2608.29.0001'), { recursive: true });
+    // A crashed extract leaves this behind and nothing else reclaims it.
+    mkdirSync(join(installDir, '.tmp-2608.29.0001-999'), { recursive: true });
 
     await updateManager.downloadAndExtractClientBundle(
       axiosServing(bundleTarball({ 'index.js': '' })),
@@ -240,6 +242,7 @@ describe('update-manager bundle download', () => {
 
     expect(bundleDirs()).toEqual(['2608.30.0002']);
     expect(statSync(join(installDir, '.state')).isDirectory()).toBe(true);
+    expect(existsSync(join(installDir, '.tmp-2608.29.0001-999'))).toBe(false);
   });
 
   it('rejects a server version that would escape the install directory', async () => {
