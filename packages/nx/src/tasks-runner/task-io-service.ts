@@ -75,10 +75,6 @@ class TaskIOService {
     }
   }
 
-  isTaskSandboxDisabled(taskId: string): boolean {
-    return this.sandboxDisabledTaskIds.has(taskId);
-  }
-
   /**
    * Subscribe to task PID updates.
    * Receives notifications when processes are added/removed from tasks.
