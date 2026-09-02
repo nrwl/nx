@@ -570,12 +570,10 @@ function removeOldClientBundles(currentInstallVersion: string) {
   const filesAndFolders = readdirSync(runnerBundleInstallDirectory);
 
   for (let fileOrFolder of filesAndFolders) {
-    // '.state' holds the control files and '.tmp-*' is an in-flight extract;
-    // no bundle can be named either, since a version starts alphanumeric.
-    if (
-      fileOrFolder === currentInstallVersion ||
-      fileOrFolder.startsWith('.')
-    ) {
+    // '.state' holds the control files. A '.tmp-*' left by a crashed extract
+    // is still reclaimed here: this runs after our own was renamed away, and
+    // the lock means no other process is extracting.
+    if (fileOrFolder === currentInstallVersion || fileOrFolder === '.state') {
       continue;
     }
     const fileOrFolderPath = join(runnerBundleInstallDirectory, fileOrFolder);
