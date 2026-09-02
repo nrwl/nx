@@ -6,9 +6,7 @@
     "declarationDir": "dist",
     "declarationMap": false,
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "composite": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
@@ -21,10 +19,7 @@
     "jest.config.ts",
     "**/*.spec-util.ts"
   ],
-  "include": [
-    "*.ts",
-    "src/**/*.ts"
-  ],
+  "include": ["*.ts", "src/**/*.ts"],
   "references": [
     {
       "path": "../js/tsconfig.lib.json"
