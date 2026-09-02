@@ -66,7 +66,6 @@ const lockPath = path.join(installDir, 'download.lock');
 
 const lock = new FileLock(lockPath);
 lock.lock();
-fs.writeFileSync(lockPath, version + ' ' + randomUUID(), 'utf-8');
 fs.writeFileSync(path.join(installDir, 'peer-holds.flag'), '', 'utf-8');
 
 setTimeout(() => {
@@ -74,6 +73,12 @@ setTimeout(() => {
     const dir = path.join(installDir, version);
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(path.join(dir, 'index.js'), 'peer bundle', 'utf-8');
+    // Recorded only on completion, exactly as the code under test does.
+    fs.writeFileSync(
+      path.join(installDir, 'download.record'),
+      version + ' ' + randomUUID(),
+      'utf-8'
+    );
   }
   lock.unlock();
 }, Number(holdMs));
@@ -170,14 +175,14 @@ describe('update-manager bundle download', () => {
     );
   });
 
-  it('records the installed version and a nonce in the download lockfile', async () => {
+  it('records the installed version and a nonce once the install completes', async () => {
     await updateManager.downloadAndExtractClientBundle(
       axiosServing(bundleTarball({ 'index.js': '' })),
       '2608.30.0002',
       'https://example.com/bundle.tar.gz'
     );
 
-    const record = readFileSync(join(installDir, 'download.lock'), 'utf-8');
+    const record = readFileSync(join(installDir, 'download.record'), 'utf-8');
     const [version, nonce] = record.trim().split(' ');
     expect(version).toBe('2608.30.0002');
     expect(nonce).toMatch(/^[0-9a-f-]{36}$/);
@@ -192,12 +197,45 @@ describe('update-manager bundle download', () => {
       );
 
     await download();
-    const first = readFileSync(join(installDir, 'download.lock'), 'utf-8');
+    const first = readFileSync(join(installDir, 'download.record'), 'utf-8');
     await download();
-    const second = readFileSync(join(installDir, 'download.lock'), 'utf-8');
+    const second = readFileSync(join(installDir, 'download.record'), 'utf-8');
 
     expect(second).not.toBe(first);
     expect(second.split(' ')[0]).toBe(first.split(' ')[0]);
+  });
+
+  it('rejects a server version that would escape the install directory', async () => {
+    const outside = join(workspace, 'precious');
+    writeFileSync(outside, 'do not delete');
+    const axios = axiosServing(bundleTarball({ 'index.js': '' }));
+
+    await expect(
+      updateManager.downloadAndExtractClientBundle(
+        axios,
+        '../../../../precious',
+        'https://example.com/bundle.tar.gz'
+      )
+    ).rejects.toThrow(/Invalid Nx Cloud client bundle version/);
+
+    expect(existsSync(outside)).toBe(true);
+    expect(axios.get).not.toHaveBeenCalled();
+  });
+
+  it('never writes into the file it holds the lock on', async () => {
+    // Windows byte-range locks are mandatory and handle-scoped, so writing to
+    // the locked file would fail with ERROR_LOCK_VIOLATION. POSIX flock is
+    // advisory, so only this assertion catches a regression here.
+    await updateManager.downloadAndExtractClientBundle(
+      axiosServing(bundleTarball({ 'index.js': '' })),
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(readFileSync(join(installDir, 'download.lock'), 'utf-8')).toBe('');
+    expect(readFileSync(join(installDir, 'download.record'), 'utf-8')).not.toBe(
+      ''
+    );
   });
 
   it('removes bundles left by earlier versions', async () => {
@@ -273,6 +311,25 @@ describe('update-manager bundle download', () => {
     expect(
       readFileSync(join(installDir, '2608.30.0002', 'index.js'), 'utf-8')
     ).toBe('good');
+  });
+
+  it('does not stall on a tar entry that is neither a file nor a directory', async () => {
+    // The entry handler must always advance the stream. A symlink entry that
+    // calls neither next() nor resume() stalls tar-stream forever, and the
+    // caller is holding the download lock while it does.
+    const pack = tar.pack();
+    pack.entry({ name: 'index.js' }, 'module.exports = {};');
+    pack.entry({ name: 'link', type: 'symlink', linkname: 'index.js' });
+    pack.entry({ name: 'after.js' }, 'module.exports = 1;');
+    pack.finalize();
+
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      axiosServing(pack.pipe(createGzip())),
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(existsSync(join(installed.fullPath, 'after.js'))).toBe(true);
   });
 
   it('rejects rather than hanging when the response body is not a valid archive', async () => {
@@ -412,6 +469,30 @@ describe('update-manager download lock', () => {
     expect(
       readFileSync(join(installDir, '2608.29.0001', 'index.js'), 'utf-8')
     ).toBe('peer bundle');
+  });
+
+  it('does not adopt a pre-existing directory the peer never installed', async () => {
+    // readBundleInstalledByLockHolder proves a directory named for the
+    // recorded version exists, not that the holder created it. An interrupted
+    // install on a released nx leaves exactly such a directory, and the server
+    // asks for that same version again because the content hash no longer
+    // matches.
+    mkdirSync(join(installDir, '2608.30.0002'), { recursive: true });
+    writeFileSync(join(installDir, '2608.30.0002', 'index.js'), 'CORRUPT');
+
+    const axios = axiosServing(bundleTarball({ 'index.js': 'good' }));
+    await startPeer({ version: '2608.30.0002', holdMs: 300, installs: false });
+
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      axios,
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(axios.get).toHaveBeenCalledOnce();
+    expect(readFileSync(join(installed.fullPath, 'index.js'), 'utf-8')).toBe(
+      'good'
+    );
   });
 
   it('takes over the download when the peer released the lock without installing', async () => {
