@@ -19,7 +19,10 @@ export class SummaryTerminalOutputLifeCycle implements LifeCycle {
     task: Task;
     hasOutput: boolean;
   }[] = [];
-  private readonly stopped: Task[] = [];
+  private readonly stopped: {
+    task: Task;
+    hasOutput: boolean;
+  }[] = [];
   private readonly completed = new Set<string>();
   private succeeded = 0;
   private cached = 0;
@@ -53,7 +56,13 @@ export class SummaryTerminalOutputLifeCycle implements LifeCycle {
           });
           break;
         case 'stopped':
-          this.stopped.push(task);
+          // A stopped batch's tasks carry the worker's partial log, which is
+          // the only record of what got through before the cancellation, so
+          // they are addressed the same way a failure is.
+          this.stopped.push({
+            task,
+            hasOutput: terminalOutput !== undefined,
+          });
           break;
         case 'local-cache':
         case 'local-cache-kept-existing':
@@ -78,7 +87,17 @@ export class SummaryTerminalOutputLifeCycle implements LifeCycle {
       bodyLines.push(
         '',
         output.dim('Stopped before finishing:'),
-        ...this.stopped.map((t) => `${output.dim('-')} ${t.id}`)
+        ...this.stopped.flatMap(({ task, hasOutput }) => {
+          const line = `${output.dim('-')} ${task.id}`;
+          return task.hash && hasOutput
+            ? [
+                line,
+                output.dim(
+                  `  full log: ${terminalOutputPathForHash(task.hash)}`
+                ),
+              ]
+            : [line];
+        })
       );
     }
     if (this.cloudLink) {
