@@ -155,6 +155,39 @@ describe('SummaryTerminalOutputLifeCycle', () => {
     expect(out).toContain('a:test');
   });
 
+  // A batch stopped by a CI step timeout carries the worker's partial log, the
+  // only record of what got through. Listing the task without addressing it
+  // leaves that log on disk with nothing pointing at it.
+  it('addresses the log of a stopped task that produced output', () => {
+    const a = makeTask('a');
+    const lifeCycle = new SummaryTerminalOutputLifeCycle([a]);
+
+    const out = captureOutput(() => {
+      lifeCycle.endTasks([result(a, 'stopped', 'how far gradle got')]);
+      lifeCycle.endCommand();
+    });
+
+    expect(out).toContain('Stopped before finishing:');
+    expect(out).toContain('full log: /cache/terminalOutputs/hash-a');
+    // Addressed, not reproduced, exactly as a failure is.
+    expect(out).not.toContain('how far gradle got');
+  });
+
+  it('does not address a log for a stopped task that produced none', () => {
+    const a = makeTask('a');
+    const lifeCycle = new SummaryTerminalOutputLifeCycle([a]);
+
+    const out = captureOutput(() => {
+      lifeCycle.endTasks([
+        { ...result(a, 'stopped'), terminalOutput: undefined } as TaskResult,
+      ]);
+      lifeCycle.endCommand();
+    });
+
+    expect(out).toContain('a:test');
+    expect(out).not.toContain('full log');
+  });
+
   it('renders the cloud link when one is set', () => {
     const a = makeTask('a');
     const lifeCycle = new SummaryTerminalOutputLifeCycle([a]);

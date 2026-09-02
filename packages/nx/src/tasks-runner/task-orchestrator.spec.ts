@@ -1276,6 +1276,25 @@ describe('TaskOrchestrator', () => {
       expect(out).toContain(EXIT_ERROR);
     });
 
+    // The fold cannot carry it under summary, so the results are the only route
+    // and the finally would otherwise unlink the only copy.
+    it("carries a stopped batch's partial log in its results under summary", async () => {
+      const orchestrator = createOrchestrator(
+        'gradle: still resolving dependencies',
+        true
+      );
+      orchestrator.resolvedOutputStyle = 'summary';
+
+      const results: any = await orchestrator.runBatch(batch, {}, 0);
+
+      expect(results[0].status).toEqual('stopped');
+      expect(results[0].terminalOutput).toContain(
+        'gradle: still resolving dependencies'
+      );
+      // The exit error still stays out: it restates the cancellation.
+      expect(results[0].terminalOutput).not.toContain(EXIT_ERROR);
+    });
+
     it("surfaces a stopped batch's captured log, without the exit error", async () => {
       const orchestrator = createOrchestrator(
         'gradle: still resolving dependencies',
