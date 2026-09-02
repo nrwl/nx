@@ -347,7 +347,7 @@ export async function convertToRspack(
   const configurationOptions: Record<string, Record<string, any>> = {};
   let buildTarget: { name: string; config: TargetConfiguration } | undefined;
   let serveTarget: { name: string; config: TargetConfiguration } | undefined;
-  let buildTsConfigPath: string | undefined;
+  const buildTsConfigPaths = new Set<string>();
   let serverTsConfigPath: string | undefined;
   const targetsToRemove: string[] = [];
   let customWebpackConfigPath: string | undefined;
@@ -369,6 +369,9 @@ export async function convertToRspack(
         createConfigOptions,
         project.root
       );
+      if (target.options?.tsConfig) {
+        buildTsConfigPaths.add(joinPathFragments(target.options.tsConfig));
+      }
       if (target.configurations) {
         for (const [configurationName, configuration] of Object.entries(
           target.configurations
@@ -380,9 +383,11 @@ export async function convertToRspack(
             configurationOptions[configurationName],
             project.root
           );
+          if (configuration.tsConfig) {
+            buildTsConfigPaths.add(joinPathFragments(configuration.tsConfig));
+          }
         }
       }
-      buildTsConfigPath = target.options?.tsConfig;
       buildTarget = { name: targetName, config: target };
       targetsToRemove.push(targetName);
     } else if (
@@ -396,7 +401,10 @@ export async function convertToRspack(
         project.root
       );
       createConfigOptions.server = './src/main.server.ts';
-      serverTsConfigPath = target.options?.tsConfig;
+      serverTsConfigPath = target.options?.tsConfig
+        ? // each target can spell the same path differently
+          joinPathFragments(target.options.tsConfig)
+        : undefined;
       targetsToRemove.push(targetName);
     } else if (
       target.executor === '@angular-devkit/build-angular:dev-server' ||
@@ -491,7 +499,7 @@ export async function convertToRspack(
       tree,
       project.root,
       serverTsConfigPath,
-      buildTsConfigPath
+      buildTsConfigPaths
     );
   }
 
