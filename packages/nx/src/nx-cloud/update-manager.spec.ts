@@ -125,9 +125,8 @@ function restoreCacheDirEnv(): void {
 }
 
 /**
- * Nothing in this file may touch a path outside its fixture. Checked before
- * any test runs rather than inside one, because afterEach's recursive rmSync
- * is itself a destructive sink that no per-test assertion guards.
+ * Fails the run before any test operates on a path outside the fixture. First
+ * of two layers: this one stops the tests, removeFixtureDir stops the delete.
  */
 function assertContainedInFixture(installDir: string, workspace: string): void {
   if (!installDir.startsWith(workspace)) {
@@ -140,11 +139,11 @@ function assertContainedInFixture(installDir: string, workspace: string): void {
 }
 
 /**
- * The recursive delete, refusing any path outside the fixture. The guard lives
- * on the sink because everything else that has kept this file contained has
- * been accidental: a throwing beforeEach leaves installDir already assigned,
- * and the escape has only been survivable while the target happened not to
- * exist yet.
+ * The recursive delete, refusing any path outside the fixture. It contributes
+ * only where afterEach actually reaches it, which means an escape some tests
+ * hit and others do not, so afterEach's earlier statements still succeed. It
+ * is NOT what covers a throwing beforeEach: there afterEach aborts on its
+ * first statement and never gets here.
  */
 function removeFixtureDir(dir: string, workspace: string): void {
   if (!dir || !dir.startsWith(workspace)) {
