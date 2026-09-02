@@ -4,6 +4,10 @@
 //! `dependencies` as `HashMap<String, Vec<String>>`, with no edge `type` or
 //! `source`, so it cannot rebuild what `filterAffected` returns.
 
+pub mod dependent_outputs;
+mod project_paths;
+pub mod tasks;
+
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::ThreadsafeFunction;
 use std::borrow::Cow;
@@ -12,9 +16,9 @@ use std::path::Path;
 use std::sync::Arc;
 use tracing::warn;
 
+use crate::native::affected::project_paths::{ProjectRoots, normalize_path};
 use crate::native::glob::build_glob_set;
 use crate::native::project_graph::types::{Project, ProjectGraph, Target};
-use crate::native::project_graph::utils::{find_project_for_path, normalize_project_root};
 use crate::native::types::{JsInputs, NxJson};
 
 /// A locator implemented in JavaScript, called once per run with the changed paths.
@@ -50,7 +54,7 @@ pub async fn locate_touched_projects(
         JsLocator,
     >,
 ) -> Result<Vec<String>> {
-    let graph = Arc::clone(&*project_graph);
+    let graph = Arc::clone(project_graph);
     let mut touched: Vec<String> = Vec::new();
 
     touched.extend(touched_projects(&graph, &touched_files));
@@ -74,33 +78,12 @@ pub async fn locate_touched_projects(
 }
 
 /// Maps each changed file to the project that owns it.
-///
-/// The mapping is built here rather than with `create_project_root_mappings`,
-/// which normalizes the project *name* into the value instead of the root into
-/// the key and so cannot match a project whose root is `""`.
 fn touched_projects(graph: &ProjectGraph, touched_files: &[String]) -> Vec<String> {
-    let root_map: HashMap<String, String> = graph
-        .nodes
-        .iter()
-        .map(|(name, project)| (normalize_project_root(&project.root), name.clone()))
-        .collect();
-
+    let roots = ProjectRoots::new(graph);
     touched_files
         .iter()
-        .filter_map(|file| find_project_for_path(normalize_path(file), &root_map).map(String::from))
+        .filter_map(|file| roots.owner_of(&normalize_path(file)).map(String::from))
         .collect()
-}
-
-/// Mirrors `normalizePath` in `packages/nx/src/utils/path.ts`: strip a Windows
-/// drive letter, then swap separators. Root keys are unix-style, and `--files`
-/// reaches us exactly as the user typed it, so a Windows path matches nothing
-/// without this.
-fn normalize_path(path: &str) -> String {
-    let without_drive = match path.as_bytes() {
-        [drive, b':', ..] if drive.is_ascii_alphabetic() => &path[2..],
-        _ => path,
-    };
-    without_drive.replace('\\', "/")
 }
 
 /// What a matched implicit pattern marks affected.
@@ -272,10 +255,14 @@ fn projects_from_project_glob_changes(
     };
     let workspace_root = Path::new(&options.workspace_root);
 
-    // Raw, not normalized: the TypeScript this replaced matched and stat'd the
-    // path exactly as given. Normalizing here would make a Windows path absolute
-    // after the drive letter is stripped, and `Path::join` drops the base on an
-    // absolute component, so the probe would stat outside the workspace.
+    // Raw, not normalized, to match the TypeScript this replaced, which globbed
+    // and stat'd the path exactly as given.
+    //
+    // This is parity, not containment. `Path::join` drops the base on an
+    // absolute component, so a raw `/etc/project.json` or `C:\...` still stats
+    // outside the workspace, and `..` escapes by ordinary resolution. Nothing
+    // here confines the probe; it only decides whether the file exists, and a
+    // path that leaves the workspace was never a project config anyway.
     for file in touched_files {
         if !glob.is_match(file) {
             continue;

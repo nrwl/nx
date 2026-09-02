@@ -36,7 +36,7 @@ fn io_snapshot_marker(digest: &str) -> HashInstruction {
 /// time, so removing a negation re-admits the observed reads it excluded.
 type Negations = Vec<(String, String)>;
 
-const ROOT_TSCONFIG_FILES: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
+pub(crate) const ROOT_TSCONFIG_FILES: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
 /// Hashed by the always-on workspace fileset every plan carries.
 const ALWAYS_ON_FILES: [&str; 3] = ["nx.json", ".gitignore", ".nxignore"];
 const LOCKFILES: [&str; 6] = [
@@ -166,6 +166,35 @@ impl<'a> VisitedTracker<'a> {
             self.set.remove(project);
         }
     }
+}
+
+/// Narrows an existing set of plans to `task_ids`, sharing the instruction pool
+/// rather than re-planning.
+///
+/// Returns `None` when any requested task has no plan, which is the caller's
+/// signal that the plans were built for a different task set and cannot answer
+/// for this one. A plan depends on the task graph only through the dependent
+/// output instructions, so a subset is sound exactly when every kept task's
+/// dependency closure survived intact.
+#[napi(ts_return_type = "ExternalObject<Record<string, Array<HashInstruction>>> | null")]
+pub fn subset_hash_plans(
+    #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
+    plans: &External<HashPlans>,
+    task_ids: Vec<String>,
+) -> Option<External<HashPlans>> {
+    subset_plans(plans, &task_ids).map(External::new)
+}
+
+pub(crate) fn subset_plans(plans: &HashPlans, task_ids: &[String]) -> Option<HashPlans> {
+    let subset: HashMap<String, Vec<u32>> = task_ids
+        .iter()
+        .map(|id| Some((id.clone(), plans.plans.get(id)?.clone())))
+        .collect::<Option<_>>()?;
+
+    Some(HashPlans {
+        pool: Arc::clone(&plans.pool),
+        plans: subset,
+    })
 }
 
 #[napi]
@@ -1306,5 +1335,49 @@ mod tests {
         assert!(visited.insert("inner1"));
         assert!(!visited.insert("outer"));
         assert!(!visited.insert("seed"));
+    }
+}
+
+#[cfg(test)]
+mod subset_tests {
+    use super::*;
+
+    fn plans(entries: &[(&str, &[u32])]) -> HashPlans {
+        HashPlans {
+            pool: Arc::new(InstructionPool::default()),
+            plans: entries
+                .iter()
+                .map(|(id, plan)| (id.to_string(), plan.to_vec()))
+                .collect(),
+        }
+    }
+
+    fn ids(ids: &[&str]) -> Vec<String> {
+        ids.iter().map(|id| id.to_string()).collect()
+    }
+
+    #[test]
+    fn keeps_only_the_requested_tasks() {
+        let source = plans(&[("a:build", &[1, 2]), ("b:build", &[3]), ("c:build", &[4])]);
+        let subset = subset_plans(&source, &ids(&["a:build", "c:build"])).unwrap();
+
+        assert_eq!(subset.plans.len(), 2);
+        assert_eq!(subset.plans["a:build"], vec![1, 2]);
+        assert_eq!(subset.plans["c:build"], vec![4]);
+    }
+
+    /// The guard: an unplanned task means these plans describe a different task
+    /// graph, so the caller has to plan for real rather than hash a subset.
+    #[test]
+    fn refuses_when_a_task_was_never_planned() {
+        let source = plans(&[("a:build", &[1])]);
+        assert!(subset_plans(&source, &ids(&["a:build", "missing:build"])).is_none());
+    }
+
+    #[test]
+    fn shares_the_instruction_pool_rather_than_copying_it() {
+        let source = plans(&[("a:build", &[1])]);
+        let subset = subset_plans(&source, &ids(&["a:build"])).unwrap();
+        assert!(Arc::ptr_eq(&source.pool, &subset.pool));
     }
 }

@@ -303,6 +303,15 @@ export interface AffectedOptions {
   workspaceRoot: string
 }
 
+/**
+ * Task ids with at least one changed file among their plan's file inputs.
+ *
+ * `changed_project_configs` is the subset of `changed_files` that is project
+ * configuration, decided in TypeScript because it needs the plugins'
+ * createNodes globs.
+ */
+export declare function affectedTasks(projectGraph: ExternalObject<ProjectGraph>, hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, changedFiles: Array<string>, changedProjectConfigs: Array<string>): Array<string>
+
 export interface BatchInfo {
   executorName: string
   taskIds: Array<string>
@@ -339,6 +348,17 @@ export declare function closeDbConnection(connection: ExternalObject<NxDbConnect
 export declare function connectToNxDb(cacheDir: string, dbName?: string | undefined | null): ExternalObject<NxDbConnection>
 
 export declare function copy(src: string, dest: string): number
+
+/**
+ * Consumer task id -> the upstream task ids whose declared outputs it reads.
+ *
+ * Producers are searched over the whole dependency closure, not just direct
+ * dependencies: `TaskOutput` does not record whether its `transitive` flag was
+ * set, and an observed read cannot say how deep the producer sits. Over-
+ * reporting an edge costs a task that was going to be a cache hit; missing one
+ * skips a task that needed to run.
+ */
+export declare function dependentOutputEdges(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, taskGraph: TaskGraph): Record<string, Array<string>>
 
 export interface DepsOutputsInput {
   dependentTasksOutputFiles: string
@@ -839,6 +859,18 @@ export declare const enum RunMode {
 export interface RuntimeInput {
   runtime: string
 }
+
+/**
+ * Narrows an existing set of plans to `task_ids`, sharing the instruction pool
+ * rather than re-planning.
+ *
+ * Returns `None` when any requested task has no plan, which is the caller's
+ * signal that the plans were built for a different task set and cannot answer
+ * for this one. A plan depends on the task graph only through the dependent
+ * output instructions, so a subset is sound exactly when every kept task's
+ * dependency closure survived intact.
+ */
+export declare function subsetHashPlans(plans: ExternalObject<Record<string, Array<HashInstruction>>>, taskIds: Array<string>): ExternalObject<Record<string, Array<HashInstruction>>> | null
 
 export declare const enum SupportedEditor {
   VSCode = 0,
