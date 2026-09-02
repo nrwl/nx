@@ -927,14 +927,32 @@ describe('migrate orchestrator (dark launch)', () => {
     const prompt = parseLastDispense(runDispensed(first.payload.next));
     expect(prompt.action).toBe('await-prompt');
 
-    // Thirteen multibyte entries (~620 bytes each) plus a fourteenth padded so
-    // the listed prefix is exactly 8192 bytes; the tiny fifteenth is listed by
-    // any cap of 8192 plus its own size or more.
+    // Mirrors digestEntryByteBudget in run/issues.ts: the fixed digest lines,
+    // the worst-case overflow line, and one separator per potential line are
+    // reserved out of the 8192-byte digest bound before entries are budgeted.
+    const issuesRef = `.nx/migrate-runs/${first.runId}/issues/`;
+    const reservedLines = [
+      '',
+      `Known issues reported earlier in this run (details under ${issuesRef}):`,
+      `Fix the issues assigned to this step within its scope where you can, and report each result in the handoff's "issueUpdates" field.`,
+      `  ...and 20 more not listed; see ${issuesRef}.`,
+    ];
+    const entryBudget =
+      8192 -
+      reservedLines.reduce(
+        (sum, line) => sum + Buffer.byteLength(line, 'utf8'),
+        0
+      ) -
+      (20 + reservedLines.length - 1);
+
+    // Thirteen multibyte entries plus a fourteenth padded so the listed prefix
+    // fills the entry budget exactly; the tiny fifteenth is listed by any
+    // budget of that size plus its own size or more.
     const entryFor = (issue: { id: string; summary: string }) =>
       `  - ${issue.id} (assigned to this step): ${issue.summary}`;
     const bigSummaries = Array.from(
       { length: 13 },
-      (_, i) => `${'題'.repeat(194)} ${i + 1}`
+      (_, i) => `${'題'.repeat(185)} ${i + 1}`
     );
     const bigBytes = bigSummaries.reduce(
       (sum, summary, i) =>
@@ -942,11 +960,15 @@ describe('migrate orchestrator (dark launch)', () => {
         Buffer.byteLength(entryFor({ id: `issue-${i + 1}`, summary }), 'utf8'),
       0
     );
-    const padSummary = 'x'.repeat(
-      8192 -
-        bigBytes -
-        Buffer.byteLength(entryFor({ id: 'issue-14', summary: '' }), 'utf8')
-    );
+    const padLength =
+      entryBudget -
+      bigBytes -
+      Buffer.byteLength(entryFor({ id: 'issue-14', summary: '' }), 'utf8');
+    // The pad must stay under the 200-char digest truncation, or the rendered
+    // entry would shrink and the listed prefix would no longer fill the budget.
+    expect(padLength).toBeGreaterThan(0);
+    expect(padLength).toBeLessThanOrEqual(200);
+    const padSummary = 'x'.repeat(padLength);
     const summaries = [
       ...bigSummaries,
       padSummary,
@@ -995,13 +1017,30 @@ describe('migrate orchestrator (dark launch)', () => {
       expect(promptTwo.payload.instructions).toContain(entryFor(issue));
       listedBytes += Buffer.byteLength(entryFor(issue), 'utf8');
     }
-    expect(listedBytes).toBe(8192);
+    expect(listedBytes).toBe(entryBudget);
     const firstUnclaimed = state.issues.find(
       (i) => i.claimedByStepId !== stepId
     );
     expect(
       listedBytes + Buffer.byteLength(entryFor(firstUnclaimed), 'utf8')
-    ).toBeGreaterThan(8192);
+    ).toBeGreaterThan(entryBudget);
+
+    // The complete serialized digest, fixed lines included, honors the bound.
+    const instrLines: string[] = promptTwo.payload.instructions.split('\n');
+    const headingIdx = instrLines.findIndex((l) =>
+      l.startsWith('Known issues reported')
+    );
+    const instructionIdx = instrLines.findIndex((l) =>
+      l.includes('"issueUpdates"')
+    );
+    expect(headingIdx).toBeGreaterThan(0);
+    expect(instructionIdx).toBeGreaterThan(headingIdx);
+    expect(
+      Buffer.byteLength(
+        instrLines.slice(headingIdx - 1, instructionIdx + 1).join('\n'),
+        'utf8'
+      )
+    ).toBeLessThanOrEqual(8192);
 
     writeHandoff(promptTwo, {
       status: 'success',

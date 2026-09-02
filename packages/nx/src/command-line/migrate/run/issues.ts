@@ -34,7 +34,8 @@ const MAX_NOTE_CHARS = 1000;
 const MAX_APPLICABLE_MIGRATIONS = 50;
 
 // Bounds on the digest rendered into dispensed steps. Overflow here is
-// truncated or counted, never rejected the way an over-bound report is.
+// truncated or counted, never rejected the way an over-bound report is. The
+// byte bound covers the whole serialized digest, fixed lines included.
 const MAX_DIGEST_ENTRIES = 20;
 const MAX_DIGEST_BYTES = 8192;
 const DIGEST_SUMMARY_CHARS = 200;
@@ -762,13 +763,21 @@ function mapApplicableSteps(
  */
 export function claimIssuesForStep(
   state: MigrateRunState,
-  stepId: string
+  stepId: string,
+  runId: string
 ): MigrateRunState {
   const issues = state.issues;
   if (!issues) return state;
   // Claims are capped to what the digest can publish: an unlisted assignment is
   // invisible to its assignee, since issueUpdates may only name digest-marked
   // issues. This walk must mirror the renderer's assigned-first order and caps.
+  // The instruction line is reserved unconditionally: it renders whenever a
+  // claim survives, and over-reserving can only under-claim.
+  const budget = digestEntryByteBudget(
+    [``, stepDigestHeading(runId), ASSIGNMENT_INSTRUCTION],
+    unresolvedIssues(state).length,
+    runId
+  );
   let count = 0;
   let bytes = 0;
   let changed = false;
@@ -784,7 +793,7 @@ export function claimIssuesForStep(
       digestEntry(issue, 'assigned to this step'),
       'utf8'
     );
-    if (count < MAX_DIGEST_ENTRIES && bytes + entryBytes <= MAX_DIGEST_BYTES) {
+    if (count < MAX_DIGEST_ENTRIES && bytes + entryBytes <= budget) {
       count++;
       bytes += entryBytes;
       if (issue.claimedByStepId === stepId) return issue;
@@ -851,9 +860,7 @@ export function renderIssueDigestLines(
   currentStepId: string,
   runId: string
 ): string[] {
-  const unresolved = (state.issues ?? []).filter(
-    (i) => i.disposition !== 'resolved'
-  );
+  const unresolved = unresolvedIssues(state);
   if (unresolved.length === 0) return [];
   const assigned = unresolved.filter(
     (i) => i.disposition === 'recorded' && i.claimedByStepId === currentStepId
@@ -870,17 +877,22 @@ export function renderIssueDigestLines(
       .filter((i) => i.disposition === 'deferred-final')
       .map((i) => digestEntry(i, 'deferred past the migration steps')),
   ];
+  const fixedLines = [
+    ``,
+    stepDigestHeading(runId),
+    ...(assigned.length > 0 ? [ASSIGNMENT_INSTRUCTION] : []),
+  ];
+  const budget = digestEntryByteBudget(fixedLines, entries.length, runId);
+  if (budget < 0) {
+    return [``, DIGEST_FALLBACK_LINE];
+  }
   const lines = [
     ``,
-    `Known issues reported earlier in this run (details under ${issuesDirRef(
-      runId
-    )}):`,
-    ...boundedEntryLines(entries, runId),
+    stepDigestHeading(runId),
+    ...boundedEntryLines(entries, runId, budget),
   ];
   if (assigned.length > 0) {
-    lines.push(
-      `Fix the issues assigned to this step within its scope where you can, and report each result in the handoff's "issueUpdates" field.`
-    );
+    lines.push(ASSIGNMENT_INSTRUCTION);
   }
   return lines;
 }
@@ -889,9 +901,7 @@ export function renderUnresolvedIssueLines(
   state: MigrateRunState,
   runId: string
 ): string[] {
-  const unresolved = (state.issues ?? []).filter(
-    (i) => i.disposition !== 'resolved'
-  );
+  const unresolved = unresolvedIssues(state);
   if (unresolved.length === 0) return [];
   const entries = [
     ...unresolved
@@ -902,33 +912,86 @@ export function renderUnresolvedIssueLines(
       .map((i) => digestEntry(i, 'deferred past the migration steps')),
   ];
   const noun = unresolved.length === 1 ? 'issue' : 'issues';
-  return [
-    `${unresolved.length} reported ${noun} remain${
-      unresolved.length === 1 ? 's' : ''
-    } unresolved (details under ${issuesDirRef(runId)}):`,
-    ...boundedEntryLines(entries, runId),
-  ];
+  const verb = unresolved.length === 1 ? 'remains' : 'remain';
+  const heading = `${unresolved.length} reported ${noun} ${verb} unresolved (details under ${issuesDirRef(
+    runId
+  )}):`;
+  const budget = digestEntryByteBudget([heading], entries.length, runId);
+  if (budget < 0) {
+    return [
+      `${unresolved.length} reported ${noun} ${verb} unresolved; see ${ISSUES_DIR_FALLBACK_REF}.`,
+    ];
+  }
+  return [heading, ...boundedEntryLines(entries, runId, budget)];
+}
+
+function unresolvedIssues(state: MigrateRunState): MigrateRunIssue[] {
+  return (state.issues ?? []).filter((i) => i.disposition !== 'resolved');
+}
+
+function stepDigestHeading(runId: string): string {
+  return `Known issues reported earlier in this run (details under ${issuesDirRef(
+    runId
+  )}):`;
+}
+
+const ASSIGNMENT_INSTRUCTION = `Fix the issues assigned to this step within its scope where you can, and report each result in the handoff's "issueUpdates" field.`;
+
+// Points at the run's issues dir without embedding the run id, whose length is
+// what made the normal digest impossible.
+const ISSUES_DIR_FALLBACK_REF = `the '${ISSUES_DIR_NAME}' directory inside the run's directory under ${MIGRATE_RUNS_RELATIVE_DIR}/`;
+
+const DIGEST_FALLBACK_LINE = `Known issues reported earlier in this run are not listed because the digest would exceed its size limit; see ${ISSUES_DIR_FALLBACK_REF}.`;
+
+function overflowLine(omitted: number, runId: string): string {
+  return `  ...and ${omitted} more not listed; see ${issuesDirRef(runId)}.`;
+}
+
+/**
+ * Byte budget left for entry lines after reserving the digest's fixed lines
+ * out of MAX_DIGEST_BYTES: the given fixed lines, the worst-case overflow line
+ * (every entry omitted), and one newline separator per line the digest could
+ * render. Derived from the serialized lines themselves, so a run id of any
+ * length is priced in. claimIssuesForStep and the renderers share it: a claim
+ * kept under it is guaranteed a rendered line, and reserving lines that may
+ * not render only shortens the listing. Negative when the fixed prose alone
+ * cannot fit.
+ */
+function digestEntryByteBudget(
+  fixedLines: string[],
+  totalEntries: number,
+  runId: string
+): number {
+  const reserved = [...fixedLines, overflowLine(totalEntries, runId)];
+  const maxLines = Math.min(totalEntries, MAX_DIGEST_ENTRIES) + reserved.length;
+  const reservedBytes =
+    reserved.reduce((sum, line) => sum + Buffer.byteLength(line, 'utf8'), 0) +
+    (maxLines - 1);
+  return MAX_DIGEST_BYTES - reservedBytes;
 }
 
 function digestEntry(issue: MigrateRunIssue, label: string): string {
+  // The marker counts against the cap: a truncated summary renders at exactly
+  // DIGEST_SUMMARY_CHARS characters.
   const summary =
     issue.summary.length > DIGEST_SUMMARY_CHARS
-      ? `${issue.summary.slice(0, DIGEST_SUMMARY_CHARS)}...`
+      ? `${issue.summary.slice(0, DIGEST_SUMMARY_CHARS - 3)}...`
       : issue.summary;
   return `  - ${issue.id} (${label}): ${summary}`;
 }
 
 // Breaks at the first entry over a cap rather than skipping it: the listed set
 // must stay a prefix, or the assigned-first ordering would not survive.
-function boundedEntryLines(entries: string[], runId: string): string[] {
+function boundedEntryLines(
+  entries: string[],
+  runId: string,
+  budget: number
+): string[] {
   const lines: string[] = [];
   let bytes = 0;
   for (const entry of entries) {
     const entryBytes = Buffer.byteLength(entry, 'utf8');
-    if (
-      lines.length >= MAX_DIGEST_ENTRIES ||
-      bytes + entryBytes > MAX_DIGEST_BYTES
-    ) {
+    if (lines.length >= MAX_DIGEST_ENTRIES || bytes + entryBytes > budget) {
       break;
     }
     lines.push(entry);
@@ -936,9 +999,7 @@ function boundedEntryLines(entries: string[], runId: string): string[] {
   }
   const omitted = entries.length - lines.length;
   if (omitted > 0) {
-    lines.push(
-      `  ...and ${omitted} more not listed; see ${issuesDirRef(runId)}.`
-    );
+    lines.push(overflowLine(omitted, runId));
   }
   return lines;
 }
