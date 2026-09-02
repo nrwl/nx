@@ -1930,7 +1930,7 @@ function emitAwaitPrompt(
       advancedElsewhere = true;
       return null;
     }
-    const next = claimIssuesForStep(fresh, step.id);
+    const next = claimIssuesForStep(fresh, step.id, runId);
     return next === fresh ? null : next;
   });
   if (advancedElsewhere) {
