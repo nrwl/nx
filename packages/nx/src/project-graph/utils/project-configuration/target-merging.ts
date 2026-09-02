@@ -266,7 +266,7 @@ function mergeSandbox(
     deferSpreadsWithoutBase
   );
 
-  if (!merged || typeof merged !== 'object') {
+  if (!merged || typeof merged !== 'object' || Array.isArray(merged)) {
     return merged;
   }
 
@@ -275,11 +275,25 @@ function mergeSandbox(
   // caller's target in place, corrupting later merge layers.
   const resolved = { ...merged };
 
+  // Keys authored before `'...'` let the base win, exactly as they do at the
+  // target level. Re-resolving those would overwrite the object-level merge's
+  // decision and make authored position meaningless for array keys while
+  // still honouring it for scalar ones.
+  const authoredKeys = Object.keys(newSandbox);
+  const spreadPosition = authoredKeys.indexOf(NX_SPREAD_TOKEN);
+  const keysBeforeSpread =
+    spreadPosition >= 0
+      ? new Set(authoredKeys.slice(0, spreadPosition))
+      : new Set<string>();
+
   // Then re-resolve any key the target authored as an array, so a nested
   // `'...'` expands against the inherited value rather than surviving as a
   // literal element.
   for (const key of Object.keys(resolved)) {
     if (!Array.isArray(newSandbox[key])) continue;
+    if (keysBeforeSpread.has(key) && baseSandbox && key in baseSandbox) {
+      continue;
+    }
     resolved[key] = getMergeValueResult(
       baseSandbox?.[key],
       newSandbox[key],
@@ -680,7 +694,10 @@ export function mergeTargetConfigurations(
 
   // merge sandbox if either side declares one
   // as with options, an incompatible target discards the base
-  if (target.sandbox || (isCompatible && baseTarget?.sandbox)) {
+  if (
+    'sandbox' in target ||
+    (isCompatible && baseTarget && 'sandbox' in baseTarget)
+  ) {
     const mergedSandbox = mergeSandbox(
       target.sandbox,
       isCompatible ? baseTarget?.sandbox : undefined,
