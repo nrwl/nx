@@ -526,15 +526,23 @@ function removeOldClientBundles(currentInstallVersion: string) {
   const filesAndFolders = readdirSync(runnerBundleInstallDirectory);
 
   for (let fileOrFolder of filesAndFolders) {
+    if (fileOrFolder === currentInstallVersion) {
+      continue;
+    }
     const fileOrFolderPath = join(runnerBundleInstallDirectory, fileOrFolder);
 
-    // Only directories are bundles. The lock files must survive: a lock on a
-    // deleted file no longer excludes processes that reopen the path.
-    if (
-      fileOrFolder !== currentInstallVersion &&
-      statSync(fileOrFolderPath).isDirectory()
-    ) {
-      rmSync(fileOrFolderPath, { recursive: true });
+    // Another process's cleanup can remove an entry between the readdir above
+    // and these calls, so both tolerate it already being gone.
+    let isBundle: boolean;
+    try {
+      // Only directories are bundles. The lock files must survive: a lock on
+      // a deleted file no longer excludes processes that reopen the path.
+      isBundle = statSync(fileOrFolderPath).isDirectory();
+    } catch {
+      continue;
+    }
+    if (isBundle) {
+      rmSync(fileOrFolderPath, { recursive: true, force: true });
     }
   }
 }
