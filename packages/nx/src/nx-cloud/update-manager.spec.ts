@@ -250,8 +250,22 @@ describe('update-manager bundle download', () => {
       },
     }));
     try {
+      // resetModules discards the fixture root too: workspaceRoot is a
+      // module-level binding re-derived from process.cwd(). Without
+      // re-applying both steps the install directory resolves to the REAL
+      // ~/.nx/<id>/cache/cloud, and this test's rmSync/renameSync then
+      // destroy the developer's actual Nx Cloud bundle.
+      const { setWorkspaceRoot } = await import('../utils/workspace-root');
+      setWorkspaceRoot(workspace);
+      const { resetSharedRootCacheForTesting } =
+        await import('../utils/cache-directory');
+      resetSharedRootCacheForTesting();
+
       const wasmManager: UpdateManager = await import('./update-manager');
       const wasmInstallDir = wasmManager.getBundleInstallDefaultLocation();
+      // Belt and braces: never let a destructive test touch a path outside
+      // its own fixture, whatever the module state says.
+      expect(wasmInstallDir.startsWith(workspace)).toBe(true);
       mkdirSync(join(wasmInstallDir, '.tmp-2608.29.0001-999'), {
         recursive: true,
       });
@@ -337,7 +351,8 @@ describe('update-manager bundle download', () => {
   it('keeps the lock files when cleaning up old bundles', async () => {
     // A lock on a deleted file no longer excludes processes that reopen the
     // path, so cleanup must never unlink these.
-    writeFileSync(join(installDir, 'verify.lock'), '123');
+    mkdirSync(join(installDir, '.state'), { recursive: true });
+    writeFileSync(join(installDir, '.state', 'verify.lock'), '123');
     mkdirSync(join(installDir, '2608.29.0001'), { recursive: true });
 
     await updateManager.downloadAndExtractClientBundle(
@@ -346,8 +361,11 @@ describe('update-manager bundle download', () => {
       'https://example.com/bundle.tar.gz'
     );
 
-    expect(existsSync(join(installDir, 'verify.lock'))).toBe(true);
+    expect(existsSync(join(installDir, '.state', 'verify.lock'))).toBe(true);
     expect(existsSync(join(installDir, '.state', 'download.lock'))).toBe(true);
+    expect(existsSync(join(installDir, '.state', 'download.record'))).toBe(
+      true
+    );
   });
 
   it('survives an entry it cannot stat while cleaning up old bundles', async () => {
