@@ -423,7 +423,26 @@ describe('update-manager download lock', () => {
     if (!existsSync(flag)) throw new Error('peer never took the lock');
   }
 
-  it('adopts the bundle a peer installed when it is not older', async () => {
+  it('adopts the bundle a peer installed at the version it was asked for', async () => {
+    const axios = axiosServing(bundleTarball({ 'index.js': 'mine' }));
+    await startPeer({ version: '2608.30.0002', holdMs: 300, installs: true });
+
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      axios,
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(installed.version).toBe('2608.30.0002');
+    expect(axios.get).not.toHaveBeenCalled();
+    expect(readFileSync(join(installed.fullPath, 'index.js'), 'utf-8')).toBe(
+      'peer bundle'
+    );
+  });
+
+  it('downloads its own bundle when the peer installed a different version', async () => {
+    // Including when the peer's is HIGHER: the server asked this process for
+    // 2608.30.0002, and a rollback is exactly that case.
     const axios = axiosServing(bundleTarball({ 'index.js': 'mine' }));
     await startPeer({ version: '2608.31.0001', holdMs: 300, installs: true });
 
@@ -433,25 +452,9 @@ describe('update-manager download lock', () => {
       'https://example.com/bundle.tar.gz'
     );
 
-    expect(installed.version).toBe('2608.31.0001');
-    expect(axios.get).not.toHaveBeenCalled();
-    expect(readFileSync(join(installed.fullPath, 'index.js'), 'utf-8')).toBe(
-      'peer bundle'
-    );
-  });
-
-  it('downloads its own bundle when the peer installed an older one', async () => {
-    const axios = axiosServing(bundleTarball({ 'index.js': 'mine' }));
-    await startPeer({ version: '2608.29.0001', holdMs: 300, installs: true });
-
-    const installed = await updateManager.downloadAndExtractClientBundle(
-      axios,
-      '2608.30.0002',
-      'https://example.com/bundle.tar.gz'
-    );
-
     expect(installed.version).toBe('2608.30.0002');
     expect(axios.get).toHaveBeenCalledOnce();
+    expect(bundleDirs()).toEqual(['2608.30.0002', '2608.31.0001']);
   });
 
   it('leaves the peer bundle in place on a contended install', async () => {
