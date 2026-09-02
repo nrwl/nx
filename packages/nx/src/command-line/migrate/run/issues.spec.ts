@@ -1461,7 +1461,7 @@ describe('migrate run issues', () => {
           disposition: 'deferred-final',
         }),
       ]);
-      const next = claimIssuesForStep(state, 'step-2');
+      const next = claimIssuesForStep(state, 'step-2', 'run-1');
       expect(next.issues.map((i) => i.claimedByStepId)).toEqual([
         'step-2',
         'step-2',
@@ -1474,7 +1474,7 @@ describe('migrate run issues', () => {
       const state = stateWith(baseSteps(), [
         issue('issue-1', { disposition: 'resolved' }),
       ]);
-      expect(claimIssuesForStep(state, 'step-2')).toBe(state);
+      expect(claimIssuesForStep(state, 'step-2', 'run-1')).toBe(state);
     });
 
     it('claims only what the digest can publish and releases a claim pushed past the caps', () => {
@@ -1487,12 +1487,63 @@ describe('migrate run issues', () => {
           ...(i === 20 ? { claimedByStepId: 'step-2' } : {}),
         })
       );
-      const next = claimIssuesForStep(stateWith(baseSteps(), many), 'step-2');
+      const next = claimIssuesForStep(
+        stateWith(baseSteps(), many),
+        'step-2',
+        'run-1'
+      );
       const claimed = next.issues.filter((i) => i.claimedByStepId === 'step-2');
       expect(claimed.map((i) => i.id)).toEqual(
         many.slice(0, 20).map((i) => i.id)
       );
       expect(next.issues[20].claimedByStepId).toBeUndefined();
+    });
+
+    it('claims only the prefix whose digest lines fit the byte budget and lists every claim', () => {
+      // 16 entries of ~620 bytes overrun the byte budget before the entry cap;
+      // the last one carries a stale claim that must be released, not hidden.
+      const many = Array.from({ length: 16 }, (_, i) =>
+        issue(`issue-${i + 1}`, {
+          fingerprint: `fp-${i}`,
+          summary: '世'.repeat(200),
+          applicableStepIds: ['step-2'],
+          ...(i === 15 ? { claimedByStepId: 'step-2' } : {}),
+        })
+      );
+      const next = claimIssuesForStep(
+        stateWith(baseSteps(), many),
+        'step-2',
+        'run-1'
+      );
+      const claimed = next.issues.filter((i) => i.claimedByStepId === 'step-2');
+      expect(claimed.length).toBeGreaterThan(0);
+      expect(claimed.length).toBeLessThan(16);
+      expect(claimed.map((i) => i.id)).toEqual(
+        many.slice(0, claimed.length).map((i) => i.id)
+      );
+      // Claim visibility: every kept claim gets a digest line, and the full
+      // serialized digest still fits the byte bound.
+      const lines = renderIssueDigestLines(next, 'step-2', 'run-1');
+      for (const i of claimed) {
+        expect(lines).toContain(
+          `  - ${i.id} (assigned to this step): ${'世'.repeat(200)}`
+        );
+      }
+      expect(lines.join('\n')).toContain('more not listed');
+      expect(Buffer.byteLength(lines.join('\n'), 'utf8')).toBeLessThanOrEqual(
+        8192
+      );
+    });
+
+    it('keeps no claims when an oversized run id leaves no digest budget', () => {
+      const state = stateWith(baseSteps(), [
+        issue('issue-1', {
+          applicableStepIds: ['step-2'],
+          claimedByStepId: 'step-2',
+        }),
+      ]);
+      const next = claimIssuesForStep(state, 'step-2', 'r'.repeat(9000));
+      expect(next.issues[0].claimedByStepId).toBeUndefined();
     });
   });
 
@@ -1547,7 +1598,7 @@ describe('migrate run issues', () => {
       expect(lines.join('\n')).not.toContain('issueUpdates');
     });
 
-    it('truncates long summaries and counts entries past the caps', () => {
+    it('truncates long summaries to the cap, marker included, and counts entries past the caps', () => {
       const many = Array.from({ length: 25 }, (_, i) =>
         issue(`issue-${i + 1}`, {
           fingerprint: `fp-${i}`,
@@ -1561,8 +1612,48 @@ describe('migrate run issues', () => {
       );
       const entryLines = lines.filter((l) => l.startsWith('  - '));
       expect(entryLines).toHaveLength(20);
-      expect(entryLines[0]).toContain(`${'x'.repeat(200)}...`);
+      expect(entryLines[0]).toBe(
+        `  - issue-1 (recorded): ${'x'.repeat(197)}...`
+      );
       expect(lines[lines.length - 1]).toContain('5 more not listed');
+    });
+
+    it('keeps the complete serialized digest within the byte bound', () => {
+      // 200-char multibyte summaries make ~620-byte entries: the byte budget
+      // runs out before the entry cap, and the fixed lines must fit too.
+      const many = Array.from({ length: 20 }, (_, i) =>
+        issue(`issue-${i + 1}`, {
+          fingerprint: `fp-${i}`,
+          summary: '世'.repeat(200),
+          ...(i === 0 ? { claimedByStepId: 'step-2' } : {}),
+        })
+      );
+      const lines = renderIssueDigestLines(
+        stateWith(baseSteps(), many),
+        'step-2',
+        'run-1'
+      );
+      expect(Buffer.byteLength(lines.join('\n'), 'utf8')).toBeLessThanOrEqual(
+        8192
+      );
+      const entryLines = lines.filter((l) => l.startsWith('  - '));
+      expect(entryLines.length).toBeLessThan(20);
+      expect(lines.join('\n')).toContain(
+        `${20 - entryLines.length} more not listed`
+      );
+      expect(lines[lines.length - 1]).toContain('"issueUpdates"');
+    });
+
+    it('falls back to a bounded pointer when an oversized run id leaves no budget', () => {
+      const lines = renderIssueDigestLines(
+        stateWith(baseSteps(), [issue('issue-1')]),
+        'step-3',
+        'r'.repeat(9000)
+      );
+      const digest = lines.join('\n');
+      expect(digest).not.toContain('r'.repeat(100));
+      expect(digest).toContain('.nx/migrate-runs/');
+      expect(Buffer.byteLength(digest, 'utf8')).toBeLessThanOrEqual(8192);
     });
   });
 
@@ -1594,6 +1685,34 @@ describe('migrate run issues', () => {
         '  - issue-2 (recorded): future one',
         '  - issue-1 (deferred past the migration steps): deferred one',
       ]);
+    });
+
+    it('keeps the complete serialized listing within the byte bound', () => {
+      const many = Array.from({ length: 20 }, (_, i) =>
+        issue(`issue-${i + 1}`, {
+          fingerprint: `fp-${i}`,
+          summary: '世'.repeat(200),
+        })
+      );
+      const lines = renderUnresolvedIssueLines(
+        stateWith(baseSteps(), many),
+        'run-1'
+      );
+      expect(Buffer.byteLength(lines.join('\n'), 'utf8')).toBeLessThanOrEqual(
+        8192
+      );
+      expect(lines.join('\n')).toContain('more not listed');
+    });
+
+    it('falls back to a bounded pointer when an oversized run id leaves no budget', () => {
+      const lines = renderUnresolvedIssueLines(
+        stateWith(baseSteps(), [issue('issue-1')]),
+        'r'.repeat(9000)
+      );
+      expect(lines).toHaveLength(1);
+      expect(lines[0]).toContain('1 reported issue remains unresolved');
+      expect(lines[0]).not.toContain('r'.repeat(100));
+      expect(Buffer.byteLength(lines[0], 'utf8')).toBeLessThanOrEqual(8192);
     });
   });
 
