@@ -136,6 +136,7 @@ export function newProject({
 
     let createNxWorkspaceMeasure: PerformanceMeasure;
     let packageInstallMeasure: PerformanceMeasure;
+    let seededFromTemplate = false;
 
     // Namespace by package manager to avoid conflicts in test suites which include multiple package managers
     const backupPath = tmpBackupProjPath(packageManager);
@@ -154,6 +155,7 @@ export function newProject({
         // side effect that downstream helpers (packageInstall ->
         // getPackageManagerCommand) rely on; mirror it when seeding from the template.
         projName = projScope;
+        seededFromTemplate = true;
       } else {
         runCreateWorkspace(projScope, {
           preset,
@@ -181,6 +183,19 @@ export function newProject({
         npmrcLines.unshift('prefer-frozen-lockfile=false');
       }
       updateFile('.npmrc', npmrcLines.join('\n'));
+
+      if (seededFromTemplate && packageManager === 'pnpm') {
+        // Same reason as the reinstall after the backup copy below: pnpm's
+        // node_modules symlinks into a store this copy cannot reach, so the
+        // packageInstall below would `pnpm add` onto an already-broken tree.
+        // Runs after the .npmrc lands so the install can reach verdaccio, and
+        // stays cheap because the template is still bare.
+        execSync(getPackageManagerCommand({ packageManager }).install, {
+          cwd: `${e2eCwd}/${projScope}`,
+          stdio: isVerbose() ? 'inherit' : 'pipe',
+          env: { CI: 'true', ...process.env },
+        });
+      }
 
       let packagesToInstall: Array<NxPackage> = [];
       if (!packages) {
