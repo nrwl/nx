@@ -390,24 +390,64 @@ function renderEffectiveInputs(
 ): void {
   const groups = data.effectiveInputs;
   if (!groups?.length) return;
+
+  // Tokenizing collapses most reads to the same {projectRoot} glob repeated
+  // once per project, so key by glob and name the projects it covers.
+  const byGlob = new Map<string, string[]>();
+  for (const group of groups) {
+    const owner = group.project ?? '{workspaceRoot}';
+    for (const glob of group.globs) {
+      const owners = byGlob.get(glob);
+      if (owners) owners.push(owner);
+      else byGlob.set(glob, [owner]);
+    }
+  }
   const total = groups.reduce((n, g) => n + g.globs.length, 0);
   console.log(
-    `  ${c.dim(`observed reads (${total} globs across ${groups.length} projects):`)}`
+    `  ${c.dim(
+      `observed reads (${byGlob.size} unique of ${total} globs, ${groups.length} projects):`
+    )}`
   );
-  const sorted = [...groups].sort((a, b) =>
-    (a.project ?? '').localeCompare(b.project ?? '')
+
+  const shared = [...byGlob].filter(([, owners]) => owners.length > 1);
+  shared.sort(
+    ([aGlob, a], [bGlob, b]) =>
+      b.length - a.length || aGlob.localeCompare(bGlob)
   );
-  for (const group of sorted) {
-    const root = group.projectRoot;
-    const header = group.project
-      ? `${c.bold(group.project)}${root ? c.dim(` (${root})`) : ''}`
-      : c.bold('{workspaceRoot}');
-    console.log(`    ${header}:`);
-    const globs = args.verbose ? group.globs : group.globs.slice(0, 5);
-    for (const glob of globs) {
-      console.log(`      - ${glob}`);
+  for (const [glob, owners] of shared) {
+    const scope =
+      owners.length === groups.length
+        ? `all ${owners.length} projects`
+        : `${owners.length} projects`;
+    console.log(`    - ${glob} ${c.dim(`(${scope})`)}`);
+    if (args.verbose && owners.length < groups.length) {
+      console.log(`      ${c.dim(owners.join(', '))}`);
     }
-    const hidden = group.globs.length - globs.length;
+  }
+
+  // Whatever is unique to one project stays under that project, so a read no
+  // one else has is still attributable at a glance.
+  const own = new Map<string, string[]>();
+  for (const [glob, owners] of byGlob) {
+    if (owners.length === 1) {
+      const list = own.get(owners[0]);
+      if (list) list.push(glob);
+      else own.set(owners[0], [glob]);
+    }
+  }
+  const roots = new Map(
+    groups.map((g) => [g.project ?? '{workspaceRoot}', g.projectRoot])
+  );
+  for (const owner of [...own.keys()].sort()) {
+    const root = roots.get(owner);
+    const header = root
+      ? `${c.bold(owner)}${c.dim(` (${root})`)}`
+      : c.bold(owner);
+    console.log(`    ${header}:`);
+    const globs = own.get(owner)!;
+    const shown = args.verbose ? globs : globs.slice(0, 5);
+    for (const glob of shown) console.log(`      - ${glob}`);
+    const hidden = globs.length - shown.length;
     if (hidden > 0) {
       console.log(`      ${c.dim(`... ${hidden} more (--verbose)`)}`);
     }

@@ -935,7 +935,9 @@ describe('show target info', () => {
       const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
 
       // The observed reads, grouped by the project that owns them.
-      expect(text).toContain('observed reads (3 globs across 2 projects)');
+      expect(text).toContain(
+        'observed reads (3 unique of 3 globs, 2 projects)'
+      );
       expect(text).toContain('the observed reads are listed above');
       // Globs inside the owning project read as {projectRoot}, like the
       // declared inputs; the header carries the real root.
@@ -949,6 +951,49 @@ describe('show target info', () => {
       expect(text).not.toContain('(replaced by snapshot)');
       // Non-file inputs are never replaced by a snapshot.
       expect(text).toContain('"env"');
+    });
+
+    it('lists a glob shared by several projects once, with its scope', async () => {
+      setGraph(graphWithLintTarget());
+      setMockIoSnapshotReport({
+        used: ['my-app:lint'],
+        tasksWithOutputs: [],
+        diagnostics: [],
+        resolution: { requestedCommit: 'ae6a03f912ab', digest: '049a9c2f7bcd' },
+      });
+      const shared = '{projectRoot}/**/*.d.ts';
+      setMockInputGlobs({
+        'my-app:lint': [
+          {
+            project: 'my-app',
+            globs: [shared, '{projectRoot}/src/only-mine.ts'],
+            includeIgnored: true,
+            fromSnapshot: true,
+          },
+          {
+            project: 'ui',
+            globs: [shared],
+            includeIgnored: true,
+            fromSnapshot: true,
+          },
+        ],
+      });
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint', verbose: true });
+      const lines = (console.log as Mock).mock.calls.map((call) => call[0]);
+      const text = lines.join('\n');
+
+      // 3 entries collapse to 2 unique globs.
+      expect(text).toContain(
+        'observed reads (2 unique of 3 globs, 2 projects)'
+      );
+      // The shared glob appears exactly once, scoped to every project.
+      expect(lines.filter((l: string) => l.includes(shared))).toHaveLength(1);
+      expect(text).toContain(`${shared} (all 2 projects)`);
+      // The glob only one project reads stays under that project.
+      expect(text).toContain('my-app (apps/my-app)');
+      expect(text).toContain('{projectRoot}/src/only-mine.ts');
     });
 
     it('keeps the declared filesets tagged when no observed reads resolved', async () => {
