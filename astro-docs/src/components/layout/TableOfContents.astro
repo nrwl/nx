@@ -306,8 +306,11 @@ const topics = id.startsWith('kb/') ? (entry.data.topics ?? []) : [];
       outline-offset: 3px;
     }
 
-    /* Hide ToC entries whose heading lives inside an inactive tab panel */
-    .toc-container .toc-hidden {
+    /* Hide ToC entries whose heading lives inside an inactive tab panel.
+       The `<li>` carrying `.toc-hidden` is rendered by TableOfContentsList.astro,
+       a separate component with its own Astro CSS scope, so `.toc-hidden` needs
+       `:global()` here or this scoped selector never matches it. */
+    .toc-container :global(.toc-hidden) {
       display: none;
     }
 
