@@ -20,7 +20,6 @@ import * as tar from 'tar-stream';
 import { cacheDir } from '../utils/cache-directory';
 import { createHash, randomUUID } from 'crypto';
 import { FileLock, IS_WASM } from '../native';
-import { compareCalver, gte } from '../utils/calver';
 import { TasksRunner } from '../tasks-runner/tasks-runner';
 import { RemoteCacheV2 } from '../tasks-runner/default-tasks-runner';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -237,10 +236,10 @@ function getLatestInstalledRunnerBundle(): CloudBundleInstall | null {
       return null;
     }
 
-    // A contended install can leave multiple bundles on disk; run the
-    // highest version.
-    installedBundles.sort((a, b) => compareCalver(b.version, a.version));
-    return installedBundles[0];
+    // A contended install can leave several bundles on disk. The record names
+    // the one an install last completed, which is the one to run; fall back to
+    // directory order for a bundle installed before records existed.
+    return recordedBundle() ?? installedBundles[0];
   } catch (e: any) {
     console.log('Could not read runner bundle path:', e.message);
     return null;
@@ -349,14 +348,13 @@ export async function downloadAndExtractClientBundle(
   version: string,
   url: string
 ): Promise<CloudBundleInstall> {
-  // Parallel nx processes race to install bundles, possibly with different
-  // versions. The first process to take the lock downloads and records its
-  // version in the lockfile; the rest wait and, when the lock clears, adopt
-  // the holder's bundle unless their own target is a higher calver tag — then
-  // they download it as a contended install, which leaves the holder's bundle
-  // on disk for the process running from it. The flock is released by the
-  // kernel if the holder dies, so no stale-lock cleanup is needed. Under WASM
-  // the lock is unavailable and downloads run unserialized.
+  // Parallel nx processes race to install bundles, possibly at different
+  // versions. The first to take the lock downloads; the rest wait and adopt
+  // its bundle when the server asked them for that same version. Otherwise
+  // they download their own as a contended install, which leaves the holder's
+  // bundle on disk for the process running from it. The flock is released by
+  // the kernel if the holder dies, so no stale-lock cleanup is needed. Under
+  // WASM the lock is unavailable and downloads run unserialized.
   if (!VALID_BUNDLE_VERSION.test(version)) {
     throw new Error(`Invalid Nx Cloud client bundle version: ${version}`);
   }
@@ -372,16 +370,18 @@ export async function downloadAndExtractClientBundle(
     await lock.wait();
     const installedBundle = bundleInstalledSince(recordBeforeContending);
     if (installedBundle) {
-      if (gte(installedBundle.version, version)) {
+      if (installedBundle.version === version) {
         debugLog(
           'Using client bundle downloaded by another process: ',
           installedBundle.version
         );
         return installedBundle;
       }
+      // A different version means that process is running from a bundle this
+      // one must not delete.
       contended = true;
       debugLog(
-        'Another process downloaded an older bundle: ',
+        'Another process installed a different bundle: ',
         installedBundle.version
       );
     }
@@ -395,16 +395,18 @@ export async function downloadAndExtractClientBundle(
     // have completed an install already.
     const installedBundle = bundleInstalledSince(recordBeforeContending);
     if (installedBundle) {
-      if (gte(installedBundle.version, version)) {
+      if (installedBundle.version === version) {
         debugLog(
           'Using client bundle downloaded by another process: ',
           installedBundle.version
         );
         return installedBundle;
       }
+      // A different version means that process is running from a bundle this
+      // one must not delete.
       contended = true;
       debugLog(
-        'Another process downloaded an older bundle: ',
+        'Another process installed a different bundle: ',
         installedBundle.version
       );
     }
@@ -438,6 +440,16 @@ function writeDownloadRecord(version: string): void {
   writeFileSync(downloadRecordFilePath, `${version} ${randomUUID()}`, 'utf-8');
 }
 
+/** The bundle the record names, if it is still on disk. */
+function recordedBundle(): CloudBundleInstall | null {
+  const version = readDownloadRecord().split(' ')[0];
+  if (!version || !VALID_BUNDLE_VERSION.test(version)) {
+    return null;
+  }
+  const fullPath = join(runnerBundleInstallDirectory, version);
+  return existsSync(fullPath) ? { version, fullPath } : null;
+}
+
 /**
  * The bundle an install completed during this call, or null. Requires the
  * record to have changed since `recordBefore` was read: a directory existing
@@ -445,16 +457,7 @@ function writeDownloadRecord(version: string): void {
  * interrupted on a released nx leaves exactly that.
  */
 function bundleInstalledSince(recordBefore: string): CloudBundleInstall | null {
-  const record = readDownloadRecord();
-  if (record === recordBefore) {
-    return null;
-  }
-  const version = record.split(' ')[0];
-  if (!version || !VALID_BUNDLE_VERSION.test(version)) {
-    return null;
-  }
-  const fullPath = join(runnerBundleInstallDirectory, version);
-  return existsSync(fullPath) ? { version, fullPath } : null;
+  return readDownloadRecord() === recordBefore ? null : recordedBundle();
 }
 
 async function downloadAndExtractBundle(
