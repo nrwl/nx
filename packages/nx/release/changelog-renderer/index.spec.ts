@@ -243,6 +243,68 @@ describe('ChangelogRenderer', () => {
         applyUsernameSpy.mockRestore();
       });
 
+      it('should exclude AI coding agents from the Thank You section', async () => {
+        const renderer = new DefaultChangelogRenderer({
+          changes: [
+            {
+              shortHash: 'abc1234',
+              authors: [
+                { name: 'James Henry', email: 'jh@example.com' },
+                // A human whose name happens to match an agent's must still be thanked
+                { name: 'Claude Dubois', email: 'claude.dubois@example.com' },
+                // One email, many display names, because the names track model versions
+                { name: 'Claude', email: 'noreply@anthropic.com' },
+                {
+                  name: 'Claude Opus 5 (1M context)',
+                  email: 'noreply@anthropic.com',
+                },
+                { name: 'Claude Sonnet 5', email: 'noreply@anthropic.com' },
+                { name: 'Claude Code', email: 'claude@anthropic.com' },
+                { name: 'Amp', email: 'amp@ampcode.com' },
+                { name: 'Cursor Agent', email: 'cursoragent@cursor.com' },
+                { name: 'OpenHands', email: 'opendevin@all-hands.dev' },
+                // The Copilot coding agent commits under both of these spellings
+                { name: 'Copilot', email: 'Copilot@users.noreply.github.com' },
+                {
+                  name: 'copilot-swe-agent[bot]',
+                  email: '198982749+Copilot@users.noreply.github.com',
+                },
+              ],
+              body: '"\n\nM\tpackages/pkg-a/src/index.ts\n"',
+              description: 'a change co-authored by agents',
+              type: 'fix',
+              scope: 'pkg-a',
+              githubReferences: [{ value: 'abc1234', type: 'hash' }],
+              isBreaking: false,
+              revertedHashes: [],
+              affectedProjects: ['pkg-a'],
+            },
+          ],
+          remoteReleaseClient,
+          changelogEntryVersion: 'v1.1.0',
+          project: null,
+          isVersionPlans: false,
+          entryWhenNoChanges: false,
+          changelogRenderOptions: {
+            authors: true,
+          },
+          conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+        });
+        const markdown = await renderer.render();
+        expect(markdown).toMatchInlineSnapshot(`
+          "## v1.1.0
+
+          ### 🩹 Fixes
+
+          - **pkg-a:** a change co-authored by agents
+
+          ### ❤️ Thank You
+
+          - Claude Dubois
+          - James Henry"
+        `);
+      });
+
       it('should not generate a Thank You section when changelogRenderOptions.authors is false', async () => {
         const renderer = new DefaultChangelogRenderer({
           changes,
