@@ -595,6 +595,58 @@ And the E2E project's `e2e` task has a dependency on the `serve` task, which ens
 }
 ```
 
+### Sandbox
+
+When [sandboxing](/docs/features/ci-features/sandboxing) is enabled, Nx tracks the files each task reads and writes. The `sandbox` property adjusts that tracking for a single target.
+
+Set `"enabled": false` to stop tracking a target's tasks:
+
+```json
+{
+  "targets": {
+    "build": {
+      "sandbox": {
+        "enabled": false
+      }
+    }
+  }
+}
+```
+
+Use `ignoredReads` and `ignoredWrites` to keep tracking the target while excluding paths from its report. The patterns are globs relative to the workspace root.
+
+```json
+{
+  "targets": {
+    "build": {
+      "sandbox": {
+        "ignoredReads": ["tmp/**"],
+        "ignoredWrites": ["**/.cache/**"]
+      }
+    }
+  }
+}
+```
+
+A target that defines `sandbox` replaces the inherited configuration rather than adding to it. Use the [spread token](#spread-token) to merge instead, either at the object level to keep inherited keys, or inside `ignoredReads` and `ignoredWrites` to keep inherited patterns.
+
+```json
+{
+  "targets": {
+    "build": {
+      "sandbox": {
+        "...": true,
+        "ignoredReads": ["...", "tmp/**"]
+      }
+    }
+  }
+}
+```
+
+{% aside type="note" title="Workspace-wide exclusions live elsewhere" %}
+`sandbox` applies to one target. To exclude paths across every task in the workspace, use `.nx/workflows/sandboxing-config.yaml`. See [Excluding paths](/docs/features/ci-features/sandboxing#excluding-paths). The two combine: a task is checked against its own `sandbox` patterns and the workspace-wide ones together, so neither overrides the other.
+{% /aside %}
+
 ### Sync generators
 
 In the same way that `dependsOn` tells Nx to run another task before running this task, the `syncGenerator` property tells Nx to run a generator to ensure that your files are in the correct state before this task is run. [Sync generators](/docs/concepts/sync-generators) are especially useful for keeping configuration files up to date with the project graph.
@@ -680,7 +732,7 @@ If the inferred target has `inputs: ["default", "^production"]`, the result is `
 }
 ```
 
-Nx processes target configuration down to `options[x]` and `configurations[x][y]`; values below that are opaque to the merge pipeline. Spread is therefore resolved at these levels:
+Nx processes target configuration down to `options[x]`, `configurations[x][y]`, and the keys of `sandbox`; values below that are opaque to the merge pipeline. Spread is therefore resolved at these levels:
 
 | Level                                              | Example                                                                     |
 | -------------------------------------------------- | --------------------------------------------------------------------------- |
@@ -691,6 +743,8 @@ Nx processes target configuration down to `options[x]` and `configurations[x][y]
 | `configurations`                                   | `"configurations": { "my-config": { ... }, "...": true }`                   |
 | `configurations[x]`                                | `"configurations": { "prod": { "...": true, "sourceMap": false } }`         |
 | `configurations[x][y]`                             | `"configurations": { "prod": { "env": { "MY_VAR": "val", "...": true } } }` |
+| `sandbox`                                          | `"sandbox": { "...": true, "enabled": false }`                              |
+| `sandbox.ignoredReads`, `sandbox.ignoredWrites`    | `"sandbox": { "ignoredReads": ["...", "tmp/**"] }`                          |
 
 {% aside type="caution" title="Spread does not apply to deeply nested options" %}
 Because `options[x]` and `configurations[x][y]` are the innermost levels Nx inspects, a spread token nested any deeper has no effect. For example, `options.webpack = { "...": true }` works (the spread is at `options[x]`), but `options.webpack.plugins = { "...": true }` is ignored because the spread sits inside the opaque value Nx assigns to `options.webpack`.
