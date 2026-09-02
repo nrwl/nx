@@ -468,8 +468,23 @@ describe('update-manager download lock', () => {
     peers = [];
   });
 
-  afterEach(() => {
-    for (const peer of peers) peer.kill();
+  afterEach(async () => {
+    // Waited on rather than fired and forgotten: a peer still holding the
+    // native flock outlives the file, and vitest kills a worker that is slow
+    // to exit, which loses this file's results rather than failing a test.
+    await Promise.all(
+      peers.map(
+        (peer) =>
+          new Promise<void>((resolve) => {
+            if (peer.exitCode !== null || peer.signalCode !== null) {
+              resolve();
+              return;
+            }
+            peer.once('exit', () => resolve());
+            peer.kill();
+          })
+      )
+    );
     rmSync(workspace, { recursive: true, force: true });
     rmSync(installDir, { recursive: true, force: true });
   });
