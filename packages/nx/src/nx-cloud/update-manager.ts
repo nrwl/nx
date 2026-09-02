@@ -189,20 +189,26 @@ export function getBundleInstallDefaultLocation() {
 
 const runnerBundleInstallDirectory = getBundleInstallDefaultLocation();
 
-const downloadLockFilePath = join(
-  runnerBundleInstallDirectory,
-  'download.lock'
-);
+// Control files live in their own subdirectory so that no bundle can ever
+// collide with one. A version has to start alphanumeric (see
+// VALID_BUNDLE_VERSION), so it can never name '.state', and installing a
+// bundle rewrites <installDir>/<version> with rmSync + renameSync - which,
+// with the control files alongside it, would replace one with a directory and
+// brick the workspace with no in-band recovery.
+const stateDirectory = join(runnerBundleInstallDirectory, '.state');
+
+function ensureStateDirectory(): void {
+  mkdirSync(stateDirectory, { recursive: true });
+}
+
+const downloadLockFilePath = join(stateDirectory, 'download.lock');
 
 // The record lives beside the lockfile rather than inside it. Windows
 // byte-range locks are mandatory and handle-scoped, so writing to a file this
 // process holds an exclusive lock on fails with ERROR_LOCK_VIOLATION. It also
 // matches the convention elsewhere in nx: project-graph.lock and run.json.lock
 // are never written to.
-const downloadRecordFilePath = join(
-  runnerBundleInstallDirectory,
-  'download.record'
-);
+const downloadRecordFilePath = join(stateDirectory, 'download.record');
 
 // A version names a directory that is created and later deleted, so a value
 // from the server must not be able to escape the install directory.
@@ -290,7 +296,7 @@ async function verifyCurrentBundle(
 }
 
 function getLatestBundleVerificationTimestamp(): number | null {
-  const lockfilePath = join(runnerBundleInstallDirectory, 'verify.lock');
+  const lockfilePath = join(stateDirectory, 'verify.lock');
 
   if (existsSync(lockfilePath)) {
     const timestampAsString = readFileSync(lockfilePath, 'utf-8');
@@ -307,8 +313,9 @@ function getLatestBundleVerificationTimestamp(): number | null {
 }
 
 function writeBundleVerificationLock() {
-  const lockfilePath = join(runnerBundleInstallDirectory, 'verify.lock');
+  const lockfilePath = join(stateDirectory, 'verify.lock');
 
+  ensureStateDirectory();
   writeFileSync(lockfilePath, new Date().getTime().toString(), 'utf-8');
 }
 
@@ -437,6 +444,7 @@ function readDownloadRecord(): string {
 }
 
 function writeDownloadRecord(version: string): void {
+  ensureStateDirectory();
   writeFileSync(downloadRecordFilePath, `${version} ${randomUUID()}`, 'utf-8');
 }
 
@@ -562,7 +570,12 @@ function removeOldClientBundles(currentInstallVersion: string) {
   const filesAndFolders = readdirSync(runnerBundleInstallDirectory);
 
   for (let fileOrFolder of filesAndFolders) {
-    if (fileOrFolder === currentInstallVersion) {
+    // '.state' holds the control files and '.tmp-*' is an in-flight extract;
+    // no bundle can be named either, since a version starts alphanumeric.
+    if (
+      fileOrFolder === currentInstallVersion ||
+      fileOrFolder.startsWith('.')
+    ) {
       continue;
     }
     const fileOrFolderPath = join(runnerBundleInstallDirectory, fileOrFolder);

@@ -62,7 +62,7 @@ const path = require('path');
 const { randomUUID } = require('crypto');
 
 const [installDir, version, holdMs, mode] = process.argv.slice(3);
-const lockPath = path.join(installDir, 'download.lock');
+const lockPath = path.join(installDir, '.state', 'download.lock');
 
 const lock = new FileLock(lockPath);
 lock.lock();
@@ -75,7 +75,7 @@ setTimeout(() => {
     fs.writeFileSync(path.join(dir, 'index.js'), 'peer bundle', 'utf-8');
     // Recorded only on completion, exactly as the code under test does.
     fs.writeFileSync(
-      path.join(installDir, 'download.record'),
+      path.join(installDir, '.state', 'download.record'),
       version + ' ' + randomUUID(),
       'utf-8'
     );
@@ -140,6 +140,7 @@ describe('update-manager bundle download', () => {
 
   const bundleDirs = () =>
     readdirSync(installDir)
+      .filter((f) => !f.startsWith('.'))
       .filter((f) => statSync(join(installDir, f)).isDirectory())
       .sort();
 
@@ -182,7 +183,10 @@ describe('update-manager bundle download', () => {
       'https://example.com/bundle.tar.gz'
     );
 
-    const record = readFileSync(join(installDir, 'download.record'), 'utf-8');
+    const record = readFileSync(
+      join(installDir, '.state', 'download.record'),
+      'utf-8'
+    );
     const [version, nonce] = record.trim().split(' ');
     expect(version).toBe('2608.30.0002');
     expect(nonce).toMatch(/^[0-9a-f-]{36}$/);
@@ -197,12 +201,45 @@ describe('update-manager bundle download', () => {
       );
 
     await download();
-    const first = readFileSync(join(installDir, 'download.record'), 'utf-8');
+    const first = readFileSync(
+      join(installDir, '.state', 'download.record'),
+      'utf-8'
+    );
     await download();
-    const second = readFileSync(join(installDir, 'download.record'), 'utf-8');
+    const second = readFileSync(
+      join(installDir, '.state', 'download.record'),
+      'utf-8'
+    );
 
     expect(second).not.toBe(first);
     expect(second.split(' ')[0]).toBe(first.split(' ')[0]);
+  });
+
+  it('cannot brick the workspace with a version named after a control file', async () => {
+    // rmSync + renameSync would replace the control file with a directory,
+    // and every later nx invocation would abort with a raw EISDIR.
+    for (const name of ['verify.lock', 'download.lock', 'download.record']) {
+      const installed = await updateManager.downloadAndExtractClientBundle(
+        axiosServing(bundleTarball({ 'index.js': '' })),
+        name,
+        'https://example.com/bundle.tar.gz'
+      );
+      expect(installed.version).toBe(name);
+      expect(statSync(join(installDir, '.state', name)).isFile()).toBe(true);
+    }
+  });
+
+  it('keeps the state directory when cleaning up old bundles', async () => {
+    mkdirSync(join(installDir, '2608.29.0001'), { recursive: true });
+
+    await updateManager.downloadAndExtractClientBundle(
+      axiosServing(bundleTarball({ 'index.js': '' })),
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(bundleDirs()).toEqual(['2608.30.0002']);
+    expect(statSync(join(installDir, '.state')).isDirectory()).toBe(true);
   });
 
   it('rejects a server version that would escape the install directory', async () => {
@@ -232,10 +269,12 @@ describe('update-manager bundle download', () => {
       'https://example.com/bundle.tar.gz'
     );
 
-    expect(readFileSync(join(installDir, 'download.lock'), 'utf-8')).toBe('');
-    expect(readFileSync(join(installDir, 'download.record'), 'utf-8')).not.toBe(
-      ''
-    );
+    expect(
+      readFileSync(join(installDir, '.state', 'download.lock'), 'utf-8')
+    ).toBe('');
+    expect(
+      readFileSync(join(installDir, '.state', 'download.record'), 'utf-8')
+    ).not.toBe('');
   });
 
   it('removes bundles left by earlier versions', async () => {
@@ -263,7 +302,7 @@ describe('update-manager bundle download', () => {
     );
 
     expect(existsSync(join(installDir, 'verify.lock'))).toBe(true);
-    expect(existsSync(join(installDir, 'download.lock'))).toBe(true);
+    expect(existsSync(join(installDir, '.state', 'download.lock'))).toBe(true);
   });
 
   it('survives an entry it cannot stat while cleaning up old bundles', async () => {
@@ -392,6 +431,7 @@ describe('update-manager download lock', () => {
 
   const bundleDirs = () =>
     readdirSync(installDir)
+      .filter((f) => !f.startsWith('.'))
       .filter((f) => statSync(join(installDir, f)).isDirectory())
       .sort();
 
@@ -475,8 +515,9 @@ describe('update-manager download lock', () => {
   });
 
   it('does not adopt a pre-existing directory the peer never installed', async () => {
-    // readBundleInstalledByLockHolder proves a directory named for the
-    // recorded version exists, not that the holder created it. An interrupted
+    // recordedBundle() proves a directory named for the recorded version
+    // exists, not that the holder created it; bundleInstalledSince() is what
+    // requires the record to have changed during the wait. An interrupted
     // install on a released nx leaves exactly such a directory, and the server
     // asks for that same version again because the content hash no longer
     // matches.
