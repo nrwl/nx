@@ -936,6 +936,87 @@ describe('TaskOrchestrator', () => {
       ).toHaveBeenCalledWith(b, 'failure', 'b failed');
     });
 
+    // The fold above is the only consumer of the captured file on the results
+    // path, and the test above is why it does not run under summary. Without
+    // the handoff below, the worker's own stderr is captured, read by nobody,
+    // and unlinked by `discardCapturedOutput` when the batch ends.
+    it('gives a failed batch its worker log under summary', () => {
+      const orchestrator = createOrchestrator({ outputStyle: 'summary' });
+      const a = makeTask('a:build');
+      const b = { ...makeTask('b:build'), hash: 'hash-b' } as Task;
+      const taskResults = [
+        { task: a, status: 'success', code: 0, terminalOutput: 'a body' },
+        { task: b, status: 'failure', code: 1, terminalOutput: 'b failed' },
+      ];
+
+      const withLog = orchestrator.attachBatchWorkerLog(
+        taskResults,
+        capturedOutputFile('gradlew: OutOfMemoryError')
+      );
+
+      // The failing task carries it, so the path summary prints for b holds the
+      // reason the batch runner died rather than only b's own line.
+      expect(withLog[1].terminalOutput).toContain('gradlew: OutOfMemoryError');
+      expect(withLog[1].terminalOutput).toContain('b failed');
+      // A task that succeeded is left alone; there is nothing to explain.
+      expect(withLog[0].terminalOutput).toEqual('a body');
+    });
+
+    it('points the other failures at that copy rather than duplicating it', () => {
+      const orchestrator = createOrchestrator({ outputStyle: 'summary' });
+      const a = { ...makeTask('a:build'), hash: 'hash-a' } as Task;
+      const b = { ...makeTask('b:build'), hash: 'hash-b' } as Task;
+      const taskResults = [
+        { task: a, status: 'failure', code: 1, terminalOutput: 'a failed' },
+        { task: b, status: 'failure', code: 1, terminalOutput: 'b failed' },
+      ];
+
+      const withLog = orchestrator.attachBatchWorkerLog(
+        taskResults,
+        capturedOutputFile('gradlew: OutOfMemoryError')
+      );
+
+      // The log is unbounded, so a copy per task would write a byte-identical
+      // file for each and charge every one against maxCacheSize.
+      expect(withLog[0].terminalOutput).toContain('gradlew: OutOfMemoryError');
+      expect(withLog[1].terminalOutput).not.toContain(
+        'gradlew: OutOfMemoryError'
+      );
+      expect(withLog[1].terminalOutput).toContain('batch worker log:');
+    });
+
+    it('leaves an all-green batch alone, so its chatter is not persisted', () => {
+      const orchestrator = createOrchestrator({ outputStyle: 'summary' });
+      const a = makeTask('a:build');
+      const taskResults = [
+        { task: a, status: 'success', code: 0, terminalOutput: 'a body' },
+      ];
+
+      expect(
+        orchestrator.attachBatchWorkerLog(
+          taskResults,
+          capturedOutputFile('noisy but harmless')
+        )
+      ).toBe(taskResults);
+    });
+
+    it('leaves the results alone when the style prints task output', () => {
+      const orchestrator = createOrchestrator({ outputStyle: 'static' });
+      const a = { ...makeTask('a:build'), hash: 'hash-a' } as Task;
+      const taskResults = [
+        { task: a, status: 'failure', code: 1, terminalOutput: 'a failed' },
+      ];
+
+      // static already streamed it or folded it; adding it here would duplicate
+      // the whole worker log into the task's persisted output.
+      expect(
+        orchestrator.attachBatchWorkerLog(
+          taskResults,
+          capturedOutputFile('already on the terminal')
+        )
+      ).toBe(taskResults);
+    });
+
     it('still collapses an all-green batch on the default, captured log or not', async () => {
       const orchestrator = createOrchestrator();
       const a = makeTask('a:build');
@@ -1119,6 +1200,39 @@ describe('TaskOrchestrator', () => {
       executorName: '@nx/gradle:batch',
       taskGraph: { tasks: { 'a:build': {} } },
     };
+
+    // Drives the RESULTS path rather than the crash path: the worker reported
+    // results, so `getResults` resolves. Without the handoff in `runBatch` the
+    // captured file is read by nobody here and unlinked on the way out, and a
+    // unit test of the handoff alone still passes.
+    it("surfaces a reporting batch's worker log under summary", async () => {
+      const orchestrator = createOrchestrator(
+        'gradlew: OutOfMemoryError in the daemon',
+        false
+      );
+      orchestrator.resolvedOutputStyle = 'summary';
+      orchestrator.taskGraph.tasks['a:build'].hash = 'hash-a';
+      orchestrator.forkedProcessTaskRunner.forkProcessForBatch = vi
+        .fn()
+        .mockResolvedValue({
+          onOutput: vi.fn(),
+          onTaskResults: vi.fn(),
+          getResults: vi.fn().mockResolvedValue({
+            'a:build': { success: false, terminalOutput: 'a failed' },
+          }),
+          getCapturedOutputPath: () =>
+            capturedPath('gradlew: OutOfMemoryError in the daemon'),
+          discardCapturedOutput: () => {},
+        });
+
+      const results: any = await orchestrator.runBatch(batch, {}, 0);
+
+      expect(results[0].status).toEqual('failure');
+      expect(results[0].terminalOutput).toContain(
+        'gradlew: OutOfMemoryError in the daemon'
+      );
+      expect(results[0].terminalOutput).toContain('a failed');
+    });
 
     it("surfaces a crashed batch's captured log alongside the exit error", async () => {
       const orchestrator = createOrchestrator(
