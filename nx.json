@@ -351,6 +351,7 @@
     },
     {
       "plugin": "@nx/dotnet",
+      "exclude": ["examples/**/*"],
       "options": {
         "build": {
           "targetName": "build:dotnet"

@@ -1,0 +1,3 @@
+# root = true stops Roslyn from walking out of the example and reading the Nx
+# repo's .editorconfig, for the same reason as Directory.Build.props.
+root = true
