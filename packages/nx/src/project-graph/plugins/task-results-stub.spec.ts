@@ -92,8 +92,8 @@ describe('task results terminal output stubbing', () => {
     expect(rehydrated).not.toHaveProperty('stubbedTerminalOutputs');
   });
 
-  // The cost this exists to remove: the sender builds every output string and
-  // copies it into the serialized payload, so the bytes must not be in it.
+  // The cost this exists to remove: the sender copies every output string into
+  // the serialized payload, so the bytes must not be in it.
   it('keeps the output out of the serialized payload', () => {
     const output = 'a-very-distinctive-output-marker';
     writeOutput('abc', output);
@@ -213,7 +213,12 @@ describe('task results terminal output stubbing', () => {
     );
 
     expect(stubbed.taskResults['proj:build'].terminalOutput).toBeUndefined();
-    expect(JSON.stringify(stubbed.taskResults)).not.toContain(mockCacheRoot);
+    // Compared as JSON escapes it: a Windows cache root's backslashes become
+    // `\\` inside the serialized string, so the raw path never appears
+    // literally and the sweep would pass for the wrong reason there.
+    expect(JSON.stringify(stubbed.taskResults)).not.toContain(
+      JSON.stringify(mockCacheRoot).slice(1, -1)
+    );
   });
 
   // The daemon stubs for its own send, and the same context is then handed to
