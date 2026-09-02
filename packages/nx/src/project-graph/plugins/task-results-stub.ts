@@ -10,9 +10,11 @@ import type { PostTasksExecutionContext } from './public-api';
  * out of `taskResults` and into a map of the paths holding them, so it can
  * cross a process boundary.
  *
- * `taskResults` carries every task's full output inline, so the sender builds
- * every one of those strings, copies them into the serialized payload and
- * pushes the whole thing across the socket, once per boundary. The bytes are
+ * `taskResults` carries every task's full output inline, so the sender copies
+ * every one of those strings into the serialized payload and pushes the whole
+ * thing across the socket, once per boundary. The strings themselves exist
+ * either way: the runner puts them on each result as its task completes, and
+ * the receiver reads them back eagerly. The bytes are
  * already on disk at `<cacheDir>/terminalOutputs/<hash>`, so transports carry
  * paths and each receiver reads them back before any plugin sees the context.
  *
