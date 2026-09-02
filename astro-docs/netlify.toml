@@ -627,6 +627,10 @@ from = "/docs/guides/tips-n-tricks/yarn-workspaces"
 to = "/docs/kb/yarn-workspaces"
 
 [[redirects]]
+from = "/docs/reference/benchmarks"
+to = "/docs/kb/benchmarks"
+
+[[redirects]]
 from = "/docs/reference/benchmarks/caching"
 to = "/docs/kb/caching"
 
