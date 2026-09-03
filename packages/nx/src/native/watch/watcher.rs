@@ -496,8 +496,6 @@ impl Watcher {
     }
 
     pub(crate) fn watch_inner(&mut self, callback: WatchEventCallback) -> Result<()> {
-        crate::native::logger::enable_logger();
-
         let pipeline =
             WatchPipeline::new(self.origin.clone(), &self.additional_globs, self.use_ignore)
                 .map_err(|msg| Error::new(Status::GenericFailure, msg))?;

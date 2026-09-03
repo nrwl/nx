@@ -5,7 +5,6 @@ use std::path::{Path, PathBuf};
 use crate::native::glob::build_glob_set;
 
 #[cfg(not(target_arch = "wasm32"))]
-use crate::native::logger::enable_logger;
 use crate::native::utils::{Normalize, get_mod_time, git::parent_gitignore_files};
 use walkdir::WalkDir;
 
@@ -109,7 +108,6 @@ where
 
     use crossbeam_channel::unbounded;
     use tracing::trace;
-    enable_logger();
 
     let directory = directory.as_ref();
     let mut walker = create_walker(directory, use_ignores);

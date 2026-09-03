@@ -20,8 +20,6 @@ use swc_ecma_parser::token::Word::{Ident, Keyword};
 use swc_ecma_parser::token::{BinOpToken, Token, TokenAndSpan};
 use swc_ecma_parser::{StringInput, Syntax, Tokens, TsConfig};
 
-use crate::native::logger::enable_logger;
-
 #[napi]
 #[derive(Debug)]
 pub struct ImportResult {
@@ -757,8 +755,6 @@ fn process_file(
 fn find_imports(
     project_file_map: HashMap<String, Vec<String>>,
 ) -> anyhow::Result<Vec<ImportResult>> {
-    enable_logger();
-
     let files_to_process: Vec<(&String, &String)> = project_file_map
         .iter()
         .flat_map(|(project_name, files)| files.iter().map(move |file| (project_name, file)))

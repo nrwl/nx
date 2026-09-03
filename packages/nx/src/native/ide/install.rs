@@ -1,5 +1,4 @@
 use crate::native::ide::detection::{SupportedEditor, get_current_editor};
-use crate::native::logger::enable_logger;
 use crate::native::utils::command::create_command;
 use napi::Error;
 use tracing::{debug, trace};
@@ -127,8 +126,6 @@ fn install_extension(command: &str) -> Result<bool, Error> {
 
 #[napi]
 pub async fn can_install_nx_console() -> bool {
-    enable_logger();
-
     let current_editor = get_current_editor();
     debug!("Detected editor: {:?}", current_editor);
 
@@ -137,8 +134,6 @@ pub async fn can_install_nx_console() -> bool {
 
 #[napi]
 pub async fn can_install_nx_console_for_editor(editor: SupportedEditor) -> bool {
-    enable_logger();
-
     if let Some(command) = get_command_for_editor(&editor) {
         if let Ok(installed) = is_nx_console_installed(&command) {
             !installed // Can install if NOT installed
@@ -152,8 +147,6 @@ pub async fn can_install_nx_console_for_editor(editor: SupportedEditor) -> bool 
 
 #[napi]
 pub async fn install_nx_console() -> bool {
-    enable_logger();
-
     let current_editor = get_current_editor();
     debug!("Detected editor: {:?}", current_editor);
 
@@ -162,8 +155,6 @@ pub async fn install_nx_console() -> bool {
 
 #[napi]
 pub async fn install_nx_console_for_editor(editor: SupportedEditor) -> bool {
-    enable_logger();
-
     if let Some(command) = get_command_for_editor(&editor) {
         debug!("Attempting to install Nx Console for {:?}", editor);
         match install_extension(command) {
@@ -257,8 +248,6 @@ fn get_command_for_editor(editor: &SupportedEditor) -> Option<&'static str> {
 
 #[napi]
 pub async fn is_editor_installed(editor: SupportedEditor) -> bool {
-    enable_logger();
-
     if let Some(command) = get_command_for_editor(&editor) {
         // Just check if the command exists and is executable
         match create_command(command).arg("--version").output() {

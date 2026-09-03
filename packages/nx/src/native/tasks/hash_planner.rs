@@ -1,4 +1,3 @@
-use crate::native::logger::enable_logger;
 use crate::native::tasks::{
     dep_outputs::get_dep_output,
     types::{CwdMode, HashInstruction, HashPlans, InstructionPool, JsonFileSetInput, TaskGraph},
@@ -96,7 +95,6 @@ impl HashPlanner {
             Arc<ProjectGraph>,
         >,
     ) -> Self {
-        enable_logger();
         Self {
             nx_json,
             project_graph: Arc::clone(project_graph),
