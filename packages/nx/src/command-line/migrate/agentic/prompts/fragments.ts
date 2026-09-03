@@ -60,11 +60,11 @@ function renderFormatRule(pmExec: string, format: FormatInstruction): string {
   const replacement = `If this migration itself added or replaced the workspace formatter, run the new one ${FORMAT_SCOPE} instead: \`${formatCommandFor(
     'prettier',
     pmExec
-  )}\` for Prettier, \`${formatCommandFor('oxfmt', pmExec)}\` for oxfmt. ${NO_FILES}`;
+  )}\` for Prettier, \`${formatCommandFor('oxfmt', pmExec)}\` for oxfmt, but only if it is installed under node_modules; if it is not, do not install or run it. ${NO_FILES}`;
   switch (format.source) {
     case 'command':
       return format.command === null
-        ? `- This workspace has no formatter configured; do not run one over your changes. ${replacement}`
+        ? `- No configured formatter is installed in this workspace; do not install or run one over your changes. ${replacement}`
         : `- After applying your changes and before writing the handoff, run \`${format.command}\` ${FORMAT_SCOPE} (the flag keeps the command from failing when some or all of those paths are files the formatter does not handle). ${replacement} ${NO_NX_FORMAT}`;
     case 'dispensed-step':
       return `- After applying your changes and before writing the handoff, run the command on the dispensed step's \`Format command:\` line ${FORMAT_SCOPE}; when that line says none, do not run a formatter. ${replacement} ${NO_NX_FORMAT}`;

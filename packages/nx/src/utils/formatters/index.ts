@@ -3,8 +3,12 @@ import { join } from 'node:path';
 import type { Tree } from '../../generators/tree';
 import { readJson } from '../../generators/utils/json';
 import { readJsonFile } from '../fileutils';
-import { isUsingOxfmt, isUsingOxfmtInTree } from './oxfmt';
-import { isUsingPrettier, isUsingPrettierInTree } from './prettier';
+import { getOxfmtBinPath, isUsingOxfmt, isUsingOxfmtInTree } from './oxfmt';
+import {
+  getPrettierPath,
+  isUsingPrettier,
+  isUsingPrettierInTree,
+} from './prettier';
 import { logger } from '../logger';
 
 /**
@@ -15,6 +19,16 @@ import { logger } from '../logger';
  * its emitted declarations, so those only fail once it has been rebuilt.
  */
 export type FormatterType = 'prettier' | 'oxfmt';
+
+/**
+ * A table, not a `switch`: callers run this inside a `try` whose `catch`
+ * means "configured but not installed", and a `never` arm would throw into
+ * that catch and be misreported. A missing member is a compile error here.
+ */
+export const resolveFormatterBin = {
+  oxfmt: getOxfmtBinPath,
+  prettier: getPrettierPath,
+} satisfies Record<FormatterType, () => string>;
 
 // Once per process: detection runs on every one of 200+ `formatFiles` call sites.
 let warnedBothConfigured = false;

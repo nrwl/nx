@@ -254,7 +254,6 @@ function defaultBranchToCompare(
   return remote ? baseRef.slice(remote.length + 1) : baseRef;
 }
 
-/** The current branch when it is the workspace's default branch, else null. */
 export function currentBranchIfDefault(root: string): string | null {
   const currentBranch = getGitCurrentBranch(root);
   if (!currentBranch) {

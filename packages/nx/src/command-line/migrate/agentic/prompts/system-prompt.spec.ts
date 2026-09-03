@@ -174,7 +174,7 @@ describe('buildSystemPrompt', () => {
     it('tells the agent not to run a formatter when the workspace has none', () => {
       const prompt = buildSystemPrompt({ ...ctx, formatCommand: null });
       expect(prompt).toContain(
-        'This workspace has no formatter configured; do not run one over your changes.'
+        'No configured formatter is installed in this workspace; do not install or run one over your changes.'
       );
       expect(prompt).not.toContain(
         'After applying your changes and before writing the handoff, run'
@@ -195,7 +195,7 @@ describe('buildSystemPrompt', () => {
         // The command was resolved before the step ran, so only the agent
         // knows the formatter changed; the flags must not be left to it.
         expect(prompt).toContain(
-          'If this migration itself added or replaced the workspace formatter, run the new one over exactly the files you created or modified instead: `pnpm exec prettier --write --ignore-unknown <paths>` for Prettier, `pnpm exec oxfmt --no-error-on-unmatched-pattern <paths>` for oxfmt. If you created or modified no files, do not run it.'
+          'If this migration itself added or replaced the workspace formatter, run the new one over exactly the files you created or modified instead: `pnpm exec prettier --write --ignore-unknown <paths>` for Prettier, `pnpm exec oxfmt --no-error-on-unmatched-pattern <paths>` for oxfmt, but only if it is installed under node_modules; if it is not, do not install or run it. If you created or modified no files, do not run it.'
         );
       }
     );
