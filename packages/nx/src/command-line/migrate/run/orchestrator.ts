@@ -155,7 +155,21 @@ export interface RunOrchestratorInitInput {
   // Workspace-local nx version; the v23 cutoff for the .gitignore fallback.
   installedNxVersion: string;
   validate: boolean | undefined;
+  // Off when a parent process hands the run to an agent it spawns: the runbook
+  // reaches that agent as a file and this stdout belongs to the user.
+  emitAgentInstructions?: boolean;
 }
+
+export type OrchestratorInitResult =
+  | {
+      kind: 'ready';
+      runId: string;
+      runRoot: string;
+      runbookPath: string;
+      reconcileCommand: string;
+    }
+  // The exit-0 refusal: the runbook is missing and another nx wrote the run.
+  | { kind: 'refused' };
 
 export interface RunOrchestratorReconcileInput {
   root: string;
@@ -216,7 +230,7 @@ function refuseUnsafeScratchExposure(
 
 export async function runOrchestratorInit(
   input: RunOrchestratorInitInput
-): Promise<void> {
+): Promise<OrchestratorInitResult> {
   const {
     root,
     migrationsJson,
@@ -225,6 +239,7 @@ export async function runOrchestratorInit(
     skipInstall,
     installedNxVersion,
     validate,
+    emitAgentInstructions = true,
   } = input;
   const planHash = computePlanHash(migrationsJson);
 
@@ -252,8 +267,7 @@ export async function runOrchestratorInit(
   }
 
   if (active) {
-    resumeRun(root, active.runId, active.state);
-    return;
+    return resumeRun(root, active.runId, active.state, emitAgentInstructions);
   }
 
   const runId = createRunId();
@@ -358,11 +372,10 @@ export async function runOrchestratorInit(
     return null;
   });
   if (winner) {
-    resumeRun(root, winner.runId, winner.state);
-    return;
+    return resumeRun(root, winner.runId, winner.state, emitAgentInstructions);
   }
 
-  finishInit(root, dir, runId, state, 'created');
+  return finishInit(root, dir, runId, state, 'created', emitAgentInstructions);
 }
 
 // Reads the newest active run, refusing one whose plan differs from the
@@ -413,7 +426,12 @@ function findActiveRunForPlan(
 
 // Shared resume tail for an active run found before or under the creation
 // lock, so the two discovery points cannot drift apart.
-function resumeRun(root: string, runId: string, state: MigrateRunState): void {
+function resumeRun(
+  root: string,
+  runId: string,
+  state: MigrateRunState,
+  emitAgentInstructions: boolean
+): OrchestratorInitResult {
   const dir = runDir(root, runId);
   // Ignore/index state can change while a durable run is paused (a checkout,
   // a .gitignore edit, a forced add). Probe before the checkpoint retry:
@@ -427,13 +445,21 @@ function resumeRun(root: string, runId: string, state: MigrateRunState): void {
   // contract must not first change git history or durable run state.
   const runbook = ensureRunbook(root, dir, runId, state);
   if (runbook === null) {
-    return;
+    return { kind: 'refused' };
   }
   // A run flagged checkpointFailed gets one more chance to capture the
   // pre-existing tree state before its first migration commit absorbs it.
   const resumed = ensureCheckpoint(root, dir, state);
   announceResume(runId, resumed);
-  finishInit(root, dir, runId, resumed, 'resumed', runbook);
+  return finishInit(
+    root,
+    dir,
+    runId,
+    resumed,
+    'resumed',
+    emitAgentInstructions,
+    runbook
+  );
 }
 
 function announceResume(runId: string, state: MigrateRunState): void {
@@ -524,10 +550,11 @@ function finishInit(
   runId: string,
   state: MigrateRunState,
   origin: 'created' | 'resumed',
+  emitAgentInstructions: boolean,
   // The runbook bytes when the caller already ensured them (the resume path,
   // which must fail before its git and state side effects).
   runbook?: string
-): void {
+): OrchestratorInitResult {
   let current = state;
   if (!current.analytics.startEmitted) {
     // Claim the watermark on the fresh state first: of two concurrent inits
@@ -550,7 +577,17 @@ function finishInit(
   }
   const content = runbook ?? ensureRunbook(root, dir, runId, current);
   if (content === null) {
-    return;
+    return { kind: 'refused' };
+  }
+  const ready: OrchestratorInitResult = {
+    kind: 'ready',
+    runId,
+    runRoot: root,
+    runbookPath: join(dir, current.runbookPath ?? RUNBOOK_FILE_NAME),
+    reconcileCommand: reconcileCommand(root, runId),
+  };
+  if (!emitAgentInstructions) {
+    return ready;
   }
   emitRunbookBlock(runId, content);
   const instructionLines = [
@@ -561,9 +598,10 @@ function finishInit(
   const lines = safeLines(instructionLines);
   logToAgent({ title: `nx migrate: run ${origin}`, bodyLines: lines });
   emitStepBlock(runId, '-', 'initialized', {
-    next: reconcileCommand(root, runId),
+    next: ready.reconcileCommand,
     instructions: lines.join('\n'),
   });
+  return ready;
 }
 
 // A missing runbook is re-rendered only by the nx version that created the
