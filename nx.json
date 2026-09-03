@@ -16,7 +16,8 @@
     "sharedGlobals": [
       "{workspaceRoot}/babel.config.json",
       "{workspaceRoot}/.nx/workflows/agents.yaml",
-      "{workspaceRoot}/.github/workflows/ci.yml"
+      "{workspaceRoot}/.github/workflows/ci.yml",
+      { "env": "NX_AB_SALT" }
     ],
     "copyReadme": [
       "{projectRoot}/README.md",
