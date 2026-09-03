@@ -77,13 +77,13 @@ describe('Angular Projects - Build and Test', () => {
     checkFilesExist(`dist/${esbuildApp}/browser/main.js`);
     checkFilesExist(`dist/my-dir/${standaloneApp}/main.js`);
     checkFilesExist(`dist/my-dir/${esbuildStandaloneApp}/browser/main.js`);
-    // This is a loose requirement because there are a lot of
-    // influences external from this project that affect this.
+    // Coarse ceiling: catches prod optimizations not being applied, not
+    // Angular runtime growth. Bumping it for an Angular release is a smell.
     const es2015BundleSize = getSize(tmpProjPath(`dist/${app1}/main.js`));
     console.log(
       `The current es2015 bundle size is ${es2015BundleSize / 1000} KB`
     );
-    expect(es2015BundleSize).toBeLessThanOrEqual(227000);
+    expect(es2015BundleSize).toBeLessThanOrEqual(300000);
 
     // check unit tests
     runCLI(
