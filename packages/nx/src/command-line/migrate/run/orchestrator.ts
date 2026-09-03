@@ -1980,7 +1980,7 @@ function emitAwaitPrompt(
         // since the runbook was written.
         `Format command: ${
           resolveFormatCommand(root, pmExecPrefix(root)) ??
-          'none (no formatter is configured)'
+          'none (no configured formatter is installed)'
         }`,
       ];
   lines.push(
