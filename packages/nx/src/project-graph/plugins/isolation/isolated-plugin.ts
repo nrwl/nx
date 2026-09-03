@@ -34,6 +34,7 @@ import type {
   ProjectsMetadata,
 } from '../public-api';
 import { resolveNxPlugin } from '../resolve-plugin';
+import { withBuiltEntryResolutionHint } from '../built-entry-resolution-hint';
 import type {
   MessageResult,
   PluginWorkerLoadResult,
@@ -158,7 +159,19 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       index
     );
 
-    const loadResult = await instance.spawnAndConnect();
+    let loadResult: LoadResultPayload;
+    try {
+      loadResult = await instance.spawnAndConnect();
+    } catch (e) {
+      throw isSourcePlugin
+        ? e
+        : withBuiltEntryResolutionHint(
+            e,
+            pluginPath,
+            root,
+            workspacePackageNames
+          );
+    }
     instance.setupHooks(loadResult);
     return instance;
   }
