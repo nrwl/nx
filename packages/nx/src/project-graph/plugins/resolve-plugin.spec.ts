@@ -435,10 +435,28 @@ describe('resolveNxPlugin', () => {
     expect(refreshedRoot).toBe(root);
     expect(getPackageNames?.()).toEqual(['@proj/from-snapshot']);
 
-    // A second resolution reuses the cached snapshot and must not push again.
     await expect(
       resolveNxPlugin('@scope/missing-plugin', root, [])
     ).rejects.toThrow();
     expect(refreshSourceGraphResolvers).toHaveBeenCalledTimes(1);
+  });
+
+  it('extracts workspace package metadata once per resolution snapshot', async () => {
+    const { getWorkspacePackagesMetadata } =
+      await import('../../plugins/js/utils/packages');
+
+    await expect(
+      resolveNxPlugin('@scope/missing-plugin', root, [])
+    ).rejects.toThrow();
+    for (let i = 0; i < 3; i++) {
+      await resolveNxPlugin('./resolve-plugin.ts', root, [__dirname]);
+    }
+    expect(getWorkspacePackagesMetadata).toHaveBeenCalledTimes(1);
+
+    resetResolvePluginCache();
+    await expect(
+      resolveNxPlugin('@scope/missing-plugin', root, [])
+    ).rejects.toThrow();
+    expect(getWorkspacePackagesMetadata).toHaveBeenCalledTimes(2);
   });
 });
