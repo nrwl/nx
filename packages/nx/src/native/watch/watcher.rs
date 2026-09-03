@@ -296,7 +296,13 @@ impl WatchPipeline {
         };
 
         if event.need_rescan() {
-            tracing::warn!("backend dropped events (rescan flag); scheduling a rescan flush");
+            // The backend can raise the flag hundreds of times before the
+            // flush drains, but they coalesce into one rescan. Log only the
+            // first of a burst: warning per raw flag floods the daemon log
+            // and slows the drain path that the overflow is already straining.
+            if !self.pending_rescan {
+                tracing::warn!("backend dropped events (rescan flag); scheduling a rescan flush");
+            }
             self.pending_rescan = true;
             let now = Instant::now();
             let bs = *self.burst_start.get_or_insert(now);
