@@ -968,6 +968,30 @@ catalogs:
 });
 
 describe('readNxMigrateConfig', () => {
+  it.each([
+    '../../../../etc/profile',
+    '/etc/profile',
+    'migrations/../../../escape.json',
+  ])('should reject the escaping migrations path %s', (migrations) => {
+    expect(() =>
+      readNxMigrateConfig({
+        name: 'hostile',
+        version: '1.0.0',
+        'nx-migrations': { migrations },
+      })
+    ).toThrow(/Invalid migrations path .* in package "hostile@1.0.0"/);
+  });
+
+  it('should reject an escaping migrations path given in the string shorthand', () => {
+    expect(() =>
+      readNxMigrateConfig({
+        name: 'hostile',
+        version: '1.0.0',
+        'nx-migrations': '../../../../etc/profile',
+      } as any)
+    ).toThrow(/Invalid migrations path/);
+  });
+
   it('should carry supportsOptionalMigrations from the nx-migrations config', () => {
     const config = readNxMigrateConfig({
       'nx-migrations': {
