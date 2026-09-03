@@ -1,5 +1,5 @@
 import { existsSync } from 'fs';
-import { extname, join, normalize, relative, sep } from 'path';
+import { extname, join, relative } from 'path';
 import { resolve as resolveExports } from 'resolve.exports';
 import {
   loadTsFile,
@@ -8,7 +8,10 @@ import {
 } from '../plugins/js/utils/register';
 import { getWorkspacePackagesMetadata } from '../plugins/js/utils/packages';
 import { getRootTsConfigResolveExportsConditions } from '../plugins/js/utils/typescript';
-import { withBuiltEntryResolutionHint } from '../project-graph/plugins/built-entry-resolution-hint';
+import {
+  isWorkspaceLocalResolution,
+  withBuiltEntryResolutionHint,
+} from '../project-graph/plugins/built-entry-resolution-hint';
 import {
   createProjectRootMappingsFromProjectConfigurations,
   findProjectForPath,
@@ -83,8 +86,8 @@ export function getImplementationFactory<T>(
       getWorkspacePackagesMetadata(projects)
         .packageManagerWorkspacePackageNames;
     if (isSource) {
-      // Factories have no unload lifecycle; repeated loads refresh and reuse
-      // this bounded per-entry resolver state.
+      // Factories have no unload lifecycle, so the per-entry resolver stays
+      // for the process lifetime.
       registerSourceGraphResolver(
         modulePath,
         workspaceRoot,
@@ -188,12 +191,9 @@ function resolveImplementationWithMetadata(
 }
 
 function isWorkspaceLocalTsImplementation(modulePath: string): boolean {
-  const normalizedRoot = normalize(workspaceRoot);
-  const normalizedPath = normalize(modulePath);
   return (
-    /\.(?:[cm]?ts|tsx)$/.test(extname(normalizedPath)) &&
-    normalizedPath.startsWith(normalizedRoot + sep) &&
-    !normalizedPath.includes(sep + 'node_modules' + sep)
+    /\.(?:[cm]?ts|tsx)$/.test(extname(modulePath)) &&
+    isWorkspaceLocalResolution(modulePath, workspaceRoot)
   );
 }
 
