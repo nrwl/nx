@@ -138,6 +138,27 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     expect(yaml).not.toContain('packages/*');
   });
 
+  it('carries minimumReleaseAge and minimumReleaseAgeExclude on pnpm 11', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      [
+        'minimumReleaseAge: 0',
+        'minimumReleaseAgeExclude:',
+        '  - esbuild',
+        '',
+      ].join('\n')
+    );
+
+    const yaml = getPrunedPnpmInstallSettingsYaml(tempDir);
+
+    const { load } = require('@zkochan/js-yaml');
+    expect(load(yaml)).toEqual({
+      packages: [],
+      minimumReleaseAge: 0,
+      minimumReleaseAgeExclude: ['esbuild'],
+    });
+  });
+
   it('carries no settings on pnpm 10 (those are read from package.json)', () => {
     mockPnpmVersion('10.5.0');
     writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');

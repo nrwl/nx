@@ -124,11 +124,12 @@ type PrunedPnpmConfig = {
  * file is inert, verified installable with identical module resolution on
  * pnpm 9, 10 and 11.
  *
- * pnpm 11+ reads build approvals (`allowBuilds`), `supportedArchitectures` and
- * `patchedDependencies` only from pnpm-workspace.yaml, so those are carried
- * from the workspace root; pass `prunedLockfileContent` to scope the approvals
- * to the packages the pruned lockfile keeps (an approval for an absent package
- * is inert either way, this only keeps the emitted file accurate). On
+ * pnpm 11+ reads build approvals (`allowBuilds`), `supportedArchitectures`,
+ * `minimumReleaseAge`/`minimumReleaseAgeExclude` and `patchedDependencies` only
+ * from pnpm-workspace.yaml, so those are carried from the workspace root; pass
+ * `prunedLockfileContent` to scope the approvals to the packages the pruned
+ * lockfile keeps (an approval for an absent package is inert either way, this
+ * only keeps the emitted file accurate). On
  * pnpm <=10, which reads them from the emitted package.json instead (see
  * `getPrunedPnpmPackageJsonBuildSettings`), or when the workspace declares
  * none, the file holds only `packages: []`. Resolution-time config stays out:
@@ -177,6 +178,8 @@ function getPrunedPnpmWorkspaceSettings(
   let rootSettings: {
     allowBuilds?: Record<string, boolean>;
     supportedArchitectures?: unknown;
+    minimumReleaseAge?: number;
+    minimumReleaseAgeExclude?: string[];
   };
   try {
     const rootWorkspaceYaml = join(workspaceRootPath, 'pnpm-workspace.yaml');
@@ -189,7 +192,7 @@ function getPrunedPnpmWorkspaceSettings(
   } catch {
     // Unreadable or malformed pnpm-workspace.yaml: skip rather than guess.
     logger.warn(
-      'Could not read the workspace root pnpm-workspace.yaml; the pruned output will not declare pnpm install settings (build-script approvals, supportedArchitectures, patchedDependencies).'
+      'Could not read the workspace root pnpm-workspace.yaml; the pruned output will not declare pnpm install settings (build-script approvals, supportedArchitectures, minimumReleaseAge, patchedDependencies).'
     );
     return null;
   }
@@ -207,6 +210,17 @@ function getPrunedPnpmWorkspaceSettings(
   }
   if (rootSettings.supportedArchitectures) {
     settings.supportedArchitectures = rootSettings.supportedArchitectures;
+  }
+  // pnpm reads `minimumReleaseAge`/`minimumReleaseAgeExclude` only from
+  // pnpm-workspace.yaml (like `allowBuilds`/`supportedArchitectures` above), so
+  // a pruned output that drops them silently falls back to pnpm's own default
+  // cutoff instead of the workspace's, which can reject lockfile entries the
+  // workspace itself allows (or vice versa).
+  if (rootSettings.minimumReleaseAge !== undefined) {
+    settings.minimumReleaseAge = rootSettings.minimumReleaseAge;
+  }
+  if (rootSettings.minimumReleaseAgeExclude) {
+    settings.minimumReleaseAgeExclude = rootSettings.minimumReleaseAgeExclude;
   }
   const patchedDependencies =
     precomputed?.patchedDependencies ??
@@ -261,7 +275,7 @@ function getPnpmMajorOrWarn(workspaceRootPath: string): number | null {
   const pnpmMajor = getPnpmMajor(workspaceRootPath);
   if (pnpmMajor === null) {
     logger.warn(
-      'Could not determine the pnpm version. The pruned output will not carry pnpm build-script approvals, supportedArchitectures, or patchedDependencies declarations; patch files still ship.'
+      'Could not determine the pnpm version. The pruned output will not carry pnpm build-script approvals, supportedArchitectures, minimumReleaseAge, or patchedDependencies declarations; patch files still ship.'
     );
   }
   return pnpmMajor;
