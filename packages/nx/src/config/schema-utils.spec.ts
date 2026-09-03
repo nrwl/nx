@@ -11,9 +11,11 @@ vi.mock('../plugins/js/utils/packages', () => ({
   })),
 }));
 
+import { mkdirSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { TempFs } from '../internal-testing-utils/temp-fs';
 import { registerSourceGraphResolver } from '../plugins/js/utils/register';
-import { workspaceRoot } from '../utils/workspace-root';
+import { setWorkspaceRoot, workspaceRoot } from '../utils/workspace-root';
 import { getImplementationFactory } from './schema-utils';
 
 describe('getImplementationFactory', () => {
@@ -32,5 +34,29 @@ describe('getImplementationFactory', () => {
       workspaceRoot,
       []
     );
+  });
+
+  it('registers a realpath-resolved implementation when the workspace root is an alias', () => {
+    const fs = new TempFs('schema-utils-alias-root');
+    const real = realpathSync(fs.tempDir);
+    const alias = join(fs.tempDir, 'alias');
+    const directory = join(real, 'ws/packages/plugin/src');
+    mkdirSync(directory, { recursive: true });
+    writeFileSync(join(directory, 'impl.ts'), '');
+    symlinkSync(join(real, 'ws'), alias, 'dir');
+    const originalRoot = workspaceRoot;
+    setWorkspaceRoot(alias);
+    try {
+      getImplementationFactory('./impl', directory, 'local-plugin', {})();
+
+      expect(registerSourceGraphResolver).toHaveBeenCalledWith(
+        join(directory, 'impl.ts'),
+        alias,
+        []
+      );
+    } finally {
+      setWorkspaceRoot(originalRoot);
+      fs.cleanup();
+    }
   });
 });
