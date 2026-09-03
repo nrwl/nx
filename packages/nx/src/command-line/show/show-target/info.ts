@@ -394,7 +394,7 @@ const SHARED_GLOB_PREVIEW = 10;
 
 /** Maps each glob to the projects whose group carries it. */
 function indexByGlob(
-  groups: readonly { project?: string; globs: readonly string[] }[],
+  groups: readonly { project?: string }[],
   pick: (group: any) => readonly string[]
 ): Map<string, string[]> {
   const byGlob = new Map<string, string[]>();
@@ -415,6 +415,43 @@ function scopeLabel(owners: readonly string[], projectCount: number): string {
     : `${owners.length} project${owners.length === 1 ? '' : 's'}`;
 }
 
+/** Most-shared first, so the globs covering the workspace lead. */
+function byShareThenName(
+  [aGlob, a]: [string, string[]],
+  [bGlob, b]: [string, string[]]
+): number {
+  return b.length - a.length || aGlob.localeCompare(bGlob);
+}
+
+function renderGlobLines(
+  entries: [string, string[]][],
+  projectCount: number,
+  c: ReturnType<typeof pc>,
+  args: ShowTargetBaseOptions,
+  hintFor?: (glob: string) => string
+): void {
+  const shown = args.verbose ? entries : entries.slice(0, SHARED_GLOB_PREVIEW);
+  for (const [glob, owners] of shown) {
+    const hint = hintFor?.(glob) ?? '';
+    console.log(
+      `    - ${glob} ${c.dim(`(${scopeLabel(owners, projectCount)})`)}${hint}`
+    );
+    if (args.verbose && owners.length < projectCount) {
+      console.log(`      ${c.dim(owners.join(', '))}`);
+    }
+  }
+  const hidden = entries.length - shown.length;
+  if (hidden > 0) {
+    console.log(`    ${c.dim(`... ${hidden} more (--verbose)`)}`);
+  }
+}
+
+/**
+ * The globs a snapshot-backed task hashes, split by where each came from: the
+ * trace's reads, the trace's own exclusions, and the exclusions carried over
+ * from declared inputs. Every line belongs to exactly one of the three, so no
+ * glob is left looking unexplained.
+ */
 function renderEffectiveInputs(
   data: TargetInfoData,
   c: ReturnType<typeof pc>,
@@ -423,44 +460,29 @@ function renderEffectiveInputs(
 ): void {
   const groups = data.effectiveInputs;
   if (!groups?.length) return;
+  const projectCount = groups.length;
 
-  // Tokenizing collapses most reads to the same {projectRoot} glob repeated
-  // once per project, so key by glob and name the projects it covers.
-  const byGlob = indexByGlob(groups, (g) => g.observed);
-  const total = groups.reduce((n, g) => n + g.observed.length, 0);
+  const reads = indexByGlob(groups, (g) =>
+    g.observed.filter((glob: string) => !glob.startsWith('!'))
+  );
+  const readTotal = groups.reduce(
+    (n, g) => n + g.observed.filter((glob) => !glob.startsWith('!')).length,
+    0
+  );
   console.log(
     `  ${c.dim(
-      `observed reads (${byGlob.size} unique of ${total} globs, ${groups.length} projects):`
+      `observed reads (${reads.size} unique of ${readTotal} globs, ${projectCount} projects):`
     )}`
   );
 
-  const shared = [...byGlob].filter(([, owners]) => owners.length > 1);
-  shared.sort(
-    ([aGlob, a], [bGlob, b]) =>
-      b.length - a.length || aGlob.localeCompare(bGlob)
-  );
-  const shownShared = args.verbose
-    ? shared
-    : shared.slice(0, SHARED_GLOB_PREVIEW);
-  for (const [glob, owners] of shownShared) {
-    console.log(
-      `    - ${glob} ${c.dim(`(${scopeLabel(owners, groups.length)})`)}`
-    );
-    if (args.verbose && owners.length < groups.length) {
-      console.log(`      ${c.dim(owners.join(', '))}`);
-    }
-  }
-  const hiddenShared = shared.length - shownShared.length;
-  if (hiddenShared > 0) {
-    console.log(
-      `    ${c.dim(`... ${hiddenShared} more shared globs (--verbose)`)}`
-    );
-  }
+  const shared = [...reads].filter(([, owners]) => owners.length > 1);
+  shared.sort(byShareThenName);
+  renderGlobLines(shared, projectCount, c, args);
 
   // Whatever is unique to one project is mostly that project's own declaration
   // output, which is noise at a glance -- summarise it unless asked.
   const own = new Map<string, string[]>();
-  for (const [glob, owners] of byGlob) {
+  for (const [glob, owners] of reads) {
     if (owners.length === 1) {
       const list = own.get(owners[0]);
       if (list) list.push(glob);
@@ -490,13 +512,30 @@ function renderEffectiveInputs(
     }
   }
 
+  // The trace records what the task did NOT read as well, so these arrive with
+  // the snapshot rather than from any declared input.
+  const traced = indexByGlob(groups, (g) =>
+    g.observed.filter((glob: string) => glob.startsWith('!'))
+  );
+  if (traced.size > 0) {
+    const total = groups.reduce(
+      (n, g) => n + g.observed.filter((glob) => glob.startsWith('!')).length,
+      0
+    );
+    console.log(
+      `  ${c.dim(
+        `exclusions recorded with the snapshot (${traced.size} unique of ${total}):`
+      )}`
+    );
+    renderGlobLines([...traced].sort(byShareThenName), projectCount, c, args);
+  }
+
   renderDeclaredExclusions(data, groups, c, args, sourceHint);
 }
 
 /**
- * Exclusions the planner carried over from declared inputs. They are why a
- * file the trace saw can still be absent from the hash, so they are named
- * apart from the reads rather than mixed in with them.
+ * Exclusions the planner carried over from declared inputs. They apply on top
+ * of the trace, so they are named apart from anything the snapshot recorded.
  */
 function renderDeclaredExclusions(
   data: TargetInfoData,
@@ -523,23 +562,16 @@ function renderDeclaredExclusions(
     }
   });
 
-  const entries = [...byGlob].sort(
-    ([aGlob, a], [bGlob, b]) =>
-      b.length - a.length || aGlob.localeCompare(bGlob)
+  renderGlobLines(
+    [...byGlob].sort(byShareThenName),
+    groups.length,
+    c,
+    args,
+    (glob) => {
+      const index = declaredHere.get(glob);
+      return index !== undefined ? sourceHint(`inputs.${index}`, 'inputs') : '';
+    }
   );
-  const shown = args.verbose ? entries : entries.slice(0, SHARED_GLOB_PREVIEW);
-  for (const [glob, owners] of shown) {
-    const index = declaredHere.get(glob);
-    const hint =
-      index !== undefined ? sourceHint(`inputs.${index}`, 'inputs') : '';
-    console.log(
-      `    - ${glob} ${c.dim(`(${scopeLabel(owners, groups.length)})`)}${hint}`
-    );
-  }
-  const hidden = entries.length - shown.length;
-  if (hidden > 0) {
-    console.log(`    ${c.dim(`... ${hidden} more (--verbose)`)}`);
-  }
 }
 
 function renderSnapshotSection(

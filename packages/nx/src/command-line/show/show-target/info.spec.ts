@@ -1009,6 +1009,56 @@ describe('show target info', () => {
       expect(text).toContain('{projectRoot}/src/only-mine.ts');
     });
 
+    it("separates the snapshot's own exclusions from the declared ones", async () => {
+      setGraph(graphWithLintTarget());
+      setMockIoSnapshotReport({
+        used: ['my-app:lint'],
+        tasksWithOutputs: [],
+        diagnostics: [],
+        resolution: { requestedCommit: 'ae6a03f912ab', digest: '049a9c2f7bcd' },
+      });
+      setMockInputGlobs({
+        'my-app:lint': [
+          {
+            project: 'my-app',
+            globs: [
+              'apps/my-app/src/main.ts',
+              '!apps/my-app/package.json',
+              '!apps/my-app/**/*.spec.ts',
+            ],
+            // A trace records what the task did not read, so the bundle
+            // carries negations of its own.
+            observed: ['apps/my-app/src/main.ts', '!apps/my-app/package.json'],
+            declared: ['!apps/my-app/**/*.spec.ts'],
+            includeIgnored: true,
+            fromSnapshot: true,
+          },
+        ],
+      });
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint', verbose: true });
+      const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
+
+      // Each of the three kinds is counted under its own heading, so no glob
+      // is left looking unexplained.
+      expect(text).toContain(
+        'observed reads (1 unique of 1 globs, 1 projects)'
+      );
+      expect(text).toContain(
+        'exclusions recorded with the snapshot (1 unique of 1)'
+      );
+      expect(text).toContain(
+        'declared exclusions still applied (1 unique of 1)'
+      );
+      // The snapshot's own negation is not counted among the reads.
+      const readsBlock = text.slice(
+        text.indexOf('observed reads'),
+        text.indexOf('exclusions recorded')
+      );
+      expect(readsBlock).not.toContain('!{projectRoot}/package.json');
+    });
+
     it('summarises the single-project reads unless --verbose', async () => {
       setGraph(graphWithLintTarget());
       setMockIoSnapshotReport({
