@@ -16,6 +16,11 @@ import '../../utils/perf-logging';
 import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
+import {
+  acquireDaemonStartLock,
+  findHealthyDaemonOwner,
+  releaseDaemonStartLock,
+} from './start-lock';
 import { isNxVersionMismatch } from '../is-nx-version-mismatch';
 import { getInstalledNxVersion } from '../../utils/installed-nx-version';
 import { serverLogger } from '../logger';
@@ -689,23 +694,21 @@ const handleWorkspaceChanges: WorkspaceChangesListener = (err, batch) => {
 };
 
 export async function startServer(): Promise<Server> {
-  // The workspace context owns the daemon's one watch and starts it before
-  // it scans, so a file written during boot is visible to one or the other.
-  if (!isWatchingWorkspaceContext()) {
-    registerDaemonForRestartChecks(server, openSockets);
-    setupWorkspaceContext(workspaceRoot, {
-      watch: true,
-      alwaysWatch: [relativeServerProcess],
-    });
-    subscribeToWorkspaceChanges(workspaceRoot, handleWorkspaceChanges);
-    serverLogger.watcherLog(
-      `Subscribed to changes within: ${workspaceRoot} (native)`
+  // Claim before anything expensive, so a starter that loses exits before the
+  // watch and the workspace context. Held until listen() succeeds, not until
+  // the registration is written: see start-lock.ts.
+  const startLock = await acquireDaemonStartLock();
+  const ownerPid = await findHealthyDaemonOwner(startLock);
+  if (ownerPid !== null) {
+    // process.exit skips finally blocks, so the lock is released explicitly.
+    releaseDaemonStartLock(startLock);
+    serverLogger.log(
+      `Another daemon already owns this workspace (pid ${ownerPid}); standing down`
     );
+    process.exit(0);
   }
 
-  // Initialize analytics for daemon process
-  await startAnalytics();
-
+  // After the stand-down: the socket directory name hashes this pid.
   const socketPath = getFullOsSocketPath();
 
   // Log daemon startup information for debugging
@@ -722,6 +725,24 @@ export async function startServer(): Promise<Server> {
     socketPath,
     nxVersion,
   });
+
+  // After the registration: a starter whose lock wait lapsed mid-scan needs it.
+  // The workspace context owns the daemon's one watch and starts it before
+  // it scans, so a file written during boot is visible to one or the other.
+  if (!isWatchingWorkspaceContext()) {
+    registerDaemonForRestartChecks(server, openSockets);
+    setupWorkspaceContext(workspaceRoot, {
+      watch: true,
+      alwaysWatch: [relativeServerProcess],
+    });
+    subscribeToWorkspaceChanges(workspaceRoot, handleWorkspaceChanges);
+    serverLogger.watcherLog(
+      `Subscribed to changes within: ${workspaceRoot} (native)`
+    );
+  }
+
+  // Initialize analytics for daemon process
+  await startAnalytics();
 
   // See notes in socket-command-line-utils.ts on OS differences regarding clean up of existings connections.
   if (!isWindows) {
@@ -769,6 +790,7 @@ export async function startServer(): Promise<Server> {
     // The exit code is what carries the errno to the client, which otherwise
     // sees only a missing socket and cannot tell a refusal from a cold start.
     server.on('error', (error: NodeJS.ErrnoException) => {
+      releaseDaemonStartLock(startLock);
       serverLogger.log(`Failed to listen on: ${socketPath} (${error.message})`);
       process.exit(isPermissionDenied(error) ? SOCKET_REFUSED_EXIT_CODE : 1);
     });
@@ -777,6 +799,10 @@ export async function startServer(): Promise<Server> {
       server.listen(socketPath, async () => {
         try {
           serverLogger.log(`Started listening on: ${socketPath}`);
+
+          // Only now is the claim redundant: a starter that takes the lock
+          // after this point probes a socket that answers.
+          releaseDaemonStartLock(startLock);
 
           // Linux gates connect() on write permission to the socket file; macOS/BSD gate
           // on the directory, which is already 0700. Done after listen because

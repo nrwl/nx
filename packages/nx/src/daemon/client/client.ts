@@ -1575,10 +1575,11 @@ export class DaemonClient {
     const { available, refusal: polled } =
       await this.waitForServerToBeAvailable({ ignoreVersionMismatch: true });
     if (available) {
-      clientLogger.log(
-        `[Client] Daemon server started, pid=${backgroundProcess.pid}`
-      );
-      return backgroundProcess.pid;
+      // Not backgroundProcess.pid: it exits when it finds a healthy owner. The
+      // registration, written before listen(), names whoever answers the socket.
+      const daemonPid = getDaemonProcessIdSync() ?? backgroundProcess.pid;
+      clientLogger.log(`[Client] Daemon server started, pid=${daemonPid}`);
+      return daemonPid;
     } else {
       // A permission refusal from either source wins, then the poll's errno,
       // then the probe's. Recency alone would report a daemon's ENOENT over the
