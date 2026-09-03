@@ -125,6 +125,8 @@ const server = createServer((socket) => {
             name,
             pluginPath,
             shouldRegisterTSTranspiler,
+            isSourcePlugin,
+            workspacePackageNames,
           }) => {
             loadErrorTimeout?.clear();
             process.chdir(root);
@@ -132,6 +134,19 @@ const server = createServer((socket) => {
               const { loadResolvedNxPluginAsync } = await Promise.resolve(
                 require(require.resolve('../load-resolved-plugin'))
               );
+
+              // Same scoping the in-process loader applies: the entry's
+              // graph resolves workspace packages the way tsconfig does.
+              // Kept for the worker's lifetime; the plugin never unloads.
+              if (isSourcePlugin) {
+                (
+                  require('../../../plugins/js/utils/register') as typeof import('../../../plugins/js/utils/register')
+                ).registerSourceGraphResolver(
+                  pluginPath,
+                  root,
+                  workspacePackageNames
+                );
+              }
 
               // Register the ts-transpiler if we are pointing to a
               // plain ts file that's not part of a plugin project
