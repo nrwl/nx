@@ -187,6 +187,9 @@ import {
 } from './run-state';
 import { depsHash } from './util';
 
+const RUN_NEXT_FIRST =
+  'Run the dispensed "next" command first: its response restates this work and names the handoff file to write.';
+
 const genMig = (pkg: string, name: string): PlannedMigration => ({
   package: pkg,
   name,
@@ -743,6 +746,19 @@ describe('runSingleMigrationWorker', () => {
       expect(stdout).toContain('<nx_migrate_prompt migration="@nx/js:p">');
       expect(stdout).toContain('"migrationId": "@nx/js:p"');
       expect(stdout).toContain('"prompt": "prompts/p.md"');
+      // No orchestrator to route through: the standalone hand-off is direct.
+      expect(output.log).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining(
+            'Apply it to this workspace, then continue.'
+          ),
+        })
+      );
+      expect(output.log).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining(RUN_NEXT_FIRST),
+        })
+      );
     });
 
     it('escapes XML-special characters in the prompt block migration attribute so hostile names cannot break the outer agent parser', async () => {
@@ -1088,6 +1104,13 @@ describe('runSingleMigrationWorker', () => {
       expect(step.status).toBe('awaiting-prompt-outcome');
       expect(step.awaitingKind).toBe('migration-prompt');
       expect(mockRunMigration).not.toHaveBeenCalled();
+      // The runbook's loop routes the work through the orchestrator's
+      // dispense, so the hand-off must not tell the agent to apply it directly.
+      expect(output.log).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: `The following prompt-based migration was not applied automatically. ${RUN_NEXT_FIRST}`,
+        })
+      );
     });
 
     it('parks a hybrid migration in awaiting-prompt-outcome after running its generator, marking the generator done', async () => {
@@ -1245,6 +1268,11 @@ describe('runSingleMigrationWorker', () => {
         readFileSync(join(dir, 'agent-work', 'step-1-attempt-2.json'), 'utf-8')
       ).toContain('"logs": "gen output"');
       expect(readRunState(dir).steps[0].status).toBe('awaiting-prompt-outcome');
+      expect(output.log).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: `The following prompt-based migration was not applied automatically. ${RUN_NEXT_FIRST}`,
+        })
+      );
     });
 
     it('re-hands the payload stored by the earlier attempt on an owed-validation retry', async () => {
@@ -1284,7 +1312,7 @@ describe('runSingleMigrationWorker', () => {
       ).toContain('"kind": "generator-validation"');
       expect(output.log).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: expect.stringContaining('still await validation'),
+          title: `The following migration's generator ran in an earlier attempt and its changes still await validation. ${RUN_NEXT_FIRST}`,
         })
       );
     });
@@ -1321,7 +1349,7 @@ describe('runSingleMigrationWorker', () => {
       expect(stdout).toContain('"kind": "generator-validation"');
       expect(output.log).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: expect.stringContaining('Inspect them with git'),
+          title: expect.stringContaining('Inspect the changes with git'),
         })
       );
     });
@@ -1381,7 +1409,7 @@ describe('runSingleMigrationWorker', () => {
       expect(stdout).not.toContain('"impl"');
       expect(output.log).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: expect.stringContaining('Inspect them with git'),
+          title: expect.stringContaining('Inspect the changes with git'),
         })
       );
     });
@@ -1801,6 +1829,11 @@ describe('runSingleMigrationWorker', () => {
       expect(stdout).toContain('"logs": "gen output"');
       expect(stdout).toContain('"path": "a.ts"');
       expect(stdout).toContain('"agentContext"');
+      expect(output.log).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: `The following migration's generator ran without an AI-driven part. ${RUN_NEXT_FIRST}`,
+        })
+      );
     });
 
     it('succeeds a validating run without a validation pass when the generator made no changes', async () => {
