@@ -144,13 +144,13 @@ function assertContainedInFixture(installDir: string, workspace: string): void {
 }
 
 /**
- * The recursive delete, refusing any path outside the fixture. The only way a
- * path gets here failing that check is that assertContainedInFixture already
- * threw for the same test on the same value, so this guard is load-bearing
- * precisely AFTER a throwing beforeEach -- vitest still runs afterEach. It is
- * skipped only when the throw hits every test in the describe, because then
- * the state afterEach dereferences is never assigned and afterEach aborts
- * before reaching here.
+ * The only rmSync in this file, refusing anything outside the fixture. Both
+ * afterEach bodies are defensive, so this is always reached and the check is
+ * live rather than a fallback. Three things fail it: a path
+ * assertContainedInFixture already threw on, a stale installDir from an
+ * earlier test measured against a newer workspace, and an unassigned value
+ * when beforeEach threw before mkdtemp returned. The fixture root passes
+ * trivially, since a path always startsWith itself.
  */
 function removeFixtureDir(dir: string, workspace: string): void {
   if (!dir || !dir.startsWith(workspace)) {
