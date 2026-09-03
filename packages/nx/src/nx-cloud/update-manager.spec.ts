@@ -106,12 +106,17 @@ const nativeBindings = findNativeBindings();
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-// The install directory is derived from cacheDirectory(). Scrubbing the
-// environment is not enough to contain it: the root it falls back to is
-// derived from git identity, which GIT_DIR redirects, so a fixture can still
-// resolve onto a real workspace's cache. NX_CACHE_DIRECTORY takes precedence
-// over every other input, so PINNING it into the fixture is positive control
-// rather than the absence of an override.
+// getBundleInstallDefaultLocation() resolves in three steps: no nx.json at the
+// workspace root gives a tmpdir path, an existing node_modules/.cache/nx/cloud
+// gives that legacy path, and only otherwise does it use cacheDir. This
+// fixture writes nx.json and has no node_modules, so it reaches the third
+// step, where NX_CACHE_DIRECTORY is honoured -- which is why pinning that
+// variable works here. It is not a general precedence: the two earlier steps
+// never consult it, and neither does sharedUserDataDir on the shared-root
+// branch of cacheDir. Scrubbing instead of pinning was not enough because the
+// root cacheDir falls back to is derived from git identity, which GIT_DIR
+// redirects onto a real workspace. assertContainedInFixture is what catches
+// resolution landing anywhere unexpected regardless.
 const CACHE_DIR_ENV = 'NX_CACHE_DIRECTORY';
 let originalCacheDirEnv: string | undefined;
 
@@ -139,11 +144,13 @@ function assertContainedInFixture(installDir: string, workspace: string): void {
 }
 
 /**
- * The recursive delete, refusing any path outside the fixture. It contributes
- * only where afterEach actually reaches it, which means an escape some tests
- * hit and others do not, so afterEach's earlier statements still succeed. It
- * is NOT what covers a throwing beforeEach: there afterEach aborts on its
- * first statement and never gets here.
+ * The recursive delete, refusing any path outside the fixture. The only way a
+ * path gets here failing that check is that assertContainedInFixture already
+ * threw for the same test on the same value, so this guard is load-bearing
+ * precisely AFTER a throwing beforeEach -- vitest still runs afterEach. It is
+ * skipped only when the throw hits every test in the describe, because then
+ * the state afterEach dereferences is never assigned and afterEach aborts
+ * before reaching here.
  */
 function removeFixtureDir(dir: string, workspace: string): void {
   if (!dir || !dir.startsWith(workspace)) {
@@ -187,8 +194,11 @@ describe('update-manager bundle download', () => {
   });
 
   afterEach(() => {
-    consoleError.mockRestore();
-    rmSync(workspace, { recursive: true, force: true });
+    // Every dereference here is defensive: beforeEach can throw before
+    // assigning these, and an afterEach that aborts never reaches the
+    // cleanup below it.
+    consoleError?.mockRestore();
+    removeFixtureDir(workspace, workspace);
     removeFixtureDir(installDir, workspace);
   });
 
@@ -560,7 +570,7 @@ describe('update-manager download lock', () => {
     // native flock outlives the file, and vitest kills a worker that is slow
     // to exit, which loses this file's results rather than failing a test.
     await Promise.all(
-      peers.map(
+      (peers ?? []).map(
         (peer) =>
           new Promise<void>((resolve) => {
             if (peer.exitCode !== null || peer.signalCode !== null) {
@@ -572,7 +582,7 @@ describe('update-manager download lock', () => {
           })
       )
     );
-    rmSync(workspace, { recursive: true, force: true });
+    removeFixtureDir(workspace, workspace);
     removeFixtureDir(installDir, workspace);
   });
 
