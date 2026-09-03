@@ -1260,6 +1260,75 @@ describe('orchestrator', () => {
       expect(readRunState(dir).steps[0].status).toBe('pending');
     });
 
+    it('answers ready with the run identity, its root, the runbook path and the reconcile command', async () => {
+      const result = await runOrchestratorInit(
+        initInput({ migrations: [genMig('@nx/js', 'a')] })
+      );
+
+      const { runId } = findActiveRun(root).active;
+      expect(result).toEqual({
+        kind: 'ready',
+        runId,
+        runRoot: root,
+        runbookPath: join(runDir(root, runId), 'RUNBOOK.md'),
+        reconcileCommand: `npx nx migrate --run-id=${runId}`,
+      });
+      expect(result).toMatchObject({
+        reconcileCommand: lastBlock().payload.next,
+      });
+    });
+
+    it('answers refused when the runbook is missing and a different nx wrote the run', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        planHash: computePlanHash(migrationsJson),
+        plan: migrationsJson.migrations,
+        nxVersion: '1.0.0',
+        runbook: false,
+      });
+
+      expect(await runOrchestratorInit(initInput(migrationsJson))).toEqual({
+        kind: 'refused',
+      });
+    });
+
+    it('creates the run and claims the analytics watermark without emitting anything when agent instructions are off', async () => {
+      const result = await runOrchestratorInit({
+        ...initInput({ migrations: [genMig('@nx/js', 'a')] }),
+        emitAgentInstructions: false,
+      });
+
+      expect(result).toMatchObject({ kind: 'ready', runRoot: root });
+      const { runId, state } = findActiveRun(root).active;
+      expect(existsSync(join(runDir(root, runId), 'RUNBOOK.md'))).toBe(true);
+      expect(state.analytics.startEmitted).toBe(true);
+      expect(mockInit).toHaveBeenCalledTimes(1);
+      expect(stdout).toBe('');
+      expect(logged).toEqual([]);
+    });
+
+    it('resumes the active run without emitting agent instructions when they are off', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        planHash: computePlanHash(migrationsJson),
+        plan: migrationsJson.migrations,
+      });
+
+      const result = await runOrchestratorInit({
+        ...initInput(migrationsJson),
+        emitAgentInstructions: false,
+      });
+
+      expect(result).toMatchObject({ kind: 'ready', runId: 'run-1' });
+      expect(parseRunbookBlocks()).toHaveLength(0);
+      expect(parseBlocks()).toHaveLength(0);
+      expect(logged.map((l) => l.title)).toEqual([
+        'nx migrate: resuming run run-1',
+      ]);
+    });
+
     it('replaces a non-regular entry at the runbook path with the re-rendered runbook', async () => {
       const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
       const dir = setupRun('run-1', {

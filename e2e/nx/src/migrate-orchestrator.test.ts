@@ -14,7 +14,13 @@ import {
   waitUntil,
 } from '@nx/e2e-utils';
 import { spawn } from 'child_process';
-import { existsSync, writeFileSync } from 'fs';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  realpathSync,
+  writeFileSync,
+} from 'fs';
 import { dirname, join } from 'path';
 
 // Mirrors getPackageManagerCommand().exec (nx/src/utils/package-manager.ts).
@@ -1297,4 +1303,239 @@ describe('migrate orchestrator (dark launch)', () => {
     }
     expect(runCommand('git status --porcelain').trim()).toBe('');
   }, 600000);
+
+  // --- master session (dark) -----------------------------------------------
+
+  // A `claude` on PATH that records how it was started, then drives the run
+  // the way a session would: through the reconcile command in its bootstrap.
+  // Started by the per-step runner instead, it writes the step's handoff.
+  const FAKE_AGENT_SCRIPT = `#!/usr/bin/env node
+const { execSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+const record = (entry) =>
+  fs.appendFileSync(process.env.FAKE_AGENT_LOG, JSON.stringify(entry) + '\\n');
+const args = process.argv.slice(2);
+record({
+  args,
+  cwd: process.cwd(),
+  env: {
+    NX_MIGRATE_ORCHESTRATOR: process.env.NX_MIGRATE_ORCHESTRATOR ?? null,
+    NX_MIGRATE_USE_LOCAL: process.env.NX_MIGRATE_USE_LOCAL ?? null,
+    NX_MIGRATE_SKIP_INSTALL: process.env.NX_MIGRATE_SKIP_INSTALL ?? null,
+  },
+});
+const master = args.indexOf('--append-system-prompt');
+if (master === -1) {
+  const handoffPath = args[args.length - 1].match(
+    /<handoff_path>\\n?([\\s\\S]*?)\\n?<\\/handoff_path>/
+  )[1];
+  fs.writeFileSync(
+    handoffPath.trim(),
+    JSON.stringify({ status: 'success', summary: 'applied by fake agent' })
+  );
+  process.exit(0);
+}
+if (process.env.FAKE_AGENT_EXIT_EARLY) {
+  process.exit(3);
+}
+const bootstrap = args[master + 2];
+const reconcile = bootstrap.match(/run \\x60([^\\x60]+)\\x60/)[1];
+const runbookPath = bootstrap.match(/runbook at (\\S+) in full/)[1];
+record({ runbook: fs.readFileSync(runbookPath, 'utf8').split('\\n')[0] });
+const env = { ...process.env, CLAUDECODE: '1' };
+function run(command) {
+  try {
+    return execSync(command, { env, encoding: 'utf8', stdio: 'pipe' });
+  } catch (e) {
+    record({ failed: command, stdout: e.stdout, stderr: e.stderr });
+    throw e;
+  }
+}
+function lastBlock(output) {
+  const re =
+    /<nx_migrate_step run-id="([^"]*)" step="([^"]*)" action="([^"]*)">\\n([\\s\\S]*?)\\n<\\/nx_migrate_step>/g;
+  let match;
+  let last = null;
+  while ((match = re.exec(output)) !== null) {
+    last = { runId: match[1], step: match[2], action: match[3], payload: JSON.parse(match[4]) };
+  }
+  if (!last) throw new Error('No step block in:\\n' + output);
+  return last;
+}
+let block = lastBlock(run(reconcile));
+let dispenses = 0;
+while (block.action !== 'complete') {
+  if (++dispenses > 25) throw new Error('Did not complete; last action ' + block.action);
+  if (block.action === 'next-step') {
+    run(block.payload.command);
+  } else if (block.action === 'await-prompt') {
+    fs.writeFileSync(path.join(process.cwd(), 'applied-' + block.step + '.txt'), 'applied by fake agent');
+    const handoffPath = block.payload.instructions.match(/^Handoff file: (.+)$/m)[1];
+    fs.writeFileSync(handoffPath, JSON.stringify({ status: 'success', summary: 'applied by fake agent' }));
+  } else {
+    throw new Error('Unexpected action ' + block.action + ': ' + JSON.stringify(block.payload));
+  }
+  block = lastBlock(run(block.payload.next));
+}
+record({ complete: block.runId });
+`;
+
+  function installFakeAgent(): { binDir: string; logFile: string } {
+    const binDir = join(tmpProjPath(), 'fake-agent');
+    mkdirSync(binDir, { recursive: true });
+    writeFileSync(join(binDir, 'claude'), FAKE_AGENT_SCRIPT, { mode: 0o755 });
+    return { binDir, logFile: join(tmpProjPath(), 'fake-agent.log') };
+  }
+
+  function readFakeAgentLog(logFile: string): Record<string, any>[] {
+    if (!existsSync(logFile)) return [];
+    return readFileSync(logFile, 'utf8')
+      .split('\n')
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+  }
+
+  // `--agentic=<id>` enables only on a TTY, so nx runs in a real terminal; the
+  // exit code comes back through a file because the terminal reports only
+  // its own status.
+  async function runMigrateInTerminal(
+    env: Record<string, string>
+  ): Promise<{ exitCode: number; output: string }> {
+    const { RustPseudoTerminal } = require('nx/src/native');
+    const exitFile = join(tmpProjPath(), 'migrate-exit-code');
+    const nxBin = join(tmpProjPath(), 'node_modules', '.bin', 'nx');
+    let output = '';
+    const child = new RustPseudoTerminal().runCommand(
+      `${nxBin} migrate --run-migrations=migrations.json --agentic=claude-code --no-create-commits; echo $? > ${exitFile}`,
+      tmpProjPath(),
+      {
+        ...getStrippedEnvironmentVariables(),
+        CI: 'true',
+        FORCE_COLOR: 'false',
+        NX_DAEMON: 'false',
+        NX_MIGRATE_USE_LOCAL: 'true',
+        NX_MIGRATE_SKIP_INSTALL: 'true',
+        ...env,
+      },
+      undefined,
+      false,
+      true
+    );
+    child.onOutput((message: string) => {
+      output += message;
+    });
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(
+        () =>
+          reject(
+            new Error(`nx migrate did not exit within 5 minutes:\n${output}`)
+          ),
+        300000
+      );
+      child.onExit(() => {
+        clearTimeout(timer);
+        resolve();
+      });
+    });
+    return {
+      exitCode: Number(readFileSync(exitFile, 'utf8').trim()),
+      output,
+    };
+  }
+
+  function runDirs(): string[] {
+    if (!existsSync(join(tmpProjPath(), '.nx', 'migrate-runs'))) return [];
+    return listFiles('.nx/migrate-runs').filter((f) => f !== 'init.lock');
+  }
+
+  // The fake agent is a POSIX script; Windows acceptance is the shim spec.
+  const describeMaster =
+    process.platform === 'win32' ? describe.skip : describe;
+
+  describeMaster('master session (dark)', () => {
+    it('should hand a user-initiated run to one agent session that drives it to completion', async () => {
+      writePlan([genMig, promptMig]);
+      const { binDir, logFile } = installFakeAgent();
+
+      const { exitCode, output } = await runMigrateInTerminal({
+        PATH: `${binDir}:${process.env.PATH}`,
+        FAKE_AGENT_LOG: logFile,
+        NX_MIGRATE_ORCHESTRATOR: 'true',
+      });
+
+      expect(exitCode).toBe(0);
+      expect(output).toContain('Starting Claude Code to drive migrate run');
+      expect(output).toContain('is complete');
+      expect(output).not.toContain('<nx_migrate_runbook');
+      const log = readFakeAgentLog(logFile);
+      const starts = log.filter((entry) => entry.args);
+      expect(starts).toHaveLength(1);
+      expect(starts[0].args.slice(0, 3)).toEqual([
+        '--allowedTools',
+        expect.stringMatching(
+          /^Edit\(\.nx\/migrate-runs\/[^/]+\/handoffs\/\*\*\)$/
+        ),
+        '--append-system-prompt',
+      ]);
+      expect(starts[0].args).toHaveLength(5);
+      expect(realpathSync(starts[0].cwd)).toBe(realpathSync(tmpProjPath()));
+      expect(starts[0].env).toEqual({
+        NX_MIGRATE_ORCHESTRATOR: null,
+        NX_MIGRATE_USE_LOCAL: null,
+        NX_MIGRATE_SKIP_INSTALL: null,
+      });
+      expect(log.find((entry) => entry.runbook)).toBeDefined();
+      const done = log.find((entry) => entry.complete);
+      expect(done).toBeDefined();
+      expect(runDirs()).toEqual([done.complete]);
+      const state = readRunStateFile(done.complete);
+      expect(state.status).toBe('completed');
+      expect(state.steps.map((s) => s.status)).toEqual([
+        'succeeded',
+        'succeeded',
+      ]);
+    }, 600000);
+
+    it('should exit 1 with the resume hint when the agent session ends before the run completes', async () => {
+      writePlan([genMig]);
+      const { binDir, logFile } = installFakeAgent();
+
+      const { exitCode, output } = await runMigrateInTerminal({
+        PATH: `${binDir}:${process.env.PATH}`,
+        FAKE_AGENT_LOG: logFile,
+        NX_MIGRATE_ORCHESTRATOR: 'true',
+        FAKE_AGENT_EXIT_EARLY: '1',
+      });
+
+      expect(exitCode).toBe(1);
+      expect(output).toContain('is still active');
+      expect(output).toContain('resume');
+      expect(runDirs()).toHaveLength(1);
+      expect(readRunStateFile(runDirs()[0]).status).toBe('active');
+    }, 600000);
+
+    it('should keep spawning the agent per step without the gate env var', async () => {
+      writePlan([promptMig]);
+      const { binDir, logFile } = installFakeAgent();
+
+      const { exitCode } = await runMigrateInTerminal({
+        PATH: `${binDir}:${process.env.PATH}`,
+        FAKE_AGENT_LOG: logFile,
+      });
+
+      expect(exitCode).toBe(0);
+      const starts = readFakeAgentLog(logFile).filter((entry) => entry.args);
+      expect(starts).toHaveLength(1);
+      expect(starts[0].args).toContain('--system-prompt');
+      expect(starts[0].args).not.toContain('--append-system-prompt');
+      for (const dir of runDirs()) {
+        expect(
+          existsSync(
+            join(tmpProjPath(), '.nx', 'migrate-runs', dir, 'run.json')
+          )
+        ).toBe(false);
+      }
+    }, 600000);
+  });
 });
