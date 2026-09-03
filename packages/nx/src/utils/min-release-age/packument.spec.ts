@@ -1,5 +1,6 @@
 import type { Mock } from 'vitest';
-vi.mock('../package-manager', () => ({
+vi.mock('../package-manager', async () => ({
+  ...(await vi.importActual('../package-manager')),
   packageRegistryView: vi.fn(),
 }));
 
@@ -23,6 +24,22 @@ describe('fetchRegistryMetadata', () => {
     const meta = await fetchRegistryMetadata('pkg-a');
     expect(meta.versions).toEqual(['1.0.0']);
     expect(meta.distTags).toEqual({ latest: '1.0.0' });
+  });
+
+  it('unwraps the one-element array npm 12 prints for a packument', async () => {
+    viewMock.mockResolvedValue(
+      JSON.stringify([
+        {
+          name: 'pkg-a',
+          versions: ['1.0.0', '1.1.0'],
+          'dist-tags': { latest: '1.1.0' },
+        },
+      ])
+    );
+    const meta = await fetchRegistryMetadata('pkg-a');
+    expect(meta.name).toBe('pkg-a');
+    expect(meta.versions).toEqual(['1.0.0', '1.1.0']);
+    expect(meta.distTags).toEqual({ latest: '1.1.0' });
   });
 
   it('keeps an array versions field', async () => {

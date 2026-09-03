@@ -2,7 +2,13 @@ vi.mock('child_process');
 
 import { join } from 'path';
 import * as childProcess from 'child_process';
-import { mkdtempSync, rmSync } from 'fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from 'fs';
 import { tmpdir } from 'os';
 import { createTreeWithEmptyWorkspace } from '../generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from '../generators/tree';
@@ -671,6 +677,29 @@ describe('readModulePackageJson', () => {
       expect(() => readModulePackageJson(s)).not.toThrow();
     }
   );
+
+  it('resolves a package named like the calling package from the given paths', () => {
+    // This spec runs inside the `nx` package, whose exports map lets Node
+    // self-reference `nx/...`. The explicit require paths must still win, as
+    // they do for the temp install `nx migrate` reads `nx@<target>` from.
+    const dir = realpathSync(
+      mkdtempSync(join(tmpdir(), 'nx-read-module-package-json-'))
+    );
+    try {
+      mkdirSync(join(dir, 'node_modules', 'nx'), { recursive: true });
+      writeFileSync(
+        join(dir, 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '0.0.0-fixture' })
+      );
+
+      const { path, packageJson } = readModulePackageJson('nx', [dir]);
+
+      expect(path).toBe(join(dir, 'node_modules', 'nx', 'package.json'));
+      expect(packageJson.version).toBe('0.0.0-fixture');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe('getDependencyVersionFromPackageJson', () => {
