@@ -23,10 +23,16 @@ pub fn selective_files_hash(
     let mut archived = vec![];
     let mut not_archived = vec![];
     let now = std::time::Instant::now();
+    // Entries read during the previous gather cannot be trusted on an mtime
+    // match alone: where mtime is whole-second (every platform but Windows), a
+    // rewrite landing in the same second as the read leaves the timestamp
+    // identical and the archived hash silently stale. Re-hash those; they are a
+    // handful of files touched during the gather window, not the workspace.
+    let gathered_at = archived_files.gathered_at();
 
     for file in files {
         if let Some(archived_file) = archived_files.remove(&file.normalized_path) {
-            if archived_file.1 == file.mod_time {
+            if archived_file.1 == file.mod_time && file.mod_time < gathered_at {
                 archived.push((file.normalized_path, archived_file));
                 continue;
             }
@@ -146,7 +152,11 @@ mod tests {
             ),
         ]
         .into_iter()
-        .collect::<NxFileHashes>();
+        .collect::<NxFileHashes>()
+        // Stamped past every file's mtime so the unmodified entries are eligible
+        // for reuse; without a stamp an archive is treated as entirely
+        // untrustworthy. See `should_rehash_entries_read_during_the_gather_window`.
+        .with_gathered_at(get_mod_time(&temp.child("test.txt").metadata().unwrap()) + 1);
 
         let hashed_files = super::selective_files_hash(temp.path(), archived_files);
         let mut hashed_files = hashed_files
@@ -164,5 +174,57 @@ mod tests {
                 "test.txt"
             ]
         )
+    }
+
+    #[test]
+    fn should_rehash_entries_read_during_the_gather_window() {
+        // An entry whose mtime is at or after the gather's own stamp was read
+        // while the workspace could still change inside that same mtime tick, so
+        // a matching timestamp does not prove the content matches. Reusing the
+        // archived hash here is how a rewrite goes missing permanently.
+        let temp = TempDir::new().unwrap();
+        temp.child("same-tick.txt").write_str("rewritten").unwrap();
+        let mod_time = get_mod_time(&temp.child("same-tick.txt").metadata().unwrap());
+
+        let archived = vec![(
+            String::from("same-tick.txt"),
+            NxFileHashed(String::from("stale-hash"), mod_time),
+        )]
+        .into_iter()
+        .collect::<NxFileHashes>()
+        .with_gathered_at(mod_time);
+
+        let hashed = super::selective_files_hash(temp.path(), archived);
+        assert_ne!(
+            hashed.get("same-tick.txt").unwrap().0,
+            "stale-hash",
+            "an entry read during the gather window must be re-hashed, not reused"
+        );
+    }
+
+    #[test]
+    fn should_still_reuse_entries_settled_before_the_gather() {
+        // The optimization has to survive the fix: an entry that stopped changing
+        // before the gather began cannot have been rewritten inside the read's
+        // tick, so it is reused without the file being touched. If this breaks,
+        // every rescan degrades into a full re-hash of the workspace.
+        let temp = TempDir::new().unwrap();
+        temp.child("settled.txt").write_str("rewritten").unwrap();
+        let mod_time = get_mod_time(&temp.child("settled.txt").metadata().unwrap());
+
+        let archived = vec![(
+            String::from("settled.txt"),
+            NxFileHashed(String::from("archived-hash"), mod_time),
+        )]
+        .into_iter()
+        .collect::<NxFileHashes>()
+        .with_gathered_at(mod_time + 1);
+
+        let hashed = super::selective_files_hash(temp.path(), archived);
+        assert_eq!(
+            hashed.get("settled.txt").unwrap().0,
+            "archived-hash",
+            "an entry settled before the gather should still be reused"
+        );
     }
 }

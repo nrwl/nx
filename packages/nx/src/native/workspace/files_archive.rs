@@ -14,19 +14,37 @@ pub struct NxFileHashed(pub String, pub i64);
 
 #[derive(Archive, Deserialize, Serialize, Debug, PartialEq)]
 #[archive(check_bytes)]
-pub struct NxFileHashes(HashMap<String, NxFileHashed>);
+pub struct NxFileHashes {
+    files: HashMap<String, NxFileHashed>,
+    /// The value `gather_stamp()` returned when the gather that wrote this
+    /// archive began. An entry whose mtime is at or after it was read while the
+    /// workspace could still change within the same mtime tick, so its hash may
+    /// already be stale and must not be reused. See `selective_files_hash`.
+    gathered_at: i64,
+}
+
+impl NxFileHashes {
+    pub fn gathered_at(&self) -> i64 {
+        self.gathered_at
+    }
+
+    pub fn with_gathered_at(mut self, gathered_at: i64) -> Self {
+        self.gathered_at = gathered_at;
+        self
+    }
+}
 
 impl Deref for NxFileHashes {
     type Target = HashMap<String, NxFileHashed>;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.files
     }
 }
 
 impl DerefMut for NxFileHashes {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
+        &mut self.files
     }
 }
 
@@ -34,7 +52,12 @@ impl FromIterator<(String, NxFileHashed)> for NxFileHashes {
     fn from_iter<T: IntoIterator<Item = (String, NxFileHashed)>>(iter: T) -> NxFileHashes {
         let mut map = HashMap::with_hasher(Default::default());
         map.extend(iter);
-        NxFileHashes(map)
+        // 0 makes every entry ambiguous until a gather stamps it, so a hash is
+        // never reused on the strength of an unset timestamp.
+        NxFileHashes {
+            files: map,
+            gathered_at: 0,
+        }
     }
 }
 
