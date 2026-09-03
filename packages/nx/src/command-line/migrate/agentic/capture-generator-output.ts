@@ -1,15 +1,111 @@
 import { format } from 'node:util';
 import { logger } from '../../../utils/logger';
+import { truncateUtf8 } from './handoff';
 
 /**
  * Tees `console.{log,warn,error,info,debug}` into an internal buffer while
  * preserving the original behavior. Does not intercept
  * `process.{stdout,stderr}.write` — those bypass `console` and would also
  * pick up unrelated framework output. Restoration is idempotent.
+ *
+ * `flush()` returns at most `MAX_GENERATOR_OUTPUT_BYTES`: up to the first
+ * `HEAD_BYTES` of output, a marker with the omitted byte count, and the most
+ * recent output. The terminal still receives everything through the tee.
  */
 export interface GeneratorOutputCapture {
   flush(): string;
   restore(): void;
+}
+
+export const MAX_GENERATOR_OUTPUT_BYTES = 16384;
+const HEAD_BYTES = 4096;
+const omittedMarker = (omitted: number | string) =>
+  `[nx migrate: ${omitted} bytes of generator output omitted]`;
+// Reserved at the widest number spelling so a growing count cannot push a
+// flush over the cap.
+export const MARKER_BYTES = Buffer.byteLength(
+  `\n${omittedMarker(Number.MAX_VALUE)}\n`
+);
+const TAIL_BYTES = MAX_GENERATOR_OUTPUT_BYTES - HEAD_BYTES - MARKER_BYTES;
+
+// Keeps the last `maxBytes` of `value`, cut on a code point.
+function keepTailUtf8(value: string, maxBytes: number): string {
+  let start = value.length;
+  let kept = 0;
+  while (start > 0) {
+    const low = value.charCodeAt(start - 1);
+    const high = start > 1 ? value.charCodeAt(start - 2) : 0;
+    const from =
+      low >= 0xdc00 && low <= 0xdfff && high >= 0xd800 && high <= 0xdbff
+        ? start - 2
+        : start - 1;
+    const bytes = Buffer.byteLength(value.slice(from, start));
+    if (kept + bytes > maxBytes) break;
+    kept += bytes;
+    start = from;
+  }
+  return value.slice(start);
+}
+
+class BoundedOutput {
+  private readonly head: string[] = [];
+  private headBytes = 0;
+  private headOpen = true;
+  // The head ends mid-record, so no newline separates it from the tail.
+  private headSplit = false;
+  private readonly tail: { text: string; cost: number }[] = [];
+  private tailBytes = 0;
+  private omitted = 0;
+
+  append(record: string): void {
+    if (this.headOpen) {
+      const separator = this.head.length ? 1 : 0;
+      const bytes = Buffer.byteLength(record);
+      if (this.headBytes + separator + bytes <= HEAD_BYTES) {
+        this.head.push(record);
+        this.headBytes += separator + bytes;
+        return;
+      }
+      this.headOpen = false;
+      const prefix = truncateUtf8(
+        record,
+        HEAD_BYTES - this.headBytes - separator
+      );
+      if (prefix) {
+        this.head.push(prefix);
+        this.headBytes += separator + Buffer.byteLength(prefix);
+        this.headSplit = true;
+        record = record.slice(prefix.length);
+      }
+    }
+    // Each tail record is charged its bytes plus a following newline; the last
+    // record's unused newline is one byte of slack at render time.
+    const cost = Buffer.byteLength(record) + 1;
+    this.tail.push({ text: record, cost });
+    this.tailBytes += cost;
+    while (this.tailBytes > TAIL_BYTES && this.tail.length > 1) {
+      const dropped = this.tail.shift().cost;
+      this.tailBytes -= dropped;
+      this.omitted += dropped;
+    }
+    if (this.tailBytes > TAIL_BYTES) {
+      const text = keepTailUtf8(this.tail[0].text, TAIL_BYTES - 1);
+      const kept = Buffer.byteLength(text) + 1;
+      this.omitted += this.tailBytes - kept;
+      this.tail[0] = { text, cost: kept };
+      this.tailBytes = kept;
+    }
+  }
+
+  render(): string {
+    const head = this.head.join('\n');
+    const tail = this.tail.map((record) => record.text).join('\n');
+    if (this.omitted > 0) {
+      return `${head}\n${omittedMarker(this.omitted)}\n${tail}`;
+    }
+    if (!this.tail.length) return head;
+    return this.headSplit ? head + tail : `${head}\n${tail}`;
+  }
 }
 
 type ConsoleMethod = 'log' | 'warn' | 'error' | 'info' | 'debug';
@@ -43,7 +139,7 @@ export function installGeneratorOutputCapture(): GeneratorOutputCapture {
     }
   }
 
-  const buffer: string[] = [];
+  const buffer = new BoundedOutput();
   const originals = new Map<ConsoleMethod, Console[ConsoleMethod]>();
 
   for (const method of CONSOLE_METHODS) {
@@ -52,7 +148,7 @@ export function installGeneratorOutputCapture(): GeneratorOutputCapture {
     const wrapper = ((...args: unknown[]) => {
       original(...args);
       try {
-        buffer.push(format(...args));
+        buffer.append(format(...args));
       } catch {
         // `format` is robust against the common pathologies but a user arg
         // with a throwing `toString()` would otherwise turn a benign
@@ -71,7 +167,7 @@ export function installGeneratorOutputCapture(): GeneratorOutputCapture {
   let restored = false;
   return {
     flush(): string {
-      return buffer.join('\n');
+      return buffer.render();
     },
     restore(): void {
       if (restored) return;
