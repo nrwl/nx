@@ -58,7 +58,7 @@ vi.mock('../cache', async () => ({
 
 import { waitForSocketConnection } from '../../utils/wait-for-socket-connection';
 import { clientLogger } from '../logger';
-import { readDaemonProcessJsonCache } from '../cache';
+import { getDaemonProcessIdSync, readDaemonProcessJsonCache } from '../cache';
 import { DAEMON_OUTPUT_LOG_FILE as logFile } from '../tmp-dir';
 import { SOCKET_REFUSED_EXIT_CODE } from '../../utils/socket-refused-exit-code';
 import {
@@ -455,6 +455,17 @@ describe('startInBackground', () => {
 
     expect((error as any).daemonPermissionError).toBeUndefined();
     expect((error as any).internalDaemonError).toBe(true);
+  });
+
+  // The spawned starter exits when a healthy daemon owns the workspace, so the
+  // registration's pid is the one to report (4242 is the spawn mock's).
+  it('should report the registered daemon pid, not the pid of the process it spawned', async () => {
+    (waitForSocketConnection as Mock).mockResolvedValue({
+      destroy: vi.fn(),
+    });
+    (getDaemonProcessIdSync as Mock).mockReturnValue(9001);
+
+    expect(await daemonClient.startInBackground()).toBe(9001);
   });
 });
 
