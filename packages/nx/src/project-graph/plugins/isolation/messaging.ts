@@ -40,6 +40,8 @@ type PluginMessageDefs = DefineMessages<{
       name: string;
       pluginPath: string;
       shouldRegisterTSTranspiler: boolean;
+      isSourcePlugin: boolean;
+      workspacePackageNames: string[];
     };
     result:
       | {

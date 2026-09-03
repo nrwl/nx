@@ -164,16 +164,16 @@ export function getRootTsConfigResolveExportsConditions(
 
 /**
  * Node `--conditions <name>` CLI args for spawning an isolated plugin worker
- * with the plugin-resolution conditions active at startup. Mirrors the set Nx
- * uses to resolve the plugin entry (`getRootTsConfigResolveExportsConditions`)
- * so the entry and the plugin's transitive workspace imports resolve the same
- * way; Node's own resolver otherwise ignores TypeScript `customConditions` and a
- * source-loaded plugin's imports land on their unbuilt `dist`.
+ * whose entry Nx loaded from source, so the plugin's transitive workspace
+ * imports resolve the way the workspace tsconfig does. Only the tsconfig
+ * `customConditions` are passed: the `development` compat fallback used for
+ * the entry lookup would also flip third-party packages that publish a
+ * `development` export onto their unbundled builds.
  */
 export function getPluginResolveConditionNodeArgs(
   root: string = workspaceRoot
 ): string[] {
-  return getRootTsConfigResolveExportsConditions(root).flatMap((c) => [
+  return getRootTsConfigCustomConditions(root).flatMap((c) => [
     '--conditions',
     c,
   ]);
@@ -181,9 +181,9 @@ export function getPluginResolveConditionNodeArgs(
 
 /**
  * Plugin conditions must never apply to the daemon process: built generators
- * run there too. Runtimes without `module.registerHooks` get no scoped
- * conditions on this path; isolated plugin workers still receive them at
- * startup, and `NODE_OPTIONS=--conditions` remains the escape hatch.
+ * run there too. Source-loaded entries get scoped conditions from
+ * `registerSourceGraphResolver` instead, and `NODE_OPTIONS=--conditions`
+ * remains the escape hatch.
  */
 export function getDaemonResolveConditionNodeArgs(): string[] {
   return [];
