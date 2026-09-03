@@ -696,6 +696,51 @@ mod tests {
     }
 
     #[test]
+    fn rescan_flag_rearms_per_burst_so_a_later_overflow_is_not_swallowed() {
+        // The overflow warn is logged once per burst, gated on the
+        // pending_rescan false->true transition. This pins that the gate
+        // re-arms after a flush: a second overflow within a burst coalesces
+        // into the one already-scheduled re-walk (recovered, logged once),
+        // and a genuine new burst after a flush re-arms the flag (logged and
+        // recovered again). The flag can never persist across a flush, so no
+        // real overflow goes unlogged.
+        use notify::event::Flag;
+
+        let dir = tempdir().expect("tempdir");
+        let canonical = dir.path().canonicalize().expect("canonicalize");
+        let mut pipeline = WatchPipeline::new(
+            canonical.to_str().expect("utf-8 path").to_string(),
+            &[],
+            false,
+        )
+        .expect("pipeline");
+        let overflow = || notify::Event::new(notify::EventKind::Other).set_flag(Flag::Rescan);
+
+        // First overflow of a burst: the flag was clear, so the gate logs.
+        assert!(!pipeline.pending_rescan);
+        pipeline.ingest_event(Ok(overflow())).expect("rescan 1");
+        assert!(pipeline.pending_rescan, "first overflow arms the flag");
+
+        // A second flag in the same burst coalesces: one marker, no re-log.
+        pipeline.ingest_event(Ok(overflow())).expect("rescan 1b");
+        let events = pipeline.snapshot_events();
+        assert_eq!(events.len(), 1, "coalesced to a single rescan marker");
+        assert!(matches!(events[0].r#type, EventType::rescan));
+
+        // The flush clears the flag.
+        pipeline.reset_burst();
+        assert!(!pipeline.pending_rescan, "flush clears the flag");
+
+        // A new burst re-arms: the gate would log again and the marker fires
+        // again, so the later overflow is neither swallowed nor unrecovered.
+        pipeline.ingest_event(Ok(overflow())).expect("rescan 2");
+        assert!(pipeline.pending_rescan, "a new burst re-arms the flag");
+        let events = pipeline.snapshot_events();
+        assert_eq!(events.len(), 1);
+        assert!(matches!(events[0].r#type, EventType::rescan));
+    }
+
+    #[test]
     fn is_dir_from_kind_only_answers_definitive_kinds() {
         use crate::native::watch::types::is_dir_from_kind;
         use notify::EventKind;
