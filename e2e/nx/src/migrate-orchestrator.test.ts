@@ -444,10 +444,18 @@ async function killWorkerAndReconcile(initOutput: string): Promise<{
 }
 
 describe('migrate orchestrator (dark launch)', () => {
+  // create-nx-workspace names the branch after git's init.defaultBranch, so
+  // it is not always `main`.
+  let defaultBranch: string;
+
   // A workspace per test: each run leaves run dirs and commits the next
   // test's assertions would see.
   beforeEach(() => {
     newProject({ packages: [] });
+    // The workspace starts on its default branch, where an orchestrated init
+    // with the default commit policy stops instead of starting a run.
+    defaultBranch = runCommand('git rev-parse --abbrev-ref HEAD').trim();
+    runCommand('git checkout -b migrate-work', { failOnError: true });
     setupMigrationPackage();
   });
 
@@ -1145,6 +1153,21 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(commitCountFor('slow-mig')).toBe(1);
     expect(commitCountFor('hybrid-mig')).toBe(1);
   }, 600000);
+
+  it('should not start a run on the default branch unless commits were asked for', () => {
+    writePlan([genMig]);
+    runCommand(`git checkout ${defaultBranch}`, { failOnError: true });
+
+    const stopped = runInit();
+    expect(stopped).toContain(
+      `Not starting the run: you are on the default branch '${defaultBranch}'`
+    );
+    expect(stopped).not.toContain('<nx_migrate_runbook');
+    expect(existsSync(join(tmpProjPath(), '.nx', 'migrate-runs'))).toBe(false);
+
+    const init = parseLastDispense(runInit(' --create-commits'));
+    expect(init.action).toBe('initialized');
+  });
 
   it('should refuse a different plan while a run is active and resume the same run on a same-plan init', () => {
     const gitignoreMig = {
