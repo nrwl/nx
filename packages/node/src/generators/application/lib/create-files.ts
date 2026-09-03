@@ -51,6 +51,9 @@ export function addAppFiles(tree: Tree, options: NormalizedSchema) {
         hasRspackPlugin(tree) && options.addPlugin !== false
           ? bundlerPluginOptions(options)
           : null,
+      // Nest resolves providers by class name, so its config keeps them
+      // through minification. Other frameworks do not need that.
+      isNest: !!options.isNest,
     }
   );
 

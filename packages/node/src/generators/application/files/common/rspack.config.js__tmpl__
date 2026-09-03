@@ -1,6 +1,8 @@
 <%_ if (rspackPluginOptions) { _%>
 const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+<%_ if (isNest) { _%>
 const rspack = require('@rspack/core');
+<%_ } _%>
 const { join } = require('path');
 
 module.exports = {
@@ -8,6 +10,7 @@ module.exports = {
     path: join(__dirname, '<%= rspackPluginOptions.outputPath %>'),
     clean: true,
   },
+<%_ if (isNest) { _%>
   optimization: {
     minimizer: [
       // Nest resolves providers by class name, so minification must not rename
@@ -20,6 +23,7 @@ module.exports = {
       }),
     ],
   },
+<%_ } _%>
   plugins: [
     new NxAppRspackPlugin({
       target: 'node',
@@ -35,7 +39,9 @@ module.exports = {
 };
 <%_ } else { _%>
 const { composePlugins, withNx } = require('@nx/rspack');
+<%_ if (isNest) { _%>
 const rspack = require('@rspack/core');
+<%_ } _%>
 
 // Nx plugins for rspack.
 module.exports = composePlugins(
@@ -45,6 +51,7 @@ module.exports = composePlugins(
   (config) => {
     config.output = { ...config.output, clean: true };
     config.devtool = 'source-map';
+<%_ if (isNest) { _%>
     // Nest resolves providers by class name, so minification must not rename
     // classes or functions.
     config.optimization = {
@@ -58,6 +65,7 @@ module.exports = composePlugins(
         }),
       ],
     };
+<%_ } _%>
     // Update the rspack config as needed here.
     // e.g. `config.plugins.push(new MyPlugin())`
     return config;

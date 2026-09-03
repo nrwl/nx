@@ -1268,6 +1268,31 @@ describe('app', () => {
   });
 
   describe('--bundler rspack', () => {
+    it('should not keep class names for a framework that does not need it', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-rspack-app',
+        bundler: 'rspack',
+        addPlugin: true,
+      });
+
+      const config = tree.read('my-rspack-app/rspack.config.js', 'utf-8');
+      expect(config).not.toContain('SwcJsMinimizerRspackPlugin');
+      expect(config).not.toContain('keep_classnames');
+    });
+
+    it('should keep class names for Nest, which resolves providers by name', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-nest-app',
+        bundler: 'rspack',
+        isNest: true,
+        addPlugin: true,
+      });
+
+      const config = tree.read('my-nest-app/rspack.config.js', 'utf-8');
+      expect(config).toContain('SwcJsMinimizerRspackPlugin');
+      expect(config).toContain('keep_classnames: true');
+    });
+
     it('should generate an rspack config and drop the webpack one', async () => {
       await applicationGenerator(tree, {
         directory: 'my-rspack-app',
