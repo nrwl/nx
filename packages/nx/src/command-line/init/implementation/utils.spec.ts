@@ -219,13 +219,12 @@ describe('utils', () => {
         },
       },
       {
-        description: 'cache directory configuration',
+        description: 'turbo cacheDir does not carry over to cacheDirectory',
         turbo: {
           cacheDir: './node_modules/.cache/turbo',
         },
         nx: {
           $schema: './node_modules/nx/schemas/nx-schema.json',
-          cacheDirectory: '.nx/cache',
         },
       },
       {
@@ -283,7 +282,6 @@ describe('utils', () => {
             ],
             default: ['{projectRoot}/**/*', 'sharedGlobals'],
           },
-          cacheDirectory: '.nx/cache',
           targetDefaults: {
             build: {
               dependsOn: ['^build'],

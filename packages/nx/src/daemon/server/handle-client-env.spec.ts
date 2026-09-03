@@ -1,0 +1,185 @@
+import type { Mock } from 'vitest';
+import { getPluginsIfLoadedOrLoading } from '../../project-graph/plugins/get-plugins';
+import { applyDaemonEnvFromClient } from '../client/daemon-environment';
+import { serverLogger } from '../logger';
+import { handleClientEnv, _setEnvForwardTimeoutMs } from './handle-client-env';
+import { invalidateGraphCache } from './project-graph-incremental-recomputation';
+
+vi.mock('../client/daemon-environment', () => ({
+  applyDaemonEnvFromClient: vi.fn(),
+}));
+vi.mock('../../project-graph/plugins/get-plugins', () => ({
+  getPluginsIfLoadedOrLoading: vi.fn(),
+}));
+vi.mock('./project-graph-incremental-recomputation', () => ({
+  invalidateGraphCache: vi.fn(),
+}));
+vi.mock('../logger', () => ({
+  serverLogger: { log: vi.fn() },
+}));
+
+describe('handleClientEnv', () => {
+  const env = { FOO: 'bar' };
+  const flushMicrotasks = () => new Promise(setImmediate);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (applyDaemonEnvFromClient as Mock).mockReturnValue(['FOO']);
+    (getPluginsIfLoadedOrLoading as Mock).mockReturnValue(undefined);
+  });
+
+  it('discards the cached graph for a client change a config write already matches', async () => {
+    // With plugins running in the daemon, a config can write the value the
+    // next client sends before that client's env arrives; process.env then
+    // has nothing to move on, but the graph in flight was computed under the
+    // previous client and must not be served to this one.
+    const actual = await vi.importActual<
+      typeof import('../client/daemon-environment')
+    >('../client/daemon-environment');
+    (applyDaemonEnvFromClient as Mock).mockImplementation(
+      actual.applyDaemonEnvFromClient
+    );
+    const originalEnv = process.env;
+    process.env = { ...originalEnv };
+    try {
+      const previous = { ...process.env };
+      await handleClientEnv(previous);
+      vi.clearAllMocks();
+      process.env.MASKED_PROBE = 'from-config';
+
+      await handleClientEnv({ ...previous, MASKED_PROBE: 'from-config' });
+
+      expect(invalidateGraphCache).toHaveBeenCalled();
+    } finally {
+      process.env = originalEnv;
+    }
+  });
+
+  it('does nothing beyond applying the env when no keys changed', async () => {
+    (applyDaemonEnvFromClient as Mock).mockReturnValue([]);
+
+    await handleClientEnv(env);
+
+    expect(applyDaemonEnvFromClient).toHaveBeenCalledWith(env);
+    expect(getPluginsIfLoadedOrLoading).not.toHaveBeenCalled();
+    expect(invalidateGraphCache).not.toHaveBeenCalled();
+  });
+
+  it('awaits worker forwarding before discarding the cached graph', async () => {
+    let resolveForward: () => void = () => {};
+    const setWorkerEnv = vi.fn().mockReturnValue(
+      new Promise<void>((resolve) => {
+        resolveForward = resolve;
+      })
+    );
+    (getPluginsIfLoadedOrLoading as Mock).mockReturnValue(
+      Promise.resolve([{ name: 'a', setWorkerEnv }])
+    );
+
+    const done = handleClientEnv(env);
+    await flushMicrotasks();
+    expect(setWorkerEnv).toHaveBeenCalledWith(env);
+    expect(invalidateGraphCache).not.toHaveBeenCalled();
+
+    resolveForward();
+    await done;
+    expect(invalidateGraphCache).toHaveBeenCalled();
+  });
+
+  it('holds a no-change client until the in-flight apply completes', async () => {
+    let resolveForward: () => void = () => {};
+    const setWorkerEnv = vi.fn().mockReturnValue(
+      new Promise<void>((resolve) => {
+        resolveForward = resolve;
+      })
+    );
+    (getPluginsIfLoadedOrLoading as Mock).mockReturnValue(
+      Promise.resolve([{ name: 'a', setWorkerEnv }])
+    );
+
+    const first = handleClientEnv(env);
+    // The second client carries the same env the first already wrote to
+    // process.env, so its own apply reports no changed keys.
+    (applyDaemonEnvFromClient as Mock).mockReturnValue([]);
+    let secondSettled = false;
+    const second = handleClientEnv(env).then(() => {
+      secondSettled = true;
+    });
+
+    await flushMicrotasks();
+    expect(secondSettled).toBe(false);
+    expect(invalidateGraphCache).not.toHaveBeenCalled();
+
+    resolveForward();
+    await first;
+    await second;
+    expect(secondSettled).toBe(true);
+    expect(invalidateGraphCache).toHaveBeenCalled();
+  });
+
+  it('proceeds after the forward timeout when a worker never acknowledges', async () => {
+    _setEnvForwardTimeoutMs(50);
+    try {
+      const setWorkerEnv = vi.fn().mockReturnValue(new Promise(() => {}));
+      (getPluginsIfLoadedOrLoading as Mock).mockReturnValue(
+        Promise.resolve([{ name: 'wedged', setWorkerEnv }])
+      );
+
+      await handleClientEnv(env);
+
+      expect(invalidateGraphCache).toHaveBeenCalled();
+      expect(serverLogger.log).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Timed out forwarding the new env to plugin workers'
+        )
+      );
+    } finally {
+      _setEnvForwardTimeoutMs(10_000);
+    }
+  });
+
+  it('settles when a worker fails to receive the env', async () => {
+    (getPluginsIfLoadedOrLoading as Mock).mockReturnValue(
+      Promise.resolve([
+        {
+          name: 'dead',
+          setWorkerEnv: vi.fn().mockRejectedValue(new Error('worker exited')),
+        },
+        { name: 'alive', setWorkerEnv: vi.fn().mockResolvedValue(undefined) },
+      ])
+    );
+
+    await handleClientEnv(env);
+
+    expect(serverLogger.log).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Failed to forward env to plugin worker "dead": worker exited'
+      )
+    );
+    expect(invalidateGraphCache).toHaveBeenCalled();
+  });
+
+  it('discards the cached graph even when no plugins are loaded', async () => {
+    await handleClientEnv(env);
+
+    expect(invalidateGraphCache).toHaveBeenCalled();
+  });
+
+  it('settles when an in-flight plugin load fails', async () => {
+    (getPluginsIfLoadedOrLoading as Mock).mockReturnValue(
+      Promise.reject(new Error('load failed'))
+    );
+
+    await expect(handleClientEnv(env)).resolves.toBeUndefined();
+    expect(invalidateGraphCache).toHaveBeenCalled();
+  });
+
+  it('skips plugins without a worker to forward to', async () => {
+    (getPluginsIfLoadedOrLoading as Mock).mockReturnValue(
+      Promise.resolve([{ name: 'in-process' }])
+    );
+
+    await expect(handleClientEnv(env)).resolves.toBeUndefined();
+    expect(invalidateGraphCache).toHaveBeenCalled();
+  });
+});

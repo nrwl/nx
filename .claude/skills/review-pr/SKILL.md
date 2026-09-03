@@ -172,11 +172,12 @@ SANDBOX=$(.claude/tools/sandbox start \
 
 This is the slowest step in the skill, but the image ships a warm pnpm store, so the install mostly links rather than downloads. It buys correctness as much as speed: a deterministic tree at the versions the PR pins. Do not skip it, even for docs-only changes.
 
-If it is unexpectedly slow, the image predates the warm store — rebuild it via `setup-review-sandbox`.
+How slow depends on whether you are the first review in the shared host: the first install in a container copies the store out of the read-only image layer (~2.3 GB, minutes), and every install after it in that container hardlinks to what is already there (~12 s). So a cold host is slow once, not every time. If it is slow on a _warm_ host, the image predates the warm store — rebuild it via `setup-review-sandbox`.
 
 Notes:
 
 - **No host mounts** — the checkout lives only inside the sandbox. All caps dropped, no privilege escalation, resources bounded. The CLI applies all of this; none of it is yours to pass.
+- **Reviews share the container, deliberately.** `start` does not create a container per review — it attaches to one shared host per image and gives this review `/work/<id>/{nx,base,mutations}`, worktrees of one shared repo. That is a disk and time optimisation, not a weakening: the boundary is still host vs. container, and isolation _between_ reviews was never claimed. It is why a review costs ~0.5 GB rather than ~4.9 GB — the pnpm store's copy-up out of the read-only image layer is ~2.3 GB, and a shared container pays it once instead of once per PR. Because the caps are now one shared budget rather than one per review, a runaway test in your PR can starve the reviews running beside it.
 - **Efficiency:** the gh-only close-without-merge signals (Step 4.5, signals 1–4 and 6–8) need no sandbox. For a **first** review, you may run those cheap signals first and only start the sandbox if no strong close signal fired — a superseded/unnecessary PR then costs no sandbox. For a **re-review**, Step 4's incremental diff needs it, so start it before Step 4. Either way, once created it must be torn down in Step 9.
 - The image carries the repo toolchain (node/java/dotnet/rust/bun via mise) baked from `mise.toml`, and `mise` auto-installs the PR's _pinned_ toolchain on first exec. It bakes **no** `node_modules` — that is what the install step above is for.
 - `tsc` and `eslint` come from that install, so agents get the versions the PR pins rather than an arbitrary latest. Report the install outcome in the charter (Step 5).
@@ -192,24 +193,28 @@ Each agent already carries this protocol in its own definition; what follows is 
 .claude/tools/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
 .claude/tools/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
 .claude/tools/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
+.claude/tools/sandbox diff <SANDBOX> [--name-only] [-- <path>...]
 .claude/tools/sandbox exec <SANDBOX> [--base] -- <CMD>
 ```
 
-Those verbs each read a **single** side. To answer "what differs between base and HEAD?", compare
-them with git through `exec` — both sides are worktrees of one repo inside the sandbox, so
-`origin/<BASE_REF_NAME>` resolves from the HEAD side and git compares tree hashes instead of walking
-files:
+Those verbs each read a **single** side. To answer "what differs between base and HEAD?", use `diff`,
+which compares tree hashes instead of walking files:
 
 ```bash
-.claude/tools/sandbox exec <SANDBOX> -- git diff --name-only origin/<BASE_REF_NAME>..HEAD
-.claude/tools/sandbox exec <SANDBOX> -- git diff origin/<BASE_REF_NAME>..HEAD -- <path>
+.claude/tools/sandbox diff <SANDBOX> --name-only
+.claude/tools/sandbox diff <SANDBOX> -- <path>
 ```
+
+**Do not spell the comparison out as `exec -- git diff origin/<BASE_REF_NAME>..HEAD`.** Reviews share
+one repo inside the container, so `origin/<BASE_REF_NAME>` is a single ref that the _next_ review's
+fetch fast-forwards — a review still running would silently start diffing against a base that moved,
+inflating its scope with commits its PR never touched. `diff` resolves the review's own immovable
+base ref, and being read-only it works from a `view` id that cannot `exec` at all.
 
 Never compare the two sides with a recursive filesystem `diff`. The HEAD side is fully installed, so
 `diff -r` walks a complete `node_modules` tree for minutes — measured at ~148s of CPU on a live
 review — and piping through `grep -v node_modules` does not help, because the walk is the cost. A
-read-only lane cannot run `exec` at all; a single file's base version is `read <path> --ref base`,
-which needs no install and no comparison.
+single file's base version is `read <path> --ref base`, which needs no install and no comparison.
 
 **Hand the read-only lanes a narrowed id.** `sandbox view` mints a second id onto the same checkout at a lower exec tier, so "this agent may read but not run things" is enforced by the sandbox rather than by instructions — agent frontmatter grants bare tool names (`Bash`), never per-verb patterns, so it cannot be expressed there:
 
@@ -1534,7 +1539,7 @@ question — "is this actually pre-existing?" — is answered by reading `--ref 
 destroys the only copy of the checkout. A grill placed after cleanup can only re-read the host diff,
 which is precisely the evidence the finding already cited. Sub-agent fact-finding depends on this
 too. The cost is that the sandbox lives for the length of the interview: if the maintainer walks
-away mid-grill, stop and run Step 9 anyway rather than leaking a multi-GB sandbox — the draft on
+away mid-grill, stop and run Step 9 anyway rather than leaking the review's subtree — the draft on
 disk is already valid, and `.claude/tools/sandbox prune` sweeps anything left behind.
 
 **Never answer your own questions.** If a question goes unanswered, stop and leave the draft exactly
@@ -1657,13 +1662,13 @@ so nothing needs re-committing here.
 
 ## Step 9: Cleanup
 
-Always stop the PR's sandbox, even on failure. It persists across the review by design, so this step is mandatory — a skipped cleanup leaks a multi-GB container. Stopping it also drops every view and mutation tree derived from it:
+Always stop the PR's sandbox, even on failure. It persists across the review by design, so this step is mandatory — a skipped cleanup leaks the review's checkouts and installed trees. Stopping it also drops every view and mutation tree derived from it:
 
 ```bash
 .claude/tools/sandbox stop "$SANDBOX"
 ```
 
-The sandbox is ephemeral: stopping it destroys the only copy of the PR checkout. If a batch run leaked sandboxes from a crash, sweep them with `.claude/tools/sandbox prune`.
+The sandbox is ephemeral: stopping it destroys the only copy of the PR checkout. What it does **not** destroy is the shared host container — other reviews are running in it, and its warm store is what makes the next review cheap. If a batch run leaked sandboxes from a crash, sweep them with `.claude/tools/sandbox prune`, which reclaims review subtrees whose row is gone. `prune --store` and `prune --host` give the rest of the disk back, and both refuse while any sandbox row is live; neither belongs in a review.
 
 ## Step 10: Commit the draft (only for durable triage dirs)
 
@@ -1684,7 +1689,7 @@ If anything in Steps 3-7 errors:
 
 1. Still write/update the triage file with `verdict: failed` and a `## Failures` entry containing the error.
 2. Still preserve any prior `## Review draft` content into `## Prior reviews` so history isn't lost.
-3. Still clean up the sandboxes (Step 9) — a leaked container is multi-GB.
+3. Still clean up the sandboxes (Step 9) — a leaked review subtree holds its checkouts and installed trees, and only `prune` will ever find it.
 4. Commit with a `failed` message instead (same guard as Step 10).
 5. Return non-zero so the caller can tell the review failed.
 

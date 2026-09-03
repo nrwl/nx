@@ -1,14 +1,53 @@
-import { execFileSync, spawnSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { logger, workspaceRoot, ProjectConfiguration } from '@nx/devkit';
+import {
+  logger,
+  parseJson,
+  workspaceRoot,
+  ProjectConfiguration,
+} from '@nx/devkit';
 import {
   hashWithWorkspaceContext,
   workspaceDataDirectory,
   hashObject,
+  isCI,
+  killChildOnHostExit,
+  killProcessTreeGraceful,
   PluginCache,
+  safeSpawn,
 } from '@nx/devkit/internal';
+
+const DEFAULT_ANALYSIS_TIMEOUT_SECONDS = isCI() ? 600 : 120;
+// setTimeout silently clamps a delay past the 32-bit signed max to 1ms, which
+// would abort immediately — the opposite of what a large value asks for.
+const MAX_TIMEOUT_MS = 2 ** 31 - 1;
+
+// Thrown when a newer analysis supersedes an in-flight one. Callers swallow it
+// rather than surfacing an internal string to the user.
+export const ANALYZER_CANCELLED_MESSAGE = 'Analyzer run was cancelled';
+
+let currentAbortController: AbortController | undefined;
+
+/**
+ * Cancel any in-flight analyzer process. Safe to call even if nothing is running.
+ */
+export function cancelPendingAnalysis(): void {
+  if (currentAbortController) {
+    currentAbortController.abort('cancelled');
+    currentAbortController = undefined;
+  }
+}
+
+export function getAnalysisTimeoutMs(): number {
+  const envTimeout = process.env.NX_DOTNET_PROJECT_GRAPH_TIMEOUT;
+  if (envTimeout) {
+    const parsed = Number(envTimeout);
+    if (!Number.isNaN(parsed) && parsed > 0) {
+      return Math.min(parsed * 1000, MAX_TIMEOUT_MS);
+    }
+  }
+  return DEFAULT_ANALYSIS_TIMEOUT_SECONDS * 1000;
+}
 
 export interface AnalysisSuccessResult {
   // Maps project file path -> node configuration
@@ -81,10 +120,10 @@ async function calculateProjectFilesHash(files: string[]): Promise<string> {
  * Run the msbuild-analyzer and return the results.
  * Uses stdin for large file lists to avoid ARG_MAX issues.
  */
-function runAnalyzer(
+async function runAnalyzer(
   files: string[],
   options?: DotNetAnalyzerOptions
-): AnalysisSuccessResult {
+): Promise<AnalysisSuccessResult> {
   if (files.length === 0) {
     return { nodesByFile: {}, referencesByRoot: {} };
   }
@@ -121,56 +160,120 @@ function runAnalyzer(
   //   }
   // }
 
+  // Nothing here may contain a double quote: on Windows `safeSpawn` routes a bare binary
+  // name through cmd.exe, whose quoting cannot express one, so it refuses the argument.
+  // That is why the options JSON goes over stdin instead (see below).
+  const args = [analyzerPath, workspaceRoot];
+
+  // Cancel any in-flight analyzer from a previous call, then create a fresh controller.
+  cancelPendingAnalysis();
+  const controller = new AbortController();
+  currentAbortController = controller;
+  const signal = controller.signal;
+  const timeoutMs = getAnalysisTimeoutMs();
+  const timeoutSeconds = timeoutMs / 1000;
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  let stdout = '';
+  let stderr = '';
   try {
-    let output: string;
+    await new Promise<void>((resolve, reject) => {
+      const child = safeSpawn('dotnet', args, {
+        stdio: ['pipe', 'pipe', 'pipe'],
+        windowsHide: true,
+        env,
+      });
+      // A plugin worker torn down by `nx reset` would otherwise orphan the analyzer.
+      killChildOnHostExit(child);
 
-    // Prepare CLI arguments
-    const args = [analyzerPath, workspaceRoot];
+      // On abort, kill the process tree and settle immediately — a wedged
+      // process that outlives the kill signal would otherwise keep this
+      // promise pending and the abort error would never surface.
+      const onAbort = () => {
+        if (child.pid) {
+          killProcessTreeGraceful(child.pid).catch(() => {});
+        }
+        reject(new Error('Analyzer aborted'));
+      };
+      signal.addEventListener('abort', onAbort, { once: true });
 
-    // Add plugin options as JSON string if provided
-    if (options) {
-      args.push(JSON.stringify(options));
-    }
+      child.stdout?.setEncoding('utf-8');
+      child.stderr?.setEncoding('utf-8');
+      child.stdout?.on('data', (data) => {
+        stdout += data;
+      });
+      child.stderr?.on('data', (data) => {
+        stderr += data;
+      });
 
-    // Use stdin mode for large file lists to avoid ARG_MAX issues. The analyzer
-    // partitions paths by filename, so we just stream everything in one block.
-    const input = files.join('\n');
-    const result = spawnSync('dotnet', args, {
-      input,
-      encoding: 'utf-8',
-      maxBuffer: 10 * 1024 * 1024, // 10MB buffer
-      stdio: ['pipe', 'pipe', 'pipe'], // stdin, stdout, stderr
-      windowsHide: true,
-      env,
+      child.on('error', (error) => {
+        signal.removeEventListener('abort', onAbort);
+        reject(error);
+      });
+
+      child.on('close', (code) => {
+        signal.removeEventListener('abort', onAbort);
+        if (code === 0) {
+          resolve();
+        } else {
+          reject(new Error(`Analyzer exited with code ${code}: ${stderr}`));
+        }
+      });
+
+      // Stream the options JSON, then the file list, over stdin. The first line is
+      // always written, empty when there are no options, so the analyzer never has to
+      // infer whether one was sent. The analyzer partitions paths by filename, so we
+      // just send everything in one block.
+      // EPIPE if the analyzer dies early. Surfaced via `close` only when the
+      // child also exits non-zero; a stdin error with a clean exit means the
+      // analyzer read a truncated file list.
+      child.stdin?.on('error', () => {});
+      child.stdin?.end(
+        [options ? JSON.stringify(options) : '', ...files].join('\n')
+      );
     });
-
-    if (result.error) {
-      throw result.error;
+  } catch (error) {
+    if (signal.reason === 'cancelled') {
+      throw new Error(ANALYZER_CANCELLED_MESSAGE);
     }
-
-    if (result.status !== 0) {
+    if (signal.aborted) {
       throw new Error(
-        `Analyzer exited with code ${result.status}: ${result.stderr}`
+        `msbuild-analyzer timed out after ${timeoutSeconds} ${timeoutSeconds === 1 ? 'second' : 'seconds'}.\n` +
+          `  1. Set the environment variable NX_DOTNET_PROJECT_GRAPH_TIMEOUT to a higher value (in seconds) to increase the timeout.\n` +
+          `  2. If the issue persists, set NX_DOTNET_DISABLE=true to disable the .NET plugin entirely.`
       );
     }
-
-    // Output stderr (includes performance logs when NX_PERF_LOGGING=true)
-    if (result.stderr) {
-      console.error(result.stderr);
-    }
-
-    output = result.stdout;
-
-    return JSON.parse(output) as AnalysisSuccessResult;
-  } catch (error) {
     const err = error as { stderr?: string; message: string };
-    if (err.stderr) {
-      logger.error(`msbuild-analyzer error: ${err.stderr}`);
+    const stderrAlreadyInMessage = err.message.includes(stderr);
+    if (stderr && !stderrAlreadyInMessage) {
+      logger.error(`msbuild-analyzer error: ${stderr}`);
     }
     throw new Error(
       `Failed to run msbuild-analyzer: ${err.message}${
-        err.stderr ? `\n${err.stderr}` : ''
+        stderr && !stderrAlreadyInMessage ? `\n${stderr}` : ''
       }`
+    );
+  } finally {
+    clearTimeout(timer);
+    // Drop the settled controller so a later cancelPendingAnalysis() cannot
+    // abort a run that already finished.
+    if (currentAbortController === controller) {
+      currentAbortController = undefined;
+    }
+  }
+
+  // Output stderr (includes performance logs when NX_PERF_LOGGING=true)
+  if (stderr) {
+    console.error(stderr);
+  }
+
+  try {
+    // parseJson over JSON.parse: on malformed output it reports line:column with
+    // a code frame, where JSON.parse gives only a character offset.
+    return parseJson<AnalysisSuccessResult>(stdout);
+  } catch (error) {
+    throw new Error(
+      `Failed to parse msbuild-analyzer output: ${(error as Error).message}`
     );
   }
 }
@@ -214,7 +317,7 @@ export async function analyzeProjects(
 
   // Run the analyzer
   try {
-    const result = runAnalyzer(files, options);
+    const result = await runAnalyzer(files, options);
 
     // Update local cache
     cache = {
@@ -236,10 +339,14 @@ export async function analyzeProjects(
     const errorResult: AnalysisErrorResult = {
       error: err,
     };
-    cache = {
-      hash: filesHash,
-      result: errorResult,
-    };
+    // A superseded run is not a result: caching it would hand the sentinel to
+    // createDependencies via readCachedAnalysisResult().
+    if (err.message !== ANALYZER_CANCELLED_MESSAGE) {
+      cache = {
+        hash: filesHash,
+        result: errorResult,
+      };
+    }
     return errorResult;
   }
 }

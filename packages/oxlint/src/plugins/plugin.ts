@@ -8,6 +8,7 @@ import {
   PluginCache,
   TargetProjectLocator,
   workspaceDataDirectory,
+  quoteShellArg,
 } from '@nx/devkit/internal';
 import {
   CreateDependencies,
@@ -64,6 +65,10 @@ const LINTABLE_EXTENSIONS = [
   'astro',
 ];
 const LINTABLE_FILES_GLOB = `**/*.{${LINTABLE_EXTENSIONS.join(',')}}`;
+// Oxlint honours both, so both decide which files it lints.
+const IGNORE_FILENAMES = ['.eslintignore', '.gitignore'];
+// The one rule that looks across projects; every other rule sees one file.
+const BOUNDARIES_PLUGIN_SPECIFIER = '@nx/oxlint/boundaries-plugin';
 const PROJECT_CONFIG_FILENAMES = ['project.json', 'package.json'];
 const OXLINT_CONFIG_GLOB = combineGlobPatterns([
   ...OXLINT_CONFIG_FILENAMES.map((f) => `**/${f}`),
@@ -77,6 +82,7 @@ const internalCreateNodes = async (
   options: OxlintPluginOptions,
   context: CreateNodesContext,
   projectRootsByOxlintRoots: Map<string, string[]>,
+  nestedRootsByParent: Map<string, string[]>,
   getLintableFilesPerProjectRoot: () => Promise<Map<string, number>>,
   configChainsByConfig: Map<string, string[]>,
   jsPluginSpecifiersByConfig: Map<string, string[]>,
@@ -116,6 +122,7 @@ const internalCreateNodes = async (
       const project = getProjectUsingOxlintConfig(
         configFilePath,
         projectRoot,
+        nestedRootsByParent,
         options,
         context,
         pmc,
@@ -159,6 +166,7 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
 
     const { oxlintConfigFiles, projectRoots, projectRootsByOxlintRoots } =
       splitConfigFiles(configFiles, context.workspaceRoot);
+    const nestedRootsByParent = nestedRootsByParentRoot(projectRoots);
 
     // The glob also matches `**/package.json`, so this callback runs in every
     // workspace, Oxlint or not. Bail before the chain walks and the hashing.
@@ -222,7 +230,7 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
             ),
             // Change which files Oxlint considers lintable, and therefore
             // whether a target is inferred at all.
-            ...ancestorEslintignorePaths(root),
+            ...ancestorIgnorePaths(root),
             lockFilePattern,
             ...(tsconfigChainsByProjectRoot.get(root) ?? []),
           ]),
@@ -241,6 +249,7 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
             fileOptions,
             fileContext,
             projectRootsByOxlintRoots,
+            nestedRootsByParent,
             getLintableFilesPerProjectRoot,
             configChainsByConfig,
             jsPluginSpecifiersByConfig,
@@ -526,6 +535,8 @@ function collectConfigChains(
       } catch {
         // A malformed config drops its chain from the task inputs rather than
         // failing graph construction, matching `readCachedJson` in @nx/js.
+        // `oxlint.config.ts`/`.mts` land here too: their chains and jsPlugins
+        // are out of scope, so they get neither file inputs nor graph edges.
         json = null;
       }
     }
@@ -757,15 +768,18 @@ async function collectLintableFilesByProjectRoot(
 }
 
 /**
- * `.eslintignore` candidates in every ancestor directory of the project root,
+ * Ignore-file candidates in every ancestor directory of the project root,
  * workspace root included. The project's own directory is excluded — files
- * there are covered by the `default` input.
+ * there are covered by the in-project ignore-file input — except at the
+ * workspace root, which is its own ancestor and so keeps its ignore files.
  */
-function ancestorEslintignorePaths(projectRoot: string): string[] {
+function ancestorIgnorePaths(projectRoot: string): string[] {
   const result: string[] = [];
   let dir = projectRoot === '.' ? '.' : dirname(projectRoot);
   while (true) {
-    result.push(dir === '.' ? '.eslintignore' : `${dir}/.eslintignore`);
+    for (const filename of IGNORE_FILENAMES) {
+      result.push(dir === '.' ? filename : `${dir}/${filename}`);
+    }
     if (dir === '.') {
       break;
     }
@@ -774,7 +788,81 @@ function ancestorEslintignorePaths(projectRoot: string): string[] {
   return result;
 }
 
-// Only the keys are read, so the value type is left open for both callers.
+/**
+ * Escape the gitignore metacharacters in a path so `--ignore-pattern` matches it
+ * literally. The value crosses two languages and `quoteShellArg` only covers the
+ * shell: to Oxlint's matcher `\`, `[`, `]`, `*` and `?` are pattern syntax, and a
+ * trailing space is stripped unless escaped — so `/a[b]` excludes `ab` while
+ * leaving `a[b]` walked, which is both a miss and a silent over-exclusion.
+ */
+function escapeIgnorePattern(pattern: string): string {
+  return pattern
+    .replace(/([\\[\]*?])/g, '\\$1')
+    .replace(/ +$/, (spaces) => spaces.replace(/ /g, '\\ '));
+}
+
+/**
+ * Direct child project roots for each project root, keyed by the parent. A root
+ * belongs to its NEAREST enclosing root, so a grandchild lands under the child
+ * rather than the grandparent — which is what keeps an outer project from
+ * emitting an exclusion that a shallower one already covers.
+ *
+ * Built once per run: resolving each root's parent by walking up is linear in
+ * the workspace, where asking every project which roots sit below it is not.
+ */
+function nestedRootsByParentRoot(
+  projectRoots: string[]
+): Map<string, string[]> {
+  // getRootForDirectory reads only the keys.
+  const roots = new Map(projectRoots.map((root) => [root, true]));
+  const byParent = new Map<string, string[]>();
+
+  for (const root of projectRoots) {
+    const parent = getRootForDirectory(dirname(root), roots);
+    // A workspace-root project is its own ancestor, so it must not claim itself.
+    if (parent === null || parent === root) {
+      continue;
+    }
+    const claimed = byParent.get(parent);
+    if (claimed) {
+      claimed.push(root);
+    } else {
+      byParent.set(parent, [root]);
+    }
+  }
+
+  for (const claimed of byParent.values()) {
+    claimed.sort();
+  }
+  return byParent;
+}
+
+/**
+ * The project roots nested directly below `projectRoot`, relative to it and
+ * limited to `lintDir` when the lint walk starts there. An excluded root either
+ * has its own inferred target or owns nothing lintable, so pruning it drops no
+ * lint coverage.
+ *
+ * Callers must emit each one anchored (`/dir`) and never as `dir/**`. A gitignore
+ * pattern is anchored only when it contains a slash, so a bare single-segment
+ * root would also match a same-named directory the outer project owns; and
+ * `dir/**` matches only entries inside `dir`, leaving Oxlint free to descend and
+ * read that directory's ignore files.
+ */
+function nestedProjectRoots(
+  projectRoot: string,
+  nestedRootsByParent: Map<string, string[]>,
+  lintDir: string
+): string[] {
+  const prefix = projectRoot === '.' ? '' : `${projectRoot}/`;
+  return (nestedRootsByParent.get(projectRoot) ?? [])
+    .map((root) => root.slice(prefix.length))
+    .filter(
+      (rel) => !lintDir || rel === lintDir || rel.startsWith(`${lintDir}/`)
+    );
+}
+
+// Only the keys are read, so the value type is left open for all callers.
 function getRootForDirectory(
   directory: string,
   roots: Map<string, unknown>
@@ -794,6 +882,7 @@ function getRootForDirectory(
 function getProjectUsingOxlintConfig(
   configFilePath: string,
   projectRoot: string,
+  nestedRootsByParent: Map<string, string[]>,
   options: OxlintPluginOptions,
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
@@ -836,6 +925,22 @@ function getProjectUsingOxlintConfig(
   const isRootProject = projectRoot === '.';
   const lintPath =
     isRootProject && standaloneSrcPath ? `./${standaloneSrcPath}` : '.';
+  const nestedIgnoreArgs = nestedProjectRoots(
+    projectRoot,
+    nestedRootsByParent,
+    isRootProject && standaloneSrcPath ? standaloneSrcPath : ''
+  )
+    // `quoteShellArg` documents that it cannot keep `%` literal through cmd.exe,
+    // so on Windows such a root is left unexcluded rather than excluded wrongly:
+    // it gets linted twice, which is what happened before this exclusion existed.
+    .filter(
+      (relativeRoot) =>
+        process.platform !== 'win32' || !relativeRoot.includes('%')
+    )
+    .map(
+      (relativeRoot) =>
+        `--ignore-pattern ${quoteShellArg(escapeIgnorePattern(`/${relativeRoot}`))}`
+    );
 
   const jsPluginFiles = new Set(
     configInputs.flatMap((config) =>
@@ -843,19 +948,40 @@ function getProjectUsingOxlintConfig(
     )
   );
 
+  const lintableFiles = `{projectRoot}/${LINTABLE_FILES_GLOB}`;
+  const usesBoundariesBridge = configInputs.some((config) =>
+    (jsPluginSpecifiersByConfig.get(config) ?? []).includes(
+      BOUNDARIES_PLUGIN_SPECIFIER
+    )
+  );
+
   const targetConfig: TargetConfiguration = {
-    command: `oxlint ${lintPath}`,
+    command: `oxlint ${[lintPath, ...nestedIgnoreArgs].join(' ')}`,
     options: { cwd: projectRoot },
     cache: true,
     inputs: [
-      'default',
-      '^default',
+      // Only what Oxlint can lint, so a README or JSON edit is not a re-lint.
+      { fileset: lintableFiles },
+      // The bridge checks the project graph, which a dependency's imports and
+      // package.json shape.
+      ...(usesBoundariesBridge
+        ? [
+            { fileset: lintableFiles, dependencies: true as const },
+            {
+              fileset: '{projectRoot}/package.json',
+              dependencies: true as const,
+            },
+          ]
+        : []),
+      // Configs, ignore files and tsconfigs inside the project.
+      {
+        fileset: `{projectRoot}/**/{${[...OXLINT_CONFIG_FILENAMES, ...IGNORE_FILENAMES, 'tsconfig*.json'].join(',')}}`,
+      },
       ...configInputs.map((config) => `{workspaceRoot}/${config}`),
       ...[...jsPluginFiles].map((file) => `{workspaceRoot}/${file}`),
-      // Oxlint layers .eslintignore files from every ancestor of a linted
-      // file; the project's own is covered by `default`. Declared even when
-      // absent, like the extends chain.
-      ...ancestorEslintignorePaths(projectRoot).map(
+      // Oxlint layers ignore files from every ancestor of a linted file.
+      // Declared even when absent, like the extends chain.
+      ...ancestorIgnorePaths(projectRoot).map(
         (file) => `{workspaceRoot}/${file}`
       ),
       ...tsconfigChainOutsideProjectRoot.map(

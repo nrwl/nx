@@ -11,6 +11,20 @@ export type { ChangelogChange };
 // Stripped from breaking change explanations (e.g. bot/session markers).
 const HtmlCommentRegex = /<!--[\s\S]*?-->/g;
 
+// Keyed on email: agent display names track model versions (e.g. "Claude Opus
+// 5 (1M context)"), and a human contributor can share a name with an agent.
+const AiAgentAuthorEmails = new Set([
+  'noreply@anthropic.com',
+  'claude@anthropic.com',
+  'amp@ampcode.com',
+  'cursoragent@cursor.com',
+  'openhands@all-hands.dev',
+  'opendevin@all-hands.dev',
+]);
+// The Copilot coding agent's trailer is not always [bot]-suffixed.
+const CopilotAuthorEmailRegex =
+  /^(?:\d+\+)?copilot@users\.noreply\.github\.com$/;
+
 /**
  * The ChangelogRenderOptions are specific to each ChangelogRenderer implementation, and are taken
  * from the user's nx.json configuration and passed as is into the ChangelogRenderer function.
@@ -329,7 +343,7 @@ export default class DefaultChangelogRenderer {
       }
       for (const author of change.authors) {
         const name = this.formatName(author.name);
-        if (!name || name.includes('[bot]')) {
+        if (!name || name.includes('[bot]') || this.isAiAgentAuthor(author)) {
           continue;
         }
         if (!_authors.has(name)) {
@@ -534,6 +548,13 @@ export default class DefaultChangelogRenderer {
       /^Co-authored-by:/i.test(trimmed) ||
       // Git metadata delimiter following the body
       trimmed === '"'
+    );
+  }
+
+  protected isAiAgentAuthor(author: { name: string; email: string }): boolean {
+    const email = (author.email || '').trim().toLowerCase();
+    return (
+      AiAgentAuthorEmails.has(email) || CopilotAuthorEmailRegex.test(email)
     );
   }
 

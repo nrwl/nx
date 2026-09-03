@@ -56,6 +56,9 @@ export default defineConfig({
     include: ['**/*.spec.ts'],
     exclude: ['src/native/tui/**', '**/node_modules/**'],
     setupFiles: ['./vitest.setup.mts'],
+    // Isolated plugin workers boot via swc (see isolated-plugin.ts). Under the
+    // previous ts-node boot they cost ~2.8s each, which pushed the graph
+    // recompute spec past this limit on CI - keep the two changes together.
     testTimeout: 35000,
     // Native .node bindings are not thread-safe across vitest worker threads.
     pool: 'forks',

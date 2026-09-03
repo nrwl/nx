@@ -3,9 +3,11 @@ import {
   checkFilesExist,
   cleanupProject,
   detectPackageManager,
+  fileExists,
   getPackageManagerCommand,
   isNotWindows,
   killPort,
+  listFiles,
   newProject,
   packageManagerLockFile,
   readFile,
@@ -76,6 +78,8 @@ describe('@nx/next (legacy)', () => {
     checkFilesExist(`dist/${appName}/redirects.js`);
     checkFilesExist(`dist/${appName}/nested/headers.js`);
     checkFilesExist(`dist/${appName}/nested/headers-2.js`);
+
+    checkBuildOutputIsSelfContained(`dist/${appName}`);
   }, 120_000);
 
   it('should build and install pruned lock file', async () => {
@@ -244,11 +248,7 @@ describe('@nx/next (legacy)', () => {
       `dist/packages/${appName}/public/shared/ui/hello.txt`
     );
 
-    // Check that compiled next config does not contain bad imports
-    const nextConfigPath = `dist/packages/${appName}/next.config.js`;
-    expect(nextConfigPath).not.toContain(`require("../`); // missing relative paths
-    expect(nextConfigPath).not.toContain(`require("nx/`); // dev-only packages
-    expect(nextConfigPath).not.toContain(`require("@nx/`); // dev-only packages
+    checkBuildOutputIsSelfContained(`dist/packages/${appName}`);
 
     // Check that `nx serve <app> --prod` works with previous production build (e.g. `nx build <app>`).
     const prodServePort = await reservePort();
@@ -320,3 +320,39 @@ describe('@nx/next (legacy)', () => {
     );
   }, 300_000);
 });
+
+// The build output must run where only the app's production dependencies are
+// installed, so the rewritten next.config.js must not require dev-only packages
+// and relative requires in the copied .nx-helpers files must resolve to files
+// present in the output (nrwl/nx#36511).
+function checkBuildOutputIsSelfContained(outputPath: string): void {
+  const nextConfigContent = readFile(`${outputPath}/next.config.js`);
+  for (const badImport of ['../', 'nx/', '@nx/']) {
+    expect(nextConfigContent).not.toContain(`require("${badImport}`);
+    expect(nextConfigContent).not.toContain(`require('${badImport}`);
+  }
+
+  const helpersDir = `${outputPath}/.nx-helpers`;
+  for (const helperFile of listFiles(helpersDir).filter((f) =>
+    f.endsWith('.js')
+  )) {
+    const content = readFile(`${helpersDir}/${helperFile}`);
+    for (const match of content.matchAll(
+      /require\((?:'(\.[^']+)'|"(\.[^"]+)")\)/g
+    )) {
+      const specifier = match[1] ?? match[2];
+      const resolves = [
+        specifier,
+        `${specifier}.js`,
+        `${specifier}/index.js`,
+      ].some((candidate) =>
+        fileExists(tmpProjPath(join(helpersDir, candidate)))
+      );
+      if (!resolves) {
+        throw new Error(
+          `${helpersDir}/${helperFile} requires '${specifier}', which does not exist in the build output`
+        );
+      }
+    }
+  }
+}

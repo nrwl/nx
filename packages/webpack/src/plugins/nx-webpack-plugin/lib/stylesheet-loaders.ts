@@ -32,7 +32,14 @@ export function getCommonLoadersForCssModules(
       options: {
         modules: {
           mode: 'local',
-          getLocalIdent: getCSSModuleLocalIdent,
+          getLocalIdent: (ctx, localIdentName, localName, loaderOptions) =>
+            getCSSModuleLocalIdent(
+              ctx,
+              localIdentName,
+              localName,
+              loaderOptions,
+              options.cssModuleHashFunction
+            ),
           // css-loader 7 defaults namedExport to true, and to camel-case-only
           // locals when it is off. Generated components import the default
           // export and reference class names as authored, so pin both.

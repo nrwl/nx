@@ -144,9 +144,9 @@ async function getTerminalOutputLifeCycle(
     const interceptedNxCloudLogs: (string | Uint8Array<ArrayBufferLike>)[] = [];
 
     // Resolve where the Nx Cloud client bundle actually loads from so the
-    // stack-trace check below matches its frames. It is NOT always
-    // `{workspaceRoot}/.nx/cache/cloud`: in a git worktree the cache dir is
-    // shared with the main repo, and it can also be relocated via
+    // stack-trace check below matches its frames. It is essentially never
+    // `{workspaceRoot}/.nx/cache/cloud`: the cache normally lives in the shared
+    // per-user `~/.nx/<hash>/cache`, and it can also be relocated via
     // NX_CACHE_DIRECTORY, a custom `cacheDirectory` in nx.json, or the lerna
     // `node_modules/.cache` location. Using the client's own resolver keeps the
     // interception working in all of those cases.

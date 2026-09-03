@@ -10,12 +10,18 @@ import {
 } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
 import { isOnDaemon } from '../daemon/is-on-daemon';
-import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
+import { sandboxSocketHint } from '../daemon/sandbox-socket-hint';
+import {
+  disableDaemonForThisProcess,
+  markDaemonAsDisabled,
+  writeDaemonLogs,
+} from '../daemon/tmp-dir';
 import { FileLock, IS_WASM } from '../native';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import { getCallSites } from '../utils/call-sites';
 import { DelayedSpinner } from '../utils/delayed-spinner';
 import { fileExists } from '../utils/fileutils';
+import { isSandbox } from '../utils/is-sandbox';
 import { logger } from '../utils/logger';
 import { output } from '../utils/output';
 import { stripIndents } from '../utils/strip-indents';
@@ -468,15 +474,37 @@ export async function createProjectGraphAndSourceMapsAsync(
 
       if (e.internalDaemonError) {
         const errorLogFile = writeDaemonLogs(e.message);
+        const sandboxed = isSandbox();
         output.warn({
           title: `Nx Daemon was not able to compute the project graph.`,
           bodyLines: [
             `Log file with the error: ${errorLogFile}`,
+            // Inline rather than left to the log file, which an agent will
+            // not open. This branch covers every internal daemon error,
+            // including ones a sandbox cannot explain, so the issue link stays
+            // either way.
+            ...(sandboxed ? sandboxSocketHint() : []),
             `Please file an issue at https://github.com/nrwl/nx`,
-            'Nx Daemon is going to be disabled until you run "nx reset".',
+            sandboxed
+              ? 'Nx Daemon is disabled for this command.'
+              : 'Nx Daemon is going to be disabled until you run "nx reset".',
           ],
         });
-        markDaemonAsDisabled(e.message);
+        // A sandbox refusal describes the environment, not the workspace. The
+        // on-disk marker would follow the checkout into an ordinary terminal
+        // and survive the user fixing their allowlist, since only `nx reset`
+        // clears it.
+        if (sandboxed) {
+          disableDaemonForThisProcess(e.message);
+        } else {
+          markDaemonAsDisabled(e.message);
+        }
+        // Both writes are only read through `isDaemonDisabled()`, which
+        // `enabled()` consults once and then memoizes. Without clearing that,
+        // every later daemon consumer in this process — task hashing, workspace
+        // context, sync generators — starts the daemon again and waits out the
+        // full connect budget, under a warning saying it is off.
+        daemonClient.reset();
         return buildProjectGraphAndSourceMapsWithoutDaemon();
       }
 

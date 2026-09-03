@@ -17,6 +17,11 @@ export {
   // ship to external plugins under the +/- 1 tolerance, so they must keep
   // importing nx/src/utils/catalog directly. See packages/devkit/CLAUDE.md.
   getCatalogManager,
+  getDaemonClientEnvGeneration,
+  getAppliedDaemonClientEnv,
+  applyDaemonEnvFromClient,
+  getGraphTimeDotEnvForTask,
+  hashDaemonClientEnv,
 } from 'nx/src/devkit-internals';
 
 // Formatter detection and setup. `@nx/js` needs these to write and detect a
@@ -44,6 +49,11 @@ export {
 } from './src/generators/e2e-web-server-info-utils';
 export { forEachExecutorOptions } from './src/generators/executor-options-utils';
 export { AggregatedLog } from './src/generators/plugin-migrations/aggregate-log-util';
+export { finalizeBatchConversion } from './src/generators/plugin-migrations/batch-conversion-finalize';
+export {
+  openBatchConversionSession,
+  type BatchConversionSession,
+} from './src/generators/plugin-migrations/batch-conversion-session';
 export {
   migrateProjectExecutorsToPlugin,
   migrateProjectExecutorsToPluginV1,
@@ -202,6 +212,8 @@ export {
   getCliPath,
   getCustomHasher,
   getDependencyConfigs,
+  getEnvFilesForTask,
+  getEnvPathsForTask,
   getExecutorForTask,
   getExecutorInformation,
   getExecutorNameForTask,
@@ -255,6 +267,7 @@ export {
   parseExecutor,
   parseVersionFromPackageManagerField,
   preventRecursionInGraphConstruction,
+  quoteShellArg,
   readCachedProjectConfiguration,
   readFileIfExisting,
   readFileMapCache,

@@ -1,66 +1,61 @@
 import { Octokit } from 'octokit';
-import { ReportData, ScopeData } from './model';
+import { ReportData, ScrapedData, ScrapedIssue, ScrapedPr } from './model';
+import { buildReport } from './stats';
 
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 const now = new Date();
 
 export async function scrapeIssues(prevDate?: Date): Promise<ReportData> {
-  let total = 0;
-  let totalBugs = 0;
-  let untriagedIssueCount = 0;
-  let totalClosed = 0;
   const scopeLabels = await getScopeLabels();
-  const scopes: Record<string, ScopeData> = {};
-
-  for await (const { data: slice } of getOpenIssueIterator()) {
-    for (const issue of slice.filter(isNotPullRequest)) {
-      const bug = hasLabel(issue, 'type: bug');
-
-      if (bug) {
-        totalBugs += 1;
-      }
-      total += 1;
-
-      let triaged = false;
-      for (const scope of scopeLabels) {
-        if (hasLabel(issue, scope)) {
-          scopes[scope] ??= { bugCount: 0, count: 0, closed: 0 };
-          if (bug) {
-            scopes[scope].bugCount += 1;
-          }
-          scopes[scope].count += 1;
-          triaged = true;
-        }
-      }
-      if (!triaged) {
-        untriagedIssueCount += 1;
-      }
-    }
-  }
-
   const sinceDate = getSinceDate(prevDate);
-  for await (const { data: slice } of getClosedIssueIterator(sinceDate)) {
-    for (const issue of slice.filter(isNotPullRequest)) {
-      totalClosed += 1;
 
-      for (const scope of scopeLabels) {
-        if (hasLabel(issue, scope)) {
-          scopes[scope] ??= { bugCount: 0, count: 0, closed: 0 };
-          scopes[scope].closed += 1;
-        }
-      }
-    }
+  const open: IssueItem[] = [];
+  for await (const { data: slice } of getOpenIssueIterator()) {
+    open.push(...slice);
+  }
+  const closed: IssueItem[] = [];
+  for await (const { data: slice } of getClosedIssueIterator(sinceDate)) {
+    closed.push(...slice);
   }
 
   return {
-    scopes: scopes,
-    totalBugCount: totalBugs,
-    totalIssueCount: total,
-    totalClosed,
-    untriagedIssueCount,
+    ...buildReport(
+      toScrapedData(open, closed, scopeLabels, sinceDate),
+      sinceDate,
+      now
+    ),
     // Format is like: Mar 03 2023
-    collectedDate: new Date().toDateString().split(' ').slice(1).join(' '),
+    collectedDate: now.toDateString().split(' ').slice(1).join(' '),
   };
+}
+
+export function toScrapedData(
+  open: IssueItem[],
+  closed: IssueItem[],
+  scopeLabels: string[],
+  sinceDate: Date
+): ScrapedData {
+  const data: ScrapedData = {
+    openIssues: [],
+    closedIssues: [],
+    openPrs: [],
+    closedPrs: [],
+  };
+  for (const item of open) {
+    if (isPullRequest(item)) {
+      data.openPrs.push(toPr(item, scopeLabels));
+    } else {
+      data.openIssues.push(toIssue(item, scopeLabels));
+    }
+  }
+  for (const item of closed) {
+    if (!isPullRequest(item)) {
+      data.closedIssues.push(toIssue(item, scopeLabels));
+    } else if (prClosedAt(item) >= sinceDate) {
+      data.closedPrs.push(toPr(item, scopeLabels));
+    }
+  }
+  return data;
 }
 
 export function getSinceDate(prevDate?: Date, referenceDate = now): Date {
@@ -83,6 +78,8 @@ const getOpenIssueIterator = () =>
     state: 'open',
   });
 
+// `since` filters on updated_at, so closed PRs are re-checked against
+// their merged_at / closed_at before being counted.
 const getClosedIssueIterator = (since: Date) =>
   octokit.paginate.iterator('GET /repos/{owner}/{repo}/issues', {
     owner: 'nrwl',
@@ -114,12 +111,36 @@ async function getAllLabels(): Promise<string[]> {
   return labels;
 }
 
-type IssueItem = Awaited<
+export type IssueItem = Awaited<
   ReturnType<typeof octokit.rest.issues.listForRepo>
 >['data'][number];
 
-function isNotPullRequest(issue: IssueItem): boolean {
-  return !('pull_request' in issue) || issue.pull_request == null;
+function isPullRequest(issue: IssueItem): boolean {
+  return issue.pull_request != null;
+}
+
+function prClosedAt(pr: IssueItem): Date {
+  return new Date(pr.pull_request?.merged_at ?? pr.closed_at);
+}
+
+function toIssue(issue: IssueItem, scopeLabels: string[]): ScrapedIssue {
+  return {
+    scopes: scopesOn(issue, scopeLabels),
+    createdAt: new Date(issue.created_at),
+    bug: hasLabel(issue, 'type: bug'),
+  };
+}
+
+function toPr(pr: IssueItem, scopeLabels: string[]): ScrapedPr {
+  return {
+    scopes: scopesOn(pr, scopeLabels),
+    createdAt: new Date(pr.created_at),
+    merged: pr.pull_request?.merged_at != null,
+  };
+}
+
+function scopesOn(issue: IssueItem, scopeLabels: string[]): string[] {
+  return scopeLabels.filter((scope) => hasLabel(issue, scope));
 }
 
 function hasLabel(issue: IssueItem, labelName: string): boolean {

@@ -7,13 +7,17 @@ import path = require('path');
 import type { PluginConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
 import { serverLogger } from '../../../daemon/logger';
+import { sandboxSocketHint } from '../../../daemon/sandbox-socket-hint';
+import { SOCKET_REFUSED_EXIT_CODE } from '../../../utils/socket-refused-exit-code';
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
 import {
   consumeMessagesFromSocket,
+  describeMessage,
   parseMessage,
 } from '../../../utils/consume-messages-from-socket';
 import { getPluginResolveConditionNodeArgs } from '../../../plugins/js/utils/typescript';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
+import { isSandbox } from '../../../utils/is-sandbox';
 import { logger } from '../../../utils/logger';
 import { ProgressTopics } from '../../../utils/progress-topics';
 import { waitForSocketConnection } from '../../../utils/wait-for-socket-connection';
@@ -190,7 +194,16 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     };
     worker.on('exit', this.exitHandler);
 
-    socket.on('data', consumeMessagesFromSocket(this.handleSocketData));
+    socket.on(
+      'data',
+      consumeMessagesFromSocket(this.handleSocketData, (err) => {
+        // Nothing else settles the pending hook promises on a framing
+        // failure, so surface it the same way a dead worker would.
+        this.exitHandler?.();
+        socket.destroy();
+        console.error(err.message);
+      })
+    );
 
     return this.sendLoadMessage();
   }
@@ -221,8 +234,21 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     await this._connectPromise;
   }
 
-  private handleSocketData = (raw: string) => {
-    const message = parseMessage<any>(raw);
+  private handleSocketData = (raw: Buffer) => {
+    let message: any;
+    try {
+      message = parseMessage<any>(raw);
+    } catch (e) {
+      // Runs inside a synchronous socket 'data' callback, so a throw here
+      // becomes an uncaughtException in the host process rather than a failed
+      // plugin call.
+      logger.error(
+        `[plugin-client] "${this.name}" sent a message that could not be parsed: ${
+          e instanceof Error ? e.message : e
+        }\nReceived: ${describeMessage(raw)}`
+      );
+      return;
+    }
     if (isPluginWorkerNotification(message)) {
       handlePluginWorkerNotification(message);
       return;
@@ -550,14 +576,10 @@ async function startPluginWorker(name: string) {
     ...process.env,
     ...(isWorkerTypescript
       ? {
-          TS_NODE_PROJECT: path.join(
+          SWC_NODE_PROJECT: path.join(
             __dirname,
             '../../../../tsconfig.lib.json'
           ),
-          TS_NODE_COMPILER_OPTIONS: JSON.stringify({
-            moduleResolution: 'node',
-            module: 'commonjs',
-          }),
         }
       : {}),
   };
@@ -577,7 +599,9 @@ async function startPluginWorker(name: string) {
       // Spawn the worker with the same resolve conditions Nx uses for plugin
       // entries so the plugin's transitive workspace imports resolve to source.
       ...getPluginResolveConditionNodeArgs(),
-      ...(isWorkerTypescript ? ['--require', 'ts-node/register'] : []),
+      // swc transpiles without type-checking: ~7x faster to boot, and this is
+      // paid once per worker spawn.
+      ...(isWorkerTypescript ? ['--require', '@swc-node/register'] : []),
       workerPath,
       ipcPath,
       name,
@@ -637,8 +661,23 @@ async function connectToWorker(
   // rather than burning through attempts against a dead socket.
   worker.once('exit', (code) => {
     if (!abortController.signal.aborted) {
-      earlyExitError = new Error(
-        `Plugin worker for "${name}" exited with code ${code} before the connection was established.`
+      // The worker sets this code only after an EPERM/EACCES on its own bind,
+      // so it is proof of a refusal rather than an inference from the
+      // environment — the only evidence available under an agent whose sandbox
+      // sets no variable `isSandbox()` reads.
+      const refused = code === SOCKET_REFUSED_EXIT_CODE;
+      earlyExitError = markWorkerStartupFailure(
+        new Error(
+          [
+            `Plugin worker for "${name}" exited with code ${code} before the connection was established.`,
+            // The worker's own stderr may be lost with the process, so the
+            // cause and the fix are repeated here.
+            ...(refused || isSandbox()
+              ? sandboxSocketHint({ certain: refused })
+              : []),
+          ].join('\n')
+        ),
+        refused
       );
       abortController.abort();
     }
@@ -660,7 +699,45 @@ async function connectToWorker(
   if (earlyExitError) {
     throw earlyExitError;
   }
-  throw new Error(`Failed to start plugin worker for plugin ${name}`);
+  throw markWorkerStartupFailure(
+    new Error(`Failed to start plugin worker for plugin ${name}`)
+  );
+}
+
+/**
+ * Marks a failure to *start or reach* a worker, as distinct from a plugin that
+ * loaded and then threw. Only the former can be retried in-process: swallowing
+ * the latter would rerun a plugin that already failed on its own merits and
+ * bury the real error.
+ */
+export const PLUGIN_WORKER_STARTUP_FAILURE = Symbol.for(
+  'nx.pluginWorkerStartupFailure'
+);
+
+/**
+ * Set when the worker exited with the socket-refused code. Narrower than
+ * {@link PLUGIN_WORKER_STARTUP_FAILURE}, which covers every way a worker can
+ * fail to come up, and is what lets the caller degrade on a refusal without
+ * also degrading for an OOM kill or a broken install.
+ */
+export const PLUGIN_WORKER_SOCKET_REFUSED = Symbol.for(
+  'nx.pluginWorkerSocketRefused'
+);
+
+function markWorkerStartupFailure(error: Error, refused = false): Error {
+  error[PLUGIN_WORKER_STARTUP_FAILURE] = true;
+  if (refused) {
+    error[PLUGIN_WORKER_SOCKET_REFUSED] = true;
+  }
+  return error;
+}
+
+export function isPluginWorkerStartupFailure(error: unknown): boolean {
+  return Boolean(error?.[PLUGIN_WORKER_STARTUP_FAILURE]);
+}
+
+export function isPluginWorkerSocketRefusal(error: unknown): boolean {
+  return Boolean(error?.[PLUGIN_WORKER_SOCKET_REFUSED]);
 }
 
 function getTypeName(u: unknown): string {

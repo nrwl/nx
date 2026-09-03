@@ -285,13 +285,22 @@ describe('convert-to-inferred', () => {
   });
 
   it('should convert project to use inference plugin', async () => {
-    const project = createProject(tree);
+    // the application generator sets the platform on the run targets
+    const runPlatformOptions = {
+      'run-android': { platform: 'android' },
+      'run-ios': { platform: 'ios' },
+    };
+    const project = createProject(tree, {}, runPlatformOptions);
     writeExpoConfig(tree, project.root);
 
-    const project2 = createProject(tree, {
-      appName: 'app2',
-      appRoot: 'apps/app2',
-    });
+    const project2 = createProject(
+      tree,
+      {
+        appName: 'app2',
+        appRoot: 'apps/app2',
+      },
+      runPlatformOptions
+    );
 
     const project2Build = project2.targets.build;
 
@@ -479,5 +488,22 @@ describe('convert-to-inferred', () => {
         include: ['apps/app2/**/*'],
       },
     ]);
+  });
+
+  it('keeps run targets without an explicit platform executor-based', async () => {
+    const project = createProject(tree);
+    writeExpoConfig(tree, project.root);
+
+    await convertToInferred(tree, {});
+
+    const projectConfig = readProjectConfiguration(tree, project.name);
+    expect(projectConfig.targets['run-android']).toEqual({
+      executor: '@nx/expo:run',
+      options: {},
+    });
+    expect(projectConfig.targets['run-ios']).toEqual({
+      executor: '@nx/expo:run',
+      options: {},
+    });
   });
 });

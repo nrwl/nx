@@ -1254,7 +1254,7 @@ describe('app', () => {
   });
 
   describe('Nest.js with webpack bundler', () => {
-    it('should generate correct build target configuration with webpack-cli args', async () => {
+    it('should not write an explicit build target since the inferred one handles NODE_ENV', async () => {
       await applicationGenerator(tree, {
         directory: 'my-nest-app',
         bundler: 'webpack',
@@ -1263,15 +1263,7 @@ describe('app', () => {
       });
 
       const project = readProjectConfiguration(tree, 'my-nest-app');
-      const buildTarget = project.targets.build;
-
-      expect(buildTarget.executor).toBe('nx:run-commands');
-      expect(buildTarget.options.command).toBe('webpack-cli build');
-      expect(buildTarget.options.env).toEqual({ NODE_ENV: 'production' });
-      expect(buildTarget.options.cwd).toEqual(project.root);
-      expect(buildTarget.configurations.development.env).toEqual({
-        NODE_ENV: 'development',
-      });
+      expect(project.targets.build).toBeUndefined();
     });
   });
 
