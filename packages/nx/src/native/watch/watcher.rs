@@ -313,14 +313,17 @@ impl WatchPipeline {
         // Trace only events that survive the filter — Access reads and
         // other floods are dropped above, so we don't pollute the log
         // with their misleading age_ms (mtime there is the prior write,
-        // not the event).
-        for (path, metadata) in raw.paths() {
-            trace!(
-                ?path,
-                kind = ?raw.kind(),
-                age_ms = event_age_ms(metadata),
-                "ingest"
-            );
+        // not the event). Guarded so the age_ms stat is never paid when
+        // trace logging is off, which is the normal case.
+        if tracing::enabled!(tracing::Level::TRACE) {
+            for (path, metadata) in raw.paths() {
+                trace!(
+                    ?path,
+                    kind = ?raw.kind(),
+                    age_ms = event_age_ms(metadata),
+                    "ingest"
+                );
+            }
         }
 
         #[cfg(not(any(target_os = "macos", target_os = "windows")))]
@@ -684,6 +687,44 @@ mod tests {
 
         pipeline.reset_burst();
         assert!(!pipeline.has_pending());
+    }
+
+    #[test]
+    fn is_dir_from_kind_only_answers_definitive_kinds() {
+        use crate::native::watch::types::is_dir_from_kind;
+        use notify::EventKind;
+        use notify::event::{CreateKind, DataChange, ModifyKind, RemoveKind, RenameMode};
+
+        // Definitive kinds are answered without a stat.
+        assert_eq!(
+            is_dir_from_kind(&EventKind::Create(CreateKind::File)),
+            Some(false)
+        );
+        assert_eq!(
+            is_dir_from_kind(&EventKind::Create(CreateKind::Folder)),
+            Some(true)
+        );
+        assert_eq!(
+            is_dir_from_kind(&EventKind::Remove(RemoveKind::File)),
+            Some(false)
+        );
+        assert_eq!(
+            is_dir_from_kind(&EventKind::Remove(RemoveKind::Folder)),
+            Some(true)
+        );
+        assert_eq!(
+            is_dir_from_kind(&EventKind::Modify(ModifyKind::Data(DataChange::Any))),
+            Some(false)
+        );
+
+        // Ambiguous kinds must fall back to a stat, never guess.
+        assert_eq!(is_dir_from_kind(&EventKind::Create(CreateKind::Any)), None);
+        assert_eq!(is_dir_from_kind(&EventKind::Remove(RemoveKind::Any)), None);
+        assert_eq!(is_dir_from_kind(&EventKind::Modify(ModifyKind::Any)), None);
+        assert_eq!(
+            is_dir_from_kind(&EventKind::Modify(ModifyKind::Name(RenameMode::To))),
+            None
+        );
     }
 
     #[test]
