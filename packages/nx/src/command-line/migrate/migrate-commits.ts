@@ -254,6 +254,20 @@ function defaultBranchToCompare(
   return remote ? baseRef.slice(remote.length + 1) : baseRef;
 }
 
+/** The current branch when it is the workspace's default branch, else null. */
+export function currentBranchIfDefault(root: string): string | null {
+  const currentBranch = getGitCurrentBranch(root);
+  if (!currentBranch) {
+    return null;
+  }
+  const defaultBranch = defaultBranchToCompare(
+    getBaseRef(readNxJson(root)),
+    currentBranch,
+    root
+  );
+  return currentBranch === defaultBranch ? currentBranch : null;
+}
+
 /**
  * Asks before a run starts committing on the workspace's default branch, and
  * reports the decision when the answer is no. Returns whether to proceed.
