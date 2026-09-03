@@ -195,15 +195,18 @@ impl WatchPipeline {
     }
 
     fn snapshot_events(&self) -> Vec<WatchEvent> {
-        // A rescan supersedes the accumulated events: the consumer re-walks,
-        // which covers everything a per-path event could have said.
+        let mut events: Vec<WatchEvent> = self.accumulator.values().map(|e| e.into()).collect();
+        // The rescan marker accompanies the accumulated batch rather than
+        // replacing it: the daemon's ignore-file and server-process intercepts
+        // read the raw events before per-path routing, so dropping them would
+        // leave the native filterer's ignore rules stale after an overflow.
         if self.pending_rescan {
-            return vec![WatchEvent {
+            events.push(WatchEvent {
                 path: String::new(),
                 r#type: EventType::rescan,
-            }];
+            });
         }
-        self.accumulator.values().map(|e| e.into()).collect()
+        events
     }
 
     fn has_pending(&self) -> bool {
@@ -642,7 +645,7 @@ mod tests {
     }
 
     #[test]
-    fn rescan_flag_supersedes_accumulated_events() {
+    fn rescan_flag_accompanies_accumulated_events() {
         use notify::event::{CreateKind, Flag};
 
         let dir = tempdir().expect("tempdir");
@@ -663,10 +666,21 @@ mod tests {
         let overflow = notify::Event::new(notify::EventKind::Other).set_flag(Flag::Rescan);
         pipeline.ingest_event(Ok(overflow)).expect("ingest rescan");
 
+        // The rescan marker rides alongside the accumulated per-path event, not
+        // in place of it, so the daemon's ignore-file/server-process intercepts
+        // still see the path they key on.
         let events = pipeline.snapshot_events();
-        assert_eq!(events.len(), 1);
-        assert!(matches!(events[0].r#type, EventType::rescan));
-        assert_eq!(events[0].path, "");
+        assert_eq!(events.len(), 2);
+        let rescan = events
+            .iter()
+            .find(|e| matches!(e.r#type, EventType::rescan))
+            .expect("rescan marker present");
+        assert_eq!(rescan.path, "");
+        let created = events
+            .iter()
+            .find(|e| matches!(e.r#type, EventType::create))
+            .expect("accumulated create preserved");
+        assert!(created.path.ends_with("file.txt"));
 
         pipeline.reset_burst();
         assert!(!pipeline.has_pending());
