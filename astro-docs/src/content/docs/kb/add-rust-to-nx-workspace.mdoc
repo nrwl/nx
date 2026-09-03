@@ -6,12 +6,9 @@ topics:
   - 'Extending Nx'
 ---
 
-Cargo already resolves and links your crates. Nx sits above it and runs Cargo tasks the same way it
-runs JavaScript ones, so your crates land in the same task graph, the same cache, and the same
-`nx affected` calculation as your web app. After the setup below, `nx run-many -t build lint test`
-covers your Vite builds and your `cargo build` calls in one command.
+Nx is able to process your Rust crates as part of the its task graph, allowing you benefit from caching (locally and on CI), affected calculation as well as allowing to run Rust projects in a polyglot monorepo setup alongside other languages.
 
-{% github_repository url="https://github.com/juristr/nx-polyglot-rust" /%}
+{% github_repository title="Example repository with JavaScript and Rust projects" url="https://github.com/juristr/nx-polyglot-rust" /%}
 
 ## Install the Rust toolchain
 
