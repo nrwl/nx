@@ -38,21 +38,66 @@ export class BatchProcess {
   private capturedOutputFd: number | undefined;
   /**
    * Set once the capture is released. A chunk can still arrive after that —
-   * stdout delivers past the exit event — and reopening then would mint a
-   * second numbered file that nothing ever cleans up.
+   * stdout delivers past the exit event — and reopening then would write to a
+   * file the renderer has already read.
    */
   private capturedOutputDiscarded = false;
   /**
-   * Set when writing the capture failed. Distinct from discarded: the bytes
-   * already on disk are still the best record of the batch, so the file is kept
-   * and rendered, while everything after the failure goes live to the terminal.
+   * Set when writing the capture has failed often enough to give up on it. The
+   * bytes already on disk are still the best record of the batch, so the file is
+   * kept and rendered, while everything after goes live to the terminal.
    */
   private capturedOutputFailed = false;
-  private static capturedOutputCount = 0;
+  /** Consecutive write failures. A transient one is retried; see MAX below. */
+  private capturedOutputFailures = 0;
+  private static captureSeq = 0;
+  /**
+   * Discriminates this capture file from every other in the process. Assigned
+   * once here rather than at open time: a value minted inside the lazy open
+   * changed the name on every reopen, orphaning what had already been captured.
+   * `batchId` alone is not enough: `TasksSchedule.batchCounters` is per
+   * instance, so a second schedule in the same process mints `<executor> 1`
+   * again and the pid does not separate them either.
+   */
+  private readonly captureSeq = ++BatchProcess.captureSeq;
+  /**
+   * A failed write is usually transient (a momentarily full disk), and under
+   * `summary` this file is the only copy the reader ever sees, so one failure
+   * should not end the capture. A permanently read-only data directory throws on
+   * every chunk though, and this runs in a stream handler, so the retries are
+   * bounded rather than unlimited.
+   */
+  private static readonly MAX_CAPTURE_FAILURES = 3;
+  /** True once the file has been opened, so a reopen appends rather than truncates. */
+  private capturedOutputOpened = false;
+  /**
+   * Bytes that went to the terminal instead of the file. Recorded so the gap can
+   * be named in the file rather than leaving a hole a reader cannot see.
+   */
+  private capturedOutputGapBytes = 0;
 
   constructor(
     private childProcess: ChildProcess,
-    private executorName: string
+    private executorName: string,
+    /**
+     * Whether the active output style puts task bytes on the terminal at all.
+     * `summary` does not, and its life cycle cannot enforce that here: this
+     * class writes to `output` directly from a stream handler, so without being
+     * told it would print a whole batch into a run that asked for log paths.
+     *
+     * False makes this capture rather than print. Suppressing the write alone
+     * would drop the bytes entirely off GitHub Actions, where nothing else
+     * captures them - and the worker's own crash output is exactly what no task
+     * ever claims, so it would exist nowhere.
+     */
+    private readonly printsOutput: boolean = true,
+    /**
+     * Labels the capture file so it is identifiable in `batch-outputs/`. Carries
+     * the executor already (`<executor> <n>`, from `TasksSchedule`), and is one
+     * of the three components of the name; `captureSeq` is what makes it
+     * unique.
+     */
+    private readonly batchId: string = executorName
   ) {
     this.childProcess.on('message', (message: BatchMessage) => {
       switch (message.type) {
@@ -99,7 +144,7 @@ export class BatchProcess {
         // current terminal output behavior. These chunks are forwarded raw and
         // routinely end mid-line, so they go through `output` to keep its line
         // tracking accurate for whatever prints next.
-        if (shouldGroupBatchOutput()) {
+        if (shouldGroupBatchOutput() || !this.printsOutput) {
           this.capture(chunk);
         } else {
           output.writeTaskOutputChunk(chunk);
@@ -117,7 +162,7 @@ export class BatchProcess {
       this.childProcess.stderr.on('data', (chunk) => {
         const text = chunk.toString();
 
-        if (shouldGroupBatchOutput()) {
+        if (shouldGroupBatchOutput() || !this.printsOutput) {
           this.capture(chunk, process.stderr);
         } else {
           // Maintain current terminal output behavior
@@ -158,8 +203,11 @@ export class BatchProcess {
       return;
     }
     if (this.capturedOutputFailed) {
-      // Capture is over, but the output is not optional. Everything from here
-      // goes straight to the terminal, on the stream it arrived on.
+      // Capture is over, but the output is not optional - so this prints even
+      // when the style says not to. A style that withholds output does so on
+      // the promise that it is readable elsewhere; once the file is gone that
+      // promise cannot be kept, and printing breaks the format while losing
+      // the bytes breaks the contract.
       output.writeTaskOutputChunk(chunk, stream);
       return;
     }
@@ -173,21 +221,54 @@ export class BatchProcess {
       if (this.capturedOutputFd === undefined) {
         const dir = join(workspaceDataDirectory, 'batch-outputs');
         mkdirSync(dir, { recursive: true });
-        const name = `${this.executorName.replace(/[^a-zA-Z0-9]+/g, '-')}-${
+        // Every component is fixed for the life of this instance, so reopening
+        // after a failed write returns to the same file. Deriving any part of
+        // it at open time minted a new name on every reopen, orphaning the
+        // bytes captured so far - which is where a compiler's first
+        // non-cascading errors are. The batch id names it for a human reading
+        // the directory; `captureSeq` is what actually makes it unique, since a
+        // second `TasksSchedule` in the same process re-mints the same id.
+        const name = `${this.batchId.replace(/[^a-zA-Z0-9]+/g, '-')}-${
           process.pid
-        }-${++BatchProcess.capturedOutputCount}.log`;
+        }-${this.captureSeq}.log`;
         const path = join(dir, name);
+        // Truncate on the first open and append after, so a reopen extends this
+        // run's file while a stale one left by a dead run whose pid was recycled
+        // is overwritten rather than appended to.
+        const fd = openSync(path, this.capturedOutputOpened ? 'a' : 'w');
         // Assigned only once the file is actually open, so a path always names
         // an fd rather than a file that failed to open.
-        const fd = openSync(path, 'w');
         this.capturedOutputPath = path;
         this.capturedOutputFd = fd;
+        this.capturedOutputOpened = true;
+      }
+      if (this.capturedOutputGapBytes > 0) {
+        // Name the hole rather than leaving one a reader cannot see. A file that
+        // reads as continuous prose with a chunk missing from the middle is
+        // worse than one that says what it lost, especially for an agent that
+        // never saw the bytes go past on the terminal.
+        const marker = Buffer.from(
+          `\n[nx] capture interrupted: ${this.capturedOutputGapBytes} bytes went to the terminal instead\n`
+        );
+        let markerWritten = 0;
+        while (markerWritten < marker.length) {
+          markerWritten += writeSync(
+            this.capturedOutputFd,
+            marker,
+            markerWritten
+          );
+        }
+        this.capturedOutputGapBytes = 0;
       }
       // Written synchronously so the file is complete the moment the batch ends,
       // with no flush to sequence against the read that renders the fold.
       while (written < bytes.length) {
         written += writeSync(this.capturedOutputFd, bytes, written);
       }
+      // Consecutive, so a batch that writes for an hour and hiccups three times
+      // far apart keeps capturing. Only an unbroken run of failures, which is
+      // what an unwritable directory looks like, gives up.
+      this.capturedOutputFailures = 0;
     } catch (e) {
       // This runs inside a stream 'data' handler, where a throw is an uncaught
       // exception rather than something the orchestrator's try can see - so a
@@ -198,11 +279,16 @@ export class BatchProcess {
       // Latch on a flag of its own rather than reusing the discard flag: that
       // one makes `capture` return early, which would drop every later chunk
       // on the floor - captured nowhere and printed nowhere.
-      this.capturedOutputFailed = true;
+      this.capturedOutputFailures++;
+      const givingUp =
+        this.capturedOutputFailures >= BatchProcess.MAX_CAPTURE_FAILURES;
+      this.capturedOutputFailed = givingUp;
       // Close the fd but keep the file. Whatever was written before the failure
       // is still the head of the batch's log, which is where a compiler's first
       // non-cascading errors live; unlinking it here would throw away the most
-      // useful bytes precisely when the disk is in trouble.
+      // useful bytes precisely when the disk is in trouble. The next chunk
+      // reopens the same path and appends, so a transient failure costs the gap
+      // rather than the rest of the batch.
       this.closeCapturedOutput();
       // Forward only what did not reach the file, and do it before warning.
       // `output.warn` writes to the terminal as well, so if that is the thing
@@ -211,15 +297,23 @@ export class BatchProcess {
       // to prevent.
       const unwritten = bytes.subarray(written);
       if (unwritten.length > 0) {
+        this.capturedOutputGapBytes += unwritten.length;
         output.writeTaskOutputChunk(unwritten, stream);
       }
-      output.warn({
-        title: `Could not capture batch output for ${this.executorName}`,
-        bodyLines: [
-          e.message,
-          'Streaming the rest of it live instead; the fold holds what was captured first.',
-        ],
-      });
+      // Only the two transitions that change what the reader gets: the first
+      // failure, and giving up. Warning on every chunk would bury the run's own
+      // output on the read-only-directory path this bound exists for.
+      if (this.capturedOutputFailures === 1 || givingUp) {
+        output.warn({
+          title: `Could not capture batch output for ${this.executorName}`,
+          bodyLines: [
+            e.message,
+            givingUp
+              ? 'Streaming the rest of it live instead; the fold holds what was captured first.'
+              : 'Streamed that much live instead; still capturing the rest.',
+          ],
+        });
+      }
     }
   }
 
@@ -231,7 +325,7 @@ export class BatchProcess {
    * The file is deliberately left open rather than closed here. A worker's
    * stdout can deliver after its exit event — which is what `getResults()`
    * settles on — and leaving the fd open keeps such a chunk appending to this
-   * same file instead of minting a second numbered one that nothing cleans up.
+   * same file rather than opening a second one that nothing cleans up.
    * The caller reads the file once, synchronously, while rendering the fold, so
    * anything arriving after that read is not shown; writes are unbuffered, so
    * the read always sees a complete prefix of what has arrived by then.

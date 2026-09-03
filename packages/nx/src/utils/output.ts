@@ -29,13 +29,35 @@ export function isStaticOutputStyle(outputStyle: string | undefined): boolean {
 }
 
 /**
+ * Whether a style puts task output on the terminal at all.
+ *
+ * `summary` does not - it prints a status line and the path to each task's log,
+ * deliberately addressing the output instead of reproducing it. So every
+ * decision that would put a task's bytes on the terminal has to consult this
+ * first, including ones that bypass the life cycle: both batch folds and
+ * `BatchProcess`'s live forward write to `output` directly, and under `summary`
+ * each would dump exactly what the style exists to keep off the screen.
+ *
+ * Withholding is only half of it. Whatever a caller suppresses here has to be
+ * readable somewhere else, because the style's contract is that the output
+ * moved, not that it is gone - `BatchProcess` captures to a file rather than
+ * dropping, and `runBatch`'s crash path folds that file into the task results.
+ */
+export function printsTaskOutput(outputStyle: string | undefined): boolean {
+  return outputStyle !== 'summary';
+}
+
+/**
  * Whether a run prints every task's output in full rather than collapsing the
  * ones that succeeded. Both static life cycles and the batch renderer have to
  * agree on this, so they read it from here rather than each deriving it.
  *
- * Exactly one style collapses, and it is also what a run that named no style
- * gets. Every other style prints in full because it was asked for explicitly,
- * so none may quietly withhold output. Note the static life cycles serve more
+ * Two styles collapse. `static-failures-only` shows only what failed, and is
+ * what a run that named no style gets; `summary` withholds task output
+ * altogether, addressing each log by path instead, and outranks `verbose` -
+ * asking for more detail cannot turn a style whose whole contract is "the
+ * output is on disk" back into one that prints. Every other style prints in
+ * full because it was asked for explicitly. Note the static life cycles serve more
  * styles than the static-sounding ones: `shouldUseDynamicLifeCycle` bails on
  * `isCI()` before it looks at the style at all, so in CI `dynamic` and `tui`
  * land here too. This is written as a deny-list for that reason — a new style
@@ -52,8 +74,9 @@ export function printsFullTaskOutput(args: {
   outputStyle?: string;
 }): boolean {
   return (
-    !!args.verbose ||
-    (args.outputStyle ?? 'static-failures-only') !== 'static-failures-only'
+    printsTaskOutput(args.outputStyle) &&
+    (!!args.verbose ||
+      (args.outputStyle ?? 'static-failures-only') !== 'static-failures-only')
   );
 }
 

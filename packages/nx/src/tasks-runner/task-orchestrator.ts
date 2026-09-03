@@ -1,5 +1,6 @@
 import { defaultMaxListeners } from 'events';
-import { writeFileSync } from 'fs';
+import type { OutputStyle } from '../command-line/yargs-utils/shared-options';
+import { existsSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { relative } from 'path';
 import { performance } from 'perf_hooks';
 import * as pc from 'picocolors';
@@ -31,6 +32,7 @@ import {
   isStaticOutputStyle,
   output,
   printsFullTaskOutput,
+  printsTaskOutput,
   shouldGroupBatchOutput,
 } from '../utils/output';
 import { combineOptionsForExecutor, Options } from '../utils/params';
@@ -85,6 +87,22 @@ function resolveBatchTaskStatus(result: {
   status?: TaskStatus;
 }): TaskStatus {
   return result.status ?? (result.success ? 'success' : 'failure');
+}
+
+/**
+ * The captured batch log, or empty if there is nothing readable. Reading it
+ * fully is acceptable only on the crash path: the batch is over, and the
+ * alternative is losing the only copy of why the worker died.
+ */
+function readCapturedBatchLog(path: string | undefined): string {
+  if (!path) {
+    return '';
+  }
+  try {
+    return readFileSync(path, 'utf-8');
+  } catch {
+    return '';
+  }
 }
 
 export class TaskOrchestrator {
@@ -182,6 +200,11 @@ export class TaskOrchestrator {
   private discreteTaskExitHandled = new Map<string, Promise<void>>();
   private continuousTaskExitHandled = new Map<string, Promise<void>>();
   private cleanupPromise: Promise<void> | null = null;
+  // Tasks whose runner already owns the write to
+  // `<cacheDir>/terminalOutputs/<hash>` — forked processes write it as they
+  // exit, and the paths that never spawn one write it inline. The backstop in
+  // postRunSteps consults this so a task's output is written exactly once.
+  private tasksWithPersistedOutput = new Set<string>();
   // endregion internal state
 
   constructor(
@@ -194,7 +217,10 @@ export class TaskOrchestrator {
     private readonly options: NxArgs & DefaultTasksRunnerOptions,
     private readonly bail: boolean,
     private readonly daemon: DaemonClient,
-    private readonly outputStyle: string,
+    /** What the user named; undefined means they named nothing. */
+    private readonly specifiedOutputStyle: OutputStyle | undefined,
+    /** What this run renders with, after defaults. */
+    private readonly resolvedOutputStyle: OutputStyle,
     private readonly fullTaskGraph: TaskGraph = taskGraph
   ) {}
 
@@ -860,7 +886,8 @@ export class TaskOrchestrator {
         batch,
         this.projectGraph,
         this.fullTaskGraph,
-        env
+        env,
+        printsTaskOutput(this.resolvedOutputStyle)
       );
 
       // Stream output from batch process to the batch
@@ -939,7 +966,15 @@ export class TaskOrchestrator {
         );
       }
 
-      return taskResults;
+      // The worker reported results, but its own stderr is not any task's
+      // output and has no route to a reader under a style that prints nothing:
+      // the fold above needs `shouldGroupBatchOutput`, `printGroupedBatchOutput`
+      // needs `printsTaskOutput` on top of that, and `discardCapturedOutput`
+      // unlinks the file when this method returns.
+      return this.attachBatchWorkerLog(
+        taskResults,
+        batchProcess.getCapturedOutputPath()
+      );
     } catch (e) {
       const isBatchStopping = this.stopRequested;
 
@@ -956,15 +991,31 @@ export class TaskOrchestrator {
         };
       });
 
+      // The same handoff the results path uses, rather than a second copy of
+      // it: a style that prints nothing renders no fold, so the captured log
+      // reaches a reader only by riding in the results, and a crashed worker's
+      // output is exactly what no task claims. A stopped batch is included: its
+      // partial log is the only record of what got through before the
+      // cancellation, and the fold below cannot carry it under `summary`
+      // because that gate gets `printsTaskOutput` too, so without this the
+      // `finally` unlinks the only copy.
+      const withWorkerLog = this.attachBatchWorkerLog(
+        taskResults,
+        batchProcess?.getCapturedOutputPath()
+      );
+
       // The worker died without reporting results, so nothing was attributed to
       // a task and no per-task output ran. Everything it wrote went to
-      // stdout/stderr, held back under log grouping — surface it as one fold.
-      // Outside grouping it already streamed live. This matters just as much
-      // when the batch was stopped: every task is marked stopped whether or not
-      // it finished, so the log is the only record of what got through. Only
-      // the exit-code error is dropped there, since it restates the
-      // cancellation.
-      if (shouldGroupBatchOutput()) {
+      // stdout/stderr, held back under grouping or under a style that prints
+      // nothing — surface it as one fold. Outside both, it already streamed
+      // live. This matters just as much when the batch was stopped: every task
+      // is marked stopped whether or not it finished, so the log is the only
+      // record of what got through. Only the exit-code error is dropped there,
+      // since it restates the cancellation.
+      if (
+        shouldGroupBatchOutput() &&
+        printsTaskOutput(this.resolvedOutputStyle)
+      ) {
         const capturedOutputPath = batchProcess?.getCapturedOutputPath();
         const trailer = isBatchStopping ? undefined : e.message;
         if (capturedOutputPath || trailer) {
@@ -977,7 +1028,7 @@ export class TaskOrchestrator {
         }
       }
 
-      return taskResults;
+      return withWorkerLog;
     } finally {
       batchProcess?.discardCapturedOutput();
       const runBatchEnd = performance.mark('TaskOrchestrator-run-batch:end');
@@ -987,6 +1038,65 @@ export class TaskOrchestrator {
         runBatchEnd.name
       );
     }
+  }
+
+  /**
+   * Gives the batch worker's captured log to the results that need it, for a
+   * style that prints nothing and so renders no fold.
+   *
+   * Only when something failed. A batch whose tasks all succeeded has nothing
+   * the worker's chatter would explain, and `summary`'s contract is that a
+   * failure's log is readable, not that every byte the run produced is.
+   *
+   * One worker means one log, so a single task carries it and the rest address
+   * that copy. Inlining it into each would write a byte-identical unbounded
+   * file per task, every one charged in full against `maxCacheSize`.
+   */
+  private attachBatchWorkerLog<
+    T extends { task: Task; status: TaskStatus; terminalOutput?: string },
+  >(results: T[], capturedOutputPath: string | undefined): T[] {
+    if (printsTaskOutput(this.resolvedOutputStyle)) {
+      return results;
+    }
+    const failures = results.filter(
+      (r) => r.status === 'failure' || r.status === 'stopped'
+    );
+    if (!failures.length) {
+      return results;
+    }
+    const workerLog = readCapturedBatchLog(capturedOutputPath);
+    if (!workerLog) {
+      return results;
+    }
+
+    // Names the task rather than a path. `task.hash` is still preliminary here:
+    // `applyFromCacheOrRunBatch` clears and recomputes it for any depsOutputs
+    // task that ran, failures included, before `persistTerminalOutputs` writes
+    // under the NEW hash. A path minted from the hash as it stands would address
+    // a file nothing ever writes. The reader loses nothing, since the holder
+    // failed too and `summary` prints its own `full log:` line.
+    const holder = failures[0];
+    const pointer = `batch worker log: reported with ${holder.task.id}`;
+
+    return results.map((result) => {
+      if (result === holder) {
+        return {
+          ...result,
+          terminalOutput: [workerLog, result.terminalOutput]
+            .filter(Boolean)
+            .join('\n'),
+        };
+      }
+      if (pointer && failures.includes(result)) {
+        return {
+          ...result,
+          terminalOutput: [result.terminalOutput, pointer]
+            .filter(Boolean)
+            .join('\n'),
+        };
+      }
+      return result;
+    });
   }
 
   /**
@@ -1056,19 +1166,24 @@ export class TaskOrchestrator {
     taskResults: TaskResult[],
     capturedOutputPath: string | undefined
   ) {
-    // Read from the same field the streaming decision uses. `this.options` has
-    // its own `outputStyle`, merged from `nx.json`'s tasksRunnerOptions, so the
-    // two disagree whenever a style is configured there but not named on the
-    // command line - and `init-tasks-runner` passes a populated `options` with
-    // no style argument at all, so on that path only `options` can carry one.
+    // Reads `resolvedOutputStyle` - what the run actually renders with. The
+    // streaming decision deliberately reads `specifiedOutputStyle` instead,
+    // since it has to tell a named style from an inferred default. `this.options`
+    // has its own `outputStyle`, merged from `nx.json`'s tasksRunnerOptions, so
+    // the two disagree whenever a style is configured there but not named on the
+    // command line.
     const printsFullOutput = printsFullTaskOutput({
       verbose: this.options.verbose,
-      outputStyle: this.outputStyle,
+      outputStyle: this.resolvedOutputStyle,
     });
     const batchOwnsTheDiagnostic = taskResults.some(
       (r) => r.status === 'failure' || r.status === 'stopped'
     );
-    if ((printsFullOutput || batchOwnsTheDiagnostic) && capturedOutputPath) {
+    if (
+      printsTaskOutput(this.resolvedOutputStyle) &&
+      (printsFullOutput || batchOwnsTheDiagnostic) &&
+      capturedOutputPath
+    ) {
       // No redirect lines: every task renders itself below, so there is nothing
       // to redirect anyone to.
       this.printBatchFold(
@@ -1227,6 +1342,10 @@ export class TaskOrchestrator {
   ): Promise<void> {
     if (this.completedTasks.has(task.id)) return;
     const terminalOutput = e?.message ?? '';
+    // The worker rejected, so whatever the runner was going to leave on disk
+    // either never landed or can't be trusted. Hand the file back to
+    // postRunSteps so the failure itself is what the task's output path holds.
+    this.tasksWithPersistedOutput.delete(task.id);
     this.options.lifeCycle.printTaskTerminalOutput(
       task,
       'failure',
@@ -1256,9 +1375,15 @@ export class TaskOrchestrator {
 
     const pipeOutput = await this.pipeOutputCapture(task);
     const temporaryOutputPath = this.cache.temporaryOutputPath(task);
-    const streamOutput = isStaticOutputStyle(this.outputStyle)
-      ? false
-      : shouldStreamOutput(task, this.initiatingProject);
+    // `summary` prints log paths rather than logs, and `shouldStreamOutput`
+    // would otherwise stream the initiating project's output in full - the one
+    // task a run-one is most likely to have. Continuous tasks are deliberately
+    // NOT suppressed the same way; see `startContinuousTask`.
+    const streamOutput =
+      isStaticOutputStyle(this.specifiedOutputStyle) ||
+      !printsTaskOutput(this.resolvedOutputStyle)
+        ? false
+        : shouldStreamOutput(task, this.initiatingProject);
 
     const env = pipeOutput
       ? getEnvVariablesForTask(
@@ -1408,17 +1533,22 @@ export class TaskOrchestrator {
           }
         }
 
-        if (!streamOutput && !shouldPrefix) {
-          // TODO: shouldn't this be checking if the task is continuous before writing anything to disk or calling printTaskTerminalOutput?
-          runningTask.onExit((code, terminalOutput) => {
+        runningTask.onExit((code, terminalOutput) => {
+          if (!streamOutput && !shouldPrefix) {
             this.options.lifeCycle.printTaskTerminalOutput(
               task,
               code === 0 ? 'success' : 'failure',
               terminalOutput
             );
+          }
+          // A continuous task never reaches postRunSteps, so exiting is its
+          // only chance to leave its output on disk. A discrete one is written
+          // there instead, whatever its output style — writing here too would
+          // just duplicate it.
+          if (task.continuous) {
             writeFileSync(temporaryOutputPath, terminalOutput);
-          });
-        }
+          }
+        });
 
         return runningTask;
       } catch (e) {
@@ -1429,6 +1559,7 @@ export class TaskOrchestrator {
         }
         const terminalOutput = e.stack ?? e.message ?? '';
         writeFileSync(temporaryOutputPath, terminalOutput);
+        this.tasksWithPersistedOutput.add(task.id);
         return new NoopChildProcess({
           code: 1,
           terminalOutput,
@@ -1436,6 +1567,7 @@ export class TaskOrchestrator {
       }
     } else if (targetConfiguration.executor === 'nx:noop') {
       writeFileSync(temporaryOutputPath, '');
+      this.tasksWithPersistedOutput.add(task.id);
       return new NoopChildProcess({
         code: 0,
         terminalOutput: '',
@@ -1449,6 +1581,12 @@ export class TaskOrchestrator {
         temporaryOutputPath,
         streamOutput
       );
+      // Every forked path leaves the file behind whatever the output style:
+      // the pseudo-terminal and prefixed processes write it when they exit,
+      // the direct-output capture has the child write it itself, and the
+      // fork-failure fallback writes the error. Continuous tasks depend on
+      // that — they never reach postRunSteps.
+      this.tasksWithPersistedOutput.add(task.id);
       if (this.tuiEnabled) {
         if (runningTask instanceof PseudoTtyProcess) {
           // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
@@ -1514,9 +1652,14 @@ export class TaskOrchestrator {
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
         console.error(e);
       }
+      const terminalOutput = e.stack ?? e.message ?? '';
+      // No process ever started, so nothing else will write the file. Record
+      // why, so the task's terminal output path resolves to the fork error
+      // rather than to nothing.
+      writeFileSync(temporaryOutputPath, terminalOutput);
       return new NoopChildProcess({
         code: 1,
-        terminalOutput: e.stack ?? e.message ?? '',
+        terminalOutput,
       });
     }
   }
@@ -1564,7 +1707,13 @@ export class TaskOrchestrator {
     const pipeOutput = await this.pipeOutputCapture(task);
     // obtain metadata
     const temporaryOutputPath = this.cache.temporaryOutputPath(task);
-    const streamOutput = isStaticOutputStyle(this.outputStyle)
+    // Deliberately not gated on `printsTaskOutput`, unlike `runTaskDirectly`.
+    // `SummaryTerminalOutputLifeCycle.printTaskTerminalOutput` is a no-op and it
+    // only reports at `endCommand`, which never runs for a task that does not
+    // end - so suppressing here would leave a `nx serve` under `summary` with a
+    // permanently silent terminal and no file to read yet. Streaming is the only
+    // channel a continuous task has.
+    const streamOutput = isStaticOutputStyle(this.specifiedOutputStyle)
       ? false
       : shouldStreamOutput(task, this.initiatingProject);
 
@@ -1606,6 +1755,9 @@ export class TaskOrchestrator {
       new Promise<void>((resolve) => {
         childProcess.onExit(async (code) => {
           await this.handleContinuousTaskExit(code, task, groupId, true);
+          // Registered after the runner's own exit handler, which is what
+          // wrote the file.
+          this.recordContinuousTerminalOutput(task);
           resolve();
         });
       })
@@ -1657,35 +1809,19 @@ export class TaskOrchestrator {
     // Caller decides whether these results should be written to the cache.
     // Cache replays pass false so a replayed failure (reported as 'failure' so
     // it counts as a failed run) isn't re-written to the cache on every replay.
-    if (shouldCache && !this.stopRequested) {
+    const resultsToCache =
+      shouldCache && !this.stopRequested ? this.resultsToCache(results) : [];
+
+    // Resolved before the cache writes so the two never write the same file.
+    this.persistTerminalOutputs(results, resultsToCache);
+
+    if (resultsToCache.length > 0) {
       // cache the results
       performance.mark('cache-results-start');
       await Promise.all(
-        results
-          .filter(
-            ({ status }) =>
-              status !== 'local-cache' &&
-              status !== 'local-cache-kept-existing' &&
-              status !== 'remote-cache' &&
-              status !== 'skipped' &&
-              status !== 'stopped'
-          )
-          .map((result) => ({
-            ...result,
-            code:
-              result.status === 'local-cache' ||
-              result.status === 'local-cache-kept-existing' ||
-              result.status === 'remote-cache' ||
-              result.status === 'success'
-                ? 0
-                : 1,
-            outputs: result.task.outputs,
-          }))
-          .filter(({ task, code }) => this.shouldCacheTaskResult(task, code))
-          .filter(({ terminalOutput, outputs }) => terminalOutput || outputs)
-          .map(async ({ task, code, terminalOutput, outputs }) =>
-            this.cache.put(task, terminalOutput, outputs, code)
-          )
+        resultsToCache.map(async ({ task, code, terminalOutput, outputs }) =>
+          this.cache.put(task, terminalOutput, outputs, code)
+        )
       );
       performance.mark('cache-results-end');
       performance.measure(
@@ -1697,6 +1833,123 @@ export class TaskOrchestrator {
 
     await this.complete(results, groupId);
     await this.scheduleNextTasksAndReleaseThreads();
+  }
+
+  /**
+   * The results `cache.put` will write, in the shape it wants them. Pulled out
+   * of postRunSteps so the terminal-output backstop can be told exactly which
+   * tasks the cache is already writing a file for.
+   */
+  private resultsToCache(
+    results: {
+      task: Task;
+      status: TaskStatus;
+      terminalOutput?: string;
+    }[]
+  ) {
+    return results
+      .filter(
+        ({ status }) =>
+          status !== 'local-cache' &&
+          status !== 'local-cache-kept-existing' &&
+          status !== 'remote-cache' &&
+          status !== 'skipped' &&
+          status !== 'stopped'
+      )
+      .map((result) => ({
+        ...result,
+        code:
+          result.status === 'local-cache' ||
+          result.status === 'local-cache-kept-existing' ||
+          result.status === 'remote-cache' ||
+          result.status === 'success'
+            ? 0
+            : 1,
+        outputs: result.task.outputs,
+      }))
+      .filter(({ task, code }) => this.shouldCacheTaskResult(task, code))
+      .filter(({ terminalOutput, outputs }) => terminalOutput || outputs);
+  }
+
+  /**
+   * Guarantee that every task that actually ran leaves its terminal output at
+   * `<cacheDir>/terminalOutputs/<hash>`, whatever its cache setting, output
+   * style, or batch membership. That path is what `--output-style=summary`
+   * addresses each failure by, what the DB cache reads back on a hit
+   * (`build_cached_result`), and what Nx Cloud falls back to reading when a
+   * task's in-memory output is undefined, so a task that reaches a terminal
+   * state without a file there is a dangling reference.
+   *
+   * Batch tasks are why this exists. Their output only ever arrives over IPC,
+   * so the sole thing that ever put it on disk was `cache.put` — leaving a
+   * `cache:false` batch task (the shape CI runs under `NX_BATCH_MODE`) with no
+   * file at all.
+   *
+   * Written exactly once per task: tasks whose runner owns the file are
+   * recorded in `tasksWithPersistedOutput`, and tasks `cache.put` is about to
+   * write are skipped here. Cache hits are skipped by status — their output was
+   * read from this very file — except a replayed cached *failure*, which comes
+   * back as `failure` and is rewritten with the bytes it was just read with.
+   * Skipped tasks never ran, so there is nothing to write.
+   *
+   * Every file written without a cache entry behind it is then registered with
+   * the cache, because `removeOldCacheRecords` only collects hashes it finds in
+   * the database — an unregistered file would never be cleaned up. That covers
+   * files this method wrote AND ones a runner wrote, which are equally
+   * invisible to the GC.
+   */
+  private persistTerminalOutputs(
+    results: {
+      task: Task;
+      status: TaskStatus;
+      terminalOutput?: string;
+    }[],
+    resultsToCache: { task: Task }[]
+  ) {
+    const writtenByCache = new Set(resultsToCache.map(({ task }) => task.id));
+    const toRecord: { hash: string; size: number }[] = [];
+    for (const { task, status, terminalOutput } of results) {
+      if (
+        terminalOutput === undefined ||
+        // A task that failed before it was hashed has no path to write to.
+        !task.hash ||
+        status === 'skipped' ||
+        status === 'local-cache' ||
+        status === 'local-cache-kept-existing' ||
+        status === 'remote-cache' ||
+        // `cache.put` writes the file and records the hash itself.
+        writtenByCache.has(task.id)
+      ) {
+        continue;
+      }
+      if (!this.tasksWithPersistedOutput.has(task.id)) {
+        this.tasksWithPersistedOutput.add(task.id);
+        writeFileSync(this.cache.temporaryOutputPath(task), terminalOutput);
+      }
+      toRecord.push({
+        hash: task.hash,
+        size: Buffer.byteLength(terminalOutput),
+      });
+    }
+    if (toRecord.length > 0) {
+      this.cache.recordTerminalOutputs(toRecord);
+    }
+  }
+
+  /**
+   * Register a continuous task's terminal output with the cache so the GC can
+   * collect it. Continuous tasks never reach postRunSteps — their file is
+   * written by whichever runner ran them, as the process exits — so this is
+   * the only place their hash gets recorded. Read off disk rather than from a
+   * result, because a continuous task completes without one.
+   */
+  private recordContinuousTerminalOutput(task: Task) {
+    if (!task.hash) return;
+    const path = this.cache.temporaryOutputPath(task);
+    if (!existsSync(path)) return;
+    this.cache.recordTerminalOutputs([
+      { hash: task.hash, size: statSync(path).size },
+    ]);
   }
 
   private async scheduleNextTasksAndReleaseThreads() {

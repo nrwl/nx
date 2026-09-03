@@ -122,6 +122,25 @@ export declare class NxCache {
   getBatch(hashes: Array<string>): Array<CachedResult | undefined | null>
   put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): Array<string>
   applyRemoteCacheResults(hash: string, result: CachedResult, outputs?: Array<string> | undefined | null): void
+  /**
+   * Register terminal outputs that were written without a cache entry —
+   * uncacheable tasks, and cacheable ones run with `--skip-nx-cache`.
+   *
+   * Without a row the file is invisible to `remove_old_cache_records`,
+   * which only ever walks hashes it finds in the database, so these files
+   * would accumulate forever. The row carries `has_artifacts = 0` so it can
+   * never be served as a cache hit.
+   *
+   * On conflict `accessed_at` always moves: the reads filter these rows out,
+   * so they would otherwise age from the first write and be collected out
+   * from under a task that is still being run daily. `size` moves only while
+   * the row is still output-only (`has_artifacts = 0`), so a task rerun with
+   * a longer log stops undercounting against `maxCacheSize`. `has_artifacts`
+   * is never touched, and a row that already has artifacts keeps the size
+   * `put` recorded, so a rewrite can neither demote a real entry nor replace
+   * its whole-entry size with the terminal output's.
+   */
+  recordTerminalOutputs(records: Array<TerminalOutputRecord>): void
   getTaskOutputsPath(hash: string): string
   getCacheSize(): number
   copyFilesFromCache(cachedResult: CachedResult, outputs: Array<string>): number
@@ -809,6 +828,15 @@ export interface TaskTarget {
   target: string
   /** The configuration of the target which the task invokes */
   configuration?: string
+}
+
+export interface TerminalOutputRecord {
+  hash: string
+  /**
+   * Byte length of the terminal output written for this hash, so these
+   * files are counted against `maxCacheSize` like any other cache content.
+   */
+  size: number
 }
 
 export declare function testOnlyTransferFileMap(projectFiles: Record<string, Array<FileData>>, nonProjectFiles: Array<FileData>): NxWorkspaceFilesExternals

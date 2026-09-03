@@ -74,6 +74,16 @@ export function getCache(options: DefaultTasksRunnerOptions): DbCache | Cache {
     : new Cache(options);
 }
 
+/**
+ * Where a task's terminal output lives on disk, for callers that have a hash but
+ * no cache instance. Mirrors the native layout (`get_task_outputs_path_internal`
+ * in cache.rs) and the legacy cache's `terminalOutputsDir`; both resolve
+ * `<cacheDir>/terminalOutputs/<hash>`.
+ */
+export function terminalOutputPathForHash(hash: string): string {
+  return join(cacheDir, 'terminalOutputs', hash);
+}
+
 export class DbCache {
   private nxJson = readNxJson();
   private cache = new NxCache(
@@ -234,6 +244,16 @@ export class DbCache {
         );
       }
     });
+  }
+
+  /**
+   * Register terminal outputs that were written outside of `put` — uncacheable
+   * tasks, and cacheable ones run with `--skip-nx-cache`. `removeOldCacheRecords`
+   * only collects hashes it finds in the database, so without this the files
+   * would never be cleaned up.
+   */
+  recordTerminalOutputs(records: { hash: string; size: number }[]) {
+    this.cache.recordTerminalOutputs(records);
   }
 
   copyFilesFromCache(_: string, cachedResult: CachedResult, outputs: string[]) {
@@ -546,6 +566,12 @@ export class Cache {
   temporaryOutputPath(task: Task) {
     return join(this.terminalOutputsDir, task.hash);
   }
+
+  /**
+   * No-op: the legacy cache has no database to record against, and its
+   * collection is directory-based rather than driven by cache records.
+   */
+  recordTerminalOutputs(_records: { hash: string; size: number }[]) {}
 
   private async expandOutputsInWorkspace(outputs: string[]) {
     return this._expandOutputs(outputs, workspaceRoot);
