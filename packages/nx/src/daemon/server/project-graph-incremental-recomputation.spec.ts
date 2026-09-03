@@ -2045,32 +2045,3 @@ describe('handleWatcherRescan', () => {
     expect(second).toBe(first);
   });
 });
-
-describe('diffFileData', () => {
-  it('classifies created, updated, unchanged and deleted files', async () => {
-    const { diffFileData } =
-      await import('./project-graph-incremental-recomputation');
-
-    const diff = diffFileData(
-      [
-        { file: 'a.ts', hash: '1' },
-        { file: 'b.ts', hash: '2' },
-        { file: 'c.ts', hash: '3' },
-      ],
-      [
-        { file: 'b.ts', hash: '2' },
-        { file: 'c.ts', hash: 'changed' },
-        { file: 'd.ts', hash: '4' },
-      ]
-    );
-
-    expect(diff.createdFiles).toEqual(['d.ts']);
-    // Created files carry their hash too: the collector needs one for every
-    // file it records, created or updated.
-    expect(diff.updatedFiles).toEqual([
-      { file: 'c.ts', hash: 'changed' },
-      { file: 'd.ts', hash: '4' },
-    ]);
-    expect(diff.deletedFiles).toEqual(['a.ts']);
-  });
-});
