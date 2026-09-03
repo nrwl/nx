@@ -3309,7 +3309,7 @@ async function runMigrations(
       getNxRequirePaths(root)
     );
     const { runOrchestratorInit } = require('./run') as typeof import('./run');
-    return await runOrchestratorInit({
+    await runOrchestratorInit({
       root,
       migrationsJson,
       createCommits: effectiveCreateCommits,
@@ -3321,6 +3321,7 @@ async function runMigrations(
       installedNxVersion: orchestratorNxPackageJson.version,
       validate: opts.validate,
     });
+    return;
   }
 
   reportMigrateRunStart({
@@ -3366,6 +3367,30 @@ async function runMigrations(
     !(await confirmMigrationCommitsOnDefaultBranch(root, 'running migrations'))
   ) {
     return;
+  }
+
+  // Dark: with the env var set, the agent drives the whole run through the
+  // orchestrator from one session instead of being spawned per step.
+  if (
+    agentic.kind === 'enabled' &&
+    process.env.NX_MIGRATE_ORCHESTRATOR === 'true'
+  ) {
+    const { packageJson: nxPackageJson } = readModulePackageJson(
+      'nx',
+      getNxRequirePaths(root)
+    );
+    const { runMasterSession } =
+      require('./agentic/master/run-master-session') as typeof import('./agentic/master/run-master-session');
+    return await runMasterSession({
+      root,
+      migrationsJson,
+      createCommits: effectiveCreateCommits,
+      commitPrefix,
+      skipInstall: shouldSkipInstall,
+      installedNxVersion: nxPackageJson.version,
+      validate: opts.validate,
+      agent: agentic.selectedAgent,
+    });
   }
 
   const shouldRunValidation = resolveShouldRunValidation({
