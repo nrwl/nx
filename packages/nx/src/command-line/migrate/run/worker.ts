@@ -1145,6 +1145,11 @@ function emitOrPrintPrompt(
   }
 }
 
+const PROMPT_NOT_APPLIED = `The following prompt-based migration was not applied automatically.`;
+// Recorded steps hand work back through the orchestrator, per the runbook's loop.
+const RUN_NEXT_FIRST = `Run the dispensed "next" command first: its response restates this work and names the handoff file to write.`;
+const CHANGES_AWAIT_VALIDATION = `The following migration's generator ran in an earlier attempt and its changes still await validation.`;
+
 function emitPromptForOuterAgent(
   migrationId: string,
   promptPath: string | undefined,
@@ -1163,7 +1168,9 @@ function emitPromptForOuterAgent(
     persistAgentWorkPayload(persistPath, payload);
   }
   logToAgent({
-    title: `The following prompt-based migration was not applied automatically. Apply it to this workspace, then continue.`,
+    title: persistPath
+      ? `${PROMPT_NOT_APPLIED} ${RUN_NEXT_FIRST}`
+      : `${PROMPT_NOT_APPLIED} Apply it to this workspace, then continue.`,
   });
   emitPromptBlock(migrationId, payload);
 }
@@ -1192,10 +1199,11 @@ function reemitCarriedAgentWork(
 ): void {
   persistAgentWorkPayload(payloadPath, payload);
   logToAgent({
-    title:
+    title: `${
       kind === 'migration-prompt'
-        ? `The following prompt-based migration was not applied automatically. Apply it to this workspace, then continue.`
-        : `The following migration's generator ran in an earlier attempt and its changes still await validation. Validate them per the runbook's validation scope rules, then continue.`,
+        ? PROMPT_NOT_APPLIED
+        : CHANGES_AWAIT_VALIDATION
+    } ${RUN_NEXT_FIRST}`,
   });
   emitPromptBlock(migrationId, payload);
 }
@@ -1275,8 +1283,8 @@ function emitValidationBlock(
   }
   logToAgent({
     title: impl
-      ? `The following migration's generator ran without an AI-driven part. Validate its changes per the runbook's validation scope rules, then continue.`
-      : `The following migration's generator ran in an earlier attempt and its changes still await validation. Inspect them with git, validate them per the runbook's validation scope rules, then continue.`,
+      ? `The following migration's generator ran without an AI-driven part. ${RUN_NEXT_FIRST}`
+      : `${CHANGES_AWAIT_VALIDATION} ${RUN_NEXT_FIRST} Inspect the changes with git.`,
   });
   emitPromptBlock(migrationId, payload);
 }
