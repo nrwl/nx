@@ -6,7 +6,6 @@ use std::sync::Arc;
 
 use crate::native::glob::glob_files::glob_files;
 use crate::native::hasher::hash;
-use crate::native::logger::enable_logger;
 use crate::native::project_graph::utils::{ProjectRootMappings, find_project_for_path};
 use crate::native::types::FileData;
 use crate::native::utils::{Normalize, NxCondvar, NxMutex, path::get_child_files};
@@ -212,8 +211,6 @@ impl FilesWorker {
 impl WorkspaceContext {
     #[napi(constructor)]
     pub fn new(workspace_root: String, cache_dir: String) -> Self {
-        enable_logger();
-
         trace!(?workspace_root);
 
         let workspace_root_path = PathBuf::from(&workspace_root);
