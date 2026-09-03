@@ -20,6 +20,7 @@ import {
   clearProjectsWithoutPluginInferenceCache,
   retrieveProjectConfigurationsWithoutPluginInference,
 } from '../utils/retrieve-workspace-files';
+import { isWorkspaceLocalResolution } from './built-entry-resolution-hint';
 
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
@@ -104,24 +105,6 @@ export async function resolveNxPlugin(
     ...result,
     workspacePackageNames: workspacePackageNames ?? [],
   };
-}
-
-/**
- * Distinguishes a symlinked workspace package (where `require.resolve`
- * follows the package-manager symlink into the workspace source tree) from
- * a truly-installed dependency under `node_modules/`. The former needs the
- * source-first lookup to bypass the dist that Node would otherwise return.
- */
-function isWorkspaceLocalResolution(
-  resolvedPath: string,
-  root: string
-): boolean {
-  const normalizedRoot = path.normalize(root);
-  const normalizedPath = path.normalize(resolvedPath);
-  return (
-    normalizedPath.startsWith(normalizedRoot + path.sep) &&
-    !normalizedPath.includes(path.sep + 'node_modules' + path.sep)
-  );
 }
 
 function isPackageResolutionError(e: unknown): boolean {
