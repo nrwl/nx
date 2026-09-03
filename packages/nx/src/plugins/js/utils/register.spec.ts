@@ -31,10 +31,6 @@ import {
 } from '../../../internal-testing-utils/cjs-mock';
 import { TempFs } from '../../../internal-testing-utils/temp-fs';
 
-/**
- * Lay out workspace packages the way a package manager does: real sources
- * under `packages/<dir>`, `node_modules/@proj/<dir>` a symlink into them.
- */
 function linkWorkspacePackages(base: string, dirs: string[]) {
   mkdirSync(join(base, 'node_modules/@proj'), { recursive: true });
   for (const dir of dirs) {
@@ -813,7 +809,6 @@ describe('registerSourceGraphResolver', () => {
     });
     expect(nextResolve).not.toHaveBeenCalled();
 
-    // A parent outside the graph keeps the default resolution untouched.
     const outsideContext = context(fileUrl('built-generator.js'));
     hooks.resolve('@proj/utils', outsideContext, nextResolve);
     expect(nextResolve).toHaveBeenCalledWith('@proj/utils', outsideContext);
@@ -836,7 +831,7 @@ describe('registerSourceGraphResolver', () => {
     );
     const nextResolve = vi.fn();
 
-    // Node < 22.19 / < 24.5 hands CJS resolve hooks a Set of conditions.
+    // CJS resolve hooks may hand conditions over as a Set.
     expect(
       hooks.resolve(
         '@proj/utils',
@@ -879,7 +874,6 @@ describe('registerSourceGraphResolver', () => {
 
     expect(result).toEqual({ url: fileUrl('dist-resolved.js') });
     expect(nextResolve).toHaveBeenCalledTimes(1);
-    // The original context object, with no conditions added.
     expect(nextResolve.mock.calls[0][1]).toBe(memberContext);
 
     cleanup();
@@ -900,7 +894,6 @@ describe('registerSourceGraphResolver', () => {
     hooks.resolve('./lazy.js', context(fileUrl('plugin.ts')), nextResolve);
     expect(nextResolve).toHaveBeenCalledTimes(1);
 
-    // The lazily imported source file is now a graph member itself.
     expect(
       hooks.resolve('@proj/utils', context(fileUrl('lazy.ts')), nextResolve)
     ).toEqual({
@@ -931,7 +924,6 @@ describe('registerSourceGraphResolver', () => {
       url: fileUrl('packages/next/src/flipped.js'),
       shortCircuit: true,
     });
-    // No longer a tracked package name after the refresh.
     hooks.resolve('@proj/utils', context(fileUrl('plugin.ts')), nextResolve);
     expect(nextResolve).toHaveBeenCalledTimes(1);
     expect(nextResolve).toHaveBeenCalledWith(
@@ -976,7 +968,6 @@ describe('registerSourceGraphResolver', () => {
 
     cleanupSecond();
     expect(hooks.deregister).toHaveBeenCalled();
-    // The former entry is no longer tracked once the graph is released.
     const memberContext = context(fileUrl('plugin.ts'));
     hooks.resolve('@proj/utils', memberContext, nextResolve);
     expect(nextResolve).toHaveBeenCalledWith('@proj/utils', memberContext);
@@ -1038,13 +1029,8 @@ describe('registerSourceGraphResolver', () => {
   });
 });
 
-// The scoping guarantee cannot be pinned with a mocked nextResolve: the defect
-// it guards against lives in the CJS loader's resolution caches (Module._load's
-// same-directory fast path and Module._pathCache), which only real requires
-// touch. Each case spawns a real node process that registers the resolver from
-// this package's register.ts (transpiled via @swc-node/register) and requires
-// two same-directory consumers of the same workspace package, one tracked as a
-// source-graph entry and one not, in both orders.
+// Real require() calls cover the CJS caches that mocked nextResolve calls
+// bypass.
 describe('registerSourceGraphResolver CJS path cache isolation', () => {
   const registerHooksAvailable =
     typeof (require('node:module') as { registerHooks?: unknown })
@@ -1067,14 +1053,12 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
     runScript = join(tempFs.tempDir, 'run.cjs');
 
     tempFs.createFilesSync({
-      // The entry reaches the package through a relative hop, so the result
-      // also proves that hop was tracked as a graph member.
+      // The relative hop verifies lazy graph-member tracking.
       'workspace/graph-entry.cjs':
         "module.exports = { ...require('./inner.cjs'), nested: require('./nested/member.cjs') };\n",
       'workspace/inner.cjs':
         "module.exports = { value: require('@proj/pkg'), resolved: require.resolve('@proj/pkg') };\n",
-      // A same-named external package nested closer to a member: not the
-      // workspace package, so it keeps Node's resolution.
+      // The nearer same-named external package must retain Node's resolution.
       'workspace/nested/member.cjs': "module.exports = require('@proj/pkg');\n",
       'workspace/nested/node_modules/@proj/pkg/package.json': JSON.stringify({
         name: '@proj/pkg',
@@ -1107,13 +1091,11 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
         `  require('node:module').registerHooks = undefined;`,
         `}`,
         `const { registerSourceGraphResolver } = require(${JSON.stringify(registerTsPath)});`,
-        // An alias root stands in for a workspace root that Node canonicalizes
-        // differently from how it was configured.
         `const base = process.argv[4] === 'alias-root' ? ${JSON.stringify(aliasDir)} : ${JSON.stringify(workspaceDir)};`,
         `const entry = base + '/graph-entry.cjs';`,
         `const sibling = base + '/sibling.cjs';`,
-        // The same physical entry registered by its real path first: the
-        // alias registration must still be recorded under its own spelling.
+        // Register the real path first to cover alias registration after an
+        // existing graph.
         `const cleanupReal = process.argv[4] === 'alias-root' ? registerSourceGraphResolver(${JSON.stringify(join(workspaceDir, 'graph-entry.cjs'))}, ${JSON.stringify(workspaceDir)}, ['@proj/pkg']) : () => {};`,
         `const cleanup = registerSourceGraphResolver(entry, base, ['@proj/pkg']);`,
         `const results = {};`,
@@ -1185,8 +1167,6 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
     120_000
   );
 
-  // Runtimes without module.registerHooks (Node < 22.15) get the CJS patches
-  // alone; the same scoping, require.resolve() included, must hold there.
   it.each(['graph-first', 'sibling-first'] as const)(
     'scopes the source export without module.registerHooks (%s)',
     (order) => {
@@ -1221,10 +1201,8 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
   );
 });
 
-// The graph conditions must union with the runtime's own conditions, not
-// replace them: a graph member resolving with only the graph conditions would
-// miss user --conditions and module-sync keys that every other consumer of the
-// same workspace package matches, forking one package into two live copies.
+// Graph conditions must union with runtime conditions so all consumers select
+// the same package instance.
 describe('registerSourceGraphResolver CJS runtime condition union', () => {
   const registerHooksAvailable =
     typeof (require('node:module') as { registerHooks?: unknown })
@@ -1252,7 +1230,6 @@ describe('registerSourceGraphResolver CJS runtime condition union', () => {
         "module.exports = { user: require('@proj/user-pkg'), dual: require('@proj/dual') };\n",
       'workspace/sibling.cjs':
         "module.exports = { user: require('@proj/user-pkg'), dual: require('@proj/dual') };\n",
-      // A user condition key ahead of the graph's development condition.
       'workspace/packages/user-pkg/package.json': JSON.stringify({
         name: '@proj/user-pkg',
         exports: {
@@ -1267,8 +1244,6 @@ describe('registerSourceGraphResolver CJS runtime condition union', () => {
       'workspace/packages/user-pkg/src/index.js':
         "module.exports = 'source';\n",
       'workspace/packages/user-pkg/dist/index.js': "module.exports = 'dist';\n",
-      // A module-sync key ahead of the require key, as dual-mode packages
-      // publish to hand require() and import() one shared copy.
       'workspace/packages/dual/package.json': JSON.stringify({
         name: '@proj/dual',
         exports: {
@@ -1313,9 +1288,7 @@ describe('registerSourceGraphResolver CJS runtime condition union', () => {
       );
       const results = JSON.parse(stdout.trim().split('\n').pop()!);
       expect(results.sibling).toEqual({ user: 'user', dual: 'esm' });
-      // The member sees the userA key, not the graph-condition fallback.
       expect(results.entry.user).toBe('user');
-      // The member binds the same copy Node picks for everyone else.
       expect(results.entry.dual).toBe(results.sibling.dual);
     },
     120_000
