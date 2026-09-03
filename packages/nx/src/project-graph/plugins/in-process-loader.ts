@@ -14,6 +14,7 @@ import type { LoadedNxPlugin } from './loaded-nx-plugin';
 import { LoadPluginError } from '../error-types';
 import path = require('node:path/posix');
 import { resolveLocalNxPlugin, resolveNxPlugin } from './resolve-plugin';
+import { withBuiltEntryResolutionHint } from './built-entry-resolution-hint';
 import {
   pluginTranspilerIsRegistered,
   registerPluginTSTranspiler,
@@ -120,7 +121,14 @@ export async function loadNxPluginAsync(
     } catch (e) {
       cleanupSourceGraphResolver();
       setCleanupSourceGraphResolver?.(() => {});
-      throw e;
+      throw isSourcePlugin
+        ? e
+        : withBuiltEntryResolutionHint(
+            e,
+            pluginPath,
+            root,
+            workspacePackageNames
+          );
     }
   } catch (e) {
     throw new LoadPluginError(moduleName, e);

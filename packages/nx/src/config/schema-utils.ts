@@ -8,6 +8,7 @@ import {
 } from '../plugins/js/utils/register';
 import { getWorkspacePackagesMetadata } from '../plugins/js/utils/packages';
 import { getRootTsConfigResolveExportsConditions } from '../plugins/js/utils/typescript';
+import { withBuiltEntryResolutionHint } from '../project-graph/plugins/built-entry-resolution-hint';
 import {
   createProjectRootMappingsFromProjectConfigurations,
   findProjectForPath,
@@ -78,14 +79,16 @@ export function getImplementationFactory<T>(
       packageName,
       projects
     );
+    const getWorkspacePackageNames = () =>
+      getWorkspacePackagesMetadata(projects)
+        .packageManagerWorkspacePackageNames;
     if (isSource) {
       // Factories have no unload lifecycle; repeated loads refresh and reuse
       // this bounded per-entry resolver state.
       registerSourceGraphResolver(
         modulePath,
         workspaceRoot,
-        getWorkspacePackagesMetadata(projects)
-          .packageManagerWorkspacePackageNames
+        getWorkspacePackageNames()
       );
     }
     // Route .ts entrypoints through loadTsFile so the native-strip ->
@@ -93,9 +96,21 @@ export function getImplementationFactory<T>(
     // set and bubbles errors like extensionless `./schema` imports (strict
     // ESM resolution failures) straight to the CLI. JS entrypoints use
     // requireWithTsconfigFallback so workspace-alias imports still resolve.
-    const module = /\.[cm]?ts$/.test(modulePath)
-      ? loadTsFile(modulePath)
-      : requireWithTsconfigFallback(modulePath);
+    let module: any;
+    try {
+      module = /\.[cm]?ts$/.test(modulePath)
+        ? loadTsFile(modulePath)
+        : requireWithTsconfigFallback(modulePath);
+    } catch (e) {
+      throw isSource
+        ? e
+        : withBuiltEntryResolutionHint(
+            e,
+            modulePath,
+            workspaceRoot,
+            getWorkspacePackageNames()
+          );
+    }
     return implementationExportName
       ? module[implementationExportName]
       : (module.default ?? module);
