@@ -556,6 +556,7 @@ function finishInit(
   const instructionLines = [
     `Nx ${origin} migrate run ${runId}. No migration step ran in this response.`,
     `Read the runbook above; it is the contract for driving this run. Then run the "next" command to get the run's current step.`,
+    ...runbookFooterLines(root, runId),
   ];
   const lines = safeLines(instructionLines);
   logToAgent({ title: `nx migrate: run ${origin}`, bodyLines: lines });
@@ -2258,8 +2259,8 @@ function noProgressLines(
   ];
 }
 
-// Append the runbook path to active and rejected responses so a compacted or
-// restarted session can recover the contract. The complete output and missing
+// Append the runbook path to init, active and rejected responses so a
+// compacted, truncated or restarted session can recover the contract. Missing
 // or non-regular runbooks stand alone.
 function runbookFooterLines(root: string, runId: string): string[] {
   if (

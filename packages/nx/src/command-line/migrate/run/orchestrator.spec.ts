@@ -373,6 +373,11 @@ describe('orchestrator', () => {
       expect(block.payload.instructions).toContain(
         `Nx created migrate run ${runId}. No migration step ran in this response.`
       );
+      // The tail names the runbook too: an agent that truncates the head of
+      // this output loses the contract otherwise.
+      expect(block.payload.instructions).toContain(
+        `Runbook: .nx/migrate-runs/${runId}/RUNBOOK.md`
+      );
       expect(mockInit).toHaveBeenCalledWith({
         migrationCount: 2,
         createCommits: false,
@@ -1199,6 +1204,9 @@ describe('orchestrator', () => {
       expect(block.action).toBe('initialized');
       expect(block.payload.instructions).toContain(
         'Nx resumed migrate run run-1.'
+      );
+      expect(block.payload.instructions).toContain(
+        'Runbook: .nx/migrate-runs/run-1/RUNBOOK.md'
       );
     });
 

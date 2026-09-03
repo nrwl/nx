@@ -475,6 +475,9 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(init.payload.instructions).toContain(
       `No migration step ran in this response.`
     );
+    expect(init.payload.instructions).toContain(
+      `Runbook: .nx/migrate-runs/${init.runId}/RUNBOOK.md`
+    );
     expect(existsSync(join(tmpProjPath(), 'gen-file'))).toBe(false);
     expect(
       readRunStateFile(init.runId).steps.every((s) => s.status === 'pending')
