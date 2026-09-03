@@ -2,12 +2,9 @@ import { realpathSync } from 'node:fs';
 import * as path from 'node:path';
 
 /**
- * Distinguishes a symlinked workspace package (where `require.resolve`
- * follows the package-manager symlink into the workspace source tree) from
- * a truly-installed dependency under `node_modules/`. The former needs the
- * source-first lookup to bypass the dist that Node would otherwise return.
- * Both sides are compared by realpath: Node reports resolved modules that
- * way, while the configured root may be an alias (`/tmp` vs `/private/tmp`).
+ * Tests workspace-local membership by realpath when available, so package
+ * symlinks and root aliases compare consistently; installed `node_modules`
+ * paths remain external.
  */
 export function isWorkspaceLocalResolution(
   resolvedPath: string,
@@ -30,10 +27,9 @@ function canonicalPath(p: string): string {
 }
 
 /**
- * A built entry runs under Node's own resolution, so a sibling workspace
- * package it cannot find is one whose build output does not exist yet.
- * Names the two ways out; the original error stays as the cause and its
- * message leads, since the daemon transports only the message.
+ * Adds build/source guidance when a workspace-local built entry cannot resolve
+ * a workspace path or package. Preserves the original error as cause and
+ * leading message.
  */
 export function withBuiltEntryResolutionHint(
   error: unknown,
