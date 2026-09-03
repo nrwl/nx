@@ -1,5 +1,14 @@
 import type { Mock } from 'vitest';
 import { EventEmitter } from 'events';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'fs';
+import { tmpdir } from 'os';
 import { join } from 'path';
 
 vi.mock('child_process', () => ({
@@ -20,17 +29,28 @@ import {
 
 const mockSpawn = spawn as unknown as Mock;
 
-type FakeChild = EventEmitter & { kill: Mock };
+type FakeChild = EventEmitter & {
+  exitCode: number | null;
+  signalCode: NodeJS.Signals | null;
+  kill: Mock;
+};
 
 // Emits `spawn` on the next tick unless told to fail before it; `exit` follows
-// on demand or right after `spawn`.
+// on demand, right after `spawn`, or on the first kill signal.
 function fakeChild(
   opts: { startError?: Error; exitAfterSpawn?: boolean } = {
     exitAfterSpawn: true,
   }
 ): FakeChild {
   const ee = new EventEmitter() as FakeChild;
-  ee.kill = vi.fn();
+  ee.exitCode = null;
+  ee.signalCode = null;
+  ee.kill = vi.fn((signal: NodeJS.Signals) => {
+    if (ee.signalCode !== null) return false;
+    ee.signalCode = signal;
+    setImmediate(() => ee.emit('exit', null, signal));
+    return true;
+  });
   setImmediate(() => {
     if (opts.startError) {
       ee.emit('error', opts.startError);
@@ -56,8 +76,15 @@ function agent(
   };
 }
 
-const runRoot = '/workspace';
 const runId = '20260715T101530-3f9a1c02';
+// Real, with the run dir the orchestrator would have created: the session
+// recreates the handoffs directory under it.
+const runRoot = mkdtempSync(join(tmpdir(), 'nx-master-root-'));
+mkdirSync(join(runRoot, '.nx', 'migrate-runs', runId), { recursive: true });
+afterAll(() => rmSync(runRoot, { recursive: true, force: true }));
+const sentinelPattern = new RegExp(
+  `create the file (\\.nx/migrate-runs/${runId}/handoffs/session-complete-[0-9a-f]{8}) as your last action`
+);
 
 function input(
   overrides: Partial<SpawnMasterSessionInput> = {}
@@ -68,9 +95,16 @@ function input(
     runId,
     runbookPath: join(runRoot, '.nx', 'migrate-runs', runId, 'RUNBOOK.md'),
     reconcileCommand: `npx nx migrate --run-id=${runId}`,
+    sentinelPollIntervalMs: 5,
+    gracefulExitMs: 20,
+    forceKillWaitMs: 20,
     ...overrides,
   };
 }
+
+const tick = () => new Promise((resolve) => setImmediate(resolve));
+const pollsElapsed = (n: number) =>
+  new Promise((resolve) => setTimeout(resolve, 5 * n));
 
 describe('spawnMasterSession', () => {
   const originalPlatform = process.platform;
@@ -107,9 +141,10 @@ describe('spawnMasterSession', () => {
       '--allowedTools',
       `Edit(.nx/migrate-runs/${runId}/handoffs/**)`,
       '--append-system-prompt',
-      expect.stringContaining(`.nx/migrate-runs/${runId}/RUNBOOK.md`),
+      expect.stringMatching(sentinelPattern),
       expect.stringContaining(`npx nx migrate --run-id=${runId}`),
     ]);
+    expect(args[3]).toContain(`.nx/migrate-runs/${runId}/RUNBOOK.md`);
     expect(options).toEqual(
       expect.objectContaining({
         stdio: 'inherit',
@@ -152,12 +187,14 @@ describe('spawnMasterSession', () => {
 
     const pending = spawnMasterSession(input());
     // Before the child's own `spawn` event has fired.
-    expect(process.listeners('SIGINT').length).toBe(sigintListeners + 1);
-    await new Promise((resolve) => setImmediate(resolve));
-    expect(process.listeners('SIGINT').length).toBe(sigintListeners + 1);
-
+    const beforeSpawnEvent = process.listeners('SIGINT').length;
+    await tick();
+    const afterSpawnEvent = process.listeners('SIGINT').length;
     child.emit('exit', null, 'SIGINT');
+
     expect(await pending).toEqual({ kind: 'exited' });
+    expect(beforeSpawnEvent).toBe(sigintListeners + 1);
+    expect(afterSpawnEvent).toBe(sigintListeners + 1);
   });
 
   it('settles on an error event after the agent started', async () => {
@@ -165,7 +202,7 @@ describe('spawnMasterSession', () => {
     mockSpawn.mockImplementation(() => child);
 
     const pending = spawnMasterSession(input());
-    await new Promise((resolve) => setImmediate(resolve));
+    await tick();
     child.emit('error', new Error('lost'));
 
     expect(await pending).toEqual({ kind: 'exited' });
@@ -194,6 +231,119 @@ describe('spawnMasterSession', () => {
     expect(await spawnMasterSession(input())).toEqual({
       kind: 'spawn-failed',
       error,
+    });
+  });
+
+  describe('session-complete sentinel', () => {
+    let root: string;
+    let handoffsDir: string;
+
+    beforeEach(() => {
+      root = mkdtempSync(join(tmpdir(), 'nx-master-'));
+      handoffsDir = join(root, '.nx', 'migrate-runs', runId, 'handoffs');
+      mkdirSync(handoffsDir, { recursive: true });
+    });
+
+    afterEach(() => {
+      rmSync(root, { recursive: true, force: true });
+    });
+
+    // The path the agent was told to create, resolved like the agent would.
+    function promptedSentinel(): string {
+      return join(
+        root,
+        mockSpawn.mock.calls[0][1][3].match(sentinelPattern)[1]
+      );
+    }
+
+    it('closes the session once the file exists and removes the file', async () => {
+      const child = fakeChild({ exitAfterSpawn: false });
+      mockSpawn.mockImplementation(() => child);
+
+      const pending = spawnMasterSession(input({ runRoot: root }));
+      await pollsElapsed(3);
+      const killsBeforeSentinel = child.kill.mock.calls.length;
+      writeFileSync(promptedSentinel(), '');
+
+      expect(await pending).toEqual({ kind: 'exited' });
+      expect(killsBeforeSentinel).toBe(0);
+      expect(child.kill).toHaveBeenCalledWith('SIGINT');
+      expect(existsSync(promptedSentinel())).toBe(false);
+    });
+
+    it('sends nothing when the child exits on its own', async () => {
+      const child = fakeChild({ exitAfterSpawn: false });
+      mockSpawn.mockImplementation(() => child);
+
+      const pending = spawnMasterSession(input({ runRoot: root }));
+      await pollsElapsed(3);
+      child.emit('exit', 0, null);
+
+      expect(await pending).toEqual({ kind: 'exited' });
+      expect(child.kill).not.toHaveBeenCalled();
+    });
+
+    it('ignores a sentinel written by another session of the same run', async () => {
+      writeFileSync(join(handoffsDir, 'session-complete-00000000'), '');
+      const child = fakeChild({ exitAfterSpawn: false });
+      mockSpawn.mockImplementation(() => child);
+
+      const pending = spawnMasterSession(input({ runRoot: root }));
+      await pollsElapsed(3);
+      writeFileSync(join(handoffsDir, 'session-complete-ffffffff'), '');
+      await pollsElapsed(3);
+      const killsBeforeOwnSentinel = child.kill.mock.calls.length;
+      writeFileSync(promptedSentinel(), '');
+
+      expect(await pending).toEqual({ kind: 'exited' });
+      expect(killsBeforeOwnSentinel).toBe(0);
+      expect(child.kill).toHaveBeenCalledWith('SIGINT');
+      expect(promptedSentinel()).not.toMatch(/session-complete-(0{8}|f{8})$/);
+    });
+
+    it('recreates a removed handoffs directory so the sentinel can be written', async () => {
+      rmSync(handoffsDir, { recursive: true });
+      const child = fakeChild({ exitAfterSpawn: false });
+      mockSpawn.mockImplementation(() => child);
+
+      const pending = spawnMasterSession(input({ runRoot: root }));
+      await pollsElapsed(3);
+      writeFileSync(promptedSentinel(), '');
+
+      expect(await pending).toEqual({ kind: 'exited' });
+      expect(child.kill).toHaveBeenCalledWith('SIGINT');
+    });
+
+    it('refuses to spawn when something else stands where the handoffs directory belongs', async () => {
+      rmSync(handoffsDir, { recursive: true });
+      symlinkSync(root, handoffsDir);
+      mockSpawn.mockImplementation(() => fakeChild());
+
+      const result = await spawnMasterSession(input({ runRoot: root }));
+
+      expect(mockSpawn).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        kind: 'spawn-failed',
+        error: expect.objectContaining({
+          message: expect.stringContaining(
+            `something other than a directory at ${handoffsDir}`
+          ),
+        }),
+      });
+    });
+
+    it('still reports the session as exited when the sentinel cannot be removed', async () => {
+      const child = fakeChild({ exitAfterSpawn: false });
+      mockSpawn.mockImplementation(() => child);
+
+      const pending = spawnMasterSession(input({ runRoot: root }));
+      await pollsElapsed(3);
+      mkdirSync(promptedSentinel());
+      writeFileSync(join(promptedSentinel(), 'child'), '');
+
+      expect(await pending).toEqual({ kind: 'exited' });
+      expect(child.kill).toHaveBeenCalledWith('SIGINT');
+      expect(existsSync(promptedSentinel())).toBe(true);
     });
   });
 
