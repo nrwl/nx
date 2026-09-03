@@ -869,4 +869,71 @@ describe('TaskOrchestrator', () => {
       expect(out).not.toContain('batch @nx/gradle:batch 2:2');
     });
   });
+
+  describe('process listener lifecycle', () => {
+    it('should remove on dispose() every process listener registered by setupSignalHandlers', async () => {
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      orchestrator.signalHandlers = [];
+      orchestrator.forkedProcessTaskRunner = {
+        cleanup: vi.fn(async () => {}),
+        removeProcessEventListeners: vi.fn(),
+      };
+      const signals = ['SIGINT', 'SIGTERM', 'SIGHUP'] as const;
+      const before = Object.fromEntries(
+        signals.map((s) => [s, process.listenerCount(s)])
+      );
+
+      orchestrator.setupSignalHandlers();
+      for (const s of signals) {
+        expect(process.listenerCount(s)).toBe(before[s] + 1);
+      }
+
+      await orchestrator.dispose();
+      for (const s of signals) {
+        expect(process.listenerCount(s)).toBe(before[s]);
+      }
+      expect(
+        orchestrator.forkedProcessTaskRunner.removeProcessEventListeners
+      ).toHaveBeenCalled();
+    });
+
+    it('should reap child processes before removing the last-resort exit handler', async () => {
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      orchestrator.signalHandlers = [];
+      const order: string[] = [];
+      orchestrator.forkedProcessTaskRunner = {
+        // A batch child can outlive its results message, so the exit
+        // handler must stay registered until every child is reaped. The
+        // push happens after a real async hop so that dropping the await
+        // in dispose() flips the recorded order and fails this test.
+        cleanup: vi.fn(async () => {
+          await new Promise((r) => setImmediate(r));
+          order.push('cleanup');
+        }),
+        removeProcessEventListeners: vi.fn(() => {
+          order.push('removeProcessEventListeners');
+        }),
+      };
+
+      await orchestrator.dispose();
+
+      expect(order).toEqual(['cleanup', 'removeProcessEventListeners']);
+    });
+
+    it('should resolve waitForContinuousTaskExit even for an exit that already happened', async () => {
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      const exitHandled = Promise.resolve();
+      orchestrator.continuousTaskExitHandled = new Map([
+        ['proj:serve', exitHandled],
+      ]);
+
+      // The creation-time promise is returned as-is; an unknown id (task
+      // never started, or already fully handled) resolves immediately
+      // rather than hanging disposal.
+      expect(orchestrator.waitForContinuousTaskExit('proj:serve')).toBe(
+        exitHandled
+      );
+      await orchestrator.waitForContinuousTaskExit('proj:unknown');
+    });
+  });
 });
