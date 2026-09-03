@@ -24,11 +24,27 @@ import { createRequire, Module } from 'node:module';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { join } from 'node:path';
+import { mkdirSync, realpathSync, symlinkSync } from 'node:fs';
 import {
   mockCjsModule,
   resetCjsMocks,
 } from '../../../internal-testing-utils/cjs-mock';
 import { TempFs } from '../../../internal-testing-utils/temp-fs';
+
+/**
+ * Lay out workspace packages the way a package manager does: real sources
+ * under `packages/<dir>`, `node_modules/@proj/<dir>` a symlink into them.
+ */
+function linkWorkspacePackages(base: string, dirs: string[]) {
+  mkdirSync(join(base, 'node_modules/@proj'), { recursive: true });
+  for (const dir of dirs) {
+    symlinkSync(
+      join(base, 'packages', dir),
+      join(base, 'node_modules/@proj', dir),
+      'dir'
+    );
+  }
+}
 {
   const req = createRequire(import.meta.url);
   const modPath = req.resolve('@swc-node/register/register');
@@ -706,7 +722,7 @@ describe('registerSourceGraphResolver', () => {
     tempFs = new TempFs('source-graph-resolver', false);
     root = tempFs.tempDir;
     tempFs.createFilesSync({
-      'node_modules/@proj/utils/package.json': JSON.stringify({
+      'packages/utils/package.json': JSON.stringify({
         name: '@proj/utils',
         exports: {
           '.': {
@@ -719,20 +735,21 @@ describe('registerSourceGraphResolver', () => {
           './sub': { source: './src/sub.ts', default: './dist/sub.js' },
         },
       }),
-      'node_modules/@proj/utils/src/index.ts': '',
-      'node_modules/@proj/utils/src/index.cts': '',
-      'node_modules/@proj/utils/src/sub.ts': '',
-      'node_modules/@proj/utils/dist/index.js': '',
-      'node_modules/@proj/utils/dist/sub.js': '',
-      'node_modules/@proj/next/package.json': JSON.stringify({
+      'packages/utils/src/index.ts': '',
+      'packages/utils/src/index.cts': '',
+      'packages/utils/src/sub.ts': '',
+      'packages/utils/dist/index.js': '',
+      'packages/utils/dist/sub.js': '',
+      'packages/next/package.json': JSON.stringify({
         name: '@proj/next',
         exports: {
           '.': { flipped: './src/flipped.js', default: './dist/index.js' },
         },
       }),
-      'node_modules/@proj/next/src/flipped.js': '',
-      'node_modules/@proj/next/dist/index.js': '',
+      'packages/next/src/flipped.js': '',
+      'packages/next/dist/index.js': '',
     });
+    linkWorkspacePackages(root, ['utils', 'next']);
   });
 
   afterAll(() => {
@@ -781,7 +798,7 @@ describe('registerSourceGraphResolver', () => {
     expect(
       hooks.resolve('@proj/utils', context(fileUrl('plugin.ts')), nextResolve)
     ).toEqual({
-      url: fileUrl('node_modules/@proj/utils/src/index.ts'),
+      url: fileUrl('packages/utils/src/index.ts'),
       shortCircuit: true,
     });
     expect(
@@ -791,7 +808,7 @@ describe('registerSourceGraphResolver', () => {
         nextResolve
       )
     ).toEqual({
-      url: fileUrl('node_modules/@proj/utils/src/sub.ts'),
+      url: fileUrl('packages/utils/src/sub.ts'),
       shortCircuit: true,
     });
     expect(nextResolve).not.toHaveBeenCalled();
@@ -827,7 +844,7 @@ describe('registerSourceGraphResolver', () => {
         nextResolve
       )
     ).toEqual({
-      url: fileUrl('node_modules/@proj/utils/src/index.cts'),
+      url: fileUrl('packages/utils/src/index.cts'),
       shortCircuit: true,
     });
     expect(
@@ -837,7 +854,7 @@ describe('registerSourceGraphResolver', () => {
         nextResolve
       )
     ).toEqual({
-      url: fileUrl('node_modules/@proj/utils/src/index.ts'),
+      url: fileUrl('packages/utils/src/index.ts'),
       shortCircuit: true,
     });
     expect(nextResolve).not.toHaveBeenCalled();
@@ -887,7 +904,7 @@ describe('registerSourceGraphResolver', () => {
     expect(
       hooks.resolve('@proj/utils', context(fileUrl('lazy.ts')), nextResolve)
     ).toEqual({
-      url: fileUrl('node_modules/@proj/utils/src/index.ts'),
+      url: fileUrl('packages/utils/src/index.ts'),
       shortCircuit: true,
     });
     expect(nextResolve).toHaveBeenCalledTimes(1);
@@ -911,7 +928,7 @@ describe('registerSourceGraphResolver', () => {
     expect(
       hooks.resolve('@proj/next', context(fileUrl('plugin.ts')), nextResolve)
     ).toEqual({
-      url: fileUrl('node_modules/@proj/next/src/flipped.js'),
+      url: fileUrl('packages/next/src/flipped.js'),
       shortCircuit: true,
     });
     // No longer a tracked package name after the refresh.
@@ -952,7 +969,7 @@ describe('registerSourceGraphResolver', () => {
     expect(
       hooks.resolve('@proj/utils', context(fileUrl('plugin.ts')), nextResolve)
     ).toEqual({
-      url: fileUrl('node_modules/@proj/utils/src/index.ts'),
+      url: fileUrl('packages/utils/src/index.ts'),
       shortCircuit: true,
     });
     expect(nextResolve).not.toHaveBeenCalled();
@@ -1046,14 +1063,20 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
 
     tempFs = new TempFs('source-graph-cjs-cache', false);
     workspaceDir = join(tempFs.tempDir, 'workspace');
+    const aliasDir = join(tempFs.tempDir, 'alias');
     runScript = join(tempFs.tempDir, 'run.cjs');
-    const graphEntry = join(workspaceDir, 'graph-entry.cjs');
-    const sibling = join(workspaceDir, 'sibling.cjs');
 
     tempFs.createFilesSync({
-      'workspace/graph-entry.cjs': "module.exports = require('@proj/pkg');\n",
-      'workspace/sibling.cjs': "module.exports = require('@proj/pkg');\n",
-      'workspace/node_modules/@proj/pkg/package.json': JSON.stringify({
+      // The entry reaches the package through a relative hop, so the result
+      // also proves that hop was tracked as a graph member.
+      'workspace/graph-entry.cjs':
+        "module.exports = { ...require('./inner.cjs'), nested: require('./nested/member.cjs') };\n",
+      'workspace/inner.cjs':
+        "module.exports = { value: require('@proj/pkg'), resolved: require.resolve('@proj/pkg') };\n",
+      // A same-named external package nested closer to a member: not the
+      // workspace package, so it keeps Node's resolution.
+      'workspace/nested/member.cjs': "module.exports = require('@proj/pkg');\n",
+      'workspace/nested/node_modules/@proj/pkg/package.json': JSON.stringify({
         name: '@proj/pkg',
         exports: {
           '.': {
@@ -1062,16 +1085,37 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
           },
         },
       }),
-      'workspace/node_modules/@proj/pkg/src/index.js':
-        "module.exports = 'source';\n",
-      'workspace/node_modules/@proj/pkg/dist/index.js':
-        "module.exports = 'dist';\n",
+      'workspace/nested/node_modules/@proj/pkg/src/index.js':
+        "module.exports = 'ext-source';\n",
+      'workspace/nested/node_modules/@proj/pkg/dist/index.js':
+        "module.exports = 'ext-dist';\n",
+      'workspace/sibling.cjs': "module.exports = require('@proj/pkg');\n",
+      'workspace/packages/pkg/package.json': JSON.stringify({
+        name: '@proj/pkg',
+        exports: {
+          '.': {
+            development: './src/index.js',
+            default: './dist/index.js',
+          },
+        },
+      }),
+      'workspace/packages/pkg/src/index.js': "module.exports = 'source';\n",
+      'workspace/packages/pkg/dist/index.js': "module.exports = 'dist';\n",
       'run.cjs': [
         `require(${JSON.stringify(swcRegisterPath)}).register({ esModuleInterop: true });`,
+        `if (process.argv[3] === 'no-hooks') {`,
+        `  require('node:module').registerHooks = undefined;`,
+        `}`,
         `const { registerSourceGraphResolver } = require(${JSON.stringify(registerTsPath)});`,
-        `const entry = ${JSON.stringify(graphEntry)};`,
-        `const sibling = ${JSON.stringify(sibling)};`,
-        `const cleanup = registerSourceGraphResolver(entry, ${JSON.stringify(workspaceDir)}, ['@proj/pkg']);`,
+        // An alias root stands in for a workspace root that Node canonicalizes
+        // differently from how it was configured.
+        `const base = process.argv[4] === 'alias-root' ? ${JSON.stringify(aliasDir)} : ${JSON.stringify(workspaceDir)};`,
+        `const entry = base + '/graph-entry.cjs';`,
+        `const sibling = base + '/sibling.cjs';`,
+        // The same physical entry registered by its real path first: the
+        // alias registration must still be recorded under its own spelling.
+        `const cleanupReal = process.argv[4] === 'alias-root' ? registerSourceGraphResolver(${JSON.stringify(join(workspaceDir, 'graph-entry.cjs'))}, ${JSON.stringify(workspaceDir)}, ['@proj/pkg']) : () => {};`,
+        `const cleanup = registerSourceGraphResolver(entry, base, ['@proj/pkg']);`,
         `const results = {};`,
         `if (process.argv[2] === 'sibling-first') {`,
         `  results.sibling = require(sibling);`,
@@ -1080,35 +1124,55 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
         `  results.entry = require(entry);`,
         `  results.sibling = require(sibling);`,
         `}`,
+        `cleanupReal();`,
         `cleanup();`,
         `delete require.cache[sibling];`,
         `results.siblingAfterCleanup = require(sibling);`,
         `console.log(JSON.stringify(results));`,
       ].join('\n'),
     });
+    linkWorkspacePackages(workspaceDir, ['pkg']);
+    symlinkSync(workspaceDir, aliasDir, 'dir');
   });
 
   afterAll(() => {
     tempFs.cleanup();
   });
 
-  function runOrdering(order: 'graph-first' | 'sibling-first') {
-    const stdout = execFileSync(process.execPath, [runScript, order], {
-      cwd: workspaceDir,
-      env: { ...process.env, NX_WORKSPACE_ROOT_PATH: workspaceDir },
-      encoding: 'utf8',
-    });
+  function runOrdering(
+    order: 'graph-first' | 'sibling-first',
+    hooks: 'hooks' | 'no-hooks' = 'hooks',
+    root: 'real-root' | 'alias-root' = 'real-root',
+    execArgv: string[] = []
+  ) {
+    const stdout = execFileSync(
+      process.execPath,
+      [...execArgv, runScript, order, hooks, root],
+      {
+        cwd: workspaceDir,
+        env: { ...process.env, NX_WORKSPACE_ROOT_PATH: workspaceDir },
+        encoding: 'utf8',
+      }
+    );
     return JSON.parse(stdout.trim().split('\n').pop()!);
   }
+
+  const expectScoped = () => ({
+    entry: {
+      value: 'source',
+      resolved: realpathSync(
+        join(workspaceDir, 'node_modules/@proj/pkg/src/index.js')
+      ),
+      nested: 'ext-dist',
+    },
+    sibling: 'dist',
+    siblingAfterCleanup: 'dist',
+  });
 
   it.runIf(registerHooksAvailable)(
     'keeps the source export scoped to the graph entry when it resolves first',
     () => {
-      expect(runOrdering('graph-first')).toEqual({
-        entry: 'source',
-        sibling: 'dist',
-        siblingAfterCleanup: 'dist',
-      });
+      expect(runOrdering('graph-first')).toEqual(expectScoped());
     },
     120_000
   );
@@ -1116,11 +1180,42 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
   it.runIf(registerHooksAvailable)(
     'still applies the source export to the graph entry when the sibling resolves first',
     () => {
-      expect(runOrdering('sibling-first')).toEqual({
-        entry: 'source',
-        sibling: 'dist',
-        siblingAfterCleanup: 'dist',
-      });
+      expect(runOrdering('sibling-first')).toEqual(expectScoped());
+    },
+    120_000
+  );
+
+  // Runtimes without module.registerHooks (Node < 22.15) get the CJS patches
+  // alone; the same scoping, require.resolve() included, must hold there.
+  it.each(['graph-first', 'sibling-first'] as const)(
+    'scopes the source export without module.registerHooks (%s)',
+    (order) => {
+      expect(runOrdering(order, 'no-hooks')).toEqual(expectScoped());
+    },
+    120_000
+  );
+
+  it.each(['hooks', 'no-hooks'] as const)(
+    'scopes the graph when the configured root is an alias of the real path (%s)',
+    (hooks) => {
+      expect(runOrdering('graph-first', hooks, 'alias-root')).toEqual(
+        expectScoped()
+      );
+    },
+    120_000
+  );
+
+  it.each(['hooks', 'no-hooks'] as const)(
+    'scopes the graph under --preserve-symlinks with an alias root (%s)',
+    (hooks) => {
+      const results = runOrdering('graph-first', hooks, 'alias-root', [
+        '--preserve-symlinks',
+      ]);
+      // Node keeps the alias spelling here, so only compare the markers.
+      expect(results.entry.value).toBe('source');
+      expect(results.entry.nested).toBe('ext-dist');
+      expect(results.sibling).toBe('dist');
+      expect(results.siblingAfterCleanup).toBe('dist');
     },
     120_000
   );
@@ -1158,7 +1253,7 @@ describe('registerSourceGraphResolver CJS runtime condition union', () => {
       'workspace/sibling.cjs':
         "module.exports = { user: require('@proj/user-pkg'), dual: require('@proj/dual') };\n",
       // A user condition key ahead of the graph's development condition.
-      'workspace/node_modules/@proj/user-pkg/package.json': JSON.stringify({
+      'workspace/packages/user-pkg/package.json': JSON.stringify({
         name: '@proj/user-pkg',
         exports: {
           '.': {
@@ -1168,15 +1263,13 @@ describe('registerSourceGraphResolver CJS runtime condition union', () => {
           },
         },
       }),
-      'workspace/node_modules/@proj/user-pkg/user/index.js':
-        "module.exports = 'user';\n",
-      'workspace/node_modules/@proj/user-pkg/src/index.js':
+      'workspace/packages/user-pkg/user/index.js': "module.exports = 'user';\n",
+      'workspace/packages/user-pkg/src/index.js':
         "module.exports = 'source';\n",
-      'workspace/node_modules/@proj/user-pkg/dist/index.js':
-        "module.exports = 'dist';\n",
+      'workspace/packages/user-pkg/dist/index.js': "module.exports = 'dist';\n",
       // A module-sync key ahead of the require key, as dual-mode packages
       // publish to hand require() and import() one shared copy.
-      'workspace/node_modules/@proj/dual/package.json': JSON.stringify({
+      'workspace/packages/dual/package.json': JSON.stringify({
         name: '@proj/dual',
         exports: {
           '.': {
@@ -1186,10 +1279,8 @@ describe('registerSourceGraphResolver CJS runtime condition union', () => {
           },
         },
       }),
-      'workspace/node_modules/@proj/dual/esm/index.js':
-        "module.exports = 'esm';\n",
-      'workspace/node_modules/@proj/dual/cjs/index.js':
-        "module.exports = 'cjs';\n",
+      'workspace/packages/dual/esm/index.js': "module.exports = 'esm';\n",
+      'workspace/packages/dual/cjs/index.js': "module.exports = 'cjs';\n",
       'run.cjs': [
         `require(${JSON.stringify(swcRegisterPath)}).register({ esModuleInterop: true });`,
         `const { registerSourceGraphResolver } = require(${JSON.stringify(registerTsPath)});`,
@@ -1201,6 +1292,7 @@ describe('registerSourceGraphResolver CJS runtime condition union', () => {
         `console.log(JSON.stringify(results));`,
       ].join('\n'),
     });
+    linkWorkspacePackages(workspaceDir, ['user-pkg', 'dual']);
   });
 
   afterAll(() => {
