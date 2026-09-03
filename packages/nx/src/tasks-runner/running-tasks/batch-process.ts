@@ -276,6 +276,9 @@ export class BatchProcess {
     }
   }
 
+  // Resolves on the CompleteBatchExecution message, not process exit: the
+  // child can outlive its results (open handles keep it alive), so callers
+  // must not treat a settled batch as an exited process.
   async getResults(): Promise<BatchResults> {
     return Promise.race<BatchResults>([
       new Promise((_, rej) => {
