@@ -18,6 +18,7 @@ import { mergeTargetConfigurations } from '../project-graph/utils/project-config
 import { getCatalogManager } from './catalog';
 import { readJsonFile } from './fileutils';
 import { hasNxJsPlugin } from './has-nx-js-plugin';
+import { isContainedRelativePath } from './path';
 import { getNxRequirePaths } from './installation-directory';
 import {
   createTempNpmDirectory,
@@ -152,6 +153,19 @@ export function normalizePackageGroup(
 export function readNxMigrateConfig(
   json: Partial<PackageJson>
 ): NxMigrationsConfiguration & { packageGroup?: ArrayPackageGroup } {
+  // Registry fetching uses this value to build a temporary extraction path.
+  // Reject unsupported absolute paths and escaping parent traversal before extraction.
+  const assertContained = (migrations: string): string => {
+    if (!isContainedRelativePath(migrations)) {
+      throw new Error(
+        `Invalid migrations path "${migrations}" in package "${json.name ?? 'unknown'}@${
+          json.version ?? 'unknown'
+        }": migration paths must not be absolute or escape their base directory through parent traversal.`
+      );
+    }
+    return migrations;
+  };
+
   const parseNxMigrationsConfig = (
     fromJson?: string | NxMigrationsConfiguration
   ): NxMigrationsConfiguration & { packageGroup?: ArrayPackageGroup } => {
@@ -159,11 +173,13 @@ export function readNxMigrateConfig(
       return {};
     }
     if (typeof fromJson === 'string') {
-      return { migrations: fromJson, packageGroup: [] };
+      return { migrations: assertContained(fromJson), packageGroup: [] };
     }
 
     return {
-      ...(fromJson.migrations ? { migrations: fromJson.migrations } : {}),
+      ...(fromJson.migrations
+        ? { migrations: assertContained(fromJson.migrations) }
+        : {}),
       ...(fromJson.packageGroup
         ? { packageGroup: normalizePackageGroup(fromJson.packageGroup) }
         : {}),
