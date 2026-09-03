@@ -480,18 +480,10 @@ const sourceGraphModulePaths = new Map<string, SourceGraph>();
 let sourceGraphHooks: { deregister(): void } | undefined;
 
 /**
- * Apply workspace export conditions only to known workspace-package imports
- * reached from an explicitly source-loaded entry. Relative source imports are
- * tracked so lazy imports remain in the same graph; third-party modules are not.
- * Registrations are reference counted per entry, so the graph is released only
- * by the last of its cleanups.
- *
- * CJS is covered on every supported runtime through scoped `Module._load` and
- * `Module._resolveFilename` patches (see `patchCjsModuleLoad` and
- * `patchCjsResolveFilename`). ESM needs `module.registerHooks()` (Node 22.15+
- * / 23.5+); earlier runtimes resolve `import()` from a graph member with the
- * process conditions, where `NODE_OPTIONS=--conditions` remains the escape
- * hatch.
+ * Applies workspace export conditions only to workspace-package imports in a
+ * source-loaded entry's graph. Relative workspace imports join the graph. The
+ * last per-entry cleanup releases it. CJS is scoped on every supported
+ * runtime; ESM scoping requires `module.registerHooks()` (Node 22.15+).
  */
 export function registerSourceGraphResolver(
   entryPath: string,
@@ -500,8 +492,8 @@ export function registerSourceGraphResolver(
 ): () => void {
   const module = require('node:module') as typeof import('node:module');
   const { pathToFileURL } = require('node:url') as typeof import('node:url');
-  // Node reports loaded modules by realpath; keys and root must match that,
-  // not the workspace root as configured (`/tmp` vs `/private/tmp`).
+  // Canonicalize root and entry to match Node's default module identities
+  // across root aliases.
   root = canonicalPath(root);
   const entryUrl = normalizeModuleUrl(
     pathToFileURL(canonicalPath(entryPath)).href
@@ -562,11 +554,8 @@ function registerSourceGraphHooks(module: typeof import('node:module')): {
       if (
         sourceGraph.packageNames.has(getPackageNameFromSpecifier(specifier))
       ) {
-        // Resolved authoritatively rather than by delegating with extra
-        // conditions: the default resolution would store the conditioned
-        // result in CJS caches keyed without conditions (see
-        // patchCjsModuleLoad). On failure, fall through to the default
-        // resolution with the context untouched.
+        // Resolve directly to keep conditioned results out of
+        // condition-agnostic CJS caches; fall back with the original context.
         const resolvedPath = resolveFromWorkspacePackageExports(
           specifier,
           context.parentURL!,
@@ -597,16 +586,9 @@ function registerSourceGraphHooks(module: typeof import('node:module')): {
 }
 
 /**
- * `Module._load` serves same-directory repeat resolutions from caches keyed
- * on parent directory + request. Those caches are read before resolve hooks
- * run and written even for hook-short-circuited resolutions, so a graph
- * member and a same-directory non-member would share one resolution in
- * whichever direction loads first. Rewriting the member's workspace-package
- * request to its resolved path before the caches see it keeps conditioned
- * results out of them; `patchCjsResolveFilename` covers `require.resolve` and
- * the resolve hook covers ESM. Resolve hooks only run inside `Module._load`
- * itself, so the patch cannot see Node's real condition context and
- * reconstructs it via `getProcessRequireConditions`.
+ * Rewrites graph-member workspace requests before `Module._load`'s
+ * condition-agnostic caches. Reconstructs CJS conditions because resolve
+ * hooks expose them too late for this patch.
  */
 function patchCjsModuleLoad(): () => void {
   const Module = require('node:module') as any;
@@ -628,8 +610,8 @@ function patchCjsModuleLoad(): () => void {
   };
   Module._load = patchedLoad;
   return () => {
-    // Another patch may have wrapped ours in the meantime; restoring would
-    // discard it, so turn ours into a pass-through instead.
+    // Preserve a later wrapper by deactivating this patch instead of
+    // restoring over it.
     if (Module._load === patchedLoad) {
       Module._load = originalLoad;
     } else {
@@ -638,11 +620,6 @@ function patchCjsModuleLoad(): () => void {
   };
 }
 
-/**
- * Resolves a workspace-package request made by a graph member with the graph
- * conditions, tracking the result as a member. Null when the request is not
- * one to rewrite, so the caller falls through to Node's resolution.
- */
 function resolveWorkspaceRequestFromGraph(
   request: string,
   parent: { filename?: string } | undefined
@@ -673,11 +650,8 @@ function resolveWorkspaceRequestFromGraph(
 }
 
 /**
- * Gives `require.resolve()` from a graph member the graph conditions, which
- * `Module._load` never sees, and tracks what a member resolves inside the
- * workspace (relative imports, tsconfig-path aliases) as members of the same
- * graph. The ESM resolve hook does the same for its resolutions; this is the
- * only tracking CJS gets on runtimes without `module.registerHooks`.
+ * Scopes `require.resolve()` and tracks other workspace CJS resolutions,
+ * including without `module.registerHooks()`.
  */
 function patchCjsResolveFilename(): () => void {
   const Module = require('node:module') as any;
@@ -725,10 +699,7 @@ function patchCjsResolveFilename(): () => void {
   };
 }
 
-/**
- * The package-names thunk runs only when a source graph exists, so callers
- * may hand it a walk over the full project graph without paying for it here.
- */
+/** Defers the caller's workspace-wide package scan until a source graph exists. */
 export function refreshSourceGraphResolvers(
   root: string,
   getWorkspacePackageNames?: () => string[]
@@ -837,9 +808,8 @@ function hasRequireCondition(
 let processRequireConditions: string[] | undefined;
 
 /**
- * The condition set Node hands CJS resolve hooks, reconstructed for the
- * `Module._load` patch where no hook context exists. `module-sync` exists
- * since Node 22.10 / 23.0.
+ * Reconstructs Node's CJS resolve-hook conditions for the `Module._load`
+ * patch, including `module-sync` where Node enables it.
  */
 function getProcessRequireConditions(): string[] {
   if (!processRequireConditions) {
@@ -873,9 +843,8 @@ function getUserConditionsFromArgs(args: string[]): string[] {
   return conditions;
 }
 
-// Parsed exports maps per package.json path. Node's own loader caches
-// package.json for the process lifetime; refreshSourceGraphResolvers clears
-// this so a daemon recompute picks up manifest changes.
+// Cache parsed exports per manifest; graph refresh clears it after manifest
+// changes.
 const workspacePackageExportsCache = new Map<string, any>();
 
 function resolveFromWorkspacePackageExports(
@@ -909,8 +878,8 @@ function resolveFromWorkspacePackageExports(
       { name: packageName, exports: packageExports },
       '.' + specifier.slice(packageName.length),
       {
-        // The union, not the graph conditions alone: a member must match the
-        // same user --conditions and module-sync keys as every other consumer.
+        // Preserve runtime user and module-sync conditions when adding graph
+        // conditions.
         conditions: [...(contextConditions ?? []), ...graph.conditions],
         require: isRequire,
       }
@@ -922,8 +891,7 @@ function resolveFromWorkspacePackageExports(
     for (const match of matches) {
       const candidate = join(packageRoot, match);
       if (existsSync(candidate)) {
-        // realpath so package-manager symlinks land on the workspace source
-        // path, keeping the resolved module trackable as a graph member.
+        // Resolve symlinks so workspace modules remain trackable graph members.
         return realpathSync(candidate);
       }
     }
