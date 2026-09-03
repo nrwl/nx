@@ -622,6 +622,42 @@ export const createNodesV2: CreateNodesV2<PluginOptions> = [
 `
     );
 
+    // A built plugin entry (no source condition) imports the same package;
+    // it must see the built sibling, not have conditions forced onto it.
+    createFile(
+      `packages/${plugin}/dist/plugins/deps-built/plugin.js`,
+      `const { basename, dirname } = require('path');
+const { workspaceDepMarker } = require('@${workspaceName}/${lib}');
+
+exports.createNodesV2 = [
+  '**/my-built-file',
+  (files, options) =>
+    files.map((f) => {
+      const root = dirname(f);
+      const name = basename(root);
+      return [
+        f,
+        {
+          projects: {
+            [root]: {
+              root,
+              name,
+              targets: {
+                build: {
+                  executor: 'nx:run-commands',
+                  options: { command: \`echo '\${workspaceDepMarker}'\` },
+                },
+              },
+              tags: options.inferredTags,
+            },
+          },
+        },
+      ];
+    }),
+];
+`
+    );
+
     updateJson(`packages/${plugin}/package.json`, (pkg) => {
       pkg.dependencies ??= {};
       pkg.dependencies[`@${workspaceName}/${lib}`] =
@@ -633,9 +669,71 @@ export const createNodesV2: CreateNodesV2<PluginOptions> = [
           [sourceCondition]: './src/plugins/deps/plugin.ts',
           default: './dist/plugins/deps/plugin.js',
         },
+        './deps-built': {
+          default: './dist/plugins/deps-built/plugin.js',
+        },
       };
       return pkg;
     });
+
+    // A plugin registered by its bare package name, with no build target:
+    // the exports root entry alone decides that it loads from source.
+    const barePlugin = uniq('bare-plugin');
+    createFile(
+      `packages/${barePlugin}/package.json`,
+      JSON.stringify({
+        name: `@${workspaceName}/${barePlugin}`,
+        version: '0.0.1',
+        dependencies: {
+          [`@${workspaceName}/${lib}`]: pm === 'pnpm' ? 'workspace:*' : '*',
+        },
+        exports: {
+          './package.json': './package.json',
+          '.': {
+            [sourceCondition]: './src/index.ts',
+            default: './dist/index.js',
+          },
+        },
+      })
+    );
+    createFile(
+      `packages/${barePlugin}/src/index.ts`,
+      `import { basename, dirname } from 'path';
+import type { CreateNodesV2 } from '@nx/devkit';
+import { workspaceDepMarker } from '@${workspaceName}/${lib}';
+
+export const createNodesV2: CreateNodesV2<{ inferredTags: string[] }> = [
+  '**/my-bare-file',
+  (files, options) =>
+    files.map((f) => {
+      const root = dirname(f);
+      const name = basename(root);
+      return [
+        f,
+        {
+          projects: {
+            [root]: {
+              root,
+              name,
+              targets: {
+                build: {
+                  executor: 'nx:run-commands',
+                  options: { command: \`echo '\${workspaceDepMarker}'\` },
+                },
+              },
+              tags: options.inferredTags,
+            },
+          },
+        },
+      ];
+    }),
+];
+`
+    );
+    createFile(
+      `packages/${barePlugin}/dist/index.js`,
+      `exports.createNodesV2 = ['**/my-bare-file', () => { throw new Error('bare plugin loaded from dist'); }];\n`
+    );
 
     // Both sync generators run in the same daemon process; scoped conditions
     // must resolve the workspace package per entry (built vs source).
@@ -676,10 +774,20 @@ export default (tree: any) =>
 
     updateJson(`nx.json`, (nxJson) => {
       nxJson.plugins ??= [];
-      nxJson.plugins.push({
-        plugin: `@${workspaceName}/${plugin}/deps`,
-        options: { inferredTags: ['deps-tag'] },
-      });
+      nxJson.plugins.push(
+        {
+          plugin: `@${workspaceName}/${plugin}/deps`,
+          options: { inferredTags: ['deps-tag'] },
+        },
+        {
+          plugin: `@${workspaceName}/${plugin}/deps-built`,
+          options: { inferredTags: ['deps-built-tag'] },
+        },
+        {
+          plugin: `@${workspaceName}/${barePlugin}`,
+          options: { inferredTags: ['bare-tag'] },
+        }
+      );
       nxJson.sync = {
         globalGenerators: [
           `@${workspaceName}/${plugin}:sync`,
@@ -698,6 +806,18 @@ export default (tree: any) =>
       JSON.stringify({ name: inferredProject, version: '0.0.1' })
     );
     createFile(`packages/${inferredProject}/my-project-file`);
+    const builtInferredProject = uniq('deps-built-inferred');
+    createFile(
+      `packages/${builtInferredProject}/package.json`,
+      JSON.stringify({ name: builtInferredProject, version: '0.0.1' })
+    );
+    createFile(`packages/${builtInferredProject}/my-built-file`);
+    const bareInferredProject = uniq('bare-inferred');
+    createFile(
+      `packages/${bareInferredProject}/package.json`,
+      JSON.stringify({ name: bareInferredProject, version: '0.0.1' })
+    );
+    createFile(`packages/${bareInferredProject}/my-bare-file`);
 
     runCLI('reset');
     runCLI('sync');
@@ -713,7 +833,17 @@ export default (tree: any) =>
     );
     expect(configuration.tags).toContain('deps-tag');
     expect(runCLI(`build ${inferredProject}`)).toContain(sourceMarker);
-  }, 120000);
+
+    expect(
+      JSON.parse(runCLI(`show project ${builtInferredProject} --json`)).tags
+    ).toContain('deps-built-tag');
+    expect(runCLI(`build ${builtInferredProject}`)).toContain(builtMarker);
+
+    expect(
+      JSON.parse(runCLI(`show project ${bareInferredProject} --json`)).tags
+    ).toContain('bare-tag');
+    expect(runCLI(`build ${bareInferredProject}`)).toContain(sourceMarker);
+  }, 180000);
 
   it('should respect and support generating plugins with a name different than the import path', async () => {
     const plugin = uniq('plugin');
