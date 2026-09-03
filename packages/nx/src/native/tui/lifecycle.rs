@@ -12,7 +12,6 @@ use napi::{Status, bindgen_prelude::Unknown};
 
 #[cfg(not(test))]
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
-#[cfg(not(test))]
 use crate::native::pseudo_terminal::pseudo_terminal::{MasterArc, ParserArc, WriterArc};
 use crate::native::tasks::types::{Task, TaskGraph, TaskResult};
 
