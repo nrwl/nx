@@ -12,6 +12,17 @@ mockCjsModule(import.meta.url, './run', {
   runOrchestratorInit: (...args: unknown[]) => mockRunOrchestratorInit(...args),
   runOrchestratorReconcile: vi.fn(),
 });
+const mockRunMasterSession = vi.fn();
+mockCjsModule(import.meta.url, './agentic/master/run-master-session', {
+  runMasterSession: (...args: unknown[]) => mockRunMasterSession(...args),
+});
+// Stubbed the same way: the user-initiated path resolves the agentic flow
+// before it can branch to the master session.
+const mockResolveAgentic = vi.fn();
+mockCjsModule(import.meta.url, './agentic/select', {
+  ...require('./agentic/select'),
+  resolveAgentic: (...args: unknown[]) => mockResolveAgentic(...args),
+});
 
 const mockIsInsideAgent = vi.fn();
 vi.mock('./agentic/inception', async () => ({
@@ -106,6 +117,8 @@ describe('migrate() orchestrated init dispatch', () => {
     );
     process.env.NX_MIGRATE_ORCHESTRATOR = 'true';
     mockRunOrchestratorInit.mockReset().mockResolvedValue(undefined);
+    mockRunMasterSession.mockReset().mockResolvedValue(undefined);
+    mockResolveAgentic.mockReset().mockResolvedValue({ kind: 'disabled' });
     mockReportRunStart.mockReset();
     mockIsInsideAgent.mockReset().mockReturnValue(true);
     mockCanPrompt.mockReset().mockReturnValue(true);
@@ -245,6 +258,94 @@ describe('migrate() orchestrated init dispatch', () => {
       );
     }
   );
+
+  describe('user-initiated run with the agentic flow enabled', () => {
+    const selectedAgent = {
+      id: 'claude-code',
+      displayName: 'Claude Code',
+      binary: '/usr/local/bin/claude',
+      source: 'path',
+    };
+
+    beforeEach(() => {
+      mockIsInsideAgent.mockReturnValue(false);
+      mockResolveAgentic.mockResolvedValue({
+        kind: 'enabled',
+        selectedAgent,
+      });
+    });
+
+    it('hands the run to the master session, after the default-branch confirmation, when the gate env var is set', async () => {
+      mockGetGitCurrentBranch.mockReturnValue('main');
+
+      await migrate(root, runMigrationsArgs({ agentic: 'claude-code' }), [
+        '--run-migrations',
+        '--agentic=claude-code',
+      ]);
+
+      expect(mockReportRunStart).toHaveBeenCalledTimes(1);
+      expect(mockMigrateConfirm).toHaveBeenCalledTimes(1);
+      expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+      expect(mockRunMasterSession).toHaveBeenCalledTimes(1);
+      expect(mockMigrateConfirm.mock.invocationCallOrder[0]).toBeLessThan(
+        mockRunMasterSession.mock.invocationCallOrder[0]
+      );
+      expect(mockRunMasterSession).toHaveBeenCalledWith({
+        root,
+        migrationsJson: expect.objectContaining({
+          migrations: expect.any(Array),
+        }),
+        createCommits: true,
+        commitPrefix: expect.any(String),
+        skipInstall: false,
+        installedNxVersion: '23.0.0',
+        validate: undefined,
+        agent: selectedAgent,
+      });
+      expect(output.log).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining('Running migrations from'),
+        })
+      );
+    });
+
+    it('starts nothing when the default-branch confirmation is declined', async () => {
+      mockGetGitCurrentBranch.mockReturnValue('main');
+      mockMigrateConfirm.mockResolvedValue(false);
+
+      await migrate(root, runMigrationsArgs({ agentic: 'claude-code' }), [
+        '--run-migrations',
+        '--agentic=claude-code',
+      ]);
+
+      expect(mockRunMasterSession).not.toHaveBeenCalled();
+      expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+      expect(output.log).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining('Running migrations from'),
+        })
+      );
+    });
+
+    it('runs the classic per-step loop without the gate env var', async () => {
+      delete process.env.NX_MIGRATE_ORCHESTRATOR;
+
+      // The classic loop runs real migration execution, which fails on this
+      // fixture; only the dispatch itself is under test.
+      await migrate(root, runMigrationsArgs({ agentic: 'claude-code' }), [
+        '--run-migrations',
+        '--agentic=claude-code',
+      ]).catch(() => {});
+
+      expect(mockRunMasterSession).not.toHaveBeenCalled();
+      expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+      expect(output.log).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining('Running migrations from'),
+        })
+      );
+    });
+  });
 
   it.each<[string, boolean | undefined, string[]]>([
     ['forwards --validate=false to the run', false, ['--no-validate']],
