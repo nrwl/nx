@@ -240,7 +240,22 @@ function tryResolveLocalPluginFromSource(
   }
 
   const main = readPluginMainFromProjectConfiguration(plugin.projectConfig);
-  return main ? { path: path.join(root, main), isSource: true } : null;
+  if (main) {
+    return { path: path.join(root, main), isSource: true };
+  }
+
+  // Bare package name without a build target: the `exports` root entry
+  // decides between source and dist, same as a subpath would.
+  if (moduleName === plugin.projectConfig.metadata?.js?.packageName) {
+    return resolveSubpathFromExports(
+      plugin.projectConfig,
+      plugin.path,
+      '.',
+      root
+    );
+  }
+
+  return null;
 }
 
 function throwUnresolvableLocalPluginError(
@@ -285,26 +300,32 @@ function resolveSubpathFromExports(
   };
 
   try {
-    const matches = resolveExports(pkg, subpath, {
-      conditions: getRootTsConfigResolveExportsConditions(root),
-    });
+    const matches = resolveExportsForLoader(
+      pkg,
+      subpath,
+      getRootTsConfigResolveExportsConditions(root)
+    );
     if (!matches || !matches.length) {
       return null;
     }
 
     let defaultMatches: string[] | void;
     try {
-      defaultMatches = resolveExports(pkg, subpath, { conditions: [] });
+      defaultMatches = resolveExportsForLoader(pkg, subpath, []);
     } catch {}
-    const isSource = !defaultMatches || defaultMatches[0] !== matches[0];
-
+    // Source when the default resolution would not have landed on the same
+    // file: an array target may fall through to the built file.
+    const defaultMatch = (defaultMatches || []).find((m) =>
+      existsSync(path.join(projectPath, m))
+    );
     for (const match of matches) {
       const candidate = path.join(projectPath, match);
       if (existsSync(candidate)) {
         return {
           path: candidate,
           isSource:
-            isSource || TS_SOURCE_EXTENSIONS.has(path.extname(candidate)),
+            defaultMatch !== match ||
+            TS_SOURCE_EXTENSIONS.has(path.extname(candidate)),
         };
       }
     }
@@ -316,6 +337,28 @@ function resolveSubpathFromExports(
   }
 
   return null;
+}
+
+/**
+ * The loader requires the entry first and falls back to `import()` only when
+ * `require()` rejects it as ESM, so a dual package must resolve to the file
+ * `require()` gets, while an import-only entry still resolves.
+ */
+function resolveExportsForLoader(
+  pkg: { name: string; exports: unknown },
+  subpath: string,
+  conditions: string[]
+): string[] | void {
+  try {
+    const matches = resolveExports(pkg, subpath, {
+      conditions,
+      require: true,
+    });
+    if (matches && matches.length) {
+      return matches;
+    }
+  } catch {}
+  return resolveExports(pkg, subpath, { conditions });
 }
 
 function lookupLocalPlugin(

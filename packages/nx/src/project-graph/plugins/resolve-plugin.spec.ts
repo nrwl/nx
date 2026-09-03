@@ -227,6 +227,144 @@ describe('resolveSubpathFromExports (via getPluginPathAndName)', () => {
     expect(pluginPath).toBe(distFile);
   });
 
+  it('resolves the bare package name through the exports root entry when there is no build main', () => {
+    const sourceFile = `${projectPath}/src/index.ts`;
+    onlyFilesExist(`${root}/tsconfig.base.json`, sourceFile);
+
+    const projects = setupProject({
+      '.': {
+        development: './src/index.ts',
+        default: './dist/index.js',
+      },
+    });
+
+    const result = getPluginPathAndName(
+      '@scope/my-plugin',
+      [`${root}/node_modules`],
+      projects,
+      root
+    );
+
+    expect(result.pluginPath).toBe(sourceFile);
+    expect(result.isSourcePlugin).toBe(true);
+  });
+
+  it('resolves the bare package name to the built entry when the exports root entry only points at dist', () => {
+    const distFile = `${projectPath}/dist/index.js`;
+    onlyFilesExist(`${root}/tsconfig.base.json`, distFile);
+
+    const projects = setupProject({
+      '.': { default: './dist/index.js' },
+    });
+
+    const result = getPluginPathAndName(
+      '@scope/my-plugin',
+      [`${root}/node_modules`],
+      projects,
+      root
+    );
+
+    expect(result.pluginPath).toBe(distFile);
+    expect(result.isSourcePlugin).toBe(false);
+  });
+
+  it('resolves a dual package bare name to the require target, as the loader requires first', () => {
+    const cjsFile = `${projectPath}/dist/index.cjs`;
+    onlyFilesExist(
+      `${root}/tsconfig.base.json`,
+      cjsFile,
+      `${projectPath}/dist/index.mjs`
+    );
+
+    const projects = setupProject({
+      '.': { import: './dist/index.mjs', require: './dist/index.cjs' },
+    });
+
+    const result = getPluginPathAndName(
+      '@scope/my-plugin',
+      [`${root}/node_modules`],
+      projects,
+      root
+    );
+
+    expect(result.pluginPath).toBe(cjsFile);
+    expect(result.isSourcePlugin).toBe(false);
+  });
+
+  it('resolves an import-only subpath entry, which the loader reaches through import()', () => {
+    const esmFile = `${projectPath}/src/plugin.mjs`;
+    onlyFilesExist(`${root}/tsconfig.base.json`, esmFile);
+
+    const projects = setupProject(
+      { './plugin': { import: './src/plugin.mjs' } },
+      ['@scope/my-plugin/plugin']
+    );
+
+    const { pluginPath } = getPluginPathAndName(
+      '@scope/my-plugin/plugin',
+      [`${root}/node_modules`],
+      projects,
+      root
+    );
+
+    expect(pluginPath).toBe(esmFile);
+  });
+
+  it('resolves a dual package subpath to the require target', () => {
+    const cjsFile = `${projectPath}/dist/plugin.cjs`;
+    onlyFilesExist(
+      `${root}/tsconfig.base.json`,
+      cjsFile,
+      `${projectPath}/dist/plugin.mjs`
+    );
+
+    const projects = setupProject(
+      {
+        './plugin': {
+          import: './dist/plugin.mjs',
+          require: './dist/plugin.cjs',
+        },
+      },
+      ['@scope/my-plugin/plugin']
+    );
+
+    const { pluginPath } = getPluginPathAndName(
+      '@scope/my-plugin/plugin',
+      [`${root}/node_modules`],
+      projects,
+      root
+    );
+
+    expect(pluginPath).toBe(cjsFile);
+  });
+
+  it('does not mark a built file as source when the conditioned array target falls through to it', () => {
+    const distFile = `${projectPath}/dist/index.js`;
+    onlyFilesExist(`${root}/tsconfig.base.json`, distFile);
+
+    for (const defaultTarget of [
+      './dist/index.js',
+      ['./dist/missing.js', './dist/index.js'],
+    ]) {
+      const projects = setupProject({
+        '.': {
+          development: ['./src/missing.ts', './dist/index.js'],
+          default: defaultTarget,
+        },
+      });
+
+      const result = getPluginPathAndName(
+        '@scope/my-plugin',
+        [`${root}/node_modules`],
+        projects,
+        root
+      );
+
+      expect(result.pluginPath).toBe(distFile);
+      expect(result.isSourcePlugin).toBe(false);
+    }
+  });
+
   it('throws an informative error when the subpath has no exports entry', () => {
     const projects = setupProject(
       {
