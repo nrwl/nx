@@ -383,6 +383,9 @@ function tokenizeUnder(path: string, root: string): string {
  * that owns them. Printed in place of the declared filesets those reads
  * replace.
  */
+/** Shared globs listed before the tail is summarised, without --verbose. */
+const SHARED_GLOB_PREVIEW = 10;
+
 function renderEffectiveInputs(
   data: TargetInfoData,
   c: ReturnType<typeof pc>,
@@ -414,7 +417,10 @@ function renderEffectiveInputs(
     ([aGlob, a], [bGlob, b]) =>
       b.length - a.length || aGlob.localeCompare(bGlob)
   );
-  for (const [glob, owners] of shared) {
+  const shownShared = args.verbose
+    ? shared
+    : shared.slice(0, SHARED_GLOB_PREVIEW);
+  for (const [glob, owners] of shownShared) {
     const scope =
       owners.length === groups.length
         ? `all ${owners.length} projects`
@@ -424,9 +430,15 @@ function renderEffectiveInputs(
       console.log(`      ${c.dim(owners.join(', '))}`);
     }
   }
+  const hiddenShared = shared.length - shownShared.length;
+  if (hiddenShared > 0) {
+    console.log(
+      `    ${c.dim(`... ${hiddenShared} more shared globs (--verbose)`)}`
+    );
+  }
 
-  // Whatever is unique to one project stays under that project, so a read no
-  // one else has is still attributable at a glance.
+  // Whatever is unique to one project is mostly that project's own declaration
+  // output, which is noise at a glance -- summarise it unless asked.
   const own = new Map<string, string[]>();
   for (const [glob, owners] of byGlob) {
     if (owners.length === 1) {
@@ -435,6 +447,17 @@ function renderEffectiveInputs(
       else own.set(owners[0], [glob]);
     }
   }
+  if (own.size === 0) return;
+  if (!args.verbose) {
+    const count = [...own.values()].reduce((n, globs) => n + globs.length, 0);
+    console.log(
+      `    ${c.dim(
+        `... ${count} reads specific to a single project, across ${own.size} projects (--verbose)`
+      )}`
+    );
+    return;
+  }
+
   const roots = new Map(
     groups.map((g) => [g.project ?? '{workspaceRoot}', g.projectRoot])
   );
@@ -444,13 +467,7 @@ function renderEffectiveInputs(
       ? `${c.bold(owner)}${c.dim(` (${root})`)}`
       : c.bold(owner);
     console.log(`    ${header}:`);
-    const globs = own.get(owner)!;
-    const shown = args.verbose ? globs : globs.slice(0, 5);
-    for (const glob of shown) console.log(`      - ${glob}`);
-    const hidden = globs.length - shown.length;
-    if (hidden > 0) {
-      console.log(`      ${c.dim(`... ${hidden} more (--verbose)`)}`);
-    }
+    for (const glob of own.get(owner)!) console.log(`      - ${glob}`);
   }
 }
 

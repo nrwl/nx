@@ -996,6 +996,46 @@ describe('show target info', () => {
       expect(text).toContain('{projectRoot}/src/only-mine.ts');
     });
 
+    it('summarises the single-project reads unless --verbose', async () => {
+      setGraph(graphWithLintTarget());
+      setMockIoSnapshotReport({
+        used: ['my-app:lint'],
+        tasksWithOutputs: [],
+        diagnostics: [],
+        resolution: { requestedCommit: 'ae6a03f912ab', digest: '049a9c2f7bcd' },
+      });
+      const shared = '{projectRoot}/**/*.d.ts';
+      setMockInputGlobs({
+        'my-app:lint': [
+          {
+            project: 'my-app',
+            globs: [shared, '{projectRoot}/src/only-mine.ts'],
+            includeIgnored: true,
+            fromSnapshot: true,
+          },
+          {
+            project: 'ui',
+            globs: [shared, '{projectRoot}/src/only-ui.ts'],
+            includeIgnored: true,
+            fromSnapshot: true,
+          },
+        ],
+      });
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint' });
+      const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
+
+      // Shared globs still list; the per-project tail collapses to a count so
+      // a 196-project task does not print hundreds of lines by default.
+      expect(text).toContain(shared);
+      expect(text).toContain(
+        '2 reads specific to a single project, across 2 projects (--verbose)'
+      );
+      expect(text).not.toContain('only-mine.ts');
+      expect(text).not.toContain('my-app (apps/my-app)');
+    });
+
     it('keeps the declared filesets tagged when no observed reads resolved', async () => {
       setGraph(graphWithLintTarget());
       setMockIoSnapshotReport({
