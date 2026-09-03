@@ -728,6 +728,46 @@ mod tests {
     }
 
     #[test]
+    fn filter_uses_kind_derived_is_dir_not_the_stat() {
+        // A directory-only ignore pattern (`ignored_dir/`) matches only when
+        // the filterer is told the path is a directory. This exercises the
+        // is_dir_at wiring end to end through check_event: the on-disk path is
+        // a real directory, so a stat would call BOTH events directories, but
+        // the event kind must decide. A Create(Folder) is filtered; a
+        // Create(File) for the same path passes, because the trailing-slash
+        // pattern is dir-only. If is_dir_at ignored the kind (or the helper
+        // returned the wrong value) the File case would be wrongly filtered.
+        use notify::EventKind;
+        use notify::event::CreateKind;
+
+        let dir = tempdir().expect("tempdir");
+        let origin = dir.path().canonicalize().expect("canonicalize");
+        let origin_str = origin.to_str().expect("utf-8 path");
+        let target = origin.join("ignored_dir");
+        fs::create_dir_all(&target).expect("mkdir target");
+
+        let filterer =
+            watch_filterer::create_filter(origin_str, &["ignored_dir/".to_string()], false)
+                .expect("filter");
+
+        let as_folder = RawWatchEvent::new(
+            notify::Event::new(EventKind::Create(CreateKind::Folder)).add_path(target.clone()),
+        );
+        let as_file = RawWatchEvent::new(
+            notify::Event::new(EventKind::Create(CreateKind::File)).add_path(target.clone()),
+        );
+
+        assert!(
+            !filterer.check_event(&as_folder),
+            "Create(Folder) for ignored_dir/ should be filtered (is_dir from kind = true)"
+        );
+        assert!(
+            filterer.check_event(&as_file),
+            "Create(File) named ignored_dir should pass the dir-only pattern (is_dir from kind = false), even though it is a directory on disk"
+        );
+    }
+
+    #[test]
     fn git_style_unlink_then_write_yields_create() {
         // Regression: `git checkout` does unlink+create on tracked
         // files. Pre-fix the accumulator's "Delete always wins" rule
