@@ -1,13 +1,25 @@
+import { delimiter } from 'node:path';
 import type { Mock } from 'vitest';
 import { getPluginsIfLoadedOrLoading } from '../../project-graph/plugins/get-plugins';
-import { applyDaemonEnvFromClient } from '../client/daemon-environment';
+import {
+  applyDaemonEnvFromClient,
+  getAppliedDaemonClientEnv,
+} from '../client/daemon-environment';
 import { serverLogger } from '../logger';
 import { handleClientEnv, _setEnvForwardTimeoutMs } from './handle-client-env';
 import { invalidateGraphCache } from './project-graph-incremental-recomputation';
 
-vi.mock('../client/daemon-environment', () => ({
-  applyDaemonEnvFromClient: vi.fn(),
-}));
+vi.mock('../client/daemon-environment', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('../client/daemon-environment')>();
+  return {
+    applyDaemonEnvFromClient: vi.fn(),
+    getAppliedDaemonClientEnv: vi.fn(),
+    getChangedEnvKeys: actual.getChangedEnvKeys,
+    normalizeDaemonEnvironmentForGraph:
+      actual.normalizeDaemonEnvironmentForGraph,
+  };
+});
 vi.mock('../../project-graph/plugins/get-plugins', () => ({
   getPluginsIfLoadedOrLoading: vi.fn(),
 }));
@@ -25,7 +37,43 @@ describe('handleClientEnv', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (applyDaemonEnvFromClient as Mock).mockReturnValue(['FOO']);
+    (getAppliedDaemonClientEnv as Mock).mockReturnValue({
+      sequence: 0,
+      env: {},
+    });
     (getPluginsIfLoadedOrLoading as Mock).mockReturnValue(undefined);
+  });
+
+  it('keeps the cached graph when only the Yarn Berry runtime folder rotated', async () => {
+    const firstBerry = '/tmp/xfs-aaa';
+    const secondBerry = '/tmp/xfs-bbb';
+    (getAppliedDaemonClientEnv as Mock).mockReturnValue({
+      sequence: 1,
+      env: {
+        BERRY_BIN_FOLDER: firstBerry,
+        PATH: [firstBerry, '/usr/bin'].join(delimiter),
+      },
+    });
+    (applyDaemonEnvFromClient as Mock).mockReturnValue([
+      'BERRY_BIN_FOLDER',
+      'PATH',
+    ]);
+    const setWorkerEnv = vi.fn().mockResolvedValue(undefined);
+    (getPluginsIfLoadedOrLoading as Mock).mockReturnValue(
+      Promise.resolve([{ name: 'a', setWorkerEnv }])
+    );
+
+    await handleClientEnv({
+      BERRY_BIN_FOLDER: secondBerry,
+      PATH: [secondBerry, '/usr/bin'].join(delimiter),
+    });
+
+    // Workers still need the fresh wrapper folder; the graph does not.
+    expect(setWorkerEnv).toHaveBeenCalled();
+    expect(invalidateGraphCache).not.toHaveBeenCalled();
+    expect(serverLogger.log).toHaveBeenCalledWith(
+      expect.stringContaining('graph identity is unchanged')
+    );
   });
 
   it('discards the cached graph for a client change a config write already matches', async () => {
