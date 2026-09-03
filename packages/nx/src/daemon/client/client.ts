@@ -1551,10 +1551,15 @@ export class DaemonClient {
     const { available, refusal: polled } =
       await this.waitForServerToBeAvailable({ ignoreVersionMismatch: true });
     if (available) {
-      clientLogger.log(
-        `[Client] Daemon server started, pid=${backgroundProcess.pid}`
-      );
-      return backgroundProcess.pid;
+      // The process spawned above is not necessarily the daemon. It stands down
+      // when it finds a healthy owner already serving this workspace, and its
+      // pid is then a process that has exited - which would be what this logs,
+      // hands to the metrics service and prints as the ID of `nx daemon
+      // --start`. Whoever answers the socket is the one in the registration,
+      // written before the daemon listens.
+      const daemonPid = getDaemonProcessIdSync() ?? backgroundProcess.pid;
+      clientLogger.log(`[Client] Daemon server started, pid=${daemonPid}`);
+      return daemonPid;
     } else {
       // A permission refusal from either source wins, then the poll's errno,
       // then the probe's. Recency alone would report a daemon's ENOENT over the
