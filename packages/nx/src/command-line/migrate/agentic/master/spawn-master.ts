@@ -1,8 +1,19 @@
 import { ChildProcess, spawn, SpawnOptions } from 'child_process';
-import { extname, relative, sep } from 'path';
+import { randomBytes } from 'crypto';
+import { existsSync, mkdirSync, rmSync } from 'fs';
+import { dirname, extname, join, relative, sep } from 'path';
 import { logger } from '../../../../utils/logger';
 import { resetSgrAfterAgent } from '../../migrate-output';
-import { waitForExit } from '../close-agent-session';
+import { runDir, runHandoffsDir } from '../../run/run-state';
+import {
+  AGENT_GRACEFUL_EXIT_MS,
+  closeAgentSession,
+  ExitInfo,
+  FORCE_KILL_WAIT_MS,
+  raceWithTimeout,
+  waitForExit,
+} from '../close-agent-session';
+import { handoffsDirState } from '../handoff';
 import { restoreTermiosAfterAgent } from '../terminal-repair';
 import { DetectedInstalledAgent } from '../types';
 import { caretEscape, neutralizePercent, quoteCmdArg } from '../windows-cmd';
@@ -14,6 +25,9 @@ export interface SpawnMasterSessionInput {
   runId: string;
   runbookPath: string;
   reconcileCommand: string;
+  sentinelPollIntervalMs?: number;
+  gracefulExitMs?: number;
+  forceKillWaitMs?: number;
 }
 
 export type SpawnMasterSessionResult =
@@ -29,23 +43,46 @@ const STRIPPED_ENV_VARS = [
   'NX_MIGRATE_ORCHESTRATOR',
 ];
 
+// Lives under handoffs/ because claude's run-scoped Edit rule already admits
+// the write and the orchestrator reads handoffs by step id, never by listing.
+// The nonce keeps a sentinel from an earlier session of the same run, stale
+// or still being written, from closing this one.
+function sessionCompleteSentinel(runRoot: string, runId: string): string {
+  return join(
+    runHandoffsDir(runDir(runRoot, runId)),
+    `session-complete-${randomBytes(4).toString('hex')}`
+  );
+}
+
 /**
  * Spawns the agent once, with the run's pinned invariant and bootstrap prompt,
- * and waits for the session to end. Every failure before the process starts
- * is returned as `spawn-failed`; what the session did is read from run state
- * by the caller, never from the exit code.
+ * and waits for the session to end, closing it once the agent writes the
+ * session-complete sentinel. Every failure before the process starts is
+ * returned as `spawn-failed`; what the session did is read from run state by
+ * the caller, never from the exit code.
  */
 export async function spawnMasterSession(
   input: SpawnMasterSessionInput
 ): Promise<SpawnMasterSessionResult> {
-  const { agent, runRoot, runId, runbookPath, reconcileCommand } = input;
-
+  const {
+    agent,
+    runRoot,
+    runId,
+    runbookPath,
+    reconcileCommand,
+    sentinelPollIntervalMs = 500,
+    gracefulExitMs = AGENT_GRACEFUL_EXIT_MS,
+    forceKillWaitMs = FORCE_KILL_WAIT_MS,
+  } = input;
+  let sentinelPath: string;
   let child: ChildProcess;
   try {
+    sentinelPath = sessionCompleteSentinel(runRoot, runId);
     const spec = buildMasterInvocation(agent.id, {
       runId,
       reconcileCommand,
-      runbookPath: relative(runRoot, runbookPath).split(sep).join('/'),
+      runbookPath: prosePath(runRoot, runbookPath),
+      sentinelPath: prosePath(runRoot, sentinelPath),
     });
     const env = { ...process.env, ...spec.env };
     for (const name of STRIPPED_ENV_VARS) {
@@ -58,6 +95,23 @@ export async function spawnMasterSession(
       windowsHide: true,
     });
     assertWithinWindowsCommandLineBudget(adapted, agent, runId);
+    // Recreated if the agent removed it, refused if something else stands in
+    // its place: a symlink would send the agent's write and the poll below
+    // elsewhere.
+    const handoffsDir = dirname(sentinelPath);
+    switch (handoffsDirState(handoffsDir)) {
+      case 'directory':
+        break;
+      case 'missing':
+        // Not recursive: the run dir exists, and a symlink raced in here
+        // fails with EEXIST instead of being followed.
+        mkdirSync(handoffsDir);
+        break;
+      case 'other':
+        throw new Error(
+          `Migrate run ${runId} has something other than a directory at ${handoffsDir}; remove it and try again.`
+        );
+    }
     // Local alias so `@nx/workspace-require-windows-hide` can track the
     // options as an Identifier.
     const spawnOptions = adapted.options;
@@ -69,6 +123,7 @@ export async function spawnMasterSession(
   // Ctrl+C belongs to the agent from the moment it exists.
   const swallowSigint = () => {};
   process.on('SIGINT', swallowSigint);
+  const sentinelWatch = new AbortController();
   let started = false;
   try {
     const exitPromise = waitForExit(child);
@@ -83,13 +138,44 @@ export async function spawnMasterSession(
       return { kind: 'spawn-failed', error: spawnError };
     }
     started = true;
-    const exit = await exitPromise;
+    let exit: ExitInfo = {};
+    const winner = await Promise.race([
+      exitPromise.then((info) => {
+        exit = info;
+        return 'exit' as const;
+      }),
+      waitForFile(
+        sentinelPath,
+        sentinelPollIntervalMs,
+        sentinelWatch.signal
+      ).then(() => 'sentinel' as const),
+    ]);
+    if (winner === 'sentinel') {
+      await closeAgentSession(
+        child,
+        exitPromise,
+        gracefulExitMs,
+        forceKillWaitMs
+      );
+      // The close can return on `exitCode` while `waitForExit` is still in
+      // its merge window; bounded so a stuck child cannot hold the run.
+      await raceWithTimeout(exitPromise, forceKillWaitMs);
+      // Hygiene only; run state decides the outcome, not this removal.
+      try {
+        rmSync(sentinelPath, { force: true });
+      } catch (error) {
+        logger.verbose(
+          `Could not remove ${sentinelPath}: ${toError(error).message}`
+        );
+      }
+    }
     logger.verbose(
       `${agent.displayName} session ended (code: ${exit.code ?? 'none'}, signal: ${
         exit.signal ?? 'none'
       }${exit.error ? `, error: ${exit.error.message}` : ''}).`
     );
   } finally {
+    sentinelWatch.abort();
     process.removeListener('SIGINT', swallowSigint);
     if (started) {
       restoreTermiosAfterAgent();
@@ -101,6 +187,34 @@ export async function spawnMasterSession(
 
 function toError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error));
+}
+
+// Workspace-relative with forward slashes on every platform: prose the agent
+// reads, not a shell path.
+function prosePath(runRoot: string, path: string): string {
+  return relative(runRoot, path).split(sep).join('/');
+}
+
+// Resolves once the file exists. Never settles after an abort; the race it
+// feeds has settled by then.
+function waitForFile(
+  path: string,
+  intervalMs: number,
+  signal: AbortSignal
+): Promise<void> {
+  return new Promise((resolve) => {
+    let timer: NodeJS.Timeout;
+    const tick = () => {
+      if (signal.aborted) return;
+      if (existsSync(path)) {
+        resolve();
+        return;
+      }
+      timer = setTimeout(tick, intervalMs);
+    };
+    signal.addEventListener('abort', () => clearTimeout(timer), { once: true });
+    timer = setTimeout(tick, intervalMs);
+  });
 }
 
 // "The maximum length of the string that you can use at the command prompt is
