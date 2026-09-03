@@ -616,7 +616,9 @@ export function createAPI(
           const fromSHA = await getCachedFromSHA(
             groupCacheKey,
             releaseGroup.releaseTag.pattern,
-            {},
+            {
+              releaseGroupName: releaseGroup.name,
+            },
             workspacePreid ?? projectsPreid?.[Object.keys(projectsPreid)[0]],
             releaseGroup.releaseTag.checkAllBranchesWhen,
             releaseGroup.releaseTag.requireSemver,
