@@ -1,6 +1,11 @@
 import { getPluginsIfLoadedOrLoading } from '../../project-graph/plugins/get-plugins';
 import type { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
-import { applyDaemonEnvFromClient } from '../client/daemon-environment';
+import {
+  applyDaemonEnvFromClient,
+  getAppliedDaemonClientEnv,
+  getChangedEnvKeys,
+  normalizeDaemonEnvironmentForGraph,
+} from '../client/daemon-environment';
 import { serverLogger } from '../logger';
 import { invalidateGraphCache } from './project-graph-incremental-recomputation';
 
@@ -32,16 +37,41 @@ export async function handleClientEnv(
   while (inFlightApply) {
     await inFlightApply;
   }
+  const graphEnvBefore = normalizeDaemonEnvironmentForGraph(process.env);
+  const previousClientEnv = getAppliedDaemonClientEnv()?.env;
   const changedEnvKeys = applyDaemonEnvFromClient(env);
   if (changedEnvKeys.length === 0) {
     return;
   }
-  serverLogger.log(
-    `Graph recompute necessary due to env variable refresh. Changed keys: ${changedEnvKeys.join(
-      ', '
-    )}`
-  );
-  const apply = applyEnvChange(env);
+  // Runtime changes always reach the workers, but only changes that survive
+  // graph normalization (e.g. Yarn Berry's per-invocation BERRY_BIN_FOLDER
+  // does not) invalidate the computed graph.
+  const graphChangedKeys = new Set([
+    ...getChangedEnvKeys(
+      graphEnvBefore,
+      normalizeDaemonEnvironmentForGraph(process.env)
+    ),
+    ...(previousClientEnv
+      ? getChangedEnvKeys(
+          normalizeDaemonEnvironmentForGraph(previousClientEnv),
+          normalizeDaemonEnvironmentForGraph(env)
+        )
+      : []),
+  ]);
+  if (graphChangedKeys.size > 0) {
+    serverLogger.log(
+      `Graph recompute necessary due to env variable refresh. Changed keys: ${[
+        ...graphChangedKeys,
+      ].join(', ')}`
+    );
+  } else {
+    serverLogger.log(
+      `Env variable refresh changed only runtime values (${changedEnvKeys.join(
+        ', '
+      )}); graph identity is unchanged, keeping the cached graph.`
+    );
+  }
+  const apply = applyEnvChange(env, graphChangedKeys.size > 0);
   inFlightApply = apply;
   try {
     await apply;
@@ -52,8 +82,14 @@ export async function handleClientEnv(
   }
 }
 
-async function applyEnvChange(env: Record<string, string>): Promise<void> {
+async function applyEnvChange(
+  env: Record<string, string>,
+  invalidateGraph: boolean
+): Promise<void> {
   await forwardEnvToPluginWorkers(env);
+  if (!invalidateGraph) {
+    return;
+  }
   // Discarding the cached graph makes the next request recompute under the
   // new env, and chains any in-flight compute (started under the old env) to
   // that successor.
