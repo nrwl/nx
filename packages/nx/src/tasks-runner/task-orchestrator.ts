@@ -152,6 +152,7 @@ export class TaskOrchestrator {
   private discreteTaskExitHandled = new Map<string, Promise<void>>();
   private continuousTaskExitHandled = new Map<string, Promise<void>>();
   private cleanupPromise: Promise<void> | null = null;
+  private signalHandlers: Array<[NodeJS.Signals, () => void]> = [];
   // endregion internal state
 
   constructor(
@@ -243,6 +244,7 @@ export class TaskOrchestrator {
       this.cache.removeOldCacheRecords();
     }
     await this.cleanup();
+    await this.dispose();
 
     // Public API (defaultTasksRunner) returns a plain object keyed by
     // task id. Internal state is a Map for faster lookup.
@@ -1763,7 +1765,7 @@ export class TaskOrchestrator {
   }
 
   private setupSignalHandlers() {
-    process.once('SIGINT', () => {
+    const sigintHandler = () => {
       this.stopRequested = true;
       if (!this.tuiEnabled) {
         // Synchronously remove DB entries before async cleanup to prevent
@@ -1793,23 +1795,57 @@ export class TaskOrchestrator {
           process.exit(signalToCode('SIGINT'));
         }
       });
-    });
-    process.once('SIGTERM', () => {
+    };
+    const sigtermHandler = () => {
       this.stopRequested = true;
       this.cleanup().finally(() => {
         if (this.resolveStopPromise) {
           this.resolveStopPromise();
         }
       });
-    });
-    process.once('SIGHUP', () => {
+    };
+    const sighupHandler = () => {
       this.stopRequested = true;
       this.cleanup().finally(() => {
         if (this.resolveStopPromise) {
           this.resolveStopPromise();
         }
       });
-    });
+    };
+
+    for (const [signal, handler] of [
+      ['SIGINT', sigintHandler],
+      ['SIGTERM', sigtermHandler],
+      ['SIGHUP', sighupHandler],
+    ] as const) {
+      this.signalHandlers.push([signal, handler]);
+      process.once(signal, handler);
+    }
+  }
+
+  // Registered at child creation, so unlike subscribing to RunningTask.onExit
+  // after the fact it cannot miss an exit that already happened.
+  waitForContinuousTaskExit(taskId: string): Promise<void> {
+    return this.continuousTaskExitHandled.get(taskId) ?? Promise.resolve();
+  }
+
+  // Releases the process-level listeners registered by setupSignalHandlers.
+  // Each closes over `this`, so a long-lived caller (an Nx Cloud agent creates
+  // an orchestrator per invocation) leaks whole orchestrators until they run.
+  async dispose() {
+    // The forked runner's exit handler is the last-resort kill for child
+    // processes, and a batch child can outlive its results message. Signal the
+    // children first so removing that handler cannot orphan a live one.
+    try {
+      await this.forkedProcessTaskRunner.cleanup();
+    } catch (e) {
+      console.error('Failed to clean up child processes on dispose:', e);
+    }
+    for (const [signal, handler] of this.signalHandlers) {
+      process.off(signal, handler);
+    }
+    this.signalHandlers = [];
+    this.forkedProcessTaskRunner.removeProcessEventListeners();
   }
 
   private cleanUpUnneededContinuousTasks() {
