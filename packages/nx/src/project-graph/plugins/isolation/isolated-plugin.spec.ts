@@ -173,14 +173,18 @@ describe('IsolatedPlugin', () => {
   });
 
   describe('settling pending requests when a worker is lost', () => {
-    function pluginWithTwoPendingRequests() {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    function testPlugin(pendingRequests = 2) {
       const plugin: any = Object.create(IsolatedPlugin.prototype);
       plugin.name = 'test-plugin';
       plugin._alive = true;
       plugin.responseHandlers = new Map();
       const errors: Error[] = [];
-      for (const tx of ['1', '2']) {
-        plugin.responseHandlers.set(tx, {
+      for (let tx = 0; tx < pendingRequests; tx++) {
+        plugin.responseHandlers.set(String(tx), {
           onMessage: vi.fn(),
           onError: (e: Error) => errors.push(e),
         });
@@ -189,7 +193,7 @@ describe('IsolatedPlugin', () => {
     }
 
     it('hands the caller-supplied error to every pending request', () => {
-      const { plugin, errors } = pluginWithTwoPendingRequests();
+      const { plugin, errors } = testPlugin();
 
       plugin.failPendingRequests(new Error('worker sent something unreadable'));
 
@@ -201,7 +205,7 @@ describe('IsolatedPlugin', () => {
     });
 
     it('takes the worker out of service without settling anything', () => {
-      const { plugin, errors } = pluginWithTwoPendingRequests();
+      const { plugin, errors } = testPlugin();
       plugin._connectPromise = Promise.resolve();
 
       plugin.markUnusable();
@@ -210,6 +214,38 @@ describe('IsolatedPlugin', () => {
       expect(plugin._connectPromise).toBeNull();
       expect(errors).toEqual([]);
       expect(plugin.responseHandlers.size).toBe(2);
+    });
+
+    it('logs a framing failure when there are no pending requests', () => {
+      const { plugin } = testPlugin(0);
+      const socket = { destroy: vi.fn() };
+      const consoleError = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
+      plugin.handleFramingFailure(socket, new Error('stream is out of sync'));
+
+      expect(socket.destroy).toHaveBeenCalled();
+      expect(consoleError).toHaveBeenCalledWith(
+        'Plugin worker "test-plugin" sent a message the host could not read, ' +
+          'so its connection was dropped. stream is out of sync'
+      );
+    });
+
+    it('routes a framing failure to pending requests without logging it twice', () => {
+      const { plugin, errors } = testPlugin();
+      const socket = { destroy: vi.fn() };
+      const consoleError = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
+      plugin.handleFramingFailure(socket, new Error('stream is out of sync'));
+
+      expect(errors.map((error) => error.message)).toEqual([
+        'Plugin worker "test-plugin" sent a message the host could not read, so its connection was dropped. stream is out of sync',
+        'Plugin worker "test-plugin" sent a message the host could not read, so its connection was dropped. stream is out of sync',
+      ]);
+      expect(consoleError).not.toHaveBeenCalled();
     });
   });
 

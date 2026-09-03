@@ -192,18 +192,10 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     socket.on(
       'data',
       consumeMessagesFromSocket(this.handleSocketData, (err) => {
-        // The worker is still running here; it is the stream that failed, so
+        // The worker may still be running here; it is the stream that failed, so
         // reporting this as an exit would send whoever reads it hunting for a
-        // dead process. The framing error names the bytes it choked on, so it
-        // travels with the error rather than only reaching stderr.
-        this.markUnusable();
-        socket.destroy();
-        this.failPendingRequests(
-          new Error(
-            `Plugin worker "${this.name}" sent a message the host could not read, ` +
-              `so its connection was dropped. ${err.message}`
-          )
-        );
+        // dead process.
+        this.handleFramingFailure(socket, err);
       })
     );
 
@@ -230,6 +222,22 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       onError(error);
     }
     this.responseHandlers.clear();
+  }
+
+  private handleFramingFailure(socket: Socket, error: Error): void {
+    const framingError = new Error(
+      `Plugin worker "${this.name}" sent a message the host could not read, ` +
+        `so its connection was dropped. ${error.message}`
+    );
+
+    this.markUnusable();
+    socket.destroy();
+
+    if (this.responseHandlers.size === 0) {
+      console.error(framingError.message);
+    } else {
+      this.failPendingRequests(framingError);
+    }
   }
 
   /**
