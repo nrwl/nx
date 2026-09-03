@@ -50,12 +50,12 @@ async function getProjectsWithoutInference(root: string) {
   projectsWithoutInferencePromise ??=
     retrieveProjectConfigurationsWithoutPluginInference(root).then(
       (projects) => {
-        // Source graphs registered against an older snapshot would keep its
-        // package names; push the rebuilt set to them.
+        // Refresh registered source graphs from the rebuilt snapshot so they
+        // do not keep stale package names.
         refreshSourceGraphResolvers(
           root,
           () =>
-            getWorkspacePackagesMetadata(projects)
+            getCachedWorkspacePackagesMetadata(projects)
               .packageManagerWorkspacePackageNames
         );
         return projects;
@@ -98,7 +98,7 @@ export async function resolveNxPlugin(
     root
   );
   const workspacePackageNames = projectsWithoutInference
-    ? getWorkspacePackagesMetadata(projectsWithoutInference)
+    ? getCachedWorkspacePackagesMetadata(projectsWithoutInference)
         .packageManagerWorkspacePackageNames
     : undefined;
   return {
@@ -244,8 +244,8 @@ function tryResolveLocalPluginFromSource(
     return { path: path.join(root, main), isSource: true };
   }
 
-  // Bare package name without a build target: the `exports` root entry
-  // decides between source and dist, same as a subpath would.
+  // Without a configured build `main`, a bare package name selects source or
+  // dist through the root `exports` entry.
   if (moduleName === plugin.projectConfig.metadata?.js?.packageName) {
     return resolveSubpathFromExports(
       plugin.projectConfig,
@@ -340,9 +340,8 @@ function resolveSubpathFromExports(
 }
 
 /**
- * The loader requires the entry first and falls back to `import()` only when
- * `require()` rejects it as ESM, so a dual package must resolve to the file
- * `require()` gets, while an import-only entry still resolves.
+ * Prefers the `require` export because the loader tries `require()` before
+ * `import()`; the `import` export is used only for import-only entries.
  */
 function resolveExportsForLoader(
   pkg: { name: string; exports: unknown },
@@ -386,8 +385,15 @@ function lookupLocalPlugin(
   };
 }
 
-let packageEntryPointsToProjectMap: Record<string, ProjectConfiguration>;
-let wildcardEntryPointsToProjectMap: Record<string, ProjectConfiguration>;
+let workspacePackagesMetadata:
+  | ReturnType<typeof getWorkspacePackagesMetadata<ProjectConfiguration>>
+  | undefined;
+function getCachedWorkspacePackagesMetadata(
+  projects: Record<string, ProjectConfiguration>
+) {
+  return (workspacePackagesMetadata ??= getWorkspacePackagesMetadata(projects));
+}
+
 function findNxProjectForImportPath(
   importPath: string,
   projects: Record<string, ProjectConfiguration>,
@@ -418,14 +424,10 @@ function findNxProjectForImportPath(
     }
   }
 
-  if (!packageEntryPointsToProjectMap && !wildcardEntryPointsToProjectMap) {
-    ({
-      entryPointsToProjectMap: packageEntryPointsToProjectMap,
-      wildcardEntryPointsToProjectMap,
-    } = getWorkspacePackagesMetadata(projects));
-  }
-  if (packageEntryPointsToProjectMap[importPath]) {
-    return { projectConfig: packageEntryPointsToProjectMap[importPath] };
+  const { entryPointsToProjectMap, wildcardEntryPointsToProjectMap } =
+    getCachedWorkspacePackagesMetadata(projects);
+  if (entryPointsToProjectMap[importPath]) {
+    return { projectConfig: entryPointsToProjectMap[importPath] };
   }
 
   const project = matchImportToWildcardEntryPointsToProjectMap(
@@ -475,8 +477,7 @@ function readTsConfigPaths(root: string = workspaceRoot) {
 export function resetResolvePluginCache(): void {
   projectsWithoutInference = undefined;
   projectsWithoutInferencePromise = null;
-  packageEntryPointsToProjectMap = undefined;
-  wildcardEntryPointsToProjectMap = undefined;
+  workspacePackagesMetadata = undefined;
   tsconfigPaths = undefined;
   clearProjectsWithoutPluginInferenceCache();
 }
