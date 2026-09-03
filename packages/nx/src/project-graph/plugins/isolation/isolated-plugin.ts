@@ -12,6 +12,7 @@ import { SOCKET_REFUSED_EXIT_CODE } from '../../../utils/socket-refused-exit-cod
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
 import {
   consumeMessagesFromSocket,
+  describeMessage,
   parseMessage,
 } from '../../../utils/consume-messages-from-socket';
 import { getPluginResolveConditionNodeArgs } from '../../../plugins/js/utils/typescript';
@@ -193,7 +194,16 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     };
     worker.on('exit', this.exitHandler);
 
-    socket.on('data', consumeMessagesFromSocket(this.handleSocketData));
+    socket.on(
+      'data',
+      consumeMessagesFromSocket(this.handleSocketData, (err) => {
+        // Nothing else settles the pending hook promises on a framing
+        // failure, so surface it the same way a dead worker would.
+        this.exitHandler?.();
+        socket.destroy();
+        console.error(err.message);
+      })
+    );
 
     return this.sendLoadMessage();
   }
@@ -224,8 +234,21 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     await this._connectPromise;
   }
 
-  private handleSocketData = (raw: string) => {
-    const message = parseMessage<any>(raw);
+  private handleSocketData = (raw: Buffer) => {
+    let message: any;
+    try {
+      message = parseMessage<any>(raw);
+    } catch (e) {
+      // Runs inside a synchronous socket 'data' callback, so a throw here
+      // becomes an uncaughtException in the host process rather than a failed
+      // plugin call.
+      logger.error(
+        `[plugin-client] "${this.name}" sent a message that could not be parsed: ${
+          e instanceof Error ? e.message : e
+        }\nReceived: ${describeMessage(raw)}`
+      );
+      return;
+    }
     if (isPluginWorkerNotification(message)) {
       handlePluginWorkerNotification(message);
       return;
@@ -553,14 +576,10 @@ async function startPluginWorker(name: string) {
     ...process.env,
     ...(isWorkerTypescript
       ? {
-          TS_NODE_PROJECT: path.join(
+          SWC_NODE_PROJECT: path.join(
             __dirname,
             '../../../../tsconfig.lib.json'
           ),
-          TS_NODE_COMPILER_OPTIONS: JSON.stringify({
-            moduleResolution: 'node',
-            module: 'commonjs',
-          }),
         }
       : {}),
   };
@@ -580,7 +599,9 @@ async function startPluginWorker(name: string) {
       // Spawn the worker with the same resolve conditions Nx uses for plugin
       // entries so the plugin's transitive workspace imports resolve to source.
       ...getPluginResolveConditionNodeArgs(),
-      ...(isWorkerTypescript ? ['--require', 'ts-node/register'] : []),
+      // swc transpiles without type-checking: ~7x faster to boot, and this is
+      // paid once per worker spawn.
+      ...(isWorkerTypescript ? ['--require', '@swc-node/register'] : []),
       workerPath,
       ipcPath,
       name,

@@ -20,6 +20,7 @@ import {
 import {
   addBuildTargetDefaults,
   findTargetDefault,
+  isExactTargetNameKey,
   updateTargetDefault,
   upsertTargetDefault,
 } from './target-defaults-utils';
@@ -612,6 +613,17 @@ describe('target-defaults-utils', () => {
         updateTargetDefault(nxJson, { executor: '@nx/jest:jest' }, () => null)
       ).toBe(nxJson);
       expect(nxJson.targetDefaults).toBeUndefined();
+    });
+  });
+
+  describe('isExactTargetNameKey', () => {
+    it('accepts plain target names and rejects executor-like and glob-like keys', () => {
+      expect(isExactTargetNameKey('build')).toBe(true);
+      expect(isExactTargetNameKey('build-base')).toBe(true);
+      expect(isExactTargetNameKey('nx:run-commands')).toBe(false);
+      expect(isExactTargetNameKey('e2e:ci')).toBe(false);
+      expect(isExactTargetNameKey('build-*')).toBe(false);
+      expect(isExactTargetNameKey('e2e-ci--**/**')).toBe(false);
     });
   });
 });

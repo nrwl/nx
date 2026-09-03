@@ -95,105 +95,116 @@ const server = createServer((socket) => {
   );
   socket.on(
     'data',
-    consumeMessagesFromSocket((raw) => {
-      const message = parseMessage<any>(raw);
-      if (!isPluginWorkerMessage(message)) {
-        return;
-      }
-      // Same check the daemon applies to its own socket. Dropped rather than thrown:
-      // a stray foreign message must not kill a worker serving its host. The daemon
-      // has a response channel and surfaces it to the client instead.
-      try {
-        assertNotForeignWorkspaceMessage(
-          message,
-          hostWorkspaceRoot,
-          `The Nx plugin worker "${expectedPluginName}" (pid: ${process.pid})`
-        );
-      } catch (e) {
-        logger.verbose(
-          `[plugin-worker] ignored a "${message.type}" message: ${
-            e instanceof Error ? e.message : e
-          }`
-        );
-        return;
-      }
-      return consumeMessage(socket, message, {
-        load: async ({
-          plugin: pluginConfiguration,
-          root,
-          name,
-          pluginPath,
-          shouldRegisterTSTranspiler,
-        }) => {
-          loadErrorTimeout?.clear();
-          process.chdir(root);
-          return withErrorHandling(async () => {
-            const { loadResolvedNxPluginAsync } = await Promise.resolve(
-              require(require.resolve('../load-resolved-plugin'))
-            );
+    consumeMessagesFromSocket(
+      (raw) => {
+        const message = parseMessage<any>(raw);
+        if (!isPluginWorkerMessage(message)) {
+          return;
+        }
+        // Same check the daemon applies to its own socket. Dropped rather than thrown:
+        // a stray foreign message must not kill a worker serving its host. The daemon
+        // has a response channel and surfaces it to the client instead.
+        try {
+          assertNotForeignWorkspaceMessage(
+            message,
+            hostWorkspaceRoot,
+            `The Nx plugin worker "${expectedPluginName}" (pid: ${process.pid})`
+          );
+        } catch (e) {
+          logger.verbose(
+            `[plugin-worker] ignored a "${message.type}" message: ${
+              e instanceof Error ? e.message : e
+            }`
+          );
+          return;
+        }
+        return consumeMessage(socket, message, {
+          load: async ({
+            plugin: pluginConfiguration,
+            root,
+            name,
+            pluginPath,
+            shouldRegisterTSTranspiler,
+          }) => {
+            loadErrorTimeout?.clear();
+            process.chdir(root);
+            return withErrorHandling(async () => {
+              const { loadResolvedNxPluginAsync } = await Promise.resolve(
+                require(require.resolve('../load-resolved-plugin'))
+              );
 
-            // Register the ts-transpiler if we are pointing to a
-            // plain ts file that's not part of a plugin project
-            if (shouldRegisterTSTranspiler) {
-              (
-                require('../transpiler') as typeof import('../transpiler')
-              ).registerPluginTSTranspiler();
-            }
-            plugin = await loadResolvedNxPluginAsync(
-              pluginConfiguration,
-              pluginPath,
-              name
-            );
-            logger.verbose(
-              `[plugin-worker] "${name}" (pid: ${process.pid}) loaded successfully`
-            );
-            return {
-              name: plugin.name,
-              include: plugin.include,
-              exclude: plugin.exclude,
-              createNodesPattern: plugin.createNodes?.[0],
-              hasCreateDependencies:
-                'createDependencies' in plugin && !!plugin.createDependencies,
-              hasProcessProjectGraph:
-                'processProjectGraph' in plugin && !!plugin.processProjectGraph,
-              hasCreateMetadata:
-                'createMetadata' in plugin && !!plugin.createMetadata,
-              hasPreTasksExecution:
-                'preTasksExecution' in plugin && !!plugin.preTasksExecution,
-              hasPostTasksExecution:
-                'postTasksExecution' in plugin && !!plugin.postTasksExecution,
-              success: true as const,
-            };
-          });
-        },
-        createNodes: async ({ configFiles, context }) =>
-          withErrorHandling(async () => {
-            const result = await plugin.createNodes[1](configFiles, context);
-            return { result, success: true as const };
-          }),
-        createDependencies: async ({ context }) =>
-          withErrorHandling(async () => {
-            const result = await plugin.createDependencies(context);
-            return { dependencies: result, success: true as const };
-          }),
-        createMetadata: async ({ graph, context }) =>
-          withErrorHandling(async () => {
-            const result = await plugin.createMetadata(graph, context);
-            return { metadata: result, success: true as const };
-          }),
-        preTasksExecution: async ({ context }) =>
-          withErrorHandling(async () => {
-            const mutations = await plugin.preTasksExecution?.(context);
-            return { success: true as const, mutations };
-          }),
-        postTasksExecution: async ({ context }) =>
-          withErrorHandling(() => plugin.postTasksExecution?.(context)),
-        setWorkerEnv: (env) =>
-          withErrorHandling(() => {
-            applyDaemonEnvFromClient(env);
-          }),
-      });
-    })
+              // Register the ts-transpiler if we are pointing to a
+              // plain ts file that's not part of a plugin project
+              if (shouldRegisterTSTranspiler) {
+                (
+                  require('../transpiler') as typeof import('../transpiler')
+                ).registerPluginTSTranspiler();
+              }
+              plugin = await loadResolvedNxPluginAsync(
+                pluginConfiguration,
+                pluginPath,
+                name
+              );
+              logger.verbose(
+                `[plugin-worker] "${name}" (pid: ${process.pid}) loaded successfully`
+              );
+              return {
+                name: plugin.name,
+                include: plugin.include,
+                exclude: plugin.exclude,
+                createNodesPattern: plugin.createNodes?.[0],
+                hasCreateDependencies:
+                  'createDependencies' in plugin && !!plugin.createDependencies,
+                hasProcessProjectGraph:
+                  'processProjectGraph' in plugin &&
+                  !!plugin.processProjectGraph,
+                hasCreateMetadata:
+                  'createMetadata' in plugin && !!plugin.createMetadata,
+                hasPreTasksExecution:
+                  'preTasksExecution' in plugin && !!plugin.preTasksExecution,
+                hasPostTasksExecution:
+                  'postTasksExecution' in plugin && !!plugin.postTasksExecution,
+                success: true as const,
+              };
+            });
+          },
+          createNodes: async ({ configFiles, context }) =>
+            withErrorHandling(async () => {
+              const result = await plugin.createNodes[1](configFiles, context);
+              return { result, success: true as const };
+            }),
+          createDependencies: async ({ context }) =>
+            withErrorHandling(async () => {
+              const result = await plugin.createDependencies(context);
+              return { dependencies: result, success: true as const };
+            }),
+          createMetadata: async ({ graph, context }) =>
+            withErrorHandling(async () => {
+              const result = await plugin.createMetadata(graph, context);
+              return { metadata: result, success: true as const };
+            }),
+          preTasksExecution: async ({ context }) =>
+            withErrorHandling(async () => {
+              const mutations = await plugin.preTasksExecution?.(context);
+              return { success: true as const, mutations };
+            }),
+          postTasksExecution: async ({ context }) =>
+            withErrorHandling(() => plugin.postTasksExecution?.(context)),
+          setWorkerEnv: (env) =>
+            withErrorHandling(() => {
+              applyDaemonEnvFromClient(env);
+            }),
+        });
+      },
+      (err) => {
+        // The host link cannot resynchronize. Exit so the host's 'exit' handler
+        // rejects the pending hooks instead of waiting on a reply that the
+        // framing failure guarantees will never arrive.
+        console.error(err.message);
+        socket.destroy();
+        process.exit(1);
+      }
+    )
   );
 
   // When the host disconnects, clean up and exit.

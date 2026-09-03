@@ -23,8 +23,8 @@ public static partial class TargetBuilder
         string description,
         List<string> directoryBuildInputs)
     {
-        var outputPath = GetOutputPath(properties, projectName, projectDirectory, workspaceRoot);
-        var intermediatePath = GetIntermediateOutputPath(properties, projectName, projectDirectory, workspaceRoot);
+        var outputPath = GetOutputPath(properties, projectDirectory, workspaceRoot);
+        var intermediatePath = GetIntermediateOutputPath(properties, projectDirectory, workspaceRoot);
         // The package defaults OpenApiDocumentsDirectory to $(BaseIntermediateOutputPath),
         // so merely referencing it lands on obj, which is already an output.
         var openApiDocumentsOutputs = GetOpenApiDocumentsOutputs(properties, fileName, projectDirectory, workspaceRoot, outputPath, intermediatePath);

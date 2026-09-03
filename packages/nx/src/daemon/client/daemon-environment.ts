@@ -45,6 +45,11 @@ const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   // resolves its root at startup before any client env is applied. The spawn
   // env keeps it so that startup resolution honors the pinned root.
   'NX_WORKSPACE_ROOT_PATH',
+  // The message-size ceiling is read when a connection is accepted, before the
+  // client's env could apply, so reflecting it would hand one client's value
+  // to the next client's connection. Pinned at daemon spawn instead; see
+  // getDaemonSpawnEnv.
+  'NX_MAX_MESSAGE_SIZE',
 
   // Nx UI/logging vars (don't affect graph structure)
   'NX_TUI',
@@ -321,6 +326,9 @@ export function getDaemonClientEnvGeneration(): number {
  *   the pin, a root without markers under an ancestor that has them
  *   resolves to the ancestor and the daemon publishes its socket under the
  *   wrong workspace.
+ * - NX_MAX_MESSAGE_SIZE: excluded from reflection (see above), so the value
+ *   here holds for the daemon's whole lifetime. Changing it therefore needs a
+ *   daemon restart (`nx reset`).
  */
 export function getDaemonSpawnEnv() {
   const env = getDaemonEnv();
@@ -329,6 +337,9 @@ export function getDaemonSpawnEnv() {
   }
   if (process.env.NX_WORKSPACE_ROOT_PATH !== undefined) {
     env.NX_WORKSPACE_ROOT_PATH = process.env.NX_WORKSPACE_ROOT_PATH;
+  }
+  if (process.env.NX_MAX_MESSAGE_SIZE !== undefined) {
+    env.NX_MAX_MESSAGE_SIZE = process.env.NX_MAX_MESSAGE_SIZE;
   }
   return env;
 }
@@ -397,4 +408,60 @@ export function applyDaemonEnvFromClient(newEnv: NodeJS.ProcessEnv): string[] {
   clientEnvApplySequence++;
   appliedClientEnv = { ...newEnv };
   return [...changedKeys];
+}
+
+const BERRY_BIN_FOLDER_GRAPH_IDENTITY = '<YARN_BERRY_BIN_FOLDER>';
+
+/**
+ * Yarn Berry creates a fresh BERRY_BIN_FOLDER for every invocation and puts it
+ * first on PATH. The wrappers inside are runtime state the daemon and workers
+ * must receive, but the folder's random name is not project-graph identity:
+ * two invocations whose environments differ only by it would compute the same
+ * graph. Strips the folder from PATH and pins the var to a sentinel so such
+ * environments compare equal. Returns a copy; never mutates runtime env.
+ */
+export function normalizeDaemonEnvironmentForGraph(
+  env: NodeJS.ProcessEnv,
+  platform: NodeJS.Platform = process.platform
+): NodeJS.ProcessEnv {
+  const normalized = { ...env };
+  const berryBinFolder = normalized.BERRY_BIN_FOLDER;
+  if (!berryBinFolder) {
+    return normalized;
+  }
+
+  const pathKey = Object.keys(normalized).find(
+    (key) => key.toUpperCase() === 'PATH'
+  );
+  if (pathKey && normalized[pathKey]) {
+    const pathDelimiter = platform === 'win32' ? ';' : ':';
+    const canonicalize = (value: string) => {
+      const withPlatformSeparators =
+        platform === 'win32' ? value.replaceAll('/', '\\') : value;
+      return platform === 'win32'
+        ? withPlatformSeparators.toLowerCase()
+        : withPlatformSeparators;
+    };
+    const canonicalBerryBinFolder = canonicalize(berryBinFolder);
+    normalized[pathKey] = normalized[pathKey]
+      .split(pathDelimiter)
+      .filter((entry) => canonicalize(entry) !== canonicalBerryBinFolder)
+      .join(pathDelimiter);
+  }
+
+  normalized.BERRY_BIN_FOLDER = BERRY_BIN_FOLDER_GRAPH_IDENTITY;
+  return normalized;
+}
+
+export function getChangedEnvKeys(
+  before: NodeJS.ProcessEnv,
+  after: NodeJS.ProcessEnv
+): string[] {
+  const changedKeys: string[] = [];
+  for (const key of new Set([...Object.keys(before), ...Object.keys(after)])) {
+    if (before[key] !== after[key]) {
+      changedKeys.push(key);
+    }
+  }
+  return changedKeys;
 }

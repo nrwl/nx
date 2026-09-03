@@ -9,11 +9,12 @@ import {
 import { tmpdir } from 'os';
 import {
   createTreeParseConfigHost,
+  readTsConfig,
   readTsConfigPaths,
   resolvePathsBaseUrl,
   type TreeParseConfigHost,
 } from './ts-config';
-import { join } from 'path';
+import { isAbsolute, join } from 'path';
 import * as ts from 'typescript';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 
@@ -443,5 +444,85 @@ describe('createTreeParseConfigHost', () => {
       ts.ModuleResolutionKind.Node10
     );
     expect(parsed.options.declaration).toBeUndefined();
+  });
+});
+
+describe('readTsConfig', () => {
+  let tempFs: TempFs;
+  let originalCwd: string;
+
+  beforeEach(() => {
+    tempFs = new TempFs('read-ts-config', false);
+    originalCwd = process.cwd();
+  });
+
+  afterEach(() => {
+    process.chdir(originalCwd);
+    tempFs.cleanup();
+  });
+
+  it('should expand ${configDir} paths to absolute values when a baseUrl-less config is read via a relative path', () => {
+    // A relative basePath would leave `paths` non-relative and trip TS5090.
+    tempFs.createFileSync(
+      'tsconfig.base.json',
+      JSON.stringify({
+        compilerOptions: {
+          paths: {
+            '@/*': ['${configDir}/src/*'],
+            '~/*': ['${configDir}/src/*'],
+          },
+        },
+      })
+    );
+    tempFs.createFileSync(
+      'proj/tsconfig.json',
+      JSON.stringify({
+        extends: '../tsconfig.base.json',
+        include: ['src/**/*.ts'],
+      })
+    );
+    tempFs.createFileSync('proj/src/index.ts', `export const a = 1;`);
+
+    process.chdir(tempFs.tempDir);
+    const parsed = readTsConfig('proj/tsconfig.json');
+
+    expect(parsed.errors).toHaveLength(0);
+    for (const values of Object.values(parsed.options.paths ?? {})) {
+      for (const value of values) {
+        expect(isAbsolute(value)).toBe(true);
+      }
+    }
+  });
+
+  it('should not report option diagnostics for a baseUrl-less ${configDir} config read via a relative path', () => {
+    tempFs.createFileSync(
+      'tsconfig.base.json',
+      JSON.stringify({
+        compilerOptions: {
+          skipLibCheck: true,
+          module: 'esnext',
+          moduleResolution: 'bundler',
+          paths: { '@/*': ['${configDir}/src/*'] },
+        },
+      })
+    );
+    tempFs.createFileSync(
+      'proj/tsconfig.json',
+      JSON.stringify({
+        extends: '../tsconfig.base.json',
+        include: ['src/**/*.ts'],
+      })
+    );
+    tempFs.createFileSync('proj/src/index.ts', `export const a = 1;`);
+
+    process.chdir(tempFs.tempDir);
+    const parsed = readTsConfig('proj/tsconfig.json');
+    const program = ts.createProgram(parsed.fileNames, {
+      ...parsed.options,
+      noEmit: true,
+    });
+
+    const optionDiagnostics = program.getOptionsDiagnostics();
+    expect(optionDiagnostics.map((d) => d.code)).not.toContain(5090);
   });
 });

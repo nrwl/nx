@@ -237,21 +237,25 @@ export function getPackageManagerCommand(
     pnpm: () => {
       let modernPnpm: boolean,
         includeDoubleDashBeforeArgs: boolean,
-        allowRegistryConfigKey: boolean;
+        configForm: boolean,
+        scopedForm: boolean;
       try {
         const pnpmVersion = getPackageManagerVersion('pnpm', root);
         modernPnpm = gte(pnpmVersion, '6.13.0');
         includeDoubleDashBeforeArgs = lt(pnpmVersion, '7.0.0');
-        // Support for --@scope:registry was added in pnpm v10.5.0 and backported to v9.15.7.
-        // Versions >=10.0.0 and <10.5.0 do NOT support this CLI option.
-        allowRegistryConfigKey = satisfies(
+        configForm = gte(pnpmVersion, '11.0.0');
+        // Support for --@scope:registry was added in pnpm v10.5.0 and
+        // backported to v9.15.7. Starting with pnpm 11, the equivalent
+        // option is --config.@scope:registry.
+        scopedForm = satisfies(
           pnpmVersion,
-          '>=9.15.7 <10.0.0 || >=10.5.0'
+          '>=9.15.7 <10.0.0 || >=10.5.0 <11.0.0'
         );
       } catch {
         modernPnpm = true;
         includeDoubleDashBeforeArgs = true;
-        allowRegistryConfigKey = false;
+        configForm = false;
+        scopedForm = false;
       }
 
       const isPnpmWorkspace = existsSync(join(root, 'pnpm-workspace.yaml'));
@@ -281,7 +285,11 @@ export function getPackageManagerCommand(
         getRegistryUrl: 'pnpm config get registry',
         publish: (packageRoot, registry, registryConfigKey, tag) =>
           `pnpm publish "${packageRoot}" --json --"${
-            allowRegistryConfigKey ? registryConfigKey : 'registry'
+            configForm
+              ? `config.${registryConfigKey}`
+              : scopedForm
+                ? registryConfigKey
+                : 'registry'
           }=${registry}" --tag=${tag} --no-git-checks`,
         ignoreScriptsFlag: '--ignore-scripts',
       };
