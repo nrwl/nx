@@ -1,6 +1,7 @@
 import { applyBaseConfig } from './apply-base-config';
 import { NormalizedNxAppRspackPluginOptions } from './models';
 import type { Configuration } from '@rspack/core';
+import * as path from 'path';
 
 describe('apply-base-config libraryTarget handling', () => {
   let options: NormalizedNxAppRspackPluginOptions;
@@ -272,5 +273,107 @@ describe('apply-base-config ts-checker rootDir (TS6059 prevention)', () => {
     expect(capturedPluginConfigs).toHaveLength(1);
     expect(capturedPluginConfigs[0].typescript.configOverwrite).toBeUndefined();
     expect(capturedPluginConfigs[0].typescript.build).toBe(true);
+  });
+});
+
+describe('apply-base-config cache option', () => {
+  const baseOptions = {
+    root: '/test',
+    projectRoot: 'apps/test',
+    target: 'web',
+  } as NormalizedNxAppRspackPluginOptions;
+
+  beforeEach(() => {
+    jest.resetModules();
+    global.NX_GRAPH_CREATION = false;
+  });
+
+  afterEach(() => {
+    delete global.NX_GRAPH_CREATION;
+    jest.dontMock('@rspack/core');
+    jest.resetModules();
+  });
+
+  it('writes the public cache value as-is in executor mode', async () => {
+    const { applyBaseConfig } = await import('./apply-base-config');
+
+    const defaults: Partial<Configuration> = {};
+    applyBaseConfig({ ...baseOptions }, defaults);
+    expect(defaults.cache).toBe(true);
+
+    const disabled: Partial<Configuration> = {};
+    applyBaseConfig({ ...baseOptions, cache: false }, disabled);
+    expect(disabled.cache).toBe(false);
+  });
+
+  it('writes the shape produced by the rspack normalizer into compiler.options in plugin mode', async () => {
+    // Stub the normalizer so the expected shape does not depend on the
+    // installed @rspack/core version.
+    const normalize = (cache: unknown) =>
+      cache === true
+        ? { type: 'memory', snapshot: {} }
+        : { ...(cache as object), snapshot: {} };
+    const getNormalizedRspackOptions = jest.fn(({ cache }) => ({
+      cache: normalize(cache),
+    }));
+    jest.doMock('@rspack/core', () => {
+      const actual = jest.requireActual('@rspack/core');
+      return new Proxy(actual, {
+        get(target, prop) {
+          if (prop === 'config') {
+            return { ...(target as any).config, getNormalizedRspackOptions };
+          }
+          return (target as any)[prop];
+        },
+      });
+    });
+    const { applyBaseConfig } = await import('./apply-base-config');
+
+    const defaults: Partial<Configuration> = {};
+    applyBaseConfig({ ...baseOptions }, defaults, { useNormalizedEntry: true });
+    expect(getNormalizedRspackOptions).toHaveBeenCalledWith({
+      context: path.join('/test', 'apps/test'),
+      cache: true,
+    });
+    expect(defaults.cache).toEqual({ type: 'memory', snapshot: {} });
+
+    const persistent: Partial<Configuration> = {};
+    applyBaseConfig(
+      { ...baseOptions, cache: { type: 'persistent' } as any },
+      persistent,
+      { useNormalizedEntry: true }
+    );
+    expect(persistent.cache).toEqual({ type: 'persistent', snapshot: {} });
+  });
+
+  it('passes an explicit cache option through the installed normalizer in plugin mode', async () => {
+    const { applyBaseConfig } = await import('./apply-base-config');
+    const rspackCore: typeof import('@rspack/core') =
+      jest.requireActual('@rspack/core');
+    const normalizedCache = (cache: Configuration['cache']) =>
+      rspackCore.config.getNormalizedRspackOptions({
+        context: path.join('/test', 'apps/test'),
+        cache,
+      }).cache;
+
+    const enabled: Partial<Configuration> = {};
+    applyBaseConfig({ ...baseOptions, cache: true }, enabled, {
+      useNormalizedEntry: true,
+    });
+    expect(enabled.cache).toEqual(normalizedCache(true));
+
+    const disabled: Partial<Configuration> = {};
+    applyBaseConfig({ ...baseOptions, cache: false }, disabled, {
+      useNormalizedEntry: true,
+    });
+    expect(disabled.cache).toBe(false);
+
+    const persistent: Partial<Configuration> = {};
+    applyBaseConfig(
+      { ...baseOptions, cache: { type: 'persistent' } as any },
+      persistent,
+      { useNormalizedEntry: true }
+    );
+    expect(persistent.cache).toEqual(normalizedCache({ type: 'persistent' }));
   });
 });
