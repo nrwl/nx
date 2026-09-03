@@ -10,6 +10,7 @@ const ctx: MasterInvocationContext = {
   runId,
   reconcileCommand: `pnpm exec nx migrate --run-id=${runId}`,
   runbookPath: `.nx/migrate-runs/${runId}/RUNBOOK.md`,
+  sentinelPath: `.nx/migrate-runs/${runId}/handoffs/session-complete`,
 };
 
 describe('master invocation prompts', () => {
@@ -28,6 +29,15 @@ describe('master invocation prompts', () => {
   it('invariant names the run and forbids inferring progress from the conversation', () => {
     expect(masterInvariant(ctx)).toContain(`driving Nx migrate run ${runId}`);
     expect(masterInvariant(ctx)).toContain('never infer its progress');
+  });
+
+  it('invariant ends with the sentinel as the last action, after reporting to the user', () => {
+    expect(
+      masterInvariant(ctx).endsWith(
+        `reports the run complete, tell the user the outcome, then create the file ${ctx.sentinelPath} as your last action; nx closes this session once it exists.`
+      )
+    ).toBe(true);
+    expect(masterBootstrapPrompt(ctx)).not.toContain(ctx.sentinelPath);
   });
 });
 

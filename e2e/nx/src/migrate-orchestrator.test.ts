@@ -1342,6 +1342,7 @@ if (process.env.FAKE_AGENT_EXIT_EARLY) {
 const bootstrap = args[master + 2];
 const reconcile = bootstrap.match(/run \\x60([^\\x60]+)\\x60/)[1];
 const runbookPath = bootstrap.match(/runbook at (\\S+) in full/)[1];
+const sentinelPath = args[master + 1].match(/create the file (\\S+) as your last action/)[1];
 record({ runbook: fs.readFileSync(runbookPath, 'utf8').split('\\n')[0] });
 const env = { ...process.env, CLAUDECODE: '1' };
 function run(command) {
@@ -1378,7 +1379,10 @@ while (block.action !== 'complete') {
   }
   block = lastBlock(run(block.payload.next));
 }
-record({ complete: block.runId });
+record({ complete: block.runId, sentinelPath });
+// Stays alive after the sentinel: nx must close the session on its own.
+fs.writeFileSync(sentinelPath, '');
+setTimeout(() => {}, 120000);
 `;
 
   function installFakeAgent(): { binDir: string; logFile: string } {
@@ -1489,6 +1493,12 @@ record({ complete: block.runId });
       const done = log.find((entry) => entry.complete);
       expect(done).toBeDefined();
       expect(runDirs()).toEqual([done.complete]);
+      expect(done.sentinelPath).toMatch(
+        new RegExp(
+          `^\\.nx/migrate-runs/${done.complete}/handoffs/session-complete-[0-9a-f]{8}$`
+        )
+      );
+      expect(existsSync(join(tmpProjPath(), done.sentinelPath))).toBe(false);
       const state = readRunStateFile(done.complete);
       expect(state.status).toBe('completed');
       expect(state.steps.map((s) => s.status)).toEqual([
