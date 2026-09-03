@@ -17,16 +17,15 @@ import {
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
 import { fileExists, readJsonFile, writeJsonFile } from '../../utils/fileutils';
-import { detectFormatter, type FormatterType } from '../../utils/formatters';
 import {
-  checkWithOxfmt,
-  getOxfmtBinPath,
-  writeWithOxfmt,
-} from '../../utils/formatters/oxfmt';
+  detectFormatter,
+  type FormatterType,
+  resolveFormatterBin,
+} from '../../utils/formatters';
+import { checkWithOxfmt, writeWithOxfmt } from '../../utils/formatters/oxfmt';
 import {
   checkWithPrettier,
   filterToPrettierSupportedFiles,
-  getPrettierPath,
   quoteForShell,
   writeWithPrettier,
 } from '../../utils/formatters/prettier';
@@ -34,16 +33,6 @@ import { getIgnoreObject } from '../../utils/ignore';
 import { sortObjectByKeys } from '../../utils/object-sort';
 import { output } from '../../utils/output';
 import { workspaceRoot } from '../../utils/workspace-root';
-
-/**
- * A table, not a `switch`: this lookup sits inside a `try` whose `catch`
- * reports "configured but not installed", and a `never` arm would throw into
- * that catch and be misreported. A missing member is a compile error here.
- */
-const resolveFormatterBin = {
-  oxfmt: getOxfmtBinPath,
-  prettier: getPrettierPath,
-} satisfies Record<FormatterType, () => string>;
 
 export async function format(
   command: 'check' | 'write',

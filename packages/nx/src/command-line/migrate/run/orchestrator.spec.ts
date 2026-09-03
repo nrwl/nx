@@ -2230,7 +2230,7 @@ describe('orchestrator', () => {
         });
         await runOrchestratorReconcile({ root, runId: 'run-1' });
         expect(lastBlock().payload.instructions).toContain(
-          'Format command: none (no formatter is configured)'
+          'Format command: none (no configured formatter is installed)'
         );
 
         writeFileSync(join(root, '.prettierrc'), '{}');
