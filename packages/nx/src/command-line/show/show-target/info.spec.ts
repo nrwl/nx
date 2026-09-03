@@ -918,12 +918,16 @@ describe('show target info', () => {
           {
             project: 'my-app',
             globs: ['apps/my-app/src/main.ts', '!apps/my-app/**/*.spec.ts'],
+            observed: ['apps/my-app/src/main.ts'],
+            declared: ['!apps/my-app/**/*.spec.ts'],
             includeIgnored: true,
             fromSnapshot: true,
           },
           {
             project: 'ui',
             globs: ['libs/ui/src/index.ts'],
+            observed: ['libs/ui/src/index.ts'],
+            declared: [],
             includeIgnored: true,
             fromSnapshot: true,
           },
@@ -936,16 +940,21 @@ describe('show target info', () => {
 
       // The observed reads, grouped by the project that owns them.
       expect(text).toContain(
-        'observed reads (3 unique of 3 globs, 2 projects)'
+        'observed reads (2 unique of 2 globs, 2 projects)'
       );
       expect(text).toContain('the observed reads are listed above');
       // Globs inside the owning project read as {projectRoot}, like the
       // declared inputs; the header carries the real root.
       expect(text).toContain('my-app (apps/my-app)');
       expect(text).toContain('{projectRoot}/src/main.ts');
-      expect(text).toContain('!{projectRoot}/**/*.spec.ts');
       // A project absent from the graph keeps its workspace-relative glob.
       expect(text).toContain('libs/ui/src/index.ts');
+      // An exclusion carried over from a declared input is named apart from
+      // the reads, since it is why a read can still be excluded.
+      expect(text).toContain(
+        'declared exclusions still applied (1 unique of 1)'
+      );
+      expect(text).toContain('!{projectRoot}/**/*.spec.ts');
       // The declared filesets they replace are gone, not merely tagged.
       expect(text).not.toContain('{projectRoot}/**/*.ts');
       expect(text).not.toContain('(replaced by snapshot)');
@@ -967,12 +976,16 @@ describe('show target info', () => {
           {
             project: 'my-app',
             globs: [shared, '{projectRoot}/src/only-mine.ts'],
+            observed: [shared, '{projectRoot}/src/only-mine.ts'],
+            declared: [],
             includeIgnored: true,
             fromSnapshot: true,
           },
           {
             project: 'ui',
             globs: [shared],
+            observed: [shared],
+            declared: [],
             includeIgnored: true,
             fromSnapshot: true,
           },
@@ -1010,12 +1023,16 @@ describe('show target info', () => {
           {
             project: 'my-app',
             globs: [shared, '{projectRoot}/src/only-mine.ts'],
+            observed: [shared, '{projectRoot}/src/only-mine.ts'],
+            declared: [],
             includeIgnored: true,
             fromSnapshot: true,
           },
           {
             project: 'ui',
             globs: [shared, '{projectRoot}/src/only-ui.ts'],
+            observed: [shared, '{projectRoot}/src/only-ui.ts'],
+            declared: [],
             includeIgnored: true,
             fromSnapshot: true,
           },

@@ -381,6 +381,14 @@ export declare function detectAiAgent(): string | null
 export interface EffectiveInputGroup {
   project?: string
   globs: Array<string>
+  /** Globs the task was observed reading. Empty for a declared fileset. */
+  observed: Array<string>
+  /**
+   * Globs the planner carried over from a declared input -- the exclusions
+   * an inferred target writes against `{projectRoot}`, which still apply on
+   * top of the trace.
+   */
+  declared: Array<string>
   /**
    * Disk-backed: an I/O snapshot's observed reads, or a declared
    * `includeIgnored` fileset. Gitignored and generated files count.

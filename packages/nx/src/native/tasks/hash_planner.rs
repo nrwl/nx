@@ -273,7 +273,9 @@ impl HashPlanner {
                     let own: hashbrown::HashSet<u32> = self
                         .snapshot_file_instructions(task, &inputs.self_inputs, snapshot, &negations)
                         .into_iter()
-                        .map(|instruction| pool.intern(instruction))
+                        .map(|(instruction, declared_tail)| {
+                            pool.intern_with_declared_tail(instruction, declared_tail)
+                        })
                         .collect();
                     ids.retain(|id| {
                         *id == always_on_id
@@ -624,7 +626,7 @@ impl HashPlanner {
         self_inputs: &[Input],
         snapshot: &SnapshotContext,
         negations: &Negations,
-    ) -> Vec<HashInstruction> {
+    ) -> Vec<(HashInstruction, u32)> {
         let io = snapshot.io;
         let self_project = task.target.project.as_str();
         let project_root = &self.project_graph.nodes[self_project].root;
@@ -693,14 +695,16 @@ impl HashPlanner {
                 .collect();
             declared_negations.sort();
             declared_negations.dedup();
+            // Appended after the sort, so they stay the group's trailing run and
+            // the split survives into the display.
+            let declared_tail = declared_negations.len() as u32;
             group.extend(declared_negations);
-            instructions.push(HashInstruction::ProjectFileSet(
-                project.to_string(),
-                group,
-                true,
+            instructions.push((
+                HashInstruction::ProjectFileSet(project.to_string(), group, true),
+                declared_tail,
             ));
         }
-        instructions.push(io_snapshot_marker(&io.digest));
+        instructions.push((io_snapshot_marker(&io.digest), 0));
         instructions
     }
 

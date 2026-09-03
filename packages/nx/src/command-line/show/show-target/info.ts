@@ -154,6 +154,12 @@ function resolveTargetInfoData(
               ...group,
               projectRoot: root,
               globs: group.globs.map((glob) => tokenizeProjectRoot(glob, root)),
+              observed: group.observed.map((glob) =>
+                tokenizeProjectRoot(glob, root)
+              ),
+              declared: group.declared.map((glob) =>
+                tokenizeProjectRoot(glob, root)
+              ),
             };
           }),
         }
@@ -386,26 +392,42 @@ function tokenizeUnder(path: string, root: string): string {
 /** Shared globs listed before the tail is summarised, without --verbose. */
 const SHARED_GLOB_PREVIEW = 10;
 
+/** Maps each glob to the projects whose group carries it. */
+function indexByGlob(
+  groups: readonly { project?: string; globs: readonly string[] }[],
+  pick: (group: any) => readonly string[]
+): Map<string, string[]> {
+  const byGlob = new Map<string, string[]>();
+  for (const group of groups) {
+    const owner = group.project ?? '{workspaceRoot}';
+    for (const glob of pick(group)) {
+      const owners = byGlob.get(glob);
+      if (owners) owners.push(owner);
+      else byGlob.set(glob, [owner]);
+    }
+  }
+  return byGlob;
+}
+
+function scopeLabel(owners: readonly string[], projectCount: number): string {
+  return owners.length === projectCount
+    ? `all ${owners.length} projects`
+    : `${owners.length} project${owners.length === 1 ? '' : 's'}`;
+}
+
 function renderEffectiveInputs(
   data: TargetInfoData,
   c: ReturnType<typeof pc>,
-  args: ShowTargetBaseOptions
+  args: ShowTargetBaseOptions,
+  sourceHint: (key: string, fallbackKey?: string) => string
 ): void {
   const groups = data.effectiveInputs;
   if (!groups?.length) return;
 
   // Tokenizing collapses most reads to the same {projectRoot} glob repeated
   // once per project, so key by glob and name the projects it covers.
-  const byGlob = new Map<string, string[]>();
-  for (const group of groups) {
-    const owner = group.project ?? '{workspaceRoot}';
-    for (const glob of group.globs) {
-      const owners = byGlob.get(glob);
-      if (owners) owners.push(owner);
-      else byGlob.set(glob, [owner]);
-    }
-  }
-  const total = groups.reduce((n, g) => n + g.globs.length, 0);
+  const byGlob = indexByGlob(groups, (g) => g.observed);
+  const total = groups.reduce((n, g) => n + g.observed.length, 0);
   console.log(
     `  ${c.dim(
       `observed reads (${byGlob.size} unique of ${total} globs, ${groups.length} projects):`
@@ -421,11 +443,9 @@ function renderEffectiveInputs(
     ? shared
     : shared.slice(0, SHARED_GLOB_PREVIEW);
   for (const [glob, owners] of shownShared) {
-    const scope =
-      owners.length === groups.length
-        ? `all ${owners.length} projects`
-        : `${owners.length} projects`;
-    console.log(`    - ${glob} ${c.dim(`(${scope})`)}`);
+    console.log(
+      `    - ${glob} ${c.dim(`(${scopeLabel(owners, groups.length)})`)}`
+    );
     if (args.verbose && owners.length < groups.length) {
       console.log(`      ${c.dim(owners.join(', '))}`);
     }
@@ -447,27 +467,78 @@ function renderEffectiveInputs(
       else own.set(owners[0], [glob]);
     }
   }
-  if (own.size === 0) return;
-  if (!args.verbose) {
-    const count = [...own.values()].reduce((n, globs) => n + globs.length, 0);
-    console.log(
-      `    ${c.dim(
-        `... ${count} reads specific to a single project, across ${own.size} projects (--verbose)`
-      )}`
-    );
-    return;
+  if (own.size > 0) {
+    if (args.verbose) {
+      const roots = new Map(
+        groups.map((g) => [g.project ?? '{workspaceRoot}', g.projectRoot])
+      );
+      for (const owner of [...own.keys()].sort()) {
+        const root = roots.get(owner);
+        const header = root
+          ? `${c.bold(owner)}${c.dim(` (${root})`)}`
+          : c.bold(owner);
+        console.log(`    ${header}:`);
+        for (const glob of own.get(owner)!) console.log(`      - ${glob}`);
+      }
+    } else {
+      const count = [...own.values()].reduce((n, globs) => n + globs.length, 0);
+      console.log(
+        `    ${c.dim(
+          `... ${count} reads specific to a single project, across ${own.size} projects (--verbose)`
+        )}`
+      );
+    }
   }
 
-  const roots = new Map(
-    groups.map((g) => [g.project ?? '{workspaceRoot}', g.projectRoot])
+  renderDeclaredExclusions(data, groups, c, args, sourceHint);
+}
+
+/**
+ * Exclusions the planner carried over from declared inputs. They are why a
+ * file the trace saw can still be absent from the hash, so they are named
+ * apart from the reads rather than mixed in with them.
+ */
+function renderDeclaredExclusions(
+  data: TargetInfoData,
+  groups: NonNullable<TargetInfoData['effectiveInputs']>,
+  c: ReturnType<typeof pc>,
+  args: ShowTargetBaseOptions,
+  sourceHint: (key: string, fallbackKey?: string) => string
+): void {
+  const byGlob = indexByGlob(groups, (g) => g.declared);
+  if (byGlob.size === 0) return;
+  const total = groups.reduce((n, g) => n + g.declared.length, 0);
+  console.log(
+    `  ${c.dim(
+      `declared exclusions still applied (${byGlob.size} unique of ${total}):`
+    )}`
   );
-  for (const owner of [...own.keys()].sort()) {
-    const root = roots.get(owner);
-    const header = root
-      ? `${c.bold(owner)}${c.dim(` (${root})`)}`
-      : c.bold(owner);
-    console.log(`    ${header}:`);
-    for (const glob of own.get(owner)!) console.log(`      - ${glob}`);
+
+  // An exclusion inherited through `^` belongs to the dependency's own target,
+  // so only the ones this target declares resolve to a source here.
+  const declaredHere = new Map<string, number>();
+  data.inputs?.forEach((input, i) => {
+    if (typeof input === 'string') {
+      declaredHere.set(input, data._inputSources?.[i] ?? i);
+    }
+  });
+
+  const entries = [...byGlob].sort(
+    ([aGlob, a], [bGlob, b]) =>
+      b.length - a.length || aGlob.localeCompare(bGlob)
+  );
+  const shown = args.verbose ? entries : entries.slice(0, SHARED_GLOB_PREVIEW);
+  for (const [glob, owners] of shown) {
+    const index = declaredHere.get(glob);
+    const hint =
+      index !== undefined ? sourceHint(`inputs.${index}`, 'inputs') : '';
+    console.log(
+      `    - ${glob} ${c.dim(`(${scopeLabel(owners, groups.length)})`)}${hint}`
+    );
+  }
+  const hidden = entries.length - shown.length;
+  if (hidden > 0) {
+    console.log(`    ${c.dim(`... ${hidden} more (--verbose)`)}`);
   }
 }
 
@@ -686,7 +757,7 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
           : '';
       console.log(`  - ${display}${hint}${replaced}`);
     }
-    renderEffectiveInputs(data, c, args);
+    renderEffectiveInputs(data, c, args, sourceHint);
   }
 
   if (data.outputs && data.outputs.length > 0) {

@@ -20,6 +20,12 @@ use std::sync::Arc;
 pub struct EffectiveInputGroup {
     pub project: Option<String>,
     pub globs: Vec<String>,
+    /// Globs the task was observed reading. Empty for a declared fileset.
+    pub observed: Vec<String>,
+    /// Globs the planner carried over from a declared input -- the exclusions
+    /// an inferred target writes against `{projectRoot}`, which still apply on
+    /// top of the trace.
+    pub declared: Vec<String>,
     /// Disk-backed: an I/O snapshot's observed reads, or a declared
     /// `includeIgnored` fileset. Gitignored and generated files count.
     pub include_ignored: bool,
@@ -116,9 +122,12 @@ impl HashPlanInspector {
                     .iter()
                     .filter_map(|id| match &*pool.get(*id) {
                         HashInstruction::ProjectFileSet(project, globs, include_ignored) => {
+                            let split = globs.len() - pool.declared_tail(*id) as usize;
                             Some(EffectiveInputGroup {
                                 project: Some(project.clone()),
                                 globs: globs.clone(),
+                                observed: globs[..split].to_vec(),
+                                declared: globs[split..].to_vec(),
                                 include_ignored: *include_ignored,
                                 from_snapshot,
                             })
@@ -126,6 +135,8 @@ impl HashPlanInspector {
                         HashInstruction::WorkspaceFileSet(globs) => Some(EffectiveInputGroup {
                             project: None,
                             globs: globs.clone(),
+                            observed: globs.clone(),
+                            declared: vec![],
                             include_ignored: false,
                             from_snapshot,
                         }),

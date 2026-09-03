@@ -216,6 +216,10 @@ pub struct InstructionPool {
     // Display strings, rendered once per unique instruction at intern time so
     // hashing can hand out shared keys instead of re-rendering per task.
     keys: DashMap<u32, Arc<str>>,
+    /// How many of a snapshot group's trailing globs are declared negations
+    /// rather than observed reads. Kept beside the instruction, not inside it,
+    /// so provenance never reaches the hash key.
+    declared_tails: DashMap<u32, u32>,
     next_id: AtomicU32,
 }
 
@@ -249,6 +253,23 @@ impl InstructionPool {
                 id
             }
         }
+    }
+
+    /// Interns a snapshot group, recording how many trailing globs the planner
+    /// appended from declared inputs. Value-equal groups agree on the count,
+    /// since the globs themselves carry it.
+    pub fn intern_with_declared_tail(&self, instruction: HashInstruction, tail: u32) -> u32 {
+        let id = self.intern(instruction);
+        if tail > 0 {
+            self.declared_tails.insert(id, tail);
+        }
+        id
+    }
+
+    /// Trailing globs of this instruction that came from a declared input; 0
+    /// when it carries none, or is not a snapshot group at all.
+    pub fn declared_tail(&self, id: u32) -> u32 {
+        self.declared_tails.get(&id).map(|tail| *tail).unwrap_or(0)
     }
 
     pub fn get(&self, id: u32) -> dashmap::mapref::one::Ref<'_, u32, HashInstruction> {
@@ -452,6 +473,27 @@ mod tests {
             HashInstruction::ProjectFileSet("ui".into(), globs.clone(), false).to_string(),
             HashInstruction::ProjectFileSet("ui".into(), globs, true).to_string()
         );
+    }
+
+    #[test]
+    fn declared_tail_is_kept_per_instruction_and_defaults_to_zero() {
+        let pool = InstructionPool::new();
+        let plain = pool.intern(HashInstruction::ProjectFileSet(
+            "ui".into(),
+            vec!["libs/ui/**/*.ts".into()],
+            true,
+        ));
+        let with_tail = pool.intern_with_declared_tail(
+            HashInstruction::ProjectFileSet(
+                "web".into(),
+                vec!["apps/web/a.ts".into(), "!apps/web/**/*.spec.ts".into()],
+                true,
+            ),
+            1,
+        );
+
+        assert_eq!(pool.declared_tail(plain), 0);
+        assert_eq!(pool.declared_tail(with_tail), 1);
     }
 
     #[test]
