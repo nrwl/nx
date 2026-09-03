@@ -135,9 +135,8 @@ const server = createServer((socket) => {
                 require(require.resolve('../load-resolved-plugin'))
               );
 
-              // Same scoping the in-process loader applies: the entry's
-              // graph resolves workspace packages the way tsconfig does.
-              // Kept for the worker's lifetime; the plugin never unloads.
+              // Keep the source graph for the worker lifetime because plugins
+              // never unload.
               if (isSourcePlugin) {
                 (
                   require('../../../plugins/js/utils/register') as typeof import('../../../plugins/js/utils/register')

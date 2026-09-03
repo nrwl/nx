@@ -199,7 +199,6 @@ describe('getPluginsSeparated', () => {
     (refreshSourceGraphResolvers as Mock).mockClear();
     await getPluginsSeparated({ plugins: ['test-a'] }, '/workspace');
 
-    // Conditions only; no package-names thunk on the cached path.
     expect(refreshSourceGraphResolvers).toHaveBeenCalledTimes(1);
     expect(refreshSourceGraphResolvers).toHaveBeenCalledWith('/workspace');
   });
@@ -213,9 +212,8 @@ describe('getPluginsSeparated', () => {
     (resetResolvePluginCache as Mock).mockClear();
     await getPluginsSeparated({ plugins: ['test-a'] });
 
-    // Dropping the snapshot forces a full workspace re-glob on the next
-    // resolution, so the cached path must never do it. Fresh package names
-    // reach source graph resolvers from the recompute sites instead.
+    // Cache hits must not re-scan local plugins; recompute sites refresh
+    // source-graph package names.
     expect(resetResolvePluginCache).not.toHaveBeenCalled();
   });
 });

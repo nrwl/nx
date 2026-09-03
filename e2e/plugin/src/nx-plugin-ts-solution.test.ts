@@ -557,7 +557,6 @@ exports.createNodesV2 = [
       readJson('tsconfig.base.json').compilerOptions.customConditions[0];
     expect(sourceCondition).not.toBe('development');
 
-    // A sibling workspace package exposes different source and built markers.
     createFile(
       `packages/${lib}/package.json`,
       JSON.stringify({
@@ -622,8 +621,6 @@ export const createNodesV2: CreateNodesV2<PluginOptions> = [
 `
     );
 
-    // A built plugin entry (no source condition) imports the same package;
-    // it must see the built sibling, not have conditions forced onto it.
     createFile(
       `packages/${plugin}/dist/plugins/deps-built/plugin.js`,
       `const { basename, dirname } = require('path');
@@ -676,8 +673,8 @@ exports.createNodesV2 = [
       return pkg;
     });
 
-    // A plugin registered by its bare package name, with no build target:
-    // the exports root entry alone decides that it loads from source.
+    // A bare-name plugin without a build target must select source through
+    // the root exports.
     const barePlugin = uniq('bare-plugin');
     createFile(
       `packages/${barePlugin}/package.json`,
@@ -735,8 +732,8 @@ export const createNodesV2: CreateNodesV2<{ inferredTags: string[] }> = [
       `exports.createNodesV2 = ['**/my-bare-file', () => { throw new Error('bare plugin loaded from dist'); }];\n`
     );
 
-    // Both sync generators run in the same daemon process; scoped conditions
-    // must resolve the workspace package per entry (built vs source).
+    // Both generators must run in one daemon to test per-entry built/source
+    // conditions.
     createFile(
       `packages/${plugin}/generators.json`,
       JSON.stringify({

@@ -659,9 +659,8 @@ async function startPluginWorker(name: string, isSourcePlugin: boolean) {
   const worker = spawn(
     process.execPath,
     [
-      // A source-loaded entry needs its transitive workspace imports resolved
-      // the way tsconfig does. A built entry runs under Node's own resolution:
-      // conditions there would pull unbuilt or non-strippable `.ts` into it.
+      // Add tsconfig conditions only for source-loaded workers; adding them to
+      // a built worker could select unbuilt source exports.
       ...(isSourcePlugin ? getPluginResolveConditionNodeArgs() : []),
       // swc transpiles without type-checking: ~7x faster to boot, and this is
       // paid once per worker spawn.

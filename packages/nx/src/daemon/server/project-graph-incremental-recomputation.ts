@@ -133,9 +133,8 @@ function kickOffRecompute() {
   // The cached pointer is about to hold an unsettled promise, so whatever the
   // previous state described is no longer what the cache serves.
   servedGraphState = null;
-  // The daemon is long-lived: drop the cached tsconfig conditions at kickoff,
-  // not at commit, so a recompute that throws or loses the winner gate does
-  // not leave a stale read cached for a cycle.
+  // Clear at kickoff: a failed or superseded recomputation must not retain
+  // stale tsconfig conditions.
   clearRootTsConfigCustomConditionsCache();
   let myPromise: Promise<SerializedProjectGraph>;
   myPromise = (async () => {
@@ -171,7 +170,6 @@ function kickOffRecompute() {
         if (servedGraphCandidate?.graph === result.projectGraph) {
           servedGraphState = servedGraphCandidate;
         }
-        // Push this graph's package names to registered source-graph resolvers.
         const { nodes } = result.projectGraph;
         refreshSourceGraphResolvers(
           workspaceRoot,

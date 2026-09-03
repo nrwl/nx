@@ -70,7 +70,6 @@ describe('getRootTsConfigCustomConditions', () => {
       JSON.stringify({ compilerOptions: { customConditions: ['updated'] } })
     );
 
-    // The change is invisible until the cache is invalidated.
     expect(getRootTsConfigCustomConditions(fs.tempDir)).toEqual(['source']);
 
     clearRootTsConfigCustomConditionsCache();

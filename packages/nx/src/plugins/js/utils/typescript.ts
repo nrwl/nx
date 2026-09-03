@@ -163,12 +163,9 @@ export function getRootTsConfigResolveExportsConditions(
 }
 
 /**
- * Node `--conditions <name>` CLI args for spawning an isolated plugin worker
- * whose entry Nx loaded from source, so the plugin's transitive workspace
- * imports resolve the way the workspace tsconfig does. Only the tsconfig
- * `customConditions` are passed: the `development` compat fallback used for
- * the entry lookup would also flip third-party packages that publish a
- * `development` export onto their unbundled builds.
+ * Returns Node `--conditions` arguments for a source-loaded isolated worker.
+ * Excludes the `development` fallback because it could select third-party
+ * development builds.
  */
 export function getPluginResolveConditionNodeArgs(
   root: string = workspaceRoot
@@ -180,10 +177,8 @@ export function getPluginResolveConditionNodeArgs(
 }
 
 /**
- * Plugin conditions must never apply to the daemon process: built generators
- * run there too. Source-loaded entries get scoped conditions from
- * `registerSourceGraphResolver` instead, and `NODE_OPTIONS=--conditions`
- * remains the escape hatch.
+ * Keeps plugin conditions out of daemon argv because built generators share
+ * the process. Source-loaded entries use `registerSourceGraphResolver` instead.
  */
 export function getDaemonResolveConditionNodeArgs(): string[] {
   return [];
