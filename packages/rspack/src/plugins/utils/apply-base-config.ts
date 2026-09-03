@@ -491,7 +491,15 @@ function applyNxDependentConfig(
   config.externals = externals;
 
   // Enabled for performance
-  config.cache = 'cache' in options ? options.cache : true;
+  const cache = 'cache' in options ? options.cache : true;
+  // compiler.options is already normalized when NxAppRspackPlugin runs, and
+  // @rspack/core >= 2.1 rejects the public `cache` shape after normalization.
+  config.cache = useNormalizedEntry
+    ? rspackCore.config.getNormalizedRspackOptions({
+        context: config.context,
+        cache,
+      }).cache
+    : cache;
   config.module = {
     ...config.module,
     rules: [
