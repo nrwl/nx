@@ -153,14 +153,14 @@ export function normalizePackageGroup(
 export function readNxMigrateConfig(
   json: Partial<PackageJson>
 ): NxMigrationsConfiguration & { packageGroup?: ArrayPackageGroup } {
-  // The migrations file is extracted to a path built from this value, so a `..`
-  // or absolute value would escape the directory it is extracted into.
+  // Registry fetching uses this value to build a temporary extraction path.
+  // Reject unsupported absolute paths and escaping parent traversal before extraction.
   const assertContained = (migrations: string): string => {
     if (!isContainedRelativePath(migrations)) {
       throw new Error(
         `Invalid migrations path "${migrations}" in package "${json.name ?? 'unknown'}@${
           json.version ?? 'unknown'
-        }": migrations paths must be relative and resolve within the package.`
+        }": migration paths must not be absolute or escape their base directory through parent traversal.`
       );
     }
     return migrations;
