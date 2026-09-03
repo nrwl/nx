@@ -87,6 +87,12 @@ async function createOrchestrator(
   return orchestrator;
 }
 
+// Nothing awaits the dispose chains below, so an unhandled rejection would take
+// down a long-lived agent process.
+function logDisposeFailure(e: unknown) {
+  console.error('Failed to dispose the task orchestrator:', e);
+}
+
 export async function runDiscreteTasks(
   tasks: Task[],
   projectGraph: ProjectGraph,
@@ -143,11 +149,13 @@ export async function runDiscreteTasks(
 
   const results = [...batchResults, ...taskResults];
   // Callers like Nx Cloud agents create an orchestrator per invocation in a
-  // long-lived process and gather every result before acting on any, so wait
-  // for settlement and release the orchestrator's process-level listeners
-  // before returning. Rejected handles stay rejected for the caller.
-  await Promise.allSettled(results);
-  await orchestrator.dispose();
+  // long-lived process; release its process-level listeners once all tasks
+  // settle, otherwise every invocation's orchestrator stays reachable forever.
+  // Not awaited, so callers keep consuming handles as they settle; the forked
+  // runner's exit handler still reaps children until dispose() runs.
+  Promise.allSettled(results)
+    .then(() => orchestrator.dispose())
+    .catch(logDisposeFailure);
   return results;
 }
 
@@ -185,6 +193,8 @@ export async function runContinuousTasks(
       }
       await orchestrator.waitForContinuousTaskExit(taskId);
     })
-  ).then(() => orchestrator.dispose());
+  )
+    .then(() => orchestrator.dispose())
+    .catch(logDisposeFailure);
   return runningTasks;
 }
