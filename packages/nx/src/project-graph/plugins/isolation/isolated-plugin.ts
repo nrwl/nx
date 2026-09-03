@@ -681,7 +681,7 @@ async function startPluginWorker(name: string) {
   }
 }
 
-async function connectToWorker(
+export async function connectToWorker(
   worker: ChildProcess,
   ipcPath: string,
   name: string
