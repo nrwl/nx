@@ -16,19 +16,37 @@ pub struct NxFileHashed(pub String, pub i64);
 
 #[derive(Archive, Deserialize, Serialize, Debug, PartialEq)]
 #[archive(check_bytes)]
-pub struct NxFileHashes(HashMap<String, NxFileHashed>);
+pub struct NxFileHashes {
+    files: HashMap<String, NxFileHashed>,
+    /// The value `gather_stamp()` returned when the gather that wrote this
+    /// archive began. An entry whose mtime is at or after it was read while the
+    /// workspace could still change within the same mtime tick, so its hash may
+    /// already be stale and must not be reused. See `selective_files_hash`.
+    gathered_at: i64,
+}
+
+impl NxFileHashes {
+    pub fn gathered_at(&self) -> i64 {
+        self.gathered_at
+    }
+
+    pub fn with_gathered_at(mut self, gathered_at: i64) -> Self {
+        self.gathered_at = gathered_at;
+        self
+    }
+}
 
 impl Deref for NxFileHashes {
     type Target = HashMap<String, NxFileHashed>;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.files
     }
 }
 
 impl DerefMut for NxFileHashes {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
+        &mut self.files
     }
 }
 
@@ -37,7 +55,7 @@ impl IntoIterator for NxFileHashes {
     type IntoIter = hashbrown::hash_map::IntoIter<String, NxFileHashed>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
+        self.files.into_iter()
     }
 }
 
@@ -45,7 +63,12 @@ impl FromIterator<(String, NxFileHashed)> for NxFileHashes {
     fn from_iter<T: IntoIterator<Item = (String, NxFileHashed)>>(iter: T) -> NxFileHashes {
         let mut map = HashMap::with_hasher(Default::default());
         map.extend(iter);
-        NxFileHashes(map)
+        // 0 makes every entry ambiguous until a gather stamps it, so a hash is
+        // never reused on the strength of an unset timestamp.
+        NxFileHashes {
+            files: map,
+            gathered_at: 0,
+        }
     }
 }
 
@@ -85,21 +108,27 @@ impl FilesArchive {
     }
 
     pub fn len(&self) -> usize {
-        self.archived().0.len()
+        self.archived().files.len()
     }
 
     /// The recorded hash and modification time for a workspace-relative path.
     pub fn get(&self, path: &str) -> Option<(&str, i64)> {
         self.archived()
-            .0
+            .files
             .get(path)
             .map(|hashed| (hashed.0.as_str(), hashed.1))
+    }
+
+    /// The stamp the gather that wrote this archive began at. See
+    /// `NxFileHashes::gathered_at` and `selective_files_hash`.
+    pub fn gathered_at(&self) -> i64 {
+        self.archived().gathered_at
     }
 
     /// Every entry as (path, hash, modification time).
     pub fn iter(&self) -> impl Iterator<Item = (&str, &str, i64)> {
         self.archived()
-            .0
+            .files
             .iter()
             .map(|(path, hashed)| (path.as_str(), hashed.0.as_str(), hashed.1))
     }
