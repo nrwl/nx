@@ -55,6 +55,7 @@ import {
   PackageManagerCommands,
   packageRegistryPack,
   packageRegistryView,
+  parseRegistryViewJson,
 } from '../../utils/package-manager';
 import { MinReleaseAgeViolationError } from '../../utils/min-release-age/errors';
 import {
@@ -2031,7 +2032,7 @@ async function getPackageMigrationsConfigFromRegistry(
     return null;
   }
 
-  const json = JSON.parse(result);
+  const json = parseRegistryViewJson<Record<string, any>>(result);
 
   if (!json['nx-migrations'] && !json['ng-update']) {
     const registry = new URL('dist' in json ? json.dist.tarball : json.tarball)
@@ -3641,7 +3642,7 @@ function stringifyCaught(e: unknown): string {
   }
 }
 
-// A resolver-based lookup (including `resolvePackageJsonWithoutCachePollution`,
+// A resolver-based lookup (including `resolveWithoutCachePollution`,
 // which does defeat Node's package self-reference) is the wrong tool here:
 // resolvers fall back to NODE_PATH after the explicit paths, and NODE_PATH
 // names the temp installation when this runs there. The scan below reads its

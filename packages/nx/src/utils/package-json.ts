@@ -1,6 +1,7 @@
 import { exec, execSync } from 'child_process';
 import { promisify } from 'util';
 import { existsSync, writeFileSync } from 'fs';
+import Module, { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'path';
 
 const execAsync = promisify(exec);
@@ -326,11 +327,9 @@ export function readModulePackageJsonWithoutFallbacks(
   packageJson: PackageJson;
   path: string;
 } {
-  const packageJsonPath: string = require.resolve(
+  const packageJsonPath = resolveWithoutCachePollution(
     `${moduleSpecifier}/package.json`,
-    {
-      paths: requirePaths,
-    }
+    requirePaths
   );
   const packageJson: PackageJson = readJsonFile(packageJsonPath);
 
@@ -368,9 +367,10 @@ export function readModulePackageJson(
     ({ path: packageJsonPath, packageJson } =
       readModulePackageJsonWithoutFallbacks(moduleSpecifier, requirePaths));
   } catch {
-    const entryPoint = require.resolve(moduleSpecifier, {
-      paths: requirePaths,
-    });
+    const entryPoint = resolveWithoutCachePollution(
+      moduleSpecifier,
+      requirePaths
+    );
 
     let moduleRootPath = dirname(entryPoint);
     packageJsonPath = join(moduleRootPath, 'package.json');
@@ -392,6 +392,45 @@ export function readModulePackageJson(
     packageJson,
     path: packageJsonPath,
   };
+}
+
+/**
+ * Resolve `request` via Node's CJS resolver while neutralising both ways
+ * `require.resolve(req, { paths })` can lie about the `paths` argument:
+ *
+ *   1. Process-wide `Module._pathCache`. It is swapped out for the duration
+ *      of the call, so any cache entries written are discarded and any
+ *      previously-poisoned entries are not read. Without this, an
+ *      in-process load of a second `nx` package (e.g. the temp `nx@latest`
+ *      install used by the daemon's AI-agents and console-status checks)
+ *      can poison the cache key this call uses and make us read the temp
+ *      path instead of the workspace path.
+ *
+ *   2. Package self-reference. When a file inside package `nx` calls
+ *      `require.resolve('nx/...')`, Node returns that calling package's
+ *      own file regardless of `paths`. We avoid that by issuing the
+ *      resolve from a `createRequire` rooted at a synthetic path that is
+ *      outside any package, so the resolver has no "self" to reference
+ *      and must honour `paths`.
+ *
+ * Node's single-threaded synchronous execution means `require.resolve` does
+ * not yield, so no other code in the process can observe the swapped cache.
+ *
+ * Throws like `require.resolve` when nothing matches.
+ */
+export function resolveWithoutCachePollution(
+  request: string,
+  requirePaths: string[]
+): string {
+  // `_pathCache` is an internal Node API not exposed in @types/node.
+  const realCache = (Module as any)._pathCache;
+  (Module as any)._pathCache = Object.create(null);
+  try {
+    const detachedRequire = createRequire('/__nx_detached_resolver__/x.js');
+    return detachedRequire.resolve(request, { paths: requirePaths });
+  } finally {
+    (Module as any)._pathCache = realCache;
+  }
 }
 
 /**
