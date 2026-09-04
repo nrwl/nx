@@ -941,7 +941,7 @@ describe('show target info', () => {
       const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
 
       // The observed reads, grouped by the project that owns them.
-      expect(text).toContain('reads:');
+      expect(text).toContain('included by the snapshot:');
       expect(text).toContain('the observed reads are listed above');
       // The pointer to the files sits with the section it describes, not 30
       // lines below it.
@@ -1044,7 +1044,7 @@ describe('show target info', () => {
 
       // Each of the three kinds is counted under its own heading, so no glob
       // is left looking unexplained.
-      expect(text).toContain('reads:');
+      expect(text).toContain('included by the snapshot:');
       expect(text).toContain('excluded by the snapshot:');
       expect(text).toContain('excluded by a declared input:');
       // The snapshot's own negation is not counted among the reads.

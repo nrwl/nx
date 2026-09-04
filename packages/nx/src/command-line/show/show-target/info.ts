@@ -444,7 +444,7 @@ function renderEffectiveInputs(
   console.log(
     `  ${c.dim(
       `considers files from ${groups.length} project${groups.length === 1 ? '' : 's'}` +
-        ` (${readTotal} reads, ${excludeTotal} exclusions):`
+        ` (${readTotal} included, ${excludeTotal} excluded):`
     )}`
   );
 
@@ -483,7 +483,7 @@ function renderEffectiveInputs(
   );
   for (const group of sorted) {
     console.log(`    ${projectLabel(group, c)}:`);
-    renderGlobList('reads', readsOf(group), c);
+    renderGlobList('included by the snapshot', readsOf(group), c);
     renderGlobList('excluded by the snapshot', tracedOf(group), c);
     renderGlobList(
       'excluded by a declared input',
