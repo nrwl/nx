@@ -197,9 +197,11 @@ impl FilesWorker {
         };
 
         // Walk before locking. The walk is the slow part and readers should not
-        // block on it. A change landing between the walk and the swap is picked
-        // up as an ordinary watch event or by the next rescan; over-reporting is
-        // absorbed by re-hashing downstream, under-reporting would not be.
+        // block on it. Nothing can interleave in practice — `rescanAndDiff` is a
+        // synchronous napi call on the daemon's single JS thread, so no
+        // `incremental_update` runs during it. Note the downstream asymmetry if
+        // that ever changes: an over-reported create/update is collapsed by
+        // re-hashing, but an over-reported delete is taken at face value.
         let fresh = gather_and_hash_files(workspace_root, cache_dir);
 
         let (files_lock, cvar) = files_sync.deref();

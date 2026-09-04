@@ -159,13 +159,13 @@ mod tests {
         .with_gathered_at(get_mod_time(&temp.child("test.txt").metadata().unwrap()) + 1);
 
         let hashed_files = super::selective_files_hash(temp.path(), archived_files);
-        let mut hashed_files = hashed_files
+        let mut paths = hashed_files
             .iter()
             .map(|(path, _)| path.as_str())
             .collect::<Vec<_>>();
-        hashed_files.sort();
+        paths.sort();
         assert_eq!(
-            hashed_files,
+            paths,
             vec![
                 "bar.txt",
                 "baz/new.txt",
@@ -173,7 +173,21 @@ mod tests {
                 "modified.txt",
                 "test.txt"
             ]
-        )
+        );
+
+        // Assert the hashes, not just the paths. `selective_files_hash` returns
+        // every walked file whether it was reused or re-hashed, so a path-set
+        // assertion passes identically either way and cannot fail for the
+        // selectivity this test is named after.
+        let hash_of = |name: &str| hashed_files.get(name).expect(name).0.clone();
+        assert_eq!(hash_of("test.txt"), "hash1", "unmodified: reused");
+        assert_eq!(hash_of("foo.txt"), "hash2", "unmodified: reused");
+        assert_eq!(hash_of("bar.txt"), "hash3", "unmodified: reused");
+        assert_ne!(
+            hash_of("modified.txt"),
+            "hash4",
+            "mtime moved past the archive entry: must be re-hashed"
+        );
     }
 
     #[test]
