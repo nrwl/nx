@@ -1,5 +1,6 @@
 import * as pc from 'picocolors';
 import { spawn } from 'child_process';
+import { StringDecoder } from 'string_decoder';
 import { dirname, join, relative } from 'path';
 import { lt } from 'semver';
 import { handleImport } from '../../utils/handle-import';
@@ -33,6 +34,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
 import { normalizeVersion } from './version-utils';
+import { terminalOutput, type MigrateOutputSink } from './deferred-output';
 
 // Migration execution engine shared by the CLI migrate loop, the Console
 // API, and the single-migration child process.
@@ -78,43 +80,80 @@ export function readPackageMigrationConfig(
   }
 }
 
+/**
+ * With a `sink`, the package manager runs detached from the terminal (stdin
+ * closed, both streams collected) and every message goes to the sink; that is
+ * for a caller sharing the terminal with another process. Without one, the
+ * install owns the terminal as it always did.
+ */
 export function runInstall(
   nxWorkspaceRoot?: string,
   phase: MigrationInstallPhase = 'pre-migration',
-  rerunCommand?: string
+  rerunCommand?: string,
+  sink?: MigrateOutputSink
 ): Promise<void> {
   const cwd = nxWorkspaceRoot ?? process.cwd();
   const packageManager = detectPackageManager(cwd);
   const pmCommands = getPackageManagerCommand(packageManager, cwd);
+  const out = sink ?? terminalOutput;
 
   const installCommand = `${pmCommands.install} ${
     pmCommands.ignoreScriptsFlag ?? ''
   }`;
-  output.log({
+  out.notice('log', {
     title: `Running '${installCommand}' to make sure necessary packages are installed`,
   });
 
   return new Promise<void>((resolve, reject) => {
     // For npm, pipe stderr so we can detect peer dependency errors while still
-    // mirroring it live to the user's terminal. Other package managers inherit
-    // stderr directly since we don't need to inspect their output.
+    // mirroring it live to the user's terminal. Without a sink, other package
+    // managers inherit stderr directly since we don't need to inspect their
+    // output.
     const shouldCaptureStderr = packageManager === 'npm';
     const child = spawn(installCommand, {
       shell: true,
-      stdio: ['inherit', 'inherit', shouldCaptureStderr ? 'pipe' : 'inherit'],
+      stdio: sink
+        ? ['ignore', 'pipe', 'pipe']
+        : ['inherit', 'inherit', shouldCaptureStderr ? 'pipe' : 'inherit'],
       windowsHide: true,
       cwd,
     });
 
+    // Decoded per stream: a chunk boundary can split a multi-byte character,
+    // and a sequence still incomplete at the end is what `end()` returns.
+    const stdoutText = new StringDecoder('utf8');
+    const stderrText = new StringDecoder('utf8');
+    child.stdout?.on('data', (chunk: Buffer) =>
+      out.raw(stdoutText.write(chunk))
+    );
+    child.stdout?.on('end', () => out.raw(stdoutText.end()));
     const stderrChunks: Buffer[] = [];
     child.stderr?.on('data', (chunk: Buffer) => {
-      process.stderr.write(chunk);
-      stderrChunks.push(chunk);
+      if (sink) {
+        out.raw(stderrText.write(chunk));
+      } else {
+        process.stderr.write(chunk);
+      }
+      if (shouldCaptureStderr) stderrChunks.push(chunk);
+    });
+    if (sink) child.stderr.on('end', () => out.raw(stderrText.end()));
+
+    // With a sink the rejection waits for `close`, which follows the streams'
+    // `end`: a caller must be able to render what it collected on rejection.
+    let spawnError: Error | null = null;
+    child.on('error', (error) => {
+      if (sink) {
+        spawnError = error;
+      } else {
+        reject(error);
+      }
     });
 
-    child.on('error', reject);
-
     child.on('close', (code) => {
+      if (spawnError) {
+        reject(spawnError);
+        return;
+      }
       if (code === 0) {
         resolve();
         return;
@@ -127,7 +166,7 @@ export function runInstall(
           // (CLI migrate, `nx repair`, single-migration runner, etc.) surfaces
           // it consistently. Top-level callers catch `NpmPeerDepsInstallError`
           // and return a non-zero exit code without re-logging.
-          logNpmPeerDepsError(phase, rerunCommand);
+          logNpmPeerDepsError(phase, rerunCommand, out);
           reject(new NpmPeerDepsInstallError());
           return;
         }
@@ -182,7 +221,8 @@ export function formatSingleMigrationRerunCommand(migrationId: string): string {
 
 export function logNpmPeerDepsError(
   phase: MigrationInstallPhase,
-  rerunCommand = 'nx migrate --run-migrations'
+  rerunCommand = 'nx migrate --run-migrations',
+  out: MigrateOutputSink = terminalOutput
 ): void {
   const peerDepsResolutionSteps = [
     'Recommended approaches (in order of preference):',
@@ -201,7 +241,7 @@ export function logNpmPeerDepsError(
   ];
 
   if (phase === 'pre-migration') {
-    output.error({
+    out.notice('error', {
       title:
         'You need to resolve the peer dependency conflicts before the migration can continue',
       bodyLines: [
@@ -214,7 +254,7 @@ export function logNpmPeerDepsError(
       ],
     });
   } else {
-    output.error({
+    out.notice('error', {
       title:
         'Some migrations have been applied, but installing the updated dependencies failed',
       bodyLines: [
@@ -230,10 +270,13 @@ export function logNpmPeerDepsError(
   }
 }
 
-export function logSkippedPostMigrationInstall(root: string): void {
+export function logSkippedPostMigrationInstall(
+  root: string,
+  out: MigrateOutputSink = terminalOutput
+): void {
   const packageManager = detectPackageManager(root);
   const installCommand = getPackageManagerCommand(packageManager, root).install;
-  output.warn({
+  out.notice('warn', {
     title: 'Migrations updated your dependencies, but the install was skipped',
     bodyLines: [`Run "${installCommand}" to install the updated dependencies.`],
   });
