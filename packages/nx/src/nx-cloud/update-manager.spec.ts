@@ -13,9 +13,20 @@ vi.mock('../utils/workspace-root', () => ({
   workspaceRootInner: vi.fn(),
 }));
 
+vi.mock('../utils/cache-directory', () => ({
+  cacheDir: join('/shared', 'cache'),
+  cacheDirectoryForWorkspace: vi.fn(() => join('/workspace', '.nx', 'cache')),
+}));
+
+// `isCI` reads ~18 environment variables that the runner sets, so left unmocked
+// these rows answer differently in CI than on a laptop.
+vi.mock('../utils/is-ci', () => ({ isCI: vi.fn(() => false) }));
+
 import { getBundleInstallDefaultLocation } from './update-manager';
+import { isCI } from '../utils/is-ci';
 
 const mockExistsSync = existsSync as MockedFunction<typeof existsSync>;
+const mockIsCI = isCI as MockedFunction<typeof isCI>;
 
 /** Paths this suite treats as present on disk. */
 function stagePresent(paths: string[]) {
@@ -27,13 +38,20 @@ const NX_JSON = join('/workspace', 'nx.json');
 describe('getBundleInstallDefaultLocation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockIsCI.mockReturnValue(false);
+    stagePresent([NX_JSON]);
   });
 
-  // NXC-4944: the bundle `require`s a bare `nx`, which resolves only by walking
-  // up into the workspace's node_modules. Following `cacheDir` broke that --
-  // it is configurable and defaults to `~/.nx/<id>/cache`.
-  it('installs inside the workspace so the bundle can resolve a bare `nx`', () => {
-    stagePresent([NX_JSON]);
+  it('shares the per-user root off CI', () => {
+    expect(getBundleInstallDefaultLocation()).toBe(
+      join('/shared', 'cache', 'cloud')
+    );
+  });
+
+  // The bundle resolves a bare `nx` by walking up into node_modules, which the
+  // shared root cannot reach.
+  it('keeps the bundle in the checkout on CI', () => {
+    mockIsCI.mockReturnValue(true);
 
     expect(getBundleInstallDefaultLocation()).toBe(
       join('/workspace', '.nx', 'cache', 'cloud')
@@ -43,6 +61,7 @@ describe('getBundleInstallDefaultLocation', () => {
   it('reuses the legacy path when the nx-cloud package is installed', () => {
     const legacy = join('/workspace', 'node_modules', '.cache', 'nx', 'cloud');
     stagePresent([NX_JSON, legacy]);
+    mockIsCI.mockReturnValue(true);
 
     expect(getBundleInstallDefaultLocation()).toBe(legacy);
   });
