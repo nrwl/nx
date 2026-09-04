@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitest/config';
-import { nxSourceResolver } from '../../scripts/vitest-nx-source-resolver.mts';
+import { nxSourceResolver } from '../../tools/vitest/nx-source-resolver.mts';
 
 export default defineConfig({
   root: import.meta.dirname,
@@ -11,7 +11,7 @@ export default defineConfig({
     environment: 'node',
     include: ['**/*.spec.ts'],
     exclude: ['**/node_modules/**', '**/files/**'],
-    setupFiles: ['../../scripts/vitest-setup.mts'],
+    setupFiles: ['../../tools/vitest/setup.mts'],
     // Matches jest.preset.js.
     testTimeout: 35000,
     // nx's native .node bindings are not thread-safe across worker threads.
