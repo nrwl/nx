@@ -12,12 +12,12 @@ export type { AgentId };
 export const MIGRATE_RUNS_RELATIVE_DIR = '.nx/migrate-runs';
 
 /**
- * The one subtree of a run directory an agent writes: its handoff files.
+ * The one subtree of a run directory the agent's pre-authorized write scope
+ * reaches: its handoff files, and the prompt files Nx writes for each step.
  * Everything beside it is state Nx owns and reads back, the orchestrator's
- * run state and plan snapshots included, so the pre-authorized write scope
- * stops at this segment. Package names make up the rest of a handoff path,
- * so without it they would occupy the run directory's top level and leave Nx
- * no name it could add there safely.
+ * run state and plan snapshots included. Package names make up the rest of a
+ * handoff path, so without it they would occupy the run directory's top level
+ * and leave Nx no name it could add there safely.
  */
 export const HANDOFFS_DIR_NAME = 'handoffs';
 
@@ -63,9 +63,8 @@ export interface DetectedInstalledAgent {
  * name for OpenCode) are encoded inside the definition, not here.
  *
  * Both prompts are written to disk (see `instruction-files.ts`) and reached
- * through `systemPromptFilePath` / `instructionsPointer`. The two inline forms
- * are the exception: codex can only receive its system context as a
- * command-line value, so it carries a reduced one there.
+ * through `systemPromptFilePath` / `instructionsPointer`. The inline fields
+ * below are the exception, for agents that cannot be pointed at a file.
  */
 export interface InvocationContext {
   /** Absolute path of the file holding the step's system prompt. */
