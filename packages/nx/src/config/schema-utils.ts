@@ -76,24 +76,12 @@ export function getImplementationFactory<T>(
   const [implementationModulePath, implementationExportName] =
     implementation.split('#');
   return () => {
-    const { path: modulePath, isSource } = resolveImplementationWithMetadata(
+    const { path: modulePath, isSource } = resolveImplementationWithSourceGraph(
       implementationModulePath,
       directory,
       packageName,
       projects
     );
-    const getWorkspacePackageNames = () =>
-      getWorkspacePackagesMetadata(projects)
-        .packageManagerWorkspacePackageNames;
-    if (isSource) {
-      // Factories have no unload lifecycle, so the per-entry resolver stays
-      // for the process lifetime.
-      registerSourceGraphResolver(
-        modulePath,
-        workspaceRoot,
-        getWorkspacePackageNames()
-      );
-    }
     // Route .ts entrypoints through loadTsFile so the native-strip ->
     // swc/ts-node fallback chain runs. Plain require() bypasses the matcher
     // set and bubbles errors like extensionless `./schema` imports (strict
@@ -111,7 +99,8 @@ export function getImplementationFactory<T>(
             e,
             modulePath,
             workspaceRoot,
-            getWorkspacePackageNames()
+            getWorkspacePackagesMetadata(projects)
+              .packageManagerWorkspacePackageNames
           );
     }
     return implementationExportName
@@ -138,6 +127,35 @@ export function resolveImplementation(
     packageName,
     projects
   ).path;
+}
+
+/**
+ * Resolves an implementation and, when it comes from source, registers its
+ * source graph before the caller loads the path, so the entry's workspace
+ * imports resolve with the tsconfig conditions.
+ */
+export function resolveImplementationWithSourceGraph(
+  implementationModulePath: string,
+  directory: string,
+  packageName: string,
+  projects: Record<string, ProjectConfiguration>
+): { path: string; isSource: boolean } {
+  const resolved = resolveImplementationWithMetadata(
+    implementationModulePath,
+    directory,
+    packageName,
+    projects
+  );
+  if (resolved.isSource) {
+    // Loaded entries have no unload lifecycle, so the per-entry resolver
+    // stays for the process lifetime.
+    registerSourceGraphResolver(
+      resolved.path,
+      workspaceRoot,
+      getWorkspacePackagesMetadata(projects).packageManagerWorkspacePackageNames
+    );
+  }
+  return resolved;
 }
 
 function resolveImplementationWithMetadata(
