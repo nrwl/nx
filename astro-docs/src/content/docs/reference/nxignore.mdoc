@@ -1,6 +1,6 @@
 ---
 title: .nxignore Reference
-description: Learn how to use the .nxignore file to specify files in your workspace that should be completely ignored by Nx during affected calculations.
+description: Learn how to use the .nxignore file to specify files in your workspace that Nx should ignore in file discovery and affected calculations.
 sidebar:
   order: 5
   label: .nxignore
@@ -11,6 +11,28 @@ You may optionally add an `.nxignore` file to the root. This file is used to spe
 be completely ignored by Nx.
 
 The syntax is the same as
-a [`.gitignore` file](https://git-scm.com/book/en/v2/Git-Basics-Recording-Changes-to-the-Repository#_ignoring).
+a [`.gitignore` file](https://git-scm.com/book/en/v2/Git-Basics-Recording-Changes-to-the-Repository#_ignoring),
+including negation patterns (`!pattern`). Nx also reads `.nxignore` files in nested directories; each one applies to
+the directory it lives in.
 
-**When a file is specified in the `.nxignore` file**, changes to that file are not taken into account in the `affected` calculations.
+Nx excludes ignored files from file discovery: they don't appear in the project graph's file map, they aren't part of
+task input hashes, and changes to them are not taken into account in the `affected` calculations.
+
+## Re-including ignored files
+
+A negation pattern in `.nxignore` makes Nx track a file that a `.gitignore` rule excludes. As with git, a file can't be
+re-included if one of its parent directories is excluded. To re-include a file inside an ignored directory, exclude the
+directory's contents instead of the directory itself:
+
+```text
+# .gitignore
+dist/*
+```
+
+```text
+# .nxignore
+!dist/.env.e2e
+```
+
+With `dist/` in `.gitignore`, the `!dist/.env.e2e` negation would have no effect because the `dist` directory itself is
+excluded.

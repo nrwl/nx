@@ -362,6 +362,41 @@ nested/child-two/
     }
 
     #[test]
+    fn nxignore_negation_reincludes_at_root_but_not_under_gitignored_dir() {
+        let temp_dir = assert_fs::TempDir::new().unwrap();
+        temp_dir
+            .child(".gitignore")
+            .write_str("dist/\n.env*\n")
+            .unwrap();
+        temp_dir
+            .child(".nxignore")
+            .write_str("!.env.e2e\n")
+            .unwrap();
+        temp_dir.child(".env.e2e").write_str("x").unwrap();
+        temp_dir.child(".env.local").write_str("x").unwrap();
+        temp_dir.child("dist/.env.e2e").write_str("x").unwrap();
+        temp_dir.child("src/index.ts").write_str("x").unwrap();
+
+        let mut files: Vec<_> = nx_walker(temp_dir.path(), true)
+            .map(|f| f.normalized_path)
+            .collect();
+        files.sort();
+
+        // .nxignore's negation re-includes the root-level file, but cannot
+        // re-include a file whose parent directory is excluded (git's rule:
+        // the walk prunes dist/ and never descends into it).
+        assert_eq!(
+            files,
+            vec![
+                ".env.e2e".to_string(),
+                ".gitignore".to_string(),
+                ".nxignore".to_string(),
+                "src/index.ts".to_string()
+            ]
+        );
+    }
+
+    #[test]
     fn ignores_parent_gitignore_when_workspace_is_git_root() {
         let parent_temp = assert_fs::TempDir::new().unwrap();
         parent_temp.child(".gitignore").write_str("*").unwrap();

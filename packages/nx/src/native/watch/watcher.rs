@@ -729,6 +729,55 @@ mod tests {
     }
 
     #[test]
+    fn nxignore_negation_under_gitignored_dir_produces_no_events() {
+        // A .nxignore negation cannot re-include a file under a gitignored
+        // directory (git's rule; the walker prunes the directory), so the
+        // watcher must not deliver events for it either. Otherwise a warm
+        // daemon ends up with files in its file map that a cold start never
+        // produces. Only macOS exercises the filter here (the root watch is
+        // recursive); on other platforms the pruned dir is never watched, so
+        // the dist/ assertion holds trivially. The filter itself is pinned
+        // by the watch_filterer unit tests.
+        let dir = tempdir().expect("tempdir");
+        let canonical = dir.path().canonicalize().expect("canonicalize tempdir");
+        fs::write(canonical.join(".gitignore"), "dist/\n.env*\n").expect("gitignore");
+        fs::write(canonical.join(".nxignore"), "!.env.e2e\n").expect("nxignore");
+        fs::create_dir_all(canonical.join("dist")).expect("mkdir dist");
+
+        let mut w = Watcher::new(
+            canonical.to_str().expect("utf-8 path").to_string(),
+            None,
+            None, // use_ignore defaults to true
+        );
+        let captured: Captured = Arc::new(Mutex::new(Vec::new()));
+        let captured_for_cb = captured.clone();
+        let callback: WatchEventCallback = Box::new(move |res| {
+            if let Ok(events) = res {
+                captured_for_cb.lock().unwrap().extend(events);
+            }
+        });
+        w.watch_inner(callback).expect("start watch");
+        std::thread::sleep(Duration::from_millis(300));
+        captured.lock().unwrap().clear();
+
+        fs::write(canonical.join("dist/.env.e2e"), "x").expect("write under dist");
+        // Control: the same negation at the root is honored by walker and
+        // watcher alike, so this event must arrive, proving the watcher
+        // was live while the dist/ write was dropped.
+        fs::write(canonical.join(".env.e2e"), "x").expect("write at root");
+
+        let events = collect(&captured);
+        assert!(
+            events.iter().any(|e| e.path == ".env.e2e"),
+            "root-level negated file should produce an event; got {events:?}"
+        );
+        assert!(
+            !events.iter().any(|e| e.path == "dist/.env.e2e"),
+            "negation must not re-include a file under a gitignored dir; got {events:?}"
+        );
+    }
+
+    #[test]
     fn concurrent_force_flush_pending_callers_do_not_time_out() {
         // Regression: pre-fix the loop dropped "extra" ForceFlush
         // replies, so concurrent callers blocked on the 500 ms

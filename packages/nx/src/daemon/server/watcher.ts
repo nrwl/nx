@@ -27,9 +27,15 @@ function dispatchWorkspaceChanges(
   events: WatchEvent[]
 ): Promise<void> | undefined {
   for (const event of events) {
-    if (event.path.endsWith('.gitignore') || event.path === '.nxignore') {
-      // If the ignore files themselves have changed we need to dynamically
-      // update our cached ignoreGlobs
+    // The watcher's filter caches every ignore file it read at startup
+    // (.gitignore, .ignore, and .nxignore files at any depth), so a change
+    // to any of them requires a restart to rebuild the filter.
+    const fileName = event.path.split(/[\\/]/).pop();
+    if (
+      fileName === '.gitignore' ||
+      fileName === '.nxignore' ||
+      fileName === '.ignore'
+    ) {
       handleServerProcessTermination({
         server: activeServer,
         reason: 'Stopping the daemon the set of ignored files changed (native)',
