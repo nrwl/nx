@@ -13,6 +13,7 @@ import { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import { workspaceRoot } from '../utils/workspace-root';
 import { HashInputs, NxWorkspaceFilesExternals } from '../native';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
+import { collectUpstreamTaskIds } from '../tasks-runner/task-graph-utils';
 
 // Re-export HashInputs from native module for public API
 export { HashInputs };
@@ -371,26 +372,9 @@ export function getDependenciesWithOutputsToHash(
   // The transitive set is a superset of the direct one, so any transitive
   // entry widens the walk for all of them.
   const transitive = depsOutputs.some((d) => d.transitive);
-
-  const result: string[] = [];
-  const visited = new Set<string>();
-  const queue = [task.id];
-  while (queue.length > 0) {
-    const current = queue.shift();
-    for (const depId of taskGraph.dependencies[current] ?? []) {
-      if (visited.has(depId)) continue;
-      visited.add(depId);
-      const dep = taskGraph.tasks[depId];
-      if (!dep) continue;
-      if (dep.outputs.length > 0) {
-        result.push(depId);
-      }
-      if (transitive) {
-        queue.push(depId);
-      }
-    }
-  }
-  return result;
+  return collectUpstreamTaskIds(taskGraph, task.id, transitive).filter(
+    (id) => taskGraph.tasks[id]?.outputs.length > 0
+  );
 }
 
 export function splitInputsIntoSelfAndDependencies(

@@ -284,7 +284,12 @@ describe('TaskHasher', () => {
         }
       );
       expect(
-        getDependenciesWithOutputsToHash(app, tg, depsOutputs(true), nxJson)
+        getDependenciesWithOutputsToHash(
+          app,
+          tg,
+          depsOutputs(true),
+          nxJson
+        ).sort()
       ).toEqual(['a:build', 'b:build', 'shared:build']);
     });
   });
