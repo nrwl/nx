@@ -38,10 +38,10 @@ export interface SystemPromptContext {
    */
   mode?: AgenticPromptMode;
   /**
-   * Exact formatter command for the files the agent changed, resolved by nx
-   * (see `resolveFormatCommand`); `null` when the workspace has no formatter.
-   * Ignored for `generic-validation` prompts, which carry no format rule;
-   * callers may pass `null` there without probing the workspace.
+   * Exact formatter command for the files the agent changed (see
+   * `resolveFormatCommand`), or `null` when none can be resolved. Ignored for
+   * `generic-validation` prompts; pass `null` there without probing, since
+   * formatter detection can warn.
    */
   formatCommand: string | null;
   // Package manager exec prefix (`npx`, `pnpm exec`); names the replacement

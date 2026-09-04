@@ -647,6 +647,50 @@ describe('run-state', () => {
       expect(readRunState(dir)).toEqual(state);
     });
 
+    it('reads a persisted fingerprint derived by the shipped format-v1 rule', () => {
+      // A literal v1 document, not buildState/issueFingerprint(): a format or
+      // fingerprint-rule change would otherwise silently retarget this fixture.
+      const dir = join(root, 'run-1');
+      mkdirSync(dir, { recursive: true });
+      const persisted = {
+        formatVersion: 1,
+        runId: 'run-1',
+        createdAt: '2026-01-01T00:00:00.000Z',
+        nxVersion: '23.0.0',
+        status: 'active',
+        createCommits: true,
+        commitPrefix: 'chore: [nx migration] ',
+        rounds: [],
+        steps: [
+          {
+            id: 'step-1',
+            roundIndex: 0,
+            migrationId: '@nx/js:a',
+            status: 'pending',
+            attempt: 1,
+            dispenseCount: 0,
+          },
+        ],
+        commits: [],
+        issues: [
+          {
+            id: 'issue-1',
+            fingerprint: '7e66a0d041bc3e37',
+            summary: 'The Build  breaks on CI: peer dep conflict!',
+            reportedByStepId: 'step-1',
+            applicableStepIds: ['step-1'],
+            disposition: 'recorded',
+          },
+        ],
+        analytics: { startEmitted: false, completeEmitted: false },
+      };
+      writeFileSync(join(dir, 'run.json'), JSON.stringify(persisted));
+
+      const state = readRunState(dir);
+      expect(state.formatVersion).toBe(1);
+      expect(state.issues[0].fingerprint).toBe('7e66a0d041bc3e37');
+    });
+
     it('refuses new-format optional fields with the wrong type instead of carrying them', () => {
       const dir = join(root, 'run-1');
       mkdirSync(dir, { recursive: true });

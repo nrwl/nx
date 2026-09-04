@@ -20,11 +20,6 @@ import { logger } from '../logger';
  */
 export type FormatterType = 'prettier' | 'oxfmt';
 
-/**
- * A table, not a `switch`: callers run this inside a `try` whose `catch`
- * means "configured but not installed", and a `never` arm would throw into
- * that catch and be misreported. A missing member is a compile error here.
- */
 export const resolveFormatterBin = {
   oxfmt: getOxfmtBinPath,
   prettier: getPrettierPath,

@@ -777,34 +777,33 @@ export function claimIssuesForStep(
 ): MigrateRunState {
   const issues = state.issues;
   if (!issues) return state;
-  // Claims are capped to what the digest can publish: an unlisted assignment is
-  // invisible to its assignee, since issueUpdates may only name digest-marked
-  // issues. This walk must mirror the renderer's assigned-first order and caps.
-  // The instruction line is reserved unconditionally: it renders whenever a
-  // claim survives, and over-reserving can only under-claim.
+  // Capped to what the digest publishes: an unlisted assignment is invisible,
+  // since issueUpdates may only name digest-marked issues. The instruction line
+  // is reserved unconditionally; it renders with any surviving claim, and
+  // over-reserving only shortens the claimed prefix.
   const budget = digestEntryByteBudget(
     [``, stepDigestHeading(runId), ASSIGNMENT_INSTRUCTION],
     unresolvedIssues(state).length,
     runId
   );
-  let count = 0;
-  let bytes = 0;
+  const applicableTo = (issue: MigrateRunIssue) =>
+    issue.disposition === 'recorded' &&
+    Array.isArray(issue.applicableStepIds) &&
+    issue.applicableStepIds.includes(stepId);
+  const applicable = issues.filter(applicableTo);
+  const kept = new Set(
+    applicable.slice(
+      0,
+      boundedPrefixCount(
+        applicable.map((issue) => digestEntry(issue, 'assigned to this step')),
+        budget
+      )
+    )
+  );
   let changed = false;
   const next = issues.map((issue) => {
-    if (
-      issue.disposition !== 'recorded' ||
-      !Array.isArray(issue.applicableStepIds) ||
-      !issue.applicableStepIds.includes(stepId)
-    ) {
-      return issue;
-    }
-    const entryBytes = Buffer.byteLength(
-      digestEntry(issue, 'assigned to this step'),
-      'utf8'
-    );
-    if (count < MAX_DIGEST_ENTRIES && bytes + entryBytes <= budget) {
-      count++;
-      bytes += entryBytes;
+    if (!applicableTo(issue)) return issue;
+    if (kept.has(issue)) {
       if (issue.claimedByStepId === stepId) return issue;
       changed = true;
       return { ...issue, claimedByStepId: stepId };
@@ -864,9 +863,8 @@ function issuesDirRef(runId: string): string {
 }
 
 /**
- * The bounded "Known issues" digest a work dispense carries. The assigned-first
- * order and caps are load-bearing: claimIssuesForStep mirrors them so every
- * claim it keeps is guaranteed a line here.
+ * The bounded "Known issues" digest a work dispense carries. Assigned entries
+ * lead and share claimIssuesForStep's prefix bound, so every kept claim appears.
  */
 export function renderIssueDigestLines(
   state: MigrateRunState,
@@ -993,28 +991,33 @@ function digestEntry(issue: MigrateRunIssue, label: string): string {
   return `  - ${issue.id} (${label}): ${summary}`;
 }
 
-// Breaks at the first entry over a cap rather than skipping it: the listed set
-// must stay a prefix, or the assigned-first ordering would not survive.
 function boundedEntryLines(
   entries: string[],
   runId: string,
   budget: number
 ): string[] {
-  const lines: string[] = [];
-  let bytes = 0;
-  for (const entry of entries) {
-    const entryBytes = Buffer.byteLength(entry, 'utf8');
-    if (lines.length >= MAX_DIGEST_ENTRIES || bytes + entryBytes > budget) {
-      break;
-    }
-    lines.push(entry);
-    bytes += entryBytes;
-  }
+  const lines = entries.slice(0, boundedPrefixCount(entries, budget));
   const omitted = entries.length - lines.length;
   if (omitted > 0) {
     lines.push(overflowLine(omitted, runId));
   }
   return lines;
+}
+
+// A prefix only: skipping an oversized entry would let a later, lower-priority
+// entry displace an earlier assigned one.
+function boundedPrefixCount(entries: string[], budget: number): number {
+  let count = 0;
+  let bytes = 0;
+  for (const entry of entries) {
+    const entryBytes = Buffer.byteLength(entry, 'utf8');
+    if (count >= MAX_DIGEST_ENTRIES || bytes + entryBytes > budget) {
+      break;
+    }
+    count++;
+    bytes += entryBytes;
+  }
+  return count;
 }
 
 function issuesDir(runDirPath: string): string {
