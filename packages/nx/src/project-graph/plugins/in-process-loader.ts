@@ -86,16 +86,24 @@ export async function loadNxPluginAsync(
     typeof pluginConfiguration === 'string'
       ? pluginConfiguration
       : pluginConfiguration.plugin;
-  try {
-    const {
-      pluginPath,
-      name,
-      shouldRegisterTSTranspiler,
-      isSourcePlugin,
-      workspacePackageNames,
-    } = await resolveNxPlugin(moduleName, root, paths);
 
-    let cleanupSourceGraphResolver = () => {};
+  let resolvedPlugin: Awaited<ReturnType<typeof resolveNxPlugin>>;
+  try {
+    resolvedPlugin = await resolveNxPlugin(moduleName, root, paths);
+  } catch (e) {
+    throw new LoadPluginError(moduleName, e);
+  }
+
+  const {
+    pluginPath,
+    name,
+    shouldRegisterTSTranspiler,
+    isSourcePlugin,
+    workspacePackageNames,
+  } = resolvedPlugin;
+  let cleanupSourceGraphResolver = () => {};
+
+  try {
     if (isSourcePlugin) {
       cleanupSourceGraphResolver = registerSourceGraphResolver(
         pluginPath,
@@ -105,32 +113,28 @@ export async function loadNxPluginAsync(
       setCleanupSourceGraphResolver?.(cleanupSourceGraphResolver);
     }
 
-    try {
-      if (shouldRegisterTSTranspiler) {
-        registerPluginTSTranspiler();
-      }
-      const { loadResolvedNxPluginAsync } = await handleImport(
-        require.resolve('./load-resolved-plugin')
-      );
-      return loadResolvedNxPluginAsync(
-        pluginConfiguration,
-        pluginPath,
-        name,
-        index
-      );
-    } catch (e) {
-      cleanupSourceGraphResolver();
-      setCleanupSourceGraphResolver?.(() => {});
-      throw isSourcePlugin
-        ? e
-        : withBuiltEntryResolutionHint(
-            e,
-            pluginPath,
-            root,
-            workspacePackageNames
-          );
+    if (shouldRegisterTSTranspiler) {
+      registerPluginTSTranspiler();
     }
+    const { loadResolvedNxPluginAsync } = await handleImport(
+      require.resolve('./load-resolved-plugin')
+    );
+    return await loadResolvedNxPluginAsync(
+      pluginConfiguration,
+      pluginPath,
+      name,
+      index
+    );
   } catch (e) {
-    throw new LoadPluginError(moduleName, e);
+    cleanupSourceGraphResolver();
+    setCleanupSourceGraphResolver?.(() => {});
+    throw isSourcePlugin
+      ? e
+      : withBuiltEntryResolutionHint(
+          e,
+          pluginPath,
+          root,
+          workspacePackageNames
+        );
   }
 }
