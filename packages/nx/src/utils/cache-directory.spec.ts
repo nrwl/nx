@@ -4,6 +4,11 @@ vi.mock('./workspace-id', async () => ({
   generateWorkspaceId: vi.fn(),
 }));
 
+// Defaulted off rather than read from the environment: `isCI` consults ~18
+// variables, and the runner this suite executes on sets them, so every sharing
+// row below would answer `none` there and `user` on a laptop.
+vi.mock('./is-ci', () => ({ isCI: vi.fn(() => false) }));
+
 vi.mock('./owned-private-dir', async () => {
   const actual = await vi.importActual('./owned-private-dir');
   return {
@@ -40,6 +45,7 @@ import {
   type SharedDataKind,
   sharedUserDataDir,
 } from './cache-directory';
+import { isCI } from './is-ci';
 import { NX_HOME_TMP_DIR, NX_TMP_DIR } from './nx-tmp-dir';
 import { canonicalDir, ensureOwnedPrivateDir } from './owned-private-dir';
 import { generateWorkspaceId } from './workspace-id';
@@ -54,6 +60,7 @@ const mockUnlinkSync = unlinkSync as MockedFunction<typeof unlinkSync>;
 const mockGenerateWorkspaceId = generateWorkspaceId as MockedFunction<
   typeof generateWorkspaceId
 >;
+const mockIsCI = isCI as MockedFunction<typeof isCI>;
 
 /** A stand-in for the repo key `deriveRepoKey` produces. */
 const WORKSPACE_ID = 'github.com/acme/repo#';
@@ -116,6 +123,7 @@ describe('shared data location', () => {
       path: dir as any,
     }));
     mockCanonicalDir.mockImplementation((dir: string) => dir);
+    mockIsCI.mockReturnValue(false);
     // Same reason: a prior row's staged nx.json would otherwise still be in
     // place and silently make this row a configured-cacheDirectory case.
     mockReadNxJson.mockImplementation(() => ({}) as any);
@@ -333,6 +341,40 @@ describe('shared data location', () => {
         expect(sharedUserDirFor('/worktree', 'cache')).toBeUndefined();
         expect(sharedUserDirFor('/worktree', 'workspace-data')).toBeUndefined();
       }
+    });
+  });
+
+  describe('a CI runner', () => {
+    it('keeps both kinds in the checkout', () => {
+      mockIsCI.mockReturnValue(true);
+
+      expect(resolveSharedDataLocation('/worktree')).toEqual({
+        share: 'none',
+      });
+      expect(sharedDataDirectory('/worktree', 'cache')).toBe(
+        join('/worktree', '.nx', 'cache')
+      );
+      expect(sharedDataDirectory('/worktree', 'workspace-data')).toBe(
+        join('/worktree', '.nx', 'workspace-data')
+      );
+    });
+
+    it('settles before anything reaches git or the filesystem', () => {
+      mockIsCI.mockReturnValue(true);
+
+      resolveSharedDataLocation('/worktree');
+
+      expect(mockGenerateWorkspaceId).not.toHaveBeenCalled();
+      expect(mockWriteFileSync).not.toHaveBeenCalled();
+    });
+
+    it('still honors a configured cacheDirectory', () => {
+      mockIsCI.mockReturnValue(true);
+      stageCacheDirectoryConfig({ '/worktree': '.nx/other' });
+
+      expect(sharedDataDirectory('/worktree', 'cache')).toBe(
+        join('/worktree', '.nx', 'other')
+      );
     });
   });
 

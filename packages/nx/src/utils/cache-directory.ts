@@ -3,6 +3,7 @@ import { existsSync, unlinkSync, writeFileSync } from 'fs';
 import { isAbsolute, join } from 'path';
 import type { NxJsonConfiguration } from '../config/nx-json';
 import { readNxJson } from '../config/nx-json';
+import { isCI } from './is-ci';
 import { NX_HOME_TMP_DIR, NX_TMP_DIR, NX_USER_TMP_DIR } from './nx-tmp-dir';
 import {
   canonicalDir,
@@ -294,9 +295,10 @@ export type SharedDataLocation =
  * `finalizeCacheHits` still calls that `local-cache`, with nothing restored.
  * Two predicates is how that happens, so there is only one.
  *
- * The per-user root is preferred for every checkout, not only for linked
+ * The per-user root is preferred for every local checkout, not only for linked
  * worktrees, and an agent sandbox can be granted `~/.nx` by a committed
- * settings file where an absolute checkout path cannot (NXC-4625).
+ * settings file where an absolute checkout path cannot (NXC-4625). CI is the
+ * exception; `computeSharedDataLocation` says why.
  */
 export function resolveSharedDataLocation(root: string): SharedDataLocation {
   let location = resolvedLocations.get(root);
@@ -308,6 +310,14 @@ export function resolveSharedDataLocation(root: string): SharedDataLocation {
 }
 
 function computeSharedDataLocation(root: string): SharedDataLocation {
+  // The Nx Cloud client bundle installs under `cacheDir` and requires bare
+  // `nx`, which resolves only by walking up into the workspace's node_modules.
+  // The DTE V4 worker is the path that hits it, and it runs only on CI
+  // (NXC-4944).
+  if (isCI()) {
+    return { share: 'none' };
+  }
+
   // Process-global, and pointing at one location for this run whichever
   // checkout asks. There is nothing left to share, so this is settled before
   // anything touches git or the filesystem.
