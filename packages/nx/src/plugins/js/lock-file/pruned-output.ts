@@ -124,16 +124,16 @@ type PrunedPnpmConfig = {
  * file is inert, verified installable with identical module resolution on
  * pnpm 9, 10 and 11.
  *
- * pnpm 11+ reads build approvals (`allowBuilds`), `supportedArchitectures`,
- * `minimumReleaseAge`/`minimumReleaseAgeExclude` and `patchedDependencies` only
- * from pnpm-workspace.yaml, so those are carried from the workspace root; pass
- * `prunedLockfileContent` to scope the approvals to the packages the pruned
- * lockfile keeps (an approval for an absent package is inert either way, this
- * only keeps the emitted file accurate). On
- * pnpm <=10, which reads them from the emitted package.json instead (see
- * `getPrunedPnpmPackageJsonBuildSettings`), or when the workspace declares
- * none, the file holds only `packages: []`. Resolution-time config stays out:
- * the pruned lockfile bakes it in (`stripPrunedLockfilePnpmConfig`).
+ * On pnpm 11+, this file carries declared `minimumReleaseAge`,
+ * `minimumReleaseAgeExclude`, `minimumReleaseAgeStrict`, build approvals,
+ * `supportedArchitectures`, and applicable `patchedDependencies` from the
+ * workspace root. Approvals and patches are scoped to the pruned lockfile.
+ *
+ * On pnpm <=10, only build approvals, `supportedArchitectures`, and
+ * `patchedDependencies` are emitted in `package.json`.
+ *
+ * Settings encoded in the pruned resolution, such as `overrides` and
+ * `packageExtensions`, are not copied (`stripPrunedLockfilePnpmConfig`).
  *
  * The major is the build machine's pnpm, which is all that is knowable at
  * build time: an output built on pnpm <=10 but deployed on pnpm 11+ will not
@@ -157,6 +157,41 @@ export function getPrunedPnpmInstallSettingsYaml(
   return dump({ packages: [], ...settings });
 }
 
+type PnpmRootWorkspaceSettings = {
+  allowBuilds?: Record<string, boolean>;
+  supportedArchitectures?: unknown;
+  minimumReleaseAge?: number;
+  minimumReleaseAgeExclude?: string[];
+  minimumReleaseAgeStrict?: boolean;
+};
+
+/**
+ * pnpm-workspace.yaml fields carried verbatim from the workspace root to the
+ * pruned output, with no interpretation beyond "declared or not" (unlike
+ * `allowBuilds`, filtered to the pruned lockfile, and `patchedDependencies`,
+ * resolved against it):
+ * - `supportedArchitectures`.
+ * - `minimumReleaseAge`/`minimumReleaseAgeExclude`: silently dropping these
+ *   falls back to pnpm's own default cutoff instead of the workspace's,
+ *   which can reject lockfile entries the workspace itself allows (or vice
+ *   versa).
+ * - `minimumReleaseAgeStrict`: starting with pnpm 11.0.0, a declared
+ *   `minimumReleaseAge` enables strict mode unless `minimumReleaseAgeStrict:
+ *   false` is also declared. Dropping an explicit `false` here would
+ *   silently re-enable strict mode in the pruned output and make its
+ *   install reject an immature exact dependency the source workspace
+ *   accepted.
+ */
+const STRAIGHT_COPY_WORKSPACE_SETTINGS: readonly Exclude<
+  keyof PnpmRootWorkspaceSettings,
+  'allowBuilds'
+>[] = [
+  'supportedArchitectures',
+  'minimumReleaseAge',
+  'minimumReleaseAgeExclude',
+  'minimumReleaseAgeStrict',
+];
+
 /**
  * The settings `getPrunedPnpmInstallSettingsYaml` emits, before serialization,
  * so a caller can tell which of them the workspace actually declares. Null when
@@ -175,12 +210,7 @@ function getPrunedPnpmWorkspaceSettings(
   if (pnpmMajor === null || pnpmMajor < 11) {
     return null;
   }
-  let rootSettings: {
-    allowBuilds?: Record<string, boolean>;
-    supportedArchitectures?: unknown;
-    minimumReleaseAge?: number;
-    minimumReleaseAgeExclude?: string[];
-  };
+  let rootSettings: PnpmRootWorkspaceSettings;
   try {
     const rootWorkspaceYaml = join(workspaceRootPath, 'pnpm-workspace.yaml');
     if (!existsSync(rootWorkspaceYaml)) {
@@ -208,19 +238,8 @@ function getPrunedPnpmWorkspaceSettings(
       settings.allowBuilds = allowBuilds;
     }
   }
-  if (rootSettings.supportedArchitectures) {
-    settings.supportedArchitectures = rootSettings.supportedArchitectures;
-  }
-  // pnpm reads `minimumReleaseAge`/`minimumReleaseAgeExclude` only from
-  // pnpm-workspace.yaml (like `allowBuilds`/`supportedArchitectures` above), so
-  // a pruned output that drops them silently falls back to pnpm's own default
-  // cutoff instead of the workspace's, which can reject lockfile entries the
-  // workspace itself allows (or vice versa).
-  if (rootSettings.minimumReleaseAge !== undefined) {
-    settings.minimumReleaseAge = rootSettings.minimumReleaseAge;
-  }
-  if (rootSettings.minimumReleaseAgeExclude) {
-    settings.minimumReleaseAgeExclude = rootSettings.minimumReleaseAgeExclude;
+  for (const field of STRAIGHT_COPY_WORKSPACE_SETTINGS) {
+    assignDefined(settings, rootSettings, field);
   }
   const patchedDependencies =
     precomputed?.patchedDependencies ??
