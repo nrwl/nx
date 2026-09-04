@@ -7,6 +7,7 @@ import { getNamedInputs } from '../../../hasher/task-hasher';
 import {
   getTaskEffectiveInputGroups,
   getTaskIoSnapshotStatus,
+  getTaskRawInputs,
   type IoSnapshotStatus,
 } from '../../../hasher/check-task-files';
 import { createTaskGraph } from '../../../tasks-runner/create-task-graph';
@@ -42,7 +43,17 @@ export async function showTargetInfoHandler(
           nxJson: t.nxJson,
         })
       : [];
-  const data = resolveTargetInfoData(t, snapshot, effectiveGroups);
+  // Already resolved for the snapshot status above, so this is a cache read.
+  const hashed =
+    effectiveGroups.length > 0
+      ? ((
+          await getTaskRawInputs(taskId, {
+            projectGraph: t.graph,
+            nxJson: t.nxJson,
+          })
+        )?.files ?? [])
+      : [];
+  const data = resolveTargetInfoData(t, snapshot, effectiveGroups, hashed);
   renderTargetInfo(data, args);
 }
 
@@ -59,7 +70,8 @@ interface ExpandedInput {
 function resolveTargetInfoData(
   t: ResolvedTarget,
   snapshot: IoSnapshotStatus,
-  effectiveGroups: EffectiveInputGroup[] = []
+  effectiveGroups: EffectiveInputGroup[] = [],
+  hashedFiles: string[] = []
 ) {
   const {
     projectName,
@@ -146,22 +158,34 @@ function resolveTargetInfoData(
     snapshot,
     ...(effectiveGroups.length > 0
       ? {
-          effectiveInputs: effectiveGroups.map((group) => {
-            const root = group.project
-              ? graph.nodes[group.project]?.data?.root
-              : undefined;
-            return {
-              ...group,
-              projectRoot: root,
-              globs: group.globs.map((glob) => tokenizeProjectRoot(glob, root)),
-              observed: group.observed.map((glob) =>
-                tokenizeProjectRoot(glob, root)
-              ),
-              declared: group.declared.map((glob) =>
-                tokenizeProjectRoot(glob, root)
-              ),
-            };
-          }),
+          effectiveInputs: (() => {
+            const roots = effectiveGroups.map((group) => ({
+              name: group.project ?? '{workspaceRoot}',
+              root: group.project
+                ? graph.nodes[group.project]?.data?.root
+                : undefined,
+            }));
+            const fileCounts = countFilesByProject(hashedFiles, roots);
+            return effectiveGroups.map((group) => {
+              const root = group.project
+                ? graph.nodes[group.project]?.data?.root
+                : undefined;
+              return {
+                ...group,
+                projectRoot: root,
+                files: fileCounts.get(group.project ?? '{workspaceRoot}') ?? 0,
+                globs: group.globs.map((glob) =>
+                  tokenizeProjectRoot(glob, root)
+                ),
+                observed: group.observed.map((glob) =>
+                  tokenizeProjectRoot(glob, root)
+                ),
+                declared: group.declared.map((glob) =>
+                  tokenizeProjectRoot(glob, root)
+                ),
+              };
+            });
+          })(),
           _declaredSources: declaredExclusionSources(
             effectiveGroups,
             targetName,
@@ -401,10 +425,13 @@ function tokenizeUnder(path: string, root: string): string {
 const DEPENDS_ON_PREVIEW = 10;
 
 /** Projects summarised before the rest become a count. */
-const PROJECT_PREVIEW = 10;
+const PROJECT_PREVIEW = 25;
 
 /** A group once the renderer has resolved the owning project's root. */
-type ResolvedInputGroup = EffectiveInputGroup & { projectRoot?: string };
+type ResolvedInputGroup = EffectiveInputGroup & {
+  projectRoot?: string;
+  files: number;
+};
 
 /**
  * The globs a snapshot-backed task hashes, grouped by the project they belong
@@ -429,6 +456,7 @@ function renderEffectiveInputs(
     (n, g) => n + tracedOf(g).length + g.declared.length,
     0
   );
+  const fileTotal = groups.reduce((n, g) => n + g.files, 0);
 
   // The replaced filesets are not printed at all, so this has to say what the
   // snapshot stands in for. Anything still listed above it -- env, runtime,
@@ -443,20 +471,22 @@ function renderEffectiveInputs(
   );
   console.log(
     `  ${c.dim(
-      `considers files from ${groups.length} project${groups.length === 1 ? '' : 's'}` +
-        ` (${readTotal} included, ${excludeTotal} excluded):`
+      `considers ${fileTotal} file${fileTotal === 1 ? '' : 's'} from ${groups.length}` +
+        ` project${groups.length === 1 ? '' : 's'}` +
+        ` (${readTotal} globs included, ${excludeTotal} excluded):`
     )}`
   );
 
   if (!args.verbose) {
-    // Heaviest first: the projects a change is most likely to invalidate.
+    // Most files first: the projects a change is most likely to invalidate.
     const ranked = [...groups].sort(
       (a, b) =>
-        readsOf(b).length - readsOf(a).length ||
-        (a.project ?? '').localeCompare(b.project ?? '')
+        b.files - a.files || (a.project ?? '').localeCompare(b.project ?? '')
     );
     for (const group of ranked.slice(0, PROJECT_PREVIEW)) {
-      console.log(`    - ${projectLabel(group, c)}`);
+      console.log(
+        `    - ${projectLabel(group, c)}: ${group.files} file${group.files === 1 ? '' : 's'}`
+      );
     }
     const hidden = ranked.length - Math.min(PROJECT_PREVIEW, ranked.length);
     if (hidden > 0) {
@@ -482,7 +512,9 @@ function renderEffectiveInputs(
     (a.project ?? '').localeCompare(b.project ?? '')
   );
   for (const group of sorted) {
-    console.log(`    ${projectLabel(group, c)}:`);
+    console.log(
+      `    ${projectLabel(group, c)} ${c.dim(`— ${group.files} file${group.files === 1 ? '' : 's'}`)}:`
+    );
     renderGlobList('included by the snapshot', readsOf(group), c);
     renderGlobList('excluded by the snapshot', tracedOf(group), c);
     renderGlobList(
@@ -585,6 +617,32 @@ function expandInputsForDisplay(
   }
 
   return result;
+}
+
+/**
+ * Splits the task's hashed files across the projects that own them, longest
+ * root first so a nested project wins. Mirrors how the planner assigned globs,
+ * so the counts line up with the globs listed under each project.
+ */
+function countFilesByProject(
+  files: readonly string[],
+  projects: readonly { name: string; root?: string }[]
+): Map<string, number> {
+  const rooted = projects
+    .filter(
+      (p): p is { name: string; root: string } => !!p.root && p.root !== '.'
+    )
+    .sort((a, b) => b.root.length - a.root.length);
+  const fallback =
+    projects.find((p) => p.root === '.') ??
+    projects.find((p) => p.name === '{workspaceRoot}');
+
+  const counts = new Map<string, number>();
+  for (const file of files) {
+    const owner = rooted.find((p) => file.startsWith(`${p.root}/`)) ?? fallback;
+    if (owner) counts.set(owner.name, (counts.get(owner.name) ?? 0) + 1);
+  }
+  return counts;
 }
 
 /**

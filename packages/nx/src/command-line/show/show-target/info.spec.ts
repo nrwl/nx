@@ -951,7 +951,7 @@ describe('show target info', () => {
       expect(text).toContain('nx show target inputs my-app:lint');
       // Globs inside the owning project read as {projectRoot}, like the
       // declared inputs; the header carries the real root.
-      expect(text).toContain('my-app (apps/my-app):');
+      expect(text).toContain('my-app (apps/my-app)');
       expect(text).toContain('{projectRoot}/src/main.ts');
       // A project absent from the graph keeps its workspace-relative glob.
       expect(text).toContain('libs/ui/src/index.ts');
@@ -1003,8 +1003,8 @@ describe('show target info', () => {
 
       // Every project gets its own block, so a glob two projects read is
       // listed under each rather than collapsed into one scoped line.
-      expect(text).toContain('my-app (apps/my-app):');
-      expect(text).toContain('ui:');
+      expect(text).toContain('my-app (apps/my-app)');
+      expect(text).toMatch(/\bui — \d+ files?:/);
       expect(lines.filter((l: string) => l.includes(shared))).toHaveLength(2);
       // A glob only one project reads stays under that project.
       expect(text).toContain('{projectRoot}/src/only-mine.ts');
@@ -1212,7 +1212,7 @@ describe('show target info', () => {
 
       // The default answers which projects the task considers, not which
       // globs; a 196-project task would otherwise print hundreds of lines.
-      expect(text).toContain('considers files from 2 projects');
+      expect(text).toMatch(/considers \d+ files? from 2 projects/);
       expect(text).toContain('my-app (apps/my-app)');
       expect(text).toContain('ui');
       expect(text).not.toContain(shared);
