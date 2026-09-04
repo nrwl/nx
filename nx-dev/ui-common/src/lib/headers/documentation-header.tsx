@@ -377,7 +377,7 @@ export function DocumentationHeader({
               Contact
             </ButtonLink>
             <ButtonLink
-              href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=documentation-header&utm_campaign=try-nx-cloud"
+              href="https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=docs-header"
               title="Try Nx Cloud for free"
               variant="contrast"
               size="small"
