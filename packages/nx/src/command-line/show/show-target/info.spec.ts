@@ -8,6 +8,7 @@ import {
   setMockHasCustomHasher,
   fetchedForHead,
   setMockInputGlobs,
+  setMockNxJson,
   setMockIoSnapshotReport,
 } from './test-utils';
 import { showTargetInfoHandler } from './info';
@@ -1069,6 +1070,52 @@ describe('show target info', () => {
       // `nx show target` reports what a run would hash, so it resolves the
       // bundle a run would rather than only reading what one left behind.
       expect(fetchedForHead).toBeGreaterThan(0);
+    });
+
+    it('traces an inherited exclusion to the named input that defines it', async () => {
+      const graph = graphWithLintTarget();
+      // The target pulls its dependencies' `production`, which is defined
+      // through another named input -- where the exclusion actually lives.
+      graph.nodes['my-app'].data.targets.lint.inputs = [
+        '{projectRoot}/**/*.ts',
+        '^production',
+      ];
+      setGraph(graph);
+      setMockNxJson({
+        namedInputs: {
+          production: ['productionBase', '!{projectRoot}/.storybook/**/*'],
+          productionBase: ['default', '!{projectRoot}/src/test/**/*'],
+          default: ['{projectRoot}/**/*'],
+        },
+      });
+      setMockIoSnapshotReport({
+        used: ['my-app:lint'],
+        tasksWithOutputs: [],
+        diagnostics: [],
+        resolution: { requestedCommit: 'ae6a03f912ab', digest: '049a9c2f7bcd' },
+      });
+      setMockInputGlobs({
+        'my-app:lint': [
+          {
+            project: 'my-app',
+            globs: ['apps/my-app/src/main.ts', '!apps/my-app/src/test/**/*'],
+            observed: ['apps/my-app/src/main.ts'],
+            declared: ['!apps/my-app/src/test/**/*'],
+            includeIgnored: true,
+            fromSnapshot: true,
+          },
+        ],
+      });
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint', verbose: true });
+      const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
+
+      // Named through the definition it is written in, not the reference that
+      // reached it, and not any one project that merely carries it.
+      expect(text).toContain(
+        '!{projectRoot}/src/test/**/* (all 1 projects) (from nx.json#namedInputs.productionBase via ^production)'
+      );
     });
 
     it('summarises the single-project reads unless --verbose', async () => {

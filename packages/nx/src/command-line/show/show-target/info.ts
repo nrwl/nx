@@ -162,6 +162,17 @@ function resolveTargetInfoData(
               ),
             };
           }),
+          _declaredSources: declaredExclusionSources(
+            effectiveGroups,
+            targetName,
+            graph,
+            nxJson,
+            sourceMaps
+          ),
+          _declaredVia: declaredExclusionsViaNamedInputs(
+            targetConfig.inputs,
+            nxJson
+          ),
         }
       : {}),
     ...(targetConfig.inputs
@@ -392,6 +403,9 @@ function tokenizeUnder(path: string, root: string): string {
 /** Shared globs listed before the tail is summarised, without --verbose. */
 const SHARED_GLOB_PREVIEW = 10;
 
+/** Projects named beside a shared glob before the rest become a count. */
+const OWNER_PREVIEW = 12;
+
 /** Maps each glob to the projects whose group carries it. */
 function indexByGlob(
   groups: readonly { project?: string }[],
@@ -437,7 +451,11 @@ function renderGlobLines(
       `    - ${glob} ${c.dim(`(${scopeLabel(owners, projectCount)})`)}${hint}`
     );
     if (args.verbose && owners.length < projectCount) {
-      console.log(`      ${c.dim(owners.join(', '))}`);
+      const named = owners.slice(0, OWNER_PREVIEW);
+      const rest = owners.length - named.length;
+      console.log(
+        `      ${c.dim(named.join(', ') + (rest > 0 ? `, +${rest} more` : ''))}`
+      );
     }
   }
   const hidden = entries.length - shown.length;
@@ -553,23 +571,26 @@ function renderDeclaredExclusions(
     )}`
   );
 
-  // An exclusion inherited through `^` belongs to the dependency's own target,
-  // so only the ones this target declares resolve to a source here.
-  const declaredHere = new Map<string, number>();
-  data.inputs?.forEach((input, i) => {
-    if (typeof input === 'string') {
-      declaredHere.set(input, data._inputSources?.[i] ?? i);
-    }
-  });
-
+  // Resolved against whichever project authored the exclusion, so one
+  // inherited through `^` still names its file.
+  const sources = data._declaredSources ?? {};
+  const via = data._declaredVia ?? {};
   renderGlobLines(
     [...byGlob].sort(byShareThenName),
     groups.length,
     c,
     args,
     (glob) => {
-      const index = declaredHere.get(glob);
-      return index !== undefined ? sourceHint(`inputs.${index}`, 'inputs') : '';
+      if (!args.verbose) return '';
+      // The named-input definition is where the exclusion is actually written,
+      // so it wins over the per-project config that merely references it.
+      if (via[glob]) return ` ${c.dim(`(from ${via[glob]})`)}`;
+      const entry = sources[glob];
+      if (!entry) return '';
+      const [file, plugin] = entry;
+      if (file && plugin) return ` ${c.dim(`(from ${file} by ${plugin})`)}`;
+      if (file) return ` ${c.dim(`(from ${file})`)}`;
+      return plugin ? ` ${c.dim(`(by ${plugin})`)}` : '';
     }
   );
 }
@@ -644,6 +665,100 @@ function expandInputsForDisplay(
   return result;
 }
 
+/**
+ * Where each declared exclusion was authored. An exclusion inherited through
+ * `^` belongs to a dependency's own target, so it is resolved against that
+ * project's inputs and source map rather than this one's.
+ */
+function declaredExclusionSources(
+  groups: EffectiveInputGroup[],
+  targetName: string,
+  graph: ProjectGraph,
+  nxJson: NxJsonConfiguration,
+  sourceMaps?: ConfigurationSourceMaps
+): Record<string, [file: string | null, plugin: string]> {
+  const sources: Record<string, [string | null, string]> = {};
+  if (!sourceMaps) return sources;
+
+  const found = new Map<string, [string | null, string][]>();
+  const carriers = new Map<string, number>();
+  for (const group of groups) {
+    if (!group.project || group.declared.length === 0) continue;
+    const node = graph.nodes[group.project];
+    const inputs = node?.data.targets?.[targetName]?.inputs;
+    const projectMap = sourceMaps[node?.data.root ?? ''];
+    if (!inputs || !projectMap) continue;
+
+    const root = node.data.root;
+    const expanded = expandInputsForDisplay(inputs, node, nxJson);
+    for (const glob of group.declared) {
+      const token = tokenizeProjectRoot(glob, root);
+      carriers.set(token, (carriers.get(token) ?? 0) + 1);
+      // Only an exact match attributes; a near miss would name the wrong line.
+      const origin = expanded.find((e) => e.value === token);
+      if (!origin) continue;
+      const entry =
+        projectMap[`targets.${targetName}.inputs.${origin.originalIndex}`];
+      if (!entry) continue;
+      const list = found.get(token);
+      if (list) list.push(entry);
+      else found.set(token, [entry]);
+    }
+  }
+
+  // An exclusion every project carries was authored once per project, so
+  // naming one project's file would imply it is the cause. A file is reported
+  // only when every carrier agrees on it; otherwise the plugin is all that is
+  // true of the whole group.
+  for (const [glob, entries] of found) {
+    const plugins = new Set(entries.map(([, plugin]) => plugin));
+    if (plugins.size !== 1) continue;
+    const plugin = [...plugins][0];
+    const files = new Set(entries.map(([file]) => file));
+    const everyCarrier = entries.length === carriers.get(glob);
+    sources[glob] =
+      everyCarrier && files.size === 1
+        ? [[...files][0], plugin]
+        : [null, plugin];
+  }
+  return sources;
+}
+
+/**
+ * Where a `^`-inherited exclusion was defined. The planner collects these from
+ * a dependency's expansion of a named input, so they exist in no project's
+ * target config -- only in the nx.json definition the `^` reference reaches.
+ */
+function declaredExclusionsViaNamedInputs(
+  targetInputs: (InputDefinition | string)[] | undefined,
+  nxJson: NxJsonConfiguration
+): Record<string, string> {
+  const named = nxJson.namedInputs ?? {};
+  const via: Record<string, string> = {};
+
+  const walk = (name: string, root: string, seen: Set<string>): void => {
+    if (seen.has(name)) return;
+    seen.add(name);
+    for (const member of named[name] ?? []) {
+      if (typeof member !== 'string') continue;
+      if (named[member]) {
+        walk(member, root, seen);
+      } else if (member.startsWith('!')) {
+        via[member] ??= `nx.json#namedInputs.${name} via ^${root}`;
+      }
+    }
+  };
+
+  for (const input of targetInputs ?? []) {
+    const name =
+      typeof input === 'string' && input.startsWith('^')
+        ? input.slice(1)
+        : undefined;
+    if (name && named[name]) walk(name, name, new Set());
+  }
+  return via;
+}
+
 function extractTargetSourceMap(
   projectRoot: string,
   targetName: string,
@@ -674,7 +789,14 @@ function extractTargetSourceMap(
 function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
   if (args.json) {
     // Strip internal renderer-only fields from JSON output
-    const { _inputSources, _depSources, _commandSourceKey, ...jsonData } = data;
+    const {
+      _inputSources,
+      _depSources,
+      _commandSourceKey,
+      _declaredSources,
+      _declaredVia,
+      ...jsonData
+    } = data;
     console.log(JSON.stringify(jsonData, null, 2));
     return;
   }
