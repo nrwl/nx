@@ -745,8 +745,17 @@ describe('registerSourceGraphResolver', () => {
       }),
       'packages/next/src/flipped.js': '',
       'packages/next/dist/index.js': '',
+      // The `source` target is missing on purpose.
+      'packages/gone/package.json': JSON.stringify({
+        name: '@proj/gone',
+        exports: {
+          '.': { source: './src/index.ts', default: './dist/index.js' },
+        },
+      }),
+      'packages/gone/dist/index.js': "module.exports = 'dist';\n",
+      'gone-entry.cjs': "module.exports = require('@proj/gone');\n",
     });
-    linkWorkspacePackages(root, ['utils', 'next']);
+    linkWorkspacePackages(root, ['utils', 'next', 'gone']);
   });
 
   afterAll(() => {
@@ -876,6 +885,47 @@ describe('registerSourceGraphResolver', () => {
     expect(result).toEqual({ url: fileUrl('dist-resolved.js') });
     expect(nextResolve).toHaveBeenCalledTimes(1);
     expect(nextResolve.mock.calls[0][1]).toBe(memberContext);
+
+    cleanup();
+  });
+
+  // TypeScript moves on to the next matching condition when a target does not
+  // resolve, so a graph member falls through to the default resolution where
+  // Node's own `--conditions` would fail with a missing file.
+  it('falls through to the default resolution when the selected source target is missing (ESM)', () => {
+    const hooks = captureResolveHook();
+    vi.spyOn(
+      typescriptUtils,
+      'getRootTsConfigResolveExportsConditions'
+    ).mockReturnValue(['source']);
+
+    const cleanup = registerSourceGraphResolver(join(root, 'plugin.ts'), root, [
+      '@proj/gone',
+    ]);
+    const memberContext = context(fileUrl('plugin.ts'));
+    const nextResolve = vi.fn(() => ({
+      url: fileUrl('packages/gone/dist/index.js'),
+    }));
+
+    expect(hooks.resolve('@proj/gone', memberContext, nextResolve)).toEqual({
+      url: fileUrl('packages/gone/dist/index.js'),
+    });
+    expect(nextResolve).toHaveBeenCalledWith('@proj/gone', memberContext);
+
+    cleanup();
+  });
+
+  it('falls through to the default resolution when the selected source target is missing (CJS)', () => {
+    captureResolveHook();
+    vi.spyOn(
+      typescriptUtils,
+      'getRootTsConfigResolveExportsConditions'
+    ).mockReturnValue(['source']);
+
+    const entry = join(root, 'gone-entry.cjs');
+    const cleanup = registerSourceGraphResolver(entry, root, ['@proj/gone']);
+
+    expect(createRequire(import.meta.url)(entry)).toBe('dist');
 
     cleanup();
   });
